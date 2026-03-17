@@ -1,0 +1,50 @@
+*.csproj
+*.csproj.meta
+*.sln
+*.DotSettings
+*.DotSettings.user
+*.suo
+*.userprefs
+*.DS_Store
+*.unityproj
+*.mayaSwatches
+*.patch
+
+/obj/
+/Library*/
+/Temp/
+/Build/
+/HotZip/
+/u8packer/
+/Assets/StreamingAssets/AB/Android*
+/Assets/StreamingAssets/AB/IOS*
+/Assets/StreamingAssets/AB/OSX*
+/Assets/StreamingAssets/AB/Windows*
+/Intermediate/
+/Release/
+/.vs
+/.vscode
+/.vsconfig
+/.log
+/Logs/
+/UserSettings/
+__pycache__/
+
+# JetBrains Rider
+.idea
+!.editorConfig
+/Assets/Plugins/Editor/JetBrains*
+
+# UWA test data
+TestData/
+
+# Cursor ignores
+*.cursorignore
+.cursor/
+.cursorrules
+CLAUDE.md
+.clipignore
+
+# White code-workspace
+*.code-workspace
+!</CodeWorkspaces/*.code-workspace>
