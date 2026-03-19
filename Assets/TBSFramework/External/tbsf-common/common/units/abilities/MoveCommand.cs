@@ -51,18 +51,39 @@ namespace TurnBasedStrategyFramework.Common.Units.Abilities
         /// <returns>A task representing the asynchronous execution of the move.</returns>
         public async Task Execute(IUnit unit, IGridController controller)
         {
-            unit.CurrentCell.IsTaken = false;
-            unit.CurrentCell.CurrentUnits.Remove(unit);
+            if (_destination == null || _source == null)
+            {
+                return;
+            }
 
-            var pathCost = _path.Prepend(unit.CurrentCell).Zip(_path.Prepend(unit.CurrentCell).Skip(1), (from, to) => unit.GetMovementCost(from, to)).Sum();
+            if (!CanOccupyDestination(unit))
+            {
+                return;
+            }
+
+            var pathCost = _path.Prepend(_source).Zip(_path.Prepend(_source).Skip(1), (from, to) => unit.GetMovementCost(from, to)).Sum();
             unit.MovementPoints -= pathCost;
 
             await controller.UnitManager.MarkAsMoving(unit, _source, _destination, _path);
             await unit.MovementAnimation(_path, _destination);
 
-            _destination.IsTaken = true;
+            if (!CanOccupyDestination(unit))
+            {
+                unit.WorldPosition = _source.WorldPosition;
+                await controller.UnitManager.UnMarkAsMoving(unit, _source, _destination, _path);
+                return;
+            }
+
+            _source.CurrentUnits.Remove(unit);
+            _source.IsTaken = _source.CurrentUnits.Count > 0;
+
             unit.CurrentCell = _destination;
-            unit.CurrentCell.CurrentUnits.Add(unit);
+            if (!unit.CurrentCell.CurrentUnits.Contains(unit))
+            {
+                unit.CurrentCell.CurrentUnits.Add(unit);
+            }
+            unit.CurrentCell.IsTaken = unit.CurrentCell.CurrentUnits.Count > 0;
+            unit.WorldPosition = _destination.WorldPosition;
 
             await controller.UnitManager.UnMarkAsMoving(unit, _source, _destination, _path);
             unit.InvokeUnitMoved(new UnitMovedEventArgs(unit, _source, _destination, _path));
@@ -77,13 +98,23 @@ namespace TurnBasedStrategyFramework.Common.Units.Abilities
         /// <returns>A task representing the asynchronous undo operation.</returns>
         public readonly Task Undo(IUnit unit, IGridController controller)
         {
+            _destination.CurrentUnits.Remove(unit);
+            _destination.IsTaken = _destination.CurrentUnits.Count > 0;
+
             unit.CurrentCell = _source;
             unit.WorldPosition = _source.WorldPosition;
-
-            _source.IsTaken = true;
-            _destination.IsTaken = false;
+            if (!_source.CurrentUnits.Contains(unit))
+            {
+                _source.CurrentUnits.Add(unit);
+            }
+            _source.IsTaken = _source.CurrentUnits.Count > 0;
 
             return Task.CompletedTask;
+        }
+
+        private bool CanOccupyDestination(IUnit unit)
+        {
+            return !_destination.IsTaken || _destination.CurrentUnits.All(u => ReferenceEquals(u, unit));
         }
 
         private static class SerializationKeys

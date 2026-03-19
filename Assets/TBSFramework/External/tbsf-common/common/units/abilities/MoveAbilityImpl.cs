@@ -131,6 +131,14 @@ namespace TurnBasedStrategyFramework.Common.Units.Abilities
                 _currentPath = UnitReference.FindPath(cell, gridController.CellManager);
             }
 
+            var latestPath = UnitReference.FindPath(cell, gridController.CellManager);
+            if (!UnitReference.IsCellMovableTo(cell) || !latestPath.Any())
+            {
+                gridController.GridState = new GridStateAwaitInput();
+                return;
+            }
+
+            _currentPath = latestPath;
             UnitReference.HumanExecuteAbility(new MoveCommand(UnitReference.CurrentCell, cell, _currentPath), gridController);
         }
 

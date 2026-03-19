@@ -503,8 +503,8 @@ namespace TurnBasedStrategyFramework.Unity.Units
         {
             if (CurrentCell != null)
             {
-                CurrentCell.IsTaken = false;
                 CurrentCell.CurrentUnits.Remove(this);
+                CurrentCell.IsTaken = CurrentCell.CurrentUnits.Count > 0;
 
                 #if UNITY_EDITOR
                 if (!Application.isPlaying && CurrentCell is Cell cell)
