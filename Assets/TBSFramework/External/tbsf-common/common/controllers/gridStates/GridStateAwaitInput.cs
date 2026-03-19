@@ -16,7 +16,9 @@ namespace TurnBasedStrategyFramework.Common.Controllers.GridStates
         /// <param name="gridController">The grid controller.</param>
         public override void OnUnitClicked(IUnit unit, GridController gridController)
         {
-            if (gridController.TurnContext.PlayableUnits().Contains(unit))
+            var activeUnit = gridController.TurnContext.PlayableUnits().FirstOrDefault();
+            // UnitSpeed 期望每回合只有一个可行动单位；当场景绑定异常时也至少阻止越权点击。
+            if (activeUnit != null && ReferenceEquals(activeUnit, unit))
             {
                 gridController.GridState = new GridStateUnitSelected(unit, unit.GetBaseAbilities());
             }

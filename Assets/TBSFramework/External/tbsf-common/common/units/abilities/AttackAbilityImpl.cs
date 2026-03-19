@@ -75,9 +75,14 @@ namespace TurnBasedStrategyFramework.Common.Units.Abilities
             {
                 UnitReference.HumanExecuteAbility(new AttackCommand(unit, UnitReference.CalculateTotalDamage(unit)), gridController);
             }
-            else if (gridController.UnitManager.GetFriendlyUnits(UnitReference.PlayerNumber).Contains(unit))
+            else
             {
-                gridController.GridState = new GridStateUnitSelected(unit, unit.GetBaseAbilities());
+                // Unit-by-unit turn system: only the active unit should be allowed to switch selection.
+                var activeUnit = gridController.TurnContext.PlayableUnits().FirstOrDefault();
+                if (activeUnit != null && ReferenceEquals(activeUnit, unit))
+                {
+                    gridController.GridState = new GridStateUnitSelected(unit, unit.GetBaseAbilities());
+                }
             }
         }
 

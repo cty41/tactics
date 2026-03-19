@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using TurnBasedStrategyFramework.Common.Cells;
 using TurnBasedStrategyFramework.Common.Units;
@@ -21,6 +22,7 @@ namespace TurnBasedStrategyFramework.Common.Controllers.GridStates
         private readonly IEnumerable<IAbility> _abilities;
 
         private bool _canPerformAction;
+        private bool _abilitiesInitialized;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GridStateUnitSelected"/> class with the selected unit and its abilities.
@@ -50,12 +52,22 @@ namespace TurnBasedStrategyFramework.Common.Controllers.GridStates
         public override async void OnStateEnter(GridController gridController)
         {
             _canPerformAction = false;
+            _abilitiesInitialized = false;
+
+            // Unit-by-unit turn system: only allow displaying abilities for the active unit.
+            var activeUnit = gridController.TurnContext.PlayableUnits().FirstOrDefault();
+            if (activeUnit == null || !ReferenceEquals(activeUnit, _selectedUnit))
+            {
+                gridController.GridState = new GridStateAwaitInput();
+                return;
+            }
 
             _selectedUnit.InvokeUnitSelected();
             foreach (var ability in _abilities)
             {
                 ability.OnAbilitySelected(gridController);
                 ability.InvokeAbilitySelected();
+                _abilitiesInitialized = true;
 
                 if (!ability.CanPerform(gridController))
                 {
@@ -87,11 +99,16 @@ namespace TurnBasedStrategyFramework.Common.Controllers.GridStates
             {
                 await gridController.UnitManager.MarkAsFriendly(new IUnit[] { _selectedUnit });
             }
-            foreach (var ability in _abilities)
+
+            // Avoid calling CleanUp for uninitialized ability state.
+            if (_abilitiesInitialized)
             {
-                ability.CleanUp(gridController);
-                ability.OnAbilityDeselected(gridController);
-                ability.InvokeAbilityDeselected();
+                foreach (var ability in _abilities)
+                {
+                    ability.CleanUp(gridController);
+                    ability.OnAbilityDeselected(gridController);
+                    ability.InvokeAbilityDeselected();
+                }
             }
         }
 

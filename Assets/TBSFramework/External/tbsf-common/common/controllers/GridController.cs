@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using TurnBasedStrategyFramework.Common.Cells;
 using TurnBasedStrategyFramework.Common.Controllers.GameResolvers;
 using TurnBasedStrategyFramework.Common.Controllers.GridStates;
@@ -144,6 +145,14 @@ namespace TurnBasedStrategyFramework.Common.Controllers
         {
             if (unit.PlayerNumber.Equals(TurnContext.CurrentPlayer.PlayerNumber))
             {
+                // UnitSpeed 期望每回合只有一个可行动单位。
+                // 当场景绑定异常导致可行动单位列表变宽时，必须在执行层阻止越权单位的命令。
+                var activeUnit = TurnContext.PlayableUnits().FirstOrDefault();
+                if (activeUnit == null || !ReferenceEquals(activeUnit, unit))
+                {
+                    return;
+                }
+
                 _ = eventArgs.PreAction(this);
                 await eventArgs.Command.Execute(unit, this);
                 _ = eventArgs.PostAction(this);
