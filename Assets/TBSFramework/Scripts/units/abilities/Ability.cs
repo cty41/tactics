@@ -10,12 +10,16 @@ namespace TurnBasedStrategyFramework.Unity.Units.Abilities
     /// <summary>
     /// A Unity-specific abstract base class representing an ability that a unit can perform in the game.
     /// </summary>
-    public abstract class Ability : MonoBehaviour, IAbility
+    public abstract class Ability : MonoBehaviour, IAbility, IDamageScalingAbility
     {
         public event Action<IAbility> AbilitySelected;
         public event Action<IAbility> AbilityDeselected;
 
         public IUnit UnitReference { get; set; }
+        [SerializeField] private bool _isRangedDamage;
+        [SerializeField] private bool _hasHalfScaling;
+        public bool IsRangedDamage => _isRangedDamage;
+        public bool HasHalfScaling => _hasHalfScaling;
 
         public virtual void Initialize(IGridController gridController) { }
         public virtual void Display(IGridController gridController) { }

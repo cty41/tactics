@@ -14,7 +14,7 @@ namespace TurnBasedStrategyFramework.Unity.Units.Abilities
         public override void Initialize(IGridController gridController)
         {
             base.Initialize(gridController);
-            _attackAbility = new AttackAbilityImpl(UnitReference);
+            _attackAbility = new AttackAbilityImpl(UnitReference, this);
             _attackAbility.Initialize(gridController);
         }
 

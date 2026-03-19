@@ -94,6 +94,7 @@ namespace TurnBasedStrategyFramework.Common.Units
         /// <param name="aggressorCell">The cell from which the attack is made.</param>
         /// <returns>The raw amount of damage before any defensive modifiers are applied.</returns>
         float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell);
+        float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage, bool halfScaling = false);
 
         /// <summary>
         /// Calculates the base damage this unit would deal to a specific defender,
@@ -131,6 +132,7 @@ namespace TurnBasedStrategyFramework.Common.Units
         /// <param name="aggressorCell">The cell from which the attacker strikes.</param>
         /// <returns>The total effective damage dealt to the defender after all modifiers.</returns>
         float CalculateTotalDamage(IUnit defender, ICell defenderCell, ICell aggressorCell);
+        float CalculateTotalDamage(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage, bool halfScaling = false);
 
         /// <summary>
         /// Calculates the final damage dealt to the target unit, combining both 

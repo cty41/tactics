@@ -19,9 +19,6 @@ namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units
         [SerializeField] private UnityCellManager _cellManager;
         [SerializeField] private Tilemap _dataTilemap;
 
-        [SerializeField] private float _speed = 1.0f;
-        public float Speed => _speed;
-
         private float baseMovementSpeed;
 
         public override ICell CurrentCell

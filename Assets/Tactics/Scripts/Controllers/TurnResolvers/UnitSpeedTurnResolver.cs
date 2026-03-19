@@ -4,7 +4,6 @@ using TurnBasedStrategyFramework.Common.Controllers;
 using TurnBasedStrategyFramework.Common.Controllers.TurnResolvers;
 using TurnBasedStrategyFramework.Common.Units;
 using TurnBasedStrategyFramework.Unity.Controllers;
-using TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units;
 using UnityEngine;
 
 namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Controllers
@@ -27,7 +26,7 @@ namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Controllers
             _unitQueue.Clear();
             var units = gridController.UnitManager.GetUnits()
                 .Where(u => u.Health > 0) // Only include alive units
-                .OrderByDescending(u => (u as TilemapUnit)?.Speed ?? 0) // Speed descending
+                .OrderByDescending(u => u.Speed) // Speed descending
                 .ThenBy(u => u.PlayerNumber) // Player number ascending (stable order)
                 .ThenBy(u => u.UnitID) // Unit ID ascending (stable order)
                 .ToList();

@@ -73,8 +73,9 @@ namespace TurnBasedStrategyFramework.Common.AI.BehaviourTrees
             }
 
             var tcs = new TaskCompletionSource<bool>();
+            var isRangedDamage = _unit.AttackRange > 1;
 
-            _unit.AIExecuteAbility(new AttackCommand(target, _unit.CalculateTotalDamage(target)), _gridController, tcs);
+            _unit.AIExecuteAbility(new AttackCommand(target, _unit.CalculateTotalDamage(target, target.CurrentCell, _unit.CurrentCell, isRangedDamage)), _gridController, tcs);
             return tcs.Task;
         }
     }

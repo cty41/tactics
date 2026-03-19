@@ -95,6 +95,16 @@ namespace TurnBasedStrategyFramework.Common.Units
         /// </summary>
         float ActionPoints { get; set; }
 
+        int Strength { get; set; }
+        int Agility { get; set; }
+        int Constitution { get; set; }
+        int Intelligence { get; set; }
+        float Speed { get; set; }
+        int Charisma { get; set; }
+        int Luck { get; set; }
+        float Mana { get; set; }
+        float MaxMana { get; set; }
+
         /// <summary>
         /// The number of the player that owns the unit.
         /// </summary>

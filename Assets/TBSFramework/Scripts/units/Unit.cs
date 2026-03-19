@@ -79,12 +79,30 @@ namespace TurnBasedStrategyFramework.Unity.Units
         [SerializeField] private float _health = 10;
         public float Health { get { return _health; } set { _health = value; } }
         public float MaxHealth { get; set; }
+        [SerializeField] private float _mana = 0;
+        public float Mana { get { return _mana; } set { _mana = Mathf.Clamp(value, 0, MaxMana); } }
+        public float MaxMana { get; set; }
 
         [SerializeField] private float _movementPoints = 5;
         public float MovementPoints { get { return _movementPoints; } set { _movementPoints = value; } }
         public float MaxMovementPoints { get; set; }
         [SerializeField] private float _movementAnimationSpeed = 1;
         public float MovementAnimationSpeed { get { return _movementAnimationSpeed; } set { _movementAnimationSpeed = value; } }
+        [SerializeField] private float _speed = 5f;
+        public virtual float Speed { get { return _speed; } set { _speed = value; } }
+
+        [SerializeField] private int _strength = 5;
+        public int Strength { get { return _strength; } set { _strength = value; } }
+        [SerializeField] private int _agility = 5;
+        public int Agility { get { return _agility; } set { _agility = value; } }
+        [SerializeField] private int _constitution = 5;
+        public int Constitution { get { return _constitution; } set { _constitution = value; } }
+        [SerializeField] private int _intelligence = 5;
+        public int Intelligence { get { return _intelligence; } set { _intelligence = value; } }
+        [SerializeField] private int _charisma = 5;
+        public int Charisma { get { return _charisma; } set { _charisma = value; } }
+        [SerializeField] private int _luck = 5;
+        public int Luck { get { return _luck; } set { _luck = value; } }
 
         [SerializeField] private int _attackRange = 1;
         public int AttackRange { get { return _attackRange; } set { _attackRange = value; } }
@@ -119,9 +137,11 @@ namespace TurnBasedStrategyFramework.Unity.Units
             _combatComponent = new CombatComponent(this);
             _behaviourTreeResource?.Initialize(this, gridController);
 
-            MaxHealth = Health;
             MaxActionPoints = ActionPoints;
-            MaxMovementPoints = MovementPoints;
+            RecalculateDerivedStats();
+            Health = MaxHealth;
+            Mana = MaxMana;
+            MovementPoints = MaxMovementPoints;
 
             _baseAbilities = GetComponents<Ability>().ToList();
             foreach (var ability in _baseAbilities)
@@ -149,6 +169,7 @@ namespace TurnBasedStrategyFramework.Unity.Units
         {
             MovementPoints = MaxMovementPoints;
             ActionPoints = MaxActionPoints;
+            Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Intelligence));
         }
 
         /// <summary>
@@ -382,6 +403,10 @@ namespace TurnBasedStrategyFramework.Unity.Units
         {
             return _combatComponent.CalculateDamageDealt(defender, defenderCell, aggressorCell);
         }
+        public virtual float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage, bool halfScaling = false)
+        {
+            return _combatComponent.CalculateDamageDealt(defender, defenderCell, aggressorCell, isRangedDamage, halfScaling);
+        }
         public float CalculateDamageDealt(IUnit defender)
         {
             return CalculateDamageDealt(defender, defender.CurrentCell, CurrentCell);
@@ -398,9 +423,20 @@ namespace TurnBasedStrategyFramework.Unity.Units
         {
             return _combatComponent.CalculateTotalDamage(defender, defenderCell, agressorCell);
         }
+        public float CalculateTotalDamage(IUnit defender, ICell defenderCell, ICell agressorCell, bool isRangedDamage, bool halfScaling = false)
+        {
+            return _combatComponent.CalculateTotalDamage(defender, defenderCell, agressorCell, isRangedDamage, halfScaling);
+        }
         public float CalculateTotalDamage(IUnit defender)
         {
             return CalculateTotalDamage(defender, defender.CurrentCell, CurrentCell);
+        }
+
+        protected virtual void RecalculateDerivedStats()
+        {
+            MaxHealth = Mathf.Max(1, Constitution * 4);
+            MaxMana = Mathf.Max(0, Charisma * 3);
+            MaxMovementPoints = Mathf.Max(1f, Speed);
         }
         public void InvokeUnitSelected()
         {
