@@ -41,9 +41,19 @@ namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Cells
         [SerializeField] private Tile _arrowRight;
         [SerializeField] private Tile _arrowUp;
         [SerializeField] private Tile _arrowDown;
+        [SerializeField] private int _highlightSortingOrder = 2;
 
         public override void Initialize(IGridController gridController)
         {
+            // Ensure no editor/runtime residue remains on HighlightLayer between scene runs.
+            _highlightLayer?.ClearAllTiles();
+            var highlightRenderer = _highlightLayer != null ? _highlightLayer.GetComponent<TilemapRenderer>() : null;
+            if (highlightRenderer != null)
+            {
+                // Keep highlight above terrain but below unit sprites to avoid occluding active units.
+                highlightRenderer.sortingOrder = _highlightSortingOrder;
+            }
+
             BoundsInt bounds = _dataLayer.cellBounds;
             _cells = new Dictionary<Vector2IntImpl, VirtualSquareCell>();
 
