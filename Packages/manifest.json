@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "com.ivanmurzak.unity.mcp": "0.55.1",
+    "com.newtonsoft.json": "1.0.1",
     "com.unity.2d.animation": "13.0.4",
     "com.unity.2d.aseprite": "3.0.1",
     "com.unity.2d.psdimporter": "12.0.1",
@@ -10,7 +12,8 @@
     "com.unity.2d.tooling": "1.0.2",
     "com.unity.collab-proxy": "2.11.4",
     "com.unity.ide.rider": "3.0.39",
-    "com.unity.ide.visualstudio": "2.0.26",
+    "com.unity.ide.visualstudio": "2.0.27",
+    "com.unity.ide.vscode": "1.2.5",
     "com.unity.inputsystem": "1.19.0",
     "com.unity.multiplayer.center": "1.0.1",
     "com.unity.postprocessing": "3.5.1",
@@ -52,8 +55,7 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.ivanmurzak.unity.mcp": "0.55.1"
+    "com.unity.modules.xr": "1.0.0"
   },
   "scopedRegistries": [
     {
@@ -61,6 +63,7 @@
       "url": "https://package.openupm.com",
       "scopes": [
         "com.ivanmurzak.unity.mcp",
+        "com.newtonsoft.json",
         "extensions.unity.playerprefsex",
         "org.nuget.microsoft.aspnetcore.connections.abstractions",
         "org.nuget.microsoft.aspnetcore.http.connections.client",
