@@ -2,7 +2,7 @@ using TurnBasedStrategyFramework.Common.Cells;
 using TurnBasedStrategyFramework.Common.Units;
 using UnityEngine;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units
+namespace Tactics.Units
 {
     public class AirUnitMovementRules : MonoBehaviour, IMovementRules
     {

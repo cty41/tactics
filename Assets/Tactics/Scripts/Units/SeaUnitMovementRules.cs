@@ -5,7 +5,7 @@ using TurnBasedStrategyFramework.Unity.Cells;
 using TurnBasedStrategyFramework.Unity.Units.Abilities;
 using UnityEngine;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units
+namespace Tactics.Units
 {
     public class SeaUnitMovementRules : MonoBehaviour, IMovementRules
     {

@@ -6,7 +6,7 @@ using TurnBasedStrategyFramework.Common.Units;
 using TurnBasedStrategyFramework.Unity.Controllers;
 using UnityEngine;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Controllers
+namespace Tactics.Controllers.TurnResolvers
 {
     /// <summary>
     /// A turn resolver that implements a unit-by-unit turn system based on unit speed.

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Cells
+namespace Tactics.Cells
 {
     [CreateAssetMenu(fileName = "NewDataTile", menuName = "TBS Framework/DataTile")]
     public class DataTile : Tile

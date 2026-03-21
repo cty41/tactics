@@ -1,11 +1,15 @@
 {
     "name": "com.crookedhead.tactics",
-    "rootNamespace": "",
+    "rootNamespace": "Tactics",
     "references": [
         "GUID:73e792cf0fd01b3438c14a3a994dd2ce",
         "GUID:ba1d260f9e69eb6409c598826f52f7b9",
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:e4079be308e5fa44786c0526e6aa10a3",
+        "GUID:cf414061cae3a954baf92763590f3127",
+        "GUID:c8e4a91b2f6d4058a7e3c0d1b9f8e2a4",
+        "GUID:c9971686576f451eb22060552a298ff1"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

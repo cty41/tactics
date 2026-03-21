@@ -3,7 +3,7 @@ using TurnBasedStrategyFramework.Common.Units;
 using TurnBasedStrategyFramework.Unity.Units;
 using UnityEngine;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units
+namespace Tactics.Units
 {
     /// <summary>
     /// Handles unit health display in Example 4

@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Tilemaps;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Cells
+namespace Tactics.Cells
 {
     public class TilemapCellManager : UnityCellManager
     {

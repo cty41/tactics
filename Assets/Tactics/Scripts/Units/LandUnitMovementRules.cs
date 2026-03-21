@@ -4,7 +4,7 @@ using TurnBasedStrategyFramework.Common.Units;
 using TurnBasedStrategyFramework.Unity.Cells;
 using UnityEngine;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units
+namespace Tactics.Units
 {
     public class LandUnitMovementRules : MonoBehaviour, IMovementRules
     {

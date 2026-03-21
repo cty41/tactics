@@ -6,7 +6,7 @@ using TurnBasedStrategyFramework.Common.Utilities;
 using TurnBasedStrategyFramework.Unity.Cells;
 using UnityEngine;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Cells
+namespace Tactics.Cells
 {
     /// <summary>
     /// A pure c# class representing a square cell in the scene.

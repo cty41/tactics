@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units
+namespace Tactics.Units
 {
     public class TilemapUnit : Unit
     {

@@ -6,7 +6,7 @@ using TurnBasedStrategyFramework.Common.Units;
 using TurnBasedStrategyFramework.Unity.AI.BehaviourTrees;
 using UnityEngine;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.AI.BehaviourTrees
+namespace Tactics.AI.BehaviourTrees
 {
     /// <summary>
     /// A behavior tree adapted from ClashOfHeroes for tilemap-based tactics games.

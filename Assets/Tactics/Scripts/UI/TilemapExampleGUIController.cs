@@ -8,7 +8,7 @@ using TurnBasedStrategyFramework.Unity.Players;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.UI
+namespace Tactics.UI
 {
     public class TilemapExampleGUIController : MonoBehaviour
     {

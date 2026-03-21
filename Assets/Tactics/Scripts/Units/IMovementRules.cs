@@ -1,7 +1,7 @@
 using TurnBasedStrategyFramework.Common.Cells;
 using TurnBasedStrategyFramework.Common.Units;
 
-namespace TurnBasedStrategyFramework.Unity.Examples.TilemapExample.Units
+namespace Tactics.Units
 {
     public interface IMovementRules
     {
