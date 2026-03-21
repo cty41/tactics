@@ -50,11 +50,8 @@ namespace TurnBasedStrategyFramework.Common.Units
 
         public float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage, bool halfScaling = false)
         {
-            var baseDamage = _unitReference.AttackFactor;
-            var attributeBonus = GetAttributeScalingBonus(isRangedDamage, halfScaling);
-            var damage = Math.Max(baseDamage + attributeBonus, 1);
-
-            return IsCriticalHit() ? damage * CritDamageMultiplier : damage;
+            var damage = CalculateBaseDamageBeforeCrit(_unitReference, isRangedDamage, halfScaling);
+            return IsCriticalHit() ? GetCriticalDamage(damage) : damage;
         }
 
         public float CalculateDamageTaken(IUnit aggressor, float damageDealt, ICell aggressorCell, ICell defenderCell)
@@ -77,21 +74,47 @@ namespace TurnBasedStrategyFramework.Common.Units
 
         private float GetAttributeScalingBonus(bool isRangedDamage, bool halfScaling)
         {
-            var scalingMultiplier = halfScaling ? 0.5f : 1f;
-            switch (isRangedDamage)
-            {
-                case true:
-                    return ((_unitReference.Agility - NeutralAttributeValue) / 2f) * scalingMultiplier;
-                default:
-                    return (_unitReference.Strength - NeutralAttributeValue) * scalingMultiplier;
-            }
+            return GetAttributeScalingBonus(_unitReference, isRangedDamage, halfScaling);
         }
 
         private bool IsCriticalHit()
         {
-            var critChance = BaseCritChance + (_unitReference.Luck - NeutralAttributeValue) * CritChancePerLuckPoint;
-            var clampedChance = Math.Max(0f, Math.Min(1f, critChance));
-            return _rng.NextDouble() < clampedChance;
+            return _rng.NextDouble() < GetClampedCritChance(_unitReference);
+        }
+
+        public static float GetClampedCritChance(IUnit unitReference)
+        {
+            var critChance = BaseCritChance + (unitReference.Luck - NeutralAttributeValue) * CritChancePerLuckPoint;
+            return Math.Max(0f, Math.Min(1f, critChance));
+        }
+
+        public static float CalculateBaseDamageBeforeCrit(IUnit unitReference, bool isRangedDamage, bool halfScaling = false)
+        {
+            var baseDamage = unitReference.AttackFactor;
+            var attributeBonus = GetAttributeScalingBonus(unitReference, isRangedDamage, halfScaling);
+            return Math.Max(baseDamage + attributeBonus, 1);
+        }
+
+        public static float GetCriticalDamage(float baseDamage)
+        {
+            return baseDamage * CritDamageMultiplier;
+        }
+
+        public static float GetExpectedDamage(float baseDamage, float critChance)
+        {
+            return baseDamage * (1f - critChance) + GetCriticalDamage(baseDamage) * critChance;
+        }
+
+        private static float GetAttributeScalingBonus(IUnit unitReference, bool isRangedDamage, bool halfScaling)
+        {
+            var scalingMultiplier = halfScaling ? 0.5f : 1f;
+            switch (isRangedDamage)
+            {
+                case true:
+                    return ((unitReference.Agility - NeutralAttributeValue) / 2f) * scalingMultiplier;
+                default:
+                    return (unitReference.Strength - NeutralAttributeValue) * scalingMultiplier;
+            }
         }
     }
 }
