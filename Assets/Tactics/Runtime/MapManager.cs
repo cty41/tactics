@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using UnityEngine;
 using Newtonsoft.Json;
 
@@ -6,6 +6,8 @@ namespace Map
 {
     public class MapManager : MonoBehaviour
     {
+        public const string MapPlayerPrefsKey = "Map";
+
         public MapConfig config;
         public MapView view;
 
@@ -13,9 +15,11 @@ namespace Map
 
         private void Start()
         {
-            if (PlayerPrefs.HasKey("Map"))
+            ClearStaleRoguelikePendingNode();
+
+            if (PlayerPrefs.HasKey(MapPlayerPrefsKey))
             {
-                string mapJson = PlayerPrefs.GetString("Map");
+                string mapJson = PlayerPrefs.GetString(MapPlayerPrefsKey);
                 Map map = JsonConvert.DeserializeObject<Map>(mapJson);
                 // using this instead of .Contains()
                 if (map.path.Any(p => p.Equals(map.GetBossNode().point)))
@@ -50,7 +54,17 @@ namespace Map
 
             string json = JsonConvert.SerializeObject(CurrentMap, Formatting.Indented,
                 new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
-            PlayerPrefs.SetString("Map", json);
+            PlayerPrefs.SetString(MapPlayerPrefsKey, json);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>Clears battle pending node left from a crash/force-quit mid-fight (never left when returning normally).</summary>
+        private static void ClearStaleRoguelikePendingNode()
+        {
+            if (!PlayerPrefs.HasKey(MapPlayerTracker.RoguelikePendingNodePrefsKey))
+                return;
+
+            PlayerPrefs.DeleteKey(MapPlayerTracker.RoguelikePendingNodePrefsKey);
             PlayerPrefs.Save();
         }
 

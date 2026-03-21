@@ -12,7 +12,9 @@ namespace Map
         /// <summary>PlayerPrefs key written before loading the battle scene; read by Tactics.Roguelike.RoguelikeBattleReturn.</summary>
         public const string RoguelikeReturnScenePrefsKey = "RoguelikeReturnScene";
 
-        public bool lockAfterSelecting = false;
+        /// <summary>PlayerPrefs key: "x,y" of the node entered when loading battle; committed to map path on victory.</summary>
+        public const string RoguelikePendingNodePrefsKey = "RoguelikePendingNode";
+
         public float enterNodeDelay = 1f;
         public MapManager mapManager;
         public MapView view;
@@ -63,14 +65,18 @@ namespace Map
 
         private void SendPlayerToNode(MapNode mapNode)
         {
-            Locked = lockAfterSelecting;
+            Locked = true;
+            mapNode.ShowSwirlAnimation();
+
+            DOTween.Sequence().AppendInterval(enterNodeDelay).OnComplete(() => EnterNode(mapNode));
+        }
+
+        private void CommitPathForNode(MapNode mapNode)
+        {
             mapManager.CurrentMap.path.Add(mapNode.Node.point);
             mapManager.SaveMap();
             view.SetAttainableNodes();
             view.SetLineColors();
-            mapNode.ShowSwirlAnimation();
-
-            DOTween.Sequence().AppendInterval(enterNodeDelay).OnComplete(() => EnterNode(mapNode));
         }
 
         private void EnterNode(MapNode mapNode)
@@ -82,7 +88,7 @@ namespace Map
                 case NodeType.MinorEnemy:
                 case NodeType.EliteEnemy:
                 case NodeType.Boss:
-                    EnterBattleNode();
+                    EnterBattleNode(mapNode);
                     break;
                 case NodeType.RestSite:
                 case NodeType.Treasure:
@@ -95,8 +101,10 @@ namespace Map
             }
         }
 
-        private void EnterBattleNode()
+        private void EnterBattleNode(MapNode mapNode)
         {
+            Vector2Int p = mapNode.Node.point;
+            PlayerPrefs.SetString(RoguelikePendingNodePrefsKey, $"{p.x},{p.y}");
             PlayerPrefs.SetString(RoguelikeReturnScenePrefsKey, mapSceneName);
             PlayerPrefs.Save();
             SceneManager.LoadScene(battleSceneName);
@@ -107,12 +115,13 @@ namespace Map
             Debug.Log(
                 $"[Roguelike stub] Node '{mapNode.Node.blueprintName}' ({mapNode.Node.nodeType}) — replace with event / chest / shop / rest UI. " +
                 $"Optional blueprint ids: eventId='{mapNode.Blueprint?.eventId}', shopId='{mapNode.Blueprint?.shopId}', treasureId='{mapNode.Blueprint?.treasureId}'");
-            StartCoroutine(CoUnlockAfterStub());
+            StartCoroutine(CoUnlockAfterStub(mapNode));
         }
 
-        private IEnumerator CoUnlockAfterStub()
+        private IEnumerator CoUnlockAfterStub(MapNode mapNode)
         {
             yield return null;
+            CommitPathForNode(mapNode);
             Locked = false;
         }
 
