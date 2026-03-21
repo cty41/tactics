@@ -1,10 +1,10 @@
 using System.Linq;
 using TMPro;
-using TurnBasedStrategyFramework.Common.Controllers;
-using TurnBasedStrategyFramework.Common.Controllers.GameResolvers;
-using TurnBasedStrategyFramework.Common.Players;
-using TurnBasedStrategyFramework.Unity.Controllers;
-using TurnBasedStrategyFramework.Unity.Players;
+using Tactics.Tbsf.Common.Controllers;
+using Tactics.Tbsf.Common.Controllers.GameResolvers;
+using Tactics.Tbsf.Common.Players;
+using Tactics.Tbsf.Unity.Controllers;
+using Tactics.Tbsf.Unity.Players;
 using UnityEngine;
 using UnityEngine.UI;
 

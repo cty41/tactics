@@ -1,0 +1,17 @@
+{
+    "name": "com.tactics.tbsf.unity",
+    "rootNamespace": "",
+    "references": [
+        "GUID:2c9350d28ddd4561bb7215cd5c3a1cc7",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

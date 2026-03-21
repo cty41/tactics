@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: a12252c546bd414eb278f6c966cb8e37
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 50282
+  packageName: Turn Based Strategy Framework
+  packageVersion: 4.0.3
+  assetPath: Assets/TBSFramework/External/tbsf-common/common/utilities/IVectorArithmetics.cs
+  uploadId: 811342

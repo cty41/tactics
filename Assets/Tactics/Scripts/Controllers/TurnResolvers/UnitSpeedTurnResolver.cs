@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using TurnBasedStrategyFramework.Common.Controllers;
-using TurnBasedStrategyFramework.Common.Controllers.TurnResolvers;
-using TurnBasedStrategyFramework.Common.Units;
-using TurnBasedStrategyFramework.Unity.Controllers;
+using Tactics.Tbsf.Common.Controllers;
+using Tactics.Tbsf.Common.Controllers.TurnResolvers;
+using Tactics.Tbsf.Common.Units;
+using Tactics.Tbsf.Unity.Controllers;
 using UnityEngine;
 
 namespace Tactics.Controllers.TurnResolvers

@@ -1,16 +1,11 @@
 ﻿<Solution>
   <Project Path="UnityUIExtensions.csproj" />
-  <Project Path="com.crookedhead.tbsf.common.csproj" />
-  <Project Path="com.crookedhead.tbsf.unity.csproj" />
+  <Project Path="com.tactics.tbsf.unity.csproj" />
   <Project Path="com.crookedhead.tactics.csproj" />
   <Project Path="com.stompyrobot.oneline.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="com.corookedhead.tbsf.unity.examples.clashofheroes.csproj" />
+  <Project Path="com.tactics.tbsf.common.csproj" />
+  <Project Path="com.tactics.tbsf.editor.csproj" />
   <Project Path="UnityUIExtensions.editor.csproj" />
   <Project Path="com.demigiant.dotween.modules.csproj" />
-  <Project Path="com.crookedhead.tbsf.examples.example4.csproj" />
-  <Project Path="com.crookedhead.tbsf.unity.editor.csproj" />
-  <Project Path="com.crookedhead.tbsf.unity.examples.tilemapexample.csproj" />
-  <Project Path="com.crookedhead.tbsf.unity.examples.example1.csproj" />
   <Project Path="Sirenix.OdinInspector.Modules.UnityMathematics.csproj" />
 </Solution>

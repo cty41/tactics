@@ -1,7 +1,7 @@
 using System.Linq;
-using TurnBasedStrategyFramework.Common.Cells;
-using TurnBasedStrategyFramework.Common.Units;
-using TurnBasedStrategyFramework.Unity.Cells;
+using Tactics.Tbsf.Common.Cells;
+using Tactics.Tbsf.Common.Units;
+using Tactics.Tbsf.Unity.Cells;
 using UnityEngine;
 
 namespace Tactics.Units

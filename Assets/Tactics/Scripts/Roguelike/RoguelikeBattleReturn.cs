@@ -2,9 +2,9 @@ using System.Collections;
 using System.Linq;
 using Map;
 using Newtonsoft.Json;
-using TurnBasedStrategyFramework.Common.Controllers.GameResolvers;
-using TurnBasedStrategyFramework.Common.Players;
-using TurnBasedStrategyFramework.Unity.Controllers;
+using Tactics.Tbsf.Common.Controllers.GameResolvers;
+using Tactics.Tbsf.Common.Players;
+using Tactics.Tbsf.Unity.Controllers;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2c9350d28ddd4561bb7215cd5c3a1cc7
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 50282
+  packageName: Turn Based Strategy Framework
+  packageVersion: 4.0
+  assetPath: Assets/Tactics/TbsfFork/External/tbsf-common/com.tactics.tbsf.common.asmdef
+  uploadId: 770975

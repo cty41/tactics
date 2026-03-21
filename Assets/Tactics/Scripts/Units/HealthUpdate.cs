@@ -1,6 +1,6 @@
 using TMPro;
-using TurnBasedStrategyFramework.Common.Units;
-using TurnBasedStrategyFramework.Unity.Units;
+using Tactics.Tbsf.Common.Units;
+using Tactics.Tbsf.Unity.Units;
 using UnityEngine;
 
 namespace Tactics.Units

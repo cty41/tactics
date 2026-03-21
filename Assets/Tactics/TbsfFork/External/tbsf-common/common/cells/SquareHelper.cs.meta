@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: fb18f945bd71465198aae61ab521fddc
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 50282
+  packageName: Turn Based Strategy Framework
+  packageVersion: 4.0.3
+  assetPath: Assets/TBSFramework/External/tbsf-common/common/cells/SquareHelper.cs
+  uploadId: 811342

@@ -1,5 +1,5 @@
-using TurnBasedStrategyFramework.Common.Cells;
-using TurnBasedStrategyFramework.Common.Units;
+using Tactics.Tbsf.Common.Cells;
+using Tactics.Tbsf.Common.Units;
 using UnityEngine;
 
 namespace Tactics.Units

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using TurnBasedStrategyFramework.Common.Cells;
-using TurnBasedStrategyFramework.Common.Units;
-using TurnBasedStrategyFramework.Unity.Cells;
-using TurnBasedStrategyFramework.Unity.Units.Abilities;
+using Tactics.Tbsf.Common.Cells;
+using Tactics.Tbsf.Common.Units;
+using Tactics.Tbsf.Unity.Cells;
+using Tactics.Tbsf.Unity.Units.Abilities;
 using UnityEngine;
 
 namespace Tactics.Units
