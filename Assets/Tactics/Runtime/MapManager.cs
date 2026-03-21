@@ -1,4 +1,5 @@
 using System.Linq;
+using Tactics.Roster;
 using UnityEngine;
 using Newtonsoft.Json;
 
@@ -16,6 +17,7 @@ namespace Map
         private void Start()
         {
             ClearStaleRoguelikePendingNode();
+            PlayerAdventureStateStore.EnsureDefaultProfile();
 
             if (PlayerPrefs.HasKey(MapPlayerPrefsKey))
             {
