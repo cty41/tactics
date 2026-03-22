@@ -1,12 +1,12 @@
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Tactics.AssetPipeline
 {
     /// <summary>
-    /// Optional smoke test: add to a scene, run <c>Tactics &gt; Asset Pipeline &gt; Setup Sample</c>, then
-    /// <c>Build Game Asset Bundles</c> with the build config asset selected. Enter Play Mode.
+    /// Optional smoke test: add <see cref="GameAssetManager"/> prefab to the scene, run
+    /// <c>Tactics &gt; Asset Pipeline &gt; Setup Sample</c>, then <c>Build Game Asset Bundles</c>.
+    /// Enter Play Mode.
     /// </summary>
     public sealed class BundleLoadSmokeTest : MonoBehaviour
     {
@@ -18,15 +18,22 @@ namespace Tactics.AssetPipeline
 
         private async void Start()
         {
-            if (!GameAssets.Initialize())
+            var mgr = GameAssetManager.Instance;
+            if (mgr == null)
+            {
+                Debug.LogError("[BundleLoadSmokeTest] No GameAssetManager in scene. Add Assets/Tactics/AssetPipeline/GameAssetManager.prefab.");
+                return;
+            }
+
+            if (!mgr.IsInitialized && !mgr.Initialize())
                 return;
 
             try
             {
-                var prefab = await GameAsset.LoadAsync<GameObject>(_assetPath);
+                var prefab = await mgr.LoadAsync<GameObject>(_assetPath);
                 Instantiate(prefab);
                 if (_releaseAfterSpawn)
-                    GameAsset.Release(_assetPath);
+                    mgr.Release(_assetPath);
             }
             catch (Exception e)
             {

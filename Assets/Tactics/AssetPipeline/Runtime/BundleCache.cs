@@ -9,6 +9,7 @@ namespace Tactics.AssetPipeline
     internal sealed class BundleCache
     {
         private readonly string _bundlesRoot;
+        private readonly Func<string, BundleRecord> _getBundleRecord;
         private readonly Dictionary<string, Entry> _loaded = new Dictionary<string, Entry>();
 
         private sealed class Entry
@@ -17,9 +18,10 @@ namespace Tactics.AssetPipeline
             public int RefCount;
         }
 
-        public BundleCache(string bundlesRoot)
+        public BundleCache(string bundlesRoot, Func<string, BundleRecord> getBundleRecord)
         {
             _bundlesRoot = bundlesRoot;
+            _getBundleRecord = getBundleRecord ?? throw new ArgumentNullException(nameof(getBundleRecord));
         }
 
         public AssetBundle GetLoadedBundle(string bundleName)
@@ -42,7 +44,7 @@ namespace Tactics.AssetPipeline
                 entry.RefCount++;
                 if (entry.Bundle == null)
                 {
-                    var path = Path.Combine(_bundlesRoot, GameAssets.GetBundleRecord(name).file);
+                    var path = Path.Combine(_bundlesRoot, _getBundleRecord(name).file);
                     var op = AssetBundle.LoadFromFileAsync(path);
                     while (!op.isDone)
                         await Task.Yield();
@@ -65,7 +67,7 @@ namespace Tactics.AssetPipeline
                 entry.RefCount++;
                 if (entry.Bundle == null)
                 {
-                    var path = Path.Combine(_bundlesRoot, GameAssets.GetBundleRecord(name).file);
+                    var path = Path.Combine(_bundlesRoot, _getBundleRecord(name).file);
                     entry.Bundle = AssetBundle.LoadFromFile(path);
                     if (entry.Bundle == null)
                         throw new IOException($"AssetBundle.LoadFromFile failed: {path}");
@@ -93,6 +95,20 @@ namespace Tactics.AssetPipeline
 
                 _loaded.Remove(name);
             }
+        }
+
+        public void UnloadAll()
+        {
+            foreach (var kv in _loaded)
+            {
+                if (kv.Value.Bundle != null)
+                {
+                    kv.Value.Bundle.Unload(false);
+                    kv.Value.Bundle = null;
+                }
+            }
+
+            _loaded.Clear();
         }
     }
 }
