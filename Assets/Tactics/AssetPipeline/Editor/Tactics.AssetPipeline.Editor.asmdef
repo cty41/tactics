@@ -1,0 +1,22 @@
+{
+    "name": "Tactics.AssetPipeline.Editor",
+    "rootNamespace": "Tactics.AssetPipeline.Editor",
+    "references": [
+        "Tactics.AssetPipeline",
+        "Sirenix.OdinInspector.Editor",
+        "Sirenix.OdinInspector.Attributes",
+        "Sirenix.Utilities",
+        "Sirenix.Utilities.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
