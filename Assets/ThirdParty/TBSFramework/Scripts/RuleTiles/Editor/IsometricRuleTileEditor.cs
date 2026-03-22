@@ -1,15 +1,13 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
-namespace Tactics.RuleTiles.Editor
+namespace UnityEditor
 {
     [CustomEditor(typeof(IsometricRuleTile), true)]
     [CanEditMultipleObjects]
-    internal class TbsfIsometricRuleTileEditor : TbsfRuleTileEditor
+    internal class IsometricRuleTileEditor : RuleTileEditor
     {
         private static readonly int[, ] s_Arrows =
         {

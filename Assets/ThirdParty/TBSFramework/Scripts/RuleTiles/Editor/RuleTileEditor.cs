@@ -2,17 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
-using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Object = UnityEngine.Object;
 
-namespace Tactics.RuleTiles.Editor
+namespace UnityEditor
 {
     [CustomEditor(typeof(RuleTile), true)]
     [CanEditMultipleObjects]
-    internal class TbsfRuleTileEditor : UnityEditor.Editor
+    internal class RuleTileEditor : Editor
     {
         internal const float k_DefaultElementHeight = 48f;
         internal const float k_PaddingBetweenRules = 26f;
@@ -330,7 +329,7 @@ namespace Tactics.RuleTiles.Editor
             public List<RuleTile.TilingRule> rules = new List<RuleTile.TilingRule>();
         }
         
-        [MenuItem("CONTEXT/RuleTile/Tactics Fork/Copy All Rules")]
+        [MenuItem("CONTEXT/RuleTile/Copy All Rules")]
         private static void CopyAllRules(MenuCommand item)
         {
             RuleTile tile = item.context as RuleTile;
@@ -343,7 +342,7 @@ namespace Tactics.RuleTiles.Editor
             EditorGUIUtility.systemCopyBuffer = rulesJson;
         }
         
-        [MenuItem("CONTEXT/RuleTile/Tactics Fork/Paste Rules")]
+        [MenuItem("CONTEXT/RuleTile/Paste Rules")]
         private static void PasteRules(MenuCommand item)
         {
             RuleTile tile = item.context as RuleTile;

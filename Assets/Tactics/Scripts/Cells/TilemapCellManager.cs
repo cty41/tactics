@@ -18,7 +18,9 @@ namespace Tactics.Cells
         [SerializeField] private Camera _mainCamera;
 
         public override event Action<ICell> CellAdded;
+#pragma warning disable CS0067 // No dynamic cell removal in this manager
         public override event Action<ICell> CellRemoved;
+#pragma warning restore CS0067
 
         [SerializeField] Tilemap _dataLayer;
         [SerializeField] Tilemap _highlightLayer;

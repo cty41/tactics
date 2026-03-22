@@ -15,13 +15,6 @@ namespace Tactics.AI.BehaviourTrees
     public class TilemapClashBehaviourTree : BehaviourTreeResource
     {
         [Space]
-        [Header("General")]
-        /// <summary>
-        /// Delay between actions in milliseconds
-        /// </summary>
-        [SerializeField] private int _delay = 100;
-
-        [Space]
         [Header("Damage Dealt Position Evaluator")]
         [SerializeField] private float _damageDealtPositionEvaluatorWeight = 1f;
         [SerializeField] private float _damageDealtPositionEvaluatorDecayValue = 0.5f;

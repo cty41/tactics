@@ -15,7 +15,9 @@ namespace Tactics.Tbsf.Unity.Cells
     public class RegularCellManager : UnityCellManager
     {
         public override event Action<ICell> CellAdded;
+#pragma warning disable CS0067 // No dynamic cell removal in this manager
         public override event Action<ICell> CellRemoved;
+#pragma warning restore CS0067
 
         Dictionary<Vector2IntImpl, Cell> _cellCache;
 

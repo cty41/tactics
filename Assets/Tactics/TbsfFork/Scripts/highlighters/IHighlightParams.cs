@@ -10,6 +10,6 @@ namespace Tactics.Tbsf.Unity.Highlighters
 
     public readonly struct NoParam : IHighlightParams
     {
-        public static readonly IHighlightParams Instance = NoParam.Instance;
+        public static readonly IHighlightParams Instance = new NoParam();
     }
 }
