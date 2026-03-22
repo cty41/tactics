@@ -1,11 +1,16 @@
 ﻿<Solution>
-  <Project Path="UnityUIExtensions.csproj" />
   <Project Path="com.tactics.tbsf.unity.csproj" />
-  <Project Path="com.crookedhead.tactics.csproj" />
   <Project Path="com.stompyrobot.oneline.csproj" />
+  <Project Path="Tactics.AssetPipeline.csproj" />
+  <Project Path="UnityUIExtensions.csproj" />
   <Project Path="com.tactics.tbsf.common.csproj" />
-  <Project Path="com.tactics.tbsf.editor.csproj" />
-  <Project Path="UnityUIExtensions.editor.csproj" />
   <Project Path="com.demigiant.dotween.modules.csproj" />
+  <Project Path="com.crookedhead.tactics.csproj" />
+  <Project Path="Tactics.AssetPipeline.Editor.csproj" />
+  <Project Path="com.tactics.tbsf.editor.csproj" />
+  <Project Path="com.stompyrobot.oneline.example.editor.csproj" />
+  <Project Path="com.stompyrobot.oneline.editor.csproj" />
+  <Project Path="UnityUIExtensions.editor.csproj" />
+  <Project Path="com.tactics.tbsf.unity.ruletiles.editor.csproj" />
   <Project Path="Sirenix.OdinInspector.Modules.UnityMathematics.csproj" />
 </Solution>
