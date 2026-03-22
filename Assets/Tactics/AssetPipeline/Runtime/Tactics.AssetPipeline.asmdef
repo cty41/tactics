@@ -1,0 +1,14 @@
+{
+    "name": "Tactics.AssetPipeline",
+    "rootNamespace": "Tactics.AssetPipeline",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
