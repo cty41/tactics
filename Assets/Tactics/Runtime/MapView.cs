@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -50,6 +50,8 @@ namespace Map
 
         protected GameObject firstParent;
         protected GameObject mapParent;
+        /// <summary>Reset in <see cref="ShowMap"/>; incremented per line in <see cref="AddLineConnection"/>.</summary>
+        protected int lineInstanceIndex;
         private List<List<Vector2Int>> paths;
         private Camera cam;
         // ALL nodes:
@@ -86,6 +88,8 @@ namespace Map
             Map = m;
 
             ClearMap();
+
+            lineInstanceIndex = 0;
 
             CreateMapParent();
 
@@ -135,16 +139,18 @@ namespace Map
 
         protected void CreateNodes(IEnumerable<Node> nodes)
         {
+            int nodeIndex = 0;
             foreach (Node node in nodes)
             {
-                MapNode mapNode = CreateMapNode(node);
+                MapNode mapNode = CreateMapNode(node, nodeIndex++);
                 MapNodes.Add(mapNode);
             }
         }
 
-        protected virtual MapNode CreateMapNode(Node node)
+        protected virtual MapNode CreateMapNode(Node node, int instanceIndex)
         {
             GameObject mapNodeObject = Instantiate(nodePrefab, mapParent.transform);
+            mapNodeObject.name = $"Node_{node.nodeType}_{instanceIndex}";
             MapNode mapNode = mapNodeObject.GetComponent<MapNode>();
             NodeBlueprint blueprint = GetBlueprint(node.blueprintName);
             mapNode.SetUp(node, blueprint);
@@ -297,6 +303,7 @@ namespace Map
             if (linePrefab == null) return;
 
             GameObject lineObject = Instantiate(linePrefab, mapParent.transform);
+            lineObject.name = $"{linePrefab.name}_{lineInstanceIndex++}";
             LineRenderer lineRenderer = lineObject.GetComponent<LineRenderer>();
             Vector3 fromPoint = from.transform.position +
                                 (to.transform.position - from.transform.position).normalized * offsetFromNodes;

@@ -106,9 +106,10 @@ namespace Map
             tr.anchoredPosition = Vector2.zero;
         }
 
-        protected override MapNode CreateMapNode(Node node)
+        protected override MapNode CreateMapNode(Node node, int instanceIndex)
         {
             GameObject mapNodeObject = Instantiate(nodePrefab, mapParent.transform);
+            mapNodeObject.name = $"Node_{node.nodeType}_{instanceIndex}";
             MapNode mapNode = mapNodeObject.GetComponent<MapNode>();
             NodeBlueprint blueprint = GetBlueprint(node.blueprintName);
             mapNode.SetUp(node, blueprint);
@@ -168,6 +169,7 @@ namespace Map
             if (uiLinePrefab == null) return;
             
             UILineRenderer lineRenderer = Instantiate(uiLinePrefab, mapParent.transform);
+            lineRenderer.gameObject.name = $"{uiLinePrefab.gameObject.name}_{lineInstanceIndex++}";
             lineRenderer.transform.SetAsFirstSibling();
             RectTransform fromRT = from.transform as RectTransform;
             RectTransform toRT = to.transform as RectTransform;
