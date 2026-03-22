@@ -48,3 +48,6 @@ CLAUDE.md
 # White code-workspace
 *.code-workspace
 !</CodeWorkspaces/*.code-workspace>
+
+# Local asset bundle build output (AssetPipeline default output root)
+GameAssetBundles/
