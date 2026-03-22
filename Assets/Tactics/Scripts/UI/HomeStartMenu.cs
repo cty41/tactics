@@ -1,5 +1,5 @@
+using Tactics.AssetPipeline;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Tactics.UI
@@ -9,7 +9,9 @@ namespace Tactics.UI
     /// </summary>
     public class HomeStartMenu : MonoBehaviour
     {
-        [SerializeField] private string _mapSceneName = "SampleScene";
+        [Tooltip("Short name (e.g. SampleScene) under Assets/Tactics/Scenes/, or full path Assets/.../Scene.unity. Must be listed in the asset pipeline manifest.")]
+        [SerializeField]
+        private string _mapSceneName = "SampleScene";
 
         private Button _button;
 
@@ -28,7 +30,7 @@ namespace Tactics.UI
 
         public void LoadRoguelikeMap()
         {
-            SceneManager.LoadScene(_mapSceneName);
+            SceneProjectPathHelper.TryLoadSceneViaAssetManager(_mapSceneName);
         }
     }
 }

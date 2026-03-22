@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Linq;
 using Map;
+using Tactics.AssetPipeline;
 using Newtonsoft.Json;
 using Tactics.Tbsf.Common.Controllers.GameResolvers;
 using Tactics.Tbsf.Common.Players;
 using Tactics.Tbsf.Unity.Controllers;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Tactics.Roguelike
 {
@@ -55,8 +55,10 @@ namespace Tactics.Roguelike
 
             ApplyRoguelikePathAfterBattle(result);
 
-            string sceneName = PlayerPrefs.GetString(ReturnScenePlayerPrefsKey, _defaultMapSceneName);
-            SceneManager.LoadScene(sceneName);
+            var stored = PlayerPrefs.GetString(ReturnScenePlayerPrefsKey, _defaultMapSceneName);
+            if (string.IsNullOrWhiteSpace(stored))
+                stored = _defaultMapSceneName;
+            SceneProjectPathHelper.TryLoadSceneViaAssetManager(stored);
         }
 
         private static void ApplyRoguelikePathAfterBattle(GameResult result)

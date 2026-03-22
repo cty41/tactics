@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Linq;
 using DG.Tweening;
+using Tactics.AssetPipeline;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Map
 {
@@ -20,10 +20,12 @@ namespace Map
         public MapView view;
 
         [Header("Roguelike — battle scene flow")]
-        [Tooltip("Must match a scene name in Build Settings.")]
-        [SerializeField] private string battleSceneName = "Test1";
-        [Tooltip("Scene that hosts MapObjects / map UI (return target after battle).")]
-        [SerializeField] private string mapSceneName = "SampleScene";
+        [Tooltip("Short name under Assets/Tactics/Scenes/ or full Assets/.../Scene.unity. Must be in asset pipeline manifest.")]
+        [SerializeField]
+        private string battleSceneName = "Test1";
+        [Tooltip("Return target after battle: short name or full path; stored in PlayerPrefs for RoguelikeBattleReturn.")]
+        [SerializeField]
+        private string mapSceneName = "SampleScene";
 
         public static MapPlayerTracker Instance;
 
@@ -107,7 +109,7 @@ namespace Map
             PlayerPrefs.SetString(RoguelikePendingNodePrefsKey, $"{p.x},{p.y}");
             PlayerPrefs.SetString(RoguelikeReturnScenePrefsKey, mapSceneName);
             PlayerPrefs.Save();
-            SceneManager.LoadScene(battleSceneName);
+            SceneProjectPathHelper.TryLoadSceneViaAssetManager(battleSceneName);
         }
 
         private void EnterStubNode(MapNode mapNode)
