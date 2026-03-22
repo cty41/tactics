@@ -40,7 +40,9 @@ TestData/
 
 # Cursor ignores
 *.cursorignore
-.cursor/
+.cursor/*
+!.cursor/skills/
+!.cursor/skills/**
 .cursorrules
 CLAUDE.md
 .clipignore
