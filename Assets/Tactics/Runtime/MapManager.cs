@@ -2,6 +2,9 @@ using System.Linq;
 using Tactics.Roster;
 using UnityEngine;
 using Newtonsoft.Json;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Map
 {
@@ -75,4 +78,22 @@ namespace Map
             SaveMap();
         }
     }
+
+#if UNITY_EDITOR
+    [CustomEditor(typeof(MapManager))]
+    public class MapManagerInspector : UnityEditor.Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+
+            var myScript = (MapManager)target;
+
+            GUILayout.Space(10);
+
+            if (GUILayout.Button("Generate"))
+                myScript.GenerateNewMap();
+        }
+    }
+#endif
 }
