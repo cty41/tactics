@@ -51,5 +51,10 @@ CLAUDE.md
 *.code-workspace
 !</CodeWorkspaces/*.code-workspace>
 
-# Local asset bundle build output (AssetPipeline default output root)
+# Local build output (AssetPipeline: Output/AssetBundles, Output/Player)
+/Output/
+# Legacy bundle root (transition)
 GameAssetBundles/
+
+# Tactics AssetPipeline copy target
+/Assets/StreamingAssets/Bundles/

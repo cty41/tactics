@@ -12,7 +12,10 @@ namespace Tactics.AssetPipeline.Editor
 {
     public static class GameAssetBundleBuilder
     {
-        /// <summary>Uses active build target, default bundle root <c>GameAssetBundles</c> under project root, default Streaming copy.</summary>
+        /// <summary>
+        /// Uses active build target, default bundle root <see cref="BuildOutputLayout.GetDefaultBundleBuildRoot"/>, default Streaming copy.
+        /// Player builds include bundles only after they are copied into StreamingAssets; the <c>Output/</c> tree is intermediate only.
+        /// </summary>
         /// <returns>False if the build was aborted or failed before completion.</returns>
         public static bool Build(GameAssetBuildConfig config, bool clearDestination)
         {
@@ -20,7 +23,7 @@ namespace Tactics.AssetPipeline.Editor
         }
 
         /// <param name="buildTargetOverride">When null, uses <see cref="EditorUserBuildSettings.activeBuildTarget"/>.</param>
-        /// <param name="bundleBuildRoot">When null or empty, uses <c>Path.Combine(Directory.GetCurrentDirectory(), "GameAssetBundles")</c>. Platform subfolder is appended.</param>
+        /// <param name="bundleBuildRoot">When null or empty, uses <see cref="BuildOutputLayout.GetDefaultBundleBuildRoot"/>. Platform subfolder is appended.</param>
         /// <param name="streamingBundlesDestinationDirectory">When null or empty, uses <c>Assets/StreamingAssets/{config.streamingSubfolder}</c>.</param>
         /// <returns>False if the build was aborted or failed before completion.</returns>
         public static bool Build(
@@ -39,7 +42,7 @@ namespace Tactics.AssetPipeline.Editor
             var target = buildTargetOverride ?? EditorUserBuildSettings.activeBuildTarget;
             var folderName = target.ToString();
             var root = string.IsNullOrWhiteSpace(bundleBuildRoot)
-                ? Path.Combine(Directory.GetCurrentDirectory(), "GameAssetBundles")
+                ? BuildOutputLayout.GetDefaultBundleBuildRoot()
                 : bundleBuildRoot.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var tempRoot = Path.Combine(root, folderName);
 

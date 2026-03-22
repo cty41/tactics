@@ -23,7 +23,9 @@ namespace Tactics.AssetPipeline.Editor
 
         [BoxGroup("Bundle build")]
         [FolderPath(AbsolutePath = true)]
-        [Tooltip("Intermediate AssetBundle output root; platform folder is appended (e.g. .../StandaloneWindows64).")]
+        [Tooltip(
+            "Intermediate AssetBundle output root; platform folder is appended (e.g. .../StandaloneWindows64). " +
+            "The player loads bundles from StreamingAssets after this step copies them there—not from Output.")]
         public string bundleBuildRoot = "";
 
         [BoxGroup("Bundle build")]
@@ -54,9 +56,9 @@ namespace Tactics.AssetPipeline.Editor
             if (buildConfig == null)
                 buildConfig = GameAssetBuildConfig.FindDefault();
             if (string.IsNullOrEmpty(bundleBuildRoot))
-                bundleBuildRoot = Path.Combine(Directory.GetCurrentDirectory(), "GameAssetBundles");
+                bundleBuildRoot = BuildOutputLayout.GetDefaultBundleBuildRoot();
             if (string.IsNullOrEmpty(playerOutputFolder))
-                playerOutputFolder = Path.Combine(Directory.GetCurrentDirectory(), "Builds", "Player");
+                playerOutputFolder = BuildOutputLayout.GetDefaultPlayerOutputFolder();
         }
 
         private void OnDisable()
