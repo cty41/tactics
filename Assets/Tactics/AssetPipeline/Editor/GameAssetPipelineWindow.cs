@@ -61,8 +61,9 @@ namespace Tactics.AssetPipeline.Editor
                 playerOutputFolder = BuildOutputLayout.GetDefaultPlayerOutputFolder();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
             SavePrefs();
         }
 

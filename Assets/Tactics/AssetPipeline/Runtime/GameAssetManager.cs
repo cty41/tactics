@@ -220,6 +220,10 @@ namespace Tactics.AssetPipeline
             json = File.ReadAllText(manifestPath);
 #endif
 
+            // On non-Android/WebGL platforms the method would otherwise be fully synchronous.
+            // Yield once to keep this async API truly async and silence CS1998.
+            await Task.Yield();
+
             return ApplyManifestJson(json);
         }
 
@@ -427,7 +431,9 @@ namespace Tactics.AssetPipeline
             if (EffectiveLoadMode == GameAssetLoadMode.EditorAssetDatabase)
             {
 #if UNITY_EDITOR
-                return LoadEditorDirect<T>(path);
+                var editorObj = LoadEditorDirect<T>(path);
+                AssetScopeManager.RegisterLoadedPath(path);
+                return editorObj;
 #else
                 throw new InvalidOperationException("EditorAssetDatabase is only available in the Unity Editor.");
 #endif
@@ -438,7 +444,13 @@ namespace Tactics.AssetPipeline
             var ab = _cache.GetLoadedBundle(bundle);
             var obj = ab.LoadAsset<T>(path);
             if (obj == null)
+            {
+                // Undo the bundle retain performed by RetainBundlesForPathSync.
+                Release(path);
                 throw new InvalidOperationException($"LoadAsset returned null: {assetProjectPath}");
+            }
+
+            AssetScopeManager.RegisterLoadedPath(path);
             return obj;
         }
 
@@ -451,7 +463,9 @@ namespace Tactics.AssetPipeline
             {
 #if UNITY_EDITOR
                 await Task.Yield();
-                return LoadEditorDirect<T>(path);
+                var editorObj = LoadEditorDirect<T>(path);
+                AssetScopeManager.RegisterLoadedPath(path);
+                return editorObj;
 #else
                 throw new InvalidOperationException("EditorAssetDatabase is only available in the Unity Editor.");
 #endif
@@ -465,7 +479,13 @@ namespace Tactics.AssetPipeline
                 await Task.Yield();
             var obj = req.asset as T;
             if (obj == null)
+            {
+                // Undo the bundle retain performed by RetainBundlesForPathAsync.
+                Release(path);
                 throw new InvalidOperationException($"LoadAssetAsync returned null: {assetProjectPath}");
+            }
+
+            AssetScopeManager.RegisterLoadedPath(path);
             return obj;
         }
 

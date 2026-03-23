@@ -109,6 +109,9 @@ namespace Map
             PlayerPrefs.SetString(RoguelikePendingNodePrefsKey, $"{p.x},{p.y}");
             PlayerPrefs.SetString(RoguelikeReturnScenePrefsKey, mapSceneName);
             PlayerPrefs.Save();
+
+            var battleSceneProjectPath = SceneProjectPathHelper.ToProjectPath(battleSceneName);
+            AssetScopeManager.BeginScene(battleSceneProjectPath);
             SceneProjectPathHelper.TryLoadSceneViaAssetManager(battleSceneName);
         }
 

@@ -25,12 +25,17 @@ namespace Tactics
         public void HideMenu()
         {
             if (_instances.TryGetValue(UIId.Menu, out var go) && go != null)
+                // UI is intentionally tied to the current scene scope:
+                // Hide/Destroy only affects visibility/lifetime of the instantiated GameObject,
+                // bundle releases happen when the scene scope ends.
                 go.SetActive(false);
         }
 
         public void DestroyMenu()
         {
             if (_instances.TryGetValue(UIId.Menu, out var go) && go != null)
+                // Do not call AssetScopeManager.EndScope / GameAssetManager.Release here.
+                // The loaded prefab remains retained until the owning scene scope ends.
                 Destroy(go);
             _instances.Remove(UIId.Menu);
         }
