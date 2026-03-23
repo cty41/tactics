@@ -22,8 +22,10 @@ namespace Tactics.AssetPipeline
         StreamingBundles = 0,
 
         /// <summary>
-        /// Editor Play Mode only: load via <c>AssetDatabase.LoadAssetAtPath</c>. Manifest is still required to validate paths.
-        /// Player builds fall back to <see cref="StreamingBundles"/>.
+        /// Editor Play Mode only: load via <c>AssetDatabase.LoadAssetAtPath</c>. No <c>manifest.json</c> or bundles required;
+        /// paths are validated with the asset database. <see cref="GameAssetManager.ResolveBundleForAsset"/> and
+        /// <see cref="GameAssetManager.GetLoadOrder"/> are unavailable until a manifest is loaded (e.g. switch to
+        /// <see cref="StreamingBundles"/> and initialize). Player builds fall back to <see cref="StreamingBundles"/>.
         /// </summary>
         EditorAssetDatabase = 1,
     }
@@ -52,9 +54,21 @@ namespace Tactics.AssetPipeline
 
 #if UNITY_EDITOR
         private readonly Dictionary<string, int> _editorDirectRefCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Editor + <see cref="GameAssetLoadMode.EditorAssetDatabase"/>: initialized without manifest or <see cref="BundleCache"/>.</summary>
+        private bool _editorManifestlessInitialized;
 #endif
 
-        public bool IsInitialized => _manifest != null && _cache != null;
+        public bool IsInitialized
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (_editorManifestlessInitialized)
+                    return true;
+#endif
+                return _manifest != null && _cache != null;
+            }
+        }
 
         public string BundlesRoot => _bundlesRoot;
 
@@ -149,6 +163,7 @@ namespace Tactics.AssetPipeline
             _assetPathToBundle = null;
             _bundlesRoot = null;
 #if UNITY_EDITOR
+            _editorManifestlessInitialized = false;
             _editorDirectRefCounts.Clear();
 #endif
         }
@@ -157,6 +172,14 @@ namespace Tactics.AssetPipeline
         public bool Initialize()
         {
             _bundlesRoot = ResolveBundlesRoot();
+#if UNITY_EDITOR
+            if (EffectiveLoadMode == GameAssetLoadMode.EditorAssetDatabase)
+            {
+                if (_editorManifestlessInitialized)
+                    return true;
+                return InitializeEditorManifestless();
+            }
+#endif
             var manifestPath = Path.Combine(_bundlesRoot, GameAssetPaths.ManifestFileName);
             if (!File.Exists(manifestPath))
             {
@@ -171,6 +194,14 @@ namespace Tactics.AssetPipeline
         public async Task<bool> InitializeAsync()
         {
             _bundlesRoot = ResolveBundlesRoot();
+#if UNITY_EDITOR
+            if (EffectiveLoadMode == GameAssetLoadMode.EditorAssetDatabase)
+            {
+                if (_editorManifestlessInitialized)
+                    return true;
+                return InitializeEditorManifestless();
+            }
+#endif
             string json;
 
 #if (UNITY_ANDROID || UNITY_WEBGL) && !UNITY_EDITOR
@@ -217,8 +248,25 @@ namespace Tactics.AssetPipeline
         }
 #endif
 
+#if UNITY_EDITOR
+        private bool InitializeEditorManifestless()
+        {
+            _cache?.UnloadAll();
+            _editorDirectRefCounts.Clear();
+            _manifest = null;
+            _bundlesByName = null;
+            _assetPathToBundle = null;
+            _cache = null;
+            _editorManifestlessInitialized = true;
+            return true;
+        }
+#endif
+
         private bool ApplyManifestJson(string json)
         {
+#if UNITY_EDITOR
+            _editorManifestlessInitialized = false;
+#endif
             _cache?.UnloadAll();
 #if UNITY_EDITOR
             _editorDirectRefCounts.Clear();
@@ -287,6 +335,14 @@ namespace Tactics.AssetPipeline
         public string ResolveBundleForAsset(string assetProjectPath)
         {
             ThrowIfNotInitialized();
+#if UNITY_EDITOR
+            if (_editorManifestlessInitialized)
+            {
+                throw new InvalidOperationException(
+                    "ResolveBundleForAsset is not available in EditorAssetDatabase mode without a manifest. " +
+                    "Build bundles and initialize with StreamingBundles, or use paths validated by Load/LoadScene only.");
+            }
+#endif
             var key = NormalizeAssetPath(assetProjectPath);
             if (_assetPathToBundle.TryGetValue(key, out var bundle))
                 return bundle;
@@ -296,6 +352,14 @@ namespace Tactics.AssetPipeline
         public List<string> GetLoadOrder(string bundleName)
         {
             ThrowIfNotInitialized();
+#if UNITY_EDITOR
+            if (_editorManifestlessInitialized)
+            {
+                throw new InvalidOperationException(
+                    "GetLoadOrder is not available in EditorAssetDatabase mode without a manifest. " +
+                    "Build bundles and initialize with StreamingBundles if you need bundle dependency order.");
+            }
+#endif
             var visited = new HashSet<string>(StringComparer.Ordinal);
             var order = new List<string>();
 
@@ -506,7 +570,7 @@ namespace Tactics.AssetPipeline
         {
             if (!Application.isPlaying)
                 throw new InvalidOperationException("EditorAssetDatabase scene load requires Play Mode.");
-            ResolveBundleForAsset(normalizedPath);
+            ValidateEditorDirectAssetPath(normalizedPath);
             EditorSceneManager.LoadSceneInPlayMode(normalizedPath, new LoadSceneParameters(loadSceneMode));
             if (!_editorDirectRefCounts.TryGetValue(normalizedPath, out var n))
                 n = 0;
@@ -516,7 +580,7 @@ namespace Tactics.AssetPipeline
         private T LoadEditorDirect<T>(string normalizedPath) where T : Object
         {
             ThrowIfNotInitialized();
-            ResolveBundleForAsset(normalizedPath);
+            ValidateEditorDirectAssetPath(normalizedPath);
             var obj = AssetDatabase.LoadAssetAtPath<T>(normalizedPath);
             if (obj == null)
                 throw new InvalidOperationException($"AssetDatabase.LoadAssetAtPath returned null: {normalizedPath}");
@@ -540,6 +604,18 @@ namespace Tactics.AssetPipeline
                 _editorDirectRefCounts.Remove(normalizedPath);
             else
                 _editorDirectRefCounts[normalizedPath] = c;
+        }
+
+        private static void ValidateEditorDirectAssetPath(string normalizedPath)
+        {
+            if (string.IsNullOrEmpty(normalizedPath) ||
+                !normalizedPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Asset path must start with \"Assets/\": {normalizedPath}");
+            }
+
+            if (!AssetDatabase.AssetPathExists(normalizedPath))
+                throw new InvalidOperationException($"Asset path does not exist in the project: {normalizedPath}");
         }
 #endif
     }

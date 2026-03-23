@@ -8,7 +8,7 @@ namespace Tactics.AssetPipeline
     [CreateAssetMenu(fileName = "GameAssetRuntimeSettings", menuName = "Tactics/Asset Pipeline/Runtime Settings", order = 1)]
     public sealed class GameAssetRuntimeSettings : ScriptableObject
     {
-        [Tooltip("StreamingBundles for player-like loads; EditorAssetDatabase only in Editor Play Mode.")]
+        [Tooltip("StreamingBundles: load AssetBundles + manifest. EditorAssetDatabase: Editor Play Mode only, AssetDatabase paths, no manifest/bundles.")]
         public GameAssetLoadMode loadMode = GameAssetLoadMode.StreamingBundles;
 
         [Tooltip("Empty = StreamingAssets/Bundles. Otherwise absolute path to bundle output folder containing manifest.json.")]

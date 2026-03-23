@@ -113,7 +113,7 @@ Unity 不允许 **Scene 资源（`.unity` / `SceneAsset`）** 与普通资源打
 
 | 字段 | 含义 |
 |------|------|
-| **Load Mode** | `StreamingBundles`：从磁盘加载 AssetBundle（与 Player 一致）。`EditorAssetDatabase`：**仅 Editor Play Mode**：Prefab 等用 `AssetDatabase.LoadAssetAtPath`；**场景**用 `EditorSceneManager.LoadSceneInPlayMode`。**仍需** 可读到的 `manifest.json` 以校验路径。Player 构建中若误选该模式会自动回退为 `StreamingBundles` 并打警告。 |
+| **Load Mode** | `StreamingBundles`：从磁盘加载 AssetBundle（与 Player 一致）。`EditorAssetDatabase`：**仅 Editor Play Mode**：Prefab 等用 `AssetDatabase.LoadAssetAtPath`；**场景**用 `EditorSceneManager.LoadSceneInPlayMode`；**不读取** `manifest.json`，路径以工程内 `AssetDatabase` 是否存在为准（`ResolveBundleForAsset` / `GetLoadOrder` 在此模式下不可用）。Player 构建中若误选该模式会自动回退为 `StreamingBundles` 并打警告。 |
 | **Bundles Root Override** | 留空则使用 `Application.streamingAssetsPath/Bundles`（或配置子目录约定下的 manifest 所在目录）。填写 **绝对路径** 时，manifest 与 bundle 文件均从该目录读取（常用于 Editor 下直接指向 `Output/AssetBundles/<Platform>`）。 |
 | **Auto Initialize On Awake** | 若为真，`Awake` 中调用同步 `Initialize()`；关闭则需自行调用 `Initialize()` / `InitializeAsync()`。 |
 
@@ -121,12 +121,13 @@ Unity 不允许 **Scene 资源（`.unity` / `SceneAsset`）** 与普通资源打
 
 在调用 `Load` / `LoadAsync` 前须完成初始化（除非已勾选自动初始化且成功）：
 
-- **`GameAssetManager.Initialize()`**：`File` 读取 manifest。适用于 Editor 与多数 Standalone；缺少 `manifest.json` 会失败并打 Error。
-- **`GameAssetManager.InitializeAsync()`**：推荐在 **Android / WebGL 真机** 使用；在受限平台上通过 `UnityWebRequest` 读取 manifest（行为见 [`GameAssetManager`](../Assets/Tactics/AssetPipeline/Runtime/GameAssetManager.cs) 内平台条件编译）。
+- **`GameAssetManager.Initialize()`**：在 **Editor** 且 **Load Mode = EditorAssetDatabase** 时**不读** manifest，仅完成初始化；否则 `File` 读取 manifest。Standalone 等缺少 `manifest.json` 会失败并打 Error。
+- **`GameAssetManager.InitializeAsync()`**：推荐在 **Android / WebGL 真机** 使用；在受限平台上通过 `UnityWebRequest` 读取 manifest（行为见 [`GameAssetManager`](../Assets/Tactics/AssetPipeline/Runtime/GameAssetManager.cs) 内平台条件编译）。Editor + `EditorAssetDatabase` 时与同步初始化同逻辑，不读 manifest。
 
 ### 按工程路径加载与释放
 
-使用与编辑器一致的 **工程资源路径**（如 `Assets/...`），且该路径必须出现在 **manifest** 的 `assets` 列表中。
+使用与编辑器一致的 **工程资源路径**（如 `Assets/...`）。在 **`StreamingBundles`** 下，该路径必须出现在 **manifest** 的 `assets` 列表中。
+在 **`EditorAssetDatabase`**（仅 Editor）下，路径须在工程中真实存在（`AssetDatabase` 校验），**不必**进 manifest。
 
 路径会经 `GameAssetManager.NormalizeAssetPath` 处理（统一 `/` 等），建议调用方也使用 `Assets/...` 正斜杠形式。
 
