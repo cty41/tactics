@@ -56,77 +56,8 @@ namespace Tactics
 
 
 
-            if (GameAssetManager.Instance == null)
-
-            {
-
-                if (_runtimeSettings == null)
-
-                {
-
-                    Debug.LogError("[GameMain] Assign Game Asset Runtime Settings (ScriptableObject).");
-
-                    return;
-
-                }
-
-
-
-                GameAssetManager.CreateBootstrap(_runtimeSettings);
-
-            }
-
-
-
-            var instance = GameAssetManager.Instance;
-
-            if (instance == null)
-
-            {
-
-                Debug.LogError("[GameMain] GameAssetManager.Instance is still null after bootstrap.");
-
-                return;
-
-            }
-
-
-
-            if (!instance.IsInitialized)
-
-            {
-
-                if (!await instance.InitializeAsync())
-
-                {
-
-                    Debug.LogError("[GameMain] GameAssetManager.InitializeAsync failed.");
-
-                    return;
-
-                }
-
-            }
-
-
-
-            var path = SceneProjectPathHelper.ToProjectPath(_firstSceneNameOrPath);
-
-            try
-
-            {
-
-                await instance.LoadSceneAsync(path);
-
-            }
-
-            catch (System.Exception e)
-
-            {
-
-                Debug.LogException(e);
-
-            }
+            await new GameFlowManager().RunAsync(_runtimeSettings, _firstSceneNameOrPath);
+            return;
 
         }
 
