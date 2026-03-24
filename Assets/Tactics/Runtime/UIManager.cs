@@ -20,24 +20,50 @@ namespace Tactics
         private readonly Dictionary<UIId, GameObject> _instances = new Dictionary<UIId, GameObject>();
         private readonly Dictionary<UIId, Task<GameObject>> _loadingTasks = new Dictionary<UIId, Task<GameObject>>();
 
-        public Task ShowMenuAsync() => ShowUIAsync(UIId.Menu, MenuPrefabPath);
-
-        public void HideMenu()
+        public Task ShowAsync(UIId id)
         {
-            if (_instances.TryGetValue(UIId.Menu, out var go) && go != null)
+            return ShowUIAsync(id, GetPrefabPath(id));
+        }
+
+        public void Hide(UIId id)
+        {
+            if (_instances.TryGetValue(id, out var go) && go != null)
                 // UI is intentionally tied to the current scene scope:
                 // Hide/Destroy only affects visibility/lifetime of the instantiated GameObject,
                 // bundle releases happen when the scene scope ends.
                 go.SetActive(false);
         }
 
-        public void DestroyMenu()
+        public void Destroy(UIId id)
         {
-            if (_instances.TryGetValue(UIId.Menu, out var go) && go != null)
+            if (_instances.TryGetValue(id, out var go) && go != null)
                 // Do not call AssetScopeManager.EndScope / GameAssetManager.Release here.
                 // The loaded prefab remains retained until the owning scene scope ends.
-                Destroy(go);
-            _instances.Remove(UIId.Menu);
+                UnityEngine.Object.Destroy(go);
+            _instances.Remove(id);
+        }
+
+        public bool IsVisible(UIId id)
+        {
+            return _instances.TryGetValue(id, out var go) && go != null && go.activeSelf;
+        }
+
+        [Obsolete("Use ShowAsync(UIId.Menu) from a domain coordinator.")]
+        public Task ShowMenuAsync() => ShowAsync(UIId.Menu);
+
+        [Obsolete("Use Hide(UIId.Menu) from a domain coordinator.")]
+        public void HideMenu() => Hide(UIId.Menu);
+
+        [Obsolete("Use Destroy(UIId.Menu) from a domain coordinator.")]
+        public void DestroyMenu() => Destroy(UIId.Menu);
+
+        private static string GetPrefabPath(UIId id)
+        {
+            return id switch
+            {
+                UIId.Menu => MenuPrefabPath,
+                _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId prefab mapping.")
+            };
         }
 
         private async Task ShowUIAsync(UIId id, string prefabPath)
