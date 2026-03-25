@@ -206,9 +206,51 @@ private async System.Threading.Tasks.Task LoadLevelAdditiveExample()
 - `GameAssetManager.ResolveBundleForAsset(path)`：查询某工程路径落在哪个 bundle。
 - `GameAssetManager.GetLoadOrder(bundleName)`：返回依赖优先的加载顺序列表（含自身），与 [`BundleCache`](../Assets/Tactics/AssetPipeline/Runtime/BundleCache.cs) 内部加载顺序一致，可用于调试或自定义扩展。
 
+### 场景作用域管理：`AssetScopeManager`
+
+[`AssetScopeManager`](../Assets/Tactics/AssetPipeline/Runtime/AssetScopeManager.cs) 自动管理场景卸载时的 bundle 释放时机：
+
+- **用户代码无需调用 `RegisterLoadedPath`**：该方法由 `GameAssetManager.Load/LoadAsync` **内部** 调用，用户只需在场景边界调用 `BeginScene`。
+- **`BeginScene(sceneProjectPath)`**：标记场景作用域入口（如进入新关卡时）。当该场景卸载时，已注册的路径对应的 bundle 引用会被延迟释放（等待帧末安全时机）。
+- **自动创建**：`GetOrCreateInstance()` 会在无实例时创建一个隐藏的 `[AssetScopeManager]` GameObject，确保资产追踪始终生效。
+- **推荐用法**：在场景加载完成后、UI/实体创建前调用 `AssetScopeManager.BeginScene(sceneProjectPath)` 建立作用域边界。
+
+```csharp
+using Tactics.AssetPipeline;
+
+private const string LevelPath = "Assets/Tactics/Scenes/MyLevel.unity";
+
+public async System.Threading.Tasks.Task EnterLevelAsync()
+{
+    AssetScopeManager.BeginScene(LevelPath);
+    var mgr = GameAssetManager.Instance;
+    await mgr.LoadSceneAsync(LevelPath, UnityEngine.SceneManagement.LoadSceneMode.Additive);
+}
+```
+
 ### 旧静态 API（过时）
 
 `GameAssets` / `GameAsset` 上的方法已标 `[Obsolete]`，内部转发到 `GameAssetManager.Instance`。新代码请直接使用 Manager；迁移完成后可删除转发类。
+
+## 禁止：不得使用 `Resources.Load`
+
+**严禁** 使用 `Resources.Load` 系列方法加载项目资源。所有资源必须通过 `GameAssetManager.Load/LoadAsync` 加载（通过 AssetBundle 管线）。
+
+违反示例（[`RoguelikeMapUIController.cs:165`](../Assets/Tactics/Runtime/UI/RoguelikeMapUIController.cs)）：
+
+```csharp
+// ❌ 禁止：使用 Resources.Load 加载资源
+Sprite bgSprite = Resources.Load<Sprite>("Arts/Sprites/Kenney RPG Pack panels/panel_beige");
+```
+
+正确做法：
+
+```csharp
+// ✅ 正确：通过 GameAssetManager 加载（同步或异步）
+var bgSprite = await GameAssetManager.Instance.LoadAsync<Sprite>(prefabPath);
+```
+
+**注意**：`Resources` 文件夹路径不带 `Assets/` 前缀，而 AssetBundle 管线使用工程路径格式，二者不能混用。
 
 ## 清单 `manifest.json` 格式
 
