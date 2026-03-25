@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
-    public enum NodeType
+    public enum RoguelikeNodeType
     {
         MinorEnemy,
         EliteEnemy,
@@ -14,13 +14,13 @@ namespace Map
     }
 }
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
     [CreateAssetMenu]
-    public class NodeBlueprint : ScriptableObject
+    public class RoguelikeNodeBlueprint : ScriptableObject
     {
         public Sprite sprite;
-        public NodeType nodeType;
+        public RoguelikeNodeType nodeType;
 
         [Header("Optional roguelike payload (stubs / future systems)")]
         [Tooltip("For Mystery / custom event nodes.")]

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using Tactics.AssetPipeline;
 using Tactics.Flow.Home;
+using Tactics.Flow.Roguelike;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
@@ -16,9 +16,6 @@ namespace Tactics.UI
     /// </summary>
     public sealed class HomeUIController : UIControllerBase
     {
-        [Header("Scene Navigation")]
-        [SerializeField] private string _mapSceneName = "SampleScene";
-
         [Header("Buttons (from Home.prefab)")]
         [SerializeField] private Button _startButton;
         [SerializeField] private Button _escButton;
@@ -191,10 +188,19 @@ namespace Tactics.UI
 
         private void OnStartClicked()
         {
-            // Reuse the asset-pipeline scene loader (same behavior as HomeStartMenu).
-            bool ok = SceneProjectPathHelper.TryLoadSceneViaAssetManager(_mapSceneName);
-            if (!ok)
-                Debug.LogError($"[HomeUIController] Start click failed to load scene '{_mapSceneName}'.");
+            _ = OpenMapUiFromHomeAsync();
+        }
+
+        private static async Task OpenMapUiFromHomeAsync()
+        {
+            try
+            {
+                await RoguelikeFlowCoordinator.Instance.OpenMapAsync();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
     }
 }

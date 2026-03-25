@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
     public enum NodeStates
     {
@@ -14,9 +14,9 @@ namespace Map
     }
 }
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
-    public class MapNode : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
+    public class RoguelikeMapUINode : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
     {
         public SpriteRenderer sr;
         public Image image;
@@ -24,34 +24,39 @@ namespace Map
         public Image circleImage;
         public Image visitedCircleImage;
 
-        public Node Node { get; private set; }
-        public NodeBlueprint Blueprint { get; private set; }
+        public RoguelikeMapNode Node { get; private set; }
+        public RoguelikeNodeBlueprint Blueprint { get; private set; }
 
         private float initialScale;
         private const float HoverScaleFactor = 1.2f;
         private float mouseDownTime;
-
         private const float MaxClickDuration = 0.5f;
 
-        public void SetUp(Node node, NodeBlueprint blueprint)
+        private Color visitedColor = Color.white;
+        private Color lockedColor = Color.gray;
+
+        public void SetUp(RoguelikeMapNode node, RoguelikeNodeBlueprint blueprint, Color visited, Color locked)
         {
             Node = node;
             Blueprint = blueprint;
+            visitedColor = visited;
+            lockedColor = locked;
+            
             if (sr != null) sr.sprite = blueprint.sprite;
             if (image != null) image.sprite = blueprint.sprite;
-            if (node.nodeType == NodeType.Boss) transform.localScale *= 1.5f;
+            if (node.nodeType == RoguelikeNodeType.Boss) transform.localScale *= 1.5f;
             if (sr != null) initialScale = sr.transform.localScale.x;
             if (image != null) initialScale = image.transform.localScale.x;
 
             if (visitedCircle != null)
             {
-                visitedCircle.color = MapView.Instance.visitedColor;
+                visitedCircle.color = visitedColor;
                 visitedCircle.gameObject.SetActive(false);
             }
 
             if (circleImage != null)
             {
-                circleImage.color = MapView.Instance.visitedColor;
+                circleImage.color = visitedColor;
                 circleImage.gameObject.SetActive(false);    
             }
             
@@ -69,13 +74,13 @@ namespace Map
                     if (sr != null)
                     {
                         sr.DOKill();
-                        sr.color = MapView.Instance.lockedColor;
+                        sr.color = lockedColor;
                     }
 
                     if (image != null)
                     {
                         image.DOKill();
-                        image.color = MapView.Instance.lockedColor;
+                        image.color = lockedColor;
                     }
 
                     break;
@@ -83,32 +88,31 @@ namespace Map
                     if (sr != null)
                     {
                         sr.DOKill();
-                        sr.color = MapView.Instance.visitedColor;
+                        sr.color = visitedColor;
                     }
                     
                     if (image != null)
                     {
                         image.DOKill();
-                        image.color = MapView.Instance.visitedColor;
+                        image.color = visitedColor;
                     }
                     
                     if (visitedCircle != null) visitedCircle.gameObject.SetActive(true);
                     if (circleImage != null) circleImage.gameObject.SetActive(true);
                     break;
                 case NodeStates.Attainable:
-                    // start pulsating from visited to locked color:
                     if (sr != null)
                     {
-                        sr.color = MapView.Instance.lockedColor;
+                        sr.color = lockedColor;
                         sr.DOKill();
-                        sr.DOColor(MapView.Instance.visitedColor, 0.5f).SetLoops(-1, LoopType.Yoyo);
+                        sr.DOColor(visitedColor, 0.5f).SetLoops(-1, LoopType.Yoyo);
                     }
                     
                     if (image != null)
                     {
-                        image.color = MapView.Instance.lockedColor;
+                        image.color = lockedColor;
                         image.DOKill();
-                        image.DOColor(MapView.Instance.visitedColor, 0.5f).SetLoops(-1, LoopType.Yoyo);
+                        image.DOColor(visitedColor, 0.5f).SetLoops(-1, LoopType.Yoyo);
                     }
                     
                     break;
@@ -156,8 +160,7 @@ namespace Map
         {
             if (Time.time - mouseDownTime < MaxClickDuration)
             {
-                // user clicked on this node:
-                MapPlayerTracker.Instance.SelectNode(this);
+                Tactics.UI.RoguelikeMapUIController.Instance.SelectNode(this);
             }
         }
 

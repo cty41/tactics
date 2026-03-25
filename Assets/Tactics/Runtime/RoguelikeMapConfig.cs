@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using OneLine;
 using UnityEngine;
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
     [CreateAssetMenu]
-    public class MapConfig : ScriptableObject
+    public class RoguelikeMapConfig : ScriptableObject
     {
-        public List<NodeBlueprint> nodeBlueprints;
+        public List<RoguelikeNodeBlueprint> nodeBlueprints;
         [Tooltip("Nodes that will be used on layers with Randomize Nodes > 0")]
-        public List<NodeType> randomNodes = new List<NodeType>
-            {NodeType.Mystery, NodeType.Store, NodeType.Treasure, NodeType.MinorEnemy, NodeType.RestSite};
+        public List<RoguelikeNodeType> randomNodes = new List<RoguelikeNodeType>
+            {RoguelikeNodeType.Mystery, RoguelikeNodeType.Store, RoguelikeNodeType.Treasure, RoguelikeNodeType.MinorEnemy, RoguelikeNodeType.RestSite};
         public int GridWidth => Mathf.Max(numOfPreBossNodes.max, numOfStartingNodes.max);
 
         [OneLineWithHeader]
@@ -20,6 +20,6 @@ namespace Map
 
         [Tooltip("Increase this number to generate more paths")]
         public int extraPaths;
-        public List<MapLayer> layers;
+        public List<RoguelikeMapLayer> layers;
     }
 }

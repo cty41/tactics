@@ -1,5 +1,3 @@
-using Map;
-
 namespace Tactics
 {
     /// <summary>
@@ -11,8 +9,7 @@ namespace Tactics
     {
         public static void ClearAll()
         {
-            MapView.Instance = null;
-            MapPlayerTracker.Instance = null;
+            Tactics.UI.RoguelikeMapUIController.Instance = null;
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.AssetPipeline;
+using Tactics.UI;
 using UnityEngine;
 
 namespace Tactics
@@ -10,12 +11,14 @@ namespace Tactics
     {
         public enum UIId
         {
-            Menu
+            Menu,
+            RoguelikeMap
         }
 
         [SerializeField] private RectTransform _uiRoot;
 
         private const string MenuPrefabPath = "Assets/Tactics/UI/Menu.prefab";
+        private const string RoguelikeMapPrefabPath = "Assets/Tactics/UI/RoguelikeMap.prefab";
 
         private readonly Dictionary<UIId, GameObject> _instances = new Dictionary<UIId, GameObject>();
         private readonly Dictionary<UIId, Task<GameObject>> _loadingTasks = new Dictionary<UIId, Task<GameObject>>();
@@ -62,6 +65,7 @@ namespace Tactics
             return id switch
             {
                 UIId.Menu => MenuPrefabPath,
+                UIId.RoguelikeMap => RoguelikeMapPrefabPath,
                 _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId prefab mapping.")
             };
         }
@@ -105,8 +109,23 @@ namespace Tactics
 
             var go = Instantiate(prefab, _uiRoot, false);
             go.name = id.ToString();
+            EnsureController(id, go);
             go.SetActive(false);
             return go;
+        }
+
+        private static void EnsureController(UIId id, GameObject root)
+        {
+            switch (id)
+            {
+                case UIId.RoguelikeMap:
+                    if (root.GetComponent<RoguelikeMapUIController>() == null)
+                        root.AddComponent<RoguelikeMapUIController>();
+                    break;
+                case UIId.Menu:
+                default:
+                    break;
+            }
         }
     }
 }

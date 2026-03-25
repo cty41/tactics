@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
     [System.Serializable]
     public class FloatMinMax
@@ -15,7 +15,7 @@ namespace Map
     }
 }
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
     [System.Serializable]
     public class IntMinMax

@@ -1,18 +1,18 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
-    public class Map
+    public class RoguelikeMap
     {
-        public List<Node> nodes;
+        public List<RoguelikeMapNode> nodes;
         public List<Vector2Int> path;
         public string bossNodeName;
-        public string configName; // similar to the act name in Slay the Spire
+        public string configName;
 
-        public Map(string configName, string bossNodeName, List<Node> nodes, List<Vector2Int> path)
+        public RoguelikeMap(string configName, string bossNodeName, List<RoguelikeMapNode> nodes, List<Vector2Int> path)
         {
             this.configName = configName;
             this.bossNodeName = bossNodeName;
@@ -20,15 +20,15 @@ namespace Map
             this.path = path;
         }
 
-        public Node GetBossNode()
+        public RoguelikeMapNode GetBossNode()
         {
-            return nodes.FirstOrDefault(n => n.nodeType == NodeType.Boss);
+            return nodes.FirstOrDefault(n => n.nodeType == RoguelikeNodeType.Boss);
         }
 
         public float DistanceBetweenFirstAndLastLayers()
         {
-            Node bossNode = GetBossNode();
-            Node firstLayerNode = nodes.FirstOrDefault(n => n.point.y == 0);
+            RoguelikeMapNode bossNode = GetBossNode();
+            RoguelikeMapNode firstLayerNode = nodes.FirstOrDefault(n => n.point.y == 0);
 
             if (bossNode == null || firstLayerNode == null)
                 return 0f;
@@ -36,7 +36,7 @@ namespace Map
             return bossNode.position.y - firstLayerNode.position.y;
         }
 
-        public Node GetNode(Vector2Int point)
+        public RoguelikeMapNode GetNode(Vector2Int point)
         {
             return nodes.FirstOrDefault(n => n.point.Equals(point));
         }

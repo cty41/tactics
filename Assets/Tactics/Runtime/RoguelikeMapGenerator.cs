@@ -2,21 +2,20 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Map
+namespace Tactics.RoguelikeMap
 {
-    public static class MapGenerator
+    public static class RoguelikeMapGenerator
     {
-        private static MapConfig config;
+        private static RoguelikeMapConfig config;
 
         private static List<float> layerDistances;
-        // ALL nodes by layer:
-        private static readonly List<List<Node>> nodes = new List<List<Node>>();
+        private static readonly List<List<RoguelikeMapNode>> nodes = new List<List<RoguelikeMapNode>>();
 
-        public static Map GetMap(MapConfig conf)
+        public static RoguelikeMap GetMap(RoguelikeMapConfig conf)
         {
             if (conf == null)
             {
-                Debug.LogWarning("Config was null in MapGenerator.Generate()");
+                Debug.LogWarning("Config was null in RoguelikeMapGenerator.Generate()");
                 return null;
             }
 
@@ -36,18 +35,16 @@ namespace Map
 
             RemoveCrossConnections();
 
-            // select all the nodes with connections:
-            List<Node> nodesList = nodes.SelectMany(n => n).Where(n => n.incoming.Count > 0 || n.outgoing.Count > 0).ToList();
+            List<RoguelikeMapNode> nodesList = nodes.SelectMany(n => n).Where(n => n.incoming.Count > 0 || n.outgoing.Count > 0).ToList();
 
-            // pick a random name of the boss level for this map:
-            string bossNodeName = config.nodeBlueprints.Where(b => b.nodeType == NodeType.Boss).ToList().Random().name;
-            return new Map(conf.name, bossNodeName, nodesList, new List<Vector2Int>());
+            string bossNodeName = config.nodeBlueprints.Where(b => b.nodeType == RoguelikeNodeType.Boss).ToList().Random().name;
+            return new RoguelikeMap(conf.name, bossNodeName, nodesList, new List<Vector2Int>());
         }
 
         private static void GenerateLayerDistances()
         {
             layerDistances = new List<float>();
-            foreach (MapLayer layer in config.layers)
+            foreach (RoguelikeMapLayer layer in config.layers)
                 layerDistances.Add(layer.distanceFromPreviousLayer.GetValue());
         }
 
@@ -60,21 +57,20 @@ namespace Map
 
         private static void PlaceLayer(int layerIndex)
         {
-            MapLayer layer = config.layers[layerIndex];
-            List<Node> nodesOnThisLayer = new List<Node>();
+            RoguelikeMapLayer layer = config.layers[layerIndex];
+            List<RoguelikeMapNode> nodesOnThisLayer = new List<RoguelikeMapNode>();
 
-            // offset of this layer to make all the nodes centered:
             float offset = layer.nodesApartDistance * config.GridWidth / 2f;
 
             for (int i = 0; i < config.GridWidth; i++)
             {
                 var supportedRandomNodeTypes =
                     config.randomNodes.Where(t => config.nodeBlueprints.Any(b => b.nodeType == t)).ToList();
-                NodeType nodeType = Random.Range(0f, 1f) < layer.randomizeNodes && supportedRandomNodeTypes.Count > 0
+                RoguelikeNodeType nodeType = Random.Range(0f, 1f) < layer.randomizeNodes && supportedRandomNodeTypes.Count > 0
                     ? supportedRandomNodeTypes.Random()
                     : layer.nodeType;
                 string blueprintName = config.nodeBlueprints.Where(b => b.nodeType == nodeType).ToList().Random().name;
-                Node node = new Node(nodeType, blueprintName, new Vector2Int(i, layerIndex))
+                RoguelikeMapNode node = new RoguelikeMapNode(nodeType, blueprintName, new Vector2Int(i, layerIndex))
                 {
                     position = new Vector2(-offset + i * layer.nodesApartDistance, GetDistanceToLayer(layerIndex))
                 };
@@ -88,14 +84,14 @@ namespace Map
         {
             for (int index = 0; index < nodes.Count; index++)
             {
-                List<Node> list = nodes[index];
-                MapLayer layer = config.layers[index];
+                List<RoguelikeMapNode> list = nodes[index];
+                RoguelikeMapLayer layer = config.layers[index];
                 float distToNextLayer = index + 1 >= layerDistances.Count
                     ? 0f
                     : layerDistances[index + 1];
                 float distToPreviousLayer = layerDistances[index];
 
-                foreach (Node node in list)
+                foreach (RoguelikeMapNode node in list)
                 {
                     float xRnd = Random.Range(-0.5f, 0.5f);
                     float yRnd = Random.Range(-0.5f, 0.5f);
@@ -114,8 +110,8 @@ namespace Map
             {
                 for (int i = 0; i < path.Count - 1; ++i)
                 {
-                    Node node = GetNode(path[i]);
-                    Node nextNode = GetNode(path[i + 1]);
+                    RoguelikeMapNode node = GetNode(path[i]);
+                    RoguelikeMapNode nextNode = GetNode(path[i + 1]);
                     node.AddOutgoing(nextNode.point);
                     nextNode.AddIncoming(node.point);
                 }
@@ -127,23 +123,18 @@ namespace Map
             for (int i = 0; i < config.GridWidth - 1; ++i)
                 for (int j = 0; j < config.layers.Count - 1; ++j)
                 {
-                    Node node = GetNode(new Vector2Int(i, j));
+                    RoguelikeMapNode node = GetNode(new Vector2Int(i, j));
                     if (node == null || node.HasNoConnections()) continue;
-                    Node right = GetNode(new Vector2Int(i + 1, j));
+                    RoguelikeMapNode right = GetNode(new Vector2Int(i + 1, j));
                     if (right == null || right.HasNoConnections()) continue;
-                    Node top = GetNode(new Vector2Int(i, j + 1));
+                    RoguelikeMapNode top = GetNode(new Vector2Int(i, j + 1));
                     if (top == null || top.HasNoConnections()) continue;
-                    Node topRight = GetNode(new Vector2Int(i + 1, j + 1));
+                    RoguelikeMapNode topRight = GetNode(new Vector2Int(i + 1, j + 1));
                     if (topRight == null || topRight.HasNoConnections()) continue;
 
-                    // Debug.Log("Inspecting node for connections: " + node.point);
                     if (!node.outgoing.Any(element => element.Equals(topRight.point))) continue;
                     if (!right.outgoing.Any(element => element.Equals(top.point))) continue;
 
-                    // Debug.Log("Found a cross node: " + node.point);
-
-                    // we managed to find a cross node:
-                    // 1) add direct connections:
                     node.AddOutgoing(top.point);
                     top.AddIncoming(node.point);
 
@@ -153,30 +144,25 @@ namespace Map
                     float rnd = Random.Range(0f, 1f);
                     if (rnd < 0.2f)
                     {
-                        // remove both cross connections:
-                        // a) 
                         node.RemoveOutgoing(topRight.point);
                         topRight.RemoveIncoming(node.point);
-                        // b) 
                         right.RemoveOutgoing(top.point);
                         top.RemoveIncoming(right.point);
                     }
                     else if (rnd < 0.6f)
                     {
-                        // a) 
                         node.RemoveOutgoing(topRight.point);
                         topRight.RemoveIncoming(node.point);
                     }
                     else
                     {
-                        // b) 
                         right.RemoveOutgoing(top.point);
                         top.RemoveIncoming(right.point);
                     }
                 }
         }
 
-        private static Node GetNode(Vector2Int p)
+        private static RoguelikeMapNode GetNode(Vector2Int p)
         {
             if (p.y >= nodes.Count) return null;
             if (p.x >= nodes[p.y].Count) return null;
@@ -227,7 +213,6 @@ namespace Map
             return paths;
         }
 
-        // Generates a random path bottom up.
         private static List<Vector2Int> Path(Vector2Int fromPoint, Vector2Int toPoint)
         {
             int toRow = toPoint.y;
