@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.ivanmurzak.unity.mcp": "0.55.1",
+    "com.ivanmurzak.unity.mcp": "0.59.0",
     "com.newtonsoft.json": "1.0.1",
     "com.unity.2d.animation": "13.0.4",
     "com.unity.2d.aseprite": "3.0.1",
@@ -105,7 +105,12 @@
         "org.nuget.system.text.encodings.web",
         "org.nuget.system.text.json",
         "org.nuget.system.threading.channels",
-        "org.nuget.system.threading.tasks.extensions"
+        "org.nuget.system.threading.tasks.extensions",
+        "com.ivanmurzak",
+        "extensions.unity",
+        "org.nuget.com.ivanmurzak",
+        "org.nuget.microsoft",
+        "org.nuget.system"
       ]
     }
   ]
