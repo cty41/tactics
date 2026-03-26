@@ -35,11 +35,10 @@ All rules in `.kilo/rules/` are **always applied** to all agent tasks:
 |------|---------|
 | `unity-core.md` | C# naming, MonoBehaviour lifecycle, serialization |
 | `unity-asset-loading.md` | GameAssetManager API, Load/Release pairing |
-| `unity-asset-inspection.md` | MCP tool usage for asset inspection |
+| `unity-asset-inspection.md` | MCP tool usage for asset inspection and modification |
 | `unity-input.md` | Unity Input System |
 | `unity-performance.md` | Performance optimization |
 | `unity-testing.md` | Unit testing |
-| `unity-prefab-editing.md` | Prefab workflows |
 
 ## Core Principles
 
