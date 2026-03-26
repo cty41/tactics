@@ -1,7 +1,7 @@
-# Plan: Expand unity-asset-inspection.md
+# Plan: Expand unity-mcp-operations.md
 
 ## Goal
-Expand `unity-asset-inspection.md` and merge `unity-prefab-editing.md` into a comprehensive **Unity MCP Agent Operation Rules** document covering both inspection and modification operations.
+Expand `unity-mcp-operations.md` (formerly `unity-asset-inspection.md`) and merge `unity-prefab-editing.md` into a comprehensive **Unity MCP Agent Operation Rules** document covering both inspection and modification operations.
 
 ## New Document Structure
 
