@@ -36,7 +36,7 @@ All rules in `.kilo/rules/` are **always applied** to all agent tasks:
 |------|---------|
 | `unity-core.md` | C# naming, MonoBehaviour lifecycle, serialization |
 | `unity-asset-loading.md` | GameAssetManager API, Load/Release pairing |
-| `unity-asset-reading.md` | MCP tool usage for asset inspection |
+| `unity-asset-inspection.md` | MCP tool usage for asset inspection |
 | `unity-ecs.md` | DOTS/ECS patterns |
 | `unity-input.md` | Unity Input System |
 | `unity-ui.md` | UI Toolkit patterns |
