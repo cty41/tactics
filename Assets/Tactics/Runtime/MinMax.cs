@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Tactics.RoguelikeMap
+namespace Tactics.Utils
 {
     [System.Serializable]
     public class FloatMinMax
@@ -13,10 +13,7 @@ namespace Tactics.RoguelikeMap
             return Random.Range(min, max);
         }
     }
-}
 
-namespace Tactics.RoguelikeMap
-{
     [System.Serializable]
     public class IntMinMax
     {

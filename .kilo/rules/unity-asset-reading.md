@@ -1,3 +1,8 @@
+---
+description: "Unity Asset reading rules via MCP tools"
+alwaysApply: true
+---
+
 # Unity Asset Reading via MCP
 
 When asked to read or inspect a Unity Asset (.asset, .prefab, .unity):

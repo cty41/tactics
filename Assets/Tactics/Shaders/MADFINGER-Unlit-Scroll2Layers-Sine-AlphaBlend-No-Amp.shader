@@ -68,15 +68,13 @@ SubShader {
 //		#pragma fragmentoption ARB_precision_hint_fastest
 		fixed4 frag (v2f i) : COLOR
 		{
-			fixed4 t1 = tex2D(_MainTex, i.uv.xy);
-			fixed4 t2 = tex2D(_DetailTex, i.uv.zw);
+			fixed4 o;
+			fixed4 tex = tex2D (_MainTex, i.uv.xy);
+			fixed4 tex2 = tex2D (_DetailTex, i.uv.zw);
 
-			// Luminance-only: dot pattern must not tint RGB (avoids cold hue from texture / unset layer).
-			float lum1 = dot(t1.rgb, float3(0.299, 0.587, 0.114));
-			float lum2 = dot(t2.rgb, float3(0.299, 0.587, 0.114));
-			fixed3 rgb = (lum1 * lum2) * i.color.rgb;
-			fixed a = t1.a * t2.a * i.color.a;
-			return fixed4(rgb, a);
+			o = tex * tex2 * i.color;
+
+			return o;
 		}
 		ENDCG
 	}

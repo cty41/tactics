@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tactics.RoguelikeMap
+namespace Tactics.Utils
 {
     public static class ShufflingExtension
     {

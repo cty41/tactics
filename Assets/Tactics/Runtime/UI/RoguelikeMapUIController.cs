@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using TMPro;
+using Tactics.AssetPipeline;
 using Tactics.Flow.Roguelike;
 using Tactics.RoguelikeMap;
 using UnityEngine;
@@ -66,6 +67,7 @@ namespace Tactics.UI
 
         private global::Tactics.RoguelikeMap.RoguelikeMap _currentMap;
         private GameObject _firstParent;
+        private RectTransform _lineParent;
         private ScrollRect _activeScrollRect;
         private readonly List<RoguelikeMapUINode> _mapNodes = new List<RoguelikeMapUINode>();
         private readonly List<UILineRenderer> _lineConnections = new List<UILineRenderer>();
@@ -86,6 +88,10 @@ namespace Tactics.UI
             WireOptionalCloseButtons();
             _wired = true;
 
+            var currentScene = gameObject.scene;
+            AssetScopeManager.BeginScene($"Assets/Tactics/Scenes/{currentScene.name}.unity");
+
+            LoadBackgroundImage();
             LoadOrGenerateMap();
             if (_currentMap != null)
             {
@@ -120,6 +126,15 @@ namespace Tactics.UI
             }
         }
 
+        public void GenerateButton()
+        {
+            GenerateNewMap();
+            if (_currentMap != null)
+            {
+                ShowMap(_currentMap);
+            }
+        }
+
         private void GenerateNewMap()
         {
             if (mapConfig == null)
@@ -145,84 +160,43 @@ namespace Tactics.UI
 
         private bool TryEnsureScrollRectsAssigned()
         {
-            if (scrollRectHorizontal != null && scrollRectVertical != null) return true;
-
-            ScrollRect[] local = GetComponentsInChildren<ScrollRect>(true);
-            AssignScrollRectsFrom(local);
-
-            if (scrollRectHorizontal == null || scrollRectVertical == null)
-            {
-                CreateRuntimeScrollRectsIfMissing();
-            }
-
             return scrollRectHorizontal != null && scrollRectVertical != null;
         }
 
-        private void AssignScrollRectsFrom(ScrollRect[] candidates)
+        private void LoadBackgroundImage()
         {
-            foreach (ScrollRect sr in candidates)
+            if (backgroundImage == null) return;
+
+            // 注意：路径需要包含扩展名 .png
+            string assetPath = "Assets/Tactics/Arts/Sprites/Kenney RPG Pack panels/panel_beige.png";
+
+            try
             {
-                if (sr == null) continue;
-                string n = sr.name.ToLowerInvariant();
+                var bgSprite = GameAssetManager.Instance.Load<Sprite>(assetPath);
 
-                if (scrollRectHorizontal == null && (n.Contains("horizontal") || (sr.horizontal && !sr.vertical)))
-                    scrollRectHorizontal = sr;
-
-                if (scrollRectVertical == null && (n.Contains("vertical") || (sr.vertical && !sr.horizontal)))
-                    scrollRectVertical = sr;
+                if (bgSprite != null)
+                    backgroundImage.sprite = bgSprite;
+                else
+                    Debug.LogWarning("[RoguelikeMapUIController] Failed to load background sprite");
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
         }
 
-        private void CreateRuntimeScrollRectsIfMissing()
+        private void SetupScrollRectAnchors()
         {
-            RectTransform host = GetComponent<RectTransform>();
-            if (host == null)
-                host = GetComponentInParent<RectTransform>();
-            if (host == null) return;
+            if (_activeScrollRect == null || _activeScrollRect.content == null) return;
 
-            if (scrollRectHorizontal == null)
-                scrollRectHorizontal = CreateRuntimeScrollRect(host, "MapScrollRectHorizontal", horizontal: true);
+            RectTransform contentRT = _activeScrollRect.content;
+            bool isHorizontal = orientation == MapOrientation.LeftToRight || orientation == MapOrientation.RightToLeft;
 
-            if (scrollRectVertical == null)
-                scrollRectVertical = CreateRuntimeScrollRect(host, "MapScrollRectVertical", horizontal: false);
-        }
-
-        private static ScrollRect CreateRuntimeScrollRect(RectTransform host, string name, bool horizontal)
-        {
-            GameObject root = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Mask), typeof(ScrollRect));
-            RectTransform rootRT = root.GetComponent<RectTransform>();
-            rootRT.SetParent(host, false);
-            rootRT.anchorMin = Vector2.zero;
-            rootRT.anchorMax = Vector2.one;
-            rootRT.offsetMin = Vector2.zero;
-            rootRT.offsetMax = Vector2.zero;
-            rootRT.localScale = Vector3.one;
-
-            Image viewportImage = root.GetComponent<Image>();
-            viewportImage.color = new Color(0f, 0f, 0f, 0f);
-
-            Mask mask = root.GetComponent<Mask>();
-            mask.showMaskGraphic = false;
-
-            GameObject content = new GameObject("Content", typeof(RectTransform));
-            RectTransform contentRT = content.GetComponent<RectTransform>();
-            contentRT.SetParent(rootRT, false);
-            contentRT.anchorMin = Vector2.zero;
-            contentRT.anchorMax = Vector2.one;
-            contentRT.offsetMin = Vector2.zero;
-            contentRT.offsetMax = Vector2.zero;
-            contentRT.localScale = Vector3.one;
-
-            ScrollRect sr = root.GetComponent<ScrollRect>();
-            sr.viewport = rootRT;
-            sr.content = contentRT;
-            sr.horizontal = horizontal;
-            sr.vertical = !horizontal;
-            sr.movementType = ScrollRect.MovementType.Clamped;
-            sr.inertia = true;
-            sr.scrollSensitivity = 1f;
-            sr.gameObject.SetActive(false);
-            return sr;
+            contentRT.anchorMin = isHorizontal ? new Vector2(0, 0.5f) : new Vector2(0.5f, 0);
+            contentRT.anchorMax = isHorizontal ? new Vector2(0, 0.5f) : new Vector2(0.5f, 0);
+            contentRT.pivot = isHorizontal ? new Vector2(0, 0.5f) : new Vector2(0.5f, 0);
+            contentRT.sizeDelta = isHorizontal ? new Vector2(840, 0) : new Vector2(0, 840);
+            contentRT.anchoredPosition = Vector2.zero;
         }
 
         public void ShowMap(global::Tactics.RoguelikeMap.RoguelikeMap m)
@@ -241,6 +215,7 @@ namespace Tactics.UI
             _lineInstanceIndex = 0;
 
             CreateMapParent();
+            SetupScrollRectAnchors();
             CreateNodes(m.nodes);
             DrawLines();
             SetMapLength();
@@ -290,6 +265,16 @@ namespace Tactics.UI
             _firstParent.transform.localScale = Vector3.one;
             RectTransform fprt = _firstParent.AddComponent<RectTransform>();
             Stretch(fprt);
+
+            GameObject lineParentObj = new GameObject("LinesParent");
+            lineParentObj.transform.SetParent(_firstParent.transform);
+            lineParentObj.transform.localScale = Vector3.one;
+            _lineParent = lineParentObj.AddComponent<RectTransform>();
+            _lineParent.localPosition = Vector3.zero;
+            _lineParent.anchorMin = new Vector2(0.5f, 0.5f);
+            _lineParent.anchorMax = new Vector2(0.5f, 0.5f);
+            _lineParent.sizeDelta = Vector2.zero;
+            _lineParent.anchoredPosition = Vector2.zero;
         }
 
         private void SetMapLength()
@@ -467,11 +452,23 @@ namespace Tactics.UI
 
         private void AddLineConnection(RoguelikeMapUINode from, RoguelikeMapUINode to)
         {
-            if (uiLinePrefab == null || from == null || to == null) return;
+            if (from == null || to == null) return;
 
-            UILineRenderer lineRenderer = Instantiate(uiLinePrefab, _firstParent.transform);
-            lineRenderer.gameObject.name = $"{uiLinePrefab.gameObject.name}_{_lineInstanceIndex++}";
-            lineRenderer.transform.SetAsFirstSibling();
+            GameObject lineObj = new GameObject($"UILineRenderer_{_lineInstanceIndex++}");
+            lineObj.transform.SetParent(_lineParent.transform);
+            lineObj.transform.SetAsFirstSibling();
+
+            RectTransform lineRT = lineObj.AddComponent<RectTransform>();
+            lineRT.localPosition = Vector3.zero;
+            lineRT.anchorMin = new Vector2(0.5f, 0.5f);
+            lineRT.anchorMax = new Vector2(0.5f, 0.5f);
+            lineRT.pivot = new Vector2(0.5f, 0.5f);
+            lineRT.anchoredPosition = Vector2.zero;
+            lineRT.sizeDelta = Vector2.zero;
+            lineRT.localScale = Vector3.one;
+
+            UILineRenderer lineRenderer = lineObj.AddComponent<UILineRenderer>();
+            lineRenderer.drivenExternally = true;
 
             RectTransform fromRT = from.transform as RectTransform;
             RectTransform toRT = to.transform as RectTransform;

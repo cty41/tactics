@@ -46,7 +46,8 @@ namespace Tactics.RoguelikeMap
             if (image != null) image.sprite = blueprint.sprite;
             if (node.nodeType == RoguelikeNodeType.Boss) transform.localScale *= 1.5f;
             if (sr != null) initialScale = sr.transform.localScale.x;
-            if (image != null) initialScale = image.transform.localScale.x;
+            else if (image != null) initialScale = image.transform.localScale.x;
+            else initialScale = 1f;
 
             if (visitedCircle != null)
             {
@@ -128,8 +129,7 @@ namespace Tactics.RoguelikeMap
                 sr.transform.DOKill();
                 sr.transform.DOScale(initialScale * HoverScaleFactor, 0.3f);
             }
-
-            if (image != null)
+            else if (image != null)
             {
                 image.transform.DOKill();
                 image.transform.DOScale(initialScale * HoverScaleFactor, 0.3f);
@@ -143,8 +143,7 @@ namespace Tactics.RoguelikeMap
                 sr.transform.DOKill();
                 sr.transform.DOScale(initialScale, 0.3f);
             }
-
-            if (image != null)
+            else if (image != null)
             {
                 image.transform.DOKill();
                 image.transform.DOScale(initialScale, 0.3f);

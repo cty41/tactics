@@ -1,7 +1,7 @@
 ---
 description: "Asset loading rules for GameAssetManager and AssetScopeManager"
 globs: ["**/*.cs"]
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Asset Loading Rules
