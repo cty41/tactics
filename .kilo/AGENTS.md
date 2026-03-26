@@ -9,9 +9,8 @@ This is an agent-first Unity project where human engineers steer and agents exec
 ## Architecture
 
 - **Game Engine**: Unity 6.2 (C# 12)
-- **Pattern**: ECS/DOTS with traditional MonoBehaviour
+- **Pattern**: Traditional MonoBehaviour
 - **Asset Pipeline**: AssetBundle-based with `GameAssetManager`
-- **Networking**: Unity Netcode for GameObjects
 
 ## Knowledge Base
 
@@ -37,10 +36,7 @@ All rules in `.kilo/rules/` are **always applied** to all agent tasks:
 | `unity-core.md` | C# naming, MonoBehaviour lifecycle, serialization |
 | `unity-asset-loading.md` | GameAssetManager API, Load/Release pairing |
 | `unity-asset-inspection.md` | MCP tool usage for asset inspection |
-| `unity-ecs.md` | DOTS/ECS patterns |
 | `unity-input.md` | Unity Input System |
-| `unity-ui.md` | UI Toolkit patterns |
-| `unity-networking.md` | Netcode multiplayer |
 | `unity-performance.md` | Performance optimization |
 | `unity-testing.md` | Unit testing |
 | `unity-prefab-editing.md` | Prefab workflows |
