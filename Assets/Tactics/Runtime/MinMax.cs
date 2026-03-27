@@ -13,7 +13,10 @@ namespace Tactics.Utils
             return Random.Range(min, max);
         }
     }
+}
 
+namespace Tactics.Utils
+{
     [System.Serializable]
     public class IntMinMax
     {

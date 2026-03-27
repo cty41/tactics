@@ -12,10 +12,11 @@ This document covers both **inspection** (reading) and **modification** (writing
 
 ### Foundational Principles
 
-1. **NEVER** directly edit YAML text content of `.asset`, `.prefab`, or `.unity` files
-2. **ALWAYS** use MCP tools for asset operations
-3. **ALWAYS** pair open/close operations (open prefab → close prefab, open scene → close/unload scene)
-4. **NEVER** assume tools exist - verify MCP server is configured
+1. **NEVER** directly read or edit YAML text content of `.asset`, `.prefab`, or `.unity` files
+2. **NEVER** use `read`, `glob`, or `grep` tools on `.asset`, `.prefab`, or `.unity` files
+3. **ALWAYS** use MCP tools for asset inspection and operations (`assets-get-data`, `scene-get-data`, `assets-prefab-open`, etc.)
+4. **ALWAYS** pair open/close operations (open prefab → close prefab, open scene → close/unload scene)
+5. **NEVER** assume tools exist - verify MCP server is configured
 
 ### Open/Close Pairing
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using TMPro;
-using Tactics.AssetPipeline;
 using Tactics.Flow.Roguelike;
 using Tactics.RoguelikeMap;
 using UnityEngine;
@@ -14,14 +13,6 @@ using Newtonsoft.Json;
 
 namespace Tactics.UI
 {
-    public enum MapOrientation
-    {
-        BottomToTop,
-        TopToBottom,
-        RightToLeft,
-        LeftToRight
-    }
-
     public sealed class RoguelikeMapUIController : UIControllerBase
     {
         public const string MapPlayerPrefsKey = "RoguelikeMap";
@@ -31,12 +22,9 @@ namespace Tactics.UI
         [Header("UI Prefabs")]
         [Tooltip("Prefab for map nodes (must have RoguelikeMapUINode component)")]
         public GameObject nodePrefab;
-        [Tooltip("Prefab for UI line between nodes")]
-        public UILineRenderer uiLinePrefab;
 
-        [Header("Scroll Rects")]
-        public ScrollRect scrollRectHorizontal;
-        public ScrollRect scrollRectVertical;
+        [Header("Scroll Rect")]
+        public ScrollRect scrollRect;
 
         [Header("Layout")]
         public float unitsToPixelsMultiplier = 10f;
@@ -53,9 +41,6 @@ namespace Tactics.UI
         public Color32 lineVisitedColor = Color.white;
         public Color32 lineLockedColor = Color.gray;
 
-        [Header("Orientation")]
-        public MapOrientation orientation = MapOrientation.BottomToTop;
-
         [Header("Background")]
         public Image backgroundImage;
 
@@ -69,6 +54,7 @@ namespace Tactics.UI
         private GameObject _firstParent;
         private RectTransform _lineParent;
         private ScrollRect _activeScrollRect;
+
         private readonly List<RoguelikeMapUINode> _mapNodes = new List<RoguelikeMapUINode>();
         private readonly List<UILineRenderer> _lineConnections = new List<UILineRenderer>();
         private int _lineInstanceIndex;
@@ -88,10 +74,6 @@ namespace Tactics.UI
             WireOptionalCloseButtons();
             _wired = true;
 
-            var currentScene = gameObject.scene;
-            AssetScopeManager.BeginScene($"Assets/Tactics/Scenes/{currentScene.name}.unity");
-
-            LoadBackgroundImage();
             LoadOrGenerateMap();
             if (_currentMap != null)
             {
@@ -126,15 +108,6 @@ namespace Tactics.UI
             }
         }
 
-        public void GenerateButton()
-        {
-            GenerateNewMap();
-            if (_currentMap != null)
-            {
-                ShowMap(_currentMap);
-            }
-        }
-
         private void GenerateNewMap()
         {
             if (mapConfig == null)
@@ -158,45 +131,66 @@ namespace Tactics.UI
             PlayerPrefs.Save();
         }
 
-        private bool TryEnsureScrollRectsAssigned()
+        private bool TryEnsureScrollRectAssigned()
         {
-            return scrollRectHorizontal != null && scrollRectVertical != null;
+            if (scrollRect != null) return true;
+
+            ScrollRect[] local = GetComponentsInChildren<ScrollRect>(true);
+            foreach (ScrollRect sr in local)
+            {
+                if (sr == null) continue;
+                scrollRect = sr;
+                break;
+            }
+
+            if (scrollRect == null)
+                CreateRuntimeScrollRectIfMissing();
+
+            return scrollRect != null;
         }
 
-        private void LoadBackgroundImage()
+        private void CreateRuntimeScrollRectIfMissing()
         {
-            if (backgroundImage == null) return;
+            RectTransform host = GetComponent<RectTransform>();
+            if (host == null)
+                host = GetComponentInParent<RectTransform>();
+            if (host == null) return;
 
-            // 注意：路径需要包含扩展名 .png
-            string assetPath = "Assets/Tactics/Arts/Sprites/Kenney RPG Pack panels/panel_beige.png";
+            GameObject root = new GameObject("ScrollRectHorizontal", typeof(RectTransform), typeof(Image), typeof(Mask), typeof(ScrollRect));
+            RectTransform rootRT = root.GetComponent<RectTransform>();
+            rootRT.SetParent(host, false);
+            rootRT.anchorMin = Vector2.zero;
+            rootRT.anchorMax = Vector2.one;
+            rootRT.offsetMin = Vector2.zero;
+            rootRT.offsetMax = Vector2.zero;
+            rootRT.localScale = Vector3.one;
 
-            try
-            {
-                var bgSprite = GameAssetManager.Instance.Load<Sprite>(assetPath);
+            Image viewportImage = root.GetComponent<Image>();
+            viewportImage.color = new Color(0f, 0f, 0f, 0f);
 
-                if (bgSprite != null)
-                    backgroundImage.sprite = bgSprite;
-                else
-                    Debug.LogWarning("[RoguelikeMapUIController] Failed to load background sprite");
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
+            Mask mask = root.GetComponent<Mask>();
+            mask.showMaskGraphic = false;
 
-        private void SetupScrollRectAnchors()
-        {
-            if (_activeScrollRect == null || _activeScrollRect.content == null) return;
+            GameObject content = new GameObject("Content", typeof(RectTransform));
+            RectTransform contentRT = content.GetComponent<RectTransform>();
+            contentRT.SetParent(rootRT, false);
+            contentRT.anchorMin = Vector2.zero;
+            contentRT.anchorMax = Vector2.one;
+            contentRT.offsetMin = Vector2.zero;
+            contentRT.offsetMax = Vector2.zero;
+            contentRT.localScale = Vector3.one;
 
-            RectTransform contentRT = _activeScrollRect.content;
-            bool isHorizontal = orientation == MapOrientation.LeftToRight || orientation == MapOrientation.RightToLeft;
+            ScrollRect sr = root.GetComponent<ScrollRect>();
+            sr.viewport = rootRT;
+            sr.content = contentRT;
+            sr.horizontal = true;
+            sr.vertical = false;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.inertia = true;
+            sr.scrollSensitivity = 1f;
+            sr.gameObject.SetActive(false);
 
-            contentRT.anchorMin = isHorizontal ? new Vector2(0, 0.5f) : new Vector2(0.5f, 0);
-            contentRT.anchorMax = isHorizontal ? new Vector2(0, 0.5f) : new Vector2(0.5f, 0);
-            contentRT.pivot = isHorizontal ? new Vector2(0, 0.5f) : new Vector2(0.5f, 0);
-            contentRT.sizeDelta = isHorizontal ? new Vector2(840, 0) : new Vector2(0, 840);
-            contentRT.anchoredPosition = Vector2.zero;
+            scrollRect = sr;
         }
 
         public void ShowMap(global::Tactics.RoguelikeMap.RoguelikeMap m)
@@ -207,7 +201,7 @@ namespace Tactics.UI
                 return;
             }
 
-            if (!TryEnsureScrollRectsAssigned())
+            if (!TryEnsureScrollRectAssigned())
                 return;
 
             _currentMap = m;
@@ -215,7 +209,6 @@ namespace Tactics.UI
             _lineInstanceIndex = 0;
 
             CreateMapParent();
-            SetupScrollRectAnchors();
             CreateNodes(m.nodes);
             DrawLines();
             SetMapLength();
@@ -227,10 +220,8 @@ namespace Tactics.UI
 
         private void ClearMap()
         {
-            if (scrollRectHorizontal != null)
-                scrollRectHorizontal.gameObject.SetActive(false);
-            if (scrollRectVertical != null)
-                scrollRectVertical.gameObject.SetActive(false);
+            if (scrollRect != null)
+                scrollRect.gameObject.SetActive(false);
 
             if (_activeScrollRect != null && _activeScrollRect.content != null)
             {
@@ -244,9 +235,7 @@ namespace Tactics.UI
 
         private ScrollRect GetScrollRectForMap()
         {
-            return orientation == MapOrientation.LeftToRight || orientation == MapOrientation.RightToLeft
-                ? scrollRectHorizontal
-                : scrollRectVertical;
+            return scrollRect;
         }
 
         private void CreateMapParent()
@@ -283,33 +272,14 @@ namespace Tactics.UI
 
             RectTransform rt = _activeScrollRect.content;
             Vector2 sizeDelta = rt.sizeDelta;
-            float length = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
-            if (orientation == MapOrientation.LeftToRight || orientation == MapOrientation.RightToLeft)
-                sizeDelta.x = length;
-            else
-                sizeDelta.y = length;
+            sizeDelta.x = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
             rt.sizeDelta = sizeDelta;
         }
 
         private void ScrollToOrigin()
         {
             if (_activeScrollRect == null) return;
-
-            switch (orientation)
-            {
-                case MapOrientation.BottomToTop:
-                    _activeScrollRect.normalizedPosition = Vector2.zero;
-                    break;
-                case MapOrientation.TopToBottom:
-                    _activeScrollRect.normalizedPosition = new Vector2(0, 1);
-                    break;
-                case MapOrientation.RightToLeft:
-                    _activeScrollRect.normalizedPosition = new Vector2(1, 0);
-                    break;
-                case MapOrientation.LeftToRight:
-                    _activeScrollRect.normalizedPosition = Vector2.zero;
-                    break;
-            }
+            _activeScrollRect.normalizedPosition = Vector2.zero;
         }
 
         private static void Stretch(RectTransform tr)
@@ -359,24 +329,8 @@ namespace Tactics.UI
             if (_currentMap == null) return Vector2.zero;
 
             float length = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
-
-            switch (orientation)
-            {
-                case MapOrientation.BottomToTop:
-                    return new Vector2(-backgroundPadding.x / 2f, (padding - length) / 2f) +
-                           node.position * unitsToPixelsMultiplier;
-                case MapOrientation.TopToBottom:
-                    return new Vector2(backgroundPadding.x / 2f, (length - padding) / 2f) -
-                           node.position * unitsToPixelsMultiplier;
-                case MapOrientation.RightToLeft:
-                    return new Vector2((length - padding) / 2f, backgroundPadding.y / 2f) -
-                           Flip(node.position) * unitsToPixelsMultiplier;
-                case MapOrientation.LeftToRight:
-                    return new Vector2((padding - length) / 2f, -backgroundPadding.y / 2f) +
-                           Flip(node.position) * unitsToPixelsMultiplier;
-                default:
-                    return Vector2.zero;
-            }
+            return new Vector2((padding - length) / 2f, -backgroundPadding.y / 2f) +
+                   Flip(node.position) * unitsToPixelsMultiplier;
         }
 
         private static Vector2 Flip(Vector2 other) => new Vector2(other.y, other.x);
@@ -468,7 +422,6 @@ namespace Tactics.UI
             lineRT.localScale = Vector3.one;
 
             UILineRenderer lineRenderer = lineObj.AddComponent<UILineRenderer>();
-            lineRenderer.drivenExternally = true;
 
             RectTransform fromRT = from.transform as RectTransform;
             RectTransform toRT = to.transform as RectTransform;
