@@ -1,9 +1,34 @@
-﻿using System;
+﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Tactics.Utils
 {
+    [System.Serializable]
+    public class FloatMinMax
+    {
+        public float min;
+        public float max;
+
+        public float GetValue()
+        {
+            return UnityEngine.Random.Range(min, max);
+        }
+    }
+
+    [System.Serializable]
+    public class IntMinMax
+    {
+        public int min;
+        public int max;
+
+        public int GetValue()
+        {
+            return UnityEngine.Random.Range(min, max + 1);
+        }
+    }
+
     public static class ShufflingExtension
     {
 
@@ -41,3 +66,4 @@ namespace Tactics.Utils
         }
     }
 }
+
