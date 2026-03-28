@@ -1,0 +1,16 @@
+{
+    "name": "Tactics.Core",
+    "rootNamespace": "Map",
+    "references": [
+        "GUID:c8e4a91b2f6d4058a7e3c0d1b9f8e2a4"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
