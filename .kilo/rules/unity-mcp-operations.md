@@ -173,6 +173,32 @@ editor-application-get-state → editor-application-set-state → verify → edi
 3. Test functionality
 4. Stop playmode when done
 
+### 8. Folder Reorganization (Moving Assets Between Folders)
+```
+assets-refresh → assets-move (folder) → verify
+```
+**Workflow for reorganizing Unity folders:**
+
+1. **DO NOT use `mkdir` or filesystem commands** to create destination folders
+2. **Use `assets-refresh`** to ensure Unity's AssetDatabase is current
+3. **Use `assets-move`** to move entire folders at once (not individual files)
+   - Source and destination must not both exist - if destination exists, delete it first
+   - If destination folder already exists (from failed operations), use `assets-delete` to remove it first
+4. **Verify with `assets-refresh`** after moves complete
+
+**Common Issue - "Destination path name does already exist":**
+- This occurs when the destination folder already exists in Unity's AssetDatabase
+- Solution: Use `assets-delete` to remove the conflicting empty folder, then retry `assets-move`
+
+**Example - Moving a folder:**
+```bash
+# Move Prefabs folder to Arts/Prefabs
+npx unity-mcp-cli run-tool assets-move --input '{
+  "sourcePaths": ["Assets/Tactics/Prefabs"],
+  "destinationPaths": ["Assets/Tactics/Arts/Prefabs"]
+}'
+```
+
 ---
 
 ## Asset Type Handling
@@ -206,9 +232,10 @@ editor-application-get-state → editor-application-set-state → verify → edi
 ### Safety Notes
 
 - `gameobject-destroy` permanently removes GameObjects and all children
-- `assets-delete` permanently removes assets from the project
+- `assets-delete` permanently removes assets from the project (including empty folders)
 - `scene-unload` without saving loses changes
 - Never assume instanceID values - always verify with `gameobject-find`
+- **DO NOT use filesystem commands (`mkdir`, `rmdir`, `rm`, etc.)** to manipulate folders - always use `assets-*` MCP tools for asset operations
 
 ### When MCP Returns Insufficient Data
 
