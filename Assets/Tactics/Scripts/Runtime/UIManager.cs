@@ -17,8 +17,8 @@ namespace Tactics
 
         [SerializeField] private RectTransform _uiRoot;
 
-        private const string MenuPrefabPath = "Assets/Tactics/UI/Menu.prefab";
-        private const string RoguelikeMapPrefabPath = "Assets/Tactics/UI/RoguelikeMap.prefab";
+        private const string MenuPrefabPath = "Assets/Tactics/Arts/UI/Menu.prefab";
+        private const string RoguelikeMapPrefabPath = "Assets/Tactics/Arts/UI/RoguelikeMap.prefab";
 
         private readonly Dictionary<UIId, GameObject> _instances = new Dictionary<UIId, GameObject>();
         private readonly Dictionary<UIId, Task<GameObject>> _loadingTasks = new Dictionary<UIId, Task<GameObject>>();
