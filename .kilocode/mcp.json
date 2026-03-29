@@ -1,9 +1,1 @@
-{
-  "mcpServers": {
-    "ai-game-developer": {
-      "disabled": false,
-      "type": "streamable-http",
-      "url": "http://localhost:53165"
-    }
-  }
-}
+{"mcpServers":{"ai-game-developer":{"disabled":false,"type":"streamable-http","url":"http://localhost:53165","alwaysAllow":["assets-get-data","object-get-data","assets-find","object-modify","assets-modify"]}}}
