@@ -23,6 +23,10 @@ namespace Tactics.UI
         [Tooltip("Prefab for map nodes (must have RoguelikeMapUINode component)")]
         public GameObject nodePrefab;
 
+        [Header("Line Prefab")]
+        [Tooltip("Prefab for UI lines (must have UILineRenderer component)")]
+        public UILineRenderer uiLinePrefab;
+
         [Header("Scroll Rect")]
         public ScrollRect scrollRect;
 
@@ -407,21 +411,11 @@ namespace Tactics.UI
         private void AddLineConnection(RoguelikeMapUINode from, RoguelikeMapUINode to)
         {
             if (from == null || to == null) return;
+            if (uiLinePrefab == null) return;
 
-            GameObject lineObj = new GameObject($"UILineRenderer_{_lineInstanceIndex++}");
-            lineObj.transform.SetParent(_lineParent.transform);
-            lineObj.transform.SetAsFirstSibling();
-
-            RectTransform lineRT = lineObj.AddComponent<RectTransform>();
-            lineRT.localPosition = Vector3.zero;
-            lineRT.anchorMin = new Vector2(0.5f, 0.5f);
-            lineRT.anchorMax = new Vector2(0.5f, 0.5f);
-            lineRT.pivot = new Vector2(0.5f, 0.5f);
-            lineRT.anchoredPosition = Vector2.zero;
-            lineRT.sizeDelta = Vector2.zero;
-            lineRT.localScale = Vector3.one;
-
-            UILineRenderer lineRenderer = lineObj.AddComponent<UILineRenderer>();
+            // Instantiate the line prefab
+            UILineRenderer lineRenderer = Instantiate(uiLinePrefab, _lineParent.transform);
+            lineRenderer.transform.SetAsFirstSibling();
 
             RectTransform fromRT = from.transform as RectTransform;
             RectTransform toRT = to.transform as RectTransform;
@@ -434,15 +428,25 @@ namespace Tactics.UI
             Vector2 toPoint = toRT.anchoredPosition +
                               (fromRT.anchoredPosition - toRT.anchoredPosition).normalized * offsetFromNodes;
 
-            var list = new List<Vector2>();
+            // Calculate midpoint and set position
+            Vector2 midPoint = (fromPoint + toPoint) * 0.5f;
+            RectTransform lineRT = lineRenderer.GetComponent<RectTransform>();
+            lineRT.anchoredPosition = midPoint;
+
+            // Calculate rotation angle
+            float angle = Mathf.Atan2(toPoint.y - fromPoint.y, toPoint.x - fromPoint.x) * Mathf.Rad2Deg;
+            lineRT.localEulerAngles = new Vector3(0, 0, angle);
+
+            // Calculate line length and set Points in local space
+            float lineLength = Vector2.Distance(fromPoint, toPoint);
+            List<Vector2> list = new List<Vector2>();
             for (int i = 0; i < linePointsCount; i++)
             {
-                list.Add(Vector3.Lerp(Vector3.zero, toPoint - fromPoint +
-                                                    2 * (fromRT.anchoredPosition - toRT.anchoredPosition).normalized *
-                                                    offsetFromNodes, (float)i / (linePointsCount - 1)));
+                float t = (float)i / (linePointsCount - 1);
+                list.Add(new Vector2(Mathf.Lerp(-lineLength / 2, lineLength / 2, t), 0));
             }
-
             lineRenderer.Points = list.ToArray();
+
             _lineConnections.Add(lineRenderer);
         }
 
@@ -485,6 +489,8 @@ namespace Tactics.UI
         public void SelectNode(RoguelikeMapUINode mapNode)
         {
             if (_locked) return;
+            if (mapNode == null || mapNode.Node == null) return;
+            if (_currentMap == null) return;
 
             if (_currentMap.path.Count == 0)
             {
