@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,66 +17,53 @@ namespace Tactics.CodeAnalysis
         [MenuItem("Tools/Code Analysis/Debug GUID Mapping")]
         public static void DebugGuidMapping()
         {
-            var sb = new System.Text.StringBuilder();
+            var sb = new StringBuilder();
             sb.AppendLine("=== GUID Mapping Debug ===\n");
 
-            // Build GUID mapping for Tactics/Scripts
             var guidToPath = new Dictionary<string, string>();
-            var csFiles = Directory.GetFiles("Assets/Tactics/Scripts", "*.cs", SearchOption.AllDirectories);
-            
-            sb.AppendLine($"Found {csFiles.Length} .cs files\n");
+            var csFiles = AssetDatabase.FindAssets("t:Script", new[] { "Assets/Tactics/Scripts" });
 
-            foreach (var file in csFiles)
+            sb.AppendLine($"Found {csFiles.Length} script GUIDs\n");
+
+            foreach (var guid in csFiles.Take(20))
             {
-                var relativePath = file.Substring(Directory.GetCurrentDirectory().Length + 1).Replace('\\', '/');
-                var guid = AssetDatabase.AssetPathToGUID(relativePath);
-                if (!string.IsNullOrEmpty(guid))
-                {
-                    guidToPath[guid] = relativePath;
-                }
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                guidToPath[guid] = path;
+                sb.AppendLine($"  {guid.Substring(0, 8)}... -> {path}");
             }
 
-            sb.AppendLine($"Built GUID mapping for {guidToPath.Count} scripts in Assets/Tactics/Scripts\n");
+            if (csFiles.Length > 20)
+                sb.AppendLine($"  ... ({csFiles.Length - 20} more)");
 
-            // Check scene dependencies using AssetDatabase
-            var scenePath = "Assets/Tactics/Scenes/Home.unity";
-            if (File.Exists(scenePath))
-            {
-                sb.AppendLine($"--- Scene Dependencies: {scenePath} ---");
-                var deps = AssetDatabase.GetDependencies(scenePath, false);
-                int scriptCount = 0;
-                foreach (var dep in deps)
-                {
-                    if (dep.EndsWith(".cs"))
-                    {
-                        sb.AppendLine($"  Script Dep: {dep}");
-                        scriptCount++;
-                    }
-                }
-                sb.AppendLine($"  Total script dependencies: {scriptCount}\n");
-            }
+            sb.AppendLine($"\nTotal: {csFiles.Length} scripts mapped\n");
 
-            // Check content of scene for specific GUIDs
-            scenePath = "Assets/Tactics/Scenes/Test1.unity";
-            if (File.Exists(scenePath))
+            // Check a scene for GUID references
+            var sceneGuids = AssetDatabase.FindAssets("t:Scene");
+            if (sceneGuids.Length > 0)
             {
+                var scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
                 sb.AppendLine($"--- GUID Scan: {scenePath} ---");
-                var content = File.ReadAllText(scenePath);
-                int foundCount = 0;
-                foreach (var kvp in guidToPath)
+
+                var absolutePath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", scenePath.Replace('/', Path.DirectorySeparatorChar)));
+                if (File.Exists(absolutePath))
                 {
-                    if (content.Contains(kvp.Key))
+                    var content = File.ReadAllText(absolutePath);
+                    int foundCount = 0;
+                    foreach (var kvp in guidToPath)
                     {
-                        sb.AppendLine($"  Found: {kvp.Key} -> {kvp.Value}");
-                        foundCount++;
-                        if (foundCount >= 10)
+                        if (content.Contains(kvp.Key))
                         {
-                            sb.AppendLine("  ... (limited to 10 for readability)");
-                            break;
+                            sb.AppendLine($"  Found: {kvp.Value}");
+                            foundCount++;
+                            if (foundCount >= 10)
+                            {
+                                sb.AppendLine($"  ... (limited to 10, {guidToPath.Count - foundCount} more possible)");
+                                break;
+                            }
                         }
                     }
+                    sb.AppendLine($"  Total scripts found: {foundCount} (of {guidToPath.Count} mapped)\n");
                 }
-                sb.AppendLine($"  Total project scripts found in scene: {foundCount} (of {guidToPath.Count} mapped)\n");
             }
 
             Debug.Log(sb.ToString());
@@ -83,28 +72,105 @@ namespace Tactics.CodeAnalysis
         [MenuItem("Tools/Code Analysis/Debug Asset Dependencies")]
         public static void DebugAssetDependencies()
         {
-            var sb = new System.Text.StringBuilder();
+            var sb = new StringBuilder();
             sb.AppendLine("=== Asset Dependencies Debug ===\n");
 
-            var scenePath = "Assets/Tactics/Scenes/Home.unity";
+            var sceneGuids = AssetDatabase.FindAssets("t:Scene");
+            if (sceneGuids.Length == 0)
+            {
+                sb.AppendLine("No scenes found.");
+                Debug.Log(sb.ToString());
+                return;
+            }
+
+            var scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
             sb.AppendLine($"Scene: {scenePath}");
 
-            var deps = AssetDatabase.GetDependencies(scenePath, false);
-            sb.AppendLine($"Total dependencies: {deps.Length}");
-
-            int csCount = 0;
-            foreach (var dep in deps)
+            try
             {
-                if (dep.EndsWith(".cs"))
+                var deps = AssetDatabase.GetDependencies(scenePath, false);
+                sb.AppendLine($"Total dependencies: {deps.Length}\n");
+
+                var csDeps = deps.Where(d => d.EndsWith(".cs")).OrderBy(d => d).ToList();
+                sb.AppendLine($"Script dependencies ({csDeps.Count}):\n");
+                foreach (var dep in csDeps)
                 {
-                    sb.AppendLine($"  .cs: {dep}");
-                    csCount++;
+                    sb.AppendLine($"  {dep}");
+                }
+            }
+            catch (Exception e)
+            {
+                sb.AppendLine($"Error: {e.Message}");
+            }
+
+            Debug.Log(sb.ToString());
+        }
+
+        [MenuItem("Tools/Code Analysis/Debug Prefab Script References")]
+        public static void DebugPrefabScriptRefs()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("=== Prefab Script References Debug ===\n");
+
+            var prefabGuids = AssetDatabase.FindAssets("t:Prefab");
+            sb.AppendLine($"Found {prefabGuids.Length} prefabs\n");
+
+            var analyzer = new UnityAssetReferenceAnalyzer();
+            analyzer.BuildGuidMapping();
+
+            int totalRefs = 0;
+            int prefabsWithScripts = 0;
+
+            foreach (var guid in prefabGuids.Take(50))
+            {
+                var prefabPath = AssetDatabase.GUIDToAssetPath(guid);
+                if (!prefabPath.StartsWith("Assets/Tactics/")) continue;
+
+                var absolutePath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", prefabPath.Replace('/', Path.DirectorySeparatorChar)));
+                if (!File.Exists(absolutePath)) continue;
+
+                var content = File.ReadAllText(absolutePath);
+                var foundScripts = new List<string>();
+
+                foreach (var kvp in analyzer.GetAllScriptGuidsForDebug())
+                {
+                    if (content.Contains(kvp.Key))
+                    {
+                        foundScripts.Add(kvp.Value);
+                    }
+                }
+
+                if (foundScripts.Count > 0)
+                {
+                    prefabsWithScripts++;
+                    totalRefs += foundScripts.Count;
+                    sb.AppendLine($"{prefabPath}:");
+                    foreach (var s in foundScripts)
+                    {
+                        sb.AppendLine($"  - {Path.GetFileNameWithoutExtension(s)}");
+                    }
+                    sb.AppendLine();
                 }
             }
 
-            sb.AppendLine($"\nScript dependencies: {csCount}");
+            if (prefabGuids.Length > 50)
+                sb.AppendLine($"(Scanned first 50 of {prefabGuids.Length} prefabs)\n");
+
+            sb.AppendLine($"Results: {totalRefs} script references across {prefabsWithScripts} prefabs");
 
             Debug.Log(sb.ToString());
+        }
+    }
+
+    // Extension to expose GUID mapping for debug
+    public static class UnityAssetReferenceAnalyzerDebugExtensions
+    {
+        public static Dictionary<string, string> GetAllScriptGuidsForDebug(this UnityAssetReferenceAnalyzer analyzer)
+        {
+            // Use reflection since the field is private
+            var field = typeof(UnityAssetReferenceAnalyzer).GetField("_guidToScriptPath",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            return field?.GetValue(analyzer) as Dictionary<string, string> ?? new Dictionary<string, string>();
         }
     }
 }

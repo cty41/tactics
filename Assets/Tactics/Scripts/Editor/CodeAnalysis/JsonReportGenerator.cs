@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Tactics.CodeAnalysis
 {
     /// <summary>
-    /// Generates JSON report for code analysis results.
+    /// Generates JSON report for code analysis results using Newtonsoft.Json.
     /// </summary>
     public class JsonReportGenerator
     {
@@ -24,35 +26,37 @@ namespace Tactics.CodeAnalysis
         }
 
         /// <summary>
-        /// Generates complete analysis report.
+        /// Generates complete analysis report with all sections populated.
         /// </summary>
         public void GenerateReport(
-            SymbolIndex symbolIndex,
-            IReadOnlyList<SpecialAttributeInfo> specialAttributes,
-            IReadOnlyList<string> allScriptPaths,
+            RoslynCodeAnalyzer analyzer,
             HashSet<string> referencedScriptPaths,
             HashSet<string> seedPaths,
             Dictionary<string, List<string>> scriptToAssetsMap,
+            List<DependencyChainEntry> dependencyChains,
+            List<RuntimeAssetLoadInfo>? runtimeLoads = null,
             string reportFileName = "analysis-report.json")
         {
             var report = new AnalysisReport
             {
-                analysisMetadata = new AnalysisMetadata
+                AnalysisMetadata = new AnalysisMetadata
                 {
-                    timestamp = DateTime.Now.ToString("o"),
-                    totalScripts = allScriptPaths.Count,
-                    analyzedScripts = symbolIndex.AllSymbols.Count,
-                    scope = "All files in Assets/Tactics/Scripts"
+                    Timestamp = DateTime.Now.ToString("o"),
+                    TotalScripts = analyzer.AllScriptPaths.Count,
+                    AnalyzedScripts = analyzer.AllSymbols.Count,
+                    Scope = "All files in Assets/Tactics/Scripts (Roslyn AST analysis)"
                 },
-                seedScripts = new List<SeedScriptInfo>(),
-                specialEntrypoints = new List<SpecialEntrypointInfo>(),
-                referencedScripts = new List<ReferencedScriptInfo>(),
-                isolatedScripts = new List<IsolatedScriptInfo>(),
-                externalDependencies = new List<ExternalDependencyInfo>()
+                SeedScripts = new List<SeedScriptInfo>(),
+                DependencyChain = new List<DependencyChainInfo>(),
+                SpecialEntrypoints = new List<SpecialEntrypointInfo>(),
+                ReferencedScripts = new List<ReferencedScriptInfo>(),
+                IsolatedScripts = new List<IsolatedScriptInfo>(),
+                ExternalDependencies = new List<ExternalDependencyInfoOutput>(),
+                RuntimeAssetLoads = new List<RuntimeAssetLoadInfoOutput>()
             };
 
             // Build seed scripts from asset references
-            foreach (var symbol in symbolIndex.AllSymbols)
+            foreach (var symbol in analyzer.AllSymbols.Where(s => string.IsNullOrEmpty(s.ParentTypeName)))
             {
                 if (seedPaths.Contains(symbol.FilePath))
                 {
@@ -62,29 +66,42 @@ namespace Tactics.CodeAnalysis
                         sources.AddRange(assets);
                     }
 
-                    report.seedScripts.Add(new SeedScriptInfo
+                    report.SeedScripts.Add(new SeedScriptInfo
                     {
-                        className = symbol.TypeName,
-                        namespaceName = symbol.Namespace,
-                        filePath = symbol.FilePath,
-                        source = sources.Count > 0 ? string.Join(", ", sources) : "Unknown reference"
+                        ClassName = symbol.TypeName,
+                        NamespaceName = symbol.Namespace,
+                        FilePath = symbol.FilePath,
+                        Source = sources.Count > 0 ? string.Join(", ", sources) : "Code dependency (entry point)"
                     });
                 }
             }
 
-            // Build special entrypoints
-            foreach (var attr in specialAttributes)
+            // Build dependency chain (always populated now)
+            foreach (var chain in dependencyChains)
             {
-                report.specialEntrypoints.Add(new SpecialEntrypointInfo
+                report.DependencyChain.Add(new DependencyChainInfo
                 {
-                    filePath = attr.FilePath,
-                    attributeName = attr.AttributeName,
-                    description = attr.Description
+                    FilePath = chain.FilePath,
+                    DependsOn = chain.DependsOn,
+                    ReferencedBy = chain.ReferencedBy
+                });
+            }
+
+            // Build special entrypoints
+            foreach (var attr in analyzer.SpecialAttributes)
+            {
+                report.SpecialEntrypoints.Add(new SpecialEntrypointInfo
+                {
+                    FilePath = attr.FilePath,
+                    AttributeName = attr.AttributeName,
+                    Description = attr.Description,
+                    ClassName = attr.ClassName,
+                    Namespace = attr.Namespace
                 });
             }
 
             // Build referenced scripts (including transitive dependencies)
-            foreach (var symbol in symbolIndex.AllSymbols)
+            foreach (var symbol in analyzer.AllSymbols.Where(s => string.IsNullOrEmpty(s.ParentTypeName)))
             {
                 if (referencedScriptPaths.Contains(symbol.FilePath))
                 {
@@ -93,7 +110,7 @@ namespace Tactics.CodeAnalysis
                     {
                         if (scriptToAssetsMap.TryGetValue(symbol.FilePath, out var assets))
                         {
-                            sources.Add($"Scene/Prefab: {string.Join(", ", assets)}");
+                            sources.Add($"Scene/Prefab/Asset: {string.Join(", ", assets)}");
                         }
                     }
                     else
@@ -101,76 +118,111 @@ namespace Tactics.CodeAnalysis
                         sources.Add("Code dependency");
                     }
 
-                    report.referencedScripts.Add(new ReferencedScriptInfo
+                    // Also check if it's a special entrypoint
+                    var specialAttrs = analyzer.SpecialAttributes.Where(a => a.FilePath == symbol.FilePath).ToList();
+                    foreach (var sa in specialAttrs)
                     {
-                        className = symbol.TypeName,
-                        namespaceName = symbol.Namespace,
-                        filePath = symbol.FilePath,
-                        referencedBy = sources.Count > 0 ? sources : new List<string> { "Unknown" }
+                        sources.Add($"[{sa.AttributeName}] - {sa.Description}");
+                    }
+
+                    if (sources.Count == 0)
+                        sources.Add("Unknown (seed)");
+
+                    report.ReferencedScripts.Add(new ReferencedScriptInfo
+                    {
+                        ClassName = symbol.TypeName,
+                        NamespaceName = symbol.Namespace,
+                        FilePath = symbol.FilePath,
+                        ReferencedBy = sources
                     });
                 }
             }
 
             // Build isolated scripts
-            foreach (var symbol in symbolIndex.AllSymbols)
+            var specialAttrPaths = new HashSet<string>(analyzer.SpecialAttributes.Select(a => a.FilePath), StringComparer.OrdinalIgnoreCase);
+            foreach (var symbol in analyzer.AllSymbols.Where(s => string.IsNullOrEmpty(s.ParentTypeName)))
             {
                 if (!referencedScriptPaths.Contains(symbol.FilePath))
                 {
                     var category = CategorizeSymbol(symbol);
-                    var confidence = DetermineConfidence(symbol, category);
+                    var hasSpecialAttr = specialAttrPaths.Contains(symbol.FilePath);
+                    var confidence = DetermineConfidence(symbol, category, hasSpecialAttr);
 
-                    report.isolatedScripts.Add(new IsolatedScriptInfo
+                    report.IsolatedScripts.Add(new IsolatedScriptInfo
                     {
-                        className = symbol.TypeName,
-                        namespaceName = symbol.Namespace,
-                        filePath = symbol.FilePath,
-                        category = category,
-                        confidence = confidence,
-                        isAbstract = symbol.IsAbstract,
-                        isInterface = symbol.IsInterface,
-                        isStatic = symbol.IsStatic
+                        ClassName = symbol.TypeName,
+                        NamespaceName = symbol.Namespace,
+                        FilePath = symbol.FilePath,
+                        Category = category,
+                        Confidence = confidence,
+                        IsAbstract = symbol.IsAbstract,
+                        IsInterface = symbol.IsInterface,
+                        IsStatic = symbol.IsStatic,
+                        IsPartial = symbol.IsPartial,
+                        HasSpecialAttribute = hasSpecialAttr
                     });
                 }
             }
 
             // Build external dependencies from using statements
-            var externalNamespaces = new Dictionary<string, List<string>>();
-            foreach (var symbol in symbolIndex.AllSymbols)
+            var externalNamespaces = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var symbol in analyzer.AllSymbols.Where(s => string.IsNullOrEmpty(s.ParentTypeName)))
             {
-                foreach (var usingNs in symbol.UsingNamespaces)
+                foreach (var usingNs in symbol.ExternalUsingNamespaces)
                 {
-                    if (!symbolIndex.IsProjectType(usingNs) && !IsSystemNamespace(usingNs))
+                    if (!IsSystemNamespace(usingNs) && !IsUnityNamespace(usingNs))
                     {
                         if (!externalNamespaces.ContainsKey(usingNs))
-                        {
                             externalNamespaces[usingNs] = new List<string>();
-                        }
                         if (!externalNamespaces[usingNs].Contains(symbol.FilePath))
-                        {
                             externalNamespaces[usingNs].Add(symbol.FilePath);
-                        }
                     }
                 }
             }
 
-            foreach (var kvp in externalNamespaces)
+            foreach (var kvp in externalNamespaces.OrderBy(k => k.Key))
             {
-                report.externalDependencies.Add(new ExternalDependencyInfo
+                report.ExternalDependencies.Add(new ExternalDependencyInfoOutput
                 {
-                    namespaceName = kvp.Key,
-                    usedBy = kvp.Value.ToList()
+                    NamespaceName = kvp.Key,
+                    UsedBy = kvp.Value.ToList()
                 });
             }
 
-            // Write JSON
+            // Build runtime asset loads
+            if (runtimeLoads != null)
+            {
+                foreach (var load in runtimeLoads)
+                {
+                    report.RuntimeAssetLoads.Add(new RuntimeAssetLoadInfoOutput
+                    {
+                        AssetPath = load.AssetPath,
+                        SourceFile = load.SourceFile,
+                        LineNumber = load.LineNumber,
+                        MethodName = load.MethodName,
+                        Location = load.Location,
+                        DiscoveredScripts = load.DiscoveredScripts
+                    });
+                }
+            }
+
+            // Write JSON using Newtonsoft.Json
             var jsonPath = Path.Combine(_outputDirectory, reportFileName);
-            var jsonContent = JsonUtility.ToJson(report, true);
+            var jsonSettings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = null
+            };
+            var jsonContent = JsonConvert.SerializeObject(report, jsonSettings);
             File.WriteAllText(jsonPath, jsonContent);
 
             Debug.Log($"[JsonReportGenerator] Report written to {jsonPath}");
         }
 
-        private string CategorizeSymbol(SymbolInfo symbol)
+        #region Categorization
+
+        private static string CategorizeSymbol(SymbolInfo symbol)
         {
             if (symbol.IsInterface)
                 return "Interface";
@@ -186,34 +238,42 @@ namespace Tactics.CodeAnalysis
                 return "EditorScript";
             if (symbol.FilePath.Contains("/Tbsf/"))
                 return "ThirdPartyFramework";
-            
+
             return "ConcreteClass";
         }
 
-        private string DetermineConfidence(SymbolInfo symbol, string category)
+        private static string DetermineConfidence(SymbolInfo symbol, string category, bool hasSpecialAttr)
         {
-            // Higher confidence for deletion if it's a concrete class with no special attributes
+            if (category == "ThirdPartyFramework")
+                return "N/A - Do Not Delete";
+            if (hasSpecialAttr)
+                return "Low - Has special attribute";
             if (category == "ConcreteClass")
                 return "High";
+            if (category == "AbstractClass" || category == "Interface")
+                return "Medium - May be used by inheritance";
             if (category == "StaticClass")
                 return "Medium";
             if (category == "EditorScript")
                 return "Low";
-            if (category == "ThirdPartyFramework")
-                return "N/A - Do Not Delete";
-            
+
             return "Medium";
         }
 
-        private bool IsSystemNamespace(string ns)
+        private static bool IsSystemNamespace(string ns)
         {
-            return ns.StartsWith("System") || 
-                   ns.StartsWith("UnityEngine") || 
-                   ns.StartsWith("UnityEditor") ||
-                   ns.StartsWith("MonoBehaviour") ||
-                   ns == "UnityEditor" ||
-                   ns == "UnityEngine";
+            return ns.StartsWith("System") || ns.StartsWith("Microsoft") ||
+                   ns.StartsWith("Mono.Cecil") || ns == "JetBrains.Annotations";
         }
+
+        private static bool IsUnityNamespace(string ns)
+        {
+            return ns.StartsWith("UnityEngine") || ns.StartsWith("UnityEditor") ||
+                   ns.StartsWith("Unity") || ns == "TMPro" || ns.StartsWith("DG.Tweening") ||
+                   ns.StartsWith("Sirenix");
+        }
+
+        #endregion
     }
 
     #region Report Data Classes
@@ -221,76 +281,144 @@ namespace Tactics.CodeAnalysis
     [Serializable]
     public class AnalysisReport
     {
-        public AnalysisMetadata analysisMetadata = default!;
-        public List<SeedScriptInfo> seedScripts = default!;
-        public List<DependencyChainInfo> dependencyChain = default!;
-        public List<SpecialEntrypointInfo> specialEntrypoints = default!;
-        public List<ReferencedScriptInfo> referencedScripts = default!;
-        public List<IsolatedScriptInfo> isolatedScripts = default!;
-        public List<ExternalDependencyInfo> externalDependencies = default!;
-    }
-
-    [Serializable]
-    public class DependencyChainInfo
-    {
-        public string filePath = string.Empty;
-        public List<string> dependsOn = default!;
-        public List<string> referencedBy = default!;
+        public AnalysisMetadata AnalysisMetadata { get; set; } = default!;
+        public List<SeedScriptInfo> SeedScripts { get; set; } = new();
+        public List<DependencyChainInfo> DependencyChain { get; set; } = new();
+        public List<SpecialEntrypointInfo> SpecialEntrypoints { get; set; } = new();
+        public List<ReferencedScriptInfo> ReferencedScripts { get; set; } = new();
+        public List<IsolatedScriptInfo> IsolatedScripts { get; set; } = new();
+        public List<ExternalDependencyInfoOutput> ExternalDependencies { get; set; } = new();
+        public List<RuntimeAssetLoadInfoOutput> RuntimeAssetLoads { get; set; } = new();
     }
 
     [Serializable]
     public class AnalysisMetadata
     {
-        public string timestamp = string.Empty;
-        public int totalScripts;
-        public int analyzedScripts;
-        public string scope = string.Empty;
+        public string Timestamp { get; set; } = string.Empty;
+        public int TotalScripts;
+        public int AnalyzedScripts;
+        public string Scope { get; set; } = string.Empty;
+
+        // For backward compatibility with old JSON readers
+        public string timestamp { get => Timestamp; set => Timestamp = value; }
+        public int totalScripts { get => TotalScripts; set => TotalScripts = value; }
+        public int analyzedScripts { get => AnalyzedScripts; set => AnalyzedScripts = value; }
+        public string scope { get => Scope; set => Scope = value; }
     }
 
     [Serializable]
     public class SeedScriptInfo
     {
-        public string className = string.Empty;
-        public string namespaceName = string.Empty;
-        public string filePath = string.Empty;
-        public string source = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
+        public string NamespaceName { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
+
+        // Backward compatibility
+        public string className { get => ClassName; set => ClassName = value; }
+        public string namespaceName { get => NamespaceName; set => NamespaceName = value; }
+        public string filePath { get => FilePath; set => FilePath = value; }
+        public string source { get => Source; set => Source = value; }
+    }
+
+    [Serializable]
+    public class DependencyChainInfo
+    {
+        public string FilePath { get; set; } = string.Empty;
+        public List<string> DependsOn { get; set; } = new();
+        public List<string> ReferencedBy { get; set; } = new();
+
+        // Backward compatibility
+        public string filePath { get => FilePath; set => FilePath = value; }
+        public List<string> dependsOn { get => DependsOn; set => DependsOn = value; }
+        public List<string> referencedBy { get => ReferencedBy; set => ReferencedBy = value; }
     }
 
     [Serializable]
     public class SpecialEntrypointInfo
     {
-        public string filePath = string.Empty;
-        public string attributeName = string.Empty;
-        public string description = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+        public string AttributeName { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
+        public string Namespace { get; set; } = string.Empty;
+
+        // Backward compatibility
+        public string filePath { get => FilePath; set => FilePath = value; }
+        public string attributeName { get => AttributeName; set => AttributeName = value; }
+        public string description { get => Description; set => Description = value; }
+        public string className { get => ClassName; set => ClassName = value; }
+        public string namespaceName { get => Namespace; set => Namespace = value; }
     }
 
     [Serializable]
     public class ReferencedScriptInfo
     {
-        public string className = string.Empty;
-        public string namespaceName = string.Empty;
-        public string filePath = string.Empty;
-        public List<string> referencedBy = default!;
+        public string ClassName { get; set; } = string.Empty;
+        public string NamespaceName { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+        public List<string> ReferencedBy { get; set; } = new();
+
+        // Backward compatibility
+        public string className { get => ClassName; set => ClassName = value; }
+        public string namespaceName { get => NamespaceName; set => NamespaceName = value; }
+        public string filePath { get => FilePath; set => FilePath = value; }
+        public List<string> referencedBy { get => ReferencedBy; set => ReferencedBy = value; }
     }
 
     [Serializable]
     public class IsolatedScriptInfo
     {
-        public string className = string.Empty;
-        public string namespaceName = string.Empty;
-        public string filePath = string.Empty;
-        public string category = string.Empty;
-        public string confidence = string.Empty;
-        public bool isAbstract;
-        public bool isInterface;
-        public bool isStatic;
+        public string ClassName { get; set; } = string.Empty;
+        public string NamespaceName { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Confidence { get; set; } = string.Empty;
+        public bool IsAbstract;
+        public bool IsInterface;
+        public bool IsStatic;
+        public bool IsPartial;
+        public bool HasSpecialAttribute;
+
+        // Backward compatibility
+        public string className { get => ClassName; set => ClassName = value; }
+        public string namespaceName { get => NamespaceName; set => NamespaceName = value; }
+        public string filePath { get => FilePath; set => FilePath = value; }
+        public string category { get => Category; set => Category = value; }
+        public string confidence { get => Confidence; set => Confidence = value; }
+        public bool isAbstract { get => IsAbstract; set => IsAbstract = value; }
+        public bool isInterface { get => IsInterface; set => IsInterface = value; }
+        public bool isStatic { get => IsStatic; set => IsStatic = value; }
     }
 
     [Serializable]
-    public class ExternalDependencyInfo
+    public class ExternalDependencyInfoOutput
     {
-        public string namespaceName = string.Empty;
-        public List<string> usedBy = default!;
+        public string NamespaceName { get; set; } = string.Empty;
+        public List<string> UsedBy { get; set; } = new();
+
+        // Backward compatibility
+        public string namespaceName { get => NamespaceName; set => NamespaceName = value; }
+        public List<string> usedBy { get => UsedBy; set => UsedBy = value; }
+    }
+
+    [Serializable]
+    public class RuntimeAssetLoadInfoOutput
+    {
+        public string AssetPath { get; set; } = string.Empty;
+        public string SourceFile { get; set; } = string.Empty;
+        public int LineNumber { get; set; }
+        public string MethodName { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public List<string> DiscoveredScripts { get; set; } = new();
+
+        // Backward compatibility
+        public string assetPath { get => AssetPath; set => AssetPath = value; }
+        public string sourceFile { get => SourceFile; set => SourceFile = value; }
+        public int lineNumber { get => LineNumber; set => LineNumber = value; }
+        public string methodName { get => MethodName; set => MethodName = value; }
+        public string location { get => Location; set => Location = value; }
+        public List<string> discoveredScripts { get => DiscoveredScripts; set => DiscoveredScripts = value; }
     }
 
     #endregion

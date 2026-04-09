@@ -1,13 +1,15 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
 namespace Tactics.CodeAnalysis
 {
     /// <summary>
-    /// Editor menu for running code reference analysis.
+    /// Editor menu for running code reference analysis using Roslyn AST parsing.
     /// Access via: Tools > Code Analysis > Analyze Script References
     /// </summary>
     public static class CodeAnalysisMenu
@@ -17,50 +19,73 @@ namespace Tactics.CodeAnalysis
         [MenuItem("Tools/Code Analysis/Analyze Script References")]
         public static void RunAnalysis()
         {
-            Debug.Log("[CodeAnalysis] Starting script reference analysis...");
+            Debug.Log("[CodeAnalysis] Starting Roslyn-based script reference analysis...");
 
             try
             {
-                // Step 1: Scan all scripts
-                var analyzer = new ReferenceAnalyzer();
-                analyzer.ScanAllScripts();
+                // Step 1: Roslyn AST scan - extracts types, references, special attributes
+                Debug.Log("[CodeAnalysis] Step 1/5: Parsing C# files with Roslyn...");
+                var roslynAnalyzer = new RoslynCodeAnalyzer();
+                roslynAnalyzer.ScanAllScripts();
 
-                // Step 2: Analyze Unity assets (scenes, prefabs)
+                // Step 2: Unity asset scanning - scenes, prefabs, ScriptableObjects
+                Debug.Log("[CodeAnalysis] Step 2/5: Scanning Unity assets...");
                 var assetAnalyzer = new UnityAssetReferenceAnalyzer();
                 assetAnalyzer.BuildGuidMapping();
-                assetAnalyzer.AnalyzeScenes();
-                assetAnalyzer.AnalyzePrefabs();
+                assetAnalyzer.AnalyzeAllScenes();
+                assetAnalyzer.AnalyzeAllPrefabs();
+                assetAnalyzer.AnalyzeScriptableObjects();
 
-                // Step 3: Get all referenced scripts from assets
+                // Step 3: Collect seed scripts (directly referenced by assets)
                 var seedPaths = assetAnalyzer.GetAllReferencedScriptPaths();
                 var scriptToAssetsMap = assetAnalyzer.GetScriptToAssetsMap();
 
-                // Step 4: Analyze code-level dependencies
-                Debug.Log("[CodeAnalysis] Analyzing code dependencies...");
-                var depTracker = new DependencyTracker(analyzer.SymbolIndex);
-                depTracker.AnalyzeDependencies();
+                // Step 3b: Add special attribute scripts as seeds
+                // Scripts with [RuntimeInitializeOnLoadMethod], [InitializeOnLoad], [MenuItem], [CreateAssetMenu]
+                // are entry points even if not directly referenced by scenes/prefabs
+                foreach (var attr in roslynAnalyzer.SpecialAttributes)
+                {
+                    seedPaths.Add(attr.FilePath);
+                }
 
-                // Get transitive dependencies from seed scripts
-                var allReferencedPaths = depTracker.GetTransitiveReferences(new HashSet<string>(seedPaths));
+                // Step 3c: Detect runtime-loaded assets via GameAssetManager.Load/LoadAsync
+                // Scripts attached to prefabs loaded at runtime are implicitly used
+                Debug.Log("[CodeAnalysis] Step 3c/5: Detecting runtime-loaded asset references...");
+                var runtimeAnalyzer = new RuntimeReferenceAnalyzer();
+                runtimeAnalyzer.ScanForRuntimeLoads();
+                runtimeAnalyzer.DiscoverReferencedScripts();
+                runtimeAnalyzer.AddDiscoveredScriptsToSeeds(seedPaths);
+
+                Debug.Log($"[CodeAnalysis] Step 3/5: Identified {seedPaths.Count} seed scripts ({assetAnalyzer.SceneReferences.Count} scene refs, {assetAnalyzer.PrefabReferences.Count} prefab refs, {assetAnalyzer.AssetReferences.Count} SO refs, {roslynAnalyzer.SpecialAttributes.Count} special attributes, {runtimeAnalyzer.RuntimeLoads.Count} runtime loads)");
+
+                // Step 4: Transitive dependency analysis
+                Debug.Log("[CodeAnalysis] Step 4/5: Computing transitive dependencies...");
+                var allReferencedPaths = roslynAnalyzer.GetTransitiveReferences(seedPaths);
+                var dependencyChains = roslynAnalyzer.BuildDependencyChains(allReferencedPaths);
 
                 // Step 5: Generate report
+                Debug.Log("[CodeAnalysis] Step 5/5: Generating report...");
                 var reportGenerator = new JsonReportGenerator(OutputDirectory);
                 reportGenerator.GenerateReport(
-                    analyzer.SymbolIndex,
-                    analyzer.SpecialAttributes,
-                    analyzer.AllScriptPaths,
+                    roslynAnalyzer,
                     allReferencedPaths,
                     seedPaths,
-                    scriptToAssetsMap
+                    scriptToAssetsMap,
+                    dependencyChains,
+                    runtimeAnalyzer.RuntimeLoads.ToList()
                 );
 
-                // Step 6: Show summary
+                // Show summary
+                var topLevelCount = roslynAnalyzer.AllSymbols.Count(s => string.IsNullOrEmpty(s.ParentTypeName));
+                var isolatedCount = topLevelCount - allReferencedPaths.Count;
                 ShowSummary(
-                    analyzer.SymbolIndex.AllSymbols.Count,
-                    analyzer.AllScriptPaths.Count,
+                    roslynAnalyzer.AllSymbols.Count,
+                    roslynAnalyzer.AllScriptPaths.Count,
                     seedPaths.Count,
                     allReferencedPaths.Count,
-                    analyzer.SymbolIndex.AllSymbols.Count - allReferencedPaths.Count
+                    Math.Max(0, isolatedCount),
+                    runtimeAnalyzer.RuntimeLoads.Count,
+                    runtimeAnalyzer.DiscoveredScriptPaths.Count
                 );
 
                 Debug.Log("[CodeAnalysis] Analysis completed successfully!");
@@ -77,64 +102,59 @@ namespace Tactics.CodeAnalysis
         }
 
         [MenuItem("Tools/Code Analysis/Analyze Script References", true)]
-        public static bool RunAnalysisValidate()
-        {
-            // Always enabled
-            return true;
-        }
+        public static bool RunAnalysisValidate() => true;
 
         [MenuItem("Tools/Code Analysis/Open Output Folder")]
         public static void OpenOutputFolder()
         {
-            var fullPath = System.IO.Path.Combine(Application.dataPath, "..", OutputDirectory);
-            fullPath = System.IO.Path.GetFullPath(fullPath);
-            
-            if (System.IO.Directory.Exists(fullPath))
+            var fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", OutputDirectory));
+            if (Directory.Exists(fullPath))
             {
                 EditorUtility.RevealInFinder(fullPath);
             }
             else
             {
-                EditorUtility.DisplayDialog(
-                    "Output Folder Not Found",
-                    $"Output folder does not exist:\n{fullPath}\n\nPlease run analysis first.",
-                    "OK"
-                );
+                EditorUtility.DisplayDialog("Output Folder Not Found",
+                    $"Output folder does not exist:\n{fullPath}\n\nPlease run analysis first.", "OK");
             }
         }
 
         [MenuItem("Tools/Code Analysis/Open Output Folder", true)]
         public static bool OpenOutputFolderValidate()
         {
-            var fullPath = System.IO.Path.Combine(Application.dataPath, "..", OutputDirectory);
-            fullPath = System.IO.Path.GetFullPath(fullPath);
-            return System.IO.Directory.Exists(fullPath);
+            var fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", OutputDirectory));
+            return Directory.Exists(fullPath);
         }
 
-        private static void ShowSummary(int symbolsCount, int totalScripts, int seedCount, int referencedCount, int isolatedCount)
+        private static void ShowSummary(int symbolsCount, int totalScripts, int seedCount, int referencedCount, int isolatedCount, int runtimeLoadCount, int runtimeDiscoveredScriptCount)
         {
-            var summary = $@"Code Analysis Summary
-=====================
-Total Scripts: {totalScripts}
-Total Symbols: {symbolsCount}
-Seed Scripts (Scene/Prefab): {seedCount}
-Referenced (with dependencies): {referencedCount}
-Isolated Scripts: {isolatedCount}
+            var summary = $@"Code Analysis Summary (Roslyn AST)
+ =====================================
+ Total Scripts: {totalScripts}
+ Total Symbols (incl. nested): {symbolsCount}
+ Seed Scripts (Assets + Special): {seedCount}
+ Referenced (with dependencies): {referencedCount}
+ Isolated Scripts: {isolatedCount}
+ Runtime Asset Loads Detected: {runtimeLoadCount}
+ Scripts from Runtime Loads: {runtimeDiscoveredScriptCount}
 
-Report saved to: {OutputDirectory}/analysis-report.json
+ Report saved to: {OutputDirectory}/analysis-report.json
 
-Note: Review isolated scripts before deletion.
-- Interfaces/Abstract classes may be used by inheritance
-- Editor scripts may have menu commands
-- Third-party framework code should not be deleted";
+ Improvements over previous version:
+ - Roslyn AST parsing (no regex false positives)
+ - Scans ALL scenes, prefabs, ScriptableObjects
+ - Special attributes as entry points
+ - Nested class indexing
+ - Full dependency chain reporting
+ - Runtime asset load detection (GameAssetManager.Load/LoadAsync)
+
+ Note: Review isolated scripts before deletion.
+ - Interfaces/Abstract classes may be used by inheritance
+ - Editor scripts may have menu commands
+ - Third-party framework code should not be deleted";
 
             Debug.Log(summary);
-            
-            EditorUtility.DisplayDialog(
-                "Code Analysis Complete",
-                summary,
-                "OK"
-            );
+            EditorUtility.DisplayDialog("Code Analysis Complete", summary, "OK");
         }
     }
 }
