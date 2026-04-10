@@ -1,21 +1,20 @@
 using Tactics.Tbsf.Common.Controllers;
 using Tactics.Tbsf.Common.Controllers.GridStates;
+using Tactics.Tbsf.Common.Players;
 
 namespace Tactics.Tbsf.Common.Players
 {
     /// <summary>
-    /// Represents a human player in the game, allowing interaction through user input.
+    /// Unity-specific implementation of a Human player.
     /// </summary>
-    public abstract class HumanPlayer : IPlayer
+    public class HumanPlayer : Player
     {
-        public abstract int PlayerNumber { get; set; }
-        public PlayerType PlayerType { get; set; }
-
-        public void Initialize(GridController gridController)
+        public override PlayerType PlayerType { get; set; } = PlayerType.HumanPlayer;
+        public override void Initialize(GridController gridController)
         {
         }
 
-        public void Play(GridController gridController)
+        public override void Play(GridController gridController)
         {
             gridController.GridState = new GridStateAwaitInput();
         }

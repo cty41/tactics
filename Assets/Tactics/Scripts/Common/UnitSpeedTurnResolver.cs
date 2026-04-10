@@ -3,7 +3,7 @@ using System.Linq;
 using Tactics.Tbsf.Common.Controllers;
 using Tactics.Tbsf.Common.Controllers.TurnResolvers;
 using Tactics.Tbsf.Common.Units;
-using Tactics.Tbsf.Unity.Controllers;
+using Tactics.Tbsf.Common.Controllers;
 using UnityEngine;
 
 namespace Tactics.Controllers.TurnResolvers

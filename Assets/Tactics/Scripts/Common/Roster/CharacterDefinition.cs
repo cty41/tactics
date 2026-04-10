@@ -2,7 +2,7 @@ using System;
 
 namespace Tactics.Roster
 {
-    /// <summary>Serializable character data aligned with <see cref="Tactics.Tbsf.Unity.Units.Unit"/> combat fields.</summary>
+    /// <summary>Serializable character data aligned with <see cref="Tactics.Tbsf.Common.Units.Unit"/> combat fields.</summary>
     [Serializable]
     public class CharacterDefinition
     {

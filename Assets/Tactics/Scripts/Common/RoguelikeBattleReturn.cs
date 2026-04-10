@@ -4,7 +4,7 @@ using Tactics.AssetPipeline;
 using Newtonsoft.Json;
 using Tactics.Tbsf.Common.Controllers.GameResolvers;
 using Tactics.Tbsf.Common.Players;
-using Tactics.Tbsf.Unity.Controllers;
+using Tactics.Tbsf.Common.Controllers;
 using UnityEngine;
 
 namespace Tactics.Roguelike

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Tactics.Tbsf.Common.Cells;
 using Tactics.Tbsf.Common.Units;
 using Tactics.Tbsf.Common.Utilities;
-using Tactics.Tbsf.Unity.Cells;
 using UnityEngine;
 
 namespace Tactics.Cells

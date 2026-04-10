@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 51b3b5bd47cb426cb23b93b4b8bdaeff
+guid: 4c295b93dc1b436d95cc314c3b5d5339
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -8,11 +8,4 @@ MonoImporter:
   icon: {instanceID: 0}
   userData: 
   assetBundleName: 
-  assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 50282
-  packageName: Turn Based Strategy Framework
-  packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/players/HumanPlayer.cs
-  uploadId: 811342
+  assetBundleVariant:

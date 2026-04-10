@@ -3,8 +3,6 @@ using TMPro;
 using Tactics.Tbsf.Common.Controllers;
 using Tactics.Tbsf.Common.Controllers.GameResolvers;
 using Tactics.Tbsf.Common.Players;
-using Tactics.Tbsf.Unity.Controllers;
-using Tactics.Tbsf.Unity.Players;
 using UnityEngine;
 using UnityEngine.UI;
 

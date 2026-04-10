@@ -3,7 +3,6 @@ using Tactics.Tbsf.Common.AI.BehaviourTrees;
 using Tactics.Tbsf.Common.AI.Evaluators;
 using Tactics.Tbsf.Common.Controllers;
 using Tactics.Tbsf.Common.Units;
-using Tactics.Tbsf.Unity.AI.BehaviourTrees;
 using UnityEngine;
 
 namespace Tactics.AI.BehaviourTrees

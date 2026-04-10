@@ -5,7 +5,7 @@ using Tactics.Tbsf.Common.Units.Abilities;
 using Tactics.Tbsf.Common.Controllers.GridStates;
 using Tactics.Tbsf.Common.Units;
 
-namespace Tactics.Tbsf.Unity.Units
+namespace Tactics.Tbsf.Common.Units
 {
     /// <summary>
     /// Helper class for unit ability execution handling common ExecuteAbility workflows.

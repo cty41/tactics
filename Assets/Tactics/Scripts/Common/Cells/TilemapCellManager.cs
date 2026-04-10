@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using Tactics.Tbsf.Common.Cells;
 using Tactics.Tbsf.Common.Controllers;
 using Tactics.Tbsf.Common.Utilities;
-using Tactics.Tbsf.Unity.Cells;
-using Tactics.Tbsf.Unity.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Tilemaps;
