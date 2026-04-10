@@ -1,6 +1,6 @@
 using System.Linq;
-using Tactics.Tbsf.Common.Cells;
-using Tactics.Tbsf.Common.Units;
+using Tactics.Common.Cells;
+using Tactics.Common.Units;
 using UnityEngine;
 
 namespace Tactics.Units

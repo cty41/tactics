@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Tactics.Tbsf.Common.Units;
+using Tactics.Common.Units;
 using Tactics.Units;
 using UnityEngine;
 
@@ -8,7 +8,7 @@ namespace Tactics.Roster
 {
     /// <summary>
     /// Strategy A: reuse existing friendly <see cref="TilemapUnit"/> placeholders in the scene and overwrite stats from <see cref="PlayerAdventureState"/>.
-    /// Must run before <see cref="Tactics.Tbsf.Common.Controllers.UnityGridController"/> starts the game (Awake + early execution order).
+    /// Must run before <see cref="Tactics.Common.Controllers.UnityGridController"/> starts the game (Awake + early execution order).
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class BattlePartyBootstrap : MonoBehaviour

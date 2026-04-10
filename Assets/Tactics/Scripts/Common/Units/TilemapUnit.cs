@@ -1,7 +1,7 @@
-using Tactics.Tbsf.Common.Cells;
-using Tactics.Tbsf.Common.Controllers;
-using Tactics.Tbsf.Common.Units;
-using Tactics.Tbsf.Common.Utilities;
+using Tactics.Common.Cells;
+using Tactics.Common.Controllers;
+using Tactics.Common.Units;
+using Tactics.Common.Utilities;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;

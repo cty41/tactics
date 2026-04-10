@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Tactics.Tbsf.Common.AI.BehaviourTrees;
-using Tactics.Tbsf.Common.AI.Evaluators;
-using Tactics.Tbsf.Common.Controllers;
-using Tactics.Tbsf.Common.Units;
+using Tactics.Common.AI.BehaviourTrees;
+using Tactics.Common.AI.Evaluators;
+using Tactics.Common.Controllers;
+using Tactics.Common.Units;
 using UnityEngine;
 
 namespace Tactics.AI.BehaviourTrees

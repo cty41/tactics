@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Tactics.Tbsf.Common.Cells;
-using Tactics.Tbsf.Common.Units;
-using Tactics.Tbsf.Common.Units.Abilities;
+using Tactics.Common.Cells;
+using Tactics.Common.Units;
+using Tactics.Common.Units.Abilities;
 using UnityEngine;
 
 namespace Tactics.Units

@@ -1,5 +1,5 @@
-using Tactics.Tbsf.Common.Cells;
-using Tactics.Tbsf.Common.Units;
+using Tactics.Common.Cells;
+using Tactics.Common.Units;
 
 namespace Tactics.Units
 {

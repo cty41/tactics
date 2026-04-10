@@ -1,5 +1,5 @@
 using TMPro;
-using Tactics.Tbsf.Common.Units;
+using Tactics.Common.Units;
 using UnityEngine;
 
 namespace Tactics.Units

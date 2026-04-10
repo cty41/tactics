@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Tactics.Tbsf.Common.Cells;
-using Tactics.Tbsf.Common.Units;
-using Tactics.Tbsf.Common.Utilities;
+using Tactics.Common.Cells;
+using Tactics.Common.Units;
+using Tactics.Common.Utilities;
 using UnityEngine;
 
 namespace Tactics.Cells
