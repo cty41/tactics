@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 07da389feda54dc5b4ae6bd43668524e
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/controllers/IGridController.cs
+  assetPath: Assets/Tactics/Scripts/Common/controllers/IGridController.cs
   uploadId: 811342

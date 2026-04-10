@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 79043108276f48f39ed6710d93188fd1
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/units/IUnit.cs
+  assetPath: Assets/Tactics/Scripts/Common/Units/IUnit.cs
   uploadId: 811342

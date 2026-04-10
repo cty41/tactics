@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 65ace0e49f1140ee9b7d4581792fa3e2
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/ai/behaviourTrees/baseNodes/DelayNode.cs
+  assetPath: Assets/Tactics/Scripts/Common/AI/behaviourTrees/baseNodes/DelayNode.cs
   uploadId: 811342

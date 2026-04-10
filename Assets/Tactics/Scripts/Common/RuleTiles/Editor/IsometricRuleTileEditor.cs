@@ -9,7 +9,7 @@ namespace Tactics.RuleTiles.Editor
 {
     [CustomEditor(typeof(IsometricRuleTile), true)]
     [CanEditMultipleObjects]
-    internal class TbsfIsometricRuleTileEditor : TbsfRuleTileEditor
+    internal class IsometricRuleTileEditorInternal : RuleTileEditorInternal
     {
         private static readonly int[, ] s_Arrows =
         {

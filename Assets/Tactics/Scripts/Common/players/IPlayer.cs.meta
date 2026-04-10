@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 0e17a29d9329444881418471bac9d614
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/players/IPlayer.cs
+  assetPath: Assets/Tactics/Scripts/Common/players/IPlayer.cs
   uploadId: 811342

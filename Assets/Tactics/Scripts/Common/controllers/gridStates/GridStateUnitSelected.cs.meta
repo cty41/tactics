@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 2b6ea0e69f924ceba07b565fe36fb46e
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/controllers/gridStates/GridStateUnitSelected.cs
+  assetPath: Assets/Tactics/Scripts/Common/controllers/gridStates/GridStateUnitSelected.cs
   uploadId: 811342

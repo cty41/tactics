@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 6c1a2ce03a1c400d866c55d5c34c0c60
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/units/abilities/MultipleTargetAttackCommand.cs
+  assetPath: Assets/Tactics/Scripts/Common/Units/abilities/MultipleTargetAttackCommand.cs
   uploadId: 811342

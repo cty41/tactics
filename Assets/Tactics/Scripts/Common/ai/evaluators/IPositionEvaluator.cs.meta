@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 167f9128ac7e472f87d4f02fabee1336
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/ai/evaluators/IPositionEvaluator.cs
+  assetPath: Assets/Tactics/Scripts/Common/AI/evaluators/IPositionEvaluator.cs
   uploadId: 811342

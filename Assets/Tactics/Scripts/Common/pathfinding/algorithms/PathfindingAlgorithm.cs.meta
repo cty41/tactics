@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 27e9516d17d544aab09ced61a43afe05
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/pathfinding/algorithms/PathfindingAlgorithm.cs
+  assetPath: Assets/Tactics/Scripts/Common/pathfinding/algorithms/PathfindingAlgorithm.cs
   uploadId: 811342

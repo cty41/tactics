@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: fe06af9f1a2047d48cb98c3ca07c7057
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/ai/evaluators/DamageDealtTargetEvaluator.cs
+  assetPath: Assets/Tactics/Scripts/Common/AI/evaluators/DamageDealtTargetEvaluator.cs
   uploadId: 811342

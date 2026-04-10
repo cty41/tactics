@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: ed56cd5b90454201a91093e9d519c165
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/ai/behaviourTrees/customNodes/AttackSequenceNode.cs
+  assetPath: Assets/Tactics/Scripts/Common/AI/behaviourTrees/customNodes/AttackSequenceNode.cs
   uploadId: 811342

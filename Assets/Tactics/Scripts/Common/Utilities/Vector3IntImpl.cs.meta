@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: fe8c1b453b7a45e399a840a066101f05
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/utilities/Vector3IntImpl.cs
+  assetPath: Assets/Tactics/Scripts/Common/Utilities/Vector3IntImpl.cs
   uploadId: 811342

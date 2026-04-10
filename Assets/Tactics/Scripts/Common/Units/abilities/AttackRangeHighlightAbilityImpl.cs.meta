@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 6ef1b4cc68e74d028d1a01af71e30fac
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/units/abilities/AttackRangeHighlightAbilityImpl.cs
+  assetPath: Assets/Tactics/Scripts/Common/Units/abilities/AttackRangeHighlightAbilityImpl.cs
   uploadId: 811342

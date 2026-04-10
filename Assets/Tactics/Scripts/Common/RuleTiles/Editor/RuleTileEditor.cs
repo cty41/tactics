@@ -12,7 +12,7 @@ namespace Tactics.RuleTiles.Editor
 {
     [CustomEditor(typeof(RuleTile), true)]
     [CanEditMultipleObjects]
-    internal class TbsfRuleTileEditor : UnityEditor.Editor
+    internal class RuleTileEditorInternal : UnityEditor.Editor
     {
         internal const float k_DefaultElementHeight = 48f;
         internal const float k_PaddingBetweenRules = 26f;

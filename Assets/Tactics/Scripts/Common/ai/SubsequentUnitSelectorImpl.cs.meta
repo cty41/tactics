@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 4ab9149be4df4459b7173550ed419d8b
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/ai/SubsequentUnitSelectorImpl.cs
+  assetPath: Assets/Tactics/Scripts/Common/AI/SubsequentUnitSelectorImpl.cs
   uploadId: 811342

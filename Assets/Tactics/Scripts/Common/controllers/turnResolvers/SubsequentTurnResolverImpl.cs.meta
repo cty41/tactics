@@ -1,4 +1,4 @@
-fileFormatVersion: 2
+﻿fileFormatVersion: 2
 guid: 83688c4ea524431dbdf3f4152905f4a6
 MonoImporter:
   externalObjects: {}
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 50282
   packageName: Turn Based Strategy Framework
   packageVersion: 4.0.3
-  assetPath: Assets/TBSFramework/External/tbsf-common/common/controllers/turnResolvers/SubsequentTurnResolverImpl.cs
+  assetPath: Assets/Tactics/Scripts/Common/controllers/turnResolvers/SubsequentTurnResolverImpl.cs
   uploadId: 811342
