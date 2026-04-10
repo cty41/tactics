@@ -39,5 +39,12 @@ namespace Tactics.Runtime.BattleLog
 
         [Tooltip("Color for turn logs")]
         public Color TurnColor = new Color(1f, 0.84f, 0f); // Gold
+
+        [Header("New Combat Skills")]
+        [Tooltip("Color for heal logs")]
+        public Color HealColor = new Color(0.2f, 1f, 0.2f); // Green
+
+        [Tooltip("Color for buff logs")]
+        public Color BuffColor = new Color(1f, 0.4f, 0f); // Orange
     }
 }

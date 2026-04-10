@@ -5,12 +5,14 @@ namespace Tactics.Runtime.BattleLog
     /// </summary>
     public enum BattleActionType
     {
-        Attack,         // Normal attack
-        Skill,          // Skill usage
-        Item,           // Item usage
-        TurnStart,      // Turn started
-        TurnEnd,        // Turn ended
-        Damage,         // Damage taken
-        Destroy         // Unit destroyed
+        Attack,         // 普通攻击
+        Skill,          // 技能使用
+        Item,           // 物品使用
+        TurnStart,      // 回合开始
+        TurnEnd,        // 回合结束
+        Damage,         // 受到伤害
+        Destroy,        // 单位被消灭
+        Heal,           // 治疗
+        Buff            // Buff施加/效果
     }
 }

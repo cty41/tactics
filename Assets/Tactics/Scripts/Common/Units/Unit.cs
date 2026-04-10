@@ -8,6 +8,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
 using Tactics.Common.AI.BehaviourTrees;
 using Tactics.Common.Cells;
@@ -24,10 +25,11 @@ namespace Tactics.Common.Units
     /// and manages visual indicators for unit selection, movement, and combat actions.
     /// </summary>
     [ExecuteInEditMode]
-    public class Unit : MonoBehaviour, IUnit, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+    public class Unit : MonoBehaviour, IUnit, INamedUnit, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         private MoveComponent _moveComponent;
         private CombatComponent _combatComponent;
+        private BuffComponent _buffComponent;
 
         public event Action<IUnit> UnitSelected;
         public event Action<IUnit> UnitDeselected;
@@ -68,6 +70,8 @@ namespace Tactics.Common.Units
         public int PlayerNumber { get { return _playerNumber; } set { _playerNumber = value; } }
 
         public int UnitID { get; set; }
+
+        public string UnitName => gameObject.name;
 
         public ITreeNode BehaviourTree { get { return _behaviourTreeResource.BehaviourTree; } }
         [SerializeField] protected BehaviourTreeResource _behaviourTreeResource;
@@ -112,6 +116,11 @@ namespace Tactics.Common.Units
         public int DefenceFactor { get { return _defenceFactor; } set { _defenceFactor = value; } }
 
         /// <summary>
+        /// The buff component that manages buffs for this unit.
+        /// </summary>
+        public BuffComponent BuffComponent => _buffComponent;
+
+        /// <summary>
         /// Cancellation token source used to cancel ongoing visual defense highlight effects when the unit is destroyed.
         /// </summary>
         CancellationTokenSource _highlightCancellationTokenSource = new CancellationTokenSource();
@@ -135,6 +144,7 @@ namespace Tactics.Common.Units
         {
             _moveComponent = new UnityMoveComponent(this);
             _combatComponent = new CombatComponent(this);
+            _buffComponent = new BuffComponent(this);
             _behaviourTreeResource?.Initialize(this, gridController);
 
             MaxActionPoints = ActionPoints;
@@ -160,9 +170,25 @@ namespace Tactics.Common.Units
         {
             return _baseAbilities;
         }
+
+        public virtual void AddBuff(Buff buff)
+        {
+            _buffComponent.AddBuff(buff);
+        }
+
+        public virtual void RemoveBuff(Buff buff)
+        {
+            _buffComponent.RemoveBuff(buff);
+        }
+
+        public virtual IReadOnlyList<Buff> GetActiveBuffs()
+        {
+            return _buffComponent.GetActiveBuffs();
+        }
         
         public virtual void OnTurnStart(IGridController gridController)
         {
+            _buffComponent.OnTurnStart(gridController);
         }
 
         public virtual void OnTurnEnd(IGridController gridController)
@@ -170,6 +196,7 @@ namespace Tactics.Common.Units
             MovementPoints = MaxMovementPoints;
             ActionPoints = MaxActionPoints;
             Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Intelligence));
+            _buffComponent.OnTurnEnd(gridController);
         }
 
         /// <summary>
@@ -519,6 +546,7 @@ namespace Tactics.Common.Units
         public virtual void OnDestroyed(IGridController gridController)
         {
             _highlightCancellationTokenSource.Cancel();
+            _buffComponent.OnUnitDestroyed();
             Destroy(gameObject);
         }
 

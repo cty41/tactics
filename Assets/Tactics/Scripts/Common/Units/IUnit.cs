@@ -5,6 +5,7 @@ using Tactics.Common.AI.BehaviourTrees;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
 
 namespace Tactics.Common.Units
@@ -135,6 +136,23 @@ namespace Tactics.Common.Units
         /// <param name="ability">The ability to register.</param>
         /// <param name="gridController">The grid controller.</param>
         void RegisterAbility(IAbility ability, IGridController gridController);
+
+        /// <summary>
+        /// Applies a buff to this unit.
+        /// </summary>
+        /// <param name="buff">The buff to apply.</param>
+        void AddBuff(Buff buff);
+
+        /// <summary>
+        /// Removes a specific buff from this unit.
+        /// </summary>
+        /// <param name="buff">The buff to remove.</param>
+        void RemoveBuff(Buff buff);
+
+        /// <summary>
+        /// Gets all active buffs on this unit.
+        /// </summary>
+        IReadOnlyList<Buff> GetActiveBuffs();
 
         /// <summary>
         /// Executes a given ability.
