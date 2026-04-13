@@ -6,12 +6,6 @@ This is an agent-first Unity project where human engineers steer and agents exec
 
 **Core Principle: No manual code contribution. Agents write all code.**
 
-## Architecture
-
-- **Game Engine**: Unity 6.2 (C# 12)
-- **Pattern**: Traditional MonoBehaviour
-- **Asset Pipeline**: AssetBundle-based with `GameAssetManager`
-
 ## Knowledge Base
 
 ```
@@ -56,18 +50,27 @@ All rules in `.kilo/rules/` are **always applied** to all agent tasks:
 5. Agent handles mundane merges autonomously
 
 ## Documentation
+For detailed information, navigate to: `ARCHITECTURE.md`
 
-For detailed information, navigate to:
-- Architecture: See `ARCHITECTURE.md`
-- Asset Pipeline: See `docs/references/GameAssetPipeline.md`
-- Code Style: See `rules/unity-core.md`
+
+## Agent Constraints
+
+### Language
+- **Plan, code, debug mode output must be in Chinese** (中文), including: plan files, task descriptions, and communication during planning.
+- Code comments and commit messages should follow the project's conventions.
+- Exception: Code identifiers (variable names, class names, method names) always follow the project's .NET naming conventions (PascalCase, camelCase, etc.).
+
+### Plan Mode Behavior
+- **When using the plan tool, ONLY create/edit the plan file.** Do NOT implement code, create files, or make any changes outside of `.kilo/plans/`.
+- Plan mode is READ-ONLY except for the plan file itself. Implementation begins ONLY after the user explicitly approves the plan.
+
+### Plan File Naming
+- **Plan files MUST use descriptive, content-based names in snake_case.**
+- Examples: `combat-skills-expansion.md`, `inventory-system-refactor.md`, `ui-overhaul.md`
+- **NEVER use auto-generated random names** (e.g., `cosmic-wolf.md`, `1775816560974-random-name.md`).
 
 ## Agent Limitations
 
-Agents cannot access:
-- Google Docs or external wikis
-- Slack/chat history
-- Knowledge in human heads only
 
 **If it's not in the codebase, it doesn't exist for agents.**
 
