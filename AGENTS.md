@@ -10,7 +10,6 @@ This is an agent-first Unity project where human engineers steer and agents exec
 
 ```
 .kilo/
-├── AGENTS.md              # This file (map)
 ├── ARCHITECTURE.md        # System architecture
 ├── docs/
 │   ├── references/        # Technical references
@@ -50,7 +49,7 @@ All rules in `.kilo/rules/` are **always applied** to all agent tasks:
 5. Agent handles mundane merges autonomously
 
 ## Documentation
-For detailed information, navigate to: `ARCHITECTURE.md`
+For detailed information, navigate to: `.kilo/ARCHITECTURE.md`
 
 
 ## Agent Constraints
