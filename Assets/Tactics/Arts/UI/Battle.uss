@@ -1,0 +1,105 @@
+/* Battle UI Styles */
+
+/* Root container - full screen coverage, positioning reference */
+.root-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Top panel - anchored to top */
+.top-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+}
+
+/* Status panel (HP/MP bars) */
+.status-panel {
+    flex-direction: column;
+    gap: 8px;
+    width: 200px;
+}
+
+/* Bottom panel - anchored to bottom */
+.bottom-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+}
+
+/* Left action panel - buttons stacked vertically */
+.left-panel {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+/* Right action panel */
+.right-panel {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+/* Base button style - fixed size */
+.button {
+    width: 120px;
+    height: 48px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: rgba(40, 40, 40, 0.85);
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: rgba(100, 100, 100, 0.9);
+    color: white;
+    font-size: 16px;
+    text-align: middle-center;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: rgba(60, 60, 60, 0.9);
+    border-color: rgba(150, 150, 150, 1);
+}
+
+.button:active {
+    background-color: rgba(80, 80, 80, 0.95);
+}
+
+/* Move button - wider */
+.move-button {
+    width: 180px;
+}
+
+/* End Turn button */
+.end-turn-button {
+    width: 140px;
+    background-color: rgba(180, 40, 40, 0.85);
+    border-color: rgba(220, 80, 80, 0.9);
+}
+
+.end-turn-button:hover {
+    background-color: rgba(200, 60, 60, 0.9);
+    border-color: rgba(240, 100, 100, 1);
+}
+
+.end-turn-button:active {
+    background-color: rgba(220, 80, 80, 0.95);
+}
