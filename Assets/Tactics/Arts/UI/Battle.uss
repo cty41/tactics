@@ -1,13 +1,9 @@
-/* Battle UI Styles */
-
-/* Root container - full screen coverage, positioning reference */
 .root-container {
     width: 100%;
     height: 100%;
     position: relative;
 }
 
-/* Top panel - anchored to top */
 .top-panel {
     position: absolute;
     top: 0;
@@ -22,14 +18,12 @@
     padding-bottom: 10px;
 }
 
-/* Status panel (HP/MP bars) */
 .status-panel {
     flex-direction: column;
     gap: 8px;
     width: 200px;
 }
 
-/* Bottom panel - anchored to bottom */
 .bottom-panel {
     position: absolute;
     bottom: 0;
@@ -44,21 +38,18 @@
     padding-bottom: 20px;
 }
 
-/* Left action panel - buttons stacked vertically */
 .left-panel {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
 }
 
-/* Right action panel */
 .right-panel {
     flex-direction: column;
     align-items: flex-end;
     gap: 8px;
 }
 
-/* Base button style - fixed size */
 .button {
     width: 120px;
     height: 48px;
@@ -76,19 +67,17 @@
 
 .button:hover {
     background-color: rgba(60, 60, 60, 0.9);
-    border-color: rgba(150, 150, 150, 1);
+    border-color: rgb(150, 150, 150);
 }
 
 .button:active {
     background-color: rgba(80, 80, 80, 0.95);
 }
 
-/* Move button - wider */
 .move-button {
     width: 180px;
 }
 
-/* End Turn button */
 .end-turn-button {
     width: 140px;
     background-color: rgba(180, 40, 40, 0.85);
@@ -97,9 +86,17 @@
 
 .end-turn-button:hover {
     background-color: rgba(200, 60, 60, 0.9);
-    border-color: rgba(240, 100, 100, 1);
+    border-color: rgb(240, 100, 100);
 }
 
 .end-turn-button:active {
     background-color: rgba(220, 80, 80, 0.95);
+}
+
+#hp .unity-progress-bar__progress {
+    background-color: rgb(76, 175, 80);
+}
+
+#mp .unity-progress-bar__progress {
+    background-color: rgb(33, 150, 243);
 }

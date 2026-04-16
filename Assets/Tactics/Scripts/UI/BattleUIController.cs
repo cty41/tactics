@@ -1,10 +1,14 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Players;
 using Tactics.Common.Battle;
+using Tactics.Common.Units;
+using Tactics.Common.Units.Abilities;
 
 namespace Tactics.UI
 {
@@ -21,8 +25,11 @@ namespace Tactics.UI
         private Button _skill2Button;
         private ProgressBar _hpBar;
         private ProgressBar _mpBar;
+        private VisualElement _bottomPanel;
         private UnityGridController _gridController;
         private InputAction _endTurnAction;
+        private IUnit _currentSelectedUnit;
+        private MoveAbilityImpl _currentMoveAbility;
 
         protected override void OnShown()
         {
@@ -61,6 +68,7 @@ namespace Tactics.UI
             _skill2Button = root.Q<Button>("Skill2Button");
             _hpBar = root.Q<ProgressBar>("hp");
             _mpBar = root.Q<ProgressBar>("mp");
+            _bottomPanel = root.Q<VisualElement>("BottomPanel");
 
             if (_endTurnButton != null) _endTurnButton.clicked += OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked += OnMoveClicked;
@@ -80,6 +88,9 @@ namespace Tactics.UI
             // Subscribe to turn/game events for UI state management
             _gridController.TurnStarted += OnTurnStarted;
             _gridController.GameEnded += OnGameEnded;
+
+            // Subscribe to unit selection events for HP/MP display
+            SubscribeToUnitEvents();
 
             // Subscribe to EndTurn input action
             InputActionAsset inputActions = null;
@@ -123,6 +134,9 @@ namespace Tactics.UI
             {
                 Debug.LogWarning("[BattleUIController] Player action map not found.");
             }
+
+            // Initialize HP/MP for the current turn's unit (handles case where TurnStarted fired before UI subscription)
+            InitializeCurrentTurnHPMP();
         }
 
         private void UnwireButtons()
@@ -132,11 +146,45 @@ namespace Tactics.UI
             if (_skill1Button != null) _skill1Button.clicked -= OnSkill1Clicked;
             if (_skill2Button != null) _skill2Button.clicked -= OnSkill2Clicked;
 
+            UnsubscribeFromUnitEvents();
+
+            if (_currentSelectedUnit is ICombatant combatant)
+            {
+                combatant.HealthChanged -= OnUnitHealthChanged;
+            }
+            _currentSelectedUnit = null;
+
             if (_endTurnAction != null)
             {
                 _endTurnAction.performed -= OnEndTurnPerformed;
                 _endTurnAction.Disable();
             }
+        }
+
+        private void InitializeCurrentTurnHPMP()
+        {
+            if (_gridController == null) return;
+
+            var playableUnits = _gridController.TurnContext.PlayableUnits?.Invoke();
+            var currentUnit = playableUnits?.FirstOrDefault();
+            if (currentUnit != null)
+            {
+                _currentSelectedUnit = currentUnit;
+                UpdateHPMPBars();
+                UpdateMoveButtonState(currentUnit);
+
+                if (_currentSelectedUnit is ICombatant combatant)
+                {
+                    combatant.HealthChanged += OnUnitHealthChanged;
+                }
+            }
+
+            bool isHumanTurn = _gridController.TurnContext.CurrentPlayer.PlayerType == PlayerType.HumanPlayer;
+            if (_bottomPanel != null)
+                _bottomPanel.style.display = isHumanTurn ? DisplayStyle.Flex : DisplayStyle.None;
+            _canEndTurn = isHumanTurn;
+            if (_endTurnButton != null)
+                _endTurnButton.SetEnabled(isHumanTurn);
         }
 
         private void OnEndTurnClicked()
@@ -147,7 +195,30 @@ namespace Tactics.UI
 
         private void OnMoveClicked()
         {
-            Debug.Log("[BattleUIController] Move button clicked");
+            if (_currentSelectedUnit == null || _gridController == null)
+                return;
+
+            var playableUnits = _gridController.TurnContext.PlayableUnits?.Invoke()?.ToList();
+            if (playableUnits == null || !playableUnits.Any(u => ReferenceEquals(u, _currentSelectedUnit)))
+                return;
+
+            var moveAbility = _currentSelectedUnit.GetBaseAbilities()
+                .OfType<MoveAbilityImpl>()
+                .FirstOrDefault();
+            
+            if (moveAbility == null || !moveAbility.CanPerform(_gridController))
+                return;
+
+            _currentMoveAbility = moveAbility;
+
+            if (_gridController.GridState is GridStateUnitSelected)
+            {
+                moveAbility.OnAbilitySelected(_gridController);
+                moveAbility.Display(_gridController);
+                return;
+            }
+
+            _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, moveAbility);
         }
 
         private void OnSkill1Clicked()
@@ -172,19 +243,49 @@ namespace Tactics.UI
 
         private void OnTurnStarted(TurnTransitionParams turnTransitionParams)
         {
-            // Only allow manual end turn when it's a human player's turn
             bool isHumanTurn = turnTransitionParams.TurnContext.CurrentPlayer.PlayerType == PlayerType.HumanPlayer;
+            
+            if (_bottomPanel != null)
+                _bottomPanel.style.display = isHumanTurn ? DisplayStyle.Flex : DisplayStyle.None;
+            
             _canEndTurn = isHumanTurn;
             if (_endTurnButton != null)
                 _endTurnButton.SetEnabled(isHumanTurn);
+
+            var playableUnits = turnTransitionParams.TurnContext.PlayableUnits();
+            var currentUnit = playableUnits.FirstOrDefault();
+            if (currentUnit != null)
+            {
+                if (_currentSelectedUnit is ICombatant oldCombatant && !ReferenceEquals(oldCombatant, currentUnit))
+                {
+                    oldCombatant.HealthChanged -= OnUnitHealthChanged;
+                }
+
+                _currentSelectedUnit = currentUnit;
+                UpdateHPMPBars();
+                UpdateMoveButtonState(currentUnit);
+
+                if (_currentSelectedUnit is ICombatant newCombatant)
+                {
+                    newCombatant.HealthChanged += OnUnitHealthChanged;
+                }
+            }
         }
 
         private void OnGameEnded(GameResult gameResult)
         {
-            // Disable end turn button when game ends
             _canEndTurn = false;
             if (_endTurnButton != null)
                 _endTurnButton.SetEnabled(false);
+            if (_moveButton != null)
+                _moveButton.SetEnabled(false);
+            
+            if (_bottomPanel != null)
+                _bottomPanel.style.display = DisplayStyle.None;
+
+            _currentSelectedUnit = null;
+            if (_hpBar != null) _hpBar.value = 0;
+            if (_mpBar != null) _mpBar.value = 0;
         }
 
         /// <summary>
@@ -197,6 +298,7 @@ namespace Tactics.UI
             if (_hpBar == null) return;
             _hpBar.highValue = maxValue;
             _hpBar.value = value;
+            _hpBar.title = $"{(int)value}/{(int)maxValue}";
         }
 
         /// <summary>
@@ -209,6 +311,108 @@ namespace Tactics.UI
             if (_mpBar == null) return;
             _mpBar.highValue = maxValue;
             _mpBar.value = value;
+            _mpBar.title = $"{(int)value}/{(int)maxValue}";
+        }
+
+        private void SubscribeToUnitEvents()
+        {
+            if (_gridController?.UnitManager == null) return;
+
+            var units = _gridController.UnitManager.GetUnits();
+            foreach (var unit in units)
+            {
+                unit.UnitSelected += OnUnitSelected;
+                unit.UnitDeselected += OnUnitDeselected;
+                
+                if (unit is IMoveable moveable)
+                {
+                    moveable.UnitMoved += OnUnitMoved;
+                }
+            }
+        }
+
+        private void UnsubscribeFromUnitEvents()
+        {
+            if (_gridController?.UnitManager == null) return;
+
+            var units = _gridController.UnitManager.GetUnits();
+            foreach (var unit in units)
+            {
+                unit.UnitSelected -= OnUnitSelected;
+                unit.UnitDeselected -= OnUnitDeselected;
+                
+                if (unit is IMoveable moveable)
+                {
+                    moveable.UnitMoved -= OnUnitMoved;
+                }
+            }
+        }
+
+        private void OnUnitSelected(IUnit unit)
+        {
+            if (_currentSelectedUnit != null && _currentSelectedUnit != unit && _currentSelectedUnit is ICombatant oldCombatant)
+            {
+                oldCombatant.HealthChanged -= OnUnitHealthChanged;
+            }
+
+            _currentSelectedUnit = unit;
+            UpdateHPMPBars();
+
+            if (_currentSelectedUnit is ICombatant combatant)
+            {
+                combatant.HealthChanged += OnUnitHealthChanged;
+            }
+        }
+
+        private void OnUnitDeselected(IUnit unit)
+        {
+            if (unit is ICombatant combatant)
+            {
+                combatant.HealthChanged -= OnUnitHealthChanged;
+            }
+        }
+
+        private void OnUnitHealthChanged(HealthChangedEventArgs args)
+        {
+            if (ReferenceEquals(args.AffectedUnit, _currentSelectedUnit))
+            {
+                UpdateHPMPBars();
+            }
+        }
+
+        private void UpdateHPMPBars()
+        {
+            if (_currentSelectedUnit == null)
+            {
+                if (_hpBar != null) _hpBar.value = 0;
+                if (_mpBar != null) _mpBar.value = 0;
+                return;
+            }
+
+            UpdateHpBar(_currentSelectedUnit.Health, _currentSelectedUnit.MaxHealth);
+            UpdateMpBar(_currentSelectedUnit.Mana, _currentSelectedUnit.MaxMana);
+        }
+
+        private void UpdateMoveButtonState(IUnit unit)
+        {
+            if (_moveButton == null || unit == null)
+            {
+                if (_moveButton != null) _moveButton.SetEnabled(false);
+                return;
+            }
+
+            bool canMove = unit.ActionPoints > 0
+                && unit.GetBaseAbilities().OfType<MoveAbilityImpl>().Any();
+
+            _moveButton.SetEnabled(canMove);
+        }
+
+        private void OnUnitMoved(UnitMovedEventArgs args)
+        {
+            if (ReferenceEquals(args.AffectedUnit, _currentSelectedUnit))
+            {
+                UpdateMoveButtonState(args.AffectedUnit);
+            }
         }
     }
 }

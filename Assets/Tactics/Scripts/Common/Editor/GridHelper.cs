@@ -5,8 +5,6 @@ using Tactics.Common.Players;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
-using Tactics.Common.Gui;
-using Tactics.Common.Players;
 using Tactics.Common.Units;
 using UnityEditor;
 using UnityEngine;
@@ -583,8 +581,6 @@ namespace TbsFramework.EditorUtils
             tilemap.GetComponent<Tilemap>().orientation = Tilemap.Orientation.XZ;
             tilemap.transform.parent = grid.transform;
 
-            var guiControllerScript = guiController.AddComponent<GUIController>();
-            guiControllerScript.SetGridController(gridControllerScript);
 
             // DominationVictoryCondition is now handled by BattleController.OnUnitRemoved().
             // No need to add this component to new scenes.
