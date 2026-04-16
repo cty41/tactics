@@ -586,12 +586,8 @@ namespace TbsFramework.EditorUtils
             var guiControllerScript = guiController.AddComponent<GUIController>();
             guiControllerScript.SetGridController(gridControllerScript);
 
-            var dominationCondition = new GameObject("DominationCondition");
-            var dominationConditionScript = dominationCondition.AddComponent<DominationVictoryCondition>();
-            dominationConditionScript.SetUnitManager(unitManagerScript);
-            dominationConditionScript.SetPlayerManager(playerManagerScript);
-            dominationConditionScript.SetGridController(gridControllerScript);
-            dominationCondition.transform.parent = gameEndConditions.transform;
+            // DominationVictoryCondition is now handled by BattleController.OnUnitRemoved().
+            // No need to add this component to new scenes.
 
             ICellGridGenerator generator = null;
 

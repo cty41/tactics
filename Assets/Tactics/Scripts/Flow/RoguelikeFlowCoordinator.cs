@@ -19,11 +19,6 @@ namespace Tactics.Flow.Roguelike
         public async Task OpenMapAsync()
         {
             if (_isMapUiTransitioning) return;
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[RoguelikeFlowCoordinator] UIManager.Instance is null. Cannot open map UI.");
-                return;
-            }
 
             _isMapUiTransitioning = true;
             try
@@ -38,23 +33,12 @@ namespace Tactics.Flow.Roguelike
 
         public void CloseMap()
         {
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[RoguelikeFlowCoordinator] UIManager.Instance is null. Cannot close map UI.");
-                return;
-            }
-
             UIManager.Instance.Hide(UIManager.UIId.RoguelikeMap);
         }
 
         public async Task ToggleMapAsync()
         {
             if (_isMapUiTransitioning) return;
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[RoguelikeFlowCoordinator] UIManager.Instance is null. Cannot toggle map UI.");
-                return;
-            }
 
             _isMapUiTransitioning = true;
             try
@@ -75,12 +59,6 @@ namespace Tactics.Flow.Roguelike
 
         public void DestroyMap()
         {
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[RoguelikeFlowCoordinator] UIManager.Instance is null. Cannot destroy map UI.");
-                return;
-            }
-
             UIManager.Instance.Destroy(UIManager.UIId.RoguelikeMap);
         }
     }

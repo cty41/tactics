@@ -1,61 +1,53 @@
-using System;
-using System.Collections;
 using System.Linq;
-using Tactics.AssetPipeline;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Tactics.Common.Controllers.GameResolvers;
-using Tactics.Common.Players;
-using Tactics.Common.Controllers;
 using UnityEngine;
+using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Battle;
+using Tactics.Common.Players;
+using Tactics.Flow.Battle;
 
 namespace Tactics.Roguelike
 {
     /// <summary>
-    /// Legacy battle return handler. Use <see cref="RoguelikeBattleReturnHandler"/> and <see cref="Tactics.Common.Battle.BattleController"/> instead.
+    /// Roguelike-specific battle return handler.
+    /// Consumes BattleController.BattleEnded to update map path and coordinate return flow.
     /// </summary>
-    [Obsolete("Use RoguelikeBattleReturnHandler and BattleController instead. This component will be removed in a future version.")]
-    public class RoguelikeBattleReturn : MonoBehaviour
+    public sealed class RoguelikeBattleReturnHandler
     {
+        private static readonly RoguelikeBattleReturnHandler _instance = new RoguelikeBattleReturnHandler();
+        public static RoguelikeBattleReturnHandler Instance => _instance;
+
         private static readonly JsonSerializerSettings MapJsonSettings = new JsonSerializerSettings
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
 
-        [SerializeField] private float _returnDelaySeconds = 1.5f;
-        [Tooltip("Used when PlayerPrefs key is missing (e.g. opened Test1 directly from editor).")]
-        [SerializeField] private string _defaultMapSceneName = "Home";
+        private RoguelikeBattleReturnHandler() { }
 
-        private UnityGridController _grid;
-
-        private void Awake()
+        /// <summary>
+        /// Register with a BattleController instance.
+        /// Call this when BattleController becomes available (e.g. from BattleController.Awake).
+        /// </summary>
+        public void RegisterController(BattleController controller)
         {
-            _grid = GetComponent<UnityGridController>();
-            if (_grid != null)
-                _grid.GameEnded += OnGameEnded;
+            if (controller == null) return;
+            controller.BattleEnded += OnBattleEnded;
         }
 
-        private void OnDestroy()
+        /// <summary>
+        /// Unregister from a BattleController instance.
+        /// </summary>
+        public void UnregisterController(BattleController controller)
         {
-            if (_grid != null)
-                _grid.GameEnded -= OnGameEnded;
+            if (controller == null) return;
+            controller.BattleEnded -= OnBattleEnded;
         }
 
-        private void OnGameEnded(GameResult result)
+        private async void OnBattleEnded(GameResult result)
         {
-            StartCoroutine(CoReturnToMap(result));
-        }
-
-        private IEnumerator CoReturnToMap(GameResult result)
-        {
-            if (_returnDelaySeconds > 0f)
-                yield return new WaitForSeconds(_returnDelaySeconds);
-
             ApplyRoguelikePathAfterBattle(result);
-
-            var stored = PlayerPrefs.GetString(Tactics.UI.RoguelikeMapUIController.RoguelikeReturnScenePrefsKey, _defaultMapSceneName);
-            if (string.IsNullOrWhiteSpace(stored))
-                stored = _defaultMapSceneName;
-            SceneProjectPathHelper.TryLoadSceneViaAssetManager(stored);
+            await BattleFlowCoordinator.Instance.EndBattleAsync(result);
         }
 
         private static void ApplyRoguelikePathAfterBattle(GameResult result)

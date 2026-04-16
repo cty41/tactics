@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using TMPro;
 using Tactics.Common.Controllers;
@@ -8,6 +9,12 @@ using UnityEngine.UI;
 
 namespace Tactics.UI
 {
+    /// <summary>
+    /// Legacy UI controller for the tilemap example.
+    /// Functionality has been moved to <see cref="BattleUIController"/>.
+    /// </summary>
+    [Obsolete("Functionality has been moved to BattleUIController. " +
+              "This component will be removed in a future version.")]
     public class TilemapExampleGUIController : MonoBehaviour
     {
         [SerializeField] private UnityGridController _gridController;

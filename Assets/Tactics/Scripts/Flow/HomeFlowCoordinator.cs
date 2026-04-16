@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Tactics.Flow.Home
 {
-    /// <summary>
-    /// Home domain coordinator.
-    /// Owns Home-specific UI policies (menu open/close/toggle) and delegates infra work to UIManager.
-    /// </summary>
     public sealed class HomeFlowCoordinator
     {
         private static readonly HomeFlowCoordinator _instance = new HomeFlowCoordinator();
@@ -19,11 +15,6 @@ namespace Tactics.Flow.Home
         public async Task OpenMenuAsync()
         {
             if (_isMenuTransitioning) return;
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[HomeFlowCoordinator] UIManager.Instance is null. Cannot open menu.");
-                return;
-            }
             _isMenuTransitioning = true;
             try
             {
@@ -37,22 +28,12 @@ namespace Tactics.Flow.Home
 
         public void CloseMenu()
         {
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[HomeFlowCoordinator] UIManager.Instance is null. Cannot close menu.");
-                return;
-            }
             UIManager.Instance.Hide(UIManager.UIId.Menu);
         }
 
         public async Task ToggleMenuAsync()
         {
             if (_isMenuTransitioning) return;
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[HomeFlowCoordinator] UIManager.Instance is null. Cannot toggle menu.");
-                return;
-            }
             _isMenuTransitioning = true;
             try
             {
@@ -72,11 +53,6 @@ namespace Tactics.Flow.Home
 
         public void DestroyMenu()
         {
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[HomeFlowCoordinator] UIManager.Instance is null. Cannot destroy menu.");
-                return;
-            }
             UIManager.Instance.Destroy(UIManager.UIId.Menu);
         }
     }

@@ -4,51 +4,130 @@ using System.Threading.Tasks;
 using Tactics.AssetPipeline;
 using Tactics.UI;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Tactics
 {
-    public sealed class UIManager : MonoBehaviourSingleton<UIManager>
+    public sealed class UIManager
     {
+        private static readonly UIManager _instance = new UIManager();
+        public static UIManager Instance => _instance;
+
+        private UIManager() { }
+
         public enum UIId
         {
             Menu,
-            RoguelikeMap
+            RoguelikeMap,
+            Battle,
         }
 
-        [SerializeField] private RectTransform _uiRoot;
+        private enum UIType
+        {
+            UguiPrefab,
+            UiToolkitUxml,
+        }
+
+        private sealed class UIInstance
+        {
+            public UIType Type { get; }
+            public GameObject ContainerGO { get; }
+            public UIDocument UiDoc { get; }
+
+            public VisualElement RootVE => UiDoc?.rootVisualElement;
+
+            public UIInstance(UIType type, GameObject containerGo, UIDocument uiDoc = null)
+            {
+                Type = type;
+                ContainerGO = containerGo;
+                UiDoc = uiDoc;
+            }
+        }
+
+        private RectTransform _uiRoot;
+
+        /// <summary>
+        /// Manually set the UI root before any UI is loaded. Optional - auto-detects Canvas if not set.
+        /// </summary>
+        public void SetUiRoot(RectTransform root) => _uiRoot = root;
+
+        private RectTransform UiRoot
+        {
+            get
+            {
+                if (_uiRoot == null)
+                {
+                    var canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+                    if (canvas != null)
+                    {
+                        _uiRoot = canvas.GetComponent<RectTransform>();
+                    }
+                }
+                return _uiRoot;
+            }
+        }
 
         private const string MenuPrefabPath = "Assets/Tactics/Arts/UI/Menu.prefab";
         private const string RoguelikeMapPrefabPath = "Assets/Tactics/Arts/UI/RoguelikeMap.prefab";
 
-        private readonly Dictionary<UIId, GameObject> _instances = new Dictionary<UIId, GameObject>();
-        private readonly Dictionary<UIId, Task<GameObject>> _loadingTasks = new Dictionary<UIId, Task<GameObject>>();
+        private const string BattleUxmlPath = "Assets/Tactics/Arts/UI/Battle.uxml";
+        private const string BattleUssPath = "Assets/Tactics/Arts/UI/Battle.uss";
+        private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
+
+        private static readonly Dictionary<UIId, UIType> s_uiTypeMap = new()
+        {
+            { UIId.Menu, UIType.UguiPrefab },
+            { UIId.RoguelikeMap, UIType.UguiPrefab },
+            { UIId.Battle, UIType.UiToolkitUxml },
+        };
+
+        private readonly Dictionary<UIId, UIInstance> _instances = new();
+        private readonly Dictionary<UIId, Task<UIInstance>> _loadingTasks = new();
+
+        private PanelSettings _panelSettings;
+
+        private async Task<PanelSettings> GetPanelSettingsAsync(GameAssetManager mgr)
+        {
+            if (_panelSettings == null)
+            {
+                _panelSettings = await mgr.LoadAsync<PanelSettings>(PanelSettingsPath);
+                if (_panelSettings == null)
+                    Debug.LogWarning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
+            }
+            return _panelSettings;
+        }
 
         public Task ShowAsync(UIId id)
         {
-            return ShowUIAsync(id, GetPrefabPath(id));
+            return ShowUIAsync(id, GetAssetPath(id));
         }
 
         public void Hide(UIId id)
         {
-            if (_instances.TryGetValue(id, out var go) && go != null)
-                // UI is intentionally tied to the current scene scope:
-                // Hide/Destroy only affects visibility/lifetime of the instantiated GameObject,
-                // bundle releases happen when the scene scope ends.
-                go.SetActive(false);
+            if (_instances.TryGetValue(id, out var instance) && instance?.ContainerGO != null)
+                instance.ContainerGO.SetActive(false);
         }
 
         public void Destroy(UIId id)
         {
-            if (_instances.TryGetValue(id, out var go) && go != null)
-                // Do not call AssetScopeManager.EndScope / GameAssetManager.Release here.
-                // The loaded prefab remains retained until the owning scene scope ends.
-                UnityEngine.Object.Destroy(go);
+            if (_instances.TryGetValue(id, out var instance) && instance?.ContainerGO != null)
+            {
+                UnityEngine.Object.Destroy(instance.ContainerGO);
+            }
+
             _instances.Remove(id);
         }
 
         public bool IsVisible(UIId id)
         {
-            return _instances.TryGetValue(id, out var go) && go != null && go.activeSelf;
+            return _instances.TryGetValue(id, out var instance)
+                && instance?.ContainerGO != null
+                && instance.ContainerGO.activeSelf;
+        }
+
+        public VisualElement GetRootElement(UIId id)
+        {
+            return _instances.TryGetValue(id, out var instance) ? instance?.RootVE : null;
         }
 
         [Obsolete("Use ShowAsync(UIId.Menu) from a domain coordinator.")]
@@ -60,27 +139,42 @@ namespace Tactics
         [Obsolete("Use Destroy(UIId.Menu) from a domain coordinator.")]
         public void DestroyMenu() => Destroy(UIId.Menu);
 
-        private static string GetPrefabPath(UIId id)
+        private static string GetAssetPath(UIId id)
         {
             return id switch
             {
                 UIId.Menu => MenuPrefabPath,
                 UIId.RoguelikeMap => RoguelikeMapPrefabPath,
-                _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId prefab mapping.")
+                UIId.Battle => BattleUxmlPath,
+                _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.")
             };
         }
 
-        private async Task ShowUIAsync(UIId id, string prefabPath)
+        private static string GetUssPath(UIId id)
         {
-            if (_instances.TryGetValue(id, out var existing) && existing != null)
+            return id switch
             {
-                existing.SetActive(true);
+                UIId.Battle => BattleUssPath,
+                _ => string.Empty
+            };
+        }
+
+        private static UIType GetUIType(UIId id)
+        {
+            return s_uiTypeMap.TryGetValue(id, out var type) ? type : throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId type mapping.");
+        }
+
+        private async Task ShowUIAsync(UIId id, string assetPath)
+        {
+            if (_instances.TryGetValue(id, out var existing) && existing?.ContainerGO != null)
+            {
+                existing.ContainerGO.SetActive(true);
                 return;
             }
 
             if (!_loadingTasks.TryGetValue(id, out var loadTask))
             {
-                loadTask = LoadAndCreateUiInstanceAsync(id, prefabPath);
+                loadTask = LoadAndCreateAsync(id, assetPath);
                 _loadingTasks[id] = loadTask;
             }
 
@@ -88,14 +182,11 @@ namespace Tactics
             _loadingTasks.Remove(id);
 
             _instances[id] = instance;
-            instance.SetActive(true);
+            instance.ContainerGO.SetActive(true);
         }
 
-        private async Task<GameObject> LoadAndCreateUiInstanceAsync(UIId id, string prefabPath)
+        private async Task<UIInstance> LoadAndCreateAsync(UIId id, string assetPath)
         {
-            if (_uiRoot == null)
-                throw new InvalidOperationException("[UIManager] _uiRoot is not assigned. Assign it to a RectTransform under the target Canvas.");
-
             var mgr = GameAssetManager.Instance;
             if (mgr == null)
                 throw new InvalidOperationException("[UIManager] GameAssetManager.Instance is null. Ensure bootstrap ran before calling UI methods.");
@@ -103,15 +194,58 @@ namespace Tactics
             if (!mgr.IsInitialized)
                 throw new InvalidOperationException("[UIManager] GameAssetManager is not initialized. Call GameAssetManager.Initialize/InitializeAsync before calling UI methods.");
 
+            return GetUIType(id) switch
+            {
+                UIType.UguiPrefab => await LoadUguiPrefabAsync(id, assetPath, mgr),
+                UIType.UiToolkitUxml => await LoadUiToolkitAsync(id, assetPath, mgr),
+                _ => throw new NotSupportedException("Unsupported UIType.")
+            };
+        }
+
+        private async Task<UIInstance> LoadUguiPrefabAsync(UIId id, string prefabPath, GameAssetManager mgr)
+        {
+            var uiRoot = UiRoot;
+            if (uiRoot == null)
+                throw new InvalidOperationException($"[UIManager] No Canvas found for UGUI prefab: {prefabPath}. Add a Canvas or call SetUiRoot().");
+
             var prefab = await mgr.LoadAsync<GameObject>(prefabPath);
             if (prefab == null)
                 throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
 
-            var go = Instantiate(prefab, _uiRoot, false);
+            var go = UnityEngine.Object.Instantiate(prefab, uiRoot, false);
             go.name = id.ToString();
             EnsureController(id, go);
             go.SetActive(false);
-            return go;
+            return new UIInstance(UIType.UguiPrefab, go, null);
+        }
+
+        private async Task<UIInstance> LoadUiToolkitAsync(UIId id, string uxmlPath, GameAssetManager mgr)
+        {
+            var visualTree = await mgr.LoadAsync<VisualTreeAsset>(uxmlPath);
+            if (visualTree == null)
+                throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
+
+            StyleSheet styleSheet = null;
+            var ussPath = GetUssPath(id);
+            if (!string.IsNullOrEmpty(ussPath))
+            {
+                styleSheet = await mgr.LoadAsync<StyleSheet>(ussPath);
+            }
+
+            var hostGo = new GameObject(id.ToString());
+
+            var uiDoc = hostGo.AddComponent<UIDocument>();
+            uiDoc.visualTreeAsset = visualTree;
+            uiDoc.panelSettings = await GetPanelSettingsAsync(mgr);
+
+            if (styleSheet != null && uiDoc.rootVisualElement != null)
+                uiDoc.rootVisualElement.styleSheets.Add(styleSheet);
+
+            EnsureUIController(id, hostGo);
+
+            hostGo.SetActive(false);
+
+            return new UIInstance(UIType.UiToolkitUxml, hostGo, uiDoc);
         }
 
         private static void EnsureController(UIId id, GameObject root)
@@ -127,6 +261,18 @@ namespace Tactics
                     break;
             }
         }
+
+        private static void EnsureUIController(UIId id, GameObject root)
+        {
+            switch (id)
+            {
+                case UIId.Battle:
+                    if (root.GetComponent<BattleUIController>() == null)
+                        root.AddComponent<BattleUIController>();
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }
-

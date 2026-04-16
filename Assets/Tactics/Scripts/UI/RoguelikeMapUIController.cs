@@ -4,6 +4,7 @@ using System.Linq;
 using DG.Tweening;
 using TMPro;
 using Tactics.Flow.Roguelike;
+using Tactics.Flow.Battle;
 using Tactics.RoguelikeMap;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -547,14 +548,14 @@ namespace Tactics.UI
             }
         }
 
-        private void EnterBattleNode(RoguelikeMapUINode mapNode)
+        private async void EnterBattleNode(RoguelikeMapUINode mapNode)
         {
             var p = mapNode.Node.point;
             PlayerPrefs.SetString(RoguelikePendingNodePrefsKey, $"{p.x},{p.y}");
             PlayerPrefs.SetString(RoguelikeReturnScenePrefsKey, "Home");
             PlayerPrefs.Save();
 
-            Tactics.AssetPipeline.SceneProjectPathHelper.TryLoadSceneViaAssetManager(battleSceneName);
+            await BattleFlowCoordinator.Instance.StartBattleAsync(battleSceneName);
         }
 
         private void EnterStubNode(RoguelikeMapUINode mapNode)
