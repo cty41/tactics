@@ -20,7 +20,6 @@ namespace Tactics.Common.Units.Abilities
         /// A set of units that are attackable by the unit with this ability.
         /// </summary>
         private HashSet<IUnit> _attackableUnits;
-        private readonly IDamageScalingAbility _damageScalingAbility;
 
         /// <summary>
         /// Gets or sets the reference to the unit that owns this ability.
@@ -31,10 +30,9 @@ namespace Tactics.Common.Units.Abilities
         /// Initializes a new instance of the <see cref="AttackAbilityImpl"/> class with the specified unit reference.
         /// </summary>
         /// <param name="unitReference">The unit that owns this ability.</param>
-        public AttackAbilityImpl(IUnit unitReference, IDamageScalingAbility damageScalingAbility = null)
+        public AttackAbilityImpl(IUnit unitReference)
         {
             UnitReference = unitReference;
-            _damageScalingAbility = damageScalingAbility;
         }
 
         /// <summary>
@@ -75,9 +73,7 @@ namespace Tactics.Common.Units.Abilities
         {
             if (UnitReference.ActionPoints > 0 && _attackableUnits.Contains(unit))
             {
-                var isRangedDamage = _damageScalingAbility?.IsRangedDamage ?? false;
-                var halfScaling = _damageScalingAbility?.HasHalfScaling ?? false;
-                UnitReference.HumanExecuteAbility(new AttackCommand(unit, UnitReference.CalculateTotalDamage(unit, unit.CurrentCell, UnitReference.CurrentCell, isRangedDamage, halfScaling)), gridController);
+                UnitReference.HumanExecuteAbility(new AttackCommand(unit, UnitReference.CalculateTotalDamage(unit, unit.CurrentCell, UnitReference.CurrentCell)), gridController);
             }
             else
             {

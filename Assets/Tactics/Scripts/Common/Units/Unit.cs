@@ -60,7 +60,8 @@ namespace Tactics.Common.Units
         [SerializeField] private List<Highlighter> _unMarkAsMoving;
         [SerializeField] private List<Highlighter> _markAsDestroyedFn;
 
-        [SerializeField] private List<Ability> _baseAbilities;
+        [SerializeField] private List<AbilityConfig> _abilityConfigs;
+        private List<IAbility> _baseAbilities;
 
         [SerializeField] Cell _currentCell;
         public virtual ICell CurrentCell { get { return _currentCell; } set { _currentCell = value as Cell; } }
@@ -153,10 +154,17 @@ namespace Tactics.Common.Units
             Mana = MaxMana;
             MovementPoints = MaxMovementPoints;
 
-            _baseAbilities = GetComponents<Ability>().ToList();
-            foreach (var ability in _baseAbilities)
+            _baseAbilities = new List<IAbility>();
+            if (_abilityConfigs != null)
             {
-                RegisterAbility(ability, gridController);
+                foreach (var config in _abilityConfigs)
+                {
+                    if (config != null)
+                    {
+                        var ability = config.CreateAbility(this);
+                        RegisterAbility(ability, gridController);
+                    }
+                }
             }
         }
 
@@ -430,9 +438,9 @@ namespace Tactics.Common.Units
         {
             return _combatComponent.CalculateDamageDealt(defender, defenderCell, aggressorCell);
         }
-        public virtual float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage, bool halfScaling = false)
+        public virtual float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage)
         {
-            return _combatComponent.CalculateDamageDealt(defender, defenderCell, aggressorCell, isRangedDamage, halfScaling);
+            return _combatComponent.CalculateDamageDealt(defender, defenderCell, aggressorCell, isRangedDamage);
         }
         public float CalculateDamageDealt(IUnit defender)
         {
@@ -450,9 +458,9 @@ namespace Tactics.Common.Units
         {
             return _combatComponent.CalculateTotalDamage(defender, defenderCell, agressorCell);
         }
-        public float CalculateTotalDamage(IUnit defender, ICell defenderCell, ICell agressorCell, bool isRangedDamage, bool halfScaling = false)
+        public float CalculateTotalDamage(IUnit defender, ICell defenderCell, ICell agressorCell, bool isRangedDamage)
         {
-            return _combatComponent.CalculateTotalDamage(defender, defenderCell, agressorCell, isRangedDamage, halfScaling);
+            return _combatComponent.CalculateTotalDamage(defender, defenderCell, agressorCell, isRangedDamage);
         }
         public float CalculateTotalDamage(IUnit defender)
         {
@@ -577,18 +585,6 @@ namespace Tactics.Common.Units
         }
         private void Reset()
         {
-            if (GetComponent<AttackAbility>() == null)
-            {
-                _ = gameObject.AddComponent<AttackAbility>();
-            }
-            if (GetComponent<MoveAbility>() == null)
-            {
-                _ = gameObject.AddComponent<MoveAbility>();
-            }
-            if (GetComponent<AttackRangeHighlightAbility>() == null)
-            {
-                _ = gameObject.AddComponent<AttackRangeHighlightAbility>();
-            }
             if(_behaviourTreeResource == null)
             {
                 GameObject brain = new GameObject("Brain");

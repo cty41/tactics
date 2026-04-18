@@ -16,14 +16,12 @@ namespace Tactics.Common.Units.Abilities
         public event Action<IAbility> AbilityDeselected;
 
         private HashSet<IUnit> _attackableUnits;
-        private readonly IDamageScalingAbility _damageScalingAbility;
 
         public IUnit UnitReference { get; set; }
 
-        public MeleeAttackAbilityImpl(IUnit unitReference, IDamageScalingAbility damageScalingAbility = null)
+        public MeleeAttackAbilityImpl(IUnit unitReference)
         {
             UnitReference = unitReference;
-            _damageScalingAbility = damageScalingAbility;
         }
 
         public void OnAbilitySelected(IGridController gridController)
@@ -46,9 +44,7 @@ namespace Tactics.Common.Units.Abilities
         {
             if (UnitReference.ActionPoints > 0 && _attackableUnits.Contains(unit))
             {
-                var isRangedDamage = _damageScalingAbility?.IsRangedDamage ?? false;
-                var halfScaling = _damageScalingAbility?.HasHalfScaling ?? false;
-                var damage = UnitReference.CalculateTotalDamage(unit, unit.CurrentCell, UnitReference.CurrentCell, isRangedDamage, halfScaling);
+                var damage = UnitReference.CalculateTotalDamage(unit, unit.CurrentCell, UnitReference.CurrentCell);
                 UnitReference.HumanExecuteAbility(new MeleeAttackCommand(unit, damage), gridController);
             }
             else

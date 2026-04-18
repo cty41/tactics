@@ -29,7 +29,7 @@ namespace Tactics.UI
         private UnityGridController _gridController;
         private InputAction _endTurnAction;
         private IUnit _currentSelectedUnit;
-        private MoveAbilityImpl _currentMoveAbility;
+        private IAbility _currentMoveAbility;
 
         protected override void OnShown()
         {
@@ -203,8 +203,7 @@ namespace Tactics.UI
                 return;
 
             var moveAbility = _currentSelectedUnit.GetBaseAbilities()
-                .OfType<MoveAbilityImpl>()
-                .FirstOrDefault();
+                .FirstOrDefault(a => IsMoveAbility(a));
             
             if (moveAbility == null || !moveAbility.CanPerform(_gridController))
                 return;
@@ -402,7 +401,7 @@ namespace Tactics.UI
             }
 
             bool canMove = unit.ActionPoints > 0
-                && unit.GetBaseAbilities().OfType<MoveAbilityImpl>().Any();
+                && unit.GetBaseAbilities().Any(IsMoveAbility);
 
             _moveButton.SetEnabled(canMove);
         }
@@ -413,6 +412,12 @@ namespace Tactics.UI
             {
                 UpdateMoveButtonState(args.AffectedUnit);
             }
+        }
+
+        private bool IsMoveAbility(IAbility ability)
+        {
+            return ability is MoveAbilityImpl ||
+                   (ability is GenericAbilityImpl && ability.GetType().Name.Contains("Move"));
         }
     }
 }

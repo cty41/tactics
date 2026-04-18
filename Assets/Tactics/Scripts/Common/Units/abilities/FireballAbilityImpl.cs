@@ -24,7 +24,7 @@ namespace Tactics.Common.Units.Abilities
 
         public IUnit UnitReference { get; set; }
 
-        public FireballAbilityImpl(IUnit unitReference, IDamageScalingAbility damageScalingAbility = null)
+        public FireballAbilityImpl(IUnit unitReference)
         {
             UnitReference = unitReference;
         }

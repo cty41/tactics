@@ -10,24 +10,11 @@ namespace Tactics.Common.Units.Abilities
     /// <summary>
     /// Implements a movement ability for a unit.
     /// Allows a unit to move to reachable cells within its movement range, visualizing the path and handling user interactions.
-    /// Supports both mouse and touch controls.
     /// </summary>
     public class MoveAbilityImpl : IAbility
     {
         public event Action<IAbility> AbilitySelected;
         public event Action<IAbility> AbilityDeselected;
-
-        /// <summary>
-        /// Indicates if a move action requires user confirmation (double-tap). Useful for mobile games to prevent accidental moves.
-        /// </summary>
-        public bool WithConfirmation { get; set; }
-        /// <summary>
-        /// Enables an optimized control scheme for touch devices, improving usability on mobile platforms.
-        /// Best used in combination with <see cref="WithConfirmation"/>.
-        /// </summary>
-        public bool UseTouchOptimizedControls { get; set; }
-        private bool _isConfirmed;
-        private ICell _confirmedTarget;
 
         /// <summary>
         /// A collection of cells within the movement range of the unit.
@@ -48,11 +35,9 @@ namespace Tactics.Common.Units.Abilities
         /// Initializes a new instance of the <see cref="MoveAbilityImpl"/> class with the specified unit reference.
         /// </summary>
         /// <param name="unitReference">The unit that owns this ability.</param>
-        public MoveAbilityImpl(IUnit unitReference, bool withConfirmation, bool useTouchControls)
+        public MoveAbilityImpl(IUnit unitReference)
         {
             UnitReference = unitReference;
-            WithConfirmation = withConfirmation;
-            UseTouchOptimizedControls = useTouchControls;
         }
 
         /// <summary>
@@ -83,8 +68,6 @@ namespace Tactics.Common.Units.Abilities
         public void CleanUp(IGridController gridController)
         {
             gridController.CellManager.UnMark(_cellsInMovementRange.Union(_currentPath));
-            _isConfirmed = false;
-            _confirmedTarget = null;
         }
 
         /// <summary>
@@ -112,25 +95,6 @@ namespace Tactics.Common.Units.Abilities
                 return;
             }
 
-            if (UseTouchOptimizedControls)
-            {
-                gridController.CellManager.MarkAsReachable(_currentPath);
-                _currentPath = UnitReference.FindPath(cell, gridController.CellManager);
-                gridController.CellManager.MarkAsPath(_currentPath, UnitReference.CurrentCell);
-            }
-
-            if (WithConfirmation && (!_isConfirmed || !_confirmedTarget.Equals(cell)))
-            {
-                _isConfirmed = true;
-                _confirmedTarget = cell;
-                return;
-            }
-
-            if (!_currentPath.Any())
-            {
-                _currentPath = UnitReference.FindPath(cell, gridController.CellManager);
-            }
-
             var latestPath = UnitReference.FindPath(cell, gridController.CellManager);
             if (!UnitReference.IsCellMovableTo(cell) || !latestPath.Any())
             {
@@ -150,7 +114,6 @@ namespace Tactics.Common.Units.Abilities
         /// <param name="gridController">The grid controller.</param>
         public void OnCellHighlighted(ICell cell, IGridController gridController)
         {
-            if (UseTouchOptimizedControls) return;
             if (_cellsInMovementRange.Contains(cell))
             {
                 _currentPath = UnitReference.FindPath(cell, gridController.CellManager);
@@ -166,18 +129,7 @@ namespace Tactics.Common.Units.Abilities
         /// <param name="gridController">The grid controller.</param>
         public void OnCellDehighlighted(ICell cell, IGridController gridController)
         {
-            if (UseTouchOptimizedControls)
-            {
-                if (_currentPath.Contains(cell))
-                {
-                    gridController.CellManager.MarkAsPath(_currentPath, UnitReference.CurrentCell);
-                }
-                else if (_cellsInMovementRange.Contains(cell))
-                {
-                    gridController.CellManager.MarkAsReachable(cell);
-                }
-            }
-            else if (_cellsInMovementRange.Contains(cell))
+            if (_cellsInMovementRange.Contains(cell))
             {
                 gridController.CellManager.MarkAsReachable(cell);
                 if(_currentPath.Any())

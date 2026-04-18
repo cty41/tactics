@@ -48,9 +48,9 @@ namespace Tactics.Common.Units
             return CalculateDamageDealt(defender, defenderCell, aggressorCell, false);
         }
 
-        public float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage, bool halfScaling = false)
+        public float CalculateDamageDealt(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage)
         {
-            var damage = CalculateBaseDamageBeforeCrit(_unitReference, isRangedDamage, halfScaling);
+            var damage = CalculateBaseDamageBeforeCrit(_unitReference, isRangedDamage);
             return IsCriticalHit() ? GetCriticalDamage(damage) : damage;
         }
 
@@ -64,17 +64,17 @@ namespace Tactics.Common.Units
             return CalculateTotalDamage(defender, defenderCell, aggressorCell, false);
         }
 
-        public float CalculateTotalDamage(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage, bool halfScaling = false)
+        public float CalculateTotalDamage(IUnit defender, ICell defenderCell, ICell aggressorCell, bool isRangedDamage)
         {
-            var damageDealt = _unitReference.CalculateDamageDealt(defender, defenderCell, aggressorCell, isRangedDamage, halfScaling);
+            var damageDealt = _unitReference.CalculateDamageDealt(defender, defenderCell, aggressorCell, isRangedDamage);
             var damageTaken = defender.CalculateDamageTaken(_unitReference, damageDealt, aggressorCell, defenderCell);
 
             return damageTaken;
         }
 
-        private float GetAttributeScalingBonus(bool isRangedDamage, bool halfScaling)
+        private float GetAttributeScalingBonus(bool isRangedDamage)
         {
-            return GetAttributeScalingBonus(_unitReference, isRangedDamage, halfScaling);
+            return GetAttributeScalingBonus(_unitReference, isRangedDamage);
         }
 
         private bool IsCriticalHit()
@@ -88,10 +88,10 @@ namespace Tactics.Common.Units
             return Math.Max(0f, Math.Min(1f, critChance));
         }
 
-        public static float CalculateBaseDamageBeforeCrit(IUnit unitReference, bool isRangedDamage, bool halfScaling = false)
+        public static float CalculateBaseDamageBeforeCrit(IUnit unitReference, bool isRangedDamage)
         {
             var baseDamage = unitReference.AttackFactor;
-            var attributeBonus = GetAttributeScalingBonus(unitReference, isRangedDamage, halfScaling);
+            var attributeBonus = GetAttributeScalingBonus(unitReference, isRangedDamage);
             return Math.Max(baseDamage + attributeBonus, 1);
         }
 
@@ -105,15 +105,14 @@ namespace Tactics.Common.Units
             return baseDamage * (1f - critChance) + GetCriticalDamage(baseDamage) * critChance;
         }
 
-        private static float GetAttributeScalingBonus(IUnit unitReference, bool isRangedDamage, bool halfScaling)
+        private static float GetAttributeScalingBonus(IUnit unitReference, bool isRangedDamage)
         {
-            var scalingMultiplier = halfScaling ? 0.5f : 1f;
             switch (isRangedDamage)
             {
                 case true:
-                    return ((unitReference.Agility - NeutralAttributeValue) / 2f) * scalingMultiplier;
+                    return ((unitReference.Agility - NeutralAttributeValue) / 2f);
                 default:
-                    return (unitReference.Strength - NeutralAttributeValue) * scalingMultiplier;
+                    return (unitReference.Strength - NeutralAttributeValue);
             }
         }
     }
