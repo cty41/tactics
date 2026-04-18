@@ -3,7 +3,6 @@ using System.Linq;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.TurnResolvers;
 using Tactics.Common.Units;
-using Tactics.Common.Controllers;
 using UnityEngine;
 
 namespace Tactics.Controllers.TurnResolvers
@@ -13,14 +12,14 @@ namespace Tactics.Controllers.TurnResolvers
     /// Units take turns in a fixed cycle ordered by speed (highest first), with stable secondary ordering.
     /// Each turn activates only one unit at a time.
     /// </summary>
-    public class UnitSpeedTurnResolver : UnityTurnResolver
+    public class UnitSpeedTurnResolver : ITurnResolver
     {
         /// <summary>
         /// Internal queue of units in speed order. This queue persists throughout the game.
         /// </summary>
         private Queue<IUnit> _unitQueue = new Queue<IUnit>();
 
-        public override TurnContext ResolveStart(GridController gridController)
+        public TurnContext ResolveStart(GridController gridController)
         {
             // Initialize the unit queue on game start
             _unitQueue.Clear();
@@ -39,7 +38,7 @@ namespace Tactics.Controllers.TurnResolvers
             return ResolveNextUnit(gridController);
         }
 
-        public override TurnContext ResolveTurn(GridController gridController)
+        public TurnContext ResolveTurn(GridController gridController)
         {
             // Remove dead units from the queue before resolving next turn
             CleanDeadUnits(gridController);

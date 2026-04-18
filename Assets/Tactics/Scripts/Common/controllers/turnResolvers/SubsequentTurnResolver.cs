@@ -1,23 +1,23 @@
-using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.TurnResolvers;
 
 namespace Tactics.Common.Controllers
 {
     /// <summary>
-    /// A concrete implementation of <see cref="UnityTurnResolver"/> that delegates turn resolution to <see cref="SubsequentTurnResolverImpl"/>.
+    /// A concrete implementation of <see cref="ITurnResolver"/> that delegates turn resolution to <see cref="SubsequentTurnResolverImpl"/>.
     /// This resolver handles turns sequentially for all players, selecting the first player at the start and moving through players in order.
     /// </summary>
-    public class SubsequentTurnResolver : UnityTurnResolver
+    public class SubsequentTurnResolver : ITurnResolver
     {
-        public SubsequentTurnResolverImpl subsequentTurnResolverImpl = new SubsequentTurnResolverImpl();
-        public override TurnContext ResolveStart(GridController gridController)
+        private readonly SubsequentTurnResolverImpl _impl = new SubsequentTurnResolverImpl();
+
+        public TurnContext ResolveStart(GridController gridController)
         {
-            return subsequentTurnResolverImpl.ResolveStart(gridController);
+            return _impl.ResolveStart(gridController);
         }
 
-        public override TurnContext ResolveTurn(GridController gridController)
+        public TurnContext ResolveTurn(GridController gridController)
         {
-            return subsequentTurnResolverImpl.ResolveTurn(gridController);
+            return _impl.ResolveTurn(gridController);
         }
     }
 }

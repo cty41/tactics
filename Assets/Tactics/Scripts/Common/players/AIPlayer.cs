@@ -38,7 +38,7 @@ namespace Tactics.Common.Players
         /// <summary>
         /// The unit selector used by the AI to determine which unit to command next.
         /// </summary>
-        [SerializeField] private UnityUnitSelector _unitSelector;
+        [SerializeReference] private IUnitSelector _unitSelector;
 
         public override PlayerType PlayerType { get; set; } = PlayerType.AutomatedPlayer;
 
@@ -123,10 +123,9 @@ namespace Tactics.Common.Players
 
         private void Reset()
         {
-            if (GetComponent<IUnitSelector>() == null)
+            if (_unitSelector == null)
             {
-                var unitSelector = gameObject.AddComponent<SubsequentUnitSelector>();
-                _unitSelector = unitSelector;
+                _unitSelector = new SubsequentUnitSelector();
             }
         }
     }

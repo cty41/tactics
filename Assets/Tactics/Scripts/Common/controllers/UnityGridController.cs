@@ -30,13 +30,13 @@ namespace Tactics.Common.Controllers
         [SerializeField] private UnityUnitManager _unitManager;
         [SerializeField] private UnityPlayerManager _playerManager;
 
-        [SerializeField] private UnityTurnResolver _turnResolver;
+        [SerializeReference] private ITurnResolver _turnResolver;
 
         public ICellManager CellManager { get { return _controller.CellManager; } set { _controller.CellManager = value; _cellManager = value as UnityCellManager; } }
         public IUnitManager UnitManager { get { return _controller.UnitManager; } set { _controller.UnitManager = value; _unitManager = value as UnityUnitManager; } }
         public IPlayerManager PlayerManager { get { return _controller.PlayerManager; } set { _controller.PlayerManager = value; _playerManager = value as UnityPlayerManager; } }
 
-        public ITurnResolver TurnResolver { get { return _controller.TurnResolver; } set { _controller.TurnResolver = value; _turnResolver = value as UnityTurnResolver; } }
+        public ITurnResolver TurnResolver { get { return _controller.TurnResolver; } set { _controller.TurnResolver = value; _turnResolver = value; } }
 
         public TurnContext TurnContext { get { return _controller.TurnContext; } }
         public GridState GridState { get { return _controller.GridState; } set { _controller.GridState = value; } }

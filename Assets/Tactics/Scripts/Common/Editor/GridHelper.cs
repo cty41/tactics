@@ -560,8 +560,7 @@ namespace TbsFramework.EditorUtils
             var unitManagerScript = unitManager.AddComponent<UnityUnitManager>();
 
             var gridControllerScript = gridController.AddComponent<UnityGridController>();
-            var turnResolverScript = gridController.AddComponent<SubsequentTurnResolver>();
-            gridControllerScript.TurnResolver = turnResolverScript;
+            gridControllerScript.TurnResolver = new SubsequentTurnResolver();
             gridControllerScript.PlayerManager = playerManagerScript;
             gridControllerScript.UnitManager = unitManagerScript;
             gridControllerScript.CellManager = cellManagerScript;
