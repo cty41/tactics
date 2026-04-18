@@ -8,10 +8,14 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="BottomPanel" class="bottom-panel">
-            <ui:VisualElement name="LeftActionPanel" class="left-panel">
+            <ui:VisualElement name="ActionPanel" class="action-panel">
                 <ui:Button name="MoveButton" text="移动" class="button move-button"/>
-                <ui:Button name="Skill1Button" text="技能1" class="button"/>
-                <ui:Button name="Skill2Button" text="技能2" class="button"/>
+                <ui:VisualElement name="SkillPanel" class="skill-panel">
+                    <ui:Button name="Skill1Button" text="技能1" class="button"/>
+                    <ui:Button name="Skill2Button" text="技能2" class="button"/>
+                    <ui:Button name="Skill3Button" text="技能3" class="button"/>
+                    <ui:Button name="Skill4Button" text="技能4" class="button"/>
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="RightActionPanel" class="right-panel">
                 <ui:Button name="EndTurnButton" text="结束回合" class="button end-turn-button"/>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -21,8 +22,9 @@ namespace Tactics.UI
     {
         private Button _endTurnButton;
         private Button _moveButton;
-        private Button _skill1Button;
-        private Button _skill2Button;
+        private VisualElement _skillPanel;
+        private readonly List<Button> _skillButtons = new List<Button>();
+        private readonly List<System.Action> _skillButtonCallbacks = new List<System.Action>();
         private ProgressBar _hpBar;
         private ProgressBar _mpBar;
         private VisualElement _bottomPanel;
@@ -64,16 +66,26 @@ namespace Tactics.UI
 
             _endTurnButton = root.Q<Button>("EndTurnButton");
             _moveButton = root.Q<Button>("MoveButton");
-            _skill1Button = root.Q<Button>("Skill1Button");
-            _skill2Button = root.Q<Button>("Skill2Button");
+            _skillPanel = root.Q<VisualElement>("SkillPanel");
             _hpBar = root.Q<ProgressBar>("hp");
             _mpBar = root.Q<ProgressBar>("mp");
             _bottomPanel = root.Q<VisualElement>("BottomPanel");
 
+            // Query skill buttons from SkillPanel
+            var skill1Button = root.Q<Button>("Skill1Button");
+            var skill2Button = root.Q<Button>("Skill2Button");
+            var skill3Button = root.Q<Button>("Skill3Button");
+            var skill4Button = root.Q<Button>("Skill4Button");
+
             if (_endTurnButton != null) _endTurnButton.clicked += OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked += OnMoveClicked;
-            if (_skill1Button != null) _skill1Button.clicked += OnSkill1Clicked;
-            if (_skill2Button != null) _skill2Button.clicked += OnSkill2Clicked;
+
+            // Register skill buttons
+            _skillButtons.Clear();
+            RegisterSkillButton(skill1Button, 0);
+            RegisterSkillButton(skill2Button, 1);
+            RegisterSkillButton(skill3Button, 2);
+            RegisterSkillButton(skill4Button, 3);
 
             // Find GridController from the currently loaded battle scene
             _gridController = Object.FindFirstObjectByType<UnityGridController>();
@@ -143,8 +155,17 @@ namespace Tactics.UI
         {
             if (_endTurnButton != null) _endTurnButton.clicked -= OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked -= OnMoveClicked;
-            if (_skill1Button != null) _skill1Button.clicked -= OnSkill1Clicked;
-            if (_skill2Button != null) _skill2Button.clicked -= OnSkill2Clicked;
+
+            // Unwire all skill buttons using stored callbacks
+            for (int i = 0; i < _skillButtons.Count && i < _skillButtonCallbacks.Count; i++)
+            {
+                if (_skillButtons[i] != null)
+                {
+                    _skillButtons[i].clicked -= _skillButtonCallbacks[i];
+                }
+            }
+            _skillButtons.Clear();
+            _skillButtonCallbacks.Clear();
 
             UnsubscribeFromUnitEvents();
 
@@ -178,6 +199,14 @@ namespace Tactics.UI
                     combatant.HealthChanged += OnUnitHealthChanged;
                 }
             }
+
+            if (currentUnit == null && _gridController.TurnContext.CurrentPlayer == null)
+            {
+                Debug.LogWarning("[BattleUIController] No current unit or player, skipping UI initialization.");
+                return;
+            }
+
+            if (_gridController.TurnContext.CurrentPlayer == null) return;
 
             bool isHumanTurn = _gridController.TurnContext.CurrentPlayer.PlayerType == PlayerType.HumanPlayer;
             if (_bottomPanel != null)
@@ -220,14 +249,32 @@ namespace Tactics.UI
             _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, moveAbility);
         }
 
-        private void OnSkill1Clicked()
+        private void OnSkillButtonClicked(int skillIndex)
         {
-            Debug.Log("[BattleUIController] Skill 1 button clicked");
+            Debug.Log($"[BattleUIController] Skill {skillIndex + 1} button clicked");
         }
 
-        private void OnSkill2Clicked()
+        /// <summary>
+        /// Creates skill buttons dynamically based on the unit's abilities.
+        /// TODO: Implement dynamic skill button creation based on unit.GetNonMoveAbilities().
+        /// </summary>
+        /// <param name="unit">The unit to create skill buttons for.</param>
+        private void CreateSkillButtonsForUnit(IUnit unit)
         {
-            Debug.Log("[BattleUIController] Skill 2 button clicked");
+            // TODO: Dynamic skill button creation
+            // 1. Clear existing skill buttons from _skillPanel
+            // 2. Iterate over unit.GetNonMoveAbilities()
+            // 3. Create a Button for each ability and add to _skillPanel
+            // 4. Bind click events to the corresponding ability execution
+        }
+
+        private void RegisterSkillButton(Button button, int skillIndex)
+        {
+            if (button == null) return;
+            _skillButtons.Add(button);
+            System.Action callback = () => OnSkillButtonClicked(skillIndex);
+            _skillButtonCallbacks.Add(callback);
+            button.clicked += callback;
         }
 
         private void OnEndTurnPerformed(InputAction.CallbackContext context)
