@@ -17,7 +17,7 @@ namespace Tactics.Common.Network
     /// </summary>
     public abstract class NetworkConnection : MonoBehaviour, INetworkConnection
     {
-        [SerializeField] private UnityGridController _gridController;
+        [SerializeField] private IGridController _gridController;
 
         /// <summary>
         /// Event triggered when the server connection is successfully established.

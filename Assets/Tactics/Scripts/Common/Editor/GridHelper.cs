@@ -559,13 +559,13 @@ namespace TbsFramework.EditorUtils
 
             var unitManagerScript = unitManager.AddComponent<UnityUnitManager>();
 
-            var gridControllerScript = gridController.AddComponent<UnityGridController>();
+            var gridControllerScript = gridController.AddComponent<Tactics.Common.Battle.BattleController>();
             gridControllerScript.TurnResolver = new SubsequentTurnResolver();
             gridControllerScript.PlayerManager = playerManagerScript;
             gridControllerScript.UnitManager = unitManagerScript;
             gridControllerScript.CellManager = cellManagerScript;
 
-            gridController.GetComponent<UnityGridController>().PlayerManager = playerManager.GetComponent<UnityPlayerManager>();
+            gridController.GetComponent<Tactics.Common.Battle.BattleController>().PlayerManager = playerManager.GetComponent<UnityPlayerManager>();
 
             var cellScript = cellPrefab.GetComponent<Cell>();
             CellShape cellShape = cellScript.CellShape;

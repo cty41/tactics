@@ -28,7 +28,7 @@ namespace Tactics.UI
         private ProgressBar _hpBar;
         private ProgressBar _mpBar;
         private VisualElement _bottomPanel;
-        private UnityGridController _gridController;
+        private IGridController _gridController;
         private InputAction _endTurnAction;
         private IUnit _currentSelectedUnit;
         private IAbility _currentMoveAbility;
@@ -88,10 +88,11 @@ namespace Tactics.UI
             RegisterSkillButton(skill4Button, 3);
 
             // Find GridController from the currently loaded battle scene
-            _gridController = Object.FindFirstObjectByType<UnityGridController>();
+            // BattleController now implements IGridController directly
+            _gridController = Object.FindFirstObjectByType<BattleController>();
             if (_gridController == null)
             {
-                Debug.LogWarning("[BattleUIController] UnityGridController not found in scene.");
+                Debug.LogWarning("[BattleUIController] BattleController (IGridController) not found in scene.");
                 return;
             }
 

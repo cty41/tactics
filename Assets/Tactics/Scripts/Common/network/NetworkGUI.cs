@@ -17,7 +17,7 @@ namespace Tactics.Common.Network
         /// The NetworkConnection object assosiated with this scene
         /// </summary>
         [SerializeField] private NetworkConnection _networkConnection;
-        [SerializeField] private UnityGridController _gridController;
+        [SerializeField] private Tactics.Common.Battle.BattleController _gridController;
 
         [SerializeField] private Text _statusText;
         [SerializeField] private Text _roomNameText;
