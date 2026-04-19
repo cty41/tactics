@@ -47,10 +47,6 @@ GameMain → GameAssetManager.InitializeAsync → Load首场景
 - UI prefabs in AssetBundles
 - UI layers managed by `UILayer`
 
-## Network
-
-Uses Unity Netcode for GameObjects with custom prefab spawning.
-
 ## Architecture Principles
 
 1. **Data-Oriented**: Use ScriptableObjects for configuration

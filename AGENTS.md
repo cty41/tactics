@@ -39,6 +39,7 @@ All rules in `.kilo/rules/` are **always applied** to all agent tasks:
 2. **Load/Release Pairing**: Every Load must have corresponding Release
 3. **Async First**: Prefer `LoadAsync` over sync loading
 4. **Scene Paths**: Use project paths (`Assets/...`) not scene names
+5. **Use Odin API First**: Prefer to use Odin when write inspector-related code
 
 ## Development Workflow
 
