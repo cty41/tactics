@@ -7,6 +7,8 @@ using Tactics.Common.Cells;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using Tactics.Common.Highlighters;
+using LegacyIHighlightParams = Tactics.Common.Highlighters.IHighlightParams;
+using NewIHighlightParams = Tactics.Common.Units.Highlight.IHighlightParams;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using UnityEngine;
@@ -168,7 +170,7 @@ namespace Tactics.Common.Cells
     /// <summary>
     /// Stores parameters for highlighting a cell as part of a movement path.
     /// </summary>
-    public readonly struct PathHighlightParams : IHighlightParams
+    public readonly struct PathHighlightParams : LegacyIHighlightParams, NewIHighlightParams
     {
         /// <summary>
         /// The path that the cell is part of.

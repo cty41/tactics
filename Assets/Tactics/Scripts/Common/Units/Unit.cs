@@ -13,6 +13,7 @@ using Tactics.Common.Utilities;
 using Tactics.Common.AI.BehaviourTrees;
 using Tactics.Common.Cells;
 using Tactics.Common.Highlighters;
+using Tactics.Common.Units.Highlight;
 using Tactics.Common.Units.Abilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -49,15 +50,34 @@ namespace Tactics.Common.Units
 
         public event Action<AbilityUsedEventArgs> AbilityUsed;
 
+        [SerializeField] private UnitHighlightConfigs _highlightConfigs = new();
+        private UnitHighlightManager _highlightManager;
+
+        /// <summary>
+        /// The highlight manager for this unit.
+        /// </summary>
+        public UnitHighlightManager HighlightManager => _highlightManager;
+
+        // ====== OBSOLETE FIELDS - kept for serialization compatibility, will be removed later ======
+        [System.Obsolete("Use _highlightConfigs.unMarkConfig instead")]
         [SerializeField] private List<Highlighter> _unMarkFn;
+        [System.Obsolete("Use _highlightConfigs.selectedConfig instead")]
         [SerializeField] private List<Highlighter> _markAsSelectedFn;
+        [System.Obsolete("Use _highlightConfigs.friendlyConfig instead")]
         [SerializeField] private List<Highlighter> _markAsFriendlyFn;
+        [System.Obsolete("Use _highlightConfigs.finishedConfig instead")]
         [SerializeField] private List<Highlighter> _markAsFinishedFn;
+        [System.Obsolete("Use _highlightConfigs.targetableConfig instead")]
         [SerializeField] private List<Highlighter> _markAsTargetable;
+        [System.Obsolete("Use _highlightConfigs.attackingConfig instead")]
         [SerializeField] private List<Highlighter> _markAsAttackingFn;
+        [System.Obsolete("Use _highlightConfigs.defendingConfig instead")]
         [SerializeField] private List<Highlighter> _markAsDefendingFn;
+        [System.Obsolete("Use _highlightConfigs.movingConfig instead")]
         [SerializeField] private List<Highlighter> _markAsMoving;
+        [System.Obsolete("Use _highlightConfigs.unMovingConfig instead")]
         [SerializeField] private List<Highlighter> _unMarkAsMoving;
+        [System.Obsolete("Use _highlightConfigs.destroyedConfig instead")]
         [SerializeField] private List<Highlighter> _markAsDestroyedFn;
 
         [SerializeField] private List<AbilityConfig> _abilityConfigs;
@@ -148,6 +168,9 @@ namespace Tactics.Common.Units
             _buffComponent = new BuffComponent(this);
             _behaviourTreeResource?.Initialize(this, gridController);
 
+            // Initialize highlight manager with configs
+            _highlightManager = new UnitHighlightManager(this, _highlightConfigs);
+
             MaxActionPoints = ActionPoints;
             RecalculateDerivedStats();
             Health = MaxHealth;
@@ -210,177 +233,81 @@ namespace Tactics.Common.Units
         /// <summary>
         /// Removes any visual highlights or marks on the unit.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_unMarkFn"/> to apply the unmarking effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task UnMark()
+        public virtual Task UnMark()
         {
-            foreach (var fn in _unMarkFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
+            return _highlightManager?.UnMark() ?? Task.CompletedTask;
         }
+
         /// <summary>
         /// Applies a visual highlight to indicate that the unit is selected.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsSelectedFn"/> to apply the selection effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsSelected()
+        public virtual Task MarkAsSelected()
         {
-            foreach (var fn in _markAsSelectedFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
+            return _highlightManager?.MarkAsSelected() ?? Task.CompletedTask;
         }
+
         /// <summary>
         /// Applies a visual highlight to indicate that the unit is friendly.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsFriendlyFn"/> to apply the friendly unit effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsFriendly()
+        public virtual Task MarkAsFriendly()
         {
-            foreach (var fn in _markAsFriendlyFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
+            return _highlightManager?.MarkAsFriendly() ?? Task.CompletedTask;
         }
+
         /// <summary>
         /// Applies a visual highlight to indicate that the unit has completed its actions for the turn.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsFinishedFn"/> to apply the finished unit effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsFinished()
+        public virtual Task MarkAsFinished()
         {
-            foreach (var fn in _markAsFinishedFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
+            return _highlightManager?.MarkAsFinished() ?? Task.CompletedTask;
         }
+
         /// <summary>
         /// Applies a visual highlight to indicate that the unit can be targeted for actions such as attacks.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsTargetable"/> to apply the reachable enemy effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsTargetable()
+        public virtual Task MarkAsTargetable()
         {
-            foreach (var fn in _markAsTargetable)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
+            return _highlightManager?.MarkAsTargetable() ?? Task.CompletedTask;
         }
+
         /// <summary>
         /// Applies a visual highlight to indicate that the unit is attacking another unit.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsAttackingFn"/> to apply the attacking effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <param name="otherUnit">The unit being attacked.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsAttacking(Unit otherUnit)
+        public virtual Task MarkAsAttacking(Unit otherUnit)
         {
-            foreach (var fn in _markAsAttackingFn)
-            {
-                await fn.Apply(new CombatHighlightParams(this, otherUnit));
-            }
+            return _highlightManager?.MarkAsAttacking(otherUnit) ?? Task.CompletedTask;
         }
+
         /// <summary>
         /// Applies a visual highlight to indicate that the unit is defending against an attack.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsDefendingFn"/> to apply the defending effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <param name="otherUnit">The unit attacking this unit.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsDefending(Unit otherUnit)
+        public virtual Task MarkAsDefending(Unit otherUnit)
         {
-            foreach (var fn in _markAsDefendingFn)
-            {
-                if (_highlightCancellationTokenSource.IsCancellationRequested)
-                {
-                    return;
-                }
-                await fn.Apply(new CombatHighlightParams(this, otherUnit));
-            }
+            return _highlightManager?.MarkAsDefending(otherUnit) ?? Task.CompletedTask;
         }
 
         /// <summary>
         /// Applies a visual effect to indicate that the unit is moving.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsMoving"/> to apply the moving effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <param name="source">The starting cell of the movement.</param>
-        /// <param name="destination">The destination cell of the movement.</param>
-        /// <param name="path">The sequence of cells representing the movement path.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsMoving(ICell source, ICell destination, IEnumerable<ICell> path)
+        public virtual Task MarkAsMoving(ICell source, ICell destination, IEnumerable<ICell> path)
         {
-            foreach (var fn in _markAsMoving)
-            {
-                await fn.Apply(new MoveHighlightParams(source, destination, path));
-            }
+            return _highlightManager?.MarkAsMoving(source, destination, path) ?? Task.CompletedTask;
         }
 
         /// <summary>
-        /// Removes the visual indication of movement from the unit, typically reversing the effects of <see cref="MarkAsMoving"/>.
+        /// Removes the visual indication of movement from the unit.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_unMarkAsMoving"/> to apply the unmarking effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <param name="source">The starting cell of the previously marked movement.</param>
-        /// <param name="destination">The destination cell of the previously marked movement.</param>
-        /// <param name="path">The sequence of cells that represented the movement path.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task UnMarkAsMoving(ICell source, ICell destination, IEnumerable<ICell> path)
+        public virtual Task UnMarkAsMoving(ICell source, ICell destination, IEnumerable<ICell> path)
         {
-            foreach (var fn in _unMarkAsMoving)
-            {
-                await fn.Apply(new MoveHighlightParams(source, destination, path));
-            }
+            return _highlightManager?.UnMarkAsMoving(source, destination, path) ?? Task.CompletedTask;
         }
 
         /// <summary>
-        /// Applies a visual effect to indicate that the unit is dead.
+        /// Applies a visual effect to indicate that the unit is destroyed.
         /// </summary>
-        /// <remarks>
-        /// This method uses the backing field <see cref="_markAsDestroyedFn"/> to apply the defending effects. 
-        /// These effects are reusable and can be customized as needed. Since this method is virtual, 
-        /// it can be overridden by inheriting classes if a different marking system is preferred.
-        /// </remarks>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public virtual async Task MarkAsDestroyed()
+        public virtual Task MarkAsDestroyed()
         {
-            foreach (var fn in _markAsDestroyedFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
+            return _highlightManager?.MarkAsDestroyed() ?? Task.CompletedTask;
         }
 
         public virtual bool IsCellMovableTo(ICell cell)
@@ -554,6 +481,7 @@ namespace Tactics.Common.Units
         public virtual void OnDestroyed(IGridController gridController)
         {
             _highlightCancellationTokenSource.Cancel();
+            _highlightManager?.CancelAllHighlights();
             _buffComponent.OnUnitDestroyed();
             Destroy(gameObject);
         }
@@ -598,7 +526,7 @@ namespace Tactics.Common.Units
     /// <summary>
     /// Parameters used to highlight combat interactions between two units.
     /// </summary>
-    public readonly struct CombatHighlightParams : IHighlightParams
+    public readonly struct CombatHighlightParams : Highlight.IHighlightParams, Tactics.Common.Highlighters.IHighlightParams
     {
         /// <summary>
         /// The unit initiating the highlight effect, whether as the attacker or the defender.
@@ -617,7 +545,7 @@ namespace Tactics.Common.Units
         }
     }
 
-    public readonly struct MoveHighlightParams : IHighlightParams
+    public readonly struct MoveHighlightParams : Highlight.IHighlightParams, Tactics.Common.Highlighters.IHighlightParams
     {
         public readonly ICell Source;
         public readonly ICell Destination;
