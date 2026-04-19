@@ -248,14 +248,14 @@ namespace Tactics.Common.Units.Abilities.Editor
             string unitName = prefabRoot.name.Replace(" ", "").Replace("-", "");
 
             string moveConfigPath = $"{configsPath}/{unitName}_Move.asset";
-            if (AssetDatabase.LoadAssetAtPath<MoveAbilityConfig>(moveConfigPath) == null)
+            if (AssetDatabase.LoadAssetAtPath<AbilityConfig>(moveConfigPath) == null)
             {
                 CreateMoveConfig(moveConfigPath);
             }
             configPaths.Add(moveConfigPath);
 
             string attackConfigPath = $"{configsPath}/{unitName}_Attack.asset";
-            if (AssetDatabase.LoadAssetAtPath<AttackAbilityConfig>(attackConfigPath) == null)
+            if (AssetDatabase.LoadAssetAtPath<AbilityConfig>(attackConfigPath) == null)
             {
                 bool isRanged = prefabRoot.GetComponent<Tactics.Units.LandUnitMovementRules>() == null;
                 CreateAttackConfig(attackConfigPath, isRanged);
@@ -267,28 +267,29 @@ namespace Tactics.Common.Units.Abilities.Editor
 
         private void CreateMoveConfig(string path)
         {
-            var config = ScriptableObject.CreateInstance<MoveAbilityConfig>();
+            var config = ScriptableObject.CreateInstance<AbilityConfig>();
             config.name = Path.GetFileNameWithoutExtension(path);
             SetPrivateField(config, "_displayName", "Move");
             SetPrivateField(config, "_actionPointCost", 1);
             SetPrivateField(config, "_targetingStrategy", new SelfTargeting());
-            SetPrivateField(config, "_effects", new List<AbilityEffect> { new MoveEffect() });
+            SetPrivateField(config, "_effects", new List<AbilityEffect>());
             AssetDatabase.CreateAsset(config, path);
             Log($"  Created MoveConfig: {path}");
         }
 
         private void CreateAttackConfig(string path, bool isRanged)
         {
-            var config = ScriptableObject.CreateInstance<AttackAbilityConfig>();
+            var config = ScriptableObject.CreateInstance<AbilityConfig>();
             config.name = Path.GetFileNameWithoutExtension(path);
             SetPrivateField(config, "_displayName", isRanged ? "Ranged Attack" : "Melee Attack");
             SetPrivateField(config, "_actionPointCost", 1);
-            SetPrivateField(config, "_attackRange", isRanged ? 3 : 1);
-            SetPrivateField(config, "_isRanged", isRanged);
-            SetPrivateField(config, "_targetingStrategy", new SingleTargetEnemy());
+            var targetingStrategy = new SingleTargetEnemy();
+            SetPrivateField(targetingStrategy, "_minRange", isRanged ? 2 : 0);
+            SetPrivateField(targetingStrategy, "_maxRange", isRanged ? 5 : 1);
+            SetPrivateField(config, "_targetingStrategy", targetingStrategy);
             SetPrivateField(config, "_effects", new List<AbilityEffect> { new DamageEffect() });
             AssetDatabase.CreateAsset(config, path);
-            Log($"  Created AttackConfig: {path}");
+            Log($"  Created AttackConfig: {path} (isRanged={isRanged})");
         }
 
         private void AssignConfigsToUnit(GameObject prefabRoot, List<string> configPaths)

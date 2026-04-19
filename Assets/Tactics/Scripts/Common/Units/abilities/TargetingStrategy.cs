@@ -66,8 +66,10 @@ namespace Tactics.Common.Units.Abilities
     [Serializable]
     public class SingleTargetEnemy : TargetingStrategy
     {
+        [SerializeField] private int _minRange;
         [SerializeField] private int _maxRange = 1;
 
+        public int MinRange => _minRange;
         public int MaxRange => _maxRange;
 
         public override IEnumerable<IUnit> GetTargets(IUnit caster, ICell selectedCell, IGridController gridController)
@@ -84,7 +86,8 @@ namespace Tactics.Common.Units.Abilities
         public override bool IsValidTarget(IUnit caster, IUnit target, IGridController gridController)
         {
             int distance = target.CurrentCell.GetDistance(caster.CurrentCell);
-            return distance <= _maxRange &&
+            return distance >= _minRange &&
+                   distance <= _maxRange &&
                    target.PlayerNumber != caster.PlayerNumber;
         }
     }

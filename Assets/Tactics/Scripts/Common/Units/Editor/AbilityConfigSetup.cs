@@ -111,9 +111,9 @@ namespace Tactics.Common.Units.Abilities.Editor
             string movePath = $"{configDir}/{name}_Move.asset";
             string atkPath = $"{configDir}/{name}_Attack.asset";
 
-            if (AssetDatabase.LoadAssetAtPath<MoveAbilityConfig>(movePath) == null)
+            if (AssetDatabase.LoadAssetAtPath<AbilityConfig>(movePath) == null)
             {
-                var cfg = ScriptableObject.CreateInstance<MoveAbilityConfig>();
+                var cfg = ScriptableObject.CreateInstance<AbilityConfig>();
                 cfg.name = Path.GetFileNameWithoutExtension(movePath);
                 SetField(cfg, "_displayName", "Move");
                 SetField(cfg, "_actionPointCost", 1);
@@ -122,14 +122,14 @@ namespace Tactics.Common.Units.Abilities.Editor
                 AssetDatabase.CreateAsset(cfg, movePath);
             }
 
-            if (AssetDatabase.LoadAssetAtPath<AttackAbilityConfig>(atkPath) == null)
+            if (AssetDatabase.LoadAssetAtPath<AbilityConfig>(atkPath) == null)
             {
-                var cfg = ScriptableObject.CreateInstance<AttackAbilityConfig>();
+                var cfg = ScriptableObject.CreateInstance<AbilityConfig>();
                 cfg.name = Path.GetFileNameWithoutExtension(atkPath);
                 SetField(cfg, "_displayName", "Attack");
                 SetField(cfg, "_actionPointCost", 1);
                 SetField(cfg, "_targetingStrategy", new SingleTargetEnemy());
-                SetField(cfg, "_effects", new List<AbilityEffect>());
+                SetField(cfg, "_effects", new List<AbilityEffect> { new DamageEffect() });
                 AssetDatabase.CreateAsset(cfg, atkPath);
             }
 
@@ -140,9 +140,9 @@ namespace Tactics.Common.Units.Abilities.Editor
             {
                 prop.ClearArray();
                 prop.InsertArrayElementAtIndex(0);
-                prop.GetArrayElementAtIndex(0).objectReferenceValue = AssetDatabase.LoadAssetAtPath<MoveAbilityConfig>(movePath);
+                prop.GetArrayElementAtIndex(0).objectReferenceValue = AssetDatabase.LoadAssetAtPath<AbilityConfig>(movePath);
                 prop.InsertArrayElementAtIndex(1);
-                prop.GetArrayElementAtIndex(1).objectReferenceValue = AssetDatabase.LoadAssetAtPath<AttackAbilityConfig>(atkPath);
+                prop.GetArrayElementAtIndex(1).objectReferenceValue = AssetDatabase.LoadAssetAtPath<AbilityConfig>(atkPath);
                 soUnit.ApplyModifiedProperties();
             }
 
@@ -182,7 +182,7 @@ namespace Tactics.Common.Units.Abilities.Editor
             string dir = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            var move = ScriptableObject.CreateInstance<MoveAbilityConfig>();
+            var move = ScriptableObject.CreateInstance<AbilityConfig>();
             move.name = "Default_Move";
             SetField(move, "_displayName", "Move");
             SetField(move, "_actionPointCost", 1);
@@ -190,12 +190,12 @@ namespace Tactics.Common.Units.Abilities.Editor
             SetField(move, "_effects", new List<AbilityEffect>());
             AssetDatabase.CreateAsset(move, $"{dir}/Default_Move.asset");
 
-            var atk = ScriptableObject.CreateInstance<AttackAbilityConfig>();
+            var atk = ScriptableObject.CreateInstance<AbilityConfig>();
             atk.name = "Default_Attack";
             SetField(atk, "_displayName", "Attack");
             SetField(atk, "_actionPointCost", 1);
             SetField(atk, "_targetingStrategy", new SingleTargetEnemy());
-            SetField(atk, "_effects", new List<AbilityEffect>());
+            SetField(atk, "_effects", new List<AbilityEffect> { new DamageEffect() });
             AssetDatabase.CreateAsset(atk, $"{dir}/Default_Attack.asset");
 
             AssetDatabase.SaveAssets();
