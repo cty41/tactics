@@ -6,11 +6,7 @@ using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
-using Tactics.Common.Highlighters;
-using LegacyIHighlightParams = Tactics.Common.Highlighters.IHighlightParams;
-using NewIHighlightParams = Tactics.Common.Units.Highlight.IHighlightParams;
-using Tactics.Common.Units;
-using Tactics.Common.Utilities;
+using Tactics.Common.Units.Highlight;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -32,10 +28,6 @@ namespace Tactics.Common.Cells
         public event Action<ICell> CellHighlighted;
         public event Action<ICell> CellDehighlighted;
 
-        [SerializeField] private List<Highlighter> _unMarkFn;
-        [SerializeField] private List<Highlighter> _markAsHighlightedFn;
-        [SerializeField] private List<Highlighter> _markAsReachableFn;
-        [SerializeField] private List<Highlighter> _markAsPathFn;
         [SerializeField] private float _movementCost = 1;
 
         private int _hashCache = -1;
@@ -81,38 +73,6 @@ namespace Tactics.Common.Cells
         public abstract IEnumerable<ICell> GetNeighbours(ICellManager cellManager);
 
         public abstract int GetDistance(ICell otherCell);
-
-        public virtual async Task UnMark()
-        {
-            foreach (var fn in _unMarkFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
-        }
-
-        public virtual async Task MarkAsHighlighted()
-        {
-            foreach (var fn in _markAsHighlightedFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
-        }
-
-        public virtual async Task MarkAsReachable()
-        {
-            foreach (var fn in _markAsReachableFn)
-            {
-                await fn.Apply(NoParam.Instance);
-            }
-        }
-
-        public virtual async Task MarkAsPath(IList<ICell> path, int cellIndex, ICell originCell)
-        {
-            foreach (var fn in _markAsPathFn)
-            {
-                await fn.Apply(new PathHighlightParams(path, cellIndex, originCell));
-            }
-        }
 
         /// <summary>
         /// Changes the color of the cell to given value. Used for AI debugging.
@@ -170,7 +130,7 @@ namespace Tactics.Common.Cells
     /// <summary>
     /// Stores parameters for highlighting a cell as part of a movement path.
     /// </summary>
-    public readonly struct PathHighlightParams : LegacyIHighlightParams, NewIHighlightParams
+    public readonly struct PathHighlightParams : Tactics.Common.Units.Highlight.IHighlightParams
     {
         /// <summary>
         /// The path that the cell is part of.
@@ -283,5 +243,3 @@ namespace Tactics.Common.Cells
         }
     }
 }
-
-

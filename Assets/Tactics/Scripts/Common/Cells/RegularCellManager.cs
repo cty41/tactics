@@ -42,58 +42,53 @@ namespace Tactics.Common.Cells
         }
 
         /// <summary>
-        /// Marks the specified cell as highlighted by delegating to the <see cref="Cell"/> implementation.
+        /// Marks the specified cell as highlighted.
         /// </summary>
         /// <param name="cell">The cell to highlight.</param>
-        public override async Task MarkAsHighlighted(ICell cell)
+        public override Task MarkAsHighlighted(ICell cell)
         {
-            await (cell as Cell).MarkAsHighlighted();
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Unmarks the specified cell by delegating to the <see cref="Cell"/> implementation.
+        /// Unmarks the specified cell.
         /// </summary>
         /// <param name="cell">The cell to unmark.</param>
-        public override async Task UnMarkAsHighlighted(ICell cell)
+        public override Task UnMarkAsHighlighted(ICell cell)
         {
-            await (cell as Cell).UnMark();
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Marks the specified cells as part of a movement path by delegating to each cell's <see cref="Cell.MarkAsPath(IList{ICell}, int, ICell)"/> implementation.
+        /// Marks the specified cells as part of a movement path.
         /// </summary>
         /// <param name="cells">The cells forming the path.</param>
         /// <param name="originCell">The origin cell of the path.</param>
-        public override async Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell)
+        public override Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell)
         {
-            var path = cells.ToList();
-            for (int i = 0; i < path.Count; i++)
-            {
-                ICell cell = path[i];
-                await (cell as Cell).MarkAsPath(path, i, originCell);
-            }
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Unmarks the specified cells by delegating to each cell's <see cref="Cell.UnMark"/> implementation.
+        /// Unmarks the specified cells.
         /// </summary>
         /// <param name="cells">The cells to unmark.</param>
-        public override async Task UnMark(IEnumerable<ICell> cells)
+        public override Task UnMark(IEnumerable<ICell> cells)
         {
-            await Task.WhenAll(cells.Select(cell => (cell as Cell).UnMark()));
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Unmarks the specified cell by delegating <see cref="Cell.UnMark"/> implementation.
+        /// Unmarks the specified cell.
         /// </summary>
-        /// <param name="cells">The cells to unmark.</param>
-        public override async Task UnMark(ICell cell)
+        /// <param name="cell">The cell to unmark.</param>
+        public override Task UnMark(ICell cell)
         {
-            await (cell as Cell).UnMark();
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Marks the specified cells as reachable by delegating to each cell's <see cref="Cell"/> implementation.
+        /// Marks the specified cells as reachable.
         /// </summary>
         /// <param name="cells">The cells to mark as reachable.</param>
         public override async Task MarkAsReachable(IEnumerable<ICell> cells)
@@ -105,12 +100,12 @@ namespace Tactics.Common.Cells
         }
 
         /// <summary>
-        /// Marks the specified cell as reachable by delegating to cell's <see cref="Cell"/> implementation.
+        /// Marks the specified cell as reachable.
         /// </summary>
-        /// <param name="cells">The cells to mark as reachable.</param>
-        public override async Task MarkAsReachable(ICell cell)
+        /// <param name="cell">The cell to mark as reachable.</param>
+        public override Task MarkAsReachable(ICell cell)
         {
-            await (cell as Cell).MarkAsReachable();
+            return Task.CompletedTask;
         }
 
         public override void SetColor(ICell cell, float r, float g, float b, float a)

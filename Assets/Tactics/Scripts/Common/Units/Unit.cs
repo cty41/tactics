@@ -12,7 +12,6 @@ using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
 using Tactics.Common.AI.BehaviourTrees;
 using Tactics.Common.Cells;
-using Tactics.Common.Highlighters;
 using Tactics.Common.Units.Highlight;
 using Tactics.Common.Units.Abilities;
 using UnityEngine;
@@ -57,28 +56,6 @@ namespace Tactics.Common.Units
         /// The highlight manager for this unit.
         /// </summary>
         public UnitHighlightManager HighlightManager => _highlightManager;
-
-        // ====== OBSOLETE FIELDS - kept for serialization compatibility, will be removed later ======
-        [System.Obsolete("Use _highlightConfigs.unMarkConfig instead")]
-        [SerializeField] private List<Highlighter> _unMarkFn;
-        [System.Obsolete("Use _highlightConfigs.selectedConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsSelectedFn;
-        [System.Obsolete("Use _highlightConfigs.friendlyConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsFriendlyFn;
-        [System.Obsolete("Use _highlightConfigs.finishedConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsFinishedFn;
-        [System.Obsolete("Use _highlightConfigs.targetableConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsTargetable;
-        [System.Obsolete("Use _highlightConfigs.attackingConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsAttackingFn;
-        [System.Obsolete("Use _highlightConfigs.defendingConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsDefendingFn;
-        [System.Obsolete("Use _highlightConfigs.movingConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsMoving;
-        [System.Obsolete("Use _highlightConfigs.unMovingConfig instead")]
-        [SerializeField] private List<Highlighter> _unMarkAsMoving;
-        [System.Obsolete("Use _highlightConfigs.destroyedConfig instead")]
-        [SerializeField] private List<Highlighter> _markAsDestroyedFn;
 
         [SerializeField] private List<AbilityConfig> _abilityConfigs;
         private List<IAbility> _baseAbilities;
@@ -526,7 +503,7 @@ namespace Tactics.Common.Units
     /// <summary>
     /// Parameters used to highlight combat interactions between two units.
     /// </summary>
-    public readonly struct CombatHighlightParams : Highlight.IHighlightParams, Tactics.Common.Highlighters.IHighlightParams
+    public readonly struct CombatHighlightParams : Highlight.IHighlightParams
     {
         /// <summary>
         /// The unit initiating the highlight effect, whether as the attacker or the defender.
@@ -545,7 +522,7 @@ namespace Tactics.Common.Units
         }
     }
 
-    public readonly struct MoveHighlightParams : Highlight.IHighlightParams, Tactics.Common.Highlighters.IHighlightParams
+    public readonly struct MoveHighlightParams : Highlight.IHighlightParams
     {
         public readonly ICell Source;
         public readonly ICell Destination;
