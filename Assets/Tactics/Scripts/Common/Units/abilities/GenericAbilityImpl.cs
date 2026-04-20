@@ -143,7 +143,10 @@ namespace Tactics.Common.Units.Abilities
             return true;
         }
 
-        private async void ExecuteEffects(IGridController gridController)
+        /// <summary>
+        /// Executes ability effects on the specified targets. Used by AI to execute abilities programmatically.
+        /// </summary>
+        public async Task ExecuteEffectsAsync(IEnumerable<IUnit> targets, IGridController gridController)
         {
             if (_owner.Mana < _config.ManaCost || _owner.ActionPoints < _config.ActionPointCost)
             {
@@ -154,6 +157,8 @@ namespace Tactics.Common.Units.Abilities
             {
                 _owner.Mana -= _config.ManaCost;
                 _owner.ActionPoints -= _config.ActionPointCost;
+
+                _pendingTargets = targets;
 
                 foreach (var effect in _config.Effects)
                 {
@@ -166,6 +171,11 @@ namespace Tactics.Common.Units.Abilities
             {
                 Debug.LogError($"[GenericAbilityImpl] Error executing ability {_config.DisplayName}: {ex.Message}");
             }
+        }
+
+        private async void ExecuteEffects(IGridController gridController)
+        {
+            await ExecuteEffectsAsync(null, gridController);
         }
 
         private HashSet<ICell> GetAoeCells(ICell center, AoETargeting aoe, IGridController gridController)
