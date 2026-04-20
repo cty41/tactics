@@ -448,7 +448,7 @@ namespace Tactics.UI
                 return;
             }
 
-            bool canMove = unit.ActionPoints > 0
+            bool canMove = !unit.HasUsedBasicAbilityThisTurn("Move")
                 && unit.GetBaseAbilities().Any(IsMoveAbility);
 
             _moveButton.SetEnabled(canMove);

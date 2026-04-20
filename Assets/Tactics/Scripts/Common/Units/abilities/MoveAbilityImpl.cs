@@ -48,7 +48,9 @@ namespace Tactics.Common.Units.Abilities
         public void OnAbilitySelected(IGridController gridController)
         {
             UnitReference.CachePaths(gridController.CellManager);
-            _cellsInMovementRange = UnitReference.ActionPoints > 0 ? new HashSet<ICell>(UnitReference.GetAvailableDestinations(gridController.CellManager.GetCells())) : new HashSet<ICell>();
+            // Check if basic move ability has been used this turn
+            bool canMove = !UnitReference.HasUsedBasicAbilityThisTurn("Move");
+            _cellsInMovementRange = canMove ? new HashSet<ICell>(UnitReference.GetAvailableDestinations(gridController.CellManager.GetCells())) : new HashSet<ICell>();
             _currentPath = Enumerable.Empty<ICell>();
         }
 
@@ -165,7 +167,8 @@ namespace Tactics.Common.Units.Abilities
         /// <returns>True if movement can be performed; otherwise, false.</returns>
         public bool CanPerform(IGridController gridController)
         {
-            return UnitReference.ActionPoints > 0 && UnitReference.GetAvailableDestinations(gridController.CellManager.GetCells()).Count > 0;
+            // Check if basic move ability has been used this turn
+            return !UnitReference.HasUsedBasicAbilityThisTurn("Move") && UnitReference.GetAvailableDestinations(gridController.CellManager.GetCells()).Count > 0;
         }
 
         public void Initialize(IGridController gridController)

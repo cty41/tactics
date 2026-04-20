@@ -94,7 +94,7 @@ namespace Tactics.Common.Units.Abilities
 
         public void OnUnitClicked(IUnit unit, IGridController gridController)
         {
-            if (UnitReference.ActionPoints > 0 && _config.TargetingStrategy != null)
+            if (_config.TargetingStrategy != null && CanPerform(gridController))
             {
                 if (_config.TargetingStrategy.IsValidTarget(_owner, unit, gridController))
                 {
@@ -120,7 +120,11 @@ namespace Tactics.Common.Units.Abilities
 
         public bool CanPerform(IGridController gridController)
         {
-            return _owner.Mana >= _config.ManaCost && _owner.ActionPoints >= _config.ActionPointCost;
+            if (_config.IsBasicAbility)
+            {
+                return !_owner.HasUsedBasicAbilityThisTurn(_config.DisplayName);
+            }
+            return _owner.Mana >= _config.ManaCost;
         }
 
         public void InvokeAbilitySelected()
@@ -148,16 +152,27 @@ namespace Tactics.Common.Units.Abilities
         /// </summary>
         public async Task ExecuteEffectsAsync(IEnumerable<IUnit> targets, IGridController gridController)
         {
-            if (_owner.Mana < _config.ManaCost || _owner.ActionPoints < _config.ActionPointCost)
+            // Basic abilities don't consume Mana but can only be used once per turn
+            if (_config.IsBasicAbility)
             {
-                return;
+                if (_owner.HasUsedBasicAbilityThisTurn(_config.DisplayName))
+                {
+                    return;
+                }
+                _owner.MarkBasicAbilityUsed(_config.DisplayName);
+            }
+            else
+            {
+                // Non-basic abilities consume Mana
+                if (_owner.Mana < _config.ManaCost)
+                {
+                    return;
+                }
+                _owner.Mana -= _config.ManaCost;
             }
 
             try
             {
-                _owner.Mana -= _config.ManaCost;
-                _owner.ActionPoints -= _config.ActionPointCost;
-
                 _pendingTargets = targets;
 
                 foreach (var effect in _config.Effects)

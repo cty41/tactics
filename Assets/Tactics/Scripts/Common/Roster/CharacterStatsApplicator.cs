@@ -17,7 +17,6 @@ namespace Tactics.Roster
             unit.Charisma = data.Charisma;
             unit.Luck = data.Luck;
             unit.Speed = data.Speed;
-            unit.ActionPoints = data.ActionPoints;
             unit.AttackRange = data.AttackRange;
             unit.AttackFactor = data.AttackFactor;
             unit.DefenceFactor = data.DefenceFactor;

@@ -74,9 +74,7 @@ namespace Tactics.Common.Units
         public ITreeNode BehaviourTree { get { return _behaviourTreeResource.BehaviourTree; } }
         [SerializeField] protected BehaviourTreeResource _behaviourTreeResource;
 
-        [SerializeField] float _actionPoints = 1;
-        public float ActionPoints { get { return _actionPoints; } set { _actionPoints = value; } }
-        public float MaxActionPoints { get; set; }
+        [SerializeField] private HashSet<string> _usedBasicAbilitiesThisTurn = new();
 
         [SerializeField] private float _health = 10;
         public float Health { get { return _health; } set { _health = value; } }
@@ -148,7 +146,7 @@ namespace Tactics.Common.Units
             // Initialize highlight manager with configs
             _highlightManager = new UnitHighlightManager(this, _highlightConfigs);
 
-            MaxActionPoints = ActionPoints;
+            _usedBasicAbilitiesThisTurn = new HashSet<string>();
             RecalculateDerivedStats();
             Health = MaxHealth;
             Mana = MaxMana;
@@ -202,9 +200,19 @@ namespace Tactics.Common.Units
         public virtual void OnTurnEnd(IGridController gridController)
         {
             MovementPoints = MaxMovementPoints;
-            ActionPoints = MaxActionPoints;
+            _usedBasicAbilitiesThisTurn.Clear();
             Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Intelligence));
             _buffComponent.OnTurnEnd(gridController);
+        }
+
+        public virtual bool HasUsedBasicAbilityThisTurn(string abilityName)
+        {
+            return _usedBasicAbilitiesThisTurn.Contains(abilityName);
+        }
+
+        public virtual void MarkBasicAbilityUsed(string abilityName)
+        {
+            _usedBasicAbilitiesThisTurn.Add(abilityName);
         }
 
         /// <summary>

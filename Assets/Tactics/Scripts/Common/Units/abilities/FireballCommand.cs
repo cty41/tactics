@@ -52,7 +52,6 @@ namespace Tactics.Common.Units.Abilities
             }
 
             _caster.Mana -= _manaCost;
-            _caster.ActionPoints -= _actionCost;
 
             string casterName = _caster is Tactics.Common.Units.INamedUnit nc ? nc.UnitName : _caster.ToString();
             string primaryTarget = hitUnits.FirstOrDefault() is Tactics.Common.Units.INamedUnit nt ? nt.UnitName : "None";
@@ -96,7 +95,6 @@ namespace Tactics.Common.Units.Abilities
             }
 
             caster.Mana += manaCost;
-            caster.ActionPoints += actionCost;
             return Task.CompletedTask;
         }
 

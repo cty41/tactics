@@ -27,7 +27,6 @@ namespace Tactics.Common.Units.Abilities
         {
             _target.ModifyHealth(-_damage, unit);
             _target.InvokeAttacked(new UnitAttackedEventArgs(_target, unit, _damage));
-            unit.ActionPoints -= _actionCost;
 
             BattleLogger.Log(new AttackLogData
             {
@@ -45,7 +44,6 @@ namespace Tactics.Common.Units.Abilities
         public Task Undo(IUnit unit, IGridController controller)
         {
             _target.ModifyHealth(+_damage, unit);
-            unit.ActionPoints += _actionCost;
             return Task.CompletedTask;
         }
 

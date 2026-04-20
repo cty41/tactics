@@ -86,16 +86,6 @@ namespace Tactics.Common.Units
         /// </summary>
         Vector3Impl WorldPosition { get; set; }
 
-        /// <summary>
-        /// The maximum action points available to the unit.
-        /// </summary>
-        float MaxActionPoints { get; set; }
-
-        /// <summary>
-        /// The current action points available to the unit.
-        /// </summary>
-        float ActionPoints { get; set; }
-
         int Strength { get; set; }
         int Agility { get; set; }
         int Constitution { get; set; }
@@ -129,6 +119,16 @@ namespace Tactics.Common.Units
         /// </summary>
         /// <returns>A collection of base abilities.</returns>
         IEnumerable<IAbility> GetBaseAbilities();
+
+        /// <summary>
+        /// Checks if a basic ability has been used this turn.
+        /// </summary>
+        bool HasUsedBasicAbilityThisTurn(string abilityName);
+
+        /// <summary>
+        /// Marks a basic ability as used for this turn.
+        /// </summary>
+        void MarkBasicAbilityUsed(string abilityName);
 
         /// <summary>
         /// Registers a new ability for the unit.

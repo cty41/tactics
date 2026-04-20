@@ -56,7 +56,6 @@ namespace Tactics.Common.Units.Abilities
                 await _defenderHighlighter.Invoke(target);
             }
 
-            unit.ActionPoints -= _actionCost;
             await Task.CompletedTask;
         }
 

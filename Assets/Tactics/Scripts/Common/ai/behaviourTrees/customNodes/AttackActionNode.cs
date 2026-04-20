@@ -50,7 +50,11 @@ namespace Tactics.Common.AI.BehaviourTrees
         /// <returns>A task representing the execution, with a boolean result indicating success.</returns>
         public Task<bool> Execute(bool debugMode)
         {
-            if (_unit.ActionPoints <= 0)
+            // Check if attack basic ability has been used this turn
+            // Try to find the attack config name to check usage
+            if (_unit.HasUsedBasicAbilityThisTurn("Melee Attack") || 
+                _unit.HasUsedBasicAbilityThisTurn("Ranged Attack") ||
+                _unit.HasUsedBasicAbilityThisTurn("Attack"))
             {
                 return Task.FromResult(false);
             }

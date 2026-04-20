@@ -27,10 +27,11 @@ namespace Tactics.Common.Units.Abilities
         [SerializeField] private int _manaCost;
         
         [BoxGroup("Costs")]
-        [SerializeField] private int _actionPointCost = 1;
-        
-        [BoxGroup("Costs")]
         [SerializeField] private float _cooldown;
+        
+        [BoxGroup("Basic Info")]
+        [Tooltip("If true, this ability can be used once per turn without consuming Mana. Examples: Move, MeleeAttack, RangedAttack.")]
+        [SerializeField] private bool _isBasicAbility;
 
         [BoxGroup("Targeting")]
         [SerializeReference] 
@@ -48,8 +49,8 @@ namespace Tactics.Common.Units.Abilities
         public Sprite Icon => _icon;
         public string Description => _description;
         public int ManaCost => _manaCost;
-        public int ActionPointCost => _actionPointCost;
         public float Cooldown => _cooldown;
+        public bool IsBasicAbility => _isBasicAbility;
         public TargetingStrategy TargetingStrategy => _targetingStrategy;
         public IReadOnlyList<AbilityEffect> Effects => _effects;
 

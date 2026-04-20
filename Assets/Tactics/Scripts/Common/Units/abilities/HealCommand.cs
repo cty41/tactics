@@ -35,7 +35,6 @@ namespace Tactics.Common.Units.Abilities
             }
 
             _target.ModifyHealth(+_actualHeal, _caster);
-            unit.ActionPoints -= _actionCost;
 
             string targetName = _target is Tactics.Common.Units.INamedUnit nt ? nt.UnitName : _target.ToString();
             string casterName = _caster is Tactics.Common.Units.INamedUnit nc ? nc.UnitName : _caster.ToString();
@@ -56,7 +55,6 @@ namespace Tactics.Common.Units.Abilities
         public Task Undo(IUnit unit, IGridController controller)
         {
             _target.ModifyHealth(-_actualHeal, _caster);
-            unit.ActionPoints += _actionCost;
             return Task.CompletedTask;
         }
 
