@@ -105,6 +105,7 @@ namespace Tactics.Common.Units.Abilities
             }
 
             _currentPath = latestPath;
+            UnitReference.MarkBasicAbilityUsed("Move");
             UnitReference.HumanExecuteAbility(new MoveCommand(UnitReference.CurrentCell, cell, _currentPath), gridController);
         }
 
@@ -196,12 +197,12 @@ namespace Tactics.Common.Units.Abilities
         }
         public void InvokeAbilitySelected()
         {
-            AbilitySelected.Invoke(this);
+            AbilitySelected?.Invoke(this);
         }
 
         public void InvokeAbilityDeselected()
         {
-            AbilityDeselected.Invoke(this);
+            AbilityDeselected?.Invoke(this);
         }
     }
 }

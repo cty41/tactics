@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Controllers;
@@ -12,6 +13,7 @@ namespace Tactics.Controllers.TurnResolvers
     /// Units take turns in a fixed cycle ordered by speed (highest first), with stable secondary ordering.
     /// Each turn activates only one unit at a time.
     /// </summary>
+    [Serializable]
     public class UnitSpeedTurnResolver : ITurnResolver
     {
         /// <summary>

@@ -8,6 +8,7 @@ namespace Tactics.Common.AI
     /// <summary>
     /// Implements a basic unit selection strategy for selecting and ordering units for the AI to control.
     /// </summary>
+    [Serializable]
     public class SubsequentUnitSelectorImpl : IUnitSelector
     {
         /// <summary>

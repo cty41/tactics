@@ -235,14 +235,19 @@ namespace Tactics.UI
             var moveAbility = _currentSelectedUnit.GetBaseAbilities()
                 .FirstOrDefault(a => IsMoveAbility(a));
             
-            if (moveAbility == null || !moveAbility.CanPerform(_gridController))
+            if (moveAbility == null)
+                return;
+
+            // Initialize ability cache before checking CanPerform
+            moveAbility.OnAbilitySelected(_gridController);
+            
+            if (!moveAbility.CanPerform(_gridController))
                 return;
 
             _currentMoveAbility = moveAbility;
 
             if (_gridController.GridState is GridStateUnitSelected)
             {
-                moveAbility.OnAbilitySelected(_gridController);
                 moveAbility.Display(_gridController);
                 return;
             }
@@ -448,10 +453,20 @@ namespace Tactics.UI
                 return;
             }
 
-            bool canMove = !unit.HasUsedBasicAbilityThisTurn("Move")
-                && unit.GetBaseAbilities().Any(IsMoveAbility);
+            bool hasUsedMove = unit.HasUsedBasicAbilityThisTurn("Move");
+            var abilities = unit.GetBaseAbilities()?.ToList();
+            int abilityCount = abilities?.Count ?? 0;
+            bool hasMoveAbility = abilities?.Any(IsMoveAbility) ?? false;
+
+            Debug.Log($"[BattleUIController] UpdateMoveButtonState: unit={unit}, " +
+                $"hasUsedMove={hasUsedMove}, abilityCount={abilityCount}, " +
+                $"hasMoveAbility={hasMoveAbility}, " +
+                $"abilityTypes={string.Join(", ", abilities?.Select(a => a.GetType().Name) ?? Enumerable.Empty<string>())}");
+
+            bool canMove = !hasUsedMove && hasMoveAbility;
 
             _moveButton.SetEnabled(canMove);
+            Debug.Log($"[BattleUIController] MoveButton enabled={canMove}");
         }
 
         private void OnUnitMoved(UnitMovedEventArgs args)

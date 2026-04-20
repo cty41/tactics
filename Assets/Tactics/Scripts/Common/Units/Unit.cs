@@ -153,21 +153,26 @@ namespace Tactics.Common.Units
             MovementPoints = MaxMovementPoints;
 
             _baseAbilities = new List<IAbility>();
+            Debug.Log($"[Unit.Initialize] {gameObject.name}: _abilityConfigs count={_abilityConfigs?.Count ?? 0}, isNull={_abilityConfigs == null}");
             if (_abilityConfigs != null)
             {
                 foreach (var config in _abilityConfigs)
                 {
+                    Debug.Log($"[Unit.Initialize] {gameObject.name}: config={config?.GetType().Name}, isNull={config == null}");
                     if (config != null)
                     {
                         var ability = config.CreateAbility(this);
+                        Debug.Log($"[Unit.Initialize] {gameObject.name}: created ability={ability?.GetType().Name}");
                         RegisterAbility(ability, gridController);
                     }
                 }
             }
+            Debug.Log($"[Unit.Initialize] {gameObject.name}: _baseAbilities count={_baseAbilities?.Count ?? 0}");
         }
 
         public virtual void RegisterAbility(IAbility ability, IGridController gridController)
         {
+            _baseAbilities.Add(ability);
             ability.UnitReference = this;
             ability.Initialize(gridController);
         }

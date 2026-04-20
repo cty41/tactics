@@ -66,7 +66,6 @@ namespace Tactics.Common.Controllers.GridStates
             foreach (var ability in _abilities)
             {
                 ability.OnAbilitySelected(gridController);
-                ability.InvokeAbilitySelected();
                 _abilitiesInitialized = true;
 
                 if (!ability.CanPerform(gridController))

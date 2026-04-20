@@ -77,7 +77,11 @@ namespace Tactics.Common.Units
         /// <returns>An enumerable collection of cells that the unit can reach.</returns>
         public List<ICell> GetAvailableDestinations(IEnumerable<ICell> cells)
         {
-            Debug.Assert(_pathCache != null, "Path cache is null, call CachePaths first");
+            // Return empty list if cache not initialized (e.g., CanPerform called before OnAbilitySelected)
+            if (_costSoFar == null || _pathCache == null)
+            {
+                return new List<ICell>();
+            }
 
             List<ICell> availableDestinations = new List<ICell>();
             foreach (var cell in cells)

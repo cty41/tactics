@@ -57,7 +57,7 @@ namespace Tactics.Common.Units.Abilities
         /// <summary>
         /// Creates a runtime IAbility instance from this configuration.
         /// </summary>
-        public IAbility CreateAbility(IUnit owner)
+        public virtual IAbility CreateAbility(IUnit owner)
         {
             return new GenericAbilityImpl(owner, this);
         }

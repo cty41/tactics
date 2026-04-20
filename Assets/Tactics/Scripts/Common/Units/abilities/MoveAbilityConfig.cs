@@ -19,7 +19,7 @@ namespace Tactics.Common.Units.Abilities
         /// Creates a MoveAbilityImpl instance instead of GenericAbilityImpl.
         /// Movement requires complex pathfinding and grid state handling.
         /// </summary>
-        public new IAbility CreateAbility(IUnit owner)
+        public override IAbility CreateAbility(IUnit owner)
         {
             return new MoveAbilityImpl(owner);
         }
