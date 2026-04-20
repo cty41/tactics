@@ -6,23 +6,97 @@ This is an agent-first Unity project where human engineers steer and agents exec
 
 **Core Principle: No manual code contribution. Agents write all code.**
 
-## Knowledge Base
+## Agent behavioral guidelines
 
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+### 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
 ```
-.kilo/
-├── ARCHITECTURE.md        # System architecture
-├── docs/
-│   ├── references/        # Technical references
-│   │   └── GameAssetPipeline.md
-│   ├── design-docs/       # Design documents
-│   ├── exec-plans/        # Execution plans
-│   └── product-specs/     # Product specifications
-└── rules/                 # Agent behavior constraints
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
 ```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+
+## Documentation map
+
+Constraints and workflow are summarized in this file. **System architecture and design details** are in [`.cursor/ARCHITECTURE.md`](.cursor/ARCHITECTURE.md). Additional references (for example under [`.cursor/docs/`](.cursor/docs/)) supplement that document.
 
 ## Key Rules
 
-All rules in `.kilo/rules/` are **always applied** to all agent tasks:
+### Using this repo with Cursor
+
+This project includes a **Cursor project rule** so the Karpathy-inspired behavioral guidelines apply automatically when you work here.
+
+#### In this repository
+
+1. Open the folder in Cursor.
+2. The rule [`.cursor/rules/karpathy-guidelines.mdc`](.cursor/rules/karpathy-guidelines.mdc) is committed with `alwaysApply: true`, so you do not need extra installation steps.
+3. In Cursor, you can confirm it under **Settings → Rules** (or the project rules UI), where `karpathy-guidelines` should appear.
+
+#### Use the same guidelines in another project
+
+**Cursor (recommended):** Copy `.cursor/rules/karpathy-guidelines.mdc` into that project’s `.cursor/rules/` directory (create the folders if needed). Adjust or merge with existing rules as you like.
+
+**Other tools:** If a stack only supports a root instruction file, copy [`CLAUDE.md`](CLAUDE.md) into that project instead (or merge its contents into your existing instructions).
+
+
+The following files under `.cursor/rules/` constrain agent work on this Unity project (confirm names against the repo):
 
 | Rule | Purpose |
 |------|---------|
@@ -32,46 +106,26 @@ All rules in `.kilo/rules/` are **always applied** to all agent tasks:
 | `unity-input.md` | Unity Input System |
 | `unity-performance.md` | Performance optimization |
 | `unity-testing.md` | Unit testing |
+| `code-organization.md` | Code organization conventions |
 
-## Core Principles
+## Core Principles (summary)
 
-1. **Asset Loading**: Always use `GameAssetManager`, never `Resources.Load`
-2. **Load/Release Pairing**: Every Load must have corresponding Release
-3. **Async First**: Prefer `LoadAsync` over sync loading
-4. **Scene Paths**: Use project paths (`Assets/...`) not scene names
-5. **Use Odin API First**: Prefer to use Odin when write inspector-related code
+Details live in [`.cursor/ARCHITECTURE.md`](.cursor/ARCHITECTURE.md) and the rule files above.
 
-## Development Workflow
-
-1. Human describes task and acceptance criteria
-2. Agent implements, tests, and opens PR
-3. Agent self-reviews via PR feedback loop
-4. Human validates only when judgment required
-5. Agent handles mundane merges autonomously
-
-## Documentation
-For detailed information, navigate to: `.kilo/ARCHITECTURE.md`
-
+1. **Assets**: Use `GameAssetManager`, not `Resources.Load`; pair every Load with Release; prefer async loading.
+2. **Paths**: Use project paths (`Assets/...`) instead of scene names where applicable.
+3. **Inspectors**: Prefer Odin APIs for inspector-related code when appropriate.
 
 ## Agent Constraints
 
 ### Language
-- **Plan, code, debug mode output must be in Chinese** (中文), including: plan files, task descriptions, and communication during planning.
-- Code comments and commit messages should follow the project's conventions.
-- Exception: Code identifiers (variable names, class names, method names) always follow the project's .NET naming conventions (PascalCase, camelCase, etc.).
 
-### Plan Mode Behavior
-- **When using the plan tool, ONLY create/edit the plan file.** Do NOT implement code, create files, or make any changes outside of `.kilo/plans/`.
-- Plan mode is READ-ONLY except for the plan file itself. Implementation begins ONLY after the user explicitly approves the plan.
-
-### Plan File Naming
-- **Plan files MUST use descriptive, content-based names in snake_case.**
-- Examples: `combat-skills-expansion.md`, `inventory-system-refactor.md`, `ui-overhaul.md`
-- **NEVER use auto-generated random names** (e.g., `cosmic-wolf.md`, `1775816560974-random-name.md`).
+- **Plan, code, and debug output must be in Chinese (中文)**, including plan files, task descriptions, and communication during planning.
+- Code comments and commit messages follow project conventions.
+- Identifiers follow .NET naming (PascalCase, camelCase, etc.).
 
 ## Agent Limitations
 
+**If it is not in the codebase, it does not exist for agents.**
 
-**If it's not in the codebase, it doesn't exist for agents.**
-
-Keep documentation in `.kilo/docs/` so agents can find it.
+Keep authoritative documentation under **`.cursor/`**—especially [`.cursor/ARCHITECTURE.md`](.cursor/ARCHITECTURE.md)—so agents can find it.

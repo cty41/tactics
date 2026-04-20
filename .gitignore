@@ -56,3 +56,4 @@ GameAssetBundles/
 # Tactics AssetPipeline copy target
 /Assets/StreamingAssets/Bundles/
 tactics.slnx
+.clinerules
