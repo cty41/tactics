@@ -12,6 +12,7 @@ namespace Tactics.Common.Units.Abilities
     /// <summary>
     /// Generic ability implementation that acts as an event coordinator between
     /// the Grid state system and the data-driven ability effects.
+    /// Also handles movement abilities when DisplayName is "Move".
     /// </summary>
     public class GenericAbilityImpl : IAbility
     {
@@ -24,7 +25,12 @@ namespace Tactics.Common.Units.Abilities
         private IEnumerable<IUnit> _pendingTargets;
         private IGridController _gridController;
 
+        // Movement-specific fields
+        private HashSet<ICell> _cellsInMovementRange;
+        private IEnumerable<ICell> _currentPath;
+
         public IUnit UnitReference { get; set; }
+        public string DisplayName => _config.DisplayName;
 
         public GenericAbilityImpl(IUnit owner, AbilityConfig config)
         {
@@ -42,11 +48,27 @@ namespace Tactics.Common.Units.Abilities
         {
             _gridController = gridController;
             _owner.CachePaths(gridController.CellManager);
+
+            if (DisplayName == "Move")
+            {
+                bool canMove = !_owner.HasUsedBasicAbilityThisTurn("Move");
+                _cellsInMovementRange = canMove
+                    ? new HashSet<ICell>(_owner.GetAvailableDestinations(gridController.CellManager.GetCells()))
+                    : new HashSet<ICell>();
+                _currentPath = Enumerable.Empty<ICell>();
+            }
         }
 
         public void Display(IGridController gridController)
         {
-            if (_config.TargetingStrategy != null)
+            if (DisplayName == "Move")
+            {
+                if (_cellsInMovementRange != null && _cellsInMovementRange.Count > 0)
+                {
+                    gridController.CellManager.MarkAsReachable(_cellsInMovementRange);
+                }
+            }
+            else if (_config.TargetingStrategy != null)
             {
                 _config.TargetingStrategy.DisplayPreview(gridController);
             }
@@ -54,7 +76,16 @@ namespace Tactics.Common.Units.Abilities
 
         public void CleanUp(IGridController gridController)
         {
-            if (_config.TargetingStrategy != null)
+            if (DisplayName == "Move")
+            {
+                if (_cellsInMovementRange != null)
+                {
+                    gridController.CellManager.UnMark(_cellsInMovementRange.Union(_currentPath ?? Enumerable.Empty<ICell>()));
+                }
+                _cellsInMovementRange = null;
+                _currentPath = null;
+            }
+            else if (_config.TargetingStrategy != null)
             {
                 _config.TargetingStrategy.CleanUpPreview(gridController);
             }
@@ -64,6 +95,27 @@ namespace Tactics.Common.Units.Abilities
 
         public void OnCellClicked(ICell cell, IGridController gridController)
         {
+            if (DisplayName == "Move")
+            {
+                if (_cellsInMovementRange == null || !_cellsInMovementRange.Contains(cell))
+                {
+                    gridController.GridState = new GridStateAwaitInput();
+                    return;
+                }
+
+                var latestPath = _owner.FindPath(cell, gridController.CellManager);
+                if (!_owner.IsCellMovableTo(cell) || !latestPath.Any())
+                {
+                    gridController.GridState = new GridStateAwaitInput();
+                    return;
+                }
+
+                _currentPath = latestPath;
+                _owner.MarkBasicAbilityUsed("Move");
+                _owner.HumanExecuteAbility(new MoveCommand(_owner.CurrentCell, cell, _currentPath), gridController);
+                return;
+            }
+
             if (!IsValidCell(cell, gridController))
             {
                 gridController.GridState = new GridStateAwaitInput();
@@ -77,7 +129,15 @@ namespace Tactics.Common.Units.Abilities
 
         public void OnCellHighlighted(ICell cell, IGridController gridController)
         {
-            if (IsValidCell(cell, gridController) && _config.TargetingStrategy is AoETargeting aoe)
+            if (DisplayName == "Move")
+            {
+                if (_cellsInMovementRange != null && _cellsInMovementRange.Contains(cell))
+                {
+                    _currentPath = _owner.FindPath(cell, gridController.CellManager);
+                    gridController.CellManager.MarkAsPath(_currentPath, _owner.CurrentCell);
+                }
+            }
+            else if (IsValidCell(cell, gridController) && _config.TargetingStrategy is AoETargeting aoe)
             {
                 var aoeCells = GetAoeCells(cell, aoe, gridController);
                 gridController.CellManager.MarkAsReachable(aoeCells);
@@ -86,7 +146,19 @@ namespace Tactics.Common.Units.Abilities
 
         public void OnCellDehighlighted(ICell cell, IGridController gridController)
         {
-            if (_config.TargetingStrategy is AoETargeting)
+            if (DisplayName == "Move")
+            {
+                if (_cellsInMovementRange != null && _cellsInMovementRange.Contains(cell))
+                {
+                    gridController.CellManager.MarkAsReachable(cell);
+                    if (_currentPath != null && _currentPath.Any())
+                    {
+                        gridController.CellManager.UnMark(_currentPath);
+                        gridController.CellManager.MarkAsReachable(_currentPath.Where(c => _cellsInMovementRange.Contains(c)));
+                    }
+                }
+            }
+            else if (_config.TargetingStrategy is AoETargeting)
             {
                 gridController.CellManager.UnMark(cell);
             }
@@ -120,6 +192,12 @@ namespace Tactics.Common.Units.Abilities
 
         public bool CanPerform(IGridController gridController)
         {
+            if (DisplayName == "Move")
+            {
+                return !_owner.HasUsedBasicAbilityThisTurn("Move")
+                    && _owner.GetAvailableDestinations(gridController.CellManager.GetCells()).Count > 0;
+            }
+
             if (_config.IsBasicAbility)
             {
                 return !_owner.HasUsedBasicAbilityThisTurn(_config.DisplayName);

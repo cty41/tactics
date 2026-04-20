@@ -479,8 +479,7 @@ namespace Tactics.UI
 
         private bool IsMoveAbility(IAbility ability)
         {
-            return ability is MoveAbilityImpl ||
-                   (ability is GenericAbilityImpl && ability.GetType().Name.Contains("Move"));
+            return ability.DisplayName == "Move";
         }
     }
 }

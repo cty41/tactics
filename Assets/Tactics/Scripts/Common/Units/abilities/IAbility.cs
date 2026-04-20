@@ -23,6 +23,11 @@ namespace Tactics.Common.Units.Abilities
         IUnit UnitReference { get; set; }
 
         /// <summary>
+        /// Gets the display name of the ability.
+        /// </summary>
+        string DisplayName { get; }
+
+        /// <summary>
         /// Initializes the ability with necessary setup steps.
         /// This method is called once when the ability is registered by the unit.
         /// </summary>
