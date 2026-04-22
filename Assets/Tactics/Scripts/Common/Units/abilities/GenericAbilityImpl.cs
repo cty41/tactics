@@ -34,6 +34,7 @@ namespace Tactics.Common.Units.Abilities
 
         public IUnit UnitReference { get; set; }
         public string DisplayName => _config.DisplayName;
+        public AbilityConfig Config => _config;
 
         public GenericAbilityImpl(IUnit owner, AbilityConfig config)
         {
@@ -352,6 +353,22 @@ namespace Tactics.Common.Units.Abilities
             if (strategy is AoETargeting aoe) return aoe.MaxRange;
             if (strategy is MultiTargetEnemy multi) return multi.MaxRange;
             return 1; // Default range
+        }
+
+        /// <summary>
+        /// Executes the move ability for AI by creating and executing a MoveCommand.
+        /// </summary>
+        public Task<bool> ExecuteMoveForAI(ICell destination, IEnumerable<ICell> path, IGridController gridController)
+        {
+            if (!CanPerform(gridController))
+            {
+                return Task.FromResult(false);
+            }
+
+            _owner.MarkBasicAbilityUsed("Move");
+            var tcs = new TaskCompletionSource<bool>();
+            _owner.AIExecuteAbility(new MoveCommand(_owner.CurrentCell, destination, path), gridController, tcs);
+            return tcs.Task;
         }
 
         /// <summary>

@@ -87,6 +87,15 @@ namespace Tactics.Common.AI.BehaviourTrees
 
             var trimmedPath = reachablePath.TakeWhile(c => !c.Equals(bestCell)).Append(bestCell).ToList();
 
+            var moveAbility = _unit.GetBaseAbilities()
+                .OfType<GenericAbilityImpl>()
+                .FirstOrDefault(a => a.DisplayName == "Move");
+
+            if (moveAbility != null)
+            {
+                return moveAbility.ExecuteMoveForAI(bestCell, trimmedPath, _gridController);
+            }
+
             var tcs = new TaskCompletionSource<bool>();
             _unit.AIExecuteAbility(new MoveCommand(_unit.CurrentCell, bestCell, trimmedPath), _gridController, tcs);
             return tcs.Task;

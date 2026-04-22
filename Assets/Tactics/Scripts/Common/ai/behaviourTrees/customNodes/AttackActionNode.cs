@@ -50,11 +50,8 @@ namespace Tactics.Common.AI.BehaviourTrees
         /// <returns>A task representing the execution, with a boolean result indicating success.</returns>
         public Task<bool> Execute(bool debugMode)
         {
-            // Check if attack basic ability has been used this turn
-            // Try to find the attack config name to check usage
-            if (_unit.HasUsedBasicAbilityThisTurn("Melee Attack") || 
-                _unit.HasUsedBasicAbilityThisTurn("Ranged Attack") ||
-                _unit.HasUsedBasicAbilityThisTurn("Attack"))
+            var attackAbility = FindAttackAbility(_unit);
+            if (attackAbility != null && !attackAbility.CanPerform(_gridController))
             {
                 return Task.FromResult(false);
             }
@@ -90,26 +87,21 @@ namespace Tactics.Common.AI.BehaviourTrees
             }
 
             var tcs = new TaskCompletionSource<bool>();
-            ExecuteAttackAbility(target, tcs);
+            ExecuteAttackAbility(target, attackAbility, tcs);
             return tcs.Task;
         }
 
         /// <summary>
-        /// Finds the best attack AbilityConfig for this unit and executes it against the target.
+        /// Executes the attack against the target using the provided ability, or falls back to legacy command.
         /// </summary>
-        private async void ExecuteAttackAbility(IUnit target, TaskCompletionSource<bool> tcs)
+        private async void ExecuteAttackAbility(IUnit target, GenericAbilityImpl attackAbility, TaskCompletionSource<bool> tcs)
         {
             try
             {
-                // Find the attack ability config from the unit's abilities
-                var attackConfig = FindAttackConfig(_unit);
-                
-                if (attackConfig != null)
+                if (attackAbility != null)
                 {
-                    // Use AbilityConfig-driven execution
-                    var ability = new GenericAbilityImpl(_unit, attackConfig);
-                    ability.Initialize(_gridController);
-                    await ability.ExecuteEffectsAsync(new List<IUnit> { target }, _gridController);
+                    await attackAbility.ExecuteEffectsAsync(new List<IUnit> { target }, _gridController);
+                    tcs.SetResult(true);
                 }
                 else
                 {
@@ -118,10 +110,7 @@ namespace Tactics.Common.AI.BehaviourTrees
                     var damage = _unit.CalculateTotalDamage(target, target.CurrentCell, _unit.CurrentCell, isRangedDamage);
                     var command = new AttackCommand(target, damage);
                     _unit.AIExecuteAbility(command, _gridController, tcs);
-                    return;
                 }
-
-                tcs.SetResult(true);
             }
             catch (Exception ex)
             {
@@ -131,79 +120,25 @@ namespace Tactics.Common.AI.BehaviourTrees
         }
 
         /// <summary>
-        /// Finds the best attack AbilityConfig for the unit.
-        /// Prefers MeleeAttack over RangedAttack for consistency.
+        /// Finds the best attack ability for the unit from its registered abilities.
+        /// Prefers melee attacks (range <= 1) over ranged.
         /// </summary>
-        private static AbilityConfig FindAttackConfig(IUnit unit)
+        private static GenericAbilityImpl FindAttackAbility(IUnit unit)
         {
-            if (unit is Unit unityUnit)
+            var attackAbilities = unit.GetBaseAbilities()
+                .OfType<GenericAbilityImpl>()
+                .Where(a => a.Config != null && a.Config.Effects != null && a.Config.Effects.Any(e => e is DamageEffect))
+                .ToList();
+
+            if (!attackAbilities.Any())
             {
-                // Find ability configs that have DamageEffect
-                foreach (var config in unityUnit.GetBaseAbilities())
-                {
-                    // Check if this ability was created from a config with DamageEffect
-                    if (config is GenericAbilityImpl genericAbility)
-                    {
-                        // We need to access the config through reflection or by storing it
-                        // For now, use a simpler approach: check the ability's Effects through the config
-                    }
-                }
-
-                // Alternative: search through _abilityConfigs via a helper
-                // Since we can't access private _abilityConfigs directly,
-                // we'll use a naming convention approach
-                return FindAttackConfigByName(unityUnit);
+                return null;
             }
-            return null;
-        }
 
-        /// <summary>
-        /// Finds attack AbilityConfig by searching for known attack config names.
-        /// </summary>
-        private static AbilityConfig FindAttackConfigByName(Unit unit)
-        {
-            // Use reflection to access _abilityConfigs
-            var field = typeof(Unit).GetField("_abilityConfigs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null)
-            {
-                var abilityConfigs = field.GetValue(unit) as List<AbilityConfig>;
-                if (abilityConfigs != null)
-                {
-                    // Priority: Melee > Ranged > Any with DamageEffect
-                    AbilityConfig meleeConfig = null;
-                    AbilityConfig rangedConfig = null;
-                    AbilityConfig anyAttackConfig = null;
-
-                    foreach (var config in abilityConfigs)
-                    {
-                        if (config == null) continue;
-
-                        bool hasDamageEffect = config.Effects != null && config.Effects.Any(e => e is DamageEffect);
-                        if (!hasDamageEffect) continue;
-
-                        // Check if it's a melee attack (range 0-1)
-                        bool isMelee = config.TargetingStrategy is SingleTargetEnemy singleTarget && singleTarget.MaxRange <= 1;
-                        
-                        if (isMelee)
-                        {
-                            meleeConfig = config;
-                            break; // Melee is preferred
-                        }
-                        else
-                        {
-                            rangedConfig = config;
-                        }
-
-                        if (anyAttackConfig == null)
-                        {
-                            anyAttackConfig = config;
-                        }
-                    }
-
-                    return meleeConfig ?? rangedConfig ?? anyAttackConfig;
-                }
-            }
-            return null;
+            // Priority: Melee > Any
+            return attackAbilities.FirstOrDefault(a =>
+                a.Config.TargetingStrategy is SingleTargetEnemy single && single.MaxRange <= 1)
+                ?? attackAbilities.First();
         }
     }
 }
