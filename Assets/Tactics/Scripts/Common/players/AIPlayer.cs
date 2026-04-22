@@ -1,53 +1,47 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.AI;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
-using Tactics.Common.Players;
 using Tactics.Common.Units;
-using Tactics.Common.AI;
 using UnityEngine;
-using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 namespace Tactics.Common.Players
 {
     /// <summary>
-    /// A Unity-specific implementation of an AI-controlled player. 
+    /// Pure C# implementation of an AI-controlled player.
     /// The AIPlayer selects and commands units during its turn using behavior trees for decision making.
     /// </summary>
-    public class AIPlayer : Player
+    public class AIPlayer : IPlayer
     {
-        /// <summary>
-        /// Gets or sets a flag indicating whether debug mode is enabled.
-        /// When enabled, the AI pauses for user input between unit actions.
-        /// </summary>
-        [SerializeField] private bool _debugMode;
+        public int PlayerNumber { get; set; }
+        public PlayerType PlayerType { get; set; } = PlayerType.AutomatedPlayer;
 
-        /// <summary>
-        /// The delay in milliseconds before the AI begins executing actions at the start of its turn.
-        /// </summary>
-        [SerializeField] private int _turnStartDelay = 0;
+        public bool DebugMode;
+        public int TurnStartDelay;
+        public int UnitDelay;
+        public IUnitSelector UnitSelector;
 
-        /// <summary>
-        /// The delay in milliseconds between actions of subsequent AI-controlled units, simulating human-like decision-making.
-        /// </summary>
-        [SerializeField] private int _unitDelay = 250;
-
-        /// <summary>
-        /// The unit selector used by the AI to determine which unit to command next.
-        /// </summary>
-        [SerializeReference] private IUnitSelector _unitSelector;
-
-        public override PlayerType PlayerType { get; set; } = PlayerType.AutomatedPlayer;
-
-        /// <summary>
-        /// A cancellation token source used to cancel AI actions if the game ends or the turn is over.
-        /// </summary>
         private CancellationTokenSource _cancellationTokenSource;
 
-        public override void Initialize(GridController gridController)
+        public AIPlayer()
+        {
+            UnitSelector = new SubsequentUnitSelector();
+        }
+
+        public AIPlayer(bool debugMode, int turnStartDelay, int unitDelay)
+        {
+            DebugMode = debugMode;
+            TurnStartDelay = turnStartDelay;
+            UnitDelay = unitDelay;
+            UnitSelector = new SubsequentUnitSelector();
+        }
+
+        public void Initialize(GridController gridController)
         {
             _cancellationTokenSource = new CancellationTokenSource();
             gridController.GameEnded += OnGameEnded;
@@ -56,76 +50,77 @@ namespace Tactics.Common.Players
 
         private void OnTurnEnded(TurnTransitionParams turnTransitionParams)
         {
-            CancelOngoingAction(); // Cancels any ongoing AI actions when the turn ends.
+            CancelOngoingAction();
         }
 
         private void OnGameEnded(GameResult gameResult)
         {
-            CancelOngoingAction(); // Cancels any ongoing AI actions when the game ends.
+            CancelOngoingAction();
         }
 
         private void CancelOngoingAction()
         {
-            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource?.Cancel();
         }
 
         /// <summary>
         /// Executes the AI player's turn by selecting and commanding units in sequence.
         /// </summary>
-        /// <param name="gridController">The grid controller.</param>
-        public override async void Play(GridController gridController)
+        public async void Play(GridController gridController)
         {
-            await Awaitable.WaitForSecondsAsync(_turnStartDelay / 1000f);
-            _cancellationTokenSource.Dispose();
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            var playableUnits = gridController.TurnContext.PlayableUnits().ToList();
-            foreach (var playableUnit in _unitSelector.SelectNext(() => playableUnits, gridController))
+            try
             {
-                if (_cancellationTokenSource.IsCancellationRequested)
+                await Awaitable.WaitForSecondsAsync(TurnStartDelay / 1000f);
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = new CancellationTokenSource();
+
+                var playableUnits = gridController.TurnContext.PlayableUnits().ToList();
+                foreach (var playableUnit in UnitSelector.SelectNext(() => playableUnits, gridController))
                 {
-                    return;
+                    if (_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    await gridController.UnitManager.MarkAsSelected(playableUnit);
+                    playableUnit.InvokeUnitSelected();
+
+                    if (DebugMode)
+                    {
+                        Debug.Log($"Current unit: {playableUnit}; Press {Key.N} to proceed to the next action");
+                        await WaitForKeypress(Key.N);
+                    }
+
+                    await Awaitable.WaitForSecondsAsync(UnitDelay / 1000f, _cancellationTokenSource.Token);
+                    if (playableUnit.BehaviourTree == null)
+                    {
+                        Debug.LogError($"[AIPlayer] Unit {playableUnit} has null BehaviourTree. Skipping.");
+                        continue;
+                    }
+                    await playableUnit.BehaviourTree.Execute(DebugMode);
+
+                    await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
+                    await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
+                    playableUnit.InvokeUnitDeselected();
                 }
 
-                await gridController.UnitManager.MarkAsSelected(playableUnit);
-                playableUnit.InvokeUnitSelected();
-
-                if (_debugMode)
-                {
-                    Debug.Log($"Current unit: {playableUnit}; Press {Key.N} to proceed to the next action");
-                    await WaitForKeypress(Key.N);
-                }
-
-                await Awaitable.WaitForSecondsAsync(_unitDelay / 1000f, _cancellationTokenSource.Token);
-                await playableUnit.BehaviourTree.Execute(_debugMode);
-
-                await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
-                await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
-                playableUnit.InvokeUnitDeselected();
+                gridController.EndTurn();
             }
-
-            gridController.EndTurn();
+            catch (Exception ex)
+            {
+                Debug.LogError($"[AIPlayer] Exception during Play() for Player {PlayerNumber}: {ex}");
+            }
         }
 
         /// <summary>
         /// Waits for the user to press the specified key in debug mode before continuing.
         /// </summary>
-        /// <param name="key">The key to wait for.</param>
-        /// <returns>A task representing the wait operation.</returns>
         private async Task WaitForKeypress(Key key)
         {
             KeyControl keyControl = Keyboard.current[key];
             while (!keyControl.wasPressedThisFrame)
             {
                 await Awaitable.NextFrameAsync();
-            }
-        }
-
-        private void Reset()
-        {
-            if (_unitSelector == null)
-            {
-                _unitSelector = new SubsequentUnitSelector();
             }
         }
     }

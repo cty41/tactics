@@ -67,6 +67,12 @@ namespace Tactics.Common.Controllers
         public virtual void StartGame(bool isNetworkInvoked = false)
         {
             TurnContext = TurnResolver.ResolveStart(this);
+            if (TurnContext.CurrentPlayer == null)
+            {
+                UnityEngine.Debug.LogError($"[GridController] TurnContext.CurrentPlayer is null. TurnResolver type: {TurnResolver?.GetType()?.Name ?? "null"}. " +
+                    "Ensure BattleController._players is configured and players' PlayerNumber matches units' PlayerNumber.");
+                return;
+            }
             foreach (var unit in TurnContext.PlayableUnits())
             {
                 unit.OnTurnStart(this);
@@ -79,6 +85,11 @@ namespace Tactics.Common.Controllers
             GameStarted?.Invoke();
             TurnStarted?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
             UnitManager.MarkAsFriendly(TurnContext.PlayableUnits());
+            if (TurnContext.CurrentPlayer == null)
+            {
+                UnityEngine.Debug.LogError($"[GridController] MakeTurnTransition: CurrentPlayer is null. UnitPlayerNumber={TurnContext.PlayableUnits().FirstOrDefault()?.PlayerNumber ?? -1}. Skipping turn.");
+                return;
+            }
             TurnContext.CurrentPlayer.Play(this);
         }
 

@@ -29,7 +29,6 @@ namespace TbsFramework.EditorUtils
         GameObject gridController;
         GameObject cellManager;
         GameObject unitManager;
-        GameObject playerManager;
         GameObject guiController;
         GameObject directionalLight;
 
@@ -525,7 +524,6 @@ namespace TbsFramework.EditorUtils
             cellManagerGameObject = cellManager;
             var grid = new GameObject("Grid");
             var tilemap = new GameObject("Tilemap");
-            playerManager = new GameObject("PlayerManager");
             unitManager = new GameObject("UnitManager");
             guiController = new GameObject("GUIController");
             var gameEndConditions = new GameObject("GameEndConditions");
@@ -540,32 +538,15 @@ namespace TbsFramework.EditorUtils
             eventSystem.AddComponent<InputSystemUIInputModule>();
 
             var cellManagerScript = cellManager.AddComponent<RegularCellManager>();
-            var playerManagerScript = playerManager.AddComponent<UnityPlayerManager>();
-            for (int i = 0; i < nHumanPlayer; i++)
-            {
-                var player = new GameObject(string.Format("Player_{0}", playerManager.transform.childCount));
-                player.AddComponent<Tactics.Common.Players.HumanPlayer>();
-                player.GetComponent<IPlayer>().PlayerNumber = playerManager.transform.childCount;
-                player.transform.parent = playerManager.transform;
-            }
-
-            for (int i = 0; i < nComputerPlayer; i++)
-            {
-                var aiPlayer = new GameObject(string.Format("AI_Player_{0}", playerManager.transform.childCount));
-                var aiPlayerScript = aiPlayer.AddComponent<AIPlayer>();
-                aiPlayerScript.PlayerNumber = playerManager.transform.childCount;
-                aiPlayer.transform.parent = playerManager.transform;
-            }
-
             var unitManagerScript = unitManager.AddComponent<UnityUnitManager>();
 
             var gridControllerScript = gridController.AddComponent<Tactics.Common.Battle.BattleController>();
             gridControllerScript.TurnResolver = new SubsequentTurnResolver();
-            gridControllerScript.PlayerManager = playerManagerScript;
             gridControllerScript.UnitManager = unitManagerScript;
             gridControllerScript.CellManager = cellManagerScript;
 
-            gridController.GetComponent<Tactics.Common.Battle.BattleController>().PlayerManager = playerManager.GetComponent<UnityPlayerManager>();
+            // Configure players directly on BattleController via serialized field
+            gridControllerScript.SetPlayers(nHumanPlayer, nComputerPlayer);
 
             var cellScript = cellPrefab.GetComponent<Cell>();
             CellShape cellShape = cellScript.CellShape;

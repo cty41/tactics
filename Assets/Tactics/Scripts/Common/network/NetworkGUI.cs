@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Tactics.Common.Battle;
 using Tactics.Common.Network;
 using Tactics.Common.Players;
 using Tactics.Common.Controllers;
-using Tactics.Common.Players;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
@@ -225,24 +225,15 @@ namespace Tactics.Common.Network
 
         private IEnumerator SetupMatch()
         {
-            for (int i = 0; i < _playersParent.childCount; i++)
+            // Remote players are now managed via BattleController's player config.
+            // Replace local human players (non-local) and non-host AI players with remote player configs.
+            // _gridController is already a BattleController
+            _gridController.ConfigureRemotePlayers(_localPlayerNumber, _networkConnection);
+
+            // Clean up old player GameObjects under PlayersParent
+            for (int i = _playersParent.childCount - 1; i >= 0; i--)
             {
-                var playerGO = _playersParent.GetChild(i).gameObject;
-                if (!playerGO.activeInHierarchy)
-                {
-                    continue;
-                }
-
-                var player = playerGO.GetComponent<Player>();
-                var playerNumber = player.PlayerNumber;
-
-                if (!playerNumber.Equals(_localPlayerNumber) && player.PlayerType.Equals(PlayerType.HumanPlayer)  || player.PlayerType.Equals(PlayerType.AutomatedPlayer) && !_networkConnection.IsHost)
-                {
-                    Destroy(player);
-                    var remotePlayer = playerGO.AddComponent<RemotePlayer>();
-                    remotePlayer.NetworkConnection = _networkConnection;
-                    remotePlayer.PlayerNumber = playerNumber;
-                }
+                Destroy(_playersParent.GetChild(i).gameObject);
             }
 
             yield return new WaitForEndOfFrame();

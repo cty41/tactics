@@ -1,23 +1,23 @@
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
-using Tactics.Common.Players;
 using Tactics.Common.Network;
 using UnityEngine;
 
 namespace Tactics.Common.Players
 {
     /// <summary>
-    /// Represents a remote player in an online game.
+    /// Pure C# implementation of a remote player in an online game.
     /// </summary>
-    public class RemotePlayer : Player
+    public class RemotePlayer : IPlayer
     {
-        public override PlayerType PlayerType { get; set; } = PlayerType.AutomatedPlayer;
+        public int PlayerNumber { get; set; }
+        public PlayerType PlayerType { get; set; } = PlayerType.AutomatedPlayer;
 
         public NetworkConnection NetworkConnection { get; set; }
 
         private bool _playerLeft;
 
-        public override void Initialize(GridController gridController)
+        public void Initialize(GridController gridController)
         {
             NetworkConnection.PlayerLeftRoom += (sender, networkUser) =>
             {
@@ -34,7 +34,7 @@ namespace Tactics.Common.Players
             };
         }
 
-        public override void Play(GridController gridController)
+        public void Play(GridController gridController)
         {
             gridController.GridState = new GridStateBlockInput();
             if (NetworkConnection.IsHost && _playerLeft)

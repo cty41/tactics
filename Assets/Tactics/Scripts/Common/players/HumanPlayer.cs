@@ -1,20 +1,23 @@
+using System;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
-using Tactics.Common.Players;
 
 namespace Tactics.Common.Players
 {
     /// <summary>
-    /// Unity-specific implementation of a Human player.
+    /// Pure C# implementation of a Human player.
+    /// Switches grid state to await player input.
     /// </summary>
-    public class HumanPlayer : Player
+    public class HumanPlayer : IPlayer
     {
-        public override PlayerType PlayerType { get; set; } = PlayerType.HumanPlayer;
-        public override void Initialize(GridController gridController)
+        public int PlayerNumber { get; set; }
+        public PlayerType PlayerType { get; set; } = PlayerType.HumanPlayer;
+
+        public void Initialize(GridController gridController)
         {
         }
 
-        public override void Play(GridController gridController)
+        public void Play(GridController gridController)
         {
             gridController.GridState = new GridStateAwaitInput();
         }

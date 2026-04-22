@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -7,6 +8,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Common.Network;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.AssetPipeline;
@@ -19,7 +21,7 @@ namespace Tactics.Common.Battle
     /// 战斗控制器，统一管理网格、单位、玩家、回合以及战斗生命周期。
     /// 合并了原 UnityGridController 的职责，直接实现 IGridController 接口。
     /// </summary>
-    public sealed class BattleController : MonoBehaviourSingleton<BattleController>, IGridController
+    public sealed class BattleController : MonoBehaviourSingleton<BattleController>, IGridController, IPlayerManager
     {
         #region Battle Events
 
@@ -70,13 +72,13 @@ namespace Tactics.Common.Battle
 
         public IPlayerManager PlayerManager
         {
-            get => _controller.PlayerManager;
-            set { _controller.PlayerManager = value; _playerManager = value as UnityPlayerManager; }
+            get => this;
+            set { /* ignored - BattleController manages players internally */ }
         }
 
         public ITurnResolver TurnResolver
         {
-            get => _controller.TurnResolver;
+            get => _controller.TurnResolver ?? (_controller.TurnResolver = new Tactics.Common.Controllers.TurnResolvers.SubsequentTurnResolverImpl());
             set { _controller.TurnResolver = value; _turnResolver = value; }
         }
 
@@ -98,15 +100,26 @@ namespace Tactics.Common.Battle
         [SerializeField] private bool _startImmediatelly = true;
         [SerializeField] private UnityCellManager _cellManager;
         [SerializeField] private UnityUnitManager _unitManager;
-        [SerializeField] private UnityPlayerManager _playerManager;
         [SerializeReference] private ITurnResolver _turnResolver;
+
+        /// <summary>
+        /// Player configurations serialized on BattleController.
+        /// If empty, players will be auto-configured from scene units.
+        /// </summary>
+        [SerializeField] private PlayerEntry[] _players;
+
+        /// <summary>
+        /// Specifies which PlayerNumber belongs to the local human player.
+        /// Set to 0 for auto-detection (fewest units = human).
+        /// </summary>
+        [SerializeField] private int _localPlayerNumber;
 
         #endregion
 
         #region Private Fields
 
         private readonly GridController _controller = new GridController();
-        private UnityPlayerManager _battlePlayerManager;
+        private IList<IPlayer> _runtimePlayers;
 
         #endregion
 
@@ -119,8 +132,14 @@ namespace Tactics.Common.Battle
             // 初始化 GridController 的依赖
             _controller.CellManager = _cellManager;
             _controller.UnitManager = _unitManager;
-            _controller.PlayerManager = _playerManager;
-            _controller.TurnResolver = _turnResolver;
+            _controller.PlayerManager = this;
+            _controller.TurnResolver = _turnResolver ?? new Tactics.Common.Controllers.TurnResolvers.SubsequentTurnResolverImpl();
+
+            // Initialize players (will be configured in IPlayerManager.Initialize after UnitManager is ready)
+            if (_players != null && _players.Length > 0)
+            {
+                InitializePlayers();
+            }
 
             // 订阅 GridController 的事件
             _controller.GameInitialized += OnGameInitialized;
@@ -154,6 +173,7 @@ namespace Tactics.Common.Battle
 
         private async void Start()
         {
+            if (this == null || gameObject == null) return; // 防止被 Destroy 后仍执行
             if (_startImmediatelly)
             {
                 // Initialize and start the game logic first (sets up CellManager, UnitManager, etc.)
@@ -175,8 +195,6 @@ namespace Tactics.Common.Battle
         {
             if (IsBattleActive) return;
             IsBattleActive = true;
-
-            _battlePlayerManager = _playerManager;
 
             _ = ShowBattleUIAsync();
 
@@ -289,7 +307,7 @@ namespace Tactics.Common.Battle
         /// </summary>
         private void OnUnitRemoved(IUnit unit)
         {
-            if (_unitManager == null || _battlePlayerManager == null)
+            if (_unitManager == null || _runtimePlayers == null)
                 return;
 
             var playersWithUnitsAlive = _unitManager.GetUnits()
@@ -298,12 +316,211 @@ namespace Tactics.Common.Battle
 
             if (playersWithUnitsAlive.Count() == 1)
             {
-                var winner = _battlePlayerManager.GetPlayers()
+                var winner = _runtimePlayers
                     .First(p => p.PlayerNumber == playersWithUnitsAlive.First());
-                var losers = _battlePlayerManager.GetPlayers()
+                var losers = _runtimePlayers
                     .Where(p => p != winner);
 
                 InvokeGameEnded(new GameResult(winner, losers));
+            }
+        }
+
+        #endregion
+
+        #region IPlayerManager Implementation
+
+        /// <summary>
+        /// Automatically configures _players based on units present in the scene.
+        /// If _localPlayerNumber > 0 and exists in scene, that faction becomes Human.
+        /// Otherwise, the faction with the fewest units becomes Human.
+        /// Units with PlayerNumber <= 0 are ignored.
+        /// </summary>
+        private void AutoConfigurePlayersFromUnits()
+        {
+            if (_unitManager == null)
+            {
+                Debug.LogWarning("[BattleController] Cannot auto-configure players: UnitManager is null.");
+                return;
+            }
+
+            var allUnits = _unitManager.GetUnits().ToList();
+            if (allUnits.Count == 0)
+            {
+                Debug.LogWarning("[BattleController] No units found in scene. Cannot auto-configure players.");
+                return;
+            }
+
+            var groups = allUnits
+                .GroupBy(u => u.PlayerNumber)
+                .Select(g => new { PlayerNumber = g.Key, Count = g.Count() })
+                .OrderBy(g => g.PlayerNumber)
+                .ToList();
+
+            var entries = new List<PlayerEntry>();
+            foreach (var group in groups)
+            {
+                int playerNumber = group.PlayerNumber;
+                // PlayerNumber = 0 is human player by convention; all others are AI
+                bool isHuman = (playerNumber == 0) || (_localPlayerNumber > 0 && playerNumber == _localPlayerNumber);
+                entries.Add(new PlayerEntry
+                {
+                    PlayerNumber = playerNumber,
+                    Type = isHuman ? PlayerType.HumanPlayer : PlayerType.AutomatedPlayer,
+                    AITurnStartDelay = 0,
+                    AIUnitDelay = 250
+                });
+            }
+
+            _players = entries.ToArray();
+            InitializePlayers();
+            Debug.Log($"[BattleController] Auto-configured players from scene units. LocalPlayerNumber={_localPlayerNumber}. " +
+                $"Config: {string.Join(", ", entries.Select(e => $"P{e.PlayerNumber}={(e.Type == PlayerType.HumanPlayer ? "Human" : "AI")}"))}");
+        }
+
+        private void InitializePlayers()
+        {
+            if (_players == null || _players.Length == 0)
+            {
+                // Fallback: create at least one human player so the game can start
+                _runtimePlayers = new List<IPlayer>
+                {
+                    new HumanPlayer { PlayerNumber = 1 }
+                };
+                Debug.LogWarning("[BattleController] No players configured. Created fallback HumanPlayer #1.");
+                return;
+            }
+
+            _runtimePlayers = new List<IPlayer>(_players.Length);
+            for (int i = 0; i < _players.Length; i++)
+            {
+                var entry = _players[i];
+                var player = entry.CreatePlayer();
+                player.PlayerNumber = entry.PlayerNumber;
+                // player initialized
+                _runtimePlayers.Add(player);
+            }
+        }
+
+        void IPlayerManager.Initialize(GridController gridController)
+        {
+            if (_runtimePlayers == null || _runtimePlayers.Count == 0)
+            {
+                if (_players == null || _players.Length == 0)
+                {
+                    AutoConfigurePlayersFromUnits(); // UnitManager is now initialized, safe to query units
+                }
+                else
+                {
+                    InitializePlayers();
+                }
+            }
+            if (_runtimePlayers == null || _runtimePlayers.Count == 0)
+            {
+                Debug.LogError("[BattleController] IPlayerManager.Initialize called but no players exist. Ensure _players is configured in Inspector.");
+                return;
+            }
+            foreach (var player in _runtimePlayers)
+            {
+                player.Initialize(gridController);
+            }
+        }
+
+        IEnumerable<IPlayer> IPlayerManager.GetPlayers()
+        {
+            if (_runtimePlayers == null || _runtimePlayers.Count == 0)
+            {
+                // Auto-initialize if not done yet
+                InitializePlayers();
+            }
+            return _runtimePlayers;
+        }
+
+        IPlayer IPlayerManager.GetPlayerByNumber(int playerNumber)
+        {
+            if (_runtimePlayers == null || _runtimePlayers.Count == 0)
+            {
+                InitializePlayers();
+            }
+            if (_runtimePlayers == null || _runtimePlayers.Count == 0)
+            {
+                Debug.LogError($"[BattleController] GetPlayerByNumber({playerNumber}) called but no players exist.");
+                return null;
+            }
+            return _runtimePlayers.FirstOrDefault(p => p.PlayerNumber == playerNumber);
+        }
+
+        /// <summary>
+        /// Helper for editor tools to quickly configure players.
+        /// </summary>
+        public void SetPlayers(int humanCount, int aiCount)
+        {
+            var entries = new List<PlayerEntry>();
+            for (int i = 0; i < humanCount; i++)
+            {
+                entries.Add(new PlayerEntry { PlayerNumber = i + 1, Type = PlayerType.HumanPlayer });
+            }
+            for (int i = 0; i < aiCount; i++)
+            {
+                entries.Add(new PlayerEntry
+                {
+                    PlayerNumber = humanCount + i + 1,
+                    Type = PlayerType.AutomatedPlayer,
+                    AITurnStartDelay = 0,
+                    AIUnitDelay = 250
+                });
+            }
+            _players = entries.ToArray();
+            InitializePlayers();
+        }
+
+        /// <summary>
+        /// Configures remote players for network matches.
+        /// Called by NetworkGUI.SetupMatch() to replace non-local human players with RemotePlayer instances.
+        /// </summary>
+        public void ConfigureRemotePlayers(int localPlayerNumber, NetworkConnection networkConnection)
+        {
+            if (_runtimePlayers == null) return;
+
+            for (int i = 0; i < _runtimePlayers.Count; i++)
+            {
+                var player = _runtimePlayers[i];
+                if (player.PlayerNumber != localPlayerNumber && player.PlayerType == PlayerType.HumanPlayer)
+                {
+                    _runtimePlayers[i] = new RemotePlayer
+                    {
+                        PlayerNumber = player.PlayerNumber,
+                        NetworkConnection = networkConnection
+                    };
+                }
+            }
+        }
+
+        #endregion
+
+        #region Player Entry Config
+
+        /// <summary>
+        /// Serializable player entry configured in BattleController inspector.
+        /// </summary>
+        [Serializable]
+        public struct PlayerEntry
+        {
+            public int PlayerNumber;
+            public PlayerType Type;
+
+            // AI-specific settings
+            [Tooltip("AI debug mode: pauses for N key between unit actions")]
+            public bool AIDebugMode;
+            [Tooltip("Delay (ms) before AI starts its turn")]
+            public int AITurnStartDelay;
+            [Tooltip("Delay (ms) between AI unit actions")]
+            public int AIUnitDelay;
+
+            public IPlayer CreatePlayer()
+            {
+                return Type == PlayerType.HumanPlayer
+                    ? new HumanPlayer()
+                    : new AIPlayer(AIDebugMode, AITurnStartDelay, AIUnitDelay);
             }
         }
 

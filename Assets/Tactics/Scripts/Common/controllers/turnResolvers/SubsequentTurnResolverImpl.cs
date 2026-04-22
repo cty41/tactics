@@ -15,7 +15,25 @@ namespace Tactics.Common.Controllers.TurnResolvers
         /// <returns>The turn context representing the initial player's turn.</returns>
         public readonly TurnContext ResolveStart(GridController gridController)
         {
-            var nextPlayer = gridController.PlayerManager.GetPlayers().OrderBy(p => p.PlayerNumber).FirstOrDefault();
+            var players = gridController.PlayerManager.GetPlayers();
+            if (players == null)
+            {
+                UnityEngine.Debug.LogError("[SubsequentTurnResolverImpl] PlayerManager.GetPlayers() returned null.");
+                return default;
+            }
+            var playerList = players.ToList();
+            if (playerList.Count == 0)
+            {
+                UnityEngine.Debug.LogError("[SubsequentTurnResolverImpl] PlayerManager.GetPlayers() returned empty list. Ensure players are configured in BattleController._players.");
+                return default;
+            }
+
+            var nextPlayer = playerList.OrderBy(p => p.PlayerNumber).FirstOrDefault();
+            if (nextPlayer == null)
+            {
+                UnityEngine.Debug.LogError("[SubsequentTurnResolverImpl] nextPlayer is null despite non-empty player list.");
+                return default;
+            }
             var allowedUnits = gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber == nextPlayer.PlayerNumber);
             return new TurnContext(nextPlayer, allowedUnits);
         }
@@ -28,7 +46,9 @@ namespace Tactics.Common.Controllers.TurnResolvers
         /// <returns>The turn context representing the next player's turn.</returns>
         public readonly TurnContext ResolveTurn(GridController gridController)
         {
-            var numberOfPlayers = gridController.PlayerManager.GetPlayers().Count();
+            var players = gridController.PlayerManager.GetPlayers().ToList();
+            if (players.Count == 0) return default;
+            var numberOfPlayers = players.Count();
             var nextPlayerNumber = (gridController.TurnContext.CurrentPlayer.PlayerNumber + 1) % numberOfPlayers;
 
             while (!gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber.Equals(nextPlayerNumber)).Any())
@@ -36,7 +56,7 @@ namespace Tactics.Common.Controllers.TurnResolvers
                 nextPlayerNumber = (nextPlayerNumber + 1) % numberOfPlayers;
             }
 
-            var nextPlayer = gridController.PlayerManager.GetPlayers().FirstOrDefault(p => p.PlayerNumber == nextPlayerNumber);
+            var nextPlayer = players.FirstOrDefault(p => p.PlayerNumber == nextPlayerNumber);
             var allowedUnits = gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber == nextPlayerNumber);
 
             return new TurnContext(nextPlayer, allowedUnits);

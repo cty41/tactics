@@ -94,6 +94,7 @@ namespace Tactics.Cells
 
         void Update()
         {
+            if (_cells == null) return; // 尚未初始化，跳过
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
                 var cell = TryGetCellUnderCursor();
@@ -119,6 +120,7 @@ namespace Tactics.Cells
 
         private VirtualSquareCell TryGetCellUnderCursor()
         {
+            if (_cells == null) return null; // 尚未初始化
             Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
             
             // Use Plane.Raycast to get accurate world position on the grid plane (z=0)

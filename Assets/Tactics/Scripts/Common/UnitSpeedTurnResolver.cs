@@ -75,6 +75,12 @@ namespace Tactics.Controllers.TurnResolvers
             _unitQueue.Enqueue(nextUnit);
 
             var player = gridController.PlayerManager.GetPlayerByNumber(nextUnit.PlayerNumber);
+            if (player == null)
+            {
+                Debug.LogError($"[UnitSpeedTurnResolver] Unit {nextUnit} has PlayerNumber={nextUnit.PlayerNumber} but no matching player found. Skipping.");
+                // Skip this unit and try the next one
+                return ResolveNextUnit(gridController);
+            }
             return new TurnContext(player, new IUnit[] { nextUnit });
         }
 
