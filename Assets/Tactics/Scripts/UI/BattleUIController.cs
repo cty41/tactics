@@ -257,7 +257,24 @@ namespace Tactics.UI
 
         private void OnSkillButtonClicked(int skillIndex)
         {
-            Debug.Log($"[BattleUIController] Skill {skillIndex + 1} button clicked");
+            if (_currentSelectedUnit == null || _gridController == null)
+            {
+                Debug.LogWarning($"[BattleUIController] Cannot use skill: currentSelectedUnit={_currentSelectedUnit != null}, gridController={_gridController != null}");
+                return;
+            }
+
+            var abilities = _currentSelectedUnit.GetBaseAbilities()?.Where(a => !IsMoveAbility(a)).ToList();
+            if (abilities == null || skillIndex >= abilities.Count)
+            {
+                Debug.LogWarning($"[BattleUIController] Skill index {skillIndex} out of range. Abilities count: {abilities?.Count ?? 0}");
+                return;
+            }
+
+            var ability = abilities[skillIndex];
+            Debug.Log($"[BattleUIController] Skill {skillIndex + 1} clicked: {ability.DisplayName}");
+
+            // Switch to unit selected state - OnStateEnter will handle OnAbilitySelected, CanPerform check, and Display
+            _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, ability);
         }
 
         /// <summary>

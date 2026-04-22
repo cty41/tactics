@@ -120,8 +120,18 @@ namespace Tactics.Cells
         private VirtualSquareCell TryGetCellUnderCursor()
         {
             Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-            Vector3 screenPoint = new Vector3(mouseScreenPos.x, mouseScreenPos.y, 0);
-            Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(screenPoint);
+            
+            // Use Plane.Raycast to get accurate world position on the grid plane (z=0)
+            // This works correctly for isometric cameras where ScreenToWorldPoint with z=0 fails
+            Plane gridPlane = new Plane(Vector3.back, Vector3.zero);
+            Ray ray = _mainCamera.ScreenPointToRay(mouseScreenPos);
+            
+            if (!gridPlane.Raycast(ray, out float enter))
+            {
+                return null;
+            }
+            
+            Vector3 mouseWorldPos = ray.GetPoint(enter);
             Vector3Int cellPos = _dataLayer.WorldToCell(mouseWorldPos);
 
             var gridPosition = new Vector2IntImpl(cellPos.x, cellPos.y);
