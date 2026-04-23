@@ -152,6 +152,7 @@ namespace Tactics.UI
         {
             try
             {
+                UIManager.Instance.Hide(UIManager.UIId.Home);
                 await RoguelikeFlowCoordinator.Instance.OpenMapAsync();
             }
             catch (System.Exception e)

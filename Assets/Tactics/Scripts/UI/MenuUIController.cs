@@ -1,3 +1,4 @@
+using System.Collections;
 using Tactics.AssetPipeline;
 using Tactics.Flow.Home;
 using UnityEngine;
@@ -23,6 +24,12 @@ namespace Tactics.UI
         protected override void OnShown()
         {
             if (_wired) return;
+            StartCoroutine(WireButtonsDelayed());
+        }
+
+        private IEnumerator WireButtonsDelayed()
+        {
+            yield return null;
             WireMenuButtons();
             _wired = true;
         }

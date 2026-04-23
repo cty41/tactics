@@ -1,4 +1,5 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/Home.uss?fileID=7433441132597879392&amp;guid=99543b1b1263797489ddf29fca0f107f&amp;type=3#Home"/>
     <ui:VisualElement name="RootContainer" class="root-container">
         <ui:Button name="EscButton" text="ESC" class="button esc-button"/>
         <ui:Button name="StartButton" text="START" class="button start-button"/>

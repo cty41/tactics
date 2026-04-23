@@ -6,6 +6,7 @@ using Tactics.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
 
 namespace Tactics
@@ -64,6 +65,15 @@ namespace Tactics
                     var canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
                     if (canvas != null)
                     {
+                        _uiRoot = canvas.GetComponent<RectTransform>();
+                    }
+                    else
+                    {
+                        var canvasGo = new GameObject("Canvas");
+                        canvas = canvasGo.AddComponent<Canvas>();
+                        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                        canvasGo.AddComponent<CanvasScaler>();
+                        canvasGo.AddComponent<GraphicRaycaster>();
                         _uiRoot = canvas.GetComponent<RectTransform>();
                     }
                 }

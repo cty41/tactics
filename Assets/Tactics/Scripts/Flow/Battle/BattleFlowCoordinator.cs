@@ -30,6 +30,10 @@ namespace Tactics.Flow.Battle
             _isTransitioning = true;
             try
             {
+                UIManager.Instance.Destroy(UIManager.UIId.RoguelikeMap);
+                UIManager.Instance.Destroy(UIManager.UIId.Home);
+                UIManager.Instance.Destroy(UIManager.UIId.Menu);
+
                 var scenePath = SceneProjectPathHelper.ToProjectPath(battleSceneName);
                 var mgr = GameAssetManager.Instance;
                 if (mgr == null || !mgr.IsInitialized)
@@ -38,7 +42,7 @@ namespace Tactics.Flow.Battle
                     return;
                 }
 
-                await mgr.LoadSceneAsync(scenePath, LoadSceneMode.Additive);
+                await mgr.LoadSceneAsync(scenePath, LoadSceneMode.Single);
 
                 await Task.Yield();
             }
