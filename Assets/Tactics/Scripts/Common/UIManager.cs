@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Tactics.AssetPipeline;
 using Tactics.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UIElements;
 
 namespace Tactics
@@ -20,6 +22,7 @@ namespace Tactics
             Menu,
             RoguelikeMap,
             Battle,
+            CheatConsole,
         }
 
         private enum UIType
@@ -72,6 +75,8 @@ namespace Tactics
 
         private const string BattleUxmlPath = "Assets/Tactics/Arts/UI/Battle.uxml";
         private const string BattleUssPath = "Assets/Tactics/Arts/UI/Battle.uss";
+        private const string CheatConsoleUxmlPath = "Assets/Tactics/Arts/UI/CheatConsole.uxml";
+        private const string CheatConsoleUssPath = "Assets/Tactics/Arts/UI/CheatConsole.uss";
         private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
 
         private static readonly Dictionary<UIId, UIType> s_uiTypeMap = new()
@@ -79,6 +84,7 @@ namespace Tactics
             { UIId.Menu, UIType.UguiPrefab },
             { UIId.RoguelikeMap, UIType.UguiPrefab },
             { UIId.Battle, UIType.UiToolkitUxml },
+            { UIId.CheatConsole, UIType.UiToolkitUxml },
         };
 
         private readonly Dictionary<UIId, UIInstance> _instances = new();
@@ -97,9 +103,43 @@ namespace Tactics
             return _panelSettings;
         }
 
+        private InputAction _toggleConsoleAction;
+        private bool _inputInitialized;
+
         public Task ShowAsync(UIId id)
         {
+            EnsureInputInitialized();
             return ShowUIAsync(id, GetAssetPath(id));
+        }
+
+        private void EnsureInputInitialized()
+        {
+            if (_inputInitialized) return;
+
+            var module = UnityEngine.Object.FindFirstObjectByType<InputSystemUIInputModule>();
+            if (module == null || module.actionsAsset == null)
+                return;
+
+            var playerMap = module.actionsAsset.FindActionMap("Player");
+            if (playerMap == null)
+                return;
+
+            _toggleConsoleAction = playerMap.FindAction("ToggleConsole");
+            if (_toggleConsoleAction != null)
+            {
+                _toggleConsoleAction.performed += OnToggleConsolePerformed;
+                _toggleConsoleAction.Enable();
+            }
+
+            _inputInitialized = true;
+        }
+
+        private void OnToggleConsolePerformed(InputAction.CallbackContext ctx)
+        {
+            if (IsVisible(UIId.CheatConsole))
+                Hide(UIId.CheatConsole);
+            else
+                _ = ShowAsync(UIId.CheatConsole);
         }
 
         public void Hide(UIId id)
@@ -146,6 +186,7 @@ namespace Tactics
                 UIId.Menu => MenuPrefabPath,
                 UIId.RoguelikeMap => RoguelikeMapPrefabPath,
                 UIId.Battle => BattleUxmlPath,
+                UIId.CheatConsole => CheatConsoleUxmlPath,
                 _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.")
             };
         }
@@ -155,6 +196,7 @@ namespace Tactics
             return id switch
             {
                 UIId.Battle => BattleUssPath,
+                UIId.CheatConsole => CheatConsoleUssPath,
                 _ => string.Empty
             };
         }
@@ -269,6 +311,10 @@ namespace Tactics
                 case UIId.Battle:
                     if (root.GetComponent<BattleUIController>() == null)
                         root.AddComponent<BattleUIController>();
+                    break;
+                case UIId.CheatConsole:
+                    if (root.GetComponent<CheatConsoleUI>() == null)
+                        root.AddComponent<CheatConsoleUI>();
                     break;
                 default:
                     break;
