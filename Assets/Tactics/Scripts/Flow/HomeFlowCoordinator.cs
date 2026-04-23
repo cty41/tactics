@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Tactics.AssetPipeline;
 using UnityEngine;
 
 namespace Tactics.Flow.Home
@@ -11,6 +12,16 @@ namespace Tactics.Flow.Home
         private bool _isMenuTransitioning;
 
         private HomeFlowCoordinator() { }
+
+        public async Task ShowHomeUIAsync()
+        {
+            while (GameAssetManager.Instance == null || !GameAssetManager.Instance.IsInitialized)
+            {
+                await Task.Yield();
+            }
+
+            await UIManager.Instance.ShowAsync(UIManager.UIId.Home);
+        }
 
         public async Task OpenMenuAsync()
         {

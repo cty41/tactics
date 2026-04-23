@@ -19,6 +19,7 @@ namespace Tactics
 
         public enum UIId
         {
+            Home,
             Menu,
             RoguelikeMap,
             Battle,
@@ -70,9 +71,12 @@ namespace Tactics
             }
         }
 
-        private const string MenuPrefabPath = "Assets/Tactics/Arts/UI/Menu.prefab";
         private const string RoguelikeMapPrefabPath = "Assets/Tactics/Arts/UI/RoguelikeMap.prefab";
 
+        private const string HomeUxmlPath = "Assets/Tactics/Arts/UI/Home.uxml";
+        private const string HomeUssPath = "Assets/Tactics/Arts/UI/Home.uss";
+        private const string MenuUxmlPath = "Assets/Tactics/Arts/UI/Menu.uxml";
+        private const string MenuUssPath = "Assets/Tactics/Arts/UI/Menu.uss";
         private const string BattleUxmlPath = "Assets/Tactics/Arts/UI/Battle.uxml";
         private const string BattleUssPath = "Assets/Tactics/Arts/UI/Battle.uss";
         private const string CheatConsoleUxmlPath = "Assets/Tactics/Arts/UI/CheatConsole.uxml";
@@ -81,7 +85,8 @@ namespace Tactics
 
         private static readonly Dictionary<UIId, UIType> s_uiTypeMap = new()
         {
-            { UIId.Menu, UIType.UguiPrefab },
+            { UIId.Home, UIType.UiToolkitUxml },
+            { UIId.Menu, UIType.UiToolkitUxml },
             { UIId.RoguelikeMap, UIType.UguiPrefab },
             { UIId.Battle, UIType.UiToolkitUxml },
             { UIId.CheatConsole, UIType.UiToolkitUxml },
@@ -183,7 +188,8 @@ namespace Tactics
         {
             return id switch
             {
-                UIId.Menu => MenuPrefabPath,
+                UIId.Home => HomeUxmlPath,
+                UIId.Menu => MenuUxmlPath,
                 UIId.RoguelikeMap => RoguelikeMapPrefabPath,
                 UIId.Battle => BattleUxmlPath,
                 UIId.CheatConsole => CheatConsoleUxmlPath,
@@ -195,6 +201,8 @@ namespace Tactics
         {
             return id switch
             {
+                UIId.Home => HomeUssPath,
+                UIId.Menu => MenuUssPath,
                 UIId.Battle => BattleUssPath,
                 UIId.CheatConsole => CheatConsoleUssPath,
                 _ => string.Empty
@@ -256,7 +264,7 @@ namespace Tactics
 
             var go = UnityEngine.Object.Instantiate(prefab, uiRoot, false);
             go.name = id.ToString();
-            EnsureController(id, go);
+            EnsureUIController(id, go);
             go.SetActive(false);
             return new UIInstance(UIType.UguiPrefab, go, null);
         }
@@ -290,24 +298,22 @@ namespace Tactics
             return new UIInstance(UIType.UiToolkitUxml, hostGo, uiDoc);
         }
 
-        private static void EnsureController(UIId id, GameObject root)
-        {
-            switch (id)
-            {
-                case UIId.RoguelikeMap:
-                    if (root.GetComponent<RoguelikeMapUIController>() == null)
-                        root.AddComponent<RoguelikeMapUIController>();
-                    break;
-                case UIId.Menu:
-                default:
-                    break;
-            }
-        }
-
         private static void EnsureUIController(UIId id, GameObject root)
         {
             switch (id)
             {
+                case UIId.Home:
+                    if (root.GetComponent<HomeUIController>() == null)
+                        root.AddComponent<HomeUIController>();
+                    break;
+                case UIId.Menu:
+                    if (root.GetComponent<MenuUIController>() == null)
+                        root.AddComponent<MenuUIController>();
+                    break;
+                case UIId.RoguelikeMap:
+                    if (root.GetComponent<RoguelikeMapUIController>() == null)
+                        root.AddComponent<RoguelikeMapUIController>();
+                    break;
                 case UIId.Battle:
                     if (root.GetComponent<BattleUIController>() == null)
                         root.AddComponent<BattleUIController>();

@@ -1,98 +1,64 @@
+using System.Collections;
 using System.Threading.Tasks;
 using Tactics.Flow.Home;
 using Tactics.Flow.Roguelike;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.UI;
-using TMPro;
+using UnityEngine.UIElements;
 
 namespace Tactics.UI
 {
     /// <summary>
-    /// Home UI controller:
-    /// - wires StartButton
-    /// - handles Esc input + EscButton click through HomeFlowCoordinator
+    /// Home UI controller (UI Toolkit):
+    /// - wires StartButton and EscButton from Home.uxml
+    /// - handles Esc input through HomeFlowCoordinator
     /// </summary>
     public sealed class HomeUIController : UIControllerBase
     {
-        [Header("Buttons (from Home.prefab)")]
-        [SerializeField] private Button _startButton;
-        [SerializeField] private Button _escButton;
-
         [Header("Input (New Input System)")]
         [SerializeField] private InputActionAsset _inputActions;
         [SerializeField] private string _cancelActionName = "Cancel";
 
+        private Button _startButton;
+        private Button _escButton;
         private InputAction _cancelAction;
-        private bool _startWired;
 
-        private void Awake()
+        protected override void OnShown()
         {
-            RebindButtonsFromHierarchy();
-            WireButtons();
-            AutoFindInputActions();
-
-            if (_escButton != null)
-            {
-                _escButton.onClick.RemoveListener(OnEscButtonClicked);
-                _escButton.onClick.AddListener(OnEscButtonClicked);
-            }
-            else
-            {
-                Debug.LogWarning("[HomeUIController] EscButton is not assigned/found; Esc UI button click will not work.");
-            }
+            StartCoroutine(WireButtonsDelayed());
         }
 
-        private void RebindButtonsFromHierarchy()
+        private IEnumerator WireButtonsDelayed()
         {
-            // Force-rebind every time to avoid stale serialized refs after prefab reconstruction.
-            _startButton = null;
-            _escButton = null;
-
-            foreach (var btn in GetComponentsInChildren<Button>(true))
-            {
-                if (btn == null) continue;
-                if (btn.name == "StartButton")
-                {
-                    _startButton = btn;
-                }
-                else if (btn.name == "EscButton")
-                {
-                    _escButton = btn;
-                }
-            }
-
-            // Fallback: match by TMP label (case-insensitive).
-            if (_escButton == null)
-            {
-                foreach (var btn in GetComponentsInChildren<Button>(true))
-                {
-                    var label = btn.GetComponentInChildren<TextMeshProUGUI>(true);
-                    var txt = label?.text?.Trim();
-                    if (string.IsNullOrEmpty(txt)) continue;
-
-                    if (txt.Equals("ESC", System.StringComparison.OrdinalIgnoreCase) ||
-                        txt.Equals("ESCAPE", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        _escButton = btn;
-                        break;
-                    }
-                }
-            }
+            yield return null;
+            WireButtons();
         }
 
         private void WireButtons()
         {
-            if (_startButton == null)
+            var root = Ui.GetRootElement(UIManager.UIId.Home);
+            if (root == null)
             {
-                Debug.LogWarning("[HomeUIController] StartButton is not assigned/found; Start click will not work.");
+                Debug.LogWarning("[HomeUIController] Could not get root visual element for Home UI.");
                 return;
             }
 
-            _startButton.onClick.RemoveListener(OnStartClicked);
-            _startButton.onClick.AddListener(OnStartClicked);
-            _startWired = true;
+            _startButton = root.Q<Button>("StartButton");
+            _escButton = root.Q<Button>("EscButton");
+
+            if (_startButton != null)
+                _startButton.clicked += OnStartClicked;
+            else
+                Debug.LogWarning("[HomeUIController] StartButton not found in UXML.");
+
+            if (_escButton != null)
+                _escButton.clicked += OnEscButtonClicked;
+            else
+                Debug.LogWarning("[HomeUIController] EscButton not found in UXML.");
+
+            AutoFindInputActions();
+            WireInput();
         }
 
         private void AutoFindInputActions()
@@ -104,36 +70,24 @@ namespace Tactics.UI
                 _inputActions = module.actionsAsset;
         }
 
-        private void OnDestroy()
-        {
-            if (_startButton != null && _startWired)
-                _startButton.onClick.RemoveListener(OnStartClicked);
-
-            if (_escButton != null) _escButton.onClick.RemoveListener(OnEscButtonClicked);
-
-            UnwireInput();
-        }
-
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            WireInput();
-        }
-
-        protected override void OnDisable()
-        {
-            UnwireInput();
-            base.OnDisable();
-        }
-
-        protected override void OnShown()
-        {
-            // Intentionally empty: Home UI is typically always active.
-        }
-
         protected override void OnHidden()
         {
-            // Intentionally empty.
+            UnwireButtons();
+            UnwireInput();
+        }
+
+        private void OnDestroy()
+        {
+            UnwireButtons();
+            UnwireInput();
+        }
+
+        private void UnwireButtons()
+        {
+            if (_startButton != null)
+                _startButton.clicked -= OnStartClicked;
+            if (_escButton != null)
+                _escButton.clicked -= OnEscButtonClicked;
         }
 
         private void WireInput()
@@ -152,8 +106,11 @@ namespace Tactics.UI
             }
 
             _cancelAction = uiMap.FindAction(_cancelActionName, true);
-            _cancelAction.performed += OnCancelPerformed;
-            _cancelAction.Enable();
+            if (_cancelAction != null)
+            {
+                _cancelAction.performed += OnCancelPerformed;
+                _cancelAction.Enable();
+            }
         }
 
         private void UnwireInput()
@@ -204,4 +161,3 @@ namespace Tactics.UI
         }
     }
 }
-

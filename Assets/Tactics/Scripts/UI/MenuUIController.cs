@@ -1,20 +1,23 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using Tactics.AssetPipeline;
 using Tactics.Flow.Home;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Tactics.UI
 {
     /// <summary>
-    /// Menu prefab controller:
-    /// - wires MenuRow_* buttons
+    /// Menu UI controller (UI Toolkit):
+    /// - wires menu buttons from Menu.uxml
     /// - executes the menu's internal business flows
     /// </summary>
     public sealed class MenuUIController : UIControllerBase
     {
         [SerializeField] private string _homeSceneName = "Home";
 
+        private Button _continueButton;
+        private Button _optionsButton;
+        private Button _mainMenuButton;
+        private Button _saveAndQuitButton;
         private bool _wired;
 
         protected override void OnShown()
@@ -24,66 +27,57 @@ namespace Tactics.UI
             _wired = true;
         }
 
+        protected override void OnHidden()
+        {
+            UnwireMenuButtons();
+            _wired = false;
+        }
+
         private void WireMenuButtons()
         {
-            // Menu prefab uses TMP labels (CONTINUE / MAIN MENU / SAVE AND QUIT / OPTIONS).
-            // Instead of relying on child object names, match by displayed text for robustness.
-            bool wiredContinue = false;
-            bool wiredMainMenu = false;
-            bool wiredSaveAndQuit = false;
-            bool wiredOptions = false;
-
-            Button[] allButtons = GetComponentsInChildren<Button>(true);
-            foreach (Button button in allButtons)
+            var root = Ui.GetRootElement(UIManager.UIId.Menu);
+            if (root == null)
             {
-                TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-                if (label == null) continue;
-
-                string text = (label.text ?? string.Empty).Trim();
-                if (text.Length == 0) continue;
-
-                if (text.Equals("CONTINUE", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!wiredContinue)
-                    {
-                        button.onClick.AddListener(OnContinueClicked);
-                        wiredContinue = true;
-                    }
-                }
-                else if (text.Equals("MAIN MENU", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!wiredMainMenu)
-                    {
-                        button.onClick.AddListener(OnMainMenuClicked);
-                        wiredMainMenu = true;
-                    }
-                }
-                else if (text.Equals("SAVE AND QUIT", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!wiredSaveAndQuit)
-                    {
-                        button.onClick.AddListener(OnSaveAndQuitClicked);
-                        wiredSaveAndQuit = true;
-                    }
-                }
-                else if (text.Equals("OPTIONS", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!wiredOptions)
-                    {
-                        button.onClick.AddListener(OnOptionsClicked);
-                        wiredOptions = true;
-                    }
-                }
+                Debug.LogWarning("[MenuUIController] Could not get root visual element for Menu UI.");
+                return;
             }
 
-            if (!wiredContinue)
-                Debug.LogWarning("[MenuUIController] Could not find a CONTINUE button (TMP text not found).");
-            if (!wiredMainMenu)
-                Debug.LogWarning("[MenuUIController] Could not find a MAIN MENU button (TMP text not found).");
-            if (!wiredSaveAndQuit)
-                Debug.LogWarning("[MenuUIController] Could not find a SAVE AND QUIT button (TMP text not found).");
-            if (!wiredOptions)
-                Debug.LogWarning("[MenuUIController] Could not find an OPTIONS button (TMP text not found).");
+            _continueButton = root.Q<Button>("ContinueButton");
+            _optionsButton = root.Q<Button>("OptionsButton");
+            _mainMenuButton = root.Q<Button>("MainMenuButton");
+            _saveAndQuitButton = root.Q<Button>("SaveAndQuitButton");
+
+            if (_continueButton != null)
+                _continueButton.clicked += OnContinueClicked;
+            else
+                Debug.LogWarning("[MenuUIController] ContinueButton not found in UXML.");
+
+            if (_optionsButton != null)
+                _optionsButton.clicked += OnOptionsClicked;
+            else
+                Debug.LogWarning("[MenuUIController] OptionsButton not found in UXML.");
+
+            if (_mainMenuButton != null)
+                _mainMenuButton.clicked += OnMainMenuClicked;
+            else
+                Debug.LogWarning("[MenuUIController] MainMenuButton not found in UXML.");
+
+            if (_saveAndQuitButton != null)
+                _saveAndQuitButton.clicked += OnSaveAndQuitClicked;
+            else
+                Debug.LogWarning("[MenuUIController] SaveAndQuitButton not found in UXML.");
+        }
+
+        private void UnwireMenuButtons()
+        {
+            if (_continueButton != null)
+                _continueButton.clicked -= OnContinueClicked;
+            if (_optionsButton != null)
+                _optionsButton.clicked -= OnOptionsClicked;
+            if (_mainMenuButton != null)
+                _mainMenuButton.clicked -= OnMainMenuClicked;
+            if (_saveAndQuitButton != null)
+                _saveAndQuitButton.clicked -= OnSaveAndQuitClicked;
         }
 
         private void OnContinueClicked()
@@ -111,4 +105,3 @@ namespace Tactics.UI
         }
     }
 }
-
