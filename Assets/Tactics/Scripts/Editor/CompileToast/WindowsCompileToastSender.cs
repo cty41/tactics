@@ -119,14 +119,48 @@ namespace Tactics.CompileToast.Editor
 
         /// <summary>
         /// Escapes a string for safe passing to PowerShell as a single argument.
-        /// Wraps in single quotes and escapes internal single quotes.
+        /// Wraps in double quotes and escapes internal double quotes/backslashes
+        /// to satisfy Windows CommandLineToArgvW rules.
         /// </summary>
         private static string EscapeArg(string value)
         {
             if (string.IsNullOrEmpty(value))
-                return "''";
-            var escaped = value.Replace("'", "''");
-            return $"'{escaped}'";
+                return "\"\"";
+
+            var sb = new StringBuilder();
+            sb.Append('\"');
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                if (c == '"')
+                {
+                    sb.Append('\\');
+                    sb.Append('\"');
+                }
+                else if (c == '\\')
+                {
+                    int backslashCount = 1;
+                    while (i + 1 < value.Length && value[i + 1] == '\\')
+                    {
+                        backslashCount++;
+                        i++;
+                    }
+                    if (i + 1 < value.Length && value[i + 1] == '"')
+                    {
+                        sb.Append('\\', backslashCount * 2);
+                    }
+                    else
+                    {
+                        sb.Append('\\', backslashCount);
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            sb.Append('\"');
+            return sb.ToString();
         }
     }
 }
