@@ -21,7 +21,7 @@ namespace Tactics.Common.Battle
     /// 战斗控制器，统一管理网格、单位、玩家、回合以及战斗生命周期。
     /// 合并了原 UnityGridController 的职责，直接实现 IGridController 接口。
     /// </summary>
-    public sealed class BattleController : MonoBehaviourSingleton<BattleController>, IGridController, IPlayerManager
+    public sealed class BattleController : MonoBehaviourSingleton<BattleController>, IGridController, IPlayerManager, IUnitManager
     {
         #region Battle Events
 
@@ -67,7 +67,7 @@ namespace Tactics.Common.Battle
         public IUnitManager UnitManager
         {
             get => _controller.UnitManager;
-            set { _controller.UnitManager = value; _unitManager = value as UnityUnitManager; }
+            set => _controller.UnitManager = value;
         }
 
         public IPlayerManager PlayerManager
@@ -99,8 +99,8 @@ namespace Tactics.Common.Battle
         /// </summary>
         [SerializeField] private bool _startImmediatelly = true;
         [SerializeField] private UnityCellManager _cellManager;
-        [SerializeField] private UnityUnitManager _unitManager;
         [SerializeReference] private ITurnResolver _turnResolver;
+        [SerializeField] private Transform _unitContainer;
 
         /// <summary>
         /// Player configurations serialized on BattleController.
@@ -120,6 +120,8 @@ namespace Tactics.Common.Battle
 
         private readonly GridController _controller = new GridController();
         private IList<IPlayer> _runtimePlayers;
+        private IList<IUnit> _units;
+        private int _unitCount;
 
         #endregion
 
@@ -131,7 +133,7 @@ namespace Tactics.Common.Battle
 
             // 初始化 GridController 的依赖
             _controller.CellManager = _cellManager;
-            _controller.UnitManager = _unitManager;
+            _controller.UnitManager = this;
             _controller.PlayerManager = this;
             _controller.TurnResolver = _turnResolver ?? new Tactics.Common.Controllers.TurnResolvers.SubsequentTurnResolverImpl();
 
@@ -149,8 +151,7 @@ namespace Tactics.Common.Battle
             _controller.TurnEnded += OnTurnEnded;
 
             // 订阅 UnitRemoved 事件用于判断胜负
-            if (_unitManager != null)
-                _unitManager.UnitRemoved += OnUnitRemoved;
+            UnitRemoved += OnUnitRemoved;
 
             RoguelikeBattleReturnHandler.Instance.RegisterController(this);
         }
@@ -164,8 +165,7 @@ namespace Tactics.Common.Battle
             _controller.TurnStarted -= OnTurnStarted;
             _controller.TurnEnded -= OnTurnEnded;
 
-            if (_unitManager != null)
-                _unitManager.UnitRemoved -= OnUnitRemoved;
+            UnitRemoved -= OnUnitRemoved;
 
             RoguelikeBattleReturnHandler.Instance.UnregisterController(this);
             base.OnDestroy();
@@ -307,10 +307,10 @@ namespace Tactics.Common.Battle
         /// </summary>
         private void OnUnitRemoved(IUnit unit)
         {
-            if (_unitManager == null || _runtimePlayers == null)
+            if (_runtimePlayers == null)
                 return;
 
-            var playersWithUnitsAlive = _unitManager.GetUnits()
+            var playersWithUnitsAlive = GetUnits()
                 .Select(u => u.PlayerNumber)
                 .Distinct();
 
@@ -337,13 +337,13 @@ namespace Tactics.Common.Battle
         /// </summary>
         private void AutoConfigurePlayersFromUnits()
         {
-            if (_unitManager == null)
+            if (_units == null)
             {
-                Debug.LogWarning("[BattleController] Cannot auto-configure players: UnitManager is null.");
+                Debug.LogWarning("[BattleController] Cannot auto-configure players: UnitManager is not initialized.");
                 return;
             }
 
-            var allUnits = _unitManager.GetUnits().ToList();
+            var allUnits = GetUnits().ToList();
             if (allUnits.Count == 0)
             {
                 Debug.LogWarning("[BattleController] No units found in scene. Cannot auto-configure players.");
@@ -493,6 +493,133 @@ namespace Tactics.Common.Battle
                     };
                 }
             }
+        }
+
+        #endregion
+
+        #region IUnitManager Implementation
+
+        public event Action<IUnit> UnitAdded;
+        public event Action<IUnit> UnitRemoved;
+
+        void IUnitManager.Initialize(IGridController gridController)
+        {
+            _units = new List<IUnit>();
+            var container = _unitContainer;
+            if (container == null)
+            {
+                var unitManagerGo = GameObject.Find("UnitManager");
+                if (unitManagerGo != null)
+                    container = unitManagerGo.transform;
+            }
+            if (container == null)
+                container = transform;
+
+            var foundUnits = container.GetComponentsInChildren<IUnit>().ToList();
+            if (foundUnits.Count == 0)
+            {
+                Debug.LogWarning("[BattleController] No units found under the determined container. " +
+                    "Ensure units are children of BattleController, or set _unitContainer explicitly, " +
+                    "or keep a GameObject named 'UnitManager' with units as its children.");
+            }
+
+            foreach (var unit in foundUnits
+                .OrderBy(u => u.CurrentCell == null)
+                .ThenBy(u => u.CurrentCell?.GridCoordinates.x)
+                .ThenBy(u => u.CurrentCell?.GridCoordinates.y))
+            {
+                AddUnit(unit);
+            }
+        }
+
+        public void AddUnit(IUnit unit)
+        {
+            unit.UnitID = _unitCount++;
+            _units.Add(unit);
+            UnitAdded?.Invoke(unit);
+        }
+
+        public void RemoveUnit(IUnit unit)
+        {
+            _units.Remove(unit);
+            UnitRemoved?.Invoke(unit);
+        }
+
+        public IEnumerable<IUnit> GetUnits()
+        {
+            return _units;
+        }
+
+        public IEnumerable<IUnit> GetFriendlyUnits(IPlayer player)
+        {
+            return GetFriendlyUnits(player.PlayerNumber);
+        }
+
+        public IEnumerable<IUnit> GetFriendlyUnits(int playerNumber)
+        {
+            return _units.Where(u => u.PlayerNumber == playerNumber);
+        }
+
+        public IEnumerable<IUnit> GetEnemyUnits(IPlayer player)
+        {
+            return GetEnemyUnits(player.PlayerNumber);
+        }
+
+        public IEnumerable<IUnit> GetEnemyUnits(int playerNumber)
+        {
+            return _units.Where(u => u.PlayerNumber != playerNumber);
+        }
+
+        public async Task UnMark(IEnumerable<IUnit> units)
+        {
+            await Task.WhenAll(units.Select(u => (u as Unit).UnMark()));
+        }
+
+        public async Task MarkAsSelected(IUnit unit)
+        {
+            await (unit as Unit).MarkAsSelected();
+        }
+
+        public async Task MarkAsFriendly(IEnumerable<IUnit> units)
+        {
+            await Task.WhenAll(units.Select(u => (u as Unit).MarkAsFriendly()));
+        }
+
+        public async Task MarkAsFinished(IEnumerable<IUnit> units)
+        {
+            await Task.WhenAll(units.Select(u => (u as Unit).MarkAsFinished()));
+        }
+
+        public async Task MarkAsTargetable(IEnumerable<IUnit> units)
+        {
+            await Task.WhenAll(units.Select(u => (u as Unit).MarkAsTargetable()));
+        }
+
+        public async Task MarkAsAttacking(IUnit unit, IUnit target)
+        {
+            var targetUnit = target as Unit;
+            await (unit as Unit).MarkAsAttacking(targetUnit);
+        }
+
+        public async Task MarkAsDefending(IUnit unit, IUnit aggressor)
+        {
+            var aggressorUnit = aggressor as Unit;
+            await (unit as Unit).MarkAsDefending(aggressorUnit);
+        }
+
+        public async Task MarkAsMoving(IUnit unit, ICell source, ICell destination, IEnumerable<ICell> path)
+        {
+            await (unit as Unit).MarkAsMoving(source, destination, path);
+        }
+
+        public async Task UnMarkAsMoving(IUnit unit, ICell source, ICell destination, IEnumerable<ICell> path)
+        {
+            await (unit as Unit).UnMarkAsMoving(source, destination, path);
+        }
+
+        public async Task MarkAsDestroyed(IUnit unit)
+        {
+            await (unit as Unit).MarkAsDestroyed();
         }
 
         #endregion

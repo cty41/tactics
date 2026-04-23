@@ -28,7 +28,7 @@ namespace TbsFramework.EditorUtils
 
         GameObject gridController;
         GameObject cellManager;
-        GameObject unitManager;
+
         GameObject guiController;
         GameObject directionalLight;
 
@@ -524,7 +524,6 @@ namespace TbsFramework.EditorUtils
             cellManagerGameObject = cellManager;
             var grid = new GameObject("Grid");
             var tilemap = new GameObject("Tilemap");
-            unitManager = new GameObject("UnitManager");
             guiController = new GameObject("GUIController");
             var gameEndConditions = new GameObject("GameEndConditions");
 
@@ -538,11 +537,9 @@ namespace TbsFramework.EditorUtils
             eventSystem.AddComponent<InputSystemUIInputModule>();
 
             var cellManagerScript = cellManager.AddComponent<RegularCellManager>();
-            var unitManagerScript = unitManager.AddComponent<UnityUnitManager>();
 
             var gridControllerScript = gridController.AddComponent<Tactics.Common.Battle.BattleController>();
             gridControllerScript.TurnResolver = new SubsequentTurnResolver();
-            gridControllerScript.UnitManager = unitManagerScript;
             gridControllerScript.CellManager = cellManagerScript;
 
             // Configure players directly on BattleController via serialized field
