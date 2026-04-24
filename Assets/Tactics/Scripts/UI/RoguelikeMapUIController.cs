@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
-using TMPro;
+using Tactics.AssetPipeline;
 using Tactics.Flow.Roguelike;
 using Tactics.Flow.Battle;
 using Tactics.RoguelikeMap;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using UnityEngine.UI.Extensions;
+using UnityEngine.UIElements;
 using Newtonsoft.Json;
 
 namespace Tactics.UI
@@ -20,34 +18,17 @@ namespace Tactics.UI
         public const string RoguelikePendingNodePrefsKey = "RoguelikePendingNode";
         public const string RoguelikeReturnScenePrefsKey = "RoguelikeReturnScene";
 
-        [Header("UI Prefabs")]
-        [Tooltip("Prefab for map nodes (must have RoguelikeMapUINode component)")]
-        public GameObject nodePrefab;
-
-        [Header("Line Prefab")]
-        [Tooltip("Prefab for UI lines (must have UILineRenderer component)")]
-        public UILineRenderer uiLinePrefab;
-
-        [Header("Scroll Rect")]
-        public ScrollRect scrollRect;
-
         [Header("Layout")]
-        public float unitsToPixelsMultiplier = 10f;
+        public float unitsToPixelsMultiplier = 60f;
         public float padding = 400f;
         public Vector2 backgroundPadding = new Vector2(-100f, -100f);
-        public float backgroundPPUMultiplier = 2f;
         public float offsetFromNodes = 15f;
-        [Range(3, 10)]
-        public int linePointsCount = 10;
 
         [Header("Colors")]
         public Color32 visitedColor = Color.white;
         public Color32 lockedColor = Color.gray;
         public Color32 lineVisitedColor = Color.white;
         public Color32 lineLockedColor = Color.gray;
-
-        [Header("Background")]
-        public Image backgroundImage;
 
         [Header("Map Data")]
         public RoguelikeMapConfig mapConfig;
@@ -56,34 +37,69 @@ namespace Tactics.UI
         [SerializeField] private string battleSceneName = "Test1";
 
         private global::Tactics.RoguelikeMap.RoguelikeMap _currentMap;
-        private GameObject _firstParent;
-        private RectTransform _lineParent;
-        private ScrollRect _activeScrollRect;
+        private bool _locked;
+
+        private ScrollView _scrollView;
+        private VisualElement _mapContent;
+        private VisualElement _linesLayer;
+        private VisualElement _nodesLayer;
+        private VisualElement _backgroundLayer;
+        private MapConnectionLinesElement _linesElement;
 
         private readonly List<RoguelikeMapUINode> _mapNodes = new List<RoguelikeMapUINode>();
-        private readonly List<UILineRenderer> _lineConnections = new List<UILineRenderer>();
-        private int _lineInstanceIndex;
-        private bool _wired;
-        private bool _locked;
+        private readonly List<MapLineConnection> _lineConnections = new List<MapLineConnection>();
+        private VisualTreeAsset _nodeTemplate;
 
         public static RoguelikeMapUIController Instance { get; set; }
 
         private void Awake()
         {
             Instance = this;
+            EnsureMapConfig();
+        }
+
+        private void EnsureMapConfig()
+        {
+            if (mapConfig != null) return;
+
+            var mgr = GameAssetManager.Instance;
+            if (mgr != null)
+            {
+                mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/Arts/ScriptableObjects/MapConfigs/DefaultRogueLikeMapConfig.asset");
+            }
+
+            if (mapConfig == null)
+                Debug.LogWarning("[RoguelikeMapUIController] Failed to load default RoguelikeMapConfig.");
         }
 
         protected override void OnShown()
         {
-            if (_wired) return;
+            Debug.Log($"[RoguelikeMapUIController] OnShown called. gameObject.active={gameObject.activeSelf}");
             WireOptionalCloseButtons();
-            _wired = true;
 
             LoadOrGenerateMap();
-            if (_currentMap != null)
+            Debug.Log($"[RoguelikeMapUIController] Starting ShowMapDelayed. _currentMap={_currentMap != null}");
+            StartCoroutine(ShowMapDelayed());
+        }
+
+        private System.Collections.IEnumerator ShowMapDelayed()
+        {
+            Debug.Log("[RoguelikeMapUIController] ShowMapDelayed coroutine started.");
+            yield return null;
+            Debug.Log($"[RoguelikeMapUIController] ShowMapDelayed after yield. gameObject.active={gameObject.activeSelf}");
+
+            // Ensure GameAssetManager has initialized before loading assets
+            EnsureMapConfig();
+            EnsureNodeTemplate();
+
+            if (_currentMap == null)
             {
-                ShowMap(_currentMap);
+                Debug.LogError("[RoguelikeMapUIController] _currentMap is null. Cannot show map.");
+                yield break;
             }
+
+            Debug.Log("[RoguelikeMapUIController] Calling ShowMap...");
+            ShowMap(_currentMap);
         }
 
         private void LoadOrGenerateMap()
@@ -136,66 +152,40 @@ namespace Tactics.UI
             PlayerPrefs.Save();
         }
 
-        private bool TryEnsureScrollRectAssigned()
+        private bool TryEnsureRootElements()
         {
-            if (scrollRect != null) return true;
+            if (_scrollView != null) return true;
 
-            ScrollRect[] local = GetComponentsInChildren<ScrollRect>(true);
-            foreach (ScrollRect sr in local)
+            var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            Debug.Log($"[RoguelikeMapUIController] TryEnsureRootElements: root={root != null}");
+            if (root == null)
             {
-                if (sr == null) continue;
-                scrollRect = sr;
-                break;
+                Debug.LogError("[RoguelikeMapUIController] Could not get root visual element for RoguelikeMap UI.");
+                return false;
             }
 
-            if (scrollRect == null)
-                CreateRuntimeScrollRectIfMissing();
+            _scrollView = root.Q<ScrollView>("MapScrollView");
+            _backgroundLayer = root.Q<VisualElement>("BackgroundLayer");
+            _linesLayer = root.Q<VisualElement>("LinesLayer");
+            _nodesLayer = root.Q<VisualElement>("NodesLayer");
 
-            return scrollRect != null;
-        }
+            Debug.Log($"[RoguelikeMapUIController] TryEnsureRootElements: scrollView={_scrollView != null}, bgLayer={_backgroundLayer != null}, linesLayer={_linesLayer != null}, nodesLayer={_nodesLayer != null}");
 
-        private void CreateRuntimeScrollRectIfMissing()
-        {
-            RectTransform host = GetComponent<RectTransform>();
-            if (host == null)
-                host = GetComponentInParent<RectTransform>();
-            if (host == null) return;
+            if (_scrollView == null)
+            {
+                Debug.LogError("[RoguelikeMapUIController] Missing required ScrollView in UXML.");
+                return false;
+            }
 
-            GameObject root = new GameObject("ScrollRectHorizontal", typeof(RectTransform), typeof(Image), typeof(Mask), typeof(ScrollRect));
-            RectTransform rootRT = root.GetComponent<RectTransform>();
-            rootRT.SetParent(host, false);
-            rootRT.anchorMin = Vector2.zero;
-            rootRT.anchorMax = Vector2.one;
-            rootRT.offsetMin = Vector2.zero;
-            rootRT.offsetMax = Vector2.zero;
-            rootRT.localScale = Vector3.one;
+            _mapContent = root.Q<VisualElement>("MapContainer");
+            Debug.Log($"[RoguelikeMapUIController] TryEnsureRootElements: mapContainer={_mapContent != null}");
+            if (_mapContent == null)
+            {
+                Debug.LogError("[RoguelikeMapUIController] MapContainer is null.");
+                return false;
+            }
 
-            Image viewportImage = root.GetComponent<Image>();
-            viewportImage.color = new Color(0f, 0f, 0f, 0f);
-
-            Mask mask = root.GetComponent<Mask>();
-            mask.showMaskGraphic = false;
-
-            GameObject content = new GameObject("Content", typeof(RectTransform));
-            RectTransform contentRT = content.GetComponent<RectTransform>();
-            contentRT.SetParent(rootRT, false);
-            contentRT.anchorMin = Vector2.zero;
-            contentRT.anchorMax = Vector2.one;
-            contentRT.offsetMin = Vector2.zero;
-            contentRT.offsetMax = Vector2.zero;
-            contentRT.localScale = Vector3.one;
-
-            ScrollRect sr = root.GetComponent<ScrollRect>();
-            sr.viewport = rootRT;
-            sr.content = contentRT;
-            sr.horizontal = true;
-            sr.vertical = false;
-            sr.movementType = ScrollRect.MovementType.Clamped;
-            sr.inertia = true;
-            sr.scrollSensitivity = 1f;
-            sr.gameObject.SetActive(false);
-
-            scrollRect = sr;
+            return true;
         }
 
         public void ShowMap(global::Tactics.RoguelikeMap.RoguelikeMap m)
@@ -206,94 +196,79 @@ namespace Tactics.UI
                 return;
             }
 
-            if (!TryEnsureScrollRectAssigned())
+            if (!TryEnsureRootElements())
                 return;
+
+            var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            Debug.Log($"[RoguelikeMapUIController] ShowMap: root={root != null}, scrollView={_scrollView != null}, mapContainer={_mapContent != null}, mapContainer.layout={_mapContent.layout.width}x{_mapContent.layout.height}, nodesLayer={_nodesLayer != null}, bgLayer={_backgroundLayer != null}");
 
             _currentMap = m;
             ClearMap();
-            _lineInstanceIndex = 0;
 
-            CreateMapParent();
-            CreateNodes(m.nodes);
-            DrawLines();
             SetMapLength();
             ScrollToOrigin();
-            ResetNodesRotation();
+
+            // Explicitly set layer sizes to avoid layout timing issues
+            float mapLength = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
+            float mapHeight = _mapContent.layout.height > 0f ? _mapContent.layout.height : 1080f;
+            if (_backgroundLayer != null) { _backgroundLayer.style.width = mapLength; _backgroundLayer.style.height = mapHeight; }
+            if (_linesLayer != null) { _linesLayer.style.width = mapLength; _linesLayer.style.height = mapHeight; }
+            if (_nodesLayer != null) { _nodesLayer.style.width = mapLength; _nodesLayer.style.height = mapHeight; }
+
+            CreateNodes(m.nodes);
+            DrawLines();
             SetAttainableNodes();
             SetLineColors();
         }
 
-        private void ClearMap()
+        private void EnsureNodeTemplate()
         {
-            if (scrollRect != null)
-                scrollRect.gameObject.SetActive(false);
+            if (_nodeTemplate != null) return;
 
-            if (_activeScrollRect != null && _activeScrollRect.content != null)
+            var mgr = GameAssetManager.Instance;
+            if (mgr != null)
             {
-                foreach (Transform t in _activeScrollRect.content)
-                    Destroy(t.gameObject);
+                _nodeTemplate = mgr.Load<VisualTreeAsset>("Assets/Tactics/Arts/UI/RoguelikeMapNode.uxml");
             }
 
+            if (_nodeTemplate == null)
+                Debug.LogWarning("[RoguelikeMapUIController] Failed to load node template. Nodes will use fallback styling.");
+        }
+
+        private void ClearMap()
+        {
+            foreach (var node in _mapNodes)
+                node.Dispose();
+
+            _nodesLayer?.Clear();
+            _linesLayer?.Clear();
+            _backgroundLayer?.Clear();
+            _linesElement = null;
             _mapNodes.Clear();
             _lineConnections.Clear();
         }
 
-        private ScrollRect GetScrollRectForMap()
-        {
-            return scrollRect;
-        }
-
-        private void CreateMapParent()
-        {
-            _activeScrollRect = GetScrollRectForMap();
-            if (_activeScrollRect == null) return;
-
-            _activeScrollRect.gameObject.SetActive(true);
-
-            Transform contentParent = _activeScrollRect.content != null
-                ? _activeScrollRect.content
-                : _activeScrollRect.transform;
-
-            _firstParent = new GameObject("OuterMapParent");
-            _firstParent.transform.SetParent(contentParent);
-            _firstParent.transform.localScale = Vector3.one;
-            RectTransform fprt = _firstParent.AddComponent<RectTransform>();
-            Stretch(fprt);
-
-            GameObject lineParentObj = new GameObject("LinesParent");
-            lineParentObj.transform.SetParent(_firstParent.transform);
-            lineParentObj.transform.localScale = Vector3.one;
-            _lineParent = lineParentObj.AddComponent<RectTransform>();
-            _lineParent.localPosition = Vector3.zero;
-            _lineParent.anchorMin = new Vector2(0.5f, 0.5f);
-            _lineParent.anchorMax = new Vector2(0.5f, 0.5f);
-            _lineParent.sizeDelta = Vector2.zero;
-            _lineParent.anchoredPosition = Vector2.zero;
-        }
-
         private void SetMapLength()
         {
-            if (_activeScrollRect == null || _activeScrollRect.content == null || _currentMap == null) return;
+            if (_mapContent == null || _currentMap == null) return;
 
-            RectTransform rt = _activeScrollRect.content;
-            Vector2 sizeDelta = rt.sizeDelta;
-            sizeDelta.x = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
-            rt.sizeDelta = sizeDelta;
+            float length = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
+            _mapContent.style.width = length;
+            _mapContent.style.flexGrow = 0;
+            _mapContent.style.flexShrink = 0;
+
+            float viewportHeight = _scrollView.contentViewport.layout.height;
+            if (viewportHeight <= 0f)
+                viewportHeight = _scrollView.layout.height;
+            if (viewportHeight <= 0f)
+                viewportHeight = 1080f;
+            _mapContent.style.height = viewportHeight;
         }
 
         private void ScrollToOrigin()
         {
-            if (_activeScrollRect == null) return;
-            _activeScrollRect.normalizedPosition = Vector2.zero;
-        }
-
-        private static void Stretch(RectTransform tr)
-        {
-            tr.localPosition = Vector3.zero;
-            tr.anchorMin = Vector2.zero;
-            tr.anchorMax = Vector2.one;
-            tr.sizeDelta = Vector2.zero;
-            tr.anchoredPosition = Vector2.zero;
+            if (_scrollView == null) return;
+            _scrollView.horizontalScroller.value = 0;
         }
 
         private void CreateNodes(IEnumerable<RoguelikeMapNode> nodes)
@@ -302,31 +277,30 @@ namespace Tactics.UI
             foreach (var node in nodes)
             {
                 RoguelikeMapUINode mapNode = CreateMapNode(node, nodeIndex++);
-                _mapNodes.Add(mapNode);
+                if (mapNode != null)
+                    _mapNodes.Add(mapNode);
             }
         }
 
         private RoguelikeMapUINode CreateMapNode(RoguelikeMapNode node, int instanceIndex)
         {
-            if (nodePrefab == null)
-            {
-                Debug.LogError("[RoguelikeMapUIController] nodePrefab is null!");
-                return null;
-            }
-
-            GameObject mapNodeObject = Instantiate(nodePrefab, _firstParent.transform);
-            mapNodeObject.name = $"Node_{node.nodeType}_{instanceIndex}";
-            RoguelikeMapUINode mapNode = mapNodeObject.GetComponent<RoguelikeMapUINode>();
-            if (mapNode == null)
-            {
-                Debug.LogError($"[RoguelikeMapUIController] nodePrefab missing RoguelikeMapUINode component: {nodePrefab.name}");
-                return null;
-            }
-
             RoguelikeNodeBlueprint blueprint = GetBlueprint(node.blueprintName);
-            mapNode.SetUp(node, blueprint, visitedColor, lockedColor);
-            mapNode.transform.localPosition = GetNodePosition(node);
+            var mapNode = new RoguelikeMapUINode(node, blueprint, visitedColor, lockedColor, _nodeTemplate);
+            Vector2 vePos = ConvertToVisualElementPosition(GetNodePosition(node));
+            mapNode.SetPosition(vePos);
+            _nodesLayer.Add(mapNode.Root);
             return mapNode;
+        }
+
+        private Vector2 ConvertToVisualElementPosition(Vector2 anchoredPos)
+        {
+            float contentWidth = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
+            float contentHeight = _mapContent != null && _mapContent.layout.height > 0f ? _mapContent.layout.height : 1080f;
+
+            const float nodeSize = 64f;
+            float left = contentWidth / 2f + anchoredPos.x - nodeSize / 2f;
+            float top = contentHeight / 2f - anchoredPos.y - nodeSize / 2f;
+            return new Vector2(left, top);
         }
 
         private Vector2 GetNodePosition(RoguelikeMapNode node)
@@ -373,8 +347,8 @@ namespace Tactics.UI
 
         public void SetLineColors()
         {
-            foreach (UILineRenderer lr in _lineConnections)
-                lr.color = lineLockedColor;
+            foreach (var line in _lineConnections)
+                line.Color = lineLockedColor;
 
             if (_currentMap.path.Count == 0) return;
 
@@ -385,7 +359,7 @@ namespace Tactics.UI
             {
                 var lineConnection = GetLineConnection(currentNode, GetNode(point)?.Node);
                 if (lineConnection != null)
-                    lineConnection.color = lineVisitedColor;
+                    lineConnection.Color = lineVisitedColor;
             }
 
             if (_currentMap.path.Count <= 1) return;
@@ -396,8 +370,10 @@ namespace Tactics.UI
                 var next = _currentMap.path[i + 1];
                 var lineConnection = GetLineConnection(_currentMap.GetNode(current), _currentMap.GetNode(next));
                 if (lineConnection != null)
-                    lineConnection.color = lineVisitedColor;
+                    lineConnection.Color = lineVisitedColor;
             }
+
+            _linesElement?.Refresh();
         }
 
         private void DrawLines()
@@ -407,54 +383,30 @@ namespace Tactics.UI
                 foreach (var connection in node.Node.outgoing)
                     AddLineConnection(node, GetNode(connection));
             }
+
+            _linesElement = new MapConnectionLinesElement();
+            _linesElement.style.position = UnityEngine.UIElements.Position.Absolute;
+            _linesElement.style.left = 0;
+            _linesElement.style.top = 0;
+            _linesElement.style.width = Length.Percent(100);
+            _linesElement.style.height = Length.Percent(100);
+            _linesElement.SetConnections(_lineConnections);
+            _linesLayer.Add(_linesElement);
         }
 
         private void AddLineConnection(RoguelikeMapUINode from, RoguelikeMapUINode to)
         {
             if (from == null || to == null) return;
-            if (uiLinePrefab == null) return;
 
-            // Instantiate the line prefab
-            UILineRenderer lineRenderer = Instantiate(uiLinePrefab, _lineParent.transform);
-            lineRenderer.transform.SetAsFirstSibling();
+            const float nodeSize = 64f;
+            Vector2 fromCenter = from.NodePosition + new Vector2(nodeSize / 2f, nodeSize / 2f);
+            Vector2 toCenter = to.NodePosition + new Vector2(nodeSize / 2f, nodeSize / 2f);
 
-            RectTransform fromRT = from.transform as RectTransform;
-            RectTransform toRT = to.transform as RectTransform;
+            Vector2 fromPoint = fromCenter + (toCenter - fromCenter).normalized * offsetFromNodes;
+            Vector2 toPoint = toCenter + (fromCenter - toCenter).normalized * offsetFromNodes;
 
-            if (fromRT == null || toRT == null) return;
-
-            Vector2 fromPoint = fromRT.anchoredPosition +
-                                (toRT.anchoredPosition - fromRT.anchoredPosition).normalized * offsetFromNodes;
-
-            Vector2 toPoint = toRT.anchoredPosition +
-                              (fromRT.anchoredPosition - toRT.anchoredPosition).normalized * offsetFromNodes;
-
-            // Calculate midpoint and set position
-            Vector2 midPoint = (fromPoint + toPoint) * 0.5f;
-            RectTransform lineRT = lineRenderer.GetComponent<RectTransform>();
-            lineRT.anchoredPosition = midPoint;
-
-            // Calculate rotation angle
-            float angle = Mathf.Atan2(toPoint.y - fromPoint.y, toPoint.x - fromPoint.x) * Mathf.Rad2Deg;
-            lineRT.localEulerAngles = new Vector3(0, 0, angle);
-
-            // Calculate line length and set Points in local space
-            float lineLength = Vector2.Distance(fromPoint, toPoint);
-            List<Vector2> list = new List<Vector2>();
-            for (int i = 0; i < linePointsCount; i++)
-            {
-                float t = (float)i / (linePointsCount - 1);
-                list.Add(new Vector2(Mathf.Lerp(-lineLength / 2, lineLength / 2, t), 0));
-            }
-            lineRenderer.Points = list.ToArray();
-
-            _lineConnections.Add(lineRenderer);
-        }
-
-        private void ResetNodesRotation()
-        {
-            foreach (var node in _mapNodes)
-                node.transform.rotation = Quaternion.identity;
+            var line = new MapLineConnection(from.Node, to.Node, fromPoint, toPoint);
+            _lineConnections.Add(line);
         }
 
         private RoguelikeMapUINode GetNode(Vector2Int p)
@@ -462,23 +414,10 @@ namespace Tactics.UI
             return _mapNodes.FirstOrDefault(n => n.Node.point.Equals(p));
         }
 
-        private UILineRenderer GetLineConnection(RoguelikeMapNode from, RoguelikeMapNode to)
+        private MapLineConnection GetLineConnection(RoguelikeMapNode from, RoguelikeMapNode to)
         {
             if (from == null || to == null) return null;
-
-            for (int i = 0; i < _lineConnections.Count; i++)
-            {
-                var fromNode = _mapNodes.ElementAtOrDefault(i);
-                if (fromNode == null) continue;
-
-                bool matchesFrom = fromNode.Node.point.Equals(from.point);
-                bool matchesTo = fromNode.Node.outgoing.Contains(to.point);
-
-                if (matchesFrom && matchesTo)
-                    return _lineConnections[i];
-            }
-
-            return null;
+            return _lineConnections.FirstOrDefault(l => l.FromNode.point.Equals(from.point) && l.ToNode.point.Equals(to.point));
         }
 
         private RoguelikeNodeBlueprint GetBlueprint(string blueprintName)
@@ -578,34 +517,34 @@ namespace Tactics.UI
 
         private void WireOptionalCloseButtons()
         {
-            bool wired = false;
-            Button[] allButtons = GetComponentsInChildren<Button>(true);
-            foreach (Button button in allButtons)
+            var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            if (root == null) return;
+
+            Button closeButton = root.Q<Button>("CloseButton");
+            if (closeButton != null)
             {
-                if (button == null) continue;
-
-                string name = (button.name ?? string.Empty).Trim();
-                if (name.Equals("CloseButton", System.StringComparison.OrdinalIgnoreCase) ||
-                    name.Equals("BackButton", System.StringComparison.OrdinalIgnoreCase) ||
-                    name.Equals("EscButton", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    button.onClick.AddListener(OnCloseClicked);
-                    wired = true;
-                    continue;
-                }
-
-                TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-                string text = (label?.text ?? string.Empty).Trim();
-                if (text.Equals("CLOSE", System.StringComparison.OrdinalIgnoreCase) ||
-                    text.Equals("BACK", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    button.onClick.AddListener(OnCloseClicked);
-                    wired = true;
-                }
+                closeButton.clicked -= OnCloseClicked;
+                closeButton.clicked += OnCloseClicked;
+                return;
             }
 
-            if (!wired)
-                Debug.Log("[RoguelikeMapUIController] No close/back button found.");
+            Button backButton = root.Q<Button>("BackButton");
+            if (backButton != null)
+            {
+                backButton.clicked -= OnCloseClicked;
+                backButton.clicked += OnCloseClicked;
+                return;
+            }
+
+            Button escButton = root.Q<Button>("EscButton");
+            if (escButton != null)
+            {
+                escButton.clicked -= OnCloseClicked;
+                escButton.clicked += OnCloseClicked;
+                return;
+            }
+
+            Debug.Log("[RoguelikeMapUIController] No close/back button found in UXML.");
         }
 
         private static void OnCloseClicked()
@@ -613,9 +552,32 @@ namespace Tactics.UI
             RoguelikeFlowCoordinator.Instance.CloseMap();
         }
 
+        private void OnDestroy()
+        {
+            ClearMap();
+        }
+
         private void OnApplicationQuit()
         {
             SaveMap();
+        }
+    }
+
+    internal sealed class MapLineConnection
+    {
+        public RoguelikeMapNode FromNode { get; }
+        public RoguelikeMapNode ToNode { get; }
+        public Vector2 FromPoint { get; }
+        public Vector2 ToPoint { get; }
+        public Color Color { get; set; }
+
+        public MapLineConnection(RoguelikeMapNode fromNode, RoguelikeMapNode toNode, Vector2 fromPoint, Vector2 toPoint)
+        {
+            FromNode = fromNode;
+            ToNode = toNode;
+            FromPoint = fromPoint;
+            ToPoint = toPoint;
+            Color = Color.gray;
         }
     }
 }

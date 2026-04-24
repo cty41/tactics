@@ -81,7 +81,8 @@ namespace Tactics
             }
         }
 
-        private const string RoguelikeMapPrefabPath = "Assets/Tactics/Arts/UI/RoguelikeMap.prefab";
+        private const string RoguelikeMapUxmlPath = "Assets/Tactics/Arts/UI/RoguelikeMap.uxml";
+        private const string RoguelikeMapUssPath = "Assets/Tactics/Arts/UI/RoguelikeMap.uss";
 
         private const string HomeUxmlPath = "Assets/Tactics/Arts/UI/Home.uxml";
         private const string HomeUssPath = "Assets/Tactics/Arts/UI/Home.uss";
@@ -97,7 +98,7 @@ namespace Tactics
         {
             { UIId.Home, UIType.UiToolkitUxml },
             { UIId.Menu, UIType.UiToolkitUxml },
-            { UIId.RoguelikeMap, UIType.UguiPrefab },
+            { UIId.RoguelikeMap, UIType.UiToolkitUxml },
             { UIId.Battle, UIType.UiToolkitUxml },
             { UIId.CheatConsole, UIType.UiToolkitUxml },
         };
@@ -200,7 +201,7 @@ namespace Tactics
             {
                 UIId.Home => HomeUxmlPath,
                 UIId.Menu => MenuUxmlPath,
-                UIId.RoguelikeMap => RoguelikeMapPrefabPath,
+                UIId.RoguelikeMap => RoguelikeMapUxmlPath,
                 UIId.Battle => BattleUxmlPath,
                 UIId.CheatConsole => CheatConsoleUxmlPath,
                 _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.")
@@ -213,6 +214,7 @@ namespace Tactics
             {
                 UIId.Home => HomeUssPath,
                 UIId.Menu => MenuUssPath,
+                UIId.RoguelikeMap => RoguelikeMapUssPath,
                 UIId.Battle => BattleUssPath,
                 UIId.CheatConsole => CheatConsoleUssPath,
                 _ => string.Empty
