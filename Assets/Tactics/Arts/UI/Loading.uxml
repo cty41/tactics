@@ -1,0 +1,6 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/Tactics/Arts/UI/Loading.uss" />
+    <ui:VisualElement name="LoadingScreen" class="loading-screen">
+        <ui:Label name="LoadingText" text="Loading..." class="loading-text" />
+    </ui:VisualElement>
+</ui:UXML>

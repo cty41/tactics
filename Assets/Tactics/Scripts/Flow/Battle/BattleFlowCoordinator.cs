@@ -30,6 +30,9 @@ namespace Tactics.Flow.Battle
             _isTransitioning = true;
             try
             {
+                // Show loading screen synchronously before destroying existing UIs to avoid empty frames.
+                UIManager.Instance.Show(UIManager.UIId.Loading);
+
                 UIManager.Instance.Destroy(UIManager.UIId.RoguelikeMap);
                 UIManager.Instance.Destroy(UIManager.UIId.Home);
                 UIManager.Instance.Destroy(UIManager.UIId.Menu);

@@ -25,6 +25,7 @@ namespace Tactics
             RoguelikeMap,
             Battle,
             CheatConsole,
+            Loading,
         }
 
         private enum UIType
@@ -92,6 +93,8 @@ namespace Tactics
         private const string BattleUssPath = "Assets/Tactics/Arts/UI/Battle.uss";
         private const string CheatConsoleUxmlPath = "Assets/Tactics/Arts/UI/CheatConsole.uxml";
         private const string CheatConsoleUssPath = "Assets/Tactics/Arts/UI/CheatConsole.uss";
+        private const string LoadingUxmlPath = "Assets/Tactics/Arts/UI/Loading.uxml";
+        private const string LoadingUssPath = "Assets/Tactics/Arts/UI/Loading.uss";
         private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
 
         private static readonly Dictionary<UIId, UIType> s_uiTypeMap = new()
@@ -101,6 +104,7 @@ namespace Tactics
             { UIId.RoguelikeMap, UIType.UiToolkitUxml },
             { UIId.Battle, UIType.UiToolkitUxml },
             { UIId.CheatConsole, UIType.UiToolkitUxml },
+            { UIId.Loading, UIType.UiToolkitUxml },
         };
 
         private readonly Dictionary<UIId, UIInstance> _instances = new();
@@ -119,6 +123,18 @@ namespace Tactics
             return _panelSettings;
         }
 
+private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
+{
+    if (_panelSettings == null)
+    {
+        _panelSettings = mgr.Load<PanelSettings>(PanelSettingsPath);
+        if (_panelSettings == null)
+            Debug.LogWarning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
+    }
+    return _panelSettings;
+}
+
+
         private InputAction _toggleConsoleAction;
         private bool _inputInitialized;
 
@@ -126,6 +142,25 @@ namespace Tactics
         {
             EnsureInputInitialized();
             return ShowUIAsync(id, GetAssetPath(id));
+        }
+
+        /// <summary>
+        /// Synchronously show a UI. Uses <see cref="GameAssetManager.Load{T}"/> internally.
+        /// Note: this blocks the calling thread during asset loading; use <see cref="ShowAsync"/> for non-blocking loads.
+        /// </summary>
+        public void Show(UIId id)
+        {
+            EnsureInputInitialized();
+
+            if (_instances.TryGetValue(id, out var existing) && existing?.ContainerGO != null)
+            {
+                existing.ContainerGO.SetActive(true);
+                return;
+            }
+
+            var instance = LoadAndCreateSync(id, GetAssetPath(id));
+            _instances[id] = instance;
+            instance.ContainerGO.SetActive(true);
         }
 
         private void EnsureInputInitialized()
@@ -204,6 +239,7 @@ namespace Tactics
                 UIId.RoguelikeMap => RoguelikeMapUxmlPath,
                 UIId.Battle => BattleUxmlPath,
                 UIId.CheatConsole => CheatConsoleUxmlPath,
+                UIId.Loading => LoadingUxmlPath,
                 _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.")
             };
         }
@@ -217,6 +253,7 @@ namespace Tactics
                 UIId.RoguelikeMap => RoguelikeMapUssPath,
                 UIId.Battle => BattleUssPath,
                 UIId.CheatConsole => CheatConsoleUssPath,
+                UIId.Loading => LoadingUssPath,
                 _ => string.Empty
             };
         }
@@ -264,51 +301,109 @@ namespace Tactics
             };
         }
 
-        private async Task<UIInstance> LoadUguiPrefabAsync(UIId id, string prefabPath, GameAssetManager mgr)
+        private UIInstance LoadAndCreateSync(UIId id, string assetPath)
         {
-            var uiRoot = UiRoot;
-            if (uiRoot == null)
-                throw new InvalidOperationException($"[UIManager] No Canvas found for UGUI prefab: {prefabPath}. Add a Canvas or call SetUiRoot().");
+            var mgr = GameAssetManager.Instance;
+            if (mgr == null)
+                throw new InvalidOperationException("[UIManager] GameAssetManager.Instance is null. Ensure bootstrap ran before calling UI methods.");
 
-            var prefab = await mgr.LoadAsync<GameObject>(prefabPath);
-            if (prefab == null)
-                throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
+            if (!mgr.IsInitialized)
+                throw new InvalidOperationException("[UIManager] GameAssetManager is not initialized. Call GameAssetManager.Initialize/InitializeAsync before calling UI methods.");
 
-            var go = UnityEngine.Object.Instantiate(prefab, uiRoot, false);
-            go.name = id.ToString();
-            EnsureUIController(id, go);
-            go.SetActive(false);
-            return new UIInstance(UIType.UguiPrefab, go, null);
-        }
-
-        private async Task<UIInstance> LoadUiToolkitAsync(UIId id, string uxmlPath, GameAssetManager mgr)
-        {
-            var visualTree = await mgr.LoadAsync<VisualTreeAsset>(uxmlPath);
-            if (visualTree == null)
-                throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
-
-            StyleSheet styleSheet = null;
-            var ussPath = GetUssPath(id);
-            if (!string.IsNullOrEmpty(ussPath))
+            return GetUIType(id) switch
             {
-                styleSheet = await mgr.LoadAsync<StyleSheet>(ussPath);
-            }
-
-            var hostGo = new GameObject(id.ToString());
-
-            var uiDoc = hostGo.AddComponent<UIDocument>();
-            uiDoc.visualTreeAsset = visualTree;
-            uiDoc.panelSettings = await GetPanelSettingsAsync(mgr);
-
-            if (styleSheet != null && uiDoc.rootVisualElement != null)
-                uiDoc.rootVisualElement.styleSheets.Add(styleSheet);
-
-            EnsureUIController(id, hostGo);
-
-            hostGo.SetActive(false);
-
-            return new UIInstance(UIType.UiToolkitUxml, hostGo, uiDoc);
+                UIType.UguiPrefab => LoadUguiPrefabSync(id, assetPath, mgr),
+                UIType.UiToolkitUxml => LoadUiToolkitSync(id, assetPath, mgr),
+                _ => throw new NotSupportedException("Unsupported UIType.")
+            };
         }
+
+private async Task<UIInstance> LoadUguiPrefabAsync(UIId id, string prefabPath, GameAssetManager mgr)
+{
+    var prefab = await mgr.LoadAsync<GameObject>(prefabPath);
+    if (prefab == null)
+        throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
+
+    return CreateUguiInstance(id, prefab);
+}
+
+private UIInstance CreateUguiInstance(UIId id, GameObject prefab)
+{
+    var uiRoot = UiRoot;
+    if (uiRoot == null)
+        throw new InvalidOperationException("[UIManager] No Canvas found for UGUI prefab. Add a Canvas or call SetUiRoot().");
+
+    var go = UnityEngine.Object.Instantiate(prefab, uiRoot, false);
+    go.name = id.ToString();
+    EnsureUIController(id, go);
+    go.SetActive(false);
+    return new UIInstance(UIType.UguiPrefab, go, null);
+}
+
+private UIInstance LoadUguiPrefabSync(UIId id, string prefabPath, GameAssetManager mgr)
+{
+    var prefab = mgr.Load<GameObject>(prefabPath);
+    if (prefab == null)
+        throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
+
+    return CreateUguiInstance(id, prefab);
+}
+
+
+private async Task<UIInstance> LoadUiToolkitAsync(UIId id, string uxmlPath, GameAssetManager mgr)
+{
+    var visualTree = await mgr.LoadAsync<VisualTreeAsset>(uxmlPath);
+    if (visualTree == null)
+        throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
+
+    StyleSheet styleSheet = null;
+    var ussPath = GetUssPath(id);
+    if (!string.IsNullOrEmpty(ussPath))
+    {
+        styleSheet = await mgr.LoadAsync<StyleSheet>(ussPath);
+    }
+
+    var panelSettings = await GetPanelSettingsAsync(mgr);
+
+    return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
+}
+
+private UIInstance CreateUiToolkitInstance(UIId id, VisualTreeAsset visualTree, StyleSheet styleSheet, PanelSettings panelSettings)
+{
+    var hostGo = new GameObject(id.ToString());
+
+    var uiDoc = hostGo.AddComponent<UIDocument>();
+    uiDoc.visualTreeAsset = visualTree;
+    uiDoc.panelSettings = panelSettings;
+
+    if (styleSheet != null && uiDoc.rootVisualElement != null)
+        uiDoc.rootVisualElement.styleSheets.Add(styleSheet);
+
+    EnsureUIController(id, hostGo);
+
+    hostGo.SetActive(false);
+
+    return new UIInstance(UIType.UiToolkitUxml, hostGo, uiDoc);
+}
+
+private UIInstance LoadUiToolkitSync(UIId id, string uxmlPath, GameAssetManager mgr)
+{
+    var visualTree = mgr.Load<VisualTreeAsset>(uxmlPath);
+    if (visualTree == null)
+        throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
+
+    StyleSheet styleSheet = null;
+    var ussPath = GetUssPath(id);
+    if (!string.IsNullOrEmpty(ussPath))
+    {
+        styleSheet = mgr.Load<StyleSheet>(ussPath);
+    }
+
+    var panelSettings = GetPanelSettingsSync(mgr);
+
+    return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
+}
+
 
         private static void EnsureUIController(UIId id, GameObject root)
         {
@@ -333,6 +428,9 @@ namespace Tactics
                 case UIId.CheatConsole:
                     if (root.GetComponent<CheatConsoleUI>() == null)
                         root.AddComponent<CheatConsoleUI>();
+                    break;
+                case UIId.Loading:
+                    // Loading UI has no controller; purely visual.
                     break;
                 default:
                     break;
