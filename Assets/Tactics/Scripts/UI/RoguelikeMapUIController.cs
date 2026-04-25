@@ -52,6 +52,10 @@ namespace Tactics.UI
         private float _cachedViewportHeight;
         private Sprite _mapBackgroundSprite;
 
+        private bool _isDragging;
+        private float _dragStartX;
+        private float _dragStartScrollValue;
+
         public static RoguelikeMapUIController Instance { get; set; }
 
         private void Awake()
@@ -199,6 +203,13 @@ namespace Tactics.UI
                 Debug.LogError("[RoguelikeMapUIController] MapContainer is null.");
                 return false;
             }
+
+            _scrollView.contentViewport.pickingMode = PickingMode.Position;
+            _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+
+            _scrollView.RegisterCallback<PointerDownEvent>(OnScrollViewPointerDown, TrickleDown.TrickleDown);
+            _scrollView.RegisterCallback<PointerMoveEvent>(OnScrollViewPointerMove, TrickleDown.TrickleDown);
+            _scrollView.RegisterCallback<PointerUpEvent>(OnScrollViewPointerUp, TrickleDown.TrickleDown);
 
             return true;
         }
@@ -647,6 +658,35 @@ namespace Tactics.UI
         private void OnDestroy()
         {
             ClearMap();
+            if (_scrollView != null)
+            {
+                _scrollView.UnregisterCallback<PointerDownEvent>(OnScrollViewPointerDown, TrickleDown.TrickleDown);
+                _scrollView.UnregisterCallback<PointerMoveEvent>(OnScrollViewPointerMove, TrickleDown.TrickleDown);
+                _scrollView.UnregisterCallback<PointerUpEvent>(OnScrollViewPointerUp, TrickleDown.TrickleDown);
+            }
+        }
+
+        private void OnScrollViewPointerDown(PointerDownEvent evt)
+        {
+            _isDragging = true;
+            _dragStartX = evt.position.x;
+            _dragStartScrollValue = _scrollView.horizontalScroller.value;
+        }
+
+        private void OnScrollViewPointerMove(PointerMoveEvent evt)
+        {
+            if (!_isDragging || _scrollView == null) return;
+            float deltaX = _dragStartX - evt.position.x;
+            _scrollView.horizontalScroller.value = Mathf.Clamp(
+                _dragStartScrollValue + deltaX,
+                _scrollView.horizontalScroller.lowValue,
+                _scrollView.horizontalScroller.highValue
+            );
+        }
+
+        private void OnScrollViewPointerUp(PointerUpEvent evt)
+        {
+            _isDragging = false;
         }
 
         private void OnApplicationQuit()
