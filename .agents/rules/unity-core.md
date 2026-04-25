@@ -1,8 +1,3 @@
----
-alwaysApply: true
----
-
-
 # Unity Core Rules - C# & MonoBehaviour
 
 ## Naming Conventions for Unity 6.2

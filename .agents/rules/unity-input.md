@@ -1,8 +1,3 @@
----
-description: "Guidelines for working with the New Input System in Unity 6.2"
-globs: ["**/Input*.cs", "**/Player*.cs", "**/*Controller*.cs"]
-alwaysApply: false
----
 
 # Unity Input System Rules
 
