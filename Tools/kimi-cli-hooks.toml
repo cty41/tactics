@@ -1,0 +1,23 @@
+# =============================================================================
+# Kimi CLI Hook 模板 — 自动触发 Unity 编译
+# =============================================================================
+# 功能：Agent 一轮对话完成后，自动调用本地 unityMCP 触发 Unity 编译。
+#
+# 安装步骤：
+# 1. 将下方 [[hooks]] 配置复制到 ~/.kimi/config.toml 中（追加到文件末尾）。
+# 2. 确保 Unity Editor 已启动且 MCP HTTP server 在运行（默认 http://127.0.0.1:8080）。
+# 3. 确保 .agents/scripts/trigger-unity-compile.py 存在且 Python 3 可用。
+#
+# 验证：
+#   kimi --version
+#   # 应无配置错误输出
+#
+# 行为：
+#   - Unity 运行时：一轮对话结束后自动触发编译，终端输出编译状态。
+#   - Unity 未运行时：静默跳过，不阻断 Agent 流程。
+# =============================================================================
+
+[[hooks]]
+event = "Stop"
+command = "python .agents\\scripts\\trigger-unity-compile.py"
+timeout = 60
