@@ -1,131 +1,131 @@
-# Tactics Project - Agent Guide
+# Tactics 项目 - Agent 指南
 
-## Overview
+## 概述
 
-This is an agent-first Unity project where human engineers steer and agents execute. The codebase is maintained by AI agents with human oversight.
+这是一个 Agent 优先的 Unity 项目，由人类工程师掌舵、Agent 执行。代码库由 AI Agent 在人工监督下维护。
 
-**Core Principle: No manual code contribution. Agents write all code.**
+**核心原则：不手动编写代码。所有代码由 Agent 编写。**
 
-## Agent behavioral guidelines
+## Agent 行为准则
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+用于减少常见 LLM 编码错误的行为准则。按需与项目特定说明合并使用。
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+**权衡：** 这些准则偏向谨慎而非速度。对于琐碎任务，请自行判断。
 
-### 1. Think Before Coding
+### 1. 编码前先思考
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+**不要假设。不要隐藏困惑。暴露权衡。**
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+在实现之前：
+- 明确陈述你的假设。如果不确定，就问。
+- 如果存在多种解释，请呈现出来——不要默默选择。
+- 如果存在更简单的方案，请说出来。在必要时提出反对意见。
+- 如果有不清楚的地方，停下来。指出困惑的地方。提问。
 
-### 2. Simplicity First
+### 2. 简洁优先
 
-**Minimum code that solves the problem. Nothing speculative.**
+**最少代码解决问题。不要臆测。**
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+- 不要超出需求范围的功能。
+- 不要为一次性代码做抽象。
+- 不要未经请求的"灵活性"或"可配置性"。
+- 不要为不可能出现的场景做错误处理。
+- 如果你写了 200 行而它可以被写成 50 行，重写它。
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+问问自己："资深工程师会说这过度设计了吗？" 如果是，简化。
 
-### 3. Surgical Changes
+### 3. 精准修改
 
-**Touch only what you must. Clean up only your own mess.**
+**只碰你必须碰的。只清理你自己造成的混乱。**
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+编辑现有代码时：
+- 不要"改进"相邻的代码、注释或格式。
+- 不要重构没有坏掉的东西。
+- 匹配现有风格，即使你自己会做得不一样。
+- 如果你注意到无关的死代码，提一下——不要删除它。
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+当你的改动产生孤儿代码时：
+- 删除**你的改动**导致不再使用的 import/变量/函数。
+- 不要删除预先存在的死代码，除非被要求。
 
-The test: Every changed line should trace directly to the user's request.
+检验标准：每一行改动都应能直接追溯到用户的请求。
 
-### 4. Goal-Driven Execution
+### 4. 目标驱动执行
 
-**Define success criteria. Loop until verified.**
+**定义成功标准。循环验证直到通过。**
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
+将任务转化为可验证的目标：
+- "添加验证" → "为无效输入编写测试，然后让它们通过"
+- "修复 bug" → "编写一个能复现它的测试，然后让它通过"
+- "重构 X" → "确保重构前后测试都通过"
 
-For multi-step tasks, state a brief plan:
+对于多步骤任务，陈述一个简要计划：
 ```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
+1. [步骤] → 验证：[检查]
+2. [步骤] → 验证：[检查]
+3. [步骤] → 验证：[检查]
 ```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+强有力的成功标准让你能独立循环。弱标准（"让它跑起来"）需要不断澄清。
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+**这些准则在以下情况下是有效的：** diff 中不必要的改动更少，因过度设计导致的重写更少，澄清问题出现在犯错之前而不是之后。
 
 
-## Documentation map
+## 文档地图
 
-Constraints and workflow are summarized in this file. **System architecture and design details** are in [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md). Additional references (for example under [`.agents/docs/`](.agents/docs/)) supplement that document.
+约束和工作流总结在本文件中。**系统架构和设计细节**位于 [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md)。其他参考（例如 [`.agents/docs/`](.agents/docs/) 下的内容）补充该文档。
 
-## Key Rules
+## 关键规则
 
-### Using this repo with Cursor
+### 在 Cursor 中使用本仓库
 
-This project includes a **Cursor project rule** so the Karpathy-inspired behavioral guidelines apply automatically when you work here.
+本项目包含一个 **Cursor 项目规则**，因此受 Karpathy 启发的行为准则会在你于此工作时自动生效。
 
-#### In this repository
+#### 在本仓库中
 
-1. Open the folder in Cursor.
-2. The `karpathy-guidelines` project rule is committed with `alwaysApply: true`, so you do not need extra installation steps.
-3. In Cursor, you can confirm it under **Settings → Rules** (or the project rules UI), where `karpathy-guidelines` should appear.
+1. 在 Cursor 中打开文件夹。
+2. `karpathy-guidelines` 项目规则以 `alwaysApply: true` 提交，因此你不需要额外的安装步骤。
+3. 在 Cursor 中，你可以在 **Settings → Rules**（或项目规则 UI）下确认它，其中应出现 `karpathy-guidelines`。
 
-#### Use the same guidelines in another project
+#### 在另一个项目中使用相同的准则
 
-**Cursor (recommended):** Copy `.agents/rules/karpathy-guidelines.mdc` into that project’s `.cursor/rules/` directory (create the folders if needed). Adjust or merge with existing rules as you like.
+**Cursor（推荐）：** 将本项目的 `karpathy-guidelines` 规则内容复制到该项目的 `.cursor/rules/` 目录中（如果需要请创建文件夹）。按你喜欢的方式调整或合并到现有规则中。
 
-**Other tools:** If a stack only supports a root instruction file, copy `.agents/rules/karpathy-guidelines.mdc` into that project's root instructions instead (or merge its contents into your existing instructions).
+**其他工具：** 如果某个技术栈只支持根指令文件，将规则内容复制到该项目的根指令中（或将其内容合并到你现有的指令中）。
 
 
-> **Note:** The following files under `.agents/rules/` constrain agent work on this Unity project. They are **not automatically injected** into the agent context; when working in the relevant area, the agent should actively read the corresponding file.
+> **注意：** 以下文件位于 `.agents/rules/` 下，约束 Agent 在本 Unity 项目上的工作。它们**不会自动注入** Agent 上下文中；在相关领域工作时，Agent 应主动读取对应的文件。
 >
-> **Skills** under `.agents/skills/` are automatically discovered and listed by the agent framework; the agent should read the corresponding `SKILL.md` when the skill is relevant to the current task.
+> `.agents/skills/` 下的 **Skills** 由 Agent 框架自动发现并列出；Agent 应在 Skill 与当前任务相关时读取对应的 `SKILL.md`。
 
-The following files under `.agents/rules/` constrain agent work on this Unity project (confirm names against the repo):
+以下文件位于 `.agents/rules/` 下，约束 Agent 在本 Unity 项目上的工作（请与仓库中的实际文件名核对）：
 
-| Rule | Purpose |
-|------|---------|
-| `unity-core.md` | C# naming, MonoBehaviour lifecycle, serialization |
-| `unity-asset-loading.md` | GameAssetManager API, Load/Release pairing |
+| 规则 | 用途 |
+|------|------|
+| `unity-core.md` | C# 命名规范、MonoBehaviour 生命周期、序列化 |
+| `unity-asset-loading.md` | GameAssetManager API、Load/Release 配对 |
 | `unity-input.md` | Unity Input System |
 
-## Core Principles (summary)
+## 核心原则（摘要）
 
-Details live in [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md) and the rule files above.
+详情见 [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md) 和上面的规则文件。
 
-1. **Assets**: Use `GameAssetManager`, not `Resources.Load`; pair every Load with Release; prefer async loading.
-2. **Paths**: Use project paths (`Assets/...`) instead of scene names where applicable.
-3. **Inspectors**: Prefer Odin APIs for inspector-related code when appropriate.
+1. **资源**：使用 `GameAssetManager`，不用 `Resources.Load`；每个 Load 都要配对 Release；优先异步加载。
+2. **路径**：在适用时使用项目路径（`Assets/...`）而非场景名。
+3. **Inspector**：在 Inspector 相关代码中，适当时优先使用 Odin API。
 
-## Agent Constraints
+## Agent 约束
 
-### Language
+### 语言
 
-- **Plan, code, and debug output must be in Chinese (中文)**, including plan files, task descriptions, and communication during planning.
-- Code comments and commit messages follow project conventions.
-- Identifiers follow .NET naming (PascalCase, camelCase, etc.).
+- **Plan、code 和 debug 输出必须使用中文（中文）**，包括计划文件、任务描述和规划期间的沟通。
+- 代码注释和 commit message 遵循项目约定。
+- 标识符遵循 .NET 命名规范（PascalCase、camelCase 等）。
 
-## Agent Limitations
+## Agent 限制
 
-**If it is not in the codebase, it does not exist for agents.**
+**如果它不在代码库中，对 Agent 来说就不存在。**
 
-Keep authoritative documentation under **`.agents/`**—especially [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md)—so agents can find it.
+将权威文档保存在 **`.agents/`** 下——尤其是 [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md)——以便 Agent 能找到它们。
