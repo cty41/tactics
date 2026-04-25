@@ -177,6 +177,18 @@ Always save before closing. Leaving prefab edit mode or scene without saving dis
 | `manage_ui` (render_ui) | Capture UI screenshot |
 | `manage_ui` (link_stylesheet) | Link USS to UXML |
 
+### UIToolkit Deep Debug (Custom Tool)
+
+When `manage_ui` (`get_visual_tree`) returns insufficient detail, use the project's custom `uitoolkit_debug` tool via `execute_custom_tool`:
+
+| Action | Purpose | Extra fields beyond standard tool |
+|--------|---------|-----------------------------------|
+| `list_documents` | List all active `UIDocument` instances in loaded scenes | — |
+| `get_tree` | Enhanced VisualElement tree dump | `enabledInHierarchy`, `resolvedStyle`, `controlValue`, `dataBinding` |
+| `get_element_detail` | Deep-dive single element | Full `resolvedStyle`, data-binding path, control values (Toggle/Slider/Dropdown etc.) |
+
+**When to use**: Debugging "element not found", "wrong style", "data binding not working", or when `manage_ui get_visual_tree` omits fields you need.
+
 ### ProBuilder Operations
 | Tool | Purpose |
 |------|---------|

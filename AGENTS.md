@@ -86,7 +86,7 @@ This project includes a **Cursor project rule** so the Karpathy-inspired behavio
 #### In this repository
 
 1. Open the folder in Cursor.
-2. The rule [`.agents/rules/karpathy-guidelines.mdc`](.agents/rules/karpathy-guidelines.mdc) is committed with `alwaysApply: true`, so you do not need extra installation steps.
+2. The `karpathy-guidelines` project rule is committed with `alwaysApply: true`, so you do not need extra installation steps.
 3. In Cursor, you can confirm it under **Settings → Rules** (or the project rules UI), where `karpathy-guidelines` should appear.
 
 #### Use the same guidelines in another project
@@ -97,6 +97,8 @@ This project includes a **Cursor project rule** so the Karpathy-inspired behavio
 
 
 > **Note:** The following files under `.agents/rules/` constrain agent work on this Unity project. They are **not automatically injected** into the agent context; when working in the relevant area, the agent should actively read the corresponding file.
+>
+> **Skills** under `.agents/skills/` are automatically discovered and listed by the agent framework; the agent should read the corresponding `SKILL.md` when the skill is relevant to the current task.
 
 The following files under `.agents/rules/` constrain agent work on this Unity project (confirm names against the repo):
 
@@ -104,11 +106,7 @@ The following files under `.agents/rules/` constrain agent work on this Unity pr
 |------|---------|
 | `unity-core.md` | C# naming, MonoBehaviour lifecycle, serialization |
 | `unity-asset-loading.md` | GameAssetManager API, Load/Release pairing |
-| `unity-mcp-operations.md` | MCP tool usage for asset inspection and modification |
 | `unity-input.md` | Unity Input System |
-| `unity-performance.md` | Performance optimization |
-| `unity-testing.md` | Unit testing |
-| `code-organization.md` | Code organization conventions |
 
 ## Core Principles (summary)
 

@@ -1,4 +1,23 @@
+---
+description: "C# 命名规范、MonoBehaviour 生命周期、序列化最佳实践"
+when_to_read: "编写或修改 C# 脚本时"
+---
+
 # Unity Core Rules - C# & MonoBehaviour
+
+## Quick Reference
+
+| Element | Convention | Example |
+|---------|-----------|---------|
+| Classes / Structs / Interfaces | PascalCase | `PlayerController`, `IHealthSystem` |
+| Private fields | `_camelCase` | `_moveSpeed`, `_isGrounded` |
+| Public properties | PascalCase | `MoveSpeed`, `IsMoving` |
+| Constants | PascalCase | `MaxHealth` |
+| Static fields | `_camelCase` | `_instanceCount` |
+| Methods | PascalCase | `ProcessInput()` |
+| Events | `On` + PascalCase | `OnPlayerDeath` |
+| Async methods | `Async` suffix | `LoadDataAsync()` |
+| Booleans | `is` / `has` / `can` prefix | `_isGrounded`, `_hasWeapon` |
 
 ## Naming Conventions for Unity 6.2
 
@@ -72,79 +91,23 @@ public class EventExample : MonoBehaviour
 ## MonoBehaviour Lifecycle
 
 ### Correct Method Order
+
 ```
-public class LifecycleExample : MonoBehaviour
+public class Example : MonoBehaviour
 {
     // 1. Serialized Fields
-    [SerializeField] private float _speed = 5f;
-    
     // 2. Private Fields
-    private Rigidbody _rigidbody;
-    private bool _isInitialized;
-    
     // 3. Properties
-    public bool IsInitialized => _isInitialized;
-    
     // 4. Unity Lifecycle Methods (in call order)
-    private void Awake()
-    {
-        // Initialize components on this object
-        // Use TryGetComponent to avoid implicit allocation if missing
-        if (!TryGetComponent(out _rigidbody))
-        {
-            Debug.LogError("Rigidbody missing!");
-        }
-    }
-    
-    private void OnEnable()
-    {
-        // Subscribe to events
-        GameEvents.OnLevelStart += HandleLevelStart;
-    }
-    
-    private void Start()
-    {
-        // Initialization after all Awake calls
-        _isInitialized = true;
-    }
-    
-    private void FixedUpdate()
-    {
-        // Physics
-        if (_isInitialized)
-        {
-            ApplyPhysics();
-        }
-    }
-    
-    private void Update()
-    {
-        // Game logic and input
-        ProcessInput();
-    }
-    
-    private void LateUpdate()
-    {
-        // Called after all Update calls (e.g., camera)
-    }
-    
-    private void OnDisable()
-    {
-        // Unsubscribe from events
-        GameEvents.OnLevelStart -= HandleLevelStart;
-    }
-    
-    private void OnDestroy()
-    {
-        // Cleanup
-        CleanupResources();
-    }
-    
+    private void Awake()     { /* Init components, TryGetComponent */ }
+    private void OnEnable()  { /* Subscribe to events */ }
+    private void Start()     { /* Init after all Awake calls */ }
+    private void FixedUpdate() { /* Physics */ }
+    private void Update()    { /* Game logic and input */ }
+    private void LateUpdate()  { /* Camera, post-update */ }
+    private void OnDisable() { /* Unsubscribe from events */ }
+    private void OnDestroy() { /* Cleanup */ }
     // 5. Custom Methods
-    private void ProcessInput() { }
-    private void ApplyPhysics() { }
-    private void HandleLevelStart() { }
-    private void CleanupResources() { }
 }
 ```
 
@@ -248,12 +211,12 @@ public class PlayerController : MonoBehaviour
 {
     /// <summary>
     /// Current movement speed of the player.
-/// </summary>
+    /// </summary>
     [SerializeField] private float _moveSpeed = 5f;
     
     /// <summary>
     /// Moves the player in the specified direction.
-/// </summary>
+    /// </summary>
     /// <param name="direction">Movement direction (normalized vector).</param>
     /// <param name="deltaTime">Time since last frame.</param>
     public void Move(Vector3 direction, float deltaTime)
@@ -263,7 +226,7 @@ public class PlayerController : MonoBehaviour
     
     /// <summary>
     /// Checks if the player can jump.
-/// </summary>
+    /// </summary>
     /// <returns>True if the player can jump.</returns>
     public bool CanJump()
     {
