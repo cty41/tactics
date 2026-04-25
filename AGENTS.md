@@ -75,7 +75,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Documentation map
 
-Constraints and workflow are summarized in this file. **System architecture and design details** are in [`.cursor/ARCHITECTURE.md`](.cursor/ARCHITECTURE.md). Additional references (for example under [`.cursor/docs/`](.cursor/docs/)) supplement that document.
+Constraints and workflow are summarized in this file. **System architecture and design details** are in [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md). Additional references (for example under [`.agents/docs/`](.agents/docs/)) supplement that document.
 
 ## Key Rules
 
@@ -86,17 +86,19 @@ This project includes a **Cursor project rule** so the Karpathy-inspired behavio
 #### In this repository
 
 1. Open the folder in Cursor.
-2. The rule [`.cursor/rules/karpathy-guidelines.mdc`](.cursor/rules/karpathy-guidelines.mdc) is committed with `alwaysApply: true`, so you do not need extra installation steps.
+2. The rule [`.agents/rules/karpathy-guidelines.mdc`](.agents/rules/karpathy-guidelines.mdc) is committed with `alwaysApply: true`, so you do not need extra installation steps.
 3. In Cursor, you can confirm it under **Settings → Rules** (or the project rules UI), where `karpathy-guidelines` should appear.
 
 #### Use the same guidelines in another project
 
-**Cursor (recommended):** Copy `.cursor/rules/karpathy-guidelines.mdc` into that project’s `.cursor/rules/` directory (create the folders if needed). Adjust or merge with existing rules as you like.
+**Cursor (recommended):** Copy `.agents/rules/karpathy-guidelines.mdc` into that project’s `.cursor/rules/` directory (create the folders if needed). Adjust or merge with existing rules as you like.
 
-**Other tools:** If a stack only supports a root instruction file, copy [`CLAUDE.md`](CLAUDE.md) into that project instead (or merge its contents into your existing instructions).
+**Other tools:** If a stack only supports a root instruction file, copy `.agents/rules/karpathy-guidelines.mdc` into that project's root instructions instead (or merge its contents into your existing instructions).
 
 
-The following files under `.cursor/rules/` constrain agent work on this Unity project (confirm names against the repo):
+> **Note:** The following files under `.agents/rules/` constrain agent work on this Unity project. They are **not automatically injected** into the agent context; when working in the relevant area, the agent should actively read the corresponding file.
+
+The following files under `.agents/rules/` constrain agent work on this Unity project (confirm names against the repo):
 
 | Rule | Purpose |
 |------|---------|
@@ -110,7 +112,7 @@ The following files under `.cursor/rules/` constrain agent work on this Unity pr
 
 ## Core Principles (summary)
 
-Details live in [`.cursor/ARCHITECTURE.md`](.cursor/ARCHITECTURE.md) and the rule files above.
+Details live in [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md) and the rule files above.
 
 1. **Assets**: Use `GameAssetManager`, not `Resources.Load`; pair every Load with Release; prefer async loading.
 2. **Paths**: Use project paths (`Assets/...`) instead of scene names where applicable.
@@ -128,4 +130,4 @@ Details live in [`.cursor/ARCHITECTURE.md`](.cursor/ARCHITECTURE.md) and the rul
 
 **If it is not in the codebase, it does not exist for agents.**
 
-Keep authoritative documentation under **`.cursor/`**—especially [`.cursor/ARCHITECTURE.md`](.cursor/ARCHITECTURE.md)—so agents can find it.
+Keep authoritative documentation under **`.agents/`**—especially [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md)—so agents can find it.
