@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using DG.Tweening;
 using Tactics.UI;
 using UnityEngine;
@@ -49,7 +50,8 @@ namespace Tactics.RoguelikeMap
 
             if (template != null)
             {
-                Root = template.Instantiate();
+                var container = template.Instantiate();
+                Root = container.Q<VisualElement>("NodeRoot") ?? container;
             }
             else
             {
@@ -64,8 +66,19 @@ namespace Tactics.RoguelikeMap
             _swirlFill.AddToClassList("swirl-fill");
             Root.Add(_swirlFill);
 
-            if (_nodeIcon != null && blueprint?.sprite != null)
-                _nodeIcon.style.backgroundImage = new StyleBackground(blueprint.sprite);
+            if (_nodeIcon != null)
+            {
+                _nodeIcon.style.width = 64f;
+                _nodeIcon.style.height = 64f;
+                if (blueprint?.sprite != null)
+                {
+                    _nodeIcon.style.backgroundImage = new StyleBackground(blueprint.sprite);
+                }
+                else
+                {
+                    _nodeIcon.style.backgroundColor = new StyleColor(Color.red);
+                }
+            }
 
             if (node.nodeType == RoguelikeNodeType.Boss)
                 _initialScale = 1.5f;
@@ -85,8 +98,7 @@ namespace Tactics.RoguelikeMap
 
             Root.RegisterCallback<PointerEnterEvent>(OnPointerEnter);
             Root.RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
-            Root.RegisterCallback<PointerDownEvent>(OnPointerDown);
-            Root.RegisterCallback<PointerUpEvent>(OnPointerUp);
+            Root.RegisterCallback<ClickEvent>(OnClick);
         }
 
         public void SetPosition(Vector2 pos)
@@ -95,6 +107,8 @@ namespace Tactics.RoguelikeMap
             Root.style.position = UnityEngine.UIElements.Position.Absolute;
             Root.style.left = pos.x;
             Root.style.top = pos.y;
+            Root.style.width = 64f;
+            Root.style.height = 64f;
         }
 
         public void SetState(NodeStates state)
@@ -156,17 +170,9 @@ namespace Tactics.RoguelikeMap
             );
         }
 
-        private void OnPointerDown(PointerDownEvent evt)
+        private void OnClick(ClickEvent evt)
         {
-            _mouseDownTime = Time.time;
-        }
-
-        private void OnPointerUp(PointerUpEvent evt)
-        {
-            if (Time.time - _mouseDownTime < MaxClickDuration)
-            {
-                Tactics.UI.RoguelikeMapUIController.Instance?.SelectNode(this);
-            }
+            Tactics.UI.RoguelikeMapUIController.Instance?.SelectNode(this);
         }
 
         public void ShowSwirlAnimation()
@@ -200,8 +206,7 @@ namespace Tactics.RoguelikeMap
 
             Root?.UnregisterCallback<PointerEnterEvent>(OnPointerEnter);
             Root?.UnregisterCallback<PointerLeaveEvent>(OnPointerLeave);
-            Root?.UnregisterCallback<PointerDownEvent>(OnPointerDown);
-            Root?.UnregisterCallback<PointerUpEvent>(OnPointerUp);
+            Root?.UnregisterCallback<ClickEvent>(OnClick);
         }
     }
 }

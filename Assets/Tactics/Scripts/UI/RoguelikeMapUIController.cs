@@ -49,6 +49,8 @@ namespace Tactics.UI
         private readonly List<RoguelikeMapUINode> _mapNodes = new List<RoguelikeMapUINode>();
         private readonly List<MapLineConnection> _lineConnections = new List<MapLineConnection>();
         private VisualTreeAsset _nodeTemplate;
+        private float _cachedViewportHeight;
+        private Sprite _mapBackgroundSprite;
 
         public static RoguelikeMapUIController Instance { get; set; }
 
@@ -85,8 +87,21 @@ namespace Tactics.UI
         private System.Collections.IEnumerator ShowMapDelayed()
         {
             Debug.Log("[RoguelikeMapUIController] ShowMapDelayed coroutine started.");
-            yield return null;
-            Debug.Log($"[RoguelikeMapUIController] ShowMapDelayed after yield. gameObject.active={gameObject.activeSelf}");
+            int frames = 0;
+            VisualElement root = null;
+            while (frames < 60)
+            {
+                root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+                if (root != null && !float.IsNaN(root.layout.height) && root.layout.height > 0f)
+                {
+                    TryEnsureRootElements();
+                    if (_mapContent != null && !float.IsNaN(_mapContent.layout.height) && _mapContent.layout.height > 0f)
+                        break;
+                }
+                yield return null;
+                frames++;
+            }
+            Debug.Log($"[RoguelikeMapUIController] Layout ready after {frames} frames. root.layout={root?.layout.width}x{root?.layout.height}, mapContainer.layout={_mapContent?.layout.width}x{_mapContent?.layout.height}");
 
             // Ensure GameAssetManager has initialized before loading assets
             EnsureMapConfig();
@@ -210,11 +225,55 @@ namespace Tactics.UI
 
             // Explicitly set layer sizes to avoid layout timing issues
             float mapLength = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
-            float mapHeight = _mapContent.layout.height > 0f ? _mapContent.layout.height : 1080f;
-            if (_backgroundLayer != null) { _backgroundLayer.style.width = mapLength; _backgroundLayer.style.height = mapHeight; }
-            if (_linesLayer != null) { _linesLayer.style.width = mapLength; _linesLayer.style.height = mapHeight; }
-            if (_nodesLayer != null) { _nodesLayer.style.width = mapLength; _nodesLayer.style.height = mapHeight; }
+            float mapHeight = _cachedViewportHeight > 0f ? _cachedViewportHeight : 1080f;
+            if (_backgroundLayer != null) { _backgroundLayer.style.width = mapLength; _backgroundLayer.style.height = mapHeight; _backgroundLayer.style.position = Position.Absolute; }
+            if (_linesLayer != null) { _linesLayer.style.width = mapLength; _linesLayer.style.height = mapHeight; _linesLayer.style.position = Position.Absolute; }
+            if (_nodesLayer != null) { _nodesLayer.style.width = mapLength; _nodesLayer.style.height = mapHeight; _nodesLayer.style.position = Position.Absolute; }
 
+            EnsureMapBackgroundSprite();
+            if (_backgroundLayer != null && _mapBackgroundSprite != null)
+            {
+                var bgElement = new VisualElement();
+                bgElement.style.position = UnityEngine.UIElements.Position.Absolute;
+                bgElement.style.left = 0;
+                bgElement.style.top = 0;
+                bgElement.style.width = mapLength;
+                bgElement.style.height = mapHeight;
+                bgElement.style.backgroundImage = new StyleBackground(_mapBackgroundSprite);
+                bgElement.style.backgroundSize = new BackgroundSize(Length.Percent(100), Length.Percent(100));
+                bgElement.style.unitySliceLeft = (int)_mapBackgroundSprite.border.x;
+                bgElement.style.unitySliceTop = (int)_mapBackgroundSprite.border.w;
+                bgElement.style.unitySliceRight = (int)_mapBackgroundSprite.border.z;
+                bgElement.style.unitySliceBottom = (int)_mapBackgroundSprite.border.y;
+                _backgroundLayer.Add(bgElement);
+            }
+
+            // Add a relative-positioned sizer to force flex layout to allocate non-zero space for MapContainer
+            if (_mapContent != null)
+            {
+                var existingSizer = _mapContent.Q("MapContainerSizer");
+                if (existingSizer == null)
+                {
+                    var sizer = new VisualElement();
+                    sizer.name = "MapContainerSizer";
+                    sizer.style.position = Position.Absolute;
+                    sizer.pickingMode = PickingMode.Ignore;
+                    sizer.style.width = mapLength;
+                    sizer.style.height = mapHeight;
+                    _mapContent.Add(sizer);
+                }
+                else
+                {
+                    existingSizer.style.width = mapLength;
+                    existingSizer.style.height = mapHeight;
+                }
+            }
+
+            BuildMapContent(m);
+        }
+
+        private void BuildMapContent(global::Tactics.RoguelikeMap.RoguelikeMap m)
+        {
             CreateNodes(m.nodes);
             DrawLines();
             SetAttainableNodes();
@@ -233,6 +292,20 @@ namespace Tactics.UI
 
             if (_nodeTemplate == null)
                 Debug.LogWarning("[RoguelikeMapUIController] Failed to load node template. Nodes will use fallback styling.");
+        }
+
+        private void EnsureMapBackgroundSprite()
+        {
+            if (_mapBackgroundSprite != null) return;
+
+            var mgr = GameAssetManager.Instance;
+            if (mgr != null)
+            {
+                _mapBackgroundSprite = mgr.Load<Sprite>("Assets/Tactics/Arts/Sprites/Kenney RPG Pack panels/panel_beige.png");
+            }
+
+            if (_mapBackgroundSprite == null)
+                Debug.LogWarning("[RoguelikeMapUIController] Failed to load map background sprite. Background will use fallback color.");
         }
 
         private void ClearMap()
@@ -258,11 +331,30 @@ namespace Tactics.UI
             _mapContent.style.flexShrink = 0;
 
             float viewportHeight = _scrollView.contentViewport.layout.height;
-            if (viewportHeight <= 0f)
+            if (float.IsNaN(viewportHeight) || viewportHeight <= 0f)
                 viewportHeight = _scrollView.layout.height;
-            if (viewportHeight <= 0f)
+            if (float.IsNaN(viewportHeight) || viewportHeight <= 0f)
+            {
+                var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+                viewportHeight = root != null && !float.IsNaN(root.layout.height) && root.layout.height > 0f
+                    ? root.layout.height : Screen.height;
+            }
+            if (float.IsNaN(viewportHeight) || viewportHeight <= 0f)
                 viewportHeight = 1080f;
+            Debug.Assert(!float.IsNaN(viewportHeight), "[RoguelikeMapUIController] viewportHeight should not be NaN");
+
+            // Force ScrollView contentViewport to have explicit size to break layout deadlock
+            var rootVe = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            if (rootVe != null && !float.IsNaN(rootVe.layout.height) && rootVe.layout.height > 0f)
+            {
+                _scrollView.contentViewport.style.height = rootVe.layout.height;
+            }
+
             _mapContent.style.height = viewportHeight;
+            _mapContent.style.minWidth = length;
+            _mapContent.style.minHeight = viewportHeight;
+            _mapContent.style.position = Position.Relative;
+            _cachedViewportHeight = viewportHeight;
         }
 
         private void ScrollToOrigin()
@@ -295,7 +387,7 @@ namespace Tactics.UI
         private Vector2 ConvertToVisualElementPosition(Vector2 anchoredPos)
         {
             float contentWidth = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
-            float contentHeight = _mapContent != null && _mapContent.layout.height > 0f ? _mapContent.layout.height : 1080f;
+            float contentHeight = _cachedViewportHeight > 0f ? _cachedViewportHeight : 1080f;
 
             const float nodeSize = 64f;
             float left = contentWidth / 2f + anchoredPos.x - nodeSize / 2f;
