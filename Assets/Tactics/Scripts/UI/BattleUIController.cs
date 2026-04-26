@@ -245,13 +245,6 @@ namespace Tactics.UI
                 return;
 
             _currentMoveAbility = moveAbility;
-
-            if (_gridController.GridState is GridStateUnitSelected)
-            {
-                moveAbility.Display(_gridController);
-                return;
-            }
-
             _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, moveAbility);
         }
 

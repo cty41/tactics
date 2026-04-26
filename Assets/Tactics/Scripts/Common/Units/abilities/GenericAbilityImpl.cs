@@ -33,6 +33,9 @@ namespace Tactics.Common.Units.Abilities
         // Targeting fields for displaying valid target cells
         private HashSet<ICell> _validTargetCells;
 
+        // Active AoE cells tracked for proper cleanup (may extend beyond _validTargetCells)
+        private HashSet<ICell> _activeAoeCells;
+
         public IUnit UnitReference { get; set; }
         public string DisplayName => _config.DisplayName;
         public AbilityConfig Config => _config;
@@ -112,6 +115,11 @@ namespace Tactics.Common.Units.Abilities
             }
             else
             {
+                if (_activeAoeCells != null && _activeAoeCells.Count > 0)
+                {
+                    gridController.CellManager.UnMark(_activeAoeCells);
+                    _activeAoeCells = null;
+                }
                 if (_validTargetCells != null)
                 {
                     gridController.CellManager.UnMark(_validTargetCells);
@@ -198,7 +206,8 @@ namespace Tactics.Common.Units.Abilities
                     tcm.SetReachableMovementMode(false);
                 }
                 var aoeCells = GetAoeCells(cell, aoe, gridController);
-                gridController.CellManager.MarkAsReachable(aoeCells);
+                _activeAoeCells = new HashSet<ICell>(aoeCells);
+                gridController.CellManager.MarkAsAoE(aoeCells);
             }
         }
 
@@ -220,9 +229,15 @@ namespace Tactics.Common.Units.Abilities
                     }
                 }
             }
-            else if (_config.TargetingStrategy is AoETargeting)
+            else if (_config.TargetingStrategy is AoETargeting aoe)
             {
-                gridController.CellManager.UnMark(cell);
+                var aoeCells = GetAoeCells(cell, aoe, gridController);
+                _activeAoeCells = null;
+                gridController.CellManager.UnMark(aoeCells);
+                if (_validTargetCells != null && _validTargetCells.Count > 0)
+                {
+                    gridController.CellManager.MarkAsReachable(_validTargetCells);
+                }
             }
         }
 

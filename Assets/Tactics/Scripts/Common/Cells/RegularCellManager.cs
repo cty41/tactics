@@ -108,6 +108,11 @@ namespace Tactics.Common.Cells
             return Task.CompletedTask;
         }
 
+        public override Task MarkAsAoE(IEnumerable<ICell> cells)
+        {
+            return Task.CompletedTask;
+        }
+
         public override void SetColor(ICell cell, float r, float g, float b, float a)
         {
             (cell as Cell).SetColor(r, g, b, a);

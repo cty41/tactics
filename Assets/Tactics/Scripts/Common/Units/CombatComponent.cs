@@ -1,5 +1,6 @@
 using System;
 using Tactics.Common.Cells;
+using UnityEngine;
 
 namespace Tactics.Common.Units
 {
@@ -12,7 +13,7 @@ namespace Tactics.Common.Units
         private const float BaseCritChance = 0.10f;
         private const float CritChancePerLuckPoint = 0.02f;
         private const float CritDamageMultiplier = 2f;
-        private static readonly Random _rng = new Random();
+        private static readonly System.Random _rng = new System.Random();
 
         /// <summary>
         /// The unit that owns this combat component.
@@ -103,6 +104,17 @@ namespace Tactics.Common.Units
         public static float GetExpectedDamage(float baseDamage, float critChance)
         {
             return baseDamage * (1f - critChance) + GetCriticalDamage(baseDamage) * critChance;
+        }
+
+        public static float CalculateDodgeRate(IUnit unit)
+        {
+            return unit.DodgeRate;
+        }
+
+        public static bool IsHit(IUnit caster, IUnit target, float accuracyPenalty)
+        {
+            float hitChance = Mathf.Clamp01(1f - target.DodgeRate - accuracyPenalty);
+            return _rng.NextDouble() < hitChance;
         }
 
         private static float GetAttributeScalingBonus(IUnit unitReference, bool isRangedDamage)

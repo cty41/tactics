@@ -89,6 +89,8 @@ namespace Tactics.Common.Cells
         /// <returns>A task representing the asynchronous marking operation.</returns>
         Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell);
 
+        Task MarkAsAoE(IEnumerable<ICell> cells);
+
         void SetColor(ICell cell, float r, float g, float b, float a);
     }
 }

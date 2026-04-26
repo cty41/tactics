@@ -31,10 +31,19 @@ namespace Tactics.Runtime.BattleLog
         public bool IsCritical { get; set; }
 
         /// <summary>
+        /// Gets or sets whether the attack missed.
+        /// </summary>
+        public bool IsMissed { get; set; }
+
+        /// <summary>
         /// Gets the display string for UI and console output.
         /// </summary>
         public override string GetDisplayString()
         {
+            if (IsMissed)
+            {
+                return $"[MISS] {Attacker} -> {Target}";
+            }
             string typeTag = IsCritical ? "[CRIT]" : "[ATK]";
             string critMark = IsCritical ? " (CRITICAL!)" : "";
             return $"{typeTag} {Attacker} -> {Target} : {Damage} dmg{critMark}";

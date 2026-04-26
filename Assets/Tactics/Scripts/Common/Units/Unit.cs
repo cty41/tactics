@@ -8,12 +8,10 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Classes;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
-using Tactics.Common.AI.BehaviourTrees;
-using Tactics.Common.Cells;
 using Tactics.Common.Units.Highlight;
-using Tactics.Common.Units.Abilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -58,6 +56,7 @@ namespace Tactics.Common.Units
         public UnitHighlightManager HighlightManager => _highlightManager;
 
         [SerializeField] private List<AbilityConfig> _abilityConfigs;
+        [SerializeField] private RoleConfig _roleConfig;
         private List<IAbility> _baseAbilities;
 
         [SerializeField] Cell _currentCell;
@@ -103,6 +102,8 @@ namespace Tactics.Common.Units
         public int Charisma { get { return _charisma; } set { _charisma = value; } }
         [SerializeField] private int _luck = 5;
         public int Luck { get { return _luck; } set { _luck = value; } }
+        [SerializeField] private float _dodgeRate = 0f;
+        public float DodgeRate { get { return _dodgeRate; } set { _dodgeRate = value; } }
 
         [SerializeField] private int _attackRange = 1;
         public int AttackRange { get { return _attackRange; } set { _attackRange = value; } }
@@ -153,10 +154,15 @@ namespace Tactics.Common.Units
             MovementPoints = MaxMovementPoints;
 
             _baseAbilities = new List<IAbility>();
-            Debug.Log($"[Unit.Initialize] {gameObject.name}: _abilityConfigs count={_abilityConfigs?.Count ?? 0}, isNull={_abilityConfigs == null}");
-            if (_abilityConfigs != null)
+            
+            var abilitySources = _roleConfig != null && _roleConfig.Abilities != null && _roleConfig.Abilities.Count > 0
+                ? _roleConfig.Abilities
+                : _abilityConfigs;
+            
+            Debug.Log($"[Unit.Initialize] {gameObject.name}: abilitySources count={abilitySources?.Count ?? 0}, isNull={abilitySources == null}, roleConfig={_roleConfig?.DisplayName}");
+            if (abilitySources != null)
             {
-                foreach (var config in _abilityConfigs)
+                foreach (var config in abilitySources)
                 {
                     Debug.Log($"[Unit.Initialize] {gameObject.name}: config={config?.GetType().Name}, isNull={config == null}");
                     if (config != null)
@@ -168,6 +174,14 @@ namespace Tactics.Common.Units
                 }
             }
             Debug.Log($"[Unit.Initialize] {gameObject.name}: _baseAbilities count={_baseAbilities?.Count ?? 0}");
+
+            // Ensure default Move ability exists
+            if (!_baseAbilities.Any(a => a.DisplayName == "Move"))
+            {
+                var moveAbility = AbilityConfig.CreateDefaultMoveConfig().CreateAbility(this);
+                RegisterAbility(moveAbility, gridController);
+                Debug.Log($"[Unit.Initialize] {gameObject.name}: auto-registered default Move ability");
+            }
         }
 
         public virtual void RegisterAbility(IAbility ability, IGridController gridController)

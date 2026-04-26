@@ -15,6 +15,7 @@ namespace Tactics.Cells
         Reachable,
         Path,
         PathEnd,
+        AoE,
     }
 
     [RequireComponent(typeof(MeshFilter))]
@@ -28,6 +29,7 @@ namespace Tactics.Cells
         [SerializeField] private Color _reachableAttackColor = new Color(1f, 0.3f, 0.2f, 0.5f);
         [SerializeField] private Color _pathColor = new Color(1f, 0.85f, 0.2f, 0.55f);
         [SerializeField] private Color _pathEndColor = new Color(1f, 0.5f, 0f, 0.7f);
+        [SerializeField] private Color _aoeColor = new Color(1f, 0.5f, 0f, 0.5f);
 
         [SerializeField] private bool _enablePulse = false;
         [SerializeField] private float _pulseSpeed = 2f;
@@ -233,6 +235,34 @@ namespace Tactics.Cells
             }
         }
 
+        public void RemoveHighlightsOfType(IEnumerable<ICell> cells, TileHighlightType type)
+        {
+            if (cells == null) return;
+            if (!_highlights.TryGetValue(type, out var set)) return;
+
+            bool changed = false;
+            foreach (var cell in cells)
+            {
+                changed |= set.Remove(cell.GridCoordinates);
+            }
+
+            if (changed)
+            {
+                RebuildMesh();
+            }
+        }
+
+        public void RemoveHighlightOfType(ICell cell, TileHighlightType type)
+        {
+            if (cell == null) return;
+            if (!_highlights.TryGetValue(type, out var set)) return;
+
+            if (set.Remove(cell.GridCoordinates))
+            {
+                RebuildMesh();
+            }
+        }
+
         public void SetReachableMovementMode(bool isMovement)
         {
             _useMoveColorForReachable = isMovement;
@@ -240,6 +270,25 @@ namespace Tactics.Cells
             {
                 RebuildMesh();
             }
+        }
+
+        public void SetAoEHighlights(IEnumerable<ICell> cells)
+        {
+            if (cells == null) return;
+
+            if (!_highlights.TryGetValue(TileHighlightType.AoE, out var set))
+            {
+                set = new HashSet<Vector2IntImpl>();
+                _highlights[TileHighlightType.AoE] = set;
+            }
+
+            set.Clear();
+            foreach (var cell in cells)
+            {
+                set.Add(cell.GridCoordinates);
+            }
+
+            RebuildMesh();
         }
 
         private Color GetColorForType(TileHighlightType type)
@@ -250,6 +299,7 @@ namespace Tactics.Cells
                 TileHighlightType.Reachable => _useMoveColorForReachable ? _reachableMoveColor : _reachableAttackColor,
                 TileHighlightType.Path => _pathColor,
                 TileHighlightType.PathEnd => _pathEndColor,
+                TileHighlightType.AoE => _aoeColor,
                 _ => Color.white,
             };
         }

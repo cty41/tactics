@@ -62,6 +62,19 @@ namespace Tactics.Common.Units.Abilities
             return new GenericAbilityImpl(owner, this);
         }
 
+        private static AbilityConfig _defaultMoveConfig;
+
+        public static AbilityConfig CreateDefaultMoveConfig()
+        {
+            if (_defaultMoveConfig != null) return _defaultMoveConfig;
+
+            _defaultMoveConfig = CreateInstance<AbilityConfig>();
+            _defaultMoveConfig._displayName = "Move";
+            _defaultMoveConfig._isBasicAbility = true;
+            _defaultMoveConfig._effects = new List<AbilityEffect> { new MoveEffect(true) };
+            return _defaultMoveConfig;
+        }
+
 #if UNITY_EDITOR
         private void OnValidate()
         {

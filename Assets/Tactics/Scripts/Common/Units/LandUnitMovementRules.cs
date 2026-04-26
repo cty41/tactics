@@ -7,8 +7,6 @@ namespace Tactics.Units
 {
     public class LandUnitMovementRules : MonoBehaviour, IMovementRules
     {
-        [SerializeField] private ScriptableObject _landCellType;
-
         public float GetMovementCost(IUnit unit, ICell source, ICell destination)
         {
             return destination.MovementCost;
@@ -16,12 +14,12 @@ namespace Tactics.Units
 
         public bool IsCellMovableTo(IUnit unit, ICell cell)
         {
-            return (cell as ITypedCell).CellType.Equals(_landCellType) && !cell.IsTaken;
+            return !cell.IsTaken;
         }
 
         public bool IsCellTraversable(IUnit unit, ICell source, ICell destination)
         {
-            return !destination.CurrentUnits.Any(u => u.PlayerNumber != unit.PlayerNumber) && (destination as ITypedCell).CellType.Equals(_landCellType);
+            return !destination.CurrentUnits.Any(u => u.PlayerNumber != unit.PlayerNumber);
         }
     }
 }

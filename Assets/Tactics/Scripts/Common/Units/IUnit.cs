@@ -93,6 +93,7 @@ namespace Tactics.Common.Units
         float Speed { get; set; }
         int Charisma { get; set; }
         int Luck { get; set; }
+        float DodgeRate { get; set; }
         float Mana { get; set; }
         float MaxMana { get; set; }
 

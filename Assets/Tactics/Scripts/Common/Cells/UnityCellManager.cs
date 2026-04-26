@@ -27,6 +27,7 @@ namespace Tactics.Common.Cells
         public abstract Task UnMarkAsHighlighted(ICell cell);
         public abstract Task UnMark(IEnumerable<ICell> cells);
         public abstract Task UnMark(ICell cell);
+        public abstract Task MarkAsAoE(IEnumerable<ICell> cells);
         public abstract void SetColor(ICell cell, float r, float g, float b, float a);
     }
 }

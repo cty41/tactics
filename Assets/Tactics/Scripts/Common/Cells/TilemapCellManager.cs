@@ -215,7 +215,8 @@ namespace Tactics.Cells
 
         public override Task UnMarkAsHighlighted(ICell cell)
         {
-            return UnMark(cell);
+            HighlightRenderer?.RemoveHighlightOfType(cell, TileHighlightType.Highlighted);
+            return Task.CompletedTask;
         }
 
         public override Task UnMark(IEnumerable<ICell> cells)
@@ -233,6 +234,12 @@ namespace Tactics.Cells
         public override Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell)
         {
             HighlightRenderer?.SetPathHighlights(cells);
+            return Task.CompletedTask;
+        }
+
+        public override Task MarkAsAoE(IEnumerable<ICell> cells)
+        {
+            HighlightRenderer?.SetAoEHighlights(cells);
             return Task.CompletedTask;
         }
 

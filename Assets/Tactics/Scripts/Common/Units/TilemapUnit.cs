@@ -19,12 +19,73 @@ namespace Tactics.Units
 
         private float baseMovementSpeed;
 
+        private void Awake()
+        {
+            EnsureTilemapRefs();
+        }
+
+        private void EnsureTilemapRefs()
+        {
+            if (_cellManager == null)
+            {
+                _cellManager = Object.FindFirstObjectByType<UnityCellManager>(
+                    FindObjectsInactive.Include);
+#pragma warning disable CS0618
+                if (_cellManager == null)
+                {
+                    var managers = FindObjectsOfType<UnityCellManager>(true);
+                    if (managers.Length > 0)
+                        _cellManager = managers[0];
+                }
+#pragma warning restore CS0618
+            }
+
+            if (_dataTilemap == null)
+            {
+                var tilemaps = Object.FindObjectsByType<Tilemap>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var t in tilemaps)
+                {
+                    if (t.name == "DataLayer")
+                    {
+                        _dataTilemap = t;
+                        break;
+                    }
+                }
+#pragma warning disable CS0618
+                if (_dataTilemap == null)
+                {
+                    var allTilemaps = FindObjectsOfType<Tilemap>(true);
+                    foreach (var t in allTilemaps)
+                    {
+                        if (t.name == "DataLayer")
+                        {
+                            _dataTilemap = t;
+                            break;
+                        }
+                    }
+                }
+#pragma warning restore CS0618
+            }
+        }
+
         public override ICell CurrentCell
         {
             get
             {
                 if (!_cellInitialized)
                 {
+                    EnsureTilemapRefs();
+                    if (_dataTilemap == null)
+                    {
+                        Debug.LogError($"[{nameof(TilemapUnit)}] _dataTilemap is null on {gameObject.name}. Cannot initialize CurrentCell.");
+                        return null;
+                    }
+                    if (_cellManager == null)
+                    {
+                        Debug.LogError($"[{nameof(TilemapUnit)}] _cellManager is null on {gameObject.name}. Cannot initialize CurrentCell.");
+                        return null;
+                    }
                     Vector3Int gridPos = _dataTilemap.WorldToCell(WorldPosition.ToVector3());
                     _currentCell = _cellManager.GetCellAt(new Vector2IntImpl(gridPos.x, gridPos.y));
                     _currentCell.IsTaken = true;
@@ -57,6 +118,7 @@ namespace Tactics.Units
 
         public override void Initialize(IGridController gridController)
         {
+            EnsureTilemapRefs();
             base.Initialize(gridController);
             baseMovementSpeed = MovementAnimationSpeed;
             UnitLeftCell += OnUnitEnteredCell;

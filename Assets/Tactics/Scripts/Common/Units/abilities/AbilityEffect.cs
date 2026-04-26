@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Runtime.BattleLog;
 using UnityEngine;
 
 namespace Tactics.Common.Units.Abilities
@@ -46,7 +47,7 @@ namespace Tactics.Common.Units.Abilities
             await Task.CompletedTask;
         }
 
-        private float CalculateDamage(IUnit caster, IUnit target)
+        protected virtual float CalculateDamage(IUnit caster, IUnit target)
         {
             float damage = _baseDamage;
             if (_scalingType != AttributeScalingType.None)
@@ -101,6 +102,11 @@ namespace Tactics.Common.Units.Abilities
     {
         [SerializeField] private bool _requiresPathfinding = true;
 
+        public MoveEffect(bool requiresPathfinding = true)
+        {
+            _requiresPathfinding = requiresPathfinding;
+        }
+
         public bool RequiresPathfinding => _requiresPathfinding;
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
@@ -150,6 +156,42 @@ namespace Tactics.Common.Units.Abilities
             {
                 if (target == null) continue;
                 // TODO: Apply DoT buff
+            }
+            await Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// Deals damage to targets with an accuracy penalty. May miss based on target dodge rate.
+    /// </summary>
+    [Serializable]
+    public class AccuracyDamageEffect : DamageEffect
+    {
+        [SerializeField] private float _accuracyPenalty = 0f;
+
+        public float AccuracyPenalty => _accuracyPenalty;
+
+        public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
+        {
+            foreach (var target in targets)
+            {
+                if (target == null) continue;
+
+                if (!CombatComponent.IsHit(caster, target, _accuracyPenalty))
+                {
+                    BattleLogger.Log(new AttackLogData
+                    {
+                        Attacker = caster is Tactics.Common.Units.INamedUnit na ? na.UnitName : caster.ToString(),
+                        Target = target is Tactics.Common.Units.INamedUnit nt ? nt.UnitName : target.ToString(),
+                        Damage = 0,
+                        IsMissed = true
+                    });
+                    continue;
+                }
+
+                float damage = CalculateDamage(caster, target);
+                target.ModifyHealth(-damage, caster);
+                target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
             }
             await Task.CompletedTask;
         }
