@@ -2,24 +2,35 @@
     <Style src="project://database/Assets/Tactics/Arts/UI/Battle.uss?fileID=7433441132597879392&amp;guid=a8b3c4d5e6f7890123456789abcdef01&amp;type=3#Battle"/>
     <ui:VisualElement name="RootContainer" class="root-container">
         <ui:VisualElement name="TopPanel" class="top-panel">
-            <ui:VisualElement name="StatusPanel" class="status-panel">
-                <ui:ProgressBar name="hp" value="22" title="HP"/>
-                <ui:ProgressBar name="mp" value="22" title="MP"/>
+            <ui:Label name="RoundLabel" text="Round 1" class="round-label"/>
+            <ui:VisualElement name="TurnOrderContainer" class="turn-order-container"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="StatusPanel" class="status-panel">
+            <ui:VisualElement name="Portrait" class="portrait"/>
+            <ui:Label name="UnitName" text="Unit" class="unit-name"/>
+            <ui:VisualElement name="HPBar" class="bar-container">
+                <ui:VisualElement name="HPBarBg" class="bar-bg">
+                    <ui:VisualElement name="HPBarFill" class="bar-fill hp-fill"/>
+                </ui:VisualElement>
+                <ui:Label name="HPText" text="20/20" class="bar-label"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="MPBar" class="bar-container">
+                <ui:VisualElement name="MPBarBg" class="bar-bg">
+                    <ui:VisualElement name="MPBarFill" class="bar-fill mp-fill"/>
+                </ui:VisualElement>
+                <ui:Label name="MPText" text="8/24" class="bar-label"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="BottomPanel" class="bottom-panel">
-            <ui:VisualElement name="ActionPanel" class="action-panel">
-                <ui:Button name="MoveButton" text="移动" class="button move-button"/>
-                <ui:VisualElement name="SkillPanel" class="skill-panel">
-                    <ui:Button name="Skill1Button" text="技能1" class="button"/>
-                    <ui:Button name="Skill2Button" text="技能2" class="button"/>
-                    <ui:Button name="Skill3Button" text="技能3" class="button"/>
-                    <ui:Button name="Skill4Button" text="技能4" class="button"/>
-                </ui:VisualElement>
+            <ui:VisualElement name="LeftPanel" class="left-panel">
+                <ui:Button name="MoveButton" class="move-button">
+                    <ui:Label text="Move" class="move-button-text"/>
+                </ui:Button>
+                <ui:VisualElement name="SkillPanel" class="skill-panel"/>
             </ui:VisualElement>
-            <ui:VisualElement name="RightActionPanel" class="right-panel">
-                <ui:Button name="EndTurnButton" text="结束回合" class="button end-turn-button"/>
-            </ui:VisualElement>
+            <ui:Button name="EndTurnButton" class="end-turn-button">
+                <ui:Label text="End Turn" class="end-turn-text"/>
+            </ui:Button>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -39,6 +39,11 @@ namespace Tactics.Common.Controllers
         TurnContext TurnContext { get; }
 
         /// <summary>
+        /// Gets the current round number.
+        /// </summary>
+        int CurrentRound { get; }
+
+        /// <summary>
         /// Gets or sets the current state of the grid, managing transitions between different grid states.
         /// </summary>
         GridState GridState { get; set; }

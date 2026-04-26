@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using UnityEngine;
 
 namespace Tactics.Common.Units.Abilities
 {
@@ -26,6 +27,16 @@ namespace Tactics.Common.Units.Abilities
         /// Gets the display name of the ability.
         /// </summary>
         string DisplayName { get; }
+
+        /// <summary>
+        /// Gets the icon sprite of the ability.
+        /// </summary>
+        Sprite Icon { get; }
+
+        /// <summary>
+        /// Gets the mana cost of the ability.
+        /// </summary>
+        int Cost { get; }
 
         /// <summary>
         /// Initializes the ability with necessary setup steps.

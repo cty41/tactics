@@ -6,22 +6,103 @@
 
 .top-panel {
     position: absolute;
-    top: 0;
+    top: 10px;
     left: 0;
     right: 0;
     flex-direction: row;
+    justify-content: center;
     align-items: flex-start;
-    gap: 10px;
-    padding-top: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 10px;
+    gap: 20px;
+}
+
+.round-label {
+    font-size: 22px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.turn-order-container {
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+}
+
+.turn-order-item {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border-width: 2px;
+    border-color: rgba(150, 150, 150, 0.8);
+    background-color: rgba(60, 60, 60, 0.8);
+}
+
+.turn-order-item.active {
+    border-color: rgb(255, 220, 100);
+    border-width: 3px;
 }
 
 .status-panel {
+    position: absolute;
+    top: 50px;
+    left: 20px;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     width: 200px;
+    background-color: rgba(30, 30, 30, 0.75);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.portrait {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background-color: rgb(100, 150, 200);
+    align-self: flex-start;
+}
+
+.unit-name {
+    font-size: 16px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+
+.bar-container {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.bar-bg {
+    flex-grow: 1;
+    height: 14px;
+    background-color: rgba(40, 40, 40, 0.8);
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 7px;
+}
+
+.hp-fill {
+    background-color: rgb(220, 60, 60);
+}
+
+.mp-fill {
+    background-color: rgb(60, 120, 220);
+}
+
+.bar-label {
+    width: 48px;
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-right;
 }
 
 .bottom-panel {
@@ -32,16 +113,13 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-end;
-    padding-top: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 20px;
+    padding: 20px;
 }
 
-.action-panel {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+.left-panel {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
 }
 
 .skill-panel {
@@ -49,59 +127,106 @@
     gap: 8px;
 }
 
-.right-panel {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-}
-
-.button {
-    width: 120px;
-    height: 48px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    background-color: rgba(40, 40, 40, 0.85);
-    border-radius: 8px;
+.skill-card {
+    width: 86px;
+    height: 110px;
+    background-color: rgba(50, 50, 60, 0.9);
+    border-radius: 10px;
     border-width: 2px;
-    border-color: rgba(100, 100, 100, 0.9);
-    color: white;
-    font-size: 16px;
-    text-align: middle-center;
+    border-color: rgba(120, 120, 140, 0.9);
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px;
     cursor: pointer;
 }
 
-.button:hover {
-    background-color: rgba(60, 60, 60, 0.9);
-    border-color: rgb(150, 150, 150);
+.skill-card:hover {
+    background-color: rgba(70, 70, 85, 0.95);
+    border-color: rgba(160, 160, 180, 0.95);
 }
 
-.button:active {
-    background-color: rgba(80, 80, 80, 0.95);
+.skill-card.disabled {
+    opacity: 0.35;
+}
+
+.skill-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background-color: rgb(150, 120, 80);
+}
+
+.skill-card-name {
+    font-size: 11px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.skill-card-cost {
+    font-size: 13px;
+    color: rgb(100, 180, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
 }
 
 .move-button {
-    width: 180px;
+    width: 90px;
+    height: 52px;
+    background-color: rgba(60, 100, 160, 0.9);
+    border-radius: 10px;
+    border-width: 2px;
+    border-color: rgba(100, 150, 220, 0.9);
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    -unity-font-style: bold;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+}
+
+.move-button:hover {
+    background-color: rgba(80, 130, 200, 0.95);
+}
+
+.move-button:disabled {
+    opacity: 0.4;
+}
+
+.move-button-text {
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
 }
 
 .end-turn-button {
-    width: 140px;
-    background-color: rgba(180, 40, 40, 0.85);
-    border-color: rgba(220, 80, 80, 0.9);
+    width: 110px;
+    height: 52px;
+    background-color: rgba(180, 60, 60, 0.9);
+    border-radius: 10px;
+    border-width: 2px;
+    border-color: rgba(220, 100, 100, 0.9);
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    -unity-font-style: bold;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
 }
 
 .end-turn-button:hover {
-    background-color: rgba(200, 60, 60, 0.9);
-    border-color: rgb(240, 100, 100);
+    background-color: rgba(200, 80, 80, 0.95);
 }
 
-.end-turn-button:active {
-    background-color: rgba(220, 80, 80, 0.95);
+.end-turn-button:disabled {
+    opacity: 0.4;
 }
 
-#hp .unity-progress-bar__progress {
-    background-color: rgb(76, 175, 80);
-}
-
-#mp .unity-progress-bar__progress {
-    background-color: rgb(33, 150, 243);
+.end-turn-text {
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
 }

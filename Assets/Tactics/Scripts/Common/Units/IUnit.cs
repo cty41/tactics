@@ -7,6 +7,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
+using UnityEngine;
 
 namespace Tactics.Common.Units
 {
@@ -96,6 +97,11 @@ namespace Tactics.Common.Units
         float DodgeRate { get; set; }
         float Mana { get; set; }
         float MaxMana { get; set; }
+
+        /// <summary>
+        /// Gets the portrait sprite of the unit.
+        /// </summary>
+        Sprite Portrait { get; }
 
         /// <summary>
         /// The number of the player that owns the unit.

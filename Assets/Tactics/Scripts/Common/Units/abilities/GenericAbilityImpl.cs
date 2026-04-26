@@ -38,6 +38,8 @@ namespace Tactics.Common.Units.Abilities
 
         public IUnit UnitReference { get; set; }
         public string DisplayName => _config.DisplayName;
+        public Sprite Icon => _config.Icon;
+        public int Cost => _config.ManaCost;
         public AbilityConfig Config => _config;
 
         public GenericAbilityImpl(IUnit owner, AbilityConfig config)

@@ -104,6 +104,7 @@ namespace Tactics.Common.Units
         public int Luck { get { return _luck; } set { _luck = value; } }
         [SerializeField] private float _dodgeRate = 0f;
         public float DodgeRate { get { return _dodgeRate; } set { _dodgeRate = value; } }
+        public Sprite Portrait => _roleConfig?.Icon;
 
         [SerializeField] private int _attackRange = 1;
         public int AttackRange { get { return _attackRange; } set { _attackRange = value; } }

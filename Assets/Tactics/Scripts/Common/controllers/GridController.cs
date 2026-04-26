@@ -21,6 +21,7 @@ namespace Tactics.Common.Controllers
         public IPlayerManager PlayerManager { get; set; }
         public ITurnResolver TurnResolver { get; set; }
         public TurnContext TurnContext { get; protected set; }
+        public int CurrentRound { get; protected set; } = 1;
 
         public event Action GameStarted;
         public event Action GameInitialized;
@@ -66,6 +67,7 @@ namespace Tactics.Common.Controllers
 
         public virtual void StartGame(bool isNetworkInvoked = false)
         {
+            CurrentRound = 1;
             TurnContext = TurnResolver.ResolveStart(this);
             if (TurnContext.CurrentPlayer == null)
             {
@@ -208,8 +210,15 @@ namespace Tactics.Common.Controllers
             }
             TurnEnded?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
 
+            var previousPlayer = TurnContext.CurrentPlayer;
             UnitManager.UnMark(TurnContext.PlayableUnits());
             TurnContext = TurnResolver.ResolveTurn(this);
+
+            if (previousPlayer != null && TurnContext.CurrentPlayer != null &&
+                previousPlayer.PlayerNumber >= TurnContext.CurrentPlayer.PlayerNumber)
+            {
+                CurrentRound++;
+            }
 
             foreach (var unit in TurnContext.PlayableUnits())
             {

@@ -83,6 +83,7 @@ namespace Tactics.Common.Battle
         }
 
         public TurnContext TurnContext => _controller.TurnContext;
+        public int CurrentRound => _controller.CurrentRound;
 
         public GridState GridState
         {
