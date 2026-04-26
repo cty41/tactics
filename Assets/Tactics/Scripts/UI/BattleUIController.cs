@@ -279,8 +279,8 @@ namespace Tactics.UI
         {
             switch (playerNumber)
             {
-                case 0: return new Color(0.4f, 0.6f, 0.9f);
-                case 1: return new Color(0.9f, 0.4f, 0.4f);
+                case 0: return new Color(0.9f, 0.4f, 0.4f);
+                case 1: return new Color(0.4f, 0.6f, 0.9f);
                 case 2: return new Color(0.4f, 0.9f, 0.5f);
                 case 3: return new Color(0.9f, 0.8f, 0.3f);
                 default: return new Color(0.6f, 0.6f, 0.6f);
