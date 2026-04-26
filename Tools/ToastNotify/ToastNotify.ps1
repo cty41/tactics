@@ -56,15 +56,16 @@ $amp = [char]38
 $ampLt = $amp + "amp;"
 $ampGt = $amp + "gt;"
 $ampQuot = $amp + "quot;"
+$ltEntity = $amp + "lt;"
 
 $bodyEsc = $bodyEsc -replace '__AMP_PLACEHOLDER__', $ampLt
-$bodyEsc = $bodyEsc -replace '__LT_PLACEHOLDER__', $amp + "lt;"
-$bodyEsc = $bodyEsc -replace '__GT_PLACEHOLDER__', $amp + "gt;"
-$bodyEsc = $bodyEsc -replace '__QUOT_PLACEHOLDER__', $amp + "quot;"
+$bodyEsc = $bodyEsc -replace '__LT_PLACEHOLDER__', $ltEntity
+$bodyEsc = $bodyEsc -replace '__GT_PLACEHOLDER__', $ampGt
+$bodyEsc = $bodyEsc -replace '__QUOT_PLACEHOLDER__', $ampQuot
 $titleEsc = $titleEsc -replace '__AMP_PLACEHOLDER__', $ampLt
-$titleEsc = $titleEsc -replace '__LT_PLACEHOLDER__', $amp + "lt;"
-$titleEsc = $titleEsc -replace '__GT_PLACEHOLDER__', $amp + "gt;"
-$titleEsc = $titleEsc -replace '__QUOT_PLACEHOLDER__', $amp + "quot;"
+$titleEsc = $titleEsc -replace '__LT_PLACEHOLDER__', $ltEntity
+$titleEsc = $titleEsc -replace '__GT_PLACEHOLDER__', $ampGt
+$titleEsc = $titleEsc -replace '__QUOT_PLACEHOLDER__', $ampQuot
 
 $xmlString = $lt+"toast duration="+$q+$Duration.ToLower()+$q+$gt+
     $lt+"visual"+$gt+
