@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Tactics.Cells;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
@@ -72,19 +73,29 @@ namespace Tactics.Common.Units.Abilities
         {
             if (DisplayName == "Move")
             {
+                if (gridController.CellManager is TilemapCellManager tcm)
+                {
+                    tcm.SetReachableMovementMode(true);
+                }
                 if (_cellsInMovementRange != null && _cellsInMovementRange.Count > 0)
                 {
                     gridController.CellManager.MarkAsReachable(_cellsInMovementRange);
                 }
             }
-            else if (_validTargetCells != null && _validTargetCells.Count > 0)
+            else
             {
-                // Display pre-calculated valid target cells for all targeting strategies
-                gridController.CellManager.MarkAsReachable(_validTargetCells);
-            }
-            else if (_config.TargetingStrategy != null)
-            {
-                _config.TargetingStrategy.DisplayPreview(gridController);
+                if (gridController.CellManager is TilemapCellManager tcm)
+                {
+                    tcm.SetReachableMovementMode(false);
+                }
+                if (_validTargetCells != null && _validTargetCells.Count > 0)
+                {
+                    gridController.CellManager.MarkAsReachable(_validTargetCells);
+                }
+                else if (_config.TargetingStrategy != null)
+                {
+                    _config.TargetingStrategy.DisplayPreview(gridController);
+                }
             }
         }
 
@@ -170,6 +181,10 @@ namespace Tactics.Common.Units.Abilities
         {
             if (DisplayName == "Move")
             {
+                if (gridController.CellManager is TilemapCellManager tcm)
+                {
+                    tcm.SetReachableMovementMode(true);
+                }
                 if (_cellsInMovementRange != null && _cellsInMovementRange.Contains(cell))
                 {
                     _currentPath = _owner.FindPath(cell, gridController.CellManager);
@@ -178,6 +193,10 @@ namespace Tactics.Common.Units.Abilities
             }
             else if (IsValidCell(cell, gridController) && _config.TargetingStrategy is AoETargeting aoe)
             {
+                if (gridController.CellManager is TilemapCellManager tcm)
+                {
+                    tcm.SetReachableMovementMode(false);
+                }
                 var aoeCells = GetAoeCells(cell, aoe, gridController);
                 gridController.CellManager.MarkAsReachable(aoeCells);
             }
@@ -187,6 +206,10 @@ namespace Tactics.Common.Units.Abilities
         {
             if (DisplayName == "Move")
             {
+                if (gridController.CellManager is TilemapCellManager tcm)
+                {
+                    tcm.SetReachableMovementMode(true);
+                }
                 if (_cellsInMovementRange != null && _cellsInMovementRange.Contains(cell))
                 {
                     gridController.CellManager.MarkAsReachable(cell);

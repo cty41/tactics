@@ -21,16 +21,13 @@ namespace Tactics.Cells
 #pragma warning restore CS0067
 
         [SerializeField] Tilemap _dataLayer;
+
+        // Old highlight fields kept for backward compatibility but unused by default.
+        // Procedural rendering is used instead.
         [SerializeField] Tilemap _highlightLayer;
         [SerializeField] Tile _highlightTile;
         [SerializeField] Tile _reachableTile;
         [SerializeField] Tile _pathTile;
-
-        Dictionary<Vector2IntImpl, VirtualSquareCell> _cells;
-
-        private VirtualSquareCell _selectedCell;
-        private float _lastRaycast = 0;
-        [SerializeField] private float _raycastDelay = 0.1f;
         [SerializeField] private Tile _lineHorizontal;
         [SerializeField] private Tile _lineVertical;
         [SerializeField] private Tile _curlLowerRight;
@@ -41,18 +38,50 @@ namespace Tactics.Cells
         [SerializeField] private Tile _arrowRight;
         [SerializeField] private Tile _arrowUp;
         [SerializeField] private Tile _arrowDown;
+
+        Dictionary<Vector2IntImpl, VirtualSquareCell> _cells;
+
+        private void Awake()
+        {
+            EnsureHighlightRenderer();
+        }
+
+        private void EnsureHighlightRenderer()
+        {
+            _ = HighlightRenderer;
+        }
+
+        private VirtualSquareCell _selectedCell;
+        private float _lastRaycast = 0;
+        [SerializeField] private float _raycastDelay = 0.1f;
         [SerializeField] private int _highlightSortingOrder = 2;
+
+        private ProceduralTileHighlightRenderer _highlightRenderer;
+
+        private ProceduralTileHighlightRenderer HighlightRenderer
+        {
+            get
+            {
+                if (_highlightRenderer == null)
+                {
+                    _highlightRenderer = GetComponent<ProceduralTileHighlightRenderer>();
+                    if (_highlightRenderer == null)
+                    {
+                        _highlightRenderer = gameObject.AddComponent<ProceduralTileHighlightRenderer>();
+                    }
+                }
+                return _highlightRenderer;
+            }
+        }
 
         public override void Initialize(IGridController gridController)
         {
-            // Ensure no editor/runtime residue remains on HighlightLayer between scene runs.
+            // Clear old highlight layer if it still exists.
             _highlightLayer?.ClearAllTiles();
-            var highlightRenderer = _highlightLayer != null ? _highlightLayer.GetComponent<TilemapRenderer>() : null;
-            if (highlightRenderer != null)
-            {
-                // Keep highlight above terrain but below unit sprites to avoid occluding active units.
-                highlightRenderer.sortingOrder = _highlightSortingOrder;
-            }
+
+            // Ensure procedural highlight renderer is available.
+            EnsureHighlightRenderer();
+            HighlightRenderer.SetDataLayer(_dataLayer);
 
             BoundsInt bounds = _dataLayer.cellBounds;
             _cells = new Dictionary<Vector2IntImpl, VirtualSquareCell>();
@@ -166,23 +195,21 @@ namespace Tactics.Cells
             return _cells.Values;
         }
 
-        public override async Task MarkAsReachable(IEnumerable<ICell> cells)
+        public override Task MarkAsReachable(IEnumerable<ICell> cells)
         {
-            foreach (var cell in cells)
-            {
-                await MarkAsReachable(cell);
-            }
+            HighlightRenderer?.AddHighlights(cells, TileHighlightType.Reachable);
+            return Task.CompletedTask;
         }
 
         public override Task MarkAsReachable(ICell cell)
         {
-            _highlightLayer.SetTile(new Vector3Int(cell.GridCoordinates.x, cell.GridCoordinates.y, 0), _reachableTile);
+            HighlightRenderer?.AddHighlights(new[] { cell }, TileHighlightType.Reachable);
             return Task.CompletedTask;
         }
 
         public override Task MarkAsHighlighted(ICell cell)
         {
-            _highlightLayer.SetTile(new Vector3Int(cell.GridCoordinates.x, cell.GridCoordinates.y, 0), _highlightTile);
+            HighlightRenderer?.SetHighlights(new[] { cell }, TileHighlightType.Highlighted);
             return Task.CompletedTask;
         }
 
@@ -191,39 +218,21 @@ namespace Tactics.Cells
             return UnMark(cell);
         }
 
-        public override async Task UnMark(IEnumerable<ICell> cells)
+        public override Task UnMark(IEnumerable<ICell> cells)
         {
-            foreach (var cell in cells)
-            {
-                await UnMark(cell);
-            }
+            HighlightRenderer?.RemoveHighlights(cells);
+            return Task.CompletedTask;
         }
 
         public override Task UnMark(ICell cell)
         {
-            _highlightLayer.SetTile(new Vector3Int(cell.GridCoordinates.x, cell.GridCoordinates.y, 0), null);
+            HighlightRenderer?.RemoveHighlight(cell);
             return Task.CompletedTask;
         }
 
         public override Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell)
         {
-            int i = 0;
-            var path = cells.ToList();
-            foreach (var cell in cells)
-            {
-                var index = i;
-                var currentPosition = path[index].GridCoordinates;
-
-                Vector2IntImpl prevPosition = index > 0 ? path[index - 1].GridCoordinates : originCell.GridCoordinates;
-                Vector2IntImpl nextPosition = index < path.Count - 1 ? path[index + 1].GridCoordinates : currentPosition;
-
-                var selectedTile = index == path.Count - 1
-                    ? GetArrowHeadSprite(prevPosition, currentPosition)
-                    : GetArrowSegmentSprite(prevPosition, currentPosition, nextPosition);
-
-                _highlightLayer.SetTile(new Vector3Int(cell.GridCoordinates.x, cell.GridCoordinates.y, 0), selectedTile);
-                i++;
-            }
+            HighlightRenderer?.SetPathHighlights(cells);
             return Task.CompletedTask;
         }
 
@@ -265,6 +274,11 @@ namespace Tactics.Cells
             if (to.x != from.x)
                 return to.x < from.x ? _arrowLeft : _arrowRight;
             return to.y <= from.y ? _arrowDown : _arrowUp;
+        }
+
+        public void SetReachableMovementMode(bool isMovement)
+        {
+            HighlightRenderer?.SetReachableMovementMode(isMovement);
         }
 
         public override void SetColor(ICell cell, float r, float g, float b, float a)
