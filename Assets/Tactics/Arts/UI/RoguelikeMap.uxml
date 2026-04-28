@@ -1,4 +1,5 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/RoguelikeMap.uss?fileID=7433441132597879392&amp;guid=c9a8017f29d7da349a4b753adb0f9b36&amp;type=3#RoguelikeMap"/>
     <ui:VisualElement name="RootContainer" class="root-container">
         <ui:ScrollView name="MapScrollView" mode="Horizontal" horizontal-scroller-visibility="Auto" vertical-scroller-visibility="Hidden" class="map-scroll-view">
             <ui:VisualElement name="MapContainer" class="map-container">
@@ -7,5 +8,23 @@
                 <ui:VisualElement name="NodesLayer" class="nodes-layer"/>
             </ui:VisualElement>
         </ui:ScrollView>
+        <ui:VisualElement name="TopBar" class="top-bar">
+            <ui:VisualElement name="TopBarLeft" class="top-bar-left">
+                <ui:Button name="SettingsButton" text="⚙" class="hud-button"/>
+                <ui:Button name="InventoryButton" text="🎒" class="hud-button"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="TopBarRight" class="top-bar-right">
+                <ui:VisualElement name="GoldContainer" class="resource-item">
+                    <ui:VisualElement name="GoldIcon" class="resource-icon gold-icon"/>
+                    <ui:Label name="GoldLabel" text="0" class="resource-label"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="FoodContainer" class="resource-item">
+                    <ui:VisualElement name="FoodIcon" class="resource-icon food-icon"/>
+                    <ui:Label name="FoodLabel" text="0" class="resource-label"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="PartyPanel" class="party-panel"/>
+
     </ui:VisualElement>
 </ui:UXML>

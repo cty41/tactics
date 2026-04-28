@@ -1,18 +1,25 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
+using Tactics.AssetPipeline;
+using Tactics.Common.Units.Classes;
 
 namespace Tactics.Roster
 {
     public static class PlayerAdventureStateStore
     {
         public const string PlayerPrefsKey = "Tactics_PlayerAdventureState";
+        private const string TestPartyJsonPath = "Assets/Tactics/GameData/TestParty.json";
 
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
+
+        /// <summary>Prefab mapping read from TestParty.json.</summary>
+        public static List<PrefabMapping> TestPrefabMappings { get; private set; } = new List<PrefabMapping>();
 
         public static void EnsureDefaultProfile()
         {
@@ -29,12 +36,41 @@ namespace Tactics.Roster
             {
                 string json = PlayerPrefs.GetString(PlayerPrefsKey);
                 var state = JsonConvert.DeserializeObject<PlayerAdventureState>(json, JsonSettings);
-                return state ?? CreateDefaultState();
+                if (state == null || !IsStateValid(state))
+                {
+                    Debug.LogWarning("[PlayerAdventureStateStore] Saved state is invalid or corrupted. Clearing old save and reloading defaults.");
+                    PlayerPrefs.DeleteKey(PlayerPrefsKey);
+                    PlayerPrefs.Save();
+                    return CreateDefaultState();
+                }
+                return state;
             }
             catch
             {
+                PlayerPrefs.DeleteKey(PlayerPrefsKey);
+                PlayerPrefs.Save();
                 return CreateDefaultState();
             }
+        }
+
+        private static bool IsStateValid(PlayerAdventureState state)
+        {
+            if (state.Roster == null || state.Roster.Count == 0)
+                return false;
+            if (state.ActivePartyCharacterIds == null || state.ActivePartyCharacterIds.Count == 0)
+                return false;
+
+            var distinctRoles = new HashSet<RoleType>();
+            foreach (var character in state.Roster)
+            {
+                if (character == null)
+                    return false;
+                distinctRoles.Add(character.RoleType);
+            }
+
+            // Reject saves where all characters have the same default RoleType (Barbarian)
+            // This indicates the save was created before RoleType was properly serialized.
+            return distinctRoles.Count >= 2;
         }
 
         public static void Save(PlayerAdventureState state)
@@ -46,7 +82,7 @@ namespace Tactics.Roster
             PlayerPrefs.Save();
         }
 
-        /// <summary>Guarantee roster has at least 2 characters and active party lists 2 valid ids (mutates and saves if repaired).</summary>
+        /// <summary>Guarantee roster has at least 3 characters and active party lists 3 valid ids (mutates and saves if repaired).</summary>
         public static PlayerAdventureState LoadRepairAndSave()
         {
             var state = Load();
@@ -65,7 +101,7 @@ namespace Tactics.Roster
                 changed = true;
             }
 
-            while (state.Roster.Count < 2)
+            while (state.Roster.Count < 3)
             {
                 int n = state.Roster.Count;
                 state.Roster.Add(CharacterDefinition.CreateDefault(
@@ -80,7 +116,7 @@ namespace Tactics.Roster
                 changed = true;
             }
 
-            while (state.ActivePartyCharacterIds.Count < 2)
+            while (state.ActivePartyCharacterIds.Count < 3)
             {
                 int idx = state.ActivePartyCharacterIds.Count;
                 state.ActivePartyCharacterIds.Add(state.Roster[idx].Id);
@@ -97,23 +133,74 @@ namespace Tactics.Roster
                 }
             }
 
-            if (state.ActivePartyCharacterIds.Count > 2)
+            if (state.ActivePartyCharacterIds.Count > 3)
             {
-                state.ActivePartyCharacterIds = state.ActivePartyCharacterIds.Take(2).ToList();
+                state.ActivePartyCharacterIds = state.ActivePartyCharacterIds.Take(3).ToList();
                 changed = true;
             }
         }
 
         private static PlayerAdventureState CreateDefaultState()
         {
-            var a = CharacterDefinition.CreateDefault("hero_a", "Hero A", strengthBonus: 1, intelligenceBonus: 0);
-            var b = CharacterDefinition.CreateDefault("hero_b", "Hero B", strengthBonus: 0, intelligenceBonus: 1);
-            return new PlayerAdventureState
+            string json = null;
+            var mgr = GameAssetManager.Instance;
+
+            if (mgr != null)
             {
-                Version = 1,
-                Roster = new List<CharacterDefinition> { a, b },
-                ActivePartyCharacterIds = new List<string> { a.Id, b.Id }
-            };
+                var textAsset = mgr.Load<TextAsset>(TestPartyJsonPath);
+                if (textAsset != null)
+                {
+                    json = textAsset.text;
+                    mgr.Release(TestPartyJsonPath);
+                }
+            }
+#if UNITY_EDITOR
+            else if (File.Exists(TestPartyJsonPath))
+            {
+                json = File.ReadAllText(TestPartyJsonPath);
+            }
+#endif
+
+            if (json == null)
+            {
+                Debug.LogError($"[PlayerAdventureStateStore] TestParty.json not found at {TestPartyJsonPath}");
+                return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+            }
+
+            try
+            {
+                var config = JsonConvert.DeserializeObject<TestPartyConfig>(json, JsonSettings);
+                if (config == null)
+                {
+                    Debug.LogError("[PlayerAdventureStateStore] Failed to deserialize TestParty.json");
+                    return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+                }
+                TestPrefabMappings = config.PrefabMappings ?? new List<PrefabMapping>();
+                return new PlayerAdventureState
+                {
+                    Version = 1,
+                    Roster = config.Roster ?? new List<CharacterDefinition>(),
+                    ActivePartyCharacterIds = config.ActivePartyCharacterIds ?? new List<string>()
+                };
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[PlayerAdventureStateStore] Failed to parse TestParty.json: {ex.Message}");
+                return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+            }
         }
+    }
+
+    public class TestPartyConfig
+    {
+        public List<CharacterDefinition> Roster { get; set; }
+        public List<string> ActivePartyCharacterIds { get; set; }
+        public List<PrefabMapping> PrefabMappings { get; set; }
+    }
+
+    public class PrefabMapping
+    {
+        public RoleType RoleType { get; set; }
+        public string PrefabPath { get; set; }
     }
 }

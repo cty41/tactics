@@ -1,33 +1,122 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
+using Tactics.Common.Cells;
+using Tactics.Common.Units.Classes;
+using Tactics.Common.Utilities;
 using Tactics.Units;
 using UnityEngine;
 
 namespace Tactics.Roster
 {
+    [Serializable]
+    public class RolePrefabMapping
+    {
+        public RoleType RoleType;
+        public GameObject Prefab;
+        public Vector2Int StartingCell;
+    }
+
     /// <summary>
-    /// Strategy A: reuse existing friendly <see cref="TilemapUnit"/> placeholders in the scene and overwrite stats from <see cref="PlayerAdventureState"/>.
-    /// Must run before <see cref="Tactics.Common.Battle.BattleController"/> starts the game (Awake + early execution order).
+    /// Spawns party units dynamically based on <see cref="PlayerAdventureState.ActivePartyCharacterIds"/>.
+    /// Must run before <see cref="Tactics.Common.Battle.BattleController"/> starts the game.
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class BattlePartyBootstrap : MonoBehaviour
     {
         [SerializeField] private int _humanPlayerNumber;
-        [Tooltip("If both elements are set, these are used in order; otherwise first two human TilemapUnits under UnitManager are used (child order).")]
+
+        [Tooltip("Deprecated: dynamic generation now uses RolePrefabMappings instead of scene placeholders.")]
         [SerializeField] private List<TilemapUnit> _partySlots = new List<TilemapUnit>();
 
-        private void Awake()
+        [SerializeField] private List<RolePrefabMapping> _rolePrefabMappings = new List<RolePrefabMapping>();
+
+        private readonly HashSet<string> _loadedPaths = new HashSet<string>();
+
+        private void OnDestroy()
+        {
+            var mgr = GameAssetManager.Instance;
+            if (mgr == null) return;
+            foreach (var path in _loadedPaths)
+                mgr.Release(path);
+            _loadedPaths.Clear();
+        }
+
+        private void Start()
         {
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
-            var slots = ResolvePartySlots();
-            if (slots.Count < 2)
+            if (state?.ActivePartyCharacterIds == null || state.ActivePartyCharacterIds.Count == 0)
             {
-                Debug.LogWarning("[BattlePartyBootstrap] Need 2 party slots with TilemapUnit; roster not applied.");
+                Debug.LogWarning("[BattlePartyBootstrap] No active party characters found.");
                 return;
             }
 
-            for (int i = 0; i < 2; i++)
+            var battleController = FindFirstObjectByType<BattleController>();
+            if (battleController == null)
+            {
+                Debug.LogError("[BattlePartyBootstrap] BattleController not found in scene.");
+                return;
+            }
+
+            Transform container = battleController.UnitContainerTransform;
+            if (container == null)
+                container = battleController.transform;
+
+            // Remove old placeholder units before spawning new ones
+            var unitManager = battleController.UnitManager;
+            var existingUnits = FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var existing in existingUnits)
+            {
+                if (existing.PlayerNumber == _humanPlayerNumber)
+                {
+                    unitManager?.RemoveUnit(existing);
+                    Destroy(existing.gameObject);
+                }
+            }
+
+            // Build prefab lookup: TestParty.json > Inspector mappings > fallback
+            var prefabLookup = new Dictionary<RoleType, GameObject>();
+            var mgr = GameAssetManager.Instance;
+
+            foreach (var jsonMapping in PlayerAdventureStateStore.TestPrefabMappings)
+            {
+                if (string.IsNullOrEmpty(jsonMapping.PrefabPath))
+                    continue;
+
+                GameObject prefab = null;
+                if (mgr != null)
+                    prefab = mgr.Load<GameObject>(jsonMapping.PrefabPath);
+
+                if (prefab != null)
+                {
+                    _loadedPaths.Add(jsonMapping.PrefabPath);
+                    prefabLookup[jsonMapping.RoleType] = prefab;
+                }
+            }
+
+            foreach (var mapping in _rolePrefabMappings)
+            {
+                if (mapping.Prefab != null && !prefabLookup.ContainsKey(mapping.RoleType))
+                    prefabLookup[mapping.RoleType] = mapping.Prefab;
+            }
+
+            GameObject fallbackPrefab = prefabLookup.Values.FirstOrDefault();
+
+            // Find Respawn spawnpoints under UnitManager
+            var respawnPoints = new List<Transform>();
+            var unitManagerGo = container.gameObject;
+            if (unitManagerGo != null)
+            {
+                foreach (Transform child in unitManagerGo.transform)
+                {
+                    if (child.CompareTag("Respawn"))
+                        respawnPoints.Add(child);
+                }
+            }
+
+            for (int i = 0; i < state.ActivePartyCharacterIds.Count; i++)
             {
                 string id = state.ActivePartyCharacterIds[i];
                 var def = state.Roster.FirstOrDefault(c => c.Id == id);
@@ -37,34 +126,57 @@ namespace Tactics.Roster
                     continue;
                 }
 
-                var unit = slots[i];
+                GameObject prefab = null;
+                if (!prefabLookup.TryGetValue(def.RoleType, out prefab) || prefab == null)
+                {
+                    prefab = fallbackPrefab;
+                    if (prefab == null)
+                    {
+                        Debug.LogError($"[BattlePartyBootstrap] No prefab mapping for role {def.RoleType} and no fallback available.");
+                        continue;
+                    }
+                    Debug.LogWarning($"[BattlePartyBootstrap] No prefab mapping for role {def.RoleType}, using fallback.");
+                }
+
+                var go = Instantiate(prefab, container);
+                go.name = $"PartyUnit_{def.DisplayName}";
+
+                var unit = go.GetComponent<TilemapUnit>();
+                if (unit == null)
+                {
+                    Debug.LogError($"[BattlePartyBootstrap] Prefab for {def.RoleType} does not have a TilemapUnit component.");
+                    Destroy(go);
+                    continue;
+                }
+
+                unit.PlayerNumber = _humanPlayerNumber;
+
+                // Set world position from Respawn objects; TilemapUnit.Initialize will resolve CurrentCell later.
+                if (i < respawnPoints.Count)
+                {
+                    go.transform.position = respawnPoints[i].position;
+                }
+                else
+                {
+                    // Fallback: position adjacent to Infantry Blue if present, else default grid origin
+                    var referenceUnit = GameObject.Find("Infantry Blue");
+                    if (referenceUnit != null)
+                    {
+                        go.transform.position = referenceUnit.transform.position + new Vector3(i * 2.5f, 0, 0);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[BattlePartyBootstrap] No Respawn point for slot {i} and no Infantry Blue reference. Using prefab default position.");
+                    }
+                }
+
                 CharacterStatsApplicator.ApplyToUnit(def, unit);
+
                 var link = unit.GetComponent<RosterCharacterLink>();
                 if (link == null)
                     link = unit.gameObject.AddComponent<RosterCharacterLink>();
                 link.CharacterId = def.Id;
             }
-        }
-
-        private List<TilemapUnit> ResolvePartySlots()
-        {
-            if (_partySlots != null && _partySlots.Count >= 2 && _partySlots[0] != null && _partySlots[1] != null)
-                return new List<TilemapUnit> { _partySlots[0], _partySlots[1] };
-
-            var list = new List<TilemapUnit>();
-            var battleController = FindFirstObjectByType<BattleController>();
-            if (battleController == null)
-                return list;
-
-            Transform root = battleController.transform;
-            for (int i = 0; i < root.childCount && list.Count < 2; i++)
-            {
-                var tu = root.GetChild(i).GetComponentInChildren<TilemapUnit>(true);
-                if (tu != null && tu.PlayerNumber == _humanPlayerNumber)
-                    list.Add(tu);
-            }
-
-            return list;
         }
     }
 }

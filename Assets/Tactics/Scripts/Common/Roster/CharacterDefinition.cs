@@ -1,4 +1,5 @@
 using System;
+using Tactics.Common.Units.Classes;
 
 namespace Tactics.Roster
 {
@@ -22,8 +23,9 @@ namespace Tactics.Roster
         public int AttackRange { get; set; }
         public int AttackFactor { get; set; }
         public int DefenceFactor { get; set; }
+        public RoleType RoleType { get; set; }
 
-        public static CharacterDefinition CreateDefault(string id, string displayName, int strengthBonus = 0, int intelligenceBonus = 0)
+        public static CharacterDefinition CreateDefault(string id, string displayName, int strengthBonus = 0, int intelligenceBonus = 0, int agilityBonus = 0, RoleType roleType = RoleType.Barbarian)
         {
             return new CharacterDefinition
             {
@@ -31,7 +33,7 @@ namespace Tactics.Roster
                 DisplayName = displayName,
                 Level = 1,
                 Strength = 5 + strengthBonus,
-                Agility = 5,
+                Agility = 5 + agilityBonus,
                 Constitution = 5,
                 Intelligence = 5 + intelligenceBonus,
                 Charisma = 5,
@@ -40,7 +42,8 @@ namespace Tactics.Roster
                 ActionPoints = 1f,
                 AttackRange = 1,
                 AttackFactor = 1,
-                DefenceFactor = 1
+                DefenceFactor = 1,
+                RoleType = roleType
             };
         }
     }

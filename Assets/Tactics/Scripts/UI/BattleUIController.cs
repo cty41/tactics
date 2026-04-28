@@ -312,7 +312,10 @@ namespace Tactics.UI
             // Name
             if (_unitNameLabel != null)
             {
-                _unitNameLabel.text = (_currentSelectedUnit as INamedUnit)?.UnitName ?? "Unknown";
+                if (_currentSelectedUnit is Unit unit && unit != null)
+                    _unitNameLabel.text = unit.UnitName;
+                else
+                    _unitNameLabel.text = "Unknown";
             }
 
             // HP & MP

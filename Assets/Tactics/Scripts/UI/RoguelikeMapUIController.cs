@@ -6,6 +6,7 @@ using Tactics.AssetPipeline;
 using Tactics.Flow.Roguelike;
 using Tactics.Flow.Battle;
 using Tactics.RoguelikeMap;
+using Tactics.Roster;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Newtonsoft.Json;
@@ -119,6 +120,7 @@ namespace Tactics.UI
 
             Debug.Log("[RoguelikeMapUIController] Calling ShowMap...");
             ShowMap(_currentMap);
+            RefreshPartyPanel();
         }
 
         private void LoadOrGenerateMap()
@@ -281,6 +283,72 @@ namespace Tactics.UI
             }
 
             BuildMapContent(m);
+        }
+
+        private void RefreshPartyPanel()
+        {
+            var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            if (root == null) return;
+
+            var partyPanel = root.Q<VisualElement>("PartyPanel");
+            if (partyPanel == null) return;
+
+            partyPanel.Clear();
+
+            var state = PlayerAdventureStateStore.Load();
+            if (state?.Roster == null || state.ActivePartyCharacterIds == null) return;
+
+            foreach (string id in state.ActivePartyCharacterIds)
+            {
+                var data = state.Roster.FirstOrDefault(c => c.Id == id);
+                if (data == null) continue;
+
+                var slot = CreatePartySlot(data);
+                partyPanel.Add(slot);
+            }
+        }
+
+        private VisualElement CreatePartySlot(CharacterDefinition data)
+        {
+            var slot = new VisualElement();
+            slot.AddToClassList("party-slot");
+
+            // Avatar
+            var avatar = new VisualElement();
+            avatar.AddToClassList("party-avatar");
+            slot.Add(avatar);
+
+            // Name
+            var nameLabel = new Label(GetRoleDisplayName(data.RoleType));
+            nameLabel.AddToClassList("party-name");
+            slot.Add(nameLabel);
+
+            // HP Bar
+            var hpBg = new VisualElement();
+            hpBg.AddToClassList("hp-bar-background");
+            var hpFill = new VisualElement();
+            hpFill.AddToClassList("hp-bar-fill");
+            hpFill.style.width = Length.Percent(100);
+            hpBg.Add(hpFill);
+            slot.Add(hpBg);
+
+            // Level
+            var levelLabel = new Label($"Level: {data.Level}");
+            levelLabel.AddToClassList("party-level");
+            slot.Add(levelLabel);
+
+            return slot;
+        }
+
+        private static string GetRoleDisplayName(Tactics.Common.Units.Classes.RoleType roleType)
+        {
+            return roleType switch
+            {
+                Tactics.Common.Units.Classes.RoleType.Barbarian => "\u6218\u58eb",
+                Tactics.Common.Units.Classes.RoleType.Mage => "\u6cd5\u5e08",
+                Tactics.Common.Units.Classes.RoleType.Hunter => "\u730e\u624b",
+                _ => roleType.ToString()
+            };
         }
 
         private void BuildMapContent(global::Tactics.RoguelikeMap.RoguelikeMap m)

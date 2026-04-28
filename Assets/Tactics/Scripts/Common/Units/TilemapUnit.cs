@@ -88,6 +88,11 @@ namespace Tactics.Units
                     }
                     Vector3Int gridPos = _dataTilemap.WorldToCell(WorldPosition.ToVector3());
                     _currentCell = _cellManager.GetCellAt(new Vector2IntImpl(gridPos.x, gridPos.y));
+                    if (_currentCell == null)
+                    {
+                        Debug.LogError($"[{nameof(TilemapUnit)}] GetCellAt returned null for gridPos {gridPos} on {gameObject.name}.");
+                        return null;
+                    }
                     _currentCell.IsTaken = true;
                     _currentCell.CurrentUnits.Add(this);
                     _cellInitialized = true;
@@ -97,6 +102,7 @@ namespace Tactics.Units
             set
             {
                 _currentCell = value;
+                _cellInitialized = true;
             }
         }
 
@@ -124,7 +130,11 @@ namespace Tactics.Units
             UnitLeftCell += OnUnitEnteredCell;
             UnitMoved += OnUnitMoved;
 
-            WorldPosition = CurrentCell.WorldPosition;
+            var cell = CurrentCell;
+            if (cell != null)
+                WorldPosition = cell.WorldPosition;
+            else
+                Debug.LogWarning($"[{nameof(TilemapUnit)}] CurrentCell is null during Initialize for {gameObject.name}.");
         }
 
         private void OnUnitMoved(UnitMovedEventArgs obj)
