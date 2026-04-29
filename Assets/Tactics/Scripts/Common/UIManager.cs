@@ -26,6 +26,7 @@ namespace Tactics
             Battle,
             CheatConsole,
             Loading,
+            Inventory,
         }
 
         private enum UIType
@@ -95,6 +96,8 @@ namespace Tactics
         private const string CheatConsoleUssPath = "Assets/Tactics/Arts/UI/CheatConsole.uss";
         private const string LoadingUxmlPath = "Assets/Tactics/Arts/UI/Loading.uxml";
         private const string LoadingUssPath = "Assets/Tactics/Arts/UI/Loading.uss";
+        private const string InventoryUxmlPath = "Assets/Tactics/Arts/UI/Inventory.uxml";
+        private const string InventoryUssPath = "Assets/Tactics/Arts/UI/Inventory.uss";
         private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
 
         private static readonly Dictionary<UIId, UIType> s_uiTypeMap = new()
@@ -105,6 +108,7 @@ namespace Tactics
             { UIId.Battle, UIType.UiToolkitUxml },
             { UIId.CheatConsole, UIType.UiToolkitUxml },
             { UIId.Loading, UIType.UiToolkitUxml },
+            { UIId.Inventory, UIType.UiToolkitUxml },
         };
 
         private readonly Dictionary<UIId, UIInstance> _instances = new();
@@ -240,6 +244,7 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
                 UIId.Battle => BattleUxmlPath,
                 UIId.CheatConsole => CheatConsoleUxmlPath,
                 UIId.Loading => LoadingUxmlPath,
+                UIId.Inventory => InventoryUxmlPath,
                 _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.")
             };
         }
@@ -254,6 +259,7 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
                 UIId.Battle => BattleUssPath,
                 UIId.CheatConsole => CheatConsoleUssPath,
                 UIId.Loading => LoadingUssPath,
+                UIId.Inventory => InventoryUssPath,
                 _ => string.Empty
             };
         }
@@ -431,6 +437,10 @@ private UIInstance LoadUiToolkitSync(UIId id, string uxmlPath, GameAssetManager 
                     break;
                 case UIId.Loading:
                     // Loading UI has no controller; purely visual.
+                    break;
+                case UIId.Inventory:
+                    if (root.GetComponent<InventoryUIController>() == null)
+                        root.AddComponent<InventoryUIController>();
                     break;
                 default:
                     break;

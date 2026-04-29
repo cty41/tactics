@@ -1,0 +1,117 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/Inventory.uss?fileID=7433441132597879392&amp;guid=2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e&amp;type=3#Inventory"/>
+    <ui:VisualElement name="InventoryRoot" class="inventory-root">
+        <ui:VisualElement name="InventoryPanel" class="inventory-panel">
+            <!-- Header -->
+            <ui:VisualElement name="Header" class="header">
+                <ui:Label name="TitleLabel" text="背包" class="title-label"/>
+                <ui:Button name="CloseButton" text="X" class="close-button"/>
+            </ui:VisualElement>
+
+            <!-- Content Area -->
+            <ui:VisualElement name="ContentArea" class="content-area">
+                <!-- Left Section -->
+                <ui:VisualElement name="LeftSection" class="left-section">
+                    <!-- Equipment Area (Top Left) -->
+                    <ui:VisualElement name="EquipmentArea" class="equipment-area">
+                        <ui:VisualElement name="EquipmentSlotsGrid" class="equipment-slots-grid">
+                            <ui:VisualElement name="SlotWeapon" class="equipped-slot"/>
+                            <ui:VisualElement name="SlotArmor" class="equipped-slot"/>
+                            <ui:VisualElement name="SlotHelmet" class="equipped-slot"/>
+                            <ui:VisualElement name="SlotBoots" class="equipped-slot"/>
+                            <ui:VisualElement name="SlotAccessory" class="equipped-slot"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- Character Section (Middle) - Only Portrait + Buttons -->
+                    <ui:VisualElement name="CharacterSection" class="character-section">
+                        <ui:VisualElement name="PortraitSmall" class="portrait-small">
+                            <ui:Label text="[立绘]" class="portrait-placeholder"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="CharacterSwitchButtons" class="character-switch-buttons">
+                            <ui:Button name="CharBtn_0" text="角色1" class="character-switch-btn active"/>
+                            <ui:Button name="CharBtn_1" text="角色2" class="character-switch-btn"/>
+                            <ui:Button name="CharBtn_2" text="角色3" class="character-switch-btn"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- Stats + Skills Row (Bottom) -->
+                    <ui:VisualElement name="StatsSkillsRow" class="stats-skills-row">
+                        <!-- Stats Column (Left Aligned) -->
+                        <ui:VisualElement name="StatsColumn" class="stats-column">
+                            <!-- Character Info -->
+                            <ui:VisualElement name="CharacterInfo" class="character-info">
+                                <ui:Label name="CharacterNameLabel" text="角色名" class="character-name-label"/>
+                                <ui:VisualElement name="CharacterMeta" class="character-meta">
+                                    <ui:Label name="LevelLabel" text="Lv.1" class="level-label"/>
+                                    <ui:Label name="HPLabel" text="HP: 100/100" class="hp-label"/>
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+
+                            <!-- Stats List -->
+                            <ui:VisualElement name="StatRow_Strength" class="stat-row">
+                                <ui:Label text="力量" class="stat-label"/>
+                                <ui:Label name="StrengthValue" text="5" class="stat-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="StatRow_Agility" class="stat-row">
+                                <ui:Label text="敏捷" class="stat-label"/>
+                                <ui:Label name="AgilityValue" text="5" class="stat-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="StatRow_Constitution" class="stat-row">
+                                <ui:Label text="体质" class="stat-label"/>
+                                <ui:Label name="ConstitutionValue" text="5" class="stat-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="StatRow_Intelligence" class="stat-row">
+                                <ui:Label text="智力" class="stat-label"/>
+                                <ui:Label name="IntelligenceValue" text="5" class="stat-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="StatRow_Charisma" class="stat-row">
+                                <ui:Label text="魅力" class="stat-label"/>
+                                <ui:Label name="CharismaValue" text="5" class="stat-value"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="StatRow_Luck" class="stat-row">
+                                <ui:Label text="运气" class="stat-label"/>
+                                <ui:Label name="LuckValue" text="5" class="stat-value"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <!-- Skills Column (Right Aligned) -->
+                        <ui:VisualElement name="SkillsColumn" class="skills-column">
+                            <ui:Label text="技能" class="section-title"/>
+                            <ui:VisualElement name="SkillSlot_0" class="skill-slot"/>
+                            <ui:VisualElement name="SkillSlot_1" class="skill-slot"/>
+                            <ui:VisualElement name="SkillSlot_2" class="skill-slot"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Storage Section (Center, Large) -->
+                <ui:VisualElement name="StorageSection" class="storage-section">
+                    <ui:VisualElement name="StorageHeader" class="storage-header">
+                        <ui:Label text="仓库" class="section-title"/>
+                    </ui:VisualElement>
+                    <ui:ScrollView name="StorageScrollView" mode="Vertical" horizontal-scroller-visibility="Hidden" class="storage-scroll-view">
+                        <ui:VisualElement name="StorageGrid" class="storage-grid-4col">
+                            <ui:VisualElement name="Slot_0" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_1" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_2" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_3" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_4" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_5" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_6" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_7" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_8" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_9" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_10" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_11" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_12" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_13" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_14" class="storage-slot-4col"/>
+                            <ui:VisualElement name="Slot_15" class="storage-slot-4col"/>
+                        </ui:VisualElement>
+                    </ui:ScrollView>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

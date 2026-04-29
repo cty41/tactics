@@ -1,0 +1,280 @@
+/* Inventory UI Styles */
+
+.inventory-root {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.inventory-panel {
+    width: 900px;
+    height: 600px;
+    background-color: rgb(235, 222, 195);
+    border-width: 4px;
+    border-color: rgb(60, 50, 40);
+    border-radius: 12px;
+    flex-direction: column;
+    padding: 16px;
+}
+
+/* Header */
+.header {
+    width: 100%;
+    height: 40px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.title-label {
+    font-size: 24px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+}
+
+.close-button {
+    width: 36px;
+    height: 36px;
+    background-color: rgb(180, 60, 60);
+    border-width: 2px;
+    border-color: rgb(60, 50, 40);
+    border-radius: 6px;
+    font-size: 20px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+}
+
+/* Content Area */
+.content-area {
+    width: 100%;
+    flex-grow: 1;
+    flex-direction: row;
+    gap: 12px;
+}
+
+/* Left Section */
+.left-section {
+    width: 280px;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Equipment Area (Top Left) */
+.equipment-area {
+    flex: 0 0 70px;  /* Fixed height, don't grow/shrink */
+    flex-direction: column;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 8px;
+}
+
+.equipment-slots-grid {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+
+.equipped-slot {
+    width: 48px;
+    height: 48px;
+    background-color: rgba(180, 160, 130, 0.5);
+    border-width: 2px;
+    border-color: rgb(120, 100, 80);
+    border-radius: 6px;
+}
+
+/* Character Section (Middle) - Only Portrait + Buttons */
+.character-section {
+    flex: 0 0 160px;  /* Fixed height, don't grow/shrink */
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 8px;
+}
+
+.portrait-small {
+    width: 100px;
+    height: 100px;
+    background-color: rgba(180, 160, 130, 0.3);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+.portrait-placeholder {
+    font-size: 12px;
+    color: rgb(120, 100, 80);
+}
+
+.character-switch-buttons {
+    width: 100%;
+    flex-direction: row;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.character-switch-btn {
+    width: 50px;
+    height: 24px;
+    background-color: rgba(180, 160, 130, 0.5);
+    border-width: 2px;
+    border-color: rgb(120, 100, 80);
+    border-radius: 4px;
+    font-size: 11px;
+    color: rgb(60, 50, 40);
+    -unity-text-align: middle-center;
+}
+
+.character-switch-btn.active {
+    background-color: rgb(120, 100, 80);
+    color: rgb(255, 255, 255);
+}
+
+/* Stats + Skills Row (Bottom) - 50% of left section height */
+.stats-skills-row {
+    flex: 1 1 0;  /* Grow to fill remaining space */
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    min-height: 200px;  /* Ensure minimum height */
+}
+
+.stats-column {
+    flex-grow: 1;
+    flex-direction: column;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 8px;
+}
+
+/* Character Info in Stats Column */
+.character-info {
+    margin-bottom: 8px;
+}
+
+.character-name-label {
+    font-size: 14px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+}
+
+.character-meta {
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.level-label {
+    font-size: 12px;
+    color: rgb(100, 80, 60);
+}
+
+.hp-label {
+    font-size: 12px;
+    color: rgb(200, 60, 60);
+}
+
+.stat-row {
+    width: 100%;
+    height: 20px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 6px;
+    padding-right: 6px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: rgb(80, 60, 40);
+}
+
+.stat-value {
+    font-size: 12px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+}
+
+.skills-column {
+    width: 70px;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 8px;
+}
+
+.section-title {
+    font-size: 12px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.skill-slot {
+    width: 44px;
+    height: 44px;
+    background-color: rgba(180, 160, 130, 0.5);
+    border-width: 2px;
+    border-color: rgb(120, 100, 80);
+    border-radius: 6px;
+}
+
+/* Storage Section (Center, Large) */
+.storage-section {
+    flex-grow: 1;
+    flex-direction: column;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 8px;
+}
+
+.storage-header {
+    margin-bottom: 6px;
+}
+
+.storage-scroll-view {
+    width: 100%;
+    flex-grow: 1;
+}
+
+.storage-grid-4col {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.storage-slot-4col {
+    width: calc(25% - 5px);
+    aspect-ratio: 1;
+    background-color: rgba(180, 160, 130, 0.5);
+    border-width: 2px;
+    border-color: rgb(120, 100, 80);
+    border-radius: 6px;
+}

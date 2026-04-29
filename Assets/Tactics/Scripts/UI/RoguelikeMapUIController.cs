@@ -83,6 +83,7 @@ namespace Tactics.UI
         {
             Debug.Log($"[RoguelikeMapUIController] OnShown called. gameObject.active={gameObject.activeSelf}");
             WireOptionalCloseButtons();
+            WireInventoryButton();
 
             LoadOrGenerateMap();
             Debug.Log($"[RoguelikeMapUIController] Starting ShowMapDelayed. _currentMap={_currentMap != null}");
@@ -718,9 +719,32 @@ namespace Tactics.UI
             Debug.Log("[RoguelikeMapUIController] No close/back button found in UXML.");
         }
 
+        private void WireInventoryButton()
+        {
+            var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            if (root == null) return;
+
+            Button inventoryButton = root.Q<Button>("InventoryButton");
+            if (inventoryButton != null)
+            {
+                inventoryButton.clicked -= OnInventoryClicked;
+                inventoryButton.clicked += OnInventoryClicked;
+                Debug.Log("[RoguelikeMapUIController] InventoryButton wired.");
+            }
+            else
+            {
+                Debug.LogWarning("[RoguelikeMapUIController] InventoryButton not found in UXML.");
+            }
+        }
+
         private static void OnCloseClicked()
         {
             RoguelikeFlowCoordinator.Instance.CloseMap();
+        }
+
+        private static void OnInventoryClicked()
+        {
+            UIManager.Instance.Show(UIManager.UIId.Inventory);
         }
 
         private void OnDestroy()
