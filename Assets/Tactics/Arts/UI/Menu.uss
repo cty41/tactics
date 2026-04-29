@@ -38,8 +38,8 @@
     border-color: rgb(249, 135, 75);
     color: white;
     font-size: 18px;
-    text-align: middle-center;
-    cursor: pointer;
+    -unity-text-align: middle-center;
+    cursor: arrow;
 }
 
 .menu-button:hover {

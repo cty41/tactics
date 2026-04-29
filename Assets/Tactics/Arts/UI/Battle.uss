@@ -12,7 +12,6 @@
     flex-direction: row;
     justify-content: center;
     align-items: flex-start;
-    gap: 20px;
 }
 
 .round-label {
@@ -24,7 +23,6 @@
 
 .turn-order-container {
     flex-direction: row;
-    gap: 6px;
     align-items: center;
     justify-content: center;
 }
@@ -36,6 +34,7 @@
     border-width: 2px;
     border-color: rgba(150, 150, 150, 0.8);
     background-color: rgba(60, 60, 60, 0.8);
+    margin-right: 6px;
 }
 
 .turn-order-item.active {
@@ -48,7 +47,6 @@
     top: 50px;
     left: 20px;
     flex-direction: column;
-    gap: 6px;
     width: 200px;
     background-color: rgba(30, 30, 30, 0.75);
     border-radius: 12px;
@@ -61,6 +59,7 @@
     border-radius: 28px;
     background-color: rgb(100, 150, 200);
     align-self: flex-start;
+    margin-bottom: 6px;
 }
 
 .unit-name {
@@ -68,13 +67,14 @@
     color: rgb(255, 255, 255);
     -unity-font-style: bold;
     -unity-text-align: middle-left;
+    margin-bottom: 6px;
 }
 
 .bar-container {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
     width: 100%;
+    margin-bottom: 6px;
 }
 
 .bar-bg {
@@ -83,6 +83,7 @@
     background-color: rgba(40, 40, 40, 0.8);
     border-radius: 7px;
     overflow: hidden;
+    margin-right: 8px;
 }
 
 .bar-fill {
@@ -119,12 +120,11 @@
 .left-panel {
     flex-direction: row;
     align-items: flex-end;
-    gap: 12px;
 }
 
 .skill-panel {
     flex-direction: row;
-    gap: 8px;
+    margin-right: 12px;
 }
 
 .skill-card {
@@ -138,7 +138,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 6px;
-    cursor: pointer;
+    cursor: arrow;
+    margin-right: 8px;
 }
 
 .skill-card:hover {
@@ -181,7 +182,7 @@
     color: rgb(255, 255, 255);
     font-size: 16px;
     -unity-font-style: bold;
-    cursor: pointer;
+    cursor: arrow;
     margin: 0;
     padding: 0;
 }
@@ -211,7 +212,7 @@
     color: rgb(255, 255, 255);
     font-size: 16px;
     -unity-font-style: bold;
-    cursor: pointer;
+    cursor: arrow;
     margin: 0;
     padding: 0;
 }
