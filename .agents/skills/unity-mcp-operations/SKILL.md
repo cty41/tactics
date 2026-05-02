@@ -16,7 +16,7 @@ This document covers both **inspection** (reading) and **modification** (writing
 3. **NEVER** manipulate `ProjectSettings/` directory files directly.
 4. **ALWAYS** use MCP tools for asset inspection and operations (`manage_asset`, `manage_gameobject`, `manage_components`, etc.).
 5. **ALWAYS** pair open/close operations (open prefab stage → close prefab stage, load scene → close/unload scene).
-6. **ALWAYS** call `refresh_unity` after completing a batch of modifications to scripts, shaders, UI files, or any assets that trigger recompilation. Do NOT refresh after each individual file change.
+6. **ALWAYS** call `refresh_unity` after modifying scripts, shaders, or any file that triggers recompilation.
 7. **NEVER** assume tools exist — verify MCP server is configured via `debug_request_context` if needed.
 
 ### Open/Close Pairing
@@ -348,19 +348,17 @@ find_gameobjects → manage_components (add / remove / set_property)
 
 ### 9. Script Creation
 ```
-create_script → ... → refresh_unity (compile)
+create_script → refresh_unity (compile)
 ```
 1. Create script with `create_script`.
-2. If creating multiple scripts in a batch, complete all creations first.
-3. Call `refresh_unity` with `compile="request"` to trigger compilation once.
+2. Call `refresh_unity` with `compile="request"` to trigger compilation.
 
 ### 10. Script Editing
 ```
-apply_text_edits / script_apply_edits → ... → refresh_unity (compile)
+apply_text_edits / script_apply_edits → refresh_unity (compile)
 ```
 1. Apply edits with `apply_text_edits` (range-based) or `script_apply_edits` (structured method/class edits).
-2. If editing multiple files in a batch, complete all edits first.
-3. Call `refresh_unity` to compile once.
+2. Call `refresh_unity` to compile.
 
 ### 11. Playmode Testing
 ```
@@ -440,7 +438,6 @@ manage_asset (create_folder) → manage_asset (move)
 - Never assume instanceID values — always verify with `find_gameobjects`.
 - **DO NOT use filesystem commands** (`mkdir`, `rmdir`, `rm`, `move`, etc.) to manipulate Unity assets or folders — always use `manage_asset` MCP tools.
 - After `create_script`, `delete_script`, or any script edit, always call `refresh_unity` with `compile="request"` to ensure Unity picks up changes.
-- When modifying multiple files in a batch, call `refresh_unity` **once** after all changes are complete. Do NOT refresh after each individual file change to avoid intermediate compilation errors.
 
 ### Performance Tips
 
