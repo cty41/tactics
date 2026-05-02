@@ -116,30 +116,6 @@
 2. **路径**：在适用时使用项目路径（`Assets/...`）而非场景名。
 3. **Inspector**：在 Inspector 相关代码中，适当时优先使用 Odin API。
 
-## 代码修改后刷新（强制）
-
-Agent 在完成一批代码或资产文件修改后，**必须**调用 MCP `refresh_unity`（`compile="request"`）触发 Unity 编译。
-
-### 触发条件
-
-以下操作完成后需要刷新：
-- 创建、修改或删除 `.cs` 脚本
-- 创建、修改或删除 `.shader` 着色器
-- 创建、修改或删除 `.uxml`、`.uss` UI 文件
-- 创建、修改或删除 `.asset`、`.mat` 等序列化资产文件
-
-### 策略：批量统一刷新
-
-- **禁止**在批量修改过程中逐个调用 `refresh_unity`
-- 应在**一批相关修改全部完成后**，**统一调用一次** `refresh_unity`
-- 这避免了中间态文件导致的编译错误
-
-### 命令
-
-```
-refresh_unity(mode="force", compile="request", wait_for_ready=true)
-```
-
 ## Agent 约束
 
 ### 语言
