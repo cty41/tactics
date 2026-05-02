@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Tactics.Common.Units.Classes;
+using Tactics.Equipment;
 
 namespace Tactics.Roster
 {
@@ -24,6 +26,74 @@ namespace Tactics.Roster
         public int AttackFactor { get; set; }
         public int DefenceFactor { get; set; }
         public RoleType RoleType { get; set; }
+
+        public Dictionary<EquipmentSlot, string> Equipment { get; set; } = new Dictionary<EquipmentSlot, string>();
+
+        public int GetTotalStrength()
+        {
+            int bonus = 0;
+            foreach (var kvp in Equipment)
+            {
+                var def = EquipmentDatabase.GetById(kvp.Value);
+                if (def != null) bonus += def.StrengthBonus;
+            }
+            return Strength + bonus;
+        }
+
+        public int GetTotalAgility()
+        {
+            int bonus = 0;
+            foreach (var kvp in Equipment)
+            {
+                var def = EquipmentDatabase.GetById(kvp.Value);
+                if (def != null) bonus += def.AgilityBonus;
+            }
+            return Agility + bonus;
+        }
+
+        public int GetTotalConstitution()
+        {
+            int bonus = 0;
+            foreach (var kvp in Equipment)
+            {
+                var def = EquipmentDatabase.GetById(kvp.Value);
+                if (def != null) bonus += def.ConstitutionBonus;
+            }
+            return Constitution + bonus;
+        }
+
+        public int GetTotalIntelligence()
+        {
+            int bonus = 0;
+            foreach (var kvp in Equipment)
+            {
+                var def = EquipmentDatabase.GetById(kvp.Value);
+                if (def != null) bonus += def.IntelligenceBonus;
+            }
+            return Intelligence + bonus;
+        }
+
+        public int GetTotalCharisma()
+        {
+            int bonus = 0;
+            foreach (var kvp in Equipment)
+            {
+                var def = EquipmentDatabase.GetById(kvp.Value);
+                if (def != null) bonus += def.CharismaBonus;
+            }
+            return Charisma + bonus;
+        }
+
+        public int GetTotalLuck()
+        {
+            int bonus = 0;
+            foreach (var kvp in Equipment)
+            {
+                var def = EquipmentDatabase.GetById(kvp.Value);
+                if (def != null) bonus += def.LuckBonus;
+            }
+            return Luck + bonus;
+        }
 
         public static CharacterDefinition CreateDefault(string id, string displayName, int strengthBonus = 0, int intelligenceBonus = 0, int agilityBonus = 0, RoleType roleType = RoleType.Barbarian)
         {

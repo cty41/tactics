@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Cheats;
 using Tactics.Runtime.BattleLog;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -115,12 +116,22 @@ namespace Tactics.UI
             if (string.IsNullOrWhiteSpace(command))
                 return;
 
-            var label = new Label($"> {command}");
-            label.AddToClassList("log-entry");
-            label.style.color = Color.white;
+            var inputLabel = new Label($"> {command}");
+            inputLabel.AddToClassList("log-entry");
+            inputLabel.style.color = Color.white;
 
-            _logList.contentContainer.Add(label);
-            _logEntryPool.Enqueue(label);
+            _logList.contentContainer.Add(inputLabel);
+            _logEntryPool.Enqueue(inputLabel);
+
+            string result = CheatCommandManager.Instance.Execute(command);
+            if (!string.IsNullOrEmpty(result))
+            {
+                var resultLabel = new Label(result);
+                resultLabel.AddToClassList("log-entry");
+                resultLabel.style.color = result.StartsWith("[Error]") ? new Color(1f, 0.3f, 0.3f) : new Color(0.3f, 1f, 0.3f);
+                _logList.contentContainer.Add(resultLabel);
+                _logEntryPool.Enqueue(resultLabel);
+            }
 
             while (_logEntryPool.Count > MaxLogEntries)
             {

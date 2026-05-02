@@ -1,0 +1,79 @@
+[
+  {
+    "Id": "sword_01",
+    "DisplayName": "铁剑",
+    "Slot": "Weapon",
+    "StrengthBonus": 5,
+    "AgilityBonus": 0,
+    "ConstitutionBonus": 0,
+    "IntelligenceBonus": 0,
+    "CharismaBonus": 0,
+    "LuckBonus": 0
+  },
+  {
+    "Id": "leather_armor_01",
+    "DisplayName": "皮甲",
+    "Slot": "Armor",
+    "StrengthBonus": 0,
+    "AgilityBonus": 2,
+    "ConstitutionBonus": 3,
+    "IntelligenceBonus": 0,
+    "CharismaBonus": 0,
+    "LuckBonus": 0
+  },
+  {
+    "Id": "iron_helmet_01",
+    "DisplayName": "铁盔",
+    "Slot": "Helmet",
+    "StrengthBonus": 0,
+    "AgilityBonus": 0,
+    "ConstitutionBonus": 2,
+    "IntelligenceBonus": 0,
+    "CharismaBonus": 0,
+    "LuckBonus": 0
+  },
+  {
+    "Id": "leather_boots_01",
+    "DisplayName": "皮靴",
+    "Slot": "Boots",
+    "StrengthBonus": 0,
+    "AgilityBonus": 3,
+    "ConstitutionBonus": 0,
+    "IntelligenceBonus": 0,
+    "CharismaBonus": 0,
+    "LuckBonus": 0
+  },
+  {
+    "Id": "lucky_ring_01",
+    "DisplayName": "幸运戒指",
+    "Slot": "Accessory",
+    "StrengthBonus": 0,
+    "AgilityBonus": 0,
+    "ConstitutionBonus": 0,
+    "IntelligenceBonus": 0,
+    "CharismaBonus": 1,
+    "LuckBonus": 5
+  },
+  {
+    "Id": "staff_01",
+    "DisplayName": "橡木法杖",
+    "Slot": "Weapon",
+    "StrengthBonus": 0,
+    "AgilityBonus": 0,
+    "ConstitutionBonus": 0,
+    "IntelligenceBonus": 5,
+    "CharismaBonus": 0,
+    "LuckBonus": 0
+  },
+  {
+    "Id": "bow_01",
+    "DisplayName": "短弓",
+    "Slot": "Weapon",
+    "StrengthBonus": 1,
+    "AgilityBonus": 4,
+    "ConstitutionBonus": 0,
+    "IntelligenceBonus": 0,
+    "CharismaBonus": 0,
+    "LuckBonus": 0
+  }
+]

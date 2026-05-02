@@ -10,12 +10,12 @@ namespace Tactics.Roster
             if (data == null || unit == null)
                 return;
 
-            unit.Strength = data.Strength;
-            unit.Agility = data.Agility;
-            unit.Constitution = data.Constitution;
-            unit.Intelligence = data.Intelligence;
-            unit.Charisma = data.Charisma;
-            unit.Luck = data.Luck;
+            unit.Strength = data.GetTotalStrength();
+            unit.Agility = data.GetTotalAgility();
+            unit.Constitution = data.GetTotalConstitution();
+            unit.Intelligence = data.GetTotalIntelligence();
+            unit.Charisma = data.GetTotalCharisma();
+            unit.Luck = data.GetTotalLuck();
             unit.Speed = data.Speed;
             unit.AttackRange = data.AttackRange;
             unit.AttackFactor = data.AttackFactor;
