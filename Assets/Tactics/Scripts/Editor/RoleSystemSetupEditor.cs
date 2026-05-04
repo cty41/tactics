@@ -87,15 +87,17 @@ namespace Tactics.Editor
                     var unit = mageInstance.GetComponent<Unit>();
                     if (unit != null)
                     {
-                        var cellManager = GameObject.Find("CellManager")?.GetComponent<Tactics.Common.Cells.UnityCellManager>();
-                        var dataTilemap = GameObject.Find("DataLayer")?.GetComponent<UnityEngine.Tilemaps.Tilemap>();
-
                         var unitSo = new SerializedObject(unit);
-                        unitSo.FindProperty("_playerNumber").intValue = 0;
-                        if (cellManager != null)
-                            unitSo.FindProperty("_cellManager").objectReferenceValue = cellManager;
+                        var cellManager = GameObject.Find("CellManager")?.GetComponent<Tactics.Common.Cells.UnityCellManager>();
+                        var dataTilemap = GameObject.Find("BackgroundLayer")?.GetComponent<UnityEngine.Tilemaps.Tilemap>();
                         if (dataTilemap != null)
-                            unitSo.FindProperty("_dataTilemap").objectReferenceValue = dataTilemap;
+                        {
+                            unitSo.FindProperty("_gridTilemap").objectReferenceValue = dataTilemap;
+                        }
+                        if (cellManager != null)
+                        {
+                            unitSo.FindProperty("_cellManager").objectReferenceValue = cellManager;
+                        }
                         unitSo.ApplyModifiedProperties();
                     }
 

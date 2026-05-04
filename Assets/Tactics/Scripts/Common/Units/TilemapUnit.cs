@@ -1,3 +1,4 @@
+using Tactics.Cells;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -5,6 +6,7 @@ using Tactics.Common.Utilities;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 
 namespace Tactics.Units
@@ -15,7 +17,8 @@ namespace Tactics.Units
         private ICell _currentCell;
         private bool _cellInitialized;
         [SerializeField] private UnityCellManager _cellManager;
-        [SerializeField] private Tilemap _dataTilemap;
+        [FormerlySerializedAs("_dataTilemap")]
+        [SerializeField] private Tilemap _gridTilemap;
 
         private float baseMovementSpeed;
 
@@ -40,32 +43,12 @@ namespace Tactics.Units
 #pragma warning restore CS0618
             }
 
-            if (_dataTilemap == null)
+            if (_gridTilemap == null)
             {
-                var tilemaps = Object.FindObjectsByType<Tilemap>(
-                    FindObjectsInactive.Include, FindObjectsSortMode.None);
-                foreach (var t in tilemaps)
-                {
-                    if (t.name == "DataLayer")
-                    {
-                        _dataTilemap = t;
-                        break;
-                    }
-                }
-#pragma warning disable CS0618
-                if (_dataTilemap == null)
-                {
-                    var allTilemaps = FindObjectsOfType<Tilemap>(true);
-                    foreach (var t in allTilemaps)
-                    {
-                        if (t.name == "DataLayer")
-                        {
-                            _dataTilemap = t;
-                            break;
-                        }
-                    }
-                }
-#pragma warning restore CS0618
+                var tcm = Object.FindFirstObjectByType<TilemapCellManager>(
+                    FindObjectsInactive.Include);
+                if (tcm != null)
+                    _gridTilemap = tcm.GridLayer;
             }
         }
 
@@ -76,9 +59,9 @@ namespace Tactics.Units
                 if (!_cellInitialized)
                 {
                     EnsureTilemapRefs();
-                    if (_dataTilemap == null)
+                    if (_gridTilemap == null)
                     {
-                        Debug.LogError($"[{nameof(TilemapUnit)}] _dataTilemap is null on {gameObject.name}. Cannot initialize CurrentCell.");
+                        Debug.LogError($"[{nameof(TilemapUnit)}] _gridTilemap is null on {gameObject.name}. Cannot initialize CurrentCell.");
                         return null;
                     }
                     if (_cellManager == null)
@@ -86,7 +69,7 @@ namespace Tactics.Units
                         Debug.LogError($"[{nameof(TilemapUnit)}] _cellManager is null on {gameObject.name}. Cannot initialize CurrentCell.");
                         return null;
                     }
-                    Vector3Int gridPos = _dataTilemap.WorldToCell(WorldPosition.ToVector3());
+                    Vector3Int gridPos = _gridTilemap.WorldToCell(WorldPosition.ToVector3());
                     _currentCell = _cellManager.GetCellAt(new Vector2IntImpl(gridPos.x, gridPos.y));
                     if (_currentCell == null)
                     {

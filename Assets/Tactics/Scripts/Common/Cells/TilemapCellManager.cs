@@ -7,6 +7,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 
 namespace Tactics.Cells
@@ -20,17 +21,12 @@ namespace Tactics.Cells
         public override event Action<ICell> CellRemoved;
 #pragma warning restore CS0067
 
-        [SerializeField] Tilemap _dataLayer;
+        [FormerlySerializedAs("_dataLayer")]
+        [SerializeField] Tilemap _gridLayer;
         [SerializeField] Tilemap _obstacleLayer;
 
         HashSet<Vector2IntImpl> _blockedCells;
 
-        // Old highlight fields kept for backward compatibility but unused by default.
-        // Procedural rendering is used instead.
-        [SerializeField] Tilemap _highlightLayer;
-        [SerializeField] Tile _highlightTile;
-        [SerializeField] Tile _reachableTile;
-        [SerializeField] Tile _pathTile;
         [SerializeField] private Tile _lineHorizontal;
         [SerializeField] private Tile _lineVertical;
         [SerializeField] private Tile _curlLowerRight;
@@ -57,7 +53,6 @@ namespace Tactics.Cells
         private VirtualSquareCell _selectedCell;
         private float _lastRaycast = 0;
         [SerializeField] private float _raycastDelay = 0.1f;
-        [SerializeField] private int _highlightSortingOrder = 2;
 
         private ProceduralTileHighlightRenderer _highlightRenderer;
 
@@ -79,26 +74,21 @@ namespace Tactics.Cells
 
         public override void Initialize(IGridController gridController)
         {
-            // Clear old highlight layer if it still exists.
-            _highlightLayer?.ClearAllTiles();
-
-            // Ensure procedural highlight renderer is available.
             EnsureHighlightRenderer();
-            HighlightRenderer.SetDataLayer(_dataLayer);
+            HighlightRenderer.SetDataLayer(_gridLayer);
 
-            BoundsInt bounds = _dataLayer.cellBounds;
+            var bounds = _gridLayer.cellBounds;
             _cells = new Dictionary<Vector2IntImpl, VirtualSquareCell>();
 
             foreach (Vector3Int pos in bounds.allPositionsWithin)
             {
-                DataTile tile = _dataLayer.GetTile<DataTile>(pos);
+                var tile = _gridLayer.GetTile(pos);
                 if (tile == null)
-                {
                     continue;
-                }
-                var worldPosition = _dataLayer.GetCellCenterWorld(pos).ToIVector3();
+
+                var worldPosition = _gridLayer.GetCellCenterWorld(pos).ToIVector3();
                 var gridPosition = new Vector2IntImpl(pos.x, pos.y);
-                var cell = new VirtualSquareCell(gridPosition, worldPosition, tile.movementCost, false, tile.cellType);
+                var cell = new VirtualSquareCell(gridPosition, worldPosition, 1, false, null);
                 _cells.Add(gridPosition, cell);
                 CellAdded?.Invoke(cell);
             }
@@ -106,15 +96,16 @@ namespace Tactics.Cells
             if (_cells.Count == 0)
             {
                 throw new InvalidOperationException(
-                    $"TilemapCellManager.Initialize: No cells found in {_dataLayer.name}. " +
-                    $"Bounds: {bounds}. Make sure the DataLayer tilemap contains DataTile tiles, " +
-                    $"not regular Tile tiles. Check Assets/Tactics/Palettes/DataTiles/*.asset files."
+                    $"TilemapCellManager.Initialize: No cells found in {_gridLayer.name}. " +
+                    $"Bounds: {bounds}. Make sure the Grid Layer tilemap contains tiles within the desired play area."
                 );
             }
 
             _selectedCell = _cells.Values.First();
             BuildBlockedCells();
         }
+
+        public Tilemap GridLayer => _gridLayer;
 
         public override ICell GetCellAt(Vector2IntImpl coords)
         {
@@ -199,7 +190,7 @@ namespace Tactics.Cells
             }
             
             Vector3 mouseWorldPos = ray.GetPoint(enter);
-            Vector3Int cellPos = _dataLayer.WorldToCell(mouseWorldPos);
+            Vector3Int cellPos = _gridLayer.WorldToCell(mouseWorldPos);
 
             var gridPosition = new Vector2IntImpl(cellPos.x, cellPos.y);
 
@@ -208,7 +199,7 @@ namespace Tactics.Cells
                 return null;
             }
 
-            Vector3 cellWorldCenter = _dataLayer.GetCellCenterWorld(cellPos);
+            Vector3 cellWorldCenter = _gridLayer.GetCellCenterWorld(cellPos);
 
             Collider2D[] colliders2D = Physics2D.OverlapPointAll(cellWorldCenter);
             if (colliders2D.Any(c => !c.isTrigger))

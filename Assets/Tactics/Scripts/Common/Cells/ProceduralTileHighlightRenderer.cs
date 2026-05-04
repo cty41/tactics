@@ -5,6 +5,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Utilities;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 
 namespace Tactics.Cells
@@ -22,7 +23,8 @@ namespace Tactics.Cells
     [RequireComponent(typeof(MeshRenderer))]
     public class ProceduralTileHighlightRenderer : MonoBehaviour
     {
-        [SerializeField] private Tilemap _dataLayer;
+        [FormerlySerializedAs("_dataLayer")]
+        [SerializeField] private Tilemap _gridLayer;
 
         [SerializeField] private Color _highlightedColor = new Color(1f, 1f, 1f, 0.5f);
         [SerializeField] private Color _reachableMoveColor = new Color(0.2f, 0.8f, 1f, 0.5f);
@@ -70,7 +72,7 @@ namespace Tactics.Cells
 
         public void SetDataLayer(Tilemap dataLayer)
         {
-            _dataLayer = dataLayer;
+            _gridLayer = dataLayer;
         }
 
         private void SetupMaterial()
@@ -306,7 +308,7 @@ namespace Tactics.Cells
 
         private void RebuildMesh()
         {
-            if (_dataLayer == null || _highlights.Count == 0)
+            if (_gridLayer == null || _highlights.Count == 0)
             {
                 _mesh.Clear();
                 return;
@@ -326,11 +328,11 @@ namespace Tactics.Cells
                 foreach (var coord in kvp.Value)
                 {
                     Vector3Int pos = new Vector3Int(coord.x, coord.y, 0);
-                    Vector3 center = _dataLayer.GetCellCenterWorld(pos);
-                    center.y += 0.02f; // Slightly above terrain to avoid z-fighting and occlusion
+                    Vector3 center = _gridLayer.GetCellCenterWorld(pos);
+                    center.y += 0.02f;
 
-                    Vector3 rightNeighbor = _dataLayer.GetCellCenterWorld(pos + Vector3Int.right);
-                    Vector3 upNeighbor = _dataLayer.GetCellCenterWorld(pos + Vector3Int.up);
+                    Vector3 rightNeighbor = _gridLayer.GetCellCenterWorld(pos + Vector3Int.right);
+                    Vector3 upNeighbor = _gridLayer.GetCellCenterWorld(pos + Vector3Int.up);
                     Vector3 dx = (rightNeighbor - center) * 0.5f;
                     Vector3 dy = (upNeighbor - center) * 0.5f;
 
