@@ -142,6 +142,8 @@ namespace Tactics.UI
             var playerMap = inputActions.FindActionMap("Player");
             if (playerMap != null)
             {
+                playerMap.Enable();
+
                 _endTurnAction = playerMap.FindAction("EndTurn");
                 if (_endTurnAction != null)
                 {

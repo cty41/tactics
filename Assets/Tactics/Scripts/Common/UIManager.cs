@@ -179,6 +179,8 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
             if (playerMap == null)
                 return;
 
+            playerMap.Enable();
+
             _toggleConsoleAction = playerMap.FindAction("ToggleConsole");
             if (_toggleConsoleAction != null)
             {

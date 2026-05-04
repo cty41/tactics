@@ -16,7 +16,7 @@
 }
 
 .log-entry {
-    font-size: 12px;
+    font-size: 16px;
     margin-bottom: 2px;
     white-space: normal;
 }
@@ -28,7 +28,7 @@
     color: rgb(255, 255, 255);
     border-color: rgba(100, 100, 100, 0.8);
     border-width: 1px;
-    font-size: 12px;
+    font-size: 16px;
     margin: 4px 8px 8px 8px;
 }
 
