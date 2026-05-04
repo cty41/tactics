@@ -92,5 +92,7 @@ namespace Tactics.Common.Cells
         Task MarkAsAoE(IEnumerable<ICell> cells);
 
         void SetColor(ICell cell, float r, float g, float b, float a);
+
+        bool IsCellWalkable(ICell cell);
     }
 }

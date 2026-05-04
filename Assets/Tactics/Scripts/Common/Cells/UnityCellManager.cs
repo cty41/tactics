@@ -29,5 +29,6 @@ namespace Tactics.Common.Cells
         public abstract Task UnMark(ICell cell);
         public abstract Task MarkAsAoE(IEnumerable<ICell> cells);
         public abstract void SetColor(ICell cell, float r, float g, float b, float a);
+        public abstract bool IsCellWalkable(ICell cell);
     }
 }

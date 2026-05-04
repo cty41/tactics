@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using Tactics.AssetPipeline;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
@@ -11,12 +13,23 @@ using Tactics.Common.Controllers.TurnResolvers;
 using Tactics.Common.Network;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
-using Tactics.AssetPipeline;
+using Tactics.Common.Units.Classes;
+using Tactics.Common.Utilities;
 using Tactics.Roguelike;
+using Tactics.Roster;
 using Tactics.UI;
+using Tactics.Units;
 
 namespace Tactics.Common.Battle
 {
+    [Serializable]
+    public class RolePrefabMapping
+    {
+        public RoleType RoleType;
+        public GameObject Prefab;
+        public Vector2Int StartingCell;
+    }
+
     /// <summary>
     /// 战斗控制器，统一管理网格、单位、玩家、回合以及战斗生命周期。
     /// 合并了原 UnityGridController 的职责，直接实现 IGridController 接口。
@@ -116,6 +129,10 @@ namespace Tactics.Common.Battle
         /// </summary>
         [SerializeField] private int _localPlayerNumber;
 
+        [Header("Party Spawning")]
+        [SerializeField] private int _humanPlayerNumber;
+        [SerializeField] private List<RolePrefabMapping> _rolePrefabMappings = new();
+
         #endregion
 
         #region Private Fields
@@ -124,6 +141,7 @@ namespace Tactics.Common.Battle
         private IList<IPlayer> _runtimePlayers;
         private IList<IUnit> _units;
         private int _unitCount;
+        private readonly HashSet<string> _loadedPaths = new();
 
         #endregion
 
@@ -160,7 +178,6 @@ namespace Tactics.Common.Battle
 
         protected override void OnDestroy()
         {
-            // 取消订阅事件
             _controller.GameInitialized -= OnGameInitialized;
             _controller.GameEnded -= OnGameEnded;
             _controller.GameStarted -= OnGameStarted;
@@ -169,20 +186,175 @@ namespace Tactics.Common.Battle
 
             UnitRemoved -= OnUnitRemoved;
 
+            var mgr = GameAssetManager.Instance;
+            if (mgr != null)
+            {
+                foreach (var path in _loadedPaths)
+                    mgr.Release(path);
+            }
+            _loadedPaths.Clear();
+
             RoguelikeBattleReturnHandler.Instance.UnregisterController(this);
             base.OnDestroy();
         }
 
         private async void Start()
         {
-            if (this == null || gameObject == null) return; // 防止被 Destroy 后仍执行
+            if (this == null || gameObject == null) return;
+
+            var mgr = GameAssetManager.Instance;
+            while (mgr == null || !mgr.IsInitialized)
+            {
+                await Task.Yield();
+                mgr = GameAssetManager.Instance;
+            }
+
+            SpawnPartyUnits();
+
             if (_startImmediatelly)
             {
-                // Initialize and start the game logic first (sets up CellManager, UnitManager, etc.)
                 InitializeGame();
                 StartGame();
-                // Then handle battle-specific setup
                 await StartBattleAsync();
+            }
+        }
+
+        private void SpawnPartyUnits()
+        {
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (state?.ActivePartyCharacterIds == null || state.ActivePartyCharacterIds.Count == 0)
+            {
+                Debug.LogWarning("[BattleController] No active party characters found.");
+                return;
+            }
+
+            Transform container = UnitContainerTransform;
+            if (container == null)
+                container = transform;
+
+            var unitManager = (this as IUnitManager);
+            var existingUnits = FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var existing in existingUnits)
+            {
+                if (existing.PlayerNumber == _humanPlayerNumber)
+                {
+                    unitManager.RemoveUnit(existing);
+                    Destroy(existing.gameObject);
+                }
+            }
+
+            var prefabLookup = new Dictionary<RoleType, GameObject>();
+            var mgr = GameAssetManager.Instance;
+
+            foreach (var jsonMapping in PlayerAdventureStateStore.TestPrefabMappings)
+            {
+                if (string.IsNullOrEmpty(jsonMapping.PrefabPath))
+                    continue;
+
+                GameObject prefab = null;
+                if (mgr != null)
+                {
+                    var resolvedPath = CharacterDefinition.ResolvePrefabPath(jsonMapping.PrefabPath);
+                    if (!string.IsNullOrEmpty(resolvedPath))
+                        prefab = mgr.Load<GameObject>(resolvedPath);
+                }
+
+                if (prefab != null)
+                {
+                    _loadedPaths.Add(CharacterDefinition.ResolvePrefabPath(jsonMapping.PrefabPath));
+                    prefabLookup[jsonMapping.RoleType] = prefab;
+                }
+            }
+
+            foreach (var mapping in _rolePrefabMappings)
+            {
+                if (mapping.Prefab != null && !prefabLookup.ContainsKey(mapping.RoleType))
+                    prefabLookup[mapping.RoleType] = mapping.Prefab;
+            }
+
+            GameObject fallbackPrefab = prefabLookup.Values.FirstOrDefault();
+
+            var respawnPoints = new List<Transform>();
+            var unitManagerGo = container.gameObject;
+            if (unitManagerGo != null)
+            {
+                foreach (Transform child in unitManagerGo.transform)
+                {
+                    if (child.CompareTag("Respawn"))
+                        respawnPoints.Add(child);
+                }
+            }
+
+            for (int i = 0; i < state.ActivePartyCharacterIds.Count; i++)
+            {
+                string id = state.ActivePartyCharacterIds[i];
+                var def = state.Roster.FirstOrDefault(c => c.Id == id);
+                if (def == null)
+                {
+                    Debug.LogWarning($"[BattleController] Party id '{id}' not in roster; skipping slot {i}.");
+                    continue;
+                }
+
+                GameObject prefab = null;
+
+                var characterPath = CharacterDefinition.ResolvePrefabPath(def.PrefabPath);
+                if (!string.IsNullOrEmpty(characterPath) && mgr != null)
+                {
+                    prefab = mgr.Load<GameObject>(characterPath);
+                    if (prefab != null)
+                        _loadedPaths.Add(characterPath);
+                }
+
+                if (prefab == null && !prefabLookup.TryGetValue(def.RoleType, out prefab))
+                    prefab = null;
+
+                if (prefab == null)
+                {
+                    prefab = fallbackPrefab;
+                    if (prefab == null)
+                    {
+                        Debug.LogError($"[BattleController] No prefab for {def.Id} (path={def.PrefabPath}, role={def.RoleType}) and no fallback available.");
+                        continue;
+                    }
+                    Debug.LogWarning($"[BattleController] No prefab for {def.Id}, using fallback.");
+                }
+
+                var go = Instantiate(prefab, container);
+                go.name = $"PartyUnit_{def.DisplayName}";
+
+                var unit = go.GetComponent<TilemapUnit>();
+                if (unit == null)
+                {
+                    Debug.LogError($"[BattleController] Prefab for {def.RoleType} does not have a TilemapUnit component.");
+                    Destroy(go);
+                    continue;
+                }
+
+                unit.PlayerNumber = _humanPlayerNumber;
+
+                if (i < respawnPoints.Count)
+                {
+                    go.transform.position = respawnPoints[i].position;
+                }
+                else
+                {
+                    var referenceUnit = GameObject.Find("Infantry Blue");
+                    if (referenceUnit != null)
+                    {
+                        go.transform.position = referenceUnit.transform.position + new Vector3(i * 2.5f, 0, 0);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[BattleController] No Respawn point for slot {i} and no Infantry Blue reference. Using prefab default position.");
+                    }
+                }
+
+                CharacterStatsApplicator.ApplyToUnit(def, unit);
+
+                var link = unit.GetComponent<RosterCharacterLink>();
+                if (link == null)
+                    link = unit.gameObject.AddComponent<RosterCharacterLink>();
+                link.CharacterId = def.Id;
             }
         }
 

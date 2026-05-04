@@ -117,5 +117,10 @@ namespace Tactics.Common.Cells
         {
             (cell as Cell).SetColor(r, g, b, a);
         }
+
+        public override bool IsCellWalkable(ICell cell)
+        {
+            return true;
+        }
     }
 }

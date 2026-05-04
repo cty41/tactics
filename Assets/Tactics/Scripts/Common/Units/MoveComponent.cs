@@ -17,6 +17,8 @@ namespace Tactics.Common.Units
         /// </summary>
         protected readonly IUnit _unitReference;
 
+        private ICellManager _cellManager;
+
         /// <summary>
         /// Caches the paths from the current cell to other cells for movement efficiency.
         /// </summary>
@@ -44,6 +46,8 @@ namespace Tactics.Common.Units
         /// <returns>True if the unit can move to the cell, otherwise false.</returns>
         public bool IsCellMovableTo(ICell cell)
         {
+            if (_cellManager != null && !_cellManager.IsCellWalkable(cell))
+                return false;
             return !cell.IsTaken;
         }
 
@@ -55,6 +59,8 @@ namespace Tactics.Common.Units
         /// <returns>True if the unit can traverse from source to destination; otherwise, false.</returns>
         public bool IsCellTraversable(ICell source, ICell destination)
         {
+            if (_cellManager != null && !_cellManager.IsCellWalkable(destination))
+                return false;
             return !destination.IsTaken;
 
         }
@@ -145,6 +151,7 @@ namespace Tactics.Common.Units
         /// <param name="cellManager">The cell manager that provides access to all cells.</param>
         public void CachePaths(ICellManager cellManager)
         {
+            _cellManager = cellManager;
             (_pathCache, _costSoFar) = pathfinder.FindAllPaths(_unitReference.GetGraphEdges(cellManager), _unitReference.CurrentCell);
         }
 

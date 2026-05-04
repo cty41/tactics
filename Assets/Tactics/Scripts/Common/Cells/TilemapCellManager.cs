@@ -21,6 +21,9 @@ namespace Tactics.Cells
 #pragma warning restore CS0067
 
         [SerializeField] Tilemap _dataLayer;
+        [SerializeField] Tilemap _obstacleLayer;
+
+        HashSet<Vector2IntImpl> _blockedCells;
 
         // Old highlight fields kept for backward compatibility but unused by default.
         // Procedural rendering is used instead.
@@ -110,6 +113,7 @@ namespace Tactics.Cells
             }
 
             _selectedCell = _cells.Values.First();
+            BuildBlockedCells();
         }
 
         public override ICell GetCellAt(Vector2IntImpl coords)
@@ -119,6 +123,38 @@ namespace Tactics.Cells
                 return cell;
             }
             return null;
+        }
+
+        public override bool IsCellWalkable(ICell cell)
+        {
+            return cell != null && !_blockedCells.Contains(cell.GridCoordinates);
+        }
+
+        public void RebuildBlockedCells()
+        {
+            _blockedCells?.Clear();
+            BuildBlockedCells();
+        }
+
+        private void BuildBlockedCells()
+        {
+            if (_obstacleLayer == null)
+            {
+                _blockedCells = new HashSet<Vector2IntImpl>();
+                return;
+            }
+
+            _blockedCells = new HashSet<Vector2IntImpl>();
+
+            foreach (var kvp in _cells)
+            {
+                var worldPos = kvp.Value.WorldPosition.ToVector3();
+                var colliders = Physics2D.OverlapPointAll(worldPos);
+                if (colliders.Any(c => !c.isTrigger))
+                {
+                    _blockedCells.Add(kvp.Key);
+                }
+            }
         }
 
         void Update()

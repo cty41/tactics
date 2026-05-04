@@ -1,14 +1,14 @@
-using System;
 using UnityEditor;
 using UnityEditor.Compilation;
+using UnityEngine;
 
 namespace Tactics.CompileToast.Editor
 {
     [InitializeOnLoad]
     internal static class CompilationFinishedToastHook
     {
-        private static DateTime _compileStartTime;
-
+        private const string PendingKey = "CompileToast_Pending";
+        private const string FailedKey = "CompileToast_Failed";
         private static bool _appIdRegistered;
 
         static CompilationFinishedToastHook()
@@ -22,30 +22,33 @@ namespace Tactics.CompileToast.Editor
 #if UNITY_EDITOR_WIN
         private static void OnCompilationStarted(object _)
         {
-            _compileStartTime = DateTime.UtcNow;
-        }
-
-        private static void OnCompilationFinished(object _)
-        {
-            // Ensure AppId is registered once (lazy init on first compile)
             if (!_appIdRegistered)
             {
                 WindowsCompileToastSender.EnsureAppIdRegistered();
                 _appIdRegistered = true;
             }
-
-            EditorApplication.delayCall += SendToastIfSucceeded;
         }
 
-        private static void SendToastIfSucceeded()
+        private static void OnCompilationFinished(object _)
         {
-            if (EditorUtility.scriptCompilationFailed)
-            {
-                WindowsCompileToastSender.TrySend("Tactics", "编译失败");
-                return;
-            }
+            SessionState.SetBool(PendingKey, true);
+            SessionState.SetBool(FailedKey, EditorUtility.scriptCompilationFailed);
+        }
 
-            WindowsCompileToastSender.TrySend("Tactics", "编译成功");
+        [InitializeOnLoadMethod]
+        private static void CheckPendingToast()
+        {
+            if (!SessionState.GetBool(PendingKey, false))
+                return;
+
+            SessionState.EraseBool(PendingKey);
+            bool failed = SessionState.GetBool(FailedKey, false);
+            SessionState.EraseBool(FailedKey);
+
+            if (failed)
+                WindowsCompileToastSender.TrySend("Tactics", "编译失败");
+            else
+                WindowsCompileToastSender.TrySend("Tactics", "编译成功");
         }
 #endif
     }
