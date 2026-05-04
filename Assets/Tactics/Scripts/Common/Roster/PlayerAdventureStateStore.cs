@@ -21,6 +21,43 @@ namespace Tactics.Roster
         /// <summary>Prefab mapping read from TestParty.json.</summary>
         public static List<PrefabMapping> TestPrefabMappings { get; private set; } = new List<PrefabMapping>();
 
+        private static void EnsureTestPrefabMappingsLoaded()
+        {
+            if (TestPrefabMappings.Count > 0)
+                return;
+
+            var mgr = GameAssetManager.Instance;
+            string json = null;
+
+            if (mgr != null)
+            {
+                var textAsset = mgr.Load<TextAsset>(TestPartyJsonPath);
+                if (textAsset != null)
+                {
+                    json = textAsset.text;
+                    mgr.Release(TestPartyJsonPath);
+                }
+            }
+#if UNITY_EDITOR
+            if (json == null && File.Exists(TestPartyJsonPath))
+                json = File.ReadAllText(TestPartyJsonPath);
+#endif
+
+            if (json != null)
+            {
+                try
+                {
+                    var config = JsonConvert.DeserializeObject<TestPartyConfig>(json, JsonSettings);
+                    if (config?.PrefabMappings != null)
+                        TestPrefabMappings = config.PrefabMappings;
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[PlayerAdventureStateStore] Failed to load prefab mappings: {ex.Message}");
+                }
+            }
+        }
+
         public static void EnsureDefaultProfile()
         {
             if (PlayerPrefs.HasKey(PlayerPrefsKey))
@@ -136,6 +173,19 @@ namespace Tactics.Roster
             if (state.ActivePartyCharacterIds.Count > 3)
             {
                 state.ActivePartyCharacterIds = state.ActivePartyCharacterIds.Take(3).ToList();
+                changed = true;
+            }
+
+            EnsureTestPrefabMappingsLoaded();
+
+            foreach (var character in state.Roster)
+            {
+                var mapping = TestPrefabMappings.FirstOrDefault(m => m.RoleType == character.RoleType);
+                var expectedPath = mapping?.PrefabPath ?? character.RoleType.ToString();
+                if (character.PrefabPath == expectedPath)
+                    continue;
+
+                character.PrefabPath = expectedPath;
                 changed = true;
             }
         }

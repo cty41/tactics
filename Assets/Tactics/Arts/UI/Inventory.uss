@@ -7,13 +7,12 @@
     left: 0;
     top: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    justify-content: center;
-    align-items: center;
+    padding: 24px;
 }
 
 .inventory-panel {
-    width: 900px;
-    height: 600px;
+    width: 100%;
+    height: 100%;
     background-color: rgb(235, 222, 195);
     border-width: 4px;
     border-color: rgb(60, 50, 40);
@@ -59,14 +58,17 @@
 
 /* Left Section */
 .left-section {
-    width: 280px;
+    width: 40%;
+    min-width: 360px;
+    max-width: 560px;
     flex-direction: column;
     margin-right: 12px;
 }
 
 /* Equipment Area (Top Left) */
 .equipment-area {
-    flex: 0 0 70px;  /* Fixed height, don't grow/shrink */
+    flex-grow: 2;
+    min-height: 48px;
     flex-direction: column;
     padding: 8px;
     background-color: rgba(255, 255, 255, 0.3);
@@ -78,23 +80,22 @@
 
 .equipment-slots-grid {
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
 }
 
 .equipped-slot {
-    width: 48px;
-    height: 48px;
+    width: 18%;
     background-color: rgba(180, 160, 130, 0.5);
     border-width: 2px;
     border-color: rgb(120, 100, 80);
     border-radius: 6px;
-    margin-right: 6px;
     margin-bottom: 6px;
 }
 
 /* Character Section (Middle) - Only Portrait + Buttons */
 .character-section {
-    flex: 0 0 160px;  /* Fixed height, don't grow/shrink */
+    flex-grow: 2;
+    min-height: 60px;
     flex-direction: column;
     align-items: center;
     padding: 8px;
@@ -118,7 +119,7 @@
 }
 
 .portrait-placeholder {
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(120, 100, 80);
 }
 
@@ -136,7 +137,7 @@
     border-width: 2px;
     border-color: rgb(120, 100, 80);
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 16px;
     color: rgb(60, 50, 40);
     -unity-text-align: middle-center;
     margin-right: 4px;
@@ -150,14 +151,13 @@
 
 /* Stats + Skills Row (Bottom) - 50% of left section height */
 .stats-skills-row {
-    flex: 1 1 0;  /* Grow to fill remaining space */
+    flex-grow: 6;
     flex-direction: row;
     width: 100%;
-    min-height: 200px;  /* Ensure minimum height */
 }
 
 .stats-column {
-    flex-grow: 1;
+    width: 20%;
     flex-direction: column;
     padding: 8px;
     background-color: rgba(255, 255, 255, 0.3);
@@ -173,7 +173,7 @@
 }
 
 .character-name-label {
-    font-size: 14px;
+    font-size: 16px;
     color: rgb(60, 50, 40);
     -unity-font-style: bold;
     margin-bottom: 2px;
@@ -185,13 +185,13 @@
 }
 
 .level-label {
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(100, 80, 60);
     margin-right: 12px;
 }
 
 .hp-label {
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(200, 60, 60);
 }
 
@@ -209,18 +209,20 @@
 }
 
 .stat-label {
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(80, 60, 40);
 }
 
 .stat-value {
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(60, 50, 40);
     -unity-font-style: bold;
 }
 
 .skills-column {
-    width: 70px;
+    width: 80%;
+    min-width: 120px;
+    max-width: 280px;
     flex-direction: column;
     align-items: center;
     padding: 8px;
@@ -231,7 +233,7 @@
 }
 
 .section-title {
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(60, 50, 40);
     -unity-font-style: bold;
     margin-bottom: 4px;
@@ -269,16 +271,16 @@
 
 .storage-grid-4col {
     width: 100%;
+    flex-direction: row;
     flex-wrap: wrap;
 }
 
 .storage-slot-4col {
-    width: 23.5%;
-    aspect-ratio: 1;
+    width: 22%;
+    height: 80px;
     background-color: rgba(180, 160, 130, 0.5);
     border-width: 2px;
     border-color: rgb(120, 100, 80);
     border-radius: 6px;
-    margin-right: 2%;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }

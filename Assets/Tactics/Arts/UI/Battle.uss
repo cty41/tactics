@@ -101,7 +101,7 @@
 
 .bar-label {
     width: 48px;
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(255, 255, 255);
     -unity-text-align: middle-right;
 }
@@ -159,14 +159,14 @@
 }
 
 .skill-card-name {
-    font-size: 11px;
+    font-size: 16px;
     color: rgb(255, 255, 255);
     -unity-text-align: middle-center;
     white-space: normal;
 }
 
 .skill-card-cost {
-    font-size: 13px;
+    font-size: 16px;
     color: rgb(100, 180, 255);
     -unity-font-style: bold;
     -unity-text-align: middle-center;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Tactics.AssetPipeline;
 using Tactics.Equipment;
 using Tactics.Roster;
 using UnityEngine;
@@ -30,6 +31,7 @@ namespace Tactics.UI
         private VisualElement _storageGrid;
         private VisualElement _skillSlotsParent;
         private VisualElement _characterSwitchButtons;
+        private VisualElement _portraitContainer;
 
         private CharacterDefinition _currentCharacter;
         private PlayerAdventureState _currentState;
@@ -47,9 +49,15 @@ namespace Tactics.UI
         {
             base.OnShown();
             EnsureUIElements();
+            RegisterKeyEvents();
             LoadState();
             SetupCharacterSwitchButtons();
             RefreshAll();
+        }
+
+        protected override void OnHidden()
+        {
+            UnregisterKeyEvents();
         }
 
         private void EnsureUIElements()
@@ -75,6 +83,7 @@ namespace Tactics.UI
             _storageGrid = _root.Q<VisualElement>("StorageGrid");
             _skillSlotsParent = _root.Q<VisualElement>("SkillSlots");
             _characterSwitchButtons = _root.Q<VisualElement>("CharacterSwitchButtons");
+            _portraitContainer = _root.Q<VisualElement>("PortraitSmall");
 
             var closeButton = _root.Q<Button>("CloseButton");
             if (closeButton != null)
@@ -97,10 +106,11 @@ namespace Tactics.UI
                 var slotElement = new VisualElement();
                 slotElement.name = $"EquippedSlot_{slot}";
                 slotElement.AddToClassList("equipped-slot");
+                slotElement.style.height = Length.Percent(18);
                 slotElement.userData = slot;
 
                 var label = new Label("空");
-                label.style.fontSize = 8;
+                label.style.fontSize = 16;
                 label.style.color = new Color(0.5f, 0.4f, 0.3f);
                 label.style.unityTextAlign = TextAnchor.MiddleCenter;
                 label.style.width = Length.Percent(100);
@@ -182,6 +192,7 @@ namespace Tactics.UI
             RefreshEquippedSlots();
             RefreshStorage();
             RefreshSkillSlots();
+            RefreshPortrait();
         }
 
         private void RefreshCharacterInfo()
@@ -290,9 +301,11 @@ namespace Tactics.UI
                 slotElement.name = $"StorageSlot_{i}";
                 slotElement.AddToClassList("storage-slot-4col");
                 slotElement.userData = i;
+                if (i % 4 != 3)
+                    slotElement.style.marginRight = Length.Percent(4);
 
                 var label = new Label(string.IsNullOrEmpty(equipmentId) ? "空" : GetEquipmentDisplayName(equipmentId));
-                label.style.fontSize = 9;
+                label.style.fontSize = 16;
                 label.style.color = string.IsNullOrEmpty(equipmentId) ? new Color(0.5f, 0.4f, 0.3f) : new Color(0.2f, 0.15f, 0.1f);
                 label.style.unityTextAlign = TextAnchor.MiddleCenter;
                 label.style.width = Length.Percent(100);
@@ -416,12 +429,82 @@ namespace Tactics.UI
                 slot.Clear();
 
                 var label = new Label("空");
-                label.style.fontSize = 10;
+                label.style.fontSize = 16;
                 label.style.color = new Color(0.5f, 0.4f, 0.3f);
                 label.style.unityTextAlign = TextAnchor.MiddleCenter;
                 label.style.width = Length.Percent(100);
                 label.style.height = Length.Percent(100);
                 slot.Add(label);
+            }
+        }
+
+        private void RefreshPortrait()
+        {
+            if (_portraitContainer == null) return;
+
+            _portraitContainer.Clear();
+
+            if (_currentCharacter == null)
+            {
+                var placeholder = new Label("[立绘]");
+                placeholder.AddToClassList("portrait-placeholder");
+                _portraitContainer.Add(placeholder);
+                return;
+            }
+
+            var resolvedPath = CharacterDefinition.ResolvePrefabPath(_currentCharacter.PrefabPath);
+            if (string.IsNullOrEmpty(resolvedPath))
+            {
+                var fallback = new Label("[无立绘]");
+                fallback.AddToClassList("portrait-placeholder");
+                _portraitContainer.Add(fallback);
+                return;
+            }
+
+            var mgr = GameAssetManager.Instance;
+            if (mgr == null)
+                return;
+
+            var prefab = mgr.Load<GameObject>(resolvedPath);
+            if (prefab != null)
+            {
+                var spriteTransform = prefab.transform.Find("Sprite");
+                if (spriteTransform != null)
+                {
+                    var renderer = spriteTransform.GetComponent<SpriteRenderer>();
+                    if (renderer != null && renderer.sprite != null)
+                    {
+                        var image = new Image();
+                        image.sprite = renderer.sprite;
+                        image.scaleMode = ScaleMode.ScaleToFit;
+                        image.style.width = Length.Percent(100);
+                        image.style.height = Length.Percent(100);
+                        _portraitContainer.Add(image);
+                    }
+                }
+
+                mgr.Release(resolvedPath);
+            }
+        }
+
+        private void RegisterKeyEvents()
+        {
+            if (_root != null)
+                _root.RegisterCallback<KeyDownEvent>(OnKeyDown);
+        }
+
+        private void UnregisterKeyEvents()
+        {
+            if (_root != null)
+                _root.UnregisterCallback<KeyDownEvent>(OnKeyDown);
+        }
+
+        private void OnKeyDown(KeyDownEvent evt)
+        {
+            if (evt.keyCode == KeyCode.Escape)
+            {
+                OnCloseClicked();
+                evt.StopPropagation();
             }
         }
 

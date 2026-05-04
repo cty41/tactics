@@ -26,6 +26,19 @@ namespace Tactics.Roster
         public int AttackFactor { get; set; }
         public int DefenceFactor { get; set; }
         public RoleType RoleType { get; set; }
+        public string PrefabPath { get; set; }
+
+        public const string PrefabPathPrefix = "Assets/Tactics/Arts/Prefabs/Units/";
+        private const string PrefabExtension = ".prefab";
+
+        public static string ResolvePrefabPath(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+            if (name.StartsWith("Assets/", System.StringComparison.Ordinal))
+                return name;
+            return PrefabPathPrefix + name + PrefabExtension;
+        }
 
         public Dictionary<EquipmentSlot, string> Equipment { get; set; } = new Dictionary<EquipmentSlot, string>();
 

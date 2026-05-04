@@ -87,7 +87,11 @@ namespace Tactics.Roster
 
                 GameObject prefab = null;
                 if (mgr != null)
-                    prefab = mgr.Load<GameObject>(jsonMapping.PrefabPath);
+                {
+                    var resolvedPath = CharacterDefinition.ResolvePrefabPath(jsonMapping.PrefabPath);
+                    if (!string.IsNullOrEmpty(resolvedPath))
+                        prefab = mgr.Load<GameObject>(resolvedPath);
+                }
 
                 if (prefab != null)
                 {
@@ -127,15 +131,30 @@ namespace Tactics.Roster
                 }
 
                 GameObject prefab = null;
-                if (!prefabLookup.TryGetValue(def.RoleType, out prefab) || prefab == null)
+
+                // Priority 1: Character's own PrefabPath
+                var characterPath = CharacterDefinition.ResolvePrefabPath(def.PrefabPath);
+                if (!string.IsNullOrEmpty(characterPath) && mgr != null)
+                {
+                    prefab = mgr.Load<GameObject>(characterPath);
+                    if (prefab != null)
+                        _loadedPaths.Add(characterPath);
+                }
+
+                // Priority 2: RoleType → prefabLookup
+                if (prefab == null && !prefabLookup.TryGetValue(def.RoleType, out prefab))
+                    prefab = null;
+
+                // Priority 3: fallback
+                if (prefab == null)
                 {
                     prefab = fallbackPrefab;
                     if (prefab == null)
                     {
-                        Debug.LogError($"[BattlePartyBootstrap] No prefab mapping for role {def.RoleType} and no fallback available.");
+                        Debug.LogError($"[BattlePartyBootstrap] No prefab for {def.Id} (path={def.PrefabPath}, role={def.RoleType}) and no fallback available.");
                         continue;
                     }
-                    Debug.LogWarning($"[BattlePartyBootstrap] No prefab mapping for role {def.RoleType}, using fallback.");
+                    Debug.LogWarning($"[BattlePartyBootstrap] No prefab for {def.Id}, using fallback.");
                 }
 
                 var go = Instantiate(prefab, container);
