@@ -198,16 +198,12 @@ namespace Tactics.Common.Battle
             base.OnDestroy();
         }
 
-        private async void Start()
+        private IEnumerator Start()
         {
-            if (this == null || gameObject == null) return;
+            if (this == null || gameObject == null) yield break;
 
-            var mgr = GameAssetManager.Instance;
-            while (mgr == null || !mgr.IsInitialized)
-            {
-                await Task.Yield();
-                mgr = GameAssetManager.Instance;
-            }
+            while (GameAssetManager.Instance == null || !GameAssetManager.Instance.IsInitialized)
+                yield return null;
 
             SpawnPartyUnits();
 
@@ -215,7 +211,7 @@ namespace Tactics.Common.Battle
             {
                 InitializeGame();
                 StartGame();
-                await StartBattleAsync();
+                _ = StartBattleAsync();
             }
         }
 

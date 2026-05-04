@@ -37,13 +37,16 @@ namespace Tactics.Common.AI.BehaviourTrees
         /// <returns>A task representing the execution, with a boolean result indicating success or failure of the move action.</returns>
         public Task<bool> Execute(bool debugMode)
         {
+            _unit.CachePaths(_gridController.CellManager);
+            var reachableCells = _unit.GetAvailableDestinations(_gridController.CellManager.GetCells());
+
+            var allCells = reachableCells.Append(_unit.CurrentCell).Distinct().ToList();
             foreach (var positionEvaluator in _positionEvaluators)
             {
-                positionEvaluator.Initialize(_unit, _gridController);
+                positionEvaluator.Initialize(allCells, _unit, _gridController);
             }
 
-            var scores = _gridController.CellManager.GetCells()
-                .Where(c => _unit.IsCellMovableTo(c) || c.Equals(_unit.CurrentCell))
+            var scores = allCells
                 .Select(cell =>
                 {
                     float scoreSum = _positionEvaluators.Sum(evaluator =>
@@ -53,7 +56,6 @@ namespace Tactics.Common.AI.BehaviourTrees
                 .OrderByDescending(e => e.scoreSum)
                 .ToList();
 
-            _unit.CachePaths(_gridController.CellManager);
             var topDestination = scores.First(e => e.cell.Equals(_unit.CurrentCell) || _unit.FindPath(e.cell, _gridController.CellManager).Any()).cell;
 
             if (topDestination.Equals(_unit.CurrentCell))

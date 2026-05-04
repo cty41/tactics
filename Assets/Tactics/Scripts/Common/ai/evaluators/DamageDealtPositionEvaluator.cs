@@ -16,6 +16,8 @@ namespace Tactics.Common.AI.Evaluators
         private readonly float _decayRate;
         private readonly float _epsilon;
 
+        private const int MaxScoreDistance = 3;
+
         private readonly Dictionary<ICell, float> _baseScores;
         private readonly Dictionary<ICell, float> _accumulatedScores;
         private float _maxAccumulatedScore;
@@ -42,23 +44,22 @@ namespace Tactics.Common.AI.Evaluators
         /// </summary>
         /// <param name="evaluatingUnit">The unit performing the evaluation.</param>
         /// <param name="gridController">The grid controller managing the game state.</param>
-        public void Initialize(IUnit evaluatingUnit, IGridController gridController)
+        public void Initialize(IReadOnlyList<ICell> possibleCells, IUnit evaluatingUnit, IGridController gridController)
         {
             _baseScores.Clear();
             _accumulatedScores.Clear();
 
-            var possibleCells = gridController.CellManager.GetCells()
-                .Where(c => evaluatingUnit.IsCellMovableTo(c) || c.Equals(evaluatingUnit.CurrentCell))
-                .ToList();
+            var enemies = gridController.UnitManager.GetEnemyUnits(evaluatingUnit.PlayerNumber).ToList();
+
+            var enemyDamage = enemies.ToDictionary(
+                u => u,
+                u => evaluatingUnit.CalculateExpectedTotalDamage(u));
 
             foreach (var cell in possibleCells)
             {
-                float baseScore = gridController.UnitManager.GetEnemyUnits(evaluatingUnit.PlayerNumber)
+                float baseScore = enemies
                     .Where(u => evaluatingUnit.IsUnitAttackable(u, u.CurrentCell, cell))
-                    .Select(u =>
-                    {
-                        return evaluatingUnit.CalculateTotalDamage(u, u.CurrentCell, cell);
-                    })
+                    .Select(u => enemyDamage[u])
                     .DefaultIfEmpty(0f)
                     .Max();
 
@@ -77,6 +78,7 @@ namespace Tactics.Common.AI.Evaluators
                 foreach (var otherCell in possibleCells)
                 {
                     float distance = otherCell.GetDistance(cell);
+                    if (distance > MaxScoreDistance) continue;
                     localSum += _baseScores[otherCell] * (float)Math.Pow((1 - _decayRate), distance);
                 }
                 _accumulatedScores[cell] = localSum;

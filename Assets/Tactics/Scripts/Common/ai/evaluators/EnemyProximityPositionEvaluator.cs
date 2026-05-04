@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
@@ -16,7 +17,7 @@ namespace Tactics.Common.AI.Evaluators
             _maxScore = 0f;
         }
 
-        public void Initialize(IUnit evaluatingUnit, IGridController gridController)
+        public void Initialize(IReadOnlyList<ICell> possibleCells, IUnit evaluatingUnit, IGridController gridController)
         {
             var enemyCount = gridController.UnitManager.GetEnemyUnits(evaluatingUnit.PlayerNumber).Count();
             _maxScore = enemyCount * 0.5f;

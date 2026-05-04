@@ -73,6 +73,14 @@ namespace Tactics.Common.Units
             return damageTaken;
         }
 
+        public float CalculateExpectedTotalDamage(IUnit defender)
+        {
+            var baseDamage = CalculateBaseDamageBeforeCrit(_unitReference, false);
+            var critChance = GetClampedCritChance(_unitReference);
+            var expectedDamage = GetExpectedDamage(baseDamage, critChance);
+            return Math.Max(expectedDamage - defender.DefenceFactor, 1);
+        }
+
         private float GetAttributeScalingBonus(bool isRangedDamage)
         {
             return GetAttributeScalingBonus(_unitReference, isRangedDamage);

@@ -142,6 +142,8 @@ namespace Tactics.Common.Units
         /// <param name="defender">The unit receiving the attack.</param>
         /// <returns>The total effective damage dealt to the defender after all modifiers.</returns>
         float CalculateTotalDamage(IUnit defender);
+
+        float CalculateExpectedTotalDamage(IUnit defender);
     }
 
     /// <summary>

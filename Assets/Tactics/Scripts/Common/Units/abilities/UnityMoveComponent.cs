@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
@@ -7,16 +8,20 @@ using UnityEngine;
 
 namespace Tactics.Common.Units.Abilities
 {
-    /// <summary>
-    /// A Unity-specific implementation of the <see cref="MoveComponent"/> responsible for handling unit movement animations in the game.
-    /// </summary>
     public class UnityMoveComponent : MoveComponent
     {
         public UnityMoveComponent(IUnit unitReference) : base(unitReference)
         {
         }
 
-        public override async Task MovementAnimation(IEnumerable<ICell> path, ICell destination)
+        public override Task MovementAnimation(IEnumerable<ICell> path, ICell destination)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            ((MonoBehaviour)_unitReference).StartCoroutine(AnimateMoveCoroutine(path, destination, tcs));
+            return tcs.Task;
+        }
+
+        private IEnumerator AnimateMoveCoroutine(IEnumerable<ICell> path, ICell destination, TaskCompletionSource<bool> tcs)
         {
             var currentCell = _unitReference.CurrentCell;
             foreach (var cell in path)
@@ -25,13 +30,14 @@ namespace Tactics.Common.Units.Abilities
                 while (!_unitReference.WorldPosition.Equals(cell.WorldPosition))
                 {
                     _unitReference.WorldPosition = Vector3.MoveTowards(_unitReference.WorldPosition.ToVector3(), cell.WorldPosition.ToVector3(), Time.deltaTime * _unitReference.MovementAnimationSpeed).ToIVector3();
-                    await Awaitable.NextFrameAsync();
+                    yield return null;
                 }
 
                 _unitReference.InvokeUnitEnteredCell(new UnitChangedGridPositionEventArgs(_unitReference, currentCell, cell));
                 currentCell = cell;
             }
             _unitReference.WorldPosition = destination.WorldPosition;
+            tcs.SetResult(true);
         }
     }
 }

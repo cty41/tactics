@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -113,96 +114,93 @@ namespace Tactics.Common.Units.Highlight
         /// <summary>
         /// Applies all enabled effects from a highlight configuration.
         /// </summary>
-        private async Task ApplyHighlight(HighlightConfig config, IHighlightParams @params = null)
+        private Task ApplyHighlight(HighlightConfig config, IHighlightParams @params = null)
         {
-            @params = @params ?? NoParam.Instance;
+            var tcs = new TaskCompletionSource<bool>();
+            _unit.StartCoroutine(ApplyHighlightRoutine(config, @params ?? NoParam.Instance, tcs));
+            return tcs.Task;
+        }
 
-            // Scaling
+        private IEnumerator ApplyHighlightRoutine(HighlightConfig config, IHighlightParams @params, TaskCompletionSource<bool> tcs)
+        {
             if (config.scaling && config.target != null)
             {
                 var originalScale = config.target.localScale;
                 var elapsed = 0f;
                 while (elapsed < config.duration)
                 {
-                    elapsed += UnityEngine.Time.deltaTime;
+                    elapsed += Time.deltaTime;
                     var t = Mathf.Clamp01(elapsed / config.duration);
                     config.target.localScale = Vector3.Lerp(originalScale, config.targetValue, t);
-                    await Awaitable.NextFrameAsync();
+                    yield return null;
                 }
             }
 
-            // Color
             if (config.color && config.targetSprite != null)
             {
                 config.targetSprite.color = config.colorValue;
             }
 
-            // Animation
             if (config.animation && config.animator != null)
             {
                 config.animator.SetTrigger(config.parameter);
                 if (config.delay > 0)
-                    await Awaitable.WaitForSecondsAsync(config.delay);
+                    yield return new WaitForSeconds(config.delay);
             }
 
-            // Delay
             if (config.delayEffect && config.delaySeconds > 0)
             {
-                await Awaitable.WaitForSecondsAsync(config.delaySeconds);
+                yield return new WaitForSeconds(config.delaySeconds);
             }
 
-            // Activate
             if (config.activate && config.targetObj != null)
             {
                 config.targetObj.SetActive(config.status);
             }
 
-            // Multi Activate
             if (config.activateMulti)
             {
                 foreach (var target in config.targets)
                     target?.SetActive(config.multiStatus);
             }
 
-            // Sway
             if (config.sway && config.swayTarget != null)
             {
                 var original = config.swayTarget.position;
                 var elapsed = 0f;
                 while (elapsed < config.swayDuration)
                 {
-                    elapsed += UnityEngine.Time.deltaTime;
+                    elapsed += Time.deltaTime;
                     var sway = Mathf.Sin(elapsed * config.swayFrequency * Mathf.PI * 2) * config.swayAmplitude;
                     config.swayTarget.position = original + new Vector3(sway, 0, 0);
-                    await Awaitable.NextFrameAsync();
+                    yield return null;
                 }
                 config.swayTarget.position = original;
             }
 
-            // Spinning
             if (config.spinning && config.spinTarget != null)
             {
                 var elapsed = 0f;
                 var axis = config.spinAxis.normalized;
                 while (elapsed < config.spinDuration)
                 {
-                    config.spinTarget.Rotate(axis, config.spinSpeed * UnityEngine.Time.deltaTime);
-                    elapsed += UnityEngine.Time.deltaTime;
-                    await Awaitable.NextFrameAsync();
+                    config.spinTarget.Rotate(axis, config.spinSpeed * Time.deltaTime);
+                    elapsed += Time.deltaTime;
+                    yield return null;
                 }
             }
 
-            // Renderer Color
             if (config.rendererColor && config.renderer != null)
             {
                 config.renderer.material.color = config.rendererColorValue;
             }
 
-            // Sprite Order
             if (config.spriteOrder && config.orderSprite != null)
             {
                 config.orderSprite.sortingOrder = config.orderValue;
             }
+
+            tcs.SetResult(true);
         }
 
         /// <summary>

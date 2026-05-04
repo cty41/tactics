@@ -399,6 +399,11 @@ namespace Tactics.Common.Units
             return CalculateTotalDamage(defender, defender.CurrentCell, CurrentCell);
         }
 
+        public float CalculateExpectedTotalDamage(IUnit defender)
+        {
+            return _combatComponent.CalculateExpectedTotalDamage(defender);
+        }
+
         protected virtual void RecalculateDerivedStats()
         {
             MaxHealth = Mathf.Max(1, Constitution * 4);

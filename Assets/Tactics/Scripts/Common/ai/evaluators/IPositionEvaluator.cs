@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -20,7 +21,7 @@ namespace Tactics.Common.AI.Evaluators
         /// </summary>
         /// <param name="evaluatingUnit">The unit that is evaluating potential positions.</param>
         /// <param name="gridController">The grid controller.</param>
-        void Initialize(IUnit evaluatingUnit, IGridController gridController);
+        void Initialize(IReadOnlyList<ICell> possibleCells, IUnit evaluatingUnit, IGridController gridController);
 
         /// <summary>
         /// Evaluates the specified cell to determine its suitability as a position for the unit.

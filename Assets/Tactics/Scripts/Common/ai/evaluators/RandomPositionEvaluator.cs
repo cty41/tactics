@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -20,7 +21,7 @@ namespace Tactics.Common.AI.Evaluators
             _rng = new Random();
         }
 
-        public void Initialize(IUnit evaluatingUnit, IGridController gridController)
+        public void Initialize(IReadOnlyList<ICell> possibleCells, IUnit evaluatingUnit, IGridController gridController)
         {
         }
 

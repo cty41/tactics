@@ -65,7 +65,10 @@ namespace Tactics.Common.AI.BehaviourTrees
 
             foreach (var positionEvaluator in _positionEvaluators)
             {
-                positionEvaluator.Initialize(_unit, _gridController);
+                _unit.CachePaths(_gridController.CellManager);
+                var reachable = _unit.GetAvailableDestinations(_gridController.CellManager.GetCells());
+                var allCells = reachable.Append(_unit.CurrentCell).Distinct().ToList();
+                positionEvaluator.Initialize(allCells, _unit, _gridController);
             }
 
             foreach (var cell in _gridController.CellManager.GetCells()
