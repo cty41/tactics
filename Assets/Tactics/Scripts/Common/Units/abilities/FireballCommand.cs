@@ -23,8 +23,10 @@ namespace Tactics.Common.Units.Abilities
         private readonly int _igniteDuration;
         private readonly float _igniteDamage;
 
+        private readonly BuffConfig _igniteBuffConfig;
+
         public FireballCommand(ICell targetCell, IUnit caster, IEnumerable<ICell> aoeCells, float damage,
-            int actionCost = 1, int manaCost = 3, int igniteDuration = 3, float igniteDamage = 1)
+            int actionCost = 1, int manaCost = 3, int igniteDuration = 3, float igniteDamage = 1, BuffConfig igniteBuffConfig = null)
         {
             _targetCell = targetCell;
             _caster = caster;
@@ -34,6 +36,7 @@ namespace Tactics.Common.Units.Abilities
             _manaCost = manaCost;
             _igniteDuration = igniteDuration;
             _igniteDamage = igniteDamage;
+            _igniteBuffConfig = igniteBuffConfig;
         }
 
         public async Task Execute(IUnit unit, IGridController controller)
@@ -46,7 +49,8 @@ namespace Tactics.Common.Units.Abilities
                     if (hitUnit == _caster) continue;
 
                     hitUnit.ModifyHealth(-_damage, _caster);
-                    hitUnit.AddBuff(new IgniteBuff(_caster, _igniteDuration, _igniteDamage));
+                    if (_igniteBuffConfig != null)
+                        hitUnit.AddBuff(new IgniteBuff(_igniteBuffConfig, _caster, _igniteDuration, _igniteDamage));
                     hitUnits.Add(hitUnit);
                 }
             }
@@ -84,8 +88,8 @@ namespace Tactics.Common.Units.Abilities
                     hitUnit.ModifyHealth(+damage, caster);
 
                     var igniteBuffs = hitUnit.GetActiveBuffs()
-                        .OfType<IgniteBuff>()
-                        .Where(b => ReferenceEquals(b.Source, caster))
+                        .OfType<Buff>()
+                        .Where(b => b.Source != null && ReferenceEquals(b.Source, caster))
                         .ToList();
                     foreach (var buff in igniteBuffs)
                     {

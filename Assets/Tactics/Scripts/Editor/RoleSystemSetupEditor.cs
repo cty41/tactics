@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using Tactics.Common.Units.Classes;
 using UnityEditor;
 using UnityEngine;
@@ -14,11 +15,13 @@ namespace Tactics.Editor
         private const string AbilitiesPath = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
         private const string ClassesPath = "Assets/Tactics/Arts/ScriptableObjects/Classes";
         private const string PrefabsPath = "Assets/Tactics/Arts/Prefabs/Units";
+        private const string BuffsPath = "Assets/Tactics/Arts/ScriptableObjects/Buffs";
 
         [MenuItem("Tools/Tactics/Setup Role System")]
         public static void SetupRoleSystem()
         {
             EnsureDirectory(ClassesPath);
+            EnsureDirectory(BuffsPath);
 
             // Load existing abilities
             var meleeAttack = LoadAsset<AbilityConfig>("MeleeAttack.asset");
@@ -31,23 +34,42 @@ namespace Tactics.Editor
                 return;
             }
 
+            // Create buff configs
+            var igniteBuffConfig = CreateIgniteBuffConfig();
+            var frozenBuffConfig = CreateFrozenBuffConfig();
+            var markBuffConfig = CreateMarkBuffConfig();
+            var counterBuffConfig = CreateCounterBuffConfig();
+
             // Create new abilities
             var magicAttack = CreateMagicAttack();
             var heavyShot = CreateHeavyShot();
             var fireball = CreateFireball();
+            var uppercut = CreateUppercut();
+            var counter = CreateCounter(counterBuffConfig);
+            var freeze = CreateFreeze(frozenBuffConfig);
+            var mark = CreateMark(markBuffConfig);
 
             // Create role configs
-            var barbarian = CreateRoleConfig("Barbarian", RoleType.Barbarian, new List<AbilityConfig> { meleeAttack, chargeAttack });
-            var mage = CreateRoleConfig("Mage", RoleType.Mage, new List<AbilityConfig> { magicAttack, fireball });
-            var hunter = CreateRoleConfig("Hunter", RoleType.Hunter, new List<AbilityConfig> { rangedAttack, heavyShot });
+            var barbarian = CreateRoleConfig("Barbarian", RoleType.Barbarian, new List<AbilityConfig> { meleeAttack, chargeAttack, uppercut, counter });
+            var mage = CreateRoleConfig("Mage", RoleType.Mage, new List<AbilityConfig> { magicAttack, fireball, freeze });
+            var hunter = CreateRoleConfig("Hunter", RoleType.Hunter, new List<AbilityConfig> { rangedAttack, heavyShot, mark });
 
             // Save assets
             AssetDatabase.CreateAsset(magicAttack, $"{AbilitiesPath}/MagicAttack.asset");
             AssetDatabase.CreateAsset(heavyShot, $"{AbilitiesPath}/HeavyShot.asset");
             AssetDatabase.CreateAsset(fireball, $"{AbilitiesPath}/Fireball.asset");
+            AssetDatabase.CreateAsset(uppercut, $"{AbilitiesPath}/Uppercut.asset");
+            AssetDatabase.CreateAsset(counter, $"{AbilitiesPath}/Counter.asset");
+            AssetDatabase.CreateAsset(freeze, $"{AbilitiesPath}/Freeze.asset");
+            AssetDatabase.CreateAsset(mark, $"{AbilitiesPath}/Mark.asset");
             AssetDatabase.CreateAsset(barbarian, $"{ClassesPath}/Barbarian.asset");
             AssetDatabase.CreateAsset(mage, $"{ClassesPath}/Mage.asset");
             AssetDatabase.CreateAsset(hunter, $"{ClassesPath}/Hunter.asset");
+
+            AssetDatabase.CreateAsset(igniteBuffConfig, $"{BuffsPath}/Ignite.asset");
+            AssetDatabase.CreateAsset(frozenBuffConfig, $"{BuffsPath}/Frozen.asset");
+            AssetDatabase.CreateAsset(markBuffConfig, $"{BuffsPath}/Mark.asset");
+            AssetDatabase.CreateAsset(counterBuffConfig, $"{BuffsPath}/Counter.asset");
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -126,6 +148,86 @@ namespace Tactics.Editor
         {
             string path = $"{AbilitiesPath}/{fileName}";
             return AssetDatabase.LoadAssetAtPath<T>(path);
+        }
+
+        private static BuffConfig CreateIgniteBuffConfig()
+        {
+            var asset = ScriptableObject.CreateInstance<BuffConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_buffName").stringValue = "Ignite";
+            so.FindProperty("_defaultDuration").intValue = 3;
+            so.FindProperty("_canAct").boolValue = true;
+            so.FindProperty("_isUnique").boolValue = false;
+
+            var behaviorsProp = so.FindProperty("_behaviors");
+            behaviorsProp.arraySize = 1;
+            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
+            behaviorElem.managedReferenceValue = new DoTBehavior();
+            so.ApplyModifiedProperties();
+
+            behaviorElem.FindPropertyRelative("_damagePerTurn").floatValue = 5f;
+
+            so.ApplyModifiedProperties();
+            return asset;
+        }
+
+        private static BuffConfig CreateFrozenBuffConfig()
+        {
+            var asset = ScriptableObject.CreateInstance<BuffConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_buffName").stringValue = "Frozen";
+            so.FindProperty("_defaultDuration").intValue = 2;
+            so.FindProperty("_canAct").boolValue = false;
+            so.FindProperty("_isUnique").boolValue = false;
+
+            var behaviorsProp = so.FindProperty("_behaviors");
+            behaviorsProp.arraySize = 1;
+            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
+            behaviorElem.managedReferenceValue = new FrozenBehavior();
+            so.ApplyModifiedProperties();
+
+            so.ApplyModifiedProperties();
+            return asset;
+        }
+
+        private static BuffConfig CreateMarkBuffConfig()
+        {
+            var asset = ScriptableObject.CreateInstance<BuffConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_buffName").stringValue = "Mark";
+            so.FindProperty("_defaultDuration").intValue = int.MaxValue;
+            so.FindProperty("_canAct").boolValue = true;
+            so.FindProperty("_isUnique").boolValue = true;
+
+            var behaviorsProp = so.FindProperty("_behaviors");
+            behaviorsProp.arraySize = 1;
+            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
+            behaviorElem.managedReferenceValue = new MarkBehavior();
+            so.ApplyModifiedProperties();
+
+            so.ApplyModifiedProperties();
+            return asset;
+        }
+
+        private static BuffConfig CreateCounterBuffConfig()
+        {
+            var asset = ScriptableObject.CreateInstance<BuffConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_buffName").stringValue = "Counter";
+            so.FindProperty("_defaultDuration").intValue = 1;
+            so.FindProperty("_canAct").boolValue = true;
+            so.FindProperty("_isUnique").boolValue = false;
+
+            var behaviorsProp = so.FindProperty("_behaviors");
+            behaviorsProp.arraySize = 1;
+            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
+            behaviorElem.managedReferenceValue = new CounterBehavior();
+            so.ApplyModifiedProperties();
+
+            behaviorElem.FindPropertyRelative("_counterDamageMultiplier").floatValue = 0.5f;
+
+            so.ApplyModifiedProperties();
+            return asset;
         }
 
         private static AbilityConfig CreateMagicAttack()
@@ -224,6 +326,141 @@ namespace Tactics.Editor
             effectElem.FindPropertyRelative("_baseDamage").floatValue = 2f;
             effectElem.FindPropertyRelative("_scalingType").enumValueIndex = (int)AttributeScalingType.Intelligence;
             effectElem.FindPropertyRelative("_isRangedDamage").boolValue = false;
+
+            so.ApplyModifiedProperties();
+            return asset;
+        }
+
+        private static AbilityConfig CreateUppercut()
+        {
+            var asset = ScriptableObject.CreateInstance<AbilityConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_displayName").stringValue = "Uppercut";
+            so.FindProperty("_description").stringValue = "Punch a unit into the air, lobbing it back 3 tiles.";
+            so.FindProperty("_manaCost").intValue = 10;
+            so.FindProperty("_cooldown").floatValue = 0f;
+            so.FindProperty("_isBasicAbility").boolValue = false;
+
+            // Targeting: SingleTargetEnemy, maxRange=1
+            var targetingProp = so.FindProperty("_targetingStrategy");
+            targetingProp.managedReferenceValue = new SingleTargetEnemy();
+            so.ApplyModifiedProperties();
+
+            targetingProp.FindPropertyRelative("_maxRange").intValue = 1;
+            targetingProp.FindPropertyRelative("_minRange").intValue = 0;
+
+            // Effects: DamageEffect + KnockbackEffect
+            var effectsProp = so.FindProperty("_effects");
+            effectsProp.arraySize = 2;
+
+            // DamageEffect (Strength scaling, melee)
+            var damageElem = effectsProp.GetArrayElementAtIndex(0);
+            damageElem.managedReferenceValue = new DamageEffect();
+            so.ApplyModifiedProperties();
+
+            damageElem.FindPropertyRelative("_baseDamage").floatValue = 3f;
+            damageElem.FindPropertyRelative("_scalingType").enumValueIndex = (int)AttributeScalingType.Strength;
+            damageElem.FindPropertyRelative("_isRangedDamage").boolValue = false;
+
+            // KnockbackEffect (3 tiles)
+            var knockbackElem = effectsProp.GetArrayElementAtIndex(1);
+            knockbackElem.managedReferenceValue = new KnockbackEffect();
+            so.ApplyModifiedProperties();
+
+            knockbackElem.FindPropertyRelative("_distance").intValue = 3;
+
+            so.ApplyModifiedProperties();
+            return asset;
+        }
+
+        private static AbilityConfig CreateCounter(BuffConfig counterBuffConfig)
+        {
+            var asset = ScriptableObject.CreateInstance<AbilityConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_displayName").stringValue = "Counter";
+            so.FindProperty("_description").stringValue = "Counterattack all attacks until your next turn.";
+            so.FindProperty("_manaCost").intValue = 10;
+            so.FindProperty("_cooldown").floatValue = 0f;
+            so.FindProperty("_isBasicAbility").boolValue = false;
+
+            // Targeting: SelfTargeting
+            var targetingProp = so.FindProperty("_targetingStrategy");
+            targetingProp.managedReferenceValue = new SelfTargeting();
+            so.ApplyModifiedProperties();
+
+            // Effects: ApplyBuffEffect (Counter BuffConfig)
+            var effectsProp = so.FindProperty("_effects");
+            effectsProp.arraySize = 1;
+            var effectElem = effectsProp.GetArrayElementAtIndex(0);
+            effectElem.managedReferenceValue = new ApplyBuffEffect();
+            so.ApplyModifiedProperties();
+
+            effectElem.FindPropertyRelative("_buffConfig").objectReferenceValue = counterBuffConfig;
+            effectElem.FindPropertyRelative("_duration").intValue = 1;
+
+            so.ApplyModifiedProperties();
+            return asset;
+        }
+
+        private static AbilityConfig CreateFreeze(BuffConfig frozenBuffConfig)
+        {
+            var asset = ScriptableObject.CreateInstance<AbilityConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_displayName").stringValue = "Freeze";
+            so.FindProperty("_description").stringValue = "Freeze an enemy for 2 turns. Frozen units cannot act or be damaged (except by fire).";
+            so.FindProperty("_manaCost").intValue = 15;
+            so.FindProperty("_cooldown").floatValue = 0f;
+            so.FindProperty("_isBasicAbility").boolValue = false;
+
+            // Targeting: SingleTargetEnemy, maxRange=3
+            var targetingProp = so.FindProperty("_targetingStrategy");
+            targetingProp.managedReferenceValue = new SingleTargetEnemy();
+            so.ApplyModifiedProperties();
+
+            targetingProp.FindPropertyRelative("_maxRange").intValue = 3;
+            targetingProp.FindPropertyRelative("_minRange").intValue = 0;
+
+            // Effects: ApplyBuffEffect (Frozen BuffConfig)
+            var effectsProp = so.FindProperty("_effects");
+            effectsProp.arraySize = 1;
+            var effectElem = effectsProp.GetArrayElementAtIndex(0);
+            effectElem.managedReferenceValue = new ApplyBuffEffect();
+            so.ApplyModifiedProperties();
+
+            effectElem.FindPropertyRelative("_buffConfig").objectReferenceValue = frozenBuffConfig;
+            effectElem.FindPropertyRelative("_duration").intValue = 2;
+
+            so.ApplyModifiedProperties();
+            return asset;
+        }
+
+        private static AbilityConfig CreateMark(BuffConfig markBuffConfig)
+        {
+            var asset = ScriptableObject.CreateInstance<AbilityConfig>();
+            var so = new SerializedObject(asset);
+            so.FindProperty("_displayName").stringValue = "Mark";
+            so.FindProperty("_description").stringValue = "Mark an enemy. All attacks against marked enemies are guaranteed critical hits. Only one mark can be active at a time.";
+            so.FindProperty("_manaCost").intValue = 10;
+            so.FindProperty("_cooldown").floatValue = 0f;
+            so.FindProperty("_isBasicAbility").boolValue = false;
+
+            // Targeting: SingleTargetEnemy, maxRange=5
+            var targetingProp = so.FindProperty("_targetingStrategy");
+            targetingProp.managedReferenceValue = new SingleTargetEnemy();
+            so.ApplyModifiedProperties();
+
+            targetingProp.FindPropertyRelative("_maxRange").intValue = 5;
+            targetingProp.FindPropertyRelative("_minRange").intValue = 0;
+
+            // Effects: ApplyBuffEffect (Mark BuffConfig)
+            var effectsProp = so.FindProperty("_effects");
+            effectsProp.arraySize = 1;
+            var effectElem = effectsProp.GetArrayElementAtIndex(0);
+            effectElem.managedReferenceValue = new ApplyBuffEffect();
+            so.ApplyModifiedProperties();
+
+            effectElem.FindPropertyRelative("_buffConfig").objectReferenceValue = markBuffConfig;
+            effectElem.FindPropertyRelative("_duration").intValue = int.MaxValue;
 
             so.ApplyModifiedProperties();
             return asset;

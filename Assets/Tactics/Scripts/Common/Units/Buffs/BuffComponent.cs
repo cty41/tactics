@@ -103,6 +103,52 @@ namespace Tactics.Common.Units.Buffs
         }
 
         /// <summary>
+        /// Returns whether the unit can act (all buffs allow action).
+        /// </summary>
+        public bool CanAct
+        {
+            get
+            {
+                foreach (var buff in _activeBuffs)
+                    if (!buff.CanAct) return false;
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Invokes OnBeforeAttacked on all active buffs.
+        /// </summary>
+        public void OnBeforeAttacked(IUnit attacker, ref float damage, ref bool isCritical)
+        {
+            foreach (var buff in new List<Buff>(_activeBuffs))
+                buff.OnBeforeAttacked(attacker, ref damage, ref isCritical);
+        }
+
+        /// <summary>
+        /// Invokes OnDamageTaken on all active buffs.
+        /// </summary>
+        public void OnDamageTaken(IUnit attacker, float damage)
+        {
+            foreach (var buff in new List<Buff>(_activeBuffs))
+                buff.OnDamageTaken(attacker, damage);
+        }
+
+        /// <summary>
+        /// Checks if the unit has a buff with a behavior of the given type.
+        /// </summary>
+        public bool HasBuff<T>() where T : BuffBehavior
+        {
+            foreach (var buff in _activeBuffs)
+            {
+                foreach (var behavior in buff.Config.Behaviors)
+                {
+                    if (behavior is T) return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Returns a read-only list of all active buffs.
         /// </summary>
         public IReadOnlyList<Buff> GetActiveBuffs()

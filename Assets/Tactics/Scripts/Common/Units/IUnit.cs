@@ -213,5 +213,15 @@ namespace Tactics.Common.Units
         /// Arbitrarily removes the unit from the game, performing necessary cleanup and detaching the unit from game logic.
         /// </summary>
         void RemoveFromGame();
+
+        /// <summary>
+        /// Whether this unit can act this turn (not frozen/stunned).
+        /// </summary>
+        bool CanAct { get; }
+
+        /// <summary>
+        /// Gets the buff component of this unit.
+        /// </summary>
+        BuffComponent BuffComponent { get; }
     }
 }

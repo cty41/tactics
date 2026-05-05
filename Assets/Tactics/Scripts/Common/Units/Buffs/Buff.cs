@@ -1,73 +1,74 @@
-using System;
+using System.Collections.Generic;
 using Tactics.Common.Controllers;
 
 namespace Tactics.Common.Units.Buffs
 {
-    /// <summary>
-    /// Abstract base class for buffs/status effects applied to units.
-    /// Buffs are managed by BuffComponent, not singletons.
-    /// </summary>
-    public abstract class Buff
+    public class Buff
     {
-        /// <summary>
-        /// Display name of the buff.
-        /// </summary>
-        public abstract string BuffName { get; }
+        private readonly BuffConfig _config;
+        private readonly IReadOnlyList<BuffBehavior> _behaviors;
 
-        /// <summary>
-        /// The unit that owns this buff. Set by BuffComponent when added.
-        /// </summary>
+        public string BuffName => _config.BuffName;
         public IUnit Owner { get; internal set; }
-
-        /// <summary>
-        /// The unit that applied this buff.
-        /// </summary>
         public IUnit Source { get; }
-
-        /// <summary>
-        /// Number of turns remaining before this buff expires.
-        /// </summary>
         public int RemainingTurns { get; set; }
-
-        /// <summary>
-        /// Returns true if the buff has expired.
-        /// </summary>
         public bool IsExpired => RemainingTurns <= 0;
+        public BuffConfig Config => _config;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Buff"/> class.
-        /// </summary>
-        /// <param name="source">The unit that applied the buff.</param>
-        /// <param name="duration">Number of turns the buff lasts.</param>
-        protected Buff(IUnit source, int duration)
+        public Buff(BuffConfig config, IUnit source, int duration)
         {
+            _config = config;
+            _behaviors = config.Behaviors;
             Source = source;
             RemainingTurns = duration;
         }
 
-        /// <summary>
-        /// Called when the buff is first applied to a unit.
-        /// </summary>
-        public virtual void OnApplied() { }
+        public virtual void OnApplied()
+        {
+            foreach (var b in _behaviors)
+                b.OnApplied(this);
+        }
 
-        /// <summary>
-        /// Called at the start of the owner's turn. Used for damage-over-time effects.
-        /// </summary>
-        /// <param name="gridController">The grid controller.</param>
-        public virtual void OnTurnStart(IGridController gridController) { }
+        public virtual void OnTurnStart(IGridController gridController)
+        {
+            foreach (var b in _behaviors)
+                b.OnTurnStart(this, gridController);
+        }
 
-        /// <summary>
-        /// Called at the end of the owner's turn. Decrements remaining turns.
-        /// </summary>
-        /// <param name="gridController">The grid controller.</param>
         public virtual void OnTurnEnd(IGridController gridController)
         {
             RemainingTurns--;
+            foreach (var b in _behaviors)
+                b.OnTurnEnd(this, gridController);
         }
 
-        /// <summary>
-        /// Called when the buff is removed or expires.
-        /// </summary>
-        public virtual void OnRemoved() { }
+        public virtual void OnRemoved()
+        {
+            foreach (var b in _behaviors)
+                b.OnRemoved(this);
+        }
+
+        public virtual void OnBeforeAttacked(IUnit attacker, ref float damage, ref bool isCritical)
+        {
+            foreach (var b in _behaviors)
+                b.OnBeforeAttacked(this, attacker, ref damage, ref isCritical);
+        }
+
+        public virtual void OnDamageTaken(IUnit attacker, float damage)
+        {
+            foreach (var b in _behaviors)
+                b.OnDamageTaken(this, attacker, damage);
+        }
+
+        public bool CanAct
+        {
+            get
+            {
+                if (!_config.CanAct) return false;
+                foreach (var b in _behaviors)
+                    if (!b.CanAct) return false;
+                return true;
+            }
+        }
     }
 }

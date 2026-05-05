@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Common.Units.Buffs;
 using Tactics.Runtime.BattleLog;
 using UnityEngine;
 
@@ -121,10 +122,10 @@ namespace Tactics.Common.Units.Abilities
     [Serializable]
     public class ApplyBuffEffect : AbilityEffect
     {
-        [SerializeField] private string _buffType;
+        [SerializeField] private BuffConfig _buffConfig;
         [SerializeField] private int _duration;
 
-        public string BuffType => _buffType;
+        public BuffConfig BuffConfig => _buffConfig;
         public int Duration => _duration;
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
@@ -132,7 +133,10 @@ namespace Tactics.Common.Units.Abilities
             foreach (var target in targets)
             {
                 if (target == null) continue;
-                // TODO: Implement buff system integration
+                if (_buffConfig == null) continue;
+
+                var buff = new Buff(_buffConfig, caster, _duration);
+                target.AddBuff(buff);
             }
             await Task.CompletedTask;
         }

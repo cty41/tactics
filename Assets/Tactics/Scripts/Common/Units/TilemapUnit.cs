@@ -134,11 +134,17 @@ namespace Tactics.Units
         public override void OnPointerEnter(PointerEventData eventData)
         {
             base.OnPointerEnter(eventData);
+            Debug.Log($"[TilemapUnit] OnPointerEnter: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
+            if (CurrentCell != null)
+                CurrentCell.InvokeCellHighlighted();
         }
 
         public override void OnPointerExit(PointerEventData eventData)
         {
             base.OnPointerExit(eventData);
+            Debug.Log($"[TilemapUnit] OnPointerExit: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
+            if (CurrentCell != null)
+                CurrentCell.InvokeCellDehighlighted();
         }
 
         public override void OnPointerClick(PointerEventData eventData)
