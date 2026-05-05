@@ -138,8 +138,6 @@ namespace Tactics.Common.Units.Abilities
 
         public void OnCellClicked(ICell cell, IGridController gridController)
         {
-            Debug.Log($"[GenericAbilityImpl] OnCellClicked: ability={_config.DisplayName}, cell={cell.GridCoordinates}");
-            
             if (DisplayName == "Move")
             {
                 if (_cellsInMovementRange == null || !_cellsInMovementRange.Contains(cell))
@@ -161,11 +159,9 @@ namespace Tactics.Common.Units.Abilities
                 return;
             }
 
-            Debug.Log($"[GenericAbilityImpl] OnCellClicked: IsValidCell={IsValidCell(cell, gridController)}, cellUnits={cell.CurrentUnits?.Count ?? 0}");
             
             if (!IsValidCell(cell, gridController))
             {
-                Debug.Log($"[GenericAbilityImpl] OnCellClicked: cell not valid, returning to await input");
                 gridController.GridState = new GridStateAwaitInput();
                 return;
             }
@@ -174,7 +170,6 @@ namespace Tactics.Common.Units.Abilities
             _pendingTargets = _config.TargetingStrategy?.GetTargets(_owner, cell, gridController) ?? Enumerable.Empty<IUnit>();
             
             int targetCount = _pendingTargets.Count();
-            Debug.Log($"[GenericAbilityImpl] OnCellClicked: pendingTargets={targetCount}");
             
             if (targetCount > 0)
             {
@@ -182,7 +177,6 @@ namespace Tactics.Common.Units.Abilities
             }
             else
             {
-                Debug.Log($"[GenericAbilityImpl] OnCellClicked: no targets, returning to await input");
                 gridController.GridState = new GridStateAwaitInput();
             }
         }
@@ -245,26 +239,21 @@ namespace Tactics.Common.Units.Abilities
 
         public void OnUnitClicked(IUnit unit, IGridController gridController)
         {
-            Debug.Log($"[GenericAbilityImpl] OnUnitClicked: ability={_config.DisplayName}, targetingStrategy={_config.TargetingStrategy != null}");
             
             bool canPerform = CanPerform(gridController);
-            Debug.Log($"[GenericAbilityImpl] CanPerform={canPerform}");
             
             if (_config.TargetingStrategy != null && canPerform)
             {
                 bool isValidTarget = _config.TargetingStrategy.IsValidTarget(_owner, unit, gridController);
-                Debug.Log($"[GenericAbilityImpl] IsValidTarget={isValidTarget}, targetPlayer={unit.PlayerNumber}, ownerPlayer={_owner.PlayerNumber}");
                 
                 if (isValidTarget)
                 {
-                    Debug.Log($"[GenericAbilityImpl] Executing ability on target: {unit}");
                     _pendingTargets = new List<IUnit> { unit };
                     ExecuteEffects(gridController);
                     return;
                 }
             }
 
-            Debug.Log($"[GenericAbilityImpl] Target not valid, checking if clicked on active unit");
             var activeUnit = gridController.TurnContext.PlayableUnits().FirstOrDefault();
             if (activeUnit != null && ReferenceEquals(activeUnit, unit))
             {
@@ -334,7 +323,6 @@ namespace Tactics.Common.Units.Abilities
             // Get max range from targeting strategy
             int maxRange = GetMaxRangeFromStrategy();
 
-            Debug.Log($"[GenericAbilityImpl] CalculateValidTargetCells: strategy={_config.TargetingStrategy.GetType().Name}, maxRange={maxRange}");
 
             // Add all cells within range using GetNeighbours for proper adjacency
             // For range=1, only show direct neighbours (up/down/left/right)
@@ -378,7 +366,6 @@ namespace Tactics.Common.Units.Abilities
                 }
             }
 
-            Debug.Log($"[GenericAbilityImpl] CalculateValidTargetCells: validCells count={validCells.Count}");
             return validCells;
         }
 

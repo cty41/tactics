@@ -1,6 +1,5 @@
 using System;
 using Tactics.Common.Cells;
-using Tactics.UI;
 using UnityEngine;
 
 namespace Tactics.Common.Units
@@ -33,32 +32,6 @@ namespace Tactics.Common.Units
         public void ModifyHealth(float healthChangeAmount, IUnit sourceUnit)
         {
             _unitReference.Health += healthChangeAmount;
-            
-            // Show damage number
-            if (DamageNumberManager.Instance != null && healthChangeAmount != 0)
-            {
-                var worldPos = _unitReference.WorldPosition;
-                var unityPos = new Vector3(worldPos.x, worldPos.y, worldPos.z);
-                var displayPos = unityPos + Vector3.up * 1.5f;
-                
-                if (healthChangeAmount < 0)
-                {
-                    DamageNumberManager.Instance.Spawn(
-                        DamageNumberType.Normal,
-                        Mathf.Abs(Mathf.RoundToInt(healthChangeAmount)),
-                        displayPos
-                    );
-                }
-                else
-                {
-                    DamageNumberManager.Instance.Spawn(
-                        DamageNumberType.Heal,
-                        Mathf.RoundToInt(healthChangeAmount),
-                        displayPos
-                    );
-                }
-            }
-            
             _unitReference.InvokeHealthChanged(new HealthChangedEventArgs(_unitReference, sourceUnit, healthChangeAmount));
             if (_unitReference.Health <= 0)
             {

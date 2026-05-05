@@ -48,6 +48,32 @@ namespace Tactics.UI
         private readonly List<VisualElement> _turnOrderItems = new List<VisualElement>();
         private bool _canEndTurn;
 
+        // Damage Numbers
+        [Header("Damage Numbers")]
+        [SerializeField] private DamageNumberConfig normalConfig;
+        [SerializeField] private DamageNumberConfig critConfig;
+        [SerializeField] private DamageNumberConfig healConfig;
+        [SerializeField] private DamageNumberConfig missConfig;
+        [SerializeField] private int poolSize = 20;
+
+        private VisualElement _damageNumberContainer;
+        private Queue<Label> _damageNumberPool;
+        private List<DamageNumberInstance> _activeDamageNumbers = new();
+
+        private struct DamageNumberInstance
+        {
+            public Label Label;
+            public Vector3 WorldStartPosition;
+            public float SpawnTime;
+            public float Lifetime;
+            public float MoveSpeed;
+            public float StartScale;
+            public float PeakScale;
+            public float EndScale;
+            public float FadeInDuration;
+            public float FadeOutDuration;
+        }
+
         protected override void OnShown()
         {
             // Delay one frame to ensure UIDocument.rootVisualElement is ready
@@ -94,6 +120,17 @@ namespace Tactics.UI
             _moveButton = root.Q<Button>("MoveButton");
             _skillPanel = root.Q<VisualElement>("SkillPanel");
             _bottomPanel = root.Q<VisualElement>("BottomPanel");
+
+            // Initialize damage numbers
+            _damageNumberContainer = root.Q<VisualElement>("DamageNumberContainer");
+            if (_damageNumberContainer != null)
+            {
+                _damageNumberPool = new Queue<Label>();
+                for (int i = 0; i < poolSize; i++)
+                {
+                    _damageNumberPool.Enqueue(CreatePooledLabel());
+                }
+            }
 
             if (_endTurnButton != null) _endTurnButton.clicked += OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked += OnMoveClicked;
@@ -639,14 +676,6 @@ namespace Tactics.UI
             }
         }
 
-        private void OnUnitHealthChanged(HealthChangedEventArgs args)
-        {
-            if (ReferenceEquals(args.AffectedUnit, _currentSelectedUnit))
-            {
-                UpdateStatusPanel();
-            }
-        }
-
         private void OnUnitMoved(UnitMovedEventArgs args)
         {
             if (ReferenceEquals(args.AffectedUnit, _currentSelectedUnit))
@@ -679,6 +708,193 @@ namespace Tactics.UI
         private bool IsMoveAbility(IAbility ability)
         {
             return ability.DisplayName == "Move";
+        }
+
+        #endregion
+
+        #region Damage Numbers
+
+        private void Update()
+        {
+            UpdateDamageNumbers();
+        }
+
+        private void UpdateDamageNumbers()
+        {
+            if (_activeDamageNumbers.Count == 0) return;
+
+            float currentTime = Time.time;
+            var camera = Camera.main;
+            if (camera == null) return;
+
+            for (int i = _activeDamageNumbers.Count - 1; i >= 0; i--)
+            {
+                var instance = _activeDamageNumbers[i];
+                float elapsed = currentTime - instance.SpawnTime;
+
+                if (elapsed >= instance.Lifetime)
+                {
+                    DespawnDamageNumber(i);
+                    continue;
+                }
+
+                Vector3 screenPos = camera.WorldToScreenPoint(instance.WorldStartPosition);
+                if (screenPos.z < 0) continue;
+
+                float uiX = screenPos.x;
+                float uiY = Screen.height - screenPos.y;
+                float moveOffset = instance.MoveSpeed * elapsed;
+
+                instance.Label.style.left = uiX;
+                instance.Label.style.top = uiY - moveOffset;
+
+                float alpha;
+                if (elapsed < instance.FadeInDuration)
+                {
+                    alpha = elapsed / instance.FadeInDuration;
+                }
+                else if (elapsed > instance.Lifetime - instance.FadeOutDuration)
+                {
+                    float fadeElapsed = elapsed - (instance.Lifetime - instance.FadeOutDuration);
+                    alpha = 1f - (fadeElapsed / instance.FadeOutDuration);
+                }
+                else
+                {
+                    alpha = 1f;
+                }
+                instance.Label.style.opacity = alpha;
+
+                float scale;
+                if (elapsed < instance.FadeInDuration)
+                {
+                    float t = elapsed / instance.FadeInDuration;
+                    scale = Mathf.Lerp(instance.StartScale, instance.PeakScale, t);
+                }
+                else
+                {
+                    float holdDuration = instance.Lifetime - instance.FadeInDuration;
+                    float t = Mathf.Clamp01((elapsed - instance.FadeInDuration) / (holdDuration * 0.5f));
+                    scale = Mathf.Lerp(instance.PeakScale, instance.EndScale, t);
+                }
+                instance.Label.style.scale = new Scale(new Vector2(scale, scale));
+
+                _activeDamageNumbers[i] = instance;
+            }
+        }
+
+        private void OnUnitHealthChanged(HealthChangedEventArgs args)
+        {
+            if (ReferenceEquals(args.AffectedUnit, _currentSelectedUnit))
+            {
+                UpdateStatusPanel();
+            }
+
+            // Show damage number
+            if (args.HealthChangeAmount != 0)
+            {
+                var worldPos = args.AffectedUnit.WorldPosition;
+                var unityPos = new Vector3(worldPos.x, worldPos.y, worldPos.z);
+                var displayPos = unityPos + Vector3.up * 1.5f;
+
+                if (args.HealthChangeAmount < 0)
+                {
+                    SpawnDamageNumber(DamageNumberType.Normal, Mathf.Abs(Mathf.RoundToInt(args.HealthChangeAmount)), displayPos);
+                }
+                else
+                {
+                    SpawnDamageNumber(DamageNumberType.Heal, Mathf.RoundToInt(args.HealthChangeAmount), displayPos);
+                }
+            }
+        }
+
+        private void SpawnDamageNumber(DamageNumberType type, int value, Vector3 worldPosition)
+        {
+            if (_damageNumberContainer == null) return;
+
+            var config = GetDamageNumberConfig(type);
+            if (config == null) return;
+
+            Label label;
+            if (_damageNumberPool.Count > 0)
+            {
+                label = _damageNumberPool.Dequeue();
+            }
+            else
+            {
+                if (_activeDamageNumbers.Count > 0)
+                {
+                    var oldest = _activeDamageNumbers[0];
+                    _activeDamageNumbers.RemoveAt(0);
+                    _damageNumberContainer.Remove(oldest.Label);
+                    label = oldest.Label;
+                }
+                else
+                {
+                    label = CreatePooledLabel();
+                }
+            }
+
+            string text = type == DamageNumberType.Miss ? "Miss" : value.ToString();
+            label.text = text;
+            label.style.display = DisplayStyle.Flex;
+            label.AddToClassList("damage-number");
+            label.AddToClassList(config.ussClassName);
+
+            var instance = new DamageNumberInstance
+            {
+                Label = label,
+                WorldStartPosition = worldPosition,
+                SpawnTime = Time.time,
+                Lifetime = config.lifetime,
+                MoveSpeed = config.moveSpeed,
+                StartScale = config.startScale,
+                PeakScale = config.peakScale,
+                EndScale = config.endScale,
+                FadeInDuration = config.fadeInDuration,
+                FadeOutDuration = config.fadeOutDuration
+            };
+
+            _activeDamageNumbers.Add(instance);
+            _damageNumberContainer.Add(label);
+        }
+
+        private Label CreatePooledLabel()
+        {
+            var label = new Label();
+            label.style.position = Position.Absolute;
+            label.pickingMode = PickingMode.Ignore;
+            label.style.display = DisplayStyle.None;
+            return label;
+        }
+
+        private DamageNumberConfig GetDamageNumberConfig(DamageNumberType type)
+        {
+            return type switch
+            {
+                DamageNumberType.Normal => normalConfig,
+                DamageNumberType.Critical => critConfig,
+                DamageNumberType.Heal => healConfig,
+                DamageNumberType.Miss => missConfig,
+                _ => normalConfig
+            };
+        }
+
+        private void DespawnDamageNumber(int index)
+        {
+            var instance = _activeDamageNumbers[index];
+            instance.Label.style.display = DisplayStyle.None;
+            instance.Label.style.opacity = 1f;
+            instance.Label.style.scale = new Scale(Vector2.one);
+
+            instance.Label.RemoveFromClassList("damage-number");
+            instance.Label.RemoveFromClassList(normalConfig?.ussClassName);
+            instance.Label.RemoveFromClassList(critConfig?.ussClassName);
+            instance.Label.RemoveFromClassList(healConfig?.ussClassName);
+            instance.Label.RemoveFromClassList(missConfig?.ussClassName);
+
+            _damageNumberContainer.Remove(instance.Label);
+            _damageNumberPool.Enqueue(instance.Label);
+            _activeDamageNumbers.RemoveAt(index);
         }
 
         #endregion

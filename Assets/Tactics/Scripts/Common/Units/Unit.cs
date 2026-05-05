@@ -118,6 +118,8 @@ namespace Tactics.Common.Units
         /// </summary>
         public BuffComponent BuffComponent => _buffComponent;
 
+        public bool CanAct => _buffComponent?.CanAct ?? true;
+
         /// <summary>
         /// Cancellation token source used to cancel ongoing visual defense highlight effects when the unit is destroyed.
         /// </summary>
@@ -160,28 +162,23 @@ namespace Tactics.Common.Units
                 ? _roleConfig.Abilities
                 : _abilityConfigs;
             
-            Debug.Log($"[Unit.Initialize] {gameObject.name}: abilitySources count={abilitySources?.Count ?? 0}, isNull={abilitySources == null}, roleConfig={_roleConfig?.DisplayName}");
             if (abilitySources != null)
             {
                 foreach (var config in abilitySources)
                 {
-                    Debug.Log($"[Unit.Initialize] {gameObject.name}: config={config?.GetType().Name}, isNull={config == null}");
                     if (config != null)
                     {
                         var ability = config.CreateAbility(this);
-                        Debug.Log($"[Unit.Initialize] {gameObject.name}: created ability={ability?.GetType().Name}");
                         RegisterAbility(ability, gridController);
                     }
                 }
             }
-            Debug.Log($"[Unit.Initialize] {gameObject.name}: _baseAbilities count={_baseAbilities?.Count ?? 0}");
 
             // Ensure default Move ability exists
             if (!_baseAbilities.Any(a => a.DisplayName == "Move"))
             {
                 var moveAbility = AbilityConfig.CreateDefaultMoveConfig().CreateAbility(this);
                 RegisterAbility(moveAbility, gridController);
-                Debug.Log($"[Unit.Initialize] {gameObject.name}: auto-registered default Move ability");
             }
         }
 
