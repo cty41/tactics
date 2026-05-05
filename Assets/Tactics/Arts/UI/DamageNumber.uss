@@ -1,0 +1,26 @@
+.damage-number {
+    position: absolute;
+    -unity-font-style: bold;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+    -unity-text-align: middle-center;
+}
+
+.damage-number-normal {
+    color: rgb(255, 255, 255);
+    font-size: 24px;
+}
+
+.damage-number-crit {
+    color: rgb(255, 220, 50);
+    font-size: 32px;
+}
+
+.damage-number-heal {
+    color: rgb(80, 255, 120);
+    font-size: 24px;
+}
+
+.damage-number-miss {
+    color: rgb(150, 150, 150);
+    font-size: 20px;
+}
