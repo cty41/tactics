@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Tactics.AssetPipeline;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -49,13 +50,10 @@ namespace Tactics.UI
         private bool _canEndTurn;
 
         // Damage Numbers
-        [Header("Damage Numbers")]
-        [SerializeField] private DamageNumberConfig normalConfig;
-        [SerializeField] private DamageNumberConfig critConfig;
-        [SerializeField] private DamageNumberConfig healConfig;
-        [SerializeField] private DamageNumberConfig missConfig;
         [SerializeField] private int poolSize = 20;
+        private const string DamageNumberSettingsPath = "Assets/Tactics/ScriptableObjects/DamageNumberSettings.asset";
 
+        private DamageNumberSettings _damageSettings;
         private VisualElement _damageNumberContainer;
         private Queue<Label> _damageNumberPool;
         private List<DamageNumberInstance> _activeDamageNumbers = new();
@@ -125,6 +123,7 @@ namespace Tactics.UI
             _damageNumberContainer = root.Q<VisualElement>("DamageNumberContainer");
             if (_damageNumberContainer != null)
             {
+                LoadDamageNumberSettings();
                 _damageNumberPool = new Queue<Label>();
                 for (int i = 0; i < poolSize; i++)
                 {
@@ -809,10 +808,9 @@ namespace Tactics.UI
 
         private void SpawnDamageNumber(DamageNumberType type, int value, Vector3 worldPosition)
         {
-            if (_damageNumberContainer == null) return;
+            if (_damageNumberContainer == null || _damageSettings == null) return;
 
-            var config = GetDamageNumberConfig(type);
-            if (config == null) return;
+            var config = _damageSettings.GetConfig(type);
 
             Label label;
             if (_damageNumberPool.Count > 0)
@@ -867,16 +865,23 @@ namespace Tactics.UI
             return label;
         }
 
-        private DamageNumberConfig GetDamageNumberConfig(DamageNumberType type)
+        private void LoadDamageNumberSettings()
         {
-            return type switch
+            var mgr = GameAssetManager.Instance;
+            if (mgr == null || !mgr.IsInitialized)
             {
-                DamageNumberType.Normal => normalConfig,
-                DamageNumberType.Critical => critConfig,
-                DamageNumberType.Heal => healConfig,
-                DamageNumberType.Miss => missConfig,
-                _ => normalConfig
-            };
+                Debug.LogWarning("[BattleUIController] GameAssetManager not available, damage numbers disabled.");
+                return;
+            }
+
+            try
+            {
+                _damageSettings = mgr.Load<DamageNumberSettings>(DamageNumberSettingsPath);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[BattleUIController] Failed to load DamageNumberSettings: {e.Message}");
+            }
         }
 
         private void DespawnDamageNumber(int index)
@@ -887,10 +892,13 @@ namespace Tactics.UI
             instance.Label.style.scale = new Scale(Vector2.one);
 
             instance.Label.RemoveFromClassList("damage-number");
-            instance.Label.RemoveFromClassList(normalConfig?.ussClassName);
-            instance.Label.RemoveFromClassList(critConfig?.ussClassName);
-            instance.Label.RemoveFromClassList(healConfig?.ussClassName);
-            instance.Label.RemoveFromClassList(missConfig?.ussClassName);
+            if (_damageSettings != null)
+            {
+                instance.Label.RemoveFromClassList(_damageSettings.normal.ussClassName);
+                instance.Label.RemoveFromClassList(_damageSettings.crit.ussClassName);
+                instance.Label.RemoveFromClassList(_damageSettings.heal.ussClassName);
+                instance.Label.RemoveFromClassList(_damageSettings.miss.ussClassName);
+            }
 
             _damageNumberContainer.Remove(instance.Label);
             _damageNumberPool.Enqueue(instance.Label);
