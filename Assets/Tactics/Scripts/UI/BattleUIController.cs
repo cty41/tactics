@@ -809,15 +809,17 @@ namespace Tactics.UI
 
             if (args.HealthChangeAmount < 0)
             {
-                SpawnDamageNumber(DamageNumberType.Normal, Mathf.Abs(Mathf.RoundToInt(args.HealthChangeAmount)), displayPos);
+                string text = "-" + Mathf.Abs(Mathf.RoundToInt(args.HealthChangeAmount));
+                SpawnDamageNumber(DamageNumberType.Normal, text, displayPos);
             }
             else
             {
-                SpawnDamageNumber(DamageNumberType.Heal, Mathf.RoundToInt(args.HealthChangeAmount), displayPos);
+                string text = "+" + Mathf.RoundToInt(args.HealthChangeAmount);
+                SpawnDamageNumber(DamageNumberType.Heal, text, displayPos);
             }
         }
 
-        private void SpawnDamageNumber(DamageNumberType type, int value, Vector3 worldPosition)
+        private void SpawnDamageNumber(DamageNumberType type, string text, Vector3 worldPosition)
         {
             if (_damageNumberContainer == null || _damageSettings == null) return;
 
@@ -843,8 +845,8 @@ namespace Tactics.UI
                 }
             }
 
-            string text = type == DamageNumberType.Miss ? "Miss" : value.ToString();
-            label.text = text;
+            string displayText = type == DamageNumberType.Miss ? "Miss" : text;
+            label.text = displayText;
             label.style.display = DisplayStyle.Flex;
             label.AddToClassList("damage-number");
             label.AddToClassList(config.ussClassName);
