@@ -64,6 +64,8 @@ namespace Tactics.UI
 
         private void InitializeUI()
         {
+            Debug.Log("[DamageNumberManager] InitializeUI starting...");
+            
             var mgr = GameAssetManager.Instance;
             if (mgr == null)
             {
@@ -80,9 +82,11 @@ namespace Tactics.UI
             // Load PanelSettings if not assigned in Inspector
             if (panelSettings == null)
             {
+                Debug.Log("[DamageNumberManager] Loading PanelSettings from GameAssetManager...");
                 try
                 {
                     panelSettings = mgr.Load<PanelSettings>(PanelSettingsPath);
+                    Debug.Log($"[DamageNumberManager] PanelSettings loaded: {panelSettings?.name}");
                 }
                 catch (System.Exception e)
                 {
@@ -90,12 +94,18 @@ namespace Tactics.UI
                     return;
                 }
             }
+            else
+            {
+                Debug.Log($"[DamageNumberManager] Using assigned PanelSettings: {panelSettings.name}");
+            }
 
             // Load StyleSheet
             StyleSheet styleSheet = null;
+            Debug.Log("[DamageNumberManager] Loading StyleSheet from GameAssetManager...");
             try
             {
                 styleSheet = mgr.Load<StyleSheet>(StyleSheetPath);
+                Debug.Log($"[DamageNumberManager] StyleSheet loaded: {styleSheet != null}");
             }
             catch (System.Exception e)
             {
@@ -105,11 +115,17 @@ namespace Tactics.UI
             // Create UIDocument
             _uiDocument = gameObject.AddComponent<UIDocument>();
             _uiDocument.panelSettings = panelSettings;
+            Debug.Log($"[DamageNumberManager] UIDocument created. PanelSettings assigned: {_uiDocument.panelSettings != null}");
 
             // Add StyleSheet
             if (styleSheet != null && _uiDocument.rootVisualElement != null)
             {
                 _uiDocument.rootVisualElement.styleSheets.Add(styleSheet);
+                Debug.Log("[DamageNumberManager] StyleSheet added to rootVisualElement");
+            }
+            else
+            {
+                Debug.LogWarning($"[DamageNumberManager] StyleSheet not added. StyleSheet: {styleSheet != null}, rootVisualElement: {_uiDocument.rootVisualElement != null}");
             }
 
             // Create container
@@ -123,7 +139,7 @@ namespace Tactics.UI
             if (_uiDocument.rootVisualElement != null)
             {
                 _uiDocument.rootVisualElement.Add(_container);
-                Debug.Log($"[DamageNumberManager] Container added. Root child count: {_uiDocument.rootVisualElement.childCount}");
+                Debug.Log($"[DamageNumberManager] Container added. Root child count: {_uiDocument.rootVisualElement.childCount}, StyleSheet count: {_uiDocument.rootVisualElement.styleSheets.count}");
             }
             else
             {
@@ -136,6 +152,8 @@ namespace Tactics.UI
             {
                 _labelPool.Enqueue(CreatePooledLabel());
             }
+            Debug.Log($"[DamageNumberManager] Label pool initialized. Pool size: {poolSize}");
+            Debug.Log("[DamageNumberManager] InitializeUI completed successfully!");
         }
 
         private Label CreatePooledLabel()
@@ -151,8 +169,14 @@ namespace Tactics.UI
         {
             if (_container == null)
             {
-                Debug.LogWarning("[DamageNumberManager] Container is null. UI not initialized yet.");
-                return;
+                Debug.Log("[DamageNumberManager] Container is null, attempting lazy init...");
+                InitializeUI();
+                
+                if (_container == null)
+                {
+                    Debug.LogError("[DamageNumberManager] InitializeUI failed. Cannot spawn damage number.");
+                    return;
+                }
             }
 
             var config = GetConfig(type);

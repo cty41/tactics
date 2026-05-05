@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -202,14 +203,16 @@ namespace Tactics.Cells
             Vector3 cellWorldCenter = _gridLayer.GetCellCenterWorld(cellPos);
 
             Collider2D[] colliders2D = Physics2D.OverlapPointAll(cellWorldCenter);
-            if (colliders2D.Any(c => !c.isTrigger))
+            var blocking2D = colliders2D.Where(c => !c.isTrigger && c.GetComponent<Unit>() == null).ToArray();
+            if (blocking2D.Length > 0)
             {
                 return null;
             }
 
             float checkRadius = 0.1f;
             Collider[] colliders3D = Physics.OverlapSphere(cellWorldCenter, checkRadius);
-            if (colliders3D.Any(c => !c.isTrigger))
+            var blocking3D = colliders3D.Where(c => !c.isTrigger && c.GetComponent<Unit>() == null).ToArray();
+            if (blocking3D.Length > 0)
             {
                 return null;
             }

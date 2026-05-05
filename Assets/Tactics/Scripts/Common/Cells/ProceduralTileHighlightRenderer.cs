@@ -37,7 +37,7 @@ namespace Tactics.Cells
         [SerializeField] private float _pulseSpeed = 2f;
         [SerializeField] private float _pulseMinOpacity = 0.15f;
 
-        [SerializeField] private int _sortingOrder = 2;
+        [SerializeField] private int _sortingOrder = 10;
         [SerializeField] private Material _overrideMaterial;
 
         private MeshFilter _meshFilter;
@@ -86,7 +86,6 @@ namespace Tactics.Cells
                 Shader shader = Shader.Find("Custom/TileHighlightShader");
                 if (shader == null)
                 {
-                    Debug.LogWarning("[ProceduralTileHighlightRenderer] Shader 'Custom/TileHighlightShader' not found. Trying URP fallback.");
                     shader = Shader.Find("Universal Render Pipeline/Unlit");
                     if (shader == null)
                     {
