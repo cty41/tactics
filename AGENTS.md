@@ -115,6 +115,7 @@
 1. **资源**：使用 `GameAssetManager`，不用 `Resources.Load`；每个 Load 都要配对 Release；优先异步加载。
 2. **路径**：在适用时使用项目路径（`Assets/...`）而非场景名。
 3. **Inspector**：在 Inspector 相关代码中，适当时优先使用 Odin API。
+4. **自动编译**：修改 C# 脚本后不需要手动调用 `refresh_unity`，编译由 `auto-compile` 插件自动处理。
 
 ## Agent 约束
 
