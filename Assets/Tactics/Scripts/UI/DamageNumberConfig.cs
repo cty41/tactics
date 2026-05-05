@@ -2,6 +2,14 @@ using UnityEngine;
 
 namespace Tactics.UI
 {
+    public enum DamageNumberType
+    {
+        Normal,
+        Critical,
+        Heal,
+        Miss
+    }
+
     [CreateAssetMenu(fileName = "DamageNumberConfig", menuName = "Tactics/Damage Number Config")]
     public sealed class DamageNumberConfig : ScriptableObject
     {
