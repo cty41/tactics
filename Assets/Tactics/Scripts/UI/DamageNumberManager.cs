@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.AssetPipeline;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -23,6 +24,9 @@ namespace Tactics.UI
         [SerializeField] private DamageNumberConfig healConfig;
         [SerializeField] private DamageNumberConfig missConfig;
         [SerializeField] private int poolSize = 20;
+
+        private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
+        private const string StyleSheetPath = "Assets/Tactics/Arts/UI/DamageNumber.uss";
 
         private UIDocument _uiDocument;
         private VisualElement _container;
@@ -51,26 +55,82 @@ namespace Tactics.UI
                 return;
             }
             _instance = this;
+        }
 
-            gameObject.name = "DamageNumberManager";
+        private void Start()
+        {
+            InitializeUI();
+        }
+
+        private void InitializeUI()
+        {
+            var mgr = GameAssetManager.Instance;
+            if (mgr == null)
+            {
+                Debug.LogError("[DamageNumberManager] GameAssetManager.Instance is null. Ensure bootstrap ran before calling UI methods.");
+                return;
+            }
+
+            if (!mgr.IsInitialized)
+            {
+                Debug.LogError("[DamageNumberManager] GameAssetManager is not initialized. Call Initialize/InitializeAsync before calling UI methods.");
+                return;
+            }
+
+            // Load PanelSettings if not assigned in Inspector
+            if (panelSettings == null)
+            {
+                try
+                {
+                    panelSettings = mgr.Load<PanelSettings>(PanelSettingsPath);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[DamageNumberManager] Failed to load PanelSettings: {e.Message}");
+                    return;
+                }
+            }
+
+            // Load StyleSheet
+            StyleSheet styleSheet = null;
+            try
+            {
+                styleSheet = mgr.Load<StyleSheet>(StyleSheetPath);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[DamageNumberManager] Failed to load StyleSheet: {e.Message}");
+            }
+
+            // Create UIDocument
             _uiDocument = gameObject.AddComponent<UIDocument>();
-            
-            if (panelSettings != null)
+            _uiDocument.panelSettings = panelSettings;
+
+            // Add StyleSheet
+            if (styleSheet != null && _uiDocument.rootVisualElement != null)
             {
-                _uiDocument.panelSettings = panelSettings;
+                _uiDocument.rootVisualElement.styleSheets.Add(styleSheet);
             }
-            else
-            {
-                Debug.LogError("[DamageNumberManager] PanelSettings is not assigned. Please assign it in the Inspector.");
-            }
-            
+
+            // Create container
             _container = new VisualElement();
+            _container.name = "DamageNumberContainer";
             _container.style.position = Position.Absolute;
             _container.style.width = Length.Percent(100);
             _container.style.height = Length.Percent(100);
             _container.pickingMode = PickingMode.Ignore;
-            _uiDocument.rootVisualElement.Add(_container);
+            
+            if (_uiDocument.rootVisualElement != null)
+            {
+                _uiDocument.rootVisualElement.Add(_container);
+                Debug.Log($"[DamageNumberManager] Container added. Root child count: {_uiDocument.rootVisualElement.childCount}");
+            }
+            else
+            {
+                Debug.LogError("[DamageNumberManager] rootVisualElement is null after creating UIDocument!");
+            }
 
+            // Initialize pool
             _labelPool = new Queue<Label>();
             for (int i = 0; i < poolSize; i++)
             {
@@ -89,6 +149,12 @@ namespace Tactics.UI
 
         public void Spawn(DamageNumberType type, int value, Vector3 worldPosition)
         {
+            if (_container == null)
+            {
+                Debug.LogWarning("[DamageNumberManager] Container is null. UI not initialized yet.");
+                return;
+            }
+
             var config = GetConfig(type);
             if (config == null) return;
 
