@@ -17,6 +17,7 @@ namespace Tactics.UI
         private static DamageNumberManager _instance;
         public static DamageNumberManager Instance => _instance;
 
+        [SerializeField] private PanelSettings panelSettings;
         [SerializeField] private DamageNumberConfig normalConfig;
         [SerializeField] private DamageNumberConfig critConfig;
         [SerializeField] private DamageNumberConfig healConfig;
@@ -54,18 +55,13 @@ namespace Tactics.UI
             gameObject.name = "DamageNumberManager";
             _uiDocument = gameObject.AddComponent<UIDocument>();
             
-            var existingPanelSettings = FindFirstObjectByType<PanelSettings>();
-            if (existingPanelSettings != null)
+            if (panelSettings != null)
             {
-                _uiDocument.panelSettings = existingPanelSettings;
+                _uiDocument.panelSettings = panelSettings;
             }
             else
             {
-                var existingDoc = FindFirstObjectByType<UIDocument>();
-                if (existingDoc != null)
-                {
-                    _uiDocument.panelSettings = existingDoc.panelSettings;
-                }
+                Debug.LogError("[DamageNumberManager] PanelSettings is not assigned. Please assign it in the Inspector.");
             }
             
             _container = new VisualElement();
