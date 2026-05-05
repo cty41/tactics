@@ -34,5 +34,11 @@
                 <ui:Label text="End Turn" class="end-turn-text"/>
             </ui:Button>
         </ui:VisualElement>
+        <ui:VisualElement name="HoverHealthBar" class="hover-health-bar">
+            <ui:VisualElement name="HoverHPBarBg" class="hover-bar-bg">
+                <ui:VisualElement name="HoverHPBarFill" class="hover-bar-fill"/>
+            </ui:VisualElement>
+            <ui:Label name="HoverHPText" text="20/20" class="hover-hp-text"/>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -53,6 +53,13 @@ namespace Tactics.UI
         [SerializeField] private int poolSize = 20;
         private const string DamageNumberSettingsPath = "Assets/Tactics/ScriptableObjects/DamageNumberSettings.asset";
 
+        // Hover Health Bar
+        private VisualElement _hoverHealthBar;
+        private VisualElement _hoverHPBarFill;
+        private Label _hoverHPText;
+        private IUnit _hoveredUnit;
+        private Camera _mainCamera;
+
         private DamageNumberSettings _damageSettings;
         private VisualElement _damageNumberContainer;
         private Queue<Label> _damageNumberPool;
@@ -118,6 +125,11 @@ namespace Tactics.UI
             _moveButton = root.Q<Button>("MoveButton");
             _skillPanel = root.Q<VisualElement>("SkillPanel");
             _bottomPanel = root.Q<VisualElement>("BottomPanel");
+
+            _hoverHealthBar = root.Q<VisualElement>("HoverHealthBar");
+            _hoverHPBarFill = root.Q<VisualElement>("HoverHPBarFill");
+            _hoverHPText = root.Q<Label>("HoverHPText");
+            _mainCamera = Camera.main;
 
             // Initialize damage numbers
             _damageNumberContainer = root.Q<VisualElement>("DamageNumberContainer");
@@ -695,6 +707,61 @@ namespace Tactics.UI
 
         #endregion
 
+        #region Hover Health Bar
+
+        private void UpdateHoverHealthBar()
+        {
+            if (_mainCamera == null || _hoverHealthBar == null) return;
+
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Ray ray = _mainCamera.ScreenPointToRay(mousePos);
+            var hits = Physics2D.GetRayIntersectionAll(ray);
+            IUnit hitUnit = null;
+            foreach (var hit in hits)
+            {
+                var unit = hit.collider.GetComponent<Unit>();
+                if (unit != null) { hitUnit = unit; break; }
+            }
+
+            if (hitUnit != _hoveredUnit)
+            {
+                _hoveredUnit = hitUnit;
+                if (_hoveredUnit == null)
+                {
+                    _hoverHealthBar.style.display = DisplayStyle.None;
+                    return;
+                }
+            }
+
+            if (_hoveredUnit == null) return;
+
+            float health = _hoveredUnit.Health;
+            float maxHealth = _hoveredUnit.MaxHealth;
+            float pct = maxHealth > 0 ? health / maxHealth : 0f;
+            if (_hoverHPText != null)
+                _hoverHPText.text = $"{(int)health}/{(int)maxHealth}";
+            if (_hoverHPBarFill != null)
+                _hoverHPBarFill.style.width = new StyleLength(new Length(pct * 100f, LengthUnit.Percent));
+
+            Vector3 worldPos = new Vector3(
+                _hoveredUnit.WorldPosition.x,
+                _hoveredUnit.WorldPosition.y,
+                _hoveredUnit.WorldPosition.z);
+            Vector3 displayPos = worldPos + Vector3.up * 1.2f;
+
+            Vector3 screenPos = _mainCamera.WorldToScreenPoint(displayPos);
+            if (screenPos.z < 0) { _hoverHealthBar.style.display = DisplayStyle.None; return; }
+
+            float uiX = screenPos.x;
+            float uiY = Screen.height - screenPos.y;
+
+            _hoverHealthBar.style.left = uiX - 50;
+            _hoverHealthBar.style.top = uiY;
+            _hoverHealthBar.style.display = DisplayStyle.Flex;
+        }
+
+        #endregion
+
         #region Helpers
 
         private void UpdateMoveButtonState(IUnit unit)
@@ -726,6 +793,7 @@ namespace Tactics.UI
         private void Update()
         {
             UpdateDamageNumbers();
+            UpdateHoverHealthBar();
         }
 
         private void UpdateDamageNumbers()
