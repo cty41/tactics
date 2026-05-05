@@ -627,6 +627,11 @@ namespace Tactics.UI
                 unit.UnitSelected += OnUnitSelected;
                 unit.UnitDeselected += OnUnitDeselected;
 
+                if (unit is ICombatant combatant)
+                {
+                    combatant.HealthChanged += OnAnyUnitHealthChanged;
+                }
+
                 if (unit is IMoveable moveable)
                 {
                     moveable.UnitMoved += OnUnitMoved;
@@ -643,6 +648,11 @@ namespace Tactics.UI
             {
                 unit.UnitSelected -= OnUnitSelected;
                 unit.UnitDeselected -= OnUnitDeselected;
+
+                if (unit is ICombatant combatant)
+                {
+                    combatant.HealthChanged -= OnAnyUnitHealthChanged;
+                }
 
                 if (unit is IMoveable moveable)
                 {
@@ -787,22 +797,23 @@ namespace Tactics.UI
             {
                 UpdateStatusPanel();
             }
+        }
 
-            // Show damage number
-            if (args.HealthChangeAmount != 0)
+        private void OnAnyUnitHealthChanged(HealthChangedEventArgs args)
+        {
+            if (args.HealthChangeAmount == 0) return;
+
+            var worldPos = args.AffectedUnit.WorldPosition;
+            var unityPos = new Vector3(worldPos.x, worldPos.y, worldPos.z);
+            var displayPos = unityPos + Vector3.up * 1.5f;
+
+            if (args.HealthChangeAmount < 0)
             {
-                var worldPos = args.AffectedUnit.WorldPosition;
-                var unityPos = new Vector3(worldPos.x, worldPos.y, worldPos.z);
-                var displayPos = unityPos + Vector3.up * 1.5f;
-
-                if (args.HealthChangeAmount < 0)
-                {
-                    SpawnDamageNumber(DamageNumberType.Normal, Mathf.Abs(Mathf.RoundToInt(args.HealthChangeAmount)), displayPos);
-                }
-                else
-                {
-                    SpawnDamageNumber(DamageNumberType.Heal, Mathf.RoundToInt(args.HealthChangeAmount), displayPos);
-                }
+                SpawnDamageNumber(DamageNumberType.Normal, Mathf.Abs(Mathf.RoundToInt(args.HealthChangeAmount)), displayPos);
+            }
+            else
+            {
+                SpawnDamageNumber(DamageNumberType.Heal, Mathf.RoundToInt(args.HealthChangeAmount), displayPos);
             }
         }
 
