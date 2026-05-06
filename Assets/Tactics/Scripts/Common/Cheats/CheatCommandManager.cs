@@ -43,6 +43,19 @@ namespace Tactics.Cheats
                 var def = EquipmentDatabase.GetById(equipmentId);
                 return $"Added {def.DisplayName} ({equipmentId}) to inventory.";
             });
+
+            RegisterCommand("clearitem", args =>
+            {
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+                if (state == null)
+                    return "[Error] Failed to load player state.";
+
+                int count = state.Inventory?.Count ?? 0;
+                state.Inventory?.Clear();
+                PlayerAdventureStateStore.Save(state);
+
+                return $"Cleared {count} items from inventory.";
+            });
         }
 
         public void RegisterCommand(string name, Func<string[], string> handler)
