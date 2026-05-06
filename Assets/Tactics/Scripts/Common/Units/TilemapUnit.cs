@@ -19,6 +19,8 @@ namespace Tactics.Units
         [SerializeField] private UnityCellManager _cellManager;
         [FormerlySerializedAs("_dataTilemap")]
         [SerializeField] private Tilemap _gridTilemap;
+        [SerializeField, Tooltip("垂直偏移量，用于将单位视觉居中于 tile 中心")]
+        private float _visualYOffset = 0.15f;
 
         private float baseMovementSpeed;
 
@@ -115,9 +117,38 @@ namespace Tactics.Units
 
             var cell = CurrentCell;
             if (cell != null)
+            {
                 WorldPosition = cell.WorldPosition;
+                ApplyVisualYOffset();
+            }
             else
                 Debug.LogWarning($"[{nameof(TilemapUnit)}] CurrentCell is null during Initialize for {gameObject.name}.");
+        }
+
+        private void ApplyVisualYOffset()
+        {
+            if (Mathf.Approximately(_visualYOffset, 0f)) return;
+
+            var spriteRenderers = GetComponentsInChildren<SpriteRenderer>(false);
+            SpriteRenderer mainSr = null;
+            float maxArea = 0f;
+            foreach (var sr in spriteRenderers)
+            {
+                if (sr.sprite == null) continue;
+                var area = sr.sprite.rect.width * sr.sprite.rect.height;
+                if (area > maxArea)
+                {
+                    maxArea = area;
+                    mainSr = sr;
+                }
+            }
+
+            if (mainSr != null && mainSr.transform != transform)
+            {
+                var localPos = mainSr.transform.localPosition;
+                localPos.y += _visualYOffset;
+                mainSr.transform.localPosition = localPos;
+            }
         }
 
         private void OnUnitMoved(UnitMovedEventArgs obj)

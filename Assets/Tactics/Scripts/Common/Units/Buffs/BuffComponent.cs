@@ -34,6 +34,18 @@ namespace Tactics.Common.Units.Buffs
                 throw new ArgumentNullException(nameof(buff), "Cannot add a null buff.");
             }
 
+            // Check uniqueness: if IsUnique is true, don't add if same config already exists
+            if (buff.Config != null && buff.Config.IsUnique)
+            {
+                foreach (var existingBuff in _activeBuffs)
+                {
+                    if (existingBuff.Config == buff.Config)
+                    {
+                        return; // Skip adding duplicate unique buff
+                    }
+                }
+            }
+
             buff.Owner = _owner;
             _activeBuffs.Add(buff);
             buff.OnApplied();

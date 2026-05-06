@@ -87,7 +87,7 @@ namespace Tactics.Cells
                 if (tile == null)
                     continue;
 
-                var worldPosition = _gridLayer.GetCellCenterWorld(pos).ToIVector3();
+                var worldPosition = GetTileWorldPosition(pos).ToIVector3();
                 var gridPosition = new Vector2IntImpl(pos.x, pos.y);
                 var cell = new VirtualSquareCell(gridPosition, worldPosition, 1, false, null);
                 _cells.Add(gridPosition, cell);
@@ -200,7 +200,7 @@ namespace Tactics.Cells
                 return null;
             }
 
-            Vector3 cellWorldCenter = _gridLayer.GetCellCenterWorld(cellPos);
+            Vector3 cellWorldCenter = GetTileWorldPosition(cellPos);
 
             Collider2D[] colliders2D = Physics2D.OverlapPointAll(cellWorldCenter);
             var blocking2D = colliders2D.Where(c => !c.isTrigger && c.GetComponent<Unit>() == null).ToArray();
@@ -320,6 +320,20 @@ namespace Tactics.Cells
 
         public override void SetColor(ICell cell, float r, float g, float b, float a)
         {
+        }
+
+        /// <summary>
+        /// 计算 tile 在 world space 中的实际渲染位置（与 TilemapRenderer 一致）
+        /// </summary>
+        private Vector3 GetTileWorldPosition(Vector3Int cellPos)
+        {
+            var grid = _gridLayer.layoutGrid;
+            var tileAnchor = _gridLayer.tileAnchor;
+            var cellSize = grid.cellSize;
+            return _gridLayer.CellToWorld(cellPos) + new Vector3(
+                cellSize.x * tileAnchor.x,
+                cellSize.y * tileAnchor.y,
+                cellSize.z * tileAnchor.z);
         }
     }
 }

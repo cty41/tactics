@@ -1,5 +1,6 @@
 using System;
 using Tactics.Common.Cells;
+using Tactics.Common.Units.Buffs;
 using UnityEngine;
 
 namespace Tactics.Common.Units
@@ -102,6 +103,18 @@ namespace Tactics.Common.Units
             var baseDamage = unitReference.AttackFactor;
             var attributeBonus = GetAttributeScalingBonus(unitReference, isRangedDamage);
             return Math.Max(baseDamage + attributeBonus, 1);
+        }
+
+        public static float CalculateBaseDamageBeforeCrit(IUnit unitReference, bool isRangedDamage, DamageType damageType)
+        {
+            switch (damageType)
+            {
+                case DamageType.Fire:
+                case DamageType.Ice:
+                    return Math.Max(unitReference.AttackFactor + (unitReference.Intelligence - NeutralAttributeValue), 1);
+                default:
+                    return CalculateBaseDamageBeforeCrit(unitReference, isRangedDamage);
+            }
         }
 
         public static float GetCriticalDamage(float baseDamage)

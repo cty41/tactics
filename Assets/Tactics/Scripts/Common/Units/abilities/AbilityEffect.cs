@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using DG.Tweening;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units.Buffs;
+using Tactics.Common.Utilities;
 using Tactics.Runtime.BattleLog;
 using UnityEngine;
 
@@ -30,10 +33,12 @@ namespace Tactics.Common.Units.Abilities
         [SerializeField] private float _baseDamage;
         [SerializeField] private AttributeScalingType _scalingType;
         [SerializeField] private bool _isRangedDamage;
+        [SerializeField] private DamageType _damageType = DamageType.Physical;
 
         public float BaseDamage => _baseDamage;
         public AttributeScalingType ScalingType => _scalingType;
         public bool IsRangedDamage => _isRangedDamage;
+        public DamageType DamageType => _damageType;
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
         {
@@ -41,9 +46,32 @@ namespace Tactics.Common.Units.Abilities
             {
                 if (target == null) continue;
 
+                // Check for Frozen buff - ice break logic
+                bool isFrozen = target.BuffComponent?.HasBuff<FrozenBehavior>() ?? false;
+                if (isFrozen)
+                {
+                    if (_damageType == DamageType.Fire)
+                    {
+                        // Fire breaks ice: remove all Frozen buffs before dealing damage
+                        var frozenBuffs = target.GetActiveBuffs()
+                            .Where(b => b.Config.Behaviors.Any(bh => bh is FrozenBehavior))
+                            .ToList();
+                        foreach (var fb in frozenBuffs)
+                            target.RemoveBuff(fb);
+                    }
+                    else
+                    {
+                        // Non-fire damage is blocked by ice
+                        continue;
+                    }
+                }
+
                 float damage = CalculateDamage(caster, target);
                 target.ModifyHealth(-damage, caster);
                 target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
+
+                // Trigger OnDamageTaken for counter and other post-damage buff effects
+                target.BuffComponent?.OnDamageTaken(caster, damage);
             }
             await Task.CompletedTask;
         }
@@ -53,10 +81,16 @@ namespace Tactics.Common.Units.Abilities
             float damage = _baseDamage;
             if (_scalingType != AttributeScalingType.None)
             {
-                float scaling = CombatComponent.CalculateBaseDamageBeforeCrit(caster, _isRangedDamage) - caster.AttackFactor;
+                float scaling = CombatComponent.CalculateBaseDamageBeforeCrit(caster, _isRangedDamage, _damageType) - caster.AttackFactor;
                 damage += scaling;
             }
-            if (UnityEngine.Random.value < CombatComponent.GetClampedCritChance(caster))
+
+            bool isCritical = UnityEngine.Random.value < CombatComponent.GetClampedCritChance(caster);
+
+            // Let buffs modify damage and force/override crit before final calculation
+            target.BuffComponent?.OnBeforeAttacked(caster, ref damage, ref isCritical);
+
+            if (isCritical)
             {
                 damage = CombatComponent.GetCriticalDamage(damage);
             }
@@ -143,23 +177,34 @@ namespace Tactics.Common.Units.Abilities
     }
 
     /// <summary>
-    /// Applies damage over time to targets.
+    /// Applies damage over time to targets via a DoT buff.
     /// </summary>
     [Serializable]
     public class DamageOverTimeEffect : AbilityEffect
     {
         [SerializeField] private float _damagePerTurn;
         [SerializeField] private int _duration;
+        [SerializeField] private BuffConfig _doTBuffConfig;
 
         public float DamagePerTurn => _damagePerTurn;
         public int Duration => _duration;
+        public BuffConfig DoTBuffConfig => _doTBuffConfig;
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
         {
             foreach (var target in targets)
             {
                 if (target == null) continue;
-                // TODO: Apply DoT buff
+
+                if (_doTBuffConfig != null)
+                {
+                    var buff = new Buff(_doTBuffConfig, caster, _duration);
+                    target.AddBuff(buff);
+                }
+                else
+                {
+                    Debug.LogWarning("[DamageOverTimeEffect] No DoT BuffConfig assigned. Skipping DoT application.");
+                }
             }
             await Task.CompletedTask;
         }
@@ -202,23 +247,99 @@ namespace Tactics.Common.Units.Abilities
     }
 
     /// <summary>
-    /// Knocks targets back a specified distance.
+    /// Performs a knockback flight: target is launched into the air along a parabolic arc
+    /// and lands at a cell up to _distance away. Uses DOTween for smooth animation.
     /// </summary>
     [Serializable]
     public class KnockbackEffect : AbilityEffect
     {
         [SerializeField] private int _distance;
+        [SerializeField] private float _duration = 0.5f;
+        [SerializeField] private float _height = 2f;
 
         public int Distance => _distance;
+        public float Duration => _duration;
+        public float Height => _height;
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
         {
             foreach (var target in targets)
             {
                 if (target == null) continue;
-                // TODO: Implement knockback logic
+
+                ICell targetCell = target.CurrentCell;
+                ICell casterCell = caster.CurrentCell;
+                if (targetCell == null || casterCell == null) continue;
+
+                // Calculate direction (caster -> target)
+                int dx = targetCell.GridCoordinates.x - casterCell.GridCoordinates.x;
+                int dy = targetCell.GridCoordinates.y - casterCell.GridCoordinates.y;
+                float mag = Mathf.Sqrt(dx * dx + dy * dy);
+                if (mag < 0.01f) continue;
+
+                int dirX = Mathf.RoundToInt(dx / mag);
+                int dirY = Mathf.RoundToInt(dy / mag);
+
+                // Find landing cell
+                ICell landingCell = FindLandingCell(targetCell, dirX, dirY, _distance, gridController);
+
+                if (landingCell != null && landingCell != targetCell)
+                {
+                    // Remove from old cell before animation
+                    if (target.CurrentCell != null)
+                    {
+                        target.CurrentCell.CurrentUnits.Remove(target);
+                        target.CurrentCell.IsTaken = target.CurrentCell.CurrentUnits.Count > 0;
+                    }
+
+                    // Perform parabolic flight animation
+                    await PerformKnockbackFlight(target, landingCell, _duration, _height);
+
+                    // Update to new cell after landing
+                    target.CurrentCell = landingCell;
+                    if (!landingCell.CurrentUnits.Contains(target))
+                        landingCell.CurrentUnits.Add(target);
+                    landingCell.IsTaken = landingCell.CurrentUnits.Count > 0;
+                    target.WorldPosition = landingCell.WorldPosition;
+                }
             }
-            await Task.CompletedTask;
+        }
+
+        private ICell FindLandingCell(ICell startCell, int dirX, int dirY, int maxDistance, IGridController gridController)
+        {
+            ICell lastValidCell = startCell;
+
+            for (int i = 1; i <= maxDistance; i++)
+            {
+                var coord = new Vector2IntImpl(startCell.GridCoordinates.x + dirX * i, startCell.GridCoordinates.y + dirY * i);
+                var candidateCell = gridController.CellManager.GetCellAt(coord);
+                if (candidateCell == null) break; // Out of bounds
+                if (!gridController.CellManager.IsCellWalkable(candidateCell)) break; // Not walkable
+
+                lastValidCell = candidateCell;
+            }
+
+            return lastValidCell != startCell ? lastValidCell : null;
+        }
+
+        private async Task PerformKnockbackFlight(IUnit target, ICell landingCell, float duration, float height)
+        {
+            if (target is not MonoBehaviour mb) return;
+
+            Vector3 startPos = mb.transform.position;
+            Vector3 endPos = landingCell.WorldPosition.ToVector3();
+
+            float progress = 0f;
+            var tween = DOTween.To(() => progress, x => progress = x, 1f, duration)
+                .OnUpdate(() =>
+                {
+                    Vector3 pos = Vector3.Lerp(startPos, endPos, progress);
+                    pos.y += Mathf.Sin(Mathf.PI * progress) * height;
+                    mb.transform.position = pos;
+                })
+                .SetEase(Ease.Linear);
+
+            await tween.AsyncWaitForCompletion();
         }
     }
 

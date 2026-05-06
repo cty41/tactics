@@ -52,8 +52,9 @@ namespace Tactics.Controllers.TurnResolvers
         /// Resolves the next unit from the queue and packages it into a TurnContext.
         /// </summary>
         /// <param name="gridController">The grid controller.</param>
+        /// <param name="skipCount">Number of valid units skipped due to inability to act.</param>
         /// <returns>A TurnContext containing the next unit's turn, or empty if no units available.</returns>
-        private TurnContext ResolveNextUnit(GridController gridController)
+        private TurnContext ResolveNextUnit(GridController gridController, int skipCount = 0)
         {
             if (_unitQueue.Count == 0)
             {
@@ -62,13 +63,28 @@ namespace Tactics.Controllers.TurnResolvers
                 return CreateEmptyTurnContext(gridController);
             }
 
+            if (skipCount >= _unitQueue.Count)
+            {
+                // All remaining units are unable to act (e.g., all frozen)
+                Debug.LogWarning("UnitSpeedTurnResolver: All units are unable to act.");
+                return CreateEmptyTurnContext(gridController);
+            }
+
             var nextUnit = _unitQueue.Dequeue();
 
             // Double-check unit is still alive and valid
             if (nextUnit.Health <= 0 || !gridController.UnitManager.GetUnits().Contains(nextUnit))
             {
-                // Skip this unit and try the next one
-                return ResolveNextUnit(gridController);
+                // Skip this unit and try the next one (dead unit doesn't count toward skip limit)
+                return ResolveNextUnit(gridController, skipCount);
+            }
+
+            // Check if unit can act (e.g., frozen)
+            if (!nextUnit.CanAct)
+            {
+                // Keep unit in queue for next cycle, but skip it this turn
+                _unitQueue.Enqueue(nextUnit);
+                return ResolveNextUnit(gridController, skipCount + 1);
             }
 
             // Put the unit back at the end of the queue for the next cycle
@@ -78,8 +94,8 @@ namespace Tactics.Controllers.TurnResolvers
             if (player == null)
             {
                 Debug.LogError($"[UnitSpeedTurnResolver] Unit {nextUnit} has PlayerNumber={nextUnit.PlayerNumber} but no matching player found. Skipping.");
-                // Skip this unit and try the next one
-                return ResolveNextUnit(gridController);
+                // This is a configuration error, not a temporary state
+                return ResolveNextUnit(gridController, skipCount);
             }
             return new TurnContext(player, new IUnit[] { nextUnit });
         }

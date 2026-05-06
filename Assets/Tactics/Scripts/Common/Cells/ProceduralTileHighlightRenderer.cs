@@ -292,6 +292,20 @@ namespace Tactics.Cells
             RebuildMesh();
         }
 
+        /// <summary>
+        /// 计算 tile 在 world space 中的实际渲染位置（与 TilemapRenderer 一致）
+        /// </summary>
+        private Vector3 GetTileWorldPosition(Vector3Int cellPos)
+        {
+            var grid = _gridLayer.layoutGrid;
+            var tileAnchor = _gridLayer.tileAnchor;
+            var cellSize = grid.cellSize;
+            return _gridLayer.CellToWorld(cellPos) + new Vector3(
+                cellSize.x * tileAnchor.x,
+                cellSize.y * tileAnchor.y,
+                cellSize.z * tileAnchor.z);
+        }
+
         private Color GetColorForType(TileHighlightType type)
         {
             return type switch
@@ -327,13 +341,17 @@ namespace Tactics.Cells
                 foreach (var coord in kvp.Value)
                 {
                     Vector3Int pos = new Vector3Int(coord.x, coord.y, 0);
-                    Vector3 center = _gridLayer.GetCellCenterWorld(pos);
+
+                    Vector3 worldCenter = GetTileWorldPosition(pos);
+                    Vector3 center = transform.InverseTransformPoint(worldCenter);
                     center.y += 0.02f;
 
-                    Vector3 rightNeighbor = _gridLayer.GetCellCenterWorld(pos + Vector3Int.right);
-                    Vector3 upNeighbor = _gridLayer.GetCellCenterWorld(pos + Vector3Int.up);
-                    Vector3 dx = (rightNeighbor - center) * 0.5f;
-                    Vector3 dy = (upNeighbor - center) * 0.5f;
+                    Vector3 worldRight = GetTileWorldPosition(pos + Vector3Int.right);
+                    Vector3 worldUp = GetTileWorldPosition(pos + Vector3Int.up);
+                    Vector3 localRight = transform.InverseTransformPoint(worldRight);
+                    Vector3 localUp = transform.InverseTransformPoint(worldUp);
+                    Vector3 dx = (localRight - center) * 0.5f;
+                    Vector3 dy = (localUp - center) * 0.5f;
 
                     int vBase = cellIndex * 4;
                     int tBase = cellIndex * 6;
