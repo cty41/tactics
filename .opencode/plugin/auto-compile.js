@@ -1,34 +1,46 @@
 /**
  * Auto-compile plugin for OpenCode
  * 
- * Automatically injects Unity compilation rules into system prompt.
- * Removes the need for manual refresh_unity calls after C# script edits.
+ * Ensures Agent calls refresh_unity after editing C# scripts.
+ * Injects compilation rules into system prompt and adds reminders in tool output.
  */
 
 export const AutoCompilePlugin = async () => {
+  const EDIT_TOOLS = [
+    'Edit',
+    'Write',
+    'unity-MCP_apply_text_edits',
+    'unity-MCP_script_apply_edits',
+    'unity-MCP_create_script',
+    'unity-MCP_delete_script'
+  ];
+
   const COMPILE_RULE = `
-## Auto-Compile Rule
+## Unity Compilation Rule (CRITICAL)
 
-When you edit, create, or delete C# scripts (.cs files), Unity Editor scripts, shaders, or any file that triggers Unity recompilation:
+After editing, creating, or deleting C# scripts (.cs files), you MUST call refresh_unity with compile="request" to trigger Unity compilation.
 
-1. **Do NOT manually call refresh_unity** - compilation is handled automatically by the auto-compile system.
-2. If you need to verify compilation succeeded, check the Unity console for errors.
-3. Continue with your task after editing scripts - the compilation will happen in the background.
-
-This rule applies to all file operations including: Edit, Write, apply_text_edits, script_apply_edits, create_script, and delete_script.
+Unity compilation is NOT automatic. Every C# file change requires an explicit refresh_unity call.
+This applies to: Edit, Write, apply_text_edits, script_apply_edits, create_script, delete_script.
 `;
 
   return {
     'experimental.chat.system.transform': async (_input, output) => {
-      // Inject compile rule into system prompt
       if (!output.system) {
         output.system = [];
       }
-      
-      // Check if rule already exists to avoid duplication
-      const hasRule = output.system.some(s => s.includes('Auto-Compile Rule'));
-      if (!hasRule) {
+      if (!output.system.some(s => s.includes('Unity Compilation Rule'))) {
         output.system.push(COMPILE_RULE);
+      }
+    },
+
+    'tool.execute.after': async (input, output) => {
+      if (EDIT_TOOLS.includes(input.tool)) {
+        const path = input.args?.path || input.args?.uri || input.args?.filePath || '';
+        if (path.endsWith('.cs')) {
+          output.output = (output.output || '') 
+            + '\n\n=== REMINDER: C# file modified, call refresh_unity to compile ===';
+        }
       }
     }
   };
