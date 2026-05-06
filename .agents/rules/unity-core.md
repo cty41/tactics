@@ -1,127 +1,122 @@
----
-description: "C# 命名规范、MonoBehaviour 生命周期、序列化最佳实践"
-when_to_read: "编写或修改 C# 脚本时"
----
+# Unity 核心规范 - C# & MonoBehaviour
 
-# Unity Core Rules - C# & MonoBehaviour
+## 快速参考
 
-## Quick Reference
+| 元素 | 命名约定 | 示例 |
+|------|----------|------|
+| 类 / 结构体 / 接口 | PascalCase | `PlayerController`, `IHealthSystem` |
+| 私有字段 | `_camelCase` | `_moveSpeed`, `_isGrounded` |
+| 公开属性 | PascalCase | `MoveSpeed`, `IsMoving` |
+| 常量 | PascalCase | `MaxHealth` |
+| 静态字段 | `_camelCase` | `_instanceCount` |
+| 方法 | PascalCase | `ProcessInput()` |
+| 事件 | `On` + PascalCase | `OnPlayerDeath` |
+| 异步方法 | `Async` 后缀 | `LoadDataAsync()` |
+| 布尔值 | `is` / `has` / `can` 前缀 | `_isGrounded`, `_hasWeapon` |
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Classes / Structs / Interfaces | PascalCase | `PlayerController`, `IHealthSystem` |
-| Private fields | `_camelCase` | `_moveSpeed`, `_isGrounded` |
-| Public properties | PascalCase | `MoveSpeed`, `IsMoving` |
-| Constants | PascalCase | `MaxHealth` |
-| Static fields | `_camelCase` | `_instanceCount` |
-| Methods | PascalCase | `ProcessInput()` |
-| Events | `On` + PascalCase | `OnPlayerDeath` |
-| Async methods | `Async` suffix | `LoadDataAsync()` |
-| Booleans | `is` / `has` / `can` prefix | `_isGrounded`, `_hasWeapon` |
+## Unity 6.2 命名规范
 
-## Naming Conventions for Unity 6.2
-
-### Classes and Structs
+### 类和结构体
 ```
-// ✅ DO: PascalCase
+// ✅ 正确：PascalCase
 public class PlayerController : MonoBehaviour { }
 
-// ✅ DO: Readonly structs for data integrity
+// ✅ 正确：只读结构体保证数据完整性
 public readonly struct GameConfig { }
 
 public interface IHealthSystem { }
 
-// ❌ DON'T
-public class player_controller { } // snake_case
-public class playerController { } // camelCase
-public struct MutableConfig { } // Avoid mutable structs
+// ❌ 错误
+public class player_controller { } // 蛇形命名
+public class playerController { }  // 驼峰命名
+public struct MutableConfig { }    // 避免可变结构体
 ```
 
-### Fields and Properties
+### 字段和属性
 ```
 public class Example : MonoBehaviour
 {
-    // ✅ DO: Private fields with _ prefix (.NET Style)
+    // ✅ 正确：私有字段使用 _ 前缀（.NET 风格）
     [SerializeField] private float _moveSpeed = 5f;
     private Transform _targetTransform;
     
-    // ✅ DO: Public properties in PascalCase
+    // ✅ 正确：公开属性使用 PascalCase
     public float MoveSpeed => _moveSpeed;
     public bool IsMoving { get; private set; }
     
-    // ✅ DO: Constants in PascalCase (Microsoft Standard)
+    // ✅ 正确：常量使用 PascalCase（Microsoft 标准）
     private const float MaxHealth = 100f;
     private const string PlayerTag = "Player";
     
-    // ✅ DO: Static fields with _ prefix
+    // ✅ 正确：静态字段使用 _ 前缀
     private static int _instanceCount = 0;
     
-    // ✅ DO: Booleans with is/has/can prefix
+    // ✅ 正确：布尔值使用 is/has/can 前缀
     private bool _isGrounded;
     private bool _hasWeapon;
     private bool _canJump;
     
-    // ❌ DON'T: Public fields without [SerializeField]
-    public float moveSpeed; // Use property or [SerializeField] private
+    // ❌ 错误：无 [SerializeField] 的公开字段
+    public float moveSpeed; // 应使用属性或 [SerializeField] private
     
-    // ❌ DON'T: Hungarian notation
+    // ❌ 错误：匈牙利命名法
     private float m_Speed; 
     private float fSpeed;
 }
 ```
 
-### Methods and Events
+### 方法和事件
 ```
 public class EventExample : MonoBehaviour
 {
-    // ✅ DO: Methods in PascalCase
+    // ✅ 正确：方法使用 PascalCase
     public void ProcessInput() { }
     private void HandleCollision() { }
     
-    // ✅ DO: Events with On prefix
+    // ✅ 正确：事件使用 On 前缀
     public event Action OnPlayerDeath;
     public event Action<int> OnScoreChanged;
     
-    // ✅ DO: Async methods with Async suffix (Use Awaitable for Unity 6.2)
+    // ✅ 正确：异步方法使用 Async 后缀（Unity 6.2 使用 Awaitable）
     private async Awaitable LoadDataAsync() { }
     public async Awaitable<bool> TryConnectAsync() { }
 }
 ```
 
-## MonoBehaviour Lifecycle
+## MonoBehaviour 生命周期
 
-### Correct Method Order
+### 正确的方法顺序
 
 ```
 public class Example : MonoBehaviour
 {
-    // 1. Serialized Fields
-    // 2. Private Fields
-    // 3. Properties
-    // 4. Unity Lifecycle Methods (in call order)
-    private void Awake()     { /* Init components, TryGetComponent */ }
-    private void OnEnable()  { /* Subscribe to events */ }
-    private void Start()     { /* Init after all Awake calls */ }
-    private void FixedUpdate() { /* Physics */ }
-    private void Update()    { /* Game logic and input */ }
-    private void LateUpdate()  { /* Camera, post-update */ }
-    private void OnDisable() { /* Unsubscribe from events */ }
-    private void OnDestroy() { /* Cleanup */ }
-    // 5. Custom Methods
+    // 1. 序列化字段
+    // 2. 私有字段
+    // 3. 属性
+    // 4. Unity 生命周期方法（按调用顺序）
+    private void Awake()     { /* 初始化组件, TryGetComponent */ }
+    private void OnEnable()  { /* 订阅事件 */ }
+    private void Start()     { /* 所有 Awake 调用完成后初始化 */ }
+    private void FixedUpdate() { /* 物理 */ }
+    private void Update()    { /* 游戏逻辑和输入 */ }
+    private void LateUpdate()  { /* 摄像机、后更新 */ }
+    private void OnDisable() { /* 取消订阅事件 */ }
+    private void OnDestroy() { /* 清理 */ }
+    // 5. 自定义方法
 }
 ```
 
-## Serialization
+## 序列化
 
-### [SerializeField] Best Practices
+### [SerializeField] 最佳实践
 ```
 public class SerializationExample : MonoBehaviour
 {
-    // ✅ DO: Private fields with [SerializeField] and _ prefix
+    // ✅ 正确：私有字段配合 [SerializeField] 和 _ 前缀
     [SerializeField] private float _health = 100f;
     [SerializeField] private GameObject _weaponPrefab;
     
-    // ✅ DO: Headers for grouping
+    // ✅ 正确：使用 Header 分组
     [Header("Movement Settings")]
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _jumpForce = 10f;
@@ -130,23 +125,23 @@ public class SerializationExample : MonoBehaviour
     [SerializeField] private AudioClip _jumpSound;
     [SerializeField] private AudioClip _landSound;
     
-    // ✅ DO: Tooltip for inspector documentation
+    // ✅ 正确：Tooltip 添加 Inspector 文档
     [Tooltip("Maximum speed the player can reach")]
     [SerializeField] private float _maxSpeed = 20f;
     
-    // ✅ DO: Range to limit values
+    // ✅ 正确：Range 限制数值范围
     [Range(0f, 1f)]
     [SerializeField] private float _volume = 0.5f;
     
-    // ✅ DO: HideInInspector to hide runtime values
+    // ✅ 正确：HideInInspector 隐藏运行时值
     [HideInInspector]
-    public int RuntimeValue; // Used by systems but not editable
+    public int RuntimeValue; // 被系统使用但不可编辑
 }
 ```
 
-### ScriptableObject for Configuration
+### ScriptableObject 做配置
 ```
-// ✅ DO: Configuration via ScriptableObject
+// ✅ 正确：通过 ScriptableObject 做配置
 [CreateAssetMenu(fileName = "WeaponConfig", menuName = "Game/Weapon Config")]
 public class WeaponConfig : ScriptableObject
 {
@@ -169,16 +164,16 @@ public class Weapon : MonoBehaviour
     
     public void Fire()
     {
-        // Using the configuration
+        // 使用配置
         DealDamage(_config.Damage);
     }
 }
 ```
 
-## Namespaces
+## 命名空间
 
 ```
-// ✅ DO: Use namespaces
+// ✅ 正确：使用命名空间
 namespace MyGame.Core
 {
     public class GameManager : MonoBehaviour
@@ -201,33 +196,33 @@ namespace MyGame.UI
 }
 ```
 
-## XML Documentation
+## XML 文档注释
 
 ```
 /// <summary>
-/// Controls player movement and actions.
+/// 控制玩家移动和动作。
 /// </summary>
 public class PlayerController : MonoBehaviour
 {
     /// <summary>
-    /// Current movement speed of the player.
+    /// 当前玩家移动速度。
     /// </summary>
     [SerializeField] private float _moveSpeed = 5f;
     
     /// <summary>
-    /// Moves the player in the specified direction.
+    /// 将玩家向指定方向移动。
     /// </summary>
-    /// <param name="direction">Movement direction (normalized vector).</param>
-    /// <param name="deltaTime">Time since last frame.</param>
+    /// <param name="direction">移动方向（规范化向量）。</param>
+    /// <param name="deltaTime">自上一帧以来的时间。</param>
     public void Move(Vector3 direction, float deltaTime)
     {
         transform.position += direction * _moveSpeed * deltaTime;
     }
     
     /// <summary>
-    /// Checks if the player can jump.
+    /// 检查玩家是否可以跳跃。
     /// </summary>
-    /// <returns>True if the player can jump.</returns>
+    /// <returns>如果可以跳跃则返回 true。</returns>
     public bool CanJump()
     {
         return IsGrounded() && !IsJumping;
@@ -235,10 +230,10 @@ public class PlayerController : MonoBehaviour
 }
 ```
 
-## Modern C# Features (Unity 6.2 / C# 12.0)
+## 现代 C# 特性（Unity 6.2 / C# 12.0）
 
 ```
-// ✅ DO: Pattern matching
+// ✅ 正确：模式匹配
 public void HandleInput(InputAction.CallbackContext context)
 {
     switch (context.phase)
@@ -255,23 +250,23 @@ public void HandleInput(InputAction.CallbackContext context)
     }
 }
 
-// ✅ DO: Null-conditional operator
+// ✅ 正确：Null 条件运算符
 private void SafeInvoke()
 {
     OnPlayerDeath?.Invoke();
 }
 
-// ✅ DO: Expression-bodied members
+// ✅ 正确：表达式体成员
 public bool IsAlive => _health > 0;
 public float HealthPercentage => _health / MaxHealth;
 
-// ✅ DO: String interpolation
+// ✅ 正确：字符串插值
 private void LogStatus()
 {
     Debug.Log($"Player Health: {_health}/{MaxHealth}");
 }
 
-// ✅ DO: Unity Awaitable (Replaces Task)
+// ✅ 正确：Unity Awaitable（替代 Task）
 private async Awaitable PerformActionAsync()
 {
     await Awaitable.NextFrameAsync();

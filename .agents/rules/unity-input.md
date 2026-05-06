@@ -1,29 +1,24 @@
----
-description: "Unity Input System 使用规范与推荐模式"
-when_to_read: "处理玩家输入、按键绑定、Input Actions 相关代码时"
----
+# Unity Input System 规范
 
-# Unity Input System Rules
+## 强制要求：使用新 Input System
 
-## REQUIRED: New Input System
-
-⚠️ **Legacy Input System is FORBIDDEN for new projects**
+⚠️ **新项目中严禁使用旧版 Input System**
 
 ```csharp
-// ❌ FORBIDDEN
+// ❌ 禁止
 if (Input.GetKey(KeyCode.W)) { }
 float horizontal = Input.GetAxis("Horizontal");
 
-// ✅ CORRECT
+// ✅ 正确
 Vector2 move = _inputActions.Gameplay.Move.ReadValue<Vector2>();
 _inputActions.Gameplay.Jump.performed += OnJump;
 ```
 
-## Input Actions Asset
+## Input Actions 资源
 
-Create via `Assets → Create → Input Actions`.
+通过 `Assets → Create → Input Actions` 创建。
 
-Recommended structure:
+推荐结构：
 
 ```
 PlayerInputActions
@@ -38,13 +33,13 @@ PlayerInputActions
     └── Cancel (Button)
 ```
 
-Generate C# class from the asset: `Inspector → Generate C# Class`.
+从资源生成 C# 类：`Inspector → Generate C# Class`。
 
-## Recommended Approach: Generated C# Class
+## 推荐方案：生成的 C# 类
 
 ```csharp
 using UnityEngine;
-using MyGame.Input; // Generated namespace
+using MyGame.Input; // 生成的命名空间
 
 public class InputHandler : MonoBehaviour
 {
@@ -97,59 +92,59 @@ public class InputHandler : MonoBehaviour
 }
 ```
 
-### Key Rules
+### 关键规则
 
-1. **Use explicit handler methods** — avoid lambdas to prevent duplicate subscriptions.
-2. **Subscribe in `OnEnable`, unsubscribe in `OnDisable`** — always pair them.
-3. **Enable the action map**, not individual actions.
-4. **Read continuous input in `Update`** (`ReadValue<T>`).
-5. **Handle event-based input in callbacks** (`performed` / `canceled`).
-6. **Do NOT reset event flags blindly in `Update`** — set transient flags in the event handler and reset them after consumption in a dedicated method or next frame if needed.
+1. **使用显式处理方法** — 避免使用 lambda 以防重复订阅
+2. **在 `OnEnable` 中订阅，在 `OnDisable` 中取消订阅** — 必须配对
+3. **启用 Action Map**，而不是单独的 Action
+4. **在 `Update` 中读取连续输入**（`ReadValue<T>`）
+5. **在回调中处理事件式输入**（`performed` / `canceled`）
+6. **不要在 `Update` 中盲目重置事件标志** — 在事件处理中设置瞬时标志，在消费完成后在专用方法中或下一帧重置
 
-## Alternative Approaches (Legacy / Not Recommended)
+## 备选方案（旧版/不推荐）
 
-### PlayerInput Component
-- Use only if you need automatic device pairing (local multiplayer) or message-based wiring.
-- Prefer `InputAction.CallbackContext` over legacy `InputValue`.
+### PlayerInput 组件
+- 仅在需要自动设备配对（本地多人）或基于消息的绑定时使用
+- 优先使用 `InputAction.CallbackContext` 而非旧版 `InputValue`
 
-### Manual InputActionAsset Reference
-- Use only if runtime asset swapping is required.
-- Remember to `FindActionMap` / `FindAction` with `throwIfNotFound: true`.
+### 手动引用 InputActionAsset
+- 仅在需要运行时替换资源时使用
+- 记住使用 `FindActionMap` / `FindAction` 并传入 `throwIfNotFound: true`
 
-## Multiplayer Input
+## 多人输入
 
-Use `PlayerInputManager` for local co-op. Subscribe to `onPlayerJoined` / `onPlayerLeft` in `OnEnable`/`OnDisable`.
+使用 `PlayerInputManager` 实现本地合作。在 `OnEnable`/`OnDisable` 中订阅 `onPlayerJoined` / `onPlayerLeft`。
 
-## Input Rebinding
+## 输入重绑定
 
-Use `PerformInteractiveRebinding()` on the generated action instance. Always `Dispose()` the `RebindingOperation` in `OnComplete` / `OnCancel`.
+对生成的 Action 实例使用 `PerformInteractiveRebinding()`。在 `OnComplete` / `OnCancel` 中务必 `Dispose()` `RebindingOperation`。
 
-## DO's and DON'Ts
+## 正确与错误对照
 
-### ❌ DON'T
+### ❌ 禁止
 
 ```csharp
-// Legacy Input — FORBIDDEN
+// 旧版 Input — 禁止
 if (Input.GetKey(KeyCode.W)) { }
 if (Input.GetMouseButton(0)) { }
 float horizontal = Input.GetAxis("Horizontal");
 
-// Unpaired subscription
+// 未配对的订阅
 void OnEnable() => _jumpAction.performed += ctx => Jump();
-// Missing unsubscribe
+// 缺少取消订阅
 
-// Resetting event flag blindly every frame
+// 每帧盲目重置事件标志
 void Update() { _jumpPressed = false; }
 ```
 
-### ✅ DO
+### ✅ 正确
 
 ```csharp
-// New Input System
+// 新 Input System
 Vector2 move = _inputActions.Gameplay.Move.ReadValue<Vector2>();
 _inputActions.Gameplay.Jump.performed += OnJump;
 
-// Proper pairing
+// 正确配对
 void OnEnable()  { _inputActions.Gameplay.Jump.performed += OnJump; _inputActions.Gameplay.Enable(); }
 void OnDisable() { _inputActions.Gameplay.Jump.performed -= OnJump; _inputActions.Gameplay.Disable(); }
 ```

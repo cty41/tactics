@@ -1,132 +1,34 @@
 # Tactics 项目 - Agent 指南
 
-## 概述
+Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 
-这是一个 Agent 优先的 Unity 项目，由人类工程师掌舵、Agent 执行。代码库由 AI Agent 在人工监督下维护。
+## 核心原则
 
-**核心原则：不手动编写代码。所有代码由 Agent 编写。**
+1. **资源**：使用 `GameAssetManager`，不用 `Resources.Load`；每个 Load 都要配对 Release
+2. **路径**：使用项目路径（`Assets/...`）
+3. **Inspector**：适当时优先使用 Odin API
+4. **编译**：C# 脚本修改后由 auto-compile 插件自动处理，不要手动调用 `refresh_unity`
+5. **日志**：通用日志用 `Logger.Info/Warning/Error`，战斗日志用 `BattleLogger.Log`，禁止 `Debug.Log`
+6. **工具安全**：禁止使用 `unity-MCP_execute_code` 执行自行编写的测试代码或验证脚本；仅当用户明确要求时才可使用该工具
 
-## Agent 行为准则
+## 规则与指南
 
-用于减少常见 LLM 编码错误的行为准则。按需与项目特定说明合并使用。
+详细规则按领域分类，按需读取。相关领域工作时，主动读取对应文件：
 
-**权衡：** 这些准则偏向谨慎而非速度。对于琐碎任务，请自行判断。
-
-### 1. 编码前先思考
-
-**不要假设。不要隐藏困惑。暴露权衡。**
-
-在实现之前：
-- 明确陈述你的假设。如果不确定，就问。
-- 如果存在多种解释，请呈现出来——不要默默选择。
-- 如果存在更简单的方案，请说出来。在必要时提出反对意见。
-- 如果有不清楚的地方，停下来。指出困惑的地方。提问。
-
-### 2. 简洁优先
-
-**最少代码解决问题。不要臆测。**
-
-- 不要超出需求范围的功能。
-- 不要为一次性代码做抽象。
-- 不要未经请求的"灵活性"或"可配置性"。
-- 不要为不可能出现的场景做错误处理。
-- 如果你写了 200 行而它可以被写成 50 行，重写它。
-
-问问自己："资深工程师会说这过度设计了吗？" 如果是，简化。
-
-### 3. 精准修改
-
-**只碰你必须碰的。只清理你自己造成的混乱。**
-
-编辑现有代码时：
-- 不要"改进"相邻的代码、注释或格式。
-- 不要重构没有坏掉的东西。
-- 匹配现有风格，即使你自己会做得不一样。
-- 如果你注意到无关的死代码，提一下——不要删除它。
-
-当你的改动产生孤儿代码时：
-- 删除**你的改动**导致不再使用的 import/变量/函数。
-- 不要删除预先存在的死代码，除非被要求。
-
-检验标准：每一行改动都应能直接追溯到用户的请求。
-
-### 4. 目标驱动执行
-
-**定义成功标准。循环验证直到通过。**
-
-将任务转化为可验证的目标：
-- "添加验证" → "为无效输入编写测试，然后让它们通过"
-- "修复 bug" → "编写一个能复现它的测试，然后让它通过"
-- "重构 X" → "确保重构前后测试都通过"
-
-对于多步骤任务，陈述一个简要计划：
-```
-1. [步骤] → 验证：[检查]
-2. [步骤] → 验证：[检查]
-3. [步骤] → 验证：[检查]
-```
-
-强有力的成功标准让你能独立循环。弱标准（"让它跑起来"）需要不断澄清。
-
----
-
-**这些准则在以下情况下是有效的：** diff 中不必要的改动更少，因过度设计导致的重写更少，澄清问题出现在犯错之前而不是之后。
-
-
-## 文档地图
-
-约束和工作流总结在本文件中。**系统架构和设计细节**位于 [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md)。其他参考（例如 [`.agents/docs/`](.agents/docs/) 下的内容）补充该文档。
-
-## 关键规则
-
-### 在 Cursor 中使用本仓库
-
-本项目包含一个 **Cursor 项目规则**，因此受 Karpathy 启发的行为准则会在你于此工作时自动生效。
-
-#### 在本仓库中
-
-1. 在 Cursor 中打开文件夹。
-2. `karpathy-guidelines` 项目规则以 `alwaysApply: true` 提交，因此你不需要额外的安装步骤。
-3. 在 Cursor 中，你可以在 **Settings → Rules**（或项目规则 UI）下确认它，其中应出现 `karpathy-guidelines`。
-
-#### 在另一个项目中使用相同的准则
-
-**Cursor（推荐）：** 将本项目的 `karpathy-guidelines` 规则内容复制到该项目的 `.cursor/rules/` 目录中（如果需要请创建文件夹）。按你喜欢的方式调整或合并到现有规则中。
-
-**其他工具：** 如果某个技术栈只支持根指令文件，将规则内容复制到该项目的根指令中（或将其内容合并到你现有的指令中）。
-
-
-> **注意：** 以下文件位于 `.agents/rules/` 下，约束 Agent 在本 Unity 项目上的工作。它们**不会自动注入** Agent 上下文中；在相关领域工作时，Agent 应主动读取对应的文件。
->
-> `.agents/skills/` 下的 **Skills** 由 Agent 框架自动发现并列出；Agent 应在 Skill 与当前任务相关时读取对应的 `SKILL.md`。
-
-以下文件位于 `.agents/rules/` 下，约束 Agent 在本 Unity 项目上的工作（请与仓库中的实际文件名核对）：
-
-| 规则 | 用途 |
-|------|------|
-| `unity-core.md` | C# 命名规范、MonoBehaviour 生命周期、序列化 |
-| `unity-asset-loading.md` | GameAssetManager API、Load/Release 配对 |
-| `unity-input.md` | Unity Input System |
-
-## 核心原则（摘要）
-
-详情见 [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md) 和上面的规则文件。
-
-1. **资源**：使用 `GameAssetManager`，不用 `Resources.Load`；每个 Load 都要配对 Release；优先异步加载。
-2. **路径**：在适用时使用项目路径（`Assets/...`）而非场景名。
-3. **Inspector**：在 Inspector 相关代码中，适当时优先使用 Odin API。
-4. **自动编译**：修改 C# 脚本后不需要手动调用 `refresh_unity`，编译由 `auto-compile` 插件自动处理。
+| 规则 | 适用场景 |
+|------|----------|
+| `rules/unity-core.md` | C# 命名规范、MonoBehaviour 生命周期、序列化 |
+| `rules/unity-asset-loading.md` | GameAssetManager API、Load/Release 配对 |
+| `rules/unity-input.md` | Unity Input System |
+| `rules/unity-logging.md` | 日志规范（禁止 Debug.Log，使用 Logger/BattleLogger） |
+| `rules/game-asset-pipeline.md` | AssetBundle 构建与加载完整指南 |
 
 ## Agent 约束
 
-### 语言
-
-- **Plan、code 和 debug 输出必须使用中文（中文）**，包括计划文件、任务描述和规划期间的沟通。
-- 代码注释和 commit message 遵循项目约定。
-- 标识符遵循 .NET 命名规范（PascalCase、camelCase 等）。
+- **语言**：Plan、code 和 debug 输出必须使用中文
+- **标识符**：遵循 .NET 命名规范（PascalCase、camelCase 等）
 
 ## Agent 限制
 
 **如果它不在代码库中，对 Agent 来说就不存在。**
-
-将权威文档保存在 **`.agents/`** 下——尤其是 [`.agents/ARCHITECTURE.md`](.agents/ARCHITECTURE.md)——以便 Agent 能找到它们。
+将权威文档保存在 `.agents/` 下。
