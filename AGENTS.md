@@ -7,7 +7,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 1. **资源**：使用 `GameAssetManager`，不用 `Resources.Load`；每个 Load 都要配对 Release
 2. **路径**：使用项目路径（`Assets/...`）
 3. **Inspector**：适当时优先使用 Odin API
-4. **编译**：C# 脚本修改后由 auto-compile 插件自动处理，不要手动调用 `refresh_unity`
+4. **编译**：修改 C# 脚本后，**必须**显式调用 `refresh_unity` 触发 Unity 编译。Agent 一次 build mode 执行完成前，若修改过任何 `.cs` 文件，必须在最后调用一次 `refresh_unity`
 5. **日志**：通用日志用 `Logger.Info/Warning/Error`，战斗日志用 `BattleLogger.Log`，禁止 `Debug.Log`
 6. **工具安全**：禁止使用 `unity-MCP_execute_code` 执行自行编写的测试代码或验证脚本；仅当用户明确要求时才可使用该工具
 

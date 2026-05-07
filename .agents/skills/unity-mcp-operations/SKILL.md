@@ -350,14 +350,14 @@ find_gameobjects → manage_components (add / remove / set_property)
 create_script
 ```
 1. Create script with `create_script`.
-2. Compilation is handled automatically by the auto-compile system.
+2. **Must call `refresh_unity` with compile="request" after script creation.**
 
 ### 10. Script Editing
 ```
 apply_text_edits / script_apply_edits
 ```
 1. Apply edits with `apply_text_edits` (range-based) or `script_apply_edits` (structured method/class edits).
-2. Compilation is handled automatically by the auto-compile system.
+2. **Must call `refresh_unity` with compile="request" after script edits.**
 
 ### 11. Playmode Testing
 ```
