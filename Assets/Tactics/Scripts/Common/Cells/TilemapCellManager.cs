@@ -180,9 +180,10 @@ namespace Tactics.Cells
             if (_cells == null) return null; // 尚未初始化
             Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
             
-            // Use Plane.Raycast to get accurate world position on the grid plane (z=0)
+            // Use Plane.Raycast to get accurate world position on the grid plane
             // This works correctly for isometric cameras where ScreenToWorldPoint with z=0 fails
-            Plane gridPlane = new Plane(Vector3.back, Vector3.zero);
+            float gridZ = _gridLayer.transform.position.z;
+            Plane gridPlane = new Plane(Vector3.back, new Vector3(0, 0, gridZ));
             Ray ray = _mainCamera.ScreenPointToRay(mouseScreenPos);
             
             if (!gridPlane.Raycast(ray, out float enter))

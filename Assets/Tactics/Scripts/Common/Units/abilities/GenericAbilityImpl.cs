@@ -173,7 +173,7 @@ namespace Tactics.Common.Units.Abilities
             
             if (targetCount > 0)
             {
-                ExecuteEffects(gridController);
+                _owner.HumanExecuteAbility(new AbilityCommand(this, _pendingTargets), gridController);
             }
             else
             {
@@ -249,7 +249,7 @@ namespace Tactics.Common.Units.Abilities
                 if (isValidTarget)
                 {
                     _pendingTargets = new List<IUnit> { unit };
-                    ExecuteEffects(gridController);
+                    _owner.HumanExecuteAbility(new AbilityCommand(this, _pendingTargets), gridController);
                     return;
                 }
             }

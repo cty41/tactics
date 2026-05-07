@@ -226,6 +226,10 @@ namespace Tactics.UI
             {
                 combatant.HealthChanged -= OnUnitHealthChanged;
             }
+            if (_currentSelectedUnit != null)
+            {
+                _currentSelectedUnit.ManaChanged -= OnUnitManaChanged;
+            }
             _currentSelectedUnit = null;
 
             if (_endTurnAction != null)
@@ -255,6 +259,7 @@ namespace Tactics.UI
                 {
                     combatant.HealthChanged += OnUnitHealthChanged;
                 }
+                _currentSelectedUnit.ManaChanged += OnUnitManaChanged;
             }
 
             if (currentUnit == null && _gridController.TurnContext.CurrentPlayer == null)
@@ -595,6 +600,10 @@ namespace Tactics.UI
                 {
                     oldCombatant.HealthChanged -= OnUnitHealthChanged;
                 }
+                if (_currentSelectedUnit != null && !ReferenceEquals(_currentSelectedUnit, currentUnit))
+                {
+                    _currentSelectedUnit.ManaChanged -= OnUnitManaChanged;
+                }
 
                 _currentSelectedUnit = currentUnit;
                 UpdateStatusPanel();
@@ -605,6 +614,7 @@ namespace Tactics.UI
                 {
                     newCombatant.HealthChanged += OnUnitHealthChanged;
                 }
+                _currentSelectedUnit.ManaChanged += OnUnitManaChanged;
             }
         }
 
@@ -679,6 +689,10 @@ namespace Tactics.UI
             {
                 oldCombatant.HealthChanged -= OnUnitHealthChanged;
             }
+            if (_currentSelectedUnit != null && _currentSelectedUnit != unit)
+            {
+                _currentSelectedUnit.ManaChanged -= OnUnitManaChanged;
+            }
 
             _currentSelectedUnit = unit;
             UpdateStatusPanel();
@@ -687,6 +701,7 @@ namespace Tactics.UI
             {
                 combatant.HealthChanged += OnUnitHealthChanged;
             }
+            _currentSelectedUnit.ManaChanged += OnUnitManaChanged;
         }
 
         private void OnUnitDeselected(IUnit unit)
@@ -695,6 +710,7 @@ namespace Tactics.UI
             {
                 combatant.HealthChanged -= OnUnitHealthChanged;
             }
+            unit.ManaChanged -= OnUnitManaChanged;
         }
 
         private void OnUnitMoved(UnitMovedEventArgs args)
@@ -864,6 +880,15 @@ namespace Tactics.UI
             if (ReferenceEquals(args.AffectedUnit, _currentSelectedUnit))
             {
                 UpdateStatusPanel();
+            }
+        }
+
+        private void OnUnitManaChanged(ManaChangedEventArgs args)
+        {
+            if (ReferenceEquals(args.AffectedUnit, _currentSelectedUnit))
+            {
+                UpdateStatusPanel();
+                UpdateSkillCards(_currentSelectedUnit);
             }
         }
 

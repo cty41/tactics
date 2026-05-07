@@ -39,6 +39,7 @@ namespace Tactics.Common.Units
         public event Action<UnitAttackedEventArgs> UnitAttacked;
         public event Action<UnitDestroyedEventArgs> UnitDestroyed;
         public event Action<HealthChangedEventArgs> HealthChanged;
+        public event Action<ManaChangedEventArgs> ManaChanged;
 
         public event Action<UnitMovedEventArgs> UnitMoved;
         public event Action<UnitChangedGridPositionEventArgs> UnitLeftCell;
@@ -79,7 +80,19 @@ namespace Tactics.Common.Units
         public float Health { get { return _health; } set { _health = value; } }
         public float MaxHealth { get; set; }
         [SerializeField] private float _mana = 0;
-        public float Mana { get { return _mana; } set { _mana = Mathf.Clamp(value, 0, MaxMana); } }
+        public float Mana
+        {
+            get { return _mana; }
+            set
+            {
+                float oldMana = _mana;
+                _mana = Mathf.Clamp(value, 0, MaxMana);
+                if (!Mathf.Approximately(oldMana, _mana))
+                {
+                    ManaChanged?.Invoke(new ManaChangedEventArgs(this, oldMana, _mana));
+                }
+            }
+        }
         public float MaxMana { get; set; }
 
         [SerializeField] private float _movementPoints = 5;
@@ -449,6 +462,10 @@ namespace Tactics.Common.Units
         public void InvokeHealthChanged(HealthChangedEventArgs eventArgs)
         {
             HealthChanged?.Invoke(eventArgs);
+        }
+        public void InvokeManaChanged(ManaChangedEventArgs eventArgs)
+        {
+            ManaChanged?.Invoke(eventArgs);
         }
         public void InvokeUnitMoved(UnitMovedEventArgs eventArgs)
         {

@@ -17,6 +17,11 @@ namespace Tactics.Common.Units
     public interface IUnit : IMoveable, ICombatant
     {
         /// <summary>
+        /// Triggered when the unit's mana changes.
+        /// </summary>
+        event Action<ManaChangedEventArgs> ManaChanged;
+
+        /// <summary>
         /// Triggered when the unit is selected.
         /// </summary>
         event Action<IUnit> UnitSelected;
@@ -45,6 +50,11 @@ namespace Tactics.Common.Units
         /// Triggered when an ability is used by the unit.
         /// </summary>
         event Action<AbilityUsedEventArgs> AbilityUsed;
+
+        /// <summary>
+        /// Invokes the ManaChanged event to signal that the unit's mana has changed.
+        /// </summary>
+        void InvokeManaChanged(ManaChangedEventArgs eventArgs);
 
         /// <summary>
         /// Invokes the UnitSelected event to signal that the unit has been selected.
