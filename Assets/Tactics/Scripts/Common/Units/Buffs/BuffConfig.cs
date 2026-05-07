@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -22,24 +21,26 @@ namespace Tactics.Common.Units.Buffs
         [BoxGroup("Behavior")]
         [SerializeField] private bool _isUnique = false;
 
-        [BoxGroup("Behaviors")]
-        [SerializeReference]
-        [ListDrawerSettings(Expanded = true)]
-        private List<BuffBehavior> _behaviors = new List<BuffBehavior>();
+        [BoxGroup("Effect")]
+        [SerializeField] private BuffEffectType _effectType = BuffEffectType.None;
+
+        [BoxGroup("Effect")]
+        [SerializeField] private BuffTriggerTiming _triggerTiming = BuffTriggerTiming.None;
+
+        [BoxGroup("Effect Params")]
+        [SerializeField] private float _damagePerTurn = 0f;
+
+        [BoxGroup("Effect Params")]
+        [SerializeField] private ElementType _elementType = ElementType.None;
 
         public string BuffName => _buffName;
         public Sprite Icon => _icon;
         public int DefaultDuration => _defaultDuration;
         public bool CanAct => _canAct;
         public bool IsUnique => _isUnique;
-        public IReadOnlyList<BuffBehavior> Behaviors => _behaviors;
-
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            if (_behaviors == null)
-                _behaviors = new List<BuffBehavior>();
-        }
-#endif
+        public BuffEffectType EffectType => _effectType;
+        public BuffTriggerTiming TriggerTiming => _triggerTiming;
+        public float DamagePerTurn => _damagePerTurn;
+        public ElementType ElementType => _elementType;
     }
 }

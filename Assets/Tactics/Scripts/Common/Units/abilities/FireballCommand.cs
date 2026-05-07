@@ -50,7 +50,7 @@ namespace Tactics.Common.Units.Abilities
 
                     hitUnit.ModifyHealth(-_damage, _caster);
                     if (_igniteBuffConfig != null)
-                        hitUnit.AddBuff(new IgniteBuff(_igniteBuffConfig, _caster, _igniteDuration, _igniteDamage));
+                        hitUnit.AddBuff(new Buff(_igniteBuffConfig, _caster, _igniteDuration));
                     hitUnits.Add(hitUnit);
                 }
             }
@@ -88,7 +88,6 @@ namespace Tactics.Common.Units.Abilities
                     hitUnit.ModifyHealth(+damage, caster);
 
                     var igniteBuffs = hitUnit.GetActiveBuffs()
-                        .OfType<Buff>()
                         .Where(b => b.Source != null && ReferenceEquals(b.Source, caster))
                         .ToList();
                     foreach (var buff in igniteBuffs)

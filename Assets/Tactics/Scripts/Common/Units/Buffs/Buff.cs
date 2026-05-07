@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Tactics.Common.Controllers;
 
 namespace Tactics.Common.Units.Buffs
@@ -6,7 +5,7 @@ namespace Tactics.Common.Units.Buffs
     public class Buff
     {
         private readonly BuffConfig _config;
-        private readonly IReadOnlyList<BuffBehavior> _behaviors;
+        private readonly BuffBehavior _behavior;
 
         public string BuffName => _config.BuffName;
         public IUnit Owner { get; internal set; }
@@ -18,46 +17,40 @@ namespace Tactics.Common.Units.Buffs
         public Buff(BuffConfig config, IUnit source, int duration)
         {
             _config = config;
-            _behaviors = config.Behaviors;
+            _behavior = new BuffBehavior(config);
             Source = source;
             RemainingTurns = duration;
         }
 
         public virtual void OnApplied()
         {
-            foreach (var b in _behaviors)
-                b.OnApplied(this);
+            _behavior.OnApplied(this);
         }
 
         public virtual void OnTurnStart(IGridController gridController)
         {
-            foreach (var b in _behaviors)
-                b.OnTurnStart(this, gridController);
+            _behavior.OnTurnStart(this, gridController);
         }
 
         public virtual void OnTurnEnd(IGridController gridController)
         {
             RemainingTurns--;
-            foreach (var b in _behaviors)
-                b.OnTurnEnd(this, gridController);
+            _behavior.OnTurnEnd(this, gridController);
         }
 
         public virtual void OnRemoved()
         {
-            foreach (var b in _behaviors)
-                b.OnRemoved(this);
+            _behavior.OnRemoved(this);
         }
 
         public virtual void OnBeforeAttacked(IUnit attacker, ref float damage, ref bool isCritical)
         {
-            foreach (var b in _behaviors)
-                b.OnBeforeAttacked(this, attacker, ref damage, ref isCritical);
+            _behavior.OnBeforeAttacked(this, attacker, ref damage, ref isCritical);
         }
 
         public virtual void OnDamageTaken(IUnit attacker, float damage)
         {
-            foreach (var b in _behaviors)
-                b.OnDamageTaken(this, attacker, damage);
+            _behavior.OnDamageTaken(this, attacker, damage);
         }
 
         public bool CanAct
@@ -65,9 +58,7 @@ namespace Tactics.Common.Units.Buffs
             get
             {
                 if (!_config.CanAct) return false;
-                foreach (var b in _behaviors)
-                    if (!b.CanAct) return false;
-                return true;
+                return _behavior.CanAct;
             }
         }
     }

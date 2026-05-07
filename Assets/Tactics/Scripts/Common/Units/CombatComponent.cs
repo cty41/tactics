@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Units.Buffs;
 using UnityEngine;
@@ -105,15 +106,66 @@ namespace Tactics.Common.Units
             return Math.Max(baseDamage + attributeBonus, 1);
         }
 
-        public static float CalculateBaseDamageBeforeCrit(IUnit unitReference, bool isRangedDamage, DamageType damageType)
+        /// <summary>
+        /// Unified damage application method used by DamageEffect and BuffBehavior.
+        /// Handles element type checks (ice break/immunity), buff hooks, crit, and defense.
+        /// </summary>
+        public static void ApplyDamage(
+            IUnit caster,
+            IUnit target,
+            float baseDamage,
+            bool isRangedDamage,
+            ElementType elementType,
+            bool canTriggerBeforeAttacked,
+            bool canCrit,
+            bool canTriggerDamageTaken)
         {
-            switch (damageType)
+            // Check for Frozen buff - ice break logic
+            bool isFrozen = target.BuffComponent?.HasBuff(BuffEffectType.Frozen) ?? false;
+            if (isFrozen)
             {
-                case DamageType.Fire:
-                case DamageType.Ice:
-                    return Math.Max(unitReference.AttackFactor + (unitReference.Intelligence - NeutralAttributeValue), 1);
-                default:
-                    return CalculateBaseDamageBeforeCrit(unitReference, isRangedDamage);
+                if (elementType == ElementType.Fire)
+                {
+                    var frozenBuffs = target.GetActiveBuffs()
+                        .Where(b => b.Config.EffectType == BuffEffectType.Frozen)
+                        .ToList();
+                    foreach (var fb in frozenBuffs)
+                        target.RemoveBuff(fb);
+                }
+                else
+                {
+                    return; // Non-fire damage blocked by ice
+                }
+            }
+
+            float damage = baseDamage;
+            bool isCritical = false;
+
+            // Crit check
+            if (canCrit)
+            {
+                isCritical = _rng.NextDouble() < GetClampedCritChance(caster);
+            }
+
+            // OnBeforeAttacked hook (e.g., Mark forces crit)
+            if (canTriggerBeforeAttacked)
+            {
+                target.BuffComponent?.OnBeforeAttacked(caster, ref damage, ref isCritical);
+            }
+
+            if (isCritical)
+            {
+                damage = GetCriticalDamage(damage);
+            }
+
+            damage = target.CalculateDamageTaken(caster, damage, caster.CurrentCell, target.CurrentCell);
+
+            target.ModifyHealth(-damage, caster);
+            target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
+
+            if (canTriggerDamageTaken)
+            {
+                target.BuffComponent?.OnDamageTaken(caster, damage);
             }
         }
 

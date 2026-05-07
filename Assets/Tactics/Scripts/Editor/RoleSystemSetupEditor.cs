@@ -158,14 +158,10 @@ namespace Tactics.Editor
             so.FindProperty("_defaultDuration").intValue = 3;
             so.FindProperty("_canAct").boolValue = true;
             so.FindProperty("_isUnique").boolValue = false;
-
-            var behaviorsProp = so.FindProperty("_behaviors");
-            behaviorsProp.arraySize = 1;
-            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
-            behaviorElem.managedReferenceValue = new DoTBehavior();
-            so.ApplyModifiedProperties();
-
-            behaviorElem.FindPropertyRelative("_damagePerTurn").floatValue = 5f;
+            so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.None;
+            so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.TurnStart;
+            so.FindProperty("_damagePerTurn").floatValue = 5f;
+            so.FindProperty("_elementType").enumValueIndex = (int)ElementType.Fire;
 
             so.ApplyModifiedProperties();
             return asset;
@@ -179,12 +175,8 @@ namespace Tactics.Editor
             so.FindProperty("_defaultDuration").intValue = 2;
             so.FindProperty("_canAct").boolValue = false;
             so.FindProperty("_isUnique").boolValue = false;
-
-            var behaviorsProp = so.FindProperty("_behaviors");
-            behaviorsProp.arraySize = 1;
-            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
-            behaviorElem.managedReferenceValue = new FrozenBehavior();
-            so.ApplyModifiedProperties();
+            so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.Frozen;
+            so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.None;
 
             so.ApplyModifiedProperties();
             return asset;
@@ -198,12 +190,8 @@ namespace Tactics.Editor
             so.FindProperty("_defaultDuration").intValue = int.MaxValue;
             so.FindProperty("_canAct").boolValue = true;
             so.FindProperty("_isUnique").boolValue = true;
-
-            var behaviorsProp = so.FindProperty("_behaviors");
-            behaviorsProp.arraySize = 1;
-            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
-            behaviorElem.managedReferenceValue = new MarkBehavior();
-            so.ApplyModifiedProperties();
+            so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.Marked;
+            so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.BeforeAttacked;
 
             so.ApplyModifiedProperties();
             return asset;
@@ -217,14 +205,9 @@ namespace Tactics.Editor
             so.FindProperty("_defaultDuration").intValue = 1;
             so.FindProperty("_canAct").boolValue = true;
             so.FindProperty("_isUnique").boolValue = false;
-
-            var behaviorsProp = so.FindProperty("_behaviors");
-            behaviorsProp.arraySize = 1;
-            var behaviorElem = behaviorsProp.GetArrayElementAtIndex(0);
-            behaviorElem.managedReferenceValue = new CounterBehavior();
-            so.ApplyModifiedProperties();
-
-            behaviorElem.FindPropertyRelative("_counterDamageMultiplier").floatValue = 0.5f;
+            so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.None;
+            so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.DamageTaken;
+            so.FindProperty("_elementType").enumValueIndex = (int)ElementType.None;
 
             so.ApplyModifiedProperties();
             return asset;

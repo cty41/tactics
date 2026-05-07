@@ -34,11 +34,13 @@ namespace Tactics.Common.Units.Abilities
         [SerializeField] private AttributeScalingType _scalingType;
         [SerializeField] private bool _isRangedDamage;
         [SerializeField] private DamageType _damageType = DamageType.Physical;
+        [SerializeField] private ElementType _elementType = ElementType.None;
 
         public float BaseDamage => _baseDamage;
         public AttributeScalingType ScalingType => _scalingType;
         public bool IsRangedDamage => _isRangedDamage;
         public DamageType DamageType => _damageType;
+        public ElementType ElementType => _elementType;
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
         {
@@ -46,56 +48,18 @@ namespace Tactics.Common.Units.Abilities
             {
                 if (target == null) continue;
 
-                // Check for Frozen buff - ice break logic
-                bool isFrozen = target.BuffComponent?.HasBuff<FrozenBehavior>() ?? false;
-                if (isFrozen)
+                float baseDamage = _baseDamage;
+                if (_scalingType != AttributeScalingType.None)
                 {
-                    if (_damageType == DamageType.Fire)
-                    {
-                        // Fire breaks ice: remove all Frozen buffs before dealing damage
-                        var frozenBuffs = target.GetActiveBuffs()
-                            .Where(b => b.Config.Behaviors.Any(bh => bh is FrozenBehavior))
-                            .ToList();
-                        foreach (var fb in frozenBuffs)
-                            target.RemoveBuff(fb);
-                    }
-                    else
-                    {
-                        // Non-fire damage is blocked by ice
-                        continue;
-                    }
+                    float scaling = CombatComponent.CalculateBaseDamageBeforeCrit(caster, _isRangedDamage) - caster.AttackFactor;
+                    baseDamage += scaling;
                 }
 
-                float damage = CalculateDamage(caster, target);
-                target.ModifyHealth(-damage, caster);
-                target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
-
-                // Trigger OnDamageTaken for counter and other post-damage buff effects
-                target.BuffComponent?.OnDamageTaken(caster, damage);
+                CombatComponent.ApplyDamage(
+                    caster, target, baseDamage, _isRangedDamage, _elementType,
+                    canTriggerBeforeAttacked: true, canCrit: true, canTriggerDamageTaken: true);
             }
             await Task.CompletedTask;
-        }
-
-        protected virtual float CalculateDamage(IUnit caster, IUnit target)
-        {
-            float damage = _baseDamage;
-            if (_scalingType != AttributeScalingType.None)
-            {
-                float scaling = CombatComponent.CalculateBaseDamageBeforeCrit(caster, _isRangedDamage, _damageType) - caster.AttackFactor;
-                damage += scaling;
-            }
-
-            bool isCritical = UnityEngine.Random.value < CombatComponent.GetClampedCritChance(caster);
-
-            // Let buffs modify damage and force/override crit before final calculation
-            target.BuffComponent?.OnBeforeAttacked(caster, ref damage, ref isCritical);
-
-            if (isCritical)
-            {
-                damage = CombatComponent.GetCriticalDamage(damage);
-            }
-            damage = target.CalculateDamageTaken(caster, damage, caster.CurrentCell, target.CurrentCell);
-            return damage;
         }
     }
 
@@ -238,9 +202,16 @@ namespace Tactics.Common.Units.Abilities
                     continue;
                 }
 
-                float damage = CalculateDamage(caster, target);
-                target.ModifyHealth(-damage, caster);
-                target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
+                float baseDamage = BaseDamage;
+                if (ScalingType != AttributeScalingType.None)
+                {
+                    float scaling = CombatComponent.CalculateBaseDamageBeforeCrit(caster, IsRangedDamage) - caster.AttackFactor;
+                    baseDamage += scaling;
+                }
+
+                CombatComponent.ApplyDamage(
+                    caster, target, baseDamage, IsRangedDamage, ElementType,
+                    canTriggerBeforeAttacked: true, canCrit: true, canTriggerDamageTaken: true);
             }
             await Task.CompletedTask;
         }

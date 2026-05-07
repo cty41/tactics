@@ -146,16 +146,13 @@ namespace Tactics.Common.Units.Buffs
         }
 
         /// <summary>
-        /// Checks if the unit has a buff with a behavior of the given type.
+        /// Checks if the unit has a buff with the given effect type.
         /// </summary>
-        public bool HasBuff<T>() where T : BuffBehavior
+        public bool HasBuff(BuffEffectType effectType)
         {
             foreach (var buff in _activeBuffs)
             {
-                foreach (var behavior in buff.Config.Behaviors)
-                {
-                    if (behavior is T) return true;
-                }
+                if (buff.Config.EffectType == effectType) return true;
             }
             return false;
         }
