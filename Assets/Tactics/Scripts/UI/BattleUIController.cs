@@ -276,6 +276,12 @@ namespace Tactics.UI
             _canEndTurn = isHumanTurn;
             if (_endTurnButton != null)
                 _endTurnButton.SetEnabled(isHumanTurn);
+
+            // 回合开始时重置为 AwaitInput 状态，不自动进入任何技能状态
+            if (isHumanTurn)
+            {
+                _gridController.GridState = new GridStateAwaitInput();
+            }
         }
 
         #region Round & Turn Order

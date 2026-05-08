@@ -45,7 +45,7 @@ namespace Tactics.Common.Units
                 },
                 controller => {
                     postAction(gridController);
-                    gridController.GridState = new GridStateUnitSelected(unit, unit.GetBaseAbilities());
+                    gridController.GridState = new GridStateAwaitInput();
                     return Task.CompletedTask;
                 },
                 isNetworkInvoked);

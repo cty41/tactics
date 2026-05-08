@@ -20,7 +20,9 @@ namespace Tactics.Common.Controllers.GridStates
             // UnitSpeed 期望每回合只有一个可行动单位；当场景绑定异常时也至少阻止越权点击。
             if (activeUnit != null && ReferenceEquals(activeUnit, unit))
             {
-                gridController.GridState = new GridStateUnitSelected(unit, unit.GetBaseAbilities());
+                // 点击单位后保持 AwaitInput 状态，不自动切换到技能选择
+                // 玩家需要通过 UI 按钮手动选择移动或技能
+                unit.InvokeUnitSelected();
             }
         }
     }

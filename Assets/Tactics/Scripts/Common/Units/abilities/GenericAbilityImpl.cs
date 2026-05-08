@@ -239,7 +239,6 @@ namespace Tactics.Common.Units.Abilities
 
         public void OnUnitClicked(IUnit unit, IGridController gridController)
         {
-            
             bool canPerform = CanPerform(gridController);
             
             if (_config.TargetingStrategy != null && canPerform)
@@ -254,11 +253,8 @@ namespace Tactics.Common.Units.Abilities
                 }
             }
 
-            var activeUnit = gridController.TurnContext.PlayableUnits().FirstOrDefault();
-            if (activeUnit != null && ReferenceEquals(activeUnit, unit))
-            {
-                gridController.GridState = new GridStateUnitSelected(unit, unit.GetBaseAbilities());
-            }
+            // 点击非目标单位或无效目标时，回到默认状态
+            gridController.GridState = new GridStateAwaitInput();
         }
 
         public void OnUnitHighlighted(IUnit unit, IGridController gridController) { }
