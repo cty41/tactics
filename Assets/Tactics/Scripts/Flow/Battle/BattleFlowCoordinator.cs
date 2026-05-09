@@ -73,8 +73,13 @@ namespace Tactics.Flow.Battle
                 if (battleScene.isLoaded)
                 {
                     var unloadOp = SceneManager.UnloadSceneAsync(battleScene);
-                    while (!unloadOp.isDone)
-                        await Task.Yield();
+                    if (unloadOp != null)
+                    {
+                        while (!unloadOp.isDone)
+                            await Task.Yield();
+                    }
+                    // Note: UnloadSceneAsync returns null if trying to unload the last loaded scene.
+                    // In that case, we proceed to load the return scene with Single mode which will replace it.
                 }
 
                 var mgr = GameAssetManager.Instance;

@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Tactics.Common.Battle;
+using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Players;
 using Tactics.Equipment;
 using Tactics.Roster;
 using UnityEngine;
@@ -55,6 +59,48 @@ namespace Tactics.Cheats
                 PlayerAdventureStateStore.Save(state);
 
                 return $"Cleared {count} items from inventory.";
+            });
+
+            RegisterCommand("battle", args =>
+            {
+                if (args.Length < 1)
+                    return "[Error] Usage: battle win | battle lost";
+
+                string subCommand = args[0].ToLower();
+
+                if (BattleController.Instance == null || !BattleController.Instance.IsBattleActive)
+                    return "[Error] No active battle.";
+
+                var players = ((IPlayerManager)BattleController.Instance).GetPlayers();
+                var humanPlayer = players.FirstOrDefault(p => p.PlayerType == PlayerType.HumanPlayer);
+                var aiPlayers = players.Where(p => p.PlayerType == PlayerType.AutomatedPlayer).ToList();
+
+                if (humanPlayer == null)
+                    return "[Error] Human player not found.";
+
+                if (aiPlayers.Count == 0)
+                    return "[Error] AI player not found.";
+
+                GameResult result;
+                string message;
+
+                if (subCommand == "win")
+                {
+                    result = new GameResult(humanPlayer, aiPlayers);
+                    message = "Human player wins the battle.";
+                }
+                else if (subCommand == "lost")
+                {
+                    result = new GameResult(aiPlayers.First(), new[] { humanPlayer });
+                    message = "AI player wins the battle.";
+                }
+                else
+                {
+                    return "[Error] Usage: battle win | battle lost";
+                }
+
+                BattleController.Instance.EndBattle(result);
+                return message;
             });
         }
 
