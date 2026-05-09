@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -167,7 +168,7 @@ namespace Tactics.Common.Units.Abilities
                 }
                 else
                 {
-                    Debug.LogWarning("[DamageOverTimeEffect] No DoT BuffConfig assigned. Skipping DoT application.");
+                    TLog.Warning("[DamageOverTimeEffect] No DoT BuffConfig assigned. Skipping DoT application.");
                 }
             }
             await Task.CompletedTask;

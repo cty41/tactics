@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Controllers;
@@ -59,14 +60,14 @@ namespace Tactics.Controllers.TurnResolvers
             if (_unitQueue.Count == 0)
             {
                 // No units available - this shouldn't happen in normal play
-                Debug.LogWarning("UnitSpeedTurnResolver: No units available for turn resolution.");
+                TLog.Warning("UnitSpeedTurnResolver: No units available for turn resolution.");
                 return CreateEmptyTurnContext(gridController);
             }
 
             if (skipCount >= _unitQueue.Count)
             {
                 // All remaining units are unable to act (e.g., all frozen)
-                Debug.LogWarning("UnitSpeedTurnResolver: All units are unable to act.");
+                TLog.Warning("UnitSpeedTurnResolver: All units are unable to act.");
                 return CreateEmptyTurnContext(gridController);
             }
 
@@ -93,7 +94,7 @@ namespace Tactics.Controllers.TurnResolvers
             var player = gridController.PlayerManager.GetPlayerByNumber(nextUnit.PlayerNumber);
             if (player == null)
             {
-                Debug.LogError($"[UnitSpeedTurnResolver] Unit {nextUnit} has PlayerNumber={nextUnit.PlayerNumber} but no matching player found. Skipping.");
+                TLog.Error($"[UnitSpeedTurnResolver] Unit {nextUnit} has PlayerNumber={nextUnit.PlayerNumber} but no matching player found. Skipping.");
                 // This is a configuration error, not a temporary state
                 return ResolveNextUnit(gridController, skipCount);
             }

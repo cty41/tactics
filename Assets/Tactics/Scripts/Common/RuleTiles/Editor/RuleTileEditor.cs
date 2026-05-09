@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
@@ -358,7 +359,7 @@ namespace Tactics.RuleTiles.Editor
             }
             catch (Exception)
             {
-                Debug.LogError("Unable to paste rules from system copy buffer");
+                TLog.Error("Unable to paste rules from system copy buffer");
             }
         }
     }

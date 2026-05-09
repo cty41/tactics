@@ -1,4 +1,5 @@
 using System.Linq;
+using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
 using Tactics.Common.Utilities;
 using Tactics.Common.Units;
@@ -22,7 +23,7 @@ namespace Tactics.Common.Editor
 
             if (!_cellsParent)
             {
-                Debug.LogWarning("No 'CellManager' found in the scene and no 'CellsParent' assigned. Cannot paint.");
+                TLog.Warning("No 'CellManager' found in the scene and no 'CellsParent' assigned. Cannot paint.");
                 return;
             }
 
@@ -31,7 +32,7 @@ namespace Tactics.Common.Editor
             cellGO.name = $"{cellGO.name}_{gridPosition}";
             if (!cellGO)
             {
-                Debug.LogError("Failed to instantiate cell prefab.");
+                TLog.Error("Failed to instantiate cell prefab.");
                 return;
             }
 
@@ -81,7 +82,7 @@ namespace Tactics.Common.Editor
             }
             else
             {
-                Debug.LogWarning("Instantiated cell prefab does not have an ICell component attached!");
+                TLog.Warning("Instantiated cell prefab does not have an ICell component attached!");
             }
         }
 

@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -220,7 +221,7 @@ namespace Tactics.Common.Battle
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
             if (state?.ActivePartyCharacterIds == null || state.ActivePartyCharacterIds.Count == 0)
             {
-                Debug.LogWarning("[BattleController] No active party characters found.");
+                TLog.Warning("[BattleController] No active party characters found.");
                 return;
             }
 
@@ -287,7 +288,7 @@ namespace Tactics.Common.Battle
                 var def = state.Roster.FirstOrDefault(c => c.Id == id);
                 if (def == null)
                 {
-                    Debug.LogWarning($"[BattleController] Party id '{id}' not in roster; skipping slot {i}.");
+                    TLog.Warning($"[BattleController] Party id '{id}' not in roster; skipping slot {i}.");
                     continue;
                 }
 
@@ -309,10 +310,10 @@ namespace Tactics.Common.Battle
                     prefab = fallbackPrefab;
                     if (prefab == null)
                     {
-                        Debug.LogError($"[BattleController] No prefab for {def.Id} (path={def.PrefabPath}, role={def.RoleType}) and no fallback available.");
+                        TLog.Error($"[BattleController] No prefab for {def.Id} (path={def.PrefabPath}, role={def.RoleType}) and no fallback available.");
                         continue;
                     }
-                    Debug.LogWarning($"[BattleController] No prefab for {def.Id}, using fallback.");
+                    TLog.Warning($"[BattleController] No prefab for {def.Id}, using fallback.");
                 }
 
                 var go = Instantiate(prefab, container);
@@ -321,7 +322,7 @@ namespace Tactics.Common.Battle
                 var unit = go.GetComponent<TilemapUnit>();
                 if (unit == null)
                 {
-                    Debug.LogError($"[BattleController] Prefab for {def.RoleType} does not have a TilemapUnit component.");
+                    TLog.Error($"[BattleController] Prefab for {def.RoleType} does not have a TilemapUnit component.");
                     Destroy(go);
                     continue;
                 }
@@ -341,7 +342,7 @@ namespace Tactics.Common.Battle
                     }
                     else
                     {
-                        Debug.LogWarning($"[BattleController] No Respawn point for slot {i} and no Infantry Blue reference. Using prefab default position.");
+                        TLog.Warning($"[BattleController] No Respawn point for slot {i} and no Infantry Blue reference. Using prefab default position.");
                     }
                 }
 
@@ -389,7 +390,7 @@ namespace Tactics.Common.Battle
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[BattleController] Failed to show Battle UI: {ex.Message}");
+                TLog.Warning($"[BattleController] Failed to show Battle UI: {ex.Message}");
             }
         }
 
@@ -509,14 +510,14 @@ namespace Tactics.Common.Battle
         {
             if (_units == null)
             {
-                Debug.LogWarning("[BattleController] Cannot auto-configure players: UnitManager is not initialized.");
+                TLog.Warning("[BattleController] Cannot auto-configure players: UnitManager is not initialized.");
                 return;
             }
 
             var allUnits = GetUnits().ToList();
             if (allUnits.Count == 0)
             {
-                Debug.LogWarning("[BattleController] No units found in scene. Cannot auto-configure players.");
+                TLog.Warning("[BattleController] No units found in scene. Cannot auto-configure players.");
                 return;
             }
 
@@ -543,7 +544,7 @@ namespace Tactics.Common.Battle
 
             _players = entries.ToArray();
             InitializePlayers();
-            Debug.Log($"[BattleController] Auto-configured players from scene units. LocalPlayerNumber={_localPlayerNumber}. " +
+            TLog.Info($"[BattleController] Auto-configured players from scene units. LocalPlayerNumber={_localPlayerNumber}. " +
                 $"Config: {string.Join(", ", entries.Select(e => $"P{e.PlayerNumber}={(e.Type == PlayerType.HumanPlayer ? "Human" : "AI")}"))}");
         }
 
@@ -556,7 +557,7 @@ namespace Tactics.Common.Battle
                 {
                     new HumanPlayer { PlayerNumber = 1 }
                 };
-                Debug.LogWarning("[BattleController] No players configured. Created fallback HumanPlayer #1.");
+                TLog.Warning("[BattleController] No players configured. Created fallback HumanPlayer #1.");
                 return;
             }
 
@@ -586,7 +587,7 @@ namespace Tactics.Common.Battle
             }
             if (_runtimePlayers == null || _runtimePlayers.Count == 0)
             {
-                Debug.LogError("[BattleController] IPlayerManager.Initialize called but no players exist. Ensure _players is configured in Inspector.");
+                TLog.Error("[BattleController] IPlayerManager.Initialize called but no players exist. Ensure _players is configured in Inspector.");
                 return;
             }
             foreach (var player in _runtimePlayers)
@@ -613,7 +614,7 @@ namespace Tactics.Common.Battle
             }
             if (_runtimePlayers == null || _runtimePlayers.Count == 0)
             {
-                Debug.LogError($"[BattleController] GetPlayerByNumber({playerNumber}) called but no players exist.");
+                TLog.Error($"[BattleController] GetPlayerByNumber({playerNumber}) called but no players exist.");
                 return null;
             }
             return _runtimePlayers.FirstOrDefault(p => p.PlayerNumber == playerNumber);
@@ -688,7 +689,7 @@ namespace Tactics.Common.Battle
             var foundUnits = container.GetComponentsInChildren<IUnit>().ToList();
             if (foundUnits.Count == 0)
             {
-                Debug.LogWarning("[BattleController] No units found under the determined container. " +
+                TLog.Warning("[BattleController] No units found under the determined container. " +
                     "Ensure units are children of BattleController, or set _unitContainer explicitly, " +
                     "or keep a GameObject named 'UnitManager' with units as its children.");
             }

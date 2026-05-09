@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -91,8 +92,8 @@ namespace Tactics.Common.AI.BehaviourTrees
             _minValue = min.sum;
             _maxValue = max.sum;
 
-            Debug.Log($"Min Value: {_minValue}");
-            Debug.Log($"Max Value: {_maxValue}");
+            TLog.Info($"Min Value: {_minValue}");
+            TLog.Info($"Max Value: {_maxValue}");
 
             foreach (var cell in _gridController.CellManager.GetCells()
                 .Where(c => _unit.IsCellMovableTo(c) || c.Equals(_unit.CurrentCell)))
@@ -108,7 +109,7 @@ namespace Tactics.Common.AI.BehaviourTrees
                 }
             }
 
-            Debug.Log($"Click on any cell to check its score. Press {Key.Q} to continue.");
+            TLog.Info($"Click on any cell to check its score. Press {Key.Q} to continue.");
             while (!Keyboard.current.qKey.wasPressedThisFrame)
             {
                 await Awaitable.NextFrameAsync();
@@ -158,7 +159,7 @@ namespace Tactics.Common.AI.BehaviourTrees
             logMessage += string.Join("\n", scores.Select(s => $"Evaluator: {s.evaluatorName}, Score: {s.score}"));
             logMessage += $"\nTotal Score: {sum}";
 
-            Debug.Log(logMessage);
+            TLog.Info(logMessage);
         }
 
     }

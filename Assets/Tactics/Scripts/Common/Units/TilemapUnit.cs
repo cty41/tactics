@@ -1,4 +1,5 @@
 using Tactics.Cells;
+using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -63,19 +64,19 @@ namespace Tactics.Units
                     EnsureTilemapRefs();
                     if (_gridTilemap == null)
                     {
-                        Debug.LogError($"[{nameof(TilemapUnit)}] _gridTilemap is null on {gameObject.name}. Cannot initialize CurrentCell.");
+                        TLog.Error($"[{nameof(TilemapUnit)}] _gridTilemap is null on {gameObject.name}. Cannot initialize CurrentCell.");
                         return null;
                     }
                     if (_cellManager == null)
                     {
-                        Debug.LogError($"[{nameof(TilemapUnit)}] _cellManager is null on {gameObject.name}. Cannot initialize CurrentCell.");
+                        TLog.Error($"[{nameof(TilemapUnit)}] _cellManager is null on {gameObject.name}. Cannot initialize CurrentCell.");
                         return null;
                     }
                     Vector3Int gridPos = _gridTilemap.WorldToCell(WorldPosition.ToVector3());
                     _currentCell = _cellManager.GetCellAt(new Vector2IntImpl(gridPos.x, gridPos.y));
                     if (_currentCell == null)
                     {
-                        Debug.LogError($"[{nameof(TilemapUnit)}] GetCellAt returned null for gridPos {gridPos} on {gameObject.name}.");
+                        TLog.Error($"[{nameof(TilemapUnit)}] GetCellAt returned null for gridPos {gridPos} on {gameObject.name}.");
                         return null;
                     }
                     _currentCell.IsTaken = true;
@@ -122,7 +123,7 @@ namespace Tactics.Units
                 ApplyVisualYOffset();
             }
             else
-                Debug.LogWarning($"[{nameof(TilemapUnit)}] CurrentCell is null during Initialize for {gameObject.name}.");
+                TLog.Warning($"[{nameof(TilemapUnit)}] CurrentCell is null during Initialize for {gameObject.name}.");
         }
 
         private void ApplyVisualYOffset()
@@ -165,7 +166,7 @@ namespace Tactics.Units
         public override void OnPointerEnter(PointerEventData eventData)
         {
             base.OnPointerEnter(eventData);
-            Debug.Log($"[TilemapUnit] OnPointerEnter: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
+            TLog.Info($"[TilemapUnit] OnPointerEnter: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
             if (CurrentCell != null)
                 CurrentCell.InvokeCellHighlighted();
         }
@@ -173,7 +174,7 @@ namespace Tactics.Units
         public override void OnPointerExit(PointerEventData eventData)
         {
             base.OnPointerExit(eventData);
-            Debug.Log($"[TilemapUnit] OnPointerExit: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
+            TLog.Info($"[TilemapUnit] OnPointerExit: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
             if (CurrentCell != null)
                 CurrentCell.InvokeCellDehighlighted();
         }

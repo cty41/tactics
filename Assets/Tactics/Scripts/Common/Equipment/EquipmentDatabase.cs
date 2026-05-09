@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using System.IO;
 using Newtonsoft.Json;
 using Tactics.AssetPipeline;
@@ -38,7 +39,7 @@ namespace Tactics.Equipment
 
             if (json == null)
             {
-                Debug.LogError($"[EquipmentDatabase] Equipment.json not found at {EquipmentJsonPath}");
+                TLog.Error($"[EquipmentDatabase] Equipment.json not found at {EquipmentJsonPath}");
                 _isLoaded = true;
                 return;
             }
@@ -48,7 +49,7 @@ namespace Tactics.Equipment
                 var list = JsonConvert.DeserializeObject<List<EquipmentDefinition>>(json);
                 if (list == null)
                 {
-                    Debug.LogError("[EquipmentDatabase] Failed to deserialize Equipment.json");
+                    TLog.Error("[EquipmentDatabase] Failed to deserialize Equipment.json");
                     _isLoaded = true;
                     return;
                 }
@@ -57,22 +58,22 @@ namespace Tactics.Equipment
                 {
                     if (string.IsNullOrEmpty(def.Id))
                     {
-                        Debug.LogWarning("[EquipmentDatabase] Skipping equipment with empty Id");
+                        TLog.Warning("[EquipmentDatabase] Skipping equipment with empty Id");
                         continue;
                     }
 
                     if (_definitions.ContainsKey(def.Id))
-                        Debug.LogWarning($"[EquipmentDatabase] Duplicate equipment Id: {def.Id}");
+                        TLog.Warning($"[EquipmentDatabase] Duplicate equipment Id: {def.Id}");
                     else
                         _definitions[def.Id] = def;
                 }
 
                 _isLoaded = true;
-                Debug.Log($"[EquipmentDatabase] Loaded {_definitions.Count} equipment definitions.");
+                TLog.Info($"[EquipmentDatabase] Loaded {_definitions.Count} equipment definitions.");
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[EquipmentDatabase] Failed to parse Equipment.json: {ex.Message}");
+                TLog.Error($"[EquipmentDatabase] Failed to parse Equipment.json: {ex.Message}");
                 _isLoaded = true;
             }
         }

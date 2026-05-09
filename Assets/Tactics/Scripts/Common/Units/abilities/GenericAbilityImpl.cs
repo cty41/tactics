@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -432,7 +433,7 @@ namespace Tactics.Common.Units.Abilities
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[GenericAbilityImpl] Error executing ability {_config.DisplayName}: {ex.Message}");
+                TLog.Error($"[GenericAbilityImpl] Error executing ability {_config.DisplayName}: {ex.Message}");
             }
         }
 

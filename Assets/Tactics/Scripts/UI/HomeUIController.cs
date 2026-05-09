@@ -1,4 +1,5 @@
 using System.Collections;
+using Tactics.Runtime.Utilities;
 using System.Threading.Tasks;
 using Tactics.Flow.Home;
 using Tactics.Flow.Roguelike;
@@ -40,7 +41,7 @@ namespace Tactics.UI
             var root = Ui.GetRootElement(UIManager.UIId.Home);
             if (root == null)
             {
-                Debug.LogWarning("[HomeUIController] Could not get root visual element for Home UI.");
+                TLog.Warning("[HomeUIController] Could not get root visual element for Home UI.");
                 return;
             }
 
@@ -50,12 +51,12 @@ namespace Tactics.UI
             if (_startButton != null)
                 _startButton.clicked += OnStartClicked;
             else
-                Debug.LogWarning("[HomeUIController] StartButton not found in UXML.");
+                TLog.Warning("[HomeUIController] StartButton not found in UXML.");
 
             if (_escButton != null)
                 _escButton.clicked += OnEscButtonClicked;
             else
-                Debug.LogWarning("[HomeUIController] EscButton not found in UXML.");
+                TLog.Warning("[HomeUIController] EscButton not found in UXML.");
 
             AutoFindInputActions();
             WireInput();
@@ -94,14 +95,14 @@ namespace Tactics.UI
         {
             if (_inputActions == null)
             {
-                Debug.LogWarning("[HomeUIController] _inputActions is null; keyboard Esc may not work.");
+                TLog.Warning("[HomeUIController] _inputActions is null; keyboard Esc may not work.");
                 return;
             }
 
             InputActionMap uiMap = _inputActions.FindActionMap("UI", true);
             if (uiMap == null)
             {
-                Debug.LogWarning("[HomeUIController] No action map named 'UI' found in InputActionAsset.");
+                TLog.Warning("[HomeUIController] No action map named 'UI' found in InputActionAsset.");
                 return;
             }
 
@@ -139,7 +140,7 @@ namespace Tactics.UI
             }
             catch (System.Exception e)
             {
-                Debug.LogException(e);
+                TLog.Error($"[HomeUIController] Exception: {e.Message}");
             }
         }
 
@@ -157,7 +158,7 @@ namespace Tactics.UI
             }
             catch (System.Exception e)
             {
-                Debug.LogException(e);
+                TLog.Error($"[HomeUIController] Exception: {e.Message}");
             }
         }
     }

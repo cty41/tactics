@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using Tactics.Common.Utilities;
 using Tactics.Common.Cells;
 using UnityEditor;
@@ -23,7 +24,7 @@ namespace TbsFramework.EditorUtils.GridGenerators
 
             if (SquarePrefab.GetComponent<Square>() == null)
             {
-                Debug.LogError("Invalid square cell prefab provided");
+                TLog.Error("Invalid square cell prefab provided");
                 return null;
             }
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.AssetPipeline;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -106,7 +107,7 @@ namespace Tactics.UI
             var root = Ui.GetRootElement(UIManager.UIId.Battle);
             if (root == null)
             {
-                Debug.LogWarning("[BattleUIController] Could not get root visual element for Battle UI.");
+                TLog.Warning("[BattleUIController] Could not get root visual element for Battle UI.");
                 return;
             }
 
@@ -150,7 +151,7 @@ namespace Tactics.UI
             _gridController = Object.FindFirstObjectByType<BattleController>();
             if (_gridController == null)
             {
-                Debug.LogWarning("[BattleUIController] BattleController (IGridController) not found in scene.");
+                TLog.Warning("[BattleUIController] BattleController (IGridController) not found in scene.");
                 return;
             }
 
@@ -183,7 +184,7 @@ namespace Tactics.UI
 
             if (inputActions == null)
             {
-                Debug.LogWarning("[BattleUIController] No InputActionAsset found (neither InputSystemUIInputModule nor PlayerInput).");
+                TLog.Warning("[BattleUIController] No InputActionAsset found (neither InputSystemUIInputModule nor PlayerInput).");
                 return;
             }
 
@@ -200,12 +201,12 @@ namespace Tactics.UI
                 }
                 else
                 {
-                    Debug.LogWarning("[BattleUIController] EndTurn action not found in Player action map.");
+                    TLog.Warning("[BattleUIController] EndTurn action not found in Player action map.");
                 }
             }
             else
             {
-                Debug.LogWarning("[BattleUIController] Player action map not found.");
+                TLog.Warning("[BattleUIController] Player action map not found.");
             }
 
             // Initialize UI for the current turn's unit
@@ -264,7 +265,7 @@ namespace Tactics.UI
 
             if (currentUnit == null && _gridController.TurnContext.CurrentPlayer == null)
             {
-                Debug.LogWarning("[BattleUIController] No current unit or player, skipping UI initialization.");
+                TLog.Warning("[BattleUIController] No current unit or player, skipping UI initialization.");
                 return;
             }
 
@@ -554,19 +555,19 @@ namespace Tactics.UI
         {
             if (_currentSelectedUnit == null || _gridController == null)
             {
-                Debug.LogWarning($"[BattleUIController] Cannot use skill: currentSelectedUnit={_currentSelectedUnit != null}, gridController={_gridController != null}");
+                TLog.Warning($"[BattleUIController] Cannot use skill: currentSelectedUnit={_currentSelectedUnit != null}, gridController={_gridController != null}");
                 return;
             }
 
             var abilities = _currentSelectedUnit.GetBaseAbilities()?.Where(a => !IsMoveAbility(a)).ToList();
             if (abilities == null || skillIndex >= abilities.Count)
             {
-                Debug.LogWarning($"[BattleUIController] Skill index {skillIndex} out of range. Abilities count: {abilities?.Count ?? 0}");
+                TLog.Warning($"[BattleUIController] Skill index {skillIndex} out of range. Abilities count: {abilities?.Count ?? 0}");
                 return;
             }
 
             var ability = abilities[skillIndex];
-            Debug.Log($"[BattleUIController] Skill {skillIndex + 1} clicked: {ability.DisplayName}");
+            TLog.Info($"[BattleUIController] Skill {skillIndex + 1} clicked: {ability.DisplayName}");
 
             // Switch to unit selected state - OnStateEnter will handle OnAbilitySelected, CanPerform check, and Display
             _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, ability);
@@ -982,7 +983,7 @@ namespace Tactics.UI
             var mgr = GameAssetManager.Instance;
             if (mgr == null || !mgr.IsInitialized)
             {
-                Debug.LogWarning("[BattleUIController] GameAssetManager not available, damage numbers disabled.");
+                TLog.Warning("[BattleUIController] GameAssetManager not available, damage numbers disabled.");
                 return;
             }
 
@@ -992,7 +993,7 @@ namespace Tactics.UI
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning($"[BattleUIController] Failed to load DamageNumberSettings: {e.Message}");
+                TLog.Warning($"[BattleUIController] Failed to load DamageNumberSettings: {e.Message}");
             }
         }
 

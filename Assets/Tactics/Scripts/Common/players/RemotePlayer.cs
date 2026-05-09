@@ -1,4 +1,5 @@
 using Tactics.Common.Controllers;
+using Tactics.Runtime.Utilities;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Network;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace Tactics.Common.Players
             {
                 if (networkUser.CustomProperties.TryGetValue("playerNumber", out string leavingPlayerNumber) && PlayerNumber.Equals(int.Parse(leavingPlayerNumber)))
                 {
-                    Debug.Log("Remote player left");
+                    TLog.Info("Remote player left");
                     _playerLeft = true;
 
                     if (NetworkConnection.IsHost && PlayerNumber.Equals(gridController.TurnContext.CurrentPlayer.PlayerNumber))

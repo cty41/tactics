@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -109,7 +110,7 @@ namespace Tactics.Common.Units.Abilities.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log($"[AbilityMigration] Scanned {_prefabCount} prefabs, removed {_componentCount} orphaned components.");
+            TLog.Info($"[AbilityMigration] Scanned {_prefabCount} prefabs, removed {_componentCount} orphaned components.");
         }
     }
 }

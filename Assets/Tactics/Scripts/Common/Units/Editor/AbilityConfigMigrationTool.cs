@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -343,7 +344,7 @@ namespace Tactics.Common.Units.Abilities.Editor
         private void Log(string message)
         {
             _logs.Add(message);
-            Debug.Log($"[AbilityMigration] {message}");
+            TLog.Info($"[AbilityMigration] {message}");
         }
     }
 }

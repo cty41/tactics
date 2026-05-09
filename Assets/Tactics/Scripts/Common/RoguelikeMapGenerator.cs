@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using System.Linq;
 using UnityEngine;
 using Tactics.Utils;
@@ -16,7 +17,7 @@ namespace Tactics.RoguelikeMap
         {
             if (conf == null)
             {
-                Debug.LogWarning("Config was null in RoguelikeMapGenerator.Generate()");
+                TLog.Warning("Config was null in RoguelikeMapGenerator.Generate()");
                 return null;
             }
 

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -128,7 +129,7 @@ namespace Tactics.Common.Units.Abilities.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 
-            foreach (var log in logs) Debug.Log($"[AbilityConfig] {log}");
+            foreach (var log in logs) TLog.Info($"[AbilityConfig] {log}");
         }
 
         private static void DeleteIfExists(string path)

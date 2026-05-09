@@ -37,7 +37,7 @@ namespace Tactics.AssetPipeline
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                Debug.LogError(e);
             }
         }
     }

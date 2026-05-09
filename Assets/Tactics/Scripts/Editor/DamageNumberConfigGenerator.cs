@@ -1,4 +1,5 @@
 using UnityEditor;
+using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using UnityEngine;
 
@@ -31,7 +32,7 @@ namespace Tactics.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("[DamageNumberConfigGenerator] Generated DamageNumberSettings at " + SettingsPath);
+            TLog.Info("[DamageNumberConfigGenerator] Generated DamageNumberSettings at " + SettingsPath);
         }
     }
 }

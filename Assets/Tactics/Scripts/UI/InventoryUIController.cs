@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using System.Linq;
 using Tactics.AssetPipeline;
 using Tactics.Equipment;
@@ -391,7 +392,7 @@ namespace Tactics.UI
 
             if (_currentCharacter.Equipment.TryGetValue(targetSlot, out string existingId) && !string.IsNullOrEmpty(existingId))
             {
-                Debug.Log($"[InventoryUIController] 槽位 {targetSlot} 已被占用，请先卸下");
+                TLog.Info($"[InventoryUIController] 槽位 {targetSlot} 已被占用，请先卸下");
                 return;
             }
 

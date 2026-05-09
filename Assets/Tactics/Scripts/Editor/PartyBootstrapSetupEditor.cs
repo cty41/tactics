@@ -1,4 +1,5 @@
 using System.Linq;
+using Tactics.Runtime.Utilities;
 using Tactics.Common.Battle;
 using Tactics.Common.Units.Classes;
 using Tactics.Roster;
@@ -20,7 +21,7 @@ namespace Tactics.Editor
             var battleController = Object.FindFirstObjectByType<BattleController>();
             if (battleController == null)
             {
-                Debug.LogError("[PartyBootstrapSetupEditor] BattleController not found in current scene.");
+                TLog.Error("[PartyBootstrapSetupEditor] BattleController not found in current scene.");
                 return;
             }
 
@@ -42,7 +43,7 @@ namespace Tactics.Editor
             serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(battleController);
 
-            Debug.Log("[PartyBootstrapSetupEditor] BattleController role prefab mappings configured. Verify in Inspector.");
+            TLog.Info("[PartyBootstrapSetupEditor] BattleController role prefab mappings configured. Verify in Inspector.");
         }
 
         private static void SetupMapping(SerializedProperty mappingProp, RoleType roleType, GameObject prefab, Vector2Int cell)

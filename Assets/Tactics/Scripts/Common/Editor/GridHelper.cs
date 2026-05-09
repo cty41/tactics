@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Linq;
 using TbsFramework.EditorUtils.GridGenerators;
 using Tactics.Common.Players;
@@ -159,7 +160,7 @@ namespace TbsFramework.EditorUtils
                         localPath = AssetDatabase.GenerateUniqueAssetPath(localPath);
                         PrefabUtility.SaveAsPrefabAssetAndConnect(gameObject, localPath, InteractionMode.UserAction);
                     }
-                    Debug.Log(string.Format("{0} prefabs saved to {1}", objectArray.Length, path));
+                    TLog.Info(string.Format("{0} prefabs saved to {1}", objectArray.Length, path));
                 }
             }
 
@@ -197,7 +198,7 @@ namespace TbsFramework.EditorUtils
 
                         DestroyImmediate(rootInstance);
                     }
-                    Debug.Log(string.Format("{0} prefabs saved to {1}", objectArray.Length, path));
+                    TLog.Info(string.Format("{0} prefabs saved to {1}", objectArray.Length, path));
                 }
             }
         }
@@ -251,7 +252,7 @@ namespace TbsFramework.EditorUtils
                 GameObject UnitsParent = unitsGameObjectPresent ? GameObject.Find("UnitManager") : unitsGameObject;
                 if (UnitsParent == null)
                 {
-                    Debug.LogError("Units parent gameobject is missing, assign it in GridHelper");
+                    TLog.Error("Units parent gameobject is missing, assign it in GridHelper");
                 }
             }
             GUI.enabled = true;
@@ -321,7 +322,7 @@ namespace TbsFramework.EditorUtils
                 GameObject CellGrid = gridControllerGameObjectPresent ? GameObject.Find("GridController") : gridControllerGameObject;
                 if (CellGrid == null)
                 {
-                    Debug.LogError("CellGrid gameobject is missing, assign it in GridHelper");
+                    TLog.Error("CellGrid gameobject is missing, assign it in GridHelper");
                 }
             }
             GUI.enabled = true;
@@ -486,7 +487,7 @@ namespace TbsFramework.EditorUtils
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError(string.Format("{0} - You are probably using wrong tile prefab", e.Message));
+                            TLog.Error(string.Format("{0} - You are probably using wrong tile prefab", e.Message));
                             DestroyImmediate(newCell.gameObject);
                         }
 

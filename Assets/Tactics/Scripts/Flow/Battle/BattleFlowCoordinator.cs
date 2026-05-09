@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Tactics.AssetPipeline;
@@ -23,7 +24,7 @@ namespace Tactics.Flow.Battle
 
             if (SceneManager.GetActiveScene().name == battleSceneName)
             {
-                Debug.LogWarning("[BattleFlowCoordinator] Battle scene is already active.");
+                TLog.Warning("[BattleFlowCoordinator] Battle scene is already active.");
                 return;
             }
 
@@ -41,7 +42,7 @@ namespace Tactics.Flow.Battle
                 var mgr = GameAssetManager.Instance;
                 if (mgr == null || !mgr.IsInitialized)
                 {
-                    Debug.LogError("[BattleFlowCoordinator] GameAssetManager is not initialized.");
+                    TLog.Error("[BattleFlowCoordinator] GameAssetManager is not initialized.");
                     return;
                 }
 

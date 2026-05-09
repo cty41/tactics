@@ -1,4 +1,5 @@
 using System.Collections;
+using Tactics.Runtime.Utilities;
 using Tactics.AssetPipeline;
 using Tactics.Flow.Home;
 using UnityEngine;
@@ -45,7 +46,7 @@ namespace Tactics.UI
             var root = Ui.GetRootElement(UIManager.UIId.Menu);
             if (root == null)
             {
-                Debug.LogWarning("[MenuUIController] Could not get root visual element for Menu UI.");
+                TLog.Warning("[MenuUIController] Could not get root visual element for Menu UI.");
                 return;
             }
 
@@ -57,22 +58,22 @@ namespace Tactics.UI
             if (_continueButton != null)
                 _continueButton.clicked += OnContinueClicked;
             else
-                Debug.LogWarning("[MenuUIController] ContinueButton not found in UXML.");
+                TLog.Warning("[MenuUIController] ContinueButton not found in UXML.");
 
             if (_optionsButton != null)
                 _optionsButton.clicked += OnOptionsClicked;
             else
-                Debug.LogWarning("[MenuUIController] OptionsButton not found in UXML.");
+                TLog.Warning("[MenuUIController] OptionsButton not found in UXML.");
 
             if (_mainMenuButton != null)
                 _mainMenuButton.clicked += OnMainMenuClicked;
             else
-                Debug.LogWarning("[MenuUIController] MainMenuButton not found in UXML.");
+                TLog.Warning("[MenuUIController] MainMenuButton not found in UXML.");
 
             if (_saveAndQuitButton != null)
                 _saveAndQuitButton.clicked += OnSaveAndQuitClicked;
             else
-                Debug.LogWarning("[MenuUIController] SaveAndQuitButton not found in UXML.");
+                TLog.Warning("[MenuUIController] SaveAndQuitButton not found in UXML.");
         }
 
         private void UnwireMenuButtons()

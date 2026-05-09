@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Tactics.Cheats;
 using Tactics.Runtime.BattleLog;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -24,7 +25,7 @@ namespace Tactics.UI
             var root = Ui.GetRootElement(UIManager.UIId.CheatConsole);
             if (root == null)
             {
-                Debug.LogWarning("[CheatConsoleUI] Could not get root visual element.");
+                TLog.Warning("[CheatConsoleUI] Could not get root visual element.");
                 return;
             }
 

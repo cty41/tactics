@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -76,23 +77,23 @@ namespace Tactics.UI
             }
 
             if (mapConfig == null)
-                Debug.LogWarning("[RoguelikeMapUIController] Failed to load default RoguelikeMapConfig.");
+                TLog.Warning("[RoguelikeMapUIController] Failed to load default RoguelikeMapConfig.");
         }
 
         protected override void OnShown()
         {
-            Debug.Log($"[RoguelikeMapUIController] OnShown called. gameObject.active={gameObject.activeSelf}");
+            TLog.Info($"[RoguelikeMapUIController] OnShown called. gameObject.active={gameObject.activeSelf}");
             WireOptionalCloseButtons();
             WireInventoryButton();
 
             LoadOrGenerateMap();
-            Debug.Log($"[RoguelikeMapUIController] Starting ShowMapDelayed. _currentMap={_currentMap != null}");
+            TLog.Info($"[RoguelikeMapUIController] Starting ShowMapDelayed. _currentMap={_currentMap != null}");
             StartCoroutine(ShowMapDelayed());
         }
 
         private System.Collections.IEnumerator ShowMapDelayed()
         {
-            Debug.Log("[RoguelikeMapUIController] ShowMapDelayed coroutine started.");
+            TLog.Info("[RoguelikeMapUIController] ShowMapDelayed coroutine started.");
             int frames = 0;
             VisualElement root = null;
             while (frames < 60)
@@ -107,7 +108,7 @@ namespace Tactics.UI
                 yield return null;
                 frames++;
             }
-            Debug.Log($"[RoguelikeMapUIController] Layout ready after {frames} frames. root.layout={root?.layout.width}x{root?.layout.height}, mapContainer.layout={_mapContent?.layout.width}x{_mapContent?.layout.height}");
+            TLog.Info($"[RoguelikeMapUIController] Layout ready after {frames} frames. root.layout={root?.layout.width}x{root?.layout.height}, mapContainer.layout={_mapContent?.layout.width}x{_mapContent?.layout.height}");
 
             // Ensure GameAssetManager has initialized before loading assets
             EnsureMapConfig();
@@ -115,11 +116,11 @@ namespace Tactics.UI
 
             if (_currentMap == null)
             {
-                Debug.LogError("[RoguelikeMapUIController] _currentMap is null. Cannot show map.");
+                TLog.Error("[RoguelikeMapUIController] _currentMap is null. Cannot show map.");
                 yield break;
             }
 
-            Debug.Log("[RoguelikeMapUIController] Calling ShowMap...");
+            TLog.Info("[RoguelikeMapUIController] Calling ShowMap...");
             ShowMap(_currentMap);
             RefreshPartyPanel();
         }
@@ -155,12 +156,12 @@ namespace Tactics.UI
         {
             if (mapConfig == null)
             {
-                Debug.LogWarning("[RoguelikeMapUIController] mapConfig is null!");
+                TLog.Warning("[RoguelikeMapUIController] mapConfig is null!");
                 return;
             }
 
             _currentMap = RoguelikeMapGenerator.GetMap(mapConfig);
-            Debug.Log(_currentMap?.ToJson());
+            TLog.Info(_currentMap?.ToJson());
         }
 
         private void SaveMap()
@@ -179,10 +180,10 @@ namespace Tactics.UI
             if (_scrollView != null) return true;
 
             var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
-            Debug.Log($"[RoguelikeMapUIController] TryEnsureRootElements: root={root != null}");
+            TLog.Info($"[RoguelikeMapUIController] TryEnsureRootElements: root={root != null}");
             if (root == null)
             {
-                Debug.LogError("[RoguelikeMapUIController] Could not get root visual element for RoguelikeMap UI.");
+                TLog.Error("[RoguelikeMapUIController] Could not get root visual element for RoguelikeMap UI.");
                 return false;
             }
 
@@ -191,19 +192,19 @@ namespace Tactics.UI
             _linesLayer = root.Q<VisualElement>("LinesLayer");
             _nodesLayer = root.Q<VisualElement>("NodesLayer");
 
-            Debug.Log($"[RoguelikeMapUIController] TryEnsureRootElements: scrollView={_scrollView != null}, bgLayer={_backgroundLayer != null}, linesLayer={_linesLayer != null}, nodesLayer={_nodesLayer != null}");
+            TLog.Info($"[RoguelikeMapUIController] TryEnsureRootElements: scrollView={_scrollView != null}, bgLayer={_backgroundLayer != null}, linesLayer={_linesLayer != null}, nodesLayer={_nodesLayer != null}");
 
             if (_scrollView == null)
             {
-                Debug.LogError("[RoguelikeMapUIController] Missing required ScrollView in UXML.");
+                TLog.Error("[RoguelikeMapUIController] Missing required ScrollView in UXML.");
                 return false;
             }
 
             _mapContent = root.Q<VisualElement>("MapContainer");
-            Debug.Log($"[RoguelikeMapUIController] TryEnsureRootElements: mapContainer={_mapContent != null}");
+            TLog.Info($"[RoguelikeMapUIController] TryEnsureRootElements: mapContainer={_mapContent != null}");
             if (_mapContent == null)
             {
-                Debug.LogError("[RoguelikeMapUIController] MapContainer is null.");
+                TLog.Error("[RoguelikeMapUIController] MapContainer is null.");
                 return false;
             }
 
@@ -221,7 +222,7 @@ namespace Tactics.UI
         {
             if (m == null)
             {
-                Debug.LogWarning("Map was null in RoguelikeMapUIController.ShowMap()");
+                TLog.Warning("Map was null in RoguelikeMapUIController.ShowMap()");
                 return;
             }
 
@@ -229,7 +230,7 @@ namespace Tactics.UI
                 return;
 
             var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
-            Debug.Log($"[RoguelikeMapUIController] ShowMap: root={root != null}, scrollView={_scrollView != null}, mapContainer={_mapContent != null}, mapContainer.layout={_mapContent.layout.width}x{_mapContent.layout.height}, nodesLayer={_nodesLayer != null}, bgLayer={_backgroundLayer != null}");
+            TLog.Info($"[RoguelikeMapUIController] ShowMap: root={root != null}, scrollView={_scrollView != null}, mapContainer={_mapContent != null}, mapContainer.layout={_mapContent.layout.width}x{_mapContent.layout.height}, nodesLayer={_nodesLayer != null}, bgLayer={_backgroundLayer != null}");
 
             _currentMap = m;
             ClearMap();
@@ -371,7 +372,7 @@ namespace Tactics.UI
             }
 
             if (_nodeTemplate == null)
-                Debug.LogWarning("[RoguelikeMapUIController] Failed to load node template. Nodes will use fallback styling.");
+                TLog.Warning("[RoguelikeMapUIController] Failed to load node template. Nodes will use fallback styling.");
         }
 
         private void EnsureMapBackgroundSprite()
@@ -385,7 +386,7 @@ namespace Tactics.UI
             }
 
             if (_mapBackgroundSprite == null)
-                Debug.LogWarning("[RoguelikeMapUIController] Failed to load map background sprite. Background will use fallback color.");
+                TLog.Warning("[RoguelikeMapUIController] Failed to load map background sprite. Background will use fallback color.");
         }
 
         private void ClearMap()
@@ -641,7 +642,7 @@ namespace Tactics.UI
 
         private void EnterNode(RoguelikeMapUINode mapNode)
         {
-            Debug.Log("Entering node: " + mapNode.Node.blueprintName + " of type: " + mapNode.Node.nodeType);
+            TLog.Info("Entering node: " + mapNode.Node.blueprintName + " of type: " + mapNode.Node.nodeType);
 
             switch (mapNode.Node.nodeType)
             {
@@ -671,7 +672,7 @@ namespace Tactics.UI
 
         private void EnterStubNode(RoguelikeMapUINode mapNode)
         {
-            Debug.Log($"[Roguelike stub] Node '{mapNode.Node.blueprintName}' ({mapNode.Node.nodeType})");
+            TLog.Info($"[Roguelike stub] Node '{mapNode.Node.blueprintName}' ({mapNode.Node.nodeType})");
             StartCoroutine(CoUnlockAfterStub(mapNode));
         }
 
@@ -684,7 +685,7 @@ namespace Tactics.UI
 
         private void PlayWarningThatNodeCannotBeAccessed()
         {
-            Debug.Log("Selected node cannot be accessed");
+            TLog.Info("Selected node cannot be accessed");
         }
 
         private void WireOptionalCloseButtons()
@@ -716,7 +717,7 @@ namespace Tactics.UI
                 return;
             }
 
-            Debug.Log("[RoguelikeMapUIController] No close/back button found in UXML.");
+            TLog.Info("[RoguelikeMapUIController] No close/back button found in UXML.");
         }
 
         private void WireInventoryButton()
@@ -729,11 +730,11 @@ namespace Tactics.UI
             {
                 inventoryButton.clicked -= OnInventoryClicked;
                 inventoryButton.clicked += OnInventoryClicked;
-                Debug.Log("[RoguelikeMapUIController] InventoryButton wired.");
+                TLog.Info("[RoguelikeMapUIController] InventoryButton wired.");
             }
             else
             {
-                Debug.LogWarning("[RoguelikeMapUIController] InventoryButton not found in UXML.");
+                TLog.Warning("[RoguelikeMapUIController] InventoryButton not found in UXML.");
             }
         }
 

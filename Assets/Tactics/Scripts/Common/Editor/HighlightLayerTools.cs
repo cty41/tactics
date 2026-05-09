@@ -1,4 +1,5 @@
 using UnityEditor;
+using Tactics.Runtime.Utilities;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -22,7 +23,7 @@ namespace TbsFramework.EditorUtils
             }
 
             ClearTilemap(tilemap);
-            Debug.Log($"Cleared all tiles on HighlightLayer: {GetHierarchyPath(tilemap.transform)}");
+            TLog.Info($"Cleared all tiles on HighlightLayer: {GetHierarchyPath(tilemap.transform)}");
         }
 
         [MenuItem("Tools/Tactics/Tilemap/Clear Selected Tilemap Tiles")]
@@ -43,7 +44,7 @@ namespace TbsFramework.EditorUtils
             }
 
             ClearTilemap(tilemap);
-            Debug.Log($"Cleared all tiles on selected Tilemap: {GetHierarchyPath(tilemap.transform)}");
+            TLog.Info($"Cleared all tiles on selected Tilemap: {GetHierarchyPath(tilemap.transform)}");
         }
 
         [MenuItem("Tools/Tactics/Tilemap/Clear Selected Tilemap Tiles", true)]

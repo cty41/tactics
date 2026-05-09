@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -53,7 +54,7 @@ namespace Tactics.Roster
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.LogWarning($"[PlayerAdventureStateStore] Failed to load prefab mappings: {ex.Message}");
+                    TLog.Warning($"[PlayerAdventureStateStore] Failed to load prefab mappings: {ex.Message}");
                 }
             }
         }
@@ -75,7 +76,7 @@ namespace Tactics.Roster
                 var state = JsonConvert.DeserializeObject<PlayerAdventureState>(json, JsonSettings);
                 if (state == null || !IsStateValid(state))
                 {
-                    Debug.LogWarning("[PlayerAdventureStateStore] Saved state is invalid or corrupted. Clearing old save and reloading defaults.");
+                    TLog.Warning("[PlayerAdventureStateStore] Saved state is invalid or corrupted. Clearing old save and reloading defaults.");
                     PlayerPrefs.DeleteKey(PlayerPrefsKey);
                     PlayerPrefs.Save();
                     return CreateDefaultState();
@@ -213,7 +214,7 @@ namespace Tactics.Roster
 
             if (json == null)
             {
-                Debug.LogError($"[PlayerAdventureStateStore] TestParty.json not found at {TestPartyJsonPath}");
+                TLog.Error($"[PlayerAdventureStateStore] TestParty.json not found at {TestPartyJsonPath}");
                 return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
             }
 
@@ -222,7 +223,7 @@ namespace Tactics.Roster
                 var config = JsonConvert.DeserializeObject<TestPartyConfig>(json, JsonSettings);
                 if (config == null)
                 {
-                    Debug.LogError("[PlayerAdventureStateStore] Failed to deserialize TestParty.json");
+                    TLog.Error("[PlayerAdventureStateStore] Failed to deserialize TestParty.json");
                     return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
                 }
                 TestPrefabMappings = config.PrefabMappings ?? new List<PrefabMapping>();
@@ -235,7 +236,7 @@ namespace Tactics.Roster
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[PlayerAdventureStateStore] Failed to parse TestParty.json: {ex.Message}");
+                TLog.Error($"[PlayerAdventureStateStore] Failed to parse TestParty.json: {ex.Message}");
                 return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
             }
         }

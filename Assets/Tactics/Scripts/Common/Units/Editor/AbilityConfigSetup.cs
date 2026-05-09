@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -56,7 +57,7 @@ namespace Tactics.Common.Units.Abilities.Editor
             EditorGUILayout.EndScrollView();
         }
 
-        private void Log(string m) { _log.Add(m); Debug.Log($"[AbilitySetup] {m}"); }
+        private void Log(string m) { _log.Add(m); TLog.Info($"[AbilitySetup] {m}"); }
 
         private void Run()
         {

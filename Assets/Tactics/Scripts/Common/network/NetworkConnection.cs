@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -158,31 +159,31 @@ namespace Tactics.Common.Network
 
         protected void InvokeServerConnected()
         {
-            Debug.Log("Server connected");
+            TLog.Info("Server connected");
             ServerConnected?.Invoke(this, EventArgs.Empty);
         }
         protected void InvokeRoomJoined(RoomData roomData)
         {
             var players = roomData.Users.ToList();
-            Debug.Log($"Joined room: {roomData.RoomID}; players inside: {players.Count}");
+            TLog.Info($"Joined room: {roomData.RoomID}; players inside: {players.Count}");
             RoomJoined?.Invoke(this, roomData);
         }
 
         protected void InvokeRoomExited()
         {
-            Debug.Log("Exited room");
+            TLog.Info("Exited room");
             RoomExited?.Invoke(this, EventArgs.Empty);
         }
 
         protected void InvokePlayerEnteredRoom(NetworkUser networkUser)
         {
-            Debug.Log($"Player {networkUser.UserID} entered room");
+            TLog.Info($"Player {networkUser.UserID} entered room");
             PlayerEnteredRoom?.Invoke(this, networkUser);
         }
 
         protected void InvokePlayerLeftRoom(NetworkUser networkUser)
         {
-            Debug.Log($"Player {networkUser.UserID} left room");
+            TLog.Info($"Player {networkUser.UserID} left room");
             PlayerLeftRoom?.Invoke(this, networkUser);
         }
         protected void InvokeCreateRoomFailed(string message)
@@ -196,7 +197,7 @@ namespace Tactics.Common.Network
 
         private void OnUnitAdded(IUnit unit)
         {
-            Debug.Log("unit added network connection");
+            TLog.Info("unit added network connection");
             unit.AbilityUsed += OnAbilityUsedLocal;
         }
 
@@ -208,7 +209,7 @@ namespace Tactics.Common.Network
 
         private void OnAbilityUsedLocal(AbilityUsedEventArgs eventArgs)
         {
-            Debug.Log("ability used local network connection");
+            TLog.Info("ability used local network connection");
             //If Ability was triggered by a remote instance, do nothing
             if (eventArgs.IsNetworkInvoked)
             {
@@ -235,7 +236,7 @@ namespace Tactics.Common.Network
 
         private void HandleRemoteAbilityUsed(Dictionary<string, object> actionParams)
         {
-            Debug.Log("ability used remote network connection");
+            TLog.Info("ability used remote network connection");
 
             var unit = _gridController.UnitManager.GetUnits().First(u => u.UnitID == int.Parse(actionParams[SerializationKeys.UnitID].ToString()));
             var commandType = Type.GetType(actionParams[SerializationKeys.CommandType].ToString());

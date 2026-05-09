@@ -1,4 +1,5 @@
 using System.Linq;
+using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.Controllers.TurnResolvers
 {
@@ -18,20 +19,20 @@ namespace Tactics.Common.Controllers.TurnResolvers
             var players = gridController.PlayerManager.GetPlayers();
             if (players == null)
             {
-                UnityEngine.Debug.LogError("[SubsequentTurnResolverImpl] PlayerManager.GetPlayers() returned null.");
+                TLog.Error("[SubsequentTurnResolverImpl] PlayerManager.GetPlayers() returned null.");
                 return default;
             }
             var playerList = players.ToList();
             if (playerList.Count == 0)
             {
-                UnityEngine.Debug.LogError("[SubsequentTurnResolverImpl] PlayerManager.GetPlayers() returned empty list. Ensure players are configured in BattleController._players.");
+                TLog.Error("[SubsequentTurnResolverImpl] PlayerManager.GetPlayers() returned empty list. Ensure players are configured in BattleController._players.");
                 return default;
             }
 
             var nextPlayer = playerList.OrderBy(p => p.PlayerNumber).FirstOrDefault();
             if (nextPlayer == null)
             {
-                UnityEngine.Debug.LogError("[SubsequentTurnResolverImpl] nextPlayer is null despite non-empty player list.");
+                TLog.Error("[SubsequentTurnResolverImpl] nextPlayer is null despite non-empty player list.");
                 return default;
             }
             var allowedUnits = gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber == nextPlayer.PlayerNumber);

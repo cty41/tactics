@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -87,14 +88,14 @@ namespace Tactics.Common.Players
 
                     if (DebugMode)
                     {
-                        Debug.Log($"Current unit: {playableUnit}; Press {Key.N} to proceed to the next action");
+                        TLog.Info($"Current unit: {playableUnit}; Press {Key.N} to proceed to the next action");
                         await WaitForKeypress(Key.N);
                     }
 
                     await Awaitable.WaitForSecondsAsync(UnitDelay / 1000f, _cancellationTokenSource.Token);
                     if (playableUnit.BehaviourTree == null)
                     {
-                        Debug.LogError($"[AIPlayer] Unit {playableUnit} has null BehaviourTree. Skipping.");
+                        TLog.Error($"[AIPlayer] Unit {playableUnit} has null BehaviourTree. Skipping.");
                         continue;
                     }
                     await playableUnit.BehaviourTree.Execute(DebugMode);
@@ -108,7 +109,7 @@ namespace Tactics.Common.Players
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[AIPlayer] Exception during Play() for Player {PlayerNumber}: {ex}");
+                TLog.Error($"[AIPlayer] Exception during Play() for Player {PlayerNumber}: {ex}");
             }
         }
 

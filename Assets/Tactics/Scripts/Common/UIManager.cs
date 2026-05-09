@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.AssetPipeline;
@@ -122,7 +123,7 @@ namespace Tactics
             {
                 _panelSettings = await mgr.LoadAsync<PanelSettings>(PanelSettingsPath);
                 if (_panelSettings == null)
-                    Debug.LogWarning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
+                    TLog.Warning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
             }
             return _panelSettings;
         }
@@ -133,7 +134,7 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
     {
         _panelSettings = mgr.Load<PanelSettings>(PanelSettingsPath);
         if (_panelSettings == null)
-            Debug.LogWarning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
+            TLog.Warning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
     }
     return _panelSettings;
 }

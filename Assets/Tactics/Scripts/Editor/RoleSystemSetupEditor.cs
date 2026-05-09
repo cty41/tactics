@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using System.IO;
 using System.Linq;
 using Tactics.Common.Units;
@@ -30,7 +31,7 @@ namespace Tactics.Editor
 
             if (meleeAttack == null || rangedAttack == null || chargeAttack == null)
             {
-                Debug.LogError("[RoleSystemSetup] Failed to load existing abilities. Please ensure MeleeAttack, RangedAttack, and ChargeAttack assets exist.");
+                TLog.Error("[RoleSystemSetup] Failed to load existing abilities. Please ensure MeleeAttack, RangedAttack, and ChargeAttack assets exist.");
                 return;
             }
 
@@ -82,7 +83,7 @@ namespace Tactics.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("[RoleSystemSetup] Role system setup complete!");
+            TLog.Info("[RoleSystemSetup] Role system setup complete!");
         }
 
         [MenuItem("Tools/Tactics/Setup Test1 Scene")]
@@ -95,7 +96,7 @@ namespace Tactics.Editor
             var existingMage = GameObject.Find("Mage");
             if (existingMage != null)
             {
-                Debug.Log("[RoleSystemSetup] Mage already exists in Test1 scene.");
+                TLog.Info("[RoleSystemSetup] Mage already exists in Test1 scene.");
             }
             else
             {
@@ -124,16 +125,16 @@ namespace Tactics.Editor
                     }
 
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
-                    Debug.Log("[RoleSystemSetup] Added Mage to Test1 scene at (0.5, 14.5, 0).");
+                    TLog.Info("[RoleSystemSetup] Added Mage to Test1 scene at (0.5, 14.5, 0).");
                 }
                 else
                 {
-                    Debug.LogWarning("[RoleSystemSetup] Mage.prefab not found.");
+                    TLog.Warning("[RoleSystemSetup] Mage.prefab not found.");
                 }
             }
 
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
-            Debug.Log("[RoleSystemSetup] Test1 scene setup complete!");
+            TLog.Info("[RoleSystemSetup] Test1 scene setup complete!");
         }
 
         private static void EnsureDirectory(string path)
@@ -473,14 +474,14 @@ namespace Tactics.Editor
             GameObject prefabRoot = PrefabUtility.LoadPrefabContents(prefabPath);
             if (prefabRoot == null)
             {
-                Debug.LogWarning($"[RoleSystemSetup] Failed to load prefab: {prefabPath}");
+                TLog.Warning($"[RoleSystemSetup] Failed to load prefab: {prefabPath}");
                 return;
             }
 
             var unit = prefabRoot.GetComponent<Unit>();
             if (unit == null)
             {
-                Debug.LogWarning($"[RoleSystemSetup] No Unit component found on {prefabFileName}");
+                TLog.Warning($"[RoleSystemSetup] No Unit component found on {prefabFileName}");
                 PrefabUtility.UnloadPrefabContents(prefabRoot);
                 return;
             }
@@ -497,7 +498,7 @@ namespace Tactics.Editor
             PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabPath);
             PrefabUtility.UnloadPrefabContents(prefabRoot);
 
-            Debug.Log($"[RoleSystemSetup] Configured {prefabFileName} with {roleConfig.DisplayName}");
+            TLog.Info($"[RoleSystemSetup] Configured {prefabFileName} with {roleConfig.DisplayName}");
         }
     }
 }

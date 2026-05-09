@@ -1,4 +1,5 @@
 using Tactics.Common.Units;
+using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
 using Tactics.Common.Units;
 using UnityEditor;
@@ -18,14 +19,14 @@ namespace Tactics.Common.Editor
         {
             if (!_unitsParent)
             {
-                Debug.LogWarning("No 'UnitManager' found in the scene and no 'UnitsParent' assigned. Cannot paint.");
+                TLog.Warning("No 'UnitManager' found in the scene and no 'UnitsParent' assigned. Cannot paint.");
                 return;
             }
 
             var selCell = GetSelectedCell();
             if (!selCell)
             {
-                Debug.LogWarning("No cell under cursor. Unit will not be painted.");
+                TLog.Warning("No cell under cursor. Unit will not be painted.");
                 return;
             }
 
@@ -33,7 +34,7 @@ namespace Tactics.Common.Editor
             var unitGO = PrefabUtility.InstantiatePrefab(_unitPrefab, _unitsParent) as GameObject;
             if (!unitGO)
             {
-                Debug.LogError("Failed to instantiate unit prefab.");
+                TLog.Error("Failed to instantiate unit prefab.");
                 return;
             }
 
@@ -76,7 +77,7 @@ namespace Tactics.Common.Editor
 
             if (Physics.Raycast(HandleUtility.GUIPointToWorldRay(Event.current.mousePosition), out var hit3D))
             {
-                Debug.Log(hit3D.transform.gameObject.ToString());
+                TLog.Info(hit3D.transform.gameObject.ToString());
                 var unit3D = hit3D.transform.GetComponentInChildren<Unit>();
                 if (unit3D) return unit3D;
             }

@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -114,7 +115,7 @@ namespace Tactics.Common.AI.BehaviourTrees
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[AttackActionNode] Error executing attack: {ex.Message}");
+                TLog.Error($"[AttackActionNode] Error executing attack: {ex.Message}");
                 tcs.SetResult(false);
             }
         }

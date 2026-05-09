@@ -1,4 +1,5 @@
 using System;
+using Tactics.Runtime.Utilities;
 using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers.GameResolvers;
@@ -71,7 +72,7 @@ namespace Tactics.Common.Controllers
             TurnContext = TurnResolver.ResolveStart(this);
             if (TurnContext.CurrentPlayer == null)
             {
-                UnityEngine.Debug.LogError($"[GridController] TurnContext.CurrentPlayer is null. TurnResolver type: {TurnResolver?.GetType()?.Name ?? "null"}. " +
+                TLog.Error($"[GridController] TurnContext.CurrentPlayer is null. TurnResolver type: {TurnResolver?.GetType()?.Name ?? "null"}. " +
                     "Ensure BattleController._players is configured and players' PlayerNumber matches units' PlayerNumber.");
                 return;
             }
@@ -89,7 +90,7 @@ namespace Tactics.Common.Controllers
             UnitManager.MarkAsFriendly(TurnContext.PlayableUnits());
             if (TurnContext.CurrentPlayer == null)
             {
-                UnityEngine.Debug.LogError($"[GridController] MakeTurnTransition: CurrentPlayer is null. UnitPlayerNumber={TurnContext.PlayableUnits().FirstOrDefault()?.PlayerNumber ?? -1}. Skipping turn.");
+                TLog.Error($"[GridController] MakeTurnTransition: CurrentPlayer is null. UnitPlayerNumber={TurnContext.PlayableUnits().FirstOrDefault()?.PlayerNumber ?? -1}. Skipping turn.");
                 return;
             }
             TurnContext.CurrentPlayer.Play(this);

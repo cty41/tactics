@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Tactics.Runtime.Utilities;
 using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
 using Tactics.Flow.Home;
@@ -46,7 +47,7 @@ namespace Tactics
                     var battleController = FindFirstObjectByType<BattleController>();
                     if (battleController != null)
                     {
-                        Debug.Log($"[SceneController] BattleController detected in scene '{sceneName}'. Basic manager initialization complete.");
+                        TLog.Info($"[SceneController] BattleController detected in scene '{sceneName}'. Basic manager initialization complete.");
                     }
                     break;
             }
@@ -56,17 +57,17 @@ namespace Tactics
         {
             if (GameAssetManager.Instance != null && GameAssetManager.Instance.IsInitialized)
             {
-                Debug.Log("[SceneController] GameAssetManager already initialized.");
+                TLog.Info("[SceneController] GameAssetManager already initialized.");
                 return;
             }
 
             if (_runtimeSettings == null)
             {
-                Debug.LogError("[SceneController] Assign Game Asset Runtime Settings (ScriptableObject).");
+                TLog.Error("[SceneController] Assign Game Asset Runtime Settings (ScriptableObject).");
                 return;
             }
 
-            Debug.Log("[SceneController] Initializing GameAssetManager...");
+            TLog.Info("[SceneController] Initializing GameAssetManager...");
 
             if (GameAssetManager.Instance == null)
             {
@@ -76,7 +77,7 @@ namespace Tactics
             var instance = GameAssetManager.Instance;
             if (instance == null)
             {
-                Debug.LogError("[SceneController] GameAssetManager.Instance is still null after bootstrap.");
+                TLog.Error("[SceneController] GameAssetManager.Instance is still null after bootstrap.");
                 return;
             }
 
@@ -84,12 +85,12 @@ namespace Tactics
             {
                 if (!await instance.InitializeAsync())
                 {
-                    Debug.LogError("[SceneController] GameAssetManager.InitializeAsync failed.");
+                    TLog.Error("[SceneController] GameAssetManager.InitializeAsync failed.");
                     return;
                 }
             }
 
-            Debug.Log("[SceneController] GameAssetManager initialized successfully.");
+            TLog.Info("[SceneController] GameAssetManager initialized successfully.");
         }
 
         private async Task LoadHomeAsync()
@@ -105,7 +106,7 @@ namespace Tactics
             }
             catch (System.Exception e)
             {
-                Debug.LogException(e);
+                TLog.Error($"[SceneController] Exception: {e.Message}");
             }
         }
     }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
 using Tactics.Common.Utilities;
 using Tactics.Common.Cells;
@@ -22,7 +23,7 @@ namespace TbsFramework.EditorUtils.GridGenerators
 
             if (HexagonPrefab.GetComponent<Hexagon>() == null)
             {
-                Debug.LogError("Invalid hexagon prefab provided");
+                TLog.Error("Invalid hexagon prefab provided");
                 return null;
             }
 
