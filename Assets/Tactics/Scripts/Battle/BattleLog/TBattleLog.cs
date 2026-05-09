@@ -4,10 +4,10 @@ using Tactics.Runtime.Utilities;
 namespace Tactics.Runtime.BattleLog
 {
     /// <summary>
-    /// Static battle logging system. Uses Logger for output and provides
+    /// Static battle logging system. Uses TLog for output and provides
     /// battle-specific log data types.
     /// </summary>
-    public static class BattleLogger
+    public static class TBattleLog
     {
         /// <summary>
         /// Event triggered when a battle log entry is created.
@@ -37,13 +37,13 @@ namespace Tactics.Runtime.BattleLog
         {
             if (data == null)
             {
-                Logger.Warning("[BattleLogger] Attempted to log null BattleLogData.");
+                TLog.Warning("[TBattleLog] Attempted to log null BattleLogData.");
                 return;
             }
 
-            // Output to console/file via Logger
+            // Output to console/file via TLog
             string displayString = data.GetDisplayString();
-            Logger.Info(displayString);
+            TLog.Info(displayString);
 
             // Trigger UI event if enabled
             if (_outputToUI)

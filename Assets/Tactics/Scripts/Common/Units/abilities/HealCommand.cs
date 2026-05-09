@@ -39,7 +39,7 @@ namespace Tactics.Common.Units.Abilities
             string targetName = _target is Tactics.Common.Units.INamedUnit nt ? nt.UnitName : _target.ToString();
             string casterName = _caster is Tactics.Common.Units.INamedUnit nc ? nc.UnitName : _caster.ToString();
 
-            BattleLogger.Log(new HealLogData
+            TBattleLog.Log(new HealLogData
             {
                 Healer = casterName,
                 Target = targetName,

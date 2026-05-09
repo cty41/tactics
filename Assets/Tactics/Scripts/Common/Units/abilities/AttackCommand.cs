@@ -38,7 +38,7 @@ namespace Tactics.Common.Units.Abilities
             _target.ModifyHealth(-_damage, unit);
             _target.InvokeAttacked(new UnitAttackedEventArgs(_target, unit, _damage));
 
-            BattleLogger.Log(new AttackLogData
+            TBattleLog.Log(new AttackLogData
             {
                 Attacker = unit is Tactics.Common.Units.INamedUnit na ? na.UnitName : unit.ToString(),
                 Target = _target is Tactics.Common.Units.INamedUnit nt ? nt.UnitName : _target.ToString(),

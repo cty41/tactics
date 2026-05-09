@@ -8,7 +8,7 @@ namespace Tactics.Runtime.Utilities
     /// Static universal logging system. Replaces Unity's native Debug.Log.
     /// Supports Console output, file output, and log level filtering.
     /// </summary>
-    public static class Logger
+    public static class TLog
     {
         private static LogLevel _minLogLevel = LogLevel.Info;
         private static bool _enableConsole = true;
@@ -55,7 +55,7 @@ namespace Tactics.Runtime.Utilities
         {
             if (string.IsNullOrEmpty(path))
             {
-                Debug.LogError("[Logger] Log file path cannot be null or empty.");
+                Debug.LogError("[TLog] Log file path cannot be null or empty.");
                 return;
             }
 
@@ -167,7 +167,7 @@ namespace Tactics.Runtime.Utilities
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[Logger] Failed to write to log file: {e.Message}");
+                    Debug.LogError($"[TLog] Failed to write to log file: {e.Message}");
                 }
             }
         }

@@ -58,7 +58,7 @@ namespace Tactics.Common.Units.Buffs
 
             string ownerName = buff.Owner is INamedUnit named ? named.UnitName : buff.Owner.ToString();
 
-            BattleLogger.Log(new DamageLogData
+            TBattleLog.Log(new DamageLogData
             {
                 Source = buff.BuffName,
                 Target = ownerName,

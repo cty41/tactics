@@ -44,7 +44,7 @@ namespace Tactics.UI
                 _rootContainer.style.flexDirection = FlexDirection.Column;
             }
 
-            BattleLogger.OnLogToUI += HandleLogEntry;
+            TBattleLog.OnLogToUI += HandleLogEntry;
 
             if (_commandInput != null)
             {
@@ -59,7 +59,7 @@ namespace Tactics.UI
 
         protected override void OnHidden()
         {
-            BattleLogger.OnLogToUI -= HandleLogEntry;
+            TBattleLog.OnLogToUI -= HandleLogEntry;
 
             if (_commandInput != null)
             {

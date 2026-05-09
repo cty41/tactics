@@ -60,7 +60,7 @@ namespace Tactics.Common.Units.Abilities
             string casterName = _caster is Tactics.Common.Units.INamedUnit nc ? nc.UnitName : _caster.ToString();
             string primaryTarget = hitUnits.FirstOrDefault() is Tactics.Common.Units.INamedUnit nt ? nt.UnitName : "None";
 
-            BattleLogger.Log(new SkillLogData
+            TBattleLog.Log(new SkillLogData
             {
                 Source = casterName,
                 SkillName = "Fireball",

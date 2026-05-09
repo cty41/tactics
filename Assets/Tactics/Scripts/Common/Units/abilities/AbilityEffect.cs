@@ -192,7 +192,7 @@ namespace Tactics.Common.Units.Abilities
 
                 if (!CombatComponent.IsHit(caster, target, _accuracyPenalty))
                 {
-                    BattleLogger.Log(new AttackLogData
+                    TBattleLog.Log(new AttackLogData
                     {
                         Attacker = caster is Tactics.Common.Units.INamedUnit na ? na.UnitName : caster.ToString(),
                         Target = target is Tactics.Common.Units.INamedUnit nt ? nt.UnitName : target.ToString(),
