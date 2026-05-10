@@ -5,6 +5,24 @@ using Tactics.Equipment;
 
 namespace Tactics.Roster
 {
+    /// <summary>Base attribute types matching <see cref="CharacterDefinition"/> fields.</summary>
+    public enum AttributeType
+    {
+        Strength,
+        Agility,
+        Constitution,
+        Intelligence,
+        Charisma,
+        Luck
+    }
+
+    /// <summary>Skill activation type.</summary>
+    public enum SkillType
+    {
+        Active,
+        Passive
+    }
+
     /// <summary>Serializable character data aligned with <see cref="Tactics.Common.Units.Unit"/> combat fields.</summary>
     [Serializable]
     public class CharacterDefinition
@@ -12,6 +30,11 @@ namespace Tactics.Roster
         public string Id { get; set; }
         public string DisplayName { get; set; }
         public int Level { get; set; }
+        public int Experience { get; set; }
+        public int AttributePoints { get; set; }
+        public Dictionary<AttributeType, int> AllocatedAttributes { get; set; }
+        public List<LearnedSkill> LearnedSkills { get; set; }
+        public int Gold { get; set; }
 
         public int Strength { get; set; }
         public int Agility { get; set; }
@@ -126,8 +149,22 @@ namespace Tactics.Roster
                 AttackRange = 1,
                 AttackFactor = 1,
                 DefenceFactor = 1,
-                RoleType = roleType
+                RoleType = roleType,
+                Experience = 0,
+                AttributePoints = 0,
+                AllocatedAttributes = new Dictionary<AttributeType, int>(),
+                LearnedSkills = new List<LearnedSkill>(),
+                Gold = 0
             };
+        }
+
+        /// <summary>A skill learned by the character.</summary>
+        [Serializable]
+        public class LearnedSkill
+        {
+            public string SkillId { get; set; }
+            public SkillType SkillType { get; set; }
+            public int Level { get; set; }
         }
     }
 }

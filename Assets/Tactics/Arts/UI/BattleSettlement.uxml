@@ -1,0 +1,32 @@
+﻿<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/BattleSettlement.uss?fileID=7433441132597879392&amp;guid=2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e&amp;type=3#BattleSettlement"/>
+    <ui:VisualElement name="BattleSettlementRoot" class="battle-settlement-root">
+        <ui:VisualElement name="BattleSettlementPanel" class="battle-settlement-panel">
+            <!-- 标题 -->
+            <ui:Label name="TitleLabel" text="战斗结算" class="title-label"/>
+
+            <!-- 战斗结果 -->
+            <ui:VisualElement name="ResultSection" class="result-section">
+                <ui:Label name="ResultLabel" text="胜利！" class="result-label victory-label"/>
+                <ui:Label name="RoundsLabel" text="总回合数：0" class="rounds-label"/>
+            </ui:VisualElement>
+
+            <!-- 经验值列表 -->
+            <ui:VisualElement name="ExperienceSection" class="experience-section">
+                <ui:Label text="获得经验值" class="section-title"/>
+                <ui:ScrollView name="ExperienceList" class="experience-list">
+                    <!-- 动态添加经验值条目 -->
+                </ui:ScrollView>
+            </ui:VisualElement>
+
+            <!-- 金币奖励 -->
+            <ui:VisualElement name="GoldSection" class="gold-section">
+                <ui:Label text="获得金币" class="section-title"/>
+                <ui:Label name="GoldLabel" text="+0" class="gold-label"/>
+            </ui:VisualElement>
+
+            <!-- 继续按钮 -->
+            <ui:Button name="ContinueButton" text="继续" class="continue-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,41 @@
+﻿<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/SkillSelection.uss?fileID=7433441132597879392&amp;guid=00000000000000000000000000000001&amp;type=3#SkillSelection"/>
+    <ui:VisualElement name="SkillSelectionRoot" class="skill-selection-root">
+        <ui:VisualElement name="SkillSelectionPanel" class="skill-selection-panel">
+            <!-- Header -->
+            <ui:Label name="TitleLabel" text="选择技能" class="title-label"/>
+            <ui:Label name="SubtitleLabel" text="升级获得新技能" class="subtitle-label"/>
+
+            <!-- 3 个技能选项 -->
+            <ui:VisualElement name="SkillsContainer" class="skills-container">
+                <ui:VisualElement name="SkillOption_0" class="skill-option" tabindex="0">
+                    <ui:Label name="SkillName_0" text="技能名" class="skill-name"/>
+                    <ui:Label name="SkillType_0" text="主动" class="skill-type"/>
+                    <ui:Label name="SkillLevel_0" text="Lv.1" class="skill-level"/>
+                    <ui:Label name="SkillDesc_0" text="技能描述" class="skill-desc"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="SkillOption_1" class="skill-option" tabindex="0">
+                    <ui:Label name="SkillName_1" text="技能名" class="skill-name"/>
+                    <ui:Label name="SkillType_1" text="主动" class="skill-type"/>
+                    <ui:Label name="SkillLevel_1" text="Lv.1" class="skill-level"/>
+                    <ui:Label name="SkillDesc_1" text="技能描述" class="skill-desc"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="SkillOption_2" class="skill-option" tabindex="0">
+                    <ui:Label name="SkillName_2" text="技能名" class="skill-name"/>
+                    <ui:Label name="SkillType_2" text="主动" class="skill-type"/>
+                    <ui:Label name="SkillLevel_2" text="Lv.1" class="skill-level"/>
+                    <ui:Label name="SkillDesc_2" text="技能描述" class="skill-desc"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- 替换提示（槽位满时显示） -->
+            <ui:VisualElement name="ReplaceSection" class="replace-section" style="display: none;">
+                <ui:Label name="ReplaceTitle" text="技能槽已满，请选择要替换的技能：" class="replace-title"/>
+                <ui:VisualElement name="ReplaceOptions" class="replace-options"/>
+            </ui:VisualElement>
+
+            <!-- 确认按钮 -->
+            <ui:Button name="ConfirmButton" text="确认选择" class="confirm-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

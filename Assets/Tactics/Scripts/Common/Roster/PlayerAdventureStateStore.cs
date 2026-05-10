@@ -215,7 +215,7 @@ namespace Tactics.Roster
             if (json == null)
             {
                 TLog.Error($"[PlayerAdventureStateStore] TestParty.json not found at {TestPartyJsonPath}");
-                return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+                return new PlayerAdventureState { Version = 2, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
             }
 
             try
@@ -224,12 +224,13 @@ namespace Tactics.Roster
                 if (config == null)
                 {
                     TLog.Error("[PlayerAdventureStateStore] Failed to deserialize TestParty.json");
-                    return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+                    return new PlayerAdventureState { Version = 2, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
                 }
                 TestPrefabMappings = config.PrefabMappings ?? new List<PrefabMapping>();
                 return new PlayerAdventureState
                 {
-                    Version = 1,
+                    Version = 2,
+                    Gold = 0,
                     Roster = config.Roster ?? new List<CharacterDefinition>(),
                     ActivePartyCharacterIds = config.ActivePartyCharacterIds ?? new List<string>()
                 };
@@ -237,7 +238,7 @@ namespace Tactics.Roster
             catch (System.Exception ex)
             {
                 TLog.Error($"[PlayerAdventureStateStore] Failed to parse TestParty.json: {ex.Message}");
-                return new PlayerAdventureState { Version = 1, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+                return new PlayerAdventureState { Version = 2, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
             }
         }
     }

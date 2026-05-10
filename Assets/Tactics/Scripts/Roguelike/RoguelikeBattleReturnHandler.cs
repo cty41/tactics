@@ -44,10 +44,32 @@ namespace Tactics.Roguelike
             controller.BattleEnded -= OnBattleEnded;
         }
 
-        private async void OnBattleEnded(GameResult result)
+        private void OnBattleEnded(GameResult result)
         {
             ApplyRoguelikePathAfterBattle(result);
-            await BattleFlowCoordinator.Instance.EndBattleAsync(result);
+
+            bool humanWon = result.Winners != null &&
+                            result.Winners.Any(p => p != null && p.PlayerType == PlayerType.HumanPlayer);
+
+            if (humanWon)
+            {
+                var allUnits = BattleController.Instance?.GetUnits();
+                int totalRounds = BattleController.Instance?.CurrentRound ?? 0;
+
+                BattleSettlementCoordinator.Instance.StartSettlement(
+                    result,
+                    totalRounds,
+                    allUnits,
+                    () =>
+                    {
+                        _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                    }
+                );
+            }
+            else
+            {
+                _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+            }
         }
 
         private static void ApplyRoguelikePathAfterBattle(GameResult result)

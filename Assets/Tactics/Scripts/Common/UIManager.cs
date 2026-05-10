@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -28,6 +28,9 @@ namespace Tactics
             CheatConsole,
             Loading,
             Inventory,
+            BattleSettlement,
+            AttributeAllocation,
+            SkillSelection,
         }
 
         private enum UIType
@@ -99,6 +102,12 @@ namespace Tactics
         private const string LoadingUssPath = "Assets/Tactics/Arts/UI/Loading.uss";
         private const string InventoryUxmlPath = "Assets/Tactics/Arts/UI/Inventory.uxml";
         private const string InventoryUssPath = "Assets/Tactics/Arts/UI/Inventory.uss";
+        private const string BattleSettlementUxmlPath = "Assets/Tactics/Arts/UI/BattleSettlement.uxml";
+        private const string BattleSettlementUssPath = "Assets/Tactics/Arts/UI/BattleSettlement.uss";
+        private const string AttributeAllocationUxmlPath = "Assets/Tactics/Arts/UI/AttributeAllocation.uxml";
+        private const string AttributeAllocationUssPath = "Assets/Tactics/Arts/UI/AttributeAllocation.uss";
+        private const string SkillSelectionUxmlPath = "Assets/Tactics/Arts/UI/SkillSelection.uxml";
+        private const string SkillSelectionUssPath = "Assets/Tactics/Arts/UI/SkillSelection.uss";
         private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
 
         private static readonly Dictionary<UIId, UIType> s_uiTypeMap = new()
@@ -110,6 +119,9 @@ namespace Tactics
             { UIId.CheatConsole, UIType.UiToolkitUxml },
             { UIId.Loading, UIType.UiToolkitUxml },
             { UIId.Inventory, UIType.UiToolkitUxml },
+            { UIId.BattleSettlement, UIType.UiToolkitUxml },
+            { UIId.AttributeAllocation, UIType.UiToolkitUxml },
+            { UIId.SkillSelection, UIType.UiToolkitUxml },
         };
 
         private readonly Dictionary<UIId, UIInstance> _instances = new();
@@ -248,6 +260,9 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
                 UIId.CheatConsole => CheatConsoleUxmlPath,
                 UIId.Loading => LoadingUxmlPath,
                 UIId.Inventory => InventoryUxmlPath,
+                UIId.BattleSettlement => BattleSettlementUxmlPath,
+                UIId.AttributeAllocation => AttributeAllocationUxmlPath,
+                UIId.SkillSelection => SkillSelectionUxmlPath,
                 _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.")
             };
         }
@@ -263,6 +278,9 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
                 UIId.CheatConsole => CheatConsoleUssPath,
                 UIId.Loading => LoadingUssPath,
                 UIId.Inventory => InventoryUssPath,
+                UIId.BattleSettlement => BattleSettlementUssPath,
+                UIId.AttributeAllocation => AttributeAllocationUssPath,
+                UIId.SkillSelection => SkillSelectionUssPath,
                 _ => string.Empty
             };
         }
@@ -445,9 +463,14 @@ private UIInstance LoadUiToolkitSync(UIId id, string uxmlPath, GameAssetManager 
                     if (root.GetComponent<InventoryUIController>() == null)
                         root.AddComponent<InventoryUIController>();
                     break;
+                case UIId.BattleSettlement:
+                    if (root.GetComponent<BattleSettlementUIController>() == null)
+                        root.AddComponent<BattleSettlementUIController>();
+                    break;
                 default:
                     break;
             }
         }
     }
 }
+

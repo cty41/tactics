@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,6 +15,7 @@ namespace Tactics.Flow.Battle
         public static BattleFlowCoordinator Instance => _instance;
 
         private bool _isTransitioning;
+        private bool _settlementInProgress;
 
         private BattleFlowCoordinator() { }
 
@@ -56,9 +57,19 @@ namespace Tactics.Flow.Battle
             }
         }
 
-        public async Task EndBattleAsync(GameResult result)
+        public async Task EndBattleAsync(GameResult result, bool skipSettlement = false)
         {
             if (_isTransitioning) return;
+
+            if (!skipSettlement)
+            {
+                if (_settlementInProgress)
+                {
+                    TLog.Warning("[BattleFlowCoordinator] Settlement already in progress, skipping duplicate.");
+                    return;
+                }
+                _settlementInProgress = true;
+            }
 
             _isTransitioning = true;
             try
@@ -93,6 +104,10 @@ namespace Tactics.Flow.Battle
             finally
             {
                 _isTransitioning = false;
+                if (!skipSettlement)
+                {
+                    _settlementInProgress = false;
+                }
             }
         }
     }

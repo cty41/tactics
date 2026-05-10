@@ -1,0 +1,186 @@
+﻿/* Attribute Allocation UI Styles */
+
+.attribute-allocation-root {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 24px;
+}
+
+.attribute-allocation-panel {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(235, 222, 195);
+    border-width: 4px;
+    border-color: rgb(60, 50, 40);
+    border-radius: 12px;
+    flex-direction: column;
+    padding: 16px;
+}
+
+/* Header */
+.header {
+    width: 100%;
+    height: 40px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.title-label {
+    font-size: 28px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+}
+
+/* Character Info */
+.character-info-area {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 8px;
+}
+
+.character-name-label {
+    font-size: 22px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+}
+
+.points-label {
+    font-size: 18px;
+    color: rgb(180, 120, 40);
+    -unity-font-style: bold;
+}
+
+/* Attributes Container */
+.attributes-container {
+    width: 100%;
+    flex-grow: 1;
+    flex-direction: column;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+/* Attribute Row */
+.attribute-row {
+    width: 100%;
+    height: 48px;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-width: 1px;
+    border-color: rgb(200, 180, 150);
+    border-radius: 6px;
+}
+
+.attribute-row:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.attr-name {
+    width: 50px;
+    font-size: 16px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.attr-value {
+    width: 36px;
+    font-size: 16px;
+    color: rgb(80, 70, 60);
+    -unity-text-align: middle-center;
+}
+
+.attr-button {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    -unity-text-align: middle-center;
+    border-width: 2px;
+    border-color: rgb(120, 100, 80);
+    border-radius: 4px;
+}
+
+.attr-minus {
+    background-color: rgb(200, 160, 120);
+    color: rgb(60, 50, 40);
+}
+
+.attr-minus:hover {
+    background-color: rgb(220, 180, 140);
+}
+
+.attr-minus:disabled {
+    background-color: rgb(180, 170, 160);
+    color: rgb(140, 130, 120);
+}
+
+.attr-plus {
+    background-color: rgb(120, 180, 120);
+    color: rgb(60, 50, 40);
+    margin-right: 8px;
+}
+
+.attr-plus:hover {
+    background-color: rgb(140, 200, 140);
+}
+
+.attr-plus:disabled {
+    background-color: rgb(180, 200, 180);
+    color: rgb(140, 160, 140);
+}
+
+.attr-allocated {
+    width: 28px;
+    font-size: 14px;
+    color: rgb(200, 120, 40);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+.attr-desc {
+    flex-grow: 1;
+    font-size: 13px;
+    color: rgb(120, 100, 80);
+    -unity-text-align: middle-left;
+    white-space: normal;
+}
+
+/* Confirm Button */
+.confirm-button {
+    width: 100%;
+    height: 48px;
+    font-size: 22px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-color: rgb(60, 130, 60);
+    border-width: 3px;
+    border-color: rgb(40, 90, 40);
+    border-radius: 10px;
+}
+
+.confirm-button:hover {
+    background-color: rgb(80, 160, 80);
+}
+
+.confirm-button:disabled {
+    background-color: rgb(140, 160, 140);
+    color: rgb(200, 200, 200);
+}

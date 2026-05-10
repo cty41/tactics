@@ -1,0 +1,78 @@
+﻿<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/Tactics/Arts/UI/AttributeAllocation.uss"/>
+    <ui:VisualElement name="AttributeAllocationRoot" class="attribute-allocation-root">
+        <ui:VisualElement name="AttributeAllocationPanel" class="attribute-allocation-panel">
+            <!-- Header -->
+            <ui:VisualElement name="Header" class="header">
+                <ui:Label name="TitleLabel" text="属性加点" class="title-label"/>
+            </ui:VisualElement>
+
+            <!-- Character Info -->
+            <ui:VisualElement name="CharacterInfoArea" class="character-info-area">
+                <ui:Label name="CharacterNameLabel" text="角色名" class="character-name-label"/>
+                <ui:Label name="PointsRemainingLabel" text="剩余点数：0" class="points-label"/>
+            </ui:VisualElement>
+
+            <!-- Attributes -->
+            <ui:VisualElement name="AttributesContainer" class="attributes-container">
+                <!-- Strength -->
+                <ui:VisualElement name="Attr_Strength" class="attribute-row">
+                    <ui:Label name="AttrName_Strength" text="力量" class="attr-name"/>
+                    <ui:Label name="AttrValue_Strength" text="0" class="attr-value"/>
+                    <ui:Button name="AttrMinus_Strength" text="-" class="attr-button attr-minus"/>
+                    <ui:Label name="AttrAllocated_Strength" text="0" class="attr-allocated"/>
+                    <ui:Button name="AttrPlus_Strength" text="+" class="attr-button attr-plus"/>
+                    <ui:Label name="AttrDesc_Strength" text="物攻+2" class="attr-desc"/>
+                </ui:VisualElement>
+                <!-- Agility -->
+                <ui:VisualElement name="Attr_Agility" class="attribute-row">
+                    <ui:Label name="AttrName_Agility" text="敏捷" class="attr-name"/>
+                    <ui:Label name="AttrValue_Agility" text="0" class="attr-value"/>
+                    <ui:Button name="AttrMinus_Agility" text="-" class="attr-button attr-minus"/>
+                    <ui:Label name="AttrAllocated_Agility" text="0" class="attr-allocated"/>
+                    <ui:Button name="AttrPlus_Agility" text="+" class="attr-button attr-plus"/>
+                    <ui:Label name="AttrDesc_Agility" text="速度+1，闪避+2%" class="attr-desc"/>
+                </ui:VisualElement>
+                <!-- Constitution -->
+                <ui:VisualElement name="Attr_Constitution" class="attribute-row">
+                    <ui:Label name="AttrName_Constitution" text="体质" class="attr-name"/>
+                    <ui:Label name="AttrValue_Constitution" text="0" class="attr-value"/>
+                    <ui:Button name="AttrMinus_Constitution" text="-" class="attr-button attr-minus"/>
+                    <ui:Label name="AttrAllocated_Constitution" text="0" class="attr-allocated"/>
+                    <ui:Button name="AttrPlus_Constitution" text="+" class="attr-button attr-plus"/>
+                    <ui:Label name="AttrDesc_Constitution" text="生命+10，物防+1" class="attr-desc"/>
+                </ui:VisualElement>
+                <!-- Intelligence -->
+                <ui:VisualElement name="Attr_Intelligence" class="attribute-row">
+                    <ui:Label name="AttrName_Intelligence" text="智力" class="attr-name"/>
+                    <ui:Label name="AttrValue_Intelligence" text="0" class="attr-value"/>
+                    <ui:Button name="AttrMinus_Intelligence" text="-" class="attr-button attr-minus"/>
+                    <ui:Label name="AttrAllocated_Intelligence" text="0" class="attr-allocated"/>
+                    <ui:Button name="AttrPlus_Intelligence" text="+" class="attr-button attr-plus"/>
+                    <ui:Label name="AttrDesc_Intelligence" text="魔攻+2，法力+10" class="attr-desc"/>
+                </ui:VisualElement>
+                <!-- Charisma -->
+                <ui:VisualElement name="Attr_Charisma" class="attribute-row">
+                    <ui:Label name="AttrName_Charisma" text="精神" class="attr-name"/>
+                    <ui:Label name="AttrValue_Charisma" text="0" class="attr-value"/>
+                    <ui:Button name="AttrMinus_Charisma" text="-" class="attr-button attr-minus"/>
+                    <ui:Label name="AttrAllocated_Charisma" text="0" class="attr-allocated"/>
+                    <ui:Button name="AttrPlus_Charisma" text="+" class="attr-button attr-plus"/>
+                    <ui:Label name="AttrDesc_Charisma" text="魔防+1，状态抗性+2%" class="attr-desc"/>
+                </ui:VisualElement>
+                <!-- Luck -->
+                <ui:VisualElement name="Attr_Luck" class="attribute-row">
+                    <ui:Label name="AttrName_Luck" text="幸运" class="attr-name"/>
+                    <ui:Label name="AttrValue_Luck" text="0" class="attr-value"/>
+                    <ui:Button name="AttrMinus_Luck" text="-" class="attr-button attr-minus"/>
+                    <ui:Label name="AttrAllocated_Luck" text="0" class="attr-allocated"/>
+                    <ui:Button name="AttrPlus_Luck" text="+" class="attr-button attr-plus"/>
+                    <ui:Label name="AttrDesc_Luck" text="暴击+1%" class="attr-desc"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- Confirm Button -->
+            <ui:Button name="ConfirmButton" text="确认" class="confirm-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

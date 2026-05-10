@@ -4,6 +4,8 @@ namespace Tactics.Common.Units.Classes
     {
         Barbarian,
         Mage,
-        Hunter
+        Hunter,
+        Healer,
+        Rogue
     }
 }

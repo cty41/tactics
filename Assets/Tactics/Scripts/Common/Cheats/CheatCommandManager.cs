@@ -4,6 +4,7 @@ using System.Linq;
 using Tactics.Common.Battle;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Players;
+using Tactics.Flow.Battle;
 using Tactics.Equipment;
 using Tactics.Roster;
 using UnityEngine;
@@ -64,9 +65,10 @@ namespace Tactics.Cheats
             RegisterCommand("battle", args =>
             {
                 if (args.Length < 1)
-                    return "[Error] Usage: battle win | battle lost";
+                    return "[Error] Usage: battle win [--skip] | battle lost";
 
                 string subCommand = args[0].ToLower();
+                bool skipSettlement = subCommand == "win" && args.Skip(1).Any(a => a == "--skip");
 
                 if (BattleController.Instance == null || !BattleController.Instance.IsBattleActive)
                     return "[Error] No active battle.";
@@ -87,7 +89,9 @@ namespace Tactics.Cheats
                 if (subCommand == "win")
                 {
                     result = new GameResult(humanPlayer, aiPlayers);
-                    message = "Human player wins the battle.";
+                    message = skipSettlement
+                        ? "Human player wins the battle (settlement skipped)."
+                        : "Human player wins the battle.";
                 }
                 else if (subCommand == "lost")
                 {
@@ -96,10 +100,17 @@ namespace Tactics.Cheats
                 }
                 else
                 {
-                    return "[Error] Usage: battle win | battle lost";
+                    return "[Error] Usage: battle win [--skip] | battle lost";
                 }
 
-                BattleController.Instance.EndBattle(result);
+                if (skipSettlement)
+                {
+                    _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                }
+                else
+                {
+                    BattleController.Instance.EndBattle(result);
+                }
                 return message;
             });
         }
