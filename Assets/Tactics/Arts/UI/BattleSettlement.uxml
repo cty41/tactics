@@ -1,5 +1,5 @@
 ﻿<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Tactics/Arts/UI/BattleSettlement.uss?fileID=7433441132597879392&amp;guid=2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e&amp;type=3#BattleSettlement"/>
+    <Style src="project://database/Assets/Tactics/Arts/UI/BattleSettlement.uss?fileID=7433441132597879392&amp;guid=07b6247dff36721498f8f1a226fe904a&amp;type=3#BattleSettlement"/>
     <ui:VisualElement name="BattleSettlementRoot" class="battle-settlement-root">
         <ui:VisualElement name="BattleSettlementPanel" class="battle-settlement-panel">
             <!-- 标题 -->

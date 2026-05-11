@@ -1,0 +1,64 @@
+﻿{
+  "uis": [
+    {
+      "id": "Home",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/Home.uxml",
+      "uss": "Assets/Tactics/Arts/UI/Home.uss"
+    },
+    {
+      "id": "Menu",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/Menu.uxml",
+      "uss": "Assets/Tactics/Arts/UI/Menu.uss"
+    },
+    {
+      "id": "RoguelikeMap",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/RoguelikeMap.uxml",
+      "uss": "Assets/Tactics/Arts/UI/RoguelikeMap.uss"
+    },
+    {
+      "id": "Battle",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/Battle.uxml",
+      "uss": "Assets/Tactics/Arts/UI/Battle.uss"
+    },
+    {
+      "id": "CheatConsole",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/CheatConsole.uxml",
+      "uss": "Assets/Tactics/Arts/UI/CheatConsole.uss"
+    },
+    {
+      "id": "Loading",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/Loading.uxml",
+      "uss": "Assets/Tactics/Arts/UI/Loading.uss"
+    },
+    {
+      "id": "Inventory",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/Inventory.uxml",
+      "uss": "Assets/Tactics/Arts/UI/Inventory.uss"
+    },
+    {
+      "id": "BattleSettlement",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/BattleSettlement.uxml",
+      "uss": "Assets/Tactics/Arts/UI/BattleSettlement.uss"
+    },
+    {
+      "id": "AttributeAllocation",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/AttributeAllocation.uxml",
+      "uss": "Assets/Tactics/Arts/UI/AttributeAllocation.uss"
+    },
+    {
+      "id": "SkillSelection",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/SkillSelection.uxml",
+      "uss": "Assets/Tactics/Arts/UI/SkillSelection.uss"
+    }
+  ]
+}

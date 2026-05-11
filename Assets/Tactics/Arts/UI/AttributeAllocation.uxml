@@ -1,5 +1,5 @@
 ﻿<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Style src="project://database/Assets/Tactics/Arts/UI/AttributeAllocation.uss"/>
+    <ui:Style src="project://database/Assets/Tactics/Arts/UI/AttributeAllocation.uss?fileID=7433441132597879392&amp;guid=2e471e588e949cf4b80fc597c32b7eec&amp;type=3#AttributeAllocation"/>
     <ui:VisualElement name="AttributeAllocationRoot" class="attribute-allocation-root">
         <ui:VisualElement name="AttributeAllocationPanel" class="attribute-allocation-panel">
             <!-- Header -->

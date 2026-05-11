@@ -6,6 +6,9 @@ using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Battle;
 using Tactics.Common.Players;
 using Tactics.Flow.Battle;
+using Tactics.Roster;
+
+using Tactics.Runtime.Utilities;
 
 namespace Tactics.Roguelike
 {
@@ -56,13 +59,24 @@ namespace Tactics.Roguelike
                 var allUnits = BattleController.Instance?.GetUnits();
                 int totalRounds = BattleController.Instance?.CurrentRound ?? 0;
 
+                // 加载玩家状态供结算流程使用
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+
+                // 注册 BattleSettlementFlow 来管理UI流程（必须在 StartSettlement 之前）
+                BattleSettlementFlow.Instance.Subscribe(BattleSettlementCoordinator.Instance, state);
+
                 BattleSettlementCoordinator.Instance.StartSettlement(
                     result,
                     totalRounds,
                     allUnits,
                     () =>
                     {
-                        _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                        // 保存状态
+                        if (state != null)
+                            PlayerAdventureStateStore.Save(state);
+                        TLog.Info("[RoguelikeBattleReturnHandler] Settlement complete. Scene transition skipped for testing.");
+                        // TODO: 恢复场景切换
+                        // _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
                     }
                 );
             }

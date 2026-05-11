@@ -120,6 +120,7 @@ namespace Tactics.Units
             if (cell != null)
             {
                 WorldPosition = cell.WorldPosition;
+                TLog.Info($"[TilemapUnit] Initialize {gameObject.name}: cellGrid=({cell.GridCoordinates.x},{cell.GridCoordinates.y}), cellWorldPos=({cell.WorldPosition.x:F2},{cell.WorldPosition.y:F2},{cell.WorldPosition.z:F2}), unitWorldPos=({WorldPosition.x:F2},{WorldPosition.y:F2},{WorldPosition.z:F2}), cellSize=({_gridTilemap.layoutGrid.cellSize.x:F2},{_gridTilemap.layoutGrid.cellSize.y:F2})");
                 ApplyVisualYOffset();
             }
             else

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Tactics.Cheats;
 using Tactics.Runtime.BattleLog;
@@ -22,11 +23,25 @@ namespace Tactics.UI
 
         protected override void OnShown()
         {
+            StartCoroutine(InitializeUI());
+        }
+
+        private IEnumerator InitializeUI()
+        {
+            yield return null;
+
             var root = Ui.GetRootElement(UIManager.UIId.CheatConsole);
             if (root == null)
             {
-                TLog.Warning("[CheatConsoleUI] Could not get root visual element.");
-                return;
+                TLog.Warning("[CheatConsoleUI] Root visual element still null after waiting. Retrying...");
+                yield return null;
+                root = Ui.GetRootElement(UIManager.UIId.CheatConsole);
+            }
+
+            if (root == null)
+            {
+                TLog.Error("[CheatConsoleUI] Failed to get root visual element after retry.");
+                yield break;
             }
 
             _rootContainer = root.Q<VisualElement>("CheatConsoleRoot");
@@ -50,7 +65,7 @@ namespace Tactics.UI
             if (_commandInput != null)
             {
                 _commandInput.RegisterCallback<NavigationSubmitEvent>(OnCommandSubmitted);
-                _commandInput.RegisterCallback<KeyDownEvent>(OnKeyDown);
+                _commandInput.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
                 _commandInput.style.height = 36;
                 _commandInput.style.backgroundColor = new Color(0.08f, 0.08f, 0.08f, 0.95f);
                 _commandInput.style.color = Color.white;
@@ -103,7 +118,7 @@ namespace Tactics.UI
         {
             if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
             {
-                evt.StopPropagation();
+                evt.StopImmediatePropagation();
                 SubmitCommand();
             }
         }

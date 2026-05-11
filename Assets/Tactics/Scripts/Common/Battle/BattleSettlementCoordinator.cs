@@ -84,9 +84,13 @@ namespace Tactics.Common.Battle
         {
             if (_isSettling)
             {
-                TLog.Warning("[BattleSettlementCoordinator] Settlement is already in progress.");
-                return;
+                TLog.Warning("[BattleSettlementCoordinator] Settlement was already in progress. Force resetting.");
+                _onComplete?.Invoke(); // 触发旧的回调避免泄漏
+                _onComplete = null;
             }
+            // 始终重置状态
+            _isSettling = false;
+            _currentPhase = SettlementPhase.None;
 
             if (allUnits == null)
             {

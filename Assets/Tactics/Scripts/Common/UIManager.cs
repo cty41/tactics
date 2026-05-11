@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,9 +9,25 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
+using System.IO;
 
 namespace Tactics
 {
+    [Serializable]
+    internal class UIConfigEntry
+    {
+        public string id;
+        public string type;
+        public string uxml;
+        public string uss;
+    }
+
+    [Serializable]
+    internal class UIConfig
+    {
+        public List<UIConfigEntry> uis;
+    }
+
     public sealed class UIManager
     {
         private static readonly UIManager _instance = new UIManager();
@@ -87,42 +103,77 @@ namespace Tactics
             }
         }
 
-        private const string RoguelikeMapUxmlPath = "Assets/Tactics/Arts/UI/RoguelikeMap.uxml";
-        private const string RoguelikeMapUssPath = "Assets/Tactics/Arts/UI/RoguelikeMap.uss";
-
-        private const string HomeUxmlPath = "Assets/Tactics/Arts/UI/Home.uxml";
-        private const string HomeUssPath = "Assets/Tactics/Arts/UI/Home.uss";
-        private const string MenuUxmlPath = "Assets/Tactics/Arts/UI/Menu.uxml";
-        private const string MenuUssPath = "Assets/Tactics/Arts/UI/Menu.uss";
-        private const string BattleUxmlPath = "Assets/Tactics/Arts/UI/Battle.uxml";
-        private const string BattleUssPath = "Assets/Tactics/Arts/UI/Battle.uss";
-        private const string CheatConsoleUxmlPath = "Assets/Tactics/Arts/UI/CheatConsole.uxml";
-        private const string CheatConsoleUssPath = "Assets/Tactics/Arts/UI/CheatConsole.uss";
-        private const string LoadingUxmlPath = "Assets/Tactics/Arts/UI/Loading.uxml";
-        private const string LoadingUssPath = "Assets/Tactics/Arts/UI/Loading.uss";
-        private const string InventoryUxmlPath = "Assets/Tactics/Arts/UI/Inventory.uxml";
-        private const string InventoryUssPath = "Assets/Tactics/Arts/UI/Inventory.uss";
-        private const string BattleSettlementUxmlPath = "Assets/Tactics/Arts/UI/BattleSettlement.uxml";
-        private const string BattleSettlementUssPath = "Assets/Tactics/Arts/UI/BattleSettlement.uss";
-        private const string AttributeAllocationUxmlPath = "Assets/Tactics/Arts/UI/AttributeAllocation.uxml";
-        private const string AttributeAllocationUssPath = "Assets/Tactics/Arts/UI/AttributeAllocation.uss";
-        private const string SkillSelectionUxmlPath = "Assets/Tactics/Arts/UI/SkillSelection.uxml";
-        private const string SkillSelectionUssPath = "Assets/Tactics/Arts/UI/SkillSelection.uss";
         private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
 
-        private static readonly Dictionary<UIId, UIType> s_uiTypeMap = new()
+        private static Dictionary<UIId, UIType> s_uiTypeMap;
+        private static Dictionary<UIId, (string uxml, string uss)> s_uiPaths;
+        private static bool s_configLoaded;
+
+        private static void EnsureConfigLoaded()
         {
-            { UIId.Home, UIType.UiToolkitUxml },
-            { UIId.Menu, UIType.UiToolkitUxml },
-            { UIId.RoguelikeMap, UIType.UiToolkitUxml },
-            { UIId.Battle, UIType.UiToolkitUxml },
-            { UIId.CheatConsole, UIType.UiToolkitUxml },
-            { UIId.Loading, UIType.UiToolkitUxml },
-            { UIId.Inventory, UIType.UiToolkitUxml },
-            { UIId.BattleSettlement, UIType.UiToolkitUxml },
-            { UIId.AttributeAllocation, UIType.UiToolkitUxml },
-            { UIId.SkillSelection, UIType.UiToolkitUxml },
-        };
+            if (s_configLoaded) return;
+            LoadConfig();
+            s_configLoaded = true;
+        }
+
+        private static void LoadConfig()
+        {
+            const string configPath = "Assets/Tactics/GameData/ui_config.json";
+
+            string json = null;
+            var mgr = GameAssetManager.Instance;
+
+            if (mgr != null && mgr.IsInitialized)
+            {
+                var textAsset = mgr.Load<TextAsset>(configPath);
+                if (textAsset != null)
+                {
+                    json = textAsset.text;
+                    mgr.Release(configPath);
+                }
+            }
+
+            #if UNITY_EDITOR
+            if (json == null && File.Exists(configPath))
+            {
+                json = File.ReadAllText(configPath);
+            }
+#endif
+
+            if (json == null)
+            {
+                TLog.Error($"[UIManager] ui_config.json not found at {configPath}");
+                s_uiPaths = new Dictionary<UIId, (string, string)>();
+                s_uiTypeMap = new Dictionary<UIId, UIType>();
+                return;
+            }
+
+            var config = JsonUtility.FromJson<UIConfig>(json);
+            if (config?.uis == null)
+            {
+                TLog.Error("[UIManager] Failed to parse ui_config.json");
+                s_uiPaths = new Dictionary<UIId, (string, string)>();
+                s_uiTypeMap = new Dictionary<UIId, UIType>();
+                return;
+            }
+
+            s_uiPaths = new Dictionary<UIId, (string, string)>(config.uis.Count);
+            s_uiTypeMap = new Dictionary<UIId, UIType>(config.uis.Count);
+
+            foreach (var entry in config.uis)
+            {
+                if (Enum.TryParse<UIId>(entry.id, out var uiId) &&
+                    Enum.TryParse<UIType>(entry.type, out var uiType))
+                {
+                    s_uiPaths[uiId] = (entry.uxml, entry.uss);
+                    s_uiTypeMap[uiId] = uiType;
+                }
+                else
+                {
+                    TLog.Warning($"[UIManager] Invalid UI config entry: id={entry.id}, type={entry.type}");
+                }
+            }
+        }
 
         private readonly Dictionary<UIId, UIInstance> _instances = new();
         private readonly Dictionary<UIId, Task<UIInstance>> _loadingTasks = new();
@@ -140,17 +191,16 @@ namespace Tactics
             return _panelSettings;
         }
 
-private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
-{
-    if (_panelSettings == null)
-    {
-        _panelSettings = mgr.Load<PanelSettings>(PanelSettingsPath);
-        if (_panelSettings == null)
-            TLog.Warning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
-    }
-    return _panelSettings;
-}
-
+        private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
+        {
+            if (_panelSettings == null)
+            {
+                _panelSettings = mgr.Load<PanelSettings>(PanelSettingsPath);
+                if (_panelSettings == null)
+                    TLog.Warning("[UIManager] Failed to load PanelSettings. UIDocument may not render correctly.");
+            }
+            return _panelSettings;
+        }
 
         private InputAction _toggleConsoleAction;
         private bool _inputInitialized;
@@ -251,42 +301,23 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
 
         private static string GetAssetPath(UIId id)
         {
-            return id switch
-            {
-                UIId.Home => HomeUxmlPath,
-                UIId.Menu => MenuUxmlPath,
-                UIId.RoguelikeMap => RoguelikeMapUxmlPath,
-                UIId.Battle => BattleUxmlPath,
-                UIId.CheatConsole => CheatConsoleUxmlPath,
-                UIId.Loading => LoadingUxmlPath,
-                UIId.Inventory => InventoryUxmlPath,
-                UIId.BattleSettlement => BattleSettlementUxmlPath,
-                UIId.AttributeAllocation => AttributeAllocationUxmlPath,
-                UIId.SkillSelection => SkillSelectionUxmlPath,
-                _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.")
-            };
+            EnsureConfigLoaded();
+            if (s_uiPaths.TryGetValue(id, out var paths))
+                return paths.uxml;
+            throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId asset mapping.");
         }
 
         private static string GetUssPath(UIId id)
         {
-            return id switch
-            {
-                UIId.Home => HomeUssPath,
-                UIId.Menu => MenuUssPath,
-                UIId.RoguelikeMap => RoguelikeMapUssPath,
-                UIId.Battle => BattleUssPath,
-                UIId.CheatConsole => CheatConsoleUssPath,
-                UIId.Loading => LoadingUssPath,
-                UIId.Inventory => InventoryUssPath,
-                UIId.BattleSettlement => BattleSettlementUssPath,
-                UIId.AttributeAllocation => AttributeAllocationUssPath,
-                UIId.SkillSelection => SkillSelectionUssPath,
-                _ => string.Empty
-            };
+            EnsureConfigLoaded();
+            if (s_uiPaths.TryGetValue(id, out var paths))
+                return paths.uss;
+            return string.Empty;
         }
 
         private static UIType GetUIType(UIId id)
         {
+            EnsureConfigLoaded();
             return s_uiTypeMap.TryGetValue(id, out var type) ? type : throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown UIId type mapping.");
         }
 
@@ -345,92 +376,90 @@ private PanelSettings GetPanelSettingsSync(GameAssetManager mgr)
             };
         }
 
-private async Task<UIInstance> LoadUguiPrefabAsync(UIId id, string prefabPath, GameAssetManager mgr)
-{
-    var prefab = await mgr.LoadAsync<GameObject>(prefabPath);
-    if (prefab == null)
-        throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
+        private async Task<UIInstance> LoadUguiPrefabAsync(UIId id, string prefabPath, GameAssetManager mgr)
+        {
+            var prefab = await mgr.LoadAsync<GameObject>(prefabPath);
+            if (prefab == null)
+                throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
 
-    return CreateUguiInstance(id, prefab);
-}
+            return CreateUguiInstance(id, prefab);
+        }
 
-private UIInstance CreateUguiInstance(UIId id, GameObject prefab)
-{
-    var uiRoot = UiRoot;
-    if (uiRoot == null)
-        throw new InvalidOperationException("[UIManager] No Canvas found for UGUI prefab. Add a Canvas or call SetUiRoot().");
+        private UIInstance CreateUguiInstance(UIId id, GameObject prefab)
+        {
+            var uiRoot = UiRoot;
+            if (uiRoot == null)
+                throw new InvalidOperationException("[UIManager] No Canvas found for UGUI prefab. Add a Canvas or call SetUiRoot().");
 
-    var go = UnityEngine.Object.Instantiate(prefab, uiRoot, false);
-    go.name = id.ToString();
-    EnsureUIController(id, go);
-    go.SetActive(false);
-    return new UIInstance(UIType.UguiPrefab, go, null);
-}
+            var go = UnityEngine.Object.Instantiate(prefab, uiRoot, false);
+            go.name = id.ToString();
+            EnsureUIController(id, go);
+            go.SetActive(false);
+            return new UIInstance(UIType.UguiPrefab, go, null);
+        }
 
-private UIInstance LoadUguiPrefabSync(UIId id, string prefabPath, GameAssetManager mgr)
-{
-    var prefab = mgr.Load<GameObject>(prefabPath);
-    if (prefab == null)
-        throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
+        private UIInstance LoadUguiPrefabSync(UIId id, string prefabPath, GameAssetManager mgr)
+        {
+            var prefab = mgr.Load<GameObject>(prefabPath);
+            if (prefab == null)
+                throw new InvalidOperationException($"[UIManager] Failed to load prefab: {prefabPath}");
 
-    return CreateUguiInstance(id, prefab);
-}
+            return CreateUguiInstance(id, prefab);
+        }
 
+        private async Task<UIInstance> LoadUiToolkitAsync(UIId id, string uxmlPath, GameAssetManager mgr)
+        {
+            var visualTree = await mgr.LoadAsync<VisualTreeAsset>(uxmlPath);
+            if (visualTree == null)
+                throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
 
-private async Task<UIInstance> LoadUiToolkitAsync(UIId id, string uxmlPath, GameAssetManager mgr)
-{
-    var visualTree = await mgr.LoadAsync<VisualTreeAsset>(uxmlPath);
-    if (visualTree == null)
-        throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
+            StyleSheet styleSheet = null;
+            var ussPath = GetUssPath(id);
+            if (!string.IsNullOrEmpty(ussPath))
+            {
+                styleSheet = await mgr.LoadAsync<StyleSheet>(ussPath);
+            }
 
-    StyleSheet styleSheet = null;
-    var ussPath = GetUssPath(id);
-    if (!string.IsNullOrEmpty(ussPath))
-    {
-        styleSheet = await mgr.LoadAsync<StyleSheet>(ussPath);
-    }
+            var panelSettings = await GetPanelSettingsAsync(mgr);
 
-    var panelSettings = await GetPanelSettingsAsync(mgr);
+            return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
+        }
 
-    return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
-}
+        private UIInstance CreateUiToolkitInstance(UIId id, VisualTreeAsset visualTree, StyleSheet styleSheet, PanelSettings panelSettings)
+        {
+            var hostGo = new GameObject(id.ToString());
 
-private UIInstance CreateUiToolkitInstance(UIId id, VisualTreeAsset visualTree, StyleSheet styleSheet, PanelSettings panelSettings)
-{
-    var hostGo = new GameObject(id.ToString());
+            var uiDoc = hostGo.AddComponent<UIDocument>();
+            uiDoc.visualTreeAsset = visualTree;
+            uiDoc.panelSettings = panelSettings;
 
-    var uiDoc = hostGo.AddComponent<UIDocument>();
-    uiDoc.visualTreeAsset = visualTree;
-    uiDoc.panelSettings = panelSettings;
+            if (styleSheet != null && uiDoc.rootVisualElement != null)
+                uiDoc.rootVisualElement.styleSheets.Add(styleSheet);
 
-    if (styleSheet != null && uiDoc.rootVisualElement != null)
-        uiDoc.rootVisualElement.styleSheets.Add(styleSheet);
+            EnsureUIController(id, hostGo);
 
-    EnsureUIController(id, hostGo);
+            hostGo.SetActive(false);
 
-    hostGo.SetActive(false);
+            return new UIInstance(UIType.UiToolkitUxml, hostGo, uiDoc);
+        }
 
-    return new UIInstance(UIType.UiToolkitUxml, hostGo, uiDoc);
-}
+        private UIInstance LoadUiToolkitSync(UIId id, string uxmlPath, GameAssetManager mgr)
+        {
+            var visualTree = mgr.Load<VisualTreeAsset>(uxmlPath);
+            if (visualTree == null)
+                throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
 
-private UIInstance LoadUiToolkitSync(UIId id, string uxmlPath, GameAssetManager mgr)
-{
-    var visualTree = mgr.Load<VisualTreeAsset>(uxmlPath);
-    if (visualTree == null)
-        throw new InvalidOperationException($"[UIManager] Failed to load VisualTreeAsset: {uxmlPath}");
+            StyleSheet styleSheet = null;
+            var ussPath = GetUssPath(id);
+            if (!string.IsNullOrEmpty(ussPath))
+            {
+                styleSheet = mgr.Load<StyleSheet>(ussPath);
+            }
 
-    StyleSheet styleSheet = null;
-    var ussPath = GetUssPath(id);
-    if (!string.IsNullOrEmpty(ussPath))
-    {
-        styleSheet = mgr.Load<StyleSheet>(ussPath);
-    }
+            var panelSettings = GetPanelSettingsSync(mgr);
 
-    var panelSettings = GetPanelSettingsSync(mgr);
-
-    return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
-}
-
+            return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
+        }
 
         private static void EnsureUIController(UIId id, GameObject root)
         {
@@ -473,4 +502,3 @@ private UIInstance LoadUiToolkitSync(UIId id, string uxmlPath, GameAssetManager 
         }
     }
 }
-
