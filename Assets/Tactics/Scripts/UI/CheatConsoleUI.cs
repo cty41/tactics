@@ -15,6 +15,11 @@ namespace Tactics.UI
     public sealed class CheatConsoleUI : UIControllerBase
     {
         private const int MaxLogEntries = 50;
+        private const int MaxHistorySize = 50;
+        private const string HistoryPrefsKey = "Tactics_CheatConsole_History";
+
+        private readonly List<string> _commandHistory = new List<string>();
+        private int _historyIndex = -1;
 
         private VisualElement _rootContainer;
         private ScrollView _logList;
@@ -70,6 +75,7 @@ namespace Tactics.UI
                 _commandInput.style.backgroundColor = new Color(0.08f, 0.08f, 0.08f, 0.95f);
                 _commandInput.style.color = Color.white;
                 _commandInput.Focus();
+                LoadHistory();
             }
         }
 
@@ -121,6 +127,20 @@ namespace Tactics.UI
                 evt.StopImmediatePropagation();
                 SubmitCommand();
             }
+            else if (evt.keyCode == KeyCode.UpArrow)
+            {
+                evt.StopPropagation();
+                NavigateHistory(-1);
+            }
+            else if (evt.keyCode == KeyCode.DownArrow)
+            {
+                evt.StopPropagation();
+                NavigateHistory(1);
+            }
+            else
+            {
+                _historyIndex = -1;
+            }
         }
 
         private void SubmitCommand()
@@ -159,7 +179,67 @@ namespace Tactics.UI
             ScrollToBottom();
 
             _commandInput.value = string.Empty;
+
+            // 添加到历史记录（去重）
+            string lastCmd = _commandHistory.Count > 0 ? _commandHistory[_commandHistory.Count - 1] : null;
+            if (lastCmd == command)
+                _commandHistory.RemoveAt(_commandHistory.Count - 1);
+            _commandHistory.Add(command);
+            if (_commandHistory.Count > MaxHistorySize)
+                _commandHistory.RemoveAt(0);
+            _historyIndex = -1;
+            SaveHistory();
+
             _commandInput.Focus();
+        }
+
+        private void SaveHistory()
+        {
+            if (_commandHistory.Count == 0) return;
+            PlayerPrefs.SetString(HistoryPrefsKey, string.Join("|", _commandHistory));
+        }
+
+        private void LoadHistory()
+        {
+            if (!PlayerPrefs.HasKey(HistoryPrefsKey)) return;
+            string saved = PlayerPrefs.GetString(HistoryPrefsKey);
+            var commands = saved.Split('|');
+            _commandHistory.Clear();
+            foreach (var cmd in commands)
+            {
+                if (!string.IsNullOrWhiteSpace(cmd))
+                    _commandHistory.Add(cmd);
+            }
+            while (_commandHistory.Count > MaxHistorySize)
+                _commandHistory.RemoveAt(0);
+        }
+
+        private void NavigateHistory(int direction)
+        {
+            if (_commandInput == null || _commandHistory.Count == 0)
+                return;
+
+            // 首次 ArrowUp（direction=-1）：从最新命令开始
+            if (_historyIndex < 0 && direction < 0)
+                _historyIndex = _commandHistory.Count;
+
+            _historyIndex += direction;
+
+            if (_historyIndex < 0)
+            {
+                _historyIndex = -1;
+                _commandInput.value = string.Empty;
+                return;
+            }
+
+            if (_historyIndex >= _commandHistory.Count)
+            {
+                _historyIndex = _commandHistory.Count - 1;
+                return;
+            }
+
+            _commandInput.value = _commandHistory[_historyIndex];
+            _commandInput.SelectRange(_commandInput.value.Length, _commandInput.value.Length);
         }
 
         private void ScrollToBottom()
