@@ -126,6 +126,30 @@ namespace Tactics.Common.Units
         [SerializeField] private int _defenceFactor = 1;
         public int DefenceFactor { get { return _defenceFactor; } set { _defenceFactor = value; } }
 
+        [SerializeField] private float _initiative;
+        /// <summary>
+        /// Determines turn order. Higher initiative acts first.
+        /// </summary>
+        public float Initiative { get { return _initiative; } set { _initiative = value; } }
+
+        [SerializeField] private int _reach = 1;
+        /// <summary>
+        /// Melee attack range in grid cells.
+        /// </summary>
+        public int Reach { get { return _reach; } set { _reach = value; } }
+
+        [SerializeField] private int _range;
+        /// <summary>
+        /// Ranged attack range in grid cells.
+        /// </summary>
+        public int Range { get { return _range; } set { _range = value; } }
+
+        [SerializeField] private bool _isDowned;
+        /// <summary>
+        /// Whether the unit is incapacitated (HP reduced to zero or below).
+        /// </summary>
+        public bool IsDowned { get { return _isDowned; } set { _isDowned = value; } }
+
         /// <summary>
         /// The buff component that manages buffs for this unit.
         /// </summary>
@@ -166,7 +190,7 @@ namespace Tactics.Common.Units
             _usedBasicAbilitiesThisTurn = new HashSet<string>();
             RecalculateDerivedStats();
             Health = MaxHealth;
-            Mana = MaxMana;
+            Mana = Charisma;
             MovementPoints = MaxMovementPoints;
 
             _baseAbilities = new List<IAbility>();
@@ -231,7 +255,7 @@ namespace Tactics.Common.Units
         {
             MovementPoints = MaxMovementPoints;
             _usedBasicAbilitiesThisTurn.Clear();
-            Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Intelligence));
+            Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Mathf.FloorToInt(Intelligence / 2f)));
             _buffComponent.OnTurnEnd(gridController);
         }
 
@@ -419,7 +443,18 @@ namespace Tactics.Common.Units
             MaxHealth = Mathf.Max(1, Constitution * 4);
             MaxMana = Mathf.Max(0, Charisma * 3);
             MaxMovementPoints = Mathf.Max(1f, Speed);
+            Initiative = Speed * 2;
         }
+        /// <summary>
+        /// Restores HP and MP after battle. If the unit was downed, it recovers.
+        /// </summary>
+        public virtual void PostBattleRecovery()
+        {
+            Health = Mathf.Min(MaxHealth, Health + Constitution * 2);
+            Mana = Mathf.Min(MaxMana, Mana + Charisma);
+            IsDowned = false;
+        }
+
         public void InvokeUnitSelected()
         {
             UnitSelected?.Invoke(this);

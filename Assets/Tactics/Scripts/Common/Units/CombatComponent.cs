@@ -35,6 +35,16 @@ namespace Tactics.Common.Units
         {
             _unitReference.Health += healthChangeAmount;
             _unitReference.InvokeHealthChanged(new HealthChangedEventArgs(_unitReference, sourceUnit, healthChangeAmount));
+
+            if (_unitReference.Health < 0)
+            {
+                _unitReference.IsDowned = true;
+            }
+            else if (_unitReference.Health >= 0 && _unitReference.IsDowned)
+            {
+                _unitReference.IsDowned = false;
+            }
+
             if (_unitReference.Health <= 0)
             {
                 _unitReference.InvokeDestroyed(new UnitDestroyedEventArgs(_unitReference, sourceUnit));
@@ -102,7 +112,11 @@ namespace Tactics.Common.Units
         public static float CalculateBaseDamageBeforeCrit(IUnit unitReference, bool isRangedDamage)
         {
             var baseDamage = unitReference.AttackFactor;
-            var attributeBonus = GetAttributeScalingBonus(unitReference, isRangedDamage);
+            float attributeBonus;
+            if (isRangedDamage)
+                attributeBonus = Mathf.FloorToInt((unitReference.Agility - NeutralAttributeValue) / 2f);
+            else
+                attributeBonus = unitReference.Strength - NeutralAttributeValue;
             return Math.Max(baseDamage + attributeBonus, 1);
         }
 
@@ -184,10 +198,32 @@ namespace Tactics.Common.Units
             return unit.DodgeRate;
         }
 
+        /// <summary>
+        /// 基于 Agility 计算基础闪避率。
+        /// </summary>
+        public static float CalculateDodgeChance(IUnit unit)
+        {
+            return unit.Agility > NeutralAttributeValue
+                ? (unit.Agility - NeutralAttributeValue) * 0.02f
+                : 0f;
+        }
+
         public static bool IsHit(IUnit caster, IUnit target, float accuracyPenalty)
         {
-            float hitChance = Mathf.Clamp01(1f - target.DodgeRate - accuracyPenalty);
-            return _rng.NextDouble() < hitChance;
+            float finalHitChance = 1f;
+
+            // Agility 基础闪避
+            float agilityDodge = CalculateDodgeChance(target);
+            finalHitChance *= (1f - agilityDodge);
+
+            // Buff、装备等其他来源的闪避率
+            finalHitChance *= (1f - target.DodgeRate);
+
+            // 环境/技能造成的命中惩罚
+            finalHitChance *= (1f - accuracyPenalty);
+
+            finalHitChance = Mathf.Clamp01(finalHitChance);
+            return _rng.NextDouble() < finalHitChance;
         }
 
         private static float GetAttributeScalingBonus(IUnit unitReference, bool isRangedDamage)

@@ -109,6 +109,26 @@ namespace Tactics.Common.Units
         float MaxMana { get; set; }
 
         /// <summary>
+        /// 先攻值，由 Speed × 2 计算得出，决定行动顺序。
+        /// </summary>
+        float Initiative { get; set; }
+
+        /// <summary>
+        /// 近战攻击范围，基础值为 1。
+        /// </summary>
+        int Reach { get; set; }
+
+        /// <summary>
+        /// 远程攻击范围。
+        /// </summary>
+        int Range { get; set; }
+
+        /// <summary>
+        /// 昏迷状态，当 HP 低于 0 时触发。
+        /// </summary>
+        bool IsDowned { get; set; }
+
+        /// <summary>
         /// Gets the portrait sprite of the unit.
         /// </summary>
         Sprite Portrait { get; }

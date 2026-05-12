@@ -145,7 +145,8 @@ namespace Tactics.Common.Battle
             int requiredExp = ExperienceTable.GetExperienceToNextLevel(character.Level);
             character.Experience -= requiredExp;
             character.Level++;
-            character.AttributePoints++;
+            // 每次升级获得1点属性点
+            character.AttributePoints += 1;
 
             TLog.Info($"[BattleSettlementCoordinator] Character {character.DisplayName} leveled up! Level={character.Level}, RemainingExp={character.Experience}, AttributePoints={character.AttributePoints}");
 

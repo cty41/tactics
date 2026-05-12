@@ -10,15 +10,15 @@ using UnityEngine;
 namespace Tactics.Controllers.TurnResolvers
 {
     /// <summary>
-    /// A turn resolver that implements a unit-by-unit turn system based on unit speed.
-    /// Units take turns in a fixed cycle ordered by speed (highest first), with stable secondary ordering.
+    /// A turn resolver that implements a unit-by-unit turn system based on unit initiative.
+    /// Units take turns in a fixed cycle ordered by initiative (highest first), with stable secondary ordering.
     /// Each turn activates only one unit at a time.
     /// </summary>
     [Serializable]
     public class UnitSpeedTurnResolver : ITurnResolver
     {
         /// <summary>
-        /// Internal queue of units in speed order. This queue persists throughout the game.
+        /// Internal queue of units in initiative order. This queue persists throughout the game.
         /// </summary>
         private Queue<IUnit> _unitQueue = new Queue<IUnit>();
 
@@ -28,7 +28,7 @@ namespace Tactics.Controllers.TurnResolvers
             _unitQueue.Clear();
             var units = gridController.UnitManager.GetUnits()
                 .Where(u => u.Health > 0) // Only include alive units
-                .OrderByDescending(u => u.Speed) // Speed descending
+                .OrderByDescending(u => u.Initiative) // Initiative descending
                 .ThenBy(u => u.PlayerNumber) // Player number ascending (stable order)
                 .ThenBy(u => u.UnitID) // Unit ID ascending (stable order)
                 .ToList();
@@ -84,6 +84,14 @@ namespace Tactics.Controllers.TurnResolvers
             if (!nextUnit.CanAct)
             {
                 // Keep unit in queue for next cycle, but skip it this turn
+                _unitQueue.Enqueue(nextUnit);
+                return ResolveNextUnit(gridController, skipCount + 1);
+            }
+
+            // Check if unit is downed (昏迷)
+            if (nextUnit.IsDowned)
+            {
+                // Keep downed unit in queue, but skip it this turn
                 _unitQueue.Enqueue(nextUnit);
                 return ResolveNextUnit(gridController, skipCount + 1);
             }

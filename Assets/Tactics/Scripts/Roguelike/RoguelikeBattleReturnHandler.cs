@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -8,6 +9,7 @@ using Tactics.Common.Players;
 using Tactics.Flow.Battle;
 using Tactics.Roster;
 
+using Tactics.Common.Units;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.Roguelike
@@ -59,6 +61,10 @@ namespace Tactics.Roguelike
                 var allUnits = BattleController.Instance?.GetUnits();
                 int totalRounds = BattleController.Instance?.CurrentRound ?? 1;
 
+                // 战后恢复 - 人类单位
+                if (allUnits != null)
+                    ApplyPostBattleRegeneration(allUnits);
+
                 // 加载玩家状态供结算流程使用
                 var state = PlayerAdventureStateStore.LoadRepairAndSave();
 
@@ -84,6 +90,30 @@ namespace Tactics.Roguelike
             else
             {
                 _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+            }
+        }
+
+        /// <summary>
+        /// 战后恢复：对人类单位恢复 HP 和 MP，并清除昏迷状态。
+        /// </summary>
+        private static void ApplyPostBattleRegeneration(IEnumerable<IUnit> allUnits)
+        {
+            foreach (var unit in allUnits)
+            {
+                if (unit.PlayerNumber != 0)
+                    continue;
+
+                float hpRegen = unit.Constitution * 2;
+                float mpRegen = unit.Charisma;
+
+                unit.Health = Mathf.Min(unit.MaxHealth, unit.Health + hpRegen);
+                unit.Mana = Mathf.Min(unit.MaxMana, unit.Mana + mpRegen);
+
+                if (unit.IsDowned)
+                    unit.IsDowned = false;
+
+                string unitName = unit is INamedUnit named ? named.UnitName : $"Unit_{unit.UnitID}";
+                TLog.Info($"[PostBattleRegen] {unitName}: HP +{hpRegen}, MP +{mpRegen}");
             }
         }
 
