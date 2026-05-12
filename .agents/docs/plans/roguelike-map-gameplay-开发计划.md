@@ -36,7 +36,7 @@
 
 ### In Scope
 
-1. 区域系统（3个暗黑风主题区域：诅咒之地/大教堂深处/地狱裂口）
+1. 区域系统（3个暗黑风主题区域：黑暗森林/墓地/修道院）
 2. 节点状态系统（逐步揭示机制：未揭示/已揭示/可到达/已访问）
 3. 事件系统（JSON配置 + BG3式属性判定 + 成功率显示）
 4. 事件编辑器工具（UI Toolkit Editor + Visual Scripting，WYSIWYG拖拽编辑，导出JSON）
@@ -66,14 +66,14 @@
 - **新增文件**:
   - `Assets/Tactics/Scripts/RoguelikeMap/Regions/RoguelikeRegion.cs`
   - `Assets/Tactics/Scripts/RoguelikeMap/Regions/RegionManager.cs`
-  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/CursedLandsRegionConfig.asset`
-  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/CathedralDepthsRegionConfig.asset`
-  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/HellsRiftRegionConfig.asset`
+  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/DarkForestRegionConfig.asset`
+  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/BurialGroundsRegionConfig.asset`
+  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/MonasteryRegionConfig.asset`
 - **验收标准**:
   - [ ] `RoguelikeRegion` 包含 regionId/regionName/description/layerCount/nodeDistribution/eventPoolIds
-  - [ ] 区域1"诅咒之地": 3层，MinorEnemy 35%, Elite 10%, Mystery 25%, Store 10%, Treasure 10%, Rest 10%
-  - [ ] 区域2"大教堂深处": 3层，MinorEnemy 30%, Elite 20%, Mystery 20%, Store 15%, Treasure 5%, Rest 10%
-  - [ ] 区域3"地狱裂口": 2层+Boss，MinorEnemy 25%, Elite 25%, Mystery 15%, Store 5%, Treasure 10%, Rest 10%, Boss 10%
+  - [ ] 区域1"黑暗森林": 3层，MinorEnemy 35%, Elite 10%, Mystery 25%, Store 10%, Treasure 10%, Rest 10%
+  - [ ] 区域2"墓地": 3层，MinorEnemy 30%, Elite 20%, Mystery 20%, Store 15%, Treasure 5%, Rest 10%
+  - [ ] 区域3"修道院": 2层+Boss，MinorEnemy 25%, Elite 25%, Mystery 15%, Store 5%, Treasure 10%, Rest 10%, Boss 10%
   - [ ] `RegionManager` 可加载和切换区域配置
 
 #### Task 2: 修改地图生成器支持区域
@@ -82,7 +82,7 @@
 - **输出**: 修改后的 `RoguelikeMapGenerator`
 - **修改文件**: `RoguelikeMapGenerator.cs`
 - **验收标准**:
-  - [ ] 地图按区域分层生成（诅咒之地3层 → 大教堂3层 → 地狱裂口2层+Boss）
+  - [ ] 地图按区域分层生成（黑暗森林3层 → 墓地3层 → 修道院2层+Boss）
   - [ ] 节点分布符合区域配置中的概率
   - [ ] Boss节点固定在每个区域的最后一层
   - [ ] 兼容现有地图生成逻辑（不影响非区域模式）
@@ -157,16 +157,16 @@
   - `Assets/Tactics/Scripts/RoguelikeMap/Events/EventOption.cs`
   - `Assets/Tactics/Scripts/RoguelikeMap/Events/EventCondition.cs`
   - `Assets/Tactics/Scripts/RoguelikeMap/Events/EventResult.cs`
-  - `Assets/Tactics/Resources/Events/CursedLands/*.json`（诅咒之地事件，通过编辑器创建至少5个）
-  - `Assets/Tactics/Resources/Events/CathedralDepths/*.json`（大教堂事件，至少5个）
-  - `Assets/Tactics/Resources/Events/HellsRift/*.json`（地狱裂口事件，至少5个）
+  - `Assets/Tactics/Resources/Events/DarkForest/*.json`（黑暗森林事件，通过编辑器创建至少5个）
+  - `Assets/Tactics/Resources/Events/BurialGrounds/*.json`（墓地事件，至少5个）
+  - `Assets/Tactics/Resources/Events/Monastery/*.json`（修道院事件，至少5个）
 - **事件JSON结构**:
   ```json
   {
     "eventId": "cursed_chest_001",
     "title": "被诅咒的宝箱",
     "description": "...",
-    "region": "CursedLands",
+    "region": "DarkForest",
     "options": [
       {
         "optionId": "smash",
@@ -250,12 +250,12 @@
 #### Task 11: 事件内容扩展（通过编辑器创建）
 
 - **目标**: 使用事件编辑器批量创建30+个事件
-- **输出**: 诅咒之地10个/大教堂深处12个/地狱裂口8个事件JSON（编辑器导出）
+- **输出**: 黑暗森林10个/墓地12个/修道院8个事件JSON（编辑器导出）
 - **验收标准**:
   - [ ] 所有事件通过事件编辑器创建和导出
   - [ ] 每个事件2-4个有意义的选项（至少含1个自动成功选项）
   - [ ] 覆盖单属性抉择/多属性分工/团队协作/条件限制四种类型
-  - [ ] 文本符合暗黑破坏神风格（诅咒之地：堕落祭坛、求救村民；大教堂：亡灵低语、圣物；地狱裂口：恶魔契约、黑暗真相）
+  - [ ] 文本符合暗黑破坏神风格（黑暗森林：堕落祭坛、求救村民；墓地：亡灵低语、圣物；修道院：恶魔契约、黑暗真相）
   - [ ] 数值平衡（奖励不过强不过弱）
 
 #### Task 12: 数值平衡
@@ -285,7 +285,7 @@
   - [ ] "继续探索"：进入下一区域的地图
   - [ ] "返回避难所"：显示Run结算界面（获得的金币/装备/经验汇总）
   - [ ] 返回避难所后回到主菜单，所有奖励结算完成
-  - [ ] 最后一个Boss（地狱裂口Boss）击败后直接进入胜利结算，无"继续探索"
+  - [ ] 最后一个Boss（修道院Boss）击败后直接进入胜利结算，无"继续探索"
 
 ---
 
@@ -355,7 +355,7 @@ Task 1 (区域数据层)
 
 ## 整体验收标准
 
-- [ ] 可以开始一局完整的暗黑风Roguelike Run（诅咒之地 → 大教堂深处 → 地狱裂口通关）
+- [ ] 可以开始一局完整的暗黑风Roguelike Run（黑暗森林 → 墓地 → 修道院通关）
 - [ ] 可以探索3个主题区域，每区域有独特的节点分布和事件主题
 - [ ] 可以触发事件并看到BG3式属性判定选项（显示成功率百分比）
 - [ ] 可以使用事件编辑器创建、编辑、导出事件JSON
