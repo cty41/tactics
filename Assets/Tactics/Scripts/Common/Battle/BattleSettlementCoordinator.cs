@@ -43,6 +43,7 @@ namespace Tactics.Common.Battle
         private int _totalRounds;
         private List<IUnit> _allUnits;
         private bool _isSettling;
+        private PlayerAdventureState _state;
 
         #endregion
 
@@ -79,8 +80,9 @@ namespace Tactics.Common.Battle
         /// <param name="result">战斗结果（胜者/败者）。</param>
         /// <param name="totalRounds">总回合数。</param>
         /// <param name="allUnits">参与战斗的所有单位。</param>
+        /// <param name="state">玩家冒险状态。</param>
         /// <param name="onComplete">结算完成时的回调。</param>
-        public void StartSettlement(GameResult result, int totalRounds, IEnumerable<IUnit> allUnits, Action onComplete)
+        public void StartSettlement(GameResult result, int totalRounds, IEnumerable<IUnit> allUnits, PlayerAdventureState state, Action onComplete)
         {
             if (_isSettling)
             {
@@ -102,6 +104,7 @@ namespace Tactics.Common.Battle
             _result = result;
             _totalRounds = totalRounds;
             _allUnits = new List<IUnit>(allUnits);
+            _state = state;
             _onComplete = onComplete;
             _currentPhase = SettlementPhase.None;
 
@@ -198,6 +201,7 @@ namespace Tactics.Common.Battle
             _result = default;
             _totalRounds = 0;
             _allUnits = null;
+            _state = null;
             _isSettling = false;
 
             TLog.Info("[BattleSettlementCoordinator] State reset.");
@@ -226,6 +230,20 @@ namespace Tactics.Common.Battle
 
             // 触发事件通知 UI 层显示结算信息
             OnRewardsCalculated?.Invoke(rewards);
+
+            // 将经验值应用到角色数据
+            if (rewards.ExperiencePerCharacter != null && _state != null && _state.Roster != null)
+            {
+                foreach (var kvp in rewards.ExperiencePerCharacter)
+                {
+                    var character = _state.Roster.FirstOrDefault(c => c.Id == kvp.Key);
+                    if (character != null)
+                    {
+                        character.Experience += kvp.Value;
+                        TLog.Info($"[BattleSettlementCoordinator] {character.DisplayName} gained {kvp.Value} exp (total: {character.Experience})");
+                    }
+                }
+            }
         }
 
         /// <summary>

@@ -109,7 +109,18 @@ namespace Tactics.Common.Battle
                 return;
             }
 
-            controller.SetBattleResult(_pendingRewards, _pendingIsVictory);
+            // 构建角色等级字典
+            var characterLevels = new Dictionary<string, int>();
+            if (_state?.Roster != null)
+            {
+                foreach (var c in _state.Roster)
+                {
+                    if (c != null && !string.IsNullOrEmpty(c.DisplayName))
+                        characterLevels[c.DisplayName] = c.Level;
+                }
+            }
+
+            controller.SetBattleResult(_pendingRewards, _pendingIsVictory, characterLevels);
             controller.OnContinue += OnBattleSettlementContinue;
         }
 

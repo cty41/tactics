@@ -48,19 +48,30 @@ namespace Tactics.Common.Controllers.TurnResolvers
         public readonly TurnContext ResolveTurn(GridController gridController)
         {
             var players = gridController.PlayerManager.GetPlayers().ToList();
+            var currentPlayerNumber = gridController.TurnContext.CurrentPlayer != null ? gridController.TurnContext.CurrentPlayer.PlayerNumber.ToString() : "null";
+            TLog.Info($"[SubsequentTurnResolverImpl] ResolveTurn: playerCount={players.Count}, currentPlayer={currentPlayerNumber}, playerNumbers=[{string.Join(",", players.Select(p => p.PlayerNumber))}]");
             if (players.Count == 0) return default;
-            var numberOfPlayers = players.Count();
-            var nextPlayerNumber = (gridController.TurnContext.CurrentPlayer.PlayerNumber + 1) % numberOfPlayers;
 
-            while (!gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber.Equals(nextPlayerNumber)).Any())
+            // 按 PlayerNumber 排序后按索引循环，而非用 PlayerNumber 取模
+            var sortedPlayers = players.OrderBy(p => p.PlayerNumber).ToList();
+            int currentIndex = sortedPlayers.FindIndex(p => p.PlayerNumber == gridController.TurnContext.CurrentPlayer.PlayerNumber);
+            if (currentIndex < 0) currentIndex = 0;
+
+            int numberToCheck = sortedPlayers.Count;
+            for (int offset = 1; offset <= numberToCheck; offset++)
             {
-                nextPlayerNumber = (nextPlayerNumber + 1) % numberOfPlayers;
+                int nextIndex = (currentIndex + offset) % numberToCheck;
+                var candidate = sortedPlayers[nextIndex];
+                if (candidate == null) continue;
+                bool hasUnits = gridController.UnitManager.GetUnits().Any(u => u.PlayerNumber == candidate.PlayerNumber);
+                if (hasUnits)
+                {
+                    var allowedUnits = gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber == candidate.PlayerNumber);
+                    return new TurnContext(candidate, allowedUnits);
+                }
             }
 
-            var nextPlayer = players.FirstOrDefault(p => p.PlayerNumber == nextPlayerNumber);
-            var allowedUnits = gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber == nextPlayerNumber);
-
-            return new TurnContext(nextPlayer, allowedUnits);
+            return default;
         }
     }
 }

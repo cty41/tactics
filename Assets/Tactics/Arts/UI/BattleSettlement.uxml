@@ -15,7 +15,7 @@
             <ui:VisualElement name="ExperienceSection" class="experience-section">
                 <ui:Label text="获得经验值" class="section-title"/>
                 <ui:ScrollView name="ExperienceList" class="experience-list">
-                    <!-- 动态添加经验值条目 -->
+                    <ui:VisualElement name="ExperienceEntries" class="experience-entries"/>
                 </ui:ScrollView>
             </ui:VisualElement>
 

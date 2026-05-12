@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Tactics.Common.Battle;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -6,20 +8,22 @@ using UnityEngine.UIElements;
 
 namespace Tactics.UI
 {
-    /// <summary>
-    /// 战斗结算 UI 控制器。
-    /// 显示战斗奖励（金币、经验值）和战斗结果，处理"继续"按钮点击事件。
-    /// </summary>
     public sealed class BattleSettlementUIController : UIControllerBase
     {
+        private const float AnimDuration = 1.5f;
+        private const int AnimSteps = 60;
+
         private VisualElement _root;
         private Label _resultLabel;
         private Label _roundsLabel;
         private Label _goldLabel;
-        private ScrollView _experienceList;
+        private VisualElement _experienceEntries;
         private Button _continueButton;
 
-        /// <summary>当玩家点击"继续"按钮时触发。</summary>
+        private BattleRewardSystem.BattleRewards _rewards;
+        private bool _isAnimating;
+        private Coroutine _animCoroutine;
+
         public event System.Action OnContinue;
 
         protected override void OnShown()
@@ -32,19 +36,20 @@ namespace Tactics.UI
         protected override void OnHidden()
         {
             UnregisterEvents();
+            if (_animCoroutine != null) { StopCoroutine(_animCoroutine); _animCoroutine = null; }
+            _isAnimating = false;
         }
 
         private void EnsureUIElements()
         {
             if (_root != null) return;
-
             _root = Ui.GetRootElement(UIManager.UIId.BattleSettlement);
             if (_root == null) return;
 
             _resultLabel = _root.Q<Label>("ResultLabel");
             _roundsLabel = _root.Q<Label>("RoundsLabel");
             _goldLabel = _root.Q<Label>("GoldLabel");
-            _experienceList = _root.Q<ScrollView>("ExperienceList");
+            _experienceEntries = _root.Q<VisualElement>("ExperienceEntries");
             _continueButton = _root.Q<Button>("ContinueButton");
         }
 
@@ -52,25 +57,25 @@ namespace Tactics.UI
         {
             if (_continueButton != null)
                 _continueButton.clicked += OnContinueClicked;
+            if (_root != null)
+                _root.RegisterCallback<ClickEvent>(OnRootClicked);
         }
 
         private void UnregisterEvents()
         {
             if (_continueButton != null)
                 _continueButton.clicked -= OnContinueClicked;
+            if (_root != null)
+                _root.UnregisterCallback<ClickEvent>(OnRootClicked);
         }
 
-        /// <summary>
-        /// 设置战斗结算显示数据。
-        /// </summary>
-        /// <param name="rewards">战斗奖励数据。</param>
-        /// <param name="isVictory">是否胜利。</param>
-        public void SetBattleResult(BattleRewardSystem.BattleRewards rewards, bool isVictory)
+        public void SetBattleResult(BattleRewardSystem.BattleRewards rewards, bool isVictory, Dictionary<string, int> characterLevels = null)
         {
             EnsureUIElements();
             if (_root == null) return;
 
-            // 设置战斗结果
+            _rewards = rewards;
+
             if (_resultLabel != null)
             {
                 _resultLabel.text = isVictory ? "胜利！" : "败北...";
@@ -79,55 +84,156 @@ namespace Tactics.UI
                 _resultLabel.AddToClassList(isVictory ? "victory-label" : "defeat-label");
             }
 
-            // 设置回合数
             if (_roundsLabel != null)
                 _roundsLabel.text = $"总回合数：{rewards.TotalRounds}";
 
-            // 设置金币
             if (_goldLabel != null)
                 _goldLabel.text = $"+{rewards.TotalGold}";
 
-            // 设置经验值列表
-            if (_experienceList != null && rewards.ExperiencePerCharacter != null)
+            if (_continueButton != null)
+                _continueButton.SetEnabled(false);
+
+            if (_experienceEntries != null)
+                _experienceEntries.Clear();
+
+            foreach (var kvp in rewards.ExperiencePerCharacter)
             {
-                _experienceList.Clear();
-                foreach (var kvp in rewards.ExperiencePerCharacter)
-                {
-                    CreateExperienceEntry(kvp.Key, kvp.Value);
-                }
+                int currentLevel = 1;
+                if (characterLevels != null && characterLevels.TryGetValue(kvp.Key, out int lv))
+                    currentLevel = lv;
+
+                int expToNext = ExperienceTable.GetExperienceToNextLevel(currentLevel);
+                CreateCharacterExpEntry(kvp.Key, kvp.Value, currentLevel, expToNext);
             }
+
+            _isAnimating = true;
+            _animCoroutine = StartCoroutine(PlayExpAnimation());
         }
 
-        /// <summary>
-        /// 动态创建单个角色经验值条目。
-        /// </summary>
-        /// <param name="characterName">角色名称。</param>
-        /// <param name="exp">获得的经验值。</param>
-        private void CreateExperienceEntry(string characterName, int exp)
+        private void CreateCharacterExpEntry(string characterName, int expGained, int currentLevel, int expToNext)
         {
-            if (_experienceList == null) return;
-
             var entry = new VisualElement();
-            entry.AddToClassList("experience-entry");
+            entry.AddToClassList("character-exp-entry");
+
+            var infoRow = new VisualElement();
+            infoRow.AddToClassList("char-info-row");
 
             var nameLabel = new Label(characterName);
-            nameLabel.AddToClassList("exp-character-name");
+            nameLabel.AddToClassList("char-name");
 
-            var expLabel = new Label($"+{exp}");
-            expLabel.AddToClassList("exp-value");
+            var levelLabel = new Label($"Lv.{currentLevel}");
+            levelLabel.AddToClassList("char-level");
 
-            entry.Add(nameLabel);
-            entry.Add(expLabel);
+            infoRow.Add(nameLabel);
+            infoRow.Add(levelLabel);
 
-            _experienceList.Add(entry);
+            var barContainer = new VisualElement();
+            barContainer.AddToClassList("exp-bar-container");
+
+            var barBg = new VisualElement();
+            barBg.AddToClassList("exp-bar-bg");
+
+            var barFill = new VisualElement();
+            barFill.AddToClassList("exp-bar-fill");
+            barFill.name = "ExpBarFill";
+            barFill.style.width = Length.Percent(0);
+
+            barBg.Add(barFill);
+            barContainer.Add(barBg);
+
+            // 进度文本：0 / expToNext
+            var expText = new Label($"0 / {expToNext}");
+            expText.AddToClassList("exp-text");
+            expText.name = "ExpText";
+            expText.userData = expToNext;
+            barContainer.Add(expText);
+
+            var gainedLabel = new Label($"+{expGained} EXP");
+            gainedLabel.AddToClassList("exp-gained");
+
+            entry.Add(infoRow);
+            entry.Add(barContainer);
+            entry.Add(gainedLabel);
+
+            _experienceEntries.Add(entry);
         }
 
-        /// <summary>
-        /// 处理"继续"按钮点击，触发 Continue 事件。
-        /// </summary>
+        private IEnumerator PlayExpAnimation()
+        {
+            float stepDelay = AnimDuration / AnimSteps;
+
+            for (int step = 1; step <= AnimSteps; step++)
+            {
+                float t = (float)step / AnimSteps;
+                int index = 0;
+
+                foreach (var entry in _experienceEntries.Children())
+                {
+                    var barFill = entry.Q<VisualElement>("ExpBarFill");
+                    var expText = entry.Q<Label>("ExpText");
+
+                    if (barFill != null && expText != null && _rewards.ExperiencePerCharacter.Count > index)
+                    {
+                        int totalGained = _rewards.ExperiencePerCharacter.Values.ElementAt(index);
+                        int expToNext = (int)(expText.userData ?? 100);
+                        int current = Mathf.RoundToInt(t * totalGained);
+                        float pct = expToNext > 0 ? (float)current / expToNext * 100f : 100f;
+                        barFill.style.width = Length.Percent(pct);
+                        expText.text = $"{current} / {expToNext}";
+                    }
+                    index++;
+                }
+
+                yield return new WaitForSeconds(stepDelay);
+            }
+
+            FinishAnimation();
+        }
+
+        private void SkipAnimation()
+        {
+            if (_animCoroutine != null)
+            {
+                StopCoroutine(_animCoroutine);
+                _animCoroutine = null;
+            }
+            FinishAnimation();
+        }
+
+        private void FinishAnimation()
+        {
+            _isAnimating = false;
+
+            int index = 0;
+            foreach (var entry in _experienceEntries.Children())
+            {
+                var barFill = entry.Q<VisualElement>("ExpBarFill");
+                var expText = entry.Q<Label>("ExpText");
+
+                if (barFill != null && expText != null && _rewards.ExperiencePerCharacter.Count > index)
+                {
+                    int gained = _rewards.ExperiencePerCharacter.Values.ElementAt(index);
+                    int expToNext = (int)(expText.userData ?? 100);
+                    float pct = expToNext > 0 ? (float)gained / expToNext * 100f : 100f;
+                    barFill.style.width = Length.Percent(Mathf.Min(pct, 100f));
+                    expText.text = $"{gained} / {expToNext}";
+                }
+                index++;
+            }
+
+            if (_continueButton != null)
+                _continueButton.SetEnabled(true);
+        }
+
+        private void OnRootClicked(ClickEvent evt)
+        {
+            if (_isAnimating)
+                SkipAnimation();
+        }
+
         private void OnContinueClicked()
         {
-            TLog.Info("[BattleSettlementUIController] Continue button clicked.");
+            if (_isAnimating) return;
             OnContinue?.Invoke();
         }
     }

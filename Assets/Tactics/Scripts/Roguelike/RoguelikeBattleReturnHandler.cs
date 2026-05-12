@@ -57,7 +57,7 @@ namespace Tactics.Roguelike
             if (humanWon)
             {
                 var allUnits = BattleController.Instance?.GetUnits();
-                int totalRounds = BattleController.Instance?.CurrentRound ?? 0;
+                int totalRounds = BattleController.Instance?.CurrentRound ?? 1;
 
                 // 加载玩家状态供结算流程使用
                 var state = PlayerAdventureStateStore.LoadRepairAndSave();
@@ -69,6 +69,7 @@ namespace Tactics.Roguelike
                     result,
                     totalRounds,
                     allUnits,
+                    state,
                     () =>
                     {
                         // 保存状态

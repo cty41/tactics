@@ -23,6 +23,7 @@ namespace Tactics.Common.Controllers
         public ITurnResolver TurnResolver { get; set; }
         public TurnContext TurnContext { get; protected set; }
         public int CurrentRound { get; protected set; } = 1;
+        private int _transitionCount;
 
         public event Action GameStarted;
         public event Action GameInitialized;
@@ -69,6 +70,7 @@ namespace Tactics.Common.Controllers
         public virtual void StartGame(bool isNetworkInvoked = false)
         {
             CurrentRound = 1;
+            _transitionCount = 0;
             TurnContext = TurnResolver.ResolveStart(this);
             if (TurnContext.CurrentPlayer == null)
             {
@@ -215,10 +217,13 @@ namespace Tactics.Common.Controllers
             UnitManager.UnMark(TurnContext.PlayableUnits());
             TurnContext = TurnResolver.ResolveTurn(this);
 
-            if (previousPlayer != null && TurnContext.CurrentPlayer != null &&
-                previousPlayer.PlayerNumber >= TurnContext.CurrentPlayer.PlayerNumber)
+            _transitionCount++;
+            int totalUnits = UnitManager.GetUnits().Count();
+            if (_transitionCount >= totalUnits)
             {
                 CurrentRound++;
+                _transitionCount = 0;
+                TLog.Info($"[GridController] Round complete. CurrentRound={CurrentRound}, TotalUnits={totalUnits}");
             }
 
             foreach (var unit in TurnContext.PlayableUnits())
