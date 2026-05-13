@@ -21,6 +21,7 @@ namespace Tactics.UI
         private Button _continueButton;
 
         private BattleRewardSystem.BattleRewards _rewards;
+        private Dictionary<string, int> _currentCharacterExp;
         private bool _isAnimating;
         private Coroutine _animCoroutine;
 
@@ -69,12 +70,13 @@ namespace Tactics.UI
                 _root.UnregisterCallback<ClickEvent>(OnRootClicked);
         }
 
-        public void SetBattleResult(BattleRewardSystem.BattleRewards rewards, bool isVictory, Dictionary<string, int> characterLevels = null)
+        public void SetBattleResult(BattleRewardSystem.BattleRewards rewards, bool isVictory, Dictionary<string, int> characterLevels = null, Dictionary<string, int> currentCharacterExp = null)
         {
             EnsureUIElements();
             if (_root == null) return;
 
             _rewards = rewards;
+            _currentCharacterExp = currentCharacterExp;
 
             if (_resultLabel != null)
             {
@@ -102,15 +104,37 @@ namespace Tactics.UI
                 if (characterLevels != null && characterLevels.TryGetValue(kvp.Key, out int lv))
                     currentLevel = lv;
 
+                int currentExp = 0;
+                if (_currentCharacterExp != null && _currentCharacterExp.TryGetValue(kvp.Key, out int exp))
+                    currentExp = exp;
+
                 int expToNext = ExperienceTable.GetExperienceToNextLevel(currentLevel);
-                CreateCharacterExpEntry(kvp.Key, kvp.Value, currentLevel, expToNext);
+                CreateCharacterExpEntry(kvp.Key, kvp.Value, currentLevel, expToNext, currentExp);
             }
 
             _isAnimating = true;
             _animCoroutine = StartCoroutine(PlayExpAnimation());
         }
 
-        private void CreateCharacterExpEntry(string characterName, int expGained, int currentLevel, int expToNext)
+        /// <summary>
+        /// Maps total accumulated experience to current level and progress within that level.
+        /// </summary>
+        private (int level, int expInLevel, int expToNext) GetLevelProgress(int totalExp)
+        {
+            int remaining = totalExp;
+            for (int level = 1; level <= ExperienceTable.GetMaxLevel(); level++)
+            {
+                int expToNext = ExperienceTable.GetExperienceToNextLevel(level);
+                if (remaining < expToNext)
+                    return (level, remaining, expToNext);
+                remaining -= expToNext;
+                if (level == ExperienceTable.GetMaxLevel())
+                    return (level, expToNext, expToNext);
+            }
+            return (ExperienceTable.GetMaxLevel(), 0, 0);
+        }
+
+        private void CreateCharacterExpEntry(string characterName, int expGained, int currentLevel, int expToNext, int currentExp)
         {
             var entry = new VisualElement();
             entry.AddToClassList("character-exp-entry");
@@ -121,8 +145,10 @@ namespace Tactics.UI
             var nameLabel = new Label(characterName);
             nameLabel.AddToClassList("char-name");
 
-            var levelLabel = new Label($"Lv.{currentLevel}");
+            var (startLevel, expInLevel, expForThisLevel) = GetLevelProgress(currentExp);
+            var levelLabel = new Label($"Lv.{startLevel}");
             levelLabel.AddToClassList("char-level");
+            levelLabel.name = "CharLevelLabel";
 
             infoRow.Add(nameLabel);
             infoRow.Add(levelLabel);
@@ -136,16 +162,16 @@ namespace Tactics.UI
             var barFill = new VisualElement();
             barFill.AddToClassList("exp-bar-fill");
             barFill.name = "ExpBarFill";
-            barFill.style.width = Length.Percent(0);
+
+            barFill.style.width = Length.Percent(expForThisLevel > 0 ? (float)expInLevel / expForThisLevel * 100f : 0);
 
             barBg.Add(barFill);
             barContainer.Add(barBg);
 
-            // 进度文本：0 / expToNext
-            var expText = new Label($"0 / {expToNext}");
+            var expText = new Label($"{expInLevel} / {expForThisLevel}");
             expText.AddToClassList("exp-text");
             expText.name = "ExpText";
-            expText.userData = expToNext;
+            expText.userData = new Vector2Int(currentExp, expGained);
             barContainer.Add(expText);
 
             var gainedLabel = new Label($"+{expGained} EXP");
@@ -171,15 +197,22 @@ namespace Tactics.UI
                 {
                     var barFill = entry.Q<VisualElement>("ExpBarFill");
                     var expText = entry.Q<Label>("ExpText");
+                    var levelLabel = entry.Q<Label>("CharLevelLabel");
 
                     if (barFill != null && expText != null && _rewards.ExperiencePerCharacter.Count > index)
                     {
                         int totalGained = _rewards.ExperiencePerCharacter.Values.ElementAt(index);
-                        int expToNext = (int)(expText.userData ?? 100);
-                        int current = Mathf.RoundToInt(t * totalGained);
-                        float pct = expToNext > 0 ? (float)current / expToNext * 100f : 100f;
-                        barFill.style.width = Length.Percent(pct);
-                        expText.text = $"{current} / {expToNext}";
+                        Vector2Int data = (Vector2Int)(expText.userData ?? new Vector2Int(0, 0));
+                        int totalStartExp = data.x;
+                        int accumulated = totalStartExp + Mathf.RoundToInt(t * totalGained);
+
+                        var (level, expInLevel, expToNext) = GetLevelProgress(accumulated);
+                        float pct = expToNext > 0 ? (float)expInLevel / expToNext * 100f : 100f;
+                        barFill.style.width = Length.Percent(Mathf.Min(pct, 100f));
+                        expText.text = $"{expInLevel} / {expToNext}";
+
+                        if (levelLabel != null)
+                            levelLabel.text = $"Lv.{level}";
                     }
                     index++;
                 }
@@ -213,10 +246,18 @@ namespace Tactics.UI
                 if (barFill != null && expText != null && _rewards.ExperiencePerCharacter.Count > index)
                 {
                     int gained = _rewards.ExperiencePerCharacter.Values.ElementAt(index);
-                    int expToNext = (int)(expText.userData ?? 100);
-                    float pct = expToNext > 0 ? (float)gained / expToNext * 100f : 100f;
+                    Vector2Int data = (Vector2Int)(expText.userData ?? new Vector2Int(0, 0));
+                    int totalStartExp = data.x;
+                    int finalTotal = totalStartExp + gained;
+
+                    var (level, expInLevel, expToNext) = GetLevelProgress(finalTotal);
+                    float pct = expToNext > 0 ? (float)expInLevel / expToNext * 100f : 100f;
                     barFill.style.width = Length.Percent(Mathf.Min(pct, 100f));
-                    expText.text = $"{gained} / {expToNext}";
+                    expText.text = $"{expInLevel} / {expToNext}";
+
+                    var levelLabel = entry.Q<Label>("CharLevelLabel");
+                    if (levelLabel != null)
+                        levelLabel.text = $"Lv.{level}";
                 }
                 index++;
             }
