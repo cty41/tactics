@@ -325,6 +325,7 @@ namespace Tactics
         {
             if (_instances.TryGetValue(id, out var existing) && existing?.ContainerGO != null)
             {
+                EnsureUIController(id, existing.ContainerGO);
                 existing.ContainerGO.SetActive(true);
                 return;
             }
