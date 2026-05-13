@@ -101,7 +101,6 @@ namespace Tactics.Common.Battle
                     break;
                 case AttributeType.Intelligence:
                     character.Intelligence += 2;
-                    character.Charisma += 10;
                     break;
                 case AttributeType.Constitution:
                     character.Constitution += 10;

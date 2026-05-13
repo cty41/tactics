@@ -238,6 +238,10 @@ namespace Tactics.Common.Battle
             int maxWaitFrames = 6000;
             int frameCount = 0;
 
+            // Warmup: give UIDocument 2 frames to build visual tree
+            await Task.Yield();
+            await Task.Yield();
+
             while (frameCount < maxWaitFrames)
             {
                 await Task.Yield();
