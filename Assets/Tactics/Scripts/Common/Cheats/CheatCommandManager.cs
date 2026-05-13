@@ -148,6 +148,39 @@ namespace Tactics.Cheats
                 TLog.Info($"[CheatCommandManager] Added {expNum} experience to {character.DisplayName}. Old: {oldExp}, New: {character.Experience}.");
                 return $"Added {expNum} experience to {character.DisplayName} (idx {idx}). Old: {oldExp}, New: {character.Experience}.";
             });
+
+            RegisterCommand("reset", args =>
+            {
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+                if (state == null)
+                    return "[Error] Failed to load player state.";
+
+                if (state.Roster == null || state.Roster.Count == 0)
+                    return "[Error] No characters to reset.";
+
+                int count = 0;
+                for (int i = 0; i < state.Roster.Count; i++)
+                {
+                    var old = state.Roster[i];
+                    if (old == null) continue;
+
+                    var def = CharacterDefinition.CreateDefault(
+                        old.Id,
+                        old.DisplayName,
+                        roleType: old.RoleType);
+                    def.PrefabPath = old.PrefabPath;
+                    state.Roster[i] = def;
+                    count++;
+                }
+
+                if (state.Inventory != null)
+                    state.Inventory.Clear();
+                state.Gold = 0;
+
+                PlayerAdventureStateStore.Save(state);
+                TLog.Info($"[CheatCommandManager] Reset {count} characters, cleared inventory and gold.");
+                return $"Reset {count} characters, cleared inventory and gold.";
+            });
         }
 
         public void RegisterCommand(string name, Func<string[], string> handler)
