@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -495,6 +495,14 @@ namespace Tactics
                 case UIId.BattleSettlement:
                     if (root.GetComponent<BattleSettlementUIController>() == null)
                         root.AddComponent<BattleSettlementUIController>();
+                    break;
+                case UIId.AttributeAllocation:
+                    if (root.GetComponent<AttributeAllocationUIController>() == null)
+                        root.AddComponent<AttributeAllocationUIController>();
+                    break;
+                case UIId.SkillSelection:
+                    if (root.GetComponent<SkillSelectionUIController>() == null)
+                        root.AddComponent<SkillSelectionUIController>();
                     break;
                 default:
                     break;
