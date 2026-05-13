@@ -7,6 +7,7 @@ using Tactics.Common.Players;
 using Tactics.Flow.Battle;
 using Tactics.Equipment;
 using Tactics.Roster;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 
 namespace Tactics.Cheats
@@ -112,6 +113,33 @@ namespace Tactics.Cheats
                     BattleController.Instance.EndBattle(result);
                 }
                 return message;
+            });
+
+            RegisterCommand("addexp", args =>
+            {
+                if (args.Length < 2)
+                    return "[Error] Usage: addexp <idx> <exp_num>";
+
+                if (!int.TryParse(args[0], out int idx))
+                    return "[Error] Invalid index '" + args[0] + "'. Must be an integer.";
+
+                if (!int.TryParse(args[1], out int expNum))
+                    return "[Error] Invalid experience value '" + args[1] + "'. Must be an integer.";
+
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+                if (state == null)
+                    return "[Error] Failed to load player state.";
+
+                if (state.Roster == null || idx < 0 || idx >= state.Roster.Count)
+                    return $"[Error] Index {idx} out of range. Roster has {(state.Roster?.Count ?? 0)} characters.";
+
+                var character = state.Roster[idx];
+                int oldExp = character.Experience;
+                character.Experience += expNum;
+                PlayerAdventureStateStore.Save(state);
+
+                TLog.Info($"[CheatCommandManager] Added {expNum} experience to {character.DisplayName}. Old: {oldExp}, New: {character.Experience}.");
+                return $"Added {expNum} experience to {character.DisplayName} (idx {idx}). Old: {oldExp}, New: {character.Experience}.";
             });
         }
 
