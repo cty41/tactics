@@ -21,7 +21,7 @@ namespace Tactics.Common.Units.Abilities.Editor
         private List<string> _logs = new List<string>();
         private bool _showLog = true;
 
-        [MenuItem("Tools/Ability System/Migrate to AbilityConfig")]
+        [MenuItem("Tactics/Ability System/Migrate to AbilityConfig")]
         public static void ShowWindow()
         {
             var window = GetWindow<AbilityConfigMigrationTool>("AbilityConfig Migration");

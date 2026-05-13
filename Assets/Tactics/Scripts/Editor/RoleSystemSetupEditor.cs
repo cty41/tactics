@@ -18,7 +18,7 @@ namespace Tactics.Editor
         private const string PrefabsPath = "Assets/Tactics/Arts/Prefabs/Units";
         private const string BuffsPath = "Assets/Tactics/Arts/ScriptableObjects/Buffs";
 
-        [MenuItem("Tools/Tactics/Setup Role System")]
+        [MenuItem("Tactics/Role System/Setup Role System")]
         public static void SetupRoleSystem()
         {
             EnsureDirectory(ClassesPath);
@@ -86,7 +86,7 @@ namespace Tactics.Editor
             TLog.Info("[RoleSystemSetup] Role system setup complete!");
         }
 
-        [MenuItem("Tools/Tactics/Setup Test1 Scene")]
+        [MenuItem("Tactics/Role System/Setup Test1 Scene")]
         public static void SetupTest1Scene()
         {
             string scenePath = "Assets/Tactics/Scenes/Test1.unity";

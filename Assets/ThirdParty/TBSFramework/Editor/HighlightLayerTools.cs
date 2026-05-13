@@ -7,7 +7,7 @@ namespace TbsFramework.EditorUtils
 {
     public static class HighlightLayerTools
     {
-        [MenuItem("Tools/Tactics/Tilemap/Clear HighlightLayer Tiles")]
+        // [MenuItem("Tools/Tactics/Tilemap/Clear HighlightLayer Tiles")]
         private static void ClearHighlightLayerTiles()
         {
             var tilemap = FindHighlightLayerTilemap();
@@ -25,7 +25,7 @@ namespace TbsFramework.EditorUtils
             Debug.Log($"Cleared all tiles on HighlightLayer: {GetHierarchyPath(tilemap.transform)}");
         }
 
-        [MenuItem("Tools/Tactics/Tilemap/Clear Selected Tilemap Tiles")]
+        // [MenuItem("Tools/Tactics/Tilemap/Clear Selected Tilemap Tiles")]
         private static void ClearSelectedTilemapTiles()
         {
             var tilemap = Selection.activeGameObject != null
@@ -46,7 +46,7 @@ namespace TbsFramework.EditorUtils
             Debug.Log($"Cleared all tiles on selected Tilemap: {GetHierarchyPath(tilemap.transform)}");
         }
 
-        [MenuItem("Tools/Tactics/Tilemap/Clear Selected Tilemap Tiles", true)]
+        // [MenuItem("Tools/Tactics/Tilemap/Clear Selected Tilemap Tiles", true)]
         private static bool ValidateClearSelectedTilemapTiles()
         {
             return Selection.activeGameObject != null &&

@@ -15,7 +15,7 @@ namespace Tactics.Editor
         private const string MagePrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Mage.prefab";
         private const string HunterPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Hunter.prefab";
 
-        [MenuItem("Tools/Tactics/Setup Party Bootstrap")]
+        [MenuItem("Tactics/Party/Setup Party Bootstrap")]
         private static void SetupPartyBootstrap()
         {
             var battleController = Object.FindFirstObjectByType<BattleController>();

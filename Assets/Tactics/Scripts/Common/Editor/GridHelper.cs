@@ -53,7 +53,7 @@ namespace TbsFramework.EditorUtils
 
         private Vector2 scrollPosition = Vector2.zero;
 
-        [MenuItem("Window/Grid Helper")]
+        [MenuItem("Tactics/Scene/Grid Helper")]
         public static void ShowWindow()
         {
             var window = GetWindow(typeof(GridHelper));

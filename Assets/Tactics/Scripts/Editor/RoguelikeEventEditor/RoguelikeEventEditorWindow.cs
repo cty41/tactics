@@ -34,7 +34,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
         private const float ToolbarHeight = 28f;
 
         // ── MenuItem ──────────────────────────────
-        [MenuItem("Tools/Tactics/Event Editor")]
+        [MenuItem("Tactics/Roguelike/Event Editor")]
         public static void ShowWindow()
         {
             var window = GetWindow<RoguelikeEventEditorWindow>();

@@ -20,7 +20,7 @@ namespace Tactics.Common.Units.Abilities.Editor
         private Vector2 _scroll;
         private List<string> _log = new List<string>();
 
-        [MenuItem("Tools/Ability System/Setup Unit Abilities")]
+        [MenuItem("Tactics/Ability System/Setup Unit Abilities")]
         public static void ShowWindow()
         {
             var w = GetWindow<AbilityConfigSetup>("Ability Setup");

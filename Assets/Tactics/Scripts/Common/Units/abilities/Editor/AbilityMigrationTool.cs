@@ -28,7 +28,7 @@ namespace Tactics.Common.Units.Abilities.Editor
             "Ability"
         };
 
-        [MenuItem("Tools/Ability Migration/Cleanup Orphaned Components")]
+        [MenuItem("Tactics/Ability System/Cleanup Orphaned Components")]
         public static void ShowWindow()
         {
             GetWindow<AbilityMigrationTool>("Ability Migration");

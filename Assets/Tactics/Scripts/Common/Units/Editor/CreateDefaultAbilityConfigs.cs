@@ -15,7 +15,7 @@ namespace Tactics.Common.Units.Abilities.Editor
     /// </summary>
     public class CreateDefaultAbilityConfigs : EditorWindow
     {
-        [MenuItem("Tools/Ability System/Create Default Ability Configs")]
+        [MenuItem("Tactics/Ability System/Create Default Ability Configs")]
         public static void CreateConfigs()
         {
             var logs = new List<string>();
