@@ -37,7 +37,7 @@ namespace Tactics.UI
         private static readonly AttributeType[] AllTypes =
         {
             AttributeType.Strength, AttributeType.Agility, AttributeType.Constitution,
-            AttributeType.Intelligence, AttributeType.Charisma, AttributeType.Luck
+            AttributeType.Speed, AttributeType.Intelligence, AttributeType.Charisma, AttributeType.Luck
         };
 
         protected override void OnShown()
@@ -199,6 +199,7 @@ namespace Tactics.UI
                 AttributeType.Constitution => _currentCharacter.Constitution - (allocated * 10),
                 AttributeType.Charisma => _currentCharacter.Charisma - allocated,
                 AttributeType.Luck => _currentCharacter.Luck - (allocated * 2),
+                AttributeType.Speed => (int)_currentCharacter.Speed - allocated,
                 _ => 0,
             };
         }
@@ -211,6 +212,7 @@ namespace Tactics.UI
             AttributeType.Constitution => 10,
             AttributeType.Charisma => 1,
             AttributeType.Luck => 2,
+            AttributeType.Speed => 1,
             _ => 0,
         };
 
@@ -223,22 +225,22 @@ namespace Tactics.UI
             title.AddToClassList("derived-title");
             _derivedStats.Add(title);
 
-            int str = _currentCharacter.GetTotalStrength();
-            int agi = _currentCharacter.GetTotalAgility();
             int con = _currentCharacter.GetTotalConstitution();
-            int intel = _currentCharacter.GetTotalIntelligence();
             int cha = _currentCharacter.GetTotalCharisma();
+            int agi = _currentCharacter.GetTotalAgility();
+            int intel = _currentCharacter.GetTotalIntelligence();
             int luck = _currentCharacter.GetTotalLuck();
+            float speed = _currentCharacter.Speed;
 
-            AddDerivedStat("物理攻击", $"{str * 2}");
-            AddDerivedStat("魔法攻击", $"{intel * 2}");
-            AddDerivedStat("生命上限", $"{con * 10}");
-            AddDerivedStat("法力上限", $"{cha * 10}");
-            AddDerivedStat("速度", $"{_currentCharacter.Speed:F1}");
-            AddDerivedStat("物理防御", $"{_currentCharacter.DefenceFactor}");
-            AddDerivedStat("魔法防御", $"{cha}");
-            AddDerivedStat("闪避", $"{agi * 2}%");
-            AddDerivedStat("状态抗性", $"{cha * 2}%");
+            AddDerivedStat("生命上限", $"{Mathf.Max(con * 4, 1)}");
+            AddDerivedStat("法力上限", $"{cha * 3}");
+            AddDerivedStat("先攻值", $"{Mathf.RoundToInt(speed * 2)}");
+            AddDerivedStat("移动力", $"{Mathf.Max(1, Mathf.RoundToInt(speed))}");
+            AddDerivedStat("法力恢复", $"{Mathf.Max(Mathf.FloorToInt(intel / 2f), 0)}");
+            AddDerivedStat("战后恢复", $"{con * 2}");
+            AddDerivedStat("闪避率", $"{agi * 2}%");
+            AddDerivedStat("暴击率", $"{10 + (luck - 5) * 2}%");
+            AddDerivedStat("额外骰子", $"{Mathf.FloorToInt(Mathf.Abs(luck - 5) / 10f)}");
         }
 
         private void AddDerivedStat(string name, string value)

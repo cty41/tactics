@@ -23,6 +23,8 @@ namespace Tactics.Common.Battle
                 AttributeType.Intelligence => "智力",
                 AttributeType.Constitution => "体质",
                 AttributeType.Charisma => "精神",
+                AttributeType.Luck => "幸运",
+                AttributeType.Speed => "速度",
                 _ => type.ToString()
             };
         }
@@ -39,6 +41,7 @@ namespace Tactics.Common.Battle
                 AttributeType.Intelligence => "每点增加 2 点魔法攻击、10 点法力上限",
                 AttributeType.Constitution => "每点增加 10 点生命上限、1 点物理防御",
                 AttributeType.Charisma => "每点增加 1 点魔法防御、2% 状态抗性",
+                AttributeType.Speed => "每点增加 1 点速度",
                 _ => "未知属性"
             };
         }
@@ -63,6 +66,8 @@ namespace Tactics.Common.Battle
                     $"{GetAttributeDisplayName(type)}: 生命上限 +{points * 10}，物理防御 +{points * 1}",
                 AttributeType.Charisma =>
                     $"{GetAttributeDisplayName(type)}: 魔法防御 +{points * 1}，状态抗性 +{points * 2}%",
+                AttributeType.Speed =>
+                    $"{GetAttributeDisplayName(type)}: 速度 +{points * 1}",
                 _ => $"{GetAttributeDisplayName(type)}: 未知加成"
             };
         }
@@ -109,6 +114,9 @@ namespace Tactics.Common.Battle
                 case AttributeType.Charisma:
                     character.Charisma += 1;
                     character.Luck += 2;
+                    break;
+                case AttributeType.Speed:
+                    character.Speed += 1f;
                     break;
             }
 

@@ -57,15 +57,23 @@
 }
 
 .left-panel {
-    flex-grow: 1;
+    width: 55%;
     flex-direction: column;
     margin-right: 8px;
+    padding: 8px;
 }
 
 .right-panel {
-    flex-grow: 1;
+    width: 45%;
     flex-direction: column;
     margin-left: 8px;
+    padding: 8px;
+}
+
+#AttributeRows {
+    flex-grow: 1;
+    min-height: 100px;
+    margin-bottom: 8px;
 }
 
 .section-title {
@@ -78,13 +86,13 @@
 .attr-row {
     flex-direction: row;
     align-items: center;
-    padding: 4px 8px;
-    margin-bottom: 4px;
+    padding: 3px 6px;
+    margin-bottom: 3px;
     background-color: rgba(255, 255, 255, 0.2);
     border-width: 1px;
     border-color: rgb(200, 180, 150);
     border-radius: 6px;
-    min-height: 36px;
+    min-height: 32px;
 }
 
 .attr-row:hover {
@@ -142,17 +150,17 @@
 }
 
 .derived-section {
-    margin-top: 8px;
+    margin-top: 12px;
     padding-top: 8px;
     border-top-width: 1px;
     border-top-color: rgb(180, 160, 130);
 }
 
 .derived-title {
-    font-size: 14px;
+    font-size: 15px;
     color: rgb(120, 100, 80);
     -unity-font-style: bold;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .derived-row {
@@ -162,13 +170,14 @@
 }
 
 .derived-name {
-    font-size: 12px;
+    font-size: 14px;
     color: rgb(120, 100, 80);
 }
 
 .derived-value {
-    font-size: 12px;
+    font-size: 14px;
     color: rgb(60, 50, 40);
+    -unity-font-style: bold;
 }
 
 .skill-card {

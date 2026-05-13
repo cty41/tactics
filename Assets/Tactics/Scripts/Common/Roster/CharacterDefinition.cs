@@ -13,7 +13,8 @@ namespace Tactics.Roster
         Constitution,
         Intelligence,
         Charisma,
-        Luck
+        Luck,
+        Speed
     }
 
     /// <summary>Skill activation type.</summary>

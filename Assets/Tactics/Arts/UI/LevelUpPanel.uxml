@@ -10,7 +10,7 @@
             <ui:VisualElement name="MainContent" class="main-content">
                 <ui:VisualElement name="LeftPanel" class="left-panel">
                     <ui:Label text="属性" class="section-title"/>
-                    <ui:ScrollView name="AttributeRows"/>
+                    <ui:ScrollView name="AttributeRows" class="attribute-scroll"/>
                     <ui:VisualElement name="DerivedStats" class="derived-section"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="RightPanel" class="right-panel">
