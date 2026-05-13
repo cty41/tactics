@@ -136,6 +136,13 @@ namespace Tactics.Cheats
                 var character = state.Roster[idx];
                 int oldExp = character.Experience;
                 character.Experience += expNum;
+
+                // Track for settlement UI display
+                string charName = character.DisplayName;
+                if (!BattleRewardSystem.PendingCheatExperience.ContainsKey(charName))
+                    BattleRewardSystem.PendingCheatExperience[charName] = 0;
+                BattleRewardSystem.PendingCheatExperience[charName] += expNum;
+
                 PlayerAdventureStateStore.Save(state);
 
                 TLog.Info($"[CheatCommandManager] Added {expNum} experience to {character.DisplayName}. Old: {oldExp}, New: {character.Experience}.");

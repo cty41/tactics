@@ -109,23 +109,46 @@ namespace Tactics.Common.Battle
                 return;
             }
 
-            // 构建角色等级字典
+            // Merge pending cheat experience into battle rewards for UI display
+            if (BattleRewardSystem.PendingCheatExperience.Count > 0)
+            {
+                foreach (var kvp in BattleRewardSystem.PendingCheatExperience)
+                {
+                    if (_pendingRewards.ExperiencePerCharacter.ContainsKey(kvp.Key))
+                        _pendingRewards.ExperiencePerCharacter[kvp.Key] += kvp.Value;
+                    else
+                        _pendingRewards.ExperiencePerCharacter[kvp.Key] = kvp.Value;
+                }
+            }
+
+            // 构建角色等级和经验字典
             var characterLevels = new Dictionary<string, int>();
+            var characterExperience = new Dictionary<string, int>();
             if (_state?.Roster != null)
             {
                 foreach (var c in _state.Roster)
                 {
                     if (c != null && !string.IsNullOrEmpty(c.DisplayName))
+                    {
                         characterLevels[c.DisplayName] = c.Level;
+                        // Pre-battle experience: current minus any addexp tracked this run
+                        int preAddexpExp = c.Experience;
+                        if (BattleRewardSystem.PendingCheatExperience.TryGetValue(c.DisplayName, out int cheatExp))
+                            preAddexpExp -= cheatExp;
+                        characterExperience[c.DisplayName] = preAddexpExp;
+                    }
                 }
             }
 
-            controller.SetBattleResult(_pendingRewards, _pendingIsVictory, characterLevels);
+            controller.SetBattleResult(_pendingRewards, _pendingIsVictory, characterLevels, characterExperience);
             controller.OnContinue += OnBattleSettlementContinue;
         }
 
         private void OnBattleSettlementContinue()
         {
+            // Clear tracked cheat experience after settlement
+            BattleRewardSystem.PendingCheatExperience.Clear();
+
             TLog.Info("[BattleSettlementFlow] BattleSettlement continue clicked.");
 
             var controller = FindController<BattleSettlementUIController>(UIManager.UIId.BattleSettlement);

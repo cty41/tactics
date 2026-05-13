@@ -15,6 +15,9 @@ namespace Tactics.Common.Battle
     /// </summary>
     public static class BattleRewardSystem
     {
+        /// <summary>Accumulated cheat experience to be merged into settlement rewards.</summary>
+        public static readonly Dictionary<string, int> PendingCheatExperience = new Dictionary<string, int>();
+
         /// <summary>
         /// 战斗奖励数据，包含金币和经验分配结果。
         /// </summary>
