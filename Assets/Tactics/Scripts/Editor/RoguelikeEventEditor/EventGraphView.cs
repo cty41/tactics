@@ -147,7 +147,8 @@ namespace Tactics.Editor.RoguelikeEventEditor
             node.style.top = y;
             node.OnPortClicked += HandlePortClick;
             node.OnNodeClicked += HandleNodeClick;
-            node.OnNodeMoved += () => OnGraphChanged?.Invoke();
+            node.OnNodeMoving += () => RedrawConnectionsForNode(node);
+            node.OnNodeMoved += () => { RedrawConnectionsForNode(node); OnGraphChanged?.Invoke(); };
 
             _canvas.Add(node);
             _nodes.Add(node);
@@ -213,6 +214,20 @@ namespace Tactics.Editor.RoguelikeEventEditor
         public void DeleteSelectedNodes()
         {
             // 简单实现：待扩展
+        }
+
+        /// <summary>
+        /// 节点移动时实时刷新所有关联连线。
+        /// </summary>
+        private void RedrawConnectionsForNode(EventNodeElement node)
+        {
+            foreach (var conn in _connections)
+            {
+                if (conn.From?.ParentNode == node || conn.To?.ParentNode == node)
+                {
+                    conn.MarkDirtyRepaint();
+                }
+            }
         }
 
         // ── 图 ↔ 数据 ────────────────────────────
@@ -306,6 +321,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
         public event Action<PortElement> OnPortClicked;
         public event Action<EventNodeElement> OnNodeClicked;
         public event Action OnNodeMoved;
+        public event Action OnNodeMoving;  // 实时拖动中触发
 
         private Label _titleLabel;
         private Label _subtitleLabel;
@@ -388,6 +404,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
                     var delta = evt.mousePosition - _dragStart;
                     style.left = _startPos.x + delta.x;
                     style.top = _startPos.y + delta.y;
+                    OnNodeMoving?.Invoke();  // 实时通知连线更新
                 }
             });
 
