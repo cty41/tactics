@@ -10,6 +10,8 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 4. **编译**：修改 C# 脚本后，**必须**显式调用 `refresh_unity` 触发 Unity 编译。Agent 一次 build mode 执行完成前，若修改过任何 `.cs` 文件，必须在最后调用一次 `refresh_unity`
 5. **日志**：通用日志用 `TLog.Info/Warning/Error`，战斗日志用 `TBattleLog.Log`，禁止 `Debug.Log`
 6. **工具安全**：禁止使用 `unity-MCP_execute_code` 执行自行编写的测试代码或验证脚本；仅当用户明确要求时才可使用该工具
+7. **Git 提交**：执行任何 git commit 前，**必须**先加载 `unity-git-commit` skill 并逐项完成其定义的提交前检查（`.meta` 配对校验、GUID 有效性确认）
+8. **审查与验证**：涉及需要在 Unity Editor 内手动操作验证的功能或修复，完成 `review-work` 审查后**禁止自动提交**。必须等待用户在 Editor 内测试验证并明确确认通过后，方可执行 `git commit`
 
 ## 规则与指南
 
