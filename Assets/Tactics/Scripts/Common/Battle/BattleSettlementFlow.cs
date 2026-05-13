@@ -128,14 +128,14 @@ namespace Tactics.Common.Battle
             {
                 foreach (var c in _state.Roster)
                 {
-                    if (c != null && !string.IsNullOrEmpty(c.DisplayName))
+                    if (c != null && !string.IsNullOrEmpty(c.Id))
                     {
-                        characterLevels[c.DisplayName] = c.Level;
+                        characterLevels[c.Id] = c.Level;
                         // Pre-battle experience: current minus any addexp tracked this run
                         int preAddexpExp = c.Experience;
-                        if (BattleRewardSystem.PendingCheatExperience.TryGetValue(c.DisplayName, out int cheatExp))
+                        if (BattleRewardSystem.PendingCheatExperience.TryGetValue(c.Id, out int cheatExp))
                             preAddexpExp -= cheatExp;
-                        characterExperience[c.DisplayName] = preAddexpExp;
+                        characterExperience[c.Id] = preAddexpExp;
                     }
                 }
             }
@@ -229,6 +229,7 @@ namespace Tactics.Common.Battle
             }
 
             controller.SetCharacter(character);
+            controller.RefreshUI();
             _ = WaitForAttributeAllocationCloseAsync(character);
         }
 

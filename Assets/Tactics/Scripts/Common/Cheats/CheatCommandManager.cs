@@ -138,10 +138,10 @@ namespace Tactics.Cheats
                 character.Experience += expNum;
 
                 // Track for settlement UI display
-                string charName = character.DisplayName;
-                if (!BattleRewardSystem.PendingCheatExperience.ContainsKey(charName))
-                    BattleRewardSystem.PendingCheatExperience[charName] = 0;
-                BattleRewardSystem.PendingCheatExperience[charName] += expNum;
+                string charId = character.Id;
+                if (!BattleRewardSystem.PendingCheatExperience.ContainsKey(charId))
+                    BattleRewardSystem.PendingCheatExperience[charId] = 0;
+                BattleRewardSystem.PendingCheatExperience[charId] += expNum;
 
                 PlayerAdventureStateStore.Save(state);
 
