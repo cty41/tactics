@@ -15,7 +15,7 @@
 
 **关键创新点**:
 - **BG3式属性事件**: 每个事件选项基于属性（力量/敏捷/智力/魅力）计算成功率，可预览
-- **可见即所得事件编辑器**: UI Toolkit Editor + Visual Scripting，拖拽编辑事件，导出JSON
+- **事件编辑器**: 独立工具，详见 [roguelike-event-editor-design.md](roguelike-event-editor-design.md)
 - **避难所机制**: 击败Boss后可在"继续探索"和"返回避难所"之间选择
 - **低金币经济**: 单局总金币控制在50以内，每个铜板都有分量
 
@@ -27,7 +27,7 @@
 |--------|-----------|
 | **主题风格** | 暗黑破坏神2 Act 1（黑暗森林/墓地/修道院·痛苦女王） |
 | **事件系统** | BG3式属性判定（力量/敏捷/智力/体质/魅力 + 成功率%） |
-| **事件编辑器** | UI Toolkit Editor + Visual Scripting，导出JSON |
+| **事件编辑器** | 独立工具 — 详见[事件编辑器设计](roguelike-event-editor-design.md) |
 | **Boss后选项** | 仅2个：继续探索 / 返回避难所 |
 | **金币总量** | ≤50金币/局（原500-800） |
 | **区域→地形影响** | ❌ 暂不实现 |
@@ -342,85 +342,32 @@
 
 ---
 
-## 事件编辑器 — 工具需求
+## 事件编辑器 — 独立工具
 
-### 概述
+事件编辑器已分离为**独立的开发计划**，详见：
 
-开发一个**可见即所得（WYSIWYG）**的事件编辑器，让策划/设计人员可以可视化地创建和编辑Roguelike事件，无需编写代码。
+- **设计文档**: [roguelike-event-editor-design.md](roguelike-event-editor-design.md)
+- **开发计划**: [roguelike-event-editor-开发计划.md](../plans/roguelike-event-editor-开发计划.md)
 
-### 技术方案
+### 与本计划的关系
 
-- **UI Toolkit Editor**: Unity Editor Window，自定义Inspector
-- **Visual Scripting**: 使用Unity Visual Scripting（或自定义节点图）实现事件逻辑流程
-- **导出格式**: JSON
+事件编辑器是**独立工具**，与主Roguelike地图玩法开发可**完全并行**。
 
-### 编辑器功能需求
+- 事件系统开发（Task 6-8）前期可使用手工编写JSON先行开发
+- 事件编辑器完成后，事件内容切换为编辑器导出
+- 对接接口为 `Assets/Tactics/Resources/Events/{Region}/*.json`，数据结构已固定
 
-#### 主界面布局
-
-```
-┌──────────────────────────────────────────────────────────┐
-│ [File] [Edit] [Export]                     [Preview]     │
-├──────────────────┬───────────────────────┬───────────────┤
-│                  │                       │               │
-│  事件列表         │   事件编辑画布          │   属性面板    │
-│  (左侧面板)       │   (中央 — 节点图)     │   (右侧)      │
-│                  │                       │               │
-│  ┌──────────┐   │  [Start] → [Option1]  │  [选项属性]   │
-│  │ 事件001   │   │       ↓              │  文本: ...    │
-│  │ 事件002   │   │  [Option2] → [Check] │  属性: 力量   │
-│  │ 事件003   │   │       ↓              │  成功率: 65%  │
-│  │ 事件004   │   │  [Option3] → [Result]│  成功奖励: .. │
-│  └──────────┘   │                       │  失败后果: .. │
-│                  │                       │               │
-│  [+ 新建事件]    │   [迷你地图]           │               │
-├──────────────────┴───────────────────────┴───────────────┤
-│                      [实时预览窗口]                       │
-│  ┌───────────────────────────────────────────────────┐   │
-│  │  事件标题: 被诅咒的宝箱                             │   │
-│  │  描述文本...                                       │   │
-│  │  [暴力撬开 力量65%]  [解除陷阱 敏捷45%]  [不管它]  │   │
-│  └───────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────┘
-```
-
-#### 节点类型（Visual Scripting Graph）
-
-| 节点类型 | 说明 | 属性 |
-|----------|------|------|
-| **Start** | 事件入口 | eventId, title, description, region |
-| **Option** | 选项节点 | text, attribute, successRate |
-| **Check** | 属性判定 | 自动基于Option的属性和玩家属性计算 |
-| **Success** | 成功结果 | reward type + amount |
-| **Failure** | 失败结果 | consequence type + amount |
-| **Branch** | 分支条件 | 可选的额外条件（如职业要求） |
-| **End** | 结束节点 | summary text |
-
-#### 节点连接逻辑
+### 依赖关系
 
 ```
-Start → Option(s) → Check → Success (绿色箭头)
-                          → Failure (红色箭头)
-                          → End
+主计划 (当前文档)          事件编辑器 (独立计划)
+  Task 1-3: 区域/地图/节点    Task 1-2: 编辑器窗口/事件列表
+  Task 5: 非战斗节点           Task 3-4: 节点图/属性面板
+  Task 6-8: 事件系统 ← JSON→  Task 7-8: JSON导入导出
+  Task 9-13: 商店/平衡/Boss    Task 9-13: 撤销/布局/模板/验证
 ```
 
-每个Option节点连接到一个Check节点，Check节点分出Success和Failure两条路径。
-
-#### 导出功能
-
-- **格式**: JSON
-- **位置**: `Assets/Tactics/Resources/Events/` 或指定路径
-- **内容**: 完整的事件数据结构
-- **预览**: 导出前可在编辑器中预览事件在游戏中的表现
-
-#### UI细节要求
-
-- 节点拖拽连接（类似Shader Graph或Dialogue System）
-- 属性值和成功率自动计算显示
-- 每个选项的文本支持多行输入
-- 属性下拉选择（Strength/Dexterity/Constitution/Intelligence/Charisma）
-- 奖励类型下拉选择（gold/item/equip/buff/heal/damage/nothing/battle）
-- 实时预览面板同步更新
+两个计划可**同步并行开发**，无阻塞依赖。
 
 ---
 
@@ -464,28 +411,6 @@ Start → Option(s) → Check → Success (绿色箭头)
 
 **战斗前传递**: BattleContext (regionId, nodeType, party, enemyLevel, enemyGroupId)
 **战斗后返回**: BattleResult (isVictory, goldEarned, loot, party)
-
----
-
-## 事件编辑器 — 实现路线
-
-### 阶段1: 基础编辑器框架
-1. 自定义Editor Window（UI Toolkit）
-2. 事件列表面板
-3. 属性面板（编辑事件基本信息）
-4. JSON导出功能
-
-### 阶段2: Visual Scripting集成
-1. 节点图画布
-2. 节点类型（Start/Option/Check/Result）
-3. 节点连接逻辑
-4. 实时预览
-
-### 阶段3: 完善
-1. 拖拽创建连接
-2. 撤销/重做
-3. 导入已有JSON事件
-4. 批量导出
 
 ---
 

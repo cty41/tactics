@@ -39,7 +39,7 @@
 1. 区域系统（3个暗黑风主题区域：黑暗森林/墓地/修道院）
 2. 节点状态系统（逐步揭示机制：未揭示/已揭示/可到达/已访问）
 3. 事件系统（JSON配置 + BG3式属性判定 + 成功率显示）
-4. 事件编辑器工具（UI Toolkit Editor + Visual Scripting，WYSIWYG拖拽编辑，导出JSON）
+4. 事件编辑器工具（独立计划 — 详见 [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)）
 5. 非战斗节点玩法（商店/宝藏/休息站 — 低金币经济）
 6. Boss节点简化行为（仅"继续探索"/"返回避难所"2选项）
 7. 资源系统（低金币经济：单局≤50金）
@@ -100,32 +100,15 @@
   - [ ] 到达新层时自动揭示下一层
   - [ ] UI正确显示4种节点状态和当前玩家位置标记
 
-#### Task 4: 事件编辑器 ⭐（高优先级）
+#### Task 4: 事件编辑器（独立计划）
 
-- **目标**: 开发WYSIWYG事件编辑器，让策划可视化创建和编辑Roguelike事件
-- **输出**: `RoguelikeEventEditorWindow`, 节点图编辑系统, JSON导出功能
-- **新增文件**:
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/RoguelikeEventEditorWindow.cs`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/EventGraphView.cs`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/Nodes/StartNode.cs`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/Nodes/OptionNode.cs`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/Nodes/CheckNode.cs`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/Nodes/ResultNode.cs`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/EventExporter.cs`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/EventEditorUXML.uxml`
-  - `Assets/Tactics/Editor/RoguelikeEventEditor/EventEditorUSS.uss`
-- **技术方案**: UI Toolkit Editor Window + 自定义节点图 + Visual Scripting风格
-- **验收标准**:
-  - [ ] 左侧事件列表面板（新建/删除/选择事件）
-  - [ ] 中央节点图画布，支持Start/Option/Check/Result节点
-  - [ ] 右侧属性面板，编辑选中节点的属性（文本、属性、成功率、奖励类型）
-  - [ ] 节点间拖拽连接（Start→Option→Check→Success/Failure）
-  - [ ] 实时预览面板，显示事件在实际游戏中的表现
-  - [ ] JSON导出功能（导出至 `Assets/Tactics/Resources/Events/`）
-  - [ ] 属性下拉选择（Strength/Dexterity/Constitution/Intelligence/Charisma）
-  - [ ] 奖励类型下拉选择（gold/item/equip/buff/heal/damage/nothing/battle）
-- **依赖**: Task 1（需知道区域ID列表）, Task 2（无需，但编辑器窗口独立）
-- **为何高优先级**: 后续所有事件内容（Task 6/11）依赖此编辑器创建，手工编写JSON效率低且易错
+> 事件编辑器已分离为**独立开发计划**，不与本计划的任务共享依赖。
+> 
+> **设计文档**: [roguelike-event-editor-design.md](../design/roguelike-event-editor-design.md)  
+> **开发计划**: [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)
+> 
+> **开发策略**: 事件编辑器与主计划完全并行。事件系统的开发（Task 6-8）前期使用手工编写的JSON文件先行开发，
+> 待编辑器完成后切换为编辑器导出。两边的数据接口通过 `Assets/Tactics/Resources/Events/{Region}/*.json` 对接。
 
 #### Task 5: 非战斗节点基础框架（低金币版）
 
@@ -291,18 +274,10 @@
 
 ### Phase 4: 优化（Week 4）
 
-#### Task 14: 事件编辑器完善
+#### Task 14: 事件编辑器完善（独立计划）
 
-- **目标**: 完善事件编辑器的高级功能
-- **输出**: 编辑器增强功能
-- **修改文件**: 编辑器相关文件
-- **验收标准**:
-  - [ ] 支持导入已有JSON事件进行编辑
-  - [ ] 支持撤销/重做（Ctrl+Z/Ctrl+Y）
-  - [ ] 支持批量导出（多选事件 → 一键导出所有）
-  - [ ] 节点图缩放和平移
-  - [ ] 自动布局功能（整理节点位置）
-  - [ ] 事件模板功能（从模板快速创建新事件）
+> 编辑器完善功能已包含在独立的 **事件编辑器开发计划** 中。
+> 详见 [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md) Phase 2-3。
 
 ---
 
@@ -315,18 +290,20 @@ Task 1 (区域数据层)
   │     │                                              ├── Task 10 (休息站)
   │     │                                              └── Task 13 (Boss结算)
   │     │
-  │     └── Task 4 (事件编辑器) ⭐ 高优先级
-  │           └── Task 6 (事件数据层) ── Task 7 (属性判定) ── Task 8 (事件UI)
-  │                 └── Task 11 (事件扩展) ── Task 14 (编辑器完善)
+  │     └── Task 6 (事件数据层) ── Task 7 (属性判定) ── Task 8 (事件UI)
+  │           └── Task 11 (事件扩展)
   │
   └── Task 12 (数值平衡) ── 依赖所有功能完成
+
+> **事件编辑器（Task 4/14）**: 已分离为独立计划，详见 [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)。
+> 事件系统（Task 6-8）通过 JSON 文件接口与编辑器对接，两方可完全并行开发。
 ```
 
 ## Risks & Open Questions
 
 | 风险 | 等级 | 缓解措施 |
 |------|------|----------|
-| 事件编辑器开发复杂度高：节点图+Visual Scripting需要较多Editor开发 | 高 | Task 4放在Phase 1最优先；先实现基础版（表单编辑），再迭代节点图 |
+| 事件编辑器开发复杂度高：已分离到独立计划 | 高 | 详见 [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)；事件系统前期用手工JSON开发 |
 | 低金币经济平衡困难：≤50金需精确数值设计 | 中 | Task 12提供调试工具，导出金币流数据人工评审 |
 | UI工作量大：事件/商店/休息站/Boss结算都需要独立UI | 中 | 使用UI Toolkit复用组件，先占位后细化 |
 | 现有代码兼容：修改多个现有文件可能引入回归 | 低 | 扩展现有类而非重构核心逻辑，保持向后兼容 |
@@ -358,7 +335,7 @@ Task 1 (区域数据层)
 - [ ] 可以开始一局完整的暗黑风Roguelike Run（黑暗森林 → 墓地 → 修道院通关）
 - [ ] 可以探索3个主题区域，每区域有独特的节点分布和事件主题
 - [ ] 可以触发事件并看到BG3式属性判定选项（显示成功率百分比）
-- [ ] 可以使用事件编辑器创建、编辑、导出事件JSON
+- [ ] 可以使用编辑器导出的JSON事件文件（事件编辑器验收详见[独立计划](roguelike-event-editor-开发计划.md)）
 - [ ] 可以在商店浏览和购买物品（金币正确扣除和获得，价格3-15金）
 - [ ] 可以在休息站选择休息/训练/冥想
 - [ ] 击败Boss后仅显示"继续探索"/"返回避难所"2个选项
