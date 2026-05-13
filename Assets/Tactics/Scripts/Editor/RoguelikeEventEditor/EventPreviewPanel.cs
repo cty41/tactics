@@ -26,14 +26,14 @@ namespace Tactics.Editor.RoguelikeEventEditor
             // 标题
             var headerRow = new VisualElement { style = { flexDirection = FlexDirection.Row, paddingBottom = 4 } };
             var icon = new Label("▶") { style = { color = new UnityEngine.Color(0.8f, 0.6f, 0.2f), fontSize = 14 } };
-            var headerText = new Label("实时预览") { style = { unityFontStyleAndWeight = UnityEngine.FontStyle.Bold, marginLeft = 4, fontSize = 11, color = new UnityEngine.Color(0.6f, 0.6f, 0.6f) } };
+            var headerText = new Label("Live Preview") { style = { unityFontStyleAndWeight = UnityEngine.FontStyle.Bold, marginLeft = 4, fontSize = 11, color = new UnityEngine.Color(0.6f, 0.6f, 0.6f) } };
             headerRow.Add(icon); headerRow.Add(headerText);
             Add(headerRow);
 
-            _titleLabel = new Label("未选择事件") { style = { fontSize = 15, unityFontStyleAndWeight = UnityEngine.FontStyle.Bold, color = new UnityEngine.Color(0.9f, 0.9f, 0.9f), paddingBottom = 4 } };
+            _titleLabel = new Label("No event selected") { style = { fontSize = 15, unityFontStyleAndWeight = UnityEngine.FontStyle.Bold, color = new UnityEngine.Color(0.9f, 0.9f, 0.9f), paddingBottom = 4 } };
             Add(_titleLabel);
 
-            _descLabel = new Label("从左侧选择一个事件...") { style = { fontSize = 12, color = new UnityEngine.Color(0.7f, 0.7f, 0.7f), paddingBottom = 8, whiteSpace = WhiteSpace.Normal } };
+            _descLabel = new Label("Select an event from the list...") { style = { fontSize = 12, color = new UnityEngine.Color(0.7f, 0.7f, 0.7f), paddingBottom = 8, whiteSpace = WhiteSpace.Normal } };
             Add(_descLabel);
 
             _optionsRow = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap, paddingTop = 4 } };
@@ -53,13 +53,13 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
             if (evt == null)
             {
-                _titleLabel.text = "未选择事件";
-                _descLabel.text = "从左侧选择一个事件...";
+_titleLabel.text = "No event selected";
+                _descLabel.text = "Select an event from the list...";
                 _optionsRow.Clear();
                 return;
             }
 
-            _titleLabel.text = evt.title ?? evt.eventId ?? "未命名事件";
+            _titleLabel.text = evt.title ?? evt.eventId ?? "Unnamed Event";
             _descLabel.text = evt.description ?? "";
 
             _optionsRow.Clear();
@@ -73,7 +73,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
             if (options.Count == 0)
             {
-                _placeholderLabel.text = "（无选项 — 请添加 Option 节点）";
+                _placeholderLabel.text = "(No options - add an Option node)";
                 _placeholderLabel.style.display = DisplayStyle.Flex;
             }
         }
@@ -111,7 +111,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             }
             else
             {
-                var autoLabel = new Label("自动成功")
+                var autoLabel = new Label("Auto Success")
                 {
                     style = { fontSize = 10, color = new UnityEngine.Color(0.3f, 0.7f, 0.3f), paddingTop = 2 }
                 };
@@ -124,17 +124,17 @@ namespace Tactics.Editor.RoguelikeEventEditor
         private void ShowOptionResult(EventNodeData opt)
         {
             _resultLabel.style.display = DisplayStyle.Flex;
-            _resultLabel.text = $"→ 选项「{opt.data?.text}」触发… (运行中基于属性判定)";
+            _resultLabel.text = $"→ Option \"{opt.data?.text}\" triggered... (resolved via attribute check at runtime)";
         }
 
         public void ClearPreview()
         {
-            _titleLabel.text = "未选择事件";
+            _titleLabel.text = "No event selected";
             _descLabel.text = "";
             _optionsRow.Clear();
             _resultLabel.style.display = DisplayStyle.None;
             _placeholderLabel.style.display = DisplayStyle.Flex;
-            _placeholderLabel.text = "从左侧选择一个事件开始编辑";
+            _placeholderLabel.text = "Select an event to begin editing";
         }
 
         private static UnityEngine.Color GetAttributeColor(string attr) => attr switch

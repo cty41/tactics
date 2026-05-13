@@ -270,15 +270,15 @@ namespace Tactics.Editor.RoguelikeEventEditor
             var newBtn = new Button(() =>
             {
                 _eventBlackboard?.CreateNewEvent();
-            }) { text = "新建", style = { height = 22, marginTop = 3, marginRight = 4, fontSize = 11 } };
+            }) { text = "New", style = { height = 22, marginTop = 3, marginRight = 4, fontSize = 11 } };
             _toolbar.Add(newBtn);
 
             var exportBtn = new Button(() => ExportCurrentEvent())
-            { text = "导出", style = { height = 22, marginTop = 3, marginRight = 4, fontSize = 11 } };
+            { text = "Export", style = { height = 22, marginTop = 3, marginRight = 4, fontSize = 11 } };
             _toolbar.Add(exportBtn);
 
             var importBtn = new Button(() => ImportEvents())
-            { text = "导入", style = { height = 22, marginTop = 3, fontSize = 11 } };
+            { text = "Import", style = { height = 22, marginTop = 3, fontSize = 11 } };
             _toolbar.Add(importBtn);
         }
 
@@ -288,7 +288,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             var data = _graphView?.BuildEventData();
             if (data == null || string.IsNullOrEmpty(data.eventId))
             {
-                EditorUtility.DisplayDialog("导出失败", "当前没有有效的事件数据", "确定");
+                EditorUtility.DisplayDialog("Export Failed", "No valid event data to export", "OK");
                 return;
             }
 
@@ -305,7 +305,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
                 System.IO.Path.Combine(Application.dataPath, "Tactics/Resources/Events", data.region, $"{data.eventId}.json"),
                 json);
             AssetDatabase.Refresh();
-            EditorUtility.DisplayDialog("导出成功", $"事件已导出到:\n{filePath}", "确定");
+            EditorUtility.DisplayDialog("Export Success", $"Event exported to:\n{filePath}", "OK");
         }
 
         private void ImportEvents()
@@ -313,7 +313,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             string dir = "Assets/Tactics/Resources/Events";
             if (!AssetDatabase.IsValidFolder(dir))
             {
-                EditorUtility.DisplayDialog("导入失败", $"未找到事件目录:\n{dir}", "确定");
+                EditorUtility.DisplayDialog("Import Failed", $"Event directory not found:\n{dir}", "OK");
                 return;
             }
 
@@ -332,14 +332,14 @@ namespace Tactics.Editor.RoguelikeEventEditor
                 }
                 catch (System.Exception ex)
                 {
-                    TLog.Warning($"[EventEditor] 导入失败: {path} — {ex.Message}");
+                    TLog.Warning($"[EventEditor] Import failed: {path} — {ex.Message}");
                 }
             }
 
             if (count > 0)
-                EditorUtility.DisplayDialog("导入成功", $"已导入 {count} 个事件", "确定");
+                EditorUtility.DisplayDialog("Import Success", $"Imported {count} event(s)", "OK");
             else
-                EditorUtility.DisplayDialog("导入完成", "未找到有效的事件JSON文件", "确定");
+                EditorUtility.DisplayDialog("Import Complete", "No valid event JSON files found", "OK");
         }
 
         // ── Helper Types ──────────────────────────

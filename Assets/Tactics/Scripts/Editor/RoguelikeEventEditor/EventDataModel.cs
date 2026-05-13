@@ -109,7 +109,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             { Strength, Dexterity, Constitution, Intelligence, Charisma };
 
         public static readonly string[] DisplayNames =
-            { "力量", "敏捷", "体质", "智力", "魅力" };
+            { "Strength", "Dexterity", "Constitution", "Intelligence", "Charisma" };
     }
 
     public static class EventResultTypes
@@ -136,6 +136,6 @@ namespace Tactics.Editor.RoguelikeEventEditor
         public const string Monastery = "Monastery";
 
         public static readonly string[] All = { DarkForest, BurialGrounds, Monastery };
-        public static readonly string[] DisplayNames = { "黑暗森林", "墓地", "修道院" };
+        public static readonly string[] DisplayNames = { "Dark Forest", "Burial Grounds", "Monastery" };
     }
 }

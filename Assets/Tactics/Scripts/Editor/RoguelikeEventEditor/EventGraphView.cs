@@ -442,13 +442,13 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
         private static string GetNodeDisplayName(string type) => type switch
         {
-            EventNodeTypes.Start => "▶ 开始",
-            EventNodeTypes.Option => "◇ 选项",
-            EventNodeTypes.Check => "◆ 判定",
-            EventNodeTypes.Success => "○ 成功",
-            EventNodeTypes.Failure => "✕ 失败",
-            EventNodeTypes.Branch => "◇ 分支",
-            EventNodeTypes.End => "■ 结束",
+            EventNodeTypes.Start => "\u25b6 Start",
+            EventNodeTypes.Option => "\u25c7 Option",
+            EventNodeTypes.Check => "\u25c6 Check",
+            EventNodeTypes.Success => "\u25cb Success",
+            EventNodeTypes.Failure => "\u2715 Failure",
+            EventNodeTypes.Branch => "\u25c7 Branch",
+            EventNodeTypes.End => "\u25a0 End",
             _ => type
         };
     }

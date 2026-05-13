@@ -37,9 +37,9 @@ namespace Tactics.Editor.RoguelikeEventEditor
             header.style.borderBottomWidth = 1;
             header.style.borderBottomColor = new UnityEngine.Color(0.3f, 0.3f, 0.3f);
 
-            var label = new Label("事件列表") { style = { unityFontStyleAndWeight = UnityEngine.FontStyle.Bold, fontSize = 12 } };
+            var label = new Label("Event List") { style = { unityFontStyleAndWeight = UnityEngine.FontStyle.Bold, fontSize = 12 } };
             var addBtn = new Button(() => CreateNewEvent()) { text = "+", style = { width = 22, height = 22, marginLeft = new StyleLength(StyleKeyword.Auto) } };
-            addBtn.tooltip = "新建事件";
+            addBtn.tooltip = "New Event";
             header.Add(label); header.Add(addBtn);
             Add(header);
 
@@ -106,7 +106,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
             var lbl = new Label(evt.title ?? evt.eventId) { style = { flexGrow = 1, fontSize = 11, color = new UnityEngine.Color(0.85f, 0.85f, 0.85f) } };
             var delBtn = new Button(() => RemoveEvent(evt.eventId)) { text = "×", style = { width = 16, height = 16, fontSize = 10, marginRight = 4 } };
-            delBtn.tooltip = "删除";
+            delBtn.tooltip = "Delete";
             row.Add(lbl); row.Add(delBtn);
             return row;
         }
@@ -129,8 +129,8 @@ namespace Tactics.Editor.RoguelikeEventEditor
                 title = "新事件", region = EventRegions.DarkForest,
                 nodes = new List<EventNodeData>
                 {
-                    new() { nodeId = "start_1", type = EventNodeTypes.Start, data = new() { eventId = $"event_{_events.Count + 1:D3}", title = "新事件", region = EventRegions.DarkForest } },
-                    new() { nodeId = "end_1", type = EventNodeTypes.End, data = new() { summaryText = "事件结束" } }
+                    new() { nodeId = "start_1", type = EventNodeTypes.Start, data = new() { eventId = $"event_{_events.Count + 1:D3}", title = "New Event", region = EventRegions.DarkForest } },
+                    new() { nodeId = "end_1", type = EventNodeTypes.End, data = new() { summaryText = "Event ends" } }
                 },
                 connections = new List<EventConnectionData> { new() { from = "start_1", to = "end_1", port = "out" } }
             };
