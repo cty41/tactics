@@ -71,7 +71,8 @@ namespace Tactics.UI
             {
                 _commandInput.RegisterCallback<NavigationSubmitEvent>(OnCommandSubmitted);
                 _commandInput.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
-                _commandInput.style.height = 36;
+                _commandInput.style.height = StyleKeyword.Auto;
+                _commandInput.style.fontSize = 16;
                 _commandInput.style.backgroundColor = new Color(0.08f, 0.08f, 0.08f, 0.95f);
                 _commandInput.style.color = Color.white;
                 _commandInput.Focus();

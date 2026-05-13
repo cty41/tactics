@@ -245,27 +245,28 @@ namespace Tactics.Common.Battle
                     }
                 }
             }
+
+            // Persist state after rewards applied
+            PlayerAdventureStateStore.Save(_state);
         }
 
         /// <summary>
         /// 保存金币奖励到玩家冒险存档。
         /// </summary>
-        private static void SaveGoldReward(int gold)
+        private void SaveGoldReward(int gold)
         {
             if (gold <= 0)
                 return;
 
-            var state = PlayerAdventureStateStore.Load();
-            if (state == null)
+            if (_state == null)
             {
-                TLog.Warning("[BattleSettlementCoordinator] Cannot save gold reward: PlayerAdventureState is null.");
+                TLog.Warning("[BattleSettlementCoordinator] Cannot save gold reward: _state is null.");
                 return;
             }
 
-            state.Gold += gold;
-            PlayerAdventureStateStore.Save(state);
+            _state.Gold += gold;
 
-            TLog.Info($"[BattleSettlementCoordinator] Gold reward saved: +{gold}. TotalGold={state.Gold}");
+            TLog.Info($"[BattleSettlementCoordinator] Gold reward added to _state: +{gold}. TotalGold={_state.Gold}");
         }
 
         #endregion
