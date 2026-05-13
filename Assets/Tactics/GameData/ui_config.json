@@ -59,6 +59,12 @@
       "type": "UiToolkitUxml",
       "uxml": "Assets/Tactics/Arts/UI/SkillSelection.uxml",
       "uss": "Assets/Tactics/Arts/UI/SkillSelection.uss"
+    },
+    {
+      "id": "LevelUp",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/LevelUpPanel.uxml",
+      "uss": ""
     }
   ]
 }

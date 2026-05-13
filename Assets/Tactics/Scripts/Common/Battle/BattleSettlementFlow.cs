@@ -206,7 +206,8 @@ namespace Tactics.Common.Battle
 
             if (hasLeveledUp)
             {
-                _ = ShowAttributeAllocationAsync(character);
+                bool needsSkillSelection = SkillSystem.ShouldShowSkillSelection(character, character.Level);
+                _ = ShowLevelUpAsync(character, needsSkillSelection);
             }
             else
             {
@@ -215,22 +216,44 @@ namespace Tactics.Common.Battle
             }
         }
 
-        private async Task ShowAttributeAllocationAsync(CharacterDefinition character)
+        private async Task ShowLevelUpAsync(CharacterDefinition character, bool needsSkillSelection)
         {
-            await UIManager.Instance.ShowAsync(UIManager.UIId.AttributeAllocation);
+            await UIManager.Instance.ShowAsync(UIManager.UIId.LevelUp);
 
-            var controller = FindController<AttributeAllocationUIController>(UIManager.UIId.AttributeAllocation);
+            var controller = FindController<LevelUpPanelController>(UIManager.UIId.LevelUp);
             if (controller == null)
             {
-                TLog.Error("[BattleSettlementFlow] AttributeAllocationUIController not found.");
+                TLog.Error("[BattleSettlementFlow] LevelUpPanelController not found.");
                 _currentCharacterIndex++;
                 ProcessNextCharacter();
                 return;
             }
 
             controller.SetCharacter(character);
-            controller.RefreshUI();
-            _ = WaitForAttributeAllocationCloseAsync(character);
+            if (needsSkillSelection)
+            {
+                var options = GenerateSkillOptions(character);
+                controller.SetSkillOptions(options);
+            }
+            controller.RefreshAll();
+
+            // Wait for UI to close
+            await Task.Yield();
+            await Task.Yield();
+
+            int maxWaitFrames = 6000;
+            int frameCount = 0;
+            while (frameCount < maxWaitFrames)
+            {
+                await Task.Yield();
+                frameCount++;
+                if (!IsUiVisible(UIManager.UIId.LevelUp))
+                    break;
+            }
+
+            TLog.Info($"[BattleSettlementFlow] LevelUp panel closed for {character.DisplayName}.");
+            _currentCharacterIndex++;
+            ProcessNextCharacter();
         }
 
         private async Task WaitForAttributeAllocationCloseAsync(CharacterDefinition character)

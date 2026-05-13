@@ -47,6 +47,7 @@ namespace Tactics
             BattleSettlement,
             AttributeAllocation,
             SkillSelection,
+            LevelUp,
         }
 
         private enum UIType
@@ -504,6 +505,10 @@ namespace Tactics
                 case UIId.SkillSelection:
                     if (root.GetComponent<SkillSelectionUIController>() == null)
                         root.AddComponent<SkillSelectionUIController>();
+                    break;
+                case UIId.LevelUp:
+                    if (root.GetComponent<LevelUpPanelController>() == null)
+                        root.AddComponent<LevelUpPanelController>();
                     break;
                 default:
                     break;
