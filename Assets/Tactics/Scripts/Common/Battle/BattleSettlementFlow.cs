@@ -237,19 +237,27 @@ namespace Tactics.Common.Battle
             }
             controller.RefreshAll();
 
-            // Wait for UI to close
-            await Task.Yield();
-            await Task.Yield();
-
-            int maxWaitFrames = 6000;
-            int frameCount = 0;
-            while (frameCount < maxWaitFrames)
+            // Wait for user to click confirm via OnConfirm event
+            var tcs = new TaskCompletionSource<bool>();
+            Action onConfirmHandler = null;
+            onConfirmHandler = () =>
             {
-                await Task.Yield();
-                frameCount++;
-                if (!IsUiVisible(UIManager.UIId.LevelUp))
-                    break;
-            }
+                controller.OnConfirm -= onConfirmHandler;
+                tcs.TrySetResult(true);
+            };
+            controller.OnConfirm += onConfirmHandler;
+
+            // Safety fallback: if event never fires, wait up to 6000 frames (~100s)
+            var timeoutTask = Task.Run(async () =>
+            {
+                for (int i = 0; i < 6000; i++)
+                {
+                    await Task.Yield();
+                }
+            });
+
+            await Task.WhenAny(tcs.Task, timeoutTask);
+            controller.OnConfirm -= onConfirmHandler;
 
             TLog.Info($"[BattleSettlementFlow] LevelUp panel closed for {character.DisplayName}.");
             _currentCharacterIndex++;
