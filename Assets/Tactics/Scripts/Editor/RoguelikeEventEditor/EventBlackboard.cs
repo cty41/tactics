@@ -89,8 +89,11 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
         public void UpdateEvent(SerializableEventData evt)
         {
+            if (evt == null || string.IsNullOrEmpty(evt.eventId)) return;
+
             var idx = _events.FindIndex(e => e.eventId == evt.eventId);
             if (idx >= 0) _events[idx] = evt;
+
             if (_eventRows.TryGetValue(evt.eventId, out var row))
             {
                 var lbl = row.Q<Label>();

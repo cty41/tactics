@@ -154,23 +154,19 @@ namespace Tactics.Editor.RoguelikeEventEditor
             var lbl = new Label(label) { style = { fontSize = 10, color = new UnityEngine.Color(0.6f, 0.6f, 0.6f), paddingBottom = 2 } };
             row.Add(lbl);
 
-            var dropdown = new PopupField<string>(displayNames != null ? new System.Collections.Generic.List<string>(displayNames) : new System.Collections.Generic.List<string>(options), currentValue);
+            int defaultIdx = System.Array.IndexOf(options, currentValue);
+            if (defaultIdx < 0) defaultIdx = 0;
+
+            var dropdown = new PopupField<string>(
+                new System.Collections.Generic.List<string>(options),
+                defaultIdx,
+                v => FormatDropdownValue(v, options, displayNames),
+                v => FormatDropdownValue(v, options, displayNames));
+
             dropdown.style.fontSize = 11;
             dropdown.style.height = 22;
-            int currentIdx = System.Array.IndexOf(options, currentValue);
-            if (currentIdx >= 0) dropdown.index = currentIdx;
 
-            dropdown.RegisterValueChangedCallback(evt =>
-            {
-                int idx = dropdown.index;
-                if (displayNames != null && idx >= 0 && idx < displayNames.Length)
-                {
-                    onChange(displayNames[idx]);
-                    // 映射回实际值
-                    if (idx < options.Length)
-                        onChange(options[idx]);
-                }
-            });
+            dropdown.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(dropdown);
             _propContainer.Add(row);
         }
@@ -178,6 +174,13 @@ namespace Tactics.Editor.RoguelikeEventEditor
         private void Changed()
         {
             _onValueChanged?.Invoke();
+        }
+
+        private static string FormatDropdownValue(string value, string[] options, string[] displayNames)
+        {
+            if (displayNames == null) return value;
+            int i = System.Array.IndexOf(options, value);
+            return i >= 0 && i < displayNames.Length ? displayNames[i] : value;
         }
     }
 }

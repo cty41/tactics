@@ -240,16 +240,16 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
         private void OnGraphNodeSelected(EventNodeElement node)
         {
-            _inspectorPanel?.InspectNode(node, () =>
-            {
-                // 属性变更后刷新预览
-                var data = _graphView?.BuildEventData();
-                if (data != null)
+                _inspectorPanel?.InspectNode(node, () =>
                 {
-                    _previewPanel?.UpdatePreview(data);
-                    _eventBlackboard?.UpdateEvent(data);
-                }
-            });
+                    var data = _graphView?.BuildEventData();
+                    if (data != null)
+                    {
+                        _previewPanel?.UpdatePreview(data);
+                        if (!string.IsNullOrEmpty(_eventBlackboard?.SelectedEventId))
+                            _eventBlackboard?.UpdateEvent(data);
+                    }
+                });
         }
 
         private void OnGraphChanged()
@@ -258,7 +258,9 @@ namespace Tactics.Editor.RoguelikeEventEditor
             if (data != null)
             {
                 _previewPanel?.UpdatePreview(data);
-                _eventBlackboard?.UpdateEvent(data);
+                // Only update blackboard if an event is selected
+                if (!string.IsNullOrEmpty(_eventBlackboard?.SelectedEventId))
+                    _eventBlackboard?.UpdateEvent(data);
             }
         }
 
