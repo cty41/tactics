@@ -1,29 +1,23 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:VisualElement name="LevelUpRoot" style="flex-grow:1; flex-direction:column; padding:20px; background-color:rgba(0,0,0,0.9);">
-        <!-- Header -->
-        <ui:VisualElement style="flex-direction:row; justify-content:space-between; margin-bottom:15px;">
-            <ui:Label name="CharacterNameLabel" text="角色名" style="font-size:22px; color:white; -unity-font-style:bold;" />
-            <ui:Label name="LevelLabel" text="Lv.1" style="font-size:18px; color:#aaa;" />
-            <ui:Label name="PointsRemainingLabel" text="剩余点数: 0" style="font-size:16px; color:#ffcc00;" />
-        </ui:VisualElement>
-        
-        <!-- Main content: left attributes + right skills -->
-        <ui:VisualElement name="MainContent" style="flex-grow:1; flex-direction:row;">
-            <!-- Left: Attribute Allocation -->
-            <ui:VisualElement name="LeftPanel" style="flex-grow:1; margin-right:10px;">
-                <ui:Label text="属性" style="font-size:16px; color:white; -unity-font-style:bold; margin-bottom:8px;" />
-                <ui:ScrollView name="AttributeRows" style="flex-grow:1;" />
-                <ui:VisualElement name="DerivedStats" style="margin-top:10px; padding-top:10px; border-top-width:1px; border-top-color:#444;" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="LevelUpRoot" class="levelup-overlay">
+        <ui:VisualElement class="levelup-panel">
+            <ui:VisualElement class="levelup-header">
+                <ui:Label name="CharacterNameLabel" class="char-name" text="角色名" />
+                <ui:Label name="LevelLabel" class="char-level" text="Lv.1" />
+                <ui:Label name="PointsRemainingLabel" class="points-label" text="剩余点数: 0" />
             </ui:VisualElement>
-            
-            <!-- Right: Skill Selection -->
-            <ui:VisualElement name="RightPanel" style="flex-grow:1; margin-left:10px;">
-                <ui:Label text="技能" style="font-size:16px; color:white; -unity-font-style:bold; margin-bottom:8px;" />
-                <ui:ScrollView name="SkillList" style="flex-grow:1;" />
+            <ui:VisualElement name="MainContent" class="main-content">
+                <ui:VisualElement name="LeftPanel" class="left-panel">
+                    <ui:Label text="属性" class="section-title" />
+                    <ui:ScrollView name="AttributeRows" />
+                    <ui:VisualElement name="DerivedStats" class="derived-section" />
+                </ui:VisualElement>
+                <ui:VisualElement name="RightPanel" class="right-panel">
+                    <ui:Label text="技能" class="section-title" />
+                    <ui:ScrollView name="SkillList" />
+                </ui:VisualElement>
             </ui:VisualElement>
+            <ui:Button name="ConfirmButton" text="确认" class="confirm-btn" />
         </ui:VisualElement>
-        
-        <!-- Bottom: Confirm -->
-        <ui:Button name="ConfirmButton" text="确认" style="margin-top:15px; height:40px; font-size:16px;" />
     </ui:VisualElement>
 </ui:UXML>

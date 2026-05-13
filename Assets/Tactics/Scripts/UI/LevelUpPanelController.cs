@@ -80,38 +80,26 @@ namespace Tactics.UI
             foreach (var type in AllTypes)
             {
                 var row = new VisualElement();
-                row.style.flexDirection = FlexDirection.Row;
-                row.style.alignItems = Align.Center;
-                row.style.marginBottom = 4;
+                row.AddToClassList("attr-row");
 
                 var nameLabel = new Label(AttributePointSystem.GetAttributeDisplayName(type));
-                nameLabel.style.width = 40;
-                nameLabel.style.color = Color.white;
-                nameLabel.style.fontSize = 14;
+                nameLabel.AddToClassList("attr-name");
 
                 var valueLabel = new Label("0");
-                valueLabel.style.width = 30;
-                valueLabel.style.color = Color.white;
-                valueLabel.style.fontSize = 14;
-                valueLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                valueLabel.AddToClassList("attr-value");
 
                 var minusBtn = new Button { text = "-" };
-                minusBtn.style.width = 25;
-                minusBtn.style.height = 25;
-                minusBtn.style.fontSize = 14;
+                minusBtn.AddToClassList("attr-btn");
+                minusBtn.AddToClassList("attr-btn-minus");
                 minusBtn.SetEnabled(false);
                 minusBtn.clicked += () => OnAttributeMinus(type);
 
                 var allocatedLabel = new Label("+0");
-                allocatedLabel.style.width = 30;
-                allocatedLabel.style.color = new Color(0.4f, 1f, 0.4f);
-                allocatedLabel.style.fontSize = 14;
-                allocatedLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                allocatedLabel.AddToClassList("attr-allocated");
 
                 var plusBtn = new Button { text = "+" };
-                plusBtn.style.width = 25;
-                plusBtn.style.height = 25;
-                plusBtn.style.fontSize = 14;
+                plusBtn.AddToClassList("attr-btn");
+                plusBtn.AddToClassList("attr-btn-plus");
                 plusBtn.clicked += () => OnAttributePlus(type);
 
                 row.Add(nameLabel);
@@ -232,10 +220,7 @@ namespace Tactics.UI
             _derivedStats.Clear();
 
             var title = new Label("派生属性");
-            title.style.fontSize = 14;
-            title.style.color = new Color(0.6f, 0.6f, 1f);
-            title.style.marginBottom = 4;
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            title.AddToClassList("derived-title");
             _derivedStats.Add(title);
 
             int str = _currentCharacter.GetTotalStrength();
@@ -259,17 +244,13 @@ namespace Tactics.UI
         private void AddDerivedStat(string name, string value)
         {
             var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.justifyContent = Justify.SpaceBetween;
-            row.style.marginBottom = 2;
+            row.AddToClassList("derived-row");
 
             var nameLabel = new Label(name);
-            nameLabel.style.color = new Color(0.7f, 0.7f, 0.7f);
-            nameLabel.style.fontSize = 12;
+            nameLabel.AddToClassList("derived-name");
 
             var valueLabel = new Label(value);
-            valueLabel.style.color = Color.white;
-            valueLabel.style.fontSize = 12;
+            valueLabel.AddToClassList("derived-value");
 
             row.Add(nameLabel);
             row.Add(valueLabel);
@@ -292,50 +273,22 @@ namespace Tactics.UI
             foreach (var skill in _skillOptions)
             {
                 var card = new VisualElement();
-                card.style.flexDirection = FlexDirection.Column;
-                card.style.paddingTop = 8;
-                card.style.paddingBottom = 8;
-                card.style.paddingLeft = 10;
-                card.style.paddingRight = 10;
-                card.style.marginBottom = 6;
-                card.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f);
-                card.style.borderTopLeftRadius = 4;
-                card.style.borderTopRightRadius = 4;
-                card.style.borderBottomLeftRadius = 4;
-                card.style.borderBottomRightRadius = 4;
-                card.style.borderLeftWidth = 3;
-                card.style.borderLeftColor = new Color(0.3f, 0.3f, 0.3f);
+                card.AddToClassList("skill-card");
 
                 var nameRow = new VisualElement();
-                nameRow.style.flexDirection = FlexDirection.Row;
-                nameRow.style.justifyContent = Justify.SpaceBetween;
+                nameRow.AddToClassList("skill-card-header");
 
                 var skillName = new Label(skill.DisplayName);
-                skillName.style.fontSize = 14;
-                skillName.style.color = Color.white;
-                skillName.style.unityFontStyleAndWeight = FontStyle.Bold;
+                skillName.AddToClassList("skill-name");
 
                 var typeLabel = new Label(skill.SkillType == SkillType.Active ? "主动" : "被动");
-                typeLabel.style.fontSize = 11;
-                typeLabel.style.color = new Color(0.5f, 0.8f, 1f);
-                typeLabel.style.paddingLeft = 6;
-                typeLabel.style.paddingRight = 6;
-                typeLabel.style.paddingTop = 2;
-                typeLabel.style.paddingBottom = 2;
-                typeLabel.style.backgroundColor = new Color(0.1f, 0.2f, 0.3f);
-                typeLabel.style.borderTopLeftRadius = 3;
-                typeLabel.style.borderTopRightRadius = 3;
-                typeLabel.style.borderBottomLeftRadius = 3;
-                typeLabel.style.borderBottomRightRadius = 3;
+                typeLabel.AddToClassList("skill-type-badge");
 
                 nameRow.Add(skillName);
                 nameRow.Add(typeLabel);
 
                 var descLabel = new Label(skill.Description);
-                descLabel.style.fontSize = 11;
-                descLabel.style.color = new Color(0.6f, 0.6f, 0.6f);
-                descLabel.style.marginTop = 2;
-                descLabel.style.whiteSpace = WhiteSpace.Normal;
+                descLabel.AddToClassList("skill-desc");
 
                 card.Add(nameRow);
                 card.Add(descLabel);
@@ -357,13 +310,9 @@ namespace Tactics.UI
             // Update visual selection
             foreach (var kvp in _skillCards)
             {
-                bool selected = kvp.Key == skillId;
-                kvp.Value.style.borderLeftColor = selected
-                    ? new Color(0.4f, 1f, 0.4f)
-                    : new Color(0.3f, 0.3f, 0.3f);
-                kvp.Value.style.backgroundColor = selected
-                    ? new Color(0.1f, 0.25f, 0.1f)
-                    : new Color(0.15f, 0.15f, 0.15f);
+                kvp.Value.RemoveFromClassList("selected");
+                if (kvp.Key == skillId)
+                    kvp.Value.AddToClassList("selected");
             }
             RefreshConfirmButton();
         }
