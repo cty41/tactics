@@ -240,7 +240,6 @@ namespace Tactics.UI
             AddDerivedStat("战后恢复", $"{con * 2}");
             AddDerivedStat("闪避率", $"{agi * 2}%");
             AddDerivedStat("暴击率", $"{10 + (luck - 5) * 2}%");
-            AddDerivedStat("额外骰子", $"{Mathf.FloorToInt(Mathf.Abs(luck - 5) / 10f)}");
         }
 
         private void AddDerivedStat(string name, string value)
