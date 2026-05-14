@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using Tactics.AssetPipeline;
 using Tactics.Common.Units.Classes;
+using Tactics.Common.Battle;
 
 namespace Tactics.Roster
 {
@@ -125,6 +126,43 @@ namespace Tactics.Roster
         {
             var state = Load();
             TryRepair(state, out bool changed);
+
+            // Ensure each character has at least one default learned skill
+            if (state.Roster != null)
+            {
+                foreach (var character in state.Roster)
+                {
+                    if (character == null) continue;
+                    if (character.LearnedSkills == null)
+                        character.LearnedSkills = new List<CharacterDefinition.LearnedSkill>();
+                    
+                    if (character.LearnedSkills.Count == 0)
+                    {
+                        string defaultSkillId = character.RoleType switch
+                        {
+                            RoleType.Barbarian => "barb_slash_1",
+                            RoleType.Mage => "mage_fireball_1",
+                            RoleType.Hunter => "hunter_shot_1",
+                            RoleType.Healer => "heal_heal_1",
+                            RoleType.Rogue => "rogue_backstab_1",
+                            _ => null
+                        };
+                        
+                        if (!string.IsNullOrEmpty(defaultSkillId))
+                        {
+                            character.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+                            {
+                                SkillId = defaultSkillId,
+                                SkillType = SkillType.Active,
+                                Level = 1
+                            });
+                            changed = true;
+                            TLog.Info($"[PlayerAdventureStateStore] Added default skill '{defaultSkillId}' to {character.DisplayName}");
+                        }
+                    }
+                }
+            }
+
             if (changed)
                 Save(state);
             return state;

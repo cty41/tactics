@@ -51,8 +51,6 @@ namespace Tactics.Roguelike
 
         private void OnBattleEnded(GameResult result)
         {
-            ApplyRoguelikePathAfterBattle(result);
-
             bool humanWon = result.Winners != null &&
                             result.Winners.Any(p => p != null && p.PlayerType == PlayerType.HumanPlayer);
 
@@ -81,7 +79,14 @@ namespace Tactics.Roguelike
                         // 保存状态
                         if (state != null)
                             PlayerAdventureStateStore.Save(state);
-                        TLog.Info("[RoguelikeBattleReturnHandler] Settlement complete. Scene transition skipped for testing.");
+            
+                        // 延迟提交地图路径（结算完成后再前进路径）
+                        ApplyRoguelikePathAfterBattle(result);
+            
+                        // 清除事件进行中标记
+                        RoguelikeEventReentryManager.ClearEventInProgress();
+            
+                        TLog.Info("[RoguelikeBattleReturnHandler] Settlement complete. Path committed, markers cleared.");
                         // TODO: 恢复场景切换
                         // _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
                     }

@@ -465,8 +465,14 @@ namespace Tactics.UI
             if (AttributePointSystem.ApplyAttributePoint(_currentCharacter, type))
             {
                 RefreshAttributeRows();
+                // 更新剩余点数显示
+                if (_pointsRemainingLabel != null)
+                    _pointsRemainingLabel.text = $"剩余点数: {_currentCharacter.AttributePoints}";
                 RefreshDerivedStats();
                 BuildSkillCards();
+                // Re-apply skill selection (BuildSkillCards cleared the visual state)
+                if (_selectedSkillId != null)
+                    SelectSkill(_selectedSkillId);
                 RefreshConfirmButton();
             }
         }
@@ -492,8 +498,14 @@ namespace Tactics.UI
             }
 
             RefreshAttributeRows();
+            // 更新剩余点数显示
+            if (_pointsRemainingLabel != null)
+                _pointsRemainingLabel.text = $"剩余点数: {_currentCharacter.AttributePoints}";
             RefreshDerivedStats();
             BuildSkillCards();
+            // Re-apply skill selection (BuildSkillCards cleared the visual state)
+            if (_selectedSkillId != null)
+                SelectSkill(_selectedSkillId);
             RefreshConfirmButton();
         }
 

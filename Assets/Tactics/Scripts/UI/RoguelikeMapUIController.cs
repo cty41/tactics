@@ -5,6 +5,7 @@ using System.Linq;
 using DG.Tweening;
 using Tactics.AssetPipeline;
 using Tactics.Flow.Roguelike;
+using Tactics.Roguelike;
 using Tactics.Flow.Battle;
 using Tactics.RoguelikeMap;
 using Tactics.Roster;
@@ -149,6 +150,13 @@ namespace Tactics.UI
             else
             {
                 GenerateNewMap();
+            }
+    
+            // 检测是否有中断的事件（玩家在事件节点中退出游戏）
+            if (RoguelikeEventReentryManager.IsEventInProgress(out string interruptedEventType, out Vector2Int? interruptedNode))
+            {
+                TLog.Warning($"[RoguelikeMapUIController] Detected interrupted event: type={interruptedEventType}, node={interruptedNode}");
+                RoguelikeEventReentryManager.ClearEventInProgress();
             }
         }
 
@@ -667,12 +675,26 @@ namespace Tactics.UI
             PlayerPrefs.SetString(RoguelikeReturnScenePrefsKey, "Home");
             PlayerPrefs.Save();
 
+            RoguelikeEventReentryManager.MarkEventInProgress("Battle", p);
+
             await BattleFlowCoordinator.Instance.StartBattleAsync(battleSceneName);
         }
 
         private void EnterStubNode(RoguelikeMapUINode mapNode)
         {
             TLog.Info($"[Roguelike stub] Node '{mapNode.Node.blueprintName}' ({mapNode.Node.nodeType})");
+
+            var p = mapNode.Node.point;
+            string eventType = mapNode.Node.nodeType switch
+            {
+                RoguelikeNodeType.RestSite => "Rest",
+                RoguelikeNodeType.Store => "Store",
+                RoguelikeNodeType.Treasure => "Treasure",
+                RoguelikeNodeType.Mystery => "Mystery",
+                _ => "Unknown"
+            };
+            RoguelikeEventReentryManager.MarkEventInProgress(eventType, p);
+
             StartCoroutine(CoUnlockAfterStub(mapNode));
         }
 
@@ -680,6 +702,7 @@ namespace Tactics.UI
         {
             yield return null;
             CommitPathForNode(mapNode);
+            RoguelikeEventReentryManager.ClearEventInProgress();
             _locked = false;
         }
 

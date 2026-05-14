@@ -2,13 +2,13 @@
     <Style src="project://database/Assets/Tactics/Arts/UI/LevelUpPanel.uss?fileID=7433441132597879392&amp;guid=945323a1697925b48bcb4e16e1acdb95&amp;type=3#LevelUpPanel"/>
     <ui:VisualElement name="LevelUpRoot" class="levelup-overlay">
         <ui:VisualElement class="levelup-panel">
-            <ui:VisualElement class="levelup-header">
-                <ui:Label name="CharacterNameLabel" text="角色名" class="char-name"/>
-                <ui:Label name="LevelLabel" text="Lv.1" class="char-level"/>
-                <ui:Label name="PointsRemainingLabel" text="剩余点数: 0" class="points-label"/>
-            </ui:VisualElement>
             <ui:VisualElement name="MainContent" class="main-content">
                 <ui:VisualElement name="LeftPanel" class="left-panel">
+                    <ui:VisualElement class="levelup-header">
+                        <ui:Label name="CharacterNameLabel" text="角色名" class="char-name"/>
+                        <ui:Label name="LevelLabel" text="Lv.1" class="char-level"/>
+                        <ui:Label name="PointsRemainingLabel" text="剩余点数: 0" class="points-label"/>
+                    </ui:VisualElement>
                     <ui:Label text="属性" class="section-title"/>
                     <ui:ScrollView name="AttributeRows" class="attribute-scroll"/>
                     <ui:VisualElement name="DerivedStats" class="derived-section"/>
