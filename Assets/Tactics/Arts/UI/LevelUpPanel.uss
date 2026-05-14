@@ -183,25 +183,34 @@
 
 .skill-card {
     flex-direction: column;
-    padding: 10px;
-    margin-bottom: 6px;
-    background-color: rgba(255, 255, 255, 0.4);
+    padding: 12px;
+    margin: 4px;
+    background-color: rgba(255, 255, 255, 0.5);
     border-width: 2px;
     border-color: rgb(180, 160, 130);
     border-radius: 8px;
-    border-left-width: 4px;
-    border-left-color: rgb(180, 160, 130);
+    border-left-width: 5px;
+    transition-duration: 0.15s;
+    transition-property: border-color, background-color;
 }
 
 .skill-card:hover {
-    background-color: rgba(200, 180, 150, 0.6);
-    border-color: rgb(140, 120, 90);
+    background-color: rgba(220, 200, 170, 0.7);
+    border-color: rgb(160, 130, 100);
 }
 
 .skill-card.selected {
-    background-color: rgba(160, 210, 160, 0.6);
-    border-color: rgb(80, 140, 80);
-    border-left-color: rgb(80, 160, 80);
+    background-color: rgba(160, 210, 160, 0.7);
+    border-color: rgb(80, 160, 80);
+    border-left-color: rgb(60, 140, 60);
+}
+
+.skill-card-active {
+    border-left-color: rgb(180, 60, 40);
+}
+
+.skill-card-passive {
+    border-left-color: rgb(60, 120, 180);
 }
 
 .skill-card-header {
@@ -211,23 +220,32 @@
 }
 
 .skill-name {
-    font-size: 18px;
+    font-size: 20px;
     color: rgb(60, 50, 40);
     -unity-font-style: bold;
 }
 
 .skill-type-badge {
-    font-size: 11px;
-    color: rgb(140, 100, 60);
-    padding: 2px 8px;
-    background-color: rgba(180, 160, 130, 0.3);
+    font-size: 13px;
+    padding: 3px 10px;
     border-radius: 4px;
+    -unity-font-style: bold;
+}
+
+.skill-card-active .skill-type-badge {
+    background-color: rgba(180, 60, 40, 0.2);
+    color: rgb(180, 60, 40);
+}
+
+.skill-card-passive .skill-type-badge {
+    background-color: rgba(60, 120, 180, 0.2);
+    color: rgb(60, 120, 180);
 }
 
 .skill-desc {
-    font-size: 14px;
+    font-size: 15px;
     color: rgb(100, 80, 60);
-    margin-top: 4px;
+    margin-top: 6px;
     white-space: normal;
 }
 
@@ -260,25 +278,139 @@
     margin-top: 8px;
 }
 
+
+
+.skill-section-header {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background-color: rgba(180, 150, 100, 0.3);
+    border-radius: 6px;
+    border-left-width: 4px;
+    border-left-color: rgb(180, 120, 40);
+}
+
+.section-header-icon {
+    font-size: 16px;
+    color: rgb(180, 120, 40);
+    margin-right: 8px;
+}
+
+.section-header-title {
+    font-size: 18px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+}
+
+.skill-sub-title {
+    font-size: 14px;
+    color: rgb(120, 100, 80);
+    margin-top: 6px;
+    margin-bottom: 4px;
+    padding-left: 4px;
+}
+
+.current-skills-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.current-skill-icon {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 10px;
+    margin: 3px;
+    background-color: rgba(255, 255, 255, 0.35);
+    border-width: 1px;
+    border-color: rgb(200, 180, 150);
+    border-radius: 6px;
+    min-height: 36px;
+}
+
+.current-skill-name {
+    font-size: 15px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+    margin-left: 4px;
+    margin-right: 8px;
+}
+
+.current-skill-active {
+    width: 4px;
+    height: 4px;
+    background-color: rgb(180, 60, 40);
+    border-radius: 2px;
+    margin-right: 4px;
+}
+
+.current-skill-passive {
+    width: 4px;
+    height: 4px;
+    background-color: rgb(60, 120, 180);
+    border-radius: 2px;
+    margin-right: 4px;
+}
+
+.skill-level-badge {
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: rgb(120, 100, 60);
+    background-color: rgba(200, 180, 140, 0.4);
+    border-radius: 3px;
+    padding: 1px 5px;
+}
+
+.skill-card-level {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+}
+
+.skill-card-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
 .skill-stats-row {
     flex-direction: row;
     justify-content: flex-start;
-    margin-top: 4px;
+    margin-top: 8px;
 }
 
 .skill-stat-damage {
-    font-size: 14px;
-    color: rgb(180, 60, 40);
+    font-size: 15px;
     -unity-font-style: bold;
-    margin-right: 12px;
+    margin-right: 4px;
+}
+
+.skill-card-active .skill-stat-damage {
+    color: rgb(180, 60, 40);
 }
 
 .skill-stat-mp {
-    font-size: 14px;
-    color: rgb(40, 80, 160);
+    font-size: 15px;
     -unity-font-style: bold;
+    margin-right: 4px;
+}
+
+.skill-card-active .skill-stat-mp {
+    color: rgb(40, 80, 180);
+}
+
+.skill-stat-group {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 16px;
+}
+
+.skill-stat-icon {
+    font-size: 14px;
+    margin-right: 4px;
 }
 
 .skill-card-passive {
-    border-left-color: rgb(100, 180, 100);
+    border-left-color: rgb(60, 120, 180);
 }
