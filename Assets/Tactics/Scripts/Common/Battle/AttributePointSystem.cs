@@ -22,7 +22,7 @@ namespace Tactics.Common.Battle
                 AttributeType.Agility => "敏捷",
                 AttributeType.Intelligence => "智力",
                 AttributeType.Constitution => "体质",
-                AttributeType.Charisma => "精神",
+                AttributeType.Charisma => "魅力",
                 AttributeType.Luck => "幸运",
                 AttributeType.Speed => "速度",
                 _ => type.ToString()
@@ -40,7 +40,7 @@ namespace Tactics.Common.Battle
                 AttributeType.Agility => "每点增加 1 点敏捷",
                 AttributeType.Intelligence => "每点增加 1 点智力",
                 AttributeType.Constitution => "每点增加 1 点体质",
-                AttributeType.Charisma => "每点增加 1 点精神",
+                AttributeType.Charisma => "每点增加 1 点魅力",
                 AttributeType.Speed => "每点增加 1 点速度",
                 AttributeType.Luck => "每点增加 1 点幸运",
                 _ => "未知属性"
@@ -66,7 +66,7 @@ namespace Tactics.Common.Battle
                 AttributeType.Constitution =>
                     $"{GetAttributeDisplayName(type)}: 体质 +{points * 1}",
                 AttributeType.Charisma =>
-                    $"{GetAttributeDisplayName(type)}: 精神 +{points * 1}",
+                    $"{GetAttributeDisplayName(type)}: 魅力 +{points * 1}",
                 AttributeType.Speed =>
                     $"{GetAttributeDisplayName(type)}: 速度 +{points * 1}",
                 AttributeType.Luck =>
