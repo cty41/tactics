@@ -254,45 +254,98 @@ namespace Tactics.UI
             _skillList.Clear();
             _skillCards.Clear();
 
-            bool hasSkills = _skillOptions != null && _skillOptions.Count > 0;
+            bool hasOptions = _skillOptions != null && _skillOptions.Count > 0;
+            bool hasCurrentSkills = _currentCharacter?.LearnedSkills != null && _currentCharacter.LearnedSkills.Count > 0;
 
             if (_rightPanel != null)
-                _rightPanel.style.display = hasSkills ? DisplayStyle.Flex : DisplayStyle.None;
+                _rightPanel.style.display = (hasOptions || hasCurrentSkills) ? DisplayStyle.Flex : DisplayStyle.None;
 
-            if (!hasSkills) return;
-
-            foreach (var skill in _skillOptions)
+            // Current Skills section
+            if (hasCurrentSkills)
             {
-                var card = new VisualElement();
-                card.AddToClassList("skill-card");
+                var currentTitle = new Label("当前技能");
+                currentTitle.AddToClassList("skill-section-title");
+                _skillList.Add(currentTitle);
 
-                var nameRow = new VisualElement();
-                nameRow.AddToClassList("skill-card-header");
-
-                var skillName = new Label(skill.DisplayName);
-                skillName.AddToClassList("skill-name");
-
-                var typeLabel = new Label(skill.SkillType == SkillType.Active ? "主动" : "被动");
-                typeLabel.AddToClassList("skill-type-badge");
-
-                nameRow.Add(skillName);
-                nameRow.Add(typeLabel);
-
-                var descLabel = new Label(skill.Description);
-                descLabel.AddToClassList("skill-desc");
-
-                card.Add(nameRow);
-                card.Add(descLabel);
-
-                card.RegisterCallback<ClickEvent>(evt =>
+                foreach (var learned in _currentCharacter.LearnedSkills)
                 {
-                    SelectSkill(skill.Id);
-                    evt.StopPropagation();
-                });
-
-                _skillList.Add(card);
-                _skillCards[skill.Id] = card;
+                    var def = SkillDatabase.GetSkillById(learned.SkillId);
+                    if (def == null) continue;
+                    _skillList.Add(CreateSkillCard(def, false));
+                }
             }
+
+            // New Skill Options section
+            if (hasOptions)
+            {
+                var newTitle = new Label("新技能");
+                newTitle.AddToClassList("skill-section-title");
+                _skillList.Add(newTitle);
+
+                foreach (var skill in _skillOptions)
+                {
+                    var card = CreateSkillCard(skill, true);
+                    string skillId = skill.Id;
+                    card.RegisterCallback<ClickEvent>(evt =>
+                    {
+                        SelectSkill(skillId);
+                        evt.StopPropagation();
+                    });
+                    _skillList.Add(card);
+                    _skillCards[skill.Id] = card;
+                }
+            }
+        }
+
+        private VisualElement CreateSkillCard(SkillDefinition skill, bool isSelectable)
+        {
+            var card = new VisualElement();
+            card.AddToClassList("skill-card");
+
+            var nameRow = new VisualElement();
+            nameRow.AddToClassList("skill-card-header");
+
+            var skillName = new Label(skill.DisplayName);
+            skillName.AddToClassList("skill-name");
+
+            var typeLabel = new Label(skill.SkillType == SkillType.Active ? "主动" : "被动");
+            typeLabel.AddToClassList("skill-type-badge");
+
+            nameRow.Add(skillName);
+            nameRow.Add(typeLabel);
+            card.Add(nameRow);
+
+            var descLabel = new Label(skill.Description);
+            descLabel.AddToClassList("skill-desc");
+            card.Add(descLabel);
+
+            if (skill.SkillType == SkillType.Active && skill.DamageBase > 0)
+            {
+                var statsRow = new VisualElement();
+                statsRow.AddToClassList("skill-stats-row");
+
+                int damage = SkillDatabase.CalculateSkillDamage(_currentCharacter, skill);
+                var damageLabel = new Label($"伤害: {damage}");
+                damageLabel.AddToClassList("skill-stat-damage");
+
+                var mpLabel = new Label($"MP: {skill.MpCost}");
+                mpLabel.AddToClassList("skill-stat-mp");
+
+                statsRow.Add(damageLabel);
+                statsRow.Add(mpLabel);
+                card.Add(statsRow);
+            }
+            else if (skill.MpCost > 0)
+            {
+                var statsRow = new VisualElement();
+                statsRow.AddToClassList("skill-stats-row");
+                var mpLabel = new Label($"MP: {skill.MpCost}");
+                mpLabel.AddToClassList("skill-stat-mp");
+                statsRow.Add(mpLabel);
+                card.Add(statsRow);
+            }
+
+            return card;
         }
 
         private void SelectSkill(string skillId)
@@ -315,6 +368,7 @@ namespace Tactics.UI
             {
                 RefreshAttributeRows();
                 RefreshDerivedStats();
+                BuildSkillCards();
                 RefreshConfirmButton();
             }
         }
@@ -341,6 +395,7 @@ namespace Tactics.UI
 
             RefreshAttributeRows();
             RefreshDerivedStats();
+            BuildSkillCards();
             RefreshConfirmButton();
         }
 

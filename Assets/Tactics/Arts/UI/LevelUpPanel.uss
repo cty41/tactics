@@ -57,14 +57,14 @@
 }
 
 .left-panel {
-    width: 55%;
+    width: 30%;
     flex-direction: column;
     margin-right: 8px;
-    padding: 8px;
+    padding: 4px;
 }
 
 .right-panel {
-    width: 45%;
+    width: 70%;
     flex-direction: column;
     margin-left: 8px;
     padding: 8px;
@@ -211,7 +211,7 @@
 }
 
 .skill-name {
-    font-size: 16px;
+    font-size: 18px;
     color: rgb(60, 50, 40);
     -unity-font-style: bold;
 }
@@ -225,7 +225,7 @@
 }
 
 .skill-desc {
-    font-size: 12px;
+    font-size: 14px;
     color: rgb(100, 80, 60);
     margin-top: 4px;
     white-space: normal;
@@ -250,4 +250,35 @@
 .confirm-btn:disabled {
     background-color: rgb(160, 150, 140);
     color: rgb(120, 110, 100);
+}
+
+.skill-section-title {
+    font-size: 16px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+    margin-top: 8px;
+}
+
+.skill-stats-row {
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: 4px;
+}
+
+.skill-stat-damage {
+    font-size: 14px;
+    color: rgb(180, 60, 40);
+    -unity-font-style: bold;
+    margin-right: 12px;
+}
+
+.skill-stat-mp {
+    font-size: 14px;
+    color: rgb(40, 80, 160);
+    -unity-font-style: bold;
+}
+
+.skill-card-passive {
+    border-left-color: rgb(100, 180, 100);
 }

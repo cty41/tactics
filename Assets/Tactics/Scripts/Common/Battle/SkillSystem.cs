@@ -18,6 +18,8 @@ namespace Tactics.Common.Battle
         public RoleType RoleType { get; set; }
         public Tactics.Roster.SkillType SkillType { get; set; }
         public int Level { get; set; }
+        public int DamageBase { get; set; }
+        public int MpCost { get; set; }
     }
 
     /// <summary>
