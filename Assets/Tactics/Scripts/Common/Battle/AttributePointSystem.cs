@@ -36,12 +36,13 @@ namespace Tactics.Common.Battle
         {
             return type switch
             {
-                AttributeType.Strength => "每点增加 2 点物理攻击",
-                AttributeType.Agility => "每点增加 1 点速度、2% 闪避",
-                AttributeType.Intelligence => "每点增加 2 点魔法攻击、10 点法力上限",
-                AttributeType.Constitution => "每点增加 10 点生命上限、1 点物理防御",
-                AttributeType.Charisma => "每点增加 1 点魔法防御、2% 状态抗性",
+                AttributeType.Strength => "每点增加 1 点力量",
+                AttributeType.Agility => "每点增加 1 点敏捷",
+                AttributeType.Intelligence => "每点增加 1 点智力",
+                AttributeType.Constitution => "每点增加 1 点体质",
+                AttributeType.Charisma => "每点增加 1 点精神",
                 AttributeType.Speed => "每点增加 1 点速度",
+                AttributeType.Luck => "每点增加 1 点幸运",
                 _ => "未知属性"
             };
         }
@@ -57,17 +58,19 @@ namespace Tactics.Common.Battle
             return type switch
             {
                 AttributeType.Strength =>
-                    $"{GetAttributeDisplayName(type)}: 物理攻击 +{points * 2}",
+                    $"{GetAttributeDisplayName(type)}: 力量 +{points * 1}",
                 AttributeType.Agility =>
-                    $"{GetAttributeDisplayName(type)}: 速度 +{points * 1}，闪避 +{points * 2}%",
+                    $"{GetAttributeDisplayName(type)}: 敏捷 +{points * 1}",
                 AttributeType.Intelligence =>
-                    $"{GetAttributeDisplayName(type)}: 魔法攻击 +{points * 2}，法力上限 +{points * 10}",
+                    $"{GetAttributeDisplayName(type)}: 智力 +{points * 1}",
                 AttributeType.Constitution =>
-                    $"{GetAttributeDisplayName(type)}: 生命上限 +{points * 10}，物理防御 +{points * 1}",
+                    $"{GetAttributeDisplayName(type)}: 体质 +{points * 1}",
                 AttributeType.Charisma =>
-                    $"{GetAttributeDisplayName(type)}: 魔法防御 +{points * 1}，状态抗性 +{points * 2}%",
+                    $"{GetAttributeDisplayName(type)}: 精神 +{points * 1}",
                 AttributeType.Speed =>
                     $"{GetAttributeDisplayName(type)}: 速度 +{points * 1}",
+                AttributeType.Luck =>
+                    $"{GetAttributeDisplayName(type)}: 幸运 +{points * 1}",
                 _ => $"{GetAttributeDisplayName(type)}: 未知加成"
             };
         }
@@ -98,22 +101,22 @@ namespace Tactics.Common.Battle
             switch (type)
             {
                 case AttributeType.Strength:
-                    character.Strength += 2;
+                    character.Strength += 1;
                     break;
                 case AttributeType.Agility:
                     character.Agility += 1;
-                    character.Speed += 1f;
                     break;
                 case AttributeType.Intelligence:
-                    character.Intelligence += 2;
+                    character.Intelligence += 1;
                     break;
                 case AttributeType.Constitution:
-                    character.Constitution += 10;
-                    character.DefenceFactor += 1;
+                    character.Constitution += 1;
                     break;
                 case AttributeType.Charisma:
                     character.Charisma += 1;
-                    character.Luck += 2;
+                    break;
+                case AttributeType.Luck:
+                    character.Luck += 1;
                     break;
                 case AttributeType.Speed:
                     character.Speed += 1f;

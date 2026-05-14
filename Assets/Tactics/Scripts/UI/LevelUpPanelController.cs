@@ -193,28 +193,18 @@ namespace Tactics.UI
             int allocated = _currentCharacter.AllocatedAttributes?.GetValueOrDefault(type, 0) ?? 0;
             return type switch
             {
-                AttributeType.Strength => _currentCharacter.Strength - (allocated * 2),
+                AttributeType.Strength => _currentCharacter.Strength - allocated,
                 AttributeType.Agility => _currentCharacter.Agility - allocated,
-                AttributeType.Intelligence => _currentCharacter.Intelligence - (allocated * 2),
-                AttributeType.Constitution => _currentCharacter.Constitution - (allocated * 10),
+                AttributeType.Intelligence => _currentCharacter.Intelligence - allocated,
+                AttributeType.Constitution => _currentCharacter.Constitution - allocated,
                 AttributeType.Charisma => _currentCharacter.Charisma - allocated,
-                AttributeType.Luck => _currentCharacter.Luck - (allocated * 2),
+                AttributeType.Luck => _currentCharacter.Luck - allocated,
                 AttributeType.Speed => (int)_currentCharacter.Speed - allocated,
                 _ => 0,
             };
         }
 
-        private static int GetPerPointBonus(AttributeType type) => type switch
-        {
-            AttributeType.Strength => 2,
-            AttributeType.Agility => 1,
-            AttributeType.Intelligence => 2,
-            AttributeType.Constitution => 10,
-            AttributeType.Charisma => 1,
-            AttributeType.Luck => 2,
-            AttributeType.Speed => 1,
-            _ => 0,
-        };
+        private static int GetPerPointBonus(AttributeType type) => 1;
 
         private void RefreshDerivedStats()
         {

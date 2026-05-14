@@ -157,25 +157,26 @@
 }
 
 .derived-title {
-    font-size: 15px;
+    font-size: 18px;
     color: rgb(120, 100, 80);
     -unity-font-style: bold;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .derived-row {
     flex-direction: row;
     justify-content: space-between;
-    padding: 1px 0;
+    padding: 2px 0;
 }
 
 .derived-name {
-    font-size: 14px;
+    font-size: 16px;
     color: rgb(120, 100, 80);
+    -unity-font-style: bold;
 }
 
 .derived-value {
-    font-size: 14px;
+    font-size: 16px;
     color: rgb(60, 50, 40);
     -unity-font-style: bold;
 }
