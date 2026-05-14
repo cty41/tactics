@@ -330,12 +330,13 @@ namespace Tactics.UI
 
             switch (type)
             {
-                case AttributeType.Strength: _currentCharacter.Strength -= 2; break;
-                case AttributeType.Agility: _currentCharacter.Agility -= 1; _currentCharacter.Speed -= 1f; break;
-                case AttributeType.Intelligence: _currentCharacter.Intelligence -= 2; break;
-                case AttributeType.Constitution: _currentCharacter.Constitution -= 10; _currentCharacter.DefenceFactor -= 1; break;
-                case AttributeType.Charisma: _currentCharacter.Charisma -= 1; _currentCharacter.Luck -= 2; break;
-                case AttributeType.Luck: _currentCharacter.Luck -= 2; break;
+                case AttributeType.Strength: _currentCharacter.Strength -= 1; break;
+                case AttributeType.Agility: _currentCharacter.Agility -= 1; break;
+                case AttributeType.Intelligence: _currentCharacter.Intelligence -= 1; break;
+                case AttributeType.Constitution: _currentCharacter.Constitution -= 1; break;
+                case AttributeType.Charisma: _currentCharacter.Charisma -= 1; break;
+                case AttributeType.Luck: _currentCharacter.Luck -= 1; break;
+                case AttributeType.Speed: _currentCharacter.Speed -= 1f; break;
             }
 
             RefreshAttributeRows();
