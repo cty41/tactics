@@ -228,10 +228,12 @@ namespace Tactics.Common.Units.Abilities
         [SerializeField] private int _distance;
         [SerializeField] private float _duration = 0.5f;
         [SerializeField] private float _height = 2f;
+        [SerializeField] private float _collisionDamage = 0f;
 
         public int Distance => _distance;
         public float Duration => _duration;
         public float Height => _height;
+        public float CollisionDamage => _collisionDamage;
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
         {
@@ -252,8 +254,8 @@ namespace Tactics.Common.Units.Abilities
                 int dirX = Mathf.RoundToInt(dx / mag);
                 int dirY = Mathf.RoundToInt(dy / mag);
 
-                // Find landing cell
-                ICell landingCell = FindLandingCell(targetCell, dirX, dirY, _distance, gridController);
+                // Find landing cell with collision detection
+                var (landingCell, collisions) = FindLandingCellWithCollisions(targetCell, dirX, dirY, _distance, gridController, target);
 
                 if (landingCell != null && landingCell != targetCell)
                 {
@@ -267,6 +269,19 @@ namespace Tactics.Common.Units.Abilities
                     // Perform parabolic flight animation
                     await PerformKnockbackFlight(target, landingCell, _duration, _height);
 
+                    // Apply collision damage to units hit along the knockback path
+                    if (_collisionDamage > 0f)
+                    {
+                        foreach (var collision in collisions)
+                        {
+                            if (collision != null && collision.Health > 0)
+                            {
+                                CombatComponent.ApplyDamage(caster, collision, _collisionDamage, false, ElementType.None,
+                                    canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: true);
+                            }
+                        }
+                    }
+
                     // Update to new cell after landing
                     target.CurrentCell = landingCell;
                     if (!landingCell.CurrentUnits.Contains(target))
@@ -277,21 +292,36 @@ namespace Tactics.Common.Units.Abilities
             }
         }
 
-        private ICell FindLandingCell(ICell startCell, int dirX, int dirY, int maxDistance, IGridController gridController)
+        private (ICell landingCell, List<IUnit> collisions) FindLandingCellWithCollisions(
+            ICell startCell, int dirX, int dirY, int maxDistance,
+            IGridController gridController, IUnit knockedBackUnit)
         {
             ICell lastValidCell = startCell;
+            var collisions = new List<IUnit>();
 
             for (int i = 1; i <= maxDistance; i++)
             {
-                var coord = new Vector2IntImpl(startCell.GridCoordinates.x + dirX * i, startCell.GridCoordinates.y + dirY * i);
+                var coord = new Vector2IntImpl(
+                    startCell.GridCoordinates.x + dirX * i,
+                    startCell.GridCoordinates.y + dirY * i);
                 var candidateCell = gridController.CellManager.GetCellAt(coord);
-                if (candidateCell == null) break; // Out of bounds
-                if (!gridController.CellManager.IsCellWalkable(candidateCell)) break; // Not walkable
+                if (candidateCell == null) break;
+                if (!gridController.CellManager.IsCellWalkable(candidateCell)) break;
+
+                var otherUnits = candidateCell.CurrentUnits
+                    .Where(u => u != knockedBackUnit)
+                    .ToList();
+
+                if (otherUnits.Any())
+                {
+                    collisions.AddRange(otherUnits);
+                    break;
+                }
 
                 lastValidCell = candidateCell;
             }
 
-            return lastValidCell != startCell ? lastValidCell : null;
+            return (lastValidCell != startCell ? lastValidCell : null, collisions);
         }
 
         private async Task PerformKnockbackFlight(IUnit target, ICell landingCell, float duration, float height)
