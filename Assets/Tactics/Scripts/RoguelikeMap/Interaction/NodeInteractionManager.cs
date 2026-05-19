@@ -1,6 +1,7 @@
 using Tactics.RoguelikeMap.Events;
 using Tactics.RoguelikeMap.UI;
 using Tactics.Runtime.Utilities;
+using Tactics.UI;
 using UnityEngine;
 
 namespace Tactics.RoguelikeMap.Interaction
@@ -75,9 +76,17 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             TLog.Info($"[NodeInteractionManager] 触发事件: {node.blueprintName}");
 
+            // 获取地图配置
+            var mapConfig = RoguelikeMapUIController.Instance?.mapConfig;
+            if (mapConfig == null)
+            {
+                TLog.Warning("[NodeInteractionManager] 地图配置为空");
+                return;
+            }
+
             // 加载事件
             var eventManager = EventManager.Instance;
-            eventManager.LoadRegionEvents("DarkForest");
+            eventManager.LoadRegionEvents("DarkForest", mapConfig);
 
             var evt = eventManager.GetRandomEvent("DarkForest");
             if (evt == null)

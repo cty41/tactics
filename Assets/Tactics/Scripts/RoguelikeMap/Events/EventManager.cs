@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Newtonsoft.Json;
-using Tactics.AssetPipeline;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -33,7 +31,7 @@ namespace Tactics.RoguelikeMap.Events
         /// <summary>
         /// 加载指定区域的所有事件
         /// </summary>
-        public void LoadRegionEvents(string regionName)
+        public void LoadRegionEvents(string regionName, RoguelikeMapConfig config)
         {
             if (_regionEvents.ContainsKey(regionName))
             {
@@ -41,24 +39,18 @@ namespace Tactics.RoguelikeMap.Events
                 return;
             }
 
-            string[] assetPaths = GetEventAssetPaths(regionName);
-            if (assetPaths == null || assetPaths.Length == 0)
+            if (config == null || config.eventFiles == null || config.eventFiles.Count == 0)
             {
-                TLog.Warning($"[EventManager] 未找到区域 {regionName} 的事件文件");
+                TLog.Warning($"[EventManager] 配置为空或无事件文件: {regionName}");
                 _regionEvents[regionName] = new List<RoguelikeEvent>();
                 return;
             }
 
             List<RoguelikeEvent> events = new List<RoguelikeEvent>();
 
-            foreach (var assetPath in assetPaths)
+            foreach (var file in config.eventFiles)
             {
-                TextAsset file = GameAssetManager.Instance.Load<TextAsset>(assetPath);
-                if (file == null)
-                {
-                    TLog.Warning($"[EventManager] 加载事件文件失败: {assetPath}");
-                    continue;
-                }
+                if (file == null) continue;
 
                 try
                 {
@@ -72,11 +64,7 @@ namespace Tactics.RoguelikeMap.Events
                 }
                 catch (System.Exception e)
                 {
-                    TLog.Error($"[EventManager] 加载事件文件失败: {assetPath}, 错误: {e.Message}");
-                }
-                finally
-                {
-                    GameAssetManager.Instance.Release(assetPath);
+                    TLog.Error($"[EventManager] 加载事件文件失败: {file.name}, 错误: {e.Message}");
                 }
             }
 
@@ -132,21 +120,5 @@ namespace Tactics.RoguelikeMap.Events
             TLog.Info($"[EventManager] 已清除所有事件");
         }
 
-        private static readonly Dictionary<string, string[]> RegionEventPaths = new Dictionary<string, string[]>
-        {
-            ["DarkForest"] = new[]
-            {
-                "Assets/Tactics/GameData/Events/DarkForest/cursed_chest_001.json",
-                "Assets/Tactics/GameData/Events/DarkForest/fallen_altar_001.json",
-                "Assets/Tactics/GameData/Events/DarkForest/lost_villager_001.json",
-            }
-        };
-
-        private string[] GetEventAssetPaths(string regionName)
-        {
-            if (RegionEventPaths.TryGetValue(regionName, out var paths))
-                return paths;
-            return Array.Empty<string>();
-        }
     }
 }

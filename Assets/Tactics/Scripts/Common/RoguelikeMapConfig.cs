@@ -23,5 +23,8 @@ namespace Tactics.RoguelikeMap
         [Tooltip("Increase this number to generate more paths")]
         public int extraPaths;
         public List<RoguelikeMapLayer> layers;
+
+        [Tooltip("事件JSON文件列表，用于加载区域事件")]
+        public List<TextAsset> eventFiles = new List<TextAsset>();
     }
 }
