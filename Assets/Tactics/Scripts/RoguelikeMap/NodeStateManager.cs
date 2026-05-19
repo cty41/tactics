@@ -31,7 +31,12 @@ namespace Tactics.RoguelikeMap
             {
                 if (node.point.y == 0)
                 {
-                    // 第1层节点设为可到达
+                    // 起始节点设为已访问（玩家已在此）
+                    node.state = NodeState.Visited;
+                }
+                else if (node.point.y == 1)
+                {
+                    // 第一层节点设为可到达
                     node.state = NodeState.Reachable;
                 }
                 else
