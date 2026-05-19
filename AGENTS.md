@@ -4,14 +4,17 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 
 ## 核心原则
 
-1. **资源**：使用 `GameAssetManager`，不用 `Resources.Load`；每个 Load 都要配对 Release
-2. **路径**：使用项目路径（`Assets/...`）
-3. **Inspector**：适当时优先使用 Odin API
-4. **编译**：修改 C# 脚本后，**必须**显式调用 `refresh_unity` 触发 Unity 编译。Agent 一次 build mode 执行完成前，若修改过任何 `.cs` 文件，必须在最后调用一次 `refresh_unity`
-5. **日志**：通用日志用 `TLog.Info/Warning/Error`，战斗日志用 `TBattleLog.Log`，禁止 `Debug.Log`
-6. **工具安全**：禁止使用 `unity-MCP_execute_code` 执行自行编写的测试代码或验证脚本；仅当用户明确要求时才可使用该工具
-7. **Git 提交**：执行任何 git commit 前，**必须**先加载 `unity-git-commit` skill 并逐项完成其定义的提交前检查（`.meta` 配对校验、GUID 有效性确认）
-8. **审查与验证**：涉及需要在 Unity Editor 内手动操作验证的功能或修复，完成 `review-work` 审查后**禁止自动提交**。必须等待用户在 Editor 内测试验证并明确确认通过后，方可执行 `git commit`
+1. **资源加载**：
+   - 必须使用 `GameAssetManager`，**严禁** `Resources.Load`
+   - 所有文件类型（.json/.txt/.xml/.asset/.prefab）都是 Unity 资产
+   - Load/Release 必须配对，优先使用异步 `LoadAsync`
+   - 路径使用完整项目路径（`Assets/...`）
+2. **Inspector**：适当时优先使用 Odin API
+3. **编译**：修改 C# 脚本后，**必须**显式调用 `refresh_unity` 触发 Unity 编译。Agent 一次 build mode 执行完成前，若修改过任何 `.cs` 文件，必须在最后调用一次 `refresh_unity`
+4. **日志**：通用日志用 `TLog.Info/Warning/Error`，战斗日志用 `TBattleLog.Log`，禁止 `Debug.Log`
+5. **工具安全**：禁止使用 `unity-MCP_execute_code` 执行自行编写的测试代码或验证脚本；仅当用户明确要求时才可使用该工具
+6. **Git 提交**：执行任何 git commit 前，**必须**先加载 `unity-git-commit` skill 并逐项完成其定义的提交前检查（`.meta` 配对校验、GUID 有效性确认）
+7. **审查与验证**：涉及需要在 Unity Editor 内手动操作验证的功能或修复，完成 `review-work` 审查后**禁止自动提交**。必须等待用户在 Editor 内测试验证并明确确认通过后，方可执行 `git commit`
 
 ## 规则与指南
 
