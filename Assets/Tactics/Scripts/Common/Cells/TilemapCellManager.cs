@@ -6,6 +6,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -87,12 +88,19 @@ namespace Tactics.Cells
                 if (tile == null)
                     continue;
 
-                var worldPosition = GetTileWorldPosition(pos).ToIVector3();
+                var worldPosition = _gridLayer.GetCellCenterWorld(pos).ToIVector3();
                 var gridPosition = new Vector2IntImpl(pos.x, pos.y);
                 var cell = new VirtualSquareCell(gridPosition, worldPosition, 1, false, null);
                 _cells.Add(gridPosition, cell);
                 CellAdded?.Invoke(cell);
             }
+
+            // 诊断日志：验证 GetCellCenterWorld 与 WorldToCell 往返一致性
+            var firstCellData = _cells.Values.First();
+            var fcGridPos = new Vector3Int(firstCellData.GridCoordinates.x, firstCellData.GridCoordinates.y, 0);
+            var center = _gridLayer.GetCellCenterWorld(fcGridPos);
+            var rt = _gridLayer.WorldToCell(center);
+            TLog.Info($"[TilemapCellManager] Initialize: firstCell gridCoord=({fcGridPos.x},{fcGridPos.y}), centerWorld={center:F2}, roundTrip=({rt.x},{rt.y})");
 
             if (_cells.Count == 0)
             {
@@ -193,6 +201,7 @@ namespace Tactics.Cells
             
             Vector3 mouseWorldPos = ray.GetPoint(enter);
             Vector3Int cellPos = _gridLayer.WorldToCell(mouseWorldPos);
+            TLog.Info($"[TilemapCellManager] TryGetCellUnderCursor: mouseWorldPos={mouseWorldPos:F2}, cellPos=({cellPos.x},{cellPos.y})");
 
             var gridPosition = new Vector2IntImpl(cellPos.x, cellPos.y);
 
@@ -201,7 +210,7 @@ namespace Tactics.Cells
                 return null;
             }
 
-            Vector3 cellWorldCenter = GetTileWorldPosition(cellPos);
+            Vector3 cellWorldCenter = _gridLayer.GetCellCenterWorld(cellPos);
 
             Collider2D[] colliders2D = Physics2D.OverlapPointAll(cellWorldCenter);
             var blocking2D = colliders2D.Where(c => !c.isTrigger && c.GetComponent<Unit>() == null).ToArray();
@@ -323,18 +332,6 @@ namespace Tactics.Cells
         {
         }
 
-        /// <summary>
-        /// 计算 tile 在 world space 中的实际渲染位置（与 TilemapRenderer 一致）
-        /// </summary>
-        private Vector3 GetTileWorldPosition(Vector3Int cellPos)
-        {
-            var grid = _gridLayer.layoutGrid;
-            var tileAnchor = _gridLayer.tileAnchor;
-            var cellSize = grid.cellSize;
-            return _gridLayer.CellToWorld(cellPos) + new Vector3(
-                cellSize.x * tileAnchor.x,
-                cellSize.y * tileAnchor.y,
-                cellSize.z * tileAnchor.z);
-        }
+
     }
 }

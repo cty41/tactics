@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Utilities;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Serialization;
@@ -292,20 +293,6 @@ namespace Tactics.Cells
             RebuildMesh();
         }
 
-        /// <summary>
-        /// 计算 tile 在 world space 中的实际渲染位置（与 TilemapRenderer 一致）
-        /// </summary>
-        private Vector3 GetTileWorldPosition(Vector3Int cellPos)
-        {
-            var grid = _gridLayer.layoutGrid;
-            var tileAnchor = _gridLayer.tileAnchor;
-            var cellSize = grid.cellSize;
-            return _gridLayer.CellToWorld(cellPos) + new Vector3(
-                cellSize.x * tileAnchor.x,
-                cellSize.y * tileAnchor.y,
-                cellSize.z * tileAnchor.z);
-        }
-
         private Color GetColorForType(TileHighlightType type)
         {
             return type switch
@@ -328,6 +315,7 @@ namespace Tactics.Cells
             }
 
             int totalCells = _highlights.Values.Sum(s => s.Count);
+            TLog.Info($"[ProceduralTileHighlightRenderer] RebuildMesh: totalCells={totalCells}, grid=(Isometric:{_gridLayer.layoutGrid.cellLayout == GridLayout.CellLayout.Isometric})");
             var vertices = new Vector3[totalCells * 4];
             var colors = new Color[totalCells * 4];
             var triangles = new int[totalCells * 6];
@@ -342,12 +330,16 @@ namespace Tactics.Cells
                 {
                     Vector3Int pos = new Vector3Int(coord.x, coord.y, 0);
 
-                    Vector3 worldCenter = GetTileWorldPosition(pos);
+                    Vector3 worldCenter = _gridLayer.GetCellCenterWorld(pos);
                     Vector3 center = transform.InverseTransformPoint(worldCenter);
                     center.y += 0.02f;
+                    if (cellIndex == 0)
+                    {
+                        TLog.Info($"[ProceduralTileHighlightRenderer] FirstCell: grid=({coord.x},{coord.y}), worldCenter=({worldCenter.x:F3},{worldCenter.y:F3},{worldCenter.z:F3}), localCenter=({center.x:F3},{center.y:F3},{center.z:F3})");
+                    }
 
-                    Vector3 worldRight = GetTileWorldPosition(pos + Vector3Int.right);
-                    Vector3 worldUp = GetTileWorldPosition(pos + Vector3Int.up);
+                    Vector3 worldRight = _gridLayer.GetCellCenterWorld(pos + Vector3Int.right);
+                    Vector3 worldUp = _gridLayer.GetCellCenterWorld(pos + Vector3Int.up);
                     Vector3 localRight = transform.InverseTransformPoint(worldRight);
                     Vector3 localUp = transform.InverseTransformPoint(worldUp);
                     Vector3 dx = (localRight - center) * 0.5f;
