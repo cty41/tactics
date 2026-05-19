@@ -1,0 +1,53 @@
+{
+  "eventId": "fallen_altar_001",
+  "title": "堕落祭坛",
+  "description": "一座破败的祭坛矗立在森林深处，上面布满了裂痕和苔藓。曾经神圣的气息已被黑暗力量侵蚀。",
+  "options": [
+    {
+      "text": "祈祷净化（魅力检定）",
+      "attribute": 5,
+      "baseSuccessRate": 50,
+      "success": {
+        "type": 5,
+        "amount": 20,
+        "itemId": "buff_holy_protection",
+        "description": "你的祈祷得到了回应，神圣的力量保护了你！"
+      },
+      "failure": {
+        "type": 7,
+        "amount": 10,
+        "itemId": "debuff_dark_mark",
+        "description": "黑暗力量反噬，你在身上留下了黑暗印记。"
+      }
+    },
+    {
+      "text": "搜刮祭坛（智力检定）",
+      "attribute": 4,
+      "baseSuccessRate": 65,
+      "success": {
+        "type": 3,
+        "amount": 1,
+        "itemId": "holy_symbol",
+        "description": "你在祭坛下找到了一个神圣护符！"
+      },
+      "failure": {
+        "type": 4,
+        "amount": 20,
+        "itemId": null,
+        "description": "你触发了祭坛的防御机制，被闪电击中！"
+      }
+    },
+    {
+      "text": "绕道而行",
+      "attribute": 0,
+      "baseSuccessRate": 100,
+      "success": {
+        "type": 0,
+        "amount": 0,
+        "itemId": null,
+        "description": "你选择不打扰这座古老的祭坛。"
+      },
+      "failure": null
+    }
+  ]
+}

@@ -40,6 +40,27 @@ namespace Tactics.RoguelikeMap
             List<RoguelikeMapNode> nodesList = nodes.SelectMany(n => n).Where(n => n.incoming.Count > 0 || n.outgoing.Count > 0).ToList();
 
             string bossNodeName = config.nodeBlueprints.Where(b => b.nodeType == RoguelikeNodeType.Boss).ToList().Random().name;
+
+            TLog.Info($"[RoguelikeMapGenerator] 生成地图完成:");
+            TLog.Info($"[RoguelikeMapGenerator]   层数: {nodes.Count}");
+            TLog.Info($"[RoguelikeMapGenerator]   总节点数(过滤前): {nodes.Sum(n => n.Count)}");
+            TLog.Info($"[RoguelikeMapGenerator]   路径数: {paths.Count}");
+            TLog.Info($"[RoguelikeMapGenerator]   连接节点数(过滤后): {nodesList.Count}");
+            TLog.Info($"[RoguelikeMapGenerator]   GridWidth: {config.GridWidth}");
+            TLog.Info($"[RoguelikeMapGenerator]   numOfStartingNodes: {config.numOfStartingNodes.GetValue()}");
+            TLog.Info($"[RoguelikeMapGenerator]   numOfPreBossNodes: {config.numOfPreBossNodes.GetValue()}");
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var layerNodes = nodes[i];
+                var connectedNodes = layerNodes.Where(n => n.incoming.Count > 0 || n.outgoing.Count > 0).ToList();
+                TLog.Info($"[RoguelikeMapGenerator]   Layer {i}: {layerNodes.Count}个节点, {connectedNodes.Count}个有连接");
+                foreach (var n in connectedNodes)
+                {
+                    TLog.Info($"[RoguelikeMapGenerator]     [{n.point}] type={n.nodeType}, in={n.incoming.Count}, out={n.outgoing.Count}");
+                }
+            }
+
             return new RoguelikeMap(conf.name, bossNodeName, nodesList, new List<Vector2Int>());
         }
 
@@ -71,7 +92,17 @@ namespace Tactics.RoguelikeMap
                 RoguelikeNodeType nodeType = Random.Range(0f, 1f) < layer.randomizeNodes && supportedRandomNodeTypes.Count > 0
                     ? supportedRandomNodeTypes.Random()
                     : layer.nodeType;
-                string blueprintName = config.nodeBlueprints.Where(b => b.nodeType == nodeType).ToList().Random().name;
+                var matchingBlueprints = config.nodeBlueprints.Where(b => b.nodeType == nodeType).ToList();
+                string blueprintName;
+                if (matchingBlueprints.Count == 0)
+                {
+                    TLog.Warning($"[RoguelikeMapGenerator] 未找到 nodeType={nodeType} 的蓝图，使用第一个蓝图");
+                    blueprintName = config.nodeBlueprints[0].name;
+                }
+                else
+                {
+                    blueprintName = matchingBlueprints.Random().name;
+                }
                 RoguelikeMapNode node = new RoguelikeMapNode(nodeType, blueprintName, new Vector2Int(i, layerIndex))
                 {
                     position = new Vector2(-offset + i * layer.nodesApartDistance, GetDistanceToLayer(layerIndex))

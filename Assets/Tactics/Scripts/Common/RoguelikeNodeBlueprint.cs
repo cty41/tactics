@@ -10,7 +10,8 @@ namespace Tactics.RoguelikeMap
         Treasure,
         Store,
         Boss,
-        Mystery
+        Mystery,
+        Start
     }
 }
 

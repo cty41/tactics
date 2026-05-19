@@ -8,6 +8,7 @@ using Tactics.Flow.Roguelike;
 using Tactics.Roguelike;
 using Tactics.Flow.Battle;
 using Tactics.RoguelikeMap;
+using Tactics.RoguelikeMap.Interaction;
 using Tactics.Roster;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -40,6 +41,7 @@ namespace Tactics.UI
         [SerializeField] private string battleSceneName = "Test1";
 
         private global::Tactics.RoguelikeMap.RoguelikeMap _currentMap;
+        private NodeStateManager _nodeStateManager;
         private bool _locked;
 
         private ScrollView _scrollView;
@@ -74,11 +76,21 @@ namespace Tactics.UI
             var mgr = GameAssetManager.Instance;
             if (mgr != null)
             {
-                mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/Arts/ScriptableObjects/MapConfigs/DefaultRogueLikeMapConfig.asset");
+                // 优先加载黑暗森林原型配置，如果不存在则加载默认配置
+                mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/Arts/ScriptableObjects/MapConfigs/DarkForestPrototypeConfig.asset");
+                if (mapConfig == null)
+                {
+                    mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/Arts/ScriptableObjects/MapConfigs/DefaultRogueLikeMapConfig.asset");
+                    TLog.Info("[RoguelikeMapUIController] 使用默认地图配置");
+                }
+                else
+                {
+                    TLog.Info("[RoguelikeMapUIController] 使用黑暗森林原型配置");
+                }
             }
 
             if (mapConfig == null)
-                TLog.Warning("[RoguelikeMapUIController] Failed to load default RoguelikeMapConfig.");
+                TLog.Warning("[RoguelikeMapUIController] Failed to load RoguelikeMapConfig.");
         }
 
         protected override void OnShown()
@@ -130,10 +142,19 @@ namespace Tactics.UI
         {
             string prefsKey = MapPlayerPrefsKey;
 
+            // 临时：强制清除缓存使用新配置
+            if (PlayerPrefs.HasKey(prefsKey))
+            {
+                TLog.Info($"[RoguelikeMapUIController] 发现缓存地图，强制清除使用新配置");
+                PlayerPrefs.DeleteKey(prefsKey);
+                PlayerPrefs.Save();
+            }
+
             if (PlayerPrefs.HasKey(prefsKey))
             {
                 string mapJson = PlayerPrefs.GetString(prefsKey);
                 _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
+                _nodeStateManager = new NodeStateManager(_currentMap);
                 if (_currentMap?.path != null && _currentMap.path.Count > 0)
                 {
                     var bossNode = _currentMap.GetBossNode();
@@ -169,7 +190,8 @@ namespace Tactics.UI
             }
 
             _currentMap = RoguelikeMapGenerator.GetMap(mapConfig);
-            TLog.Info(_currentMap?.ToJson());
+            _nodeStateManager = new NodeStateManager(_currentMap);
+            // TLog.Info(_currentMap?.ToJson());
         }
 
         private void SaveMap()
@@ -241,6 +263,7 @@ namespace Tactics.UI
             TLog.Info($"[RoguelikeMapUIController] ShowMap: root={root != null}, scrollView={_scrollView != null}, mapContainer={_mapContent != null}, mapContainer.layout={_mapContent.layout.width}x{_mapContent.layout.height}, nodesLayer={_nodesLayer != null}, bgLayer={_backgroundLayer != null}");
 
             _currentMap = m;
+            _nodeStateManager = new NodeStateManager(_currentMap);
             ClearMap();
 
             SetMapLength();
@@ -260,8 +283,15 @@ namespace Tactics.UI
                 bgElement.style.position = UnityEngine.UIElements.Position.Absolute;
                 bgElement.style.left = 0;
                 bgElement.style.top = 0;
-                bgElement.style.width = mapLength;
-                bgElement.style.height = mapHeight;
+                
+                // 当mapLength较小时，拉大背景到全屏
+                float screenWidth = Screen.width;
+                float screenHeight = Screen.height;
+                float bgWidth = Mathf.Max(mapLength, screenWidth);
+                float bgHeight = Mathf.Max(mapHeight, screenHeight);
+                
+                bgElement.style.width = bgWidth;
+                bgElement.style.height = bgHeight;
                 bgElement.style.backgroundImage = new StyleBackground(_mapBackgroundSprite);
                 bgElement.style.backgroundSize = new BackgroundSize(Length.Percent(100), Length.Percent(100));
                 bgElement.style.unitySliceLeft = (int)_mapBackgroundSprite.border.x;
@@ -497,31 +527,47 @@ namespace Tactics.UI
 
         public void SetAttainableNodes()
         {
-            foreach (var node in _mapNodes)
-                node.SetState(NodeStates.Locked);
-
-            if (_currentMap.path.Count == 0)
+            // 使用 NodeStateManager 管理节点状态
+            if (_nodeStateManager != null)
             {
-                foreach (var node in _mapNodes.Where(n => n.Node.point.y == 0))
-                    node.SetState(NodeStates.Attainable);
+                // 初始化节点状态
+                _nodeStateManager.InitializeStates();
+                
+                // 更新UI节点状态
+                foreach (var node in _mapNodes)
+                {
+                    node.SetState(node.Node.state);
+                }
             }
             else
             {
-                foreach (var point in _currentMap.path)
+                // 回退到旧逻辑（兼容性）
+                foreach (var node in _mapNodes)
+                    node.SetState(NodeState.Unrevealed);
+
+                if (_currentMap.path.Count == 0)
                 {
-                    var mapNode = GetNode(point);
-                    if (mapNode != null)
-                        mapNode.SetState(NodeStates.Visited);
+                    foreach (var node in _mapNodes.Where(n => n.Node.point.y == 0))
+                        node.SetState(NodeState.Reachable);
                 }
-
-                var currentPoint = _currentMap.path[_currentMap.path.Count - 1];
-                var currentNode = _currentMap.GetNode(currentPoint);
-
-                foreach (var point in currentNode.outgoing)
+                else
                 {
-                    var mapNode = GetNode(point);
-                    if (mapNode != null)
-                        mapNode.SetState(NodeStates.Attainable);
+                    foreach (var point in _currentMap.path)
+                    {
+                        var mapNode = GetNode(point);
+                        if (mapNode != null)
+                            mapNode.SetState(NodeState.Visited);
+                    }
+
+                    var currentPoint = _currentMap.path[_currentMap.path.Count - 1];
+                    var currentNode = _currentMap.GetNode(currentPoint);
+
+                    foreach (var point in currentNode.outgoing)
+                    {
+                        var mapNode = GetNode(point);
+                        if (mapNode != null)
+                            mapNode.SetState(NodeState.Reachable);
+                    }
                 }
             }
         }
@@ -613,22 +659,38 @@ namespace Tactics.UI
             if (mapNode == null || mapNode.Node == null) return;
             if (_currentMap == null) return;
 
-            if (_currentMap.path.Count == 0)
+            // 使用 NodeStateManager 检查节点是否可点击
+            if (_nodeStateManager != null)
             {
-                if (mapNode.Node.point.y == 0)
+                if (_nodeStateManager.IsNodeClickable(mapNode.Node.point))
+                {
                     SendPlayerToNode(mapNode);
+                }
                 else
+                {
                     PlayWarningThatNodeCannotBeAccessed();
+                }
             }
             else
             {
-                var currentPoint = _currentMap.path[_currentMap.path.Count - 1];
-                var currentNode = _currentMap.GetNode(currentPoint);
-
-                if (currentNode != null && currentNode.outgoing.Any(point => point.Equals(mapNode.Node.point)))
-                    SendPlayerToNode(mapNode);
+                // 回退到旧逻辑（兼容性）
+                if (_currentMap.path.Count == 0)
+                {
+                    if (mapNode.Node.point.y == 0)
+                        SendPlayerToNode(mapNode);
+                    else
+                        PlayWarningThatNodeCannotBeAccessed();
+                }
                 else
-                    PlayWarningThatNodeCannotBeAccessed();
+                {
+                    var currentPoint = _currentMap.path[_currentMap.path.Count - 1];
+                    var currentNode = _currentMap.GetNode(currentPoint);
+
+                    if (currentNode != null && currentNode.outgoing.Any(point => point.Equals(mapNode.Node.point)))
+                        SendPlayerToNode(mapNode);
+                    else
+                        PlayWarningThatNodeCannotBeAccessed();
+                }
             }
         }
 
@@ -643,8 +705,20 @@ namespace Tactics.UI
         private void CommitPathForNode(RoguelikeMapUINode mapNode)
         {
             _currentMap.path.Add(mapNode.Node.point);
+            
+            // 使用 NodeStateManager 更新节点状态
+            if (_nodeStateManager != null)
+            {
+                _nodeStateManager.VisitNode(mapNode.Node.point);
+                
+                // 更新所有UI节点状态
+                foreach (var node in _mapNodes)
+                {
+                    node.SetState(node.Node.state);
+                }
+            }
+            
             SaveMap();
-            SetAttainableNodes();
             SetLineColors();
         }
 
@@ -652,19 +726,32 @@ namespace Tactics.UI
         {
             TLog.Info("Entering node: " + mapNode.Node.blueprintName + " of type: " + mapNode.Node.nodeType);
 
-            switch (mapNode.Node.nodeType)
+            // 使用 NodeInteractionManager 处理节点交互
+            if (NodeInteractionManager.Instance != null)
             {
-                case RoguelikeNodeType.MinorEnemy:
-                case RoguelikeNodeType.EliteEnemy:
-                case RoguelikeNodeType.Boss:
-                    EnterBattleNode(mapNode);
-                    break;
-                case RoguelikeNodeType.RestSite:
-                case RoguelikeNodeType.Treasure:
-                case RoguelikeNodeType.Store:
-                case RoguelikeNodeType.Mystery:
-                    EnterStubNode(mapNode);
-                    break;
+                NodeInteractionManager.Instance.HandleNodeInteraction(mapNode.Node);
+            }
+            else
+            {
+                // 回退到旧逻辑（兼容性）
+                switch (mapNode.Node.nodeType)
+                {
+                    case RoguelikeNodeType.Start:
+                        // 起始节点不进入战斗，只是视觉标记
+                        TLog.Info("[RoguelikeMapUIController] 起始节点，不进入战斗");
+                        break;
+                    case RoguelikeNodeType.MinorEnemy:
+                    case RoguelikeNodeType.EliteEnemy:
+                    case RoguelikeNodeType.Boss:
+                        EnterBattleNode(mapNode);
+                        break;
+                    case RoguelikeNodeType.RestSite:
+                    case RoguelikeNodeType.Treasure:
+                    case RoguelikeNodeType.Store:
+                    case RoguelikeNodeType.Mystery:
+                        EnterStubNode(mapNode);
+                        break;
+                }
             }
         }
 

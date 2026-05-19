@@ -6,6 +6,17 @@ using UnityEngine;
 
 namespace Tactics.RoguelikeMap
 {
+    /// <summary>
+    /// 节点状态枚举
+    /// </summary>
+    public enum NodeState
+    {
+        Unrevealed,  // 未揭示：灰色问号，不可点击
+        Revealed,    // 已揭示：真实图标，半透明，不可点击
+        Reachable,   // 可到达：真实图标，高亮边框，可点击
+        Visited      // 已访问：半透明，不可点击
+    }
+
     public class RoguelikeMapNode
     {
         public readonly Vector2Int point;
@@ -15,6 +26,8 @@ namespace Tactics.RoguelikeMap
         public readonly RoguelikeNodeType nodeType;
         public readonly string blueprintName;
         public Vector2 position;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public NodeState state = NodeState.Unrevealed;
 
         public RoguelikeMapNode(RoguelikeNodeType nodeType, string blueprintName, Vector2Int point)
         {

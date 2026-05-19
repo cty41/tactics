@@ -1,0 +1,53 @@
+{
+  "eventId": "lost_villager_001",
+  "title": "迷路的村民",
+  "description": "你在森林中遇到一个瑟瑟发抖的村民，他说自己迷路了，请求你帮助他找到回家的路。",
+  "options": [
+    {
+      "text": "护送村民（体质检定）",
+      "attribute": 3,
+      "baseSuccessRate": 75,
+      "success": {
+        "type": 1,
+        "amount": 40,
+        "itemId": null,
+        "description": "你成功护送村民回到村庄，村民们感激地给了你报酬。"
+      },
+      "failure": {
+        "type": 4,
+        "amount": 10,
+        "itemId": null,
+        "description": "在护送过程中，你们遭遇了野兽袭击，你受了些轻伤。"
+      }
+    },
+    {
+      "text": "指明方向（智力检定）",
+      "attribute": 4,
+      "baseSuccessRate": 60,
+      "success": {
+        "type": 1,
+        "amount": 20,
+        "itemId": null,
+        "description": "你准确地指出了村庄的方向，村民感激地给了你一些金币。"
+      },
+      "failure": {
+        "type": 0,
+        "amount": 0,
+        "itemId": null,
+        "description": "你的方向感似乎不太准确，村民只好自己摸索。"
+      }
+    },
+    {
+      "text": "无视村民",
+      "attribute": 0,
+      "baseSuccessRate": 100,
+      "success": {
+        "type": 0,
+        "amount": 0,
+        "itemId": null,
+        "description": "你选择继续赶路，没有理会村民的求助。"
+      },
+      "failure": null
+    }
+  ]
+}

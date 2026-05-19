@@ -7,12 +7,8 @@ using UnityEngine.UIElements;
 
 namespace Tactics.RoguelikeMap
 {
-    public enum NodeStates
-    {
-        Locked,
-        Visited,
-        Attainable
-    }
+    // 使用 RoguelikeMap 命名空间中的 NodeState 枚举
+    // NodeState: Unrevealed, Revealed, Reachable, Visited
 
     public sealed class RoguelikeMapUINode
     {
@@ -94,7 +90,7 @@ namespace Tactics.RoguelikeMap
             if (_swirlFill != null)
                 _swirlFill.style.display = DisplayStyle.None;
 
-            SetState(NodeStates.Locked);
+            SetState(NodeState.Unrevealed);
 
             Root.RegisterCallback<PointerEnterEvent>(OnPointerEnter);
             Root.RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
@@ -111,7 +107,7 @@ namespace Tactics.RoguelikeMap
             Root.style.height = 64f;
         }
 
-        public void SetState(NodeStates state)
+        public void SetState(NodeState state)
         {
             if (_visitedIndicator != null)
                 _visitedIndicator.style.display = DisplayStyle.None;
@@ -120,24 +116,36 @@ namespace Tactics.RoguelikeMap
 
             switch (state)
             {
-                case NodeStates.Locked:
+                case NodeState.Unrevealed:
+                    // 未揭示：灰色，不可点击
                     _currentTintColor = _lockedColor;
                     ApplyTint(_lockedColor);
+                    Root.pickingMode = PickingMode.Ignore;
                     break;
-                case NodeStates.Visited:
-                    _currentTintColor = _visitedColor;
-                    ApplyTint(_visitedColor);
-                    if (_visitedIndicator != null)
-                        _visitedIndicator.style.display = DisplayStyle.Flex;
+                case NodeState.Revealed:
+                    // 已揭示：半透明，不可点击
+                    _currentTintColor = new Color(_lockedColor.r, _lockedColor.g, _lockedColor.b, 0.5f);
+                    ApplyTint(_currentTintColor);
+                    Root.pickingMode = PickingMode.Ignore;
                     break;
-                case NodeStates.Attainable:
+                case NodeState.Reachable:
+                    // 可到达：高亮闪烁，可点击
                     _currentTintColor = _lockedColor;
                     ApplyTint(_lockedColor);
+                    Root.pickingMode = PickingMode.Position;
                     _attainableTween = DOTween.To(
                         () => _currentTintColor,
                         c => { _currentTintColor = c; ApplyTint(c); },
                         _visitedColor, 0.5f
                     ).SetLoops(-1, LoopType.Yoyo);
+                    break;
+                case NodeState.Visited:
+                    // 已访问：显示已访问标记，不可点击
+                    _currentTintColor = _visitedColor;
+                    ApplyTint(_visitedColor);
+                    if (_visitedIndicator != null)
+                        _visitedIndicator.style.display = DisplayStyle.Flex;
+                    Root.pickingMode = PickingMode.Ignore;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(state), state, null);
