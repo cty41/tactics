@@ -1,0 +1,27 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "@warp-dot-dev/opencode-warp",
+    "oh-my-openagent@latest",
+    "superpowers@git+https://github.com/obra/superpowers.git"
+  ],
+  "mcp": {
+    "unity-MCP": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "--from",
+        "mcpforunityserver",
+        "mcp-for-unity",
+        "--transport",
+        "stdio"
+      ]
+    }
+  },
+  "lsp": {
+    "csharp": {
+      "command": ["roslyn-language-server", "--stdio"],
+      "extensions": [".cs"]
+    }
+  }
+}

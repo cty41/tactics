@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json",
+  "agents": {
+    "sisyphus": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"]
+    },
+    "oracle": {
+      "model": "deepseek/deepseek-v4-pro"
+    },
+    "explore": {
+      "model": "deepseek/deepseek-v4-flash"
+    },
+    "multimodal-looker": {
+      "model": "xiaomi-token-plan-cn/mimo-v2.5"
+    },
+    "prometheus": {
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
+    },
+    "metis": {
+      "model": "deepseek/deepseek-v4-pro"
+    },
+    "momus": {
+      "model": "deepseek/deepseek-v4-pro"
+    },
+    "atlas": {
+      "model": "deepseek/deepseek-v4-pro"
+    },
+    "sisyphus-junior": {
+      "model": "deepseek/deepseek-v4-pro"
+    }
+  },
+  "categories": {
+    "visual-engineering": {
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"]
+    },
+    "ultrabrain": {
+      "model": "deepseek/deepseek-v4-pro"
+    },
+    "deep": {
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
+    },
+    "artistry": {
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"]
+    },
+    "quick": {
+      "model": "deepseek/deepseek-v4-flash"
+    },
+    "unspecified-low": {
+      "model": "deepseek/deepseek-v4-flash"
+    },
+    "unspecified-high": {
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"]
+    },
+    "writing": {
+      "model": "deepseek/deepseek-v4-flash"
+    }
+  },
+  "runtime_fallback": {
+    "enabled": true,
+    "retry_on_errors": [429, 503, 529, 1308, 1310],
+    "max_fallback_attempts": 3,
+    "cooldown_seconds": 60,
+    "timeout_seconds": 30,
+    "notify_on_fallback": true
+  }
+}
