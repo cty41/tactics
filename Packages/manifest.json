@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
     "com.github-glitchenzo.nugetforunity": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
     "com.newtonsoft.json": "1.0.1",
     "com.unity.2d.animation": "13.0.4",
@@ -52,16 +51,22 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "com.coplaydev.unity-mcp": "9.6.8"
   },
   "scopedRegistries": [
     {
       "name": "package.openupm.com",
       "url": "https://package.openupm.com",
       "scopes": [
+        "com.coplaydev.unity-mcp",
+        "com.ivanmurzak",
         "com.ivanmurzak.unity.mcp",
         "com.newtonsoft.json",
+        "extensions.unity",
         "extensions.unity.playerprefsex",
+        "org.nuget.com.ivanmurzak",
+        "org.nuget.microsoft",
         "org.nuget.microsoft.aspnetcore.connections.abstractions",
         "org.nuget.microsoft.aspnetcore.http.connections.client",
         "org.nuget.microsoft.aspnetcore.http.connections.common",
@@ -88,6 +93,7 @@
         "org.nuget.microsoft.extensions.options",
         "org.nuget.microsoft.extensions.primitives",
         "org.nuget.r3",
+        "org.nuget.system",
         "org.nuget.system.buffers",
         "org.nuget.system.collections.immutable",
         "org.nuget.system.componentmodel.annotations",
@@ -102,12 +108,7 @@
         "org.nuget.system.text.encodings.web",
         "org.nuget.system.text.json",
         "org.nuget.system.threading.channels",
-        "org.nuget.system.threading.tasks.extensions",
-        "com.ivanmurzak",
-        "extensions.unity",
-        "org.nuget.com.ivanmurzak",
-        "org.nuget.microsoft",
-        "org.nuget.system"
+        "org.nuget.system.threading.tasks.extensions"
       ]
     }
   ]
