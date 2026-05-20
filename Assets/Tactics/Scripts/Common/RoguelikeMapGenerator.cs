@@ -1,294 +1,385 @@
 using System.Collections.Generic;
 using Tactics.Runtime.Utilities;
-using System.Linq;
 using UnityEngine;
-using Tactics.Utils;
 
 namespace Tactics.RoguelikeMap
 {
+    /// <summary>
+    /// FTL 风格地图生成器（网格布局）。
+    /// 使用网格布局 + 距离约束 + BFS 连通性检查的方式生成地图。
+    /// 节点按网格单元排列，从左下到右上依次为 Start → 中间节点 → Boss。
+    /// </summary>
     public static class RoguelikeMapGenerator
     {
-        private static RoguelikeMapConfig config;
-
-        private static List<float> layerDistances;
-        private static readonly List<List<RoguelikeMapNode>> nodes = new List<List<RoguelikeMapNode>>();
-
-        public static RoguelikeMap GetMap(RoguelikeMapConfig conf)
+        private const int MaxRetries = 50;
+        /// <summary>
+        /// 根据配置生成一张 FTL 风格的 Roguelike 地图（网格布局）。
+        /// </summary>
+        /// <param name="config">地图配置</param>
+        /// <returns>生成的地图，失败返回 null</returns>
+        public static RoguelikeMap GetMap(RoguelikeMapConfig config)
         {
-            if (conf == null)
+            if (config == null)
             {
-                TLog.Warning("Config was null in RoguelikeMapGenerator.Generate()");
+                TLog.Error("[RoguelikeMapGenerator] Config is null.");
                 return null;
             }
 
-            config = conf;
-            nodes.Clear();
+            if (config.nodeCount < 2)
+            {
+                TLog.Error("[RoguelikeMapGenerator] nodeCount must be >= 2.");
+                return null;
+            }
 
-            GenerateLayerDistances();
+            TLog.Info($"[RoguelikeMapGenerator] Generating FTL-style map: gridColumns={config.gridColumns}, gridRows={config.gridRows}, " +
+                      $"nodeCount={config.nodeCount}, maxReachableDistance={config.maxReachableDistance}, " +
+                      $"minDistance={config.minDistanceBetweenNodes}, storeMinDistance={config.storeMinDistance}");
 
-            for (int i = 0; i < conf.layers.Count; i++)
-                PlaceLayer(i);
+            for (int retry = 0; retry < MaxRetries; retry++)
+            {
+                var nodes = new List<RoguelikeMapNode>();
+                var connections = new List<(RoguelikeMapNode from, RoguelikeMapNode to)>();
+                int nextId = 0;
 
-            List<List<Vector2Int>> paths = GeneratePaths();
+                // 1. 计算网格单元尺寸
+                int gridCols = config.gridColumns;
+                int gridRows = config.gridRows;
+                float mapWidth = config.maxReachableDistance * gridCols * 0.8f;
+                float mapHeight = config.maxReachableDistance * gridRows * 0.6f;
+                float cellWidth = mapWidth / gridCols;
+                float cellHeight = mapHeight / gridRows;
 
-            RandomizeNodePositions();
+                TLog.Info($"[RoguelikeMapGenerator] Attempt {retry + 1}/{MaxRetries}: grid={gridCols}x{gridRows}, cellSize=({cellWidth:F1},{cellHeight:F1})");
 
-            SetUpConnections(paths);
+                // 2. 在网格单元内放置节点
+                for (int col = 0; col < gridCols; col++)
+                {
+                    for (int row = 0; row < gridRows; row++)
+                    {
+                        // 单元内随机位置（避开边界 10%-90%）
+                        float x = col * cellWidth + UnityEngine.Random.Range(0.1f, 0.9f) * cellWidth;
+                        float y = row * cellHeight + UnityEngine.Random.Range(0.1f, 0.9f) * cellHeight;
+                        Vector2 pos = new Vector2(x, y);
 
-            RemoveCrossConnections();
+                        // 确定节点类型
+                        RoguelikeNodeType nodeType;
+                        string blueprintName;
+                        if (col == 0 && row == 0)
+                        {
+                            nodeType = RoguelikeNodeType.Start;
+                            blueprintName = "Start";
+                        }
+                        else if (col == gridCols - 1 && row == gridRows - 1)
+                        {
+                            nodeType = RoguelikeNodeType.Boss;
+                            blueprintName = "Boss";
+                        }
+                        else
+                        {
+                            nodeType = config.randomNodes[UnityEngine.Random.Range(0, config.randomNodes.Count)];
+                            blueprintName = GetBlueprintName(config, nodeType);
+                        }
 
-            List<RoguelikeMapNode> nodesList = nodes.SelectMany(n => n).Where(n => n.incoming.Count > 0 || n.outgoing.Count > 0).ToList();
+                        // 商店间距约束
+                        if (nodeType == RoguelikeNodeType.Store && !IsValidStorePosition(pos, nodes, config.storeMinDistance))
+                        {
+                            TLog.Info($"[RoguelikeMapGenerator] Store too close, skipping at ({pos.x:F1},{pos.y:F1})");
+                            continue;
+                        }
 
-            string bossNodeName = config.nodeBlueprints.Where(b => b.nodeType == RoguelikeNodeType.Boss).ToList().Random().name;
+                        var node = new RoguelikeMapNode($"n{nextId++}", nodeType, blueprintName, pos);
+                        nodes.Add(node);
+                        TLog.Info($"[RoguelikeMapGenerator] Placed node {node.nodeId} ({nodeType}) at ({pos.x:F1},{pos.y:F1}) in cell [{col},{row}]");
+                    }
+                }
 
-            TLog.Info($"[RoguelikeMapGenerator] 生成地图完成:");
-            TLog.Info($"[RoguelikeMapGenerator]   层数: {nodes.Count}");
-            TLog.Info($"[RoguelikeMapGenerator]   总节点数(过滤前): {nodes.Sum(n => n.Count)}");
-            TLog.Info($"[RoguelikeMapGenerator]   路径数: {paths.Count}");
-            TLog.Info($"[RoguelikeMapGenerator]   连接节点数(过滤后): {nodesList.Count}");
-            TLog.Info($"[RoguelikeMapGenerator]   GridWidth: {config.GridWidth}");
-            TLog.Info($"[RoguelikeMapGenerator]   numOfStartingNodes: {config.numOfStartingNodes.GetValue()}");
-            TLog.Info($"[RoguelikeMapGenerator]   numOfPreBossNodes: {config.numOfPreBossNodes.GetValue()}");
+                // 3. 建立连接（使用 BuildConnections）
+                connections = BuildConnections(nodes, config.maxReachableDistance);
 
+                // 4. 填充 incoming/outgoing
+                foreach (var (from, to) in connections)
+                {
+                    from.AddOutgoing(to.nodeId);
+                    to.AddIncoming(from.nodeId);
+                }
+
+                // 5. 验证
+                if (!IsFullyConnected(nodes[0], nodes))
+                {
+                    TLog.Info($"[RoguelikeMapGenerator] Not all nodes reachable (attempt {retry + 1}/{MaxRetries}), retrying...");
+                    continue;
+                }
+
+                if (!HasMinimumConnections(nodes))
+                {
+                    TLog.Info($"[RoguelikeMapGenerator] Some nodes have < 2 connections (attempt {retry + 1}/{MaxRetries}), retrying...");
+                    continue;
+                }
+
+                // 6. 成功
+                LogMapResult(nodes, connections);
+                return new RoguelikeMap(config.name, nodes[nodes.Count - 1].nodeId, nodes, new HashSet<string>(),
+                    config.maxReachableDistance, config.visionRange);
+            }
+
+            TLog.Error($"[RoguelikeMapGenerator] Failed to generate connected map after {MaxRetries} attempts.");
+            return null;
+        }
+
+        /// <summary>
+        /// 建立节点间的纯距离连接。
+        /// 1) 对每个节点，连接最近的 1-3 个可达节点
+        /// 2) 侧向补充：连接数不足 2 的节点，补连最近的可达节点
+        /// 3) 额外 20% 随机连接
+        /// </summary>
+        private static List<(RoguelikeMapNode from, RoguelikeMapNode to)> BuildConnections(
+            List<RoguelikeMapNode> nodes,
+            float maxReachableDistance)
+        {
+            var connections = new List<(RoguelikeMapNode from, RoguelikeMapNode to)>();
+            var connectionSet = new HashSet<(string, string)>();
+            const int MaxConnectionsPerNode = 4;
+
+            // 1) 对每个节点，连接最近的 1-3 个可达节点
             for (int i = 0; i < nodes.Count; i++)
             {
-                var layerNodes = nodes[i];
-                var connectedNodes = layerNodes.Where(n => n.incoming.Count > 0 || n.outgoing.Count > 0).ToList();
-                TLog.Info($"[RoguelikeMapGenerator]   Layer {i}: {layerNodes.Count}个节点, {connectedNodes.Count}个有连接");
-                foreach (var n in connectedNodes)
+                var nodeA = nodes[i];
+                var candidates = new List<(int index, float distance)>();
+
+                for (int j = 0; j < nodes.Count; j++)
                 {
-                    TLog.Info($"[RoguelikeMapGenerator]     [{n.point}] type={n.nodeType}, in={n.incoming.Count}, out={n.outgoing.Count}");
-                }
-            }
-
-            return new RoguelikeMap(conf.name, bossNodeName, nodesList, new List<Vector2Int>());
-        }
-
-        private static void GenerateLayerDistances()
-        {
-            layerDistances = new List<float>();
-            foreach (RoguelikeMapLayer layer in config.layers)
-                layerDistances.Add(layer.distanceFromPreviousLayer.GetValue());
-        }
-
-        private static float GetDistanceToLayer(int layerIndex)
-        {
-            if (layerIndex < 0 || layerIndex > layerDistances.Count) return 0f;
-
-            return layerDistances.Take(layerIndex + 1).Sum();
-        }
-
-        private static void PlaceLayer(int layerIndex)
-        {
-            RoguelikeMapLayer layer = config.layers[layerIndex];
-            List<RoguelikeMapNode> nodesOnThisLayer = new List<RoguelikeMapNode>();
-
-            float offset = layer.nodesApartDistance * config.GridWidth / 2f;
-
-            for (int i = 0; i < config.GridWidth; i++)
-            {
-                var supportedRandomNodeTypes =
-                    config.randomNodes.Where(t => config.nodeBlueprints.Any(b => b.nodeType == t)).ToList();
-                RoguelikeNodeType nodeType = Random.Range(0f, 1f) < layer.randomizeNodes && supportedRandomNodeTypes.Count > 0
-                    ? supportedRandomNodeTypes.Random()
-                    : layer.nodeType;
-                var matchingBlueprints = config.nodeBlueprints.Where(b => b.nodeType == nodeType).ToList();
-                string blueprintName;
-                if (matchingBlueprints.Count == 0)
-                {
-                    TLog.Warning($"[RoguelikeMapGenerator] 未找到 nodeType={nodeType} 的蓝图，使用第一个蓝图");
-                    blueprintName = config.nodeBlueprints[0].name;
-                }
-                else
-                {
-                    blueprintName = matchingBlueprints.Random().name;
-                }
-                RoguelikeMapNode node = new RoguelikeMapNode(nodeType, blueprintName, new Vector2Int(i, layerIndex))
-                {
-                    position = new Vector2(-offset + i * layer.nodesApartDistance, GetDistanceToLayer(layerIndex))
-                };
-                nodesOnThisLayer.Add(node);
-            }
-
-            nodes.Add(nodesOnThisLayer);
-        }
-
-        private static void RandomizeNodePositions()
-        {
-            for (int index = 0; index < nodes.Count; index++)
-            {
-                List<RoguelikeMapNode> list = nodes[index];
-                RoguelikeMapLayer layer = config.layers[index];
-                float distToNextLayer = index + 1 >= layerDistances.Count
-                    ? 0f
-                    : layerDistances[index + 1];
-                float distToPreviousLayer = layerDistances[index];
-
-                foreach (RoguelikeMapNode node in list)
-                {
-                    float xRnd = Random.Range(-0.5f, 0.5f);
-                    float yRnd = Random.Range(-0.5f, 0.5f);
-
-                    float x = xRnd * layer.nodesApartDistance;
-                    float y = yRnd < 0 ? distToPreviousLayer * yRnd: distToNextLayer * yRnd;
-
-                    node.position += new Vector2(x, y) * layer.randomizePosition;
-                }
-            }
-        }
-
-        private static void SetUpConnections(List<List<Vector2Int>> paths)
-        {
-            foreach (List<Vector2Int> path in paths)
-            {
-                for (int i = 0; i < path.Count - 1; ++i)
-                {
-                    RoguelikeMapNode node = GetNode(path[i]);
-                    RoguelikeMapNode nextNode = GetNode(path[i + 1]);
-                    node.AddOutgoing(nextNode.point);
-                    nextNode.AddIncoming(node.point);
-                }
-            }
-        }
-
-        private static void RemoveCrossConnections()
-        {
-            for (int i = 0; i < config.GridWidth - 1; ++i)
-                for (int j = 0; j < config.layers.Count - 1; ++j)
-                {
-                    RoguelikeMapNode node = GetNode(new Vector2Int(i, j));
-                    if (node == null || node.HasNoConnections()) continue;
-                    RoguelikeMapNode right = GetNode(new Vector2Int(i + 1, j));
-                    if (right == null || right.HasNoConnections()) continue;
-                    RoguelikeMapNode top = GetNode(new Vector2Int(i, j + 1));
-                    if (top == null || top.HasNoConnections()) continue;
-                    RoguelikeMapNode topRight = GetNode(new Vector2Int(i + 1, j + 1));
-                    if (topRight == null || topRight.HasNoConnections()) continue;
-
-                    if (!node.outgoing.Any(element => element.Equals(topRight.point))) continue;
-                    if (!right.outgoing.Any(element => element.Equals(top.point))) continue;
-
-                    node.AddOutgoing(top.point);
-                    top.AddIncoming(node.point);
-
-                    right.AddOutgoing(topRight.point);
-                    topRight.AddIncoming(right.point);
-
-                    float rnd = Random.Range(0f, 1f);
-                    if (rnd < 0.2f)
+                    if (i == j) continue;
+                    float dist = MapReachabilityUtility.CalculateDistance(nodeA.position, nodes[j].position);
+                    if (dist <= maxReachableDistance)
                     {
-                        node.RemoveOutgoing(topRight.point);
-                        topRight.RemoveIncoming(node.point);
-                        right.RemoveOutgoing(top.point);
-                        top.RemoveIncoming(right.point);
-                    }
-                    else if (rnd < 0.6f)
-                    {
-                        node.RemoveOutgoing(topRight.point);
-                        topRight.RemoveIncoming(node.point);
-                    }
-                    else
-                    {
-                        right.RemoveOutgoing(top.point);
-                        top.RemoveIncoming(right.point);
+                        candidates.Add((j, dist));
                     }
                 }
-        }
 
-        private static RoguelikeMapNode GetNode(Vector2Int p)
-        {
-            if (p.y >= nodes.Count) return null;
-            if (p.x >= nodes[p.y].Count) return null;
+                // 按距离排序，取前 1-3 个
+                candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+                int currentConn = CountConnections(nodeA, connectionSet);
+                int maxForward = Mathf.Max(0, MaxConnectionsPerNode - currentConn);
+                int connectCount = Mathf.Min(UnityEngine.Random.Range(1, 4), candidates.Count, maxForward);
 
-            return nodes[p.y][p.x];
-        }
-
-        private static Vector2Int GetFinalNode()
-        {
-            int y = config.layers.Count - 1;
-            if (config.GridWidth % 2 == 1)
-                return new Vector2Int(config.GridWidth / 2, y);
-
-            return Random.Range(0, 2) == 0
-                ? new Vector2Int(config.GridWidth / 2, y)
-                : new Vector2Int(config.GridWidth / 2 - 1, y);
-        }
-
-        private static List<List<Vector2Int>> GeneratePaths()
-        {
-            Vector2Int finalNode = GetFinalNode();
-            var paths = new List<List<Vector2Int>>();
-            int numOfStartingNodes = config.numOfStartingNodes.GetValue();
-            int numOfPreBossNodes = config.numOfPreBossNodes.GetValue();
-
-            List<int> candidateXs = new List<int>();
-            for (int i = 0; i < config.GridWidth; i++)
-                candidateXs.Add(i);
-
-            candidateXs.Shuffle();
-            IEnumerable<int> startingXs = candidateXs.Take(numOfStartingNodes);
-            List<Vector2Int> startingPoints = (from x in startingXs select new Vector2Int(x, 0)).ToList();
-
-            candidateXs.Shuffle();
-            IEnumerable<int> preBossXs = candidateXs.Take(numOfPreBossNodes);
-            List<Vector2Int> preBossPoints = (from x in preBossXs select new Vector2Int(x, finalNode.y - 1)).ToList();
-
-            int numOfPaths = Mathf.Max(numOfStartingNodes, numOfPreBossNodes) + Mathf.Max(0, config.extraPaths);
-            for (int i = 0; i < numOfPaths; ++i)
-            {
-                Vector2Int startNode = startingPoints[i % numOfStartingNodes];
-                Vector2Int endNode = preBossPoints[i % numOfPreBossNodes];
-                List<Vector2Int> path = Path(startNode, endNode);
-                path.Add(finalNode);
-                paths.Add(path);
+                for (int c = 0; c < connectCount; c++)
+                {
+                    var target = nodes[candidates[c].index];
+                    var key = (nodeA.nodeId, target.nodeId);
+                    var reverseKey = (target.nodeId, nodeA.nodeId);
+                    if (connectionSet.Add(key) && !connectionSet.Contains(reverseKey))
+                    {
+                        connections.Add((nodeA, target));
+                    }
+                }
             }
 
-            return paths;
-        }
-
-        private static List<Vector2Int> Path(Vector2Int fromPoint, Vector2Int toPoint)
-        {
-            int toRow = toPoint.y;
-            int toCol = toPoint.x;
-
-            int lastNodeCol = fromPoint.x;
-
-            List<Vector2Int> path = new List<Vector2Int> { fromPoint };
-            List<int> candidateCols = new List<int>();
-            for (int row = 1; row < toRow; ++row)
+            // 2) 侧向补充：连接数不足 2 的节点，补连最近的可达节点
+            for (int i = 0; i < nodes.Count; i++)
             {
-                candidateCols.Clear();
+                var node = nodes[i];
+                int currentConnections = CountConnections(node, connectionSet);
 
-                int verticalDistance = toRow - row;
-                int horizontalDistance;
+                if (currentConnections >= 2 || currentConnections >= MaxConnectionsPerNode)
+                    continue;
 
-                int forwardCol = lastNodeCol;
-                horizontalDistance = Mathf.Abs(toCol - forwardCol);
-                if (horizontalDistance <= verticalDistance)
-                    candidateCols.Add(lastNodeCol);
+                var nearby = new List<(int index, float distance)>();
+                for (int j = 0; j < nodes.Count; j++)
+                {
+                    if (i == j) continue;
+                    float dist = MapReachabilityUtility.CalculateDistance(node.position, nodes[j].position);
+                    if (dist <= maxReachableDistance)
+                    {
+                        nearby.Add((j, dist));
+                    }
+                }
 
-                int leftCol = lastNodeCol - 1;
-                horizontalDistance = Mathf.Abs(toCol - leftCol);
-                if (leftCol >= 0 && horizontalDistance <= verticalDistance)
-                    candidateCols.Add(leftCol);
+                nearby.Sort((a, b) => a.distance.CompareTo(b.distance));
 
-                int rightCol = lastNodeCol + 1;
-                horizontalDistance = Mathf.Abs(toCol - rightCol);
-                if (rightCol < config.GridWidth && horizontalDistance <= verticalDistance)
-                    candidateCols.Add(rightCol);
+                foreach (var (index, _) in nearby)
+                {
+                    if (currentConnections >= 2) break;
 
-                int randomCandidateIndex = Random.Range(0, candidateCols.Count);
-                int candidateCol = candidateCols[randomCandidateIndex];
-                Vector2Int nextPoint = new Vector2Int(candidateCol, row);
+                    var target = nodes[index];
+                    var key = (node.nodeId, target.nodeId);
+                    var reverseKey = (target.nodeId, node.nodeId);
 
-                path.Add(nextPoint);
+                    if (connectionSet.Contains(key) || connectionSet.Contains(reverseKey))
+                        continue;
 
-                lastNodeCol = candidateCol;
+                    connectionSet.Add(key);
+                    connections.Add((node, target));
+                    currentConnections++;
+                }
             }
 
-            path.Add(toPoint);
+            // 3) 额外 20% 随机连接
+            int extraCount = Mathf.CeilToInt(nodes.Count * 0.2f);
+            int extraAdded = 0;
+            int maxExtraAttempts = nodes.Count * 5;
+            int extraAttempt = 0;
 
-            return path;
+            while (extraAdded < extraCount && extraAttempt < maxExtraAttempts)
+            {
+                extraAttempt++;
+                int a = UnityEngine.Random.Range(0, nodes.Count);
+                int b = UnityEngine.Random.Range(0, nodes.Count);
+
+                if (a == b) continue;
+
+                var nodeA = nodes[a];
+                var nodeB = nodes[b];
+                float dist = MapReachabilityUtility.CalculateDistance(nodeA.position, nodeB.position);
+                if (dist > maxReachableDistance) continue;
+
+                int connA = CountConnections(nodeA, connectionSet);
+                int connB = CountConnections(nodeB, connectionSet);
+                if (connA >= MaxConnectionsPerNode || connB >= MaxConnectionsPerNode)
+                    continue;
+
+                var key = (nodeA.nodeId, nodeB.nodeId);
+                var reverseKey = (nodeB.nodeId, nodeA.nodeId);
+                if (connectionSet.Contains(key) || connectionSet.Contains(reverseKey)) continue;
+
+                connectionSet.Add(key);
+                connections.Add((nodeA, nodeB));
+                extraAdded++;
+            }
+
+            return connections;
+        }
+
+        /// <summary>
+        /// 检查位置是否与已有节点保持最小距离。
+        /// </summary>
+        private static bool IsValidPosition(Vector2 pos, List<RoguelikeMapNode> existing, float minDistance)
+        {
+            foreach (var node in existing)
+            {
+                if (MapReachabilityUtility.CalculateDistance(pos, node.position) < minDistance)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 检查位置是否与已有商店保持最小距离。
+        /// </summary>
+        private static bool IsValidStorePosition(Vector2 pos, List<RoguelikeMapNode> existing, float storeMinDistance)
+        {
+            foreach (var node in existing)
+            {
+                if (node.nodeType == RoguelikeNodeType.Store &&
+                    MapReachabilityUtility.CalculateDistance(pos, node.position) < storeMinDistance)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 从配置的蓝图列表中随机选取匹配类型的蓝图名称。
+        /// 无匹配蓝图时返回类型名称。
+        /// </summary>
+        private static string GetBlueprintName(RoguelikeMapConfig config, RoguelikeNodeType nodeType)
+        {
+            if (config.nodeBlueprints == null || config.nodeBlueprints.Count == 0)
+                return nodeType.ToString();
+
+            var matching = config.nodeBlueprints.FindAll(b => b != null && b.nodeType == nodeType);
+            if (matching.Count == 0)
+                return nodeType.ToString();
+
+            return matching[UnityEngine.Random.Range(0, matching.Count)].name;
+        }
+
+        /// <summary>
+        /// BFS 检查从 start 出发是否可达所有节点（遍历 incoming 和 outgoing 双向边）。
+        /// </summary>
+        private static bool IsFullyConnected(RoguelikeMapNode start, List<RoguelikeMapNode> allNodes)
+        {
+            var visited = new HashSet<string>();
+            var queue = new Queue<string>();
+            queue.Enqueue(start.nodeId);
+            visited.Add(start.nodeId);
+
+            var nodeMap = new Dictionary<string, RoguelikeMapNode>();
+            foreach (var node in allNodes)
+                nodeMap[node.nodeId] = node;
+
+            while (queue.Count > 0)
+            {
+                string currentId = queue.Dequeue();
+                if (!nodeMap.TryGetValue(currentId, out var current))
+                    continue;
+
+                foreach (var neighborId in current.outgoing)
+                {
+                    if (visited.Add(neighborId))
+                        queue.Enqueue(neighborId);
+                }
+
+                foreach (var neighborId in current.incoming)
+                {
+                    if (visited.Add(neighborId))
+                        queue.Enqueue(neighborId);
+                }
+            }
+
+            bool connected = visited.Count == allNodes.Count;
+            if (!connected)
+            {
+                TLog.Info($"[RoguelikeMapGenerator] BFS: {visited.Count}/{allNodes.Count} reachable from start.");
+            }
+            return connected;
+        }
+
+        /// <summary>
+        /// 检查所有节点是否至少有 2 个连接。
+        /// </summary>
+        private static bool HasMinimumConnections(List<RoguelikeMapNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                int total = node.outgoing.Count + node.incoming.Count;
+                if (total < 2)
+                {
+                    TLog.Info($"[RoguelikeMapGenerator] Node {node.nodeId} ({node.nodeType}) has only {total} connections.");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 统计节点在连接集合中的连接数。
+        /// </summary>
+        private static int CountConnections(RoguelikeMapNode node, HashSet<(string, string)> connectionSet)
+        {
+            int count = 0;
+            foreach (var (from, to) in connectionSet)
+            {
+                if (from == node.nodeId || to == node.nodeId)
+                    count++;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// 输出生成结果摘要日志。
+        /// </summary>
+        private static void LogMapResult(List<RoguelikeMapNode> nodes, List<(RoguelikeMapNode from, RoguelikeMapNode to)> connections)
+        {
+            // 统计各类型节点数量
+            var typeCounts = new Dictionary<RoguelikeNodeType, int>();
+            foreach (var node in nodes)
+            {
+                if (!typeCounts.ContainsKey(node.nodeType))
+                    typeCounts[node.nodeType] = 0;
+                typeCounts[node.nodeType]++;
+            }
+
+            string typeSummary = string.Join(", ", typeCounts);
+            TLog.Info($"[RoguelikeMapGenerator] FTL-style map generated: {nodes.Count} nodes, {connections.Count} connections. Types: [{typeSummary}]");
         }
     }
 }

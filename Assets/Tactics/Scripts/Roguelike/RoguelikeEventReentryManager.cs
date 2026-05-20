@@ -12,12 +12,12 @@ namespace Tactics.Roguelike
         /// Mark that a roguelike event node is currently in progress.
         /// Call this when entering a node (battle, rest, store, treasure, mystery).
         /// </summary>
-        public static void MarkEventInProgress(string eventType, Vector2Int nodePoint)
+        public static void MarkEventInProgress(string eventType, string nodeId)
         {
             PlayerPrefs.SetString(EventInProgressKey, eventType);
-            PlayerPrefs.SetString(EventNodeKey, $"{nodePoint.x},{nodePoint.y}");
+            PlayerPrefs.SetString(EventNodeKey, nodeId ?? string.Empty);
             PlayerPrefs.Save();
-            TLog.Info($"[RoguelikeEventReentryManager] Marked event in progress: type={eventType}, node=({nodePoint.x},{nodePoint.y})");
+            TLog.Info($"[RoguelikeEventReentryManager] Marked event in progress: type={eventType}, nodeId={nodeId}");
         }
 
         /// <summary>
@@ -38,12 +38,12 @@ namespace Tactics.Roguelike
         /// Check if there's an event in progress.
         /// </summary>
         /// <param name="eventType">Output: the event type string (e.g. "Battle", "Rest")</param>
-        /// <param name="nodePoint">Output: the node coordinates. null if not set or invalid.</param>
+        /// <param name="nodeId">Output: the node ID. null if not set.</param>
         /// <returns>true if an event is in progress</returns>
-        public static bool IsEventInProgress(out string eventType, out Vector2Int? nodePoint)
+        public static bool IsEventInProgress(out string eventType, out string nodeId)
         {
             eventType = PlayerPrefs.GetString(EventInProgressKey, null);
-            nodePoint = null;
+            nodeId = null;
 
             if (string.IsNullOrEmpty(eventType))
                 return false;
@@ -51,13 +51,7 @@ namespace Tactics.Roguelike
             string nodeStr = PlayerPrefs.GetString(EventNodeKey, null);
             if (!string.IsNullOrEmpty(nodeStr))
             {
-                string[] parts = nodeStr.Split(',');
-                if (parts.Length == 2 &&
-                    int.TryParse(parts[0], out int x) &&
-                    int.TryParse(parts[1], out int y))
-                {
-                    nodePoint = new Vector2Int(x, y);
-                }
+                nodeId = nodeStr;
             }
 
             return true;

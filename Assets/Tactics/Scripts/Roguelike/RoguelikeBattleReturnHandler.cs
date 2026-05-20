@@ -145,26 +145,17 @@ namespace Tactics.Roguelike
                 return;
             }
 
-            string[] parts = pending.Split(',');
-            if (parts.Length != 2 || !int.TryParse(parts[0], out int x) || !int.TryParse(parts[1], out int y))
-            {
-                PlayerPrefs.DeleteKey(Tactics.UI.RoguelikeMapUIController.RoguelikePendingNodePrefsKey);
-                PlayerPrefs.Save();
-                return;
-            }
-
             string mapJson = PlayerPrefs.GetString(Tactics.UI.RoguelikeMapUIController.MapPlayerPrefsKey);
             global::Tactics.RoguelikeMap.RoguelikeMap map = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson, MapJsonSettings);
-            if (map?.path == null)
+            if (map?.visitedNodes == null)
             {
                 PlayerPrefs.DeleteKey(Tactics.UI.RoguelikeMapUIController.RoguelikePendingNodePrefsKey);
                 PlayerPrefs.Save();
                 return;
             }
 
-            var point = new Vector2Int(x, y);
-            if (!map.path.Any(p => p.Equals(point)))
-                map.path.Add(point);
+            // pending is now a nodeId string
+            map.visitedNodes.Add(pending);
 
             string newJson = JsonConvert.SerializeObject(map, Formatting.Indented, MapJsonSettings);
             PlayerPrefs.SetString(Tactics.UI.RoguelikeMapUIController.MapPlayerPrefsKey, newJson);

@@ -1,9 +1,11 @@
+using System;
 using OneLine;
 using UnityEngine;
 using Tactics.Utils;
 
 namespace Tactics.RoguelikeMap
 {
+    [Obsolete("RoguelikeMapLayer is being replaced by free-graph config model. Will be removed in Task 3.")]
     [System.Serializable]
     public class RoguelikeMapLayer
     {

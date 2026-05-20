@@ -155,10 +155,10 @@ namespace Tactics.UI
                 string mapJson = PlayerPrefs.GetString(prefsKey);
                 _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
                 _nodeStateManager = new NodeStateManager(_currentMap);
-                if (_currentMap?.path != null && _currentMap.path.Count > 0)
+                if (_currentMap?.visitedNodes != null && _currentMap.visitedNodes.Count > 0)
                 {
                     var bossNode = _currentMap.GetBossNode();
-                    if (bossNode != null && _currentMap.path.Any(p => p.Equals(bossNode.point)))
+                    if (bossNode != null && _currentMap.visitedNodes.Contains(bossNode.nodeId))
                     {
                         GenerateNewMap();
                     }
@@ -174,9 +174,9 @@ namespace Tactics.UI
             }
     
             // 检测是否有中断的事件（玩家在事件节点中退出游戏）
-            if (RoguelikeEventReentryManager.IsEventInProgress(out string interruptedEventType, out Vector2Int? interruptedNode))
+            if (RoguelikeEventReentryManager.IsEventInProgress(out string interruptedEventType, out string interruptedNodeId))
             {
-                TLog.Warning($"[RoguelikeMapUIController] Detected interrupted event: type={interruptedEventType}, node={interruptedNode}");
+                TLog.Warning($"[RoguelikeMapUIController] Detected interrupted event: type={interruptedEventType}, nodeId={interruptedNodeId}");
                 RoguelikeEventReentryManager.ClearEventInProgress();
             }
         }
@@ -270,7 +270,7 @@ namespace Tactics.UI
             ScrollToOrigin();
 
             // Explicitly set layer sizes to avoid layout timing issues
-            float mapLength = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
+            float mapLength = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
             float mapHeight = _cachedViewportHeight > 0f ? _cachedViewportHeight : 1080f;
             if (_backgroundLayer != null) { _backgroundLayer.style.width = mapLength; _backgroundLayer.style.height = mapHeight; _backgroundLayer.style.position = Position.Absolute; }
             if (_linesLayer != null) { _linesLayer.style.width = mapLength; _linesLayer.style.height = mapHeight; _linesLayer.style.position = Position.Absolute; }
@@ -444,7 +444,7 @@ namespace Tactics.UI
         {
             if (_mapContent == null || _currentMap == null) return;
 
-            float length = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
+            float length = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
             _mapContent.style.width = length;
             _mapContent.style.flexGrow = 0;
             _mapContent.style.flexShrink = 0;
@@ -505,7 +505,7 @@ namespace Tactics.UI
 
         private Vector2 ConvertToVisualElementPosition(Vector2 anchoredPos)
         {
-            float contentWidth = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
+            float contentWidth = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
             float contentHeight = _cachedViewportHeight > 0f ? _cachedViewportHeight : 1080f;
 
             const float nodeSize = 64f;
@@ -518,12 +518,31 @@ namespace Tactics.UI
         {
             if (_currentMap == null) return Vector2.zero;
 
-            float length = padding + _currentMap.DistanceBetweenFirstAndLastLayers() * unitsToPixelsMultiplier;
+            float length = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
             return new Vector2((padding - length) / 2f, -backgroundPadding.y / 2f) +
                    Flip(node.position) * unitsToPixelsMultiplier;
         }
 
         private static Vector2 Flip(Vector2 other) => new Vector2(other.y, other.x);
+
+        /// <summary>
+        /// 计算地图 Y 轴跨度（替代已移除的 DistanceBetweenFirstAndLastLayers）。
+        /// </summary>
+        private float CalculateMapYSpan()
+        {
+            if (_currentMap == null || _currentMap.nodes == null || _currentMap.nodes.Count == 0)
+                return 0f;
+
+            float minY = float.MaxValue;
+            float maxY = float.MinValue;
+            foreach (var node in _currentMap.nodes)
+            {
+                if (node.position.y < minY) minY = node.position.y;
+                if (node.position.y > maxY) maxY = node.position.y;
+            }
+
+            return maxY - minY;
+        }
 
         public void SetAttainableNodes()
         {
@@ -545,26 +564,26 @@ namespace Tactics.UI
                 foreach (var node in _mapNodes)
                     node.SetState(NodeState.Unrevealed);
 
-                if (_currentMap.path.Count == 0)
+                if (_currentMap.visitedNodes.Count == 0)
                 {
-                    foreach (var node in _mapNodes.Where(n => n.Node.point.y == 0))
+                    // 无入边的节点设为可到达（起始节点）
+                    foreach (var node in _mapNodes.Where(n => n.Node.incoming.Count == 0))
                         node.SetState(NodeState.Reachable);
                 }
                 else
                 {
-                    foreach (var point in _currentMap.path)
+                    foreach (var nodeId in _currentMap.visitedNodes)
                     {
-                        var mapNode = GetNode(point);
+                        var mapNode = GetNode(nodeId);
                         if (mapNode != null)
                             mapNode.SetState(NodeState.Visited);
                     }
 
-                    var currentPoint = _currentMap.path[_currentMap.path.Count - 1];
-                    var currentNode = _currentMap.GetNode(currentPoint);
+                    var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
 
-                    foreach (var point in currentNode.outgoing)
+                    foreach (var outgoingId in currentNode.outgoing)
                     {
-                        var mapNode = GetNode(point);
+                        var mapNode = GetNode(outgoingId);
                         if (mapNode != null)
                             mapNode.SetState(NodeState.Reachable);
                     }
@@ -577,25 +596,25 @@ namespace Tactics.UI
             foreach (var line in _lineConnections)
                 line.Color = lineLockedColor;
 
-            if (_currentMap.path.Count == 0) return;
+            if (_currentMap.visitedNodes.Count == 0) return;
 
-            var currentPoint = _currentMap.path[_currentMap.path.Count - 1];
-            var currentNode = _currentMap.GetNode(currentPoint);
+            var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
 
-            foreach (var point in currentNode.outgoing)
+            foreach (var outgoingId in currentNode.outgoing)
             {
-                var lineConnection = GetLineConnection(currentNode, GetNode(point)?.Node);
+                var lineConnection = GetLineConnection(currentNode, GetNode(outgoingId)?.Node);
                 if (lineConnection != null)
                     lineConnection.Color = lineVisitedColor;
             }
 
-            if (_currentMap.path.Count <= 1) return;
+            if (_currentMap.visitedNodes.Count <= 1) return;
 
-            for (int i = 0; i < _currentMap.path.Count - 1; i++)
+            var visitedList = _currentMap.visitedNodes.ToList();
+            for (int i = 0; i < visitedList.Count - 1; i++)
             {
-                var current = _currentMap.path[i];
-                var next = _currentMap.path[i + 1];
-                var lineConnection = GetLineConnection(_currentMap.GetNode(current), _currentMap.GetNode(next));
+                var current = _currentMap.GetNode(visitedList[i]);
+                var next = _currentMap.GetNode(visitedList[i + 1]);
+                var lineConnection = GetLineConnection(current, next);
                 if (lineConnection != null)
                     lineConnection.Color = lineVisitedColor;
             }
@@ -607,8 +626,8 @@ namespace Tactics.UI
         {
             foreach (var node in _mapNodes)
             {
-                foreach (var connection in node.Node.outgoing)
-                    AddLineConnection(node, GetNode(connection));
+                foreach (var connectionId in node.Node.outgoing)
+                    AddLineConnection(node, GetNode(connectionId));
             }
 
             _linesElement = new MapConnectionLinesElement();
@@ -636,15 +655,15 @@ namespace Tactics.UI
             _lineConnections.Add(line);
         }
 
-        private RoguelikeMapUINode GetNode(Vector2Int p)
+        private RoguelikeMapUINode GetNode(string nodeId)
         {
-            return _mapNodes.FirstOrDefault(n => n.Node.point.Equals(p));
+            return _mapNodes.FirstOrDefault(n => n.Node.nodeId == nodeId);
         }
 
         private MapLineConnection GetLineConnection(RoguelikeMapNode from, RoguelikeMapNode to)
         {
             if (from == null || to == null) return null;
-            return _lineConnections.FirstOrDefault(l => l.FromNode.point.Equals(from.point) && l.ToNode.point.Equals(to.point));
+            return _lineConnections.FirstOrDefault(l => l.FromNode.nodeId == from.nodeId && l.ToNode.nodeId == to.nodeId);
         }
 
         private RoguelikeNodeBlueprint GetBlueprint(string blueprintName)
@@ -662,7 +681,7 @@ namespace Tactics.UI
             // 使用 NodeStateManager 检查节点是否可点击
             if (_nodeStateManager != null)
             {
-                if (_nodeStateManager.IsNodeClickable(mapNode.Node.point))
+                if (_nodeStateManager.IsNodeClickable(mapNode.Node.nodeId))
                 {
                     SendPlayerToNode(mapNode);
                 }
@@ -674,19 +693,18 @@ namespace Tactics.UI
             else
             {
                 // 回退到旧逻辑（兼容性）
-                if (_currentMap.path.Count == 0)
+                if (_currentMap.visitedNodes.Count == 0)
                 {
-                    if (mapNode.Node.point.y == 0)
+                    if (mapNode.Node.incoming.Count == 0)
                         SendPlayerToNode(mapNode);
                     else
                         PlayWarningThatNodeCannotBeAccessed();
                 }
                 else
                 {
-                    var currentPoint = _currentMap.path[_currentMap.path.Count - 1];
-                    var currentNode = _currentMap.GetNode(currentPoint);
+                    var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
 
-                    if (currentNode != null && currentNode.outgoing.Any(point => point.Equals(mapNode.Node.point)))
+                    if (currentNode != null && currentNode.outgoing.Any(id => id == mapNode.Node.nodeId))
                         SendPlayerToNode(mapNode);
                     else
                         PlayWarningThatNodeCannotBeAccessed();
@@ -704,12 +722,12 @@ namespace Tactics.UI
 
         private void CommitPathForNode(RoguelikeMapUINode mapNode)
         {
-            _currentMap.path.Add(mapNode.Node.point);
+            _currentMap.visitedNodes.Add(mapNode.Node.nodeId);
             
             // 使用 NodeStateManager 更新节点状态
             if (_nodeStateManager != null)
             {
-                _nodeStateManager.VisitNode(mapNode.Node.point);
+                _nodeStateManager.VisitNode(mapNode.Node.nodeId);
                 
                 // 更新所有UI节点状态
                 foreach (var node in _mapNodes)
@@ -757,12 +775,12 @@ namespace Tactics.UI
 
         private async void EnterBattleNode(RoguelikeMapUINode mapNode)
         {
-            var p = mapNode.Node.point;
-            PlayerPrefs.SetString(RoguelikePendingNodePrefsKey, $"{p.x},{p.y}");
+            var nodeId = mapNode.Node.nodeId;
+            PlayerPrefs.SetString(RoguelikePendingNodePrefsKey, nodeId);
             PlayerPrefs.SetString(RoguelikeReturnScenePrefsKey, "Home");
             PlayerPrefs.Save();
 
-            RoguelikeEventReentryManager.MarkEventInProgress("Battle", p);
+            RoguelikeEventReentryManager.MarkEventInProgress("Battle", nodeId);
 
             await BattleFlowCoordinator.Instance.StartBattleAsync(battleSceneName);
         }
@@ -771,7 +789,7 @@ namespace Tactics.UI
         {
             TLog.Info($"[Roguelike stub] Node '{mapNode.Node.blueprintName}' ({mapNode.Node.nodeType})");
 
-            var p = mapNode.Node.point;
+            var nodeId = mapNode.Node.nodeId;
             string eventType = mapNode.Node.nodeType switch
             {
                 RoguelikeNodeType.RestSite => "Rest",
@@ -780,7 +798,7 @@ namespace Tactics.UI
                 RoguelikeNodeType.Mystery => "Mystery",
                 _ => "Unknown"
             };
-            RoguelikeEventReentryManager.MarkEventInProgress(eventType, p);
+            RoguelikeEventReentryManager.MarkEventInProgress(eventType, nodeId);
 
             StartCoroutine(CoUnlockAfterStub(mapNode));
         }

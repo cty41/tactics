@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -8,16 +9,21 @@ namespace Tactics.RoguelikeMap
     public class RoguelikeMap
     {
         public List<RoguelikeMapNode> nodes;
-        public List<Vector2Int> path;
+        public HashSet<string> visitedNodes;
         public string bossNodeName;
         public string configName;
+        public float maxReachableDistance;
+        public float visionRange;
 
-        public RoguelikeMap(string configName, string bossNodeName, List<RoguelikeMapNode> nodes, List<Vector2Int> path)
+        public RoguelikeMap(string configName, string bossNodeName, List<RoguelikeMapNode> nodes,
+            HashSet<string> visitedNodes, float maxReachableDistance = 0f, float visionRange = 0f)
         {
             this.configName = configName;
             this.bossNodeName = bossNodeName;
             this.nodes = nodes;
-            this.path = path;
+            this.visitedNodes = visitedNodes ?? new HashSet<string>();
+            this.maxReachableDistance = maxReachableDistance;
+            this.visionRange = visionRange;
         }
 
         public RoguelikeMapNode GetBossNode()
@@ -25,20 +31,9 @@ namespace Tactics.RoguelikeMap
             return nodes.FirstOrDefault(n => n.nodeType == RoguelikeNodeType.Boss);
         }
 
-        public float DistanceBetweenFirstAndLastLayers()
+        public RoguelikeMapNode GetNode(string nodeId)
         {
-            RoguelikeMapNode bossNode = GetBossNode();
-            RoguelikeMapNode firstLayerNode = nodes.FirstOrDefault(n => n.point.y == 0);
-
-            if (bossNode == null || firstLayerNode == null)
-                return 0f;
-
-            return bossNode.position.y - firstLayerNode.position.y;
-        }
-
-        public RoguelikeMapNode GetNode(Vector2Int point)
-        {
-            return nodes.FirstOrDefault(n => n.point.Equals(point));
+            return nodes.FirstOrDefault(n => n.nodeId == nodeId);
         }
 
         public string ToJson()

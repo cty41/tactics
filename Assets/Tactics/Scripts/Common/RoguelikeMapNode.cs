@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -19,9 +20,9 @@ namespace Tactics.RoguelikeMap
 
     public class RoguelikeMapNode
     {
-        public readonly Vector2Int point;
-        public readonly List<Vector2Int> incoming = new List<Vector2Int>();
-        public readonly List<Vector2Int> outgoing = new List<Vector2Int>();
+        public readonly string nodeId;
+        public readonly List<string> incoming = new List<string>();
+        public readonly List<string> outgoing = new List<string>();
         [JsonConverter(typeof(StringEnumConverter))]
         public readonly RoguelikeNodeType nodeType;
         public readonly string blueprintName;
@@ -29,37 +30,51 @@ namespace Tactics.RoguelikeMap
         [JsonConverter(typeof(StringEnumConverter))]
         public NodeState state = NodeState.Unrevealed;
 
+        /// <summary>
+        /// 事件 ID（用于 Mystery / 自定义事件节点）。
+        /// </summary>
+        public string eventId = "";
+
+        [Obsolete("Use RoguelikeMapNode(string nodeId, RoguelikeNodeType, string, Vector2) instead.")]
         public RoguelikeMapNode(RoguelikeNodeType nodeType, string blueprintName, Vector2Int point)
         {
             this.nodeType = nodeType;
             this.blueprintName = blueprintName;
-            this.point = point;
+            this.nodeId = $"{point.x},{point.y}";
         }
 
-        public void AddIncoming(Vector2Int p)
+        public RoguelikeMapNode(string nodeId, RoguelikeNodeType nodeType, string blueprintName, Vector2 position)
         {
-            if (incoming.Any(element => element.Equals(p)))
+            this.nodeId = nodeId;
+            this.nodeType = nodeType;
+            this.blueprintName = blueprintName;
+            this.position = position;
+        }
+
+        public void AddIncoming(string id)
+        {
+            if (incoming.Contains(id))
                 return;
 
-            incoming.Add(p);
+            incoming.Add(id);
         }
 
-        public void AddOutgoing(Vector2Int p)
+        public void AddOutgoing(string id)
         {
-            if (outgoing.Any(element => element.Equals(p)))
+            if (outgoing.Contains(id))
                 return;
 
-            outgoing.Add(p);
+            outgoing.Add(id);
         }
 
-        public void RemoveIncoming(Vector2Int p)
+        public void RemoveIncoming(string id)
         {
-            incoming.RemoveAll(element => element.Equals(p));
+            incoming.Remove(id);
         }
 
-        public void RemoveOutgoing(Vector2Int p)
+        public void RemoveOutgoing(string id)
         {
-            outgoing.RemoveAll(element => element.Equals(p));
+            outgoing.Remove(id);
         }
 
         public bool HasNoConnections()

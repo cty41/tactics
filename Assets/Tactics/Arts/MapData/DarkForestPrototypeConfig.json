@@ -1,0 +1,339 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "nodeId": "n0",
+      "type": "Start",
+      "position": {
+        "x": 7.16698933,
+        "y": 0.7529406
+      },
+      "outgoing": [
+        "n1",
+        "n4"
+      ],
+      "incoming": [],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n1",
+      "type": "RestSite",
+      "position": {
+        "x": 4.9434967,
+        "y": 7.798456
+      },
+      "outgoing": [
+        "n2",
+        "n5",
+        "n6"
+      ],
+      "incoming": [
+        "n0"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n2",
+      "type": "Mystery",
+      "position": {
+        "x": 4.673108,
+        "y": 16.50258
+      },
+      "outgoing": [
+        "n3",
+        "n6",
+        "n7"
+      ],
+      "incoming": [
+        "n1"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n3",
+      "type": "Mystery",
+      "position": {
+        "x": 4.206437,
+        "y": 18.8496914
+      },
+      "outgoing": [
+        "n6",
+        "n7"
+      ],
+      "incoming": [
+        "n2"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n4",
+      "type": "Treasure",
+      "position": {
+        "x": 14.1416273,
+        "y": 3.74321461
+      },
+      "outgoing": [
+        "n5",
+        "n8",
+        "n9"
+      ],
+      "incoming": [
+        "n0"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n5",
+      "type": "Store",
+      "position": {
+        "x": 14.1899233,
+        "y": 10.4506483
+      },
+      "outgoing": [
+        "n6",
+        "n8",
+        "n9",
+        "n10"
+      ],
+      "incoming": [
+        "n1",
+        "n4"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n6",
+      "type": "Mystery",
+      "position": {
+        "x": 9.733664,
+        "y": 12.9652624
+      },
+      "outgoing": [],
+      "incoming": [
+        "n1",
+        "n2",
+        "n3",
+        "n5"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n7",
+      "type": "Store",
+      "position": {
+        "x": 9.847754,
+        "y": 23.36606
+      },
+      "outgoing": [],
+      "incoming": [
+        "n2",
+        "n3"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n8",
+      "type": "MinorEnemy",
+      "position": {
+        "x": 17.3743973,
+        "y": 4.240877
+      },
+      "outgoing": [
+        "n9",
+        "n12"
+      ],
+      "incoming": [
+        "n4",
+        "n5"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n9",
+      "type": "Treasure",
+      "position": {
+        "x": 21.7321434,
+        "y": 9.733106
+      },
+      "outgoing": [
+        "n10",
+        "n12",
+        "n13"
+      ],
+      "incoming": [
+        "n4",
+        "n5",
+        "n8"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n10",
+      "type": "Mystery",
+      "position": {
+        "x": 22.1409855,
+        "y": 13.599102
+      },
+      "outgoing": [
+        "n11",
+        "n13",
+        "n14"
+      ],
+      "incoming": [
+        "n5",
+        "n9"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n11",
+      "type": "Mystery",
+      "position": {
+        "x": 22.24519,
+        "y": 23.1119747
+      },
+      "outgoing": [
+        "n15"
+      ],
+      "incoming": [
+        "n10"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n12",
+      "type": "Treasure",
+      "position": {
+        "x": 27.3262825,
+        "y": 3.312661
+      },
+      "outgoing": [
+        "n13",
+        "n16"
+      ],
+      "incoming": [
+        "n8",
+        "n9"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n13",
+      "type": "RestSite",
+      "position": {
+        "x": 28.5314274,
+        "y": 7.64693832
+      },
+      "outgoing": [
+        "n14",
+        "n16"
+      ],
+      "incoming": [
+        "n9",
+        "n10",
+        "n12"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n14",
+      "type": "MinorEnemy",
+      "position": {
+        "x": 31.0231228,
+        "y": 14.98501
+      },
+      "outgoing": [
+        "n15",
+        "n18",
+        "n19"
+      ],
+      "incoming": [
+        "n10",
+        "n13"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n15",
+      "type": "MinorEnemy",
+      "position": {
+        "x": 30.2477837,
+        "y": 19.7164116
+      },
+      "outgoing": [
+        "n18",
+        "n19"
+      ],
+      "incoming": [
+        "n11",
+        "n14"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n16",
+      "type": "Treasure",
+      "position": {
+        "x": 33.443737,
+        "y": 3.10722041
+      },
+      "outgoing": [
+        "n17"
+      ],
+      "incoming": [
+        "n12",
+        "n13"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n17",
+      "type": "RestSite",
+      "position": {
+        "x": 39.19135,
+        "y": 8.932148
+      },
+      "outgoing": [
+        "n18"
+      ],
+      "incoming": [
+        "n16"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n18",
+      "type": "Mystery",
+      "position": {
+        "x": 37.924675,
+        "y": 16.0588074
+      },
+      "outgoing": [
+        "n19"
+      ],
+      "incoming": [
+        "n14",
+        "n15",
+        "n17"
+      ],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "n19",
+      "type": "Boss",
+      "position": {
+        "x": 36.60221,
+        "y": 21.1830082
+      },
+      "outgoing": [],
+      "incoming": [
+        "n14",
+        "n15",
+        "n18"
+      ],
+      "blueprintName": ""
+    }
+  ],
+  "maxReachableDistance": 10,
+  "visionRange": 5
+}
