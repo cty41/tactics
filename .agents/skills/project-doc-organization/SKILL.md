@@ -1,11 +1,23 @@
 ---
 name: project-doc-organization
-description: 规范项目文档的目录结构和存放位置。设计文档、开发计划、头脑风暴草稿各有其位。
+description: "Use when creating, moving, or organizing project documentation files — design docs, plans, usage guides, or drafts"
 ---
 
 # 项目文档组织规范
 
 定义 Tactics Unity 项目中各类文档的标准存放位置。核心区分：**工作区（临时）**与**知识库（持久）**。
+
+## Quick Reference
+
+| 文档类型 | 存放位置 | 生命周期 |
+|---------|---------|---------|
+| 设计文档 | `.agents/docs/design/` | 持久保留，随设计迭代更新 |
+| 开发计划 | `.agents/docs/plans/` | 持久保留，随进度更新 |
+| 使用指南 | `.agents/docs/usage/` | 持久保留 |
+| 头脑风暴草稿 | `.sisyphus/drafts/` | 临时，确认后迁移或丢弃 |
+| 执行中计划 | `.sisyphus/plans/` | 临时，完成后归档 |
+
+**决策原则**：设计真相源 → `.agents/docs/design/`，计划真相源 → `.agents/docs/plans/`，执行工作区 → `.sisyphus/`。
 
 ## When to use
 

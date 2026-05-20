@@ -1,12 +1,28 @@
 ---
 name: unity-agentic-tools
-description: "Unity umbrella skill. Source of truth for all Unity Agentic Tools operations that do not require a reachable live editor bridge."
+description: "Use when performing Unity asset operations via CLI — reading, searching, updating, or deleting Unity YAML files (.asset, .prefab, .unity, .mat)"
 allowed-tools:
   - "Bash(unity-agentic-tools *)"
 argument-hint: "<non-editor command and args>"
 ---
 
 # Unity Agentic Tools (Umbrella)
+
+## Quick Reference
+
+| 操作 | 命令 |
+|------|------|
+| 读取场景层级 | `read scene <file>` |
+| 读取 GameObject | `read gameobject <file> <id>` |
+| 读取组件 | `read component <file> <file_id>` |
+| 读取资产 | `read asset <file>` |
+| 搜索 | `search <type> <pattern>` |
+| 更新值 | `update <file> <path> <value>` |
+| 删除 | `delete <file> <target>` |
+
+**启动顺序**：`setup -p <project>` → `status` → 就绪
+
+**关键约束**：禁止手动读写 Unity YAML 文件（.unity, .prefab, .asset, .mat, .meta），必须通过 CLI。
 
 CLI: `unity-agentic-tools <command>`
 

@@ -5,6 +5,20 @@ description: Use when organizing Unity MenuItem attributes, checking menu struct
 
 # Unity MenuItem 归组规范
 
+## Quick Reference
+
+**菜单路径标准**：`Tactics/<分类>/<功能>`
+
+**分类检查清单**：
+| 步骤 | 操作 |
+|------|------|
+| 1. 扫描 | `grep -rn '\[MenuItem\s*\(' --include="*.cs" Assets/` |
+| 2. 分类 | 自有代码 → 迁移到 `Tactics/`，ThirdParty → 检查重复 |
+| 3. 迁移 | 修改 MenuItem 路径为 `Tactics/<Category>/<Function>` |
+| 4. 冲突处理 | 注释 ThirdParty 版重复的 `[MenuItem]` 行 |
+
+**常见分类**：Role System, Roguelike, Party, Tilemap, Ability System, Scene
+
 确保项目中所有 C# `[MenuItem]` 和 `[ContextMenu]` 统一归入 `Tactics/` 根菜单，遵循 `Tactics/<分类>/<功能>` 结构。
 
 ## When to use

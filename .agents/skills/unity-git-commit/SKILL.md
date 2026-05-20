@@ -5,6 +5,20 @@ description: Use when committing Unity project changes, creating PRs, or handlin
 
 # Unity Git 提交规范
 
+## Quick Reference
+
+| 操作 | 需同时处理的 .meta |
+|------|------------------|
+| 新增文件 | 确认 .meta 已生成且 staged |
+| 修改文件 | .meta 通常不变，检查是否误改 |
+| 删除文件 | 同时删除对应 .meta |
+| 移动/重命名 | 同时移动/重命名 .meta（保持 GUID 不变） |
+
+**提交前检查**：
+1. `git status` 确认 .meta 与源文件成对出现
+2. 检查 GUID 是否冲突（Unity 导入时自动处理）
+3. 检查 ProjectSettings/ 下文件是否有意外改动
+
 ## .meta 文件关联规则 (CRITICAL)
 
 **Unity 的每个 Assets 下的文件都有一个同名的 `.meta` 文件。添加/修改/删除源文件时，必须同时处理对应的 `.meta` 文件。**

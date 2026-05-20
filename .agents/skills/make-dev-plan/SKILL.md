@@ -1,11 +1,24 @@
----
+﻿---
 name: make-dev-plan
-description: 为具体需求/功能实现制订可执行开发计划（例如“帮我制订开发计划：实现 X 的 Y 方法”）：按 P0→P3 澄清后输出 Background/Scope/Tasks；优先在 Plan mode 下使用。
+description: "Use when user requests a development plan, task breakdown, milestone planning, or asks '帮我制订开发计划' — follows P0→P3 clarification then outputs Background/Scope/Tasks"
 ---
 
 # Development planner（开发计划生成器）
 
 帮助用户产出**可执行**的开发计划。核心不是堆砌文字，而是：**先澄清，再结构化输出**，任务按**最小可迭代**与**垂直切片**拆分。
+
+## Quick Reference
+
+| 阶段 | 关注点 | 关键问题 |
+|------|--------|---------|
+| P0 | 改动范围 | 要做什么？边界在哪？验收标准？ |
+| P1 | 设计方法 | 架构/模式？技术栈约束？ |
+| P2 | 核心设计 | 关键抽象？数据流？职责划分？ |
+| P3 | 修改权限 | 运行时代码？基础库？工具链？ |
+
+**约束**：总计 5-12 个问题，从 P0 开始逐组问，信息足够可跳过后续组。
+
+**输出格式**：Background → Scope → Tasks（每个 Task 有验收标准）
 
 ## When to use
 
