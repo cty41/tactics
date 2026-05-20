@@ -130,6 +130,14 @@
 
 ---
 
+## 地图生成算法
+
+地图生成采用 FTL 风格自由星图算法（v3.0），已提取为独立设计文档。
+
+详见：[FTL 风格地图生成算法](ftl-style-map-generation-algorithm.md)
+
+---
+
 ## 节点类型详细设计
 
 ### 1. MinorEnemy (普通战斗)
