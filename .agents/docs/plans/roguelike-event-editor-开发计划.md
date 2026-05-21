@@ -1,7 +1,7 @@
 # Roguelike事件编辑器 — 开发计划
 
-> **版本**: v1.0  
-> **日期**: 2026-05-12  
+> **版本**: v2.0  
+> **日期**: 2026-05-21  
 > **状态**: 待执行  
 > **关联设计**: [roguelike-event-editor-design.md](../design/roguelike-event-editor-design.md)  
 > **主计划**: [roguelike-map-gameplay-开发计划.md](../plans/roguelike-map-gameplay-开发计划.md)
@@ -89,7 +89,6 @@
 - **新增文件**:
   - `Assets/Tactics/Editor/RoguelikeEventEditor/EventBlackboard.cs`
 - **验收标准**:
-  - [ ] 按区域分组显示（黑暗森林/墓地/修道院）
   - [ ] 显示每个事件的基本信息（ID、标题、选项数）
   - [ ] 支持新建事件（点击+按钮，弹出新建对话框）
   - [ ] 支持删除事件（右键菜单→删除）
@@ -126,7 +125,7 @@
 - **新增文件**:
   - `Assets/Tactics/Editor/RoguelikeEventEditor/EventInspectorPanel.cs`
 - **验收标准**:
-  - [ ] 选中Start节点：显示eventId(文本)、title(文本)、description(多行文本)、region(下拉)
+  - [ ] 选中Start节点：显示eventId(文本)、title(文本)、description(多行文本)
   - [ ] 选中Option节点：显示text(文本)、attribute(下拉:力量/敏捷/体质/智力/魅力)、successRate(数值)
   - [ ] 选中Result节点：显示type(下拉:gold/item/equip/buff/damage/heal/battle/exp/nothing)、amount(数值)、text(文本)
   - [ ] 选中End节点：显示summaryText(文本)
@@ -177,7 +176,7 @@
 - **验收标准**:
   - [ ] 导出时移除编辑器专属数据（position坐标等）
   - [ ] 导出JSON格式符合数据模型定义
-  - [ ] 可选导出路径（默认`Assets/Tactics/Resources/Events/{Region}/`）
+  - [ ] 可选导出路径（默认`Assets/Tactics/Resources/Events/`）
   - [ ] 导出成功后弹出提示，AssetDatabase自动刷新
   - [ ] 支持批量导出（勾选多个事件→一键导出所有）
   - [ ] 导出前验证必填字段，缺少字段报错
@@ -255,7 +254,7 @@
 - **验收标准**:
   - [ ] 完整流程可用：新建→编辑→预览→导出→导入→修改→导出
   - [ ] 每个节点类型的功能完整
-  - [ ] 3个区域各创建一个示例事件
+  - [ ] 创建3个示例事件（不同类型）
   - [ ] 撰写"事件编辑器使用指南"存入 `.agents/docs/usage/`
   - [ ] 所有操作不产生Unity报错
 
@@ -302,11 +301,11 @@ Wave 5: Task 13(汇总)
 
 ```
 主计划 (roguelike-map-gameplay-开发计划)
-├── Task 1-3: 区域/地图/节点状态（独立）
-├── Task 5: 非战斗节点（独立）
-├── Task 6-8: 事件系统/属性判定/事件UI →  依赖事件编辑器导出JSON
-│     ↑                                       可以用手工JSON先行开发
-│     └── 事件编辑器 (独立计划) ←──────────────┘
+├── Task 1-2: 地图/节点状态（独立）
+├── Task 3: 非战斗节点（独立）
+├── Task 6-8: 事件系统/属性判定/事件UI → 依赖事件编辑器导出JSON
+│     ↑                                     可以用手工JSON先行开发
+│     └── 事件编辑器 (独立计划) ←────────────┘
 ├── Task 9-13: 商店/休息站/内容/平衡/Boss（独立）
 ```
 
@@ -320,7 +319,7 @@ Wave 5: Task 13(汇总)
 ### 文件交付对接
 
 ```
-事件编辑器输出 → Assets/Tactics/Resources/Events/{Region}/*.json
+事件编辑器输出 → Assets/Tactics/Resources/Events/*.json
 事件系统读取 ← 同一路径
 ```
 

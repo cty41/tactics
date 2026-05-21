@@ -1,9 +1,10 @@
 # Roguelike地图玩法开发计划
 
-> **版本**: v2.0
-> **日期**: 2026-05-12
+> **版本**: v3.0
+> **日期**: 2026-05-21
 > **状态**: 待执行
 > **关联设计**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md)
+> **关联算法**: [ftl-style-map-generation-algorithm.md](../design/ftl-style-map-generation-algorithm.md)
 
 ---
 
@@ -20,7 +21,7 @@
 
 ### 目标
 
-实现完整的暗黑破坏神风格Roguelike地图探索玩法，包括区域主题系统、节点状态系统、BG3式属性判定事件系统、非战斗节点玩法、事件编辑器工具。
+实现FTL风格自由探索Roguelike地图玩法，包括节点状态系统（有限视野迷雾）、BG3式属性判定事件系统、非战斗节点玩法、事件编辑器工具。
 
 ### 预期收益
 
@@ -28,7 +29,7 @@
 - BG3式属性判定事件提供构筑策略深度
 - 低金币经济（≤50/局）让每个决策都有分量
 - 事件编辑器让策划可视化管理事件内容
-- 单局时长控制在30-45分钟
+- 单局时长控制在15-25分钟
 
 ---
 
@@ -36,12 +37,12 @@
 
 ### In Scope
 
-1. 区域系统（3个暗黑风主题区域：黑暗森林/墓地/修道院）
-2. 节点状态系统（逐步揭示机制：未揭示/已揭示/可到达/已访问）
+1. FTL风格地图生成（网格布局、距离约束连接、BFS连通性验证）
+2. 节点状态系统（有限视野迷雾：未揭示/已揭示/可到达/已访问）
 3. 事件系统（JSON配置 + BG3式属性判定 + 成功率显示）
 4. 事件编辑器工具（独立计划 — 详见 [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)）
 5. 非战斗节点玩法（商店/宝藏/休息站 — 低金币经济）
-6. Boss节点简化行为（仅"继续探索"/"返回避难所"2选项）
+6. Boss胜利结算（单个最终Boss，击败后展示Run成果）
 7. 资源系统（低金币经济：单局≤50金）
 
 ### Out of Scope
@@ -50,8 +51,7 @@
 - 多人协作/对战
 - 成就系统
 - 音效和特效
-- 区域主题战斗地形影响（已从v1.0移除）
-- 复杂的区域过渡事件系统（已简化）
+
 
 ---
 
@@ -59,46 +59,37 @@
 
 ### Phase 1: 基础框架 + 事件编辑器（Week 1-2）
 
-#### Task 1: 区域系统数据层（暗黑风主题）
+#### Task 1: 地图生成器验证与优化
 
-- **目标**: 创建暗黑破坏神风格区域配置和区域管理器
-- **输出**: `RoguelikeRegion` ScriptableObject, RegionConfig数据文件, `RegionManager`
-- **新增文件**:
-  - `Assets/Tactics/Scripts/RoguelikeMap/Regions/RoguelikeRegion.cs`
-  - `Assets/Tactics/Scripts/RoguelikeMap/Regions/RegionManager.cs`
-  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/DarkForestRegionConfig.asset`
-  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/BurialGroundsRegionConfig.asset`
-  - `Assets/Tactics/Arts/ScriptableObjects/RegionConfigs/MonasteryRegionConfig.asset`
+- **目标**: 验证现有FTL风格地图生成器，确保符合设计规范
+- **输出**: 验证报告，必要时微调生成参数
+- **现有文件**: `RoguelikeMapGenerator.cs`（已实现FTL风格网格布局）
 - **验收标准**:
-  - [ ] `RoguelikeRegion` 包含 regionId/regionName/description/layerCount/nodeDistribution/eventPoolIds
-  - [ ] 区域1"黑暗森林": 3层，MinorEnemy 35%, Elite 10%, Mystery 25%, Store 10%, Treasure 10%, Rest 10%
-  - [ ] 区域2"墓地": 3层，MinorEnemy 30%, Elite 20%, Mystery 20%, Store 15%, Treasure 5%, Rest 10%
-  - [ ] 区域3"修道院": 2层+Boss，MinorEnemy 25%, Elite 25%, Mystery 15%, Store 5%, Treasure 10%, Rest 10%, Boss 10%
-  - [ ] `RegionManager` 可加载和切换区域配置
+  - [ ] 生成5×4网格布局（20节点）
+  - [ ] 前向/侧向/后向连接正确
+  - [ ] BFS连通性验证通过
+  - [ ] Boss节点固定在最右侧列
+  - [ ] 每节点至少2个连接
+  - [ ] 节点分布概率：MinorEnemy 30%, Elite 15%, Mystery 25%, Store 10%, Treasure 10%, Rest 10%
 
-#### Task 2: 修改地图生成器支持区域
+#### Task 2: 节点状态与视野系统
 
-- **目标**: 让 `RoguelikeMapGenerator` 支持按区域生成地图
-- **输出**: 修改后的 `RoguelikeMapGenerator`
-- **修改文件**: `RoguelikeMapGenerator.cs`
-- **验收标准**:
-  - [ ] 地图按区域分层生成（黑暗森林3层 → 墓地3层 → 修道院2层+Boss）
-  - [ ] 节点分布符合区域配置中的概率
-  - [ ] Boss节点固定在每个区域的最后一层
-  - [ ] 兼容现有地图生成逻辑（不影响非区域模式）
-
-#### Task 3: 节点状态系统
-
-- **目标**: 实现节点的逐步揭示和状态管理
-- **输出**: 扩展的 `RoguelikeMapNode`, `MapRevealSystem`, 修改后的 `RoguelikeMapUIController`
-- **修改文件**: `RoguelikeMapNode.cs`, `RoguelikeMapUIController.cs`
+- **目标**: 实现FTL风格有限视野迷雾系统
+- **输出**: 扩展的 `RoguelikeMapNode`, `MapRevealSystem`, `NodeStateManager` 重写
+- **修改文件**: `RoguelikeMapNode.cs`, `NodeStateManager.cs`, `RoguelikeMapUIController.cs`
 - **新增文件**:
-  - `Assets/Tactics/Scripts/RoguelikeMap/MapRevealSystem.cs`
+  - `Assets/Tactics/Scripts/RoguelikeMap/MapRevealSystem.cs` — 视野范围计算
 - **验收标准**:
   - [ ] 节点支持4种状态：未揭示（灰色问号）、已揭示（真实图标）、可到达（高亮边框）、已访问（半透明不可点击）
-  - [ ] 只能看到当前层节点和下一层节点类型
-  - [ ] 到达新层时自动揭示下一层
+  - [ ] 视野范围基于距离值计算（从当前节点沿连接路径遍历）
+  - [ ] 已访问节点永久可见
+  - [ ] 当前节点的连接邻居可见（Reachable状态）
+  - [ ] 视野范围外的未访问节点不可见（Unrevealed状态）
   - [ ] UI正确显示4种节点状态和当前玩家位置标记
+
+#### Task 3: 节点状态与视野系统
+
+> **已合并到 Task 2** — 节点状态管理和视野系统合并为一个任务。详见 Task 2。
 
 #### Task 4: 事件编辑器（独立计划）
 
@@ -108,7 +99,7 @@
 > **开发计划**: [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)
 > 
 > **开发策略**: 事件编辑器与主计划完全并行。事件系统的开发（Task 6-8）前期使用手工编写的JSON文件先行开发，
-> 待编辑器完成后切换为编辑器导出。两边的数据接口通过 `Assets/Tactics/Resources/Events/{Region}/*.json` 对接。
+> 待编辑器完成后切换为编辑器导出。两边的数据接口通过 `Assets/Tactics/Resources/Events/*.json` 对接。
 
 #### Task 5: 非战斗节点基础框架（低金币版）
 
@@ -124,7 +115,7 @@
   - [ ] 点击Store节点弹出商店UI（基础占位界面）
   - [ ] 点击Treasure节点直接获得奖励（金币2-5，弹出提示）
   - [ ] 点击RestSite节点弹出选项UI（休息/训练/冥想，占位界面）
-  - [ ] 点击Boss节点进入战斗，胜利后仅显示2个选项：继续探索 / 返回避难所
+  - [ ] 点击Boss节点进入战斗，胜利后进入胜利结算界面
   - [ ] 每个非战斗节点只能交互一次，已访问后变半透明
 
 ---
@@ -140,23 +131,19 @@
   - `Assets/Tactics/Scripts/RoguelikeMap/Events/EventOption.cs`
   - `Assets/Tactics/Scripts/RoguelikeMap/Events/EventCondition.cs`
   - `Assets/Tactics/Scripts/RoguelikeMap/Events/EventResult.cs`
-  - `Assets/Tactics/Resources/Events/DarkForest/*.json`（黑暗森林事件，通过编辑器创建至少5个）
-  - `Assets/Tactics/Resources/Events/BurialGrounds/*.json`（墓地事件，至少5个）
-  - `Assets/Tactics/Resources/Events/Monastery/*.json`（修道院事件，至少5个）
+  - `Assets/Tactics/Resources/Events/*.json`（统一事件池，通过编辑器创建至少10个）
 - **事件JSON结构**:
   ```json
   {
     "eventId": "cursed_chest_001",
     "title": "被诅咒的宝箱",
     "description": "...",
-    "region": "DarkForest",
     "options": [
       {
         "optionId": "smash",
         "text": "暴力撬开",
         "attribute": "Strength",
         "successRate": 50,
-        "condition": null,
         "success": {"type": "gold", "amount": 5},
         "failure": {"type": "damage", "amount": 8, "target": "self"}
       }
@@ -164,10 +151,10 @@
   }
   ```
 - **验收标准**:
-  - [ ] JSON格式正确，包含 eventId/title/description/region/options
+  - [ ] JSON格式正确，包含 eventId/title/description/options
   - [ ] 每个选项支持 attribute/successRate/condition/success/failure 字段
   - [ ] 支持多种结果类型（gold/item/equip/buff/heal/damage/nothing/battle）
-  - [ ] 每个区域至少5个事件，覆盖单属性/多属性/团队协作类型
+  - [ ] 至少10个事件，覆盖单属性/多属性/团队协作类型
 
 #### Task 7: BG3式属性判定系统
 
@@ -179,7 +166,6 @@
 - **验收标准**:
   - [ ] 成功率计算公式: `基础成功率 + (属性值 - 10) × 5%` 正确实现
   - [ ] 属性值6→20%, 8→30%, 10→40%, 14→60%, 18→80%, 20→90%
-  - [ ] 支持条件判定（如 `"condition": {"class": "Mage"}` 需队伍有法师）
   - [ ] 无属性选项自动成功（successRate=100）
   - [ ] 团队成员属性和职业正确读取
 
@@ -195,7 +181,6 @@
   - [ ] 显示事件标题、沉浸式描述文本
   - [ ] 显示2-4个选项按钮，每个显示：动作描述 + 关联属性 + 成功率百分比
   - [ ] 成功率直观展示（如绿色65% / 黄色45% / 红色25%）
-  - [ ] 有条件限制的选项显示条件要求（如"需要: Mage"），不满足时灰色禁用
   - [ ] 选择后展示成功/失败结果（奖励/惩罚描述 + 动画过渡）
   - [ ] 无属性选项显示为"自动成功"（绿色100%）
 
@@ -232,13 +217,13 @@
 
 #### Task 11: 事件内容扩展（通过编辑器创建）
 
-- **目标**: 使用事件编辑器批量创建30+个事件
-- **输出**: 黑暗森林10个/墓地12个/修道院8个事件JSON（编辑器导出）
+- **目标**: 使用事件编辑器批量创建15+个事件
+- **输出**: 统一事件池15个事件JSON（编辑器导出）
 - **验收标准**:
   - [ ] 所有事件通过事件编辑器创建和导出
   - [ ] 每个事件2-4个有意义的选项（至少含1个自动成功选项）
-  - [ ] 覆盖单属性抉择/多属性分工/团队协作/条件限制四种类型
-  - [ ] 文本符合暗黑破坏神风格（黑暗森林：堕落祭坛、求救村民；墓地：亡灵低语、圣物；修道院：恶魔契约、黑暗真相）
+  - [ ] 覆盖单属性抉择/多属性分工/团队协作三种类型
+  - [ ] 文本符合黑暗奇幻风格
   - [ ] 数值平衡（奖励不过强不过弱）
 
 #### Task 12: 数值平衡
@@ -250,25 +235,23 @@
   - [ ] 金币收入分布合理：普通战斗1-3金/精英3-6金/宝藏2-5金/事件0-5金/Boss 5-10金
   - [ ] 商店商品价格3-15金，确保玩家能买1-3件
   - [ ] 属性判定成功率平衡：核心属性玩家应能达到60-80%成功率
-  - [ ] 单局时长30-45分钟（测试均值）
+  - [ ] 单局时长15-25分钟
   - [ ] Boss难度曲线平滑递增
   - [ ] 不同路径选择产生明显金币差异（±15金以上）
 
-#### Task 13: Boss节点"返回避难所"结算
+#### Task 13: Boss胜利结算
 
-- **目标**: 实现Boss击败后的简化选项和Run结算
-- **输出**: `BossVictoryUI`, `RunSummaryUI`, 返回避难所逻辑
+- **目标**: 实现最终Boss击败后的胜利结算
+- **输出**: `BossVictoryUI`, `RunSummaryUI`
 - **新增文件**:
   - `Assets/Tactics/Scripts/RoguelikeMap/UI/BossVictoryUIController.cs`
   - `Assets/Tactics/Scripts/RoguelikeMap/UI/RunSummaryUIController.cs`
   - `Assets/Tactics/Arts/UI/BossVictoryPanel.uxml`
   - `Assets/Tactics/Arts/UI/RunSummaryPanel.uxml`
 - **验收标准**:
-  - [ ] Boss击败后显示战利品（金币/装备图标）和2个大按钮："继续探索" / "返回避难所"
-  - [ ] "继续探索"：进入下一区域的地图
-  - [ ] "返回避难所"：显示Run结算界面（获得的金币/装备/经验汇总）
-  - [ ] 返回避难所后回到主菜单，所有奖励结算完成
-  - [ ] 最后一个Boss（修道院Boss）击败后直接进入胜利结算，无"继续探索"
+  - [ ] Boss击败后显示战利品（金币/装备图标）
+  - [ ] 显示Run结算界面（获得的金币/装备/经验汇总）
+  - [ ] 结算完成后回到主菜单
 
 ---
 
@@ -284,15 +267,13 @@
 ## 依赖关系
 
 ```
-Task 1 (区域数据层)
-  ├── Task 2 (地图生成器) ── Task 3 (节点状态) ── Task 5 (非战斗节点)
-  │     │                                              ├── Task 9 (商店)
-  │     │                                              ├── Task 10 (休息站)
-  │     │                                              └── Task 13 (Boss结算)
-  │     │
+Task 1 (地图生成器验证)
+  ├── Task 2 (节点状态/视野系统) ── Task 3 (非战斗节点)
+  │     │                              ├── Task 9 (商店)
+  │     │                              ├── Task 10 (休息站)
+  │     │                              └── Task 13 (Boss结算)
   │     └── Task 6 (事件数据层) ── Task 7 (属性判定) ── Task 8 (事件UI)
   │           └── Task 11 (事件扩展)
-  │
   └── Task 12 (数值平衡) ── 依赖所有功能完成
 
 > **事件编辑器（Task 4/14）**: 已分离为独立计划，详见 [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)。
@@ -320,27 +301,27 @@ Task 1 (区域数据层)
 ## Assumptions
 
 1. **允许修改现有文件**：`RoguelikeMapGenerator.cs`, `RoguelikeMapUIController.cs`, `RoguelikeMapNode.cs`, `RoguelikeBattleReturnHandler.cs`
-2. **允许新增命名空间**：`Tactics.RoguelikeMap.Events`, `Tactics.RoguelikeMap.Regions`, `Tactics.RoguelikeMap.Interaction`, `Tactics.Editor.RoguelikeEventEditor`
+2. **允许新增命名空间**：`Tactics.RoguelikeMap.Events`, `Tactics.RoguelikeMap.Interaction`, `Tactics.Editor.RoguelikeEventEditor`
 3. **技术栈**：Unity 2022+, UI Toolkit (UXML/USS), JSON配置, Editor Window API
 4. **事件配置**：使用JSON文件，通过事件编辑器导出（不再手工编写）
 5. **商店商品**：使用现有Item系统（ItemData/EquipmentData）
 6. **队伍数据**：`CharacterDefinition` 包含HP/MP和属性（力量/敏捷/体质/智力/魅力），可在Roguelike运行中修改
 7. **金币系统**：独立管理，不依赖已有的Inventory系统（如有），单局≤50金
-8. **区域主题无战斗地形影响**：v2移除该特性，简化开发范围
+8. **无战斗地形影响**：v3延续此决策，不实现战斗地形影响
 
 ---
 
 ## 整体验收标准
 
-- [ ] 可以开始一局完整的暗黑风Roguelike Run（黑暗森林 → 墓地 → 修道院通关）
-- [ ] 可以探索3个主题区域，每区域有独特的节点分布和事件主题
+- [ ] 可以开始一局完整的Roguelike Run（FTL风格自由探索地图）
+- [ ] 可以探索FTL风格自由星图，体验非线性路径选择
 - [ ] 可以触发事件并看到BG3式属性判定选项（显示成功率百分比）
 - [ ] 可以使用编辑器导出的JSON事件文件（事件编辑器验收详见[独立计划](roguelike-event-editor-开发计划.md)）
 - [ ] 可以在商店浏览和购买物品（金币正确扣除和获得，价格3-15金）
 - [ ] 可以在休息站选择休息/训练/冥想
-- [ ] 击败Boss后仅显示"继续探索"/"返回避难所"2个选项
+- [ ] 击败Boss后进入胜利结算，展示Run成果
 - [ ] 单局总金币获取≤50
-- [ ] 单局时长30-45分钟（3次测试均值）
+- [ ] 单局时长15-25分钟（3次测试均值）
 - [ ] 每次Run体验不同（节点分布、事件、商品随机）
 
 ---
