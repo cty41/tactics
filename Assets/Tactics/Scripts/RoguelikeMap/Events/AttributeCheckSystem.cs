@@ -44,7 +44,7 @@ namespace Tactics.RoguelikeMap.Events
         }
 
         /// <summary>
-        /// 执行属性判定
+        /// 执行属性判定（旧版，无上下文时仅输出日志）
         /// </summary>
         /// <param name="option">事件选项</param>
         /// <param name="attributeValue">属性值</param>
@@ -53,6 +53,7 @@ namespace Tactics.RoguelikeMap.Events
         {
             if (option.attribute == AttributeType.None)
             {
+                option.success?.Apply(null);
                 TLog.Info($"[AttributeCheck] 自动成功");
                 return true;
             }
@@ -67,12 +68,84 @@ namespace Tactics.RoguelikeMap.Events
             if (success)
             {
                 TLog.Info($"[AttributeCheck] 判定成功!");
-                option.success?.Apply();
+                option.success?.Apply(null);
             }
             else
             {
                 TLog.Info($"[AttributeCheck] 判定失败!");
-                option.failure?.Apply();
+                option.failure?.Apply(null);
+            }
+
+            return success;
+        }
+
+        /// <summary>
+        /// 执行属性判定（使用事件效果上下文，自动选取目标并读取属性值）
+        /// </summary>
+        /// <param name="option">事件选项</param>
+        /// <param name="ctx">事件效果上下文</param>
+        /// <returns>是否成功</returns>
+        public static bool PerformCheck(EventOption option, EventEffectContext ctx)
+        {
+            if (option == null)
+            {
+                TLog.Warning("[AttributeCheck] 选项为空");
+                return false;
+            }
+
+            if (ctx == null || ctx.Party.Count == 0)
+            {
+                TLog.Warning("[AttributeCheck] 上下文为空或队伍为空，降级为旧版判定");
+                return PerformCheck(option, 0);
+            }
+
+            // 无属性要求，自动成功
+            if (option.attribute == AttributeType.None)
+            {
+                TLog.Info("[AttributeCheck] 无属性要求，自动成功");
+                option.success?.Apply(ctx);
+                return true;
+            }
+
+            // 根据success/failure的target字段选取角色
+            EventTargetType targetType = (option.success != null && option.success.target != EventTargetType.All)
+                ? option.success.target
+                : (option.failure != null ? option.failure.target : EventTargetType.All);
+
+            // 选取目标角色
+            var character = ctx.PickTarget(targetType, option.attribute);
+            if (character == null)
+            {
+                TLog.Warning("[AttributeCheck] 无法选取目标角色，降级为旧版判定");
+                return PerformCheck(option, 0);
+            }
+
+            // 读取属性值
+            int attributeValue = EventEffectContext.GetCharacterAttribute(character, option.attribute);
+
+            // 生成BG3风格判定描述
+            string adjudicatorText = EventEffectContext.GetAdjudicatorDescription(character, option.attribute);
+            TLog.Info($"[AttributeCheck] {adjudicatorText}");
+
+            // 执行判定
+            int successRate = CalculateSuccessRate(option, attributeValue);
+            int roll = UnityEngine.Random.Range(0, 100);
+
+            TLog.Info($"[AttributeCheck] 目标: {character.DisplayName}, " +
+                      $"属性: {option.GetAttributeName()}, 值: {attributeValue}, " +
+                      $"成功率: {successRate}%, 掷骰: {roll}");
+
+            bool success = roll < successRate;
+
+            if (success)
+            {
+                TLog.Info("[AttributeCheck] 判定成功!");
+                option.success?.Apply(ctx);
+            }
+            else
+            {
+                TLog.Info("[AttributeCheck] 判定失败!");
+                option.failure?.Apply(ctx);
             }
 
             return success;
@@ -95,14 +168,15 @@ namespace Tactics.RoguelikeMap.Events
 
         /// <summary>
         /// 获取成功率对应的颜色（用于UI显示）
+        /// 阈值: ≥60% 绿色, 40-59% 黄色, &lt;40% 红色
         /// </summary>
         public static UnityEngine.Color GetSuccessRateColor(int successRate)
         {
-            if (successRate >= 70)
-                return UnityEngine.Color.green;
+            if (successRate >= 60)
+                return new UnityEngine.Color(0.30f, 0.69f, 0.31f); // #4CAF50
             if (successRate >= 40)
-                return UnityEngine.Color.yellow;
-            return UnityEngine.Color.red;
+                return new UnityEngine.Color(1.0f, 0.76f, 0.03f);  // #FFC107
+            return new UnityEngine.Color(0.96f, 0.26f, 0.21f);     // #F44336
         }
     }
 }

@@ -1,7 +1,7 @@
-<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+﻿<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Tactics/Arts/UI/RoguelikeMap.uss?fileID=7433441132597879392&amp;guid=c9a8017f29d7da349a4b753adb0f9b36&amp;type=3#RoguelikeMap"/>
     <ui:VisualElement name="RootContainer" class="root-container">
-        <ui:ScrollView name="MapScrollView" mode="Horizontal" horizontal-scroller-visibility="Auto" vertical-scroller-visibility="Hidden" class="map-scroll-view">
+        <ui:ScrollView name="MapScrollView" mode="VerticalAndHorizontal" horizontal-scroller-visibility="Auto" vertical-scroller-visibility="Auto" class="map-scroll-view">
             <ui:VisualElement name="MapContainer" class="map-container">
                 <ui:VisualElement name="BackgroundLayer" picking-mode="Ignore" class="background-layer"/>
                 <ui:VisualElement name="LinesLayer" picking-mode="Ignore" class="lines-layer"/>

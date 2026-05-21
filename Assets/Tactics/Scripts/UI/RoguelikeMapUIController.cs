@@ -39,6 +39,7 @@ namespace Tactics.UI
 
         [Header("Battle Scene")]
         [SerializeField] private string battleSceneName = "Test1";
+        public string BattleSceneName => battleSceneName;
 
         private global::Tactics.RoguelikeMap.RoguelikeMap _currentMap;
         private NodeStateManager _nodeStateManager;
@@ -60,6 +61,8 @@ namespace Tactics.UI
         private bool _isDragging;
         private float _dragStartX;
         private float _dragStartScrollValue;
+        private float _dragStartY;
+        private float _dragStartVerticalScrollValue;
 
         public static RoguelikeMapUIController Instance { get; set; }
 
@@ -138,27 +141,48 @@ namespace Tactics.UI
             RefreshPartyPanel();
         }
 
-        private void LoadOrGenerateMap()
+private void LoadOrGenerateMap()
         {
             string prefsKey = MapPlayerPrefsKey;
 
-            // 临时：强制清除缓存使用新配置
-            if (PlayerPrefs.HasKey(prefsKey))
+            // 检查 SceneController 的地图模式配置
+            var sc = SceneController.Instance;
+            if (sc != null && sc.MapMode == MapGenerationMode.LocalFile && sc.MapDataFile != null)
             {
-                TLog.Info($"[RoguelikeMapUIController] 发现缓存地图，强制清除使用新配置");
-                PlayerPrefs.DeleteKey(prefsKey);
-                PlayerPrefs.Save();
-            }
-
-            if (PlayerPrefs.HasKey(prefsKey))
-            {
-                string mapJson = PlayerPrefs.GetString(prefsKey);
-                _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
+                // 从本地 JSON 配置文件加载地图
+                string json = sc.MapDataFile.text;
+                _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(json);
+                if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
+                if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
                 _nodeStateManager = new NodeStateManager(_currentMap);
-                if (_currentMap?.visitedNodes != null && _currentMap.visitedNodes.Count > 0)
+                TLog.Info($"[RoguelikeMapUIController] 从本地配置加载地图: {sc.MapDataFile.name}");
+            }
+            else
+            {
+                // 随机生成模式：清除缓存，走随机生成
+                if (PlayerPrefs.HasKey(prefsKey))
                 {
-                    var bossNode = _currentMap.GetBossNode();
-                    if (bossNode != null && _currentMap.visitedNodes.Contains(bossNode.nodeId))
+                    TLog.Info($"[RoguelikeMapUIController] 清除缓存地图，使用新配置");
+                    PlayerPrefs.DeleteKey(prefsKey);
+                    PlayerPrefs.Save();
+                }
+
+                if (PlayerPrefs.HasKey(prefsKey))
+                {
+                    string mapJson = PlayerPrefs.GetString(prefsKey);
+                    _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
+                    if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
+                    if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
+                    _nodeStateManager = new NodeStateManager(_currentMap);
+                    if (_currentMap?.visitedNodes != null && _currentMap.visitedNodes.Count > 0)
+                    {
+                        var bossNode = _currentMap.GetBossNode();
+                        if (bossNode != null && _currentMap.visitedNodes.Contains(bossNode.nodeId))
+                        {
+                            GenerateNewMap();
+                        }
+                    }
+                    else
                     {
                         GenerateNewMap();
                     }
@@ -167,10 +191,6 @@ namespace Tactics.UI
                 {
                     GenerateNewMap();
                 }
-            }
-            else
-            {
-                GenerateNewMap();
             }
     
             // 检测是否有中断的事件（玩家在事件节点中退出游戏）
@@ -239,7 +259,7 @@ namespace Tactics.UI
             }
 
             _scrollView.contentViewport.pickingMode = PickingMode.Position;
-            _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Auto;
 
             _scrollView.RegisterCallback<PointerDownEvent>(OnScrollViewPointerDown, TrickleDown.TrickleDown);
             _scrollView.RegisterCallback<PointerMoveEvent>(OnScrollViewPointerMove, TrickleDown.TrickleDown);
@@ -270,11 +290,11 @@ namespace Tactics.UI
             ScrollToOrigin();
 
             // Explicitly set layer sizes to avoid layout timing issues
-            float mapLength = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
-            float mapHeight = _cachedViewportHeight > 0f ? _cachedViewportHeight : 1080f;
-            if (_backgroundLayer != null) { _backgroundLayer.style.width = mapLength; _backgroundLayer.style.height = mapHeight; _backgroundLayer.style.position = Position.Absolute; }
-            if (_linesLayer != null) { _linesLayer.style.width = mapLength; _linesLayer.style.height = mapHeight; _linesLayer.style.position = Position.Absolute; }
-            if (_nodesLayer != null) { _nodesLayer.style.width = mapLength; _nodesLayer.style.height = mapHeight; _nodesLayer.style.position = Position.Absolute; }
+            float mapWidth = padding * 2 + CalculateMapXSpan() * unitsToPixelsMultiplier;
+            float mapHeight = padding * 2 + CalculateMapYSpan() * unitsToPixelsMultiplier;
+            if (_backgroundLayer != null) { _backgroundLayer.style.width = mapWidth; _backgroundLayer.style.height = mapHeight; _backgroundLayer.style.position = Position.Absolute; }
+            if (_linesLayer != null) { _linesLayer.style.width = mapWidth; _linesLayer.style.height = mapHeight; _linesLayer.style.position = Position.Absolute; }
+            if (_nodesLayer != null) { _nodesLayer.style.width = mapWidth; _nodesLayer.style.height = mapHeight; _nodesLayer.style.position = Position.Absolute; }
 
             EnsureMapBackgroundSprite();
             if (_backgroundLayer != null && _mapBackgroundSprite != null)
@@ -284,10 +304,10 @@ namespace Tactics.UI
                 bgElement.style.left = 0;
                 bgElement.style.top = 0;
                 
-                // 当mapLength较小时，拉大背景到全屏
+                // 当mapWidth较小时，拉大背景到全屏
                 float screenWidth = Screen.width;
                 float screenHeight = Screen.height;
-                float bgWidth = Mathf.Max(mapLength, screenWidth);
+                float bgWidth = Mathf.Max(mapWidth, screenWidth);
                 float bgHeight = Mathf.Max(mapHeight, screenHeight);
                 
                 bgElement.style.width = bgWidth;
@@ -311,13 +331,13 @@ namespace Tactics.UI
                     sizer.name = "MapContainerSizer";
                     sizer.style.position = Position.Absolute;
                     sizer.pickingMode = PickingMode.Ignore;
-                    sizer.style.width = mapLength;
+                    sizer.style.width = mapWidth;
                     sizer.style.height = mapHeight;
                     _mapContent.Add(sizer);
                 }
                 else
                 {
-                    existingSizer.style.width = mapLength;
+                    existingSizer.style.width = mapWidth;
                     existingSizer.style.height = mapHeight;
                 }
             }
@@ -444,42 +464,24 @@ namespace Tactics.UI
         {
             if (_mapContent == null || _currentMap == null) return;
 
-            float length = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
-            _mapContent.style.width = length;
+            float mapWidth = padding * 2 + CalculateMapXSpan() * unitsToPixelsMultiplier;
+            float mapHeight = padding * 2 + CalculateMapYSpan() * unitsToPixelsMultiplier;
+            
+            _mapContent.style.width = mapWidth;
+            _mapContent.style.height = mapHeight;
             _mapContent.style.flexGrow = 0;
             _mapContent.style.flexShrink = 0;
-
-            float viewportHeight = _scrollView.contentViewport.layout.height;
-            if (float.IsNaN(viewportHeight) || viewportHeight <= 0f)
-                viewportHeight = _scrollView.layout.height;
-            if (float.IsNaN(viewportHeight) || viewportHeight <= 0f)
-            {
-                var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
-                viewportHeight = root != null && !float.IsNaN(root.layout.height) && root.layout.height > 0f
-                    ? root.layout.height : Screen.height;
-            }
-            if (float.IsNaN(viewportHeight) || viewportHeight <= 0f)
-                viewportHeight = 1080f;
-            Debug.Assert(!float.IsNaN(viewportHeight), "[RoguelikeMapUIController] viewportHeight should not be NaN");
-
-            // Force ScrollView contentViewport to have explicit size to break layout deadlock
-            var rootVe = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
-            if (rootVe != null && !float.IsNaN(rootVe.layout.height) && rootVe.layout.height > 0f)
-            {
-                _scrollView.contentViewport.style.height = rootVe.layout.height;
-            }
-
-            _mapContent.style.height = viewportHeight;
-            _mapContent.style.minWidth = length;
-            _mapContent.style.minHeight = viewportHeight;
+            _mapContent.style.minWidth = mapWidth;
+            _mapContent.style.minHeight = mapHeight;
             _mapContent.style.position = Position.Relative;
-            _cachedViewportHeight = viewportHeight;
+            _cachedViewportHeight = mapHeight;
         }
 
         private void ScrollToOrigin()
         {
             if (_scrollView == null) return;
-            _scrollView.horizontalScroller.value = 0;
+            _scrollView.horizontalScroller.value = 0f;
+            _scrollView.verticalScroller.value = 0f;
         }
 
         private void CreateNodes(IEnumerable<RoguelikeMapNode> nodes)
@@ -505,34 +507,36 @@ namespace Tactics.UI
 
         private Vector2 ConvertToVisualElementPosition(Vector2 anchoredPos)
         {
-            float contentWidth = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
-            float contentHeight = _cachedViewportHeight > 0f ? _cachedViewportHeight : 1080f;
-
             const float nodeSize = 64f;
-            float left = contentWidth / 2f + anchoredPos.x - nodeSize / 2f;
-            float top = contentHeight / 2f - anchoredPos.y - nodeSize / 2f;
+            float left = anchoredPos.x - nodeSize / 2f;
+            float top = anchoredPos.y - nodeSize / 2f;
             return new Vector2(left, top);
         }
 
         private Vector2 GetNodePosition(RoguelikeMapNode node)
         {
             if (_currentMap == null) return Vector2.zero;
-
-            float length = padding + CalculateMapYSpan() * unitsToPixelsMultiplier;
-            return new Vector2((padding - length) / 2f, -backgroundPadding.y / 2f) +
-                   Flip(node.position) * unitsToPixelsMultiplier;
+            return new Vector2(padding, padding) + node.position * unitsToPixelsMultiplier;
         }
 
-        private static Vector2 Flip(Vector2 other) => new Vector2(other.y, other.x);
+        private float CalculateMapXSpan()
+        {
+            if (_currentMap == null || _currentMap.nodes == null || _currentMap.nodes.Count == 0)
+                return 0f;
+            float minX = float.MaxValue;
+            float maxX = float.MinValue;
+            foreach (var node in _currentMap.nodes)
+            {
+                if (node.position.x < minX) minX = node.position.x;
+                if (node.position.x > maxX) maxX = node.position.x;
+            }
+            return maxX - minX;
+        }
 
-        /// <summary>
-        /// 计算地图 Y 轴跨度（替代已移除的 DistanceBetweenFirstAndLastLayers）。
-        /// </summary>
         private float CalculateMapYSpan()
         {
             if (_currentMap == null || _currentMap.nodes == null || _currentMap.nodes.Count == 0)
                 return 0f;
-
             float minY = float.MaxValue;
             float maxY = float.MinValue;
             foreach (var node in _currentMap.nodes)
@@ -540,12 +544,12 @@ namespace Tactics.UI
                 if (node.position.y < minY) minY = node.position.y;
                 if (node.position.y > maxY) maxY = node.position.y;
             }
-
             return maxY - minY;
         }
 
         public void SetAttainableNodes()
         {
+            TLog.Info($"[RoguelikeMapUIController] SetAttainableNodes: nodeStateManager={_nodeStateManager != null}, mapNodes={_mapNodes?.Count ?? 0}, visitedNodes={_currentMap?.visitedNodes?.Count ?? -1}");
             // 使用 NodeStateManager 管理节点状态
             if (_nodeStateManager != null)
             {
@@ -556,6 +560,7 @@ namespace Tactics.UI
                 foreach (var node in _mapNodes)
                 {
                     node.SetState(node.Node.state);
+                    TLog.Info($"[RoguelikeMapUIController] Node {node.Node.nodeId} state={node.Node.state}, type={node.Node.nodeType}, pos=({node.Node.position.x:F1},{node.Node.position.y:F1})");
                 }
             }
             else
@@ -891,17 +896,25 @@ namespace Tactics.UI
         {
             _isDragging = true;
             _dragStartX = evt.position.x;
+            _dragStartY = evt.position.y;
             _dragStartScrollValue = _scrollView.horizontalScroller.value;
+            _dragStartVerticalScrollValue = _scrollView.verticalScroller.value;
         }
 
         private void OnScrollViewPointerMove(PointerMoveEvent evt)
         {
             if (!_isDragging || _scrollView == null) return;
             float deltaX = _dragStartX - evt.position.x;
+            float deltaY = _dragStartY - evt.position.y;
             _scrollView.horizontalScroller.value = Mathf.Clamp(
                 _dragStartScrollValue + deltaX,
                 _scrollView.horizontalScroller.lowValue,
                 _scrollView.horizontalScroller.highValue
+            );
+            _scrollView.verticalScroller.value = Mathf.Clamp(
+                _dragStartVerticalScrollValue + deltaY,
+                _scrollView.verticalScroller.lowValue,
+                _scrollView.verticalScroller.highValue
             );
         }
 

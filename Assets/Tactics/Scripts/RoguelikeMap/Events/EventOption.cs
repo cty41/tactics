@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 
 namespace Tactics.RoguelikeMap.Events
@@ -69,7 +70,7 @@ namespace Tactics.RoguelikeMap.Events
         }
 
         /// <summary>
-        /// 执行选项
+        /// 执行选项（旧版，无上下文时仅输出日志）
         /// </summary>
         /// <param name="attributeValue">属性值</param>
         /// <returns>是否成功</returns>
@@ -77,7 +78,7 @@ namespace Tactics.RoguelikeMap.Events
         {
             if (attribute == AttributeType.None)
             {
-                success?.Apply();
+                success?.Apply(null);
                 return true;
             }
 
@@ -86,14 +87,24 @@ namespace Tactics.RoguelikeMap.Events
 
             if (roll < successRate)
             {
-                success?.Apply();
+                success?.Apply(null);
                 return true;
             }
             else
             {
-                failure?.Apply();
+                failure?.Apply(null);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 执行选项（使用事件效果上下文，自动选取目标并读取属性值）
+        /// </summary>
+        /// <param name="context">事件效果上下文（包含队伍和目标选取逻辑）</param>
+        /// <returns>是否成功</returns>
+        public bool Execute(EventEffectContext context)
+        {
+            return AttributeCheckSystem.PerformCheck(this, context);
         }
     }
 }

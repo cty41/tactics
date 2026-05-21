@@ -298,6 +298,12 @@ namespace Tactics.Editor.RoguelikeMapEditor
 
             // 设置 MaxReachableDistance 并加载节点
             _mapGraphView.MaxReachableDistance = _currentConfig.maxReachableDistance;
+            // Calculate canvas bounds from config
+            float genCellW = _currentConfig.maxReachableDistance * _currentConfig.gridColumns * 0.8f / _currentConfig.gridColumns;
+            float genCellH = _currentConfig.maxReachableDistance * _currentConfig.gridRows * 0.6f / _currentConfig.gridRows;
+            float genCanvasW = genCellW * _currentConfig.gridColumns + 1f;
+            float genCanvasH = genCellH * _currentConfig.gridRows + 1f;
+            _mapGraphView.SetCanvasBounds(genCanvasW, genCanvasH);
             _mapGraphView.LoadNodes(map.nodes);
             _currentMap = map;
 
@@ -370,6 +376,14 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 _mapGraphView.MaxReachableDistance = data.maxReachableDistance > 0
                     ? data.maxReachableDistance
                     : (_currentConfig != null ? _currentConfig.maxReachableDistance : 200f);
+                if (_currentConfig != null)
+                {
+                    float loadCellW = _currentConfig.maxReachableDistance * _currentConfig.gridColumns * 0.8f / _currentConfig.gridColumns;
+                    float loadCellH = _currentConfig.maxReachableDistance * _currentConfig.gridRows * 0.6f / _currentConfig.gridRows;
+                    float loadCanvasW = loadCellW * _currentConfig.gridColumns + 1f;
+                    float loadCanvasH = loadCellH * _currentConfig.gridRows + 1f;
+                    _mapGraphView.SetCanvasBounds(loadCanvasW, loadCanvasH);
+                }
                 _mapGraphView.LoadNodes(map.nodes);
                 _currentMap = map;
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Tactics.AssetPipeline;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -65,6 +66,62 @@ namespace Tactics.RoguelikeMap.Events
                 catch (System.Exception e)
                 {
                     TLog.Error($"[EventManager] 加载事件文件失败: {file.name}, 错误: {e.Message}");
+                }
+            }
+
+            _regionEvents[regionName] = events;
+            TLog.Info($"[EventManager] 区域 {regionName} 共加载 {events.Count} 个事件");
+        }
+
+        /// <summary>
+        /// 通过GameAssetManager加载指定区域的所有事件（动态路径方式）
+        /// 使用此方法加载时，eventFiles在Inspector中分配优先于此方法
+        /// </summary>
+        /// <param name="regionName">区域名称</param>
+        /// <param name="eventPaths">资产路径列表（如"Assets/Tactics/GameData/Events/DarkForest/event_cursed_chest.json"）</param>
+        public void LoadRegionEventsFromPaths(string regionName, List<string> eventPaths)
+        {
+            if (_regionEvents.ContainsKey(regionName))
+            {
+                TLog.Info($"[EventManager] 区域 {regionName} 的事件已加载");
+                return;
+            }
+
+            if (eventPaths == null || eventPaths.Count == 0)
+            {
+                TLog.Warning($"[EventManager] 事件路径列表为空: {regionName}");
+                _regionEvents[regionName] = new List<RoguelikeEvent>();
+                return;
+            }
+
+            List<RoguelikeEvent> events = new List<RoguelikeEvent>();
+
+            foreach (var path in eventPaths)
+            {
+                if (string.IsNullOrEmpty(path)) continue;
+
+                try
+                {
+                    TextAsset file = GameAssetManager.Instance.Load<TextAsset>(path);
+                    if (file == null)
+                    {
+                        TLog.Warning($"[EventManager] GameAssetManager无法加载: {path}");
+                        continue;
+                    }
+
+                    var evt = RoguelikeEvent.FromJson(file.text);
+                    GameAssetManager.Instance.Release(path);
+
+                    if (evt != null)
+                    {
+                        events.Add(evt);
+                        _events[evt.eventId] = evt;
+                        TLog.Info($"[EventManager] 加载事件: {evt.eventId} - {evt.title}");
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    TLog.Error($"[EventManager] 通过GameAssetManager加载事件文件失败: {path}, 错误: {e.Message}");
                 }
             }
 

@@ -9,11 +9,13 @@ namespace Tactics.RoguelikeMap
     public class RoguelikeMap
     {
         public List<RoguelikeMapNode> nodes;
-        public HashSet<string> visitedNodes;
+                public HashSet<string> visitedNodes = new HashSet<string>();
         public string bossNodeName;
         public string configName;
         public float maxReachableDistance;
         public float visionRange;
+        public RoguelikeMap() { }
+
 
         public RoguelikeMap(string configName, string bossNodeName, List<RoguelikeMapNode> nodes,
             HashSet<string> visitedNodes, float maxReachableDistance = 0f, float visionRange = 0f)

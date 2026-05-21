@@ -8,7 +8,7 @@ namespace Tactics.RoguelikeMap.UI
 {
     /// <summary>
     /// 事件UI控制器
-    /// 负责显示事件界面和处理玩家选择
+    /// 使用 UXML 模板构建 FTL 风格事件界面，支持 BG3 风格判定信息显示
     /// </summary>
     public class EventUIController : MonoBehaviour
     {
@@ -16,23 +16,38 @@ namespace Tactics.RoguelikeMap.UI
 
         [Header("UI Settings")]
         [SerializeField] private VisualTreeAsset eventPanelTemplate;
-        [SerializeField] private StyleSheet eventPanelStyle;
 
-        private VisualElement _root;
-        private VisualElement _eventPanel;
+        private UIDocument _uiDocument;
+        private VisualElement _overlay;
         private Label _titleLabel;
         private Label _descriptionLabel;
         private VisualElement _optionsContainer;
-        private VisualElement _resultContainer;
+        private VisualElement _resultPanel;
         private Label _resultLabel;
         private Button _continueButton;
 
         private RoguelikeEvent _currentEvent;
         private System.Action<bool> _onComplete;
 
+        // 判定上下文：角色名 → 属性值字典
+        private string _adjudicatorName;
+        private Dictionary<AttributeType, int> _attributeValues;
+
         private void Awake()
         {
             Instance = this;
+            _uiDocument = GetComponent<UIDocument>();
+        }
+
+        /// <summary>
+        /// 设置判定上下文（在 ShowEvent 前调用）
+        /// </summary>
+        /// <param name="characterName">判定角色名</param>
+        /// <param name="attributeValues">角色属性值字典</param>
+        public void SetAdjudicatorContext(string characterName, Dictionary<AttributeType, int> attributeValues)
+        {
+            _adjudicatorName = characterName;
+            _attributeValues = attributeValues;
         }
 
         /// <summary>
@@ -50,97 +65,51 @@ namespace Tactics.RoguelikeMap.UI
             _currentEvent = evt;
             _onComplete = onComplete;
 
-            // 创建UI
-            CreateEventPanel();
+            // 实例化 UXML 模板
+            InstantiateTemplate();
 
-            // 显示事件
+            // 显示事件内容
             DisplayEvent(evt);
 
             TLog.Info($"[EventUIController] 显示事件: {evt.title}");
         }
 
         /// <summary>
-        /// 创建事件面板
+        /// 实例化 UXML 模板并缓存元素引用
         /// </summary>
-        private void CreateEventPanel()
+        private void InstantiateTemplate()
         {
             // 清除现有面板
-            if (_eventPanel != null)
+            ClearExisting();
+
+            if (eventPanelTemplate == null)
             {
-                _eventPanel.RemoveFromHierarchy();
+                TLog.Error("[EventUIController] eventPanelTemplate 未设置");
+                return;
             }
 
-            // 创建根容器
-            _root = new VisualElement();
-            _root.style.position = Position.Absolute;
-            _root.style.left = 0;
-            _root.style.top = 0;
-            _root.style.right = 0;
-            _root.style.bottom = 0;
-            _root.style.backgroundColor = new Color(0, 0, 0, 0.7f);
+            // 实例化到 UIDocument 的根元素
+            var root = _uiDocument?.rootVisualElement;
+            if (root == null)
+            {
+                TLog.Error("[EventUIController] UIDocument rootVisualElement 为空");
+                return;
+            }
 
-            // 创建事件面板
-            _eventPanel = new VisualElement();
-            _eventPanel.style.width = 600;
-            _eventPanel.style.height = 500;
-            _eventPanel.style.alignSelf = Align.Center;
-            _eventPanel.style.justifyContent = Justify.Center;
-            _eventPanel.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
-            _eventPanel.style.borderTopLeftRadius = 10;
-            _eventPanel.style.borderTopRightRadius = 10;
-            _eventPanel.style.borderBottomLeftRadius = 10;
-            _eventPanel.style.borderBottomRightRadius = 10;
-            _eventPanel.style.paddingTop = 20;
-            _eventPanel.style.paddingBottom = 20;
-            _eventPanel.style.paddingLeft = 20;
-            _eventPanel.style.paddingRight = 20;
+            var instance = eventPanelTemplate.Instantiate();
+            root.Add(instance);
 
-            // 标题
-            _titleLabel = new Label();
-            _titleLabel.style.fontSize = 24;
-            _titleLabel.style.color = Color.white;
-            _titleLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _titleLabel.style.marginBottom = 10;
-            _eventPanel.Add(_titleLabel);
+            // 缓存元素引用
+            _overlay = instance.Q<VisualElement>("EventOverlay");
+            _titleLabel = instance.Q<Label>("EventTitle");
+            _descriptionLabel = instance.Q<Label>("EventDescription");
+            _optionsContainer = instance.Q<VisualElement>("OptionsContainer");
+            _resultPanel = instance.Q<VisualElement>("ResultPanel");
+            _resultLabel = instance.Q<Label>("ResultText");
+            _continueButton = instance.Q<Button>("ContinueButton");
 
-            // 描述
-            _descriptionLabel = new Label();
-            _descriptionLabel.style.fontSize = 14;
-            _descriptionLabel.style.color = new Color(0.8f, 0.8f, 0.8f, 1f);
-            _descriptionLabel.style.whiteSpace = WhiteSpace.Normal;
-            _descriptionLabel.style.marginBottom = 20;
-            _eventPanel.Add(_descriptionLabel);
-
-            // 选项容器
-            _optionsContainer = new VisualElement();
-            _optionsContainer.style.marginBottom = 20;
-            _eventPanel.Add(_optionsContainer);
-
-            // 结果容器（初始隐藏）
-            _resultContainer = new VisualElement();
-            _resultContainer.style.display = DisplayStyle.None;
-            _eventPanel.Add(_resultContainer);
-
-            _resultLabel = new Label();
-            _resultLabel.style.fontSize = 16;
-            _resultLabel.style.color = Color.white;
-            _resultLabel.style.whiteSpace = WhiteSpace.Normal;
-            _resultLabel.style.marginBottom = 20;
-            _resultContainer.Add(_resultLabel);
-
-            // 继续按钮
-            _continueButton = new Button();
-            _continueButton.text = "继续";
-            _continueButton.style.fontSize = 18;
-            _continueButton.style.height = 40;
-            _continueButton.style.display = DisplayStyle.None;
-            _continueButton.clicked += OnContinueClicked;
-            _eventPanel.Add(_continueButton);
-
-            _root.Add(_eventPanel);
-
-            // 添加到UIManager
-            // TODO: 需要集成到UIManager系统
+            // 注册继续按钮事件
+            _continueButton?.RegisterCallback<ClickEvent>(OnContinueClicked);
         }
 
         /// <summary>
@@ -148,63 +117,121 @@ namespace Tactics.RoguelikeMap.UI
         /// </summary>
         private void DisplayEvent(RoguelikeEvent evt)
         {
-            _titleLabel.text = evt.title;
-            _descriptionLabel.text = evt.description;
+            if (_titleLabel != null)
+                _titleLabel.text = evt.title;
+
+            if (_descriptionLabel != null)
+                _descriptionLabel.text = evt.description;
+
+            // 确保选项可见，结果隐藏
+            if (_optionsContainer != null)
+                _optionsContainer.style.display = DisplayStyle.Flex;
+
+            if (_resultPanel != null)
+                _resultPanel.style.display = DisplayStyle.None;
+
+            if (_continueButton != null)
+                _continueButton.style.display = DisplayStyle.None;
 
             // 清除现有选项
-            _optionsContainer.Clear();
+            _optionsContainer?.Clear();
 
-            // 创建选项按钮
+            // 创建选项
             for (int i = 0; i < evt.options.Count; i++)
             {
                 var option = evt.options[i];
-                var button = CreateOptionButton(option, i);
-                _optionsContainer.Add(button);
+                var optionElement = CreateOptionElement(option, i);
+                _optionsContainer?.Add(optionElement);
             }
         }
 
         /// <summary>
-        /// 创建选项按钮
+        /// 创建选项元素（BG3 风格：选项文本 + 成功率 + 判定信息）
         /// </summary>
-        private Button CreateOptionButton(EventOption option, int index)
+        private VisualElement CreateOptionElement(EventOption option, int index)
         {
-            var button = new Button();
-            button.style.height = 60;
-            button.style.marginBottom = 10;
-            button.style.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
-            button.style.borderTopLeftRadius = 5;
-            button.style.borderTopRightRadius = 5;
-            button.style.borderBottomLeftRadius = 5;
-            button.style.borderBottomRightRadius = 5;
+            // 选项容器
+            var container = new VisualElement();
+            container.AddToClassList("option-container");
 
-            // 选项文本
+            // 文本行（选项文本 + 成功率）
+            var textRow = new VisualElement();
+            textRow.AddToClassList("option-text-row");
+
             var textLabel = new Label(option.text);
-            textLabel.style.fontSize = 16;
-            textLabel.style.color = Color.white;
-            textLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
-            button.Add(textLabel);
+            textLabel.AddToClassList("option-text");
+            textRow.Add(textLabel);
 
-            // 属性和成功率
-            if (option.attribute != AttributeType.None)
+            // 成功率标签
+            var rateLabel = new Label();
+            rateLabel.AddToClassList("option-success-rate");
+
+            if (option.attribute == AttributeType.None)
             {
-                var infoLabel = new Label($"{option.GetAttributeName()} | 成功率: {option.baseSuccessRate}%");
-                infoLabel.style.fontSize = 12;
-                infoLabel.style.color = AttributeCheckSystem.GetSuccessRateColor(option.baseSuccessRate);
-                infoLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-                button.Add(infoLabel);
+                // 自动成功
+                rateLabel.text = "100%";
+                rateLabel.AddToClassList("auto-success");
             }
             else
             {
-                var infoLabel = new Label("自动成功");
-                infoLabel.style.fontSize = 12;
-                infoLabel.style.color = Color.green;
-                infoLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-                button.Add(infoLabel);
+                int attrValue = GetAttributeValue(option.attribute);
+                int successRate = option.CalculateSuccessRate(attrValue);
+                rateLabel.text = $"{successRate}%";
+
+                // 根据成功率添加颜色类
+                string colorClass = GetSuccessRateClass(successRate);
+                rateLabel.AddToClassList(colorClass);
             }
 
-            button.clicked += () => OnOptionSelected(index);
+            textRow.Add(rateLabel);
+            container.Add(textRow);
 
-            return button;
+            // BG3 风格判定信息
+            var adjudicatorLabel = new Label();
+            adjudicatorLabel.AddToClassList("adjudicator-info");
+
+            if (option.attribute == AttributeType.None)
+            {
+                adjudicatorLabel.text = "(自动成功)";
+            }
+            else
+            {
+                int attrValue = GetAttributeValue(option.attribute);
+                string charName = string.IsNullOrEmpty(_adjudicatorName) ? "角色" : _adjudicatorName;
+                string attrName = option.GetAttributeName();
+                adjudicatorLabel.text = $"(由 {charName} 进行判定，{attrName} {attrValue})";
+            }
+
+            container.Add(adjudicatorLabel);
+
+            // 点击事件
+            int capturedIndex = index;
+            container.RegisterCallback<ClickEvent>(evt => OnOptionSelected(capturedIndex));
+
+            return container;
+        }
+
+        /// <summary>
+        /// 获取属性值（从上下文或默认值）
+        /// </summary>
+        private int GetAttributeValue(AttributeType attribute)
+        {
+            if (_attributeValues != null && _attributeValues.TryGetValue(attribute, out int value))
+                return value;
+
+            return 10; // 默认值
+        }
+
+        /// <summary>
+        /// 获取成功率对应的 USS 类名
+        /// </summary>
+        private static string GetSuccessRateClass(int successRate)
+        {
+            if (successRate >= 60)
+                return "success-rate-high";
+            if (successRate >= 40)
+                return "success-rate-mid";
+            return "success-rate-low";
         }
 
         /// <summary>
@@ -217,10 +244,8 @@ namespace Tactics.RoguelikeMap.UI
 
             var option = _currentEvent.options[index];
 
-            // TODO: 获取角色属性值
-            int attributeValue = 10; // 临时使用默认值
-
-            // 执行判定
+            // 获取属性值并执行判定
+            int attributeValue = GetAttributeValue(option.attribute);
             bool success = option.Execute(attributeValue);
 
             // 显示结果
@@ -233,34 +258,35 @@ namespace Tactics.RoguelikeMap.UI
         private void ShowResult(EventOption option, bool success)
         {
             // 隐藏选项
-            _optionsContainer.style.display = DisplayStyle.None;
+            if (_optionsContainer != null)
+                _optionsContainer.style.display = DisplayStyle.None;
 
-            // 显示结果
-            _resultContainer.style.display = DisplayStyle.Flex;
+            // 显示结果面板
+            if (_resultPanel != null)
+                _resultPanel.style.display = DisplayStyle.Flex;
 
             var result = success ? option.success : option.failure;
-            if (result != null)
+            if (result != null && _resultLabel != null)
             {
                 _resultLabel.text = result.description;
-                _resultLabel.style.color = success ? Color.green : Color.red;
+
+                // 清除旧样式类，添加结果样式
+                _resultLabel.RemoveFromClassList("result-success");
+                _resultLabel.RemoveFromClassList("result-failure");
+                _resultLabel.AddToClassList(success ? "result-success" : "result-failure");
             }
 
             // 显示继续按钮
-            _continueButton.style.display = DisplayStyle.Flex;
+            if (_continueButton != null)
+                _continueButton.style.display = DisplayStyle.Flex;
         }
 
         /// <summary>
         /// 继续按钮被点击
         /// </summary>
-        private void OnContinueClicked()
+        private void OnContinueClicked(ClickEvent evt)
         {
-            // 关闭事件面板
-            if (_root != null)
-            {
-                _root.RemoveFromHierarchy();
-            }
-
-            // 回调
+            ClosePanel();
             _onComplete?.Invoke(true);
             _onComplete = null;
             _currentEvent = null;
@@ -271,14 +297,43 @@ namespace Tactics.RoguelikeMap.UI
         /// </summary>
         public void Close()
         {
-            if (_root != null)
-            {
-                _root.RemoveFromHierarchy();
-            }
-
+            ClosePanel();
             _onComplete?.Invoke(false);
             _onComplete = null;
             _currentEvent = null;
+        }
+
+        /// <summary>
+        /// 清除现有面板
+        /// </summary>
+        private void ClearExisting()
+        {
+            if (_continueButton != null)
+                _continueButton.UnregisterCallback<ClickEvent>(OnContinueClicked);
+
+            var root = _uiDocument?.rootVisualElement;
+            if (root != null)
+            {
+                // 移除 EventOverlay 实例（由模板创建）
+                var overlay = root.Q<VisualElement>("EventOverlay");
+                overlay?.RemoveFromHierarchy();
+            }
+
+            _overlay = null;
+            _titleLabel = null;
+            _descriptionLabel = null;
+            _optionsContainer = null;
+            _resultPanel = null;
+            _resultLabel = null;
+            _continueButton = null;
+        }
+
+        /// <summary>
+        /// 关闭面板并清理
+        /// </summary>
+        private void ClosePanel()
+        {
+            ClearExisting();
         }
     }
 }

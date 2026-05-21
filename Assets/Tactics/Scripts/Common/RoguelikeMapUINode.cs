@@ -112,37 +112,52 @@ namespace Tactics.RoguelikeMap
             if (_visitedIndicator != null)
                 _visitedIndicator.style.display = DisplayStyle.None;
 
+            // Reset border to default
+            Root.style.borderTopWidth = 0f;
+            Root.style.borderBottomWidth = 0f;
+            Root.style.borderLeftWidth = 0f;
+            Root.style.borderRightWidth = 0f;
+
             KillTweens();
 
             switch (state)
             {
                 case NodeState.Unrevealed:
-                    // 未揭示：灰色，不可点击
-                    _currentTintColor = _lockedColor;
-                    ApplyTint(_lockedColor);
+                    // 未揭示：灰色问号外观，不可点击
+                    _currentTintColor = new Color(_lockedColor.r, _lockedColor.g, _lockedColor.b, 0.3f);
+                    ApplyTint(_currentTintColor);
+                    ApplyIconOpacity(0.3f);
                     Root.pickingMode = PickingMode.Ignore;
                     break;
                 case NodeState.Revealed:
-                    // 已揭示：半透明，不可点击
+                    // 已揭示：真实图标，半透明，不可点击
                     _currentTintColor = new Color(_lockedColor.r, _lockedColor.g, _lockedColor.b, 0.5f);
                     ApplyTint(_currentTintColor);
+                    ApplyIconOpacity(0.5f);
                     Root.pickingMode = PickingMode.Ignore;
                     break;
                 case NodeState.Reachable:
-                    // 可到达：高亮闪烁，可点击
-                    _currentTintColor = _lockedColor;
-                    ApplyTint(_lockedColor);
+                    // 可到达：真实图标，高亮边框闪烁，可点击
+                    _currentTintColor = _visitedColor;
+                    ApplyTint(_visitedColor);
+                    ApplyIconOpacity(1f);
                     Root.pickingMode = PickingMode.Position;
+
+                    // 高亮边框
+                    ApplyBorderHighlight();
+
+                    // 脉冲动画
                     _attainableTween = DOTween.To(
                         () => _currentTintColor,
                         c => { _currentTintColor = c; ApplyTint(c); },
-                        _visitedColor, 0.5f
+                        _lockedColor, 0.6f
                     ).SetLoops(-1, LoopType.Yoyo);
                     break;
                 case NodeState.Visited:
-                    // 已访问：显示已访问标记，不可点击
-                    _currentTintColor = _visitedColor;
-                    ApplyTint(_visitedColor);
+                    // 已访问：真实图标，0.4 透明度，不可点击
+                    _currentTintColor = new Color(_visitedColor.r, _visitedColor.g, _visitedColor.b, 0.4f);
+                    ApplyTint(_currentTintColor);
+                    ApplyIconOpacity(0.4f);
                     if (_visitedIndicator != null)
                         _visitedIndicator.style.display = DisplayStyle.Flex;
                     Root.pickingMode = PickingMode.Ignore;
@@ -156,6 +171,24 @@ namespace Tactics.RoguelikeMap
         {
             if (_nodeIcon != null)
                 _nodeIcon.style.unityBackgroundImageTintColor = color;
+        }
+
+        private void ApplyIconOpacity(float opacity)
+        {
+            if (_nodeIcon != null)
+                _nodeIcon.style.opacity = opacity;
+        }
+
+        private void ApplyBorderHighlight()
+        {
+            Root.style.borderTopWidth = 2f;
+            Root.style.borderBottomWidth = 2f;
+            Root.style.borderLeftWidth = 2f;
+            Root.style.borderRightWidth = 2f;
+            Root.style.borderTopColor = _visitedColor;
+            Root.style.borderBottomColor = _visitedColor;
+            Root.style.borderLeftColor = _visitedColor;
+            Root.style.borderRightColor = _visitedColor;
         }
 
         private void OnPointerEnter(PointerEnterEvent evt)

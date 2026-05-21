@@ -24,7 +24,8 @@ namespace Tactics.RoguelikeMap
         public readonly List<string> incoming = new List<string>();
         public readonly List<string> outgoing = new List<string>();
         [JsonConverter(typeof(StringEnumConverter))]
-        public readonly RoguelikeNodeType nodeType;
+        [JsonProperty("type")]
+                public readonly RoguelikeNodeType nodeType;
         public readonly string blueprintName;
         public Vector2 position;
         [JsonConverter(typeof(StringEnumConverter))]
@@ -43,7 +44,8 @@ namespace Tactics.RoguelikeMap
             this.nodeId = $"{point.x},{point.y}";
         }
 
-        public RoguelikeMapNode(string nodeId, RoguelikeNodeType nodeType, string blueprintName, Vector2 position)
+        [JsonConstructor]
+                public RoguelikeMapNode(string nodeId, RoguelikeNodeType nodeType, string blueprintName, Vector2 position)
         {
             this.nodeId = nodeId;
             this.nodeType = nodeType;

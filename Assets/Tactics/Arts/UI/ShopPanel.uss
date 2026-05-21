@@ -1,0 +1,140 @@
+/* Shop Panel UI Styles - FTL Dark/Parchment Theme */
+
+.shop-overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.65);
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+.shop-panel {
+    width: 520px;
+    max-width: 85%;
+    max-height: 75%;
+    background-color: rgb(235, 222, 195);
+    border-width: 4px;
+    border-color: rgb(60, 50, 40);
+    border-radius: 12px;
+    flex-direction: column;
+    padding: 24px;
+}
+
+/* Top Bar */
+.top-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(180, 160, 130);
+}
+
+.shop-title {
+    font-size: 26px;
+    color: rgb(60, 50, 40);
+    -unity-font-style: bold;
+}
+
+.gold-display {
+    font-size: 20px;
+    color: rgb(180, 140, 30);
+    -unity-font-style: bold;
+}
+
+/* Goods Container */
+.goods-container {
+    flex-grow: 1;
+    min-height: 120px;
+    max-height: 360px;
+    margin-bottom: 16px;
+}
+
+/* Single Good Row */
+.good-row {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.35);
+    border-width: 2px;
+    border-color: rgb(180, 160, 130);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.good-icon {
+    font-size: 24px;
+    margin-right: 12px;
+    min-width: 36px;
+    -unity-text-align: middle-center;
+}
+
+.good-name {
+    font-size: 16px;
+    color: rgb(50, 40, 30);
+    -unity-font-style: bold;
+    flex-grow: 1;
+}
+
+.good-price {
+    font-size: 16px;
+    color: rgb(180, 140, 30);
+    -unity-font-style: bold;
+    margin-right: 12px;
+    min-width: 50px;
+    -unity-text-align: middle-right;
+}
+
+/* Buy Button */
+.buy-btn {
+    min-width: 64px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    background-color: rgb(76, 175, 80);
+    color: rgb(255, 255, 255);
+    border-width: 2px;
+    border-color: rgb(56, 142, 60);
+    border-radius: 6px;
+    padding: 4px 12px;
+}
+
+.buy-btn:hover {
+    background-color: rgb(102, 187, 106);
+}
+
+/* Buy Button - Insufficient Gold */
+.buy-btn-disabled {
+    min-width: 64px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    background-color: rgb(158, 158, 158);
+    color: rgb(200, 200, 200);
+    border-width: 2px;
+    border-color: rgb(130, 130, 130);
+    border-radius: 6px;
+    padding: 4px 12px;
+}
+
+/* Close Button */
+.close-btn {
+    align-self: flex-end;
+    min-width: 80px;
+    font-size: 16px;
+    -unity-font-style: bold;
+    background-color: rgb(120, 100, 80);
+    color: rgb(235, 222, 195);
+    border-width: 2px;
+    border-color: rgb(90, 75, 55);
+    border-radius: 6px;
+    padding: 6px 16px;
+}
+
+.close-btn:hover {
+    background-color: rgb(150, 128, 105);
+}

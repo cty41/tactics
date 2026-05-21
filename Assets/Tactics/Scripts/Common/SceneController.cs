@@ -9,6 +9,15 @@ using UnityEngine.SceneManagement;
 namespace Tactics
 {
     /// <summary>
+    /// Roguelike 地图生成模式。
+    /// </summary>
+    public enum MapGenerationMode
+    {
+        Random,     // 随机生成（默认）
+        LocalFile   // 从本地 JSON 配置文件加载
+    }
+
+    /// <summary>
     /// Unified scene entry controller. Replaces GameMain, SceneBootstrap, and HomeSceneEntry.
     /// Automatically dispatches initialization based on the active scene name:
     /// - Splash: initializes managers then loads Home scene.
@@ -17,6 +26,8 @@ namespace Tactics
     /// </summary>
     public sealed class SceneController : MonoBehaviour
     {
+        public static SceneController Instance { get; private set; }
+
         [Tooltip("Shared options applied to the manager before it activates. Required for bootstrap.")]
         [SerializeField]
         private GameAssetRuntimeSettings _runtimeSettings;
@@ -25,7 +36,24 @@ namespace Tactics
         [SerializeField]
         private float _minimumSplashSeconds = 0.5f;
 
-        private async void Start()
+        [Header("Roguelike Map")]
+        [Tooltip("地图生成方式：随机生成 / 从本地配置文件加载。")]
+        [SerializeField]
+        private MapGenerationMode _mapMode = MapGenerationMode.Random;
+
+        [Tooltip("本地地图 JSON 配置文件。仅在 Mode = LocalFile 时使用。")]
+        [SerializeField]
+        private TextAsset _mapDataFile;
+
+        public MapGenerationMode MapMode => _mapMode;
+        public TextAsset MapDataFile => _mapDataFile;
+
+        private void Awake()
+        {
+            Instance = this;
+        }
+
+                private async void Start()
         {
             await InitializeManagersAsync();
 

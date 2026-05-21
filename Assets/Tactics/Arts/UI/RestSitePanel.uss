@@ -1,0 +1,148 @@
+/* Rest Site Panel UI Styles - Dark Campfire Theme (FTL style) */
+
+.rest-overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+.rest-panel {
+    width: 480px;
+    max-width: 85%;
+    background-color: rgb(28, 24, 20);
+    border-width: 3px;
+    border-color: rgb(180, 120, 40);
+    border-radius: 12px;
+    flex-direction: column;
+    padding: 28px 24px;
+}
+
+/* Title */
+.rest-title {
+    font-size: 28px;
+    color: rgb(255, 180, 60);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+/* Description */
+.rest-description {
+    font-size: 15px;
+    color: rgb(180, 165, 140);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: 20px;
+    width: 100%;
+    padding-bottom: 16px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(60, 50, 35);
+}
+
+/* Options Container */
+.rest-options {
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* Base Option Button */
+.rest-option-btn {
+    font-size: 16px;
+    height: 56px;
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-width: 2px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 6px 16px;
+}
+
+/* Rest Button - Enabled, Green */
+.rest-btn {
+    background-color: rgb(46, 100, 50);
+    color: rgb(220, 240, 220);
+    border-color: rgb(80, 160, 80);
+}
+
+.rest-btn:hover {
+    background-color: rgb(56, 120, 60);
+    border-color: rgb(100, 190, 100);
+}
+
+.rest-btn:active {
+    background-color: rgb(36, 80, 40);
+}
+
+.rest-btn-label {
+    font-size: 16px;
+    color: rgb(220, 240, 220);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.rest-btn-desc {
+    font-size: 12px;
+    color: rgb(160, 200, 160);
+    -unity-text-align: middle-center;
+}
+
+/* Disabled Option Button (Train / Meditate) */
+.option-disabled {
+    background-color: rgb(50, 45, 38);
+    border-color: rgb(80, 72, 60);
+    opacity: 0.5;
+}
+
+.option-disabled-label {
+    font-size: 16px;
+    color: rgb(140, 130, 115);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.option-disabled-desc {
+    font-size: 12px;
+    color: rgb(110, 100, 88);
+    -unity-text-align: middle-center;
+}
+
+.developing-tag {
+    font-size: 11px;
+    color: rgb(200, 160, 60);
+    -unity-font-style: italic;
+    -unity-text-align: middle-center;
+    margin-top: 2px;
+}
+
+/* Leave Button */
+.leave-btn {
+    font-size: 16px;
+    height: 40px;
+    width: 100%;
+    background-color: rgb(60, 52, 42);
+    color: rgb(180, 165, 140);
+    border-width: 2px;
+    border-color: rgb(90, 78, 60);
+    border-radius: 8px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.leave-btn:hover {
+    background-color: rgb(75, 65, 52);
+    border-color: rgb(120, 105, 80);
+}
+
+.leave-btn:active {
+    background-color: rgb(50, 42, 34);
+}

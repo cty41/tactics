@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/ShopPanel.uss?fileID=&amp;guid=&amp;type=3#ShopPanel"/>
+    <ui:VisualElement name="ShopOverlay" class="shop-overlay">
+        <ui:VisualElement name="ShopPanel" class="shop-panel">
+            <!-- Top Bar: Title + Gold -->
+            <ui:VisualElement name="TopBar" class="top-bar">
+                <ui:Label name="ShopTitle" text="商人" class="shop-title"/>
+                <ui:Label name="GoldDisplay" text="金币: 0" class="gold-display"/>
+            </ui:VisualElement>
+
+            <!-- Goods List -->
+            <ui:ScrollView name="GoodsContainer" class="goods-container">
+                <!-- Goods are populated dynamically in code -->
+            </ui:ScrollView>
+
+            <!-- Close Button -->
+            <ui:Button name="CloseButton" text="关闭" class="close-btn"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -67,7 +67,8 @@ _titleLabel.text = "No event selected";
             foreach (var opt in options)
             {
                 var btn = BuildOptionButton(opt);
-                btn.RegisterCallback<ClickEvent>(_ => ShowOptionResult(opt));
+                var capturedEvt = evt;
+                btn.RegisterCallback<ClickEvent>(_ => ShowOptionResult(opt, capturedEvt));
                 _optionsRow.Add(btn);
             }
 
@@ -121,10 +122,23 @@ _titleLabel.text = "No event selected";
             return container;
         }
 
-        private void ShowOptionResult(EventNodeData opt)
+        private void ShowOptionResult(EventNodeData opt, SerializableEventData evt)
         {
             _resultLabel.style.display = DisplayStyle.Flex;
-            _resultLabel.text = $"→ Option \"{opt.data?.text}\" triggered... (resolved via attribute check at runtime)";
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"→ Option \"{opt.data?.text ?? "?"}\" triggered...\n");
+
+            // 显示所有 Result 节点的目标信息
+            foreach (var node in evt.nodes)
+            {
+                if (node.type == EventNodeTypes.Success || node.type == EventNodeTypes.Failure)
+                {
+                    var targetText = GetTargetDisplayText(node.data.target);
+                    sb.AppendLine($"  [{node.type}] {node.data.resultType}{targetText}");
+                }
+            }
+
+            _resultLabel.text = sb.ToString().TrimEnd();
         }
 
         public void ClearPreview()
@@ -145,6 +159,14 @@ _titleLabel.text = "No event selected";
             EventAttributes.Intelligence => new UnityEngine.Color(0.3f, 0.5f, 0.9f),
             EventAttributes.Charisma => new UnityEngine.Color(0.8f, 0.4f, 0.9f),
             _ => new UnityEngine.Color(0.6f, 0.6f, 0.6f)
+        };
+
+        private static string GetTargetDisplayText(string target) => target switch
+        {
+            EventTargetTypes.Self => "(仅影响自己)",
+            EventTargetTypes.RandomAlly => "(随机影响一名队友)",
+            EventTargetTypes.All => "(影响全队)",
+            _ => ""
         };
 
         private static string GetAttributeDisplayName(string attr) => attr switch

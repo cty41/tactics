@@ -1,3 +1,7 @@
+using System.Threading.Tasks;
+using Tactics.Flow.Battle;
+using Tactics.Roguelike;
+using Tactics.RoguelikeMap.Economy;
 using Tactics.RoguelikeMap.Events;
 using Tactics.RoguelikeMap.UI;
 using Tactics.Runtime.Utilities;
@@ -60,13 +64,23 @@ namespace Tactics.RoguelikeMap.Interaction
         /// <summary>
         /// 处理战斗节点
         /// </summary>
-        private void HandleBattleNode(RoguelikeMapNode node)
+        private async void HandleBattleNode(RoguelikeMapNode node)
         {
-            // TODO: 调用战斗系统
             TLog.Info($"[NodeInteractionManager] 进入战斗: {node.blueprintName}");
-            
-            // 临时实现：直接标记为完成
-            // 实际应该调用 BattleFlowCoordinator.Instance.StartBattleAsync()
+
+            // 保存当前节点ID用于战后处理
+            PlayerPrefs.SetString(RoguelikeMapUIController.RoguelikePendingNodePrefsKey, node.nodeId);
+            PlayerPrefs.SetString(RoguelikeMapUIController.RoguelikeReturnScenePrefsKey, "Home");
+            PlayerPrefs.Save();
+
+            // 标记事件进行中（支持断线重连恢复）
+            RoguelikeEventReentryManager.MarkEventInProgress("Battle", node.nodeId);
+
+            // 获取战斗场景名
+            string battleSceneName = RoguelikeMapUIController.Instance?.BattleSceneName ?? "Test1";
+
+            // 触发战斗场景加载
+            await BattleFlowCoordinator.Instance.StartBattleAsync(battleSceneName);
         }
 
         /// <summary>
@@ -117,14 +131,20 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             TLog.Info($"[NodeInteractionManager] 打开宝藏: {node.blueprintName}");
 
-            // 随机金币奖励
-            int goldAmount = Random.Range(2, 6);
-            
-            // TODO: 增加玩家金币
-            TLog.Info($"[NodeInteractionManager] 获得 {goldAmount} 金币");
-
-            // 显示奖励提示
-            ShowRewardPopup($"获得 {goldAmount} 金币");
+            // 委托给 TreasureNodeHandler 处理（金币奖励 + UXML 面板）
+            var handler = GetComponentInChildren<TreasureNodeHandler>();
+            if (handler != null)
+            {
+                handler.HandleTreasureNode(node);
+            }
+            else
+            {
+                TLog.Warning("[NodeInteractionManager] TreasureNodeHandler 未找到，使用回退逻辑");
+                // 回退：直接增加金币
+                int goldAmount = Random.Range(2, 6);
+                RunGoldManager.Instance.AddGold(goldAmount);
+                TLog.Info($"[NodeInteractionManager] 获得 {goldAmount} 金币");
+            }
         }
 
         /// <summary>
@@ -134,8 +154,15 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             TLog.Info($"[NodeInteractionManager] 进入商店: {node.blueprintName}");
 
-            // TODO: 显示商店UI
-            ShowRewardPopup("商店功能开发中...");
+            if (StoreNodeHandler.Instance != null)
+            {
+                StoreNodeHandler.Instance.ShowShop(node);
+            }
+            else
+            {
+                TLog.Warning("[NodeInteractionManager] StoreNodeHandler未初始化");
+                ShowRewardPopup("商店功能开发中...");
+            }
         }
 
         /// <summary>
@@ -145,8 +172,15 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             TLog.Info($"[NodeInteractionManager] 进入休息站: {node.blueprintName}");
 
-            // TODO: 显示休息选项UI
-            ShowRewardPopup("休息站功能开发中...");
+            // 委托给 RestSiteNodeHandler 处理
+            if (RestSiteNodeHandler.Instance != null)
+            {
+                RestSiteNodeHandler.Instance.HandleRestSiteNode(node);
+            }
+            else
+            {
+                TLog.Warning("[NodeInteractionManager] RestSiteNodeHandler 未初始化");
+            }
         }
 
         /// <summary>

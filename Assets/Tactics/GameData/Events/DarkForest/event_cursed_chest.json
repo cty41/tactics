@@ -1,0 +1,27 @@
+{
+  "eventId": "cursed_chest_001",
+  "title": "被诅咒的宝箱",
+  "description": "房间中央摆着一个精致的宝箱，上面刻着诡异的符文，散发着微弱的紫色光芒。",
+  "options": [
+    {
+      "text": "暴力撬开",
+      "attribute": "Strength",
+      "baseSuccessRate": 50,
+      "success": {"type": "Gold", "amount": 5, "target": "All"},
+      "failure": {"type": "Damage", "amount": 8, "target": "Self"}
+    },
+    {
+      "text": "灵巧解除",
+      "attribute": "Dexterity",
+      "baseSuccessRate": 65,
+      "success": {"type": "Gold", "amount": 3, "target": "All"},
+      "failure": {"type": "Damage", "amount": 5, "target": "Self"}
+    },
+    {
+      "text": "不管它",
+      "attribute": null,
+      "baseSuccessRate": 100,
+      "success": {"type": "Nothing", "target": "All"}
+    }
+  ]
+}

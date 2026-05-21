@@ -1,63 +1,77 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.RoguelikeMap;
 using Tactics.Runtime.Utilities;
-using UnityEngine;
 
 namespace Tactics.RoguelikeMap
 {
     /// <summary>
-    /// 节点状态管理器
-    /// 负责管理节点的状态转换逻辑
+    /// 节点状态管理器（FTL 风格自由图模式）
+    /// 使用 MapRevealSystem 进行基于 BFS 的视野计算和状态转换。
     /// </summary>
     public class NodeStateManager
     {
         private readonly RoguelikeMap _map;
+        private readonly MapRevealSystem _revealSystem;
         private readonly Dictionary<string, RoguelikeMapNode> _nodeLookup;
 
         public NodeStateManager(RoguelikeMap map)
         {
             _map = map;
             _nodeLookup = map.nodes.ToDictionary(n => n.nodeId, n => n);
+            _revealSystem = new MapRevealSystem(map, map.visionRange);
         }
 
         /// <summary>
-        /// 初始化节点状态
-        /// 第1层节点设为Reachable，其余设为Unrevealed
+        /// 初始化节点状态。
+        /// 如果 visitedNodes 非空（加载存档），从最后访问节点恢复视野。
+        /// 否则（新地图），从起点节点开始。
         /// </summary>
-        [Obsolete("To be rewritten in Task 12 - will use free-graph reachability instead of layer-based logic.")]
         public void InitializeStates()
         {
-            foreach (var node in _map.nodes)
+            if (_map.visitedNodes.Count > 0)
             {
-                if (node.incoming.Count == 0)
+                // 恢复存档状态：所有已访问节点标记为 Visited
+                foreach (var nodeId in _map.visitedNodes)
                 {
-                    // 起始节点（无入边）设为已访问
-                    node.state = NodeState.Visited;
+                    if (_nodeLookup.TryGetValue(nodeId, out var visitedNode))
+                        visitedNode.state = NodeState.Visited;
                 }
-                else if (node.incoming.Any(id => _map.nodes.Any(n => n.nodeId == id && n.state == NodeState.Visited)))
-                {
-                    // 直接连接到已访问节点的设为可到达
-                    node.state = NodeState.Reachable;
-                }
-                else
-                {
-                    // 其他节点设为未揭示
-                    node.state = NodeState.Unrevealed;
-                }
-            }
 
-            TLog.Info($"[NodeStateManager] 初始化完成（free-graph模式）");
+                // 从最后访问的节点计算当前视野
+                var lastVisited = _map.visitedNodes.Last();
+                _revealSystem.UpdateReveal(lastVisited);
+
+                TLog.Info($"[NodeStateManager] 从存档恢复，最后访问: {lastVisited}, " +
+                          $"已访问节点数: {_map.visitedNodes.Count}");
+            }
+            else
+            {
+                // 新地图：找到起点节点（无入边）
+                var startNode = _map.nodes.FirstOrDefault(n => n.incoming.Count == 0);
+                if (startNode == null)
+                {
+                    TLog.Warning("[NodeStateManager] No start node found (no node with empty incoming list).");
+                    return;
+                }
+
+                // 起点设为已访问
+                startNode.state = NodeState.Visited;
+                _map.visitedNodes.Add(startNode.nodeId);
+
+                // 从起点计算视野
+                _revealSystem.UpdateReveal(startNode.nodeId);
+
+                TLog.Info($"[NodeStateManager] 初始化完成（free-graph BFS 视野模式），起点: {startNode.nodeId}");
+            }
         }
 
         /// <summary>
-        /// 访问节点
-        /// 将节点设为Visited，并揭示相邻节点
+        /// 访问节点。
+        /// 将节点设为 Visited，调用 MapRevealSystem 更新视野。
         /// </summary>
         /// <param name="nodeId">被访问的节点ID</param>
-        /// <returns>新揭示的节点列表</returns>
-        [Obsolete("To be rewritten in Task 12")]
+        /// <returns>新揭示或变为可到达的节点列表</returns>
         public List<RoguelikeMapNode> VisitNode(string nodeId)
         {
             if (!_nodeLookup.TryGetValue(nodeId, out var node))
@@ -66,68 +80,30 @@ namespace Tactics.RoguelikeMap
                 return new List<RoguelikeMapNode>();
             }
 
+            // 记录变更前的状态，用于返回新揭示的节点
+            var previousStates = _map.nodes.ToDictionary(n => n.nodeId, n => n.state);
+
             // 将当前节点设为已访问
             node.state = NodeState.Visited;
             TLog.Info($"[NodeStateManager] 节点已访问: {nodeId}");
 
-            // 揭示相邻节点
-            var revealedNodes = RevealNextLayerNodes(node);
+            // 使用 MapRevealSystem 重新计算视野
+            _revealSystem.UpdateReveal(nodeId);
 
-            // 将当前可到达的节点设为已访问（如果所有相邻节点都已访问）
-            UpdateReachableNodes();
+            // 返回新揭示的节点（状态从 Unrevealed 变为 Revealed 或 Reachable 的节点）
+            var revealedNodes = _map.nodes
+                .Where(n => n.state != NodeState.Visited
+                            && previousStates.TryGetValue(n.nodeId, out var prev)
+                            && prev == NodeState.Unrevealed
+                            && n.state != NodeState.Unrevealed)
+                .ToList();
 
+            TLog.Info($"[NodeStateManager] 新揭示节点数: {revealedNodes.Count}");
             return revealedNodes;
         }
 
         /// <summary>
-        /// 揭示相邻节点
-        /// </summary>
-        private List<RoguelikeMapNode> RevealNextLayerNodes(RoguelikeMapNode visitedNode)
-        {
-            var revealedNodes = new List<RoguelikeMapNode>();
-
-            // 遍历所有出边（指向的节点）
-            foreach (var outgoingId in visitedNode.outgoing)
-            {
-                if (_nodeLookup.TryGetValue(outgoingId, out var nextNode))
-                {
-                    if (nextNode.state == NodeState.Unrevealed)
-                    {
-                        nextNode.state = NodeState.Revealed;
-                        revealedNodes.Add(nextNode);
-                        TLog.Info($"[NodeStateManager] 节点已揭示: {outgoingId}");
-                    }
-                }
-            }
-
-            return revealedNodes;
-        }
-
-        /// <summary>
-        /// 更新可到达节点
-        /// 当访问一个节点后，检查是否需要将其他节点设为可到达
-        /// </summary>
-        private void UpdateReachableNodes()
-        {
-            // 将直接连接到已访问节点的已揭示节点设为可到达
-            foreach (var node in _map.nodes)
-            {
-                if (node.state == NodeState.Revealed)
-                {
-                    bool hasVisitedIncoming = node.incoming.Any(id =>
-                        _nodeLookup.TryGetValue(id, out var n) && n.state == NodeState.Visited);
-
-                    if (hasVisitedIncoming)
-                    {
-                        node.state = NodeState.Reachable;
-                        TLog.Info($"[NodeStateManager] 节点变为可到达: {node.nodeId}");
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 检查节点是否可点击
+        /// 检查节点是否可点击（只有 Reachable 状态可点击）
         /// </summary>
         public bool IsNodeClickable(string nodeId)
         {
@@ -138,7 +114,7 @@ namespace Tactics.RoguelikeMap
         }
 
         /// <summary>
-        /// 获取节点状态
+        /// 获取节点当前状态
         /// </summary>
         public NodeState GetNodeState(string nodeId)
         {
@@ -153,7 +129,7 @@ namespace Tactics.RoguelikeMap
         /// </summary>
         public List<RoguelikeMapNode> GetReachableNodes()
         {
-            return _map.nodes.Where(n => n.state == NodeState.Reachable).ToList();
+            return _revealSystem.GetReachableNodes();
         }
 
         /// <summary>
@@ -181,7 +157,7 @@ namespace Tactics.RoguelikeMap
             {
                 node.state = NodeState.Unrevealed;
             }
-            TLog.Info($"[NodeStateManager] 所有节点状态已重置");
+            TLog.Info("[NodeStateManager] 所有节点状态已重置");
         }
     }
 }

@@ -30,6 +30,10 @@ namespace Tactics.Editor.RoguelikeMapEditor
         private readonly List<(string from, string to)> _mapConnections = new();
         private const float DisplayScale = 50f; // 编辑器显示缩放因子
         private float _maxReachableDistance = 200f;
+        private float _canvasWidth;
+        private float _canvasHeight;
+        private bool _hasCanvasBounds;
+        private VisualElement _boundaryLayer;
 
         // ── Selection ─────────────────────────────
         private MapNodeElement _selectedNode;
@@ -77,6 +81,30 @@ namespace Tactics.Editor.RoguelikeMapEditor
         }
 
         // ── Configuration ─────────────────────────
+        public void SetCanvasBounds(float width, float height)
+        {
+            _canvasWidth = width;
+            _canvasHeight = height;
+            _hasCanvasBounds = true;
+            UpdateBoundary();
+        }
+
+        private void UpdateBoundary()
+        {
+            if (_boundaryLayer == null || !_hasCanvasBounds) return;
+            _boundaryLayer.style.width = _canvasWidth * DisplayScale;
+            _boundaryLayer.style.height = _canvasHeight * DisplayScale;
+            _boundaryLayer.style.borderLeftWidth = 1;
+            _boundaryLayer.style.borderRightWidth = 1;
+            _boundaryLayer.style.borderTopWidth = 1;
+            _boundaryLayer.style.borderBottomWidth = 1;
+            _boundaryLayer.style.borderLeftColor = new Color(0.4f, 0.6f, 0.4f, 0.6f);
+            _boundaryLayer.style.borderRightColor = new Color(0.4f, 0.6f, 0.4f, 0.6f);
+            _boundaryLayer.style.borderTopColor = new Color(0.4f, 0.6f, 0.4f, 0.6f);
+            _boundaryLayer.style.borderBottomColor = new Color(0.4f, 0.6f, 0.4f, 0.6f);
+            _boundaryLayer.style.backgroundColor = new Color(0.18f, 0.18f, 0.20f, 0.3f);
+        }
+
         public float MaxReachableDistance
         {
             get => _maxReachableDistance;
@@ -120,6 +148,15 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 pickingMode = PickingMode.Ignore
             };
             _canvas.Add(_connectionLayer);
+
+            // Canvas boundary indicator
+            _boundaryLayer = new VisualElement
+            {
+                style = { position = Position.Absolute, left = 0, top = 0 },
+                name = "boundary-layer",
+                pickingMode = PickingMode.Ignore
+            };
+            _canvasContainer.Add(_boundaryLayer);
         }
 
         private void RegisterCallbacks()
@@ -326,6 +363,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
 
             _canvas.Add(node);
             _nodes.Add(node);
+            if (_hasCanvasBounds)
+                node.SetClampBounds(0, 0, _canvasWidth * DisplayScale - node.NodeSize, _canvasHeight * DisplayScale - node.NodeSize);
             RebuildAllConnections();
             return node;
         }
@@ -364,6 +403,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
 
                 _canvas.Add(node);
                 _nodes.Add(node);
+                if (_hasCanvasBounds)
+                    node.SetClampBounds(0, 0, _canvasWidth * DisplayScale - node.NodeSize, _canvasHeight * DisplayScale - node.NodeSize);
             }
 
             // Extract connections from nodes' incoming/outgoing lists (set by generator/deserializer)
@@ -572,6 +613,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
         private Vector2 _startPos;
         private bool _isDragging;
         private double _lastClickTime;
+        private float _clampMinX, _clampMinY, _clampMaxX, _clampMaxY;
+        private bool _hasClampBounds;
 
         private static readonly Dictionary<RoguelikeNodeType, Color> TypeColors = new()
         {
@@ -660,8 +703,16 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 if (_isDragging)
                 {
                     var d = evt.mousePosition - _dragStart;
-                    style.left = _startPos.x + d.x;
-                    style.top = _startPos.y + d.y;
+                    if (_hasClampBounds)
+                    {
+                        style.left = Mathf.Clamp(_startPos.x + d.x, _clampMinX, _clampMaxX);
+                        style.top = Mathf.Clamp(_startPos.y + d.y, _clampMinY, _clampMaxY);
+                    }
+                    else
+                    {
+                        style.left = _startPos.x + d.x;
+                        style.top = _startPos.y + d.y;
+                    }
                     OnNodeMoving?.Invoke();
                 }
             });
@@ -674,6 +725,15 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     OnNodeMoved?.Invoke();
                 }
             });
+        }
+
+        public void SetClampBounds(float minX, float minY, float maxX, float maxY)
+        {
+            _clampMinX = minX;
+            _clampMinY = minY;
+            _clampMaxX = maxX;
+            _clampMaxY = maxY;
+            _hasClampBounds = true;
         }
 
         public void SetSelected(bool selected)

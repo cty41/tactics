@@ -82,11 +82,11 @@ namespace Tactics.Editor.RoguelikeEventEditor
                     AddDropdown("Result Type", data.resultType ?? EventResultTypes.Gold, EventResultTypes.All,
                         EventResultTypes.All,
                         v => { data.resultType = v; node.UpdateLabels(); Changed(); });
+                    AddDropdown("Target", data.target ?? EventTargetTypes.Self, EventTargetTypes.AllValues, EventTargetTypes.DisplayNames,
+                        v => { data.target = v; node.UpdateLabels(); Changed(); });
                     AddIntField("Amount", data.amount ?? 0, -100, 100, v => { data.amount = v; node.UpdateLabels(); Changed(); });
                     AddField("Result Text", data.resultText, v => { data.resultText = v; node.UpdateLabels(); Changed(); }, multiline: true);
 
-                    if (data.resultType == EventResultTypes.Damage || data.resultType == EventResultTypes.DamageAll)
-                        AddField("Target", data.target ?? "self", v => data.target = v);
                     if (data.resultType == EventResultTypes.Item)
                         AddField("Item ID", data.itemId, v => data.itemId = v);
                     if (data.resultType == EventResultTypes.Equip)

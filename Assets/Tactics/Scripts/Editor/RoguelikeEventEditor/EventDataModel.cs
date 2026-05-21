@@ -68,7 +68,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
         public string buffId;
         public string enemyGroupId;
         public string resultText;
-        public string target;         // self | all
+        public string target;         // self | random | all
 
         // End 节点
         public string summaryText;
@@ -127,6 +127,19 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
         public static readonly string[] All =
             { Gold, Item, Equip, Buff, Damage, DamageAll, Heal, Battle, Exp, Nothing };
+    }
+
+    public static class EventTargetTypes
+    {
+        public const string Self = "self";
+        public const string RandomAlly = "random";
+        public const string All = "all";
+
+        public static readonly string[] AllValues =
+            { Self, RandomAlly, All };
+
+        public static readonly string[] DisplayNames =
+            { "Self", "Random Ally", "All" };
     }
 
     public static class EventRegions

@@ -1,0 +1,27 @@
+{
+  "eventId": "dark_altar_001",
+  "title": "黑暗祭坛",
+  "description": "密林深处立着一座古老的石质祭坛，上面刻有扭曲的符文，空气中弥漫着硫磺的味道。",
+  "options": [
+    {
+      "text": "摧毁祭坛",
+      "attribute": "Strength",
+      "baseSuccessRate": 45,
+      "success": {"type": "Gold", "amount": 6, "target": "All"},
+      "failure": {"type": "Damage", "amount": 10, "target": "All"}
+    },
+    {
+      "text": "解读符文",
+      "attribute": "Intelligence",
+      "baseSuccessRate": 50,
+      "success": {"type": "Heal", "amount": 10, "target": "All"},
+      "failure": {"type": "Damage", "amount": 5, "target": "Self"}
+    },
+    {
+      "text": "悄悄离开",
+      "attribute": null,
+      "baseSuccessRate": 100,
+      "success": {"type": "Nothing", "target": "All"}
+    }
+  ]
+}

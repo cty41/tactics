@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/RestSitePanel.uss?fileID=7433441132597879392&amp;guid=&amp;type=3#RestSitePanel"/>
+    <ui:VisualElement name="RestOverlay" class="rest-overlay">
+        <ui:VisualElement name="RestPanel" class="rest-panel">
+            <ui:Label name="RestTitle" text="🔥 篝火营地" class="rest-title"/>
+            <ui:Label name="RestDescription" text="温暖的火焰驱散了周围的黑暗。" class="rest-description"/>
+
+            <ui:VisualElement name="OptionsContainer" class="rest-options">
+                <!-- Rest Button - Enabled -->
+                <ui:Button name="RestButton" class="rest-option-btn rest-btn">
+                    <ui:Label text="休息" class="rest-btn-label"/>
+                    <ui:Label text="每人恢复 20% HP" class="rest-btn-desc"/>
+                </ui:Button>
+
+                <!-- Train Button - Disabled -->
+                <ui:VisualElement name="TrainButton" class="rest-option-btn option-disabled">
+                    <ui:Label text="训练" class="option-disabled-label"/>
+                    <ui:Label text="提升 1 点属性" class="option-disabled-desc"/>
+                    <ui:Label text="开发中" class="developing-tag"/>
+                </ui:VisualElement>
+
+                <!-- Meditate Button - Disabled -->
+                <ui:VisualElement name="MeditateButton" class="rest-option-btn option-disabled">
+                    <ui:Label text="冥想" class="option-disabled-label"/>
+                    <ui:Label text="恢复全部 MP" class="option-disabled-desc"/>
+                    <ui:Label text="开发中" class="developing-tag"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:Button name="LeaveButton" text="离开" class="leave-btn"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
