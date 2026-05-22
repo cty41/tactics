@@ -53,31 +53,45 @@ namespace Tactics
             Instance = this;
         }
 
-                private async void Start()
+        private async void Start()
         {
-            await InitializeManagersAsync();
-
-            var sceneName = SceneManager.GetActiveScene().name;
-
-            switch (sceneName)
+            try
             {
-                case "Splash":
-                    if (_minimumSplashSeconds > 0f)
-                        await Task.Delay((int)(_minimumSplashSeconds * 1000f));
-                    await LoadHomeAsync();
-                    break;
+                await InitializeManagersAsync();
 
-                case "Home":
-                    await HomeFlowCoordinator.Instance.ShowHomeUIAsync();
-                    break;
+                // 检查初始化是否成功
+                if (GameAssetManager.Instance == null || !GameAssetManager.Instance.IsInitialized)
+                {
+                    TLog.Error("[SceneController] GameAssetManager initialization failed, cannot proceed");
+                    return;
+                }
 
-                default:
-                    var battleController = FindFirstObjectByType<BattleController>();
-                    if (battleController != null)
-                    {
-                        TLog.Info($"[SceneController] BattleController detected in scene '{sceneName}'. Basic manager initialization complete.");
-                    }
-                    break;
+                var sceneName = SceneManager.GetActiveScene().name;
+
+                switch (sceneName)
+                {
+                    case "Splash":
+                        if (_minimumSplashSeconds > 0f)
+                            await Task.Delay((int)(_minimumSplashSeconds * 1000f));
+                        await LoadHomeAsync();
+                        break;
+
+                    case "Home":
+                        await HomeFlowCoordinator.Instance.ShowHomeUIAsync();
+                        break;
+
+                    default:
+                        var battleController = FindFirstObjectByType<BattleController>();
+                        if (battleController != null)
+                        {
+                            TLog.Info($"[SceneController] BattleController detected in scene '{sceneName}'. Basic manager initialization complete.");
+                        }
+                        break;
+                }
+            }
+            catch (System.Exception e)
+            {
+                TLog.Error($"[SceneController] Start failed: {e.Message}\n{e.StackTrace}");
             }
         }
 

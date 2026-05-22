@@ -1,5 +1,6 @@
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Runtime.Utilities;
+using Tactics.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -11,22 +12,12 @@ namespace Tactics.RoguelikeMap.Interaction
     /// </summary>
     public class TreasureNodeHandler : MonoBehaviour
     {
-        [Header("UI Settings")]
-        [SerializeField] private VisualTreeAsset treasurePanelTemplate;
-
-        private UIDocument _uiDocument;
         private VisualElement _currentPanel;
-
-        private void Awake()
-        {
-            _uiDocument = GetComponent<UIDocument>();
-        }
 
         /// <summary>
         /// 处理宝藏节点交互
         /// </summary>
-        /// <param name="node">宝藏节点数据</param>
-        public void HandleTreasureNode(RoguelikeMapNode node)
+        public async void HandleTreasureNode(RoguelikeMapNode node)
         {
             if (node == null)
             {
@@ -45,89 +36,49 @@ namespace Tactics.RoguelikeMap.Interaction
             bool hasEquipment = Random.value < 0.2f;
             string equipmentName = hasEquipment ? "[铁剑] — TODO: 对接装备系统" : null;
 
-            // 3. 显示 UXML 奖励面板
-            ShowTreasurePanel(actualGold, equipmentName);
-        }
-
-        /// <summary>
-        /// 显示宝藏奖励面板
-        /// </summary>
-        private void ShowTreasurePanel(int goldAmount, string equipmentName)
-        {
-            // 清除现有面板
-            ClearExistingPanel();
-
-            if (treasurePanelTemplate == null)
-            {
-                TLog.Error("[TreasureNodeHandler] treasurePanelTemplate 未设置");
-                return;
-            }
-
-            var root = _uiDocument?.rootVisualElement;
+            // 3. 通过 UIManager 显示 UXML 奖励面板
+            await UIManager.Instance.ShowAsync(UIManager.UIId.TreasurePanel);
+            var root = UIManager.Instance.GetRootElement(UIManager.UIId.TreasurePanel);
             if (root == null)
             {
-                TLog.Error("[TreasureNodeHandler] UIDocument rootVisualElement 为空");
+                TLog.Error("[TreasureNodeHandler] 无法获取 TreasurePanel 根元素");
                 return;
             }
 
-            // 实例化 UXML 模板
-            var instance = treasurePanelTemplate.Instantiate();
-            root.Add(instance);
-            _currentPanel = instance;
+            _currentPanel = root;
 
             // 设置金币数量
-            var goldLabel = instance.Q<Label>("GoldAmountLabel");
+            var goldLabel = root.Q<Label>("GoldAmountLabel");
             if (goldLabel != null)
-                goldLabel.text = $"+{goldAmount} 金币";
+                goldLabel.text = $"+{actualGold} 金币";
 
             // 设置装备（如果有）
-            var equipmentRow = instance.Q<VisualElement>("EquipmentRow");
-            var equipmentLabel = instance.Q<Label>("EquipmentLabel");
-            if (equipmentName != null)
+            var equipmentRow = root.Q<VisualElement>("EquipmentRow");
+            if (equipmentRow != null)
             {
-                if (equipmentRow != null)
+                if (hasEquipment)
+                {
                     equipmentRow.style.display = DisplayStyle.Flex;
-                if (equipmentLabel != null)
-                    equipmentLabel.text = equipmentName;
-            }
-            else
-            {
-                if (equipmentRow != null)
+                    var equipLabel = root.Q<Label>("EquipmentNameLabel");
+                    if (equipLabel != null)
+                        equipLabel.text = equipmentName;
+                }
+                else
+                {
                     equipmentRow.style.display = DisplayStyle.None;
+                }
             }
 
-            // 注册确认按钮
-            var confirmButton = instance.Q<Button>("ConfirmButton");
-            confirmButton?.RegisterCallback<ClickEvent>(OnConfirmClicked);
+            // 绑定关闭按钮
+            var closeBtn = root.Q<Button>("CloseButton");
+            if (closeBtn != null)
+                closeBtn.RegisterCallback<ClickEvent>(_ => ClosePanel());
         }
 
-        /// <summary>
-        /// 确认按钮点击回调
-        /// </summary>
-        private void OnConfirmClicked(ClickEvent evt)
+        private void ClosePanel()
         {
-            ClearExistingPanel();
-            TLog.Info("[TreasureNodeHandler] 宝藏面板已关闭");
-        }
-
-        /// <summary>
-        /// 清除现有面板
-        /// </summary>
-        private void ClearExistingPanel()
-        {
-            if (_currentPanel != null)
-            {
-                var confirmButton = _currentPanel.Q<Button>("ConfirmButton");
-                confirmButton?.UnregisterCallback<ClickEvent>(OnConfirmClicked);
-
-                _currentPanel.RemoveFromHierarchy();
-                _currentPanel = null;
-            }
-        }
-
-        private void OnDestroy()
-        {
-            ClearExistingPanel();
+            UIManager.Instance.Hide(UIManager.UIId.TreasurePanel);
+            _currentPanel = null;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Tactics.AssetPipeline;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 
 namespace Tactics.Flow.Home
@@ -15,12 +16,20 @@ namespace Tactics.Flow.Home
 
         public async Task ShowHomeUIAsync()
         {
-            while (GameAssetManager.Instance == null || !GameAssetManager.Instance.IsInitialized)
+            // 等待 GameAssetManager 就绪，带超时保护
+            for (int i = 0; i < 120; i++) // 最多等 120 帧
             {
+                var mgr = GameAssetManager.Instance;
+                if (mgr != null && mgr.IsInitialized)
+                {
+                    TLog.Info("[HomeFlowCoordinator] GameAssetManager ready, showing Home UI");
+                    await UIManager.Instance.ShowAsync(UIManager.UIId.Home);
+                    return;
+                }
                 await Task.Yield();
             }
-
-            await UIManager.Instance.ShowAsync(UIManager.UIId.Home);
+            
+            TLog.Error("[HomeFlowCoordinator] GameAssetManager not initialized after 120 frames, giving up");
         }
 
         public async Task OpenMenuAsync()

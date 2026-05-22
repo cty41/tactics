@@ -152,7 +152,7 @@ private void LoadOrGenerateMap()
                 // 从本地 JSON 配置文件加载地图
                 string json = sc.MapDataFile.text;
                 _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(json);
-                if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
+                if (_currentMap.visionRange <= 5f) _currentMap.visionRange = 15f;
                 if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
                 _nodeStateManager = new NodeStateManager(_currentMap);
                 TLog.Info($"[RoguelikeMapUIController] 从本地配置加载地图: {sc.MapDataFile.name}");
@@ -745,36 +745,41 @@ private void LoadOrGenerateMap()
             SetLineColors();
         }
 
-        private void EnterNode(RoguelikeMapUINode mapNode)
+private void EnterNode(RoguelikeMapUINode mapNode)
         {
             TLog.Info("Entering node: " + mapNode.Node.blueprintName + " of type: " + mapNode.Node.nodeType);
 
-            // 使用 NodeInteractionManager 处理节点交互
+            // Ensure NodeInteractionManager exists
+            if (NodeInteractionManager.Instance == null)
+            {
+                var existing = FindFirstObjectByType<NodeInteractionManager>();
+                if (existing != null)
+                {
+                    TLog.Info("[RoguelikeMapUIController] Found existing NodeInteractionManager in scene");
+                }
+                else
+                {
+                    var go = new GameObject("NodeInteractionManager");
+                    go.AddComponent<NodeInteractionManager>();
+                    TLog.Info("[RoguelikeMapUIController] Created NodeInteractionManager at runtime");
+                }
+            }
+
             if (NodeInteractionManager.Instance != null)
             {
                 NodeInteractionManager.Instance.HandleNodeInteraction(mapNode.Node);
             }
             else
             {
-                // 回退到旧逻辑（兼容性）
-                switch (mapNode.Node.nodeType)
-                {
-                    case RoguelikeNodeType.Start:
-                        // 起始节点不进入战斗，只是视觉标记
-                        TLog.Info("[RoguelikeMapUIController] 起始节点，不进入战斗");
-                        break;
-                    case RoguelikeNodeType.MinorEnemy:
-                    case RoguelikeNodeType.EliteEnemy:
-                    case RoguelikeNodeType.Boss:
-                        EnterBattleNode(mapNode);
-                        break;
-                    case RoguelikeNodeType.RestSite:
-                    case RoguelikeNodeType.Treasure:
-                    case RoguelikeNodeType.Store:
-                    case RoguelikeNodeType.Mystery:
-                        EnterStubNode(mapNode);
-                        break;
-                }
+                TLog.Warning("[RoguelikeMapUIController] NodeInteractionManager.Instance still null after creation attempt");
+            }
+
+            // Non-battle nodes: commit path and unlock after interaction
+            if (mapNode.Node.nodeType != RoguelikeNodeType.MinorEnemy &&
+                mapNode.Node.nodeType != RoguelikeNodeType.EliteEnemy &&
+                mapNode.Node.nodeType != RoguelikeNodeType.Boss)
+            {
+                StartCoroutine(CoUnlockAfterStub(mapNode));
             }
         }
 

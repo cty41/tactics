@@ -21,6 +21,16 @@ namespace Tactics.RoguelikeMap.Interaction
         private void Awake()
         {
             Instance = this;
+            EnsureHandler<TreasureNodeHandler>();
+            EnsureHandler<StoreNodeHandler>();
+            EnsureHandler<RestSiteNodeHandler>();
+        }
+
+        private void EnsureHandler<T>() where T : MonoBehaviour
+        {
+            if (GetComponent<T>() == null)
+                gameObject.AddComponent<T>();
+
         }
 
         /// <summary>
@@ -92,6 +102,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
             // 获取地图配置
             var mapConfig = RoguelikeMapUIController.Instance?.mapConfig;
+            TLog.Info($"[NodeInteractionManager] mapConfig = {mapConfig != null}");
             if (mapConfig == null)
             {
                 TLog.Warning("[NodeInteractionManager] 地图配置为空");
@@ -133,6 +144,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
             // 委托给 TreasureNodeHandler 处理（金币奖励 + UXML 面板）
             var handler = GetComponentInChildren<TreasureNodeHandler>();
+            TLog.Info($"[NodeInteractionManager] TreasureNodeHandler = {handler != null}");
             if (handler != null)
             {
                 handler.HandleTreasureNode(node);
@@ -153,6 +165,7 @@ namespace Tactics.RoguelikeMap.Interaction
         private void HandleStoreNode(RoguelikeMapNode node)
         {
             TLog.Info($"[NodeInteractionManager] 进入商店: {node.blueprintName}");
+            TLog.Info($"[NodeInteractionManager] StoreNodeHandler.Instance = {StoreNodeHandler.Instance != null}");
 
             if (StoreNodeHandler.Instance != null)
             {
@@ -171,6 +184,7 @@ namespace Tactics.RoguelikeMap.Interaction
         private void HandleRestSiteNode(RoguelikeMapNode node)
         {
             TLog.Info($"[NodeInteractionManager] 进入休息站: {node.blueprintName}");
+            TLog.Info($"[NodeInteractionManager] RestSiteNodeHandler.Instance = {RestSiteNodeHandler.Instance != null}");
 
             // 委托给 RestSiteNodeHandler 处理
             if (RestSiteNodeHandler.Instance != null)

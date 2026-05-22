@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Runtime.Utilities;
+using Tactics.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,10 +15,6 @@ namespace Tactics.RoguelikeMap.Interaction
     {
         public static StoreNodeHandler Instance { get; private set; }
 
-        [Header("UI Settings")]
-        [SerializeField] private VisualTreeAsset shopPanelTemplate;
-
-        private UIDocument _uiDocument;
         private VisualElement _overlay;
         private Label _titleLabel;
         private Label _goldLabel;
@@ -32,16 +29,13 @@ namespace Tactics.RoguelikeMap.Interaction
         private void Awake()
         {
             Instance = this;
-            _uiDocument = GetComponent<UIDocument>();
             _shopManager = new ShopManager();
         }
 
         /// <summary>
         /// 显示商店界面
         /// </summary>
-        /// <param name="node">当前商店节点</param>
-        /// <param name="onClose">关闭回调</param>
-        public void ShowShop(RoguelikeMapNode node, System.Action onClose = null)
+        public async void ShowShop(RoguelikeMapNode node, System.Action onClose = null)
         {
             if (node == null)
             {
@@ -52,8 +46,25 @@ namespace Tactics.RoguelikeMap.Interaction
             _currentNode = node;
             _onClose = onClose;
 
-            // 实例化 UXML 模板
-            InstantiateTemplate();
+            // 通过 UIManager 显示 UI
+            await UIManager.Instance.ShowAsync(UIManager.UIId.ShopPanel);
+            var root = UIManager.Instance.GetRootElement(UIManager.UIId.ShopPanel);
+            if (root == null)
+            {
+                TLog.Error("[StoreNodeHandler] 无法获取 ShopPanel 根元素");
+                return;
+            }
+
+            // 缓存元素引用
+            _overlay = root.Q<VisualElement>("ShopOverlay");
+            _titleLabel = root.Q<Label>("ShopTitle");
+            _goldLabel = root.Q<Label>("GoldDisplay");
+            _goodsContainer = root.Q<VisualElement>("GoodsContainer");
+            _closeButton = root.Q<Button>("CloseButton");
+
+            // 绑定关闭按钮
+            if (_closeButton != null)
+                _closeButton.RegisterCallback<ClickEvent>(_ => CloseShop());
 
             // 生成商品
             int goodCount = Random.Range(2, 4); // 2-3 件
@@ -68,169 +79,60 @@ namespace Tactics.RoguelikeMap.Interaction
             TLog.Info($"[StoreNodeHandler] 显示商店，{_currentGoods.Count} 件商品");
         }
 
-        /// <summary>
-        /// 实例化 UXML 模板并缓存元素引用
-        /// </summary>
-        private void InstantiateTemplate()
-        {
-            ClearExisting();
-
-            if (shopPanelTemplate == null)
-            {
-                TLog.Error("[StoreNodeHandler] shopPanelTemplate 未设置");
-                return;
-            }
-
-            var root = _uiDocument.rootVisualElement;
-            var instance = shopPanelTemplate.Instantiate();
-            root.Add(instance);
-
-            _overlay = root.Q<VisualElement>("ShopOverlay");
-            _titleLabel = root.Q<Label>("ShopTitle");
-            _goldLabel = root.Q<Label>("GoldDisplay");
-            _goodsContainer = root.Q<VisualElement>("GoodsContainer");
-            _closeButton = root.Q<Button>("CloseButton");
-
-            // 绑定关闭按钮
-            if (_closeButton != null)
-                _closeButton.RegisterCallback<ClickEvent>(evt => CloseShop());
-        }
-
-        /// <summary>
-        /// 显示商品列表
-        /// </summary>
         private void DisplayGoods()
         {
             if (_goodsContainer == null) return;
-
             _goodsContainer.Clear();
 
-            for (int i = 0; i < _currentGoods.Count; i++)
+            foreach (var good in _currentGoods)
             {
-                var good = _currentGoods[i];
-                var row = CreateGoodRow(good, i);
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.marginBottom = 4;
+
+                var nameLabel = new Label(good.Name);
+                nameLabel.style.flexGrow = 1;
+                row.Add(nameLabel);
+
+                var priceLabel = new Label($"{good.Price} 金");
+                priceLabel.style.marginLeft = 8;
+                row.Add(priceLabel);
+
+                var buyBtn = new Button(() => BuyGood(good)) { text = "购买" };
+                buyBtn.SetEnabled(RunGoldManager.Instance.HasEnoughGold(good.Price));
+                row.Add(buyBtn);
+
                 _goodsContainer.Add(row);
             }
         }
 
-        /// <summary>
-        /// 创建单个商品行
-        /// </summary>
-        private VisualElement CreateGoodRow(ShopGood good, int index)
+        private void BuyGood(ShopGood good)
         {
-            var row = new VisualElement();
-            row.AddToClassList("good-row");
-
-            // 图标
-            var icon = new Label(good.IconHint);
-            icon.AddToClassList("good-icon");
-            row.Add(icon);
-
-            // 名称
-            var name = new Label(good.Name);
-            name.AddToClassList("good-name");
-            row.Add(name);
-
-            // 价格
-            var price = new Label($"{good.Price}金");
-            price.AddToClassList("good-price");
-            row.Add(price);
-
-            // 购买按钮
-            var buyBtn = new Button();
-            buyBtn.text = "购买";
-
-            bool canAfford = RunGoldManager.Instance.HasEnoughGold(good.Price);
-            if (canAfford)
+            if (!RunGoldManager.Instance.HasEnoughGold(good.Price))
             {
-                buyBtn.AddToClassList("buy-btn");
-                int capturedIndex = index;
-                buyBtn.RegisterCallback<ClickEvent>(evt => OnBuyClicked(capturedIndex));
-            }
-            else
-            {
-                buyBtn.AddToClassList("buy-btn-disabled");
-                buyBtn.text = "金币不足";
-                buyBtn.SetEnabled(false);
+                TLog.Info("[StoreNodeHandler] 金币不足");
+                return;
             }
 
-            row.Add(buyBtn);
-
-            return row;
+            RunGoldManager.Instance.SpendGold(good.Price);
+            _currentGoods.Remove(good);
+            DisplayGoods();
+            UpdateGoldDisplay();
+            TLog.Info($"[StoreNodeHandler] 购买了 {good.Name}，花费 {good.Price} 金币");
         }
 
-        /// <summary>
-        /// 购买商品
-        /// </summary>
-        private void OnBuyClicked(int index)
-        {
-            if (index < 0 || index >= _currentGoods.Count) return;
-
-            var good = _currentGoods[index];
-
-            if (RunGoldManager.Instance.SpendGold(good.Price))
-            {
-                TLog.Info($"[StoreNodeHandler] 购买成功: {good.Name} ({good.Price}金)");
-
-                // 移除已购买商品
-                _currentGoods.RemoveAt(index);
-
-                // 刷新商品列表和金币显示
-                DisplayGoods();
-                UpdateGoldDisplay();
-            }
-            else
-            {
-                TLog.Warning($"[StoreNodeHandler] 购买失败: 金币不足");
-                // 刷新按钮状态
-                DisplayGoods();
-            }
-        }
-
-        /// <summary>
-        /// 更新金币显示
-        /// </summary>
         private void UpdateGoldDisplay()
         {
             if (_goldLabel != null)
-            {
-                int gold = RunGoldManager.Instance.CurrentGold;
-                _goldLabel.text = $"金币: {gold}";
-            }
+                _goldLabel.text = $"金币: {RunGoldManager.Instance.CurrentGold}";
         }
 
-        /// <summary>
-        /// 关闭商店
-        /// </summary>
         private void CloseShop()
         {
-            TLog.Info("[StoreNodeHandler] 关闭商店");
-
-            // 标记节点已访问
-            if (_currentNode != null)
-                _currentNode.state = NodeState.Visited;
-
-            ClearExisting();
-            _onClose?.Invoke();
-        }
-
-        /// <summary>
-        /// 清除现有面板
-        /// </summary>
-        private void ClearExisting()
-        {
-            if (_uiDocument?.rootVisualElement != null)
-            {
-                var root = _uiDocument.rootVisualElement;
-                var existing = root.Q<VisualElement>("ShopOverlay");
-                existing?.RemoveFromHierarchy();
-            }
-
+            UIManager.Instance.Hide(UIManager.UIId.ShopPanel);
             _overlay = null;
-            _titleLabel = null;
-            _goldLabel = null;
-            _goodsContainer = null;
-            _closeButton = null;
+            _onClose?.Invoke();
+            TLog.Info("[StoreNodeHandler] 商店关闭");
         }
     }
 }

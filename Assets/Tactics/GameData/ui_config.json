@@ -65,6 +65,24 @@
       "type": "UiToolkitUxml",
       "uxml": "Assets/Tactics/Arts/UI/LevelUpPanel.uxml",
       "uss": "Assets/Tactics/Arts/UI/LevelUpPanel.uss"
+    },
+    {
+      "id": "TreasurePanel",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/TreasurePanel.uxml",
+      "uss": "Assets/Tactics/Arts/UI/TreasurePanel.uss"
+    },
+    {
+      "id": "ShopPanel",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/ShopPanel.uxml",
+      "uss": "Assets/Tactics/Arts/UI/ShopPanel.uss"
+    },
+    {
+      "id": "RestSitePanel",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/RestSitePanel.uxml",
+      "uss": "Assets/Tactics/Arts/UI/RestSitePanel.uss"
     }
   ]
 }

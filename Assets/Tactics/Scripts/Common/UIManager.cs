@@ -46,8 +46,11 @@ namespace Tactics
             Inventory,
             BattleSettlement,
             AttributeAllocation,
-            SkillSelection,
-            LevelUp,
+        SkillSelection,
+        LevelUp,
+        TreasurePanel,
+        ShopPanel,
+        RestSitePanel,
         }
 
         private enum UIType

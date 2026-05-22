@@ -20,6 +20,7 @@ namespace Tactics.RoguelikeMap
         private readonly VisualElement _nodeIcon;
         private readonly VisualElement _visitedIndicator;
         private readonly RadialFillElement _swirlFill;
+        private readonly Label _debugLabel;
 
         private readonly float _initialScale;
         private const float HoverScaleFactor = 1.2f;
@@ -62,6 +63,20 @@ namespace Tactics.RoguelikeMap
             _swirlFill.AddToClassList("swirl-fill");
             Root.Add(_swirlFill);
 
+            _debugLabel = new Label();
+            _debugLabel.name = "DebugLabel";
+            _debugLabel.style.position = UnityEngine.UIElements.Position.Absolute;
+            _debugLabel.style.top = -20f;
+            _debugLabel.style.left = 0f;
+                        _debugLabel.style.fontSize = 16;
+            _debugLabel.style.color = Color.white;
+            _debugLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                        _debugLabel.style.width = 120f;
+            _debugLabel.style.whiteSpace = WhiteSpace.NoWrap;
+            _debugLabel.style.overflow = Overflow.Visible;
+            _debugLabel.pickingMode = PickingMode.Ignore;
+            Root.Add(_debugLabel);
+
             if (_nodeIcon != null)
             {
                 _nodeIcon.style.width = 64f;
@@ -72,7 +87,7 @@ namespace Tactics.RoguelikeMap
                 }
                 else
                 {
-                    _nodeIcon.style.backgroundColor = new StyleColor(Color.red);
+                    _nodeIcon.style.backgroundColor = new StyleColor(_lockedColor);
                 }
             }
 
@@ -105,6 +120,19 @@ namespace Tactics.RoguelikeMap
             Root.style.top = pos.y;
             Root.style.width = 64f;
             Root.style.height = 64f;
+        }
+
+        private void UpdateDebugLabel()
+        {
+            if (_debugLabel == null) return;
+            _debugLabel.text = $"#{Node.nodeId}\n{Node.nodeType}\n{Node.state}";
+            _debugLabel.style.color = Node.state switch
+            {
+                NodeState.Reachable => new Color(0.3f, 1f, 0.3f),
+                NodeState.Visited => new Color(0.5f, 0.5f, 0.5f),
+                NodeState.Revealed => new Color(0.6f, 0.6f, 0.3f),
+                _ => new Color(0.8f, 0.3f, 0.3f) // Unrevealed = red
+            };
         }
 
         public void SetState(NodeState state)
@@ -165,6 +193,8 @@ namespace Tactics.RoguelikeMap
                 default:
                     throw new ArgumentOutOfRangeException(nameof(state), state, null);
             }
+
+            UpdateDebugLabel();
         }
 
         private void ApplyTint(Color color)
