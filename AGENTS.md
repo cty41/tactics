@@ -10,6 +10,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | 禁止 `Debug.Log` | 用 `TLog`/`TBattleLog`（详见 `rules/unity-logging.md`） |
 | 禁止直接读写 Unity YAML | 必须通过 MCP 工具（详见 `unity-mcp-core` skill） |
 | `.cs` 修改后必须编译 | 调用 `refresh_unity` |
+| 写 C# 代码前必须验证 | 遵循 `rules/unity-code-generation.md` 工作流 |
 | git commit 前必须检查 | 加载 `unity-git-commit` skill |
 
 ## 规则文件索引
@@ -19,10 +20,10 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | 规则 | 适用场景 |
 |------|----------|
 | `rules/unity-core.md` | C# 命名规范、MonoBehaviour 生命周期、序列化 |
-| `rules/unity-asset-loading.md` | GameAssetManager API、Load/Release 配对 |
+| `rules/unity-asset-loading.md` | GameAssetManager 强制约束、Load/Release 配对 |
 | `rules/unity-input.md` | Unity Input System |
 | `rules/unity-logging.md` | 日志规范（禁止 Debug.Log，使用 TLog/TBattleLog） |
-| `rules/game-asset-pipeline.md` | AssetBundle 构建与加载完整指南 |
+| `rules/unity-code-generation.md` | C# 代码生成强制工作流、防编译错误 |
 
 ## 核心原则
 
