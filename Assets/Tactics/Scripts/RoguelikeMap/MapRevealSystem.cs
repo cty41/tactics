@@ -25,9 +25,9 @@ namespace Tactics.RoguelikeMap
 
         /// <summary>
         /// BFS from currentNodeId along incoming+outgoing connections.
-        /// Nodes within 1 hop → Reachable.
-        /// Nodes within visionRange cumulative Euclidean distance but not direct → Revealed.
-        /// All other non-Visited nodes → Unrevealed.
+        /// Nodes within 1 hop → Visibility=Revealed, IsReachable=true.
+        /// Nodes within visionRange cumulative Euclidean distance but not direct → Visibility=Fogged.
+        /// All other non-Visited nodes → Visibility=Hidden.
         /// Visited nodes stay Visited and act as transparent vision anchors.
         /// </summary>
         public void UpdateReveal(string currentNodeId)
@@ -38,11 +38,19 @@ namespace Tactics.RoguelikeMap
                 return;
             }
 
-            // Reset all non-Visited nodes to Unrevealed before recalculating
+            // Reset all non-Visited nodes to Hidden before recalculating
             foreach (var node in _map.nodes)
             {
-                if (node.state != NodeState.Visited)
-                    node.state = NodeState.Unrevealed;
+                if (node.VisitState != NodeVisitState.Visited)
+                {
+                    node.Visibility = NodeVisibility.Hidden;
+                    node.IsReachable = false;
+                }
+                else
+                {
+                    // Visited nodes: reset IsReachable (will be recalculated)
+                    node.IsReachable = false;
+                }
             }
 
             // BFS state: nodeId -> (cumulativeDistance, hopCount)
@@ -82,21 +90,25 @@ namespace Tactics.RoguelikeMap
                     visited.Add(neighborId);
 
                     // Visited nodes stay Visited but are transparent for further traversal
-                    if (neighborNode.state == NodeState.Visited)
+                    if (neighborNode.VisitState == NodeVisitState.Visited)
                     {
+                        // Visited neighbor within 1 hop is still Reachable (clickable)
+                        if (newHops == 1)
+                            neighborNode.IsReachable = true;
                         queue.Enqueue((neighborId, newCumDist, newHops));
                         continue;
                     }
 
                     if (newHops == 1)
                     {
-                        // Direct neighbor (1 hop) → Reachable (clickable)
-                        neighborNode.state = NodeState.Reachable;
+                        // Direct neighbor (1 hop) → Revealed + Reachable (clickable)
+                        neighborNode.Visibility = NodeVisibility.Revealed;
+                        neighborNode.IsReachable = true;
                     }
                     else if (newCumDist <= _visionRange)
                     {
-                        // Within vision but not direct → Revealed (visible, not clickable)
-                        neighborNode.state = NodeState.Revealed;
+                        // Within vision but not direct → Fogged (visible, not clickable)
+                        neighborNode.Visibility = NodeVisibility.Fogged;
                     }
 
                     queue.Enqueue((neighborId, newCumDist, newHops));
@@ -104,8 +116,9 @@ namespace Tactics.RoguelikeMap
             }
 
             TLog.Info($"[MapRevealSystem] Vision from {currentNodeId}: " +
-                      $"{_map.nodes.Count(n => n.state == NodeState.Reachable)} reachable, " +
-                      $"{_map.nodes.Count(n => n.state == NodeState.Revealed)} revealed, " +
+                      $"{_map.nodes.Count(n => n.IsReachable)} reachable, " +
+                      $"{_map.nodes.Count(n => n.Visibility == NodeVisibility.Revealed)} revealed, " +
+                      $"{_map.nodes.Count(n => n.Visibility == NodeVisibility.Fogged)} fogged, " +
                       $"range={_visionRange}");
         }
 
@@ -114,7 +127,7 @@ namespace Tactics.RoguelikeMap
         /// </summary>
         public List<RoguelikeMapNode> GetReachableNodes()
         {
-            return _map.nodes.Where(n => n.state == NodeState.Reachable).ToList();
+            return _map.nodes.Where(n => n.IsReachable).ToList();
         }
     }
 }

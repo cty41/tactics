@@ -105,7 +105,7 @@ namespace Tactics.RoguelikeMap
             if (_swirlFill != null)
                 _swirlFill.style.display = DisplayStyle.None;
 
-            SetState(NodeState.Unrevealed);
+            ApplyVisualState();
 
             Root.RegisterCallback<PointerEnterEvent>(OnPointerEnter);
             Root.RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
@@ -125,16 +125,17 @@ namespace Tactics.RoguelikeMap
         private void UpdateDebugLabel()
         {
             if (_debugLabel == null) return;
-            _debugLabel.text = $"#{Node.nodeId}\n{Node.nodeType}\n{Node.state}";
-            _debugLabel.style.color = Node.state switch
-            {
-                NodeState.Reachable => new Color(0.3f, 1f, 0.3f),
-                NodeState.Visited => new Color(0.5f, 0.5f, 0.5f),
-                NodeState.Revealed => new Color(0.6f, 0.6f, 0.3f),
-                _ => new Color(0.8f, 0.3f, 0.3f) // Unrevealed = red
-            };
+            _debugLabel.text = $"#{Node.nodeId}\n{Node.nodeType}\nV:{Node.Visibility}\nR:{Node.IsReachable}";
+            _debugLabel.style.color = Node.IsReachable
+                ? new Color(0.3f, 1f, 0.3f)
+                : Node.VisitState == NodeVisitState.Visited
+                    ? new Color(0.5f, 0.5f, 0.5f)
+                    : Node.Visibility == NodeVisibility.Revealed
+                        ? new Color(0.6f, 0.6f, 0.3f)
+                        : new Color(0.8f, 0.3f, 0.3f); // Hidden/Fogged = red
         }
 
+        [Obsolete("Use ApplyVisualState() which reads Node.Visibility, Node.VisitState, Node.IsReachable directly.")]
         public void SetState(NodeState state)
         {
             if (_visitedIndicator != null)
@@ -193,6 +194,101 @@ namespace Tactics.RoguelikeMap
                 default:
                     throw new ArgumentOutOfRangeException(nameof(state), state, null);
             }
+
+            UpdateDebugLabel();
+        }
+
+        /// <summary>
+        /// 从 Node.Visibility、Node.VisitState、Node.IsReachable 读取状态并应用视觉效果。
+        /// </summary>
+        public void ApplyVisualState()
+        {
+            if (_visitedIndicator != null)
+                _visitedIndicator.style.display = DisplayStyle.None;
+
+            // Reset border to default
+            Root.style.borderTopWidth = 0f;
+            Root.style.borderBottomWidth = 0f;
+            Root.style.borderLeftWidth = 0f;
+            Root.style.borderRightWidth = 0f;
+
+            KillTweens();
+
+            bool reachable = Node.IsReachable;
+            bool visited = Node.VisitState == NodeVisitState.Visited;
+
+            // 消耗性节点已消耗时：半透明 + 禁用点击 + 显示访问标记
+            bool isConsumed = Node.IsConsumed;
+            bool isConsumableType = Node.nodeType == RoguelikeNodeType.Mystery
+                || Node.nodeType == RoguelikeNodeType.Treasure
+                || Node.nodeType == RoguelikeNodeType.RestSite;
+
+            if (isConsumed && isConsumableType)
+            {
+                _currentTintColor = new Color(_lockedColor.r, _lockedColor.g, _lockedColor.b, 0.25f);
+                ApplyTint(_currentTintColor);
+                ApplyIconOpacity(0.25f);
+                Root.pickingMode = PickingMode.Ignore;
+                KillTweens();
+
+                if (visited && _visitedIndicator != null)
+                    _visitedIndicator.style.display = DisplayStyle.Flex;
+
+                UpdateDebugLabel();
+                return;
+            }
+
+            switch (Node.Visibility)
+            {
+                case NodeVisibility.Hidden:
+                    // 不可见：灰色问号外观，不可点击
+                    _currentTintColor = new Color(_lockedColor.r, _lockedColor.g, _lockedColor.b, 0.3f);
+                    ApplyTint(_currentTintColor);
+                    ApplyIconOpacity(0.3f);
+                    Root.pickingMode = PickingMode.Ignore;
+                    break;
+
+                case NodeVisibility.Fogged:
+                    // 迷雾：半透明真实图标，不可点击
+                    _currentTintColor = new Color(_lockedColor.r, _lockedColor.g, _lockedColor.b, 0.5f);
+                    ApplyTint(_currentTintColor);
+                    ApplyIconOpacity(0.5f);
+                    Root.pickingMode = PickingMode.Ignore;
+                    break;
+
+                case NodeVisibility.Revealed:
+                    if (reachable)
+                    {
+                        // 可到达：真实图标，高亮边框闪烁，可点击
+                        _currentTintColor = _visitedColor;
+                        ApplyTint(_visitedColor);
+                        ApplyIconOpacity(1f);
+                        Root.pickingMode = PickingMode.Position;
+
+                        // 高亮边框
+                        ApplyBorderHighlight();
+
+                        // 脉冲动画
+                        _attainableTween = DOTween.To(
+                            () => _currentTintColor,
+                            c => { _currentTintColor = c; ApplyTint(c); },
+                            _lockedColor, 0.6f
+                        ).SetLoops(-1, LoopType.Yoyo);
+                    }
+                    else
+                    {
+                        // 已揭示但不可达：真实图标，正常显示，不可点击
+                        _currentTintColor = _visitedColor;
+                        ApplyTint(_visitedColor);
+                        ApplyIconOpacity(1f);
+                        Root.pickingMode = PickingMode.Ignore;
+                    }
+                    break;
+            }
+
+            // 访问标记叠加：已访问节点显示访问指示器
+            if (visited && _visitedIndicator != null)
+                _visitedIndicator.style.display = DisplayStyle.Flex;
 
             UpdateDebugLabel();
         }

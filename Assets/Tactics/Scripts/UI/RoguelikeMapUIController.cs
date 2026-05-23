@@ -567,13 +567,21 @@ private void LoadOrGenerateMap()
             {
                 // 回退到旧逻辑（兼容性）
                 foreach (var node in _mapNodes)
-                    node.SetState(NodeState.Unrevealed);
+                {
+                    node.Node.Visibility = NodeVisibility.Hidden;
+                    node.Node.IsReachable = false;
+                    node.ApplyVisualState();
+                }
 
                 if (_currentMap.visitedNodes.Count == 0)
                 {
                     // 无入边的节点设为可到达（起始节点）
                     foreach (var node in _mapNodes.Where(n => n.Node.incoming.Count == 0))
-                        node.SetState(NodeState.Reachable);
+                    {
+                        node.Node.Visibility = NodeVisibility.Revealed;
+                        node.Node.IsReachable = true;
+                        node.ApplyVisualState();
+                    }
                 }
                 else
                 {
@@ -581,7 +589,10 @@ private void LoadOrGenerateMap()
                     {
                         var mapNode = GetNode(nodeId);
                         if (mapNode != null)
-                            mapNode.SetState(NodeState.Visited);
+                        {
+                            mapNode.Node.VisitState = NodeVisitState.Visited;
+                            mapNode.ApplyVisualState();
+                        }
                     }
 
                     var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
@@ -590,7 +601,11 @@ private void LoadOrGenerateMap()
                     {
                         var mapNode = GetNode(outgoingId);
                         if (mapNode != null)
-                            mapNode.SetState(NodeState.Reachable);
+                        {
+                            mapNode.Node.Visibility = NodeVisibility.Revealed;
+                            mapNode.Node.IsReachable = true;
+                            mapNode.ApplyVisualState();
+                        }
                     }
                 }
             }
@@ -709,7 +724,10 @@ private void LoadOrGenerateMap()
                 {
                     var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
 
-                    if (currentNode != null && currentNode.outgoing.Any(id => id == mapNode.Node.nodeId))
+                    bool isNeighbor = currentNode != null &&
+                        (currentNode.outgoing.Any(id => id == mapNode.Node.nodeId) ||
+                         currentNode.incoming.Any(id => id == mapNode.Node.nodeId));
+                    if (isNeighbor)
                         SendPlayerToNode(mapNode);
                     else
                         PlayWarningThatNodeCannotBeAccessed();
@@ -737,7 +755,7 @@ private void LoadOrGenerateMap()
                 // 更新所有UI节点状态
                 foreach (var node in _mapNodes)
                 {
-                    node.SetState(node.Node.state);
+                    node.ApplyVisualState();
                 }
             }
             
@@ -767,6 +785,7 @@ private void EnterNode(RoguelikeMapUINode mapNode)
 
             if (NodeInteractionManager.Instance != null)
             {
+                NodeInteractionManager.Instance.CurrentMap = _currentMap;
                 NodeInteractionManager.Instance.HandleNodeInteraction(mapNode.Node);
             }
             else

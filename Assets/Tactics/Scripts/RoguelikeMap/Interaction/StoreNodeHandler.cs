@@ -26,6 +26,11 @@ namespace Tactics.RoguelikeMap.Interaction
         private RoguelikeMapNode _currentNode;
         private System.Action _onClose;
 
+        /// <summary>
+        /// 当前 RoguelikeMap 实例，由调用方设置，用于持久化购买记录
+        /// </summary>
+        public global::Tactics.RoguelikeMap.RoguelikeMap CurrentMap { get; set; }
+
         private void Awake()
         {
             Instance = this;
@@ -99,7 +104,17 @@ namespace Tactics.RoguelikeMap.Interaction
                 row.Add(priceLabel);
 
                 var buyBtn = new Button(() => BuyGood(good)) { text = "购买" };
-                buyBtn.SetEnabled(RunGoldManager.Instance.HasEnoughGold(good.Price));
+
+                if (CurrentMap != null && CurrentMap.IsStoreGoodPurchased(_currentNode.nodeId, good.Name))
+                {
+                    buyBtn.text = "已售出";
+                    buyBtn.SetEnabled(false);
+                }
+                else
+                {
+                    buyBtn.SetEnabled(RunGoldManager.Instance.HasEnoughGold(good.Price));
+                }
+
                 row.Add(buyBtn);
 
                 _goodsContainer.Add(row);
@@ -115,6 +130,7 @@ namespace Tactics.RoguelikeMap.Interaction
             }
 
             RunGoldManager.Instance.SpendGold(good.Price);
+            CurrentMap?.AddStorePurchase(_currentNode.nodeId, good.Name);
             _currentGoods.Remove(good);
             DisplayGoods();
             UpdateGoldDisplay();

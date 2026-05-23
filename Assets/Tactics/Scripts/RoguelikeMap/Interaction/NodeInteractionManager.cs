@@ -19,6 +19,11 @@ namespace Tactics.RoguelikeMap.Interaction
     {
         public static NodeInteractionManager Instance { get; private set; }
 
+        /// <summary>
+        /// 当前 RoguelikeMap 实例，由 RoguelikeMapUIController 设置
+        /// </summary>
+        public global::Tactics.RoguelikeMap.RoguelikeMap CurrentMap { get; set; }
+
         private void Awake()
         {
             Instance = this;
@@ -45,6 +50,13 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
+            // 消耗性节点已消耗则跳过
+            if (node.IsConsumed && IsConsumableNodeType(node.nodeType))
+            {
+                TLog.Info($"[NodeInteractionManager] 节点 {node.nodeId} 已被消耗，跳过事件");
+                return;
+            }
+
             TLog.Info($"[NodeInteractionManager] 处理节点交互: {node.nodeType} - {node.blueprintName}");
 
             switch (node.nodeType)
@@ -56,20 +68,33 @@ namespace Tactics.RoguelikeMap.Interaction
                     break;
                 case RoguelikeNodeType.Mystery:
                     HandleMysteryNode(node);
+                    node.IsConsumed = true;
                     break;
                 case RoguelikeNodeType.Treasure:
                     HandleTreasureNode(node);
+                    node.IsConsumed = true;
                     break;
                 case RoguelikeNodeType.Store:
                     HandleStoreNode(node);
                     break;
                 case RoguelikeNodeType.RestSite:
                     HandleRestSiteNode(node);
+                    node.IsConsumed = true;
                     break;
                 default:
                     TLog.Warning($"[NodeInteractionManager] 未知节点类型: {node.nodeType}");
                     break;
             }
+        }
+
+        /// <summary>
+        /// 判断是否为消耗性节点类型
+        /// </summary>
+        private bool IsConsumableNodeType(RoguelikeNodeType type)
+        {
+            return type == RoguelikeNodeType.Mystery
+                || type == RoguelikeNodeType.Treasure
+                || type == RoguelikeNodeType.RestSite;
         }
 
         /// <summary>
@@ -179,6 +204,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
             if (StoreNodeHandler.Instance != null)
             {
+                StoreNodeHandler.Instance.CurrentMap = CurrentMap;
                 StoreNodeHandler.Instance.ShowShop(node);
             }
             else

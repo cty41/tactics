@@ -14,6 +14,12 @@ namespace Tactics.RoguelikeMap
         public string configName;
         public float maxReachableDistance;
         public float visionRange;
+
+        /// <summary>
+        /// 商店购买状态存储。Key = nodeId，Value = 已购买商品名称列表。
+        /// </summary>
+        public Dictionary<string, List<string>> StorePurchases = new Dictionary<string, List<string>>();
+
         public RoguelikeMap() { }
 
 
@@ -44,6 +50,33 @@ namespace Tactics.RoguelikeMap
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             });
+        }
+
+        /// <summary>
+        /// 记录商店购买。
+        /// </summary>
+        public void AddStorePurchase(string nodeId, string goodName)
+        {
+            if (!StorePurchases.ContainsKey(nodeId))
+                StorePurchases[nodeId] = new List<string>();
+            if (!StorePurchases[nodeId].Contains(goodName))
+                StorePurchases[nodeId].Add(goodName);
+        }
+
+        /// <summary>
+        /// 获取指定商店的已购买商品列表。
+        /// </summary>
+        public List<string> GetStorePurchases(string nodeId)
+        {
+            return StorePurchases.TryGetValue(nodeId, out var list) ? list : new List<string>();
+        }
+
+        /// <summary>
+        /// 检查指定商店的某商品是否已购买。
+        /// </summary>
+        public bool IsStoreGoodPurchased(string nodeId, string goodName)
+        {
+            return StorePurchases.TryGetValue(nodeId, out var list) && list.Contains(goodName);
         }
     }
 }

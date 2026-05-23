@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.RoguelikeMap;
@@ -35,7 +36,7 @@ namespace Tactics.RoguelikeMap
                 foreach (var nodeId in _map.visitedNodes)
                 {
                     if (_nodeLookup.TryGetValue(nodeId, out var visitedNode))
-                        visitedNode.state = NodeState.Visited;
+                        visitedNode.VisitState = NodeVisitState.Visited;
                 }
 
                 // 从最后访问的节点计算当前视野
@@ -56,7 +57,7 @@ namespace Tactics.RoguelikeMap
                 }
 
                 // 起点设为已访问
-                startNode.state = NodeState.Visited;
+                startNode.VisitState = NodeVisitState.Visited;
                 _map.visitedNodes.Add(startNode.nodeId);
 
                 // 从起点计算视野
@@ -84,18 +85,18 @@ namespace Tactics.RoguelikeMap
             var previousStates = _map.nodes.ToDictionary(n => n.nodeId, n => n.state);
 
             // 将当前节点设为已访问
-            node.state = NodeState.Visited;
+            node.VisitState = NodeVisitState.Visited;
             TLog.Info($"[NodeStateManager] 节点已访问: {nodeId}");
 
             // 使用 MapRevealSystem 重新计算视野
             _revealSystem.UpdateReveal(nodeId);
 
-            // 返回新揭示的节点（状态从 Unrevealed 变为 Revealed 或 Reachable 的节点）
+            // 返回新揭示的节点（状态从 Unrevealed 变为可见的节点）
             var revealedNodes = _map.nodes
-                .Where(n => n.state != NodeState.Visited
+                .Where(n => n.Visibility != NodeVisibility.Hidden
                             && previousStates.TryGetValue(n.nodeId, out var prev)
                             && prev == NodeState.Unrevealed
-                            && n.state != NodeState.Unrevealed)
+                            && n.Visibility != NodeVisibility.Hidden)
                 .ToList();
 
             TLog.Info($"[NodeStateManager] 新揭示节点数: {revealedNodes.Count}");
@@ -110,12 +111,13 @@ namespace Tactics.RoguelikeMap
             if (!_nodeLookup.TryGetValue(nodeId, out var node))
                 return false;
 
-            return node.state == NodeState.Reachable;
+            return node.IsReachable;
         }
 
         /// <summary>
         /// 获取节点当前状态
         /// </summary>
+        [Obsolete("Use NodeVisibility/NodeVisitState instead.")]
         public NodeState GetNodeState(string nodeId)
         {
             if (!_nodeLookup.TryGetValue(nodeId, out var node))
@@ -137,7 +139,7 @@ namespace Tactics.RoguelikeMap
         /// </summary>
         public List<RoguelikeMapNode> GetVisitedNodes()
         {
-            return _map.nodes.Where(n => n.state == NodeState.Visited).ToList();
+            return _map.nodes.Where(n => n.VisitState == NodeVisitState.Visited).ToList();
         }
 
         /// <summary>
@@ -145,7 +147,7 @@ namespace Tactics.RoguelikeMap
         /// </summary>
         public bool HasReachedBoss()
         {
-            return _map.nodes.Any(n => n.nodeType == RoguelikeNodeType.Boss && n.state == NodeState.Visited);
+            return _map.nodes.Any(n => n.nodeType == RoguelikeNodeType.Boss && n.VisitState == NodeVisitState.Visited);
         }
 
         /// <summary>
@@ -155,7 +157,9 @@ namespace Tactics.RoguelikeMap
         {
             foreach (var node in _map.nodes)
             {
-                node.state = NodeState.Unrevealed;
+                node.Visibility = NodeVisibility.Hidden;
+                node.IsReachable = false;
+                node.VisitState = NodeVisitState.Unvisited;
             }
             TLog.Info("[NodeStateManager] 所有节点状态已重置");
         }

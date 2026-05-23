@@ -8,8 +8,30 @@ using UnityEngine;
 namespace Tactics.RoguelikeMap
 {
     /// <summary>
+    /// 节点可见性状态
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum NodeVisibility
+    {
+        Hidden,   // 完全隐藏：不可见
+        Fogged,   // 迷雾状态：显示轮廓但不可交互
+        Revealed  // 已揭示：完全可见
+    }
+
+    /// <summary>
+    /// 节点访问状态
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum NodeVisitState
+    {
+        Unvisited,  // 未访问
+        Visited     // 已访问
+    }
+
+    /// <summary>
     /// 节点状态枚举
     /// </summary>
+    [Obsolete("Use NodeVisibility and NodeVisitState instead.")]
     public enum NodeState
     {
         Unrevealed,  // 未揭示：灰色问号，不可点击
@@ -28,8 +50,25 @@ namespace Tactics.RoguelikeMap
                 public readonly RoguelikeNodeType nodeType;
         public readonly string blueprintName;
         public Vector2 position;
+        [Obsolete("Use Visibility and VisitState instead.")]
         [JsonConverter(typeof(StringEnumConverter))]
         public NodeState state = NodeState.Unrevealed;
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        public NodeVisibility Visibility = NodeVisibility.Hidden;
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        public NodeVisitState VisitState = NodeVisitState.Unvisited;
+
+        /// <summary>
+        /// 是否可到达（用于 UI 交互判定）
+        /// </summary>
+        public bool IsReachable = false;
+
+        /// <summary>
+        /// 是否已消耗（用于 Mystery/Treasure/RestSite 节点，首次访问后标记，重访不再触发事件）
+        /// </summary>
+        public bool IsConsumed = false;
 
         /// <summary>
         /// 事件 ID（用于 Mystery / 自定义事件节点）。
