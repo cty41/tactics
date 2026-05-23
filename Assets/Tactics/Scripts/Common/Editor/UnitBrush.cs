@@ -1,7 +1,6 @@
 using Tactics.Common.Units;
 using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
-using Tactics.Common.Units;
 using UnityEditor;
 using UnityEngine;
 

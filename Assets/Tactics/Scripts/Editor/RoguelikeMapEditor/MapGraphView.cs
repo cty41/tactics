@@ -339,7 +339,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
             menu.AddSeparator("");
             menu.AddItem("Focus All (F)", false, FocusAll);
 
-            menu.DropDown(new Rect(screenPos.x, screenPos.y, 0, 0), this, false);
+            menu.DropDown(new Rect(screenPos.x, screenPos.y, 0, 0), this, DropdownMenuSizeMode.Content);
         }
 
         // ═══════════════════════════════════════════

@@ -551,7 +551,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             _listView.selectionType = SelectionType.Single;
 
             // Single-click → select & create node
-            _listView.onSelectionChange += selectedItems =>
+            _listView.selectionChanged += selectedItems =>
             {
                 TLog.Info("[EE] Popup onSelectionChange fired");
                 if (selectedItems is IEnumerable<object> items)
@@ -567,7 +567,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             };
 
             // Enter / double-click → create node
-            _listView.onItemsChosen += items =>
+            _listView.itemsChosen += items =>
             {
                 if (items is IEnumerable<object> chosen)
                 {
@@ -624,7 +624,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             _listView.RefreshItems();
         }
 
-        public void Focus()
+        public new void Focus()
         {
             _searchField.Focus();
             _searchField.SelectAll();
