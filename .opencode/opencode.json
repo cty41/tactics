@@ -8,14 +8,8 @@
   "mcp": {
     "unity-MCP": {
       "type": "local",
-      "command": [
-        "uvx",
-        "--from",
-        "mcpforunityserver",
-        "mcp-for-unity",
-        "--transport",
-        "stdio"
-      ]
+      "type": "remote",
+      "url": "http://127.0.0.1:8080/mcp",
     }
   },
   "lsp": {
