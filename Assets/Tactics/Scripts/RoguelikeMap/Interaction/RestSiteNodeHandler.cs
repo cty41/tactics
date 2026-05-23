@@ -52,7 +52,7 @@ namespace Tactics.RoguelikeMap.Interaction
                 restBtn.RegisterCallback<ClickEvent>(_ => OnRestClicked());
 
             // 绑定关闭按钮
-            var closeBtn = root.Q<Button>("CloseButton");
+            var closeBtn = root.Q<Button>("LeaveButton");
             if (closeBtn != null)
                 closeBtn.RegisterCallback<ClickEvent>(_ => ClosePanel());
 

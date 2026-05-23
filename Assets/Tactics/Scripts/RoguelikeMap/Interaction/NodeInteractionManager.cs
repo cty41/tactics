@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.Flow.Battle;
 using Tactics.Roguelike;
@@ -96,7 +97,7 @@ namespace Tactics.RoguelikeMap.Interaction
         /// <summary>
         /// 处理神秘节点（事件）
         /// </summary>
-        private void HandleMysteryNode(RoguelikeMapNode node)
+        private async void HandleMysteryNode(RoguelikeMapNode node)
         {
             TLog.Info($"[NodeInteractionManager] 触发事件: {node.blueprintName}");
 
@@ -109,9 +110,17 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
-            // 加载事件
+            // 加载事件（通过显式路径，避免 ScriptableObject 嵌套 TextAsset 引用在运行时为 null）
             var eventManager = EventManager.Instance;
-            eventManager.LoadRegionEvents("DarkForest", mapConfig);
+            // 清除可能存在的空缓存（TextAsset 引用解析失败时会缓存空列表）
+            eventManager.ClearRegion("DarkForest");
+            var eventPaths = new List<string>
+            {
+                "Assets/Tactics/GameData/Events/DarkForest/cursed_chest_001.json",
+                "Assets/Tactics/GameData/Events/DarkForest/fallen_altar_001.json",
+                "Assets/Tactics/GameData/Events/DarkForest/lost_villager_001.json"
+            };
+            eventManager.LoadRegionEventsFromPaths("DarkForest", eventPaths);
 
             var evt = eventManager.GetRandomEvent("DarkForest");
             if (evt == null)
@@ -120,7 +129,8 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
-            // 显示事件UI
+            // 显示事件UI（通过 UIManager 初始化 EventUIController）
+            await UIManager.Instance.ShowAsync(UIManager.UIId.EventPanel);
             if (EventUIController.Instance != null)
             {
                 EventUIController.Instance.ShowEvent(evt, (success) =>

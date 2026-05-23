@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.AssetPipeline;
+using Tactics.RoguelikeMap.UI;
 using Tactics.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -35,6 +36,15 @@ namespace Tactics
 
         private UIManager() { }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            s_configLoaded = false;
+            s_uiPaths = null;
+            s_uiTypeMap = null;
+        }
+
+
         public enum UIId
         {
             Home,
@@ -51,6 +61,7 @@ namespace Tactics
         TreasurePanel,
         ShopPanel,
         RestSitePanel,
+        EventPanel,
         }
 
         private enum UIType
@@ -115,7 +126,7 @@ namespace Tactics
 
         private static void EnsureConfigLoaded()
         {
-            if (s_configLoaded) return;
+            if (s_configLoaded && s_uiPaths != null) return;
             LoadConfig();
             s_configLoaded = true;
         }
@@ -513,6 +524,11 @@ namespace Tactics
                     if (root.GetComponent<LevelUpPanelController>() == null)
                         root.AddComponent<LevelUpPanelController>();
                     break;
+                case UIId.EventPanel:
+                    if (root.GetComponent<EventUIController>() == null)
+                        root.AddComponent<EventUIController>();
+                    break;
+
                 default:
                     break;
             }

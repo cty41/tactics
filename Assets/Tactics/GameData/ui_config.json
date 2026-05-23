@@ -83,6 +83,12 @@
       "type": "UiToolkitUxml",
       "uxml": "Assets/Tactics/Arts/UI/RestSitePanel.uxml",
       "uss": "Assets/Tactics/Arts/UI/RestSitePanel.uss"
+    },
+    {
+      "id": "EventPanel",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/EventPanel.uxml",
+      "uss": "Assets/Tactics/Arts/UI/EventPanel.uss"
     }
   ]
 }

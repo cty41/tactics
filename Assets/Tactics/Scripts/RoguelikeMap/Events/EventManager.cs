@@ -130,6 +130,14 @@ namespace Tactics.RoguelikeMap.Events
         }
 
         /// <summary>
+        /// 清除指定区域的缓存事件（用于重新加载）
+        /// </summary>
+        public void ClearRegion(string regionName)
+        {
+            _regionEvents.Remove(regionName);
+        }
+
+        /// <summary>
         /// 获取指定区域的随机事件
         /// </summary>
         public RoguelikeEvent GetRandomEvent(string regionName)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Tactics.RoguelikeMap.Events;
 using Tactics.Runtime.Utilities;
+using Tactics.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,10 +15,6 @@ namespace Tactics.RoguelikeMap.UI
     {
         public static EventUIController Instance { get; private set; }
 
-        [Header("UI Settings")]
-        [SerializeField] private VisualTreeAsset eventPanelTemplate;
-
-        private UIDocument _uiDocument;
         private VisualElement _overlay;
         private Label _titleLabel;
         private Label _descriptionLabel;
@@ -36,7 +33,6 @@ namespace Tactics.RoguelikeMap.UI
         private void Awake()
         {
             Instance = this;
-            _uiDocument = GetComponent<UIDocument>();
         }
 
         /// <summary>
@@ -53,7 +49,7 @@ namespace Tactics.RoguelikeMap.UI
         /// <summary>
         /// 显示事件UI
         /// </summary>
-        public void ShowEvent(RoguelikeEvent evt, System.Action<bool> onComplete)
+        public async void ShowEvent(RoguelikeEvent evt, System.Action<bool> onComplete)
         {
             if (evt == null)
             {
@@ -65,51 +61,31 @@ namespace Tactics.RoguelikeMap.UI
             _currentEvent = evt;
             _onComplete = onComplete;
 
-            // 实例化 UXML 模板
-            InstantiateTemplate();
+            // 通过 UIManager 显示面板
+            await UIManager.Instance.ShowAsync(UIManager.UIId.EventPanel);
+            var root = UIManager.Instance.GetRootElement(UIManager.UIId.EventPanel);
+            if (root == null)
+            {
+                TLog.Error("[EventUIController] 无法获取 EventPanel 根元素");
+                return;
+            }
+
+            // 缓存元素引用
+            _overlay = root.Q<VisualElement>("EventOverlay");
+            _titleLabel = root.Q<Label>("EventTitle");
+            _descriptionLabel = root.Q<Label>("EventDescription");
+            _optionsContainer = root.Q<VisualElement>("OptionsContainer");
+            _resultPanel = root.Q<VisualElement>("ResultPanel");
+            _resultLabel = root.Q<Label>("ResultText");
+            _continueButton = root.Q<Button>("ContinueButton");
+
+            // 注册继续按钮事件
+            _continueButton?.RegisterCallback<ClickEvent>(OnContinueClicked);
 
             // 显示事件内容
             DisplayEvent(evt);
 
             TLog.Info($"[EventUIController] 显示事件: {evt.title}");
-        }
-
-        /// <summary>
-        /// 实例化 UXML 模板并缓存元素引用
-        /// </summary>
-        private void InstantiateTemplate()
-        {
-            // 清除现有面板
-            ClearExisting();
-
-            if (eventPanelTemplate == null)
-            {
-                TLog.Error("[EventUIController] eventPanelTemplate 未设置");
-                return;
-            }
-
-            // 实例化到 UIDocument 的根元素
-            var root = _uiDocument?.rootVisualElement;
-            if (root == null)
-            {
-                TLog.Error("[EventUIController] UIDocument rootVisualElement 为空");
-                return;
-            }
-
-            var instance = eventPanelTemplate.Instantiate();
-            root.Add(instance);
-
-            // 缓存元素引用
-            _overlay = instance.Q<VisualElement>("EventOverlay");
-            _titleLabel = instance.Q<Label>("EventTitle");
-            _descriptionLabel = instance.Q<Label>("EventDescription");
-            _optionsContainer = instance.Q<VisualElement>("OptionsContainer");
-            _resultPanel = instance.Q<VisualElement>("ResultPanel");
-            _resultLabel = instance.Q<Label>("ResultText");
-            _continueButton = instance.Q<Button>("ContinueButton");
-
-            // 注册继续按钮事件
-            _continueButton?.RegisterCallback<ClickEvent>(OnContinueClicked);
         }
 
         /// <summary>
@@ -311,14 +287,6 @@ namespace Tactics.RoguelikeMap.UI
             if (_continueButton != null)
                 _continueButton.UnregisterCallback<ClickEvent>(OnContinueClicked);
 
-            var root = _uiDocument?.rootVisualElement;
-            if (root != null)
-            {
-                // 移除 EventOverlay 实例（由模板创建）
-                var overlay = root.Q<VisualElement>("EventOverlay");
-                overlay?.RemoveFromHierarchy();
-            }
-
             _overlay = null;
             _titleLabel = null;
             _descriptionLabel = null;
@@ -334,6 +302,7 @@ namespace Tactics.RoguelikeMap.UI
         private void ClosePanel()
         {
             ClearExisting();
+            UIManager.Instance.Hide(UIManager.UIId.EventPanel);
         }
     }
 }
