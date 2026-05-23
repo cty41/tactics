@@ -12,7 +12,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
 {
     /// <summary>
     /// Roguelike 地图编辑器主窗口。
-    /// 三列布局：左侧（配置面板）| 中央（MapGraphView 画布）| 右侧（MapInspectorPanel 属性面板）。
+    /// 两列布局：左侧（配置面板）| 中央（MapGraphView 画布）。
+    /// 属性编辑通过 Unity Inspector（CustomEditor + Selection.activeObject）完成。
     /// 工具栏支持 Generate / Save / Load / Export 操作。
     /// </summary>
     public class RoguelikeMapEditorWindow : EditorWindow
@@ -20,15 +21,15 @@ namespace Tactics.Editor.RoguelikeMapEditor
         // ── 面板引用 ──────────────────────────────
         private VisualElement _leftPanel;
         private VisualElement _centerPanel;
-        private VisualElement _rightPanel;
 
         // ── 功能组件 ──────────────────────────────
         private MapGraphView _mapGraphView;
-        private MapInspectorPanel _inspectorPanel;
 
         // ── 数据 ──────────────────────────────────
         private RoguelikeMapConfig _currentConfig;
         private RoguelikeMapData _currentMap;
+        private MapNodeDataWrapper _selectionWrapper;
+        private bool _isDirty = false;
 
         // ── 顶部工具栏 ────────────────────────────
         private VisualElement _toolbar;
@@ -37,8 +38,6 @@ namespace Tactics.Editor.RoguelikeMapEditor
         private const float ToolbarHeight = 28f;
         private const float LeftPanelMinWidth = 180f;
         private const float LeftPanelMaxWidth = 320f;
-        private const float RightPanelMinWidth = 200f;
-        private const float RightPanelMaxWidth = 380f;
         private const string DefaultSaveDir = "Assets/Tactics/Arts/MapData";
 
         // ── MenuItem ──────────────────────────────
@@ -67,7 +66,21 @@ namespace Tactics.Editor.RoguelikeMapEditor
 
         private void OnDisable()
         {
+            if (_isDirty)
+            {
+                OnSaveClicked();
+            }
+            if (_selectionWrapper != null)
+            {
+                DestroyImmediate(_selectionWrapper);
+                _selectionWrapper = null;
+            }
             _currentMap = null;
+        }
+
+        private void MarkDirty()
+        {
+            _isDirty = true;
         }
 
         // ── Config Loading ────────────────────────
@@ -103,7 +116,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
             _toolbar.style.paddingRight = 8;
             rootVisualElement.Add(_toolbar);
 
-            // 中部：三列布局
+            // 中部：两列布局
             var middleRow = new VisualElement();
             middleRow.style.flexGrow = 1;
             middleRow.style.flexDirection = FlexDirection.Row;
@@ -125,18 +138,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
             _centerPanel.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f);
             middleRow.Add(_centerPanel);
 
-            // 右列：MapInspectorPanel 属性面板
-            _rightPanel = new VisualElement();
-            _rightPanel.name = "right-panel";
-            _rightPanel.style.flexGrow = 0.25f;
-            _rightPanel.style.minWidth = RightPanelMinWidth;
-            _rightPanel.style.maxWidth = RightPanelMaxWidth;
-            _rightPanel.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f);
-            middleRow.Add(_rightPanel);
-
             // 创建功能组件
             BuildCenterPanel();
-            BuildRightPanel();
             BuildLeftPanel();
         }
 
@@ -144,12 +147,6 @@ namespace Tactics.Editor.RoguelikeMapEditor
         {
             _mapGraphView = new MapGraphView();
             _centerPanel.Add(_mapGraphView);
-        }
-
-        private void BuildRightPanel()
-        {
-            _inspectorPanel = new MapInspectorPanel();
-            _rightPanel.Add(_inspectorPanel);
         }
 
         private void BuildLeftPanel()
@@ -208,7 +205,6 @@ namespace Tactics.Editor.RoguelikeMapEditor
             rootVisualElement.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f);
             _leftPanel?.AddToClassList("panel-dark");
             _centerPanel?.AddToClassList("panel-dark");
-            _rightPanel?.AddToClassList("panel-dark");
         }
 
         // ── Wire Up Callbacks ─────────────────────
@@ -220,13 +216,24 @@ namespace Tactics.Editor.RoguelikeMapEditor
             {
                 if (node == null)
                 {
-                    _inspectorPanel?.InspectNode(null);
+                    if (_selectionWrapper != null)
+                    {
+                        DestroyImmediate(_selectionWrapper);
+                        _selectionWrapper = null;
+                    }
+                    Selection.activeObject = null;
                     return;
                 }
 
-                // 从当前 map 中查找对应节点数据
                 var mapNode = _currentMap?.GetNode(node.NodeId);
-                _inspectorPanel?.InspectNode(mapNode);
+                if (mapNode == null) return;
+
+                if (_selectionWrapper == null)
+                    _selectionWrapper = ScriptableObject.CreateInstance<MapNodeDataWrapper>();
+
+                _selectionWrapper.Initialize(mapNode);
+                _selectionWrapper.OnDataChanged = MarkDirty;
+                Selection.activeObject = _selectionWrapper;
             };
         }
 
@@ -342,6 +349,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 AssetDatabase.Refresh();
                 TLog.Info($"[RoguelikeMapEditor] Map saved to: {filePath}");
                 EditorUtility.DisplayDialog("Save", $"Map saved to:\n{filePath}", "OK");
+                _isDirty = false;
             }
             catch (Exception ex)
             {

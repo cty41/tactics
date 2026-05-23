@@ -180,6 +180,16 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     evt.StopPropagation();
                 }
             });
+
+            // Left-click on empty canvas → deselect
+            RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button == 0 && (evt.target == _canvasContainer || evt.target == _canvas || evt.target == _gridLayer))
+                {
+                    DeselectNode();
+                    evt.StopPropagation();
+                }
+            });
         }
 
         // ── Zoom / Pan ────────────────────────────
@@ -444,6 +454,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
             {
                 _selectedNode.SetSelected(false);
                 _selectedNode = null;
+                OnNodeSelected?.Invoke(null);
             }
         }
 

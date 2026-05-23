@@ -7,15 +7,17 @@ namespace Tactics.Editor.RoguelikeEventEditor
 {
     /// <summary>
     /// WYSIWYG Roguelike事件编辑器主窗口。
-    /// 三列布局：左侧事件列表 | 中央节点画布 | 右侧属性面板 + 底部实时预览。
+    /// 两列布局：左侧事件列表 | 中央节点图画布 + 底部实时预览。
+    /// 属性编辑通过 Unity Inspector（CustomEditor + Selection.activeObject）完成。
     /// </summary>
     public class RoguelikeEventEditorWindow : EditorWindow
     {
         // ── 面板引用 ──────────────────────────────
         private EventBlackboard _eventBlackboard;
         private EventGraphView _graphView;
-        private EventInspectorPanel _inspectorPanel;
         private EventPreviewPanel _previewPanel;
+        private EventNodeDataWrapper _selectionWrapper;
+        private bool _isDirty = false;
 
         // ── 顶部工具栏 ────────────────────────────
         private VisualElement _toolbar;
@@ -25,8 +27,6 @@ namespace Tactics.Editor.RoguelikeEventEditor
         private const string UssFile = "EditorResources/EditorWindow.uss";
 
         // ── 常量 ──────────────────────────────────
-        private const float InspectorMinWidth = 220f;
-        private const float InspectorMaxWidth = 380f;
         private const float BlackboardMinWidth = 180f;
         private const float BlackboardMaxWidth = 320f;
         private const float PreviewMinHeight = 120f;
@@ -77,7 +77,21 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
         private void OnDisable()
         {
+            if (_isDirty)
+            {
+                ExportCurrentEvent();
+            }
+            if (_selectionWrapper != null)
+            {
+                DestroyImmediate(_selectionWrapper);
+                _selectionWrapper = null;
+            }
             _eventBlackboard?.SaveSessionState();
+        }
+
+        private void MarkDirty()
+        {
+            _isDirty = true;
         }
 
         // ── Layout ────────────────────────────────
@@ -113,12 +127,6 @@ namespace Tactics.Editor.RoguelikeEventEditor
             graphContainer.name = "graph-container";
             graphContainer.style.flexGrow = 1;
             middleRow.Add(graphContainer);
-
-            // 右列：属性面板
-            var inspectorContainer = new VisualElement();
-            inspectorContainer.name = "inspector-container";
-            SetupSplitter(inspectorContainer, InspectorMinWidth, InspectorMaxWidth, "inspector");
-            middleRow.Add(inspectorContainer);
 
             // 底部：预览面板
             var previewContainer = new VisualElement();
@@ -178,9 +186,6 @@ namespace Tactics.Editor.RoguelikeEventEditor
             var blackboard = rootVisualElement.Q<VisualElement>("blackboard-container");
             blackboard?.AddToClassList("panel-dark");
 
-            var inspector = rootVisualElement.Q<VisualElement>("inspector-container");
-            inspector?.AddToClassList("panel-dark");
-
             var preview = rootVisualElement.Q<VisualElement>("preview-container");
             preview?.AddToClassList("panel-dark");
         }
@@ -206,13 +211,6 @@ namespace Tactics.Editor.RoguelikeEventEditor
                 _graphView.OnGraphChanged += OnGraphChanged;
             }
 
-            var inspectorContainer = rootVisualElement.Q<VisualElement>("inspector-container");
-            if (inspectorContainer != null)
-            {
-                _inspectorPanel = new EventInspectorPanel();
-                inspectorContainer.Add(_inspectorPanel);
-            }
-
             var previewContainer = rootVisualElement.Q<VisualElement>("preview-container");
             if (previewContainer != null)
             {
@@ -229,7 +227,6 @@ namespace Tactics.Editor.RoguelikeEventEditor
         {
             _graphView?.LoadEvent(evt);
             _previewPanel?.UpdatePreview(evt);
-            _inspectorPanel?.ClearProperties();
         }
 
         private void OnEventAdded(SerializableEventData evt)
@@ -240,16 +237,24 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
         private void OnGraphNodeSelected(EventNodeElement node)
         {
-                _inspectorPanel?.InspectNode(node, () =>
+            // Selection/wrapper logic
+            if (node == null)
+            {
+                if (_selectionWrapper != null)
                 {
-                    var data = _graphView?.BuildEventData();
-                    if (data != null)
-                    {
-                        _previewPanel?.UpdatePreview(data);
-                        if (!string.IsNullOrEmpty(_eventBlackboard?.SelectedEventId))
-                            _eventBlackboard?.UpdateEvent(data);
-                    }
-                });
+                    DestroyImmediate(_selectionWrapper);
+                    _selectionWrapper = null;
+                }
+                Selection.activeObject = null;
+            }
+            else
+            {
+                if (_selectionWrapper == null)
+                    _selectionWrapper = ScriptableObject.CreateInstance<EventNodeDataWrapper>();
+                _selectionWrapper.Initialize(node.Data, node.NodeType, node.NodeId);
+                _selectionWrapper.OnDataChanged = MarkDirty;
+                Selection.activeObject = _selectionWrapper;
+            }
         }
 
         private void OnGraphChanged()

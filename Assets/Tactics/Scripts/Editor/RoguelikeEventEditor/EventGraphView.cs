@@ -114,6 +114,16 @@ namespace Tactics.Editor.RoguelikeEventEditor
                     evt.StopPropagation();
                 }
             });
+
+            // Left-click on empty canvas → deselect
+            RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button == 0 && (evt.target == _canvasContainer || evt.target == _canvas || evt.target == _gridLayer))
+                {
+                    DeselectNode();
+                    evt.StopPropagation();
+                }
+            });
         }
 
         // ── Zoom / Pan ────────────────────────────
@@ -351,7 +361,12 @@ namespace Tactics.Editor.RoguelikeEventEditor
 
         private void DeselectNode()
         {
-            if (_selectedNode != null) { _selectedNode.RemoveFromClassList("selected"); _selectedNode = null; }
+            if (_selectedNode != null)
+            {
+                _selectedNode.RemoveFromClassList("selected");
+                _selectedNode = null;
+                OnNodeSelected?.Invoke(null);
+            }
         }
 
         private void DeleteNode(EventNodeElement node)
