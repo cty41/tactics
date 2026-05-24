@@ -15,6 +15,7 @@ using Tactics.Common.Network;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Classes;
+using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
 using Tactics.Roguelike;
 using Tactics.Roster;
@@ -211,6 +212,7 @@ namespace Tactics.Common.Battle
             if (_startImmediatelly)
             {
                 InitializeGame();
+                SyncStartingHp();
                 StartGame();
                 _ = StartBattleAsync();
             }
@@ -352,6 +354,16 @@ namespace Tactics.Common.Battle
                 if (link == null)
                     link = unit.gameObject.AddComponent<RosterCharacterLink>();
                 link.CharacterId = def.Id;
+
+                // Apply PendingBuffs from CharacterDefinition (map-layer buffs → combat start)
+                if (def.PendingBuffs.Count > 0)
+                {
+                    foreach (var buffConfig in def.PendingBuffs)
+                    {
+                        unit.AddBuff(new Buff(buffConfig, null, buffConfig.DefaultDuration));
+                    }
+                    def.ClearPendingBuffs();
+                }
             }
         }
 
@@ -391,6 +403,29 @@ namespace Tactics.Common.Battle
             catch (Exception ex)
             {
                 TLog.Warning($"[BattleController] Failed to show Battle UI: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 战斗开始时同步 HP：从地图层 CharacterDefinition.CurrentHp 读取到战斗层 Unit.Health。
+        /// InitializeGame() 已将 MaxHealth 计算完毕并满血初始化，此处覆盖为存档血量。
+        /// </summary>
+        private void SyncStartingHp()
+        {
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var friendlyUnits = GetFriendlyUnits(_humanPlayerNumber);
+            foreach (var unit in friendlyUnits)
+            {
+                var mono = unit as MonoBehaviour;
+                if (mono == null) continue;
+                var link = mono.GetComponent<RosterCharacterLink>();
+                if (link == null) continue;
+                var def = state.Roster.FirstOrDefault(c => c.Id == link.CharacterId);
+                if (def == null) continue;
+
+                if (def.CurrentHp > 0)
+                    unit.Health = Mathf.Min(def.CurrentHp, unit.MaxHealth);
+                // CurrentHp == 0 表示旧存档无 HP 记录，留满血
             }
         }
 

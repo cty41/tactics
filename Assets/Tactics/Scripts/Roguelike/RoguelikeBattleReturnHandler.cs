@@ -66,6 +66,22 @@ namespace Tactics.Roguelike
                 // 加载玩家状态供结算流程使用
                 var state = PlayerAdventureStateStore.LoadRepairAndSave();
 
+                // 同步 HP：从战斗层 Unit.Health 保存到地图层 CharacterDefinition.CurrentHp
+                if (allUnits != null && state?.Roster != null)
+                {
+                    foreach (var unit in allUnits)
+                    {
+                        if (unit.PlayerNumber != 0) continue;
+                        var mono = unit as MonoBehaviour;
+                        if (mono == null) continue;
+                        var link = mono.GetComponent<RosterCharacterLink>();
+                        if (link == null) continue;
+                        var def = state.Roster.FirstOrDefault(c => c.Id == link.CharacterId);
+                        if (def == null) continue;
+                        def.CurrentHp = Mathf.RoundToInt(unit.Health);
+                    }
+                }
+
                 // 注册 BattleSettlementFlow 来管理UI流程（必须在 StartSettlement 之前）
                 BattleSettlementFlow.Instance.Subscribe(BattleSettlementCoordinator.Instance, state);
 

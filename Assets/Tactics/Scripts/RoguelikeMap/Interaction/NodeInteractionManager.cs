@@ -8,6 +8,7 @@ using Tactics.RoguelikeMap.UI;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Tactics.RoguelikeMap.Interaction
 {
@@ -240,6 +241,92 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             // TODO: 实现奖励提示UI
             TLog.Info($"[NodeInteractionManager] 奖励提示: {message}");
+        }
+
+        /// <summary>
+        /// 显示效果结果弹窗（通用）
+        /// 在 TLog 中记录日志，并显示一个简单的运行时弹窗，玩家点击确认后关闭。
+        /// </summary>
+        /// <param name="title">弹窗标题</param>
+        /// <param name="message">效果描述文本</param>
+        /// <param name="onClose">关闭后的回调（可选）</param>
+        public void ShowEffectResult(string title, string message, System.Action onClose = null)
+        {
+            TLog.Info($"[EffectResult] {title}: {message}");
+
+            var uiDoc = UnityEngine.Object.FindFirstObjectByType<UIDocument>();
+            var root = uiDoc?.rootVisualElement;
+            if (root == null)
+            {
+                TLog.Warning("[NodeInteractionManager] 无法显示效果结果：没有活动的 UIDocument");
+                onClose?.Invoke();
+                return;
+            }
+
+            // 半透明遮罩
+            var overlay = new VisualElement();
+            overlay.style.position = Position.Absolute;
+            overlay.style.left = 0;
+            overlay.style.right = 0;
+            overlay.style.top = 0;
+            overlay.style.bottom = 0;
+            overlay.style.alignItems = Align.Center;
+            overlay.style.justifyContent = Justify.Center;
+            overlay.style.backgroundColor = new Color(0f, 0f, 0f, 0.55f);
+
+            // 弹窗容器
+            var box = new VisualElement();
+            box.style.backgroundColor = new Color(0.12f, 0.12f, 0.14f, 0.97f);
+            box.style.borderTopLeftRadius = 10;
+            box.style.borderTopRightRadius = 10;
+            box.style.borderBottomLeftRadius = 10;
+            box.style.borderBottomRightRadius = 10;
+            box.style.paddingTop = 24;
+            box.style.paddingBottom = 24;
+            box.style.paddingLeft = 32;
+            box.style.paddingRight = 32;
+            box.style.minWidth = 220;
+            box.style.maxWidth = 360;
+            box.style.alignItems = Align.Center;
+
+            // 标题
+            var titleLabel = new Label(title);
+            titleLabel.style.fontSize = 18;
+            titleLabel.style.color = new Color(1f, 0.85f, 0.4f);
+            titleLabel.style.marginBottom = 12;
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            box.Add(titleLabel);
+
+            // 消息文本
+            var messageLabel = new Label(message);
+            messageLabel.style.fontSize = 14;
+            messageLabel.style.color = new Color(0.9f, 0.9f, 0.9f);
+            messageLabel.style.whiteSpace = WhiteSpace.Normal;
+            messageLabel.style.marginBottom = 18;
+            messageLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            box.Add(messageLabel);
+
+            // 确认按钮
+            var confirmBtn = new Button(() =>
+            {
+                if (overlay.parent != null)
+                    overlay.parent.Remove(overlay);
+                onClose?.Invoke();
+            });
+            confirmBtn.text = "确认";
+            confirmBtn.style.width = 100;
+            confirmBtn.style.height = 32;
+            confirmBtn.style.fontSize = 14;
+            confirmBtn.style.color = Color.white;
+            confirmBtn.style.backgroundColor = new Color(0.25f, 0.55f, 0.25f, 1f);
+            confirmBtn.style.borderTopLeftRadius = 6;
+            confirmBtn.style.borderTopRightRadius = 6;
+            confirmBtn.style.borderBottomLeftRadius = 6;
+            confirmBtn.style.borderBottomRightRadius = 6;
+            box.Add(confirmBtn);
+
+            overlay.Add(box);
+            root.Add(overlay);
         }
     }
 }

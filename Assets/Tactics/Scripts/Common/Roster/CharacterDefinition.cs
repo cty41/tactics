@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Tactics.Common.Units.Classes;
+using Tactics.Common.Units.Buffs;
 using Tactics.Equipment;
 
 namespace Tactics.Roster
@@ -32,6 +33,11 @@ namespace Tactics.Roster
         public string DisplayName { get; set; }
         public int Level { get; set; }
         public int Experience { get; set; }
+        public int CurrentHp { get; set; }
+
+        /// <summary>最大HP，基于体质计算（与 Unit.MaxHealth 公式一致：Constitution × 4）。</summary>
+        public int MaxHp => System.Math.Max(1, Constitution * 4);
+
         public int AttributePoints { get; set; }
         public Dictionary<AttributeType, int> AllocatedAttributes { get; set; }
         public List<LearnedSkill> LearnedSkills { get; set; }
@@ -65,6 +71,45 @@ namespace Tactics.Roster
         }
 
         public Dictionary<EquipmentSlot, string> Equipment { get; set; } = new Dictionary<EquipmentSlot, string>();
+
+        /// <summary>
+        /// 地图层待生效 Buff 列表。战斗开始时应用到角色，然后清空。
+        /// </summary>
+        public List<BuffConfig> PendingBuffs = new List<BuffConfig>();
+
+        /// <summary>
+        /// 添加待生效 Buff（防止重复添加相同名称的 Buff）。
+        /// </summary>
+        public void AddPendingBuff(BuffConfig config)
+        {
+            if (config == null) return;
+            if (!PendingBuffs.Exists(b => b.BuffName == config.BuffName))
+                PendingBuffs.Add(config);
+        }
+
+        /// <summary>
+        /// 移除指定名称的待生效 Buff。
+        /// </summary>
+        public void RemovePendingBuff(string buffName)
+        {
+            PendingBuffs.RemoveAll(b => b.BuffName == buffName);
+        }
+
+        /// <summary>
+        /// 清空所有待生效 Buff（战斗开始后调用）。
+        /// </summary>
+        public void ClearPendingBuffs()
+        {
+            PendingBuffs.Clear();
+        }
+
+        /// <summary>
+        /// 检查是否有指定名称的待生效 Buff。
+        /// </summary>
+        public bool HasPendingBuff(string buffName)
+        {
+            return PendingBuffs.Exists(b => b.BuffName == buffName);
+        }
 
         public int GetTotalStrength()
         {

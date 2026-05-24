@@ -1,4 +1,5 @@
 using Tactics.RoguelikeMap;
+using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using UnityEngine;
@@ -61,8 +62,44 @@ namespace Tactics.RoguelikeMap.Interaction
 
         private void OnRestClicked()
         {
-            TLog.Info("[RestSiteNodeHandler] 休息：每人恢复 20% HP — TODO: 对接角色HP系统");
-            ClosePanel();
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (state?.Roster == null || state.Roster.Count == 0)
+            {
+                TLog.Warning("[RestSiteNodeHandler] 队伍为空，无法恢复 HP");
+                ClosePanel();
+                return;
+            }
+
+            var summaryLines = new System.Text.StringBuilder();
+            int totalHeal = 0;
+
+            foreach (var character in state.Roster)
+            {
+                int maxHp = 100 + character.GetTotalConstitution() * 5;
+
+                // 初始化 CurrentHp（旧存档可能为 0）
+                if (character.CurrentHp <= 0)
+                    character.CurrentHp = maxHp;
+
+                int healAmount = Mathf.CeilToInt(maxHp * 0.2f);
+                int before = character.CurrentHp;
+                character.CurrentHp = Mathf.Min(maxHp, character.CurrentHp + healAmount);
+                int actualHeal = character.CurrentHp - before;
+                totalHeal += actualHeal;
+
+                TLog.Info($"[RestSiteNodeHandler] {character.DisplayName}: 恢复 {actualHeal} HP ({before}/{maxHp} → {character.CurrentHp}/{maxHp})");
+                summaryLines.AppendLine($"{character.DisplayName}: +{actualHeal} HP");
+            }
+
+            PlayerAdventureStateStore.Save(state);
+            TLog.Info("[RestSiteNodeHandler] 全队休息完成，HP 已恢复");
+
+            // 显示效果结果弹窗
+            NodeInteractionManager.Instance?.ShowEffectResult(
+                "休息完成",
+                $"全队恢复了 HP！\n{summaryLines}",
+                ClosePanel
+            );
         }
 
         private void ClosePanel()
