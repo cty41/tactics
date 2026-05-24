@@ -51,6 +51,9 @@ namespace Tactics.RoguelikeMap.Interaction
             _currentNode = node;
             _onClose = onClose;
 
+            // TODO: 从 node.storeConfig 读取商品配置
+            // var config = node.storeConfig ?? StoreNodeConfig.Default;
+
             // 通过 UIManager 显示 UI
             await UIManager.Instance.ShowAsync(UIManager.UIId.ShopPanel);
             var root = UIManager.Instance.GetRootElement(UIManager.UIId.ShopPanel);

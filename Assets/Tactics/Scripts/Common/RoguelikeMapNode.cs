@@ -40,6 +40,46 @@ namespace Tactics.RoguelikeMap
         Visited      // 已访问：半透明，不可点击
     }
 
+    /// <summary>
+    /// Buff配置项（BuffConfig 引用 + 可选概率权重）
+    /// </summary>
+    [System.Serializable]
+    public class BuffConfigEntry
+    {
+        public Tactics.Common.Units.Buffs.BuffConfig buffConfig;
+        public float weight = 1f;
+    }
+
+    /// <summary>
+    /// 装备奖励配置项
+    /// </summary>
+    [System.Serializable]
+    public class EquipmentEntry
+    {
+        public string equipmentId;
+        public float weight = 1f;
+    }
+
+    /// <summary>
+    /// 宝藏节点奖励配置
+    /// </summary>
+    [System.Serializable]
+    public class TreasureNodeConfig
+    {
+        public int goldMin = 2;
+        public int goldMax = 5;
+        public System.Collections.Generic.List<BuffConfigEntry> buffEntries = new System.Collections.Generic.List<BuffConfigEntry>();
+        public System.Collections.Generic.List<EquipmentEntry> equipmentEntries = new System.Collections.Generic.List<EquipmentEntry>();
+    }
+
+    /// <summary>
+    /// 商店节点商品配置（占位，后续扩展）
+    /// </summary>
+    [System.Serializable]
+    public class StoreNodeConfig
+    {
+    }
+
     public class RoguelikeMapNode
     {
         public readonly string nodeId;
@@ -74,6 +114,16 @@ namespace Tactics.RoguelikeMap
         /// 事件 ID（用于 Mystery / 自定义事件节点）。
         /// </summary>
         public string eventId = "";
+
+        /// <summary>
+        /// 宝藏节点奖励配置（仅 Treasure 类型节点使用）。
+        /// </summary>
+        public TreasureNodeConfig treasureConfig;
+
+        /// <summary>
+        /// 商店节点商品配置（仅 Store 类型节点使用）。
+        /// </summary>
+        public StoreNodeConfig storeConfig;
 
         [Obsolete("Use RoguelikeMapNode(string nodeId, RoguelikeNodeType, string, Vector2) instead.")]
         public RoguelikeMapNode(RoguelikeNodeType nodeType, string blueprintName, Vector2Int point)

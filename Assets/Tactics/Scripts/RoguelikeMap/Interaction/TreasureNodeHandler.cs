@@ -1,4 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
+using Tactics.AssetPipeline;
+using Tactics.Common.Units.Buffs;
 using Tactics.RoguelikeMap.Economy;
+using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using UnityEngine;
@@ -27,16 +32,54 @@ namespace Tactics.RoguelikeMap.Interaction
 
             TLog.Info($"[TreasureNodeHandler] 打开宝藏: {node.blueprintName}");
 
-            // 1. 随机金币奖励：2-5 金币
-            int goldAmount = Random.Range(2, 6);
+            var config = node.treasureConfig;
+
+            // 1. 随机金币奖励（从配置读取范围，默认 2-5）
+            int goldMin = config?.goldMin ?? 2;
+            int goldMax = config?.goldMax ?? 5;
+            int goldAmount = Random.Range(goldMin, goldMax + 1); // +1 因为 Random.Range(int,int) 上限为 exclusive
             int actualGold = RunGoldManager.Instance.AddGold(goldAmount);
             TLog.Info($"[TreasureNodeHandler] 获得 {actualGold} 金币");
 
-            // 2. 20% 概率获得占位装备
-            bool hasEquipment = Random.value < 0.2f;
-            string equipmentName = hasEquipment ? "[铁剑] — TODO: 对接装备系统" : null;
+            // 2. 从配置的 buffEntries 按权重随机选择
+            string buffResultMessage = null;
+            if (config?.buffEntries != null && config.buffEntries.Count > 0)
+            {
+                var selectedEntry = WeightedRandom(config.buffEntries, e => e.weight);
+                if (selectedEntry?.buffConfig != null)
+                {
+                    var buffConfig = selectedEntry.buffConfig;
+                    var state = PlayerAdventureStateStore.Load();
+                    if (state?.Roster != null && state.ActivePartyCharacterIds.Count > 0)
+                    {
+                        var activeCharacters = state.Roster
+                            .Where(c => state.ActivePartyCharacterIds.Contains(c.Id))
+                            .ToList();
+                        if (activeCharacters.Count > 0)
+                        {
+                            var target = activeCharacters[Random.Range(0, activeCharacters.Count)];
+                            target.AddPendingBuff(buffConfig);
+                            TLog.Info($"[TreasureNodeHandler] 角色 {target.DisplayName} 获得待生效 Buff: {buffConfig.BuffName}");
+                            buffResultMessage = $"{target.DisplayName} 获得 Buff：{buffConfig.BuffName}";
+                        }
+                    }
+                }
+            }
 
-            // 3. 通过 UIManager 显示 UXML 奖励面板
+            // 3. 从配置的 equipmentEntries 按权重随机选择
+            bool hasEquipment = false;
+            string equipmentName = null;
+            if (config?.equipmentEntries != null && config.equipmentEntries.Count > 0)
+            {
+                var selectedEntry = WeightedRandom(config.equipmentEntries, e => e.weight);
+                if (selectedEntry != null)
+                {
+                    hasEquipment = true;
+                    equipmentName = $"[{selectedEntry.equipmentId}] — TODO: 对接装备系统";
+                }
+            }
+
+            // 4. 通过 UIManager 显示 UXML 奖励面板
             await UIManager.Instance.ShowAsync(UIManager.UIId.TreasurePanel);
             var root = UIManager.Instance.GetRootElement(UIManager.UIId.TreasurePanel);
             if (root == null)
@@ -70,9 +113,39 @@ namespace Tactics.RoguelikeMap.Interaction
             }
 
             // 绑定关闭按钮
-            var closeBtn = root.Q<Button>("CloseButton");
+            var closeBtn = root.Q<Button>("ConfirmButton");
             if (closeBtn != null)
                 closeBtn.RegisterCallback<ClickEvent>(_ => ClosePanel());
+
+            // 5. Buff 信息已在步骤2中通过 TLog 记录
+            // TODO: 将 buffResultMessage 显示在 TreasurePanel 的 Label 中
+        }
+
+        /// <summary>
+        /// 按权重从列表中随机选择一个元素
+        /// </summary>
+        private T WeightedRandom<T>(IList<T> entries, System.Func<T, float> weightSelector)
+        {
+            if (entries == null || entries.Count == 0)
+                return default;
+
+            float totalWeight = 0f;
+            foreach (var entry in entries)
+                totalWeight += weightSelector(entry);
+
+            if (totalWeight <= 0f)
+                return entries[Random.Range(0, entries.Count)];
+
+            float randomValue = Random.Range(0f, totalWeight);
+            float accumulated = 0f;
+            foreach (var entry in entries)
+            {
+                accumulated += weightSelector(entry);
+                if (randomValue < accumulated)
+                    return entry;
+            }
+
+            return entries[entries.Count - 1];
         }
 
         private void ClosePanel()

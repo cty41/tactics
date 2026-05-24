@@ -332,6 +332,28 @@
         "n18"
       ],
       "blueprintName": ""
+    },
+    {
+      "nodeId": "treasure_c373b",
+      "type": "Treasure",
+      "position": {
+        "x": 801.6326,
+        "y": 936.49884
+      },
+      "outgoing": [],
+      "incoming": [],
+      "blueprintName": ""
+    },
+    {
+      "nodeId": "minorenemy_1ff73",
+      "type": "MinorEnemy",
+      "position": {
+        "x": 826.8897,
+        "y": 95.58954
+      },
+      "outgoing": [],
+      "incoming": [],
+      "blueprintName": ""
     }
   ],
   "maxReachableDistance": 10,

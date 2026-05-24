@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Tactics.RoguelikeMap;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Tactics.Runtime.Utilities;
@@ -109,6 +110,75 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     node.eventId = v;
                     TLog.Info($"[MapInspectorPanel] 节点 '{node.nodeId}' eventId 更新为: '{v}'");
                     OnNodeChanged?.Invoke();
+                });
+            }
+
+            // ── 宝藏节点配置（仅 Treasure 类型）──
+            if (node.nodeType == RoguelikeNodeType.Treasure)
+            {
+                var config = node.treasureConfig;
+                if (config == null)
+                {
+                    config = new TreasureNodeConfig();
+                    node.treasureConfig = config;
+                }
+
+                var treasureHeader = new Label("宝藏奖励配置")
+                {
+                    style =
+                    {
+                        unityFontStyleAndWeight = FontStyle.Bold,
+                        fontSize = 12,
+                        marginTop = 8,
+                        paddingBottom = 4,
+                        borderBottomWidth = 1,
+                        borderBottomColor = new Color(0.3f, 0.3f, 0.3f)
+                    }
+                };
+                _propContainer.Add(treasureHeader);
+
+                var goldRow = new VisualElement
+                {
+                    style = { flexDirection = FlexDirection.Row, marginBottom = 8 }
+                };
+                goldRow.Add(CreateIntField("金币下限", config.goldMin,
+                    v => { config.goldMin = v; OnNodeChanged?.Invoke(); }));
+                goldRow.Add(CreateIntField("金币上限", config.goldMax,
+                    v => { config.goldMax = v; OnNodeChanged?.Invoke(); }));
+                _propContainer.Add(goldRow);
+            }
+
+            // ── 商店节点配置（仅 Store 类型，占位）──
+            if (node.nodeType == RoguelikeNodeType.Store)
+            {
+                var storeHeader = new Label("商店配置")
+                {
+                    style =
+                    {
+                        unityFontStyleAndWeight = FontStyle.Bold,
+                        fontSize = 12,
+                        marginTop = 8,
+                        paddingBottom = 4,
+                        borderBottomWidth = 1,
+                        borderBottomColor = new Color(0.3f, 0.3f, 0.3f)
+                    }
+                };
+                _propContainer.Add(storeHeader);
+
+                _propContainer.Add(new Label("Store 节点配置待后续实现")
+                {
+                    style =
+                    {
+                        fontSize = 11,
+                        color = new Color(0.7f, 0.85f, 1f),
+                        backgroundColor = new Color(0.15f, 0.25f, 0.35f),
+                        paddingTop = 6,
+                        paddingBottom = 6,
+                        paddingLeft = 8,
+                        paddingRight = 8,
+                        marginTop = 4,
+                        marginBottom = 8
+                    }
                 });
             }
 
@@ -276,6 +346,23 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 var clamped = Mathf.Clamp(evt.newValue, -9999f, 9999f);
                 onChange(clamped);
             });
+            container.Add(field);
+            return container;
+        }
+
+        private VisualElement CreateIntField(string label, int value, Action<int> onChange)
+        {
+            var container = new VisualElement { style = { marginRight = 8 } };
+            container.Add(new Label(label)
+            {
+                style = { fontSize = 10, color = new Color(0.6f, 0.6f, 0.6f), paddingBottom = 2 }
+            });
+
+            var field = new IntegerField { value = value };
+            field.style.fontSize = 11;
+            field.style.height = 22;
+            field.style.minWidth = 60;
+            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             container.Add(field);
             return container;
         }
