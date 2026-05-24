@@ -331,7 +331,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 string label = $"Add {type}";
                 menu.AddItem(label, false, () =>
                 {
-                    AddNode(type, canvasPos.x, canvasPos.y);
+                    AddNode(type, canvasPos.x / DisplayScale, canvasPos.y / DisplayScale);
                     OnGraphChanged?.Invoke();
                 });
             }

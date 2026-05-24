@@ -249,6 +249,13 @@ namespace Tactics.Editor.RoguelikeMapEditor
             };
             _toolbar.Add(generateBtn);
 
+            var clearBtn = new Button(() => _mapGraphView?.ClearCanvas())
+            {
+                text = "Clear",
+                style = { height = 22, marginTop = 3, marginRight = 4, fontSize = 11 }
+            };
+            _toolbar.Add(clearBtn);
+
             var saveBtn = new Button(() => OnSaveClicked())
             {
                 text = "Save",
