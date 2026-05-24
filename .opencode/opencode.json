@@ -8,8 +8,7 @@
   "mcp": {
     "unity-MCP": {
       "type": "local",
-      "type": "remote",
-      "url": "http://127.0.0.1:8080/mcp",
+      "url": "http://127.0.0.1:8080/mcp"
     }
   },
   "lsp": {

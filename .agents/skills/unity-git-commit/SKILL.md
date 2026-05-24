@@ -38,6 +38,33 @@ description: Use when committing Unity project changes, creating PRs, or handlin
 2. `git status` 检查是否有新增源文件但 `.meta` 未暂存的情况（遗漏）
 3. 确认 `.meta` 中 `guid` 不是 `00000000000000000000000000000000`
 
+## 提交粒度约束
+
+**以计划中的完整功能作为提交单元，而非单个任务。**
+
+| 原则 | 说明 |
+|------|------|
+| 功能完整性 | 一次提交 = 一个完整的、可独立运行的功能 |
+| 按功能划分 | 不同功能（如 HP 恢复 vs Buff 系统）分不同提交 |
+| 不按步骤划分 | 同一功能的多个实现步骤合并为一个提交 |
+| 可回滚性 | 回滚一个提交应该移除一个完整功能，而非半个功能 |
+
+**示例**：
+```
+# ❌ 错误：按任务粒度提交
+feat(character): 扩展 CharacterDefinition 支持 Buff
+feat(effects): 创建 BuffConfig 数据模型
+feat(effects): 创建 BuffEffectCalculator
+
+# ✅ 正确：按功能粒度提交
+feat(effects): 实现 Buff/Debuff 数据模型和效果计算器
+```
+
+**提交前提示用户检查**：
+- 在执行 `git commit` 之前，必须先提示用户确认本次提交的内容
+- 格式：`即将提交: <commit message>，包含 <N> 个文件变更。确认？`
+- 用户确认后再执行提交
+
 ## 提交信息格式
 
 ```
