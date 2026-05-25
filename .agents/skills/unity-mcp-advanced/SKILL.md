@@ -21,6 +21,13 @@ Advanced Unity MCP operations: scripts, code execution, editor control, builds, 
 | 执行代码 | `execute_code` | `action="execute"`, `code` |
 | 刷新编译 | `refresh_unity` | `compile="request"` |
 
+## When to use
+
+- 需要创建、修改、验证或编译 C# 脚本时
+- 需要运行 Unity EditMode/PlayMode 测试或读取测试结果时
+- 需要管理构建、包、Profiler、Frame Debugger 或 Console 时
+- 只有在用户明确要求或确有必要时才使用 `execute_code`
+
 ## Tool Tables
 
 ### Script Operations
@@ -109,7 +116,7 @@ Advanced Unity MCP operations: scripts, code execution, editor control, builds, 
 | `execute_menu_item` | — | Execute Unity menu item |
 | `debug_request_context` | — | Get MCP request context |
 
-## Workflow Patterns
+## Workflow
 
 ### 1. Script Iteration
 ```
@@ -133,3 +140,20 @@ find_gameobjects → manage_vfx (particle_play / particle_stop / line_set_positi
 - **Asset refresh**: Use `refresh_unity` after external asset changes to sync the AssetDatabase.
 - **Console monitoring**: Use `read_console` to check for errors after operations. Filter by `types=["error","warning"]`.
 - **Test workflow**: `run_tests` (async) → `get_test_job` (poll) — tests run asynchronously.
+
+## Anti-patterns
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| Editing C# and skipping compile | `validate_script` then `refresh_unity(compile="request")` | Catches compile errors immediately |
+| Using `execute_code` for routine edits | Use script edit tools | Keeps changes reviewable and persistent |
+| Polling tests without wait timeout | Use `get_test_job(wait_timeout=30)` | Avoids tight polling loops |
+| Ignoring console errors after operations | Read console errors/warnings | Unity failures often appear only in Console |
+
+## Checklist
+
+- [ ] `project-coding-reference` was used before writing C# code
+- [ ] Script changes were validated with `validate_script`
+- [ ] `.cs` changes triggered `refresh_unity(compile="request")`
+- [ ] Tests or Console checks were run when behavior changed
+- [ ] `execute_code` was only used with explicit need

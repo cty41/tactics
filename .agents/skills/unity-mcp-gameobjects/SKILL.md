@@ -22,6 +22,13 @@ description: "Use when creating, modifying, deleting, or finding GameObjects and
 
 > 核心规则见 `unity-mcp-core`
 
+## When to use
+
+- 需要在 Unity 场景或 Prefab Stage 中查找、创建、修改、删除 GameObject 时
+- 需要添加、移除或设置组件属性时
+- 需要批量创建或调整多个对象时
+- 需要通过 instance ID 精确操作对象以避免名称歧义时
+
 ## GameObject Operations
 
 | Tool | Action | Purpose |
@@ -98,7 +105,7 @@ description: "Use when creating, modifying, deleting, or finding GameObjects and
 | Asset 资源 | `{"guid": "..."}` 或 `{"path": "Assets/..."}` |
 | Sprite 子资源 | `{"guid": "...", "spriteName": "name"}` |
 
-## Workflow Patterns
+## Workflow
 
 ### 1. GameObject Creation
 
@@ -143,11 +150,28 @@ batch_execute (commands=[{tool, params}, ...])
 
 ### 4. Prefab 实例化
 
-从已有 Prefab 创建实例属于 `manage_prefabs` 范畴（详参 `unity-mcp-prefabs`），但最终布局调整仍使用 `manage_gameobject`：
+从已有 Prefab 创建实例属于 `manage_prefabs` 范畴（详参 `unity-mcp-scene`），但最终布局调整仍使用 `manage_gameobject`：
 
 ```
 find_gameobjects (找到实例) → manage_gameobject (modify 调整 transform/active/layer)
 ```
+
+## Anti-patterns
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| Targeting by name when IDs are available | Use instance ID | Avoids ambiguous names |
+| Editing prefab instances without prefab workflow | Use `unity-mcp-scene` prefab operations | Preserves prefab asset changes |
+| Running repeated object edits sequentially | Use `batch_execute` | Reduces latency |
+| Setting component references by guessed strings | Use instance ID or asset reference object | Avoids broken references |
+
+## Checklist
+
+- [ ] Target GameObjects were found before mutation
+- [ ] Instance IDs are used when available
+- [ ] Inactive objects are included when needed
+- [ ] Multiple same-type components specify `component_index`
+- [ ] Repeated independent operations use `batch_execute`
 
 ## 注意事项
 

@@ -93,7 +93,7 @@ description: "Use when creating, moving, or organizing project documentation fil
 
 `make-dev-plan` 技能在执行 `writing-plans` 工作流时可能使用的活跃工作区。
 
-## 工作流程
+## Workflow
 
 ```text
 头脑风暴阶段 ──→ 输出到 .sisyphus/drafts/
@@ -142,7 +142,7 @@ description: "Use when creating, moving, or organizing project documentation fil
 - 前置计划：[战斗系统演进](../plans/战斗系统演进计划.md)
 ```
 
-## 常见错误
+## Anti-patterns
 
 ### ❌ 错误 1：将设计文档放在 plans 目录
 
@@ -185,3 +185,11 @@ description: "Use when creating, moving, or organizing project documentation fil
 | 头脑风暴草稿 | `.sisyphus/drafts/` | `brainstorm-draft.md` |
 | 执行中计划 | `.sisyphus/plans/` | `active-plan.md` |
 | 执行证据 | `.sisyphus/evidence/` | `screenshot.png` |
+
+## Checklist
+
+- [ ] 设计文档放在 `.agents/docs/design/`
+- [ ] 开发计划放在 `.agents/docs/plans/`
+- [ ] 使用指南放在 `.agents/docs/usage/`
+- [ ] 临时草稿放在 `.sisyphus/drafts/`
+- [ ] 执行状态不直接写回稳定计划文档

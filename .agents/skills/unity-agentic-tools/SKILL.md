@@ -1,9 +1,6 @@
 ---
 name: unity-agentic-tools
-description: "Use when performing Unity asset operations via CLI — reading, searching, updating, or deleting Unity YAML files (.asset, .prefab, .unity, .mat)"
-allowed-tools:
-  - "Bash(unity-agentic-tools *)"
-argument-hint: "<non-editor command and args>"
+description: "Use when performing Unity asset operations through unity-agentic-tools CLI, including reading, searching, updating, or deleting Unity serialized assets (.asset, .prefab, .unity, .mat) without manual YAML edits"
 ---
 
 # Unity Agentic Tools (Umbrella)
@@ -29,6 +26,13 @@ CLI: `unity-agentic-tools <command>`
 **CRITICAL: Use the CLI for ALL Unity operations. NEVER manually read, edit, write, or grep Unity files (.unity, .prefab, .asset, .mat, .anim, .controller, .meta, ProjectSettings/) using Read, Edit, Write, or Grep tools. NEVER manually edit Unity C# scripts or Editor bridge code. The CLI handles YAML parsing, GUID preservation, and safe editing. Manual file access will break things.**
 
 Commands emit structured JSON by default.
+
+## When to use
+
+- 需要检查或修改 Unity 序列化资产，但不能直接读写 YAML 文本时
+- 需要用 CLI 查询 `.unity`、`.prefab`、`.asset`、`.mat`、`.meta` 等资产结构时
+- 需要执行不依赖 live Unity Editor bridge 的资产读取、轻量更新、删除或搜索时
+- 需要在 Codex 或 OpenCode 中复用同一套 Unity 资产 CLI 工作流时
 
 ## Single source of truth routing
 
@@ -103,7 +107,7 @@ See `reference/commands-utilities.md` for full usage and options.
 | `cleanup` | Remove `.unity-agentic` state |
 | `status` | Health and configuration report |
 
-## Workflow rule
+## Workflow
 
 Inspect before mutate:
 1. Read target state (`read ...`)
@@ -122,3 +126,20 @@ See `reference/workflows.md` for end-to-end checklists.
 - **Editor bridge won't connect**: Ensure Unity is open, check `editor status`, re-run `editor install` (or `editor --project <path> install`)
 - **`scene-open` fails**: Use Assets-relative path (`Assets/Scenes/Main.unity`). Run `editor invoke UnityEditor.AssetDatabase Refresh` first for newly created scenes
 - **Loaded edit protection error**: If editor is connected and target `.unity`/`.prefab` is currently loaded/open, pass `--bypass-loaded-protection` to force file-based edits
+
+## Anti-patterns
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| Reading Unity YAML with generic file tools | Use `unity-agentic-tools read ...` | Preserves Unity serialization semantics |
+| Editing `.meta` or prefab text by hand | Use CLI update/delete commands | Avoids GUID and reference corruption |
+| Depending on `allowed-tools` frontmatter | Put tool requirements in this body text | Codex/OpenCode only share `name` and `description` reliably |
+| Using editor bridge commands for offline reads | Use non-editor `unity-agentic-tools` commands | Avoids unnecessary Unity Editor dependency |
+
+## Checklist
+
+- [ ] Frontmatter only uses `name` and `description` for Codex/OpenCode compatibility
+- [ ] Target operation does not require direct Unity YAML access
+- [ ] Target state was read before any mutation
+- [ ] Mutated target was re-read after the operation
+- [ ] Live editor bridge work is routed to the appropriate MCP/editor workflow instead

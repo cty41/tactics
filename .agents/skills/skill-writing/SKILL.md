@@ -11,7 +11,7 @@ description: "Use when creating new skills or editing existing skills — ensure
 
 | 元素 | 必需 | 作用 |
 |------|------|------|
-| Frontmatter | ✅ | name + description 触发条件 |
+| Frontmatter | ✅ | 仅 `name` + `description`，兼容 Codex/OpenCode |
 | Quick Reference | ✅ | 一行表格快速查找 |
 | When to use | ✅ | 明确触发条件 |
 | Workflow | ✅ | 分步指南 + 代码示例 |
@@ -34,6 +34,10 @@ name: my-skill
 description: "Use when [触发条件] — [核心价值]"
 ---
 ```
+
+只使用 `name` 和 `description`。Codex 只依赖这两个字段触发技能；OpenCode 也支持 `.agents/skills/<name>/SKILL.md` 并通过 `name`/`description` 暴露技能。不要把 `allowed-tools`、`argument-hint`、`tools` 等单端字段写入 skill frontmatter；如需说明工具限制，写在正文 Workflow 中。
+
+`description` 必须包含用途和触发条件，因为正文只有在技能被加载后才可见。
 
 ### Step 2: Quick Reference
 
@@ -106,6 +110,7 @@ description: "Use when [触发条件] — [核心价值]"
 ## Checklist
 
 - [ ] 包含 Frontmatter（name + description）
+- [ ] Frontmatter 不包含 `allowed-tools`、`argument-hint` 等非双端稳定字段
 - [ ] 包含 Quick Reference 表格
 - [ ] 包含 When to use 触发条件
 - [ ] 包含 Workflow 分步指南

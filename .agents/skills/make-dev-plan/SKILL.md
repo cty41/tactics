@@ -1,4 +1,4 @@
-﻿---
+---
 name: make-dev-plan
 description: "Use when user requests a development plan, task breakdown, milestone planning, or asks '帮我制订开发计划' — follows P0→P3 clarification then outputs Background/Scope/Tasks"
 ---
@@ -239,3 +239,20 @@ description: "Use when user requests a development plan, task breakdown, milesto
 3. Tasks 按 MVP-first 拆分；每个任务可独立、可验证；优先垂直切片而非技术分层。
 4. 信息不足时列出 Assumptions；必要时按 Phase 分阶段。
 5. 避免模糊表述，验收标准须具体可执行。
+
+## Anti-patterns
+
+| 错误 | 正确 | 原因 |
+|------|------|------|
+| 未澄清范围就输出完整计划 | 先按 P0→P3 收集关键信息 | 避免计划偏离真实目标 |
+| 把基础库/工具链默认纳入可改范围 | 未获许可时列为待确认或替代方案 | 避免越权规划 |
+| 按技术分层拆任务 | 按可验证的垂直切片拆任务 | 便于迭代和验收 |
+| 验收标准写成“完成实现” | 写出可观察行为或检查命令 | 计划才可执行 |
+
+## Checklist
+
+- [ ] 已明确目标、范围和成功标准
+- [ ] 已区分 In Scope / Out of Scope
+- [ ] 已记录必要 Assumptions
+- [ ] Tasks 可独立完成且可验证
+- [ ] 未默认纳入用户未授权的基础库、工具链或结构边界改动

@@ -18,6 +18,13 @@ description: "Use when searching, creating, modifying, or deleting Unity assets,
 | 创建 UI | `manage_ui` | `action="create"`, `path` (UXML/USS) |
 | 创建形状 | `manage_probuilder` | `action="create_shape"`, `target` |
 
+## When to use
+
+- 需要通过 MCP 搜索、创建、移动、复制或删除 Unity 资产时
+- 需要操作材质、纹理、Shader、UI Toolkit、ProBuilder 网格时
+- 需要读取资产信息但不能直接读取 Unity YAML 时
+- 需要批量资产操作并保持 Unity AssetDatabase 一致时
+
 ## Asset Operations
 
 | Tool | Action | Purpose |
@@ -77,7 +84,7 @@ description: "Use when searching, creating, modifying, or deleting Unity assets,
 | `manage_probuilder` | set_face_material | Assign material to faces |
 | `manage_probuilder` | get_mesh_info | Get mesh details |
 
-## Workflow Patterns
+## Workflow
 
 ### 1. Asset Inspection
 ```
@@ -92,3 +99,20 @@ manage_asset (search) → manage_asset (modify)
 ```
 1. Locate asset with `search`.
 2. Modify properties with `modify` using the asset path or GUID.
+
+## Anti-patterns
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| Reading `.asset` or `.mat` text directly | Use `manage_asset` / `manage_material` | Preserves serialized data safety |
+| Generating previews during broad searches | Keep `generate_preview=false` | Avoids huge payloads |
+| Creating UI Toolkit files outside UI workflow | Also use `ui-development` | Ensures UIManager integration |
+| Modifying many assets sequentially one by one | Use `batch_execute` when independent | Reduces latency |
+
+## Checklist
+
+- [ ] Asset was found with `manage_asset search` or known path was verified
+- [ ] No Unity serialized YAML was edited directly
+- [ ] Broad searches avoid previews
+- [ ] UI work also follows `ui-development`
+- [ ] Independent repeated operations use `batch_execute`

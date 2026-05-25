@@ -1,6 +1,6 @@
 ---
 name: unity-git-commit
-description: Use when committing Unity project changes, creating PRs, or handling git operations in a Unity codebase where .meta files must be paired with their source files
+description: "Use when committing Unity project changes, creating PRs, or handling git operations where Assets files must stay paired with their .meta files"
 ---
 
 # Unity Git 提交规范
@@ -18,6 +18,21 @@ description: Use when committing Unity project changes, creating PRs, or handlin
 1. `git status` 确认 .meta 与源文件成对出现
 2. 检查 GUID 是否冲突（Unity 导入时自动处理）
 3. 检查 ProjectSettings/ 下文件是否有意外改动
+
+## When to use
+
+- 用户要求提交、准备 PR、检查 git 状态或整理 Unity 变更时
+- 新增、删除、移动或重命名 `Assets/` 下文件时
+- 需要确认 `.meta` 文件和源文件是否成对暂存时
+- 提交前需要给用户展示提交内容并等待确认时
+
+## Workflow
+
+1. 运行 `git status`，识别变更范围和是否存在未配对 `.meta`。
+2. 对 `Assets/` 下新增、删除、移动、重命名逐项检查源文件与 `.meta`。
+3. 检查 `ProjectSettings/`、包配置、场景和 prefab 是否属于本次意图。
+4. 按功能粒度整理暂存区，不按内部步骤拆提交。
+5. 执行 `git commit` 前向用户确认提交信息和文件数量。
 
 ## .meta 文件关联规则 (CRITICAL)
 
@@ -76,8 +91,18 @@ feat(effects): 实现 Buff/Debuff 数据模型和效果计算器
 
 常用 type：`fix`（修复）、`feat`（新功能）、`refactor`（重构）
 
-## 常见错误
+## Anti-patterns
 
 - 新增 C# 脚本但忘记 `git add` 其 `.meta` → 其他人 checkout 后缺少 GUID 引用
 - 删除 `.prefab` 但 `.meta` 残留 → 下次导入时生成新 GUID，引用断裂
 - 多人冲突时 `.meta` 合并不当 → GUID 重复或丢失
+- 未经用户确认直接提交 → 违反项目提交流程
+
+## Checklist
+
+- [ ] `git status` 已检查
+- [ ] `Assets/` 下新增文件有对应 `.meta`
+- [ ] `Assets/` 下删除文件也删除对应 `.meta`
+- [ ] 移动/重命名保持源文件和 `.meta` 同步
+- [ ] 提交粒度是完整功能
+- [ ] `git commit` 前已向用户确认

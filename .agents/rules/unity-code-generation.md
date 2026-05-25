@@ -69,7 +69,7 @@ Agent 写 C# 时的 #1 编译错误：**缺少 `using` 或使用了不存在的�
 | 场景 | 工具 | 用法 |
 |------|------|------|
 | 验证类型是否存在 | `unity_reflect` | `action="get_type"`, `class_name="TLog"` |
-| 搜索项目中某类型 | `unity_reflect` | `action="search"`, `query="BattleLogger"` |
+| 搜索项目中某类型 | `unity_reflect` | `action="search"`, `query="TBattleLog"` |
 | 检查现有 using | `Read` 同模块 1-2 个 .cs 文件 | 复制它们的 using 块 |
 | 写完后验证 | `validate_script` | `uri="Assets/.../MyScript.cs"` |
 | 批量编译 | `refresh_unity` | `compile="request"` |

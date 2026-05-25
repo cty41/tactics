@@ -1,6 +1,6 @@
 ---
 name: unity-menu-organizer
-description: Use when organizing Unity MenuItem attributes, checking menu structure compliance, or migrating menu items to the Tactics root menu. Triggers: "organize menu", "check menu items", "menu structure", "MenuItem", "ContextMenu"
+description: "Use when organizing Unity MenuItem or ContextMenu attributes, checking menu structure compliance, or migrating editor menu items to the Tactics root menu"
 ---
 
 # Unity MenuItem 归组规范
@@ -12,7 +12,7 @@ description: Use when organizing Unity MenuItem attributes, checking menu struct
 **分类检查清单**：
 | 步骤 | 操作 |
 |------|------|
-| 1. 扫描 | `grep -rn '\[MenuItem\s*\(' --include="*.cs" Assets/` |
+| 1. 扫描 | `rg -n "\[MenuItem\s*\(" Assets --glob "*.cs"` |
 | 2. 分类 | 自有代码 → 迁移到 `Tactics/`，ThirdParty → 检查重复 |
 | 3. 迁移 | 修改 MenuItem 路径为 `Tactics/<Category>/<Function>` |
 | 4. 冲突处理 | 注释 ThirdParty 版重复的 `[MenuItem]` 行 |
@@ -35,9 +35,9 @@ description: Use when organizing Unity MenuItem attributes, checking menu struct
 扫描项目中所有 `[MenuItem]` 和 `[ContextMenu]` 定义：
 
 ```bash
-# grep MenuItem 定义
-grep -rn '\[MenuItem\s*\(' --include="*.cs" Assets/
-grep -rn '\[ContextMenu\s*\(' --include="*.cs" Assets/
+# MenuItem / ContextMenu 定义
+rg -n "\[MenuItem\s*\(" Assets --glob "*.cs"
+rg -n "\[ContextMenu\s*\(" Assets --glob "*.cs"
 ```
 
 ### Step 2: 分类
@@ -95,7 +95,7 @@ CONTEXT/RuleTile/Paste Rules                   ← ThirdParty 原始版（不修
 
 1. **编译**：修改任何 `.cs` 文件后，调用 `refresh_unity(compile="request")`
 2. **检查控制台**：`read_console` 确认无编译错误
-3. **二次扫描**：重新 grep 确认无遗漏的旧路径
+3. **二次扫描**：重新 `rg` 确认无遗漏的旧路径
 
 ## 目标菜单结构
 
@@ -146,7 +146,17 @@ Tactics/
 
 ## 常见错误
 
+## Anti-patterns
+
 - 使用 `Tools/` 或 `Window/` 而非 `Tactics/`
 - 路径层级过深（建议不超过 3 层：`Tactics/Category/Item`）
 - ThirdParty 代码的 MenuItem 未检查是否与自有代码重复
 - 修改 MenuItem 后忘记调用 `refresh_unity` 编译
+
+## Checklist
+
+- [ ] 所有自有 `[MenuItem]` 路径以 `Tactics/` 开头
+- [ ] 新增菜单路径不超过 `Tactics/<Category>/<Item>` 三层
+- [ ] ThirdParty 重复菜单已检查并避免冲突
+- [ ] 修改 `.cs` 后已调用 `refresh_unity(compile="request")`
+- [ ] 已用 `rg` 二次扫描确认旧路径无遗漏

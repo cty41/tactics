@@ -24,6 +24,13 @@ description: "Use when loading, saving, inspecting, or editing Unity scenes, pre
 
 > 核心规则见 `unity-mcp-core`
 
+## When to use
+
+- 需要加载、保存、关闭、检查或验证 Unity 场景时
+- 需要打开、保存、关闭或无头修改 Prefab 时
+- 需要创建、配置或截图相机时
+- 需要保证 Scene/Prefab 操作符合 Open/Close 配对规则时
+
 ## Scene Operations
 
 | Tool | Action | Purpose |
@@ -142,7 +149,7 @@ description: "Use when loading, saving, inspecting, or editing Unity scenes, pre
 | `search_method` | string | `by_id` / `by_name` / `by_path` |
 | `properties` | dict | 动作特定参数（见各 action 的 properties 说明） |
 
-## Workflow Patterns
+## Workflow
 
 ### 1. Prefab Inspection（只读检查）
 ```
@@ -209,3 +216,20 @@ manage_camera (create_camera) → manage_camera (set_target) → manage_camera (
 2. 设置目标: `manage_camera action="set_target" target="CameraName" properties={"follow": "Player", "lookAt": "Player"}`.
 3. 配置镜头: `manage_camera action="set_lens" target="CameraName" properties={"fieldOfView": 60}`.
 4. 配置混合: `manage_camera action="set_blend" properties={"style": "EaseInOut", "duration": 1.0}`.
+
+## Anti-patterns
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| Loading a scene and leaving it open | Save if changed, then close | Avoids hidden editor state |
+| Opening Prefab Stage without closing it | Save/close or close without save after read-only work | Keeps editor state clean |
+| Capturing camera render when overlay UI is required | Omit `camera` to use ScreenCapture | Camera render excludes Screen Space Overlay |
+| Editing prefab YAML directly | Use `manage_prefabs` | Preserves Unity serialization |
+
+## Checklist
+
+- [ ] Scene loads have matching save/close steps when mutated
+- [ ] Prefab Stage opens have matching save/close or close-only steps
+- [ ] Screenshots choose ScreenCapture vs camera render intentionally
+- [ ] Read-only inspection avoids unnecessary saves
+- [ ] Mutating scene/prefab work is verified after changes

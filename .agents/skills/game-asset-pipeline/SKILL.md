@@ -21,9 +21,16 @@ description: "Use when configuring AssetBundle build settings, creating GameAsse
 2. Build results are copied to `Assets/StreamingAssets/{streamingSubfolder}` (default subfolder is `Bundles`).
 3. At runtime, the player reads `manifest.json` from `Application.streamingAssetsPath`, then loads bundle files from disk as needed.
 
-Path constants are in `Assets/Tactics/AssetPipeline/Runtime/GameAssetPaths.cs` (default `StreamingBundlesFolder = "Bundles"`, `ManifestFileName = "manifest.json"`).
+Path constants are in `Assets/Tactics/Scripts/AssetPipeline/Runtime/GameAssetPaths.cs` (default `StreamingBundlesFolder = "Bundles"`, `ManifestFileName = "manifest.json"`).
 
-The full source lives at `Assets/Tactics/AssetPipeline/`.
+The full source lives at `Assets/Tactics/Scripts/AssetPipeline/`.
+
+## When to use
+
+- 配置或创建 `GameAssetBuildConfig` 时
+- 构建、清理、验证 AssetBundle 和 `manifest.json` 时
+- 调试 `GameAssetManager` 的 Bundle 模式加载时
+- 排查平台相关的 StreamingAssets 或 Bundle 输出问题时
 
 ## Data Flow
 
@@ -57,18 +64,20 @@ flowchart TD
 - **Editor debugging**: Set **Bundles Root Override** on `GameAssetManager` to the intermediate output's **absolute path** to load real bundles without copying to StreamingAssets each time.
 - **Platform note**: Android/WebGL read StreamingAssets differently from desktop; prefer `GameAssetManager.InitializeAsync()` at runtime.
 
-## Workflow: Configuring AssetBundles
+## Workflow
 
-### Step 1: Create Build Config
+### Configuring AssetBundles
 
-Create a `GameAssetBuildConfig` asset via `Assets > Create > Tactics > Asset Pipeline > Build Config`. A sample config is at `Assets/Tactics/AssetPipeline/GameAssetBuildConfig.asset`.
+#### Step 1: Create Build Config
+
+Create a `GameAssetBuildConfig` asset via `Assets > Create > Tactics > Asset Pipeline > Build Config`. A sample config is at `Assets/Tactics/Scripts/AssetPipeline/GameAssetBuildConfig.asset`.
 
 | Field | Description |
 |-------|-------------|
 | `streamingSubfolder` | Target subfolder name under `StreamingAssets`; falls back to `Bundles` if empty or invalid. |
 | `groups` | Multiple `GameAssetBundleGroup` entries, each corresponding to **one** AssetBundle. |
 
-### Step 2: Define Bundle Groups
+#### Step 2: Define Bundle Groups
 
 Each `GameAssetBundleGroup`:
 
@@ -85,7 +94,7 @@ Each `GameAssetBundleGroup`:
 
 Recommended practice: use a `main_scenes` group for scenes only and a `main_assets` group for other resources, with `excludeFolders` to exclude directories containing `.unity` files from the assets group.
 
-### Step 3: Build Bundles
+#### Step 3: Build Bundles
 
 **Menu** (via `GameAssetPipelineMenu`):
 
@@ -108,7 +117,7 @@ Recommended practice: use a `main_scenes` group for scenes only and a `main_asse
 - `Tactics > Asset Pipeline > Setup Sample (Prefab + Build Config)`: prepares a sample prefab and config (`GameAssetSampleSetup`).
 - `BundleLoadSmokeTest` component: place the `GameAssetManager` prefab in the scene, build bundles, then enter Play Mode to verify the loading pipeline.
 
-### Step 4: Verify Manifest
+#### Step 4: Verify Manifest
 
 The builder writes `manifest.json`, deserialized at runtime as `GameAssetManifest` (via `JsonUtility`):
 
@@ -133,16 +142,33 @@ At runtime, `GetLoadOrder` uses `deps` to **load dependencies first, then the cu
 
 | Purpose | Path |
 |---------|------|
-| Build config | `Assets/Tactics/AssetPipeline/Editor/GameAssetBuildConfig.cs` |
-| Build bundles and manifest | `Assets/Tactics/AssetPipeline/Editor/GameAssetBundleBuilder.cs` |
-| Menu and window | `Assets/Tactics/AssetPipeline/Editor/GameAssetPipelineMenu.cs`, `GameAssetPipelineWindow.cs` |
-| Default output path | `Assets/Tactics/AssetPipeline/Editor/BuildOutputLayout.cs` |
-| Scene singleton, load modes | `Assets/Tactics/AssetPipeline/Runtime/GameAssetManager.cs` |
-| Runtime shared config (SO) | `Assets/Tactics/AssetPipeline/Runtime/GameAssetRuntimeSettings.cs`, `GameAssetRuntimeSettings.asset` |
+| Build config | `Assets/Tactics/Scripts/AssetPipeline/Editor/GameAssetBuildConfig.cs` |
+| Build bundles and manifest | `Assets/Tactics/Scripts/AssetPipeline/Editor/GameAssetBundleBuilder.cs` |
+| Menu and window | `Assets/Tactics/Scripts/AssetPipeline/Editor/GameAssetPipelineMenu.cs`, `GameAssetPipelineWindow.cs` |
+| Default output path | `Assets/Tactics/Scripts/AssetPipeline/Editor/BuildOutputLayout.cs` |
+| Scene singleton, load modes | `Assets/Tactics/Scripts/AssetPipeline/Runtime/GameAssetManager.cs` |
+| Runtime shared config (SO) | `Assets/Tactics/Scripts/AssetPipeline/Runtime/GameAssetRuntimeSettings.cs`, `Assets/Tactics/Scripts/AssetPipeline/GameAssetRuntimeSettings.asset` |
 | Splash bootstrap | `Assets/Tactics/Scripts/GameMain.cs` |
-| Scene path resolution | `Assets/Tactics/AssetPipeline/Runtime/SceneProjectPathHelper.cs` |
-| MonoBehaviour singleton base | `Assets/Tactics/AssetPipeline/Runtime/MonoBehaviourSingleton.cs` |
-| Manager prefab | `Assets/Tactics/AssetPipeline/GameAssetManager.prefab` |
-| Bundle cache | `Assets/Tactics/AssetPipeline/Runtime/BundleCache.cs` |
-| Obsolete forwarding | `Assets/Tactics/AssetPipeline/Runtime/GameAssets.cs`, `GameAsset.cs` |
-| Manifest data structure | `Assets/Tactics/AssetPipeline/Runtime/GameAssetManifest.cs` |
+| Scene path resolution | `Assets/Tactics/Scripts/AssetPipeline/Runtime/SceneProjectPathHelper.cs` |
+| MonoBehaviour singleton base | `Assets/Tactics/Scripts/AssetPipeline/Runtime/MonoBehaviourSingleton.cs` |
+| Manager prefab | `Assets/Tactics/Scripts/AssetPipeline/GameAssetManager.prefab` |
+| Bundle cache | `Assets/Tactics/Scripts/AssetPipeline/Runtime/BundleCache.cs` |
+| Obsolete forwarding | `Assets/Tactics/Scripts/AssetPipeline/Runtime/GameAssets.cs`, `GameAsset.cs` |
+| Manifest data structure | `Assets/Tactics/Scripts/AssetPipeline/Runtime/GameAssetManifest.cs` |
+
+## Anti-patterns
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| Mixing scenes and non-scene assets in one bundle | Split into scene and asset groups | Unity rejects mixed SceneAsset bundles |
+| Reading bundles from `Output/AssetBundles` in player builds | Copy to `Assets/StreamingAssets/<subfolder>` | Only StreamingAssets is packaged |
+| Using sync initialization on Android/WebGL | Prefer `InitializeAsync()` | StreamingAssets may require UnityWebRequest |
+| Documenting outdated AssetPipeline paths | Use `Assets/Tactics/Scripts/AssetPipeline` | Matches current repository layout |
+
+## Checklist
+
+- [ ] Bundle groups have unique names
+- [ ] Scene assets and non-scene assets are in separate groups
+- [ ] Editor-only folders and scripts are excluded
+- [ ] Build output is copied to StreamingAssets or a deliberate override
+- [ ] Runtime verification uses `GameAssetManager.InitializeAsync()` where platform-safe

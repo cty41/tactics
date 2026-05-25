@@ -19,6 +19,15 @@ description: "Use when loading or releasing project assets at runtime via GameAs
 
 ---
 
+## When to use
+
+- 运行时代码需要加载、释放或实例化 Unity 资源时
+- 需要把场景名转换成 `Assets/.../*.unity` 项目路径时
+- 需要管理场景级资源生命周期或排查 Bundle 未释放问题时
+- 需要确认代码没有使用被禁止的 `Resources.Load` 时
+
+## Workflow
+
 ## Workflow: GameAssetManager 初始化
 
 ```csharp
@@ -40,7 +49,7 @@ if (!mgr.IsInitialized)
 
 ---
 
-## Workflow: 加载与释放
+## 加载与释放
 
 ### 基本加载
 
@@ -65,7 +74,7 @@ mgr.Release(path);
 
 ---
 
-## Workflow: 场景加载
+## 场景加载
 
 ```csharp
 // 使用项目路径，而不是场景名
@@ -83,7 +92,7 @@ await mgr.UnloadSceneAsync("Assets/Tactics/Scenes/MyLevel.unity");
 
 ---
 
-## Workflow: AssetScopeManager 场景作用域
+## AssetScopeManager 场景作用域
 
 ```csharp
 // 进入场景时标记场景作用域
@@ -101,7 +110,7 @@ AssetScopeManager.BeginScene("Assets/Tactics/Scenes/MyLevel.unity");
 
 ---
 
-## Workflow: 路径转换
+## 路径转换
 
 使用 `SceneProjectPathHelper` 将场景名转为项目路径：
 
@@ -114,8 +123,25 @@ string path = SceneProjectPathHelper.ToProjectPath("MyLevel");
 
 ---
 
-## 参考文件
+## Reference Files
 
-- `Assets/Tactics/AssetPipeline/Runtime/GameAssetManager.cs` — Manager 实现
-- `Assets/Tactics/AssetPipeline/Runtime/GameAssetPaths.cs` — 路径常量
-- `Assets/Tactics/AssetPipeline/Runtime/AssetScopeManager.cs` — 作用域管理
+- `Assets/Tactics/Scripts/AssetPipeline/Runtime/GameAssetManager.cs` — Manager 实现
+- `Assets/Tactics/Scripts/AssetPipeline/Runtime/GameAssetPaths.cs` — 路径常量
+- `Assets/Tactics/Scripts/AssetPipeline/Runtime/AssetScopeManager.cs` — 作用域管理
+
+## Anti-patterns
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| `Resources.Load(...)` | `GameAssetManager.Instance.LoadAsync<T>(path)` | 项目资源必须走 AssetBundle 管线 |
+| 加载后不释放 | `Load/LoadAsync` 与 `Release` 配对 | 避免 Bundle 生命周期泄漏 |
+| 用场景名加载 | 使用 `Assets/.../*.unity` 路径 | Manifest 按项目路径索引 |
+| 在构建中使用 `EditorAssetDatabase` 模式 | 使用 `StreamingBundles` | Editor 模式仅用于调试 |
+
+## Checklist
+
+- [ ] 所有资源路径都是 `Assets/...` 项目路径
+- [ ] 优先使用 `LoadAsync`
+- [ ] 每次成功加载都有对应 `Release`
+- [ ] 场景加载使用完整 `.unity` 路径
+- [ ] 没有新增 `Resources.Load`

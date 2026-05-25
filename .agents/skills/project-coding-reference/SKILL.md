@@ -1,6 +1,6 @@
 ---
 name: project-coding-reference
-description: "Use BEFORE writing any C# code — quick reference for project namespaces, common APIs, singleton access patterns, and anti-patterns to avoid compilation errors"
+description: "Use when writing or modifying C# code, before adding using statements, project type references, singleton calls, logging, or asset loading APIs"
 ---
 
 # Project Coding Reference
@@ -14,7 +14,8 @@ description: "Use BEFORE writing any C# code — quick reference for project nam
 | Namespace | Key Classes | Common Use |
 |-----------|------------|------------|
 | `Tactics.Runtime.Utilities` | `TLog` | Logging (never use `Debug.Log`) |
-| `Tactics.UI` | `UIManager`, `UIControllerBase` | UI management |
+| `Tactics` | `UIManager` | UI singleton and UIId enum |
+| `Tactics.UI` | `UIControllerBase` | UI controller base class |
 | `Tactics.AssetPipeline` | `GameAssetManager` | Asset loading (never use `Resources.Load`) |
 | `Tactics.RoguelikeMap` | `RoguelikeMapNode`, `NodeState` | Map nodes |
 | `Tactics.RoguelikeMap.Events` | `RoguelikeEvent`, `EventOption`, `EventResult`, `EventEffectContext` | Event system |
@@ -74,7 +75,8 @@ Before using a class, check the Namespace Reference table above.
 
 ```csharp
 using Tactics.Runtime.Utilities;   // TLog
-using Tactics.UI;                   // UIManager
+using Tactics;                     // UIManager
+using Tactics.UI;                  // UIControllerBase
 using Tactics.AssetPipeline;        // GameAssetManager
 using Tactics.RoguelikeMap.Events;  // Event classes
 ```
@@ -102,7 +104,7 @@ await UIManager.ShowAsync(UIManager.UIId.MyPanel);
 | ❌ Wrong | ✅ Correct | Why |
 |----------|-----------|-----|
 | `Ui.GetRootElement()` in MonoBehaviour | `UIManager.Instance.GetRootElement()` | `Ui` is protected, only in UIControllerBase |
-| Missing `using Tactics.UI;` | Add the using statement | Compilation error |
+| Missing `using Tactics;` for UIManager | Add `using Tactics;` | `UIManager` is in the root Tactics namespace |
 | `Debug.Log()` | `TLog.Info()` | Project convention |
 | `Resources.Load()` | `GameAssetManager.Instance.Load()` | Project convention |
 | `RunGoldManager.CurrentGold` | `RunGoldManager.Instance.CurrentGold` | Singleton needs `.Instance` |
