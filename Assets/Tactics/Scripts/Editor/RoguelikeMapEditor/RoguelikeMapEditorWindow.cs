@@ -226,6 +226,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 }
 
                 var mapNode = _currentMap?.GetNode(node.NodeId);
+                TLog.Info($"[RoguelikeMapEditor] OnNodeSelected: nodeId={node.NodeId}, mapNode={mapNode != null}");
                 if (mapNode == null) return;
 
                 if (_selectionWrapper == null)
@@ -234,6 +235,30 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 _selectionWrapper.Initialize(mapNode);
                 _selectionWrapper.OnDataChanged = MarkDirty;
                 Selection.activeObject = _selectionWrapper;
+            };
+
+            _mapGraphView.OnNodeAdded += (type, x, y, nodeId) =>
+            {
+                TLog.Info($"[RoguelikeMapEditor] OnNodeAdded handler called: nodeId={nodeId}, _currentMap={_currentMap != null}");
+                if (_currentMap == null)
+                {
+                    _currentMap = new RoguelikeMapData("UntitledMap", "", new System.Collections.Generic.List<RoguelikeMapNode>(), new System.Collections.Generic.HashSet<string>(), 10f, 5f);
+                    TLog.Info("[RoguelikeMapEditor] OnNodeAdded: auto-created new empty map");
+                }
+                var mapNode = new RoguelikeMapNode(nodeId, type, "", new Vector2(x, y));
+                if (type == RoguelikeNodeType.Treasure)
+                {
+                    mapNode.treasureConfig = new TreasureNodeConfig();
+                }
+                else if (type == RoguelikeNodeType.Store)
+                {
+                    mapNode.storeConfig = new StoreNodeConfig();
+                }
+
+                TLog.Info($"[RoguelikeMapEditor] OnNodeAdded: nodeId={nodeId}, creating RoguelikeMapNode");
+                _currentMap.nodes.Add(mapNode);
+                MarkDirty();
+                TLog.Info($"[RoguelikeMapEditor] OnNodeAdded: added to map, total nodes={_currentMap.nodes.Count}");
             };
         }
 
@@ -459,7 +484,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
         private string BuildJsonFromGraph()
         {
             // 从画布获取节点位置信息
-            var graphNodes = _mapGraphView.BuildMapNodeList();
+            var graphNodes = _mapGraphView.BuildMapNodeList(_currentMap?.nodes);
 
             // 使用 MapReachabilityUtility 重建连接关系
             float maxDist = _currentConfig != null

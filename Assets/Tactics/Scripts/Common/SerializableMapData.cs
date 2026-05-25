@@ -84,6 +84,18 @@ namespace Tactics.RoguelikeMap
         /// </summary>
         [JsonProperty("treasureId")]
         public string treasureId;
+
+        /// <summary>
+        /// 宝藏金币下限（用于 Treasure 节点）。
+        /// </summary>
+        [JsonProperty("goldMin")]
+        public int? goldMin;
+
+        /// <summary>
+        /// 宝藏金币上限（用于 Treasure 节点）。
+        /// </summary>
+        [JsonProperty("goldMax")]
+        public int? goldMax;
     }
 
     /// <summary>
@@ -220,6 +232,14 @@ namespace Tactics.RoguelikeMap
                 var node = new RoguelikeMapNode(nodeData.nodeId, nodeType, nodeData.blueprintName,
                     nodeData.position.ToVector2());
                 node.eventId = nodeData.eventId ?? "";
+                if (nodeData.goldMin.HasValue || nodeData.goldMax.HasValue)
+                {
+                    node.treasureConfig = new TreasureNodeConfig
+                    {
+                        goldMin = nodeData.goldMin ?? 2,
+                        goldMax = nodeData.goldMax ?? 5
+                    };
+                }
                 nodes.Add(node);
             }
 
@@ -276,7 +296,9 @@ namespace Tactics.RoguelikeMap
                     blueprintName = node.blueprintName,
                     incoming = node.incoming.ToArray(),
                     outgoing = node.outgoing.ToArray(),
-                    eventId = string.IsNullOrEmpty(node.eventId) ? null : node.eventId
+                    eventId = string.IsNullOrEmpty(node.eventId) ? null : node.eventId,
+                    goldMin = node.treasureConfig?.goldMin,
+                    goldMax = node.treasureConfig?.goldMax
                 };
 
                 data.nodes.Add(nodeData);

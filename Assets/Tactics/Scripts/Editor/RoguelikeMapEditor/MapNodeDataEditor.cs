@@ -51,6 +51,88 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 node.eventId = EditorGUILayout.TextField("Event ID", node.eventId ?? "");
             }
 
+            // ── Treasure 配置（仅 Treasure 类型） ──
+            if (node.nodeType == RoguelikeNodeType.Treasure)
+            {
+                EditorGUILayout.Space(8);
+                EditorGUILayout.LabelField("Treasure Config", EditorStyles.boldLabel);
+
+                var tc = wrapper.TreasureConfig;
+                if (tc != null)
+                {
+                    tc.goldMin = EditorGUILayout.IntField("Gold Min", tc.goldMin);
+                    tc.goldMax = EditorGUILayout.IntField("Gold Max", tc.goldMax);
+
+                    // Buff 列表
+                    EditorGUILayout.Space(4);
+                    EditorGUILayout.LabelField("Buff Entries", EditorStyles.miniLabel);
+
+                    int buffRemoveIndex = -1;
+                    for (int i = 0; i < tc.buffEntries.Count; i++)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        tc.buffEntries[i].buffConfig = (Tactics.Common.Units.Buffs.BuffConfig)EditorGUILayout.ObjectField(
+                            tc.buffEntries[i].buffConfig, typeof(Tactics.Common.Units.Buffs.BuffConfig), false);
+                        tc.buffEntries[i].weight = EditorGUILayout.FloatField("W", tc.buffEntries[i].weight, GUILayout.Width(60));
+                        if (GUILayout.Button("-", GUILayout.Width(24))) buffRemoveIndex = i;
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    if (buffRemoveIndex >= 0)
+                    {
+                        tc.buffEntries.RemoveAt(buffRemoveIndex);
+                        dataChanged = true;
+                    }
+
+                    if (GUILayout.Button("+ Buff"))
+                    {
+                        tc.buffEntries.Add(new BuffConfigEntry());
+                        dataChanged = true;
+                    }
+
+                    // Equipment 列表
+                    EditorGUILayout.Space(4);
+                    EditorGUILayout.LabelField("Equipment Entries", EditorStyles.miniLabel);
+
+                    int equipRemoveIndex = -1;
+                    for (int i = 0; i < tc.equipmentEntries.Count; i++)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        tc.equipmentEntries[i].equipmentId = EditorGUILayout.TextField("ID", tc.equipmentEntries[i].equipmentId);
+                        tc.equipmentEntries[i].weight = EditorGUILayout.FloatField("W", tc.equipmentEntries[i].weight, GUILayout.Width(60));
+                        if (GUILayout.Button("-", GUILayout.Width(24))) equipRemoveIndex = i;
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    if (equipRemoveIndex >= 0)
+                    {
+                        tc.equipmentEntries.RemoveAt(equipRemoveIndex);
+                        dataChanged = true;
+                    }
+
+                    if (GUILayout.Button("+ Equipment"))
+                    {
+                        tc.equipmentEntries.Add(new EquipmentEntry());
+                        dataChanged = true;
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("No treasure config. Click to create.", MessageType.Info);
+                    if (GUILayout.Button("Create Treasure Config"))
+                    {
+                        wrapper.SetTreasureConfig(new TreasureNodeConfig());
+                        dataChanged = true;
+                    }
+                }
+            }
+
+            // ── Store 配置（仅 Store 类型） ──
+            if (node.nodeType == RoguelikeNodeType.Store)
+            {
+                EditorGUILayout.Space(8);
+                EditorGUILayout.LabelField("Store Config", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox("Store config - coming soon", MessageType.Info);
+            }
+
             // ── Outgoing Connections ──
             EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Outgoing Connections", EditorStyles.boldLabel);
@@ -66,7 +148,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 {
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField(node.outgoing[i], GUILayout.ExpandWidth(true));
-                    if (GUILayout.Button("×", GUILayout.Width(24)))
+                    if (GUILayout.Button("-", GUILayout.Width(24)))
                     {
                         removeIndex = i;
                     }
@@ -98,7 +180,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
             // ── 通知变更 ──
             if (EditorGUI.EndChangeCheck() || dataChanged)
             {
-                wrapper.NotifyDataChanged();
+                wrapper.ApplyAndNotify();
             }
         }
     }

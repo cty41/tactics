@@ -46,8 +46,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
         public void SyncToNode()
         {
             if (NodeData == null) return;
-            NodeData.treasureConfig = DeepCopyTreasureConfig(_treasureConfig);
-            NodeData.storeConfig = DeepCopyStoreConfig(_storeConfig);
+            NodeData.treasureConfig = _treasureConfig?.Clone();
+            NodeData.storeConfig = _storeConfig?.Clone();
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
         public void SyncFromNode()
         {
             if (NodeData == null) return;
-            _treasureConfig = DeepCopyTreasureConfig(NodeData.treasureConfig);
-            _storeConfig = DeepCopyStoreConfig(NodeData.storeConfig);
+            _treasureConfig = NodeData.treasureConfig?.Clone();
+            _storeConfig = NodeData.storeConfig?.Clone();
         }
 
         /// <summary>
@@ -77,32 +77,14 @@ namespace Tactics.Editor.RoguelikeMapEditor
             NotifyDataChanged();
         }
 
-        // ── Deep Copy Helpers ────────────────────────────────────────────────
-
-        private static TreasureNodeConfig DeepCopyTreasureConfig(TreasureNodeConfig src)
+        /// <summary>
+        /// 设置宝藏节点配置（创建新配置时调用）。
+        /// </summary>
+        public void SetTreasureConfig(TreasureNodeConfig config)
         {
-            if (src == null) return null;
-            return new TreasureNodeConfig
-            {
-                goldMin = src.goldMin,
-                goldMax = src.goldMax,
-                buffEntries = src.buffEntries?.ConvertAll(e => new BuffConfigEntry
-                {
-                    buffConfig = e.buffConfig,
-                    weight = e.weight
-                }) ?? new System.Collections.Generic.List<BuffConfigEntry>(),
-                equipmentEntries = src.equipmentEntries?.ConvertAll(e => new EquipmentEntry
-                {
-                    equipmentId = e.equipmentId,
-                    weight = e.weight
-                }) ?? new System.Collections.Generic.List<EquipmentEntry>()
-            };
-        }
-
-        private static StoreNodeConfig DeepCopyStoreConfig(StoreNodeConfig src)
-        {
-            if (src == null) return null;
-            return new StoreNodeConfig();
+            _treasureConfig = config;
+            SyncToNode();
+            NotifyDataChanged();
         }
     }
 }

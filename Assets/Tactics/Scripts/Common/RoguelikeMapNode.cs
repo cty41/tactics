@@ -70,6 +70,25 @@ namespace Tactics.RoguelikeMap
         public int goldMax = 5;
         public System.Collections.Generic.List<BuffConfigEntry> buffEntries = new System.Collections.Generic.List<BuffConfigEntry>();
         public System.Collections.Generic.List<EquipmentEntry> equipmentEntries = new System.Collections.Generic.List<EquipmentEntry>();
+
+        public TreasureNodeConfig Clone()
+        {
+            return new TreasureNodeConfig
+            {
+                goldMin = goldMin,
+                goldMax = goldMax,
+                buffEntries = buffEntries?.ConvertAll(e => new BuffConfigEntry
+                {
+                    buffConfig = e.buffConfig,
+                    weight = e.weight
+                }) ?? new System.Collections.Generic.List<BuffConfigEntry>(),
+                equipmentEntries = equipmentEntries?.ConvertAll(e => new EquipmentEntry
+                {
+                    equipmentId = e.equipmentId,
+                    weight = e.weight
+                }) ?? new System.Collections.Generic.List<EquipmentEntry>()
+            };
+        }
     }
 
     /// <summary>
@@ -78,6 +97,10 @@ namespace Tactics.RoguelikeMap
     [System.Serializable]
     public class StoreNodeConfig
     {
+        public StoreNodeConfig Clone()
+        {
+            return new StoreNodeConfig();
+        }
     }
 
     public class RoguelikeMapNode

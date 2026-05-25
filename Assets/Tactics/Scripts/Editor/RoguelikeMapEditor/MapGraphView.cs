@@ -40,6 +40,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
 
         // ── Callbacks ─────────────────────────────
         public event Action<MapNodeElement> OnNodeSelected;
+        public event Action<RoguelikeNodeType, float, float, string> OnNodeAdded;
         public event Action OnNodeChanged;
         public event Action OnGraphChanged;
 
@@ -376,6 +377,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
             if (_hasCanvasBounds)
                 node.SetClampBounds(0, 0, _canvasWidth * DisplayScale - node.NodeSize, _canvasHeight * DisplayScale - node.NodeSize);
             RebuildAllConnections();
+            TLog.Info($"[MapGraphView] AddNode: type={nodeType}, nodeId={node.NodeId}, x={x}, y={y}");
+            OnNodeAdded?.Invoke(nodeType, x, y, node.NodeId);
             return node;
         }
 
@@ -562,9 +565,21 @@ namespace Tactics.Editor.RoguelikeMapEditor
             return null;
         }
 
-        public List<RoguelikeMapNode> BuildMapNodeList()
+        public List<RoguelikeMapNode> BuildMapNodeList(IReadOnlyList<RoguelikeMapNode> existingNodes = null)
         {
             var result = new List<RoguelikeMapNode>();
+            var existingById = new Dictionary<string, RoguelikeMapNode>();
+            if (existingNodes != null)
+            {
+                foreach (var existing in existingNodes)
+                {
+                    if (existing != null && !string.IsNullOrEmpty(existing.nodeId))
+                    {
+                        existingById[existing.nodeId] = existing;
+                    }
+                }
+            }
+
             foreach (var elem in _nodes)
             {
                 var mapNode = new RoguelikeMapNode(
@@ -573,6 +588,12 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     "",
                     GetNodeOriginalPosition(elem));
                 mapNode.eventId = elem.EventId;
+                if (existingById.TryGetValue(elem.NodeId, out var existing))
+                {
+                    mapNode.treasureConfig = existing.treasureConfig?.Clone();
+                    mapNode.storeConfig = existing.storeConfig?.Clone();
+                }
+
                 result.Add(mapNode);
             }
             return result;
