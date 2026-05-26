@@ -11,6 +11,7 @@ using Tactics.Roster;
 
 using Tactics.Common.Units;
 using Tactics.Runtime.Utilities;
+using Tactics.UI;
 
 namespace Tactics.Roguelike
 {
@@ -53,6 +54,7 @@ namespace Tactics.Roguelike
         {
             bool humanWon = result.Winners != null &&
                             result.Winners.Any(p => p != null && p.PlayerType == PlayerType.HumanPlayer);
+            bool isRoguelikeBattle = HasRoguelikeBattleContext();
 
             if (humanWon)
             {
@@ -95,22 +97,41 @@ namespace Tactics.Roguelike
                         // 保存状态
                         if (state != null)
                             PlayerAdventureStateStore.Save(state);
-            
-                        // 延迟提交地图路径（结算完成后再前进路径）
-                        ApplyRoguelikePathAfterBattle(result);
-            
-                        // 清除事件进行中标记
-                        RoguelikeEventReentryManager.ClearEventInProgress();
-            
-                        TLog.Info("[RoguelikeBattleReturnHandler] Settlement complete. Path committed, markers cleared.");
-                        // TODO: 恢复场景切换
-                        // _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+
+                        if (isRoguelikeBattle)
+                        {
+                            // 延迟提交地图路径（结算完成后再前进路径）
+                            bool committedInMemory = RoguelikeMapRuntimeState.TryCommitPendingBattleVictory();
+                            if (!committedInMemory)
+                            {
+                                ApplyRoguelikePathAfterBattle(result);
+                                RoguelikeMapRuntimeState.MarkResumeMapOnHome();
+                            }
+
+                            // 清除事件进行中标记
+                            RoguelikeEventReentryManager.ClearEventInProgress();
+
+                            TLog.Info("[RoguelikeBattleReturnHandler] Settlement complete. Path committed, markers cleared.");
+                            _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                        }
+                        else
+                        {
+                            TLog.Info("[RoguelikeBattleReturnHandler] Settlement complete in standalone battle context. Staying in current scene.");
+                        }
                     }
                 );
             }
             else
             {
-                _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                if (isRoguelikeBattle)
+                {
+                    RoguelikeMapRuntimeState.ClearPendingBattle();
+                    _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                }
+                else
+                {
+                    TLog.Info("[RoguelikeBattleReturnHandler] Defeat in standalone battle context. Staying in current scene.");
+                }
             }
         }
 
@@ -177,6 +198,18 @@ namespace Tactics.Roguelike
             PlayerPrefs.SetString(Tactics.UI.RoguelikeMapUIController.MapPlayerPrefsKey, newJson);
             PlayerPrefs.DeleteKey(Tactics.UI.RoguelikeMapUIController.RoguelikePendingNodePrefsKey);
             PlayerPrefs.Save();
+        }
+
+        private static bool HasRoguelikeBattleContext()
+        {
+            if (RoguelikeMapRuntimeState.HasActiveRun || !string.IsNullOrEmpty(RoguelikeMapRuntimeState.PendingBattleNodeId))
+                return true;
+
+            if (PlayerPrefs.HasKey(RoguelikeMapUIController.RoguelikePendingNodePrefsKey))
+                return true;
+
+            return RoguelikeEventReentryManager.IsEventInProgress(out string eventType, out _)
+                && string.Equals(eventType, "Battle", System.StringComparison.Ordinal);
         }
     }
 }

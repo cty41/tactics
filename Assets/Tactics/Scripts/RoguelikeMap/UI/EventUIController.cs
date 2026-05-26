@@ -67,6 +67,9 @@ namespace Tactics.RoguelikeMap.UI
             if (root == null)
             {
                 TLog.Error("[EventUIController] 无法获取 EventPanel 根元素");
+                onComplete?.Invoke(false);
+                _onComplete = null;
+                _currentEvent = null;
                 return;
             }
 

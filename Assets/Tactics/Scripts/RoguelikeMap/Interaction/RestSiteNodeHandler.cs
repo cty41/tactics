@@ -17,6 +17,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
         private VisualElement _overlay;
         private RoguelikeMapNode _currentNode;
+        private System.Action _onClose;
 
         private void Awake()
         {
@@ -26,15 +27,17 @@ namespace Tactics.RoguelikeMap.Interaction
         /// <summary>
         /// 处理休息站节点交互
         /// </summary>
-        public async void HandleRestSiteNode(RoguelikeMapNode node)
+        public async void HandleRestSiteNode(RoguelikeMapNode node, System.Action onClose = null)
         {
             if (node == null)
             {
                 TLog.Warning("[RestSiteNodeHandler] 节点为空");
+                onClose?.Invoke();
                 return;
             }
 
             _currentNode = node;
+            _onClose = onClose;
 
             // 通过 UIManager 显示 UI
             await UIManager.Instance.ShowAsync(UIManager.UIId.RestSitePanel);
@@ -42,6 +45,8 @@ namespace Tactics.RoguelikeMap.Interaction
             if (root == null)
             {
                 TLog.Error("[RestSiteNodeHandler] 无法获取 RestSitePanel 根元素");
+                _onClose?.Invoke();
+                _onClose = null;
                 return;
             }
 
@@ -106,6 +111,9 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             UIManager.Instance.Hide(UIManager.UIId.RestSitePanel);
             _overlay = null;
+            var callback = _onClose;
+            _onClose = null;
+            callback?.Invoke();
         }
     }
 }

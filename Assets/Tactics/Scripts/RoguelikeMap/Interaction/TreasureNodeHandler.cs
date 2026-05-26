@@ -18,19 +18,22 @@ namespace Tactics.RoguelikeMap.Interaction
     public class TreasureNodeHandler : MonoBehaviour
     {
         private VisualElement _currentPanel;
+        private System.Action _onClose;
 
         /// <summary>
         /// 处理宝藏节点交互
         /// </summary>
-        public async void HandleTreasureNode(RoguelikeMapNode node)
+        public async void HandleTreasureNode(RoguelikeMapNode node, System.Action onClose = null)
         {
             if (node == null)
             {
                 TLog.Warning("[TreasureNodeHandler] 节点为空");
+                onClose?.Invoke();
                 return;
             }
 
             TLog.Info($"[TreasureNodeHandler] 打开宝藏: {node.blueprintName}");
+            _onClose = onClose;
 
             var config = node.treasureConfig;
 
@@ -85,6 +88,8 @@ namespace Tactics.RoguelikeMap.Interaction
             if (root == null)
             {
                 TLog.Error("[TreasureNodeHandler] 无法获取 TreasurePanel 根元素");
+                _onClose?.Invoke();
+                _onClose = null;
                 return;
             }
 
@@ -152,6 +157,9 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             UIManager.Instance.Hide(UIManager.UIId.TreasurePanel);
             _currentPanel = null;
+            var callback = _onClose;
+            _onClose = null;
+            callback?.Invoke();
         }
     }
 }

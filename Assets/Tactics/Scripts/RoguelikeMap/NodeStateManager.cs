@@ -15,12 +15,16 @@ namespace Tactics.RoguelikeMap
         private readonly RoguelikeMap _map;
         private readonly MapRevealSystem _revealSystem;
         private readonly Dictionary<string, RoguelikeMapNode> _nodeLookup;
+        private readonly string _currentNodeIdHint;
 
-        public NodeStateManager(RoguelikeMap map)
+        public string CurrentNodeId { get; private set; }
+
+        public NodeStateManager(RoguelikeMap map, string currentNodeIdHint = null)
         {
             _map = map;
             _nodeLookup = map.nodes.ToDictionary(n => n.nodeId, n => n);
             _revealSystem = new MapRevealSystem(map, map.visionRange);
+            _currentNodeIdHint = currentNodeIdHint;
         }
 
         /// <summary>
@@ -40,10 +44,10 @@ namespace Tactics.RoguelikeMap
                 }
 
                 // 从最后访问的节点计算当前视野
-                var lastVisited = _map.visitedNodes.Last();
-                _revealSystem.UpdateReveal(lastVisited);
+                CurrentNodeId = ResolveCurrentNodeId();
+                _revealSystem.UpdateReveal(CurrentNodeId);
 
-                TLog.Info($"[NodeStateManager] 从存档恢复，最后访问: {lastVisited}, " +
+                TLog.Info($"[NodeStateManager] 从存档恢复，最后访问: {CurrentNodeId}, " +
                           $"已访问节点数: {_map.visitedNodes.Count}");
             }
             else
@@ -59,6 +63,7 @@ namespace Tactics.RoguelikeMap
                 // 起点设为已访问
                 startNode.VisitState = NodeVisitState.Visited;
                 _map.visitedNodes.Add(startNode.nodeId);
+                CurrentNodeId = startNode.nodeId;
 
                 // 从起点计算视野
                 _revealSystem.UpdateReveal(startNode.nodeId);
@@ -86,6 +91,7 @@ namespace Tactics.RoguelikeMap
 
             // 将当前节点设为已访问
             node.VisitState = NodeVisitState.Visited;
+            CurrentNodeId = nodeId;
             TLog.Info($"[NodeStateManager] 节点已访问: {nodeId}");
 
             // 使用 MapRevealSystem 重新计算视野
@@ -162,6 +168,21 @@ namespace Tactics.RoguelikeMap
                 node.VisitState = NodeVisitState.Unvisited;
             }
             TLog.Info("[NodeStateManager] 所有节点状态已重置");
+        }
+
+        private string ResolveCurrentNodeId()
+        {
+            if (!string.IsNullOrEmpty(_currentNodeIdHint) &&
+                _nodeLookup.TryGetValue(_currentNodeIdHint, out var hintedNode) &&
+                hintedNode.VisitState == NodeVisitState.Visited)
+            {
+                return hintedNode.nodeId;
+            }
+
+            if (_map.visitedNodes.Count == 1)
+                return _map.visitedNodes.First();
+
+            return _map.visitedNodes.Last();
         }
     }
 }

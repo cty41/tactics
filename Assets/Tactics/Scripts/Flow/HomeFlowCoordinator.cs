@@ -2,6 +2,8 @@ using System.Threading.Tasks;
 using Tactics.AssetPipeline;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
+using Tactics.Flow.Roguelike;
+using Tactics.Roguelike;
 
 namespace Tactics.Flow.Home
 {
@@ -24,12 +26,36 @@ namespace Tactics.Flow.Home
                 {
                     TLog.Info("[HomeFlowCoordinator] GameAssetManager ready, showing Home UI");
                     await UIManager.Instance.ShowAsync(UIManager.UIId.Home);
+                    await TryResumeRoguelikeMapAsync();
                     return;
                 }
                 await Task.Yield();
             }
             
             TLog.Error("[HomeFlowCoordinator] GameAssetManager not initialized after 120 frames, giving up");
+        }
+
+        private static async Task TryResumeRoguelikeMapAsync()
+        {
+            if (!RoguelikeMapRuntimeState.ConsumeResumeMapOnHomeFlag())
+            {
+                UIManager.Instance.Hide(UIManager.UIId.Loading);
+                return;
+            }
+
+            UIManager.Instance.Show(UIManager.UIId.Loading);
+            UIManager.Instance.Hide(UIManager.UIId.Home);
+
+            bool mapReady = await RoguelikeFlowCoordinator.Instance.OpenMapAndWaitReadyAsync();
+            if (mapReady)
+            {
+                UIManager.Instance.Hide(UIManager.UIId.Loading);
+                return;
+            }
+
+            TLog.Error("[HomeFlowCoordinator] RoguelikeMap failed to become ready after battle return.");
+            UIManager.Instance.Hide(UIManager.UIId.Loading);
+            await UIManager.Instance.ShowAsync(UIManager.UIId.Home);
         }
 
         public async Task OpenMenuAsync()

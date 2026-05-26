@@ -43,7 +43,7 @@ namespace Tactics.RoguelikeMap.Interaction
         /// <summary>
         /// 处理节点交互
         /// </summary>
-        public void HandleNodeInteraction(RoguelikeMapNode node)
+        public void HandleNodeInteraction(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             if (node == null)
             {
@@ -68,18 +68,18 @@ namespace Tactics.RoguelikeMap.Interaction
                     HandleBattleNode(node);
                     break;
                 case RoguelikeNodeType.Mystery:
-                    HandleMysteryNode(node);
+                    HandleMysteryNode(node, onCompleted);
                     node.IsConsumed = true;
                     break;
                 case RoguelikeNodeType.Treasure:
-                    HandleTreasureNode(node);
+                    HandleTreasureNode(node, onCompleted);
                     node.IsConsumed = true;
                     break;
                 case RoguelikeNodeType.Store:
-                    HandleStoreNode(node);
+                    HandleStoreNode(node, onCompleted);
                     break;
                 case RoguelikeNodeType.RestSite:
-                    HandleRestSiteNode(node);
+                    HandleRestSiteNode(node, onCompleted);
                     node.IsConsumed = true;
                     break;
                 default:
@@ -105,6 +105,8 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             TLog.Info($"[NodeInteractionManager] 进入战斗: {node.blueprintName}");
 
+            RoguelikeMapRuntimeState.BeginBattleFromNode(CurrentMap, node.nodeId, "Home");
+
             // 保存当前节点ID用于战后处理
             PlayerPrefs.SetString(RoguelikeMapUIController.RoguelikePendingNodePrefsKey, node.nodeId);
             PlayerPrefs.SetString(RoguelikeMapUIController.RoguelikeReturnScenePrefsKey, "Home");
@@ -123,7 +125,7 @@ namespace Tactics.RoguelikeMap.Interaction
         /// <summary>
         /// 处理神秘节点（事件）
         /// </summary>
-        private async void HandleMysteryNode(RoguelikeMapNode node)
+        private async void HandleMysteryNode(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             TLog.Info($"[NodeInteractionManager] 触发事件: {node.blueprintName}");
 
@@ -133,11 +135,19 @@ namespace Tactics.RoguelikeMap.Interaction
             if (mapConfig == null)
             {
                 TLog.Warning("[NodeInteractionManager] 地图配置为空");
+                onCompleted?.Invoke();
                 return;
             }
 
             // 加载事件（通过显式路径，避免 ScriptableObject 嵌套 TextAsset 引用在运行时为 null）
             var eventManager = EventManager.Instance;
+            if (eventManager == null)
+            {
+                TLog.Warning("[NodeInteractionManager] EventManager 未初始化");
+                onCompleted?.Invoke();
+                return;
+            }
+
             // 清除可能存在的空缓存（TextAsset 引用解析失败时会缓存空列表）
             eventManager.ClearRegion("DarkForest");
             var eventPaths = new List<string>
@@ -152,6 +162,7 @@ namespace Tactics.RoguelikeMap.Interaction
             if (evt == null)
             {
                 TLog.Warning("[NodeInteractionManager] 没有可用事件");
+                onCompleted?.Invoke();
                 return;
             }
 
@@ -162,19 +173,20 @@ namespace Tactics.RoguelikeMap.Interaction
                 EventUIController.Instance.ShowEvent(evt, (success) =>
                 {
                     TLog.Info($"[NodeInteractionManager] 事件完成，结果: {success}");
-                    // TODO: 处理事件结果
+                    onCompleted?.Invoke();
                 });
             }
             else
             {
                 TLog.Warning("[NodeInteractionManager] EventUIController未初始化");
+                onCompleted?.Invoke();
             }
         }
 
         /// <summary>
         /// 处理宝藏节点
         /// </summary>
-        private void HandleTreasureNode(RoguelikeMapNode node)
+        private void HandleTreasureNode(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             TLog.Info($"[NodeInteractionManager] 打开宝藏: {node.blueprintName}");
 
@@ -183,7 +195,7 @@ namespace Tactics.RoguelikeMap.Interaction
             TLog.Info($"[NodeInteractionManager] TreasureNodeHandler = {handler != null}");
             if (handler != null)
             {
-                handler.HandleTreasureNode(node);
+                handler.HandleTreasureNode(node, onCompleted);
             }
             else
             {
@@ -192,13 +204,14 @@ namespace Tactics.RoguelikeMap.Interaction
                 int goldAmount = Random.Range(2, 6);
                 RunGoldManager.Instance.AddGold(goldAmount);
                 TLog.Info($"[NodeInteractionManager] 获得 {goldAmount} 金币");
+                onCompleted?.Invoke();
             }
         }
 
         /// <summary>
         /// 处理商店节点
         /// </summary>
-        private void HandleStoreNode(RoguelikeMapNode node)
+        private void HandleStoreNode(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             TLog.Info($"[NodeInteractionManager] 进入商店: {node.blueprintName}");
             TLog.Info($"[NodeInteractionManager] StoreNodeHandler.Instance = {StoreNodeHandler.Instance != null}");
@@ -206,19 +219,20 @@ namespace Tactics.RoguelikeMap.Interaction
             if (StoreNodeHandler.Instance != null)
             {
                 StoreNodeHandler.Instance.CurrentMap = CurrentMap;
-                StoreNodeHandler.Instance.ShowShop(node);
+                StoreNodeHandler.Instance.ShowShop(node, onCompleted);
             }
             else
             {
                 TLog.Warning("[NodeInteractionManager] StoreNodeHandler未初始化");
                 ShowRewardPopup("商店功能开发中...");
+                onCompleted?.Invoke();
             }
         }
 
         /// <summary>
         /// 处理休息站节点
         /// </summary>
-        private void HandleRestSiteNode(RoguelikeMapNode node)
+        private void HandleRestSiteNode(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             TLog.Info($"[NodeInteractionManager] 进入休息站: {node.blueprintName}");
             TLog.Info($"[NodeInteractionManager] RestSiteNodeHandler.Instance = {RestSiteNodeHandler.Instance != null}");
@@ -226,11 +240,12 @@ namespace Tactics.RoguelikeMap.Interaction
             // 委托给 RestSiteNodeHandler 处理
             if (RestSiteNodeHandler.Instance != null)
             {
-                RestSiteNodeHandler.Instance.HandleRestSiteNode(node);
+                RestSiteNodeHandler.Instance.HandleRestSiteNode(node, onCompleted);
             }
             else
             {
                 TLog.Warning("[NodeInteractionManager] RestSiteNodeHandler 未初始化");
+                onCompleted?.Invoke();
             }
         }
 

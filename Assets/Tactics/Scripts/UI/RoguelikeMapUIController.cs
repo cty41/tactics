@@ -13,6 +13,7 @@ using Tactics.Roster;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace Tactics.UI
 {
@@ -63,6 +64,7 @@ namespace Tactics.UI
         private float _dragStartScrollValue;
         private float _dragStartY;
         private float _dragStartVerticalScrollValue;
+        private TaskCompletionSource<bool> _mapReadyTcs;
 
         public static RoguelikeMapUIController Instance { get; set; }
 
@@ -99,12 +101,18 @@ namespace Tactics.UI
         protected override void OnShown()
         {
             TLog.Info($"[RoguelikeMapUIController] OnShown called. gameObject.active={gameObject.activeSelf}");
+            ResetMapReadyState();
             WireOptionalCloseButtons();
             WireInventoryButton();
 
             LoadOrGenerateMap();
             TLog.Info($"[RoguelikeMapUIController] Starting ShowMapDelayed. _currentMap={_currentMap != null}");
             StartCoroutine(ShowMapDelayed());
+        }
+
+        protected override void OnHidden()
+        {
+            SetMapReady(false);
         }
 
         private System.Collections.IEnumerator ShowMapDelayed()
@@ -133,15 +141,17 @@ namespace Tactics.UI
             if (_currentMap == null)
             {
                 TLog.Error("[RoguelikeMapUIController] _currentMap is null. Cannot show map.");
+                SetMapReady(false);
                 yield break;
             }
 
             TLog.Info("[RoguelikeMapUIController] Calling ShowMap...");
             ShowMap(_currentMap);
             RefreshPartyPanel();
+            yield return StartCoroutine(WaitForMapReadyCoroutine());
         }
 
-private void LoadOrGenerateMap()
+        private void LoadOrGenerateMap()
         {
             string prefsKey = MapPlayerPrefsKey;
 
@@ -154,26 +164,25 @@ private void LoadOrGenerateMap()
                 _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(json);
                 if (_currentMap.visionRange <= 5f) _currentMap.visionRange = 15f;
                 if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
-                _nodeStateManager = new NodeStateManager(_currentMap);
+                RoguelikeMapRuntimeState.AttachMap(_currentMap);
+                _nodeStateManager = CreateNodeStateManager(_currentMap);
                 TLog.Info($"[RoguelikeMapUIController] 从本地配置加载地图: {sc.MapDataFile.name}");
             }
             else
             {
-                // 随机生成模式：清除缓存，走随机生成
-                if (PlayerPrefs.HasKey(prefsKey))
+                if (RoguelikeMapRuntimeState.HasActiveRun && RoguelikeMapRuntimeState.CurrentMap != null)
                 {
-                    TLog.Info($"[RoguelikeMapUIController] 清除缓存地图，使用新配置");
-                    PlayerPrefs.DeleteKey(prefsKey);
-                    PlayerPrefs.Save();
+                    _currentMap = RoguelikeMapRuntimeState.CurrentMap;
+                    _nodeStateManager = CreateNodeStateManager(_currentMap);
+                    TLog.Info("[RoguelikeMapUIController] 从运行时状态恢复地图");
                 }
-
-                if (PlayerPrefs.HasKey(prefsKey))
+                else if (PlayerPrefs.HasKey(prefsKey))
                 {
                     string mapJson = PlayerPrefs.GetString(prefsKey);
                     _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
                     if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
                     if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
-                    _nodeStateManager = new NodeStateManager(_currentMap);
+                    _nodeStateManager = CreateNodeStateManager(_currentMap);
                     if (_currentMap?.visitedNodes != null && _currentMap.visitedNodes.Count > 0)
                     {
                         var bossNode = _currentMap.GetBossNode();
@@ -210,7 +219,8 @@ private void LoadOrGenerateMap()
             }
 
             _currentMap = RoguelikeMapGenerator.GetMap(mapConfig);
-            _nodeStateManager = new NodeStateManager(_currentMap);
+            _nodeStateManager = CreateNodeStateManager(_currentMap);
+            RoguelikeMapRuntimeState.AttachMap(_currentMap);
             // TLog.Info(_currentMap?.ToJson());
         }
 
@@ -283,7 +293,8 @@ private void LoadOrGenerateMap()
             TLog.Info($"[RoguelikeMapUIController] ShowMap: root={root != null}, scrollView={_scrollView != null}, mapContainer={_mapContent != null}, mapContainer.layout={_mapContent.layout.width}x{_mapContent.layout.height}, nodesLayer={_nodesLayer != null}, bgLayer={_backgroundLayer != null}");
 
             _currentMap = m;
-            _nodeStateManager = new NodeStateManager(_currentMap);
+            RoguelikeMapRuntimeState.AttachMap(_currentMap, ResolveCurrentNodeId());
+            _nodeStateManager = CreateNodeStateManager(_currentMap);
             ClearMap();
 
             SetMapLength();
@@ -555,12 +566,12 @@ private void LoadOrGenerateMap()
             {
                 // 初始化节点状态
                 _nodeStateManager.InitializeStates();
+                RoguelikeMapRuntimeState.AttachMap(_currentMap, _nodeStateManager.CurrentNodeId);
                 
                 // 更新UI节点状态
                 foreach (var node in _mapNodes)
                 {
-                    node.SetState(node.Node.state);
-                    TLog.Info($"[RoguelikeMapUIController] Node {node.Node.nodeId} state={node.Node.state}, type={node.Node.nodeType}, pos=({node.Node.position.x:F1},{node.Node.position.y:F1})");
+                    node.ApplyVisualState();
                 }
             }
             else
@@ -595,16 +606,19 @@ private void LoadOrGenerateMap()
                         }
                     }
 
-                    var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
+                    var currentNode = _currentMap.GetNode(ResolveCurrentNodeId());
 
-                    foreach (var outgoingId in currentNode.outgoing)
+                    if (currentNode != null)
                     {
-                        var mapNode = GetNode(outgoingId);
-                        if (mapNode != null)
+                        foreach (var outgoingId in currentNode.outgoing)
                         {
-                            mapNode.Node.Visibility = NodeVisibility.Revealed;
-                            mapNode.Node.IsReachable = true;
-                            mapNode.ApplyVisualState();
+                            var mapNode = GetNode(outgoingId);
+                            if (mapNode != null)
+                            {
+                                mapNode.Node.Visibility = NodeVisibility.Revealed;
+                                mapNode.Node.IsReachable = true;
+                                mapNode.ApplyVisualState();
+                            }
                         }
                     }
                 }
@@ -616,9 +630,11 @@ private void LoadOrGenerateMap()
             foreach (var line in _lineConnections)
                 line.Color = lineLockedColor;
 
-            if (_currentMap.visitedNodes.Count == 0) return;
+            string currentNodeId = ResolveCurrentNodeId();
+            if (string.IsNullOrEmpty(currentNodeId)) return;
 
-            var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
+            var currentNode = _currentMap.GetNode(currentNodeId);
+            if (currentNode == null) return;
 
             foreach (var outgoingId in currentNode.outgoing)
             {
@@ -627,9 +643,9 @@ private void LoadOrGenerateMap()
                     lineConnection.Color = lineVisitedColor;
             }
 
-            if (_currentMap.visitedNodes.Count <= 1) return;
+            var visitedList = RoguelikeMapRuntimeState.VisitedPathNodeIds;
+            if (visitedList.Count <= 1) return;
 
-            var visitedList = _currentMap.visitedNodes.ToList();
             for (int i = 0; i < visitedList.Count - 1; i++)
             {
                 var current = _currentMap.GetNode(visitedList[i]);
@@ -722,7 +738,7 @@ private void LoadOrGenerateMap()
                 }
                 else
                 {
-                    var currentNode = _currentMap.GetNode(_currentMap.visitedNodes.Last());
+                    var currentNode = _currentMap.GetNode(ResolveCurrentNodeId());
 
                     bool isNeighbor = currentNode != null &&
                         (currentNode.outgoing.Any(id => id == mapNode.Node.nodeId) ||
@@ -745,12 +761,14 @@ private void LoadOrGenerateMap()
 
         private void CommitPathForNode(RoguelikeMapUINode mapNode)
         {
-            _currentMap.visitedNodes.Add(mapNode.Node.nodeId);
+            RoguelikeMapRuntimeState.AttachMap(_currentMap, ResolveCurrentNodeId());
+            RoguelikeMapRuntimeState.CommitNodeProgress(mapNode.Node.nodeId);
             
             // 使用 NodeStateManager 更新节点状态
             if (_nodeStateManager != null)
             {
                 _nodeStateManager.VisitNode(mapNode.Node.nodeId);
+                RoguelikeMapRuntimeState.AttachMap(_currentMap, _nodeStateManager.CurrentNodeId);
                 
                 // 更新所有UI节点状态
                 foreach (var node in _mapNodes)
@@ -783,23 +801,67 @@ private void EnterNode(RoguelikeMapUINode mapNode)
                 }
             }
 
+            string eventType = GetNodeEventType(mapNode.Node.nodeType);
             if (NodeInteractionManager.Instance != null)
             {
                 NodeInteractionManager.Instance.CurrentMap = _currentMap;
-                NodeInteractionManager.Instance.HandleNodeInteraction(mapNode.Node);
+                if (mapNode.Node.nodeType == RoguelikeNodeType.MinorEnemy ||
+                    mapNode.Node.nodeType == RoguelikeNodeType.EliteEnemy ||
+                    mapNode.Node.nodeType == RoguelikeNodeType.Boss)
+                {
+                    NodeInteractionManager.Instance.HandleNodeInteraction(mapNode.Node);
+                }
+                else
+                {
+                    RoguelikeEventReentryManager.MarkEventInProgress(eventType, mapNode.Node.nodeId);
+                    NodeInteractionManager.Instance.HandleNodeInteraction(
+                        mapNode.Node,
+                        () => OnNonBattleNodeInteractionCompleted(mapNode));
+                    return;
+                }
             }
             else
             {
                 TLog.Warning("[RoguelikeMapUIController] NodeInteractionManager.Instance still null after creation attempt");
+                if (mapNode.Node.nodeType != RoguelikeNodeType.MinorEnemy &&
+                    mapNode.Node.nodeType != RoguelikeNodeType.EliteEnemy &&
+                    mapNode.Node.nodeType != RoguelikeNodeType.Boss)
+                {
+                    RoguelikeEventReentryManager.MarkEventInProgress(eventType, mapNode.Node.nodeId);
+                }
             }
 
-            // Non-battle nodes: commit path and unlock after interaction
             if (mapNode.Node.nodeType != RoguelikeNodeType.MinorEnemy &&
                 mapNode.Node.nodeType != RoguelikeNodeType.EliteEnemy &&
                 mapNode.Node.nodeType != RoguelikeNodeType.Boss)
             {
                 StartCoroutine(CoUnlockAfterStub(mapNode));
             }
+        }
+
+        private void OnNonBattleNodeInteractionCompleted(RoguelikeMapUINode mapNode)
+        {
+            if (mapNode == null || mapNode.Node == null)
+            {
+                _locked = false;
+                return;
+            }
+
+            CommitPathForNode(mapNode);
+            RoguelikeEventReentryManager.ClearEventInProgress();
+            _locked = false;
+        }
+
+        private static string GetNodeEventType(RoguelikeNodeType nodeType)
+        {
+            return nodeType switch
+            {
+                RoguelikeNodeType.RestSite => "Rest",
+                RoguelikeNodeType.Store => "Store",
+                RoguelikeNodeType.Treasure => "Treasure",
+                RoguelikeNodeType.Mystery => "Mystery",
+                _ => "Unknown"
+            };
         }
 
         private async void EnterBattleNode(RoguelikeMapUINode mapNode)
@@ -907,6 +969,7 @@ private void EnterNode(RoguelikeMapUINode mapNode)
 
         private void OnDestroy()
         {
+            SetMapReady(false);
             ClearMap();
             if (_scrollView != null)
             {
@@ -950,6 +1013,104 @@ private void EnterNode(RoguelikeMapUINode mapNode)
         private void OnApplicationQuit()
         {
             SaveMap();
+        }
+
+        public Task<bool> WaitUntilReadyAsync()
+        {
+            if (_mapReadyTcs == null)
+                ResetMapReadyState();
+
+            return _mapReadyTcs.Task;
+        }
+
+        private NodeStateManager CreateNodeStateManager(global::Tactics.RoguelikeMap.RoguelikeMap map)
+        {
+            return map == null ? null : new NodeStateManager(map, RoguelikeMapRuntimeState.CurrentNodeId);
+        }
+
+        private string ResolveCurrentNodeId()
+        {
+            if (_currentMap == null)
+                return null;
+
+            if (ReferenceEquals(RoguelikeMapRuntimeState.CurrentMap, _currentMap) &&
+                !string.IsNullOrEmpty(RoguelikeMapRuntimeState.CurrentNodeId) &&
+                _currentMap.GetNode(RoguelikeMapRuntimeState.CurrentNodeId) != null)
+            {
+                return RoguelikeMapRuntimeState.CurrentNodeId;
+            }
+
+            if (!string.IsNullOrEmpty(_nodeStateManager?.CurrentNodeId) &&
+                _currentMap.GetNode(_nodeStateManager.CurrentNodeId) != null)
+            {
+                return _nodeStateManager.CurrentNodeId;
+            }
+
+            if (_currentMap.visitedNodes.Count == 1)
+                return _currentMap.visitedNodes.First();
+
+            return null;
+        }
+
+        private void ResetMapReadyState()
+        {
+            _mapReadyTcs = new TaskCompletionSource<bool>();
+        }
+
+        private void SetMapReady(bool isReady)
+        {
+            _mapReadyTcs?.TrySetResult(isReady);
+        }
+
+        private System.Collections.IEnumerator WaitForMapReadyCoroutine()
+        {
+            const int maxFrames = 120;
+            for (int frame = 0; frame < maxFrames; frame++)
+            {
+                yield return null;
+                if (IsMapFullyReady())
+                {
+                    TLog.Info($"[RoguelikeMapUIController] Map ready after {frame + 1} validation frames.");
+                    SetMapReady(true);
+                    yield break;
+                }
+            }
+
+            TLog.Error("[RoguelikeMapUIController] Timed out waiting for map to become ready.");
+            SetMapReady(false);
+        }
+
+        private bool IsMapFullyReady()
+        {
+            var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            if (root == null || _mapContent == null || _nodesLayer == null || _linesLayer == null)
+                return false;
+
+            if (float.IsNaN(root.layout.height) || root.layout.height <= 0f)
+                return false;
+
+            if (float.IsNaN(_mapContent.layout.height) || _mapContent.layout.height <= 0f)
+                return false;
+
+            if (_currentMap?.nodes == null || _nodeStateManager == null)
+                return false;
+
+            if (_mapNodes.Count != _currentMap.nodes.Count)
+                return false;
+
+            if (_linesElement == null)
+                return false;
+
+            if (_nodesLayer.childCount < _mapNodes.Count)
+                return false;
+
+            var partyPanel = root.Q<VisualElement>("PartyPanel");
+            if (partyPanel == null)
+                return false;
+
+            var state = PlayerAdventureStateStore.Load();
+            int expectedPartyCount = state?.ActivePartyCharacterIds?.Count ?? 0;
+            return partyPanel.childCount == expectedPartyCount;
         }
     }
 

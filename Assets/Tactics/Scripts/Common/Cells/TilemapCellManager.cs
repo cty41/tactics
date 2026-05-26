@@ -201,7 +201,6 @@ namespace Tactics.Cells
             
             Vector3 mouseWorldPos = ray.GetPoint(enter);
             Vector3Int cellPos = _gridLayer.WorldToCell(mouseWorldPos);
-            TLog.Info($"[TilemapCellManager] TryGetCellUnderCursor: mouseWorldPos={mouseWorldPos:F2}, cellPos=({cellPos.x},{cellPos.y})");
 
             var gridPosition = new Vector2IntImpl(cellPos.x, cellPos.y);
 

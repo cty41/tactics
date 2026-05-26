@@ -74,6 +74,8 @@ namespace Tactics.Flow.Battle
             _isTransitioning = true;
             try
             {
+                UIManager.Instance.Show(UIManager.UIId.Loading);
+
                 string returnSceneName = PlayerPrefs.GetString(
                     RoguelikeMapUIController.RoguelikeReturnScenePrefsKey, "Home");
                 if (string.IsNullOrWhiteSpace(returnSceneName))

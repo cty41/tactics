@@ -22,7 +22,6 @@ namespace Tactics.Common.Battle
 
         private BattleSettlementCoordinator _coordinator;
         private PlayerAdventureState _state;
-        private Action _onComplete;
 
         private List<CharacterDefinition> _characterQueue;
         private int _currentCharacterIndex;
@@ -69,7 +68,6 @@ namespace Tactics.Common.Battle
             }
 
             _state = null;
-            _onComplete = null;
             _characterQueue = null;
             _currentCharacterIndex = 0;
 
@@ -191,7 +189,7 @@ namespace Tactics.Common.Battle
             if (_characterQueue == null || _currentCharacterIndex >= _characterQueue.Count)
             {
                 TLog.Info("[BattleSettlementFlow] All characters processed. Settlement flow complete.");
-                _onComplete?.Invoke();
+                CompleteSettlement();
                 return;
             }
 
@@ -437,6 +435,20 @@ namespace Tactics.Common.Battle
 
             return uiDoc.rootVisualElement.style.display != DisplayStyle.None
                 && uiDoc.gameObject.activeInHierarchy;
+        }
+
+        private void CompleteSettlement()
+        {
+            if (_coordinator == null)
+            {
+                TLog.Warning("[BattleSettlementFlow] CompleteSettlement called without coordinator.");
+                return;
+            }
+
+            while (_coordinator.CurrentPhase != SettlementPhase.Complete)
+            {
+                _coordinator.AdvancePhase();
+            }
         }
 
         #endregion

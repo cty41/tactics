@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 
 namespace Tactics.Flow.Roguelike
@@ -31,6 +32,26 @@ namespace Tactics.Flow.Roguelike
             }
         }
 
+        public async Task<bool> OpenMapAndWaitReadyAsync()
+        {
+            if (_isMapUiTransitioning)
+            {
+                return await WaitForVisibleMapReadyAsync();
+            }
+
+            _isMapUiTransitioning = true;
+            try
+            {
+                await UIManager.Instance.ShowAsync(UIManager.UIId.RoguelikeMap);
+            }
+            finally
+            {
+                _isMapUiTransitioning = false;
+            }
+
+            return await WaitForVisibleMapReadyAsync();
+        }
+
         public void CloseMap()
         {
             UIManager.Instance.Hide(UIManager.UIId.RoguelikeMap);
@@ -60,6 +81,21 @@ namespace Tactics.Flow.Roguelike
         public void DestroyMap()
         {
             UIManager.Instance.Destroy(UIManager.UIId.RoguelikeMap);
+        }
+
+        private static async Task<bool> WaitForVisibleMapReadyAsync()
+        {
+            for (int i = 0; i < 60; i++)
+            {
+                var controller = Tactics.UI.RoguelikeMapUIController.Instance;
+                if (controller != null)
+                    return await controller.WaitUntilReadyAsync();
+
+                await Task.Yield();
+            }
+
+            TLog.Error("[RoguelikeFlowCoordinator] RoguelikeMapUIController instance not available after showing map.");
+            return false;
         }
     }
 }

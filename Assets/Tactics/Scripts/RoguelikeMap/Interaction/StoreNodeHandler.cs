@@ -45,6 +45,7 @@ namespace Tactics.RoguelikeMap.Interaction
             if (node == null)
             {
                 TLog.Warning("[StoreNodeHandler] 节点为空");
+                onClose?.Invoke();
                 return;
             }
 
@@ -60,6 +61,8 @@ namespace Tactics.RoguelikeMap.Interaction
             if (root == null)
             {
                 TLog.Error("[StoreNodeHandler] 无法获取 ShopPanel 根元素");
+                _onClose?.Invoke();
+                _onClose = null;
                 return;
             }
 
@@ -150,7 +153,9 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             UIManager.Instance.Hide(UIManager.UIId.ShopPanel);
             _overlay = null;
-            _onClose?.Invoke();
+            var callback = _onClose;
+            _onClose = null;
+            callback?.Invoke();
             TLog.Info("[StoreNodeHandler] 商店关闭");
         }
     }
