@@ -1,0 +1,7 @@
+# Hook trust 当前在项目级配置层不稳定，实际启用入口迁移到用户级
+# `C:\Users\15507\.codex\config.toml`。
+#
+# 本仓库保留脚本与说明文件，供本机用户级配置调用：
+# - `.codex/hooks/unity_auto_compile_guard.py`
+# - `.codex/hooks/sync_user_codex_hooks.ps1`
+# - `.codex/hooks/install-user-hooks.md`
