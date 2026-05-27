@@ -5,6 +5,7 @@ using Tactics.Roguelike;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.RoguelikeMap.Events;
 using Tactics.RoguelikeMap.UI;
+using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using UnityEngine;
@@ -139,7 +140,6 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
-            // 加载事件（通过显式路径，避免 ScriptableObject 嵌套 TextAsset 引用在运行时为 null）
             var eventManager = EventManager.Instance;
             if (eventManager == null)
             {
@@ -148,17 +148,14 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
-            // 清除可能存在的空缓存（TextAsset 引用解析失败时会缓存空列表）
-            eventManager.ClearRegion("DarkForest");
-            var eventPaths = new List<string>
-            {
-                "Assets/Tactics/GameData/Events/DarkForest/cursed_chest_001.json",
-                "Assets/Tactics/GameData/Events/DarkForest/fallen_altar_001.json",
-                "Assets/Tactics/GameData/Events/DarkForest/lost_villager_001.json"
-            };
-            eventManager.LoadRegionEventsFromPaths("DarkForest", eventPaths);
+            const string regionName = "DarkForest";
+            EnsureRegionEventsLoaded(eventManager, regionName, mapConfig);
 
-            var evt = eventManager.GetRandomEvent("DarkForest");
+            RoguelikeEvent evt = null;
+            if (!string.IsNullOrWhiteSpace(node.eventId))
+                evt = eventManager.GetEvent(node.eventId);
+
+            evt ??= eventManager.GetRandomEvent(regionName);
             if (evt == null)
             {
                 TLog.Warning("[NodeInteractionManager] 没有可用事件");
@@ -166,11 +163,14 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var effectContext = RoguelikeRewardHelper.CreateActivePartyContext(state);
+
             // 显示事件UI（通过 UIManager 初始化 EventUIController）
             await UIManager.Instance.ShowAsync(UIManager.UIId.EventPanel);
             if (EventUIController.Instance != null)
             {
-                EventUIController.Instance.ShowEvent(evt, (success) =>
+                EventUIController.Instance.ShowEvent(evt, effectContext, success =>
                 {
                     TLog.Info($"[NodeInteractionManager] 事件完成，结果: {success}");
                     onCompleted?.Invoke();
@@ -247,6 +247,14 @@ namespace Tactics.RoguelikeMap.Interaction
                 TLog.Warning("[NodeInteractionManager] RestSiteNodeHandler 未初始化");
                 onCompleted?.Invoke();
             }
+        }
+
+        private static void EnsureRegionEventsLoaded(EventManager eventManager, string regionName, RoguelikeMapConfig mapConfig)
+        {
+            if (eventManager.IsRegionLoaded(regionName))
+                return;
+
+            eventManager.LoadRegionEvents(regionName, mapConfig);
         }
 
         /// <summary>

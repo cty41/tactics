@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -25,21 +26,24 @@ namespace Tactics.Editor.RoguelikeMapEditor
         private bool _isPanning;
 
         // ── Data ──────────────────────────────────
+        private MapEditorDocument _document;
         private readonly List<MapNodeElement> _nodes = new();
         private readonly List<MapConnectionElement> _connections = new();
-        private readonly List<(string from, string to)> _mapConnections = new();
+        private readonly List<MapConnectionElement> _distanceConnections = new();
         private const float DisplayScale = 50f; // 编辑器显示缩放因子
         private float _maxReachableDistance = 200f;
         private float _canvasWidth;
         private float _canvasHeight;
         private bool _hasCanvasBounds;
         private VisualElement _boundaryLayer;
+        private bool _showDistanceHints;
 
         // ── Selection ─────────────────────────────
         private MapNodeElement _selectedNode;
 
         // ── Callbacks ─────────────────────────────
         public event Action<MapNodeElement> OnNodeSelected;
+        public event Action<MapNodeElement> OnNodeDoubleClicked;
         public event Action<RoguelikeNodeType, float, float, string> OnNodeAdded;
         public event Action OnNodeChanged;
         public event Action OnGraphChanged;
@@ -111,6 +115,24 @@ namespace Tactics.Editor.RoguelikeMapEditor
             get => _maxReachableDistance;
             set => _maxReachableDistance = value;
         }
+
+        /// <summary>
+        /// 绑定文档模型。画布的所有数据操作都通过文档模型进行。
+        /// </summary>
+        public void SetDocument(MapEditorDocument doc)
+        {
+            _document = doc;
+            if (_document != null)
+            {
+                _maxReachableDistance = _document.maxReachableDistance;
+                LoadNodesFromDocument();
+            }
+        }
+
+        /// <summary>
+        /// 获取当前绑定的文档模型。
+        /// </summary>
+        public MapEditorDocument GetDocument() => _document;
 
         // ── Build ─────────────────────────────────
         private void BuildCanvas()
@@ -348,6 +370,13 @@ namespace Tactics.Editor.RoguelikeMapEditor
         // ═══════════════════════════════════════════
         public MapNodeElement AddNode(RoguelikeNodeType nodeType, float x = 200, float y = 200, string nodeId = null)
         {
+            // 如果有文档模型，通过文档模型创建节点
+            if (_document != null)
+            {
+                var editableNode = _document.AddNode(nodeType, new Vector2(x, y));
+                nodeId = editableNode.nodeId;
+            }
+
             var node = new MapNodeElement(nodeType, nodeId);
             node.style.position = Position.Absolute;
             node.style.left = x * DisplayScale;
@@ -357,11 +386,21 @@ namespace Tactics.Editor.RoguelikeMapEditor
             node.OnNodeClicked += SelectNode;
             // Double-click → open Event Editor for Mystery nodes
             node.OnNodeDoubleClicked += OnNodeDoubleClickedHandler;
-            // Move → update connections
+            // Move → update connections and document
             node.OnNodeMoving += () => RedrawConnectionsForNode(node);
             node.OnNodeMoved += () =>
             {
                 RedrawConnectionsForNode(node);
+                // 同步位置到文档模型
+                if (_document != null)
+                {
+                    var editableNode = _document.GetNode(node.NodeId);
+                    if (editableNode != null)
+                    {
+                        editableNode.position = GetNodeOriginalPosition(node);
+                        _document.MarkDirty();
+                    }
+                }
                 OnNodeChanged?.Invoke();
                 OnGraphChanged?.Invoke();
             };
@@ -370,6 +409,24 @@ namespace Tactics.Editor.RoguelikeMapEditor
             node.AddManipulator(new ContextualMenuManipulator(evt =>
             {
                 evt.menu.AppendAction("Delete", _ => DeleteNode(node));
+                evt.menu.AppendSeparator();
+                // "Connect To" 子菜单
+                foreach (var otherNode in _nodes)
+                {
+                    if (otherNode == node) continue;
+                    bool alreadyConnected = _document != null &&
+                        _document.GetNode(node.NodeId)?.outgoing.Contains(otherNode.NodeId) == true;
+                    string label = alreadyConnected
+                        ? $"Disconnect/{otherNode.NodeType} ({otherNode.NodeId})"
+                        : $"Connect To/{otherNode.NodeType} ({otherNode.NodeId})";
+                    evt.menu.AppendAction(label, _ =>
+                    {
+                        if (alreadyConnected)
+                            RemoveConnection(node.NodeId, otherNode.NodeId);
+                        else
+                            AddConnection(node.NodeId, otherNode.NodeId);
+                    });
+                }
             }));
 
             _canvas.Add(node);
@@ -380,6 +437,79 @@ namespace Tactics.Editor.RoguelikeMapEditor
             TLog.Info($"[MapGraphView] AddNode: type={nodeType}, nodeId={node.NodeId}, x={x}, y={y}");
             OnNodeAdded?.Invoke(nodeType, x, y, node.NodeId);
             return node;
+        }
+
+        /// <summary>
+        /// 从文档模型加载所有节点到画布。
+        /// </summary>
+        public void LoadNodesFromDocument()
+        {
+            ClearCanvas();
+            if (_document == null) return;
+
+            TLog.Info($"[MapGraphView] LoadNodesFromDocument: {_document.nodes.Count} nodes, DisplayScale={DisplayScale}");
+
+            foreach (var editableNode in _document.nodes)
+            {
+                var node = new MapNodeElement(editableNode.nodeType, editableNode.nodeId);
+                node.EventId = editableNode.eventId ?? "";
+                node.style.position = Position.Absolute;
+                node.style.left = editableNode.position.x * DisplayScale;
+                node.style.top = editableNode.position.y * DisplayScale;
+
+                TLog.Info($"[MapGraphView] Node {editableNode.nodeId}: gamePos=({editableNode.position.x:F1},{editableNode.position.y:F1}) → displayPos=({editableNode.position.x * DisplayScale:F1},{editableNode.position.y * DisplayScale:F1})");
+
+                node.OnNodeClicked += SelectNode;
+                node.OnNodeDoubleClicked += OnNodeDoubleClickedHandler;
+                node.OnNodeMoving += () => RedrawConnectionsForNode(node);
+                node.OnNodeMoved += () =>
+                {
+                    RedrawConnectionsForNode(node);
+                    // 同步位置到文档模型
+                    if (_document != null)
+                    {
+                        var docNode = _document.GetNode(node.NodeId);
+                        if (docNode != null)
+                        {
+                            docNode.position = GetNodeOriginalPosition(node);
+                            _document.MarkDirty();
+                        }
+                    }
+                    OnNodeChanged?.Invoke();
+                    OnGraphChanged?.Invoke();
+                };
+
+                node.AddManipulator(new ContextualMenuManipulator(evt =>
+                {
+                    evt.menu.AppendAction("Delete", _ => DeleteNode(node));
+                    evt.menu.AppendSeparator();
+                    foreach (var otherNode in _nodes)
+                    {
+                        if (otherNode == node) continue;
+                        bool alreadyConnected = _document != null &&
+                            _document.GetNode(node.NodeId)?.outgoing.Contains(otherNode.NodeId) == true;
+                        string label = alreadyConnected
+                            ? $"Disconnect/{otherNode.NodeType} ({otherNode.NodeId})"
+                            : $"Connect To/{otherNode.NodeType} ({otherNode.NodeId})";
+                        var capturedOther = otherNode;
+                        evt.menu.AppendAction(label, _ =>
+                        {
+                            if (alreadyConnected)
+                                RemoveConnection(node.NodeId, capturedOther.NodeId);
+                            else
+                                AddConnection(node.NodeId, capturedOther.NodeId);
+                        });
+                    }
+                }));
+
+                _canvas.Add(node);
+                _nodes.Add(node);
+                if (_hasCanvasBounds)
+                    node.SetClampBounds(0, 0, _canvasWidth * DisplayScale - node.NodeSize, _canvasHeight * DisplayScale - node.NodeSize);
+            }
+
+            RebuildAllConnections();
+            FocusAll();
         }
 
         public void LoadNodes(List<RoguelikeMapNode> mapNodes)
@@ -405,6 +535,16 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 node.OnNodeMoved += () =>
                 {
                     RedrawConnectionsForNode(node);
+                    // 同步位置到文档模型
+                    if (_document != null)
+                    {
+                        var docNode = _document.GetNode(node.NodeId);
+                        if (docNode != null)
+                        {
+                            docNode.position = GetNodeOriginalPosition(node);
+                            _document.MarkDirty();
+                        }
+                    }
                     OnNodeChanged?.Invoke();
                     OnGraphChanged?.Invoke();
                 };
@@ -412,22 +552,30 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 node.AddManipulator(new ContextualMenuManipulator(evt =>
                 {
                     evt.menu.AppendAction("Delete", _ => DeleteNode(node));
+                    evt.menu.AppendSeparator();
+                    foreach (var otherNode in _nodes)
+                    {
+                        if (otherNode == node) continue;
+                        bool alreadyConnected = _document != null &&
+                            _document.GetNode(node.NodeId)?.outgoing.Contains(otherNode.NodeId) == true;
+                        string label = alreadyConnected
+                            ? $"Disconnect/{otherNode.NodeType} ({otherNode.NodeId})"
+                            : $"Connect To/{otherNode.NodeType} ({otherNode.NodeId})";
+                        var capturedOther = otherNode;
+                        evt.menu.AppendAction(label, _ =>
+                        {
+                            if (alreadyConnected)
+                                RemoveConnection(node.NodeId, capturedOther.NodeId);
+                            else
+                                AddConnection(node.NodeId, capturedOther.NodeId);
+                        });
+                    }
                 }));
 
                 _canvas.Add(node);
                 _nodes.Add(node);
                 if (_hasCanvasBounds)
                     node.SetClampBounds(0, 0, _canvasWidth * DisplayScale - node.NodeSize, _canvasHeight * DisplayScale - node.NodeSize);
-            }
-
-            // Extract connections from nodes' incoming/outgoing lists (set by generator/deserializer)
-            _mapConnections.Clear();
-            foreach (var mapNode in mapNodes)
-            {
-                foreach (var targetId in mapNode.outgoing)
-                {
-                    _mapConnections.Add((mapNode.nodeId, targetId));
-                }
             }
 
             RebuildAllConnections();
@@ -444,11 +592,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
 
         private void OnNodeDoubleClickedHandler(MapNodeElement node)
         {
-            if (node.NodeType == RoguelikeNodeType.Mystery)
-            {
-                TLog.Info($"[MapGraphView] 双击 Mystery 节点 '{node.NodeId}'，打开 Event Editor");
-                EditorApplication.ExecuteMenuItem("Tactics/Event Editor");
-            }
+            TLog.Info($"[MapGraphView] 双击节点 '{node.NodeId}' (type={node.NodeType})");
+            OnNodeDoubleClicked?.Invoke(node);
         }
 
         private void DeselectNode()
@@ -463,10 +608,20 @@ namespace Tactics.Editor.RoguelikeMapEditor
 
         private void DeleteNode(MapNodeElement node)
         {
+            if (node == null || _document == null) return;
+
+            string nodeId = node.NodeId;
+
             if (_selectedNode == node) DeselectNode();
-            RemoveConnectionsForNode(node);
+
+            // 从文档中删除节点（会自动清理相关 outgoing 引用）
+            _document.RemoveNode(nodeId);
+
+            // 从画布中移除
             node.RemoveFromHierarchy();
             _nodes.Remove(node);
+
+            // 刷新连线显示
             RebuildAllConnections();
             OnGraphChanged?.Invoke();
         }
@@ -516,22 +671,60 @@ namespace Tactics.Editor.RoguelikeMapEditor
             // Clear existing
             foreach (var conn in _connections) conn.RemoveFromHierarchy();
             _connections.Clear();
-
-            if (_mapConnections.Count == 0) return;
+            foreach (var conn in _distanceConnections) conn.RemoveFromHierarchy();
+            _distanceConnections.Clear();
 
             // Build a lookup from nodeId to MapNodeElement
             var nodeMap = new Dictionary<string, MapNodeElement>();
             foreach (var node in _nodes)
                 nodeMap[node.NodeId] = node;
 
-            foreach (var (fromId, toId) in _mapConnections)
+            // 1. 从文档模型获取手工连接关系（实线）
+            if (_document != null)
             {
-                if (nodeMap.TryGetValue(fromId, out var fromElement) &&
-                    nodeMap.TryGetValue(toId, out var toElement))
+                var connections = _document.GetAllConnections();
+                foreach (var (fromId, toId) in connections)
                 {
-                    var conn = new MapConnectionElement(fromElement, toElement);
-                    _connectionLayer.Add(conn);
-                    _connections.Add(conn);
+                    if (nodeMap.TryGetValue(fromId, out var fromElement) &&
+                        nodeMap.TryGetValue(toId, out var toElement))
+                    {
+                        var conn = new MapConnectionElement(fromElement, toElement, isManual: true);
+                        _connectionLayer.Add(conn);
+                        _connections.Add(conn);
+                    }
+                }
+            }
+
+            // 2. 距离建议连接（虚线，仅在启用时显示）
+            if (_showDistanceHints && _document != null)
+            {
+                var existingPairs = new HashSet<(string, string)>();
+                foreach (var (fromId, toId) in _document.GetAllConnections())
+                {
+                    existingPairs.Add((fromId, toId));
+                    existingPairs.Add((toId, fromId));
+                }
+
+                for (int i = 0; i < _document.nodes.Count; i++)
+                {
+                    for (int j = i + 1; j < _document.nodes.Count; j++)
+                    {
+                        var a = _document.nodes[i];
+                        var b = _document.nodes[j];
+                        float dist = Vector2.Distance(a.position, b.position);
+
+                        if (dist <= _maxReachableDistance &&
+                            !existingPairs.Contains((a.nodeId, b.nodeId)))
+                        {
+                            if (nodeMap.TryGetValue(a.nodeId, out var elemA) &&
+                                nodeMap.TryGetValue(b.nodeId, out var elemB))
+                            {
+                                var hint = new MapConnectionElement(elemA, elemB, isManual: false);
+                                _connectionLayer.Add(hint);
+                                _distanceConnections.Add(hint);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -558,6 +751,80 @@ namespace Tactics.Editor.RoguelikeMapEditor
             });
         }
 
+        // ═══════════════════════════════════════════
+        //  Distance-based connection rebuild
+        // ═══════════════════════════════════════════
+
+        /// <summary>
+        /// 按距离重建所有连接（显式操作，覆盖现有连接）。
+        /// 清空所有手工连接后，按 maxReachableDistance 重新生成双向连接。
+        /// </summary>
+        public void RebuildConnectionsByDistance()
+        {
+            if (_document == null) return;
+
+            TLog.Info($"[MapGraphView] RebuildConnectionsByDistance: clearing all connections, maxDist={_maxReachableDistance}");
+
+            // 清空所有现有连接
+            foreach (var node in _document.nodes)
+                node.outgoing.Clear();
+
+            // 按距离重建（双向）
+            for (int i = 0; i < _document.nodes.Count; i++)
+            {
+                for (int j = i + 1; j < _document.nodes.Count; j++)
+                {
+                    var a = _document.nodes[i];
+                    var b = _document.nodes[j];
+                    float dist = Vector2.Distance(a.position, b.position);
+
+                    if (dist <= _maxReachableDistance)
+                    {
+                        a.outgoing.Add(b.nodeId);
+                        b.outgoing.Add(a.nodeId);
+                    }
+                }
+            }
+
+            _document.MarkDirty();
+            RebuildAllConnections();
+            TLog.Info($"[MapGraphView] RebuildConnectionsByDistance done. Total connections: {_document.GetAllConnections().Count}");
+        }
+
+        /// <summary>
+        /// 设置是否显示距离建议连接（虚线）。
+        /// </summary>
+        public void SetShowDistanceHints(bool show)
+        {
+            _showDistanceHints = show;
+            RebuildAllConnections();
+        }
+
+        /// <summary>
+        /// 获取是否正在显示距离建议连接。
+        /// </summary>
+        public bool ShowDistanceHints => _showDistanceHints;
+
+        /// <summary>
+        /// 在两个节点之间添加手工连接。
+        /// </summary>
+        public void AddConnection(string fromId, string toId)
+        {
+            if (_document == null) return;
+            _document.AddConnection(fromId, toId);
+            RebuildAllConnections();
+        }
+
+        /// <summary>
+        /// 在两个节点之间移除手工连接。
+        /// </summary>
+        public void RemoveConnection(string fromId, string toId)
+        {
+            if (_document == null) return;
+            _document.RemoveConnection(fromId, toId);
+            RebuildAllConnections();
+        }
+
         private MapNodeElement FindNodeElement(string nodeId)
         {
             foreach (var node in _nodes)
@@ -565,18 +832,54 @@ namespace Tactics.Editor.RoguelikeMapEditor
             return null;
         }
 
+        /// <summary>
+        /// 从文档模型构建 RoguelikeMapNode 列表（用于向后兼容）。
+        /// 如果文档模型不存在，从画布节点构建。
+        /// </summary>
         public List<RoguelikeMapNode> BuildMapNodeList(IReadOnlyList<RoguelikeMapNode> existingNodes = null)
         {
-            var result = new List<RoguelikeMapNode>();
-            var existingById = new Dictionary<string, RoguelikeMapNode>();
+            if (_document != null)
+            {
+                // 从文档模型构建
+                var result = new List<RoguelikeMapNode>();
+                var existingById = new Dictionary<string, RoguelikeMapNode>();
+                if (existingNodes != null)
+                {
+                    foreach (var existing in existingNodes)
+                    {
+                        if (existing != null && !string.IsNullOrEmpty(existing.nodeId))
+                            existingById[existing.nodeId] = existing;
+                    }
+                }
+
+                foreach (var editableNode in _document.nodes)
+                {
+                    var mapNode = new RoguelikeMapNode(
+                        editableNode.nodeId,
+                        editableNode.nodeType,
+                        editableNode.blueprintName ?? "",
+                        editableNode.position);
+                    mapNode.eventId = editableNode.eventId ?? "";
+                    mapNode.treasureConfig = editableNode.ToTreasureConfig();
+                    mapNode.storeConfig = editableNode.ToStoreConfig();
+                    // 重建 outgoing
+                    foreach (var targetId in editableNode.outgoing)
+                        mapNode.AddOutgoing(targetId);
+
+                    result.Add(mapNode);
+                }
+                return result;
+            }
+
+            // Fallback: 从画布节点构建（无文档模型时）
+            var fallbackResult = new List<RoguelikeMapNode>();
+            var fallbackExistingById = new Dictionary<string, RoguelikeMapNode>();
             if (existingNodes != null)
             {
                 foreach (var existing in existingNodes)
                 {
                     if (existing != null && !string.IsNullOrEmpty(existing.nodeId))
-                    {
-                        existingById[existing.nodeId] = existing;
-                    }
+                        fallbackExistingById[existing.nodeId] = existing;
                 }
             }
 
@@ -588,15 +891,15 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     "",
                     GetNodeOriginalPosition(elem));
                 mapNode.eventId = elem.EventId;
-                if (existingById.TryGetValue(elem.NodeId, out var existing))
+                if (fallbackExistingById.TryGetValue(elem.NodeId, out var existing))
                 {
                     mapNode.treasureConfig = existing.treasureConfig?.Clone();
                     mapNode.storeConfig = existing.storeConfig?.Clone();
                 }
 
-                result.Add(mapNode);
+                fallbackResult.Add(mapNode);
             }
-            return result;
+            return fallbackResult;
         }
 
         // ═══════════════════════════════════════════
@@ -606,10 +909,45 @@ namespace Tactics.Editor.RoguelikeMapEditor
         {
             foreach (var node in _nodes) node.RemoveFromHierarchy();
             foreach (var conn in _connections) conn.RemoveFromHierarchy();
+            foreach (var conn in _distanceConnections) conn.RemoveFromHierarchy();
             _nodes.Clear();
             _connections.Clear();
-            _mapConnections.Clear();
+            _distanceConnections.Clear();
             _selectedNode = null;
+        }
+
+        /// <summary>
+        /// 清除当前选中节点（视觉高亮 + 引用）。
+        /// </summary>
+        public void ClearSelection()
+        {
+            if (_selectedNode != null)
+            {
+                _selectedNode.SetSelected(false);
+                _selectedNode = null;
+            }
+        }
+
+        /// <summary>
+        /// 更新指定节点的类型视觉样式（颜色、标签）。
+        /// </summary>
+        public void UpdateNodeVisual(string nodeId, RoguelikeNodeType newType)
+        {
+            var elem = _nodes.FirstOrDefault(n => n.NodeId == nodeId);
+            if (elem == null) return;
+            elem.UpdateNodeType(newType);
+        }
+
+        /// <summary>
+        /// 更新指定节点的画布位置（从文档模型坐标 → 显示坐标）。
+        /// </summary>
+        public void UpdateNodePosition(string nodeId, Vector2 position)
+        {
+            var elem = _nodes.FirstOrDefault(n => n.NodeId == nodeId);
+            if (elem == null) return;
+            elem.style.left = position.x * DisplayScale;
+            elem.style.top = position.y * DisplayScale;
+            RedrawConnectionsForNode(elem);
         }
 
         public Vector2 GetNodeOriginalPosition(MapNodeElement node)
@@ -631,7 +969,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
     public class MapNodeElement : VisualElement
     {
         public string NodeId { get; }
-        public RoguelikeNodeType NodeType { get; }
+        public RoguelikeNodeType NodeType { get; private set; }
         public string EventId { get; set; } = "";
         public float NodeSize => 40f;
 
@@ -773,23 +1111,43 @@ namespace Tactics.Editor.RoguelikeMapEditor
             style.borderTopColor = selected ? new Color(1f, 0.9f, 0.3f) : Color.white;
             style.borderTopWidth = selected ? 3 : 2;
         }
+
+        /// <summary>
+        /// 更新节点类型及对应视觉样式（颜色、标签、tooltip）。
+        /// </summary>
+        public void UpdateNodeType(RoguelikeNodeType newType)
+        {
+            NodeType = newType;
+            style.backgroundColor = TypeColors.GetValueOrDefault(newType, Color.gray);
+            _label.text = TypeLabels.GetValueOrDefault(newType, "?");
+            tooltip = $"{newType} ({NodeId})";
+        }
     }
 
     // ═══════════════════════════════════════════════
-    //  MapConnectionElement — 虚线连接
+    //  MapConnectionElement — 连接线（支持实线/虚线）
     // ═══════════════════════════════════════════════
     public class MapConnectionElement : VisualElement
     {
         public MapNodeElement From { get; }
         public MapNodeElement To { get; }
 
+        /// <summary>是否为手工连接（实线）。false 表示距离建议连接（虚线）。</summary>
+        public bool IsManual { get; }
+
         private const float DashLength = 6f;
         private const float GapLength = 4f;
 
-        public MapConnectionElement(MapNodeElement from, MapNodeElement to)
+        private static readonly Color ManualColor = new Color(0.5f, 0.8f, 0.5f, 0.85f);
+        private static readonly Color DistanceColor = new Color(0.6f, 0.6f, 0.6f, 0.5f);
+        private const float ManualLineWidth = 2f;
+        private const float DistanceLineWidth = 1f;
+
+        public MapConnectionElement(MapNodeElement from, MapNodeElement to, bool isManual = true)
         {
             From = from;
             To = to;
+            IsManual = isManual;
             style.position = Position.Absolute;
             style.left = 0;
             style.top = 0;
@@ -807,15 +1165,29 @@ namespace Tactics.Editor.RoguelikeMapEditor
             var s = From.worldBound.center;
             var e = To.worldBound.center;
 
-            // Convert to local space using WorldToLocal
             var start = this.WorldToLocal(s);
             var end = this.WorldToLocal(e);
 
             var painter = ctx.painter2D;
-            painter.strokeColor = new Color(0.6f, 0.6f, 0.6f, 0.7f);
-            painter.lineWidth = 1.5f;
+            painter.strokeColor = IsManual ? ManualColor : DistanceColor;
+            painter.lineWidth = IsManual ? ManualLineWidth : DistanceLineWidth;
 
-            DrawDashedLine(painter, start, end);
+            if (IsManual)
+            {
+                DrawSolidLine(painter, start, end);
+            }
+            else
+            {
+                DrawDashedLine(painter, start, end);
+            }
+        }
+
+        private void DrawSolidLine(Painter2D painter, Vector2 start, Vector2 end)
+        {
+            painter.BeginPath();
+            painter.MoveTo(start);
+            painter.LineTo(end);
+            painter.Stroke();
         }
 
         private void DrawDashedLine(Painter2D painter, Vector2 start, Vector2 end)

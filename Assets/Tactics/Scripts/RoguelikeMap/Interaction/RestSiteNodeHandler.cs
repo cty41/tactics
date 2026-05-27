@@ -80,13 +80,13 @@ namespace Tactics.RoguelikeMap.Interaction
 
             foreach (var character in state.Roster)
             {
-                int maxHp = 100 + character.GetTotalConstitution() * 5;
+                int maxHp = character.MaxHp;
 
                 // 初始化 CurrentHp（旧存档可能为 0）
                 if (character.CurrentHp <= 0)
                     character.CurrentHp = maxHp;
 
-                int healAmount = Mathf.CeilToInt(maxHp * 0.2f);
+                int healAmount = Mathf.CeilToInt(maxHp * 0.3f);
                 int before = character.CurrentHp;
                 character.CurrentHp = Mathf.Min(maxHp, character.CurrentHp + healAmount);
                 int actualHeal = character.CurrentHp - before;

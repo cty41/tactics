@@ -52,7 +52,7 @@ namespace Tactics.RoguelikeMap.Interaction
                 if (selectedEntry?.buffConfig != null)
                 {
                     var buffConfig = selectedEntry.buffConfig;
-                    var state = PlayerAdventureStateStore.Load();
+                    var state = PlayerAdventureStateStore.LoadRepairAndSave();
                     if (state?.Roster != null && state.ActivePartyCharacterIds.Count > 0)
                     {
                         var activeCharacters = state.Roster
@@ -64,6 +64,7 @@ namespace Tactics.RoguelikeMap.Interaction
                             target.AddPendingBuff(buffConfig);
                             TLog.Info($"[TreasureNodeHandler] 角色 {target.DisplayName} 获得待生效 Buff: {buffConfig.BuffName}");
                             buffResultMessage = $"{target.DisplayName} 获得 Buff：{buffConfig.BuffName}";
+                            PlayerAdventureStateStore.Save(state);
                         }
                     }
                 }
@@ -75,10 +76,11 @@ namespace Tactics.RoguelikeMap.Interaction
             if (config?.equipmentEntries != null && config.equipmentEntries.Count > 0)
             {
                 var selectedEntry = WeightedRandom(config.equipmentEntries, e => e.weight);
-                if (selectedEntry != null)
+                if (selectedEntry != null &&
+                    RoguelikeRewardHelper.TryAddEquipmentToInventory(selectedEntry.equipmentId, out string displayName))
                 {
                     hasEquipment = true;
-                    equipmentName = $"[{selectedEntry.equipmentId}] — TODO: 对接装备系统";
+                    equipmentName = displayName;
                 }
             }
 
@@ -122,8 +124,12 @@ namespace Tactics.RoguelikeMap.Interaction
             if (closeBtn != null)
                 closeBtn.RegisterCallback<ClickEvent>(_ => ClosePanel());
 
-            // 5. Buff 信息已在步骤2中通过 TLog 记录
-            // TODO: 将 buffResultMessage 显示在 TreasurePanel 的 Label 中
+            var buffLabel = root.Q<Label>("BuffResultLabel");
+            if (buffLabel != null)
+            {
+                buffLabel.text = string.IsNullOrEmpty(buffResultMessage) ? string.Empty : buffResultMessage;
+                buffLabel.style.display = string.IsNullOrEmpty(buffResultMessage) ? DisplayStyle.None : DisplayStyle.Flex;
+            }
         }
 
         /// <summary>

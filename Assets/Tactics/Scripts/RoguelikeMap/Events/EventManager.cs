@@ -185,5 +185,10 @@ namespace Tactics.RoguelikeMap.Events
             TLog.Info($"[EventManager] 已清除所有事件");
         }
 
+        public bool IsRegionLoaded(string regionName)
+        {
+            return _regionEvents.ContainsKey(regionName);
+        }
+
     }
 }

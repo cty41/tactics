@@ -25,6 +25,7 @@ namespace Tactics.RoguelikeMap.UI
 
         private RoguelikeEvent _currentEvent;
         private System.Action<bool> _onComplete;
+        private EventEffectContext _effectContext;
 
         // 判定上下文：角色名 → 属性值字典
         private string _adjudicatorName;
@@ -49,7 +50,14 @@ namespace Tactics.RoguelikeMap.UI
         /// <summary>
         /// 显示事件UI
         /// </summary>
-        public async void ShowEvent(RoguelikeEvent evt, System.Action<bool> onComplete)
+        private bool _lastExecutionSucceeded;
+
+        public void ShowEvent(RoguelikeEvent evt, System.Action<bool> onComplete)
+        {
+            ShowEvent(evt, null, onComplete);
+        }
+
+        public async void ShowEvent(RoguelikeEvent evt, EventEffectContext effectContext, System.Action<bool> onComplete)
         {
             if (evt == null)
             {
@@ -60,6 +68,8 @@ namespace Tactics.RoguelikeMap.UI
 
             _currentEvent = evt;
             _onComplete = onComplete;
+            _effectContext = effectContext;
+            _lastExecutionSucceeded = false;
 
             // 通过 UIManager 显示面板
             await UIManager.Instance.ShowAsync(UIManager.UIId.EventPanel);
@@ -153,7 +163,7 @@ namespace Tactics.RoguelikeMap.UI
             }
             else
             {
-                int attrValue = GetAttributeValue(option.attribute);
+                int attrValue = ResolveAttributeValue(option.attribute);
                 int successRate = option.CalculateSuccessRate(attrValue);
                 rateLabel.text = $"{successRate}%";
 
@@ -175,8 +185,8 @@ namespace Tactics.RoguelikeMap.UI
             }
             else
             {
-                int attrValue = GetAttributeValue(option.attribute);
-                string charName = string.IsNullOrEmpty(_adjudicatorName) ? "角色" : _adjudicatorName;
+                int attrValue = ResolveAttributeValue(option.attribute);
+                string charName = ResolveAdjudicatorName(option.attribute);
                 string attrName = option.GetAttributeName();
                 adjudicatorLabel.text = $"(由 {charName} 进行判定，{attrName} {attrValue})";
             }
@@ -224,8 +234,9 @@ namespace Tactics.RoguelikeMap.UI
             var option = _currentEvent.options[index];
 
             // 获取属性值并执行判定
-            int attributeValue = GetAttributeValue(option.attribute);
-            bool success = option.Execute(attributeValue);
+            bool success = _effectContext != null
+                ? option.Execute(_effectContext)
+                : option.Execute(GetAttributeValue(option.attribute));
 
             // 显示结果
             ShowResult(option, success);
@@ -236,6 +247,7 @@ namespace Tactics.RoguelikeMap.UI
         /// </summary>
         private void ShowResult(EventOption option, bool success)
         {
+            _lastExecutionSucceeded = success;
             // 隐藏选项
             if (_optionsContainer != null)
                 _optionsContainer.style.display = DisplayStyle.None;
@@ -266,9 +278,10 @@ namespace Tactics.RoguelikeMap.UI
         private void OnContinueClicked(ClickEvent evt)
         {
             ClosePanel();
-            _onComplete?.Invoke(true);
+            _onComplete?.Invoke(_lastExecutionSucceeded);
             _onComplete = null;
             _currentEvent = null;
+            _effectContext = null;
         }
 
         /// <summary>
@@ -280,6 +293,7 @@ namespace Tactics.RoguelikeMap.UI
             _onComplete?.Invoke(false);
             _onComplete = null;
             _currentEvent = null;
+            _effectContext = null;
         }
 
         /// <summary>
@@ -306,6 +320,28 @@ namespace Tactics.RoguelikeMap.UI
         {
             ClearExisting();
             UIManager.Instance.Hide(UIManager.UIId.EventPanel);
+        }
+
+        private int ResolveAttributeValue(AttributeType attribute)
+        {
+            if (_effectContext != null)
+            {
+                var character = _effectContext.PickTarget(EventTargetType.All, attribute);
+                return EventEffectContext.GetCharacterAttribute(character, attribute);
+            }
+
+            return GetAttributeValue(attribute);
+        }
+
+        private string ResolveAdjudicatorName(AttributeType attribute)
+        {
+            if (_effectContext != null)
+            {
+                var character = _effectContext.PickTarget(EventTargetType.All, attribute);
+                return character?.DisplayName ?? "角色";
+            }
+
+            return string.IsNullOrEmpty(_adjudicatorName) ? "角色" : _adjudicatorName;
         }
     }
 }

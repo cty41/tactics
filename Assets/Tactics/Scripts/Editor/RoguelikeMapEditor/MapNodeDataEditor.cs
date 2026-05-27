@@ -130,7 +130,40 @@ namespace Tactics.Editor.RoguelikeMapEditor
             {
                 EditorGUILayout.Space(8);
                 EditorGUILayout.LabelField("Store Config", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox("Store config - coming soon", MessageType.Info);
+                var sc = wrapper.StoreConfig;
+                if (sc != null)
+                {
+                    int removeIndex = -1;
+                    for (int i = 0; i < sc.goods.Count; i++)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        sc.goods[i].equipmentId = EditorGUILayout.TextField("ID", sc.goods[i].equipmentId);
+                        sc.goods[i].price = EditorGUILayout.IntField("Price", sc.goods[i].price, GUILayout.Width(120));
+                        if (GUILayout.Button("-", GUILayout.Width(24))) removeIndex = i;
+                        EditorGUILayout.EndHorizontal();
+                    }
+
+                    if (removeIndex >= 0)
+                    {
+                        sc.goods.RemoveAt(removeIndex);
+                        dataChanged = true;
+                    }
+
+                    if (GUILayout.Button("+ Good"))
+                    {
+                        sc.goods.Add(new StoreGoodEntry());
+                        dataChanged = true;
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("No store config. Click to create.", MessageType.Info);
+                    if (GUILayout.Button("Create Store Config"))
+                    {
+                        wrapper.SetStoreConfig(new StoreNodeConfig());
+                        dataChanged = true;
+                    }
+                }
             }
 
             // ── Outgoing Connections ──

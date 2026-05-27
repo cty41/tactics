@@ -31,6 +31,39 @@ namespace Tactics.RoguelikeMap
     [Serializable]
     public class SerializableNodeData
     {
+        [Serializable]
+        public class SerializableWeightedEquipmentData
+        {
+            [JsonProperty("equipmentId")]
+            public string equipmentId;
+
+            [JsonProperty("weight")]
+            public float weight = 1f;
+        }
+
+        [Serializable]
+        public class SerializableStoreGoodData
+        {
+            [JsonProperty("equipmentId")]
+            public string equipmentId;
+
+            [JsonProperty("price")]
+            public int price;
+        }
+
+        [Serializable]
+        public class SerializableBuffEntryData
+        {
+            /// <summary>
+            /// BuffConfig 的资产路径（相对于 Assets/），用于 JSON 序列化 ScriptableObject 引用。
+            /// </summary>
+            [JsonProperty("buffConfigPath")]
+            public string buffConfigPath;
+
+            [JsonProperty("weight")]
+            public float weight = 1f;
+        }
+
         /// <summary>
         /// 节点唯一标识（对应 RoguelikeMapNode.nodeId）。
         /// </summary>
@@ -96,6 +129,15 @@ namespace Tactics.RoguelikeMap
         /// </summary>
         [JsonProperty("goldMax")]
         public int? goldMax;
+
+        [JsonProperty("treasureEquipment")]
+        public List<SerializableWeightedEquipmentData> treasureEquipment = new List<SerializableWeightedEquipmentData>();
+
+        [JsonProperty("storeGoods")]
+        public List<SerializableStoreGoodData> storeGoods = new List<SerializableStoreGoodData>();
+
+        [JsonProperty("treasureBuffs")]
+        public List<SerializableBuffEntryData> treasureBuffs = new List<SerializableBuffEntryData>();
     }
 
     /// <summary>
@@ -237,7 +279,23 @@ namespace Tactics.RoguelikeMap
                     node.treasureConfig = new TreasureNodeConfig
                     {
                         goldMin = nodeData.goldMin ?? 2,
-                        goldMax = nodeData.goldMax ?? 5
+                        goldMax = nodeData.goldMax ?? 5,
+                        equipmentEntries = nodeData.treasureEquipment?.Select(e => new EquipmentEntry
+                        {
+                            equipmentId = e.equipmentId,
+                            weight = e.weight
+                        }).ToList() ?? new List<EquipmentEntry>()
+                    };
+                }
+                if (nodeData.storeGoods != null && nodeData.storeGoods.Count > 0)
+                {
+                    node.storeConfig = new StoreNodeConfig
+                    {
+                        goods = nodeData.storeGoods.Select(g => new StoreGoodEntry
+                        {
+                            equipmentId = g.equipmentId,
+                            price = g.price
+                        }).ToList()
                     };
                 }
                 nodes.Add(node);
@@ -298,7 +356,17 @@ namespace Tactics.RoguelikeMap
                     outgoing = node.outgoing.ToArray(),
                     eventId = string.IsNullOrEmpty(node.eventId) ? null : node.eventId,
                     goldMin = node.treasureConfig?.goldMin,
-                    goldMax = node.treasureConfig?.goldMax
+                    goldMax = node.treasureConfig?.goldMax,
+                    treasureEquipment = node.treasureConfig?.equipmentEntries?.Select(e => new SerializableNodeData.SerializableWeightedEquipmentData
+                    {
+                        equipmentId = e.equipmentId,
+                        weight = e.weight
+                    }).ToList() ?? new List<SerializableNodeData.SerializableWeightedEquipmentData>(),
+                    storeGoods = node.storeConfig?.goods?.Select(g => new SerializableNodeData.SerializableStoreGoodData
+                    {
+                        equipmentId = g.equipmentId,
+                        price = g.price
+                    }).ToList() ?? new List<SerializableNodeData.SerializableStoreGoodData>()
                 };
 
                 data.nodes.Add(nodeData);

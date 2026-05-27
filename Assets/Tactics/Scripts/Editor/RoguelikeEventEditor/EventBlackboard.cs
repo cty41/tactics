@@ -114,7 +114,7 @@ namespace Tactics.Editor.RoguelikeEventEditor
             return row;
         }
 
-        private void SelectEvent(string eventId)
+        public void SelectEvent(string eventId)
         {
             if (_selectedEventId != null && _eventRows.TryGetValue(_selectedEventId, out var old))
                 old.style.backgroundColor = StyleKeyword.Null;

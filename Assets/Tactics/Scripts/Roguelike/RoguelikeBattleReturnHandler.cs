@@ -23,6 +23,7 @@ namespace Tactics.Roguelike
     {
         private static readonly RoguelikeBattleReturnHandler _instance = new RoguelikeBattleReturnHandler();
         public static RoguelikeBattleReturnHandler Instance => _instance;
+        private static GameResult _pendingRoguelikeReturnResult;
 
         private static readonly JsonSerializerSettings MapJsonSettings = new JsonSerializerSettings
         {
@@ -86,6 +87,12 @@ namespace Tactics.Roguelike
 
                 // 注册 BattleSettlementFlow 来管理UI流程（必须在 StartSettlement 之前）
                 BattleSettlementFlow.Instance.Subscribe(BattleSettlementCoordinator.Instance, state);
+                if (isRoguelikeBattle)
+                {
+                    _pendingRoguelikeReturnResult = result;
+                    BattleSettlementFlow.Instance.OnFlowFinished -= OnRoguelikeSettlementFlowFinished;
+                    BattleSettlementFlow.Instance.OnFlowFinished += OnRoguelikeSettlementFlowFinished;
+                }
 
                 BattleSettlementCoordinator.Instance.StartSettlement(
                     result,
@@ -102,17 +109,14 @@ namespace Tactics.Roguelike
                         {
                             // 延迟提交地图路径（结算完成后再前进路径）
                             bool committedInMemory = RoguelikeMapRuntimeState.TryCommitPendingBattleVictory();
+                            ApplyRoguelikePathAfterBattle(result);
                             if (!committedInMemory)
-                            {
-                                ApplyRoguelikePathAfterBattle(result);
                                 RoguelikeMapRuntimeState.MarkResumeMapOnHome();
-                            }
 
                             // 清除事件进行中标记
                             RoguelikeEventReentryManager.ClearEventInProgress();
 
-                            TLog.Info("[RoguelikeBattleReturnHandler] Settlement complete. Path committed, markers cleared.");
-                            _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                            TLog.Info("[RoguelikeBattleReturnHandler] Settlement data committed. Waiting for BattleSettlementFlow to finish before leaving battle.");
                         }
                         else
                         {
@@ -210,6 +214,15 @@ namespace Tactics.Roguelike
 
             return RoguelikeEventReentryManager.IsEventInProgress(out string eventType, out _)
                 && string.Equals(eventType, "Battle", System.StringComparison.Ordinal);
+        }
+
+        private static void OnRoguelikeSettlementFlowFinished()
+        {
+            BattleSettlementFlow.Instance.OnFlowFinished -= OnRoguelikeSettlementFlowFinished;
+            TLog.Info("[RoguelikeBattleReturnHandler] BattleSettlementFlow finished. Leaving battle scene now.");
+            var result = _pendingRoguelikeReturnResult;
+            _pendingRoguelikeReturnResult = default;
+            _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
         }
     }
 }

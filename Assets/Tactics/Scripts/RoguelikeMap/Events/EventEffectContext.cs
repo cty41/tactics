@@ -20,10 +20,19 @@ namespace Tactics.RoguelikeMap.Events
         /// <summary>自身角色ID（默认为队伍第一个角色）</summary>
         public string SelfCharacterId { get; set; }
 
-        public EventEffectContext(List<CharacterDefinition> party, string selfCharacterId = null)
+        public PlayerAdventureState AdventureState { get; }
+
+        public EventEffectContext(List<CharacterDefinition> party, string selfCharacterId = null, PlayerAdventureState adventureState = null)
         {
             Party = party ?? new List<CharacterDefinition>();
             SelfCharacterId = selfCharacterId;
+            AdventureState = adventureState;
+        }
+
+        public void SaveAdventureState()
+        {
+            if (AdventureState != null)
+                PlayerAdventureStateStore.Save(AdventureState);
         }
 
         /// <summary>

@@ -154,7 +154,27 @@ namespace Tactics.UI
         private void LoadOrGenerateMap()
         {
             string prefsKey = MapPlayerPrefsKey;
+            if (RoguelikeMapRuntimeState.HasActiveRun && RoguelikeMapRuntimeState.CurrentMap != null)
+            {
+                _currentMap = RoguelikeMapRuntimeState.CurrentMap;
+                _nodeStateManager = CreateNodeStateManager(_currentMap);
+                TLog.Info("[RoguelikeMapUIController] 从运行时状态恢复地图");
+            }
+            else
+            {
+                LoadFreshMap(prefsKey);
+            }
 
+            // 检测是否有中断的事件（玩家在事件节点中退出游戏）
+            if (RoguelikeEventReentryManager.IsEventInProgress(out string interruptedEventType, out string interruptedNodeId))
+            {
+                TLog.Warning($"[RoguelikeMapUIController] Detected interrupted event: type={interruptedEventType}, nodeId={interruptedNodeId}");
+                RoguelikeEventReentryManager.ClearEventInProgress();
+            }
+        }
+
+        private void LoadFreshMap(string prefsKey)
+        {
             // 检查 SceneController 的地图模式配置
             var sc = SceneController.Instance;
             if (sc != null && sc.MapMode == MapGenerationMode.LocalFile && sc.MapDataFile != null)
@@ -168,30 +188,17 @@ namespace Tactics.UI
                 _nodeStateManager = CreateNodeStateManager(_currentMap);
                 TLog.Info($"[RoguelikeMapUIController] 从本地配置加载地图: {sc.MapDataFile.name}");
             }
-            else
+            else if (PlayerPrefs.HasKey(prefsKey))
             {
-                if (RoguelikeMapRuntimeState.HasActiveRun && RoguelikeMapRuntimeState.CurrentMap != null)
+                string mapJson = PlayerPrefs.GetString(prefsKey);
+                _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
+                if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
+                if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
+                _nodeStateManager = CreateNodeStateManager(_currentMap);
+                if (_currentMap?.visitedNodes != null && _currentMap.visitedNodes.Count > 0)
                 {
-                    _currentMap = RoguelikeMapRuntimeState.CurrentMap;
-                    _nodeStateManager = CreateNodeStateManager(_currentMap);
-                    TLog.Info("[RoguelikeMapUIController] 从运行时状态恢复地图");
-                }
-                else if (PlayerPrefs.HasKey(prefsKey))
-                {
-                    string mapJson = PlayerPrefs.GetString(prefsKey);
-                    _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
-                    if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
-                    if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
-                    _nodeStateManager = CreateNodeStateManager(_currentMap);
-                    if (_currentMap?.visitedNodes != null && _currentMap.visitedNodes.Count > 0)
-                    {
-                        var bossNode = _currentMap.GetBossNode();
-                        if (bossNode != null && _currentMap.visitedNodes.Contains(bossNode.nodeId))
-                        {
-                            GenerateNewMap();
-                        }
-                    }
-                    else
+                    var bossNode = _currentMap.GetBossNode();
+                    if (bossNode != null && _currentMap.visitedNodes.Contains(bossNode.nodeId))
                     {
                         GenerateNewMap();
                     }
@@ -201,12 +208,9 @@ namespace Tactics.UI
                     GenerateNewMap();
                 }
             }
-    
-            // 检测是否有中断的事件（玩家在事件节点中退出游戏）
-            if (RoguelikeEventReentryManager.IsEventInProgress(out string interruptedEventType, out string interruptedNodeId))
+            else
             {
-                TLog.Warning($"[RoguelikeMapUIController] Detected interrupted event: type={interruptedEventType}, nodeId={interruptedNodeId}");
-                RoguelikeEventReentryManager.ClearEventInProgress();
+                GenerateNewMap();
             }
         }
 
@@ -1044,6 +1048,17 @@ private void EnterNode(RoguelikeMapUINode mapNode)
                 _currentMap.GetNode(_nodeStateManager.CurrentNodeId) != null)
             {
                 return _nodeStateManager.CurrentNodeId;
+            }
+
+            if (ReferenceEquals(RoguelikeMapRuntimeState.CurrentMap, _currentMap) &&
+                RoguelikeMapRuntimeState.VisitedPathNodeIds.Count > 0)
+            {
+                string lastVisitedNodeId = RoguelikeMapRuntimeState.VisitedPathNodeIds[^1];
+                if (!string.IsNullOrEmpty(lastVisitedNodeId) &&
+                    _currentMap.GetNode(lastVisitedNodeId) != null)
+                {
+                    return lastVisitedNodeId;
+                }
             }
 
             if (_currentMap.visitedNodes.Count == 1)

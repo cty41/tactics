@@ -61,6 +61,16 @@ namespace Tactics.RoguelikeMap
     }
 
     /// <summary>
+    /// 商店商品配置项
+    /// </summary>
+    [System.Serializable]
+    public class StoreGoodEntry
+    {
+        public string equipmentId;
+        public int price = 5;
+    }
+
+    /// <summary>
     /// 宝藏节点奖励配置
     /// </summary>
     [System.Serializable]
@@ -97,9 +107,18 @@ namespace Tactics.RoguelikeMap
     [System.Serializable]
     public class StoreNodeConfig
     {
+        public System.Collections.Generic.List<StoreGoodEntry> goods = new System.Collections.Generic.List<StoreGoodEntry>();
+
         public StoreNodeConfig Clone()
         {
-            return new StoreNodeConfig();
+            return new StoreNodeConfig
+            {
+                goods = goods?.ConvertAll(g => new StoreGoodEntry
+                {
+                    equipmentId = g.equipmentId,
+                    price = g.price
+                }) ?? new System.Collections.Generic.List<StoreGoodEntry>()
+            };
         }
     }
 

@@ -104,6 +104,9 @@ namespace Tactics.RoguelikeMap.Events
         /// <returns>是否成功</returns>
         public bool Execute(EventEffectContext context)
         {
+            if (context == null)
+                return Execute(10);
+
             return AttributeCheckSystem.PerformCheck(this, context);
         }
     }

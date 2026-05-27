@@ -32,6 +32,12 @@ namespace Tactics.Common.Battle
         private BattleSettlementFlow() { }
 
         /// <summary>
+        /// 当整条结算 UI 链真正结束时触发。
+        /// 该事件晚于 BattleSettlementCoordinator 的 Complete 阶段语义，供外层做场景切换等收尾。
+        /// </summary>
+        public event Action OnFlowFinished;
+
+        /// <summary>
         /// 订阅结算协调器事件，开始监听结算流程。
         /// </summary>
         /// <param name="coordinator">战斗结算协调器。</param>
@@ -90,6 +96,7 @@ namespace Tactics.Common.Battle
         private void OnSettlementComplete()
         {
             TLog.Info("[BattleSettlementFlow] Settlement complete.");
+            OnFlowFinished?.Invoke();
         }
 
         #endregion

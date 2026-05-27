@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
+using Tactics.Equipment;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -52,9 +53,6 @@ namespace Tactics.RoguelikeMap.Interaction
             _currentNode = node;
             _onClose = onClose;
 
-            // TODO: 从 node.storeConfig 读取商品配置
-            // var config = node.storeConfig ?? StoreNodeConfig.Default;
-
             // 通过 UIManager 显示 UI
             await UIManager.Instance.ShowAsync(UIManager.UIId.ShopPanel);
             var root = UIManager.Instance.GetRootElement(UIManager.UIId.ShopPanel);
@@ -77,9 +75,8 @@ namespace Tactics.RoguelikeMap.Interaction
             if (_closeButton != null)
                 _closeButton.RegisterCallback<ClickEvent>(_ => CloseShop());
 
-            // 生成商品
-            int goodCount = Random.Range(2, 4); // 2-3 件
-            _currentGoods = _shopManager.GenerateGoods(goodCount);
+            // 优先使用节点配置商品，旧地图回退到临时随机商品
+            _currentGoods = BuildGoods(node);
 
             // 显示商品列表
             DisplayGoods();
@@ -111,7 +108,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
                 var buyBtn = new Button(() => BuyGood(good)) { text = "购买" };
 
-                if (CurrentMap != null && CurrentMap.IsStoreGoodPurchased(_currentNode.nodeId, good.Name))
+                if (CurrentMap != null && CurrentMap.IsStoreGoodPurchased(_currentNode.nodeId, GetPurchaseKey(good)))
                 {
                     buyBtn.text = "已售出";
                     buyBtn.SetEnabled(false);
@@ -135,12 +132,18 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
+            if (!RoguelikeRewardHelper.TryAddEquipmentToInventory(good.EquipmentId, out string equipmentName))
+            {
+                TLog.Warning($"[StoreNodeHandler] 授予商品失败: {good.EquipmentId}");
+                return;
+            }
+
             RunGoldManager.Instance.SpendGold(good.Price);
-            CurrentMap?.AddStorePurchase(_currentNode.nodeId, good.Name);
+            CurrentMap?.AddStorePurchase(_currentNode.nodeId, GetPurchaseKey(good));
             _currentGoods.Remove(good);
             DisplayGoods();
             UpdateGoldDisplay();
-            TLog.Info($"[StoreNodeHandler] 购买了 {good.Name}，花费 {good.Price} 金币");
+            TLog.Info($"[StoreNodeHandler] 购买了 {equipmentName}，花费 {good.Price} 金币");
         }
 
         private void UpdateGoldDisplay()
@@ -157,6 +160,39 @@ namespace Tactics.RoguelikeMap.Interaction
             _onClose = null;
             callback?.Invoke();
             TLog.Info("[StoreNodeHandler] 商店关闭");
+        }
+
+        private List<ShopGood> BuildGoods(RoguelikeMapNode node)
+        {
+            if (node?.storeConfig?.goods != null && node.storeConfig.goods.Count > 0)
+            {
+                var configuredGoods = new List<ShopGood>();
+                foreach (var entry in node.storeConfig.goods)
+                {
+                    if (string.IsNullOrWhiteSpace(entry.equipmentId))
+                        continue;
+
+                    var def = EquipmentDatabase.GetById(entry.equipmentId);
+                    configuredGoods.Add(new ShopGood
+                    {
+                        EquipmentId = entry.equipmentId,
+                        Name = def?.DisplayName ?? entry.equipmentId,
+                        Price = Mathf.Max(0, entry.price),
+                        IconHint = string.Empty
+                    });
+                }
+
+                if (configuredGoods.Count > 0)
+                    return configuredGoods;
+            }
+
+            int goodCount = Random.Range(2, 4);
+            return _shopManager.GenerateGoods(goodCount);
+        }
+
+        private static string GetPurchaseKey(ShopGood good)
+        {
+            return string.IsNullOrWhiteSpace(good?.EquipmentId) ? good?.Name : good.EquipmentId;
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Tactics.AssetPipeline;
 using Tactics.Common.Units.Buffs;
+using Tactics.Equipment;
+using Tactics.RoguelikeMap.Interaction;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Roster;
 using Tactics.Runtime.Utilities;
@@ -61,6 +63,7 @@ namespace Tactics.RoguelikeMap.Events
         /// <param name="ctx">事件效果上下文（包含队伍和目标选取逻辑），null时仅输出日志</param>
         public void Apply(EventEffectContext ctx)
         {
+            bool shouldSaveState = false;
             switch (type)
             {
                 case EventResultType.Gold:
@@ -69,26 +72,37 @@ namespace Tactics.RoguelikeMap.Events
                     break;
                 case EventResultType.Heal:
                     ApplyHeal(ctx);
+                    shouldSaveState = true;
                     break;
                 case EventResultType.Damage:
                     ApplyDamage(ctx);
+                    shouldSaveState = true;
                     break;
                 case EventResultType.Item:
-                    TLog.Info($"[EventResult] 获得物品: {itemId} (TODO)");
+                    TLog.Warning($"[EventResult] Item 奖励暂未接入独立背包系统: {itemId}");
                     break;
                 case EventResultType.Equipment:
-                    TLog.Info($"[EventResult] 获得装备: {itemId} (TODO)");
+                    if (RoguelikeRewardHelper.TryAddEquipmentToInventory(itemId, out string equipmentName, ctx?.AdventureState))
+                    {
+                        TLog.Info($"[EventResult] 获得装备: {equipmentName}");
+                        shouldSaveState = true;
+                    }
                     break;
                 case EventResultType.Buff:
                     ApplyBuff(ctx, isDebuff: false);
+                    shouldSaveState = true;
                     break;
                 case EventResultType.Debuff:
                     ApplyBuff(ctx, isDebuff: true);
+                    shouldSaveState = true;
                     break;
                 case EventResultType.Nothing:
                     TLog.Info($"[EventResult] 无效果");
                     break;
             }
+
+            if (shouldSaveState)
+                ctx?.SaveAdventureState();
         }
 
         /// <summary>

@@ -10,6 +10,7 @@ namespace Tactics.RoguelikeMap.Interaction
     [System.Serializable]
     public class ShopGood
     {
+        public string EquipmentId;
         public string Name;      // 商品名称
         public int Price;        // 价格 3-15
         public string IconHint;  // 图标提示文字（emoji）
@@ -22,9 +23,10 @@ namespace Tactics.RoguelikeMap.Interaction
     /// </summary>
     public class ShopManager
     {
-        private static readonly string[] GoodNames = { "治疗药水", "铁剑", "皮甲", "魔法卷轴", "力量戒指" };
-        private static readonly string[] GoodIcons = { "\U0001F9EA", "\u2694\uFE0F", "\U0001F6E1\uFE0F", "\U0001F4DC", "\U0001F48D" };
-        private static readonly int[] GoodPrices = { 5, 12, 8, 10, 15 };
+        private static readonly string[] GoodIds = { "sword_01", "leather_armor_01", "iron_helmet_01", "bow_01", "lucky_ring_01" };
+        private static readonly string[] GoodNames = { "铁剑", "皮甲", "铁盔", "短弓", "幸运戒指" };
+        private static readonly string[] GoodIcons = { "\u2694\uFE0F", "\U0001F6E1\uFE0F", "\u26D1", "\U0001F3F9", "\U0001F48D" };
+        private static readonly int[] GoodPrices = { 12, 8, 7, 10, 15 };
 
         /// <summary>
         /// 生成指定数量的随机商品
@@ -51,6 +53,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
                 goods.Add(new ShopGood
                 {
+                    EquipmentId = GoodIds[idx],
                     Name = GoodNames[idx],
                     Price = GoodPrices[idx],
                     IconHint = GoodIcons[idx]

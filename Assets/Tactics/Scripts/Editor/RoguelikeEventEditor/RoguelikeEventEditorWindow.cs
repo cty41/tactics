@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -347,6 +348,97 @@ namespace Tactics.Editor.RoguelikeEventEditor
                 EditorUtility.DisplayDialog("Import Success", $"Imported {count} event(s)", "OK");
             else
                 EditorUtility.DisplayDialog("Import Complete", "No valid event JSON files found", "OK");
+        }
+
+        // ── 外部调用接口 ──────────────────────────
+        /// <summary>
+        /// 打开指定事件。若事件未加载则先导入。
+        /// </summary>
+        public void OpenEvent(string eventId)
+        {
+            if (string.IsNullOrEmpty(eventId)) return;
+
+            // 确保面板已初始化
+            if (_eventBlackboard == null)
+            {
+                TLog.Warning("[EventEditor] Blackboard not initialized, retrying after layout");
+                // 如果面板还没初始化，延迟执行
+                rootVisualElement.schedule.Execute(() => OpenEvent(eventId)).StartingIn(100);
+                return;
+            }
+
+            // 如果事件未在列表中，尝试从文件导入
+            var existing = _eventBlackboard.GetEvent(eventId);
+            if (existing == null)
+            {
+                ImportEventById(eventId);
+            }
+
+            // 选中事件
+            _eventBlackboard.SelectEvent(eventId);
+            TLog.Info($"[EventEditor] Opened event '{eventId}'");
+        }
+
+        /// <summary>
+        /// 创建新事件并选中。
+        /// </summary>
+        public void CreateNewEvent(string eventId)
+        {
+            if (string.IsNullOrEmpty(eventId)) return;
+
+            // 确保面板已初始化
+            if (_eventBlackboard == null)
+            {
+                TLog.Warning("[EventEditor] Blackboard not initialized, retrying after layout");
+                rootVisualElement.schedule.Execute(() => CreateNewEvent(eventId)).StartingIn(100);
+                return;
+            }
+
+            var evt = new SerializableEventData
+            {
+                eventId = eventId,
+                title = "新事件",
+                region = EventRegions.DarkForest,
+                nodes = new List<EventNodeData>
+                {
+                    new() { nodeId = "start_1", type = EventNodeTypes.Start, data = new() { eventId = eventId, title = "New Event", region = EventRegions.DarkForest } },
+                    new() { nodeId = "end_1", type = EventNodeTypes.End, data = new() { summaryText = "Event ends" } }
+                },
+                connections = new List<EventConnectionData> { new() { from = "start_1", to = "end_1", port = "out" } }
+            };
+
+            _eventBlackboard.AddEvent(evt);
+            _eventBlackboard.SelectEvent(eventId);
+            TLog.Info($"[EventEditor] Created new event '{eventId}'");
+        }
+
+        /// <summary>
+        /// 按 eventId 从文件导入单个事件。
+        /// </summary>
+        private void ImportEventById(string eventId)
+        {
+            string baseDir = "Assets/Tactics/Resources/Events";
+            if (!AssetDatabase.IsValidFolder(baseDir)) return;
+
+            var guids = AssetDatabase.FindAssets($"{eventId}", new[] { baseDir });
+            foreach (var guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!path.EndsWith($"/{eventId}.json")) continue;
+                try
+                {
+                    string json = System.IO.File.ReadAllText(
+                        System.IO.Path.Combine(Application.dataPath, path.Substring("Assets/".Length)));
+                    var data = EventGraphSerializer.Deserialize(json);
+                    _eventBlackboard?.AddEvent(data);
+                    TLog.Info($"[EventEditor] Imported event '{eventId}' from {path}");
+                }
+                catch (System.Exception ex)
+                {
+                    TLog.Warning($"[EventEditor] Import failed: {path} — {ex.Message}");
+                }
+                break;
+            }
         }
 
         // ── Helper Types ──────────────────────────

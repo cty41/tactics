@@ -86,5 +86,12 @@ namespace Tactics.Editor.RoguelikeMapEditor
             SyncToNode();
             NotifyDataChanged();
         }
+
+        public void SetStoreConfig(StoreNodeConfig config)
+        {
+            _storeConfig = config;
+            SyncToNode();
+            NotifyDataChanged();
+        }
     }
 }
