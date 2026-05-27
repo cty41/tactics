@@ -1,185 +1,168 @@
+using Tactics.RoguelikeMap;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Tactics.RoguelikeMap.UI
+namespace Tactics.UI
 {
     /// <summary>
-    /// Boss胜利UI控制器
-    /// 负责显示Boss击败后的结算界面
+    /// Run结束总结UI控制器
+    /// 负责显示Run结束后的结算界面，支持Victory和Defeat两种结局
     /// </summary>
-    public class BossVictoryUIController : MonoBehaviour
+    public sealed class RunEndSummaryUIController : UIControllerBase
     {
-        public static BossVictoryUIController Instance { get; private set; }
-
-        [Header("UI Settings")]
-        [SerializeField] private VisualTreeAsset bossVictoryPanelTemplate;
-        [SerializeField] private StyleSheet bossVictoryPanelStyle;
-
         private VisualElement _root;
-        private VisualElement _victoryPanel;
+        private VisualElement _panel;
         private Label _titleLabel;
         private Label _goldLabel;
+        private Label _statsLabel;
+        private Label _equipmentLabel;
         private Label _itemsLabel;
+        private Label _bossStatusLabel;
         private Button _returnHomeButton;
 
         private RunSummary _runSummary;
         private System.Action _onReturnHome;
 
-        private void Awake()
+        protected override void OnShown()
         {
-            Instance = this;
+            base.OnShown();
+            EnsureUIElements();
+            RegisterEvents();
+        }
+
+        protected override void OnHidden()
+        {
+            UnregisterEvents();
+        }
+
+        private void EnsureUIElements()
+        {
+            if (_root != null) return;
+            _root = Ui.GetRootElement(UIManager.UIId.RunEndSummary);
+            if (_root == null) return;
+
+            _panel = _root.Q<VisualElement>("RunEndSummaryPanel");
+            _titleLabel = _root.Q<Label>("TitleLabel");
+            _goldLabel = _root.Q<Label>("GoldLabel");
+            _statsLabel = _root.Q<Label>("StatsLabel");
+            _equipmentLabel = _root.Q<Label>("EquipmentLabel");
+            _itemsLabel = _root.Q<Label>("ItemsLabel");
+            _bossStatusLabel = _root.Q<Label>("BossStatusLabel");
+            _returnHomeButton = _root.Q<Button>("ReturnHomeButton");
+        }
+
+        private void RegisterEvents()
+        {
+            if (_returnHomeButton != null)
+                _returnHomeButton.clicked += OnReturnHomeClicked;
+        }
+
+        private void UnregisterEvents()
+        {
+            if (_returnHomeButton != null)
+                _returnHomeButton.clicked -= OnReturnHomeClicked;
         }
 
         /// <summary>
-        /// 显示Boss胜利界面
+        /// 显示Run结束总结界面
         /// </summary>
-        public void ShowVictory(RunSummary summary, System.Action onReturnHome)
+        /// <param name="summary">Run结算数据</param>
+        /// <param name="onReturnHome">返回Home的回调</param>
+        public void ShowSummary(RunSummary summary, System.Action onReturnHome)
         {
             if (summary == null)
             {
-                TLog.Warning("[BossVictoryUIController] RunSummary为空");
+                TLog.Warning("[RunEndSummaryUIController] RunSummary is null");
                 return;
             }
 
             _runSummary = summary;
             _onReturnHome = onReturnHome;
 
-            // 创建UI
-            CreateVictoryPanel();
+            EnsureUIElements();
+            if (_root == null) return;
 
-            // 显示胜利信息
-            DisplayVictory(summary);
+            RunOutcome outcome = summary.GetRunOutcome();
+            bool isVictory = outcome == RunOutcome.Victory;
 
-            TLog.Info($"[BossVictoryUIController] 显示Boss胜利界面");
-        }
-
-        /// <summary>
-        /// 创建胜利面板
-        /// </summary>
-        private void CreateVictoryPanel()
-        {
-            // 清除现有面板
-            if (_victoryPanel != null)
+            // Update theme
+            if (_panel != null)
             {
-                _victoryPanel.RemoveFromHierarchy();
+                _panel.RemoveFromClassList("victory");
+                _panel.RemoveFromClassList("defeat");
+                _panel.AddToClassList(isVictory ? "victory" : "defeat");
             }
 
-            // 创建根容器
-            _root = new VisualElement();
-            _root.style.position = Position.Absolute;
-            _root.style.left = 0;
-            _root.style.top = 0;
-            _root.style.right = 0;
-            _root.style.bottom = 0;
-            _root.style.backgroundColor = new Color(0, 0, 0, 0.8f);
+            if (_titleLabel != null)
+            {
+                _titleLabel.text = isVictory ? "Run 完成！" : "Run 失败...";
+                _titleLabel.RemoveFromClassList("victory");
+                _titleLabel.RemoveFromClassList("defeat");
+                _titleLabel.AddToClassList(isVictory ? "victory" : "defeat");
+            }
 
-            // 创建胜利面板
-            _victoryPanel = new VisualElement();
-            _victoryPanel.style.width = 500;
-            _victoryPanel.style.height = 400;
-            _victoryPanel.style.alignSelf = Align.Center;
-            _victoryPanel.style.justifyContent = Justify.Center;
-            _victoryPanel.style.backgroundColor = new Color(0.1f, 0.3f, 0.1f, 1f);
-            _victoryPanel.style.borderTopLeftRadius = 15;
-            _victoryPanel.style.borderTopRightRadius = 15;
-            _victoryPanel.style.borderBottomLeftRadius = 15;
-            _victoryPanel.style.borderBottomRightRadius = 15;
-            _victoryPanel.style.paddingTop = 30;
-            _victoryPanel.style.paddingBottom = 30;
-            _victoryPanel.style.paddingLeft = 30;
-            _victoryPanel.style.paddingRight = 30;
+            // Gold
+            if (_goldLabel != null)
+                _goldLabel.text = summary.totalGold.ToString();
 
-            // 标题
-            _titleLabel = new Label("Boss已被击败！");
-            _titleLabel.style.fontSize = 28;
-            _titleLabel.style.color = Color.yellow;
-            _titleLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _titleLabel.style.marginBottom = 30;
-            _victoryPanel.Add(_titleLabel);
+            // Stats
+            if (_statsLabel != null)
+            {
+                _statsLabel.text = $"击败敌人: {summary.enemiesDefeated}\n" +
+                                  $"访问节点: {summary.nodesVisited}\n" +
+                                  $"完成事件: {summary.eventsCompleted}";
+            }
 
-            // 金币奖励
-            _goldLabel = new Label();
-            _goldLabel.style.fontSize = 18;
-            _goldLabel.style.color = Color.white;
-            _goldLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _goldLabel.style.marginBottom = 15;
-            _victoryPanel.Add(_goldLabel);
+            // Equipment
+            if (_equipmentLabel != null)
+            {
+                if (summary.acquiredEquipment.Count > 0)
+                {
+                    _equipmentLabel.text = string.Join("\n", summary.acquiredEquipment);
+                    _equipmentLabel.parent.style.display = DisplayStyle.Flex;
+                }
+                else
+                {
+                    _equipmentLabel.parent.style.display = DisplayStyle.None;
+                }
+            }
 
-            // 物品奖励
-            _itemsLabel = new Label();
-            _itemsLabel.style.fontSize = 16;
-            _itemsLabel.style.color = new Color(0.8f, 0.8f, 0.8f, 1f);
-            _itemsLabel.style.whiteSpace = WhiteSpace.Normal;
-            _itemsLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            _itemsLabel.style.marginBottom = 30;
-            _victoryPanel.Add(_itemsLabel);
+            // Items
+            if (_itemsLabel != null)
+            {
+                if (summary.acquiredItems.Count > 0)
+                {
+                    _itemsLabel.text = string.Join("\n", summary.acquiredItems);
+                    _itemsLabel.parent.style.display = DisplayStyle.Flex;
+                }
+                else
+                {
+                    _itemsLabel.parent.style.display = DisplayStyle.None;
+                }
+            }
 
-            // 返回Home按钮
-            _returnHomeButton = new Button();
-            _returnHomeButton.text = "返回避难所";
-            _returnHomeButton.style.fontSize = 20;
-            _returnHomeButton.style.height = 50;
-            _returnHomeButton.style.backgroundColor = new Color(0.8f, 0.6f, 0.2f, 1f);
-            _returnHomeButton.style.borderTopLeftRadius = 10;
-            _returnHomeButton.style.borderTopRightRadius = 10;
-            _returnHomeButton.style.borderBottomLeftRadius = 10;
-            _returnHomeButton.style.borderBottomRightRadius = 10;
-            _returnHomeButton.clicked += OnReturnHomeClicked;
-            _victoryPanel.Add(_returnHomeButton);
+            // Boss Status
+            if (_bossStatusLabel != null)
+            {
+                if (summary.bossDefeated)
+                {
+                    _bossStatusLabel.text = "✓ Boss已被击败";
+                    _bossStatusLabel.style.display = DisplayStyle.Flex;
+                }
+                else
+                {
+                    _bossStatusLabel.text = "✗ Boss未被击败";
+                    _bossStatusLabel.style.display = DisplayStyle.Flex;
+                }
+            }
 
-            _root.Add(_victoryPanel);
-
-            // 添加到UIManager
-            // TODO: 需要集成到UIManager系统
+            TLog.Info($"[RunEndSummaryUIController] Showing summary, outcome={outcome}");
         }
 
-        /// <summary>
-        /// 显示胜利信息
-        /// </summary>
-        private void DisplayVictory(RunSummary summary)
-        {
-            _goldLabel.text = $"获得金币: {summary.totalGold}";
-            
-            if (summary.acquiredItems.Count > 0)
-            {
-                _itemsLabel.text = "获得物品:\n" + string.Join("\n", summary.acquiredItems);
-            }
-            else
-            {
-                _itemsLabel.text = "没有获得额外物品";
-            }
-        }
-
-        /// <summary>
-        /// 返回Home按钮被点击
-        /// </summary>
         private void OnReturnHomeClicked()
         {
-            TLog.Info("[BossVictoryUIController] 返回Home");
-
-            // 关闭胜利面板
-            if (_root != null)
-            {
-                _root.RemoveFromHierarchy();
-            }
-
-            // 回调
-            _onReturnHome?.Invoke();
-            _onReturnHome = null;
-            _runSummary = null;
-        }
-
-        /// <summary>
-        /// 关闭胜利UI
-        /// </summary>
-        public void Close()
-        {
-            if (_root != null)
-            {
-                _root.RemoveFromHierarchy();
-            }
-
+            TLog.Info("[RunEndSummaryUIController] Return home clicked");
             _onReturnHome?.Invoke();
             _onReturnHome = null;
             _runSummary = null;

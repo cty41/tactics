@@ -89,6 +89,12 @@
       "type": "UiToolkitUxml",
       "uxml": "Assets/Tactics/Arts/UI/EventPanel.uxml",
       "uss": "Assets/Tactics/Arts/UI/EventPanel.uss"
+    },
+    {
+      "id": "RunEndSummary",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/RunEndSummary.uxml",
+      "uss": "Assets/Tactics/Arts/UI/RunEndSummary.uss"
     }
   ]
 }

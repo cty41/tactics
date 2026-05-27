@@ -3,11 +3,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Battle;
 using Tactics.Common.Players;
 using Tactics.Flow.Battle;
 using Tactics.Roster;
+using Tactics.RoguelikeMap;
+using Tactics.RoguelikeMap.UI;
 
 using Tactics.Common.Units;
 using Tactics.Runtime.Utilities;
@@ -129,8 +132,30 @@ namespace Tactics.Roguelike
             {
                 if (isRoguelikeBattle)
                 {
-                    RoguelikeMapRuntimeState.ClearPendingBattle();
-                    _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                    // 失败态也经过统一结算流程
+                    var allUnits = BattleController.Instance?.GetUnits();
+                    int totalRounds = BattleController.Instance?.CurrentRound ?? 1;
+                    var state = PlayerAdventureStateStore.LoadRepairAndSave();
+
+                    // 注册 BattleSettlementFlow 来管理UI流程
+                    BattleSettlementFlow.Instance.Subscribe(BattleSettlementCoordinator.Instance, state);
+                    _pendingRoguelikeReturnResult = result;
+                    BattleSettlementFlow.Instance.OnFlowFinished -= OnRoguelikeSettlementFlowFinished;
+                    BattleSettlementFlow.Instance.OnFlowFinished += OnRoguelikeSettlementFlowFinished;
+
+                    BattleSettlementCoordinator.Instance.StartSettlement(
+                        result,
+                        totalRounds,
+                        allUnits,
+                        state,
+                        () =>
+                        {
+                            // 失败态结算完成回调
+                            RoguelikeMapRuntimeState.ClearPendingBattle();
+                            RoguelikeEventReentryManager.ClearEventInProgress();
+                            TLog.Info("[RoguelikeBattleReturnHandler] Defeat settlement complete. Waiting for BattleSettlementFlow to finish.");
+                        }
+                    );
                 }
                 else
                 {
@@ -216,13 +241,145 @@ namespace Tactics.Roguelike
                 && string.Equals(eventType, "Battle", System.StringComparison.Ordinal);
         }
 
-        private static void OnRoguelikeSettlementFlowFinished()
+        /// <summary>
+        /// 结算流程完成后的回调：显示 RunEndSummary 后再离开战斗场景
+        /// </summary>
+        private static async void OnRoguelikeSettlementFlowFinished()
         {
             BattleSettlementFlow.Instance.OnFlowFinished -= OnRoguelikeSettlementFlowFinished;
-            TLog.Info("[RoguelikeBattleReturnHandler] BattleSettlementFlow finished. Leaving battle scene now.");
+            TLog.Info("[RoguelikeBattleReturnHandler] BattleSettlementFlow finished. Showing RunEndSummary.");
+
             var result = _pendingRoguelikeReturnResult;
             _pendingRoguelikeReturnResult = default;
-            _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+
+            // 创建 RunSummary 并填充数据
+            var summary = CreateRunSummaryFromCurrentState(result);
+
+            // 显示 RunEndSummaryUIController
+            await UIManager.Instance.ShowAsync(UIManager.UIId.RunEndSummary);
+            var controller = FindController<RunEndSummaryUIController>(UIManager.UIId.RunEndSummary);
+            if (controller != null)
+            {
+                controller.ShowSummary(summary, () =>
+                {
+                    TLog.Info("[RoguelikeBattleReturnHandler] RunEndSummary closed. Leaving battle scene now.");
+                    UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
+                    _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                });
+            }
+            else
+            {
+                TLog.Warning("[RoguelikeBattleReturnHandler] RunEndSummaryUIController not found. Leaving battle scene directly.");
+                _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
+            }
+        }
+
+        /// <summary>
+        /// 从当前状态创建 RunSummary 实例
+        /// </summary>
+        private static RunSummary CreateRunSummaryFromCurrentState(GameResult result)
+        {
+            var summary = new RunSummary();
+
+            // 设置 RunOutcome
+            bool humanWon = result.Winners != null &&
+                            result.Winners.Any(p => p != null && p.PlayerType == PlayerType.HumanPlayer);
+            summary.SetRunOutcome(humanWon ? RunOutcome.Victory : RunOutcome.Defeat);
+
+            // 如果是 Boss 战，标记 Boss 已击败
+            if (humanWon && IsBossBattle())
+            {
+                summary.MarkBossDefeated();
+            }
+
+            // 从 PlayerAdventureState 获取数据
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (state != null)
+            {
+                summary.AddGold(state.Gold);
+
+                // 统计装备和物品
+                foreach (var item in state.Inventory)
+                {
+                    if (!string.IsNullOrEmpty(item))
+                    {
+                        summary.AddItem(item);
+                    }
+                }
+            }
+
+            // 从 RoguelikeMapRuntimeState 获取节点访问统计
+            if (RoguelikeMapRuntimeState.HasActiveRun)
+            {
+                int nodesVisited = RoguelikeMapRuntimeState.VisitedPathNodeIds?.Count ?? 0;
+                for (int i = 0; i < nodesVisited; i++)
+                {
+                    summary.IncrementNodesVisited();
+                }
+            }
+
+            TLog.Info($"[RoguelikeBattleReturnHandler] RunSummary created: Outcome={summary.GetRunOutcome()}, Gold={summary.totalGold}, NodesVisited={summary.nodesVisited}, BossDefeated={summary.bossDefeated}");
+            return summary;
+        }
+
+        /// <summary>
+        /// 判断当前战斗是否是 Boss 战
+        /// </summary>
+        private static bool IsBossBattle()
+        {
+            // 检查 PendingBattleNodeId 对应的节点类型
+            if (!string.IsNullOrEmpty(RoguelikeMapRuntimeState.PendingBattleNodeId) &&
+                RoguelikeMapRuntimeState.CurrentMap != null)
+            {
+                var node = RoguelikeMapRuntimeState.CurrentMap.GetNode(RoguelikeMapRuntimeState.PendingBattleNodeId);
+                if (node != null && node.nodeType == RoguelikeNodeType.Boss)
+                {
+                    return true;
+                }
+            }
+
+            // 检查 PlayerPrefs 中的 Boss 标记
+            if (PlayerPrefs.HasKey("RoguelikeBossBattle"))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 查找指定 UIId 对应的 UIController
+        /// </summary>
+        private static T FindController<T>(UIManager.UIId uiId) where T : UIControllerBase
+        {
+            var uiDoc = GetUiDocument(uiId);
+            if (uiDoc != null)
+            {
+                var controller = uiDoc.GetComponent<T>();
+                if (controller != null)
+                    return controller;
+            }
+
+            var controllers = UnityEngine.Object.FindObjectsByType<T>(FindObjectsSortMode.None);
+            if (controllers.Length > 0)
+                return controllers[0];
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取指定 UIId 对应的 UIDocument
+        /// </summary>
+        private static UIDocument GetUiDocument(UIManager.UIId uiId)
+        {
+            string uiName = uiId.ToString();
+            var uiDocs = UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
+            foreach (var doc in uiDocs)
+            {
+                if (doc.gameObject.name.Contains(uiName))
+                    return doc;
+            }
+            return null;
         }
     }
 }

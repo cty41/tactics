@@ -1,7 +1,29 @@
 using System.Collections.Generic;
+using Tactics.Runtime.Utilities;
 
 namespace Tactics.RoguelikeMap
 {
+    /// <summary>
+    /// Run 结局类型
+    /// </summary>
+    public enum RunOutcome
+    {
+        /// <summary>
+        /// 胜利（击败Boss）
+        /// </summary>
+        Victory,
+
+        /// <summary>
+        /// 失败（角色死亡）
+        /// </summary>
+        Defeat,
+
+        /// <summary>
+        /// 放弃（玩家主动退出）
+        /// </summary>
+        Abandoned
+    }
+
     /// <summary>
     /// Run结算数据
     /// 记录本次Run的所有奖励和统计
@@ -43,6 +65,11 @@ namespace Tactics.RoguelikeMap
         /// 是否击败了Boss
         /// </summary>
         public bool bossDefeated;
+
+        /// <summary>
+        /// Run结局
+        /// </summary>
+        private RunOutcome _outcome = RunOutcome.Abandoned;
 
         /// <summary>
         /// 添加金币
@@ -107,11 +134,29 @@ namespace Tactics.RoguelikeMap
         }
 
         /// <summary>
+        /// 设置Run结局
+        /// </summary>
+        public void SetRunOutcome(RunOutcome outcome)
+        {
+            _outcome = outcome;
+            TLog.Info($"[RunSummary] Run结局设置为: {outcome}");
+        }
+
+        /// <summary>
+        /// 获取Run结局
+        /// </summary>
+        public RunOutcome GetRunOutcome()
+        {
+            return _outcome;
+        }
+
+        /// <summary>
         /// 获取结算摘要
         /// </summary>
         public string GetSummaryText()
         {
             var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Run结局: {GetOutcomeDisplayName(_outcome)}");
             sb.AppendLine($"总金币: {totalGold}");
             sb.AppendLine($"击败敌人: {enemiesDefeated}");
             sb.AppendLine($"访问节点: {nodesVisited}");
@@ -131,6 +176,24 @@ namespace Tactics.RoguelikeMap
         }
 
         /// <summary>
+        /// 获取结局显示名称
+        /// </summary>
+        private string GetOutcomeDisplayName(RunOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case RunOutcome.Victory:
+                    return "胜利";
+                case RunOutcome.Defeat:
+                    return "失败";
+                case RunOutcome.Abandoned:
+                    return "放弃";
+                default:
+                    return outcome.ToString();
+            }
+        }
+
+        /// <summary>
         /// 重置结算数据
         /// </summary>
         public void Reset()
@@ -142,6 +205,7 @@ namespace Tactics.RoguelikeMap
             nodesVisited = 0;
             eventsCompleted = 0;
             bossDefeated = false;
+            _outcome = RunOutcome.Abandoned;
         }
     }
 }

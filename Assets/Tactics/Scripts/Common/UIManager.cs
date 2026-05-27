@@ -62,6 +62,7 @@ namespace Tactics
         ShopPanel,
         RestSitePanel,
         EventPanel,
+        RunEndSummary,
         }
 
         private enum UIType
@@ -527,6 +528,10 @@ namespace Tactics
                 case UIId.EventPanel:
                     if (root.GetComponent<EventUIController>() == null)
                         root.AddComponent<EventUIController>();
+                    break;
+                case UIId.RunEndSummary:
+                    if (root.GetComponent<RunEndSummaryUIController>() == null)
+                        root.AddComponent<RunEndSummaryUIController>();
                     break;
 
                 default:
