@@ -63,9 +63,10 @@ description: "Use when creating, moving, or organizing project documentation fil
 
 存放**可执行开发计划**，回答"怎么做"和"何时做"：
 
-- 由 `make-dev-plan` 技能输出的结构化计划
+- 由 `make-dev-plan`、`plan-mode-plan-writer` 等 planning skill 输出的正式计划
 - 包含 Background / Scope / Tasks 三大块
 - 每个 Task 有验收标准
+- 对于 Plan Mode 的正式计划，默认作为稳定真相源落地保存
 
 示例：`战斗系统演进计划.md`、`Buff与DoT效果落地计划.md`
 
@@ -119,7 +120,7 @@ description: "Use when creating, moving, or organizing project documentation fil
 
 每个主题只有一个真相源：
 - 设计真相源：`.agents/docs/design/`
-- 计划真相源：`.agents/docs/plans/`
+- 计划真相源：`.agents/docs/plans/`（包含 Plan Mode 下正式落地的计划）
 - 执行工作区：`.sisyphus/plans/`（执行完成后归档或清理）
 
 ### 2. 临时 vs 持久
@@ -130,6 +131,15 @@ description: "Use when creating, moving, or organizing project documentation fil
 | `.sisyphus/plans/` | 临时 | 执行期间，完成后归档 |
 | `.agents/docs/design/` | 持久 | 长期保留，随设计迭代更新 |
 | `.agents/docs/plans/` | 持久 | 长期保留，随进度更新状态 |
+
+### 2.5 Plan Mode 计划落地规则
+
+对于 **Plan Mode** 产出的正式计划：
+
+- 默认保存到 `.agents/docs/plans/`
+- 不应只停留在聊天上下文
+- 回复中应告知用户文件路径
+- 若是主计划的子阶段，应在文档中补充关联链接
 
 ### 3. 引用规范
 
@@ -190,6 +200,7 @@ description: "Use when creating, moving, or organizing project documentation fil
 
 - [ ] 设计文档放在 `.agents/docs/design/`
 - [ ] 开发计划放在 `.agents/docs/plans/`
+- [ ] Plan Mode 的正式计划已落地到 `.agents/docs/plans/`
 - [ ] 使用指南放在 `.agents/docs/usage/`
 - [ ] 临时草稿放在 `.sisyphus/drafts/`
 - [ ] 执行状态不直接写回稳定计划文档

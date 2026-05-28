@@ -1,6 +1,6 @@
 ---
 name: make-dev-plan
-description: "Use when user requests a development plan, task breakdown, milestone planning, or asks '帮我制订开发计划' — follows P0→P3 clarification then outputs Background/Scope/Tasks"
+description: "Use when user requests a development plan, task breakdown, milestone planning, or asks '帮我制订开发计划' — clarifies via P0→P3, then hands the finalized plan to `plan-mode-plan-writer` for save + handoff context"
 ---
 
 # Development planner（开发计划生成器）
@@ -18,7 +18,7 @@ description: "Use when user requests a development plan, task breakdown, milesto
 
 **约束**：总计 5-12 个问题，从 P0 开始逐组问，信息足够可跳过后续组。
 
-**输出格式**：Background → Scope → Tasks（每个 Task 有验收标准）
+**输出职责**：本 skill 负责澄清和任务拆分；正式计划成品需交给 `plan-mode-plan-writer` 统一补齐上下文、落地保存并返回路径。
 
 ## When to use
 
@@ -67,7 +67,9 @@ description: "Use when user requests a development plan, task breakdown, milesto
 
 ### Step 2: Generate the plan
 
-输出必须固定包含三大块：**Background**、**Scope**、**Tasks**（见下方模板）。
+在澄清完成后，先生成 **计划内容骨架**，再交给 `plan-mode-plan-writer` 整理成正式计划文件。
+
+最低要求仍是：**Background**、**Scope**、**Tasks**；但如果该计划最终会进入正式落地阶段，必须额外补充执行上下文（当前状态、关键文件、验证方式、handoff 信息等）。
 
 ---
 
@@ -202,6 +204,18 @@ description: "Use when user requests a development plan, task breakdown, milesto
 ...
 ```
 
+### Step 3: Hand off to `plan-mode-plan-writer`
+
+当计划已经 decision-complete 时：
+
+1. 使用本 skill 产出清晰的范围、任务、验收标准
+2. 使用 `plan-mode-plan-writer`：
+   - 补齐弱模型执行上下文
+   - 保存到 `.agents/docs/plans/`
+   - 在回复中告知用户路径
+
+如果当前只是在澄清阶段或草案阶段，不要提前落地保存。
+
 ---
 
 ## Optional enhancements
@@ -248,6 +262,7 @@ description: "Use when user requests a development plan, task breakdown, milesto
 | 把基础库/工具链默认纳入可改范围 | 未获许可时列为待确认或替代方案 | 避免越权规划 |
 | 按技术分层拆任务 | 按可验证的垂直切片拆任务 | 便于迭代和验收 |
 | 验收标准写成“完成实现” | 写出可观察行为或检查命令 | 计划才可执行 |
+| 输出完计划就结束 | 正式计划交给 `plan-mode-plan-writer` 落地保存 | 否则无法稳定交接 |
 
 ## Checklist
 
@@ -256,3 +271,4 @@ description: "Use when user requests a development plan, task breakdown, milesto
 - [ ] 已记录必要 Assumptions
 - [ ] Tasks 可独立完成且可验证
 - [ ] 未默认纳入用户未授权的基础库、工具链或结构边界改动
+- [ ] 正式计划已交给 `plan-mode-plan-writer` 统一落地
