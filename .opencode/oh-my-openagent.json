@@ -2,14 +2,13 @@
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json",
   "agents": {
     "sisyphus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["deepseek/deepseek-v4-pro"]
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "oracle": {
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "explore": {
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5"
     },
     "multimodal-looker": {
       "model": "xiaomi-token-plan-cn/mimo-v2.5"
@@ -18,45 +17,42 @@
       "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "metis": {
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "momus": {
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "atlas": {
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "sisyphus-junior": {
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     }
   },
   "categories": {
     "visual-engineering": {
-      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro",
-      "fallback_models": ["deepseek/deepseek-v4-pro"]
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "ultrabrain": {
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "deep": {
       "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "artistry": {
-      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro",
-      "fallback_models": ["deepseek/deepseek-v4-pro"]
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "quick": {
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5"
     },
     "unspecified-low": {
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5"
     },
     "unspecified-high": {
-      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro",
-      "fallback_models": ["deepseek/deepseek-v4-pro"]
+      "model": "xiaomi-token-plan-cn/mimo-v2.5-pro"
     },
     "writing": {
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "xiaomi-token-plan-cn/mimo-v2.5"
     }
   },
   "runtime_fallback": {

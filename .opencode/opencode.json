@@ -2,7 +2,6 @@
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
     "@warp-dot-dev/opencode-warp",
-    "oh-my-openagent@latest",
     "superpowers@git+https://github.com/obra/superpowers.git"
   ],
   "mcp": {
