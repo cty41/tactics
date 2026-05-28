@@ -102,7 +102,7 @@ namespace Tactics.RoguelikeMap
     }
 
     /// <summary>
-    /// 商店节点商品配置（占位，后续扩展）
+    /// 商店节点商品配置
     /// </summary>
     [System.Serializable]
     public class StoreNodeConfig

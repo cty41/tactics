@@ -35,56 +35,13 @@ namespace Tactics.RoguelikeMap.Interaction
             TLog.Info($"[TreasureNodeHandler] 打开宝藏: {node.blueprintName}");
             _onClose = onClose;
 
-            var config = node.treasureConfig;
+            // 1. 计算奖励结果
+            var rewardResult = CalculateTreasureReward(node);
 
-            // 1. 随机金币奖励（从配置读取范围，默认 2-5）
-            int goldMin = config?.goldMin ?? 2;
-            int goldMax = config?.goldMax ?? 5;
-            int goldAmount = Random.Range(goldMin, goldMax + 1); // +1 因为 Random.Range(int,int) 上限为 exclusive
-            int actualGold = RunGoldManager.Instance.AddGold(goldAmount);
-            TLog.Info($"[TreasureNodeHandler] 获得 {actualGold} 金币");
+            // 2. 应用奖励到游戏状态
+            ApplyReward(rewardResult);
 
-            // 2. 从配置的 buffEntries 按权重随机选择
-            string buffResultMessage = null;
-            if (config?.buffEntries != null && config.buffEntries.Count > 0)
-            {
-                var selectedEntry = WeightedRandom(config.buffEntries, e => e.weight);
-                if (selectedEntry?.buffConfig != null)
-                {
-                    var buffConfig = selectedEntry.buffConfig;
-                    var state = PlayerAdventureStateStore.LoadRepairAndSave();
-                    if (state?.Roster != null && state.ActivePartyCharacterIds.Count > 0)
-                    {
-                        var activeCharacters = state.Roster
-                            .Where(c => state.ActivePartyCharacterIds.Contains(c.Id))
-                            .ToList();
-                        if (activeCharacters.Count > 0)
-                        {
-                            var target = activeCharacters[Random.Range(0, activeCharacters.Count)];
-                            target.AddPendingBuff(buffConfig);
-                            TLog.Info($"[TreasureNodeHandler] 角色 {target.DisplayName} 获得待生效 Buff: {buffConfig.BuffName}");
-                            buffResultMessage = $"{target.DisplayName} 获得 Buff：{buffConfig.BuffName}";
-                            PlayerAdventureStateStore.Save(state);
-                        }
-                    }
-                }
-            }
-
-            // 3. 从配置的 equipmentEntries 按权重随机选择
-            bool hasEquipment = false;
-            string equipmentName = null;
-            if (config?.equipmentEntries != null && config.equipmentEntries.Count > 0)
-            {
-                var selectedEntry = WeightedRandom(config.equipmentEntries, e => e.weight);
-                if (selectedEntry != null &&
-                    RoguelikeRewardHelper.TryAddEquipmentToInventory(selectedEntry.equipmentId, out string displayName))
-                {
-                    hasEquipment = true;
-                    equipmentName = displayName;
-                }
-            }
-
-            // 4. 通过 UIManager 显示 UXML 奖励面板
+            // 3. 通过 UIManager 显示 UXML 奖励面板
             await UIManager.Instance.ShowAsync(UIManager.UIId.TreasurePanel);
             var root = UIManager.Instance.GetRootElement(UIManager.UIId.TreasurePanel);
             if (root == null)
@@ -97,21 +54,120 @@ namespace Tactics.RoguelikeMap.Interaction
 
             _currentPanel = root;
 
+            // 4. 使用 RewardResult 的展示文本更新 UI
+            DisplayRewardResult(root, rewardResult);
+
+            // 绑定关闭按钮
+            var closeBtn = root.Q<Button>("ConfirmButton");
+            if (closeBtn != null)
+                closeBtn.RegisterCallback<ClickEvent>(_ => ClosePanel());
+        }
+
+        /// <summary>
+        /// 计算宝藏节点的奖励结果
+        /// </summary>
+        private RewardResult CalculateTreasureReward(RoguelikeMapNode node)
+        {
+            var config = node.treasureConfig;
+            var result = new RewardResult();
+
+            // 随机金币奖励
+            int goldMin = config?.goldMin ?? 2;
+            int goldMax = config?.goldMax ?? 5;
+            result.GoldAmount = Random.Range(goldMin, goldMax + 1);
+
+            // 从配置的 buffEntries 按权重随机选择
+            if (config?.buffEntries != null && config.buffEntries.Count > 0)
+            {
+                var selectedEntry = WeightedRandom(config.buffEntries, e => e.weight);
+                if (selectedEntry?.buffConfig != null)
+                {
+                    result.Buffs.Add(selectedEntry.buffConfig);
+                }
+            }
+
+            // 从配置的 equipmentEntries 按权重随机选择
+            if (config?.equipmentEntries != null && config.equipmentEntries.Count > 0)
+            {
+                var selectedEntry = WeightedRandom(config.equipmentEntries, e => e.weight);
+                if (selectedEntry != null)
+                {
+                    result.EquipmentIds.Add(selectedEntry.equipmentId);
+                }
+            }
+
+            // 标记事件完成
+            result.EventsCompleted = 1;
+
+            return result;
+        }
+
+        /// <summary>
+        /// 应用奖励到游戏状态
+        /// </summary>
+        private void ApplyReward(RewardResult rewardResult)
+        {
+            // 应用金币
+            int actualGold = RunGoldManager.Instance.AddGold(rewardResult.GoldAmount);
+            TLog.Info($"[TreasureNodeHandler] 获得 {actualGold} 金币");
+
+            // 应用装备
+            foreach (var equipId in rewardResult.EquipmentIds)
+            {
+                if (RoguelikeRewardHelper.TryAddEquipmentToInventory(equipId, out string equipmentName))
+                {
+                    TLog.Info($"[TreasureNodeHandler] 获得装备: {equipmentName}");
+                }
+            }
+
+            // 应用 Buff
+            if (rewardResult.Buffs.Count > 0)
+            {
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+                if (state?.Roster != null && state.ActivePartyCharacterIds.Count > 0)
+                {
+                    var activeCharacters = state.Roster
+                        .Where(c => state.ActivePartyCharacterIds.Contains(c.Id))
+                        .ToList();
+                    if (activeCharacters.Count > 0)
+                    {
+                        var target = activeCharacters[Random.Range(0, activeCharacters.Count)];
+                        foreach (var buffConfig in rewardResult.Buffs)
+                        {
+                            target.AddPendingBuff(buffConfig);
+                            TLog.Info($"[TreasureNodeHandler] 角色 {target.DisplayName} 获得待生效 Buff: {buffConfig.BuffName}");
+                        }
+                        PlayerAdventureStateStore.Save(state);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 使用 RewardResult 的展示文本更新 UI
+        /// </summary>
+        private void DisplayRewardResult(VisualElement root, RewardResult rewardResult)
+        {
             // 设置金币数量
             var goldLabel = root.Q<Label>("GoldAmountLabel");
             if (goldLabel != null)
-                goldLabel.text = $"+{actualGold} 金币";
+                goldLabel.text = $"+{rewardResult.GoldAmount} 金币";
 
             // 设置装备（如果有）
             var equipmentRow = root.Q<VisualElement>("EquipmentRow");
             if (equipmentRow != null)
             {
-                if (hasEquipment)
+                if (rewardResult.EquipmentIds.Count > 0)
                 {
                     equipmentRow.style.display = DisplayStyle.Flex;
                     var equipLabel = root.Q<Label>("EquipmentNameLabel");
                     if (equipLabel != null)
-                        equipLabel.text = equipmentName;
+                    {
+                        // 使用第一个装备ID获取显示名称
+                        var equipId = rewardResult.EquipmentIds[0];
+                        var def = Tactics.Equipment.EquipmentDatabase.GetById(equipId);
+                        equipLabel.text = def?.DisplayName ?? equipId;
+                    }
                 }
                 else
                 {
@@ -119,16 +175,19 @@ namespace Tactics.RoguelikeMap.Interaction
                 }
             }
 
-            // 绑定关闭按钮
-            var closeBtn = root.Q<Button>("ConfirmButton");
-            if (closeBtn != null)
-                closeBtn.RegisterCallback<ClickEvent>(_ => ClosePanel());
-
+            // 设置 Buff 结果
             var buffLabel = root.Q<Label>("BuffResultLabel");
             if (buffLabel != null)
             {
-                buffLabel.text = string.IsNullOrEmpty(buffResultMessage) ? string.Empty : buffResultMessage;
-                buffLabel.style.display = string.IsNullOrEmpty(buffResultMessage) ? DisplayStyle.None : DisplayStyle.Flex;
+                if (rewardResult.Buffs.Count > 0)
+                {
+                    buffLabel.text = $"获得 Buff: {string.Join(", ", rewardResult.Buffs.ConvertAll(b => b.BuffName))}";
+                    buffLabel.style.display = DisplayStyle.Flex;
+                }
+                else
+                {
+                    buffLabel.style.display = DisplayStyle.None;
+                }
             }
         }
 

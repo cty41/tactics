@@ -41,6 +41,9 @@ namespace Tactics.Editor.RoguelikeMapEditor
         private const float RightPanelMaxWidth = 360f;
         private const string DefaultSaveDir = "Assets/Tactics/Arts/MapData";
 
+        // ── Config 持久化键 ───────────────────────
+        private const string LastConfigGuidKey = "RoguelikeMapEditor_LastConfigGuid";
+
         // ── MenuItem ──────────────────────────────
         [MenuItem("Tactics/RoguelikeMap Editor")]
         public static void ShowWindow()
@@ -82,6 +85,11 @@ namespace Tactics.Editor.RoguelikeMapEditor
         }
 
         // ── Config Loading ────────────────────────
+
+        /// <summary>
+        /// 加载默认配置（恢复优先策略）。
+        /// OnEnable 调用此方法，静默恢复上次选择的 config，不主动弹窗。
+        /// </summary>
         private void LoadDefaultConfig()
         {
             var guids = AssetDatabase.FindAssets("t:RoguelikeMapConfig");
@@ -93,49 +101,163 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 return;
             }
 
-            // 如果有多个配置，允许用户选择
-            if (guids.Length > 1)
+            // 策略1: 尝试恢复上次选中的 config
+            string lastGuid = EditorPrefs.GetString(LastConfigGuidKey, "");
+            if (!string.IsNullOrEmpty(lastGuid))
             {
-                var configNames = new string[guids.Length];
-                for (int i = 0; i < guids.Length; i++)
+                var restoredConfig = TryLoadConfigByGuid(lastGuid);
+                if (restoredConfig != null)
                 {
-                    var path = AssetDatabase.GUIDToAssetPath(guids[i]);
-                    configNames[i] = System.IO.Path.GetFileNameWithoutExtension(path);
-                }
-
-                // 构建选项列表供用户选择
-                int selectedIndex = EditorUtility.DisplayDialogComplex(
-                    "Select Config",
-                    $"Found {guids.Length} RoguelikeMapConfig assets. Select one:",
-                    configNames[0],
-                    configNames.Length > 1 ? configNames[1] : "Cancel",
-                    configNames.Length > 2 ? configNames[2] : "Cancel");
-
-                // DisplayDialogComplex 返回 0/1/2，映射到前三个选项
-                // 如果选项不足，回退到第一个
-                if (selectedIndex >= 0 && selectedIndex < guids.Length)
-                {
-                    var path = AssetDatabase.GUIDToAssetPath(guids[selectedIndex]);
-                    _currentConfig = AssetDatabase.LoadAssetAtPath<RoguelikeMapConfig>(path);
+                    _currentConfig = restoredConfig;
+                    TLog.Info($"[RoguelikeMapEditor] Restored last config: {_currentConfig.name}");
+                    UpdateConfigLabel();
+                    return;
                 }
                 else
                 {
-                    // 用户点击了 Cancel 或超出范围，加载第一个
-                    var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                    _currentConfig = AssetDatabase.LoadAssetAtPath<RoguelikeMapConfig>(path);
+                    // 历史 GUID 已失效，清理旧记录
+                    EditorPrefs.DeleteKey(LastConfigGuidKey);
+                    TLog.Info("[RoguelikeMapEditor] Last config GUID is invalid, cleared.");
                 }
             }
-            else
+
+            // 策略2: 只有一个 config，自动加载
+            if (guids.Length == 1)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guids[0]);
                 _currentConfig = AssetDatabase.LoadAssetAtPath<RoguelikeMapConfig>(path);
+                SaveConfigGuid(guids[0]);
+                TLog.Info($"[RoguelikeMapEditor] Auto-loaded single config: {_currentConfig.name}");
+                UpdateConfigLabel();
+                return;
             }
 
+            // 策略3: 多个 config 且无历史选择，弹窗让用户选择
+            _currentConfig = PromptUserToSelectConfig(guids);
             if (_currentConfig != null)
             {
-                TLog.Info($"[RoguelikeMapEditor] Loaded config: {_currentConfig.name}");
+                string selectedGuid = GetConfigGuid(_currentConfig);
+                if (!string.IsNullOrEmpty(selectedGuid))
+                {
+                    SaveConfigGuid(selectedGuid);
+                }
+                TLog.Info($"[RoguelikeMapEditor] User selected config: {_currentConfig.name}");
             }
             UpdateConfigLabel();
+        }
+
+        /// <summary>
+        /// 手动切换/重载配置（用户主动触发）。
+        /// 始终弹出选择对话框（如果有多个 config）。
+        /// </summary>
+        private void ReloadConfig()
+        {
+            var guids = AssetDatabase.FindAssets("t:RoguelikeMapConfig");
+            if (guids.Length == 0)
+            {
+                TLog.Warning("[RoguelikeMapEditor] No RoguelikeMapConfig found in project.");
+                _currentConfig = null;
+                UpdateConfigLabel();
+                return;
+            }
+
+            // 只有一个 config，直接加载
+            if (guids.Length == 1)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                _currentConfig = AssetDatabase.LoadAssetAtPath<RoguelikeMapConfig>(path);
+                SaveConfigGuid(guids[0]);
+                TLog.Info($"[RoguelikeMapEditor] Loaded single config: {_currentConfig.name}");
+                UpdateConfigLabel();
+                return;
+            }
+
+            // 多个 config，弹窗让用户选择
+            var selectedConfig = PromptUserToSelectConfig(guids);
+            if (selectedConfig != null)
+            {
+                _currentConfig = selectedConfig;
+                string selectedGuid = GetConfigGuid(_currentConfig);
+                if (!string.IsNullOrEmpty(selectedGuid))
+                {
+                    SaveConfigGuid(selectedGuid);
+                }
+                TLog.Info($"[RoguelikeMapEditor] User switched to config: {_currentConfig.name}");
+            }
+            UpdateConfigLabel();
+        }
+
+        /// <summary>
+        /// 通过 GUID 尝试加载 config。
+        /// </summary>
+        private RoguelikeMapConfig TryLoadConfigByGuid(string guid)
+        {
+            if (string.IsNullOrEmpty(guid)) return null;
+
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.IsNullOrEmpty(path)) return null;
+
+            var config = AssetDatabase.LoadAssetAtPath<RoguelikeMapConfig>(path);
+            return config;
+        }
+
+        /// <summary>
+        /// 获取 config 资产的 GUID。
+        /// </summary>
+        private string GetConfigGuid(RoguelikeMapConfig config)
+        {
+            if (config == null) return null;
+
+            var path = AssetDatabase.GetAssetPath(config);
+            if (string.IsNullOrEmpty(path)) return null;
+
+            return AssetDatabase.AssetPathToGUID(path);
+        }
+
+        /// <summary>
+        /// 保存 config GUID 到 EditorPrefs。
+        /// </summary>
+        private void SaveConfigGuid(string guid)
+        {
+            if (!string.IsNullOrEmpty(guid))
+            {
+                EditorPrefs.SetString(LastConfigGuidKey, guid);
+            }
+        }
+
+        /// <summary>
+        /// 弹窗让用户选择 config。
+        /// </summary>
+        private RoguelikeMapConfig PromptUserToSelectConfig(string[] guids)
+        {
+            var configNames = new string[guids.Length];
+            for (int i = 0; i < guids.Length; i++)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                configNames[i] = System.IO.Path.GetFileNameWithoutExtension(path);
+            }
+
+            // 构建选项列表供用户选择
+            int selectedIndex = EditorUtility.DisplayDialogComplex(
+                "Select Config",
+                $"Found {guids.Length} RoguelikeMapConfig assets. Select one:",
+                configNames[0],
+                configNames.Length > 1 ? configNames[1] : "Cancel",
+                configNames.Length > 2 ? configNames[2] : "Cancel");
+
+            // DisplayDialogComplex 返回 0/1/2，映射到前三个选项
+            // 如果选项不足，回退到第一个
+            if (selectedIndex >= 0 && selectedIndex < guids.Length)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guids[selectedIndex]);
+                return AssetDatabase.LoadAssetAtPath<RoguelikeMapConfig>(path);
+            }
+            else
+            {
+                // 用户点击了 Cancel 或超出范围，加载第一个
+                var path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                return AssetDatabase.LoadAssetAtPath<RoguelikeMapConfig>(path);
+            }
         }
 
         // ── Layout ────────────────────────────────
@@ -229,7 +351,7 @@ namespace Tactics.Editor.RoguelikeMapEditor
             // Reload Config 按钮
             var reloadBtn = new Button(() =>
             {
-                LoadDefaultConfig();
+                ReloadConfig();
                 UpdateLeftPanelInfo();
             })
             {
