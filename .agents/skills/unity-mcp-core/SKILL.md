@@ -80,6 +80,48 @@ Always save before closing。 Leaving prefab edit mode or scene without saving d
 
 Use `batch_execute` when performing 3+ independent operations。 Reduces latency and token costs by 10-100x compared to sequential calls。
 
+## Connection Troubleshooting
+
+当 MCP 工具调用失败（如 "Session not found"、"Connection refused"、"Connection timeout"）时：
+
+### 必须执行的步骤
+
+1. **首先**读取配置文件检查端口设置：
+   - OpenCode: `.opencode/opencode.json`
+   - Claude Code: `.claude/claude_code_config.json`
+   - 其他工具：检查对应的配置文件
+
+2. **不要**假设默认端口（3000、8080、5000 等）
+
+3. **使用**配置文件中的实际端口进行连接测试
+
+4. **确认**Unity Editor 是否已启动，MCP 插件是否已启用
+
+### 故障排除流程
+
+```mermaid
+graph TD
+    A[MCP 工具调用失败] --> B{读取配置文件}
+    B --> C[提取端口/URL]
+    C --> D{验证端口是否在监听}
+    D -->|否| E[检查 Unity Editor 状态]
+    D -->|是| F[使用正确端口重试]
+    E --> G[启动 Unity/启用 MCP]
+    G --> F
+    F --> H{仍然失败?}
+    H -->|是| I[报告具体错误信息]
+    H -->|否| J[问题解决]
+```
+
+### Anti-patterns
+
+| ❌ 错误 | ✅ 正确 | 原因 |
+|---------|---------|------|
+| 假设端口 3000 | 读取配置文件确认端口 | 配置可能不同 |
+| 重复尝试相同错误端口 | 改变策略，检查配置 | 避免无效重复 |
+| 不检查 Unity 状态 | 确认 Unity Editor 已启动 | MCP 需要 Unity 运行 |
+| 忽略配置文件 | 首先读取配置 | 配置是唯一真相源 |
+
 ## Anti-patterns
 
 | Wrong | Correct | Why |
