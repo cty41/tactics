@@ -2,9 +2,12 @@
 
 > **版本**: v3.0
 > **日期**: 2026-05-21
-> **状态**: 待执行
+> **状态**: 进行中（Phase 3 已完成，Phase 4 进行中）
 > **关联设计**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md)
 > **关联算法**: [ftl-style-map-generation-algorithm.md](../design/ftl-style-map-generation-algorithm.md)
+> **阶段计划**:
+> - Phase 3: [roguelike-map-phase3-统一结算与整局收口计划.md](./roguelike-map-phase3-统一结算与整局收口计划.md) - 已完成
+> - Phase 4: [roguelike-map-phase4-数据约定清理与回归计划.md](./roguelike-map-phase4-数据约定清理与回归计划.md) - 进行中
 
 ---
 
@@ -213,54 +216,31 @@
 
 ---
 
-### Phase 3: 内容填充（Week 3-4）
+### Phase 3: 内容填充与 Run 收口（Week 3-4）
 
-#### Task 11: 事件内容扩展（通过编辑器创建）
-
-- **目标**: 使用事件编辑器批量创建15+个事件
-- **输出**: 统一事件池15个事件JSON（编辑器导出）
-- **验收标准**:
-  - [ ] 所有事件通过事件编辑器创建和导出
-  - [ ] 每个事件2-4个有意义的选项（至少含1个自动成功选项）
-  - [ ] 覆盖单属性抉择/多属性分工/团队协作三种类型
-  - [ ] 文本符合黑暗奇幻风格
-  - [ ] 数值平衡（奖励不过强不过弱）
-
-#### Task 12: 数值平衡
-
-- **目标**: 调整所有数值确保低金币经济下的游戏平衡
-- **输出**: 金币平衡表, 难度曲线, 奖励价值评估, 时长测试数据
-- **验收标准**:
-  - [ ] **单局总金币≤50**（核心硬指标）
-  - [ ] 金币收入分布合理：普通战斗1-3金/精英3-6金/宝藏2-5金/事件0-5金/Boss 5-10金
-  - [ ] 商店商品价格3-15金，确保玩家能买1-3件
-  - [ ] 属性判定成功率平衡：核心属性玩家应能达到60-80%成功率
-  - [ ] 单局时长15-25分钟
-  - [ ] Boss难度曲线平滑递增
-  - [ ] 不同路径选择产生明显金币差异（±15金以上）
-
-#### Task 13: Boss胜利结算
-
-- **目标**: 实现最终Boss击败后的胜利结算
-- **输出**: `BossVictoryUI`, `RunSummaryUI`
-- **新增文件**:
-  - `Assets/Tactics/Scripts/RoguelikeMap/UI/BossVictoryUIController.cs`
-  - `Assets/Tactics/Scripts/RoguelikeMap/UI/RunSummaryUIController.cs`
-  - `Assets/Tactics/Arts/UI/BossVictoryPanel.uxml`
-  - `Assets/Tactics/Arts/UI/RunSummaryPanel.uxml`
-- **验收标准**:
-  - [ ] Boss击败后显示战利品（金币/装备图标）
-  - [ ] 显示Run结算界面（获得的金币/装备/经验汇总）
-  - [ ] 结算完成后回到主菜单
+> Phase 3 已拆分为独立计划，详见：
+>
+> - [roguelike-map-phase3-统一结算与整局收口计划.md](./roguelike-map-phase3-统一结算与整局收口计划.md)
+>
+> 本阶段专注于：
+> - 统一 Roguelike 战斗结算入口
+> - Roguelike run-end 总结
+> - `RunSummary` 与结算上下文收束
+> - 事件内容填充与 Phase 3 级别的数值平衡
 
 ---
 
-### Phase 4: 优化（Week 4）
+### Phase 4: 数据约定清理与回归（Week 4）
 
-#### Task 14: 事件编辑器完善（独立计划）
-
-> 编辑器完善功能已包含在独立的 **事件编辑器开发计划** 中。
-> 详见 [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md) Phase 2-3。
+> Phase 4 已拆分为独立计划，详见：
+>
+> - [roguelike-map-phase4-数据约定清理与回归计划.md](./roguelike-map-phase4-数据约定清理与回归计划.md)
+>
+> 本阶段专注于：
+> - 事件资源契约统一
+> - 节点配置接口统一
+> - 奖励/效果结果模型收束
+> - RoguelikeMap 与非 Roguelike 战斗回归
 
 ---
 
@@ -291,10 +271,10 @@ Task 1 (地图生成器验证)
 
 ### Open Questions
 
-1. **休息站的"训练"选项**：提升1点属性应由玩家选择具体属性还是随机？（当前设计：玩家选择）
-2. **商店刷新机制**：是否需要支持"付费刷新商品"功能？（当前设计：无，精简2-3个商品）
-3. **事件连锁**：是否需要支持"事件A的选择影响后续事件B"的跨事件状态？（v2暂不实现）
-4. **Boss战难度**：Boss的多阶段机制是否依赖战斗系统的新特性？
+1. **商店刷新机制**：是否需要支持"付费刷新商品"功能？（当前设计：无，精简2-3个商品）
+2. **事件连锁**：是否需要支持"事件A的选择影响后续事件B"的跨事件状态？（v2暂不实现）
+3. **Boss战难度**：Boss的多阶段机制是否依赖战斗系统的新特性？
+4. **Run-end Defeat**：Phase 3 是否只交付 Victory 收口，Defeat 作为后续扩展？（当前计划：Phase 3 先交付普通战斗胜利 + Boss 胜利的 run-end 收口，结构上兼容 Defeat）
 
 ---
 
@@ -318,8 +298,8 @@ Task 1 (地图生成器验证)
 - [ ] 可以触发事件并看到BG3式属性判定选项（显示成功率百分比）
 - [ ] 可以使用编辑器导出的JSON事件文件（事件编辑器验收详见[独立计划](roguelike-event-editor-开发计划.md)）
 - [ ] 可以在商店浏览和购买物品（金币正确扣除和获得，价格3-15金）
-- [ ] 可以在休息站选择休息/训练/冥想
-- [ ] 击败Boss后进入胜利结算，展示Run成果
+- [ ] 可以在休息站执行 `rest`
+- [ ] 普通战斗胜利和 Boss 胜利后，都在统一战斗结算链结束后进入 Roguelike run-end 总结，展示 Run 成果
 - [ ] 单局总金币获取≤50
 - [ ] 单局时长15-25分钟（3次测试均值）
 - [ ] 每次Run体验不同（节点分布、事件、商品随机）

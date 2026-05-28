@@ -278,16 +278,54 @@
 - 消耗品: 概率获得
 - 装备: 小概率
 
+**节点配置接口**:
+```csharp
+// RoguelikeMapNode.treasureConfig
+public class TreasureNodeConfig
+{
+    public int goldMin = 2;
+    public int goldMax = 5;
+    public List<BuffConfigEntry> buffEntries;      // Buff奖励池
+    public List<EquipmentEntry> equipmentEntries;   // 装备奖励池
+}
+```
+
 ### 6. RestSite (休息站)
 
 **触发**: 点击节点 → 弹出选择UI
 
 **选项**:
 - **休息**: 恢复队伍30%最大HP
-- **训练**: 选择一个角色，提升1点属性（力量/敏捷/体质/智力/魅力）
-- **冥想**: 选择一个角色，恢复全部MP
 
-### 7. Boss (最终Boss)
+**节点配置接口**: 无特殊配置，使用默认 RestSite 行为
+
+### 7. Store (商店)
+
+**触发**: 点击节点 → 弹出商店UI
+
+**低金币经济下的商店设计**:
+- 商品数量: 2-3个（精简）
+- 价格范围: **3-15金币**
+- 消耗品: 3-5金币
+- 普通装备: 8-12金币
+- 稀有装备: 15金币（贵但买得起1-2件）
+
+**设计理念**: 因为单局只有40-50金币，每个购买决策都很重要。买药水还是攒钱买装备？这是核心策略点。
+
+**节点配置接口**:
+```csharp
+// RoguelikeMapNode.storeConfig
+public class StoreNodeConfig
+{
+    public List<StoreGoodEntry> goods;  // 商品列表
+}
+
+public class StoreGoodEntry
+{
+    public string equipmentId;  // 装备ID
+    public int price = 5;       // 价格
+}
+```
 
 **位置**: 地图最右侧列，固定1个Boss节点
 
@@ -310,7 +348,7 @@
 
 - 事件系统开发（Task 6-8）前期可使用手工编写JSON先行开发
 - 事件编辑器完成后，事件内容切换为编辑器导出
-- 对接接口为 `Assets/Tactics/Resources/Events/*.json`，数据结构已固定
+- 对接接口为 `RoguelikeMapConfig.eventFiles`（TextAsset 列表），数据结构已固定
 
 ### 依赖关系
 
@@ -390,8 +428,11 @@ Assets/Tactics/
 │       └── UI/              ← 事件/商店/休息UI
 ├── Editor/
 │   └── RoguelikeEventEditor/ ← 事件编辑器（Editor Only）
-└── Resources/
-    └── Events/              ← JSON事件配置文件（统一目录）
+├── GameData/
+│   └── Events/              ← JSON事件配置文件（统一目录）
+└── Arts/
+    └── ScriptableObjects/
+        └── MapConfigs/      ← RoguelikeMapConfig 资产
 ```
 
 ---
