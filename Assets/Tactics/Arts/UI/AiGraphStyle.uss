@@ -1,0 +1,80 @@
+/* AI Decision Graph Editor Styles */
+
+.graph-view {
+    background-color: #1a1a1a;
+}
+
+.grid-background {
+    background-color: #1a1a1a;
+}
+
+/* 意图节点样式 */
+.intent-node {
+    background-color: #2d2d2d;
+    border-width: 2px;
+    border-color: #4a90d9;
+    border-radius: 8px;
+    min-width: 150px;
+}
+
+.intent-node .title {
+    background-color: #4a90d9;
+    color: white;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 6px 6px 0 0;
+}
+
+.intent-node .node-content {
+    padding: 10px;
+}
+
+/* 端口样式 */
+.port {
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background-color: #666;
+    border-width: 2px;
+    border-color: #999;
+}
+
+.port.input {
+    margin-left: -6px;
+}
+
+.port.output {
+    margin-right: -6px;
+}
+
+.port:hover {
+    background-color: #4a90d9;
+    border-color: #6ab0ff;
+}
+
+/* 连接线样式 */
+.edge {
+    stroke-width: 2px;
+    stroke-color: #666;
+}
+
+.edge:hover {
+    stroke-color: #4a90d9;
+}
+
+/* Inspector 样式 */
+.inspector {
+    background-color: #252525;
+    padding: 10px;
+}
+
+.inspector label {
+    color: #ccc;
+}
+
+.inspector .title {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 10px;
+}

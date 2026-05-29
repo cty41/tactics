@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.AI.BehaviourTrees;
+using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -12,6 +13,7 @@ using Tactics.Common.Units.Classes;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
 using Tactics.Common.Units.Highlight;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -71,8 +73,16 @@ namespace Tactics.Common.Units
 
         public string UnitName => gameObject.name;
 
-        public ITreeNode BehaviourTree { get { return _behaviourTreeResource.BehaviourTree; } }
+        public ITreeNode BehaviourTree { get { return _behaviourTreeResource?.BehaviourTree; } }
         [SerializeField] protected BehaviourTreeResource _behaviourTreeResource;
+
+        [Tooltip("新 AI 脑资产（与 BehaviourTreeResource 互斥）")]
+        [SerializeField] private AiBrainAsset _aiBrainAsset;
+
+        /// <summary>
+        /// 新 AI 脑资产。如果设置了此字段，则使用新 AI 系统而不是行为树。
+        /// </summary>
+        public AiBrainAsset AiBrainAsset => _aiBrainAsset;
 
         [SerializeField] private HashSet<string> _usedBasicAbilitiesThisTurn = new();
 
@@ -182,7 +192,16 @@ namespace Tactics.Common.Units
             _moveComponent = new UnityMoveComponent(this);
             _combatComponent = new CombatComponent(this);
             _buffComponent = new BuffComponent(this);
-            _behaviourTreeResource?.Initialize(this, gridController);
+
+            // 新 AI / 旧行为树互斥
+            if (_aiBrainAsset != null)
+            {
+                TLog.Info($"[Unit] {gameObject.name} using new AI brain, skipping old behaviour tree init.");
+            }
+            else
+            {
+                _behaviourTreeResource?.Initialize(this, gridController);
+            }
 
             // Initialize highlight manager with configs
             _highlightManager = new UnitHighlightManager(this, _highlightConfigs);

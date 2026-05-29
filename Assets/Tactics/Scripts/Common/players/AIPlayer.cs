@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.AI;
+using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Units;
@@ -93,12 +94,24 @@ namespace Tactics.Common.Players
                     }
 
                     await Awaitable.WaitForSecondsAsync(UnitDelay / 1000f, _cancellationTokenSource.Token);
-                    if (playableUnit.BehaviourTree == null)
+
+                    // 新 AI / 旧行为树分流
+                    if (playableUnit is Unit concreteUnit && concreteUnit.AiBrainAsset != null)
                     {
-                        TLog.Error($"[AIPlayer] Unit {playableUnit} has null BehaviourTree. Skipping.");
+                        // 使用新 AI 系统
+                        TLog.Info($"[AIPlayer] Unit {playableUnit} using new AI brain.");
+                        await AiBrainRunner.Execute(playableUnit, gridController, concreteUnit.AiBrainAsset);
+                    }
+                    else if (playableUnit.BehaviourTree != null)
+                    {
+                        // 使用旧行为树
+                        await playableUnit.BehaviourTree.Execute(DebugMode);
+                    }
+                    else
+                    {
+                        TLog.Error($"[AIPlayer] Unit {playableUnit} has no AI configured. Skipping.");
                         continue;
                     }
-                    await playableUnit.BehaviourTree.Execute(DebugMode);
 
                     await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
                     await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
