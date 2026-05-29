@@ -113,7 +113,7 @@ BFS 计算视野 → B 的邻居 A 仍是 Visited（不会变回 Reachable）
       4. 点击节点 A
       5. 验证可以成功进入节点 A
     Expected Result: 节点 A 可以被点击并进入
-    Evidence: .sisyphus/evidence/task-1-reentry-test.png
+    Evidence: 已完成验证
 
   Scenario: 非直接邻居的已访问节点不可点击
     Tool: Unity Editor Play Mode
@@ -123,7 +123,7 @@ BFS 计算视野 → B 的邻居 A 仍是 Visited（不会变回 Reachable）
       2. 检查节点 C 的状态
       3. 验证 C 的状态为 Visited（不可点击）
     Expected Result: 节点 C 保持 Visited 状态，不可点击
-    Evidence: .sisyphus/evidence/task-1-non-neighbor-test.png
+    Evidence: 已完成验证
   ```
 
   **Commit**: YES

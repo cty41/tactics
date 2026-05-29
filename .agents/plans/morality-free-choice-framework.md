@@ -2,7 +2,7 @@
 
 > **状态**: 草稿，待深化  
 > **日期**: 2026-05-15  
-> **关联设计**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md) | [roguelike-event-editor-design.md](../design/roguelike-event-editor-design.md)
+> **关联设计**: [roguelike-map-gameplay-design.md](../docs/roguelike-map-gameplay-design.md) | [roguelike-event-editor-design.md](../docs/roguelike-event-editor-design.md)
 
 ---
 

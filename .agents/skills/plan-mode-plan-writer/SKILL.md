@@ -1,13 +1,13 @@
 ---
 name: plan-mode-plan-writer
-description: "Use when producing a formal plan in Plan Mode — saves the finalized plan to `.agents/docs/plans/`, returns the path, and adds execution context for weaker LLM handoff"
+description: "Use when producing a formal plan in Plan Mode — saves the finalized plan to `.agents/plans/`, returns the path, and adds execution context for weaker LLM handoff"
 ---
 
 # Plan Mode 计划落地规范
 
 统一约束 **Plan Mode** 下正式计划的成品形态。核心目标只有两个：
 
-1. 形成正式计划后，必须落地保存到 `.agents/docs/plans/`，并告知用户路径。
+1. 形成正式计划后，必须落地保存到 `.agents/plans/`，并告知用户路径。
 2. 计划正文必须补齐足够的执行上下文，让新 session 中能力较弱的 LLM 也能接手实施。
 
 ## Quick Reference
@@ -16,7 +16,7 @@ description: "Use when producing a formal plan in Plan Mode — saves the finali
 |------|------|------|
 | 判定正式计划 | 仅保存 decision-complete 的最终计划 | `<proposed_plan>` |
 | 补齐上下文 | 写明当前状态、关键文件、接口、验证方式、风险 | 可交接执行包 |
-| 落地保存 | 保存到 `.agents/docs/plans/` | 稳定计划文件 |
+| 落地保存 | 保存到 `.agents/plans/` | 稳定计划文件 |
 | 告知路径 | 回复中明确文件路径与关联文档 | 可直接打开 |
 
 ## When to use
@@ -112,7 +112,7 @@ description: "Use when producing a formal plan in Plan Mode — saves the finali
 
 默认规则：
 
-- 所有正式计划都保存到 `.agents/docs/plans/`
+- 所有正式计划都保存到 `.agents/plans/`
 - 文件名使用“主题可读名 + `计划.md`”风格
 - 子阶段计划允许拆成独立文件
 - 若存在主计划，子计划中补充相对链接
@@ -132,14 +132,14 @@ description: "Use when producing a formal plan in Plan Mode — saves the finali
 
 1. 澄清与收束
 2. 生成正式计划
-3. 落地到 `.agents/docs/plans/`
+3. 落地到 `.agents/plans/`
 4. 回复路径与关联说明
 
 ## Anti-patterns
 
 | 错误 | 正确 | 原因 |
 |------|------|------|
-| 计划只存在于聊天回复 | 正式计划保存到 `.agents/docs/plans/` | 否则无法稳定交接 |
+| 计划只存在于聊天回复 | 正式计划保存到 `.agents/plans/` | 否则无法稳定交接 |
 | 只写 Task 标题，不写上下文 | 补齐当前状态、入口点、验证方式 | 弱模型无法直接执行 |
 | 把草案也写成稳定计划文件 | 只有 decision-complete 的正式计划才保存 | 避免污染计划真相源 |
 | 计划保存了，但不告诉用户路径 | 回复中明确给出路径 | 用户无法确认落地结果 |
@@ -150,6 +150,6 @@ description: "Use when producing a formal plan in Plan Mode — saves the finali
 - [ ] 当前内容已达到正式计划标准
 - [ ] 计划使用单个 `<proposed_plan>` 输出
 - [ ] 已补齐当前状态、关键上下文、验证方式、handoff 信息
-- [ ] 正式计划保存到 `.agents/docs/plans/`
+- [ ] 正式计划保存到 `.agents/plans/`
 - [ ] 回复中已明确告知路径
 - [ ] 如有主从关系，已补关联链接

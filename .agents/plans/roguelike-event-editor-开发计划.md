@@ -3,7 +3,7 @@
 > **版本**: v2.0  
 > **日期**: 2026-05-21  
 > **状态**: 待执行  
-> **关联设计**: [roguelike-event-editor-design.md](../design/roguelike-event-editor-design.md)  
+> **关联设计**: [roguelike-event-editor-design.md](../docs/roguelike-event-editor-design.md)  
 > **主计划**: [roguelike-map-gameplay-开发计划.md](../plans/roguelike-map-gameplay-开发计划.md)
 
 ---
@@ -255,7 +255,7 @@
   - [ ] 完整流程可用：新建→编辑→预览→导出→导入→修改→导出
   - [ ] 每个节点类型的功能完整
   - [ ] 创建3个示例事件（不同类型）
-  - [ ] 撰写"事件编辑器使用指南"存入 `.agents/docs/usage/`
+  - [ ] 撰写"事件编辑器使用指南"存入 `.agents/docs/`
   - [ ] 所有操作不产生Unity报错
 
 ---

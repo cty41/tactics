@@ -211,7 +211,7 @@ description: "Use when user requests a development plan, task breakdown, milesto
 1. 使用本 skill 产出清晰的范围、任务、验收标准
 2. 使用 `plan-mode-plan-writer`：
    - 补齐弱模型执行上下文
-   - 保存到 `.agents/docs/plans/`
+   - 保存到 `.agents/plans/`
    - 在回复中告知用户路径
 
 如果当前只是在澄清阶段或草案阶段，不要提前落地保存。

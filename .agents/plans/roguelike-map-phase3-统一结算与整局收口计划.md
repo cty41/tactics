@@ -3,7 +3,7 @@
 > **版本**: v1.0
 > **日期**: 2026-05-27
 > **状态**: 已完成
-> **关联设计**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md)
+> **关联设计**: [roguelike-map-gameplay-design.md](../docs/roguelike-map-gameplay-design.md)
 > **关联主计划**: [roguelike-map-gameplay-开发计划.md](./roguelike-map-gameplay-开发计划.md)
 
 ---

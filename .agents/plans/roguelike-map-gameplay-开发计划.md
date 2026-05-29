@@ -3,8 +3,8 @@
 > **版本**: v3.0
 > **日期**: 2026-05-21
 > **状态**: 进行中（Phase 3 已完成，Phase 4 进行中）
-> **关联设计**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md)
-> **关联算法**: [ftl-style-map-generation-algorithm.md](../design/ftl-style-map-generation-algorithm.md)
+> **关联设计**: [roguelike-map-gameplay-design.md](../docs/roguelike-map-gameplay-design.md)
+> **关联算法**: [ftl-style-map-generation-algorithm.md](../docs/ftl-style-map-generation-algorithm.md)
 > **阶段计划**:
 > - Phase 3: [roguelike-map-phase3-统一结算与整局收口计划.md](./roguelike-map-phase3-统一结算与整局收口计划.md) - 已完成
 > - Phase 4: [roguelike-map-phase4-数据约定清理与回归计划.md](./roguelike-map-phase4-数据约定清理与回归计划.md) - 进行中
@@ -98,7 +98,7 @@
 
 > 事件编辑器已分离为**独立开发计划**，不与本计划的任务共享依赖。
 > 
-> **设计文档**: [roguelike-event-editor-design.md](../design/roguelike-event-editor-design.md)  
+> **设计文档**: [roguelike-event-editor-design.md](../docs/roguelike-event-editor-design.md)  
 > **开发计划**: [roguelike-event-editor-开发计划.md](roguelike-event-editor-开发计划.md)
 > 
 > **开发策略**: 事件编辑器与主计划完全并行。事件系统的开发（Task 6-8）前期使用手工编写的JSON文件先行开发，
@@ -308,7 +308,7 @@ Task 1 (地图生成器验证)
 
 ## 关联文档
 
-- **设计文档**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md)
+- **设计文档**: [roguelike-map-gameplay-design.md](../docs/roguelike-map-gameplay-design.md)
 - **项目文档组织规范**: [project-doc-organization](../../skills/project-doc-organization/SKILL.md)
 - **前置计划**: [战斗结算与奖励计划.md](战斗结算与奖励计划.md)
 - **前置计划**: [地形效果计划.md](地形效果计划.md)

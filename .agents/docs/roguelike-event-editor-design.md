@@ -3,7 +3,7 @@
 > **版本**: v1.0  
 > **日期**: 2026-05-12  
 > **状态**: 设计完成  
-> **关联设计**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md)  
+> **关联设计**: [roguelike-map-gameplay-design.md](./roguelike-map-gameplay-design.md)  
 > **关联计划**: [roguelike-event-editor-开发计划.md](../plans/roguelike-event-editor-开发计划.md)
 
 ---
@@ -342,7 +342,7 @@ AssetDatabase.Refresh()
 ```
 ┌──────────────────────────────────────────────┐
 │          Roguelike地图玩法 主计划               │
-│  .agents/docs/plans/roguelike-map-gameplay-   │
+│  .agents/plans/roguelike-map-gameplay-        │
 │  开发计划.md                                   │
 │                                              │
 │  Task 1-3: 区域系统/地图生成/节点状态           │
@@ -352,7 +352,7 @@ AssetDatabase.Refresh()
 │                          ↑                    │
 │                          | 依赖                │
 │  Task 事件编辑器 (独立) ──┘                    │
-│  .agents/docs/plans/                          │
+│  .agents/plans/                               │
 │  roguelike-event-editor-开发计划.md            │
 └──────────────────────────────────────────────┘
 ```

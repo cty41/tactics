@@ -23,7 +23,7 @@
 ## Context
 
 ### 设计来源
-- **设计文档**: `.agents/docs/design/ftl-style-map-generation-algorithm.md` (v3.1)
+- **设计文档**: `.agents/docs/ftl-style-map-generation-algorithm.md` (v3.1)
 - **核心变化**: 从列式布局改为网格布局
 
 ### 当前实现（v3.0 列式布局）

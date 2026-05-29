@@ -3,7 +3,7 @@
 > **版本**: v1.0
 > **日期**: 2026-05-27
 > **状态**: 进行中
-> **关联设计**: [roguelike-map-gameplay-design.md](../design/roguelike-map-gameplay-design.md)
+> **关联设计**: [roguelike-map-gameplay-design.md](../docs/roguelike-map-gameplay-design.md)
 > **关联主计划**: [roguelike-map-gameplay-开发计划.md](./roguelike-map-gameplay-开发计划.md)
 > **前置阶段**: [roguelike-map-phase3-统一结算与整局收口计划.md](./roguelike-map-phase3-统一结算与整局收口计划.md)
 
@@ -113,7 +113,7 @@
 ### Task 6: 文档同步清理
 
 - **目标**: 把设计文档、主计划、分阶段计划中的旧约束同步清理掉
-- **输入**: `.agents/docs/design/roguelike-map-gameplay-design.md`, 主计划, Phase 3/4 子计划
+- **输入**: `.agents/docs/roguelike-map-gameplay-design.md`, 主计划, Phase 3/4 子计划
 - **输出**: 一致的文档真相源
 - **验收标准**:
   - [x] 设计文档不再保留 `RestSite` 的训练/冥想旧描述

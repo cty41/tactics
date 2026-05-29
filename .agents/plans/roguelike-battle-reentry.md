@@ -226,7 +226,7 @@ public static class RoguelikeEventReentryManager
 ### Task 6: 更新设计文档
 
 - **目标**：在 `战斗结算与奖励计划.md` 中添加重入流程章节
-- **输入**：当前 `.agents/docs/plans/战斗结算与奖励计划.md`
+- **输入**：当前 `.agents/plans/战斗结算与奖励计划.md`
 - **输出**：更新后的文档
 - **验收标准**：
   - [x] 新增 "## 战斗与事件重入流程" 章节
