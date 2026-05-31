@@ -13,6 +13,7 @@ namespace Tactics.Flow.Home
         public static HomeFlowCoordinator Instance => _instance;
 
         private bool _isMenuTransitioning;
+        private bool _menuPausedGame;
 
         private HomeFlowCoordinator() { }
 
@@ -65,6 +66,11 @@ namespace Tactics.Flow.Home
             try
             {
                 await UIManager.Instance.ShowAsync(UIManager.UIId.Menu);
+                if (!_menuPausedGame)
+                {
+                    GamePauseService.Pause();
+                    _menuPausedGame = true;
+                }
             }
             finally
             {
@@ -75,6 +81,11 @@ namespace Tactics.Flow.Home
         public void CloseMenu()
         {
             UIManager.Instance.Hide(UIManager.UIId.Menu);
+            if (_menuPausedGame)
+            {
+                GamePauseService.Resume();
+                _menuPausedGame = false;
+            }
         }
 
         public async Task ToggleMenuAsync()
@@ -85,11 +96,16 @@ namespace Tactics.Flow.Home
             {
                 if (UIManager.Instance.IsVisible(UIManager.UIId.Menu))
                 {
-                    UIManager.Instance.Hide(UIManager.UIId.Menu);
+                    CloseMenu();
                     return;
                 }
 
                 await UIManager.Instance.ShowAsync(UIManager.UIId.Menu);
+                if (!_menuPausedGame)
+                {
+                    GamePauseService.Pause();
+                    _menuPausedGame = true;
+                }
             }
             finally
             {
@@ -100,6 +116,22 @@ namespace Tactics.Flow.Home
         public void DestroyMenu()
         {
             UIManager.Instance.Destroy(UIManager.UIId.Menu);
+            if (_menuPausedGame)
+            {
+                GamePauseService.Resume();
+                _menuPausedGame = false;
+            }
+        }
+
+        public async Task OpenOptionsFromMenuAsync()
+        {
+            await UIManager.Instance.ShowAsync(UIManager.UIId.Options);
+        }
+
+        public void ForceResumeForSceneTransition()
+        {
+            _menuPausedGame = false;
+            GamePauseService.ForceResume();
         }
     }
 }

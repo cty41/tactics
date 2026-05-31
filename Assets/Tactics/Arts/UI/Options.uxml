@@ -1,0 +1,20 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Tactics/Arts/UI/Options.uss?fileID=7433441132597879392&amp;guid=679da12b8739ce6468d2b6a58ef1ed32&amp;type=3#Options"/>
+    <ui:VisualElement name="OptionsOverlay" class="overlay">
+        <ui:VisualElement name="OptionsRoot" class="panel">
+            <ui:Label name="OptionsTitle" text="OPTIONS" class="title"/>
+            <ui:VisualElement class="separator"/>
+            <ui:Label text="Resolution" class="field-label"/>
+            <ui:DropdownField name="ResolutionDropdown" class="field"/>
+            <ui:Toggle name="FullscreenToggle" text="Fullscreen" class="toggle"/>
+            <ui:Label text="Master Volume" class="field-label"/>
+            <ui:Slider name="MasterVolumeSlider" low-value="0" high-value="1" value="1" class="field"/>
+            <ui:Toggle name="MuteToggle" text="Mute" class="toggle"/>
+            <ui:Label name="AudioStatusLabel" text="" class="status-label"/>
+            <ui:VisualElement class="button-row">
+                <ui:Button name="ApplyButton" text="APPLY" class="button"/>
+                <ui:Button name="BackButton" text="BACK" class="button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

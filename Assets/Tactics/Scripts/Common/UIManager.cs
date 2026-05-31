@@ -3,6 +3,7 @@ using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.AssetPipeline;
+using Tactics.Flow.Home;
 using Tactics.RoguelikeMap.UI;
 using Tactics.UI;
 using UnityEngine;
@@ -56,13 +57,15 @@ namespace Tactics
             Inventory,
             BattleSettlement,
             AttributeAllocation,
-        SkillSelection,
-        LevelUp,
-        TreasurePanel,
-        ShopPanel,
-        RestSitePanel,
-        EventPanel,
-        RunEndSummary,
+            SkillSelection,
+            LevelUp,
+            TreasurePanel,
+            ShopPanel,
+            RestSitePanel,
+            EventPanel,
+            RunEndSummary,
+            Options,
+            SlotSelect,
         }
 
         private enum UIType
@@ -219,6 +222,7 @@ namespace Tactics
         }
 
         private InputAction _toggleConsoleAction;
+        private InputAction _toggleMenuAction;
         private bool _inputInitialized;
 
         public Task ShowAsync(UIId id)
@@ -267,6 +271,14 @@ namespace Tactics
                 _toggleConsoleAction.Enable();
             }
 
+            var uiMap = module.actionsAsset.FindActionMap("UI");
+            _toggleMenuAction = uiMap?.FindAction("Cancel");
+            if (_toggleMenuAction != null)
+            {
+                _toggleMenuAction.performed += OnToggleMenuPerformed;
+                _toggleMenuAction.Enable();
+            }
+
             _inputInitialized = true;
         }
 
@@ -276,6 +288,25 @@ namespace Tactics
                 Hide(UIId.CheatConsole);
             else
                 _ = ShowAsync(UIId.CheatConsole);
+        }
+
+        private void OnToggleMenuPerformed(InputAction.CallbackContext ctx)
+        {
+            if (IsVisible(UIId.Options))
+            {
+                Hide(UIId.Options);
+                return;
+            }
+
+            if (!CanTogglePauseMenu())
+                return;
+
+            _ = HomeFlowCoordinator.Instance.ToggleMenuAsync();
+        }
+
+        private bool CanTogglePauseMenu()
+        {
+            return IsVisible(UIId.RoguelikeMap) || IsVisible(UIId.Battle) || IsVisible(UIId.Menu);
         }
 
         public void Hide(UIId id)
@@ -532,6 +563,14 @@ namespace Tactics
                 case UIId.RunEndSummary:
                     if (root.GetComponent<RunEndSummaryUIController>() == null)
                         root.AddComponent<RunEndSummaryUIController>();
+                    break;
+                case UIId.Options:
+                    if (root.GetComponent<OptionsUIController>() == null)
+                        root.AddComponent<OptionsUIController>();
+                    break;
+                case UIId.SlotSelect:
+                    if (root.GetComponent<SlotSelectUIController>() == null)
+                        root.AddComponent<SlotSelectUIController>();
                     break;
 
                 default:

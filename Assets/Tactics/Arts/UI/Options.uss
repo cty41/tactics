@@ -1,0 +1,70 @@
+.overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.52);
+    justify-content: center;
+    align-items: center;
+}
+
+.panel {
+    width: 440px;
+    min-height: 500px;
+    background-color: rgba(0, 0, 0, 0.94);
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: rgb(249, 135, 75);
+    padding: 32px;
+    flex-direction: column;
+}
+
+.title {
+    font-size: 34px;
+    color: white;
+    -unity-text-align: middle-center;
+    margin-bottom: 12px;
+}
+
+.separator {
+    height: 2px;
+    background-color: rgb(249, 135, 75);
+    margin-bottom: 16px;
+}
+
+.field-label {
+    color: white;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.field {
+    margin-bottom: 14px;
+}
+
+.toggle {
+    color: white;
+    margin-bottom: 14px;
+}
+
+.status-label {
+    min-height: 20px;
+    color: rgb(249, 135, 75);
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.button-row {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.button {
+    width: 170px;
+    height: 44px;
+    background-color: rgba(0, 0, 0, 0.843);
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: rgb(249, 135, 75);
+    color: white;
+    font-size: 16px;
+}

@@ -95,6 +95,18 @@
       "type": "UiToolkitUxml",
       "uxml": "Assets/Tactics/Arts/UI/RunEndSummary.uxml",
       "uss": "Assets/Tactics/Arts/UI/RunEndSummary.uss"
+    },
+    {
+      "id": "Options",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/Options.uxml",
+      "uss": "Assets/Tactics/Arts/UI/Options.uss"
+    },
+    {
+      "id": "SlotSelect",
+      "type": "UiToolkitUxml",
+      "uxml": "Assets/Tactics/Arts/UI/SlotSelect.uxml",
+      "uss": "Assets/Tactics/Arts/UI/SlotSelect.uss"
     }
   ]
 }

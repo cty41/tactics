@@ -1,29 +1,21 @@
 using System.Collections;
 using Tactics.Runtime.Utilities;
 using System.Threading.Tasks;
-using Tactics.Flow.Home;
-using Tactics.Flow.Roguelike;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.UIElements;
 
 namespace Tactics.UI
 {
     /// <summary>
     /// Home UI controller (UI Toolkit):
-    /// - wires StartButton and EscButton from Home.uxml
-    /// - handles Esc input through HomeFlowCoordinator
+    /// - wires main menu buttons from Home.uxml
     /// </summary>
     public sealed class HomeUIController : UIControllerBase
     {
-        [Header("Input (New Input System)")]
-        [SerializeField] private InputActionAsset _inputActions;
-        [SerializeField] private string _cancelActionName = "Cancel";
-
-        private Button _startButton;
-        private Button _escButton;
-        private InputAction _cancelAction;
+        private Button _newGameButton;
+        private Button _loadGameButton;
+        private Button _optionsButton;
+        private Button _quitButton;
 
         protected override void OnShown()
         {
@@ -45,98 +37,83 @@ namespace Tactics.UI
                 return;
             }
 
-            _startButton = root.Q<Button>("StartButton");
-            _escButton = root.Q<Button>("EscButton");
+            _newGameButton = root.Q<Button>("NewGameButton") ?? root.Q<Button>("StartButton");
+            _loadGameButton = root.Q<Button>("LoadGameButton");
+            _optionsButton = root.Q<Button>("OptionsButton");
+            _quitButton = root.Q<Button>("QuitButton");
 
-            if (_startButton != null)
-                _startButton.clicked += OnStartClicked;
+            if (_newGameButton != null)
+                _newGameButton.clicked += OnNewGameClicked;
             else
-                TLog.Warning("[HomeUIController] StartButton not found in UXML.");
+                TLog.Warning("[HomeUIController] NewGameButton not found in UXML.");
 
-            if (_escButton != null)
-                _escButton.clicked += OnEscButtonClicked;
+            if (_loadGameButton != null)
+                _loadGameButton.clicked += OnLoadGameClicked;
             else
-                TLog.Warning("[HomeUIController] EscButton not found in UXML.");
+                TLog.Warning("[HomeUIController] LoadGameButton not found in UXML.");
 
-            AutoFindInputActions();
-            WireInput();
-        }
+            if (_optionsButton != null)
+                _optionsButton.clicked += OnOptionsClicked;
+            else
+                TLog.Warning("[HomeUIController] OptionsButton not found in UXML.");
 
-        private void AutoFindInputActions()
-        {
-            if (_inputActions != null) return;
-
-            var module = Object.FindFirstObjectByType<InputSystemUIInputModule>();
-            if (module != null)
-                _inputActions = module.actionsAsset;
+            if (_quitButton != null)
+                _quitButton.clicked += OnQuitClicked;
+            else
+                TLog.Warning("[HomeUIController] QuitButton not found in UXML.");
         }
 
         protected override void OnHidden()
         {
             UnwireButtons();
-            UnwireInput();
         }
 
         private void OnDestroy()
         {
             UnwireButtons();
-            UnwireInput();
         }
 
         private void UnwireButtons()
         {
-            if (_startButton != null)
-                _startButton.clicked -= OnStartClicked;
-            if (_escButton != null)
-                _escButton.clicked -= OnEscButtonClicked;
+            if (_newGameButton != null)
+                _newGameButton.clicked -= OnNewGameClicked;
+            if (_loadGameButton != null)
+                _loadGameButton.clicked -= OnLoadGameClicked;
+            if (_optionsButton != null)
+                _optionsButton.clicked -= OnOptionsClicked;
+            if (_quitButton != null)
+                _quitButton.clicked -= OnQuitClicked;
         }
 
-        private void WireInput()
+        private void OnNewGameClicked()
         {
-            if (_inputActions == null)
-            {
-                TLog.Warning("[HomeUIController] _inputActions is null; keyboard Esc may not work.");
-                return;
-            }
-
-            InputActionMap uiMap = _inputActions.FindActionMap("UI", true);
-            if (uiMap == null)
-            {
-                TLog.Warning("[HomeUIController] No action map named 'UI' found in InputActionAsset.");
-                return;
-            }
-
-            _cancelAction = uiMap.FindAction(_cancelActionName, true);
-            if (_cancelAction != null)
-            {
-                _cancelAction.performed += OnCancelPerformed;
-                _cancelAction.Enable();
-            }
+            _ = OpenNewGameSlotsAsync();
         }
 
-        private void UnwireInput()
+        private void OnLoadGameClicked()
         {
-            if (_cancelAction == null) return;
-            _cancelAction.performed -= OnCancelPerformed;
-            _cancelAction.Disable();
-            _cancelAction = null;
+            _ = OpenLoadGameSlotsAsync();
         }
 
-        private void OnCancelPerformed(InputAction.CallbackContext context)
+        private void OnOptionsClicked()
         {
-            _ = RequestToggleMenuAsync();
+            _ = OptionsUIController.ShowAsync(false);
         }
 
-        public void OnEscButtonClicked()
+        private void OnQuitClicked()
         {
-            _ = RequestToggleMenuAsync();
+#if UNITY_EDITOR
+            TLog.Info("[HomeUIController] Quit requested in Editor.");
+#else
+            Application.Quit();
+#endif
         }
 
-        private async Task RequestToggleMenuAsync()
+        private static async Task OpenNewGameSlotsAsync()
         {
             try
             {
-                await HomeFlowCoordinator.Instance.ToggleMenuAsync();
+                await SlotSelectUIController.ShowForNewGameAsync();
             }
             catch (System.Exception e)
             {
@@ -144,17 +121,11 @@ namespace Tactics.UI
             }
         }
 
-        private void OnStartClicked()
-        {
-            _ = OpenMapUiFromHomeAsync();
-        }
-
-        private static async Task OpenMapUiFromHomeAsync()
+        private static async Task OpenLoadGameSlotsAsync()
         {
             try
             {
-                UIManager.Instance.Hide(UIManager.UIId.Home);
-                await RoguelikeFlowCoordinator.Instance.OpenMapAsync();
+                await SlotSelectUIController.ShowForLoadGameAsync();
             }
             catch (System.Exception e)
             {

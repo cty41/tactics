@@ -95,21 +95,23 @@ namespace Tactics.UI
 
         private void OnMainMenuClicked()
         {
-            HomeFlowCoordinator.Instance.CloseMenu();
+            HomeFlowCoordinator.Instance.ForceResumeForSceneTransition();
+            UIManager.Instance.Hide(UIManager.UIId.Options);
+            UIManager.Instance.Hide(UIManager.UIId.Menu);
             SceneProjectPathHelper.TryLoadSceneViaAssetManager(_homeSceneName);
         }
 
         private void OnSaveAndQuitClicked()
         {
-            // TODO: hook up your existing save/quit flow.
-            HomeFlowCoordinator.Instance.CloseMenu();
+            HomeFlowCoordinator.Instance.ForceResumeForSceneTransition();
+            UIManager.Instance.Hide(UIManager.UIId.Options);
+            UIManager.Instance.Hide(UIManager.UIId.Menu);
             SceneProjectPathHelper.TryLoadSceneViaAssetManager(_homeSceneName);
         }
 
         private void OnOptionsClicked()
         {
-            // TODO: open an options sub-menu if you implement one later.
-            HomeFlowCoordinator.Instance.CloseMenu();
+            _ = OptionsUIController.ShowAsync(true);
         }
     }
 }

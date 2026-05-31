@@ -13,6 +13,10 @@ namespace Tactics.Roster
     public static class PlayerAdventureStateStore
     {
         public const string PlayerPrefsKey = "Tactics_PlayerAdventureState";
+        public const int SlotCount = 3;
+        public const int DefaultSlotIndex = 0;
+
+        private const string ActiveSlotPrefsKey = "Tactics_PlayerAdventureState_ActiveSlot";
         private const string TestPartyJsonPath = "Assets/Tactics/GameData/TestParty.json";
 
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
@@ -62,23 +66,31 @@ namespace Tactics.Roster
 
         public static void EnsureDefaultProfile()
         {
-            if (PlayerPrefs.HasKey(PlayerPrefsKey))
+            MigrateLegacySaveIfNeeded();
+            if (HasSave(GetActiveSlotIndex()))
                 return;
             Save(CreateDefaultState());
         }
 
         public static PlayerAdventureState Load()
         {
-            if (!PlayerPrefs.HasKey(PlayerPrefsKey))
+            return Load(GetActiveSlotIndex());
+        }
+
+        public static PlayerAdventureState Load(int slotIndex)
+        {
+            MigrateLegacySaveIfNeeded();
+            var key = GetSlotPrefsKey(slotIndex);
+            if (!PlayerPrefs.HasKey(key))
                 return CreateDefaultState();
             try
             {
-                string json = PlayerPrefs.GetString(PlayerPrefsKey);
+                string json = PlayerPrefs.GetString(key);
                 var state = JsonConvert.DeserializeObject<PlayerAdventureState>(json, JsonSettings);
                 if (state == null || !IsStateValid(state))
                 {
                     TLog.Warning("[PlayerAdventureStateStore] Saved state is invalid or corrupted. Clearing old save and reloading defaults.");
-                    PlayerPrefs.DeleteKey(PlayerPrefsKey);
+                    PlayerPrefs.DeleteKey(key);
                     PlayerPrefs.Save();
                     return CreateDefaultState();
                 }
@@ -114,17 +126,30 @@ namespace Tactics.Roster
 
         public static void Save(PlayerAdventureState state)
         {
+            Save(GetActiveSlotIndex(), state);
+        }
+
+        public static void Save(int slotIndex, PlayerAdventureState state)
+        {
             if (state == null)
                 return;
+            slotIndex = NormalizeSlotIndex(slotIndex);
             string json = JsonConvert.SerializeObject(state, Formatting.Indented, JsonSettings);
-            PlayerPrefs.SetString(PlayerPrefsKey, json);
+            PlayerPrefs.SetString(GetSlotPrefsKey(slotIndex), json);
+            SetActiveSlotIndex(slotIndex);
             PlayerPrefs.Save();
         }
 
         /// <summary>Guarantee roster has at least 3 characters and active party lists 3 valid ids (mutates and saves if repaired).</summary>
         public static PlayerAdventureState LoadRepairAndSave()
         {
-            var state = Load();
+            return LoadRepairAndSave(GetActiveSlotIndex());
+        }
+
+        public static PlayerAdventureState LoadRepairAndSave(int slotIndex)
+        {
+            slotIndex = NormalizeSlotIndex(slotIndex);
+            var state = Load(slotIndex);
             TryRepair(state, out bool changed);
 
             // Ensure each character has at least one default learned skill
@@ -164,8 +189,77 @@ namespace Tactics.Roster
             }
 
             if (changed)
-                Save(state);
+                Save(slotIndex, state);
             return state;
+        }
+
+        public static bool HasSave(int slotIndex)
+        {
+            MigrateLegacySaveIfNeeded();
+            return PlayerPrefs.HasKey(GetSlotPrefsKey(slotIndex));
+        }
+
+        public static void Delete(int slotIndex)
+        {
+            PlayerPrefs.DeleteKey(GetSlotPrefsKey(slotIndex));
+            PlayerPrefs.Save();
+        }
+
+        public static PlayerAdventureState CreateNew(int slotIndex)
+        {
+            var state = CreateDefaultState();
+            Save(slotIndex, state);
+            return state;
+        }
+
+        public static int GetActiveSlotIndex()
+        {
+            return NormalizeSlotIndex(PlayerPrefs.GetInt(ActiveSlotPrefsKey, DefaultSlotIndex));
+        }
+
+        public static void SetActiveSlotIndex(int slotIndex)
+        {
+            PlayerPrefs.SetInt(ActiveSlotPrefsKey, NormalizeSlotIndex(slotIndex));
+            PlayerPrefs.Save();
+        }
+
+        public static SaveSlotSummary GetSlotSummary(int slotIndex)
+        {
+            slotIndex = NormalizeSlotIndex(slotIndex);
+            if (!HasSave(slotIndex))
+                return SaveSlotSummary.Empty(slotIndex);
+
+            try
+            {
+                var state = Load(slotIndex);
+                return SaveSlotSummary.FromState(slotIndex, state);
+            }
+            catch (System.Exception ex)
+            {
+                TLog.Warning($"[PlayerAdventureStateStore] Failed to summarize slot {slotIndex + 1}: {ex.Message}");
+                return SaveSlotSummary.Corrupted(slotIndex);
+            }
+        }
+
+        private static string GetSlotPrefsKey(int slotIndex)
+        {
+            return $"{PlayerPrefsKey}_Slot{NormalizeSlotIndex(slotIndex) + 1}";
+        }
+
+        private static int NormalizeSlotIndex(int slotIndex)
+        {
+            return Mathf.Clamp(slotIndex, 0, SlotCount - 1);
+        }
+
+        private static void MigrateLegacySaveIfNeeded()
+        {
+            var slotOneKey = GetSlotPrefsKey(DefaultSlotIndex);
+            if (!PlayerPrefs.HasKey(PlayerPrefsKey) || PlayerPrefs.HasKey(slotOneKey))
+                return;
+
+            PlayerPrefs.SetString(slotOneKey, PlayerPrefs.GetString(PlayerPrefsKey));
+            PlayerPrefs.SetInt(ActiveSlotPrefsKey, DefaultSlotIndex);
+            PlayerPrefs.Save();
         }
 
         private static void TryRepair(PlayerAdventureState state, out bool changed)
@@ -292,5 +386,46 @@ namespace Tactics.Roster
     {
         public RoleType RoleType { get; set; }
         public string PrefabPath { get; set; }
+    }
+
+    public readonly struct SaveSlotSummary
+    {
+        public int SlotIndex { get; }
+        public bool HasSave { get; }
+        public bool IsCorrupted { get; }
+        public int Gold { get; }
+        public int RosterCount { get; }
+        public int ActivePartyCount { get; }
+
+        private SaveSlotSummary(int slotIndex, bool hasSave, bool isCorrupted, int gold, int rosterCount, int activePartyCount)
+        {
+            SlotIndex = slotIndex;
+            HasSave = hasSave;
+            IsCorrupted = isCorrupted;
+            Gold = gold;
+            RosterCount = rosterCount;
+            ActivePartyCount = activePartyCount;
+        }
+
+        public static SaveSlotSummary Empty(int slotIndex)
+        {
+            return new SaveSlotSummary(slotIndex, false, false, 0, 0, 0);
+        }
+
+        public static SaveSlotSummary Corrupted(int slotIndex)
+        {
+            return new SaveSlotSummary(slotIndex, true, true, 0, 0, 0);
+        }
+
+        public static SaveSlotSummary FromState(int slotIndex, PlayerAdventureState state)
+        {
+            return new SaveSlotSummary(
+                slotIndex,
+                true,
+                false,
+                state?.Gold ?? 0,
+                state?.Roster?.Count ?? 0,
+                state?.ActivePartyCharacterIds?.Count ?? 0);
+        }
     }
 }
