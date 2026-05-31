@@ -18,6 +18,12 @@ namespace Tactics.Common.AI.MonsterAI
         [SerializeField] private bool _enablePositionSafetyScore = true;
         [SerializeField] private bool _enableKillPotentialScore = true;
         [SerializeField] private bool _enableAllyProximityScore = false;
+        [SerializeField] private bool _enableAbilityEffectivenessScore = true;
+        [SerializeField] private bool _enableAOEValueScore = true;
+        [SerializeField] private bool _enableHealUrgencyScore = true;
+        [SerializeField] private bool _enableControlValueScore = true;
+        [SerializeField] private bool _enableBuffUtilityScore = true;
+        [SerializeField] private bool _enableDebuffUtilityScore = true;
 
         [Header("距离目标评分")]
         [SerializeField] private float _distanceWeight = 5f;
@@ -47,6 +53,30 @@ namespace Tactics.Common.AI.MonsterAI
         [SerializeField] private float _allyProximityWeight = 1f;
         [SerializeField] private AnimationCurve _allyProximityCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
+        [Header("技能效果评分")]
+        [SerializeField] private float _abilityEffectivenessWeight = 6f;
+        [SerializeField] private AnimationCurve _abilityEffectivenessCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
+        [Header("AOE 评分")]
+        [SerializeField] private float _aoeValueWeight = 4f;
+        [SerializeField] private AnimationCurve _aoeValueCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
+        [Header("治疗紧急度评分")]
+        [SerializeField] private float _healUrgencyWeight = 5f;
+        [SerializeField] private AnimationCurve _healUrgencyCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
+        [Header("控制评分")]
+        [SerializeField] private float _controlValueWeight = 4f;
+        [SerializeField] private AnimationCurve _controlValueCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
+        [Header("Buff 评分")]
+        [SerializeField] private float _buffUtilityWeight = 3f;
+        [SerializeField] private AnimationCurve _buffUtilityCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
+        [Header("Debuff 评分")]
+        [SerializeField] private float _debuffUtilityWeight = 3f;
+        [SerializeField] private AnimationCurve _debuffUtilityCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
         [Header("随机扰动")]
         [Range(0f, 0.3f)]
         [SerializeField] private float _noiseFactor = 0.05f;
@@ -63,6 +93,12 @@ namespace Tactics.Common.AI.MonsterAI
         public bool EnablePositionSafetyScore => _enablePositionSafetyScore;
         public bool EnableKillPotentialScore => _enableKillPotentialScore;
         public bool EnableAllyProximityScore => _enableAllyProximityScore;
+        public bool EnableAbilityEffectivenessScore => _enableAbilityEffectivenessScore;
+        public bool EnableAOEValueScore => _enableAOEValueScore;
+        public bool EnableHealUrgencyScore => _enableHealUrgencyScore;
+        public bool EnableControlValueScore => _enableControlValueScore;
+        public bool EnableBuffUtilityScore => _enableBuffUtilityScore;
+        public bool EnableDebuffUtilityScore => _enableDebuffUtilityScore;
 
         public string StyleLabel => _styleLabel;
 
@@ -80,6 +116,12 @@ namespace Tactics.Common.AI.MonsterAI
                 ScoreType.PositionSafety => (_positionSafetyWeight, _positionSafetyCurve),
                 ScoreType.KillPotential => (_killPotentialWeight, _killPotentialCurve),
                 ScoreType.AllyProximity => (_allyProximityWeight, _allyProximityCurve),
+                ScoreType.AbilityEffectiveness => (_abilityEffectivenessWeight, _abilityEffectivenessCurve),
+                ScoreType.AOEValue => (_aoeValueWeight, _aoeValueCurve),
+                ScoreType.HealUrgency => (_healUrgencyWeight, _healUrgencyCurve),
+                ScoreType.ControlValue => (_controlValueWeight, _controlValueCurve),
+                ScoreType.BuffUtility => (_buffUtilityWeight, _buffUtilityCurve),
+                ScoreType.DebuffUtility => (_debuffUtilityWeight, _debuffUtilityCurve),
                 _ => (1f, AnimationCurve.Linear(0, 0, 1, 1))
             };
         }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
+using Tactics.Common.Units.Abilities;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.AI.MonsterAI
@@ -59,8 +60,17 @@ namespace Tactics.Common.AI.MonsterAI
                 foreach (var ability in baseAbilities)
                 {
                     bool isReady = ability.CanPerform(gridController);
-                    int range = ability is Tactics.Common.Units.Abilities.IAbility a ? self.AttackRange : self.AttackRange;
-                    availableAbilities.Add(new AbilityInfo(ability.DisplayName, range, isReady, ability));
+                    var metadata = BuildAbilityMetadata(ability, self);
+                    availableAbilities.Add(new AbilityInfo(
+                        ability.DisplayName,
+                        metadata.Range,
+                        isReady,
+                        ability,
+                        metadata.Tags,
+                        metadata.BaseDamage,
+                        metadata.HealAmount,
+                        metadata.ControlValue,
+                        metadata.UtilityValue));
                 }
             }
             decisionLog.Info($"Available abilities: {availableAbilities.Count}");
@@ -76,6 +86,107 @@ namespace Tactics.Common.AI.MonsterAI
                 brainAsset,
                 decisionLog
             );
+        }
+
+        private static (int Range, AbilityAiTags Tags, float BaseDamage, float HealAmount, float ControlValue, float UtilityValue)
+            BuildAbilityMetadata(IAbility ability, IUnit self)
+        {
+            int range = self.AttackRange;
+            AbilityAiTags tags = AbilityAiTags.None;
+            float baseDamage = 0f;
+            float healAmount = 0f;
+            float controlValue = 0f;
+            float utilityValue = 0f;
+
+            if (ability is GenericAbilityImpl generic && generic.Config != null)
+            {
+                var config = generic.Config;
+                range = GetRange(config.TargetingStrategy, self.AttackRange);
+                tags |= GetTargetingTags(config.TargetingStrategy);
+
+                foreach (var effect in config.Effects)
+                {
+                    switch (effect)
+                    {
+                        case DamageEffect damage:
+                            tags |= AbilityAiTags.Damage;
+                            baseDamage += damage.BaseDamage;
+                            break;
+                        case HealEffect heal:
+                            tags |= AbilityAiTags.Heal;
+                            healAmount += heal.HealAmount;
+                            break;
+                        case ApplyBuffEffect:
+                            tags |= AbilityAiTags.Buff | AbilityAiTags.Utility;
+                            utilityValue += 0.35f;
+                            break;
+                        case DamageOverTimeEffect dot:
+                            tags |= AbilityAiTags.Damage | AbilityAiTags.Debuff;
+                            baseDamage += dot.DamagePerTurn * dot.Duration;
+                            utilityValue += 0.25f;
+                            break;
+                        case KnockbackEffect knockback:
+                            tags |= AbilityAiTags.Control;
+                            controlValue += 0.2f + knockback.Distance * 0.1f;
+                            break;
+                        case SpawnEffect:
+                            tags |= AbilityAiTags.Utility;
+                            utilityValue += 0.5f;
+                            break;
+                        case MoveEffect:
+                            tags |= AbilityAiTags.Movement;
+                            break;
+                    }
+                }
+            }
+
+            if (tags == AbilityAiTags.None)
+            {
+                tags = InferTagsFromName(ability.DisplayName);
+            }
+
+            return (range, tags, baseDamage, healAmount, controlValue, utilityValue);
+        }
+
+        private static int GetRange(TargetingStrategy strategy, int fallback)
+        {
+            return strategy switch
+            {
+                SingleTargetEnemy single => single.MaxRange,
+                SingleTargetAlly ally => ally.MaxRange,
+                AoETargeting aoe => aoe.MaxRange,
+                MultiTargetEnemy multi => multi.MaxRange,
+                MoveThenHealTargeting heal => heal.HealRange,
+                _ => fallback
+            };
+        }
+
+        private static AbilityAiTags GetTargetingTags(TargetingStrategy strategy)
+        {
+            return strategy switch
+            {
+                AoETargeting => AbilityAiTags.Aoe,
+                MultiTargetEnemy => AbilityAiTags.Aoe,
+                MoveThenHealTargeting => AbilityAiTags.Heal | AbilityAiTags.Movement,
+                MoveThenAttackTargeting => AbilityAiTags.Damage | AbilityAiTags.Movement,
+                _ => AbilityAiTags.None
+            };
+        }
+
+        private static AbilityAiTags InferTagsFromName(string abilityName)
+        {
+            string name = abilityName?.ToLowerInvariant() ?? string.Empty;
+            AbilityAiTags tags = AbilityAiTags.None;
+
+            if (name.Contains("move")) tags |= AbilityAiTags.Movement;
+            if (name.Contains("heal")) tags |= AbilityAiTags.Heal;
+            if (name.Contains("buff")) tags |= AbilityAiTags.Buff | AbilityAiTags.Utility;
+            if (name.Contains("debuff") || name.Contains("poison") || name.Contains("burn")) tags |= AbilityAiTags.Debuff;
+            if (name.Contains("stun") || name.Contains("slow") || name.Contains("knock")) tags |= AbilityAiTags.Control;
+            if (name.Contains("fire") || name.Contains("attack") || name.Contains("damage")) tags |= AbilityAiTags.Damage;
+            if (name.Contains("area") || name.Contains("aoe")) tags |= AbilityAiTags.Aoe;
+
+            return tags;
         }
     }
 }

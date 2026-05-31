@@ -37,11 +37,24 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>候选目标（可为 null）</summary>
         public IUnit Target { get; }
 
+        /// <summary>候选目标集合，用于 AOE / 群体技能。</summary>
+        public List<IUnit> Targets { get; }
+
+        /// <summary>技能点击目标格（可为 null）。</summary>
+        public ICell AbilityTargetCell { get; }
+
         /// <summary>预估造成伤害</summary>
         public float EstimatedDamage { get; set; }
 
         /// <summary>预估击杀概率（0-1）</summary>
         public float EstimatedKillChance { get; set; }
+
+        public int EstimatedTargetsHit { get; set; }
+        public float EstimatedTotalDamage { get; set; }
+        public float EstimatedFriendlyFireDamage { get; set; }
+        public float EstimatedControlValue { get; set; }
+        public float EstimatedUtilityValue { get; set; }
+        public float EstimatedHealValue { get; set; }
 
         /// <summary>总分</summary>
         public float TotalScore { get; set; }
@@ -64,13 +77,17 @@ namespace Tactics.Common.AI.MonsterAI
             IUnit target,
             ICell destination,
             AbilityInfo ability,
-            float basePriority)
+            float basePriority,
+            List<IUnit> targets = null,
+            ICell abilityTargetCell = null)
         {
             IntentType = intentType;
             Action = action;
             Target = target;
             Destination = destination;
             Ability = ability;
+            Targets = targets ?? (target != null ? new List<IUnit> { target } : new List<IUnit>());
+            AbilityTargetCell = abilityTargetCell ?? target?.CurrentCell;
             BasePriority = basePriority;
             TotalScore = 0f;
             ScoreBreakdown = new Dictionary<string, ScoreDetail>();
@@ -109,10 +126,12 @@ namespace Tactics.Common.AI.MonsterAI
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"Intent: {IntentType} | Action: {Action}");
             sb.AppendLine($"  Target: {(Target != null ? $"Unit_{Target.UnitID}" : "None")}");
+            sb.AppendLine($"  TargetsHit: {EstimatedTargetsHit}");
             sb.AppendLine($"  Destination: {(Destination != null ? $"({Destination.GridCoordinates.x}, {Destination.GridCoordinates.y})" : "None")}");
+            sb.AppendLine($"  AbilityTargetCell: {(AbilityTargetCell != null ? $"({AbilityTargetCell.GridCoordinates.x}, {AbilityTargetCell.GridCoordinates.y})" : "None")}");
             sb.AppendLine($"  Ability: {(Ability?.Name ?? "None")}");
             sb.AppendLine($"  Base: {BasePriority} | Total: {TotalScore:F2} | Pass: {PassedRules}");
-            sb.AppendLine($"  EstDamage: {EstimatedDamage:F0} | KillChance: {EstimatedKillChance:P0}");
+            sb.AppendLine($"  EstDamage: {EstimatedDamage:F0} | TotalDamage: {EstimatedTotalDamage:F0} | FriendlyFire: {EstimatedFriendlyFireDamage:F0} | Heal: {EstimatedHealValue:F0} | KillChance: {EstimatedKillChance:P0}");
             if (!string.IsNullOrEmpty(RuleFailureReason))
                 sb.AppendLine($"  FAIL: {RuleFailureReason}");
             foreach (var kvp in ScoreBreakdown)

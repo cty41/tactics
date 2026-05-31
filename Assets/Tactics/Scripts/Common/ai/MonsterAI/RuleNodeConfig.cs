@@ -48,6 +48,20 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>移动目标位置安全（不在敌人攻击范围内）</summary>
         DestinationSafe,
         /// <summary>有友军在附近</summary>
-        HasAllyNearby
+        HasAllyNearby,
+        /// <summary>技能候选带有指定 AI 标签（参数使用 AbilityAiTags 数值）</summary>
+        HasAbilityTag,
+        /// <summary>存在伤害技能候选</summary>
+        HasDamageAbility,
+        /// <summary>存在治疗技能候选</summary>
+        HasHealAbility,
+        /// <summary>存在控制技能候选</summary>
+        HasControlAbility,
+        /// <summary>存在 AOE 技能候选</summary>
+        HasAOEAbility,
+        /// <summary>目标需要治疗</summary>
+        TargetNeedsHealing,
+        /// <summary>有多目标命中机会</summary>
+        MultiTargetOpportunity
     }
 }

@@ -55,6 +55,16 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>击杀可能性</summary>
         KillPotential,
         /// <summary>协同作战（与友军距离）</summary>
-        AllyProximity
+        AllyProximity,
+        /// <summary>AOE 命中价值</summary>
+        AOEValue,
+        /// <summary>治疗紧急度</summary>
+        HealUrgency,
+        /// <summary>控制效果价值</summary>
+        ControlValue,
+        /// <summary>增益效果价值</summary>
+        BuffUtility,
+        /// <summary>减益效果价值</summary>
+        DebuffUtility
     }
 }

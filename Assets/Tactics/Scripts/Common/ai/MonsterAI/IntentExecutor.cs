@@ -97,13 +97,13 @@ namespace Tactics.Common.AI.MonsterAI
         /// </summary>
         private static async Task ExecuteAbilityUse(IntentCandidate selected, AiContext context)
         {
-            if (selected.Ability?.Ability == null || selected.Target == null) return;
+            if (selected.Ability?.Ability == null || selected.AbilityTargetCell == null) return;
 
-            context.DecisionLog.Info($"AbilityUse: {selected.Ability.Name} on Unit_{selected.Target.UnitID}");
+            context.DecisionLog.Info($"AbilityUse: {selected.Ability.Name}");
 
             // 选中技能，点击目标触发，复用现有技能执行链
             selected.Ability.Ability.OnAbilitySelected(context.GridController);
-            selected.Ability.Ability.OnCellClicked(selected.Target.CurrentCell, context.GridController);
+            selected.Ability.Ability.OnCellClicked(selected.AbilityTargetCell, context.GridController);
         }
 
         /// <summary>

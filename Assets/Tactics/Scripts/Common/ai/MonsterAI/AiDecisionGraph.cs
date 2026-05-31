@@ -185,7 +185,8 @@ namespace Tactics.Common.AI.MonsterAI
                         ScoreType = score.ScoreType,
                         Enabled = score.Enabled,
                         Weight = score.Weight,
-                        Parameter = score.Parameter
+                        Parameter = score.Parameter,
+                        ResponseCurve = score.ResponseCurve
                     });
                 }
             }

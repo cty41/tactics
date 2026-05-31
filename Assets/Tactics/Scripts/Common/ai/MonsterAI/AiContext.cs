@@ -101,19 +101,57 @@ namespace Tactics.Common.AI.MonsterAI
     /// <summary>
     /// 技能信息。
     /// </summary>
+    [System.Flags]
+    public enum AbilityAiTags
+    {
+        None = 0,
+        Damage = 1 << 0,
+        Heal = 1 << 1,
+        Buff = 1 << 2,
+        Debuff = 1 << 3,
+        Control = 1 << 4,
+        Aoe = 1 << 5,
+        Movement = 1 << 6,
+        Utility = 1 << 7
+    }
+
     public class AbilityInfo
     {
         public string Name { get; }
         public int Range { get; }
         public bool IsReady { get; }
         public IAbility Ability { get; }
+        public AbilityAiTags Tags { get; }
+        public float BaseDamage { get; }
+        public float HealAmount { get; }
+        public float ControlValue { get; }
+        public float UtilityValue { get; }
 
-        public AbilityInfo(string name, int range, bool isReady, IAbility ability)
+        public AbilityInfo(
+            string name,
+            int range,
+            bool isReady,
+            IAbility ability,
+            AbilityAiTags tags = AbilityAiTags.None,
+            float baseDamage = 0f,
+            float healAmount = 0f,
+            float controlValue = 0f,
+            float utilityValue = 0f)
         {
             Name = name;
             Range = range;
             IsReady = isReady;
             Ability = ability;
+            Tags = tags;
+            BaseDamage = baseDamage;
+            HealAmount = healAmount;
+            ControlValue = controlValue;
+            UtilityValue = utilityValue;
+        }
+
+        public bool HasTag(AbilityAiTags tag)
+        {
+            return (Tags & tag) != 0;
         }
     }
 }

@@ -115,10 +115,25 @@ description: "Use when creating monster AI assets (AiDecisionGraph, AIProfile, A
     "enable_distance_score": true,
     "enable_target_health_score": true,
     "enable_kill_potential_score": true,
+    "enable_ability_effectiveness_score": true,
+    "enable_aoe_value_score": true,
+    "enable_heal_urgency_score": true,
+    "enable_control_value_score": true,
     "distance_weight": 5.0,
     "target_health_weight": 3.0,
     "kill_potential_weight": 8.0,
+    "ability_effectiveness_weight": 6.0,
+    "aoe_value_weight": 4.0,
+    "heal_urgency_weight": 5.0,
+    "control_value_weight": 4.0,
     "noise_factor": 0.05
+  },
+
+  "ability_policies": {
+    "ability_use_enabled": true,
+    "preferred_tags": ["Damage", "AOE", "Control"],
+    "avoid_friendly_fire": true,
+    "min_multi_target_count": 2
   }
 }
 ```
@@ -141,9 +156,11 @@ description: "Use when creating monster AI assets (AiDecisionGraph, AIProfile, A
 
 **IntentType**: `Engage`, `BasicAttack`, `AbilityUse`, `Retreat`, `FinishOff`, `HoldPosition`
 
-**RuleType**: `TargetInRange`, `TargetInMoveAttackRange`, `HealthAboveThreshold`, `HealthBelowThreshold`, `HasAvailableAbility`, `TargetKillable`, `DestinationSafe`, `HasAllyNearby`
+**RuleType**: `TargetInRange`, `TargetInMoveAttackRange`, `HealthAboveThreshold`, `HealthBelowThreshold`, `HasAvailableAbility`, `TargetKillable`, `DestinationSafe`, `HasAllyNearby`, `HasAbilityTag`, `HasDamageAbility`, `HasHealAbility`, `HasControlAbility`, `HasAOEAbility`, `TargetNeedsHealing`, `MultiTargetOpportunity`
 
-**ScoreType**: `DistanceToTarget`, `TargetHealth`, `SelfHealth`, `TargetValue`, `PositionSafety`, `KillPotential`, `AllyProximity`
+**ScoreType**: `DistanceToTarget`, `TargetHealth`, `SelfHealth`, `TargetValue`, `PositionSafety`, `AbilityEffectiveness`, `KillPotential`, `AllyProximity`, `AOEValue`, `HealUrgency`, `ControlValue`, `BuffUtility`, `DebuffUtility`
+
+**AbilityAiTags**: `Damage`, `Heal`, `Buff`, `Debuff`, `Control`, `Aoe`, `Movement`, `Utility`
 
 ## MCP Field Mapping
 
@@ -193,6 +210,20 @@ description: "Use when creating monster AI assets (AiDecisionGraph, AIProfile, A
 | `_sourceNodeId` | `_edges[0]._sourceNodeId` |
 | `_targetNodeId` | `_edges[0]._targetNodeId` |
 
+### Graph 布局约定
+
+所有 MCP 生成的 `AiDecisionGraph` 都必须写入 `_position`，避免资产可用但可视化混乱。
+
+| 节点类型 | 推荐 X | 说明 |
+|----------|--------|------|
+| Intent | 60 | 主决策列 |
+| Rule | 340 | 硬门禁列 |
+| Score | 620 | 评分列 |
+| Orphan/待处理 | 900+ | 不应出现在最终模板；仅用于诊断 |
+
+Intent 推荐纵向顺序：`FinishOff -> BasicAttack -> Engage -> AbilityUse -> Retreat -> HoldPosition`。
+同一 Intent 下的 Rule/Score 以父节点 Y 为中心，按 72 像素间距上下排列。
+
 ### AIProfile (ScriptableObject)
 
 | 字段 | patch 路径 |
@@ -202,6 +233,14 @@ description: "Use when creating monster AI assets (AiDecisionGraph, AIProfile, A
 | `_distanceCurve` | `_distanceCurve` |
 | `_noiseFactor` | `_noiseFactor` |
 | `_styleLabel` | `_styleLabel` |
+| `_enableAbilityEffectivenessScore` | `_enableAbilityEffectivenessScore` |
+| `_abilityEffectivenessWeight` | `_abilityEffectivenessWeight` |
+| `_enableAOEValueScore` | `_enableAOEValueScore` |
+| `_aoeValueWeight` | `_aoeValueWeight` |
+| `_enableHealUrgencyScore` | `_enableHealUrgencyScore` |
+| `_healUrgencyWeight` | `_healUrgencyWeight` |
+| `_enableControlValueScore` | `_enableControlValueScore` |
+| `_controlValueWeight` | `_controlValueWeight` |
 
 ### AiBrainAsset (ScriptableObject)
 
@@ -291,9 +330,40 @@ refresh_unity → 刷新资产数据库
 - 节点列表非空
 - 边引用的节点都存在
 - 意图类型不重复
+- 非诊断模板中不保留孤立 Rule/Score 节点
+- 节点 `_position` 已按 Intent/Rule/Score 三列写入
 - 脑资产成功引用 graph 和 profile
 
 ## Templates
+
+### 多技能怪模板要点
+
+当 graph 含有 `AbilityUse` 意图时，MCP 生成器应同时创建技能类规则/评分节点：
+
+```json
+{
+  "intent_nodes": [
+    {"node_id": "6", "intent_type": "AbilityUse", "base_priority": 18}
+  ],
+  "rule_nodes": [
+    {"node_id": "30", "rule_name": "HasDamageAbility", "rule_type": "HasDamageAbility"},
+    {"node_id": "31", "rule_name": "MultiTargetOpportunity", "rule_type": "MultiTargetOpportunity", "parameter": 2}
+  ],
+  "score_nodes": [
+    {"node_id": "40", "score_name": "AbilityValue", "score_type": "AbilityEffectiveness", "weight": 6},
+    {"node_id": "41", "score_name": "AOEValue", "score_type": "AOEValue", "weight": 4},
+    {"node_id": "42", "score_name": "ControlValue", "score_type": "ControlValue", "weight": 4}
+  ],
+  "edges": [
+    {"source": "6", "target": "30"},
+    {"source": "6", "target": "40"},
+    {"source": "6", "target": "41"},
+    {"source": "6", "target": "42"}
+  ]
+}
+```
+
+注意：`AbilityUse` 仍然是一个抽象意图。具体用哪个技能由运行时展开出的 `技能 + 目标/目标组 + 站位` 候选共同评分决定，不要为每个技能创建独立 intent 节点。
 
 ### 基础近战小怪
 
@@ -302,29 +372,37 @@ refresh_unity → 刷新资产数据库
   "monster_name": "BasicMelee",
   "style_label": "Aggressive",
   "intent_nodes": [
-    {"node_id": "1", "intent_type": "Engage", "base_priority": 15},
-    {"node_id": "2", "intent_type": "BasicAttack", "base_priority": 20},
-    {"node_id": "3", "intent_type": "FinishOff", "base_priority": 25},
-    {"node_id": "4", "intent_type": "Retreat", "base_priority": 5},
-    {"node_id": "5", "intent_type": "HoldPosition", "base_priority": 1}
+    {"node_id": "1", "intent_type": "FinishOff", "base_priority": 35, "position": [60, 60]},
+    {"node_id": "2", "intent_type": "BasicAttack", "base_priority": 25, "position": [60, 250]},
+    {"node_id": "3", "intent_type": "Engage", "base_priority": 15, "position": [60, 440]},
+    {"node_id": "4", "intent_type": "Retreat", "base_priority": 30, "position": [60, 630]},
+    {"node_id": "5", "intent_type": "HoldPosition", "base_priority": 1, "position": [60, 820]}
   ],
   "rule_nodes": [
-    {"node_id": "10", "rule_name": "TargetInRange", "rule_type": "TargetInMoveAttackRange"},
-    {"node_id": "11", "rule_name": "NotLowHealth", "rule_type": "HealthAboveThreshold", "parameter": 0.2}
+    {"node_id": "10", "rule_name": "Target In Move+Attack Range", "rule_type": "TargetInMoveAttackRange", "position": [340, 24]},
+    {"node_id": "11", "rule_name": "Target Killable", "rule_type": "TargetKillable", "position": [340, 96]},
+    {"node_id": "12", "rule_name": "Target In Attack Range", "rule_type": "TargetInRange", "position": [340, 250]},
+    {"node_id": "13", "rule_name": "Low Health", "rule_type": "HealthBelowThreshold", "parameter": 0.3, "position": [340, 594]},
+    {"node_id": "14", "rule_name": "Destination Safe", "rule_type": "DestinationSafe", "position": [340, 666]}
   ],
   "score_nodes": [
-    {"node_id": "20", "score_name": "Distance", "score_type": "DistanceToTarget", "weight": 5},
-    {"node_id": "21", "score_name": "TargetHP", "score_type": "TargetHealth", "weight": 3},
-    {"node_id": "22", "score_name": "KillShot", "score_type": "KillPotential", "weight": 8},
-    {"node_id": "23", "score_name": "Safety", "score_type": "PositionSafety", "weight": 4}
+    {"node_id": "20", "score_name": "Kill Potential", "score_type": "KillPotential", "weight": 8, "position": [620, 60]},
+    {"node_id": "21", "score_name": "Distance To Target", "score_type": "DistanceToTarget", "weight": 5, "position": [620, 250]},
+    {"node_id": "22", "score_name": "Target Health", "score_type": "TargetHealth", "weight": 3, "position": [620, 322]}
   ],
   "edges": [
     {"source": "1", "target": "10"},
-    {"source": "2", "target": "20"},
+    {"source": "1", "target": "11"},
+    {"source": "1", "target": "20"},
+    {"source": "1", "target": "21"},
+    {"source": "2", "target": "12"},
     {"source": "2", "target": "21"},
     {"source": "2", "target": "22"},
     {"source": "3", "target": "10"},
-    {"source": "4", "target": "23"}
+    {"source": "3", "target": "21"},
+    {"source": "4", "target": "13"},
+    {"source": "4", "target": "14"},
+    {"source": "5", "target": "21"}
   ],
   "brain_defaults": {
     "low_health_threshold": 0.3,

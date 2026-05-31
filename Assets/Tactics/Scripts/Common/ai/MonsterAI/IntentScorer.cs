@@ -73,11 +73,35 @@ namespace Tactics.Common.AI.MonsterAI
                 case ScoreType.PositionSafety:
                     return CalcSafety(candidate.Destination ?? context.Self.CurrentCell, context.Enemies);
 
+                case ScoreType.AbilityEffectiveness:
+                    return CalcAbilityEffectiveness(candidate, context);
+
                 case ScoreType.KillPotential:
                     return candidate.EstimatedKillChance;
 
                 case ScoreType.AllyProximity:
                     return CalcAllyProximity(candidate.Destination ?? context.Self.CurrentCell, context.Allies);
+
+                case ScoreType.AOEValue:
+                    return candidate.Ability != null && candidate.Ability.HasTag(AbilityAiTags.Aoe)
+                        ? Mathf.Clamp01(candidate.EstimatedTargetsHit / 4f)
+                        : 0f;
+
+                case ScoreType.HealUrgency:
+                    return Mathf.Clamp01(candidate.EstimatedHealValue / GetAverageMaxHealth(context.Allies, context.Self));
+
+                case ScoreType.ControlValue:
+                    return Mathf.Clamp01(candidate.EstimatedControlValue);
+
+                case ScoreType.BuffUtility:
+                    return candidate.Ability != null && candidate.Ability.HasTag(AbilityAiTags.Buff)
+                        ? Mathf.Clamp01(candidate.EstimatedUtilityValue)
+                        : 0f;
+
+                case ScoreType.DebuffUtility:
+                    return candidate.Ability != null && candidate.Ability.HasTag(AbilityAiTags.Debuff)
+                        ? Mathf.Clamp01(candidate.EstimatedUtilityValue)
+                        : 0f;
 
                 default:
                     return 0.5f;
@@ -104,6 +128,12 @@ namespace Tactics.Common.AI.MonsterAI
             TryScore(ScoreType.PositionSafety, profile.EnablePositionSafetyScore);
             TryScore(ScoreType.KillPotential, profile.EnableKillPotentialScore);
             TryScore(ScoreType.AllyProximity, profile.EnableAllyProximityScore);
+            TryScore(ScoreType.AbilityEffectiveness, profile.EnableAbilityEffectivenessScore);
+            TryScore(ScoreType.AOEValue, profile.EnableAOEValueScore);
+            TryScore(ScoreType.HealUrgency, profile.EnableHealUrgencyScore);
+            TryScore(ScoreType.ControlValue, profile.EnableControlValueScore);
+            TryScore(ScoreType.BuffUtility, profile.EnableBuffUtilityScore);
+            TryScore(ScoreType.DebuffUtility, profile.EnableDebuffUtilityScore);
         }
 
         private static void ApplyDefaultScores(IntentCandidate candidate, AiContext context)
@@ -146,6 +176,45 @@ namespace Tactics.Common.AI.MonsterAI
             if (avg >= 2f && avg <= 4f) return 1f;
             if (avg < 2f) return avg / 2f;
             return 1f - Mathf.Clamp01((avg - 4f) / 6f);
+        }
+
+        private static float CalcAbilityEffectiveness(IntentCandidate candidate, AiContext context)
+        {
+            if (candidate.Action != ActionType.UseAbility || candidate.Ability == null) return 0f;
+
+            float healthBasis = GetAverageMaxHealth(context.Enemies, context.Self);
+            float damageScore = Mathf.Clamp01(candidate.EstimatedTotalDamage / healthBasis);
+            float friendlyFirePenalty = Mathf.Clamp01(candidate.EstimatedFriendlyFireDamage / healthBasis);
+            float healScore = Mathf.Clamp01(candidate.EstimatedHealValue / GetAverageMaxHealth(context.Allies, context.Self));
+            float aoeScore = candidate.Ability.HasTag(AbilityAiTags.Aoe)
+                ? Mathf.Clamp01(candidate.EstimatedTargetsHit / 4f)
+                : 0f;
+            float controlScore = Mathf.Clamp01(candidate.EstimatedControlValue);
+            float utilityScore = Mathf.Clamp01(candidate.EstimatedUtilityValue);
+
+            return Mathf.Clamp01(
+                candidate.EstimatedKillChance * 0.35f +
+                damageScore * 0.25f +
+                healScore * 0.15f +
+                aoeScore * 0.1f +
+                controlScore * 0.1f +
+                utilityScore * 0.05f -
+                friendlyFirePenalty * 0.3f);
+        }
+
+        private static float GetAverageMaxHealth(List<IUnit> units, IUnit fallback)
+        {
+            float sum = 0f;
+            int count = 0;
+            foreach (var unit in units)
+            {
+                if (unit == null || unit.IsDowned || unit.MaxHealth <= 0f) continue;
+                sum += unit.MaxHealth;
+                count++;
+            }
+
+            if (count > 0) return Mathf.Max(1f, sum / count);
+            return Mathf.Max(1f, fallback?.MaxHealth ?? 1f);
         }
 
         private static float CalcDist(ICell a, ICell b)

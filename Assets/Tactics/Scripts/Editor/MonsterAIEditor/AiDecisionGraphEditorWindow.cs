@@ -39,6 +39,7 @@ namespace Tactics.Editor.MonsterAIEditor
             AddToolbarButton(toolbar, "Load Graph", LoadGraph);
             AddToolbarButton(toolbar, "Save", () => { _graphView?.SaveGraph(_currentGraph); AssetDatabase.SaveAssets(); TLog.Info($"[AI Editor] Saved."); });
             AddToolbarButton(toolbar, "Validate", ValidateGraph);
+            AddToolbarButton(toolbar, "Auto Layout", AutoLayoutGraph);
             AddToolbarButton(toolbar, "New Graph", CreateNewGraph);
             AddToolbarButton(toolbar, "Clear", ClearGraph);
 
@@ -90,6 +91,19 @@ namespace Tactics.Editor.MonsterAIEditor
                 EditorUtility.DisplayDialog("Validation", "Graph is valid!", "OK");
             else
                 EditorUtility.DisplayDialog("Validation Errors", $"{errors.Count} error(s):\n\n{string.Join("\n", errors)}", "OK");
+        }
+
+        private void AutoLayoutGraph()
+        {
+            if (_currentGraph == null)
+            {
+                EditorUtility.DisplayDialog("Error", "No graph loaded.", "OK");
+                return;
+            }
+
+            _graphView?.AutoLayoutGraph();
+            AssetDatabase.SaveAssets();
+            TLog.Info("[AI Editor] Auto layout applied.");
         }
 
         private void CreateNewGraph()

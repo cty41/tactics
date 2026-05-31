@@ -114,6 +114,20 @@ namespace Tactics.Common.AI.MonsterAI
                     return candidate.Destination == null || IsSafe(candidate.Destination, context.Enemies);
                 case RuleType.HasAllyNearby:
                     return HasAllyNearby(context);
+                case RuleType.HasAbilityTag:
+                    return HasAbilityTag(candidate, (AbilityAiTags)(int)rule.Parameter);
+                case RuleType.HasDamageAbility:
+                    return HasAbilityTag(candidate, AbilityAiTags.Damage);
+                case RuleType.HasHealAbility:
+                    return HasAbilityTag(candidate, AbilityAiTags.Heal);
+                case RuleType.HasControlAbility:
+                    return HasAbilityTag(candidate, AbilityAiTags.Control);
+                case RuleType.HasAOEAbility:
+                    return HasAbilityTag(candidate, AbilityAiTags.Aoe);
+                case RuleType.TargetNeedsHealing:
+                    return CandidateTargetsNeedHealing(candidate);
+                case RuleType.MultiTargetOpportunity:
+                    return candidate.EstimatedTargetsHit >= System.Math.Max(2, (int)rule.Parameter);
                 default:
                     return true;
             }
@@ -136,6 +150,26 @@ namespace Tactics.Common.AI.MonsterAI
                 if (ally.CurrentCell == null) continue;
                 if (CalcDist(context.Self.CurrentCell, ally.CurrentCell) <= 3f) return true;
             }
+            return false;
+        }
+
+        private static bool HasAbilityTag(IntentCandidate candidate, AbilityAiTags tag)
+        {
+            return candidate.Action == ActionType.UseAbility &&
+                   candidate.Ability != null &&
+                   candidate.Ability.HasTag(tag);
+        }
+
+        private static bool CandidateTargetsNeedHealing(IntentCandidate candidate)
+        {
+            if (!HasAbilityTag(candidate, AbilityAiTags.Heal)) return false;
+
+            foreach (var target in candidate.Targets)
+            {
+                if (target == null || target.IsDowned) continue;
+                if (target.Health < target.MaxHealth) return true;
+            }
+
             return false;
         }
 

@@ -98,6 +98,52 @@ namespace Tactics.Editor.MonsterAIEditor
             LoadGraph(graph);
         }
 
+        public void AutoLayoutGraph()
+        {
+            if (_graph == null) return;
+
+            const float intentX = 60f;
+            const float ruleX = 340f;
+            const float scoreX = 620f;
+            const float orphanX = 900f;
+            const float startY = 60f;
+            const float intentGapY = 190f;
+            const float childGapY = 72f;
+
+            var positionedChildren = new HashSet<string>();
+            var intents = _graph.Nodes
+                .OfType<IntentNodeRecord>()
+                .OrderBy(intent => GetIntentLayoutOrder(intent.IntentType))
+                .ThenBy(intent => ParseNodeId(intent.NodeId))
+                .ToList();
+
+            for (int i = 0; i < intents.Count; i++)
+            {
+                var intent = intents[i];
+                float intentY = startY + i * intentGapY;
+                SetNodePosition(intent, intentX, intentY);
+
+                var children = GetChildNodes(intent.NodeId);
+                var rules = children.OfType<RuleNodeRecord>()
+                    .OrderBy(rule => GetRuleLayoutOrder(rule.RuleType))
+                    .ThenBy(rule => ParseNodeId(rule.NodeId))
+                    .ToList();
+                var scores = children.OfType<ScoreNodeRecord>()
+                    .OrderBy(score => GetScoreLayoutOrder(score.ScoreType))
+                    .ThenBy(score => ParseNodeId(score.NodeId))
+                    .ToList();
+
+                LayoutChildColumn(rules, ruleX, intentY, childGapY, positionedChildren);
+                LayoutChildColumn(scores, scoreX, intentY, childGapY, positionedChildren);
+            }
+
+            LayoutOrphanNodes<RuleNodeRecord>(ruleX, orphanX, startY, childGapY, positionedChildren);
+            LayoutOrphanNodes<ScoreNodeRecord>(scoreX, orphanX + 240f, startY, childGapY, positionedChildren);
+
+            EditorUtility.SetDirty(_graph);
+            LoadGraph(_graph);
+        }
+
         // ── 创建节点视图 ──
 
         private GraphNode CreateNodeView(GraphNodeRecord record)
@@ -106,15 +152,44 @@ namespace Tactics.Editor.MonsterAIEditor
             {
                 IntentNodeRecord intent => new IntentNodeView(intent.NodeId, intent.IntentType.ToString(), intent.BasePriority),
                 RuleNodeRecord rule => new RuleNodeView(rule.NodeId, rule.RuleName, rule.RuleType),
-                ScoreNodeRecord score => new ScoreNodeView(score.NodeId, score.ScoreName, score.ScoreType),
+                ScoreNodeRecord score => new ScoreNodeView(score.NodeId, score.ScoreName, score.ScoreType, score.Weight),
                 _ => null
             };
 
             if (nodeView == null) return null;
 
+            ApplyNodeStyleClasses(record, nodeView);
             nodeView.SetPosition(new Rect(record.Position.x, record.Position.y, 200, 120));
             nodeView.OnNodeSelected += (id) => OnNodeSelected?.Invoke(id);
             return nodeView;
+        }
+
+        private void ApplyNodeStyleClasses(GraphNodeRecord record, GraphNode nodeView)
+        {
+            if (!record.Enabled)
+                nodeView.AddToClassList("node-disabled");
+
+            if (IsOrphanChild(record))
+                nodeView.AddToClassList("node-orphan");
+
+            switch (record)
+            {
+                case IntentNodeRecord intent:
+                    nodeView.AddToClassList(GetIntentStyleClass(intent.IntentType));
+                    break;
+                case RuleNodeRecord rule:
+                    nodeView.AddToClassList(GetRuleStyleClass(rule.RuleType));
+                    break;
+                case ScoreNodeRecord score:
+                    nodeView.AddToClassList(GetScoreStyleClass(score.ScoreType));
+                    break;
+            }
+        }
+
+        private bool IsOrphanChild(GraphNodeRecord record)
+        {
+            if (record is IntentNodeRecord || _graph == null) return false;
+            return !_graph.Edges.Any(edge => edge.TargetNodeId == record.NodeId);
         }
 
         private GraphNode CreateNodeViewForRecord(GraphNodeRecord record)
@@ -191,6 +266,7 @@ namespace Tactics.Editor.MonsterAIEditor
             // 创建边
             if (change.edgesToCreate != null)
             {
+                var validEdges = new List<Edge>();
                 foreach (var edge in change.edgesToCreate)
                 {
                     var srcNode = edge.output.node as GraphNode;
@@ -200,14 +276,15 @@ namespace Tactics.Editor.MonsterAIEditor
                     // 校验合法连接
                     if (!IsValidConnection(srcNode, tgtNode))
                     {
-                        change.edgesToCreate.Remove(edge);
                         continue;
                     }
 
                     var edgeRec = _graph.AddEdge(srcNode.NodeId, tgtNode.NodeId);
                     edge.userData = edgeRec.EdgeId;
                     _edgeRecords[edgeRec.EdgeId] = edgeRec;
+                    validEdges.Add(edge);
                 }
+                change.edgesToCreate = validEdges;
                 if (change.edgesToCreate.Count > 0)
                     EditorUtility.SetDirty(_graph);
             }
@@ -223,6 +300,164 @@ namespace Tactics.Editor.MonsterAIEditor
             if (source is IntentNodeView && target is ScoreNodeView) return true;
             // 禁止：Rule->Rule, Score->Score, Rule->Score, Score->Intent, Rule->Intent
             return false;
+        }
+
+        private List<GraphNodeRecord> GetChildNodes(string intentNodeId)
+        {
+            var children = new List<GraphNodeRecord>();
+            foreach (var edge in _graph.Edges)
+            {
+                if (edge.SourceNodeId != intentNodeId) continue;
+
+                var child = _graph.FindNode(edge.TargetNodeId);
+                if (child != null)
+                    children.Add(child);
+            }
+            return children;
+        }
+
+        private void LayoutChildColumn<T>(
+            List<T> children,
+            float x,
+            float parentY,
+            float gapY,
+            HashSet<string> positionedChildren) where T : GraphNodeRecord
+        {
+            float firstY = parentY - (children.Count - 1) * gapY * 0.5f;
+
+            for (int i = 0; i < children.Count; i++)
+            {
+                var child = children[i];
+                if (!positionedChildren.Add(child.NodeId)) continue;
+
+                SetNodePosition(child, x, firstY + i * gapY);
+            }
+        }
+
+        private void LayoutOrphanNodes<T>(
+            float fallbackX,
+            float orphanX,
+            float startY,
+            float gapY,
+            HashSet<string> positionedChildren) where T : GraphNodeRecord
+        {
+            var orphans = _graph.Nodes
+                .OfType<T>()
+                .Where(node => !positionedChildren.Contains(node.NodeId))
+                .OrderBy(node => ParseNodeId(node.NodeId))
+                .ToList();
+
+            float x = orphans.Count > 0 ? orphanX : fallbackX;
+            for (int i = 0; i < orphans.Count; i++)
+            {
+                SetNodePosition(orphans[i], x, startY + i * gapY);
+            }
+        }
+
+        private static void SetNodePosition(GraphNodeRecord record, float x, float y)
+        {
+            record.Position = new Vector2(x, y);
+        }
+
+        private static int GetIntentLayoutOrder(IntentType intentType)
+        {
+            return intentType switch
+            {
+                IntentType.FinishOff => 0,
+                IntentType.BasicAttack => 1,
+                IntentType.Engage => 2,
+                IntentType.AbilityUse => 3,
+                IntentType.Retreat => 4,
+                IntentType.HoldPosition => 5,
+                _ => 99
+            };
+        }
+
+        private static int GetRuleLayoutOrder(RuleType ruleType)
+        {
+            return ruleType switch
+            {
+                RuleType.TargetInRange => 0,
+                RuleType.TargetInMoveAttackRange => 1,
+                RuleType.TargetKillable => 2,
+                RuleType.HealthBelowThreshold => 3,
+                RuleType.DestinationSafe => 4,
+                _ => 99
+            };
+        }
+
+        private static int GetScoreLayoutOrder(ScoreType scoreType)
+        {
+            return scoreType switch
+            {
+                ScoreType.KillPotential => 0,
+                ScoreType.DistanceToTarget => 1,
+                ScoreType.TargetHealth => 2,
+                ScoreType.PositionSafety => 3,
+                _ => 99
+            };
+        }
+
+        private static int ParseNodeId(string nodeId)
+        {
+            return int.TryParse(nodeId, out int id) ? id : int.MaxValue;
+        }
+
+        private static string GetIntentStyleClass(IntentType intentType)
+        {
+            return intentType switch
+            {
+                IntentType.FinishOff => "intent-finish-off",
+                IntentType.BasicAttack => "intent-basic-attack",
+                IntentType.Engage => "intent-engage",
+                IntentType.AbilityUse => "intent-ability-use",
+                IntentType.Retreat => "intent-retreat",
+                IntentType.HoldPosition => "intent-hold-position",
+                _ => "intent-generic"
+            };
+        }
+
+        private static string GetRuleStyleClass(RuleType ruleType)
+        {
+            return ruleType switch
+            {
+                RuleType.TargetInRange => "rule-target",
+                RuleType.TargetInMoveAttackRange => "rule-target",
+                RuleType.TargetKillable => "rule-target",
+                RuleType.HealthAboveThreshold => "rule-health",
+                RuleType.HealthBelowThreshold => "rule-health",
+                RuleType.DestinationSafe => "rule-safety",
+                RuleType.HasAvailableAbility => "rule-ability",
+                RuleType.HasAbilityTag => "rule-ability",
+                RuleType.HasDamageAbility => "rule-ability",
+                RuleType.HasHealAbility => "rule-ability",
+                RuleType.HasControlAbility => "rule-ability",
+                RuleType.HasAOEAbility => "rule-ability",
+                RuleType.TargetNeedsHealing => "rule-health",
+                RuleType.MultiTargetOpportunity => "rule-ability",
+                _ => "rule-utility"
+            };
+        }
+
+        private static string GetScoreStyleClass(ScoreType scoreType)
+        {
+            return scoreType switch
+            {
+                ScoreType.DistanceToTarget => "score-position",
+                ScoreType.PositionSafety => "score-position",
+                ScoreType.AllyProximity => "score-position",
+                ScoreType.TargetHealth => "score-health",
+                ScoreType.SelfHealth => "score-health",
+                ScoreType.KillPotential => "score-offense",
+                ScoreType.TargetValue => "score-offense",
+                ScoreType.AbilityEffectiveness => "score-ability",
+                ScoreType.AOEValue => "score-ability",
+                ScoreType.HealUrgency => "score-health",
+                ScoreType.ControlValue => "score-ability",
+                ScoreType.BuffUtility => "score-utility",
+                ScoreType.DebuffUtility => "score-utility",
+                _ => "score-utility"
+            };
         }
 
         // ── 端口兼容 ──
@@ -292,7 +527,14 @@ namespace Tactics.Editor.MonsterAIEditor
             public override void OnSelected()
             {
                 base.OnSelected();
+                AddToClassList("node-selected");
                 OnNodeSelected?.Invoke(NodeId);
+            }
+
+            public override void OnUnselected()
+            {
+                base.OnUnselected();
+                RemoveFromClassList("node-selected");
             }
         }
 
@@ -347,11 +589,11 @@ namespace Tactics.Editor.MonsterAIEditor
         {
             private readonly Label _weightLabel;
 
-            public ScoreNodeView(string nodeId, string scoreName, ScoreType scoreType)
+            public ScoreNodeView(string nodeId, string scoreName, ScoreType scoreType, float weight)
                 : base(nodeId, string.IsNullOrEmpty(scoreName) ? scoreType.ToString() : scoreName, "score-node")
             {
                 CreatePorts(true, false);
-                _weightLabel = new Label($"w:1.0");
+                _weightLabel = new Label($"w:{weight:F1}");
                 _weightLabel.style.fontSize = 9;
                 _weightLabel.style.color = new Color(0.8f, 0.7f, 0.3f);
                 mainContainer.Add(_weightLabel);
