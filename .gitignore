@@ -80,3 +80,19 @@ Assets/Unity.VisualScripting.Generated
 # If the source bank files are kept outside of the StreamingAssets folder then these can be ignored.
 # Log files can be ignored.
 fmod_editor.log
+
+# FMOD Studio project local state
+/Proj_FMod/**/.user/
+/Proj_FMod/**/.unsaved/
+/Proj_FMod/**/.cache/
+/Proj_FMod/**/Cache/
+
+# FMOD Studio generated banks/build output
+/Proj_FMod/**/*.bank
+/Proj_FMod/**/*.bank.meta
+/Proj_FMod/**/Build/
+/Proj_FMod/**/Builds/
+/Proj_FMod/**/Banks/
+
+# FMOD Studio logs
+/Proj_FMod/**/fmod*.log
