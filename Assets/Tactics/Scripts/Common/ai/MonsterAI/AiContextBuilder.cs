@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
@@ -44,13 +45,32 @@ namespace Tactics.Common.AI.MonsterAI
 
             decisionLog.Info($"Enemies: {enemies.Count}, Allies: {allies.Count}");
 
+            var allCells = gridController.CellManager.GetCells().ToList();
+            decisionLog.Info($"Current cell: {(self.CurrentCell != null ? $"({self.CurrentCell.GridCoordinates.x}, {self.CurrentCell.GridCoordinates.y})" : "None")}");
+            decisionLog.Info($"Movement: {self.MovementPoints:F1}/{self.MaxMovementPoints:F1}, Total cells: {allCells.Count}");
+
+            // 新 AI 不经过能力选中流程，必须在读取可达格前主动建立移动路径缓存。
+            if (self.CurrentCell != null)
+            {
+                self.CachePaths(gridController.CellManager);
+            }
+            else
+            {
+                decisionLog.Info("Current cell is null; skipping movement path cache.");
+            }
+
             // 获取可达格子
-            var reachableCells = self.GetAvailableDestinations(gridController.CellManager.GetCells());
+            var reachableCells = self.GetAvailableDestinations(allCells);
             decisionLog.Info($"Reachable cells: {reachableCells.Count}");
 
             // 获取候选目标（所有活着的敌人）
             var candidateTargets = enemies.Where(e => !e.IsDowned).ToList();
             decisionLog.Info($"Candidate targets: {candidateTargets.Count}");
+            foreach (var target in candidateTargets)
+            {
+                decisionLog.Info(
+                    $"Target Unit_{target.UnitID}: cell={FormatCell(target.CurrentCell)}, hp={target.Health:F1}/{target.MaxHealth:F1}, downed={target.IsDowned}");
+            }
 
             // 获取可用技能（通过 CanPerform 判定实际可用性）
             var availableAbilities = new List<AbilityInfo>();
@@ -146,6 +166,11 @@ namespace Tactics.Common.AI.MonsterAI
             }
 
             return (range, tags, baseDamage, healAmount, controlValue, utilityValue);
+        }
+
+        private static string FormatCell(ICell cell)
+        {
+            return cell != null ? $"({cell.GridCoordinates.x}, {cell.GridCoordinates.y})" : "None";
         }
 
         private static int GetRange(TargetingStrategy strategy, int fallback)

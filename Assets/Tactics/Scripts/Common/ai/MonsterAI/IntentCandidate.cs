@@ -25,6 +25,9 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>意图类型</summary>
         public IntentType IntentType { get; }
 
+        /// <summary>生成该候选的图意图节点 ID。为空时表示非图候选或旧兼容候选。</summary>
+        public string SourceIntentNodeId { get; }
+
         /// <summary>执行动作类型</summary>
         public ActionType Action { get; }
 
@@ -79,9 +82,11 @@ namespace Tactics.Common.AI.MonsterAI
             AbilityInfo ability,
             float basePriority,
             List<IUnit> targets = null,
-            ICell abilityTargetCell = null)
+            ICell abilityTargetCell = null,
+            string sourceIntentNodeId = null)
         {
             IntentType = intentType;
+            SourceIntentNodeId = sourceIntentNodeId;
             Action = action;
             Target = target;
             Destination = destination;

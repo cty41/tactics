@@ -16,15 +16,16 @@ namespace Tactics.Common.AI.MonsterAI
             {
                 if (!candidate.PassedRules) continue;
 
-                // 按图节点评分
+                // 按候选来源意图节点的连线评分，避免 HoldPosition 吃到全图所有 ScoreNode。
                 if (graph != null)
                 {
-                    foreach (var node in graph.Nodes)
+                    foreach (var score in GetConnectedScores(graph, candidate))
                     {
-                        if (node is not ScoreNodeRecord score || !score.Enabled) continue;
+                        if (!IsScoreApplicable(score.ScoreType, candidate)) continue;
+
                         float raw = CalcRawScore(score.ScoreType, candidate, context);
                         float norm = Mathf.Clamp01(raw);
-                        float curve = profile != null ? profile.ApplyCurve(norm, score.ResponseCurve) : norm;
+                        float curve = ApplyScoreCurve(score.ScoreType, norm, score.ResponseCurve, profile);
                         float weighted = curve * score.Weight;
                         candidate.AddScore(score.ScoreName, raw, curve, weighted);
                         context.DecisionLog.ScoreAdded(candidate.IntentType.ToString(), score.ScoreName, raw, curve, weighted);
@@ -47,6 +48,47 @@ namespace Tactics.Common.AI.MonsterAI
 
                 candidate.CalculateTotalScore();
             }
+        }
+
+        private static List<ScoreNodeRecord> GetConnectedScores(AiDecisionGraph graph, IntentCandidate candidate)
+        {
+            var scores = new List<ScoreNodeRecord>();
+            var intentRecord = FindIntentRecord(graph, candidate);
+            if (intentRecord == null)
+            {
+                return scores;
+            }
+
+            foreach (var edge in graph.Edges)
+            {
+                if (edge.SourceNodeId != intentRecord.NodeId) continue;
+
+                var child = graph.FindNode(edge.TargetNodeId);
+                if (child is ScoreNodeRecord score && score.Enabled)
+                {
+                    scores.Add(score);
+                }
+            }
+
+            return scores;
+        }
+
+        private static IntentNodeRecord FindIntentRecord(AiDecisionGraph graph, IntentCandidate candidate)
+        {
+            if (!string.IsNullOrEmpty(candidate.SourceIntentNodeId))
+            {
+                return graph.FindNode(candidate.SourceIntentNodeId) as IntentNodeRecord;
+            }
+
+            foreach (var node in graph.Nodes)
+            {
+                if (node is IntentNodeRecord intent && intent.IntentType == candidate.IntentType)
+                {
+                    return intent;
+                }
+            }
+
+            return null;
         }
 
         private static float CalcRawScore(ScoreType type, IntentCandidate candidate, AiContext context)
@@ -113,10 +155,12 @@ namespace Tactics.Common.AI.MonsterAI
             void TryScore(ScoreType type, bool enabled)
             {
                 if (!enabled) return;
+                if (!IsScoreApplicable(type, candidate)) return;
+
                 var (weight, curve) = profile.GetScoreConfig(type);
                 float raw = CalcRawScore(type, candidate, context);
                 float norm = Mathf.Clamp01(raw);
-                float cVal = profile.ApplyCurve(norm, curve);
+                float cVal = ApplyScoreCurve(type, norm, curve, profile);
                 float wVal = cVal * weight;
                 candidate.AddScore(type.ToString(), raw, cVal, wVal);
             }
@@ -138,8 +182,12 @@ namespace Tactics.Common.AI.MonsterAI
 
         private static void ApplyDefaultScores(IntentCandidate candidate, AiContext context)
         {
-            float ds = CalcRawScore(ScoreType.DistanceToTarget, candidate, context);
-            candidate.AddScore("DistanceToTarget", ds, ds, ds * 5f);
+            if (IsScoreApplicable(ScoreType.DistanceToTarget, candidate))
+            {
+                float ds = CalcRawScore(ScoreType.DistanceToTarget, candidate, context);
+                candidate.AddScore("DistanceToTarget", ds, ds, ds * 5f);
+            }
+
             if (candidate.Target != null)
             {
                 float hs = CalcRawScore(ScoreType.TargetHealth, candidate, context);
@@ -149,6 +197,38 @@ namespace Tactics.Common.AI.MonsterAI
                 candidate.AddScore("FinishOffBonus", 1f, 1f, context.BrainAsset.LowHealthTargetBonus);
             if (candidate.IntentType == IntentType.Retreat && context.IsSelfLowHealth())
                 candidate.AddScore("RetreatBonus", 1f, 1f, context.BrainAsset.RetreatBaseScore);
+        }
+
+        private static float ApplyScoreCurve(ScoreType type, float normalizedValue, AnimationCurve curve, AIProfile profile)
+        {
+            // DistanceToTarget 的 raw 语义固定为“接近度”：越近越高。
+            // 旧资产里可能保存了反向曲线；这里用正向值兜底，避免奖励远离目标。
+            if (type == ScoreType.DistanceToTarget)
+            {
+                return normalizedValue;
+            }
+
+            return profile != null ? profile.ApplyCurve(normalizedValue, curve) : normalizedValue;
+        }
+
+        private static bool IsScoreApplicable(ScoreType type, IntentCandidate candidate)
+        {
+            switch (type)
+            {
+                case ScoreType.DistanceToTarget:
+                case ScoreType.TargetHealth:
+                case ScoreType.TargetValue:
+                    return candidate.Target != null;
+                case ScoreType.AOEValue:
+                case ScoreType.AbilityEffectiveness:
+                case ScoreType.HealUrgency:
+                case ScoreType.ControlValue:
+                case ScoreType.BuffUtility:
+                case ScoreType.DebuffUtility:
+                    return candidate.Ability != null;
+                default:
+                    return true;
+            }
         }
 
         private static float CalcSafety(ICell cell, List<IUnit> enemies)

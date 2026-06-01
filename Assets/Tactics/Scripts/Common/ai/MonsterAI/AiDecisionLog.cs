@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
+using Tactics.Common.Cells;
+using Tactics.Common.Units;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.AI.MonsterAI
@@ -39,6 +41,19 @@ namespace Tactics.Common.AI.MonsterAI
             if (_verbose)
             {
                 TLog.Info($"[AI] [{intentName}] Filtered by rule '{ruleName}': {reason}");
+            }
+        }
+
+        /// <summary>
+        /// 添加聚合规则过滤日志，避免大量候选被同一规则过滤时刷屏。
+        /// </summary>
+        public void RuleFilteredSummary(string intentName, string ruleName, string reason, int count)
+        {
+            string message = $"[{intentName}] Filtered by rule '{ruleName}': {count} candidates. Reason: {reason}";
+            _entries.Add(new LogEntry(LogType.RuleFiltered, message));
+            if (_verbose)
+            {
+                TLog.Info($"[AI] {message}");
             }
         }
 
@@ -105,13 +120,23 @@ namespace Tactics.Common.AI.MonsterAI
             foreach (var candidate in candidates)
             {
                 string status = candidate.PassedRules ? "PASS" : $"FAIL: {candidate.RuleFailureReason}";
-                sb.AppendLine($"  - {candidate.IntentType}: Score={candidate.TotalScore:F2}, Status={status}");
+                sb.AppendLine($"  - {candidate.IntentType}: Score={candidate.TotalScore:F2}, Target={FormatUnit(candidate.Target)}, Destination={FormatCell(candidate.Destination)}, Status={status}");
             }
             _entries.Add(new LogEntry(LogType.CandidateList, sb.ToString()));
             if (_verbose)
             {
                 TLog.Info($"[AI] {sb}");
             }
+        }
+
+        private static string FormatUnit(IUnit unit)
+        {
+            return unit != null ? $"Unit_{unit.UnitID}" : "None";
+        }
+
+        private static string FormatCell(ICell cell)
+        {
+            return cell != null ? $"({cell.GridCoordinates.x}, {cell.GridCoordinates.y})" : "None";
         }
 
         /// <summary>

@@ -12,22 +12,16 @@ namespace Tactics.Common.AI.MonsterAI
             var graph = context.BrainAsset.DecisionGraph;
             if (graph == null) return;
 
+            var aggregatedFailures = new Dictionary<string, RuleFailureSummary>();
+
             foreach (var candidate in candidates)
             {
                 if (!candidate.PassedRules) continue;
 
-                // 找到对应的意图节点，获取关联的规则节点
-                IntentNodeRecord intentRecord = null;
+                // 找到生成该候选的意图节点，获取关联的规则节点。
+                // 兼容旧候选：没有 SourceIntentNodeId 时才退回按 IntentType 匹配。
+                IntentNodeRecord intentRecord = FindIntentRecord(graph, candidate);
                 List<RuleNodeRecord> connectedRules = new();
-
-                foreach (var node in graph.Nodes)
-                {
-                    if (node is IntentNodeRecord intent && intent.IntentType == candidate.IntentType)
-                    {
-                        intentRecord = intent;
-                        break;
-                    }
-                }
 
                 if (intentRecord != null)
                 {
@@ -47,7 +41,7 @@ namespace Tactics.Common.AI.MonsterAI
                     {
                         candidate.PassedRules = false;
                         candidate.RuleFailureReason = $"Rule '{rule.RuleName}' on cooldown ({rule.RemainingCooldown}) or already triggered (one-shot).";
-                        context.DecisionLog.RuleFiltered(candidate.IntentType.ToString(), rule.RuleName, candidate.RuleFailureReason);
+                        RecordRuleFailure(aggregatedFailures, context, candidate, rule, candidate.RuleFailureReason);
                         break;
                     }
 
@@ -55,7 +49,7 @@ namespace Tactics.Common.AI.MonsterAI
                     {
                         candidate.PassedRules = false;
                         candidate.RuleFailureReason = $"Rule '{rule.RuleName}' failed.";
-                        context.DecisionLog.RuleFiltered(candidate.IntentType.ToString(), rule.RuleName, candidate.RuleFailureReason);
+                        RecordRuleFailure(aggregatedFailures, context, candidate, rule, candidate.RuleFailureReason);
                         break;
                     }
 
@@ -63,6 +57,56 @@ namespace Tactics.Common.AI.MonsterAI
                     MarkTriggered(rule);
                 }
             }
+
+            if (!context.BrainAsset.EnableDetailedRuleFilterLog)
+            {
+                foreach (var summary in aggregatedFailures.Values)
+                {
+                    context.DecisionLog.RuleFilteredSummary(summary.IntentName, summary.RuleName, summary.Reason, summary.Count);
+                }
+            }
+        }
+
+        private static void RecordRuleFailure(
+            Dictionary<string, RuleFailureSummary> aggregatedFailures,
+            AiContext context,
+            IntentCandidate candidate,
+            RuleNodeRecord rule,
+            string reason)
+        {
+            string intentName = candidate.IntentType.ToString();
+            if (context.BrainAsset.EnableDetailedRuleFilterLog)
+            {
+                context.DecisionLog.RuleFiltered(intentName, rule.RuleName, reason);
+                return;
+            }
+
+            string key = $"{intentName}|{rule.RuleName}|{reason}";
+            if (!aggregatedFailures.TryGetValue(key, out var summary))
+            {
+                summary = new RuleFailureSummary(intentName, rule.RuleName, reason);
+            }
+
+            summary.Count++;
+            aggregatedFailures[key] = summary;
+        }
+
+        private static IntentNodeRecord FindIntentRecord(AiDecisionGraph graph, IntentCandidate candidate)
+        {
+            if (!string.IsNullOrEmpty(candidate.SourceIntentNodeId))
+            {
+                return graph.FindNode(candidate.SourceIntentNodeId) as IntentNodeRecord;
+            }
+
+            foreach (var node in graph.Nodes)
+            {
+                if (node is IntentNodeRecord intent && intent.IntentType == candidate.IntentType)
+                {
+                    return intent;
+                }
+            }
+
+            return null;
         }
 
         private static bool CanTrigger(RuleNodeRecord rule)
@@ -100,8 +144,7 @@ namespace Tactics.Common.AI.MonsterAI
                     return candidate.Target?.CurrentCell != null &&
                            CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
                 case RuleType.TargetInMoveAttackRange:
-                    return candidate.Destination != null && candidate.Target?.CurrentCell != null &&
-                           CalcDist(candidate.Destination, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+                    return IsTargetInMoveAttackRange(candidate, context);
                 case RuleType.HealthAboveThreshold:
                     return context.GetSelfHealthPercent() >= rule.Parameter;
                 case RuleType.HealthBelowThreshold:
@@ -179,6 +222,52 @@ namespace Tactics.Common.AI.MonsterAI
             float dx = a.GridCoordinates.x - b.GridCoordinates.x;
             float dy = a.GridCoordinates.y - b.GridCoordinates.y;
             return (float)System.Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        private static bool IsTargetInMoveAttackRange(IntentCandidate candidate, AiContext context)
+        {
+            if (candidate.Target?.CurrentCell == null)
+                return false;
+
+            if (candidate.Destination == null)
+                return CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+
+            if (CalcDist(candidate.Destination, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f)
+                return true;
+
+            return candidate.IntentType == IntentType.Engage &&
+                   candidate.Action == ActionType.Move &&
+                   !HasReachableAttackCell(context, candidate.Target);
+        }
+
+        private static bool HasReachableAttackCell(AiContext context, IUnit target)
+        {
+            if (target?.CurrentCell == null)
+                return false;
+
+            foreach (var cell in context.ReachableCells)
+            {
+                if (CalcDist(cell, target.CurrentCell) <= context.Self.AttackRange + 0.5f)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private struct RuleFailureSummary
+        {
+            public string IntentName;
+            public string RuleName;
+            public string Reason;
+            public int Count;
+
+            public RuleFailureSummary(string intentName, string ruleName, string reason)
+            {
+                IntentName = intentName;
+                RuleName = ruleName;
+                Reason = reason;
+                Count = 0;
+            }
         }
     }
 }

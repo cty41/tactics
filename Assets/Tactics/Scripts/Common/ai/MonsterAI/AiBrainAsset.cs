@@ -33,9 +33,17 @@ namespace Tactics.Common.AI.MonsterAI
         [Tooltip("撤退意图基础分数")]
         [SerializeField] private float _retreatBaseScore = 50f;
 
+        [Header("候选生成")]
+        [Tooltip("每个目标最多保留的接敌候选数，避免可达格 × 目标导致候选爆炸")]
+        [Min(1)]
+        [SerializeField] private int _maxEngageCandidatesPerTarget = 3;
+
         [Header("调试选项")]
         [Tooltip("是否启用详细日志")]
         [SerializeField] private bool _enableVerboseLogging = false;
+
+        [Tooltip("是否逐条输出规则过滤日志。关闭时会按规则聚合输出，避免刷屏")]
+        [SerializeField] private bool _enableDetailedRuleFilterLog = false;
 
         [Tooltip("是否在图上高亮命中节点")]
         [SerializeField] private bool _highlightDecisionNodes = true;
@@ -51,7 +59,9 @@ namespace Tactics.Common.AI.MonsterAI
         public float KillableDamageThreshold => _killableDamageThreshold;
         public float LowHealthTargetBonus => _lowHealthTargetBonus;
         public float RetreatBaseScore => _retreatBaseScore;
+        public int MaxEngageCandidatesPerTarget => _maxEngageCandidatesPerTarget;
         public bool EnableVerboseLogging => _enableVerboseLogging;
+        public bool EnableDetailedRuleFilterLog => _enableDetailedRuleFilterLog;
         public bool HighlightDecisionNodes => _highlightDecisionNodes;
         public string Version => _version;
 
@@ -72,6 +82,7 @@ namespace Tactics.Common.AI.MonsterAI
         {
             _lowHealthThreshold = Mathf.Clamp01(_lowHealthThreshold);
             _killableDamageThreshold = Mathf.Clamp01(_killableDamageThreshold);
+            _maxEngageCandidatesPerTarget = Mathf.Max(1, _maxEngageCandidatesPerTarget);
         }
     }
 }

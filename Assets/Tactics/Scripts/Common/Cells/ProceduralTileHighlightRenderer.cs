@@ -315,7 +315,6 @@ namespace Tactics.Cells
             }
 
             int totalCells = _highlights.Values.Sum(s => s.Count);
-            TLog.Info($"[ProceduralTileHighlightRenderer] RebuildMesh: totalCells={totalCells}, grid=(Isometric:{_gridLayer.layoutGrid.cellLayout == GridLayout.CellLayout.Isometric})");
             var vertices = new Vector3[totalCells * 4];
             var colors = new Color[totalCells * 4];
             var triangles = new int[totalCells * 6];
@@ -333,10 +332,6 @@ namespace Tactics.Cells
                     Vector3 worldCenter = _gridLayer.GetCellCenterWorld(pos);
                     Vector3 center = transform.InverseTransformPoint(worldCenter);
                     center.y += 0.02f;
-                    if (cellIndex == 0)
-                    {
-                        TLog.Info($"[ProceduralTileHighlightRenderer] FirstCell: grid=({coord.x},{coord.y}), worldCenter=({worldCenter.x:F3},{worldCenter.y:F3},{worldCenter.z:F3}), localCenter=({center.x:F3},{center.y:F3},{center.z:F3})");
-                    }
 
                     Vector3 worldRight = _gridLayer.GetCellCenterWorld(pos + Vector3Int.right);
                     Vector3 worldUp = _gridLayer.GetCellCenterWorld(pos + Vector3Int.up);

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -70,12 +71,13 @@ namespace Tactics.Common.AI.MonsterAI
             context.DecisionLog.Info($"Engage: Moving to ({selected.Destination.GridCoordinates.x}, {selected.Destination.GridCoordinates.y})");
 
             var moveAbility = FindMoveAbility(context);
-            if (moveAbility != null)
+            if (moveAbility == null)
             {
-            // 选中移动技能，点击目标格子触发，复用现有移动执行链
-                moveAbility.Ability.OnAbilitySelected(context.GridController);
-                moveAbility.Ability.OnCellClicked(selected.Destination, context.GridController);
+                TLog.Warning("[IntentExecutor] Move ability not found for Engage.");
+                return;
             }
+
+            await ExecuteMoveAsync(selected.Destination, context, moveAbility);
         }
 
         /// <summary>
@@ -89,7 +91,7 @@ namespace Tactics.Common.AI.MonsterAI
 
             float damage = context.Self.CalculateDamageDealt(selected.Target, selected.Target.CurrentCell, context.Self.CurrentCell);
             var command = new AttackCommand(selected.Target, damage);
-            await context.Self.ExecuteAbility(command, null, null);
+            await ExecuteCommandForAI(command, context);
         }
 
         /// <summary>
@@ -101,9 +103,13 @@ namespace Tactics.Common.AI.MonsterAI
 
             context.DecisionLog.Info($"AbilityUse: {selected.Ability.Name}");
 
-            // 选中技能，点击目标触发，复用现有技能执行链
-            selected.Ability.Ability.OnAbilitySelected(context.GridController);
-            selected.Ability.Ability.OnCellClicked(selected.AbilityTargetCell, context.GridController);
+            if (selected.Ability.Ability is GenericAbilityImpl generic)
+            {
+                await generic.ExecuteEffectsAsync(selected.Targets, context.GridController);
+                return;
+            }
+
+            TLog.Warning($"[IntentExecutor] Ability '{selected.Ability.Name}' does not support awaitable AI execution.");
         }
 
         /// <summary>
@@ -116,11 +122,13 @@ namespace Tactics.Common.AI.MonsterAI
             context.DecisionLog.Info($"Retreat: Moving to ({selected.Destination.GridCoordinates.x}, {selected.Destination.GridCoordinates.y})");
 
             var moveAbility = FindMoveAbility(context);
-            if (moveAbility != null)
+            if (moveAbility == null)
             {
-                moveAbility.Ability.OnAbilitySelected(context.GridController);
-                moveAbility.Ability.OnCellClicked(selected.Destination, context.GridController);
+                TLog.Warning("[IntentExecutor] Move ability not found for Retreat.");
+                return;
             }
+
+            await ExecuteMoveAsync(selected.Destination, context, moveAbility);
         }
 
         /// <summary>
@@ -136,17 +144,24 @@ namespace Tactics.Common.AI.MonsterAI
             if (selected.Destination != null)
             {
                 var moveAbility = FindMoveAbility(context);
-                if (moveAbility != null)
+                if (moveAbility == null)
                 {
-                    moveAbility.Ability.OnAbilitySelected(context.GridController);
-                    moveAbility.Ability.OnCellClicked(selected.Destination, context.GridController);
+                    TLog.Warning("[IntentExecutor] Move ability not found for FinishOff.");
+                    return;
+                }
+
+                bool moved = await ExecuteMoveAsync(selected.Destination, context, moveAbility);
+                if (!moved)
+                {
+                    TLog.Warning("[IntentExecutor] FinishOff movement failed; skipping follow-up attack.");
+                    return;
                 }
             }
 
             // 攻击目标 - 使用现有 AttackCommand
             float damage = context.Self.CalculateDamageDealt(selected.Target, selected.Target.CurrentCell, context.Self.CurrentCell);
             var command = new AttackCommand(selected.Target, damage);
-            await context.Self.ExecuteAbility(command, null, null);
+            await ExecuteCommandForAI(command, context);
         }
 
         /// <summary>
@@ -166,6 +181,35 @@ namespace Tactics.Common.AI.MonsterAI
                     return ability;
             }
             return null;
+        }
+
+        private static async Task<bool> ExecuteMoveAsync(ICell destination, AiContext context, AbilityInfo moveAbility)
+        {
+            if (destination == null) return false;
+            if (destination.Equals(context.Self.CurrentCell)) return true;
+
+            context.Self.CachePaths(context.GridController.CellManager);
+            var path = context.Self.FindPath(destination, context.GridController.CellManager).ToList();
+            if (path.Count == 0)
+            {
+                TLog.Warning("[IntentExecutor] Move path is empty.");
+                return false;
+            }
+
+            if (moveAbility.Ability is GenericAbilityImpl genericMove)
+            {
+                return await genericMove.ExecuteMoveForAI(destination, path, context.GridController);
+            }
+
+            await ExecuteCommandForAI(new MoveCommand(context.Self.CurrentCell, destination, path), context);
+            return true;
+        }
+
+        private static Task ExecuteCommandForAI(ICommand command, AiContext context)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            context.Self.AIExecuteAbility(command, context.GridController, tcs);
+            return tcs.Task;
         }
     }
 }

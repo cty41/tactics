@@ -39,10 +39,10 @@ namespace Tactics.Common.AI.MonsterAI
                 switch (intent.IntentType)
                 {
                     case IntentType.Engage:
-                        GenerateActionCandidates(context, intent, IntentType.Engage, ActionType.Move, candidates);
+                        GenerateEngageCandidates(context, intent, candidates);
                         break;
                     case IntentType.BasicAttack:
-                        GenerateActionCandidates(context, intent, IntentType.BasicAttack, ActionType.Attack, candidates);
+                        GenerateBasicAttackCandidates(context, intent, candidates);
                         break;
                     case IntentType.AbilityUse:
                         GenerateAbilityCandidates(context, intent, candidates);
@@ -63,45 +63,57 @@ namespace Tactics.Common.AI.MonsterAI
             return candidates;
         }
 
-        /// <summary>对每个可达格+每个敌人生成动作候选</summary>
-        private static void GenerateActionCandidates(AiContext context, IntentNodeRecord intent, IntentType intentType, ActionType actionType, List<IntentCandidate> candidates)
+        /// <summary>
+        /// 生成接敌候选：优先保留移动后可攻击的位置；若本回合无法进入攻击位，则保留少量最近前进格。
+        /// </summary>
+        private static void GenerateEngageCandidates(AiContext context, IntentNodeRecord intent, List<IntentCandidate> candidates)
         {
-            foreach (var cell in context.ReachableCells)
+            int maxPerTarget = System.Math.Max(1, context.BrainAsset.MaxEngageCandidatesPerTarget);
+
+            foreach (var target in context.CandidateTargets)
             {
-                foreach (var target in context.CandidateTargets)
+                if (target.CurrentCell == null) continue;
+
+                var attackCells = context.ReachableCells
+                    .Where(cell => CalcDist(cell, target.CurrentCell) <= context.Self.AttackRange + 0.5f)
+                    .OrderBy(cell => CalcDist(context.Self.CurrentCell, cell))
+                    .ThenBy(cell => CalcDist(cell, target.CurrentCell))
+                    .Take(maxPerTarget)
+                    .ToList();
+
+                var selectedCells = attackCells.Count > 0
+                    ? attackCells
+                    : context.ReachableCells
+                        .OrderBy(cell => CalcDist(cell, target.CurrentCell))
+                        .ThenBy(cell => CalcDist(context.Self.CurrentCell, cell))
+                        .Take(maxPerTarget)
+                        .ToList();
+
+                foreach (var cell in selectedCells)
                 {
-                    if (target.CurrentCell == null) continue;
-
-                    AbilityInfo ability = null;
-                    if (actionType == ActionType.UseAbility)
-                    {
-                        foreach (var ab in context.AvailableAbilities)
-                        {
-                            if (ab.Name == "Move") continue;
-                            float dist = CalcDist(cell, target.CurrentCell);
-                            if (dist <= ab.Range + 0.5f)
-                            {
-                                ability = ab;
-                                break;
-                            }
-                        }
-                        if (ability == null) continue;
-                    }
-                    else if (actionType == ActionType.Attack)
-                    {
-                        float dist = CalcDist(cell, target.CurrentCell);
-                        if (dist > context.Self.AttackRange + 0.5f) continue;
-                    }
-
-                    var c = new IntentCandidate(intentType, actionType, target, cell, ability, intent.BasePriority);
-                    // 预估结果
-                    if (actionType == ActionType.Attack || actionType == ActionType.UseAbility)
-                    {
-                        c.EstimatedDamage = context.Self.CalculateDamageDealt(target, target.CurrentCell, cell);
-                        c.EstimatedKillChance = target.Health > 0 ? System.Math.Min(1f, c.EstimatedDamage / target.Health) : 1f;
-                    }
-                    candidates.Add(c);
+                    candidates.Add(new IntentCandidate(IntentType.Engage, ActionType.Move, target, cell, null, intent.BasePriority, sourceIntentNodeId: intent.NodeId));
                 }
+            }
+        }
+
+        private static void GenerateBasicAttackCandidates(AiContext context, IntentNodeRecord intent, List<IntentCandidate> candidates)
+        {
+            foreach (var target in context.CandidateTargets)
+            {
+                if (target.CurrentCell == null) continue;
+                if (CalcDist(context.Self.CurrentCell, target.CurrentCell) > context.Self.AttackRange + 0.5f) continue;
+
+                var candidate = new IntentCandidate(
+                    IntentType.BasicAttack,
+                    ActionType.Attack,
+                    target,
+                    context.Self.CurrentCell,
+                    null,
+                    intent.BasePriority,
+                    sourceIntentNodeId: intent.NodeId);
+                candidate.EstimatedDamage = context.Self.CalculateDamageDealt(target, target.CurrentCell, context.Self.CurrentCell);
+                candidate.EstimatedKillChance = target.Health > 0 ? System.Math.Min(1f, candidate.EstimatedDamage / target.Health) : 1f;
+                candidates.Add(candidate);
             }
         }
 
@@ -121,7 +133,8 @@ namespace Tactics.Common.AI.MonsterAI
                         ability,
                         intent.BasePriority,
                         option.Targets,
-                        option.TargetCell);
+                        option.TargetCell,
+                        intent.NodeId);
 
                     EstimateAbilityOutcome(candidate, context);
                     candidates.Add(candidate);
@@ -291,7 +304,7 @@ namespace Tactics.Common.AI.MonsterAI
                 if (safety > bestSafety) { bestSafety = safety; bestCell = cell; }
             }
             if (bestCell != null)
-                candidates.Add(new IntentCandidate(IntentType.Retreat, ActionType.Move, null, bestCell, null, intent.BasePriority));
+                candidates.Add(new IntentCandidate(IntentType.Retreat, ActionType.Move, null, bestCell, null, intent.BasePriority, sourceIntentNodeId: intent.NodeId));
         }
 
         private static void GenerateFinishOffCandidates(AiContext context, IntentNodeRecord intent, List<IntentCandidate> candidates)
@@ -306,13 +319,17 @@ namespace Tactics.Common.AI.MonsterAI
                 float bestDist = float.MaxValue;
                 foreach (var cell in context.ReachableCells)
                 {
+                    if (CalcDist(cell, target.CurrentCell) > context.Self.AttackRange + 0.5f) continue;
                     float d = CalcDist(cell, target.CurrentCell);
                     if (d < bestDist) { bestDist = d; bestCell = cell; }
                 }
-                if (bestCell != null)
+
+                bool canAttackFromCurrent = CalcDist(context.Self.CurrentCell, target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+                if (bestCell != null || canAttackFromCurrent)
                 {
-                    var c = new IntentCandidate(IntentType.FinishOff, ActionType.Attack, target, bestCell, null, intent.BasePriority + context.BrainAsset.LowHealthTargetBonus);
-                    c.EstimatedDamage = context.Self.CalculateDamageDealt(target, target.CurrentCell, bestCell);
+                    var attackCell = bestCell ?? context.Self.CurrentCell;
+                    var c = new IntentCandidate(IntentType.FinishOff, ActionType.Attack, target, bestCell, null, intent.BasePriority + context.BrainAsset.LowHealthTargetBonus, sourceIntentNodeId: intent.NodeId);
+                    c.EstimatedDamage = context.Self.CalculateDamageDealt(target, target.CurrentCell, attackCell);
                     c.EstimatedKillChance = target.Health > 0 ? System.Math.Min(1f, c.EstimatedDamage / target.Health) : 1f;
                     candidates.Add(c);
                 }
@@ -321,7 +338,7 @@ namespace Tactics.Common.AI.MonsterAI
 
         private static void GenerateHoldCandidate(AiContext context, IntentNodeRecord intent, List<IntentCandidate> candidates)
         {
-            candidates.Add(new IntentCandidate(IntentType.HoldPosition, ActionType.Wait, null, context.Self.CurrentCell, null, intent.BasePriority));
+            candidates.Add(new IntentCandidate(IntentType.HoldPosition, ActionType.Wait, null, context.Self.CurrentCell, null, intent.BasePriority, sourceIntentNodeId: intent.NodeId));
         }
 
         private static void GenerateDefaultCandidates(AiContext context, List<IntentCandidate> candidates)
