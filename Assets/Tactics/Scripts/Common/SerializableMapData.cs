@@ -107,6 +107,12 @@ namespace Tactics.RoguelikeMap
         public string eventId;
 
         /// <summary>
+        /// 战斗遭遇配置路径（用于敌方节点动态生成怪物）。
+        /// </summary>
+        [JsonProperty("encounterConfigPath")]
+        public string encounterConfigPath;
+
+        /// <summary>
         /// 商店 ID（用于 Store 节点）。
         /// </summary>
         [JsonProperty("shopId")]
@@ -274,6 +280,7 @@ namespace Tactics.RoguelikeMap
                 var node = new RoguelikeMapNode(nodeData.nodeId, nodeType, nodeData.blueprintName,
                     nodeData.position.ToVector2());
                 node.eventId = nodeData.eventId ?? "";
+                node.encounterConfigPath = nodeData.encounterConfigPath ?? "";
                 if (nodeData.goldMin.HasValue || nodeData.goldMax.HasValue)
                 {
                     node.treasureConfig = new TreasureNodeConfig
@@ -355,6 +362,7 @@ namespace Tactics.RoguelikeMap
                     incoming = node.incoming.ToArray(),
                     outgoing = node.outgoing.ToArray(),
                     eventId = string.IsNullOrEmpty(node.eventId) ? null : node.eventId,
+                    encounterConfigPath = string.IsNullOrEmpty(node.encounterConfigPath) ? null : node.encounterConfigPath,
                     goldMin = node.treasureConfig?.goldMin,
                     goldMax = node.treasureConfig?.goldMax,
                     treasureEquipment = node.treasureConfig?.equipmentEntries?.Select(e => new SerializableNodeData.SerializableWeightedEquipmentData

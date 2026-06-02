@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Tactics.AssetPipeline;
+using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
@@ -158,6 +159,7 @@ namespace Tactics.Common.Battle
             _controller.UnitManager = this;
             _controller.PlayerManager = this;
             _controller.TurnResolver = _turnResolver ?? new Tactics.Common.Controllers.TurnResolvers.SubsequentTurnResolverImpl();
+            _controller.BeforeUnitManagerInitialize = _ => SpawnEncounterUnits();
 
             // Initialize players (will be configured in IPlayerManager.Initialize after UnitManager is ready)
             if (_players != null && _players.Length > 0)
@@ -215,6 +217,43 @@ namespace Tactics.Common.Battle
                 SyncStartingHp();
                 StartGame();
                 _ = StartBattleAsync();
+            }
+        }
+
+        private void SpawnEncounterUnits()
+        {
+            var mgr = GameAssetManager.Instance;
+            if (mgr == null)
+            {
+                TLog.Error("[BattleController] GameAssetManager unavailable while spawning encounter units.");
+                return;
+            }
+
+            Transform container = UnitContainerTransform;
+            if (container == null)
+                container = transform;
+
+            var existingUnits = FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var existing in existingUnits)
+            {
+                if (existing == null || existing.PlayerNumber == _humanPlayerNumber)
+                    continue;
+
+                existing.gameObject.SetActive(false);
+                Destroy(existing.gameObject);
+            }
+
+            var encounterPath = EncounterRuntimeState.GetPendingEncounterPath();
+            var encounter = EncounterConfigLoader.Load(encounterPath, mgr);
+            if (encounter == null)
+            {
+                TLog.Warning($"[BattleController] No valid encounter found at '{encounterPath}'.");
+                return;
+            }
+
+            foreach (var unitEntry in encounter.Units)
+            {
+                SpawnEncounterUnit(unitEntry, container, mgr, encounterPath);
             }
         }
 
@@ -365,6 +404,74 @@ namespace Tactics.Common.Battle
                     def.ClearPendingBuffs();
                 }
             }
+        }
+
+        private void SpawnEncounterUnit(EncounterUnitEntry unitEntry, Transform container, GameAssetManager mgr, string encounterPath)
+        {
+            var prefabPath = GameAssetManager.NormalizeAssetPath(unitEntry.UnitPrefabPath);
+            var prefab = mgr.Load<GameObject>(prefabPath);
+            if (prefab == null)
+            {
+                TLog.Error($"[BattleController] Encounter prefab not found: {prefabPath} ({encounterPath})");
+                return;
+            }
+
+            _loadedPaths.Add(prefabPath);
+
+            var go = Instantiate(prefab, container);
+            go.name = string.IsNullOrWhiteSpace(unitEntry.UnitName) ? prefab.name : unitEntry.UnitName;
+
+            var unit = go.GetComponent<TilemapUnit>();
+            if (unit == null)
+            {
+                TLog.Error($"[BattleController] Encounter prefab missing TilemapUnit: {prefabPath}");
+                Destroy(go);
+                return;
+            }
+
+            unit.PlayerNumber = unitEntry.PlayerNumber;
+
+            if (!TryGetEncounterCell(unitEntry.SpawnCellX, unitEntry.SpawnCellY, out var spawnCell))
+            {
+                TLog.Error($"[BattleController] Encounter cell ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}) not found for '{go.name}'.");
+                Destroy(go);
+                return;
+            }
+
+            go.transform.position = spawnCell.WorldPosition.ToVector3();
+            unit.CurrentCell = spawnCell;
+            if (!spawnCell.CurrentUnits.Contains(unit))
+                spawnCell.CurrentUnits.Add(unit);
+            spawnCell.IsTaken = true;
+
+            if (!string.IsNullOrWhiteSpace(unitEntry.AiBrainAssetPath))
+            {
+                var aiPath = GameAssetManager.NormalizeAssetPath(unitEntry.AiBrainAssetPath);
+                var brain = mgr.Load<AiBrainAsset>(aiPath);
+                if (brain == null)
+                {
+                    TLog.Error($"[BattleController] Encounter AI brain not found: {aiPath}");
+                }
+                else
+                {
+                    _loadedPaths.Add(aiPath);
+                    unit.ApplyAiBrain(brain);
+                }
+            }
+        }
+
+        private bool TryGetEncounterCell(int x, int y, out ICell cell)
+        {
+            cell = null;
+            var manager = _cellManager ?? CellManager as UnityCellManager;
+            if (manager == null)
+            {
+                TLog.Error("[BattleController] CellManager is null while spawning encounter units.");
+                return false;
+            }
+
+            cell = manager.GetCellAt(new Vector2IntImpl(x, y));
+            return cell != null;
         }
 
         #endregion

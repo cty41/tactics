@@ -118,6 +118,11 @@ namespace Tactics.Cells
 
         public override ICell GetCellAt(Vector2IntImpl coords)
         {
+            if (_cells == null)
+            {
+                return null;
+            }
+
             if (_cells.TryGetValue(coords, out var cell))
             {
                 return cell;

@@ -1,0 +1,21 @@
+{
+  "encounterId": "basic_melee",
+  "units": [
+    {
+      "unitName": "EncounterHunterBlue",
+      "unitPrefabPath": "Assets/Tactics/Arts/Prefabs/Units/HunterBlue.prefab",
+      "aiBrainAssetPath": "Assets/Tactics/AI/BasicMeleeBrain.asset",
+      "playerNumber": 1,
+      "spawnCellX": 13,
+      "spawnCellY": 25
+    },
+    {
+      "unitName": "EncounterFighterBlue",
+      "unitPrefabPath": "Assets/Tactics/Arts/Prefabs/Units/Infantry Blue.prefab",
+      "aiBrainAssetPath": "Assets/Tactics/AI/BasicMeleeBrain.asset",
+      "playerNumber": 1,
+      "spawnCellX": 17,
+      "spawnCellY": 29
+    }
+  ]
+}

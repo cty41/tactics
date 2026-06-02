@@ -21,6 +21,7 @@ namespace Tactics.Common.Controllers
         public IUnitManager UnitManager { get; set; }
         public IPlayerManager PlayerManager { get; set; }
         public ITurnResolver TurnResolver { get; set; }
+        public Action<IGridController> BeforeUnitManagerInitialize { get; set; }
         public TurnContext TurnContext { get; protected set; }
         public int CurrentRound { get; protected set; } = 1;
         private int _transitionCount;
@@ -54,6 +55,8 @@ namespace Tactics.Common.Controllers
             CellManager.CellAdded += RegisterCell;
             CellManager.Initialize(this);
             CellManager.UnMark(CellManager.GetCells());
+
+            BeforeUnitManagerInitialize?.Invoke(this);
 
             UnitManager.UnitAdded += RegisterUnit;
             UnitManager.Initialize(this);

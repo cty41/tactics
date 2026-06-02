@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Common.Battle;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -88,6 +89,7 @@ namespace Tactics.RoguelikeMap
                         }
 
                         var node = new RoguelikeMapNode($"n{nextId++}", nodeType, blueprintName, pos);
+                        node.encounterConfigPath = EncounterConfigLoader.GetDefaultEncounterPath(nodeType);
                         nodes.Add(node);
                         TLog.Info($"[RoguelikeMapGenerator] Placed node {node.nodeId} ({nodeType}) at ({pos.x:F1},{pos.y:F1}) in cell [{col},{row}]");
                     }

@@ -158,6 +158,11 @@ namespace Tactics.RoguelikeMap
         public string eventId = "";
 
         /// <summary>
+        /// 战斗遭遇配置路径（用于敌方节点动态生成怪物）。
+        /// </summary>
+        public string encounterConfigPath = "";
+
+        /// <summary>
         /// 宝藏节点奖励配置（仅 Treasure 类型节点使用）。
         /// </summary>
         public TreasureNodeConfig treasureConfig;

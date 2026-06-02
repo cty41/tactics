@@ -84,6 +84,11 @@ namespace Tactics.Common.Units
         /// </summary>
         public AiBrainAsset AiBrainAsset => _aiBrainAsset;
 
+        public void ApplyAiBrain(AiBrainAsset brainAsset)
+        {
+            _aiBrainAsset = brainAsset;
+        }
+
         [SerializeField] private HashSet<string> _usedBasicAbilitiesThisTurn = new();
 
         [SerializeField] private float _health = 10;
