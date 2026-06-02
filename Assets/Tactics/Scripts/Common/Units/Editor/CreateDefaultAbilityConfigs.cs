@@ -19,7 +19,7 @@ namespace Tactics.Common.Units.Abilities.Editor
         public static void CreateConfigs()
         {
             var logs = new List<string>();
-            string dir = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
+            string dir = "Assets/Tactics/Battle/Abilities";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             // 1. Melee_Attack: SingleTargetEnemy(min=0, max=1) + DamageEffect

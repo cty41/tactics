@@ -13,10 +13,10 @@ namespace Tactics.Editor
 {
     public static class RoleSystemSetupEditor
     {
-        private const string AbilitiesPath = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
-        private const string ClassesPath = "Assets/Tactics/Arts/ScriptableObjects/Classes";
+        private const string AbilitiesPath = "Assets/Tactics/Battle/Abilities";
+        private const string ClassesPath = "Assets/Tactics/Battle/Classes";
         private const string PrefabsPath = "Assets/Tactics/Arts/Prefabs/Units";
-        private const string BuffsPath = "Assets/Tactics/Arts/ScriptableObjects/Buffs";
+        private const string BuffsPath = "Assets/Tactics/Battle/Buffs";
 
         [MenuItem("Tactics/Role System/Setup Role System")]
         public static void SetupRoleSystem()

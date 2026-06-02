@@ -63,7 +63,7 @@ namespace Tactics.Common.Units.Abilities.Editor
         {
             _log.Clear();
             Log("=== Starting Setup ===");
-            string dir = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
+            string dir = "Assets/Tactics/Battle/Abilities";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             AssetDatabase.Refresh();
 
@@ -180,7 +180,7 @@ namespace Tactics.Common.Units.Abilities.Editor
         private void CreateDefaults()
         {
             _log.Clear();
-            string dir = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
+            string dir = "Assets/Tactics/Battle/Abilities";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             var move = ScriptableObject.CreateInstance<AbilityConfig>();

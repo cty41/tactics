@@ -90,7 +90,7 @@ namespace Tactics.Common.Units.Abilities.Editor
             _logs.Clear();
             Log("=== Starting AbilityConfig Migration ===");
 
-            string configsPath = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
+            string configsPath = "Assets/Tactics/Battle/Abilities";
             EnsureDirectoryExists(configsPath);
 
             var unitPrefabs = FindUnitPrefabs();
@@ -143,7 +143,7 @@ namespace Tactics.Common.Units.Abilities.Editor
             _logs.Clear();
             Log("=== Creating Default AbilityConfigs ===");
 
-            string configsPath = "Assets/Tactics/Arts/ScriptableObjects/Abilities";
+            string configsPath = "Assets/Tactics/Battle/Abilities";
             EnsureDirectoryExists(configsPath);
 
             CreateAttackConfig($"{configsPath}/Default_MeleeAttack.asset", false);

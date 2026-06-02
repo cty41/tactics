@@ -82,10 +82,10 @@ namespace Tactics.UI
             if (mgr != null)
             {
                 // 优先加载黑暗森林原型配置，如果不存在则加载默认配置
-                mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/Arts/ScriptableObjects/MapConfigs/DarkForestPrototypeConfig.asset");
+                mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset");
                 if (mapConfig == null)
                 {
-                    mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/Arts/ScriptableObjects/MapConfigs/DefaultRogueLikeMapConfig.asset");
+                    mapConfig = mgr.Load<RoguelikeMapConfig>("Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset");
                     TLog.Info("[RoguelikeMapUIController] 使用默认地图配置");
                 }
                 else
