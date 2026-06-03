@@ -57,6 +57,17 @@ description: "Use when writing or modifying C# code, before adding using stateme
 | RoguelikeFlowCoordinator | `RoguelikeFlowCoordinator.Instance` |
 | SceneController | `SceneController.Instance` |
 
+### High-Risk Project Types
+
+以下类型在 `Assets/ThirdParty/TBSFramework/` 中存在同名定义，容易误引用第三方版本。
+
+| Type | Namespace | Why it matters |
+|------|-----------|----------------|
+| `CombatComponent` | `Tactics.Common.Units` | 与 ThirdParty 中同名类型重名 |
+| `IUnit` | `Tactics.Common.Units` | 与 ThirdParty 中同名接口重名 |
+| `ElementType` | `Tactics.Common.Units.Buffs` | 枚举常用于伤害/Buff 逻辑，易漏 namespace |
+| `Vector3ImplExtension` | `Tactics.Common.Utilities` | 扩展类命名不直观，且存在同名 ThirdParty 版本 |
+
 ## When to use
 
 - Writing any new C# file in the project
@@ -66,6 +77,10 @@ description: "Use when writing or modifying C# code, before adding using stateme
 - Adding new using statements
 
 ## Workflow
+
+### Step 0: Never guess project types
+
+Quick Reference 未列出的类型，禁止凭经验猜命名空间。必须先搜索定义，并优先确认 `Assets/Tactics/Scripts/**` 下是否已有项目内实现，避免误用 ThirdParty 同名类型。
 
 ### Step 1: Look up namespace
 
@@ -108,6 +123,7 @@ await UIManager.ShowAsync(UIManager.UIId.MyPanel);
 | `Debug.Log()` | `TLog.Info()` | Project convention |
 | `Resources.Load()` | `GameAssetManager.Instance.Load()` | Project convention |
 | `RunGoldManager.CurrentGold` | `RunGoldManager.Instance.CurrentGold` | Singleton needs `.Instance` |
+| 未列在 Quick Reference 的项目类型凭经验猜 namespace | 先搜索定义，优先确认 `Assets/Tactics/Scripts/**` 下的项目内实现 | 项目内与 ThirdParty 存在同名类型，猜测极易引用错 |
 
 ## Checklist
 
@@ -118,3 +134,4 @@ Before submitting C# code, verify:
 - [ ] Non-UIControllerBase classes use `UIManager.Instance` not `Ui`
 - [ ] Logging uses `TLog` not `Debug.Log`
 - [ ] Asset loading uses `GameAssetManager` not `Resources.Load`
+- [ ] Quick Reference 未列出的类型，已先搜索定义而不是凭经验猜 namespace
