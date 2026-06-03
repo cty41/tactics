@@ -1,11 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "@warp-dot-dev/opencode-warp",
-    "@mohak34/opencode-notifier@latest",
-    "superpowers@git+https://github.com/obra/superpowers.git",
-    "./.opencode/plugin/auto-compile.js"
-  ],
+  "plugin": ["./.opencode/plugin/auto-compile.js"],
   "mcp": {
     "unity-MCP": {
       "type": "remote",
