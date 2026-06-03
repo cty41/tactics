@@ -1,6 +1,6 @@
 ---
 name: make-dev-plan
-description: "Use when user requests a development plan, task breakdown, milestone planning, or asks '帮我制订开发计划' — clarifies via P0→P3, then hands the finalized plan to `plan-mode-plan-writer` for save + handoff context"
+description: "Use when user requests a development plan, task breakdown, milestone planning, or asks '帮我制订开发计划' — can also receive design output from brainstorming. Clarifies via P0→P3, then hands the finalized plan to `plan-mode-plan-writer` for save + handoff context"
 ---
 
 # Development planner（开发计划生成器）
@@ -23,7 +23,8 @@ description: "Use when user requests a development plan, task breakdown, milesto
 ## When to use
 
 - 用户需要开发计划、里程碑、任务拆分、范围界定、迭代规划。
-- 用户提出“帮我制订开发计划：实现/改造……（某模块/某文件/某方法）”这类请求，且希望拆成可执行任务。
+- 用户提出"帮我制订开发计划：实现/改造……（某模块/某文件/某方法）"这类请求，且希望拆成可执行任务。
+- `brainstorming` 已完成设计收束，需要将设计文档转化为开发计划。
 - 信息不完整时，须先澄清再输出计划，或显式列出 Assumptions。
 
 ## Workflow
@@ -101,6 +102,23 @@ description: "Use when user requests a development plan, task breakdown, milesto
 
 ---
 
+## File Structure
+
+在定义 Tasks 之前，先列出本次改动涉及的文件及其职责。这是分解决策被锁定的地方。
+
+- 每个文件应有单一清晰职责
+- 一起变更的文件应放在一起
+- 在已有代码库中，遵循已有模式；如果某个需要修改的文件已变得过大，在计划中包含拆分是合理的
+
+```markdown
+## File Structure
+
+- `路径/to/file.cs` — 职责说明
+- `路径/to/another.cs` — 职责说明
+```
+
+---
+
 ## Tasks（拆分原则）
 
 ### Principle 1: MVP-first（最小可迭代）
@@ -125,6 +143,7 @@ description: "Use when user requests a development plan, task breakdown, milesto
 - 目标：
 - 输入：
 - 输出：
+- 涉及文件：
 - 验收标准：
   - ...
 ```
@@ -137,6 +156,10 @@ description: "Use when user requests a development plan, task breakdown, milesto
 - 目标：实现基础注册流程
 - 输入：邮箱 + 密码
 - 输出：成功创建用户账号
+- 涉及文件：
+  - Create: `src/auth/register.ts`
+  - Modify: `src/api/users.ts`
+  - Test: `tests/auth/register.test.ts`
 - 验收标准：
   - 用户可以提交注册表单
   - 数据成功写入持久化层
@@ -181,6 +204,10 @@ description: "Use when user requests a development plan, task breakdown, milesto
 - 目标：
 - 预期收益：
 
+## File Structure
+
+- `路径/to/file.cs` — 职责说明
+
 ## Scope
 
 ### In Scope
@@ -197,6 +224,7 @@ description: "Use when user requests a development plan, task breakdown, milesto
 - 目标：
 - 输入：
 - 输出：
+- 涉及文件：
 - 验收标准：
   - ...
 
@@ -244,6 +272,29 @@ description: "Use when user requests a development plan, task breakdown, milesto
 
 ---
 
+## No Placeholders
+
+每个 task 的验收标准和输出必须包含实际内容，不得使用占位符。以下都是**计划失败**：
+
+- "TBD"、"TODO"、"后续补充"
+- "完成实现"、"按需求完成"
+- "添加适当的错误处理"（没有具体说明）
+- "类似 Task N"（直接复制内容 — 执行者可能乱序阅读）
+
+---
+
+## Self-Review
+
+写完完整计划后，用 fresh eyes 对照需求自检：
+
+1. **需求覆盖：** 逐项检查需求/设计文档，每个条目都能指向一个 task 吗？列出缺口。
+2. **占位符扫描：** 搜索计划中的红旗 — 任何 "No Placeholders" 中列出的模式。发现则修复。
+3. **一致性检查：** 后续 task 中使用的类型、方法签名、属性名与前面定义的一致吗？Task 3 叫 `clearLayers()` 但 Task 7 叫 `clearFullLayers()` 是 bug。
+
+发现问题直接修复即可，不需要再次审阅。
+
+---
+
 ## Role prompt（行为约束摘要）
 
 以资深技术负责人身份协助用户制定清晰、可执行的计划：
@@ -253,6 +304,7 @@ description: "Use when user requests a development plan, task breakdown, milesto
 3. Tasks 按 MVP-first 拆分；每个任务可独立、可验证；优先垂直切片而非技术分层。
 4. 信息不足时列出 Assumptions；必要时按 Phase 分阶段。
 5. 避免模糊表述，验收标准须具体可执行。
+6. 在拆 Tasks 前先列 File Structure；验收标准中禁止占位符；计划完成后执行 Self-Review。
 
 ## Anti-patterns
 
@@ -261,14 +313,19 @@ description: "Use when user requests a development plan, task breakdown, milesto
 | 未澄清范围就输出完整计划 | 先按 P0→P3 收集关键信息 | 避免计划偏离真实目标 |
 | 把基础库/工具链默认纳入可改范围 | 未获许可时列为待确认或替代方案 | 避免越权规划 |
 | 按技术分层拆任务 | 按可验证的垂直切片拆任务 | 便于迭代和验收 |
-| 验收标准写成“完成实现” | 写出可观察行为或检查命令 | 计划才可执行 |
+| 验收标准写成"完成实现" | 写出可观察行为或检查命令 | 计划才可执行 |
 | 输出完计划就结束 | 正式计划交给 `plan-mode-plan-writer` 落地保存 | 否则无法稳定交接 |
+| 跳过 File Structure 直接拆任务 | 先列出涉及文件及职责再拆任务 | 便于分解决策和 review |
+| 验收标准含 TBD/TODO | 验收标准写具体可验证内容 | 否则执行者无法判断是否完成 |
 
 ## Checklist
 
 - [ ] 已明确目标、范围和成功标准
 - [ ] 已区分 In Scope / Out of Scope
+- [ ] 已列出 File Structure（涉及文件及职责）
 - [ ] 已记录必要 Assumptions
 - [ ] Tasks 可独立完成且可验证
+- [ ] Tasks 验收标准不含占位符
 - [ ] 未默认纳入用户未授权的基础库、工具链或结构边界改动
+- [ ] 已执行 Self-Review（需求覆盖、占位符、一致性）
 - [ ] 正式计划已交给 `plan-mode-plan-writer` 统一落地

@@ -1,6 +1,6 @@
 ---
 name: plan-mode-plan-writer
-description: "Use when producing a formal plan in Plan Mode — saves the finalized plan to `.agents/plans/`, returns the path, and adds execution context for weaker LLM handoff"
+description: "Use when producing a formal plan in Plan Mode — receives decision-complete plans from make-dev-plan (directly or after brainstorming -> make-dev-plan), saves to `.agents/plans/`, returns the path, and adds execution context for weaker LLM handoff"
 ---
 
 # Plan Mode 计划落地规范
@@ -124,16 +124,17 @@ description: "Use when producing a formal plan in Plan Mode — saves the finali
 
 ### Step 5: 与其他 planning skill 协同
 
-- `make-dev-plan` 负责澄清、范围和任务拆分
+- `brainstorming` 负责需求不清晰时的设计收束，输出设计文档到 `.agents/docs/`（按需触发）
+- `make-dev-plan` 负责澄清、范围和任务拆分（可接收 `brainstorming` 的设计输出作为输入）
 - `plan-mode-plan-writer` 负责把正式计划整理成稳定文档并补齐交接上下文
 - `project-doc-organization` 负责目录与真相源约定
 
-如果一次任务同时涉及多个 planning skill，顺序固定为：
+典型链路有两种：
 
-1. 澄清与收束
-2. 生成正式计划
-3. 落地到 `.agents/plans/`
-4. 回复路径与关联说明
+1. **需求不清晰**：`brainstorming` -> 设计文档 -> `make-dev-plan` -> `plan-mode-plan-writer`
+2. **需求已清晰**：`make-dev-plan` -> `plan-mode-plan-writer`
+
+无论哪种链路，最终都经由 `make-dev-plan` 产出计划骨架，再交给 `plan-mode-plan-writer` 落地。
 
 ## Anti-patterns
 
