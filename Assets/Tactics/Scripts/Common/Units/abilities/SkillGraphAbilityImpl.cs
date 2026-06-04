@@ -1,0 +1,195 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Tactics.Common.Cells;
+using Tactics.Common.Controllers;
+using Tactics.Common.Controllers.GridStates;
+using Tactics.Common.Skills.Graph;
+using Tactics.Runtime.Utilities;
+using UnityEngine;
+
+namespace Tactics.Common.Units.Abilities
+{
+    /// <summary>
+    /// SkillGraph 能力实现。
+    /// 通过 SkillGraphRunner 执行技能图。
+    /// </summary>
+    public class SkillGraphAbilityImpl : IAbility
+    {
+        public event Action<IAbility> AbilitySelected;
+        public event Action<IAbility> AbilityDeselected;
+
+        private readonly IUnit _owner;
+        private readonly SkillGraphAbilityConfig _config;
+        private IGridController _gridController;
+        private HashSet<ICell> _validTargetCells;
+
+        public IUnit UnitReference { get; set; }
+        public string DisplayName => _config.DisplayName;
+        public Sprite Icon => _config.Icon;
+        public int Cost => _config.ManaCost;
+
+        public SkillGraphAbilityImpl(IUnit owner, SkillGraphAbilityConfig config)
+        {
+            _owner = owner;
+            _config = config;
+            UnitReference = owner;
+        }
+
+        public void Initialize(IGridController gridController)
+        {
+            _gridController = gridController;
+        }
+
+        public void OnAbilitySelected(IGridController gridController)
+        {
+            _gridController = gridController;
+            _validTargetCells = CalculateValidTargetCells();
+        }
+
+        public void Display(IGridController gridController)
+        {
+            if (_validTargetCells != null && _validTargetCells.Count > 0)
+            {
+                gridController.CellManager.MarkAsReachable(_validTargetCells);
+            }
+        }
+
+        public void CleanUp(IGridController gridController)
+        {
+            if (_validTargetCells != null)
+            {
+                gridController.CellManager.UnMark(_validTargetCells);
+                _validTargetCells = null;
+            }
+        }
+
+        public void OnUnitClicked(IUnit unit, IGridController gridController)
+        {
+            if (!CanPerform(gridController)) return;
+            if (unit.CurrentCell == null) return;
+            if (_validTargetCells == null || !_validTargetCells.Contains(unit.CurrentCell)) return;
+
+            _ = ExecuteSkillGraph(unit.CurrentCell, gridController);
+        }
+
+        public void OnCellClicked(ICell cell, IGridController gridController)
+        {
+            if (!CanPerform(gridController)) return;
+            if (_validTargetCells == null || !_validTargetCells.Contains(cell)) return;
+
+            _ = ExecuteSkillGraph(cell, gridController);
+        }
+
+        public void OnUnitHighlighted(IUnit unit, IGridController gridController) { }
+        public void OnUnitDehighlighted(IUnit unit, IGridController gridController) { }
+        public void OnUnitDestroyed(IGridController gridController) { }
+        public void OnCellHighlighted(ICell cell, IGridController gridController) { }
+        public void OnCellDehighlighted(ICell cell, IGridController gridController) { }
+        public void OnAbilityDeselected(IGridController gridController) { }
+        public void OnTurnStart(IGridController gridController) { }
+        public void OnTurnEnd(IGridController gridController) { }
+
+        public bool CanPerform(IGridController gridController)
+        {
+            if (_config.SkillGraph == null) return false;
+            if (_config.IsBasicAbility)
+                return !_owner.HasUsedBasicAbilityThisTurn(_config.DisplayName);
+            return _owner.Mana >= _config.ManaCost;
+        }
+
+        public void InvokeAbilitySelected()
+        {
+            AbilitySelected?.Invoke(this);
+        }
+
+        public void InvokeAbilityDeselected()
+        {
+            AbilityDeselected?.Invoke(this);
+        }
+
+        private async Task ExecuteSkillGraph(ICell selectedCell, IGridController gridController)
+        {
+            var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(_config.SkillGraph);
+            var context = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController);
+
+            // Pre-set target from cell click
+            var unitsOnCell = selectedCell.CurrentUnits;
+            if (unitsOnCell != null && unitsOnCell.Count > 0)
+            {
+                context.PrimaryTarget = unitsOnCell[0];
+            }
+            context.TargetPoint = selectedCell;
+
+            var runner = new SkillGraphRunner();
+            var result = await runner.Execute(context);
+
+            if (result == SkillGraphExecutionState.Completed)
+            {
+                TLog.Info($"[SkillGraphAbility] '{DisplayName}' completed successfully.");
+            }
+            else
+            {
+                TLog.Warning($"[SkillGraphAbility] '{DisplayName}' ended with state: {result}. Error: {context.LastError}");
+            }
+
+            // Mark basic ability used or deduct mana
+            if (_config.IsBasicAbility)
+                _owner.MarkBasicAbilityUsed(_config.DisplayName);
+            else
+                _owner.Mana -= _config.ManaCost;
+
+            gridController.GridState = new GridStateAwaitInput();
+        }
+
+        private HashSet<ICell> CalculateValidTargetCells()
+        {
+            var validCells = new HashSet<ICell>();
+            if (_gridController == null) return validCells;
+
+            int range = _config.TargetRange;
+            var allCells = _gridController.CellManager.GetCells();
+            var ownerCell = _owner.CurrentCell;
+            bool cardinalOnly = UsesCardinalDash();
+
+            foreach (var cell in allCells)
+            {
+                int distance = cell.GetDistance(ownerCell);
+                if (distance <= 0 || distance > range)
+                    continue;
+
+                if (cardinalOnly)
+                {
+                    int dx = cell.GridCoordinates.x - ownerCell.GridCoordinates.x;
+                    int dy = cell.GridCoordinates.y - ownerCell.GridCoordinates.y;
+                    bool isCardinal = (dx == 0) ^ (dy == 0);
+                    if (!isCardinal)
+                        continue;
+                }
+
+                if (distance <= range)
+                {
+                    validCells.Add(cell);
+                }
+            }
+
+            return validCells;
+        }
+
+        private bool UsesCardinalDash()
+        {
+            if (_config?.SkillGraph == null)
+                return false;
+
+            var nodes = _config.SkillGraph.Nodes;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (nodes[i] is DashToTargetNodeRecord)
+                    return true;
+            }
+
+            return false;
+        }
+    }
+}
