@@ -23,7 +23,8 @@ namespace Tactics.Common.Skills.Graph
         Fail,
         ProjectileLaunch,
         OnHit,
-        ApplyBuff
+        ApplyBuff,
+        SelectSelf
     }
 
     public enum SkillGraphPortType
@@ -86,6 +87,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.ProjectileLaunch => new ProjectileLaunchNodeRecord(),
                 SkillGraphNodeType.OnHit => new OnHitNodeRecord(),
                 SkillGraphNodeType.ApplyBuff => new ApplyBuffNodeRecord(),
+                SkillGraphNodeType.SelectSelf => new SelectSelfNodeRecord(),
                 _ => null
             };
         }
@@ -222,6 +224,12 @@ namespace Tactics.Common.Skills.Graph
         public BuffConfig BuffConfig { get => _buffConfig; set => _buffConfig = value; }
         public int Duration { get => _duration; set => _duration = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyBuff;
+    }
+
+    [System.Serializable]
+    public class SelectSelfNodeRecord : SkillGraphNodeRecord
+    {
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.SelectSelf;
     }
 
     // ═══════════════════════════════════════════════

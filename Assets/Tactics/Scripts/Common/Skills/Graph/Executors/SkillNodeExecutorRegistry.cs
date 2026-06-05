@@ -24,6 +24,7 @@ namespace Tactics.Common.Skills.Graph
             Register(new ProjectileLaunchNodeExecutor());
             Register(new OnHitNodeExecutor());
             Register(new ApplyBuffNodeExecutor());
+            Register(new SelectSelfNodeExecutor());
         }
 
         public static void Register(ISkillNodeExecutor executor)

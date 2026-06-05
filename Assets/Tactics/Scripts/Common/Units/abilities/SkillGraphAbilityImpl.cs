@@ -160,6 +160,12 @@ namespace Tactics.Common.Units.Abilities
             int minRange = GetMinRangeFromGraph();
             bool cardinalOnly = UsesCardinalDash();
 
+            if (FirstSelectionRequiresSelf())
+            {
+                displayCells.Add(ownerCell);
+                return displayCells;
+            }
+
             foreach (var cell in allCells)
             {
                 int distance = cell.GetDistance(ownerCell);
@@ -199,6 +205,13 @@ namespace Tactics.Common.Units.Abilities
             var ownerCell = _owner.CurrentCell;
             bool cardinalOnly = UsesCardinalDash();
             bool requiresEnemy = FirstSelectionRequiresEnemy();
+            bool requiresSelf = FirstSelectionRequiresSelf();
+
+            if (requiresSelf)
+            {
+                validCells.Add(ownerCell);
+                return validCells;
+            }
 
             foreach (var cell in allCells)
             {
@@ -262,6 +275,12 @@ namespace Tactics.Common.Units.Abilities
             }
 
             return false;
+        }
+
+        private bool FirstSelectionRequiresSelf()
+        {
+            var first = FindFirstSelectionNode();
+            return first is SelectSelfNodeRecord;
         }
 
         private bool GraphContainsDashToTarget()

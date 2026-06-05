@@ -301,4 +301,19 @@ namespace Tactics.Common.Skills.Graph
             return Task.FromResult(SkillNodeExecutionResult.Success());
         }
     }
+
+    public class SelectSelfNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.SelectSelf;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            if (context.Caster == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No caster for SelectSelf."));
+
+            context.PrimaryTarget = context.Caster;
+            TLog.Info("[SelectSelf] Target set to caster.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
 }

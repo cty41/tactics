@@ -204,6 +204,9 @@ namespace Tactics.Editor.SkillGraphEditor
                     "Apply Buff", "node-effect",
                     hasInput: true, hasOutput: false,
                     info: $"Buff: {r.BuffConfig?.BuffName ?? "null"}, Dur: {r.Duration}"),
+                SelectSelfNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Select Self", "node-target",
+                    hasInput: true, hasOutput: true),
                 _ => null
             };
 

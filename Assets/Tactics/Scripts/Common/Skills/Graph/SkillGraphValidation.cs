@@ -94,7 +94,8 @@ namespace Tactics.Common.Skills.Graph
             SkillGraphNodeType.Fail,
             SkillGraphNodeType.ProjectileLaunch,
             SkillGraphNodeType.OnHit,
-            SkillGraphNodeType.ApplyBuff
+            SkillGraphNodeType.ApplyBuff,
+            SkillGraphNodeType.SelectSelf
         };
 
         /// <summary>
