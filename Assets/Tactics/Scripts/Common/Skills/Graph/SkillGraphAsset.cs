@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Common.Units.Buffs;
 using UnityEngine;
 
 namespace Tactics.Common.Skills.Graph
@@ -21,7 +22,8 @@ namespace Tactics.Common.Skills.Graph
         Finish,
         Fail,
         ProjectileLaunch,
-        OnHit
+        OnHit,
+        ApplyBuff
     }
 
     public enum SkillGraphPortType
@@ -83,6 +85,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.Fail => new FailNodeRecord(),
                 SkillGraphNodeType.ProjectileLaunch => new ProjectileLaunchNodeRecord(),
                 SkillGraphNodeType.OnHit => new OnHitNodeRecord(),
+                SkillGraphNodeType.ApplyBuff => new ApplyBuffNodeRecord(),
                 _ => null
             };
         }
@@ -208,6 +211,17 @@ namespace Tactics.Common.Skills.Graph
     public class OnHitNodeRecord : SkillGraphNodeRecord
     {
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.OnHit;
+    }
+
+    [System.Serializable]
+    public class ApplyBuffNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private BuffConfig _buffConfig;
+        [SerializeField] private int _duration;
+
+        public BuffConfig BuffConfig { get => _buffConfig; set => _buffConfig = value; }
+        public int Duration { get => _duration; set => _duration = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyBuff;
     }
 
     // ═══════════════════════════════════════════════

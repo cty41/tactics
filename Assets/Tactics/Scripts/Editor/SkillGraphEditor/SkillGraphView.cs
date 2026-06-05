@@ -200,6 +200,10 @@ namespace Tactics.Editor.SkillGraphEditor
                 OnHitNodeRecord r => new SkillGraphNode(r.NodeId,
                     "On Hit", "node-effect",
                     hasInput: true, hasOutput: true),
+                ApplyBuffNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Apply Buff", "node-effect",
+                    hasInput: true, hasOutput: false,
+                    info: $"Buff: {r.BuffConfig?.BuffName ?? "null"}, Dur: {r.Duration}"),
                 _ => null
             };
 

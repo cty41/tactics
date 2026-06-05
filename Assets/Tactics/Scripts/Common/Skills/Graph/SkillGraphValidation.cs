@@ -93,7 +93,8 @@ namespace Tactics.Common.Skills.Graph
             SkillGraphNodeType.Finish,
             SkillGraphNodeType.Fail,
             SkillGraphNodeType.ProjectileLaunch,
-            SkillGraphNodeType.OnHit
+            SkillGraphNodeType.OnHit,
+            SkillGraphNodeType.ApplyBuff
         };
 
         /// <summary>

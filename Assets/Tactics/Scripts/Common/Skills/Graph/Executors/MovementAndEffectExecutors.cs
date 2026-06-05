@@ -277,4 +277,28 @@ namespace Tactics.Common.Skills.Graph
             return Task.FromResult(SkillNodeExecutionResult.Success());
         }
     }
+
+    public class ApplyBuffNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyBuff;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (ApplyBuffNodeRecord)node;
+            var caster = context.Caster;
+            var target = context.PrimaryTarget;
+            var grid = context.GridController;
+
+            if (record.BuffConfig == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("BuffConfig is null."));
+
+            if (target == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No target for buff application."));
+
+            var buff = new Units.Buffs.Buff(record.BuffConfig, caster, record.Duration);
+            target.AddBuff(buff);
+            TLog.Info($"[ApplyBuff] Applied '{record.BuffConfig.BuffName}' to target (duration={record.Duration}).");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
 }

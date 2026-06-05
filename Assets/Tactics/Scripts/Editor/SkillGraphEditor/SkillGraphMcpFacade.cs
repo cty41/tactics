@@ -598,6 +598,14 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("travelTime", out var tt)) r.TravelTime = (float)tt;
                     if (parameters.TryGetValue("speed", out var sp)) r.Speed = (float)sp;
                     break;
+                case ApplyBuffNodeRecord r:
+                    if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = (int)buffDur;
+                    if (parameters.TryGetValue("buffAssetPath", out var bp) && bp is string buffPath && !string.IsNullOrEmpty(buffPath))
+                    {
+                        var buffConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Buffs.BuffConfig>(buffPath);
+                        if (buffConfig != null) r.BuffConfig = buffConfig;
+                    }
+                    break;
             }
         }
 
@@ -635,6 +643,10 @@ namespace Tactics.Editor.SkillGraphEditor
                 case ProjectileLaunchNodeRecord r:
                     dict["travelTime"] = r.TravelTime;
                     dict["speed"] = r.Speed;
+                    break;
+                case ApplyBuffNodeRecord r:
+                    dict["duration"] = r.Duration;
+                    dict["buffAssetPath"] = r.BuffConfig != null ? AssetDatabase.GetAssetPath(r.BuffConfig) : null;
                     break;
             }
             return dict;
