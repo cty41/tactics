@@ -47,15 +47,147 @@ namespace Tactics.Editor.SkillGraphEditor
         {
             if (graph == null) return null;
 
+            var bridge = SkillGraphAbilityConfigGenerator.FindAbilityConfigForGraph(graph);
+
             return new SkillGraphSummary
             {
+                Path = AssetDatabase.GetAssetPath(graph),
                 DisplayName = graph.DisplayName,
                 Version = graph.Version,
                 NodeCount = graph.Nodes.Count,
                 EdgeCount = graph.Edges.Count,
                 EntryNodeId = graph.FindEntryNode()?.NodeId,
-                NodeIds = graph.Nodes.ConvertAll(n => n.NodeId).ToArray()
+                NodeIds = graph.Nodes.ConvertAll(n => n.NodeId).ToArray(),
+                HasBridgeConfig = bridge != null,
+                BridgeConfigPath = bridge != null ? AssetDatabase.GetAssetPath(bridge) : null
             };
+        }
+
+        /// <summary>
+        /// 获取图完整详情。
+        /// </summary>
+        public static SkillGraphDetail GetGraphDetail(string graphPath)
+        {
+            var graph = LoadGraph(graphPath);
+            if (graph == null)
+                return null;
+
+            var detail = new SkillGraphDetail
+            {
+                Summary = GetGraphSummary(graph),
+                Nodes = new List<SkillNodeDetail>(),
+                Edges = new List<SkillEdgeDetail>()
+            };
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                var node = graph.Nodes[i];
+                detail.Nodes.Add(new SkillNodeDetail
+                {
+                    NodeId = node.NodeId,
+                    NodeType = node.NodeType,
+                    Position = node.Position,
+                    Enabled = node.Enabled,
+                    Parameters = ExtractParameters(node)
+                });
+            }
+
+            for (int i = 0; i < graph.Edges.Count; i++)
+            {
+                var edge = graph.Edges[i];
+                detail.Edges.Add(new SkillEdgeDetail
+                {
+                    EdgeId = edge.EdgeId,
+                    SourceNodeId = edge.SourceNodeId,
+                    TargetNodeId = edge.TargetNodeId,
+                    PortType = edge.PortType
+                });
+            }
+
+            detail.Validation = ValidateGraph(graph);
+            return detail;
+        }
+
+        /// <summary>
+        /// 列出目录下全部 SkillGraph 资产摘要。
+        /// </summary>
+        public static List<SkillGraphSummary> ListGraphs(string folderPath = null)
+        {
+            string root = string.IsNullOrEmpty(folderPath)
+                ? SkillGraphAbilityConfigGenerator.SkillGraphDir
+                : folderPath;
+
+            var results = new List<SkillGraphSummary>();
+            if (!AssetDatabase.IsValidFolder(root))
+                return results;
+
+            string[] guids = AssetDatabase.FindAssets("t:SkillGraphAsset", new[] { root });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                var graph = LoadGraph(path);
+                if (graph != null)
+                    results.Add(GetGraphSummary(graph));
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// 获取单个节点的连接详情。
+        /// </summary>
+        public static SkillNodeConnections GetGraphNodeConnections(string graphPath, string nodeId)
+        {
+            var graph = LoadGraph(graphPath);
+            if (graph == null)
+                return null;
+
+            var node = graph.FindNode(nodeId);
+            if (node == null)
+                return null;
+
+            var connections = new SkillNodeConnections
+            {
+                GraphPath = graphPath,
+                Node = new SkillNodeDetail
+                {
+                    NodeId = node.NodeId,
+                    NodeType = node.NodeType,
+                    Position = node.Position,
+                    Enabled = node.Enabled,
+                    Parameters = ExtractParameters(node)
+                },
+                Incoming = new List<SkillEdgeDetail>(),
+                Outgoing = new List<SkillEdgeDetail>()
+            };
+
+            var incoming = graph.GetEdgesTo(nodeId);
+            for (int i = 0; i < incoming.Count; i++)
+            {
+                var edge = incoming[i];
+                connections.Incoming.Add(new SkillEdgeDetail
+                {
+                    EdgeId = edge.EdgeId,
+                    SourceNodeId = edge.SourceNodeId,
+                    TargetNodeId = edge.TargetNodeId,
+                    PortType = edge.PortType
+                });
+            }
+
+            var outgoing = graph.GetEdgesFrom(nodeId);
+            for (int i = 0; i < outgoing.Count; i++)
+            {
+                var edge = outgoing[i];
+                connections.Outgoing.Add(new SkillEdgeDetail
+                {
+                    EdgeId = edge.EdgeId,
+                    SourceNodeId = edge.SourceNodeId,
+                    TargetNodeId = edge.TargetNodeId,
+                    PortType = edge.PortType
+                });
+            }
+
+            return connections;
         }
 
         // ═══════════════════════════════════════════
@@ -248,6 +380,174 @@ namespace Tactics.Editor.SkillGraphEditor
             };
         }
 
+        public static SkillGraphBridgeSyncStatus GetBridgeSyncStatus(string graphPath)
+        {
+            var graph = LoadGraph(graphPath);
+            if (graph == null)
+            {
+                return new SkillGraphBridgeSyncStatus
+                {
+                    GraphPath = graphPath,
+                    GraphExists = false,
+                    ExpectedConfigPath = null,
+                    ActualConfigPath = null,
+                    BridgeExists = false,
+                    IsGraphReferenceMatch = false,
+                    IsDisplayNameMatch = false,
+                    IsTargetRangeMatch = false,
+                    ExpectedDisplayName = null,
+                    ActualDisplayName = null,
+                    ExpectedTargetRange = 0,
+                    ActualTargetRange = 0
+                };
+            }
+
+            var config = SkillGraphAbilityConfigGenerator.FindAbilityConfigForGraph(graph);
+            int expectedTargetRange = SkillGraphAbilityConfigGenerator.InferTargetRange(graph);
+
+            return new SkillGraphBridgeSyncStatus
+            {
+                GraphPath = graphPath,
+                GraphExists = true,
+                ExpectedConfigPath = SkillGraphAbilityConfigGenerator.BuildAbilityConfigPath(graph),
+                ActualConfigPath = config != null ? AssetDatabase.GetAssetPath(config) : null,
+                BridgeExists = config != null,
+                IsGraphReferenceMatch = config != null && config.SkillGraph == graph,
+                IsDisplayNameMatch = config != null && config.DisplayName == graph.DisplayName,
+                IsTargetRangeMatch = config != null && config.TargetRange == expectedTargetRange,
+                ExpectedDisplayName = graph.DisplayName,
+                ActualDisplayName = config != null ? config.DisplayName : null,
+                ExpectedTargetRange = expectedTargetRange,
+                ActualTargetRange = config != null ? config.TargetRange : 0
+            };
+        }
+
+        public static SkillGraphBridgeValidationResult ValidateBridge(string graphPath)
+        {
+            var status = GetBridgeSyncStatus(graphPath);
+            var diagnostics = new List<SkillGraphDiagnostic>();
+
+            if (!status.GraphExists)
+            {
+                diagnostics.Add(new SkillGraphDiagnostic
+                {
+                    Code = "NullGraph",
+                    Severity = SkillGraphDiagnosticSeverity.Error,
+                    Category = SkillGraphDiagnosticCategory.Bridge,
+                    Message = $"Graph not found: {graphPath}",
+                    SuggestedFix = "Provide a valid graph asset path.",
+                    SuggestedFixType = SkillGraphSuggestedFixType.None
+                });
+            }
+            else if (!status.BridgeExists)
+            {
+                diagnostics.Add(new SkillGraphDiagnostic
+                {
+                    Code = SkillGraphValidation.BridgeMissing,
+                    Severity = SkillGraphDiagnosticSeverity.Error,
+                    Category = SkillGraphDiagnosticCategory.Bridge,
+                    Message = $"No SkillGraphAbilityConfig found for graph '{graphPath}'.",
+                    SuggestedFix = "Create a bridge config from this graph.",
+                    SuggestedFixType = SkillGraphSuggestedFixType.CreateBridge,
+                    Blocking = true
+                });
+            }
+            else
+            {
+                if (!status.IsGraphReferenceMatch)
+                {
+                    diagnostics.Add(new SkillGraphDiagnostic
+                    {
+                        Code = SkillGraphValidation.WrongGraphReference,
+                        Severity = SkillGraphDiagnosticSeverity.Error,
+                        Category = SkillGraphDiagnosticCategory.Bridge,
+                        Message = $"Bridge config '{status.ActualConfigPath}' references the wrong SkillGraph.",
+                        SuggestedFix = "Sync the bridge config graph reference.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.SyncBridge,
+                        Blocking = true
+                    });
+                }
+
+                if (!status.IsDisplayNameMatch)
+                {
+                    diagnostics.Add(new SkillGraphDiagnostic
+                    {
+                        Code = SkillGraphValidation.DisplayNameDrift,
+                        Severity = SkillGraphDiagnosticSeverity.Warning,
+                        Category = SkillGraphDiagnosticCategory.Bridge,
+                        Message = $"Bridge config display name '{status.ActualDisplayName}' differs from graph display name '{status.ExpectedDisplayName}'.",
+                        SuggestedFix = "Sync the bridge config display name from the graph.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.SyncBridge,
+                        Blocking = false
+                    });
+                }
+
+                if (!status.IsTargetRangeMatch)
+                {
+                    diagnostics.Add(new SkillGraphDiagnostic
+                    {
+                        Code = SkillGraphValidation.TargetRangeDrift,
+                        Severity = SkillGraphDiagnosticSeverity.Warning,
+                        Category = SkillGraphDiagnosticCategory.Bridge,
+                        Message = $"Bridge target range '{status.ActualTargetRange}' differs from graph-inferred range '{status.ExpectedTargetRange}'.",
+                        SuggestedFix = "Sync the bridge config target range from the graph.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.SyncBridge,
+                        Blocking = false
+                    });
+                }
+            }
+
+            return new SkillGraphBridgeValidationResult
+            {
+                Status = status,
+                IsValid = diagnostics.FindAll(d => d.Blocking).Count == 0,
+                Diagnostics = diagnostics
+            };
+        }
+
+        // ═══════════════════════════════════════════
+        //  Legacy readiness audit
+        // ═══════════════════════════════════════════
+
+        public static List<LegacyAbilityAuditResult> ListLegacyAbilityConfigs()
+        {
+            return SkillGraphLegacyAbilityAudit.RunAudit();
+        }
+
+        public static LegacyAbilityAuditSummary RunLegacyAbilityReadinessAudit()
+        {
+            var items = SkillGraphLegacyAbilityAudit.RunAudit();
+            var summary = new LegacyAbilityAuditSummary
+            {
+                Items = items,
+                Total = items.Count
+            };
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                switch (items[i].Status)
+                {
+                    case LegacyAbilityReadinessStatus.ReadyForMigration:
+                        summary.ReadyForMigration++;
+                        break;
+                    case LegacyAbilityReadinessStatus.NeedsProjectileSemantic:
+                        summary.NeedsProjectileSemantic++;
+                        break;
+                    case LegacyAbilityReadinessStatus.BlockedByLegacyIncompleteImplementation:
+                        summary.BlockedByLegacyIncompleteImplementation++;
+                        break;
+                    case LegacyAbilityReadinessStatus.NeedsManualDesign:
+                        summary.NeedsManualDesign++;
+                        break;
+                    case LegacyAbilityReadinessStatus.SpecialCase:
+                        summary.SpecialCase++;
+                        break;
+                }
+            }
+
+            return summary;
+        }
+
         public static SkillGraphAbilityConfigResult SyncAbilityConfigFromGraph(
             string graphPath,
             string configPath = null,
@@ -337,12 +637,23 @@ namespace Tactics.Editor.SkillGraphEditor
 
     public class SkillGraphSummary
     {
+        public string Path;
         public string DisplayName;
         public int Version;
         public int NodeCount;
         public int EdgeCount;
         public string EntryNodeId;
         public string[] NodeIds;
+        public bool HasBridgeConfig;
+        public string BridgeConfigPath;
+    }
+
+    public class SkillGraphDetail
+    {
+        public SkillGraphSummary Summary;
+        public List<SkillNodeDetail> Nodes;
+        public List<SkillEdgeDetail> Edges;
+        public SkillGraphValidationResult Validation;
     }
 
     public class SkillNodeDetail
@@ -352,6 +663,22 @@ namespace Tactics.Editor.SkillGraphEditor
         public Vector2 Position;
         public bool Enabled;
         public Dictionary<string, object> Parameters;
+    }
+
+    public class SkillEdgeDetail
+    {
+        public string EdgeId;
+        public string SourceNodeId;
+        public string TargetNodeId;
+        public SkillGraphPortType PortType;
+    }
+
+    public class SkillNodeConnections
+    {
+        public string GraphPath;
+        public SkillNodeDetail Node;
+        public List<SkillEdgeDetail> Incoming;
+        public List<SkillEdgeDetail> Outgoing;
     }
 
     public class SkillGraphValidationResult
@@ -368,5 +695,39 @@ namespace Tactics.Editor.SkillGraphEditor
         public bool Created;
         public bool Updated;
         public string Message;
+    }
+
+    public class SkillGraphBridgeSyncStatus
+    {
+        public string GraphPath;
+        public bool GraphExists;
+        public string ExpectedConfigPath;
+        public string ActualConfigPath;
+        public bool BridgeExists;
+        public bool IsGraphReferenceMatch;
+        public bool IsDisplayNameMatch;
+        public bool IsTargetRangeMatch;
+        public string ExpectedDisplayName;
+        public string ActualDisplayName;
+        public int ExpectedTargetRange;
+        public int ActualTargetRange;
+    }
+
+    public class SkillGraphBridgeValidationResult
+    {
+        public SkillGraphBridgeSyncStatus Status;
+        public bool IsValid;
+        public List<SkillGraphDiagnostic> Diagnostics;
+    }
+
+    public class LegacyAbilityAuditSummary
+    {
+        public int Total;
+        public int ReadyForMigration;
+        public int NeedsProjectileSemantic;
+        public int BlockedByLegacyIncompleteImplementation;
+        public int NeedsManualDesign;
+        public int SpecialCase;
+        public List<LegacyAbilityAuditResult> Items;
     }
 }

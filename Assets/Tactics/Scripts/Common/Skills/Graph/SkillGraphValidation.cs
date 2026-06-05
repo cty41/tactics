@@ -8,17 +8,46 @@ namespace Tactics.Common.Skills.Graph
         Warning
     }
 
+    public enum SkillGraphDiagnosticCategory
+    {
+        Structure,
+        Runtime,
+        Unsupported,
+        Bridge,
+        Migration
+    }
+
+    public enum SkillGraphSuggestedFixType
+    {
+        None,
+        AddNode,
+        RemoveEdge,
+        ReplaceNode,
+        SetParameter,
+        ReconnectEdge,
+        CreateBridge,
+        SyncBridge,
+        ReviewLegacyImplementation,
+        DesignProjectileSemantic
+    }
+
     public class SkillGraphDiagnostic
     {
         public string Code { get; set; }
         public SkillGraphDiagnosticSeverity Severity { get; set; }
+        public SkillGraphDiagnosticCategory Category { get; set; } = SkillGraphDiagnosticCategory.Structure;
+        private bool? _blocking;
+        public bool Blocking { get => _blocking ?? Severity == SkillGraphDiagnosticSeverity.Error; set => _blocking = value; }
         public string NodeId { get; set; }
         public string EdgeId { get; set; }
+        public List<string> RelatedNodeIds { get; set; } = new List<string>();
+        public List<string> RelatedEdgeIds { get; set; } = new List<string>();
         public string Message { get; set; }
         public string SuggestedFix { get; set; }
+        public SkillGraphSuggestedFixType SuggestedFixType { get; set; } = SkillGraphSuggestedFixType.None;
 
         public override string ToString()
-            => $"[{Severity}] {Code}: {Message}" +
+            => $"[{Severity}/{Category}/blocking={Blocking}] {Code}: {Message}" +
                (string.IsNullOrEmpty(NodeId) ? "" : $" (node={NodeId})") +
                (string.IsNullOrEmpty(EdgeId) ? "" : $" (edge={EdgeId})");
     }
@@ -41,6 +70,12 @@ namespace Tactics.Common.Skills.Graph
         public const string MissingTargetSource = "MissingTargetSource";
         public const string MissingPointSource = "MissingPointSource";
         public const string UnreachableNode = "UnreachableNode";
+        public const string ProjectileSemanticMissing = "ProjectileSemanticMissing";
+        public const string LegacyAbilityNotMigrated = "LegacyAbilityNotMigrated";
+        public const string BridgeMissing = "BridgeMissing";
+        public const string WrongGraphReference = "WrongGraphReference";
+        public const string TargetRangeDrift = "TargetRangeDrift";
+        public const string DisplayNameDrift = "DisplayNameDrift";
 
         // ── 首版支持节点集合 ──
 
@@ -73,7 +108,9 @@ namespace Tactics.Common.Skills.Graph
                 {
                     Code = "NullAsset",
                     Severity = SkillGraphDiagnosticSeverity.Error,
-                    Message = "SkillGraphAsset is null."
+                    Category = SkillGraphDiagnosticCategory.Structure,
+                    Message = "SkillGraphAsset is null.",
+                    SuggestedFixType = SkillGraphSuggestedFixType.AddNode
                 });
                 return false;
             }
@@ -154,9 +191,12 @@ namespace Tactics.Common.Skills.Graph
                     {
                         Code = InvalidEdgeSource,
                         Severity = SkillGraphDiagnosticSeverity.Error,
+                        Category = SkillGraphDiagnosticCategory.Structure,
                         EdgeId = edge.EdgeId,
                         Message = $"Edge '{edge.EdgeId}' references non-existent source node '{edge.SourceNodeId}'.",
-                        SuggestedFix = "Delete the edge or reconnect to a valid source node."
+                        SuggestedFix = "Delete the edge or reconnect to a valid source node.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.ReconnectEdge,
+                        RelatedEdgeIds = new List<string> { edge.EdgeId }
                     });
                 }
 
@@ -166,9 +206,12 @@ namespace Tactics.Common.Skills.Graph
                     {
                         Code = InvalidEdgeTarget,
                         Severity = SkillGraphDiagnosticSeverity.Error,
+                        Category = SkillGraphDiagnosticCategory.Structure,
                         EdgeId = edge.EdgeId,
                         Message = $"Edge '{edge.EdgeId}' references non-existent target node '{edge.TargetNodeId}'.",
-                        SuggestedFix = "Delete the edge or reconnect to a valid target node."
+                        SuggestedFix = "Delete the edge or reconnect to a valid target node.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.ReconnectEdge,
+                        RelatedEdgeIds = new List<string> { edge.EdgeId }
                     });
                 }
 
@@ -178,10 +221,14 @@ namespace Tactics.Common.Skills.Graph
                     {
                         Code = SelfReferencingEdge,
                         Severity = SkillGraphDiagnosticSeverity.Error,
+                        Category = SkillGraphDiagnosticCategory.Structure,
                         EdgeId = edge.EdgeId,
                         NodeId = edge.SourceNodeId,
                         Message = $"Edge '{edge.EdgeId}' self-references node '{edge.SourceNodeId}'.",
-                        SuggestedFix = "Remove the self-referencing edge."
+                        SuggestedFix = "Remove the self-referencing edge.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.RemoveEdge,
+                        RelatedNodeIds = new List<string> { edge.SourceNodeId },
+                        RelatedEdgeIds = new List<string> { edge.EdgeId }
                     });
                 }
             }
@@ -195,9 +242,12 @@ namespace Tactics.Common.Skills.Graph
                     {
                         Code = EntryNodeHasIncoming,
                         Severity = SkillGraphDiagnosticSeverity.Error,
+                        Category = SkillGraphDiagnosticCategory.Structure,
                         NodeId = nodes[i].NodeId,
                         Message = "Start node should not have incoming edges.",
-                        SuggestedFix = "Remove incoming edges from the Start node."
+                        SuggestedFix = "Remove incoming edges from the Start node.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.RemoveEdge,
+                        RelatedNodeIds = new List<string> { nodes[i].NodeId }
                     });
                 }
             }
@@ -214,9 +264,13 @@ namespace Tactics.Common.Skills.Graph
                         {
                             Code = TerminalNodeHasOutgoing,
                             Severity = SkillGraphDiagnosticSeverity.Warning,
+                            Category = SkillGraphDiagnosticCategory.Structure,
+                            Blocking = false,
                             NodeId = nodes[i].NodeId,
                             Message = $"Terminal node '{nodes[i].NodeId}' has {outgoing.Count} outgoing edge(s). They will be ignored at runtime.",
-                            SuggestedFix = "Remove outgoing edges from terminal nodes."
+                            SuggestedFix = "Remove outgoing edges from terminal nodes.",
+                            SuggestedFixType = SkillGraphSuggestedFixType.RemoveEdge,
+                            RelatedNodeIds = new List<string> { nodes[i].NodeId }
                         });
                     }
                 }
@@ -237,9 +291,13 @@ namespace Tactics.Common.Skills.Graph
                     {
                         Code = OrphanNode,
                         Severity = SkillGraphDiagnosticSeverity.Warning,
+                        Category = SkillGraphDiagnosticCategory.Structure,
+                        Blocking = false,
                         NodeId = node.NodeId,
                         Message = $"Node '{node.NodeId}' ({node.NodeType}) is orphaned — no incoming or outgoing edges.",
-                        SuggestedFix = "Connect the node or remove it."
+                        SuggestedFix = "Connect the node or remove it.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.ReconnectEdge,
+                        RelatedNodeIds = new List<string> { node.NodeId }
                     });
                 }
             }
@@ -264,9 +322,13 @@ namespace Tactics.Common.Skills.Graph
                     {
                         Code = UnreachableNode,
                         Severity = SkillGraphDiagnosticSeverity.Warning,
+                        Category = SkillGraphDiagnosticCategory.Runtime,
+                        Blocking = false,
                         NodeId = nodes[i].NodeId,
                         Message = $"Node '{nodes[i].NodeId}' ({nodes[i].NodeType}) is not reachable from the Start node.",
-                        SuggestedFix = "Connect the node to the execution flow or remove it."
+                        SuggestedFix = "Connect the node to the execution flow or remove it.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.ReconnectEdge,
+                        RelatedNodeIds = new List<string> { nodes[i].NodeId }
                     });
                 }
             }
@@ -325,9 +387,12 @@ namespace Tactics.Common.Skills.Graph
                             {
                                 Code = MissingTargetSource,
                                 Severity = SkillGraphDiagnosticSeverity.Error,
+                                Category = SkillGraphDiagnosticCategory.Runtime,
                                 NodeId = currentId,
                                 Message = $"DashToTarget node '{currentId}' requires a PrimaryTarget, but no SelectPrimaryTarget node precedes it in the execution path.",
-                                SuggestedFix = "Add a SelectPrimaryTarget node before this node."
+                                SuggestedFix = "Add a SelectPrimaryTarget node before this node.",
+                                SuggestedFixType = SkillGraphSuggestedFixType.AddNode,
+                                RelatedNodeIds = new List<string> { currentId }
                             });
                         }
                         break;
@@ -339,9 +404,12 @@ namespace Tactics.Common.Skills.Graph
                             {
                                 Code = MissingTargetSource,
                                 Severity = SkillGraphDiagnosticSeverity.Error,
+                                Category = SkillGraphDiagnosticCategory.Runtime,
                                 NodeId = currentId,
                                 Message = $"ApplyDamage node '{currentId}' requires a target source, but no SelectPrimaryTarget or CollectTargetsInArea node precedes it.",
-                                SuggestedFix = "Add a SelectPrimaryTarget or CollectTargetsInArea node before this node."
+                                SuggestedFix = "Add a SelectPrimaryTarget or CollectTargetsInArea node before this node.",
+                                SuggestedFixType = SkillGraphSuggestedFixType.AddNode,
+                                RelatedNodeIds = new List<string> { currentId }
                             });
                         }
                         break;
@@ -352,9 +420,12 @@ namespace Tactics.Common.Skills.Graph
                             {
                                 Code = MissingTargetSource,
                                 Severity = SkillGraphDiagnosticSeverity.Error,
+                                Category = SkillGraphDiagnosticCategory.Runtime,
                                 NodeId = currentId,
                                 Message = $"ApplyKnockback node '{currentId}' requires a PrimaryTarget, but no SelectPrimaryTarget node precedes it.",
-                                SuggestedFix = "Add a SelectPrimaryTarget node before this node."
+                                SuggestedFix = "Add a SelectPrimaryTarget node before this node.",
+                                SuggestedFixType = SkillGraphSuggestedFixType.AddNode,
+                                RelatedNodeIds = new List<string> { currentId }
                             });
                         }
                         break;
@@ -365,9 +436,12 @@ namespace Tactics.Common.Skills.Graph
                             {
                                 Code = MissingPointSource,
                                 Severity = SkillGraphDiagnosticSeverity.Error,
+                                Category = SkillGraphDiagnosticCategory.Runtime,
                                 NodeId = currentId,
                                 Message = $"CollectTargetsInArea node '{currentId}' requires a TargetPoint, but no SelectTargetPoint node precedes it.",
-                                SuggestedFix = "Add a SelectTargetPoint node before this node."
+                                SuggestedFix = "Add a SelectTargetPoint node before this node.",
+                                SuggestedFixType = SkillGraphSuggestedFixType.AddNode,
+                                RelatedNodeIds = new List<string> { currentId }
                             });
                         }
                         break;
@@ -378,9 +452,12 @@ namespace Tactics.Common.Skills.Graph
                             {
                                 Code = MissingTargetSource,
                                 Severity = SkillGraphDiagnosticSeverity.Error,
+                                Category = SkillGraphDiagnosticCategory.Runtime,
                                 NodeId = currentId,
                                 Message = $"ForEachTarget node '{currentId}' requires a TargetSet, but no CollectTargetsInArea node precedes it.",
-                                SuggestedFix = "Add a CollectTargetsInArea node before this node."
+                                SuggestedFix = "Add a CollectTargetsInArea node before this node.",
+                                SuggestedFixType = SkillGraphSuggestedFixType.AddNode,
+                                RelatedNodeIds = new List<string> { currentId }
                             });
                         }
                         break;
@@ -415,9 +492,12 @@ namespace Tactics.Common.Skills.Graph
                     {
                         Code = UnsupportedNodeType,
                         Severity = SkillGraphDiagnosticSeverity.Error,
+                        Category = SkillGraphDiagnosticCategory.Unsupported,
                         NodeId = nodes[i].NodeId,
                         Message = $"Node '{nodes[i].NodeId}' has type '{nodes[i].NodeType}' which is not supported in Phase 1.",
-                        SuggestedFix = "Remove the node or replace it with a Phase 1 supported type."
+                        SuggestedFix = "Remove the node or replace it with a Phase 1 supported type.",
+                        SuggestedFixType = SkillGraphSuggestedFixType.ReplaceNode,
+                        RelatedNodeIds = new List<string> { nodes[i].NodeId }
                     });
                 }
             }
