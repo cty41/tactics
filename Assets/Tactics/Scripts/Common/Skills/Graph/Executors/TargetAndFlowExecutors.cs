@@ -154,7 +154,7 @@ namespace Tactics.Common.Skills.Graph
             if (index >= context.TargetSet.Count)
             {
                 context.SetBlackboard("ForEachIndex", 0);
-                return Task.FromResult(SkillNodeExecutionResult.Success());
+                return Task.FromResult(SkillNodeExecutionResult.Branch("OnComplete"));
             }
 
             context.PrimaryTarget = context.TargetSet[index];

@@ -30,7 +30,8 @@ namespace Tactics.Common.Skills.Graph
         OnHit,
         OnMiss,
         OnTrue,
-        OnFalse
+        OnFalse,
+        OnComplete
     }
 
     public enum SkillGraphDamageType
