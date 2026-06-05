@@ -21,6 +21,8 @@ namespace Tactics.Common.Skills.Graph
             Register(new ApplyKnockbackNodeExecutor());
             Register(new FinishNodeExecutor());
             Register(new FailNodeExecutor());
+            Register(new ProjectileLaunchNodeExecutor());
+            Register(new OnHitNodeExecutor());
         }
 
         public static void Register(ISkillNodeExecutor executor)

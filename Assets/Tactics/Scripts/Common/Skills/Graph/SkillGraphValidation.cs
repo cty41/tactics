@@ -91,7 +91,9 @@ namespace Tactics.Common.Skills.Graph
             SkillGraphNodeType.ApplyKnockback,
             SkillGraphNodeType.Branch,
             SkillGraphNodeType.Finish,
-            SkillGraphNodeType.Fail
+            SkillGraphNodeType.Fail,
+            SkillGraphNodeType.ProjectileLaunch,
+            SkillGraphNodeType.OnHit
         };
 
         /// <summary>

@@ -192,6 +192,13 @@ namespace Tactics.Editor.SkillGraphEditor
                     hasInput: true, hasOutput: false),
                 FailNodeRecord r => new SkillGraphNode(r.NodeId, "Fail", "node-terminal",
                     hasInput: true, hasOutput: false),
+                ProjectileLaunchNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Projectile Launch", "node-movement",
+                    hasInput: true, hasOutput: true,
+                    info: $"Travel: {r.TravelTime}s, Speed: {r.Speed}"),
+                OnHitNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "On Hit", "node-effect",
+                    hasInput: true, hasOutput: true),
                 _ => null
             };
 

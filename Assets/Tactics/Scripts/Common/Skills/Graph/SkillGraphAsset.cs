@@ -19,7 +19,9 @@ namespace Tactics.Common.Skills.Graph
         ApplyKnockback,
         Branch,
         Finish,
-        Fail
+        Fail,
+        ProjectileLaunch,
+        OnHit
     }
 
     public enum SkillGraphPortType
@@ -78,6 +80,8 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.Branch => new BranchNodeRecord(),
                 SkillGraphNodeType.Finish => new FinishNodeRecord(),
                 SkillGraphNodeType.Fail => new FailNodeRecord(),
+                SkillGraphNodeType.ProjectileLaunch => new ProjectileLaunchNodeRecord(),
+                SkillGraphNodeType.OnHit => new OnHitNodeRecord(),
                 _ => null
             };
         }
@@ -92,8 +96,10 @@ namespace Tactics.Common.Skills.Graph
     [System.Serializable]
     public class SelectPrimaryTargetNodeRecord : SkillGraphNodeRecord
     {
+        [SerializeField] private int _minRange;
         [SerializeField] private int _maxRange = 1;
 
+        public int MinRange { get => _minRange; set => _minRange = value; }
         public int MaxRange { get => _maxRange; set => _maxRange = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.SelectPrimaryTarget;
     }
@@ -184,6 +190,23 @@ namespace Tactics.Common.Skills.Graph
     public class FailNodeRecord : SkillGraphNodeRecord
     {
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.Fail;
+    }
+
+    [System.Serializable]
+    public class ProjectileLaunchNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private float _travelTime = 0.3f;
+        [SerializeField] private float _speed = 10f;
+
+        public float TravelTime { get => _travelTime; set => _travelTime = value; }
+        public float Speed { get => _speed; set => _speed = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.ProjectileLaunch;
+    }
+
+    [System.Serializable]
+    public class OnHitNodeRecord : SkillGraphNodeRecord
+    {
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.OnHit;
     }
 
     // ═══════════════════════════════════════════════

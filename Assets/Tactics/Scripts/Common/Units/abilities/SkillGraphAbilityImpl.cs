@@ -24,6 +24,7 @@ namespace Tactics.Common.Units.Abilities
         private readonly SkillGraphAbilityConfig _config;
         private IGridController _gridController;
         private HashSet<ICell> _validTargetCells;
+        private HashSet<ICell> _displayCells;
 
         public IUnit UnitReference { get; set; }
         public string DisplayName => _config.DisplayName;
@@ -46,21 +47,26 @@ namespace Tactics.Common.Units.Abilities
         {
             _gridController = gridController;
             _validTargetCells = CalculateValidTargetCells();
+            _displayCells = CalculateDisplayCells();
         }
 
         public void Display(IGridController gridController)
         {
-            if (_validTargetCells != null && _validTargetCells.Count > 0)
+            if (_displayCells != null && _displayCells.Count > 0)
             {
-                gridController.CellManager.MarkAsReachable(_validTargetCells);
+                gridController.CellManager.MarkAsReachable(_displayCells);
             }
         }
 
         public void CleanUp(IGridController gridController)
         {
+            if (_displayCells != null)
+            {
+                gridController.CellManager.UnMark(_displayCells);
+                _displayCells = null;
+            }
             if (_validTargetCells != null)
             {
-                gridController.CellManager.UnMark(_validTargetCells);
                 _validTargetCells = null;
             }
         }
@@ -143,6 +149,46 @@ namespace Tactics.Common.Units.Abilities
             gridController.GridState = new GridStateAwaitInput();
         }
 
+        private HashSet<ICell> CalculateDisplayCells()
+        {
+            var displayCells = new HashSet<ICell>();
+            if (_gridController == null) return displayCells;
+
+            int maxRange = _config.TargetRange;
+            var allCells = _gridController.CellManager.GetCells();
+            var ownerCell = _owner.CurrentCell;
+            int minRange = GetMinRangeFromGraph();
+            bool cardinalOnly = UsesCardinalDash();
+
+            foreach (var cell in allCells)
+            {
+                int distance = cell.GetDistance(ownerCell);
+                if (distance < minRange || distance > maxRange)
+                    continue;
+
+                if (cardinalOnly)
+                {
+                    int dx = cell.GridCoordinates.x - ownerCell.GridCoordinates.x;
+                    int dy = cell.GridCoordinates.y - ownerCell.GridCoordinates.y;
+                    bool isCardinal = (dx == 0) ^ (dy == 0);
+                    if (!isCardinal)
+                        continue;
+                }
+
+                displayCells.Add(cell);
+            }
+
+            return displayCells;
+        }
+
+        private int GetMinRangeFromGraph()
+        {
+            var first = FindFirstSelectionNode();
+            if (first is SelectPrimaryTargetNodeRecord select)
+                return select.MinRange;
+            return 0;
+        }
+
         private HashSet<ICell> CalculateValidTargetCells()
         {
             var validCells = new HashSet<ICell>();
@@ -152,6 +198,7 @@ namespace Tactics.Common.Units.Abilities
             var allCells = _gridController.CellManager.GetCells();
             var ownerCell = _owner.CurrentCell;
             bool cardinalOnly = UsesCardinalDash();
+            bool requiresEnemy = FirstSelectionRequiresEnemy();
 
             foreach (var cell in allCells)
             {
@@ -168,6 +215,9 @@ namespace Tactics.Common.Units.Abilities
                         continue;
                 }
 
+                if (requiresEnemy && !HasEnemyUnit(cell))
+                    continue;
+
                 if (distance <= range)
                 {
                     validCells.Add(cell);
@@ -175,6 +225,55 @@ namespace Tactics.Common.Units.Abilities
             }
 
             return validCells;
+        }
+
+        private bool HasEnemyUnit(ICell cell)
+        {
+            if (_gridController == null || cell == null) return false;
+            foreach (var unit in cell.CurrentUnits)
+            {
+                if (unit != null && unit.PlayerNumber != _owner.PlayerNumber)
+                    return true;
+            }
+            return false;
+        }
+
+        private SkillGraphNodeRecord FindFirstSelectionNode()
+        {
+            if (_config?.SkillGraph == null) return null;
+            var nodes = _config.SkillGraph.Nodes;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var node = nodes[i];
+                if (node is StartNodeRecord) continue;
+                return node;
+            }
+            return null;
+        }
+
+        private bool FirstSelectionRequiresEnemy()
+        {
+            var first = FindFirstSelectionNode();
+            if (first == null) return false;
+
+            if (first is SelectPrimaryTargetNodeRecord)
+            {
+                return !GraphContainsDashToTarget();
+            }
+
+            return false;
+        }
+
+        private bool GraphContainsDashToTarget()
+        {
+            if (_config?.SkillGraph == null) return false;
+            var nodes = _config.SkillGraph.Nodes;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (nodes[i] is DashToTargetNodeRecord)
+                    return true;
+            }
+            return false;
         }
 
         private bool UsesCardinalDash()

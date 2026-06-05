@@ -26,9 +26,9 @@ namespace Tactics.Common.Skills.Graph
             if (context.PrimaryTarget != null)
                 return Task.FromResult(SkillNodeExecutionResult.Success());
 
-            // If the user explicitly clicked a cell and there is no target on it,
-            // preserve the dash-to-point intent instead of auto-binding a nearby enemy.
-            if (context.TargetPoint != null)
+            // If user clicked an empty tile and downstream can consume TargetPoint (e.g. DashToTarget),
+            // allow proceeding without PrimaryTarget so dash-to-point still works.
+            if (context.TargetPoint != null && GraphHasDownstreamDash(context))
                 return Task.FromResult(SkillNodeExecutionResult.Success());
 
             var enemies = grid.UnitManager.GetEnemyUnits(grid.TurnContext.CurrentPlayer);
@@ -39,7 +39,7 @@ namespace Tactics.Common.Skills.Graph
             {
                 if (enemy == null || enemy.CurrentCell == null) continue;
                 int dist = enemy.CurrentCell.GetDistance(caster.CurrentCell);
-                if (dist <= record.MaxRange && dist < bestDist)
+                if (dist >= record.MinRange && dist <= record.MaxRange && dist < bestDist)
                 {
                     bestDist = dist;
                     bestTarget = enemy;
@@ -51,6 +51,40 @@ namespace Tactics.Common.Skills.Graph
 
             context.PrimaryTarget = bestTarget;
             return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+
+        private static bool GraphHasDownstreamDash(SkillExecutionContext context)
+        {
+            var runtimeDef = context.RuntimeDef;
+            if (runtimeDef == null) return false;
+
+            var visited = new System.Collections.Generic.HashSet<string>();
+            var queue = new System.Collections.Generic.Queue<string>();
+
+            // Seed with outgoing edges from current node
+            var edges = runtimeDef.GetEdgesFrom(context.CurrentNodeId);
+            for (int i = 0; i < edges.Count; i++)
+            {
+                if (visited.Add(edges[i].TargetNodeId))
+                    queue.Enqueue(edges[i].TargetNodeId);
+            }
+
+            while (queue.Count > 0)
+            {
+                var nodeId = queue.Dequeue();
+                var node = runtimeDef.GetNode(nodeId);
+                if (node is DashToTargetNodeRecord)
+                    return true;
+
+                var nextEdges = runtimeDef.GetEdgesFrom(nodeId);
+                for (int i = 0; i < nextEdges.Count; i++)
+                {
+                    if (visited.Add(nextEdges[i].TargetNodeId))
+                        queue.Enqueue(nextEdges[i].TargetNodeId);
+                }
+            }
+
+            return false;
         }
     }
 

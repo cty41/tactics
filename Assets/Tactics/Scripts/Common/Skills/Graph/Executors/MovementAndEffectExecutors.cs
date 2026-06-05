@@ -225,4 +225,56 @@ namespace Tactics.Common.Skills.Graph
             return Task.FromResult(SkillNodeExecutionResult.Failed("Skill graph reached Fail node."));
         }
     }
+
+    public class ProjectileLaunchNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.ProjectileLaunch;
+
+        public async Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (ProjectileLaunchNodeRecord)node;
+            var caster = context.Caster;
+            var target = context.PrimaryTarget;
+            var grid = context.GridController;
+
+            if (target == null || target.CurrentCell == null)
+                return SkillNodeExecutionResult.Failed("No target for projectile launch.");
+
+            if (caster == null || caster.CurrentCell == null)
+                return SkillNodeExecutionResult.Failed("No caster for projectile launch.");
+
+            TLog.Info($"[ProjectileLaunch] Launching projectile from ({caster.CurrentCell.GridCoordinates.x},{caster.CurrentCell.GridCoordinates.y}) to ({target.CurrentCell.GridCoordinates.x},{target.CurrentCell.GridCoordinates.y})");
+
+            float travelTime = UnityEngine.Mathf.Max(0.05f, record.TravelTime);
+            await Task.Delay((int)(travelTime * 1000));
+
+            context.SetBlackboard("ProjectileHit", true);
+            context.SetBlackboard("ProjectileTarget", target);
+
+            TLog.Info("[ProjectileLaunch] Projectile reached target.");
+            return SkillNodeExecutionResult.Success();
+        }
+    }
+
+    public class OnHitNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.OnHit;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            bool hit = context.GetBlackboard<bool>("ProjectileHit", false);
+            if (!hit)
+            {
+                TLog.Info("[OnHit] Projectile did not hit target.");
+                return Task.FromResult(SkillNodeExecutionResult.Failed("Projectile missed."));
+            }
+
+            var savedTarget = context.GetBlackboard<IUnit>("ProjectileTarget");
+            if (savedTarget != null && context.PrimaryTarget == null)
+                context.PrimaryTarget = savedTarget;
+
+            TLog.Info("[OnHit] Projectile hit confirmed.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
 }

@@ -569,6 +569,7 @@ namespace Tactics.Editor.SkillGraphEditor
             switch (record)
             {
                 case SelectPrimaryTargetNodeRecord r:
+                    if (parameters.TryGetValue("minRange", out var minr)) r.MinRange = (int)minr;
                     if (parameters.TryGetValue("maxRange", out var mr)) r.MaxRange = (int)mr;
                     break;
                 case SelectTargetPointNodeRecord r:
@@ -593,6 +594,10 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("height", out var h)) r.Height = (float)h;
                     if (parameters.TryGetValue("duration", out var dur)) r.Duration = (float)dur;
                     break;
+                case ProjectileLaunchNodeRecord r:
+                    if (parameters.TryGetValue("travelTime", out var tt)) r.TravelTime = (float)tt;
+                    if (parameters.TryGetValue("speed", out var sp)) r.Speed = (float)sp;
+                    break;
             }
         }
 
@@ -602,6 +607,7 @@ namespace Tactics.Editor.SkillGraphEditor
             switch (record)
             {
                 case SelectPrimaryTargetNodeRecord r:
+                    dict["minRange"] = r.MinRange;
                     dict["maxRange"] = r.MaxRange;
                     break;
                 case SelectTargetPointNodeRecord r:
@@ -625,6 +631,10 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["distance"] = r.Distance;
                     dict["height"] = r.Height;
                     dict["duration"] = r.Duration;
+                    break;
+                case ProjectileLaunchNodeRecord r:
+                    dict["travelTime"] = r.TravelTime;
+                    dict["speed"] = r.Speed;
                     break;
             }
             return dict;
