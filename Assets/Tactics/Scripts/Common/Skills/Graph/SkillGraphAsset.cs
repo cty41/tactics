@@ -24,7 +24,11 @@ namespace Tactics.Common.Skills.Graph
         ProjectileLaunch,
         OnHit,
         ApplyBuff,
-        SelectSelf
+        SelectSelf,
+        SelectAlly,
+        ApplyHeal,
+        DashToAlly,
+        LaunchUnit
     }
 
     public enum SkillGraphPortType
@@ -88,6 +92,10 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.OnHit => new OnHitNodeRecord(),
                 SkillGraphNodeType.ApplyBuff => new ApplyBuffNodeRecord(),
                 SkillGraphNodeType.SelectSelf => new SelectSelfNodeRecord(),
+                SkillGraphNodeType.SelectAlly => new SelectAllyNodeRecord(),
+                SkillGraphNodeType.ApplyHeal => new ApplyHealNodeRecord(),
+                SkillGraphNodeType.DashToAlly => new DashToAllyNodeRecord(),
+                SkillGraphNodeType.LaunchUnit => new LaunchUnitNodeRecord(),
                 _ => null
             };
         }
@@ -230,6 +238,52 @@ namespace Tactics.Common.Skills.Graph
     public class SelectSelfNodeRecord : SkillGraphNodeRecord
     {
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.SelectSelf;
+    }
+
+    [System.Serializable]
+    public class SelectAllyNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private int _maxRange = 1;
+
+        public int MaxRange { get => _maxRange; set => _maxRange = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.SelectAlly;
+    }
+
+    [System.Serializable]
+    public class ApplyHealNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private float _healAmount = 5f;
+
+        public float HealAmount { get => _healAmount; set => _healAmount = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyHeal;
+    }
+
+    [System.Serializable]
+    public class DashToAllyNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private int _maxRange = 4;
+
+        public int MaxRange { get => _maxRange; set => _maxRange = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.DashToAlly;
+    }
+
+    [System.Serializable]
+    public class LaunchUnitNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private int _launchDistance = 3;
+        [SerializeField] private float _landingDamage = 2f;
+        [SerializeField] private float _flightHeight = 3f;
+        [SerializeField] private float _flightDuration = 0.8f;
+        [SerializeField] private float _bounceHeight = 1.5f;
+        [SerializeField] private float _bounceDuration = 0.3f;
+
+        public int LaunchDistance { get => _launchDistance; set => _launchDistance = value; }
+        public float LandingDamage { get => _landingDamage; set => _landingDamage = value; }
+        public float FlightHeight { get => _flightHeight; set => _flightHeight = value; }
+        public float FlightDuration { get => _flightDuration; set => _flightDuration = value; }
+        public float BounceHeight { get => _bounceHeight; set => _bounceHeight = value; }
+        public float BounceDuration { get => _bounceDuration; set => _bounceDuration = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.LaunchUnit;
     }
 
     // ═══════════════════════════════════════════════

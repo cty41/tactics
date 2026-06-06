@@ -316,4 +316,184 @@ namespace Tactics.Common.Skills.Graph
             return Task.FromResult(SkillNodeExecutionResult.Success());
         }
     }
+
+    public class SelectAllyNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.SelectAlly;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (SelectAllyNodeRecord)node;
+            var caster = context.Caster;
+            var grid = context.GridController;
+
+            if (context.PrimaryTarget != null)
+                return Task.FromResult(SkillNodeExecutionResult.Success());
+
+            var allies = grid.UnitManager.GetFriendlyUnits(grid.TurnContext.CurrentPlayer);
+            Units.IUnit bestAlly = null;
+            int bestDist = int.MaxValue;
+
+            foreach (var ally in allies)
+            {
+                if (ally == null || ally.CurrentCell == null) continue;
+                if (ReferenceEquals(ally, caster)) continue;
+                int dist = ally.CurrentCell.GetDistance(caster.CurrentCell);
+                if (dist <= record.MaxRange && dist < bestDist)
+                {
+                    bestDist = dist;
+                    bestAlly = ally;
+                }
+            }
+
+            if (bestAlly == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No valid ally in range."));
+
+            context.PrimaryTarget = bestAlly;
+            TLog.Info($"[SelectAlly] Target set to ally at distance {bestDist}.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
+
+    public class ApplyHealNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyHeal;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (ApplyHealNodeRecord)node;
+            var caster = context.Caster;
+            var target = context.PrimaryTarget;
+
+            if (target == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No target for heal."));
+
+            float healAmount = record.HealAmount;
+            float maxHeal = target.MaxHealth - target.Health;
+            float actualHeal = UnityEngine.Mathf.Min(healAmount, maxHeal);
+
+            target.ModifyHealth(actualHeal, caster);
+            TLog.Info($"[ApplyHeal] Healed target for {actualHeal} HP.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
+
+    public class DashToAllyNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.DashToAlly;
+
+        public async Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (DashToAllyNodeRecord)node;
+            var caster = context.Caster;
+            var target = context.PrimaryTarget;
+            var grid = context.GridController;
+
+            if (target?.CurrentCell == null || caster?.CurrentCell == null)
+                return SkillNodeExecutionResult.Failed("Invalid caster or ally target for dash.");
+
+            int distance = target.CurrentCell.GetDistance(caster.CurrentCell);
+            if (distance > record.MaxRange)
+                return SkillNodeExecutionResult.Failed($"Ally out of dash range ({distance} > {record.MaxRange}).");
+
+            var targetCell = target.CurrentCell;
+            var casterCell = caster.CurrentCell;
+            var (dirX, dirY) = GetCardinalDirection(casterCell.GridCoordinates, targetCell.GridCoordinates);
+            if (dirX == 0 && dirY == 0)
+                return SkillNodeExecutionResult.Failed("Dash destination must be on the same row or column.");
+
+            var (stopCell, hitUnit) = FindDashStopCell(casterCell, dirX, dirY, distance, grid);
+            if (stopCell == null || stopCell == casterCell)
+                return SkillNodeExecutionResult.Failed("No valid dash destination.");
+
+            var path = BuildStraightLinePath(casterCell, stopCell, dirX, dirY, grid);
+            if (path.Count == 0)
+                return SkillNodeExecutionResult.Failed("No dash path available.");
+
+            await grid.UnitManager.MarkAsMoving(caster, casterCell, stopCell, path);
+            await caster.MovementAnimation(path, stopCell);
+
+            casterCell.CurrentUnits.Remove(caster);
+            casterCell.IsTaken = casterCell.CurrentUnits.Count > 0;
+
+            caster.CurrentCell = stopCell;
+            if (!stopCell.CurrentUnits.Contains(caster))
+                stopCell.CurrentUnits.Add(caster);
+            stopCell.IsTaken = true;
+            caster.WorldPosition = stopCell.WorldPosition;
+
+            await grid.UnitManager.UnMarkAsMoving(caster, casterCell, stopCell, path);
+            caster.InvokeUnitMoved(new Units.UnitMovedEventArgs(caster, casterCell, stopCell, path));
+
+            if (hitUnit != null && hitUnit.CurrentCell.GetDistance(stopCell) <= 1)
+            {
+                context.PrimaryTarget = hitUnit;
+                TLog.Info($"[DashToAlly] Hit unit at stop cell, target set for heal.");
+            }
+
+            TLog.Info($"[DashToAlly] Dashed to ({stopCell.GridCoordinates.x}, {stopCell.GridCoordinates.y})");
+            return SkillNodeExecutionResult.Success();
+        }
+
+        private (int dx, int dy) GetCardinalDirection(Common.Utilities.Vector2IntImpl from, Common.Utilities.Vector2IntImpl to)
+        {
+            int dx = to.x - from.x;
+            int dy = to.y - from.y;
+            if (dx != 0 && dy != 0) return (0, 0);
+            return (dx == 0 ? 0 : (dx > 0 ? 1 : -1),
+                    dy == 0 ? 0 : (dy > 0 ? 1 : -1));
+        }
+
+        private (Cells.ICell stopCell, Units.IUnit hitUnit) FindDashStopCell(Cells.ICell start, int dirX, int dirY, int maxDist, Controllers.IGridController grid)
+        {
+            Cells.ICell lastValid = start;
+            Units.IUnit hitUnit = null;
+            for (int i = 1; i <= maxDist; i++)
+            {
+                var coord = new Common.Utilities.Vector2IntImpl(
+                    start.GridCoordinates.x + dirX * i,
+                    start.GridCoordinates.y + dirY * i);
+                var cell = grid.CellManager.GetCellAt(coord);
+                if (cell == null) break;
+                if (!grid.CellManager.IsCellWalkable(cell)) break;
+                if (cell.CurrentUnits.Count > 0)
+                {
+                    lastValid = GetRelativeCell(start, dirX, dirY, i - 1, grid);
+                    hitUnit = cell.CurrentUnits[0];
+                    break;
+                }
+                lastValid = cell;
+            }
+            if (lastValid == start && hitUnit == null)
+                lastValid = GetRelativeCell(start, dirX, dirY, maxDist, grid);
+            return (lastValid, hitUnit);
+        }
+
+        private Cells.ICell GetRelativeCell(Cells.ICell origin, int dirX, int dirY, int steps, Controllers.IGridController grid)
+        {
+            if (steps == 0) return origin;
+            var coord = new Common.Utilities.Vector2IntImpl(
+                origin.GridCoordinates.x + dirX * steps,
+                origin.GridCoordinates.y + dirY * steps);
+            return grid.CellManager.GetCellAt(coord);
+        }
+
+        private System.Collections.Generic.List<Cells.ICell> BuildStraightLinePath(Cells.ICell start, Cells.ICell end, int dirX, int dirY, Controllers.IGridController grid)
+        {
+            var path = new System.Collections.Generic.List<Cells.ICell>();
+            int steps = UnityEngine.Mathf.Max(
+                UnityEngine.Mathf.Abs(end.GridCoordinates.x - start.GridCoordinates.x),
+                UnityEngine.Mathf.Abs(end.GridCoordinates.y - start.GridCoordinates.y));
+            for (int i = 1; i <= steps; i++)
+            {
+                var coord = new Common.Utilities.Vector2IntImpl(
+                    start.GridCoordinates.x + dirX * i,
+                    start.GridCoordinates.y + dirY * i);
+                var cell = grid.CellManager.GetCellAt(coord);
+                if (cell != null)
+                    path.Add(cell);
+            }
+            return path;
+        }
+    }
 }

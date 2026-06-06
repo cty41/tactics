@@ -606,6 +606,23 @@ namespace Tactics.Editor.SkillGraphEditor
                         if (buffConfig != null) r.BuffConfig = buffConfig;
                     }
                     break;
+                case SelectAllyNodeRecord r:
+                    if (parameters.TryGetValue("maxRange", out var allyRange)) r.MaxRange = (int)allyRange;
+                    break;
+                case ApplyHealNodeRecord r:
+                    if (parameters.TryGetValue("healAmount", out var healAmt)) r.HealAmount = (float)healAmt;
+                    break;
+                case DashToAllyNodeRecord r:
+                    if (parameters.TryGetValue("maxRange", out var dashAllyRange)) r.MaxRange = (int)dashAllyRange;
+                    break;
+                case LaunchUnitNodeRecord r:
+                    if (parameters.TryGetValue("launchDistance", out var ld)) r.LaunchDistance = (int)ld;
+                    if (parameters.TryGetValue("landingDamage", out var ldm)) r.LandingDamage = (float)ldm;
+                    if (parameters.TryGetValue("flightHeight", out var fh)) r.FlightHeight = (float)fh;
+                    if (parameters.TryGetValue("flightDuration", out var fd)) r.FlightDuration = (float)fd;
+                    if (parameters.TryGetValue("bounceHeight", out var bounch)) r.BounceHeight = (float)bounch;
+                    if (parameters.TryGetValue("bounceDuration", out var bouncd)) r.BounceDuration = (float)bouncd;
+                    break;
             }
         }
 
@@ -647,6 +664,23 @@ namespace Tactics.Editor.SkillGraphEditor
                 case ApplyBuffNodeRecord r:
                     dict["duration"] = r.Duration;
                     dict["buffAssetPath"] = r.BuffConfig != null ? AssetDatabase.GetAssetPath(r.BuffConfig) : null;
+                    break;
+                case SelectAllyNodeRecord r:
+                    dict["maxRange"] = r.MaxRange;
+                    break;
+                case ApplyHealNodeRecord r:
+                    dict["healAmount"] = r.HealAmount;
+                    break;
+                case DashToAllyNodeRecord r:
+                    dict["maxRange"] = r.MaxRange;
+                    break;
+                case LaunchUnitNodeRecord r:
+                    dict["launchDistance"] = r.LaunchDistance;
+                    dict["landingDamage"] = r.LandingDamage;
+                    dict["flightHeight"] = r.FlightHeight;
+                    dict["flightDuration"] = r.FlightDuration;
+                    dict["bounceHeight"] = r.BounceHeight;
+                    dict["bounceDuration"] = r.BounceDuration;
                     break;
             }
             return dict;

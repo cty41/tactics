@@ -166,6 +166,18 @@ namespace Tactics.Common.Units.Abilities
                 return displayCells;
             }
 
+            if (FirstSelectionRequiresAlly())
+            {
+                int allyRange = GetAllyRangeFromGraph();
+                foreach (var cell in allCells)
+                {
+                    int dist = cell.GetDistance(ownerCell);
+                    if (dist > 0 && dist <= allyRange && HasFriendlyUnit(cell))
+                        displayCells.Add(cell);
+                }
+                return displayCells;
+            }
+
             foreach (var cell in allCells)
             {
                 int distance = cell.GetDistance(ownerCell);
@@ -210,6 +222,18 @@ namespace Tactics.Common.Units.Abilities
             if (requiresSelf)
             {
                 validCells.Add(ownerCell);
+                return validCells;
+            }
+
+            if (FirstSelectionRequiresAlly())
+            {
+                int allyRange = GetAllyRangeFromGraph();
+                foreach (var cell in allCells)
+                {
+                    int dist = cell.GetDistance(ownerCell);
+                    if (dist > 0 && dist <= allyRange && HasFriendlyUnit(cell))
+                        validCells.Add(cell);
+                }
                 return validCells;
             }
 
@@ -283,6 +307,31 @@ namespace Tactics.Common.Units.Abilities
             return first is SelectSelfNodeRecord;
         }
 
+        private bool FirstSelectionRequiresAlly()
+        {
+            var first = FindFirstSelectionNode();
+            return first is SelectAllyNodeRecord;
+        }
+
+        private int GetAllyRangeFromGraph()
+        {
+            var first = FindFirstSelectionNode();
+            if (first is SelectAllyNodeRecord select)
+                return select.MaxRange;
+            return 1;
+        }
+
+        private bool HasFriendlyUnit(ICell cell)
+        {
+            if (_gridController == null || cell == null) return false;
+            foreach (var unit in cell.CurrentUnits)
+            {
+                if (unit != null && unit.PlayerNumber == _owner.PlayerNumber && !ReferenceEquals(unit, _owner))
+                    return true;
+            }
+            return false;
+        }
+
         private bool GraphContainsDashToTarget()
         {
             if (_config?.SkillGraph == null) return false;
@@ -303,7 +352,7 @@ namespace Tactics.Common.Units.Abilities
             var nodes = _config.SkillGraph.Nodes;
             for (int i = 0; i < nodes.Count; i++)
             {
-                if (nodes[i] is DashToTargetNodeRecord)
+                if (nodes[i] is DashToTargetNodeRecord || nodes[i] is DashToAllyNodeRecord)
                     return true;
             }
 

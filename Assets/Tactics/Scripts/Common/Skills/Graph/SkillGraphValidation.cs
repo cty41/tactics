@@ -95,7 +95,11 @@ namespace Tactics.Common.Skills.Graph
             SkillGraphNodeType.ProjectileLaunch,
             SkillGraphNodeType.OnHit,
             SkillGraphNodeType.ApplyBuff,
-            SkillGraphNodeType.SelectSelf
+            SkillGraphNodeType.SelectSelf,
+            SkillGraphNodeType.SelectAlly,
+            SkillGraphNodeType.ApplyHeal,
+            SkillGraphNodeType.DashToAlly,
+            SkillGraphNodeType.LaunchUnit
         };
 
         /// <summary>

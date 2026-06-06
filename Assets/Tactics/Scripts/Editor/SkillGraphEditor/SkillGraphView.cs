@@ -207,6 +207,22 @@ namespace Tactics.Editor.SkillGraphEditor
                 SelectSelfNodeRecord r => new SkillGraphNode(r.NodeId,
                     "Select Self", "node-target",
                     hasInput: true, hasOutput: true),
+                SelectAllyNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Select Ally", "node-target",
+                    hasInput: true, hasOutput: true,
+                    info: $"Range: {r.MaxRange}"),
+                ApplyHealNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Apply Heal", "node-effect",
+                    hasInput: true, hasOutput: false,
+                    info: $"Heal: {r.HealAmount}"),
+                DashToAllyNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Dash To Ally", "node-movement",
+                    hasInput: true, hasOutput: true,
+                    info: $"Range: {r.MaxRange}"),
+                LaunchUnitNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Launch Unit", "node-movement",
+                    hasInput: true, hasOutput: true,
+                    info: $"Dist: {r.LaunchDistance}, Dmg: {r.LandingDamage}, H: {r.FlightHeight}"),
                 _ => null
             };
 
