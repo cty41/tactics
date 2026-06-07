@@ -180,7 +180,7 @@ namespace Tactics.Editor.SkillGraphEditor
                 ApplyDamageNodeRecord r => new SkillGraphNode(r.NodeId,
                     "Apply Damage", "node-effect",
                     hasInput: true, hasOutput: false,
-                    info: $"Dmg: {r.BaseDamage}, Type: {r.DamageType}"),
+                    info: $"Dmg: {r.BaseDamage}, Type: {r.DamageType}" + (r.AccuracyPenalty > 0 ? $", AccPenalty: {r.AccuracyPenalty}" : "")),
                 ApplyKnockbackNodeRecord r => new SkillGraphNode(r.NodeId,
                     "Apply Knockback", "node-effect",
                     hasInput: true, hasOutput: false,

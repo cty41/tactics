@@ -133,6 +133,13 @@ namespace Tactics.Common.Skills.Graph
                 return Task.FromResult(SkillNodeExecutionResult.Success());
             }
 
+            // 命中率惩罚检查（HeavyShot 等技能）
+            if (record.AccuracyPenalty > 0f && !CombatComponent.IsHit(caster, target, record.AccuracyPenalty))
+            {
+                TLog.Info($"[ApplyDamage] Attack missed (accuracyPenalty={record.AccuracyPenalty}).");
+                return Task.FromResult(SkillNodeExecutionResult.Success());
+            }
+
             CombatComponent.ApplyDamage(
                 caster, target, record.BaseDamage, record.IsRanged,
                 record.DamageType == SkillGraphDamageType.Physical

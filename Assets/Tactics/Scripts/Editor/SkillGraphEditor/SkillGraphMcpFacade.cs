@@ -588,6 +588,7 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("damageType", out var dt)) r.DamageType = (SkillGraphDamageType)dt;
                     if (parameters.TryGetValue("isRanged", out var ir)) r.IsRanged = (bool)ir;
                     if (parameters.TryGetValue("canCrit", out var cc)) r.CanCrit = (bool)cc;
+                    if (parameters.TryGetValue("accuracyPenalty", out var ap)) r.AccuracyPenalty = (float)ap;
                     break;
                 case ApplyKnockbackNodeRecord r:
                     if (parameters.TryGetValue("distance", out var dist)) r.Distance = (int)dist;
@@ -651,6 +652,7 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["damageType"] = r.DamageType;
                     dict["isRanged"] = r.IsRanged;
                     dict["canCrit"] = r.CanCrit;
+                    dict["accuracyPenalty"] = r.AccuracyPenalty;
                     break;
                 case ApplyKnockbackNodeRecord r:
                     dict["distance"] = r.Distance;

@@ -162,11 +162,13 @@ namespace Tactics.Common.Skills.Graph
         [SerializeField] private SkillGraphDamageType _damageType = SkillGraphDamageType.Physical;
         [SerializeField] private bool _isRanged;
         [SerializeField] private bool _canCrit = true;
+        [SerializeField] private float _accuracyPenalty;
 
         public float BaseDamage { get => _baseDamage; set => _baseDamage = value; }
         public SkillGraphDamageType DamageType { get => _damageType; set => _damageType = value; }
         public bool IsRanged { get => _isRanged; set => _isRanged = value; }
         public bool CanCrit { get => _canCrit; set => _canCrit = value; }
+        public float AccuracyPenalty { get => _accuracyPenalty; set => _accuracyPenalty = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyDamage;
     }
 
