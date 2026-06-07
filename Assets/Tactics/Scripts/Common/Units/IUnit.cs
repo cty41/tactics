@@ -52,6 +52,11 @@ namespace Tactics.Common.Units
         event Action<AbilityUsedEventArgs> AbilityUsed;
 
         /// <summary>
+        /// Triggered when a basic ability is marked as used this turn.
+        /// </summary>
+        event Action<string> BasicAbilityUsed;
+
+        /// <summary>
         /// Invokes the ManaChanged event to signal that the unit's mana has changed.
         /// </summary>
         void InvokeManaChanged(ManaChangedEventArgs eventArgs);
@@ -86,6 +91,12 @@ namespace Tactics.Common.Units
         /// </summary>
         /// <param name="args">The event arguments containing ability usage data.</param>
         void InvokeAbilityUsed(AbilityUsedEventArgs args);
+
+        /// <summary>
+        /// Invokes the BasicAbilityUsed event to signal that a basic ability has been used this turn.
+        /// </summary>
+        /// <param name="abilityName">The name of the basic ability that was used.</param>
+        void InvokeBasicAbilityUsed(string abilityName);
 
         /// <summary>
         /// The cell that the unit currently occupies.

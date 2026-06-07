@@ -49,6 +49,7 @@ namespace Tactics.Common.Units
         public event Action<UnitPositionChangedEventArgs> UnitWorldPositionChanged;
 
         public event Action<AbilityUsedEventArgs> AbilityUsed;
+        public event Action<string> BasicAbilityUsed;
 
         [SerializeField] private UnitHighlightConfigs _highlightConfigs = new();
         private UnitHighlightManager _highlightManager;
@@ -291,6 +292,7 @@ namespace Tactics.Common.Units
         public virtual void MarkBasicAbilityUsed(string abilityName)
         {
             _usedBasicAbilitiesThisTurn.Add(abilityName);
+            InvokeBasicAbilityUsed(abilityName);
         }
 
         /// <summary>
@@ -507,6 +509,11 @@ namespace Tactics.Common.Units
         public void InvokeAbilityUsed(AbilityUsedEventArgs args)
         {
             AbilityUsed?.Invoke(args);
+        }
+
+        public void InvokeBasicAbilityUsed(string abilityName)
+        {
+            BasicAbilityUsed?.Invoke(abilityName);
         }
 
         public void InvokeAttacked(UnitAttackedEventArgs eventArgs)

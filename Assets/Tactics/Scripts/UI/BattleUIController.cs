@@ -230,6 +230,7 @@ namespace Tactics.UI
             if (_currentSelectedUnit != null)
             {
                 _currentSelectedUnit.ManaChanged -= OnUnitManaChanged;
+                _currentSelectedUnit.BasicAbilityUsed -= OnBasicAbilityUsed;
             }
             _currentSelectedUnit = null;
 
@@ -261,6 +262,7 @@ namespace Tactics.UI
                     combatant.HealthChanged += OnUnitHealthChanged;
                 }
                 _currentSelectedUnit.ManaChanged += OnUnitManaChanged;
+                _currentSelectedUnit.BasicAbilityUsed += OnBasicAbilityUsed;
             }
 
             if (currentUnit == null && _gridController.TurnContext.CurrentPlayer == null)
@@ -534,19 +536,7 @@ namespace Tactics.UI
             if (moveAbility == null)
                 return;
 
-            // Initialize ability cache before checking CanPerform
-            moveAbility.OnAbilitySelected(_gridController);
-
-            if (!moveAbility.CanPerform(_gridController))
-                return;
-
             _currentMoveAbility = moveAbility;
-
-            if (_gridController.GridState is GridStateUnitSelected)
-            {
-                moveAbility.Display(_gridController);
-                return;
-            }
 
             _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, moveAbility);
         }
@@ -610,6 +600,7 @@ namespace Tactics.UI
                 if (_currentSelectedUnit != null && !ReferenceEquals(_currentSelectedUnit, currentUnit))
                 {
                     _currentSelectedUnit.ManaChanged -= OnUnitManaChanged;
+                    _currentSelectedUnit.BasicAbilityUsed -= OnBasicAbilityUsed;
                 }
 
                 _currentSelectedUnit = currentUnit;
@@ -622,6 +613,7 @@ namespace Tactics.UI
                     newCombatant.HealthChanged += OnUnitHealthChanged;
                 }
                 _currentSelectedUnit.ManaChanged += OnUnitManaChanged;
+                _currentSelectedUnit.BasicAbilityUsed += OnBasicAbilityUsed;
             }
         }
 
@@ -699,6 +691,7 @@ namespace Tactics.UI
             if (_currentSelectedUnit != null && _currentSelectedUnit != unit)
             {
                 _currentSelectedUnit.ManaChanged -= OnUnitManaChanged;
+                _currentSelectedUnit.BasicAbilityUsed -= OnBasicAbilityUsed;
             }
 
             _currentSelectedUnit = unit;
@@ -709,6 +702,7 @@ namespace Tactics.UI
                 combatant.HealthChanged += OnUnitHealthChanged;
             }
             _currentSelectedUnit.ManaChanged += OnUnitManaChanged;
+            _currentSelectedUnit.BasicAbilityUsed += OnBasicAbilityUsed;
         }
 
         private void OnUnitDeselected(IUnit unit)
@@ -718,6 +712,7 @@ namespace Tactics.UI
                 combatant.HealthChanged -= OnUnitHealthChanged;
             }
             unit.ManaChanged -= OnUnitManaChanged;
+            unit.BasicAbilityUsed -= OnBasicAbilityUsed;
         }
 
         private void OnUnitMoved(UnitMovedEventArgs args)
@@ -897,6 +892,12 @@ namespace Tactics.UI
                 UpdateStatusPanel();
                 UpdateSkillCards(_currentSelectedUnit);
             }
+        }
+
+        private void OnBasicAbilityUsed(string abilityName)
+        {
+            UpdateSkillCards(_currentSelectedUnit);
+            UpdateMoveButtonState(_currentSelectedUnit);
         }
 
         private void OnAnyUnitHealthChanged(HealthChangedEventArgs args)
