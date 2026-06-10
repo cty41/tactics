@@ -918,6 +918,114 @@ namespace Tactics.Editor.SkillGraphEditor
 
             return result;
         }
+
+        public static RoleConfigDetachResult DetachAbilityConfigFromRoleConfig(
+            string configPath,
+            string roleConfigPath,
+            bool dryRun = true)
+        {
+            var result = new RoleConfigDetachResult
+            {
+                ConfigPath = configPath,
+                RoleConfigPath = roleConfigPath,
+                DryRun = dryRun
+            };
+
+            var abilityConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Abilities.AbilityConfig>(configPath);
+            if (abilityConfig == null)
+            {
+                result.Errors.Add($"AbilityConfig not found: {configPath}");
+                result.Message = "AbilityConfig not found.";
+                return result;
+            }
+
+            var roleConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Classes.RoleConfig>(roleConfigPath);
+            if (roleConfig == null)
+            {
+                result.Errors.Add($"RoleConfig not found: {roleConfigPath}");
+                result.Message = "RoleConfig not found.";
+                return result;
+            }
+
+            var beforeResult = ListRoleConfigAbilities(roleConfigPath);
+            result.Before = beforeResult.Entries;
+
+            var so = new SerializedObject(roleConfig);
+            var abilitiesProp = so.FindProperty("_abilities");
+            if (abilitiesProp == null)
+            {
+                result.Errors.Add("RoleConfig has no _abilities serialized field.");
+                result.Message = "Missing _abilities field.";
+                return result;
+            }
+
+            // Find the ability by reference
+            int foundIndex = -1;
+            for (int i = 0; i < abilitiesProp.arraySize; i++)
+            {
+                var elem = abilitiesProp.GetArrayElementAtIndex(i);
+                if (elem.objectReferenceValue == abilityConfig)
+                {
+                    foundIndex = i;
+                    break;
+                }
+            }
+
+            if (foundIndex < 0)
+            {
+                result.Warnings.Add($"AbilityConfig '{abilityConfig.name}' is not attached to this RoleConfig.");
+                result.Changed = false;
+                result.Message = "AbilityConfig not found in RoleConfig. No changes made.";
+                return result;
+            }
+
+            // Apply removal if not dry-run
+            if (!dryRun)
+            {
+                // Unity ObjectReference array: first null the reference, then delete element
+                abilitiesProp.GetArrayElementAtIndex(foundIndex).objectReferenceValue = null;
+                abilitiesProp.DeleteArrayElementAtIndex(foundIndex);
+
+                // Double-check for null leftover (Unity serialization quirk)
+                if (foundIndex < abilitiesProp.arraySize &&
+                    abilitiesProp.GetArrayElementAtIndex(foundIndex).objectReferenceValue == null)
+                {
+                    abilitiesProp.DeleteArrayElementAtIndex(foundIndex);
+                }
+
+                so.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(roleConfig);
+                AssetDatabase.SaveAssets();
+            }
+
+            // Build projected after (works for both dry-run and real apply)
+            var afterEntries = new List<RoleAbilityEntry>();
+            int newIndex = 0;
+            for (int i = 0; i < result.Before.Count; i++)
+            {
+                var entry = result.Before[i];
+                if (entry.AssetPath != configPath)
+                {
+                    var projected = new RoleAbilityEntry
+                    {
+                        Index = newIndex++,
+                        AssetPath = entry.AssetPath,
+                        AssetGuid = entry.AssetGuid,
+                        AssetName = entry.AssetName,
+                        AssetType = entry.AssetType,
+                        DisplayName = entry.DisplayName,
+                        IsSkillGraphBridge = entry.IsSkillGraphBridge
+                    };
+                    afterEntries.Add(projected);
+                }
+            }
+
+            result.After = afterEntries;
+            result.Changed = true;
+            result.Message = $"Removed '{abilityConfig.name}' at index {foundIndex}. Changed=true, DryRun={dryRun}";
+
+            return result;
+        }
     }
 
     // ═══════════════════════════════════════════
@@ -1057,6 +1165,19 @@ namespace Tactics.Editor.SkillGraphEditor
     }
 
     public class RoleConfigAttachResult
+    {
+        public string ConfigPath;
+        public string RoleConfigPath;
+        public bool Changed;
+        public bool DryRun;
+        public List<RoleAbilityEntry> Before = new();
+        public List<RoleAbilityEntry> After = new();
+        public List<string> Warnings = new();
+        public List<string> Errors = new();
+        public string Message;
+    }
+
+    public class RoleConfigDetachResult
     {
         public string ConfigPath;
         public string RoleConfigPath;
