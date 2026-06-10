@@ -701,6 +701,223 @@ namespace Tactics.Editor.SkillGraphEditor
             }
             return dict;
         }
+
+        // ═══════════════════════════════════════════
+        //  RoleConfig Mount Operations
+        // ═══════════════════════════════════════════
+
+        public static RoleConfigAbilitiesResult ListRoleConfigAbilities(string roleConfigPath)
+        {
+            var result = new RoleConfigAbilitiesResult { RoleConfigPath = roleConfigPath };
+            var roleConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Classes.RoleConfig>(roleConfigPath);
+            if (roleConfig == null)
+            {
+                result.Errors.Add($"RoleConfig not found: {roleConfigPath}");
+                return result;
+            }
+
+            result.RoleConfigName = roleConfig.DisplayName;
+            var abilities = roleConfig.Abilities;
+            for (int i = 0; i < abilities.Count; i++)
+            {
+                var ability = abilities[i];
+                if (ability == null)
+                {
+                    result.Entries.Add(new RoleAbilityEntry { Index = i, AssetName = "null", DisplayName = "null", IsSkillGraphBridge = false });
+                    continue;
+                }
+
+                string assetPath = AssetDatabase.GetAssetPath(ability);
+                string guid = AssetDatabase.AssetPathToGUID(assetPath);
+                bool isGraph = ability is Tactics.Common.Units.Abilities.SkillGraphAbilityConfig;
+
+                result.Entries.Add(new RoleAbilityEntry
+                {
+                    Index = i,
+                    AssetPath = assetPath,
+                    AssetGuid = guid,
+                    AssetName = ability.name,
+                    AssetType = ability.GetType().Name,
+                    DisplayName = ability.DisplayName,
+                    IsSkillGraphBridge = isGraph
+                });
+            }
+
+            return result;
+        }
+
+        public static RoleConfigLookupResult GetRoleConfigForPrefab(string prefabPath)
+        {
+            var result = new RoleConfigLookupResult { PrefabPath = prefabPath };
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab == null)
+            {
+                result.Errors.Add($"Prefab not found: {prefabPath}");
+                return result;
+            }
+
+            result.PrefabName = prefab.name;
+            var unit = prefab.GetComponent<Tactics.Common.Units.Unit>();
+            if (unit == null)
+            {
+                result.HasRoleConfig = false;
+                result.Warnings.Add("Prefab has no Unit component.");
+                return result;
+            }
+
+            var so = new SerializedObject(unit);
+            var roleConfigProp = so.FindProperty("_roleConfig");
+            var roleConfig = roleConfigProp?.objectReferenceValue as Tactics.Common.Units.Classes.RoleConfig;
+            if (roleConfig == null)
+            {
+                result.HasRoleConfig = false;
+                result.Warnings.Add("Unit has no RoleConfig assigned.");
+                return result;
+            }
+
+            result.HasRoleConfig = true;
+            result.RoleConfigPath = AssetDatabase.GetAssetPath(roleConfig);
+            result.RoleConfigName = roleConfig.DisplayName;
+
+            var abilitiesResult = ListRoleConfigAbilities(result.RoleConfigPath);
+            result.Entries = abilitiesResult.Entries;
+            result.Warnings.AddRange(abilitiesResult.Warnings);
+            result.Errors.AddRange(abilitiesResult.Errors);
+
+            return result;
+        }
+
+        public static RoleConfigAttachResult AttachAbilityConfigToRoleConfig(
+            string configPath,
+            string roleConfigPath,
+            bool append = true,
+            int? replaceIndex = null,
+            string replaceByName = null,
+            bool dryRun = true)
+        {
+            var result = new RoleConfigAttachResult
+            {
+                ConfigPath = configPath,
+                RoleConfigPath = roleConfigPath,
+                DryRun = dryRun
+            };
+
+            var abilityConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Abilities.AbilityConfig>(configPath);
+            if (abilityConfig == null)
+            {
+                result.Errors.Add($"AbilityConfig not found: {configPath}");
+                result.Message = "AbilityConfig not found.";
+                return result;
+            }
+
+            var roleConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Classes.RoleConfig>(roleConfigPath);
+            if (roleConfig == null)
+            {
+                result.Errors.Add($"RoleConfig not found: {roleConfigPath}");
+                result.Message = "RoleConfig not found.";
+                return result;
+            }
+
+            var beforeResult = ListRoleConfigAbilities(roleConfigPath);
+            result.Before = beforeResult.Entries;
+
+            var so = new SerializedObject(roleConfig);
+            var abilitiesProp = so.FindProperty("_abilities");
+            if (abilitiesProp == null)
+            {
+                result.Errors.Add("RoleConfig has no _abilities serialized field.");
+                result.Message = "Missing _abilities field.";
+                return result;
+            }
+
+            bool changed = false;
+            int actionIndex = -1;
+            string actionType = "none";
+
+            if (replaceIndex.HasValue)
+            {
+                // Replace by index
+                int idx = replaceIndex.Value;
+                if (idx < 0 || idx >= abilitiesProp.arraySize)
+                {
+                    result.Errors.Add($"ReplaceIndex {idx} is out of range (0-{abilitiesProp.arraySize - 1}).");
+                    result.Message = "ReplaceIndex out of range.";
+                    return result;
+                }
+
+                abilitiesProp.GetArrayElementAtIndex(idx).objectReferenceValue = abilityConfig;
+                changed = true;
+                actionIndex = idx;
+                actionType = "replace_index";
+            }
+            else if (!string.IsNullOrEmpty(replaceByName))
+            {
+                // Replace by name
+                bool found = false;
+                for (int i = 0; i < abilitiesProp.arraySize; i++)
+                {
+                    var elem = abilitiesProp.GetArrayElementAtIndex(i);
+                    var existingAbility = elem.objectReferenceValue as Tactics.Common.Units.Abilities.AbilityConfig;
+                    if (existingAbility != null &&
+                        (existingAbility.DisplayName == replaceByName || existingAbility.name == replaceByName))
+                    {
+                        elem.objectReferenceValue = abilityConfig;
+                        changed = true;
+                        actionIndex = i;
+                        actionType = "replace_by_name";
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    result.Warnings.Add($"No ability found with name '{replaceByName}'. No changes made.");
+                }
+            }
+            else if (append)
+            {
+                // Append mode
+                bool alreadyExists = false;
+                for (int i = 0; i < abilitiesProp.arraySize; i++)
+                {
+                    var elem = abilitiesProp.GetArrayElementAtIndex(i);
+                    if (elem.objectReferenceValue == abilityConfig)
+                    {
+                        alreadyExists = true;
+                        break;
+                    }
+                }
+
+                if (alreadyExists)
+                {
+                    result.Warnings.Add($"AbilityConfig '{abilityConfig.name}' is already attached to this RoleConfig.");
+                }
+                else
+                {
+                    int newIndex = abilitiesProp.arraySize;
+                    abilitiesProp.arraySize++;
+                    abilitiesProp.GetArrayElementAtIndex(newIndex).objectReferenceValue = abilityConfig;
+                    changed = true;
+                    actionIndex = newIndex;
+                    actionType = "append";
+                }
+            }
+
+            if (changed && !dryRun)
+            {
+                so.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(roleConfig);
+                AssetDatabase.SaveAssets();
+            }
+
+            var afterResult = ListRoleConfigAbilities(roleConfigPath);
+            result.After = afterResult.Entries;
+            result.Changed = changed;
+            result.Message = $"Action={actionType}, Index={actionIndex}, Changed={changed}, DryRun={dryRun}";
+
+            return result;
+        }
     }
 
     // ═══════════════════════════════════════════
@@ -801,5 +1018,54 @@ namespace Tactics.Editor.SkillGraphEditor
         public int NeedsManualDesign;
         public int SpecialCase;
         public List<LegacyAbilityAuditResult> Items;
+    }
+
+    // ═══════════════════════════════════════════
+    //  RoleConfig Mount Data Structures
+    // ═══════════════════════════════════════════
+
+    public class RoleAbilityEntry
+    {
+        public int Index;
+        public string AssetPath;
+        public string AssetGuid;
+        public string AssetName;
+        public string AssetType;
+        public string DisplayName;
+        public bool IsSkillGraphBridge;
+    }
+
+    public class RoleConfigAbilitiesResult
+    {
+        public string RoleConfigPath;
+        public string RoleConfigName;
+        public List<RoleAbilityEntry> Entries = new();
+        public List<string> Warnings = new();
+        public List<string> Errors = new();
+    }
+
+    public class RoleConfigLookupResult
+    {
+        public string PrefabPath;
+        public string PrefabName;
+        public string RoleConfigPath;
+        public string RoleConfigName;
+        public bool HasRoleConfig;
+        public List<RoleAbilityEntry> Entries = new();
+        public List<string> Warnings = new();
+        public List<string> Errors = new();
+    }
+
+    public class RoleConfigAttachResult
+    {
+        public string ConfigPath;
+        public string RoleConfigPath;
+        public bool Changed;
+        public bool DryRun;
+        public List<RoleAbilityEntry> Before = new();
+        public List<RoleAbilityEntry> After = new();
+        public List<string> Warnings = new();
+        public List<string> Errors = new();
+        public string Message;
     }
 }
