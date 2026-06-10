@@ -99,7 +99,9 @@ namespace Tactics.Common.Skills.Graph
             SkillGraphNodeType.SelectAlly,
             SkillGraphNodeType.ApplyHeal,
             SkillGraphNodeType.DashToAlly,
-            SkillGraphNodeType.LaunchUnit
+            SkillGraphNodeType.LaunchUnit,
+            SkillGraphNodeType.SelectMoveDestination,
+            SkillGraphNodeType.ExecuteMove
         };
 
         /// <summary>

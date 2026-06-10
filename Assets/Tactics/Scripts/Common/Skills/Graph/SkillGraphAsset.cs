@@ -28,7 +28,9 @@ namespace Tactics.Common.Skills.Graph
         SelectAlly,
         ApplyHeal,
         DashToAlly,
-        LaunchUnit
+        LaunchUnit,
+        SelectMoveDestination,
+        ExecuteMove
     }
 
     public enum SkillGraphPortType
@@ -96,6 +98,8 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.ApplyHeal => new ApplyHealNodeRecord(),
                 SkillGraphNodeType.DashToAlly => new DashToAllyNodeRecord(),
                 SkillGraphNodeType.LaunchUnit => new LaunchUnitNodeRecord(),
+                SkillGraphNodeType.SelectMoveDestination => new SelectMoveDestinationNodeRecord(),
+                SkillGraphNodeType.ExecuteMove => new ExecuteMoveNodeRecord(),
                 _ => null
             };
         }
@@ -286,6 +290,26 @@ namespace Tactics.Common.Skills.Graph
         public float BounceHeight { get => _bounceHeight; set => _bounceHeight = value; }
         public float BounceDuration { get => _bounceDuration; set => _bounceDuration = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.LaunchUnit;
+    }
+
+    [System.Serializable]
+    public class SelectMoveDestinationNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private bool _respectMovementRules = true;
+
+        public bool RespectMovementRules { get => _respectMovementRules; set => _respectMovementRules = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.SelectMoveDestination;
+    }
+
+    [System.Serializable]
+    public class ExecuteMoveNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private bool _consumeMovementPoints = true;
+        [SerializeField] private bool _markAsBasicAbilityUsed = true;
+
+        public bool ConsumeMovementPoints { get => _consumeMovementPoints; set => _consumeMovementPoints = value; }
+        public bool MarkAsBasicAbilityUsed { get => _markAsBasicAbilityUsed; set => _markAsBasicAbilityUsed = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.ExecuteMove;
     }
 
     // ═══════════════════════════════════════════════

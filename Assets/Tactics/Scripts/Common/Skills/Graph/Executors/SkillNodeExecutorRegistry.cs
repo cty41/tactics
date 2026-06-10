@@ -29,6 +29,8 @@ namespace Tactics.Common.Skills.Graph
             Register(new ApplyHealNodeExecutor());
             Register(new DashToAllyNodeExecutor());
             Register(new LaunchUnitNodeExecutor());
+            Register(new SelectMoveDestinationNodeExecutor());
+            Register(new ExecuteMoveNodeExecutor());
         }
 
         public static void Register(ISkillNodeExecutor executor)

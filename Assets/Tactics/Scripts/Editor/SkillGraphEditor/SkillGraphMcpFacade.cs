@@ -624,6 +624,13 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("bounceHeight", out var bounch)) r.BounceHeight = (float)bounch;
                     if (parameters.TryGetValue("bounceDuration", out var bouncd)) r.BounceDuration = (float)bouncd;
                     break;
+                case SelectMoveDestinationNodeRecord r:
+                    if (parameters.TryGetValue("respectMovementRules", out var rmr)) r.RespectMovementRules = (bool)rmr;
+                    break;
+                case ExecuteMoveNodeRecord r:
+                    if (parameters.TryGetValue("consumeMovementPoints", out var cmp)) r.ConsumeMovementPoints = (bool)cmp;
+                    if (parameters.TryGetValue("markAsBasicAbilityUsed", out var mabu)) r.MarkAsBasicAbilityUsed = (bool)mabu;
+                    break;
             }
         }
 
@@ -683,6 +690,13 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["flightDuration"] = r.FlightDuration;
                     dict["bounceHeight"] = r.BounceHeight;
                     dict["bounceDuration"] = r.BounceDuration;
+                    break;
+                case SelectMoveDestinationNodeRecord r:
+                    dict["respectMovementRules"] = r.RespectMovementRules;
+                    break;
+                case ExecuteMoveNodeRecord r:
+                    dict["consumeMovementPoints"] = r.ConsumeMovementPoints;
+                    dict["markAsBasicAbilityUsed"] = r.MarkAsBasicAbilityUsed;
                     break;
             }
             return dict;

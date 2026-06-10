@@ -223,6 +223,14 @@ namespace Tactics.Editor.SkillGraphEditor
                     "Launch Unit", "node-movement",
                     hasInput: true, hasOutput: true,
                     info: $"Dist: {r.LaunchDistance}, Dmg: {r.LandingDamage}, H: {r.FlightHeight}"),
+                SelectMoveDestinationNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Select Move Destination", "node-target",
+                    hasInput: true, hasOutput: true,
+                    info: $"RespectRules: {r.RespectMovementRules}"),
+                ExecuteMoveNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Execute Move", "node-movement",
+                    hasInput: true, hasOutput: true,
+                    info: $"ConsumeMP: {r.ConsumeMovementPoints}, MarkUsed: {r.MarkAsBasicAbilityUsed}"),
                 _ => null
             };
 

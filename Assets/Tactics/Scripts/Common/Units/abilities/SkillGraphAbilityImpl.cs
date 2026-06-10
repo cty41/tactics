@@ -166,6 +166,15 @@ namespace Tactics.Common.Units.Abilities
                 return displayCells;
             }
 
+            if (FirstSelectionRequiresMoveDestination())
+            {
+                _owner.CachePaths(_gridController.CellManager);
+                var destinations = _owner.GetAvailableDestinations(_gridController.CellManager.GetCells());
+                foreach (var cell in destinations)
+                    displayCells.Add(cell);
+                return displayCells;
+            }
+
             if (FirstSelectionRequiresAlly())
             {
                 int allyRange = GetAllyRangeFromGraph();
@@ -222,6 +231,15 @@ namespace Tactics.Common.Units.Abilities
             if (requiresSelf)
             {
                 validCells.Add(ownerCell);
+                return validCells;
+            }
+
+            if (FirstSelectionRequiresMoveDestination())
+            {
+                _owner.CachePaths(_gridController.CellManager);
+                var destinations = _owner.GetAvailableDestinations(_gridController.CellManager.GetCells());
+                foreach (var cell in destinations)
+                    validCells.Add(cell);
                 return validCells;
             }
 
@@ -311,6 +329,12 @@ namespace Tactics.Common.Units.Abilities
         {
             var first = FindFirstSelectionNode();
             return first is SelectAllyNodeRecord;
+        }
+
+        private bool FirstSelectionRequiresMoveDestination()
+        {
+            var first = FindFirstSelectionNode();
+            return first is SelectMoveDestinationNodeRecord;
         }
 
         private int GetAllyRangeFromGraph()
