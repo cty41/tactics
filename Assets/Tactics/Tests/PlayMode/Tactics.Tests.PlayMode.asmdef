@@ -1,0 +1,23 @@
+{
+    "name": "Tactics.Tests.PlayMode",
+    "rootNamespace": "Tactics.Tests.PlayMode",
+    "references": [
+        "GUID:6aaf4f1fe211baf44bf77a9e8adbc0ed"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

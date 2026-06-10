@@ -1,0 +1,23 @@
+{
+  "name": "gameplay-test-spec",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "gameplay-test-spec": "./dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node dist/tests/compiler.test.js"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.14.10",
+    "typescript": "^5.5.3"
+  }
+}

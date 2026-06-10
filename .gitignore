@@ -30,6 +30,10 @@
 /UserSettings/
 __pycache__/
 
+# Local Node tool outputs
+/Tools/gameplay-test-spec/node_modules/
+/Tools/gameplay-test-spec/dist/
+
 # JetBrains Rider
 .idea
 !.editorConfig
