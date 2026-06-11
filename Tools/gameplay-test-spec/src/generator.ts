@@ -38,6 +38,14 @@ export function generateScenarioSpec(text: string): GenerationResult {
 
   if (includesAny(normalized, ["非法", "无终点", "no terminal", "invalid"])) {
     spec = createInvalidGraphSpec();
+  } else if (includesAny(normalized, ["蓝量不足", "mana不足", "mana不够", "没蓝", "没有蓝", "mana too low"])) {
+    spec = createManaInsufficientSpec();
+  } else if (includesAny(normalized, ["蓝量足够", "mana足够", "蓝量够", "足够释放", "mana enough"])) {
+    spec = createManaSuccessSpec();
+  } else if (includesAny(normalized, ["超出射程", "射程外", "out of range", "range too far"])) {
+    spec = createTargetOutOfRangeSpec();
+  } else if (includesAny(normalized, ["没有任何有效目标", "没有有效目标", "无有效目标", "no valid target", "no target"])) {
+    spec = createNoValidTargetSpec();
   } else if (includesAny(normalized, ["治疗", "自愈", "heal"])) {
     const hp = extractHealthTransition(normalized, 6, 10);
     spec = createSelfHealSpec(hp.from, hp.to);
@@ -94,6 +102,125 @@ function createSelfHealSpec(initialHealth: number, expectedHealth: number): Scen
   };
 }
 
+function createManaSuccessSpec(): ScenarioSpec {
+  return {
+    feature: "SkillGraph",
+    scenario: "ManaConsumedOnSuccessfulAbilityUse",
+    tags: ["mvp", "skill", "mana", "ability", "heal"],
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "createSkillTestWorld", parameters: {} },
+      { kind: "createSkillGraph", parameters: { alias: "graph", graphKind: "selfHeal", healAmount: 4 } },
+      { kind: "createSkillAbilityConfig", parameters: { alias: "ability", graphAlias: "graph", manaCost: 3, targetRange: 1 } },
+      { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 6, maxHealth: 10, mana: 10, cellAlias: "casterCell" } },
+      { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } },
+      { kind: "createSkillAbility", parameters: { alias: "abilityImpl", configAlias: "ability", ownerAlias: "caster" } },
+      { kind: "selectAbility", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    actions: [
+      { kind: "executeAbilityOnTarget", target: "caster", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Completed", parameters: {} },
+      { kind: "unitManaEquals", target: "caster", expected: 7, parameters: {} },
+      { kind: "unitHealthEquals", target: "caster", expected: 10, parameters: {} },
+      { kind: "stepMessageContains", expected: "Completed", parameters: {} }
+    ]
+  };
+}
+
+function createManaInsufficientSpec(): ScenarioSpec {
+  return {
+    feature: "SkillGraph",
+    scenario: "ManaInsufficientPreventsAbilityUse",
+    tags: ["mvp", "skill", "mana", "ability", "heal"],
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "createSkillTestWorld", parameters: {} },
+      { kind: "createSkillGraph", parameters: { alias: "graph", graphKind: "selfHeal", healAmount: 4 } },
+      { kind: "createSkillAbilityConfig", parameters: { alias: "ability", graphAlias: "graph", manaCost: 8, targetRange: 1 } },
+      { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 6, maxHealth: 10, mana: 5, cellAlias: "casterCell" } },
+      { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } },
+      { kind: "createSkillAbility", parameters: { alias: "abilityImpl", configAlias: "ability", ownerAlias: "caster" } },
+      { kind: "selectAbility", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    actions: [
+      { kind: "executeAbilityOnTarget", target: "caster", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Failed", parameters: {} },
+      { kind: "unitManaEquals", target: "caster", expected: 5, parameters: {} },
+      { kind: "lastErrorContains", expected: "Not enough mana", parameters: {} },
+      { kind: "stepMessageContains", expected: "Failed", parameters: {} }
+    ]
+  };
+}
+
+function createTargetOutOfRangeSpec(): ScenarioSpec {
+  return {
+    feature: "SkillGraph",
+    scenario: "TargetOutOfRangePreventsAbilityUse",
+    tags: ["mvp", "skill", "mana", "ability", "damage", "range"],
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "createSkillTestWorld", parameters: {} },
+      { kind: "createSkillGraph", parameters: { alias: "graph", graphKind: "singleTargetDamage", baseDamage: 7 } },
+      { kind: "createSkillAbilityConfig", parameters: { alias: "ability", graphAlias: "graph", manaCost: 3, targetRange: 2 } },
+      { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
+      { kind: "createCell", parameters: { alias: "targetCell", x: 4, y: 0 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, mana: 10, cellAlias: "casterCell" } },
+      { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: 10, maxHealth: 10, cellAlias: "targetCell" } },
+      { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } },
+      { kind: "createSkillAbility", parameters: { alias: "abilityImpl", configAlias: "ability", ownerAlias: "caster" } },
+      { kind: "selectAbility", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    actions: [
+      { kind: "executeAbilityOnTarget", target: "target", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Failed", parameters: {} },
+      { kind: "unitManaEquals", target: "caster", expected: 10, parameters: {} },
+      { kind: "lastErrorContains", expected: "Target out of range", parameters: {} },
+      { kind: "stepMessageContains", expected: "Failed", parameters: {} }
+    ]
+  };
+}
+
+function createNoValidTargetSpec(): ScenarioSpec {
+  return {
+    feature: "SkillGraph",
+    scenario: "NoValidTargetPreventsAbilityUse",
+    tags: ["mvp", "skill", "mana", "ability", "damage", "target"],
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "createSkillTestWorld", parameters: {} },
+      { kind: "createSkillGraph", parameters: { alias: "graph", graphKind: "singleTargetDamage", baseDamage: 7 } },
+      { kind: "createSkillAbilityConfig", parameters: { alias: "ability", graphAlias: "graph", manaCost: 3, targetRange: 2 } },
+      { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
+      { kind: "createCell", parameters: { alias: "targetCell", x: 1, y: 0 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, mana: 10, cellAlias: "casterCell" } },
+      { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } },
+      { kind: "createSkillAbility", parameters: { alias: "abilityImpl", configAlias: "ability", ownerAlias: "caster" } },
+      { kind: "selectAbility", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    actions: [
+      { kind: "executeAbilityOnCell", target: "targetCell", parameters: { abilityAlias: "abilityImpl" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Failed", parameters: {} },
+      { kind: "unitManaEquals", target: "caster", expected: 10, parameters: {} },
+      { kind: "lastErrorContains", expected: "No valid target in range", parameters: {} },
+      { kind: "stepMessageContains", expected: "Failed", parameters: {} }
+    ]
+  };
+}
+
 function createSingleTargetDamageSpec(initialHealth: number, expectedHealth: number): ScenarioSpec {
   return {
     feature: "SkillGraph",
@@ -104,7 +231,7 @@ function createSingleTargetDamageSpec(initialHealth: number, expectedHealth: num
     setup: [
       { kind: "createSkillTestWorld", parameters: {} },
       { kind: "createSkillGraph", parameters: { alias: "graph", graphKind: "singleTargetDamage", baseDamage: initialHealth - expectedHealth } },
-      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, cell: { x: 0, y: 0 } } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cell: { x: 0, y: 0 } } },
       { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: initialHealth, maxHealth: initialHealth, defenceFactor: 0, cell: { x: 1, y: 0 } } },
       { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
     ],
@@ -128,7 +255,7 @@ function createInvalidGraphSpec(): ScenarioSpec {
     setup: [
       { kind: "createSkillTestWorld", parameters: {} },
       { kind: "createSkillGraph", parameters: { alias: "graph", graphKind: "invalidSelfHeal", healAmount: 5 } },
-      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10 } },
       { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
     ],
     actions: [

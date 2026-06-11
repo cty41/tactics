@@ -6,6 +6,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Skills.Graph;
+using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -77,7 +78,7 @@ namespace Tactics.Common.Units.Abilities
             if (unit.CurrentCell == null) return;
             if (_validTargetCells == null || !_validTargetCells.Contains(unit.CurrentCell)) return;
 
-            _ = ExecuteSkillGraph(unit.CurrentCell, gridController);
+            _ = ExecuteSkillGraphAsync(unit.CurrentCell, gridController);
         }
 
         public void OnCellClicked(ICell cell, IGridController gridController)
@@ -85,7 +86,7 @@ namespace Tactics.Common.Units.Abilities
             if (!CanPerform(gridController)) return;
             if (_validTargetCells == null || !_validTargetCells.Contains(cell)) return;
 
-            _ = ExecuteSkillGraph(cell, gridController);
+            _ = ExecuteSkillGraphAsync(cell, gridController);
         }
 
         public void OnUnitHighlighted(IUnit unit, IGridController gridController) { }
@@ -105,6 +106,53 @@ namespace Tactics.Common.Units.Abilities
             return _owner.Mana >= _config.ManaCost;
         }
 
+        public async Task<SkillGraphRuntimeTestResult> ExecuteForTestAsync(ICell selectedCell, IGridController gridController)
+        {
+            if (gridController == null)
+                throw new ArgumentNullException(nameof(gridController));
+
+            OnAbilitySelected(gridController);
+
+            var result = CreateTestResult();
+            result.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
+            result.PrimaryTarget = CaptureTargetSnapshot(selectedCell);
+
+            if (!CanPerform(gridController))
+            {
+                result.ExecutionState = SkillGraphExecutionState.Failed;
+                result.LastError = "Not enough mana.";
+                result.StepCount = 0;
+                return result;
+            }
+
+            if (selectedCell == null)
+            {
+                result.ExecutionState = SkillGraphExecutionState.Failed;
+                result.LastError = "No target selected.";
+                result.StepCount = 0;
+                return result;
+            }
+
+            bool hasUnitsOnCell = selectedCell.CurrentUnits != null && selectedCell.CurrentUnits.Count > 0;
+            if (_validTargetCells == null || _validTargetCells.Count == 0)
+            {
+                result.ExecutionState = SkillGraphExecutionState.Failed;
+                result.LastError = hasUnitsOnCell ? "Target out of range." : "No valid target in range.";
+                result.StepCount = 0;
+                return result;
+            }
+
+            if (!_validTargetCells.Contains(selectedCell))
+            {
+                result.ExecutionState = SkillGraphExecutionState.Failed;
+                result.LastError = hasUnitsOnCell ? "Target out of range." : "No valid target in range.";
+                result.StepCount = 0;
+                return result;
+            }
+
+            return await ExecuteSkillGraphAsync(selectedCell, gridController);
+        }
+
         public void InvokeAbilitySelected()
         {
             AbilitySelected?.Invoke(this);
@@ -115,10 +163,11 @@ namespace Tactics.Common.Units.Abilities
             AbilityDeselected?.Invoke(this);
         }
 
-        private async Task ExecuteSkillGraph(ICell selectedCell, IGridController gridController)
+        private async Task<SkillGraphRuntimeTestResult> ExecuteSkillGraphAsync(ICell selectedCell, IGridController gridController)
         {
             var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(_config.SkillGraph);
             var context = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController);
+            var testResult = CreateTestResult();
 
             // Pre-set target from cell click
             var unitsOnCell = selectedCell.CurrentUnits;
@@ -127,17 +176,18 @@ namespace Tactics.Common.Units.Abilities
                 context.PrimaryTarget = unitsOnCell[0];
             }
             context.TargetPoint = selectedCell;
+            testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
 
             var runner = new SkillGraphRunner();
-            var result = await runner.Execute(context);
+            var executionState = await runner.Execute(context);
 
-            if (result == SkillGraphExecutionState.Completed)
+            if (executionState == SkillGraphExecutionState.Completed)
             {
                 TLog.Info($"[SkillGraphAbility] '{DisplayName}' completed successfully.");
             }
             else
             {
-                TLog.Warning($"[SkillGraphAbility] '{DisplayName}' ended with state: {result}. Error: {context.LastError}");
+                TLog.Warning($"[SkillGraphAbility] '{DisplayName}' ended with state: {executionState}. Error: {context.LastError}");
             }
 
             // Mark basic ability used or deduct mana
@@ -147,6 +197,30 @@ namespace Tactics.Common.Units.Abilities
                 _owner.Mana -= _config.ManaCost;
 
             gridController.GridState = new GridStateAwaitInput();
+
+            testResult.ExecutionState = executionState;
+            testResult.LastError = context.LastError;
+            testResult.StepCount = context.StepCount;
+            testResult.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
+            testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
+            return testResult;
+        }
+
+        private SkillGraphRuntimeTestResult CreateTestResult()
+        {
+            return new SkillGraphRuntimeTestResult
+            {
+                Name = DisplayName,
+                GraphName = _config.SkillGraph?.DisplayName ?? DisplayName
+            };
+        }
+
+        private static SkillGraphTestUnitSnapshot CaptureTargetSnapshot(ICell selectedCell)
+        {
+            if (selectedCell?.CurrentUnits == null || selectedCell.CurrentUnits.Count == 0)
+                return null;
+
+            return SkillGraphTestUnitSnapshot.Capture(selectedCell.CurrentUnits[0]);
         }
 
         private HashSet<ICell> CalculateDisplayCells()

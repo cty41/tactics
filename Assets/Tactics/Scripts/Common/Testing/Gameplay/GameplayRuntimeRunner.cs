@@ -24,6 +24,18 @@ namespace Tactics.Common.Testing.Gameplay
             if (plan == null)
                 throw new ArgumentNullException(nameof(plan));
 
+            var executionTask = ExecuteCoreAsync(plan);
+            _ = executionTask.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+
+            var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
+            if (completed != executionTask)
+                return BuildTimeoutResult(plan);
+
+            return await executionTask;
+        }
+
+        private async Task<GameplayTestResult> ExecuteCoreAsync(ExecutableScenarioPlan plan)
+        {
             var result = new GameplayTestResult { ScenarioName = plan.ScenarioName };
 
             using var context = new GameplayRuntimeContext();
@@ -40,6 +52,7 @@ namespace Tactics.Common.Testing.Gameplay
 
                 var stepResult = await adapter.ExecuteAsync(context, action);
                 result.ExecutedSteps.Add(stepResult);
+                context.LastStepMessage = stepResult.Message;
                 if (!stepResult.Passed)
                 {
                     result.Diagnostics.Add(stepResult.Message);
@@ -74,6 +87,15 @@ namespace Tactics.Common.Testing.Gameplay
                     result.Probes.Add(probe);
             }
 
+            return result;
+        }
+
+        private static GameplayTestResult BuildTimeoutResult(ExecutableScenarioPlan plan)
+        {
+            var result = new GameplayTestResult { ScenarioName = plan.ScenarioName };
+            var message = $"Scenario '{plan.ScenarioName}' timed out after {plan.TimeoutMs} ms.";
+            result.ExecutedSteps.Add(GameplayStepResult.Fail("Runner", "timeout", message));
+            result.Diagnostics.Add(message);
             return result;
         }
 

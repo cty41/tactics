@@ -2,12 +2,13 @@
     "name": "Tactics.Tests.PlayMode",
     "rootNamespace": "Tactics.Tests.PlayMode",
     "references": [
-        "GUID:6aaf4f1fe211baf44bf77a9e8adbc0ed"
+        "GUID:6aaf4f1fe211baf44bf77a9e8adbc0ed",
+        "GUID:e4079be308e5fa44786c0526e6aa10a3"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": true,
+    "overrideReferences": false,
     "optionalUnityReferences": [
         "TestAssemblies"
     ],

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node dist/tests/compiler.test.js"
+    "test": "npm run build && node dist/tests/compiler.test.js && node dist/tests/ability-resource.test.js"
   },
   "dependencies": {
     "commander": "^12.1.0",

@@ -4,18 +4,27 @@ import { ScenarioSpecSchema, type ExpectationDiagnostic, type ScenarioSpec } fro
 const supportedSetupKinds = new Set([
   "createSkillTestWorld",
   "createSkillGraph",
+  "createCell",
   "createUnit",
-  "setTurnContext"
+  "createSkillAbilityConfig",
+  "createSkillAbility",
+  "setTurnContext",
+  "selectAbility"
 ]);
 
 const supportedActionKinds = new Set([
-  "executeSkillGraph"
+  "executeSkillGraph",
+  "executeAbilityOnTarget",
+  "executeAbilityOnCell"
 ]);
 
 const supportedAssertionKinds = new Set([
   "executionStateEquals",
   "validationErrorCodeIncludes",
-  "unitHealthEquals"
+  "unitHealthEquals",
+  "unitManaEquals",
+  "lastErrorContains",
+  "stepMessageContains"
 ]);
 
 export interface ValidationResult {

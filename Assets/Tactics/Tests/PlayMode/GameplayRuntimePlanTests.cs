@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -11,9 +13,9 @@ namespace Tactics.Tests.PlayMode
     public class GameplayRuntimePlanTests
     {
         [UnityTest]
-        public IEnumerator RuntimeRunner_ExecutesSelfHealPlan()
+        public IEnumerator RuntimeRunner_ExecutesSelfHealPlanFromFile()
         {
-            var task = ExecutePlan(SelfHealPlanJson);
+            var task = ExecutePlan(GetPlanPath("self-heal.plan.json"));
             yield return WaitForTask(task);
 
             var result = task.Result;
@@ -22,9 +24,9 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator RuntimeRunner_ExecutesSingleTargetDamagePlan()
+        public IEnumerator RuntimeRunner_ExecutesSingleTargetDamagePlanFromFile()
         {
-            var task = ExecutePlan(SingleTargetDamagePlanJson);
+            var task = ExecutePlan(GetPlanPath("single-target-damage.plan.json"));
             yield return WaitForTask(task);
 
             var result = task.Result;
@@ -33,9 +35,9 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator RuntimeRunner_RejectsInvalidGraphPlan()
+        public IEnumerator RuntimeRunner_RejectsInvalidGraphPlanFromFile()
         {
-            var task = ExecutePlan(InvalidGraphPlanJson);
+            var task = ExecutePlan(GetPlanPath("invalid-graph.plan.json"));
             yield return WaitForTask(task);
 
             var result = task.Result;
@@ -43,11 +45,85 @@ namespace Tactics.Tests.PlayMode
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "validationErrorCodeIncludes" && assertion.Passed), Is.True);
         }
 
-        private static async Task<GameplayTestResult> ExecutePlan(string json)
+        [Test]
+        public void LoaderRejectsUnsupportedSchemaVersionPlan()
         {
-            var plan = ExecutableScenarioPlanLoader.FromJson(json);
+            AssertPlanLoadFails("bad-schema-version.plan.json", "schemaVersion");
+        }
+
+        [Test]
+        public void LoaderRejectsPlanWithoutRequiredAdapters()
+        {
+            AssertPlanLoadFails("missing-required-adapters.plan.json", "required adapter");
+        }
+
+        [Test]
+        public void LoaderRejectsPlanWithoutRuntimeActions()
+        {
+            AssertPlanLoadFails("missing-runtime-actions.plan.json", "runtime action");
+        }
+
+        [Test]
+        public void LoaderRejectsPlanWithoutAssertions()
+        {
+            AssertPlanLoadFails("missing-assertion-plans.plan.json", "assertion");
+        }
+
+        [Test]
+        public void LoaderRejectsPlanWithMissingActionMetadata()
+        {
+            AssertPlanLoadFails("missing-action-metadata.plan.json", "adapter", "kind");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_TimesOutWhenExecutionExceedsPlanTimeout()
+        {
+            var plan = new ExecutableScenarioPlan
+            {
+                ScenarioName = "SkillGraph.TimeoutIsReported",
+                TimeoutMs = 50
+            };
+
+            plan.RequiredAdapters.Add("Skill");
+            plan.SetupActions.Add(new ExecutableScenarioAction
+            {
+                Adapter = "Skill",
+                Kind = "slowAction"
+            });
+
+            var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { new SlowSkillStepAdapter() });
+            var task = runner.ExecuteAsync(plan);
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsFalse(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Diagnostics.Any(diagnostic => diagnostic.Contains("timed out", StringComparison.OrdinalIgnoreCase)), Is.True);
+            Assert.That(result.ExecutedSteps.Any(step => step.Kind == "timeout"), Is.True);
+        }
+
+        private static string GetPlanPath(string fileName)
+        {
+            return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", fileName));
+        }
+
+        private static async Task<GameplayTestResult> ExecutePlan(string planPath)
+        {
+            Assert.IsTrue(File.Exists(planPath), $"Plan file not found: {planPath}");
+
+            var plan = ExecutableScenarioPlanLoader.FromFile(planPath);
             var runner = new GameplayRuntimeRunner();
             return await runner.ExecuteAsync(plan);
+        }
+
+        private static void AssertPlanLoadFails(string fileName, params string[] expectedMessageFragments)
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() => ExecutableScenarioPlanLoader.FromFile(GetPlanPath(fileName)));
+            Assert.IsNotNull(ex);
+
+            foreach (var expectedFragment in expectedMessageFragments)
+            {
+                Assert.That(ex.Message, Does.Contain(expectedFragment));
+            }
         }
 
         private static IEnumerator WaitForTask<T>(Task<T> task)
@@ -60,71 +136,35 @@ namespace Tactics.Tests.PlayMode
             }
         }
 
-        private const string SelfHealPlanJson = @"
-{
-  ""schemaVersion"": 1,
-  ""scenarioName"": ""SkillGraph.SelfHealSkillRaisesCasterHealth"",
-  ""requiredAdapters"": [""Skill""],
-  ""setupActions"": [
-    { ""adapter"": ""Skill"", ""kind"": ""createSkillTestWorld"", ""parameters"": {} },
-    { ""adapter"": ""Skill"", ""kind"": ""createSkillGraph"", ""parameters"": { ""alias"": ""graph"", ""graphKind"": ""selfHeal"", ""healAmount"": 5 } },
-    { ""adapter"": ""Skill"", ""kind"": ""createUnit"", ""parameters"": { ""alias"": ""caster"", ""playerNumber"": 0, ""health"": 6, ""maxHealth"": 10 } },
-    { ""adapter"": ""Skill"", ""kind"": ""setTurnContext"", ""parameters"": { ""currentPlayerNumber"": 0, ""playableUnitAliases"": [""caster""] } }
-  ],
-  ""runtimeActions"": [
-    { ""adapter"": ""Skill"", ""kind"": ""executeSkillGraph"", ""parameters"": { ""graphAlias"": ""graph"", ""casterAlias"": ""caster"" } }
-  ],
-  ""assertionPlans"": [
-    { ""adapter"": ""Skill"", ""kind"": ""executionStateEquals"", ""expected"": ""Completed"", ""parameters"": {} },
-    { ""adapter"": ""Skill"", ""kind"": ""unitHealthEquals"", ""target"": ""caster"", ""expected"": 10, ""parameters"": {} }
-  ],
-  ""timeoutMs"": 10000,
-  ""probeRequests"": []
-}";
+        private sealed class SlowSkillStepAdapter : IGameplayStepAdapter
+        {
+            public string AdapterName => "Skill";
 
-        private const string SingleTargetDamagePlanJson = @"
-{
-  ""schemaVersion"": 1,
-  ""scenarioName"": ""SkillGraph.SingleTargetDamageReducesTargetHealth"",
-  ""requiredAdapters"": [""Skill""],
-  ""setupActions"": [
-    { ""adapter"": ""Skill"", ""kind"": ""createSkillTestWorld"", ""parameters"": {} },
-    { ""adapter"": ""Skill"", ""kind"": ""createSkillGraph"", ""parameters"": { ""alias"": ""graph"", ""graphKind"": ""singleTargetDamage"", ""baseDamage"": 7 } },
-    { ""adapter"": ""Skill"", ""kind"": ""createUnit"", ""parameters"": { ""alias"": ""caster"", ""playerNumber"": 0, ""cell"": { ""x"": 0, ""y"": 0 } } },
-    { ""adapter"": ""Skill"", ""kind"": ""createUnit"", ""parameters"": { ""alias"": ""target"", ""playerNumber"": 1, ""health"": 10, ""maxHealth"": 10, ""defenceFactor"": 0, ""cell"": { ""x"": 1, ""y"": 0 } } },
-    { ""adapter"": ""Skill"", ""kind"": ""setTurnContext"", ""parameters"": { ""currentPlayerNumber"": 0, ""playableUnitAliases"": [""caster""] } }
-  ],
-  ""runtimeActions"": [
-    { ""adapter"": ""Skill"", ""kind"": ""executeSkillGraph"", ""parameters"": { ""graphAlias"": ""graph"", ""casterAlias"": ""caster"" } }
-  ],
-  ""assertionPlans"": [
-    { ""adapter"": ""Skill"", ""kind"": ""executionStateEquals"", ""expected"": ""Completed"", ""parameters"": {} },
-    { ""adapter"": ""Skill"", ""kind"": ""unitHealthEquals"", ""target"": ""target"", ""expected"": 3, ""parameters"": {} }
-  ],
-  ""timeoutMs"": 10000,
-  ""probeRequests"": []
-}";
+            public bool CanExecute(ExecutableScenarioAction action)
+            {
+                return string.Equals(action.Kind, "slowAction", StringComparison.OrdinalIgnoreCase);
+            }
 
-        private const string InvalidGraphPlanJson = @"
-{
-  ""schemaVersion"": 1,
-  ""scenarioName"": ""SkillGraph.InvalidGraphWithoutTerminalIsRejected"",
-  ""requiredAdapters"": [""Skill""],
-  ""setupActions"": [
-    { ""adapter"": ""Skill"", ""kind"": ""createSkillTestWorld"", ""parameters"": {} },
-    { ""adapter"": ""Skill"", ""kind"": ""createSkillGraph"", ""parameters"": { ""alias"": ""graph"", ""graphKind"": ""invalidSelfHeal"", ""healAmount"": 5 } },
-    { ""adapter"": ""Skill"", ""kind"": ""createUnit"", ""parameters"": { ""alias"": ""caster"", ""playerNumber"": 0 } },
-    { ""adapter"": ""Skill"", ""kind"": ""setTurnContext"", ""parameters"": { ""currentPlayerNumber"": 0, ""playableUnitAliases"": [""caster""] } }
-  ],
-  ""runtimeActions"": [
-    { ""adapter"": ""Skill"", ""kind"": ""executeSkillGraph"", ""parameters"": { ""graphAlias"": ""graph"", ""casterAlias"": ""caster"" } }
-  ],
-  ""assertionPlans"": [
-    { ""adapter"": ""Skill"", ""kind"": ""executionStateEquals"", ""expected"": ""Aborted"", ""parameters"": {} },
-    { ""adapter"": ""Skill"", ""kind"": ""validationErrorCodeIncludes"", ""expected"": ""NoTerminalNode"", ""parameters"": {} }
-  ],
-  ""timeoutMs"": 10000,
-  ""probeRequests"": []
-}";
+            public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
+            {
+                await Task.Delay(200);
+                return GameplayStepResult.Pass("Skill", action.Kind, "slow action completed");
+            }
+
+            public bool CanAssert(ExecutableScenarioAssertion assertion)
+            {
+                return false;
+            }
+
+            public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+            {
+                return Task.FromResult(GameplayAssertionResult.Fail("Skill", assertion.Kind, "Assertions are not supported in the timeout adapter."));
+            }
+
+            public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
+            {
+                return null;
+            }
+        }
     }
 }

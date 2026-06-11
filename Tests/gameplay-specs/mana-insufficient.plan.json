@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "SkillGraph.ManaInsufficientPreventsAbilityUse",
+  "requiredAdapters": [
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "kind": "createSkillTestWorld",
+      "parameters": {},
+      "adapter": "Skill"
+    },
+    {
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "graph",
+        "graphKind": "selfHeal",
+        "healAmount": 4
+      },
+      "adapter": "Skill"
+    },
+    {
+      "kind": "createSkillAbilityConfig",
+      "parameters": {
+        "alias": "ability",
+        "graphAlias": "graph",
+        "manaCost": 8,
+        "targetRange": 1
+      },
+      "adapter": "Skill"
+    },
+    {
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      },
+      "adapter": "Skill"
+    },
+    {
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "caster",
+        "playerNumber": 0,
+        "health": 6,
+        "maxHealth": 10,
+        "mana": 5,
+        "cellAlias": "casterCell"
+      },
+      "adapter": "Skill"
+    },
+    {
+      "kind": "setTurnContext",
+      "parameters": {
+        "currentPlayerNumber": 0,
+        "playableUnitAliases": [
+          "caster"
+        ]
+      },
+      "adapter": "Skill"
+    },
+    {
+      "kind": "createSkillAbility",
+      "parameters": {
+        "alias": "abilityImpl",
+        "configAlias": "ability",
+        "ownerAlias": "caster"
+      },
+      "adapter": "Skill"
+    },
+    {
+      "kind": "selectAbility",
+      "parameters": {
+        "abilityAlias": "abilityImpl"
+      },
+      "adapter": "Skill"
+    }
+  ],
+  "runtimeActions": [
+    {
+      "kind": "executeAbilityOnTarget",
+      "target": "caster",
+      "parameters": {
+        "abilityAlias": "abilityImpl"
+      },
+      "adapter": "Skill"
+    }
+  ],
+  "assertionPlans": [
+    {
+      "kind": "executionStateEquals",
+      "expected": "Failed",
+      "parameters": {},
+      "adapter": "Skill"
+    },
+    {
+      "kind": "unitManaEquals",
+      "target": "caster",
+      "expected": 5,
+      "parameters": {},
+      "adapter": "Skill"
+    },
+    {
+      "kind": "lastErrorContains",
+      "expected": "Not enough mana",
+      "parameters": {},
+      "adapter": "Skill"
+    },
+    {
+      "kind": "stepMessageContains",
+      "expected": "Failed",
+      "parameters": {},
+      "adapter": "Skill"
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitManaEquals",
+      "target": "caster",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "lastErrorContains",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "parameters": {}
+    }
+  ]
+}
