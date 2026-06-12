@@ -1,6 +1,6 @@
 ---
 name: gameplay-test-framework
-description: "Use when generating, validating, compiling, or running gameplay automation tests from natural language or design docs — guides agents through Tools/gameplay-test-spec and Unity PlayMode execution"
+description: "Use when generating, validating, compiling, or running gameplay automation tests from natural language, design docs, or batch templates — guides agents through Tools/gameplay-test-spec and Unity PlayMode execution"
 ---
 
 # Gameplay Test Framework
@@ -18,11 +18,13 @@ description: "Use when generating, validating, compiling, or running gameplay au
 | 5 | `node dist/src/cli.js validate-spec` | 校验 spec frontmatter 与语义 |
 | 6 | `node dist/src/cli.js compile-spec` | spec -> `*.plan.json` |
 | 7 | `Tactics.Tests.PlayMode` | Unity PlayMode 计划执行入口 |
+| 8 | `.agents/docs/skill-graph-playtest-template.md` | 批量模板输入源 |
 
 ## When to use
 
 - 用户要求把自然语言需求转成可执行 gameplay 测试
 - 用户要求根据 `.agents/docs/` 中的策划文档生成测试用例
+- 用户要求根据 `.agents/docs/skill-graph-playtest-template.md` 批量展开一组测试用例
 - 用户要求执行或排查 `gameplay-test-spec` 工具链
 - 用户要求运行 `GameplayRuntimeRunner`、`SkillGameplayStepAdapter` 或 `plan.json` 驱动的 PlayMode 测试
 - 用户要求为新的 gameplay 场景补充自动化回归
@@ -45,6 +47,19 @@ node dist/src/cli.js generate-spec --text "..." --out path/to/scenario.gameplay-
 
 输出的 `*.gameplay-test.md` 是正式 spec，人可读且可审查。
 真实样例和回归夹具统一放在 `Tests/gameplay-specs/`，`*.plan.json` 是它们的编译产物。
+
+### Batch Template Workflow
+
+当输入是 `.agents/docs/skill-graph-playtest-template.md` 这类批量模板时，先把模板拆成多个独立场景，再逐个走标准链路。
+
+1. 读取每个模板条目中的 `## ClassName`、`### SkillName`、`补充：`
+2. 归一化成单条自然语言输入，例如 `{ClassName} {SkillName} 技能测试：{测试点1}，{测试点2}`
+3. 为每个条目生成独立的 `*.gameplay-test.md`
+4. 对每个条目执行 `validate-spec`
+5. 对通过校验的条目执行 `compile-spec`
+6. 汇总成功、歧义、失败三类结果
+
+批量模板流程只是对单条工作流的循环展开，不是另一套命令体系。不要把它继续拆回 `.mimocode/command/`。
 
 ### Step 3: 校验 spec
 
@@ -129,6 +144,7 @@ node dist/src/cli.js compile-spec --spec C:\Temp\self-heal.gameplay-test.md --ou
 | 直接手写 `plan.json` | 先生成 spec，再 compile | 编译链路会丢失校验和诊断 |
 | 自由文本直接喂 Unity | 先生成 `*.gameplay-test.md` | Unity 只消费结构化 plan |
 | 跳过 `validate-spec` | 先校验再编译 | 避免把歧义输入送进执行层 |
+| 把批量模板流程放回 `.mimocode/command/` | 统一放进 skill | 避免重复定义同一条工作流 |
 | 把 skill 当成实现代码 | skill 只提供工作流 | 真相源是 `Tools/gameplay-test-spec` |
 | 在 PlayMode 测试里继续内嵌大段 `ExecutableScenarioPlan` | 改为读取 `Tests/gameplay-specs/*.plan.json` | 文件驱动 fixture 才能和 TS 回归对齐 |
 | 将 `node_modules` / `dist` 提交进仓库 | 保持本地构建产物忽略 | 这两个目录是本地工具输出 |
@@ -142,6 +158,7 @@ node dist/src/cli.js compile-spec --spec C:\Temp\self-heal.gameplay-test.md --ou
 - [ ] 已通过 `validate-spec`
 - [ ] 已通过 `compile-spec`
 - [ ] `Tests/gameplay-specs/` 下的 spec/plan fixture 已同步
+- [ ] 批量模板生成流程已从 `.mimocode/command/` 收口到 skill
 - [ ] `npm test` 覆盖了全部 compiled TS tests
 - [ ] 已使用 Unity PlayMode 执行 `Tactics.Tests.PlayMode`
 - [ ] loader negative tests 和 timeout test 已通过

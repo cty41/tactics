@@ -18,11 +18,24 @@ const supportedActionKinds = new Set([
   "executeAbilityOnCell"
 ]);
 
+const supportedGraphKinds = new Set([
+  "selfHeal",
+  "singleTargetDamage",
+  "invalidSelfHeal",
+  "areaDamage",
+  "knockback",
+  "allyHeal",
+  "applyBuff"
+]);
+
 const supportedAssertionKinds = new Set([
   "executionStateEquals",
   "validationErrorCodeIncludes",
   "unitHealthEquals",
   "unitManaEquals",
+  "unitHasBuff",
+  "unitBuffDurationEquals",
+  "unitCellEquals",
   "lastErrorContains",
   "stepMessageContains"
 ]);
@@ -69,6 +82,20 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
         message: `Unsupported action kind '${action.kind}'.`,
         path: action.id ?? action.kind
       });
+    }
+  }
+
+  for (const step of spec.setup) {
+    if (step.kind === "createSkillGraph") {
+      const graphKind = typeof step.parameters.graphKind === "string" ? step.parameters.graphKind : "";
+      if (!supportedGraphKinds.has(graphKind)) {
+        diagnostics.push({
+          code: "UnsupportedGraphKind",
+          severity: "error",
+          message: `Unsupported skill graph kind '${graphKind}'.`,
+          path: step.id ?? step.kind
+        });
+      }
     }
   }
 

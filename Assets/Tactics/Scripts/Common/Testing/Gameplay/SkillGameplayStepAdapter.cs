@@ -9,6 +9,7 @@ using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay
@@ -95,6 +96,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "validationErrorCodeIncludes"
                 or "unitHealthEquals"
                 or "unitManaEquals"
+                or "unitHasBuff"
+                or "unitBuffDurationEquals"
+                or "unitCellEquals"
                 or "lastErrorContains"
                 or "stepMessageContains";
         }
@@ -109,6 +113,9 @@ namespace Tactics.Common.Testing.Gameplay
                     "validationErrorCodeIncludes" => AssertValidationErrorCode(context, assertion),
                     "unitHealthEquals" => AssertUnitHealth(context, assertion),
                     "unitManaEquals" => AssertUnitMana(context, assertion),
+                    "unitHasBuff" => AssertUnitHasBuff(context, assertion),
+                    "unitBuffDurationEquals" => AssertUnitBuffDuration(context, assertion),
+                    "unitCellEquals" => AssertUnitCell(context, assertion),
                     "lastErrorContains" => AssertLastErrorContains(context, assertion),
                     "stepMessageContains" => AssertStepMessageContains(context, assertion),
                     _ => GameplayAssertionResult.Fail(SkillAdapterName, assertion.Kind, $"Unsupported Skill assertion '{assertion.Kind}'.")
@@ -144,6 +151,24 @@ namespace Tactics.Common.Testing.Gameplay
                 data["maxHealth"] = unit.MaxHealth;
                 data["mana"] = unit.Mana;
                 data["playerNumber"] = unit.PlayerNumber;
+                data["cellCoordinates"] = unit.CurrentCell?.GridCoordinates.ToString();
+
+                var activeBuffs = new JArray();
+                if (unit.BuffComponent != null)
+                {
+                    foreach (var buff in unit.BuffComponent.GetActiveBuffs())
+                    {
+                        activeBuffs.Add(new JObject
+                        {
+                            ["name"] = buff.BuffName,
+                            ["remainingTurns"] = buff.RemainingTurns,
+                            ["effectType"] = buff.Config?.EffectType.ToString(),
+                            ["triggerTiming"] = buff.Config?.TriggerTiming.ToString()
+                        });
+                    }
+                }
+
+                data["activeBuffs"] = activeBuffs;
             }
 
             return new ProbeSnapshot
@@ -158,12 +183,25 @@ namespace Tactics.Common.Testing.Gameplay
         private static void CreateSkillGraph(GameplayRuntimeContext context, JObject parameters)
         {
             string alias = GetString(parameters, "alias", "graph");
-            string graphKind = GetRequiredString(parameters, "graphKind");
+            string graphKind = GetRequiredString(parameters, "graphKind").Trim().ToLowerInvariant();
             SkillGraphAsset graph = graphKind switch
             {
-                "selfHeal" => SkillGraphTestGraphFactory.CreateSelfHealGraph(alias, GetFloat(parameters, "healAmount", 5f)),
-                "singleTargetDamage" => SkillGraphTestGraphFactory.CreateSingleTargetDamageGraph(alias, GetFloat(parameters, "baseDamage", 7f)),
-                "invalidSelfHeal" => SkillGraphTestGraphFactory.CreateSelfHealGraph(alias, GetFloat(parameters, "healAmount", 5f), includeFinishNode: false),
+                "selfheal" => SkillGraphTestGraphFactory.CreateSelfHealGraph(alias, GetFloat(parameters, "healAmount", 5f)),
+                "singletargetdamage" => SkillGraphTestGraphFactory.CreateSingleTargetDamageGraph(alias, GetFloat(parameters, "baseDamage", 7f)),
+                "invalidselfheal" => SkillGraphTestGraphFactory.CreateSelfHealGraph(alias, GetFloat(parameters, "healAmount", 5f), includeFinishNode: false),
+                "areadamage" => SkillGraphTestGraphFactory.CreateAreaDamageGraph(alias, GetFloat(parameters, "baseDamage", 3f), GetInt(parameters, "radius", 1), GetInt(parameters, "maxRange", 4)),
+                "knockback" => SkillGraphTestGraphFactory.CreateKnockbackGraph(alias, GetInt(parameters, "distance", 1), GetInt(parameters, "maxRange", 1)),
+                "allyheal" => SkillGraphTestGraphFactory.CreateAllyHealGraph(alias, GetFloat(parameters, "healAmount", 5f), GetInt(parameters, "maxRange", 1)),
+                "applybuff" => SkillGraphTestGraphFactory.CreateApplyBuffGraph(
+                    alias,
+                    GetString(parameters, "buffName", alias),
+                    GetInt(parameters, "duration", 2),
+                    ParseBuffEffectType(GetString(parameters, "buffEffectType", "None")),
+                    ParseBuffTriggerTiming(GetString(parameters, "triggerTiming", "None")),
+                    GetString(parameters, "selectionKind", "self"),
+                    GetInt(parameters, "maxRange", 1),
+                    GetBool(parameters, "isUnique", true),
+                    GetBool(parameters, "canAct", true)),
                 _ => throw new InvalidOperationException($"Unsupported graphKind '{graphKind}'.")
             };
 
@@ -208,6 +246,19 @@ namespace Tactics.Common.Testing.Gameplay
             unit.MaxMana = GetFloat(parameters, "maxMana", unit.MaxMana);
             unit.Mana = GetFloat(parameters, "mana", unit.Mana);
             unit.DefenceFactor = GetInt(parameters, "defenceFactor", unit.DefenceFactor);
+            unit.AttackFactor = GetInt(parameters, "attackFactor", unit.AttackFactor);
+            unit.Strength = GetInt(parameters, "strength", unit.Strength);
+            unit.Agility = GetInt(parameters, "agility", unit.Agility);
+            unit.Constitution = GetInt(parameters, "constitution", unit.Constitution);
+            unit.Intelligence = GetInt(parameters, "intelligence", unit.Intelligence);
+            unit.Charisma = GetInt(parameters, "charisma", unit.Charisma);
+            unit.Luck = GetInt(parameters, "luck", unit.Luck);
+            unit.Speed = GetFloat(parameters, "speed", unit.Speed);
+            unit.DodgeRate = GetFloat(parameters, "dodgeRate", unit.DodgeRate);
+            unit.Reach = GetInt(parameters, "reach", unit.Reach);
+            unit.Range = GetInt(parameters, "range", unit.Range);
+            unit.Initiative = GetFloat(parameters, "initiative", unit.Initiative);
+            unit.MovementPoints = GetFloat(parameters, "movementPoints", unit.MovementPoints);
             context.Units[alias] = unit;
         }
 
@@ -310,6 +361,13 @@ namespace Tactics.Common.Testing.Gameplay
                 context.Units.TryGetValue(targetAlias, out primaryTarget);
             }
 
+            ICell targetPoint = null;
+            string targetPointAlias = GetString(parameters, "targetPointAlias", null);
+            if (!string.IsNullOrWhiteSpace(targetPointAlias))
+            {
+                targetPoint = ResolvePoint(context, targetPointAlias);
+            }
+
             var runner = new SkillGraphRuntimeTestRunner();
             context.LastSkillResult = await runner.ExecuteAsync(new SkillGraphRuntimeTestRequest
             {
@@ -317,8 +375,10 @@ namespace Tactics.Common.Testing.Gameplay
                 Graph = graph,
                 GridController = world.GridController,
                 Caster = caster,
-                PrimaryTarget = primaryTarget
+                PrimaryTarget = primaryTarget,
+                TargetPoint = targetPoint
             });
+            context.LastStepMessage = context.LastSkillResult?.Summary;
         }
 
         private static async Task<GameplayStepResult> ExecuteSkillAbility(GameplayRuntimeContext context, string abilityAlias, ICell selectedCell, string actionKind)
@@ -469,6 +529,66 @@ namespace Tactics.Common.Testing.Gameplay
                 : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target}.Mana={expected}, actual={unit.Mana}.");
         }
 
+        private static GameplayAssertionResult AssertUnitHasBuff(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitHasBuff requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            string buffName = GetString(assertion.Parameters, "buffName", assertion.Expected?.ToObject<string>());
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitHasBuff requires a buffName parameter or string expected value.");
+
+            var activeBuff = unit.BuffComponent?.GetActiveBuffs()
+                .FirstOrDefault(buff => string.Equals(buff.BuffName, buffName, StringComparison.OrdinalIgnoreCase));
+
+            return activeBuff != null
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target} has buff '{buffName}'.")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"{assertion.Target} does not have buff '{buffName}'.");
+        }
+
+        private static GameplayAssertionResult AssertUnitBuffDuration(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitBuffDurationEquals requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            string buffName = GetString(assertion.Parameters, "buffName", null);
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitBuffDurationEquals requires a buffName parameter.");
+
+            var activeBuff = unit.BuffComponent?.GetActiveBuffs()
+                .FirstOrDefault(buff => string.Equals(buff.BuffName, buffName, StringComparison.OrdinalIgnoreCase));
+            if (activeBuff == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"{assertion.Target} does not have buff '{buffName}'.");
+
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            return activeBuff.RemainingTurns == expected
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target}.{buffName}.RemainingTurns={activeBuff.RemainingTurns}")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target}.{buffName}.RemainingTurns={expected}, actual={activeBuff.RemainingTurns}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitCell(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitCellEquals requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+            if (unit.CurrentCell == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"{assertion.Target} is not placed on a cell.");
+
+            if (!TryParseCellCoordinates(assertion.Expected, out int expectedX, out int expectedY))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitCellEquals requires expected coordinates in { x, y } form.");
+
+            int actualX = unit.CurrentCell.GridCoordinates.x;
+            int actualY = unit.CurrentCell.GridCoordinates.y;
+            return actualX == expectedX && actualY == expectedY
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target}.Cell=({actualX}, {actualY})")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target}.Cell=({expectedX}, {expectedY}), actual=({actualX}, {actualY}).");
+        }
+
         private static GameplayAssertionResult AssertLastErrorContains(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
         {
             var result = RequireSkillResult(context);
@@ -524,6 +644,13 @@ namespace Tactics.Common.Testing.Gameplay
                 : defaultValue;
         }
 
+        private static bool GetBool(JObject parameters, string name, bool defaultValue)
+        {
+            return parameters.TryGetValue(name, StringComparison.OrdinalIgnoreCase, out var token)
+                ? token.ToObject<bool>()
+                : defaultValue;
+        }
+
         private static int GetInt(JObject parameters, string name, int defaultValue)
         {
             return parameters.TryGetValue(name, StringComparison.OrdinalIgnoreCase, out var token)
@@ -536,6 +663,64 @@ namespace Tactics.Common.Testing.Gameplay
             return parameters.TryGetValue(name, StringComparison.OrdinalIgnoreCase, out var token)
                 ? token.ToObject<float>()
                 : defaultValue;
+        }
+
+        private static BuffEffectType ParseBuffEffectType(string value)
+        {
+            return Enum.TryParse(value, true, out BuffEffectType parsed) ? parsed : BuffEffectType.None;
+        }
+
+        private static BuffTriggerTiming ParseBuffTriggerTiming(string value)
+        {
+            return Enum.TryParse(value, true, out BuffTriggerTiming parsed) ? parsed : BuffTriggerTiming.None;
+        }
+
+        private static ICell ResolvePoint(GameplayRuntimeContext context, string alias)
+        {
+            if (context.Cells.TryGetValue(alias, out var cell) && cell != null)
+                return cell;
+
+            if (context.Units.TryGetValue(alias, out var unit) && unit?.CurrentCell != null)
+                return unit.CurrentCell;
+
+            throw new InvalidOperationException($"Target point alias '{alias}' does not exist.");
+        }
+
+        private static bool TryParseCellCoordinates(JToken token, out int x, out int y)
+        {
+            x = 0;
+            y = 0;
+
+            if (token == null || token.Type == JTokenType.Null)
+                return false;
+
+            if (token.Type == JTokenType.Object)
+            {
+                var obj = (JObject)token;
+                if (!obj.TryGetValue("x", StringComparison.OrdinalIgnoreCase, out var xToken))
+                    return false;
+                if (!obj.TryGetValue("y", StringComparison.OrdinalIgnoreCase, out var yToken))
+                    return false;
+
+                x = xToken.ToObject<int>();
+                y = yToken.ToObject<int>();
+                return true;
+            }
+
+            if (token.Type == JTokenType.String)
+            {
+                var text = token.ToObject<string>();
+                if (string.IsNullOrWhiteSpace(text))
+                    return false;
+
+                var parts = text.Split(',');
+                if (parts.Length != 2)
+                    return false;
+
+                return int.TryParse(parts[0].Trim(), out x) && int.TryParse(parts[1].Trim(), out y);
+            }
+
+            return false;
         }
     }
 }
