@@ -121,6 +121,43 @@ namespace Tactics.Tests.PlayMode
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "ally" && assertion.Passed), Is.True);
         }
 
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesFireballAreaCountPlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("mage-fireball-area-count.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitCountInArea" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "targetA" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "safeTarget" && assertion.Passed), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMarkBuffUniquePlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("hunter-mark-buff-unique.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitBuffIsUnique" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHasBuff" && assertion.Passed), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesCounterMultiStagePlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("barbarian-counter-multi-stage.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "multiStageStateEquals" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "caster" && assertion.Passed), Is.True);
+        }
+
         [Test]
         public void LoaderRejectsUnsupportedSchemaVersionPlan()
         {

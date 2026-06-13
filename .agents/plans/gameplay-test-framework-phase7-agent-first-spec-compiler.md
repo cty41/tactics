@@ -74,11 +74,13 @@
 
 ### 1. 重新定义宿主工具职责
 
-- `generator.ts` 降级为可选薄层，不再承担“任意自然语言理解”的长期职责。
+- `generator.ts` 降级为可选薄层，不再承担"任意自然语言理解"的长期职责。
 - 正式主入口改成两种：
   - agent 直接产出 `*.gameplay-test.md`
   - agent 先产出受控中间描述，再由工具转成 `ScenarioSpec`
 - `validator.ts` 和 `compiler.ts` 升为主干能力；后续稳定性主要依赖这两层，而不是依赖自然语言模板命中。
+- 当前阶段状态更新：部分新断言接口已在 `SkillGameplayStepAdapter` 中出现（如 `unitBuffCountEquals`、`unitBuffIsUnique`、`unitCountInArea`、`projectileLaunched`、`multiStageStateEquals` 等），但尚未全部形成正式 fixture + PlayMode 回归闭环。
+
 
 ### 2. 定义 agent-first 输入边界
 

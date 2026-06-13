@@ -107,7 +107,7 @@ node dist/src/cli.js generate-spec --text "..." --out path/to/scenario.gameplay-
 - `stepMessageContains` - 步骤消息断言
 - `validationErrorCodeIncludes` - 验证错误码断言
 
-### Phase 7 新增断言
+### Phase 7 新增断言（接口已扩展，但部分仍在收口中）
 - `unitBuffCountEquals` - buff 数量断言（支持同名 buff 堆叠检测）
 - `unitBuffIsUnique` - buff 唯一性断言（确保无重复 buff）
 - `unitCountInArea` - 区域内单位数量断言（需要 centerAlias 和 radius 参数）

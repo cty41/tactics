@@ -4,9 +4,9 @@
 
 - 目标：把当前 gameplay test framework 收口成一套一致、可回归、可交给 agent 稳定使用的文件驱动工具链。
 - 当前正式链路固定为：
-  - 自然语言 / 设计文档
-  - `Tools/gameplay-test-spec` 生成 `*.gameplay-test.md`
-  - `Tools/gameplay-test-spec` 编译 `*.plan.json`
+  - agent 受控描述 / `ScenarioDraft` / `ScenarioSpec`
+  - 或兼容方式：自然语言 / 设计文档通过 `generate-spec` 生成 `*.gameplay-test.md`
+  - `Tools/gameplay-test-spec` 校验与编译 `*.plan.json`
   - Unity PlayMode 读取 `Tests/gameplay-specs/*.plan.json`
   - `GameplayRuntimeRunner` 执行并返回结构化结果
 - 当前稳定支持的 MVP 路径：
