@@ -91,7 +91,7 @@ assertions:
     expected: Completed
     parameters: {}
   - kind: unitCountInArea
-    expected: 2
+    expected: 3
     parameters:
       centerAlias: targetPointCell
       radius: 1

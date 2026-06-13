@@ -134,3 +134,27 @@ test("generates and compiles no valid target ability scenario", () => {
   assert.equal(compiled.plan?.runtimeActions[0].kind, "executeAbilityOnCell");
   assert.ok(compiled.plan?.assertionPlans.some(assertion => assertion.kind === "stepMessageContains"));
 });
+
+test("compiles battle advance round fixture", async () => {
+  const markdown = await readFixture("battle-advance-turn.gameplay-test.md");
+  const planJson = await readFixture("battle-advance-turn.plan.json");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const validation = validateScenarioSpec(doc.frontmatter);
+  assert.equal(validation.valid, true, validation.diagnostics.map(d => d.message).join("\n"));
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.equal(compiled.plan.scenarioName, "Battle.BattleAdvancesRound");
+  assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(planJson));
+});
+
+test("rejects battle fixture with unsupported action kind", async () => {
+  const markdown = await readFixture("battle-unsupported-kind.gameplay-test.md");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, false);
+  assert.ok(compiled.diagnostics.some(d => d.code === "UnsupportedActionKind"));
+});

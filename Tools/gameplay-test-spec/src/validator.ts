@@ -9,13 +9,17 @@ const supportedSetupKinds = new Set([
   "createSkillAbilityConfig",
   "createSkillAbility",
   "setTurnContext",
-  "selectAbility"
+  "selectAbility",
+  "bindBattleController"
 ]);
 
 const supportedActionKinds = new Set([
   "executeSkillGraph",
   "executeAbilityOnTarget",
-  "executeAbilityOnCell"
+  "executeAbilityOnCell",
+  "advanceTurn",
+  "endBattleWithResult",
+  "executeAbility"
 ]);
 
 const supportedGraphKinds = new Set([
@@ -45,7 +49,12 @@ const supportedAssertionKinds = new Set([
   "projectileLaunched",
   "projectileHitTarget",
   "projectileCompleted",
-  "multiStageStateEquals"
+  "multiStageStateEquals",
+  "battleIsActive",
+  "currentRoundEquals",
+  "unitAliveEquals",
+  "battleResultEquals",
+  "unitPositionEquals"
 ]);
 
 interface AliasState {
@@ -91,14 +100,14 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
   }
 
   for (const assertion of spec.assertions) {
-    validateAssertion(assertion, state, diagnostics);
+    validateAssertion(assertion, state, diagnostics, spec.requiredAdapters);
   }
 
-  if (!spec.requiredAdapters.includes("Skill")) {
+  if (!spec.requiredAdapters.includes("Skill") && !spec.requiredAdapters.includes("Battle")) {
     diagnostics.push({
-      code: "MissingSkillAdapter",
+      code: "MissingAdapter",
       severity: "error",
-      message: "MVP scenarios must include the Skill adapter."
+      message: "Scenarios must include at least one supported adapter (Skill or Battle)."
     });
   }
 
@@ -130,7 +139,7 @@ export function validateScenarioDraft(draft: unknown): ValidationResult {
     feature: draftData.feature,
     scenario: draftData.scenario,
     tags: draftData.tags,
-    requiredAdapters: draftData.requiredAdapters.length > 0 ? draftData.requiredAdapters : ["Skill"],
+    requiredAdapters: draftData.requiredAdapters,
     setup: draftData.setup.map(s => ({ kind: s.kind, parameters: s.parameters })),
     actions: draftData.actions.map(a => ({ kind: a.kind, target: a.target, parameters: a.parameters })),
     assertions: draftData.assertions.map(a => ({ kind: a.kind, target: a.target, expected: a.expected, parameters: a.parameters })),
@@ -215,7 +224,7 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
   }
 }
 
-function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diagnostics: ExpectationDiagnostic[], requiredAdapters?: string[]): void {
   if (!supportedAssertionKinds.has(assertion.kind)) {
     diagnostics.push({
       code: "UnsupportedAssertionKind",
@@ -225,6 +234,8 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     });
     return;
   }
+
+  const isBattleAssertion = requiredAdapters?.includes("Battle") && !requiredAdapters?.includes("Skill");
 
   switch (assertion.kind) {
     case "executionStateEquals":
@@ -236,20 +247,36 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "unitHealthEquals":
     case "unitManaEquals":
       requireNumberExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
-      requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
       break;
     case "unitHasBuff":
-      requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
       requireBuffName(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitBuffDurationEquals":
-      requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
       requireBuffName(assertion, diagnostics, "InvalidAssertionExpectedType");
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitCellEquals":
-      requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
       requireCellCoordinatesExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "unitAliveEquals":
+      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
+      if (typeof assertion.expected !== "boolean") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a boolean expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "battleIsActive":
+    case "currentRoundEquals":
+    case "battleResultEquals":
+    case "unitPositionEquals":
       break;
   }
 }

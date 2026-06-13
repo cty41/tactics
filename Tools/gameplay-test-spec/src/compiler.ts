@@ -39,7 +39,7 @@ export function compileScenarioDraft(draft: unknown): CompileResult {
 }
 
 function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnostic[]): CompileResult {
-  const fallbackAdapter = spec.requiredAdapters.includes("Skill") ? "Skill" : spec.requiredAdapters[0];
+  const fallbackAdapter = spec.requiredAdapters[0];
   const probeRequests = deriveProbeRequests(spec, fallbackAdapter);
 
   const plan: ExecutableScenarioPlan = {

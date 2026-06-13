@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Tactics.Common.Battle;
+using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
@@ -13,6 +15,8 @@ namespace Tactics.Common.Testing.Gameplay
         public SkillGraphTestWorld SkillWorld { get; set; }
         public SkillGraphRuntimeTestResult LastSkillResult { get; set; }
         public string LastStepMessage { get; set; }
+        public BattleController BattleController { get; set; }
+        public GameResult? LastBattleResult { get; set; }
         public Dictionary<string, SkillGraphAsset> SkillGraphs { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, SkillGraphAbilityConfig> SkillAbilityConfigs { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, IAbility> SkillAbilities { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -30,6 +34,8 @@ namespace Tactics.Common.Testing.Gameplay
             Cells.Clear();
             LastSkillResult = null;
             LastStepMessage = null;
+            BattleController = null;
+            LastBattleResult = null;
         }
     }
 }

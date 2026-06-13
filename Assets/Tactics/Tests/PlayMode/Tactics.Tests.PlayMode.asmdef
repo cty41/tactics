@@ -3,7 +3,8 @@
     "rootNamespace": "Tactics.Tests.PlayMode",
     "references": [
         "GUID:6aaf4f1fe211baf44bf77a9e8adbc0ed",
-        "GUID:e4079be308e5fa44786c0526e6aa10a3"
+        "GUID:e4079be308e5fa44786c0526e6aa10a3",
+        "GUID:42a6b88ef22e6ff4a94a0934f01a341d"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

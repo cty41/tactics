@@ -63,7 +63,7 @@ export const ScenarioDraftSchema = z.object({
   feature: z.string().min(1),
   scenario: z.string().min(1),
   tags: z.array(z.string()).default([]),
-  requiredAdapters: z.array(AdapterSchema).default(["Skill"]),
+  requiredAdapters: z.array(AdapterSchema).min(1),
   setup: z.array(ScenarioDraftSetupSchema).default([]),
   actions: z.array(ScenarioDraftActionSchema).min(1),
   assertions: z.array(ScenarioDraftAssertionSchema).min(1),
