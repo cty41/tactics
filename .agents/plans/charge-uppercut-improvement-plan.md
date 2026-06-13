@@ -249,7 +249,6 @@ public class ChargeAttackEffect : AbilityEffect
 # ChargeAttack.asset 修改后
 _displayName: Charge Attack
 _manaCost: 0
-_actionPointCost: 2
 _targetingStrategy:
   type: {class: MoveThenAttackTargeting}
   data:

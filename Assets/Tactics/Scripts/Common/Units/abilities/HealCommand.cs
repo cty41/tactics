@@ -15,15 +15,13 @@ namespace Tactics.Common.Units.Abilities
         private readonly IUnit _target;
         private readonly float _healAmount;
         private readonly IUnit _caster;
-        private readonly int _actionCost;
         private readonly float _actualHeal;
 
-        public HealCommand(IUnit target, IUnit caster, float healAmount = 3, int actionCost = 1)
+        public HealCommand(IUnit target, IUnit caster, float healAmount = 3)
         {
             _target = target;
             _caster = caster;
             _healAmount = healAmount;
-            _actionCost = actionCost;
             _actualHeal = Math.Min(healAmount, _target.MaxHealth - _target.Health);
         }
 
@@ -63,7 +61,6 @@ namespace Tactics.Common.Units.Abilities
             public const string TargetID = "target_id";
             public const string CasterID = "caster_id";
             public const string HealAmount = "heal_amount";
-            public const string ActionCost = "action_cost";
         }
 
         public Dictionary<string, object> Serialize()
@@ -72,8 +69,7 @@ namespace Tactics.Common.Units.Abilities
             {
                 { SerializationKeys.TargetID, _target.UnitID },
                 { SerializationKeys.CasterID, _caster.UnitID },
-                { SerializationKeys.HealAmount, _healAmount },
-                { SerializationKeys.ActionCost, _actionCost }
+                { SerializationKeys.HealAmount, _healAmount }
             };
         }
 
@@ -82,13 +78,12 @@ namespace Tactics.Common.Units.Abilities
             var targetId = Convert.ToInt32(actionParams[SerializationKeys.TargetID]);
             var casterId = Convert.ToInt32(actionParams[SerializationKeys.CasterID]);
             var healAmount = Convert.ToSingle(actionParams[SerializationKeys.HealAmount]);
-            var actionCost = Convert.ToInt32(actionParams[SerializationKeys.ActionCost]);
 
             var units = gridController.UnitManager.GetUnits();
             var target = units.First(u => u.UnitID == targetId);
             var caster = units.First(u => u.UnitID == casterId);
 
-            return new HealCommand(target, caster, healAmount, actionCost);
+            return new HealCommand(target, caster, healAmount);
         }
     }
 }

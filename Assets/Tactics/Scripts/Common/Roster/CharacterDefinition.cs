@@ -51,7 +51,6 @@ namespace Tactics.Roster
         public int Luck { get; set; }
 
         public float Speed { get; set; }
-        public float ActionPoints { get; set; }
         public int AttackRange { get; set; }
         public int AttackFactor { get; set; }
         public int DefenceFactor { get; set; }
@@ -191,7 +190,6 @@ namespace Tactics.Roster
                 Charisma = 5,
                 Luck = 5,
                 Speed = 5f,
-                ActionPoints = 1f,
                 AttackRange = 1,
                 AttackFactor = 1,
                 DefenceFactor = 1,

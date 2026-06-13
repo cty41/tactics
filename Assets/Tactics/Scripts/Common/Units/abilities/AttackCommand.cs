@@ -15,7 +15,6 @@ namespace Tactics.Common.Units.Abilities
     {
         private readonly IUnit _target;
         private readonly float _damage;
-        private readonly int _actionCost;
         private readonly bool _isRanged;
 
         /// <summary>
@@ -23,13 +22,11 @@ namespace Tactics.Common.Units.Abilities
         /// </summary>
         /// <param name="target">The unit to be attacked.</param>
         /// <param name="damage">The damage value to be inflicted on the target.</param>
-        /// <param name="actionCost">The number of action points consumed by the attack.</param>
         /// <param name="isRanged">Whether this is a ranged attack (affects damage calculation).</param>
-        public AttackCommand(IUnit target, float damage, int actionCost = 1, bool isRanged = false)
+        public AttackCommand(IUnit target, float damage, bool isRanged = false)
         {
             _target = target;
             _damage = damage;
-            _actionCost = actionCost;
             _isRanged = isRanged;
         }
 
@@ -61,7 +58,6 @@ namespace Tactics.Common.Units.Abilities
         {
             public const string TargetID = "target_id";
             public const string Damage = "damage";
-            public const string ActionCost = "action_cost";
             public const string IsRanged = "is_ranged";
         }
 
@@ -71,7 +67,6 @@ namespace Tactics.Common.Units.Abilities
             {
                 { SerializationKeys.TargetID, _target.UnitID },
                 { SerializationKeys.Damage, _damage },
-                { SerializationKeys.ActionCost, _actionCost },
                 { SerializationKeys.IsRanged, _isRanged }
             };
         }
@@ -80,14 +75,13 @@ namespace Tactics.Common.Units.Abilities
         {
             var targetId = Convert.ToInt32(actionParams[SerializationKeys.TargetID]);
             var damage = Convert.ToSingle(actionParams[SerializationKeys.Damage]);
-            var actionCost = Convert.ToInt32(actionParams[SerializationKeys.ActionCost]);
             var isRanged = actionParams.TryGetValue(SerializationKeys.IsRanged, out var rangedValue) 
                 && Convert.ToBoolean(rangedValue);
 
             var target = gridController.UnitManager.GetUnits()
                 .First(u => u.UnitID == targetId);
 
-            return new AttackCommand(target, damage, actionCost, isRanged);
+            return new AttackCommand(target, damage, isRanged);
         }
     }
 }

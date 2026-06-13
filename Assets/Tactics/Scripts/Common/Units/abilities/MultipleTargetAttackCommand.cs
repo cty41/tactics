@@ -21,11 +21,6 @@ namespace Tactics.Common.Units.Abilities
         private readonly float _damage;
 
         /// <summary>
-        /// The cost in action points required to perform the attack.
-        /// </summary>
-        private readonly int _actionCost;
-
-        /// <summary>
         /// A function that highlights the aggressor unit when performing the attack.
         /// </summary>
         private readonly Func<Task> _aggressorHighlighter;
@@ -35,11 +30,10 @@ namespace Tactics.Common.Units.Abilities
         /// </summary>
         private readonly Func<IUnit, Task> _defenderHighlighter;
 
-        public MultipleTargetAttackCommand(IEnumerable<IUnit> targets, float damage, int actionCost, Func<Task> aggressorHighlighter, Func<IUnit, Task> defenderHighlighter)
+        public MultipleTargetAttackCommand(IEnumerable<IUnit> targets, float damage, Func<Task> aggressorHighlighter, Func<IUnit, Task> defenderHighlighter)
         {
             _targets = targets;
             _damage = damage;
-            _actionCost = actionCost;
 
             _aggressorHighlighter = aggressorHighlighter;
             _defenderHighlighter = defenderHighlighter;

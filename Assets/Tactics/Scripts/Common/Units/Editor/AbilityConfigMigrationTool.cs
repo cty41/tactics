@@ -271,7 +271,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             var config = ScriptableObject.CreateInstance<AbilityConfig>();
             config.name = Path.GetFileNameWithoutExtension(path);
             SetPrivateField(config, "_displayName", "Move");
-            SetPrivateField(config, "_actionPointCost", 1);
             SetPrivateField(config, "_targetingStrategy", new SelfTargeting());
             SetPrivateField(config, "_effects", new List<AbilityEffect>());
             AssetDatabase.CreateAsset(config, path);
@@ -283,7 +282,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             var config = ScriptableObject.CreateInstance<AbilityConfig>();
             config.name = Path.GetFileNameWithoutExtension(path);
             SetPrivateField(config, "_displayName", isRanged ? "Ranged Attack" : "Melee Attack");
-            SetPrivateField(config, "_actionPointCost", 1);
             var targetingStrategy = new SingleTargetEnemy();
             SetPrivateField(targetingStrategy, "_minRange", isRanged ? 2 : 0);
             SetPrivateField(targetingStrategy, "_maxRange", isRanged ? 5 : 1);

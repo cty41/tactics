@@ -29,7 +29,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             melee.name = "Melee_Attack";
             SetField(melee, "_displayName", "Melee Attack");
             SetField(melee, "_description", "Attack adjacent enemy unit.");
-            SetField(melee, "_actionPointCost", 1);
             var meleeTargeting = new SingleTargetEnemy();
             SetField(meleeTargeting, "_minRange", 0);
             SetField(meleeTargeting, "_maxRange", 1);
@@ -45,7 +44,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             ranged.name = "Ranged_Attack";
             SetField(ranged, "_displayName", "Ranged Attack");
             SetField(ranged, "_description", "Attack enemy unit at range 2-5.");
-            SetField(ranged, "_actionPointCost", 1);
             var rangedTargeting = new SingleTargetEnemy();
             SetField(rangedTargeting, "_minRange", 2);
             SetField(rangedTargeting, "_maxRange", 5);
@@ -63,7 +61,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             heal.name = "Melee_Heal";
             SetField(heal, "_displayName", "Heal");
             SetField(heal, "_description", "Heal adjacent ally unit.");
-            SetField(heal, "_actionPointCost", 1);
             var healTargeting = new SingleTargetAlly();
             SetField(healTargeting, "_maxRange", 1);
             SetField(heal, "_targetingStrategy", healTargeting);
@@ -80,7 +77,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             fireball.name = "Fireball";
             SetField(fireball, "_displayName", "Fireball");
             SetField(fireball, "_description", "Deal AoE damage in a cross pattern.");
-            SetField(fireball, "_actionPointCost", 2);
             SetField(fireball, "_manaCost", 5);
             var aoeTargeting = new AoETargeting();
             SetField(aoeTargeting, "_radius", 1);
@@ -100,7 +96,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             chargeAtk.name = "Charge_Attack";
             SetField(chargeAtk, "_displayName", "Charge Attack");
             SetField(chargeAtk, "_description", "Move then attack an enemy.");
-            SetField(chargeAtk, "_actionPointCost", 2);
             var chargeAtkTargeting = new MoveThenAttackTargeting();
             SetField(chargeAtkTargeting, "_moveRange", 5);
             SetField(chargeAtk, "_targetingStrategy", chargeAtkTargeting);
@@ -115,7 +110,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             chargeHeal.name = "Charge_Heal";
             SetField(chargeHeal, "_displayName", "Charge Heal");
             SetField(chargeHeal, "_description", "Move then heal an adjacent ally.");
-            SetField(chargeHeal, "_actionPointCost", 2);
             var chargeHealTargeting = new MoveThenHealTargeting();
             SetField(chargeHealTargeting, "_moveRange", 5);
             SetField(chargeHealTargeting, "_healRange", 1);

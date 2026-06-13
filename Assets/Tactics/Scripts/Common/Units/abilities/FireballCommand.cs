@@ -18,7 +18,6 @@ namespace Tactics.Common.Units.Abilities
         private readonly IUnit _caster;
         private readonly List<ICell> _aoeCells;
         private readonly float _damage;
-        private readonly int _actionCost;
         private readonly int _manaCost;
         private readonly int _igniteDuration;
         private readonly float _igniteDamage;
@@ -26,13 +25,12 @@ namespace Tactics.Common.Units.Abilities
         private readonly BuffConfig _igniteBuffConfig;
 
         public FireballCommand(ICell targetCell, IUnit caster, IEnumerable<ICell> aoeCells, float damage,
-            int actionCost = 1, int manaCost = 3, int igniteDuration = 3, float igniteDamage = 1, BuffConfig igniteBuffConfig = null)
+            int manaCost = 3, int igniteDuration = 3, float igniteDamage = 1, BuffConfig igniteBuffConfig = null)
         {
             _targetCell = targetCell;
             _caster = caster;
             _aoeCells = new List<ICell>(aoeCells);
             _damage = damage;
-            _actionCost = actionCost;
             _manaCost = manaCost;
             _igniteDuration = igniteDuration;
             _igniteDamage = igniteDamage;
@@ -77,7 +75,6 @@ namespace Tactics.Common.Units.Abilities
             var caster = _caster;
             var damage = _damage;
             var manaCost = _manaCost;
-            var actionCost = _actionCost;
             var aoeCells = _aoeCells;
             foreach (var cell in aoeCells)
             {
@@ -107,7 +104,6 @@ namespace Tactics.Common.Units.Abilities
             public const string TargetCellX = "target_cell_x";
             public const string TargetCellY = "target_cell_y";
             public const string Damage = "damage";
-            public const string ActionCost = "action_cost";
             public const string ManaCost = "mana_cost";
         }
 
@@ -121,7 +117,6 @@ namespace Tactics.Common.Units.Abilities
                 { SerializationKeys.TargetCellX, cellX },
                 { SerializationKeys.TargetCellY, cellY },
                 { SerializationKeys.Damage, _damage },
-                { SerializationKeys.ActionCost, _actionCost },
                 { SerializationKeys.ManaCost, _manaCost }
             };
         }
@@ -132,7 +127,6 @@ namespace Tactics.Common.Units.Abilities
             var cellX = Convert.ToInt32(actionParams[SerializationKeys.TargetCellX]);
             var cellY = Convert.ToInt32(actionParams[SerializationKeys.TargetCellY]);
             var damage = Convert.ToSingle(actionParams[SerializationKeys.Damage]);
-            var actionCost = Convert.ToInt32(actionParams[SerializationKeys.ActionCost]);
             var manaCost = Convert.ToInt32(actionParams[SerializationKeys.ManaCost]);
 
             var caster = gridController.UnitManager.GetUnits().First(u => u.UnitID == casterId);
@@ -154,7 +148,7 @@ namespace Tactics.Common.Units.Abilities
                 aoeCells.Insert(0, targetCell);
             }
 
-            return new FireballCommand(targetCell, caster, aoeCells, damage, actionCost, manaCost);
+            return new FireballCommand(targetCell, caster, aoeCells, damage, manaCost);
         }
     }
 }

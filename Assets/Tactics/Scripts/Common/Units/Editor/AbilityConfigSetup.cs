@@ -117,7 +117,6 @@ namespace Tactics.Common.Units.Abilities.Editor
                 var cfg = ScriptableObject.CreateInstance<AbilityConfig>();
                 cfg.name = Path.GetFileNameWithoutExtension(movePath);
                 SetField(cfg, "_displayName", "Move");
-                SetField(cfg, "_actionPointCost", 1);
                 SetField(cfg, "_targetingStrategy", new SelfTargeting());
                 SetField(cfg, "_effects", new List<AbilityEffect>());
                 AssetDatabase.CreateAsset(cfg, movePath);
@@ -128,7 +127,6 @@ namespace Tactics.Common.Units.Abilities.Editor
                 var cfg = ScriptableObject.CreateInstance<AbilityConfig>();
                 cfg.name = Path.GetFileNameWithoutExtension(atkPath);
                 SetField(cfg, "_displayName", "Attack");
-                SetField(cfg, "_actionPointCost", 1);
                 SetField(cfg, "_targetingStrategy", new SingleTargetEnemy());
                 SetField(cfg, "_effects", new List<AbilityEffect> { new DamageEffect() });
                 AssetDatabase.CreateAsset(cfg, atkPath);
@@ -186,7 +184,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             var move = ScriptableObject.CreateInstance<AbilityConfig>();
             move.name = "Default_Move";
             SetField(move, "_displayName", "Move");
-            SetField(move, "_actionPointCost", 1);
             SetField(move, "_targetingStrategy", new SelfTargeting());
             SetField(move, "_effects", new List<AbilityEffect>());
             AssetDatabase.CreateAsset(move, $"{dir}/Default_Move.asset");
@@ -194,7 +191,6 @@ namespace Tactics.Common.Units.Abilities.Editor
             var atk = ScriptableObject.CreateInstance<AbilityConfig>();
             atk.name = "Default_Attack";
             SetField(atk, "_displayName", "Attack");
-            SetField(atk, "_actionPointCost", 1);
             SetField(atk, "_targetingStrategy", new SingleTargetEnemy());
             SetField(atk, "_effects", new List<AbilityEffect> { new DamageEffect() });
             AssetDatabase.CreateAsset(atk, $"{dir}/Default_Attack.asset");

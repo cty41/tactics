@@ -76,7 +76,7 @@
 
 ## Assumptions
 
-- 本阶段不再扩 Battle/UI/Map；skill 语义回归只做收口，不引入 AP/Cooldown 作为主线。
+- 本阶段不再扩 Battle/UI/Map；skill 语义回归只做收口，不引入 Cooldown 作为主线。
 - `schemaVersion` 继续固定为 `1`。
 - Unity 侧只做执行安全所需的最小 plan 校验，不复制一整套 TS schema。
 - `timeoutMs` 只表示整个场景的总超时，不定义 step 级超时。

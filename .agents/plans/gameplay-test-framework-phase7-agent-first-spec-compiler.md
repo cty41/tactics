@@ -103,7 +103,7 @@
   - `buff unique/stack` 相关断言
   - `projectile lifecycle` 相关断言或 probe
   - 必要的多阶段执行状态观测
-- 不新增 `AP` / `Cooldown` 支持。
+- 不新增 `Cooldown` 支持。
 - 现有 `mark`、`counter`、`fireball`、`charge`、`applyBuff` 作为首批验证对象。
 
 ### 4. validator 改成真正的主防线
@@ -172,7 +172,7 @@
 ## Assumptions
 
 - 未来主要使用者是 AI agent，而不是人类直接手写自由文本。
-- `AP` 将废除，`Cooldown` 暂不纳入测试框架正式支持。
+- `Cooldown` 暂不纳入测试框架正式支持。
 - 当前阶段仍然只做 `Skill` 自动化测试框架增强，不启动 `Battle/UI/Map`。
 - `generate-spec` 可以继续保留做 MVP/兼容入口，但不再作为长期能力建设重点。
 
@@ -190,5 +190,5 @@
   3. 最后再收缩 `generator.ts` 的职责与 skill 文档
 - 不要做的事：
   - 不要把 generator 重构成强自然语言解析器
-  - 不要把 `AP` / `Cooldown` 再拉回正式支持面
+  - 不要把 `Cooldown` 再拉回正式支持面
   - 不要改变现有 `plan.json` 主契约和 PlayMode 主入口
