@@ -38,19 +38,25 @@ namespace Tactics.Common.Skills.Graph.Testing
             return graph;
         }
 
-        public static SkillGraphAsset CreateSingleTargetDamageGraph(string displayName, float baseDamage)
+        public static SkillGraphAsset CreateSingleTargetDamageGraph(
+            string displayName,
+            float baseDamage,
+            bool canCrit = false,
+            bool isRanged = false,
+            int minRange = 1,
+            int maxRange = 3)
         {
             var graph = CreateGraph(displayName);
 
             var start = CreateNode<StartNodeRecord>("start");
             var selectTarget = CreateNode<SelectPrimaryTargetNodeRecord>("select_target");
-            selectTarget.MinRange = 1;
-            selectTarget.MaxRange = 3;
+            selectTarget.MinRange = Math.Max(1, minRange);
+            selectTarget.MaxRange = Math.Max(selectTarget.MinRange, maxRange);
 
             var damage = CreateNode<ApplyDamageNodeRecord>("damage");
             damage.BaseDamage = baseDamage;
-            damage.CanCrit = false;
-            damage.IsRanged = false;
+            damage.CanCrit = canCrit;
+            damage.IsRanged = isRanged;
 
             var finish = CreateNode<FinishNodeRecord>("finish");
 
@@ -62,6 +68,33 @@ namespace Tactics.Common.Skills.Graph.Testing
             graph.AddEdge("start", "select_target");
             graph.AddEdge("select_target", "damage");
             graph.AddEdge("damage", "finish");
+
+            return graph;
+        }
+
+        public static SkillGraphAsset CreateChargeGraph(string displayName, int distance, int maxRange = 3, float collisionDamage = 1f)
+        {
+            var graph = CreateGraph(displayName);
+
+            var start = CreateNode<StartNodeRecord>("start");
+            var selectTarget = CreateNode<SelectPrimaryTargetNodeRecord>("select_target");
+            selectTarget.MinRange = 1;
+            selectTarget.MaxRange = Math.Max(1, maxRange);
+
+            var dash = CreateNode<DashToTargetNodeRecord>("dash");
+            dash.MaxRange = Math.Max(1, maxRange);
+            dash.CollisionDamage = collisionDamage;
+
+            var finish = CreateNode<FinishNodeRecord>("finish");
+
+            graph.Nodes.Add(start);
+            graph.Nodes.Add(selectTarget);
+            graph.Nodes.Add(dash);
+            graph.Nodes.Add(finish);
+
+            graph.AddEdge("start", "select_target");
+            graph.AddEdge("select_target", "dash");
+            graph.AddEdge("dash", "finish");
 
             return graph;
         }

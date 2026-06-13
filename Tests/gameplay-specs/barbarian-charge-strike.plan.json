@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "SkillGraph.SingleTargetDamageReducesTargetHealth",
+  "scenarioName": "SkillGraph.ChargeStrikeMovesAndDamagesTarget",
   "requiredAdapters": [
     "Skill"
   ],
@@ -14,9 +14,46 @@
       "adapter": "Skill",
       "kind": "createSkillGraph",
       "parameters": {
-        "alias": "graph",
-        "graphKind": "singleTargetDamage",
-        "baseDamage": 7
+        "alias": "chargeGraph",
+        "graphKind": "charge",
+        "collisionDamage": 1,
+        "maxRange": 3
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "pathCell",
+        "x": 1,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "targetCell",
+        "x": 2,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "retreatCell",
+        "x": 3,
+        "y": 0
       }
     },
     {
@@ -25,10 +62,9 @@
       "parameters": {
         "alias": "caster",
         "playerNumber": 0,
-        "cell": {
-          "x": 0,
-          "y": 0
-        }
+        "health": 10,
+        "maxHealth": 10,
+        "cellAlias": "casterCell"
       }
     },
     {
@@ -39,11 +75,7 @@
         "playerNumber": 1,
         "health": 10,
         "maxHealth": 10,
-        "defenceFactor": 0,
-        "cell": {
-          "x": 1,
-          "y": 0
-        }
+        "cellAlias": "targetCell"
       }
     },
     {
@@ -62,8 +94,9 @@
       "adapter": "Skill",
       "kind": "executeSkillGraph",
       "parameters": {
-        "graphAlias": "graph",
-        "casterAlias": "caster"
+        "graphAlias": "chargeGraph",
+        "casterAlias": "caster",
+        "primaryTargetAlias": "target"
       }
     }
   ],
@@ -76,9 +109,29 @@
     },
     {
       "adapter": "Skill",
+      "kind": "unitCellEquals",
+      "target": "caster",
+      "expected": {
+        "x": 2,
+        "y": 0
+      },
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitCellEquals",
+      "target": "target",
+      "expected": {
+        "x": 3,
+        "y": 0
+      },
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
       "kind": "unitHealthEquals",
       "target": "target",
-      "expected": 3,
+      "expected": 9,
       "parameters": {}
     }
   ],
@@ -87,6 +140,18 @@
     {
       "adapter": "Skill",
       "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitCellEquals",
+      "target": "caster",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitCellEquals",
+      "target": "target",
       "parameters": {}
     },
     {

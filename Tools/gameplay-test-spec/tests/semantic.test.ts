@@ -62,3 +62,60 @@ test("generates counter then damage scenario from natural language", () => {
   assert.ok(plan?.assertionPlans.some(assertion => assertion.kind === "unitHealthEquals" && assertion.target === "caster"));
   assert.ok(plan?.assertionPlans.some(assertion => assertion.kind === "unitHealthEquals" && assertion.target === "target"));
 });
+
+test("generates charge scenario from natural language", () => {
+  const plan = expectValidSpec("冲锋到目标并撞击造成伤害", "ChargeStrikeMovesAndDamagesTarget");
+  assert.equal(plan?.runtimeActions[0].kind, "executeSkillGraph");
+  assert.ok(plan?.setupActions.some(action => action.kind === "createSkillGraph" && action.parameters.graphKind === "charge"));
+  assert.ok(plan?.assertionPlans.some(assertion => assertion.kind === "unitCellEquals"));
+  assert.ok(plan?.assertionPlans.some(assertion => assertion.kind === "unitHealthEquals"));
+});
+
+test("rejects specs that reference missing aliases", () => {
+  const validation = validateScenarioSpec({
+    feature: "SkillGraph",
+    scenario: "BrokenAliasReference",
+    tags: ["mvp", "skill"],
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "createSkillTestWorld", parameters: {} },
+      { kind: "createSkillAbilityConfig", parameters: { alias: "ability", graphAlias: "missingGraph", manaCost: 1, targetRange: 1 } }
+    ],
+    actions: [
+      { kind: "executeSkillGraph", parameters: { graphAlias: "missingGraph", casterAlias: "caster" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Completed", parameters: {} }
+    ]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(diagnostic => diagnostic.code === "UnknownGraphAlias"));
+});
+
+test("rejects buff assertions with malformed expected values", () => {
+  const validation = validateScenarioSpec({
+    feature: "SkillGraph",
+    scenario: "MalformedBuffAssertion",
+    tags: ["mvp", "skill"],
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "createSkillTestWorld", parameters: {} },
+      { kind: "createSkillGraph", parameters: { alias: "graph", graphKind: "applyBuff", selectionKind: "self", buffName: "Might", buffEffectType: "None", triggerTiming: "None", duration: 2 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10 } },
+      { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
+    ],
+    actions: [
+      { kind: "executeSkillGraph", parameters: { graphAlias: "graph", casterAlias: "caster" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Completed", parameters: {} },
+      { kind: "unitBuffDurationEquals", target: "caster", expected: "two", parameters: { buffName: "Might" } }
+    ]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(diagnostic => diagnostic.code === "InvalidAssertionExpectedType"));
+});

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "SkillGraph.SelfHealSkillRaisesCasterHealth",
+  "scenarioName": "SkillGraph.AllyHealRestoresFriendlyUnitHealth",
   "requiredAdapters": [
     "Skill"
   ],
@@ -14,9 +14,28 @@
       "adapter": "Skill",
       "kind": "createSkillGraph",
       "parameters": {
-        "alias": "graph",
-        "graphKind": "selfHeal",
-        "healAmount": 4
+        "alias": "allyHealGraph",
+        "graphKind": "allyHeal",
+        "healAmount": 4,
+        "maxRange": 1
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "allyCell",
+        "x": 1,
+        "y": 0
       }
     },
     {
@@ -25,8 +44,20 @@
       "parameters": {
         "alias": "caster",
         "playerNumber": 0,
+        "health": 10,
+        "maxHealth": 10,
+        "cellAlias": "casterCell"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "ally",
+        "playerNumber": 0,
         "health": 6,
-        "maxHealth": 10
+        "maxHealth": 10,
+        "cellAlias": "allyCell"
       }
     },
     {
@@ -35,7 +66,8 @@
       "parameters": {
         "currentPlayerNumber": 0,
         "playableUnitAliases": [
-          "caster"
+          "caster",
+          "ally"
         ]
       }
     }
@@ -45,7 +77,7 @@
       "adapter": "Skill",
       "kind": "executeSkillGraph",
       "parameters": {
-        "graphAlias": "graph",
+        "graphAlias": "allyHealGraph",
         "casterAlias": "caster"
       }
     }
@@ -60,7 +92,7 @@
     {
       "adapter": "Skill",
       "kind": "unitHealthEquals",
-      "target": "caster",
+      "target": "ally",
       "expected": 10,
       "parameters": {}
     }
@@ -75,7 +107,7 @@
     {
       "adapter": "Skill",
       "kind": "unitHealthEquals",
-      "target": "caster",
+      "target": "ally",
       "parameters": {}
     }
   ]

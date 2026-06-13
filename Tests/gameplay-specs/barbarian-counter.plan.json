@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "SkillGraph.SingleTargetDamageReducesTargetHealth",
+  "scenarioName": "SkillGraph.CounterBuffRetaliatesWhenDamaged",
   "requiredAdapters": [
     "Skill"
   ],
@@ -14,9 +14,43 @@
       "adapter": "Skill",
       "kind": "createSkillGraph",
       "parameters": {
-        "alias": "graph",
+        "alias": "counterGraph",
+        "graphKind": "applyBuff",
+        "selectionKind": "enemy",
+        "buffName": "Counter",
+        "buffEffectType": "None",
+        "triggerTiming": "DamageTaken",
+        "duration": 2,
+        "maxRange": 1
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "damageGraph",
         "graphKind": "singleTargetDamage",
-        "baseDamage": 7
+        "baseDamage": 4,
+        "canCrit": false,
+        "isRanged": false
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "targetCell",
+        "x": 1,
+        "y": 0
       }
     },
     {
@@ -25,10 +59,9 @@
       "parameters": {
         "alias": "caster",
         "playerNumber": 0,
-        "cell": {
-          "x": 0,
-          "y": 0
-        }
+        "health": 10,
+        "maxHealth": 10,
+        "cellAlias": "casterCell"
       }
     },
     {
@@ -39,11 +72,8 @@
         "playerNumber": 1,
         "health": 10,
         "maxHealth": 10,
-        "defenceFactor": 0,
-        "cell": {
-          "x": 1,
-          "y": 0
-        }
+        "luck": 0,
+        "cellAlias": "targetCell"
       }
     },
     {
@@ -62,8 +92,18 @@
       "adapter": "Skill",
       "kind": "executeSkillGraph",
       "parameters": {
-        "graphAlias": "graph",
-        "casterAlias": "caster"
+        "graphAlias": "counterGraph",
+        "casterAlias": "caster",
+        "primaryTargetAlias": "target"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "damageGraph",
+        "casterAlias": "caster",
+        "primaryTargetAlias": "target"
       }
     }
   ],
@@ -76,9 +116,32 @@
     },
     {
       "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "target",
+      "expected": "Counter",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffDurationEquals",
+      "target": "target",
+      "expected": 2,
+      "parameters": {
+        "buffName": "Counter"
+      }
+    },
+    {
+      "adapter": "Skill",
       "kind": "unitHealthEquals",
       "target": "target",
-      "expected": 3,
+      "expected": 6,
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "caster",
+      "expected": 9,
       "parameters": {}
     }
   ],
@@ -91,8 +154,28 @@
     },
     {
       "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "target",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffDurationEquals",
+      "target": "target",
+      "parameters": {
+        "buffName": "Counter"
+      }
+    },
+    {
+      "adapter": "Skill",
       "kind": "unitHealthEquals",
       "target": "target",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "caster",
       "parameters": {}
     }
   ]

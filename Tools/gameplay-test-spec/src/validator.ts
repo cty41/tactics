@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ScenarioSpecSchema, type ExpectationDiagnostic, type ScenarioSpec } from "./schema.js";
+import { ScenarioSpecSchema, type ExpectationDiagnostic, type ScenarioAssertion, type ScenarioSpec, type ScenarioStep } from "./schema.js";
 
 const supportedSetupKinds = new Set([
   "createSkillTestWorld",
@@ -25,7 +25,8 @@ const supportedGraphKinds = new Set([
   "areaDamage",
   "knockback",
   "allyHeal",
-  "applyBuff"
+  "applyBuff",
+  "charge"
 ]);
 
 const supportedAssertionKinds = new Set([
@@ -39,6 +40,14 @@ const supportedAssertionKinds = new Set([
   "lastErrorContains",
   "stepMessageContains"
 ]);
+
+interface AliasState {
+  graphs: Set<string>;
+  cells: Set<string>;
+  units: Set<string>;
+  abilityConfigs: Set<string>;
+  abilities: Set<string>;
+}
 
 export interface ValidationResult {
   spec?: ScenarioSpec;
@@ -62,52 +71,20 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
 
   const spec = parsed.data;
   const diagnostics: ExpectationDiagnostic[] = [];
+  const state = createAliasState();
 
   for (const step of spec.setup) {
-    if (!supportedSetupKinds.has(step.kind)) {
-      diagnostics.push({
-        code: "UnsupportedSetupKind",
-        severity: "error",
-        message: `Unsupported setup kind '${step.kind}'.`,
-        path: step.id ?? step.kind
-      });
-    }
+    validateStepKind(step, supportedSetupKinds, "UnsupportedSetupKind", diagnostics);
+    validateSetupStep(step, state, diagnostics);
   }
 
   for (const action of spec.actions) {
-    if (!supportedActionKinds.has(action.kind)) {
-      diagnostics.push({
-        code: "UnsupportedActionKind",
-        severity: "error",
-        message: `Unsupported action kind '${action.kind}'.`,
-        path: action.id ?? action.kind
-      });
-    }
-  }
-
-  for (const step of spec.setup) {
-    if (step.kind === "createSkillGraph") {
-      const graphKind = typeof step.parameters.graphKind === "string" ? step.parameters.graphKind : "";
-      if (!supportedGraphKinds.has(graphKind)) {
-        diagnostics.push({
-          code: "UnsupportedGraphKind",
-          severity: "error",
-          message: `Unsupported skill graph kind '${graphKind}'.`,
-          path: step.id ?? step.kind
-        });
-      }
-    }
+    validateStepKind(action, supportedActionKinds, "UnsupportedActionKind", diagnostics);
+    validateActionStep(action, state, diagnostics);
   }
 
   for (const assertion of spec.assertions) {
-    if (!supportedAssertionKinds.has(assertion.kind)) {
-      diagnostics.push({
-        code: "UnsupportedAssertionKind",
-        severity: "error",
-        message: `Unsupported assertion kind '${assertion.kind}'.`,
-        path: assertion.id ?? assertion.kind
-      });
-    }
+    validateAssertion(assertion, state, diagnostics);
   }
 
   if (!spec.requiredAdapters.includes("Skill")) {
@@ -123,6 +100,546 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
     diagnostics,
     valid: diagnostics.every(diagnostic => diagnostic.severity !== "error")
   };
+}
+
+function createAliasState(): AliasState {
+  return {
+    graphs: new Set<string>(),
+    cells: new Set<string>(),
+    units: new Set<string>(),
+    abilityConfigs: new Set<string>(),
+    abilities: new Set<string>()
+  };
+}
+
+function validateStepKind(
+  step: ScenarioStep,
+  supportedKinds: Set<string>,
+  code: string,
+  diagnostics: ExpectationDiagnostic[]
+): void {
+  if (supportedKinds.has(step.kind)) {
+    return;
+  }
+
+  diagnostics.push({
+    code,
+    severity: "error",
+    message: `Unsupported ${step.id ? "step" : "item"} kind '${step.kind}'.`,
+    path: step.id ?? step.kind
+  });
+}
+
+function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  switch (step.kind) {
+    case "createSkillTestWorld":
+      resetAliasState(state);
+      break;
+    case "createSkillGraph":
+      validateGraphStep(step, state, diagnostics);
+      break;
+    case "createCell":
+      registerAlias(step, "alias", step.parameters.alias, state.cells, diagnostics, "MissingCellAlias");
+      break;
+    case "createUnit":
+      validateUnitSetup(step, state, diagnostics);
+      break;
+    case "createSkillAbilityConfig":
+      validateAbilityConfigSetup(step, state, diagnostics);
+      break;
+    case "createSkillAbility":
+      validateAbilitySetup(step, state, diagnostics);
+      break;
+    case "setTurnContext":
+      validateTurnContextSetup(step, state, diagnostics);
+      break;
+    case "selectAbility":
+      validateSelectAbilitySetup(step, state, diagnostics);
+      break;
+    default:
+      break;
+  }
+}
+
+function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  switch (step.kind) {
+    case "executeSkillGraph":
+      validateExecuteSkillGraph(step, state, diagnostics);
+      break;
+    case "executeAbilityOnTarget":
+      validateExecuteAbilityOnTarget(step, state, diagnostics);
+      break;
+    case "executeAbilityOnCell":
+      validateExecuteAbilityOnCell(step, state, diagnostics);
+      break;
+    default:
+      break;
+  }
+}
+
+function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  if (!supportedAssertionKinds.has(assertion.kind)) {
+    diagnostics.push({
+      code: "UnsupportedAssertionKind",
+      severity: "error",
+      message: `Unsupported assertion kind '${assertion.kind}'.`,
+      path: assertion.id ?? assertion.kind
+    });
+    return;
+  }
+
+  switch (assertion.kind) {
+    case "executionStateEquals":
+    case "validationErrorCodeIncludes":
+    case "lastErrorContains":
+    case "stepMessageContains":
+      requireStringExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "unitHealthEquals":
+    case "unitManaEquals":
+      requireNumberExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      requireKnownUnit(assertion, state, diagnostics);
+      break;
+    case "unitHasBuff":
+      requireKnownUnit(assertion, state, diagnostics);
+      requireBuffName(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "unitBuffDurationEquals":
+      requireKnownUnit(assertion, state, diagnostics);
+      requireBuffName(assertion, diagnostics, "InvalidAssertionExpectedType");
+      requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "unitCellEquals":
+      requireKnownUnit(assertion, state, diagnostics);
+      requireCellCoordinatesExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+  }
+}
+
+function validateGraphStep(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const alias = getString(step.parameters.alias) ?? "graph";
+  if (!alias) {
+    diagnostics.push({
+      code: "MissingGraphAlias",
+      severity: "error",
+      message: "createSkillGraph requires an alias.",
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  const graphKind = getString(step.parameters.graphKind) ?? "";
+  if (!supportedGraphKinds.has(graphKind)) {
+    diagnostics.push({
+      code: "UnsupportedGraphKind",
+      severity: "error",
+      message: `Unsupported skill graph kind '${graphKind}'.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  state.graphs.add(alias);
+}
+
+function validateUnitSetup(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const alias = getString(step.parameters.alias);
+  if (!alias) {
+    diagnostics.push({
+      code: "MissingUnitAlias",
+      severity: "error",
+      message: "createUnit requires an alias.",
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  const cellAlias = getString(step.parameters.cellAlias);
+  if (cellAlias && !state.cells.has(cellAlias)) {
+    diagnostics.push({
+      code: "UnknownCellAlias",
+      severity: "error",
+      message: `Cell alias '${cellAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  state.units.add(alias);
+}
+
+function validateAbilityConfigSetup(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const alias = getString(step.parameters.alias);
+  if (!alias) {
+    diagnostics.push({
+      code: "MissingAbilityConfigAlias",
+      severity: "error",
+      message: "createSkillAbilityConfig requires an alias.",
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  const graphAlias = getString(step.parameters.graphAlias);
+  if (!graphAlias) {
+    diagnostics.push({
+      code: "MissingGraphAlias",
+      severity: "error",
+      message: "createSkillAbilityConfig requires a graphAlias.",
+      path: step.id ?? step.kind
+    });
+  }
+  else if (!state.graphs.has(graphAlias)) {
+    diagnostics.push({
+      code: "UnknownGraphAlias",
+      severity: "error",
+      message: `Skill graph alias '${graphAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  state.abilityConfigs.add(alias);
+}
+
+function validateAbilitySetup(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const alias = getString(step.parameters.alias);
+  if (!alias) {
+    diagnostics.push({
+      code: "MissingAbilityAlias",
+      severity: "error",
+      message: "createSkillAbility requires an alias.",
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  const configAlias = getString(step.parameters.configAlias);
+  if (!configAlias) {
+    diagnostics.push({
+      code: "MissingAbilityConfigAlias",
+      severity: "error",
+      message: "createSkillAbility requires a configAlias.",
+      path: step.id ?? step.kind
+    });
+  }
+  else if (!state.abilityConfigs.has(configAlias)) {
+    diagnostics.push({
+      code: "UnknownAbilityConfigAlias",
+      severity: "error",
+      message: `Ability config alias '${configAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  const ownerAlias = getString(step.parameters.ownerAlias);
+  if (!ownerAlias) {
+    diagnostics.push({
+      code: "MissingUnitAlias",
+      severity: "error",
+      message: "createSkillAbility requires an ownerAlias.",
+      path: step.id ?? step.kind
+    });
+  }
+  else if (!state.units.has(ownerAlias)) {
+    diagnostics.push({
+      code: "UnknownUnitAlias",
+      severity: "error",
+      message: `Unit alias '${ownerAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  state.abilities.add(alias);
+}
+
+function validateTurnContextSetup(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const aliases = Array.isArray(step.parameters.playableUnitAliases)
+    ? step.parameters.playableUnitAliases
+    : [];
+
+  for (const alias of aliases) {
+    if (typeof alias !== "string" || !alias) {
+      diagnostics.push({
+        code: "InvalidPlayableUnitAlias",
+        severity: "error",
+        message: "playableUnitAliases must only contain unit alias strings.",
+        path: step.id ?? step.kind
+      });
+      continue;
+    }
+
+    if (!state.units.has(alias)) {
+      diagnostics.push({
+        code: "UnknownUnitAlias",
+        severity: "error",
+        message: `Playable unit alias '${alias}' does not exist.`,
+        path: step.id ?? step.kind
+      });
+    }
+  }
+}
+
+function validateSelectAbilitySetup(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const abilityAlias = getString(step.parameters.abilityAlias);
+  if (!abilityAlias) {
+    diagnostics.push({
+      code: "MissingAbilityAlias",
+      severity: "error",
+      message: "selectAbility requires an abilityAlias.",
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  if (!state.abilities.has(abilityAlias)) {
+    diagnostics.push({
+      code: "UnknownAbilityAlias",
+      severity: "error",
+      message: `Ability alias '${abilityAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateExecuteSkillGraph(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const graphAlias = getString(step.parameters.graphAlias) ?? "graph";
+  if (!state.graphs.has(graphAlias)) {
+    diagnostics.push({
+      code: "UnknownGraphAlias",
+      severity: "error",
+      message: `Skill graph alias '${graphAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  const casterAlias = getString(step.parameters.casterAlias);
+  if (!casterAlias) {
+    diagnostics.push({
+      code: "MissingUnitAlias",
+      severity: "error",
+      message: "executeSkillGraph requires a casterAlias.",
+      path: step.id ?? step.kind
+    });
+  }
+  else if (!state.units.has(casterAlias)) {
+    diagnostics.push({
+      code: "UnknownUnitAlias",
+      severity: "error",
+      message: `Caster alias '${casterAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  const primaryTargetAlias = getString(step.parameters.primaryTargetAlias);
+  if (primaryTargetAlias && !state.units.has(primaryTargetAlias)) {
+    diagnostics.push({
+      code: "UnknownUnitAlias",
+      severity: "error",
+      message: `Primary target alias '${primaryTargetAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  const targetPointAlias = getString(step.parameters.targetPointAlias);
+  if (targetPointAlias && !state.cells.has(targetPointAlias) && !state.units.has(targetPointAlias)) {
+    diagnostics.push({
+      code: "UnknownCellAlias",
+      severity: "error",
+      message: `Target point alias '${targetPointAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateExecuteAbilityOnTarget(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const abilityAlias = getString(step.parameters.abilityAlias);
+  if (!abilityAlias) {
+    diagnostics.push({
+      code: "MissingAbilityAlias",
+      severity: "error",
+      message: "executeAbilityOnTarget requires an abilityAlias.",
+      path: step.id ?? step.kind
+    });
+  }
+  else if (!state.abilities.has(abilityAlias)) {
+    diagnostics.push({
+      code: "UnknownAbilityAlias",
+      severity: "error",
+      message: `Ability alias '${abilityAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  const targetAlias = getString(step.target) ?? getString(step.parameters.targetAlias);
+  if (!targetAlias) {
+    diagnostics.push({
+      code: "MissingUnitAlias",
+      severity: "error",
+      message: "executeAbilityOnTarget requires a target alias.",
+      path: step.id ?? step.kind
+    });
+  }
+  else if (!state.units.has(targetAlias)) {
+    diagnostics.push({
+      code: "UnknownUnitAlias",
+      severity: "error",
+      message: `Target alias '${targetAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateExecuteAbilityOnCell(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const abilityAlias = getString(step.parameters.abilityAlias);
+  if (!abilityAlias) {
+    diagnostics.push({
+      code: "MissingAbilityAlias",
+      severity: "error",
+      message: "executeAbilityOnCell requires an abilityAlias.",
+      path: step.id ?? step.kind
+    });
+  }
+  else if (!state.abilities.has(abilityAlias)) {
+    diagnostics.push({
+      code: "UnknownAbilityAlias",
+      severity: "error",
+      message: `Ability alias '${abilityAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  const cellAlias = getString(step.target) ?? getString(step.parameters.cellAlias);
+  if (cellAlias) {
+    if (!state.cells.has(cellAlias)) {
+      diagnostics.push({
+        code: "UnknownCellAlias",
+        severity: "error",
+        message: `Cell alias '${cellAlias}' does not exist.`,
+        path: step.id ?? step.kind
+      });
+    }
+  }
+}
+
+function requireKnownUnit(assertion: ScenarioAssertion, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  if (!assertion.target) {
+    diagnostics.push({
+      code: "MissingUnitAlias",
+      severity: "error",
+      message: `${assertion.kind} requires a target unit alias.`,
+      path: assertion.id ?? assertion.kind
+    });
+    return;
+  }
+
+  if (!state.units.has(assertion.target)) {
+    diagnostics.push({
+      code: "UnknownUnitAlias",
+      severity: "error",
+      message: `Unit alias '${assertion.target}' does not exist.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+}
+
+function requireStringExpected(assertion: ScenarioAssertion, diagnostics: ExpectationDiagnostic[], code: string): void {
+  if (typeof assertion.expected !== "string" || !assertion.expected.trim()) {
+    diagnostics.push({
+      code,
+      severity: "error",
+      message: `${assertion.kind} requires a string expected value.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+}
+
+function requireNumberExpected(assertion: ScenarioAssertion, diagnostics: ExpectationDiagnostic[], code: string): void {
+  if (typeof assertion.expected !== "number" || Number.isNaN(assertion.expected)) {
+    diagnostics.push({
+      code,
+      severity: "error",
+      message: `${assertion.kind} requires a numeric expected value.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+}
+
+function requireIntegerExpected(assertion: ScenarioAssertion, diagnostics: ExpectationDiagnostic[], code: string): void {
+  if (typeof assertion.expected !== "number" || !Number.isInteger(assertion.expected)) {
+    diagnostics.push({
+      code,
+      severity: "error",
+      message: `${assertion.kind} requires an integer expected value.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+}
+
+function requireBuffName(assertion: ScenarioAssertion, diagnostics: ExpectationDiagnostic[], code: string): void {
+  const buffName = getString(assertion.parameters.buffName) ?? (typeof assertion.expected === "string" ? assertion.expected : "");
+  if (!buffName) {
+    diagnostics.push({
+      code,
+      severity: "error",
+      message: `${assertion.kind} requires a buffName string.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+}
+
+function requireCellCoordinatesExpected(assertion: ScenarioAssertion, diagnostics: ExpectationDiagnostic[], code: string): void {
+  const expected = assertion.expected;
+  if (expected == null || typeof expected !== "object" || Array.isArray(expected)) {
+    diagnostics.push({
+      code,
+      severity: "error",
+      message: `${assertion.kind} requires { x, y } coordinates as expected value.`,
+      path: assertion.id ?? assertion.kind
+    });
+    return;
+  }
+
+  const obj = expected as Record<string, unknown>;
+  if (typeof obj.x !== "number" || typeof obj.y !== "number") {
+    diagnostics.push({
+      code,
+      severity: "error",
+      message: `${assertion.kind} requires numeric x/y coordinates.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function registerAlias(
+  step: ScenarioStep,
+  parameterName: string,
+  value: unknown,
+  aliasSet: Set<string>,
+  diagnostics: ExpectationDiagnostic[],
+  missingCode: string
+): void {
+  const alias = getString(value);
+  if (!alias) {
+    diagnostics.push({
+      code: missingCode,
+      severity: "error",
+      message: `${step.kind} requires a ${parameterName}.`,
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  aliasSet.add(alias);
+}
+
+function resetAliasState(state: AliasState): void {
+  state.graphs.clear();
+  state.cells.clear();
+  state.units.clear();
+  state.abilityConfigs.clear();
+  state.abilities.clear();
 }
 
 export function formatZodError(error: z.ZodError): ExpectationDiagnostic[] {

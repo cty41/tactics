@@ -45,6 +45,82 @@ namespace Tactics.Tests.PlayMode
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "validationErrorCodeIncludes" && assertion.Passed), Is.True);
         }
 
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesCounterPlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("barbarian-counter.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "caster" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "target" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHasBuff" && assertion.Passed), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMarkPlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("hunter-mark.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHasBuff" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitBuffDurationEquals" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Passed), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesFireballPlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("mage-fireball.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Count(assertion => assertion.Kind == "unitHealthEquals" && assertion.Passed), Is.GreaterThanOrEqualTo(3));
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesChargeStrikePlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("barbarian-charge-strike.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitCellEquals" && assertion.Target == "caster" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitCellEquals" && assertion.Target == "target" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "target" && assertion.Passed), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesChargeStrikeBlockedRetreatPlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("barbarian-charge-blocked-retreat.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitCellEquals" && assertion.Target == "caster" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitCellEquals" && assertion.Target == "target" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "target" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "caster" && assertion.Passed), Is.True);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "blocker" && assertion.Passed), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMeleeHealPlanFromFile()
+        {
+            var task = ExecutePlan(GetPlanPath("melee-heal.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            Assert.IsTrue(result.Passed, string.Join("\n", result.Diagnostics));
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Target == "ally" && assertion.Passed), Is.True);
+        }
+
         [Test]
         public void LoaderRejectsUnsupportedSchemaVersionPlan()
         {

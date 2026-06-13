@@ -75,6 +75,7 @@ namespace Tactics.Common.Testing.Gameplay
     {
         public string Kind { get; set; }
         public string Adapter { get; set; }
+        public string Target { get; set; }
         public bool Passed { get; set; }
         public string Message { get; set; }
 

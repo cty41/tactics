@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "SkillGraph.AreaDamageHitsAllTargetsInRadius",
+  "scenarioName": "SkillGraph.ChargeStrikeStopsBeforeBlockedRetreatAndDamagesBothUnits",
   "requiredAdapters": [
     "Skill"
   ],
@@ -14,11 +14,10 @@
       "adapter": "Skill",
       "kind": "createSkillGraph",
       "parameters": {
-        "alias": "areaGraph",
-        "graphKind": "areaDamage",
-        "baseDamage": 3,
-        "radius": 1,
-        "maxRange": 4
+        "alias": "chargeGraph",
+        "graphKind": "charge",
+        "collisionDamage": 1,
+        "maxRange": 3
       }
     },
     {
@@ -34,16 +33,7 @@
       "adapter": "Skill",
       "kind": "createCell",
       "parameters": {
-        "alias": "targetPointCell",
-        "x": 1,
-        "y": 1
-      }
-    },
-    {
-      "adapter": "Skill",
-      "kind": "createCell",
-      "parameters": {
-        "alias": "targetCellA",
+        "alias": "pathCell",
         "x": 1,
         "y": 0
       }
@@ -52,18 +42,18 @@
       "adapter": "Skill",
       "kind": "createCell",
       "parameters": {
-        "alias": "targetCellB",
-        "x": 0,
-        "y": 1
+        "alias": "targetCell",
+        "x": 2,
+        "y": 0
       }
     },
     {
       "adapter": "Skill",
       "kind": "createCell",
       "parameters": {
-        "alias": "safeCell",
-        "x": 4,
-        "y": 4
+        "alias": "blockerCell",
+        "x": 3,
+        "y": 0
       }
     },
     {
@@ -81,33 +71,22 @@
       "adapter": "Skill",
       "kind": "createUnit",
       "parameters": {
-        "alias": "targetA",
+        "alias": "target",
         "playerNumber": 1,
         "health": 10,
         "maxHealth": 10,
-        "cellAlias": "targetCellA"
+        "cellAlias": "targetCell"
       }
     },
     {
       "adapter": "Skill",
       "kind": "createUnit",
       "parameters": {
-        "alias": "targetB",
+        "alias": "blocker",
         "playerNumber": 1,
         "health": 10,
         "maxHealth": 10,
-        "cellAlias": "targetCellB"
-      }
-    },
-    {
-      "adapter": "Skill",
-      "kind": "createUnit",
-      "parameters": {
-        "alias": "safeTarget",
-        "playerNumber": 1,
-        "health": 10,
-        "maxHealth": 10,
-        "cellAlias": "safeCell"
+        "cellAlias": "blockerCell"
       }
     },
     {
@@ -126,9 +105,9 @@
       "adapter": "Skill",
       "kind": "executeSkillGraph",
       "parameters": {
-        "graphAlias": "areaGraph",
+        "graphAlias": "chargeGraph",
         "casterAlias": "caster",
-        "targetPointAlias": "targetPointCell"
+        "primaryTargetAlias": "target"
       }
     }
   ],
@@ -141,22 +120,42 @@
     },
     {
       "adapter": "Skill",
-      "kind": "unitHealthEquals",
-      "target": "targetA",
-      "expected": 7,
+      "kind": "unitCellEquals",
+      "target": "caster",
+      "expected": {
+        "x": 1,
+        "y": 0
+      },
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitCellEquals",
+      "target": "target",
+      "expected": {
+        "x": 2,
+        "y": 0
+      },
       "parameters": {}
     },
     {
       "adapter": "Skill",
       "kind": "unitHealthEquals",
-      "target": "targetB",
-      "expected": 7,
+      "target": "target",
+      "expected": 9,
       "parameters": {}
     },
     {
       "adapter": "Skill",
       "kind": "unitHealthEquals",
-      "target": "safeTarget",
+      "target": "caster",
+      "expected": 9,
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "blocker",
       "expected": 10,
       "parameters": {}
     }
@@ -170,20 +169,38 @@
     },
     {
       "adapter": "Skill",
-      "kind": "unitHealthEquals",
-      "target": "targetA",
+      "kind": "unitCellEquals",
+      "target": "caster",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitCellEquals",
+      "target": "target",
       "parameters": {}
     },
     {
       "adapter": "Skill",
       "kind": "unitHealthEquals",
-      "target": "targetB",
+      "target": "target",
       "parameters": {}
     },
     {
       "adapter": "Skill",
       "kind": "unitHealthEquals",
-      "target": "safeTarget",
+      "target": "target",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "caster",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "blocker",
       "parameters": {}
     }
   ]

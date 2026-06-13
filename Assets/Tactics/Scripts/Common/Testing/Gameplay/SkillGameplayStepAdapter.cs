@@ -187,11 +187,18 @@ namespace Tactics.Common.Testing.Gameplay
             SkillGraphAsset graph = graphKind switch
             {
                 "selfheal" => SkillGraphTestGraphFactory.CreateSelfHealGraph(alias, GetFloat(parameters, "healAmount", 5f)),
-                "singletargetdamage" => SkillGraphTestGraphFactory.CreateSingleTargetDamageGraph(alias, GetFloat(parameters, "baseDamage", 7f)),
+                "singletargetdamage" => SkillGraphTestGraphFactory.CreateSingleTargetDamageGraph(
+                    alias,
+                    GetFloat(parameters, "baseDamage", 7f),
+                    GetBool(parameters, "canCrit", false),
+                    GetBool(parameters, "isRanged", false),
+                    GetInt(parameters, "minRange", GetBool(parameters, "isRanged", false) ? 2 : 1),
+                    GetInt(parameters, "maxRange", 3)),
                 "invalidselfheal" => SkillGraphTestGraphFactory.CreateSelfHealGraph(alias, GetFloat(parameters, "healAmount", 5f), includeFinishNode: false),
                 "areadamage" => SkillGraphTestGraphFactory.CreateAreaDamageGraph(alias, GetFloat(parameters, "baseDamage", 3f), GetInt(parameters, "radius", 1), GetInt(parameters, "maxRange", 4)),
                 "knockback" => SkillGraphTestGraphFactory.CreateKnockbackGraph(alias, GetInt(parameters, "distance", 1), GetInt(parameters, "maxRange", 1)),
                 "allyheal" => SkillGraphTestGraphFactory.CreateAllyHealGraph(alias, GetFloat(parameters, "healAmount", 5f), GetInt(parameters, "maxRange", 1)),
+                "charge" => SkillGraphTestGraphFactory.CreateChargeGraph(alias, GetInt(parameters, "distance", 1), GetInt(parameters, "maxRange", 3), GetFloat(parameters, "collisionDamage", 1f)),
                 "applybuff" => SkillGraphTestGraphFactory.CreateApplyBuffGraph(
                     alias,
                     GetString(parameters, "buffName", alias),

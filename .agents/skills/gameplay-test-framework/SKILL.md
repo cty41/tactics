@@ -25,6 +25,7 @@ description: "Use when generating, validating, compiling, or running gameplay au
 - 用户要求把自然语言需求转成可执行 gameplay 测试
 - 用户要求根据 `.agents/docs/` 中的策划文档生成测试用例
 - 用户要求根据 `.agents/docs/skill-graph-playtest-template.md` 批量展开一组测试用例
+- 用户要求补齐或回归当前已支持的技能语义，例如 buff、aoe、knockback、ally heal、mark、counter、charge
 - 用户要求执行或排查 `gameplay-test-spec` 工具链
 - 用户要求运行 `GameplayRuntimeRunner`、`SkillGameplayStepAdapter` 或 `plan.json` 驱动的 PlayMode 测试
 - 用户要求为新的 gameplay 场景补充自动化回归
@@ -105,6 +106,13 @@ node dist/src/cli.js compile-spec --spec path/to/scenario.gameplay-test.md --out
 - `single target damage`
 - `mana success / insufficient / out of range / no valid target`
 - `invalid graph rejected before execution`
+- `buff / status`
+- `area damage`
+- `knockback`
+- `ally heal`
+- `mark`
+- `counter`
+- `charge`
 - `Tests/gameplay-specs/` 文件驱动 fixture
 - `ExecutableScenarioPlanLoader` 的最小校验
 - `GameplayRuntimeRunner` 的 `timeoutMs` 执行
@@ -158,6 +166,7 @@ node dist/src/cli.js compile-spec --spec C:\Temp\self-heal.gameplay-test.md --ou
 - [ ] 已通过 `validate-spec`
 - [ ] 已通过 `compile-spec`
 - [ ] `Tests/gameplay-specs/` 下的 spec/plan fixture 已同步
+- [ ] 当前语义回归 fixture（buff / aoe / knockback / ally heal / mark / counter / charge）已同步
 - [ ] 批量模板生成流程已从 `.mimocode/command/` 收口到 skill
 - [ ] `npm test` 覆盖了全部 compiled TS tests
 - [ ] 已使用 Unity PlayMode 执行 `Tactics.Tests.PlayMode`

@@ -65,6 +65,8 @@ export function generateScenarioSpec(text: string): GenerationResult {
     spec = createCounterRetaliationSpec();
   } else if (includesAny(normalized, ["标记", "mark", "marked"])) {
     spec = createMarkedDamageSpec();
+  } else if (includesAny(normalized, ["冲锋", "charge", "突进"])) {
+    spec = createChargeSpec();
   } else if (includesAny(normalized, ["范围伤害", "群体", "aoe", "area damage", "半径内"]) ) {
     spec = createAreaDamageSpec();
   } else if (includesAny(normalized, ["击退", "knockback", "推开", "吹飞"])) {
@@ -443,16 +445,16 @@ function createMarkedDamageSpec(): ScenarioSpec {
           maxRange: 1
         }
       },
-      {
-        kind: "createSkillGraph",
-        parameters: {
-          alias: "damageGraph",
-          graphKind: "singleTargetDamage",
-          baseDamage: 4,
-          canCrit: false,
-          isRanged: false
-        }
-      },
+        {
+          kind: "createSkillGraph",
+          parameters: {
+            alias: "damageGraph",
+            graphKind: "singleTargetDamage",
+            baseDamage: 4,
+            canCrit: true,
+            isRanged: false
+          }
+        },
       { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
       { kind: "createCell", parameters: { alias: "targetCell", x: 1, y: 0 } },
       { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } },
@@ -468,6 +470,44 @@ function createMarkedDamageSpec(): ScenarioSpec {
       { kind: "unitHasBuff", target: "target", expected: "Marked", parameters: {} },
       { kind: "unitBuffDurationEquals", target: "target", expected: 2, parameters: { buffName: "Marked" } },
       { kind: "unitHealthEquals", target: "target", expected: 2, parameters: {} }
+      ]
+    };
+  }
+
+function createChargeSpec(): ScenarioSpec {
+  return {
+    feature: "SkillGraph",
+    scenario: "ChargeStrikeMovesAndDamagesTarget",
+    tags: ["mvp", "skill", "movement", "charge", "damage"],
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "createSkillTestWorld", parameters: {} },
+      {
+        kind: "createSkillGraph",
+        parameters: {
+          alias: "chargeGraph",
+          graphKind: "charge",
+          collisionDamage: 1,
+          maxRange: 3
+        }
+      },
+      { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
+      { kind: "createCell", parameters: { alias: "pathCell", x: 1, y: 0 } },
+      { kind: "createCell", parameters: { alias: "targetCell", x: 2, y: 0 } },
+      { kind: "createCell", parameters: { alias: "retreatCell", x: 3, y: 0 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } },
+      { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: 10, maxHealth: 10, cellAlias: "targetCell" } },
+      { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
+    ],
+    actions: [
+      { kind: "executeSkillGraph", parameters: { graphAlias: "chargeGraph", casterAlias: "caster", primaryTargetAlias: "target" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Completed", parameters: {} },
+      { kind: "unitCellEquals", target: "caster", expected: { x: 2, y: 0 }, parameters: {} },
+      { kind: "unitCellEquals", target: "target", expected: { x: 3, y: 0 }, parameters: {} },
+      { kind: "unitHealthEquals", target: "target", expected: 9, parameters: {} }
     ]
   };
 }

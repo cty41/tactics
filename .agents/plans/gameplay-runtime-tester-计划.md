@@ -1,4 +1,4 @@
-# Gameplay Test Framework Phase 4 计划（基础设施收口与防漂移）
+# Gameplay Test Framework Phase 6 计划（Skill 语义回归收口）
 
 ## Summary
 
@@ -15,6 +15,13 @@
   - single target damage
   - mana success / insufficient / out of range / no valid target
   - invalid graph rejected before execution
+  - buff / status
+  - area damage
+  - knockback
+  - ally heal
+  - mark
+  - counter
+  - charge
 
 ## Key Changes
 
@@ -22,6 +29,7 @@
 
 - 重写本计划和 `.agents/skills/gameplay-test-framework/SKILL.md`，确保它们描述的是当前真实实现，而不是旧的 battle-only 设想。
 - 所有正式样例 fixture 统一放在 `Tests/gameplay-specs/`，由 TS 工具和 Unity PlayMode 共用。
+- 语义回归 fixture 以 `barbarian-counter`、`hunter-mark`、`mage-fireball`、`barbarian-charge-strike`、`melee-heal` 为正式样例集合，并与 TS round-trip 测试同步。
 
 ### 2. 默认回归收口
 
@@ -29,6 +37,7 @@
 - TS 默认回归至少覆盖：
   - `compiler.test.ts`
   - `ability-resource.test.ts`
+  - `semantic.test.ts`
 - 新增 ability 资源测试必须通过 fixture 驱动，而不是继续在测试里手工维护 `ExecutableScenarioPlan`。
 
 ### 3. Unity 侧硬校验与超时
@@ -55,9 +64,11 @@
 - `Tools/gameplay-test-spec`：
   - `npm test` 必须 100% 通过
   - fixture round-trip 测试必须通过
+  - 语义归一化测试必须通过
 - Unity PlayMode：
   - `GameplayRuntimePlanTests` 继续通过文件驱动 fixture
   - `GameplayRuntimeAbilityPlanTests` 继续通过文件驱动 fixture
+  - 语义 fixture（buff / aoe / knockback / ally heal / mark / counter / charge）必须通过
   - loader negative tests 必须通过
   - timeout test 必须通过
 - 文档：
@@ -65,7 +76,7 @@
 
 ## Assumptions
 
-- 本阶段不扩 skill 语义，不引入 Buff/AoE/AP/Cooldown 等新断言。
+- 本阶段不再扩 Battle/UI/Map；skill 语义回归只做收口，不引入 AP/Cooldown 作为主线。
 - `schemaVersion` 继续固定为 `1`。
 - Unity 侧只做执行安全所需的最小 plan 校验，不复制一整套 TS schema。
 - `timeoutMs` 只表示整个场景的总超时，不定义 step 级超时。

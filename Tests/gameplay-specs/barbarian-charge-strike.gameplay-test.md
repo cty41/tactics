@@ -1,9 +1,11 @@
 ---
 feature: SkillGraph
-scenario: SingleTargetDamageReducesTargetHealth
+scenario: ChargeStrikeMovesAndDamagesTarget
 tags:
   - mvp
   - skill
+  - movement
+  - charge
   - damage
 requiredAdapters:
   - Skill
@@ -12,26 +14,44 @@ setup:
     parameters: {}
   - kind: createSkillGraph
     parameters:
-      alias: graph
-      graphKind: singleTargetDamage
-      baseDamage: 7
+      alias: chargeGraph
+      graphKind: charge
+      collisionDamage: 1
+      maxRange: 3
+  - kind: createCell
+    parameters:
+      alias: casterCell
+      x: 0
+      'y': 0
+  - kind: createCell
+    parameters:
+      alias: pathCell
+      x: 1
+      'y': 0
+  - kind: createCell
+    parameters:
+      alias: targetCell
+      x: 2
+      'y': 0
+  - kind: createCell
+    parameters:
+      alias: retreatCell
+      x: 3
+      'y': 0
   - kind: createUnit
     parameters:
       alias: caster
       playerNumber: 0
-      cell:
-        x: 0
-        'y': 0
+      health: 10
+      maxHealth: 10
+      cellAlias: casterCell
   - kind: createUnit
     parameters:
       alias: target
       playerNumber: 1
       health: 10
       maxHealth: 10
-      defenceFactor: 0
-      cell:
-        x: 1
-        'y': 0
+      cellAlias: targetCell
   - kind: setTurnContext
     parameters:
       currentPlayerNumber: 0
@@ -40,19 +60,32 @@ setup:
 actions:
   - kind: executeSkillGraph
     parameters:
-      graphAlias: graph
+      graphAlias: chargeGraph
       casterAlias: caster
+      primaryTargetAlias: target
 assertions:
   - kind: executionStateEquals
     expected: Completed
     parameters: {}
+  - kind: unitCellEquals
+    target: caster
+    expected:
+      x: 2
+      'y': 0
+    parameters: {}
+  - kind: unitCellEquals
+    target: target
+    expected:
+      x: 3
+      'y': 0
+    parameters: {}
   - kind: unitHealthEquals
     target: target
-    expected: 3
+    expected: 9
     parameters: {}
 timeoutMs: 10000
 ---
 
-# SkillGraph - SingleTargetDamageReducesTargetHealth
+# SkillGraph - ChargeStrikeMovesAndDamagesTarget
 
 Generated gameplay test spec.

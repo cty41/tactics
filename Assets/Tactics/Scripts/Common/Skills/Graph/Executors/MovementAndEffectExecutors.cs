@@ -10,6 +10,8 @@ namespace Tactics.Common.Skills.Graph
 {
     public class DashToTargetNodeExecutor : ISkillNodeExecutor
     {
+        private const float ChargeCollisionDamage = 1f;
+
         public SkillGraphNodeType NodeType => SkillGraphNodeType.DashToTarget;
 
         public async Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
@@ -33,37 +35,11 @@ namespace Tactics.Common.Skills.Graph
             if (dirX == 0 && dirY == 0)
                 return SkillNodeExecutionResult.Failed("Dash destination must be on the same row or column.");
 
-            var stopCell = FindDashStopCell(casterCell, dirX, dirY, distance, grid);
-            if (stopCell == null || stopCell == casterCell)
-                return SkillNodeExecutionResult.Failed("No valid dash destination.");
+            var chargeResult = await ExecuteChargeAsync(caster, target, grid, casterCell, targetCell, dirX, dirY, distance);
+            if (!chargeResult)
+                return SkillNodeExecutionResult.Failed(chargeResult.FailReason);
 
-            var path = BuildStraightLinePath(casterCell, stopCell, dirX, dirY, grid);
-            if (path.Count == 0)
-                return SkillNodeExecutionResult.Failed("No dash path available.");
-
-            await grid.UnitManager.MarkAsMoving(caster, casterCell, stopCell, path);
-            await caster.MovementAnimation(path, stopCell);
-
-            casterCell.CurrentUnits.Remove(caster);
-            casterCell.IsTaken = casterCell.CurrentUnits.Count > 0;
-
-            caster.CurrentCell = stopCell;
-            if (!stopCell.CurrentUnits.Contains(caster))
-                stopCell.CurrentUnits.Add(caster);
-            stopCell.IsTaken = true;
-            caster.WorldPosition = stopCell.WorldPosition;
-
-            await grid.UnitManager.UnMarkAsMoving(caster, casterCell, stopCell, path);
-            caster.InvokeUnitMoved(new UnitMovedEventArgs(caster, casterCell, stopCell, path));
-
-            if (target != null && record.CollisionDamage > 0f && target.CurrentCell.GetDistance(stopCell) <= 1)
-            {
-                CombatComponent.ApplyDamage(
-                    caster, target, record.CollisionDamage, false, ElementType.None,
-                    canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: true);
-            }
-
-            TLog.Info($"[DashToTarget] Dashed to ({stopCell.GridCoordinates.x}, {stopCell.GridCoordinates.y})");
+            TLog.Info($"[DashToTarget] Charge resolved: {chargeResult.Message}");
             return SkillNodeExecutionResult.Success();
         }
 
@@ -79,21 +55,111 @@ namespace Tactics.Common.Skills.Graph
                     dy == 0 ? 0 : (dy > 0 ? 1 : -1));
         }
 
-        private Cells.ICell FindDashStopCell(Cells.ICell start, int dirX, int dirY, int maxDist, Controllers.IGridController grid)
+        private async Task<ChargeResolution> ExecuteChargeAsync(
+            IUnit caster,
+            IUnit target,
+            IGridController grid,
+            ICell casterCell,
+            ICell targetCell,
+            int dirX,
+            int dirY,
+            int distance)
         {
-            Cells.ICell lastValid = start;
-            for (int i = 1; i <= maxDist; i++)
+            for (int i = 1; i < distance; i++)
             {
                 var coord = new Common.Utilities.Vector2IntImpl(
-                    start.GridCoordinates.x + dirX * i,
-                    start.GridCoordinates.y + dirY * i);
+                    casterCell.GridCoordinates.x + dirX * i,
+                    casterCell.GridCoordinates.y + dirY * i);
                 var cell = grid.CellManager.GetCellAt(coord);
-                if (cell == null) break;
-                if (!grid.CellManager.IsCellWalkable(cell)) break;
-                if (cell.CurrentUnits.Count > 0) break;
-                lastValid = cell;
+
+                if (cell == null || !grid.CellManager.IsCellWalkable(cell))
+                    return ChargeResolution.Fail("Charge path is blocked.");
+
+                if (cell.CurrentUnits.Count > 0)
+                {
+                    var blockingUnit = cell.CurrentUnits[0];
+                    var blockerStopCell = GetRelativeCell(casterCell, dirX, dirY, i - 1, grid) ?? casterCell;
+
+                    await MoveUnitAsync(caster, casterCell, blockerStopCell, grid);
+                    ApplyCollisionDamage(caster, blockingUnit);
+
+                    return ChargeResolution.Success($"Blocked by '{blockingUnit}'.");
+                }
             }
-            return lastValid;
+
+            var retreatCell = GetRelativeCell(targetCell, dirX, dirY, 1, grid);
+            var canRetreat = retreatCell != null
+                && grid.CellManager.IsCellWalkable(retreatCell)
+                && retreatCell.CurrentUnits.Count == 0;
+
+            if (canRetreat)
+            {
+                await MoveUnitAsync(target, targetCell, retreatCell, grid);
+                await MoveUnitAsync(caster, casterCell, targetCell, grid);
+                ApplyCollisionDamage(caster, target);
+                return ChargeResolution.Success($"Reached target '{targetCell.GridCoordinates}'.");
+            }
+
+            var stopCell = distance > 1
+                ? GetRelativeCell(casterCell, dirX, dirY, distance - 1, grid)
+                : casterCell;
+
+            if (stopCell != null && stopCell != casterCell)
+                await MoveUnitAsync(caster, casterCell, stopCell, grid);
+
+            ApplyCollisionDamage(caster, target);
+            ApplyCollisionDamage(target, caster);
+            return ChargeResolution.Success("Target could not retreat.");
+        }
+
+        private void ApplyCollisionDamage(IUnit attacker, IUnit target)
+        {
+            if (attacker == null || target == null)
+                return;
+
+            CombatComponent.ApplyDamage(
+                attacker, target, ChargeCollisionDamage, false, ElementType.None,
+                canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: true);
+        }
+
+        private async Task MoveUnitAsync(IUnit unit, ICell source, ICell destination, IGridController grid)
+        {
+            if (unit == null || source == null || destination == null || ReferenceEquals(source, destination))
+                return;
+
+            var (dirX, dirY) = GetCardinalDirection(source.GridCoordinates, destination.GridCoordinates);
+            var path = BuildStraightLinePath(source, destination, dirX, dirY, grid);
+            if (path.Count == 0)
+                return;
+
+            await grid.UnitManager.MarkAsMoving(unit, source, destination, path);
+            await unit.MovementAnimation(path, destination);
+
+            source.CurrentUnits.Remove(unit);
+            source.IsTaken = source.CurrentUnits.Count > 0;
+
+            unit.CurrentCell = destination;
+            if (!destination.CurrentUnits.Contains(unit))
+                destination.CurrentUnits.Add(unit);
+            destination.IsTaken = destination.CurrentUnits.Count > 0;
+            unit.WorldPosition = destination.WorldPosition;
+
+            await grid.UnitManager.UnMarkAsMoving(unit, source, destination, path);
+            unit.InvokeUnitMoved(new UnitMovedEventArgs(unit, source, destination, path));
+        }
+
+        private Cells.ICell GetRelativeCell(Cells.ICell origin, int dirX, int dirY, int steps, IGridController grid)
+        {
+            if (origin == null)
+                return null;
+
+            if (steps == 0)
+                return origin;
+
+            var coord = new Common.Utilities.Vector2IntImpl(
+                origin.GridCoordinates.x + dirX * steps,
+                origin.GridCoordinates.y + dirY * steps);
+            return grid.CellManager.GetCellAt(coord);
         }
 
         private System.Collections.Generic.List<ICell> BuildStraightLinePath(ICell start, ICell end, int dirX, int dirY, IGridController grid)
@@ -114,6 +180,25 @@ namespace Tactics.Common.Skills.Graph
             }
 
             return path;
+        }
+
+        private readonly struct ChargeResolution
+        {
+            public bool IsSuccess { get; }
+            public string Message { get; }
+            public string FailReason { get; }
+
+            private ChargeResolution(bool success, string message, string failReason)
+            {
+                IsSuccess = success;
+                Message = message;
+                FailReason = failReason;
+            }
+
+            public static ChargeResolution Success(string message) => new(true, message, null);
+            public static ChargeResolution Fail(string reason) => new(false, null, reason);
+
+            public static implicit operator bool(ChargeResolution resolution) => resolution.IsSuccess;
         }
     }
 

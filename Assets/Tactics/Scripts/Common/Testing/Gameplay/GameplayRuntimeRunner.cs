@@ -66,12 +66,14 @@ namespace Tactics.Common.Testing.Gameplay
                 if (adapter == null || !adapter.CanAssert(assertion))
                 {
                     var failure = GameplayAssertionResult.Fail(assertion.Adapter, assertion.Kind, $"No adapter can assert '{assertion.Kind}'.");
+                    failure.Target = assertion.Target;
                     result.Assertions.Add(failure);
                     result.Diagnostics.Add(failure.Message);
                     continue;
                 }
 
                 var assertionResult = await adapter.AssertAsync(context, assertion);
+                assertionResult.Target = assertion.Target;
                 result.Assertions.Add(assertionResult);
                 if (!assertionResult.Passed)
                 {

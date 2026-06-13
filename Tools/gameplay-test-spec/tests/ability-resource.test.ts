@@ -27,6 +27,29 @@ const abilityScenarios = [
   }
 ] as const;
 
+const skillArchetypeScenarios = [
+  {
+    fixtureBaseName: "barbarian-counter",
+    text: "让敌人获得反击状态，然后被近战攻击触发反击"
+  },
+  {
+    fixtureBaseName: "hunter-mark",
+    text: "先给敌人挂上标记，再让下一次攻击必定暴击"
+  },
+  {
+    fixtureBaseName: "mage-fireball",
+    text: "范围伤害命中半径内的多个目标"
+  },
+  {
+    fixtureBaseName: "barbarian-charge-strike",
+    text: "冲锋到目标并撞击造成伤害"
+  },
+  {
+    fixtureBaseName: "melee-heal",
+    text: "治疗友军目标并恢复 4 点生命"
+  }
+] as const;
+
 async function readFixture(name: string): Promise<string> {
   return readFile(new URL(name, fixturesDirUrl), "utf8");
 }
@@ -36,6 +59,27 @@ function normalizePlan(plan: unknown): unknown {
 }
 
 for (const scenario of abilityScenarios) {
+  test(`round-trips ${scenario.fixtureBaseName} gameplay test fixture`, async () => {
+    const markdown = await readFixture(`${scenario.fixtureBaseName}.gameplay-test.md`);
+    const planJson = await readFixture(`${scenario.fixtureBaseName}.plan.json`);
+    const doc = parseGameplayTestDocument(markdown);
+
+    const generated = generateScenarioSpec(scenario.text);
+    assert.equal(generated.needsClarification, false);
+    assert.ok(generated.spec);
+    assert.deepEqual(generated.spec, doc.frontmatter);
+
+    const validation = validateScenarioSpec(doc.frontmatter);
+    assert.equal(validation.valid, true, validation.diagnostics.map(diagnostic => diagnostic.message).join("\n"));
+
+    const compiled = compileScenarioSpec(doc.frontmatter);
+    assert.equal(compiled.valid, true, compiled.diagnostics.map(diagnostic => diagnostic.message).join("\n"));
+    assert.ok(compiled.plan);
+    assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(planJson));
+  });
+}
+
+for (const scenario of skillArchetypeScenarios) {
   test(`round-trips ${scenario.fixtureBaseName} gameplay test fixture`, async () => {
     const markdown = await readFixture(`${scenario.fixtureBaseName}.gameplay-test.md`);
     const planJson = await readFixture(`${scenario.fixtureBaseName}.plan.json`);

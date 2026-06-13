@@ -1,11 +1,12 @@
 ---
 feature: SkillGraph
-scenario: AreaDamageHitsAllTargetsInRadius
+scenario: ChargeStrikeStopsBeforeBlockedRetreatAndDamagesBothUnits
 tags:
   - mvp
   - skill
+  - movement
+  - charge
   - damage
-  - aoe
 requiredAdapters:
   - Skill
 setup:
@@ -13,11 +14,10 @@ setup:
     parameters: {}
   - kind: createSkillGraph
     parameters:
-      alias: areaGraph
-      graphKind: areaDamage
-      baseDamage: 3
-      radius: 1
-      maxRange: 4
+      alias: chargeGraph
+      graphKind: charge
+      collisionDamage: 1
+      maxRange: 3
   - kind: createCell
     parameters:
       alias: casterCell
@@ -25,24 +25,19 @@ setup:
       'y': 0
   - kind: createCell
     parameters:
-      alias: targetPointCell
-      x: 1
-      'y': 1
-  - kind: createCell
-    parameters:
-      alias: targetCellA
+      alias: pathCell
       x: 1
       'y': 0
   - kind: createCell
     parameters:
-      alias: targetCellB
-      x: 0
-      'y': 1
+      alias: targetCell
+      x: 2
+      'y': 0
   - kind: createCell
     parameters:
-      alias: safeCell
-      x: 4
-      'y': 4
+      alias: blockerCell
+      x: 3
+      'y': 0
   - kind: createUnit
     parameters:
       alias: caster
@@ -52,25 +47,18 @@ setup:
       cellAlias: casterCell
   - kind: createUnit
     parameters:
-      alias: targetA
+      alias: target
       playerNumber: 1
       health: 10
       maxHealth: 10
-      cellAlias: targetCellA
+      cellAlias: targetCell
   - kind: createUnit
     parameters:
-      alias: targetB
+      alias: blocker
       playerNumber: 1
       health: 10
       maxHealth: 10
-      cellAlias: targetCellB
-  - kind: createUnit
-    parameters:
-      alias: safeTarget
-      playerNumber: 1
-      health: 10
-      maxHealth: 10
-      cellAlias: safeCell
+      cellAlias: blockerCell
   - kind: setTurnContext
     parameters:
       currentPlayerNumber: 0
@@ -79,28 +67,40 @@ setup:
 actions:
   - kind: executeSkillGraph
     parameters:
-      graphAlias: areaGraph
+      graphAlias: chargeGraph
       casterAlias: caster
-      targetPointAlias: targetPointCell
+      primaryTargetAlias: target
 assertions:
   - kind: executionStateEquals
     expected: Completed
     parameters: {}
-  - kind: unitHealthEquals
-    target: targetA
-    expected: 7
+  - kind: unitCellEquals
+    target: caster
+    expected:
+      x: 1
+      'y': 0
+    parameters: {}
+  - kind: unitCellEquals
+    target: target
+    expected:
+      x: 2
+      'y': 0
     parameters: {}
   - kind: unitHealthEquals
-    target: targetB
-    expected: 7
+    target: target
+    expected: 9
     parameters: {}
   - kind: unitHealthEquals
-    target: safeTarget
+    target: caster
+    expected: 9
+    parameters: {}
+  - kind: unitHealthEquals
+    target: blocker
     expected: 10
     parameters: {}
 timeoutMs: 10000
 ---
 
-# SkillGraph - AreaDamageHitsAllTargetsInRadius
+# SkillGraph - ChargeStrikeStopsBeforeBlockedRetreatAndDamagesBothUnits
 
 Generated gameplay test spec.
