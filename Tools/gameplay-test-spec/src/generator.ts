@@ -337,9 +337,9 @@ function createAreaDamageSpec(): ScenarioSpec {
       { kind: "createCell", parameters: { alias: "targetCellB", x: 0, y: 1 } },
       { kind: "createCell", parameters: { alias: "safeCell", x: 4, y: 4 } },
       { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } },
-      { kind: "createUnit", parameters: { alias: "targetA", playerNumber: 1, health: 10, maxHealth: 10, cellAlias: "targetCellA" } },
-      { kind: "createUnit", parameters: { alias: "targetB", playerNumber: 1, health: 10, maxHealth: 10, cellAlias: "targetCellB" } },
-      { kind: "createUnit", parameters: { alias: "safeTarget", playerNumber: 1, health: 10, maxHealth: 10, cellAlias: "safeCell" } },
+      { kind: "createUnit", parameters: { alias: "targetA", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "targetCellA" } },
+      { kind: "createUnit", parameters: { alias: "targetB", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "targetCellB" } },
+      { kind: "createUnit", parameters: { alias: "safeTarget", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "safeCell" } },
       { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
     ],
     actions: [
@@ -458,7 +458,7 @@ function createMarkedDamageSpec(): ScenarioSpec {
       { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
       { kind: "createCell", parameters: { alias: "targetCell", x: 1, y: 0 } },
       { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } },
-      { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: 10, maxHealth: 10, cellAlias: "targetCell" } },
+      { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "targetCell" } },
       { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
     ],
     actions: [
@@ -547,7 +547,7 @@ function createCounterRetaliationSpec(): ScenarioSpec {
       { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
       { kind: "createCell", parameters: { alias: "targetCell", x: 1, y: 0 } },
       { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } },
-      { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: 10, maxHealth: 10, luck: 0, cellAlias: "targetCell" } },
+      { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, luck: 0, cellAlias: "targetCell" } },
       { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
     ],
     actions: [

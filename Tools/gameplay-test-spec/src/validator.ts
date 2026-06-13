@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ScenarioSpecSchema, type ExpectationDiagnostic, type ScenarioAssertion, type ScenarioSpec, type ScenarioStep } from "./schema.js";
+import { ScenarioSpecSchema, ScenarioDraftSchema, type ExpectationDiagnostic, type ScenarioAssertion, type ScenarioSpec, type ScenarioStep, type ScenarioDraft } from "./schema.js";
 
 const supportedSetupKinds = new Set([
   "createSkillTestWorld",
@@ -36,9 +36,16 @@ const supportedAssertionKinds = new Set([
   "unitManaEquals",
   "unitHasBuff",
   "unitBuffDurationEquals",
+  "unitBuffCountEquals",
+  "unitBuffIsUnique",
   "unitCellEquals",
+  "unitCountInArea",
   "lastErrorContains",
-  "stepMessageContains"
+  "stepMessageContains",
+  "projectileLaunched",
+  "projectileHitTarget",
+  "projectileCompleted",
+  "multiStageStateEquals"
 ]);
 
 interface AliasState {
@@ -95,11 +102,42 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
     });
   }
 
+  validateSemanticRules(spec, state, diagnostics);
+
   return {
     spec,
     diagnostics,
     valid: diagnostics.every(diagnostic => diagnostic.severity !== "error")
   };
+}
+
+export function validateScenarioDraft(draft: unknown): ValidationResult {
+  const parsed = ScenarioDraftSchema.safeParse(draft);
+  if (!parsed.success) {
+    return {
+      valid: false,
+      diagnostics: parsed.error.issues.map(issue => ({
+        code: "DraftSchemaValidationFailed",
+        severity: "error",
+        message: issue.message,
+        path: issue.path.join(".")
+      }))
+    };
+  }
+
+  const draftData = parsed.data;
+  const spec: ScenarioSpec = {
+    feature: draftData.feature,
+    scenario: draftData.scenario,
+    tags: draftData.tags,
+    requiredAdapters: draftData.requiredAdapters.length > 0 ? draftData.requiredAdapters : ["Skill"],
+    setup: draftData.setup.map(s => ({ kind: s.kind, parameters: s.parameters })),
+    actions: draftData.actions.map(a => ({ kind: a.kind, target: a.target, parameters: a.parameters })),
+    assertions: draftData.assertions.map(a => ({ kind: a.kind, target: a.target, expected: a.expected, parameters: a.parameters })),
+    timeoutMs: draftData.timeoutMs
+  };
+
+  return validateScenarioSpec(spec);
 }
 
 function createAliasState(): AliasState {
@@ -640,6 +678,138 @@ function resetAliasState(state: AliasState): void {
   state.units.clear();
   state.abilityConfigs.clear();
   state.abilities.clear();
+}
+
+function validateSemanticRules(spec: ScenarioSpec, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  const graphKinds = new Map<string, string>();
+  for (const step of spec.setup) {
+    if (step.kind === "createSkillGraph") {
+      const alias = getString(step.parameters.alias) ?? "graph";
+      const graphKind = getString(step.parameters.graphKind) ?? "";
+      graphKinds.set(alias, graphKind);
+    }
+  }
+
+  for (const action of spec.actions) {
+    if (action.kind === "executeSkillGraph") {
+      const graphAlias = getString(action.parameters.graphAlias) ?? "graph";
+      const graphKind = graphKinds.get(graphAlias);
+
+      if (graphKind === "areaDamage") {
+        const targetPointAlias = getString(action.parameters.targetPointAlias);
+        if (!targetPointAlias) {
+          diagnostics.push({
+            code: "MissingTargetPoint",
+            severity: "error",
+            message: "areaDamage graph requires a targetPointAlias in executeSkillGraph action.",
+            path: action.id ?? action.kind
+          });
+        }
+      }
+
+      if (graphKind === "applyBuff") {
+        const graphSetup = spec.setup.find(s =>
+          s.kind === "createSkillGraph" &&
+          (getString(s.parameters.alias) ?? "graph") === graphAlias
+        );
+        if (graphSetup) {
+          const buffName = getString(graphSetup.parameters.buffName);
+          const duration = graphSetup.parameters.duration;
+          const selectionKind = getString(graphSetup.parameters.selectionKind);
+          if (!buffName) {
+            diagnostics.push({
+              code: "MissingBuffName",
+              severity: "warning",
+              message: "applyBuff graph should specify a buffName parameter.",
+              path: graphSetup.id ?? graphSetup.kind
+            });
+          }
+          if (duration == null || (typeof duration === "number" && duration <= 0)) {
+            diagnostics.push({
+              code: "InvalidBuffDuration",
+              severity: "warning",
+              message: "applyBuff graph should specify a positive duration.",
+              path: graphSetup.id ?? graphSetup.kind
+            });
+          }
+          if (!selectionKind) {
+            diagnostics.push({
+              code: "MissingSelectionKind",
+              severity: "warning",
+              message: "applyBuff graph should specify a selectionKind (self/enemy/ally).",
+              path: graphSetup.id ?? graphSetup.kind
+            });
+          }
+        }
+      }
+    }
+  }
+
+  for (const assertion of spec.assertions) {
+    if (assertion.kind === "unitBuffIsUnique" || assertion.kind === "unitBuffCountEquals") {
+      if (!assertion.target) {
+        diagnostics.push({
+          code: "MissingUnitAlias",
+          severity: "error",
+          message: `${assertion.kind} requires a target unit alias.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      const buffName = getString(assertion.parameters.buffName);
+      if (!buffName && typeof assertion.expected !== "string") {
+        diagnostics.push({
+          code: "MissingBuffName",
+          severity: "error",
+          message: `${assertion.kind} requires a buffName parameter.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+    }
+
+    if (assertion.kind === "unitCountInArea") {
+      const centerAlias = getString(assertion.parameters.centerAlias);
+      const radius = assertion.parameters.radius;
+      if (!centerAlias) {
+        diagnostics.push({
+          code: "MissingCenterAlias",
+          severity: "error",
+          message: "unitCountInArea requires a centerAlias parameter.",
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      if (radius == null || typeof radius !== "number" || radius <= 0) {
+        diagnostics.push({
+          code: "InvalidRadius",
+          severity: "error",
+          message: "unitCountInArea requires a positive radius parameter.",
+          path: assertion.id ?? assertion.kind
+        });
+      }
+    }
+
+    if (assertion.kind.startsWith("projectile")) {
+      if (!assertion.target) {
+        diagnostics.push({
+          code: "MissingProjectileTarget",
+          severity: "error",
+          message: `${assertion.kind} requires a target unit alias.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+    }
+
+    if (assertion.kind === "multiStageStateEquals") {
+      const stageIndex = assertion.parameters.stageIndex;
+      if (stageIndex == null || typeof stageIndex !== "number" || stageIndex < 0) {
+        diagnostics.push({
+          code: "InvalidStageIndex",
+          severity: "error",
+          message: "multiStageStateEquals requires a non-negative stageIndex parameter.",
+          path: assertion.id ?? assertion.kind
+        });
+      }
+    }
+  }
 }
 
 export function formatZodError(error: z.ZodError): ExpectationDiagnostic[] {

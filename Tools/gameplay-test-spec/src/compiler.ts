@@ -1,6 +1,6 @@
-import type { Adapter, ExecutableScenarioPlan, ProbeRequestSchema, ScenarioAssertion, ScenarioSpec, ScenarioStep } from "./schema.js";
-import { ExecutableScenarioPlanSchema, type ExpectationDiagnostic } from "./schema.js";
-import { validateScenarioSpec } from "./validator.js";
+import type { Adapter, ExecutableScenarioPlan, ProbeRequestSchema, ScenarioAssertion, ScenarioDraft, ScenarioSpec, ScenarioStep } from "./schema.js";
+import { ExecutableScenarioPlanSchema, ScenarioDraftSchema, type ExpectationDiagnostic } from "./schema.js";
+import { validateScenarioSpec, validateScenarioDraft } from "./validator.js";
 
 function resolveAdapter(step: ScenarioStep | ScenarioAssertion, fallback: Adapter): Adapter {
   return step.adapter ?? fallback;
@@ -22,6 +22,23 @@ export function compileScenarioSpec(input: unknown): CompileResult {
   }
 
   const spec = validation.spec;
+  return compileSpecToPlan(spec, validation.diagnostics);
+}
+
+export function compileScenarioDraft(draft: unknown): CompileResult {
+  const validation = validateScenarioDraft(draft);
+  if (!validation.valid || !validation.spec) {
+    return {
+      valid: false,
+      diagnostics: validation.diagnostics
+    };
+  }
+
+  const spec = validation.spec;
+  return compileSpecToPlan(spec, validation.diagnostics);
+}
+
+function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnostic[]): CompileResult {
   const fallbackAdapter = spec.requiredAdapters.includes("Skill") ? "Skill" : spec.requiredAdapters[0];
   const probeRequests = deriveProbeRequests(spec, fallbackAdapter);
 
@@ -51,7 +68,7 @@ export function compileScenarioSpec(input: unknown): CompileResult {
 
   return {
     plan: parsed.data,
-    diagnostics: validation.diagnostics,
+    diagnostics,
     valid: true
   };
 }

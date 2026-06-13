@@ -41,6 +41,35 @@ export const ScenarioSpecSchema = z.object({
   timeoutMs: z.number().int().positive().default(10000)
 });
 
+export const ScenarioDraftSetupSchema = z.object({
+  kind: z.string().min(1),
+  parameters: z.record(JsonValueSchema).default({})
+});
+
+export const ScenarioDraftActionSchema = z.object({
+  kind: z.string().min(1),
+  target: z.string().optional(),
+  parameters: z.record(JsonValueSchema).default({})
+});
+
+export const ScenarioDraftAssertionSchema = z.object({
+  kind: z.string().min(1),
+  target: z.string().optional(),
+  expected: JsonValueSchema.optional(),
+  parameters: z.record(JsonValueSchema).default({})
+});
+
+export const ScenarioDraftSchema = z.object({
+  feature: z.string().min(1),
+  scenario: z.string().min(1),
+  tags: z.array(z.string()).default([]),
+  requiredAdapters: z.array(AdapterSchema).default(["Skill"]),
+  setup: z.array(ScenarioDraftSetupSchema).default([]),
+  actions: z.array(ScenarioDraftActionSchema).min(1),
+  assertions: z.array(ScenarioDraftAssertionSchema).min(1),
+  timeoutMs: z.number().int().positive().default(10000)
+});
+
 export const ExecutableActionSchema = ScenarioStepSchema.extend({
   adapter: AdapterSchema
 });
@@ -71,6 +100,7 @@ export type Adapter = z.infer<typeof AdapterSchema>;
 export type ScenarioStep = z.infer<typeof ScenarioStepSchema>;
 export type ScenarioAssertion = z.infer<typeof ScenarioAssertionSchema>;
 export type ScenarioSpec = z.infer<typeof ScenarioSpecSchema>;
+export type ScenarioDraft = z.infer<typeof ScenarioDraftSchema>;
 export type ExecutableScenarioPlan = z.infer<typeof ExecutableScenarioPlanSchema>;
 
 export type DiagnosticSeverity = "error" | "warning";

@@ -85,6 +85,7 @@
         "playerNumber": 1,
         "health": 10,
         "maxHealth": 10,
+        "defenceFactor": 0,
         "cellAlias": "targetCellA"
       }
     },
@@ -96,6 +97,7 @@
         "playerNumber": 1,
         "health": 10,
         "maxHealth": 10,
+        "defenceFactor": 0,
         "cellAlias": "targetCellB"
       }
     },
@@ -107,6 +109,7 @@
         "playerNumber": 1,
         "health": 10,
         "maxHealth": 10,
+        "defenceFactor": 0,
         "cellAlias": "safeCell"
       }
     },

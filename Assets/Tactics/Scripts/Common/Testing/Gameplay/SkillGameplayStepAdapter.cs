@@ -98,9 +98,16 @@ namespace Tactics.Common.Testing.Gameplay
                 or "unitManaEquals"
                 or "unitHasBuff"
                 or "unitBuffDurationEquals"
+                or "unitBuffCountEquals"
+                or "unitBuffIsUnique"
                 or "unitCellEquals"
+                or "unitCountInArea"
                 or "lastErrorContains"
-                or "stepMessageContains";
+                or "stepMessageContains"
+                or "projectileLaunched"
+                or "projectileHitTarget"
+                or "projectileCompleted"
+                or "multiStageStateEquals";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -115,9 +122,16 @@ namespace Tactics.Common.Testing.Gameplay
                     "unitManaEquals" => AssertUnitMana(context, assertion),
                     "unitHasBuff" => AssertUnitHasBuff(context, assertion),
                     "unitBuffDurationEquals" => AssertUnitBuffDuration(context, assertion),
+                    "unitBuffCountEquals" => AssertUnitBuffCount(context, assertion),
+                    "unitBuffIsUnique" => AssertUnitBuffIsUnique(context, assertion),
                     "unitCellEquals" => AssertUnitCell(context, assertion),
+                    "unitCountInArea" => AssertUnitCountInArea(context, assertion),
                     "lastErrorContains" => AssertLastErrorContains(context, assertion),
                     "stepMessageContains" => AssertStepMessageContains(context, assertion),
+                    "projectileLaunched" => AssertProjectileLaunched(context, assertion),
+                    "projectileHitTarget" => AssertProjectileHitTarget(context, assertion),
+                    "projectileCompleted" => AssertProjectileCompleted(context, assertion),
+                    "multiStageStateEquals" => AssertMultiStageState(context, assertion),
                     _ => GameplayAssertionResult.Fail(SkillAdapterName, assertion.Kind, $"Unsupported Skill assertion '{assertion.Kind}'.")
                 };
 
@@ -623,6 +637,142 @@ namespace Tactics.Common.Testing.Gameplay
             return contains
                 ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"StepMessage contains '{expected}'.")
                 : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"StepMessage did not contain '{expected}'. Actual={context.LastStepMessage ?? "null"}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitBuffCount(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitBuffCountEquals requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            string buffName = GetString(assertion.Parameters, "buffName", assertion.Expected?.ToObject<string>());
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitBuffCountEquals requires a buffName parameter.");
+
+            int expected = assertion.Expected?.ToObject<int>() ?? GetInt(assertion.Parameters, "expected", 0);
+            int actualCount = unit.BuffComponent?.GetActiveBuffs()
+                .Count(buff => string.Equals(buff.BuffName, buffName, StringComparison.OrdinalIgnoreCase)) ?? 0;
+
+            return actualCount == expected
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target} has {actualCount} '{buffName}' buff(s).")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target} to have {expected} '{buffName}' buff(s), actual={actualCount}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitBuffIsUnique(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitBuffIsUnique requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            string buffName = GetString(assertion.Parameters, "buffName", assertion.Expected?.ToObject<string>());
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitBuffIsUnique requires a buffName parameter.");
+
+            int actualCount = unit.BuffComponent?.GetActiveBuffs()
+                .Count(buff => string.Equals(buff.BuffName, buffName, StringComparison.OrdinalIgnoreCase)) ?? 0;
+
+            return actualCount <= 1
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target} has unique '{buffName}' buff (count={actualCount}).")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target} to have unique '{buffName}' buff, but found {actualCount} instances.");
+        }
+
+        private static GameplayAssertionResult AssertUnitCountInArea(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            string centerAlias = GetString(assertion.Parameters, "centerAlias", null);
+            if (string.IsNullOrWhiteSpace(centerAlias))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitCountInArea requires a centerAlias parameter.");
+
+            ICell center = null;
+            if (context.Cells.TryGetValue(centerAlias, out var cell))
+                center = cell;
+            else if (context.Units.TryGetValue(centerAlias, out var unit))
+                center = unit.CurrentCell;
+
+            if (center == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Center alias '{centerAlias}' does not resolve to a cell.");
+
+            int radius = GetInt(assertion.Parameters, "radius", 1);
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+
+            int actualCount = context.Units.Values.Count(u =>
+            {
+                if (u.CurrentCell == null) return false;
+                int dx = Math.Abs(u.CurrentCell.GridCoordinates.x - center.GridCoordinates.x);
+                int dy = Math.Abs(u.CurrentCell.GridCoordinates.y - center.GridCoordinates.y);
+                return dx <= radius && dy <= radius;
+            });
+
+            return actualCount == expected
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"Found {actualCount} unit(s) in area around '{centerAlias}'.")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {expected} unit(s) in area around '{centerAlias}', actual={actualCount}.");
+        }
+
+        private static GameplayAssertionResult AssertProjectileLaunched(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var result = context.LastSkillResult;
+            if (result == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
+
+            bool launched = result.StepCount > 0 &&
+                (result.Summary?.Contains("Projectile", StringComparison.OrdinalIgnoreCase) ?? false);
+
+            return launched
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, "Projectile was launched.")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, "No projectile launch detected.");
+        }
+
+        private static GameplayAssertionResult AssertProjectileHitTarget(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "projectileHitTarget requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            var result = context.LastSkillResult;
+            if (result == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
+
+            bool hit = result.Summary?.Contains("Hit", StringComparison.OrdinalIgnoreCase) ?? false;
+
+            return hit
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"Projectile hit target '{assertion.Target}'.")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Projectile did not hit target '{assertion.Target}'.");
+        }
+
+        private static GameplayAssertionResult AssertProjectileCompleted(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var result = context.LastSkillResult;
+            if (result == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
+
+            bool completed = result.ExecutionState.ToString() == "Completed" &&
+                (result.Summary?.Contains("Projectile", StringComparison.OrdinalIgnoreCase) ?? false);
+
+            return completed
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, "Projectile lifecycle completed.")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, "Projectile lifecycle did not complete.");
+        }
+
+        private static GameplayAssertionResult AssertMultiStageState(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            int stageIndex = GetInt(assertion.Parameters, "stageIndex", -1);
+            if (stageIndex < 0)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "multiStageStateEquals requires a non-negative stageIndex parameter.");
+
+            string expected = assertion.Expected?.ToObject<string>();
+            if (string.IsNullOrWhiteSpace(expected))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "multiStageStateEquals requires an expected state string.");
+
+            var result = context.LastSkillResult;
+            if (result == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
+
+            string actualState = result.ExecutionState.ToString();
+            return string.Equals(expected, actualState, StringComparison.Ordinal)
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"Stage {stageIndex} state={actualState}.")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected stage {stageIndex} state={expected}, actual={actualState}.");
         }
 
         private static SkillGraphTestWorld RequireWorld(GameplayRuntimeContext context)

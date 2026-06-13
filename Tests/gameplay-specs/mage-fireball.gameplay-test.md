@@ -56,6 +56,7 @@ setup:
       playerNumber: 1
       health: 10
       maxHealth: 10
+      defenceFactor: 0
       cellAlias: targetCellA
   - kind: createUnit
     parameters:
@@ -63,6 +64,7 @@ setup:
       playerNumber: 1
       health: 10
       maxHealth: 10
+      defenceFactor: 0
       cellAlias: targetCellB
   - kind: createUnit
     parameters:
@@ -70,6 +72,7 @@ setup:
       playerNumber: 1
       health: 10
       maxHealth: 10
+      defenceFactor: 0
       cellAlias: safeCell
   - kind: setTurnContext
     parameters:

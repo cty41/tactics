@@ -52,6 +52,7 @@ setup:
       playerNumber: 1
       health: 10
       maxHealth: 10
+      defenceFactor: 0
       luck: 0
       cellAlias: targetCell
   - kind: setTurnContext
