@@ -107,6 +107,11 @@ namespace Tactics.Common.Skills.Graph
             return _blackboard.ContainsKey(key);
         }
 
+        public void ClearBlackboard()
+        {
+            _blackboard.Clear();
+        }
+
         // ── 事件记录 ──
 
         public void RecordEvent(string eventType, string nodeId, IUnit target = null)

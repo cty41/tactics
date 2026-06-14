@@ -161,6 +161,11 @@ namespace Tactics.Common.Skills.Graph.Testing
                 result.ExecutionState = SkillGraphExecutionState.Aborted;
                 result.LastError = ex.Message;
             }
+            finally
+            {
+                // 清除 blackboard 引用，避免 Dispose 后访问已销毁对象
+                context.ClearBlackboard();
+            }
 
             result.ExecutionEvents.AddRange(context.ExecutionEvents);
             result.StageResults.AddRange(context.StageResults);

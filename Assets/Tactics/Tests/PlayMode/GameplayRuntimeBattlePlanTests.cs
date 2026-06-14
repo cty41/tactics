@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
@@ -119,6 +120,34 @@ namespace Tactics.Tests.PlayMode
             yield return null;
             yield return null;
             yield return null;
+
+            // 取消 RoguelikeBattleReturnHandler 的订阅，防止访问已销毁对象
+            if (_battleRoot != null)
+            {
+                var bc = _battleRoot.GetComponent<BattleController>();
+                if (bc != null)
+                {
+                    try
+                    {
+                        // 取消 BattleEnded 事件订阅
+                        var handlerType = ResolveRoguelikeBattleReturnHandlerType();
+                        if (handlerType != null)
+                        {
+                            var instanceProp = handlerType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
+                            var instance = instanceProp?.GetValue(null);
+                            if (instance != null)
+                            {
+                                var unregisterMethod = handlerType.GetMethod("UnregisterController", BindingFlags.Public | BindingFlags.Instance);
+                                unregisterMethod?.Invoke(instance, new object[] { bc });
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning($"[TearDown] Failed to unregister BattleController: {ex.Message}");
+                    }
+                }
+            }
 
             if (_cellManagerRoot != null)
             {
@@ -367,6 +396,17 @@ namespace Tactics.Tests.PlayMode
                     catch { return Array.Empty<Type>(); }
                 })
                 .FirstOrDefault(type => type.FullName == "Tactics.Common.Battle.BattleController");
+        }
+
+        private static Type ResolveRoguelikeBattleReturnHandlerType()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly =>
+                {
+                    try { return assembly.GetTypes(); }
+                    catch { return Array.Empty<Type>(); }
+                })
+                .FirstOrDefault(type => type.FullName == "Tactics.RoguelikeMap.RoguelikeBattleReturnHandler");
         }
 
         private static IEnumerator WaitForTask<T>(Task<T> task)

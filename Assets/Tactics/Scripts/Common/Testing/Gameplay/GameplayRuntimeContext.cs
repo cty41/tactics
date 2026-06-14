@@ -29,12 +29,21 @@ namespace Tactics.Common.Testing.Gameplay
 
         public void Dispose()
         {
-            // 1. 先清除所有对 MonoBehaviour 的引用（在 GameObject 销毁之前）
+            // 1. 清除每个 Unit 上的 Buff（Buff 持有对 Unit 和 BuffConfig 的引用）
+            foreach (var unit in Units.Values)
+            {
+                if (unit is Unit concreteUnit)
+                {
+                    concreteUnit.BuffComponent?.OnUnitDestroyed();
+                }
+            }
+
+            // 2. 先清除所有对 MonoBehaviour 的引用（在 GameObject 销毁之前）
             Units.Clear();
             Cells.Clear();
             SkillAbilities.Clear();
 
-            // 2. 销毁 ScriptableObject 实例
+            // 3. 销毁 ScriptableObject 实例
             foreach (var config in SkillAbilityConfigs.Values)
             {
                 if (config != null)
@@ -49,11 +58,11 @@ namespace Tactics.Common.Testing.Gameplay
             }
             SkillGraphs.Clear();
 
-            // 3. 销毁 GameObjects（通过 SkillWorld）
+            // 4. 销毁 GameObjects（通过 SkillWorld）
             SkillWorld?.Dispose();
             SkillWorld = null;
 
-            // 4. 清空其余引用
+            // 5. 清空其余引用
             AiBrainAssets.Clear();
             LastSkillResult = null;
             LastStepMessage = null;
