@@ -222,7 +222,10 @@ namespace Tactics.Common.Testing.Gameplay
             var controller = RequireBattleController(context, action.Kind);
             if (!EnsureBattleInitialized(controller))
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController initialization failed. Ensure the test scene provides CellManager and players.");
+            // 禁用 AI 自动 Play，防止 AI 自动推进回合
+            controller.DisableAiAutoPlay = true;
             controller.EndTurn();
+            controller.DisableAiAutoPlay = false;
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Advanced turn. CurrentRound={controller.CurrentRound}");
         }
 

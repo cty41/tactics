@@ -111,6 +111,15 @@ namespace Tactics.Common.Battle
             set => _controller.BypassActiveUnitCheck = value;
         }
 
+        /// <summary>
+        /// 当设置为 true 时，禁止 AI 自动执行 Play()，用于测试环境。
+        /// </summary>
+        public bool DisableAiAutoPlay
+        {
+            get => _controller.DisableAiAutoPlay;
+            set => _controller.DisableAiAutoPlay = value;
+        }
+
         public GridState GridState
         {
             get => _controller.GridState;

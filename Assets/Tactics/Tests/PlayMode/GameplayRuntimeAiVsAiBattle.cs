@@ -212,12 +212,17 @@ namespace Tactics.Tests.PlayMode
 
             if (targetCell != null)
             {
+                // 绕过活跃单位检查，允许 P1 在 AI 回合执行命令
+                controller.BypassActiveUnitCheck = true;
+
                 var moveCommand = new MoveCommand(originalCell, targetCell, new[] { originalCell, targetCell });
                 var moveTask = p1Unit.HumanExecuteAbility(moveCommand, controller);
                 yield return new WaitUntil(() => moveTask.IsCompleted);
                 
                 // 等待移动动画完成
                 yield return new WaitForSeconds(2.0f);
+
+                controller.BypassActiveUnitCheck = false;
 
                 Debug.Log($"[Test] P1 new position: ({p1Unit.CurrentCell.GridCoordinates.x}, {p1Unit.CurrentCell.GridCoordinates.y})");
                 Assert.That(p1Unit.CurrentCell, Is.EqualTo(targetCell), "P1 should have moved to target cell.");
@@ -279,11 +284,16 @@ namespace Tactics.Tests.PlayMode
             Assert.IsNotNull(p1Unit, "P1 unit should exist.");
             Assert.IsNotNull(p2Unit, "P2 unit should exist.");
 
+            // 绕过活跃单位检查，允许 P1 在 AI 回合执行命令
+            controller.BypassActiveUnitCheck = true;
+
             // Attack P2 with lethal damage
             var command = new AttackCommand(p2Unit, 999f);
             var attackTask = p1Unit.HumanExecuteAbility(command, controller);
             yield return new WaitUntil(() => attackTask.IsCompleted);
             yield return new WaitForSeconds(1.0f);
+
+            controller.BypassActiveUnitCheck = false;
 
             // Verify P2 is dead
             Assert.IsTrue(p2Unit.IsDowned, "P2 should be downed.");

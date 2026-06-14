@@ -31,6 +31,11 @@ namespace Tactics.Common.Controllers
         /// </summary>
         public bool BypassActiveUnitCheck { get; set; } = false;
 
+        /// <summary>
+        /// 当设置为 true 时，禁止 AI 自动执行 Play()，用于测试环境。
+        /// </summary>
+        public bool DisableAiAutoPlay { get; set; } = false;
+
         public event Action GameStarted;
         public event Action GameInitialized;
         public event Action<GameResult> GameEnded;
@@ -249,7 +254,10 @@ namespace Tactics.Common.Controllers
 
             TurnStarted?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
             UnitManager.MarkAsFriendly(TurnContext.PlayableUnits());
-            TurnContext.CurrentPlayer.Play(this);
+            if (!DisableAiAutoPlay)
+            {
+                TurnContext.CurrentPlayer.Play(this);
+            }
         }
 
         public void InvokeGameEnded(GameResult gameResult)
