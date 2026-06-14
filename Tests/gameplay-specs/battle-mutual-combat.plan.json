@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "scenarioName": "Battle.MutualCombat",
   "requiredAdapters": [
-    "Battle"
+    "Battle",
+    "Skill"
   ],
   "setupActions": [
     {
@@ -11,43 +12,44 @@
       "parameters": {}
     },
     {
-      "adapter": "Battle",
-      "kind": "createAiBrain",
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
       "parameters": {
-        "brainAssetAlias": "attack_brain",
-        "brainType": "attack"
+        "alias": "meleeAttackGraph",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 5,
+        "isRanged": false,
+        "minRange": 1,
+        "maxRange": 1
       }
     }
   ],
   "runtimeActions": [
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "attack",
-        "attackerAlias": "p1_0",
-        "targetAlias": "p2_0",
-        "damage": 5
+        "graphAlias": "meleeAttackGraph",
+        "casterAlias": "p1_0",
+        "targetAlias": "p2_0"
       }
     },
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "attack",
-        "attackerAlias": "p2_0",
-        "targetAlias": "p1_0",
-        "damage": 5
+        "graphAlias": "meleeAttackGraph",
+        "casterAlias": "p2_0",
+        "targetAlias": "p1_0"
       }
     },
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "attack",
-        "attackerAlias": "p1_0",
-        "targetAlias": "p2_0",
-        "damage": 5
+        "graphAlias": "meleeAttackGraph",
+        "casterAlias": "p1_0",
+        "targetAlias": "p2_0"
       }
     }
   ],

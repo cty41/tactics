@@ -2,13 +2,26 @@
   "schemaVersion": 1,
   "scenarioName": "Battle.TwoVsTwoCombat",
   "requiredAdapters": [
-    "Battle"
+    "Battle",
+    "Skill"
   ],
   "setupActions": [
     {
       "adapter": "Battle",
       "kind": "bindBattleController",
       "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "lethalAttackGraph",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 999,
+        "isRanged": false,
+        "minRange": 1,
+        "maxRange": 1
+      }
     },
     {
       "adapter": "Battle",
@@ -32,22 +45,20 @@
   "runtimeActions": [
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "attack",
-        "attackerAlias": "p1_0",
-        "targetAlias": "p2_0",
-        "damage": 999
+        "graphAlias": "lethalAttackGraph",
+        "casterAlias": "p1_0",
+        "targetAlias": "p2_0"
       }
     },
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "attack",
-        "attackerAlias": "p1_1",
-        "targetAlias": "p2_1",
-        "damage": 999
+        "graphAlias": "lethalAttackGraph",
+        "casterAlias": "p1_1",
+        "targetAlias": "p2_1"
       }
     }
   ],
@@ -80,7 +91,7 @@
       "parameters": {}
     }
   ],
-  "timeoutMs": 10000,
+  "timeoutMs": 15000,
   "probeRequests": [
     {
       "adapter": "Battle",

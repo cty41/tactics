@@ -2,13 +2,35 @@
   "schemaVersion": 1,
   "scenarioName": "Battle.AIHeal",
   "requiredAdapters": [
-    "Battle"
+    "Battle",
+    "Skill"
   ],
   "setupActions": [
     {
       "adapter": "Battle",
       "kind": "bindBattleController",
       "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "meleeAttackGraph",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 10,
+        "isRanged": false,
+        "minRange": 1,
+        "maxRange": 1
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "selfHealGraph",
+        "graphKind": "selfHeal",
+        "healAmount": 5
+      }
     },
     {
       "adapter": "Battle",
@@ -22,22 +44,19 @@
   "runtimeActions": [
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "attack",
-        "attackerAlias": "p2_0",
-        "targetAlias": "p1_0",
-        "damage": 10
+        "graphAlias": "meleeAttackGraph",
+        "casterAlias": "p2_0",
+        "targetAlias": "p1_0"
       }
     },
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "heal",
-        "casterAlias": "p1_0",
-        "targetAlias": "p1_0",
-        "healAmount": 5
+        "graphAlias": "selfHealGraph",
+        "casterAlias": "p1_0"
       }
     }
   ],

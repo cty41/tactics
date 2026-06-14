@@ -2,13 +2,25 @@
   "schemaVersion": 1,
   "scenarioName": "Battle.AIFireball",
   "requiredAdapters": [
-    "Battle"
+    "Battle",
+    "Skill"
   ],
   "setupActions": [
     {
       "adapter": "Battle",
       "kind": "bindBattleController",
       "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "fireballGraph",
+        "graphKind": "areaDamage",
+        "baseDamage": 5,
+        "radius": 1,
+        "maxRange": 3
+      }
     },
     {
       "adapter": "Battle",
@@ -22,14 +34,11 @@
   "runtimeActions": [
     {
       "adapter": "Battle",
-      "kind": "executeAbility",
+      "kind": "executeBattleSkillGraph",
       "parameters": {
-        "commandType": "fireball",
+        "graphAlias": "fireballGraph",
         "casterAlias": "p1_0",
-        "targetCellAlias": "cell_1_0",
-        "damage": 5,
-        "manaCost": 0,
-        "aoeCellAliases": ["cell_1_0"]
+        "targetAlias": "p2_0"
       }
     }
   ],
