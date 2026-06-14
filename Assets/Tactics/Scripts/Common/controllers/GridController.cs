@@ -26,6 +26,11 @@ namespace Tactics.Common.Controllers
         public int CurrentRound { get; protected set; } = 1;
         private int _transitionCount;
 
+        /// <summary>
+        /// 当设置为 true 时，OnAbilityUsed 跳过活跃单位检查，允许 AI 测试直接执行命令。
+        /// </summary>
+        public bool BypassActiveUnitCheck { get; set; } = false;
+
         public event Action GameStarted;
         public event Action GameInitialized;
         public event Action<GameResult> GameEnded;
@@ -162,14 +167,18 @@ namespace Tactics.Common.Controllers
         /// <returns>A task representing the asynchronous execution of the ability.</returns>
         protected virtual async void OnAbilityUsed(IUnit unit, AbilityUsedEventArgs eventArgs)
         {
-            if (unit.PlayerNumber.Equals(TurnContext.CurrentPlayer.PlayerNumber))
+            if (unit.PlayerNumber.Equals(TurnContext.CurrentPlayer.PlayerNumber) || BypassActiveUnitCheck)
             {
                 // UnitSpeed 期望每回合只有一个可行动单位。
                 // 当场景绑定异常导致可行动单位列表变宽时，必须在执行层阻止越权单位的命令。
-                var activeUnit = TurnContext.PlayableUnits().FirstOrDefault();
-                if (activeUnit == null || !ReferenceEquals(activeUnit, unit))
+                // 但 AI 测试需要绕过此检查。
+                if (!BypassActiveUnitCheck)
                 {
-                    return;
+                    var activeUnit = TurnContext.PlayableUnits().FirstOrDefault();
+                    if (activeUnit == null || !ReferenceEquals(activeUnit, unit))
+                    {
+                        return;
+                    }
                 }
 
                 _ = eventArgs.PreAction(this);

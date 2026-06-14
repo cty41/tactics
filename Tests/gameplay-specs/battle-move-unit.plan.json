@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.MoveUnitToCell",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "moveUnit",
+      "parameters": {
+        "unitAlias": "p1_0",
+        "cellAlias": "cell_1_1"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "unitPositionEquals",
+      "target": "p1_0",
+      "expected": { "x": 1, "y": 1 },
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "unitPositionEquals",
+      "target": "p1_0",
+      "parameters": {}
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Battle;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Skills.Graph;
@@ -22,6 +23,8 @@ namespace Tactics.Common.Testing.Gameplay
         public Dictionary<string, IAbility> SkillAbilities { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, IUnit> Units { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, ICell> Cells { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, AiBrainAsset> AiBrainAssets { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public AiDecisionLog LastAiDecisionLog { get; set; }
 
         public void Dispose()
         {
@@ -32,6 +35,7 @@ namespace Tactics.Common.Testing.Gameplay
             SkillAbilities.Clear();
             Units.Clear();
             Cells.Clear();
+            AiBrainAssets.Clear();
             LastSkillResult = null;
             LastStepMessage = null;
             BattleController = null;

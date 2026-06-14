@@ -117,8 +117,32 @@ namespace Tactics.Common.Units.Highlight
         private Task ApplyHighlight(HighlightConfig config, IHighlightParams @params = null)
         {
             var tcs = new TaskCompletionSource<bool>();
+            if (_unit == null)
+            {
+                tcs.SetResult(false);
+                return tcs.Task;
+            }
+            // Fast path: if no visual effects configured, complete immediately
+            if (!HasAnyVisualEffect(config))
+            {
+                tcs.SetResult(true);
+                return tcs.Task;
+            }
             _unit.StartCoroutine(ApplyHighlightRoutine(config, @params ?? NoParam.Instance, tcs));
             return tcs.Task;
+        }
+
+        private static bool HasAnyVisualEffect(HighlightConfig config)
+        {
+            return (config.scaling && config.target != null)
+                || (config.color && config.targetSprite != null)
+                || (config.animation && config.animator != null)
+                || (config.delayEffect && config.delaySeconds > 0)
+                || (config.activate && config.targetObj != null)
+                || config.activateMulti
+                || (config.spinning && config.spinTarget != null)
+                || (config.rendererColor && config.renderer != null)
+                || (config.spriteOrder && config.orderSprite != null);
         }
 
         private IEnumerator ApplyHighlightRoutine(HighlightConfig config, IHighlightParams @params, TaskCompletionSource<bool> tcs)

@@ -102,6 +102,15 @@ namespace Tactics.Common.Battle
         public int CurrentRound => _controller.CurrentRound;
         public Transform UnitContainerTransform => _unitContainer;
 
+        /// <summary>
+        /// 当设置为 true 时，OnAbilityUsed 跳过活跃单位检查，允许 AI 测试直接执行命令。
+        /// </summary>
+        public bool BypassActiveUnitCheck
+        {
+            get => _controller.BypassActiveUnitCheck;
+            set => _controller.BypassActiveUnitCheck = value;
+        }
+
         public GridState GridState
         {
             get => _controller.GridState;
@@ -890,17 +899,19 @@ namespace Tactics.Common.Battle
 
         public async Task MarkAsSelected(IUnit unit)
         {
-            await (unit as Unit).MarkAsSelected();
+            var mono = unit as Unit;
+            if (mono == null) return;
+            await mono.MarkAsSelected();
         }
 
         public async Task MarkAsFriendly(IEnumerable<IUnit> units)
         {
-            await Task.WhenAll(units.Select(u => (u as Unit).MarkAsFriendly()));
+            await Task.WhenAll(units.Select(u => (u as Unit)?.MarkAsFriendly() ?? Task.CompletedTask));
         }
 
         public async Task MarkAsFinished(IEnumerable<IUnit> units)
         {
-            await Task.WhenAll(units.Select(u => (u as Unit).MarkAsFinished()));
+            await Task.WhenAll(units.Select(u => (u as Unit)?.MarkAsFinished() ?? Task.CompletedTask));
         }
 
         public async Task MarkAsTargetable(IEnumerable<IUnit> units)

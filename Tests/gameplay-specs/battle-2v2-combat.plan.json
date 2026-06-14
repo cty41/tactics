@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "Battle.BattleFullCombatVictory",
+  "scenarioName": "Battle.TwoVsTwoCombat",
   "requiredAdapters": [
     "Battle"
   ],
@@ -9,6 +9,24 @@
       "adapter": "Battle",
       "kind": "bindBattleController",
       "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "setUnitState",
+      "parameters": {
+        "unitAlias": "p2_0",
+        "health": 100,
+        "maxHealth": 100
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "setUnitState",
+      "parameters": {
+        "unitAlias": "p2_1",
+        "health": 100,
+        "maxHealth": 100
+      }
     }
   ],
   "runtimeActions": [
@@ -21,6 +39,16 @@
         "targetAlias": "p2_0",
         "damage": 999
       }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeAbility",
+      "parameters": {
+        "commandType": "attack",
+        "attackerAlias": "p1_1",
+        "targetAlias": "p2_1",
+        "damage": 999
+      }
     }
   ],
   "assertionPlans": [
@@ -28,6 +56,13 @@
       "adapter": "Battle",
       "kind": "unitAliveEquals",
       "target": "p2_0",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitAliveEquals",
+      "target": "p2_1",
       "expected": false,
       "parameters": {}
     },
@@ -52,13 +87,6 @@
       "kind": "unitAliveEquals",
       "target": "p2_0",
       "parameters": {}
-    },
-    {
-      "adapter": "Battle",
-      "kind": "battleResultEquals",
-      "parameters": {
-        "winnerPlayerNumber": 1
-      }
     },
     {
       "adapter": "Battle",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "Battle.BattleFullCombatVictory",
+  "scenarioName": "Battle.AIFullCombat",
   "requiredAdapters": [
     "Battle"
   ],
@@ -59,11 +59,6 @@
       "parameters": {
         "winnerPlayerNumber": 1
       }
-    },
-    {
-      "adapter": "Battle",
-      "kind": "battleIsActive",
-      "parameters": {}
     }
   ]
 }

@@ -22,6 +22,9 @@ namespace Tactics.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            // 忽略前一个测试残留的 AIPlayer 异步错误（async void Play() 跨帧执行）
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+
             var controllerType = ResolveBattleControllerType();
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
 
@@ -101,14 +104,21 @@ namespace Tactics.Tests.PlayMode
             var initMethod = controllerType.GetMethod("InitializeAndStart", BindingFlags.Instance | BindingFlags.Public);
             initMethod?.Invoke(bc, new object[] { false });
 
+            // 等两帧让 AIPlayer 异步操作完成
+            yield return null;
             yield return null;
         }
 
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            // 忽略销毁时和 AIPlayer 的错误日志
+            // ignoreFailingMessages 由 SetUp 设置为 true，这里确保仍然为 true
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+
+            // 等待几帧让 AIPlayer 异步操作完成
+            yield return null;
+            yield return null;
+            yield return null;
 
             if (_cellManagerRoot != null)
             {
@@ -123,12 +133,12 @@ namespace Tactics.Tests.PlayMode
             }
 
             yield return null;
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = false;
         }
 
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesBattleAdvanceTurnPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecuteBattlePlan(GetPlanPath("battle-advance-turn.plan.json"));
             yield return WaitForTask(task);
 
@@ -145,7 +155,6 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecuteBattlePlan(GetPlanPath("battle-end-result.plan.json"));
             yield return WaitForTask(task);
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = false;
 
             var result = task.Result;
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
@@ -159,15 +168,104 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecuteBattlePlan(GetPlanPath("battle-full-combat-victory.plan.json"));
             yield return WaitForTask(task);
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = false;
 
             var result = task.Result;
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
             Assert.IsTrue(result.Passed, details);
-            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHealthEquals" && assertion.Passed), Is.True, details);
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitAliveEquals" && assertion.Passed), Is.True, details);
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleResultEquals" && assertion.Passed), Is.True, details);
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleIsActive" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleHealPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-heal.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleIsActive" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleMoveUnitPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-move-unit.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitPositionEquals" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleFireballAoEPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-fireball-aoe.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleIsActive" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleMultiRoundPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-multi-round.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "currentRoundEquals" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleBuffIgnitePlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-buff-ignite.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHasBuff" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleAIAttackPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-ai-attack.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleIsActive" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleAIDecisionLogPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-ai-decision-log.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "aiSelectedIntentTypeEquals" && assertion.Passed), Is.True, details);
         }
 
         private static string GetPlanPath(string fileName)

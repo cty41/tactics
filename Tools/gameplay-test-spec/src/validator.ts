@@ -19,7 +19,12 @@ const supportedActionKinds = new Set([
   "executeAbilityOnCell",
   "advanceTurn",
   "endBattleWithResult",
-  "executeAbility"
+  "executeAbility",
+  "moveUnit",
+  "setUnitState",
+  "addBuff",
+  "executeAI",
+  "createAiBrain"
 ]);
 
 const supportedGraphKinds = new Set([
@@ -54,7 +59,14 @@ const supportedAssertionKinds = new Set([
   "currentRoundEquals",
   "unitAliveEquals",
   "battleResultEquals",
-  "unitPositionEquals"
+  "unitPositionEquals",
+  "playerNumberEquals",
+  "unitMaxHealthEquals",
+  "unitCountEquals",
+  "unitCanAct",
+  "aiSelectedIntentTypeEquals",
+  "aiCandidateCountEquals",
+  "aiRuleFilteredCountEquals"
 ]);
 
 interface AliasState {

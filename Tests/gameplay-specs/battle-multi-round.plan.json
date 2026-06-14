@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.MultiRoundCombat",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "currentRoundEquals",
+      "expected": 2,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "currentRoundEquals",
+      "parameters": {}
+    }
+  ]
+}

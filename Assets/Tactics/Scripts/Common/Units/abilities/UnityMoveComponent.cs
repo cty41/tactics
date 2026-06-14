@@ -17,7 +17,20 @@ namespace Tactics.Common.Units.Abilities
         public override Task MovementAnimation(IEnumerable<ICell> path, ICell destination)
         {
             var tcs = new TaskCompletionSource<bool>();
-            ((MonoBehaviour)_unitReference).StartCoroutine(AnimateMoveCoroutine(path, destination, tcs));
+            var mono = _unitReference as MonoBehaviour;
+            if (mono == null)
+            {
+                tcs.SetResult(true);
+                return tcs.Task;
+            }
+            // Fast path: if unit has no Animator or SpriteRenderer, skip animation
+            if (mono.GetComponent<Animator>() == null && mono.GetComponent<SpriteRenderer>() == null)
+            {
+                _unitReference.WorldPosition = destination.WorldPosition;
+                tcs.SetResult(true);
+                return tcs.Task;
+            }
+            mono.StartCoroutine(AnimateMoveCoroutine(path, destination, tcs));
             return tcs.Task;
         }
 
