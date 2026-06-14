@@ -21,6 +21,12 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+        }
+
         [UnityTest]
         public IEnumerator RuntimeRunner_AbortsInvalidGraph_BeforeExecution()
         {

@@ -115,6 +115,13 @@ namespace Tactics.Common.Skills.Graph.Testing
 
         public void Dispose()
         {
+            // 先清空管理器（移除引用，避免悬空引用窗口）
+            CellManager.Clear();
+            UnitManager.Clear();
+            PlayerManager.Clear();
+            GridController.ClearTurnContext();
+
+            // 再销毁 GameObjects
             for (int i = _spawnedObjects.Count - 1; i >= 0; i--)
             {
                 var go = _spawnedObjects[i];
@@ -132,10 +139,6 @@ namespace Tactics.Common.Skills.Graph.Testing
             }
 
             _spawnedObjects.Clear();
-            CellManager.Clear();
-            UnitManager.Clear();
-            PlayerManager.Clear();
-            GridController.ClearTurnContext();
         }
     }
 

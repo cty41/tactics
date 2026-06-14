@@ -29,7 +29,11 @@ namespace Tactics.Common.Testing.Gameplay
 
             var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
             if (completed != executionTask)
+            {
+                // 等待 ExecuteCoreAsync 完成（包括 Dispose），避免 context 泄漏
+                try { await executionTask; } catch { /* 忽略，超时结果已构建 */ }
                 return BuildTimeoutResult(plan);
+            }
 
             return await executionTask;
         }

@@ -18,6 +18,12 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+        }
+
         [UnityTest]
         public IEnumerator Runner_AbortsWhenNoEntryNode()
         {

@@ -8,6 +8,7 @@ using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
 using Tactics.Common.Cells;
 using Tactics.Common.Units.Abilities;
+using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay
 {
@@ -28,18 +29,37 @@ namespace Tactics.Common.Testing.Gameplay
 
         public void Dispose()
         {
-            SkillWorld?.Dispose();
-            SkillWorld = null;
-            SkillGraphs.Clear();
-            SkillAbilityConfigs.Clear();
-            SkillAbilities.Clear();
+            // 1. 先清除所有对 MonoBehaviour 的引用（在 GameObject 销毁之前）
             Units.Clear();
             Cells.Clear();
+            SkillAbilities.Clear();
+
+            // 2. 销毁 ScriptableObject 实例
+            foreach (var config in SkillAbilityConfigs.Values)
+            {
+                if (config != null)
+                    UnityEngine.Object.Destroy(config);
+            }
+            SkillAbilityConfigs.Clear();
+
+            foreach (var graph in SkillGraphs.Values)
+            {
+                if (graph != null)
+                    UnityEngine.Object.Destroy(graph);
+            }
+            SkillGraphs.Clear();
+
+            // 3. 销毁 GameObjects（通过 SkillWorld）
+            SkillWorld?.Dispose();
+            SkillWorld = null;
+
+            // 4. 清空其余引用
             AiBrainAssets.Clear();
             LastSkillResult = null;
             LastStepMessage = null;
             BattleController = null;
             LastBattleResult = null;
+            LastAiDecisionLog = null;
         }
     }
 }
