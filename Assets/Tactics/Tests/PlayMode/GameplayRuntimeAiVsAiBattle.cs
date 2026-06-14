@@ -262,6 +262,46 @@ namespace Tactics.Tests.PlayMode
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator AiVsAi_FullCombatVictory()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var controller = BattleController.Instance;
+            Assert.IsNotNull(controller, "BattleController.Instance should exist.");
+
+            var units = controller.GetUnits().ToList();
+            var p1Unit = units.FirstOrDefault(u => u.PlayerNumber == 1);
+            var p2Unit = units.FirstOrDefault(u => u.PlayerNumber == 2);
+
+            Assert.IsNotNull(p1Unit, "P1 unit should exist.");
+            Assert.IsNotNull(p2Unit, "P2 unit should exist.");
+
+            // Attack P2 with lethal damage
+            var command = new AttackCommand(p2Unit, 999f);
+            var attackTask = p1Unit.HumanExecuteAbility(command, controller);
+            yield return new WaitUntil(() => attackTask.IsCompleted);
+            yield return new WaitForSeconds(1.0f);
+
+            // Verify P2 is dead
+            Assert.IsTrue(p2Unit.IsDowned, "P2 should be downed.");
+            Assert.LessOrEqual(p2Unit.Health, 0f, "P2 health should be <= 0.");
+
+            // Verify battle ended with P1 victory
+            Assert.IsFalse(controller.IsBattleActive, "Battle should have ended.");
+
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator AiVsAi_BattleIsActive()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var controller = BattleController.Instance;
+            Assert.IsNotNull(controller, "BattleController.Instance should exist.");
+            Assert.IsTrue(controller.IsBattleActive, "Battle should be active.");
+            yield return null;
+        }
+
         private static string GetPlanPath(string fileName)
         {
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", fileName));
