@@ -103,6 +103,72 @@ namespace Tactics.Editor.MCP
         }
     }
 
+    [McpForUnityTool("validate_skill_graph_spec")]
+    public static class ValidateSkillGraphSpecTool
+    {
+        public static object HandleCommand(JObject @params)
+        {
+            string specPath = @params["specPath"]?.ToString();
+            if (string.IsNullOrWhiteSpace(specPath))
+                return new ErrorResponse("specPath parameter is required.");
+
+            try
+            {
+                string fullPath = Path.Combine(Application.dataPath, "..", specPath);
+                if (!File.Exists(fullPath))
+                    return new ErrorResponse($"Spec file not found: {specPath}");
+
+                var result = SkillGraphCliHelper.RunCli("validate-spec", $"-s \"{specPath}\"");
+                return JObject.Parse(result);
+            }
+            catch (Exception ex)
+            {
+                return new ErrorResponse($"Failed to validate spec: {ex.Message}");
+            }
+        }
+    }
+
+    [McpForUnityTool("apply_skill_graph_spec")]
+    public static class ApplySkillGraphSpecTool
+    {
+        public static object HandleCommand(JObject @params)
+        {
+            string specPath = @params["specPath"]?.ToString();
+            string graphPath = @params["graphPath"]?.ToString();
+
+            if (string.IsNullOrWhiteSpace(specPath))
+                return new ErrorResponse("specPath parameter is required.");
+            if (string.IsNullOrWhiteSpace(graphPath))
+                return new ErrorResponse("graphPath parameter is required.");
+
+            try
+            {
+                string fullSpecPath = Path.Combine(Application.dataPath, "..", specPath);
+                if (!File.Exists(fullSpecPath))
+                    return new ErrorResponse($"Spec file not found: {specPath}");
+
+                // Read spec content
+                string specContent = File.ReadAllText(fullSpecPath);
+
+                // Use MCP Facade to apply spec
+                var facadeType = System.Type.GetType("Tactics.Editor.SkillGraphEditor.SkillGraphMcpFacade");
+                if (facadeType == null)
+                    return new ErrorResponse("SkillGraphMcpFacade not found.");
+
+                var applyMethod = facadeType.GetMethod("ApplySpec", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                if (applyMethod == null)
+                    return new ErrorResponse("ApplySpec method not found.");
+
+                var result = applyMethod.Invoke(null, new object[] { graphPath, specContent });
+                return JObject.FromObject(result);
+            }
+            catch (Exception ex)
+            {
+                return new ErrorResponse($"Failed to apply spec: {ex.Message}");
+            }
+        }
+    }
+
     internal static class SkillGraphCliHelper
     {
         internal static string RunCli(string command, string args)

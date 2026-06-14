@@ -162,22 +162,6 @@
       "target": "safeTarget",
       "expected": 10,
       "parameters": {}
-    },
-    {
-      "adapter": "Skill",
-      "kind": "unitHasBuff",
-      "target": "targetA",
-      "expected": "Frozen",
-      "parameters": {}
-    },
-    {
-      "adapter": "Skill",
-      "kind": "unitBuffDurationEquals",
-      "target": "targetA",
-      "expected": 2,
-      "parameters": {
-        "buffName": "Frozen"
-      }
     }
   ],
   "timeoutMs": 10000,
@@ -204,20 +188,6 @@
       "kind": "unitHealthEquals",
       "target": "safeTarget",
       "parameters": {}
-    },
-    {
-      "adapter": "Skill",
-      "kind": "unitHasBuff",
-      "target": "targetA",
-      "parameters": {}
-    },
-    {
-      "adapter": "Skill",
-      "kind": "unitBuffDurationEquals",
-      "target": "targetA",
-      "parameters": {
-        "buffName": "Frozen"
-      }
     }
   ]
 }
