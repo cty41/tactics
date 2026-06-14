@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Units;
@@ -10,6 +11,8 @@ namespace Tactics.Common.Units.Abilities
 {
     public class UnityMoveComponent : MoveComponent
     {
+        private CancellationTokenSource _moveCts;
+
         public UnityMoveComponent(IUnit unitReference) : base(unitReference)
         {
         }
@@ -20,21 +23,52 @@ namespace Tactics.Common.Units.Abilities
             var mono = _unitReference as MonoBehaviour;
             if (mono == null)
             {
+                _unitReference.WorldPosition = destination.WorldPosition;
                 tcs.SetResult(true);
                 return tcs.Task;
             }
-            mono.StartCoroutine(AnimateMoveCoroutine(path, destination, tcs));
+
+            // 快速路径：如果 path 为空或只有一个点，直接设置位置
+            var pathList = path as List<ICell> ?? new List<ICell>(path);
+            if (pathList.Count <= 1)
+            {
+                _unitReference.WorldPosition = destination.WorldPosition;
+                tcs.SetResult(true);
+                return tcs.Task;
+            }
+
+            _moveCts?.Cancel();
+            _moveCts = new CancellationTokenSource();
+            mono.StartCoroutine(AnimateMoveCoroutine(pathList, destination, tcs, _moveCts.Token));
             return tcs.Task;
         }
 
-        private IEnumerator AnimateMoveCoroutine(IEnumerable<ICell> path, ICell destination, TaskCompletionSource<bool> tcs)
+        public void CancelMovement()
+        {
+            _moveCts?.Cancel();
+        }
+
+        private IEnumerator AnimateMoveCoroutine(List<ICell> path, ICell destination, TaskCompletionSource<bool> tcs, CancellationToken token)
         {
             var currentCell = _unitReference.CurrentCell;
             foreach (var cell in path)
             {
+                if (token.IsCancellationRequested)
+                {
+                    _unitReference.WorldPosition = destination.WorldPosition;
+                    tcs.SetCanceled();
+                    yield break;
+                }
+
                 _unitReference.InvokeUnitLeftCell(new UnitChangedGridPositionEventArgs(_unitReference, currentCell, cell));
                 while (!_unitReference.WorldPosition.Equals(cell.WorldPosition))
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        _unitReference.WorldPosition = destination.WorldPosition;
+                        tcs.SetCanceled();
+                        yield break;
+                    }
                     _unitReference.WorldPosition = Vector3.MoveTowards(_unitReference.WorldPosition.ToVector3(), cell.WorldPosition.ToVector3(), Time.deltaTime * _unitReference.MovementAnimationSpeed).ToIVector3();
                     yield return null;
                 }
