@@ -93,7 +93,7 @@ namespace Tactics.Common.AI.BehaviourTrees
         }
 
         /// <summary>
-        /// Executes the attack against the target using the provided ability, or falls back to legacy command.
+        /// Executes the attack against the target using the provided ability.
         /// </summary>
         private async void ExecuteAttackAbility(IUnit target, GenericAbilityImpl attackAbility, TaskCompletionSource<bool> tcs)
         {
@@ -106,11 +106,8 @@ namespace Tactics.Common.AI.BehaviourTrees
                 }
                 else
                 {
-                    // Fallback to legacy CombatComponent damage calculation
-                    var isRangedDamage = _unit.AttackRange > 1;
-                    var damage = _unit.CalculateTotalDamage(target, target.CurrentCell, _unit.CurrentCell, isRangedDamage);
-                    var command = new AttackCommand(target, damage);
-                    _unit.AIExecuteAbility(command, _gridController, tcs);
+                    TLog.Error("[AttackActionNode] No attack ability found. Ensure unit has AbilityConfig with DamageEffect.");
+                    tcs.SetResult(false);
                 }
             }
             catch (Exception ex)

@@ -10,7 +10,9 @@ namespace Tactics.Common.AI.MonsterAI
 {
     /// <summary>
     /// 意图执行器。
-    /// 负责把意图翻译成现有移动/攻击/技能命令，只做意图翻译，不承载战斗规则。
+    /// 负责把意图翻译成技能执行动作，只做意图翻译，不承载战斗规则。
+    /// 运行时主路径优先使用 GenericAbilityImpl / SkillGraphAbilityImpl，
+    /// 旧 Command 路径仅作为兼容兜底。
     /// </summary>
     public static class IntentExecutor
     {
@@ -81,7 +83,9 @@ namespace Tactics.Common.AI.MonsterAI
         }
 
         /// <summary>
-        /// 执行普攻意图 - 使用现有 AttackCommand。
+        /// 执行普攻意图。
+        /// 优先走新技能执行链（GenericAbilityImpl/SkillGraphAbilityImpl），
+        /// 仅在找不到可用攻击能力时保留 Command 兜底，避免旧系统成为主路径。
         /// </summary>
         private static async Task ExecuteBasicAttack(IntentCandidate selected, AiContext context)
         {
@@ -89,9 +93,14 @@ namespace Tactics.Common.AI.MonsterAI
 
             context.DecisionLog.Info($"BasicAttack: Attacking Unit_{selected.Target.UnitID}");
 
-            float damage = context.Self.CalculateDamageDealt(selected.Target, selected.Target.CurrentCell, context.Self.CurrentCell);
-            var command = new AttackCommand(selected.Target, damage);
-            await ExecuteCommandForAI(command, context);
+            var attackAbility = FindAttackAbility(context);
+            if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
+            {
+                await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                return;
+            }
+
+            TLog.Warning("[IntentExecutor] No attack ability found. Ensure unit has AbilityConfig with DamageEffect.");
         }
 
         /// <summary>
@@ -158,10 +167,15 @@ namespace Tactics.Common.AI.MonsterAI
                 }
             }
 
-            // 攻击目标 - 使用现有 AttackCommand
-            float damage = context.Self.CalculateDamageDealt(selected.Target, selected.Target.CurrentCell, context.Self.CurrentCell);
-            var command = new AttackCommand(selected.Target, damage);
-            await ExecuteCommandForAI(command, context);
+            // 攻击目标 - 优先走新技能执行链
+            var attackAbility = FindAttackAbility(context);
+            if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
+            {
+                await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                return;
+            }
+
+            TLog.Warning("[IntentExecutor] No attack ability found for FinishOff. Ensure unit has AbilityConfig with DamageEffect.");
         }
 
         /// <summary>
@@ -171,6 +185,16 @@ namespace Tactics.Common.AI.MonsterAI
         {
             context.DecisionLog.Info("HoldPosition: Not moving or attacking.");
             await Task.CompletedTask;
+        }
+
+        private static AbilityInfo FindAttackAbility(AiContext context)
+        {
+            foreach (var ability in context.AvailableAbilities)
+            {
+                if (ability.Name == "Attack" || ability.Name == "MeleeAttack" || ability.Name == "RangedAttack")
+                    return ability;
+            }
+            return null;
         }
 
         private static AbilityInfo FindMoveAbility(AiContext context)
@@ -201,6 +225,7 @@ namespace Tactics.Common.AI.MonsterAI
                 return await genericMove.ExecuteMoveForAI(destination, path, context.GridController);
             }
 
+            // 兼容兜底：当单位只有基础 Move 能力时仍保留 MoveCommand
             await ExecuteCommandForAI(new MoveCommand(context.Self.CurrentCell, destination, path), context);
             return true;
         }
