@@ -69,6 +69,9 @@ namespace Tactics.Common.Units.Highlight
         /// </summary>
         public virtual async Task MarkAsAttacking(Unit otherUnit)
         {
+            if (_highlightCancellationTokenSource.IsCancellationRequested)
+                return;
+
             var combatParams = new CombatHighlightParams(_unit, otherUnit);
             await ApplyHighlight(_configs.attackingConfig, combatParams);
         }
@@ -147,12 +150,15 @@ namespace Tactics.Common.Units.Highlight
 
         private IEnumerator ApplyHighlightRoutine(HighlightConfig config, IHighlightParams @params, TaskCompletionSource<bool> tcs)
         {
+            var token = _highlightCancellationTokenSource.Token;
+
             if (config.scaling && config.target != null)
             {
                 var originalScale = config.target.localScale;
                 var elapsed = 0f;
                 while (elapsed < config.duration)
                 {
+                    if (token.IsCancellationRequested) { tcs.SetCanceled(); yield break; }
                     elapsed += Time.deltaTime;
                     var t = Mathf.Clamp01(elapsed / config.duration);
                     config.target.localScale = Vector3.Lerp(originalScale, config.targetValue, t);
@@ -169,11 +175,15 @@ namespace Tactics.Common.Units.Highlight
             {
                 config.animator.SetTrigger(config.parameter);
                 if (config.delay > 0)
+                {
+                    if (token.IsCancellationRequested) { tcs.SetCanceled(); yield break; }
                     yield return new WaitForSeconds(config.delay);
+                }
             }
 
             if (config.delayEffect && config.delaySeconds > 0)
             {
+                if (token.IsCancellationRequested) { tcs.SetCanceled(); yield break; }
                 yield return new WaitForSeconds(config.delaySeconds);
             }
 
@@ -194,6 +204,7 @@ namespace Tactics.Common.Units.Highlight
                 var elapsed = 0f;
                 while (elapsed < config.swayDuration)
                 {
+                    if (token.IsCancellationRequested) { config.swayTarget.position = original; tcs.SetCanceled(); yield break; }
                     elapsed += Time.deltaTime;
                     var sway = Mathf.Sin(elapsed * config.swayFrequency * Mathf.PI * 2) * config.swayAmplitude;
                     config.swayTarget.position = original + new Vector3(sway, 0, 0);
@@ -208,6 +219,7 @@ namespace Tactics.Common.Units.Highlight
                 var axis = config.spinAxis.normalized;
                 while (elapsed < config.spinDuration)
                 {
+                    if (token.IsCancellationRequested) { tcs.SetCanceled(); yield break; }
                     config.spinTarget.Rotate(axis, config.spinSpeed * Time.deltaTime);
                     elapsed += Time.deltaTime;
                     yield return null;
