@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Battle;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
@@ -26,6 +27,11 @@ namespace Tactics.Common.Testing.Gameplay
         public Dictionary<string, ICell> Cells { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, AiBrainAsset> AiBrainAssets { get; } = new(StringComparer.OrdinalIgnoreCase);
         public AiDecisionLog LastAiDecisionLog { get; set; }
+
+        /// <summary>
+        /// 运行时作用域，管理所有异步操作的生命周期。
+        /// </summary>
+        public IBattleRuntimeScope RuntimeScope { get; set; }
 
         public void Dispose()
         {
@@ -69,6 +75,7 @@ namespace Tactics.Common.Testing.Gameplay
             BattleController = null;
             LastBattleResult = null;
             LastAiDecisionLog = null;
+            RuntimeScope = null;
         }
     }
 }

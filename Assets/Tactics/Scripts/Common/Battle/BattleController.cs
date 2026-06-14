@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Tactics.AssetPipeline;
 using Tactics.Common.AI.MonsterAI;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
@@ -101,6 +102,11 @@ namespace Tactics.Common.Battle
         public TurnContext TurnContext => _controller.TurnContext;
         public int CurrentRound => _controller.CurrentRound;
         public Transform UnitContainerTransform => _unitContainer;
+
+        /// <summary>
+        /// 战斗运行时作用域，管理所有异步操作的生命周期。
+        /// </summary>
+        public IBattleRuntimeScope RuntimeScope { get; set; }
 
         /// <summary>
         /// 当设置为 true 时，OnAbilityUsed 跳过活跃单位检查，允许 AI 测试直接执行命令。
