@@ -337,11 +337,14 @@ namespace Tactics.Common.Skills.Graph
 
             TLog.Info($"[ProjectileLaunch] Launching projectile from ({caster.CurrentCell.GridCoordinates.x},{caster.CurrentCell.GridCoordinates.y}) to ({target.CurrentCell.GridCoordinates.x},{target.CurrentCell.GridCoordinates.y})");
 
+            context.RecordEvent("ProjectileLaunched", node.NodeId, target);
+
             float travelTime = UnityEngine.Mathf.Max(0.05f, record.TravelTime);
             await Task.Delay((int)(travelTime * 1000));
 
             context.SetBlackboard("ProjectileHit", true);
             context.SetBlackboard("ProjectileTarget", target);
+            context.RecordEvent("ProjectileHit", node.NodeId, target);
 
             TLog.Info("[ProjectileLaunch] Projectile reached target.");
             return SkillNodeExecutionResult.Success();

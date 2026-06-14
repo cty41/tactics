@@ -26,7 +26,8 @@ const supportedGraphKinds = new Set([
   "knockback",
   "allyHeal",
   "applyBuff",
-  "charge"
+  "charge",
+  "projectile"
 ]);
 
 const supportedAssertionKinds = new Set([

@@ -715,8 +715,7 @@ namespace Tactics.Common.Testing.Gameplay
             if (result == null)
                 return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
 
-            bool launched = result.StepCount > 0 &&
-                (result.Summary?.Contains("Projectile", StringComparison.OrdinalIgnoreCase) ?? false);
+            bool launched = result.ExecutionEvents.Exists(e => e.EventType == "ProjectileLaunched");
 
             return launched
                 ? GameplayAssertionResult.Pass("Skill", assertion.Kind, "Projectile was launched.")
@@ -734,7 +733,10 @@ namespace Tactics.Common.Testing.Gameplay
             if (result == null)
                 return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
 
-            bool hit = result.Summary?.Contains("Hit", StringComparison.OrdinalIgnoreCase) ?? false;
+            string targetName = unit is UnityEngine.MonoBehaviour mb ? mb.gameObject.name : unit.GetType().Name;
+            bool hit = result.ExecutionEvents.Exists(e =>
+                e.EventType == "ProjectileHit" &&
+                string.Equals(e.TargetUnitName, targetName, StringComparison.OrdinalIgnoreCase));
 
             return hit
                 ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"Projectile hit target '{assertion.Target}'.")
@@ -747,8 +749,8 @@ namespace Tactics.Common.Testing.Gameplay
             if (result == null)
                 return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
 
-            bool completed = result.ExecutionState.ToString() == "Completed" &&
-                (result.Summary?.Contains("Projectile", StringComparison.OrdinalIgnoreCase) ?? false);
+            bool completed = result.ExecutionState == SkillGraphExecutionState.Completed &&
+                result.ExecutionEvents.Exists(e => e.EventType == "ProjectileHit");
 
             return completed
                 ? GameplayAssertionResult.Pass("Skill", assertion.Kind, "Projectile lifecycle completed.")
@@ -769,7 +771,11 @@ namespace Tactics.Common.Testing.Gameplay
             if (result == null)
                 return GameplayAssertionResult.Fail("Skill", assertion.Kind, "Skill graph has not been executed.");
 
-            string actualState = result.ExecutionState.ToString();
+            var stageResult = result.StageResults.Find(s => s.StageIndex == stageIndex);
+            if (stageResult == null)
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"No stage result found for stageIndex={stageIndex}.");
+
+            string actualState = stageResult.State.ToString();
             return string.Equals(expected, actualState, StringComparison.Ordinal)
                 ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"Stage {stageIndex} state={actualState}.")
                 : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected stage {stageIndex} state={expected}, actual={actualState}.");

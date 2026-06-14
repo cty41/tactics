@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -276,6 +277,112 @@ namespace Tactics.Editor.SkillGraphEditor
             bool removed = graph.RemoveEdge(edgeId);
             if (removed) EditorUtility.SetDirty(graph);
             return removed;
+        }
+
+        // ═══════════════════════════════════════════
+        //  Spec 操作
+        // ═══════════════════════════════════════════
+
+        /// <summary>
+        /// 将 SkillGraphSpec 编译并应用到指定图资产。
+        /// 流程：预校验 → 编译 → 替换节点/边 → 校验 → 保存。
+        /// </summary>
+        public static SkillGraphSpecApplyResult ApplySpec(string graphPath, SkillGraphSpec spec)
+        {
+            var result = new SkillGraphSpecApplyResult { GraphPath = graphPath };
+
+            if (spec == null)
+            {
+                result.CompileErrors.Add(new SkillGraphDiagnostic
+                {
+                    Code = "NullSpec",
+                    Severity = SkillGraphDiagnosticSeverity.Error,
+                    Message = "SkillGraphSpec is null."
+                });
+                return result;
+            }
+
+            var compileResult = SkillGraphSpecCompiler.Compile(spec);
+            result.CompileErrors.AddRange(compileResult.Errors);
+            result.CompileWarnings.AddRange(compileResult.Warnings);
+
+            if (!compileResult.Success)
+                return result;
+
+            var compiledAsset = compileResult.Asset;
+            var existingAsset = LoadGraph(graphPath);
+
+            if (existingAsset != null)
+            {
+                existingAsset.Clear();
+                existingAsset.DisplayName = compiledAsset.DisplayName;
+
+                for (int i = 0; i < compiledAsset.Nodes.Count; i++)
+                {
+                    var node = compiledAsset.Nodes[i];
+                    existingAsset.Nodes.Add(node);
+                }
+                for (int i = 0; i < compiledAsset.Edges.Count; i++)
+                {
+                    var edge = compiledAsset.Edges[i];
+                    existingAsset.Edges.Add(edge);
+                }
+
+                EditorUtility.SetDirty(existingAsset);
+                AssetDatabase.SaveAssets();
+
+                var validationResult = ValidateGraph(existingAsset);
+                result.ValidationErrors.AddRange(validationResult.Errors);
+                result.ValidationWarnings.AddRange(validationResult.Warnings);
+                result.IsValid = validationResult.IsValid;
+                result.Asset = existingAsset;
+            }
+            else
+            {
+                var dir = System.IO.Path.GetDirectoryName(graphPath);
+                if (!string.IsNullOrEmpty(dir) && !AssetDatabase.IsValidFolder(dir))
+                {
+                    EnsureFolder(dir);
+                }
+
+                AssetDatabase.CreateAsset(compiledAsset, graphPath);
+                AssetDatabase.SaveAssets();
+
+                var validationResult = ValidateGraph(compiledAsset);
+                result.ValidationErrors.AddRange(validationResult.Errors);
+                result.ValidationWarnings.AddRange(validationResult.Warnings);
+                result.IsValid = validationResult.IsValid;
+                result.Asset = compiledAsset;
+            }
+
+            result.Success = result.CompileErrors.Count == 0 && result.ValidationErrors.Count == 0;
+            return result;
+        }
+
+        /// <summary>
+        /// 从已有 SkillGraphAsset 导出 SkillGraphSpec。
+        /// </summary>
+        public static SkillGraphSpec ExportSpec(string graphPath)
+        {
+            var asset = LoadGraph(graphPath);
+            if (asset == null) return null;
+            return SkillGraphSpecCompiler.ExportSpec(asset);
+        }
+
+        private static void EnsureFolder(string folderPath)
+        {
+            if (AssetDatabase.IsValidFolder(folderPath))
+                return;
+
+            var parts = folderPath.Replace('\\', '/').Split('/');
+            var current = parts[0];
+            for (int i = 1; i < parts.Length; i++)
+            {
+                var next = current + "/" + parts[i];
+                if (!AssetDatabase.IsValidFolder(next))
+                    AssetDatabase.CreateFolder(current, parts[i]);
+                current = next;
+            }
         }
 
         // ═══════════════════════════════════════════
@@ -569,38 +676,38 @@ namespace Tactics.Editor.SkillGraphEditor
             switch (record)
             {
                 case SelectPrimaryTargetNodeRecord r:
-                    if (parameters.TryGetValue("minRange", out var minr)) r.MinRange = (int)minr;
-                    if (parameters.TryGetValue("maxRange", out var mr)) r.MaxRange = (int)mr;
+                    if (parameters.TryGetValue("minRange", out var minr)) r.MinRange = ToInt(minr);
+                    if (parameters.TryGetValue("maxRange", out var mr)) r.MaxRange = ToInt(mr);
                     break;
                 case SelectTargetPointNodeRecord r:
-                    if (parameters.TryGetValue("maxRange", out var mr2)) r.MaxRange = (int)mr2;
+                    if (parameters.TryGetValue("maxRange", out var mr2)) r.MaxRange = ToInt(mr2);
                     break;
                 case CollectTargetsInAreaNodeRecord r:
-                    if (parameters.TryGetValue("radius", out var rad)) r.Radius = (int)rad;
-                    if (parameters.TryGetValue("shape", out var shape)) r.Shape = (SkillGraphAreaShape)shape;
+                    if (parameters.TryGetValue("radius", out var rad)) r.Radius = ToInt(rad);
+                    if (parameters.TryGetValue("shape", out var shape)) r.Shape = (SkillGraphAreaShape)ToInt(shape);
                     break;
                 case DashToTargetNodeRecord r:
-                    if (parameters.TryGetValue("maxRange", out var mr3)) r.MaxRange = (int)mr3;
-                    if (parameters.TryGetValue("collisionDamage", out var cd)) r.CollisionDamage = (float)cd;
+                    if (parameters.TryGetValue("maxRange", out var mr3)) r.MaxRange = ToInt(mr3);
+                    if (parameters.TryGetValue("collisionDamage", out var cd)) r.CollisionDamage = ToFloat(cd);
                     break;
                 case ApplyDamageNodeRecord r:
-                    if (parameters.TryGetValue("baseDamage", out var bd)) r.BaseDamage = (float)bd;
-                    if (parameters.TryGetValue("damageType", out var dt)) r.DamageType = (SkillGraphDamageType)dt;
-                    if (parameters.TryGetValue("isRanged", out var ir)) r.IsRanged = (bool)ir;
-                    if (parameters.TryGetValue("canCrit", out var cc)) r.CanCrit = (bool)cc;
-                    if (parameters.TryGetValue("accuracyPenalty", out var ap)) r.AccuracyPenalty = (float)ap;
+                    if (parameters.TryGetValue("baseDamage", out var bd)) r.BaseDamage = ToFloat(bd);
+                    if (parameters.TryGetValue("damageType", out var dt)) r.DamageType = (SkillGraphDamageType)ToInt(dt);
+                    if (parameters.TryGetValue("isRanged", out var ir)) r.IsRanged = ToBool(ir);
+                    if (parameters.TryGetValue("canCrit", out var cc)) r.CanCrit = ToBool(cc);
+                    if (parameters.TryGetValue("accuracyPenalty", out var ap)) r.AccuracyPenalty = ToFloat(ap);
                     break;
                 case ApplyKnockbackNodeRecord r:
-                    if (parameters.TryGetValue("distance", out var dist)) r.Distance = (int)dist;
-                    if (parameters.TryGetValue("height", out var h)) r.Height = (float)h;
-                    if (parameters.TryGetValue("duration", out var dur)) r.Duration = (float)dur;
+                    if (parameters.TryGetValue("distance", out var dist)) r.Distance = ToInt(dist);
+                    if (parameters.TryGetValue("height", out var h)) r.Height = ToFloat(h);
+                    if (parameters.TryGetValue("duration", out var dur)) r.Duration = ToFloat(dur);
                     break;
                 case ProjectileLaunchNodeRecord r:
-                    if (parameters.TryGetValue("travelTime", out var tt)) r.TravelTime = (float)tt;
-                    if (parameters.TryGetValue("speed", out var sp)) r.Speed = (float)sp;
+                    if (parameters.TryGetValue("travelTime", out var tt)) r.TravelTime = ToFloat(tt);
+                    if (parameters.TryGetValue("speed", out var sp)) r.Speed = ToFloat(sp);
                     break;
                 case ApplyBuffNodeRecord r:
-                    if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = (int)buffDur;
+                    if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = ToInt(buffDur);
                     if (parameters.TryGetValue("buffAssetPath", out var bp) && bp is string buffPath && !string.IsNullOrEmpty(buffPath))
                     {
                         var buffConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Buffs.BuffConfig>(buffPath);
@@ -608,31 +715,35 @@ namespace Tactics.Editor.SkillGraphEditor
                     }
                     break;
                 case SelectAllyNodeRecord r:
-                    if (parameters.TryGetValue("maxRange", out var allyRange)) r.MaxRange = (int)allyRange;
+                    if (parameters.TryGetValue("maxRange", out var allyRange)) r.MaxRange = ToInt(allyRange);
                     break;
                 case ApplyHealNodeRecord r:
-                    if (parameters.TryGetValue("healAmount", out var healAmt)) r.HealAmount = (float)healAmt;
+                    if (parameters.TryGetValue("healAmount", out var healAmt)) r.HealAmount = ToFloat(healAmt);
                     break;
                 case DashToAllyNodeRecord r:
-                    if (parameters.TryGetValue("maxRange", out var dashAllyRange)) r.MaxRange = (int)dashAllyRange;
+                    if (parameters.TryGetValue("maxRange", out var dashAllyRange)) r.MaxRange = ToInt(dashAllyRange);
                     break;
                 case LaunchUnitNodeRecord r:
-                    if (parameters.TryGetValue("launchDistance", out var ld)) r.LaunchDistance = (int)ld;
-                    if (parameters.TryGetValue("landingDamage", out var ldm)) r.LandingDamage = (float)ldm;
-                    if (parameters.TryGetValue("flightHeight", out var fh)) r.FlightHeight = (float)fh;
-                    if (parameters.TryGetValue("flightDuration", out var fd)) r.FlightDuration = (float)fd;
-                    if (parameters.TryGetValue("bounceHeight", out var bounch)) r.BounceHeight = (float)bounch;
-                    if (parameters.TryGetValue("bounceDuration", out var bouncd)) r.BounceDuration = (float)bouncd;
+                    if (parameters.TryGetValue("launchDistance", out var ld)) r.LaunchDistance = ToInt(ld);
+                    if (parameters.TryGetValue("landingDamage", out var ldm)) r.LandingDamage = ToFloat(ldm);
+                    if (parameters.TryGetValue("flightHeight", out var fh)) r.FlightHeight = ToFloat(fh);
+                    if (parameters.TryGetValue("flightDuration", out var fd)) r.FlightDuration = ToFloat(fd);
+                    if (parameters.TryGetValue("bounceHeight", out var bounch)) r.BounceHeight = ToFloat(bounch);
+                    if (parameters.TryGetValue("bounceDuration", out var bouncd)) r.BounceDuration = ToFloat(bouncd);
                     break;
                 case SelectMoveDestinationNodeRecord r:
-                    if (parameters.TryGetValue("respectMovementRules", out var rmr)) r.RespectMovementRules = (bool)rmr;
+                    if (parameters.TryGetValue("respectMovementRules", out var rmr)) r.RespectMovementRules = ToBool(rmr);
                     break;
                 case ExecuteMoveNodeRecord r:
-                    if (parameters.TryGetValue("consumeMovementPoints", out var cmp)) r.ConsumeMovementPoints = (bool)cmp;
-                    if (parameters.TryGetValue("markAsBasicAbilityUsed", out var mabu)) r.MarkAsBasicAbilityUsed = (bool)mabu;
+                    if (parameters.TryGetValue("consumeMovementPoints", out var cmp)) r.ConsumeMovementPoints = ToBool(cmp);
+                    if (parameters.TryGetValue("markAsBasicAbilityUsed", out var mabu)) r.MarkAsBasicAbilityUsed = ToBool(mabu);
                     break;
             }
         }
+
+        private static int ToInt(object v) => v is long l ? (int)l : Convert.ToInt32(v);
+        private static float ToFloat(object v) => v is double d ? (float)d : Convert.ToSingle(v);
+        private static bool ToBool(object v) => v is bool b ? b : Convert.ToBoolean(v);
 
         private static Dictionary<string, object> ExtractParameters(SkillGraphNodeRecord record)
         {
@@ -701,6 +812,12 @@ namespace Tactics.Editor.SkillGraphEditor
             }
             return dict;
         }
+
+        public static void ApplyParametersPublic(SkillGraphNodeRecord record, Dictionary<string, object> parameters)
+            => ApplyParameters(record, parameters);
+
+        public static Dictionary<string, object> ExtractParametersPublic(SkillGraphNodeRecord record)
+            => ExtractParameters(record);
 
         // ═══════════════════════════════════════════
         //  RoleConfig Mount Operations
@@ -1083,6 +1200,18 @@ namespace Tactics.Editor.SkillGraphEditor
         public bool IsValid;
         public List<SkillGraphDiagnostic> Errors;
         public List<SkillGraphDiagnostic> Warnings;
+    }
+
+    public class SkillGraphSpecApplyResult
+    {
+        public string GraphPath;
+        public bool Success;
+        public bool IsValid;
+        public SkillGraphAsset Asset;
+        public List<SkillGraphDiagnostic> CompileErrors = new();
+        public List<SkillGraphDiagnostic> CompileWarnings = new();
+        public List<SkillGraphDiagnostic> ValidationErrors = new();
+        public List<SkillGraphDiagnostic> ValidationWarnings = new();
     }
 
     public class SkillGraphAbilityConfigResult

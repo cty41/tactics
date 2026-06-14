@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "SkillGraph.AreaDamageHitsAllTargetsInRadius",
+  "scenarioName": "SkillGraph.冰霜新星Skill",
   "requiredAdapters": [
     "Skill"
   ],
@@ -14,11 +14,11 @@
       "adapter": "Skill",
       "kind": "createSkillGraph",
       "parameters": {
-        "alias": "areaGraph",
+        "alias": "graph",
         "graphKind": "areaDamage",
-        "baseDamage": 3,
-        "radius": 1,
-        "maxRange": 4
+        "baseDamage": 5,
+        "radius": 2,
+        "maxRange": 3
       }
     },
     {
@@ -129,7 +129,7 @@
       "adapter": "Skill",
       "kind": "executeSkillGraph",
       "parameters": {
-        "graphAlias": "areaGraph",
+        "graphAlias": "graph",
         "casterAlias": "caster",
         "targetPointAlias": "targetPointCell"
       }
@@ -144,32 +144,16 @@
     },
     {
       "adapter": "Skill",
-      "kind": "unitCountInArea",
-      "expected": 3,
-      "parameters": {
-        "centerAlias": "targetPointCell",
-        "radius": 1
-      }
-    },
-    {
-      "adapter": "Skill",
-      "kind": "unitHealthEquals",
-      "target": "caster",
-      "expected": 10,
-      "parameters": {}
-    },
-    {
-      "adapter": "Skill",
       "kind": "unitHealthEquals",
       "target": "targetA",
-      "expected": 7,
+      "expected": 5,
       "parameters": {}
     },
     {
       "adapter": "Skill",
       "kind": "unitHealthEquals",
       "target": "targetB",
-      "expected": 7,
+      "expected": 5,
       "parameters": {}
     },
     {
@@ -178,6 +162,22 @@
       "target": "safeTarget",
       "expected": 10,
       "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "targetA",
+      "expected": "Frozen",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffDurationEquals",
+      "target": "targetA",
+      "expected": 2,
+      "parameters": {
+        "buffName": "Frozen"
+      }
     }
   ],
   "timeoutMs": 10000,
@@ -189,14 +189,6 @@
     },
     {
       "adapter": "Skill",
-      "kind": "unitCountInArea",
-      "parameters": {
-        "centerAlias": "targetPointCell",
-        "radius": 1
-      }
-    },
-    {
-      "adapter": "Skill",
       "kind": "unitHealthEquals",
       "target": "targetA",
       "parameters": {}
@@ -212,6 +204,20 @@
       "kind": "unitHealthEquals",
       "target": "safeTarget",
       "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "targetA",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffDurationEquals",
+      "target": "targetA",
+      "parameters": {
+        "buffName": "Frozen"
+      }
     }
   ]
 }

@@ -41,6 +41,8 @@ namespace Tactics.Common.Skills.Graph.Testing
         public int StepCount { get; set; }
         public SkillGraphTestUnitSnapshot Caster { get; set; }
         public SkillGraphTestUnitSnapshot PrimaryTarget { get; set; }
+        public List<SkillGraphExecutionEvent> ExecutionEvents { get; } = new();
+        public List<SkillStageResult> StageResults { get; } = new();
 
         public bool Passed => ValidationErrors.Count == 0 && ExecutionState == SkillGraphExecutionState.Completed;
 
@@ -157,6 +159,8 @@ namespace Tactics.Common.Skills.Graph.Testing
                 result.LastError = ex.Message;
             }
 
+            result.ExecutionEvents.AddRange(context.ExecutionEvents);
+            result.StageResults.AddRange(context.StageResults);
             result.Caster = SkillGraphTestUnitSnapshot.Capture(request.Caster);
             result.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
             return result;
