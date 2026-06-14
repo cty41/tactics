@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Tactics.Common.Battle.Runtime;
 
 namespace Tactics.Common.Testing.Gameplay
 {
@@ -42,9 +43,20 @@ namespace Tactics.Common.Testing.Gameplay
         {
             var result = new GameplayTestResult { ScenarioName = plan.ScenarioName };
 
+            // 创建 RuntimeScope 管理异步生命周期
+            using var scope = new BattleRuntimeScope();
             using var context = new GameplayRuntimeContext();
+            context.RuntimeScope = scope;
+
             foreach (var action in plan.SetupActions.Concat(plan.RuntimeActions))
             {
+                // 检查是否已取消
+                if (scope.IsCancelling)
+                {
+                    result.Diagnostics.Add("Execution cancelled.");
+                    return result;
+                }
+
                 var adapter = ResolveAdapter(action.Adapter);
                 if (adapter == null || !adapter.CanExecute(action))
                 {
@@ -66,6 +78,13 @@ namespace Tactics.Common.Testing.Gameplay
 
             foreach (var assertion in plan.AssertionPlans)
             {
+                // 检查是否已取消
+                if (scope.IsCancelling)
+                {
+                    result.Diagnostics.Add("Execution cancelled.");
+                    return result;
+                }
+
                 var adapter = ResolveAdapter(assertion.Adapter);
                 if (adapter == null || !adapter.CanAssert(assertion))
                 {

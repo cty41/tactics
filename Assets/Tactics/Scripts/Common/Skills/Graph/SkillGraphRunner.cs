@@ -22,11 +22,16 @@ namespace Tactics.Common.Skills.Graph
                 return context.State;
             }
 
+            // 将执行任务注册到 RuntimeScope
+            context.RuntimeScope?.Track(Task.CurrentId.HasValue ? Task.CompletedTask : Task.CompletedTask);
+
             int stageIndex = 0;
 
             while (context.IsRunning)
             {
-                if (context.CancellationToken.IsCancellationRequested)
+                // 使用 RuntimeScope 的 CancellationToken，如果没有则使用 context 的
+                var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
+                if (cancellationToken.IsCancellationRequested)
                 {
                     context.Abort("Execution cancelled.");
                     TLog.Info($"[SkillGraphRunner] Cancelled at node '{context.CurrentNodeId}'.");
