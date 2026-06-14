@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units.Abilities;
 using UnityEditor;
 
@@ -32,11 +33,23 @@ namespace Tactics.Editor.SkillGraphEditor
                 if (asset is SkillGraphAbilityConfig)
                     continue;
 
-                results.Add(Evaluate(path, asset));
+                var result = Evaluate(path, asset);
+                result.HasSkillGraphBridge = CheckHasBridge(asset.name);
+                results.Add(result);
             }
 
             results.Sort((a, b) => string.CompareOrdinal(a.AbilityName, b.AbilityName));
             return results;
+        }
+
+        private static bool CheckHasBridge(string abilityName)
+        {
+            string graphPath = $"{SkillGraphAbilityConfigGenerator.SkillGraphDir}/{abilityName}_Graph.asset";
+            var graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(graphPath);
+            if (graph == null) return false;
+
+            var bridge = SkillGraphAbilityConfigGenerator.FindAbilityConfigForGraph(graph);
+            return bridge != null;
         }
 
         private static LegacyAbilityAuditResult Evaluate(string assetPath, AbilityConfig asset)

@@ -586,3 +586,493 @@ function createInvalidGraphSpec(): ScenarioSpec {
     ]
   };
 }
+
+// ═══════════════════════════════════════════
+//  SkillGraphSpec 生成（NL → 技能图结构）
+// ═══════════════════════════════════════════
+
+export interface SkillGraphSpecNode {
+  Id: string;
+  Type: string;
+  Parameters?: Record<string, unknown>;
+}
+
+export interface SkillGraphSpecEdge {
+  Source: string;
+  Target: string;
+  Port?: string;
+}
+
+export interface SkillGraphSpecOutput {
+  DisplayName: string;
+  Description: string;
+  Nodes: SkillGraphSpecNode[];
+  Edges: SkillGraphSpecEdge[];
+}
+
+export interface SkillGraphSpecGenerationResult {
+  spec?: SkillGraphSpecOutput;
+  diagnostics: Array<{ code: string; severity: string; message: string }>;
+  needsClarification: boolean;
+  missingFields: string[];
+  ambiguousFields: string[];
+  questionsToAsk: string[];
+}
+
+export interface SkillDesignAnswers {
+  displayName: string;
+  description?: string;
+  targetType: "single_enemy" | "self" | "ally" | "area";
+  effects: Array<"damage" | "heal" | "buff" | "knockback" | "dash">;
+  damageType?: "Physical" | "Magical";
+  baseDamage?: number;
+  healAmount?: number;
+  buffName?: string;
+  buffDuration?: number;
+  buffIsUnique?: boolean;
+  knockbackDistance?: number;
+  isRanged?: boolean;
+  canCrit?: boolean;
+  maxRange?: number;
+  areaRadius?: number;
+  dashMaxRange?: number;
+  dashCollisionDamage?: number;
+}
+
+export function generateSkillGraphSpec(text: string): SkillGraphSpecGenerationResult {
+  const normalized = text.trim().toLowerCase();
+
+  if (!normalized) {
+    return {
+      diagnostics: [{ code: "MissingInput", severity: "error", message: "Input is empty." }],
+      needsClarification: true,
+      missingFields: ["input"],
+      ambiguousFields: [],
+      questionsToAsk: []
+    };
+  }
+
+  const questionsToAsk: string[] = [];
+  const missingFields: string[] = [];
+
+  // ── 意图识别 ──
+  const hasArea = includesAny(normalized, ["范围", "周围", "群体", "aoe", "area", "半径"]);
+  const hasDamage = includesAny(normalized, ["伤害", "damage", "攻击", "打击"]);
+  const hasHeal = includesAny(normalized, ["治疗", "治愈", "heal", "回复", "恢复"]);
+  const hasBuff = includesAny(normalized, ["buff", "增益", "强化", "冰冻", "冻结", "标记", "着火", "灼烧", "减速", "护盾"]);
+  const hasKnockback = includesAny(normalized, ["击退", "knockback", "推开", "吹飞"]);
+  const hasDash = includesAny(normalized, ["冲锋", "突进", "charge", "dash", "跳跃"]);
+  const hasSelf = includesAny(normalized, ["自身", "自己", "自我", "self"]);
+  const hasAlly = includesAny(normalized, ["友军", "盟友", "ally"]);
+  const hasRanged = includesAny(normalized, ["远程", "投射", "弹道", "射击", "ranged", "projectile"]);
+  const isMagical = includesAny(normalized, ["魔法", "法术", "magical", "魔力"]);
+
+  // ── 提取数值 ──
+  const baseDamage = extractNumberAfterKeywords(normalized, ["伤害", "damage", "攻击力"], 5);
+  const healAmount = extractNumberAfterKeywords(normalized, ["治疗", "heal", "恢复"], 5);
+  const buffDuration = extractNumberAfterKeywords(normalized, ["持续", "duration", "回合"], 2);
+  const areaRadius = extractNumberAfterKeywords(normalized, ["半径", "radius", "范围"], 2);
+  const maxRange = extractNumberAfterKeywords(normalized, ["距离", "射程", "range"], 3);
+
+  // ── 确定目标类型 ──
+  let targetType: SkillDesignAnswers["targetType"] = "single_enemy";
+  if (hasArea) targetType = "area";
+  else if (hasSelf) targetType = "self";
+  else if (hasAlly) targetType = "ally";
+
+  // ── 确定效果列表 ──
+  const effects: SkillDesignAnswers["effects"] = [];
+  if (hasDamage) effects.push("damage");
+  if (hasHeal) effects.push("heal");
+  if (hasBuff) effects.push("buff");
+  if (hasKnockback) effects.push("knockback");
+  if (hasDash) effects.push("dash");
+
+  if (effects.length === 0) {
+    questionsToAsk.push("这个技能的效果是什么？(造成伤害 / 治疗 / 施加状态 / 击退 / 位移)");
+    missingFields.push("effects");
+  }
+
+  // ── 提取 Buff 名称 ──
+  let buffName: string | undefined;
+  if (hasBuff) {
+    if (includesAny(normalized, ["冰冻", "冻结", "frozen"])) buffName = "Frozen";
+    else if (includesAny(normalized, ["标记", "mark"])) buffName = "Marked";
+    else if (includesAny(normalized, ["着火", "灼烧", "ignite"])) buffName = "Ignite";
+    else if (includesAny(normalized, ["反击", "counter"])) buffName = "Counter";
+    else if (includesAny(normalized, ["减速", "slow"])) buffName = "Slowed";
+    else if (includesAny(normalized, ["护盾", "shield"])) buffName = "Shielded";
+    else buffName = "Buff";
+  }
+
+  // ── 生成 SkillGraphSpec ──
+  const displayName = text.split(/[,，。]/)[0].trim().replace(/\s+/g, "") || "NewSkill";
+  const answers: SkillDesignAnswers = {
+    displayName,
+    description: text,
+    targetType,
+    effects,
+    damageType: isMagical ? "Magical" : "Physical",
+    baseDamage: hasDamage ? baseDamage : undefined,
+    healAmount: hasHeal ? healAmount : undefined,
+    buffName,
+    buffDuration: hasBuff ? buffDuration : undefined,
+    buffIsUnique: true,
+    knockbackDistance: hasKnockback ? 1 : undefined,
+    isRanged: hasRanged,
+    canCrit: false,
+    maxRange,
+    areaRadius: hasArea ? areaRadius : undefined,
+    dashMaxRange: hasDash ? maxRange : undefined,
+    dashCollisionDamage: hasDash ? 1 : undefined
+  };
+
+  const spec = buildSkillGraphSpec(answers);
+
+  return {
+    spec,
+    diagnostics: [],
+    needsClarification: questionsToAsk.length > 0,
+    missingFields,
+    ambiguousFields: [],
+    questionsToAsk
+  };
+}
+
+export function generateSkillGraphSpecFromAnswers(answers: SkillDesignAnswers): SkillGraphSpecOutput {
+  return buildSkillGraphSpec(answers);
+}
+
+function buildSkillGraphSpec(a: SkillDesignAnswers): SkillGraphSpecOutput {
+  const nodes: SkillGraphSpecNode[] = [];
+  const edges: SkillGraphSpecEdge[] = [];
+  let prevId = "start";
+
+  nodes.push({ Id: "start", Type: "Start" });
+
+  // ── 目标选择 ──
+  if (a.targetType === "self") {
+    nodes.push({ Id: "select", Type: "SelectSelf" });
+  } else if (a.targetType === "ally") {
+    nodes.push({ Id: "select", Type: "SelectAlly", Parameters: { maxRange: a.maxRange ?? 2 } });
+  } else if (a.targetType === "area") {
+    nodes.push({ Id: "point", Type: "SelectTargetPoint", Parameters: { maxRange: a.maxRange ?? 3 } });
+    edges.push({ Source: prevId, Target: "point" });
+    prevId = "point";
+    nodes.push({ Id: "collect", Type: "CollectTargetsInArea", Parameters: { radius: a.areaRadius ?? 2 } });
+    edges.push({ Source: prevId, Target: "collect" });
+    prevId = "collect";
+    nodes.push({ Id: "loop", Type: "ForEachTarget" });
+    edges.push({ Source: prevId, Target: "loop" });
+    prevId = "loop";
+  } else {
+    // single_enemy
+    if (a.isRanged) {
+      nodes.push({ Id: "select", Type: "SelectPrimaryTarget", Parameters: { minRange: 2, maxRange: a.maxRange ?? 3 } });
+    } else {
+      nodes.push({ Id: "select", Type: "SelectPrimaryTarget", Parameters: { minRange: 1, maxRange: a.maxRange ?? 1 } });
+    }
+  }
+
+  if (a.targetType !== "area") {
+    edges.push({ Source: prevId, Target: "select" });
+    prevId = "select";
+  }
+
+  // ── 位移效果 ──
+  if (a.effects.includes("dash")) {
+    nodes.push({ Id: "dash", Type: "DashToTarget", Parameters: { maxRange: a.dashMaxRange ?? 3, collisionDamage: a.dashCollisionDamage ?? 1 } });
+    edges.push({ Source: prevId, Target: "dash" });
+    prevId = "dash";
+  }
+
+  // ── 弹道 ──
+  if (a.isRanged && a.targetType === "single_enemy") {
+    nodes.push({ Id: "projectile", Type: "ProjectileLaunch", Parameters: { travelTime: 0.3, speed: 10 } });
+    edges.push({ Source: prevId, Target: "projectile" });
+    prevId = "projectile";
+    nodes.push({ Id: "on_hit", Type: "OnHit" });
+    edges.push({ Source: prevId, Target: "on_hit" });
+    prevId = "on_hit";
+  }
+
+  // ── 效果节点 ──
+  if (a.effects.includes("damage")) {
+    const damageId = "damage";
+    nodes.push({
+      Id: damageId,
+      Type: "ApplyDamage",
+      Parameters: {
+        baseDamage: a.baseDamage ?? 5,
+        damageType: a.damageType === "Magical" ? 1 : 0,
+        isRanged: a.isRanged ?? false,
+        canCrit: a.canCrit ?? false
+      }
+    });
+    edges.push({ Source: prevId, Target: damageId });
+    prevId = damageId;
+  }
+
+  if (a.effects.includes("heal")) {
+    const healId = "heal";
+    nodes.push({ Id: healId, Type: "ApplyHeal", Parameters: { healAmount: a.healAmount ?? 5 } });
+    edges.push({ Source: prevId, Target: healId });
+    prevId = healId;
+  }
+
+  if (a.effects.includes("knockback")) {
+    const kbId = "knockback";
+    nodes.push({ Id: kbId, Type: "ApplyKnockback", Parameters: { distance: a.knockbackDistance ?? 1 } });
+    edges.push({ Source: prevId, Target: kbId });
+    prevId = kbId;
+  }
+
+  if (a.effects.includes("buff") && a.buffName) {
+    const buffId = "buff";
+    nodes.push({
+      Id: buffId,
+      Type: "ApplyBuff",
+      Parameters: { buffName: a.buffName, duration: a.buffDuration ?? 2, isUnique: a.buffIsUnique ?? true }
+    });
+    edges.push({ Source: prevId, Target: buffId });
+    prevId = buffId;
+  }
+
+  // ── 终止 ──
+  nodes.push({ Id: "finish", Type: "Finish" });
+
+  // ── 循环闭合 ──
+  if (a.targetType === "area") {
+    edges.push({ Source: prevId, Target: "loop" });
+    edges.push({ Source: "loop", Target: "finish", Port: "OnComplete" });
+  } else {
+    edges.push({ Source: prevId, Target: "finish" });
+  }
+
+  return {
+    DisplayName: a.displayName,
+    Description: a.description ?? "",
+    Nodes: nodes,
+    Edges: edges
+  };
+}
+
+// ═══════════════════════════════════════════
+//  SkillGraphSpec → gameplay-test.md 转换
+// ═══════════════════════════════════════════
+
+export function generateGameplayTestFromSpec(spec: SkillGraphSpecOutput): ScenarioSpec {
+  const analysis = analyzeSpec(spec);
+  const setup = buildSetup(spec, analysis);
+  const actions = buildActions(spec, analysis);
+  const assertions = buildAssertions(spec, analysis);
+
+  return {
+    feature: "SkillGraph",
+    scenario: `${spec.DisplayName.replace(/\s+/g, "")}Skill`,
+    tags: buildTags(analysis),
+    requiredAdapters: ["Skill"],
+    timeoutMs: 10000,
+    setup,
+    actions,
+    assertions
+  };
+}
+
+interface SpecAnalysis {
+  graphKind: string;
+  targetType: "single_enemy" | "self" | "ally" | "area";
+  hasProjectile: boolean;
+  hasDash: boolean;
+  hasBuff: boolean;
+  hasHeal: boolean;
+  hasDamage: boolean;
+  hasKnockback: boolean;
+  damageType: number;
+  baseDamage: number;
+  healAmount: number;
+  buffName: string;
+  buffDuration: number;
+  maxRange: number;
+  areaRadius: number;
+}
+
+function analyzeSpec(spec: SkillGraphSpecOutput): SpecAnalysis {
+  const types = new Set(spec.Nodes.map(n => n.Type));
+
+  const hasProjectile = types.has("ProjectileLaunch");
+  const hasDash = types.has("DashToTarget");
+  const hasBuff = types.has("ApplyBuff");
+  const hasHeal = types.has("ApplyHeal");
+  const hasDamage = types.has("ApplyDamage");
+  const hasKnockback = types.has("ApplyKnockback");
+  const isArea = types.has("CollectTargetsInArea");
+  const isSelf = types.has("SelectSelf");
+  const isAlly = types.has("SelectAlly");
+
+  let targetType: SpecAnalysis["targetType"] = "single_enemy";
+  if (isArea) targetType = "area";
+  else if (isSelf) targetType = "self";
+  else if (isAlly) targetType = "ally";
+
+  let graphKind = "singleTargetDamage";
+  if (hasProjectile) graphKind = "projectile";
+  else if (isArea) graphKind = "areaDamage";
+  else if (isSelf && hasHeal) graphKind = "selfHeal";
+  else if (isAlly && hasHeal) graphKind = "allyHeal";
+  else if (hasDash) graphKind = "charge";
+  else if (hasKnockback) graphKind = "knockback";
+  else if (hasBuff && !hasDamage) graphKind = "applyBuff";
+
+  const damageNode = spec.Nodes.find(n => n.Type === "ApplyDamage");
+  const healNode = spec.Nodes.find(n => n.Type === "ApplyHeal");
+  const buffNode = spec.Nodes.find(n => n.Type === "ApplyBuff");
+  const selectNode = spec.Nodes.find(n => n.Type === "SelectPrimaryTarget");
+  const collectNode = spec.Nodes.find(n => n.Type === "CollectTargetsInArea");
+
+  return {
+    graphKind,
+    targetType,
+    hasProjectile,
+    hasDash,
+    hasBuff,
+    hasHeal,
+    hasDamage,
+    hasKnockback,
+    damageType: (damageNode?.Parameters?.damageType as number) ?? 0,
+    baseDamage: (damageNode?.Parameters?.baseDamage as number) ?? 5,
+    healAmount: (healNode?.Parameters?.healAmount as number) ?? 5,
+    buffName: (buffNode?.Parameters?.buffName as string) ?? "Buff",
+    buffDuration: (buffNode?.Parameters?.duration as number) ?? 2,
+    maxRange: (selectNode?.Parameters?.maxRange as number) ?? 3,
+    areaRadius: (collectNode?.Parameters?.radius as number) ?? 2
+  };
+}
+
+function buildSetup(spec: SkillGraphSpecOutput, analysis: SpecAnalysis): ScenarioSpec["setup"] {
+  const setup: ScenarioSpec["setup"] = [
+    { kind: "createSkillTestWorld", parameters: {} }
+  ];
+
+  const graphParams: Record<string, unknown> = {
+    alias: "graph",
+    graphKind: analysis.graphKind
+  };
+
+  if (analysis.hasDamage) graphParams.baseDamage = analysis.baseDamage;
+  if (analysis.graphKind === "areaDamage") {
+    graphParams.radius = analysis.areaRadius;
+    graphParams.maxRange = analysis.maxRange;
+  }
+  if (analysis.graphKind === "charge") {
+    graphParams.maxRange = analysis.maxRange;
+  }
+  if (analysis.graphKind === "selfHeal" || analysis.graphKind === "allyHeal") {
+    graphParams.healAmount = analysis.healAmount;
+  }
+  if (analysis.graphKind === "applyBuff") {
+    graphParams.buffName = analysis.buffName;
+    graphParams.duration = analysis.buffDuration;
+    graphParams.selectionKind = analysis.targetType === "self" ? "self" : "enemy";
+  }
+
+  setup.push({ kind: "createSkillGraph", parameters: graphParams });
+
+  if (analysis.targetType === "area") {
+    setup.push({ kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } });
+    setup.push({ kind: "createCell", parameters: { alias: "targetPointCell", x: 1, y: 1 } });
+    setup.push({ kind: "createCell", parameters: { alias: "targetCellA", x: 1, y: 0 } });
+    setup.push({ kind: "createCell", parameters: { alias: "targetCellB", x: 0, y: 1 } });
+    setup.push({ kind: "createCell", parameters: { alias: "safeCell", x: 4, y: 4 } });
+    setup.push({ kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } });
+    setup.push({ kind: "createUnit", parameters: { alias: "targetA", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "targetCellA" } });
+    setup.push({ kind: "createUnit", parameters: { alias: "targetB", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "targetCellB" } });
+    setup.push({ kind: "createUnit", parameters: { alias: "safeTarget", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "safeCell" } });
+  } else if (analysis.targetType === "self") {
+    setup.push({ kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 6, maxHealth: 10 } });
+  } else if (analysis.targetType === "ally") {
+    setup.push({ kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } });
+    setup.push({ kind: "createCell", parameters: { alias: "allyCell", x: 1, y: 0 } });
+    setup.push({ kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } });
+    setup.push({ kind: "createUnit", parameters: { alias: "ally", playerNumber: 0, health: 6, maxHealth: 10, cellAlias: "allyCell" } });
+  } else {
+    setup.push({ kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } });
+    setup.push({ kind: "createCell", parameters: { alias: "targetCell", x: 1, y: 0 } });
+    setup.push({ kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, health: 10, maxHealth: 10, cellAlias: "casterCell" } });
+    setup.push({ kind: "createUnit", parameters: { alias: "target", playerNumber: 1, health: 10, maxHealth: 10, defenceFactor: 0, cellAlias: "targetCell" } });
+  }
+
+  setup.push({ kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } });
+
+  return setup;
+}
+
+function buildActions(spec: SkillGraphSpecOutput, analysis: SpecAnalysis): ScenarioSpec["actions"] {
+  const action: Record<string, unknown> = {
+    graphAlias: "graph",
+    casterAlias: "caster"
+  };
+
+  if (analysis.targetType === "single_enemy") {
+    action.primaryTargetAlias = "target";
+  } else if (analysis.targetType === "area") {
+    action.targetPointAlias = "targetPointCell";
+  }
+
+  return [{ kind: "executeSkillGraph", parameters: action }];
+}
+
+function buildAssertions(spec: SkillGraphSpecOutput, analysis: SpecAnalysis): ScenarioSpec["assertions"] {
+  const assertions: ScenarioSpec["assertions"] = [
+    { kind: "executionStateEquals", expected: "Completed", parameters: {} }
+  ];
+
+  if (analysis.hasDamage) {
+    if (analysis.targetType === "area") {
+      assertions.push({ kind: "unitHealthEquals", target: "targetA", expected: 10 - analysis.baseDamage, parameters: {} });
+      assertions.push({ kind: "unitHealthEquals", target: "targetB", expected: 10 - analysis.baseDamage, parameters: {} });
+      assertions.push({ kind: "unitHealthEquals", target: "safeTarget", expected: 10, parameters: {} });
+    } else if (analysis.targetType === "single_enemy") {
+      assertions.push({ kind: "unitHealthEquals", target: "target", expected: 10 - analysis.baseDamage, parameters: {} });
+    }
+  }
+
+  if (analysis.hasHeal) {
+    if (analysis.targetType === "self") {
+      assertions.push({ kind: "unitHealthEquals", target: "caster", expected: 10, parameters: {} });
+    } else if (analysis.targetType === "ally") {
+      assertions.push({ kind: "unitHealthEquals", target: "ally", expected: 10, parameters: {} });
+    }
+  }
+
+  if (analysis.hasBuff) {
+    if (analysis.targetType === "area") {
+      assertions.push({ kind: "unitHasBuff", target: "targetA", expected: analysis.buffName, parameters: {} });
+      assertions.push({ kind: "unitBuffDurationEquals", target: "targetA", expected: analysis.buffDuration, parameters: { buffName: analysis.buffName } });
+    } else {
+      const buffTarget = analysis.targetType === "self" ? "caster" : "target";
+      assertions.push({ kind: "unitHasBuff", target: buffTarget, expected: analysis.buffName, parameters: {} });
+      assertions.push({ kind: "unitBuffDurationEquals", target: buffTarget, expected: analysis.buffDuration, parameters: { buffName: analysis.buffName } });
+    }
+  }
+
+  if (analysis.hasProjectile) {
+    assertions.push({ kind: "projectileLaunched", target: "target", parameters: {} });
+    assertions.push({ kind: "projectileHitTarget", target: "target", parameters: {} });
+    assertions.push({ kind: "projectileCompleted", target: "target", parameters: {} });
+  }
+
+  return assertions;
+}
+
+function buildTags(analysis: SpecAnalysis): string[] {
+  const tags = ["mvp", "skill"];
+  if (analysis.hasDamage) tags.push("damage");
+  if (analysis.targetType === "area") tags.push("aoe");
+  if (analysis.hasHeal) tags.push("heal");
+  if (analysis.hasBuff) tags.push("buff");
+  if (analysis.hasDash) tags.push("movement");
+  if (analysis.hasKnockback) tags.push("knockback");
+  if (analysis.hasProjectile) tags.push("projectile");
+  return tags;
+}

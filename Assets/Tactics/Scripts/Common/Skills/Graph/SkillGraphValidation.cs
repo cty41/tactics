@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Tactics.Common.Skills.Graph
@@ -511,6 +512,145 @@ namespace Tactics.Common.Skills.Graph
                     });
                 }
             }
+        }
+
+        // ───────────────────────────────────────────
+        //  Spec 预校验
+        // ───────────────────────────────────────────
+
+        private static readonly HashSet<string> SpecKnownNodeTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Start", "SelectPrimaryTarget", "SelectTargetPoint", "CollectTargetsInArea",
+            "ForEachTarget", "DashToTarget", "ApplyDamage", "ApplyKnockback",
+            "Branch", "Finish", "Fail", "ProjectileLaunch", "OnHit",
+            "ApplyBuff", "SelectSelf", "SelectAlly", "ApplyHeal",
+            "DashToAlly", "LaunchUnit", "SelectMoveDestination", "ExecuteMove"
+        };
+
+        public static List<SkillGraphDiagnostic> ValidateSpec(SkillGraphSpec spec)
+        {
+            var errors = new List<SkillGraphDiagnostic>();
+            if (spec == null)
+            {
+                errors.Add(new SkillGraphDiagnostic
+                {
+                    Code = "NullSpec",
+                    Severity = SkillGraphDiagnosticSeverity.Error,
+                    Message = "SkillGraphSpec is null."
+                });
+                return errors;
+            }
+
+            int startCount = 0;
+            bool hasTerminal = false;
+            var nodeIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < spec.Nodes.Count; i++)
+            {
+                var node = spec.Nodes[i];
+
+                if (string.IsNullOrEmpty(node.Id))
+                {
+                    errors.Add(new SkillGraphDiagnostic
+                    {
+                        Code = "MissingNodeId",
+                        Severity = SkillGraphDiagnosticSeverity.Error,
+                        Message = $"Node at index {i} has no Id."
+                    });
+                    continue;
+                }
+
+                if (!nodeIds.Add(node.Id))
+                {
+                    errors.Add(new SkillGraphDiagnostic
+                    {
+                        Code = "DuplicateNodeId",
+                        Severity = SkillGraphDiagnosticSeverity.Error,
+                        NodeId = node.Id,
+                        Message = $"Duplicate node Id '{node.Id}'."
+                    });
+                }
+
+                if (string.IsNullOrEmpty(node.Type) || !SpecKnownNodeTypes.Contains(node.Type))
+                {
+                    errors.Add(new SkillGraphDiagnostic
+                    {
+                        Code = UnsupportedNodeType,
+                        Severity = SkillGraphDiagnosticSeverity.Error,
+                        Category = SkillGraphDiagnosticCategory.Unsupported,
+                        NodeId = node.Id,
+                        Message = $"Node '{node.Id}' has unknown type '{node.Type}'."
+                    });
+                }
+
+                if (string.Equals(node.Type, "Start", StringComparison.OrdinalIgnoreCase)) startCount++;
+                if (string.Equals(node.Type, "Finish", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(node.Type, "Fail", StringComparison.OrdinalIgnoreCase)) hasTerminal = true;
+            }
+
+            if (startCount == 0)
+            {
+                errors.Add(new SkillGraphDiagnostic
+                {
+                    Code = MissingEntryNode,
+                    Severity = SkillGraphDiagnosticSeverity.Error,
+                    Message = "Spec has no Start node."
+                });
+            }
+            else if (startCount > 1)
+            {
+                errors.Add(new SkillGraphDiagnostic
+                {
+                    Code = MultipleEntryNodes,
+                    Severity = SkillGraphDiagnosticSeverity.Error,
+                    Message = $"Spec has {startCount} Start nodes; only one is allowed."
+                });
+            }
+
+            if (!hasTerminal)
+            {
+                errors.Add(new SkillGraphDiagnostic
+                {
+                    Code = NoTerminalNode,
+                    Severity = SkillGraphDiagnosticSeverity.Error,
+                    Message = "Spec has no Finish or Fail node."
+                });
+            }
+
+            for (int i = 0; i < spec.Edges.Count; i++)
+            {
+                var edge = spec.Edges[i];
+                if (string.IsNullOrEmpty(edge.Source) || !nodeIds.Contains(edge.Source))
+                {
+                    errors.Add(new SkillGraphDiagnostic
+                    {
+                        Code = InvalidEdgeSource,
+                        Severity = SkillGraphDiagnosticSeverity.Error,
+                        Message = $"Edge references non-existent source node '{edge.Source}'."
+                    });
+                }
+                if (string.IsNullOrEmpty(edge.Target) || !nodeIds.Contains(edge.Target))
+                {
+                    errors.Add(new SkillGraphDiagnostic
+                    {
+                        Code = InvalidEdgeTarget,
+                        Severity = SkillGraphDiagnosticSeverity.Error,
+                        Message = $"Edge references non-existent target node '{edge.Target}'."
+                    });
+                }
+                if (!string.IsNullOrEmpty(edge.Source) && edge.Source == edge.Target)
+                {
+                    errors.Add(new SkillGraphDiagnostic
+                    {
+                        Code = SelfReferencingEdge,
+                        Severity = SkillGraphDiagnosticSeverity.Error,
+                        NodeId = edge.Source,
+                        Message = $"Edge self-references node '{edge.Source}'."
+                    });
+                }
+            }
+
+            return errors;
         }
 
         // ───────────────────────────────────────────

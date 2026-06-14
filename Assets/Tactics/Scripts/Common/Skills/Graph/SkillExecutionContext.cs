@@ -17,6 +17,28 @@ namespace Tactics.Common.Skills.Graph
     }
 
     /// <summary>
+    /// 结构化执行事件（替代字符串匹配）。
+    /// </summary>
+    public sealed class SkillGraphExecutionEvent
+    {
+        public string EventType;
+        public string NodeId;
+        public string TargetUnitName;
+        public float Timestamp;
+    }
+
+    /// <summary>
+    /// 阶段执行结果快照。
+    /// </summary>
+    public sealed class SkillStageResult
+    {
+        public int StageIndex;
+        public string NodeId;
+        public SkillGraphExecutionState State;
+        public string FailReason;
+    }
+
+    /// <summary>
     /// 单次施法执行上下文。
     /// 保存 SkillGraph 在一次释放过程中的全部运行时状态。
     /// </summary>
@@ -47,6 +69,12 @@ namespace Tactics.Common.Skills.Graph
         // ── 最大步数保护 ──
         public int MaxSteps { get; set; } = 200;
 
+        // ── 结构化事件追踪 ──
+        public List<SkillGraphExecutionEvent> ExecutionEvents { get; } = new();
+
+        // ── 阶段结果记录 ──
+        public List<SkillStageResult> StageResults { get; } = new();
+
         public SkillExecutionContext(IUnit caster, SkillGraphAsset graphAsset, SkillGraphRuntimeDefinition runtimeDef, IGridController gridController)
         {
             Caster = caster;
@@ -75,6 +103,32 @@ namespace Tactics.Common.Skills.Graph
             return _blackboard.ContainsKey(key);
         }
 
+        // ── 事件记录 ──
+
+        public void RecordEvent(string eventType, string nodeId, IUnit target = null)
+        {
+            ExecutionEvents.Add(new SkillGraphExecutionEvent
+            {
+                EventType = eventType,
+                NodeId = nodeId,
+                TargetUnitName = GetUnitName(target),
+                Timestamp = UnityEngine.Time.time
+            });
+        }
+
+        // ── 阶段记录 ──
+
+        public void RecordStage(int stageIndex, string nodeId, SkillGraphExecutionState state, string failReason = null)
+        {
+            StageResults.Add(new SkillStageResult
+            {
+                StageIndex = stageIndex,
+                NodeId = nodeId,
+                State = state,
+                FailReason = failReason
+            });
+        }
+
         // ── 状态查询 ──
 
         public bool IsRunning => State == SkillGraphExecutionState.Running;
@@ -97,6 +151,12 @@ namespace Tactics.Common.Skills.Graph
         {
             State = SkillGraphExecutionState.Aborted;
             LastError = reason;
+        }
+
+        private static string GetUnitName(IUnit unit)
+        {
+            if (unit == null) return null;
+            return unit is UnityEngine.MonoBehaviour mb ? mb.gameObject.name : unit.GetType().Name;
         }
     }
 }

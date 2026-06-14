@@ -3,7 +3,8 @@
     "rootNamespace": "Tactics.Editor.MCP",
     "references": [
         "MCPForUnity.Editor",
-        "MCPForUnity.Runtime"
+        "MCPForUnity.Runtime",
+        "Tactics.Common"
     ],
     "includePlatforms": [
         "Editor"

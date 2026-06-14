@@ -22,6 +22,8 @@ namespace Tactics.Common.Skills.Graph
                 return context.State;
             }
 
+            int stageIndex = 0;
+
             while (context.IsRunning)
             {
                 context.StepCount++;
@@ -66,6 +68,11 @@ namespace Tactics.Common.Skills.Graph
                     TLog.Error($"[SkillGraphRunner] Exception in node '{currentNode.NodeId}': {ex}");
                     return context.State;
                 }
+
+                context.RecordStage(stageIndex++, currentNode.NodeId,
+                    result.IsFailed ? SkillGraphExecutionState.Failed :
+                    SkillGraphExecutionState.Completed,
+                    result.FailReason);
 
                 if (result.IsFailed)
                 {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Tactics.Common.Units.Buffs;
 using UnityEngine;
 
@@ -99,7 +100,7 @@ namespace Tactics.Common.Skills.Graph.Testing
             return graph;
         }
 
-        public static SkillGraphAsset CreateAreaDamageGraph(string displayName, float baseDamage, int radius, int maxRange = 4)
+        public static SkillGraphAsset CreateAreaDamageGraph(string displayName, float baseDamage, int radius = 1, int maxRange = 3)
         {
             var graph = CreateGraph(displayName);
 
@@ -107,32 +108,29 @@ namespace Tactics.Common.Skills.Graph.Testing
             var selectPoint = CreateNode<SelectTargetPointNodeRecord>("select_point");
             selectPoint.MaxRange = maxRange;
 
-            var collectTargets = CreateNode<CollectTargetsInAreaNodeRecord>("collect_targets");
-            collectTargets.Radius = radius;
-            collectTargets.Shape = SkillGraphAreaShape.Circle;
+            var collect = CreateNode<CollectTargetsInAreaNodeRecord>("collect");
+            collect.Radius = radius;
 
-            var forEachTarget = CreateNode<ForEachTargetNodeRecord>("for_each_target");
+            var forEach = CreateNode<ForEachTargetNodeRecord>("for_each");
 
             var damage = CreateNode<ApplyDamageNodeRecord>("damage");
             damage.BaseDamage = baseDamage;
-            damage.CanCrit = false;
-            damage.IsRanged = false;
 
             var finish = CreateNode<FinishNodeRecord>("finish");
 
             graph.Nodes.Add(start);
             graph.Nodes.Add(selectPoint);
-            graph.Nodes.Add(collectTargets);
-            graph.Nodes.Add(forEachTarget);
+            graph.Nodes.Add(collect);
+            graph.Nodes.Add(forEach);
             graph.Nodes.Add(damage);
             graph.Nodes.Add(finish);
 
             graph.AddEdge("start", "select_point");
-            graph.AddEdge("select_point", "collect_targets");
-            graph.AddEdge("collect_targets", "for_each_target");
-            graph.AddEdge("for_each_target", "damage");
-            graph.AddEdge("damage", "for_each_target");
-            graph.AddEdge("for_each_target", "finish", SkillGraphPortType.OnComplete);
+            graph.AddEdge("select_point", "collect");
+            graph.AddEdge("collect", "for_each");
+            graph.AddEdge("for_each", "damage");
+            graph.AddEdge("damage", "for_each");
+            graph.AddEdge("for_each", "finish", SkillGraphPortType.OnComplete);
 
             return graph;
         }
@@ -144,7 +142,7 @@ namespace Tactics.Common.Skills.Graph.Testing
             var start = CreateNode<StartNodeRecord>("start");
             var selectTarget = CreateNode<SelectPrimaryTargetNodeRecord>("select_target");
             selectTarget.MinRange = 1;
-            selectTarget.MaxRange = maxRange;
+            selectTarget.MaxRange = Math.Max(1, maxRange);
 
             var knockback = CreateNode<ApplyKnockbackNodeRecord>("knockback");
             knockback.Distance = distance;
@@ -163,7 +161,7 @@ namespace Tactics.Common.Skills.Graph.Testing
             return graph;
         }
 
-        public static SkillGraphAsset CreateAllyHealGraph(string displayName, float healAmount, int maxRange = 1)
+        public static SkillGraphAsset CreateAllyHealGraph(string displayName, float healAmount, int maxRange = 2)
         {
             var graph = CreateGraph(displayName);
 
@@ -191,77 +189,92 @@ namespace Tactics.Common.Skills.Graph.Testing
         public static SkillGraphAsset CreateApplyBuffGraph(
             string displayName,
             string buffName,
-            int duration,
-            BuffEffectType effectType,
-            BuffTriggerTiming triggerTiming,
+            int duration = 2,
+            BuffEffectType effectType = BuffEffectType.None,
+            BuffTriggerTiming triggerTiming = BuffTriggerTiming.None,
             string selectionKind = "self",
             int maxRange = 1,
             bool isUnique = true,
             bool canAct = true)
         {
             var graph = CreateGraph(displayName);
-            var start = CreateNode<StartNodeRecord>("start");
-            SkillGraphNodeRecord selectionNode;
 
-            switch ((selectionKind ?? "self").Trim().ToLowerInvariant())
+            var start = CreateNode<StartNodeRecord>("start");
+
+            SkillGraphNodeRecord selectTarget;
+            if (string.Equals(selectionKind, "self", System.StringComparison.OrdinalIgnoreCase))
             {
-                case "self":
-                    selectionNode = CreateNode<SelectSelfNodeRecord>("select_self");
-                    break;
-                case "ally":
-                    var selectAlly = CreateNode<SelectAllyNodeRecord>("select_ally");
-                    selectAlly.MaxRange = maxRange;
-                    selectionNode = selectAlly;
-                    break;
-                case "enemy":
-                    var selectTarget = CreateNode<SelectPrimaryTargetNodeRecord>("select_target");
-                    selectTarget.MinRange = 1;
-                    selectTarget.MaxRange = maxRange;
-                    selectionNode = selectTarget;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(selectionKind), selectionKind, "Unsupported buff selection kind.");
+                selectTarget = CreateNode<SelectSelfNodeRecord>("select_target");
+            }
+            else
+            {
+                var selectNode = CreateNode<SelectPrimaryTargetNodeRecord>("select_target");
+                selectNode.MinRange = 1;
+                selectNode.MaxRange = Math.Max(1, maxRange);
+                selectTarget = selectNode;
             }
 
-            var applyBuff = CreateNode<ApplyBuffNodeRecord>("apply_buff");
-            applyBuff.BuffConfig = CreateBuffConfig(buffName, duration, effectType, triggerTiming, isUnique, canAct);
-            applyBuff.Duration = duration;
+            var buffConfig = ScriptableObject.CreateInstance<BuffConfig>();
+            buffConfig.name = buffName;
+            SetPrivateField(typeof(BuffConfig), buffConfig, "_buffName", buffName);
+            SetPrivateField(typeof(BuffConfig), buffConfig, "_defaultDuration", duration);
+            SetPrivateField(typeof(BuffConfig), buffConfig, "_effectType", effectType);
+            SetPrivateField(typeof(BuffConfig), buffConfig, "_triggerTiming", triggerTiming);
+            SetPrivateField(typeof(BuffConfig), buffConfig, "_isUnique", isUnique);
+            SetPrivateField(typeof(BuffConfig), buffConfig, "_canAct", canAct);
+
+            var buff = CreateNode<ApplyBuffNodeRecord>("buff");
+            buff.Duration = duration;
+            buff.BuffConfig = buffConfig;
 
             var finish = CreateNode<FinishNodeRecord>("finish");
 
             graph.Nodes.Add(start);
-            graph.Nodes.Add(selectionNode);
-            graph.Nodes.Add(applyBuff);
+            graph.Nodes.Add(selectTarget);
+            graph.Nodes.Add(buff);
             graph.Nodes.Add(finish);
 
-            graph.AddEdge("start", selectionNode.NodeId);
-            graph.AddEdge(selectionNode.NodeId, "apply_buff");
-            graph.AddEdge("apply_buff", "finish");
+            graph.AddEdge("start", "select_target");
+            graph.AddEdge("select_target", "buff");
+            graph.AddEdge("buff", "finish");
 
             return graph;
         }
 
-        private static BuffConfig CreateBuffConfig(
-            string buffName,
-            int defaultDuration,
-            BuffEffectType effectType,
-            BuffTriggerTiming triggerTiming,
-            bool isUnique,
-            bool canAct)
+        public static SkillGraphAsset CreateProjectileGraph(string displayName, float baseDamage, float travelTime = 0.05f)
         {
-            var config = ScriptableObject.CreateInstance<BuffConfig>();
-            config.name = buffName;
+            var graph = CreateGraph(displayName);
 
-            SetPrivateField(typeof(BuffConfig), config, "_buffName", buffName);
-            SetPrivateField(typeof(BuffConfig), config, "_defaultDuration", defaultDuration);
-            SetPrivateField(typeof(BuffConfig), config, "_canAct", canAct);
-            SetPrivateField(typeof(BuffConfig), config, "_isUnique", isUnique);
-            SetPrivateField(typeof(BuffConfig), config, "_effectType", effectType);
-            SetPrivateField(typeof(BuffConfig), config, "_triggerTiming", triggerTiming);
-            SetPrivateField(typeof(BuffConfig), config, "_damagePerTurn", 0f);
-            SetPrivateField(typeof(BuffConfig), config, "_elementType", ElementType.None);
+            var start = CreateNode<StartNodeRecord>("start");
+            var selectTarget = CreateNode<SelectPrimaryTargetNodeRecord>("select_target");
+            selectTarget.MinRange = 1;
+            selectTarget.MaxRange = 3;
 
-            return config;
+            var projectile = CreateNode<ProjectileLaunchNodeRecord>("projectile");
+            projectile.TravelTime = travelTime;
+            projectile.Speed = 10f;
+
+            var onHit = CreateNode<OnHitNodeRecord>("on_hit");
+
+            var damage = CreateNode<ApplyDamageNodeRecord>("damage");
+            damage.BaseDamage = baseDamage;
+
+            var finish = CreateNode<FinishNodeRecord>("finish");
+
+            graph.Nodes.Add(start);
+            graph.Nodes.Add(selectTarget);
+            graph.Nodes.Add(projectile);
+            graph.Nodes.Add(onHit);
+            graph.Nodes.Add(damage);
+            graph.Nodes.Add(finish);
+
+            graph.AddEdge("start", "select_target");
+            graph.AddEdge("select_target", "projectile");
+            graph.AddEdge("projectile", "on_hit");
+            graph.AddEdge("on_hit", "damage");
+            graph.AddEdge("damage", "finish");
+
+            return graph;
         }
 
         private static SkillGraphAsset CreateGraph(string displayName)

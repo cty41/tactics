@@ -100,6 +100,14 @@ namespace Tactics.Common.Skills.Graph.Testing
             unit.WorldPosition = cell.WorldPosition;
         }
 
+        public void PlaceUnit(IUnit unit, int x, int y)
+        {
+            var cell = CellManager.GetCellAt(new Vector2IntImpl(x, y));
+            if (cell == null)
+                throw new InvalidOperationException($"No cell at ({x}, {y}).");
+            PlaceUnit(unit, cell);
+        }
+
         public void SetTurnContext(IPlayer currentPlayer, IEnumerable<IUnit> playableUnits)
         {
             GridController.SetTurnContext(currentPlayer, playableUnits);

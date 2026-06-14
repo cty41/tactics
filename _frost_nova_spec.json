@@ -1,0 +1,82 @@
+{
+  "DisplayName": "冰霜新星",
+  "Description": "冰霜新星, 对周围半径2内的敌人造成5点魔法伤害并施加冰冻持续2回合, 距离3",
+  "Nodes": [
+    {
+      "Id": "start",
+      "Type": "Start"
+    },
+    {
+      "Id": "point",
+      "Type": "SelectTargetPoint",
+      "Parameters": {
+        "maxRange": 3
+      }
+    },
+    {
+      "Id": "collect",
+      "Type": "CollectTargetsInArea",
+      "Parameters": {
+        "radius": 2
+      }
+    },
+    {
+      "Id": "loop",
+      "Type": "ForEachTarget"
+    },
+    {
+      "Id": "damage",
+      "Type": "ApplyDamage",
+      "Parameters": {
+        "baseDamage": 5,
+        "damageType": 1,
+        "isRanged": false,
+        "canCrit": false
+      }
+    },
+    {
+      "Id": "buff",
+      "Type": "ApplyBuff",
+      "Parameters": {
+        "buffName": "Frozen",
+        "duration": 2,
+        "isUnique": true
+      }
+    },
+    {
+      "Id": "finish",
+      "Type": "Finish"
+    }
+  ],
+  "Edges": [
+    {
+      "Source": "start",
+      "Target": "point"
+    },
+    {
+      "Source": "point",
+      "Target": "collect"
+    },
+    {
+      "Source": "collect",
+      "Target": "loop"
+    },
+    {
+      "Source": "loop",
+      "Target": "damage"
+    },
+    {
+      "Source": "damage",
+      "Target": "buff"
+    },
+    {
+      "Source": "buff",
+      "Target": "loop"
+    },
+    {
+      "Source": "loop",
+      "Target": "finish",
+      "Port": "OnComplete"
+    }
+  ]
+}
