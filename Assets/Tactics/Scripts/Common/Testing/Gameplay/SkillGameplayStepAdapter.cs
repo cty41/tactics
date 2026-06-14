@@ -213,6 +213,7 @@ namespace Tactics.Common.Testing.Gameplay
                 "knockback" => SkillGraphTestGraphFactory.CreateKnockbackGraph(alias, GetInt(parameters, "distance", 1), GetInt(parameters, "maxRange", 1)),
                 "allyheal" => SkillGraphTestGraphFactory.CreateAllyHealGraph(alias, GetFloat(parameters, "healAmount", 5f), GetInt(parameters, "maxRange", 1)),
                 "charge" => SkillGraphTestGraphFactory.CreateChargeGraph(alias, GetInt(parameters, "distance", 1), GetInt(parameters, "maxRange", 3), GetFloat(parameters, "collisionDamage", 1f)),
+                "projectile" => SkillGraphTestGraphFactory.CreateProjectileGraph(alias, GetFloat(parameters, "baseDamage", 5f), GetFloat(parameters, "travelTime", 0.05f)),
                 "applybuff" => SkillGraphTestGraphFactory.CreateApplyBuffGraph(
                     alias,
                     GetString(parameters, "buffName", alias),
