@@ -268,6 +268,70 @@ namespace Tactics.Tests.PlayMode
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "aiSelectedIntentTypeEquals" && assertion.Passed), Is.True, details);
         }
 
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleFrozenRestrictionPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-frozen-restriction.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHasBuff" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleDotDamagePlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-dot-damage.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleBuffExpiryPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-buff-expiry.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitBuffDurationEquals" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleMultiBuffPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-multi-buff.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitHasBuff" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattle3v3CombatPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-3v3-combat.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitAliveEquals" && assertion.Passed), Is.True, details);
+        }
+
         private static string GetPlanPath(string fileName)
         {
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", fileName));

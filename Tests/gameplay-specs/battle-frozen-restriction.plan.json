@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.FrozenRestriction",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "addBuff",
+      "parameters": {
+        "unitAlias": "p2_0",
+        "buffName": "Frozen",
+        "duration": 2
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "unitHasBuff",
+      "target": "p2_0",
+      "expected": "Frozen",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "unitHasBuff",
+      "target": "p2_0",
+      "parameters": {}
+    }
+  ]
+}
