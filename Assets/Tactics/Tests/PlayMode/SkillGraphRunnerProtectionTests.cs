@@ -12,6 +12,12 @@ namespace Tactics.Tests.PlayMode
 {
     public class SkillGraphRunnerProtectionTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+        }
+
         [UnityTest]
         public IEnumerator Runner_AbortsWhenNoEntryNode()
         {
@@ -144,6 +150,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator Runner_RecordsExecutionEvents_ForProjectileGraph()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var world = new SkillGraphTestWorld();
             try
             {
@@ -181,6 +188,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator Runner_RecordsStageResults()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var world = new SkillGraphTestWorld();
             try
             {

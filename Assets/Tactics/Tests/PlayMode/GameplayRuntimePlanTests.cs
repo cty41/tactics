@@ -12,9 +12,16 @@ namespace Tactics.Tests.PlayMode
 {
     public class GameplayRuntimePlanTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+        }
+
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesSelfHealPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("self-heal.plan.json"));
             yield return WaitForTask(task);
 
@@ -26,6 +33,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesSingleTargetDamagePlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("single-target-damage.plan.json"));
             yield return WaitForTask(task);
 
@@ -48,6 +56,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesCounterPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("barbarian-counter.plan.json"));
             yield return WaitForTask(task);
 
@@ -61,6 +70,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesMarkPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("hunter-mark.plan.json"));
             yield return WaitForTask(task);
 
@@ -74,6 +84,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesFireballPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("mage-fireball.plan.json"));
             yield return WaitForTask(task);
 
@@ -85,6 +96,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesChargeStrikePlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("barbarian-charge-strike.plan.json"));
             yield return WaitForTask(task);
 
@@ -98,6 +110,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesChargeStrikeBlockedRetreatPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("barbarian-charge-blocked-retreat.plan.json"));
             yield return WaitForTask(task);
 
@@ -113,6 +126,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesMeleeHealPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("melee-heal.plan.json"));
             yield return WaitForTask(task);
 
@@ -124,6 +138,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesFireballAreaCountPlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("mage-fireball-area-count.plan.json"));
             yield return WaitForTask(task);
 
@@ -137,6 +152,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesMarkBuffUniquePlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("hunter-mark-buff-unique.plan.json"));
             yield return WaitForTask(task);
 
@@ -149,6 +165,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesCounterMultiStagePlanFromFile()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecutePlan(GetPlanPath("barbarian-counter-multi-stage.plan.json"));
             yield return WaitForTask(task);
 

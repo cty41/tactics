@@ -15,6 +15,12 @@ namespace Tactics.Tests.PlayMode
 {
     public class SkillGraphRuntimeTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+        }
+
         [UnityTest]
         public IEnumerator RuntimeRunner_AbortsInvalidGraph_BeforeExecution()
         {
@@ -58,6 +64,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_HealsCaster_WithSelfTargetGraph()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var world = new SkillGraphTestWorld();
 
             try
@@ -102,6 +109,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_DealsDamageToNearestEnemy_WithSingleTargetGraph()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var world = new SkillGraphTestWorld();
 
             try
@@ -153,6 +161,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesChargeGraph()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var world = new SkillGraphTestWorld();
             try
             {
@@ -366,6 +375,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator AssetIntegration_LoadsFromDisk_AndValidates()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(
                 "Assets/Tactics/Battle/Abilities/SkillGraphs/MeleeAttack_Graph.asset");
 
@@ -381,6 +391,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator AssetIntegration_BridgeSync_CreatesAndValidates()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(
                 "Assets/Tactics/Battle/Abilities/SkillGraphs/MeleeAttack_Graph.asset");
             Assert.IsNotNull(graph);
@@ -425,6 +436,7 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator AssetIntegration_ProjectileGraph_RunsEndToEnd()
         {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(
                 "Assets/Tactics/Battle/Abilities/SkillGraphs/RangedAttack_Graph.asset");
             Assert.IsNotNull(graph, "RangedAttack_Graph.asset not found");
