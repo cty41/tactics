@@ -28,6 +28,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "advanceTurn"
                 or "endBattleWithResult"
                 or "executeAbility"
+                or "executeBattleSkillGraph"
                 or "moveUnit"
                 or "setUnitState"
                 or "addBuff"
@@ -393,10 +394,19 @@ namespace Tactics.Common.Testing.Gameplay
                     return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Target alias '{targetAlias}' not found.");
             }
 
+            string targetPointAlias = action.Parameters["targetPointAlias"]?.ToString();
+            ICell targetPoint = null;
+            if (!string.IsNullOrWhiteSpace(targetPointAlias))
+            {
+                if (!context.Cells.TryGetValue(targetPointAlias, out targetPoint))
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Target point alias '{targetPointAlias}' not found.");
+            }
+
             var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(graphAsset);
             var skillContext = new SkillExecutionContext(caster, graphAsset, runtimeDef, controller)
             {
                 PrimaryTarget = primaryTarget,
+                TargetPoint = targetPoint,
                 RuntimeScope = context.RuntimeScope
             };
 

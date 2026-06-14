@@ -30,7 +30,8 @@
       "parameters": {
         "graphAlias": "fireballGraph",
         "casterAlias": "p1_0",
-        "targetAlias": "p2_0"
+        "targetAlias": "p2_0",
+        "targetPointAlias": "cell_1_0"
       }
     }
   ],
