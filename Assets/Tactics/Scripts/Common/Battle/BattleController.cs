@@ -525,6 +525,34 @@ namespace Tactics.Common.Battle
             BattleEnded?.Invoke(result);
         }
 
+        /// <summary>
+        /// 异步结束战斗，等待所有异步操作完成后再触发 BattleEnded 事件。
+        /// </summary>
+        public async Task EndBattleAsync(GameResult result)
+        {
+            if (!IsBattleActive) return;
+
+            // 1. 标记战斗不活跃
+            IsBattleActive = false;
+
+            // 2. 取消 RuntimeScope 中的所有异步操作
+            if (RuntimeScope != null)
+            {
+                RuntimeScope.Cancel();
+                try
+                {
+                    await RuntimeScope.WhenIdleAsync();
+                }
+                catch
+                {
+                    // 忽略取消异常
+                }
+            }
+
+            // 3. 触发 BattleEnded 事件
+            BattleEnded?.Invoke(result);
+        }
+
         private async Task ShowBattleUIAsync()
         {
             try
