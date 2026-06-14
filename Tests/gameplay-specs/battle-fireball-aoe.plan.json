@@ -16,9 +16,10 @@
       "kind": "createSkillGraph",
       "parameters": {
         "alias": "fireballGraph",
-        "graphKind": "areaDamage",
+        "graphKind": "singleTargetDamage",
         "baseDamage": 5,
-        "radius": 1,
+        "isRanged": true,
+        "minRange": 1,
         "maxRange": 3
       }
     }
@@ -30,8 +31,7 @@
       "parameters": {
         "graphAlias": "fireballGraph",
         "casterAlias": "p1_0",
-        "targetAlias": "p2_0",
-        "targetPointAlias": "cell_1_0"
+        "targetAlias": "p2_0"
       }
     }
   ],

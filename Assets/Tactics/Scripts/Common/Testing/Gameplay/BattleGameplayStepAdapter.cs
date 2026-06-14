@@ -27,7 +27,6 @@ namespace Tactics.Common.Testing.Gameplay
             return action.Kind is "bindBattleController"
                 or "advanceTurn"
                 or "endBattleWithResult"
-                or "executeAbility"
                 or "executeBattleSkillGraph"
                 or "moveUnit"
                 or "setUnitState"
@@ -48,8 +47,6 @@ namespace Tactics.Common.Testing.Gameplay
                         return AdvanceTurn(context, action);
                     case "endBattleWithResult":
                         return EndBattleWithResult(context, action);
-                    case "executeAbility":
-                        return await ExecuteAbility(context, action);
                     case "executeBattleSkillGraph":
                         return await ExecuteBattleSkillGraph(context, action);
                     case "moveUnit":
@@ -240,127 +237,6 @@ namespace Tactics.Common.Testing.Gameplay
             controller.EndBattle(result);
             context.LastBattleResult = result;
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Battle ended.");
-        }
-
-        private static async Task<GameplayStepResult> ExecuteAbility(GameplayRuntimeContext context, ExecutableScenarioAction action)
-        {
-            var controller = RequireBattleController(context, action.Kind);
-            if (!EnsureBattleInitialized(controller))
-                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController not initialized.");
-
-            string commandType = action.Parameters["commandType"]?.ToString()?.ToLower() ?? "attack";
-
-            ICommand command;
-            string executorAlias;
-            switch (commandType)
-            {
-                case "attack":
-                    executorAlias = action.Parameters["attackerAlias"]?.ToString();
-                    var attackTargetAlias = action.Parameters["targetAlias"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(executorAlias) || string.IsNullOrWhiteSpace(attackTargetAlias))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "attack requires attackerAlias and targetAlias.");
-                    if (!context.Units.TryGetValue(executorAlias, out var attacker))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Attacker alias '{executorAlias}' not found.");
-                    if (!context.Units.TryGetValue(attackTargetAlias, out var attackTarget))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Target alias '{attackTargetAlias}' not found.");
-                    float damage = action.Parameters["damage"]?.ToObject<float>() ?? 5f;
-                    command = new AttackCommand(attackTarget, damage);
-                    await attacker.HumanExecuteAbility(command, controller);
-                    break;
-
-                case "heal":
-                    executorAlias = action.Parameters["casterAlias"]?.ToString();
-                    var healTargetAlias = action.Parameters["targetAlias"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(executorAlias) || string.IsNullOrWhiteSpace(healTargetAlias))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "heal requires casterAlias and targetAlias.");
-                    if (!context.Units.TryGetValue(executorAlias, out var caster))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Caster alias '{executorAlias}' not found.");
-                    if (!context.Units.TryGetValue(healTargetAlias, out var healTarget))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Target alias '{healTargetAlias}' not found.");
-                    float healAmount = action.Parameters["healAmount"]?.ToObject<float>() ?? 3f;
-                    command = new HealCommand(healTarget, caster, healAmount);
-                    await caster.HumanExecuteAbility(command, controller);
-                    break;
-
-                case "move":
-                    var moveUnitAlias = action.Parameters["unitAlias"]?.ToString();
-                    var destCellAlias = action.Parameters["destinationCellAlias"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(moveUnitAlias) || string.IsNullOrWhiteSpace(destCellAlias))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "move requires unitAlias and destinationCellAlias.");
-                    if (!context.Units.TryGetValue(moveUnitAlias, out var moveUnit))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit alias '{moveUnitAlias}' not found.");
-                    if (!context.Cells.TryGetValue(destCellAlias, out var destCell))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell alias '{destCellAlias}' not found.");
-                    var sourceCell = moveUnit.CurrentCell;
-                    if (sourceCell == null)
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit '{moveUnitAlias}' has no current cell.");
-                    var pathCellAliases = action.Parameters["pathCellAliases"]?.ToObject<string[]>();
-                    IEnumerable<ICell> path;
-                    if (pathCellAliases != null && pathCellAliases.Length > 0)
-                    {
-                        var pathCells = new List<ICell>();
-                        foreach (var pca in pathCellAliases)
-                        {
-                            if (context.Cells.TryGetValue(pca, out var pc))
-                                pathCells.Add(pc);
-                        }
-                        path = pathCells;
-                    }
-                    else
-                    {
-                        path = new[] { sourceCell, destCell };
-                    }
-                    command = new MoveCommand(sourceCell, destCell, path);
-                    await moveUnit.HumanExecuteAbility(command, controller);
-                    break;
-
-                case "fireball":
-                    var fbCasterAlias = action.Parameters["casterAlias"]?.ToString();
-                    var fbTargetCellAlias = action.Parameters["targetCellAlias"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(fbCasterAlias) || string.IsNullOrWhiteSpace(fbTargetCellAlias))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "fireball requires casterAlias and targetCellAlias.");
-                    if (!context.Units.TryGetValue(fbCasterAlias, out var fbCaster))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Caster alias '{fbCasterAlias}' not found.");
-                    if (!context.Cells.TryGetValue(fbTargetCellAlias, out var fbTargetCell))
-                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell alias '{fbTargetCellAlias}' not found.");
-                    float fbDamage = action.Parameters["damage"]?.ToObject<float>() ?? 5f;
-                    int fbManaCost = action.Parameters["manaCost"]?.ToObject<int>() ?? 3;
-                    var fbAoeCellAliases = action.Parameters["aoeCellAliases"]?.ToObject<string[]>();
-                    List<ICell> aoeCells;
-                    if (fbAoeCellAliases != null && fbAoeCellAliases.Length > 0)
-                    {
-                        aoeCells = new List<ICell>();
-                        foreach (var aca in fbAoeCellAliases)
-                        {
-                            if (context.Cells.TryGetValue(aca, out var ac))
-                                aoeCells.Add(ac);
-                        }
-                    }
-                    else
-                    {
-                        aoeCells = new List<ICell> { fbTargetCell };
-                        // Add neighbors if available
-                        var cellMgr = controller.CellManager;
-                        if (cellMgr != null)
-                        {
-                            foreach (var cell in cellMgr.GetCells())
-                            {
-                                var dist = Math.Abs(cell.GridCoordinates.x - fbTargetCell.GridCoordinates.x)
-                                         + Math.Abs(cell.GridCoordinates.y - fbTargetCell.GridCoordinates.y);
-                                if (dist == 1)
-                                    aoeCells.Add(cell);
-                            }
-                        }
-                    }
-                    command = new FireballCommand(fbTargetCell, fbCaster, aoeCells, fbDamage, fbManaCost);
-                    await fbCaster.HumanExecuteAbility(command, controller);
-                    break;
-
-                default:
-                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unsupported commandType '{commandType}'.");
-            }
-
-            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed {commandType}.");
         }
 
         /// <summary>
