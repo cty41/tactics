@@ -11,6 +11,7 @@ namespace Tactics.Common.Units.Abilities
     /// Unified command to execute an attack action by a unit on a target unit.
     /// Replaces MeleeAttackCommand and RangedAttackCommand.
     /// </summary>
+    [Obsolete("Legacy skill system. Use GenericAbilityImpl/SkillGraphAbilityImpl instead. This will be removed in a future version.")]
     public readonly struct AttackCommand : ICommand
     {
         private readonly IUnit _target;

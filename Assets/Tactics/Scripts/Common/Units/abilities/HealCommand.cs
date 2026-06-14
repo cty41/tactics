@@ -10,6 +10,7 @@ namespace Tactics.Common.Units.Abilities
     /// <summary>
     /// Command to execute a healing action on a friendly unit.
     /// </summary>
+    [Obsolete("Legacy skill system. Use GenericAbilityImpl/SkillGraphAbilityImpl instead. This will be removed in a future version.")]
     public readonly struct HealCommand : ICommand
     {
         private readonly IUnit _target;

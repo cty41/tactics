@@ -8,6 +8,7 @@ using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
@@ -48,6 +49,8 @@ namespace Tactics.Common.Testing.Gameplay
                         return EndBattleWithResult(context, action);
                     case "executeAbility":
                         return await ExecuteAbility(context, action);
+                    case "executeBattleSkillGraph":
+                        return await ExecuteBattleSkillGraph(context, action);
                     case "moveUnit":
                         return MoveUnit(context, action);
                     case "setUnitState":
@@ -357,6 +360,53 @@ namespace Tactics.Common.Testing.Gameplay
             }
 
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed {commandType}.");
+        }
+
+        /// <summary>
+        /// 通过 SkillGraph 执行技能（新系统入口）。
+        /// 从 context.SkillGraphs 中查找图，通过 SkillGraphRunner 执行。
+        /// </summary>
+        private static async Task<GameplayStepResult> ExecuteBattleSkillGraph(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            if (!EnsureBattleInitialized(controller))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController not initialized.");
+
+            string graphAlias = action.Parameters["graphAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(graphAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "executeBattleSkillGraph requires graphAlias.");
+
+            if (!context.SkillGraphs.TryGetValue(graphAlias, out var graphAsset))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"SkillGraph alias '{graphAlias}' not found.");
+
+            string casterAlias = action.Parameters["casterAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(casterAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "executeBattleSkillGraph requires casterAlias.");
+            if (!context.Units.TryGetValue(casterAlias, out var caster))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Caster alias '{casterAlias}' not found.");
+
+            string targetAlias = action.Parameters["targetAlias"]?.ToString();
+            IUnit primaryTarget = null;
+            if (!string.IsNullOrWhiteSpace(targetAlias))
+            {
+                if (!context.Units.TryGetValue(targetAlias, out primaryTarget))
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Target alias '{targetAlias}' not found.");
+            }
+
+            var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(graphAsset);
+            var skillContext = new SkillExecutionContext(caster, graphAsset, runtimeDef, controller)
+            {
+                PrimaryTarget = primaryTarget,
+                RuntimeScope = context.RuntimeScope
+            };
+
+            var runner = new SkillGraphRunner();
+            var result = await runner.Execute(skillContext);
+
+            if (result == SkillGraphExecutionState.Completed)
+                return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed SkillGraph '{graphAlias}' on {casterAlias}.");
+
+            return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"SkillGraph '{graphAlias}' execution failed: {skillContext.LastError}");
         }
 
         private static GameplayStepResult MoveUnit(GameplayRuntimeContext context, ExecutableScenarioAction action)

@@ -12,6 +12,7 @@ namespace Tactics.Common.Units.Abilities
     /// <summary>
     /// Command to execute a fireball attack: AOE damage + ignite buff on all units in target area.
     /// </summary>
+    [Obsolete("Legacy skill system. Use GenericAbilityImpl/SkillGraphAbilityImpl instead. This will be removed in a future version.")]
     public readonly struct FireballCommand : ICommand
     {
         private readonly ICell _targetCell;
