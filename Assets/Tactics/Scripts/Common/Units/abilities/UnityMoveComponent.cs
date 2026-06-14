@@ -23,13 +23,6 @@ namespace Tactics.Common.Units.Abilities
                 tcs.SetResult(true);
                 return tcs.Task;
             }
-            // Fast path: if unit has no Animator or SpriteRenderer, skip animation
-            if (mono.GetComponent<Animator>() == null && mono.GetComponent<SpriteRenderer>() == null)
-            {
-                _unitReference.WorldPosition = destination.WorldPosition;
-                tcs.SetResult(true);
-                return tcs.Task;
-            }
             mono.StartCoroutine(AnimateMoveCoroutine(path, destination, tcs));
             return tcs.Task;
         }

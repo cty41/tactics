@@ -215,6 +215,9 @@ namespace Tactics.Tests.PlayMode
                 var moveCommand = new MoveCommand(originalCell, targetCell, new[] { originalCell, targetCell });
                 var moveTask = p1Unit.HumanExecuteAbility(moveCommand, controller);
                 yield return new WaitUntil(() => moveTask.IsCompleted);
+                
+                // 等待移动动画完成
+                yield return new WaitForSeconds(2.0f);
 
                 Debug.Log($"[Test] P1 new position: ({p1Unit.CurrentCell.GridCoordinates.x}, {p1Unit.CurrentCell.GridCoordinates.y})");
                 Assert.That(p1Unit.CurrentCell, Is.EqualTo(targetCell), "P1 should have moved to target cell.");
