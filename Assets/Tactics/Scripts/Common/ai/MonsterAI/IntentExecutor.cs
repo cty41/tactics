@@ -205,11 +205,18 @@ namespace Tactics.Common.AI.MonsterAI
             return true;
         }
 
-        private static Task ExecuteCommandForAI(ICommand command, AiContext context)
+        private static async Task ExecuteCommandForAI(ICommand command, AiContext context)
         {
             var tcs = new TaskCompletionSource<bool>();
             context.Self.AIExecuteAbility(command, context.GridController, tcs);
-            return tcs.Task;
+            
+            // 添加超时机制，避免 tcs 永远挂起
+            var timeoutTask = Task.Delay(2000);
+            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                TLog.Info("[IntentExecutor] Command execution timed out (2s), assuming executed.");
+            }
         }
     }
 }

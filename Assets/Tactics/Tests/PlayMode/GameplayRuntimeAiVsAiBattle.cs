@@ -207,6 +207,9 @@ namespace Tactics.Tests.PlayMode
             var command = new AttackCommand(p2Unit, damage);
             var attackTask = p1Unit.HumanExecuteAbility(command, controller);
             yield return new WaitUntil(() => attackTask.IsCompleted);
+            
+            // 等待异步攻击完成（OnAbilityUsed 是 async void）
+            yield return new WaitForSeconds(0.5f);
 
             float p2HealthAfter = p2Unit.Health;
             Debug.Log($"[Test] P2 Health after: {p2HealthAfter}/{p2Unit.MaxHealth}");
