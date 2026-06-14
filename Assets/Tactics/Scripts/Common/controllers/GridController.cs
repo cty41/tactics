@@ -1,6 +1,7 @@
 using System;
 using Tactics.Runtime.Utilities;
 using System.Linq;
+using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
@@ -192,6 +193,27 @@ namespace Tactics.Common.Controllers
             }
         }
 
+        /// <summary>
+        /// 真正等待能力执行完成的异步方法。
+        /// 不通过事件系统，直接执行命令。
+        /// </summary>
+        public async Task HandleAbilityUsedAsync(IUnit unit, ICommand command)
+        {
+            if (unit.PlayerNumber.Equals(TurnContext.CurrentPlayer.PlayerNumber) || BypassActiveUnitCheck)
+            {
+                if (!BypassActiveUnitCheck)
+                {
+                    var activeUnit = TurnContext.PlayableUnits().FirstOrDefault();
+                    if (activeUnit == null || !ReferenceEquals(activeUnit, unit))
+                    {
+                        return;
+                    }
+                }
+
+                await command.Execute(unit, this);
+            }
+        }
+
         private async void OnUnitDestroyed(UnitDestroyedEventArgs eventArgs)
         {
             foreach (var ability in eventArgs.AffectedUnit.GetBaseAbilities())
@@ -209,6 +231,28 @@ namespace Tactics.Common.Controllers
             eventArgs.AffectedUnit.Cleanup(this);
             await UnitManager.MarkAsDestroyed(eventArgs.AffectedUnit);
             eventArgs.AffectedUnit.OnDestroyed(this);
+        }
+
+        /// <summary>
+        /// 真正等待单位销毁完成的异步方法。
+        /// </summary>
+        public async Task HandleUnitDestroyedAsync(IUnit unit)
+        {
+            foreach (var ability in unit.GetBaseAbilities())
+            {
+                ability.OnUnitDestroyed(this);
+            }
+
+            UnitManager.RemoveUnit(unit);
+
+            unit.UnitClicked -= OnUnitClicked;
+            unit.UnitSelected -= OnUnitHighlighted;
+            unit.UnitDeselected -= OnUnitDehighlighted;
+            unit.UnitDestroyed -= OnUnitDestroyed;
+
+            unit.Cleanup(this);
+            await UnitManager.MarkAsDestroyed(unit);
+            unit.OnDestroyed(this);
         }
 
         public void EndTurn(bool isNetworkInvoked = false)

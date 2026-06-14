@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.Controllers;
 
@@ -16,6 +17,21 @@ namespace Tactics.Common.Units.Abilities
         /// <param name="controller">The grid controller.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task Execute(IUnit unit, IGridController controller);
+
+        /// <summary>
+        /// Executes the command for the specified unit with cancellation support.
+        /// 默认实现调用 Execute 方法。
+        /// </summary>
+        /// <param name="unit">The unit performing the command.</param>
+        /// <param name="controller">The grid controller.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task ExecuteAsync(IUnit unit, IGridController controller, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                return Task.CompletedTask;
+            return Execute(unit, controller);
+        }
 
         /// <summary>
         /// Reverts the effects of the command for the specified unit, effectively undoing the action.

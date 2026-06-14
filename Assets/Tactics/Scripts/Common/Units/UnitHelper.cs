@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Controllers.GridStates;
@@ -78,6 +80,32 @@ namespace Tactics.Common.Units
                     return Task.CompletedTask;
                 },
                 isNetworkInvoked);
+        }
+
+        /// <summary>
+        /// 真正等待能力执行完成的异步方法。
+        /// 直接调用 Command.Execute，不通过事件系统。
+        /// </summary>
+        public static async Task ExecuteAbilityAsync(IUnit unit, ICommand command, IGridController gridController, CancellationToken token = default)
+        {
+            if (token.IsCancellationRequested)
+                return;
+
+            await command.Execute(unit, gridController);
+        }
+
+        /// <summary>
+        /// 真正等待能力执行完成的异步方法（带前置和后置动作）。
+        /// </summary>
+        public static async Task ExecuteAbilityAsync(IUnit unit, ICommand command, IGridController gridController,
+            Func<IGridController, Task> preAction, Func<IGridController, Task> postAction, CancellationToken token = default)
+        {
+            if (token.IsCancellationRequested)
+                return;
+
+            await preAction(gridController);
+            await command.Execute(unit, gridController);
+            await postAction(gridController);
         }
     }
 }
