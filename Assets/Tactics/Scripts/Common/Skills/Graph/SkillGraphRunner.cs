@@ -26,6 +26,13 @@ namespace Tactics.Common.Skills.Graph
 
             while (context.IsRunning)
             {
+                if (context.CancellationToken.IsCancellationRequested)
+                {
+                    context.Abort("Execution cancelled.");
+                    TLog.Info($"[SkillGraphRunner] Cancelled at node '{context.CurrentNodeId}'.");
+                    return context.State;
+                }
+
                 context.StepCount++;
 
                 if (context.StepCount > context.MaxSteps)

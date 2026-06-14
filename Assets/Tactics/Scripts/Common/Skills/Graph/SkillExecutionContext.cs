@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -68,6 +69,9 @@ namespace Tactics.Common.Skills.Graph
 
         // ── 最大步数保护 ──
         public int MaxSteps { get; set; } = 200;
+
+        // ── 取消令牌 ──
+        public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
 
         // ── 结构化事件追踪 ──
         public List<SkillGraphExecutionEvent> ExecutionEvents { get; } = new();

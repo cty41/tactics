@@ -340,7 +340,7 @@ namespace Tactics.Common.Skills.Graph
             context.RecordEvent("ProjectileLaunched", node.NodeId, target);
 
             float travelTime = UnityEngine.Mathf.Max(0.05f, record.TravelTime);
-            await Task.Delay((int)(travelTime * 1000));
+            await Task.Delay((int)(travelTime * 1000), context.CancellationToken);
 
             context.SetBlackboard("ProjectileHit", true);
             context.SetBlackboard("ProjectileTarget", target);

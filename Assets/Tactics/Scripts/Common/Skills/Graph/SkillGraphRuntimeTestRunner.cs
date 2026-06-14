@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
@@ -24,6 +25,7 @@ namespace Tactics.Common.Skills.Graph.Testing
         public ICell TargetPoint { get; set; }
         public int MaxSteps { get; set; } = 200;
         public bool ValidateGraph { get; set; } = true;
+        public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
     }
 
     /// <summary>
@@ -144,7 +146,8 @@ namespace Tactics.Common.Skills.Graph.Testing
             {
                 MaxSteps = request.MaxSteps,
                 PrimaryTarget = request.PrimaryTarget,
-                TargetPoint = request.TargetPoint
+                TargetPoint = request.TargetPoint,
+                CancellationToken = request.CancellationToken
             };
 
             try
