@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Controllers.GameResolvers;
@@ -245,9 +245,6 @@ namespace Tactics.Common.Battle
                     }
                 }
             }
-
-            // Persist state after rewards applied
-            PlayerAdventureStateStore.Save(_state);
         }
 
         /// <summary>

@@ -2,12 +2,16 @@ using System;
 
 namespace Tactics.Equipment
 {
+    public enum EquipmentRarity { Common = 0, Rare = 1 }
+
     [Serializable]
     public class EquipmentDefinition
     {
         public string Id;
         public string DisplayName;
         public EquipmentSlot Slot;
+        public EquipmentRarity Rarity;
+        public int Price;
         public int StrengthBonus;
         public int AgilityBonus;
         public int ConstitutionBonus;

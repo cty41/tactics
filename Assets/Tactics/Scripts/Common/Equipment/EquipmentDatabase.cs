@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Tactics.Runtime.Utilities;
 using System.IO;
 using Newtonsoft.Json;
@@ -96,6 +97,14 @@ namespace Tactics.Equipment
                 Load();
 
             return !string.IsNullOrEmpty(id) && _definitions.ContainsKey(id);
+        }
+
+        public static IReadOnlyList<EquipmentDefinition> GetAll()
+        {
+            if (!_isLoaded)
+                Load();
+
+            return _definitions.Values.ToList();
         }
     }
 }
