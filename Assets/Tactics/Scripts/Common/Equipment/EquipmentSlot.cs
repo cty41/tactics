@@ -6,6 +6,7 @@ namespace Tactics.Equipment
         Armor,
         Helmet,
         Boots,
-        Accessory
+        Accessory,
+        Shield
     }
 }
