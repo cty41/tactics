@@ -21,7 +21,7 @@ namespace Tactics.Units
         [FormerlySerializedAs("_dataTilemap")]
         [SerializeField] private Tilemap _gridTilemap;
         [SerializeField, Tooltip("垂直偏移量，用于将单位视觉居中于 tile 中心")]
-        private float _visualYOffset = 0.15f;
+        private float _visualYOffset = 0.25f;
 
         private float baseMovementSpeed;
 
@@ -133,10 +133,12 @@ namespace Tactics.Units
 
             var spriteRenderers = GetComponentsInChildren<SpriteRenderer>(false);
             SpriteRenderer mainSr = null;
+            SpriteRenderer shadowSr = null;
             float maxArea = 0f;
             foreach (var sr in spriteRenderers)
             {
                 if (sr.sprite == null) continue;
+                if (sr.name == "Shadow") shadowSr = sr;
                 var area = sr.sprite.rect.width * sr.sprite.rect.height;
                 if (area > maxArea)
                 {
@@ -150,6 +152,13 @@ namespace Tactics.Units
                 var localPos = mainSr.transform.localPosition;
                 localPos.y += _visualYOffset;
                 mainSr.transform.localPosition = localPos;
+
+                if (shadowSr != null && shadowSr != mainSr)
+                {
+                    var shadowPos = shadowSr.transform.localPosition;
+                    shadowPos.y = localPos.y + mainSr.sprite.bounds.min.y;
+                    shadowSr.transform.localPosition = shadowPos;
+                }
             }
         }
 

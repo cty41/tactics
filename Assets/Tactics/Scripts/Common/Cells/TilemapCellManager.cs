@@ -55,8 +55,12 @@ namespace Tactics.Cells
         private VirtualSquareCell _selectedCell;
         private float _lastRaycast = 0;
         [SerializeField] private float _raycastDelay = 0.1f;
+        private Vector3 _lastRawWorldPos;
 
         private ProceduralTileHighlightRenderer _highlightRenderer;
+        private Vector3 _anchorWorldOffset;
+
+        public bool ShowDebugOverlay { get; set; }
 
         private ProceduralTileHighlightRenderer HighlightRenderer
         {
@@ -79,6 +83,9 @@ namespace Tactics.Cells
             EnsureHighlightRenderer();
             HighlightRenderer.SetDataLayer(_gridLayer);
 
+            _anchorWorldOffset = _gridLayer.GetCellCenterWorld(Vector3Int.zero)
+                               - _gridLayer.CellToWorld(Vector3Int.zero);
+
             var bounds = _gridLayer.cellBounds;
             _cells = new Dictionary<Vector2IntImpl, VirtualSquareCell>();
 
@@ -94,13 +101,6 @@ namespace Tactics.Cells
                 _cells.Add(gridPosition, cell);
                 CellAdded?.Invoke(cell);
             }
-
-            // 诊断日志：验证 GetCellCenterWorld 与 WorldToCell 往返一致性
-            var firstCellData = _cells.Values.First();
-            var fcGridPos = new Vector3Int(firstCellData.GridCoordinates.x, firstCellData.GridCoordinates.y, 0);
-            var center = _gridLayer.GetCellCenterWorld(fcGridPos);
-            var rt = _gridLayer.WorldToCell(center);
-            TLog.Info($"[TilemapCellManager] Initialize: firstCell gridCoord=({fcGridPos.x},{fcGridPos.y}), centerWorld={center:F2}, roundTrip=({rt.x},{rt.y})");
 
             if (_cells.Count == 0)
             {
@@ -188,6 +188,117 @@ namespace Tactics.Cells
             }
         }
 
+        private void OnGUI()
+        {
+            if (!ShowDebugOverlay || _cells == null || _selectedCell == null) return;
+
+            var style = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 16,
+                fontStyle = FontStyle.Bold
+            };
+            style.normal.textColor = Color.white;
+
+            float y = 10;
+            float lineH = 22;
+
+            var screenPos = Mouse.current.position.ReadValue();
+            var cellCoords = _selectedCell.GridCoordinates;
+            var raw = _lastRawWorldPos;
+            var center = _gridLayer.CellToWorld(new Vector3Int(cellCoords.x, cellCoords.y, 0));
+            float dx = raw.x - center.x;
+            float dy = raw.y - center.y;
+
+            GUI.Label(new Rect(10, y, 600, lineH), $"Cell: ({cellCoords.x},{cellCoords.y})", style); y += lineH;
+            GUI.Label(new Rect(10, y, 600, lineH), $"CellCenter: ({center.x:F2}, {center.y:F2})", style); y += lineH;
+            GUI.Label(new Rect(10, y, 600, lineH), $"MouseWorld: ({raw.x:F2}, {raw.y:F2})", style); y += lineH;
+
+            style.normal.textColor = Mathf.Abs(dy) > 0.1f ? Color.yellow : Color.green;
+            GUI.Label(new Rect(10, y, 600, lineH), $"Delta: ({dx:F3}, {dy:F3})  [Y offset = {dy / 0.5f:F2} tileH]", style); y += lineH;
+
+            style.normal.textColor = Color.cyan;
+            GUI.Label(new Rect(10, y, 600, lineH), $"Screen: ({screenPos.x:F0}, {screenPos.y:F0})", style); y += lineH;
+
+            var cellWorldPos = _gridLayer.CellToWorld(new Vector3Int(cellCoords.x, cellCoords.y, 0));
+            style.normal.textColor = Color.white;
+            GUI.Label(new Rect(10, y, 600, lineH), $"CellToWorld: ({cellWorldPos.x:F2}, {cellWorldPos.y:F2})", style); y += lineH;
+
+            var screenCenter = _mainCamera.WorldToScreenPoint(center);
+            var screenCellOrigin = _mainCamera.WorldToScreenPoint(cellWorldPos);
+            style.normal.textColor = Color.green;
+            GUI.Label(new Rect(10, y, 600, lineH), $"Center→Screen: ({screenCenter.x:F0}, {screenCenter.y:F0})", style); y += lineH;
+            style.normal.textColor = Color.magenta;
+            GUI.Label(new Rect(10, y, 600, lineH), $"CellOrigin→Screen: ({screenCellOrigin.x:F0}, {screenCellOrigin.y:F0})", style); y += lineH;
+
+            screenCenter.y = Screen.height - screenCenter.y;
+            DrawCrosshair(screenCenter, Color.green, 12);
+
+            screenCellOrigin.y = Screen.height - screenCellOrigin.y;
+            DrawCrosshair(screenCellOrigin, Color.magenta, 8);
+
+            var mouseScr = screenPos;
+            mouseScr.y = Screen.height - mouseScr.y;
+            DrawCrosshair(mouseScr, Color.red, 10);
+
+            DrawUnitDebug(style, y);
+        }
+
+        private void DrawUnitDebug(GUIStyle style, float startY)
+        {
+            var units = FindObjectsByType<Tactics.Common.Units.Unit>(FindObjectsSortMode.None);
+            if (units.Length == 0) return;
+
+            float y = startY + 10;
+            float lineH = 20;
+            var smallStyle = new GUIStyle(style) { fontSize = 13 };
+
+            foreach (var u in units)
+            {
+                var sr = u.GetComponentInChildren<SpriteRenderer>();
+                if (sr == null || sr.sprite == null) continue;
+
+                var srPos = sr.transform.position;
+                var bounds = sr.sprite.bounds;
+                var bottomCenter = srPos + new Vector3(0, bounds.min.y, 0);
+                var cellPos = _gridLayer.WorldToCell(u.transform.position);
+                var cellCenter = _gridLayer.CellToWorld(cellPos);
+                var cellTop = _gridLayer.GetCellCenterWorld(cellPos);
+
+                smallStyle.normal.textColor = Color.yellow;
+                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"{u.name}:", smallStyle); y += lineH;
+                smallStyle.normal.textColor = Color.white;
+                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  spriteBottom=({bottomCenter.x:F2},{bottomCenter.y:F2})", smallStyle); y += lineH;
+                smallStyle.normal.textColor = Color.magenta;
+                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  cellCenter=({cellCenter.x:F2},{cellCenter.y:F2})", smallStyle); y += lineH;
+                smallStyle.normal.textColor = Color.green;
+                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  cellTop=({cellTop.x:F2},{cellTop.y:F2})", smallStyle); y += lineH;
+
+                float deltaBottom = bottomCenter.y - cellCenter.y;
+                smallStyle.normal.textColor = Mathf.Abs(deltaBottom) < 0.05f ? Color.green : Color.red;
+                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  bottom→center delta={deltaBottom:F3}", smallStyle); y += lineH;
+
+                var scrBottom = _mainCamera.WorldToScreenPoint(bottomCenter);
+                scrBottom.y = Screen.height - scrBottom.y;
+                DrawCrosshair(scrBottom, Color.yellow, 8);
+
+                var scrCellCenter = _mainCamera.WorldToScreenPoint(cellCenter);
+                scrCellCenter.y = Screen.height - scrCellCenter.y;
+                DrawCrosshair(scrCellCenter, Color.magenta, 8);
+
+                y += 5;
+            }
+        }
+
+        private void DrawCrosshair(Vector2 screenPos, Color color, float size)
+        {
+            var prevColor = GUI.color;
+            GUI.color = color;
+            var tex = Texture2D.whiteTexture;
+            GUI.DrawTexture(new Rect(screenPos.x - size, screenPos.y - 1, size * 2, 3), tex);
+            GUI.DrawTexture(new Rect(screenPos.x - 1, screenPos.y - size, 3, size * 2), tex);
+            GUI.color = prevColor;
+        }
+
         private VirtualSquareCell TryGetCellUnderCursor()
         {
             if (_cells == null) return null; // 尚未初始化
@@ -205,7 +316,8 @@ namespace Tactics.Cells
             }
             
             Vector3 mouseWorldPos = ray.GetPoint(enter);
-            Vector3Int cellPos = _gridLayer.WorldToCell(mouseWorldPos);
+            _lastRawWorldPos = mouseWorldPos;
+            Vector3Int cellPos = _gridLayer.WorldToCell(mouseWorldPos + _anchorWorldOffset);
 
             var gridPosition = new Vector2IntImpl(cellPos.x, cellPos.y);
 
@@ -335,7 +447,6 @@ namespace Tactics.Cells
         public override void SetColor(ICell cell, float r, float g, float b, float a)
         {
         }
-
 
     }
 }

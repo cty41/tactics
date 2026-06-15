@@ -7,6 +7,7 @@ using Tactics.Common.Players;
 using Tactics.Flow.Battle;
 using Tactics.Equipment;
 using Tactics.Roster;
+using Tactics.Cells;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -113,6 +114,16 @@ namespace Tactics.Cheats
                     BattleController.Instance.EndBattle(result);
                 }
                 return message;
+            });
+
+            RegisterCommand("displaydebug", args =>
+            {
+                var cellManager = UnityEngine.Object.FindFirstObjectByType<TilemapCellManager>();
+                if (cellManager == null)
+                    return "[Error] TilemapCellManager not found.";
+
+                cellManager.ShowDebugOverlay = !cellManager.ShowDebugOverlay;
+                return $"Debug overlay: {(cellManager.ShowDebugOverlay ? "ON" : "OFF")}";
             });
 
             RegisterCommand("addexp", args =>

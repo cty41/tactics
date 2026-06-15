@@ -329,12 +329,12 @@ namespace Tactics.Cells
                 {
                     Vector3Int pos = new Vector3Int(coord.x, coord.y, 0);
 
-                    Vector3 worldCenter = _gridLayer.GetCellCenterWorld(pos);
+                    Vector3 worldCenter = _gridLayer.CellToWorld(pos);
                     Vector3 center = transform.InverseTransformPoint(worldCenter);
                     center.y += 0.02f;
 
-                    Vector3 worldRight = _gridLayer.GetCellCenterWorld(pos + Vector3Int.right);
-                    Vector3 worldUp = _gridLayer.GetCellCenterWorld(pos + Vector3Int.up);
+                    Vector3 worldRight = _gridLayer.CellToWorld(pos + Vector3Int.right);
+                    Vector3 worldUp = _gridLayer.CellToWorld(pos + Vector3Int.up);
                     Vector3 localRight = transform.InverseTransformPoint(worldRight);
                     Vector3 localUp = transform.InverseTransformPoint(worldUp);
                     Vector3 dx = (localRight - center) * 0.5f;
