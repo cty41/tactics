@@ -94,8 +94,18 @@ namespace Tactics.Common.Skills.Graph
 
             if (canRetreat)
             {
+                var approachCell = distance > 1
+                    ? GetRelativeCell(casterCell, dirX, dirY, distance - 1, grid)
+                    : casterCell;
+
+                if (approachCell != null && approachCell != casterCell)
+                    await MoveUnitAsync(caster, casterCell, approachCell, grid);
+
                 await MoveUnitAsync(target, targetCell, retreatCell, grid);
-                await MoveUnitAsync(caster, casterCell, targetCell, grid);
+
+                var fromCell = (approachCell != null && approachCell != casterCell) ? approachCell : casterCell;
+                await MoveUnitAsync(caster, fromCell, targetCell, grid);
+
                 ApplyCollisionDamage(caster, target);
                 return ChargeResolution.Success($"Reached target '{targetCell.GridCoordinates}'.");
             }
@@ -243,7 +253,7 @@ namespace Tactics.Common.Skills.Graph
     {
         public SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyKnockback;
 
-        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        public async Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
         {
             var record = (ApplyKnockbackNodeRecord)node;
             var caster = context.Caster;
@@ -253,7 +263,7 @@ namespace Tactics.Common.Skills.Graph
             if (target?.CurrentCell == null || caster?.CurrentCell == null)
             {
                 TLog.Info("[ApplyKnockback] No target present, skipping knockback.");
-                return Task.FromResult(SkillNodeExecutionResult.Success());
+                return SkillNodeExecutionResult.Success();
             }
 
             var targetCell = target.CurrentCell;
@@ -263,7 +273,7 @@ namespace Tactics.Common.Skills.Graph
             int dy = targetCell.GridCoordinates.y - casterCell.GridCoordinates.y;
             float mag = UnityEngine.Mathf.Sqrt(dx * dx + dy * dy);
             if (mag < 0.01f)
-                return Task.FromResult(SkillNodeExecutionResult.Failed("Cannot determine knockback direction."));
+                return SkillNodeExecutionResult.Failed("Cannot determine knockback direction.");
 
             int dirX = UnityEngine.Mathf.RoundToInt(dx / mag);
             int dirY = UnityEngine.Mathf.RoundToInt(dy / mag);
@@ -277,6 +287,9 @@ namespace Tactics.Common.Skills.Graph
                 && grid.CellManager.IsCellWalkable(knockCell)
                 && knockCell.CurrentUnits.Count == 0)
             {
+                var startWorldPos = targetCell.WorldPosition.ToVector3();
+                var endWorldPos = knockCell.WorldPosition.ToVector3();
+
                 targetCell.CurrentUnits.Remove(target);
                 targetCell.IsTaken = targetCell.CurrentUnits.Count > 0;
                 target.CurrentCell = knockCell;
@@ -284,8 +297,22 @@ namespace Tactics.Common.Skills.Graph
                     knockCell.CurrentUnits.Add(target);
                 knockCell.IsTaken = true;
 
-                if (target is UnityEngine.MonoBehaviour mb)
-                    mb.transform.position = knockCell.WorldPosition.ToVector3();
+                if (target is UnityEngine.MonoBehaviour mb && record.Duration > 0f)
+                {
+                    float elapsed = 0f;
+                    while (elapsed < record.Duration)
+                    {
+                        elapsed += UnityEngine.Time.deltaTime;
+                        float t = UnityEngine.Mathf.Clamp01(elapsed / record.Duration);
+                        float heightOffset = 4f * record.Height * t * (1f - t);
+                        var flatPos = UnityEngine.Vector3.Lerp(startWorldPos, endWorldPos, t);
+                        mb.transform.position = flatPos + new UnityEngine.Vector3(0, heightOffset, 0);
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+                }
+
+                if (target is UnityEngine.MonoBehaviour finalMb)
+                    finalMb.transform.position = endWorldPos;
 
                 TLog.Info($"[ApplyKnockback] Knocked target to ({knockCell.GridCoordinates.x}, {knockCell.GridCoordinates.y})");
             }
@@ -294,7 +321,7 @@ namespace Tactics.Common.Skills.Graph
                 TLog.Info("[ApplyKnockback] Knockback destination blocked, target stays in place.");
             }
 
-            return Task.FromResult(SkillNodeExecutionResult.Success());
+            return SkillNodeExecutionResult.Success();
         }
     }
 

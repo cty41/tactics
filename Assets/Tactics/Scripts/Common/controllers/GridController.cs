@@ -264,7 +264,7 @@ namespace Tactics.Common.Controllers
         {
             GridState = new GridStateBlockInput();
 
-            foreach (var unit in TurnContext.PlayableUnits())
+            foreach (var unit in UnitManager.GetUnits())
             {
                 unit.OnTurnEnd(this);
                 foreach (var ability in unit.GetBaseAbilities())
