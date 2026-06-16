@@ -310,6 +310,19 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleFrozenBuffExpiryPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-frozen-expiry.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(a => a.Kind == "unitDoesNotHaveBuff" && a.Passed), Is.True, details);
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesBattleDotDamagePlanFromFile()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;

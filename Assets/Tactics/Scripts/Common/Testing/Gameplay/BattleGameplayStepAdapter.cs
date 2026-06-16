@@ -79,6 +79,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "unitPositionEquals"
                 or "unitManaEquals"
                 or "unitHasBuff"
+                or "unitDoesNotHaveBuff"
                 or "unitBuffDurationEquals"
                 or "playerNumberEquals"
                 or "unitMaxHealthEquals"
@@ -103,6 +104,7 @@ namespace Tactics.Common.Testing.Gameplay
                     "unitPositionEquals" => AssertUnitPositionEquals(context, assertion),
                     "unitManaEquals" => AssertUnitManaEquals(context, assertion),
                     "unitHasBuff" => AssertUnitHasBuff(context, assertion),
+                    "unitDoesNotHaveBuff" => AssertUnitDoesNotHaveBuff(context, assertion),
                     "unitBuffDurationEquals" => AssertUnitBuffDurationEquals(context, assertion),
                     "playerNumberEquals" => AssertPlayerNumberEquals(context, assertion),
                     "unitMaxHealthEquals" => AssertUnitMaxHealthEquals(context, assertion),
@@ -556,6 +558,21 @@ namespace Tactics.Common.Testing.Gameplay
             return hasBuff
                 ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target} has buff '{expected}'.")
                 : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target} to have buff '{expected}', but not found.");
+        }
+
+        private static GameplayAssertionResult AssertUnitDoesNotHaveBuff(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "unitDoesNotHaveBuff requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+            string buffName = assertion.Expected?.ToString() ?? assertion.Parameters["buffName"]?.ToString();
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "unitDoesNotHaveBuff requires expected buffName.");
+            bool hasBuff = unit.GetActiveBuffs().Any(b => b.BuffName == buffName);
+            return !hasBuff
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target} does not have buff '{buffName}'.")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target} to NOT have buff '{buffName}', but it was found.");
         }
 
         private static GameplayAssertionResult AssertUnitBuffDurationEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)

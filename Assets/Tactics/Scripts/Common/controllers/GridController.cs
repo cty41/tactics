@@ -264,7 +264,17 @@ namespace Tactics.Common.Controllers
         {
             GridState = new GridStateBlockInput();
 
-            foreach (var unit in UnitManager.GetUnits())
+            var allUnits = UnitManager.GetUnits().ToList();
+            TLog.Info($"[MakeTurnTransition] Called. Total units: {allUnits.Count}");
+            foreach (var unit in allUnits)
+            {
+                var unitName = (unit is UnityEngine.MonoBehaviour mb) ? mb.gameObject.name : "?";
+                var buffComp = unit.BuffComponent;
+                var activeBuffs = buffComp?.GetActiveBuffs();
+                TLog.Info($"[MakeTurnTransition] {unitName}: BuffComponent={buffComp != null}, activeBuffCount={activeBuffs?.Count ?? -1}, CanAct={unit.CanAct}");
+            }
+
+            foreach (var unit in allUnits)
             {
                 unit.OnTurnEnd(this);
                 foreach (var ability in unit.GetBaseAbilities())
