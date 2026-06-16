@@ -119,7 +119,9 @@ namespace Tactics.Common.Testing.Gameplay
             {
                 "asset" => FailureCategory.Asset,
                 "validation" => FailureCategory.Validation,
-                _ => FailureCategory.Action
+                "setup" => FailureCategory.Setup,
+                "action" => FailureCategory.Action,
+                _ => FailureCategory.None  // 默认不设置，让 runner 根据 action 类型决定
             };
             return new GameplayStepResult { Adapter = adapter, Kind = kind, Passed = false, Message = message, FailureCategory = failureCategory };
         }

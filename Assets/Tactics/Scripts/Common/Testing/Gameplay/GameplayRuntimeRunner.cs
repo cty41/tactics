@@ -77,7 +77,7 @@ namespace Tactics.Common.Testing.Gameplay
                     var category = stepResult.FailureCategory != FailureCategory.None
                         ? stepResult.FailureCategory
                         : (IsSetupAction(action) ? FailureCategory.Setup : FailureCategory.Action);
-                    var phase = category == FailureCategory.Setup ? "setup" : "action";
+                    var phase = ResolvePhase(category, action);
                     result.AddFailure(category, phase, action.Kind, action.Adapter, stepResult.Message);
                     return result;
                 }
@@ -137,6 +137,20 @@ namespace Tactics.Common.Testing.Gameplay
                 or "useRealAssets"
                 or "loadSkillGraphAsset"
                 or "loadRoguelikeMap";
+        }
+
+        private static string ResolvePhase(FailureCategory category, ExecutableScenarioAction action)
+        {
+            return category switch
+            {
+                FailureCategory.Setup => "setup",
+                FailureCategory.Asset => IsSetupAction(action) ? "setup" : "action",
+                FailureCategory.Validation => "validation",
+                FailureCategory.Action => "action",
+                FailureCategory.Assertion => "assertion",
+                FailureCategory.Timeout => "timeout",
+                _ => IsSetupAction(action) ? "setup" : "action"
+            };
         }
 
         private static GameplayTestResult BuildTimeoutResult(ExecutableScenarioPlan plan)

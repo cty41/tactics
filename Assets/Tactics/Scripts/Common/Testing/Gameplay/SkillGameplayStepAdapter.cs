@@ -240,11 +240,11 @@ namespace Tactics.Common.Testing.Gameplay
 
             string alias = GetString(action.Parameters, "alias", null);
             if (string.IsNullOrWhiteSpace(alias))
-                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadSkillGraphAsset requires an alias parameter.");
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadSkillGraphAsset requires an alias parameter.", "Setup");
 
             string assetPath = GetString(action.Parameters, "assetPath", null);
             if (string.IsNullOrWhiteSpace(assetPath))
-                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadSkillGraphAsset requires an assetPath parameter.");
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadSkillGraphAsset requires an assetPath parameter.", "Setup");
 
             var graphAsset = GameAssetManager.Instance?.Load<SkillGraphAsset>(assetPath);
             if (graphAsset == null)

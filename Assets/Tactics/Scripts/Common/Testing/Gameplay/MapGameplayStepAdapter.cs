@@ -115,18 +115,18 @@ namespace Tactics.Common.Testing.Gameplay
         {
             string mapConfigPath = action.Parameters["mapConfigPath"]?.ToString();
             if (string.IsNullOrWhiteSpace(mapConfigPath))
-                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "loadRoguelikeMap requires mapConfigPath.");
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "loadRoguelikeMap requires mapConfigPath.", "Setup");
 
             // Load map config from GameAssetManager
             var mapConfig = GameAssetManager.Instance?.Load<RoguelikeMapConfig>(mapConfigPath);
             if (mapConfig == null)
-                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Failed to load map config from '{mapConfigPath}'.");
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Failed to load map config from '{mapConfigPath}'.", "Asset");
 
             // Generate map from config
             var generator = new RoguelikeMapGenerator();
             var map = generator.Generate(mapConfig);
             if (map == null)
-                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "Failed to generate map from config.");
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "Failed to generate map from config.", "Asset");
 
             // Attach map to runtime state
             RoguelikeMapRuntimeState.AttachMap(map);
