@@ -181,7 +181,7 @@ namespace Tactics.Common.Skills.Graph
     {
         [SerializeField] private int _distance = 1;
         [SerializeField] private float _height = 2f;
-        [SerializeField] private float _duration = 0.5f;
+        [SerializeField] private float _duration = 0.2f;
 
         public int Distance { get => _distance; set => _distance = value; }
         public float Height { get => _height; set => _height = value; }
