@@ -271,6 +271,15 @@ namespace Tactics.Common.Controllers
                 {
                     ability.OnTurnEnd(this);
                 }
+
+                if (unit.BuffComponent != null)
+                {
+                    foreach (var buff in unit.GetActiveBuffs())
+                    {
+                        var unitName = (unit is UnityEngine.MonoBehaviour mb) ? mb.gameObject.name : "?";
+                        TLog.Info($"[MakeTurnTransition] {unitName} buff '{buff.BuffName}' remaining={buff.RemainingTurns} expired={buff.IsExpired}");
+                    }
+                }
             }
             TurnEnded?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
 

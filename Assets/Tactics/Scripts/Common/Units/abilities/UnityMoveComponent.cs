@@ -28,9 +28,9 @@ namespace Tactics.Common.Units.Abilities
                 return tcs.Task;
             }
 
-            // 快速路径：如果 path 为空或只有一个点，直接设置位置
+            // 快速路径：如果 path 为空，直接设置位置
             var pathList = path as List<ICell> ?? new List<ICell>(path);
-            if (pathList.Count <= 1)
+            if (pathList.Count == 0)
             {
                 _unitReference.WorldPosition = destination.WorldPosition;
                 tcs.SetResult(true);
@@ -61,7 +61,8 @@ namespace Tactics.Common.Units.Abilities
                 }
 
                 _unitReference.InvokeUnitLeftCell(new UnitChangedGridPositionEventArgs(_unitReference, currentCell, cell));
-                while (!_unitReference.WorldPosition.Equals(cell.WorldPosition))
+                var targetPos = cell.WorldPosition.ToVector3();
+                while (UnityEngine.Vector3.Distance(_unitReference.WorldPosition.ToVector3(), targetPos) > 0.001f)
                 {
                     if (token.IsCancellationRequested)
                     {
@@ -69,9 +70,10 @@ namespace Tactics.Common.Units.Abilities
                         tcs.SetCanceled();
                         yield break;
                     }
-                    _unitReference.WorldPosition = Vector3.MoveTowards(_unitReference.WorldPosition.ToVector3(), cell.WorldPosition.ToVector3(), Time.deltaTime * _unitReference.MovementAnimationSpeed).ToIVector3();
+                    _unitReference.WorldPosition = UnityEngine.Vector3.MoveTowards(_unitReference.WorldPosition.ToVector3(), targetPos, UnityEngine.Time.deltaTime * _unitReference.MovementAnimationSpeed).ToIVector3();
                     yield return null;
                 }
+                _unitReference.WorldPosition = cell.WorldPosition;
 
                 _unitReference.InvokeUnitEnteredCell(new UnitChangedGridPositionEventArgs(_unitReference, currentCell, cell));
                 currentCell = cell;
