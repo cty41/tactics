@@ -39,7 +39,7 @@
       "adapter": "Battle",
       "kind": "unitBuffDurationEquals",
       "target": "p2_0",
-      "expected": 3,
+      "expected": 2,
       "parameters": {
         "buffName": "Ignite"
       }

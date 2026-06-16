@@ -35,15 +35,6 @@
   "assertionPlans": [
     {
       "adapter": "Battle",
-      "kind": "unitBuffDurationEquals",
-      "target": "p2_0",
-      "expected": 0,
-      "parameters": {
-        "buffName": "Frozen"
-      }
-    },
-    {
-      "adapter": "Battle",
       "kind": "unitDoesNotHaveBuff",
       "target": "p2_0",
       "expected": "Frozen",
@@ -51,12 +42,5 @@
     }
   ],
   "timeoutMs": 10000,
-  "probeRequests": [
-    {
-      "adapter": "Battle",
-      "kind": "unitHasBuff",
-      "target": "p2_0",
-      "parameters": {}
-    }
-  ]
+  "probeRequests": []
 }

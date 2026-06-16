@@ -264,31 +264,12 @@ namespace Tactics.Common.Controllers
         {
             GridState = new GridStateBlockInput();
 
-            var allUnits = UnitManager.GetUnits().ToList();
-            TLog.Info($"[MakeTurnTransition] Called. Total units: {allUnits.Count}");
-            foreach (var unit in allUnits)
-            {
-                var unitName = (unit is UnityEngine.MonoBehaviour mb) ? mb.gameObject.name : "?";
-                var buffComp = unit.BuffComponent;
-                var activeBuffs = buffComp?.GetActiveBuffs();
-                TLog.Info($"[MakeTurnTransition] {unitName}: BuffComponent={buffComp != null}, activeBuffCount={activeBuffs?.Count ?? -1}, CanAct={unit.CanAct}");
-            }
-
-            foreach (var unit in allUnits)
+            foreach (var unit in UnitManager.GetUnits())
             {
                 unit.OnTurnEnd(this);
                 foreach (var ability in unit.GetBaseAbilities())
                 {
                     ability.OnTurnEnd(this);
-                }
-
-                if (unit.BuffComponent != null)
-                {
-                    foreach (var buff in unit.GetActiveBuffs())
-                    {
-                        var unitName = (unit is UnityEngine.MonoBehaviour mb) ? mb.gameObject.name : "?";
-                        TLog.Info($"[MakeTurnTransition] {unitName} buff '{buff.BuffName}' remaining={buff.RemainingTurns} expired={buff.IsExpired}");
-                    }
                 }
             }
             TurnEnded?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));

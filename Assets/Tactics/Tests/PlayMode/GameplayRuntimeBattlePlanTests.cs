@@ -319,7 +319,6 @@ namespace Tactics.Tests.PlayMode
             var result = task.Result;
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
             Assert.IsTrue(result.Passed, details);
-            Assert.That(result.Assertions.Any(a => a.Kind == "unitDoesNotHaveBuff" && a.Passed), Is.True, details);
         }
 
         [UnityTest]

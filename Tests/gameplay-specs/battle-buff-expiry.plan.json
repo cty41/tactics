@@ -30,7 +30,7 @@
   "assertionPlans": [
     {
       "adapter": "Battle",
-      "kind": "unitHasBuff",
+      "kind": "unitDoesNotHaveBuff",
       "target": "p2_0",
       "expected": "Ignite",
       "parameters": {}

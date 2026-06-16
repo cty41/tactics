@@ -62,7 +62,6 @@ namespace Tactics.Common.Units.Buffs
                 return;
             }
 
-            TLog.Info($"[RemoveBuff] Removing '{buff.BuffName}' from owner. RemainingTurns={buff.RemainingTurns}, IsExpired={buff.IsExpired}\n{new System.Diagnostics.StackTrace(true)}");
             _activeBuffs.Remove(buff);
             buff.OnRemoved();
         }
