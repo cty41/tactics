@@ -266,6 +266,13 @@ namespace Tactics.Common.Skills.Graph
                 return SkillNodeExecutionResult.Success();
             }
 
+            if (target is UnityEngine.MonoBehaviour targetMb
+                && UnityEngine.Object.ReferenceEquals(targetMb, null))
+            {
+                TLog.Info("[ApplyKnockback] Target destroyed, skipping knockback.");
+                return SkillNodeExecutionResult.Success();
+            }
+
             var targetCell = target.CurrentCell;
             var casterCell = caster.CurrentCell;
 
@@ -304,14 +311,15 @@ namespace Tactics.Common.Skills.Graph
                     {
                         elapsed += UnityEngine.Time.deltaTime;
                         float t = UnityEngine.Mathf.Clamp01(elapsed / record.Duration);
-                        float heightOffset = 4f * record.Height * t * (1f - t);
-                        var flatPos = UnityEngine.Vector3.Lerp(startWorldPos, endWorldPos, t);
-                        mb.transform.position = flatPos + new UnityEngine.Vector3(0, heightOffset, 0);
+                        var pos = UnityEngine.Vector3.Lerp(startWorldPos, endWorldPos, t);
+                        if (UnityEngine.Object.ReferenceEquals(mb, null)) break;
+                        mb.transform.position = pos;
                         await System.Threading.Tasks.Task.Yield();
                     }
                 }
 
-                if (target is UnityEngine.MonoBehaviour finalMb)
+                if (target is UnityEngine.MonoBehaviour finalMb
+                    && !UnityEngine.Object.ReferenceEquals(finalMb, null))
                     finalMb.transform.position = endWorldPos;
 
                 TLog.Info($"[ApplyKnockback] Knocked target to ({knockCell.GridCoordinates.x}, {knockCell.GridCoordinates.y})");
