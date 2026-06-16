@@ -158,3 +158,85 @@ test("rejects battle fixture with unsupported action kind", async () => {
   assert.equal(compiled.valid, false);
   assert.ok(compiled.diagnostics.some(d => d.code === "UnsupportedActionKind"));
 });
+
+// Mixed-adapter routing tests
+
+test("mixed-adapter: Battle + Skill routes correctly", async () => {
+  const markdown = await readFixture("battle-full-combat-victory.gameplay-test.md");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+
+  // Setup routing
+  const setupKinds = compiled.plan.setupActions.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(setupKinds.includes("bindBattleController(Battle)"), `bindBattleController should route to Battle, got: ${setupKinds.join(", ")}`);
+  assert.ok(setupKinds.includes("createSkillGraph(Skill)"), `createSkillGraph should route to Skill, got: ${setupKinds.join(", ")}`);
+
+  // Action routing
+  const actionKinds = compiled.plan.runtimeActions.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(actionKinds.includes("executeBattleSkillGraph(Battle)"), `executeBattleSkillGraph should route to Battle, got: ${actionKinds.join(", ")}`);
+
+  // Assertion routing
+  const assertionKinds = compiled.plan.assertionPlans.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(assertionKinds.includes("unitAliveEquals(Battle)"), `unitAliveEquals should route to Battle, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("battleResultEquals(Battle)"), `battleResultEquals should route to Battle, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("battleIsActive(Battle)"), `battleIsActive should route to Battle, got: ${assertionKinds.join(", ")}`);
+});
+
+test("mixed-adapter: Map + Battle routes correctly", async () => {
+  const markdown = await readFixture("map/map-battle-node.gameplay-test.md");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+
+  // Setup routing
+  const setupKinds = compiled.plan.setupActions.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(setupKinds.includes("loadRoguelikeMap(Map)"), `loadRoguelikeMap should route to Map, got: ${setupKinds.join(", ")}`);
+  assert.ok(setupKinds.includes("bindBattleController(Battle)"), `bindBattleController should route to Battle, got: ${setupKinds.join(", ")}`);
+  assert.ok(setupKinds.includes("createSkillGraph(Skill)"), `createSkillGraph should route to Skill, got: ${setupKinds.join(", ")}`);
+
+  // Action routing
+  const actionKinds = compiled.plan.runtimeActions.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(actionKinds.includes("enterNode(Map)"), `enterNode should route to Map, got: ${actionKinds.join(", ")}`);
+  assert.ok(actionKinds.includes("executeBattleSkillGraph(Battle)"), `executeBattleSkillGraph should route to Battle, got: ${actionKinds.join(", ")}`);
+  assert.ok(actionKinds.includes("completeNode(Map)"), `completeNode should route to Map, got: ${actionKinds.join(", ")}`);
+
+  // Assertion routing
+  const assertionKinds = compiled.plan.assertionPlans.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(assertionKinds.includes("mapIsActive(Map)"), `mapIsActive should route to Map, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("battleIsActive(Battle)"), `battleIsActive should route to Battle, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("nodeIsVisited(Map)"), `nodeIsVisited should route to Map, got: ${assertionKinds.join(", ")}`);
+});
+
+test("mixed-adapter: UI + Map + Battle routes correctly", async () => {
+  const markdown = await readFixture("ui/ui-map-battle-integration.gameplay-test.md");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+
+  // Setup routing
+  const setupKinds = compiled.plan.setupActions.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(setupKinds.includes("loadRoguelikeMap(Map)"), `loadRoguelikeMap should route to Map, got: ${setupKinds.join(", ")}`);
+  assert.ok(setupKinds.includes("bindBattleController(Battle)"), `bindBattleController should route to Battle, got: ${setupKinds.join(", ")}`);
+  assert.ok(setupKinds.includes("createSkillGraph(Skill)"), `createSkillGraph should route to Skill, got: ${setupKinds.join(", ")}`);
+
+  // Action routing
+  const actionKinds = compiled.plan.runtimeActions.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(actionKinds.includes("openUI(UI)"), `openUI should route to UI, got: ${actionKinds.join(", ")}`);
+  assert.ok(actionKinds.includes("enterNode(Map)"), `enterNode should route to Map, got: ${actionKinds.join(", ")}`);
+  assert.ok(actionKinds.includes("executeBattleSkillGraph(Battle)"), `executeBattleSkillGraph should route to Battle, got: ${actionKinds.join(", ")}`);
+  assert.ok(actionKinds.includes("completeNode(Map)"), `completeNode should route to Map, got: ${actionKinds.join(", ")}`);
+
+  // Assertion routing
+  const assertionKinds = compiled.plan.assertionPlans.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(assertionKinds.includes("mapIsActive(Map)"), `mapIsActive should route to Map, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("battleIsActive(Battle)"), `battleIsActive should route to Battle, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("nodeIsVisited(Map)"), `nodeIsVisited should route to Map, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("elementVisible(UI)"), `elementVisible should route to UI, got: ${assertionKinds.join(", ")}`);
+});

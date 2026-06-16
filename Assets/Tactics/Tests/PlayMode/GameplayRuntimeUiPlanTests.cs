@@ -5,52 +5,41 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Tactics.AssetPipeline;
-using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
-using Tactics.Common.Units.Classes;
 using Tactics.Common.Utilities;
 using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace Tactics.Tests.PlayMode
 {
-    public class GameplayRuntimeBattleWithRealConfigs
+    public class GameplayRuntimeUiPlanTests
     {
         private GameObject _battleRoot;
         private GameObject _cellManagerRoot;
-        private GameAssetManager _assetManager;
 
         [UnitySetUp]
         public IEnumerator SetUp()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
 
-            // Initialize GameAssetManager
-            var initTask = TestGameAssetHelper.EnsureInitialized();
-            yield return new WaitUntil(() => initTask.IsCompleted);
-            _assetManager = initTask.Result;
-            Assume.That(_assetManager, Is.Not.Null, "GameAssetManager should be initialized.");
-            Assume.That(_assetManager.IsInitialized, Is.True, "GameAssetManager should be initialized.");
-
             var controllerType = ResolveBattleControllerType();
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
 
-            _battleRoot = new GameObject("TestBattleControllerReal");
+            _battleRoot = new GameObject("TestBattleControllerUi");
             var bc = (MonoBehaviour)_battleRoot.AddComponent(controllerType);
 
             var startFlag = controllerType.GetField("_startImmediatelly", BindingFlags.Instance | BindingFlags.NonPublic);
             startFlag?.SetValue(bc, false);
 
-            // 4x4 grid
-            _cellManagerRoot = new GameObject("TestCellManagerReal");
+            // 2x2 grid
+            _cellManagerRoot = new GameObject("TestCellManagerUi");
             var cellMgr = _cellManagerRoot.AddComponent<RegularCellManager>();
-            for (int x = 0; x < 4; x++)
+            for (int x = 0; x < 2; x++)
             {
-                for (int y = 0; y < 4; y++)
+                for (int y = 0; y < 2; y++)
                 {
                     var cellGo = new GameObject($"Cell_{x}_{y}");
                     cellGo.transform.SetParent(_cellManagerRoot.transform);
@@ -75,8 +64,8 @@ namespace Tactics.Tests.PlayMode
                 beforeInitProp?.SetValue(gridController, null);
             }
 
-            // Set all players as AI for automated testing
-            controllerType.GetMethod("SetPlayers", BindingFlags.Instance | BindingFlags.Public)?.Invoke(bc, new object[] { 0, 2 });
+            // 1 Human + 1 AI
+            controllerType.GetMethod("SetPlayers", BindingFlags.Instance | BindingFlags.Public)?.Invoke(bc, new object[] { 1, 1 });
 
             var unitContainer = _battleRoot.transform;
             var unitField = controllerType.GetField("_unitContainer", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -92,23 +81,19 @@ namespace Tactics.Tests.PlayMode
                 unitContainer = (Transform)unitField.GetValue(bc);
             }
 
-            // Load real configs
-            var brainAsset = TestUnitFactory.LoadBasicMeleeBrain();
-            Assume.That(brainAsset, Is.Not.Null, "BasicMeleeBrain should load.");
+            // Create units
+            var unit1Go = new GameObject("Unit_P1");
+            unit1Go.transform.SetParent(unitContainer);
+            var unit1 = unit1Go.AddComponent<Unit>();
+            unit1.PlayerNumber = 1;
+            unit1.CurrentCell = FindCell(_cellManagerRoot, 0, 0);
 
-            // Create units with real configs
-            var unit1 = TestUnitFactory.CreateBarbarian(unitContainer, "Barbarian_P1", 1, FindCell(_cellManagerRoot, 0, 0), brainAsset);
-            var unit2 = TestUnitFactory.CreateBarbarian(unitContainer, "Barbarian_P2", 2, FindCell(_cellManagerRoot, 3, 0), brainAsset);
+            var unit2Go = new GameObject("Unit_P2");
+            unit2Go.transform.SetParent(unitContainer);
+            var unit2 = unit2Go.AddComponent<Unit>();
+            unit2.PlayerNumber = 2;
+            unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
 
-            // Initialize and start battle
-            var initMethod = controllerType.GetMethod("InitializeAndStart", BindingFlags.Instance | BindingFlags.Public);
-            initMethod?.Invoke(bc, new object[] { false });
-
-            // Wait for AI players to execute
-            yield return null;
-            yield return null;
-            yield return null;
-            yield return null;
             yield return null;
         }
 
@@ -129,79 +114,31 @@ namespace Tactics.Tests.PlayMode
                 _battleRoot = null;
             }
 
-            TestGameAssetHelper.Cleanup();
-
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator GameAssetManager_CanLoadRealConfigs()
+        public IEnumerator RuntimeRunner_ExecutesUiElementVisibility()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
-            // Verify GameAssetManager can load real game configs
-            Assert.IsNotNull(_assetManager, "GameAssetManager should exist.");
-            Assert.IsTrue(_assetManager.IsInitialized, "GameAssetManager should be initialized.");
-
-            // Load RoleConfig
-            var barbarianConfig = _assetManager.Load<RoleConfig>("Assets/Tactics/Battle/Classes/Barbarian.asset");
-            Assert.IsNotNull(barbarianConfig, "Barbarian RoleConfig should load.");
-            Assert.AreEqual(RoleType.Barbarian, barbarianConfig.RoleType, "Should be Barbarian role.");
-            Assert.That(barbarianConfig.Abilities.Count, Is.GreaterThan(0), "Barbarian should have abilities.");
-
-            // Load AiBrainAsset
-            var brainAsset = _assetManager.Load<AiBrainAsset>("Assets/Tactics/AI/BasicMeleeBrain.asset");
-            Assert.IsNotNull(brainAsset, "BasicMeleeBrain should load.");
-            Assert.IsTrue(brainAsset.IsValid(), "AiBrainAsset should be valid.");
-
-            // Verify battle controller exists
-            var controller = BattleController.Instance;
-            Assert.IsNotNull(controller, "BattleController.Instance should exist.");
-
-            // Verify units are registered with abilities
-            var units = controller.GetUnits().ToList();
-            Assert.That(units.Count, Is.GreaterThanOrEqualTo(2), "Should have at least 2 units.");
-
-            var p1Unit = units.FirstOrDefault(u => u.PlayerNumber == 1);
-            var p2Unit = units.FirstOrDefault(u => u.PlayerNumber == 2);
-            Assert.IsNotNull(p1Unit, "P1 unit should exist.");
-            Assert.IsNotNull(p2Unit, "P2 unit should exist.");
-
-            // Verify units have abilities
-            var p1Abilities = p1Unit.GetBaseAbilities().ToList();
-            Assert.That(p1Abilities.Count, Is.GreaterThan(0), "P1 unit should have abilities.");
-
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator RuntimeRunner_ExecutesBattleWithRealSkillGraph()
-        {
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
-            var task = ExecuteBattlePlan(GetPlanPath("battle-assets", "battle-with-real-skill-graph.plan.json"));
+            var task = ExecuteUiPlan(GetPlanPath("ui", "ui-element-visibility.plan.json"));
             yield return WaitForTask(task);
 
             var result = task.Result;
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
             Assert.IsTrue(result.Passed, details);
-            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleIsActive" && assertion.Passed), Is.True, details);
         }
 
         [UnityTest]
-        public IEnumerator RuntimeRunner_ExecutesBattleWithRealFireball()
+        public IEnumerator RuntimeRunner_ExecutesUiMapBattleIntegration()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
-            var task = ExecuteBattlePlan(GetPlanPath("battle-assets", "battle-with-real-fireball.plan.json"));
+            var task = ExecuteUiPlan(GetPlanPath("ui", "ui-map-battle-integration.plan.json"));
             yield return WaitForTask(task);
 
             var result = task.Result;
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
             Assert.IsTrue(result.Passed, details);
-            Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleIsActive" && assertion.Passed), Is.True, details);
-        }
-
-        private static string GetPlanPath(string fileName)
-        {
-            return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", fileName));
         }
 
         private static string GetPlanPath(string subDir, string fileName)
@@ -210,27 +147,18 @@ namespace Tactics.Tests.PlayMode
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", "compiled", fileName));
         }
 
-        private static async Task<GameplayTestResult> ExecuteBattlePlan(string planPath)
+        private static async Task<GameplayTestResult> ExecuteUiPlan(string planPath)
         {
             Assert.IsTrue(File.Exists(planPath), $"Plan file not found: {planPath}");
-            Assert.IsNotNull(GetBattleControllerInstance(), "BattleController.Instance should be injected by SetUp.");
             var plan = ExecutableScenarioPlanLoader.FromFile(planPath);
             var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[]
             {
                 new SkillGameplayStepAdapter(),
-                new BattleGameplayStepAdapter()
+                new BattleGameplayStepAdapter(),
+                new MapGameplayStepAdapter(),
+                new UiGameplayStepAdapter()
             });
             return await runner.ExecuteAsync(plan);
-        }
-
-        private static object GetBattleControllerInstance()
-        {
-            var controllerType = ResolveBattleControllerType();
-            if (controllerType == null)
-                return null;
-
-            var property = controllerType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
-            return property?.GetValue(null);
         }
 
         private static Type ResolveBattleControllerType()

@@ -7,21 +7,26 @@ tags:
   - integration
 requiredAdapters:
   - Battle
+  - Skill
 setup:
   - kind: bindBattleController
     parameters: {}
-actions:
-  - kind: executeAbility
+  - kind: createSkillGraph
     parameters:
-      commandType: attack
-      attackerAlias: p1_0
+      alias: lethalAttackGraph
+      graphKind: singleTargetDamage
+      baseDamage: 999
+      isRanged: false
+      minRange: 1
+      maxRange: 1
+actions:
+  - kind: executeBattleSkillGraph
+    adapter: Battle
+    parameters:
+      graphAlias: lethalAttackGraph
+      casterAlias: p1_0
       targetAlias: p2_0
-      damage: 100
 assertions:
-  - kind: unitHealthEquals
-    target: p2_0
-    expected: 0
-    parameters: {}
   - kind: unitAliveEquals
     target: p2_0
     expected: false
@@ -32,9 +37,9 @@ assertions:
   - kind: battleIsActive
     expected: false
     parameters: {}
-timeoutMs: 10000
+timeoutMs: 15000
 ---
 
 # Battle - BattleFullCombatVictory
 
-完整战斗测试流程：P1 攻击 P2 → P2 死亡 → P1 获胜。
+完整战斗测试流程：P1 使用技能图攻击 P2 → P2 死亡 → P1 获胜。

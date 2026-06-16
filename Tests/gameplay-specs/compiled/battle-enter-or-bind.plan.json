@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.BattleEnterOrBind",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "currentRoundEquals",
+      "expected": 1,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitCountEquals",
+      "expected": 2,
+      "parameters": {
+        "playerNumber": 0
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitCountEquals",
+      "expected": 2,
+      "parameters": {
+        "playerNumber": 1
+      }
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "currentRoundEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitCountEquals",
+      "parameters": {
+        "playerNumber": 0
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitCountEquals",
+      "parameters": {
+        "playerNumber": 1
+      }
+    }
+  ]
+}

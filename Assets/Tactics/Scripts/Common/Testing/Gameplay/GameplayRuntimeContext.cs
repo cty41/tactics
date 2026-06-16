@@ -9,6 +9,9 @@ using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
 using Tactics.Common.Cells;
 using Tactics.Common.Units.Abilities;
+using Tactics.RoguelikeMap;
+using Tactics.RoguelikeMap.Events;
+using Tactics.UI;
 using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay
@@ -27,6 +30,18 @@ namespace Tactics.Common.Testing.Gameplay
         public Dictionary<string, ICell> Cells { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, AiBrainAsset> AiBrainAssets { get; } = new(StringComparer.OrdinalIgnoreCase);
         public AiDecisionLog LastAiDecisionLog { get; set; }
+
+        // Map/Roguelike 相关
+        public global::Tactics.RoguelikeMap.RoguelikeMap RoguelikeMap { get; set; }
+        public string CurrentNodeId { get; set; }
+        public RoguelikeEvent CurrentEvent { get; set; }
+        public bool EventCompleted { get; set; }
+
+        // UI 相关
+        public UIManager.UIId? CurrentUiId { get; set; }
+
+        // 真实资产模式
+        public bool UseRealAssets { get; set; }
 
         /// <summary>
         /// 运行时作用域，管理所有异步操作的生命周期。
@@ -76,6 +91,15 @@ namespace Tactics.Common.Testing.Gameplay
             LastBattleResult = null;
             LastAiDecisionLog = null;
             RuntimeScope = null;
+
+            // 6. 清空 Map 相关
+            RoguelikeMap = null;
+            CurrentNodeId = null;
+            CurrentEvent = null;
+            EventCompleted = false;
+
+            // 7. 清空 UI 相关
+            CurrentUiId = null;
         }
     }
 }
