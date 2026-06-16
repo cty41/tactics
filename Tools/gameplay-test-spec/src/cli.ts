@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, readdir, stat } from "node:fs/promises";
+import { join, basename } from "node:path";
 import { compileScenarioSpec, compileScenarioDraft } from "./compiler.js";
 import { formatGameplayTestDocument, parseGameplayTestDocument } from "./frontmatter.js";
 import { generateScenarioSpec, generateSkillGraphSpec, generateSkillGraphSpecFromAnswers, generateGameplayTestFromSpec, type SkillDesignAnswers } from "./generator.js";
@@ -144,6 +145,164 @@ program
     await writeFile(options.out, markdown, "utf8");
     printJson({ ok: true, out: options.out, scenario: scenarioSpec.scenario, graphKind: scenarioSpec.setup.find((s: any) => s.kind === "createSkillGraph")?.parameters?.graphKind });
   });
+
+// Batch commands
+program
+  .command("batch-compile")
+  .description("Batch compile all *.gameplay-test.md files in a directory")
+  .requiredOption("-d, --dir <path>", "input directory containing *.gameplay-test.md files")
+  .option("-o, --out <path>", "output directory for *.plan.json files (default: same as input)")
+  .option("--filter-adapter <adapter>", "filter by adapter (e.g., Battle, Skill)")
+  .option("--filter-tag <tag>", "filter by tag")
+  .option("--filter-feature <feature>", "filter by feature")
+  .option("--filter-scenario <scenario>", "filter by scenario name")
+  .action(async options => {
+    const inputDir = options.dir;
+    const outDir = options.out || inputDir;
+    const files = await findGameplayTestFiles(inputDir);
+    
+    const summary = {
+      total: 0,
+      compiled: 0,
+      failed: 0,
+      skipped: 0,
+      failures: [] as Array<{ file: string; diagnostics: any[] }>
+    };
+
+    for (const file of files) {
+      summary.total++;
+      try {
+        const markdown = await readFile(file, "utf8");
+        const doc = parseGameplayTestDocument(markdown);
+        const spec = doc.frontmatter as any;
+
+        // Apply filters
+        if (options.filterAdapter && !spec.requiredAdapters?.includes(options.filterAdapter)) {
+          summary.skipped++;
+          continue;
+        }
+        if (options.filterTag && !spec.tags?.includes(options.filterTag)) {
+          summary.skipped++;
+          continue;
+        }
+        if (options.filterFeature && spec.feature !== options.filterFeature) {
+          summary.skipped++;
+          continue;
+        }
+        if (options.filterScenario && spec.scenario !== options.filterScenario) {
+          summary.skipped++;
+          continue;
+        }
+
+        const result = compileScenarioSpec(spec);
+        if (result.valid && result.plan) {
+          const outPath = join(outDir, basename(file, ".gameplay-test.md") + ".plan.json");
+          await writeFile(outPath, `${JSON.stringify(result.plan, null, 2)}\n`, "utf8");
+          summary.compiled++;
+        } else {
+          summary.failed++;
+          summary.failures.push({
+            file: basename(file),
+            diagnostics: result.diagnostics
+          });
+        }
+      } catch (error) {
+        summary.failed++;
+        summary.failures.push({
+          file: basename(file),
+          diagnostics: [{ code: "FileError", severity: "error", message: String(error) }]
+        });
+      }
+    }
+
+    printJson(summary);
+    process.exitCode = summary.failed > 0 ? 1 : 0;
+  });
+
+program
+  .command("batch-validate")
+  .description("Batch validate all *.gameplay-test.md files in a directory")
+  .requiredOption("-d, --dir <path>", "input directory containing *.gameplay-test.md files")
+  .option("--filter-adapter <adapter>", "filter by adapter (e.g., Battle, Skill)")
+  .option("--filter-tag <tag>", "filter by tag")
+  .option("--filter-feature <feature>", "filter by feature")
+  .option("--filter-scenario <scenario>", "filter by scenario name")
+  .action(async options => {
+    const inputDir = options.dir;
+    const files = await findGameplayTestFiles(inputDir);
+    
+    const summary = {
+      total: 0,
+      valid: 0,
+      invalid: 0,
+      skipped: 0,
+      failures: [] as Array<{ file: string; diagnostics: any[] }>
+    };
+
+    for (const file of files) {
+      summary.total++;
+      try {
+        const markdown = await readFile(file, "utf8");
+        const doc = parseGameplayTestDocument(markdown);
+        const spec = doc.frontmatter as any;
+
+        // Apply filters
+        if (options.filterAdapter && !spec.requiredAdapters?.includes(options.filterAdapter)) {
+          summary.skipped++;
+          continue;
+        }
+        if (options.filterTag && !spec.tags?.includes(options.filterTag)) {
+          summary.skipped++;
+          continue;
+        }
+        if (options.filterFeature && spec.feature !== options.filterFeature) {
+          summary.skipped++;
+          continue;
+        }
+        if (options.filterScenario && spec.scenario !== options.filterScenario) {
+          summary.skipped++;
+          continue;
+        }
+
+        const result = validateScenarioSpec(spec);
+        if (result.valid) {
+          summary.valid++;
+        } else {
+          summary.invalid++;
+          summary.failures.push({
+            file: basename(file),
+            diagnostics: result.diagnostics
+          });
+        }
+      } catch (error) {
+        summary.invalid++;
+        summary.failures.push({
+          file: basename(file),
+          diagnostics: [{ code: "FileError", severity: "error", message: String(error) }]
+        });
+      }
+    }
+
+    printJson(summary);
+    process.exitCode = summary.invalid > 0 ? 1 : 0;
+  });
+
+async function findGameplayTestFiles(dir: string): Promise<string[]> {
+  const files: string[] = [];
+  const entries = await readdir(dir, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const subFiles = await findGameplayTestFiles(fullPath);
+      files.push(...subFiles);
+    } else if (entry.name.endsWith(".gameplay-test.md")) {
+      files.push(fullPath);
+    }
+  }
+  
+  return files;
+}
 
 program.parseAsync().catch(error => {
   printJson({

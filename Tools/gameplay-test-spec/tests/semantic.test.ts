@@ -119,3 +119,101 @@ test("rejects buff assertions with malformed expected values", () => {
   assert.equal(validation.valid, false);
   assert.ok(validation.diagnostics.some(diagnostic => diagnostic.code === "InvalidAssertionExpectedType"));
 });
+
+// UI assertion negative tests
+
+test("rejects elementVisible without target", () => {
+  const validation = validateScenarioSpec({
+    feature: "UI",
+    scenario: "ElementVisibleNoTarget",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [{ kind: "openUI", parameters: { uiId: "Home" } }],
+    assertions: [{ kind: "elementVisible", expected: true, parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "MissingElementTarget"));
+});
+
+test("rejects elementVisible without expected", () => {
+  const validation = validateScenarioSpec({
+    feature: "UI",
+    scenario: "ElementVisibleNoExpected",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [{ kind: "openUI", parameters: { uiId: "Home" } }],
+    assertions: [{ kind: "elementVisible", target: "MyButton", parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidAssertionExpectedType"));
+});
+
+test("rejects elementText without target", () => {
+  const validation = validateScenarioSpec({
+    feature: "UI",
+    scenario: "ElementTextNoTarget",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [{ kind: "openUI", parameters: { uiId: "Home" } }],
+    assertions: [{ kind: "elementText", expected: "Hello", parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "MissingElementTarget"));
+});
+
+test("rejects elementText with non-string expected", () => {
+  const validation = validateScenarioSpec({
+    feature: "UI",
+    scenario: "ElementTextBadExpected",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [{ kind: "openUI", parameters: { uiId: "Home" } }],
+    assertions: [{ kind: "elementText", target: "MyLabel", expected: 123, parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidAssertionExpectedType"));
+});
+
+test("rejects openUI without uiId", () => {
+  const validation = validateScenarioSpec({
+    feature: "UI",
+    scenario: "OpenUINoUiId",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [{ kind: "openUI", parameters: {} }],
+    assertions: [{ kind: "elementVisible", target: "MyButton", expected: true, parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "MissingUiId"));
+});
+
+test("rejects clickElement without elementName", () => {
+  const validation = validateScenarioSpec({
+    feature: "UI",
+    scenario: "ClickElementNoName",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [{ kind: "clickElement", parameters: {} }],
+    assertions: [{ kind: "elementVisible", target: "MyButton", expected: true, parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "MissingElementName"));
+});

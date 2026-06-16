@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "SkillGraph.MarkedTargetTakesCriticalDamage",
+  "requiredAdapters": [
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "markGraph",
+        "graphKind": "applyBuff",
+        "selectionKind": "enemy",
+        "buffName": "Marked",
+        "buffEffectType": "Marked",
+        "triggerTiming": "BeforeAttacked",
+        "duration": 2,
+        "maxRange": 1
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "damageGraph",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 4,
+        "canCrit": true,
+        "isRanged": false
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "targetCell",
+        "x": 1,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "caster",
+        "playerNumber": 0,
+        "health": 10,
+        "maxHealth": 10,
+        "cellAlias": "casterCell"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "target",
+        "playerNumber": 1,
+        "health": 10,
+        "maxHealth": 10,
+        "defenceFactor": 0,
+        "cellAlias": "targetCell"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "setTurnContext",
+      "parameters": {
+        "currentPlayerNumber": 0,
+        "playableUnitAliases": [
+          "caster"
+        ]
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Skill",
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "markGraph",
+        "casterAlias": "caster",
+        "primaryTargetAlias": "target"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "damageGraph",
+        "casterAlias": "caster",
+        "primaryTargetAlias": "target"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "expected": "Completed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffIsUnique",
+      "target": "target",
+      "expected": "Marked",
+      "parameters": {
+        "buffName": "Marked"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "target",
+      "expected": "Marked",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "target",
+      "expected": 2,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffIsUnique",
+      "target": "target",
+      "parameters": {
+        "buffName": "Marked"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "target",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "target",
+      "parameters": {}
+    }
+  ]
+}

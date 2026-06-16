@@ -32,7 +32,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "selectAbility"
                 or "executeAbilityOnTarget"
                 or "executeAbilityOnCell"
-                or "executeSkillGraph";
+                or "executeSkillGraph"
+                or "loadSkillGraphAsset";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -80,6 +81,8 @@ namespace Tactics.Common.Testing.Gameplay
                     case "executeSkillGraph":
                         await ExecuteSkillGraph(context, action.Parameters);
                         return GameplayStepResult.Pass(SkillAdapterName, action.Kind, context.LastSkillResult?.Summary);
+                    case "loadSkillGraphAsset":
+                        return LoadSkillGraphAsset(context, action);
                     default:
                         return GameplayStepResult.Fail(SkillAdapterName, action.Kind, $"Unsupported Skill action '{action.Kind}'.");
                 }
@@ -228,6 +231,27 @@ namespace Tactics.Common.Testing.Gameplay
             };
 
             context.SkillGraphs[alias] = graph;
+        }
+
+        private static GameplayStepResult LoadSkillGraphAsset(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            if (!context.UseRealAssets)
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadSkillGraphAsset requires useRealAssets to be called first.", "Asset");
+
+            string alias = GetString(action.Parameters, "alias", null);
+            if (string.IsNullOrWhiteSpace(alias))
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadSkillGraphAsset requires an alias parameter.", "Setup");
+
+            string assetPath = GetString(action.Parameters, "assetPath", null);
+            if (string.IsNullOrWhiteSpace(assetPath))
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadSkillGraphAsset requires an assetPath parameter.", "Setup");
+
+            var graphAsset = GameAssetManager.Instance?.Load<SkillGraphAsset>(assetPath);
+            if (graphAsset == null)
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, $"Failed to load SkillGraphAsset from '{assetPath}'.", "Asset");
+
+            context.SkillGraphs[alias] = graphAsset;
+            return GameplayStepResult.Pass(SkillAdapterName, action.Kind, $"Loaded SkillGraphAsset '{alias}' from '{assetPath}'.");
         }
 
         private static void CreateCell(GameplayRuntimeContext context, JObject parameters)

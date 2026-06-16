@@ -11,7 +11,7 @@ namespace Tactics.Common.Testing.Gameplay
         private readonly Dictionary<string, IGameplayStepAdapter> _adapters;
 
         public GameplayRuntimeRunner()
-            : this(new IGameplayStepAdapter[] { new SkillGameplayStepAdapter() })
+            : this(new IGameplayStepAdapter[] { new SkillGameplayStepAdapter(), new BattleGameplayStepAdapter(), new MapGameplayStepAdapter(), new UiGameplayStepAdapter() })
         {
         }
 
@@ -31,8 +31,7 @@ namespace Tactics.Common.Testing.Gameplay
             var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
             if (completed != executionTask)
             {
-                // 等待 ExecuteCoreAsync 完成（包括 Dispose），避免 context 泄漏
-                try { await executionTask; } catch { /* 忽略，超时结果已构建 */ }
+                // 超时后不再等待原任务，直接返回超时结果
                 return BuildTimeoutResult(plan);
             }
 
@@ -53,16 +52,19 @@ namespace Tactics.Common.Testing.Gameplay
                 // 检查是否已取消
                 if (scope.IsCancelling)
                 {
-                    result.Diagnostics.Add("Execution cancelled.");
+                    result.AddFailure(FailureCategory.Setup, "setup", action.Kind, action.Adapter, "Execution cancelled.");
                     return result;
                 }
 
                 var adapter = ResolveAdapter(action.Adapter);
                 if (adapter == null || !adapter.CanExecute(action))
                 {
+                    var isSetup = IsSetupAction(action);
+                    var category = isSetup ? FailureCategory.Setup : FailureCategory.Action;
+                    var phase = isSetup ? "setup" : "action";
                     var failure = GameplayStepResult.Fail(action.Adapter, action.Kind, $"No adapter can execute action '{action.Kind}'.");
                     result.ExecutedSteps.Add(failure);
-                    result.Diagnostics.Add(failure.Message);
+                    result.AddFailure(category, phase, action.Kind, action.Adapter, failure.Message);
                     return result;
                 }
 
@@ -71,7 +73,12 @@ namespace Tactics.Common.Testing.Gameplay
                 context.LastStepMessage = stepResult.Message;
                 if (!stepResult.Passed)
                 {
-                    result.Diagnostics.Add(stepResult.Message);
+                    // Use the failure category from the step result if set, otherwise determine from action type
+                    var category = stepResult.FailureCategory != FailureCategory.None
+                        ? stepResult.FailureCategory
+                        : (IsSetupAction(action) ? FailureCategory.Setup : FailureCategory.Action);
+                    var phase = ResolvePhase(category, action);
+                    result.AddFailure(category, phase, action.Kind, action.Adapter, stepResult.Message);
                     return result;
                 }
             }
@@ -81,7 +88,7 @@ namespace Tactics.Common.Testing.Gameplay
                 // 检查是否已取消
                 if (scope.IsCancelling)
                 {
-                    result.Diagnostics.Add("Execution cancelled.");
+                    result.AddFailure(FailureCategory.Assertion, "assertion", assertion.Kind, assertion.Adapter, "Execution cancelled.");
                     return result;
                 }
 
@@ -91,7 +98,7 @@ namespace Tactics.Common.Testing.Gameplay
                     var failure = GameplayAssertionResult.Fail(assertion.Adapter, assertion.Kind, $"No adapter can assert '{assertion.Kind}'.");
                     failure.Target = assertion.Target;
                     result.Assertions.Add(failure);
-                    result.Diagnostics.Add(failure.Message);
+                    result.AddFailure(FailureCategory.Assertion, "assertion", assertion.Kind, assertion.Adapter, failure.Message);
                     continue;
                 }
 
@@ -100,7 +107,7 @@ namespace Tactics.Common.Testing.Gameplay
                 result.Assertions.Add(assertionResult);
                 if (!assertionResult.Passed)
                 {
-                    result.Diagnostics.Add(assertionResult.Message);
+                    result.AddFailure(FailureCategory.Assertion, "assertion", assertion.Kind, assertion.Adapter, assertionResult.Message);
                 }
             }
 
@@ -115,12 +122,43 @@ namespace Tactics.Common.Testing.Gameplay
             return result;
         }
 
+        private static bool IsSetupAction(ExecutableScenarioAction action)
+        {
+            return action.Kind is "createSkillTestWorld"
+                or "createSkillGraph"
+                or "createCell"
+                or "createUnit"
+                or "createSkillAbilityConfig"
+                or "createSkillAbility"
+                or "setTurnContext"
+                or "selectAbility"
+                or "bindBattleController"
+                or "createAiBrain"
+                or "useRealAssets"
+                or "loadSkillGraphAsset"
+                or "loadRoguelikeMap";
+        }
+
+        private static string ResolvePhase(FailureCategory category, ExecutableScenarioAction action)
+        {
+            return category switch
+            {
+                FailureCategory.Setup => "setup",
+                FailureCategory.Asset => IsSetupAction(action) ? "setup" : "action",
+                FailureCategory.Validation => "validation",
+                FailureCategory.Action => "action",
+                FailureCategory.Assertion => "assertion",
+                FailureCategory.Timeout => "timeout",
+                _ => IsSetupAction(action) ? "setup" : "action"
+            };
+        }
+
         private static GameplayTestResult BuildTimeoutResult(ExecutableScenarioPlan plan)
         {
             var result = new GameplayTestResult { ScenarioName = plan.ScenarioName };
             var message = $"Scenario '{plan.ScenarioName}' timed out after {plan.TimeoutMs} ms.";
             result.ExecutedSteps.Add(GameplayStepResult.Fail("Runner", "timeout", message));
-            result.Diagnostics.Add(message);
+            result.AddFailure(FailureCategory.Timeout, "timeout", "timeout", "Runner", message);
             return result;
         }
 

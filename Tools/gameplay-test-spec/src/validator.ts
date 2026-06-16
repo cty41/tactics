@@ -10,7 +10,11 @@ const supportedSetupKinds = new Set([
   "createSkillAbility",
   "setTurnContext",
   "selectAbility",
-  "bindBattleController"
+  "bindBattleController",
+  "createAiBrain",
+  "useRealAssets",
+  "loadSkillGraphAsset",
+  "loadRoguelikeMap"
 ]);
 
 const supportedActionKinds = new Set([
@@ -20,11 +24,20 @@ const supportedActionKinds = new Set([
   "advanceTurn",
   "endBattleWithResult",
   "executeAbility",
+  "executeBattleSkillGraph",
   "moveUnit",
   "setUnitState",
   "addBuff",
   "executeAI",
-  "createAiBrain"
+  "createAiBrain",
+  "enterNode",
+  "triggerEvent",
+  "completeNode",
+  "openUI",
+  "closeUI",
+  "clickElement",
+  "setText",
+  "setElementEnabled"
 ]);
 
 const supportedGraphKinds = new Set([
@@ -67,7 +80,17 @@ const supportedAssertionKinds = new Set([
   "unitCanAct",
   "aiSelectedIntentTypeEquals",
   "aiCandidateCountEquals",
-  "aiRuleFilteredCountEquals"
+  "aiRuleFilteredCountEquals",
+  "currentNodeEquals",
+  "mapIsActive",
+  "visitedNodeCountEquals",
+  "nodeTypeEquals",
+  "nodeIsReachable",
+  "nodeIsVisited",
+  "elementVisible",
+  "elementText",
+  "elementEnabled",
+  "elementExists"
 ]);
 
 interface AliasState {
@@ -76,6 +99,7 @@ interface AliasState {
   units: Set<string>;
   abilityConfigs: Set<string>;
   abilities: Set<string>;
+  useRealAssets: boolean;
 }
 
 export interface ValidationResult {
@@ -102,6 +126,9 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
   const diagnostics: ExpectationDiagnostic[] = [];
   const state = createAliasState();
 
+  // Check if bindBattleController is in setup (units registered at runtime)
+  const hasBindBattleController = spec.setup.some(s => s.kind === "bindBattleController");
+
   for (const step of spec.setup) {
     validateStepKind(step, supportedSetupKinds, "UnsupportedSetupKind", diagnostics);
     validateSetupStep(step, state, diagnostics);
@@ -109,18 +136,18 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
 
   for (const action of spec.actions) {
     validateStepKind(action, supportedActionKinds, "UnsupportedActionKind", diagnostics);
-    validateActionStep(action, state, diagnostics);
+    validateActionStep(action, state, diagnostics, hasBindBattleController);
   }
 
   for (const assertion of spec.assertions) {
-    validateAssertion(assertion, state, diagnostics, spec.requiredAdapters);
+    validateAssertion(assertion, state, diagnostics, spec.requiredAdapters, hasBindBattleController);
   }
 
-  if (!spec.requiredAdapters.includes("Skill") && !spec.requiredAdapters.includes("Battle")) {
+  if (!spec.requiredAdapters.includes("Skill") && !spec.requiredAdapters.includes("Battle") && !spec.requiredAdapters.includes("Map") && !spec.requiredAdapters.includes("UI")) {
     diagnostics.push({
       code: "MissingAdapter",
       severity: "error",
-      message: "Scenarios must include at least one supported adapter (Skill or Battle)."
+      message: "Scenarios must include at least one supported adapter (Skill, Battle, Map, or UI)."
     });
   }
 
@@ -168,7 +195,8 @@ function createAliasState(): AliasState {
     cells: new Set<string>(),
     units: new Set<string>(),
     abilityConfigs: new Set<string>(),
-    abilities: new Set<string>()
+    abilities: new Set<string>(),
+    useRealAssets: false
   };
 }
 
@@ -216,15 +244,54 @@ function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: E
     case "selectAbility":
       validateSelectAbilitySetup(step, state, diagnostics);
       break;
+    case "createAiBrain":
+      // createAiBrain is a Battle setup action, no special validation needed
+      break;
+    case "useRealAssets":
+      if (state.graphs.size > 0 || state.units.size > 0 || state.cells.size > 0) {
+        diagnostics.push({
+          code: "MixedAssetMode",
+          severity: "error",
+          message: "useRealAssets must be used before any createSkillGraph/createUnit/createCell setup.",
+          path: step.id ?? step.kind
+        });
+      }
+      state.useRealAssets = true;
+      break;
+    case "loadSkillGraphAsset":
+      if (!state.useRealAssets) {
+        diagnostics.push({
+          code: "MissingRealAssetMode",
+          severity: "error",
+          message: "loadSkillGraphAsset requires useRealAssets to be called first.",
+          path: step.id ?? step.kind
+        });
+      }
+      registerAlias(step, "alias", step.parameters.alias, state.graphs, diagnostics, "MissingGraphAlias");
+      break;
+    case "loadRoguelikeMap":
+      // loadRoguelikeMap is a Map setup action, requires mapConfigPath parameter
+      if (!getString(step.parameters.mapConfigPath)) {
+        diagnostics.push({
+          code: "MissingMapConfigPath",
+          severity: "error",
+          message: "loadRoguelikeMap requires a mapConfigPath parameter.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
     default:
       break;
   }
 }
 
-function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[], hasBindBattleController?: boolean): void {
   switch (step.kind) {
     case "executeSkillGraph":
       validateExecuteSkillGraph(step, state, diagnostics);
+      break;
+    case "executeBattleSkillGraph":
+      validateExecuteBattleSkillGraph(step, state, diagnostics, hasBindBattleController);
       break;
     case "executeAbilityOnTarget":
       validateExecuteAbilityOnTarget(step, state, diagnostics);
@@ -232,12 +299,36 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
     case "executeAbilityOnCell":
       validateExecuteAbilityOnCell(step, state, diagnostics);
       break;
+    case "enterNode":
+      validateEnterNode(step, diagnostics);
+      break;
+    case "triggerEvent":
+      validateTriggerEvent(step, diagnostics);
+      break;
+    case "completeNode":
+      // completeNode 不强制要求参数，会使用 currentNodeId
+      break;
+    case "openUI":
+      validateOpenUI(step, diagnostics);
+      break;
+    case "closeUI":
+      // closeUI 不强制要求参数，会关闭当前 UI
+      break;
+    case "clickElement":
+      validateClickElement(step, diagnostics);
+      break;
+    case "setText":
+      validateSetText(step, diagnostics);
+      break;
+    case "setElementEnabled":
+      validateSetElementEnabled(step, diagnostics);
+      break;
     default:
       break;
   }
 }
 
-function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diagnostics: ExpectationDiagnostic[], requiredAdapters?: string[]): void {
+function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diagnostics: ExpectationDiagnostic[], requiredAdapters?: string[], hasBindBattleController?: boolean): void {
   if (!supportedAssertionKinds.has(assertion.kind)) {
     diagnostics.push({
       code: "UnsupportedAssertionKind",
@@ -248,7 +339,9 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     return;
   }
 
-  const isBattleAssertion = requiredAdapters?.includes("Battle") && !requiredAdapters?.includes("Skill");
+  // If bindBattleController is in setup, units are registered at runtime
+  // so we skip static unit alias checks
+  const isBattleContext = hasBindBattleController || (requiredAdapters?.includes("Battle") && !requiredAdapters?.includes("Skill"));
 
   switch (assertion.kind) {
     case "executionStateEquals":
@@ -260,23 +353,23 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "unitHealthEquals":
     case "unitManaEquals":
       requireNumberExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
-      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
       break;
     case "unitHasBuff":
-      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
       requireBuffName(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitBuffDurationEquals":
-      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
       requireBuffName(assertion, diagnostics, "InvalidAssertionExpectedType");
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitCellEquals":
-      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
       requireCellCoordinatesExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitAliveEquals":
-      if (!isBattleAssertion) requireKnownUnit(assertion, state, diagnostics);
+      if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
       if (typeof assertion.expected !== "boolean") {
         diagnostics.push({
           code: "InvalidAssertionExpectedType",
@@ -290,6 +383,50 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "currentRoundEquals":
     case "battleResultEquals":
     case "unitPositionEquals":
+    case "currentNodeEquals":
+    case "mapIsActive":
+    case "visitedNodeCountEquals":
+    case "nodeTypeEquals":
+    case "nodeIsReachable":
+    case "nodeIsVisited":
+      break;
+    case "elementVisible":
+    case "elementEnabled":
+    case "elementExists":
+      if (!assertion.target) {
+        diagnostics.push({
+          code: "MissingElementTarget",
+          severity: "error",
+          message: `${assertion.kind} requires a target element name.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      if (typeof assertion.expected !== "boolean") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a boolean expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "elementText":
+      if (!assertion.target) {
+        diagnostics.push({
+          code: "MissingElementTarget",
+          severity: "error",
+          message: `${assertion.kind} requires a target element name.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      if (typeof assertion.expected !== "string") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a string expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
       break;
   }
 }
@@ -527,6 +664,134 @@ function validateExecuteSkillGraph(step: ScenarioStep, state: AliasState, diagno
   }
 }
 
+function validateExecuteBattleSkillGraph(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[], hasBindBattleController?: boolean): void {
+  const graphAlias = getString(step.parameters.graphAlias) ?? "graph";
+  if (!state.graphs.has(graphAlias)) {
+    diagnostics.push({
+      code: "UnknownGraphAlias",
+      severity: "error",
+      message: `Skill graph alias '${graphAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+
+  // Battle adapter registers units at runtime via bindBattleController,
+  // so we don't check unit aliases statically for Battle actions
+  const casterAlias = getString(step.parameters.casterAlias);
+  if (!casterAlias) {
+    diagnostics.push({
+      code: "MissingUnitAlias",
+      severity: "error",
+      message: "executeBattleSkillGraph requires a casterAlias.",
+      path: step.id ?? step.kind
+    });
+  }
+
+  const targetAlias = getString(step.parameters.targetAlias);
+  // Skip unit alias check - units are registered at runtime by bindBattleController
+
+  const targetPointAlias = getString(step.parameters.targetPointAlias);
+  // Skip cell alias check if bindBattleController is in setup (cells registered at runtime)
+  if (targetPointAlias && !hasBindBattleController && !state.cells.has(targetPointAlias)) {
+    diagnostics.push({
+      code: "UnknownCellAlias",
+      severity: "error",
+      message: `Target point alias '${targetPointAlias}' does not exist.`,
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateEnterNode(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const nodeId = getString(step.parameters.nodeId);
+  if (!nodeId) {
+    diagnostics.push({
+      code: "MissingNodeId",
+      severity: "error",
+      message: "enterNode requires a nodeId parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateTriggerEvent(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const eventId = getString(step.parameters.eventId);
+  if (!eventId) {
+    diagnostics.push({
+      code: "MissingEventId",
+      severity: "error",
+      message: "triggerEvent requires an eventId parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateOpenUI(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const uiId = getString(step.parameters.uiId);
+  if (!uiId) {
+    diagnostics.push({
+      code: "MissingUiId",
+      severity: "error",
+      message: "openUI requires a uiId parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateClickElement(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const elementName = getString(step.parameters.elementName);
+  if (!elementName) {
+    diagnostics.push({
+      code: "MissingElementName",
+      severity: "error",
+      message: "clickElement requires an elementName parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateSetText(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const elementName = getString(step.parameters.elementName);
+  if (!elementName) {
+    diagnostics.push({
+      code: "MissingElementName",
+      severity: "error",
+      message: "setText requires an elementName parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+  const text = getString(step.parameters.text);
+  if (text === undefined) {
+    diagnostics.push({
+      code: "MissingText",
+      severity: "error",
+      message: "setText requires a text parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validateSetElementEnabled(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const elementName = getString(step.parameters.elementName);
+  if (!elementName) {
+    diagnostics.push({
+      code: "MissingElementName",
+      severity: "error",
+      message: "setElementEnabled requires an elementName parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+  const enabled = step.parameters.enabled;
+  if (enabled === undefined || enabled === null) {
+    diagnostics.push({
+      code: "MissingEnabled",
+      severity: "error",
+      message: "setElementEnabled requires an enabled parameter.",
+      path: step.id ?? step.kind
+    });
+  }
+}
+
 function validateExecuteAbilityOnTarget(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
   const abilityAlias = getString(step.parameters.abilityAlias);
   if (!abilityAlias) {
@@ -718,9 +983,22 @@ function resetAliasState(state: AliasState): void {
   state.units.clear();
   state.abilityConfigs.clear();
   state.abilities.clear();
+  state.useRealAssets = false;
 }
 
 function validateSemanticRules(spec: ScenarioSpec, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  // Check for mixed asset modes
+  const hasCreateSkillTestWorld = spec.setup.some(s => s.kind === "createSkillTestWorld");
+  const hasUseRealAssets = spec.setup.some(s => s.kind === "useRealAssets");
+  if (hasCreateSkillTestWorld && hasUseRealAssets) {
+    diagnostics.push({
+      code: "MixedAssetMode",
+      severity: "error",
+      message: "Cannot mix createSkillTestWorld (lightweight mode) with useRealAssets (real asset mode).",
+      path: "setup"
+    });
+  }
+
   const graphKinds = new Map<string, string>();
   for (const step of spec.setup) {
     if (step.kind === "createSkillGraph") {

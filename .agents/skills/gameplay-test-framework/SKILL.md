@@ -31,6 +31,34 @@ description: "Use when generating, validating, compiling, or running gameplay au
 - 用户要求运行 `GameplayRuntimeRunner`、`SkillGameplayStepAdapter` 或 `plan.json` 驱动的 PlayMode 测试
 - 用户要求为新的 gameplay 场景补充自动化回归
 
+## Spec 支持矩阵
+
+详细的 adapter 支持能力请参考：
+
+- **Skill adapter**: 本文档下方的 Skill 语义说明
+- **Battle adapter**: `.agents/docs/battle-spec-support-matrix.md`
+
+### 主线约束
+
+1. `.gameplay-test.md` 是主要输入载体，`ScenarioSpec` 是内部结构化真相层
+2. `generate-spec` 保留为自然语言到 `.gameplay-test.md` 的辅助入口
+3. 禁止新增手写 `plan.json` 主路径，新能力优先走 `.gameplay-test.md -> ScenarioSpec -> validator -> compiler -> plan.json`
+4. Battle 优先：在 Battle spec-first 主链未收口前，不正式扩面 Map/UI
+
+### 资产模式边界
+
+| 模式 | 使用场景 | Setup 标记 | Fixture 目录 |
+|------|----------|-----------|-------------|
+| **轻量模式** | Skill-only 逻辑测试 | `createSkillTestWorld` | `Tests/gameplay-specs/` (根目录) |
+| **真实资产模式** | 需要加载真实 ScriptableObject | `useRealAssets` + `loadSkillGraphAsset` | `Tests/gameplay-specs/battle-assets/` |
+
+**规则**：
+- `battle-assets/` 目录下的 fixture 默认要求真实资产模式
+- 轻量模式 fixture 不受影响，继续使用 `createSkillTestWorld`
+- 两种模式可并存，不互相替换
+- `useRealAssets` 必须在 `loadSkillGraphAsset` 之前调用
+- `loadSkillGraphAsset` 需要 `useRealAssets` 已启用，否则报 Asset failure
+
 ## Agent-First Workflow（推荐）
 
 ### Step 1: Agent 理解需求并输出受控描述
@@ -167,6 +195,8 @@ node dist/src/cli.js generate-spec --text "自身治疗技能，caster HP 从 6 
 | 跳过 `validate-spec` | 先校验再编译 | 避免把歧义输入送进执行层 |
 | 依赖 generator 关键词模板 | agent 直接输出 ScenarioDraft | Phase 7: Agent-First 设计 |
 | 把 skill 当成实现代码 | skill 只提供工作流 | 真相源是 `Tools/gameplay-test-spec` |
+| 新增手写 `plan.json` 作为主路径 | 优先走 `.gameplay-test.md -> ScenarioSpec -> compiler` | plan.json 是编译产物，不是主要维护对象 |
+| Battle 能力绕过 spec 直接写 plan | 先定版 Battle spec 契约 | 避免 spec/validator/runtime 漂移 |
 
 ## Checklist
 

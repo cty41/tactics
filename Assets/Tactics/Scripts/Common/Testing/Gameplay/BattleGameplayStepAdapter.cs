@@ -32,7 +32,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "setUnitState"
                 or "addBuff"
                 or "executeAI"
-                or "createAiBrain";
+                or "createAiBrain"
+                or "useRealAssets";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -59,6 +60,8 @@ namespace Tactics.Common.Testing.Gameplay
                         return await ExecuteAI(context, action);
                     case "createAiBrain":
                         return CreateAiBrain(context, action);
+                    case "useRealAssets":
+                        return await UseRealAssets(context, action);
                     default:
                         return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unsupported Battle action '{action.Kind}'.");
                 }
@@ -436,6 +439,23 @@ namespace Tactics.Common.Testing.Gameplay
 
             context.AiBrainAssets[brainAlias] = brainAsset;
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Created AI brain '{brainAlias}' of type '{brainType}'.");
+        }
+
+        private static async Task<GameplayStepResult> UseRealAssets(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            try
+            {
+                var mgr = await TestGameAssetHelper.EnsureInitialized();
+                if (mgr == null)
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Failed to initialize GameAssetManager.", "Asset");
+
+                context.UseRealAssets = true;
+                return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Real asset mode enabled.");
+            }
+            catch (Exception ex)
+            {
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Failed to enable real asset mode: {ex.Message}", "Asset");
+            }
         }
 
         private static GameplayAssertionResult AssertBattleIsActive(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)

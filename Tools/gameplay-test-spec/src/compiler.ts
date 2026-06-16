@@ -2,8 +2,88 @@ import type { Adapter, ExecutableScenarioPlan, ProbeRequestSchema, ScenarioAsser
 import { ExecutableScenarioPlanSchema, ScenarioDraftSchema, type ExpectationDiagnostic } from "./schema.js";
 import { validateScenarioSpec, validateScenarioDraft } from "./validator.js";
 
-function resolveAdapter(step: ScenarioStep | ScenarioAssertion, fallback: Adapter): Adapter {
-  return step.adapter ?? fallback;
+// Kind -> adapter 映射表，用于 mixed-adapter 场景的正确路由
+const setupKindToAdapter: Record<string, Adapter> = {
+  createSkillTestWorld: "Skill",
+  createSkillGraph: "Skill",
+  createCell: "Skill",
+  createUnit: "Skill",
+  createSkillAbilityConfig: "Skill",
+  createSkillAbility: "Skill",
+  setTurnContext: "Skill",
+  selectAbility: "Skill",
+  bindBattleController: "Battle",
+  createAiBrain: "Battle",
+  useRealAssets: "Battle",
+  loadSkillGraphAsset: "Skill",
+  loadRoguelikeMap: "Map"
+};
+
+const actionKindToAdapter: Record<string, Adapter> = {
+  executeSkillGraph: "Skill",
+  executeAbilityOnTarget: "Skill",
+  executeAbilityOnCell: "Skill",
+  advanceTurn: "Battle",
+  endBattleWithResult: "Battle",
+  executeBattleSkillGraph: "Battle",
+  moveUnit: "Battle",
+  setUnitState: "Battle",
+  addBuff: "Battle",
+  executeAI: "Battle",
+  executeAbility: "Battle",
+  enterNode: "Map",
+  triggerEvent: "Map",
+  completeNode: "Map",
+  openUI: "UI",
+  closeUI: "UI",
+  clickElement: "UI",
+  setText: "UI",
+  setElementEnabled: "UI"
+};
+
+const assertionKindToAdapter: Record<string, Adapter> = {
+  // Skill 独占断言
+  executionStateEquals: "Skill",
+  validationErrorCodeIncludes: "Skill",
+  lastErrorContains: "Skill",
+  stepMessageContains: "Skill",
+  projectileLaunched: "Skill",
+  projectileHitTarget: "Skill",
+  projectileCompleted: "Skill",
+  multiStageStateEquals: "Skill",
+  // Battle 独占断言
+  battleIsActive: "Battle",
+  currentRoundEquals: "Battle",
+  battleResultEquals: "Battle",
+  playerNumberEquals: "Battle",
+  unitCountEquals: "Battle",
+  unitCanAct: "Battle",
+  aiSelectedIntentTypeEquals: "Battle",
+  aiCandidateCountEquals: "Battle",
+  aiRuleFilteredCountEquals: "Battle",
+  // Map 独占断言
+  currentNodeEquals: "Map",
+  mapIsActive: "Map",
+  visitedNodeCountEquals: "Map",
+  nodeTypeEquals: "Map",
+  nodeIsReachable: "Map",
+  nodeIsVisited: "Map",
+  // UI 独占断言
+  elementVisible: "UI",
+  elementText: "UI",
+  elementEnabled: "UI",
+  elementExists: "UI"
+  // 注意：unitHealthEquals / unitManaEquals / unitAliveEquals / unitPositionEquals 等
+  // 共享断言不在此映射中，会回退到 requiredAdapters[0]，由 spec 上下文决定
+};
+
+function resolveAdapter(step: ScenarioStep | ScenarioAssertion, kindMap: Record<string, Adapter>, fallback: Adapter): Adapter {
+  // 优先使用显式指定的 adapter
+  if (step.adapter) return step.adapter;
+  // 其次使用 kind 映射表
+  if (kindMap[step.kind]) return kindMap[step.kind];
+  // 最后使用 fallback
+  return fallback;
 }
 
 export interface CompileResult {
@@ -46,9 +126,9 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
     schemaVersion: 1,
     scenarioName: `${spec.feature}.${spec.scenario}`,
     requiredAdapters: spec.requiredAdapters,
-    setupActions: spec.setup.map(step => ({ ...step, adapter: resolveAdapter(step, fallbackAdapter) })),
-    runtimeActions: spec.actions.map(step => ({ ...step, adapter: resolveAdapter(step, fallbackAdapter) })),
-    assertionPlans: spec.assertions.map(assertion => ({ ...assertion, adapter: resolveAdapter(assertion, fallbackAdapter) })),
+    setupActions: spec.setup.map(step => ({ ...step, adapter: resolveAdapter(step, setupKindToAdapter, fallbackAdapter) })),
+    runtimeActions: spec.actions.map(step => ({ ...step, adapter: resolveAdapter(step, actionKindToAdapter, fallbackAdapter) })),
+    assertionPlans: spec.assertions.map(assertion => ({ ...assertion, adapter: resolveAdapter(assertion, assertionKindToAdapter, fallbackAdapter) })),
     timeoutMs: spec.timeoutMs,
     probeRequests
   };
@@ -73,9 +153,9 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
   };
 }
 
-function deriveProbeRequests(spec: ScenarioSpec, adapter: Adapter): ExecutableScenarioPlan["probeRequests"] {
+function deriveProbeRequests(spec: ScenarioSpec, fallback: Adapter): ExecutableScenarioPlan["probeRequests"] {
   return spec.assertions.map(assertion => ({
-    adapter: assertion.adapter ?? adapter,
+    adapter: assertion.adapter ?? assertionKindToAdapter[assertion.kind] ?? fallback,
     kind: assertion.kind,
     target: assertion.target,
     parameters: assertion.parameters
