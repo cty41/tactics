@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Tactics;
+using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Testing.Gameplay;
@@ -25,6 +27,12 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
 
+            // Initialize GameAssetManager for real asset loading
+            var initTask = TestGameAssetHelper.EnsureInitialized();
+            yield return new WaitUntil(() => initTask.IsCompleted);
+            Assume.That(initTask.Result, Is.Not.Null, "GameAssetManager should be initialized.");
+
+            // Create BattleController first (BattleUIController.FindFirstObjectByType needs it)
             var controllerType = ResolveBattleControllerType();
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
 
@@ -94,6 +102,16 @@ namespace Tactics.Tests.PlayMode
             unit2.PlayerNumber = 2;
             unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
 
+            // Initialize and start battle (registers units with UnitManager)
+            var initMethod = controllerType.GetMethod("InitializeAndStart", BindingFlags.Instance | BindingFlags.Public);
+            initMethod?.Invoke(bc, new object[] { false });
+
+            // Show Battle UI through real asset pipeline
+            var showTask = UIManager.Instance.ShowAsync(UIManager.UIId.Battle);
+            yield return new WaitUntil(() => showTask.IsCompleted);
+
+            // Wait for BattleUIController.WireButtonsDelayed coroutine (1 frame delay)
+            yield return null;
             yield return null;
         }
 
@@ -101,6 +119,8 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator TearDown()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+
+            TestGameAssetHelper.Cleanup();
 
             if (_cellManagerRoot != null)
             {
@@ -134,6 +154,18 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecuteUiPlan(GetPlanPath("ui", "ui-map-battle-integration.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBuffIconCountDisplay()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteUiPlan(GetPlanPath("ui", "buff-icon-count.plan.json"));
             yield return WaitForTask(task);
 
             var result = task.Result;

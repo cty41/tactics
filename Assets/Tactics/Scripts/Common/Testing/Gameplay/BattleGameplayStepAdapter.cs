@@ -12,6 +12,7 @@ using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
+using Tactics.AssetPipeline;
 using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay
@@ -371,14 +372,24 @@ namespace Tactics.Common.Testing.Gameplay
 
             int duration = action.Parameters["duration"]?.ToObject<int>() ?? 3;
 
-            // Create BuffConfig programmatically
-            var config = ScriptableObject.CreateInstance<BuffConfig>();
-            var nameField = typeof(BuffConfig).GetField("_buffName", BindingFlags.NonPublic | BindingFlags.Instance);
-            nameField?.SetValue(config, buffName);
-            var durationField = typeof(BuffConfig).GetField("_defaultDuration", BindingFlags.NonPublic | BindingFlags.Instance);
-            durationField?.SetValue(config, duration);
+            string configPath = action.Parameters["configPath"]?.ToString();
+            BuffConfig config;
 
-            // Create and add buff
+            if (!string.IsNullOrWhiteSpace(configPath))
+            {
+                config = GameAssetManager.Instance?.Load<BuffConfig>(configPath);
+                if (config == null)
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Failed to load BuffConfig from '{configPath}'.");
+            }
+            else
+            {
+                config = ScriptableObject.CreateInstance<BuffConfig>();
+                var nameField = typeof(BuffConfig).GetField("_buffName", BindingFlags.NonPublic | BindingFlags.Instance);
+                nameField?.SetValue(config, buffName);
+                var durationField = typeof(BuffConfig).GetField("_defaultDuration", BindingFlags.NonPublic | BindingFlags.Instance);
+                durationField?.SetValue(config, duration);
+            }
+
             var buff = new Buff(config, unit, duration);
             unit.AddBuff(buff);
 

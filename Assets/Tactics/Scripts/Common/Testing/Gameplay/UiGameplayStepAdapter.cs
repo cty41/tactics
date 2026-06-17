@@ -284,13 +284,16 @@ namespace Tactics.Common.Testing.Gameplay
 
         private static VisualElement FindElement(GameplayRuntimeContext context, string elementName)
         {
+            // Support hierarchical selectors: "parent >> child"
+            string[] parts = elementName.Split(new[] { " >> " }, StringSplitOptions.None);
+
             // Try to find element in current UI
             if (context.CurrentUiId.HasValue)
             {
                 var uiDoc = GetUiDocument(context.CurrentUiId.Value);
                 if (uiDoc?.rootVisualElement != null)
                 {
-                    var element = uiDoc.rootVisualElement.Q(elementName);
+                    var element = FindByPath(uiDoc.rootVisualElement, parts);
                     if (element != null)
                         return element;
                 }
@@ -302,13 +305,30 @@ namespace Tactics.Common.Testing.Gameplay
             {
                 if (doc.rootVisualElement != null)
                 {
-                    var element = doc.rootVisualElement.Q(elementName);
+                    var element = FindByPath(doc.rootVisualElement, parts);
                     if (element != null)
                         return element;
                 }
             }
 
             return null;
+        }
+
+        private static VisualElement FindByPath(VisualElement root, string[] pathParts)
+        {
+            if (pathParts.Length == 1)
+                return root.Q(pathParts[0]);
+
+            var current = root.Q(pathParts[0]);
+            if (current == null) return null;
+
+            for (int i = 1; i < pathParts.Length; i++)
+            {
+                current = current.Q(pathParts[i]);
+                if (current == null) return null;
+            }
+
+            return current;
         }
 
         private static UIDocument GetUiDocument(UIManager.UIId uiId)

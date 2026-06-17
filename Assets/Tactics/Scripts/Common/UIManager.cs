@@ -337,6 +337,18 @@ namespace Tactics
             return _instances.TryGetValue(id, out var instance) ? instance?.RootVE : null;
         }
 
+        /// <summary>
+        /// Register a pre-created UIDocument for testing without going through the asset loading pipeline.
+        /// Automatically attaches the appropriate UIController (BattleUIController, etc.).
+        /// </summary>
+        public void RegisterTestUI(UIId id, UIDocument uiDoc)
+        {
+            var go = uiDoc.gameObject;
+            EnsureUIController(id, go);
+            _instances[id] = new UIInstance(UIType.UiToolkitUxml, go, uiDoc);
+            go.SetActive(true);
+        }
+
         [Obsolete("Use ShowAsync(UIId.Menu) from a domain coordinator.")]
         public Task ShowMenuAsync() => ShowAsync(UIId.Menu);
 
