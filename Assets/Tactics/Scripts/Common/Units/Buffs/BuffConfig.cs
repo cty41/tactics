@@ -18,9 +18,6 @@ namespace Tactics.Common.Units.Buffs
         [BoxGroup("Behavior")]
         [SerializeField] private bool _canAct = true;
 
-        [BoxGroup("Behavior")]
-        [SerializeField] private bool _isUnique = false;
-
         [BoxGroup("Effect")]
         [SerializeField] private BuffEffectType _effectType = BuffEffectType.None;
 
@@ -37,7 +34,6 @@ namespace Tactics.Common.Units.Buffs
         public Sprite Icon => _icon;
         public int DefaultDuration => _defaultDuration;
         public bool CanAct => _canAct;
-        public bool IsUnique => _isUnique;
         public BuffEffectType EffectType => _effectType;
         public BuffTriggerTiming TriggerTiming => _triggerTiming;
         public float DamagePerTurn => _damagePerTurn;

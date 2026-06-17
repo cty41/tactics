@@ -51,6 +51,8 @@ namespace Tactics.Common.Units
         public event Action<AbilityUsedEventArgs> AbilityUsed;
         public event Action<string> BasicAbilityUsed;
 
+        public event Action<BuffChangedEventArgs> BuffChanged;
+
         [SerializeField] private UnitHighlightConfigs _highlightConfigs = new();
         private UnitHighlightManager _highlightManager;
 
@@ -198,6 +200,7 @@ namespace Tactics.Common.Units
             _moveComponent = new UnityMoveComponent(this);
             _combatComponent = new CombatComponent(this);
             _buffComponent = new BuffComponent(this);
+            _buffComponent.BuffChanged += args => BuffChanged?.Invoke(args);
 
             // 新 AI / 旧行为树互斥
             if (_aiBrainAsset != null)

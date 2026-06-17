@@ -13,6 +13,8 @@ using Tactics.Common.Battle;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 
+using Tactics.Common.Units.Buffs;
+
 namespace Tactics.UI
 {
     /// <summary>
@@ -66,6 +68,16 @@ namespace Tactics.UI
         private Queue<Label> _damageNumberPool;
         private List<DamageNumberInstance> _activeDamageNumbers = new();
 
+        // Buff Icons
+        private VisualElement _buffIconRoot;
+        private readonly Dictionary<IUnit, UnitBuffIcons> _unitBuffIcons = new();
+
+        private class UnitBuffIcons
+        {
+            public VisualElement Container;
+            public readonly Dictionary<Buff, VisualElement> Icons = new();
+        }
+
         private struct DamageNumberInstance
         {
             public Label Label;
@@ -100,6 +112,9 @@ namespace Tactics.UI
                 _gridController.TurnStarted -= OnTurnStarted;
                 _gridController.GameEnded -= OnGameEnded;
             }
+
+            _unitBuffIcons.Clear();
+            _buffIconRoot?.Clear();
         }
 
         private void WireButtons()
@@ -143,6 +158,16 @@ namespace Tactics.UI
                     _damageNumberPool.Enqueue(CreatePooledLabel());
                 }
             }
+
+            // Initialize buff icon root
+            _buffIconRoot = new VisualElement();
+            _buffIconRoot.style.position = Position.Absolute;
+            _buffIconRoot.style.left = 0;
+            _buffIconRoot.style.top = 0;
+            _buffIconRoot.style.width = Length.Percent(100);
+            _buffIconRoot.style.height = Length.Percent(100);
+            _buffIconRoot.pickingMode = PickingMode.Ignore;
+            root.Add(_buffIconRoot);
 
             if (_endTurnButton != null) _endTurnButton.clicked += OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked += OnMoveClicked;
@@ -648,6 +673,18 @@ namespace Tactics.UI
                 unit.UnitSelected += OnUnitSelected;
                 unit.UnitDeselected += OnUnitDeselected;
 
+                if (unit is Unit concreteUnit)
+                {
+                    concreteUnit.BuffChanged += args => OnBuffChanged(concreteUnit, args);
+                    concreteUnit.UnitDestroyed += _ => OnUnitDestroyed(concreteUnit);
+
+                    // Sync existing buffs
+                    foreach (var buff in concreteUnit.GetActiveBuffs())
+                    {
+                        AddBuffIcon(concreteUnit, buff);
+                    }
+                }
+
                 if (unit is ICombatant combatant)
                 {
                     combatant.HealthChanged += OnAnyUnitHealthChanged;
@@ -680,6 +717,9 @@ namespace Tactics.UI
                     moveable.UnitMoved -= OnUnitMoved;
                 }
             }
+
+            _unitBuffIcons.Clear();
+            _buffIconRoot?.Clear();
         }
 
         private void OnUnitSelected(IUnit unit)
@@ -780,6 +820,179 @@ namespace Tactics.UI
 
         #endregion
 
+        #region Buff Icons
+
+        private const float BuffIconSize = 28f;
+        private const float BuffIconFontSize = 10f;
+        private const float BuffIconYOffset = 1.8f;
+
+        public void OnBuffChanged(IUnit unit, BuffChangedEventArgs args)
+        {
+            if (unit == null || args?.Buff == null) return;
+
+            switch (args.ChangeType)
+            {
+                case BuffChangeType.Added:
+                    AddBuffIcon(unit, args.Buff);
+                    break;
+                case BuffChangeType.Removed:
+                    RemoveBuffIcon(unit, args.Buff);
+                    break;
+                case BuffChangeType.Refreshed:
+                case BuffChangeType.TurnChanged:
+                    UpdateBuffTurnCounters(unit);
+                    break;
+            }
+        }
+
+        public void OnUnitDestroyed(IUnit unit)
+        {
+            if (unit == null) return;
+
+            if (_unitBuffIcons.TryGetValue(unit, out var unitIcons))
+            {
+                _buffIconRoot.Remove(unitIcons.Container);
+                _unitBuffIcons.Remove(unit);
+            }
+        }
+
+        private void AddBuffIcon(IUnit unit, Buff buff)
+        {
+            if (!_unitBuffIcons.TryGetValue(unit, out var unitIcons))
+            {
+                var container = new VisualElement();
+                container.style.flexDirection = FlexDirection.Row;
+                container.style.alignItems = Align.Center;
+                container.style.position = Position.Absolute;
+                container.pickingMode = PickingMode.Ignore;
+                _buffIconRoot.Add(container);
+
+                unitIcons = new UnitBuffIcons { Container = container };
+                _unitBuffIcons[unit] = unitIcons;
+            }
+
+            var iconWrapper = new VisualElement();
+            iconWrapper.name = $"buff-icon-{buff.BuffName}";
+            iconWrapper.style.position = Position.Relative;
+            iconWrapper.style.width = BuffIconSize;
+            iconWrapper.style.height = BuffIconSize;
+            iconWrapper.style.marginLeft = 1;
+            iconWrapper.style.marginRight = 1;
+
+            var iconImage = new VisualElement();
+            iconImage.style.width = Length.Percent(100);
+            iconImage.style.height = Length.Percent(100);
+            iconImage.style.backgroundImage = new StyleBackground(buff.Config.Icon);
+            iconImage.style.backgroundSize = new BackgroundSize(Length.Percent(100), Length.Percent(100));
+            iconWrapper.Add(iconImage);
+
+            if (buff.RemainingTurns > 0)
+            {
+                var turnLabel = new Label(buff.RemainingTurns.ToString());
+                turnLabel.style.position = Position.Absolute;
+                turnLabel.style.right = 0;
+                turnLabel.style.bottom = 0;
+                turnLabel.style.fontSize = BuffIconFontSize;
+                turnLabel.style.color = Color.white;
+                turnLabel.style.unityTextOutlineColor = Color.black;
+                turnLabel.style.unityTextOutlineWidth = 1;
+                turnLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                turnLabel.name = "turn-count";
+                iconWrapper.Add(turnLabel);
+            }
+
+            unitIcons.Container.Add(iconWrapper);
+            unitIcons.Icons[buff] = iconWrapper;
+            unitIcons.Container.style.display = DisplayStyle.Flex;
+        }
+
+        private void RemoveBuffIcon(IUnit unit, Buff buff)
+        {
+            if (!_unitBuffIcons.TryGetValue(unit, out var unitIcons)) return;
+
+            if (unitIcons.Icons.TryGetValue(buff, out var iconWrapper))
+            {
+                unitIcons.Container.Remove(iconWrapper);
+                unitIcons.Icons.Remove(buff);
+            }
+
+            if (unitIcons.Icons.Count == 0)
+            {
+                _buffIconRoot.Remove(unitIcons.Container);
+                _unitBuffIcons.Remove(unit);
+            }
+        }
+
+        private void UpdateBuffIconPositions()
+        {
+            if (_unitBuffIcons.Count == 0) return;
+
+            var camera = _mainCamera ?? Camera.main;
+            if (camera == null) return;
+
+            foreach (var (unit, unitIcons) in _unitBuffIcons)
+            {
+                if (unit == null || unitIcons.Icons.Count == 0) continue;
+
+                Vector3 worldPos = new Vector3(
+                    unit.WorldPosition.x,
+                    unit.WorldPosition.y,
+                    unit.WorldPosition.z);
+                Vector3 displayPos = worldPos + Vector3.up * BuffIconYOffset;
+
+                Vector3 screenPos = camera.WorldToScreenPoint(displayPos);
+                if (screenPos.z < 0)
+                {
+                    unitIcons.Container.style.display = DisplayStyle.None;
+                    continue;
+                }
+
+                float uiX = screenPos.x;
+                float uiY = Screen.height - screenPos.y;
+
+                unitIcons.Container.style.left = uiX;
+                unitIcons.Container.style.top = uiY;
+                unitIcons.Container.style.display = DisplayStyle.Flex;
+            }
+        }
+
+        private void UpdateBuffTurnCounters(IUnit unit)
+        {
+            if (!_unitBuffIcons.TryGetValue(unit, out var unitIcons)) return;
+
+            foreach (var (buff, iconWrapper) in unitIcons.Icons)
+            {
+                var turnLabel = iconWrapper.Q<Label>("turn-count");
+                if (buff.RemainingTurns > 0)
+                {
+                    if (turnLabel == null)
+                    {
+                        turnLabel = new Label(buff.RemainingTurns.ToString());
+                        turnLabel.style.position = Position.Absolute;
+                        turnLabel.style.right = 0;
+                        turnLabel.style.bottom = 0;
+                        turnLabel.style.fontSize = BuffIconFontSize;
+                        turnLabel.style.color = Color.white;
+                        turnLabel.style.unityTextOutlineColor = Color.black;
+                        turnLabel.style.unityTextOutlineWidth = 1;
+                        turnLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                        turnLabel.name = "turn-count";
+                        iconWrapper.Add(turnLabel);
+                    }
+                    else
+                    {
+                        turnLabel.text = buff.RemainingTurns.ToString();
+                    }
+                }
+                else if (turnLabel != null)
+                {
+                    iconWrapper.Remove(turnLabel);
+                }
+            }
+        }
+
+        #endregion
+
         #region Helpers
 
         private void UpdateMoveButtonState(IUnit unit)
@@ -812,6 +1025,7 @@ namespace Tactics.UI
         {
             UpdateDamageNumbers();
             UpdateHoverHealthBar();
+            UpdateBuffIconPositions();
         }
 
         private void UpdateDamageNumbers()

@@ -226,7 +226,6 @@ namespace Tactics.Common.Testing.Gameplay
                     ParseBuffTriggerTiming(GetString(parameters, "triggerTiming", "None")),
                     GetString(parameters, "selectionKind", "self"),
                     GetInt(parameters, "maxRange", 1),
-                    GetBool(parameters, "isUnique", true),
                     GetBool(parameters, "canAct", true)),
                 _ => throw new InvalidOperationException($"Unsupported graphKind '{graphKind}'.")
             };

@@ -194,7 +194,6 @@ namespace Tactics.Common.Skills.Graph.Testing
             BuffTriggerTiming triggerTiming = BuffTriggerTiming.None,
             string selectionKind = "self",
             int maxRange = 1,
-            bool isUnique = true,
             bool canAct = true)
         {
             var graph = CreateGraph(displayName);
@@ -220,7 +219,6 @@ namespace Tactics.Common.Skills.Graph.Testing
             SetPrivateField(typeof(BuffConfig), buffConfig, "_defaultDuration", duration);
             SetPrivateField(typeof(BuffConfig), buffConfig, "_effectType", effectType);
             SetPrivateField(typeof(BuffConfig), buffConfig, "_triggerTiming", triggerTiming);
-            SetPrivateField(typeof(BuffConfig), buffConfig, "_isUnique", isUnique);
             SetPrivateField(typeof(BuffConfig), buffConfig, "_canAct", canAct);
 
             var buff = CreateNode<ApplyBuffNodeRecord>("buff");

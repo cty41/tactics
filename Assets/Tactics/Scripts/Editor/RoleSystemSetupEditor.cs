@@ -158,7 +158,6 @@ namespace Tactics.Editor
             so.FindProperty("_buffName").stringValue = "Ignite";
             so.FindProperty("_defaultDuration").intValue = 3;
             so.FindProperty("_canAct").boolValue = true;
-            so.FindProperty("_isUnique").boolValue = false;
             so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.None;
             so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.TurnStart;
             so.FindProperty("_damagePerTurn").floatValue = 5f;
@@ -175,7 +174,6 @@ namespace Tactics.Editor
             so.FindProperty("_buffName").stringValue = "Frozen";
             so.FindProperty("_defaultDuration").intValue = 2;
             so.FindProperty("_canAct").boolValue = false;
-            so.FindProperty("_isUnique").boolValue = false;
             so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.Frozen;
             so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.None;
 
@@ -190,7 +188,6 @@ namespace Tactics.Editor
             so.FindProperty("_buffName").stringValue = "Mark";
             so.FindProperty("_defaultDuration").intValue = int.MaxValue;
             so.FindProperty("_canAct").boolValue = true;
-            so.FindProperty("_isUnique").boolValue = true;
             so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.Marked;
             so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.BeforeAttacked;
 
@@ -205,7 +202,6 @@ namespace Tactics.Editor
             so.FindProperty("_buffName").stringValue = "Counter";
             so.FindProperty("_defaultDuration").intValue = 1;
             so.FindProperty("_canAct").boolValue = true;
-            so.FindProperty("_isUnique").boolValue = false;
             so.FindProperty("_effectType").enumValueIndex = (int)BuffEffectType.None;
             so.FindProperty("_triggerTiming").enumValueIndex = (int)BuffTriggerTiming.DamageTaken;
             so.FindProperty("_elementType").enumValueIndex = (int)ElementType.None;

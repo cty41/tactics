@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Tactics.Common.Controllers;
+using UnityEngine;
 
 namespace Tactics.Common.Units.Buffs
 {
@@ -12,6 +13,8 @@ namespace Tactics.Common.Units.Buffs
     {
         private readonly IUnit _owner;
         private readonly List<Buff> _activeBuffs;
+
+        public event Action<BuffChangedEventArgs> BuffChanged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BuffComponent"/> class.
@@ -34,14 +37,17 @@ namespace Tactics.Common.Units.Buffs
                 throw new ArgumentNullException(nameof(buff), "Cannot add a null buff.");
             }
 
-            // Check uniqueness: if IsUnique is true, don't add if same config already exists
-            if (buff.Config != null && buff.Config.IsUnique)
+            // Global uniqueness: same Config → refresh duration instead of stacking
+            if (buff.Config != null)
             {
-                foreach (var existingBuff in _activeBuffs)
+                for (int i = 0; i < _activeBuffs.Count; i++)
                 {
-                    if (existingBuff.Config == buff.Config)
+                    if (_activeBuffs[i].Config == buff.Config)
                     {
-                        return; // Skip adding duplicate unique buff
+                        int newDuration = Mathf.Max(_activeBuffs[i].RemainingTurns, buff.RemainingTurns);
+                        _activeBuffs[i].RemainingTurns = newDuration;
+                        BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Refreshed, _activeBuffs[i]));
+                        return;
                     }
                 }
             }
@@ -49,6 +55,7 @@ namespace Tactics.Common.Units.Buffs
             buff.Owner = _owner;
             _activeBuffs.Add(buff);
             buff.OnApplied();
+            BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Added, buff));
         }
 
         /// <summary>
@@ -64,6 +71,7 @@ namespace Tactics.Common.Units.Buffs
 
             _activeBuffs.Remove(buff);
             buff.OnRemoved();
+            BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Removed, buff));
         }
 
         /// <summary>
@@ -93,6 +101,10 @@ namespace Tactics.Common.Units.Buffs
                 {
                     expiredBuffs.Add(buff);
                 }
+                else
+                {
+                    BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.TurnChanged, buff));
+                }
             }
 
             foreach (var buff in expiredBuffs)
@@ -109,6 +121,7 @@ namespace Tactics.Common.Units.Buffs
             foreach (var buff in new List<Buff>(_activeBuffs))
             {
                 buff.OnRemoved();
+                BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Removed, buff));
             }
 
             _activeBuffs.Clear();
