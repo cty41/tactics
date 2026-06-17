@@ -157,7 +157,7 @@ namespace Tactics.Common.Testing.Gameplay
 
             if (element is Button button)
             {
-                button.Click();
+                button.SendEvent(ClickEvent.GetPooled());
                 return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Clicked button '{elementName}'.");
             }
 
@@ -331,7 +331,7 @@ namespace Tactics.Common.Testing.Gameplay
                 return button.text;
             if (element is TextField textField)
                 return textField.value;
-            return element.text ?? string.Empty;
+            return string.Empty;
         }
     }
 }

@@ -10,6 +10,7 @@ using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
+using Tactics.AssetPipeline;
 using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay

@@ -7,6 +7,7 @@ using Tactics.Roguelike;
 using Tactics.RoguelikeMap;
 using Tactics.RoguelikeMap.Events;
 using Tactics.RoguelikeMap.Interaction;
+using Tactics.AssetPipeline;
 using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay
@@ -85,20 +86,19 @@ namespace Tactics.Common.Testing.Gameplay
         public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
         {
             var data = new JObject();
-            var mapState = RoguelikeMapRuntimeState;
 
-            data["hasActiveRun"] = mapState.HasActiveRun;
-            data["currentNodeId"] = mapState.CurrentNodeId;
-            data["visitedNodeCount"] = mapState.VisitedPathNodeIds?.Count ?? 0;
+            data["hasActiveRun"] = RoguelikeMapRuntimeState.HasActiveRun;
+            data["currentNodeId"] = RoguelikeMapRuntimeState.CurrentNodeId;
+            data["visitedNodeCount"] = RoguelikeMapRuntimeState.VisitedPathNodeIds?.Count ?? 0;
 
-            if (mapState.CurrentMap != null)
+            if (RoguelikeMapRuntimeState.CurrentMap != null)
             {
-                var currentNode = mapState.CurrentMap.GetNode(mapState.CurrentNodeId);
+                var currentNode = RoguelikeMapRuntimeState.CurrentMap.GetNode(RoguelikeMapRuntimeState.CurrentNodeId);
                 if (currentNode != null)
                 {
                     data["currentNodeType"] = currentNode.nodeType.ToString();
                     data["currentNodeReachable"] = currentNode.IsReachable;
-                    data["currentNodeVisited"] = currentNode.IsVisited;
+                    data["currentNodeVisited"] = currentNode.VisitState == NodeVisitState.Visited;
                 }
             }
 
@@ -123,8 +123,7 @@ namespace Tactics.Common.Testing.Gameplay
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Failed to load map config from '{mapConfigPath}'.", "Asset");
 
             // Generate map from config
-            var generator = new RoguelikeMapGenerator();
-            var map = generator.Generate(mapConfig);
+            var map = RoguelikeMapGenerator.GetMap(mapConfig);
             if (map == null)
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, "Failed to generate map from config.", "Asset");
 
@@ -195,14 +194,14 @@ namespace Tactics.Common.Testing.Gameplay
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Node '{nodeId}' not found.");
 
             // Mark node as visited
-            node.IsVisited = true;
+            node.VisitState = NodeVisitState.Visited;
             map.visitedNodes.Add(nodeId);
 
             // Update reachable nodes
             foreach (var connection in node.outgoing)
             {
                 var connectedNode = map.GetNode(connection);
-                if (connectedNode != null && !connectedNode.IsVisited)
+                if (connectedNode != null && connectedNode.VisitState != NodeVisitState.Visited)
                 {
                     connectedNode.IsReachable = true;
                 }
@@ -305,7 +304,7 @@ namespace Tactics.Common.Testing.Gameplay
             if (node == null)
                 return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Node '{nodeId}' not found.");
 
-            bool actual = node.IsVisited;
+            bool actual = node.VisitState == NodeVisitState.Visited;
             return actual == expected
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"Node '{nodeId}' IsVisited={actual}")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected Node '{nodeId}' IsVisited={expected}, actual={actual}.");
