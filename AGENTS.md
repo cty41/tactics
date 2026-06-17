@@ -24,6 +24,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | `rules/unity-input.md` | Unity Input System |
 | `rules/unity-logging.md` | 日志规范（禁止 Debug.Log，使用 TLog/TBattleLog） |
 | `rules/unity-code-generation.md` | C# 代码生成强制工作流、防编译错误 |
+| `rules/code-documentation.md` | 代码注释规范（XML doc + // 块注释，英文，系统规则必须注释） |
 
 ## 核心原则
 
