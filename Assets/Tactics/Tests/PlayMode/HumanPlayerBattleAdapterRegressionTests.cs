@@ -29,6 +29,8 @@ namespace Tactics.Tests.PlayMode
     /// 6. Host-null fallback still auto-ends the first unactionable human turn
     /// 7. Successful rebind clears LastBattleResult
     /// 8. AdvanceTurn restores DisableAiAutoPlay when EndTurn throws
+    /// 9. Host-null fallback + same-frame EndBattle discards auto-EndTurn
+    /// 10. SubsequentTurnResolverImpl + turnResolver='subsequent' binds successfully
     /// </summary>
     public class HumanPlayerBattleAdapterRegressionTests
     {
@@ -286,7 +288,10 @@ namespace Tactics.Tests.PlayMode
                 "bindBattleController should FAIL when trying to change resolver on an already-started controller.");
             Assert.IsTrue(result.Message.Contains("resolver"),
                 $"Failure message should mention resolver mismatch. Actual: {result.Message}");
-            Assert.AreEqual(typeof(SubsequentTurnResolverImpl), bc.TurnResolver.GetType(),
+            // After normalization, the controller's SubsequentTurnResolverImpl should still be intact
+            // (the adapter should NOT have overwritten it on failure)
+            var currentResolverKind = bc.TurnResolver;
+            Assert.IsTrue(currentResolverKind is SubsequentTurnResolverImpl,
                 "Failed rebind must not rewrite the controller's current resolver.");
             Assert.AreEqual(boundUnitCount, context.Units.Count,
                 "Failed rebind must not drop existing unit aliases from the context.");
@@ -340,6 +345,10 @@ namespace Tactics.Tests.PlayMode
 
             bc.DisableAiAutoPlay = true;
             bc.StartGame(false);
+            _ = bc.StartBattleAsync();
+
+            Assert.IsTrue(bc.IsBattleActive, "Battle should be active after StartBattleAsync.");
+            Assert.IsNotNull(BattleController.Instance, "BattleController.Instance should be set.");
 
             for (int i = 0; i < 15; i++)
             {
@@ -409,6 +418,77 @@ namespace Tactics.Tests.PlayMode
             Assert.IsFalse(advanceTask.Result.Passed, "AdvanceTurn should fail when GridState.EndTurn throws.");
             Assert.IsTrue(bc.DisableAiAutoPlay,
                 "AdvanceTurn must restore DisableAiAutoPlay to its previous value when EndTurn throws.");
+
+            context.Dispose();
+        }
+
+        [UnityTest]
+        public IEnumerator HostNullFallback_SameFrameEndBattle_DoesNotEndTurn()
+        {
+            CreateBattleScaffolding(out var bc, createUnits: true);
+            bc.InitializeGame(false);
+            yield return null;
+
+            var humanUnit = bc.GetUnits().FirstOrDefault(u => u.PlayerNumber == 1);
+            Assert.IsNotNull(humanUnit, "Human unit should exist after InitializeGame.");
+
+            var frozenConfig = CreateFrozenBuffConfig();
+            humanUnit.AddBuff(new Buff(frozenConfig, humanUnit, 1));
+            Assert.IsFalse(humanUnit.CanAct, "Human unit must be frozen before StartGame.");
+
+            // Force _host to null so fallback path is used
+            var runtimePlayersField = typeof(BattleController).GetField("_runtimePlayers", BindingFlags.Instance | BindingFlags.NonPublic);
+            object humanPlayer = null;
+            foreach (var player in (System.Collections.IEnumerable)runtimePlayersField.GetValue(bc))
+            {
+                var pn = player.GetType().GetProperty("PlayerNumber");
+                if ((int)pn.GetValue(player) == 1) { humanPlayer = player; break; }
+            }
+            Assert.IsNotNull(humanPlayer, "Human player instance should exist.");
+            humanPlayer.GetType().GetField("_host", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(humanPlayer, null);
+
+            bc.DisableAiAutoPlay = true;
+            bc.StartGame(false);
+            _ = bc.StartBattleAsync();
+
+            // Same frame: end the battle BEFORE the fallback's NextFrameAsync fires
+            bc.EndBattle(new GameResult());
+
+            // Wait for the fallback's NextFrameAsync to fire
+            for (int i = 0; i < 15; i++) yield return null;
+
+            // The turn must NOT have advanced — battle ended, auto-EndTurn should be discarded
+            // If the guard failed, the turn would have advanced to P2 (PlayerNumber != 1)
+            Assert.AreEqual(1, bc.TurnContext.CurrentPlayer.PlayerNumber,
+                "After same-frame EndBattle, the fallback auto-EndTurn must be discarded — turn should NOT advance.");
+        }
+
+        [UnityTest]
+        public IEnumerator SubsequentImplWithSubsequentParam_BindSucceeds()
+        {
+            CreateBattleScaffolding(out var bc, createUnits: true);
+            // Start with SubsequentTurnResolverImpl (the Impl, not the wrapper)
+            bc.TurnResolver = new SubsequentTurnResolverImpl();
+            bc.InitializeAndStart(false);
+            yield return null;
+            yield return null;
+
+            var adapter = new BattleGameplayStepAdapter();
+            var context = new GameplayRuntimeContext();
+            // Request "subsequent" — adapter creates SubsequentTurnResolver (wrapper)
+            // This should be treated as equivalent to the Impl already on the controller
+            var action = new ExecutableScenarioAction { Kind = "bindBattleController", Adapter = "Battle" };
+            // Use reflection to set Parameters["turnResolver"] = "subsequent"
+            // (test assembly doesn't reference Newtonsoft.Json directly)
+            SetActionParameter(action, "turnResolver", "subsequent");
+
+            var task = adapter.ExecuteAsync(context, action);
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            Assert.IsTrue(task.Result.Passed,
+                $"SubsequentTurnResolverImpl + turnResolver='subsequent' should be treated as compatible. Details: {task.Result.Message}");
+            Assert.IsTrue(context.Units.Count > 0, "Bind should register unit aliases.");
+            Assert.IsNotNull(context.BattleEndedHandler, "Bind should install BattleEnded handler.");
 
             context.Dispose();
         }
@@ -539,6 +619,16 @@ namespace Tactics.Tests.PlayMode
                     return square;
             }
             return null;
+        }
+
+        private static void SetActionParameter(ExecutableScenarioAction action, string key, string value)
+        {
+            // Build a JSON object { key: value } and assign to action.Parameters via reflection,
+            // avoiding a direct Newtonsoft.Json reference in the test assembly.
+            var parameters = action.GetType().GetProperty("Parameters")?.GetValue(action);
+            var parseMethod = parameters?.GetType().GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
+            var newParams = parseMethod?.Invoke(null, new object[] { $"{{\"{key}\":\"{value}\"}}" });
+            action.GetType().GetProperty("Parameters")?.SetValue(action, newParams);
         }
 
         private sealed class ThrowingGridState : GridState

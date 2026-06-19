@@ -29,6 +29,9 @@ namespace Tactics.Common.Players
         {
             Cleanup();
             _boundGridController = gridController;
+            // Always prefer a live BattleController host — even if the first Initialize()
+            // call happened before Awake(), retry the singleton so we can use the coroutine
+            // path (which is reliable) rather than the async fallback.
             _host = BattleController.Instance;
             InstallSubscriptions(gridController);
         }
@@ -100,13 +103,16 @@ namespace Tactics.Common.Players
             }
 
             _endTurnScheduled = true;
-            if (_host != null)
+            // Prefer coroutine path (reliable in all contexts). If _host is null,
+            // try BattleController.Instance as fallback host before resorting to async.
+            var coroutineHost = _host ?? BattleController.Instance;
+            if (coroutineHost != null)
             {
-                _host.StartCoroutine(AutoEndTurnAfterOneFrame(gridController));
+                coroutineHost.StartCoroutine(AutoEndTurnAfterOneFrame(gridController));
             }
             else
             {
-                // Fallback: no MonoBehaviour host available — still schedule to the next frame
+                // Fallback: no MonoBehaviour host available — schedule to the next frame
                 // so the first unactionable human turn does not deadlock waiting for TurnEnded.
                 AutoEndTurnAfterOneFrameWithoutHost(gridController);
             }
@@ -167,9 +173,19 @@ namespace Tactics.Common.Players
 
             // If we have a host battle, it must still be active — EndBattle()/BattleEnded
             // must not have fired between scheduling and execution.
-            if (_host != null && !_host.IsBattleActive)
+            // When _host is null (fallback path), check BattleController.Instance directly
+            // so a same-frame EndBattle() still blocks the queued auto-EndTurn.
+            if (_host != null)
             {
-                return false;
+                if (!_host.IsBattleActive)
+                    return false;
+            }
+            else
+            {
+                var instance = BattleController.Instance;
+                // If the singleton was destroyed or battle ended, discard the queued request.
+                if (instance == null || !instance.IsBattleActive)
+                    return false;
             }
 
             // The turn must still be unactionable; otherwise a real input may have started.

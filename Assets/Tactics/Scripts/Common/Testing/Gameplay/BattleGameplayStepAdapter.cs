@@ -227,11 +227,12 @@ namespace Tactics.Common.Testing.Gameplay
             }
             else
             {
-                // State 3: Already ready — resolver must match
-                var currentType = controller.TurnResolver?.GetType();
-                if (currentType != requestedType)
+                // State 3: Already ready — resolver semantic kind must match
+                var currentKind = NormalizeResolverKind(controller.TurnResolver);
+                var requestedKind = NormalizeResolverKind(requestedResolver);
+                if (currentKind != requestedKind)
                     return GameplayStepResult.Fail(BattleAdapterName, action.Kind,
-                        $"Cannot change turn resolver on an already-started BattleController. Current={currentType?.Name}, Requested={requestedType?.Name}. Set the resolver in test SetUp before InitializeAndStart().");
+                        $"Cannot change turn resolver on an already-started BattleController. Current={currentKind}, Requested={requestedKind}. Set the resolver in test SetUp before InitializeAndStart().");
                 if (!IsBattleControllerReady(controller))
                     return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController is in a half-initialized anomaly state (CurrentPlayer was non-null at branch entry but ready check failed).");
                 _appliedResolverTypes[controller.GetInstanceID()] = requestedType;
@@ -891,6 +892,21 @@ namespace Tactics.Common.Testing.Gameplay
         private static BattleController RequireBattleController(GameplayRuntimeContext context, string actionKind)
         {
             return context.BattleController ?? throw new InvalidOperationException($"BattleController has not been bound. Execute 'bindBattleController' before '{actionKind}'.");
+        }
+
+        /// <summary>
+        /// Maps a turn resolver to a normalized semantic key so that wrapper/impl pairs
+        /// (e.g. SubsequentTurnResolver vs SubsequentTurnResolverImpl) are treated as equivalent.
+        /// </summary>
+        private static string NormalizeResolverKind(ITurnResolver resolver)
+        {
+            return resolver switch
+            {
+                SubsequentTurnResolver => "subsequent",
+                SubsequentTurnResolverImpl => "subsequent",
+                UnitSpeedTurnResolver => "unitSpeed",
+                _ => $"other:{resolver?.GetType().FullName}"
+            };
         }
     }
 }
