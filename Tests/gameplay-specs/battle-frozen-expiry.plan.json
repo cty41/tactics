@@ -30,6 +30,21 @@
       "adapter": "Battle",
       "kind": "advanceTurn",
       "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
     }
   ],
   "assertionPlans": [

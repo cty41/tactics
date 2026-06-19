@@ -19,13 +19,13 @@ actions:
     parameters:
       unitAlias: p1_0
       buffName: Frozen
-      duration: 3
+      duration: 1
       configPath: Assets/Tactics/Battle/Buffs/Frozen.asset
   - kind: addBuff
     parameters:
       unitAlias: p1_0
       buffName: Frozen
-      duration: 3
+      duration: 1
       configPath: Assets/Tactics/Battle/Buffs/Frozen.asset
 assertions:
   - kind: unitHasBuff
@@ -34,7 +34,7 @@ assertions:
     parameters: {}
   - kind: unitBuffDurationEquals
     target: p1_0
-    expected: 3
+    expected: 2
     parameters:
       buffName: Frozen
   - kind: elementExists
@@ -43,7 +43,7 @@ assertions:
     parameters: {}
   - kind: elementText
     target: buff-icon-Frozen >> turn-count
-    expected: "3"
+    expected: "2"
     parameters: {}
 timeoutMs: 15000
 ---

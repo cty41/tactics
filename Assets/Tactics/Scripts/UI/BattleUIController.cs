@@ -823,7 +823,7 @@ namespace Tactics.UI
         #region Buff Icons
 
         private const float BuffIconSize = 28f;
-        private const float BuffIconFontSize = 10f;
+        private const float BuffIconFontSize = 14f;
         private const float BuffIconYOffset = 1.8f;
 
         public void OnBuffChanged(IUnit unit, BuffChangedEventArgs args)
@@ -1025,7 +1025,53 @@ namespace Tactics.UI
         {
             UpdateDamageNumbers();
             UpdateHoverHealthBar();
+            SyncBuffIcons();
             UpdateBuffIconPositions();
+        }
+
+        /// <summary>
+        /// Keeps the visual buff-icon state aligned with the unit runtime state.
+        /// This self-heals cases where the UI missed a BuffChanged event but the
+        /// unit already has active buffs (for example, timing-sensitive UI setup).
+        /// </summary>
+        private void SyncBuffIcons()
+        {
+            if (_gridController?.UnitManager == null || _buffIconRoot == null)
+            {
+                return;
+            }
+
+            foreach (var unit in _gridController.UnitManager.GetUnits().OfType<Unit>())
+            {
+                var activeBuffs = unit.GetActiveBuffs();
+                if (!_unitBuffIcons.TryGetValue(unit, out var unitIcons))
+                {
+                    foreach (var activeBuff in activeBuffs)
+                    {
+                        AddBuffIcon(unit, activeBuff);
+                    }
+
+                    continue;
+                }
+
+                foreach (var activeBuff in activeBuffs)
+                {
+                    if (!unitIcons.Icons.ContainsKey(activeBuff))
+                    {
+                        AddBuffIcon(unit, activeBuff);
+                    }
+                }
+
+                foreach (var staleEntry in unitIcons.Icons.Keys.ToList())
+                {
+                    if (!activeBuffs.Contains(staleEntry))
+                    {
+                        RemoveBuffIcon(unit, staleEntry);
+                    }
+                }
+
+                UpdateBuffTurnCounters(unit);
+            }
         }
 
         private void UpdateDamageNumbers()

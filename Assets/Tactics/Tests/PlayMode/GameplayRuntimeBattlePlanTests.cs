@@ -101,11 +101,19 @@ namespace Tactics.Tests.PlayMode
             unit2.PlayerNumber = 2;
             unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
 
-            // 初始化并开始战斗
+            // 设置 resolver 与 Test1.unity 一致（UnitSpeedTurnResolver），
+            // 然后初始化战斗。这样 bindBattleController 检测到 resolver 匹配就不会 re-init。
+            var resolverType = Type.GetType("Tactics.Controllers.TurnResolvers.UnitSpeedTurnResolver, com.tactics");
+            if (resolverType != null)
+            {
+                var resolver = Activator.CreateInstance(resolverType);
+                var resolverProp = controllerType.GetProperty("TurnResolver", BindingFlags.Instance | BindingFlags.Public);
+                resolverProp?.SetValue(bc, resolver);
+            }
+
             var initMethod = controllerType.GetMethod("InitializeAndStart", BindingFlags.Instance | BindingFlags.Public);
             initMethod?.Invoke(bc, new object[] { false });
 
-            // 等两帧让 AIPlayer 异步操作完成
             yield return null;
             yield return null;
         }

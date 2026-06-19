@@ -101,6 +101,15 @@ namespace Tactics.Tests.PlayMode
             var unit2 = TestUnitFactory.CreateBarbarian(unitContainer, "Barbarian_P2", 2, FindCell(_cellManagerRoot, 3, 0), brainAsset);
 
             // Initialize and start battle
+            // 设置 resolver 与 Test1.unity 一致（UnitSpeedTurnResolver）
+            var resolverType = Type.GetType("Tactics.Controllers.TurnResolvers.UnitSpeedTurnResolver, com.tactics");
+            if (resolverType != null)
+            {
+                var resolver = Activator.CreateInstance(resolverType);
+                var resolverProp = controllerType.GetProperty("TurnResolver", BindingFlags.Instance | BindingFlags.Public);
+                resolverProp?.SetValue(bc, resolver);
+            }
+
             var initMethod = controllerType.GetMethod("InitializeAndStart", BindingFlags.Instance | BindingFlags.Public);
             initMethod?.Invoke(bc, new object[] { false });
 

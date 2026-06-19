@@ -44,7 +44,7 @@ namespace Tactics.Common.Units.Buffs
                 {
                     if (_activeBuffs[i].Config == buff.Config)
                     {
-                        int newDuration = Mathf.Max(_activeBuffs[i].RemainingTurns, buff.RemainingTurns);
+                        int newDuration = _activeBuffs[i].RemainingTurns + buff.RemainingTurns;
                         _activeBuffs[i].RemainingTurns = newDuration;
                         BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Refreshed, _activeBuffs[i]));
                         return;

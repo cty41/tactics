@@ -276,14 +276,19 @@ namespace Tactics.Common.Units
         
         public virtual void OnTurnStart(IGridController gridController)
         {
+            PrepareForTurn();
             _buffComponent.OnTurnStart(gridController);
         }
 
-        public virtual void OnTurnEnd(IGridController gridController)
+        public virtual void PrepareForTurn()
         {
             MovementPoints = MaxMovementPoints;
             _usedBasicAbilitiesThisTurn.Clear();
             Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Mathf.FloorToInt(Intelligence / 2f)));
+        }
+
+        public virtual void OnTurnEnd(IGridController gridController)
+        {
             _buffComponent.OnTurnEnd(gridController);
         }
 

@@ -87,6 +87,16 @@ namespace Tactics.Common.Players
                     await gridController.UnitManager.MarkAsSelected(playableUnit);
                     playableUnit.InvokeUnitSelected();
 
+                    // Frozen/downed units enter their turn (buff ticks via OnTurnEnd)
+                    // but skip action execution entirely
+                    if (!playableUnit.CanAct || playableUnit.IsDowned)
+                    {
+                        await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
+                        await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
+                        playableUnit.InvokeUnitDeselected();
+                        continue;
+                    }
+
                     if (DebugMode)
                     {
                         TLog.Info($"Current unit: {playableUnit}; Press {Key.N} to proceed to the next action");

@@ -43,6 +43,10 @@ namespace Tactics.Common.Testing.Gameplay
         // 真实资产模式
         public bool UseRealAssets { get; set; }
 
+        // BattleEnded 订阅追踪（防止重复订阅泄漏）
+        public BattleController SubscribedBattleController { get; set; }
+        public Action<GameResult> BattleEndedHandler { get; set; }
+
         /// <summary>
         /// 运行时作用域，管理所有异步操作的生命周期。
         /// </summary>
@@ -50,6 +54,14 @@ namespace Tactics.Common.Testing.Gameplay
 
         public void Dispose()
         {
+            // 0. 解绑 BattleEnded 订阅（防止旧 context 继续收到结果写入）
+            if (SubscribedBattleController != null && BattleEndedHandler != null)
+            {
+                SubscribedBattleController.BattleEnded -= BattleEndedHandler;
+                SubscribedBattleController = null;
+                BattleEndedHandler = null;
+            }
+
             // 1. 清除每个 Unit 上的 Buff（Buff 持有对 Unit 和 BuffConfig 的引用）
             foreach (var unit in Units.Values)
             {

@@ -24,7 +24,7 @@
       "parameters": {
         "unitAlias": "p1_0",
         "buffName": "Frozen",
-        "duration": 3,
+        "duration": 1,
         "configPath": "Assets/Tactics/Battle/Buffs/Frozen.asset"
       }
     },
@@ -34,7 +34,7 @@
       "parameters": {
         "unitAlias": "p1_0",
         "buffName": "Frozen",
-        "duration": 3,
+        "duration": 1,
         "configPath": "Assets/Tactics/Battle/Buffs/Frozen.asset"
       }
     }
@@ -51,7 +51,7 @@
       "adapter": "Battle",
       "kind": "unitBuffDurationEquals",
       "target": "p1_0",
-      "expected": 3,
+      "expected": 2,
       "parameters": {
         "buffName": "Frozen"
       }
@@ -67,7 +67,7 @@
       "adapter": "UI",
       "kind": "elementText",
       "target": "buff-icon-Frozen >> turn-count",
-      "expected": "3",
+      "expected": "2",
       "parameters": {}
     }
   ],

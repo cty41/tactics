@@ -51,49 +51,27 @@ namespace Tactics.Controllers.TurnResolvers
 
         /// <summary>
         /// Resolves the next unit from the queue and packages it into a TurnContext.
+        /// All units enter the turn cycle regardless of CanAct/IsDowned status.
+        /// The action layer (AIPlayer/HumanPlayer) is responsible for skipping
+        /// frozen/downed units' actions while still ticking their buff durations
+        /// via normal OnTurnEnd lifecycle.
         /// </summary>
         /// <param name="gridController">The grid controller.</param>
-        /// <param name="skipCount">Number of valid units skipped due to inability to act.</param>
         /// <returns>A TurnContext containing the next unit's turn, or empty if no units available.</returns>
-        private TurnContext ResolveNextUnit(GridController gridController, int skipCount = 0)
+        private TurnContext ResolveNextUnit(GridController gridController)
         {
             if (_unitQueue.Count == 0)
             {
-                // No units available - this shouldn't happen in normal play
                 TLog.Warning("UnitSpeedTurnResolver: No units available for turn resolution.");
-                return CreateEmptyTurnContext(gridController);
-            }
-
-            if (skipCount >= _unitQueue.Count)
-            {
-                // All remaining units are unable to act (e.g., all frozen)
-                TLog.Warning("UnitSpeedTurnResolver: All units are unable to act.");
                 return CreateEmptyTurnContext(gridController);
             }
 
             var nextUnit = _unitQueue.Dequeue();
 
-            // Double-check unit is still alive and valid
+            // Only skip dead/invalid units — frozen/downed units still enter their turn
             if (nextUnit.Health <= 0 || !gridController.UnitManager.GetUnits().Contains(nextUnit))
             {
-                // Skip this unit and try the next one (dead unit doesn't count toward skip limit)
-                return ResolveNextUnit(gridController, skipCount);
-            }
-
-            // Check if unit can act (e.g., frozen)
-            if (!nextUnit.CanAct)
-            {
-                // Keep unit in queue for next cycle, but skip it this turn
-                _unitQueue.Enqueue(nextUnit);
-                return ResolveNextUnit(gridController, skipCount + 1);
-            }
-
-            // Check if unit is downed (昏迷)
-            if (nextUnit.IsDowned)
-            {
-                // Keep downed unit in queue, but skip it this turn
-                _unitQueue.Enqueue(nextUnit);
-                return ResolveNextUnit(gridController, skipCount + 1);
+                return ResolveNextUnit(gridController);
             }
 
             // Put the unit back at the end of the queue for the next cycle
@@ -103,8 +81,7 @@ namespace Tactics.Controllers.TurnResolvers
             if (player == null)
             {
                 TLog.Error($"[UnitSpeedTurnResolver] Unit {nextUnit} has PlayerNumber={nextUnit.PlayerNumber} but no matching player found. Skipping.");
-                // This is a configuration error, not a temporary state
-                return ResolveNextUnit(gridController, skipCount);
+                return ResolveNextUnit(gridController);
             }
             return new TurnContext(player, new IUnit[] { nextUnit });
         }

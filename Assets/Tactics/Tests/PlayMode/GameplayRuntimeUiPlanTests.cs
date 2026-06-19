@@ -103,6 +103,15 @@ namespace Tactics.Tests.PlayMode
             unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
 
             // Initialize and start battle (registers units with UnitManager)
+            // 设置 resolver 与 Test1.unity 一致（UnitSpeedTurnResolver）
+            var resolverType = Type.GetType("Tactics.Controllers.TurnResolvers.UnitSpeedTurnResolver, com.tactics");
+            if (resolverType != null)
+            {
+                var resolver = Activator.CreateInstance(resolverType);
+                var resolverProp = controllerType.GetProperty("TurnResolver", BindingFlags.Instance | BindingFlags.Public);
+                resolverProp?.SetValue(bc, resolver);
+            }
+
             var initMethod = controllerType.GetMethod("InitializeAndStart", BindingFlags.Instance | BindingFlags.Public);
             initMethod?.Invoke(bc, new object[] { false });
 

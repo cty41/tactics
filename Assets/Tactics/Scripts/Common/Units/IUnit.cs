@@ -237,6 +237,12 @@ namespace Tactics.Common.Units
         void OnTurnStart(IGridController gridController);
 
         /// <summary>
+        /// Prepares unit resources for its new turn without triggering buff start logic.
+        /// </summary>
+        void PrepareForTurn() {}
+
+
+        /// <summary>
         /// Called at the end of the unit's turn.
         /// </summary>
         /// <param name="gridController">The grid controller for managing unit interactions.</param>

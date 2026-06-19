@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Tactics.Common.AI.MonsterAI;
@@ -13,6 +14,9 @@ using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
 using Tactics.AssetPipeline;
+using Tactics.Common.Controllers;
+using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Controllers.TurnResolvers;
 using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay
@@ -20,6 +24,7 @@ namespace Tactics.Common.Testing.Gameplay
     public sealed class BattleGameplayStepAdapter : IGameplayStepAdapter
     {
         private const string BattleAdapterName = "Battle";
+        private static readonly Dictionary<int, Type> _appliedResolverTypes = new();
 
         public string AdapterName => BattleAdapterName;
 
@@ -185,20 +190,57 @@ namespace Tactics.Common.Testing.Gameplay
             if (controller == null)
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController.Instance is not available.");
 
-            context.BattleController = controller;
+            // Resolve requested turn resolver type (default: UnitSpeedTurnResolver to match Test1.unity)
+            var resolverParam = action.Parameters?["turnResolver"]?.ToString()?.ToLowerInvariant();
+            var requestedResolver = resolverParam == "subsequent"
+                ? (ITurnResolver)new SubsequentTurnResolver()
+                : new UnitSpeedTurnResolver();
+            var requestedType = requestedResolver.GetType();
 
-            // 订阅 BattleEnded 事件，自动捕获战斗结果
-            controller.BattleEnded += result =>
+            // Four-state initialization check:
+            // 1. Uninitialized: GridState == null
+            // 2. Initialized-not-started: GridState != null, TurnContext.CurrentPlayer == null
+            // 3. Ready: TurnContext.CurrentPlayer != null
+            // 4. Half-initialized anomaly: GridState != null but StartGame partially failed
+            if (controller.GridState == null)
             {
-                context.LastBattleResult = result;
-            };
+                // State 1: Uninitialized — set resolver and do full InitializeAndStart
+                controller.TurnResolver = requestedResolver;
+                if (!EnsureBattleInitialized(controller))
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController initialization failed during bind.");
+                if (!IsBattleControllerReady(controller))
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController is in a half-initialized anomaly state after InitializeAndStart (GridState set but CurrentPlayer missing).");
+            }
+            else if (controller.TurnContext.CurrentPlayer == null)
+            {
+                // State 2: Initialized but not started (InitializeGame ran, StartGame did not).
+                // Set resolver and call StartGame() to complete startup.
+                controller.TurnResolver = requestedResolver;
+                controller.StartGame();
+                // StartGame() does not throw on failure — it early-returns. We must verify
+                // the controller actually entered a ready state before treating bind as success.
+                if (!IsBattleControllerReady(controller))
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController is in a half-initialized anomaly state after StartGame (GridState set but CurrentPlayer missing).");
+                _appliedResolverTypes[controller.GetInstanceID()] = requestedType;
+                if (!controller.IsBattleActive)
+                    _ = controller.StartBattleAsync();
+            }
+            else
+            {
+                // State 3: Already ready — resolver must match
+                var currentType = controller.TurnResolver?.GetType();
+                if (currentType != requestedType)
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind,
+                        $"Cannot change turn resolver on an already-started BattleController. Current={currentType?.Name}, Requested={requestedType?.Name}. Set the resolver in test SetUp before InitializeAndStart().");
+                if (!IsBattleControllerReady(controller))
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController is in a half-initialized anomaly state (CurrentPlayer was non-null at branch entry but ready check failed).");
+                _appliedResolverTypes[controller.GetInstanceID()] = requestedType;
+                if (!controller.IsBattleActive)
+                    _ = controller.StartBattleAsync();
+            }
 
-            // 确保战斗已初始化（注册单位到 controller）
-            if (!EnsureBattleInitialized(controller))
-                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController initialization failed during bind.");
-
-            // 注册单位别名到 context.Units（按 PlayerNumber 分组）
             var units = controller.GetUnits().ToList();
+            var unitAliases = new Dictionary<string, IUnit>(StringComparer.OrdinalIgnoreCase);
             var playerCounters = new Dictionary<int, int>();
             foreach (var unit in units)
             {
@@ -207,18 +249,47 @@ namespace Tactics.Common.Testing.Gameplay
                     playerCounters[playerNum] = 0;
                 int index = playerCounters[playerNum]++;
                 string alias = $"p{playerNum}_{index}";
-                context.Units[alias] = unit;
+                unitAliases[alias] = unit;
             }
 
-            // 注册格子别名到 context.Cells
+            var cellAliases = new Dictionary<string, ICell>(StringComparer.OrdinalIgnoreCase);
             if (controller.CellManager != null)
             {
                 foreach (var cell in controller.CellManager.GetCells())
                 {
                     var coords = cell.GridCoordinates;
                     string alias = $"cell_{coords.x}_{coords.y}";
-                    context.Cells[alias] = cell;
+                    cellAliases[alias] = cell;
                 }
+            }
+
+            // Commit only after all validation succeeded. If bind fails earlier, keep the
+            // existing context intact: old subscription, old aliases, and old BattleController.
+            bool isRebind = context.SubscribedBattleController != null;
+            CleanupBattleEndedSubscription(context);
+            if (isRebind)
+            {
+                RemoveBattleAliases(context.Units, @"^p\d+_\d+$");
+                RemoveBattleAliases(context.Cells, @"^cell_");
+            }
+
+            context.BattleController = controller;
+            context.LastBattleResult = null;
+
+            // Subscribe BattleEnded with a named handler so it can be unsubscribed
+            Action<GameResult> onBattleEnded = result => { context.LastBattleResult = result; };
+            controller.BattleEnded += onBattleEnded;
+            context.SubscribedBattleController = controller;
+            context.BattleEndedHandler = onBattleEnded;
+
+            foreach (var pair in unitAliases)
+            {
+                context.Units[pair.Key] = pair.Value;
+            }
+
+            foreach (var pair in cellAliases)
+            {
+                context.Cells[pair.Key] = pair.Value;
             }
 
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Bound {units.Count} units ({string.Join(", ", context.Units.Keys)}), {context.Cells.Count} cells.");
@@ -230,9 +301,16 @@ namespace Tactics.Common.Testing.Gameplay
             if (!EnsureBattleInitialized(controller))
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController initialization failed. Ensure the test scene provides CellManager and players.");
             // 禁用 AI 自动 Play，防止 AI 自动推进回合
+            var previousDisableAiAutoPlay = controller.DisableAiAutoPlay;
             controller.DisableAiAutoPlay = true;
-            controller.EndTurn();
-            controller.DisableAiAutoPlay = false;
+            try
+            {
+                controller.EndTurn();
+            }
+            finally
+            {
+                controller.DisableAiAutoPlay = previousDisableAiAutoPlay;
+            }
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Advanced turn. CurrentRound={controller.CurrentRound}");
         }
 
@@ -720,23 +798,93 @@ namespace Tactics.Common.Testing.Gameplay
 
         private static bool EnsureBattleInitialized(BattleController controller)
         {
-            if (controller.GridState != null)
+            // State 1: Uninitialized — full init
+            if (controller.GridState == null)
             {
-                if (!controller.IsBattleActive)
-                    _ = controller.StartBattleAsync();
-                return true;
+                try
+                {
+                    InitializeBattleController(controller);
+                    return IsBattleControllerReady(controller);
+                }
+                catch
+                {
+                    return false;
+                }
             }
 
-            try
+            // State 2: Initialized but not started — complete startup
+            if (controller.TurnContext.CurrentPlayer == null)
             {
-                controller.InitializeAndStart();
-                if (!controller.IsBattleActive)
-                    _ = controller.StartBattleAsync();
-                return controller.GridState != null;
+                try
+                {
+                    controller.StartGame();
+                    _appliedResolverTypes[controller.GetInstanceID()] = controller.TurnResolver?.GetType();
+                    if (!IsBattleControllerReady(controller))
+                        return false;
+                    if (!controller.IsBattleActive)
+                        _ = controller.StartBattleAsync();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
             }
-            catch
-            {
+
+            // State 3: Already ready — verify ready state, do not trust GridState alone
+            if (!IsBattleControllerReady(controller))
                 return false;
+            if (!controller.IsBattleActive)
+                _ = controller.StartBattleAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Unified ready-state check. A BattleController is "ready" only when both
+        /// GridState is set AND TurnContext.CurrentPlayer is non-null. GridState != null
+        /// alone is NOT sufficient — StartGame() may early-return without throwing,
+        /// leaving a half-initialized anomaly that must be treated as failure.
+        /// </summary>
+        private static bool IsBattleControllerReady(BattleController controller)
+        {
+            return controller.GridState != null
+                && controller.TurnContext.CurrentPlayer != null;
+        }
+
+        private static void InitializeBattleController(BattleController controller)
+        {
+            controller.InitializeAndStart();
+            if (!controller.IsBattleActive)
+                _ = controller.StartBattleAsync();
+            _appliedResolverTypes[controller.GetInstanceID()] = controller.TurnResolver?.GetType();
+        }
+
+        /// <summary>
+        /// Unsubscribe the previous BattleEnded handler from the previously bound controller (if any).
+        /// Called at the start of BindBattleController to prevent subscription leaks.
+        /// </summary>
+        private static void CleanupBattleEndedSubscription(GameplayRuntimeContext context)
+        {
+            if (context.SubscribedBattleController != null && context.BattleEndedHandler != null)
+            {
+                context.SubscribedBattleController.BattleEnded -= context.BattleEndedHandler;
+                context.SubscribedBattleController = null;
+                context.BattleEndedHandler = null;
+            }
+        }
+
+        /// <summary>
+        /// Removes only aliases whose key matches <paramref name="pattern"/> from the given dictionary.
+        /// Used during rebind to selectively clear battle-registered aliases without touching
+        /// aliases registered by other adapters (e.g. Skill's createUnit).
+        /// </summary>
+        private static void RemoveBattleAliases<T>(Dictionary<string, T> dict, string pattern)
+        {
+            var regex = new Regex(pattern, RegexOptions.Compiled);
+            var keysToRemove = dict.Keys.Where(k => regex.IsMatch(k)).ToList();
+            foreach (var key in keysToRemove)
+            {
+                dict.Remove(key);
             }
         }
 
