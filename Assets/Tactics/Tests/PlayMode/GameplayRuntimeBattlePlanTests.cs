@@ -379,6 +379,60 @@ namespace Tactics.Tests.PlayMode
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "unitAliveEquals" && assertion.Passed), Is.True, details);
         }
 
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleAIBasicAttackExecutesDamagePlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-ai-basic-attack-executes-damage.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(a => a.Kind == "aiWasNoOpEquals" && a.Passed), Is.True, details);
+            Assert.That(result.Assertions.Any(a => a.Kind == "targetHealthChangedSinceStep" && a.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleAIEngageIsNotNoOpPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-ai-engage-is-not-noop.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(a => a.Kind == "unitPositionChangedSinceStep" && a.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleAIFreezeExpiryResumePlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-ai-freeze-expiry-resume.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(a => a.Kind == "unitCanAct" && a.Passed), Is.True, details);
+            Assert.That(result.Assertions.Any(a => a.Kind == "aiWasNoOpEquals" && a.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleAIAbilityNameMappingPlanFromFile()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteBattlePlan(GetPlanPath("battle-ai-ability-name-mapping.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+            Assert.That(result.Assertions.Any(a => a.Kind == "aiWasNoOpEquals" && a.Passed), Is.True, details);
+        }
+
         private static string GetPlanPath(string fileName)
         {
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", fileName));

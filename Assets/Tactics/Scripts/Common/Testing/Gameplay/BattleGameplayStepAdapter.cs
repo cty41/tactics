@@ -96,7 +96,12 @@ namespace Tactics.Common.Testing.Gameplay
                 or "unitCanAct"
                 or "aiSelectedIntentTypeEquals"
                 or "aiCandidateCountEquals"
-                or "aiRuleFilteredCountEquals";
+                or "aiRuleFilteredCountEquals"
+                or "aiUsedAbilityEquals"
+                or "aiWasNoOpEquals"
+                or "unitPositionChangedSinceStep"
+                or "targetHealthChangedSinceStep"
+                or "decisionLogContains";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -122,6 +127,11 @@ namespace Tactics.Common.Testing.Gameplay
                     "aiSelectedIntentTypeEquals" => AssertAiSelectedIntentTypeEquals(context, assertion),
                     "aiCandidateCountEquals" => AssertAiCandidateCountEquals(context, assertion),
                     "aiRuleFilteredCountEquals" => AssertAiRuleFilteredCountEquals(context, assertion),
+                    "aiUsedAbilityEquals" => AssertAiUsedAbilityEquals(context, assertion),
+                    "aiWasNoOpEquals" => AssertAiWasNoOpEquals(context, assertion),
+                    "unitPositionChangedSinceStep" => AssertUnitPositionChangedSinceStep(context, assertion),
+                    "targetHealthChangedSinceStep" => AssertTargetHealthChangedSinceStep(context, assertion),
+                    "decisionLogContains" => AssertDecisionLogContains(context, assertion),
                     _ => GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unsupported Battle assertion '{assertion.Kind}'.")
                 };
 
@@ -173,6 +183,23 @@ namespace Tactics.Common.Testing.Gameplay
                     data["aiSelectedIntent"] = finalSelection.Message;
                 }
                 data["aiRuleFilteredCount"] = entries.Count(e => e.Type == AiDecisionLog.LogType.RuleFiltered);
+            }
+
+            // AI execution snapshot fields
+            var snap = context.LastAiSnapshot;
+            if (snap != null)
+            {
+                data["aiSelectedIntentType"] = snap.SelectedIntentType ?? "";
+                data["aiSelectedActionType"] = snap.SelectedActionType ?? "";
+                data["aiSelectedAbilityName"] = snap.SelectedAbilityName ?? "";
+                data["aiSelectedScore"] = snap.SelectedScore;
+                data["aiActorPosition"] = $"{snap.ActorPositionAfter.x},{snap.ActorPositionAfter.y}";
+                data["aiTargetPosition"] = snap.TargetAlias != null ? $"{snap.TargetPositionAfter.x},{snap.TargetPositionAfter.y}" : "";
+                data["aiDidMove"] = snap.DidMove;
+                data["aiDidDamageTarget"] = snap.DidDamageTarget;
+                data["aiDidHealTarget"] = snap.DidHealTarget;
+                data["aiWasNoOp"] = snap.WasNoOp;
+                data["aiFailureReason"] = snap.FailureReason ?? "";
             }
 
             return new ProbeSnapshot
@@ -491,6 +518,26 @@ namespace Tactics.Common.Testing.Gameplay
             if (!context.AiBrainAssets.TryGetValue(brainAlias, out var brainAsset))
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Brain asset alias '{brainAlias}' not found. Use createAiBrain first.");
 
+            // Record pre-execution snapshot
+            var snapshot = new AiExecutionSnapshot
+            {
+                ActorAlias = unitAlias,
+                ActorUnitId = unit.UnitID,
+                ActorPositionBefore = unit.CurrentCell?.GridCoordinates ?? default,
+                ActorHealthBefore = unit.Health,
+                ActorManaBefore = unit.Mana,
+            };
+
+            // Resolve target alias from context.Units (first enemy unit as default target)
+            string targetAlias = action.Parameters["targetAlias"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(targetAlias) && context.Units.TryGetValue(targetAlias, out var targetUnit))
+            {
+                snapshot.TargetAlias = targetAlias;
+                snapshot.TargetUnitId = targetUnit.UnitID;
+                snapshot.TargetPositionBefore = targetUnit.CurrentCell?.GridCoordinates ?? default;
+                snapshot.TargetHealthBefore = targetUnit.Health;
+            }
+
             try
             {
                 // 绕过活跃单位检查，允许 AI 直接执行命令
@@ -498,11 +545,85 @@ namespace Tactics.Common.Testing.Gameplay
                 var decisionLog = await AI.MonsterAI.AiBrainRunner.ExecuteWithLog(unit, controller, brainAsset);
                 controller.BypassActiveUnitCheck = false;
                 context.LastAiDecisionLog = decisionLog;
-                return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed AI for {unitAlias} using brain '{brainAlias}'.");
+
+                // Record post-execution snapshot
+                snapshot.ActorPositionAfter = unit.CurrentCell?.GridCoordinates ?? default;
+                snapshot.ActorHealthAfter = unit.Health;
+                snapshot.ActorManaAfter = unit.Mana;
+
+                if (snapshot.TargetAlias != null && context.Units.TryGetValue(snapshot.TargetAlias, out var targetAfter))
+                {
+                    snapshot.TargetPositionAfter = targetAfter.CurrentCell?.GridCoordinates ?? default;
+                    snapshot.TargetHealthAfter = targetAfter.Health;
+                }
+
+                // Extract selected intent from decision log
+                if (decisionLog != null)
+                {
+                    var entries = decisionLog.GetEntries();
+                    var finalSelection = entries.LastOrDefault(e => e.Type == AiDecisionLog.LogType.FinalSelection);
+                    if (finalSelection != null)
+                    {
+                        // Parse "Selected: Engage (Score: 18.51)" format
+                        var msg = finalSelection.Message;
+                        var colonIdx = msg.IndexOf(':');
+                        var parenIdx = msg.IndexOf('(');
+                        if (colonIdx >= 0 && parenIdx > colonIdx)
+                            snapshot.SelectedIntentType = msg.Substring(colonIdx + 1, parenIdx - colonIdx - 1).Trim();
+                        if (float.TryParse(System.Text.RegularExpressions.Regex.Match(msg, @"Score:\s*([\d.]+)").Groups[1].Value, out var score))
+                            snapshot.SelectedScore = score;
+                    }
+
+                    // Extract ability name and action type from ExecutionResult log
+                    var execResult = entries.LastOrDefault(e => e.Type == AiDecisionLog.LogType.ExecutionResult);
+                    if (execResult != null)
+                    {
+                        // Parse "Executed: Ability='Melee Attack', ActionType=Attack, Target=Unit_0" format
+                        var abilityMatch = System.Text.RegularExpressions.Regex.Match(execResult.Message, @"Ability='([^']*)'");
+                        if (abilityMatch.Success)
+                            snapshot.SelectedAbilityName = abilityMatch.Groups[1].Value;
+
+                        var actionMatch = System.Text.RegularExpressions.Regex.Match(execResult.Message, @"ActionType=(\w+)");
+                        if (actionMatch.Success)
+                            snapshot.SelectedActionType = actionMatch.Groups[1].Value;
+                    }
+                }
+
+                // Compute effect flags
+                snapshot.DidMove = snapshot.ActorPositionBefore.x != snapshot.ActorPositionAfter.x
+                                || snapshot.ActorPositionBefore.y != snapshot.ActorPositionAfter.y;
+                snapshot.DidDamageTarget = snapshot.TargetAlias != null
+                                        && snapshot.TargetHealthAfter < snapshot.TargetHealthBefore;
+                snapshot.DidHealTarget = snapshot.TargetAlias != null
+                                      && snapshot.TargetHealthAfter > snapshot.TargetHealthBefore;
+
+                // Determine if this was a no-op
+                if (snapshot.SelectedIntentType == null)
+                {
+                    snapshot.WasNoOp = true;
+                    snapshot.FailureReason = "Failed to parse selected intent type from decision log.";
+                }
+                else
+                {
+                    bool intentIsHoldPosition = string.Equals(snapshot.SelectedIntentType, "HoldPosition", System.StringComparison.OrdinalIgnoreCase);
+                    snapshot.WasNoOp = !intentIsHoldPosition && !snapshot.DidMove && !snapshot.DidDamageTarget && !snapshot.DidHealTarget;
+
+                    if (snapshot.WasNoOp)
+                        snapshot.FailureReason = "AI selected a non-HoldPosition intent but produced no observable effect (no move, no damage, no heal).";
+                }
+
+                // Store snapshots
+                context.PreviousAiSnapshot = context.LastAiSnapshot;
+                context.LastAiSnapshot = snapshot;
+
+                return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed AI for {unitAlias} using brain '{brainAlias}'. Intent={snapshot.SelectedIntentType}, DidMove={snapshot.DidMove}, DidDamage={snapshot.DidDamageTarget}, WasNoOp={snapshot.WasNoOp}");
             }
             catch (Exception ex)
             {
                 controller.BypassActiveUnitCheck = false;
+                snapshot.FailureReason = $"AI execution exception: {ex.Message}";
+                context.PreviousAiSnapshot = context.LastAiSnapshot;
+                context.LastAiSnapshot = snapshot;
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"AI execution failed: {ex.Message}");
             }
         }
@@ -795,6 +916,71 @@ namespace Tactics.Common.Testing.Gameplay
             return actual == expected
                 ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"AI rule filtered count={actual}")
                 : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected AI rule filtered count={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertAiUsedAbilityEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var snap = context.LastAiSnapshot;
+            if (snap == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No AI execution snapshot recorded. Execute executeAI first.");
+            string expected = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(expected))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "aiUsedAbilityEquals requires expected ability name.");
+            string actual = snap.SelectedAbilityName ?? "";
+            return actual.Contains(expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"AI used ability '{actual}' contains '{expected}'.")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected AI to use ability '{expected}', but used '{actual}'.");
+        }
+
+        private static GameplayAssertionResult AssertAiWasNoOpEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var snap = context.LastAiSnapshot;
+            if (snap == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No AI execution snapshot recorded. Execute executeAI first.");
+            bool expected = assertion.Expected?.ToObject<bool>() ?? false;
+            bool actual = snap.WasNoOp;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"AI WasNoOp={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected AI WasNoOp={expected}, actual={actual}. FailureReason={snap.FailureReason}");
+        }
+
+        private static GameplayAssertionResult AssertUnitPositionChangedSinceStep(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var snap = context.LastAiSnapshot;
+            if (snap == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No AI execution snapshot recorded. Execute executeAI first.");
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = snap.DidMove;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Unit position changed={actual} (from {snap.ActorPositionBefore.x},{snap.ActorPositionBefore.y} to {snap.ActorPositionAfter.x},{snap.ActorPositionAfter.y})")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected position changed={expected}, actual={actual}. Position: ({snap.ActorPositionBefore.x},{snap.ActorPositionBefore.y}) -> ({snap.ActorPositionAfter.x},{snap.ActorPositionAfter.y})");
+        }
+
+        private static GameplayAssertionResult AssertTargetHealthChangedSinceStep(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var snap = context.LastAiSnapshot;
+            if (snap == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No AI execution snapshot recorded. Execute executeAI first.");
+            if (snap.TargetAlias == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No target specified in executeAI action. Add targetAlias parameter.");
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = snap.DidDamageTarget || snap.DidHealTarget;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Target health changed={actual} (before={snap.TargetHealthBefore:F1}, after={snap.TargetHealthAfter:F1})")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected target health changed={expected}, actual={actual}. Health: {snap.TargetHealthBefore:F1} -> {snap.TargetHealthAfter:F1}");
+        }
+
+        private static GameplayAssertionResult AssertDecisionLogContains(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (context.LastAiDecisionLog == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No AI decision log recorded. Execute executeAI first.");
+            string expected = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(expected))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "decisionLogContains requires expected text.");
+            var formatted = context.LastAiDecisionLog.GetFormattedLog();
+            return formatted.Contains(expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Decision log contains '{expected}'.")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Decision log does not contain '{expected}'.");
         }
 
         private static bool EnsureBattleInitialized(BattleController controller)

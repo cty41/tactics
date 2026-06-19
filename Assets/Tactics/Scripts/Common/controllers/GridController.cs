@@ -278,6 +278,11 @@ namespace Tactics.Common.Controllers
             UnitManager.UnMark(TurnContext.PlayableUnits());
             TurnContext = TurnResolver.ResolveTurn(this);
 
+            var newUnit = TurnContext.PlayableUnits().FirstOrDefault();
+            var newBuffCount = (newUnit as Tactics.Common.Units.Unit)?.BuffComponent?.GetActiveBuffs()?.Count ?? 0;
+            // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+            TLog.Info($"[TurnTransition] P{previousPlayer?.PlayerNumber} → P{TurnContext.CurrentPlayer?.PlayerNumber}, CanAct={newUnit?.CanAct}, Buffs={newBuffCount}");
+
             _transitionCount++;
             int totalUnits = UnitManager.GetUnits().Count();
             if (_transitionCount >= totalUnits)

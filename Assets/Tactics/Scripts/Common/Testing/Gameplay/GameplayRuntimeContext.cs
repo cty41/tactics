@@ -31,6 +31,10 @@ namespace Tactics.Common.Testing.Gameplay
         public Dictionary<string, AiBrainAsset> AiBrainAssets { get; } = new(StringComparer.OrdinalIgnoreCase);
         public AiDecisionLog LastAiDecisionLog { get; set; }
 
+        // AI 执行快照（用于验证 AI 是否真正产出了效果）
+        public AiExecutionSnapshot LastAiSnapshot { get; set; }
+        public AiExecutionSnapshot PreviousAiSnapshot { get; set; }
+
         // Map/Roguelike 相关
         public global::Tactics.RoguelikeMap.RoguelikeMap RoguelikeMap { get; set; }
         public string CurrentNodeId { get; set; }
@@ -102,6 +106,8 @@ namespace Tactics.Common.Testing.Gameplay
             BattleController = null;
             LastBattleResult = null;
             LastAiDecisionLog = null;
+            LastAiSnapshot = null;
+            PreviousAiSnapshot = null;
             RuntimeScope = null;
 
             // 6. 清空 Map 相关

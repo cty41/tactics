@@ -129,6 +129,20 @@ namespace Tactics.Common.AI.MonsterAI
             }
         }
 
+        /// <summary>
+        /// 添加执行结果日志。由 IntentExecutor 在实际执行动作后写入。
+        /// </summary>
+        public void ExecutionResult(string abilityName, string actionType, int? targetUnitId = null)
+        {
+            string targetStr = targetUnitId.HasValue ? $"Target=Unit_{targetUnitId}" : "Target=None";
+            string message = $"Executed: Ability='{abilityName}', ActionType={actionType}, {targetStr}";
+            _entries.Add(new LogEntry(LogType.ExecutionResult, message));
+            if (_verbose)
+            {
+                TLog.Info($"[AI] {message}");
+            }
+        }
+
         private static string FormatUnit(IUnit unit)
         {
             return unit != null ? $"Unit_{unit.UnitID}" : "None";
@@ -188,7 +202,8 @@ namespace Tactics.Common.AI.MonsterAI
             RuleFiltered,
             Score,
             FinalSelection,
-            CandidateList
+            CandidateList,
+            ExecutionResult
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.AI.MonsterAI
 {
@@ -88,6 +89,16 @@ namespace Tactics.Common.AI.MonsterAI
                         .ThenBy(cell => CalcDist(context.Self.CurrentCell, cell))
                         .Take(maxPerTarget)
                         .ToList();
+
+                // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+                TLog.Info($"[IntentGen] Engage target Unit_{target.UnitID}: " +
+                    $"reachableCells={context.ReachableCells.Count}, " +
+                    $"attackCells={attackCells.Count}, " +
+                    $"selectedCells={selectedCells.Count}, " +
+                    $"distToTarget={CalcDist(context.Self.CurrentCell, target.CurrentCell):F2}, " +
+                    $"attackRange={context.Self.AttackRange}, " +
+                    $"selfPos=({context.Self.CurrentCell?.GridCoordinates.x},{context.Self.CurrentCell?.GridCoordinates.y}), " +
+                    $"targetPos=({target.CurrentCell?.GridCoordinates.x},{target.CurrentCell?.GridCoordinates.y})");
 
                 foreach (var cell in selectedCells)
                 {

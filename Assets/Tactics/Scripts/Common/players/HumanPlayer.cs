@@ -4,6 +4,7 @@ using Tactics.Common.Battle;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 
 namespace Tactics.Common.Players
@@ -41,10 +42,15 @@ namespace Tactics.Common.Players
             var playableUnits = gridController.TurnContext.PlayableUnits();
             if (playableUnits != null && playableUnits.Any(u => u.CanAct && !u.IsDowned))
             {
+                var unit = playableUnits.First();
+                // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+                TLog.Info($"[HumanPlayer] AwaitInput: CanAct={unit.CanAct}, IsDowned={unit.IsDowned}, Player={unit.PlayerNumber}");
                 gridController.GridState = new GridStateAwaitInput();
                 return;
             }
 
+            // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+            TLog.Info($"[HumanPlayer] AutoEndTurn: no actionable unit");
             gridController.GridState = new GridStateBlockInput();
             ScheduleAutoEndTurn(gridController);
         }

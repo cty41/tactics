@@ -141,8 +141,12 @@ namespace Tactics.Common.AI.MonsterAI
             switch (rule.RuleType)
             {
                 case RuleType.TargetInRange:
-                    return candidate.Target?.CurrentCell != null &&
+                    bool inRange = candidate.Target?.CurrentCell != null &&
                            CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+                    if (!inRange && candidate.Target?.CurrentCell != null)
+                        // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+                        TLog.Info($"[RuleFilter] TargetInRange FAILED: dist={CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell):F2}, attackRange={context.Self.AttackRange}");
+                    return inRange;
                 case RuleType.TargetInMoveAttackRange:
                     return IsTargetInMoveAttackRange(candidate, context);
                 case RuleType.HealthAboveThreshold:
@@ -230,14 +234,25 @@ namespace Tactics.Common.AI.MonsterAI
                 return false;
 
             if (candidate.Destination == null)
-                return CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+            {
+                bool result = CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+                // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+                TLog.Info($"[RuleFilter] TargetInMoveAttackRange: no destination, distToTarget={CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell):F2}, attackRange={context.Self.AttackRange}, result={result}");
+                return result;
+            }
 
             if (CalcDist(candidate.Destination, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f)
                 return true;
 
-            return candidate.IntentType == IntentType.Engage &&
+            bool fallbackResult = candidate.IntentType == IntentType.Engage &&
                    candidate.Action == ActionType.Move &&
                    !HasReachableAttackCell(context, candidate.Target);
+            // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+            TLog.Info($"[RuleFilter] TargetInMoveAttackRange: destDist={CalcDist(candidate.Destination, candidate.Target.CurrentCell):F2}, " +
+                $"isEngage={candidate.IntentType == IntentType.Engage}, " +
+                $"hasReachableAttackCell={HasReachableAttackCell(context, candidate.Target)}, " +
+                $"result={fallbackResult}");
+            return fallbackResult;
         }
 
         private static bool HasReachableAttackCell(AiContext context, IUnit target)

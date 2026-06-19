@@ -91,6 +91,9 @@ namespace Tactics.Common.Players
                     // but skip action execution entirely
                     if (!playableUnit.CanAct || playableUnit.IsDowned)
                     {
+                        int skipBuffs = (playableUnit as Tactics.Common.Units.Unit)?.BuffComponent?.GetActiveBuffs()?.Count ?? 0;
+                        // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+                        TLog.Info($"[AIPlayer] SKIP frozen/downed: CanAct={playableUnit.CanAct}, IsDowned={playableUnit.IsDowned}, Buffs={skipBuffs}, Player={playableUnit.PlayerNumber}");
                         await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
                         await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
                         playableUnit.InvokeUnitDeselected();
@@ -109,7 +112,8 @@ namespace Tactics.Common.Players
                     if (playableUnit is Unit concreteUnit && concreteUnit.AiBrainAsset != null)
                     {
                         // 使用新 AI 系统
-                        TLog.Info($"[AIPlayer] Unit {playableUnit} using new AI brain.");
+                        // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
+                        TLog.Info($"[AIPlayer] EXECUTE AI: CanAct={playableUnit.CanAct}, Brain={concreteUnit.AiBrainAsset.name}, MovePts={concreteUnit.MovementPoints:F1}, Player={playableUnit.PlayerNumber}");
                         await AiBrainRunner.Execute(playableUnit, gridController, concreteUnit.AiBrainAsset);
                     }
                     else if (playableUnit.BehaviourTree != null)

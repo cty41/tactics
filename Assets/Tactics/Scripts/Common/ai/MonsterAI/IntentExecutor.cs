@@ -76,10 +76,12 @@ namespace Tactics.Common.AI.MonsterAI
             if (moveAbility == null)
             {
                 TLog.Warning("[IntentExecutor] Move ability not found for Engage.");
+                context.DecisionLog.ExecutionResult(null, "Move");
                 return;
             }
 
             await ExecuteMoveAsync(selected.Destination, context, moveAbility);
+            context.DecisionLog.ExecutionResult(moveAbility.Name, "Move");
         }
 
         /// <summary>
@@ -97,10 +99,12 @@ namespace Tactics.Common.AI.MonsterAI
             if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
             {
                 await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
                 return;
             }
 
             TLog.Warning("[IntentExecutor] No attack ability found. Ensure unit has AbilityConfig with DamageEffect.");
+            context.DecisionLog.ExecutionResult(null, "Attack", selected.Target.UnitID);
         }
 
         /// <summary>
@@ -115,6 +119,7 @@ namespace Tactics.Common.AI.MonsterAI
             if (selected.Ability.Ability is GenericAbilityImpl generic)
             {
                 await generic.ExecuteEffectsAsync(selected.Targets, context.GridController);
+                context.DecisionLog.ExecutionResult(selected.Ability.Name, "UseAbility", selected.Target?.UnitID);
                 return;
             }
 
@@ -134,10 +139,12 @@ namespace Tactics.Common.AI.MonsterAI
             if (moveAbility == null)
             {
                 TLog.Warning("[IntentExecutor] Move ability not found for Retreat.");
+                context.DecisionLog.ExecutionResult(null, "Move");
                 return;
             }
 
             await ExecuteMoveAsync(selected.Destination, context, moveAbility);
+            context.DecisionLog.ExecutionResult(moveAbility.Name, "Move");
         }
 
         /// <summary>
@@ -156,6 +163,7 @@ namespace Tactics.Common.AI.MonsterAI
                 if (moveAbility == null)
                 {
                     TLog.Warning("[IntentExecutor] Move ability not found for FinishOff.");
+                    context.DecisionLog.ExecutionResult(null, "Move");
                     return;
                 }
 
@@ -163,6 +171,7 @@ namespace Tactics.Common.AI.MonsterAI
                 if (!moved)
                 {
                     TLog.Warning("[IntentExecutor] FinishOff movement failed; skipping follow-up attack.");
+                    context.DecisionLog.ExecutionResult(null, "Move");
                     return;
                 }
             }
@@ -172,10 +181,12 @@ namespace Tactics.Common.AI.MonsterAI
             if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
             {
                 await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
                 return;
             }
 
             TLog.Warning("[IntentExecutor] No attack ability found for FinishOff. Ensure unit has AbilityConfig with DamageEffect.");
+            context.DecisionLog.ExecutionResult(null, "Attack", selected.Target.UnitID);
         }
 
         /// <summary>
@@ -184,6 +195,7 @@ namespace Tactics.Common.AI.MonsterAI
         private static async Task ExecuteHoldPosition(IntentCandidate selected, AiContext context)
         {
             context.DecisionLog.Info("HoldPosition: Not moving or attacking.");
+            context.DecisionLog.ExecutionResult(null, "Wait");
             await Task.CompletedTask;
         }
 
@@ -191,7 +203,9 @@ namespace Tactics.Common.AI.MonsterAI
         {
             foreach (var ability in context.AvailableAbilities)
             {
-                if (ability.Name == "Attack" || ability.Name == "MeleeAttack" || ability.Name == "RangedAttack")
+                var name = ability.Name ?? "";
+                if (name == "Melee Attack" || name == "Ranged Attack" || name == "Magic Attack" ||
+                    name == "Attack" || name == "MeleeAttack" || name == "RangedAttack")
                     return ability;
             }
             return null;
