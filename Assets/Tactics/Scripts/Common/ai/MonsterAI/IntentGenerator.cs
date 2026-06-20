@@ -102,7 +102,14 @@ namespace Tactics.Common.AI.MonsterAI
 
                 foreach (var cell in selectedCells)
                 {
-                    candidates.Add(new IntentCandidate(IntentType.Engage, ActionType.Move, target, cell, null, intent.BasePriority, sourceIntentNodeId: intent.NodeId));
+                    bool canAttackFromCell = CalcDist(cell, target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+                    var c = new IntentCandidate(IntentType.Engage, ActionType.Move, target, cell, null, intent.BasePriority, sourceIntentNodeId: intent.NodeId);
+                    if (canAttackFromCell)
+                    {
+                        c.EstimatedDamage = context.Self.CalculateDamageDealt(target, target.CurrentCell, cell);
+                        c.EstimatedKillChance = target.Health > 0 ? System.Math.Min(1f, c.EstimatedDamage / target.Health) : 1f;
+                    }
+                    candidates.Add(c);
                 }
             }
         }

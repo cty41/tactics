@@ -82,6 +82,22 @@ namespace Tactics.Common.AI.MonsterAI
 
             await ExecuteMoveAsync(selected.Destination, context, moveAbility);
             context.DecisionLog.ExecutionResult(moveAbility.Name, "Move");
+
+            // 移动成功后，若目标在攻击范围内，追加一次攻击
+            if (selected.Target != null)
+            {
+                var attackAbility = FindAttackAbility(context);
+                if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
+                {
+                    await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                    context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
+                }
+                else if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
+                {
+                    await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                    context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
+                }
+            }
         }
 
         /// <summary>
