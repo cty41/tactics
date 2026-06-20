@@ -109,56 +109,17 @@ namespace Tactics.Common.Players
             }
 
             _endTurnScheduled = true;
-            // Prefer coroutine path (reliable in all contexts). If _host is null,
-            // try BattleController.Instance as fallback host before resorting to async.
-            var coroutineHost = _host ?? BattleController.Instance;
-            if (coroutineHost != null)
-            {
-                coroutineHost.StartCoroutine(AutoEndTurnAfterOneFrame(gridController));
-            }
-            else
-            {
-                // Fallback: no MonoBehaviour host available — schedule to the next frame
-                // so the first unactionable human turn does not deadlock waiting for TurnEnded.
-                AutoEndTurnAfterOneFrameWithoutHost(gridController);
-            }
+            DelayedAutoEndTurn(gridController);
         }
 
-        private async void AutoEndTurnAfterOneFrameWithoutHost(GridController gridController)
+        private async void DelayedAutoEndTurn(GridController gridController)
         {
-            await Awaitable.NextFrameAsync();
-            ExecutePendingEndTurn(gridController);
-        }
-
-        private IEnumerator AutoEndTurnAfterOneFrame(GridController gridController)
-        {
-            yield return null;
-
+            await TurnSkipHelper.DelayAndEndTurnAsync(
+                gridController,
+                _host ?? BattleController.Instance,
+                () => _endTurnScheduled && ShouldStillEndTurn(gridController),
+                TurnSkipHelper.FrozenSkipDelaySeconds);
             _endTurnScheduled = false;
-
-            if (!ShouldStillEndTurn(gridController))
-            {
-                yield break;
-            }
-
-            gridController.EndTurn();
-        }
-
-        private void ExecutePendingEndTurn(GridController gridController)
-        {
-            if (!_endTurnScheduled)
-            {
-                return;
-            }
-
-            _endTurnScheduled = false;
-
-            if (!ShouldStillEndTurn(gridController))
-            {
-                return;
-            }
-
-            gridController.EndTurn();
         }
 
         /// <summary>

@@ -557,6 +557,12 @@ namespace Tactics.Common.Battle
         {
             try
             {
+                if (!await WaitForGameAssetReady())
+                {
+                    TLog.Warning("[BattleController] Battle UI skipped: GameAssetManager bootstrap did not complete in time.");
+                    return;
+                }
+
                 await UIManager.Instance.ShowAsync(UIManager.UIId.Battle);
             }
             catch (Exception ex)
@@ -564,6 +570,24 @@ namespace Tactics.Common.Battle
                 TLog.Warning($"[BattleController] Failed to show Battle UI: {ex.Message}");
             }
         }
+
+        private static async Task<bool> WaitForGameAssetReady(float timeoutSeconds = 5f)
+        {
+            float deadline = Time.realtimeSinceStartup + timeoutSeconds;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                var manager = GameAssetManager.Instance;
+                if (manager != null && manager.IsInitialized)
+                {
+                    return true;
+                }
+
+                await Awaitable.NextFrameAsync();
+            }
+
+            return GameAssetManager.Instance != null && GameAssetManager.Instance.IsInitialized;
+        }
+
 
         /// <summary>
         /// 战斗开始时同步 HP：从地图层 CharacterDefinition.CurrentHp 读取到战斗层 Unit.Health。

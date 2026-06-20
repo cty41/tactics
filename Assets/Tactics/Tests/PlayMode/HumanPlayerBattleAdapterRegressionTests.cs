@@ -96,8 +96,19 @@ namespace Tactics.Tests.PlayMode
             // before firing the queued auto-EndTurn.
             _ = bc.StartBattleAsync();
 
-            // Wait enough frames for the one-frame-delayed auto-EndTurn coroutine to fire.
-            for (int i = 0; i < 15; i++)
+            // Should not auto-end immediately on the next frame anymore.
+            for (int i = 0; i < 10; i++)
+            {
+                yield return null;
+            }
+
+            Assert.IsNotNull(bc.TurnContext.CurrentPlayer,
+                "TurnContext.CurrentPlayer should not be null during delayed frozen skip.");
+            Assert.AreEqual(1, bc.TurnContext.CurrentPlayer.PlayerNumber,
+                "Frozen human turn should still be active during the 1-second visibility delay.");
+
+            // Wait enough frames for the 1-second delayed auto-EndTurn to fire.
+            for (int i = 0; i < 70; i++)
             {
                 yield return null;
             }

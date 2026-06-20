@@ -1,9 +1,12 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Cells;
+using Tactics.Common.Controllers;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
@@ -104,6 +107,32 @@ namespace Tactics.Tests.PlayMode
             Assert.IsNull(result, "FindMoveAbility should return null for 'Melee Attack'.");
         }
 
+        [Test]
+        public async Task ExecuteBasicAttack_UsesAiExecutableAbility_WhenAvailable()
+        {
+            var aiAbility = new FakeAiExecutableAbility();
+            var abilityInfo = new AbilityInfo(
+                "Melee Attack",
+                1,
+                true,
+                aiAbility,
+                AbilityAiTags.Damage,
+                5f,
+                0f,
+                0f,
+                0f
+            );
+            var context = CreateContextWithAbilities(new[] { abilityInfo });
+            var selected = CreateSelectedCandidate(IntentType.BasicAttack, context);
+
+            await InvokeExecuteBasicAttack(selected, context);
+
+            Assert.IsTrue(aiAbility.EffectsAsyncCalled, "IAiExecutableAbility.ExecuteEffectsAsync should be called.");
+            var executionEntry = context.DecisionLog.GetEntries().LastOrDefault(e => e.Type == AiDecisionLog.LogType.ExecutionResult);
+            Assert.IsNotNull(executionEntry, "ExecutionResult should be recorded.");
+            Assert.IsTrue(executionEntry.Message.Contains("Melee Attack"), executionEntry.Message);
+        }
+
         #region Helpers
 
         /// <summary>
@@ -168,6 +197,60 @@ namespace Tactics.Tests.PlayMode
             var method = typeof(IntentExecutor).GetMethod("FindMoveAbility", BindingFlags.NonPublic | BindingFlags.Static);
             Assert.IsNotNull(method, "FindMoveAbility method should exist.");
             return (AbilityInfo)method.Invoke(null, new object[] { context });
+        }
+
+        private static async Task InvokeExecuteBasicAttack(IntentCandidate selected, AiContext context)
+        {
+            var method = typeof(IntentExecutor).GetMethod("ExecuteBasicAttack", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(method, "ExecuteBasicAttack method should exist.");
+            var task = (Task)method.Invoke(null, new object[] { selected, context });
+            Assert.IsNotNull(task);
+            await task;
+        }
+
+        private static IntentCandidate CreateSelectedCandidate(IntentType intentType, AiContext context)
+        {
+            var target = context.CandidateTargets?.FirstOrDefault();
+            return new IntentCandidate(intentType, ActionType.Attack, target, target?.CurrentCell, null, 10f, sourceIntentNodeId: null);
+        }
+
+        private sealed class FakeAiExecutableAbility : IAbility, IAiExecutableAbility
+        {
+            public bool EffectsAsyncCalled { get; private set; }
+            public event System.Action<IAbility> AbilitySelected;
+            public event System.Action<IAbility> AbilityDeselected;
+            public IUnit UnitReference { get; set; }
+            public string DisplayName => "FakeAttack";
+            public Sprite Icon => null;
+            public int Cost => 0;
+            public void Initialize(IGridController gridController) { }
+            public void Display(IGridController gridController) { }
+            public void CleanUp(IGridController gridController) { }
+            public void OnUnitClicked(IUnit unit, IGridController gridController) { }
+            public void OnUnitHighlighted(IUnit unit, IGridController gridController) { }
+            public void OnUnitDehighlighted(IUnit unit, IGridController gridController) { }
+            public void OnUnitDestroyed(IGridController gridController) { }
+            public void OnCellClicked(ICell cell, IGridController gridController) { }
+            public void OnCellHighlighted(ICell cell, IGridController gridController) { }
+            public void OnCellDehighlighted(ICell cell, IGridController gridController) { }
+            public void OnAbilitySelected(IGridController gridController) { }
+            public void OnAbilityDeselected(IGridController gridController) { }
+            public void OnTurnStart(IGridController gridController) { }
+            public void OnTurnEnd(IGridController gridController) { }
+            public bool CanPerform(IGridController gridController) => true;
+            public void InvokeAbilitySelected() { AbilitySelected?.Invoke(this); }
+            public void InvokeAbilityDeselected() { AbilityDeselected?.Invoke(this); }
+
+            public Task ExecuteEffectsAsync(IEnumerable<IUnit> targets, IGridController gridController)
+            {
+                EffectsAsyncCalled = true;
+                return Task.CompletedTask;
+            }
+
+            public Task<bool> ExecuteMoveForAI(ICell destination, IEnumerable<ICell> path, IGridController gridController)
+            {
+                return Task.FromResult(false);
+            }
         }
 
         #endregion

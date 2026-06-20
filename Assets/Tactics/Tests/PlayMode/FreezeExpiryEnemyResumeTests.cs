@@ -270,6 +270,41 @@ namespace Tactics.Tests.PlayMode
                 $"TurnLog: {string.Join(" | ", turnLog.Take(20))}");
         }
 
+        [UnityTest]
+        public IEnumerator FrozenAIUnit_WaitsBeforeSkip()
+        {
+            LogAssert.ignoreFailingMessages = true;
+
+            var initTask = TestGameAssetHelper.EnsureInitialized();
+            yield return new WaitUntil(() => initTask.IsCompleted);
+            Assume.That(initTask.Result, Is.Not.Null, "GameAssetManager must initialize.");
+
+            CreateBattleScaffolding(out var bc, out Unit p1Unit, out Unit p2Unit);
+            bc.TurnResolver = new UnitSpeedTurnResolver();
+
+            var frozenConfig = CreateFrozenBuffConfig(duration: 1);
+            p1Unit.AddBuff(new Buff(frozenConfig, p1Unit, 1));
+            Assert.IsFalse(p1Unit.CanAct, "P1 AI unit must be frozen before battle start.");
+
+            bc.InitializeAndStart(false);
+            _ = bc.StartBattleAsync();
+            Assert.IsTrue(bc.IsBattleActive, "Battle should be active.");
+
+            for (int i = 0; i < 10; i++)
+                yield return null;
+
+            Assert.IsNotNull(bc.TurnContext.CurrentPlayer);
+            Assert.AreEqual(1, bc.TurnContext.CurrentPlayer.PlayerNumber,
+                "Frozen AI unit should still hold the turn during the 1-second visibility delay.");
+
+            for (int i = 0; i < 70; i++)
+                yield return null;
+
+            Assert.IsNotNull(bc.TurnContext.CurrentPlayer);
+            Assert.AreNotEqual(1, bc.TurnContext.CurrentPlayer.PlayerNumber,
+                "Frozen AI unit should be skipped after the 1-second delay.");
+        }
+
         #region Helpers
 
         private void CreateBattleScaffolding(out BattleController bc, out Unit p1Unit, out Unit p2Unit, bool humanPlayer1 = false)

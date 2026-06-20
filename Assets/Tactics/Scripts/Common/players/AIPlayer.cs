@@ -5,12 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.AI;
 using Tactics.Common.AI.MonsterAI;
+using Tactics.Common.Battle;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Units;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+
 
 namespace Tactics.Common.Players
 {
@@ -94,10 +96,21 @@ namespace Tactics.Common.Players
                         int skipBuffs = (playableUnit as Tactics.Common.Units.Unit)?.BuffComponent?.GetActiveBuffs()?.Count ?? 0;
                         // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
                         TLog.Info($"[AIPlayer] SKIP frozen/downed: CanAct={playableUnit.CanAct}, IsDowned={playableUnit.IsDowned}, Buffs={skipBuffs}, Player={playableUnit.PlayerNumber}");
-                        await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
-                        await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
-                        playableUnit.InvokeUnitDeselected();
-                        continue;
+                        bool endedTurn = await TurnSkipHelper.DelayAndEndTurnAsync(
+                            gridController,
+                            BattleController.Instance,
+                            () => !playableUnit.CanAct || playableUnit.IsDowned,
+                            TurnSkipHelper.FrozenSkipDelaySeconds,
+                            _cancellationTokenSource.Token);
+
+                        if (endedTurn)
+                        {
+                            await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
+                            await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
+                            playableUnit.InvokeUnitDeselected();
+                        }
+
+                        return;
                     }
 
                     if (DebugMode)
@@ -131,7 +144,6 @@ namespace Tactics.Common.Players
                     await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
                     playableUnit.InvokeUnitDeselected();
                 }
-
                 gridController.EndTurn();
             }
             catch (Exception ex)

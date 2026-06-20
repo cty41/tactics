@@ -16,7 +16,7 @@ namespace Tactics.Common.Units.Abilities
     /// SkillGraph 能力实现。
     /// 通过 SkillGraphRunner 执行技能图。
     /// </summary>
-    public class SkillGraphAbilityImpl : IAbility
+    public class SkillGraphAbilityImpl : IAbility, IAiExecutableAbility
     {
         public event Action<IAbility> AbilitySelected;
         public event Action<IAbility> AbilityDeselected;
@@ -104,6 +104,32 @@ namespace Tactics.Common.Units.Abilities
             if (_config.IsBasicAbility)
                 return !_owner.HasUsedBasicAbilityThisTurn(_config.DisplayName);
             return _owner.Mana >= _config.ManaCost;
+        }
+
+        public async Task ExecuteEffectsAsync(IEnumerable<IUnit> targets, IGridController gridController)
+        {
+            if (targets == null) return;
+
+            _gridController = gridController;
+            _validTargetCells = CalculateValidTargetCells();
+
+            foreach (var target in targets)
+            {
+                if (target?.CurrentCell == null) continue;
+                if (_validTargetCells == null || !_validTargetCells.Contains(target.CurrentCell))
+                {
+                    TLog.Warning($"[SkillGraphAbilityImpl] AI target {target.UnitID} out of range for '{DisplayName}'.");
+                    continue;
+                }
+
+                await ExecuteSkillGraphAsync(target.CurrentCell, gridController);
+            }
+        }
+
+        public Task<bool> ExecuteMoveForAI(ICell destination, IEnumerable<ICell> path, IGridController gridController)
+        {
+            // SkillGraph 当前不承担 AI 移动主链，交由 Move 能力处理。
+            return Task.FromResult(false);
         }
 
         public async Task<SkillGraphRuntimeTestResult> ExecuteForTestAsync(ICell selectedCell, IGridController gridController)

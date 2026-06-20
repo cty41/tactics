@@ -96,6 +96,13 @@ namespace Tactics.Common.AI.MonsterAI
             context.DecisionLog.Info($"BasicAttack: Attacking Unit_{selected.Target.UnitID}");
 
             var attackAbility = FindAttackAbility(context);
+            if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
+            {
+                await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
+                return;
+            }
+
             if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
             {
                 await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
@@ -104,7 +111,7 @@ namespace Tactics.Common.AI.MonsterAI
             }
 
             TLog.Warning("[IntentExecutor] No attack ability found. Ensure unit has AbilityConfig with DamageEffect.");
-            context.DecisionLog.ExecutionResult(null, "Attack", selected.Target.UnitID);
+            context.DecisionLog.ExecutionResult(attackAbility?.Name, "Attack", selected.Target.UnitID);
         }
 
         /// <summary>
@@ -115,6 +122,13 @@ namespace Tactics.Common.AI.MonsterAI
             if (selected.Ability?.Ability == null || selected.AbilityTargetCell == null) return;
 
             context.DecisionLog.Info($"AbilityUse: {selected.Ability.Name}");
+
+            if (selected.Ability.Ability is IAiExecutableAbility aiAbility)
+            {
+                await aiAbility.ExecuteEffectsAsync(selected.Targets, context.GridController);
+                context.DecisionLog.ExecutionResult(selected.Ability.Name, "UseAbility", selected.Target?.UnitID);
+                return;
+            }
 
             if (selected.Ability.Ability is GenericAbilityImpl generic)
             {

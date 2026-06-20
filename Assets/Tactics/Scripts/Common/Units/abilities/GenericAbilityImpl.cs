@@ -7,6 +7,7 @@ using Tactics.Cells;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
+using Tactics.Common.Units;
 using UnityEngine;
 
 namespace Tactics.Common.Units.Abilities
@@ -16,7 +17,7 @@ namespace Tactics.Common.Units.Abilities
     /// the Grid state system and the data-driven ability effects.
     /// Also handles movement abilities when DisplayName is "Move".
     /// </summary>
-    public class GenericAbilityImpl : IAbility
+    public class GenericAbilityImpl : IAbility, IAiExecutableAbility
     {
         public event Action<IAbility> AbilitySelected;
         public event Action<IAbility> AbilityDeselected;
