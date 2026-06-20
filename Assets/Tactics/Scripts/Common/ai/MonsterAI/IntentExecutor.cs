@@ -192,6 +192,13 @@ namespace Tactics.Common.AI.MonsterAI
 
             // 攻击目标 - 优先走新技能执行链
             var attackAbility = FindAttackAbility(context);
+            if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
+            {
+                await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
+                return;
+            }
+
             if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
             {
                 await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
@@ -200,7 +207,7 @@ namespace Tactics.Common.AI.MonsterAI
             }
 
             TLog.Warning("[IntentExecutor] No attack ability found for FinishOff. Ensure unit has AbilityConfig with DamageEffect.");
-            context.DecisionLog.ExecutionResult(null, "Attack", selected.Target.UnitID);
+            context.DecisionLog.ExecutionResult(attackAbility?.Name, "Attack", selected.Target.UnitID);
         }
 
         /// <summary>
@@ -246,6 +253,12 @@ namespace Tactics.Common.AI.MonsterAI
             {
                 TLog.Warning("[IntentExecutor] Move path is empty.");
                 return false;
+            }
+
+            if (moveAbility.Ability is IAiExecutableAbility aiMove)
+            {
+                bool moved = await aiMove.ExecuteMoveForAI(destination, path, context.GridController);
+                if (moved) return true;
             }
 
             if (moveAbility.Ability is GenericAbilityImpl genericMove)

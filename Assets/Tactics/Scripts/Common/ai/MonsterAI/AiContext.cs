@@ -112,7 +112,8 @@ namespace Tactics.Common.AI.MonsterAI
         Control = 1 << 4,
         Aoe = 1 << 5,
         Movement = 1 << 6,
-        Utility = 1 << 7
+        Utility = 1 << 7,
+        Ranged = 1 << 8
     }
 
     public class AbilityInfo

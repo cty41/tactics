@@ -31,6 +31,8 @@ namespace Tactics.Common.Units.Abilities
         public string DisplayName => _config.DisplayName;
         public Sprite Icon => _config.Icon;
         public int Cost => _config.ManaCost;
+        public SkillGraphAsset SkillGraphAsset => _config.SkillGraph;
+        public int TargetRange => _config.TargetRange;
 
         public SkillGraphAbilityImpl(IUnit owner, SkillGraphAbilityConfig config)
         {
@@ -126,10 +128,25 @@ namespace Tactics.Common.Units.Abilities
             }
         }
 
-        public Task<bool> ExecuteMoveForAI(ICell destination, IEnumerable<ICell> path, IGridController gridController)
+        public async Task<bool> ExecuteMoveForAI(ICell destination, IEnumerable<ICell> path, IGridController gridController)
         {
-            // SkillGraph 当前不承担 AI 移动主链，交由 Move 能力处理。
-            return Task.FromResult(false);
+            if (destination == null || path == null) return false;
+            if (destination.Equals(_owner.CurrentCell)) return true;
+
+            var pathList = path.ToList();
+            if (pathList.Count == 0) return false;
+
+            var tcs = new TaskCompletionSource<bool>();
+            _owner.AIExecuteAbility(new MoveCommand(_owner.CurrentCell, destination, pathList), gridController, tcs);
+
+            var timeoutTask = Task.Delay(2000);
+            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                TLog.Info("[SkillGraphAbilityImpl] ExecuteMoveForAI timed out (2s), assuming executed.");
+            }
+
+            return true;
         }
 
         public async Task<SkillGraphRuntimeTestResult> ExecuteForTestAsync(ICell selectedCell, IGridController gridController)

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Runtime.Utilities;
@@ -155,6 +156,29 @@ namespace Tactics.Common.AI.MonsterAI
                             break;
                         case MoveEffect:
                             tags |= AbilityAiTags.Movement;
+                            break;
+                    }
+                }
+            }
+            else if (ability is SkillGraphAbilityImpl skillGraph && skillGraph.SkillGraphAsset != null)
+            {
+                range = skillGraph.TargetRange;
+                foreach (var node in skillGraph.SkillGraphAsset.Nodes)
+                {
+                    switch (node)
+                    {
+                        case ApplyDamageNodeRecord dmg:
+                            tags |= AbilityAiTags.Damage;
+                            baseDamage += dmg.BaseDamage;
+                            if (dmg.IsRanged) tags |= AbilityAiTags.Ranged;
+                            break;
+                        case ApplyBuffNodeRecord:
+                            tags |= AbilityAiTags.Buff | AbilityAiTags.Utility;
+                            utilityValue += 0.35f;
+                            break;
+                        case DashToTargetNodeRecord dash:
+                            tags |= AbilityAiTags.Control | AbilityAiTags.Movement;
+                            controlValue += 0.2f + dash.CollisionDamage * 0.1f;
                             break;
                     }
                 }
