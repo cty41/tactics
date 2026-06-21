@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Necromancer.SkeletonDelayedAction",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "killUnit",
+      "parameters": {
+        "unitAlias": "p2_0"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "unitIsCorpse",
+      "target": "p2_0",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "currentRoundEquals",
+      "expected": 0,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "unitIsCorpse",
+      "target": "p2_0",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "currentRoundEquals",
+      "parameters": {}
+    }
+  ]
+}

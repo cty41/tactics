@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Necromancer.CurseReplacesOtherCurseOnSameTarget",
+  "requiredAdapters": [
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "curseAGraph",
+        "graphKind": "applyBuff",
+        "selectionKind": "enemy",
+        "buffName": "CurseA",
+        "buffEffectType": "CurseDamageAmplifier",
+        "duration": 6,
+        "maxRange": 3
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "curseBGraph",
+        "graphKind": "applyBuff",
+        "selectionKind": "enemy",
+        "buffName": "CurseB",
+        "buffEffectType": "CurseDamageAmplifier",
+        "duration": 4,
+        "maxRange": 3
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "targetCell",
+        "x": 1,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "caster",
+        "playerNumber": 0,
+        "health": 10,
+        "maxHealth": 10,
+        "cellAlias": "casterCell"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "target",
+        "playerNumber": 1,
+        "health": 100,
+        "maxHealth": 100,
+        "cellAlias": "targetCell"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "setTurnContext",
+      "parameters": {
+        "currentPlayerNumber": 0,
+        "playableUnitAliases": [
+          "caster"
+        ]
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Skill",
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "curseAGraph",
+        "casterAlias": "caster",
+        "primaryTargetAlias": "target"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "curseBGraph",
+        "casterAlias": "caster",
+        "primaryTargetAlias": "target"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "expected": "Completed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffCountEquals",
+      "target": "target",
+      "expected": 1,
+      "parameters": {
+        "buffName": "CurseB"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "target",
+      "expected": "CurseB",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffDurationEquals",
+      "target": "target",
+      "expected": 4,
+      "parameters": {
+        "buffName": "CurseB"
+      }
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffCountEquals",
+      "target": "target",
+      "parameters": {
+        "buffName": "CurseB"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHasBuff",
+      "target": "target",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitBuffDurationEquals",
+      "target": "target",
+      "parameters": {
+        "buffName": "CurseB"
+      }
+    }
+  ]
+}

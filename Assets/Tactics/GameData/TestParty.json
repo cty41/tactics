@@ -50,12 +50,30 @@
       "DefenceFactor": 1,
       "RoleType": "Hunter",
       "PrefabPath": "Hunter"
+    },
+    {
+      "Id": "necromancer",
+      "DisplayName": "Necromancer",
+      "Level": 1,
+      "Strength": 4,
+      "Agility": 5,
+      "Constitution": 5,
+      "Intelligence": 8,
+      "Charisma": 6,
+      "Luck": 4,
+      "Speed": 4.0,
+      "AttackRange": 1,
+      "AttackFactor": 1,
+      "DefenceFactor": 1,
+      "RoleType": "Necromancer",
+      "PrefabPath": "Necromancer"
     }
   ],
-  "ActivePartyCharacterIds": ["warrior", "mage", "hunter"],
+  "ActivePartyCharacterIds": ["warrior", "mage", "hunter", "necromancer"],
   "PrefabMappings": [
     { "RoleType": "Barbarian", "PrefabPath": "Fighter" },
     { "RoleType": "Mage", "PrefabPath": "Mage" },
-    { "RoleType": "Hunter", "PrefabPath": "Hunter" }
+    { "RoleType": "Hunter", "PrefabPath": "Hunter" },
+    { "RoleType": "Necromancer", "PrefabPath": "Necromancer" }
   ]
 }

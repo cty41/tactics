@@ -47,6 +47,27 @@ namespace Tactics.Common.Units
 
             if (_unitReference.Health <= 0)
             {
+                // Linked death: kill summoned unit when owner dies
+                if (_unitReference.SummonedUnit != null && !_unitReference.SummonedUnit.IsDowned)
+                {
+                    var summoned = _unitReference.SummonedUnit;
+                    _unitReference.SummonedUnit = null;
+                    summoned.OwnerUnit = null;
+                    summoned.OwnerUnitId = -1;
+                    summoned.ModifyHealth(-summoned.Health - 1, null);
+                }
+
+                // Linked death: clear owner's SummonedUnit when summoned dies
+                if (_unitReference.OwnerUnit != null)
+                {
+                    _unitReference.OwnerUnit.SummonedUnit = null;
+                    _unitReference.OwnerUnit = null;
+                }
+                if (_unitReference.OwnerUnitId >= 0)
+                {
+                    _unitReference.OwnerUnitId = -1;
+                }
+
                 _unitReference.InvokeDestroyed(new UnitDestroyedEventArgs(_unitReference, sourceUnit));
             }
         }
@@ -173,6 +194,12 @@ namespace Tactics.Common.Units
             }
 
             damage = target.CalculateDamageTaken(caster, damage, caster.CurrentCell, target.CurrentCell);
+
+            // Curse damage amplifier: target takes 30% more damage
+            if (target.BuffComponent != null && target.BuffComponent.HasBuff(BuffEffectType.CurseDamageAmplifier))
+            {
+                damage *= 1.3f;
+            }
 
             target.ModifyHealth(-damage, caster);
             target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));

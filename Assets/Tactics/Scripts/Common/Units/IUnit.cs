@@ -140,6 +140,26 @@ namespace Tactics.Common.Units
         bool IsDowned { get; set; }
 
         /// <summary>
+        /// 尸体标记，敌人死亡后原地留下的尸体。
+        /// </summary>
+        bool IsCorpse { get; set; }
+
+        /// <summary>
+        /// 召唤物归属 ID，-1 表示无归属。
+        /// </summary>
+        int OwnerUnitId { get; set; }
+
+        /// <summary>
+        /// 当前召唤的单位引用（死灵法师持有），null 表示无召唤物。
+        /// </summary>
+        IUnit SummonedUnit { get; set; }
+
+        /// <summary>
+        /// 召唤者的直接引用（骷髅持有），null 表示无归属。
+        /// </summary>
+        IUnit OwnerUnit { get; set; }
+
+        /// <summary>
         /// Gets the portrait sprite of the unit.
         /// </summary>
         Sprite Portrait { get; }

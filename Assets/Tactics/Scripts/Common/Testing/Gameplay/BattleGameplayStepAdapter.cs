@@ -39,7 +39,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "addBuff"
                 or "executeAI"
                 or "createAiBrain"
-                or "useRealAssets";
+                or "useRealAssets"
+                or "spawnCorpse"
+                or "killUnit";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -68,6 +70,10 @@ namespace Tactics.Common.Testing.Gameplay
                         return CreateAiBrain(context, action);
                     case "useRealAssets":
                         return await UseRealAssets(context, action);
+                    case "spawnCorpse":
+                        return SpawnCorpse(context, action);
+                    case "killUnit":
+                        return KillUnit(context, action);
                     default:
                         return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unsupported Battle action '{action.Kind}'.");
                 }
@@ -101,7 +107,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "aiWasNoOpEquals"
                 or "unitPositionChangedSinceStep"
                 or "targetHealthChangedSinceStep"
-                or "decisionLogContains";
+                or "decisionLogContains"
+                or "cellIsBlocked"
+                or "unitIsCorpse"
+                or "unitOwnerEquals";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -132,6 +141,9 @@ namespace Tactics.Common.Testing.Gameplay
                     "unitPositionChangedSinceStep" => AssertUnitPositionChangedSinceStep(context, assertion),
                     "targetHealthChangedSinceStep" => AssertTargetHealthChangedSinceStep(context, assertion),
                     "decisionLogContains" => AssertDecisionLogContains(context, assertion),
+                    "cellIsBlocked" => AssertCellIsBlocked(context, assertion),
+                    "unitIsCorpse" => AssertUnitIsCorpse(context, assertion),
+                    "unitOwnerEquals" => AssertUnitOwnerEquals(context, assertion),
                     _ => GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unsupported Battle assertion '{assertion.Kind}'.")
                 };
 
@@ -434,7 +446,30 @@ namespace Tactics.Common.Testing.Gameplay
             var mono = unit as MonoBehaviour;
             if (mono != null)
                 mono.transform.position = new Vector3(destCell.GridCoordinates.x, destCell.GridCoordinates.y, 0);
+
+            // Remove from old cell
+            if (unit.CurrentCell != null)
+            {
+                unit.CurrentCell.CurrentUnits.Remove(unit);
+                unit.CurrentCell.IsTaken = unit.CurrentCell.CurrentUnits.Count > 0;
+            }
+
+            // Check if destination is blocked (e.g., by corpse)
+            if (destCell.IsTaken)
+            {
+                // Restore old cell
+                if (unit.CurrentCell != null)
+                {
+                    unit.CurrentCell.CurrentUnits.Add(unit);
+                    unit.CurrentCell.IsTaken = true;
+                }
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell ({destCell.GridCoordinates.x},{destCell.GridCoordinates.y}) is blocked.");
+            }
+
             unit.CurrentCell = destCell;
+            if (!destCell.CurrentUnits.Contains(unit))
+                destCell.CurrentUnits.Add(unit);
+            destCell.IsTaken = true;
 
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Moved {unitAlias} to ({destCell.GridCoordinates.x},{destCell.GridCoordinates.y}).");
         }
@@ -1078,6 +1113,86 @@ namespace Tactics.Common.Testing.Gameplay
         private static BattleController RequireBattleController(GameplayRuntimeContext context, string actionKind)
         {
             return context.BattleController ?? throw new InvalidOperationException($"BattleController has not been bound. Execute 'bindBattleController' before '{actionKind}'.");
+        }
+
+        private static GameplayStepResult SpawnCorpse(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            string unitAlias = action.Parameters?["unitAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(unitAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "spawnCorpse requires a unitAlias parameter.");
+
+            if (!context.Units.TryGetValue(unitAlias, out var unit))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit alias '{unitAlias}' does not exist.");
+
+            unit.IsCorpse = true;
+            unit.IsDowned = true;
+            unit.Health = -1;
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' marked as corpse.");
+        }
+
+        private static GameplayStepResult KillUnit(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            string unitAlias = action.Parameters?["unitAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(unitAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "killUnit requires a unitAlias parameter.");
+
+            if (!context.Units.TryGetValue(unitAlias, out var unit))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit alias '{unitAlias}' does not exist.");
+
+            unit.ModifyHealth(-unit.Health - 1, null);
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' killed.");
+        }
+
+        private static GameplayAssertionResult AssertCellIsBlocked(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var controller = RequireBattleController(context, assertion.Kind);
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "cellIsBlocked requires a target cell alias.");
+
+            if (!context.Cells.TryGetValue(assertion.Target, out var cell))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Cell alias '{assertion.Target}' does not exist.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = cell.IsTaken;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.IsTaken={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.IsTaken={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitIsCorpse(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "unitIsCorpse requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = unit.IsCorpse;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.IsCorpse={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.IsCorpse={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitOwnerEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "unitOwnerEquals requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            string expectedOwner = assertion.Expected?.ToObject<string>();
+            if (string.IsNullOrWhiteSpace(expectedOwner))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "unitOwnerEquals requires an expected owner alias string.");
+            if (!context.Units.TryGetValue(expectedOwner, out var owner))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Owner alias '{expectedOwner}' does not exist.");
+
+            int actual = unit.OwnerUnitId;
+            int expected = owner.UnitID;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.OwnerUnitId={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.OwnerUnitId={expected}, actual={actual}.");
         }
 
         /// <summary>

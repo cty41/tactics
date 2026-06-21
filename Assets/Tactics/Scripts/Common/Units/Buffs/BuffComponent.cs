@@ -50,6 +50,18 @@ namespace Tactics.Common.Units.Buffs
                         return;
                     }
                 }
+
+                // Curse category exclusivity: only one curse per unit, later replaces earlier
+                if (!string.IsNullOrEmpty(buff.Config.CurseCategory))
+                {
+                    for (int i = _activeBuffs.Count - 1; i >= 0; i--)
+                    {
+                        if (_activeBuffs[i].Config != null && _activeBuffs[i].Config.CurseCategory == buff.Config.CurseCategory)
+                        {
+                            RemoveBuff(_activeBuffs[i]);
+                        }
+                    }
+                }
             }
 
             buff.Owner = _owner;

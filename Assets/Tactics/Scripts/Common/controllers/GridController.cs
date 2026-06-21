@@ -216,6 +216,34 @@ namespace Tactics.Common.Controllers
 
         private async void OnUnitDestroyed(UnitDestroyedEventArgs eventArgs)
         {
+            // Linked death: if this unit has a summoned unit, kill it
+            if (eventArgs.AffectedUnit.SummonedUnit != null && !eventArgs.AffectedUnit.SummonedUnit.IsDowned)
+            {
+                var summoned = eventArgs.AffectedUnit.SummonedUnit;
+                eventArgs.AffectedUnit.SummonedUnit = null;
+                summoned.OwnerUnitId = -1;
+                summoned.ModifyHealth(-summoned.Health - 1, null);
+            }
+
+            // Linked death: if this unit is summoned, clear owner reference
+            if (eventArgs.AffectedUnit.OwnerUnitId >= 0)
+            {
+                var owner = UnitManager.GetUnits().FirstOrDefault(u => u.UnitID == eventArgs.AffectedUnit.OwnerUnitId);
+                if (owner != null)
+                {
+                    owner.SummonedUnit = null;
+                }
+                eventArgs.AffectedUnit.OwnerUnitId = -1;
+            }
+
+            // Corpse generation: first time death → keep as corpse on grid
+            if (!eventArgs.AffectedUnit.IsCorpse)
+            {
+                eventArgs.AffectedUnit.IsCorpse = true;
+                TLog.Info($"[GridController] Unit {eventArgs.AffectedUnit.UnitID} became corpse at {eventArgs.AffectedUnit.CurrentCell?.GridCoordinates}");
+                return;
+            }
+
             foreach (var ability in eventArgs.AffectedUnit.GetBaseAbilities())
             {
                 ability.OnUnitDestroyed(this);
@@ -238,6 +266,26 @@ namespace Tactics.Common.Controllers
         /// </summary>
         public async Task HandleUnitDestroyedAsync(IUnit unit)
         {
+            // Linked death: if this unit has a summoned unit, kill it
+            if (unit.SummonedUnit != null && !unit.SummonedUnit.IsDowned)
+            {
+                var summoned = unit.SummonedUnit;
+                unit.SummonedUnit = null;
+                summoned.OwnerUnitId = -1;
+                summoned.ModifyHealth(-summoned.Health - 1, null);
+            }
+
+            // Linked death: if this unit is summoned, clear owner reference
+            if (unit.OwnerUnitId >= 0)
+            {
+                var owner = UnitManager.GetUnits().FirstOrDefault(u => u.UnitID == unit.OwnerUnitId);
+                if (owner != null)
+                {
+                    owner.SummonedUnit = null;
+                }
+                unit.OwnerUnitId = -1;
+            }
+
             foreach (var ability in unit.GetBaseAbilities())
             {
                 ability.OnUnitDestroyed(this);

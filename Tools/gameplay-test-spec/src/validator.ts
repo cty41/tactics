@@ -37,7 +37,9 @@ const supportedActionKinds = new Set([
   "closeUI",
   "clickElement",
   "setText",
-  "setElementEnabled"
+  "setElementEnabled",
+  "spawnCorpse",
+  "killUnit"
 ]);
 
 const supportedGraphKinds = new Set([
@@ -95,7 +97,10 @@ const supportedAssertionKinds = new Set([
   "elementVisible",
   "elementText",
   "elementEnabled",
-  "elementExists"
+  "elementExists",
+  "cellIsBlocked",
+  "unitOwnerEquals",
+  "unitIsCorpse"
 ]);
 
 interface AliasState {
@@ -429,6 +434,46 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
           code: "InvalidAssertionExpectedType",
           severity: "error",
           message: `${assertion.kind} requires a string expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "cellIsBlocked":
+      if (!assertion.target) {
+        diagnostics.push({
+          code: "MissingCellTarget",
+          severity: "error",
+          message: `${assertion.kind} requires a target cell alias.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      if (typeof assertion.expected !== "boolean") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a boolean expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "unitOwnerEquals":
+      if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
+      if (typeof assertion.expected !== "string") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a string expected value (owner unit alias).`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "unitIsCorpse":
+      if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
+      if (typeof assertion.expected !== "boolean") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a boolean expected value.`,
           path: assertion.id ?? assertion.kind
         });
       }

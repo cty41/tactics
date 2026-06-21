@@ -6,6 +6,7 @@ namespace Tactics.Common.Units.Classes
         Mage,
         Hunter,
         Healer,
-        Rogue
+        Rogue,
+        Necromancer
     }
 }

@@ -24,6 +24,9 @@ namespace Tactics.Common.Units.Buffs
         [BoxGroup("Effect")]
         [SerializeField] private BuffTriggerTiming _triggerTiming = BuffTriggerTiming.None;
 
+        [BoxGroup("Effect")]
+        [SerializeField] private string _curseCategory = "";
+
         [BoxGroup("Effect Params")]
         [SerializeField] private float _damagePerTurn = 0f;
 
@@ -36,6 +39,7 @@ namespace Tactics.Common.Units.Buffs
         public bool CanAct => _canAct;
         public BuffEffectType EffectType => _effectType;
         public BuffTriggerTiming TriggerTiming => _triggerTiming;
+        public string CurseCategory => _curseCategory;
         public float DamagePerTurn => _damagePerTurn;
         public ElementType ElementType => _elementType;
     }

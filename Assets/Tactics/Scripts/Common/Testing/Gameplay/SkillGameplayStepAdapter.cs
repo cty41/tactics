@@ -111,7 +111,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "projectileLaunched"
                 or "projectileHitTarget"
                 or "projectileCompleted"
-                or "multiStageStateEquals";
+                or "multiStageStateEquals"
+                or "cellIsBlocked"
+                or "unitOwnerEquals"
+                or "unitIsCorpse";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -804,6 +807,54 @@ namespace Tactics.Common.Testing.Gameplay
             return string.Equals(expected, actualState, StringComparison.Ordinal)
                 ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"Stage {stageIndex} state={actualState}.")
                 : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected stage {stageIndex} state={expected}, actual={actualState}.");
+        }
+
+        private static GameplayAssertionResult AssertCellIsBlocked(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "cellIsBlocked requires a target cell alias.");
+            if (!context.Cells.TryGetValue(assertion.Target, out var cell))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Cell alias '{assertion.Target}' does not exist.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = cell.IsTaken;
+            return actual == expected
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target}.IsTaken={actual}")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target}.IsTaken={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitOwnerEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitOwnerEquals requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            string expectedOwner = assertion.Expected?.ToObject<string>();
+            if (string.IsNullOrWhiteSpace(expectedOwner))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitOwnerEquals requires an expected owner alias string.");
+            if (!context.Units.TryGetValue(expectedOwner, out var owner))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Owner alias '{expectedOwner}' does not exist.");
+
+            int actual = unit.OwnerUnitId;
+            int expected = owner.UnitID;
+            return actual == expected
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target}.OwnerUnitId={actual}")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target}.OwnerUnitId={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitIsCorpse(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, "unitIsCorpse requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = unit.IsCorpse;
+            return actual == expected
+                ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target}.IsCorpse={actual}")
+                : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target}.IsCorpse={expected}, actual={actual}.");
         }
 
         private static SkillGraphTestWorld RequireWorld(GameplayRuntimeContext context)

@@ -168,6 +168,30 @@ namespace Tactics.Common.Units
         /// </summary>
         public bool IsDowned { get { return _isDowned; } set { _isDowned = value; } }
 
+        [SerializeField] private bool _isCorpse;
+        /// <summary>
+        /// 尸体标记，敌人死亡后原地留下的尸体。
+        /// </summary>
+        public bool IsCorpse { get { return _isCorpse; } set { _isCorpse = value; } }
+
+        [SerializeField] private int _ownerUnitId = -1;
+        /// <summary>
+        /// 召唤物归属 ID，-1 表示无归属。
+        /// </summary>
+        public int OwnerUnitId { get { return _ownerUnitId; } set { _ownerUnitId = value; } }
+
+        private IUnit _summonedUnit;
+        /// <summary>
+        /// 当前召唤的单位引用（死灵法师持有），null 表示无召唤物。
+        /// </summary>
+        public IUnit SummonedUnit { get { return _summonedUnit; } set { _summonedUnit = value; } }
+
+        private IUnit _ownerUnit;
+        /// <summary>
+        /// 召唤者的直接引用（骷髅持有），null 表示无归属。
+        /// </summary>
+        public IUnit OwnerUnit { get { return _ownerUnit; } set { _ownerUnit = value; } }
+
         /// <summary>
         /// The buff component that manages buffs for this unit.
         /// </summary>
@@ -578,6 +602,20 @@ namespace Tactics.Common.Units
 
         public virtual void OnDestroyed(IGridController gridController)
         {
+            // Linked death: if this unit has a summoned unit, kill it
+            if (_summonedUnit != null && !_summonedUnit.IsDowned)
+            {
+                _summonedUnit.OwnerUnitId = -1;
+                _summonedUnit.ModifyHealth(-_summonedUnit.Health - 1, null);
+                _summonedUnit = null;
+            }
+
+            // Linked death: if this unit is summoned, clear owner reference
+            if (_ownerUnitId >= 0)
+            {
+                _ownerUnitId = -1;
+            }
+
             _highlightCancellationTokenSource.Cancel();
             _highlightManager?.CancelAllHighlights();
             _buffComponent.OnUnitDestroyed();

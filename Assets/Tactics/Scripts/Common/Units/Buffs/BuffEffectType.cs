@@ -4,6 +4,7 @@ namespace Tactics.Common.Units.Buffs
     {
         None,
         Frozen,
-        Marked
+        Marked,
+        CurseDamageAmplifier
     }
 }
