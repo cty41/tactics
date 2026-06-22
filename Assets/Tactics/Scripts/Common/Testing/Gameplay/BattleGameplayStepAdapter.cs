@@ -9,6 +9,7 @@ using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
@@ -41,7 +42,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "createAiBrain"
                 or "useRealAssets"
                 or "spawnCorpse"
-                or "killUnit";
+                or "killUnit"
+                or "spawnInteractableCorpse"
+                or "consumeInteractableCorpseAt";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -74,6 +77,10 @@ namespace Tactics.Common.Testing.Gameplay
                         return SpawnCorpse(context, action);
                     case "killUnit":
                         return KillUnit(context, action);
+                    case "spawnInteractableCorpse":
+                        return SpawnInteractableCorpse(context, action);
+                    case "consumeInteractableCorpseAt":
+                        return ConsumeInteractableCorpseAt(context, action);
                     default:
                         return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unsupported Battle action '{action.Kind}'.");
                 }
@@ -110,7 +117,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "decisionLogContains"
                 or "cellIsBlocked"
                 or "unitIsCorpse"
-                or "unitOwnerEquals";
+                or "interactableCorpseExistsAt"
+                or "cellOccupiedByInteractable";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -144,6 +152,8 @@ namespace Tactics.Common.Testing.Gameplay
                     "cellIsBlocked" => AssertCellIsBlocked(context, assertion),
                     "unitIsCorpse" => AssertUnitIsCorpse(context, assertion),
                     "unitOwnerEquals" => AssertUnitOwnerEquals(context, assertion),
+                    "interactableCorpseExistsAt" => AssertInteractableCorpseExistsAt(context, assertion),
+                    "cellOccupiedByInteractable" => AssertCellOccupiedByInteractable(context, assertion),
                     _ => GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unsupported Battle assertion '{assertion.Kind}'.")
                 };
 
@@ -1128,7 +1138,15 @@ namespace Tactics.Common.Testing.Gameplay
             unit.IsCorpse = true;
             unit.IsDowned = true;
             unit.Health = -1;
-            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' marked as corpse.");
+
+            // Also create a Corpse interactable on the cell
+            if (unit.CurrentCell != null)
+            {
+                var corpse = new Corpse();
+                unit.CurrentCell.AddInteractable(corpse);
+            }
+
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' marked as corpse with Corpse interactable.");
         }
 
         private static GameplayStepResult KillUnit(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -1193,6 +1211,64 @@ namespace Tactics.Common.Testing.Gameplay
             return actual == expected
                 ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.OwnerUnitId={actual}")
                 : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.OwnerUnitId={expected}, actual={actual}.");
+        }
+
+        private static GameplayStepResult SpawnInteractableCorpse(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            string cellAlias = action.Parameters?["cellAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(cellAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "spawnInteractableCorpse requires a cellAlias parameter.");
+
+            if (!context.Cells.TryGetValue(cellAlias, out var cell))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell alias '{cellAlias}' does not exist.");
+
+            context.InteractableCorpsesByCell[cellAlias] = true;
+            cell.IsTaken = true;
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Interactable corpse spawned at '{cellAlias}'.");
+        }
+
+        private static GameplayStepResult ConsumeInteractableCorpseAt(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            string cellAlias = action.Parameters?["cellAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(cellAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "consumeInteractableCorpseAt requires a cellAlias parameter.");
+
+            if (!context.InteractableCorpsesByCell.ContainsKey(cellAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"No interactable corpse found at '{cellAlias}'.");
+
+            context.InteractableCorpsesByCell.Remove(cellAlias);
+            if (context.Cells.TryGetValue(cellAlias, out var cell))
+                cell.IsTaken = false;
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Interactable corpse consumed at '{cellAlias}'.");
+        }
+
+        private static GameplayAssertionResult AssertInteractableCorpseExistsAt(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "interactableCorpseExistsAt requires a target cell alias.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = context.InteractableCorpsesByCell.ContainsKey(assertion.Target);
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"InteractableCorpse at '{assertion.Target}' exists={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected InteractableCorpse at '{assertion.Target}' exists={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertCellOccupiedByInteractable(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "cellOccupiedByInteractable requires a target cell alias.");
+
+            if (!context.Cells.TryGetValue(assertion.Target, out var cell))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Cell alias '{assertion.Target}' does not exist.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = context.InteractableCorpsesByCell.ContainsKey(assertion.Target) && cell.IsTaken;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Cell '{assertion.Target}' occupied by interactable={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected Cell '{assertion.Target}' occupied by interactable={expected}, actual={actual}.");
         }
 
         /// <summary>

@@ -14,7 +14,9 @@ const supportedSetupKinds = new Set([
   "createAiBrain",
   "useRealAssets",
   "loadSkillGraphAsset",
-  "loadRoguelikeMap"
+  "loadRoguelikeMap",
+  "loadTestPartyConfig",
+  "loadTestEncounterConfig"
 ]);
 
 const supportedActionKinds = new Set([
@@ -39,7 +41,10 @@ const supportedActionKinds = new Set([
   "setText",
   "setElementEnabled",
   "spawnCorpse",
-  "killUnit"
+  "killUnit",
+  "setBattleTestMode",
+  "spawnInteractableCorpse",
+  "consumeInteractableCorpseAt"
 ]);
 
 const supportedGraphKinds = new Set([
@@ -100,7 +105,9 @@ const supportedAssertionKinds = new Set([
   "elementExists",
   "cellIsBlocked",
   "unitOwnerEquals",
-  "unitIsCorpse"
+  "unitIsCorpse",
+  "interactableCorpseExistsAt",
+  "cellOccupiedByInteractable"
 ]);
 
 interface AliasState {
@@ -290,6 +297,42 @@ function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: E
         });
       }
       break;
+    case "loadTestPartyConfig":
+      if (!getString(step.parameters.configPath)) {
+        diagnostics.push({
+          code: "MissingTestPartyConfigPath",
+          severity: "error",
+          message: "loadTestPartyConfig requires a configPath parameter.",
+          path: step.id ?? step.kind
+        });
+      }
+      if (!getString(step.parameters.spawnPointPrefix)) {
+        diagnostics.push({
+          code: "MissingSpawnPointPrefix",
+          severity: "error",
+          message: "loadTestPartyConfig requires a spawnPointPrefix parameter.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
+    case "loadTestEncounterConfig":
+      if (!getString(step.parameters.configPath)) {
+        diagnostics.push({
+          code: "MissingTestEncounterConfigPath",
+          severity: "error",
+          message: "loadTestEncounterConfig requires a configPath parameter.",
+          path: step.id ?? step.kind
+        });
+      }
+      if (!getString(step.parameters.spawnPointPrefix)) {
+        diagnostics.push({
+          code: "MissingSpawnPointPrefix",
+          severity: "error",
+          message: "loadTestEncounterConfig requires a spawnPointPrefix parameter.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
     default:
       break;
   }
@@ -469,6 +512,42 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
       break;
     case "unitIsCorpse":
       if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
+      if (typeof assertion.expected !== "boolean") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a boolean expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "interactableCorpseExistsAt":
+      if (!assertion.target) {
+        diagnostics.push({
+          code: "MissingCellTarget",
+          severity: "error",
+          message: `${assertion.kind} requires a target cell alias.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      if (typeof assertion.expected !== "boolean") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a boolean expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "cellOccupiedByInteractable":
+      if (!assertion.target) {
+        diagnostics.push({
+          code: "MissingCellTarget",
+          severity: "error",
+          message: `${assertion.kind} requires a target cell alias.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
       if (typeof assertion.expected !== "boolean") {
         diagnostics.push({
           code: "InvalidAssertionExpectedType",

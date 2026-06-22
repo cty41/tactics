@@ -16,7 +16,9 @@ const setupKindToAdapter: Record<string, Adapter> = {
   createAiBrain: "Battle",
   useRealAssets: "Battle",
   loadSkillGraphAsset: "Skill",
-  loadRoguelikeMap: "Map"
+  loadRoguelikeMap: "Map",
+  loadTestPartyConfig: "Skill",
+  loadTestEncounterConfig: "Skill"
 };
 
 const actionKindToAdapter: Record<string, Adapter> = {

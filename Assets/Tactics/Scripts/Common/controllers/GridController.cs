@@ -6,6 +6,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Common.Interactables;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
@@ -236,11 +237,17 @@ namespace Tactics.Common.Controllers
                 eventArgs.AffectedUnit.OwnerUnitId = -1;
             }
 
-            // Corpse generation: first time death → keep as corpse on grid
+            // Corpse generation: first time death → create Corpse interactable on grid
             if (!eventArgs.AffectedUnit.IsCorpse)
             {
                 eventArgs.AffectedUnit.IsCorpse = true;
-                TLog.Info($"[GridController] Unit {eventArgs.AffectedUnit.UnitID} became corpse at {eventArgs.AffectedUnit.CurrentCell?.GridCoordinates}");
+                var cell = eventArgs.AffectedUnit.CurrentCell;
+                if (cell != null)
+                {
+                    var corpse = new Corpse();
+                    cell.AddInteractable(corpse);
+                    TLog.Info($"[GridController] Unit {eventArgs.AffectedUnit.UnitID} died, Corpse created at {cell.GridCoordinates}");
+                }
                 return;
             }
 

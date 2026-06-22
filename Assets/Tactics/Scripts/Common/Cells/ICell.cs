@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 
@@ -54,6 +55,21 @@ namespace Tactics.Common.Cells
         /// The list of units currently occupying this cell.
         /// </summary>
         IList<IUnit> CurrentUnits { get; }
+
+        /// <summary>
+        /// The list of interactable objects currently on this cell.
+        /// </summary>
+        IList<IInteractable> CurrentInteractables { get; }
+
+        /// <summary>
+        /// Adds an interactable object to this cell and updates IsTaken if it occupies the cell.
+        /// </summary>
+        void AddInteractable(IInteractable interactable);
+
+        /// <summary>
+        /// Removes an interactable object from this cell and updates IsTaken accordingly.
+        /// </summary>
+        void RemoveInteractable(IInteractable interactable);
 
         /// <summary>
         /// The movement cost required to enter this cell.

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using Tactics.Runtime.Utilities;
@@ -36,17 +37,23 @@ namespace Tactics.Common.Units.Abilities
                 }
 
                 ICell corpseCell = target.CurrentCell;
+                if (corpseCell == null) continue;
 
-                // Consume corpse: remove from grid and destroy
-                if (corpseCell != null)
+                // Consume Corpse interactable
+                var corpse = corpseCell.CurrentInteractables
+                    .FirstOrDefault(i => i is Corpse && !i.IsDestroyed) as Corpse;
+                if (corpse != null)
                 {
-                    corpseCell.CurrentUnits.Remove(target);
-                    corpseCell.IsTaken = corpseCell.CurrentUnits.Count > 0;
+                    corpse.Consume();
                 }
+
+                // Remove the dead unit from cell
+                corpseCell.CurrentUnits.Remove(target);
+                corpseCell.IsTaken = corpseCell.CurrentUnits.Count > 0 || corpseCell.CurrentInteractables.Any(i => i.OccupiesCell);
                 target.RemoveFromGame();
 
                 // Spawn skeleton unit
-                if (_skeletonPrefab != null && corpseCell != null)
+                if (_skeletonPrefab != null)
                 {
                     var skeletonGO = GameObject.Instantiate(_skeletonPrefab, corpseCell.WorldPosition.ToVector3(), Quaternion.identity);
                     var skeletonUnit = skeletonGO.GetComponent<IUnit>();

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using Tactics.Common.Units.Highlight;
@@ -51,6 +52,24 @@ namespace Tactics.Common.Cells
                 }
                 return _unitListWrapper;
             }
+        }
+
+        private readonly List<IInteractable> _currentInteractables = new List<IInteractable>();
+        public IList<IInteractable> CurrentInteractables => _currentInteractables;
+
+        public void AddInteractable(IInteractable interactable)
+        {
+            if (interactable == null || _currentInteractables.Contains(interactable)) return;
+            _currentInteractables.Add(interactable);
+            if (interactable.OccupiesCell)
+                IsTaken = true;
+        }
+
+        public void RemoveInteractable(IInteractable interactable)
+        {
+            if (interactable == null || !_currentInteractables.Remove(interactable)) return;
+            if (interactable.OccupiesCell && !_currentInteractables.Any(i => i.OccupiesCell) && _currentUnits.Count == 0)
+                IsTaken = false;
         }
 
         public abstract Vector3 CellDimensions { get; protected set; }

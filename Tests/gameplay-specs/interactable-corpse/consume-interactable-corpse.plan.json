@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "InteractableCorpse.ConsumeInteractableCorpse",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "cell_0_0",
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "spawnInteractableCorpse",
+      "parameters": {
+        "cellAlias": "cell_0_0"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "consumeInteractableCorpseAt",
+      "parameters": {
+        "cellAlias": "cell_0_0"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "interactableCorpseExistsAt",
+      "target": "cell_0_0",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "cellOccupiedByInteractable",
+      "target": "cell_0_0",
+      "expected": false,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "interactableCorpseExistsAt",
+      "target": "cell_0_0",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "cellOccupiedByInteractable",
+      "target": "cell_0_0",
+      "parameters": {}
+    }
+  ]
+}
