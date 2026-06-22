@@ -136,7 +136,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "createAiBrain"
                 or "useRealAssets"
                 or "loadSkillGraphAsset"
-                or "loadRoguelikeMap";
+                or "loadRoguelikeMap"
+                or "loadTestPartyConfig"
+                or "loadTestEncounterConfig"
+                or "setBattleTestMode";
         }
 
         private static string ResolvePhase(FailureCategory category, ExecutableScenarioAction action)

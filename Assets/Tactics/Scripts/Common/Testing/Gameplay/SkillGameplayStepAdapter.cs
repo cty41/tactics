@@ -34,7 +34,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "executeAbilityOnTarget"
                 or "executeAbilityOnCell"
                 or "executeSkillGraph"
-                or "loadSkillGraphAsset";
+                or "loadSkillGraphAsset"
+                or "loadTestPartyConfig"
+                or "loadTestEncounterConfig"
+                or "setBattleTestMode";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -84,6 +87,12 @@ namespace Tactics.Common.Testing.Gameplay
                         return GameplayStepResult.Pass(SkillAdapterName, action.Kind, context.LastSkillResult?.Summary);
                     case "loadSkillGraphAsset":
                         return LoadSkillGraphAsset(context, action);
+                    case "loadTestPartyConfig":
+                        return LoadTestPartyConfig(context, action);
+                    case "loadTestEncounterConfig":
+                        return LoadTestEncounterConfig(context, action);
+                    case "setBattleTestMode":
+                        return SetBattleTestMode(context, action);
                     default:
                         return GameplayStepResult.Fail(SkillAdapterName, action.Kind, $"Unsupported Skill action '{action.Kind}'.");
                 }
@@ -855,6 +864,43 @@ namespace Tactics.Common.Testing.Gameplay
             return actual == expected
                 ? GameplayAssertionResult.Pass("Skill", assertion.Kind, $"{assertion.Target}.IsCorpse={actual}")
                 : GameplayAssertionResult.Fail("Skill", assertion.Kind, $"Expected {assertion.Target}.IsCorpse={expected}, actual={actual}.");
+        }
+
+        private static GameplayStepResult LoadTestPartyConfig(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string configPath = GetString(action.Parameters, "configPath", null);
+            if (string.IsNullOrWhiteSpace(configPath))
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestPartyConfig requires a configPath parameter.", "Setup");
+
+            string spawnPointPrefix = GetString(action.Parameters, "spawnPointPrefix", null);
+            if (string.IsNullOrWhiteSpace(spawnPointPrefix))
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestPartyConfig requires a spawnPointPrefix parameter.", "Setup");
+
+            context.TestPartyConfigPath = configPath;
+            context.TestPartySpawnPointPrefix = spawnPointPrefix;
+            return GameplayStepResult.Pass(SkillAdapterName, action.Kind, $"Loaded test party config '{configPath}'.");
+        }
+
+        private static GameplayStepResult LoadTestEncounterConfig(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string configPath = GetString(action.Parameters, "configPath", null);
+            if (string.IsNullOrWhiteSpace(configPath))
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestEncounterConfig requires a configPath parameter.", "Setup");
+
+            string spawnPointPrefix = GetString(action.Parameters, "spawnPointPrefix", null);
+            if (string.IsNullOrWhiteSpace(spawnPointPrefix))
+                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestEncounterConfig requires a spawnPointPrefix parameter.", "Setup");
+
+            context.TestEncounterConfigPath = configPath;
+            context.TestEncounterSpawnPointPrefix = spawnPointPrefix;
+            return GameplayStepResult.Pass(SkillAdapterName, action.Kind, $"Loaded test encounter config '{configPath}'.");
+        }
+
+        private static GameplayStepResult SetBattleTestMode(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            bool enabled = GetBool(action.Parameters, "enabled", true);
+            context.UseBattleTestMode = enabled;
+            return GameplayStepResult.Pass(SkillAdapterName, action.Kind, $"BattleTestMode={enabled}.");
         }
 
         private static SkillGraphTestWorld RequireWorld(GameplayRuntimeContext context)

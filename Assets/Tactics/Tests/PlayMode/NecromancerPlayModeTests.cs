@@ -219,6 +219,21 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.Object.DestroyImmediate(unitGo);
         }
 
+        [UnityTest]
+        public IEnumerator BattleController_TestSetup_FieldsExist()
+        {
+            var go = new GameObject("BattleController_FieldCheck");
+            var bc = go.AddComponent<Tactics.Common.Battle.BattleController>();
+            yield return null;
+
+            var type = typeof(Tactics.Common.Battle.BattleController);
+            Assert.That(type.GetField("_useTestSetup", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance), Is.Not.Null, "_useTestSetup field should exist.");
+            Assert.That(type.GetField("_testPartyConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance), Is.Not.Null, "_testPartyConfig field should exist.");
+            Assert.That(type.GetField("_testEncounterConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance), Is.Not.Null, "_testEncounterConfig field should exist.");
+
+            UnityEngine.Object.DestroyImmediate(go);
+        }
+
         private static void SetPrivateField(object obj, string fieldName, object value)
         {
             var field = obj.GetType().GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
