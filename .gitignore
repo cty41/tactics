@@ -103,3 +103,5 @@ fmod_editor.log
 
 # FMOD Studio logs
 /Proj_FMod/**/fmod*.log
+.mimocode/plans
+Tests/gameplay-specs/compiled
