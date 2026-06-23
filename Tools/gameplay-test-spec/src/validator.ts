@@ -309,8 +309,8 @@ function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: E
       if (!getString(step.parameters.spawnPointPrefix)) {
         diagnostics.push({
           code: "MissingSpawnPointPrefix",
-          severity: "error",
-          message: "loadTestPartyConfig requires a spawnPointPrefix parameter.",
+          severity: "warning",
+          message: "loadTestPartyConfig usually needs a spawnPointPrefix to resolve spawn points.",
           path: step.id ?? step.kind
         });
       }
@@ -327,8 +327,8 @@ function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: E
       if (!getString(step.parameters.spawnPointPrefix)) {
         diagnostics.push({
           code: "MissingSpawnPointPrefix",
-          severity: "error",
-          message: "loadTestEncounterConfig requires a spawnPointPrefix parameter.",
+          severity: "warning",
+          message: "loadTestEncounterConfig usually needs a spawnPointPrefix to resolve spawn points.",
           path: step.id ?? step.kind
         });
       }

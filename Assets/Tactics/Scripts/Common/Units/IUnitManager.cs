@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Players;
+using UnityEngine;
 
 namespace Tactics.Common.Units
 {
@@ -23,6 +24,12 @@ namespace Tactics.Common.Units
         /// Event triggered when a unit is removed from the manager, typically when the unit is destroyed during the game, or removed by calling <see cref="Tactics.Common.Units.IUnit.RemoveFromGame"/>
         /// </summary>
         event Action<IUnit> UnitRemoved;
+
+        /// <summary>
+        /// 所有战斗运行时对象的统一父节点 Transform。
+        /// 用于单位、交互物、召唤物的层级管理。
+        /// </summary>
+        Transform ContainerTransform { get; }
 
         /// <summary>
         /// Initializes the UnitManager when the game start.

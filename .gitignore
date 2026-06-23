@@ -34,6 +34,9 @@ __pycache__/
 /Tools/gameplay-test-spec/node_modules/
 /Tools/gameplay-test-spec/dist/
 
+# Gameplay test spec batch compile output
+Tests/gameplay-specs/**/*.gameplay-test.plan.json
+
 # JetBrains Rider
 .idea
 !.editorConfig

@@ -19,7 +19,7 @@ namespace Tactics.Common.Units.Classes
 
         [BoxGroup("Abilities")]
         [SerializeField]
-        [ListDrawerSettings(DraggableItems = true, Expanded = true, ShowPaging = false)]
+        [ListDrawerSettings(DraggableItems = true, ShowFoldout = true, ShowPaging = false)]
         private List<AbilityConfig> _abilities = new List<AbilityConfig>();
 
         public string DisplayName => _displayName;

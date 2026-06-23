@@ -240,3 +240,47 @@ test("mixed-adapter: UI + Map + Battle routes correctly", async () => {
   assert.ok(assertionKinds.includes("nodeIsVisited(Map)"), `nodeIsVisited should route to Map, got: ${assertionKinds.join(", ")}`);
   assert.ok(assertionKinds.includes("elementVisible(UI)"), `elementVisible should route to UI, got: ${assertionKinds.join(", ")}`);
 });
+
+test("battle-test-config fixture compiles with stable adapter routing", async () => {
+  const markdown = await readFixture("battle-test-config/load-encounter-config.gameplay-test.md");
+  const planJson = await readFixture("battle-test-config/load-encounter-config.plan.json");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(planJson));
+
+  const setupKinds = compiled.plan.setupActions.map(a => `${a.kind}(${a.adapter})`);
+  const actionKinds = compiled.plan.runtimeActions.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(setupKinds.includes("loadTestEncounterConfig(Skill)"), `loadTestEncounterConfig should route to Skill, got: ${setupKinds.join(", ")}`);
+  assert.ok(actionKinds.includes("setBattleTestMode(Skill)"), `setBattleTestMode should route to Skill, got: ${actionKinds.join(", ")}`);
+});
+
+test("interactable corpse fixture compiles with stable adapter routing", async () => {
+  const markdown = await readFixture("interactable-corpse/spawn-interactable-corpse.gameplay-test.md");
+  const planJson = await readFixture("interactable-corpse/spawn-interactable-corpse.plan.json");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(planJson));
+
+  const actionKinds = compiled.plan.runtimeActions.map(a => `${a.kind}(${a.adapter})`);
+  const assertionKinds = compiled.plan.assertionPlans.map(a => `${a.kind}(${a.adapter})`);
+  assert.ok(actionKinds.includes("spawnInteractableCorpse(Battle)"), `spawnInteractableCorpse should route to Battle, got: ${actionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("interactableCorpseExistsAt(Battle)"), `interactableCorpseExistsAt should route to Battle, got: ${assertionKinds.join(", ")}`);
+  assert.ok(assertionKinds.includes("cellOccupiedByInteractable(Battle)"), `cellOccupiedByInteractable should route to Battle, got: ${assertionKinds.join(", ")}`);
+});
+
+test("necromancer corpse dependency fixture compiles with stable adapter routing", async () => {
+  const markdown = await readFixture("necromancer/summon-requires-corpse.gameplay-test.md");
+  const planJson = await readFixture("necromancer/summon-requires-corpse.plan.json");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(planJson));
+});

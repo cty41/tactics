@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Cells;
+using Tactics.Common.Interactables;
+using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Runtime.Utilities;
@@ -162,9 +164,9 @@ namespace Tactics.Common.AI.MonsterAI
 
         private static IEnumerable<AbilityTargetOption> EnumerateAbilityTargetOptions(AiContext context, AbilityInfo ability)
         {
-            if (ability.Ability is GenericAbilityImpl generic && generic.Config?.TargetingStrategy != null)
+            if (ability.Ability is SkillGraphAbilityImpl skillGraph)
             {
-                foreach (var option in EnumerateGenericAbilityTargetOptions(context, ability, generic.Config.TargetingStrategy))
+                foreach (var option in EnumerateSkillGraphTargetOptions(context, ability, skillGraph))
                     yield return option;
                 yield break;
             }
@@ -177,48 +179,43 @@ namespace Tactics.Common.AI.MonsterAI
             }
         }
 
-        private static IEnumerable<AbilityTargetOption> EnumerateGenericAbilityTargetOptions(AiContext context, AbilityInfo ability, TargetingStrategy strategy)
+        private static IEnumerable<AbilityTargetOption> EnumerateSkillGraphTargetOptions(AiContext context, AbilityInfo ability, SkillGraphAbilityImpl skillGraph)
         {
-            switch (strategy)
+            var firstNode = skillGraph.FindFirstSelectionNode();
+            switch (firstNode)
             {
-                case SelfTargeting:
+                case SelectSelfNodeRecord:
                     yield return new AbilityTargetOption(context.Self.CurrentCell, new List<IUnit> { context.Self });
                     yield break;
 
-                case AoETargeting:
-                    foreach (var cell in GetCellsInRange(context, ability.Range))
+                case SelectAllyNodeRecord allySelect:
+                    foreach (var ally in GetPotentialAllyTargets(context))
                     {
-                        var targets = strategy.GetTargets(context.Self, cell, context.GridController)
-                            .Where(unit => unit != null && !unit.IsDowned)
-                            .ToList();
-                        if (targets.Count > 0)
-                            yield return new AbilityTargetOption(cell, targets);
+                        if (ally.CurrentCell == null) continue;
+                        if (CalcDist(context.Self.CurrentCell, ally.CurrentCell) > allySelect.MaxRange + 0.5f) continue;
+                        yield return new AbilityTargetOption(ally.CurrentCell, new List<IUnit> { ally });
                     }
                     yield break;
 
-                case MultiTargetEnemy:
+                case SelectPrimaryTargetNodeRecord primarySelect:
                     foreach (var target in context.CandidateTargets)
                     {
                         if (target.CurrentCell == null) continue;
                         if (CalcDist(context.Self.CurrentCell, target.CurrentCell) > ability.Range + 0.5f) continue;
-
-                        var targets = strategy.GetTargets(context.Self, target.CurrentCell, context.GridController)
-                            .Where(unit => unit != null && !unit.IsDowned)
-                            .ToList();
-                        if (targets.Count > 0)
-                            yield return new AbilityTargetOption(target.CurrentCell, targets);
+                        yield return new AbilityTargetOption(target.CurrentCell, new List<IUnit> { target });
                     }
                     yield break;
 
-                case SingleTargetAlly:
-                case MoveThenHealTargeting:
-                    foreach (var ally in GetPotentialAllyTargets(context))
+                case SelectCorpseTargetNodeRecord:
+                    foreach (var cell in context.GridController.CellManager.GetCells())
                     {
-                        if (ally.CurrentCell == null) continue;
-                        if (CalcDist(context.Self.CurrentCell, ally.CurrentCell) > ability.Range + 0.5f) continue;
-                        if (!strategy.IsValidTarget(context.Self, ally, context.GridController)) continue;
-
-                        yield return new AbilityTargetOption(ally.CurrentCell, new List<IUnit> { ally });
+                        bool hasCorpse = false;
+                        foreach (var interactable in cell.CurrentInteractables)
+                        {
+                            if (interactable is Corpse corpse && !corpse.IsDestroyed) { hasCorpse = true; break; }
+                        }
+                        if (hasCorpse)
+                            yield return new AbilityTargetOption(cell, new List<IUnit>());
                     }
                     yield break;
 
@@ -227,20 +224,9 @@ namespace Tactics.Common.AI.MonsterAI
                     {
                         if (target.CurrentCell == null) continue;
                         if (CalcDist(context.Self.CurrentCell, target.CurrentCell) > ability.Range + 0.5f) continue;
-                        if (!strategy.IsValidTarget(context.Self, target, context.GridController)) continue;
-
                         yield return new AbilityTargetOption(target.CurrentCell, new List<IUnit> { target });
                     }
                     yield break;
-            }
-        }
-
-        private static IEnumerable<ICell> GetCellsInRange(AiContext context, int range)
-        {
-            foreach (var cell in context.GridController.CellManager.GetCells())
-            {
-                if (CalcDist(context.Self.CurrentCell, cell) <= range + 0.5f)
-                    yield return cell;
             }
         }
 

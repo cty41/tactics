@@ -678,7 +678,8 @@ namespace Tactics.Common.Skills.Graph
                     continue;
                 }
 
-                var go = UnityEngine.Object.Instantiate(prefab, corpseCell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity);
+                var container = grid.UnitManager?.ContainerTransform;
+                var go = UnityEngine.Object.Instantiate(prefab, corpseCell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity, container);
                 var unit = go.GetComponent<IUnit>();
                 if (unit != null)
                 {

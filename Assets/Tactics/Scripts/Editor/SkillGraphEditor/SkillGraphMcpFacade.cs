@@ -612,48 +612,6 @@ namespace Tactics.Editor.SkillGraphEditor
             };
         }
 
-        // ═══════════════════════════════════════════
-        //  Legacy readiness audit
-        // ═══════════════════════════════════════════
-
-        public static List<LegacyAbilityAuditResult> ListLegacyAbilityConfigs()
-        {
-            return SkillGraphLegacyAbilityAudit.RunAudit();
-        }
-
-        public static LegacyAbilityAuditSummary RunLegacyAbilityReadinessAudit()
-        {
-            var items = SkillGraphLegacyAbilityAudit.RunAudit();
-            var summary = new LegacyAbilityAuditSummary
-            {
-                Items = items,
-                Total = items.Count
-            };
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                switch (items[i].Status)
-                {
-                    case LegacyAbilityReadinessStatus.ReadyForMigration:
-                        summary.ReadyForMigration++;
-                        break;
-                    case LegacyAbilityReadinessStatus.NeedsProjectileSemantic:
-                        summary.NeedsProjectileSemantic++;
-                        break;
-                    case LegacyAbilityReadinessStatus.BlockedByLegacyIncompleteImplementation:
-                        summary.BlockedByLegacyIncompleteImplementation++;
-                        break;
-                    case LegacyAbilityReadinessStatus.NeedsManualDesign:
-                        summary.NeedsManualDesign++;
-                        break;
-                    case LegacyAbilityReadinessStatus.SpecialCase:
-                        summary.SpecialCase++;
-                        break;
-                }
-            }
-
-            return summary;
-        }
 
         public static SkillGraphAbilityConfigResult SyncAbilityConfigFromGraph(
             string graphPath,
@@ -1244,17 +1202,6 @@ namespace Tactics.Editor.SkillGraphEditor
         public SkillGraphBridgeSyncStatus Status;
         public bool IsValid;
         public List<SkillGraphDiagnostic> Diagnostics;
-    }
-
-    public class LegacyAbilityAuditSummary
-    {
-        public int Total;
-        public int ReadyForMigration;
-        public int NeedsProjectileSemantic;
-        public int BlockedByLegacyIncompleteImplementation;
-        public int NeedsManualDesign;
-        public int SpecialCase;
-        public List<LegacyAbilityAuditResult> Items;
     }
 
     // ═══════════════════════════════════════════

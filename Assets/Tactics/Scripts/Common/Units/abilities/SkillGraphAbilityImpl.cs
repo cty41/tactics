@@ -431,7 +431,7 @@ namespace Tactics.Common.Units.Abilities
             return false;
         }
 
-        private SkillGraphNodeRecord FindFirstSelectionNode()
+        public SkillGraphNodeRecord FindFirstSelectionNode()
         {
             if (_config?.SkillGraph == null) return null;
             var nodes = _config.SkillGraph.Nodes;

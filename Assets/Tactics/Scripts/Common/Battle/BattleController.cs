@@ -498,18 +498,32 @@ namespace Tactics.Common.Battle
                 spawnCell.CurrentUnits.Add(unit);
             spawnCell.IsTaken = true;
 
-            if (!string.IsNullOrWhiteSpace(unitEntry.AiBrainAssetPath))
+            if (unitEntry.PlayerNumber != _humanPlayerNumber)
             {
-                var aiPath = GameAssetManager.NormalizeAssetPath(unitEntry.AiBrainAssetPath);
-                var brain = mgr.Load<AiBrainAsset>(aiPath);
-                if (brain == null)
+                if (!string.IsNullOrWhiteSpace(unitEntry.AiBrainAssetPath))
                 {
-                    TLog.Error($"[BattleController] Encounter AI brain not found: {aiPath}");
+                    var aiPath = GameAssetManager.NormalizeAssetPath(unitEntry.AiBrainAssetPath);
+                    var brain = mgr.Load<AiBrainAsset>(aiPath);
+                    if (brain == null)
+                    {
+                        TLog.Error($"[BattleController] AI brain not found: {aiPath}. Destroying AI unit '{go.name}'.");
+                        Destroy(go);
+                        return;
+                    }
+
+                    if (!brain.IsValid())
+                    {
+                        TLog.Error($"[BattleController] AI brain is invalid: {aiPath}. Destroying AI unit '{go.name}'.");
+                        Destroy(go);
+                        return;
+                    }
+
+                    _loadedPaths.Add(aiPath);
+                    unit.ApplyAiBrain(brain);
                 }
                 else
                 {
-                    _loadedPaths.Add(aiPath);
-                    unit.ApplyAiBrain(brain);
+                    TLog.Info($"[BattleController] Encounter unit '{go.name}' has no AiBrainAssetPath configured. Unit will have no AI.");
                 }
             }
         }
@@ -647,18 +661,32 @@ namespace Tactics.Common.Battle
                     cell.CurrentUnits.Add(unit);
                 cell.IsTaken = true;
 
-                if (!string.IsNullOrWhiteSpace(slot.AiBrainAssetPath) && mgr != null)
+                if (slot.PlayerNumber != _humanPlayerNumber)
                 {
-                    var aiPath = GameAssetManager.NormalizeAssetPath(slot.AiBrainAssetPath);
-                    var brain = mgr.Load<AiBrainAsset>(aiPath);
-                    if (brain == null)
+                    if (!string.IsNullOrWhiteSpace(slot.AiBrainAssetPath) && mgr != null)
                     {
-                        TLog.Error($"[BattleController] Encounter AI brain not found: {aiPath}");
+                        var aiPath = GameAssetManager.NormalizeAssetPath(slot.AiBrainAssetPath);
+                        var brain = mgr.Load<AiBrainAsset>(aiPath);
+                        if (brain == null)
+                        {
+                            TLog.Error($"[BattleController] Test encounter AI brain not found: {aiPath}. Destroying AI unit '{go.name}'.");
+                            Destroy(go);
+                            continue;
+                        }
+
+                        if (!brain.IsValid())
+                        {
+                            TLog.Error($"[BattleController] Test encounter AI brain is invalid: {aiPath}. Destroying AI unit '{go.name}'.");
+                            Destroy(go);
+                            continue;
+                        }
+
+                        _loadedPaths.Add(aiPath);
+                        unit.ApplyAiBrain(brain);
                     }
                     else
                     {
-                        _loadedPaths.Add(aiPath);
-                        unit.ApplyAiBrain(brain);
+                        TLog.Info($"[BattleController] Test encounter unit '{go.name}' has no AiBrainAssetPath configured. Unit will have no AI.");
                     }
                 }
             }
@@ -1136,6 +1164,8 @@ namespace Tactics.Common.Battle
 
         public event Action<IUnit> UnitAdded;
         public event Action<IUnit> UnitRemoved;
+
+        Transform IUnitManager.ContainerTransform => UnitContainerTransform;
 
         void IUnitManager.Initialize(IGridController gridController)
         {

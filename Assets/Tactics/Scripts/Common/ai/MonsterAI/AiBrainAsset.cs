@@ -5,7 +5,7 @@ namespace Tactics.Common.AI.MonsterAI
     /// <summary>
     /// 怪物原型级 AI 脚本资产。
     /// 持有决策图、默认参数、调试选项、版本信息。
-    /// 与 BehaviourTreeResource 互斥，单位只能绑定其中一种。
+    /// 单位通过 AiBrainAsset 驱动 AI 决策，不再支持旧 BehaviourTreeResource。
     /// </summary>
     [CreateAssetMenu(fileName = "NewAiBrain", menuName = "Tactics/AI/Ai Brain Asset")]
     public class AiBrainAsset : ScriptableObject

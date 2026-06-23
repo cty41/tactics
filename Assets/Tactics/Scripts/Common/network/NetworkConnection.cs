@@ -7,7 +7,6 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Network;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
-using Tactics.Common.Controllers;
 using UnityEngine;
 
 namespace Tactics.Common.Network

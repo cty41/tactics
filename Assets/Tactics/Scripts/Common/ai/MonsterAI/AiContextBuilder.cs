@@ -119,48 +119,7 @@ namespace Tactics.Common.AI.MonsterAI
             float controlValue = 0f;
             float utilityValue = 0f;
 
-            if (ability is GenericAbilityImpl generic && generic.Config != null)
-            {
-                var config = generic.Config;
-                range = GetRange(config.TargetingStrategy, self.AttackRange);
-                tags |= GetTargetingTags(config.TargetingStrategy);
-
-                foreach (var effect in config.Effects)
-                {
-                    switch (effect)
-                    {
-                        case DamageEffect damage:
-                            tags |= AbilityAiTags.Damage;
-                            baseDamage += damage.BaseDamage;
-                            break;
-                        case HealEffect heal:
-                            tags |= AbilityAiTags.Heal;
-                            healAmount += heal.HealAmount;
-                            break;
-                        case ApplyBuffEffect:
-                            tags |= AbilityAiTags.Buff | AbilityAiTags.Utility;
-                            utilityValue += 0.35f;
-                            break;
-                        case DamageOverTimeEffect dot:
-                            tags |= AbilityAiTags.Damage | AbilityAiTags.Debuff;
-                            baseDamage += dot.DamagePerTurn * dot.Duration;
-                            utilityValue += 0.25f;
-                            break;
-                        case KnockbackEffect knockback:
-                            tags |= AbilityAiTags.Control;
-                            controlValue += 0.2f + knockback.Distance * 0.1f;
-                            break;
-                        case SpawnEffect:
-                            tags |= AbilityAiTags.Utility;
-                            utilityValue += 0.5f;
-                            break;
-                        case MoveEffect:
-                            tags |= AbilityAiTags.Movement;
-                            break;
-                    }
-                }
-            }
-            else if (ability is SkillGraphAbilityImpl skillGraph && skillGraph.SkillGraphAsset != null)
+            if (ability is SkillGraphAbilityImpl skillGraph && skillGraph.SkillGraphAsset != null)
             {
                 range = skillGraph.TargetRange;
                 foreach (var node in skillGraph.SkillGraphAsset.Nodes)
@@ -195,31 +154,6 @@ namespace Tactics.Common.AI.MonsterAI
         private static string FormatCell(ICell cell)
         {
             return cell != null ? $"({cell.GridCoordinates.x}, {cell.GridCoordinates.y})" : "None";
-        }
-
-        private static int GetRange(TargetingStrategy strategy, int fallback)
-        {
-            return strategy switch
-            {
-                SingleTargetEnemy single => single.MaxRange,
-                SingleTargetAlly ally => ally.MaxRange,
-                AoETargeting aoe => aoe.MaxRange,
-                MultiTargetEnemy multi => multi.MaxRange,
-                MoveThenHealTargeting heal => heal.HealRange,
-                _ => fallback
-            };
-        }
-
-        private static AbilityAiTags GetTargetingTags(TargetingStrategy strategy)
-        {
-            return strategy switch
-            {
-                AoETargeting => AbilityAiTags.Aoe,
-                MultiTargetEnemy => AbilityAiTags.Aoe,
-                MoveThenHealTargeting => AbilityAiTags.Heal | AbilityAiTags.Movement,
-                MoveThenAttackTargeting => AbilityAiTags.Damage | AbilityAiTags.Movement,
-                _ => AbilityAiTags.None
-            };
         }
 
         private static AbilityAiTags InferTagsFromName(string abilityName)

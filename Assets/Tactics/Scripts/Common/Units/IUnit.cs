@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Tactics.Common.AI.BehaviourTrees;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units.Abilities;
@@ -168,11 +167,6 @@ namespace Tactics.Common.Units
         /// The number of the player that owns the unit.
         /// </summary>
         int PlayerNumber { get; set; }
-
-        /// <summary>
-        /// The behavior tree associated with the unit, used by the AI Player.
-        /// </summary>
-        ITreeNode BehaviourTree { get; }
 
         int UnitID { get; set; }
 

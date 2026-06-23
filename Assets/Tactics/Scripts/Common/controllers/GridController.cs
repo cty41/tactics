@@ -256,7 +256,8 @@ namespace Tactics.Common.Controllers
                             var prefab = mgr.Load<UnityEngine.GameObject>(CorpsePrefabPath);
                             if (prefab != null)
                             {
-                                var go = UnityEngine.Object.Instantiate(prefab, cell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity);
+                                var container = UnitManager?.ContainerTransform;
+                                var go = UnityEngine.Object.Instantiate(prefab, cell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity, container);
                                 corpse = go.GetComponent<Corpse>();
                             }
                         }
@@ -265,6 +266,8 @@ namespace Tactics.Common.Controllers
                     if (corpse == null)
                     {
                         var go = new UnityEngine.GameObject("Corpse");
+                        var container = UnitManager?.ContainerTransform;
+                        if (container != null) go.transform.SetParent(container);
                         corpse = go.AddComponent<Corpse>();
                         go.transform.position = cell.WorldPosition.ToVector3();
                     }

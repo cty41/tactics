@@ -11,8 +11,7 @@ namespace Tactics.Common.AI.MonsterAI
     /// <summary>
     /// 意图执行器。
     /// 负责把意图翻译成技能执行动作，只做意图翻译，不承载战斗规则。
-    /// 运行时主路径优先使用 GenericAbilityImpl / SkillGraphAbilityImpl，
-    /// 旧 Command 路径仅作为兼容兜底。
+    /// 通过 IAiExecutableAbility 接口统一执行，不依赖具体能力实现类型。
     /// </summary>
     public static class IntentExecutor
     {
@@ -92,18 +91,15 @@ namespace Tactics.Common.AI.MonsterAI
                     await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
                     context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
                 }
-                else if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
+                else
                 {
-                    await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
-                    context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
+                    TLog.Warning("[IntentExecutor] Engage follow-up attack: no executable attack ability found.");
                 }
             }
         }
 
         /// <summary>
         /// 执行普攻意图。
-        /// 优先走新技能执行链（GenericAbilityImpl/SkillGraphAbilityImpl），
-        /// 仅在找不到可用攻击能力时保留 Command 兜底，避免旧系统成为主路径。
         /// </summary>
         private static async Task ExecuteBasicAttack(IntentCandidate selected, AiContext context)
         {
@@ -119,14 +115,7 @@ namespace Tactics.Common.AI.MonsterAI
                 return;
             }
 
-            if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
-            {
-                await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
-                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
-                return;
-            }
-
-            TLog.Warning("[IntentExecutor] No attack ability found. Ensure unit has AbilityConfig with DamageEffect.");
+            TLog.Warning("[IntentExecutor] No executable attack ability found for BasicAttack.");
             context.DecisionLog.ExecutionResult(attackAbility?.Name, "Attack", selected.Target.UnitID);
         }
 
@@ -146,14 +135,7 @@ namespace Tactics.Common.AI.MonsterAI
                 return;
             }
 
-            if (selected.Ability.Ability is GenericAbilityImpl generic)
-            {
-                await generic.ExecuteEffectsAsync(selected.Targets, context.GridController);
-                context.DecisionLog.ExecutionResult(selected.Ability.Name, "UseAbility", selected.Target?.UnitID);
-                return;
-            }
-
-            TLog.Warning($"[IntentExecutor] Ability '{selected.Ability.Name}' does not support awaitable AI execution.");
+            TLog.Warning($"[IntentExecutor] Ability '{selected.Ability.Name}' does not implement IAiExecutableAbility.");
         }
 
         /// <summary>
@@ -206,7 +188,7 @@ namespace Tactics.Common.AI.MonsterAI
                 }
             }
 
-            // 攻击目标 - 优先走新技能执行链
+            // 攻击目标
             var attackAbility = FindAttackAbility(context);
             if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
             {
@@ -215,14 +197,7 @@ namespace Tactics.Common.AI.MonsterAI
                 return;
             }
 
-            if (attackAbility?.Ability is GenericAbilityImpl genericAttack)
-            {
-                await genericAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
-                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
-                return;
-            }
-
-            TLog.Warning("[IntentExecutor] No attack ability found for FinishOff. Ensure unit has AbilityConfig with DamageEffect.");
+            TLog.Warning("[IntentExecutor] No executable attack ability found for FinishOff.");
             context.DecisionLog.ExecutionResult(attackAbility?.Name, "Attack", selected.Target.UnitID);
         }
 
@@ -277,12 +252,7 @@ namespace Tactics.Common.AI.MonsterAI
                 if (moved) return true;
             }
 
-            if (moveAbility.Ability is GenericAbilityImpl genericMove)
-            {
-                return await genericMove.ExecuteMoveForAI(destination, path, context.GridController);
-            }
-
-            // 兼容兜底：当单位只有基础 Move 能力时仍保留 MoveCommand
+            // 兼容兜底：当 IAiExecutableAbility 不可用时仍保留 MoveCommand
             await ExecuteCommandForAI(new MoveCommand(context.Self.CurrentCell, destination, path), context);
             return true;
         }

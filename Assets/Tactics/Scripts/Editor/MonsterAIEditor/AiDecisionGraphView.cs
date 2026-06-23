@@ -471,7 +471,7 @@ namespace Tactics.Editor.MonsterAIEditor
 
         // ── 序列化（用于复制粘贴） ──
 
-        private string SerializeGraphElements(IEnumerable<GraphElement> elements)
+        private new string SerializeGraphElements(IEnumerable<GraphElement> elements)
         {
             return "";
         }

@@ -18,8 +18,9 @@ namespace Tactics.Common.Players
 {
     /// <summary>
     /// Pure C# implementation of an AI-controlled player.
-    /// The AIPlayer selects and commands units during its turn using behavior trees for decision making.
+    /// The AIPlayer selects and commands units during its turn using AiBrainRunner for decision making.
     /// </summary>
+
     public class AIPlayer : IPlayer
     {
         public int PlayerNumber { get; set; }
@@ -121,24 +122,17 @@ namespace Tactics.Common.Players
 
                     await Awaitable.WaitForSecondsAsync(UnitDelay / 1000f, _cancellationTokenSource.Token);
 
-                    // 新 AI / 旧行为树分流
                     if (playableUnit is Unit concreteUnit && concreteUnit.AiBrainAsset != null)
                     {
-                        // 使用新 AI 系统
-                        // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
                         TLog.Info($"[AIPlayer] EXECUTE AI: CanAct={playableUnit.CanAct}, Brain={concreteUnit.AiBrainAsset.name}, MovePts={concreteUnit.MovementPoints:F1}, Player={playableUnit.PlayerNumber}");
                         await AiBrainRunner.Execute(playableUnit, gridController, concreteUnit.AiBrainAsset);
                     }
-                    else if (playableUnit.BehaviourTree != null)
-                    {
-                        // 使用旧行为树
-                        await playableUnit.BehaviourTree.Execute(DebugMode);
-                    }
                     else
                     {
-                        TLog.Error($"[AIPlayer] Unit {playableUnit} has no AI configured. Skipping.");
+                        TLog.Error($"[AIPlayer] Unit {playableUnit} has no AiBrainAsset configured. Skipping.");
                         continue;
                     }
+
 
                     await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
                     await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });

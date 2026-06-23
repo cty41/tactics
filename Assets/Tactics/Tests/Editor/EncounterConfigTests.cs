@@ -8,8 +8,8 @@ using Tactics.Common.Controllers.TurnResolvers;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
-using Tactics.RoguelikeMap;
 using UnityEngine;
+using Tactics.RoguelikeMap;
 using UnityEngine.TestTools;
 using System;
 using System.Collections.Generic;
@@ -153,8 +153,10 @@ namespace Tactics.Tests.Editor
                 _order = order;
             }
 
+#pragma warning disable CS0067 // Events are never used — interface stubs
             public event Action<ICell> CellAdded;
             public event Action<ICell> CellRemoved;
+#pragma warning restore CS0067
 
             public void Initialize(IGridController gridController)
             {
@@ -192,8 +194,12 @@ namespace Tactics.Tests.Editor
                 _order = order;
             }
 
+#pragma warning disable CS0067 // Events are never used — interface stubs
             public event Action<IUnit> UnitAdded;
             public event Action<IUnit> UnitRemoved;
+#pragma warning restore CS0067
+
+            public Transform ContainerTransform => null;
 
             public void Initialize(IGridController gridController)
             {

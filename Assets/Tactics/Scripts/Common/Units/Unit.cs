@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Tactics.Common.AI.BehaviourTrees;
 using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
@@ -12,6 +11,7 @@ using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Classes;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
+using Tactics.AssetPipeline;
 using Tactics.Common.Units.Highlight;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -76,10 +76,6 @@ namespace Tactics.Common.Units
 
         public string UnitName => gameObject.name;
 
-        public ITreeNode BehaviourTree { get { return _behaviourTreeResource?.BehaviourTree; } }
-        [SerializeField] protected BehaviourTreeResource _behaviourTreeResource;
-
-        [Tooltip("新 AI 脑资产（与 BehaviourTreeResource 互斥）")]
         [SerializeField] private AiBrainAsset _aiBrainAsset;
 
         /// <summary>
@@ -226,16 +222,6 @@ namespace Tactics.Common.Units
             _buffComponent = new BuffComponent(this);
             _buffComponent.BuffChanged += args => BuffChanged?.Invoke(args);
 
-            // 新 AI / 旧行为树互斥
-            if (_aiBrainAsset != null)
-            {
-                TLog.Info($"[Unit] {gameObject.name} using new AI brain, skipping old behaviour tree init.");
-            }
-            else
-            {
-                _behaviourTreeResource?.Initialize(this, gridController);
-            }
-
             // Initialize highlight manager with configs
             _highlightManager = new UnitHighlightManager(this, _highlightConfigs);
 
@@ -258,16 +244,30 @@ namespace Tactics.Common.Units
                     if (config != null)
                     {
                         var ability = config.CreateAbility(this);
-                        RegisterAbility(ability, gridController);
+                        if (ability != null)
+                        {
+                            RegisterAbility(ability, gridController);
+                        }
+                        else
+                        {
+                            TLog.Warning($"[Unit] {gameObject.name}: AbilityConfig '{config.DisplayName}' returned null from CreateAbility. Skipping.");
+                        }
                     }
                 }
             }
 
-            // Ensure default Move ability exists
             if (!_baseAbilities.Any(a => a.DisplayName == "Move"))
             {
-                var moveAbility = AbilityConfig.CreateDefaultMoveConfig().CreateAbility(this);
-                RegisterAbility(moveAbility, gridController);
+                SkillGraphAbilityConfig moveConfig = null;
+
+                if (GameAssetManager.Instance != null)
+                {
+                    moveConfig = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
+                        "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Move_Graph_Ability.asset");
+                }
+
+                moveConfig ??= SkillGraphAbilityConfig.CreateDefaultMoveConfig();
+                RegisterAbility(moveConfig.CreateAbility(this), gridController);
             }
         }
 
@@ -649,13 +649,6 @@ namespace Tactics.Common.Units
         }
         private void Reset()
         {
-            if(_behaviourTreeResource == null)
-            {
-                GameObject brain = new GameObject("Brain");
-                brain.transform.parent = transform;
-                var behaviourTreeResource = brain.AddComponent<RegularBehaviourTreeResource>();
-                _behaviourTreeResource = behaviourTreeResource;
-            }
         }
     }
 

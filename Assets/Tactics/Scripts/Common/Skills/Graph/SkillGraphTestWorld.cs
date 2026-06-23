@@ -155,11 +155,13 @@ namespace Tactics.Common.Skills.Graph.Testing
         public int CurrentRound { get; private set; } = 1;
         public GridState GridState { get; set; } = new GridStateBlockInput();
 
+#pragma warning disable CS0067 // Event is never used — required by IGridController interface
         public event Action GameStarted;
         public event Action GameInitialized;
         public event Action<GameResult> GameEnded;
         public event Action<TurnTransitionParams> TurnStarted;
         public event Action<TurnTransitionParams> TurnEnded;
+#pragma warning restore CS0067
 
         public void SetTurnContext(IPlayer currentPlayer, IEnumerable<IUnit> playableUnits)
         {
@@ -205,8 +207,10 @@ namespace Tactics.Common.Skills.Graph.Testing
         private readonly List<ICell> _cells = new();
         private readonly Dictionary<Vector2IntImpl, ICell> _cellsByCoord = new();
 
+#pragma warning disable CS0067 // Event is never used — required by ICellManager interface
         public event Action<ICell> CellAdded;
         public event Action<ICell> CellRemoved;
+#pragma warning restore CS0067
 
         public void AddCell(ICell cell)
         {
@@ -260,6 +264,8 @@ namespace Tactics.Common.Skills.Graph.Testing
 
         public event Action<IUnit> UnitAdded;
         public event Action<IUnit> UnitRemoved;
+
+        public Transform ContainerTransform => null;
 
         public void AddUnit(IUnit unit)
         {

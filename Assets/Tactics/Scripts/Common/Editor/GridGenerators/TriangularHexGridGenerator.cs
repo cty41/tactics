@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
 using Tactics.Common.Utilities;
-using Tactics.Common.Cells;
 using UnityEditor;
 using UnityEngine;
 
