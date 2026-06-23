@@ -3,8 +3,8 @@ using UnityEngine;
 namespace Tactics.Common.Battle.Authoring
 {
     /// <summary>
-    /// Scene 中玩家出生点标记。
-    /// 通过 SpawnId 与测试配置资产绑定，不直接存 scene 引用。
+    /// Scene 中玩家出生点预览锚点。
+    /// 仅用于编辑器可视化和辅助摆放，不再作为测试配置的运行时真相源。
     /// </summary>
     public sealed class PlayerSpawnPoint : MonoBehaviour
     {

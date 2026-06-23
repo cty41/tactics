@@ -28,6 +28,9 @@
 | `addBuff` | Battle | `unitAlias`, `buffName` | 给单位添加 Buff（可选 duration，默认 3） |
 | `executeAI` | Battle | `unitAlias` | 执行 AI 决策（需先 createAiBrain） |
 | `createAiBrain` | Battle | `brainAssetAlias` | 创建 AI 脑资产（brainType: attack/heal） |
+| `loadTestPartyConfig` | Skill | `configPath` | 加载玩家测试队伍配置来源 |
+| `loadTestEncounterConfig` | Skill | `configPath` | 加载敌方测试关卡配置来源 |
+| `setBattleTestMode` | Skill | `enabled` | 切换战斗测试模式开关 |
 
 ### executeBattleSkillGraph 详细参数
 
@@ -60,6 +63,9 @@
 | `aiSelectedIntentTypeEquals` | Battle | 无 | string | AI 最终选择的意图类型 |
 | `aiCandidateCountEquals` | Battle | 无 | number | AI 候选动作数 |
 | `aiRuleFilteredCountEquals` | Battle | 无 | number | AI 规则过滤数 |
+| `cellIsBlocked` | Battle/Skill | cell alias | boolean | 格子是否被占用 |
+| `unitOwnerEquals` | Battle/Skill | unit alias | string | 单位归属关系 |
+| `unitIsCorpse` | Battle/Skill | unit alias | boolean | 单位是否为尸体 |
 
 ---
 

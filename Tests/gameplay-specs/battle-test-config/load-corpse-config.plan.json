@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "BattleTestConfig.MissingPartyConfig_FailsClearly",
+  "scenarioName": "BattleTestConfig.LoadCorpseConfig_SetsEncounterSource",
   "requiredAdapters": [
     "Skill"
   ],
@@ -12,9 +12,9 @@
     },
     {
       "adapter": "Skill",
-      "kind": "loadTestPartyConfig",
+      "kind": "loadTestEncounterConfig",
       "parameters": {
-        "configPath": ""
+        "configPath": "Assets/Tactics/ScriptableObjects/BattleTest/CorpseTestEncounter.asset"
       }
     }
   ],
@@ -31,13 +31,19 @@
     {
       "adapter": "Skill",
       "kind": "executionStateEquals",
-      "expected": "Failed",
+      "expected": "Completed",
       "parameters": {}
     },
     {
       "adapter": "Skill",
       "kind": "stepMessageContains",
-      "expected": "loadTestPartyConfig",
+      "expected": "loadTestEncounterConfig",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "expected": "setBattleTestMode",
       "parameters": {}
     }
   ],
@@ -46,6 +52,11 @@
     {
       "adapter": "Skill",
       "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
       "parameters": {}
     },
     {

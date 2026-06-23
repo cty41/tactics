@@ -12,7 +12,6 @@ setup:
   - kind: loadTestEncounterConfig
     parameters:
       configPath: ""
-      spawnPointPrefix: enemy_spawn
 actions:
   - kind: setBattleTestMode
     parameters:

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "BattleTestConfig.MissingSpawnPointId_FailsClearly",
+  "scenarioName": "BattleTestConfig.MissingPartyConfigPath_FailsClearly",
   "requiredAdapters": [
     "Skill"
   ],
@@ -14,7 +14,7 @@
       "adapter": "Skill",
       "kind": "createCell",
       "parameters": {
-        "alias": "dummySpawn",
+        "alias": "dummyCell",
         "x": 0,
         "y": 0
       }
@@ -23,8 +23,7 @@
       "adapter": "Skill",
       "kind": "loadTestPartyConfig",
       "parameters": {
-        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset",
-        "spawnPointPrefix": "missing_spawn"
+        "configPath": ""
       }
     }
   ],

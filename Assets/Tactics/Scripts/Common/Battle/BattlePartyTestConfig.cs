@@ -7,7 +7,7 @@ namespace Tactics.Common.Battle
 {
     /// <summary>
     /// 测试用玩家队伍配置资产。
-    /// 通过 SpawnId 绑定 scene 中的 PlayerSpawnPoint，不直接引用 scene 对象。
+    /// 直接通过格子坐标生成，不依赖 scene 中的出生点对象。
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Battle/Test Party Config")]
     public sealed class BattlePartyTestConfig : ScriptableObject
@@ -30,7 +30,7 @@ namespace Tactics.Common.Battle
     [Serializable]
     public sealed class PartyTestSlot
     {
-        [SerializeField] private string _spawnId;
+        [SerializeField] private Vector2Int _spawnCell;
         [SerializeField] private GameObject _unitPrefab;
         [SerializeField] private RoleType _roleType = RoleType.Barbarian;
         [SerializeField] private string _displayName;
@@ -47,7 +47,7 @@ namespace Tactics.Common.Battle
         [SerializeField] private int _attackFactor = 1;
         [SerializeField] private int _defenceFactor = 1;
 
-        public string SpawnId => _spawnId;
+        public Vector2Int SpawnCell => _spawnCell;
         public GameObject UnitPrefab => _unitPrefab;
         public RoleType RoleType => _roleType;
         public string DisplayName => _displayName;

@@ -872,12 +872,7 @@ namespace Tactics.Common.Testing.Gameplay
             if (string.IsNullOrWhiteSpace(configPath))
                 return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestPartyConfig requires a configPath parameter.", "Setup");
 
-            string spawnPointPrefix = GetString(action.Parameters, "spawnPointPrefix", null);
-            if (string.IsNullOrWhiteSpace(spawnPointPrefix))
-                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestPartyConfig requires a spawnPointPrefix parameter.", "Setup");
-
             context.TestPartyConfigPath = configPath;
-            context.TestPartySpawnPointPrefix = spawnPointPrefix;
             return GameplayStepResult.Pass(SkillAdapterName, action.Kind, $"Loaded test party config '{configPath}'.");
         }
 
@@ -887,12 +882,7 @@ namespace Tactics.Common.Testing.Gameplay
             if (string.IsNullOrWhiteSpace(configPath))
                 return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestEncounterConfig requires a configPath parameter.", "Setup");
 
-            string spawnPointPrefix = GetString(action.Parameters, "spawnPointPrefix", null);
-            if (string.IsNullOrWhiteSpace(spawnPointPrefix))
-                return GameplayStepResult.Fail(SkillAdapterName, action.Kind, "loadTestEncounterConfig requires a spawnPointPrefix parameter.", "Setup");
-
             context.TestEncounterConfigPath = configPath;
-            context.TestEncounterSpawnPointPrefix = spawnPointPrefix;
             return GameplayStepResult.Pass(SkillAdapterName, action.Kind, $"Loaded test encounter config '{configPath}'.");
         }
 

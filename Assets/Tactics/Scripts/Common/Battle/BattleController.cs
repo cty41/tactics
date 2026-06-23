@@ -22,6 +22,7 @@ using Tactics.Common.Utilities;
 using Tactics.Roguelike;
 using Tactics.Roster;
 using Tactics.UI;
+using Tactics.Common.Interactables;
 using Tactics.Units;
 
 namespace Tactics.Common.Battle
@@ -166,6 +167,10 @@ namespace Tactics.Common.Battle
         [SerializeField] private BattlePartyTestConfig _testPartyConfig;
         [SerializeField] private BattleEncounterTestConfig _testEncounterConfig;
 
+        [Header("Corpse")]
+        [Tooltip("尸体 prefab 在 GameAssetManager 中的路径。单位死亡时通过此路径加载尸体 prefab。")]
+        [SerializeField] private string _corpsePrefabPath = "Assets/Tactics/Arts/Prefabs/Units/TestCorpse.prefab";
+
         #endregion
 
         #region Private Fields
@@ -175,8 +180,6 @@ namespace Tactics.Common.Battle
         private IList<IUnit> _units;
         private int _unitCount;
         private readonly HashSet<string> _loadedPaths = new();
-        private Dictionary<string, Authoring.PlayerSpawnPoint> _playerSpawnCache = new(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, Authoring.EnemySpawnPoint> _enemySpawnCache = new(StringComparer.OrdinalIgnoreCase);
 
         #endregion
 
@@ -191,9 +194,13 @@ namespace Tactics.Common.Battle
             _controller.UnitManager = this;
             _controller.PlayerManager = this;
             _controller.TurnResolver = _turnResolver ?? new Tactics.Common.Controllers.TurnResolvers.SubsequentTurnResolverImpl();
-            _controller.BeforeUnitManagerInitialize = _ => SpawnEncounterUnits();
-
-            BuildSpawnPointCaches();
+            _controller.CorpsePrefabPath = _corpsePrefabPath;
+            _controller.BeforeUnitManagerInitialize = _ =>
+            {
+                if (_useTestSetup && _testPartyConfig != null)
+                    SpawnTestPartyUnits();
+                SpawnEncounterUnits();
+            };
 
             // Initialize players (will be configured in IPlayerManager.Initialize after UnitManager is ready)
             if (_players != null && _players.Length > 0)
@@ -259,6 +266,7 @@ namespace Tactics.Common.Battle
             if (_useTestSetup && _testEncounterConfig != null)
             {
                 SpawnTestEncounterUnits();
+                SpawnTestEncounterInteractables();
                 return;
             }
 
@@ -301,7 +309,7 @@ namespace Tactics.Common.Battle
         {
             if (_useTestSetup && _testPartyConfig != null)
             {
-                SpawnTestPartyUnits();
+                // Deferred to BeforeUnitManagerInitialize (after CellManager init)
                 return;
             }
 
@@ -506,42 +514,6 @@ namespace Tactics.Common.Battle
             }
         }
 
-        private void BuildSpawnPointCaches()
-        {
-            _playerSpawnCache.Clear();
-            _enemySpawnCache.Clear();
-
-            foreach (var point in FindObjectsByType<Authoring.PlayerSpawnPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (point == null) continue;
-                if (string.IsNullOrWhiteSpace(point.SpawnId))
-                {
-                    TLog.Warning("[BattleController] PlayerSpawnPoint with empty SpawnId ignored.");
-                    continue;
-                }
-
-                if (!_playerSpawnCache.TryAdd(point.SpawnId, point))
-                {
-                    TLog.Error($"[BattleController] Duplicate PlayerSpawnPoint SpawnId='{point.SpawnId}'. Using first instance.");
-                }
-            }
-
-            foreach (var point in FindObjectsByType<Authoring.EnemySpawnPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (point == null) continue;
-                if (string.IsNullOrWhiteSpace(point.SpawnId))
-                {
-                    TLog.Warning("[BattleController] EnemySpawnPoint with empty SpawnId ignored.");
-                    continue;
-                }
-
-                if (!_enemySpawnCache.TryAdd(point.SpawnId, point))
-                {
-                    TLog.Error($"[BattleController] Duplicate EnemySpawnPoint SpawnId='{point.SpawnId}'. Using first instance.");
-                }
-            }
-        }
-
         private void SpawnTestPartyUnits()
         {
             if (_testPartyConfig == null)
@@ -579,9 +551,8 @@ namespace Tactics.Common.Battle
                     continue;
                 }
 
-                if (string.IsNullOrWhiteSpace(slot.SpawnId) || !_playerSpawnCache.TryGetValue(slot.SpawnId, out var spawnPoint))
+                if (!TryGetTestSetupCell(slot.SpawnCell, $"TestPartySlot[{i}]", out var cell))
                 {
-                    TLog.Error($"[BattleController] PlayerSpawnPoint with SpawnId='{slot.SpawnId}' not found for slot {i}.");
                     continue;
                 }
 
@@ -607,19 +578,11 @@ namespace Tactics.Common.Battle
                 unit.AttackFactor = slot.AttackFactor;
                 unit.DefenceFactor = slot.DefenceFactor;
 
-                go.transform.position = spawnPoint.transform.position;
-                var cell = _cellManager != null ? _cellManager.GetCellAt(new Vector2IntImpl(Mathf.RoundToInt(spawnPoint.transform.position.x), Mathf.RoundToInt(spawnPoint.transform.position.y))) : null;
-                if (cell != null)
-                {
-                    unit.CurrentCell = cell;
-                    if (!cell.CurrentUnits.Contains(unit))
-                        cell.CurrentUnits.Add(unit);
-                    cell.IsTaken = true;
-                }
-                else
-                {
-                    TLog.Warning($"[BattleController] PlayerSpawnPoint '{slot.SpawnId}' did not map to a grid cell.");
-                }
+                go.transform.position = cell.WorldPosition.ToVector3();
+                unit.CurrentCell = cell;
+                if (!cell.CurrentUnits.Contains(unit))
+                    cell.CurrentUnits.Add(unit);
+                cell.IsTaken = true;
             }
         }
 
@@ -660,9 +623,8 @@ namespace Tactics.Common.Battle
                     continue;
                 }
 
-                if (string.IsNullOrWhiteSpace(slot.SpawnId) || !_enemySpawnCache.TryGetValue(slot.SpawnId, out var spawnPoint))
+                if (!TryGetTestSetupCell(slot.SpawnCell, $"TestEncounterSlot[{i}]", out var cell))
                 {
-                    TLog.Error($"[BattleController] EnemySpawnPoint with SpawnId='{slot.SpawnId}' not found for slot {i}.");
                     continue;
                 }
 
@@ -679,20 +641,11 @@ namespace Tactics.Common.Battle
 
                 unit.PlayerNumber = slot.PlayerNumber;
 
-                var cell = _cellManager != null ? _cellManager.GetCellAt(new Vector2IntImpl(Mathf.RoundToInt(spawnPoint.transform.position.x), Mathf.RoundToInt(spawnPoint.transform.position.y))) : null;
-                if (cell != null)
-                {
-                    go.transform.position = cell.WorldPosition.ToVector3();
-                    unit.CurrentCell = cell;
-                    if (!cell.CurrentUnits.Contains(unit))
-                        cell.CurrentUnits.Add(unit);
-                    cell.IsTaken = true;
-                }
-                else
-                {
-                    go.transform.position = spawnPoint.transform.position;
-                    TLog.Warning($"[BattleController] EnemySpawnPoint '{slot.SpawnId}' did not map to a grid cell.");
-                }
+                go.transform.position = cell.WorldPosition.ToVector3();
+                unit.CurrentCell = cell;
+                if (!cell.CurrentUnits.Contains(unit))
+                    cell.CurrentUnits.Add(unit);
+                cell.IsTaken = true;
 
                 if (!string.IsNullOrWhiteSpace(slot.AiBrainAssetPath) && mgr != null)
                 {
@@ -711,6 +664,54 @@ namespace Tactics.Common.Battle
             }
         }
 
+        private void SpawnTestEncounterInteractables()
+        {
+            if (_testEncounterConfig == null) return;
+
+            var corpseSlots = _testEncounterConfig.CorpseSlots;
+            if (corpseSlots == null || corpseSlots.Count == 0) return;
+
+            Transform container = UnitContainerTransform ?? transform;
+
+            for (int i = 0; i < corpseSlots.Count; i++)
+            {
+                var slot = corpseSlots[i];
+                if (slot == null)
+                {
+                    TLog.Warning($"[BattleController] CorpseTestSlot[{i}] is null. Skipping.");
+                    continue;
+                }
+
+                if (slot.UnitPrefab == null)
+                {
+                    TLog.Error($"[BattleController] CorpseTestSlot[{i}] has null UnitPrefab. Skipping.");
+                    continue;
+                }
+
+                if (!TryGetTestSetupCell(slot.SpawnCell, $"CorpseTestSlot[{i}]", out var cell))
+                {
+                    continue;
+                }
+
+                var go = Instantiate(slot.UnitPrefab, container);
+                go.name = string.IsNullOrWhiteSpace(slot.DisplayName) ? $"TestCorpse_{i}" : slot.DisplayName;
+                go.SetActive(true);
+
+                var corpse = go.GetComponent<Corpse>();
+                if (corpse == null)
+                {
+                    TLog.Error($"[BattleController] CorpseTestSlot[{i}] prefab missing Corpse component.");
+                    Destroy(go);
+                    continue;
+                }
+
+                go.transform.position = cell.WorldPosition.ToVector3();
+                cell.AddInteractable(corpse);
+
+                TLog.Info($"[BattleController] Corpse '{go.name}' spawned at {cell.GridCoordinates}.");
+            }
+        }
+
         private bool TryGetEncounterCell(int x, int y, out ICell cell)
         {
             cell = null;
@@ -723,6 +724,24 @@ namespace Tactics.Common.Battle
 
             cell = manager.GetCellAt(new Vector2IntImpl(x, y));
             return cell != null;
+        }
+
+        private bool TryGetTestSetupCell(Vector2Int spawnCell, string slotLabel, out ICell cell)
+        {
+            cell = null;
+            var manager = CellManager;
+            if (manager == null)
+            {
+                TLog.Error($"[BattleController] CellManager is null while resolving {slotLabel}.");
+                return false;
+            }
+
+            cell = manager.GetCellAt(spawnCell.ToIVector2Int());
+            if (cell != null)
+                return true;
+
+            TLog.Error($"[BattleController] {slotLabel} SpawnCell '{spawnCell}' did not map to a grid cell.");
+            return false;
         }
 
         #endregion

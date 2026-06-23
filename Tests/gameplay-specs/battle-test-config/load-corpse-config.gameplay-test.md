@@ -1,9 +1,10 @@
 ---
 feature: BattleTestConfig
-scenario: LoadEncounterConfig_SetsEncounterSource
+scenario: LoadCorpseConfig_SetsEncounterSource
 tags:
   - battle
   - test-config
+  - corpse
 requiredAdapters:
   - Skill
 setup:
@@ -11,7 +12,7 @@ setup:
     parameters: {}
   - kind: loadTestEncounterConfig
     parameters:
-      configPath: Tests/gameplay-specs/battle-test-config/Assets/Encounter/TestEncounter.asset
+      configPath: Assets/Tactics/ScriptableObjects/BattleTest/CorpseTestEncounter.asset
 actions:
   - kind: setBattleTestMode
     parameters:
@@ -29,6 +30,7 @@ assertions:
 timeoutMs: 10000
 ---
 
-# BattleTestConfig - LoadEncounterConfig_SetsEncounterSource
+# BattleTestConfig - LoadCorpseConfig_SetsEncounterSource
 
-验证 `loadTestEncounterConfig` 可加载敌方测试关卡配置来源，并能切换到测试模式。
+验证 `loadTestEncounterConfig` 可加载包含 corpse slots 的敌方测试关卡配置，并能切换到测试模式。
+覆盖 config loading 链路，确保含尸体槽位的 encounter config 可正常被 test setup 消费。

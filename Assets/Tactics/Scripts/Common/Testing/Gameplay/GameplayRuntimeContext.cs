@@ -53,9 +53,7 @@ namespace Tactics.Common.Testing.Gameplay
         // 战斗测试配置模式
         public bool UseBattleTestMode { get; set; }
         public string TestPartyConfigPath { get; set; }
-        public string TestPartySpawnPointPrefix { get; set; }
         public string TestEncounterConfigPath { get; set; }
-        public string TestEncounterSpawnPointPrefix { get; set; }
 
         // BattleEnded 订阅追踪（防止重复订阅泄漏）
         public BattleController SubscribedBattleController { get; set; }

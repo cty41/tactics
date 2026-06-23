@@ -11,13 +11,12 @@ setup:
     parameters: {}
   - kind: createCell
     parameters:
-      alias: dummySpawn
+      alias: dummyCell
       x: 0
       'y': 0
   - kind: loadTestPartyConfig
     parameters:
-      configPath: Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset
-      spawnPointPrefix: missing_spawn
+      configPath: ""
 actions:
   - kind: setBattleTestMode
     parameters:
@@ -32,6 +31,6 @@ assertions:
 timeoutMs: 10000
 ---
 
-# BattleTestConfig - MissingSpawnPointId_FailsClearly
+# BattleTestConfig - MissingPartyConfigPath_FailsClearly
 
-验证配置指向不存在的 spawn 点位前缀时，测试链路会以明确失败提示，而不是静默继续。
+验证缺少玩家测试配置路径时，测试链路会以明确失败提示，而不是静默继续。

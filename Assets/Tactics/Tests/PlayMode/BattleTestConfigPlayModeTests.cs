@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Tactics.Common.Battle;
-using Tactics.Common.Battle.Authoring;
 using Tactics.Common.Cells;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Classes;
 using Tactics.Common.Utilities;
@@ -26,8 +27,6 @@ namespace Tactics.Tests.PlayMode
             go.AddComponent<TilemapUnit>();
             return go;
         }
-        private readonly List<GameObject> _spawnPoints = new();
-
         [UnitySetUp]
         public IEnumerator SetUp()
         {
@@ -84,13 +83,6 @@ namespace Tactics.Tests.PlayMode
             yield return null;
             yield return null;
 
-            // Destroy all spawned test objects
-            foreach (var sp in _spawnPoints)
-            {
-                if (sp != null) Object.DestroyImmediate(sp);
-            }
-            _spawnPoints.Clear();
-
             // Destroy any leftover TilemapUnits from tests
             foreach (var unit in Object.FindObjectsByType<TilemapUnit>(FindObjectsSortMode.None))
             {
@@ -104,28 +96,25 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TestMode_SpawnsPartyUnits_AtSpawnPoints()
+        public IEnumerator TestMode_SpawnsPartyUnits_AtSpawnCells()
         {
             // Arrange
             var template = CreateUnitTemplate();
-            var spawnA = CreateSpawnPoint<PlayerSpawnPoint>("p_spawn_1", new Vector3(0, 0, 0));
-            var spawnB = CreateSpawnPoint<PlayerSpawnPoint>("p_spawn_2", new Vector3(1, 0, 0));
 
             var partyConfig = ScriptableObject.CreateInstance<BattlePartyTestConfig>();
             var slots = new List<PartyTestSlot>
             {
-                CreatePartySlot("p_spawn_1", template, "Warrior"),
-                CreatePartySlot("p_spawn_2", template, "Mage")
+                CreatePartySlot(new Vector2Int(0, 0), template, "Warrior"),
+                CreatePartySlot(new Vector2Int(1, 0), template, "Mage")
             };
             SetPrivateField(partyConfig, "_slots", slots);
 
             var bc = _battleRoot.GetComponent<BattleController>();
             SetPrivateField(bc, "_useTestSetup", true);
             SetPrivateField(bc, "_testPartyConfig", partyConfig);
-            RebuildSpawnCaches(bc);
 
             // Act
-            CallPrivate(bc, "SpawnPartyUnits");
+            CallPrivate(bc, "SpawnTestPartyUnits");
             yield return null;
 
             // Assert
@@ -136,25 +125,23 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TestMode_SpawnsEncounterUnits_AtSpawnPoints()
+        public IEnumerator TestMode_SpawnsEncounterUnits_AtSpawnCells()
         {
             // Arrange
             var template = CreateUnitTemplate();
             // Set PlayerNumber=1 so encounter cleanup doesn't destroy it
             template.GetComponent<TilemapUnit>().PlayerNumber = 1;
-            var spawnA = CreateSpawnPoint<EnemySpawnPoint>("e_spawn_1", new Vector3(3, 0, 0));
 
             var encounterConfig = ScriptableObject.CreateInstance<BattleEncounterTestConfig>();
             var slots = new List<EncounterTestSlot>
             {
-                CreateEncounterSlot("e_spawn_1", template, "Goblin", 2)
+                CreateEncounterSlot(new Vector2Int(3, 0), template, "Goblin", 2)
             };
             SetPrivateField(encounterConfig, "_slots", slots);
 
             var bc = _battleRoot.GetComponent<BattleController>();
             SetPrivateField(bc, "_useTestSetup", true);
             SetPrivateField(bc, "_testEncounterConfig", encounterConfig);
-            RebuildSpawnCaches(bc);
 
             // Act
             CallPrivate(bc, "SpawnEncounterUnits");
@@ -168,29 +155,28 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator MissingSpawnPoint_LogsError()
+        public IEnumerator MissingSpawnCell_LogsError()
         {
-            // Arrange: config references nonexistent spawn point
+            // Arrange: config references nonexistent spawn cell
             var template = CreateUnitTemplate();
             var partyConfig = ScriptableObject.CreateInstance<BattlePartyTestConfig>();
             var slots = new List<PartyTestSlot>
             {
-                CreatePartySlot("nonexistent_spawn", template, "Ghost")
+                CreatePartySlot(new Vector2Int(99, 99), template, "Ghost")
             };
             SetPrivateField(partyConfig, "_slots", slots);
 
             var bc = _battleRoot.GetComponent<BattleController>();
             SetPrivateField(bc, "_useTestSetup", true);
             SetPrivateField(bc, "_testPartyConfig", partyConfig);
-            RebuildSpawnCaches(bc);
 
             // Act + Assert expected error
-            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("PlayerSpawnPoint with SpawnId='nonexistent_spawn' not found"));
-            CallPrivate(bc, "SpawnPartyUnits");
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("TestPartySlot\\[0\\] SpawnCell '\\(99, 99\\)' did not map to a grid cell"));
+            CallPrivate(bc, "SpawnTestPartyUnits");
             yield return null;
 
             int playerUnits = CountUnitsWithPlayerNumber(1);
-            Assert.That(playerUnits, Is.EqualTo(0), "Should not spawn when spawn point is missing.");
+            Assert.That(playerUnits, Is.EqualTo(0), "Should not spawn when spawn cell is missing.");
 
             Object.DestroyImmediate(template);
         }
@@ -200,24 +186,22 @@ namespace Tactics.Tests.PlayMode
         {
             // Arrange
             var template = CreateUnitTemplate();
-            var spawnA = CreateSpawnPoint<PlayerSpawnPoint>("p_spawn_1", new Vector3(0, 0, 0));
 
             var partyConfig = ScriptableObject.CreateInstance<BattlePartyTestConfig>();
             var slots = new List<PartyTestSlot>
             {
-                CreatePartySlot("p_spawn_1", null, "Ghost"),
-                CreatePartySlot("p_spawn_1", template, "Valid")
+                CreatePartySlot(new Vector2Int(0, 0), null, "Ghost"),
+                CreatePartySlot(new Vector2Int(0, 0), template, "Valid")
             };
             SetPrivateField(partyConfig, "_slots", slots);
 
             var bc = _battleRoot.GetComponent<BattleController>();
             SetPrivateField(bc, "_useTestSetup", true);
             SetPrivateField(bc, "_testPartyConfig", partyConfig);
-            RebuildSpawnCaches(bc);
 
             // Act + Assert expected error for null prefab
             LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("TestPartySlot\\[0\\] has null UnitPrefab"));
-            CallPrivate(bc, "SpawnPartyUnits");
+            CallPrivate(bc, "SpawnTestPartyUnits");
             yield return null;
 
             int playerUnits = CountUnitsWithPlayerNumber(1);
@@ -244,22 +228,128 @@ namespace Tactics.Tests.PlayMode
             Assert.Pass("Production path completed without crash.");
         }
 
-        // --- Helpers ---
-
-        private T CreateSpawnPoint<T>(string spawnId, Vector3 position) where T : MonoBehaviour
+        [UnityTest]
+        public IEnumerator TestMode_SpawnsCorpseUnits_WithCorpseInteractable()
         {
-            var go = new GameObject($"Spawn_{spawnId}");
-            go.transform.position = position;
-            var point = go.AddComponent<T>();
-            SetPrivateField(point, "_spawnId", spawnId);
-            _spawnPoints.Add(go);
-            return point;
+            // Arrange: create a corpse prefab (inactive to avoid FindObjectsByType picking it up)
+            var corpseGo = new GameObject("CorpsePrefab");
+            corpseGo.AddComponent<Corpse>();
+            corpseGo.AddComponent<BoxCollider2D>();
+            corpseGo.SetActive(false);
+
+            var encounterConfig = ScriptableObject.CreateInstance<BattleEncounterTestConfig>();
+            var corpseSlots = new List<CorpseTestSlot>
+            {
+                CreateCorpseSlot(new Vector2Int(2, 1), corpseGo, "TestCorpse", 2)
+            };
+            SetPrivateField(encounterConfig, "_corpseSlots", corpseSlots);
+            SetPrivateField(encounterConfig, "_slots", new List<EncounterTestSlot>());
+
+            var bc = _battleRoot.GetComponent<BattleController>();
+            SetPrivateField(bc, "_useTestSetup", true);
+            SetPrivateField(bc, "_testEncounterConfig", encounterConfig);
+
+            // Act
+            CallPrivate(bc, "SpawnEncounterUnits");
+            yield return null;
+
+            // Assert: Corpse component exists in scene (only active ones)
+            var corpses = Object.FindObjectsByType<Corpse>(FindObjectsSortMode.None)
+                .Where(c => c.gameObject.activeInHierarchy).ToList();
+            Assert.That(corpses.Count, Is.EqualTo(1), $"Expected 1 Corpse, found {corpses.Count}.");
+
+            // Assert: Corpse is on a cell
+            var corpse = corpses[0];
+            Assert.IsNotNull(corpse.CurrentCell, "Corpse should have a CurrentCell.");
+            var cell = corpse.CurrentCell;
+            Assert.IsTrue(cell.CurrentInteractables.Any(i => i is Corpse && !i.IsDestroyed), "Cell should have a Corpse interactable.");
+            Assert.IsTrue(cell.IsTaken, "Cell should be taken.");
+
+            Object.DestroyImmediate(corpseGo);
         }
 
-        private static PartyTestSlot CreatePartySlot(string spawnId, GameObject prefab, string displayName)
+        [UnityTest]
+        public IEnumerator TestMode_CorpseUnit_IsConsumable()
+        {
+            // Arrange: create a corpse prefab (inactive to avoid FindObjectsByType picking it up)
+            var corpseGo = new GameObject("CorpsePrefab");
+            corpseGo.AddComponent<Corpse>();
+            corpseGo.AddComponent<BoxCollider2D>();
+            corpseGo.SetActive(false);
+
+            var encounterConfig = ScriptableObject.CreateInstance<BattleEncounterTestConfig>();
+            var corpseSlots = new List<CorpseTestSlot>
+            {
+                CreateCorpseSlot(new Vector2Int(2, 1), corpseGo, "TestCorpse", 2)
+            };
+            SetPrivateField(encounterConfig, "_corpseSlots", corpseSlots);
+            SetPrivateField(encounterConfig, "_slots", new List<EncounterTestSlot>());
+
+            var bc = _battleRoot.GetComponent<BattleController>();
+            SetPrivateField(bc, "_useTestSetup", true);
+            SetPrivateField(bc, "_testEncounterConfig", encounterConfig);
+
+            CallPrivate(bc, "SpawnEncounterUnits");
+            yield return null;
+
+            // Find the corpse (only active ones)
+            var corpse = Object.FindObjectsByType<Corpse>(FindObjectsSortMode.None)
+                .First(c => c.gameObject.activeInHierarchy);
+            Assert.IsNotNull(corpse, "Corpse should exist.");
+            var cell = corpse.CurrentCell;
+            Assert.IsNotNull(cell, "Corpse should have a CurrentCell.");
+
+            // Act: consume the corpse
+            corpse.Consume();
+
+            // Assert: corpse consumed, cell freed
+            Assert.IsTrue(corpse.IsDestroyed, "Corpse should be destroyed after consume.");
+            Assert.IsFalse(cell.CurrentInteractables.Any(i => i is Corpse && !i.IsDestroyed),
+                "No living Corpse should remain on cell after consume.");
+            Assert.IsFalse(cell.IsTaken, "Cell should be free after corpse is consumed.");
+
+            Object.DestroyImmediate(corpseGo);
+        }
+
+        [UnityTest]
+        public IEnumerator TestMode_MissingCorpseSpawnCell_LogsError()
+        {
+            // Arrange: create a corpse prefab (inactive to avoid FindObjectsByType picking it up)
+            var corpseGo = new GameObject("CorpsePrefab");
+            corpseGo.AddComponent<Corpse>();
+            corpseGo.SetActive(false);
+
+            var encounterConfig = ScriptableObject.CreateInstance<BattleEncounterTestConfig>();
+            var corpseSlots = new List<CorpseTestSlot>
+            {
+                CreateCorpseSlot(new Vector2Int(99, 99), corpseGo, "Ghost", 2)
+            };
+            SetPrivateField(encounterConfig, "_corpseSlots", corpseSlots);
+            SetPrivateField(encounterConfig, "_slots", new List<EncounterTestSlot>());
+
+            var bc = _battleRoot.GetComponent<BattleController>();
+            SetPrivateField(bc, "_useTestSetup", true);
+            SetPrivateField(bc, "_testEncounterConfig", encounterConfig);
+
+            // Act + Assert expected error
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("CorpseTestSlot\\[0\\] SpawnCell '\\(99, 99\\)' did not map to a grid cell"));
+            CallPrivate(bc, "SpawnEncounterUnits");
+            yield return null;
+
+            // No active corpses should be spawned
+            var corpses = Object.FindObjectsByType<Corpse>(FindObjectsSortMode.None)
+                .Where(c => c.gameObject.activeInHierarchy).ToList();
+            Assert.That(corpses.Count, Is.EqualTo(0), "No corpses should spawn when spawn cell is missing.");
+
+            Object.DestroyImmediate(corpseGo);
+        }
+
+        // --- Helpers ---
+
+        private static PartyTestSlot CreatePartySlot(Vector2Int spawnCell, GameObject prefab, string displayName)
         {
             var slot = new PartyTestSlot();
-            SetPrivateField(slot, "_spawnId", spawnId);
+            SetPrivateField(slot, "_spawnCell", spawnCell);
             SetPrivateField(slot, "_unitPrefab", prefab);
             SetPrivateField(slot, "_displayName", displayName);
             SetPrivateField(slot, "_roleType", RoleType.Barbarian);
@@ -275,20 +365,24 @@ namespace Tactics.Tests.PlayMode
             return slot;
         }
 
-        private static EncounterTestSlot CreateEncounterSlot(string spawnId, GameObject prefab, string displayName, int playerNumber)
+        private static EncounterTestSlot CreateEncounterSlot(Vector2Int spawnCell, GameObject prefab, string displayName, int playerNumber)
         {
             var slot = new EncounterTestSlot();
-            SetPrivateField(slot, "_spawnId", spawnId);
+            SetPrivateField(slot, "_spawnCell", spawnCell);
             SetPrivateField(slot, "_unitPrefab", prefab);
             SetPrivateField(slot, "_displayName", displayName);
             SetPrivateField(slot, "_playerNumber", playerNumber);
             return slot;
         }
 
-        private void RebuildSpawnCaches(BattleController bc)
+        private static CorpseTestSlot CreateCorpseSlot(Vector2Int spawnCell, GameObject prefab, string displayName, int playerNumber)
         {
-            var buildMethod = typeof(BattleController).GetMethod("BuildSpawnPointCaches", BindingFlags.Instance | BindingFlags.NonPublic);
-            buildMethod?.Invoke(bc, null);
+            var slot = new CorpseTestSlot();
+            SetPrivateField(slot, "_spawnCell", spawnCell);
+            SetPrivateField(slot, "_unitPrefab", prefab);
+            SetPrivateField(slot, "_displayName", displayName);
+            SetPrivateField(slot, "_playerNumber", playerNumber);
+            return slot;
         }
 
         private void CallPrivate(BattleController bc, string methodName)

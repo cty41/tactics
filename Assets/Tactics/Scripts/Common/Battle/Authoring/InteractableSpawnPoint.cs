@@ -3,10 +3,10 @@ using UnityEngine;
 namespace Tactics.Common.Battle.Authoring
 {
     /// <summary>
-    /// Scene 中敌方出生点预览锚点。
-    /// 仅用于编辑器可视化和辅助摆放，不再作为测试配置的运行时真相源。
+    /// 通用交互物出生点预览锚点。
+    /// 用于编辑器可视化和辅助摆放，尸体是第一种接入对象，后续可扩展宝箱、金币等。
     /// </summary>
-    public sealed class EnemySpawnPoint : MonoBehaviour
+    public sealed class InteractableSpawnPoint : MonoBehaviour
     {
         [SerializeField] private string _spawnId;
 

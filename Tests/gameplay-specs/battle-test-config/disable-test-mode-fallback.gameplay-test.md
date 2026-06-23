@@ -12,11 +12,9 @@ setup:
   - kind: loadTestPartyConfig
     parameters:
       configPath: Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset
-      spawnPointPrefix: player_spawn
   - kind: loadTestEncounterConfig
     parameters:
       configPath: Tests/gameplay-specs/battle-test-config/Assets/Encounter/TestEncounter.asset
-      spawnPointPrefix: enemy_spawn
 actions:
   - kind: setBattleTestMode
     parameters:

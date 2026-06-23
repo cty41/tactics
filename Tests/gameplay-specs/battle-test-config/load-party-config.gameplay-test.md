@@ -12,7 +12,6 @@ setup:
   - kind: loadTestPartyConfig
     parameters:
       configPath: Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset
-      spawnPointPrefix: player_spawn
 actions:
   - kind: setBattleTestMode
     parameters:

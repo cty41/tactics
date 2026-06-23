@@ -32,8 +32,7 @@
       "adapter": "Skill",
       "kind": "loadTestPartyConfig",
       "parameters": {
-        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset",
-        "spawnPointPrefix": "player_spawn"
+        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset"
       }
     }
   ],

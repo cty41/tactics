@@ -14,8 +14,7 @@
       "adapter": "Skill",
       "kind": "loadTestEncounterConfig",
       "parameters": {
-        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Encounter/TestEncounter.asset",
-        "spawnPointPrefix": "enemy_spawn"
+        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Encounter/TestEncounter.asset"
       }
     }
   ],

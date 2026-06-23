@@ -11,8 +11,7 @@ setup:
     parameters: {}
   - kind: loadTestPartyConfig
     parameters:
-      configPath: Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset
-      spawnPointPrefix: missing_player_spawn
+      configPath: ""
 actions:
   - kind: setBattleTestMode
     parameters:
@@ -29,4 +28,4 @@ timeoutMs: 10000
 
 # BattleTestConfig - MissingPartyConfig_FailsClearly
 
-验证当玩家测试配置指向不存在的 spawn 点位时，测试链路会以明确失败提示，而不是静默继续。
+验证当玩家测试配置路径缺失时，测试链路会以明确失败提示，而不是静默继续。

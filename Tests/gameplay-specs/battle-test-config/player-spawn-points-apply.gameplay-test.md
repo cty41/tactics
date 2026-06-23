@@ -23,7 +23,6 @@ setup:
   - kind: loadTestPartyConfig
     parameters:
       configPath: Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset
-      spawnPointPrefix: player_spawn
 actions:
   - kind: setBattleTestMode
     parameters:
@@ -43,4 +42,4 @@ timeoutMs: 10000
 
 # BattleTestConfig - PlayerSpawnPointsApplyCorrectly
 
-验证玩家测试配置可结合玩家 spawn 点位语义加载。
+验证玩家测试配置可按坐标语义加载。

@@ -14,16 +14,14 @@
       "adapter": "Skill",
       "kind": "loadTestPartyConfig",
       "parameters": {
-        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset",
-        "spawnPointPrefix": "player_spawn"
+        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset"
       }
     },
     {
       "adapter": "Skill",
       "kind": "loadTestEncounterConfig",
       "parameters": {
-        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Encounter/TestEncounter.asset",
-        "spawnPointPrefix": "enemy_spawn"
+        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Encounter/TestEncounter.asset"
       }
     }
   ],
