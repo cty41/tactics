@@ -3,6 +3,7 @@ using System.Threading;
 using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 
 namespace Tactics.Common.Skills.Graph
@@ -63,6 +64,7 @@ namespace Tactics.Common.Skills.Graph
         public IUnit PrimaryTarget { get; set; }
         public ICell TargetPoint { get; set; }
         public List<IUnit> TargetSet { get; set; } = new();
+        public List<Corpse> TargetCorpses { get; set; } = new();
         public IGridController GridController { get; }
 
         // ── 黑板（临时变量）──

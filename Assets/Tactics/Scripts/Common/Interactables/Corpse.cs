@@ -1,11 +1,13 @@
-using Tactics.Common.Cells;
+using UnityEngine;
 
 namespace Tactics.Common.Interactables
 {
     /// <summary>
     /// 尸体：战场中由敌人死亡生成的可交互对象。
     /// 占格、可选中、可被死灵法术消耗。
+    /// 作为 MonoBehaviour 挂在 GameObject 上，承载视觉表现。
     /// </summary>
+    [DisallowMultipleComponent]
     public sealed class Corpse : Interactable
     {
         public override bool OccupiesCell => true;

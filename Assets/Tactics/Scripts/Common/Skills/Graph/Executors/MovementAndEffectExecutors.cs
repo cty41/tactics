@@ -1,10 +1,14 @@
+using System.Linq;
 using System.Threading.Tasks;
+using Tactics.AssetPipeline;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
 using Tactics.Runtime.Utilities;
+using UnityEngine;
 
 namespace Tactics.Common.Skills.Graph
 {
@@ -624,6 +628,85 @@ namespace Tactics.Common.Skills.Graph
                     path.Add(cell);
             }
             return path;
+        }
+    }
+
+    public class SummonUnitNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.SummonUnit;
+
+        public async Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (SummonUnitNodeRecord)node;
+            var caster = context.Caster;
+            var grid = context.GridController;
+            var corpses = context.TargetCorpses;
+
+            if (corpses == null || corpses.Count == 0)
+                return SkillNodeExecutionResult.Failed("No corpses to summon from.");
+
+            int summoned = 0;
+            foreach (var corpse in corpses)
+            {
+                if (corpse == null || corpse.IsDestroyed) continue;
+
+                if (caster.SummonedUnit != null && !caster.SummonedUnit.IsDowned)
+                {
+                    TLog.Info($"[SummonUnit] Caster {caster.UnitID} already has a living summon.");
+                    break;
+                }
+
+                ICell corpseCell = corpse.CurrentCell;
+                if (corpseCell == null) continue;
+
+                corpse.Consume();
+
+                GameObject prefab = null;
+                if (!string.IsNullOrEmpty(record.UnitPrefabPath))
+                {
+                    var mgr = GameAssetManager.Instance;
+                    if (mgr != null)
+                    {
+                        var path = GameAssetManager.NormalizeAssetPath(record.UnitPrefabPath);
+                        prefab = mgr.Load<GameObject>(path);
+                    }
+                }
+
+                if (prefab == null)
+                {
+                    TLog.Error($"[SummonUnit] Prefab not found: {record.UnitPrefabPath}");
+                    continue;
+                }
+
+                var go = UnityEngine.Object.Instantiate(prefab, corpseCell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity);
+                var unit = go.GetComponent<IUnit>();
+                if (unit != null)
+                {
+                    unit.OwnerUnitId = caster.UnitID;
+                    unit.PlayerNumber = caster.PlayerNumber;
+                    unit.CurrentCell = corpseCell;
+                    corpseCell.CurrentUnits.Add(unit);
+                    corpseCell.IsTaken = true;
+
+                    caster.SummonedUnit = unit;
+
+                    grid.UnitManager.AddUnit(unit);
+                    unit.Initialize(gridController: grid);
+
+                    summoned++;
+                    TLog.Info($"[SummonUnit] Unit summoned for caster {caster.UnitID} at {corpseCell.GridCoordinates}");
+                }
+                else
+                {
+                    TLog.Error($"[SummonUnit] Prefab missing IUnit component: {record.UnitPrefabPath}");
+                    UnityEngine.Object.Destroy(go);
+                }
+            }
+
+            if (summoned == 0)
+                return SkillNodeExecutionResult.Failed("No units summoned.");
+
+            return SkillNodeExecutionResult.Success();
         }
     }
 }

@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Linq;
+using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Battle;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
+using Tactics.Common.Units;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -37,22 +39,29 @@ namespace Tactics.Common.Players
             InstallSubscriptions(gridController);
         }
 
-        public void Play(GridController gridController)
+        public async void Play(GridController gridController)
         {
             var playableUnits = gridController.TurnContext.PlayableUnits();
-            if (playableUnits != null && playableUnits.Any(u => u.CanAct && !u.IsDowned))
+            if (playableUnits == null || !playableUnits.Any(u => u.CanAct && !u.IsDowned))
             {
-                var unit = playableUnits.First();
-                // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
-                TLog.Info($"[HumanPlayer] AwaitInput: CanAct={unit.CanAct}, IsDowned={unit.IsDowned}, Player={unit.PlayerNumber}");
-                gridController.GridState = new GridStateAwaitInput();
+                TLog.Info($"[HumanPlayer] AutoEndTurn: no actionable unit");
+                gridController.GridState = new GridStateBlockInput();
+                ScheduleAutoEndTurn(gridController);
                 return;
             }
 
-            // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
-            TLog.Info($"[HumanPlayer] AutoEndTurn: no actionable unit");
-            gridController.GridState = new GridStateBlockInput();
-            ScheduleAutoEndTurn(gridController);
+            // Check if current unit has AiBrainAsset → auto-execute with AI
+            var unit = playableUnits.First();
+            if (unit is Unit concreteUnit && concreteUnit.AiBrainAsset != null)
+            {
+                TLog.Info($"[HumanPlayer] Unit {unit.UnitID} has AiBrainAsset, auto-executing with AI.");
+                await AiBrainRunner.Execute(unit, gridController, concreteUnit.AiBrainAsset);
+                gridController.EndTurn();
+                return;
+            }
+
+            TLog.Info($"[HumanPlayer] AwaitInput: CanAct={unit.CanAct}, IsDowned={unit.IsDowned}, Player={unit.PlayerNumber}");
+            gridController.GridState = new GridStateAwaitInput();
         }
 
         private void InstallSubscriptions(GridController gridController)

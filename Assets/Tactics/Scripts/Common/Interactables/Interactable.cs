@@ -1,13 +1,14 @@
 using Tactics.Common.Cells;
+using UnityEngine;
 
 namespace Tactics.Common.Interactables
 {
     /// <summary>
-    /// 战场可交互对象的最小基类。
-    /// 只承载位置、占格、可选中、交互入口、基础销毁状态。
+    /// 战场可交互对象的最小基类（MonoBehaviour）。
+    /// 承载位置、占格、可选中、交互入口、基础销毁状态。
     /// 不含回合、阵营、Buff、技能、战斗数值。
     /// </summary>
-    public abstract class Interactable : IInteractable
+    public abstract class Interactable : MonoBehaviour, IInteractable
     {
         private ICell _currentCell;
         private bool _isDestroyed;
@@ -49,6 +50,9 @@ namespace Tactics.Common.Interactables
                 _currentCell.RemoveInteractable(this);
                 _currentCell = null;
             }
+
+            if (gameObject != null)
+                Destroy(gameObject);
         }
     }
 }

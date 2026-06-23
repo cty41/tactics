@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Interactables;
-using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -25,41 +24,37 @@ namespace Tactics.Common.Units.Abilities
 
         public override async Task Execute(IUnit caster, IEnumerable<IUnit> targets, IGridController gridController)
         {
-            foreach (var target in targets)
-            {
-                if (target == null || !target.IsCorpse) continue;
+            await Task.CompletedTask;
+        }
 
-                // Check summon limit
+        /// <summary>
+        /// Execute summon using Corpse interactable targets.
+        /// </summary>
+        public async Task ExecuteWithCorpses(IUnit caster, IEnumerable<Corpse> corpses, IGridController gridController)
+        {
+            foreach (var corpse in corpses)
+            {
+                if (corpse == null || corpse.IsDestroyed) continue;
+
                 if (caster.SummonedUnit != null && !caster.SummonedUnit.IsDowned)
                 {
                     TLog.Info($"[SummonSkeletonEffect] Caster {caster.UnitID} already has a living skeleton.");
                     continue;
                 }
 
-                ICell corpseCell = target.CurrentCell;
+                ICell corpseCell = corpse.CurrentCell;
                 if (corpseCell == null) continue;
 
-                // Consume Corpse interactable
-                var corpse = corpseCell.CurrentInteractables
-                    .FirstOrDefault(i => i is Corpse && !i.IsDestroyed) as Corpse;
-                if (corpse != null)
-                {
-                    corpse.Consume();
-                }
+                corpse.Consume();
 
-                // Remove the dead unit from cell
-                corpseCell.CurrentUnits.Remove(target);
-                corpseCell.IsTaken = corpseCell.CurrentUnits.Count > 0 || corpseCell.CurrentInteractables.Any(i => i.OccupiesCell);
-                target.RemoveFromGame();
-
-                // Spawn skeleton unit
                 if (_skeletonPrefab != null)
                 {
-                    var skeletonGO = GameObject.Instantiate(_skeletonPrefab, corpseCell.WorldPosition.ToVector3(), Quaternion.identity);
+                    var skeletonGO = UnityEngine.Object.Instantiate(_skeletonPrefab, corpseCell.WorldPosition.ToVector3(), Quaternion.identity);
                     var skeletonUnit = skeletonGO.GetComponent<IUnit>();
                     if (skeletonUnit != null)
                     {
                         skeletonUnit.OwnerUnitId = caster.UnitID;
+                        skeletonUnit.PlayerNumber = caster.PlayerNumber;
                         skeletonUnit.CurrentCell = corpseCell;
                         corpseCell.CurrentUnits.Add(skeletonUnit);
                         corpseCell.IsTaken = true;

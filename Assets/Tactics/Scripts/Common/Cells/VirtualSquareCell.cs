@@ -44,6 +44,7 @@ namespace Tactics.Cells
         {
             if (interactable == null || _currentInteractables.Contains(interactable)) return;
             _currentInteractables.Add(interactable);
+            interactable.CurrentCell = this;
             if (interactable.OccupiesCell)
                 IsTaken = true;
         }

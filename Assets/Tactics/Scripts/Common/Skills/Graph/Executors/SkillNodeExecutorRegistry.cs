@@ -31,6 +31,8 @@ namespace Tactics.Common.Skills.Graph
             Register(new LaunchUnitNodeExecutor());
             Register(new SelectMoveDestinationNodeExecutor());
             Register(new ExecuteMoveNodeExecutor());
+            Register(new SelectCorpseTargetNodeExecutor());
+            Register(new SummonUnitNodeExecutor());
         }
 
         public static void Register(ISkillNodeExecutor executor)

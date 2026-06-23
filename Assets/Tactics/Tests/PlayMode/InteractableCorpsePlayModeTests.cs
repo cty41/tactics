@@ -19,7 +19,6 @@ namespace Tactics.Tests.PlayMode
         {
             LogAssert.ignoreFailingMessages = true;
 
-            // Create cell manager with a simple 2x2 grid
             _cellManagerRoot = new GameObject("TestCellManager");
             var cellMgr = _cellManagerRoot.AddComponent<RegularCellManager>();
             for (int x = 0; x < 2; x++)
@@ -35,7 +34,6 @@ namespace Tactics.Tests.PlayMode
                 }
             }
 
-            // Initialize cell cache
             cellMgr.Initialize(null);
 
             yield return null;
@@ -54,22 +52,19 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator Corpse_OccupiesCell_CanBeConsumed()
         {
-            // Arrange: get a cell and create a Corpse interactable
             var cell = FindCell(0, 0);
             Assert.IsNotNull(cell, "Cell should exist.");
 
-            var corpse = new Corpse();
+            var corpseGo = new GameObject("TestCorpse");
+            var corpse = corpseGo.AddComponent<Corpse>();
             cell.AddInteractable(corpse);
 
-            // Assert: cell is occupied by corpse
             Assert.IsTrue(cell.IsTaken, "Cell should be occupied by corpse.");
             Assert.IsTrue(cell.CurrentInteractables.Any(i => i is Corpse), "Cell should have a Corpse interactable.");
             Assert.IsTrue(corpse.OccupiesCell, "Corpse should occupy cell.");
 
-            // Act: consume the corpse
             corpse.Consume();
 
-            // Assert: corpse removed, cell freed
             Assert.IsFalse(cell.CurrentInteractables.Any(i => i is Corpse), "Corpse should be consumed.");
             Assert.IsFalse(cell.IsTaken, "Cell should be free after corpse is consumed.");
             yield break;
@@ -78,23 +73,21 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator Corpse_MultipleOnSameCell_AllTracked()
         {
-            // Arrange: create a cell with two corpses (edge case)
             var cell = FindCell(1, 0);
             Assert.IsNotNull(cell, "Cell should exist.");
 
-            var corpse1 = new Corpse();
-            var corpse2 = new Corpse();
+            var corpseGo1 = new GameObject("TestCorpse1");
+            var corpse1 = corpseGo1.AddComponent<Corpse>();
+            var corpseGo2 = new GameObject("TestCorpse2");
+            var corpse2 = corpseGo2.AddComponent<Corpse>();
             cell.AddInteractable(corpse1);
             cell.AddInteractable(corpse2);
 
-            // Assert: both tracked
             Assert.IsTrue(cell.CurrentInteractables.Count(i => i is Corpse) == 2, "Both corpses should be tracked.");
             Assert.IsTrue(cell.IsTaken, "Cell should be occupied.");
 
-            // Act: consume one
             corpse1.Consume();
 
-            // Assert: one remains, cell still occupied
             Assert.IsTrue(cell.CurrentInteractables.Count(i => i is Corpse) == 1, "One corpse should remain.");
             Assert.IsTrue(cell.IsTaken, "Cell should still be occupied.");
             yield break;

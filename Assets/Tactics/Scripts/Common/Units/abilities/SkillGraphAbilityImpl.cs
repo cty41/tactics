@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
+using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Runtime.Utilities;
@@ -292,6 +293,16 @@ namespace Tactics.Common.Units.Abilities
                 return displayCells;
             }
 
+            if (FirstSelectionRequiresCorpse())
+            {
+                foreach (var cell in allCells)
+                {
+                    if (HasCorpseInteractable(cell))
+                        displayCells.Add(cell);
+                }
+                return displayCells;
+            }
+
             if (FirstSelectionRequiresAlly())
             {
                 int allyRange = GetAllyRangeFromGraph();
@@ -357,6 +368,16 @@ namespace Tactics.Common.Units.Abilities
                 var destinations = _owner.GetAvailableDestinations(_gridController.CellManager.GetCells());
                 foreach (var cell in destinations)
                     validCells.Add(cell);
+                return validCells;
+            }
+
+            if (FirstSelectionRequiresCorpse())
+            {
+                foreach (var cell in allCells)
+                {
+                    if (HasCorpseInteractable(cell))
+                        validCells.Add(cell);
+                }
                 return validCells;
             }
 
@@ -452,6 +473,23 @@ namespace Tactics.Common.Units.Abilities
         {
             var first = FindFirstSelectionNode();
             return first is SelectMoveDestinationNodeRecord;
+        }
+
+        private bool FirstSelectionRequiresCorpse()
+        {
+            var first = FindFirstSelectionNode();
+            return first is SelectCorpseTargetNodeRecord;
+        }
+
+        private bool HasCorpseInteractable(ICell cell)
+        {
+            if (cell == null) return false;
+            foreach (var interactable in cell.CurrentInteractables)
+            {
+                if (interactable is Corpse corpse && !corpse.IsDestroyed)
+                    return true;
+            }
+            return false;
         }
 
         private int GetAllyRangeFromGraph()

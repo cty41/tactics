@@ -1,5 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
+using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.Skills.Graph
 {
@@ -159,6 +163,52 @@ namespace Tactics.Common.Skills.Graph
 
             context.PrimaryTarget = context.TargetSet[index];
             context.SetBlackboard("ForEachIndex", index + 1);
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
+
+    public class SelectCorpseTargetNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.SelectCorpseTarget;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (SelectCorpseTargetNodeRecord)node;
+            var caster = context.Caster;
+            var grid = context.GridController;
+
+            if (context.TargetCorpses != null && context.TargetCorpses.Count > 0)
+                return Task.FromResult(SkillNodeExecutionResult.Success());
+
+            var corpses = new List<Corpse>();
+            var allCells = grid.CellManager.GetCells();
+
+            foreach (var cell in allCells)
+            {
+                if (caster?.CurrentCell != null)
+                {
+                    int distance = cell.GetDistance(caster.CurrentCell);
+                    if (distance < record.MinRange || distance > record.MaxRange)
+                        continue;
+                }
+
+                foreach (var interactable in cell.CurrentInteractables)
+                {
+                    if (interactable is Corpse corpse && !corpse.IsDestroyed)
+                    {
+                        corpses.Add(corpse);
+                    }
+                }
+            }
+
+            if (corpses.Count == 0)
+            {
+                TLog.Info("[SelectCorpseTarget] No corpses found on battlefield.");
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No corpses found."));
+            }
+
+            context.TargetCorpses = corpses;
+            TLog.Info($"[SelectCorpseTarget] Found {corpses.Count} corpse(s).");
             return Task.FromResult(SkillNodeExecutionResult.Success());
         }
     }

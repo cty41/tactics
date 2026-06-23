@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units.Buffs;
 using UnityEngine;
 
@@ -30,7 +31,9 @@ namespace Tactics.Common.Skills.Graph
         DashToAlly,
         LaunchUnit,
         SelectMoveDestination,
-        ExecuteMove
+        ExecuteMove,
+        SelectCorpseTarget,
+        SummonUnit
     }
 
     public enum SkillGraphPortType
@@ -100,6 +103,8 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.LaunchUnit => new LaunchUnitNodeRecord(),
                 SkillGraphNodeType.SelectMoveDestination => new SelectMoveDestinationNodeRecord(),
                 SkillGraphNodeType.ExecuteMove => new ExecuteMoveNodeRecord(),
+                SkillGraphNodeType.SelectCorpseTarget => new SelectCorpseTargetNodeRecord(),
+                SkillGraphNodeType.SummonUnit => new SummonUnitNodeRecord(),
                 _ => null
             };
         }
@@ -310,6 +315,26 @@ namespace Tactics.Common.Skills.Graph
         public bool ConsumeMovementPoints { get => _consumeMovementPoints; set => _consumeMovementPoints = value; }
         public bool MarkAsBasicAbilityUsed { get => _markAsBasicAbilityUsed; set => _markAsBasicAbilityUsed = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ExecuteMove;
+    }
+
+    [System.Serializable]
+    public class SelectCorpseTargetNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private int _minRange;
+        [SerializeField] private int _maxRange = 999;
+
+        public int MinRange { get => _minRange; set => _minRange = value; }
+        public int MaxRange { get => _maxRange; set => _maxRange = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.SelectCorpseTarget;
+    }
+
+    [System.Serializable]
+    public class SummonUnitNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private string _unitPrefabPath;
+
+        public string UnitPrefabPath { get => _unitPrefabPath; set => _unitPrefabPath = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.SummonUnit;
     }
 
     // ═══════════════════════════════════════════════

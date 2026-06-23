@@ -4,14 +4,13 @@ using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Interactables;
-using Tactics.Common.Units.Buffs;
 using UnityEngine;
 
 namespace Tactics.Common.Units.Abilities
 {
     /// <summary>
     /// Targets a corpse interactable within range. Used by summon skeleton ability.
-    /// Returns the dead unit on the cell that has an associated Corpse interactable.
+    /// Returns Corpse interactables on the cell within range.
     /// </summary>
     [Serializable]
     public class CorpseTargeting : TargetingStrategy
@@ -27,40 +26,39 @@ namespace Tactics.Common.Units.Abilities
             _targetType = TargetType.SingleEnemy;
         }
 
-        public override IEnumerable<IUnit> GetTargets(IUnit caster, ICell selectedCell, IGridController gridController)
+        public IEnumerable<Corpse> GetCorpseTargets(IUnit caster, ICell selectedCell, IGridController gridController)
         {
-            // Check if cell has a Corpse interactable
-            bool hasCorpse = selectedCell.CurrentInteractables
-                .Any(i => i is Corpse && !i.IsDestroyed);
+            if (selectedCell == null || caster?.CurrentCell == null) yield break;
 
-            if (!hasCorpse) yield break;
+            int distance = selectedCell.GetDistance(caster.CurrentCell);
+            if (distance < _minRange || distance > _maxRange) yield break;
 
-            // Return the dead unit on this cell (the original unit that became corpse)
-            foreach (var unit in selectedCell.CurrentUnits)
+            foreach (var interactable in selectedCell.CurrentInteractables)
             {
-                if (unit != null && unit.IsCorpse && unit.IsDowned)
+                if (interactable is Corpse corpse && !corpse.IsDestroyed)
                 {
-                    int distance = selectedCell.GetDistance(caster.CurrentCell);
-                    if (distance >= _minRange && distance <= _maxRange)
-                    {
-                        yield return unit;
-                    }
+                    yield return corpse;
                 }
             }
         }
 
-        public override bool IsValidTarget(IUnit caster, IUnit target, IGridController gridController)
+        public bool IsValidCorpseTarget(IUnit caster, Corpse target, IGridController gridController)
         {
-            if (target == null || !target.IsCorpse) return false;
-            if (target.CurrentCell == null || caster.CurrentCell == null) return false;
-
-            // Must have Corpse interactable on the cell
-            bool hasCorpse = target.CurrentCell.CurrentInteractables
-                .Any(i => i is Corpse && !i.IsDestroyed);
-            if (!hasCorpse) return false;
+            if (target == null || target.IsDestroyed) return false;
+            if (target.CurrentCell == null || caster?.CurrentCell == null) return false;
 
             int distance = target.CurrentCell.GetDistance(caster.CurrentCell);
             return distance >= _minRange && distance <= _maxRange;
+        }
+
+        public override IEnumerable<IUnit> GetTargets(IUnit caster, ICell selectedCell, IGridController gridController)
+        {
+            yield break;
+        }
+
+        public override bool IsValidTarget(IUnit caster, IUnit target, IGridController gridController)
+        {
+            return false;
         }
     }
 }

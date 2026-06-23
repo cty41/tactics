@@ -88,17 +88,28 @@ namespace Tactics.Controllers.TurnResolvers
 
         /// <summary>
         /// Removes dead or invalid units from the queue.
+        /// Also adds any runtime-spawned units (e.g. summoned skeletons) that are not yet in the queue.
         /// </summary>
         /// <param name="gridController">The grid controller.</param>
         private void CleanDeadUnits(GridController gridController)
         {
-            var aliveUnits = gridController.UnitManager.GetUnits().Where(u => u.Health > 0).ToHashSet();
+            var aliveUnits = gridController.UnitManager.GetUnits().Where(u => u.Health > 0).ToList();
+            var aliveSet = aliveUnits.ToHashSet();
             var tempQueue = new Queue<IUnit>();
 
             while (_unitQueue.Count > 0)
             {
                 var unit = _unitQueue.Dequeue();
-                if (aliveUnits.Contains(unit))
+                if (aliveSet.Contains(unit))
+                {
+                    tempQueue.Enqueue(unit);
+                }
+            }
+
+            // Add runtime-spawned units not yet in queue (e.g. summoned units)
+            foreach (var unit in aliveUnits)
+            {
+                if (!tempQueue.Contains(unit))
                 {
                     tempQueue.Enqueue(unit);
                 }

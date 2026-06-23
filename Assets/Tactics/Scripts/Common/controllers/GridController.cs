@@ -10,6 +10,7 @@ using Tactics.Common.Interactables;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Utilities;
 
 namespace Tactics.Common.Controllers
 {
@@ -24,6 +25,7 @@ namespace Tactics.Common.Controllers
         public IPlayerManager PlayerManager { get; set; }
         public ITurnResolver TurnResolver { get; set; }
         public Action<IGridController> BeforeUnitManagerInitialize { get; set; }
+        public string CorpsePrefabPath { get; set; }
         public TurnContext TurnContext { get; protected set; }
         public int CurrentRound { get; protected set; } = 1;
         private int _transitionCount;
@@ -244,7 +246,29 @@ namespace Tactics.Common.Controllers
                 var cell = eventArgs.AffectedUnit.CurrentCell;
                 if (cell != null)
                 {
-                    var corpse = new Corpse();
+                    Corpse corpse = null;
+
+                    if (!string.IsNullOrEmpty(CorpsePrefabPath))
+                    {
+                        var mgr = AssetPipeline.GameAssetManager.Instance;
+                        if (mgr != null)
+                        {
+                            var prefab = mgr.Load<UnityEngine.GameObject>(CorpsePrefabPath);
+                            if (prefab != null)
+                            {
+                                var go = UnityEngine.Object.Instantiate(prefab, cell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity);
+                                corpse = go.GetComponent<Corpse>();
+                            }
+                        }
+                    }
+
+                    if (corpse == null)
+                    {
+                        var go = new UnityEngine.GameObject("Corpse");
+                        corpse = go.AddComponent<Corpse>();
+                        go.transform.position = cell.WorldPosition.ToVector3();
+                    }
+
                     cell.AddInteractable(corpse);
                     TLog.Info($"[GridController] Unit {eventArgs.AffectedUnit.UnitID} died, Corpse created at {cell.GridCoordinates}");
                 }
