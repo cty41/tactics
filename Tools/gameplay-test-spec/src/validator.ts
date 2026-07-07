@@ -16,7 +16,10 @@ const supportedSetupKinds = new Set([
   "loadSkillGraphAsset",
   "loadRoguelikeMap",
   "loadTestPartyConfig",
-  "loadTestEncounterConfig"
+  "loadTestEncounterConfig",
+  "setAdventureGold",
+  "setRosterCharacterState",
+  "addInventoryItem"
 ]);
 
 const supportedActionKinds = new Set([
@@ -35,6 +38,11 @@ const supportedActionKinds = new Set([
   "enterNode",
   "triggerEvent",
   "completeNode",
+  "setAdventureGold",
+  "setRosterCharacterState",
+  "addInventoryItem",
+  "applyRestSiteResult",
+  "buyShopEquipment",
   "openUI",
   "closeUI",
   "clickElement",
@@ -99,6 +107,13 @@ const supportedAssertionKinds = new Set([
   "nodeTypeEquals",
   "nodeIsReachable",
   "nodeIsVisited",
+  "runGoldEquals",
+  "rosterCharacterHpEquals",
+  "rosterCharacterMpEquals",
+  "rosterCharacterDeadEquals",
+  "rosterCharacterExperienceEquals",
+  "rosterCharacterEquipmentEquals",
+  "inventoryContains",
   "elementVisible",
   "elementText",
   "elementEnabled",

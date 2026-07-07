@@ -17,6 +17,9 @@ namespace Tactics.RoguelikeMap.Interaction
         /// <summary>金币奖励</summary>
         public int GoldAmount { get; set; }
 
+        /// <summary>金币花费</summary>
+        public int GoldCost { get; set; }
+
         /// <summary>获得的装备ID列表</summary>
         public List<string> EquipmentIds { get; set; } = new List<string>();
 
@@ -31,6 +34,15 @@ namespace Tactics.RoguelikeMap.Interaction
 
         /// <summary>恢复的HP总量</summary>
         public int HealAmount { get; set; }
+
+        /// <summary>按最大HP比例恢复（0-1）。优先于固定 HealAmount。</summary>
+        public float HealPercent { get; set; }
+
+        /// <summary>恢复的MP总量</summary>
+        public int ManaHealAmount { get; set; }
+
+        /// <summary>按最大MP比例恢复（0-1）。优先于固定 ManaHealAmount。</summary>
+        public float ManaHealPercent { get; set; }
 
         /// <summary>受到的伤害总量</summary>
         public int DamageAmount { get; set; }
@@ -77,10 +89,17 @@ namespace Tactics.RoguelikeMap.Interaction
         /// </summary>
         public void ApplyGoldToState(PlayerAdventureState state)
         {
-            if (state == null || GoldAmount <= 0) return;
+            if (state == null || (GoldAmount <= 0 && GoldCost <= 0)) return;
 
-            state.Gold += GoldAmount;
-            TLog.Info($"[RewardResult] Added {GoldAmount} gold to player state. Total={state.Gold}");
+            RunGoldManager.Instance.SyncFromState(state);
+            if (GoldAmount > 0)
+                RunGoldManager.Instance.AddGold(GoldAmount);
+
+            if (GoldCost > 0)
+                RunGoldManager.Instance.SpendGold(GoldCost);
+
+            RunGoldManager.Instance.SyncToState(state);
+            TLog.Info($"[RewardResult] Applied gold delta to player state. Reward={GoldAmount}, Cost={GoldCost}, Total={state.Gold}");
         }
 
         /// <summary>
@@ -109,12 +128,18 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             if (party == null || party.Count == 0) return;
 
-            if (HealAmount > 0)
+            if (HealPercent > 0f || HealAmount > 0)
             {
                 foreach (var character in party)
                 {
+                    if (character.IsDead)
+                        continue;
+
                     int oldHp = character.CurrentHp;
-                    character.CurrentHp = System.Math.Min(character.MaxHp, character.CurrentHp + HealAmount);
+                    int healValue = HealPercent > 0f
+                        ? (int)System.Math.Ceiling(character.MaxHp * HealPercent)
+                        : HealAmount;
+                    character.CurrentHp = System.Math.Min(character.MaxHp, character.CurrentHp + healValue);
                     TLog.Info($"[RewardResult] {character.DisplayName} healed: {oldHp} -> {character.CurrentHp}/{character.MaxHp}");
                 }
             }
@@ -123,10 +148,37 @@ namespace Tactics.RoguelikeMap.Interaction
             {
                 foreach (var character in party)
                 {
+                    if (character.IsDead)
+                        continue;
+
                     int oldHp = character.CurrentHp;
                     character.CurrentHp = System.Math.Max(0, character.CurrentHp - DamageAmount);
+                    if (character.CurrentHp <= 0)
+                        character.IsDead = true;
                     TLog.Info($"[RewardResult] {character.DisplayName} damaged: {oldHp} -> {character.CurrentHp}/{character.MaxHp}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// 应用MP变化到队伍。
+        /// </summary>
+        public void ApplyMpChangeToParty(List<CharacterDefinition> party)
+        {
+            if (party == null || party.Count == 0 || (ManaHealAmount <= 0 && ManaHealPercent <= 0f))
+                return;
+
+            foreach (var character in party)
+            {
+                if (character.IsDead)
+                    continue;
+
+                int oldMp = character.CurrentMp ?? 0;
+                int manaValue = ManaHealPercent > 0f
+                    ? (int)System.Math.Ceiling(character.MaxMp * ManaHealPercent)
+                    : ManaHealAmount;
+                character.CurrentMp = System.Math.Min(character.MaxMp, oldMp + manaValue);
+                TLog.Info($"[RewardResult] {character.DisplayName} mana healed: {oldMp} -> {character.CurrentMp}/{character.MaxMp}");
             }
         }
 
@@ -161,15 +213,45 @@ namespace Tactics.RoguelikeMap.Interaction
             if (other == null) return;
 
             GoldAmount += other.GoldAmount;
+            GoldCost += other.GoldCost;
             EquipmentIds.AddRange(other.EquipmentIds);
             ItemIds.AddRange(other.ItemIds);
             Buffs.AddRange(other.Buffs);
             Debuffs.AddRange(other.Debuffs);
             HealAmount += other.HealAmount;
+            HealPercent = System.Math.Max(HealPercent, other.HealPercent);
+            ManaHealAmount += other.ManaHealAmount;
+            ManaHealPercent = System.Math.Max(ManaHealPercent, other.ManaHealPercent);
             DamageAmount += other.DamageAmount;
             ExperienceAmount += other.ExperienceAmount;
             EnemiesDefeated += other.EnemiesDefeated;
             EventsCompleted += other.EventsCompleted;
+        }
+
+        /// <summary>
+        /// 将结果统一应用到玩家状态与队伍。
+        /// </summary>
+        public void ApplyToState(PlayerAdventureState state)
+        {
+            if (state == null)
+                return;
+
+            ApplyGoldToState(state);
+            ApplyEquipmentToState(state);
+            ApplyHpChangeToParty(state.Roster);
+            ApplyMpChangeToParty(state.Roster);
+            ApplyBuffsToParty(state.Roster);
+
+            if (ExperienceAmount > 0 && state.Roster != null)
+            {
+                foreach (var character in state.Roster)
+                {
+                    if (character.IsDead)
+                        continue;
+
+                    character.Experience += ExperienceAmount;
+                }
+            }
         }
 
         /// <summary>
@@ -182,14 +264,24 @@ namespace Tactics.RoguelikeMap.Interaction
             if (GoldAmount > 0)
                 sb.AppendLine($"获得金币: {GoldAmount}");
 
+            if (GoldCost > 0)
+                sb.AppendLine($"花费金币: {GoldCost}");
+
             if (EquipmentIds.Count > 0)
                 sb.AppendLine($"获得装备: {string.Join(", ", EquipmentIds)}");
 
             if (ItemIds.Count > 0)
                 sb.AppendLine($"获得物品: {string.Join(", ", ItemIds)}");
 
-            if (HealAmount > 0)
+            if (HealPercent > 0f)
+                sb.AppendLine($"恢复HP: {HealPercent:P0}");
+            else if (HealAmount > 0)
                 sb.AppendLine($"恢复HP: {HealAmount}");
+
+            if (ManaHealPercent > 0f)
+                sb.AppendLine($"恢复MP: {ManaHealPercent:P0}");
+            else if (ManaHealAmount > 0)
+                sb.AppendLine($"恢复MP: {ManaHealAmount}");
 
             if (DamageAmount > 0)
                 sb.AppendLine($"受到伤害: {DamageAmount}");
@@ -220,6 +312,14 @@ namespace Tactics.RoguelikeMap.Interaction
         public static RewardResult Gold(int amount)
         {
             return new RewardResult { GoldAmount = amount };
+        }
+
+        /// <summary>
+        /// 创建金币花费结果。
+        /// </summary>
+        public static RewardResult GoldCostResult(int amount)
+        {
+            return new RewardResult { GoldCost = amount };
         }
 
         /// <summary>

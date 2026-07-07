@@ -272,6 +272,27 @@ namespace Tactics.RoguelikeMap.Interaction
         }
 
         /// <summary>
+        /// 统一应用节点结果到冒险状态并保存。
+        /// </summary>
+        public PlayerAdventureState ApplyRewardResult(RewardResult rewardResult, PlayerAdventureState state = null)
+        {
+            if (rewardResult == null)
+                return state;
+
+            state ??= PlayerAdventureStateStore.LoadRepairAndSave();
+            if (state == null)
+            {
+                TLog.Warning("[NodeInteractionManager] 无法应用节点结果：玩家状态为空");
+                return null;
+            }
+
+            rewardResult.ApplyToState(state);
+            PlayerAdventureStateStore.Save(state);
+            TLog.Info($"[NodeInteractionManager] 已统一应用节点结果: {rewardResult.GetDisplayText()}");
+            return state;
+        }
+
+        /// <summary>
         /// 显示效果结果弹窗（通用）
         /// 在 TLog 中记录日志，并显示一个简单的运行时弹窗，玩家点击确认后关闭。
         /// </summary>

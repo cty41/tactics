@@ -1,4 +1,5 @@
 using Tactics.Runtime.Utilities;
+using Tactics.Roster;
 
 namespace Tactics.RoguelikeMap.Economy
 {
@@ -113,6 +114,30 @@ namespace Tactics.RoguelikeMap.Economy
         public bool HasEnoughGold(int amount)
         {
             return CurrentGold >= amount;
+        }
+
+        /// <summary>
+        /// 从玩家冒险状态同步当前金币。
+        /// </summary>
+        public void SyncFromState(PlayerAdventureState state)
+        {
+            if (state == null)
+                return;
+
+            CurrentGold = System.Math.Clamp(state.Gold, 0, MaxGold);
+            TLog.Info($"[RunGoldManager] 已从状态同步金币: {CurrentGold}/{MaxGold}");
+        }
+
+        /// <summary>
+        /// 将当前金币同步回玩家冒险状态。
+        /// </summary>
+        public void SyncToState(PlayerAdventureState state)
+        {
+            if (state == null)
+                return;
+
+            state.Gold = CurrentGold;
+            TLog.Info($"[RunGoldManager] 已写回状态金币: {state.Gold}");
         }
 
         /// <summary>

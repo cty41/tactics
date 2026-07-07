@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Tactics.RoguelikeMap.Economy;
+using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using Tactics.Equipment;
@@ -25,6 +26,7 @@ namespace Tactics.RoguelikeMap.Interaction
         private ShopManager _shopManager;
         private List<ShopGood> _currentGoods;
         private RoguelikeMapNode _currentNode;
+        private PlayerAdventureState _currentState;
         private System.Action _onClose;
 
         /// <summary>
@@ -52,6 +54,8 @@ namespace Tactics.RoguelikeMap.Interaction
 
             _currentNode = node;
             _onClose = onClose;
+            _currentState = PlayerAdventureStateStore.LoadRepairAndSave();
+            RunGoldManager.Instance.SyncFromState(_currentState);
 
             // 通过 UIManager 显示 UI
             await UIManager.Instance.ShowAsync(UIManager.UIId.ShopPanel);
@@ -132,13 +136,20 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
-            if (!RoguelikeRewardHelper.TryAddEquipmentToInventory(good.EquipmentId, out string equipmentName))
+            if (!EquipmentDatabase.Contains(good.EquipmentId))
             {
                 TLog.Warning($"[StoreNodeHandler] 授予商品失败: {good.EquipmentId}");
                 return;
             }
 
-            RunGoldManager.Instance.SpendGold(good.Price);
+            var purchaseResult = RewardResult.Empty();
+            purchaseResult.GoldCost = good.Price;
+            purchaseResult.EquipmentIds.Add(good.EquipmentId);
+            NodeInteractionManager.Instance?.ApplyRewardResult(purchaseResult, _currentState);
+
+            var def = EquipmentDatabase.GetById(good.EquipmentId);
+            string equipmentName = def?.DisplayName ?? good.EquipmentId;
+
             CurrentMap?.AddStorePurchase(_currentNode.nodeId, GetPurchaseKey(good));
             _currentGoods.Remove(good);
             DisplayGoods();

@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Units;
+using Tactics.RoguelikeMap.Interaction;
+using Tactics.RoguelikeMap.Economy;
 using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -31,6 +33,20 @@ namespace Tactics.Common.Battle
 
             /// <summary>战斗总回合数。</summary>
             public int TotalRounds;
+
+            /// <summary>
+            /// 转换为统一节点结果结构，供 Roguelike 地图层统一消费。
+            /// </summary>
+            public RewardResult ToRewardResult()
+            {
+                return new RewardResult
+                {
+                    GoldAmount = TotalGold,
+                    ExperienceAmount = ExperiencePerCharacter?.Values.Sum() ?? 0,
+                    EnemiesDefeated = ExperiencePerCharacter?.Count ?? 0,
+                    IsBattleReward = true
+                };
+            }
         }
 
         /// <summary>
@@ -144,7 +160,7 @@ namespace Tactics.Common.Battle
             }
 
             // 累加金币
-            state.Gold += rewards.TotalGold;
+            rewards.ToRewardResult().ApplyGoldToState(state);
             TLog.Info($"[BattleRewardSystem] 添加 {rewards.TotalGold} 金币（总计：{state.Gold}）。");
 
             // 分配经验值

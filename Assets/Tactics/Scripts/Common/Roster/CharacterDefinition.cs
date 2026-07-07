@@ -34,9 +34,14 @@ namespace Tactics.Roster
         public int Level { get; set; }
         public int Experience { get; set; }
         public int CurrentHp { get; set; }
+        public int? CurrentMp { get; set; }
+        public bool IsDead { get; set; }
 
         /// <summary>最大HP，基于体质计算（与 Unit.MaxHealth 公式一致：Constitution × 4）。</summary>
         public int MaxHp => System.Math.Max(1, Constitution * 4);
+
+        /// <summary>最大MP，基于魅力计算（与 Unit.MaxMana 公式一致：Charisma × 3）。</summary>
+        public int MaxMp => System.Math.Max(0, Charisma * 3);
 
         public int AttributePoints { get; set; }
         public Dictionary<AttributeType, int> AllocatedAttributes { get; set; }
@@ -195,6 +200,9 @@ namespace Tactics.Roster
                 DefenceFactor = 1,
                 RoleType = roleType,
                 Experience = 0,
+                CurrentHp = 5 * 4,
+                CurrentMp = 5 * 3,
+                IsDead = false,
                 AttributePoints = 0,
                 AllocatedAttributes = new Dictionary<AttributeType, int>(),
                 LearnedSkills = new List<LearnedSkill>(),

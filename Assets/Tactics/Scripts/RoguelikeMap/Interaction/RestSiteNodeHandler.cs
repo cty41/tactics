@@ -76,27 +76,22 @@ namespace Tactics.RoguelikeMap.Interaction
             }
 
             var summaryLines = new System.Text.StringBuilder();
-            int totalHeal = 0;
+            var rewardResult = RewardResult.Empty();
+            rewardResult.HealPercent = 0.3f;
+            rewardResult.ManaHealPercent = 0.3f;
+            NodeInteractionManager.Instance?.ApplyRewardResult(rewardResult, state);
 
             foreach (var character in state.Roster)
             {
-                int maxHp = character.MaxHp;
+                if (character.IsDead)
+                {
+                    summaryLines.AppendLine($"{character.DisplayName}: 已死亡，无法休息恢复");
+                    continue;
+                }
 
-                // 初始化 CurrentHp（旧存档可能为 0）
-                if (character.CurrentHp <= 0)
-                    character.CurrentHp = maxHp;
-
-                int healAmount = Mathf.CeilToInt(maxHp * 0.3f);
-                int before = character.CurrentHp;
-                character.CurrentHp = Mathf.Min(maxHp, character.CurrentHp + healAmount);
-                int actualHeal = character.CurrentHp - before;
-                totalHeal += actualHeal;
-
-                TLog.Info($"[RestSiteNodeHandler] {character.DisplayName}: 恢复 {actualHeal} HP ({before}/{maxHp} → {character.CurrentHp}/{maxHp})");
-                summaryLines.AppendLine($"{character.DisplayName}: +{actualHeal} HP");
+                summaryLines.AppendLine($"{character.DisplayName}: {character.CurrentHp}/{character.MaxHp} HP, {character.CurrentMp}/{character.MaxMp} MP");
             }
 
-            PlayerAdventureStateStore.Save(state);
             TLog.Info("[RestSiteNodeHandler] 全队休息完成，HP 已恢复");
 
             // 显示效果结果弹窗

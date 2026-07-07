@@ -10,6 +10,7 @@ using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Interactables;
+using Tactics.Common.Players;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
@@ -18,6 +19,8 @@ using Tactics.AssetPipeline;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.TurnResolvers;
 using Tactics.Controllers.TurnResolvers;
+using Tactics.Roguelike;
+using Tactics.Roster;
 using UnityEngine;
 
 namespace Tactics.Common.Testing.Gameplay
@@ -367,8 +370,51 @@ namespace Tactics.Common.Testing.Gameplay
         private static GameplayStepResult EndBattleWithResult(GameplayRuntimeContext context, ExecutableScenarioAction action)
         {
             var controller = RequireBattleController(context, action.Kind);
-            var result = new GameResult();
-            controller.EndBattle(result);
+            GameResult result;
+
+            var winnerPlayerNumberToken = action.Parameters["winnerPlayerNumber"];
+            if (winnerPlayerNumberToken != null)
+            {
+                int winnerPlayerNumber = winnerPlayerNumberToken.ToObject<int>();
+                var winner = new HumanPlayer
+                {
+                    PlayerNumber = winnerPlayerNumber,
+                    PlayerType = PlayerType.HumanPlayer
+                };
+
+                var loserPlayerNumbers = ReadPlayerNumbers(action, "loserPlayerNumber", "loserPlayerNumbers");
+                var losers = loserPlayerNumbers.Count > 0
+                    ? loserPlayerNumbers.Select(number => (IPlayer)new AIPlayer
+                    {
+                        PlayerNumber = number,
+                        PlayerType = PlayerType.AutomatedPlayer
+                    }).ToList()
+                    : controller.GetUnits()
+                        .Select(unit => unit.PlayerNumber)
+                        .Distinct()
+                        .Where(number => number != winnerPlayerNumber)
+                        .Select(number => (IPlayer)new AIPlayer
+                        {
+                            PlayerNumber = number,
+                            PlayerType = PlayerType.AutomatedPlayer
+                        })
+                        .ToList();
+
+                result = new GameResult(winner, losers);
+            }
+            else
+            {
+                result = new GameResult();
+            }
+
+            bool skipControllerEndBattle = action.Parameters["skipControllerEndBattle"]?.ToObject<bool>() ?? false;
+            if (!skipControllerEndBattle)
+                controller.EndBattle(result);
+
+            bool applyRoguelikeWriteback = action.Parameters["applyRoguelikeWriteback"]?.ToObject<bool>() ?? false;
+            if (applyRoguelikeWriteback)
+                ApplyRoguelikeWriteback(controller);
+
             context.LastBattleResult = result;
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Battle ended.");
         }
@@ -506,7 +552,36 @@ namespace Tactics.Common.Testing.Gameplay
             var playerNumber = action.Parameters["playerNumber"];
             if (playerNumber != null) unit.PlayerNumber = playerNumber.ToObject<int>();
 
+            var isDowned = action.Parameters["isDowned"];
+            if (isDowned != null) unit.IsDowned = isDowned.ToObject<bool>();
+
+            string characterId = action.Parameters["characterId"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(characterId) && unit is MonoBehaviour monoBehaviour)
+            {
+                var link = monoBehaviour.GetComponent<RosterCharacterLink>() ?? monoBehaviour.gameObject.AddComponent<RosterCharacterLink>();
+                link.CharacterId = characterId;
+            }
+
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Set state for {unitAlias}.");
+        }
+
+        private static List<int> ReadPlayerNumbers(ExecutableScenarioAction action, string singularKey, string pluralKey)
+        {
+            if (action.Parameters[pluralKey] is JArray array)
+                return array.Select(token => token.ToObject<int>()).ToList();
+
+            if (action.Parameters[singularKey] != null)
+                return new List<int> { action.Parameters[singularKey].ToObject<int>() };
+
+            return new List<int>();
+        }
+
+        private static void ApplyRoguelikeWriteback(BattleController controller)
+        {
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var syncMethod = typeof(RoguelikeBattleReturnHandler).GetMethod("SyncPartyStateFromBattleUnits", BindingFlags.NonPublic | BindingFlags.Static);
+            syncMethod?.Invoke(null, new object[] { controller.GetUnits(), state });
+            PlayerAdventureStateStore.Save(state);
         }
 
         private static GameplayStepResult AddBuff(GameplayRuntimeContext context, ExecutableScenarioAction action)

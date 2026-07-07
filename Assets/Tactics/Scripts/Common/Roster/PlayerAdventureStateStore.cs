@@ -313,6 +313,18 @@ namespace Tactics.Roster
 
             foreach (var character in state.Roster)
             {
+                if (character.CurrentHp <= 0 && !character.IsDead)
+                {
+                    character.CurrentHp = character.MaxHp;
+                    changed = true;
+                }
+
+                if (!character.CurrentMp.HasValue)
+                {
+                    character.CurrentMp = character.MaxMp;
+                    changed = true;
+                }
+
                 var mapping = TestPrefabMappings.FirstOrDefault(m => m.RoleType == character.RoleType);
                 var expectedPath = mapping?.PrefabPath ?? character.RoleType.ToString();
                 if (character.PrefabPath == expectedPath)
