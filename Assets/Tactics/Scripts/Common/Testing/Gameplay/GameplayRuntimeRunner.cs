@@ -139,7 +139,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "loadRoguelikeMap"
                 or "loadTestPartyConfig"
                 or "loadTestEncounterConfig"
-                or "setBattleTestMode";
+                or "setBattleTestMode"
+                or "setAdventureGold"
+                or "setRosterCharacterState";
         }
 
         private static string ResolvePhase(FailureCategory category, ExecutableScenarioAction action)

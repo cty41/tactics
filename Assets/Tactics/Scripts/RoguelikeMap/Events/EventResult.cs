@@ -67,8 +67,11 @@ namespace Tactics.RoguelikeMap.Events
             switch (type)
             {
                 case EventResultType.Gold:
+                    RunGoldManager.Instance.SyncFromState(ctx?.AdventureState);
                     RunGoldManager.Instance.AddGold(amount);
+                    RunGoldManager.Instance.SyncToState(ctx?.AdventureState);
                     TLog.Info($"[EventResult] 获得 {amount} 金币");
+                    shouldSaveState = true;
                     break;
                 case EventResultType.Heal:
                     ApplyHeal(ctx);

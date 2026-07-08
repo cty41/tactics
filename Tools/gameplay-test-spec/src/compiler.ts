@@ -18,7 +18,11 @@ const setupKindToAdapter: Record<string, Adapter> = {
   loadSkillGraphAsset: "Skill",
   loadRoguelikeMap: "Map",
   loadTestPartyConfig: "Skill",
-  loadTestEncounterConfig: "Skill"
+  loadTestEncounterConfig: "Skill",
+  setAdventureGold: "Map",
+  setRosterCharacterState: "Map",
+  addInventoryItem: "Map",
+  equipInventoryEquipmentToRosterCharacter: "Map"
 };
 
 const actionKindToAdapter: Record<string, Adapter> = {
@@ -36,6 +40,11 @@ const actionKindToAdapter: Record<string, Adapter> = {
   enterNode: "Map",
   triggerEvent: "Map",
   completeNode: "Map",
+  setAdventureGold: "Map",
+  setRosterCharacterState: "Map",
+  addInventoryItem: "Map",
+  applyRestSiteResult: "Map",
+  buyShopEquipment: "Map",
   openUI: "UI",
   closeUI: "UI",
   clickElement: "UI",
@@ -70,6 +79,14 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   nodeTypeEquals: "Map",
   nodeIsReachable: "Map",
   nodeIsVisited: "Map",
+  runGoldEquals: "Map",
+  rosterCharacterHpEquals: "Map",
+  rosterCharacterMpEquals: "Map",
+  rosterCharacterDeadEquals: "Map",
+  rosterCharacterExperienceEquals: "Map",
+  rosterCharacterEquipmentEquals: "Map",
+  rosterCharacterTotalAttributeEquals: "Map",
+  inventoryContains: "Map",
   // UI 独占断言
   elementVisible: "UI",
   elementText: "UI",

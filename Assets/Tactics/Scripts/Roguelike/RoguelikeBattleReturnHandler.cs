@@ -72,21 +72,7 @@ namespace Tactics.Roguelike
                 // 加载玩家状态供结算流程使用
                 var state = PlayerAdventureStateStore.LoadRepairAndSave();
 
-                // 同步 HP：从战斗层 Unit.Health 保存到地图层 CharacterDefinition.CurrentHp
-                if (allUnits != null && state?.Roster != null)
-                {
-                    foreach (var unit in allUnits)
-                    {
-                        if (unit.PlayerNumber != 0) continue;
-                        var mono = unit as MonoBehaviour;
-                        if (mono == null) continue;
-                        var link = mono.GetComponent<RosterCharacterLink>();
-                        if (link == null) continue;
-                        var def = state.Roster.FirstOrDefault(c => c.Id == link.CharacterId);
-                        if (def == null) continue;
-                        def.CurrentHp = Mathf.RoundToInt(unit.Health);
-                    }
-                }
+                SyncPartyStateFromBattleUnits(allUnits, state);
 
                 // 注册 BattleSettlementFlow 来管理UI流程（必须在 StartSettlement 之前）
                 BattleSettlementFlow.Instance.Subscribe(BattleSettlementCoordinator.Instance, state);
@@ -137,6 +123,8 @@ namespace Tactics.Roguelike
                     int totalRounds = BattleController.Instance?.CurrentRound ?? 1;
                     var state = PlayerAdventureStateStore.LoadRepairAndSave();
 
+                    SyncPartyStateFromBattleUnits(allUnits, state);
+
                     // 注册 BattleSettlementFlow 来管理UI流程
                     BattleSettlementFlow.Instance.Subscribe(BattleSettlementCoordinator.Instance, state);
                     _pendingRoguelikeReturnResult = result;
@@ -151,6 +139,9 @@ namespace Tactics.Roguelike
                         () =>
                         {
                             // 失败态结算完成回调
+                            if (state != null)
+                                PlayerAdventureStateStore.Save(state);
+
                             RoguelikeMapRuntimeState.ClearPendingBattle();
                             RoguelikeEventReentryManager.ClearEventInProgress();
                             TLog.Info("[RoguelikeBattleReturnHandler] Defeat settlement complete. Waiting for BattleSettlementFlow to finish.");
@@ -165,7 +156,8 @@ namespace Tactics.Roguelike
         }
 
         /// <summary>
-        /// 战后恢复：对人类单位恢复 HP 和 MP，并清除昏迷状态。
+        /// 战后恢复：只对存活的人类单位恢复 HP 和 MP。
+        /// 已倒下单位按永久死亡口径保留 0 HP / 0 MP / downed 状态，不在此处复活。
         /// </summary>
         private static void ApplyPostBattleRegeneration(IEnumerable<IUnit> allUnits)
         {
@@ -174,17 +166,49 @@ namespace Tactics.Roguelike
                 if (unit.PlayerNumber != 0)
                     continue;
 
+                if (unit.IsDowned || unit.Health <= 0f)
+                {
+                    unit.Health = 0f;
+                    unit.Mana = 0f;
+                    continue;
+                }
+
                 float hpRegen = unit.Constitution * 2;
                 float mpRegen = unit.Charisma;
 
                 unit.Health = Mathf.Min(unit.MaxHealth, unit.Health + hpRegen);
                 unit.Mana = Mathf.Min(unit.MaxMana, unit.Mana + mpRegen);
 
-                if (unit.IsDowned)
-                    unit.IsDowned = false;
-
                 string unitName = unit is INamedUnit named ? named.UnitName : $"Unit_{unit.UnitID}";
                 TLog.Info($"[PostBattleRegen] {unitName}: HP +{hpRegen}, MP +{mpRegen}");
+            }
+        }
+
+        private static void SyncPartyStateFromBattleUnits(IEnumerable<IUnit> allUnits, PlayerAdventureState state)
+        {
+            if (allUnits == null || state?.Roster == null)
+                return;
+
+            foreach (var unit in allUnits)
+            {
+                if (unit.PlayerNumber != 0)
+                    continue;
+
+                var mono = unit as MonoBehaviour;
+                if (mono == null)
+                    continue;
+
+                var link = mono.GetComponent<RosterCharacterLink>();
+                if (link == null)
+                    continue;
+
+                var def = state.Roster.FirstOrDefault(c => c.Id == link.CharacterId);
+                if (def == null)
+                    continue;
+
+                def.CurrentHp = Mathf.RoundToInt(unit.Health);
+                def.CurrentMp = Mathf.RoundToInt(unit.Mana);
+                def.IsDead = unit.IsDowned;
             }
         }
 

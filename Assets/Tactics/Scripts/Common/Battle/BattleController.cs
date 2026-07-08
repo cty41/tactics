@@ -864,8 +864,8 @@ namespace Tactics.Common.Battle
 
 
         /// <summary>
-        /// 战斗开始时同步 HP：从地图层 CharacterDefinition.CurrentHp 读取到战斗层 Unit.Health。
-        /// InitializeGame() 已将 MaxHealth 计算完毕并满血初始化，此处覆盖为存档血量。
+        /// 战斗开始时同步 HP/MP/死亡态：从地图层 CharacterDefinition 读取到战斗层 Unit。
+        /// InitializeGame() 已将 MaxHealth/MaxMana 计算完毕并初始化，此处覆盖为存档状态。
         /// </summary>
         private void SyncStartingHp()
         {
@@ -880,9 +880,20 @@ namespace Tactics.Common.Battle
                 var def = state.Roster.FirstOrDefault(c => c.Id == link.CharacterId);
                 if (def == null) continue;
 
+                if (def.IsDead)
+                {
+                    unit.Health = 0f;
+                    unit.IsDowned = true;
+                    unit.Mana = 0f;
+                    continue;
+                }
+
                 if (def.CurrentHp > 0)
                     unit.Health = Mathf.Min(def.CurrentHp, unit.MaxHealth);
-                // CurrentHp == 0 表示旧存档无 HP 记录，留满血
+                // CurrentHp == 0 且未标记死亡时，视为旧存档无 HP 记录，保留初始化值
+
+                if (def.CurrentMp.HasValue)
+                    unit.Mana = Mathf.Min(def.CurrentMp.Value, unit.MaxMana);
             }
         }
 

@@ -107,40 +107,14 @@ namespace Tactics.RoguelikeMap.Interaction
         /// </summary>
         private void ApplyReward(RewardResult rewardResult)
         {
-            // 应用金币
-            int actualGold = RunGoldManager.Instance.AddGold(rewardResult.GoldAmount);
-            TLog.Info($"[TreasureNodeHandler] 获得 {actualGold} 金币");
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
 
-            // 应用装备
-            foreach (var equipId in rewardResult.EquipmentIds)
-            {
-                if (RoguelikeRewardHelper.TryAddEquipmentToInventory(equipId, out string equipmentName))
-                {
-                    TLog.Info($"[TreasureNodeHandler] 获得装备: {equipmentName}");
-                }
-            }
+            int beforeGold = state?.Gold ?? 0;
+            NodeInteractionManager.Instance?.ApplyRewardResult(rewardResult, state);
 
-            // 应用 Buff
-            if (rewardResult.Buffs.Count > 0)
-            {
-                var state = PlayerAdventureStateStore.LoadRepairAndSave();
-                if (state?.Roster != null && state.ActivePartyCharacterIds.Count > 0)
-                {
-                    var activeCharacters = state.Roster
-                        .Where(c => state.ActivePartyCharacterIds.Contains(c.Id))
-                        .ToList();
-                    if (activeCharacters.Count > 0)
-                    {
-                        var target = activeCharacters[Random.Range(0, activeCharacters.Count)];
-                        foreach (var buffConfig in rewardResult.Buffs)
-                        {
-                            target.AddPendingBuff(buffConfig);
-                            TLog.Info($"[TreasureNodeHandler] 角色 {target.DisplayName} 获得待生效 Buff: {buffConfig.BuffName}");
-                        }
-                        PlayerAdventureStateStore.Save(state);
-                    }
-                }
-            }
+            int actualGold = (state?.Gold ?? beforeGold) - beforeGold;
+            if (actualGold > 0)
+                TLog.Info($"[TreasureNodeHandler] 获得 {actualGold} 金币");
         }
 
         /// <summary>

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Controllers.GameResolvers;
+using Tactics.RoguelikeMap.Interaction;
 using Tactics.Common.Units;
+using Tactics.RoguelikeMap.Economy;
 using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 
@@ -44,6 +46,7 @@ namespace Tactics.Common.Battle
         private List<IUnit> _allUnits;
         private bool _isSettling;
         private PlayerAdventureState _state;
+        private RewardResult _currentRewardResult;
 
         #endregion
 
@@ -51,6 +54,9 @@ namespace Tactics.Common.Battle
 
         /// <summary>当奖励计算完成时触发，携带奖励数据供 UI 显示。</summary>
         public event Action<BattleRewardSystem.BattleRewards> OnRewardsCalculated;
+
+        /// <summary>当统一结果结构生成后触发，供 Roguelike 地图层后续接入。</summary>
+        public event Action<RewardResult> OnRewardResultGenerated;
 
         /// <summary>当角色升级时触发，携带升级后的角色数据。</summary>
         public event Action<CharacterDefinition> OnCharacterLevelUp;
@@ -67,6 +73,9 @@ namespace Tactics.Common.Battle
 
         /// <summary>当前结算阶段。</summary>
         public SettlementPhase CurrentPhase => _currentPhase;
+
+        /// <summary>当前战斗结算对应的统一结果结构。</summary>
+        public RewardResult CurrentRewardResult => _currentRewardResult;
 
         #endregion
 
@@ -106,6 +115,7 @@ namespace Tactics.Common.Battle
             _allUnits = new List<IUnit>(allUnits);
             _state = state;
             _onComplete = onComplete;
+            _currentRewardResult = null;
             _currentPhase = SettlementPhase.None;
 
             TLog.Info($"[BattleSettlementCoordinator] Starting battle settlement. TotalRounds={totalRounds}, UnitCount={_allUnits.Count}");
@@ -203,6 +213,7 @@ namespace Tactics.Common.Battle
             _totalRounds = 0;
             _allUnits = null;
             _state = null;
+            _currentRewardResult = null;
             _isSettling = false;
 
             TLog.Info("[BattleSettlementCoordinator] State reset.");
@@ -224,6 +235,9 @@ namespace Tactics.Common.Battle
             // 调用 BattleRewardSystem 计算战斗奖励
             var rewards = BattleRewardSystem.CalculateBattleRewards(_result, _totalRounds, _allUnits);
 
+            // 生成统一结果结构，供地图层和节点语义统一消费
+            _currentRewardResult = rewards.ToRewardResult();
+
             // 保存金币奖励到存档
             SaveGoldReward(rewards.TotalGold);
 
@@ -231,6 +245,7 @@ namespace Tactics.Common.Battle
 
             // 触发事件通知 UI 层显示结算信息
             OnRewardsCalculated?.Invoke(rewards);
+            OnRewardResultGenerated?.Invoke(_currentRewardResult);
 
             // 将经验值应用到角色数据
             if (rewards.ExperiencePerCharacter != null && _state != null && _state.Roster != null)
@@ -261,7 +276,9 @@ namespace Tactics.Common.Battle
                 return;
             }
 
-            _state.Gold += gold;
+            RunGoldManager.Instance.SyncFromState(_state);
+            RunGoldManager.Instance.AddGold(gold);
+            RunGoldManager.Instance.SyncToState(_state);
 
             TLog.Info($"[BattleSettlementCoordinator] Gold reward added to _state: +{gold}. TotalGold={_state.Gold}");
         }
