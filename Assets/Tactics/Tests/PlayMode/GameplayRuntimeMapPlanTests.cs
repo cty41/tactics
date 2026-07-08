@@ -261,6 +261,30 @@ namespace Tactics.Tests.PlayMode
             Assert.IsTrue(result.Passed, details);
         }
 
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMapShopStaffMageIntelligence()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteMapPlan(GetPlanPath("map", "shop-staff-mage-intelligence.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMapShopBowHunterAgility()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteMapPlan(GetPlanPath("map", "shop-bow-hunter-agility.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
         private static string GetPlanPath(string subDir, string fileName)
         {
             // Use compiled/ directory for batch-compile output

@@ -21,7 +21,8 @@ const setupKindToAdapter: Record<string, Adapter> = {
   loadTestEncounterConfig: "Skill",
   setAdventureGold: "Map",
   setRosterCharacterState: "Map",
-  addInventoryItem: "Map"
+  addInventoryItem: "Map",
+  equipInventoryEquipmentToRosterCharacter: "Map"
 };
 
 const actionKindToAdapter: Record<string, Adapter> = {
@@ -84,6 +85,7 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   rosterCharacterDeadEquals: "Map",
   rosterCharacterExperienceEquals: "Map",
   rosterCharacterEquipmentEquals: "Map",
+  rosterCharacterTotalAttributeEquals: "Map",
   inventoryContains: "Map",
   // UI 独占断言
   elementVisible: "UI",

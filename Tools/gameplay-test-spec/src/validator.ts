@@ -19,7 +19,8 @@ const supportedSetupKinds = new Set([
   "loadTestEncounterConfig",
   "setAdventureGold",
   "setRosterCharacterState",
-  "addInventoryItem"
+  "addInventoryItem",
+  "equipInventoryEquipmentToRosterCharacter"
 ]);
 
 const supportedActionKinds = new Set([
@@ -113,6 +114,7 @@ const supportedAssertionKinds = new Set([
   "rosterCharacterDeadEquals",
   "rosterCharacterExperienceEquals",
   "rosterCharacterEquipmentEquals",
+  "rosterCharacterTotalAttributeEquals",
   "inventoryContains",
   "elementVisible",
   "elementText",

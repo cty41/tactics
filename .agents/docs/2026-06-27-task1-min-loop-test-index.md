@@ -148,6 +148,28 @@
 - 覆盖目标：
   - 角色死亡后，`PlayerAdventureState.Inventory` 中的消耗品仍然保留
 
+### 10. 商店非泛用价值（`staff_01 -> Mage`）
+
+- fixture：`Tests/gameplay-specs/map/shop-staff-mage-intelligence.gameplay-test.md`
+- plan：`Tests/gameplay-specs/compiled/shop-staff-mage-intelligence.plan.json`
+- PlayMode 入口：
+  - `RuntimeRunner_ExecutesMapShopStaffMageIntelligence()`
+- 覆盖目标：
+  - 商店购买 `staff_01`
+  - 将其装备给 `Mage`
+  - 断言 `Gold` 扣减、`Weapon == staff_01`、`Mage.TotalIntelligence == 12`
+
+### 11. 商店非泛用价值镜像链（`bow_01 -> Hunter`）
+
+- fixture：`Tests/gameplay-specs/map/shop-bow-hunter-agility.gameplay-test.md`
+- plan：`Tests/gameplay-specs/compiled/shop-bow-hunter-agility.plan.json`
+- PlayMode 入口：
+  - `RuntimeRunner_ExecutesMapShopBowHunterAgility()`
+- 覆盖目标：
+  - 商店购买 `bow_01`
+  - 将其装备给 `Hunter`
+  - 断言 `Gold` 扣减、`Weapon == bow_01`、`Hunter.TotalAgility == 11`
+
 ---
 
 ## 六、当前通过状态
@@ -165,6 +187,8 @@
 7. `RuntimeRunner_ExecutesMapBattleGrowthWriteback`
 8. `RuntimeRunner_ExecutesMapBattleDeathEquipmentRetained`
 9. `RuntimeRunner_ExecutesMapBattleDeathConsumableRetained`
+10. `RuntimeRunner_ExecutesMapShopStaffMageIntelligence`
+11. `RuntimeRunner_ExecutesMapShopBowHunterAgility`
 
 这意味着当前最小闭环与边界条件，至少已经在自动化层证明了：
 
@@ -177,6 +201,8 @@
 - 战后成长结果可写回
 - 死亡后已装备物仍保留
 - 死亡后背包内消耗品仍保留
+- 商店点的最小“非泛用价值”已被自动化证明：`staff_01` 对 `Mage` 的功能价值高于泛用消费语义
+- 商店点的“非泛用价值”已具备镜像证明：`staff_01 -> Mage` 与 `bow_01 -> Hunter` 两条专用装备链均已通过
 
 ---
 
@@ -257,6 +283,7 @@
     - `rosterCharacterDeadEquals`
     - `rosterCharacterExperienceEquals`
     - `rosterCharacterEquipmentEquals`
+    - `rosterCharacterTotalAttributeEquals`
     - `inventoryContains`
   - `loadRoguelikeMap(...)` 增加最小内存测试图 fallback
 
@@ -278,7 +305,7 @@
 
 更适合继续补的是：
 
-- 商店点“非泛用型价值”路径
+- 商店点“非泛用型价值”可继续扩成更多职业/装备镜像链
 - 战后结果统一语义导出（如 `BattleSettlementCoordinator.CurrentRewardResult`）
 - 更明确的“节点结果写回后进入地图层比较上下文”链路
 

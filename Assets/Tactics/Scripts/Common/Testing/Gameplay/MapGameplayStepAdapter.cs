@@ -30,6 +30,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "setAdventureGold"
                 or "setRosterCharacterState"
                 or "addInventoryItem"
+                or "equipInventoryEquipmentToRosterCharacter"
                 or "applyRestSiteResult"
                 or "buyShopEquipment";
         }
@@ -54,6 +55,8 @@ namespace Tactics.Common.Testing.Gameplay
                         return SetRosterCharacterState(context, action);
                     case "addInventoryItem":
                         return AddInventoryItem(context, action);
+                    case "equipInventoryEquipmentToRosterCharacter":
+                        return EquipInventoryEquipmentToRosterCharacter(context, action);
                     case "applyRestSiteResult":
                         return ApplyRestSiteResult(context, action);
                     case "buyShopEquipment":
@@ -82,6 +85,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "rosterCharacterDeadEquals"
                 or "rosterCharacterExperienceEquals"
                 or "rosterCharacterEquipmentEquals"
+                or "rosterCharacterTotalAttributeEquals"
                 or "inventoryContains";
         }
 
@@ -103,6 +107,7 @@ namespace Tactics.Common.Testing.Gameplay
                     "rosterCharacterDeadEquals" => AssertRosterCharacterDeadEquals(assertion),
                     "rosterCharacterExperienceEquals" => AssertRosterCharacterExperienceEquals(assertion),
                     "rosterCharacterEquipmentEquals" => AssertRosterCharacterEquipmentEquals(assertion),
+                    "rosterCharacterTotalAttributeEquals" => AssertRosterCharacterTotalAttributeEquals(assertion),
                     "inventoryContains" => AssertInventoryContains(assertion),
                     _ => GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported Map assertion '{assertion.Kind}'.")
                 };
@@ -365,6 +370,36 @@ namespace Tactics.Common.Testing.Gameplay
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Added inventory item '{itemId}'.");
         }
 
+        private static GameplayStepResult EquipInventoryEquipmentToRosterCharacter(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string characterId = action.Parameters["characterId"]?.ToString();
+            string equipmentId = action.Parameters["equipmentId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(characterId) || string.IsNullOrWhiteSpace(equipmentId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "equipInventoryEquipmentToRosterCharacter requires characterId and equipmentId.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Character '{characterId}' not found.");
+
+            if (state.Inventory == null || !state.Inventory.Contains(equipmentId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Inventory does not contain '{equipmentId}'.");
+
+            var equipmentDef = EquipmentDatabase.GetById(equipmentId);
+            if (equipmentDef == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Equipment '{equipmentId}' not found in database.");
+
+            var slot = equipmentDef.Slot;
+            character.Equipment ??= new Dictionary<EquipmentSlot, string>();
+            if (character.Equipment.TryGetValue(slot, out var existing) && !string.IsNullOrEmpty(existing))
+                state.Inventory.Add(existing);
+
+            state.Inventory.Remove(equipmentId);
+            character.Equipment[slot] = equipmentId;
+            PlayerAdventureStateStore.Save(state);
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Equipped '{equipmentId}' to '{characterId}' on slot '{slot}'.");
+        }
+
         private static GameplayStepResult ApplyRestSiteResult(GameplayRuntimeContext context, ExecutableScenarioAction action)
         {
             float healPercent = action.Parameters["healPercent"]?.ToObject<float>() ?? 0.3f;
@@ -606,6 +641,41 @@ namespace Tactics.Common.Testing.Gameplay
             return actual == expected
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId}.{slot}={actual}")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId}.{slot}={expected}, actual={actual ?? "<null>"}.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterTotalAttributeEquals(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterTotalAttributeEquals requires target characterId.");
+
+            string attribute = assertion.Parameters["attribute"]?.ToString();
+            if (string.IsNullOrWhiteSpace(attribute))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterTotalAttributeEquals requires attribute parameter.");
+
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            int actual = attribute switch
+            {
+                "Strength" => character.GetTotalStrength(),
+                "Agility" => character.GetTotalAgility(),
+                "Constitution" => character.GetTotalConstitution(),
+                "Intelligence" => character.GetTotalIntelligence(),
+                "Charisma" => character.GetTotalCharisma(),
+                "Luck" => character.GetTotalLuck(),
+                _ => int.MinValue
+            };
+
+            if (actual == int.MinValue)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported attribute '{attribute}'.");
+
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId}.Total{attribute}={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId}.Total{attribute}={expected}, actual={actual}.");
         }
 
         private static GameplayAssertionResult AssertInventoryContains(ExecutableScenarioAssertion assertion)
