@@ -1,5 +1,6 @@
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Newtonsoft.Json;
 
 namespace Tactics.Common.Units.Buffs
 {
@@ -32,6 +33,9 @@ namespace Tactics.Common.Units.Buffs
 
         [BoxGroup("Effect Params")]
         [SerializeField] private ElementType _elementType = ElementType.None;
+
+        [JsonIgnore]
+        public string RuntimeSourceAssetPath { get; set; }
 
         public string BuffName => _buffName;
         public Sprite Icon => _icon;

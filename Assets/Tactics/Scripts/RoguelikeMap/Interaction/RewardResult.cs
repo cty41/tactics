@@ -97,10 +97,15 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             if (state == null || (GoldAmount <= 0 && GoldCost <= 0)) return;
 
-            int delta = GoldAmount - GoldCost;
-            state.Gold = System.Math.Max(0, state.Gold + delta);
-            if (RunGoldManager.Instance != null)
-                RunGoldManager.Instance.SyncFromState(state);
+            RunGoldManager.Instance.SyncFromState(state);
+
+            if (GoldAmount > 0)
+                RunGoldManager.Instance.AddGold(GoldAmount);
+
+            if (GoldCost > 0)
+                RunGoldManager.Instance.SpendGold(GoldCost);
+
+            RunGoldManager.Instance.SyncToState(state);
             TLog.Info($"[RewardResult] Applied gold delta to player state. Reward={GoldAmount}, Cost={GoldCost}, Total={state.Gold}");
         }
 

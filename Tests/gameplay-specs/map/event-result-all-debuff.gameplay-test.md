@@ -18,12 +18,12 @@ actions:
       targetType: All
       itemId: Assets/Tactics/ScriptableObjects/Buffs/CurseDamageAmplifier.asset
 assertions:
-  - kind: rosterCharacterHasPendingBuff
+  - kind: runtimeRosterCharacterHasPendingBuff
     adapter: Map
     target: warrior
     expected: CurseDamageAmplifier
     parameters: {}
-  - kind: rosterCharacterHasPendingBuff
+  - kind: runtimeRosterCharacterHasPendingBuff
     adapter: Map
     target: mage
     expected: CurseDamageAmplifier

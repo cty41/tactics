@@ -26,7 +26,7 @@ actions:
       resultType: Buff
       targetType: Self
       selfCharacterId: warrior
-      itemId: Assets/Tactics/ScriptableObjects/Buffs/CurseDamageAmplifier.asset
+      itemId: Assets/Tactics/Battle/Buffs/Frozen.asset
   - kind: applyEventResult
     adapter: Map
     parameters:
@@ -42,7 +42,12 @@ assertions:
   - kind: rosterCharacterHasPendingBuff
     adapter: Map
     target: warrior
-    expected: CurseDamageAmplifier
+    expected: Frozen
+    parameters: {}
+  - kind: rosterCharacterPendingBuffHasIcon
+    adapter: Map
+    target: warrior
+    expected: Frozen
     parameters: {}
   - kind: rosterCharacterHpEquals
     adapter: Map

@@ -90,7 +90,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "rosterCharacterExperienceEquals"
                 or "rosterCharacterEquipmentEquals"
                 or "rosterCharacterTotalAttributeEquals"
+                or "runtimeRosterCharacterHasPendingBuff"
                 or "rosterCharacterHasPendingBuff"
+                or "rosterCharacterPendingBuffHasIcon"
                 or "inventoryContains";
         }
 
@@ -113,7 +115,9 @@ namespace Tactics.Common.Testing.Gameplay
                     "rosterCharacterExperienceEquals" => AssertRosterCharacterExperienceEquals(assertion),
                     "rosterCharacterEquipmentEquals" => AssertRosterCharacterEquipmentEquals(assertion),
                     "rosterCharacterTotalAttributeEquals" => AssertRosterCharacterTotalAttributeEquals(assertion),
+                    "runtimeRosterCharacterHasPendingBuff" => AssertRuntimeRosterCharacterHasPendingBuff(context, assertion),
                     "rosterCharacterHasPendingBuff" => AssertRosterCharacterHasPendingBuff(context, assertion),
+                    "rosterCharacterPendingBuffHasIcon" => AssertRosterCharacterPendingBuffHasIcon(assertion),
                     "inventoryContains" => AssertInventoryContains(assertion),
                     _ => GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported Map assertion '{assertion.Kind}'.")
                 };
@@ -807,6 +811,27 @@ namespace Tactics.Common.Testing.Gameplay
             if (string.IsNullOrWhiteSpace(buffName))
                 return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterHasPendingBuff requires expected buffName.");
 
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            bool actual = character.HasPendingBuff(buffName);
+            return actual
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} has persisted pending buff '{buffName}'.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} to have persisted pending buff '{buffName}'.");
+        }
+
+        private static GameplayAssertionResult AssertRuntimeRosterCharacterHasPendingBuff(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "runtimeRosterCharacterHasPendingBuff requires target characterId.");
+
+            string buffName = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "runtimeRosterCharacterHasPendingBuff requires expected buffName.");
+
             var state = context?.CurrentAdventureState ?? PlayerAdventureStateStore.LoadRepairAndSave();
             var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
             if (character == null)
@@ -814,8 +839,30 @@ namespace Tactics.Common.Testing.Gameplay
 
             bool actual = character.HasPendingBuff(buffName);
             return actual
-                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} has pending buff '{buffName}'.")
-                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} to have pending buff '{buffName}'.");
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} has runtime pending buff '{buffName}'.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} to have runtime pending buff '{buffName}'.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterPendingBuffHasIcon(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterPendingBuffHasIcon requires target characterId.");
+
+            string buffName = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterPendingBuffHasIcon requires expected buffName.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            var buff = character.PendingBuffs?.FirstOrDefault(b => b != null && b.BuffName == buffName);
+            bool actual = buff?.Icon != null;
+            return actual
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} pending buff '{buffName}' has icon.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} pending buff '{buffName}' to retain icon after reload.");
         }
     }
 }

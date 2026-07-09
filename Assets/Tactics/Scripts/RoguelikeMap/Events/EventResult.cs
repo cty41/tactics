@@ -174,7 +174,10 @@ namespace Tactics.RoguelikeMap.Events
             {
                 var buffConfig = GameAssetManager.Instance?.Load<BuffConfig>(itemId);
                 if (buffConfig != null)
+                {
+                    buffConfig.RuntimeSourceAssetPath = itemId;
                     return buffConfig;
+                }
 
                 // In gameplay tests the asset runtime may be absent; create a minimal runtime config
                 // so unified-result targeting/writeback can still be verified without broad asset bootstrap.
@@ -198,6 +201,7 @@ namespace Tactics.RoguelikeMap.Events
 
             var buffConfig = UnityEngine.ScriptableObject.CreateInstance<BuffConfig>();
             typeof(BuffConfig).GetField("_buffName", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(buffConfig, buffName);
+            buffConfig.RuntimeSourceAssetPath = sourceId;
             TLog.Warning($"[EventResult] 使用运行时 BuffConfig 回退: {buffName}");
             return buffConfig;
         }

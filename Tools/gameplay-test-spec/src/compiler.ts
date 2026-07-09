@@ -87,7 +87,9 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   rosterCharacterExperienceEquals: "Map",
   rosterCharacterEquipmentEquals: "Map",
   rosterCharacterTotalAttributeEquals: "Map",
+  runtimeRosterCharacterHasPendingBuff: "Map",
   rosterCharacterHasPendingBuff: "Map",
+  rosterCharacterPendingBuffHasIcon: "Map",
   inventoryContains: "Map",
   // UI 独占断言
   elementVisible: "UI",

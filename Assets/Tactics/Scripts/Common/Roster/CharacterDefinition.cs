@@ -6,6 +6,9 @@ using Tactics.Common.Units.Classes;
 using Tactics.Common.Units.Buffs;
 using Tactics.Equipment;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Tactics.Roster
 {
@@ -260,6 +263,7 @@ namespace Tactics.Roster
         public class PendingBuffSnapshot
         {
             public string BuffName { get; set; }
+            public string BuffAssetPath { get; set; }
             public int DefaultDuration { get; set; }
             public bool CanAct { get; set; }
             public BuffEffectType EffectType { get; set; }
@@ -276,6 +280,7 @@ namespace Tactics.Roster
                 return new PendingBuffSnapshot
                 {
                     BuffName = config.BuffName,
+                    BuffAssetPath = ResolveBuffAssetPath(config),
                     DefaultDuration = config.DefaultDuration,
                     CanAct = config.CanAct,
                     EffectType = config.EffectType,
@@ -291,6 +296,23 @@ namespace Tactics.Roster
                 if (string.IsNullOrWhiteSpace(BuffName))
                     return null;
 
+                if (!string.IsNullOrWhiteSpace(BuffAssetPath))
+                {
+                    var loadedConfig = Tactics.AssetPipeline.GameAssetManager.Instance?.Load<BuffConfig>(BuffAssetPath);
+                    if (loadedConfig == null)
+                    {
+#if UNITY_EDITOR
+                        loadedConfig = AssetDatabase.LoadAssetAtPath<BuffConfig>(BuffAssetPath);
+#endif
+                    }
+
+                    if (loadedConfig != null)
+                    {
+                        loadedConfig.RuntimeSourceAssetPath = BuffAssetPath;
+                        return loadedConfig;
+                    }
+                }
+
                 var config = ScriptableObject.CreateInstance<BuffConfig>();
                 SetPrivateField(config, "_buffName", BuffName);
                 SetPrivateField(config, "_defaultDuration", DefaultDuration);
@@ -300,7 +322,22 @@ namespace Tactics.Roster
                 SetPrivateField(config, "_curseCategory", CurseCategory ?? string.Empty);
                 SetPrivateField(config, "_damagePerTurn", DamagePerTurn);
                 SetPrivateField(config, "_elementType", ElementType);
+                config.RuntimeSourceAssetPath = BuffAssetPath;
                 return config;
+            }
+
+            private static string ResolveBuffAssetPath(BuffConfig config)
+            {
+                if (!string.IsNullOrWhiteSpace(config.RuntimeSourceAssetPath))
+                    return config.RuntimeSourceAssetPath;
+
+#if UNITY_EDITOR
+                string assetPath = AssetDatabase.GetAssetPath(config);
+                if (!string.IsNullOrWhiteSpace(assetPath))
+                    return assetPath;
+#endif
+
+                return null;
             }
 
             private static void SetPrivateField<T>(BuffConfig config, string fieldName, T value)
