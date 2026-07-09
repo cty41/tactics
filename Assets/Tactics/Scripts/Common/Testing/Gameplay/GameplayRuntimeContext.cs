@@ -11,6 +11,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Units.Abilities;
 using Tactics.RoguelikeMap;
 using Tactics.RoguelikeMap.Events;
+using Tactics.Roster;
 using Tactics.UI;
 using UnityEngine;
 
@@ -43,6 +44,7 @@ namespace Tactics.Common.Testing.Gameplay
         public string CurrentNodeId { get; set; }
         public RoguelikeEvent CurrentEvent { get; set; }
         public bool EventCompleted { get; set; }
+        public PlayerAdventureState CurrentAdventureState { get; set; }
 
         // UI 相关
         public UIManager.UIId? CurrentUiId { get; set; }
@@ -123,6 +125,7 @@ namespace Tactics.Common.Testing.Gameplay
             CurrentNodeId = null;
             CurrentEvent = null;
             EventCompleted = false;
+            CurrentAdventureState = null;
 
             // 7. 清空 UI 相关
             CurrentUiId = null;

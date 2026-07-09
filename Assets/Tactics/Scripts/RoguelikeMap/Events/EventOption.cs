@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Tactics.RoguelikeMap.Interaction;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -76,25 +77,22 @@ namespace Tactics.RoguelikeMap.Events
         /// <returns>是否成功</returns>
         public bool Execute(int attributeValue)
         {
+            return Execute(attributeValue, out _, out _);
+        }
+
+        public bool Execute(int attributeValue, out EventResult resolvedResult, out RewardResult appliedRewardResult)
+        {
+            resolvedResult = null;
+            appliedRewardResult = null;
+
             if (attribute == AttributeType.None)
             {
-                success?.Apply(null);
+                resolvedResult = success;
+                appliedRewardResult = success?.Apply(null);
                 return true;
             }
 
-            int successRate = CalculateSuccessRate(attributeValue);
-            int roll = UnityEngine.Random.Range(0, 100);
-
-            if (roll < successRate)
-            {
-                success?.Apply(null);
-                return true;
-            }
-            else
-            {
-                failure?.Apply(null);
-                return false;
-            }
+            return AttributeCheckSystem.PerformCheck(this, attributeValue, out resolvedResult, out appliedRewardResult);
         }
 
         /// <summary>
@@ -104,10 +102,18 @@ namespace Tactics.RoguelikeMap.Events
         /// <returns>是否成功</returns>
         public bool Execute(EventEffectContext context)
         {
-            if (context == null)
-                return Execute(10);
+            return Execute(context, out _, out _);
+        }
 
-            return AttributeCheckSystem.PerformCheck(this, context);
+        public bool Execute(EventEffectContext context, out EventResult resolvedResult, out RewardResult appliedRewardResult)
+        {
+            resolvedResult = null;
+            appliedRewardResult = null;
+
+            if (context == null)
+                return Execute(10, out resolvedResult, out appliedRewardResult);
+
+            return AttributeCheckSystem.PerformCheck(this, context, out resolvedResult, out appliedRewardResult);
         }
     }
 }

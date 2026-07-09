@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using Newtonsoft.Json;
 using Tactics.Common.Units.Classes;
 using Tactics.Common.Units.Buffs;
 using Tactics.Equipment;
+using UnityEngine;
 
 namespace Tactics.Roster
 {
@@ -79,7 +82,13 @@ namespace Tactics.Roster
         /// <summary>
         /// 地图层待生效 Buff 列表。战斗开始时应用到角色，然后清空。
         /// </summary>
+        [JsonIgnore]
         public List<BuffConfig> PendingBuffs = new List<BuffConfig>();
+
+        /// <summary>
+        /// PendingBuffs 的轻量可持久化表示，避免直接序列化 ScriptableObject。
+        /// </summary>
+        public List<PendingBuffSnapshot> PendingBuffSnapshots { get; set; } = new List<PendingBuffSnapshot>();
 
         /// <summary>
         /// 添加待生效 Buff（防止重复添加相同名称的 Buff）。
@@ -87,8 +96,19 @@ namespace Tactics.Roster
         public void AddPendingBuff(BuffConfig config)
         {
             if (config == null) return;
-            if (!PendingBuffs.Exists(b => b.BuffName == config.BuffName))
-                PendingBuffs.Add(config);
+
+            PendingBuffSnapshots ??= new List<PendingBuffSnapshot>();
+            PendingBuffs ??= new List<BuffConfig>();
+
+            var snapshot = PendingBuffSnapshot.FromConfig(config);
+            if (snapshot == null)
+                return;
+
+            if (!PendingBuffSnapshots.Exists(b => b.BuffName == snapshot.BuffName))
+                PendingBuffSnapshots.Add(snapshot);
+
+            if (!PendingBuffs.Exists(b => b.BuffName == snapshot.BuffName))
+                PendingBuffs.Add(snapshot.ToRuntimeConfig());
         }
 
         /// <summary>
@@ -96,6 +116,7 @@ namespace Tactics.Roster
         /// </summary>
         public void RemovePendingBuff(string buffName)
         {
+            PendingBuffSnapshots?.RemoveAll(b => b.BuffName == buffName);
             PendingBuffs.RemoveAll(b => b.BuffName == buffName);
         }
 
@@ -104,6 +125,7 @@ namespace Tactics.Roster
         /// </summary>
         public void ClearPendingBuffs()
         {
+            PendingBuffSnapshots?.Clear();
             PendingBuffs.Clear();
         }
 
@@ -112,7 +134,22 @@ namespace Tactics.Roster
         /// </summary>
         public bool HasPendingBuff(string buffName)
         {
-            return PendingBuffs.Exists(b => b.BuffName == buffName);
+            return (PendingBuffSnapshots?.Exists(b => b.BuffName == buffName) == true)
+                   || PendingBuffs.Exists(b => b.BuffName == buffName);
+        }
+
+        public void HydratePendingBuffs()
+        {
+            PendingBuffs ??= new List<BuffConfig>();
+            PendingBuffSnapshots ??= new List<PendingBuffSnapshot>();
+
+            PendingBuffs.Clear();
+            foreach (var snapshot in PendingBuffSnapshots)
+            {
+                var config = snapshot?.ToRuntimeConfig();
+                if (config != null)
+                    PendingBuffs.Add(config);
+            }
         }
 
         public int GetTotalStrength()
@@ -217,6 +254,59 @@ namespace Tactics.Roster
             public string SkillId { get; set; }
             public SkillType SkillType { get; set; }
             public int Level { get; set; }
+        }
+
+        [Serializable]
+        public class PendingBuffSnapshot
+        {
+            public string BuffName { get; set; }
+            public int DefaultDuration { get; set; }
+            public bool CanAct { get; set; }
+            public BuffEffectType EffectType { get; set; }
+            public BuffTriggerTiming TriggerTiming { get; set; }
+            public string CurseCategory { get; set; }
+            public float DamagePerTurn { get; set; }
+            public ElementType ElementType { get; set; }
+
+            public static PendingBuffSnapshot FromConfig(BuffConfig config)
+            {
+                if (config == null || string.IsNullOrWhiteSpace(config.BuffName))
+                    return null;
+
+                return new PendingBuffSnapshot
+                {
+                    BuffName = config.BuffName,
+                    DefaultDuration = config.DefaultDuration,
+                    CanAct = config.CanAct,
+                    EffectType = config.EffectType,
+                    TriggerTiming = config.TriggerTiming,
+                    CurseCategory = config.CurseCategory,
+                    DamagePerTurn = config.DamagePerTurn,
+                    ElementType = config.ElementType
+                };
+            }
+
+            public BuffConfig ToRuntimeConfig()
+            {
+                if (string.IsNullOrWhiteSpace(BuffName))
+                    return null;
+
+                var config = ScriptableObject.CreateInstance<BuffConfig>();
+                SetPrivateField(config, "_buffName", BuffName);
+                SetPrivateField(config, "_defaultDuration", DefaultDuration);
+                SetPrivateField(config, "_canAct", CanAct);
+                SetPrivateField(config, "_effectType", EffectType);
+                SetPrivateField(config, "_triggerTiming", TriggerTiming);
+                SetPrivateField(config, "_curseCategory", CurseCategory ?? string.Empty);
+                SetPrivateField(config, "_damagePerTurn", DamagePerTurn);
+                SetPrivateField(config, "_elementType", ElementType);
+                return config;
+            }
+
+            private static void SetPrivateField<T>(BuffConfig config, string fieldName, T value)
+            {
+                typeof(BuffConfig).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(config, value);
+            }
         }
     }
 }

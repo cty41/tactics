@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tactics.RoguelikeMap.Interaction;
 using Tactics.Runtime.Utilities;
 using Tactics.Roster;
 using UnityEngine;
@@ -33,6 +34,23 @@ namespace Tactics.RoguelikeMap.Events
         {
             if (AdventureState != null)
                 PlayerAdventureStateStore.Save(AdventureState);
+        }
+
+        /// <summary>
+        /// 通过统一结果出口应用 RewardResult，并负责最终保存时机。
+        /// </summary>
+        public void ApplyRewardResult(RewardResult rewardResult)
+        {
+            if (rewardResult == null || AdventureState == null)
+                return;
+
+            if (NodeInteractionManager.Instance != null)
+                NodeInteractionManager.Instance.ApplyRewardResult(rewardResult, AdventureState);
+            else
+            {
+                rewardResult.ApplyToState(AdventureState);
+                SaveAdventureState();
+            }
         }
 
         /// <summary>
@@ -74,9 +92,10 @@ namespace Tactics.RoguelikeMap.Events
                     return GetSelfCharacter();
 
                 case EventTargetType.RandomAlly:
-                    int randomIndex = UnityEngine.Random.Range(0, Party.Count);
-                    TLog.Info($"[EventEffectContext] 随机选取队友: {Party[randomIndex].DisplayName}");
-                    return Party[randomIndex];
+                    var allyCandidates = ResolveRandomAllyCandidates();
+                    int randomIndex = UnityEngine.Random.Range(0, allyCandidates.Count);
+                    TLog.Info($"[EventEffectContext] 随机选取队友: {allyCandidates[randomIndex].DisplayName}");
+                    return allyCandidates[randomIndex];
 
                 case EventTargetType.All:
                     return GetSelfCharacter();
@@ -107,8 +126,9 @@ namespace Tactics.RoguelikeMap.Events
                     return GetSelfCharacter();
 
                 case EventTargetType.RandomAlly:
-                    int randomIndex = UnityEngine.Random.Range(0, Party.Count);
-                    var randomChar = Party[randomIndex];
+                    var allyCandidates = ResolveRandomAllyCandidates();
+                    int randomIndex = UnityEngine.Random.Range(0, allyCandidates.Count);
+                    var randomChar = allyCandidates[randomIndex];
                     TLog.Info($"[EventEffectContext] 随机选取队友: {randomChar.DisplayName}");
                     return randomChar;
 
@@ -198,6 +218,16 @@ namespace Tactics.RoguelikeMap.Events
             int attrValue = GetCharacterAttribute(character, attribute);
 
             return $"由 {charName} 进行判定，{attrName}{attrValue}";
+        }
+
+        private List<CharacterDefinition> ResolveRandomAllyCandidates()
+        {
+            var self = GetSelfCharacter();
+            var allyCandidates = Party.Where(character => character != null && character != self).ToList();
+            if (allyCandidates.Count > 0)
+                return allyCandidates;
+
+            return Party.Where(character => character != null).ToList();
         }
 
         /// <summary>

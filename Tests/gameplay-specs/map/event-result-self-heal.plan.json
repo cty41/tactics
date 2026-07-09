@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.EventResultSelfHeal",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "warrior",
+        "currentHp": 6
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "mage",
+        "currentHp": 5
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "applyEventResult",
+      "parameters": {
+        "resultType": "Heal",
+        "targetType": "Self",
+        "selfCharacterId": "warrior",
+        "amount": 4
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHpEquals",
+      "target": "warrior",
+      "expected": 10,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHpEquals",
+      "target": "mage",
+      "expected": 5,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHpEquals",
+      "target": "warrior",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHpEquals",
+      "target": "mage",
+      "parameters": {}
+    }
+  ]
+}

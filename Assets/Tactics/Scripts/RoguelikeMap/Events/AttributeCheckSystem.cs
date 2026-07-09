@@ -1,4 +1,5 @@
 using Tactics.RoguelikeMap.Events;
+using Tactics.RoguelikeMap.Interaction;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.RoguelikeMap.Events
@@ -51,9 +52,18 @@ namespace Tactics.RoguelikeMap.Events
         /// <returns>是否成功</returns>
         public static bool PerformCheck(EventOption option, int attributeValue)
         {
+            return PerformCheck(option, attributeValue, out _, out _);
+        }
+
+        public static bool PerformCheck(EventOption option, int attributeValue, out EventResult resolvedResult, out RewardResult appliedRewardResult)
+        {
+            resolvedResult = null;
+            appliedRewardResult = null;
+
             if (option.attribute == AttributeType.None)
             {
-                option.success?.Apply(null);
+                resolvedResult = option.success;
+                appliedRewardResult = option.success?.Apply(null);
                 TLog.Info($"[AttributeCheck] 自动成功");
                 return true;
             }
@@ -68,12 +78,14 @@ namespace Tactics.RoguelikeMap.Events
             if (success)
             {
                 TLog.Info($"[AttributeCheck] 判定成功!");
-                option.success?.Apply(null);
+                resolvedResult = option.success;
+                appliedRewardResult = option.success?.Apply(null);
             }
             else
             {
                 TLog.Info($"[AttributeCheck] 判定失败!");
-                option.failure?.Apply(null);
+                resolvedResult = option.failure;
+                appliedRewardResult = option.failure?.Apply(null);
             }
 
             return success;
@@ -87,6 +99,14 @@ namespace Tactics.RoguelikeMap.Events
         /// <returns>是否成功</returns>
         public static bool PerformCheck(EventOption option, EventEffectContext ctx)
         {
+            return PerformCheck(option, ctx, out _, out _);
+        }
+
+        public static bool PerformCheck(EventOption option, EventEffectContext ctx, out EventResult resolvedResult, out RewardResult appliedRewardResult)
+        {
+            resolvedResult = null;
+            appliedRewardResult = null;
+
             if (option == null)
             {
                 TLog.Warning("[AttributeCheck] 选项为空");
@@ -96,14 +116,15 @@ namespace Tactics.RoguelikeMap.Events
             if (ctx == null || ctx.Party.Count == 0)
             {
                 TLog.Warning("[AttributeCheck] 上下文为空或队伍为空，降级为旧版判定");
-                return PerformCheck(option, 0);
+                return PerformCheck(option, 0, out resolvedResult, out appliedRewardResult);
             }
 
             // 无属性要求，自动成功
             if (option.attribute == AttributeType.None)
             {
                 TLog.Info("[AttributeCheck] 无属性要求，自动成功");
-                option.success?.Apply(ctx);
+                resolvedResult = option.success;
+                appliedRewardResult = option.success?.Apply(ctx);
                 return true;
             }
 
@@ -117,7 +138,7 @@ namespace Tactics.RoguelikeMap.Events
             if (character == null)
             {
                 TLog.Warning("[AttributeCheck] 无法选取目标角色，降级为旧版判定");
-                return PerformCheck(option, 0);
+                return PerformCheck(option, 0, out resolvedResult, out appliedRewardResult);
             }
 
             // 读取属性值
@@ -140,12 +161,14 @@ namespace Tactics.RoguelikeMap.Events
             if (success)
             {
                 TLog.Info("[AttributeCheck] 判定成功!");
-                option.success?.Apply(ctx);
+                resolvedResult = option.success;
+                appliedRewardResult = option.success?.Apply(ctx);
             }
             else
             {
                 TLog.Info("[AttributeCheck] 判定失败!");
-                option.failure?.Apply(ctx);
+                resolvedResult = option.failure;
+                appliedRewardResult = option.failure?.Apply(ctx);
             }
 
             return success;
