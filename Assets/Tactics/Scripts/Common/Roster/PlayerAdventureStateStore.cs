@@ -94,6 +94,13 @@ namespace Tactics.Roster
                     PlayerPrefs.Save();
                     return CreateDefaultState();
                 }
+
+                if (state.Roster != null)
+                {
+                    foreach (var character in state.Roster)
+                        character?.HydratePendingBuffs();
+                }
+
                 return state;
             }
             catch
@@ -158,6 +165,7 @@ namespace Tactics.Roster
                 foreach (var character in state.Roster)
                 {
                     if (character == null) continue;
+                    character.HydratePendingBuffs();
                     if (character.LearnedSkills == null)
                         character.LearnedSkills = new List<CharacterDefinition.LearnedSkill>();
                     

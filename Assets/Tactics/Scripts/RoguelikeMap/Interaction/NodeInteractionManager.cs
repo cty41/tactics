@@ -205,10 +205,8 @@ namespace Tactics.RoguelikeMap.Interaction
             else
             {
                 TLog.Warning("[NodeInteractionManager] TreasureNodeHandler 未找到，使用回退逻辑");
-                // 回退：直接增加金币
                 int goldAmount = Random.Range(2, 6);
-                RunGoldManager.Instance.AddGold(goldAmount);
-                TLog.Info($"[NodeInteractionManager] 获得 {goldAmount} 金币");
+                ApplyRewardResult(RewardResult.Gold(goldAmount));
                 onCompleted?.Invoke();
             }
         }

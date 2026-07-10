@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -32,7 +33,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "addInventoryItem"
                 or "equipInventoryEquipmentToRosterCharacter"
                 or "applyRestSiteResult"
-                or "buyShopEquipment";
+                or "buyShopEquipment"
+                or "applyEventResult";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -61,6 +63,8 @@ namespace Tactics.Common.Testing.Gameplay
                         return ApplyRestSiteResult(context, action);
                     case "buyShopEquipment":
                         return BuyShopEquipment(context, action);
+                    case "applyEventResult":
+                        return ApplyEventResult(context, action);
                     default:
                         return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Unsupported Map action '{action.Kind}'.");
                 }
@@ -86,6 +90,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "rosterCharacterExperienceEquals"
                 or "rosterCharacterEquipmentEquals"
                 or "rosterCharacterTotalAttributeEquals"
+                or "runtimeRosterCharacterHasPendingBuff"
+                or "rosterCharacterHasPendingBuff"
+                or "rosterCharacterPendingBuffHasIcon"
                 or "inventoryContains";
         }
 
@@ -108,6 +115,9 @@ namespace Tactics.Common.Testing.Gameplay
                     "rosterCharacterExperienceEquals" => AssertRosterCharacterExperienceEquals(assertion),
                     "rosterCharacterEquipmentEquals" => AssertRosterCharacterEquipmentEquals(assertion),
                     "rosterCharacterTotalAttributeEquals" => AssertRosterCharacterTotalAttributeEquals(assertion),
+                    "runtimeRosterCharacterHasPendingBuff" => AssertRuntimeRosterCharacterHasPendingBuff(context, assertion),
+                    "rosterCharacterHasPendingBuff" => AssertRosterCharacterHasPendingBuff(context, assertion),
+                    "rosterCharacterPendingBuffHasIcon" => AssertRosterCharacterPendingBuffHasIcon(assertion),
                     "inventoryContains" => AssertInventoryContains(assertion),
                     _ => GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported Map assertion '{assertion.Kind}'.")
                 };
@@ -260,6 +270,8 @@ namespace Tactics.Common.Testing.Gameplay
 
             var evt = eventManager.GetEvent(eventId);
             if (evt == null)
+                evt = LoadFallbackEventAsset(eventId);
+            if (evt == null)
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Event '{eventId}' not found.");
 
             // Store event in context for assertions
@@ -267,6 +279,47 @@ namespace Tactics.Common.Testing.Gameplay
             context.EventCompleted = false;
 
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Triggered event '{eventId}'.");
+        }
+
+        private static RoguelikeEvent LoadFallbackEventAsset(string eventId)
+        {
+            if (string.IsNullOrWhiteSpace(eventId))
+                return null;
+
+            string[] candidatePaths =
+            {
+                $"Assets/Tactics/GameData/Events/DarkForest/{eventId}.json"
+            };
+
+            foreach (var path in candidatePaths)
+            {
+                try
+                {
+                    var textAsset = GameAssetManager.Instance?.Load<TextAsset>(path);
+                    if (textAsset == null)
+                    {
+                        if (File.Exists(path))
+                        {
+                            var json = File.ReadAllText(path);
+                            var fallbackEvent = RoguelikeEvent.FromJson(json);
+                            if (fallbackEvent != null)
+                                return fallbackEvent;
+                        }
+                        continue;
+                    }
+
+                    var evt = RoguelikeEvent.FromJson(textAsset.text);
+                    GameAssetManager.Instance.Release(path);
+                    if (evt != null)
+                        return evt;
+                }
+                catch
+                {
+                    // ignore fallback load errors and continue trying
+                }
+            }
+
+            return null;
         }
 
         private static GameplayStepResult CompleteNode(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -309,6 +362,7 @@ namespace Tactics.Common.Testing.Gameplay
             state.Gold = amount;
             RunGoldManager.Instance.SyncFromState(state);
             PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Set adventure gold to {amount}.");
         }
 
@@ -354,6 +408,7 @@ namespace Tactics.Common.Testing.Gameplay
             }
 
             PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Updated character state for '{characterId}'.");
         }
 
@@ -367,6 +422,7 @@ namespace Tactics.Common.Testing.Gameplay
             state.Inventory ??= new List<string>();
             state.Inventory.Add(itemId);
             PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Added inventory item '{itemId}'.");
         }
 
@@ -397,6 +453,7 @@ namespace Tactics.Common.Testing.Gameplay
             state.Inventory.Remove(equipmentId);
             character.Equipment[slot] = equipmentId;
             PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Equipped '{equipmentId}' to '{characterId}' on slot '{slot}'.");
         }
 
@@ -416,6 +473,7 @@ namespace Tactics.Common.Testing.Gameplay
                 reward.ApplyToState(state);
                 PlayerAdventureStateStore.Save(state);
             }
+            context.CurrentAdventureState = state;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Applied rest site result: HP {healPercent:P0}, MP {manaHealPercent:P0}.");
         }
 
@@ -437,7 +495,59 @@ namespace Tactics.Common.Testing.Gameplay
                 reward.ApplyToState(state);
                 PlayerAdventureStateStore.Save(state);
             }
+            context.CurrentAdventureState = state;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Bought shop equipment '{equipmentId}' for {price} gold.");
+        }
+
+        private static GameplayStepResult ApplyEventResult(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string resultTypeName = action.Parameters["resultType"]?.ToString();
+            if (string.IsNullOrWhiteSpace(resultTypeName) || !Enum.TryParse<EventResultType>(resultTypeName, true, out var resultType))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "applyEventResult requires a valid resultType.");
+
+            string targetTypeName = action.Parameters["targetType"]?.ToString();
+            EventTargetType targetType = EventTargetType.All;
+            if (!string.IsNullOrWhiteSpace(targetTypeName) && !Enum.TryParse<EventTargetType>(targetTypeName, true, out targetType))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "applyEventResult targetType is invalid.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (state == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "Adventure state is unavailable.");
+
+            string selfCharacterId = action.Parameters["selfCharacterId"]?.ToString();
+            var contextParty = ResolveContextParty(state, action);
+            var eventContext = new EventEffectContext(contextParty, selfCharacterId, state);
+            var eventResult = new EventResult
+            {
+                type = resultType,
+                target = targetType,
+                amount = action.Parameters["amount"]?.ToObject<int>() ?? 0,
+                itemId = action.Parameters["itemId"]?.ToString(),
+                description = action.Parameters["description"]?.ToString()
+            };
+
+            eventResult.Apply(eventContext);
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Applied event result '{resultType}' to target '{targetType}'.");
+        }
+
+        private static List<CharacterDefinition> ResolveContextParty(PlayerAdventureState state, ExecutableScenarioAction action)
+        {
+            var roster = state?.Roster ?? new List<CharacterDefinition>();
+            if (!action.Parameters.TryGetValue("partyCharacterIds", out var partyIdsToken) || partyIdsToken == null)
+                return roster;
+
+            List<string> partyCharacterIds = partyIdsToken.Type switch
+            {
+                JTokenType.Array => partyIdsToken.ToObject<List<string>>(),
+                JTokenType.String => partyIdsToken.ToString().Split(',').Select(id => id.Trim()).Where(id => !string.IsNullOrWhiteSpace(id)).ToList(),
+                _ => null
+            };
+
+            if (partyCharacterIds == null || partyCharacterIds.Count == 0)
+                return roster;
+
+            return roster.Where(character => character != null && partyCharacterIds.Contains(character.Id)).ToList();
         }
 
         private static GameplayAssertionResult AssertCurrentNodeEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -689,6 +799,70 @@ namespace Tactics.Common.Testing.Gameplay
             return actual
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"Inventory contains '{expectedItem}'.")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected inventory to contain '{expectedItem}'.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterHasPendingBuff(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterHasPendingBuff requires target characterId.");
+
+            string buffName = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterHasPendingBuff requires expected buffName.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            bool actual = character.HasPendingBuff(buffName);
+            return actual
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} has persisted pending buff '{buffName}'.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} to have persisted pending buff '{buffName}'.");
+        }
+
+        private static GameplayAssertionResult AssertRuntimeRosterCharacterHasPendingBuff(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "runtimeRosterCharacterHasPendingBuff requires target characterId.");
+
+            string buffName = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "runtimeRosterCharacterHasPendingBuff requires expected buffName.");
+
+            var state = context?.CurrentAdventureState ?? PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            bool actual = character.HasPendingBuff(buffName);
+            return actual
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} has runtime pending buff '{buffName}'.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} to have runtime pending buff '{buffName}'.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterPendingBuffHasIcon(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterPendingBuffHasIcon requires target characterId.");
+
+            string buffName = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(buffName))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterPendingBuffHasIcon requires expected buffName.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            var buff = character.PendingBuffs?.FirstOrDefault(b => b != null && b.BuffName == buffName);
+            bool actual = buff?.Icon != null;
+            return actual
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} pending buff '{buffName}' has icon.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} pending buff '{buffName}' to retain icon after reload.");
         }
     }
 }

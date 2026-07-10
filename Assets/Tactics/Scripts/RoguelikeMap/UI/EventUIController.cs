@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Tactics.RoguelikeMap.Events;
+using Tactics.RoguelikeMap.Interaction;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using UnityEngine;
@@ -234,18 +235,20 @@ namespace Tactics.RoguelikeMap.UI
             var option = _currentEvent.options[index];
 
             // 获取属性值并执行判定
+            EventResult resolvedResult;
+            RewardResult appliedRewardResult;
             bool success = _effectContext != null
-                ? option.Execute(_effectContext)
-                : option.Execute(GetAttributeValue(option.attribute));
+                ? option.Execute(_effectContext, out resolvedResult, out appliedRewardResult)
+                : option.Execute(GetAttributeValue(option.attribute), out resolvedResult, out appliedRewardResult);
 
             // 显示结果
-            ShowResult(option, success);
+            ShowResult(option, resolvedResult, appliedRewardResult, success);
         }
 
         /// <summary>
         /// 显示结果
         /// </summary>
-        private void ShowResult(EventOption option, bool success)
+        private void ShowResult(EventOption option, EventResult resolvedResult, RewardResult appliedRewardResult, bool success)
         {
             _lastExecutionSucceeded = success;
             // 隐藏选项
@@ -256,10 +259,10 @@ namespace Tactics.RoguelikeMap.UI
             if (_resultPanel != null)
                 _resultPanel.style.display = DisplayStyle.Flex;
 
-            var result = success ? option.success : option.failure;
-            if (result != null && _resultLabel != null)
+            var result = resolvedResult ?? (success ? option.success : option.failure);
+            if (_resultLabel != null)
             {
-                _resultLabel.text = result.description;
+                _resultLabel.text = result?.GetDisplayText(_effectContext, appliedRewardResult) ?? string.Empty;
 
                 // 清除旧样式类，添加结果样式
                 _resultLabel.RemoveFromClassList("result-success");

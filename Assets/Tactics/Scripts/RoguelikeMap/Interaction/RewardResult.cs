@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Tactics.Common.Units.Buffs;
+using Tactics.Equipment;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Roster;
 using Tactics.Runtime.Utilities;
@@ -25,6 +26,11 @@ namespace Tactics.RoguelikeMap.Interaction
 
         /// <summary>获得的物品ID列表</summary>
         public List<string> ItemIds { get; set; } = new List<string>();
+
+        /// <summary>
+        /// 受影响角色 ID 列表。为空时表示对整队生效。
+        /// </summary>
+        public List<string> TargetCharacterIds { get; set; } = new List<string>();
 
         /// <summary>获得的增益效果</summary>
         public List<BuffConfig> Buffs { get; set; } = new List<BuffConfig>();
@@ -92,6 +98,7 @@ namespace Tactics.RoguelikeMap.Interaction
             if (state == null || (GoldAmount <= 0 && GoldCost <= 0)) return;
 
             RunGoldManager.Instance.SyncFromState(state);
+
             if (GoldAmount > 0)
                 RunGoldManager.Instance.AddGold(GoldAmount);
 
@@ -109,14 +116,44 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             if (state == null || EquipmentIds.Count == 0) return false;
 
+            state.Inventory ??= new List<string>();
             bool anyAdded = false;
             foreach (var equipId in EquipmentIds)
             {
-                if (RoguelikeRewardHelper.TryAddEquipmentToInventory(equipId, out string equipmentName, state))
+                if (string.IsNullOrWhiteSpace(equipId))
+                    continue;
+
+                if (!EquipmentDatabase.Contains(equipId))
                 {
-                    TLog.Info($"[RewardResult] Added equipment: {equipmentName}");
-                    anyAdded = true;
+                    TLog.Warning($"[RewardResult] Equipment '{equipId}' not found.");
+                    continue;
                 }
+
+                state.Inventory.Add(equipId);
+                var def = EquipmentDatabase.GetById(equipId);
+                TLog.Info($"[RewardResult] Added equipment: {def?.DisplayName ?? equipId}");
+                anyAdded = true;
+            }
+            return anyAdded;
+        }
+
+        /// <summary>
+        /// 应用物品到玩家状态。
+        /// </summary>
+        public bool ApplyItemsToState(PlayerAdventureState state)
+        {
+            if (state == null || ItemIds.Count == 0) return false;
+
+            state.Inventory ??= new List<string>();
+            bool anyAdded = false;
+            foreach (var itemId in ItemIds)
+            {
+                if (string.IsNullOrWhiteSpace(itemId))
+                    continue;
+
+                state.Inventory.Add(itemId);
+                TLog.Info($"[RewardResult] Added item: {itemId}");
+                anyAdded = true;
             }
             return anyAdded;
         }
@@ -130,7 +167,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
             if (HealPercent > 0f || HealAmount > 0)
             {
-                foreach (var character in party)
+                foreach (var character in ResolveTargetCharacters(party))
                 {
                     if (character.IsDead)
                         continue;
@@ -146,7 +183,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
             if (DamageAmount > 0)
             {
-                foreach (var character in party)
+                foreach (var character in ResolveTargetCharacters(party))
                 {
                     if (character.IsDead)
                         continue;
@@ -168,7 +205,7 @@ namespace Tactics.RoguelikeMap.Interaction
             if (party == null || party.Count == 0 || (ManaHealAmount <= 0 && ManaHealPercent <= 0f))
                 return;
 
-            foreach (var character in party)
+            foreach (var character in ResolveTargetCharacters(party))
             {
                 if (character.IsDead)
                     continue;
@@ -189,7 +226,7 @@ namespace Tactics.RoguelikeMap.Interaction
         {
             if (party == null || party.Count == 0) return;
 
-            foreach (var character in party)
+            foreach (var character in ResolveTargetCharacters(party))
             {
                 foreach (var buff in Buffs)
                 {
@@ -218,6 +255,8 @@ namespace Tactics.RoguelikeMap.Interaction
             ItemIds.AddRange(other.ItemIds);
             Buffs.AddRange(other.Buffs);
             Debuffs.AddRange(other.Debuffs);
+            if (TargetCharacterIds.Count == 0)
+                TargetCharacterIds.AddRange(other.TargetCharacterIds);
             HealAmount += other.HealAmount;
             HealPercent = System.Math.Max(HealPercent, other.HealPercent);
             ManaHealAmount += other.ManaHealAmount;
@@ -238,6 +277,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
             ApplyGoldToState(state);
             ApplyEquipmentToState(state);
+            ApplyItemsToState(state);
             ApplyHpChangeToParty(state.Roster);
             ApplyMpChangeToParty(state.Roster);
             ApplyBuffsToParty(state.Roster);
@@ -272,6 +312,9 @@ namespace Tactics.RoguelikeMap.Interaction
 
             if (ItemIds.Count > 0)
                 sb.AppendLine($"获得物品: {string.Join(", ", ItemIds)}");
+
+            if (TargetCharacterIds.Count > 0)
+                sb.AppendLine($"目标角色: {string.Join(", ", TargetCharacterIds)}");
 
             if (HealPercent > 0f)
                 sb.AppendLine($"恢复HP: {HealPercent:P0}");
@@ -342,6 +385,25 @@ namespace Tactics.RoguelikeMap.Interaction
                 EnemiesDefeated = enemiesDefeated,
                 IsBattleReward = true
             };
+        }
+
+        private IEnumerable<CharacterDefinition> ResolveTargetCharacters(List<CharacterDefinition> party)
+        {
+            if (party == null || party.Count == 0)
+                yield break;
+
+            if (TargetCharacterIds == null || TargetCharacterIds.Count == 0)
+            {
+                foreach (var character in party)
+                    yield return character;
+                yield break;
+            }
+
+            foreach (var character in party)
+            {
+                if (character != null && TargetCharacterIds.Contains(character.Id))
+                    yield return character;
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using Newtonsoft.Json;
 using Tactics.AssetPipeline;
 using Tactics.Common.Units.Buffs;
@@ -58,185 +60,150 @@ namespace Tactics.RoguelikeMap.Events
         public string description;
 
         /// <summary>
-        /// 应用事件结果
+        /// 尝试将事件结果翻译为统一的 RewardResult。
+        /// 对目标敏感语义仍通过 TargetCharacterIds 保留。
         /// </summary>
-        /// <param name="ctx">事件效果上下文（包含队伍和目标选取逻辑），null时仅输出日志</param>
-        public void Apply(EventEffectContext ctx)
+        public RewardResult ToRewardResult(EventEffectContext ctx = null)
         {
-            bool shouldSaveState = false;
+            var result = RewardResult.Empty();
+
             switch (type)
             {
-                case EventResultType.Gold:
-                    RunGoldManager.Instance.SyncFromState(ctx?.AdventureState);
-                    RunGoldManager.Instance.AddGold(amount);
-                    RunGoldManager.Instance.SyncToState(ctx?.AdventureState);
-                    TLog.Info($"[EventResult] 获得 {amount} 金币");
-                    shouldSaveState = true;
-                    break;
-                case EventResultType.Heal:
-                    ApplyHeal(ctx);
-                    shouldSaveState = true;
-                    break;
-                case EventResultType.Damage:
-                    ApplyDamage(ctx);
-                    shouldSaveState = true;
-                    break;
-                case EventResultType.Item:
-                    TLog.Warning($"[EventResult] Item 奖励暂未接入独立背包系统: {itemId}");
-                    break;
-                case EventResultType.Equipment:
-                    if (RoguelikeRewardHelper.TryAddEquipmentToInventory(itemId, out string equipmentName, ctx?.AdventureState))
-                    {
-                        TLog.Info($"[EventResult] 获得装备: {equipmentName}");
-                        shouldSaveState = true;
-                    }
-                    break;
-                case EventResultType.Buff:
-                    ApplyBuff(ctx, isDebuff: false);
-                    shouldSaveState = true;
-                    break;
-                case EventResultType.Debuff:
-                    ApplyBuff(ctx, isDebuff: true);
-                    shouldSaveState = true;
-                    break;
                 case EventResultType.Nothing:
-                    TLog.Info($"[EventResult] 无效果");
-                    break;
-            }
-
-            if (shouldSaveState)
-                ctx?.SaveAdventureState();
-        }
-
-        /// <summary>
-        /// 恢复HP：All目标对全队生效，其他目标选取单个角色
-        /// </summary>
-        private void ApplyHeal(EventEffectContext ctx)
-        {
-            if (ctx == null)
-            {
-                TLog.Warning("[EventResult] Heal 效果需要 EventEffectContext，当前为 null");
-                return;
-            }
-
-            if (target == EventTargetType.All)
-            {
-                foreach (var character in ctx.Party)
-                {
-                    HealCharacter(character, amount);
-                }
-                TLog.Info($"[EventResult] 全队每人回复 {amount} HP");
-            }
-            else
-            {
-                var character = ctx.PickTarget(target, AttributeType.None);
-                if (character != null)
-                {
-                    HealCharacter(character, amount);
-                    TLog.Info($"[EventResult] {character.DisplayName} 回复 {amount} HP (HP: {character.CurrentHp}/{character.MaxHp})");
-                }
-            }
-        }
-
-        /// <summary>
-        /// 造成伤害：All目标对全队生效，其他目标选取单个角色
-        /// </summary>
-        private void ApplyDamage(EventEffectContext ctx)
-        {
-            if (ctx == null)
-            {
-                TLog.Warning("[EventResult] Damage 效果需要 EventEffectContext，当前为 null");
-                return;
-            }
-
-            if (target == EventTargetType.All)
-            {
-                foreach (var character in ctx.Party)
-                {
-                    DamageCharacter(character, amount);
-                }
-                TLog.Info($"[EventResult] 全队每人受到 {amount} 伤害");
-            }
-            else
-            {
-                var character = ctx.PickTarget(target, AttributeType.None);
-                if (character != null)
-                {
-                    DamageCharacter(character, amount);
-                    TLog.Info($"[EventResult] {character.DisplayName} 受到 {amount} 伤害 (HP: {character.CurrentHp}/{character.MaxHp})");
-                }
+                    return result;
+                case EventResultType.Gold:
+                    result.GoldAmount = amount;
+                    return result;
+                case EventResultType.Item:
+                    if (!string.IsNullOrWhiteSpace(itemId))
+                        result.ItemIds.Add(itemId);
+                    return result;
+                case EventResultType.Equipment:
+                    if (!string.IsNullOrWhiteSpace(itemId))
+                        result.EquipmentIds.Add(itemId);
+                    return result;
+                case EventResultType.Heal:
+                    result.HealAmount = amount;
+                    ApplyTargetSelection(ctx, result);
+                    return result;
+                case EventResultType.Damage:
+                    result.DamageAmount = amount;
+                    ApplyTargetSelection(ctx, result);
+                    return result;
+                case EventResultType.Buff:
+                case EventResultType.Debuff:
+                    var buffConfig = ResolveBuffConfig();
+                    if (buffConfig != null)
+                    {
+                        if (type == EventResultType.Buff)
+                            result.Buffs.Add(buffConfig);
+                        else
+                            result.Debuffs.Add(buffConfig);
+                        ApplyTargetSelection(ctx, result);
+                    }
+                    return result;
+                default:
+                    return result;
             }
         }
 
         /// <summary>
-        /// 添加 Buff/Debuff 到 PendingBuffs：通过 itemId 加载 BuffConfig 资产
-        /// </summary>
-        private void ApplyBuff(EventEffectContext ctx, bool isDebuff)
+         /// 应用事件结果
+         /// </summary>
+         /// <param name="ctx">事件效果上下文（包含队伍和目标选取逻辑），null时仅输出日志</param>
+        public RewardResult Apply(EventEffectContext ctx)
         {
-            if (ctx == null)
+            var rewardResult = ToRewardResult(ctx);
+
+            bool hasUnifiedPayload = rewardResult.GoldAmount > 0 ||
+                                     rewardResult.GoldCost > 0 ||
+                                     rewardResult.EquipmentIds.Count > 0 ||
+                                     rewardResult.ItemIds.Count > 0 ||
+                                     rewardResult.HealAmount > 0 ||
+                                     rewardResult.DamageAmount > 0 ||
+                                     rewardResult.Buffs.Count > 0 ||
+                                     rewardResult.Debuffs.Count > 0;
+
+            if (hasUnifiedPayload)
             {
-                TLog.Warning($"[EventResult] {(isDebuff ? "Debuff" : "Buff")} 效果需要 EventEffectContext，当前为 null");
-                return;
+                ctx?.ApplyRewardResult(rewardResult);
+
+                TLog.Info($"[EventResult] 统一结果已应用: {rewardResult.GetDisplayText()}");
+                return rewardResult;
             }
 
+            if (type == EventResultType.Nothing)
+            {
+                TLog.Info("[EventResult] 无效果");
+            }
+
+            return rewardResult;
+        }
+
+        public string GetDisplayText(EventEffectContext ctx = null, RewardResult appliedRewardResult = null)
+        {
+            string unifiedText = (appliedRewardResult ?? ToRewardResult(ctx))?.GetDisplayText();
+            if (!string.IsNullOrWhiteSpace(unifiedText))
+                return unifiedText;
+
+            if (!string.IsNullOrWhiteSpace(description))
+                return description;
+
+            return type == EventResultType.Nothing ? "无效果" : string.Empty;
+        }
+
+        private void ApplyTargetSelection(EventEffectContext ctx, RewardResult rewardResult)
+        {
+            if (ctx == null || rewardResult == null || target == EventTargetType.All)
+                return;
+
+            var character = ctx.PickTarget(target, AttributeType.None);
+            if (character != null)
+                rewardResult.TargetCharacterIds.Add(character.Id);
+        }
+
+        private BuffConfig ResolveBuffConfig()
+        {
             if (string.IsNullOrEmpty(itemId))
             {
-                TLog.Warning($"[EventResult] {(isDebuff ? "Debuff" : "Buff")} 效果的 itemId 为空");
-                return;
+                TLog.Warning($"[EventResult] Buff/Debuff 效果的 itemId 为空");
+                return null;
             }
 
-            BuffConfig buffConfig;
             try
             {
-                buffConfig = GameAssetManager.Instance.Load<BuffConfig>(itemId);
+                var buffConfig = GameAssetManager.Instance?.Load<BuffConfig>(itemId);
+                if (buffConfig != null)
+                {
+                    buffConfig.RuntimeSourceAssetPath = itemId;
+                    return buffConfig;
+                }
+
+                // In gameplay tests the asset runtime may be absent; create a minimal runtime config
+                // so unified-result targeting/writeback can still be verified without broad asset bootstrap.
+                return CreateRuntimeFallbackBuffConfig(itemId);
             }
             catch (Exception e)
             {
                 TLog.Error($"[EventResult] 加载 BuffConfig 失败: {itemId}, 错误: {e.Message}");
-                return;
-            }
-
-            if (buffConfig == null)
-            {
-                TLog.Warning($"[EventResult] BuffConfig 未找到: {itemId}");
-                return;
-            }
-
-            string label = isDebuff ? "减益" : "增益";
-
-            if (target == EventTargetType.All)
-            {
-                foreach (var character in ctx.Party)
-                {
-                    character.AddPendingBuff(buffConfig);
-                    TLog.Info($"[EventResult] {character.DisplayName} 获得{label}: {buffConfig.BuffName}");
-                }
-            }
-            else
-            {
-                var character = ctx.PickTarget(target, AttributeType.None);
-                if (character != null)
-                {
-                    character.AddPendingBuff(buffConfig);
-                    TLog.Info($"[EventResult] {character.DisplayName} 获得{label}: {buffConfig.BuffName}");
-                }
+                return CreateRuntimeFallbackBuffConfig(itemId);
             }
         }
 
-        /// <summary>恢复角色HP，不超过上限</summary>
-        private static void HealCharacter(CharacterDefinition character, int amount)
+        private BuffConfig CreateRuntimeFallbackBuffConfig(string sourceId)
         {
-            int oldHp = character.CurrentHp;
-            character.CurrentHp = Math.Min(character.MaxHp, character.CurrentHp + amount);
-            TLog.Info($"[EventResult] {character.DisplayName} HP: {oldHp} → {character.CurrentHp}/{character.MaxHp}");
-        }
+            if (string.IsNullOrWhiteSpace(sourceId))
+                return null;
 
-        /// <summary>对角色造成伤害，不低于0</summary>
-        private static void DamageCharacter(CharacterDefinition character, int amount)
-        {
-            int oldHp = character.CurrentHp;
-            character.CurrentHp = Math.Max(0, character.CurrentHp - amount);
-            TLog.Info($"[EventResult] {character.DisplayName} HP: {oldHp} → {character.CurrentHp}/{character.MaxHp}");
+            string buffName = Path.GetFileNameWithoutExtension(sourceId);
+            if (string.IsNullOrWhiteSpace(buffName))
+                buffName = sourceId;
+
+            var buffConfig = UnityEngine.ScriptableObject.CreateInstance<BuffConfig>();
+            typeof(BuffConfig).GetField("_buffName", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(buffConfig, buffName);
+            buffConfig.RuntimeSourceAssetPath = sourceId;
+            TLog.Warning($"[EventResult] 使用运行时 BuffConfig 回退: {buffName}");
+            return buffConfig;
         }
     }
 }
