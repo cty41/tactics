@@ -34,10 +34,10 @@ Ignore:
 
 Sprite asset requirements:
 isolated character sprite only
-single animation frame sprite
+single animation frame sprite unless the action prompt explicitly requests an equal-cell sequence sheet
 full body visible from head to toe
 centered in frame
-pure white or transparent background
+perfectly flat solid #00ff00 chroma-key background for later removal, unless native alpha is explicitly available
 no cast shadow
 no floor
 no environment
@@ -49,6 +49,12 @@ fixed canvas and framing
 same scale across all frames
 same camera angle
 same baseline
+
+Sequence-sheet override:
+when an action prompt requests a sequence sheet, use one square image divided into equal square cells.
+Do not draw borders, labels, grid lines, arrows, or text.
+Each used cell contains exactly one complete sprite on the same cell canvas.
+Never allow a weapon, hair, shield, or body part to cross into another cell.
 
 Quality constraints:
 one character only

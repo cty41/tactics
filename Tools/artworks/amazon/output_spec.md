@@ -51,7 +51,7 @@ The goal is not maximum detail. The goal is stable silhouette readability after 
 
 Default authored frame counts:
 
-- `idle`: `6` frames
+- `idle`: `8` frames for the down-right stability-test sequence
 - `walk`: `8` frames
 - `attack`: `6` frames
 - `hurt`: `4-5` frames
@@ -63,8 +63,8 @@ Do not increase frame counts just because the game runs at `60fps`.
 
 Recommended in-game playback targets:
 
-- `idle`: play authored `6` frames at `6fps`
-  - practical cadence in a `60fps` game: `10` ticks per frame
+- `idle`: play authored `8` frames at `8fps`
+  - practical cadence in a `60fps` game: `7.5` ticks per frame; schedule frame changes from elapsed time, not integer tick counting
 - `walk`: play authored `8` frames at `12fps`
   - practical cadence in a `60fps` game: `5` ticks per frame
 - `attack`: play authored `6` frames at `12fps`
@@ -153,3 +153,36 @@ Do not allow idle to drift into:
 - throw anticipation
 - run lean
 - showcase posing
+
+## Down-Right Idle Stability-Test Sheet
+
+For the current `amazon / idle / dr` test asset, generate one square `3 x 3` sequence sheet before producing individual PNG frames.
+
+- Cells `1-8`, read left-to-right then top-to-bottom, are `idle_f01` through `idle_f08`.
+- Cell `9` must be completely empty: only the chroma-key background, no sprite fragment, no label, no decoration.
+- The sheet is a temporary production source and must live under `imgs/idle/dr/source/`, outside the preview-frame directory.
+- Remove the connected chroma-key background once on the full sheet, then split the first eight equal cells.
+- Resize every split cell to `256 x 256` with nearest-neighbor sampling.
+- Never trim, recenter, scale, or clean backgrounds independently per frame.
+
+### Locked Anchors
+
+- Final canvas: `256 x 256 RGBA`.
+- Foot baseline: `y = 232` in every frame.
+- Canvas center: `x = 128`.
+- The spear shaft, shield outer rim, feet, and pelvis stay in the same screen-space position.
+- Head, upper torso, and only the ponytail tip may change.
+- No part may cross the 16px side or top safe margin, or the 24px bottom baseline margin.
+
+### Eight-Frame Breathing Loop
+
+| Frame | Motion state |
+| --- | --- |
+| `f01` | neutral |
+| `f02` | upper torso and head rise by 1px |
+| `f03` | upper torso and head rise by 2px |
+| `f04` | upper torso and head rise by 1px |
+| `f05` | neutral |
+| `f06` | upper torso and head lower by 1px |
+| `f07` | upper torso and head lower by 2px |
+| `f08` | upper torso and head lower by 1px, then loop to `f01` |

@@ -15,6 +15,7 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 | 生成母提示词 | `base_style_prompt.md` |
 | 生成角色提示词 | `character_prompt.md` |
 | 生成动作提示词 | `idle_prompts.md` / `walk_prompts.md` / `attack_prompts.md` |
+| 稳定性测试 | 单张等分 sequence sheet + 机械切分规则 |
 | 生成输出规格 | `output_spec.md` |
 
 ## When to use
@@ -113,6 +114,14 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 - weapon state
 - consistency constraints
 
+当用户需要验证同一角色的低幅度 idle 连续性时，`idle_prompts.md` 还必须提供一个可选的 sequence sheet 测试模式：
+
+- 用一张图承载整套帧，降低独立生图的身份漂移
+- 根据输出画幅选择等分网格；正方形输出优先使用 `3x3`，前 `8` 格为动画帧、第 `9` 格完全透明
+- 明确读取顺序、每帧的闭环轨迹、固定脚底基线和固定装备锚点
+- 切分后禁止逐帧 trim、重新居中、独立缩放或独立背景处理
+- 该模式是 prompt 资产测试流程，不改变本 skill 不直接生图的边界
+
 ### Step 6: 生成输出规格文档
 
 必须额外产出 `output_spec.md`，用于锁定这套角色资源的输出目标。至少覆盖：
@@ -128,7 +137,7 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 
 如果目标是 `60fps` 游戏，默认推荐：
 
-- `idle`：6 帧原画，按 `6fps` 播放
+- `idle`：6 帧原画，按 `6fps` 播放；若使用 sequence sheet 稳定性测试，可改为 `8` 帧、`8fps`、`1s` 闭环
 - `walk`：8 帧原画，按 `12fps` 播放
 - `attack`：6 帧原画，按 `12fps` 播放
 
@@ -174,6 +183,8 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 | 因为游戏是 60fps 就要求 60 张原画帧 | 保持低帧原画，靠播放节奏适配 60fps | 小体量 tilemap 单位不需要超高原画帧数 |
 | 把参考图所有内容都当成要保留 | 明确区分 Keep / Ignore | 背景阴影和展示姿态会把模型带偏 |
 | 动作文档只有“frame X of N” | 每帧写 body-part 级骨架 | 否则帧间一致性差 |
+| 为 idle 独立生成多张成品图 | 先用单张等分 sequence sheet 验证连续性 | 独立生图会重画角色轮廓、装备和构图 |
+| 切分后逐帧自动裁切 | 保留统一 tile canvas，只允许整张 sheet 的背景清理 | 独立裁切会制造基线和体量抖动 |
 | 用镜像补齐所有等距方向 | 对不对称装备角色默认做 4 向原生绘制 | 否则长矛手和盾手会反掉 |
 | 在 skill 里顺带规定 Unity 导入 | 把边界限定在 prompt 库 | 第一版目标是稳定提示词真相源 |
 | 为了好看放宽到像素插画 | 优先 production-ready sprite 约束 | 用户目标是游戏资源，不是展示插画 |
@@ -187,5 +198,6 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 - [ ] 已输出 `character_prompt.md`
 - [ ] 已输出 `idle_prompts.md` / `walk_prompts.md` / `attack_prompts.md`
 - [ ] 每帧都包含 body-part 级骨架字段
+- [ ] 如需 idle 连续性测试，已写明 sheet 网格、读取顺序、空白格和禁止逐帧裁切规则
 - [ ] 已写明 60fps 游戏下的推荐播放节奏
 - [ ] 文档没有混入生图执行或 Unity 导入步骤

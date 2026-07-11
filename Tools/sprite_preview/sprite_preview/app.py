@@ -27,6 +27,8 @@ class AppConfig:
 
 
 class SpritePreviewApp:
+    _GUIDE_BASELINE_RATIO = 232.0 / 256.0
+
     def __init__(self, config: AppConfig | None = None) -> None:
         self.config = config or AppConfig()
         self.playback = PlaybackState(
@@ -40,6 +42,8 @@ class SpritePreviewApp:
         self._load_generation = 0
         self._last_tick = 0.0
         self._autoplay_enabled = self.config.default_autoplay
+        self._show_guides = True
+        self._show_onion_skin = False
 
         self.root_tag = "sprite_preview_root"
         self.texture_registry_tag = "sprite_preview_texture_registry"
@@ -50,6 +54,8 @@ class SpritePreviewApp:
         self.duration_tag = "sprite_preview_duration"
         self.loop_tag = "sprite_preview_loop"
         self.autoplay_tag = "sprite_preview_autoplay"
+        self.guides_tag = "sprite_preview_guides"
+        self.onion_tag = "sprite_preview_onion"
         self.play_button_tag = "sprite_preview_play_button"
         self.status_tag = "sprite_preview_status"
         self.detail_tag = "sprite_preview_detail"
@@ -115,6 +121,8 @@ class SpritePreviewApp:
                 dpg.add_input_float(tag=self.duration_tag, label="Duration (s)", default_value=self.config.default_duration_seconds, min_value=0.01, step=0.1, width=140, callback=self._on_duration_changed)
                 dpg.add_checkbox(tag=self.loop_tag, label="Loop", default_value=self.config.default_loop, callback=self._on_loop_changed)
                 dpg.add_checkbox(tag=self.autoplay_tag, label="Autoplay", default_value=self.config.default_autoplay, callback=self._on_autoplay_changed)
+                dpg.add_checkbox(tag=self.guides_tag, label="Guides", default_value=self._show_guides, callback=self._on_guides_changed)
+                dpg.add_checkbox(tag=self.onion_tag, label="Onion Skin", default_value=self._show_onion_skin, callback=self._on_onion_changed)
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Previous Frame", callback=self._step_previous)
                 dpg.add_button(label="Next Frame", callback=self._step_next)
@@ -172,6 +180,14 @@ class SpritePreviewApp:
 
     def _on_autoplay_changed(self, sender: Any, app_data: Any, user_data: Any | None = None) -> None:
         self._autoplay_enabled = bool(app_data)
+
+    def _on_guides_changed(self, sender: Any, app_data: Any, user_data: Any | None = None) -> None:
+        self._show_guides = bool(app_data)
+        self._refresh_ui()
+
+    def _on_onion_changed(self, sender: Any, app_data: Any, user_data: Any | None = None) -> None:
+        self._show_onion_skin = bool(app_data)
+        self._refresh_ui()
 
     def _toggle_playback(self) -> None:
         if self.sequence is None:
@@ -355,12 +371,56 @@ class SpritePreviewApp:
             color=(72, 72, 80, 255),
             parent=self.preview_drawlist_tag,
         )
-        dpg.draw_image(
-            frame.texture_tag,
-            (x1, y1),
-            (x2, y2),
-            parent=self.preview_drawlist_tag,
-        )
+        if self._show_onion_skin and frame_count > 1:
+            previous_index = (current_index - 1) % frame_count if self.playback.loop else max(0, current_index - 1)
+            previous_frame = self.sequence.frames[previous_index]
+            # Draw both frames translucently so silhouette drift remains visible.
+            dpg.draw_image(
+                previous_frame.texture_tag,
+                (x1, y1),
+                (x2, y2),
+                color=(96, 176, 255, 128),
+                parent=self.preview_drawlist_tag,
+            )
+            dpg.draw_image(
+                frame.texture_tag,
+                (x1, y1),
+                (x2, y2),
+                color=(255, 240, 160, 192),
+                parent=self.preview_drawlist_tag,
+            )
+        else:
+            dpg.draw_image(
+                frame.texture_tag,
+                (x1, y1),
+                (x2, y2),
+                parent=self.preview_drawlist_tag,
+            )
+
+        if self._show_guides:
+            center_x = (x1 + x2) * 0.5
+            baseline_y = y1 + draw_height * self._GUIDE_BASELINE_RATIO
+            dpg.draw_line(
+                (center_x, y1),
+                (center_x, y2),
+                color=(82, 196, 255, 180),
+                thickness=1.0,
+                parent=self.preview_drawlist_tag,
+            )
+            dpg.draw_line(
+                (x1, baseline_y),
+                (x2, baseline_y),
+                color=(255, 196, 82, 180),
+                thickness=1.0,
+                parent=self.preview_drawlist_tag,
+            )
+            dpg.draw_text(
+                (x1 + 8, baseline_y - 20),
+                "center / baseline",
+                color=(255, 220, 144, 220),
+                size=14,
+                parent=self.preview_drawlist_tag,
+            )
         dpg.draw_text(
             (16, 14),
             f"{current_index + 1}/{frame_count}  {frame.path.name}",
@@ -384,6 +444,8 @@ class SpritePreviewApp:
         dpg.configure_item(self.duration_tag, enabled=self.playback.mode == "duration")
         dpg.set_value(self.loop_tag, self.playback.loop)
         dpg.set_value(self.autoplay_tag, self._autoplay_enabled)
+        dpg.set_value(self.guides_tag, self._show_guides)
+        dpg.set_value(self.onion_tag, self._show_onion_skin)
 
     def _sync_play_button(self) -> None:
         dpg.configure_item(self.play_button_tag, label="Pause" if self.playback.playing else "Play")
