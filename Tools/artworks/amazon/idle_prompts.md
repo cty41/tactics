@@ -1,19 +1,6 @@
 # Amazon Idle Prompts
 
-## Animation Contract
-
-```text
-Animation contract:
-idle combat stance for a 2D isometric battle sprite.
-Facing down-right.
-Body upright and stable.
-Ready for combat, but not attacking.
-No dramatic motion.
-No running energy.
-The pose should feel controlled, planted, and loop-friendly.
-```
-
-## Full Prompt Template
+## Single-Frame Template
 
 ```text
 [Paste base_style_prompt.md]
@@ -23,18 +10,11 @@ The pose should feel controlled, planted, and loop-friendly.
 Animation contract:
 idle combat stance for a 2D isometric battle sprite.
 Facing down-right.
-Body upright and stable.
-Ready for combat, but not attacking.
-No dramatic motion.
-No running energy.
-The pose should feel controlled, planted, and loop-friendly.
-
-View contract:
-2D isometric 45-degree angle view.
-Facing down-right.
+Body upright, planted, and ready for combat.
+No attack anticipation, throw anticipation, running lean, or showcase posing.
 
 Frame contract:
-This is frame [X] of 6.
+This is frame [X] of [N].
 
 Pose details:
 [head state]
@@ -48,140 +28,39 @@ Pose details:
 [hair state]
 
 Final frame requirements:
-single sprite frame only
-full body visible
-centered
-no extra objects
-no duplicate weapon
-no duplicate limbs
-no effects
-no cast shadow
+one sprite only
+no duplicate limbs, weapon, or shield
+no cast shadow, floor, effects, UI, grid line, or text
 ```
 
-## Frame Skeletons
+## Down-Right Eight-Frame Sequence-Sheet Test Prompt
 
-### Frame 1 of 6
+Use this prompt as one image-generation request. The current `idle.png` is a style reference only; preserve its chibi proportion, coarse pixel clusters, red tunic, blonde high ponytail, one long javelin, and one round shield.
 
 ```text
-Frame contract:
-This is frame 1 of 6.
+Use case: stylized-concept
+Asset type: Unity 2D isometric sprite-animation production sheet
+Input image: the provided amazon idle image is a style and character reference only, not a layout reference.
 
-Pose details:
-head upright and level
-torso compact and stable
-left arm holds the round shield close to the body
-right arm holds the javelin in a relaxed ready position
-left leg planted firmly
-right leg planted firmly in a balanced stance
-weapon state: one javelin held clearly and simply, not being thrown
-shield state: one round shield facing outward in a defensive ready position
-hair state: ponytail resting naturally with minimal motion
+Create one square production source image containing a 3 by 3 grid of equal square sprite cells. There are no visible grid lines, borders, labels, arrows, text, or panel decorations. Keep the entire image on one perfectly flat solid #00ff00 chroma-key background, with no shadow, gradient, texture, floor, or reflection.
 
-Consistency constraints:
-preserve the exact same character identity, same body proportions, same face style, same outfit shape, same colors, same javelin design, same shield design, same pixel density, same camera angle, same framing, and same scale.
+Cells are read left-to-right, then top-to-bottom. Cells 1 through 8 each contain exactly one full-body animation frame of the SAME amazon female warrior: down-right 2D isometric 45-degree view, 2-head-tall chibi proportion, large blocky dark eyes, blonde high ponytail, short red tunic with simple gold trim, one long javelin, and one round shield. Cell 9 is completely empty #00ff00 background.
+
+Style: strict low-resolution pixel art, coarse sturdy pixel clusters, limited palette, hard shadow blocks, no anti-aliasing, no painterly rendering, no smooth lighting, no glossy highlights, not a polished pixel illustration.
+
+Cell framing contract: each used cell is the same square camera canvas. Keep canvas center x=128 and foot baseline y=232 after normalizing each cell to 256 by 256. The feet, pelvis, spear shaft, shield outer rim, character scale, camera angle, and all equipment dimensions are visually locked across all eight cells. Do not crop any hair, spear, shield, head, or feet. Never allow any element to cross into another cell.
+
+Animation contract: restrained planted combat breathing only. The legs stay planted. The shield and spear remain locked in screen position. Only the upper torso and head move, with at most a tiny ponytail-tip delay. Do not redraw the face, hair mass, body proportions, tunic shape, shield diameter, spear length, or weapon angle between cells.
+
+Exact cell motion:
+1 neutral; 2 torso and head up 1 pixel; 3 up 2 pixels; 4 up 1 pixel; 5 neutral; 6 down 1 pixel; 7 down 2 pixels; 8 down 1 pixel and ready to loop back to cell 1.
+
+Avoid: white background, transparent checkerboard, background objects, cast shadows, extra weapons, duplicate limbs, attack poses, movement blur, cell borders, text, UI, different scales, different face designs, different equipment, per-cell camera changes, or decorative variations.
 ```
 
-### Frame 2 of 6
+## Usage Notes
 
-```text
-Frame contract:
-This is frame 2 of 6.
-
-Pose details:
-head slightly lowered but still level
-torso steady with a very small breathing lift
-left arm keeps the shield close to the torso
-right arm relaxes the javelin angle slightly downward
-left leg planted
-right leg planted with a tiny weight shift
-weapon state: one javelin only, still in ready position
-shield state: one shield only, unchanged silhouette
-hair state: ponytail barely shifting with the breathing motion
-
-Consistency constraints:
-preserve the exact same character identity, same body proportions, same face style, same outfit shape, same colors, same javelin design, same shield design, same pixel density, same camera angle, same framing, and same scale.
-```
-
-### Frame 3 of 6
-
-```text
-Frame contract:
-This is frame 3 of 6.
-
-Pose details:
-head centered and calm
-torso returns to neutral center
-left arm keeps the shield in a compact guard
-right arm keeps the javelin close to the body with a slight upward ready angle
-left leg firmly planted
-right leg firmly planted
-weapon state: one javelin only, stable silhouette, no throw motion
-shield state: one shield only, stable round silhouette
-hair state: ponytail nearly still
-
-Consistency constraints:
-preserve the exact same character identity, same body proportions, same face style, same outfit shape, same colors, same javelin design, same shield design, same pixel density, same camera angle, same framing, and same scale.
-```
-
-### Frame 4 of 6
-
-```text
-Frame contract:
-This is frame 4 of 6.
-
-Pose details:
-head upright and level
-torso shows a very small breathing drop
-left arm shield guard remains close and readable
-right arm lets the javelin angle dip slightly
-left leg planted with stable balance
-right leg planted with a slight opposite weight shift
-weapon state: one javelin only, no duplicate shaft, no attack wind-up
-shield state: one shield only, unchanged defensive position
-hair state: ponytail follows the subtle body settling motion
-
-Consistency constraints:
-preserve the exact same character identity, same body proportions, same face style, same outfit shape, same colors, same javelin design, same shield design, same pixel density, same camera angle, same framing, and same scale.
-```
-
-### Frame 5 of 6
-
-```text
-Frame contract:
-This is frame 5 of 6.
-
-Pose details:
-head calm and steady
-torso rises back toward neutral breathing height
-left arm shield position remains compact
-right arm returns the javelin to a clearer ready angle
-left leg firmly planted
-right leg firmly planted
-weapon state: one javelin only, controlled ready pose
-shield state: one shield only, readable outer edge
-hair state: ponytail settles back toward rest
-
-Consistency constraints:
-preserve the exact same character identity, same body proportions, same face style, same outfit shape, same colors, same javelin design, same shield design, same pixel density, same camera angle, same framing, and same scale.
-```
-
-### Frame 6 of 6
-
-```text
-Frame contract:
-This is frame 6 of 6.
-
-Pose details:
-head returns to the same neutral level as frame 1
-torso returns to the same stable idle center as frame 1
-left arm shield guard matches the starting pose
-right arm javelin ready position matches the starting pose
-left leg planted exactly like the starting pose
-right leg planted exactly like the starting pose
-weapon state: one javelin only, silhouette loops cleanly back to frame 1
-shield state: one shield only, loops cleanly back to frame 1
-hair state: ponytail returns to the resting starting pose
-
-Consistency constraints:
-preserve the exact same character identity, same body proportions, same face style, same outfit shape, same colors, same javelin design, same shield design, same pixel density, same camera angle, same framing, and same scale.
-```
+- Generate the sequence sheet once; do not issue eight independent frame prompts for this test.
+- Clean the chroma key on the entire sheet, then split it into equal cells before nearest-neighbor normalization.
+- Reject the whole sheet if any used cell changes character identity, equipment silhouette, scale, camera, baseline, or cell framing.
+- The normal single-frame template remains valid for other actions and directions.
