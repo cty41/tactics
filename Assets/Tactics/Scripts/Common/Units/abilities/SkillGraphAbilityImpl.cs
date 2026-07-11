@@ -293,6 +293,17 @@ namespace Tactics.Common.Units.Abilities
                 return displayCells;
             }
 
+            if (FirstSelectionRequiresTeleport())
+            {
+                foreach (var cell in allCells)
+                {
+                    int distance = cell.GetDistance(ownerCell);
+                    if (distance > 0 && distance <= _config.TargetRange && !cell.IsTaken)
+                        displayCells.Add(cell);
+                }
+                return displayCells;
+            }
+
             if (FirstSelectionRequiresCorpse())
             {
                 foreach (var cell in allCells)
@@ -368,6 +379,17 @@ namespace Tactics.Common.Units.Abilities
                 var destinations = _owner.GetAvailableDestinations(_gridController.CellManager.GetCells());
                 foreach (var cell in destinations)
                     validCells.Add(cell);
+                return validCells;
+            }
+
+            if (FirstSelectionRequiresTeleport())
+            {
+                foreach (var cell in allCells)
+                {
+                    int distance = cell.GetDistance(ownerCell);
+                    if (distance > 0 && distance <= _config.TargetRange && !cell.IsTaken)
+                        validCells.Add(cell);
+                }
                 return validCells;
             }
 
@@ -473,6 +495,12 @@ namespace Tactics.Common.Units.Abilities
         {
             var first = FindFirstSelectionNode();
             return first is SelectMoveDestinationNodeRecord;
+        }
+
+        private bool FirstSelectionRequiresTeleport()
+        {
+            var first = FindFirstSelectionNode();
+            return first is TeleportNodeRecord;
         }
 
         private bool FirstSelectionRequiresCorpse()

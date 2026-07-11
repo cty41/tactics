@@ -369,21 +369,19 @@ namespace Tactics.Common.Battle
                     targetType = SkillType.Active;
 
                 options = SkillDatabase.GetRandomSkillsForSelection(
-                    character.RoleType,
+                    character,
                     targetType,
                     1,
-                    3,
-                    character.LearnedSkills);
+                    3);
 
                 if (options.Count < 3)
                 {
                     var otherType = targetType == SkillType.Active ? SkillType.Passive : SkillType.Active;
                     var additional = SkillDatabase.GetRandomSkillsForSelection(
-                        character.RoleType,
+                        character,
                         otherType,
                         1,
-                        3 - options.Count,
-                        character.LearnedSkills);
+                        3 - options.Count);
                     options.AddRange(additional);
                 }
             }

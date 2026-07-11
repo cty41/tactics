@@ -1,0 +1,15 @@
+{
+  "DisplayName": "冰甲",
+  "Description": "为自身施加冰甲，持续期间降低受到的伤害。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "self", "Type": "SelectSelf" },
+    { "Id": "armor", "Type": "ApplyBuff", "Parameters": { "duration": 2, "buffAssetPath": "Assets/Tactics/ScriptableObjects/Buffs/IceArmor.asset" } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "self" },
+    { "Source": "self", "Target": "armor" },
+    { "Source": "armor", "Target": "finish" }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "DisplayName": "骨盾",
+  "Description": "以死灵法师魅力的两倍获得可重施刷新的近战物理伤害护盾。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "self", "Type": "SelectSelf" },
+    { "Id": "shield", "Type": "ApplyShield", "Parameters": { "attributeMultiplier": 2 } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "self" },
+    { "Source": "self", "Target": "shield" },
+    { "Source": "shield", "Target": "finish" }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "DisplayName": "突刺",
+  "Description": "对相邻敌人进行一次近战突刺。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "target", "Type": "SelectPrimaryTarget", "Parameters": { "minRange": 1, "maxRange": 1 } },
+    { "Id": "damage", "Type": "ApplyDamage", "Parameters": { "baseDamage": 6, "damageType": 0, "isRanged": false, "canCrit": true } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "target" },
+    { "Source": "target", "Target": "damage" },
+    { "Source": "damage", "Target": "finish" }
+  ]
+}

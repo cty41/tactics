@@ -1,0 +1,20 @@
+{
+  "DisplayName": "恐惧诅咒",
+  "Description": "以指定地块为中心，影响中心及上下左右共5格内的敌人，使其暂时无法行动。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "point", "Type": "SelectTargetPoint", "Parameters": { "maxRange": 5 } },
+    { "Id": "collect", "Type": "CollectTargetsInArea", "Parameters": { "radius": 1, "shape": 1, "targetFaction": 1 } },
+    { "Id": "each", "Type": "ForEachTarget" },
+    { "Id": "fear", "Type": "ApplyBuff", "Parameters": { "duration": 1, "buffAssetPath": "Assets/Tactics/ScriptableObjects/Buffs/Fear.asset" } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "point" },
+    { "Source": "point", "Target": "collect" },
+    { "Source": "collect", "Target": "each" },
+    { "Source": "each", "Target": "fear" },
+    { "Source": "fear", "Target": "each" },
+    { "Source": "each", "Target": "finish", "Port": "OnComplete" }
+  ]
+}

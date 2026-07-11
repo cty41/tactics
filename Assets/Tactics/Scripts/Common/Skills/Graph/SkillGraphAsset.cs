@@ -33,7 +33,10 @@ namespace Tactics.Common.Skills.Graph
         SelectMoveDestination,
         ExecuteMove,
         SelectCorpseTarget,
-        SummonUnit
+        SummonUnit,
+        Teleport,
+        MultiStab,
+        ApplyShield
     }
 
     public enum SkillGraphPortType
@@ -56,6 +59,13 @@ namespace Tactics.Common.Skills.Graph
     {
         Circle,
         Cross
+    }
+
+    public enum SkillGraphTargetFaction
+    {
+        All,
+        Enemies,
+        Allies
     }
 
     // ═══════════════════════════════════════════════
@@ -105,6 +115,9 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.ExecuteMove => new ExecuteMoveNodeRecord(),
                 SkillGraphNodeType.SelectCorpseTarget => new SelectCorpseTargetNodeRecord(),
                 SkillGraphNodeType.SummonUnit => new SummonUnitNodeRecord(),
+                SkillGraphNodeType.Teleport => new TeleportNodeRecord(),
+                SkillGraphNodeType.MultiStab => new MultiStabNodeRecord(),
+                SkillGraphNodeType.ApplyShield => new ApplyShieldNodeRecord(),
                 _ => null
             };
         }
@@ -141,9 +154,11 @@ namespace Tactics.Common.Skills.Graph
     {
         [SerializeField] private int _radius = 1;
         [SerializeField] private SkillGraphAreaShape _shape = SkillGraphAreaShape.Circle;
+        [SerializeField] private SkillGraphTargetFaction _targetFaction = SkillGraphTargetFaction.All;
 
         public int Radius { get => _radius; set => _radius = value; }
         public SkillGraphAreaShape Shape { get => _shape; set => _shape = value; }
+        public SkillGraphTargetFaction TargetFaction { get => _targetFaction; set => _targetFaction = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.CollectTargetsInArea;
     }
 
@@ -222,9 +237,13 @@ namespace Tactics.Common.Skills.Graph
     {
         [SerializeField] private float _travelTime = 0.3f;
         [SerializeField] private float _speed = 10f;
+        [SerializeField] private bool _dropOnHit;
+        [SerializeField] private int _dropSearchRadius = 1;
 
         public float TravelTime { get => _travelTime; set => _travelTime = value; }
         public float Speed { get => _speed; set => _speed = value; }
+        public bool DropOnHit { get => _dropOnHit; set => _dropOnHit = value; }
+        public int DropSearchRadius { get => _dropSearchRadius; set => _dropSearchRadius = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ProjectileLaunch;
     }
 
@@ -332,9 +351,48 @@ namespace Tactics.Common.Skills.Graph
     public class SummonUnitNodeRecord : SkillGraphNodeRecord
     {
         [SerializeField] private string _unitPrefabPath;
+        [SerializeField] private bool _requiresCorpse = true;
+        [SerializeField] private string _summonName;
 
         public string UnitPrefabPath { get => _unitPrefabPath; set => _unitPrefabPath = value; }
+        public bool RequiresCorpse { get => _requiresCorpse; set => _requiresCorpse = value; }
+        public string SummonName { get => _summonName; set => _summonName = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.SummonUnit;
+    }
+
+    /// <summary>
+    /// Moves the caster directly to an unoccupied destination without pathfinding
+    /// or movement-point consumption.
+    /// </summary>
+    [System.Serializable]
+    public class TeleportNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private int _maxRange = 6;
+
+        public int MaxRange { get => _maxRange; set => _maxRange = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.Teleport;
+    }
+
+    /// <summary>
+    /// Applies a fixed number of consecutive melee hits to the selected target.
+    /// </summary>
+    [System.Serializable]
+    public class MultiStabNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private int _segmentCount = 3;
+        [SerializeField] private float _damagePerSegment = 4f;
+
+        public int SegmentCount { get => _segmentCount; set => _segmentCount = value; }
+        public float DamagePerSegment { get => _damagePerSegment; set => _damagePerSegment = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.MultiStab;
+    }
+
+    [System.Serializable]
+    public class ApplyShieldNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private float _attributeMultiplier = 2f;
+        public float AttributeMultiplier { get => _attributeMultiplier; set => _attributeMultiplier = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyShield;
     }
 
     // ═══════════════════════════════════════════════

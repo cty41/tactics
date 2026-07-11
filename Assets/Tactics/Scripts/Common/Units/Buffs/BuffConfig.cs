@@ -34,6 +34,9 @@ namespace Tactics.Common.Units.Buffs
         [BoxGroup("Effect Params")]
         [SerializeField] private ElementType _elementType = ElementType.None;
 
+        [BoxGroup("Effect Params")]
+        [SerializeField, Range(0f, 1f)] private float _damageReductionPercent;
+
         [JsonIgnore]
         public string RuntimeSourceAssetPath { get; set; }
 
@@ -46,5 +49,6 @@ namespace Tactics.Common.Units.Buffs
         public string CurseCategory => _curseCategory;
         public float DamagePerTurn => _damagePerTurn;
         public ElementType ElementType => _elementType;
+        public float DamageReductionPercent => _damageReductionPercent;
     }
 }

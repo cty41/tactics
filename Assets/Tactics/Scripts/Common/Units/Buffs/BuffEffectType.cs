@@ -5,6 +5,8 @@ namespace Tactics.Common.Units.Buffs
         None,
         Frozen,
         Marked,
-        CurseDamageAmplifier
+        CurseDamageAmplifier,
+        DamageReduction,
+        Poison
     }
 }

@@ -27,6 +27,7 @@ namespace Tactics.Common.Skills.Graph
         public string EventType;
         public string NodeId;
         public string TargetUnitName;
+        public string CellCoordinates;
         public float Timestamp;
     }
 
@@ -127,6 +128,18 @@ namespace Tactics.Common.Skills.Graph
                 EventType = eventType,
                 NodeId = nodeId,
                 TargetUnitName = GetUnitName(target),
+                CellCoordinates = target?.CurrentCell?.GridCoordinates.ToString(),
+                Timestamp = UnityEngine.Time.time
+            });
+        }
+
+        public void RecordEventAtCell(string eventType, string nodeId, Tactics.Common.Cells.ICell cell)
+        {
+            ExecutionEvents.Add(new SkillGraphExecutionEvent
+            {
+                EventType = eventType,
+                NodeId = nodeId,
+                CellCoordinates = cell?.GridCoordinates.ToString(),
                 Timestamp = UnityEngine.Time.time
             });
         }

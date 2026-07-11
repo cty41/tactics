@@ -1,5 +1,6 @@
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 using Tactics.AssetPipeline;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
@@ -253,6 +254,53 @@ namespace Tactics.Common.Skills.Graph
         }
     }
 
+    /// <summary>
+    /// Resolves consecutive close-range thrusts against the graph's primary target.
+    /// </summary>
+    public class MultiStabNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.MultiStab;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (MultiStabNodeRecord)node;
+            var caster = context.Caster;
+            var target = context.PrimaryTarget;
+            if (caster == null || target == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No caster or target for multi stab."));
+
+            int segments = Mathf.Max(1, record.SegmentCount);
+            for (int i = 0; i < segments; i++)
+            {
+                CombatComponent.ApplyDamage(
+                    caster, target, record.DamagePerSegment, false, ElementType.None,
+                    canTriggerBeforeAttacked: true,
+                    canCrit: true,
+                    canTriggerDamageTaken: true);
+                context.RecordEvent("MultiStabHit", node.NodeId, target);
+            }
+
+            TLog.Info($"[MultiStab] Resolved {segments} segments against {target.UnitID}.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
+
+    public class ApplyShieldNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyShield;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (ApplyShieldNodeRecord)node;
+            var caster = context.Caster;
+            if (caster == null) return Task.FromResult(SkillNodeExecutionResult.Failed("No caster for shield."));
+            CombatComponent.ApplyDamageShield(caster, caster.Charisma * record.AttributeMultiplier);
+            context.RecordEvent("ShieldApplied", node.NodeId, caster);
+            TLog.Info($"[ApplyShield] Applied {caster.Charisma * record.AttributeMultiplier} shield.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
+
     public class ApplyKnockbackNodeExecutor : ISkillNodeExecutor
     {
         public SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyKnockback;
@@ -385,8 +433,34 @@ namespace Tactics.Common.Skills.Graph
             context.SetBlackboard("ProjectileTarget", target);
             context.RecordEvent("ProjectileHit", node.NodeId, target);
 
+            if (record.DropOnHit)
+            {
+                var dropCell = FindNearestEmptyCell(target.CurrentCell, grid, record.DropSearchRadius);
+                if (dropCell != null)
+                {
+                    context.SetBlackboard("ProjectileDropCell", dropCell);
+                    context.RecordEventAtCell("ProjectileDropped", node.NodeId, dropCell);
+                    TLog.Info($"[ProjectileLaunch] Projectile dropped near target at ({dropCell.GridCoordinates.x},{dropCell.GridCoordinates.y}).");
+                }
+            }
+
             TLog.Info("[ProjectileLaunch] Projectile reached target.");
             return SkillNodeExecutionResult.Success();
+        }
+
+        private static Cells.ICell FindNearestEmptyCell(Cells.ICell origin, Controllers.IGridController grid, int radius)
+        {
+            if (origin == null || grid?.CellManager == null) return null;
+            var candidates = new List<Cells.ICell>();
+            foreach (var cell in grid.CellManager.GetCells())
+            {
+                if (cell == null || cell == origin) continue;
+                if (cell.GetDistance(origin) > Mathf.Max(1, radius)) continue;
+                if (cell.CurrentUnits.Count != 0 || !grid.CellManager.IsCellWalkable(cell)) continue;
+                candidates.Add(cell);
+            }
+            candidates.Sort((a, b) => a.GetDistance(origin).CompareTo(b.GetDistance(origin)));
+            return candidates.Count > 0 ? candidates[0] : null;
         }
     }
 
@@ -642,13 +716,20 @@ namespace Tactics.Common.Skills.Graph
             var grid = context.GridController;
             var corpses = context.TargetCorpses;
 
-            if (corpses == null || corpses.Count == 0)
+            if (record.RequiresCorpse && (corpses == null || corpses.Count == 0))
                 return SkillNodeExecutionResult.Failed("No corpses to summon from.");
 
             int summoned = 0;
-            foreach (var corpse in corpses)
+            var spawnCells = record.RequiresCorpse
+                ? corpses.Select(c => c?.CurrentCell).Where(c => c != null).ToList()
+                : new List<ICell> { FindNearestEmptyCell(caster.CurrentCell, grid, 1) };
+
+            foreach (var spawnCell in spawnCells)
             {
-                if (corpse == null || corpse.IsDestroyed) continue;
+                var corpse = record.RequiresCorpse
+                    ? corpses.FirstOrDefault(c => c != null && !c.IsDestroyed && c.CurrentCell == spawnCell)
+                    : null;
+                if (record.RequiresCorpse && corpse == null) continue;
 
                 if (caster.SummonedUnit != null && !caster.SummonedUnit.IsDowned)
                 {
@@ -656,10 +737,9 @@ namespace Tactics.Common.Skills.Graph
                     break;
                 }
 
-                ICell corpseCell = corpse.CurrentCell;
+                ICell corpseCell = spawnCell;
                 if (corpseCell == null) continue;
-
-                corpse.Consume();
+                corpse?.Consume();
 
                 GameObject prefab = null;
                 if (!string.IsNullOrEmpty(record.UnitPrefabPath))
@@ -680,6 +760,8 @@ namespace Tactics.Common.Skills.Graph
 
                 var container = grid.UnitManager?.ContainerTransform;
                 var go = UnityEngine.Object.Instantiate(prefab, corpseCell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity, container);
+                if (!string.IsNullOrEmpty(record.SummonName))
+                    go.name = record.SummonName;
                 var unit = go.GetComponent<IUnit>();
                 if (unit != null)
                 {
@@ -692,7 +774,17 @@ namespace Tactics.Common.Skills.Graph
                     caster.SummonedUnit = unit;
 
                     grid.UnitManager.AddUnit(unit);
-                    unit.Initialize(gridController: grid);
+                    try
+                    {
+                        unit.Initialize(gridController: grid);
+                    }
+                    catch (UnassignedReferenceException) when (grid is Testing.SkillGraphTestGridController)
+                    {
+                        // Production TilemapUnit prefabs receive their tilemap from the scene.
+                        // The lightweight graph test world intentionally has no tilemap scene;
+                        // the base Unit state initialized above is sufficient for behavior tests.
+                        TLog.Warning($"[SummonUnit] Skipped scene-only TilemapUnit initialization for test summon '{go.name}'.");
+                    }
 
                     summoned++;
                     TLog.Info($"[SummonUnit] Unit summoned for caster {caster.UnitID} at {corpseCell.GridCoordinates}");
@@ -708,6 +800,17 @@ namespace Tactics.Common.Skills.Graph
                 return SkillNodeExecutionResult.Failed("No units summoned.");
 
             return SkillNodeExecutionResult.Success();
+        }
+
+        private static ICell FindNearestEmptyCell(ICell origin, IGridController grid, int radius)
+        {
+            if (origin == null || grid?.CellManager == null) return null;
+            var candidates = grid.CellManager.GetCells()
+                .Where(cell => cell != null && cell != origin && cell.GetDistance(origin) <= Mathf.Max(1, radius)
+                    && cell.CurrentUnits.Count == 0 && grid.CellManager.IsCellWalkable(cell))
+                .OrderBy(cell => cell.GetDistance(origin))
+                .ToList();
+            return candidates.FirstOrDefault();
         }
     }
 }

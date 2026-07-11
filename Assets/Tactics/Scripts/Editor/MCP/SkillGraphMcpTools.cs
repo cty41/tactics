@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using MCPForUnity.Editor.Helpers;
 using MCPForUnity.Editor.Tools;
 using Newtonsoft.Json.Linq;
@@ -149,23 +150,47 @@ namespace Tactics.Editor.MCP
 
                 // Read spec content
                 string specContent = File.ReadAllText(fullSpecPath);
+                var facadeType = FindLoadedType("Tactics.Editor.SkillGraphEditor.SkillGraphMcpFacade");
+                var specType = FindLoadedType("Tactics.Common.Skills.Graph.SkillGraphSpec");
+                if (facadeType == null || specType == null)
+                    return new ErrorResponse("SkillGraph editor runtime types are not loaded.");
 
-                // Use MCP Facade to apply spec
-                var facadeType = System.Type.GetType("Tactics.Editor.SkillGraphEditor.SkillGraphMcpFacade");
-                if (facadeType == null)
-                    return new ErrorResponse("SkillGraphMcpFacade not found.");
+                var spec = JObject.Parse(specContent).ToObject(specType);
+                if (spec == null)
+                    return new ErrorResponse("SkillGraphSpec JSON is invalid.");
 
-                var applyMethod = facadeType.GetMethod("ApplySpec", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                var applyMethod = facadeType.GetMethod(
+                    "ApplySpec",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static,
+                    null,
+                    new[] { typeof(string), specType },
+                    null);
                 if (applyMethod == null)
                     return new ErrorResponse("ApplySpec method not found.");
 
-                var result = applyMethod.Invoke(null, new object[] { graphPath, specContent });
-                return JObject.FromObject(result);
+                var result = applyMethod.Invoke(null, new object[] { graphPath, spec });
+                var resultType = result?.GetType();
+                bool success = resultType?.GetField("Success")?.GetValue(result) is bool successValue && successValue;
+                bool isValid = resultType?.GetField("IsValid")?.GetValue(result) is bool validValue && validValue;
+
+                return new SuccessResponse("SkillGraph spec applied", new JObject
+                {
+                    ["graphPath"] = graphPath,
+                    ["success"] = success,
+                    ["isValid"] = isValid
+                });
             }
             catch (Exception ex)
             {
                 return new ErrorResponse($"Failed to apply spec: {ex.Message}");
             }
+        }
+
+        private static Type FindLoadedType(string fullName)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Select(assembly => assembly.GetType(fullName, false))
+                .FirstOrDefault(type => type != null);
         }
     }
 

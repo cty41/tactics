@@ -133,15 +133,28 @@ namespace Tactics.Common.Skills.Graph
             {
                 if (cell.GetDistance(center) > record.Radius) continue;
 
+                int dx = cell.GridCoordinates.x - center.GridCoordinates.x;
+                int dy = cell.GridCoordinates.y - center.GridCoordinates.y;
+                if (record.Shape == SkillGraphAreaShape.Cross && dx != 0 && dy != 0)
+                    continue;
+
                 foreach (var unit in cell.CurrentUnits)
                 {
-                    if (unit != null)
+                    if (unit != null && MatchesFaction(unit, context.Caster, record.TargetFaction))
                         targets.Add(unit);
                 }
             }
 
             context.TargetSet = targets;
             return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+
+        private static bool MatchesFaction(Units.IUnit unit, Units.IUnit caster, SkillGraphTargetFaction faction)
+        {
+            if (faction == SkillGraphTargetFaction.All || caster == null)
+                return true;
+            bool samePlayer = unit.PlayerNumber == caster.PlayerNumber;
+            return faction == SkillGraphTargetFaction.Allies ? samePlayer : !samePlayer;
         }
     }
 

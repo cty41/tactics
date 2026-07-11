@@ -7,6 +7,7 @@ namespace Tactics.Common.Units.Classes
         Hunter,
         Healer,
         Rogue,
-        Necromancer
+        Necromancer,
+        Amazon
     }
 }

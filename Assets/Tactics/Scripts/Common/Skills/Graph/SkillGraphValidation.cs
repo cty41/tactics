@@ -101,8 +101,13 @@ namespace Tactics.Common.Skills.Graph
             SkillGraphNodeType.ApplyHeal,
             SkillGraphNodeType.DashToAlly,
             SkillGraphNodeType.LaunchUnit,
+            SkillGraphNodeType.SelectCorpseTarget,
+            SkillGraphNodeType.SummonUnit,
             SkillGraphNodeType.SelectMoveDestination,
             SkillGraphNodeType.ExecuteMove
+            ,SkillGraphNodeType.Teleport
+            ,SkillGraphNodeType.MultiStab
+            ,SkillGraphNodeType.ApplyShield
         };
 
         /// <summary>
@@ -524,7 +529,10 @@ namespace Tactics.Common.Skills.Graph
             "ForEachTarget", "DashToTarget", "ApplyDamage", "ApplyKnockback",
             "Branch", "Finish", "Fail", "ProjectileLaunch", "OnHit",
             "ApplyBuff", "SelectSelf", "SelectAlly", "ApplyHeal",
-            "DashToAlly", "LaunchUnit", "SelectMoveDestination", "ExecuteMove"
+            "Teleport",
+            "MultiStab",
+            "ApplyShield",
+            "DashToAlly", "LaunchUnit", "SelectCorpseTarget", "SummonUnit", "SelectMoveDestination", "ExecuteMove"
         };
 
         public static List<SkillGraphDiagnostic> ValidateSpec(SkillGraphSpec spec)

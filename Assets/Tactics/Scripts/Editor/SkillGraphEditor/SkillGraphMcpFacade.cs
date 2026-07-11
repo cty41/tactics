@@ -643,6 +643,7 @@ namespace Tactics.Editor.SkillGraphEditor
                 case CollectTargetsInAreaNodeRecord r:
                     if (parameters.TryGetValue("radius", out var rad)) r.Radius = ToInt(rad);
                     if (parameters.TryGetValue("shape", out var shape)) r.Shape = (SkillGraphAreaShape)ToInt(shape);
+                    if (parameters.TryGetValue("targetFaction", out var faction)) r.TargetFaction = (SkillGraphTargetFaction)ToInt(faction);
                     break;
                 case DashToTargetNodeRecord r:
                     if (parameters.TryGetValue("maxRange", out var mr3)) r.MaxRange = ToInt(mr3);
@@ -663,6 +664,8 @@ namespace Tactics.Editor.SkillGraphEditor
                 case ProjectileLaunchNodeRecord r:
                     if (parameters.TryGetValue("travelTime", out var tt)) r.TravelTime = ToFloat(tt);
                     if (parameters.TryGetValue("speed", out var sp)) r.Speed = ToFloat(sp);
+                    if (parameters.TryGetValue("dropOnHit", out var doh)) r.DropOnHit = ToBool(doh);
+                    if (parameters.TryGetValue("dropSearchRadius", out var dsr)) r.DropSearchRadius = ToInt(dsr);
                     break;
                 case ApplyBuffNodeRecord r:
                     if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = ToInt(buffDur);
@@ -689,12 +692,27 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("bounceHeight", out var bounch)) r.BounceHeight = ToFloat(bounch);
                     if (parameters.TryGetValue("bounceDuration", out var bouncd)) r.BounceDuration = ToFloat(bouncd);
                     break;
+                case SummonUnitNodeRecord r:
+                    if (parameters.TryGetValue("unitPrefabPath", out var upp) && upp is string prefabPath) r.UnitPrefabPath = prefabPath;
+                    if (parameters.TryGetValue("requiresCorpse", out var rc)) r.RequiresCorpse = ToBool(rc);
+                    if (parameters.TryGetValue("summonName", out var sn) && sn is string summonName) r.SummonName = summonName;
+                    break;
                 case SelectMoveDestinationNodeRecord r:
                     if (parameters.TryGetValue("respectMovementRules", out var rmr)) r.RespectMovementRules = ToBool(rmr);
                     break;
                 case ExecuteMoveNodeRecord r:
                     if (parameters.TryGetValue("consumeMovementPoints", out var cmp)) r.ConsumeMovementPoints = ToBool(cmp);
                     if (parameters.TryGetValue("markAsBasicAbilityUsed", out var mabu)) r.MarkAsBasicAbilityUsed = ToBool(mabu);
+                    break;
+                case TeleportNodeRecord r:
+                    if (parameters.TryGetValue("maxRange", out var teleportRange)) r.MaxRange = ToInt(teleportRange);
+                    break;
+                case MultiStabNodeRecord r:
+                    if (parameters.TryGetValue("segmentCount", out var segmentCount)) r.SegmentCount = ToInt(segmentCount);
+                    if (parameters.TryGetValue("damagePerSegment", out var segmentDamage)) r.DamagePerSegment = ToFloat(segmentDamage);
+                    break;
+                case ApplyShieldNodeRecord r:
+                    if (parameters.TryGetValue("attributeMultiplier", out var shieldMultiplier)) r.AttributeMultiplier = ToFloat(shieldMultiplier);
                     break;
             }
         }
@@ -718,6 +736,7 @@ namespace Tactics.Editor.SkillGraphEditor
                 case CollectTargetsInAreaNodeRecord r:
                     dict["radius"] = r.Radius;
                     dict["shape"] = r.Shape;
+                    dict["targetFaction"] = r.TargetFaction;
                     break;
                 case DashToTargetNodeRecord r:
                     dict["maxRange"] = r.MaxRange;
@@ -738,6 +757,8 @@ namespace Tactics.Editor.SkillGraphEditor
                 case ProjectileLaunchNodeRecord r:
                     dict["travelTime"] = r.TravelTime;
                     dict["speed"] = r.Speed;
+                    dict["dropOnHit"] = r.DropOnHit;
+                    dict["dropSearchRadius"] = r.DropSearchRadius;
                     break;
                 case ApplyBuffNodeRecord r:
                     dict["duration"] = r.Duration;
@@ -760,12 +781,27 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["bounceHeight"] = r.BounceHeight;
                     dict["bounceDuration"] = r.BounceDuration;
                     break;
+                case SummonUnitNodeRecord r:
+                    dict["unitPrefabPath"] = r.UnitPrefabPath;
+                    dict["requiresCorpse"] = r.RequiresCorpse;
+                    dict["summonName"] = r.SummonName;
+                    break;
                 case SelectMoveDestinationNodeRecord r:
                     dict["respectMovementRules"] = r.RespectMovementRules;
                     break;
                 case ExecuteMoveNodeRecord r:
                     dict["consumeMovementPoints"] = r.ConsumeMovementPoints;
                     dict["markAsBasicAbilityUsed"] = r.MarkAsBasicAbilityUsed;
+                    break;
+                case TeleportNodeRecord r:
+                    dict["maxRange"] = r.MaxRange;
+                    break;
+                case MultiStabNodeRecord r:
+                    dict["segmentCount"] = r.SegmentCount;
+                    dict["damagePerSegment"] = r.DamagePerSegment;
+                    break;
+                case ApplyShieldNodeRecord r:
+                    dict["attributeMultiplier"] = r.AttributeMultiplier;
                     break;
             }
             return dict;

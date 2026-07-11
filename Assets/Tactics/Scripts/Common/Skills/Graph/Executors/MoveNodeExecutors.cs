@@ -68,4 +68,37 @@ namespace Tactics.Common.Skills.Graph
             return SkillNodeExecutionResult.Success();
         }
     }
+
+    /// <summary>
+    /// Executes a direct relocation for teleport-style skills. Unlike normal
+    /// movement it intentionally skips pathfinding and movement-point costs.
+    /// </summary>
+    public class TeleportNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.Teleport;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var caster = context.Caster;
+            var destination = context.TargetPoint;
+            if (caster?.CurrentCell == null || destination == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("Invalid caster or teleport destination."));
+
+            if (destination.IsTaken)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("Teleport destination is occupied."));
+
+            var source = caster.CurrentCell;
+            source.CurrentUnits.Remove(caster);
+            source.IsTaken = source.CurrentUnits.Count > 0;
+
+            caster.CurrentCell = destination;
+            destination.CurrentUnits.Add(caster);
+            destination.IsTaken = true;
+            caster.WorldPosition = destination.WorldPosition;
+
+            context.RecordEvent("Teleported", node.NodeId, caster);
+            TLog.Info($"[Teleport] Moved caster from ({source.GridCoordinates.x},{source.GridCoordinates.y}) to ({destination.GridCoordinates.x},{destination.GridCoordinates.y}).");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
 }

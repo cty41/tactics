@@ -1,0 +1,15 @@
+{
+  "DisplayName": "连续刺击",
+  "Description": "选择3格内的敌方单位，对同一目标连续进行三段近战刺击。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "target", "Type": "SelectPrimaryTarget", "Parameters": { "minRange": 1, "maxRange": 3 } },
+    { "Id": "stabs", "Type": "MultiStab", "Parameters": { "segmentCount": 3, "damagePerSegment": 4 } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "target" },
+    { "Source": "target", "Target": "stabs" },
+    { "Source": "stabs", "Target": "finish" }
+  ]
+}

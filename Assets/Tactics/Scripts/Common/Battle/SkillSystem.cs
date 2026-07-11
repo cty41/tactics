@@ -20,6 +20,11 @@ namespace Tactics.Common.Battle
         public int Level { get; set; }
         public int DamageBase { get; set; }
         public int MpCost { get; set; }
+        public AttributeType? RequiredAttribute { get; set; }
+        public int MinimumAttribute { get; set; }
+        public string PrerequisiteSkillId { get; set; }
+        public int MaxSkillLevel { get; set; } = 2;
+        public bool IsFirstSliceAvailable { get; set; }
     }
 
     /// <summary>
@@ -68,6 +73,20 @@ namespace Tactics.Common.Battle
             if (character.RoleType != skill.RoleType)
             {
                 TLog.Info($"[SkillSystem] Skill {skill.Id} role mismatch: character is {character.RoleType}, skill requires {skill.RoleType}.");
+                return false;
+            }
+
+            if (skill.RequiredAttribute.HasValue
+                && GetAttributeValue(character, skill.RequiredAttribute.Value) < skill.MinimumAttribute)
+            {
+                TLog.Info($"[SkillSystem] Skill {skill.Id} requires {skill.RequiredAttribute} {skill.MinimumAttribute}.");
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(skill.PrerequisiteSkillId)
+                && !HasSkill(character, skill.PrerequisiteSkillId))
+            {
+                TLog.Info($"[SkillSystem] Skill {skill.Id} requires prerequisite {skill.PrerequisiteSkillId}.");
                 return false;
             }
 
@@ -172,9 +191,12 @@ namespace Tactics.Common.Battle
                 return false;
             }
 
-            if (learnedSkill.Level >= MaxLevel)
+            int maxLevel = FirstSliceSkillCatalog.TryGet(skillId, out var definition)
+                ? definition.MaxSkillLevel
+                : MaxLevel;
+            if (learnedSkill.Level >= maxLevel)
             {
-                TLog.Info($"[SkillSystem] Skill {skillId} is already at max level {MaxLevel}.");
+                TLog.Info($"[SkillSystem] Skill {skillId} is already at max level {maxLevel}.");
                 return false;
             }
 
@@ -265,6 +287,21 @@ namespace Tactics.Common.Battle
                 return new List<CharacterDefinition.LearnedSkill>();
 
             return character.LearnedSkills.Where(s => s.SkillType == (Tactics.Roster.SkillType)type).ToList();
+        }
+
+        private static int GetAttributeValue(CharacterDefinition character, AttributeType attribute)
+        {
+            return attribute switch
+            {
+                AttributeType.Strength => character.GetTotalStrength(),
+                AttributeType.Agility => character.GetTotalAgility(),
+                AttributeType.Constitution => character.GetTotalConstitution(),
+                AttributeType.Intelligence => character.GetTotalIntelligence(),
+                AttributeType.Charisma => character.GetTotalCharisma(),
+                AttributeType.Luck => character.GetTotalLuck(),
+                AttributeType.Speed => (int)character.Speed,
+                _ => 0
+            };
         }
     }
 }

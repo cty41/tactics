@@ -108,6 +108,27 @@ namespace Tactics.Common.Battle
             AddSkill("rogue_lethality_2", "致命一击 II", "暴击伤害 +50%", RoleType.Rogue, SkillType.Passive, 2, 0, 0);
             AddSkill("rogue_shadow_1", "暗影步", "移动后首次攻击暴击率 +20%", RoleType.Rogue, SkillType.Passive, 1, 0, 0);
             AddSkill("rogue_shadow_2", "暗影步 II", "移动后首次攻击暴击率 +40%", RoleType.Rogue, SkillType.Passive, 2, 0, 0);
+
+            foreach (var skill in FirstSliceSkillCatalog.All)
+            {
+                AddFirstSliceSkill(skill);
+            }
+        }
+
+        private static void AddFirstSliceSkill(SkillDefinition skill)
+        {
+            if (skill == null || string.IsNullOrEmpty(skill.Id))
+            {
+                return;
+            }
+
+            if (_definitions.ContainsKey(skill.Id))
+            {
+                TLog.Warning($"[SkillDatabase] Duplicate first-slice skill Id: {skill.Id}");
+                return;
+            }
+
+            _definitions.Add(skill.Id, skill);
         }
 
         private static void AddSkill(string id, string displayName, string description, RoleType roleType, SkillType skillType, int level, int damageBase = 0, int mpCost = 0)
@@ -140,7 +161,9 @@ namespace Tactics.Common.Battle
                 Load();
 
             return _definitions.Values
-                .Where(s => s.RoleType == roleType && s.SkillType == skillType && s.Level == level)
+                .Where(s => s.RoleType == roleType
+                    && s.SkillType == skillType
+                    && (s.IsFirstSliceAvailable ? level == 1 : s.Level == level))
                 .ToList();
         }
 
@@ -242,6 +265,42 @@ namespace Tactics.Common.Battle
         }
 
         /// <summary>
+        /// Returns random skill candidates after applying the first-slice role,
+        /// attribute, prerequisite and slot rules for a concrete character.
+        /// </summary>
+        public static List<SkillDefinition> GetRandomSkillsForSelection(
+            CharacterDefinition character,
+            SkillType skillType,
+            int level,
+            int count = 3)
+        {
+            if (character == null)
+            {
+                return new List<SkillDefinition>();
+            }
+
+            if (!_isLoaded)
+            {
+                Load();
+            }
+
+            var pool = GetSkillsForRole(character.RoleType, skillType, level)
+                .Where(skill => !skill.IsFirstSliceAvailable || SkillSystem.CanLearnSkill(character, skill))
+                .ToList();
+
+            if (pool.Count == 0)
+            {
+                return new List<SkillDefinition>();
+            }
+
+            var rng = new System.Random();
+            return pool
+                .OrderBy(_ => rng.Next())
+                .Take(Math.Min(count, pool.Count))
+                .ToList();
+        }
+
+        /// <summary>
         /// Returns Level 1 skills that the character has already learned and can be upgraded.
         /// </summary>
         public static List<SkillDefinition> GetUpgradeableSkills(CharacterDefinition character)
@@ -258,11 +317,19 @@ namespace Tactics.Common.Battle
                 if (learned == null || string.IsNullOrEmpty(learned.SkillId))
                     continue;
 
-                if (learned.Level != 1)
-                    continue;
-
                 var def = GetSkillById(learned.SkillId);
                 if (def == null)
+                    continue;
+
+                if (def.IsFirstSliceAvailable)
+                {
+                    if (learned.Level < def.MaxSkillLevel)
+                        upgradeable.Add(def);
+
+                    continue;
+                }
+
+                if (learned.Level != 1)
                     continue;
 
                 // Check if Level 2 version exists

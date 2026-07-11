@@ -231,6 +231,9 @@ namespace Tactics.Common.Units
             Mana = Charisma;
             MovementPoints = MaxMovementPoints;
 
+            if (_roleConfig != null && _roleConfig.RoleType == RoleType.Amazon)
+                CombatComponent.EnableCombatTechniques(this);
+
             _baseAbilities = new List<IAbility>();
             
             var abilitySources = _roleConfig != null && _roleConfig.Abilities != null && _roleConfig.Abilities.Count > 0

@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Units.Buffs;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 
 namespace Tactics.Common.Units
@@ -11,6 +13,24 @@ namespace Tactics.Common.Units
     /// </summary>
     public class CombatComponent
     {
+        private static readonly Dictionary<IUnit, float> DamageShields = new();
+        private static readonly HashSet<IUnit> CombatTechniqueUnits = new();
+        private static readonly System.Random CombatTechniqueRandom = new();
+
+        public static void EnableCombatTechniques(IUnit unit)
+        {
+            if (unit != null) CombatTechniqueUnits.Add(unit);
+        }
+
+        public static void ApplyDamageShield(IUnit unit, float amount)
+        {
+            if (unit != null) DamageShields[unit] = Math.Max(0f, amount);
+        }
+
+        public static float GetDamageShield(IUnit unit)
+        {
+            return unit != null && DamageShields.TryGetValue(unit, out var value) ? value : 0f;
+        }
         private const int NeutralAttributeValue = 5;
         private const float BaseCritChance = 0.10f;
         private const float CritChancePerLuckPoint = 0.02f;
@@ -155,6 +175,13 @@ namespace Tactics.Common.Units
             bool canCrit,
             bool canTriggerDamageTaken)
         {
+            if (canTriggerBeforeAttacked && CombatTechniqueUnits.Contains(target)
+                && CombatTechniqueRandom.NextDouble() < 0.30d)
+            {
+                TLog.Info($"[CombatTechniques] {target.UnitID} dodged direct damage.");
+                return;
+            }
+
             // Check for Frozen buff - ice break logic
             bool isFrozen = target.BuffComponent?.HasBuff(BuffEffectType.Frozen) ?? false;
             if (isFrozen)
@@ -201,7 +228,26 @@ namespace Tactics.Common.Units
                 damage *= 1.3f;
             }
 
-            target.ModifyHealth(-damage, caster);
+            if (target.BuffComponent != null && target.BuffComponent.HasBuff(BuffEffectType.DamageReduction))
+            {
+                foreach (var armor in target.GetActiveBuffs())
+                {
+                    if (armor.Config.EffectType != BuffEffectType.DamageReduction)
+                        continue;
+                    damage *= Mathf.Clamp01(1f - armor.Config.DamageReductionPercent);
+                }
+            }
+
+            if (!isRangedDamage && elementType == ElementType.None && DamageShields.TryGetValue(target, out var shield))
+            {
+                float absorbed = Math.Min(shield, damage);
+                damage -= absorbed;
+                shield -= absorbed;
+                if (shield <= 0f) DamageShields.Remove(target);
+                else DamageShields[target] = shield;
+            }
+
+            if (damage > 0f) target.ModifyHealth(-damage, caster);
             target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
 
             if (canTriggerDamageTaken)

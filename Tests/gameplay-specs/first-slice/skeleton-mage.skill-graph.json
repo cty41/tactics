@@ -1,0 +1,13 @@
+{
+  "DisplayName": "骷髅法师",
+  "Description": "在施法者邻近空格召唤骷髅法师。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "summon", "Type": "SummonUnit", "Parameters": { "unitPrefabPath": "Assets/Tactics/Arts/Prefabs/Units/Skeleton.prefab", "requiresCorpse": false, "summonName": "SkeletonMage" } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "summon" },
+    { "Source": "summon", "Target": "finish" }
+  ]
+}

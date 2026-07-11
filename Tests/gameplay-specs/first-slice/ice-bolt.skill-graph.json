@@ -1,0 +1,19 @@
+{
+  "DisplayName": "寒冰箭",
+  "Description": "最大距离5格的单体冰霜投射物；命中第一个目标后造成魔法伤害。减速效果由后续专用 Buff 资产接入。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "target", "Type": "SelectPrimaryTarget", "Parameters": { "minRange": 1, "maxRange": 5 } },
+    { "Id": "projectile", "Type": "ProjectileLaunch", "Parameters": { "travelTime": 0.25, "speed": 12 } },
+    { "Id": "onHit", "Type": "OnHit" },
+    { "Id": "damage", "Type": "ApplyDamage", "Parameters": { "baseDamage": 8, "damageType": 1, "isRanged": true, "canCrit": false } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "target" },
+    { "Source": "target", "Target": "projectile" },
+    { "Source": "projectile", "Target": "onHit" },
+    { "Source": "onHit", "Target": "damage" },
+    { "Source": "damage", "Target": "finish" }
+  ]
+}
