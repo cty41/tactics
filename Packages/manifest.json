@@ -52,7 +52,8 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "com.maligan.unity-zed": "0.2.3-preview"
   },
   "scopedRegistries": [
     {
@@ -62,6 +63,7 @@
         "com.coplaydev.unity-mcp",
         "com.ivanmurzak",
         "com.ivanmurzak.unity.mcp",
+        "com.maligan.unity-zed",
         "com.newtonsoft.json",
         "extensions.unity",
         "extensions.unity.playerprefsex",

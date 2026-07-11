@@ -5,10 +5,17 @@
       "depth": 0,
       "source": "git",
       "dependencies": {
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.unity.modules.uielements": "1.0.0",
+        "com.unity.modules.screencapture": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0",
         "com.unity.nuget.newtonsoft-json": "3.0.2",
         "com.unity.test-framework": "1.1.31"
       },
-      "hash": "78ee5418415953b79c358bfe6355fcc3fde7912b"
+      "hash": "11836003a5e2ffcb7715ecec7e1fbb9d9cdb5bb8"
     },
     "com.github-glitchenzo.nugetforunity": {
       "version": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
@@ -16,6 +23,15 @@
       "source": "git",
       "dependencies": {},
       "hash": "acc1c7bc9ea34c33b830e40316fca52553878d29"
+    },
+    "com.maligan.unity-zed": {
+      "version": "0.2.3-preview",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.ide.visualstudio": "2.0.20"
+      },
+      "url": "https://package.openupm.com"
     },
     "com.newtonsoft.json": {
       "version": "1.0.1",
@@ -158,6 +174,15 @@
       "depth": 1,
       "source": "builtin",
       "dependencies": {}
+    },
+    "com.unity.ide.visualstudio": {
+      "version": "2.0.26",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.33"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.inputsystem": {
       "version": "1.19.0",

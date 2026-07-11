@@ -3,3 +3,12 @@ rmcp_client = true
 
 [mcp_servers.unityMCP]
 url = "http://127.0.0.1:8080/mcp"
+
+[mcp_servers.unityMCP.tools.set_active_instance]
+approval_mode = "approve"
+
+[mcp_servers.unityMCP.tools.refresh_unity]
+approval_mode = "approve"
+
+[mcp_servers.unityMCP.tools.read_console]
+approval_mode = "approve"
