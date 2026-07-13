@@ -8,6 +8,7 @@ using Tactics.Flow.Battle;
 using Tactics.Equipment;
 using Tactics.Roster;
 using Tactics.Cells;
+using Tactics.Runtime.BattleLog;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -27,6 +28,12 @@ namespace Tactics.Cheats
 
         private void RegisterBuiltInCommands()
         {
+            RegisterCommand("clearlog", args =>
+            {
+                TBattleLog.ClearCurrentBattleLogs();
+                return "Battle log cleared.";
+            });
+
             RegisterCommand("additem", args =>
             {
                 if (args.Length < 1)
@@ -206,6 +213,9 @@ namespace Tactics.Cheats
         {
             if (string.IsNullOrWhiteSpace(commandLine))
                 return null;
+
+            if (!Application.isEditor && !Debug.isDebugBuild)
+                return "[Error] Cheat commands are disabled in this build.";
 
             var parts = commandLine.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)

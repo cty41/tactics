@@ -8,6 +8,7 @@ using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
+using Tactics.Runtime.BattleLog;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -222,6 +223,8 @@ namespace Tactics.Common.Units.Abilities
             context.TargetPoint = selectedCell;
             testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
 
+            LogSkillUse(context.PrimaryTarget);
+
             var runner = new SkillGraphRunner();
             var executionState = await runner.Execute(context);
 
@@ -248,6 +251,27 @@ namespace Tactics.Common.Units.Abilities
             testResult.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
             testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
             return testResult;
+        }
+
+        private void LogSkillUse(IUnit target)
+        {
+            if (!TBattleLog.IsBattleActive)
+                return;
+
+            TBattleLog.Log(new SkillLogData
+            {
+                Source = GetUnitName(_owner),
+                SkillName = DisplayName,
+                Target = GetUnitName(target)
+            });
+        }
+
+        private static string GetUnitName(IUnit unit)
+        {
+            if (unit is INamedUnit named && !string.IsNullOrWhiteSpace(named.UnitName))
+                return named.UnitName;
+
+            return unit == null ? null : $"Unit_{unit.UnitID}";
         }
 
         private SkillGraphRuntimeTestResult CreateTestResult()

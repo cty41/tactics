@@ -395,11 +395,17 @@ namespace Tactics
                 _loadingTasks[id] = loadTask;
             }
 
-            var instance = await loadTask;
-            _loadingTasks.Remove(id);
-
-            _instances[id] = instance;
-            instance.ContainerGO.SetActive(true);
+            try
+            {
+                var instance = await loadTask;
+                _instances[id] = instance;
+                instance.ContainerGO.SetActive(true);
+            }
+            finally
+            {
+                if (_loadingTasks.TryGetValue(id, out var pendingTask) && pendingTask == loadTask)
+                    _loadingTasks.Remove(id);
+            }
         }
 
         private async Task<UIInstance> LoadAndCreateAsync(UIId id, string assetPath)
@@ -492,6 +498,8 @@ namespace Tactics
             var uiDoc = hostGo.AddComponent<UIDocument>();
             uiDoc.visualTreeAsset = visualTree;
             uiDoc.panelSettings = panelSettings;
+            // Keep the battle console above other UI Toolkit documents so its overlay remains visible.
+            uiDoc.sortingOrder = id == UIId.CheatConsole ? 100 : 0;
 
             if (styleSheet != null && uiDoc.rootVisualElement != null)
                 uiDoc.rootVisualElement.styleSheets.Add(styleSheet);

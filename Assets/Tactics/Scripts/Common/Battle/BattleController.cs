@@ -24,6 +24,7 @@ using Tactics.Roster;
 using Tactics.UI;
 using Tactics.Common.Interactables;
 using Tactics.Units;
+using Tactics.Runtime.BattleLog;
 
 namespace Tactics.Common.Battle
 {
@@ -256,6 +257,7 @@ namespace Tactics.Common.Battle
             {
                 InitializeGame();
                 SyncStartingHp();
+                TBattleLog.BeginBattle();
                 StartGame();
                 _ = StartBattleAsync();
             }
@@ -783,8 +785,11 @@ namespace Tactics.Common.Battle
         {
             if (IsBattleActive) return;
             IsBattleActive = true;
+            if (!TBattleLog.IsBattleActive)
+                TBattleLog.BeginBattle();
 
             _ = ShowBattleUIAsync();
+            _ = ShowBattleConsoleAsync();
 
             BattleStarted?.Invoke();
         }
@@ -797,6 +802,8 @@ namespace Tactics.Common.Battle
             if (!IsBattleActive) return;
             IsBattleActive = false;
             BattleEnded?.Invoke(result);
+            TBattleLog.EndBattle();
+            UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
         }
 
         /// <summary>
@@ -825,6 +832,8 @@ namespace Tactics.Common.Battle
 
             // 3. 触发 BattleEnded 事件
             BattleEnded?.Invoke(result);
+            TBattleLog.EndBattle();
+            UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
         }
 
         private async Task ShowBattleUIAsync()
@@ -842,6 +851,30 @@ namespace Tactics.Common.Battle
             catch (Exception ex)
             {
                 TLog.Warning($"[BattleController] Failed to show Battle UI: {ex.Message}");
+            }
+        }
+
+        private async Task ShowBattleConsoleAsync()
+        {
+            try
+            {
+                if (!await WaitForGameAssetReady())
+                {
+                    TLog.Warning("[BattleController] Battle console skipped: GameAssetManager bootstrap did not complete in time.");
+                    return;
+                }
+
+                if (!IsBattleActive)
+                    return;
+
+                await UIManager.Instance.ShowAsync(UIManager.UIId.CheatConsole);
+
+                if (!IsBattleActive)
+                    UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
+            }
+            catch (Exception ex)
+            {
+                TLog.Warning($"[BattleController] Failed to show battle console: {ex.Message}");
             }
         }
 
@@ -965,6 +998,16 @@ namespace Tactics.Common.Battle
         /// </summary>
         private void OnTurnStarted(TurnTransitionParams turnTransitionParams)
         {
+            if (TBattleLog.IsBattleActive)
+            {
+                TBattleLog.Log(new TurnLogData
+                {
+                    PlayerNumber = turnTransitionParams.TurnContext.CurrentPlayer?.PlayerNumber ?? -1,
+                    TurnNumber = CurrentRound,
+                    IsStart = true
+                });
+            }
+
             TurnStarted?.Invoke(turnTransitionParams);
         }
 
@@ -973,6 +1016,16 @@ namespace Tactics.Common.Battle
         /// </summary>
         private void OnTurnEnded(TurnTransitionParams turnTransitionParams)
         {
+            if (TBattleLog.IsBattleActive)
+            {
+                TBattleLog.Log(new TurnLogData
+                {
+                    PlayerNumber = turnTransitionParams.TurnContext.CurrentPlayer?.PlayerNumber ?? -1,
+                    TurnNumber = CurrentRound,
+                    IsStart = false
+                });
+            }
+
             TurnEnded?.Invoke(turnTransitionParams);
         }
 

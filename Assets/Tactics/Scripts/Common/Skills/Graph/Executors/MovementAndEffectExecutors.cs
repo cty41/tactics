@@ -8,6 +8,7 @@ using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
+using Tactics.Runtime.BattleLog;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -582,7 +583,27 @@ namespace Tactics.Common.Skills.Graph
 
             target.ModifyHealth(actualHeal, caster);
             TLog.Info($"[ApplyHeal] Healed target for {actualHeal} HP.");
+
+            if (TBattleLog.IsBattleActive)
+            {
+                TBattleLog.Log(new HealLogData
+                {
+                    Healer = GetUnitName(caster),
+                    Target = GetUnitName(target),
+                    HealAmount = actualHeal,
+                    RemainingHealth = target.Health
+                });
+            }
+
             return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+
+        private static string GetUnitName(IUnit unit)
+        {
+            if (unit is INamedUnit named && !string.IsNullOrWhiteSpace(named.UnitName))
+                return named.UnitName;
+
+            return unit == null ? "Unknown" : $"Unit_{unit.UnitID}";
         }
     }
 
@@ -788,6 +809,16 @@ namespace Tactics.Common.Skills.Graph
 
                     summoned++;
                     TLog.Info($"[SummonUnit] Unit summoned for caster {caster.UnitID} at {corpseCell.GridCoordinates}");
+
+                    if (TBattleLog.IsBattleActive)
+                    {
+                        TBattleLog.Log(new SkillLogData
+                        {
+                            Source = GetUnitName(caster),
+                            SkillName = string.IsNullOrWhiteSpace(record.SummonName) ? "Summon" : $"Summon {record.SummonName}",
+                            Target = GetUnitName(unit)
+                        });
+                    }
                 }
                 else
                 {
@@ -800,6 +831,14 @@ namespace Tactics.Common.Skills.Graph
                 return SkillNodeExecutionResult.Failed("No units summoned.");
 
             return SkillNodeExecutionResult.Success();
+        }
+
+        private static string GetUnitName(IUnit unit)
+        {
+            if (unit is INamedUnit named && !string.IsNullOrWhiteSpace(named.UnitName))
+                return named.UnitName;
+
+            return unit == null ? "Unknown" : $"Unit_{unit.UnitID}";
         }
 
         private static ICell FindNearestEmptyCell(ICell origin, IGridController grid, int radius)

@@ -8,7 +8,9 @@ namespace Tactics.Runtime.BattleLog
         /// <summary>
         /// Gets the type of battle action.
         /// </summary>
-        public override BattleActionType ActionType => BattleActionType.TurnStart;
+        public override BattleActionType ActionType => IsStart
+            ? BattleActionType.TurnStart
+            : BattleActionType.TurnEnd;
 
         /// <summary>
         /// Gets or sets the player number.

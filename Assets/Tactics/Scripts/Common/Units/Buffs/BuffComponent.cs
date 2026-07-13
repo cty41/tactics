@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Tactics.Common.Controllers;
+using Tactics.Runtime.BattleLog;
 using UnityEngine;
 
 namespace Tactics.Common.Units.Buffs
@@ -47,6 +48,7 @@ namespace Tactics.Common.Units.Buffs
                         int newDuration = _activeBuffs[i].RemainingTurns + buff.RemainingTurns;
                         _activeBuffs[i].RemainingTurns = newDuration;
                         BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Refreshed, _activeBuffs[i]));
+                        LogBuff(buff.Source, _owner, _activeBuffs[i].BuffName, newDuration);
                         return;
                     }
                 }
@@ -68,6 +70,7 @@ namespace Tactics.Common.Units.Buffs
             _activeBuffs.Add(buff);
             buff.OnApplied();
             BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Added, buff));
+            LogBuff(buff.Source, _owner, buff.BuffName, buff.RemainingTurns);
         }
 
         /// <summary>
@@ -84,6 +87,29 @@ namespace Tactics.Common.Units.Buffs
             _activeBuffs.Remove(buff);
             buff.OnRemoved();
             BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Removed, buff));
+            LogBuff(buff.Source, _owner, buff.BuffName, 0);
+        }
+
+        private static void LogBuff(IUnit source, IUnit target, string buffName, int duration)
+        {
+            if (!TBattleLog.IsBattleActive)
+                return;
+
+            TBattleLog.Log(new BuffLogData
+            {
+                Source = GetUnitName(source),
+                Target = GetUnitName(target),
+                BuffName = buffName,
+                Duration = duration
+            });
+        }
+
+        private static string GetUnitName(IUnit unit)
+        {
+            if (unit is INamedUnit named && !string.IsNullOrWhiteSpace(named.UnitName))
+                return named.UnitName;
+
+            return unit == null ? "Unknown" : $"Unit_{unit.UnitID}";
         }
 
         /// <summary>
@@ -134,6 +160,7 @@ namespace Tactics.Common.Units.Buffs
             {
                 buff.OnRemoved();
                 BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Removed, buff));
+                LogBuff(buff.Source, _owner, buff.BuffName, 0);
             }
 
             _activeBuffs.Clear();

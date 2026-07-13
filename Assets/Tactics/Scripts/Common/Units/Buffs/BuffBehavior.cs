@@ -1,5 +1,4 @@
 using Tactics.Common.Controllers;
-using Tactics.Runtime.BattleLog;
 using UnityEngine;
 
 namespace Tactics.Common.Units.Buffs
@@ -41,7 +40,8 @@ namespace Tactics.Common.Units.Buffs
 
             CombatComponent.ApplyDamage(
                 buff.Owner, attacker, baseDamage, false, _config.ElementType,
-                canTriggerBeforeAttacked: true, canCrit: true, canTriggerDamageTaken: false);
+                canTriggerBeforeAttacked: true, canCrit: true, canTriggerDamageTaken: false,
+                logSourceName: buff.BuffName);
         }
 
         public virtual void OnTurnStart(Buff buff, IGridController gridController)
@@ -54,17 +54,8 @@ namespace Tactics.Common.Units.Buffs
 
             CombatComponent.ApplyDamage(
                 buff.Source, buff.Owner, _config.DamagePerTurn, false, _config.ElementType,
-                canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: false);
-
-            string ownerName = buff.Owner is INamedUnit named ? named.UnitName : buff.Owner.ToString();
-
-            TBattleLog.Log(new DamageLogData
-            {
-                Source = buff.BuffName,
-                Target = ownerName,
-                Damage = _config.DamagePerTurn,
-                RemainingHealth = buff.Owner.Health
-            });
+                canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: false,
+                logSourceName: buff.BuffName);
         }
 
         public virtual void OnTurnEnd(Buff buff, IGridController gridController) { }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Units.Buffs;
+using Tactics.Runtime.BattleLog;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -173,12 +174,14 @@ namespace Tactics.Common.Units
             ElementType elementType,
             bool canTriggerBeforeAttacked,
             bool canCrit,
-            bool canTriggerDamageTaken)
+            bool canTriggerDamageTaken,
+            string logSourceName = null)
         {
             if (canTriggerBeforeAttacked && CombatTechniqueUnits.Contains(target)
                 && CombatTechniqueRandom.NextDouble() < 0.30d)
             {
                 TLog.Info($"[CombatTechniques] {target.UnitID} dodged direct damage.");
+                LogMiss(caster, target);
                 return;
             }
 
@@ -196,6 +199,7 @@ namespace Tactics.Common.Units
                 }
                 else
                 {
+                    LogMiss(caster, target);
                     return; // Non-fire damage blocked by ice
                 }
             }
@@ -250,10 +254,47 @@ namespace Tactics.Common.Units
             if (damage > 0f) target.ModifyHealth(-damage, caster);
             target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
 
+            LogDamage(logSourceName ?? GetUnitName(caster), target, damage);
+
             if (canTriggerDamageTaken)
             {
                 target.BuffComponent?.OnDamageTaken(caster, damage);
             }
+        }
+
+        private static void LogDamage(string sourceName, IUnit target, float damage)
+        {
+            if (!TBattleLog.IsBattleActive || target == null)
+                return;
+
+            TBattleLog.Log(new DamageLogData
+            {
+                Source = string.IsNullOrWhiteSpace(sourceName) ? "Unknown" : sourceName,
+                Target = GetUnitName(target),
+                Damage = damage,
+                RemainingHealth = target.Health
+            });
+        }
+
+        private static void LogMiss(IUnit caster, IUnit target)
+        {
+            if (!TBattleLog.IsBattleActive || target == null)
+                return;
+
+            TBattleLog.Log(new AttackLogData
+            {
+                Attacker = GetUnitName(caster),
+                Target = GetUnitName(target),
+                IsMissed = true
+            });
+        }
+
+        private static string GetUnitName(IUnit unit)
+        {
+            if (unit is INamedUnit named && !string.IsNullOrWhiteSpace(named.UnitName))
+                return named.UnitName;
+
+            return unit == null ? "Unknown" : $"Unit_{unit.UnitID}";
         }
 
         public static float GetCriticalDamage(float baseDamage)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Tactics.Cheats;
@@ -10,12 +11,13 @@ namespace Tactics.UI
 {
     /// <summary>
     /// UI Toolkit controller for the in-game cheat/debug console.
-    /// Displays battle logs and accepts command input via a bottom text field.
+    /// Displays structured battle logs and accepts development-only commands.
     /// </summary>
     public sealed class CheatConsoleUI : UIControllerBase
     {
         private const int MaxLogEntries = 50;
         private const int MaxHistorySize = 50;
+        private const float BottomScrollTolerance = 32f;
         private const string HistoryPrefsKey = "Tactics_CheatConsole_History";
 
         private readonly List<string> _commandHistory = new List<string>();
@@ -24,11 +26,19 @@ namespace Tactics.UI
         private VisualElement _rootContainer;
         private ScrollView _logList;
         private TextField _commandInput;
+        private Coroutine _initializeCoroutine;
         private readonly Queue<VisualElement> _logEntryPool = new Queue<VisualElement>();
+        private bool _isSubscribed;
+        private bool _callbacksRegistered;
+        private bool _userNearBottom = true;
+
+        private static bool IsDevelopmentBuild => Application.isEditor || Debug.isDebugBuild;
 
         protected override void OnShown()
         {
-            StartCoroutine(InitializeUI());
+            if (_initializeCoroutine != null)
+                StopCoroutine(_initializeCoroutine);
+            _initializeCoroutine = StartCoroutine(InitializeUI());
         }
 
         private IEnumerator InitializeUI()
@@ -38,6 +48,9 @@ namespace Tactics.UI
             var root = Ui.GetRootElement(UIManager.UIId.CheatConsole);
             if (root == null)
             {
+                if (this == null || !isActiveAndEnabled)
+                    yield break;
+
                 TLog.Warning("[CheatConsoleUI] Root visual element still null after waiting. Retrying...");
                 yield return null;
                 root = Ui.GetRootElement(UIManager.UIId.CheatConsole);
@@ -45,7 +58,10 @@ namespace Tactics.UI
 
             if (root == null)
             {
-                TLog.Error("[CheatConsoleUI] Failed to get root visual element after retry.");
+                if (this == null || !isActiveAndEnabled)
+                    yield break;
+
+                TLog.Warning("[CheatConsoleUI] Failed to get root visual element after retry. ToggleConsole can retry initialization.");
                 yield break;
             }
 
@@ -60,35 +76,67 @@ namespace Tactics.UI
                 _rootContainer.style.top = 0;
                 _rootContainer.style.left = 0;
                 _rootContainer.style.right = 0;
-                _rootContainer.style.height = Length.Percent(35);
+                _rootContainer.style.height = Length.Percent(25);
                 _rootContainer.style.backgroundColor = new Color(0, 0, 0, 0.85f);
                 _rootContainer.style.flexDirection = FlexDirection.Column;
             }
 
-            TBattleLog.OnLogToUI += HandleLogEntry;
+            if (!_isSubscribed)
+            {
+                TBattleLog.OnLogToUI += HandleLogEntry;
+                TBattleLog.OnLogsCleared += HandleLogsCleared;
+                _isSubscribed = true;
+            }
+
+            ClearDisplayedLogs();
+            foreach (var data in TBattleLog.GetCurrentBattleLogs())
+                AddLogEntry(data, false);
+            ScrollToBottom();
 
             if (_commandInput != null)
             {
-                _commandInput.RegisterCallback<NavigationSubmitEvent>(OnCommandSubmitted);
-                _commandInput.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+                if (!_callbacksRegistered)
+                {
+                    _commandInput.RegisterCallback<NavigationSubmitEvent>(OnCommandSubmitted);
+                    _commandInput.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+                    _callbacksRegistered = true;
+                }
+
+                _commandInput.style.display = IsDevelopmentBuild
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
                 _commandInput.style.height = StyleKeyword.Auto;
                 _commandInput.style.fontSize = 16;
                 _commandInput.style.backgroundColor = new Color(0.08f, 0.08f, 0.08f, 0.95f);
                 _commandInput.style.color = Color.white;
-                _commandInput.Focus();
                 LoadHistory();
+                // Do not steal focus from battle input when the console is auto-shown.
             }
         }
 
         protected override void OnHidden()
         {
-            TBattleLog.OnLogToUI -= HandleLogEntry;
+            if (_initializeCoroutine != null)
+            {
+                StopCoroutine(_initializeCoroutine);
+                _initializeCoroutine = null;
+            }
 
-            if (_commandInput != null)
+            if (_isSubscribed)
+            {
+                TBattleLog.OnLogToUI -= HandleLogEntry;
+                TBattleLog.OnLogsCleared -= HandleLogsCleared;
+                _isSubscribed = false;
+            }
+
+            if (_commandInput != null && _callbacksRegistered)
             {
                 _commandInput.UnregisterCallback<NavigationSubmitEvent>(OnCommandSubmitted);
                 _commandInput.UnregisterCallback<KeyDownEvent>(OnKeyDown);
+                _callbacksRegistered = false;
             }
+
+            ClearDisplayedLogs();
 
             if (_rootContainer != null)
                 _rootContainer.style.display = DisplayStyle.None;
@@ -96,24 +144,54 @@ namespace Tactics.UI
 
         private void HandleLogEntry(BattleLogData data)
         {
+            AddLogEntry(data, true);
+        }
+
+        private void HandleLogsCleared()
+        {
+            ClearDisplayedLogs();
+        }
+
+        private void AddLogEntry(BattleLogData data, bool respectScrollPosition)
+        {
             if (data == null || _logList == null)
                 return;
 
+            bool shouldScroll = !respectScrollPosition || IsNearBottom();
             var label = new Label(data.GetDisplayString());
             label.AddToClassList("log-entry");
             label.style.color = GetColorForType(data.ActionType);
+            AddEntryLabel(label);
 
+            if (shouldScroll)
+                ScrollToBottom();
+        }
+
+        private void AddEntryLabel(VisualElement label)
+        {
             _logList.contentContainer.Add(label);
             _logEntryPool.Enqueue(label);
+            TrimDisplayedEntries();
+        }
 
+        private void TrimDisplayedEntries()
+        {
             while (_logEntryPool.Count > MaxLogEntries)
             {
                 var oldest = _logEntryPool.Dequeue();
-                if (oldest != null)
-                    oldest.RemoveFromHierarchy();
+                oldest?.RemoveFromHierarchy();
+            }
+        }
+
+        private void ClearDisplayedLogs()
+        {
+            while (_logEntryPool.Count > 0)
+            {
+                var entry = _logEntryPool.Dequeue();
+                entry?.RemoveFromHierarchy();
             }
 
-            ScrollToBottom();
+            _userNearBottom = true;
         }
 
         private void OnCommandSubmitted(NavigationSubmitEvent evt)
@@ -146,43 +224,41 @@ namespace Tactics.UI
 
         private void SubmitCommand()
         {
-            if (_commandInput == null)
+            if (!IsDevelopmentBuild || _commandInput == null || _logList == null)
                 return;
 
             string command = _commandInput.value;
             if (string.IsNullOrWhiteSpace(command))
                 return;
 
+            bool isClearLog = string.Equals(command.Trim(), "clearlog", StringComparison.OrdinalIgnoreCase);
+
             var inputLabel = new Label($"> {command}");
             inputLabel.AddToClassList("log-entry");
             inputLabel.style.color = Color.white;
-
-            _logList.contentContainer.Add(inputLabel);
-            _logEntryPool.Enqueue(inputLabel);
+            AddEntryLabel(inputLabel);
 
             string result = CheatCommandManager.Instance.Execute(command);
             if (!string.IsNullOrEmpty(result))
             {
                 var resultLabel = new Label(result);
                 resultLabel.AddToClassList("log-entry");
-                resultLabel.style.color = result.StartsWith("[Error]") ? new Color(1f, 0.3f, 0.3f) : new Color(0.3f, 1f, 0.3f);
-                _logList.contentContainer.Add(resultLabel);
-                _logEntryPool.Enqueue(resultLabel);
+                resultLabel.style.color = result.StartsWith("[Error]")
+                    ? new Color(1f, 0.3f, 0.3f)
+                    : new Color(0.3f, 1f, 0.3f);
+                AddEntryLabel(resultLabel);
             }
 
-            while (_logEntryPool.Count > MaxLogEntries)
-            {
-                var oldest = _logEntryPool.Dequeue();
-                if (oldest != null)
-                    oldest.RemoveFromHierarchy();
-            }
-
-            ScrollToBottom();
+            if (isClearLog)
+                ClearDisplayedLogs();
+            else
+                ScrollToBottom();
 
             _commandInput.value = string.Empty;
 
-            // 添加到历史记录（去重）
-            string lastCmd = _commandHistory.Count > 0 ? _commandHistory[_commandHistory.Count - 1] : null;
+            string lastCmd = _commandHistory.Count > 0
+                ? _commandHistory[_commandHistory.Count - 1]
+                : null;
             if (lastCmd == command)
                 _commandHistory.RemoveAt(_commandHistory.Count - 1);
             _commandHistory.Add(command);
@@ -220,7 +296,6 @@ namespace Tactics.UI
             if (_commandInput == null || _commandHistory.Count == 0)
                 return;
 
-            // 首次 ArrowUp（direction=-1）：从最新命令开始
             if (_historyIndex < 0 && direction < 0)
                 _historyIndex = _commandHistory.Count;
 
@@ -243,12 +318,25 @@ namespace Tactics.UI
             _commandInput.SelectRange(_commandInput.value.Length, _commandInput.value.Length);
         }
 
+        private bool IsNearBottom()
+        {
+            if (_logList == null)
+                return true;
+
+            float contentHeight = _logList.contentContainer.layout.height;
+            float viewportHeight = _logList.layout.height;
+            float remaining = contentHeight - viewportHeight - _logList.scrollOffset.y;
+            _userNearBottom = remaining <= BottomScrollTolerance;
+            return _userNearBottom;
+        }
+
         private void ScrollToBottom()
         {
             if (_logList == null)
                 return;
 
             _logList.scrollOffset = new Vector2(0, float.MaxValue);
+            _userNearBottom = true;
         }
 
         private static Color GetColorForType(BattleActionType type)
