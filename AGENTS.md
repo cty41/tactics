@@ -12,6 +12,8 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | `.cs` 修改后必须编译 | 调用 `refresh_unity` |
 | 写 C# 代码前必须验证 | 遵循 `rules/unity-code-generation.md` 工作流 |
 | git commit 前必须检查 | 加载 `unity-git-commit` skill |
+| 跨系统知识查询/沉淀 | 先读 `.agents/knowledge/index.md`，并遵循 `knowledge-maintenance` skill |
+| 代码/文档变更后同步 OKF | 运行 `python Tools/okf/catalog_impact.py report --worktree`，更新并同步受影响 scope |
 
 ## 规则文件索引
 
@@ -25,6 +27,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | `rules/unity-logging.md` | 日志规范（禁止 Debug.Log，使用 TLog/TBattleLog） |
 | `rules/unity-code-generation.md` | C# 代码生成强制工作流、防编译错误 |
 | `rules/code-documentation.md` | 代码注释规范（XML doc + // 块注释，英文，系统规则必须注释） |
+| `.agents/rules/knowledge-maintenance.md` | OKF 知识查询、写回、替代和校验规范 |
 
 ## 核心原则
 
@@ -39,12 +42,13 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 4. **必须** `refresh_unity` — 修改 `.cs` 后显式编译
 5. **必须** 加载 `unity-git-commit` — git commit 前执行提交前检查（`.meta` 配对、GUID 校验）
 6. **必须** 用户确认 — Unity Editor 内手动验证的功能，禁止自动提交
+7. **必须** OKF 影响检测 — 修改 `catalog-scopes.yaml` 监控范围内的代码、文档、规则或工具后，先运行 `report --worktree`；核对并更新本任务影响的概念正文，再运行 `sync --worktree --scope <scope> --write`
 
 ### 最佳实践
 
-7. Inspector 适当时优先使用 Odin API
-8. 标识符遵循 .NET 命名规范（PascalCase、camelCase 等）
-9. `execute_code` 仅当用户明确要求时使用
+8. Inspector 适当时优先使用 Odin API
+9. 标识符遵循 .NET 命名规范（PascalCase、camelCase 等）
+10. `execute_code` 仅当用户明确要求时使用
 
 ## Agent 约束
 
@@ -55,3 +59,5 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 
 **如果它不在代码库中，对 Agent 来说就不存在。**
 将权威文档保存在 `.agents/` 下。
+
+跨系统架构、当前设计和历史决策先从 `.agents/knowledge/index.md` 渐进读取。OKF 页面是导航与当前状态综合层；涉及实际实现时，必须继续核对其 `repo_paths` 指向的代码、Unity 资产和测试。

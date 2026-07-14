@@ -386,6 +386,6 @@ Run 过程:
 
 ## 关联文档
 
-- 设计文档：[Roguelike地图玩法设计](../design/roguelike-map-gameplay-design.md)
-- 设计文档：[Roguelike事件编辑器设计](../design/roguelike-event-editor-design.md)
+- 设计文档：[Roguelike地图玩法设计](../docs/roguelike-map-gameplay-design.md)
+- 设计文档：[Roguelike事件编辑器设计](../docs/roguelike-event-editor-design.md)
 - 原始笔记：[brainstorm.md](./brainstorm.md)

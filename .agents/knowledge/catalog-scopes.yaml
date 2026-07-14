@@ -1,0 +1,95 @@
+version: 1
+
+tracked_roots:
+  - AGENTS.md
+  - .agents/ARCHITECTURE.md
+  - .agents/docs
+  - .agents/plans
+  - .agents/rules
+  - .agents/skills
+  - Assets/Tactics
+  - Packages
+  - ProjectSettings
+  - Tools/okf
+
+ignored_paths:
+  - .agents/knowledge
+
+scopes:
+  project-architecture:
+    concept: architecture/project-overview.md
+    paths:
+      - AGENTS.md
+      - .agents/ARCHITECTURE.md
+      - Assets/Tactics/Scripts/Common/UIManager.cs
+
+  unity-agent-workflow:
+    concept: operations/unity-agent-workflow.md
+    paths:
+      - AGENTS.md
+      - .agents/rules
+      - .agents/skills/unity-mcp-core
+      - .agents/skills/unity-auto-compile-guard
+      - .agents/skills/project-doc-organization
+
+  okf-maintenance:
+    concept: operations/okf-maintenance.md
+    paths:
+      - AGENTS.md
+      - .agents/rules/knowledge-maintenance.md
+      - .agents/skills/knowledge-maintenance
+      - .agents/skills/project-doc-organization
+      - Tools/okf
+
+  first-slice-three-class-skills:
+    concept: plans/first-slice-three-class-skills.md
+    paths:
+      - .agents/plans/2026-06-24-first-slice-three-class-skills-plan.md
+      - .agents/docs/2026-06-24-pure-run-squad-prototype-design.md
+      - Assets/Tactics/Scripts/Common/Battle/FirstSliceSkillCatalog.cs
+      - Assets/Tactics/Battle/Abilities/SkillGraphs
+      - Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs
+      - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
+
+  battle-system:
+    concept: systems/battle.md
+    paths:
+      - .agents/plans/战斗系统演进计划.md
+      - Assets/Tactics/Scripts/Common/Battle
+      - Assets/Tactics/Scripts/Battle
+      - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
+      - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
+
+  monster-ai:
+    concept: systems/monster-ai.md
+    paths:
+      - .agents/plans/怪物战斗AI系统统一计划.md
+      - .agents/skills/monster-ai-mcp-workflow
+      - Assets/Tactics/Scripts/Common/ai/MonsterAI
+      - Assets/Tactics/Scripts/Editor/MonsterAIEditor
+      - Assets/Tactics/AI/BasicMeleeGraph.asset
+      - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
+
+  roguelike-run:
+    concept: systems/roguelike-run.md
+    paths:
+      - .agents/docs/2026-06-24-pure-run-squad-prototype-design.md
+      - .agents/docs/roguelike-map-gameplay-design.md
+      - .agents/plans/roguelike-map-gameplay-开发计划.md
+      - Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs
+      - Assets/Tactics/Scripts/Roguelike
+      - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs
+      - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
+      - Assets/Tactics/RoguelikeMap
+      - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
+
+  skill-graph:
+    concept: systems/skill-graph.md
+    paths:
+      - .agents/docs/skill-graph-editor-design.md
+      - .agents/plans/skill-graph-editor-phase1-implementation-plan.md
+      - Assets/Tactics/Scripts/Common/Skills/Graph
+      - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
+      - Assets/Tactics/Battle/Abilities/SkillGraphs
+      - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
+      - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs

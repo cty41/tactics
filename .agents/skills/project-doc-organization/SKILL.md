@@ -14,6 +14,7 @@ description: "Use when creating, moving, or organizing project documentation fil
 | 设计文档 | `.agents/docs/` | 持久保留，随设计迭代更新 |
 | 开发计划 | `.agents/plans/` | 持久保留，随进度更新 |
 | 使用指南 | `.agents/docs/` | 持久保留 |
+| 跨系统知识目录 | `.agents/knowledge/` | OKF 综合层，持续维护 |
 
 **决策原则**：设计真相源 → `.agents/docs/`，计划真相源 → `.agents/plans/`。
 
@@ -36,6 +37,10 @@ description: "Use when creating, moving, or organizing project documentation fil
 ├── plans/                   ← 开发计划（可执行任务）
 │   ├── 战斗系统演进计划.md
 │   └── roguelike-map-gameplay-开发计划.md
+├── knowledge/               ← 独立 OKF bundle（导航、综合、关系）
+│   ├── index.md
+│   ├── log.md
+│   └── systems/
 ├── skills/                  ← Agent 技能定义
 ├── rules/                   ← 编码规范
 ├── shared-rules/            ← 共享规则
@@ -68,6 +73,17 @@ description: "Use when creating, moving, or organizing project documentation fil
 
 示例：`战斗系统演进计划.md`、`Buff与DoT效果落地计划.md`
 
+### `.agents/knowledge/` — OKF 综合知识层
+
+存放符合 OKF v0.1 的跨系统概念页、渐进索引和更新日志：
+
+- 不复制完整设计、计划或代码
+- 通过 `repo_paths`、`resource` 和正文引用连接原始真相源
+- 汇总当前状态、系统关系、替代关系和验证 revision
+- 查询实现状态时仍必须回到代码、Unity 资产和测试复核
+
+详细维护流程见 `../knowledge-maintenance/SKILL.md` 和 `../../rules/knowledge-maintenance.md`。
+
 ## Workflow
 
 ```text
@@ -83,6 +99,7 @@ description: "Use when creating, moving, or organizing project documentation fil
 1. **设计**：将设计文档保存到 `.agents/docs/`
 2. **制订计划**：基于设计文档，输出到 `.agents/plans/`
 3. **执行**：从 `.agents/plans/` 读取并执行
+4. **综合**：将跨系统当前状态更新到 `.agents/knowledge/`，不改变原始真相源职责
 
 ## 关键原则
 
@@ -91,6 +108,8 @@ description: "Use when creating, moving, or organizing project documentation fil
 每个主题只有一个真相源：
 - 设计真相源：`.agents/docs/`
 - 计划真相源：`.agents/plans/`（包含 Plan Mode 下正式落地的计划）
+- 实现真相源：代码、Unity 资产和测试
+- OKF 综合层：`.agents/knowledge/`（负责导航和综合，不替代上述真相源）
 
 ### 2. 引用规范
 
@@ -148,3 +167,4 @@ description: "Use when creating, moving, or organizing project documentation fil
 - [ ] 开发计划放在 `.agents/plans/`
 - [ ] Plan Mode 的正式计划已落地到 `.agents/plans/`
 - [ ] 使用指南放在 `.agents/docs/`
+- [ ] 跨系统综合页放在 `.agents/knowledge/`，且引用原始真相源

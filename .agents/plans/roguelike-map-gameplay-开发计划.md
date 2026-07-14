@@ -309,6 +309,6 @@ Task 1 (地图生成器验证)
 ## 关联文档
 
 - **设计文档**: [roguelike-map-gameplay-design.md](../docs/roguelike-map-gameplay-design.md)
-- **项目文档组织规范**: [project-doc-organization](../../skills/project-doc-organization/SKILL.md)
+- **项目文档组织规范**: [project-doc-organization](../skills/project-doc-organization/SKILL.md)
 - **前置计划**: [战斗结算与奖励计划.md](战斗结算与奖励计划.md)
-- **前置计划**: [地形效果计划.md](地形效果计划.md)
+- **前置计划**: 地形效果计划（待创建）

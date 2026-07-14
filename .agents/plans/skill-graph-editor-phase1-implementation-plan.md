@@ -2,7 +2,7 @@
 
 ## 关联文档
 
-- 设计文档：[`../docs/design/skill-graph-editor-design.md`](../docs/design/skill-graph-editor-design.md)
+- 设计文档：[`../docs/skill-graph-editor-design.md`](../docs/skill-graph-editor-design.md)
 
 ## Background
 
