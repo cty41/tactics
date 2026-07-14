@@ -28,6 +28,7 @@ verified_revision: d5f1730d3527
 - AI 候选中的技能执行依赖[SkillGraph](skill-graph.md)及其能力元数据。
 - AI 的移动、攻击和回合推进发生在[Battle System](battle.md)中。
 - AI 资产创建和修改必须遵循项目的[Unity Agent Workflow](../operations/unity-agent-workflow.md)。
+- 敌人节奏、移动评分、模式序列和形态切换可参考[Mewgenics Analysis](../references/mewgenics-analysis.md)，但外部字段不代表项目已实现能力。
 
 # Known Boundary
 

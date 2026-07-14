@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source_manifest": "../manifests/mewgenics-analysis.json",
+  "sanitization": "No full decompiler output, raw strings, or game binary content is included.",
+  "functions": [
+    {"name":"FUN_1401339e0","address":"1401339e0","callers":1,"callees":11,"strings":40},
+    {"name":"FUN_140134400","address":"140134400","callers":7,"callees":10,"strings":12},
+    {"name":"FUN_140134520","address":"140134520","callers":6,"callees":10,"strings":12},
+    {"name":"FUN_140134640","address":"140134640","callers":3,"callees":9,"strings":119},
+    {"name":"FUN_140135c60","address":"140135c60","callers":3,"callees":9,"strings":103},
+    {"name":"FUN_14013c090","address":"14013c090","callers":0,"callees":13,"strings":49},
+    {"name":"FUN_14013c4e0","address":"14013c4e0","callers":15,"callees":1,"strings":4},
+    {"name":"FUN_14013c570","address":"14013c570","callers":18,"callees":1,"strings":4},
+    {"name":"FUN_14013c600","address":"14013c600","callers":6,"callees":0,"strings":4},
+    {"name":"FUN_14013c690","address":"14013c690","callers":1,"callees":1,"strings":9},
+    {"name":"FUN_14013c800","address":"14013c800","callers":1,"callees":1,"strings":9},
+    {"name":"FUN_14015f820","address":"14015f820","callers":0,"callees":17,"strings":59},
+    {"name":"FUN_1408a1340","address":"1408a1340","callers":7,"callees":5,"strings":13},
+    {"name":"FUN_1408a3460","address":"1408a3460","callers":1,"callees":5,"strings":12}
+  ]
+}

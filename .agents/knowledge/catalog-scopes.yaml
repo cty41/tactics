@@ -11,6 +11,7 @@ tracked_roots:
   - Packages
   - ProjectSettings
   - Tools/okf
+  - Tools/reverse-engineering
 
 ignored_paths:
   - .agents/knowledge
@@ -69,6 +70,13 @@ scopes:
       - Assets/Tactics/Scripts/Editor/MonsterAIEditor
       - Assets/Tactics/AI/BasicMeleeGraph.asset
       - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
+
+  mewgenics-reference-analysis:
+    concept: references/mewgenics-analysis.md
+    paths:
+      - .agents/docs/mewgenics-config-analysis.md
+      - .agents/docs/mewgenics-runtime-reverse-engineering.md
+      - Tools/reverse-engineering
 
   roguelike-run:
     concept: systems/roguelike-run.md

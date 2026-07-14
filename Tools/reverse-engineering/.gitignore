@@ -1,0 +1,11 @@
+# Keep machine-local analysis state and copyrighted/raw inputs outside Git.
+*.exe
+*.dll
+*.gpr
+*.gzf
+*.rep/
+raw/
+export/
+exports/
+logs/
+workspace/

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "program": "Mewgenics.exe",
+  "address_basis": "image virtual address in the analyzed PE",
+  "targets": [
+    "FUN_1401339e0",
+    "FUN_140134400",
+    "FUN_140134520",
+    "FUN_140134640",
+    "FUN_140135c60",
+    "FUN_14013c090",
+    "FUN_14013c4e0",
+    "FUN_14013c570",
+    "FUN_14013c600",
+    "FUN_14013c690",
+    "FUN_14013c800",
+    "FUN_14015f820",
+    "FUN_1408a1340",
+    "FUN_1408a3460"
+  ]
+}
