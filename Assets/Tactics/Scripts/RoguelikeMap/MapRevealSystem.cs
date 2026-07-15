@@ -6,9 +6,8 @@ using UnityEngine;
 namespace Tactics.RoguelikeMap
 {
     /// <summary>
-    /// FTL-style limited vision fog of war system.
-    /// Uses BFS from a current node along graph connections (incoming + outgoing)
-    /// to determine which nodes are Revealed, Reachable, or Unrevealed.
+    /// Forward-only limited vision fog of war system.
+    /// Uses BFS from the current node along outgoing connections only.
     /// </summary>
     public class MapRevealSystem
     {
@@ -24,11 +23,11 @@ namespace Tactics.RoguelikeMap
         }
 
         /// <summary>
-        /// BFS from currentNodeId along incoming+outgoing connections.
+        /// BFS from currentNodeId along outgoing connections.
         /// Nodes within 1 hop → Visibility=Revealed, IsReachable=true.
         /// Nodes within visionRange cumulative Euclidean distance but not direct → Visibility=Fogged.
         /// All other non-Visited nodes → Visibility=Hidden.
-        /// Visited nodes stay Visited and act as transparent vision anchors.
+        /// Visited nodes are never reachable again.
         /// </summary>
         public void UpdateReveal(string currentNodeId)
         {
@@ -65,12 +64,7 @@ namespace Tactics.RoguelikeMap
                 if (!_nodeLookup.TryGetValue(nodeId, out var node))
                     continue;
 
-                // Traverse both outgoing and incoming connections
-                var neighbors = new HashSet<string>();
-                foreach (var outId in node.outgoing) neighbors.Add(outId);
-                foreach (var inId in node.incoming) neighbors.Add(inId);
-
-                foreach (var neighborId in neighbors)
+                foreach (var neighborId in node.outgoing)
                 {
                     if (visited.Contains(neighborId))
                         continue;
@@ -89,12 +83,10 @@ namespace Tactics.RoguelikeMap
 
                     visited.Add(neighborId);
 
-                    // Visited nodes stay Visited but are transparent for further traversal
+                    // A visited node can remain a vision anchor, but it is never selectable again.
                     if (neighborNode.VisitState == NodeVisitState.Visited)
                     {
-                        // Visited neighbor within 1 hop is still Reachable (clickable)
-                        if (newHops == 1)
-                            neighborNode.IsReachable = true;
+                        neighborNode.IsReachable = false;
                         queue.Enqueue((neighborId, newCumDist, newHops));
                         continue;
                     }
@@ -127,7 +119,9 @@ namespace Tactics.RoguelikeMap
         /// </summary>
         public List<RoguelikeMapNode> GetReachableNodes()
         {
-            return _map.nodes.Where(n => n.IsReachable).ToList();
+            return _map.nodes
+                .Where(n => n.IsReachable && n.VisitState == NodeVisitState.Unvisited)
+                .ToList();
         }
     }
 }

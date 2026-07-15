@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Players;
 using Tactics.RoguelikeMap.Interaction;
 using Tactics.Common.Units;
 using Tactics.RoguelikeMap.Economy;
@@ -47,6 +48,7 @@ namespace Tactics.Common.Battle
         private bool _isSettling;
         private PlayerAdventureState _state;
         private RewardResult _currentRewardResult;
+        private bool _isPlayerVictory;
 
         #endregion
 
@@ -76,6 +78,9 @@ namespace Tactics.Common.Battle
 
         /// <summary>当前战斗结算对应的统一结果结构。</summary>
         public RewardResult CurrentRewardResult => _currentRewardResult;
+
+        /// <summary>Whether the human player won the battle being settled.</summary>
+        public bool IsPlayerVictory => _isPlayerVictory;
 
         #endregion
 
@@ -114,6 +119,8 @@ namespace Tactics.Common.Battle
             _totalRounds = totalRounds;
             _allUnits = new List<IUnit>(allUnits);
             _state = state;
+            _isPlayerVictory = result.Winners != null &&
+                               result.Winners.Any(player => player != null && player.PlayerType == PlayerType.HumanPlayer);
             _onComplete = onComplete;
             _currentRewardResult = null;
             _currentPhase = SettlementPhase.None;
@@ -136,6 +143,17 @@ namespace Tactics.Common.Battle
             {
                 TLog.Warning("[BattleSettlementCoordinator] ProcessLevelUp called with null character.");
                 return false;
+            }
+
+            if (_state?.IsPureRun == true)
+            {
+                if (!_isPlayerVictory)
+                    return false;
+
+                bool granted = PureRunProgression.GrantLevel(character);
+                if (granted)
+                    OnCharacterLevelUp?.Invoke(character);
+                return granted;
             }
 
             bool hasLeveledUp = ExperienceSystem.CheckLevelUp(character);
@@ -214,6 +232,7 @@ namespace Tactics.Common.Battle
             _allUnits = null;
             _state = null;
             _currentRewardResult = null;
+            _isPlayerVictory = false;
             _isSettling = false;
 
             TLog.Info("[BattleSettlementCoordinator] State reset.");
@@ -248,7 +267,9 @@ namespace Tactics.Common.Battle
             OnRewardResultGenerated?.Invoke(_currentRewardResult);
 
             // 将经验值应用到角色数据
-            if (rewards.ExperiencePerCharacter != null && _state != null && _state.Roster != null)
+            if (_state?.IsPureRun != true &&
+                rewards.ExperiencePerCharacter != null &&
+                _state?.Roster != null)
             {
                 foreach (var kvp in rewards.ExperiencePerCharacter)
                 {
@@ -284,5 +305,169 @@ namespace Tactics.Common.Battle
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Pure-run growth rules that can be consumed by settlement, commands, and tests without UI dependencies.
+    /// </summary>
+    public static class PureRunProgression
+    {
+        public const int SkillChoiceCount = 3;
+
+        /// <summary>
+        /// Selects the lowest-level living active character. Active-party order is the stable tie-breaker.
+        /// </summary>
+        public static CharacterDefinition SelectLowestLevelLivingCharacter(PlayerAdventureState state)
+        {
+            if (state?.Roster == null || state.ActivePartyCharacterIds == null)
+                return null;
+
+            var rosterById = state.Roster
+                .Where(character => character != null && !string.IsNullOrEmpty(character.Id))
+                .GroupBy(character => character.Id)
+                .ToDictionary(group => group.Key, group => group.First());
+
+            CharacterDefinition selected = null;
+            foreach (string characterId in state.ActivePartyCharacterIds)
+            {
+                if (!rosterById.TryGetValue(characterId, out var candidate) || candidate.IsDead)
+                    continue;
+
+                if (selected == null || candidate.Level < selected.Level)
+                    selected = candidate;
+            }
+
+            return selected;
+        }
+
+        /// <summary>Grants one victory level to the selected pure-run character.</summary>
+        public static CharacterDefinition GrantVictoryLevel(PlayerAdventureState state)
+        {
+            if (state?.IsPureRun != true)
+                return null;
+
+            var character = SelectLowestLevelLivingCharacter(state);
+            return GrantLevel(character) ? character : null;
+        }
+
+        public static bool GrantLevel(CharacterDefinition character)
+        {
+            if (character == null || character.Level >= SkillSystem.MaxCharacterLevel)
+                return false;
+
+            character.Level++;
+            character.AttributePoints++;
+            return true;
+        }
+
+        /// <summary>
+        /// Builds deterministic legal first-slice choices and reserves slot zero for the one-time
+        /// starting-branch advanced guarantee when its base attribute reaches seven.
+        /// </summary>
+        public static List<SkillDefinition> BuildSkillChoices(
+            CharacterDefinition character,
+            int runSeed,
+            int offerOrdinal,
+            int count = SkillChoiceCount)
+        {
+            if (character == null || count <= 0)
+                return new List<SkillDefinition>();
+
+            var legal = FirstSliceSkillCatalog.All
+                .Where(skill => skill.RoleType == character.RoleType && SkillSystem.CanLearnSkill(character, skill))
+                .OrderBy(skill => skill.Id, StringComparer.Ordinal)
+                .ToList();
+
+            SkillDefinition guaranteed = null;
+            TryGetGuaranteedAdvancedSkill(character, out guaranteed);
+            if (guaranteed != null)
+                legal.RemoveAll(skill => skill.Id == guaranteed.Id);
+
+            int randomSeed = Tactics.Roguelike.RoguelikeMapRuntimeState.DeriveSeed(
+                runSeed,
+                $"skill-offer-{character.Id}",
+                offerOrdinal);
+            Shuffle(legal, new Random(randomSeed));
+
+            var result = new List<SkillDefinition>();
+            if (guaranteed != null)
+                result.Add(guaranteed);
+
+            result.AddRange(legal.Take(Math.Max(0, count - result.Count)));
+            return result;
+        }
+
+        public static bool TryGetGuaranteedAdvancedSkill(
+            CharacterDefinition character,
+            out SkillDefinition advancedSkill)
+        {
+            advancedSkill = null;
+            if (character == null ||
+                character.HasConsumedStartingAdvancedGuarantee ||
+                string.IsNullOrEmpty(character.StartingBranchSkillId) ||
+                HasLearnedAdvancedSkill(character))
+            {
+                return false;
+            }
+
+            advancedSkill = FindStartingBranchAdvancedSkill(character);
+            if (advancedSkill == null || !SkillSystem.CanLearnSkill(character, advancedSkill))
+            {
+                advancedSkill = null;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>Consumes the guarantee only when the corresponding advanced skill was actually offered.</summary>
+        public static bool MarkAdvancedGuaranteeConsumed(
+            CharacterDefinition character,
+            IEnumerable<SkillDefinition> offeredSkills)
+        {
+            if (character == null || character.HasConsumedStartingAdvancedGuarantee || offeredSkills == null)
+                return false;
+
+            var advancedSkill = FindStartingBranchAdvancedSkill(character);
+            if (advancedSkill == null || !offeredSkills.Any(skill => skill?.Id == advancedSkill.Id))
+                return false;
+
+            character.HasConsumedStartingAdvancedGuarantee = true;
+            return true;
+        }
+
+        private static SkillDefinition FindStartingBranchAdvancedSkill(CharacterDefinition character)
+        {
+            return FirstSliceSkillCatalog.All.FirstOrDefault(skill =>
+                skill.RoleType == character.RoleType &&
+                string.Equals(skill.PrerequisiteSkillId, character.StartingBranchSkillId, StringComparison.Ordinal));
+        }
+
+        private static bool HasLearnedAdvancedSkill(CharacterDefinition character)
+        {
+            if (character.LearnedSkills == null)
+                return false;
+
+            foreach (var learnedSkill in character.LearnedSkills)
+            {
+                if (learnedSkill != null &&
+                    FirstSliceSkillCatalog.TryGet(learnedSkill.SkillId, out var definition) &&
+                    !string.IsNullOrEmpty(definition.PrerequisiteSkillId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void Shuffle<T>(IList<T> values, Random random)
+        {
+            for (int index = values.Count - 1; index > 0; index--)
+            {
+                int swapIndex = random.Next(index + 1);
+                (values[index], values[swapIndex]) = (values[swapIndex], values[index]);
+            }
+        }
     }
 }

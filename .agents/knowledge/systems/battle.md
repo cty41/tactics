@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、回合、单位、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-14T00:00:00+08:00"
+timestamp: "2026-07-15T00:06:58+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -15,11 +15,14 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: d5f1730d3527
+source_fingerprint: sha256:10239712858ede1cd47af7b3c6faa0ff2e4fece609e03fedca64487835e6702c
 ---
 
 # Current State
 
-`BattleController` 统一承接棋盘、玩家、单位、回合事件和战斗生命周期。`BattleSettlementCoordinator` 与 `BattleSettlementFlow` 负责奖励、升级和结算 UI；`TBattleLog` 在战斗生命周期内收集结构化回合、技能、伤害、治疗和 Buff 信息。
+`BattleController` 统一承接棋盘、玩家、单位、回合事件和战斗生命周期。`BattleSettlementCoordinator` 与 `BattleSettlementFlow` 负责奖励、最低等级单人成长、高级技能候选保底和结算 UI；`TBattleLog` 在战斗生命周期内收集结构化回合、技能、伤害、治疗和 Buff 信息。
+
+`EncounterCatalog` 提供四类怪物定义、N1–N6/E1–E2/Special 显式配方、三类布局及普通/精英/Special 倍率，并由 resolver 产生稳定的 `ResolvedEncounter`。怪物定义携带明确 AbilityConfig 路径，动态生成时注入单位；该链路不使用运行时威胁预算。
 
 # Relationships
 

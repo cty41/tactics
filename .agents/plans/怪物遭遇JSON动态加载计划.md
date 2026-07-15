@@ -3,11 +3,15 @@
 ## Summary
 
 - 目标：将敌方怪物的 Unit 与 AI 配置从 `Test1` 场景实例迁移到地图节点引用的遭遇 JSON，在进入战斗时动态生成敌方单位。
-- 当前复查结论（2026-06-02）：当前工作区未发现 `EncounterConfig`、`encounterConfigPath`、`SpawnEncounterEnemies`、`aiBrainAssetPath` 等相关实现；关键文件 `BattleController.cs`、`Unit.cs`、`NodeInteractionManager.cs`、`SerializableMapData.cs` 当前无相关 diff。
+- 当前复查结论（2026-07-14）：JSON 遭遇加载、地图节点引用和动态敌方生成已经存在；本计划的原始“尚未实现”判断已过时。后续扩展以 `EncounterConfig` 为入口，不再创建第二套加载链。
 - 成功标准：同一个战斗场景可根据当前 Roguelike 节点加载不同怪物阵容、出生格、Unit prefab、AiBrainAsset；玩家队伍仍沿用现有存档 / `TestParty.json` 动态生成。
 - 范围：敌方遭遇 MVP；不重做战斗框架，不把玩家队伍迁入遭遇 JSON，不改 AssetBundle 基础管线。
 
 ## Current State
+
+- `EncounterConfig`、pending encounter、地图节点引用和战斗前动态生成已经落地，旧地图仍有默认遭遇兼容路径。
+- Pure Run v1 在此基础上增加 `MonsterDefinition`、`EncounterRecipe`、`BattleLayout` 和 `ResolvedEncounter`，用稳定配方解析阵容与倍率。
+- 普通 N1–N6、精英 E1–E2 和两个 Special 变体是显式内容配方；首版不增加运行时 `threatValue`、动态预算或按战力自动拼怪。
 
 - `AIPlayer` 当前通过 `Unit.AiBrainAsset` 判断是否进入新 AI：`AIPlayer -> AiBrainRunner.Execute(unit, gridController, concreteUnit.AiBrainAsset)`。
 - `Unit` 当前只有 `_aiBrainAsset` 序列化字段与只读 getter，动态生成后若要绑定 brain，需要新增受控 API，例如 `ApplyAiBrain(AiBrainAsset brain)`。

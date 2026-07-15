@@ -20,10 +20,18 @@ namespace Tactics.Common.AI.MonsterAI
         /// </summary>
         public static async Task Execute(IntentCandidate selected, AiContext context)
         {
+            await ExecuteWithResult(selected, context);
+        }
+
+        /// <summary>
+        /// Executes an intent and returns a structured result for patterns and gameplay tests.
+        /// </summary>
+        public static async Task<AiActionExecutionResult> ExecuteWithResult(IntentCandidate selected, AiContext context)
+        {
             if (selected == null)
             {
                 TLog.Warning("[IntentExecutor] Selected intent is null.");
-                return;
+                return AiActionExecutionResult.Failure("Selected intent is null.");
             }
 
             context.DecisionLog.Info($"Executing intent: {selected.IntentType}");
@@ -34,31 +42,31 @@ namespace Tactics.Common.AI.MonsterAI
                 {
                     case IntentType.Engage:
                         await ExecuteEngage(selected, context);
-                        break;
+                        return AiActionExecutionResult.Success("Engage", !Equals(selected.Destination, context.Self.CurrentCell));
                     case IntentType.BasicAttack:
                         await ExecuteBasicAttack(selected, context);
-                        break;
+                        return AiActionExecutionResult.Success("BasicAttack");
                     case IntentType.AbilityUse:
-                        await ExecuteAbilityUse(selected, context);
-                        break;
+                        return await ExecuteAbilityUse(selected, context);
                     case IntentType.Retreat:
                         await ExecuteRetreat(selected, context);
-                        break;
+                        return AiActionExecutionResult.Success("Retreat", true);
                     case IntentType.FinishOff:
                         await ExecuteFinishOff(selected, context);
-                        break;
+                        return AiActionExecutionResult.Success("FinishOff", selected.Destination != null);
                     case IntentType.HoldPosition:
                         await ExecuteHoldPosition(selected, context);
-                        break;
+                        return AiActionExecutionResult.Success("Wait");
                     default:
                         TLog.Warning($"[IntentExecutor] Unknown intent type: {selected.IntentType}");
-                        break;
+                        return AiActionExecutionResult.Failure($"Unknown intent type: {selected.IntentType}");
                 }
             }
             catch (System.Exception ex)
             {
                 TLog.Error($"[IntentExecutor] Error executing intent {selected.IntentType}: {ex.Message}");
                 await ExecuteHoldPosition(selected, context);
+                return AiActionExecutionResult.Failure(ex.Message);
             }
         }
 
@@ -122,20 +130,53 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行技能释放意图 - 复用现有 AIExecuteAbility 链路。
         /// </summary>
-        private static async Task ExecuteAbilityUse(IntentCandidate selected, AiContext context)
+        private static async Task<AiActionExecutionResult> ExecuteAbilityUse(IntentCandidate selected, AiContext context)
         {
-            if (selected.Ability?.Ability == null || selected.AbilityTargetCell == null) return;
+            if (selected.Ability?.Ability == null || selected.AbilityTargetCell == null)
+                return AiActionExecutionResult.Failure("Ability or target point is missing.");
 
             context.DecisionLog.Info($"AbilityUse: {selected.Ability.Name}");
+
+            var origin = context.Self.CurrentCell;
+            bool moved = false;
+            if (selected.Destination != null && !selected.Destination.Equals(origin))
+            {
+                var moveAbility = FindMoveAbility(context);
+                if (moveAbility == null || !await ExecuteMoveAsync(selected.Destination, context, moveAbility))
+                {
+                    context.DecisionLog.ExecutionResult(null, "MoveFailed");
+                    return AiActionExecutionResult.Failure("Movement failed; ability was not cast.");
+                }
+                moved = true;
+            }
+
+            var plan = new AiActionPlan(
+                context.Self,
+                context.GridController,
+                origin,
+                selected.Destination ?? origin,
+                selected.AbilityTargetCell,
+                selected.Targets,
+                selected.Ability);
+
+            if (selected.Ability.Ability is IPlannedAbilityExecutor plannedExecutor)
+            {
+                var result = await plannedExecutor.ExecuteAsync(plan);
+                context.DecisionLog.ExecutionResult(selected.Ability.Name, result.Succeeded ? "UseAbility" : "AbilityFailed", selected.Target?.UnitID);
+                return result.Succeeded
+                    ? AiActionExecutionResult.Success(selected.Ability.Name, moved)
+                    : AiActionExecutionResult.Failure(result.FailureReason, moved);
+            }
 
             if (selected.Ability.Ability is IAiExecutableAbility aiAbility)
             {
                 await aiAbility.ExecuteEffectsAsync(selected.Targets, context.GridController);
                 context.DecisionLog.ExecutionResult(selected.Ability.Name, "UseAbility", selected.Target?.UnitID);
-                return;
+                return AiActionExecutionResult.Success(selected.Ability.Name, moved);
             }
 
             TLog.Warning($"[IntentExecutor] Ability '{selected.Ability.Name}' does not implement IAiExecutableAbility.");
+            return AiActionExecutionResult.Failure($"Ability '{selected.Ability.Name}' is not AI executable.", moved);
         }
 
         /// <summary>
@@ -248,16 +289,14 @@ namespace Tactics.Common.AI.MonsterAI
 
             if (moveAbility.Ability is IAiExecutableAbility aiMove)
             {
-                bool moved = await aiMove.ExecuteMoveForAI(destination, path, context.GridController);
-                if (moved) return true;
+                return await aiMove.ExecuteMoveForAI(destination, path, context.GridController);
             }
 
             // 兼容兜底：当 IAiExecutableAbility 不可用时仍保留 MoveCommand
-            await ExecuteCommandForAI(new MoveCommand(context.Self.CurrentCell, destination, path), context);
-            return true;
+            return await ExecuteCommandForAI(new MoveCommand(context.Self.CurrentCell, destination, path), destination, context);
         }
 
-        private static async Task ExecuteCommandForAI(ICommand command, AiContext context)
+        private static async Task<bool> ExecuteCommandForAI(ICommand command, ICell destination, AiContext context)
         {
             var tcs = new TaskCompletionSource<bool>();
             context.Self.AIExecuteAbility(command, context.GridController, tcs);
@@ -267,8 +306,10 @@ namespace Tactics.Common.AI.MonsterAI
             var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
             if (completedTask == timeoutTask)
             {
-                TLog.Info("[IntentExecutor] Command execution timed out (2s), assuming executed.");
+                TLog.Warning("[IntentExecutor] Command execution timed out (2s).");
+                return destination != null && destination.Equals(context.Self.CurrentCell);
             }
+            return await tcs.Task && destination != null && destination.Equals(context.Self.CurrentCell);
         }
     }
 }

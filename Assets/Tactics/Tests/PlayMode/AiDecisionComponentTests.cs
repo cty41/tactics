@@ -99,5 +99,25 @@ namespace Tactics.Tests.PlayMode
             var brain = AiBrainTestHelper.CreateAttackBrain();
             Assert.IsTrue(brain.IsValid());
         }
+
+        [Test]
+        public void AiPatternRuntime_StoresIndependentPerUnitSteps()
+        {
+            AiPatternRuntime.ResetAll();
+            var firstObject = new GameObject("PatternUnitA");
+            var secondObject = new GameObject("PatternUnitB");
+            firstObject.transform.SetParent(_unitContainer.transform);
+            secondObject.transform.SetParent(_unitContainer.transform);
+            var first = firstObject.AddComponent<Unit>();
+            var second = secondObject.AddComponent<Unit>();
+
+            AiPatternRuntime.Advance(first, 2);
+
+            Assert.AreEqual(1, AiPatternRuntime.GetStep(first));
+            Assert.AreEqual(0, AiPatternRuntime.GetStep(second));
+
+            AiPatternRuntime.Advance(first, 2);
+            Assert.AreEqual(0, AiPatternRuntime.GetStep(first));
+        }
     }
 }

@@ -7,8 +7,8 @@ using Tactics.Runtime.Utilities;
 namespace Tactics.RoguelikeMap
 {
     /// <summary>
-    /// 节点状态管理器（FTL 风格自由图模式）
-    /// 使用 MapRevealSystem 进行基于 BFS 的视野计算和状态转换。
+    /// Forward-only node state manager.
+    /// Uses MapRevealSystem to reveal outgoing choices and permanently closes visited nodes.
     /// </summary>
     public class NodeStateManager
     {
@@ -45,6 +45,7 @@ namespace Tactics.RoguelikeMap
 
                 // 从最后访问的节点计算当前视野
                 CurrentNodeId = ResolveCurrentNodeId();
+                _map.currentNodeId = CurrentNodeId;
                 _revealSystem.UpdateReveal(CurrentNodeId);
 
                 TLog.Info($"[NodeStateManager] 从存档恢复，最后访问: {CurrentNodeId}, " +
@@ -63,6 +64,7 @@ namespace Tactics.RoguelikeMap
                 // 起点设为已访问
                 startNode.VisitState = NodeVisitState.Visited;
                 _map.visitedNodes.Add(startNode.nodeId);
+                _map.currentNodeId = startNode.nodeId;
                 CurrentNodeId = startNode.nodeId;
 
                 // 从起点计算视野
@@ -86,11 +88,18 @@ namespace Tactics.RoguelikeMap
                 return new List<RoguelikeMapNode>();
             }
 
-            // 记录变更前的状态，用于返回新揭示的节点
-            var previousStates = _map.nodes.ToDictionary(n => n.nodeId, n => n.state);
+            if (node.VisitState == NodeVisitState.Visited || !node.IsReachable)
+            {
+                TLog.Warning($"[NodeStateManager] Node is not a valid forward choice: {nodeId}");
+                return new List<RoguelikeMapNode>();
+            }
 
-            // 将当前节点设为已访问
+            var previousVisibility = _map.nodes.ToDictionary(n => n.nodeId, n => n.Visibility);
+
             node.VisitState = NodeVisitState.Visited;
+            node.IsReachable = false;
+            _map.visitedNodes.Add(nodeId);
+            _map.currentNodeId = nodeId;
             CurrentNodeId = nodeId;
             TLog.Info($"[NodeStateManager] 节点已访问: {nodeId}");
 
@@ -100,9 +109,8 @@ namespace Tactics.RoguelikeMap
             // 返回新揭示的节点（状态从 Unrevealed 变为可见的节点）
             var revealedNodes = _map.nodes
                 .Where(n => n.Visibility != NodeVisibility.Hidden
-                            && previousStates.TryGetValue(n.nodeId, out var prev)
-                            && prev == NodeState.Unrevealed
-                            && n.Visibility != NodeVisibility.Hidden)
+                            && previousVisibility.TryGetValue(n.nodeId, out var previous)
+                            && previous == NodeVisibility.Hidden)
                 .ToList();
 
             TLog.Info($"[NodeStateManager] 新揭示节点数: {revealedNodes.Count}");
@@ -117,7 +125,7 @@ namespace Tactics.RoguelikeMap
             if (!_nodeLookup.TryGetValue(nodeId, out var node))
                 return false;
 
-            return node.IsReachable;
+            return node.IsReachable && node.VisitState == NodeVisitState.Unvisited;
         }
 
         /// <summary>
@@ -177,6 +185,13 @@ namespace Tactics.RoguelikeMap
                 hintedNode.VisitState == NodeVisitState.Visited)
             {
                 return hintedNode.nodeId;
+            }
+
+            if (!string.IsNullOrEmpty(_map.currentNodeId) &&
+                _nodeLookup.TryGetValue(_map.currentNodeId, out var persistedNode) &&
+                persistedNode.VisitState == NodeVisitState.Visited)
+            {
+                return persistedNode.nodeId;
             }
 
             if (_map.visitedNodes.Count == 1)

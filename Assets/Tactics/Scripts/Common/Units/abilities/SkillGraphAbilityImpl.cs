@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
+using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Interactables;
@@ -18,7 +19,7 @@ namespace Tactics.Common.Units.Abilities
     /// SkillGraph 能力实现。
     /// 通过 SkillGraphRunner 执行技能图。
     /// </summary>
-    public class SkillGraphAbilityImpl : IAbility, IAiExecutableAbility
+    public class SkillGraphAbilityImpl : IAbility, IAiExecutableAbility, IAbilityTargetingProvider, IPlannedAbilityExecutor
     {
         public event Action<IAbility> AbilitySelected;
         public event Action<IAbility> AbilityDeselected;
@@ -117,17 +118,17 @@ namespace Tactics.Common.Units.Abilities
             _gridController = gridController;
             _validTargetCells = CalculateValidTargetCells();
 
-            foreach (var target in targets)
+            // Legacy callers can only express a unit target. Execute the graph once even when
+            // an AOE caller supplies every affected unit; resource costs belong to the cast.
+            var target = targets.FirstOrDefault(unit => unit?.CurrentCell != null);
+            if (target == null) return;
+            if (_validTargetCells == null || !_validTargetCells.Contains(target.CurrentCell))
             {
-                if (target?.CurrentCell == null) continue;
-                if (_validTargetCells == null || !_validTargetCells.Contains(target.CurrentCell))
-                {
-                    TLog.Warning($"[SkillGraphAbilityImpl] AI target {target.UnitID} out of range for '{DisplayName}'.");
-                    continue;
-                }
-
-                await ExecuteSkillGraphAsync(target.CurrentCell, gridController);
+                TLog.Warning($"[SkillGraphAbilityImpl] AI target {target.UnitID} out of range for '{DisplayName}'.");
+                return;
             }
+
+            await ExecuteSkillGraphAsync(target.CurrentCell, gridController);
         }
 
         public async Task<bool> ExecuteMoveForAI(ICell destination, IEnumerable<ICell> path, IGridController gridController)
@@ -145,10 +146,100 @@ namespace Tactics.Common.Units.Abilities
             var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
             if (completedTask == timeoutTask)
             {
-                TLog.Info("[SkillGraphAbilityImpl] ExecuteMoveForAI timed out (2s), assuming executed.");
+                TLog.Warning("[SkillGraphAbilityImpl] ExecuteMoveForAI timed out (2s).");
+                return destination.Equals(_owner.CurrentCell);
             }
 
-            return true;
+            return await tcs.Task && destination.Equals(_owner.CurrentCell);
+        }
+
+        /// <summary>
+        /// Enumerates target options that are legal for both player execution and AI execution.
+        /// The AI layer must not reconstruct SkillGraph targeting rules independently.
+        /// </summary>
+        public AbilityTargetResult QueryTargets(AbilityTargetQuery query)
+        {
+            var options = new List<AbilityTargetOption>();
+            if (query?.GridController?.CellManager == null || _owner == null)
+                return new AbilityTargetResult(options);
+
+            _gridController = query.GridController;
+            var candidates = query.PotentialTargets
+                .Where(unit => unit != null)
+                .Distinct()
+                .ToList();
+
+            var origin = query.OriginCell ?? _owner.CurrentCell;
+            var validCells = CalculateValidTargetCells(origin);
+            if (validCells == null || validCells.Count == 0)
+                return new AbilityTargetResult(options);
+
+            if (FirstSelectionRequiresSelf())
+            {
+                if (origin != null && validCells.Contains(origin))
+                    options.Add(new AbilityTargetOption(origin, new[] { _owner }));
+                return new AbilityTargetResult(options);
+            }
+
+            var first = FindFirstSelectionNode();
+            bool requiresAlly = first is SelectAllyNodeRecord;
+            bool requiresCorpse = first is SelectCorpseTargetNodeRecord;
+
+            if (first is SelectTargetPointNodeRecord)
+            {
+                var area = FindAreaCollectionNode();
+                foreach (var targetCell in validCells)
+                {
+                    var affected = area == null
+                        ? GetLiveUnitsAt(targetCell, candidates)
+                        : CollectAreaTargets(targetCell, area, candidates);
+                    options.Add(new AbilityTargetOption(targetCell, affected));
+                }
+                return new AbilityTargetResult(options);
+            }
+
+            if (requiresCorpse)
+            {
+                foreach (var targetCell in validCells)
+                    options.Add(new AbilityTargetOption(targetCell, new List<IUnit>()));
+                return new AbilityTargetResult(options);
+            }
+
+            foreach (var target in candidates)
+            {
+                if (target.IsDowned || target.CurrentCell == null || !validCells.Contains(target.CurrentCell))
+                    continue;
+
+                bool isAlly = target.PlayerNumber == _owner.PlayerNumber;
+                if (requiresAlly != isAlly)
+                    continue;
+                if (requiresAlly && ReferenceEquals(target, _owner))
+                    continue;
+
+                options.Add(new AbilityTargetOption(target.CurrentCell, new[] { target }));
+            }
+
+            return new AbilityTargetResult(options);
+        }
+
+        public async Task<AiActionExecutionResult> ExecuteAsync(AiActionPlan plan)
+        {
+            if (plan?.GridController == null || plan.TargetPoint == null)
+                return AiActionExecutionResult.Failure("Missing grid or target point.");
+
+            var query = new AbilityTargetQuery(
+                _owner,
+                _owner.CurrentCell,
+                plan.GridController,
+                plan.Targets);
+            var legal = QueryTargets(query).Options.Any(option => option.TargetPoint.Equals(plan.TargetPoint));
+            if (!legal || !CanPerform(plan.GridController))
+                return AiActionExecutionResult.Failure("Target point is no longer legal.");
+
+            var result = await ExecuteSkillGraphAsync(plan.TargetPoint, plan.GridController);
+            return result.ExecutionState == SkillGraphExecutionState.Completed
+                ? AiActionExecutionResult.Success(DisplayName, !Equals(plan.Origin, plan.Destination))
+                : AiActionExecutionResult.Failure(result.LastError ?? "Skill graph failed.");
         }
 
         public async Task<SkillGraphRuntimeTestResult> ExecuteForTestAsync(ICell selectedCell, IGridController gridController)
@@ -296,7 +387,7 @@ namespace Tactics.Common.Units.Abilities
             var displayCells = new HashSet<ICell>();
             if (_gridController == null) return displayCells;
 
-            int maxRange = _config.TargetRange;
+            int maxRange = GetTargetRange();
             var allCells = _gridController.CellManager.GetCells();
             var ownerCell = _owner.CurrentCell;
             int minRange = GetMinRangeFromGraph();
@@ -379,14 +470,16 @@ namespace Tactics.Common.Units.Abilities
             return 0;
         }
 
-        private HashSet<ICell> CalculateValidTargetCells()
+        private HashSet<ICell> CalculateValidTargetCells(ICell originCell = null)
         {
             var validCells = new HashSet<ICell>();
             if (_gridController == null) return validCells;
 
-            int range = _config.TargetRange;
+            int range = GetTargetRange();
+            int minRange = GetMinRangeFromGraph();
             var allCells = _gridController.CellManager.GetCells();
-            var ownerCell = _owner.CurrentCell;
+            var ownerCell = originCell ?? _owner.CurrentCell;
+            if (ownerCell == null) return validCells;
             bool cardinalOnly = UsesCardinalDash();
             bool requiresEnemy = FirstSelectionRequiresEnemy();
             bool requiresSelf = FirstSelectionRequiresSelf();
@@ -411,7 +504,7 @@ namespace Tactics.Common.Units.Abilities
                 foreach (var cell in allCells)
                 {
                     int distance = cell.GetDistance(ownerCell);
-                    if (distance > 0 && distance <= _config.TargetRange && !cell.IsTaken)
+                    if (distance > 0 && distance <= range && !cell.IsTaken)
                         validCells.Add(cell);
                 }
                 return validCells;
@@ -442,7 +535,7 @@ namespace Tactics.Common.Units.Abilities
             foreach (var cell in allCells)
             {
                 int distance = cell.GetDistance(ownerCell);
-                if (distance <= 0 || distance > range)
+                if (distance < minRange || distance > range)
                     continue;
 
                 if (cardinalOnly)
@@ -457,6 +550,9 @@ namespace Tactics.Common.Units.Abilities
                 if (requiresEnemy && !HasEnemyUnit(cell))
                     continue;
 
+                if (RequiresLineOfSight() && !HasLineOfSight(ownerCell, cell))
+                    continue;
+
                 if (distance <= range)
                 {
                     validCells.Add(cell);
@@ -464,6 +560,135 @@ namespace Tactics.Common.Units.Abilities
             }
 
             return validCells;
+        }
+
+        private int GetTargetRange()
+        {
+            var first = FindFirstSelectionNode();
+            return first switch
+            {
+                SelectPrimaryTargetNodeRecord select => select.MaxRange,
+                SelectTargetPointNodeRecord select => select.MaxRange,
+                SelectCorpseTargetNodeRecord select => select.MaxRange,
+                TeleportNodeRecord teleport => teleport.MaxRange,
+                _ => _config.TargetRange
+            };
+        }
+
+        private bool RequiresLineOfSight()
+        {
+            if (_config?.SkillGraph == null)
+                return false;
+
+            foreach (var node in _config.SkillGraph.Nodes)
+            {
+                if (node is ProjectileLaunchNodeRecord)
+                    return true;
+                if (node is ApplyDamageNodeRecord damage && damage.IsRanged)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool HasLineOfSight(ICell origin, ICell target)
+        {
+            if (origin == null || target == null || _gridController?.CellManager == null)
+                return false;
+            if (origin.Equals(target))
+                return true;
+
+            int x = origin.GridCoordinates.x;
+            int y = origin.GridCoordinates.y;
+            int targetX = target.GridCoordinates.x;
+            int targetY = target.GridCoordinates.y;
+            int dx = targetX - x;
+            int dy = targetY - y;
+            int nx = Math.Abs(dx);
+            int ny = Math.Abs(dy);
+            int signX = dx == 0 ? 0 : dx > 0 ? 1 : -1;
+            int signY = dy == 0 ? 0 : dy > 0 ? 1 : -1;
+            int ix = 0;
+            int iy = 0;
+
+            // Supercover visits both cells when a ray crosses an exact grid corner. This keeps
+            // player preview, AI planning, and execution from disagreeing on diagonal cover.
+            while (ix < nx || iy < ny)
+            {
+                long horizontal = (1L + 2L * ix) * ny;
+                long vertical = (1L + 2L * iy) * nx;
+                if (horizontal == vertical)
+                {
+                    x += signX;
+                    y += signY;
+                    ix++;
+                    iy++;
+                }
+                else if (horizontal < vertical)
+                {
+                    x += signX;
+                    ix++;
+                }
+                else
+                {
+                    y += signY;
+                    iy++;
+                }
+
+                if (x == targetX && y == targetY) break;
+                var cell = _gridController.CellManager.GetCellAt(new Tactics.Common.Utilities.Vector2IntImpl(x, y));
+                if (cell == null || IsLineBlocker(cell))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool IsLineBlocker(ICell cell)
+        {
+            if (cell.CurrentUnits.Any(unit => unit != null && !unit.IsDowned))
+                return true;
+
+            // A taken cell without a live unit represents layout terrain or an occupying
+            // interactable. Downed units deliberately do not provide line-of-sight cover.
+            return cell.IsTaken && cell.CurrentUnits.Count == 0;
+        }
+
+        private CollectTargetsInAreaNodeRecord FindAreaCollectionNode()
+        {
+            return _config?.SkillGraph?.Nodes?.OfType<CollectTargetsInAreaNodeRecord>().FirstOrDefault();
+        }
+
+        private static List<IUnit> GetLiveUnitsAt(ICell cell, IEnumerable<IUnit> candidates)
+        {
+            return candidates.Where(unit => !unit.IsDowned && Equals(unit.CurrentCell, cell)).ToList();
+        }
+
+        private List<IUnit> CollectAreaTargets(
+            ICell center,
+            CollectTargetsInAreaNodeRecord area,
+            IEnumerable<IUnit> candidates)
+        {
+            var targets = new List<IUnit>();
+            foreach (var unit in candidates)
+            {
+                if (unit.IsDowned || unit.CurrentCell == null || unit.CurrentCell.GetDistance(center) > area.Radius)
+                    continue;
+
+                int dx = unit.CurrentCell.GridCoordinates.x - center.GridCoordinates.x;
+                int dy = unit.CurrentCell.GridCoordinates.y - center.GridCoordinates.y;
+                if (area.Shape == SkillGraphAreaShape.Cross && dx != 0 && dy != 0)
+                    continue;
+
+                bool samePlayer = unit.PlayerNumber == _owner.PlayerNumber;
+                if (area.TargetFaction == SkillGraphTargetFaction.Enemies && samePlayer)
+                    continue;
+                if (area.TargetFaction == SkillGraphTargetFaction.Allies && !samePlayer)
+                    continue;
+
+                targets.Add(unit);
+            }
+            return targets;
         }
 
         private bool HasEnemyUnit(ICell cell)

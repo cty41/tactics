@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -23,28 +24,36 @@ namespace Tactics.Common.AI.MonsterAI
         /// </summary>
         public static async Task Execute(IUnit unit, IGridController gridController, AiBrainAsset brainAsset)
         {
+            await ExecuteTurn(unit, gridController, brainAsset);
+        }
+
+        /// <summary>
+        /// Executes one AI turn and exposes the selected plan and execution outcome.
+        /// </summary>
+        public static async Task<AiTurnResult> ExecuteTurn(IUnit unit, IGridController gridController, AiBrainAsset brainAsset)
+        {
             if (unit == null)
             {
                 TLog.Error("[AiBrainRunner] Unit is null.");
-                return;
+                return null;
             }
 
             if (gridController == null)
             {
                 TLog.Error("[AiBrainRunner] GridController is null.");
-                return;
+                return null;
             }
 
             if (brainAsset == null)
             {
                 TLog.Error("[AiBrainRunner] BrainAsset is null.");
-                return;
+                return null;
             }
 
             if (!brainAsset.IsValid())
             {
                 TLog.Error("[AiBrainRunner] BrainAsset is not valid.");
-                return;
+                return null;
             }
 
             TLog.Info($"[AiBrainRunner] Executing AI for unit: {unit.UnitID}");
@@ -55,6 +64,15 @@ namespace Tactics.Common.AI.MonsterAI
             // 2. 生成候选意图
             var candidates = IntentGenerator.Generate(context);
 
+            int patternStep = -1;
+            bool usedFallback = false;
+            string expectedAbility = null;
+            if (brainAsset.PatternSteps.Count > 0)
+            {
+                patternStep = AiPatternRuntime.GetStep(unit) % brainAsset.PatternSteps.Count;
+                expectedAbility = brainAsset.PatternSteps[patternStep].AbilityName;
+            }
+
             // 3. 规则过滤
             RuleFilter.Filter(candidates, context);
 
@@ -62,10 +80,37 @@ namespace Tactics.Common.AI.MonsterAI
             IntentScorer.Score(candidates, context);
 
             // 5. 选择最佳候选
-            var selected = IntentResolver.Resolve(candidates, context);
+            var candidatesToResolve = candidates;
+            if (expectedAbility != null)
+            {
+                var legalPatternCandidates = candidates
+                    .Where(candidate => candidate.PassedRules && candidate.Ability?.Name == expectedAbility)
+                    .ToList();
+                if (legalPatternCandidates.Count > 0)
+                    candidatesToResolve = legalPatternCandidates;
+                else
+                    usedFallback = true;
+            }
+            var selected = IntentResolver.Resolve(candidatesToResolve, context);
 
             // 6. 调用执行器落地
-            await IntentExecutor.Execute(selected, context);
+            var execution = await IntentExecutor.ExecuteWithResult(selected, context);
+            if (execution.Succeeded && !usedFallback && expectedAbility != null && selected?.Ability?.Name == expectedAbility)
+                AiPatternRuntime.Advance(unit, brainAsset.PatternSteps.Count);
+
+            if (usedFallback && execution.Succeeded)
+                execution = AiActionExecutionResult.Success(execution.AbilityName, execution.Moved, true);
+
+            var plan = selected == null
+                ? null
+                : new AiActionPlan(
+                    unit,
+                    gridController,
+                    unit.CurrentCell,
+                    selected.Destination,
+                    selected.AbilityTargetCell,
+                    selected.Targets,
+                    selected.Ability);
 
             // 输出决策日志
             if (brainAsset.EnableVerboseLogging)
@@ -74,6 +119,7 @@ namespace Tactics.Common.AI.MonsterAI
             }
 
             TLog.Info($"[AiBrainRunner] Completed AI execution for unit: {unit.UnitID}");
+            return new AiTurnResult(plan, execution, patternStep);
         }
 
         /// <summary>

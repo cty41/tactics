@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.RunSeedGrowthAssertions",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 20260714
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadRoguelikeMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset",
+        "strictAsset": true
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "target": "mage",
+      "parameters": {
+        "characterId": "mage",
+        "level": 3,
+        "skillId": "mage_fireball_1",
+        "skillLevel": 2
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterLevelEquals",
+      "target": "mage",
+      "expected": 3,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHasSkillId",
+      "target": "mage",
+      "expected": "mage_fireball_1",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 15000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterLevelEquals",
+      "target": "mage",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHasSkillId",
+      "target": "mage",
+      "parameters": {}
+    }
+  ]
+}

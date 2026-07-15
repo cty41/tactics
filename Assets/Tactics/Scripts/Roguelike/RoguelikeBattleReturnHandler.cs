@@ -244,8 +244,7 @@ namespace Tactics.Roguelike
                 return;
             }
 
-            // pending is now a nodeId string
-            map.visitedNodes.Add(pending);
+            map.RecordNodeCompletion(pending, true);
 
             string newJson = JsonConvert.SerializeObject(map, Formatting.Indented, MapJsonSettings);
             PlayerPrefs.SetString(Tactics.UI.RoguelikeMapUIController.MapPlayerPrefsKey, newJson);

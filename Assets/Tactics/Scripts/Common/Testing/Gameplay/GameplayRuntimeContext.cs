@@ -38,6 +38,7 @@ namespace Tactics.Common.Testing.Gameplay
         // AI 执行快照（用于验证 AI 是否真正产出了效果）
         public AiExecutionSnapshot LastAiSnapshot { get; set; }
         public AiExecutionSnapshot PreviousAiSnapshot { get; set; }
+        public AiTurnResultSnapshot LastAiTurnResult { get; set; }
 
         // Map/Roguelike 相关
         public global::Tactics.RoguelikeMap.RoguelikeMap RoguelikeMap { get; set; }
@@ -56,6 +57,10 @@ namespace Tactics.Common.Testing.Gameplay
         public bool UseBattleTestMode { get; set; }
         public string TestPartyConfigPath { get; set; }
         public string TestEncounterConfigPath { get; set; }
+
+        // Deterministic map test settings.
+        public int? RunSeed { get; set; }
+        public bool StrictAsset { get; set; }
 
         // BattleEnded 订阅追踪（防止重复订阅泄漏）
         public BattleController SubscribedBattleController { get; set; }
@@ -118,6 +123,7 @@ namespace Tactics.Common.Testing.Gameplay
             LastAiDecisionLog = null;
             LastAiSnapshot = null;
             PreviousAiSnapshot = null;
+            LastAiTurnResult = null;
             RuntimeScope = null;
 
             // 6. 清空 Map 相关

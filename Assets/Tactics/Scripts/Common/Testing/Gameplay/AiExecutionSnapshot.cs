@@ -39,4 +39,23 @@ namespace Tactics.Common.Testing.Gameplay
         public bool WasNoOp { get; set; }
         public string FailureReason { get; set; }
     }
+
+    /// <summary>
+    /// Stable, structured projection of one AI turn for gameplay assertions.
+    /// </summary>
+    /// <remarks>
+    /// This test-facing contract remains available while the runtime AI result API evolves.
+    /// Missing runtime fields are represented by empty strings or zero rather than inferred success.
+    /// </remarks>
+    public sealed class AiTurnResultSnapshot
+    {
+        public bool Succeeded { get; set; }
+        public string AbilityId { get; set; }
+        public string Destination { get; set; }
+        public string TargetPoint { get; set; }
+        public int TargetCount { get; set; }
+        public bool UsedFallback { get; set; }
+        public string PatternStep { get; set; }
+        public string FailureReason { get; set; }
+    }
 }

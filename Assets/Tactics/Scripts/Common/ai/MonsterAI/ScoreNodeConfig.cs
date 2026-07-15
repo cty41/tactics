@@ -65,6 +65,10 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>增益效果价值</summary>
         BuffUtility,
         /// <summary>减益效果价值</summary>
-        DebuffUtility
+        DebuffUtility,
+        /// <summary>技能从候选站位释放时的射程利用率</summary>
+        AbilityRangeFit,
+        /// <summary>友军能够跟进当前目标的价值</summary>
+        FollowUpValue
     }
 }

@@ -25,6 +25,7 @@ namespace Tactics.Common.Testing.Gameplay
         public bool CanExecute(ExecutableScenarioAction action)
         {
             return action.Kind is "loadRoguelikeMap"
+                or "setRunSeed"
                 or "enterNode"
                 or "triggerEvent"
                 or "completeNode"
@@ -43,6 +44,8 @@ namespace Tactics.Common.Testing.Gameplay
             {
                 switch (action.Kind)
                 {
+                    case "setRunSeed":
+                        return SetRunSeed(context, action);
                     case "loadRoguelikeMap":
                         return LoadRoguelikeMap(context, action);
                     case "enterNode":
@@ -88,6 +91,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "rosterCharacterMpEquals"
                 or "rosterCharacterDeadEquals"
                 or "rosterCharacterExperienceEquals"
+                or "rosterCharacterLevelEquals"
+                or "rosterCharacterHasSkillId"
                 or "rosterCharacterEquipmentEquals"
                 or "rosterCharacterTotalAttributeEquals"
                 or "runtimeRosterCharacterHasPendingBuff"
@@ -113,6 +118,8 @@ namespace Tactics.Common.Testing.Gameplay
                     "rosterCharacterMpEquals" => AssertRosterCharacterMpEquals(assertion),
                     "rosterCharacterDeadEquals" => AssertRosterCharacterDeadEquals(assertion),
                     "rosterCharacterExperienceEquals" => AssertRosterCharacterExperienceEquals(assertion),
+                    "rosterCharacterLevelEquals" => AssertRosterCharacterLevelEquals(assertion),
+                    "rosterCharacterHasSkillId" => AssertRosterCharacterHasSkillId(assertion),
                     "rosterCharacterEquipmentEquals" => AssertRosterCharacterEquipmentEquals(assertion),
                     "rosterCharacterTotalAttributeEquals" => AssertRosterCharacterTotalAttributeEquals(assertion),
                     "runtimeRosterCharacterHasPendingBuff" => AssertRuntimeRosterCharacterHasPendingBuff(context, assertion),
@@ -137,6 +144,8 @@ namespace Tactics.Common.Testing.Gameplay
             data["hasActiveRun"] = RoguelikeMapRuntimeState.HasActiveRun;
             data["currentNodeId"] = RoguelikeMapRuntimeState.CurrentNodeId;
             data["visitedNodeCount"] = RoguelikeMapRuntimeState.VisitedPathNodeIds?.Count ?? 0;
+            data["runSeed"] = context.RunSeed;
+            data["strictAsset"] = context.StrictAsset;
 
             if (RoguelikeMapRuntimeState.CurrentMap != null)
             {
@@ -158,27 +167,44 @@ namespace Tactics.Common.Testing.Gameplay
             };
         }
 
+        private static GameplayStepResult SetRunSeed(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            if (!action.Parameters.TryGetValue("seed", out var seedToken) || seedToken.Type != JTokenType.Integer)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "setRunSeed requires an integer seed.", "Setup");
+
+            int seed = seedToken.ToObject<int>();
+            context.RunSeed = seed;
+            UnityEngine.Random.InitState(seed);
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Set run seed to {seed}.");
+        }
+
         private static GameplayStepResult LoadRoguelikeMap(GameplayRuntimeContext context, ExecutableScenarioAction action)
         {
             string mapConfigPath = action.Parameters["mapConfigPath"]?.ToString();
             if (string.IsNullOrWhiteSpace(mapConfigPath))
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, "loadRoguelikeMap requires mapConfigPath.", "Setup");
 
+            bool strictAsset = action.Parameters["strictAsset"]?.ToObject<bool>() ?? context.StrictAsset;
+            context.StrictAsset = strictAsset;
+
             // Load map config from GameAssetManager
             var mgr = GameAssetManager.Instance;
             var mapConfig = mgr?.Load<RoguelikeMapConfig>(mapConfigPath);
-            if (mapConfig == null && !string.Equals(mapConfigPath, "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset", StringComparison.Ordinal))
+            if (!strictAsset && mapConfig == null && !string.Equals(mapConfigPath, "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset", StringComparison.Ordinal))
             {
                 mapConfig = mgr?.Load<RoguelikeMapConfig>("Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset");
             }
 
-            if (mapConfig == null && !string.Equals(mapConfigPath, "Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset", StringComparison.Ordinal))
+            if (!strictAsset && mapConfig == null && !string.Equals(mapConfigPath, "Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset", StringComparison.Ordinal))
             {
                 mapConfig = mgr?.Load<RoguelikeMapConfig>("Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset");
             }
 
             if (mapConfig == null)
             {
+                if (strictAsset)
+                    return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Map config asset '{mapConfigPath}' was not found and strictAsset is enabled.", "Asset");
+
                 // Final fallback for PlayMode tests: create a tiny in-memory map instead of failing on asset lookup.
                 var fallbackMap = CreateFallbackTestMap();
                 RoguelikeMapRuntimeState.AttachMap(fallbackMap);
@@ -388,6 +414,36 @@ namespace Tactics.Common.Testing.Gameplay
 
             if (action.Parameters.TryGetValue("level", out var levelToken))
                 character.Level = levelToken.ToObject<int>();
+
+            if (action.Parameters.TryGetValue("skillId", out var skillIdToken))
+            {
+                string skillId = skillIdToken.ToString();
+                if (string.IsNullOrWhiteSpace(skillId))
+                    return GameplayStepResult.Fail(MapAdapterName, action.Kind, "setRosterCharacterState skillId cannot be empty.");
+
+                character.LearnedSkills ??= new List<CharacterDefinition.LearnedSkill>();
+                var learnedSkill = character.LearnedSkills.FirstOrDefault(skill =>
+                    string.Equals(skill?.SkillId, skillId, StringComparison.OrdinalIgnoreCase));
+                if (learnedSkill == null)
+                {
+                    learnedSkill = new CharacterDefinition.LearnedSkill
+                    {
+                        SkillId = skillId,
+                        SkillType = SkillType.Active,
+                        Level = 1
+                    };
+                    character.LearnedSkills.Add(learnedSkill);
+                }
+
+                if (action.Parameters.TryGetValue("skillLevel", out var skillLevelToken))
+                    learnedSkill.Level = skillLevelToken.ToObject<int>();
+
+                if (action.Parameters.TryGetValue("skillType", out var skillTypeToken) &&
+                    Enum.TryParse(skillTypeToken.ToString(), true, out SkillType skillType))
+                {
+                    learnedSkill.SkillType = skillType;
+                }
+            }
 
             if (action.Parameters.TryGetValue("attributePoints", out var attributePointsToken))
                 character.AttributePoints = attributePointsToken.ToObject<int>();
@@ -728,6 +784,46 @@ namespace Tactics.Common.Testing.Gameplay
             return actual == expected
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId}.Experience={actual}")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId}.Experience={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterLevelEquals(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterLevelEquals requires target characterId.");
+
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            int actual = character.Level;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId}.Level={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId}.Level={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterHasSkillId(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterHasSkillId requires target characterId.");
+
+            string expectedSkillId = assertion.Expected?.ToString();
+            if (string.IsNullOrWhiteSpace(expectedSkillId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterHasSkillId requires expected SkillId.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
+            if (character == null)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+
+            bool actual = character.LearnedSkills?.Any(skill =>
+                string.Equals(skill?.SkillId, expectedSkillId, StringComparison.OrdinalIgnoreCase)) == true;
+            return actual
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} has learned skill '{expectedSkillId}'.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} to have learned skill '{expectedSkillId}'.");
         }
 
         private static GameplayAssertionResult AssertRosterCharacterEquipmentEquals(ExecutableScenarioAssertion assertion)

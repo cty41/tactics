@@ -87,8 +87,7 @@ namespace Tactics.Common.Battle
             TLog.Info("[BattleSettlementFlow] OnRewardsCalculated received. Showing BattleSettlement UI.");
 
             _pendingRewards = rewards;
-            _pendingIsVictory = _coordinator != null
-                && _coordinator.CurrentPhase != SettlementPhase.None;
+            _pendingIsVictory = _coordinator?.IsPlayerVictory == true;
 
             _ = ShowBattleSettlementAsync();
         }
@@ -180,12 +179,22 @@ namespace Tactics.Common.Battle
                 return;
             }
 
-            foreach (var character in _state.Roster)
+            if (_state.IsPureRun)
             {
-                if (character == null)
-                    continue;
+                if (!_pendingIsVictory)
+                    return;
 
-                _characterQueue.Add(character);
+                var selected = PureRunProgression.SelectLowestLevelLivingCharacter(_state);
+                if (selected != null)
+                    _characterQueue.Add(selected);
+            }
+            else
+            {
+                foreach (var character in _state.Roster)
+                {
+                    if (character != null)
+                        _characterQueue.Add(character);
+                }
             }
 
             TLog.Info($"[BattleSettlementFlow] Initialized character queue with {_characterQueue.Count} alive characters.");
@@ -237,8 +246,7 @@ namespace Tactics.Common.Battle
             controller.SetCharacter(character);
             if (needsSkillSelection)
             {
-                var options = GenerateSkillOptions(character);
-                controller.SetSkillOptions(options);
+                controller.SetSkillOptionProvider(() => GenerateSkillOptions(character));
             }
             controller.RefreshAll();
 
@@ -247,6 +255,9 @@ namespace Tactics.Common.Battle
             Action onConfirmHandler = null;
             onConfirmHandler = () =>
             {
+                if (_state?.IsPureRun == true)
+                    PureRunProgression.MarkAdvancedGuaranteeConsumed(character, controller.SkillOptions);
+
                 controller.OnConfirm -= onConfirmHandler;
                 tcs.TrySetResult(true);
             };
@@ -351,6 +362,15 @@ namespace Tactics.Common.Battle
 
             if (character == null)
                 return options;
+
+            if (_state?.IsPureRun == true && SkillSystem.IsNewSkillLevel(character.Level))
+            {
+                return PureRunProgression.BuildSkillChoices(
+                    character,
+                    _state.RunSeed,
+                    character.Level,
+                    PureRunProgression.SkillChoiceCount);
+            }
 
             bool isNewSkill = SkillSystem.IsNewSkillLevel(character.Level);
             bool isUpgrade = SkillSystem.IsUpgradeSkillLevel(character.Level);

@@ -78,10 +78,18 @@ namespace Tactics.Common.AI.MonsterAI
                 }
             }
 
-            // 策略2: 随机选择
-            var randomIndex = UnityEngine.Random.Range(0, tiedCandidates.Count);
-            context.DecisionLog.Info("Tie resolved by random selection.");
-            return tiedCandidates[randomIndex];
+            // Stable ordering makes the same run seed reproducible and avoids consuming
+            // Unity's global random stream during otherwise identical decisions.
+            var stable = tiedCandidates
+                .OrderBy(candidate => candidate.Ability?.Name ?? string.Empty)
+                .ThenBy(candidate => candidate.Target?.UnitID ?? int.MaxValue)
+                .ThenBy(candidate => candidate.Destination?.GridCoordinates.x ?? int.MaxValue)
+                .ThenBy(candidate => candidate.Destination?.GridCoordinates.y ?? int.MaxValue)
+                .ThenBy(candidate => candidate.AbilityTargetCell?.GridCoordinates.x ?? int.MaxValue)
+                .ThenBy(candidate => candidate.AbilityTargetCell?.GridCoordinates.y ?? int.MaxValue)
+                .First();
+            context.DecisionLog.Info("Tie resolved by stable candidate ordering.");
+            return stable;
         }
 
         /// <summary>

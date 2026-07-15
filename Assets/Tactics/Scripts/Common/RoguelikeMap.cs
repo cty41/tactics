@@ -9,11 +9,16 @@ namespace Tactics.RoguelikeMap
     public class RoguelikeMap
     {
         public List<RoguelikeMapNode> nodes;
-                public HashSet<string> visitedNodes = new HashSet<string>();
+        public HashSet<string> visitedNodes = new HashSet<string>();
+        public HashSet<string> completedBattleNodeIds = new HashSet<string>();
         public string bossNodeName;
         public string configName;
         public float maxReachableDistance;
         public float visionRange;
+        public int layoutVersion;
+        public int runSeed;
+        public int battleVictoryCount;
+        public string currentNodeId;
 
         /// <summary>
         /// 商店购买状态存储。Key = nodeId，Value = 已购买商品名称列表。
@@ -42,6 +47,35 @@ namespace Tactics.RoguelikeMap
         public RoguelikeMapNode GetNode(string nodeId)
         {
             return nodes.FirstOrDefault(n => n.nodeId == nodeId);
+        }
+
+        /// <summary>
+        /// Records a completed node and optionally records a battle victory exactly once.
+        /// </summary>
+        public bool RecordNodeCompletion(string nodeId, bool isBattleVictory)
+        {
+            var node = GetNode(nodeId);
+            if (node == null)
+                return false;
+
+            visitedNodes ??= new HashSet<string>();
+            completedBattleNodeIds ??= new HashSet<string>();
+
+            visitedNodes.Add(nodeId);
+            currentNodeId = nodeId;
+
+            if (isBattleVictory && IsBattleNode(node) && completedBattleNodeIds.Add(nodeId))
+                battleVictoryCount++;
+
+            return true;
+        }
+
+        public static bool IsBattleNode(RoguelikeMapNode node)
+        {
+            return node != null &&
+                   (node.nodeType == RoguelikeNodeType.MinorEnemy ||
+                    node.nodeType == RoguelikeNodeType.EliteEnemy ||
+                    node.nodeType == RoguelikeNodeType.Boss);
         }
 
         public string ToJson()

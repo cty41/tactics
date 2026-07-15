@@ -132,6 +132,11 @@ namespace Tactics.RoguelikeMap
                 public readonly RoguelikeNodeType nodeType;
         public readonly string blueprintName;
         public Vector2 position;
+
+        /// <summary>
+        /// Zero-based progression layer. Layer 0 is the run start and layers 1-7 are playable layers.
+        /// </summary>
+        public int LayerIndex { get; set; }
         [Obsolete("Use Visibility and VisitState instead.")]
         [JsonConverter(typeof(StringEnumConverter))]
         public NodeState state = NodeState.Unrevealed;
