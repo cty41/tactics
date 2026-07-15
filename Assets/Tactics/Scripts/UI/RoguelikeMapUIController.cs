@@ -156,9 +156,16 @@ namespace Tactics.UI
             string prefsKey = MapPlayerPrefsKey;
             if (RoguelikeMapRuntimeState.HasActiveRun && RoguelikeMapRuntimeState.CurrentMap != null)
             {
-                _currentMap = RoguelikeMapRuntimeState.CurrentMap;
-                _nodeStateManager = CreateNodeStateManager(_currentMap);
-                TLog.Info("[RoguelikeMapUIController] 从运行时状态恢复地图");
+                if (RoguelikeMapRuntimeState.CurrentMap.layoutVersion == RoguelikeMapGenerator.PureRunLayoutVersion)
+                {
+                    _currentMap = RoguelikeMapRuntimeState.CurrentMap;
+                    _nodeStateManager = CreateNodeStateManager(_currentMap);
+                    TLog.Info("[RoguelikeMapUIController] 从运行时状态恢复地图");
+                }
+                else
+                {
+                    GenerateNewMap();
+                }
             }
             else
             {
@@ -192,6 +199,11 @@ namespace Tactics.UI
             {
                 string mapJson = PlayerPrefs.GetString(prefsKey);
                 _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
+                if (_currentMap == null || _currentMap.layoutVersion != RoguelikeMapGenerator.PureRunLayoutVersion)
+                {
+                    GenerateNewMap();
+                    return;
+                }
                 if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
                 if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
                 _nodeStateManager = CreateNodeStateManager(_currentMap);
@@ -222,10 +234,12 @@ namespace Tactics.UI
                 return;
             }
 
-            _currentMap = RoguelikeMapGenerator.GetMap(mapConfig);
+            int runSeed = RoguelikeMapGenerator.CreateRunSeed();
+            _currentMap = RoguelikeMapGenerator.GetPureRunMap(mapConfig, runSeed);
             _nodeStateManager = CreateNodeStateManager(_currentMap);
             RoguelikeMapRuntimeState.AttachMap(_currentMap);
-            // TLog.Info(_currentMap?.ToJson());
+            PlayerAdventureStateStore.Save(PlayerAdventureStateStore.CreatePureRunState(runSeed));
+            SaveMap();
         }
 
         private void SaveMap()
@@ -765,22 +779,22 @@ namespace Tactics.UI
 
         private void CommitPathForNode(RoguelikeMapUINode mapNode)
         {
-            RoguelikeMapRuntimeState.AttachMap(_currentMap, ResolveCurrentNodeId());
-            RoguelikeMapRuntimeState.CommitNodeProgress(mapNode.Node.nodeId);
-            
-            // 使用 NodeStateManager 更新节点状态
             if (_nodeStateManager != null)
             {
                 _nodeStateManager.VisitNode(mapNode.Node.nodeId);
-                RoguelikeMapRuntimeState.AttachMap(_currentMap, _nodeStateManager.CurrentNodeId);
-                
+
                 // 更新所有UI节点状态
                 foreach (var node in _mapNodes)
                 {
                     node.ApplyVisualState();
                 }
             }
-            
+
+            RoguelikeMapRuntimeState.AttachMap(
+                _currentMap,
+                _nodeStateManager?.CurrentNodeId ?? mapNode.Node.nodeId);
+            RoguelikeMapRuntimeState.CommitNodeProgress(mapNode.Node.nodeId);
+
             SaveMap();
             SetLineColors();
         }

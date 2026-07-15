@@ -13,6 +13,7 @@ using Tactics.RoguelikeMap;
 using UnityEngine.TestTools;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Tactics.Tests.Editor
@@ -81,6 +82,85 @@ namespace Tactics.Tests.Editor
             LogAssert.Expect(LogType.Error,
                 new Regex(@"\[EncounterConfigLoader\] Duplicate spawn cell '1,2' in encounter: duplicate\.json"));
             Assert.IsFalse(EncounterConfigLoader.Validate(config, "duplicate.json"));
+        }
+
+        [TestCase("N1", "open", "charger:2,ranged:1")]
+        [TestCase("N2", "open", "ranged:2,support:1")]
+        [TestCase("N3", "center_blocker", "aoe:1,charger:2,support:1")]
+        [TestCase("N4", "split_flank", "aoe:1,charger:1,ranged:2")]
+        [TestCase("N5", "center_blocker", "aoe:1,charger:1,support:2")]
+        [TestCase("N6", "split_flank", "aoe:1,charger:2,ranged:1")]
+        public void Resolve_NormalRecipe_UsesAuthoredCompositionAndLayout(
+            string recipeId,
+            string expectedLayoutId,
+            string expectedComposition)
+        {
+            var resolved = EncounterResolver.Resolve(recipeId, 12345);
+
+            Assert.AreEqual(expectedLayoutId, resolved.Layout.LayoutId);
+            Assert.AreEqual(1f, resolved.HealthMultiplier);
+            Assert.AreEqual(1f, resolved.OutputMultiplier);
+            Assert.AreEqual(expectedComposition, FormatComposition(resolved));
+        }
+
+        [TestCase("E1", "center_blocker")]
+        [TestCase("E2", "split_flank")]
+        public void Resolve_EliteRecipe_AppliesExplicitMultipliers(string recipeId, string expectedLayoutId)
+        {
+            var resolved = EncounterResolver.Resolve(recipeId, 9);
+
+            Assert.AreEqual(expectedLayoutId, resolved.Layout.LayoutId);
+            Assert.AreEqual(1.3f, resolved.HealthMultiplier, 0.0001f);
+            Assert.AreEqual(1.15f, resolved.OutputMultiplier, 0.0001f);
+            Assert.That(resolved.Units, Has.All.Matches<ResolvedEncounterUnit>(unit =>
+                Math.Abs(unit.HealthMultiplier - 1.3f) < 0.0001f &&
+                Math.Abs(unit.OutputMultiplier - 1.15f) < 0.0001f));
+        }
+
+        [Test]
+        public void Resolve_SpecialRecipe_IsStableForSeedAndUsesSpecialMultipliers()
+        {
+            var first = EncounterResolver.Resolve("Special", 7788);
+            var second = EncounterResolver.Resolve("Special", 7788);
+
+            Assert.AreEqual("open", first.Layout.LayoutId);
+            Assert.AreEqual(1.8f, first.HealthMultiplier, 0.0001f);
+            Assert.AreEqual(1.25f, first.OutputMultiplier, 0.0001f);
+            Assert.AreEqual(1, first.Units.Count);
+            Assert.AreEqual(first.Units[0].Monster.MonsterId, second.Units[0].Monster.MonsterId);
+            Assert.That(
+                first.Units[0].Monster.MonsterId,
+                Is.EqualTo(EncounterCatalog.EliteChargerId).Or.EqualTo(EncounterCatalog.ElitePoisonCasterId));
+        }
+
+        [Test]
+        public void ResolvedEncounter_ToEncounterConfig_PreservesRecipeDataForLegacySpawner()
+        {
+            var resolved = EncounterResolver.Resolve("E1", 44);
+
+            var config = resolved.ToEncounterConfig();
+
+            Assert.AreEqual("E1", config.EncounterId);
+            Assert.AreEqual("E1", config.RecipeId);
+            Assert.AreEqual(44, config.RunSeed);
+            Assert.AreEqual(resolved.Units.Count, config.Units.Count);
+            Assert.That(config.Units, Has.All.Matches<EncounterUnitEntry>(unit =>
+                !string.IsNullOrWhiteSpace(unit.MonsterId) &&
+                !string.IsNullOrWhiteSpace(unit.UnitPrefabPath) &&
+                !string.IsNullOrWhiteSpace(unit.AiBrainAssetPath) &&
+                unit.AbilityConfigPaths != null &&
+                unit.AbilityConfigPaths.Count >= 2 &&
+                Math.Abs(unit.HealthMultiplier - 1.3f) < 0.0001f &&
+                Math.Abs(unit.OutputMultiplier - 1.15f) < 0.0001f));
+            Assert.IsTrue(EncounterConfigLoader.Validate(config, "resolved-e1"));
+        }
+
+        [Test]
+        public void EncounterRuntime_DoesNotExposeThreatValue()
+        {
+            Assert.IsNull(typeof(EncounterRecipe).GetProperty("ThreatValue"));
+            Assert.IsNull(typeof(ResolvedEncounter).GetProperty("ThreatValue"));
+            Assert.IsNull(typeof(EncounterUnitEntry).GetField("ThreatValue"));
         }
 
         [Test]
@@ -183,6 +263,14 @@ namespace Tactics.Tests.Editor
             public Task MarkAsAoE(IEnumerable<ICell> cells) => Task.CompletedTask;
             public void SetColor(ICell cell, float r, float g, float b, float a) { }
             public bool IsCellWalkable(ICell cell) => true;
+        }
+
+        private static string FormatComposition(ResolvedEncounter resolved)
+        {
+            return string.Join(",", resolved.Units
+                .GroupBy(unit => unit.Monster.MonsterId)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => $"{group.Key}:{group.Count()}"));
         }
 
         private sealed class FakeUnitManager : IUnitManager

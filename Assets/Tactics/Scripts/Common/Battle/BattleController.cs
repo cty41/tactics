@@ -18,6 +18,7 @@ using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Classes;
 using Tactics.Common.Units.Buffs;
+using Tactics.Common.Units.Abilities;
 using Tactics.Common.Utilities;
 using Tactics.Roguelike;
 using Tactics.Roster;
@@ -486,6 +487,26 @@ namespace Tactics.Common.Battle
             }
 
             unit.PlayerNumber = unitEntry.PlayerNumber;
+
+            if (unitEntry.AbilityConfigPaths != null && unitEntry.AbilityConfigPaths.Count > 0)
+            {
+                var abilityConfigs = new List<AbilityConfig>();
+                foreach (string configuredPath in unitEntry.AbilityConfigPaths)
+                {
+                    string abilityPath = GameAssetManager.NormalizeAssetPath(configuredPath);
+                    var abilityConfig = mgr.Load<AbilityConfig>(abilityPath);
+                    if (abilityConfig == null)
+                    {
+                        TLog.Error($"[BattleController] Ability config not found: {abilityPath}. Destroying encounter unit '{go.name}'.");
+                        Destroy(go);
+                        return;
+                    }
+
+                    _loadedPaths.Add(abilityPath);
+                    abilityConfigs.Add(abilityConfig);
+                }
+                unit.ApplyAbilityConfigs(abilityConfigs);
+            }
 
             if (!TryGetEncounterCell(unitEntry.SpawnCellX, unitEntry.SpawnCellY, out var spawnCell))
             {

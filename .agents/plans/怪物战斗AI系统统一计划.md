@@ -21,9 +21,16 @@
   - `IntentResolver` 选择最佳候选。
   - `IntentExecutor` 复用现有移动、攻击、技能执行链。
 - `AbilityUse` 已从“取第一个技能”升级为多技能候选化：
-  - 候选粒度为“技能 + 目标/目标组 + 站位”。
+  - 候选粒度为“可达起点 + 技能 + 合法目标点 + 实际受影响目标组”。
   - 支持伤害、治疗、Buff、Debuff、控制、AOE 等 AI 标签。
   - 新增技能类规则和评分：`HasDamageAbility`、`HasHealAbility`、`HasAOEAbility`、`MultiTargetOpportunity`、`AbilityEffectiveness`、`AOEValue`、`HealUrgency`、`ControlValue`、`BuffUtility`、`DebuffUtility`。
+- Mew 风格的职责边界已经落地到运行时契约：
+  - `IAbilityTargetingProvider` 是玩家预览、AI 候选和执行前重验证的共同合法性入口；技能拥有射程、形状、阵营、空格目标、AOE 展开和 LOS 规则。
+  - `AiActionPlan` 保存站位、技能、目标点和目标集合；`IPlannedAbilityExecutor` 按目标点只执行一次技能图，移动失败不会继续施法。
+  - `AbilityRangeFit` 和 `FollowUpValue` 让 AI 在合法动作之间评价射程利用与后续集火；新资产可选择 `GraphWeight × ProfileWeight`，旧资产保持图权重兼容模式。
+  - 平分使用稳定候选顺序，不再消费 Unity 全局随机流。
+- 固定 Pattern 使用每单位运行时游标，不把状态写在共享 `AiBrainAsset` 或决策图上。Pattern 步骤没有合法动作或执行失败时回退 Generic AI，只有指定技能成功才推进。
+- 首版明确不建立运行时 `threatValue` 或动态遭遇预算器；敌人压力由遭遇配方、布局和普通/精英/Special 倍率表达。
 - `BasicMeleeGraph.asset` 已作为基础近战小怪模板重建：
   - Intent：`FinishOff`、`BasicAttack`、`Engage`、`Retreat`、`HoldPosition`。
   - Rule：攻击范围、移动攻击范围、可击杀、低血量、安全目的地。
@@ -54,7 +61,7 @@ AIPlayer / Unit
     -> IntentExecutor
 ```
 
-- `AiContext` 是一次决策快照，包含自身、敌我单位、候选目标、可达格、可用技能与基础威胁信息。
+- `AiContext` 是一次决策快照，包含自身、敌我单位、候选目标、可达格和可用技能；其中局部位置安全评分不等同于遭遇 `threatValue`。
 - `IntentCandidate` 是评分和执行的统一对象，不只是抽象意图名；它应携带目标、站位、技能、预估伤害/治疗/控制收益、规则失败原因和分项评分。
 - `RuleFilter` 只做硬门禁，不做加减分。
 - `IntentScorer` 负责把 score 节点或 profile 配置转换为分项分数。
@@ -142,7 +149,7 @@ AIPlayer / Unit
 ## Remaining Work
 
 - 明确 `ScoreNode.Parameter` 的正式语义。目前它是序列化字段，但运行时尚未读取；推荐用于距离归一化上限、AOE 满分目标数、安全度缩放等 score-specific 参数。
-- 复核 `IntentScorer` 的 per-intent score 语义。若 score 节点仍按 graph 全局遍历，就不能在视觉上暗示某个 score 只影响某个 intent。
+- 为四类首版怪物创建并验证真实 SkillGraph、profile、graph 和 brain 资产；运行时接口已具备，资产必须通过 Unity MCP 工作流生成。
 - 增加 AI 调试可视化：
   - 单回合决策日志面板。
   - 候选动作分项评分表。
@@ -153,6 +160,7 @@ AIPlayer / Unit
   - 治疗辅助怪。
   - 控制怪。
   - 高威胁精英怪。
+- 增加固定 Pattern 的 Inspector/Graph 校验，防止空技能名和无法由单位技能集满足的步骤。
 - 增加资产校验工具：
   - orphan 节点检测。
   - disabled 节点提示。
@@ -177,6 +185,9 @@ AIPlayer / Unit
 - [ ] 新 AI 与旧行为树单位可共存。
 - [ ] `BasicMeleeGraph.asset` 可加载、可校验、可视化布局清晰。
 - [ ] `AbilityUse` 可为多个技能生成候选，而不是只选第一个技能。
+- [ ] 玩家预览、AI 与执行前重验证使用同一 `IAbilityTargetingProvider` 结果。
+- [ ] AOE 目标组只执行一次技能图并只扣除一次资源。
+- [ ] 两只共享 Brain 的单位拥有独立 Pattern 游标，失败与 fallback 不推进。
 - [ ] Graph Editor 可保存节点、边、位置和参数。
 - [ ] MCP workflow 能根据结构化 spec 生成 graph/profile/brain。
 - [ ] 修改 `.cs` 后必须执行 Unity 编译；仅修改本计划文档不需要编译。

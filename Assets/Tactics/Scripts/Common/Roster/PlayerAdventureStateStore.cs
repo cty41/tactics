@@ -220,6 +220,33 @@ namespace Tactics.Roster
             return state;
         }
 
+        /// <summary>
+        /// Creates the fixed first-demo party in stable Mage, Necromancer, Amazon order.
+        /// Every base attribute starts at five and the seed selects one basic branch per role.
+        /// </summary>
+        public static PlayerAdventureState CreatePureRunState(int runSeed)
+        {
+            EnsureTestPrefabMappingsLoaded();
+
+            var roster = new List<CharacterDefinition>
+            {
+                CreatePureRunCharacter("pure_run_mage", "Mage", RoleType.Mage, "Mage", runSeed, 0),
+                CreatePureRunCharacter("pure_run_necromancer", "Necromancer", RoleType.Necromancer, "Necromancer", runSeed, 1),
+                CreatePureRunCharacter("pure_run_amazon", "Amazon", RoleType.Amazon, "Hunter", runSeed, 2)
+            };
+
+            return new PlayerAdventureState
+            {
+                Version = 3,
+                IsPureRun = true,
+                RunSeed = runSeed,
+                Gold = 0,
+                Roster = roster,
+                ActivePartyCharacterIds = roster.Select(character => character.Id).ToList(),
+                Inventory = new List<string>()
+            };
+        }
+
         public static int GetActiveSlotIndex()
         {
             return NormalizeSlotIndex(PlayerPrefs.GetInt(ActiveSlotPrefsKey, DefaultSlotIndex));
@@ -334,7 +361,10 @@ namespace Tactics.Roster
                 }
 
                 var mapping = TestPrefabMappings.FirstOrDefault(m => m.RoleType == character.RoleType);
-                var expectedPath = mapping?.PrefabPath ?? character.RoleType.ToString();
+                string pureRunFallback = state.IsPureRun && character.RoleType == RoleType.Amazon
+                    ? "Hunter"
+                    : character.RoleType.ToString();
+                var expectedPath = mapping?.PrefabPath ?? pureRunFallback;
                 if (character.PrefabPath == expectedPath)
                     continue;
 
@@ -392,6 +422,54 @@ namespace Tactics.Roster
                 TLog.Error($"[PlayerAdventureStateStore] Failed to parse TestParty.json: {ex.Message}");
                 return new PlayerAdventureState { Version = 2, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
             }
+        }
+
+        private static CharacterDefinition CreatePureRunCharacter(
+            string id,
+            string displayName,
+            RoleType roleType,
+            string fallbackPrefabPath,
+            int runSeed,
+            int partyIndex)
+        {
+            var character = CharacterDefinition.CreateDefault(id, displayName, roleType: roleType);
+            var mapping = TestPrefabMappings.FirstOrDefault(entry => entry.RoleType == roleType);
+            character.PrefabPath = mapping?.PrefabPath ?? fallbackPrefabPath;
+
+            string[] branchSkillIds = roleType switch
+            {
+                RoleType.Mage => new[] { "mage.fireball", "mage.ice_bolt", "mage.lightning" },
+                RoleType.Necromancer => new[]
+                {
+                    "necromancer.summon_skeleton",
+                    "necromancer.amplify_damage",
+                    "necromancer.bone_spear"
+                },
+                RoleType.Amazon => new[] { "amazon.thrust", "amazon.poison_spear", "amazon.combat_techniques" },
+                _ => System.Array.Empty<string>()
+            };
+
+            if (branchSkillIds.Length == 0)
+                return character;
+
+            int branchSeed = Tactics.Roguelike.RoguelikeMapRuntimeState.DeriveSeed(
+                runSeed,
+                $"starting-branch-{roleType}",
+                partyIndex);
+            int branchIndex = (int)((uint)branchSeed % (uint)branchSkillIds.Length);
+            character.StartingBranchSkillId = branchSkillIds[branchIndex];
+
+            if (FirstSliceSkillCatalog.TryGet(character.StartingBranchSkillId, out var skill))
+            {
+                character.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+                {
+                    SkillId = skill.Id,
+                    SkillType = skill.SkillType,
+                    Level = 1
+                });
+            }
+
+            return character;
         }
     }
 

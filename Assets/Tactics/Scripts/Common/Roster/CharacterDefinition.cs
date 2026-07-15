@@ -54,6 +54,12 @@ namespace Tactics.Roster
         public List<LearnedSkill> LearnedSkills { get; set; }
         public int Gold { get; set; }
 
+        /// <summary>The basic skill that defines the character's starting first-slice branch.</summary>
+        public string StartingBranchSkillId { get; set; }
+
+        /// <summary>Whether this branch's one-time guaranteed advanced offer has been consumed.</summary>
+        public bool HasConsumedStartingAdvancedGuarantee { get; set; }
+
         public int Strength { get; set; }
         public int Agility { get; set; }
         public int Constitution { get; set; }

@@ -88,6 +88,16 @@ namespace Tactics.Common.Units
             _aiBrainAsset = brainAsset;
         }
 
+        /// <summary>
+        /// Replaces prefab-authored ability configs before unit initialization.
+        /// </summary>
+        public void ApplyAbilityConfigs(IEnumerable<AbilityConfig> abilityConfigs)
+        {
+            _abilityConfigs = abilityConfigs?.Where(config => config != null).Distinct().ToList()
+                ?? new List<AbilityConfig>();
+            _roleConfig = null;
+        }
+
         [SerializeField] private HashSet<string> _usedBasicAbilitiesThisTurn = new();
 
         [SerializeField] private float _health = 10;

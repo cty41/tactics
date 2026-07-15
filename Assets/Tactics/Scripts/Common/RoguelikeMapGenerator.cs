@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tactics.Common.Battle;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -13,6 +15,69 @@ namespace Tactics.RoguelikeMap
     public static class RoguelikeMapGenerator
     {
         private const int MaxRetries = 50;
+        public const int PureRunLayoutVersion = 1;
+        public const int PureRunLayerCount = 7;
+
+        private const float PureRunLayerSpacing = 10f;
+        private const float PureRunBranchSpacing = 5f;
+
+        /// <summary>
+        /// Creates a seed for a new run without depending on Unity's global random state.
+        /// </summary>
+        public static int CreateRunSeed()
+        {
+            return Guid.NewGuid().GetHashCode();
+        }
+
+        /// <summary>
+        /// Builds the first-demo forward-only run map.
+        /// Layers 1-3 and 5 are mandatory battles, layers 4 and 6 offer battle/service
+        /// competition, and layer 7 is the single Special boss encounter.
+        /// </summary>
+        public static RoguelikeMap GetPureRunMap(RoguelikeMapConfig config, int runSeed)
+        {
+            var layers = new List<List<RoguelikeMapNode>>
+            {
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "start", RoguelikeNodeType.Start, 0, 0) },
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_01_battle", RoguelikeNodeType.MinorEnemy, 1, 0) },
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_02_battle", RoguelikeNodeType.MinorEnemy, 2, 0) },
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_03_battle", RoguelikeNodeType.MinorEnemy, 3, 0) },
+                CreateCompetitionLayer(config, 4, RoguelikeNodeType.MinorEnemy),
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_05_battle", RoguelikeNodeType.EliteEnemy, 5, 0) },
+                CreateCompetitionLayer(config, 6, RoguelikeNodeType.EliteEnemy),
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_07_special", RoguelikeNodeType.Boss, 7, 0, "Special") }
+            };
+
+            for (int layerIndex = 0; layerIndex < layers.Count - 1; layerIndex++)
+            {
+                foreach (var from in layers[layerIndex])
+                {
+                    foreach (var to in layers[layerIndex + 1])
+                    {
+                        from.AddOutgoing(to.nodeId);
+                        to.AddIncoming(from.nodeId);
+                    }
+                }
+            }
+
+            var nodes = layers.SelectMany(layer => layer).ToList();
+            var start = layers[0][0];
+            start.VisitState = NodeVisitState.Visited;
+            start.Visibility = NodeVisibility.Revealed;
+
+            return new RoguelikeMap(
+                config != null ? config.name : "PureRun",
+                layers[PureRunLayerCount][0].nodeId,
+                nodes,
+                new HashSet<string> { start.nodeId },
+                Mathf.Max(config != null ? config.maxReachableDistance : 0f, PureRunLayerSpacing + 1f),
+                Mathf.Max(config != null ? config.visionRange : 0f, PureRunLayerSpacing * 2.5f))
+            {
+                layoutVersion = PureRunLayoutVersion,
+                runSeed = runSeed,
+                currentNodeId = start.nodeId
+            };
+        }
         /// <summary>
         /// 根据配置生成一张 FTL 风格的 Roguelike 地图（网格布局）。
         /// </summary>
@@ -292,6 +357,60 @@ namespace Tactics.RoguelikeMap
                 return nodeType.ToString();
 
             return matching[UnityEngine.Random.Range(0, matching.Count)].name;
+        }
+
+        private static List<RoguelikeMapNode> CreateCompetitionLayer(
+            RoguelikeMapConfig config,
+            int layerIndex,
+            RoguelikeNodeType battleType)
+        {
+            return new List<RoguelikeMapNode>
+            {
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_battle", battleType, layerIndex, 0),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_rest", RoguelikeNodeType.RestSite, layerIndex, 1),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_store", RoguelikeNodeType.Store, layerIndex, 2)
+            };
+        }
+
+        private static RoguelikeMapNode CreatePureRunNode(
+            RoguelikeMapConfig config,
+            string nodeId,
+            RoguelikeNodeType nodeType,
+            int layerIndex,
+            int branchIndex,
+            string blueprintNameOverride = null)
+        {
+            float y = branchIndex switch
+            {
+                1 => PureRunBranchSpacing,
+                2 => -PureRunBranchSpacing,
+                _ => 0f
+            };
+
+            var node = new RoguelikeMapNode(
+                nodeId,
+                nodeType,
+                blueprintNameOverride ?? GetDeterministicBlueprintName(config, nodeType),
+                new Vector2(layerIndex * PureRunLayerSpacing, y))
+            {
+                LayerIndex = layerIndex,
+                encounterConfigPath = EncounterConfigLoader.GetDefaultEncounterPath(nodeType)
+            };
+
+            return node;
+        }
+
+        private static string GetDeterministicBlueprintName(RoguelikeMapConfig config, RoguelikeNodeType nodeType)
+        {
+            if (config?.nodeBlueprints == null)
+                return nodeType.ToString();
+
+            return config.nodeBlueprints
+                       .Where(blueprint => blueprint != null && blueprint.nodeType == nodeType)
+                       .OrderBy(blueprint => blueprint.name, StringComparer.Ordinal)
+                       .Select(blueprint => blueprint.name)
+                       .FirstOrDefault()
+                   ?? nodeType.ToString();
         }
 
         /// <summary>

@@ -115,6 +115,13 @@ namespace Tactics.Common.Testing.Gameplay
                 or "aiRuleFilteredCountEquals"
                 or "aiUsedAbilityEquals"
                 or "aiWasNoOpEquals"
+                or "aiTurnSucceededEquals"
+                or "aiTurnAbilityEquals"
+                or "aiTurnDestinationEquals"
+                or "aiTurnTargetPointEquals"
+                or "aiTurnTargetCountEquals"
+                or "aiTurnUsedFallbackEquals"
+                or "aiTurnPatternStepEquals"
                 or "unitPositionChangedSinceStep"
                 or "targetHealthChangedSinceStep"
                 or "decisionLogContains"
@@ -149,6 +156,13 @@ namespace Tactics.Common.Testing.Gameplay
                     "aiRuleFilteredCountEquals" => AssertAiRuleFilteredCountEquals(context, assertion),
                     "aiUsedAbilityEquals" => AssertAiUsedAbilityEquals(context, assertion),
                     "aiWasNoOpEquals" => AssertAiWasNoOpEquals(context, assertion),
+                    "aiTurnSucceededEquals" => AssertAiTurnBooleanField(context, assertion, "succeeded", result => result.Succeeded),
+                    "aiTurnAbilityEquals" => AssertAiTurnStringField(context, assertion, "ability", result => result.AbilityId),
+                    "aiTurnDestinationEquals" => AssertAiTurnStringField(context, assertion, "destination", result => result.Destination),
+                    "aiTurnTargetPointEquals" => AssertAiTurnStringField(context, assertion, "target point", result => result.TargetPoint),
+                    "aiTurnTargetCountEquals" => AssertAiTurnTargetCountEquals(context, assertion),
+                    "aiTurnUsedFallbackEquals" => AssertAiTurnBooleanField(context, assertion, "fallback", result => result.UsedFallback),
+                    "aiTurnPatternStepEquals" => AssertAiTurnStringField(context, assertion, "pattern step", result => result.PatternStep),
                     "unitPositionChangedSinceStep" => AssertUnitPositionChangedSinceStep(context, assertion),
                     "targetHealthChangedSinceStep" => AssertTargetHealthChangedSinceStep(context, assertion),
                     "decisionLogContains" => AssertDecisionLogContains(context, assertion),
@@ -225,6 +239,18 @@ namespace Tactics.Common.Testing.Gameplay
                 data["aiDidHealTarget"] = snap.DidHealTarget;
                 data["aiWasNoOp"] = snap.WasNoOp;
                 data["aiFailureReason"] = snap.FailureReason ?? "";
+            }
+
+            var turnResult = context.LastAiTurnResult;
+            if (turnResult != null)
+            {
+                data["aiTurnSucceeded"] = turnResult.Succeeded;
+                data["aiTurnAbility"] = turnResult.AbilityId ?? "";
+                data["aiTurnDestination"] = turnResult.Destination ?? "";
+                data["aiTurnTargetPoint"] = turnResult.TargetPoint ?? "";
+                data["aiTurnTargetCount"] = turnResult.TargetCount;
+                data["aiTurnUsedFallback"] = turnResult.UsedFallback;
+                data["aiTurnPatternStep"] = turnResult.PatternStep ?? "";
             }
 
             return new ProbeSnapshot
@@ -735,6 +761,7 @@ namespace Tactics.Common.Testing.Gameplay
                 // Store snapshots
                 context.PreviousAiSnapshot = context.LastAiSnapshot;
                 context.LastAiSnapshot = snapshot;
+                context.LastAiTurnResult = BuildAiTurnResultSnapshot(decisionLog, snapshot);
 
                 return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed AI for {unitAlias} using brain '{brainAlias}'. Intent={snapshot.SelectedIntentType}, DidMove={snapshot.DidMove}, DidDamage={snapshot.DidDamageTarget}, WasNoOp={snapshot.WasNoOp}");
             }
@@ -744,6 +771,11 @@ namespace Tactics.Common.Testing.Gameplay
                 snapshot.FailureReason = $"AI execution exception: {ex.Message}";
                 context.PreviousAiSnapshot = context.LastAiSnapshot;
                 context.LastAiSnapshot = snapshot;
+                context.LastAiTurnResult = new AiTurnResultSnapshot
+                {
+                    Succeeded = false,
+                    FailureReason = snapshot.FailureReason
+                };
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"AI execution failed: {ex.Message}");
             }
         }
@@ -1101,6 +1133,129 @@ namespace Tactics.Common.Testing.Gameplay
             return formatted.Contains(expected, StringComparison.OrdinalIgnoreCase)
                 ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Decision log contains '{expected}'.")
                 : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Decision log does not contain '{expected}'.");
+        }
+
+        private static AiTurnResultSnapshot BuildAiTurnResultSnapshot(AiDecisionLog decisionLog, AiExecutionSnapshot execution)
+        {
+            string formattedLog = decisionLog?.GetFormattedLog() ?? string.Empty;
+            string destination = ReadCoordinate(formattedLog, "Destination");
+            if (string.IsNullOrEmpty(destination))
+                destination = $"{execution.ActorPositionAfter.x},{execution.ActorPositionAfter.y}";
+
+            string targetPoint = ReadCoordinate(formattedLog, "TargetPoint");
+            if (string.IsNullOrEmpty(targetPoint) && execution.TargetAlias != null)
+                targetPoint = $"{execution.TargetPositionAfter.x},{execution.TargetPositionAfter.y}";
+
+            int targetCount = ReadInteger(formattedLog, "TargetCount")
+                ?? (execution.TargetAlias == null ? 0 : 1);
+            bool usedFallback = ReadBoolean(formattedLog, "UsedFallback") ?? false;
+            string patternStep = ReadText(formattedLog, "PatternStep");
+            string abilityId = ReadText(formattedLog, "AbilityId");
+            if (string.IsNullOrWhiteSpace(abilityId))
+                abilityId = execution.SelectedAbilityName ?? string.Empty;
+
+            return new AiTurnResultSnapshot
+            {
+                Succeeded = string.IsNullOrWhiteSpace(execution.FailureReason),
+                AbilityId = abilityId,
+                Destination = destination,
+                TargetPoint = targetPoint ?? string.Empty,
+                TargetCount = targetCount,
+                UsedFallback = usedFallback,
+                PatternStep = patternStep ?? string.Empty,
+                FailureReason = execution.FailureReason ?? string.Empty
+            };
+        }
+
+        private static string ReadCoordinate(string text, string fieldName)
+        {
+            var match = Regex.Match(
+                text,
+                $@"{Regex.Escape(fieldName)}\s*=\s*\(?\s*(-?\d+)\s*,\s*(-?\d+)\s*\)?",
+                RegexOptions.IgnoreCase);
+            return match.Success ? $"{match.Groups[1].Value},{match.Groups[2].Value}" : string.Empty;
+        }
+
+        private static int? ReadInteger(string text, string fieldName)
+        {
+            var match = Regex.Match(
+                text,
+                $@"{Regex.Escape(fieldName)}\s*=\s*(-?\d+)",
+                RegexOptions.IgnoreCase);
+            return match.Success && int.TryParse(match.Groups[1].Value, out int value) ? value : null;
+        }
+
+        private static bool? ReadBoolean(string text, string fieldName)
+        {
+            var match = Regex.Match(
+                text,
+                $@"{Regex.Escape(fieldName)}\s*=\s*(true|false)",
+                RegexOptions.IgnoreCase);
+            return match.Success && bool.TryParse(match.Groups[1].Value, out bool value) ? value : null;
+        }
+
+        private static string ReadText(string text, string fieldName)
+        {
+            var quoted = Regex.Match(
+                text,
+                $@"{Regex.Escape(fieldName)}\s*=\s*'([^']*)'",
+                RegexOptions.IgnoreCase);
+            if (quoted.Success)
+                return quoted.Groups[1].Value.Trim();
+
+            var plain = Regex.Match(
+                text,
+                $@"{Regex.Escape(fieldName)}\s*=\s*([^,;\r\n]+)",
+                RegexOptions.IgnoreCase);
+            return plain.Success ? plain.Groups[1].Value.Trim() : string.Empty;
+        }
+
+        private static GameplayAssertionResult AssertAiTurnStringField(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion,
+            string fieldLabel,
+            Func<AiTurnResultSnapshot, string> selector)
+        {
+            var turnResult = context.LastAiTurnResult;
+            if (turnResult == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No structured AI turn result recorded. Execute executeAI first.");
+
+            string expected = assertion.Expected?.ToString() ?? string.Empty;
+            string actual = selector(turnResult) ?? string.Empty;
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"AI turn {fieldLabel} equals '{actual}'.")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected AI turn {fieldLabel} '{expected}', actual '{actual}'.");
+        }
+
+        private static GameplayAssertionResult AssertAiTurnBooleanField(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion,
+            string fieldLabel,
+            Func<AiTurnResultSnapshot, bool> selector)
+        {
+            var turnResult = context.LastAiTurnResult;
+            if (turnResult == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No structured AI turn result recorded. Execute executeAI first.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? false;
+            bool actual = selector(turnResult);
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"AI turn {fieldLabel} equals {actual}.")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected AI turn {fieldLabel} {expected}, actual {actual}.");
+        }
+
+        private static GameplayAssertionResult AssertAiTurnTargetCountEquals(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            var turnResult = context.LastAiTurnResult;
+            if (turnResult == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No structured AI turn result recorded. Execute executeAI first.");
+
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            return turnResult.TargetCount == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"AI turn target count equals {turnResult.TargetCount}.")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected AI turn target count {expected}, actual {turnResult.TargetCount}.");
         }
 
         private static bool EnsureBattleInitialized(BattleController controller)

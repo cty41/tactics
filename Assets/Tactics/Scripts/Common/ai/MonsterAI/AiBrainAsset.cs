@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Tactics.Common.AI.MonsterAI
@@ -17,6 +19,9 @@ namespace Tactics.Common.AI.MonsterAI
         [Header("评分风格")]
         [Tooltip("AI 行为风格配置（权重、曲线、扰动）")]
         [SerializeField] private AIProfile _profile;
+
+        [Tooltip("旧资产只使用图节点权重；新资产可将图权重与 Profile 权重相乘")]
+        [SerializeField] private AiScoreWeightMode _scoreWeightMode = AiScoreWeightMode.LegacyGraphOnly;
 
         [Header("默认参数")]
         [Tooltip("低血量阈值（百分比），低于此值触发撤退/保命意图")]
@@ -38,6 +43,10 @@ namespace Tactics.Common.AI.MonsterAI
         [Min(1)]
         [SerializeField] private int _maxEngageCandidatesPerTarget = 3;
 
+        [Header("固定 Pattern")]
+        [Tooltip("按顺序执行的可学习技能循环。没有合法步骤时回退 Generic AI，且不推进游标")]
+        [SerializeField] private List<AiPatternStep> _patternSteps = new List<AiPatternStep>();
+
         [Header("调试选项")]
         [Tooltip("是否启用详细日志")]
         [SerializeField] private bool _enableVerboseLogging = false;
@@ -55,11 +64,13 @@ namespace Tactics.Common.AI.MonsterAI
         // 公共属性
         public AiDecisionGraph DecisionGraph => _decisionGraph;
         public AIProfile Profile => _profile;
+        public AiScoreWeightMode ScoreWeightMode => _scoreWeightMode;
         public float LowHealthThreshold => _lowHealthThreshold;
         public float KillableDamageThreshold => _killableDamageThreshold;
         public float LowHealthTargetBonus => _lowHealthTargetBonus;
         public float RetreatBaseScore => _retreatBaseScore;
         public int MaxEngageCandidatesPerTarget => _maxEngageCandidatesPerTarget;
+        public IReadOnlyList<AiPatternStep> PatternSteps => _patternSteps;
         public bool EnableVerboseLogging => _enableVerboseLogging;
         public bool EnableDetailedRuleFilterLog => _enableDetailedRuleFilterLog;
         public bool HighlightDecisionNodes => _highlightDecisionNodes;
@@ -84,5 +95,22 @@ namespace Tactics.Common.AI.MonsterAI
             _killableDamageThreshold = Mathf.Clamp01(_killableDamageThreshold);
             _maxEngageCandidatesPerTarget = Mathf.Max(1, _maxEngageCandidatesPerTarget);
         }
+    }
+
+    public enum AiScoreWeightMode
+    {
+        LegacyGraphOnly,
+        GraphTimesProfile
+    }
+
+    /// <summary>
+    /// One learnable step in a monster's fixed high-threat loop.
+    /// </summary>
+    [Serializable]
+    public sealed class AiPatternStep
+    {
+        [SerializeField] private string _abilityName;
+
+        public string AbilityName => _abilityName;
     }
 }

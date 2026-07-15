@@ -14,6 +14,7 @@ const supportedSetupKinds = new Set([
   "createAiBrain",
   "useRealAssets",
   "loadSkillGraphAsset",
+  "setRunSeed",
   "loadRoguelikeMap",
   "loadTestPartyConfig",
   "loadTestEncounterConfig",
@@ -36,6 +37,7 @@ const supportedActionKinds = new Set([
   "addBuff",
   "executeAI",
   "createAiBrain",
+  "setRunSeed",
   "enterNode",
   "triggerEvent",
   "completeNode",
@@ -98,6 +100,13 @@ const supportedAssertionKinds = new Set([
   "aiSelectedIntentTypeEquals",
   "aiCandidateCountEquals",
   "aiRuleFilteredCountEquals",
+  "aiTurnSucceededEquals",
+  "aiTurnAbilityEquals",
+  "aiTurnDestinationEquals",
+  "aiTurnTargetPointEquals",
+  "aiTurnTargetCountEquals",
+  "aiTurnUsedFallbackEquals",
+  "aiTurnPatternStepEquals",
   "aiUsedAbilityEquals",
   "aiWasNoOpEquals",
   "unitPositionChangedSinceStep",
@@ -114,6 +123,8 @@ const supportedAssertionKinds = new Set([
   "rosterCharacterMpEquals",
   "rosterCharacterDeadEquals",
   "rosterCharacterExperienceEquals",
+  "rosterCharacterLevelEquals",
+  "rosterCharacterHasSkillId",
   "rosterCharacterEquipmentEquals",
   "rosterCharacterTotalAttributeEquals",
   "runtimeRosterCharacterHasPendingBuff",
@@ -317,6 +328,17 @@ function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: E
           path: step.id ?? step.kind
         });
       }
+      if (step.parameters.strictAsset !== undefined && typeof step.parameters.strictAsset !== "boolean") {
+        diagnostics.push({
+          code: "InvalidStrictAsset",
+          severity: "error",
+          message: "loadRoguelikeMap strictAsset must be a boolean.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
+    case "setRunSeed":
+      validateRunSeed(step, diagnostics);
       break;
     case "loadTestPartyConfig":
       if (!getString(step.parameters.configPath)) {
@@ -373,6 +395,9 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
     case "executeAbilityOnCell":
       validateExecuteAbilityOnCell(step, state, diagnostics);
       break;
+    case "setRunSeed":
+      validateRunSeed(step, diagnostics);
+      break;
     case "enterNode":
       validateEnterNode(step, diagnostics);
       break;
@@ -402,6 +427,20 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
   }
 }
 
+function validateRunSeed(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const seed = step.parameters.seed;
+  if (typeof seed === "number" && Number.isInteger(seed)) {
+    return;
+  }
+
+  diagnostics.push({
+    code: "InvalidRunSeed",
+    severity: "error",
+    message: "setRunSeed requires an integer seed parameter.",
+    path: step.id ?? step.kind
+  });
+}
+
 function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diagnostics: ExpectationDiagnostic[], requiredAdapters?: string[], hasBindBattleController?: boolean): void {
   if (!supportedAssertionKinds.has(assertion.kind)) {
     diagnostics.push({
@@ -422,12 +461,32 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "validationErrorCodeIncludes":
     case "lastErrorContains":
     case "stepMessageContains":
+    case "aiTurnAbilityEquals":
+    case "aiTurnDestinationEquals":
+    case "aiTurnTargetPointEquals":
+    case "aiTurnPatternStepEquals":
+    case "rosterCharacterHasSkillId":
       requireStringExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitHealthEquals":
     case "unitManaEquals":
       requireNumberExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
+      break;
+    case "aiTurnTargetCountEquals":
+    case "rosterCharacterLevelEquals":
+      requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "aiTurnSucceededEquals":
+    case "aiTurnUsedFallbackEquals":
+      if (typeof assertion.expected !== "boolean") {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: `${assertion.kind} requires a boolean expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
       break;
     case "unitHasBuff":
       if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);

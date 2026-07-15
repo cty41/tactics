@@ -26,6 +26,7 @@ namespace Tactics.UI
 
         private CharacterDefinition _currentCharacter;
         private List<SkillDefinition> _skillOptions;
+        private Func<List<SkillDefinition>> _skillOptionProvider;
         private string _selectedSkillId;
         private int? _selectedReplaceIndex;
 
@@ -33,6 +34,7 @@ namespace Tactics.UI
         private readonly Dictionary<string, VisualElement> _skillCards = new();
 
         public event Action OnConfirm;
+        public IReadOnlyList<SkillDefinition> SkillOptions => _skillOptions ?? (IReadOnlyList<SkillDefinition>)Array.Empty<SkillDefinition>();
 
         private static readonly AttributeType[] AllTypes =
         {
@@ -136,6 +138,7 @@ namespace Tactics.UI
         {
             _currentCharacter = character;
             _skillOptions = null;
+            _skillOptionProvider = null;
             _selectedSkillId = null;
             if (isActiveAndEnabled)
                 RefreshAll();
@@ -143,8 +146,20 @@ namespace Tactics.UI
 
         public void SetSkillOptions(List<SkillDefinition> options)
         {
+            _skillOptionProvider = null;
             _skillOptions = options;
             _selectedSkillId = null;
+            BuildSkillCards();
+            RefreshConfirmButton();
+        }
+
+        /// <summary>
+        /// Sets a provider so attribute changes can immediately rebuild the legal skill offer.
+        /// </summary>
+        public void SetSkillOptionProvider(Func<List<SkillDefinition>> provider)
+        {
+            _skillOptionProvider = provider;
+            RefreshSkillOptionsFromProvider();
             BuildSkillCards();
             RefreshConfirmButton();
         }
@@ -469,10 +484,8 @@ namespace Tactics.UI
                 if (_pointsRemainingLabel != null)
                     _pointsRemainingLabel.text = $"剩余点数: {_currentCharacter.AttributePoints}";
                 RefreshDerivedStats();
+                RefreshSkillOptionsFromProvider();
                 BuildSkillCards();
-                // Re-apply skill selection (BuildSkillCards cleared the visual state)
-                if (_selectedSkillId != null)
-                    SelectSkill(_selectedSkillId);
                 RefreshConfirmButton();
             }
         }
@@ -502,10 +515,8 @@ namespace Tactics.UI
             if (_pointsRemainingLabel != null)
                 _pointsRemainingLabel.text = $"剩余点数: {_currentCharacter.AttributePoints}";
             RefreshDerivedStats();
+            RefreshSkillOptionsFromProvider();
             BuildSkillCards();
-            // Re-apply skill selection (BuildSkillCards cleared the visual state)
-            if (_selectedSkillId != null)
-                SelectSkill(_selectedSkillId);
             RefreshConfirmButton();
         }
 
@@ -524,9 +535,35 @@ namespace Tactics.UI
             if (_currentCharacter.AttributePoints > 0) return;
             if (_skillOptions != null && _skillOptions.Count > 0 && _selectedSkillId == null) return;
 
+            if (!string.IsNullOrEmpty(_selectedSkillId))
+            {
+                var selectedSkill = _skillOptions?.FirstOrDefault(skill => skill.Id == _selectedSkillId);
+                if (selectedSkill == null)
+                    return;
+
+                bool applied = SkillSystem.HasSkill(_currentCharacter, selectedSkill.Id)
+                    ? SkillSystem.UpgradeSkill(_currentCharacter, selectedSkill.Id)
+                    : SkillSystem.LearnSkill(_currentCharacter, selectedSkill, _selectedReplaceIndex);
+                if (!applied)
+                {
+                    TLog.Warning($"[LevelUpPanel] Failed to apply selected skill {_selectedSkillId}.");
+                    return;
+                }
+            }
+
             TLog.Info($"[LevelUpPanel] Confirmed for {_currentCharacter.DisplayName}. Skill: {_selectedSkillId ?? "none"}");
             OnConfirm?.Invoke();
             Ui.Hide(UIManager.UIId.LevelUp);
+        }
+
+        private void RefreshSkillOptionsFromProvider()
+        {
+            if (_skillOptionProvider == null)
+                return;
+
+            _skillOptions = _skillOptionProvider.Invoke() ?? new List<SkillDefinition>();
+            _selectedSkillId = null;
+            _selectedReplaceIndex = null;
         }
 
         private sealed class AttributeRow

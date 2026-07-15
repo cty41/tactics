@@ -26,7 +26,10 @@ namespace Tactics.Common.AI.MonsterAI
                         float raw = CalcRawScore(score.ScoreType, candidate, context);
                         float norm = Mathf.Clamp01(raw);
                         float curve = ApplyScoreCurve(score.ScoreType, norm, score.ResponseCurve, profile);
-                        float weighted = curve * score.Weight;
+                        float profileWeight = 1f;
+                        if (profile != null && context.BrainAsset.ScoreWeightMode == AiScoreWeightMode.GraphTimesProfile)
+                            profileWeight = profile.GetScoreConfig(score.ScoreType).weight;
+                        float weighted = curve * score.Weight * profileWeight;
                         candidate.AddScore(score.ScoreName, raw, curve, weighted);
                         context.DecisionLog.ScoreAdded(candidate.IntentType.ToString(), score.ScoreName, raw, curve, weighted);
                     }
@@ -145,6 +148,22 @@ namespace Tactics.Common.AI.MonsterAI
                         ? Mathf.Clamp01(candidate.EstimatedUtilityValue)
                         : 0f;
 
+                case ScoreType.AbilityRangeFit:
+                    if (candidate.Ability == null || candidate.AbilityTargetCell == null) return 0f;
+                    float range = Mathf.Max(1f, candidate.Ability.Range);
+                    float usedRange = CalcDist(candidate.Destination ?? context.Self.CurrentCell, candidate.AbilityTargetCell);
+                    return 1f - Mathf.Clamp01(Mathf.Abs(range - usedRange) / range);
+
+                case ScoreType.FollowUpValue:
+                    if (candidate.Target?.CurrentCell == null || context.Allies.Count == 0) return 0f;
+                    int followers = 0;
+                    foreach (var ally in context.Allies)
+                    {
+                        if (ally.CurrentCell != null && CalcDist(ally.CurrentCell, candidate.Target.CurrentCell) <= ally.AttackRange + 0.5f)
+                            followers++;
+                    }
+                    return Mathf.Clamp01((float)followers / context.Allies.Count);
+
                 default:
                     return 0.5f;
             }
@@ -225,7 +244,10 @@ namespace Tactics.Common.AI.MonsterAI
                 case ScoreType.ControlValue:
                 case ScoreType.BuffUtility:
                 case ScoreType.DebuffUtility:
+                case ScoreType.AbilityRangeFit:
                     return candidate.Ability != null;
+                case ScoreType.FollowUpValue:
+                    return candidate.Target != null;
                 default:
                     return true;
             }

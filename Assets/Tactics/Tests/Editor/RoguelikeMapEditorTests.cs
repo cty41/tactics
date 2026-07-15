@@ -3,6 +3,8 @@ using Tactics.RoguelikeMap;
 using Tactics.Editor.RoguelikeMapEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using Tactics.Roguelike;
 
 namespace Tactics.Tests.Editor
 {
@@ -512,6 +514,112 @@ namespace Tactics.Tests.Editor
 
             Assert.AreEqual(0, doc.nodes.Count);
             Assert.IsTrue(doc.IsDirty);
+        }
+
+        [Test]
+        public void PureRunMap_UsesSevenForwardLayersAndFiveToSevenBattles()
+        {
+            var config = ScriptableObject.CreateInstance<RoguelikeMapConfig>();
+            try
+            {
+                var map = RoguelikeMapGenerator.GetPureRunMap(config, 12345);
+
+                Assert.That(map.layoutVersion, Is.EqualTo(RoguelikeMapGenerator.PureRunLayoutVersion));
+                Assert.That(map.runSeed, Is.EqualTo(12345));
+                Assert.That(map.nodes.Select(node => node.LayerIndex).Distinct(),
+                    Is.EquivalentTo(Enumerable.Range(0, RoguelikeMapGenerator.PureRunLayerCount + 1)));
+                Assert.That(map.nodes.Where(node => node.LayerIndex == 4).Select(node => node.nodeType),
+                    Is.EquivalentTo(new[] { RoguelikeNodeType.MinorEnemy, RoguelikeNodeType.RestSite, RoguelikeNodeType.Store }));
+                Assert.That(map.nodes.Where(node => node.LayerIndex == 6).Select(node => node.nodeType),
+                    Is.EquivalentTo(new[] { RoguelikeNodeType.EliteEnemy, RoguelikeNodeType.RestSite, RoguelikeNodeType.Store }));
+                Assert.That(map.nodes.Single(node => node.LayerIndex == 7).nodeType, Is.EqualTo(RoguelikeNodeType.Boss));
+
+                foreach (var node in map.nodes)
+                {
+                    foreach (string outgoingId in node.outgoing)
+                    {
+                        Assert.That(map.GetNode(outgoingId).LayerIndex, Is.EqualTo(node.LayerIndex + 1),
+                            $"Expected a forward-only edge from {node.nodeId} to {outgoingId}.");
+                    }
+                }
+
+                var battleCounts = new HashSet<int>();
+                CollectBattleCounts(map, "start", 0, battleCounts);
+                Assert.That(battleCounts, Is.EquivalentTo(new[] { 5, 6, 7 }));
+            }
+            finally
+            {
+                Object.DestroyImmediate(config);
+            }
+        }
+
+        [Test]
+        public void PureRunMap_VisitedNodesCannotBeSelectedAgain()
+        {
+            var config = ScriptableObject.CreateInstance<RoguelikeMapConfig>();
+            try
+            {
+                var map = RoguelikeMapGenerator.GetPureRunMap(config, 7);
+                var stateManager = new NodeStateManager(map, "start");
+                stateManager.InitializeStates();
+
+                Assert.That(stateManager.IsNodeClickable("layer_01_battle"), Is.True);
+                stateManager.VisitNode("layer_01_battle");
+
+                Assert.That(stateManager.CurrentNodeId, Is.EqualTo("layer_01_battle"));
+                Assert.That(stateManager.IsNodeClickable("start"), Is.False);
+                Assert.That(stateManager.IsNodeClickable("layer_02_battle"), Is.True);
+
+                stateManager.VisitNode("start");
+                Assert.That(stateManager.CurrentNodeId, Is.EqualTo("layer_01_battle"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(config);
+            }
+        }
+
+        [Test]
+        public void PureRunRuntimeSnapshot_ExposesSeedLayerAndVictoryCount()
+        {
+            var config = ScriptableObject.CreateInstance<RoguelikeMapConfig>();
+            try
+            {
+                var map = RoguelikeMapGenerator.GetPureRunMap(config, 99);
+                RoguelikeMapRuntimeState.AttachMap(map, "start");
+                RoguelikeMapRuntimeState.CommitNodeProgress("layer_01_battle", true);
+
+                var snapshot = RoguelikeMapRuntimeState.GetSnapshot();
+                Assert.That(snapshot.RunSeed, Is.EqualTo(99));
+                Assert.That(snapshot.CurrentLayerIndex, Is.EqualTo(1));
+                Assert.That(snapshot.BattleVictoryCount, Is.EqualTo(1));
+                Assert.That(snapshot.CurrentNodeId, Is.EqualTo("layer_01_battle"));
+            }
+            finally
+            {
+                RoguelikeMapRuntimeState.ClearAll();
+                Object.DestroyImmediate(config);
+            }
+        }
+
+        private static void CollectBattleCounts(
+            global::Tactics.RoguelikeMap.RoguelikeMap map,
+            string nodeId,
+            int battleCount,
+            ISet<int> results)
+        {
+            var node = map.GetNode(nodeId);
+            if (global::Tactics.RoguelikeMap.RoguelikeMap.IsBattleNode(node))
+                battleCount++;
+
+            if (node.outgoing.Count == 0)
+            {
+                results.Add(battleCount);
+                return;
+            }
+
+            foreach (string outgoingId in node.outgoing)
+                CollectBattleCounts(map, outgoingId, battleCount, results);
         }
     }
 }

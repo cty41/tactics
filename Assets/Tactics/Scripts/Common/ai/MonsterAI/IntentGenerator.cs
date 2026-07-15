@@ -62,6 +62,23 @@ namespace Tactics.Common.AI.MonsterAI
                 }
             }
 
+            // Legacy brains may not contain an AbilityUse node. Encounter archetypes can still
+            // provide explicit ability configs; generate those candidates through the same
+            // legality provider and scorer instead of silently reducing every monster to melee.
+            bool graphHasAbilityIntent = graph.Nodes
+                .OfType<IntentNodeRecord>()
+                .Any(node => node.Enabled && node.IntentType == IntentType.AbilityUse);
+            if (!graphHasAbilityIntent && context.AvailableAbilities.Any(ability => !IsMoveAbility(ability)))
+            {
+                var implicitIntent = new IntentNodeRecord
+                {
+                    NodeId = "implicit-ability-use",
+                    IntentType = IntentType.AbilityUse,
+                    BasePriority = 10f
+                };
+                GenerateAbilityCandidates(context, implicitIntent, candidates);
+            }
+
             context.DecisionLog.Info($"Generated {candidates.Count} intent candidates.");
             return candidates;
         }
@@ -143,30 +160,62 @@ namespace Tactics.Common.AI.MonsterAI
             {
                 if (!ability.IsReady || IsMoveAbility(ability)) continue;
 
-                foreach (var option in EnumerateAbilityTargetOptions(context, ability))
-                {
-                    var candidate = new IntentCandidate(
-                        IntentType.AbilityUse,
-                        ActionType.UseAbility,
-                        option.PrimaryTarget,
-                        context.Self.CurrentCell,
-                        ability,
-                        intent.BasePriority,
-                        option.Targets,
-                        option.TargetCell,
-                        intent.NodeId);
+                var origins = context.ReachableCells
+                    .Append(context.Self.CurrentCell)
+                    .Where(cell => cell != null)
+                    .Distinct();
 
-                    EstimateAbilityOutcome(candidate, context);
-                    candidates.Add(candidate);
+                foreach (var origin in origins)
+                {
+                    foreach (var option in EnumerateAbilityTargetOptions(context, ability, origin))
+                    {
+                        var candidate = new IntentCandidate(
+                            IntentType.AbilityUse,
+                            ActionType.UseAbility,
+                            option.PrimaryTarget,
+                            origin,
+                            ability,
+                            intent.BasePriority,
+                            option.Targets,
+                            option.TargetCell,
+                            intent.NodeId);
+
+                        EstimateAbilityOutcome(candidate, context);
+                        candidates.Add(candidate);
+                    }
                 }
             }
         }
 
-        private static IEnumerable<AbilityTargetOption> EnumerateAbilityTargetOptions(AiContext context, AbilityInfo ability)
+        private static IEnumerable<AbilityTargetOption> EnumerateAbilityTargetOptions(
+            AiContext context,
+            AbilityInfo ability,
+            ICell origin)
         {
+            if (ability.Ability is IAbilityTargetingProvider targetingProvider)
+            {
+                var potentialTargets = context.Enemies
+                    .Concat(context.Allies)
+                    .Append(context.Self);
+
+                var query = new AbilityTargetQuery(
+                    context.Self,
+                    origin,
+                    context.GridController,
+                    potentialTargets);
+                foreach (var option in targetingProvider.QueryTargets(query).Options)
+                {
+                    yield return new AbilityTargetOption(
+                        option.TargetPoint,
+                        option.Targets?.ToList() ?? new List<IUnit>());
+                }
+
+                yield break;
+            }
+
             if (ability.Ability is SkillGraphAbilityImpl skillGraph)
             {
-                foreach (var option in EnumerateSkillGraphTargetOptions(context, ability, skillGraph))
+                foreach (var option in EnumerateSkillGraphTargetOptions(context, ability, skillGraph, origin))
                     yield return option;
                 yield break;
             }
@@ -174,12 +223,16 @@ namespace Tactics.Common.AI.MonsterAI
             foreach (var target in context.CandidateTargets)
             {
                 if (target.CurrentCell == null) continue;
-                if (CalcDist(context.Self.CurrentCell, target.CurrentCell) > ability.Range + 0.5f) continue;
+                if (CalcDist(origin, target.CurrentCell) > ability.Range + 0.5f) continue;
                 yield return new AbilityTargetOption(target.CurrentCell, new List<IUnit> { target });
             }
         }
 
-        private static IEnumerable<AbilityTargetOption> EnumerateSkillGraphTargetOptions(AiContext context, AbilityInfo ability, SkillGraphAbilityImpl skillGraph)
+        private static IEnumerable<AbilityTargetOption> EnumerateSkillGraphTargetOptions(
+            AiContext context,
+            AbilityInfo ability,
+            SkillGraphAbilityImpl skillGraph,
+            ICell origin)
         {
             var firstNode = skillGraph.FindFirstSelectionNode();
             switch (firstNode)
@@ -192,7 +245,7 @@ namespace Tactics.Common.AI.MonsterAI
                     foreach (var ally in GetPotentialAllyTargets(context))
                     {
                         if (ally.CurrentCell == null) continue;
-                        if (CalcDist(context.Self.CurrentCell, ally.CurrentCell) > allySelect.MaxRange + 0.5f) continue;
+                        if (CalcDist(origin, ally.CurrentCell) > allySelect.MaxRange + 0.5f) continue;
                         yield return new AbilityTargetOption(ally.CurrentCell, new List<IUnit> { ally });
                     }
                     yield break;
@@ -201,7 +254,7 @@ namespace Tactics.Common.AI.MonsterAI
                     foreach (var target in context.CandidateTargets)
                     {
                         if (target.CurrentCell == null) continue;
-                        if (CalcDist(context.Self.CurrentCell, target.CurrentCell) > ability.Range + 0.5f) continue;
+                        if (CalcDist(origin, target.CurrentCell) > ability.Range + 0.5f) continue;
                         yield return new AbilityTargetOption(target.CurrentCell, new List<IUnit> { target });
                     }
                     yield break;
@@ -223,7 +276,7 @@ namespace Tactics.Common.AI.MonsterAI
                     foreach (var target in context.CandidateTargets)
                     {
                         if (target.CurrentCell == null) continue;
-                        if (CalcDist(context.Self.CurrentCell, target.CurrentCell) > ability.Range + 0.5f) continue;
+                        if (CalcDist(origin, target.CurrentCell) > ability.Range + 0.5f) continue;
                         yield return new AbilityTargetOption(target.CurrentCell, new List<IUnit> { target });
                     }
                     yield break;

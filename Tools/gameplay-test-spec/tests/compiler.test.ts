@@ -4,6 +4,7 @@ import test from "node:test";
 import { compileScenarioSpec } from "../src/compiler.js";
 import { parseGameplayTestDocument } from "../src/frontmatter.js";
 import { generateScenarioSpec } from "../src/generator.js";
+import type { ScenarioSpec } from "../src/schema.js";
 import { validateScenarioSpec } from "../src/validator.js";
 
 const fixturesDirUrl = new URL("../../../../Tests/gameplay-specs/", import.meta.url);
@@ -283,4 +284,62 @@ test("necromancer corpse dependency fixture compiles with stable adapter routing
   assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
   assert.ok(compiled.plan);
   assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(planJson));
+});
+
+test("compiles run seed and growth assertions from the authored source spec", async () => {
+  const markdown = await readFixture("map/run-seed-growth-assertions.gameplay-test.md");
+  const generatedPlan = await readFixture("map/run-seed-growth-assertions.plan.json");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(generatedPlan));
+  assert.equal(compiled.plan.setupActions[0].kind, "setRunSeed");
+  assert.equal(compiled.plan.setupActions[0].adapter, "Map");
+  assert.equal(compiled.plan.setupActions[1].parameters.strictAsset, true);
+  assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "Map"));
+});
+
+test("compiles structured AI turn result assertions from the authored source spec", async () => {
+  const markdown = await readFixture("battle-ai-turn-result.gameplay-test.md");
+  const generatedPlan = await readFixture("battle-ai-turn-result.plan.json");
+  const doc = parseGameplayTestDocument(markdown);
+  const source = doc.frontmatter as ScenarioSpec;
+  source.assertions.push(
+    { kind: "aiTurnAbilityEquals", expected: "BasicAttack", parameters: {} },
+    { kind: "aiTurnDestinationEquals", expected: "13,25", parameters: {} },
+    { kind: "aiTurnTargetPointEquals", expected: "17,25", parameters: {} },
+    { kind: "aiTurnTargetCountEquals", expected: 1, parameters: {} },
+    { kind: "aiTurnPatternStepEquals", expected: "0", parameters: {} }
+  );
+
+  const compiled = compileScenarioSpec(source);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "Battle"));
+
+  const fixtureCompiled = compileScenarioSpec(parseGameplayTestDocument(markdown).frontmatter);
+  assert.ok(fixtureCompiled.plan);
+  assert.deepEqual(normalizePlan(fixtureCompiled.plan), JSON.parse(generatedPlan));
+});
+
+test("rejects malformed run seed, strict asset, and AI turn result expected values", async () => {
+  const mapMarkdown = await readFixture("map/run-seed-growth-assertions.gameplay-test.md");
+  const mapSpec = parseGameplayTestDocument(mapMarkdown).frontmatter as ScenarioSpec;
+  mapSpec.setup[0].parameters.seed = 1.5;
+  mapSpec.setup[1].parameters.strictAsset = "yes";
+
+  const mapValidation = validateScenarioSpec(mapSpec);
+  assert.equal(mapValidation.valid, false);
+  assert.ok(mapValidation.diagnostics.some(d => d.code === "InvalidRunSeed"));
+  assert.ok(mapValidation.diagnostics.some(d => d.code === "InvalidStrictAsset"));
+
+  const battleMarkdown = await readFixture("battle-ai-turn-result.gameplay-test.md");
+  const battleSpec = parseGameplayTestDocument(battleMarkdown).frontmatter as ScenarioSpec;
+  battleSpec.assertions[0].expected = "true";
+
+  const battleValidation = validateScenarioSpec(battleSpec);
+  assert.equal(battleValidation.valid, false);
+  assert.ok(battleValidation.diagnostics.some(d => d.code === "InvalidAssertionExpectedType"));
 });

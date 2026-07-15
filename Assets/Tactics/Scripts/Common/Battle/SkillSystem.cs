@@ -77,7 +77,7 @@ namespace Tactics.Common.Battle
             }
 
             if (skill.RequiredAttribute.HasValue
-                && GetAttributeValue(character, skill.RequiredAttribute.Value) < skill.MinimumAttribute)
+                && GetBaseAttributeValue(character, skill.RequiredAttribute.Value) < skill.MinimumAttribute)
             {
                 TLog.Info($"[SkillSystem] Skill {skill.Id} requires {skill.RequiredAttribute} {skill.MinimumAttribute}.");
                 return false;
@@ -289,20 +289,25 @@ namespace Tactics.Common.Battle
             return character.LearnedSkills.Where(s => s.SkillType == (Tactics.Roster.SkillType)type).ToList();
         }
 
-        private static int GetAttributeValue(CharacterDefinition character, AttributeType attribute)
+        /// <summary>
+        /// Returns the persistent base attribute value. Equipment bonuses do not unlock skills.
+        /// </summary>
+        public static int GetBaseAttributeValue(CharacterDefinition character, AttributeType attribute)
         {
+            if (character == null)
+                return 0;
+
             return attribute switch
             {
-                AttributeType.Strength => character.GetTotalStrength(),
-                AttributeType.Agility => character.GetTotalAgility(),
-                AttributeType.Constitution => character.GetTotalConstitution(),
-                AttributeType.Intelligence => character.GetTotalIntelligence(),
-                AttributeType.Charisma => character.GetTotalCharisma(),
-                AttributeType.Luck => character.GetTotalLuck(),
+                AttributeType.Strength => character.Strength,
+                AttributeType.Agility => character.Agility,
+                AttributeType.Constitution => character.Constitution,
+                AttributeType.Intelligence => character.Intelligence,
+                AttributeType.Charisma => character.Charisma,
+                AttributeType.Luck => character.Luck,
                 AttributeType.Speed => (int)character.Speed,
                 _ => 0
             };
         }
     }
 }
-

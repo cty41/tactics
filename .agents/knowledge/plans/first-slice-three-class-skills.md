@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/.agents/plans/2026-06-24-fi
 title: First Slice Three-Class Skills
 description: 三职业基础技能、首批高级技能、候选过滤和最小升级UI的首切计划综合页。
 tags: [plan, skills, first-slice, progression]
-timestamp: "2026-07-14T00:00:00+08:00"
+timestamp: "2026-07-14T23:27:16+08:00"
 status: active
 catalog_scope: first-slice-three-class-skills
 repo_paths:
@@ -15,6 +15,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs
   - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
 verified_revision: d5f1730d3527
+source_fingerprint: sha256:36a0cf2d06c6997b451c0fe52f1d6e2261e02b40255f42d6193c5358dd9f7a95
 ---
 
 # Goal
@@ -23,7 +24,7 @@ verified_revision: d5f1730d3527
 
 # Current Evidence
 
-项目已经存在 `FirstSliceSkillCatalog`、三职业相关 SkillGraph/AbilityConfig 资产及对应 Catalog/Asset PlayMode 测试。原计划没有统一完成状态，因此本概念保持 `active`；判断单项是否完成时，以具体代码、资产和测试为准。
+项目已经存在 `FirstSliceSkillCatalog`、三职业相关 SkillGraph/AbilityConfig 资产及对应 Catalog/Asset PlayMode 测试。Pure Run 初始化会为三职业稳定选择起始分支；当基础主属性达到 7 时，起始分支高级技能拥有一次候选保底，并通过现有 LevelUp UI 真正学习。原计划没有统一完成状态，因此本概念保持 `active`。
 
 # Relationships
 
