@@ -1,8 +1,18 @@
 # Tactics Knowledge Update Log
 
 ## 2026-07-15
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:adbe32e3cf9f575b3f59f7f38d4666d01640762723f8b7eb58ad9bcd96cfe774`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:7225f0f8f97854f10d0461539683e1ea1fc01e388e9bbbf75958ffdc4a8c2902`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:6617411637c9911034d298186c5d4f0c70ea6e65ea82f1cfe9692ed512d5d3c4`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:49c60c62589897f441d456ae2d98e125358bd3fc888f14e7d98ed8edb0786222`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:ac0c40ecf08a3791382ed3df8e4423f1995d9efab28c61384760bf8d7a649343`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:9c77cfbcdf7eaaabc5b94dfba923530905c98277735689a9512652bb115e2128`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:d8e53a4c62644be88e719c29d56fbdedba90d06d4885e03ebdf5199ad4829edb`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:a19edfe2bdecc307735299939024a40b4d2a6071bf7b4c6d5a86407b86f76498`。
+* **Creation**: 添加项目文档生命周期与统一已知缺口概念。
+* **Update**: 将当前设计收敛为权威文档，并移除已经完成、过期或重复的 docs/plans。
+* **Deprecation**: 三职业首切计划已完成知识迁移，概念状态改为 archived。
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:c4c7f7adc1fa8276fd7db81be3db016ba55f2f540895be24963a0ae46a508529`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:10239712858ede1cd47af7b3c6faa0ff2e4fece609e03fedca64487835e6702c`。
 
 ## 2026-07-14
 * **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:5440f1243da2099b84fb0adceb31384a23f2972b2828a31b623b58ab897e7bc3`。

@@ -1,72 +1,68 @@
 # RoguelikeMap Editor 手动验收流程
 
+## 使用原则
+
+- 本清单验证 Unity Editor 动态行为，不以截图作为正确性证据。
+- 记录实际通过/失败项和 Console 错误；失败后只为真实复现问题建立修复任务。
+- 自动测试先行，再执行本清单。
+
 ## 前置条件
-1. Unity Editor 已打开
-2. 项目中有至少一个 `RoguelikeMapConfig` 资产
 
-## 测试步骤
+1. Unity Editor 已打开且项目编译无错误。
+2. 项目中至少存在一个 `RoguelikeMapConfig`。
+3. 已运行 EditMode `RoguelikeMapEditorTests`。
 
-### 1. 基本功能
-- [ ] 打开编辑器：`Tactics` → `RoguelikeMap Editor`
-- [ ] 窗口正常显示，三栏布局（左配置、中画布、右属性）
+## 地图编辑器
 
-### 2. 生成地图
-- [ ] 点击 `Generate` 按钮
-- [ ] 地图正常生成，节点显示在画布上
-- [ ] 右侧面板显示 "Select a node"
+### 打开与布局
 
-### 3. 节点编辑
-- [ ] 点击选中一个节点
-- [ ] 右侧面板显示节点属性
-- [ ] 修改节点位置，画布上节点同步移动
-- [ ] 修改节点类型，节点颜色同步变化
+- [ ] 通过 `Tactics/RoguelikeMap Editor` 打开窗口。
+- [ ] 配置区、画布和 Inspector 正常显示。
+- [ ] 打开窗口不会无条件弹出配置选择框。
 
-### 4. 连接编辑
-- [ ] 手工添加连接（右键菜单或拖拽）
-- [ ] 连接线正常显示
-- [ ] 手工删除连接
-- [ ] 点击 `Rebuild Connections` 按钮，按距离重建连接
+### 生成与节点编辑
 
-### 5. Treasure/Store 配置
-- [ ] 选中 Treasure 节点
-- [ ] 修改 goldMin/goldMax
-- [ ] 添加/删除 equipmentEntries
-- [ ] 选中 Store 节点
-- [ ] 添加/删除 storeGoods
+- [ ] `Generate` 生成有效地图，节点和连接可见。
+- [ ] 选中节点后 Inspector 显示对应数据。
+- [ ] 修改节点位置后画布和文档同步。
+- [ ] 修改节点类型后颜色与类型字段同步。
+- [ ] 新增和删除节点不会留下悬空连接。
 
-### 6. Mystery 节点联动
-- [ ] 选中 Mystery 节点
-- [ ] 设置 eventId
-- [ ] 双击 Mystery 节点
-- [ ] Event Editor 打开并定位到对应事件
+### 连接
 
-### 7. 保存/加载
-- [ ] 点击 `Save` 保存到默认目录
-- [ ] 关闭编辑器
-- [ ] 重新打开编辑器
-- [ ] 点击 `Load` 加载保存的地图
-- [ ] 所有数据完整恢复
+- [ ] 可手工新增、删除连接。
+- [ ] 拖动节点时连接线持续跟随。
+- [ ] `Rebuild Connections` 明确覆盖现有连接，并按距离重建双向连接。
 
-### 8. Export/Import
-- [ ] 点击 `Export` 导出到指定路径
-- [ ] 清空编辑器
-- [ ] 点击 `Load` 导入刚才导出的 JSON
-- [ ] 所有数据完整恢复
+### 节点配置
 
-### 9. 校验
-- [ ] 点击 `Validate` 按钮
-- [ ] 无错误时显示 "All checks passed!"
-- [ ] 有错误时显示具体错误列表
+- [ ] Treasure 的金币、装备和 Buff 条目可编辑并 round-trip。
+- [ ] Store 商品配置可编辑并 round-trip。
+- [ ] Mystery 的 `eventId` 可编辑。
+- [ ] 双击 Mystery 节点会打开 Event Editor，并定位或创建对应事件。
 
-### 10. 清理
-- [ ] 点击 `Clear` 清空编辑器
-- [ ] 所有面板重置
-- [ ] 脏标记清除
+### 保存、加载与校验
 
-## 预期结果
-- 所有操作响应正常，无报错
-- 数据 round-trip 完整
-- UI 同步更新
+- [ ] Save 后关闭并重开窗口，Load 能恢复节点、位置、连接和节点配置。
+- [ ] Export 后重新加载 JSON，数据保持一致。
+- [ ] Validate 对合法数据报告通过，对重复 ID、无起点或断链给出明确错误。
+- [ ] Clear 清空数据、选择状态和脏标记。
 
-## 自动化测试
-运行 `Window` → `General` → `Test Runner` → `EditMode` → `RoguelikeMapEditorTests` 验证核心逻辑。
+## Pure Run 主流程回归
+
+- [ ] 新开 Pure Run 后只能选择当前层后继节点。
+- [ ] 已访问节点不可再次点击。
+- [ ] 非战斗节点结果不会因重新显示地图而回滚。
+- [ ] 战斗胜利返回后，当前位置、胜场、节点状态和后继可达性正确。
+- [ ] 战斗失败不会提交胜场或角色升级。
+- [ ] Boss 胜利后正常结束当前 run。
+
+## 独立战斗回归
+
+- [ ] 非 Roguelike 战斗不会误开 RoguelikeMap。
+- [ ] 非 Roguelike 战斗不会误进入 Pure Run 结束流程。
+- [ ] 通用结算的经验、属性和技能选择仍可使用。
+
+## 结果记录
+
+验收记录至少包含：Unity 版本、测试日期、使用的配置资产、自动测试结果、失败步骤、错误文本和复现条件。

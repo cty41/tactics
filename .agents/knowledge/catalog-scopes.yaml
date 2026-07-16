@@ -24,6 +24,15 @@ scopes:
       - .agents/ARCHITECTURE.md
       - Assets/Tactics/Scripts/Common/UIManager.cs
 
+  project-documentation:
+    concept: operations/project-documentation.md
+    paths:
+      - .agents/docs
+      - .agents/plans
+      - .agents/skills/project-doc-organization
+      - .agents/skills/plan-mode-plan-writer
+      - .agents/skills/make-dev-plan
+
   unity-agent-workflow:
     concept: operations/unity-agent-workflow.md
     paths:
@@ -42,38 +51,33 @@ scopes:
       - .agents/skills/project-doc-organization
       - Tools/okf
 
-  first-slice-three-class-skills:
-    concept: plans/first-slice-three-class-skills.md
+  project-known-gaps:
+    concept: plans/project-known-gaps.md
     paths:
-      - .agents/plans/2026-06-24-first-slice-three-class-skills-plan.md
-      - .agents/docs/2026-06-24-pure-run-squad-prototype-design.md
-      - Assets/Tactics/Scripts/Common/Battle/FirstSliceSkillCatalog.cs
-      - Assets/Tactics/Battle/Abilities/SkillGraphs
-      - Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs
-      - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
-      - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
+      - .agents/docs/project-known-gaps.md
 
   battle-system:
     concept: systems/battle.md
     paths:
-      - .agents/plans/战斗系统演进计划.md
+      - .agents/docs/attribute-system-design.md
+      - .agents/docs/buff-system-rules.md
+      - .agents/docs/three-class-skill-design.md
       - Assets/Tactics/Scripts/Common/Battle
       - Assets/Tactics/Scripts/Battle
       - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
       - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
-      - .agents/plans/怪物遭遇JSON动态加载计划.md
       - Assets/Tactics/Tests/Editor/EncounterConfigTests.cs
 
   monster-ai:
     concept: systems/monster-ai.md
     paths:
-      - .agents/plans/怪物战斗AI系统统一计划.md
       - .agents/skills/monster-ai-mcp-workflow
       - Assets/Tactics/Scripts/Common/ai/MonsterAI
       - Assets/Tactics/Scripts/Editor/MonsterAIEditor
+      - Assets/Tactics/AI/BasicMeleeBrain.asset
       - Assets/Tactics/AI/BasicMeleeGraph.asset
+      - Assets/Tactics/AI/BasicMeleeProfile.asset
       - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
-      - .agents/plans/2026-07-14-pure-run-monster-system-v1-plan.md
       - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
       - Assets/Tactics/Scripts/Common/Units/Unit.cs
 
@@ -88,36 +92,39 @@ scopes:
     concept: systems/roguelike-run.md
     paths:
       - .agents/docs/2026-06-24-pure-run-squad-prototype-design.md
-      - .agents/docs/roguelike-map-gameplay-design.md
-      - .agents/plans/roguelike-map-gameplay-开发计划.md
+      - .agents/docs/roguelike-event-editor-design.md
+      - .agents/docs/roguelike-map-editor-manual-test.md
       - Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs
-      - Assets/Tactics/Scripts/Roguelike
-      - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs
-      - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
-      - Assets/Tactics/RoguelikeMap
-      - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
-      - .agents/plans/2026-07-14-pure-run-monster-system-v1-plan.md
       - Assets/Tactics/Scripts/Common/RoguelikeMap.cs
       - Assets/Tactics/Scripts/Common/RoguelikeMapNode.cs
       - Assets/Tactics/Scripts/Common/Roster
+      - Assets/Tactics/Scripts/Roguelike
       - Assets/Tactics/Scripts/RoguelikeMap
+      - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
       - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
+      - Assets/Tactics/Scripts/Editor/RoguelikeEventEditor
+      - Assets/Tactics/RoguelikeMap
+      - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 
   skill-graph:
     concept: systems/skill-graph.md
     paths:
-      - .agents/docs/skill-graph-editor-design.md
-      - .agents/plans/skill-graph-editor-phase1-implementation-plan.md
+      - .agents/docs/skill-graph-system.md
+      - .agents/skills/skill-graph-creation
       - Assets/Tactics/Scripts/Common/Skills/Graph
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
+      - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityConfig.cs
+      - Assets/Tactics/Scripts/Editor/SkillGraphEditor
+      - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
       - Assets/Tactics/Battle/Abilities/SkillGraphs
       - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
       - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
-      - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
 
   gameplay-test-framework:
     concept: systems/gameplay-test-framework.md
     paths:
+      - .agents/docs/gameplay-test-framework.md
+      - .agents/skills/gameplay-test-framework
       - Assets/Tactics/Scripts/Common/Testing/Gameplay
       - Tools/gameplay-test-spec
       - Tests/gameplay-specs

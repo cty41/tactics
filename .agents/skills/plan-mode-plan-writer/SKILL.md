@@ -1,156 +1,88 @@
 ---
 name: plan-mode-plan-writer
-description: "Use when producing a formal plan in Plan Mode — receives decision-complete plans from make-dev-plan (directly or after brainstorming -> make-dev-plan), saves to `.agents/plans/`, returns the path, and adds execution context for weaker LLM handoff"
+description: "Use when producing a formal plan in Plan Mode — receives decision-complete plans from make-dev-plan, saves active plans to `.agents/plans/`, and adds execution context for handoff"
 ---
 
 # Plan Mode 计划落地规范
 
-统一约束 **Plan Mode** 下正式计划的成品形态。核心目标只有两个：
-
-1. 形成正式计划后，必须落地保存到 `.agents/plans/`，并告知用户路径。
-2. 计划正文必须补齐足够的执行上下文，让新 session 中能力较弱的 LLM 也能接手实施。
+将已经收束的方案保存为可直接执行、可交接且有明确结束条件的活跃计划。
 
 ## Quick Reference
 
-| 步骤 | 要求 | 输出 |
-|------|------|------|
-| 判定正式计划 | 仅保存 decision-complete 的最终计划 | `<proposed_plan>` |
-| 补齐上下文 | 写明当前状态、关键文件、接口、验证方式、风险 | 可交接执行包 |
-| 落地保存 | 保存到 `.agents/plans/` | 稳定计划文件 |
-| 告知路径 | 回复中明确文件路径与关联文档 | 可直接打开 |
+| 阶段 | 要求 |
+|---|---|
+| 收束 | 目标、边界、关键决策和成功标准完整 |
+| 补上下文 | 当前状态、入口文件、约束、风险和验证方式可复核 |
+| 落地 | 保存到 `.agents/plans/` 并告知用户路径 |
+| 收尾 | 实施验证后迁移长期知识并删除 completed plan |
 
 ## When to use
 
-- 任何 **Plan Mode** 下需要输出正式计划的场景
-- 用户要求生成开发计划、阶段计划、修复计划、review 后行动计划
-- 需要把计划交接给新 session 或能力较弱的 LLM 执行
+- Plan Mode 中需要交付正式开发、修复或迁移计划。
+- `make-dev-plan` 已提供 decision-complete 的计划骨架。
+- 计划需要交给新 session 或其他 Agent 直接执行。
 
 ## Workflow
 
-### Step 1: 先判断是否已达到正式计划状态
+### 1. 判断是否可落地
 
-只有满足下面条件，才算正式计划，允许落地保存：
+只有同时满足以下条件才创建文件：
 
-- 目标、成功标准、边界已经明确
-- 关键实现路径已经收束
-- 不再依赖高影响的未决选择
-- 可以直接交给另一位工程师或 agent 执行
+- 目标与成功标准明确；
+- 范围和明确不做的内容已写清；
+- 高影响选择已经决定；
+- 任务能按验收标准逐项完成。
 
-以下内容 **不保存**：
+澄清问题、候选方案和中间草案不写入 `.agents/plans/`。
 
-- 澄清问题
-- 中间草案
-- 尚未 decision-complete 的候选方案
+### 2. 补齐执行上下文
 
-### Step 2: 计划必须补齐执行上下文
+正式计划至少包含：
 
-正式计划默认包含以下信息；不要只给抽象任务名：
+- Summary：目标、成功标准、当前结论；
+- Current State：已实现/未实现边界和证据；
+- Relevant Context：关键目录、类型、数据流和项目约束；
+- Implementation：按依赖顺序拆分的任务与验收；
+- Test Plan：自动验证、必要的人工验证和回归范围；
+- Risks / Assumptions：风险、外部依赖和默认选择；
+- Handoff Notes：先读什么、先验证什么、明确不要做什么。
 
-- `Summary`
-  - 目标
-  - 成功标准
-  - 当前结论
-- `Current State`
-  - 当前实现状态
-  - 已知问题
-  - 已完成 / 未完成边界
-- `Relevant Context`
-  - 关键目录、文件、入口点、核心类型或服务
-  - 已有项目约束
-- `Implementation Changes`
-  - 按阶段或任务拆分
-  - 每项有目标、输入、输出、验收标准
-- `Interfaces / Data Flow`
-  - 需要修改或依赖的接口、状态流、调用链
-- `Test Plan`
-  - 自动检查
-  - 手工验证
-  - 回归场景
-- `Risks / Open Questions`
-  - 风险点
-  - 外部依赖
-  - 未决项
-- `Assumptions`
-  - 代用户做的默认选择
-- `Handoff Notes`
-  - 新 session 先读哪些文件
-  - 先验证什么
-  - 明确不要做什么
+### 3. 保存与回复
 
-### Step 3: 统一输出格式
+- 文件名使用清晰主题名，必要时带日期。
+- 保存到 `.agents/plans/`；如果存在仍活跃的上级计划，用相对链接关联。
+- 回复中给出计划路径和关键范围。
 
-正式计划使用单个 `<proposed_plan>`，内容应当简洁但 decision-complete。
+### 4. 定义收尾动作
 
-推荐结构：
+每份计划必须在 Handoff 或验收部分写明：完成实现与验证后，按 `project-doc-organization` 执行以下动作：
 
-```markdown
-<proposed_plan>
-# 标题
+1. 将长期设计结论并入 `.agents/docs/` 权威文档；
+2. 将真正未完成项写入统一缺口，或经用户批准建立新计划；
+3. 更新受影响 OKF scope；
+4. 删除已完成计划，由 Git 保存历史。
 
-## Summary
-...
+## 协作链路
 
-## Key Changes
-...
-
-## Test Plan
-...
-
-## Assumptions
-...
-</proposed_plan>
-```
-
-当任务复杂、需要更强交接上下文时，在 `Key Changes` 中补充：
-
-- `Current State`
-- `Relevant Context`
-- `Interfaces / Data Flow`
-- `Handoff Notes`
-
-### Step 4: 正式计划必须落地保存
-
-默认规则：
-
-- 所有正式计划都保存到 `.agents/plans/`
-- 文件名使用“主题可读名 + `计划.md`”风格
-- 子阶段计划允许拆成独立文件
-- 若存在主计划，子计划中补充相对链接
-
-保存后在回复中必须说明：
-
-- 计划文件路径
-- 如有主从关系，说明关联文档
-
-### Step 5: 与其他 planning skill 协同
-
-- `brainstorming` 负责需求不清晰时的设计收束，输出设计文档到 `.agents/docs/`（按需触发）
-- `make-dev-plan` 负责澄清、范围和任务拆分（可接收 `brainstorming` 的设计输出作为输入）
-- `plan-mode-plan-writer` 负责把正式计划整理成稳定文档并补齐交接上下文
-- `project-doc-organization` 负责目录与真相源约定
-
-典型链路有两种：
-
-1. **需求不清晰**：`brainstorming` -> 设计文档 -> `make-dev-plan` -> `plan-mode-plan-writer`
-2. **需求已清晰**：`make-dev-plan` -> `plan-mode-plan-writer`
-
-无论哪种链路，最终都经由 `make-dev-plan` 产出计划骨架，再交给 `plan-mode-plan-writer` 落地。
+- 需求不清晰：`brainstorming` → `make-dev-plan` → 本 skill。
+- 需求已清晰：`make-dev-plan` → 本 skill。
+- 文档位置与完成后清理：`project-doc-organization`。
 
 ## Anti-patterns
 
-| 错误 | 正确 | 原因 |
-|------|------|------|
-| 计划只存在于聊天回复 | 正式计划保存到 `.agents/plans/` | 否则无法稳定交接 |
-| 只写 Task 标题，不写上下文 | 补齐当前状态、入口点、验证方式 | 弱模型无法直接执行 |
-| 把草案也写成稳定计划文件 | 只有 decision-complete 的正式计划才保存 | 避免污染计划真相源 |
-| 计划保存了，但不告诉用户路径 | 回复中明确给出路径 | 用户无法确认落地结果 |
-| 让后续执行者自己猜入口文件 | 在 `Relevant Context` / `Handoff Notes` 中写明 | 降低新 session 推断成本 |
+| 错误 | 正确 |
+|---|---|
+| 计划只存在聊天中 | 将正式计划保存到 plans |
+| 只有任务标题 | 补当前状态、入口、验证与交接上下文 |
+| 草案也写入 plans | 只保存 decision-complete 内容 |
+| 实施完成仍长期保留计划 | 迁移知识、更新 OKF 后删除 |
+| 将所有想法塞入当前计划 | 非当前范围进入统一缺口 |
 
 ## Checklist
 
-- [ ] 当前内容已达到正式计划标准
-- [ ] 计划使用单个 `<proposed_plan>` 输出
-- [ ] 已补齐当前状态、关键上下文、验证方式、handoff 信息
-- [ ] 正式计划保存到 `.agents/plans/`
-- [ ] 回复中已明确告知路径
-- [ ] 如有主从关系，已补关联链接
+- [ ] 内容已 decision-complete。
+- [ ] 当前状态和关键路径来自仓库证据。
+- [ ] 每个任务有明确验收标准。
+- [ ] 自动/人工验证边界写清。
+- [ ] 文件已保存到 `.agents/plans/`，路径已告知用户。
+- [ ] 计划定义了完成后的知识迁移和删除动作。

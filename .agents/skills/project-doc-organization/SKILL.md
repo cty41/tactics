@@ -5,166 +5,77 @@ description: "Use when creating, moving, or organizing project documentation fil
 
 # 项目文档组织规范
 
-定义 Tactics Unity 项目中各类文档的标准存放位置。核心区分：**工作区（临时）**与**知识库（持久）**。
+保持 `.agents/` 中的文档短小、当前、可发现。设计、计划、实现和 OKF 各有独立职责。
 
 ## Quick Reference
 
-| 文档类型 | 存放位置 | 生命周期 |
-|---------|---------|---------|
-| 设计文档 | `.agents/docs/` | 持久保留，随设计迭代更新 |
-| 开发计划 | `.agents/plans/` | 持久保留，随进度更新 |
-| 使用指南 | `.agents/docs/` | 持久保留 |
-| 跨系统知识目录 | `.agents/knowledge/` | OKF 综合层，持续维护 |
-
-**决策原则**：设计真相源 → `.agents/docs/`，计划真相源 → `.agents/plans/`。
+| 内容 | 位置 | 生命周期 |
+|---|---|---|
+| 当前设计与使用指南 | `.agents/docs/` | 持续更新；失效内容删除或合并 |
+| 临时灵感收集箱 | `.agents/docs/brainstorm.md` | 未验证；成熟后迁移并删除原条目 |
+| 活跃可执行计划 | `.agents/plans/` | 实施完成并迁移长期知识后删除 |
+| 跨系统综合与导航 | `.agents/knowledge/` | 按 OKF 规则维护 |
+| 实现事实 | 代码、Unity 资产、测试 | 当前行为的最终事实源 |
 
 ## When to use
 
-- 创建或移动设计文档、开发计划、使用指南时
-- 头脑风暴结束后，需要决定草稿何去何从
-- 发现文档放错目录，需要纠正
-- 不确定某份文档该放哪里
+- 新建、移动、合并或删除设计文档、计划和指南。
+- 实施完成后处理计划生命周期。
+- 发现同一主题存在互相冲突的多份文档。
+- 需要判断内容应该进入 docs、plans、knowledge 还是代码注释。
 
-## 目录结构
+## 分类规则
 
-```
-.agents/
-├── docs/                    ← 设计文档、使用指南（扁平结构）
-│   ├── roguelike-map-gameplay-design.md
-│   ├── attribute-system-design.md
-│   ├── CheatCodeGuide.md
-│   └── screenshots/         ← 截图 / 视觉参考
-├── plans/                   ← 开发计划（可执行任务）
-│   ├── 战斗系统演进计划.md
-│   └── roguelike-map-gameplay-开发计划.md
-├── knowledge/               ← 独立 OKF bundle（导航、综合、关系）
-│   ├── index.md
-│   ├── log.md
-│   └── systems/
-├── skills/                  ← Agent 技能定义
-├── rules/                   ← 编码规范
-├── shared-rules/            ← 共享规则
-└── ARCHITECTURE.md          ← 项目架构总览
-```
+### `.agents/docs/`
 
-## 文档分类规则
+保存当前系统设计、数据流、约束和使用方式。一个主题优先只有一份权威文档；阶段审计、临时验证结果和已经被实现吸收的计划不要长期堆积在这里。
 
-### `.agents/docs/` — 设计文档与使用指南
+`brainstorm.md` 是明确例外：它只收集未经验证的临时灵感，不是设计真相源。想法成熟后迁入对应权威设计；确认是现有缺口时迁入 `project-known-gaps.md`；决定执行后才建立正式计划。
 
-存放**完整设计方案**和**使用指南**：
+### `.agents/plans/`
 
-- 系统架构设计
-- 核心机制设计（战斗、属性、技能等）
-- 数据结构与数据流设计
-- 技术方案选型
-- 命令行工具使用说明
-- 调试/测试指南
+只保存已经收束、尚需执行的计划。计划必须有明确范围、任务、验收和交接上下文。草案不进入该目录；已完成计划也不继续充当当前设计文档。
 
-示例：`attribute-system-design.md`、`roguelike-map-gameplay-design.md`、`CheatCodeGuide.md`
+### `.agents/knowledge/`
 
-### `.agents/plans/` — 开发计划
-
-存放**可执行开发计划**，回答"怎么做"和"何时做"：
-
-- 由 `make-dev-plan`、`plan-mode-plan-writer` 等 planning skill 输出的正式计划
-- 包含 Background / Scope / Tasks 三大块
-- 每个 Task 有验收标准
-- 对于 Plan Mode 的正式计划，默认作为稳定真相源落地保存
-
-示例：`战斗系统演进计划.md`、`Buff与DoT效果落地计划.md`
-
-### `.agents/knowledge/` — OKF 综合知识层
-
-存放符合 OKF v0.1 的跨系统概念页、渐进索引和更新日志：
-
-- 不复制完整设计、计划或代码
-- 通过 `repo_paths`、`resource` 和正文引用连接原始真相源
-- 汇总当前状态、系统关系、替代关系和验证 revision
-- 查询实现状态时仍必须回到代码、Unity 资产和测试复核
-
-详细维护流程见 `../knowledge-maintenance/SKILL.md` 和 `../../rules/knowledge-maintenance.md`。
+保存 OKF 概念页、索引和日志。它负责摘要、关系和导航，不复制整份设计/计划，也不替代代码、资产或测试。维护规则见 `../knowledge-maintenance/SKILL.md`。
 
 ## Workflow
 
-```text
-设计阶段 ──→ 输出到 .agents/docs/
-     │
-     ▼ (制订计划)
-输出到 .agents/plans/
-     │
-     ▼ (执行)
-从 .agents/plans/ 读取并执行
-```
+1. 未验证的想法先写入 `.agents/docs/brainstorm.md`。
+2. 设计结论写入或合并到 `.agents/docs/` 的主题权威文档。
+3. 只有 decision-complete 的执行方案写入 `.agents/plans/`。
+4. 实施时以计划为任务入口，以代码、资产和测试验证结果。
+5. 完成后执行计划收尾：
+   - 确认实现与验收结果；
+   - 将仍有长期价值的设计规则合并回权威 docs；
+   - 将未实施项写入统一缺口清单，或另建获得批准的活跃计划；
+   - 更新受影响 OKF scope；
+   - 删除已完成计划，历史由 Git 保留。
 
-1. **设计**：将设计文档保存到 `.agents/docs/`
-2. **制订计划**：基于设计文档，输出到 `.agents/plans/`
-3. **执行**：从 `.agents/plans/` 读取并执行
-4. **综合**：将跨系统当前状态更新到 `.agents/knowledge/`，不改变原始真相源职责
+## 引用原则
 
-## 关键原则
-
-### 1. 单一真相源
-
-每个主题只有一个真相源：
-- 设计真相源：`.agents/docs/`
-- 计划真相源：`.agents/plans/`（包含 Plan Mode 下正式落地的计划）
-- 实现真相源：代码、Unity 资产和测试
-- OKF 综合层：`.agents/knowledge/`（负责导航和综合，不替代上述真相源）
-
-### 2. 引用规范
-
-文档之间引用使用相对路径：
-
-```markdown
-## 关联文档
-
-- 设计文档：[属性系统设计](../docs/attribute-system-design.md)
-- 前置计划：[战斗系统演进](../plans/战斗系统演进计划.md)
-```
-
-### 3. Plan Mode 计划落地规则
-
-对于 **Plan Mode** 产出的正式计划：
-
-- 默认保存到 `.agents/plans/`
-- 不应只停留在聊天上下文
-- 回复中应告知用户文件路径
-- 若是主计划的子阶段，应在文档中补充关联链接
+- Markdown 文档之间使用相对链接。
+- 不引用已删除的阶段计划作为当前事实源。
+- 文档描述实现状态时，给出可复核的代码、资产或测试路径。
+- 图片只在视觉关系无法由文字准确说明时保留，不把截图作为功能验证证据。
 
 ## Anti-patterns
 
-### ❌ 错误 1：将设计文档放在 plans 目录
-
-```
-# 错误
-.agents/plans/roguelike-map-design.md  ← 这是设计文档！
-
-# 正确
-.agents/docs/roguelike-map-design.md
-```
-
-### ❌ 错误 2：将计划文档放在 docs 目录
-
-```
-# 错误
-.agents/docs/战斗系统演进计划.md  ← 这是开发计划！
-
-# 正确
-.agents/plans/战斗系统演进计划.md
-```
-
-## 快速参考
-
-| 文档类型 | 存放位置 | 示例 |
-|----------|----------|------|
-| 完整设计方案 | `.agents/docs/` | `roguelike-map-gameplay-design.md` |
-| 使用指南 | `.agents/docs/` | `CheatCodeGuide.md` |
-| 开发计划 | `.agents/plans/` | `战斗系统演进计划.md` |
+| 错误 | 正确 |
+|---|---|
+| completed plan 永久留在 plans | 迁移长期知识后删除 |
+| 每个阶段生成一份新设计文档 | 更新该主题的权威文档 |
+| 将历史审计当成当前实现 | 回到代码、资产和测试复核 |
+| 将完整设计复制进 OKF | 摘要并链接权威来源 |
+| 为删除内容再建 archive 目录 | 使用 Git 历史 |
+| 将 brainstorm 条目当作已批准需求 | 先收束设计或确认缺口 |
 
 ## Checklist
 
-- [ ] 设计文档放在 `.agents/docs/`
-- [ ] 开发计划放在 `.agents/plans/`
-- [ ] Plan Mode 的正式计划已落地到 `.agents/plans/`
-- [ ] 使用指南放在 `.agents/docs/`
-- [ ] 跨系统综合页放在 `.agents/knowledge/`，且引用原始真相源
+- [ ] 文档类型与目录匹配。
+- [ ] `brainstorm.md` 中的条目没有被当作当前设计或实施承诺。
+- [ ] 同主题没有并列的当前真相源。
+- [ ] 活跃计划仍有待执行任务。
+- [ ] 完成计划的长期知识已迁移，遗留项已归档到统一缺口或新计划。
+- [ ] 相关链接、OKF scope 和索引已同步。

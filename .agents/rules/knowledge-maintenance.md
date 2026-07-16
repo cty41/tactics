@@ -8,12 +8,16 @@
 
 | 问题类型 | 首要真相源 | OKF 的作用 |
 |----------|------------|------------|
-| 设计意图 | `.agents/docs/` | 汇总结论并连接相关系统 |
-| 执行计划 | `.agents/plans/` | 展示状态、依赖和替代关系 |
+| 设计意图 | `.agents/docs/` 的主题权威文档 | 汇总结论并连接相关系统 |
+| 活跃执行计划 | `.agents/plans/` | 展示状态、依赖和替代关系 |
 | 当前实现 | 代码、Unity 资产、测试 | 提供入口和最后验证 revision |
 | Agent 工作流 | `AGENTS.md`、rules、skills | 提供渐进导航，不自动改写规则 |
 
 发生冲突时，OKF 页面必须回到相应真相源复核并更新，不能用综合页覆盖源事实。
+
+`.agents/docs/brainstorm.md` 是未经验证的临时灵感收集箱，不属于设计真相源，也不自动进入 OKF 系统概念或已知缺口。
+
+`.agents/plans/` 只保存仍需执行的计划。实施完成后，长期结论迁移到权威 docs，未实施项进入统一缺口或经批准的新计划，completed plan 删除并由 Git 保留历史。OKF 自身需要保留的历史概念使用 `archived` 或 `superseded`。
 
 ## Tactics OKF Profile 0.1 与自动同步扩展
 

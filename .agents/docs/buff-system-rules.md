@@ -1,94 +1,96 @@
-# Buff System Rules（战斗 Buff 系统规则文档）
+# 战斗 Buff 系统当前规则
 
-## 概述
+## 结构
 
-Buff 系统由 4 个核心类组成：`BuffConfig`（配置）→ `Buff`（实例）→ `BuffBehavior`（行为逻辑）→ `BuffComponent`（容器管理）。
+Buff 主链为：
 
-## BuffConfig 参数详解
+```text
+BuffConfig（资产配置）
+  -> Buff（来源、拥有者、剩余回合实例）
+  -> BuffBehavior（触发行为）
+  -> BuffComponent（单位上的容器、唯一性和生命周期）
+```
 
-| 参数 | 类型 | 默认值 | 规则 |
-|------|------|--------|------|
-| `BuffName` | string | — | Buff 显示名称，用于日志和 UI |
-| `Icon` | Sprite | null | Buff 图标，用于头顶显示 |
-| `DefaultDuration` | int | 3 | 默认持续回合数（创建 Buff 时传入的 duration） |
-| `CanAct` | bool | **true** | `false` 时该 buff 会**禁止单位行动**（如冰冻）。多个 buff 时，任一 `CanAct=false` 即无法行动 |
-| `EffectType` | enum | None | Buff 效果分类：`None`、`Frozen`、`Marked`。用于 `HasBuff()` 查询和冰破逻辑 |
-| `TriggerTiming` | enum | None | 效果触发时机，决定 `BuffBehavior` 何时执行效果（见下表） |
-| `DamagePerTurn` | float | 0 | 每回合伤害值，仅 `TriggerTiming=TurnStart` 时生效 |
-| `ElementType` | enum | None | 元素类型：`None`、`Fire`、`Ice`、`Water`、`Earth`、`Wind`。用于冰破逻辑和伤害计算 |
+`BuffConfig` 的当前字段包括名称、图标、默认持续时间、能否行动、效果类型、触发时机、诅咒分类、每回合伤害、元素和减伤比例。
 
-## TriggerTiming 详解
+## 添加与互斥规则
 
-| 值 | 触发时机 | 实际行为 | 典型用途 |
-|----|---------|---------|---------|
-| `None` | 不触发 | 纯状态标记，无自动效果 | Frozen（仅标记状态，效果由外部逻辑处理） |
-| `TurnStart` | 回合开始时 | 对 Owner 造成 `DamagePerTurn` 伤害 | DoT（如 Ignite 灼烧） |
-| `DamageTaken` | 受到伤害时 | 如果攻击者在 1 格内，Owner 反击攻击者 | Counter（反伤/反击） |
-| `BeforeAttacked` | 被攻击前 | 强制将 `isCritical` 设为 `true` | Mark（标记，被攻击时必定暴击） |
+### 同一 Config
+
+同一单位再次添加引用同一个 `BuffConfig` 对象的 Buff 时：
+
+- 不创建第二个实例；
+- `RemainingTurns = 旧剩余回合 + 新 Buff 回合`；
+- 触发 `BuffChangeType.Refreshed`；
+- 不再次调用 `OnApplied`。
+
+这是当前实现的“唯一并延长”规则，不是取两个持续时间的最大值。
+
+### 同一诅咒分类
+
+不同 Config 若具有相同且非空的 `CurseCategory`：
+
+- 新诅咒添加前移除旧诅咒；
+- 同一分类在一个单位上最终只保留后施加的 Config；
+- 同一个 Config 会先命中刷新逻辑，因此累计时长而不是替换自身。
+
+当前伤害加深诅咒与恐惧诅咒都应遵守这一分类互斥规则。
+
+### 地图层 Pending Buff
+
+`CharacterDefinition.AddPendingBuff` 以 `BuffName` 防止重复快照。进入战斗时将快照还原为运行时 Config，应用后清空 pending 列表。
 
 ## 生命周期
 
-```
-new Buff(config, source, duration)  →  BuffComponent.AddBuff(buff)
-                                          ↓
-                              同 Config 已存在？→ 刷新 RemainingTurns = max(旧, 新)
-                                          ↓ 否
-                              buff.Owner = _owner; _activeBuffs.Add(buff)
-                                          ↓
-                              buff.OnApplied()  →  BuffBehavior.OnApplied()
-                                          ↓
-                              [运行中] OnTurnStart / OnBeforeAttacked / OnDamageTaken
-                                          ↓
-                              OnTurnEnd: RemainingTurns--  →  IsExpired?  →  RemoveBuff
-                                          ↓
-                              buff.OnRemoved()  →  BuffBehavior.OnRemoved()
+```text
+AddBuff
+  -> 新实例：设置 Owner、OnApplied、Added
+  -> 同 Config：累计时长、Refreshed
+
+单位回合开始
+  -> 对每个 Buff 调用 OnTurnStart
+
+单位回合结束
+  -> Buff.OnTurnEnd 递减剩余回合
+  -> 未过期：TurnChanged
+  -> 已过期：RemoveBuff、OnRemoved、Removed
 ```
 
-## 关键规则
+销毁单位时会对所有 Buff 调用 `OnRemoved` 并清空容器。
 
-### 1. 全局唯一规则
-- 每个 BuffConfig 在同一单位上**只能有 1 个实例**
-- 重复施加时**刷新** `RemainingTurns`（取 `max(当前剩余, 新持续时间)`）
-- 刷新时**不触发** `OnApplied()`，不触发效果，仅更新时长
+## 行为规则
 
-### 2. CanAct 规则
-- `BuffComponent.CanAct` 遍历所有 active buffs，**任一** `CanAct=false` → 单位无法行动
-- `Buff.CanAct` 先检查 `_config.CanAct`，再检查 `_behavior.CanAct`（两者都为 true 才可行动）
+| `TriggerTiming` | 当前行为 |
+|---|---|
+| `None` | 只提供状态或由外部战斗逻辑消费 |
+| `TurnStart` | 以 `DamagePerTurn` 对拥有者造成不可暴击的周期伤害 |
+| `DamageTaken` | 受到伤害后，若攻击者在 1 格内则反击 |
+| `BeforeAttacked` | 攻击结算前将本次攻击标记为暴击 |
 
-### 3. 冰破（Ice Break）规则
-- 当受到攻击时，如果目标有 `Frozen` buff（`EffectType=Frozen`），攻击者为 `Ice` 元素 → **移除所有 Frozen buff**
-- 代码位置：`CombatComponent.cs:137-147`
+当前 `BuffEffectType`：`None`、`Frozen`、`Marked`、`CurseDamageAmplifier`、`DamageReduction`、`Poison`。
 
-### 4. 过期规则
-- `IsExpired = RemainingTurns <= 0`
-- `OnTurnEnd()` 中先执行 `RemainingTurns--`，再检查过期
-- 过期 buff 被批量 `RemoveBuff()`，触发 `BuffChanged(Removed)`
+- 任一活动 Buff 的 `CanAct == false`，单位即不能行动。
+- `Frozen` 的解除、诅咒增伤和减伤由战斗组件按 `EffectType` 消费。
+- DoT 通过 `CombatComponent.ApplyDamage` 进入统一伤害与战斗日志链路。
 
-### 5. Duration 规则
-- 创建时传入 `duration`，通常等于 `BuffConfig.DefaultDuration`
-- 也可自定义（如 `AbilityEffect` 中的 `_duration` 字段）
-- 同 Config 重复施加取 `max(当前, 新)`，不会缩短
+## UI 与事件
 
-## 现有 Buff 资产
+`BuffChanged` 事件类型：
 
-| 资产 | EffectType | TriggerTiming | CanAct | 元素 |
-|------|-----------|---------------|--------|------|
-| Frozen.asset | Frozen | None | **false** | Ice |
-| Ignite.asset | — | TurnStart | true | Fire |
-| Counter.asset | — | DamageTaken | true | — |
-| Mark.asset | Marked | BeforeAttacked | true | — |
+| 类型 | 含义 |
+|---|---|
+| `Added` | 新实例加入 |
+| `Removed` | 主动移除、过期或销毁 |
+| `Refreshed` | 同 Config 累计时长 |
+| `TurnChanged` | 回合结束后时长变化且仍未过期 |
 
-## BuffChanged 事件类型
+`BattleUIController` 监听这些事件维护单位头顶图标和回合数；`TBattleLog` 记录添加、刷新与移除结果。
 
-| ChangeType | 触发时机 |
-|------------|---------|
-| `Added` | 新 buff 实例被添加 |
-| `Removed` | buff 被移除（过期/销毁/冰破） |
-| `Refreshed` | 已有 buff 的 RemainingTurns 被刷新 |
-| `TurnChanged` | 回合结束时 RemainingTurns 递减（未过期的 buff） |
+## 验证入口
 
-## 测试框架可用断言
-
-- `unitHasBuff(buffName)` — 检查是否有指定 buff
-- `unitBuffDurationEquals(buffName, expected)` — 检查 buff 剩余回合
-- `unitBuffCountEquals(buffName, expected)` — 检查同名 buff 数量
+- `Assets/Tactics/Scripts/Common/Units/Buffs/`
+- `Assets/Tactics/Scripts/Common/Units/CombatComponent.cs`
+- `Assets/Tactics/Tests/PlayMode/NecromancerPlayModeTests.cs`
+- `Assets/Tactics/Tests/PlayMode/GameplayRuntimePlanTests.cs`
+- `Tests/gameplay-specs/necromancer/curse-refreshes-duration.gameplay-test.md`
+- `Tests/gameplay-specs/necromancer/curse-replaces-other-curse.gameplay-test.md`

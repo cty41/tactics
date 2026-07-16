@@ -1,0 +1,35 @@
+---
+type: Operational Playbook
+resource: https://github.com/cty41/tactics/tree/main/.agents/docs
+title: Project Documentation
+description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
+tags: [operations, documentation, plans, knowledge]
+timestamp: "2026-07-15T13:51:33+08:00"
+status: active
+catalog_scope: project-documentation
+repo_paths:
+  - .agents/docs
+  - .agents/plans
+  - .agents/skills/project-doc-organization/SKILL.md
+  - .agents/skills/plan-mode-plan-writer/SKILL.md
+verified_revision: c56d71ad4ebd
+source_fingerprint: sha256:7225f0f8f97854f10d0461539683e1ea1fc01e388e9bbbf75958ffdc4a8c2902
+---
+
+# Current State
+
+`.agents/docs/` 主要保存当前设计与使用指南；同一主题优先维护一份权威文档。`brainstorm.md` 是唯一的临时灵感收集箱，不属于设计真相源或实施承诺。想法成熟后迁入主题设计、[项目已知缺口](../plans/project-known-gaps.md)或正式计划。
+
+`.agents/plans/` 只保存仍需执行且 decision-complete 的计划。实现完成并验证后，长期规则回写 docs，未实施项进入已知缺口或经批准的新计划，completed plan 随后删除并由 Git 保留历史。
+
+`.agents/knowledge/` 负责跨系统摘要、关系和导航，不复制完整设计或已完成计划。代码、Unity 资产和测试仍是当前行为的最终事实源。
+
+# Relationships
+
+- [OKF Maintenance](okf-maintenance.md)负责从路径变更反向同步知识 scope。
+- [Unity Agent Workflow](unity-agent-workflow.md)定义代码、资产和验证的安全边界。
+- [Project Known Gaps](../plans/project-known-gaps.md)集中保存尚未激活的真实缺口。
+
+# Verification Guidance
+
+整理文档时检查重复主题、失效链接、旧架构术语和计划状态；不以截图证明功能。删除历史文件后运行 OKF 影响检测与 bundle 校验。

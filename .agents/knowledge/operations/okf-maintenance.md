@@ -4,17 +4,18 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/okf
 title: OKF Maintenance
 description: 将工作区变更映射到 catalog_scope，并由 Agent 同步受影响知识概念的维护流程。
 tags: [agent, okf, knowledge, automation]
-timestamp: "2026-07-14T21:25:00+08:00"
+timestamp: "2026-07-15T13:51:33+08:00"
 status: active
 catalog_scope: okf-maintenance
 repo_paths:
   - .agents/knowledge/catalog-scopes.yaml
   - .agents/rules/knowledge-maintenance.md
   - .agents/skills/knowledge-maintenance/SKILL.md
+  - .agents/skills/project-doc-organization/SKILL.md
   - Tools/okf/catalog_impact.py
   - Tools/okf/validate_bundle.py
-verified_revision: d5f1730d3527
-source_fingerprint: sha256:8e4038c1ec510f34d13190724394d01a2edceea63d9821e017694f419fe58e70
+verified_revision: c56d71ad4ebd
+source_fingerprint: sha256:adbe32e3cf9f575b3f59f7f38d4666d01640762723f8b7eb58ad9bcd96cfe774
 ---
 
 # Current State
@@ -23,9 +24,12 @@ source_fingerprint: sha256:8e4038c1ec510f34d13190724394d01a2edceea63d9821e017694
 
 这一流程由 Agent 规则触发，不依赖 Git hook 或远端 CI。未映射但位于受监控目录的路径会显示为警告，Agent 必须判断它应加入已有 scope、建立新概念，还是明确保持不受 OKF 管理。
 
+当前设计来自 `.agents/docs/` 的主题权威文档，`brainstorm.md` 仅保存未经验证的临时灵感。当前任务只来自仍活跃的 `.agents/plans/`。计划完成后应先迁移长期知识并删除计划；OKF 中需要保留的历史概念使用 `archived` 或 `superseded`，不继续把旧计划当当前依据。
+
 # Relationships
 
 - [Unity Agent Workflow](unity-agent-workflow.md)规定代码、资产、文档和验证的通用安全边界。
+- [Project Documentation](project-documentation.md)规定 docs、活跃 plans、统一缺口和完成后清理的职责。
 - [Open Knowledge Format v0.1](../references/okf-v0.1.md)定义 bundle、概念、索引和日志的基础格式。
 
 # Verification Guidance

@@ -1,158 +1,90 @@
 ---
 name: skill-graph-creation
-description: "Use when user wants to create a new skill through conversational Q&A — guides agent through intent recognition, question-driven detail collection, and automated SkillGraphSpec + gameplay-test generation"
+description: "Use when user wants to create a new skill through conversational Q&A — guides agent through intent recognition, SkillGraphSpec generation, validation, gameplay tests, and Unity asset application"
 ---
 
 # SkillGraph 技能创建向导
 
-通过提问引导用户完善技能细节，自动生成 SkillGraphSpec JSON 和 gameplay-test.md。
+通过最少提问把技能意图收束成 `SkillGraphSpec`，测试优先地验证语义，再通过 Unity/MCP 工具生成资产。系统边界见 `../../docs/skill-graph-system.md`。
 
 ## Quick Reference
 
-| 阶段 | 动作 | 输出 |
-|------|------|------|
-| 意图识别 | 解析用户描述 | 技能模式 + 已知参数 |
-| 提问补全 | 只问缺失信息 | 完整参数集 |
-| 生成图 | bash CLI `generate-skill-graph-spec` | SkillGraphSpec JSON |
-| 生成测试 | 根据 Spec 生成 gameplay-test.md | `.gameplay-test.md` 文件 |
-| 确认 | 展示结果等用户确认 | 执行 ApplySpec |
+| 阶段 | 输出 |
+|---|---|
+| 意图识别 | 已知参数、缺失决策、默认值 |
+| Spec | `SkillGraphSpec` JSON |
+| 测试 | `*.gameplay-test.md` → `.plan.json` |
+| Unity 校验 | Spec/Graph validation 结果 |
+| 应用 | `SkillGraphAsset` 与必要 Ability bridge |
 
 ## When to use
 
-- 用户输入类似"帮我做一个新技能"、"创建一个冰霜新星技能"
-- 用户给出简短的技能描述，需要补全细节
-- 用户想要 test-first 方式创建技能
+- 用户要求创建或扩展一个 SkillGraph 技能。
+- 简短技能描述需要补齐目标、范围、阶段或状态规则。
+- 用户希望 test-first 创建技能或通过 MCP 落地资产。
 
 ## Workflow
 
-### Step 1: 意图识别 + 提问
+### 1. 读取当前约束
 
-读取用户描述，识别目标类型、伤害类型、效果类型、弹道、位移等维度。
+先核对技能目录、相关权威设计、现有相似 SkillGraph 和 Gameplay Test。写 C# 时另行加载项目代码规则；修改 Unity 资产时不得直接编辑 YAML。
 
-**只问缺失的，不问已明确的。** 如果描述已足够完整，跳过提问。
+### 2. 只问高影响缺失项
 
-```
-识别到: 范围伤害 + 魔法 + 施加冰冻
-需要补充:
-1. 伤害范围半径? (默认 2)
-2. 基础魔法伤害值? (默认 5)
-3. 冰冻持续回合? (默认 2)
-4. 最大施法距离? (默认 3)
-```
+从用户描述提取：目标阵营/形状、距离、伤害/治疗、Buff、位移、投射物、召唤、阶段顺序、消耗和失败行为。已明确的内容不重复提问；低风险数值可给出显式默认值。
 
-### Step 2: 生成 SkillGraphSpec JSON
+### 3. 生成 Spec
 
-通过 bash tool 调用 TypeScript CLI：
+在仓库根目录执行：
 
-```bash
-node Tools/gameplay-test-spec/dist/src/cli.js generate-skill-graph-spec -t "冰霜新星, 半径2, 伤害5, 冰冻2回合, 距离3"
+```powershell
+node Tools/gameplay-test-spec/dist/src/cli.js generate-skill-graph-spec -t "<技能描述>" -o <skill-spec.json>
 ```
 
-如果返回 `needsClarification: true`，根据 `questionsToAsk` 继续提问。
+如果返回 `needsClarification`，只追问 `questionsToAsk` 中仍影响语义的项。已有结构化答案文件时可用：
 
-如果返回完整 `spec`，直接使用。
-
-也可以用 `generate-skill-graph-spec-answers` 传入结构化参数（先写 JSON 文件再调用）：
-
-```bash
-echo '{"displayName":"冰霜新星","targetType":"area","effects":["damage","buff"],"damageType":"Magical","baseDamage":5,"areaRadius":2,"maxRange":3,"buffName":"Frozen","buffDuration":2,"buffIsUnique":true}' > _answers.json
-node Tools/gameplay-test-spec/dist/src/cli.js generate-skill-graph-spec-answers -a _answers.json
+```powershell
+node Tools/gameplay-test-spec/dist/src/cli.js generate-skill-graph-spec-answers -a <answers.json> -o <skill-spec.json>
 ```
 
-### Step 3: 生成 gameplay-test.md（测试优先）
+不要用 shell 拼接命令临时写 JSON；创建受版本控制的输入时使用正常文件编辑流程。
 
-使用 CLI 自动从 SkillGraphSpec JSON 生成 gameplay-test.md：
+### 4. 测试优先
 
-```bash
-node Tools/gameplay-test-spec/dist/src/cli.js generate-test-from-spec -s _spec.json -o Tests/gameplay-specs/new-skill.gameplay-test.md
+```powershell
+node Tools/gameplay-test-spec/dist/src/cli.js generate-test-from-spec -s <skill-spec.json> -o <scenario.gameplay-test.md>
+node Tools/gameplay-test-spec/dist/src/cli.js validate-spec -s <scenario.gameplay-test.md>
+node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay-test.md> -o <scenario.plan.json>
 ```
 
-支持的模式：`singleTargetDamage` / `projectile` / `areaDamage` / `selfHeal` / `allyHeal` / `charge` / `knockback` / `applyBuff`
+检查生成测试是否真的覆盖用户约束，尤其是目标范围、命中顺序、Buff 存在性、投射物结束状态和落点。生成器不能表达的关键语义应补充受支持断言，不能只接受一个宽松模板。
 
-组合技能（如范围+伤害+Buff）会自动推断正确的 graphKind 和断言。
+### 5. Unity 校验与应用
 
-### Step 4: 展示并确认
+1. 使用 `SkillGraphSpecCompiler`/MCP validation 检查 Spec 和目标图。
+2. 只对确定性问题使用 `SkillGraphSpecAutoFixer`。
+3. 向用户展示识别结果、关键节点/阶段、测试覆盖和待生成资产；涉及用户选择时先确认。
+4. 通过 Unity MCP/项目资产工具应用 Spec，必要时生成 `SkillGraphAbilityConfig` 桥接。
+5. 编译 Unity 并运行对应 PlayMode/Gameplay Test。
 
-向用户展示：
-1. 识别到的模式
-2. SkillGraphSpec JSON
-3. gameplay-test.md 内容
-4. 询问是否执行
-
-### Step 5: 执行（用户确认后）
-
-```
-1. 保存 gameplay-test.md 到 Tests/gameplay-specs/
-2. ApplySpec(graphPath, spec) → 落地 SkillGraphAsset
-3. CreateAbilityConfigForGraph → 生成桥接配置
-4. 编译 plan.json
-5. 运行 PlayMode 测试验证
-```
-
-## CLI 命令
-
-| 命令 | 用途 | 输出 |
-|------|------|------|
-| `generate-skill-graph-spec -t "描述"` | NL → SkillGraphSpec | JSON stdout |
-| `generate-skill-graph-spec-answers -a answers.json` | 结构化 → SkillGraphSpec | JSON stdout |
-| `generate-spec -t "描述" -o output.md` | NL → gameplay-test.md | 文件 |
-| `compile-spec -s spec.md -o plan.json` | spec → plan.json | 文件 |
-
-所有 CLI 命令通过 bash tool 调用，工作目录为项目根目录 `D:\codes\tactics-worktrees\w1`。
-
-## 节点链速查表
-
-| 模式 | 节点链 | graphKind |
-|------|--------|-----------|
-| 单体近战 | Start → SelectPrimaryTarget → ApplyDamage → Finish | singleTargetDamage |
-| 单体远程 | Start → SelectPrimaryTarget → ProjectileLaunch → OnHit → ApplyDamage → Finish | projectile |
-| 范围伤害 | Start → SelectTargetPoint → CollectTargetsInArea → ForEachTarget → ApplyDamage → (loop) → Finish | areaDamage |
-| 自身治疗 | Start → SelectSelf → ApplyHeal → Finish | selfHeal |
-| 友军治疗 | Start → SelectAlly → ApplyHeal → Finish | allyHeal |
-| 冲锋 | Start → SelectPrimaryTarget → DashToTarget → Finish | charge |
-| 击退 | Start → SelectPrimaryTarget → ApplyKnockback → Finish | knockback |
-| 伤害+Buff | Start → SelectPrimaryTarget → ApplyDamage → ApplyBuff → Finish | singleTargetDamage |
-| 范围+伤害+Buff | Start → SelectTargetPoint → CollectTargetsInArea → ForEachTarget → ApplyDamage → ApplyBuff → (loop) → Finish | areaDamage |
+具体 MCP 工具名和参数以 `Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs` 的当前实现为准，不从旧提示文档复制契约。
 
 ## Anti-patterns
 
-| ❌ 错误 | ✅ 正确 |
-|---------|---------|
-| 直接生成 SkillGraphSpec 不问问题 | 先识别意图，只问缺失信息 |
-| 生成图后才写测试 | 先生成 gameplay-test.md（测试优先） |
-| 用 generate-spec 处理范围/组合技能 | 根据 SkillGraphSpec 输出手动生成 |
-| 一次性问所有参数 | 只问缺失的，已明确的跳过 |
-| 不展示结果直接 ApplySpec | 展示 JSON 等用户确认 |
+| 错误 | 正确 |
+|---|---|
+| 未核对目录和相似技能就生成 | 先读取当前事实源 |
+| 一次询问所有可能参数 | 只问影响语义的缺失项 |
+| 直接编辑 `.asset` YAML | 使用 Unity/MCP/资产工具 |
+| 先落资产后补测试 | 先生成并校验 Spec 测试 |
+| 自动修复改变产品语义 | 仅修复确定性结构问题 |
+| 使用固定本机 worktree 路径 | 从当前仓库根目录运行 |
 
-## 完整对话示例
+## Checklist
 
-```
-用户: 冰霜新星, 对周围敌人造成魔法伤害并施加冰冻
-
-Agent:
-  识别到技能模式: 范围 + 魔法伤害 + Buff(冰冻)
-  
-  需要补充几个参数:
-  1. 伤害范围半径? (默认 2)
-  2. 基础魔法伤害值? (默认 5)
-  3. 冰冻持续回合? (默认 2)
-  4. 最大施法距离? (默认 3)
-
-用户: 半径2, 伤害5, 冰冻2回合, 距离3
-
-Agent:
-  bash: node Tools/gameplay-test-spec/dist/src/cli.js generate-skill-graph-spec -t "冰霜新星, 半径2, 伤害5, 冰冻2回合, 距离3"
-  
-  [展示 SkillGraphSpec JSON]
-  
-  生成 gameplay-test.md...
-  [展示 YAML]
-  
-  确认后执行 ApplySpec + 生成桥接 + 运行测试?
-
-用户: 确认
-
-Agent:
-  [执行 ApplySpec, 创建桥接, 运行测试]
-  完成! 63 个测试全部通过。
-```
+- [ ] 用户约束、目录和相似资产已核对。
+- [ ] 只补问了高影响缺失项。
+- [ ] Spec 和 gameplay test 已生成并校验。
+- [ ] 关键语义有专用断言。
+- [ ] Unity 资产通过工具应用且未直接编辑 YAML。
+- [ ] Unity 编译与相关测试通过。

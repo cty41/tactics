@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-07-14T21:22:19+08:00"
+timestamp: "2026-07-15T13:51:33+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -13,8 +13,8 @@ repo_paths:
   - .agents/skills/unity-mcp-core/SKILL.md
   - .agents/skills/unity-auto-compile-guard/SKILL.md
   - .agents/skills/project-doc-organization/SKILL.md
-verified_revision: d5f1730d3527
-source_fingerprint: sha256:35c9b0a981ee8d162b4d6961a9544cf4b78543d8917ab597cb65f80847bd4710
+verified_revision: c56d71ad4ebd
+source_fingerprint: sha256:6617411637c9911034d298186c5d4f0c70ea6e65ea82f1cfe9692ed512d5d3c4
 ---
 
 # Core Rules
@@ -35,6 +35,8 @@ source_fingerprint: sha256:35c9b0a981ee8d162b4d6961a9544cf4b78543d8917ab597cb65f
 知识查询、ingest、supersede 和 lint 遵循 [OKF v0.1](../references/okf-v0.1.md) 与项目的 `knowledge-maintenance` skill。普通查询默认只读。
 
 修改 `catalog-scopes.yaml` 监控范围内的实现或文档后，继续执行 [OKF Maintenance](okf-maintenance.md) 的影响检测与 scope 同步；这一步发生在提交准备之前，不依赖 pre-commit 或 CI。
+
+设计、活跃计划和完成后清理遵循 [Project Documentation](project-documentation.md)。
 
 # Citations
 

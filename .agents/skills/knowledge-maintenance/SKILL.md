@@ -5,104 +5,91 @@ description: "Use when querying, ingesting, superseding, or linting cross-system
 
 # Tactics OKF Knowledge Maintenance
 
-维护 `.agents/knowledge/` 中的独立 OKF v0.1 bundle，并保持它与设计、计划、代码、Unity 资产和测试一致。
+维护 `.agents/knowledge/` 的 OKF v0.1 bundle，使其能导航到当前设计、活跃计划、代码、Unity 资产和测试。
 
 ## Quick Reference
 
 | 操作 | 入口 |
-|------|------|
+|---|---|
 | 查询 | `.agents/knowledge/index.md` |
-| 写入/更新 | 查找并更新已有 `catalog_scope` |
-| 替代旧概念 | `status: superseded` + `superseded_by` |
-| 检测代码影响 | `python Tools/okf/catalog_impact.py report --worktree` |
-| 同步受影响 scope | `python Tools/okf/catalog_impact.py sync --worktree --scope <scope> --write` |
+| 影响检测 | `python Tools/okf/catalog_impact.py report --worktree` |
+| 同步 scope | `python Tools/okf/catalog_impact.py sync --worktree --scope <scope> --write` |
 | 校验 | `python Tools/okf/validate_bundle.py` |
+| 工具测试 | `python -m unittest discover Tools/okf -p "test_*.py"` |
 
 ## When to use
 
-- 回答跨多个系统、文档或历史决策的问题
-- 将外部资料或持久分析沉淀为项目知识
-- 实现变化后更新系统综合页和验证 revision
-- 标记旧知识被新结论替代
-- 检查 OKF frontmatter、链接、index 或 log 健康度
+- 查询或更新跨系统当前状态。
+- 代码、资产、测试或权威文档变化后同步受影响 scope。
+- 摄取外部资料、替代旧概念、修复 index/frontmatter/link。
+- 清理文档与计划时维护可发现性和历史关系。
+
+## 真相源边界
+
+- 当前设计：`.agents/docs/` 中的主题权威文档；`brainstorm.md` 只是临时灵感，不是事实源。
+- 当前任务：仅指 `.agents/plans/` 中仍需执行的活跃计划。
+- 当前行为：代码、Unity 资产和测试。
+- OKF：摘要、关系、验证 revision 和导航。
+
+计划完成后，结果必须从实现与权威 docs 推导；不要继续引用已删除计划作为当前事实。OKF 自身的历史概念不要物理删除，应使用 `superseded` 或 `archived` 状态保留关系。
 
 ## Workflow
 
-### Step 1: 选择操作模式
+### 1. 渐进查询
 
-- `query` 默认只读。
-- `ingest`、`supersede` 和产生修复的 `lint` 会修改知识库，必须在任务范围内明确授权。
+从根 index 开始，只读取相关子 index 和概念页，再按 `repo_paths` 回到真相源。不要先加载整个 bundle。
 
-### Step 2: 渐进读取
+### 2. 棬测影响
 
-先读取根 index，再读取相关子 index 和概念页：
-
-```text
-.agents/knowledge/index.md
-  -> systems/index.md
-    -> systems/skill-graph.md
-```
-
-不要先扫描并加载整个 bundle。
-
-### Step 3: 回到真相源
-
-概念页只是综合层：
-
-- 设计问题核对 `.agents/docs/`
-- 计划问题核对 `.agents/plans/`
-- 当前实现核对 `repo_paths` 指向的代码、Unity 资产和测试
-- Agent 约束核对 `AGENTS.md`、rules 和 skills
-
-### Step 4: 更新概念
-
-遵循 `.agents/rules/knowledge-maintenance.md`。新概念至少使用：
-
-```yaml
----
-type: Game System
-title: Example System
-description: 一句话摘要。
-timestamp: 2026-07-14T00:00:00+08:00
-status: active
-catalog_scope: example-system
----
-```
-
-关系必须同时写在正文 Markdown 链接中，不能只存在于 frontmatter。
-
-### Step 5: 更新导航与日志
-
-- 将概念加入所在目录的 `index.md`。
-- 新目录加入父级 index。
-- 知识发生变化时，在根 `log.md` 的最新日期下记录一条 Creation、Update、Deprecation 或 Lint。
-
-实现变化触发的维护先运行影响检测。读取报告列出的概念和真实 diff，更新正文后再对本任务实际影响的 scope 执行 `sync`。不要因为工作区已有其他未提交修改而同步无关 scope。
-
-### Step 6: 校验
+对工作区变更先运行：
 
 ```powershell
-python Tools/okf/validate_bundle.py
-python -m unittest discover Tools/okf -p "test_*.py"
+python Tools/okf/catalog_impact.py report --worktree
 ```
 
-校验失败时先修复 frontmatter、断链、index 覆盖或重复 `catalog_scope`，再交付结果。
+只处理本任务实际影响的 scope；不要同步工作区中他人的无关修改。文档治理和 `brainstorm.md` 改动进入 `project-documentation`；只有经仓库证据确认的未实施项才进入 `project-known-gaps`。
+
+### 3. 更新概念与关系
+
+遵循 `.agents/rules/knowledge-maintenance.md`：
+
+- active scope 唯一；
+- frontmatter 的路径、状态、revision 和 fingerprint 有效；
+- 关系同时写成正文 Markdown 链接；
+- 新概念加入子 index，目录加入父 index；
+- 替代旧概念时填写 `superseded_by`，归档完成切片时使用 `archived`。
+
+### 4. 记录并同步
+
+在根 `log.md` 记录 Creation、Update、Deprecation 或 Lint。更新正文后，对实际受影响 scope 分别执行：
+
+```powershell
+python Tools/okf/catalog_impact.py sync --worktree --scope <scope> --write
+```
+
+### 5. 校验
+
+```powershell
+python -m unittest discover Tools/okf -p "test_*.py"
+python Tools/okf/validate_bundle.py
+```
 
 ## Anti-patterns
 
-| 错误 | 正确 | 原因 |
-|------|------|------|
-| 为每次聊天创建页面 | 更新已有 scope 或保持只读 | 防止知识碎片化 |
-| 把 OKF 当实现真相源 | 回到代码、资产和测试 | 综合页可能过时 |
-| 复制完整设计或代码 | 摘要并引用 `repo_paths` | 避免双重维护 |
-| 删除过时概念 | 标记 superseded 并链接替代页 | 保留决策历史 |
-| 只更新概念页 | 同步 index、log 并 lint | 保持可发现和可验证 |
+| 错误 | 正确 |
+|---|---|
+| 扫描整个知识库后再找主题 | index → 子 index → 概念页渐进读取 |
+| 把 OKF 当实现真相源 | 回到 repo_paths 指向的实现与测试 |
+| 复制完整设计/计划 | 摘要并链接权威来源 |
+| 已完成计划继续作为当前依据 | 从 docs、代码、资产、测试重建当前结论 |
+| 将 brainstorm 灵感写成当前状态 | 先核对并迁入设计、缺口或计划 |
+| 删除过时 OKF 概念 | 标记 superseded/archived 并保留关系 |
+| 同步所有报告 scope | 只同步本任务影响的 scope |
 
 ## Checklist
 
-- [ ] 从根 index 渐进读取
-- [ ] 已核对对应真相源
-- [ ] `catalog_scope` 没有重复 active 页面
-- [ ] 内部关系已写为 Markdown 链接
-- [ ] index 和必要的 log 已更新
-- [ ] OKF 校验与单元测试通过
+- [ ] 已从 index 渐进读取并复核真相源。
+- [ ] active `catalog_scope` 唯一。
+- [ ] repo_paths、正文链接、index 与 log 已同步。
+- [ ] 已完成计划不再作为当前事实来源。
+- [ ] 影响检测、scope sync、validator 和单元测试通过。

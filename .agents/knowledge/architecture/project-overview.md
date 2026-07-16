@@ -4,20 +4,20 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
 tags: [architecture, unity, agent-first]
-timestamp: "2026-07-14T21:22:19+08:00"
+timestamp: "2026-07-15T12:00:00+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
   - AGENTS.md
   - .agents/ARCHITECTURE.md
   - Assets/Tactics/Scripts/Common/UIManager.cs
-verified_revision: d5f1730d3527
+verified_revision: c56d71ad4ebd
 source_fingerprint: sha256:0d4feed7888853a0ca5f469716af441f37f1f2e8ce95009e80e8c6d96cf06637
 ---
 
 # Summary
 
-Tactics 是 Agent 优先维护的 Unity 战棋项目。设计意图保存在 `.agents/docs/`，执行计划保存在 `.agents/plans/`，当前实现由代码、Unity 资产和测试证明；本 OKF bundle 只提供跨系统综合和导航。
+Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、Unity 资产和测试证明；本 OKF bundle 只提供跨系统综合和导航。
 
 # Runtime Foundation
 
@@ -33,6 +33,7 @@ Tactics 是 Agent 优先维护的 Unity 战棋项目。设计意图保存在 `.a
 - [Battle System](../systems/battle.md)承接棋盘、回合、单位、结算和战斗反馈。
 - [Roguelike Run](../systems/roguelike-run.md)组织地图、节点、冒险状态和 run 内成长。
 - [Unity Agent Workflow](../operations/unity-agent-workflow.md)定义 Agent 修改和验证项目的安全路径。
+- [Project Documentation](../operations/project-documentation.md)定义设计、活跃计划、统一缺口和历史清理的生命周期。
 - [OKF Maintenance](../operations/okf-maintenance.md)将实现和文档变更反向映射到需要更新的知识 scope。
 
 # Citations

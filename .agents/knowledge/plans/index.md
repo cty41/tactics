@@ -1,3 +1,11 @@
-# Development Plan
+# Planning Knowledge
 
-* [First Slice Three-Class Skills](first-slice-three-class-skills.md) - 三职业基础技能、首批高级技能、候选过滤和最小升级 UI 的活跃首切计划。
+## Backlog
+
+* [Project Known Gaps](project-known-gaps.md) - 已确认但尚未激活为开发计划的集中缺口。
+
+## Archived Outcomes
+
+* [First Slice Three-Class Skills](first-slice-three-class-skills.md) - 已由当前设计、技能目录、资产和测试接管的三职业首切成果。
+
+本索引只表达已审计规划知识的状态；未纳入本次审计范围的文件不据此推断状态。
