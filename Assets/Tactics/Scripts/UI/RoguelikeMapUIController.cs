@@ -19,9 +19,9 @@ namespace Tactics.UI
 {
     public sealed class RoguelikeMapUIController : UIControllerBase
     {
-        public const string MapPlayerPrefsKey = "RoguelikeMap";
-        public const string RoguelikePendingNodePrefsKey = "RoguelikePendingNode";
-        public const string RoguelikeReturnScenePrefsKey = "RoguelikeReturnScene";
+        public const string MapPlayerPrefsKey = PureRunSessionStore.MapPrefsKey;
+        public const string RoguelikePendingNodePrefsKey = PureRunSessionStore.PendingNodePrefsKey;
+        public const string RoguelikeReturnScenePrefsKey = PureRunSessionStore.ReturnScenePrefsKey;
 
         [Header("Layout")]
         public float unitsToPixelsMultiplier = 60f;
@@ -153,7 +153,6 @@ namespace Tactics.UI
 
         private void LoadOrGenerateMap()
         {
-            string prefsKey = MapPlayerPrefsKey;
             if (RoguelikeMapRuntimeState.HasActiveRun && RoguelikeMapRuntimeState.CurrentMap != null)
             {
                 if (RoguelikeMapRuntimeState.CurrentMap.layoutVersion == RoguelikeMapGenerator.PureRunLayoutVersion)
@@ -169,7 +168,7 @@ namespace Tactics.UI
             }
             else
             {
-                LoadFreshMap(prefsKey);
+                LoadFreshMap();
             }
 
             // 检测是否有中断的事件（玩家在事件节点中退出游戏）
@@ -180,7 +179,7 @@ namespace Tactics.UI
             }
         }
 
-        private void LoadFreshMap(string prefsKey)
+        private void LoadFreshMap()
         {
             // 检查 SceneController 的地图模式配置
             var sc = SceneController.Instance;
@@ -195,30 +194,12 @@ namespace Tactics.UI
                 _nodeStateManager = CreateNodeStateManager(_currentMap);
                 TLog.Info($"[RoguelikeMapUIController] 从本地配置加载地图: {sc.MapDataFile.name}");
             }
-            else if (PlayerPrefs.HasKey(prefsKey))
+            else if (PureRunSessionStore.TryLoad(out _, out var savedMap))
             {
-                string mapJson = PlayerPrefs.GetString(prefsKey);
-                _currentMap = JsonConvert.DeserializeObject<global::Tactics.RoguelikeMap.RoguelikeMap>(mapJson);
-                if (_currentMap == null || _currentMap.layoutVersion != RoguelikeMapGenerator.PureRunLayoutVersion)
-                {
-                    GenerateNewMap();
-                    return;
-                }
+                _currentMap = savedMap;
                 if (_currentMap.visionRange < 5f) _currentMap.visionRange = 15f;
                 if (_currentMap.maxReachableDistance < 1f) _currentMap.maxReachableDistance = 10f;
                 _nodeStateManager = CreateNodeStateManager(_currentMap);
-                if (_currentMap?.visitedNodes != null && _currentMap.visitedNodes.Count > 0)
-                {
-                    var bossNode = _currentMap.GetBossNode();
-                    if (bossNode != null && _currentMap.visitedNodes.Contains(bossNode.nodeId))
-                    {
-                        GenerateNewMap();
-                    }
-                }
-                else
-                {
-                    GenerateNewMap();
-                }
             }
             else
             {
@@ -237,20 +218,14 @@ namespace Tactics.UI
             int runSeed = RoguelikeMapGenerator.CreateRunSeed();
             _currentMap = RoguelikeMapGenerator.GetPureRunMap(mapConfig, runSeed);
             _nodeStateManager = CreateNodeStateManager(_currentMap);
-            RoguelikeMapRuntimeState.AttachMap(_currentMap);
-            PlayerAdventureStateStore.Save(PlayerAdventureStateStore.CreatePureRunState(runSeed));
-            SaveMap();
+            PureRunSessionStore.StartNew(PlayerAdventureStateStore.CreatePureRunState(runSeed), _currentMap);
         }
 
         private void SaveMap()
         {
             if (_currentMap == null) return;
 
-            string prefsKey = MapPlayerPrefsKey;
-            string json = JsonConvert.SerializeObject(_currentMap, Formatting.Indented,
-                new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-            PlayerPrefs.SetString(prefsKey, json);
-            PlayerPrefs.Save();
+            PureRunSessionStore.SaveMap(_currentMap);
         }
 
         private bool TryEnsureRootElements()
@@ -387,6 +362,13 @@ namespace Tactics.UI
             var state = PlayerAdventureStateStore.Load();
             if (state?.Roster == null || state.ActivePartyCharacterIds == null) return;
 
+            var goldLabel = root.Q<Label>("GoldLabel");
+            if (goldLabel != null)
+                goldLabel.text = state.Gold.ToString();
+            var consumableLabel = root.Q<Label>("ConsumableLabel");
+            if (consumableLabel != null)
+                consumableLabel.text = (state.ConsumableInstances?.Count ?? 0).ToString();
+
             foreach (string id in state.ActivePartyCharacterIds)
             {
                 var data = state.Roster.FirstOrDefault(c => c.Id == id);
@@ -401,6 +383,8 @@ namespace Tactics.UI
         {
             var slot = new VisualElement();
             slot.AddToClassList("party-slot");
+            if (data.IsDead)
+                slot.AddToClassList("party-dead");
 
             // Avatar
             var avatar = new VisualElement();
@@ -408,7 +392,10 @@ namespace Tactics.UI
             slot.Add(avatar);
 
             // Name
-            var nameLabel = new Label(GetRoleDisplayName(data.RoleType));
+            string displayName = string.IsNullOrWhiteSpace(data.DisplayName)
+                ? GetRoleDisplayName(data.RoleType)
+                : data.DisplayName;
+            var nameLabel = new Label(data.IsDead ? $"{displayName} [DEAD]" : displayName);
             nameLabel.AddToClassList("party-name");
             slot.Add(nameLabel);
 
@@ -417,9 +404,15 @@ namespace Tactics.UI
             hpBg.AddToClassList("hp-bar-background");
             var hpFill = new VisualElement();
             hpFill.AddToClassList("hp-bar-fill");
-            hpFill.style.width = Length.Percent(100);
+            float hpPercent = data.IsDead ? 0f : Mathf.Clamp01(data.CurrentHp / (float)data.MaxHp) * 100f;
+            hpFill.style.width = Length.Percent(hpPercent);
             hpBg.Add(hpFill);
             slot.Add(hpBg);
+
+            var vitalsLabel = new Label(
+                $"HP {Mathf.Max(0, data.CurrentHp)}/{data.MaxHp}  MP {Mathf.Max(0, data.CurrentMp ?? 0)}/{data.MaxMp}");
+            vitalsLabel.AddToClassList("party-vitals");
+            slot.Add(vitalsLabel);
 
             // Level
             var levelLabel = new Label($"Level: {data.Level}");

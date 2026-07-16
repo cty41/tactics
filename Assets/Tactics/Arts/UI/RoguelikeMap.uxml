@@ -18,9 +18,9 @@
                     <ui:VisualElement name="GoldIcon" class="resource-icon gold-icon"/>
                     <ui:Label name="GoldLabel" text="0" class="resource-label"/>
                 </ui:VisualElement>
-                <ui:VisualElement name="FoodContainer" class="resource-item">
+                <ui:VisualElement name="ConsumableContainer" class="resource-item">
                     <ui:VisualElement name="FoodIcon" class="resource-icon food-icon"/>
-                    <ui:Label name="FoodLabel" text="0" class="resource-label"/>
+                    <ui:Label name="ConsumableLabel" text="0" class="resource-label"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

@@ -15,7 +15,7 @@ namespace Tactics.RoguelikeMap
     public static class RoguelikeMapGenerator
     {
         private const int MaxRetries = 50;
-        public const int PureRunLayoutVersion = 1;
+        public const int PureRunLayoutVersion = 2;
         public const int PureRunLayerCount = 7;
 
         private const float PureRunLayerSpacing = 10f;
@@ -31,7 +31,7 @@ namespace Tactics.RoguelikeMap
 
         /// <summary>
         /// Builds the first-demo forward-only run map.
-        /// Layers 1-3 and 5 are mandatory battles, layers 4 and 6 offer battle/service
+        /// Layers 1-3 and 5 are mandatory battles, layers 4 and 6 offer battle/service/event
         /// competition, and layer 7 is the single Special boss encounter.
         /// </summary>
         public static RoguelikeMap GetPureRunMap(RoguelikeMapConfig config, int runSeed)
@@ -366,9 +366,10 @@ namespace Tactics.RoguelikeMap
         {
             return new List<RoguelikeMapNode>
             {
-                CreatePureRunNode(config, $"layer_{layerIndex:00}_battle", battleType, layerIndex, 0),
-                CreatePureRunNode(config, $"layer_{layerIndex:00}_rest", RoguelikeNodeType.RestSite, layerIndex, 1),
-                CreatePureRunNode(config, $"layer_{layerIndex:00}_store", RoguelikeNodeType.Store, layerIndex, 2)
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_battle", battleType, layerIndex, 0, null, 4),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_rest", RoguelikeNodeType.RestSite, layerIndex, 1, null, 4),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_store", RoguelikeNodeType.Store, layerIndex, 2, null, 4),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_event", RoguelikeNodeType.Mystery, layerIndex, 3, null, 4)
             };
         }
 
@@ -378,14 +379,12 @@ namespace Tactics.RoguelikeMap
             RoguelikeNodeType nodeType,
             int layerIndex,
             int branchIndex,
-            string blueprintNameOverride = null)
+            string blueprintNameOverride = null,
+            int branchCount = 1)
         {
-            float y = branchIndex switch
-            {
-                1 => PureRunBranchSpacing,
-                2 => -PureRunBranchSpacing,
-                _ => 0f
-            };
+            float y = branchCount <= 1
+                ? 0f
+                : ((branchCount - 1) * 0.5f - branchIndex) * PureRunBranchSpacing;
 
             var node = new RoguelikeMapNode(
                 nodeId,

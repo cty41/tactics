@@ -16,6 +16,16 @@ using UnityEngine;
 namespace Tactics.Common.Units.Abilities
 {
     /// <summary>
+    /// Overrides resource legality and completion handling for runtime graph abilities.
+    /// </summary>
+    public interface ISkillGraphUsePolicy
+    {
+        string DisplayName { get; }
+        bool CanPerform(IGridController gridController);
+        void CommitCompletedUse();
+    }
+
+    /// <summary>
     /// SkillGraph 能力实现。
     /// 通过 SkillGraphRunner 执行技能图。
     /// </summary>
@@ -29,18 +39,23 @@ namespace Tactics.Common.Units.Abilities
         private IGridController _gridController;
         private HashSet<ICell> _validTargetCells;
         private HashSet<ICell> _displayCells;
+        private readonly ISkillGraphUsePolicy _usePolicy;
 
         public IUnit UnitReference { get; set; }
-        public string DisplayName => _config.DisplayName;
+        public string DisplayName => _usePolicy?.DisplayName ?? _config.DisplayName;
         public Sprite Icon => _config.Icon;
         public int Cost => _config.ManaCost;
         public SkillGraphAsset SkillGraphAsset => _config.SkillGraph;
         public int TargetRange => _config.TargetRange;
 
-        public SkillGraphAbilityImpl(IUnit owner, SkillGraphAbilityConfig config)
+        public SkillGraphAbilityImpl(
+            IUnit owner,
+            SkillGraphAbilityConfig config,
+            ISkillGraphUsePolicy usePolicy = null)
         {
             _owner = owner;
             _config = config;
+            _usePolicy = usePolicy;
             UnitReference = owner;
         }
 
@@ -106,6 +121,8 @@ namespace Tactics.Common.Units.Abilities
         public bool CanPerform(IGridController gridController)
         {
             if (_config.SkillGraph == null) return false;
+            if (_usePolicy != null)
+                return _usePolicy.CanPerform(gridController);
             if (_config.IsBasicAbility)
                 return !_owner.HasUsedBasicAbilityThisTurn(_config.DisplayName);
             return _owner.Mana >= _config.ManaCost;
@@ -183,6 +200,7 @@ namespace Tactics.Common.Units.Abilities
 
             var first = FindFirstSelectionNode();
             bool requiresAlly = first is SelectAllyNodeRecord;
+            bool allyIncludesSelf = first is SelectAllyNodeRecord allySelection && allySelection.IncludeSelf;
             bool requiresCorpse = first is SelectCorpseTargetNodeRecord;
 
             if (first is SelectTargetPointNodeRecord)
@@ -213,7 +231,7 @@ namespace Tactics.Common.Units.Abilities
                 bool isAlly = target.PlayerNumber == _owner.PlayerNumber;
                 if (requiresAlly != isAlly)
                     continue;
-                if (requiresAlly && ReferenceEquals(target, _owner))
+                if (requiresAlly && !allyIncludesSelf && ReferenceEquals(target, _owner))
                     continue;
 
                 options.Add(new AbilityTargetOption(target.CurrentCell, new[] { target }));
@@ -328,11 +346,15 @@ namespace Tactics.Common.Units.Abilities
                 TLog.Warning($"[SkillGraphAbility] '{DisplayName}' ended with state: {executionState}. Error: {context.LastError}");
             }
 
-            // Mark basic ability used or deduct mana
-            if (_config.IsBasicAbility)
-                _owner.MarkBasicAbilityUsed(_config.DisplayName);
-            else
-                _owner.Mana -= _config.ManaCost;
+            if (executionState == SkillGraphExecutionState.Completed)
+            {
+                if (_usePolicy != null)
+                    _usePolicy.CommitCompletedUse();
+                else if (_config.IsBasicAbility)
+                    _owner.MarkBasicAbilityUsed(_config.DisplayName);
+                else
+                    _owner.Mana -= _config.ManaCost;
+            }
 
             gridController.GridState = new GridStateAwaitInput();
 
@@ -432,10 +454,11 @@ namespace Tactics.Common.Units.Abilities
             if (FirstSelectionRequiresAlly())
             {
                 int allyRange = GetAllyRangeFromGraph();
+                bool includeSelf = FirstAllySelectionIncludesSelf();
                 foreach (var cell in allCells)
                 {
                     int dist = cell.GetDistance(ownerCell);
-                    if (dist > 0 && dist <= allyRange && HasFriendlyUnit(cell))
+                    if ((includeSelf || dist > 0) && dist <= allyRange && HasFriendlyUnit(cell, includeSelf))
                         displayCells.Add(cell);
                 }
                 return displayCells;
@@ -523,10 +546,11 @@ namespace Tactics.Common.Units.Abilities
             if (FirstSelectionRequiresAlly())
             {
                 int allyRange = GetAllyRangeFromGraph();
+                bool includeSelf = FirstAllySelectionIncludesSelf();
                 foreach (var cell in allCells)
                 {
                     int dist = cell.GetDistance(ownerCell);
-                    if (dist > 0 && dist <= allyRange && HasFriendlyUnit(cell))
+                    if ((includeSelf || dist > 0) && dist <= allyRange && HasFriendlyUnit(cell, includeSelf))
                         validCells.Add(cell);
                 }
                 return validCells;
@@ -777,12 +801,18 @@ namespace Tactics.Common.Units.Abilities
             return 1;
         }
 
-        private bool HasFriendlyUnit(ICell cell)
+        private bool FirstAllySelectionIncludesSelf()
+        {
+            return FindFirstSelectionNode() is SelectAllyNodeRecord select && select.IncludeSelf;
+        }
+
+        private bool HasFriendlyUnit(ICell cell, bool includeSelf = false)
         {
             if (_gridController == null || cell == null) return false;
             foreach (var unit in cell.CurrentUnits)
             {
-                if (unit != null && unit.PlayerNumber == _owner.PlayerNumber && !ReferenceEquals(unit, _owner))
+                if (unit != null && unit.PlayerNumber == _owner.PlayerNumber &&
+                    (includeSelf || !ReferenceEquals(unit, _owner)))
                     return true;
             }
             return false;

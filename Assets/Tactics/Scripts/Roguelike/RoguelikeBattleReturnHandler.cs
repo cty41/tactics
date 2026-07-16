@@ -27,6 +27,8 @@ namespace Tactics.Roguelike
         private static readonly RoguelikeBattleReturnHandler _instance = new RoguelikeBattleReturnHandler();
         public static RoguelikeBattleReturnHandler Instance => _instance;
         private static GameResult _pendingRoguelikeReturnResult;
+        private static bool _pendingRunTerminal;
+        private static PureRunEndReason _pendingRunEndReason;
 
         private static readonly JsonSerializerSettings MapJsonSettings = new JsonSerializerSettings
         {
@@ -79,6 +81,8 @@ namespace Tactics.Roguelike
                 if (isRoguelikeBattle)
                 {
                     _pendingRoguelikeReturnResult = result;
+                    _pendingRunTerminal = IsBossBattle();
+                    _pendingRunEndReason = PureRunEndReason.BossVictory;
                     BattleSettlementFlow.Instance.OnFlowFinished -= OnRoguelikeSettlementFlowFinished;
                     BattleSettlementFlow.Instance.OnFlowFinished += OnRoguelikeSettlementFlowFinished;
                 }
@@ -128,6 +132,8 @@ namespace Tactics.Roguelike
                     // 注册 BattleSettlementFlow 来管理UI流程
                     BattleSettlementFlow.Instance.Subscribe(BattleSettlementCoordinator.Instance, state);
                     _pendingRoguelikeReturnResult = result;
+                    _pendingRunTerminal = true;
+                    _pendingRunEndReason = PureRunEndReason.Defeat;
                     BattleSettlementFlow.Instance.OnFlowFinished -= OnRoguelikeSettlementFlowFinished;
                     BattleSettlementFlow.Instance.OnFlowFinished += OnRoguelikeSettlementFlowFinished;
 
@@ -265,15 +271,27 @@ namespace Tactics.Roguelike
         }
 
         /// <summary>
-        /// 结算流程完成后的回调：显示 RunEndSummary 后再离开战斗场景
+        /// Leaves normal victories through the map return flow and shows a run summary only
+        /// for defeat or boss victory.
         /// </summary>
         private static async void OnRoguelikeSettlementFlowFinished()
         {
             BattleSettlementFlow.Instance.OnFlowFinished -= OnRoguelikeSettlementFlowFinished;
-            TLog.Info("[RoguelikeBattleReturnHandler] BattleSettlementFlow finished. Showing RunEndSummary.");
 
             var result = _pendingRoguelikeReturnResult;
             _pendingRoguelikeReturnResult = default;
+            bool isTerminal = _pendingRunTerminal;
+            PureRunEndReason endReason = _pendingRunEndReason;
+            _pendingRunTerminal = false;
+
+            if (!isTerminal)
+            {
+                TLog.Info("[RoguelikeBattleReturnHandler] Settlement finished. Returning to the active run map.");
+                await BattleFlowCoordinator.Instance.EndBattleAsync(result);
+                return;
+            }
+
+            TLog.Info($"[RoguelikeBattleReturnHandler] Settlement finished. Showing terminal run summary: {endReason}.");
 
             // 创建 RunSummary 并填充数据
             var summary = CreateRunSummaryFromCurrentState(result);
@@ -287,12 +305,14 @@ namespace Tactics.Roguelike
                 {
                     TLog.Info("[RoguelikeBattleReturnHandler] RunEndSummary closed. Leaving battle scene now.");
                     UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
+                    PureRunSessionStore.Finish(endReason);
                     _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
                 });
             }
             else
             {
                 TLog.Warning("[RoguelikeBattleReturnHandler] RunEndSummaryUIController not found. Leaving battle scene directly.");
+                PureRunSessionStore.Finish(endReason);
                 _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
             }
         }

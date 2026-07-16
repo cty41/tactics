@@ -1,4 +1,6 @@
 using System.Collections;
+using Tactics.Flow.Roguelike;
+using Tactics.Roguelike;
 using Tactics.Runtime.Utilities;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -16,6 +18,10 @@ namespace Tactics.UI
         private Button _loadGameButton;
         private Button _optionsButton;
         private Button _quitButton;
+        private VisualElement _overwritePrompt;
+        private Button _confirmNewRunButton;
+        private Button _cancelNewRunButton;
+        private bool _isWired;
 
         protected override void OnShown()
         {
@@ -41,6 +47,15 @@ namespace Tactics.UI
             _loadGameButton = root.Q<Button>("LoadGameButton");
             _optionsButton = root.Q<Button>("OptionsButton");
             _quitButton = root.Q<Button>("QuitButton");
+            _overwritePrompt = root.Q<VisualElement>("OverwritePrompt");
+            _confirmNewRunButton = root.Q<Button>("ConfirmNewRunButton");
+            _cancelNewRunButton = root.Q<Button>("CancelNewRunButton");
+
+            if (_isWired)
+            {
+                RefreshRunActions();
+                return;
+            }
 
             if (_newGameButton != null)
                 _newGameButton.clicked += OnNewGameClicked;
@@ -61,6 +76,14 @@ namespace Tactics.UI
                 _quitButton.clicked += OnQuitClicked;
             else
                 TLog.Warning("[HomeUIController] QuitButton not found in UXML.");
+
+            if (_confirmNewRunButton != null)
+                _confirmNewRunButton.clicked += OnConfirmNewRunClicked;
+            if (_cancelNewRunButton != null)
+                _cancelNewRunButton.clicked += HideOverwritePrompt;
+
+            _isWired = true;
+            RefreshRunActions();
         }
 
         protected override void OnHidden()
@@ -83,16 +106,34 @@ namespace Tactics.UI
                 _optionsButton.clicked -= OnOptionsClicked;
             if (_quitButton != null)
                 _quitButton.clicked -= OnQuitClicked;
+            if (_confirmNewRunButton != null)
+                _confirmNewRunButton.clicked -= OnConfirmNewRunClicked;
+            if (_cancelNewRunButton != null)
+                _cancelNewRunButton.clicked -= HideOverwritePrompt;
+
+            _isWired = false;
         }
 
         private void OnNewGameClicked()
         {
-            _ = OpenNewGameSlotsAsync();
+            if (PureRunSessionStore.HasActiveRun)
+            {
+                ShowOverwritePrompt();
+                return;
+            }
+
+            _ = StartNewRunAsync();
         }
 
         private void OnLoadGameClicked()
         {
-            _ = OpenLoadGameSlotsAsync();
+            if (!PureRunSessionStore.TryLoad(out _, out _))
+            {
+                RefreshRunActions();
+                return;
+            }
+
+            _ = OpenRunMapAsync();
         }
 
         private void OnOptionsClicked()
@@ -109,11 +150,18 @@ namespace Tactics.UI
 #endif
         }
 
-        private static async Task OpenNewGameSlotsAsync()
+        private void OnConfirmNewRunClicked()
+        {
+            HideOverwritePrompt();
+            _ = StartNewRunAsync();
+        }
+
+        private static async Task StartNewRunAsync()
         {
             try
             {
-                await SlotSelectUIController.ShowForNewGameAsync();
+                PureRunSessionStore.Clear();
+                await OpenRunMapAsync();
             }
             catch (System.Exception e)
             {
@@ -121,16 +169,29 @@ namespace Tactics.UI
             }
         }
 
-        private static async Task OpenLoadGameSlotsAsync()
+        private static async Task OpenRunMapAsync()
         {
-            try
-            {
-                await SlotSelectUIController.ShowForLoadGameAsync();
-            }
-            catch (System.Exception e)
-            {
-                TLog.Error($"[HomeUIController] Exception: {e.Message}");
-            }
+            UIManager.Instance.Hide(UIManager.UIId.Home);
+            await RoguelikeFlowCoordinator.Instance.OpenMapAsync();
+        }
+
+        private void RefreshRunActions()
+        {
+            if (_loadGameButton != null)
+                _loadGameButton.SetEnabled(PureRunSessionStore.HasActiveRun);
+            HideOverwritePrompt();
+        }
+
+        private void ShowOverwritePrompt()
+        {
+            if (_overwritePrompt != null)
+                _overwritePrompt.style.display = DisplayStyle.Flex;
+        }
+
+        private void HideOverwritePrompt()
+        {
+            if (_overwritePrompt != null)
+                _overwritePrompt.style.display = DisplayStyle.None;
         }
     }
 }

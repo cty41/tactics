@@ -5,6 +5,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Roguelike;
+using Tactics.Consumables;
+using Tactics.RoguelikeMap.Interaction;
+using Tactics.Roster;
 
 namespace Tactics.Tests.Editor
 {
@@ -529,9 +532,9 @@ namespace Tactics.Tests.Editor
                 Assert.That(map.nodes.Select(node => node.LayerIndex).Distinct(),
                     Is.EquivalentTo(Enumerable.Range(0, RoguelikeMapGenerator.PureRunLayerCount + 1)));
                 Assert.That(map.nodes.Where(node => node.LayerIndex == 4).Select(node => node.nodeType),
-                    Is.EquivalentTo(new[] { RoguelikeNodeType.MinorEnemy, RoguelikeNodeType.RestSite, RoguelikeNodeType.Store }));
+                    Is.EquivalentTo(new[] { RoguelikeNodeType.MinorEnemy, RoguelikeNodeType.RestSite, RoguelikeNodeType.Store, RoguelikeNodeType.Mystery }));
                 Assert.That(map.nodes.Where(node => node.LayerIndex == 6).Select(node => node.nodeType),
-                    Is.EquivalentTo(new[] { RoguelikeNodeType.EliteEnemy, RoguelikeNodeType.RestSite, RoguelikeNodeType.Store }));
+                    Is.EquivalentTo(new[] { RoguelikeNodeType.EliteEnemy, RoguelikeNodeType.RestSite, RoguelikeNodeType.Store, RoguelikeNodeType.Mystery }));
                 Assert.That(map.nodes.Single(node => node.LayerIndex == 7).nodeType, Is.EqualTo(RoguelikeNodeType.Boss));
 
                 foreach (var node in map.nodes)
@@ -598,6 +601,64 @@ namespace Tactics.Tests.Editor
             finally
             {
                 RoguelikeMapRuntimeState.ClearAll();
+                Object.DestroyImmediate(config);
+            }
+        }
+
+        [Test]
+        public void ConsumablePool_IsDeterministicAndInstancesOwnDurability()
+        {
+            var firstDefinition = ConsumableDatabase.Roll("consumables", 20260715);
+            var repeatedDefinition = ConsumableDatabase.Roll("consumables", 20260715);
+
+            Assert.That(firstDefinition, Is.Not.Null);
+            Assert.That(repeatedDefinition?.Id, Is.EqualTo(firstDefinition.Id));
+
+            var firstInstance = ConsumableInstance.Create(firstDefinition);
+            var secondInstance = ConsumableInstance.Create(firstDefinition);
+            firstInstance.RemainingCharges--;
+
+            Assert.That(firstInstance.InstanceId, Is.Not.EqualTo(secondInstance.InstanceId));
+            Assert.That(secondInstance.RemainingCharges, Is.EqualTo(secondInstance.MaxCharges));
+        }
+
+        [Test]
+        public void RewardResult_KnownConsumableCreatesInstanceInsteadOfLegacyInventoryEntry()
+        {
+            var state = PlayerAdventureStateStore.CreatePureRunState(7);
+            var reward = RewardResult.Empty();
+            reward.ItemIds.Add("field_ration");
+
+            reward.ApplyItemsToState(state);
+
+            Assert.That(state.ConsumableInstances, Has.Count.EqualTo(1));
+            Assert.That(state.ConsumableInstances[0].DefinitionId, Is.EqualTo("field_ration"));
+            Assert.That(state.Inventory, Does.Not.Contain("field_ration"));
+        }
+
+        [Test]
+        public void PureRunSessionStore_RequiresStateMapPairAndClearsTerminalRun()
+        {
+            var config = ScriptableObject.CreateInstance<RoguelikeMapConfig>();
+            try
+            {
+                PureRunSessionStore.Clear();
+                int seed = 91;
+                var state = PlayerAdventureStateStore.CreatePureRunState(seed);
+                var map = RoguelikeMapGenerator.GetPureRunMap(config, seed);
+                PureRunSessionStore.StartNew(state, map);
+
+                Assert.That(PureRunSessionStore.TryLoad(out var loadedState, out var loadedMap), Is.True);
+                Assert.That(loadedState.RunSeed, Is.EqualTo(seed));
+                Assert.That(loadedMap.runSeed, Is.EqualTo(seed));
+
+                PureRunSessionStore.Finish(PureRunEndReason.Defeat);
+                Assert.That(PureRunSessionStore.HasActiveRun, Is.False);
+                Assert.That(PureRunSessionStore.TryLoad(out _, out _), Is.False);
+            }
+            finally
+            {
+                PureRunSessionStore.Clear();
                 Object.DestroyImmediate(config);
             }
         }

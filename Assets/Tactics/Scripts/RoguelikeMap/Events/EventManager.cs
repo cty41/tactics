@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Tactics.AssetPipeline;
 using Tactics.Runtime.Utilities;
@@ -150,6 +151,24 @@ namespace Tactics.RoguelikeMap.Events
 
             int index = UnityEngine.Random.Range(0, events.Count);
             return events[index];
+        }
+
+        /// <summary>
+        /// Selects an event from a stable, ID-sorted region pool.
+        /// </summary>
+        public RoguelikeEvent GetDeterministicEvent(string regionName, int seed)
+        {
+            if (!_regionEvents.TryGetValue(regionName, out var events) || events.Count == 0)
+                return null;
+
+            var ordered = events
+                .Where(evt => evt != null)
+                .OrderBy(evt => evt.eventId, StringComparer.Ordinal)
+                .ToList();
+            if (ordered.Count == 0)
+                return null;
+
+            return ordered[new System.Random(seed).Next(ordered.Count)];
         }
 
         /// <summary>

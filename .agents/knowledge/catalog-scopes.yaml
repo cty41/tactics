@@ -67,6 +67,7 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
       - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
       - Assets/Tactics/Tests/Editor/EncounterConfigTests.cs
+      - Assets/Tactics/Scripts/UI/BattleSettlementUIController.cs
 
   monster-ai:
     concept: systems/monster-ai.md
@@ -102,6 +103,15 @@ scopes:
       - Assets/Tactics/Scripts/RoguelikeMap
       - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
       - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
+      - Assets/Tactics/Scripts/UI/HomeUIController.cs
+      - Assets/Tactics/Scripts/UI/InventoryUIController.cs
+      - Assets/Tactics/Arts/UI/Home.uxml
+      - Assets/Tactics/Arts/UI/Home.uss
+      - Assets/Tactics/Arts/UI/RoguelikeMap.uxml
+      - Assets/Tactics/Arts/UI/RoguelikeMap.uss
+      - Assets/Tactics/Scripts/Common/Consumables
+      - Assets/Tactics/GameData/Consumables.json
+      - Assets/Tactics/GameData/Events/DarkForest
       - Assets/Tactics/Scripts/Editor/RoguelikeEventEditor
       - Assets/Tactics/RoguelikeMap
       - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
@@ -126,5 +136,6 @@ scopes:
       - .agents/docs/gameplay-test-framework.md
       - .agents/skills/gameplay-test-framework
       - Assets/Tactics/Scripts/Common/Testing/Gameplay
+      - Assets/Tactics/Tests/PlayMode/GameplayRuntimeMapPlanTests.cs
       - Tools/gameplay-test-spec
       - Tests/gameplay-specs

@@ -310,6 +310,18 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunFiveBattleRoute()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteMapPlan(GetSourcePlanPath("map", "pure-run-five-battle-route.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesMapBattleDeathWriteback()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
@@ -397,6 +409,11 @@ namespace Tactics.Tests.PlayMode
         {
             // Use compiled/ directory for batch-compile output
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", "compiled", fileName));
+        }
+
+        private static string GetSourcePlanPath(string subDir, string fileName)
+        {
+            return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", subDir, fileName));
         }
 
         private static async Task<GameplayTestResult> ExecuteMapPlan(string planPath)

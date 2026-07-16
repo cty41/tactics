@@ -7,6 +7,9 @@ using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Editor.SkillGraphEditor;
+using Tactics.Consumables;
+using Tactics.Roguelike;
+using Tactics.Roster;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -106,6 +109,80 @@ namespace Tactics.Tests.PlayMode
             }
             finally
             {
+                world.Dispose();
+            }
+
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_RestoresCasterMana_WithSelfTargetGraph()
+        {
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                var graph = SkillGraphTestGraphFactory.CreateSelfManaGraph("SelfMana", 6f);
+                var caster = world.CreateUnit("Caster", playerNumber: 0);
+                caster.MaxMana = 10f;
+                caster.Mana = 2f;
+                world.SetTurnContext(world.PlayerOne, new IUnit[] { caster });
+
+                var runner = new SkillGraphRuntimeTestRunner();
+                var task = runner.ExecuteAsync(new SkillGraphRuntimeTestRequest
+                {
+                    Name = "SelfMana",
+                    Graph = graph,
+                    GridController = world.GridController,
+                    Caster = caster
+                });
+
+                yield return WaitForTask(task);
+
+                Assert.AreEqual(SkillGraphExecutionState.Completed, task.Result.ExecutionState);
+                Assert.That(task.Result.ValidationErrors, Is.Empty);
+                Assert.AreEqual(8f, caster.Mana);
+            }
+            finally
+            {
+                world.Dispose();
+            }
+
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator ConsumableAbility_CommitsOneChargeAndBlocksSecondUseInSameTurn()
+        {
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                PureRunSessionStore.Clear();
+                var definition = ConsumableDatabase.GetById("bandage_roll");
+                var item = ConsumableInstance.Create(definition);
+                var state = PlayerAdventureStateStore.CreatePureRunState(17);
+                state.ConsumableInstances.Add(item);
+                PureRunSessionStore.SaveState(state);
+
+                var casterCell = world.CreateSquareCell("CasterCell", 0, 0);
+                var caster = world.CreateUnit("Caster", playerNumber: 0, casterCell);
+                caster.MaxHealth = 10f;
+                caster.Health = 3f;
+                world.SetTurnContext(world.PlayerOne, new IUnit[] { caster });
+
+                var ability = (SkillGraphAbilityImpl)ConsumableAbilityFactory.Create(caster, item);
+                ability.Initialize(world.GridController);
+                var task = ability.ExecuteForTestAsync(casterCell, world.GridController);
+                yield return WaitForTask(task);
+
+                var saved = PlayerAdventureStateStore.LoadRepairAndSave();
+                Assert.AreEqual(SkillGraphExecutionState.Completed, task.Result.ExecutionState);
+                Assert.AreEqual(8f, caster.Health);
+                Assert.AreEqual(2, saved.ConsumableInstances.Single().RemainingCharges);
+                Assert.That(ability.CanPerform(world.GridController), Is.False);
+            }
+            finally
+            {
+                PureRunSessionStore.Clear();
                 world.Dispose();
             }
 

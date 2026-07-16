@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Tactics.Common.Units.Buffs;
+using Tactics.Consumables;
 using Tactics.Equipment;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Roster;
@@ -151,8 +152,18 @@ namespace Tactics.RoguelikeMap.Interaction
                 if (string.IsNullOrWhiteSpace(itemId))
                     continue;
 
-                state.Inventory.Add(itemId);
-                TLog.Info($"[RewardResult] Added item: {itemId}");
+                var consumable = ConsumableDatabase.GetById(itemId);
+                if (consumable != null)
+                {
+                    state.ConsumableInstances ??= new List<ConsumableInstance>();
+                    state.ConsumableInstances.Add(ConsumableInstance.Create(consumable));
+                    TLog.Info($"[RewardResult] Added consumable: {consumable.DisplayName}");
+                }
+                else
+                {
+                    state.Inventory.Add(itemId);
+                    TLog.Info($"[RewardResult] Added legacy item: {itemId}");
+                }
                 anyAdded = true;
             }
             return anyAdded;

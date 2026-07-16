@@ -39,6 +39,25 @@ namespace Tactics.Common.Skills.Graph.Testing
             return graph;
         }
 
+        public static SkillGraphAsset CreateSelfManaGraph(string displayName, float manaAmount)
+        {
+            var graph = CreateGraph(displayName);
+            var start = CreateNode<StartNodeRecord>("start");
+            var selectSelf = CreateNode<SelectSelfNodeRecord>("select_self");
+            var restoreMana = CreateNode<ApplyManaNodeRecord>("restore_mana");
+            restoreMana.ManaAmount = manaAmount;
+            var finish = CreateNode<FinishNodeRecord>("finish");
+
+            graph.Nodes.Add(start);
+            graph.Nodes.Add(selectSelf);
+            graph.Nodes.Add(restoreMana);
+            graph.Nodes.Add(finish);
+            graph.AddEdge("start", "select_self");
+            graph.AddEdge("select_self", "restore_mana");
+            graph.AddEdge("restore_mana", "finish");
+            return graph;
+        }
+
         public static SkillGraphAsset CreateSingleTargetDamageGraph(
             string displayName,
             float baseDamage,

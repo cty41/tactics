@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Battle;
+using Tactics.Consumables;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -17,6 +18,7 @@ namespace Tactics.UI
         private Label _resultLabel;
         private Label _roundsLabel;
         private Label _goldLabel;
+        private Label _itemDropLabel;
         private VisualElement _experienceEntries;
         private Button _continueButton;
 
@@ -50,6 +52,15 @@ namespace Tactics.UI
             _resultLabel = _root.Q<Label>("ResultLabel");
             _roundsLabel = _root.Q<Label>("RoundsLabel");
             _goldLabel = _root.Q<Label>("GoldLabel");
+            _itemDropLabel = _root.Q<Label>("ItemDropLabel");
+            if (_itemDropLabel == null && _goldLabel?.parent != null)
+            {
+                _itemDropLabel = new Label { name = "ItemDropLabel" };
+                _itemDropLabel.style.color = new Color(0.9f, 0.78f, 0.42f);
+                _itemDropLabel.style.fontSize = 16;
+                _itemDropLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                _goldLabel.parent.Add(_itemDropLabel);
+            }
             _experienceEntries = _root.Q<VisualElement>("ExperienceEntries");
             _continueButton = _root.Q<Button>("ContinueButton");
         }
@@ -91,6 +102,19 @@ namespace Tactics.UI
 
             if (_goldLabel != null)
                 _goldLabel.text = $"+{rewards.TotalGold}";
+
+            if (_itemDropLabel != null)
+            {
+                var itemNames = rewards.ItemIds?
+                    .Select(itemId => ConsumableDatabase.GetById(itemId)?.DisplayName ?? itemId)
+                    .ToList();
+                _itemDropLabel.text = itemNames != null && itemNames.Count > 0
+                    ? $"获得物品：{string.Join("、", itemNames)}"
+                    : string.Empty;
+                _itemDropLabel.style.display = string.IsNullOrEmpty(_itemDropLabel.text)
+                    ? DisplayStyle.None
+                    : DisplayStyle.Flex;
+            }
 
             if (_continueButton != null)
                 _continueButton.SetEnabled(false);

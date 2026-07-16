@@ -14,7 +14,7 @@
       "text": "灵巧解除",
       "attribute": "Dexterity",
       "baseSuccessRate": 65,
-      "success": {"type": "Gold", "amount": 3, "target": "All"},
+      "success": {"type": "Item", "itemPoolId": "consumables", "target": "All"},
       "failure": {"type": "Damage", "amount": 5, "target": "Self"}
     },
     {

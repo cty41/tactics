@@ -27,6 +27,7 @@ namespace Tactics.Common.Skills.Graph
             Register(new SelectSelfNodeExecutor());
             Register(new SelectAllyNodeExecutor());
             Register(new ApplyHealNodeExecutor());
+            Register(new ApplyManaNodeExecutor());
             Register(new DashToAllyNodeExecutor());
             Register(new LaunchUnitNodeExecutor());
             Register(new SelectMoveDestinationNodeExecutor());

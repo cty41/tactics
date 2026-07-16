@@ -5,6 +5,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 using Tactics.AssetPipeline;
 using Tactics.Common.Units.Buffs;
+using Tactics.Consumables;
 using Tactics.Equipment;
 using Tactics.RoguelikeMap.Interaction;
 using Tactics.RoguelikeMap.Economy;
@@ -56,6 +57,9 @@ namespace Tactics.RoguelikeMap.Events
         [JsonProperty("itemId")]
         public string itemId;
 
+        [JsonProperty("itemPoolId")]
+        public string itemPoolId;
+
         [JsonProperty("description")]
         public string description;
 
@@ -75,8 +79,18 @@ namespace Tactics.RoguelikeMap.Events
                     result.GoldAmount = amount;
                     return result;
                 case EventResultType.Item:
-                    if (!string.IsNullOrWhiteSpace(itemId))
-                        result.ItemIds.Add(itemId);
+                    string resolvedItemId = itemId;
+                    if (string.IsNullOrWhiteSpace(resolvedItemId) && !string.IsNullOrWhiteSpace(itemPoolId))
+                    {
+                        int runSeed = ctx?.AdventureState?.RunSeed ?? 0;
+                        string nodeId = Tactics.Roguelike.RoguelikeMapRuntimeState.CurrentNodeId ?? "event";
+                        int seed = Tactics.Roguelike.RoguelikeMapRuntimeState.DeriveSeed(
+                            runSeed,
+                            $"event-item:{nodeId}:{itemPoolId}");
+                        resolvedItemId = ConsumableDatabase.Roll(itemPoolId, seed)?.Id;
+                    }
+                    if (!string.IsNullOrWhiteSpace(resolvedItemId))
+                        result.ItemIds.Add(resolvedItemId);
                     return result;
                 case EventResultType.Equipment:
                     if (!string.IsNullOrWhiteSpace(itemId))
