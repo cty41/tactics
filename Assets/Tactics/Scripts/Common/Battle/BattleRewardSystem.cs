@@ -34,18 +34,24 @@ namespace Tactics.Common.Battle
             /// <summary>战斗总回合数。</summary>
             public int TotalRounds;
 
+            /// <summary>Run-only item drops generated during settlement.</summary>
+            public List<string> ItemIds;
+
             /// <summary>
             /// 转换为统一节点结果结构，供 Roguelike 地图层统一消费。
             /// </summary>
             public RewardResult ToRewardResult()
             {
-                return new RewardResult
+                var result = new RewardResult
                 {
                     GoldAmount = TotalGold,
                     ExperienceAmount = ExperiencePerCharacter?.Values.Sum() ?? 0,
                     EnemiesDefeated = ExperiencePerCharacter?.Count ?? 0,
                     IsBattleReward = true
                 };
+                if (ItemIds != null)
+                    result.ItemIds.AddRange(ItemIds);
+                return result;
             }
         }
 
@@ -62,7 +68,8 @@ namespace Tactics.Common.Battle
             {
                 TotalGold = 0,
                 ExperiencePerCharacter = new Dictionary<string, int>(),
-                TotalRounds = totalRounds
+                TotalRounds = totalRounds,
+                ItemIds = new List<string>()
             };
 
             if (result.Winners == null)

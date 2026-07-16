@@ -16,6 +16,7 @@ const supportedSetupKinds = new Set([
   "loadSkillGraphAsset",
   "setRunSeed",
   "loadRoguelikeMap",
+  "loadPureRunMap",
   "loadTestPartyConfig",
   "loadTestEncounterConfig",
   "setAdventureGold",
@@ -115,6 +116,7 @@ const supportedAssertionKinds = new Set([
   "currentNodeEquals",
   "mapIsActive",
   "visitedNodeCountEquals",
+  "battleVictoryCountEquals",
   "nodeTypeEquals",
   "nodeIsReachable",
   "nodeIsVisited",
@@ -131,6 +133,7 @@ const supportedAssertionKinds = new Set([
   "rosterCharacterHasPendingBuff",
   "rosterCharacterPendingBuffHasIcon",
   "inventoryContains",
+  "consumableCountEquals",
   "elementVisible",
   "elementText",
   "elementEnabled",
@@ -319,12 +322,13 @@ function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: E
       registerAlias(step, "alias", step.parameters.alias, state.graphs, diagnostics, "MissingGraphAlias");
       break;
     case "loadRoguelikeMap":
+    case "loadPureRunMap":
       // loadRoguelikeMap is a Map setup action, requires mapConfigPath parameter
       if (!getString(step.parameters.mapConfigPath)) {
         diagnostics.push({
           code: "MissingMapConfigPath",
           severity: "error",
-          message: "loadRoguelikeMap requires a mapConfigPath parameter.",
+          message: `${step.kind} requires a mapConfigPath parameter.`,
           path: step.id ?? step.kind
         });
       }
@@ -519,6 +523,8 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "currentNodeEquals":
     case "mapIsActive":
     case "visitedNodeCountEquals":
+    case "battleVictoryCountEquals":
+    case "consumableCountEquals":
     case "nodeTypeEquals":
     case "nodeIsReachable":
     case "nodeIsVisited":

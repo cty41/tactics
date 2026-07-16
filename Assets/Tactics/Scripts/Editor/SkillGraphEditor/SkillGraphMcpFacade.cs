@@ -677,9 +677,13 @@ namespace Tactics.Editor.SkillGraphEditor
                     break;
                 case SelectAllyNodeRecord r:
                     if (parameters.TryGetValue("maxRange", out var allyRange)) r.MaxRange = ToInt(allyRange);
+                    if (parameters.TryGetValue("includeSelf", out var includeSelf)) r.IncludeSelf = ToBool(includeSelf);
                     break;
                 case ApplyHealNodeRecord r:
                     if (parameters.TryGetValue("healAmount", out var healAmt)) r.HealAmount = ToFloat(healAmt);
+                    break;
+                case ApplyManaNodeRecord r:
+                    if (parameters.TryGetValue("manaAmount", out var manaAmt)) r.ManaAmount = ToFloat(manaAmt);
                     break;
                 case DashToAllyNodeRecord r:
                     if (parameters.TryGetValue("maxRange", out var dashAllyRange)) r.MaxRange = ToInt(dashAllyRange);
@@ -766,9 +770,13 @@ namespace Tactics.Editor.SkillGraphEditor
                     break;
                 case SelectAllyNodeRecord r:
                     dict["maxRange"] = r.MaxRange;
+                    dict["includeSelf"] = r.IncludeSelf;
                     break;
                 case ApplyHealNodeRecord r:
                     dict["healAmount"] = r.HealAmount;
+                    break;
+                case ApplyManaNodeRecord r:
+                    dict["manaAmount"] = r.ManaAmount;
                     break;
                 case DashToAllyNodeRecord r:
                     dict["maxRange"] = r.MaxRange;

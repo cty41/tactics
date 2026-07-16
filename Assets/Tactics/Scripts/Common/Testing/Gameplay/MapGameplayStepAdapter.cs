@@ -10,6 +10,7 @@ using Tactics.RoguelikeMap.Events;
 using Tactics.RoguelikeMap.Interaction;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Equipment;
+using Tactics.Consumables;
 using Tactics.AssetPipeline;
 using Tactics.Roster;
 using UnityEngine;
@@ -25,6 +26,7 @@ namespace Tactics.Common.Testing.Gameplay
         public bool CanExecute(ExecutableScenarioAction action)
         {
             return action.Kind is "loadRoguelikeMap"
+                or "loadPureRunMap"
                 or "setRunSeed"
                 or "enterNode"
                 or "triggerEvent"
@@ -48,6 +50,8 @@ namespace Tactics.Common.Testing.Gameplay
                         return SetRunSeed(context, action);
                     case "loadRoguelikeMap":
                         return LoadRoguelikeMap(context, action);
+                    case "loadPureRunMap":
+                        return LoadPureRunMap(context, action);
                     case "enterNode":
                         return EnterNode(context, action);
                     case "triggerEvent":
@@ -83,6 +87,7 @@ namespace Tactics.Common.Testing.Gameplay
             return assertion.Kind is "currentNodeEquals"
                 or "mapIsActive"
                 or "visitedNodeCountEquals"
+                or "battleVictoryCountEquals"
                 or "nodeTypeEquals"
                 or "nodeIsReachable"
                 or "nodeIsVisited"
@@ -98,7 +103,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "runtimeRosterCharacterHasPendingBuff"
                 or "rosterCharacterHasPendingBuff"
                 or "rosterCharacterPendingBuffHasIcon"
-                or "inventoryContains";
+                or "inventoryContains"
+                or "consumableCountEquals";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -110,6 +116,7 @@ namespace Tactics.Common.Testing.Gameplay
                     "currentNodeEquals" => AssertCurrentNodeEquals(context, assertion),
                     "mapIsActive" => AssertMapIsActive(context, assertion),
                     "visitedNodeCountEquals" => AssertVisitedNodeCountEquals(context, assertion),
+                    "battleVictoryCountEquals" => AssertBattleVictoryCountEquals(assertion),
                     "nodeTypeEquals" => AssertNodeTypeEquals(context, assertion),
                     "nodeIsReachable" => AssertNodeIsReachable(context, assertion),
                     "nodeIsVisited" => AssertNodeIsVisited(context, assertion),
@@ -126,6 +133,7 @@ namespace Tactics.Common.Testing.Gameplay
                     "rosterCharacterHasPendingBuff" => AssertRosterCharacterHasPendingBuff(context, assertion),
                     "rosterCharacterPendingBuffHasIcon" => AssertRosterCharacterPendingBuffHasIcon(assertion),
                     "inventoryContains" => AssertInventoryContains(assertion),
+                    "consumableCountEquals" => AssertConsumableCountEquals(assertion),
                     _ => GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported Map assertion '{assertion.Kind}'.")
                 };
 
@@ -222,6 +230,33 @@ namespace Tactics.Common.Testing.Gameplay
             context.RoguelikeMap = map;
 
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Loaded map with {map.nodes?.Count ?? 0} nodes.");
+        }
+
+        private static GameplayStepResult LoadPureRunMap(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string mapConfigPath = action.Parameters["mapConfigPath"]?.ToString();
+            if (string.IsNullOrWhiteSpace(mapConfigPath))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "loadPureRunMap requires mapConfigPath.", "Setup");
+
+            var mapConfig = GameAssetManager.Instance?.Load<RoguelikeMapConfig>(mapConfigPath);
+            if (mapConfig == null)
+            {
+                bool strictAsset = action.Parameters["strictAsset"]?.ToObject<bool>() ?? false;
+                if (strictAsset)
+                    return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Map config asset '{mapConfigPath}' was not found.", "Asset");
+
+                mapConfig = ScriptableObject.CreateInstance<RoguelikeMapConfig>();
+                mapConfig.name = "PureRunGameplayTestFallback";
+            }
+
+            int seed = context.RunSeed ?? 0;
+            var map = RoguelikeMapGenerator.GetPureRunMap(mapConfig, seed);
+            var state = PlayerAdventureStateStore.CreatePureRunState(seed);
+            PureRunSessionStore.StartNew(state, map);
+            context.RoguelikeMap = map;
+            context.CurrentAdventureState = state;
+            context.CurrentNodeId = map.currentNodeId;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Loaded Pure Run map with seed {seed}.");
         }
 
         private static global::Tactics.RoguelikeMap.RoguelikeMap CreateFallbackTestMap()
@@ -362,19 +397,11 @@ namespace Tactics.Common.Testing.Gameplay
             if (node == null)
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Node '{nodeId}' not found.");
 
-            // Mark node as visited
-            node.VisitState = NodeVisitState.Visited;
-            map.visitedNodes.Add(nodeId);
-
-            // Update reachable nodes
-            foreach (var connection in node.outgoing)
-            {
-                var connectedNode = map.GetNode(connection);
-                if (connectedNode != null && connectedNode.VisitState != NodeVisitState.Visited)
-                {
-                    connectedNode.IsReachable = true;
-                }
-            }
+            RoguelikeMapRuntimeState.CommitNodeProgress(
+                nodeId,
+                global::Tactics.RoguelikeMap.RoguelikeMap.IsBattleNode(node));
+            context.CurrentNodeId = nodeId;
+            PureRunSessionStore.SaveMap(map);
 
             context.EventCompleted = true;
 
@@ -636,6 +663,15 @@ namespace Tactics.Common.Testing.Gameplay
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected VisitedNodeCount={expected}, actual={actual}.");
         }
 
+        private static GameplayAssertionResult AssertBattleVictoryCountEquals(ExecutableScenarioAssertion assertion)
+        {
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            int actual = RoguelikeMapRuntimeState.BattleVictoryCount;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"BattleVictoryCount={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected BattleVictoryCount={expected}, actual={actual}.");
+        }
+
         private static GameplayAssertionResult AssertNodeTypeEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
         {
             string nodeId = assertion.Target ?? context.CurrentNodeId;
@@ -895,6 +931,15 @@ namespace Tactics.Common.Testing.Gameplay
             return actual
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"Inventory contains '{expectedItem}'.")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected inventory to contain '{expectedItem}'.");
+        }
+
+        private static GameplayAssertionResult AssertConsumableCountEquals(ExecutableScenarioAssertion assertion)
+        {
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            int actual = PlayerAdventureStateStore.LoadRepairAndSave()?.ConsumableInstances?.Count ?? 0;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"ConsumableCount={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected ConsumableCount={expected}, actual={actual}.");
         }
 
         private static GameplayAssertionResult AssertRosterCharacterHasPendingBuff(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)

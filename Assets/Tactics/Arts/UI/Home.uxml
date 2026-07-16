@@ -4,10 +4,20 @@
         <ui:VisualElement name="MainMenuPanel" class="main-menu-panel">
             <ui:Label name="GameTitle" text="TACTICS" class="game-title"/>
             <ui:VisualElement name="MenuSeparator" class="menu-separator"/>
-            <ui:Button name="NewGameButton" text="NEW GAME" class="button menu-button"/>
-            <ui:Button name="LoadGameButton" text="LOAD GAME" class="button menu-button"/>
+            <ui:Button name="NewGameButton" text="NEW RUN" class="button menu-button"/>
+            <ui:Button name="LoadGameButton" text="CONTINUE RUN" class="button menu-button"/>
             <ui:Button name="OptionsButton" text="OPTIONS" class="button menu-button"/>
             <ui:Button name="QuitButton" text="QUIT" class="button menu-button"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="OverwritePrompt" class="overwrite-overlay">
+            <ui:VisualElement class="overwrite-panel">
+                <ui:Label text="START A NEW RUN?" class="overwrite-title"/>
+                <ui:Label text="Your current run will be replaced." class="overwrite-message"/>
+                <ui:VisualElement class="overwrite-actions">
+                    <ui:Button name="ConfirmNewRunButton" text="START NEW RUN" class="button overwrite-button"/>
+                    <ui:Button name="CancelNewRunButton" text="CANCEL" class="button overwrite-button"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

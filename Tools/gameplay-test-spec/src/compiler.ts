@@ -18,6 +18,7 @@ const setupKindToAdapter: Record<string, Adapter> = {
   loadSkillGraphAsset: "Skill",
   setRunSeed: "Map",
   loadRoguelikeMap: "Map",
+  loadPureRunMap: "Map",
   loadTestPartyConfig: "Skill",
   loadTestEncounterConfig: "Skill",
   setAdventureGold: "Map",
@@ -86,6 +87,7 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   currentNodeEquals: "Map",
   mapIsActive: "Map",
   visitedNodeCountEquals: "Map",
+  battleVictoryCountEquals: "Map",
   nodeTypeEquals: "Map",
   nodeIsReachable: "Map",
   nodeIsVisited: "Map",
@@ -102,6 +104,7 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   rosterCharacterHasPendingBuff: "Map",
   rosterCharacterPendingBuffHasIcon: "Map",
   inventoryContains: "Map",
+  consumableCountEquals: "Map",
   // UI 独占断言
   elementVisible: "UI",
   elementText: "UI",

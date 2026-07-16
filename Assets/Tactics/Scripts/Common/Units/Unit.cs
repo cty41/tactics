@@ -8,6 +8,8 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Consumables;
+using Tactics.Roster;
 using Tactics.Common.Units.Classes;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
@@ -281,6 +283,20 @@ namespace Tactics.Common.Units
 
                 moveConfig ??= SkillGraphAbilityConfig.CreateDefaultMoveConfig();
                 RegisterAbility(moveConfig.CreateAbility(this), gridController);
+            }
+
+            if (PlayerNumber == 0)
+            {
+                var adventureState = PlayerAdventureStateStore.LoadRepairAndSave();
+                if (adventureState?.IsPureRun == true && adventureState.ConsumableInstances != null)
+                {
+                    foreach (var item in adventureState.ConsumableInstances)
+                    {
+                        var ability = ConsumableAbilityFactory.Create(this, item);
+                        if (ability != null)
+                            RegisterAbility(ability, gridController);
+                    }
+                }
             }
         }
 

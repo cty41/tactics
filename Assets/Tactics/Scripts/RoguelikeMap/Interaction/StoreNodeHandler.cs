@@ -4,6 +4,8 @@ using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using Tactics.UI;
 using Tactics.Equipment;
+using Tactics.Consumables;
+using Tactics.Roguelike;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -136,25 +138,34 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
             }
 
-            if (!EquipmentDatabase.Contains(good.EquipmentId))
+            if (good.IsConsumable && ConsumableDatabase.GetById(good.ConsumableId) == null)
             {
-                TLog.Warning($"[StoreNodeHandler] 授予商品失败: {good.EquipmentId}");
+                TLog.Warning($"[StoreNodeHandler] 授予消耗品失败: {good.ConsumableId}");
+                return;
+            }
+            if (!good.IsConsumable && !EquipmentDatabase.Contains(good.EquipmentId))
+            {
+                TLog.Warning($"[StoreNodeHandler] 授予装备失败: {good.EquipmentId}");
                 return;
             }
 
             var purchaseResult = RewardResult.Empty();
             purchaseResult.GoldCost = good.Price;
-            purchaseResult.EquipmentIds.Add(good.EquipmentId);
+            if (good.IsConsumable)
+                purchaseResult.ItemIds.Add(good.ConsumableId);
+            else
+                purchaseResult.EquipmentIds.Add(good.EquipmentId);
             NodeInteractionManager.Instance?.ApplyRewardResult(purchaseResult, _currentState);
 
-            var def = EquipmentDatabase.GetById(good.EquipmentId);
-            string equipmentName = def?.DisplayName ?? good.EquipmentId;
+            string itemName = good.IsConsumable
+                ? ConsumableDatabase.GetById(good.ConsumableId)?.DisplayName ?? good.ConsumableId
+                : EquipmentDatabase.GetById(good.EquipmentId)?.DisplayName ?? good.EquipmentId;
 
             CurrentMap?.AddStorePurchase(_currentNode.nodeId, GetPurchaseKey(good));
             _currentGoods.Remove(good);
             DisplayGoods();
             UpdateGoldDisplay();
-            TLog.Info($"[StoreNodeHandler] 购买了 {equipmentName}，花费 {good.Price} 金币");
+            TLog.Info($"[StoreNodeHandler] 购买了 {itemName}，花费 {good.Price} 金币");
         }
 
         private void UpdateGoldDisplay()
@@ -197,13 +208,18 @@ namespace Tactics.RoguelikeMap.Interaction
                     return configuredGoods;
             }
 
-            int goodCount = Random.Range(2, 4);
-            return _shopManager.GenerateGoods(goodCount);
+            int seed = RoguelikeMapRuntimeState.DeriveSeed(
+                RoguelikeMapRuntimeState.RunSeed,
+                $"store:{node.nodeId}");
+            return _shopManager.GenerateGoods(3, seed);
         }
 
         private static string GetPurchaseKey(ShopGood good)
         {
-            return string.IsNullOrWhiteSpace(good?.EquipmentId) ? good?.Name : good.EquipmentId;
+            if (good == null) return null;
+            return good.IsConsumable
+                ? $"item:{good.ConsumableId}"
+                : $"equipment:{good.EquipmentId}";
         }
     }
 }

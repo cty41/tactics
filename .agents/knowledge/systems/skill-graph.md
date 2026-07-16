@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-07-15T10:43:26+08:00"
+timestamp: "2026-07-16T10:16:53+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -20,7 +20,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
   - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:a19edfe2bdecc307735299939024a40b4d2a6071bf7b4c6d5a86407b86f76498
+source_fingerprint: sha256:cfc076a4fb606f80df1f884ffa698befce7351d59a46120809c7517fadc046ee
 ---
 
 # Current State
@@ -29,11 +29,14 @@ source_fingerprint: sha256:a19edfe2bdecc307735299939024a40b4d2a6071bf7b4c6d5a864
 
 Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent 可通过 `SkillGraphSpec`、`SkillGraphSpecCompiler` 与 `SkillGraphSpecAutoFixer` 建立结构化输入，并使用 MCP 工具生成、校验和应用资产；运行语义继续由 Gameplay Test/PlayMode 测试证明。
 
+节点集合现包含 `ApplyMana`，`SelectAlly` 可显式允许自身成为合法友军目标。运行时能力可注入使用策略：策略负责额外合法性、动态显示名和成功完成后的资源提交；图失败时不会扣除资源。Pure Run 消耗品使用该边界实现每名角色每个队伍回合一次，并在图完成后扣除对应实例耐久。
+
 # Relationships
 
 - [Battle System](battle.md)提供单位、格子、目标和效果环境。
 - [Monster AI](monster-ai.md)通过共享合法性和执行接口选择技能。
 - [Gameplay Test Framework](gameplay-test-framework.md)验证目标、阶段、状态与投射物结果。
+- [Roguelike Run](roguelike-run.md)使用运行时 SkillGraph 模板执行战斗消耗品。
 - 三职业首批技能的完成记录保留在[Archived Outcome](../plans/first-slice-three-class-skills.md)。
 - 后续静态校验增强见[Project Known Gaps](../plans/project-known-gaps.md)。
 

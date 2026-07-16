@@ -28,6 +28,7 @@ namespace Tactics.Common.Skills.Graph
         SelectSelf,
         SelectAlly,
         ApplyHeal,
+        ApplyMana,
         DashToAlly,
         LaunchUnit,
         SelectMoveDestination,
@@ -109,6 +110,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.SelectSelf => new SelectSelfNodeRecord(),
                 SkillGraphNodeType.SelectAlly => new SelectAllyNodeRecord(),
                 SkillGraphNodeType.ApplyHeal => new ApplyHealNodeRecord(),
+                SkillGraphNodeType.ApplyMana => new ApplyManaNodeRecord(),
                 SkillGraphNodeType.DashToAlly => new DashToAllyNodeRecord(),
                 SkillGraphNodeType.LaunchUnit => new LaunchUnitNodeRecord(),
                 SkillGraphNodeType.SelectMoveDestination => new SelectMoveDestinationNodeRecord(),
@@ -274,8 +276,10 @@ namespace Tactics.Common.Skills.Graph
     public class SelectAllyNodeRecord : SkillGraphNodeRecord
     {
         [SerializeField] private int _maxRange = 1;
+        [SerializeField] private bool _includeSelf;
 
         public int MaxRange { get => _maxRange; set => _maxRange = value; }
+        public bool IncludeSelf { get => _includeSelf; set => _includeSelf = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.SelectAlly;
     }
 
@@ -286,6 +290,15 @@ namespace Tactics.Common.Skills.Graph
 
         public float HealAmount { get => _healAmount; set => _healAmount = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyHeal;
+    }
+
+    [System.Serializable]
+    public class ApplyManaNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private float _manaAmount = 5f;
+
+        public float ManaAmount { get => _manaAmount; set => _manaAmount = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyMana;
     }
 
     [System.Serializable]

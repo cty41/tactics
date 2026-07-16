@@ -5,6 +5,9 @@ using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Players;
 using Tactics.RoguelikeMap.Interaction;
 using Tactics.Common.Units;
+using Tactics.Consumables;
+using Tactics.Roguelike;
+using Tactics.RoguelikeMap;
 using Tactics.RoguelikeMap.Economy;
 using Tactics.Roster;
 using Tactics.Runtime.Utilities;
@@ -255,6 +258,7 @@ namespace Tactics.Common.Battle
             var rewards = BattleRewardSystem.CalculateBattleRewards(_result, _totalRounds, _allUnits);
 
             // 生成统一结果结构，供地图层和节点语义统一消费
+            AppendPureRunConsumableDrop(ref rewards);
             _currentRewardResult = rewards.ToRewardResult();
 
             // 保存金币奖励到存档
@@ -281,6 +285,37 @@ namespace Tactics.Common.Battle
                     }
                 }
             }
+        }
+
+        private void AppendPureRunConsumableDrop(ref BattleRewardSystem.BattleRewards rewards)
+        {
+            if (!_isPlayerVictory || _state?.IsPureRun != true)
+                return;
+
+            string nodeId = RoguelikeMapRuntimeState.PendingBattleNodeId;
+            var node = RoguelikeMapRuntimeState.CurrentMap?.GetNode(nodeId);
+            float chance = node?.nodeType switch
+            {
+                RoguelikeNodeType.MinorEnemy => 0.25f,
+                RoguelikeNodeType.EliteEnemy => 0.30f,
+                _ => 0f
+            };
+            if (chance <= 0f)
+                return;
+
+            int chanceSeed = RoguelikeMapRuntimeState.DeriveSeed(_state.RunSeed, $"battle-drop:{nodeId}");
+            if (new Random(chanceSeed).NextDouble() >= chance)
+                return;
+
+            int itemSeed = RoguelikeMapRuntimeState.DeriveSeed(_state.RunSeed, $"battle-drop-item:{nodeId}");
+            var definition = ConsumableDatabase.Roll("consumables", itemSeed);
+            if (definition == null)
+                return;
+
+            rewards.ItemIds ??= new List<string>();
+            rewards.ItemIds.Add(definition.Id);
+            rewards.ToRewardResult().ApplyItemsToState(_state);
+            TLog.Info($"[BattleSettlementCoordinator] Consumable drop: {definition.DisplayName}.");
         }
 
         /// <summary>

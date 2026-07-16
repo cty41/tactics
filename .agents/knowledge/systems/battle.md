@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-15T10:44:04+08:00"
+timestamp: "2026-07-16T10:16:46+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:49c60c62589897f441d456ae2d98e125358bd3fc888f14e7d98ed8edb0786222
+source_fingerprint: sha256:9c29b0335f80fdcbd610adf374a97dfb0f8051e643fbfd573b100a150763d502
 ---
 
 # Current State
@@ -28,6 +28,8 @@ source_fingerprint: sha256:49c60c62589897f441d456ae2d98e125358bd3fc888f14e7d98ed
 Buff 以配置引用和 CurseCategory 决定刷新/替换：同一配置重复施加会累加持续时间，同类别不同诅咒由后施加者替换。三职业首批 18 技能已进入目录、SkillGraph 资产和测试。
 
 `BattleSettlementCoordinator`/`BattleSettlementFlow` 负责战后成长和返回 Run；`TBattleLog` 收集结构化回合、技能、伤害、治疗和 Buff 信息。当前反馈已有伤害数字、Buff 图标与屏幕战斗日志。
+
+Pure Run 战斗会把持有的消耗品作为运行时 SkillGraph 能力注册到三名人类角色。普通敌人与精英胜利分别按 25% 和 30% 概率从消耗品池掉落，掉落种子由 run seed 与节点 ID 推导；Boss 不追加掉落，因为其结算为终局。
 
 # Relationships
 

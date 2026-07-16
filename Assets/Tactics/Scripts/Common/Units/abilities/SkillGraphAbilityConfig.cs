@@ -26,6 +26,21 @@ namespace Tactics.Common.Units.Abilities
             return new SkillGraphAbilityImpl(owner, this);
         }
 
+        /// <summary>
+        /// Creates a transient configuration for data-driven runtime abilities.
+        /// </summary>
+        public static SkillGraphAbilityConfig CreateRuntime(
+            string displayName,
+            SkillGraphAsset graph,
+            int targetRange = 1)
+        {
+            var config = CreateInstance<SkillGraphAbilityConfig>();
+            config.InitializeRuntime(displayName, false);
+            config._skillGraph = graph;
+            config._targetRange = Mathf.Max(0, targetRange);
+            return config;
+        }
+
         private static SkillGraphAbilityConfig _defaultMoveConfig;
 
         /// <summary>

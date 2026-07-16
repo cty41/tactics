@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Tactics.Runtime.Utilities;
 using System.Linq;
 using Tactics.AssetPipeline;
+using Tactics.Consumables;
 using Tactics.Equipment;
 using Tactics.Roster;
 using UnityEngine;
@@ -209,11 +210,15 @@ namespace Tactics.UI
             if (_levelLabel != null)
                 _levelLabel.text = $"Lv.{_currentCharacter.Level}";
 
-            int maxHp = 100 + _currentCharacter.GetTotalConstitution() * 5;
             if (_hpLabel != null)
-                _hpLabel.text = $"{maxHp}/{maxHp}";
+                _hpLabel.text = _currentCharacter.IsDead
+                    ? $"DEAD 0/{_currentCharacter.MaxHp}"
+                    : $"{_currentCharacter.CurrentHp}/{_currentCharacter.MaxHp}  MP {_currentCharacter.CurrentMp ?? 0}/{_currentCharacter.MaxMp}";
             if (_hpBarFill != null)
-                _hpBarFill.style.width = Length.Percent(100);
+                _hpBarFill.style.width = Length.Percent(
+                    _currentCharacter.IsDead
+                        ? 0f
+                        : Mathf.Clamp01(_currentCharacter.CurrentHp / (float)_currentCharacter.MaxHp) * 100f);
 
             SetStatValue(_strengthValue, _currentCharacter.Strength, _currentCharacter.GetTotalStrength());
             SetStatValue(_agilityValue, _currentCharacter.Agility, _currentCharacter.GetTotalAgility());
@@ -285,7 +290,9 @@ namespace Tactics.UI
             _storageSlotEquipmentIds.Clear();
 
             var inventory = _currentState.Inventory ?? new List<string>();
-            int totalSlots = Mathf.Max(DefaultCapacity, GetNextMultipleOf(inventory.Count, SlotsPerRow));
+            var consumables = _currentState.ConsumableInstances ?? new List<ConsumableInstance>();
+            int entryCount = inventory.Count + consumables.Count;
+            int totalSlots = Mathf.Max(DefaultCapacity, GetNextMultipleOf(entryCount, SlotsPerRow));
 
             for (int i = 0; i < totalSlots; i++)
             {
@@ -297,6 +304,17 @@ namespace Tactics.UI
                 }
 
                 string equipmentId = i < inventory.Count ? inventory[i] : null;
+                string displayName = null;
+                if (!string.IsNullOrEmpty(equipmentId))
+                {
+                    displayName = GetEquipmentDisplayName(equipmentId);
+                }
+                else if (i >= inventory.Count && i - inventory.Count < consumables.Count)
+                {
+                    var instance = consumables[i - inventory.Count];
+                    var definition = ConsumableDatabase.GetById(instance.DefinitionId);
+                    displayName = $"{definition?.DisplayName ?? instance.DefinitionId}\n{instance.RemainingCharges}/{instance.MaxCharges}";
+                }
 
                 var slotElement = new VisualElement();
                 slotElement.name = $"StorageSlot_{i}";
@@ -305,9 +323,9 @@ namespace Tactics.UI
                 if (i % 4 != 3)
                     slotElement.style.marginRight = Length.Percent(4);
 
-                var label = new Label(string.IsNullOrEmpty(equipmentId) ? "空" : GetEquipmentDisplayName(equipmentId));
+                var label = new Label(string.IsNullOrEmpty(displayName) ? "空" : displayName);
                 label.style.fontSize = 16;
-                label.style.color = string.IsNullOrEmpty(equipmentId) ? new Color(0.5f, 0.4f, 0.3f) : new Color(0.2f, 0.15f, 0.1f);
+                label.style.color = string.IsNullOrEmpty(displayName) ? new Color(0.5f, 0.4f, 0.3f) : new Color(0.2f, 0.15f, 0.1f);
                 label.style.unityTextAlign = TextAnchor.MiddleCenter;
                 label.style.width = Length.Percent(100);
                 label.style.height = Length.Percent(100);

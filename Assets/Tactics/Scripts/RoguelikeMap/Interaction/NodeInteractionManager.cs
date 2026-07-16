@@ -160,7 +160,18 @@ namespace Tactics.RoguelikeMap.Interaction
             if (!string.IsNullOrWhiteSpace(node.eventId))
                 evt = eventManager.GetEvent(node.eventId);
 
-            evt ??= eventManager.GetRandomEvent(regionName);
+            if (evt == null)
+            {
+                int eventSeed = Roguelike.RoguelikeMapRuntimeState.DeriveSeed(
+                    Roguelike.RoguelikeMapRuntimeState.RunSeed,
+                    $"map-event:{node.nodeId}");
+                evt = eventManager.GetDeterministicEvent(regionName, eventSeed);
+                if (evt != null)
+                {
+                    node.eventId = evt.eventId;
+                    Roguelike.PureRunSessionStore.SaveMap(Roguelike.RoguelikeMapRuntimeState.CurrentMap);
+                }
+            }
             if (evt == null)
             {
                 TLog.Warning("[NodeInteractionManager] 没有可用事件");

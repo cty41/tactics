@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.PureRunFiveBattleRoute",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 20260715
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_01_battle"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_02_battle"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_03_battle"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_04_rest"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_05_battle"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_06_event"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_07_special"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "currentNodeEquals",
+      "expected": "layer_07_special",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "visitedNodeCountEquals",
+      "expected": 8,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "battleVictoryCountEquals",
+      "expected": 5,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "consumableCountEquals",
+      "expected": 0,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 20000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "currentNodeEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "visitedNodeCountEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "battleVictoryCountEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "consumableCountEquals",
+      "parameters": {}
+    }
+  ]
+}

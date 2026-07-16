@@ -7,6 +7,8 @@ using UnityEngine;
 using Tactics.AssetPipeline;
 using Tactics.Common.Units.Classes;
 using Tactics.Common.Battle;
+using Tactics.Consumables;
+using Tactics.Roguelike;
 
 namespace Tactics.Roster
 {
@@ -74,6 +76,8 @@ namespace Tactics.Roster
 
         public static PlayerAdventureState Load()
         {
+            if (PureRunSessionStore.TryLoadState(out var pureRunState))
+                return pureRunState;
             return Load(GetActiveSlotIndex());
         }
 
@@ -133,6 +137,11 @@ namespace Tactics.Roster
 
         public static void Save(PlayerAdventureState state)
         {
+            if (state?.IsPureRun == true)
+            {
+                PureRunSessionStore.SaveState(state);
+                return;
+            }
             Save(GetActiveSlotIndex(), state);
         }
 
@@ -150,6 +159,8 @@ namespace Tactics.Roster
         /// <summary>Guarantee roster has at least 3 characters and active party lists 3 valid ids (mutates and saves if repaired).</summary>
         public static PlayerAdventureState LoadRepairAndSave()
         {
+            if (PureRunSessionStore.TryLoadState(out var pureRunState))
+                return pureRunState;
             return LoadRepairAndSave(GetActiveSlotIndex());
         }
 
@@ -157,44 +168,7 @@ namespace Tactics.Roster
         {
             slotIndex = NormalizeSlotIndex(slotIndex);
             var state = Load(slotIndex);
-            TryRepair(state, out bool changed);
-
-            // Ensure each character has at least one default learned skill
-            if (state.Roster != null)
-            {
-                foreach (var character in state.Roster)
-                {
-                    if (character == null) continue;
-                    character.HydratePendingBuffs();
-                    if (character.LearnedSkills == null)
-                        character.LearnedSkills = new List<CharacterDefinition.LearnedSkill>();
-                    
-                    if (character.LearnedSkills.Count == 0)
-                    {
-                        string defaultSkillId = character.RoleType switch
-                        {
-                            RoleType.Barbarian => "barb_slash_1",
-                            RoleType.Mage => "mage_fireball_1",
-                            RoleType.Hunter => "hunter_shot_1",
-                            RoleType.Healer => "heal_heal_1",
-                            RoleType.Rogue => "rogue_backstab_1",
-                            _ => null
-                        };
-                        
-                        if (!string.IsNullOrEmpty(defaultSkillId))
-                        {
-                            character.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
-                            {
-                                SkillId = defaultSkillId,
-                                SkillType = SkillType.Active,
-                                Level = 1
-                            });
-                            changed = true;
-                            TLog.Info($"[PlayerAdventureStateStore] Added default skill '{defaultSkillId}' to {character.DisplayName}");
-                        }
-                    }
-                }
-            }
+            bool changed = RepairInPlace(state);
 
             if (changed)
                 Save(slotIndex, state);
@@ -237,13 +211,14 @@ namespace Tactics.Roster
 
             return new PlayerAdventureState
             {
-                Version = 3,
+                Version = 4,
                 IsPureRun = true,
                 RunSeed = runSeed,
                 Gold = 0,
                 Roster = roster,
                 ActivePartyCharacterIds = roster.Select(character => character.Id).ToList(),
-                Inventory = new List<string>()
+                Inventory = new List<string>(),
+                ConsumableInstances = new List<ConsumableInstance>()
             };
         }
 
@@ -300,6 +275,52 @@ namespace Tactics.Roster
         private static void TryRepair(PlayerAdventureState state, out bool changed)
         {
             changed = false;
+            if (state.Version < 4)
+            {
+                state.Version = 4;
+                changed = true;
+            }
+
+            if (state.Inventory == null)
+            {
+                state.Inventory = new List<string>();
+                changed = true;
+            }
+
+            if (state.ConsumableInstances == null)
+            {
+                state.ConsumableInstances = new List<ConsumableInstance>();
+                changed = true;
+            }
+
+            for (int i = state.ConsumableInstances.Count - 1; i >= 0; i--)
+            {
+                var instance = state.ConsumableInstances[i];
+                var definition = instance == null ? null : ConsumableDatabase.GetById(instance.DefinitionId);
+                if (instance == null || definition == null || instance.RemainingCharges <= 0)
+                {
+                    state.ConsumableInstances.RemoveAt(i);
+                    changed = true;
+                    continue;
+                }
+
+                int maxCharges = System.Math.Max(1, definition.MaxCharges);
+                if (string.IsNullOrWhiteSpace(instance.InstanceId))
+                {
+                    instance.InstanceId = System.Guid.NewGuid().ToString("N");
+                    changed = true;
+                }
+                if (instance.MaxCharges != maxCharges)
+                {
+                    instance.MaxCharges = maxCharges;
+                    changed = true;
+                }
+                if (instance.RemainingCharges > maxCharges)
+                {
+                    instance.RemainingCharges = maxCharges;
+                    changed = true;
+                }
+            }
             if (state.Roster == null)
             {
                 state.Roster = new List<CharacterDefinition>();
@@ -371,6 +392,54 @@ namespace Tactics.Roster
                 character.PrefabPath = expectedPath;
                 changed = true;
             }
+        }
+
+        internal static bool RepairInPlace(PlayerAdventureState state)
+        {
+            if (state == null)
+                return false;
+
+            TryRepair(state, out bool changed);
+
+            // Legacy profiles may predate learned-skill persistence. Pure Run characters
+            // already receive their branch skill and therefore do not enter this fallback.
+            if (state.Roster == null)
+                return changed;
+
+            foreach (var character in state.Roster)
+            {
+                if (character == null)
+                    continue;
+
+                character.HydratePendingBuffs();
+                character.LearnedSkills ??= new List<CharacterDefinition.LearnedSkill>();
+                if (character.LearnedSkills.Count > 0)
+                    continue;
+
+                string defaultSkillId = character.RoleType switch
+                {
+                    RoleType.Barbarian => "barb_slash_1",
+                    RoleType.Mage => "mage_fireball_1",
+                    RoleType.Hunter => "hunter_shot_1",
+                    RoleType.Healer => "heal_heal_1",
+                    RoleType.Rogue => "rogue_backstab_1",
+                    _ => null
+                };
+
+                if (string.IsNullOrEmpty(defaultSkillId))
+                    continue;
+
+                character.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+                {
+                    SkillId = defaultSkillId,
+                    SkillType = SkillType.Active,
+                    Level = 1
+                });
+                changed = true;
+                TLog.Info($"[PlayerAdventureStateStore] Added default skill '{defaultSkillId}' to {character.DisplayName}");
+            }
+
+            return changed;
         }
 
         private static PlayerAdventureState CreateDefaultState()

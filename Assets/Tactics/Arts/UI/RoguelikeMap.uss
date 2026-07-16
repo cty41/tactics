@@ -196,3 +196,14 @@
     color: rgb(80, 80, 80);
     -unity-text-align: middle-center;
 }
+
+.party-vitals {
+    font-size: 12px;
+    color: rgb(55, 55, 55);
+    -unity-text-align: middle-center;
+}
+
+.party-dead {
+    opacity: 0.55;
+    border-color: rgb(130, 25, 25);
+}

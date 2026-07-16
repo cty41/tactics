@@ -546,7 +546,7 @@ namespace Tactics.Common.Skills.Graph
             foreach (var ally in allies)
             {
                 if (ally == null || ally.CurrentCell == null) continue;
-                if (ReferenceEquals(ally, caster)) continue;
+                if (!record.IncludeSelf && ReferenceEquals(ally, caster)) continue;
                 int dist = ally.CurrentCell.GetDistance(caster.CurrentCell);
                 if (dist <= record.MaxRange && dist < bestDist)
                 {
@@ -604,6 +604,24 @@ namespace Tactics.Common.Skills.Graph
                 return named.UnitName;
 
             return unit == null ? "Unknown" : $"Unit_{unit.UnitID}";
+        }
+    }
+
+    public class ApplyManaNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyMana;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var record = (ApplyManaNodeRecord)node;
+            var target = context.PrimaryTarget;
+            if (target == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No target for mana restoration."));
+
+            float restoredMana = UnityEngine.Mathf.Min(record.ManaAmount, target.MaxMana - target.Mana);
+            target.Mana += restoredMana;
+            TLog.Info($"[ApplyMana] Restored {restoredMana} MP.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
         }
     }
 
