@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Tactics.Common.Units.Buffs;
 using Tactics.Consumables;
@@ -293,6 +294,10 @@ namespace Tactics.RoguelikeMap.Interaction
             ApplyMpChangeToParty(state.Roster);
             ApplyBuffsToParty(state.Roster);
 
+            // Map effects can kill a character outside battle. Keep death loadout
+            // behavior identical to battle settlement and let the caller save once.
+            CharacterLoadoutService.AutoUnloadDeadCharacters(state);
+
             if (ExperienceAmount > 0 && state.Roster != null)
             {
                 foreach (var character in state.Roster)
@@ -322,7 +327,7 @@ namespace Tactics.RoguelikeMap.Interaction
                 sb.AppendLine($"获得装备: {string.Join(", ", EquipmentIds)}");
 
             if (ItemIds.Count > 0)
-                sb.AppendLine($"获得物品: {string.Join(", ", ItemIds)}");
+                sb.AppendLine($"获得物品: {string.Join("、", ItemIds.Select(ConsumableDatabase.GetAcquisitionDisplayText))}");
 
             if (TargetCharacterIds.Count > 0)
                 sb.AppendLine($"目标角色: {string.Join(", ", TargetCharacterIds)}");

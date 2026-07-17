@@ -182,6 +182,13 @@ namespace Tactics.Common.Units
         /// </summary>
         public bool IsCorpse { get { return _isCorpse; } set { _isCorpse = value; } }
 
+        [SerializeField] private bool _canReceiveHealing = true;
+        /// <summary>
+        /// Whether positive health changes can restore this unit's health.
+        /// Reanimated summons disable this while remaining valid heal targets.
+        /// </summary>
+        public bool CanReceiveHealing { get { return _canReceiveHealing; } set { _canReceiveHealing = value; } }
+
         [SerializeField] private int _ownerUnitId = -1;
         /// <summary>
         /// 召唤物归属 ID，-1 表示无归属。
@@ -285,17 +292,21 @@ namespace Tactics.Common.Units
                 RegisterAbility(moveConfig.CreateAbility(this), gridController);
             }
 
-            if (PlayerNumber == 0)
+            var rosterLink = GetComponent<RosterCharacterLink>();
+            if (rosterLink != null && !string.IsNullOrWhiteSpace(rosterLink.CharacterId))
             {
                 var adventureState = PlayerAdventureStateStore.LoadRepairAndSave();
-                if (adventureState?.IsPureRun == true && adventureState.ConsumableInstances != null)
+                var character = adventureState?.Roster?.FirstOrDefault(candidate =>
+                    candidate?.Id == rosterLink.CharacterId);
+                if (adventureState?.IsPureRun == true &&
+                    character != null &&
+                    !string.IsNullOrWhiteSpace(character.CarriedConsumableInstanceId))
                 {
-                    foreach (var item in adventureState.ConsumableInstances)
-                    {
-                        var ability = ConsumableAbilityFactory.Create(this, item);
-                        if (ability != null)
-                            RegisterAbility(ability, gridController);
-                    }
+                    var item = adventureState.ConsumableInstances?.FirstOrDefault(candidate =>
+                        candidate?.InstanceId == character.CarriedConsumableInstanceId);
+                    var ability = ConsumableAbilityFactory.Create(this, item, character.Id);
+                    if (ability != null)
+                        RegisterAbility(ability, gridController);
                 }
             }
         }

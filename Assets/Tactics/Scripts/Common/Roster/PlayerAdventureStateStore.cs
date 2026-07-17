@@ -17,6 +17,7 @@ namespace Tactics.Roster
         public const string PlayerPrefsKey = "Tactics_PlayerAdventureState";
         public const int SlotCount = 3;
         public const int DefaultSlotIndex = 0;
+        public const int CurrentVersion = 5;
 
         private const string ActiveSlotPrefsKey = "Tactics_PlayerAdventureState_ActiveSlot";
         private const string TestPartyJsonPath = "Assets/Tactics/GameData/TestParty.json";
@@ -211,7 +212,7 @@ namespace Tactics.Roster
 
             return new PlayerAdventureState
             {
-                Version = 4,
+                Version = CurrentVersion,
                 IsPureRun = true,
                 RunSeed = runSeed,
                 Gold = 0,
@@ -274,12 +275,7 @@ namespace Tactics.Roster
 
         private static void TryRepair(PlayerAdventureState state, out bool changed)
         {
-            changed = false;
-            if (state.Version < 4)
-            {
-                state.Version = 4;
-                changed = true;
-            }
+            changed = MigrateToCurrentVersion(state);
 
             if (state.Inventory == null)
             {
@@ -392,6 +388,76 @@ namespace Tactics.Roster
                 character.PrefabPath = expectedPath;
                 changed = true;
             }
+
+            if (CharacterLoadoutService.RepairLoadouts(state))
+                changed = true;
+        }
+
+        private static bool MigrateToCurrentVersion(PlayerAdventureState state)
+        {
+            if (state == null || state.Version >= CurrentVersion)
+                return false;
+
+            state.Inventory ??= new List<string>();
+            state.ConsumableInstances ??= new List<ConsumableInstance>();
+            state.Roster ??= new List<CharacterDefinition>();
+
+            var migratedInstances = new List<ConsumableInstance>();
+            foreach (var instance in state.ConsumableInstances)
+            {
+                if (instance == null || instance.RemainingCharges <= 0)
+                    continue;
+
+                switch (instance.DefinitionId)
+                {
+                    case "field_ration":
+                        migratedInstances.Add(CreateMigratedInstance("life_potion", instance.InstanceId));
+                        break;
+                    case "catnip_tonic":
+                        migratedInstances.Add(CreateMigratedInstance("mana_potion", instance.InstanceId));
+                        break;
+                    case "bandage_roll":
+                        for (int chargeIndex = 0; chargeIndex < instance.RemainingCharges; chargeIndex++)
+                        {
+                            string instanceId = chargeIndex == 0
+                                ? instance.InstanceId
+                                : System.Guid.NewGuid().ToString("N");
+                            migratedInstances.Add(CreateMigratedInstance(
+                                "cleansing_potion",
+                                instanceId));
+                        }
+                        break;
+                    default:
+                        migratedInstances.Add(instance);
+                        break;
+                }
+            }
+
+            state.ConsumableInstances = migratedInstances;
+            foreach (var character in state.Roster)
+            {
+                if (character != null)
+                    character.CarriedConsumableInstanceId = null;
+            }
+
+            state.Version = CurrentVersion;
+            CharacterLoadoutService.AutoUnloadDeadCharacters(state);
+            return true;
+        }
+
+        private static ConsumableInstance CreateMigratedInstance(
+            string definitionId,
+            string instanceId)
+        {
+            return new ConsumableInstance
+            {
+                InstanceId = string.IsNullOrWhiteSpace(instanceId)
+                    ? System.Guid.NewGuid().ToString("N")
+                    : instanceId,
+                DefinitionId = definitionId,
+                RemainingCharges = 1,
+                MaxCharges = 1
+            };
         }
 
         internal static bool RepairInPlace(PlayerAdventureState state)
@@ -466,7 +532,7 @@ namespace Tactics.Roster
             if (json == null)
             {
                 TLog.Error($"[PlayerAdventureStateStore] TestParty.json not found at {TestPartyJsonPath}");
-                return new PlayerAdventureState { Version = 2, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+                return new PlayerAdventureState { Version = CurrentVersion, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
             }
 
             try
@@ -475,12 +541,12 @@ namespace Tactics.Roster
                 if (config == null)
                 {
                     TLog.Error("[PlayerAdventureStateStore] Failed to deserialize TestParty.json");
-                    return new PlayerAdventureState { Version = 2, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+                    return new PlayerAdventureState { Version = CurrentVersion, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
                 }
                 TestPrefabMappings = config.PrefabMappings ?? new List<PrefabMapping>();
                 return new PlayerAdventureState
                 {
-                    Version = 2,
+                    Version = CurrentVersion,
                     Gold = 0,
                     Roster = config.Roster ?? new List<CharacterDefinition>(),
                     ActivePartyCharacterIds = config.ActivePartyCharacterIds ?? new List<string>()
@@ -489,7 +555,7 @@ namespace Tactics.Roster
             catch (System.Exception ex)
             {
                 TLog.Error($"[PlayerAdventureStateStore] Failed to parse TestParty.json: {ex.Message}");
-                return new PlayerAdventureState { Version = 2, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
+                return new PlayerAdventureState { Version = CurrentVersion, Gold = 0, Roster = new List<CharacterDefinition>(), ActivePartyCharacterIds = new List<string>() };
             }
         }
 

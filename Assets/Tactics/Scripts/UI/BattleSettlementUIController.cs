@@ -106,10 +106,10 @@ namespace Tactics.UI
             if (_itemDropLabel != null)
             {
                 var itemNames = rewards.ItemIds?
-                    .Select(itemId => ConsumableDatabase.GetById(itemId)?.DisplayName ?? itemId)
+                    .Select(ConsumableDatabase.GetAcquisitionDisplayText)
                     .ToList();
                 _itemDropLabel.text = itemNames != null && itemNames.Count > 0
-                    ? $"获得物品：{string.Join("、", itemNames)}"
+                    ? string.Join("、", itemNames)
                     : string.Empty;
                 _itemDropLabel.style.display = string.IsNullOrEmpty(_itemDropLabel.text)
                     ? DisplayStyle.None

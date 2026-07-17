@@ -34,9 +34,13 @@ namespace Tactics.Common.Testing.Gameplay
                 or "setAdventureGold"
                 or "setRosterCharacterState"
                 or "addInventoryItem"
+                or "addConsumableInstance"
                 or "equipInventoryEquipmentToRosterCharacter"
+                or "carryConsumableToRosterCharacter"
+                or "unloadRosterCharacterConsumable"
                 or "applyRestSiteResult"
                 or "buyShopEquipment"
+                or "buyShopGood"
                 or "applyEventResult";
         }
 
@@ -64,12 +68,20 @@ namespace Tactics.Common.Testing.Gameplay
                         return SetRosterCharacterState(context, action);
                     case "addInventoryItem":
                         return AddInventoryItem(context, action);
+                    case "addConsumableInstance":
+                        return AddConsumableInstance(context, action);
                     case "equipInventoryEquipmentToRosterCharacter":
                         return EquipInventoryEquipmentToRosterCharacter(context, action);
+                    case "carryConsumableToRosterCharacter":
+                        return CarryConsumableToRosterCharacter(context, action);
+                    case "unloadRosterCharacterConsumable":
+                        return UnloadRosterCharacterConsumable(context, action);
                     case "applyRestSiteResult":
                         return ApplyRestSiteResult(context, action);
                     case "buyShopEquipment":
                         return BuyShopEquipment(context, action);
+                    case "buyShopGood":
+                        return BuyShopGood(context, action);
                     case "applyEventResult":
                         return ApplyEventResult(context, action);
                     default:
@@ -104,7 +116,13 @@ namespace Tactics.Common.Testing.Gameplay
                 or "rosterCharacterHasPendingBuff"
                 or "rosterCharacterPendingBuffHasIcon"
                 or "inventoryContains"
-                or "consumableCountEquals";
+                or "consumableCountEquals"
+                or "rosterCharacterCarriedConsumableEquals"
+                or "backpackConsumableCountEquals"
+                or "consumableInstanceExists"
+                or "shopGoodCountEquals"
+                or "shopConsumableCountAtLeast"
+                or "shopConsumableIdsUnique";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -134,6 +152,12 @@ namespace Tactics.Common.Testing.Gameplay
                     "rosterCharacterPendingBuffHasIcon" => AssertRosterCharacterPendingBuffHasIcon(assertion),
                     "inventoryContains" => AssertInventoryContains(assertion),
                     "consumableCountEquals" => AssertConsumableCountEquals(assertion),
+                    "rosterCharacterCarriedConsumableEquals" => AssertRosterCharacterCarriedConsumableEquals(assertion),
+                    "backpackConsumableCountEquals" => AssertBackpackConsumableCountEquals(assertion),
+                    "consumableInstanceExists" => AssertConsumableInstanceExists(assertion),
+                    "shopGoodCountEquals" => AssertShopGoodCountEquals(context, assertion),
+                    "shopConsumableCountAtLeast" => AssertShopConsumableCountAtLeast(context, assertion),
+                    "shopConsumableIdsUnique" => AssertShopConsumableIdsUnique(context, assertion),
                     _ => GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported Map assertion '{assertion.Kind}'.")
                 };
 
@@ -509,6 +533,32 @@ namespace Tactics.Common.Testing.Gameplay
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Added inventory item '{itemId}'.");
         }
 
+        private static GameplayStepResult AddConsumableInstance(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string definitionId = action.Parameters["definitionId"]?.ToString();
+            string instanceId = action.Parameters["instanceId"]?.ToString();
+            var definition = ConsumableDatabase.GetById(definitionId);
+            if (definition == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Consumable definition '{definitionId}' not found.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            state.ConsumableInstances ??= new List<ConsumableInstance>();
+            if (!string.IsNullOrWhiteSpace(instanceId) &&
+                state.ConsumableInstances.Any(item => string.Equals(item?.InstanceId, instanceId, StringComparison.Ordinal)))
+            {
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Consumable instance '{instanceId}' already exists.");
+            }
+
+            var instance = ConsumableInstance.Create(definition, instanceId);
+            state.ConsumableInstances.Add(instance);
+            PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(
+                MapAdapterName,
+                action.Kind,
+                $"Added consumable '{definition.Id}' as instance '{instance.InstanceId}'.");
+        }
+
         private static GameplayStepResult EquipInventoryEquipmentToRosterCharacter(GameplayRuntimeContext context, ExecutableScenarioAction action)
         {
             string characterId = action.Parameters["characterId"]?.ToString();
@@ -528,16 +578,52 @@ namespace Tactics.Common.Testing.Gameplay
             if (equipmentDef == null)
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Equipment '{equipmentId}' not found in database.");
 
-            var slot = equipmentDef.Slot;
-            character.Equipment ??= new Dictionary<EquipmentSlot, string>();
-            if (character.Equipment.TryGetValue(slot, out var existing) && !string.IsNullOrEmpty(existing))
-                state.Inventory.Add(existing);
+            if (!CharacterLoadoutService.TryEquipEquipment(state, characterId, equipmentId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Failed to equip '{equipmentId}' to '{characterId}'.");
 
-            state.Inventory.Remove(equipmentId);
-            character.Equipment[slot] = equipmentId;
             PlayerAdventureStateStore.Save(state);
             context.CurrentAdventureState = state;
-            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Equipped '{equipmentId}' to '{characterId}' on slot '{slot}'.");
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Equipped '{equipmentId}' to '{characterId}' on slot '{equipmentDef.Slot}'.");
+        }
+
+        private static GameplayStepResult CarryConsumableToRosterCharacter(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string characterId = action.Parameters["characterId"]?.ToString();
+            string instanceId = action.Parameters["instanceId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(characterId) || string.IsNullOrWhiteSpace(instanceId))
+            {
+                return GameplayStepResult.Fail(
+                    MapAdapterName,
+                    action.Kind,
+                    "carryConsumableToRosterCharacter requires characterId and instanceId.");
+            }
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (!CharacterLoadoutService.TryCarryConsumable(state, characterId, instanceId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Failed to carry '{instanceId}' on '{characterId}'.");
+
+            PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"'{characterId}' now carries '{instanceId}'.");
+        }
+
+        private static GameplayStepResult UnloadRosterCharacterConsumable(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string characterId = action.Parameters["characterId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "unloadRosterCharacterConsumable requires characterId.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (!CharacterLoadoutService.TryUnloadConsumable(state, characterId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Character '{characterId}' has no carried consumable.");
+
+            PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Unloaded consumable from '{characterId}'.");
         }
 
         private static GameplayStepResult ApplyRestSiteResult(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -567,10 +653,46 @@ namespace Tactics.Common.Testing.Gameplay
             if (string.IsNullOrWhiteSpace(equipmentId))
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, "buyShopEquipment requires equipmentId.");
 
+            return ApplyShopPurchase(context, action.Kind, StoreGoodKind.Equipment, equipmentId, price);
+        }
+
+        private static GameplayStepResult BuyShopGood(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string kindName = action.Parameters["itemKind"]?.ToString();
+            string contentId = action.Parameters["contentId"]?.ToString();
+            int price = action.Parameters["price"]?.ToObject<int>() ?? 0;
+            if (!Enum.TryParse(kindName, true, out StoreGoodKind kind) || string.IsNullOrWhiteSpace(contentId))
+            {
+                return GameplayStepResult.Fail(
+                    MapAdapterName,
+                    action.Kind,
+                    "buyShopGood requires a valid itemKind and contentId.");
+            }
+
+            return ApplyShopPurchase(context, action.Kind, kind, contentId, price);
+        }
+
+        private static GameplayStepResult ApplyShopPurchase(
+            GameplayRuntimeContext context,
+            string actionKind,
+            StoreGoodKind kind,
+            string contentId,
+            int price)
+        {
+            bool isValid = kind == StoreGoodKind.Consumable
+                ? ConsumableDatabase.GetById(contentId) != null
+                : EquipmentDatabase.GetById(contentId) != null;
+            if (!isValid)
+                return GameplayStepResult.Fail(MapAdapterName, actionKind, $"Shop content '{contentId}' was not found.");
+
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
             var reward = RewardResult.Empty();
             reward.GoldCost = price;
-            reward.EquipmentIds.Add(equipmentId);
+            if (kind == StoreGoodKind.Consumable)
+                reward.ItemIds.Add(contentId);
+            else
+                reward.EquipmentIds.Add(contentId);
+
             if (NodeInteractionManager.Instance != null)
                 NodeInteractionManager.Instance.ApplyRewardResult(reward, state);
             else
@@ -579,7 +701,7 @@ namespace Tactics.Common.Testing.Gameplay
                 PlayerAdventureStateStore.Save(state);
             }
             context.CurrentAdventureState = state;
-            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Bought shop equipment '{equipmentId}' for {price} gold.");
+            return GameplayStepResult.Pass(MapAdapterName, actionKind, $"Bought shop {kind} '{contentId}' for {price} gold.");
         }
 
         private static GameplayStepResult ApplyEventResult(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -872,7 +994,10 @@ namespace Tactics.Common.Testing.Gameplay
             if (string.IsNullOrWhiteSpace(slotName) || !Enum.TryParse<EquipmentSlot>(slotName, true, out var slot))
                 return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterEquipmentEquals requires a valid equipmentSlot parameter.");
 
-            string expected = assertion.Expected?.ToString();
+            string expected = assertion.Expected?.Type == JTokenType.Null
+                ? null
+                : assertion.Expected?.ToString();
+            expected = string.IsNullOrWhiteSpace(expected) ? null : expected;
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
             var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
             if (character == null)
@@ -940,6 +1065,114 @@ namespace Tactics.Common.Testing.Gameplay
             return actual == expected
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"ConsumableCount={actual}")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected ConsumableCount={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterCarriedConsumableEquals(
+            ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(characterId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "rosterCharacterCarriedConsumableEquals requires target characterId.");
+
+            string expected = assertion.Expected?.Type == JTokenType.Null
+                ? null
+                : assertion.Expected?.ToString();
+            expected = string.IsNullOrWhiteSpace(expected) ? null : expected;
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            string actual = state?.Roster?
+                .FirstOrDefault(character => character?.Id == characterId)?
+                .CarriedConsumableInstanceId;
+            actual = string.IsNullOrWhiteSpace(actual) ? null : actual;
+
+            return string.Equals(actual, expected, StringComparison.Ordinal)
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId}.CarriedConsumable={actual ?? "<empty>"}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId}.CarriedConsumable={expected ?? "<empty>"}, actual={actual ?? "<empty>"}.");
+        }
+
+        private static GameplayAssertionResult AssertBackpackConsumableCountEquals(ExecutableScenarioAssertion assertion)
+        {
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            string definitionId = assertion.Parameters["definitionId"]?.ToString();
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var backpack = CharacterLoadoutService.GetBackpackConsumables(state);
+            int actual = string.IsNullOrWhiteSpace(definitionId)
+                ? backpack.Count
+                : backpack.Count(item => string.Equals(item.DefinitionId, definitionId, StringComparison.Ordinal));
+
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"BackpackConsumableCount={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected BackpackConsumableCount={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertConsumableInstanceExists(ExecutableScenarioAssertion assertion)
+        {
+            string instanceId = assertion.Target ?? assertion.Parameters["instanceId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(instanceId))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "consumableInstanceExists requires target instanceId.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = PlayerAdventureStateStore.LoadRepairAndSave()?.ConsumableInstances?
+                .Any(instance => string.Equals(instance?.InstanceId, instanceId, StringComparison.Ordinal)) == true;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"ConsumableInstanceExists({instanceId})={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected ConsumableInstanceExists({instanceId})={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertShopGoodCountEquals(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            int expected = assertion.Expected?.ToObject<int>() ?? 3;
+            int actual = GenerateShopGoods(context, assertion).Count;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"ShopGoodCount={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected ShopGoodCount={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertShopConsumableCountAtLeast(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            int expected = assertion.Expected?.ToObject<int>() ?? 1;
+            int actual = GenerateShopGoods(context, assertion).Count(good => good.IsConsumable);
+            return actual >= expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"ShopConsumableCount={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected ShopConsumableCount>={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertShopConsumableIdsUnique(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            var consumableIds = GenerateShopGoods(context, assertion)
+                .Where(good => good.IsConsumable)
+                .Select(good => good.ConsumableId)
+                .ToList();
+            bool actual = consumableIds.Count == consumableIds.Distinct(StringComparer.Ordinal).Count();
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"ShopConsumableIdsUnique={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected ShopConsumableIdsUnique={expected}, actual={actual}.");
+        }
+
+        private static List<ShopGood> GenerateShopGoods(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            string nodeId = assertion.Parameters["nodeId"]?.ToString();
+            nodeId = string.IsNullOrWhiteSpace(nodeId)
+                ? context.CurrentNodeId ?? RoguelikeMapRuntimeState.CurrentNodeId ?? "test-store"
+                : nodeId;
+
+            int runSeed = assertion.Parameters["runSeed"]?.ToObject<int>()
+                ?? context.RunSeed
+                ?? RoguelikeMapRuntimeState.RunSeed;
+            int seed = assertion.Parameters["seed"]?.ToObject<int>()
+                ?? RoguelikeMapRuntimeState.DeriveSeed(runSeed, $"store:{nodeId}");
+
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var configuredGoods = map?.GetNode(nodeId)?.storeConfig?.goods;
+            return new ShopManager().GenerateGoods(3, seed, configuredGoods);
         }
 
         private static GameplayAssertionResult AssertRosterCharacterHasPendingBuff(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)

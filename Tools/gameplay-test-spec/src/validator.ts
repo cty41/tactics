@@ -45,9 +45,15 @@ const supportedActionKinds = new Set([
   "setAdventureGold",
   "setRosterCharacterState",
   "addInventoryItem",
+  "equipInventoryEquipmentToRosterCharacter",
   "applyRestSiteResult",
   "buyShopEquipment",
+  "addConsumableInstance",
+  "carryConsumableToRosterCharacter",
+  "unloadRosterCharacterConsumable",
+  "buyShopGood",
   "applyEventResult",
+  "useCarriedConsumable",
   "openUI",
   "closeUI",
   "clickElement",
@@ -78,6 +84,7 @@ const supportedAssertionKinds = new Set([
   "unitHealthEquals",
   "unitManaEquals",
   "unitHasBuff",
+  "unitDoesNotHaveBuff",
   "unitBuffDurationEquals",
   "unitBuffCountEquals",
   "unitBuffIsUnique",
@@ -134,6 +141,13 @@ const supportedAssertionKinds = new Set([
   "rosterCharacterPendingBuffHasIcon",
   "inventoryContains",
   "consumableCountEquals",
+  "rosterCharacterCarriedConsumableEquals",
+  "backpackConsumableCountEquals",
+  "consumableInstanceExists",
+  "shopGoodCountEquals",
+  "shopConsumableCountAtLeast",
+  "shopConsumableIdsUnique",
+  "unitCanReceiveHealingEquals",
   "elementVisible",
   "elementText",
   "elementEnabled",
@@ -479,10 +493,16 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
       break;
     case "aiTurnTargetCountEquals":
     case "rosterCharacterLevelEquals":
+    case "backpackConsumableCountEquals":
+    case "shopGoodCountEquals":
+    case "shopConsumableCountAtLeast":
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "aiTurnSucceededEquals":
     case "aiTurnUsedFallbackEquals":
+    case "consumableInstanceExists":
+    case "shopConsumableIdsUnique":
+    case "unitCanReceiveHealingEquals":
       if (typeof assertion.expected !== "boolean") {
         diagnostics.push({
           code: "InvalidAssertionExpectedType",
@@ -493,6 +513,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
       }
       break;
     case "unitHasBuff":
+    case "unitDoesNotHaveBuff":
       if (!isBattleContext) requireKnownUnit(assertion, state, diagnostics);
       requireBuffName(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;

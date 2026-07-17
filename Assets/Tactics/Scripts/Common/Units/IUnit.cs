@@ -144,6 +144,11 @@ namespace Tactics.Common.Units
         bool IsCorpse { get; set; }
 
         /// <summary>
+        /// Whether positive health changes can restore this unit's health.
+        /// </summary>
+        bool CanReceiveHealing { get; set; }
+
+        /// <summary>
         /// 召唤物归属 ID，-1 表示无归属。
         /// </summary>
         int OwnerUnitId { get; set; }

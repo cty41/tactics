@@ -53,6 +53,20 @@ namespace Tactics.Tests.PlayMode
             Assert.That(amazon.Abilities.Count, Is.GreaterThanOrEqualTo(4));
         }
 
+        [Test]
+        public void NecromancerSummonGraphs_DeclareHealingPolicy()
+        {
+            AssertSummonHealingPolicy(
+                "Assets/Tactics/Battle/Abilities/SkillGraphs/SummonSkeleton_Graph.asset",
+                false);
+            AssertSummonHealingPolicy(
+                "Assets/Tactics/Battle/Abilities/SkillGraphs/SkeletonMage_Graph.asset",
+                false);
+            AssertSummonHealingPolicy(
+                "Assets/Tactics/Battle/Abilities/SkillGraphs/SummonFireDemon_Graph.asset",
+                true);
+        }
+
         [UnityTest]
         public IEnumerator ProjectileGraphs_LoadAndExecuteAgainstRealAssets()
         {
@@ -387,6 +401,25 @@ namespace Tactics.Tests.PlayMode
             {
                 world.Dispose();
             }
+        }
+
+        private static void AssertSummonHealingPolicy(string graphPath, bool expected)
+        {
+            var graph = GameAssetManager.Instance.Load<SkillGraphAsset>(graphPath);
+            Assert.That(graph, Is.Not.Null, $"Missing summon graph: {graphPath}");
+
+            SummonUnitNodeRecord summonNode = null;
+            foreach (var node in graph.Nodes)
+            {
+                if (node is SummonUnitNodeRecord candidate)
+                {
+                    summonNode = candidate;
+                    break;
+                }
+            }
+
+            Assert.That(summonNode, Is.Not.Null, $"Missing summon node: {graphPath}");
+            Assert.That(summonNode.CanReceiveHealing, Is.EqualTo(expected), graphPath);
         }
     }
 }

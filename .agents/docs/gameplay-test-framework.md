@@ -23,8 +23,8 @@ Gameplay Test Framework 让 Agent 用受控 Markdown 场景描述生成稳定的
 | 适配器 | 用途 |
 |---|---|
 | Skill | 施放技能、选择目标、验证伤害/Buff/位移/投射物/多阶段结果 |
-| Battle | 创建参战单位、推进回合、验证生命、法力、行动状态和胜负 |
-| Map | 构建并推进 Roguelike 节点、验证可达性和节点状态 |
+| Battle | 创建参战单位、推进回合、使用角色携带消耗品，并验证生命、法力、治疗资格、Buff、行动状态和胜负 |
+| Map | 构建并推进 Roguelike 节点，操作装备/消耗品装载与商店购买，并验证可达性、背包、角色状态和商品组成 |
 | UI | 驱动已接入的界面动作并检查可观测 UI 状态 |
 
 具体 action、assertion 和参数集合以 `Tools/gameplay-test-spec` 的 schema、编译器和 Unity adapter 代码为准。

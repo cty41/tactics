@@ -86,6 +86,19 @@ namespace Tactics.Consumables
             return _definitions.Values.OrderBy(definition => definition.Id, StringComparer.Ordinal).ToList();
         }
 
+        /// <summary>
+        /// Formats a newly acquired copy using its display name and charge state.
+        /// </summary>
+        public static string GetAcquisitionDisplayText(string id)
+        {
+            var definition = GetById(id);
+            if (definition == null)
+                return id ?? string.Empty;
+
+            int maxCharges = Math.Max(1, definition.MaxCharges);
+            return $"{definition.DisplayName}（{maxCharges}/{maxCharges}）";
+        }
+
         public static ConsumableDefinition Roll(string poolId, int seed)
         {
             EnsureLoaded();

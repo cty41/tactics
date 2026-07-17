@@ -1,38 +1,38 @@
 {
   "Definitions": [
     {
-      "Id": "field_ration",
-      "DisplayName": "战地口粮",
-      "Description": "在战斗中恢复自身 8 点生命。",
+      "Id": "life_potion",
+      "DisplayName": "生命药剂",
+      "Description": "为自身或相邻友军恢复 8 点生命。",
       "Rarity": "Common",
       "Price": 5,
       "MaxCharges": 1,
-      "AbilityTemplateId": "consumable.self_heal",
+      "EffectKind": "RestoreHealth",
       "Magnitude": 8,
-      "MaxRange": 0,
-      "TargetMode": "Self"
+      "MaxRange": 1,
+      "TargetMode": "AllyIncludingSelf"
     },
     {
-      "Id": "catnip_tonic",
-      "DisplayName": "猫薄荷补剂",
-      "Description": "在战斗中恢复自身 6 点法力。",
+      "Id": "mana_potion",
+      "DisplayName": "魔法药剂",
+      "Description": "为自身或相邻友军恢复 6 点魔法。",
       "Rarity": "Common",
       "Price": 5,
       "MaxCharges": 1,
-      "AbilityTemplateId": "consumable.self_mana",
+      "EffectKind": "RestoreMana",
       "Magnitude": 6,
-      "MaxRange": 0,
-      "TargetMode": "Self"
+      "MaxRange": 1,
+      "TargetMode": "AllyIncludingSelf"
     },
     {
-      "Id": "bandage_roll",
-      "DisplayName": "绷带卷",
-      "Description": "恢复自身或相邻存活友军 5 点生命。",
+      "Id": "cleansing_potion",
+      "DisplayName": "净化药水",
+      "Description": "清除自身或相邻友军的全部减益效果。",
       "Rarity": "Uncommon",
       "Price": 9,
-      "MaxCharges": 3,
-      "AbilityTemplateId": "consumable.ally_heal",
-      "Magnitude": 5,
+      "MaxCharges": 1,
+      "EffectKind": "RemoveHarmfulBuffs",
+      "Magnitude": 0,
       "MaxRange": 1,
       "TargetMode": "AllyIncludingSelf"
     }
@@ -41,9 +41,9 @@
     {
       "Id": "consumables",
       "Entries": [
-        { "ConsumableId": "field_ration", "Weight": 5 },
-        { "ConsumableId": "catnip_tonic", "Weight": 3 },
-        { "ConsumableId": "bandage_roll", "Weight": 1 }
+        { "ConsumableId": "life_potion", "Weight": 1 },
+        { "ConsumableId": "mana_potion", "Weight": 1 },
+        { "ConsumableId": "cleansing_potion", "Weight": 1 }
       ]
     }
   ]

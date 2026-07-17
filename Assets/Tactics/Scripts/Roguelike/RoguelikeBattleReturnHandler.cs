@@ -216,6 +216,10 @@ namespace Tactics.Roguelike
                 def.CurrentMp = Mathf.RoundToInt(unit.Mana);
                 def.IsDead = unit.IsDowned;
             }
+
+            // Death is the single transition point that returns all carried loadout
+            // entries to the shared backpack. The settlement callback persists the state.
+            CharacterLoadoutService.AutoUnloadDeadCharacters(state);
         }
 
         private static void ApplyRoguelikePathAfterBattle(GameResult result)

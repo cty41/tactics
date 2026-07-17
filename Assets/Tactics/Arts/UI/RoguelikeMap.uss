@@ -126,10 +126,6 @@
     background-color: rgb(255, 215, 0);
 }
 
-.food-icon {
-    background-color: rgb(210, 105, 30);
-}
-
 .resource-label {
     font-size: 20px;
     color: rgb(255, 255, 255);

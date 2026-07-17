@@ -30,6 +30,7 @@ namespace Tactics.RoguelikeMap.Interaction
         private RoguelikeMapNode _currentNode;
         private PlayerAdventureState _currentState;
         private System.Action _onClose;
+        private readonly HashSet<string> _sessionPurchasedGoodKeys = new HashSet<string>();
 
         /// <summary>
         /// 当前 RoguelikeMap 实例，由调用方设置，用于持久化购买记录
@@ -56,6 +57,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
             _currentNode = node;
             _onClose = onClose;
+            _sessionPurchasedGoodKeys.Clear();
             _currentState = PlayerAdventureStateStore.LoadRepairAndSave();
             RunGoldManager.Instance.SyncFromState(_currentState);
 
@@ -114,9 +116,9 @@ namespace Tactics.RoguelikeMap.Interaction
 
                 var buyBtn = new Button(() => BuyGood(good)) { text = "购买" };
 
-                if (CurrentMap != null && CurrentMap.IsStoreGoodPurchased(_currentNode.nodeId, GetPurchaseKey(good)))
+                if (IsGoodPurchased(good))
                 {
-                    buyBtn.text = "已售出";
+                    buyBtn.text = "已购买";
                     buyBtn.SetEnabled(false);
                 }
                 else
@@ -132,6 +134,9 @@ namespace Tactics.RoguelikeMap.Interaction
 
         private void BuyGood(ShopGood good)
         {
+            if (good == null || IsGoodPurchased(good))
+                return;
+
             if (!RunGoldManager.Instance.HasEnoughGold(good.Price))
             {
                 TLog.Info("[StoreNodeHandler] 金币不足");
@@ -161,8 +166,9 @@ namespace Tactics.RoguelikeMap.Interaction
                 ? ConsumableDatabase.GetById(good.ConsumableId)?.DisplayName ?? good.ConsumableId
                 : EquipmentDatabase.GetById(good.EquipmentId)?.DisplayName ?? good.EquipmentId;
 
-            CurrentMap?.AddStorePurchase(_currentNode.nodeId, GetPurchaseKey(good));
-            _currentGoods.Remove(good);
+            string purchaseKey = GetPurchaseKey(good);
+            _sessionPurchasedGoodKeys.Add(purchaseKey);
+            CurrentMap?.AddStorePurchase(_currentNode.nodeId, purchaseKey);
             DisplayGoods();
             UpdateGoldDisplay();
             TLog.Info($"[StoreNodeHandler] 购买了 {itemName}，花费 {good.Price} 金币");
@@ -186,32 +192,22 @@ namespace Tactics.RoguelikeMap.Interaction
 
         private List<ShopGood> BuildGoods(RoguelikeMapNode node)
         {
-            if (node?.storeConfig?.goods != null && node.storeConfig.goods.Count > 0)
-            {
-                var configuredGoods = new List<ShopGood>();
-                foreach (var entry in node.storeConfig.goods)
-                {
-                    if (string.IsNullOrWhiteSpace(entry.equipmentId))
-                        continue;
-
-                    var def = EquipmentDatabase.GetById(entry.equipmentId);
-                    configuredGoods.Add(new ShopGood
-                    {
-                        EquipmentId = entry.equipmentId,
-                        Name = def?.DisplayName ?? entry.equipmentId,
-                        Price = Mathf.Max(0, entry.price),
-                        IconHint = string.Empty
-                    });
-                }
-
-                if (configuredGoods.Count > 0)
-                    return configuredGoods;
-            }
-
             int seed = RoguelikeMapRuntimeState.DeriveSeed(
                 RoguelikeMapRuntimeState.RunSeed,
                 $"store:{node.nodeId}");
-            return _shopManager.GenerateGoods(3, seed);
+            return _shopManager.GenerateGoods(3, seed, node?.storeConfig?.goods);
+        }
+
+        private bool IsGoodPurchased(ShopGood good)
+        {
+            string purchaseKey = GetPurchaseKey(good);
+            if (string.IsNullOrWhiteSpace(purchaseKey))
+                return false;
+
+            return _sessionPurchasedGoodKeys.Contains(purchaseKey) ||
+                   (CurrentMap != null &&
+                    _currentNode != null &&
+                    CurrentMap.IsStoreGoodPurchased(_currentNode.nodeId, purchaseKey));
         }
 
         private static string GetPurchaseKey(ShopGood good)

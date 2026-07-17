@@ -100,6 +100,7 @@ namespace Tactics.Common.Skills.Graph
             SkillGraphNodeType.SelectAlly,
             SkillGraphNodeType.ApplyHeal,
             SkillGraphNodeType.ApplyMana,
+            SkillGraphNodeType.RemoveHarmfulBuffs,
             SkillGraphNodeType.DashToAlly,
             SkillGraphNodeType.LaunchUnit,
             SkillGraphNodeType.SelectCorpseTarget,

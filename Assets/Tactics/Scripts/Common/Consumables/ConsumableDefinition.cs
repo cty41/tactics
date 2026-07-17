@@ -16,12 +16,19 @@ namespace Tactics.Consumables
         AllyIncludingSelf
     }
 
+    public enum ConsumableEffectKind
+    {
+        RestoreHealth,
+        RestoreMana,
+        RemoveHarmfulBuffs
+    }
+
     /// <summary>
     /// Immutable content definition for a battle-only consumable.
     /// </summary>
     /// <remarks>
-    /// The item owns acquisition and durability data. AbilityTemplateId selects a
-    /// SkillGraph template, so targeting and effect execution stay in the ability runtime.
+    /// The item owns acquisition and durability data. EffectKind selects the transient
+    /// SkillGraph effect while targeting and execution remain in the ability runtime.
     /// </remarks>
     [Serializable]
     public sealed class ConsumableDefinition
@@ -32,7 +39,8 @@ namespace Tactics.Consumables
         public ConsumableRarity Rarity;
         public int Price;
         public int MaxCharges = 1;
-        public string AbilityTemplateId;
+        public string IconPath;
+        public ConsumableEffectKind EffectKind;
         public float Magnitude;
         public int MaxRange;
         public ConsumableTargetMode TargetMode;

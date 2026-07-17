@@ -22,7 +22,7 @@ namespace Tactics.Common.Units.Abilities
     {
         string DisplayName { get; }
         bool CanPerform(IGridController gridController);
-        void CommitCompletedUse();
+        void CommitCompletedUse(SkillExecutionContext context);
     }
 
     /// <summary>
@@ -349,7 +349,7 @@ namespace Tactics.Common.Units.Abilities
             if (executionState == SkillGraphExecutionState.Completed)
             {
                 if (_usePolicy != null)
-                    _usePolicy.CommitCompletedUse();
+                    _usePolicy.CommitCompletedUse(context);
                 else if (_config.IsBasicAbility)
                     _owner.MarkBasicAbilityUsed(_config.DisplayName);
                 else
@@ -812,6 +812,7 @@ namespace Tactics.Common.Units.Abilities
             foreach (var unit in cell.CurrentUnits)
             {
                 if (unit != null && unit.PlayerNumber == _owner.PlayerNumber &&
+                    !unit.IsDowned && unit.Health > 0f &&
                     (includeSelf || !ReferenceEquals(unit, _owner)))
                     return true;
             }

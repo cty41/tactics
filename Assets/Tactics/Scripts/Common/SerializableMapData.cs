@@ -44,6 +44,13 @@ namespace Tactics.RoguelikeMap
         [Serializable]
         public class SerializableStoreGoodData
         {
+            [JsonProperty("itemKind")]
+            public StoreGoodKind itemKind = StoreGoodKind.Equipment;
+
+            [JsonProperty("contentId")]
+            public string contentId;
+
+            // Preserved for maps authored before mixed store goods were introduced.
             [JsonProperty("equipmentId")]
             public string equipmentId;
 
@@ -300,6 +307,8 @@ namespace Tactics.RoguelikeMap
                     {
                         goods = nodeData.storeGoods.Select(g => new StoreGoodEntry
                         {
+                            itemKind = g.itemKind,
+                            contentId = g.contentId,
                             equipmentId = g.equipmentId,
                             price = g.price
                         }).ToList()
@@ -372,7 +381,11 @@ namespace Tactics.RoguelikeMap
                     }).ToList() ?? new List<SerializableNodeData.SerializableWeightedEquipmentData>(),
                     storeGoods = node.storeConfig?.goods?.Select(g => new SerializableNodeData.SerializableStoreGoodData
                     {
-                        equipmentId = g.equipmentId,
+                        itemKind = g.ResolvedKind,
+                        contentId = g.ResolvedContentId,
+                        equipmentId = g.ResolvedKind == StoreGoodKind.Equipment
+                            ? g.ResolvedContentId
+                            : null,
                         price = g.price
                     }).ToList() ?? new List<SerializableNodeData.SerializableStoreGoodData>()
                 };

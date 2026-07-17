@@ -206,8 +206,10 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     {
                         style = { flexDirection = FlexDirection.Row, marginBottom = 6, alignItems = Align.FlexEnd }
                     };
-                    goodRow.Add(CreateStringField("装备ID", good.equipmentId ?? string.Empty,
-                        v => { good.equipmentId = v; OnNodeChanged?.Invoke(); }));
+                    goodRow.Add(CreateStoreGoodKindField("类型", good.ResolvedKind,
+                        v => { good.SetContent(v, good.ResolvedContentId); OnNodeChanged?.Invoke(); }));
+                    goodRow.Add(CreateStringField("内容ID", good.ResolvedContentId ?? string.Empty,
+                        v => { good.SetContent(good.ResolvedKind, v); OnNodeChanged?.Invoke(); }));
                     goodRow.Add(CreateIntField("价格", good.price,
                         v => { good.price = v; OnNodeChanged?.Invoke(); }));
 
@@ -600,8 +602,10 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     {
                         style = { flexDirection = FlexDirection.Row, marginBottom = 6, alignItems = Align.FlexEnd }
                     };
-                    goodRow.Add(CreateStringField("装备ID", good.equipmentId ?? string.Empty,
-                        v => { good.equipmentId = v; OnNodeChanged?.Invoke(); }));
+                    goodRow.Add(CreateStoreGoodKindField("类型", good.ResolvedKind,
+                        v => { good.SetContent(v, good.ResolvedContentId); OnNodeChanged?.Invoke(); }));
+                    goodRow.Add(CreateStringField("内容ID", good.ResolvedContentId ?? string.Empty,
+                        v => { good.SetContent(good.ResolvedKind, v); OnNodeChanged?.Invoke(); }));
                     goodRow.Add(CreateIntField("价格", good.price,
                         v => { good.price = v; OnNodeChanged?.Invoke(); }));
 
@@ -958,6 +962,25 @@ namespace Tactics.Editor.RoguelikeMapEditor
             field.style.fontSize = 11;
             field.style.height = 22;
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            container.Add(field);
+            return container;
+        }
+
+        private VisualElement CreateStoreGoodKindField(
+            string label,
+            StoreGoodKind value,
+            Action<StoreGoodKind> onChange)
+        {
+            var container = new VisualElement { style = { marginRight = 8, minWidth = 100 } };
+            container.Add(new Label(label)
+            {
+                style = { fontSize = 10, color = new Color(0.6f, 0.6f, 0.6f), paddingBottom = 2 }
+            });
+
+            var field = new EnumField(value);
+            field.style.fontSize = 11;
+            field.style.height = 22;
+            field.RegisterValueChangedCallback(evt => onChange((StoreGoodKind)evt.newValue));
             container.Add(field);
             return container;
         }

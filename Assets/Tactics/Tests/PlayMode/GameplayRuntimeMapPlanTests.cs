@@ -10,6 +10,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
+using Tactics.Roguelike;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -24,6 +25,11 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator SetUp()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            PureRunSessionStore.Clear();
+
+            var assetTask = TestGameAssetHelper.EnsureInitialized();
+            yield return new WaitUntil(() => assetTask.IsCompleted);
+            Assume.That(assetTask.Result, Is.Not.Null, "GameAssetManager should be initialized.");
 
             var controllerType = ResolveBattleControllerType();
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
@@ -101,6 +107,8 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator TearDown()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            PureRunSessionStore.Clear();
+            TestGameAssetHelper.Cleanup();
 
             if (_cellManagerRoot != null)
             {
@@ -358,27 +366,63 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator RuntimeRunner_ExecutesMapBattleDeathEquipmentRetained()
+        public IEnumerator RuntimeRunner_ExecutesBattleDeathLoadoutAutoUnloaded()
         {
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
-            var task = ExecuteMapPlan(GetPlanPath("map", "battle-death-equipment-retained.plan.json"));
-            yield return WaitForTask(task);
-
-            var result = task.Result;
-            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
-            Assert.IsTrue(result.Passed, details);
+            yield return ExecuteAndAssertPlan("battle-death-loadout-auto-unloaded.plan.json");
         }
 
         [UnityTest]
-        public IEnumerator RuntimeRunner_ExecutesMapBattleDeathConsumableRetained()
+        public IEnumerator RuntimeRunner_ExecutesMapEventDeathLoadoutAutoUnloaded()
         {
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
-            var task = ExecuteMapPlan(GetPlanPath("map", "battle-death-consumable-retained.plan.json"));
-            yield return WaitForTask(task);
+            yield return ExecuteAndAssertPlan("map-event-death-loadout-auto-unloaded.plan.json");
+        }
 
-            var result = task.Result;
-            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
-            Assert.IsTrue(result.Passed, details);
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesInventoryCarryReplaceUnload()
+        {
+            yield return ExecuteAndAssertPlan("inventory-carry-replace-unload.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesInventoryEquipmentOneStepReplace()
+        {
+            yield return ExecuteAndAssertPlan("inventory-equipment-one-step-replace.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesLifePotionExplicitAdjacentTarget()
+        {
+            yield return ExecuteAndAssertPlan("life-potion-explicit-adjacent-target.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesManaPotionExplicitAdjacentTarget()
+        {
+            yield return ExecuteAndAssertPlan("mana-potion-explicit-adjacent-target.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesCleansingPotionRemovesOnlyHarmful()
+        {
+            yield return ExecuteAndAssertPlan("cleansing-potion-removes-only-harmful.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesConsumableInvalidTargetDoesNotConsume()
+        {
+            yield return ExecuteAndAssertPlan("consumable-invalid-target-does-not-consume.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesReanimatedSummonHealingImmunity()
+        {
+            yield return ExecuteAndAssertPlan("reanimated-summon-healing-immunity.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesStoreConsumableGuarantee()
+        {
+            yield return ExecuteAndAssertPlan("store-consumable-guarantee.plan.json");
         }
 
         [UnityTest]
@@ -414,6 +458,17 @@ namespace Tactics.Tests.PlayMode
         private static string GetSourcePlanPath(string subDir, string fileName)
         {
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", subDir, fileName));
+        }
+
+        private static IEnumerator ExecuteAndAssertPlan(string fileName)
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteMapPlan(GetPlanPath("map", fileName));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
         }
 
         private static async Task<GameplayTestResult> ExecuteMapPlan(string planPath)

@@ -87,6 +87,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 {
                     editable.storeGoods.Add(new StoreGoodEntry
                     {
+                        itemKind = g.itemKind,
+                        contentId = g.contentId,
                         equipmentId = g.equipmentId,
                         price = g.price
                     });
@@ -133,6 +135,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
             {
                 editable.storeGoods = node.storeConfig.goods?.ConvertAll(g => new StoreGoodEntry
                 {
+                    itemKind = g.itemKind,
+                    contentId = g.contentId,
                     equipmentId = g.equipmentId,
                     price = g.price
                 }) ?? new List<StoreGoodEntry>();
@@ -190,7 +194,11 @@ namespace Tactics.Editor.RoguelikeMapEditor
             {
                 nodeData.storeGoods.Add(new SerializableNodeData.SerializableStoreGoodData
                 {
-                    equipmentId = g.equipmentId,
+                    itemKind = g.ResolvedKind,
+                    contentId = g.ResolvedContentId,
+                    equipmentId = g.ResolvedKind == StoreGoodKind.Equipment
+                        ? g.ResolvedContentId
+                        : null,
                     price = g.price
                 });
             }
@@ -231,6 +239,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
             {
                 goods = storeGoods?.ConvertAll(g => new StoreGoodEntry
                 {
+                    itemKind = g.itemKind,
+                    contentId = g.contentId,
                     equipmentId = g.equipmentId,
                     price = g.price
                 }) ?? new List<StoreGoodEntry>()
@@ -281,6 +291,8 @@ namespace Tactics.Editor.RoguelikeMapEditor
                 }) ?? new List<EquipmentEntry>(),
                 storeGoods = storeGoods?.ConvertAll(g => new StoreGoodEntry
                 {
+                    itemKind = g.itemKind,
+                    contentId = g.contentId,
                     equipmentId = g.equipmentId,
                     price = g.price
                 }) ?? new List<StoreGoodEntry>()

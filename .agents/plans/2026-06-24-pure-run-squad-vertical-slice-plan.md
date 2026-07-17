@@ -105,6 +105,7 @@
 
 ### Task 4: 落地装备与消耗品的即时分配价值
 
+- 当前状态：已完成实现、自动化验证和 Unity 人工 UI/交互验收；稳定规则见 [Pure Run 三人小队原型设计](../docs/2026-06-24-pure-run-squad-prototype-design.md)，实现与回归入口见 `Assets/Tactics/Scripts/Common/Roster/CharacterLoadoutService.cs`、`Assets/Tactics/Scripts/UI/InventoryUIController.cs` 和 `Assets/Tactics/Tests/PlayMode/ConsumableBattleUseTests.cs`。
 - 目标：让掉落不是单纯数值奖励，而是小队内部的分配选择。
 - 输入：Treasure/Store 节点、Inventory UI、现有装备与背包交互。
 - 输出：最小装备槽与消耗品槽分配体验，支持战斗掉落、宝箱或商店获得后立即进入当前 run 构筑。

@@ -54,6 +54,11 @@ namespace Tactics.Common.Units
 
         public void ModifyHealth(float healthChangeAmount, IUnit sourceUnit)
         {
+            // Reanimated summons remain selectable by healing abilities, but every
+            // positive HP change resolves as no effect at the shared health boundary.
+            if (healthChangeAmount > 0f && !_unitReference.CanReceiveHealing)
+                return;
+
             _unitReference.Health += healthChangeAmount;
             _unitReference.InvokeHealthChanged(new HealthChangedEventArgs(_unitReference, sourceUnit, healthChangeAmount));
 

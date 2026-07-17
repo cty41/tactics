@@ -89,6 +89,15 @@ namespace Tactics.Roster
         public Dictionary<EquipmentSlot, string> Equipment { get; set; } = new Dictionary<EquipmentSlot, string>();
 
         /// <summary>
+        /// Instance ID of the single consumable carried by this character.
+        /// </summary>
+        /// <remarks>
+        /// Carried instances remain in PlayerAdventureState.ConsumableInstances and are
+        /// excluded from the shared backpack by CharacterLoadoutService.
+        /// </remarks>
+        public string CarriedConsumableInstanceId { get; set; }
+
+        /// <summary>
         /// 地图层待生效 Buff 列表。战斗开始时应用到角色，然后清空。
         /// </summary>
         [JsonIgnore]
@@ -272,6 +281,7 @@ namespace Tactics.Roster
             public string BuffAssetPath { get; set; }
             public int DefaultDuration { get; set; }
             public bool CanAct { get; set; }
+            public BuffPolarity Polarity { get; set; }
             public BuffEffectType EffectType { get; set; }
             public BuffTriggerTiming TriggerTiming { get; set; }
             public string CurseCategory { get; set; }
@@ -289,6 +299,7 @@ namespace Tactics.Roster
                     BuffAssetPath = ResolveBuffAssetPath(config),
                     DefaultDuration = config.DefaultDuration,
                     CanAct = config.CanAct,
+                    Polarity = config.Polarity,
                     EffectType = config.EffectType,
                     TriggerTiming = config.TriggerTiming,
                     CurseCategory = config.CurseCategory,
@@ -323,6 +334,7 @@ namespace Tactics.Roster
                 SetPrivateField(config, "_buffName", BuffName);
                 SetPrivateField(config, "_defaultDuration", DefaultDuration);
                 SetPrivateField(config, "_canAct", CanAct);
+                SetPrivateField(config, "_polarity", Polarity);
                 SetPrivateField(config, "_effectType", EffectType);
                 SetPrivateField(config, "_triggerTiming", TriggerTiming);
                 SetPrivateField(config, "_curseCategory", CurseCategory ?? string.Empty);

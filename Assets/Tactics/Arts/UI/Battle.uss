@@ -118,12 +118,18 @@
 }
 
 .left-panel {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.action-panel {
     flex-direction: row;
-    align-items: flex-end;
+    align-items: center;
 }
 
 .skill-panel {
     flex-direction: row;
+    margin-top: 8px;
     margin-right: 12px;
 }
 
@@ -183,7 +189,7 @@
     font-size: 16px;
     -unity-font-style: bold;
     cursor: arrow;
-    margin: 0;
+    margin: 0 8px 0 0;
     padding: 0;
 }
 
@@ -200,6 +206,70 @@
     font-size: 16px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
+}
+
+.consumable-button {
+    width: 166px;
+    height: 52px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: rgba(48, 34, 28, 0.96);
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: rgba(126, 87, 54, 0.95);
+    margin: 0;
+    padding: 6px 8px;
+}
+
+.consumable-button:hover {
+    background-color: rgba(72, 48, 35, 0.98);
+    border-color: rgba(177, 120, 67, 1);
+}
+
+.consumable-button:disabled {
+    opacity: 0.36;
+}
+
+.consumable-button.targeting {
+    background-color: rgba(91, 49, 31, 1);
+    border-color: rgb(224, 151, 72);
+    border-width: 3px;
+}
+
+.consumable-button-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgba(155, 112, 70, 0.9);
+    background-color: rgb(62, 46, 35);
+    picking-mode: ignore;
+}
+
+.consumable-button-copy {
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 8px;
+    picking-mode: ignore;
+}
+
+.consumable-button-name {
+    color: rgb(230, 215, 188);
+    font-size: 15px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    picking-mode: ignore;
+}
+
+.consumable-button-charges {
+    color: rgb(190, 145, 82);
+    font-size: 13px;
+    -unity-text-align: middle-left;
+    picking-mode: ignore;
 }
 
 .end-turn-button {

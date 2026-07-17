@@ -365,9 +365,6 @@ namespace Tactics.UI
             var goldLabel = root.Q<Label>("GoldLabel");
             if (goldLabel != null)
                 goldLabel.text = state.Gold.ToString();
-            var consumableLabel = root.Q<Label>("ConsumableLabel");
-            if (consumableLabel != null)
-                consumableLabel.text = (state.ConsumableInstances?.Count ?? 0).ToString();
 
             foreach (string id in state.ActivePartyCharacterIds)
             {

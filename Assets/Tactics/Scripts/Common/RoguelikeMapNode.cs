@@ -61,13 +61,53 @@ namespace Tactics.RoguelikeMap
     }
 
     /// <summary>
+    /// 商店商品内容类型。
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum StoreGoodKind
+    {
+        Equipment,
+        Consumable
+    }
+
+    /// <summary>
     /// 商店商品配置项
     /// </summary>
     [System.Serializable]
     public class StoreGoodEntry
     {
+        public StoreGoodKind itemKind = StoreGoodKind.Equipment;
+        public string contentId;
+
+        // Legacy equipment-only field. Old maps resolve it as Equipment without migration.
         public string equipmentId;
         public int price = 5;
+
+        public StoreGoodKind ResolvedKind => string.IsNullOrWhiteSpace(contentId)
+            ? StoreGoodKind.Equipment
+            : itemKind;
+
+        public string ResolvedContentId => string.IsNullOrWhiteSpace(contentId)
+            ? equipmentId
+            : contentId;
+
+        public void SetContent(StoreGoodKind kind, string id)
+        {
+            itemKind = kind;
+            contentId = id;
+            equipmentId = kind == StoreGoodKind.Equipment ? id : null;
+        }
+
+        public StoreGoodEntry Clone()
+        {
+            return new StoreGoodEntry
+            {
+                itemKind = itemKind,
+                contentId = contentId,
+                equipmentId = equipmentId,
+                price = price
+            };
+        }
     }
 
     /// <summary>
@@ -113,11 +153,8 @@ namespace Tactics.RoguelikeMap
         {
             return new StoreNodeConfig
             {
-                goods = goods?.ConvertAll(g => new StoreGoodEntry
-                {
-                    equipmentId = g.equipmentId,
-                    price = g.price
-                }) ?? new System.Collections.Generic.List<StoreGoodEntry>()
+                goods = goods?.ConvertAll(g => g?.Clone() ?? new StoreGoodEntry())
+                    ?? new System.Collections.Generic.List<StoreGoodEntry>()
             };
         }
     }

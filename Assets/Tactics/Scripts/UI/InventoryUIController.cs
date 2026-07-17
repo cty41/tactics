@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using Tactics.Runtime.Utilities;
 using System.Linq;
 using Tactics.AssetPipeline;
 using Tactics.Consumables;
@@ -10,12 +10,43 @@ using UnityEngine.UIElements;
 
 namespace Tactics.UI
 {
+    /// <summary>
+    /// Presents character loadouts and the shared equipment/consumable backpack.
+    /// </summary>
+    /// <remarks>
+    /// All mutations are delegated to CharacterLoadoutService. The controller owns only
+    /// selection, filtering, anchored popover state, immediate persistence, and rendering.
+    /// </remarks>
     public sealed class InventoryUIController : UIControllerBase
     {
         private const int SlotsPerRow = 4;
         private const int DefaultRows = 5;
         private const int DefaultCapacity = SlotsPerRow * DefaultRows;
-        private const int DoubleClickThresholdMs = 300;
+        private const float PopoverWidth = 320f;
+        private const float PopoverGap = 8f;
+
+        private enum InventoryFilter
+        {
+            All,
+            Equipment,
+            Consumable
+        }
+
+        private enum ItemLocation
+        {
+            BackpackEquipment,
+            BackpackConsumable,
+            EquippedEquipment,
+            CarriedConsumable
+        }
+
+        private sealed class InventoryEntry
+        {
+            public ItemLocation Location;
+            public string EquipmentId;
+            public string ConsumableInstanceId;
+            public EquipmentSlot EquipmentSlot;
+        }
 
         private VisualElement _root;
         private Label _characterNameLabel;
@@ -30,22 +61,35 @@ namespace Tactics.UI
         private Label _luckValue;
 
         private VisualElement _equippedSlotsParent;
+        private VisualElement _carriedConsumableSlot;
+        private Label _carriedConsumableLabel;
         private VisualElement _storageGrid;
         private VisualElement _skillSlotsParent;
         private VisualElement _characterSwitchButtons;
         private VisualElement _portraitContainer;
 
+        private Button _filterAllButton;
+        private Button _filterEquipmentButton;
+        private Button _filterConsumableButton;
+        private VisualElement _itemPopover;
+        private Image _itemIcon;
+        private Label _itemIconPlaceholder;
+        private Label _itemName;
+        private Label _itemMeta;
+        private Label _itemDescription;
+        private Button _itemActionButton;
+
         private CharacterDefinition _currentCharacter;
         private PlayerAdventureState _currentState;
-        private int _selectedPartyIndex = 0;
-        private string _lastClickedSlotId;
-        private long _lastClickTime;
+        private int _selectedPartyIndex;
+        private InventoryFilter _activeFilter = InventoryFilter.All;
+        private InventoryEntry _selectedEntry;
+        private VisualElement _popoverAnchor;
 
-        private readonly Dictionary<EquipmentSlot, VisualElement> _equippedSlotElements = new Dictionary<EquipmentSlot, VisualElement>();
-        private readonly Dictionary<EquipmentSlot, Label> _equippedSlotLabels = new Dictionary<EquipmentSlot, Label>();
-        private readonly List<VisualElement> _storageSlotElements = new List<VisualElement>();
-        private readonly List<Label> _storageSlotLabels = new List<Label>();
-        private readonly List<string> _storageSlotEquipmentIds = new List<string>();
+        private readonly Dictionary<EquipmentSlot, VisualElement> _equippedSlotElements = new();
+        private readonly Dictionary<EquipmentSlot, Label> _equippedSlotLabels = new();
+        private readonly List<VisualElement> _storageSlotElements = new();
+        private readonly List<InventoryEntry> _storageEntries = new();
 
         protected override void OnShown()
         {
@@ -59,15 +103,18 @@ namespace Tactics.UI
 
         protected override void OnHidden()
         {
+            HideItemPopover();
             UnregisterKeyEvents();
         }
 
         private void EnsureUIElements()
         {
-            if (_root != null) return;
+            if (_root != null)
+                return;
 
             _root = Ui.GetRootElement(UIManager.UIId.Inventory);
-            if (_root == null) return;
+            if (_root == null)
+                return;
 
             _characterNameLabel = _root.Q<Label>("CharacterNameLabel");
             _levelLabel = _root.Q<Label>("LevelLabel");
@@ -82,46 +129,73 @@ namespace Tactics.UI
             _luckValue = _root.Q<Label>("LuckValue");
 
             _equippedSlotsParent = _root.Q<VisualElement>("EquipmentSlotsGrid");
+            _carriedConsumableSlot = _root.Q<VisualElement>("CarriedConsumableSlot");
+            _carriedConsumableLabel = _root.Q<Label>("CarriedConsumableLabel");
             _storageGrid = _root.Q<VisualElement>("StorageGrid");
             _skillSlotsParent = _root.Q<VisualElement>("SkillSlots");
             _characterSwitchButtons = _root.Q<VisualElement>("CharacterSwitchButtons");
             _portraitContainer = _root.Q<VisualElement>("PortraitSmall");
 
+            _filterAllButton = _root.Q<Button>("InventoryFilterAll");
+            _filterEquipmentButton = _root.Q<Button>("InventoryFilterEquipment");
+            _filterConsumableButton = _root.Q<Button>("InventoryFilterConsumable");
+            _itemPopover = _root.Q<VisualElement>("InventoryItemPopover");
+            _itemIcon = _root.Q<Image>("InventoryItemIcon");
+            _itemIconPlaceholder = _root.Q<Label>("InventoryItemIconPlaceholder");
+            _itemName = _root.Q<Label>("InventoryItemName");
+            _itemMeta = _root.Q<Label>("InventoryItemMeta");
+            _itemDescription = _root.Q<Label>("InventoryItemDescription");
+            _itemActionButton = _root.Q<Button>("InventoryItemActionButton");
+
             var closeButton = _root.Q<Button>("CloseButton");
             if (closeButton != null)
                 closeButton.clicked += OnCloseClicked;
+            if (_filterAllButton != null)
+                _filterAllButton.clicked += () => SetFilter(InventoryFilter.All);
+            if (_filterEquipmentButton != null)
+                _filterEquipmentButton.clicked += () => SetFilter(InventoryFilter.Equipment);
+            if (_filterConsumableButton != null)
+                _filterConsumableButton.clicked += () => SetFilter(InventoryFilter.Consumable);
+            if (_itemActionButton != null)
+                _itemActionButton.clicked += OnItemActionClicked;
+            if (_carriedConsumableSlot != null)
+                _carriedConsumableSlot.RegisterCallback<ClickEvent>(_ => OnCarriedConsumableClicked());
 
+            _root.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
             InitializeEquippedSlots();
         }
 
         private void InitializeEquippedSlots()
         {
-            if (_equippedSlotsParent == null) return;
+            if (_equippedSlotsParent == null)
+                return;
 
             _equippedSlotElements.Clear();
             _equippedSlotLabels.Clear();
             _equippedSlotsParent.Clear();
 
-            var slots = new[] { EquipmentSlot.Weapon, EquipmentSlot.Armor, EquipmentSlot.Helmet, EquipmentSlot.Boots, EquipmentSlot.Accessory };
+            var slots = new[]
+            {
+                EquipmentSlot.Weapon,
+                EquipmentSlot.Armor,
+                EquipmentSlot.Helmet,
+                EquipmentSlot.Boots,
+                EquipmentSlot.Accessory
+            };
+
             foreach (var slot in slots)
             {
-                var slotElement = new VisualElement();
-                slotElement.name = $"EquippedSlot_{slot}";
+                var slotElement = new VisualElement
+                {
+                    name = $"EquippedSlot_{slot}",
+                    userData = slot
+                };
                 slotElement.AddToClassList("equipped-slot");
-                slotElement.style.height = Length.Percent(18);
-                slotElement.userData = slot;
 
                 var label = new Label("空");
-                label.style.fontSize = 16;
-                label.style.color = new Color(0.5f, 0.4f, 0.3f);
-                label.style.unityTextAlign = TextAnchor.MiddleCenter;
-                label.style.width = Length.Percent(100);
-                label.style.height = Length.Percent(100);
-                label.style.overflow = Overflow.Hidden;
-                label.style.whiteSpace = WhiteSpace.Normal;
+                label.AddToClassList("inventory-slot-label");
                 slotElement.Add(label);
-
-                slotElement.RegisterCallback<ClickEvent>(evt => OnEquippedSlotClicked(slot));
+                slotElement.RegisterCallback<ClickEvent>(_ => OnEquippedSlotClicked(slot));
 
                 _equippedSlotElements[slot] = slotElement;
                 _equippedSlotLabels[slot] = label;
@@ -147,54 +221,82 @@ namespace Tactics.UI
             if (activeIds.Count == 0)
             {
                 _currentCharacter = _currentState.Roster.FirstOrDefault();
+                return;
             }
-            else
-            {
-                _selectedPartyIndex = Mathf.Clamp(_selectedPartyIndex, 0, activeIds.Count - 1);
-                _currentCharacter = _currentState.Roster.FirstOrDefault(c => c.Id == activeIds[_selectedPartyIndex]);
-            }
+
+            _selectedPartyIndex = Mathf.Clamp(_selectedPartyIndex, 0, activeIds.Count - 1);
+            _currentCharacter = _currentState.Roster.FirstOrDefault(
+                character => character.Id == activeIds[_selectedPartyIndex]);
         }
 
         private void SetupCharacterSwitchButtons()
         {
-            if (_characterSwitchButtons == null || _currentState == null) return;
+            if (_characterSwitchButtons == null || _currentState == null)
+                return;
 
             _characterSwitchButtons.Clear();
             var activeIds = _currentState.ActivePartyCharacterIds ?? new List<string>();
-
-            for (int i = 0; i < activeIds.Count; i++)
+            for (int index = 0; index < activeIds.Count; index++)
             {
-                int index = i;
-                var character = _currentState.Roster.FirstOrDefault(c => c.Id == activeIds[i]);
-                string displayName = character?.DisplayName ?? $"角色{i + 1}";
-
-                var btn = new Button();
-                btn.name = $"CharBtn_{i}";
-                btn.text = displayName;
-                btn.AddToClassList("character-switch-btn");
-                if (i == _selectedPartyIndex)
-                    btn.AddToClassList("active");
-
-                btn.clicked += () => OnCharacterSwitchClicked(index);
-                _characterSwitchButtons.Add(btn);
+                int capturedIndex = index;
+                var character = _currentState.Roster.FirstOrDefault(candidate => candidate.Id == activeIds[index]);
+                var button = new Button
+                {
+                    name = $"CharBtn_{index}",
+                    text = character?.DisplayName ?? $"角色{index + 1}"
+                };
+                button.AddToClassList("character-switch-btn");
+                if (index == _selectedPartyIndex)
+                    button.AddToClassList("active");
+                button.clicked += () => OnCharacterSwitchClicked(capturedIndex);
+                _characterSwitchButtons.Add(button);
             }
         }
 
         private void OnCharacterSwitchClicked(int index)
         {
+            HideItemPopover();
             _selectedPartyIndex = index;
             LoadCharacterData();
             SetupCharacterSwitchButtons();
             RefreshAll();
         }
 
+        private void SetFilter(InventoryFilter filter)
+        {
+            if (_activeFilter == filter)
+                return;
+
+            HideItemPopover();
+            _activeFilter = filter;
+            RefreshFilterButtons();
+            RefreshStorage();
+        }
+
         private void RefreshAll()
         {
+            RefreshFilterButtons();
             RefreshCharacterInfo();
             RefreshEquippedSlots();
+            RefreshCarriedConsumableSlot();
             RefreshStorage();
             RefreshSkillSlots();
             RefreshPortrait();
+        }
+
+        private void RefreshFilterButtons()
+        {
+            SetFilterButtonState(_filterAllButton, _activeFilter == InventoryFilter.All);
+            SetFilterButtonState(_filterEquipmentButton, _activeFilter == InventoryFilter.Equipment);
+            SetFilterButtonState(_filterConsumableButton, _activeFilter == InventoryFilter.Consumable);
+        }
+
+        private static void SetFilterButtonState(Button button, bool active)
+        {
+            if (button == null)
+                return;
+
+            button.EnableInClassList("active", active);
         }
 
         private void RefreshCharacterInfo()
@@ -209,16 +311,19 @@ namespace Tactics.UI
                 _characterNameLabel.text = _currentCharacter.DisplayName ?? "未知";
             if (_levelLabel != null)
                 _levelLabel.text = $"Lv.{_currentCharacter.Level}";
-
             if (_hpLabel != null)
+            {
                 _hpLabel.text = _currentCharacter.IsDead
                     ? $"DEAD 0/{_currentCharacter.MaxHp}"
                     : $"{_currentCharacter.CurrentHp}/{_currentCharacter.MaxHp}  MP {_currentCharacter.CurrentMp ?? 0}/{_currentCharacter.MaxMp}";
+            }
             if (_hpBarFill != null)
+            {
                 _hpBarFill.style.width = Length.Percent(
                     _currentCharacter.IsDead
                         ? 0f
                         : Mathf.Clamp01(_currentCharacter.CurrentHp / (float)_currentCharacter.MaxHp) * 100f);
+            }
 
             SetStatValue(_strengthValue, _currentCharacter.Strength, _currentCharacter.GetTotalStrength());
             SetStatValue(_agilityValue, _currentCharacter.Agility, _currentCharacter.GetTotalAgility());
@@ -228,313 +333,511 @@ namespace Tactics.UI
             SetStatValue(_luckValue, _currentCharacter.Luck, _currentCharacter.GetTotalLuck());
         }
 
-        private void SetStatValue(Label label, int baseValue, int totalValue)
+        private static void SetStatValue(Label label, int baseValue, int totalValue)
         {
-            if (label == null) return;
+            if (label == null)
+                return;
 
             label.text = totalValue.ToString();
-
-            if (totalValue > baseValue)
-                label.style.color = new Color(0.2f, 0.8f, 0.2f);
-            else if (totalValue < baseValue)
-                label.style.color = new Color(0.8f, 0.2f, 0.2f);
-            else
-                label.style.color = new Color(0.37f, 0.31f, 0.25f);
+            label.style.color = totalValue switch
+            {
+                _ when totalValue > baseValue => new Color(0.2f, 0.8f, 0.2f),
+                _ when totalValue < baseValue => new Color(0.8f, 0.2f, 0.2f),
+                _ => new Color(0.37f, 0.31f, 0.25f)
+            };
         }
 
         private void SetDefaultCharacterInfo()
         {
-            if (_characterNameLabel != null) _characterNameLabel.text = "未选择角色";
-            if (_levelLabel != null) _levelLabel.text = "Lv.--";
-            if (_hpLabel != null) _hpLabel.text = "--/--";
-            if (_hpBarFill != null) _hpBarFill.style.width = Length.Percent(0);
+            if (_characterNameLabel != null)
+                _characterNameLabel.text = "未选择角色";
+            if (_levelLabel != null)
+                _levelLabel.text = "Lv.--";
+            if (_hpLabel != null)
+                _hpLabel.text = "--/--";
+            if (_hpBarFill != null)
+                _hpBarFill.style.width = Length.Percent(0);
 
-            if (_strengthValue != null) { _strengthValue.text = "--"; _strengthValue.style.color = new Color(0.37f, 0.31f, 0.25f); }
-            if (_agilityValue != null) { _agilityValue.text = "--"; _agilityValue.style.color = new Color(0.37f, 0.31f, 0.25f); }
-            if (_constitutionValue != null) { _constitutionValue.text = "--"; _constitutionValue.style.color = new Color(0.37f, 0.31f, 0.25f); }
-            if (_intelligenceValue != null) { _intelligenceValue.text = "--"; _intelligenceValue.style.color = new Color(0.37f, 0.31f, 0.25f); }
-            if (_charismaValue != null) { _charismaValue.text = "--"; _charismaValue.style.color = new Color(0.37f, 0.31f, 0.25f); }
-            if (_luckValue != null) { _luckValue.text = "--"; _luckValue.style.color = new Color(0.37f, 0.31f, 0.25f); }
+            foreach (var label in new[]
+                     {
+                         _strengthValue,
+                         _agilityValue,
+                         _constitutionValue,
+                         _intelligenceValue,
+                         _charismaValue,
+                         _luckValue
+                     })
+            {
+                if (label == null)
+                    continue;
+                label.text = "--";
+                label.style.color = new Color(0.37f, 0.31f, 0.25f);
+            }
         }
 
         private void RefreshEquippedSlots()
         {
-            if (_currentCharacter == null) return;
-
-            foreach (var kvp in _equippedSlotLabels)
+            foreach (var pair in _equippedSlotLabels)
             {
-                var slot = kvp.Key;
-                var label = kvp.Value;
-
-                if (_currentCharacter.Equipment.TryGetValue(slot, out string equipmentId) && !string.IsNullOrEmpty(equipmentId))
-                {
-                    var def = EquipmentDatabase.GetById(equipmentId);
-                    label.text = def?.DisplayName ?? equipmentId;
-                    label.style.color = new Color(0.2f, 0.15f, 0.1f);
-                }
-                else
-                {
-                    label.text = "空";
-                    label.style.color = new Color(0.5f, 0.4f, 0.3f);
-                }
+                var label = pair.Value;
+                string equipmentId = null;
+                bool hasItem = _currentCharacter?.Equipment != null &&
+                               _currentCharacter.Equipment.TryGetValue(pair.Key, out equipmentId) &&
+                               !string.IsNullOrWhiteSpace(equipmentId);
+                label.text = hasItem
+                    ? EquipmentDatabase.GetById(equipmentId)?.DisplayName ?? equipmentId
+                    : "空";
+                label.EnableInClassList("filled", hasItem);
             }
+        }
+
+        private void RefreshCarriedConsumableSlot()
+        {
+            if (_carriedConsumableLabel == null)
+                return;
+
+            var instance = GetCarriedConsumable();
+            var definition = instance == null ? null : ConsumableDatabase.GetById(instance.DefinitionId);
+            bool hasItem = instance != null;
+            _carriedConsumableLabel.text = hasItem
+                ? $"{definition?.DisplayName ?? instance.DefinitionId}\n{instance.RemainingCharges}/{instance.MaxCharges}"
+                : "空";
+            _carriedConsumableSlot?.EnableInClassList("filled", hasItem);
         }
 
         private void RefreshStorage()
         {
-            if (_storageGrid == null || _currentState == null) return;
+            if (_storageGrid == null || _currentState == null)
+                return;
 
             _storageGrid.Clear();
             _storageSlotElements.Clear();
-            _storageSlotLabels.Clear();
-            _storageSlotEquipmentIds.Clear();
+            _storageEntries.Clear();
 
-            var inventory = _currentState.Inventory ?? new List<string>();
-            var consumables = _currentState.ConsumableInstances ?? new List<ConsumableInstance>();
-            int entryCount = inventory.Count + consumables.Count;
-            int totalSlots = Mathf.Max(DefaultCapacity, GetNextMultipleOf(entryCount, SlotsPerRow));
-
-            for (int i = 0; i < totalSlots; i++)
+            if (_activeFilter is InventoryFilter.All or InventoryFilter.Equipment)
             {
-                int rowIndex = i / SlotsPerRow;
-                int colIndex = i % SlotsPerRow;
-
-                if (colIndex == 0 && i > 0)
+                foreach (string equipmentId in _currentState.Inventory ?? Enumerable.Empty<string>())
                 {
+                    _storageEntries.Add(new InventoryEntry
+                    {
+                        Location = ItemLocation.BackpackEquipment,
+                        EquipmentId = equipmentId
+                    });
                 }
+            }
 
-                string equipmentId = i < inventory.Count ? inventory[i] : null;
-                string displayName = null;
-                if (!string.IsNullOrEmpty(equipmentId))
+            if (_activeFilter is InventoryFilter.All or InventoryFilter.Consumable)
+            {
+                foreach (var instance in CharacterLoadoutService.GetBackpackConsumables(_currentState))
                 {
-                    displayName = GetEquipmentDisplayName(equipmentId);
+                    _storageEntries.Add(new InventoryEntry
+                    {
+                        Location = ItemLocation.BackpackConsumable,
+                        ConsumableInstanceId = instance.InstanceId
+                    });
                 }
-                else if (i >= inventory.Count && i - inventory.Count < consumables.Count)
-                {
-                    var instance = consumables[i - inventory.Count];
-                    var definition = ConsumableDatabase.GetById(instance.DefinitionId);
-                    displayName = $"{definition?.DisplayName ?? instance.DefinitionId}\n{instance.RemainingCharges}/{instance.MaxCharges}";
-                }
+            }
 
-                var slotElement = new VisualElement();
-                slotElement.name = $"StorageSlot_{i}";
+            int totalSlots = Mathf.Max(
+                DefaultCapacity,
+                GetNextMultipleOf(_storageEntries.Count, SlotsPerRow));
+            for (int index = 0; index < totalSlots; index++)
+            {
+                InventoryEntry entry = index < _storageEntries.Count ? _storageEntries[index] : null;
+                var slotElement = new VisualElement
+                {
+                    name = $"StorageSlot_{index}",
+                    userData = entry
+                };
                 slotElement.AddToClassList("storage-slot-4col");
-                slotElement.userData = i;
-                if (i % 4 != 3)
+                if (index % SlotsPerRow != SlotsPerRow - 1)
                     slotElement.style.marginRight = Length.Percent(4);
 
-                var label = new Label(string.IsNullOrEmpty(displayName) ? "空" : displayName);
-                label.style.fontSize = 16;
-                label.style.color = string.IsNullOrEmpty(displayName) ? new Color(0.5f, 0.4f, 0.3f) : new Color(0.2f, 0.15f, 0.1f);
-                label.style.unityTextAlign = TextAnchor.MiddleCenter;
-                label.style.width = Length.Percent(100);
-                label.style.height = Length.Percent(100);
-                label.style.overflow = Overflow.Hidden;
-                label.style.whiteSpace = WhiteSpace.Normal;
+                var label = new Label(GetEntryDisplayName(entry));
+                label.AddToClassList("inventory-slot-label");
+                label.EnableInClassList("empty", entry == null);
                 slotElement.Add(label);
 
-                int slotIndex = i;
-                slotElement.RegisterCallback<ClickEvent>(evt => OnStorageSlotClicked(slotIndex));
+                if (entry != null)
+                {
+                    int capturedIndex = index;
+                    slotElement.RegisterCallback<ClickEvent>(_ => OnStorageSlotClicked(capturedIndex));
+                }
 
                 _storageSlotElements.Add(slotElement);
-                _storageSlotLabels.Add(label);
-                _storageSlotEquipmentIds.Add(equipmentId);
                 _storageGrid.Add(slotElement);
             }
         }
 
-        private int GetNextMultipleOf(int value, int multiple)
+        private string GetEntryDisplayName(InventoryEntry entry)
         {
-            if (value <= 0) return multiple;
-            return ((value + multiple - 1) / multiple) * multiple;
+            if (entry == null)
+                return "空";
+
+            if (entry.Location == ItemLocation.BackpackEquipment)
+                return EquipmentDatabase.GetById(entry.EquipmentId)?.DisplayName ?? entry.EquipmentId;
+
+            var instance = FindConsumable(entry.ConsumableInstanceId);
+            var definition = instance == null ? null : ConsumableDatabase.GetById(instance.DefinitionId);
+            return instance == null
+                ? "空"
+                : $"{definition?.DisplayName ?? instance.DefinitionId}\n{instance.RemainingCharges}/{instance.MaxCharges}";
         }
 
-        private string GetEquipmentDisplayName(string equipmentId)
+        private static int GetNextMultipleOf(int value, int multiple)
         {
-            var def = EquipmentDatabase.GetById(equipmentId);
-            return def?.DisplayName ?? equipmentId;
+            if (value <= 0)
+                return multiple;
+            return ((value + multiple - 1) / multiple) * multiple;
         }
 
         private void OnStorageSlotClicked(int slotIndex)
         {
-            if (_currentState == null || _currentCharacter == null) return;
-            if (slotIndex >= _storageSlotEquipmentIds.Count) return;
+            if (slotIndex < 0 || slotIndex >= _storageEntries.Count)
+                return;
 
-            string equipmentId = _storageSlotEquipmentIds[slotIndex];
-            if (string.IsNullOrEmpty(equipmentId)) return;
-
-            long currentTime = GetCurrentTimeMs();
-            string slotId = $"storage_{slotIndex}";
-
-            if (_lastClickedSlotId == slotId && (currentTime - _lastClickTime) < DoubleClickThresholdMs)
-            {
-                EquipItem(equipmentId, slotIndex);
-                _lastClickedSlotId = null;
-                _lastClickTime = 0;
-            }
-            else
-            {
-                _lastClickedSlotId = slotId;
-                _lastClickTime = currentTime;
-            }
+            ShowItemPopover(_storageEntries[slotIndex], _storageSlotElements[slotIndex]);
         }
 
         private void OnEquippedSlotClicked(EquipmentSlot slot)
         {
-            if (_currentState == null || _currentCharacter == null) return;
-
-            long currentTime = GetCurrentTimeMs();
-            string slotId = $"equipped_{slot}";
-
-            if (_lastClickedSlotId == slotId && (currentTime - _lastClickTime) < DoubleClickThresholdMs)
+            if (_currentCharacter?.Equipment == null ||
+                !_currentCharacter.Equipment.TryGetValue(slot, out string equipmentId) ||
+                string.IsNullOrWhiteSpace(equipmentId))
             {
-                UnequipItem(slot);
-                _lastClickedSlotId = null;
-                _lastClickTime = 0;
-            }
-            else
-            {
-                _lastClickedSlotId = slotId;
-                _lastClickTime = currentTime;
-            }
-        }
-
-        private void EquipItem(string equipmentId, int inventoryIndex)
-        {
-            if (_currentState == null || _currentCharacter == null) return;
-
-            var equipmentDef = EquipmentDatabase.GetById(equipmentId);
-            if (equipmentDef == null) return;
-
-            EquipmentSlot targetSlot = equipmentDef.Slot;
-
-            if (_currentCharacter.Equipment.TryGetValue(targetSlot, out string existingId) && !string.IsNullOrEmpty(existingId))
-            {
-                TLog.Info($"[InventoryUIController] 槽位 {targetSlot} 已被占用，请先卸下");
                 return;
             }
 
-            if (inventoryIndex < 0 || inventoryIndex >= _currentState.Inventory.Count) return;
-            if (_currentState.Inventory[inventoryIndex] != equipmentId) return;
+            ShowItemPopover(
+                new InventoryEntry
+                {
+                    Location = ItemLocation.EquippedEquipment,
+                    EquipmentId = equipmentId,
+                    EquipmentSlot = slot
+                },
+                _equippedSlotElements[slot]);
+        }
 
-            _currentState.Inventory.RemoveAt(inventoryIndex);
-            _currentCharacter.Equipment[targetSlot] = equipmentId;
+        private void OnCarriedConsumableClicked()
+        {
+            var instance = GetCarriedConsumable();
+            if (instance == null)
+                return;
+
+            ShowItemPopover(
+                new InventoryEntry
+                {
+                    Location = ItemLocation.CarriedConsumable,
+                    ConsumableInstanceId = instance.InstanceId
+                },
+                _carriedConsumableSlot);
+        }
+
+        private void ShowItemPopover(InventoryEntry entry, VisualElement anchor)
+        {
+            if (_itemPopover == null || entry == null || anchor == null)
+                return;
+
+            _selectedEntry = entry;
+            _popoverAnchor = anchor;
+            PopulateItemPopover(entry);
+            _itemPopover.style.display = DisplayStyle.Flex;
+
+            Rect rootBounds = _root.worldBound;
+            Rect anchorBounds = anchor.worldBound;
+            float left = anchorBounds.xMax - rootBounds.xMin + PopoverGap;
+            if (left + PopoverWidth > rootBounds.width)
+                left = anchorBounds.xMin - rootBounds.xMin - PopoverWidth - PopoverGap;
+            float top = anchorBounds.yMin - rootBounds.yMin;
+
+            _itemPopover.style.left = Mathf.Max(8f, left);
+            _itemPopover.style.top = Mathf.Max(8f, top);
+        }
+
+        private void PopulateItemPopover(InventoryEntry entry)
+        {
+            if (entry.Location is ItemLocation.BackpackEquipment or ItemLocation.EquippedEquipment)
+            {
+                PopulateEquipmentPopover(entry);
+                return;
+            }
+
+            PopulateConsumablePopover(entry);
+        }
+
+        private void PopulateEquipmentPopover(InventoryEntry entry)
+        {
+            var definition = EquipmentDatabase.GetById(entry.EquipmentId);
+            if (_itemName != null)
+                _itemName.text = definition?.DisplayName ?? entry.EquipmentId;
+            if (_itemMeta != null)
+            {
+                _itemMeta.text = definition == null
+                    ? "装备"
+                    : $"{definition.Rarity} · {definition.Slot}";
+            }
+            if (_itemDescription != null)
+                _itemDescription.text = BuildEquipmentDescription(definition);
+            if (_itemActionButton != null)
+            {
+                _itemActionButton.text = entry.Location == ItemLocation.EquippedEquipment
+                    ? "卸下"
+                    : IsEquipmentSlotOccupied(definition?.Slot) ? "替换" : "装备";
+                _itemActionButton.SetEnabled(_currentCharacter?.IsDead == false);
+            }
+
+            SetPopoverIcon(null);
+        }
+
+        private void PopulateConsumablePopover(InventoryEntry entry)
+        {
+            var instance = FindConsumable(entry.ConsumableInstanceId);
+            var definition = instance == null ? null : ConsumableDatabase.GetById(instance.DefinitionId);
+            if (_itemName != null)
+                _itemName.text = definition?.DisplayName ?? instance?.DefinitionId ?? "未知消耗品";
+            if (_itemMeta != null)
+            {
+                _itemMeta.text = instance == null
+                    ? "消耗品"
+                    : $"{definition?.Rarity.ToString() ?? "Unknown"} · {instance.RemainingCharges}/{instance.MaxCharges} · 自身及正交相邻 1 格";
+            }
+            if (_itemDescription != null)
+                _itemDescription.text = definition?.Description ?? string.Empty;
+            if (_itemActionButton != null)
+            {
+                _itemActionButton.text = entry.Location == ItemLocation.CarriedConsumable
+                    ? "卸下"
+                    : GetCarriedConsumable() == null ? "携带" : "替换";
+                _itemActionButton.SetEnabled(_currentCharacter?.IsDead == false);
+            }
+
+            SetPopoverIcon(definition?.IconPath);
+        }
+
+        private static string BuildEquipmentDescription(EquipmentDefinition definition)
+        {
+            if (definition == null)
+                return string.Empty;
+
+            var bonuses = new List<string>();
+            AddBonus(bonuses, "力量", definition.StrengthBonus);
+            AddBonus(bonuses, "敏捷", definition.AgilityBonus);
+            AddBonus(bonuses, "体质", definition.ConstitutionBonus);
+            AddBonus(bonuses, "智力", definition.IntelligenceBonus);
+            AddBonus(bonuses, "魅力", definition.CharismaBonus);
+            AddBonus(bonuses, "幸运", definition.LuckBonus);
+            return bonuses.Count == 0 ? "无额外属性。" : string.Join("，", bonuses);
+        }
+
+        private static void AddBonus(ICollection<string> bonuses, string name, int value)
+        {
+            if (value != 0)
+                bonuses.Add($"{name} {(value > 0 ? "+" : string.Empty)}{value}");
+        }
+
+        private void SetPopoverIcon(string iconPath)
+        {
+            if (_itemIcon == null || _itemIconPlaceholder == null)
+                return;
+
+            _itemIcon.sprite = null;
+            _itemIcon.style.display = DisplayStyle.None;
+            _itemIconPlaceholder.style.display = DisplayStyle.Flex;
+            if (string.IsNullOrWhiteSpace(iconPath))
+                return;
+
+            var assetManager = GameAssetManager.Instance;
+            if (assetManager == null || !assetManager.IsInitialized)
+                return;
+
+            var sprite = assetManager.Load<Sprite>(iconPath);
+            if (sprite == null)
+                return;
+
+            _itemIcon.sprite = sprite;
+            _itemIcon.style.display = DisplayStyle.Flex;
+            _itemIconPlaceholder.style.display = DisplayStyle.None;
+            assetManager.Release(iconPath);
+        }
+
+        private void OnItemActionClicked()
+        {
+            if (_selectedEntry == null || _currentState == null || _currentCharacter == null ||
+                _currentCharacter.IsDead)
+            {
+                return;
+            }
+
+            bool changed = _selectedEntry.Location switch
+            {
+                ItemLocation.BackpackEquipment => CharacterLoadoutService.TryEquipEquipment(
+                    _currentState,
+                    _currentCharacter.Id,
+                    _selectedEntry.EquipmentId),
+                ItemLocation.BackpackConsumable => CharacterLoadoutService.TryCarryConsumable(
+                    _currentState,
+                    _currentCharacter.Id,
+                    _selectedEntry.ConsumableInstanceId),
+                ItemLocation.EquippedEquipment => CharacterLoadoutService.TryUnequipEquipment(
+                    _currentState,
+                    _currentCharacter.Id,
+                    _selectedEntry.EquipmentSlot),
+                ItemLocation.CarriedConsumable => CharacterLoadoutService.TryUnloadConsumable(
+                    _currentState,
+                    _currentCharacter.Id),
+                _ => false
+            };
+
+            if (!changed)
+                return;
 
             PlayerAdventureStateStore.Save(_currentState);
+            HideItemPopover();
             RefreshAll();
         }
 
-        private void UnequipItem(EquipmentSlot slot)
+        private bool IsEquipmentSlotOccupied(EquipmentSlot? slot)
         {
-            if (_currentState == null || _currentCharacter == null) return;
+            if (!slot.HasValue || _currentCharacter?.Equipment == null)
+                return false;
 
-            if (!_currentCharacter.Equipment.TryGetValue(slot, out string equipmentId) || string.IsNullOrEmpty(equipmentId))
+            return _currentCharacter.Equipment.TryGetValue(slot.Value, out string equipmentId) &&
+                   !string.IsNullOrWhiteSpace(equipmentId);
+        }
+
+        private ConsumableInstance GetCarriedConsumable()
+        {
+            return FindConsumable(_currentCharacter?.CarriedConsumableInstanceId);
+        }
+
+        private ConsumableInstance FindConsumable(string instanceId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+                return null;
+
+            return _currentState?.ConsumableInstances?.FirstOrDefault(instance =>
+                instance != null &&
+                string.Equals(instance.InstanceId, instanceId, StringComparison.Ordinal));
+        }
+
+        private void HideItemPopover()
+        {
+            if (_itemPopover != null)
+                _itemPopover.style.display = DisplayStyle.None;
+            _selectedEntry = null;
+            _popoverAnchor = null;
+        }
+
+        private void OnRootPointerDown(PointerDownEvent evt)
+        {
+            if (_itemPopover == null || _itemPopover.style.display == DisplayStyle.None)
                 return;
 
-            _currentCharacter.Equipment[slot] = null;
-            _currentState.Inventory.Add(equipmentId);
+            var target = evt.target as VisualElement;
+            if (target != null &&
+                (_itemPopover.Contains(target) || _popoverAnchor?.Contains(target) == true))
+            {
+                return;
+            }
 
-            PlayerAdventureStateStore.Save(_currentState);
-            RefreshAll();
+            HideItemPopover();
         }
 
         private void RefreshSkillSlots()
         {
-            if (_skillSlotsParent == null) return;
+            if (_skillSlotsParent == null)
+                return;
 
-            foreach (var child in _skillSlotsParent.Children())
+            foreach (var slot in _skillSlotsParent.Children())
             {
-                var slot = child;
                 slot.Clear();
-
                 var label = new Label("空");
-                label.style.fontSize = 16;
-                label.style.color = new Color(0.5f, 0.4f, 0.3f);
-                label.style.unityTextAlign = TextAnchor.MiddleCenter;
-                label.style.width = Length.Percent(100);
-                label.style.height = Length.Percent(100);
+                label.AddToClassList("inventory-slot-label");
+                label.AddToClassList("empty");
                 slot.Add(label);
             }
         }
 
         private void RefreshPortrait()
         {
-            if (_portraitContainer == null) return;
+            if (_portraitContainer == null)
+                return;
 
             _portraitContainer.Clear();
-
             if (_currentCharacter == null)
             {
-                var placeholder = new Label("[立绘]");
-                placeholder.AddToClassList("portrait-placeholder");
-                _portraitContainer.Add(placeholder);
+                AddPortraitPlaceholder("[立绘]");
                 return;
             }
 
-            var resolvedPath = CharacterDefinition.ResolvePrefabPath(_currentCharacter.PrefabPath);
-            if (string.IsNullOrEmpty(resolvedPath))
+            string resolvedPath = CharacterDefinition.ResolvePrefabPath(_currentCharacter.PrefabPath);
+            var assetManager = GameAssetManager.Instance;
+            if (string.IsNullOrWhiteSpace(resolvedPath) || assetManager == null || !assetManager.IsInitialized)
             {
-                var fallback = new Label("[无立绘]");
-                fallback.AddToClassList("portrait-placeholder");
-                _portraitContainer.Add(fallback);
+                AddPortraitPlaceholder("[无立绘]");
                 return;
             }
 
-            var mgr = GameAssetManager.Instance;
-            if (mgr == null)
-                return;
-
-            var prefab = mgr.Load<GameObject>(resolvedPath);
-            if (prefab != null)
+            var prefab = assetManager.Load<GameObject>(resolvedPath);
+            if (prefab == null)
             {
-                var spriteTransform = prefab.transform.Find("Sprite");
-                if (spriteTransform != null)
+                AddPortraitPlaceholder("[无立绘]");
+                return;
+            }
+
+            var renderer = prefab.transform.Find("Sprite")?.GetComponent<SpriteRenderer>();
+            if (renderer?.sprite != null)
+            {
+                var image = new Image
                 {
-                    var renderer = spriteTransform.GetComponent<SpriteRenderer>();
-                    if (renderer != null && renderer.sprite != null)
-                    {
-                        var image = new Image();
-                        image.sprite = renderer.sprite;
-                        image.scaleMode = ScaleMode.ScaleToFit;
-                        image.style.width = Length.Percent(100);
-                        image.style.height = Length.Percent(100);
-                        _portraitContainer.Add(image);
-                    }
-                }
-
-                mgr.Release(resolvedPath);
+                    sprite = renderer.sprite,
+                    scaleMode = ScaleMode.ScaleToFit
+                };
+                image.style.width = Length.Percent(100);
+                image.style.height = Length.Percent(100);
+                _portraitContainer.Add(image);
             }
+            else
+            {
+                AddPortraitPlaceholder("[无立绘]");
+            }
+
+            assetManager.Release(resolvedPath);
+        }
+
+        private void AddPortraitPlaceholder(string text)
+        {
+            var placeholder = new Label(text);
+            placeholder.AddToClassList("portrait-placeholder");
+            _portraitContainer.Add(placeholder);
         }
 
         private void RegisterKeyEvents()
         {
-            if (_root != null)
-                _root.RegisterCallback<KeyDownEvent>(OnKeyDown);
+            _root?.RegisterCallback<KeyDownEvent>(OnKeyDown);
         }
 
         private void UnregisterKeyEvents()
         {
-            if (_root != null)
-                _root.UnregisterCallback<KeyDownEvent>(OnKeyDown);
+            _root?.UnregisterCallback<KeyDownEvent>(OnKeyDown);
         }
 
         private void OnKeyDown(KeyDownEvent evt)
         {
-            if (evt.keyCode == KeyCode.Escape)
-            {
+            if (evt.keyCode != KeyCode.Escape)
+                return;
+
+            if (_itemPopover != null && _itemPopover.style.display != DisplayStyle.None)
+                HideItemPopover();
+            else
                 OnCloseClicked();
-                evt.StopPropagation();
-            }
+            evt.StopPropagation();
         }
 
         private void OnCloseClicked()
         {
+            HideItemPopover();
             Ui.Hide(UIManager.UIId.Inventory);
-        }
-
-        private static long GetCurrentTimeMs()
-        {
-            return System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
     }
 }

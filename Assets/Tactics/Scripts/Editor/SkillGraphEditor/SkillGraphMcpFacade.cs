@@ -700,6 +700,7 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("unitPrefabPath", out var upp) && upp is string prefabPath) r.UnitPrefabPath = prefabPath;
                     if (parameters.TryGetValue("requiresCorpse", out var rc)) r.RequiresCorpse = ToBool(rc);
                     if (parameters.TryGetValue("summonName", out var sn) && sn is string summonName) r.SummonName = summonName;
+                    if (parameters.TryGetValue("canReceiveHealing", out var crh)) r.CanReceiveHealing = ToBool(crh);
                     break;
                 case SelectMoveDestinationNodeRecord r:
                     if (parameters.TryGetValue("respectMovementRules", out var rmr)) r.RespectMovementRules = ToBool(rmr);
@@ -793,6 +794,7 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["unitPrefabPath"] = r.UnitPrefabPath;
                     dict["requiresCorpse"] = r.RequiresCorpse;
                     dict["summonName"] = r.SummonName;
+                    dict["canReceiveHealing"] = r.CanReceiveHealing;
                     break;
                 case SelectMoveDestinationNodeRecord r:
                     dict["respectMovementRules"] = r.RespectMovementRules;

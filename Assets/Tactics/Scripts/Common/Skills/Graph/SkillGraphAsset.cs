@@ -37,7 +37,8 @@ namespace Tactics.Common.Skills.Graph
         SummonUnit,
         Teleport,
         MultiStab,
-        ApplyShield
+        ApplyShield,
+        RemoveHarmfulBuffs
     }
 
     public enum SkillGraphPortType
@@ -111,6 +112,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.SelectAlly => new SelectAllyNodeRecord(),
                 SkillGraphNodeType.ApplyHeal => new ApplyHealNodeRecord(),
                 SkillGraphNodeType.ApplyMana => new ApplyManaNodeRecord(),
+                SkillGraphNodeType.RemoveHarmfulBuffs => new RemoveHarmfulBuffsNodeRecord(),
                 SkillGraphNodeType.DashToAlly => new DashToAllyNodeRecord(),
                 SkillGraphNodeType.LaunchUnit => new LaunchUnitNodeRecord(),
                 SkillGraphNodeType.SelectMoveDestination => new SelectMoveDestinationNodeRecord(),
@@ -302,6 +304,12 @@ namespace Tactics.Common.Skills.Graph
     }
 
     [System.Serializable]
+    public class RemoveHarmfulBuffsNodeRecord : SkillGraphNodeRecord
+    {
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.RemoveHarmfulBuffs;
+    }
+
+    [System.Serializable]
     public class DashToAllyNodeRecord : SkillGraphNodeRecord
     {
         [SerializeField] private int _maxRange = 4;
@@ -366,10 +374,12 @@ namespace Tactics.Common.Skills.Graph
         [SerializeField] private string _unitPrefabPath;
         [SerializeField] private bool _requiresCorpse = true;
         [SerializeField] private string _summonName;
+        [SerializeField] private bool _canReceiveHealing = true;
 
         public string UnitPrefabPath { get => _unitPrefabPath; set => _unitPrefabPath = value; }
         public bool RequiresCorpse { get => _requiresCorpse; set => _requiresCorpse = value; }
         public string SummonName { get => _summonName; set => _summonName = value; }
+        public bool CanReceiveHealing { get => _canReceiveHealing; set => _canReceiveHealing = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.SummonUnit;
     }
 

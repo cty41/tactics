@@ -157,10 +157,12 @@ namespace Tactics.Tests.PlayMode
             try
             {
                 PureRunSessionStore.Clear();
-                var definition = ConsumableDatabase.GetById("bandage_roll");
+                var definition = ConsumableDatabase.GetById("life_potion");
                 var item = ConsumableInstance.Create(definition);
                 var state = PlayerAdventureStateStore.CreatePureRunState(17);
                 state.ConsumableInstances.Add(item);
+                var character = state.Roster.First();
+                character.CarriedConsumableInstanceId = item.InstanceId;
                 PureRunSessionStore.SaveState(state);
 
                 var casterCell = world.CreateSquareCell("CasterCell", 0, 0);
@@ -169,15 +171,16 @@ namespace Tactics.Tests.PlayMode
                 caster.Health = 3f;
                 world.SetTurnContext(world.PlayerOne, new IUnit[] { caster });
 
-                var ability = (SkillGraphAbilityImpl)ConsumableAbilityFactory.Create(caster, item);
+                var ability = ConsumableAbilityFactory.Create(caster, item, character.Id);
                 ability.Initialize(world.GridController);
                 var task = ability.ExecuteForTestAsync(casterCell, world.GridController);
                 yield return WaitForTask(task);
 
                 var saved = PlayerAdventureStateStore.LoadRepairAndSave();
                 Assert.AreEqual(SkillGraphExecutionState.Completed, task.Result.ExecutionState);
-                Assert.AreEqual(8f, caster.Health);
-                Assert.AreEqual(2, saved.ConsumableInstances.Single().RemainingCharges);
+                Assert.AreEqual(10f, caster.Health);
+                Assert.That(saved.ConsumableInstances, Is.Empty);
+                Assert.That(saved.Roster.First().CarriedConsumableInstanceId, Is.Null);
                 Assert.That(ability.CanPerform(world.GridController), Is.False);
             }
             finally

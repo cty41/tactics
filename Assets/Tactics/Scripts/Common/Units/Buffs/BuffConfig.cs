@@ -4,6 +4,15 @@ using Newtonsoft.Json;
 
 namespace Tactics.Common.Units.Buffs
 {
+    /// <summary>
+    /// Classifies an effect as beneficial or harmful for cleanse behavior.
+    /// </summary>
+    public enum BuffPolarity
+    {
+        Beneficial,
+        Harmful
+    }
+
     [CreateAssetMenu(menuName = "Game/Buffs/Buff Config")]
     public class BuffConfig : ScriptableObject
     {
@@ -18,6 +27,9 @@ namespace Tactics.Common.Units.Buffs
 
         [BoxGroup("Behavior")]
         [SerializeField] private bool _canAct = true;
+
+        [BoxGroup("Behavior")]
+        [SerializeField] private BuffPolarity _polarity = BuffPolarity.Beneficial;
 
         [BoxGroup("Effect")]
         [SerializeField] private BuffEffectType _effectType = BuffEffectType.None;
@@ -44,6 +56,7 @@ namespace Tactics.Common.Units.Buffs
         public Sprite Icon => _icon;
         public int DefaultDuration => _defaultDuration;
         public bool CanAct => _canAct;
+        public BuffPolarity Polarity => _polarity;
         public BuffEffectType EffectType => _effectType;
         public BuffTriggerTiming TriggerTiming => _triggerTiming;
         public string CurseCategory => _curseCategory;

@@ -136,9 +136,20 @@ namespace Tactics.Editor.RoguelikeMapEditor
                     int removeIndex = -1;
                     for (int i = 0; i < sc.goods.Count; i++)
                     {
+                        var good = sc.goods[i];
+                        StoreGoodKind resolvedKind = good.ResolvedKind;
+                        string resolvedContentId = good.ResolvedContentId ?? string.Empty;
+
                         EditorGUILayout.BeginHorizontal();
-                        sc.goods[i].equipmentId = EditorGUILayout.TextField("ID", sc.goods[i].equipmentId);
-                        sc.goods[i].price = EditorGUILayout.IntField("Price", sc.goods[i].price, GUILayout.Width(120));
+                        var itemKind = (StoreGoodKind)EditorGUILayout.EnumPopup("Type", resolvedKind);
+                        string contentId = EditorGUILayout.TextField("ID", resolvedContentId);
+                        if (itemKind != resolvedKind ||
+                            !string.Equals(contentId, resolvedContentId, System.StringComparison.Ordinal))
+                        {
+                            good.SetContent(itemKind, contentId);
+                        }
+
+                        good.price = EditorGUILayout.IntField("Price", good.price, GUILayout.Width(120));
                         if (GUILayout.Button("-", GUILayout.Width(24))) removeIndex = i;
                         EditorGUILayout.EndHorizontal();
                     }

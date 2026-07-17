@@ -21,6 +21,12 @@
                             <ui:VisualElement name="SlotBoots" class="equipped-slot"/>
                             <ui:VisualElement name="SlotAccessory" class="equipped-slot"/>
                         </ui:VisualElement>
+                        <ui:VisualElement name="CarriedConsumableRow" class="carried-consumable-row">
+                            <ui:Label text="消耗品" class="carried-consumable-title"/>
+                            <ui:VisualElement name="CarriedConsumableSlot" class="carried-consumable-slot">
+                                <ui:Label name="CarriedConsumableLabel" text="空" class="inventory-slot-label empty"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
                     </ui:VisualElement>
 
                     <!-- Character Section (Middle) - Only Portrait + Buttons -->
@@ -89,6 +95,11 @@
                 <ui:VisualElement name="StorageSection" class="storage-section">
                     <ui:VisualElement name="StorageHeader" class="storage-header">
                         <ui:Label text="仓库" class="section-title"/>
+                        <ui:VisualElement name="InventoryFilters" class="inventory-filters">
+                            <ui:Button name="InventoryFilterAll" text="全部" class="inventory-filter active"/>
+                            <ui:Button name="InventoryFilterEquipment" text="装备" class="inventory-filter"/>
+                            <ui:Button name="InventoryFilterConsumable" text="消耗品" class="inventory-filter"/>
+                        </ui:VisualElement>
                     </ui:VisualElement>
                     <ui:ScrollView name="StorageScrollView" mode="Vertical" horizontal-scroller-visibility="Hidden" class="storage-scroll-view">
                         <ui:VisualElement name="StorageGrid" class="storage-grid-4col">
@@ -111,6 +122,16 @@
                         </ui:VisualElement>
                     </ui:ScrollView>
                 </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="InventoryItemPopover" class="inventory-item-popover">
+                <ui:VisualElement name="InventoryItemIconBox" class="inventory-item-icon-box">
+                    <ui:Image name="InventoryItemIcon" class="inventory-item-icon"/>
+                    <ui:Label name="InventoryItemIconPlaceholder" text="?" class="inventory-item-icon-placeholder"/>
+                </ui:VisualElement>
+                <ui:Label name="InventoryItemName" text="物品" class="inventory-item-name"/>
+                <ui:Label name="InventoryItemMeta" text="" class="inventory-item-meta"/>
+                <ui:Label name="InventoryItemDescription" text="" class="inventory-item-description"/>
+                <ui:Button name="InventoryItemActionButton" text="操作" class="inventory-item-action"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

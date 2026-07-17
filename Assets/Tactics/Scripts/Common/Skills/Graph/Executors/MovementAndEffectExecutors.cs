@@ -577,11 +577,10 @@ namespace Tactics.Common.Skills.Graph
             if (target == null)
                 return Task.FromResult(SkillNodeExecutionResult.Failed("No target for heal."));
 
-            float healAmount = record.HealAmount;
-            float maxHeal = target.MaxHealth - target.Health;
-            float actualHeal = UnityEngine.Mathf.Min(healAmount, maxHeal);
-
-            target.ModifyHealth(actualHeal, caster);
+            float healthBefore = target.Health;
+            float requestedHeal = UnityEngine.Mathf.Min(record.HealAmount, target.MaxHealth - healthBefore);
+            target.ModifyHealth(requestedHeal, caster);
+            float actualHeal = UnityEngine.Mathf.Max(0f, target.Health - healthBefore);
             TLog.Info($"[ApplyHeal] Healed target for {actualHeal} HP.");
 
             if (TBattleLog.IsBattleActive)
@@ -621,6 +620,29 @@ namespace Tactics.Common.Skills.Graph
             float restoredMana = UnityEngine.Mathf.Min(record.ManaAmount, target.MaxMana - target.Mana);
             target.Mana += restoredMana;
             TLog.Info($"[ApplyMana] Restored {restoredMana} MP.");
+            return Task.FromResult(SkillNodeExecutionResult.Success());
+        }
+    }
+
+    public class RemoveHarmfulBuffsNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.RemoveHarmfulBuffs;
+
+        public Task<SkillNodeExecutionResult> Execute(SkillGraphNodeRecord node, SkillExecutionContext context)
+        {
+            var target = context.PrimaryTarget;
+            if (target == null)
+                return Task.FromResult(SkillNodeExecutionResult.Failed("No target for cleanse."));
+
+            var harmfulBuffs = target.GetActiveBuffs()
+                .Where(buff => buff?.Config?.Polarity == BuffPolarity.Harmful)
+                .ToList();
+
+            foreach (var buff in harmfulBuffs)
+                target.RemoveBuff(buff);
+
+            context.SetBlackboard("RemovedHarmfulBuffCount", harmfulBuffs.Count);
+            TLog.Info($"[RemoveHarmfulBuffs] Removed {harmfulBuffs.Count} harmful effects.");
             return Task.FromResult(SkillNodeExecutionResult.Success());
         }
     }
@@ -804,6 +826,7 @@ namespace Tactics.Common.Skills.Graph
                 var unit = go.GetComponent<IUnit>();
                 if (unit != null)
                 {
+                    unit.CanReceiveHealing = record.CanReceiveHealing;
                     unit.OwnerUnitId = caster.UnitID;
                     unit.PlayerNumber = caster.PlayerNumber;
                     unit.CurrentCell = corpseCell;

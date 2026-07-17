@@ -7,6 +7,7 @@ using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Roster;
+using Tactics.Runtime.BattleLog;
 using UnityEngine;
 
 namespace Tactics.Consumables
@@ -16,7 +17,10 @@ namespace Tactics.Consumables
     /// </summary>
     public static class ConsumableAbilityFactory
     {
-        public static IAbility Create(IUnit owner, ConsumableInstance instance)
+        public static ConsumableBattleAbility Create(
+            IUnit owner,
+            ConsumableInstance instance,
+            string characterId)
         {
             if (owner == null || instance == null)
                 return null;
@@ -30,17 +34,25 @@ namespace Tactics.Consumables
                 $"{definition.DisplayName} [{instance.RemainingCharges}/{instance.MaxCharges}]",
                 graph,
                 definition.MaxRange);
-            return new SkillGraphAbilityImpl(
+            var usePolicy = new ConsumableUsePolicy(
+                owner,
+                instance.InstanceId,
+                characterId,
+                definition);
+            return new ConsumableBattleAbility(
                 owner,
                 config,
-                new ConsumableUsePolicy(owner, instance.InstanceId, definition.DisplayName, instance.MaxCharges));
+                usePolicy,
+                definition,
+                instance.InstanceId,
+                characterId);
         }
 
         private static SkillGraphAsset CreateGraph(ConsumableDefinition definition)
         {
             var graph = ScriptableObject.CreateInstance<SkillGraphAsset>();
-            graph.DisplayName = definition.AbilityTemplateId;
-            graph.Tags = new[] { "consumable", definition.AbilityTemplateId };
+            graph.DisplayName = definition.Id;
+            graph.Tags = new[] { "consumable", definition.EffectKind.ToString() };
 
             var start = graph.AddNode(SkillGraphNodeType.Start, Vector2.zero);
             SkillGraphNodeRecord selection;
@@ -58,9 +70,14 @@ namespace Tactics.Consumables
                 selection = graph.AddNode(SkillGraphNodeType.SelectSelf, new Vector2(180f, 0f));
             }
 
-            SkillGraphNodeRecord effect = definition.AbilityTemplateId == "consumable.self_mana"
-                ? CreateManaNode(graph, definition.Magnitude)
-                : CreateHealNode(graph, definition.Magnitude);
+            SkillGraphNodeRecord effect = definition.EffectKind switch
+            {
+                ConsumableEffectKind.RestoreMana => CreateManaNode(graph, definition.Magnitude),
+                ConsumableEffectKind.RemoveHarmfulBuffs => graph.AddNode(
+                    SkillGraphNodeType.RemoveHarmfulBuffs,
+                    new Vector2(360f, 0f)),
+                _ => CreateHealNode(graph, definition.Magnitude)
+            };
             var finish = graph.AddNode(SkillGraphNodeType.Finish, new Vector2(540f, 0f));
 
             graph.AddEdge(start.NodeId, selection.NodeId);
@@ -93,25 +110,40 @@ namespace Tactics.Consumables
         private static readonly HashSet<string> Uses = new HashSet<string>(StringComparer.Ordinal);
         private readonly IUnit _owner;
         private readonly string _instanceId;
-        private readonly string _itemName;
-        private readonly int _maxCharges;
+        private readonly string _characterId;
+        private readonly ConsumableDefinition _definition;
         private IGridController _gridController;
 
-        public ConsumableUsePolicy(IUnit owner, string instanceId, string itemName, int maxCharges)
+        public ConsumableUsePolicy(
+            IUnit owner,
+            string instanceId,
+            string characterId,
+            ConsumableDefinition definition)
         {
             _owner = owner;
             _instanceId = instanceId;
-            _itemName = itemName;
-            _maxCharges = maxCharges;
+            _characterId = characterId;
+            _definition = definition;
+        }
+
+        public event Action UseCommitted;
+
+        public int RemainingCharges
+        {
+            get
+            {
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+                return state?.ConsumableInstances?
+                    .FirstOrDefault(item => item.InstanceId == _instanceId)?
+                    .RemainingCharges ?? 0;
+            }
         }
 
         public string DisplayName
         {
             get
             {
-                var state = PlayerAdventureStateStore.LoadRepairAndSave();
-                var instance = state?.ConsumableInstances?.FirstOrDefault(item => item.InstanceId == _instanceId);
-                return $"{_itemName} [{instance?.RemainingCharges ?? 0}/{_maxCharges}]";
+                return $"{_definition.DisplayName} [{RemainingCharges}/{_definition.MaxCharges}]";
             }
         }
 
@@ -124,28 +156,48 @@ namespace Tactics.Consumables
 
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
             var instance = state?.ConsumableInstances?.FirstOrDefault(item => item.InstanceId == _instanceId);
-            return instance != null && instance.RemainingCharges > 0 && !Uses.Contains(BuildTurnKey(gridController));
+            var character = state?.Roster?.FirstOrDefault(candidate => candidate?.Id == _characterId);
+            return instance != null &&
+                   instance.RemainingCharges > 0 &&
+                   character?.CarriedConsumableInstanceId == _instanceId &&
+                   !Uses.Contains(BuildTurnKey(gridController));
         }
 
-        public void CommitCompletedUse()
+        public void CommitCompletedUse(SkillExecutionContext context)
         {
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
-            var instance = state?.ConsumableInstances?.FirstOrDefault(item => item.InstanceId == _instanceId);
-            if (instance == null || instance.RemainingCharges <= 0)
+            if (!CharacterLoadoutService.TryCommitConsumableUse(state, _instanceId))
                 return;
 
-            instance.RemainingCharges--;
-            if (instance.RemainingCharges <= 0)
-                state.ConsumableInstances.Remove(instance);
             PlayerAdventureStateStore.Save(state);
 
             if (_gridController != null)
                 Uses.Add(BuildTurnKey(_gridController));
+
+            if (_definition.EffectKind == ConsumableEffectKind.RemoveHarmfulBuffs && TBattleLog.IsBattleActive)
+            {
+                TBattleLog.Log(new CleanseLogData
+                {
+                    Source = GetUnitName(_owner),
+                    ItemName = _definition.DisplayName,
+                    RemovedCount = context?.GetBlackboard<int>("RemovedHarmfulBuffCount", 0) ?? 0
+                });
+            }
+
+            UseCommitted?.Invoke();
         }
 
         private string BuildTurnKey(IGridController gridController)
         {
             return $"{RuntimeHelpers.GetHashCode(gridController)}:{gridController.CurrentRound}:{_owner.PlayerNumber}:{_owner.UnitID}";
+        }
+
+        private static string GetUnitName(IUnit unit)
+        {
+            if (unit is INamedUnit named && !string.IsNullOrWhiteSpace(named.UnitName))
+                return named.UnitName;
+
+            return unit == null ? "Unknown" : $"Unit_{unit.UnitID}";
         }
     }
 

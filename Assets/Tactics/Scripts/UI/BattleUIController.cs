@@ -12,6 +12,7 @@ using Tactics.Common.Players;
 using Tactics.Common.Battle;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Consumables;
 
 using Tactics.Common.Units.Buffs;
 
@@ -39,6 +40,10 @@ namespace Tactics.UI
         // Bottom panel
         private Button _endTurnButton;
         private Button _moveButton;
+        private Button _consumableButton;
+        private VisualElement _consumableIcon;
+        private Label _consumableNameLabel;
+        private Label _consumableChargesLabel;
         private VisualElement _skillPanel;
         private VisualElement _bottomPanel;
 
@@ -47,6 +52,8 @@ namespace Tactics.UI
         private InputAction _endTurnAction;
         private IUnit _currentSelectedUnit;
         private IAbility _currentMoveAbility;
+        private ConsumableBattleAbility _currentConsumableAbility;
+        private bool _isConsumableTargeting;
         private readonly List<VisualElement> _skillCards = new List<VisualElement>();
         private readonly List<System.Action> _skillCallbacks = new List<System.Action>();
         private readonly List<VisualElement> _turnOrderItems = new List<VisualElement>();
@@ -139,6 +146,10 @@ namespace Tactics.UI
 
             _endTurnButton = root.Q<Button>("EndTurnButton");
             _moveButton = root.Q<Button>("MoveButton");
+            _consumableButton = root.Q<Button>("BattleConsumableButton");
+            _consumableIcon = root.Q<VisualElement>("BattleConsumableIcon");
+            _consumableNameLabel = root.Q<Label>("BattleConsumableName");
+            _consumableChargesLabel = root.Q<Label>("BattleConsumableCharges");
             _skillPanel = root.Q<VisualElement>("SkillPanel");
             _bottomPanel = root.Q<VisualElement>("BottomPanel");
 
@@ -171,6 +182,7 @@ namespace Tactics.UI
 
             if (_endTurnButton != null) _endTurnButton.clicked += OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked += OnMoveClicked;
+            if (_consumableButton != null) _consumableButton.clicked += OnConsumableClicked;
 
             // Find GridController from the currently loaded battle scene
             _gridController = Object.FindFirstObjectByType<BattleController>();
@@ -242,6 +254,10 @@ namespace Tactics.UI
         {
             if (_endTurnButton != null) _endTurnButton.clicked -= OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked -= OnMoveClicked;
+            if (_consumableButton != null) _consumableButton.clicked -= OnConsumableClicked;
+
+            SetCurrentConsumableAbility(null);
+            _isConsumableTargeting = false;
 
             ClearSkillCards();
             ClearTurnOrder();
@@ -280,6 +296,7 @@ namespace Tactics.UI
                 _currentSelectedUnit = currentUnit;
                 UpdateStatusPanel();
                 UpdateMoveButtonState(currentUnit);
+                UpdateConsumableButton(currentUnit);
                 UpdateSkillCards(currentUnit);
 
                 if (_currentSelectedUnit is ICombatant combatant)
@@ -447,7 +464,7 @@ namespace Tactics.UI
             ClearSkillCards();
             if (_skillPanel == null || unit == null) return;
 
-            var abilities = unit.GetBaseAbilities()?.Where(a => !IsMoveAbility(a)).ToList();
+            var abilities = GetSkillAbilities(unit);
             if (abilities == null) return;
 
             for (int i = 0; i < abilities.Count; i++)
@@ -542,12 +559,15 @@ namespace Tactics.UI
 
         private void OnEndTurnClicked()
         {
+            _isConsumableTargeting = false;
             if (_gridController != null)
                 _gridController.EndTurn();
         }
 
         private void OnMoveClicked()
         {
+            _isConsumableTargeting = false;
+            _consumableButton?.EnableInClassList("targeting", false);
             if (_currentSelectedUnit == null || _gridController == null)
                 return;
 
@@ -568,13 +588,15 @@ namespace Tactics.UI
 
         private void OnSkillButtonClicked(int skillIndex)
         {
+            _isConsumableTargeting = false;
+            _consumableButton?.EnableInClassList("targeting", false);
             if (_currentSelectedUnit == null || _gridController == null)
             {
                 TLog.Warning($"[BattleUIController] Cannot use skill: currentSelectedUnit={_currentSelectedUnit != null}, gridController={_gridController != null}");
                 return;
             }
 
-            var abilities = _currentSelectedUnit.GetBaseAbilities()?.Where(a => !IsMoveAbility(a)).ToList();
+            var abilities = GetSkillAbilities(_currentSelectedUnit);
             if (abilities == null || skillIndex >= abilities.Count)
             {
                 TLog.Warning($"[BattleUIController] Skill index {skillIndex} out of range. Abilities count: {abilities?.Count ?? 0}");
@@ -586,6 +608,22 @@ namespace Tactics.UI
 
             // Switch to unit selected state - OnStateEnter will handle OnAbilitySelected, CanPerform check, and Display
             _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, ability);
+        }
+
+        private void OnConsumableClicked()
+        {
+            if (_currentSelectedUnit == null || _gridController == null ||
+                _currentConsumableAbility == null ||
+                !_currentConsumableAbility.CanPerform(_gridController))
+            {
+                return;
+            }
+
+            _isConsumableTargeting = true;
+            _consumableButton?.EnableInClassList("targeting", true);
+            _gridController.GridState = new GridStateUnitSelected(
+                _currentSelectedUnit,
+                _currentConsumableAbility);
         }
 
         #endregion
@@ -602,6 +640,8 @@ namespace Tactics.UI
 
         private void OnTurnStarted(TurnTransitionParams turnTransitionParams)
         {
+            _isConsumableTargeting = false;
+            _consumableButton?.EnableInClassList("targeting", false);
             bool isHumanTurn = turnTransitionParams.TurnContext.CurrentPlayer.PlayerType == PlayerType.HumanPlayer;
 
             if (_bottomPanel != null)
@@ -631,6 +671,7 @@ namespace Tactics.UI
                 _currentSelectedUnit = currentUnit;
                 UpdateStatusPanel();
                 UpdateMoveButtonState(currentUnit);
+                UpdateConsumableButton(currentUnit);
                 UpdateSkillCards(currentUnit);
 
                 if (_currentSelectedUnit is ICombatant newCombatant)
@@ -649,11 +690,15 @@ namespace Tactics.UI
                 _endTurnButton.SetEnabled(false);
             if (_moveButton != null)
                 _moveButton.SetEnabled(false);
+            if (_consumableButton != null)
+                _consumableButton.SetEnabled(false);
 
             if (_bottomPanel != null)
                 _bottomPanel.style.display = DisplayStyle.None;
 
             _currentSelectedUnit = null;
+            SetCurrentConsumableAbility(null);
+            _isConsumableTargeting = false;
             UpdateHpBar(0, 1);
             UpdateMpBar(0, 1);
             ClearSkillCards();
@@ -736,6 +781,7 @@ namespace Tactics.UI
 
             _currentSelectedUnit = unit;
             UpdateStatusPanel();
+            UpdateConsumableButton(unit);
 
             if (_currentSelectedUnit is ICombatant combatant)
             {
@@ -1012,6 +1058,94 @@ namespace Tactics.UI
             _moveButton.SetEnabled(canMove);
         }
 
+        private void UpdateConsumableButton(IUnit unit)
+        {
+            var ability = unit?.GetBaseAbilities()?
+                .OfType<ConsumableBattleAbility>()
+                .FirstOrDefault();
+            if (ability != null && ability.RemainingCharges <= 0)
+                ability = null;
+
+            SetCurrentConsumableAbility(ability);
+            if (_consumableButton == null)
+                return;
+
+            if (ability == null)
+            {
+                _consumableButton.SetEnabled(false);
+                _consumableButton.tooltip = null;
+                _consumableButton.EnableInClassList("targeting", false);
+                if (_consumableNameLabel != null)
+                    _consumableNameLabel.text = "空";
+                if (_consumableChargesLabel != null)
+                    _consumableChargesLabel.text = "--";
+                SetConsumableIcon(null);
+                return;
+            }
+
+            int remainingCharges = ability.RemainingCharges;
+            _consumableButton.SetEnabled(_gridController != null && ability.CanPerform(_gridController));
+            _consumableButton.tooltip =
+                $"{ability.Definition.DisplayName}\n{ability.Definition.Description}\n" +
+                $"目标：自身或正交相邻友军（距离 {ability.Definition.MaxRange}）\n" +
+                $"次数：{remainingCharges}/{ability.Definition.MaxCharges}";
+            if (_consumableNameLabel != null)
+                _consumableNameLabel.text = ability.Definition.DisplayName;
+            if (_consumableChargesLabel != null)
+                _consumableChargesLabel.text = $"{remainingCharges}/{ability.Definition.MaxCharges}";
+            SetConsumableIcon(ability.Definition.IconPath);
+        }
+
+        private void SetCurrentConsumableAbility(ConsumableBattleAbility ability)
+        {
+            if (ReferenceEquals(_currentConsumableAbility, ability))
+                return;
+
+            if (_currentConsumableAbility != null)
+                _currentConsumableAbility.UseCommitted -= OnConsumableUseCommitted;
+
+            _currentConsumableAbility = ability;
+            if (_currentConsumableAbility != null)
+                _currentConsumableAbility.UseCommitted += OnConsumableUseCommitted;
+        }
+
+        private void OnConsumableUseCommitted(ConsumableBattleAbility ability)
+        {
+            _isConsumableTargeting = false;
+            _consumableButton?.EnableInClassList("targeting", false);
+            UpdateConsumableButton(_currentSelectedUnit);
+        }
+
+        private void SetConsumableIcon(string iconPath)
+        {
+            if (_consumableIcon == null)
+                return;
+
+            _consumableIcon.style.backgroundImage = null;
+            _consumableIcon.style.backgroundColor = new StyleColor(new Color(0.24f, 0.18f, 0.14f));
+            if (string.IsNullOrWhiteSpace(iconPath))
+                return;
+
+            var assetManager = GameAssetManager.Instance;
+            if (assetManager == null || !assetManager.IsInitialized)
+                return;
+
+            var sprite = assetManager.Load<Sprite>(iconPath);
+            if (sprite == null)
+                return;
+
+            _consumableIcon.style.backgroundImage = new StyleBackground(sprite);
+            _consumableIcon.style.backgroundColor = Color.clear;
+            assetManager.Release(iconPath);
+        }
+
+        private List<IAbility> GetSkillAbilities(IUnit unit)
+        {
+            return unit?.GetBaseAbilities()?
+                .Where(ability => !IsMoveAbility(ability) && ability is not ConsumableBattleAbility)
+                .ToList() ?? new List<IAbility>();
+        }
+
         private bool IsMoveAbility(IAbility ability)
         {
             return ability.DisplayName == "Move";
@@ -1023,6 +1157,16 @@ namespace Tactics.UI
 
         private void Update()
         {
+            if (_isConsumableTargeting &&
+                (Keyboard.current?.escapeKey.wasPressedThisFrame == true ||
+                 Mouse.current?.rightButton.wasPressedThisFrame == true))
+            {
+                _isConsumableTargeting = false;
+                _consumableButton?.EnableInClassList("targeting", false);
+                if (_gridController != null)
+                    _gridController.GridState = new GridStateAwaitInput();
+            }
+
             UpdateDamageNumbers();
             UpdateHoverHealthBar();
             SyncBuffIcons();

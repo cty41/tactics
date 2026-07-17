@@ -627,13 +627,13 @@ namespace Tactics.Tests.Editor
         {
             var state = PlayerAdventureStateStore.CreatePureRunState(7);
             var reward = RewardResult.Empty();
-            reward.ItemIds.Add("field_ration");
+            reward.ItemIds.Add("life_potion");
 
             reward.ApplyItemsToState(state);
 
             Assert.That(state.ConsumableInstances, Has.Count.EqualTo(1));
-            Assert.That(state.ConsumableInstances[0].DefinitionId, Is.EqualTo("field_ration"));
-            Assert.That(state.Inventory, Does.Not.Contain("field_ration"));
+            Assert.That(state.ConsumableInstances[0].DefinitionId, Is.EqualTo("life_potion"));
+            Assert.That(state.Inventory, Does.Not.Contain("life_potion"));
         }
 
         [Test]

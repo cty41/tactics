@@ -12,6 +12,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
+using Tactics.Roguelike;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -26,6 +27,7 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator SetUp()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            PureRunSessionStore.Clear();
 
             // Initialize GameAssetManager for real asset loading
             var initTask = TestGameAssetHelper.EnsureInitialized();
@@ -129,6 +131,7 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
 
+            PureRunSessionStore.Clear();
             TestGameAssetHelper.Cleanup();
 
             if (_cellManagerRoot != null)
@@ -175,6 +178,28 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecuteUiPlan(GetPlanPath("ui", "buff-icon-count.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesInventoryItemPopover()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("ui", "inventory-item-popover.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleConsumableSlot()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("ui", "battle-consumable-slot.plan.json"));
             yield return WaitForTask(task);
 
             var result = task.Result;

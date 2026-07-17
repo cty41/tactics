@@ -25,9 +25,18 @@
         </ui:VisualElement>
         <ui:VisualElement name="BottomPanel" class="bottom-panel">
             <ui:VisualElement name="LeftPanel" class="left-panel">
-                <ui:Button name="MoveButton" class="move-button">
-                    <ui:Label text="Move" class="move-button-text"/>
-                </ui:Button>
+                <ui:VisualElement name="ActionPanel" class="action-panel">
+                    <ui:Button name="MoveButton" class="move-button">
+                        <ui:Label text="Move" class="move-button-text"/>
+                    </ui:Button>
+                    <ui:Button name="BattleConsumableButton" class="consumable-button">
+                        <ui:VisualElement name="BattleConsumableIcon" class="consumable-button-icon"/>
+                        <ui:VisualElement class="consumable-button-copy">
+                            <ui:Label name="BattleConsumableName" text="空" class="consumable-button-name"/>
+                            <ui:Label name="BattleConsumableCharges" text="--" class="consumable-button-charges"/>
+                        </ui:VisualElement>
+                    </ui:Button>
+                </ui:VisualElement>
                 <ui:VisualElement name="SkillPanel" class="skill-panel"/>
             </ui:VisualElement>
             <ui:Button name="EndTurnButton" class="end-turn-button">

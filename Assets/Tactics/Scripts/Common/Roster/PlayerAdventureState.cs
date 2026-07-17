@@ -7,7 +7,7 @@ namespace Tactics.Roster
     [Serializable]
     public class PlayerAdventureState
     {
-        public int Version { get; set; } = 4;
+        public int Version { get; set; } = 5;
         public bool IsPureRun { get; set; }
         public int RunSeed { get; set; }
         public int Gold { get; set; } = 0;

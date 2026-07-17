@@ -18,6 +18,7 @@ using Tactics.Common.Units.Buffs;
 using Tactics.AssetPipeline;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Consumables;
 using Tactics.Controllers.TurnResolvers;
 using Tactics.Roguelike;
 using Tactics.Roster;
@@ -40,6 +41,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "executeBattleSkillGraph"
                 or "moveUnit"
                 or "setUnitState"
+                or "useCarriedConsumable"
                 or "addBuff"
                 or "executeAI"
                 or "createAiBrain"
@@ -68,6 +70,8 @@ namespace Tactics.Common.Testing.Gameplay
                         return MoveUnit(context, action);
                     case "setUnitState":
                         return SetUnitState(context, action);
+                    case "useCarriedConsumable":
+                        return await UseCarriedConsumable(context, action);
                     case "addBuff":
                         return AddBuff(context, action);
                     case "executeAI":
@@ -108,6 +112,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "unitBuffDurationEquals"
                 or "playerNumberEquals"
                 or "unitMaxHealthEquals"
+                or "unitCanReceiveHealingEquals"
                 or "unitCountEquals"
                 or "unitCanAct"
                 or "aiSelectedIntentTypeEquals"
@@ -149,6 +154,7 @@ namespace Tactics.Common.Testing.Gameplay
                     "unitBuffDurationEquals" => AssertUnitBuffDurationEquals(context, assertion),
                     "playerNumberEquals" => AssertPlayerNumberEquals(context, assertion),
                     "unitMaxHealthEquals" => AssertUnitMaxHealthEquals(context, assertion),
+                    "unitCanReceiveHealingEquals" => AssertUnitCanReceiveHealingEquals(context, assertion),
                     "unitCountEquals" => AssertUnitCountEquals(context, assertion),
                     "unitCanAct" => AssertUnitCanAct(context, assertion),
                     "aiSelectedIntentTypeEquals" => AssertAiSelectedIntentTypeEquals(context, assertion),
@@ -210,6 +216,7 @@ namespace Tactics.Common.Testing.Gameplay
                 data["mana"] = unit.Mana;
                 data["maxMana"] = unit.MaxMana;
                 data["canAct"] = unit.CanAct;
+                data["canReceiveHealing"] = unit.CanReceiveHealing;
                 data["activeBuffs"] = new JArray(unit.GetActiveBuffs().Select(b => b.BuffName));
             }
 
@@ -572,6 +579,9 @@ namespace Tactics.Common.Testing.Gameplay
             var maxHealth = action.Parameters["maxHealth"];
             if (maxHealth != null && mono != null) mono.MaxHealth = maxHealth.ToObject<float>();
 
+            var maxMana = action.Parameters["maxMana"];
+            if (maxMana != null) unit.MaxMana = maxMana.ToObject<float>();
+
             var mana = action.Parameters["mana"];
             if (mana != null) unit.Mana = mana.ToObject<float>();
 
@@ -581,6 +591,10 @@ namespace Tactics.Common.Testing.Gameplay
             var isDowned = action.Parameters["isDowned"];
             if (isDowned != null) unit.IsDowned = isDowned.ToObject<bool>();
 
+            var canReceiveHealing = action.Parameters["canReceiveHealing"];
+            if (canReceiveHealing != null)
+                unit.CanReceiveHealing = canReceiveHealing.ToObject<bool>();
+
             string characterId = action.Parameters["characterId"]?.ToString();
             if (!string.IsNullOrWhiteSpace(characterId) && unit is MonoBehaviour monoBehaviour)
             {
@@ -589,6 +603,65 @@ namespace Tactics.Common.Testing.Gameplay
             }
 
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Set state for {unitAlias}.");
+        }
+
+        private static async Task<GameplayStepResult> UseCarriedConsumable(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            if (!EnsureBattleInitialized(controller))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "BattleController is not initialized.");
+
+            string casterAlias = action.Parameters["casterAlias"]?.ToString();
+            string targetAlias = action.Parameters["targetAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(casterAlias) || string.IsNullOrWhiteSpace(targetAlias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "useCarriedConsumable requires casterAlias and targetAlias.");
+            if (!context.Units.TryGetValue(casterAlias, out var caster))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Caster alias '{casterAlias}' not found.");
+            if (!context.Units.TryGetValue(targetAlias, out var target) || target.CurrentCell == null)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Target alias '{targetAlias}' is unavailable.");
+
+            var ability = caster.GetBaseAbilities().OfType<ConsumableBattleAbility>().FirstOrDefault();
+            if (ability == null)
+            {
+                string characterId = action.Parameters["characterId"]?.ToString();
+                if (string.IsNullOrWhiteSpace(characterId) && caster is MonoBehaviour casterBehaviour)
+                    characterId = casterBehaviour.GetComponent<RosterCharacterLink>()?.CharacterId;
+                if (string.IsNullOrWhiteSpace(characterId))
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Caster has no roster character link.");
+
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+                var character = state?.Roster?.FirstOrDefault(candidate => candidate?.Id == characterId);
+                var instance = state?.ConsumableInstances?.FirstOrDefault(candidate =>
+                    candidate?.InstanceId == character?.CarriedConsumableInstanceId);
+                ability = ConsumableAbilityFactory.Create(caster, instance, characterId);
+                if (ability == null || caster is not Unit concreteUnit)
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Failed to create the carried consumable ability.");
+
+                concreteUnit.RegisterAbility(ability, controller);
+            }
+
+            var result = await ability.ExecuteForTestAsync(target.CurrentCell, controller);
+            context.LastSkillResult = result;
+            context.LastStepMessage = result.LastError;
+            bool expectedSuccess = action.Parameters["expectSuccess"]?.ToObject<bool>() ?? true;
+            bool succeeded = result.ExecutionState == SkillGraphExecutionState.Completed;
+            if (succeeded == expectedSuccess)
+            {
+                string outcome = succeeded ? "used" : "rejected";
+                return GameplayStepResult.Pass(
+                    BattleAdapterName,
+                    action.Kind,
+                    $"Consumable '{ability.Definition.DisplayName}' was {outcome} for {casterAlias} -> {targetAlias}.");
+            }
+
+            return GameplayStepResult.Fail(
+                BattleAdapterName,
+                action.Kind,
+                succeeded
+                    ? "Consumable use unexpectedly succeeded."
+                    : result.LastError ?? "Consumable execution failed.");
         }
 
         private static List<int> ReadPlayerNumbers(ExecutableScenarioAction action, string singularKey, string pluralKey)
@@ -1001,6 +1074,22 @@ namespace Tactics.Common.Testing.Gameplay
             return Math.Abs(actual - expected) < 0.001f
                 ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.MaxHealth={actual}")
                 : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.MaxHealth={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitCanReceiveHealingEquals(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            if (string.IsNullOrWhiteSpace(assertion.Target))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "unitCanReceiveHealingEquals requires a target unit alias.");
+            if (!context.Units.TryGetValue(assertion.Target, out var unit))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unit alias '{assertion.Target}' does not exist.");
+
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = unit.CanReceiveHealing;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.CanReceiveHealing={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.CanReceiveHealing={expected}, actual={actual}.");
         }
 
         private static GameplayAssertionResult AssertUnitCountEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)

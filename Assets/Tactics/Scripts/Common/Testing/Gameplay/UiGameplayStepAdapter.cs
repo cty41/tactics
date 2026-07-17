@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Tactics.UI;
@@ -12,6 +13,9 @@ namespace Tactics.Common.Testing.Gameplay
     public sealed class UiGameplayStepAdapter : IGameplayStepAdapter
     {
         private const string UiAdapterName = "UI";
+        private static readonly MethodInfo ClickableInvokeMethod = typeof(Clickable).GetMethod(
+            "Invoke",
+            BindingFlags.Instance | BindingFlags.NonPublic);
 
         public string AdapterName => UiAdapterName;
 
@@ -155,15 +159,15 @@ namespace Tactics.Common.Testing.Gameplay
             if (element == null)
                 return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Element '{elementName}' not found.");
 
-            if (element is Button button)
-            {
-                button.SendEvent(ClickEvent.GetPooled());
-                return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Clicked button '{elementName}'.");
-            }
+            using var clickEvent = ClickEvent.GetPooled();
+            clickEvent.target = element;
+            if (element is Button button && button.clickable != null && ClickableInvokeMethod != null)
+                ClickableInvokeMethod.Invoke(button.clickable, new object[] { clickEvent });
+            else
+                element.SendEvent(clickEvent);
 
-            // For non-button elements, simulate click via event
-            element.SendEvent(new ClickEvent());
-            return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Clicked element '{elementName}'.");
+            string elementKind = element is Button ? "button" : "element";
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Clicked {elementKind} '{elementName}'.");
         }
 
         private static GameplayStepResult SetText(GameplayRuntimeContext context, ExecutableScenarioAction action)
