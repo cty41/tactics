@@ -113,7 +113,8 @@ namespace Tactics.Common.Controllers
                 TLog.Error($"[GridController] MakeTurnTransition: CurrentPlayer is null. UnitPlayerNumber={TurnContext.PlayableUnits().FirstOrDefault()?.PlayerNumber ?? -1}. Skipping turn.");
                 return;
             }
-            TurnContext.CurrentPlayer.Play(this);
+            if (!DisableAiAutoPlay || TurnContext.CurrentPlayer.PlayerType != PlayerType.AutomatedPlayer)
+                TurnContext.CurrentPlayer.Play(this);
         }
 
         public virtual void InitializeAndStart(bool isNetworkInvoked = false)
@@ -283,9 +284,11 @@ namespace Tactics.Common.Controllers
                     cell.AddInteractable(corpse);
                     TLog.Info($"[GridController] Unit {eventArgs.AffectedUnit.UnitID} died, Corpse created at {cell.GridCoordinates}");
                 }
-                return;
             }
 
+            // Corpse resources are represented by the interactable created above. The
+            // defeated combat unit must still leave UnitManager so victory detection can
+            // observe that its faction has no living combatants.
             foreach (var ability in eventArgs.AffectedUnit.GetBaseAbilities())
             {
                 ability.OnUnitDestroyed(this);
@@ -397,7 +400,7 @@ namespace Tactics.Common.Controllers
 
             TurnStarted?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
             UnitManager.MarkAsFriendly(TurnContext.PlayableUnits());
-            if (!DisableAiAutoPlay)
+            if (!DisableAiAutoPlay || TurnContext.CurrentPlayer.PlayerType != PlayerType.AutomatedPlayer)
             {
                 TurnContext.CurrentPlayer.Play(this);
             }

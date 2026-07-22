@@ -2,7 +2,7 @@
 
 ## 文档状态
 
-- 当前设计真相源，按 2026-07-17 仓库实现收敛。
+- 当前设计真相源，按 2026-07-23 仓库实现收敛。
 - 只描述已启用的 Pure Run v1；未来技能、掉落和元进度见 [项目已知缺口](project-known-gaps.md)。
 - 旧 5×4 自由探索、回溯和节点重入方案已经被 7 层单向路线替代。
 
@@ -26,9 +26,9 @@ Pure Run 是一局内完成的固定三人小队构筑体验：玩家在有限�
 |---|---|---|
 | 0 | Start | 初始化并揭示第 1 层 |
 | 1–3 | MinorEnemy | 必经普通战斗 |
-| 4 | MinorEnemy / RestSite / Store | 战斗与服务竞争 |
+| 4 | MinorEnemy / RestSite / Store / Mystery | 战斗、服务与事件竞争 |
 | 5 | EliteEnemy | 必经精英战斗 |
-| 6 | EliteEnemy / RestSite / Store | 精英战斗与服务竞争 |
+| 6 | EliteEnemy / RestSite / Store / Mystery | 精英战斗、服务与事件竞争 |
 | 7 | Boss，配方 `Special` | 单局终点 |
 
 因此一局实际包含 5、6 或 7 场战斗。`MapRevealSystem` 只将当前节点的一跳后继设为可选；更远节点可以进入雾中预览，但不可点击。
@@ -60,8 +60,9 @@ Pure Run 是一局内完成的固定三人小队构筑体验：玩家在有限�
 - 选择规则为“最低等级优先”，并以固定队伍顺序打破同级平局。
 - 获选角色等级 `+1`、属性点 `+1`；最高等级沿用 `SkillSystem.MaxCharacterLevel = 12`。
 - 每名角色的起始分支由 `runSeed + RoleType + partyIndex` 稳定选择，并直接学习对应基础技能 Lv1。
-- 升级候选默认生成 3 个合法技能；角色主分支属性达到 7 后，尚未获得高级技能时，对应高级技能在槽位 0 获得一次保底。
+- 升级候选默认生成 3 个合法选项，并混合尚未学习的新技能与已学技能的下一级；角色主分支属性达到 7 后，尚未获得高级技能时，对应高级技能在槽位 0 获得一次保底。
 - 保底只在对应高级技能确实出现在候选中时消费，并随角色状态持久化。
+- 玩家必须在升级界面显式确认选择；技能槽位已满时暂不提供替换流程，特殊额外技能也不进入候选。
 
 完整技能表及前置关系见 [三职业首切技能设计](three-class-skill-design.md)。
 
@@ -89,9 +90,15 @@ Inventory 是装备与消耗品的统一分配入口。共享背包支持“全�
 
 Buff 只有 Beneficial/Harmful 两类。标准正向 HP 恢复统一检查 `CanReceiveHealing`；骷髅和骷髅法师等复活类召唤物仍是合法治疗目标，但实际恢复为 0，药水或技能照常结算。魔法恢复与净化不受该限制。
 
-### Treasure 与 Mystery（当前 Pure Run 路线不生成）
+### Mystery
 
-通用地图模型和编辑器仍支持 Treasure 配置以及 Mystery 事件图，但 `GetPureRunMap` 当前 7 层路线不会生成这两类节点。它们不属于 Pure Run v1 成功路径；若其他地图使用，结果应通过统一奖励链写回 `PlayerAdventureState` 后再提交节点完成。
+第 4、6 层各生成一个 Mystery 选项。两个节点从诅咒宝箱、堕落祭坛、迷途村民三事件池中按 `runSeed` 稳定抽取且同一局不重复；已有事件 ID 在重载时保留。检定结果由稳定种子决定，事件奖励、伤害和节点完成使用同一事务链，避免中断重入时重抽或重复结算。尚未选择、已生成结果、已提交结果三种中断阶段均可恢复；事件伤害导致全队死亡时进入统一 Defeat 结算。
+
+通用地图模型和编辑器仍支持 Treasure 配置，但 Pure Run 当前不生成宝箱节点；其节点逻辑与地图出现规则仍是延期项。
+
+### 遭遇与 RunSummary
+
+正式遭遇单位可配置生命与输出倍率、初始魔法值和阻挡格，首批怪物通过独立 Brain/Profile 形成追击、远程、施法与控场差异。战败奖励严格为 0，不提交战斗节点或成长。金币、物品、装备、击败敌人数、访问节点数和完成事件数通过幂等键累计到 `CurrentRunSummary`；Boss 胜利与战斗/事件团灭分别生成 Victory 或 Defeat 终局快照。
 
 ## 当前成功标准
 
@@ -101,6 +108,9 @@ Buff 只有 Beneficial/Harmful 两类。标准正向 HP 恢复统一检查 `CanR
 - 战斗胜利仅成长一名最低等级存活角色；失败不成长。
 - 场景往返后地图、队伍、金币、技能、装备、携带消耗品和待生效 Buff 保持一致。
 - 玩家可从掉落、商店或显式事件获得独立药水实例，在地图背包分配给角色，并在下一场战斗中对明确友军目标使用。
+- 玩家可在升级时从新技能与已学技能下一级的混合候选中确认一项，并在下一场战斗使用对应等级资产。
+- Mystery、RestSite、Store 和战斗在中断重入后不会重复奖励、重复购买或重复消费节点。
+- 终局 `RunSummary` 与本局已提交事务一致，战败为零奖励且不能伪造胜场。
 
 ## 非目标
 
@@ -116,4 +126,4 @@ Buff 只有 Beneficial/Harmful 两类。标准正向 HP 恢复统一检查 `CanR
 - 地图：`RoguelikeMapGenerator`、`RoguelikeMapRuntimeState`、`NodeStateManager`。
 - 状态：`PlayerAdventureStateStore`、`CharacterLoadoutService`、`PureRunProgression`。
 - UI：`RoguelikeMapUIController`、`InventoryUIController`、`BattleUIController`、各节点 handler。
-- 自动化：`CharacterLoadoutServiceTests`、`ConsumableAcquisitionTests`、`ConsumableBattleUseTests`、`ConsumableUiInteractionTests` 与 `Tests/gameplay-specs/consumables/`。
+- 自动化：相关 Editor/PlayMode 测试，以及 `Tests/gameplay-specs/consumables/`、`Tests/gameplay-specs/map/`、`Tests/gameplay-specs/ui/`。`pure-run-real-player-route` 从 New Run 开始，经真实战斗伤害、升级确认、商店和会话重载到 Boss；失败与事件团灭另有独立玩家流。

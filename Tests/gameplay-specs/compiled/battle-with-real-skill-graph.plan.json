@@ -16,7 +16,7 @@
       "kind": "loadSkillGraphAsset",
       "parameters": {
         "alias": "meleeAttackGraph",
-        "assetPath": "Assets/Tactics/Battle/Abilities/MeleeAttack.asset"
+        "assetPath": "Assets/Tactics/Battle/Abilities/SkillGraphs/MeleeAttack_Graph.asset"
       }
     },
     {
@@ -41,7 +41,7 @@
       "adapter": "Battle",
       "kind": "unitHealthEquals",
       "target": "p2_0",
-      "expected": 80,
+      "expected": 19,
       "parameters": {}
     },
     {

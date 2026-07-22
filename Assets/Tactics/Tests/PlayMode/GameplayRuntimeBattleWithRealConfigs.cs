@@ -13,6 +13,7 @@ using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Classes;
 using Tactics.Common.Utilities;
+using Tactics.Roguelike;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -40,6 +41,7 @@ namespace Tactics.Tests.PlayMode
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
 
             _battleRoot = new GameObject("TestBattleControllerReal");
+            _battleRoot.SetActive(false);
             var bc = (MonoBehaviour)_battleRoot.AddComponent(controllerType);
 
             var startFlag = controllerType.GetField("_startImmediatelly", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -64,8 +66,10 @@ namespace Tactics.Tests.PlayMode
             var cellMgrField = controllerType.GetField("_cellManager", BindingFlags.Instance | BindingFlags.NonPublic);
             cellMgrField?.SetValue(bc, cellMgr);
 
-            var awake = controllerType.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            awake?.Invoke(bc, null);
+            _battleRoot.SetActive(true);
+            RoguelikeBattleReturnHandler.Instance.UnregisterController((BattleController)bc);
+            bc.enabled = false;
+            ((BattleController)bc).DisableAiAutoPlay = true;
 
             var gridControllerField = controllerType.GetField("_controller", BindingFlags.Instance | BindingFlags.NonPublic);
             var gridController = gridControllerField?.GetValue(bc);

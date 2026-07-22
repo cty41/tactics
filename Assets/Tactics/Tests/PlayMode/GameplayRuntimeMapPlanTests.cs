@@ -11,6 +11,7 @@ using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using Tactics.Roguelike;
+using Tactics.Roster;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -26,15 +27,20 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             PureRunSessionStore.Clear();
+            RoguelikeMapRuntimeState.ClearAll();
+            BattleSettlementFlow.Instance.Unsubscribe();
+            BattleSettlementCoordinator.Instance.Reset();
 
             var assetTask = TestGameAssetHelper.EnsureInitialized();
             yield return new WaitUntil(() => assetTask.IsCompleted);
             Assume.That(assetTask.Result, Is.Not.Null, "GameAssetManager should be initialized.");
+            PlayerAdventureStateStore.CreateNew(PlayerAdventureStateStore.DefaultSlotIndex);
 
             var controllerType = ResolveBattleControllerType();
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
 
             _battleRoot = new GameObject("TestBattleControllerMap");
+            _battleRoot.SetActive(false);
             var bc = (MonoBehaviour)_battleRoot.AddComponent(controllerType);
 
             var startFlag = controllerType.GetField("_startImmediatelly", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -59,8 +65,10 @@ namespace Tactics.Tests.PlayMode
             var cellMgrField = controllerType.GetField("_cellManager", BindingFlags.Instance | BindingFlags.NonPublic);
             cellMgrField?.SetValue(bc, cellMgr);
 
-            var awake = controllerType.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            awake?.Invoke(bc, null);
+            _battleRoot.SetActive(true);
+            RoguelikeBattleReturnHandler.Instance.UnregisterController((BattleController)bc);
+            bc.enabled = false;
+            ((BattleController)bc).DisableAiAutoPlay = true;
 
             var gridControllerField = controllerType.GetField("_controller", BindingFlags.Instance | BindingFlags.NonPublic);
             var gridController = gridControllerField?.GetValue(bc);
@@ -93,12 +101,16 @@ namespace Tactics.Tests.PlayMode
             var unit1 = unit1Go.AddComponent<Unit>();
             unit1.PlayerNumber = 1;
             unit1.CurrentCell = FindCell(_cellManagerRoot, 0, 0);
+            unit1.CurrentCell.CurrentUnits.Add(unit1);
+            unit1.CurrentCell.IsTaken = true;
 
             var unit2Go = new GameObject("Unit_P2");
             unit2Go.transform.SetParent(unitContainer);
             var unit2 = unit2Go.AddComponent<Unit>();
             unit2.PlayerNumber = 2;
             unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
+            unit2.CurrentCell.CurrentUnits.Add(unit2);
+            unit2.CurrentCell.IsTaken = true;
 
             yield return null;
         }
@@ -108,6 +120,9 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             PureRunSessionStore.Clear();
+            RoguelikeMapRuntimeState.ClearAll();
+            BattleSettlementFlow.Instance.Unsubscribe();
+            BattleSettlementCoordinator.Instance.Reset();
             TestGameAssetHelper.Cleanup();
 
             if (_cellManagerRoot != null)
@@ -354,6 +369,12 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMysteryUnselectedReentry()
+        {
+            yield return ExecuteAndAssertPlan("mystery-unselected-reentry.plan.json");
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesRestTransactionReentry()
         {
             yield return ExecuteAndAssertSourcePlan("rest-transaction-reentry.plan.json");
@@ -375,6 +396,18 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator RuntimeRunner_ExecutesPureRunSummaryAndDefeat()
         {
             yield return ExecuteAndAssertSourcePlan("pure-run-summary-and-defeat.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunNaturalBattleDefeat()
+        {
+            yield return ExecuteAndAssertPlan("pure-run-natural-battle-defeat.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunEventPartyDefeat()
+        {
+            yield return ExecuteAndAssertPlan("pure-run-event-party-defeat.plan.json");
         }
 
         [UnityTest]

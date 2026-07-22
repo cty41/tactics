@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-23T04:13:48+08:00"
+timestamp: "2026-07-23T06:43:08+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -42,7 +42,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:73b4a02b7511e6e9ffb84c7d75f62b3ee98ba66f7a8e270a91323437275baa53
+source_fingerprint: sha256:36f3eb0fd9b0f563b1a65d2d9a638249d0fe1f90f6706f5cb40d94f0a81593e7
 ---
 
 # Current State

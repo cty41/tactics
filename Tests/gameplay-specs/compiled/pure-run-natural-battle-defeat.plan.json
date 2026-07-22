@@ -1,13 +1,19 @@
 {
   "schemaVersion": 1,
-  "scenarioName": "UI.UiMapBattleIntegration",
+  "scenarioName": "Map.PureRunNaturalBattleDefeat",
   "requiredAdapters": [
-    "UI",
     "Map",
     "Battle",
     "Skill"
   ],
   "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 9101
+      }
+    },
     {
       "adapter": "Map",
       "kind": "loadPureRunMap",
@@ -24,87 +30,87 @@
       "adapter": "Skill",
       "kind": "createSkillGraph",
       "parameters": {
-        "alias": "attackGraph",
+        "alias": "enemyFinisher",
         "graphKind": "singleTargetDamage",
-        "baseDamage": 1
+        "baseDamage": 999,
+        "isRanged": false,
+        "minRange": 1,
+        "maxRange": 1
       }
     }
   ],
   "runtimeActions": [
     {
-      "adapter": "UI",
-      "kind": "openUI",
+      "adapter": "Map",
+      "kind": "beginBattleNode",
       "parameters": {
-        "uiId": "RoguelikeMap"
+        "nodeId": "layer_01_battle"
       }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
     },
     {
       "adapter": "Battle",
       "kind": "executeBattleSkillGraph",
       "parameters": {
-        "graphAlias": "attackGraph",
-        "casterAlias": "p1_0",
-        "targetAlias": "p2_0"
+        "graphAlias": "enemyFinisher",
+        "casterAlias": "p2_0",
+        "targetAlias": "p1_0"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "waitForBattleEnd",
+      "parameters": {
+        "maxFrames": 120
       }
     },
     {
       "adapter": "Map",
-      "kind": "completeNode",
+      "kind": "commitNaturalBattleDefeat",
       "parameters": {
-        "nodeId": "layer_01_battle"
+        "playerNumber": 1
       }
     }
   ],
   "assertionPlans": [
     {
       "adapter": "Map",
-      "kind": "mapIsActive",
-      "expected": true,
-      "parameters": {}
-    },
-    {
-      "adapter": "Battle",
-      "kind": "battleIsActive",
+      "kind": "battleDefeatRewardsAreZero",
       "expected": true,
       "parameters": {}
     },
     {
       "adapter": "Map",
-      "kind": "nodeIsVisited",
-      "target": "layer_01_battle",
-      "expected": true,
+      "kind": "completedSummaryOutcomeEquals",
+      "expected": "Defeat",
       "parameters": {}
     },
     {
-      "adapter": "UI",
-      "kind": "elementVisible",
-      "target": "RootContainer",
-      "expected": true,
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "expected": false,
       "parameters": {}
     }
   ],
-  "timeoutMs": 25000,
+  "timeoutMs": 20000,
   "probeRequests": [
     {
       "adapter": "Map",
-      "kind": "mapIsActive",
-      "parameters": {}
-    },
-    {
-      "adapter": "Battle",
-      "kind": "battleIsActive",
+      "kind": "battleDefeatRewardsAreZero",
       "parameters": {}
     },
     {
       "adapter": "Map",
-      "kind": "nodeIsVisited",
-      "target": "layer_01_battle",
+      "kind": "completedSummaryOutcomeEquals",
       "parameters": {}
     },
     {
-      "adapter": "UI",
-      "kind": "elementVisible",
-      "target": "RootContainer",
+      "adapter": "Map",
+      "kind": "mapIsActive",
       "parameters": {}
     }
   ]

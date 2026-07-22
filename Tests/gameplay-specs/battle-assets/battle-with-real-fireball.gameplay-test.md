@@ -14,7 +14,7 @@ setup:
   - kind: loadSkillGraphAsset
     parameters:
       alias: fireballGraph
-      assetPath: Assets/Tactics/Battle/Abilities/Fireball.asset
+      assetPath: Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv1_Graph.asset
   - kind: bindBattleController
     parameters: {}
 actions:
@@ -33,4 +33,4 @@ timeoutMs: 20000
 
 # Battle - BattleWithRealFireball
 
-真实资产 Battle 回归：使用真实的 Fireball SkillGraphAsset 执行范围技能，验证战斗状态。
+真实资产 Battle 回归：使用当前权威的 Fireball Lv1 SkillGraphAsset 执行技能，验证战斗状态。

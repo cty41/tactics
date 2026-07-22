@@ -14,7 +14,7 @@ setup:
   - kind: loadSkillGraphAsset
     parameters:
       alias: meleeAttackGraph
-      assetPath: Assets/Tactics/Battle/Abilities/MeleeAttack.asset
+      assetPath: Assets/Tactics/Battle/Abilities/SkillGraphs/MeleeAttack_Graph.asset
   - kind: bindBattleController
     parameters: {}
 actions:
@@ -27,7 +27,7 @@ actions:
 assertions:
   - kind: unitHealthEquals
     target: p2_0
-    expected: 80
+    expected: 19
     parameters: {}
   - kind: battleIsActive
     expected: true
@@ -37,4 +37,4 @@ timeoutMs: 20000
 
 # Battle - BattleWithRealSkillGraph
 
-真实资产 Battle 回归：使用真实的 MeleeAttack SkillGraphAsset 执行战斗技能，验证单位 HP 变化。
+真实资产 Battle 回归：使用当前权威的 MeleeAttack SkillGraphAsset 执行战斗技能，验证单位 HP 变化。

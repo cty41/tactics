@@ -64,7 +64,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "cancelOrderedTargetSelection"
                 or "bindPureRunAbilityToUnit"
                 or "dropAmazonSpear"
-                or "clickBattleUnit";
+                or "clickBattleUnit"
+                or "spawnBattleUnit"
+                or "restartBattle"
+                or "waitForBattleEnd";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -131,6 +134,12 @@ namespace Tactics.Common.Testing.Gameplay
                         return DropAmazonSpear(context, action);
                     case "clickBattleUnit":
                         return ClickBattleUnit(context, action);
+                    case "spawnBattleUnit":
+                        return SpawnBattleUnit(context, action);
+                    case "restartBattle":
+                        return await RestartBattle(context, action);
+                    case "waitForBattleEnd":
+                        return await WaitForBattleEnd(context, action);
                     default:
                         return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unsupported Battle action '{action.Kind}'.");
                 }
@@ -522,6 +531,73 @@ namespace Tactics.Common.Testing.Gameplay
                 : GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Spear drop failed.");
         }
 
+        private static GameplayStepResult SpawnBattleUnit(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            string alias = action.Parameters["alias"]?.ToString();
+            string cellAlias = action.Parameters["cellAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(alias) || context.Units.ContainsKey(alias))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "spawnBattleUnit requires a unique alias.");
+            if (!context.Cells.TryGetValue(cellAlias ?? string.Empty, out var cell))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell '{cellAlias}' not found.");
+            if (cell.IsTaken)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell '{cellAlias}' is occupied.");
+
+            var gameObject = new GameObject($"Gameplay_{alias}");
+            var unit = gameObject.AddComponent<Unit>();
+            unit.PlayerNumber = action.Parameters["playerNumber"]?.ToObject<int>() ?? 2;
+            unit.MaxHealth = action.Parameters["maxHealth"]?.ToObject<float>() ?? 8f;
+            unit.Health = action.Parameters["health"]?.ToObject<float>() ?? unit.MaxHealth;
+            unit.MaxMana = action.Parameters["maxMana"]?.ToObject<float>() ?? 0f;
+            unit.Mana = action.Parameters["mana"]?.ToObject<float>() ?? unit.MaxMana;
+            unit.CurrentCell = cell;
+            cell.CurrentUnits.Add(unit);
+            cell.IsTaken = true;
+            unit.Initialize(controller);
+            controller.UnitManager.AddUnit(unit);
+
+            context.OwnedRuntimeGameObjects.Add(gameObject);
+            context.Units[alias] = unit;
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Spawned '{alias}' at '{cellAlias}'.");
+        }
+
+        private static async Task<GameplayStepResult> RestartBattle(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            var controller = RequireBattleController(context, action.Kind);
+            if (controller.IsBattleActive)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Cannot restart an active battle.");
+
+            context.LastBattleResult = null;
+            await controller.StartBattleAsync();
+            return controller.IsBattleActive
+                ? GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Battle restarted with the current units.")
+                : GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Battle did not become active.");
+        }
+
+        private static async Task<GameplayStepResult> WaitForBattleEnd(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            int maxFrames = action.Parameters["maxFrames"]?.ToObject<int>() ?? 120;
+            for (int frame = 0; frame < Math.Max(1, maxFrames); frame++)
+            {
+                if (context.LastBattleResult.HasValue)
+                    return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Natural battle result was observed.");
+                await Task.Yield();
+            }
+
+            string units = string.Join(", ", context.BattleController?.GetUnits()
+                .Select(unit => $"P{unit.PlayerNumber}:HP={unit.Health}:Down={unit.IsDowned}") ?? Array.Empty<string>());
+            return GameplayStepResult.Fail(
+                BattleAdapterName,
+                action.Kind,
+                $"No battle result was observed after {maxFrames} frames. Active={context.BattleController?.IsBattleActive}; Units=[{units}].");
+        }
+
         private static GameplayStepResult ClickBattleUnit(
             GameplayRuntimeContext context,
             ExecutableScenarioAction action)
@@ -619,7 +695,7 @@ namespace Tactics.Common.Testing.Gameplay
 
             bool applyRoguelikeWriteback = action.Parameters["applyRoguelikeWriteback"]?.ToObject<bool>() ?? false;
             if (applyRoguelikeWriteback)
-                ApplyRoguelikeWriteback(controller);
+                ApplyRoguelikeWriteback(controller, result);
 
             context.LastBattleResult = result;
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Battle ended.");
@@ -936,11 +1012,26 @@ namespace Tactics.Common.Testing.Gameplay
             return new List<int>();
         }
 
-        private static void ApplyRoguelikeWriteback(BattleController controller)
+        private static void ApplyRoguelikeWriteback(BattleController controller, GameResult result)
         {
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var units = controller.GetUnits();
+            bool humanWon = result.Winners?.Any(player =>
+                player != null && player.PlayerType == PlayerType.HumanPlayer) == true;
+            if (humanWon)
+            {
+                var regenerationMethod = typeof(RoguelikeBattleReturnHandler).GetMethod(
+                    "ApplyPostBattleRegeneration",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                regenerationMethod?.Invoke(null, new object[] { units });
+            }
             var syncMethod = typeof(RoguelikeBattleReturnHandler).GetMethod("SyncPartyStateFromBattleUnits", BindingFlags.NonPublic | BindingFlags.Static);
-            syncMethod?.Invoke(null, new object[] { controller.GetUnits(), state });
+            syncMethod?.Invoke(null, new object[] { units, state });
+            var rewards = BattleRewardSystem.CalculateBattleRewards(
+                result,
+                controller.CurrentRound,
+                units);
+            BattleRewardSystem.ApplyRewards(state, rewards);
             PlayerAdventureStateStore.Save(state);
         }
 
@@ -1139,7 +1230,19 @@ namespace Tactics.Common.Testing.Gameplay
                     snapshot.WasNoOp = !intentIsHoldPosition && !snapshot.DidMove && !snapshot.DidDamageTarget && !snapshot.DidHealTarget;
 
                     if (snapshot.WasNoOp)
-                        snapshot.FailureReason = "AI selected a non-HoldPosition intent but produced no observable effect (no move, no damage, no heal).";
+                    {
+                        string abilities = string.Join(", ", unit.GetBaseAbilities()
+                            .Select(ability => $"{ability.DisplayName}:{ability.GetType().Name}"));
+                        string executionFailure = decisionLog?.GetEntries()
+                            .LastOrDefault(entry => entry.Message.StartsWith("AbilityUse failed:", StringComparison.Ordinal))
+                            ?.Message;
+                        snapshot.FailureReason =
+                            $"AI selected '{snapshot.SelectedIntentType}' but produced no observable effect " +
+                            $"(no move, no damage, no heal). Available abilities=[{abilities}]. " +
+                            $"SelectedAbility={snapshot.SelectedAbilityName ?? "none"}; " +
+                            $"ActionType={snapshot.SelectedActionType ?? "none"}; " +
+                            $"Execution={executionFailure ?? "no explicit failure"}.";
+                    }
                 }
 
                 // Store snapshots

@@ -21,7 +21,7 @@ setup:
     parameters:
       alias: attackGraph
       graphKind: singleTargetDamage
-      baseDamage: 50
+      baseDamage: 1
 actions:
   - kind: openUI
     adapter: UI

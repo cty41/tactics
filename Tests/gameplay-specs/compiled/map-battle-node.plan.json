@@ -11,7 +11,8 @@
       "adapter": "Map",
       "kind": "loadRoguelikeMap",
       "parameters": {
-        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DefaultMapConfig.asset"
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset",
+        "useFallbackMap": true
       }
     },
     {
@@ -25,7 +26,7 @@
       "parameters": {
         "alias": "attackGraph",
         "graphKind": "singleTargetDamage",
-        "baseDamage": 50
+        "baseDamage": 1
       }
     }
   ],

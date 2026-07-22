@@ -17,17 +17,17 @@
         "brainAssetAlias": "attack_brain",
         "brainType": "attack"
       }
-    },
+    }
+  ],
+  "runtimeActions": [
     {
       "adapter": "Battle",
       "kind": "moveUnit",
       "parameters": {
         "unitAlias": "p2_0",
-        "cellAlias": "cell_1_1"
+        "cellAlias": "cell_3_0"
       }
-    }
-  ],
-  "runtimeActions": [
+    },
     {
       "adapter": "Battle",
       "kind": "executeAI",
@@ -62,8 +62,17 @@
   "probeRequests": [
     {
       "adapter": "Battle",
-      "kind": "unitHealthEquals",
-      "target": "p2_0",
+      "kind": "aiWasNoOpEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitPositionChangedSinceStep",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "targetHealthChangedSinceStep",
       "parameters": {}
     }
   ]

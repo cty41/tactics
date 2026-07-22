@@ -35,7 +35,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "pressKey"
                 or "configureLevelUpPanel"
                 or "refreshBattleActions"
-                or "refreshInventory";
+                or "refreshInventory"
+                or "waitForElement"
+                or "waitForMapReady";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -66,6 +68,10 @@ namespace Tactics.Common.Testing.Gameplay
                         return RefreshBattleActions(action);
                     case "refreshInventory":
                         return RefreshInventory(action);
+                    case "waitForElement":
+                        return await WaitForElement(context, action);
+                    case "waitForMapReady":
+                        return await WaitForMapReady(context, action);
                     default:
                         return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Unsupported UI action '{action.Kind}'.");
                 }
@@ -203,7 +209,16 @@ namespace Tactics.Common.Testing.Gameplay
 
             var element = FindElement(context, elementName);
             if (element == null)
-                return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Element '{elementName}' not found.");
+            {
+                string prefix = elementName.StartsWith("AbilityCard_", StringComparison.Ordinal)
+                    ? "AbilityCard_"
+                    : elementName;
+                string available = DescribeNamedElements(prefix);
+                return GameplayStepResult.Fail(
+                    UiAdapterName,
+                    action.Kind,
+                    $"Element '{elementName}' not found. Available matching elements=[{available}].");
+            }
 
             using var clickEvent = ClickEvent.GetPooled();
             clickEvent.target = element;
@@ -214,6 +229,38 @@ namespace Tactics.Common.Testing.Gameplay
 
             string elementKind = element is Button ? "button" : "element";
             return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Clicked {elementKind} '{elementName}'.");
+        }
+
+        private static async Task<GameplayStepResult> WaitForElement(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string elementName = action.Parameters["elementName"]?.ToString();
+            int maxFrames = action.Parameters["maxFrames"]?.ToObject<int>() ?? 120;
+            int minimumFrames = action.Parameters["minimumFrames"]?.ToObject<int>() ?? 0;
+            for (int frame = 0; frame < Math.Max(1, maxFrames); frame++)
+            {
+                if (frame >= minimumFrames && FindElement(context, elementName) != null)
+                    return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Element '{elementName}' became available.");
+                await Task.Yield();
+            }
+
+            return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Element '{elementName}' was not available after {maxFrames} frames.");
+        }
+
+        private static async Task<GameplayStepResult> WaitForMapReady(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            for (int frame = 0; frame < 240 && RoguelikeMapUIController.Instance == null; frame++)
+                await Task.Yield();
+
+            var controller = RoguelikeMapUIController.Instance;
+            if (controller == null || !await controller.WaitUntilReadyAsync())
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, "Roguelike map UI did not become ready.");
+
+            context.CurrentUiId = UIManager.UIId.RoguelikeMap;
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind, "Roguelike map UI is ready.");
         }
 
         private static GameplayStepResult HoverElement(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -309,7 +356,15 @@ namespace Tactics.Common.Testing.Gameplay
             if (controller == null)
                 return GameplayStepResult.Fail(UiAdapterName, action.Kind, "BattleUIController not found.");
             controller.RefreshActionUi();
-            return GameplayStepResult.Pass(UiAdapterName, action.Kind, "Refreshed battle action UI.");
+            var selectedUnit = typeof(BattleUIController)
+                .GetField("_currentSelectedUnit", BindingFlags.Instance | BindingFlags.NonPublic)?
+                .GetValue(controller) as Tactics.Common.Units.IUnit;
+            string abilities = string.Join(", ", selectedUnit?.GetBaseAbilities()
+                ?.Select(ability => ability?.DisplayName ?? "<null>") ?? Array.Empty<string>());
+            return GameplayStepResult.Pass(
+                UiAdapterName,
+                action.Kind,
+                $"Refreshed battle action UI for unit {selectedUnit?.UnitID.ToString() ?? "<none>"}; abilities=[{abilities}].");
         }
 
         private static GameplayStepResult RefreshInventory(ExecutableScenarioAction action)
@@ -602,6 +657,18 @@ namespace Tactics.Common.Testing.Gameplay
             }
 
             return null;
+        }
+
+        private static string DescribeNamedElements(string prefix)
+        {
+            return string.Join(", ", UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None)
+                .Where(document => document?.rootVisualElement != null)
+                .SelectMany(document => document.rootVisualElement.Query<VisualElement>().ToList())
+                .Select(element => element.name)
+                .Where(name => !string.IsNullOrEmpty(name) &&
+                    name.StartsWith(prefix ?? string.Empty, StringComparison.Ordinal))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(name => name, StringComparer.Ordinal));
         }
 
         private static VisualElement ResolveRoot(GameplayRuntimeContext context)

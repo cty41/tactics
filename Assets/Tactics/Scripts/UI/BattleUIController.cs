@@ -220,6 +220,11 @@ namespace Tactics.UI
             // Subscribe to unit selection events for HP/MP display
             SubscribeToUnitEvents();
 
+            // The visual state must not depend on an optional InputActionAsset. Some scenes
+            // drive the battle through UI Toolkit callbacks only, but still need the current
+            // unit, skill cards, and status panel initialized.
+            InitializeCurrentTurnUI();
+
             // Subscribe to EndTurn input action
             InputActionAsset inputActions = null;
 
@@ -265,8 +270,6 @@ namespace Tactics.UI
                 TLog.Warning("[BattleUIController] Player action map not found.");
             }
 
-            // Initialize UI for the current turn's unit
-            InitializeCurrentTurnUI();
         }
 
         private void UnwireButtons()

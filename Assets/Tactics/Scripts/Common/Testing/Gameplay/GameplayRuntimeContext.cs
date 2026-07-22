@@ -36,6 +36,7 @@ namespace Tactics.Common.Testing.Gameplay
         public Dictionary<string, ICell> Cells { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, AiBrainAsset> AiBrainAssets { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, BuffConfig> RuntimeBuffConfigs { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public List<GameObject> OwnedRuntimeGameObjects { get; } = new();
 
         // Shared battle primitive observations used by Battle/UI adapters.
         public BattleInitiativeService InitiativeService { get; set; }
@@ -98,6 +99,12 @@ namespace Tactics.Common.Testing.Gameplay
                 BattleEndedHandler = null;
             }
 
+            // Clear battle-scoped objects while their test cells are still alive. In
+            // particular, dropped spears are separate GameObjects and otherwise keep a
+            // destroyed CurrentCell visible to the persistent battle UI on the next frame.
+            if (SkillWorld != null)
+                AmazonBattleState.For(SkillWorld.GridController)?.Clear();
+
             // 1. 清除每个 Unit 上的 Buff（Buff 持有对 Unit 和 BuffConfig 的引用）
             foreach (var unit in Units.Values)
             {
@@ -111,6 +118,13 @@ namespace Tactics.Common.Testing.Gameplay
             Units.Clear();
             Cells.Clear();
             SkillAbilities.Clear();
+
+            foreach (var gameObject in OwnedRuntimeGameObjects)
+            {
+                if (gameObject != null)
+                    UnityEngine.Object.Destroy(gameObject);
+            }
+            OwnedRuntimeGameObjects.Clear();
 
             // 3. 销毁 ScriptableObject 实例
             foreach (var config in OwnedSkillAbilityConfigs)

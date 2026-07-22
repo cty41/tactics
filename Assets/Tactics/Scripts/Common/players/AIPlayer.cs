@@ -63,7 +63,7 @@ namespace Tactics.Common.Players
             CancelOngoingAction();
         }
 
-        private void CancelOngoingAction()
+        internal void CancelOngoingAction()
         {
             _cancellationTokenSource?.Cancel();
         }

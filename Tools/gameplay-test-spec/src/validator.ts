@@ -26,6 +26,7 @@ const supportedSetupKinds = new Set([
 ]);
 
 const supportedActionKinds = new Set([
+  "bindBattleController",
   "executeSkillGraph",
   "executeAbilityOnTarget",
   "executeAbilityOnCell",
@@ -59,6 +60,14 @@ const supportedActionKinds = new Set([
   "commitNodeTransaction",
   "reloadPureRunSession",
   "exercisePureRunSummaryAndDefeat",
+  "captureActivePureRun",
+  "beginBattleNode",
+  "commitNaturalBattleVictory",
+  "grantPureRunLevel",
+  "commitNodeInteraction",
+  "beginNodeTransaction",
+  "commitNaturalBattleDefeat",
+  "commitEventPartyDefeat",
   "useCarriedConsumable",
   "openUI",
   "closeUI",
@@ -71,6 +80,8 @@ const supportedActionKinds = new Set([
   "configureLevelUpPanel",
   "refreshBattleActions",
   "refreshInventory",
+  "waitForElement",
+  "waitForMapReady",
   "spawnCorpse",
   "killUnit",
   "setBattleTestMode",
@@ -89,7 +100,10 @@ const supportedActionKinds = new Set([
   "cancelOrderedTargetSelection",
   "bindPureRunAbilityToUnit",
   "dropAmazonSpear",
-  "clickBattleUnit"
+  "clickBattleUnit",
+  "spawnBattleUnit",
+  "restartBattle",
+  "waitForBattleEnd"
 ]);
 
 const supportedGraphKinds = new Set([

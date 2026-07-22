@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-23T04:13:53+08:00"
+timestamp: "2026-07-23T06:43:15+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -27,7 +27,7 @@ repo_paths:
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:e7464de689071a61ba54fe83740f3316e7c330a34a5dfc2ac1942f74ba500479
+source_fingerprint: sha256:7396326ff9ead83a57c76696cb9b4e208bb8cbc35aebd14303b4ae3fb833cde3
 ---
 
 # Current State
@@ -57,6 +57,8 @@ LevelUp 面板按实际 `LearnedSkill.Level` 显示当前技能和混合候选�
 进行中的 `RunSummary` 与 Pure Run 状态共同持久化，所有奖励、节点和击杀流水都使用稳定 transaction key 去重。`totalGold` 只累计实际提交的正向金币，不因购买扣款回退；获得过的装备和物品记录稳定 ID，即使后来装备、花费或使用仍保留。节点仅在提交完成时计数，Mystery 同时增加事件数，正式敌人死亡只在玩家胜利结算时写入。
 
 战斗失败、Boss 胜利和 Mystery 导致的全灭统一先从进行中统计生成结局快照，再清除活动 session。RunEndSummary 读取该快照并解析装备/消耗品显示名，关闭总结时才消费快照；因此 UI 不依赖已经清理的角色背包或地图运行时状态。
+
+自动化真实路线从 Home 的 New Run 入口开始，经五场自然战斗胜利、一次显式技能升级、商店购买和存档重载抵达 Boss，过程中不使用直接节点完成或伪造战果。自然战斗团灭与 Mystery 事件团灭是独立失败路线；最终仅把 Unity Editor 内的整体视觉、手感和连续操作体验保留给人工验收。
 
 # Relationships
 

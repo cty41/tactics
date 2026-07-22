@@ -16,7 +16,7 @@
       "kind": "loadSkillGraphAsset",
       "parameters": {
         "alias": "fireballGraph",
-        "assetPath": "Assets/Tactics/Battle/Abilities/Fireball.asset"
+        "assetPath": "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv1_Graph.asset"
       }
     },
     {

@@ -95,6 +95,8 @@ namespace Tactics.Common.AI.MonsterAI
 
             // 6. 调用执行器落地
             var execution = await IntentExecutor.ExecuteWithResult(selected, context);
+            if (IsDestroyed(unit))
+                return new AiTurnResult(null, execution, patternStep);
             if (execution.Succeeded && !usedFallback && expectedAbility != null && selected?.Ability?.Name == expectedAbility)
                 AiPatternRuntime.Advance(unit, brainAsset.PatternSteps.Count);
 
@@ -120,6 +122,11 @@ namespace Tactics.Common.AI.MonsterAI
 
             TLog.Info($"[AiBrainRunner] Completed AI execution for unit: {unit.UnitID}");
             return new AiTurnResult(plan, execution, patternStep);
+        }
+
+        private static bool IsDestroyed(IUnit unit)
+        {
+            return unit is UnityEngine.Object unityObject && unityObject == null;
         }
 
         /// <summary>

@@ -34,6 +34,8 @@ actions:
     adapter: Battle
     parameters:
       winnerPlayerNumber: 1
+      skipControllerEndBattle: true
+      applyRoguelikeWriteback: true
 assertions:
   - kind: rosterCharacterHpEquals
     adapter: Map

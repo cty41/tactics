@@ -110,6 +110,8 @@ namespace Tactics.Tests.PlayMode
         [Test]
         public async Task ExecuteBasicAttack_UsesAiExecutableAbility_WhenAvailable()
         {
+            var targetObject = new GameObject("IntentExecutorTarget");
+            var target = targetObject.AddComponent<Unit>();
             var aiAbility = new FakeAiExecutableAbility();
             var abilityInfo = new AbilityInfo(
                 "Melee Attack",
@@ -122,15 +124,22 @@ namespace Tactics.Tests.PlayMode
                 0f,
                 0f
             );
-            var context = CreateContextWithAbilities(new[] { abilityInfo });
+            var context = CreateContextWithAbilities(new[] { abilityInfo }, new[] { target });
             var selected = CreateSelectedCandidate(IntentType.BasicAttack, context);
 
-            await InvokeExecuteBasicAttack(selected, context);
+            try
+            {
+                await InvokeExecuteBasicAttack(selected, context);
 
-            Assert.IsTrue(aiAbility.EffectsAsyncCalled, "IAiExecutableAbility.ExecuteEffectsAsync should be called.");
-            var executionEntry = context.DecisionLog.GetEntries().LastOrDefault(e => e.Type == AiDecisionLog.LogType.ExecutionResult);
-            Assert.IsNotNull(executionEntry, "ExecutionResult should be recorded.");
-            Assert.IsTrue(executionEntry.Message.Contains("Melee Attack"), executionEntry.Message);
+                Assert.IsTrue(aiAbility.EffectsAsyncCalled, "IAiExecutableAbility.ExecuteEffectsAsync should be called.");
+                var executionEntry = context.DecisionLog.GetEntries().LastOrDefault(e => e.Type == AiDecisionLog.LogType.ExecutionResult);
+                Assert.IsNotNull(executionEntry, "ExecutionResult should be recorded.");
+                Assert.IsTrue(executionEntry.Message.Contains("Melee Attack"), executionEntry.Message);
+            }
+            finally
+            {
+                Object.DestroyImmediate(targetObject);
+            }
         }
 
         #region Helpers
@@ -162,7 +171,7 @@ namespace Tactics.Tests.PlayMode
             return CreateContextWithAbilities(new AbilityInfo[0]);
         }
 
-        private static AiContext CreateContextWithAbilities(AbilityInfo[] abilities)
+        private static AiContext CreateContextWithAbilities(AbilityInfo[] abilities, IEnumerable<IUnit> candidateTargets = null)
         {
             // AiContext constructor: (self, gridController, enemies, allies, reachableCells, candidateTargets, availableAbilities, brainAsset, decisionLog)
             var context = new AiContext(
@@ -171,7 +180,7 @@ namespace Tactics.Tests.PlayMode
                 null,   // enemies
                 null,   // allies
                 null,   // reachableCells
-                null,   // candidateTargets
+                candidateTargets?.ToList(),
                 abilities.ToList(),
                 null,   // brainAsset
                 new AiDecisionLog(false)

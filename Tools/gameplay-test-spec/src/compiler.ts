@@ -28,6 +28,7 @@ const setupKindToAdapter: Record<string, Adapter> = {
 };
 
 const actionKindToAdapter: Record<string, Adapter> = {
+  bindBattleController: "Battle",
   executeSkillGraph: "Skill",
   executeAbilityOnTarget: "Skill",
   executeAbilityOnCell: "Skill",
@@ -60,6 +61,14 @@ const actionKindToAdapter: Record<string, Adapter> = {
   commitNodeTransaction: "Map",
   reloadPureRunSession: "Map",
   exercisePureRunSummaryAndDefeat: "Map",
+  captureActivePureRun: "Map",
+  beginBattleNode: "Map",
+  commitNaturalBattleVictory: "Map",
+  grantPureRunLevel: "Map",
+  commitNodeInteraction: "Map",
+  beginNodeTransaction: "Map",
+  commitNaturalBattleDefeat: "Map",
+  commitEventPartyDefeat: "Map",
   useCarriedConsumable: "Battle",
   openUI: "UI",
   closeUI: "UI",
@@ -72,6 +81,8 @@ const actionKindToAdapter: Record<string, Adapter> = {
   configureLevelUpPanel: "UI",
   refreshBattleActions: "UI",
   refreshInventory: "UI",
+  waitForElement: "UI",
+  waitForMapReady: "UI",
   spawnCorpse: "Battle",
   killUnit: "Battle",
   spawnInteractableCorpse: "Battle",
@@ -89,7 +100,10 @@ const actionKindToAdapter: Record<string, Adapter> = {
   cancelOrderedTargetSelection: "Battle",
   bindPureRunAbilityToUnit: "Battle",
   dropAmazonSpear: "Battle",
-  clickBattleUnit: "Battle"
+  clickBattleUnit: "Battle",
+  spawnBattleUnit: "Battle",
+  restartBattle: "Battle",
+  waitForBattleEnd: "Battle"
 };
 
 const assertionKindToAdapter: Record<string, Adapter> = {

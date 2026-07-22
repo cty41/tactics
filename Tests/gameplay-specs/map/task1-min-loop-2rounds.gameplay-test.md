@@ -13,6 +13,7 @@ setup:
   - kind: loadRoguelikeMap
     parameters:
       mapConfigPath: Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
+      useFallbackMap: true
   - kind: bindBattleController
     parameters: {}
   - kind: setRosterCharacterState
@@ -39,6 +40,8 @@ actions:
     adapter: Battle
     parameters:
       winnerPlayerNumber: 1
+      skipControllerEndBattle: true
+      applyRoguelikeWriteback: true
   - kind: completeNode
     adapter: Map
     parameters:

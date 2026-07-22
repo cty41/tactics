@@ -16,6 +16,7 @@ using Tactics.Common.Battle;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Players;
+using Tactics.Common.Units;
 using Tactics.Roster;
 using UnityEngine;
 
@@ -51,7 +52,15 @@ namespace Tactics.Common.Testing.Gameplay
                 or "buyShopGoodTransaction"
                 or "commitNodeTransaction"
                 or "reloadPureRunSession"
-                or "exercisePureRunSummaryAndDefeat";
+                or "exercisePureRunSummaryAndDefeat"
+                or "beginBattleNode"
+                or "commitNaturalBattleVictory"
+                or "grantPureRunLevel"
+                or "commitNodeInteraction"
+                or "captureActivePureRun"
+                or "beginNodeTransaction"
+                or "commitNaturalBattleDefeat"
+                or "commitEventPartyDefeat";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -106,6 +115,22 @@ namespace Tactics.Common.Testing.Gameplay
                         return ReloadPureRunSession(context, action);
                     case "exercisePureRunSummaryAndDefeat":
                         return ExercisePureRunSummaryAndDefeat(context, action);
+                    case "beginBattleNode":
+                        return BeginBattleNode(context, action);
+                    case "commitNaturalBattleVictory":
+                        return CommitNaturalBattleVictory(context, action);
+                    case "grantPureRunLevel":
+                        return GrantPureRunLevel(context, action);
+                    case "commitNodeInteraction":
+                        return CommitNodeInteraction(context, action);
+                    case "captureActivePureRun":
+                        return CaptureActivePureRun(context, action);
+                    case "beginNodeTransaction":
+                        return BeginNodeTransaction(context, action);
+                    case "commitNaturalBattleDefeat":
+                        return CommitNaturalBattleDefeat(context, action);
+                    case "commitEventPartyDefeat":
+                        return CommitEventPartyDefeat(context, action);
                     default:
                         return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Unsupported Map action '{action.Kind}'.");
                 }
@@ -275,6 +300,17 @@ namespace Tactics.Common.Testing.Gameplay
             bool strictAsset = action.Parameters["strictAsset"]?.ToObject<bool>() ?? context.StrictAsset;
             context.StrictAsset = strictAsset;
 
+            if (action.Parameters["useFallbackMap"]?.ToObject<bool>() == true)
+            {
+                var fallbackMap = CreateFallbackTestMap();
+                RoguelikeMapRuntimeState.AttachMap(fallbackMap);
+                context.RoguelikeMap = fallbackMap;
+                return GameplayStepResult.Pass(
+                    MapAdapterName,
+                    action.Kind,
+                    $"Loaded fallback in-memory map with {fallbackMap.nodes?.Count ?? 0} nodes.");
+            }
+
             // Load map config from GameAssetManager
             var mgr = GameAssetManager.Instance;
             var mapConfig = mgr?.Load<RoguelikeMapConfig>(mapConfigPath);
@@ -333,9 +369,13 @@ namespace Tactics.Common.Testing.Gameplay
             var map = RoguelikeMapGenerator.GetPureRunMap(mapConfig, seed);
             var state = PlayerAdventureStateStore.CreatePureRunState(seed);
             PureRunSessionStore.StartNew(state, map);
+            var nodeStateManager = new NodeStateManager(map, map.currentNodeId);
+            nodeStateManager.InitializeStates();
+            RoguelikeMapRuntimeState.AttachMap(map, nodeStateManager.CurrentNodeId);
+            PureRunSessionStore.SaveMap(map);
             context.RoguelikeMap = map;
             context.CurrentAdventureState = state;
-            context.CurrentNodeId = map.currentNodeId;
+            context.CurrentNodeId = nodeStateManager.CurrentNodeId;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Loaded Pure Run map with seed {seed}.");
         }
 
@@ -486,6 +526,185 @@ namespace Tactics.Common.Testing.Gameplay
             context.EventCompleted = true;
 
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Completed node '{nodeId}'.");
+        }
+
+        private static GameplayStepResult BeginBattleNode(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string nodeId = action.Parameters["nodeId"]?.ToString();
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var node = map?.GetNode(nodeId);
+            if (node == null || !global::Tactics.RoguelikeMap.RoguelikeMap.IsBattleNode(node))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Battle node '{nodeId}' was not found.");
+            if (!node.IsReachable)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Battle node '{nodeId}' is not reachable.");
+
+            RoguelikeMapRuntimeState.BeginBattleFromNode(map, nodeId, "Home");
+            context.CurrentNodeId = nodeId;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Began battle node '{nodeId}'.");
+        }
+
+        private static GameplayStepResult CommitNaturalBattleVictory(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            int playerNumber = action.Parameters["playerNumber"]?.ToObject<int>() ?? 1;
+            if (!context.LastBattleResult.HasValue ||
+                context.LastBattleResult.Value.Winners?.Any(player => player != null && player.PlayerNumber == playerNumber) != true)
+            {
+                return GameplayStepResult.Fail(
+                    MapAdapterName,
+                    action.Kind,
+                    $"No natural battle victory was recorded for player {playerNumber}.");
+            }
+
+            string nodeId = RoguelikeMapRuntimeState.PendingBattleNodeId ?? context.CurrentNodeId;
+            var activeMap = RoguelikeMapRuntimeState.CurrentMap ?? context.RoguelikeMap;
+            var node = activeMap?.GetNode(nodeId);
+            bool committed = RoguelikeMapRuntimeState.TryCommitPendingBattleVictory();
+            bool alreadyCommittedBySettlement = !committed &&
+                node?.VisitState == NodeVisitState.Visited &&
+                activeMap?.completedBattleNodeIds?.Contains(nodeId) == true;
+            if (!committed && !alreadyCommittedBySettlement)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "Natural battle settlement did not commit the pending node.");
+
+            context.CurrentNodeId = nodeId;
+            var nodeStateManager = new NodeStateManager(activeMap, nodeId);
+            nodeStateManager.InitializeStates();
+            RoguelikeMapRuntimeState.AttachMap(activeMap, nodeStateManager.CurrentNodeId);
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (PureRunSummaryRecorder.RecordNodeCompletion(state, nodeId, node.nodeType))
+                PlayerAdventureStateStore.Save(state);
+            if (context.RoguelikeMap != null)
+                PureRunSessionStore.SaveMap(context.RoguelikeMap);
+            int visitedCount = state?.CurrentRunSummary?.nodesVisited ?? -1;
+            string summaryKeys = string.Join(",", state?.AppliedRunSummaryKeys ?? new List<string>());
+            if (node?.nodeType == RoguelikeNodeType.Boss)
+                PureRunSessionStore.Finish(PureRunEndReason.BossVictory);
+            return GameplayStepResult.Pass(
+                MapAdapterName,
+                action.Kind,
+                $"Committed natural victory for '{nodeId}' (summary nodes={visitedCount}, keys=[{summaryKeys}]).");
+        }
+
+        private static GameplayStepResult GrantPureRunLevel(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            if (!context.LastBattleResult.HasValue || context.LastBattleResult.Value.Winners?.Any() != true)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "grantPureRunLevel requires a completed victory.");
+
+            string characterId = action.Parameters["characterId"]?.ToString();
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(candidate => candidate?.Id == characterId);
+            if (character == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Character '{characterId}' not found.");
+            if (!PureRunProgression.GrantLevel(character))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Character '{characterId}' could not gain a Pure Run level.");
+
+            PlayerAdventureStateStore.Save(state);
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Granted a battle-earned level to '{characterId}'.");
+        }
+
+        private static GameplayStepResult CommitNodeInteraction(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string nodeId = action.Parameters["nodeId"]?.ToString();
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var node = map?.GetNode(nodeId);
+            if (node?.Transaction?.Phase != RoguelikeNodeTransactionPhase.Committed)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Node '{nodeId}' has no committed interaction.");
+            if (!RoguelikeMapRuntimeState.CommitNodeProgress(nodeId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Node interaction '{nodeId}' could not advance the map.");
+
+            context.CurrentNodeId = nodeId;
+            var nodeStateManager = new NodeStateManager(map, nodeId);
+            nodeStateManager.InitializeStates();
+            RoguelikeMapRuntimeState.AttachMap(map, nodeStateManager.CurrentNodeId);
+            PureRunSessionStore.SaveMap(map);
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            int visitedCount = state?.CurrentRunSummary?.nodesVisited ?? -1;
+            string summaryKeys = string.Join(",", state?.AppliedRunSummaryKeys ?? new List<string>());
+            return GameplayStepResult.Pass(
+                MapAdapterName,
+                action.Kind,
+                $"Advanced after committed interaction '{nodeId}' (summary nodes={visitedCount}, keys=[{summaryKeys}]).");
+        }
+
+        private static GameplayStepResult CaptureActivePureRun(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            var liveMap = RoguelikeMapRuntimeState.CurrentMap;
+            if (!PureRunSessionStore.TryLoad(out var state, out var persistedMap) || state?.IsPureRun != true)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "No active Pure Run could be captured after the Home flow.");
+
+            var map = liveMap ?? persistedMap;
+            if (map == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "The active Pure Run has no map.");
+
+            RoguelikeMapRuntimeState.AttachMap(map, map.currentNodeId);
+            context.CurrentAdventureState = state;
+            context.RoguelikeMap = map;
+            context.CurrentNodeId = map.currentNodeId;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Captured active Pure Run at '{map.currentNodeId}'.");
+        }
+
+        private static GameplayStepResult BeginNodeTransaction(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string nodeId = action.Parameters["nodeId"]?.ToString();
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var node = map?.GetNode(nodeId);
+            if (node == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Node '{nodeId}' was not found.");
+
+            RoguelikeNodeTransactionService.Begin(node, map);
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Entered node transaction '{nodeId}'.");
+        }
+
+        private static GameplayStepResult CommitNaturalBattleDefeat(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            int playerNumber = action.Parameters["playerNumber"]?.ToObject<int>() ?? 1;
+            if (!context.LastBattleResult.HasValue ||
+                context.LastBattleResult.Value.Winners?.Any(player => player != null && player.PlayerNumber == playerNumber) == true)
+            {
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"No natural defeat was recorded for player {playerNumber}.");
+            }
+
+            var rewards = BattleRewardSystem.CalculateBattleRewards(
+                context.LastBattleResult.Value,
+                context.BattleController?.CurrentRound ?? 1,
+                context.BattleController?.GetUnits() ?? Array.Empty<IUnit>());
+            if (rewards.TotalGold != 0 || (rewards.ExperiencePerCharacter?.Count ?? 0) != 0 ||
+                (rewards.ItemIds?.Count ?? 0) != 0)
+            {
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "A defeated party received battle rewards.");
+            }
+
+            RoguelikeMapRuntimeState.ClearPendingBattle();
+            if (!PureRunSessionStore.TryLoadCompletedSummary(out _))
+                PureRunSessionStore.Finish(PureRunEndReason.Defeat);
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, "Committed natural battle defeat with zero rewards.");
+        }
+
+        private static GameplayStepResult CommitEventPartyDefeat(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (state?.Roster == null || state.Roster.Any(character => character != null && !character.IsDead))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "The event did not defeat the entire party.");
+
+            if (!PureRunSessionStore.TryLoadCompletedSummary(out _))
+                PureRunSessionStore.Finish(PureRunEndReason.Defeat);
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, "Committed event party defeat.");
         }
 
         private static GameplayStepResult SetAdventureGold(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -917,7 +1136,11 @@ namespace Tactics.Common.Testing.Gameplay
                 return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Node '{nodeId}' was not found.");
 
             RoguelikeNodeTransactionService.Commit(node, map, consumeNode);
-            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Committed node transaction '{nodeId}'.");
+            int visitedCount = PlayerAdventureStateStore.LoadRepairAndSave()?.CurrentRunSummary?.nodesVisited ?? -1;
+            return GameplayStepResult.Pass(
+                MapAdapterName,
+                action.Kind,
+                $"Committed node transaction '{nodeId}' (summary nodes={visitedCount}).");
         }
 
         private static GameplayStepResult ReloadPureRunSession(
@@ -1206,7 +1429,13 @@ namespace Tactics.Common.Testing.Gameplay
             var state = PlayerAdventureStateStore.LoadRepairAndSave();
             var character = state?.Roster?.FirstOrDefault(c => c.Id == characterId);
             if (character == null)
-                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Character '{characterId}' not found.");
+            {
+                string rosterIds = string.Join(",", state?.Roster?.Select(candidate => candidate?.Id) ?? Array.Empty<string>());
+                return GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Character '{characterId}' not found. IsPureRun={state?.IsPureRun}; Roster=[{rosterIds}].");
+            }
 
             int actual = character.CurrentHp;
             return actual == expected

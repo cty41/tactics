@@ -227,6 +227,12 @@ namespace Tactics.Common.Battle
 
         protected override void OnDestroy()
         {
+            if (_runtimePlayers != null)
+            {
+                foreach (var aiPlayer in _runtimePlayers.OfType<AIPlayer>())
+                    aiPlayer.CancelOngoingAction();
+            }
+
             _controller.GameInitialized -= OnGameInitialized;
             _controller.GameEnded -= OnGameEnded;
             _controller.GameStarted -= OnGameStarted;

@@ -38,11 +38,13 @@ actions:
     adapter: Battle
     parameters:
       winnerPlayerNumber: 1
+      skipControllerEndBattle: true
+      applyRoguelikeWriteback: true
 assertions:
   - kind: rosterCharacterExperienceEquals
     adapter: Map
     target: warrior
-    expected: 20
+    expected: 30
     parameters: {}
 timeoutMs: 20000
 ---

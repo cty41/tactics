@@ -12,14 +12,15 @@ requiredAdapters:
 setup:
   - kind: loadRoguelikeMap
     parameters:
-      mapConfigPath: Assets/Tactics/RoguelikeMap/MapConfigs/DefaultMapConfig.asset
+      mapConfigPath: Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
+      useFallbackMap: true
   - kind: bindBattleController
     parameters: {}
   - kind: createSkillGraph
     parameters:
       alias: attackGraph
       graphKind: singleTargetDamage
-      baseDamage: 50
+      baseDamage: 1
 actions:
   - kind: enterNode
     adapter: Map

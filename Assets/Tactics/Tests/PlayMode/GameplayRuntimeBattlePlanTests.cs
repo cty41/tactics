@@ -5,11 +5,14 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
+using Tactics.Common.Units.Abilities;
 using Tactics.Common.Utilities;
+using Tactics.Roguelike;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -26,20 +29,25 @@ namespace Tactics.Tests.PlayMode
             // 忽略前一个测试残留的 AIPlayer 异步错误（async void Play() 跨帧执行）
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
 
+            var assetTask = TestGameAssetHelper.EnsureInitialized();
+            yield return new WaitUntil(() => assetTask.IsCompleted);
+            Assume.That(assetTask.Result, Is.Not.Null, "GameAssetManager should be initialized.");
+
             var controllerType = ResolveBattleControllerType();
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
 
             _battleRoot = new GameObject("TestBattleController");
+            _battleRoot.SetActive(false);
             var bc = (MonoBehaviour)_battleRoot.AddComponent(controllerType);
 
             // 禁用 Start() 协程（依赖 GameAssetManager）
             var startFlag = controllerType.GetField("_startImmediatelly", BindingFlags.Instance | BindingFlags.NonPublic);
             startFlag?.SetValue(bc, false);
 
-            // 创建 RegularCellManager + 2x2 网格
+            // 创建 RegularCellManager + 4x2 网格，覆盖近战、远程与接敌路径。
             _cellManagerRoot = new GameObject("TestCellManager");
             var cellMgr = _cellManagerRoot.AddComponent<RegularCellManager>();
-            for (int x = 0; x < 2; x++)
+            for (int x = 0; x < 4; x++)
             {
                 for (int y = 0; y < 2; y++)
                 {
@@ -56,9 +64,11 @@ namespace Tactics.Tests.PlayMode
             var cellMgrField = controllerType.GetField("_cellManager", BindingFlags.Instance | BindingFlags.NonPublic);
             cellMgrField?.SetValue(bc, cellMgr);
 
-            // 手动触发 Awake()
-            var awake = controllerType.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            awake?.Invoke(bc, null);
+            // Activate only after serialized dependencies are assigned so Awake runs once.
+            _battleRoot.SetActive(true);
+            RoguelikeBattleReturnHandler.Instance.UnregisterController((BattleController)bc);
+            bc.enabled = false;
+            ((BattleController)bc).DisableAiAutoPlay = true;
 
             // 清除 BeforeUnitManagerInitialize 回调（避免 SpawnEncounterUnits 依赖 GameAssetManager）
             var gridControllerField = controllerType.GetField("_controller", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -93,6 +103,8 @@ namespace Tactics.Tests.PlayMode
             var unit1 = unit1Go.AddComponent<Unit>();
             unit1.PlayerNumber = 1;
             unit1.CurrentCell = FindCell(_cellManagerRoot, 0, 0);
+            unit1.CurrentCell.CurrentUnits.Add(unit1);
+            unit1.CurrentCell.IsTaken = true;
 
             // 创建 P2 单位（AI）
             var unit2Go = new GameObject("TestUnit_P2");
@@ -100,6 +112,14 @@ namespace Tactics.Tests.PlayMode
             var unit2 = unit2Go.AddComponent<Unit>();
             unit2.PlayerNumber = 2;
             unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
+            unit2.CurrentCell.CurrentUnits.Add(unit2);
+            unit2.CurrentCell.IsTaken = true;
+
+            var meleeAttack = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
+                "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MeleeAttack_Graph_Ability.asset");
+            Assume.That(meleeAttack, Is.Not.Null, "Melee attack gameplay fixture is required.");
+            unit1.ApplyAbilityConfigs(new AbilityConfig[] { meleeAttack });
+            unit2.ApplyAbilityConfigs(new AbilityConfig[] { meleeAttack });
 
             // 设置 resolver 与 Test1.unity 一致（UnitSpeedTurnResolver），
             // 然后初始化战斗。这样 bindBattleController 检测到 resolver 匹配就不会 re-init。
@@ -169,6 +189,7 @@ namespace Tactics.Tests.PlayMode
                 _battleRoot = null;
             }
 
+            TestGameAssetHelper.Cleanup();
             yield return null;
         }
 

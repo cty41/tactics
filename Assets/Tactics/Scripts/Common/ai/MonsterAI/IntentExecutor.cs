@@ -64,10 +64,21 @@ namespace Tactics.Common.AI.MonsterAI
             }
             catch (System.Exception ex)
             {
+                if (IsDestroyed(context?.Self) || IsDestroyed(selected.Target))
+                {
+                    return AiActionExecutionResult.Failure(
+                        $"Intent '{selected.IntentType}' was cancelled because a combatant was destroyed.");
+                }
+
                 TLog.Error($"[IntentExecutor] Error executing intent {selected.IntentType}: {ex.Message}");
                 await ExecuteHoldPosition(selected, context);
                 return AiActionExecutionResult.Failure(ex.Message);
             }
+        }
+
+        private static bool IsDestroyed(IUnit unit)
+        {
+            return unit is UnityEngine.Object unityObject && unityObject == null;
         }
 
         /// <summary>
@@ -163,6 +174,8 @@ namespace Tactics.Common.AI.MonsterAI
             {
                 var result = await plannedExecutor.ExecuteAsync(plan);
                 context.DecisionLog.ExecutionResult(selected.Ability.Name, result.Succeeded ? "UseAbility" : "AbilityFailed", selected.Target?.UnitID);
+                if (!result.Succeeded)
+                    context.DecisionLog.Info($"AbilityUse failed: {result.FailureReason}");
                 return result.Succeeded
                     ? AiActionExecutionResult.Success(selected.Ability.Name, moved)
                     : AiActionExecutionResult.Failure(result.FailureReason, moved);

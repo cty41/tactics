@@ -28,6 +28,9 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             PureRunSessionStore.Clear();
+            RoguelikeMapRuntimeState.ClearAll();
+            BattleSettlementFlow.Instance.Unsubscribe();
+            BattleSettlementCoordinator.Instance.Reset();
 
             DestroyCachedUiInstances();
             yield return null;
@@ -42,6 +45,7 @@ namespace Tactics.Tests.PlayMode
             Assume.That(controllerType, Is.Not.Null, "BattleController type should exist.");
 
             _battleRoot = new GameObject("TestBattleControllerUi");
+            _battleRoot.SetActive(false);
             var bc = (MonoBehaviour)_battleRoot.AddComponent(controllerType);
 
             var startFlag = controllerType.GetField("_startImmediatelly", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -66,8 +70,10 @@ namespace Tactics.Tests.PlayMode
             var cellMgrField = controllerType.GetField("_cellManager", BindingFlags.Instance | BindingFlags.NonPublic);
             cellMgrField?.SetValue(bc, cellMgr);
 
-            var awake = controllerType.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            awake?.Invoke(bc, null);
+            _battleRoot.SetActive(true);
+            RoguelikeBattleReturnHandler.Instance.UnregisterController((BattleController)bc);
+            bc.enabled = false;
+            ((BattleController)bc).DisableAiAutoPlay = true;
 
             var gridControllerField = controllerType.GetField("_controller", BindingFlags.Instance | BindingFlags.NonPublic);
             var gridController = gridControllerField?.GetValue(bc);
@@ -99,6 +105,7 @@ namespace Tactics.Tests.PlayMode
             unit1Go.transform.SetParent(unitContainer);
             var unit1 = unit1Go.AddComponent<Unit>();
             unit1.PlayerNumber = 1;
+            unit1.Speed = 20f;
             unit1.CurrentCell = FindCell(_cellManagerRoot, 0, 0);
             unit1.CurrentCell.CurrentUnits.Add(unit1);
             unit1.CurrentCell.IsTaken = true;
@@ -107,6 +114,7 @@ namespace Tactics.Tests.PlayMode
             unit2Go.transform.SetParent(unitContainer);
             var unit2 = unit2Go.AddComponent<Unit>();
             unit2.PlayerNumber = 2;
+            unit2.Speed = 10f;
             unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
             unit2.CurrentCell.CurrentUnits.Add(unit2);
             unit2.CurrentCell.IsTaken = true;
@@ -139,6 +147,9 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
 
             PureRunSessionStore.Clear();
+            RoguelikeMapRuntimeState.ClearAll();
+            BattleSettlementFlow.Instance.Unsubscribe();
+            BattleSettlementCoordinator.Instance.Reset();
             DestroyCachedUiInstances();
             yield return null;
             TestGameAssetHelper.Cleanup();
@@ -266,9 +277,19 @@ namespace Tactics.Tests.PlayMode
             AssertPlanPassed(task.Result);
         }
 
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunRealPlayerRoute()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("compiled", "pure-run-real-player-route.plan.json"));
+            yield return WaitForTask(task);
+            AssertPlanPassed(task.Result);
+        }
+
         private static void AssertPlanPassed(GameplayTestResult result)
         {
-            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            var stepTrace = string.Join("; ", result.ExecutedSteps.Select(step => $"{step.Kind}: {step.Message}"));
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, " +
+                          $"Diagnostics=[{string.Join("; ", result.Diagnostics)}], StepTrace=[{stepTrace}]";
             Assert.IsTrue(result.Passed, details);
         }
 

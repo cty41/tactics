@@ -80,7 +80,7 @@ namespace Tactics.Common.Testing.Gameplay
             SetField(profile, "_targetHealthWeight", 3f);
             SetField(profile, "_enableSelfHealthScore", true);
             SetField(profile, "_selfHealthWeight", 2f);
-            SetField(profile, "_noiseFactor", 0.05f);
+            SetField(profile, "_noiseFactor", 0f);
             return profile;
         }
 
