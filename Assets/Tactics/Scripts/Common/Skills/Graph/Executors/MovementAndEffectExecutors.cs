@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
@@ -427,16 +428,20 @@ namespace Tactics.Common.Skills.Graph
             var caster = context.Caster;
             var target = context.PrimaryTarget;
             var grid = context.GridController;
+            var targetCell = target?.CurrentCell ?? (!record.RequiresLineOfSight ? context.TargetPoint : null);
 
-            if (target == null || target.CurrentCell == null)
+            if (targetCell == null)
                 return SkillNodeExecutionResult.Failed("No target for projectile launch.");
 
             if (caster == null || caster.CurrentCell == null)
                 return SkillNodeExecutionResult.Failed("No caster for projectile launch.");
 
-            TLog.Info($"[ProjectileLaunch] Launching projectile from ({caster.CurrentCell.GridCoordinates.x},{caster.CurrentCell.GridCoordinates.y}) to ({target.CurrentCell.GridCoordinates.x},{target.CurrentCell.GridCoordinates.y})");
+            TLog.Info($"[ProjectileLaunch] Launching projectile from ({caster.CurrentCell.GridCoordinates.x},{caster.CurrentCell.GridCoordinates.y}) to ({targetCell.GridCoordinates.x},{targetCell.GridCoordinates.y})");
 
-            context.RecordEvent("ProjectileLaunched", node.NodeId, target);
+            if (target != null)
+                context.RecordEvent("ProjectileLaunched", node.NodeId, target);
+            else
+                context.RecordEventAtCell("ProjectileLaunched", node.NodeId, targetCell);
 
             float travelTime = UnityEngine.Mathf.Max(0.05f, record.TravelTime);
             var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
@@ -444,11 +449,14 @@ namespace Tactics.Common.Skills.Graph
 
             context.SetBlackboard("ProjectileHit", true);
             context.SetBlackboard("ProjectileTarget", target);
-            context.RecordEvent("ProjectileHit", node.NodeId, target);
+            if (target != null)
+                context.RecordEvent("ProjectileHit", node.NodeId, target);
+            else
+                context.RecordEventAtCell("ProjectileHit", node.NodeId, targetCell);
 
             if (record.DropOnHit)
             {
-                var dropCell = FindNearestEmptyCell(target.CurrentCell, grid, record.DropSearchRadius);
+                var dropCell = FindNearestEmptyCell(targetCell, grid, record.DropSearchRadius);
                 if (dropCell != null)
                 {
                     context.SetBlackboard("ProjectileDropCell", dropCell);
@@ -807,106 +815,80 @@ namespace Tactics.Common.Skills.Graph
             if (record.RequiresCorpse && (corpses == null || corpses.Count == 0))
                 return SkillNodeExecutionResult.Failed("No corpses to summon from.");
 
-            int summoned = 0;
-            var spawnCells = record.RequiresCorpse
-                ? corpses.Select(c => c?.CurrentCell).Where(c => c != null).ToList()
-                : new List<ICell> { FindNearestEmptyCell(caster.CurrentCell, grid, 1) };
+            // One cast consumes exactly one selected corpse. AI fallback ordering is stable.
+            var corpse = record.RequiresCorpse
+                ? corpses.Where(candidate => candidate != null && !candidate.IsDestroyed && candidate.CurrentCell != null)
+                    .OrderBy(candidate => caster.CurrentCell?.GetDistance(candidate.CurrentCell) ?? int.MaxValue)
+                    .ThenBy(candidate => candidate.CurrentCell.GridCoordinates.x)
+                    .ThenBy(candidate => candidate.CurrentCell.GridCoordinates.y)
+                    .FirstOrDefault()
+                : null;
+            var spawnCell = corpse?.CurrentCell ?? FindNearestEmptyCell(caster.CurrentCell, grid, 1);
+            if (spawnCell == null)
+                return SkillNodeExecutionResult.Failed("No legal summon cell.");
 
-            foreach (var spawnCell in spawnCells)
+            var manager = GameAssetManager.Instance;
+            var prefab = manager?.Load<GameObject>(GameAssetManager.NormalizeAssetPath(record.UnitPrefabPath));
+            if (prefab == null)
+                return SkillNodeExecutionResult.Failed($"Prefab not found: {record.UnitPrefabPath}");
+
+            GameObject go = null;
+            IUnit unit = null;
+            try
             {
-                var corpse = record.RequiresCorpse
-                    ? corpses.FirstOrDefault(c => c != null && !c.IsDestroyed && c.CurrentCell == spawnCell)
-                    : null;
-                if (record.RequiresCorpse && corpse == null) continue;
-
-                ICell corpseCell = spawnCell;
-                if (corpseCell == null) continue;
-                corpse?.Consume();
-
-                GameObject prefab = null;
-                if (!string.IsNullOrEmpty(record.UnitPrefabPath))
-                {
-                    var mgr = GameAssetManager.Instance;
-                    if (mgr != null)
-                    {
-                        var path = GameAssetManager.NormalizeAssetPath(record.UnitPrefabPath);
-                        prefab = mgr.Load<GameObject>(path);
-                    }
-                }
-
-                if (prefab == null)
-                {
-                    TLog.Error($"[SummonUnit] Prefab not found: {record.UnitPrefabPath}");
-                    continue;
-                }
-
-                var container = grid.UnitManager?.ContainerTransform;
-                var go = UnityEngine.Object.Instantiate(prefab, corpseCell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity, container);
+                go = UnityEngine.Object.Instantiate(
+                    prefab, spawnCell.WorldPosition.ToVector3(), UnityEngine.Quaternion.identity,
+                    grid.UnitManager?.ContainerTransform);
+                go.SetActive(false);
                 if (!string.IsNullOrEmpty(record.SummonName))
                     go.name = record.SummonName;
-                var unit = go.GetComponent<IUnit>();
-                if (unit != null)
-                {
-                    unit.CanReceiveHealing = record.CanReceiveHealing;
-                    unit.OwnerUnitId = caster.UnitID;
-                    unit.PlayerNumber = caster.PlayerNumber;
-                    unit.CurrentCell = corpseCell;
-                    corpseCell.CurrentUnits.Add(unit);
-                    corpseCell.IsTaken = true;
-
-                    grid.UnitManager.AddUnit(unit);
-                    try
-                    {
-                        unit.Initialize(gridController: grid);
-                    }
-                    catch (UnassignedReferenceException) when (grid is Testing.SkillGraphTestGridController)
-                    {
-                        // Production TilemapUnit prefabs receive their tilemap from the scene.
-                        // The lightweight graph test world intentionally has no tilemap scene;
-                        // the base Unit state initialized above is sufficient for behavior tests.
-                        TLog.Warning($"[SummonUnit] Skipped scene-only TilemapUnit initialization for test summon '{go.name}'.");
-                    }
-
-                    unit.Facing = caster.Facing;
-                    var registry = SummonRegistry.For(grid);
-                    var replacements = registry?.Register(
-                        caster,
-                        record.SummonCategory,
-                        unit,
-                        record.MaxActive) ?? new List<IUnit>();
-                    foreach (var replacement in replacements)
-                        registry.Despawn(replacement);
-
-                    if (registry == null)
-                    {
-                        unit.OwnerUnit = caster;
-                        unit.OwnerUnitId = caster.UnitID;
-                        caster.SummonedUnit = unit;
-                    }
-
-                    summoned++;
-                    TLog.Info($"[SummonUnit] Unit summoned for caster {caster.UnitID} at {corpseCell.GridCoordinates}");
-
-                    if (TBattleLog.IsBattleActive)
-                    {
-                        TBattleLog.Log(new SkillLogData
-                        {
-                            Source = GetUnitName(caster),
-                            SkillName = string.IsNullOrWhiteSpace(record.SummonName) ? "Summon" : $"Summon {record.SummonName}",
-                            Target = GetUnitName(unit)
-                        });
-                    }
-                }
-                else
-                {
-                    TLog.Error($"[SummonUnit] Prefab missing IUnit component: {record.UnitPrefabPath}");
+                unit = go.GetComponent<IUnit>();
+                if (unit == null)
+                    throw new InvalidOperationException("Summon prefab has no IUnit component.");
+                unit.CanReceiveHealing = record.CanReceiveHealing;
+                unit.OwnerUnitId = caster.UnitID;
+                unit.OwnerUnit = caster;
+                unit.PlayerNumber = caster.PlayerNumber;
+                unit.CurrentCell = spawnCell;
+                unit.Initialize(grid);
+                unit.Facing = caster.Facing;
+            }
+            catch (UnassignedReferenceException) when (grid is Testing.SkillGraphTestGridController && unit != null)
+            {
+                unit.Facing = caster.Facing;
+                TLog.Warning($"[SummonUnit] Skipped scene-only initialization for test summon '{go.name}'.");
+            }
+            catch (Exception exception)
+            {
+                if (go != null)
                     UnityEngine.Object.Destroy(go);
-                }
+                TLog.Error($"[SummonUnit] Preparation failed: {exception.Message}");
+                return SkillNodeExecutionResult.Failed("Summon preparation failed.");
             }
 
-            if (summoned == 0)
-                return SkillNodeExecutionResult.Failed("No units summoned.");
+            // No fallible work remains: commit corpse, new summon, then oldest replacement.
+            corpse?.Consume();
+            spawnCell.CurrentUnits.Add(unit);
+            spawnCell.IsTaken = true;
+            go.SetActive(true);
+            grid.UnitManager.AddUnit(unit);
+            var registry = SummonRegistry.For(grid);
+            var replacements = registry.Register(caster, record.SummonCategory, unit, record.MaxActive);
+            foreach (var replacement in replacements)
+                registry.Despawn(replacement);
 
+            TLog.Info($"[SummonUnit] Unit summoned for caster {caster.UnitID} at {spawnCell.GridCoordinates}");
+            if (TBattleLog.IsBattleActive)
+            {
+                TBattleLog.Log(new SkillLogData
+                {
+                    Source = GetUnitName(caster),
+                    SkillName = string.IsNullOrWhiteSpace(record.SummonName) ? "Summon" : $"Summon {record.SummonName}",
+                    Target = GetUnitName(unit)
+                });
+            }
+
+            await Task.CompletedTask;
             return SkillNodeExecutionResult.Success();
         }
 

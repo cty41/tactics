@@ -10,6 +10,7 @@ using Tactics.Common.Units;
 using Tactics.Common.Cells;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
+using Tactics.Common.Interactables;
 using Tactics.RoguelikeMap;
 using Tactics.RoguelikeMap.Events;
 using Tactics.Roster;
@@ -47,7 +48,7 @@ namespace Tactics.Common.Testing.Gameplay
         public List<string> TargetMarkerOrder { get; } = new();
 
         // Interactable Corpse 测试支持：cell alias -> 是否存在 interactable corpse
-        public Dictionary<string, bool> InteractableCorpsesByCell { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, Corpse> InteractableCorpsesByCell { get; } = new(StringComparer.OrdinalIgnoreCase);
         public AiDecisionLog LastAiDecisionLog { get; set; }
 
         // AI 执行快照（用于验证 AI 是否真正产出了效果）
@@ -134,6 +135,13 @@ namespace Tactics.Common.Testing.Gameplay
                     UnityEngine.Object.Destroy(buffConfig);
             }
             RuntimeBuffConfigs.Clear();
+
+            foreach (var corpse in InteractableCorpsesByCell.Values)
+            {
+                if (corpse != null)
+                    UnityEngine.Object.Destroy(corpse.gameObject);
+            }
+            InteractableCorpsesByCell.Clear();
 
             // 4. 销毁 GameObjects（通过 SkillWorld）
             SkillWorld?.Dispose();

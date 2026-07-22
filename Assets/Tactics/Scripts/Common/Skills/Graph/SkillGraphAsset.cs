@@ -39,7 +39,8 @@ namespace Tactics.Common.Skills.Graph
         MultiStab,
         ApplyShield,
         RemoveHarmfulBuffs,
-        MageSkill
+        MageSkill,
+        NecromancerSkill
     }
 
     public enum SkillGraphPortType
@@ -124,6 +125,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.MultiStab => new MultiStabNodeRecord(),
                 SkillGraphNodeType.ApplyShield => new ApplyShieldNodeRecord(),
                 SkillGraphNodeType.MageSkill => new MageSkillNodeRecord(),
+                SkillGraphNodeType.NecromancerSkill => new NecromancerSkillNodeRecord(),
                 _ => null
             };
         }
@@ -247,11 +249,13 @@ namespace Tactics.Common.Skills.Graph
         [SerializeField] private float _speed = 10f;
         [SerializeField] private bool _dropOnHit;
         [SerializeField] private int _dropSearchRadius = 1;
+        [SerializeField] private bool _requiresLineOfSight = true;
 
         public float TravelTime { get => _travelTime; set => _travelTime = value; }
         public float Speed { get => _speed; set => _speed = value; }
         public bool DropOnHit { get => _dropOnHit; set => _dropOnHit = value; }
         public int DropSearchRadius { get => _dropSearchRadius; set => _dropSearchRadius = value; }
+        public bool RequiresLineOfSight { get => _requiresLineOfSight; set => _requiresLineOfSight = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ProjectileLaunch;
     }
 

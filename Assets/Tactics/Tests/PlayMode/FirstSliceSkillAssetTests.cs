@@ -372,7 +372,7 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator FearCurse_AffectsFiveCrossCellsOnly()
         {
             var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
-                "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Graph_Ability.asset");
+                "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Lv2_Graph_Ability.asset");
             var world = new SkillGraphTestWorld();
             try
             {
@@ -403,8 +403,14 @@ namespace Tactics.Tests.PlayMode
                 yield return new WaitUntil(() => task.IsCompleted);
                 Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed), task.Result.LastError);
                 for (int i = 0; i < enemies.Length - 1; i++)
-                    Assert.That(enemies[i].BuffComponent.CanAct, Is.False, $"Cross target {i} should be feared.");
-                Assert.That(enemies[5].BuffComponent.CanAct, Is.True, "Diagonal target must not be affected.");
+                {
+                    Assert.That(enemies[i].BuffComponent.HasBuff(BuffEffectType.Fear), Is.True,
+                        $"Cross target {i} should be feared.");
+                    Assert.That(enemies[i].BuffComponent.CanAct, Is.True,
+                        "Fear preserves attacks and skills after forced movement.");
+                }
+                Assert.That(enemies[5].BuffComponent.HasBuff(BuffEffectType.Fear), Is.False,
+                    "Diagonal target must not be affected.");
             }
             finally { world.Dispose(); }
         }
@@ -503,7 +509,6 @@ namespace Tactics.Tests.PlayMode
             var configPaths = new[]
             {
                 "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonFireDemon_Graph_Ability.asset",
-                "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMage_Graph_Ability.asset",
                 "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Decoy_Graph_Ability.asset"
             };
             foreach (var configPath in configPaths)
@@ -633,6 +638,7 @@ namespace Tactics.Tests.PlayMode
 
             SummonUnitNodeRecord summonNode = null;
             MageSkillNodeRecord mageSummonNode = null;
+            NecromancerSkillNodeRecord necromancerSummonNode = null;
             foreach (var node in graph.Nodes)
             {
                 if (node is SummonUnitNodeRecord candidate)
@@ -645,11 +651,23 @@ namespace Tactics.Tests.PlayMode
                 {
                     mageSummonNode = mageCandidate;
                 }
+                if (node is NecromancerSkillNodeRecord necromancerCandidate
+                    && necromancerCandidate.SkillKind is NecromancerSkillKind.SummonSkeleton
+                        or NecromancerSkillKind.SummonSkeletonMage)
+                {
+                    necromancerSummonNode = necromancerCandidate;
+                }
             }
 
             if (mageSummonNode != null)
             {
                 Assert.That(expected, Is.True, "Fire Demons accept standard healing.");
+                return;
+            }
+
+            if (necromancerSummonNode != null)
+            {
+                Assert.That(expected, Is.False, "Reanimated summons reject standard HP recovery.");
                 return;
             }
 

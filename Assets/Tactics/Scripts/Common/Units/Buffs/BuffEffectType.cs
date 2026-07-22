@@ -10,6 +10,7 @@ namespace Tactics.Common.Units.Buffs
         Poison,
         Burning,
         Slow,
-        Stun
+        Stun,
+        Fear
     }
 }

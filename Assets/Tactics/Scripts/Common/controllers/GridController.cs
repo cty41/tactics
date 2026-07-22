@@ -220,6 +220,9 @@ namespace Tactics.Common.Controllers
 
         private async void OnUnitDestroyed(UnitDestroyedEventArgs eventArgs)
         {
+            // Capture summon identity before registry cleanup clears ownership. Reanimated
+            // units are removed outright and never become valid corpse resources.
+            bool wasSummoned = eventArgs.AffectedUnit.OwnerUnitId >= 0;
             SummonRegistry.For(this)?.HandleUnitDeath(eventArgs.AffectedUnit);
 
             // Linked death: if this unit has a summoned unit, kill it
@@ -243,7 +246,7 @@ namespace Tactics.Common.Controllers
             }
 
             // Corpse generation: first time death → create Corpse interactable on grid
-            if (!eventArgs.AffectedUnit.IsCorpse)
+            if (!wasSummoned && !eventArgs.AffectedUnit.IsCorpse)
             {
                 eventArgs.AffectedUnit.IsCorpse = true;
                 var cell = eventArgs.AffectedUnit.CurrentCell;

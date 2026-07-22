@@ -460,6 +460,7 @@ namespace Tactics.Common.Units.Abilities
             var ownerCell = _owner.CurrentCell;
             int minRange = GetMinRangeFromGraph();
             bool cardinalOnly = UsesCardinalDash();
+            bool straightLineOnly = RequiresStraightLineEndpoint();
 
             if (FirstSelectionRequiresSelf())
             {
@@ -525,6 +526,14 @@ namespace Tactics.Common.Units.Abilities
                         continue;
                 }
 
+                if (straightLineOnly)
+                {
+                    int dx = cell.GridCoordinates.x - ownerCell.GridCoordinates.x;
+                    int dy = cell.GridCoordinates.y - ownerCell.GridCoordinates.y;
+                    if (dx != 0 && dy != 0 && Math.Abs(dx) != Math.Abs(dy))
+                        continue;
+                }
+
                 displayCells.Add(cell);
             }
 
@@ -550,6 +559,7 @@ namespace Tactics.Common.Units.Abilities
             var ownerCell = originCell ?? _owner.CurrentCell;
             if (ownerCell == null) return validCells;
             bool cardinalOnly = UsesCardinalDash();
+            bool straightLineOnly = RequiresStraightLineEndpoint();
             bool requiresEnemy = FirstSelectionRequiresEnemy();
             bool requiresSelf = FirstSelectionRequiresSelf();
 
@@ -617,6 +627,14 @@ namespace Tactics.Common.Units.Abilities
                         continue;
                 }
 
+                if (straightLineOnly)
+                {
+                    int dx = cell.GridCoordinates.x - ownerCell.GridCoordinates.x;
+                    int dy = cell.GridCoordinates.y - ownerCell.GridCoordinates.y;
+                    if (dx != 0 && dy != 0 && Math.Abs(dx) != Math.Abs(dy))
+                        continue;
+                }
+
                 if (requiresEnemy && !HasEnemyUnit(cell))
                     continue;
 
@@ -654,13 +672,20 @@ namespace Tactics.Common.Units.Abilities
             {
                 if (node is TeleportNodeRecord teleport)
                     return teleport.RequiresLineOfSight;
-                if (node is ProjectileLaunchNodeRecord)
-                    return true;
+                if (node is ProjectileLaunchNodeRecord projectile)
+                    return projectile.RequiresLineOfSight;
                 if (node is ApplyDamageNodeRecord damage && damage.IsRanged)
                     return true;
             }
 
             return false;
+        }
+
+        private bool RequiresStraightLineEndpoint()
+        {
+            return _config?.SkillGraph?.Nodes?
+                .OfType<NecromancerSkillNodeRecord>()
+                .Any(node => node.SkillKind == NecromancerSkillKind.BoneSpear && node.Level >= 3) == true;
         }
 
         private bool HasLineOfSight(ICell origin, ICell target)

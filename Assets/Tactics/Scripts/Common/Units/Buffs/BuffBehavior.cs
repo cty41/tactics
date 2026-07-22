@@ -1,3 +1,4 @@
+using System.Linq;
 using Tactics.Common.Controllers;
 using UnityEngine;
 
@@ -54,6 +55,12 @@ namespace Tactics.Common.Units.Buffs
 
         public virtual void OnTurnStart(Buff buff, IGridController gridController)
         {
+            if (_config.EffectType == BuffEffectType.Fear)
+            {
+                ResolveFearMovement(buff, gridController);
+                return;
+            }
+
             if (_config.TriggerTiming != BuffTriggerTiming.TurnStart &&
                 _config.EffectType is not BuffEffectType.Burning and not BuffEffectType.Poison)
                 return;
@@ -83,5 +90,35 @@ namespace Tactics.Common.Units.Buffs
         public virtual void OnRemoved(Buff buff) { }
 
         public virtual bool CanAct => _config.CanAct;
+
+        private static void ResolveFearMovement(Buff buff, IGridController gridController)
+        {
+            var owner = buff.Owner;
+            var sourceCell = buff.Source?.CurrentCell;
+            var origin = owner?.CurrentCell;
+            if (owner == null || origin == null || sourceCell == null || gridController?.CellManager == null)
+                return;
+
+            int currentDistance = origin.GetDistance(sourceCell);
+            owner.CachePaths(gridController.CellManager);
+            var destination = owner.GetAvailableDestinations(gridController.CellManager.GetCells())
+                .Where(cell => cell.GetDistance(sourceCell) > currentDistance)
+                .OrderByDescending(cell => cell.GetDistance(sourceCell))
+                .ThenBy(cell => cell.GridCoordinates.x)
+                .ThenBy(cell => cell.GridCoordinates.y)
+                .FirstOrDefault();
+
+            // Fear consumes the ordinary movement opportunity even when no farther cell exists.
+            owner.MovementPoints = 0f;
+            if (destination == null)
+                return;
+
+            origin.CurrentUnits.Remove(owner);
+            origin.IsTaken = origin.CurrentUnits.Count > 0 || origin.CurrentInteractables.Any(item => item.OccupiesCell);
+            owner.CurrentCell = destination;
+            destination.CurrentUnits.Add(owner);
+            destination.IsTaken = true;
+            owner.WorldPosition = destination.WorldPosition;
+        }
     }
 }

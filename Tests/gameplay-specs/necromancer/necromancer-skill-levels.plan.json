@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "NecromancerSkillLevels.SelectedCorpseSummonsExactlyOneLevelTwoSkeleton",
+  "requiredAdapters": [
+    "Skill",
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "useRealAssets",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "loadSkillGraphAsset",
+      "parameters": {
+        "alias": "summonSkeletonLevelTwo",
+        "assetPath": "Assets/Tactics/Battle/Abilities/SkillGraphs/SummonSkeleton_Lv2_Graph.asset"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "firstCorpseCell",
+        "x": 1,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "selectedCorpseCell",
+        "x": 2,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "necromancer",
+        "playerNumber": 0,
+        "cellAlias": "casterCell",
+        "mana": 20,
+        "maxMana": 20
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "setTurnContext",
+      "parameters": {
+        "currentPlayerNumber": 0,
+        "playableUnitAliases": [
+          "necromancer"
+        ]
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "spawnInteractableCorpse",
+      "parameters": {
+        "cellAlias": "firstCorpseCell"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "spawnInteractableCorpse",
+      "parameters": {
+        "cellAlias": "selectedCorpseCell"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "summonSkeletonLevelTwo",
+        "casterAlias": "necromancer",
+        "targetPointAlias": "selectedCorpseCell"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "expected": "Completed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "interactableCorpseExistsAt",
+      "target": "firstCorpseCell",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "interactableCorpseExistsAt",
+      "target": "selectedCorpseCell",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "cellOccupiedByInteractable",
+      "target": "firstCorpseCell",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "cellOccupiedByInteractable",
+      "target": "selectedCorpseCell",
+      "expected": false,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "interactableCorpseExistsAt",
+      "target": "firstCorpseCell",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "interactableCorpseExistsAt",
+      "target": "selectedCorpseCell",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "cellOccupiedByInteractable",
+      "target": "firstCorpseCell",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "cellOccupiedByInteractable",
+      "target": "selectedCorpseCell",
+      "parameters": {}
+    }
+  ]
+}

@@ -14,7 +14,19 @@ namespace Tactics.Common.Units
     /// </summary>
     public class CombatComponent
     {
-        private static readonly Dictionary<IUnit, float> DamageShields = new();
+        private readonly struct DamageShieldState
+        {
+            public DamageShieldState(float amount, bool absorbsAllDamage)
+            {
+                Amount = amount;
+                AbsorbsAllDamage = absorbsAllDamage;
+            }
+
+            public float Amount { get; }
+            public bool AbsorbsAllDamage { get; }
+        }
+
+        private static readonly Dictionary<IUnit, DamageShieldState> DamageShields = new();
         private static readonly HashSet<IUnit> CombatTechniqueUnits = new();
         private static readonly System.Random CombatTechniqueRandom = new();
 
@@ -33,14 +45,15 @@ namespace Tactics.Common.Units
             return unit != null && CombatTechniqueUnits.Contains(unit);
         }
 
-        public static void ApplyDamageShield(IUnit unit, float amount)
+        public static void ApplyDamageShield(IUnit unit, float amount, bool absorbsAllDamage = false)
         {
-            if (unit != null) DamageShields[unit] = Math.Max(0f, amount);
+            if (unit != null)
+                DamageShields[unit] = new DamageShieldState(Math.Max(0f, amount), absorbsAllDamage);
         }
 
         public static float GetDamageShield(IUnit unit)
         {
-            return unit != null && DamageShields.TryGetValue(unit, out var value) ? value : 0f;
+            return unit != null && DamageShields.TryGetValue(unit, out var value) ? value.Amount : 0f;
         }
         private const int NeutralAttributeValue = 5;
         private const float BaseCritChance = 0.10f;
@@ -298,13 +311,15 @@ namespace Tactics.Common.Units
                 }
             }
 
-            if (damageCategory == DamageCategory.Physical && DamageShields.TryGetValue(target, out var shield))
+            if (DamageShields.TryGetValue(target, out var shieldState)
+                && (damageCategory == DamageCategory.Physical || shieldState.AbsorbsAllDamage))
             {
+                float shield = shieldState.Amount;
                 float absorbed = Math.Min(shield, damage);
                 damage -= absorbed;
                 shield -= absorbed;
                 if (shield <= 0f) DamageShields.Remove(target);
-                else DamageShields[target] = shield;
+                else DamageShields[target] = new DamageShieldState(shield, shieldState.AbsorbsAllDamage);
             }
 
             if (damage > 0f) target.ModifyHealth(-damage, caster);

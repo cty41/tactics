@@ -327,22 +327,37 @@ namespace Tactics.Common.Battle
 
             Add(definitions, "necromancer.summon_skeleton", "召唤骷髅", "消耗尸体召唤骷髅战士。", RoleType.Necromancer,
                 SkillType.Active, AttributeType.Charisma, 5, null, 3,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Lv2_Graph_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Lv3_Graph_Ability.asset")));
             Add(definitions, "necromancer.amplify_damage", "伤害加深诅咒", "令目标承受更多伤害。", RoleType.Necromancer,
                 SkillType.Active, AttributeType.Charisma, 5, null, 3,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Lv2_Graph_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Lv3_Graph_Ability.asset")));
             Add(definitions, "necromancer.bone_spear", "骨矛", "发射可贯穿目标的骨矛。", RoleType.Necromancer,
                 SkillType.Active, AttributeType.Intelligence, 5, null, 3,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Lv2_Graph_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Lv3_Graph_Ability.asset")));
             Add(definitions, "necromancer.skeleton_mage", "骷髅法师", "消耗尸体召唤骷髅法师。", RoleType.Necromancer,
                 SkillType.Active, AttributeType.Charisma, 7, "necromancer.summon_skeleton", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMage_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMage_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMage_Lv2_Graph_Ability.asset")));
             Add(definitions, "necromancer.fear_curse", "恐惧诅咒", "使范围内敌人陷入恐惧。", RoleType.Necromancer,
                 SkillType.Active, AttributeType.Charisma, 7, "necromancer.amplify_damage", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Lv2_Graph_Ability.asset")));
             Add(definitions, "necromancer.bone_shield", "骨盾", "生成可吸收伤害的骨盾。", RoleType.Necromancer,
                 SkillType.Active, AttributeType.Charisma, 7, "necromancer.bone_spear", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneShield_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneShield_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneShield_Lv2_Graph_Ability.asset")));
 
             Add(definitions, "amazon.thrust", "突刺", "攻击前方直线上的敌人。", RoleType.Amazon,
                 SkillType.Active, AttributeType.Agility, 5, null, 3,

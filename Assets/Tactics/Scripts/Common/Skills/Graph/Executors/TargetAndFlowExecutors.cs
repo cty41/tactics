@@ -193,6 +193,17 @@ namespace Tactics.Common.Skills.Graph
             if (context.TargetCorpses != null && context.TargetCorpses.Count > 0)
                 return Task.FromResult(SkillNodeExecutionResult.Success());
 
+            // Player/test input selects one physical corpse cell. Preserve that choice so a
+            // single cast can never consume every corpse discovered by the AI fallback scan.
+            var selectedCorpse = context.TargetPoint?.CurrentInteractables
+                .OfType<Corpse>()
+                .FirstOrDefault(corpse => !corpse.IsDestroyed);
+            if (selectedCorpse != null)
+            {
+                context.TargetCorpses = new List<Corpse> { selectedCorpse };
+                return Task.FromResult(SkillNodeExecutionResult.Success());
+            }
+
             var corpses = new List<Corpse>();
             var allCells = grid.CellManager.GetCells();
 

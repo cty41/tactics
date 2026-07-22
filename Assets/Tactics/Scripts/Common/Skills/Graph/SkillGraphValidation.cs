@@ -111,6 +111,7 @@ namespace Tactics.Common.Skills.Graph
             ,SkillGraphNodeType.MultiStab
             ,SkillGraphNodeType.ApplyShield
             ,SkillGraphNodeType.MageSkill
+            ,SkillGraphNodeType.NecromancerSkill
         };
 
         /// <summary>

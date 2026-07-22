@@ -243,6 +243,10 @@ namespace Tactics.Editor.SkillGraphEditor
                     "Mage Skill", "node-effect",
                     hasInput: true, hasOutput: true,
                     info: $"{r.SkillKind} Lv{r.Level}"),
+                NecromancerSkillNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Necromancer Skill", "node-effect",
+                    hasInput: true, hasOutput: true,
+                    info: $"{r.SkillKind} Lv{r.Level}"),
                 _ => null
             };
 
