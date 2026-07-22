@@ -195,6 +195,11 @@ namespace Tactics.RoguelikeMap
         public bool IsConsumed = false;
 
         /// <summary>
+        /// Persisted non-battle interaction state used to resume an interrupted node.
+        /// </summary>
+        public RoguelikeNodeTransaction Transaction;
+
+        /// <summary>
         /// 事件 ID（用于 Mystery / 自定义事件节点）。
         /// </summary>
         public string eventId = "";

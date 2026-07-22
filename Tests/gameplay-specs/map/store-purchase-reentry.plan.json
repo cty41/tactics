@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.StorePurchaseReentry",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 7303
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setAdventureGold",
+      "parameters": {
+        "amount": 100
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "buyShopGoodTransaction",
+      "parameters": {
+        "nodeId": "layer_04_store",
+        "itemKind": "Consumable",
+        "contentId": "life_potion",
+        "price": 10
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "reloadPureRunSession",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "buyShopGoodTransaction",
+      "parameters": {
+        "nodeId": "layer_04_store",
+        "itemKind": "Consumable",
+        "contentId": "life_potion",
+        "price": 10
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "runGoldEquals",
+      "expected": 40,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "consumableCountEquals",
+      "expected": 1,
+      "parameters": {
+        "consumableId": "life_potion"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "transactionApplicationCountEquals",
+      "expected": 1,
+      "parameters": {
+        "key": "node:layer_04_store:purchase:item:life_potion"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_store",
+      "expected": "Entered",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "runGoldEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "consumableCountEquals",
+      "parameters": {
+        "consumableId": "life_potion"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "transactionApplicationCountEquals",
+      "parameters": {
+        "key": "node:layer_04_store:purchase:item:life_potion"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_store",
+      "parameters": {}
+    }
+  ]
+}

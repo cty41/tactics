@@ -60,6 +60,7 @@ namespace Tactics.RoguelikeMap.Interaction
             _sessionPurchasedGoodKeys.Clear();
             _currentState = PlayerAdventureStateStore.LoadRepairAndSave();
             RunGoldManager.Instance.SyncFromState(_currentState);
+            RoguelikeNodeTransactionService.Begin(node, CurrentMap);
 
             // 通过 UIManager 显示 UI
             await UIManager.Instance.ShowAsync(UIManager.UIId.ShopPanel);
@@ -81,7 +82,10 @@ namespace Tactics.RoguelikeMap.Interaction
 
             // 绑定关闭按钮
             if (_closeButton != null)
-                _closeButton.RegisterCallback<ClickEvent>(_ => CloseShop());
+            {
+                _closeButton.clicked -= CloseShop;
+                _closeButton.clicked += CloseShop;
+            }
 
             // 优先使用节点配置商品，旧地图回退到临时随机商品
             _currentGoods = BuildGoods(node);
@@ -160,15 +164,21 @@ namespace Tactics.RoguelikeMap.Interaction
                 purchaseResult.ItemIds.Add(good.ConsumableId);
             else
                 purchaseResult.EquipmentIds.Add(good.EquipmentId);
-            NodeInteractionManager.Instance?.ApplyRewardResult(purchaseResult, _currentState);
+            string purchaseKey = GetPurchaseKey(good);
+            string transactionKey = RoguelikeNodeTransactionService.BuildActionKey(
+                _currentNode,
+                $"purchase:{purchaseKey}");
+            if (!RoguelikeNodeTransactionService.TryApplyOnce(_currentState, transactionKey, purchaseResult))
+                return;
 
             string itemName = good.IsConsumable
                 ? ConsumableDatabase.GetById(good.ConsumableId)?.DisplayName ?? good.ConsumableId
                 : EquipmentDatabase.GetById(good.EquipmentId)?.DisplayName ?? good.EquipmentId;
 
-            string purchaseKey = GetPurchaseKey(good);
             _sessionPurchasedGoodKeys.Add(purchaseKey);
             CurrentMap?.AddStorePurchase(_currentNode.nodeId, purchaseKey);
+            if (CurrentMap != null)
+                PureRunSessionStore.SaveMap(CurrentMap);
             DisplayGoods();
             UpdateGoldDisplay();
             TLog.Info($"[StoreNodeHandler] 购买了 {itemName}，花费 {good.Price} 金币");
@@ -182,6 +192,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
         private void CloseShop()
         {
+            RoguelikeNodeTransactionService.Commit(_currentNode, CurrentMap, false);
             UIManager.Instance.Hide(UIManager.UIId.ShopPanel);
             _overlay = null;
             var callback = _onClose;
@@ -207,7 +218,12 @@ namespace Tactics.RoguelikeMap.Interaction
             return _sessionPurchasedGoodKeys.Contains(purchaseKey) ||
                    (CurrentMap != null &&
                     _currentNode != null &&
-                    CurrentMap.IsStoreGoodPurchased(_currentNode.nodeId, purchaseKey));
+                    CurrentMap.IsStoreGoodPurchased(_currentNode.nodeId, purchaseKey)) ||
+                   RoguelikeNodeTransactionService.WasApplied(
+                       _currentState,
+                       RoguelikeNodeTransactionService.BuildActionKey(
+                           _currentNode,
+                           $"purchase:{purchaseKey}"));
         }
 
         private static string GetPurchaseKey(ShopGood good)

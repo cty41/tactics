@@ -15,5 +15,6 @@ namespace Tactics.Roster
         public List<string> ActivePartyCharacterIds { get; set; } = new List<string>();
         public List<string> Inventory { get; set; } = new List<string>();
         public List<ConsumableInstance> ConsumableInstances { get; set; } = new List<ConsumableInstance>();
+        public List<string> AppliedNodeTransactionKeys { get; set; } = new List<string>();
     }
 }

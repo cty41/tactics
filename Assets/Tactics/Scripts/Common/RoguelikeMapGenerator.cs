@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Battle;
+using Tactics.Roguelike;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -61,6 +62,7 @@ namespace Tactics.RoguelikeMap
             }
 
             var nodes = layers.SelectMany(layer => layer).ToList();
+            EnsurePureRunMysteryEvents(nodes, runSeed);
             var start = layers[0][0];
             start.VisitState = NodeVisitState.Visited;
             start.Visibility = NodeVisibility.Revealed;
@@ -77,6 +79,62 @@ namespace Tactics.RoguelikeMap
                 runSeed = runSeed,
                 currentNodeId = start.nodeId
             };
+        }
+
+        /// <summary>
+        /// Assigns the two Pure Run mystery nodes from a stable shuffled pool. Existing
+        /// assignments are preserved so loading an older session never rerolls a node.
+        /// </summary>
+        public static bool EnsurePureRunMysteryEvents(RoguelikeMap map)
+        {
+            return map != null && EnsurePureRunMysteryEvents(map.nodes, map.runSeed);
+        }
+
+        private static bool EnsurePureRunMysteryEvents(List<RoguelikeMapNode> nodes, int runSeed)
+        {
+            if (nodes == null)
+                return false;
+
+            string[] pool = { "cursed_chest_001", "fallen_altar_001", "lost_villager_001" };
+            var orderedPool = pool
+                .Select((eventId, index) => new
+                {
+                    EventId = eventId,
+                    Order = RoguelikeMapRuntimeState.DeriveSeed(runSeed, "pure-run-event-pool", index)
+                })
+                .OrderBy(entry => entry.Order)
+                .ThenBy(entry => entry.EventId, StringComparer.Ordinal)
+                .Select(entry => entry.EventId)
+                .ToList();
+
+            var mysteryNodes = nodes
+                .Where(node => node?.nodeType == RoguelikeNodeType.Mystery)
+                .OrderBy(node => node.LayerIndex)
+                .ThenBy(node => node.nodeId, StringComparer.Ordinal)
+                .ToList();
+            var used = new HashSet<string>(
+                mysteryNodes
+                    .Where(node => !string.IsNullOrWhiteSpace(node.eventId))
+                    .Select(node => node.eventId),
+                StringComparer.Ordinal);
+            var available = orderedPool.Where(eventId => !used.Contains(eventId)).ToList();
+            bool changed = false;
+
+            foreach (var node in mysteryNodes)
+            {
+                if (!string.IsNullOrWhiteSpace(node.eventId))
+                    continue;
+
+                string eventId = available.Count > 0
+                    ? available[0]
+                    : orderedPool[mysteryNodes.IndexOf(node) % orderedPool.Count];
+                node.eventId = eventId;
+                used.Add(eventId);
+                available.Remove(eventId);
+                changed = true;
+            }
+
+            return changed;
         }
         /// <summary>
         /// 根据配置生成一张 FTL 风格的 Roguelike 地图（网格布局）。

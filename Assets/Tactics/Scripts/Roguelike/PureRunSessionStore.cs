@@ -80,6 +80,9 @@ namespace Tactics.Roguelike
                 if (repaired)
                     SaveState(state);
 
+                if (RoguelikeMapGenerator.EnsurePureRunMysteryEvents(map))
+                    SaveMap(map);
+
                 RoguelikeMapRuntimeState.AttachMap(map, map.currentNodeId);
                 return true;
             }

@@ -158,7 +158,11 @@ namespace Tactics.RoguelikeMap.Events
         {
             string unifiedText = (appliedRewardResult ?? ToRewardResult(ctx))?.GetDisplayText();
             if (!string.IsNullOrWhiteSpace(unifiedText))
-                return unifiedText;
+            {
+                return string.IsNullOrWhiteSpace(description)
+                    ? unifiedText
+                    : $"{description}\n{unifiedText}";
+            }
 
             if (!string.IsNullOrWhiteSpace(description))
                 return description;

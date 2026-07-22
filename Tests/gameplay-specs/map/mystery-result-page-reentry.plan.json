@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.MysteryResultPageReentry",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 7301
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "resolveNodeEventOption",
+      "parameters": {
+        "nodeId": "layer_04_event",
+        "optionId": "leave"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "reloadPureRunSession",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_event",
+      "expected": "Resolved",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeIsConsumed",
+      "target": "layer_04_event",
+      "expected": false,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_event",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeIsConsumed",
+      "target": "layer_04_event",
+      "parameters": {}
+    }
+  ]
+}

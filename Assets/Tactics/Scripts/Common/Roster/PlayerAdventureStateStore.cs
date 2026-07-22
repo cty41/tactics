@@ -293,6 +293,12 @@ namespace Tactics.Roster
                 changed = true;
             }
 
+            if (state.AppliedNodeTransactionKeys == null)
+            {
+                state.AppliedNodeTransactionKeys = new List<string>();
+                changed = true;
+            }
+
             for (int i = state.ConsumableInstances.Count - 1; i >= 0; i--)
             {
                 var instance = state.ConsumableInstances[i];

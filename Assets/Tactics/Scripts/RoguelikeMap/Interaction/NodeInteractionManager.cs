@@ -71,7 +71,6 @@ namespace Tactics.RoguelikeMap.Interaction
                     break;
                 case RoguelikeNodeType.Mystery:
                     HandleMysteryNode(node, onCompleted);
-                    node.IsConsumed = true;
                     break;
                 case RoguelikeNodeType.Treasure:
                     HandleTreasureNode(node, onCompleted);
@@ -82,7 +81,6 @@ namespace Tactics.RoguelikeMap.Interaction
                     break;
                 case RoguelikeNodeType.RestSite:
                     HandleRestSiteNode(node, onCompleted);
-                    node.IsConsumed = true;
                     break;
                 default:
                     TLog.Warning($"[NodeInteractionManager] 未知节点类型: {node.nodeType}");
@@ -134,6 +132,7 @@ namespace Tactics.RoguelikeMap.Interaction
         private async void HandleMysteryNode(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             TLog.Info($"[NodeInteractionManager] 触发事件: {node.blueprintName}");
+            RoguelikeNodeTransactionService.Begin(node, CurrentMap);
 
             // 获取地图配置
             var mapConfig = RoguelikeMapUIController.Instance?.mapConfig;
@@ -186,10 +185,18 @@ namespace Tactics.RoguelikeMap.Interaction
             await UIManager.Instance.ShowAsync(UIManager.UIId.EventPanel);
             if (EventUIController.Instance != null)
             {
-                EventUIController.Instance.ShowEvent(evt, effectContext, success =>
+                EventUIController.Instance.ShowEvent(evt, effectContext, node, CurrentMap, committed =>
                 {
-                    TLog.Info($"[NodeInteractionManager] 事件完成，结果: {success}");
+                    TLog.Info($"[NodeInteractionManager] 事件界面关闭，已提交: {committed}");
+                    if (!committed)
+                        return;
+
                     onCompleted?.Invoke();
+                    if (state?.Roster != null && state.Roster.Count > 0 &&
+                        state.Roster.TrueForAll(character => character == null || character.IsDead))
+                    {
+                        ShowEventDefeatSummary(state);
+                    }
                 });
             }
             else
@@ -228,6 +235,7 @@ namespace Tactics.RoguelikeMap.Interaction
         private void HandleStoreNode(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             TLog.Info($"[NodeInteractionManager] 进入商店: {node.blueprintName}");
+            RoguelikeNodeTransactionService.Begin(node, CurrentMap);
             TLog.Info($"[NodeInteractionManager] StoreNodeHandler.Instance = {StoreNodeHandler.Instance != null}");
 
             if (StoreNodeHandler.Instance != null)
@@ -249,6 +257,7 @@ namespace Tactics.RoguelikeMap.Interaction
         private void HandleRestSiteNode(RoguelikeMapNode node, System.Action onCompleted = null)
         {
             TLog.Info($"[NodeInteractionManager] 进入休息站: {node.blueprintName}");
+            RoguelikeNodeTransactionService.Begin(node, CurrentMap);
             TLog.Info($"[NodeInteractionManager] RestSiteNodeHandler.Instance = {RestSiteNodeHandler.Instance != null}");
 
             // 委托给 RestSiteNodeHandler 处理
@@ -269,6 +278,30 @@ namespace Tactics.RoguelikeMap.Interaction
                 return;
 
             eventManager.LoadRegionEvents(regionName, mapConfig);
+        }
+
+        private async void ShowEventDefeatSummary(PlayerAdventureState state)
+        {
+            var summary = new RunSummary();
+            summary.SetRunOutcome(RunOutcome.Defeat);
+            summary.AddGold(state?.Gold ?? 0);
+            int visitedCount = CurrentMap?.visitedNodes?.Count ?? 0;
+            for (int i = 0; i < visitedCount; i++)
+                summary.IncrementNodesVisited();
+
+            await UIManager.Instance.ShowAsync(UIManager.UIId.RunEndSummary);
+            var controller = UnityEngine.Object.FindFirstObjectByType<RunEndSummaryUIController>();
+            if (controller == null)
+            {
+                TLog.Warning("[NodeInteractionManager] 事件全灭后无法显示 RunEndSummary");
+                return;
+            }
+
+            controller.ShowSummary(summary, () =>
+            {
+                UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
+                PureRunSessionStore.Finish(PureRunEndReason.Defeat);
+            });
         }
 
         /// <summary>

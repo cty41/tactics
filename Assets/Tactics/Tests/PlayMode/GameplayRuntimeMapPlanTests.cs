@@ -342,6 +342,30 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMysteryDeterminismAndReentry()
+        {
+            yield return ExecuteAndAssertSourcePlan("mystery-determinism-and-reentry.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesMysteryResultPageReentry()
+        {
+            yield return ExecuteAndAssertSourcePlan("mystery-result-page-reentry.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesRestTransactionReentry()
+        {
+            yield return ExecuteAndAssertSourcePlan("rest-transaction-reentry.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesStorePurchaseReentry()
+        {
+            yield return ExecuteAndAssertSourcePlan("store-purchase-reentry.plan.json");
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesMapBattleDeathWriteback()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
@@ -476,6 +500,17 @@ namespace Tactics.Tests.PlayMode
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var task = ExecuteMapPlan(GetPlanPath("map", fileName));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        private static IEnumerator ExecuteAndAssertSourcePlan(string fileName)
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteMapPlan(GetSourcePlanPath("map", fileName));
             yield return WaitForTask(task);
 
             var result = task.Result;

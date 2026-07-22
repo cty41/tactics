@@ -27,6 +27,8 @@ namespace Tactics.RoguelikeMap.UI
         private RoguelikeEvent _currentEvent;
         private System.Action<bool> _onComplete;
         private EventEffectContext _effectContext;
+        private RoguelikeMapNode _currentNode;
+        private global::Tactics.RoguelikeMap.RoguelikeMap _currentMap;
 
         // 判定上下文：角色名 → 属性值字典
         private string _adjudicatorName;
@@ -58,7 +60,17 @@ namespace Tactics.RoguelikeMap.UI
             ShowEvent(evt, null, onComplete);
         }
 
-        public async void ShowEvent(RoguelikeEvent evt, EventEffectContext effectContext, System.Action<bool> onComplete)
+        public void ShowEvent(RoguelikeEvent evt, EventEffectContext effectContext, System.Action<bool> onComplete)
+        {
+            ShowEvent(evt, effectContext, null, null, onComplete);
+        }
+
+        public async void ShowEvent(
+            RoguelikeEvent evt,
+            EventEffectContext effectContext,
+            RoguelikeMapNode node,
+            global::Tactics.RoguelikeMap.RoguelikeMap map,
+            System.Action<bool> onComplete)
         {
             if (evt == null)
             {
@@ -70,6 +82,8 @@ namespace Tactics.RoguelikeMap.UI
             _currentEvent = evt;
             _onComplete = onComplete;
             _effectContext = effectContext;
+            _currentNode = node;
+            _currentMap = map;
             _lastExecutionSucceeded = false;
 
             // 通过 UIManager 显示面板
@@ -94,10 +108,13 @@ namespace Tactics.RoguelikeMap.UI
             _continueButton = root.Q<Button>("ContinueButton");
 
             // 注册继续按钮事件
+            _continueButton?.UnregisterCallback<ClickEvent>(OnContinueClicked);
             _continueButton?.RegisterCallback<ClickEvent>(OnContinueClicked);
 
             // 显示事件内容
             DisplayEvent(evt);
+            if (_currentNode?.Transaction?.Phase >= RoguelikeNodeTransactionPhase.Resolved)
+                RestoreResolvedResult();
 
             TLog.Info($"[EventUIController] 显示事件: {evt.title}");
         }
@@ -232,14 +249,53 @@ namespace Tactics.RoguelikeMap.UI
             if (_currentEvent == null || index >= _currentEvent.options.Count)
                 return;
 
+            if (_currentNode?.Transaction?.Phase >= RoguelikeNodeTransactionPhase.Resolved)
+                return;
+
             var option = _currentEvent.options[index];
 
-            // 获取属性值并执行判定
             EventResult resolvedResult;
             RewardResult appliedRewardResult;
-            bool success = _effectContext != null
-                ? option.Execute(_effectContext, out resolvedResult, out appliedRewardResult)
-                : option.Execute(GetAttributeValue(option.attribute), out resolvedResult, out appliedRewardResult);
+            bool success;
+
+            if (_effectContext != null && _currentNode != null)
+            {
+                success = AttributeCheckSystem.ResolveDeterministic(
+                    option,
+                    _effectContext,
+                    _effectContext.AdventureState?.RunSeed ?? _currentMap?.runSeed ?? 0,
+                    _currentNode.nodeId,
+                    out resolvedResult,
+                    out var adjudicator,
+                    out int attributeValue,
+                    out int successRate,
+                    out int roll);
+                if (adjudicator != null)
+                    _effectContext.SelfCharacterId = adjudicator.Id;
+
+                appliedRewardResult = resolvedResult?.ToRewardResult(_effectContext) ?? RewardResult.Empty();
+                string resultText = resolvedResult?.GetDisplayText(_effectContext, appliedRewardResult) ?? string.Empty;
+                RoguelikeNodeTransactionService.ResolveEvent(
+                    _currentNode,
+                    _currentMap,
+                    _currentEvent.eventId,
+                    option,
+                    success,
+                    adjudicator,
+                    attributeValue,
+                    successRate,
+                    roll,
+                    resolvedResult,
+                    resultText);
+                appliedRewardResult = RoguelikeNodeTransactionService.EnsureResolvedEventApplied(
+                    _currentNode,
+                    _currentMap,
+                    _effectContext);
+            }
+            else
+            {
+                success = option.Execute(GetAttributeValue(option.attribute), out resolvedResult, out appliedRewardResult);
+            }
 
             // 显示结果
             ShowResult(option, resolvedResult, appliedRewardResult, success);
@@ -280,11 +336,15 @@ namespace Tactics.RoguelikeMap.UI
         /// </summary>
         private void OnContinueClicked(ClickEvent evt)
         {
+            if (_currentNode != null)
+                RoguelikeNodeTransactionService.Commit(_currentNode, _currentMap, true);
             ClosePanel();
-            _onComplete?.Invoke(_lastExecutionSucceeded);
+            _onComplete?.Invoke(true);
             _onComplete = null;
             _currentEvent = null;
             _effectContext = null;
+            _currentNode = null;
+            _currentMap = null;
         }
 
         /// <summary>
@@ -297,6 +357,8 @@ namespace Tactics.RoguelikeMap.UI
             _onComplete = null;
             _currentEvent = null;
             _effectContext = null;
+            _currentNode = null;
+            _currentMap = null;
         }
 
         /// <summary>
@@ -345,6 +407,33 @@ namespace Tactics.RoguelikeMap.UI
             }
 
             return string.IsNullOrEmpty(_adjudicatorName) ? "角色" : _adjudicatorName;
+        }
+
+        private void RestoreResolvedResult()
+        {
+            var transaction = _currentNode?.Transaction;
+            if (transaction == null)
+                return;
+
+            RoguelikeNodeTransactionService.EnsureResolvedEventApplied(
+                _currentNode,
+                _currentMap,
+                _effectContext);
+            _lastExecutionSucceeded = transaction.Succeeded;
+
+            if (_optionsContainer != null)
+                _optionsContainer.style.display = DisplayStyle.None;
+            if (_resultPanel != null)
+                _resultPanel.style.display = DisplayStyle.Flex;
+            if (_resultLabel != null)
+            {
+                _resultLabel.text = transaction.ResultText ?? string.Empty;
+                _resultLabel.RemoveFromClassList("result-success");
+                _resultLabel.RemoveFromClassList("result-failure");
+                _resultLabel.AddToClassList(transaction.Succeeded ? "result-success" : "result-failure");
+            }
+            if (_continueButton != null)
+                _continueButton.style.display = DisplayStyle.Flex;
         }
     }
 }

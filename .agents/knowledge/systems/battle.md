@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-23T03:00:15+08:00"
+timestamp: "2026-07-23T03:32:16+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -39,7 +39,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:d0a888664334024ea60f0db0854f7ec00252566cf56362422dc5969401fbcd22
+source_fingerprint: sha256:67d53431891dc5489676a094b91b73323be7a4926b8d1cfffa135dfc957d2936
 ---
 
 # Current State
@@ -51,6 +51,8 @@ source_fingerprint: sha256:d0a888664334024ea60f0db0854f7ec00252566cf56362422dc59
 Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换。燃烧按层数累加且每次目标行动开始造成当前层数伤害后减 1；中毒固定每次施加增加 3 个行动周期、每周期固定伤害且伤害不叠加；减速固定 `Speed -2` 并刷新持续时间；眩晕固定跳过 1 次行动并刷新。标准状态即使来自不同配置也合并，其他 Buff 按配置的刷新策略处理，同类别不同诅咒由后施加者替换。`BuffPolarity` 只区分 Beneficial/Harmful，净化统一移除 Harmful。标准正向 HP 恢复检查 `CanReceiveHealing`，复活类骷髅仍可选为目标但实际恢复为 0。
 
 地图待生效 Buff 可在单位初始化前挂载：`Unit` 先创建并保留 Buff 容器，战斗初始化时再绑定 `GridController`，不会清空恢复状态。战斗或回合切换取消 AI 延时属于正常生命周期，不记录错误日志。
+
+正式 Mystery 事件使用真实 `BuffConfig` 资产传递跨战斗效果：诅咒宝箱的伤害承受提高 30% 与堕落祭坛的伤害减免 20% 均持续 3 个行动周期，并分别标记为 Harmful 与 Beneficial；资产通过 `GameAssetManager` 加载并由 PlayMode 测试校验精确效果字段。
 
 单位持有四方向 `Facing` 状态。成功移动后按最后一步更新朝向，成功选择目标的技能按目标方向更新朝向，失败技能恢复原朝向；待输入状态下点击正交相邻格可免费转向。默认人类单位朝东、非人类单位朝西，表现层优先消费 Animator 的 `Facing`/`DirectionX`/`DirectionY` 参数，并为纯横向 Sprite 提供翻转回退。
 

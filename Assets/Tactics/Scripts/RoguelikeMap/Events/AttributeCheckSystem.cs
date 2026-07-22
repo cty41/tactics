@@ -12,14 +12,14 @@ namespace Tactics.RoguelikeMap.Events
     {
         /// <summary>
         /// 计算成功率
-        /// 公式: 基础成功率 + (属性值 - 10) × 5%
+        /// 公式: 基础成功率 + (属性值 - 5) × 5%
         /// </summary>
         /// <param name="baseSuccessRate">基础成功率</param>
         /// <param name="attributeValue">属性值</param>
         /// <returns>实际成功率（0-100）</returns>
         public static int CalculateSuccessRate(int baseSuccessRate, int attributeValue)
         {
-            int rate = baseSuccessRate + (attributeValue - 10) * 5;
+            int rate = baseSuccessRate + (attributeValue - 5) * 5;
             return ClampRate(rate);
         }
 
@@ -172,6 +172,52 @@ namespace Tactics.RoguelikeMap.Events
             }
 
             return success;
+        }
+
+        /// <summary>
+        /// Resolves a Pure Run event check from a stable per-option random stream without
+        /// applying its reward. The caller persists the result before applying it.
+        /// </summary>
+        public static bool ResolveDeterministic(
+            EventOption option,
+            EventEffectContext ctx,
+            int runSeed,
+            string nodeId,
+            out EventResult resolvedResult,
+            out Tactics.Roster.CharacterDefinition adjudicator,
+            out int attributeValue,
+            out int successRate,
+            out int roll)
+        {
+            resolvedResult = null;
+            adjudicator = null;
+            attributeValue = 0;
+            successRate = 100;
+            roll = 0;
+
+            if (option == null)
+                return false;
+
+            if (option.attribute == AttributeType.None)
+            {
+                resolvedResult = option.success;
+                return true;
+            }
+
+            adjudicator = ctx?.PickTarget(EventTargetType.All, option.attribute);
+            attributeValue = EventEffectContext.GetCharacterAttribute(adjudicator, option.attribute);
+            successRate = CalculateSuccessRate(option, attributeValue);
+
+            string optionId = string.IsNullOrWhiteSpace(option.stableOptionId)
+                ? option.text ?? "option"
+                : option.stableOptionId;
+            int seed = Tactics.Roguelike.RoguelikeMapRuntimeState.DeriveSeed(
+                runSeed,
+                $"event-check:{nodeId}:{optionId}");
+            roll = new System.Random(seed).Next(0, 100);
+            bool succeeded = roll < successRate;
+            resolvedResult = succeeded ? option.success : option.failure;
+            return succeeded;
         }
 
         /// <summary>

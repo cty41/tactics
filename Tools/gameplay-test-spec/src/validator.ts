@@ -53,6 +53,11 @@ const supportedActionKinds = new Set([
   "unloadRosterCharacterConsumable",
   "buyShopGood",
   "applyEventResult",
+  "resolveNodeEventOption",
+  "applyRestNodeTransaction",
+  "buyShopGoodTransaction",
+  "commitNodeTransaction",
+  "reloadPureRunSession",
   "useCarriedConsumable",
   "openUI",
   "closeUI",
@@ -170,6 +175,12 @@ const supportedAssertionKinds = new Set([
   "shopGoodCountEquals",
   "shopConsumableCountAtLeast",
   "shopConsumableIdsUnique",
+  "mysteryEventIdsUnique",
+  "nodeEventIdEquals",
+  "nodeTransactionPhaseEquals",
+  "nodeTransactionRewardAppliedEquals",
+  "transactionApplicationCountEquals",
+  "nodeIsConsumed",
   "unitCanReceiveHealingEquals",
   "elementVisible",
   "elementText",
@@ -607,6 +618,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "unitStatusRemainingActionsEquals":
     case "actualSkillLevelEquals":
     case "decoyRemainingActionsEquals":
+    case "transactionApplicationCountEquals":
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "currentRoundOrderEquals":
@@ -621,6 +633,9 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "aiTurnUsedFallbackEquals":
     case "consumableInstanceExists":
     case "shopConsumableIdsUnique":
+    case "mysteryEventIdsUnique":
+    case "nodeTransactionRewardAppliedEquals":
+    case "nodeIsConsumed":
     case "unitCanReceiveHealingEquals":
     case "pureRunSkillChoicesAreMixed":
       if (typeof assertion.expected !== "boolean") {

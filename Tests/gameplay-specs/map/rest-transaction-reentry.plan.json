@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.RestTransactionReentry",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 7302
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "pure_run_mage",
+        "currentHp": 1,
+        "currentMp": 1,
+        "isDead": false
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "applyRestNodeTransaction",
+      "parameters": {
+        "nodeId": "layer_04_rest",
+        "healPercent": 0.3,
+        "manaHealPercent": 0.3
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "reloadPureRunSession",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "applyRestNodeTransaction",
+      "parameters": {
+        "nodeId": "layer_04_rest",
+        "healPercent": 0.3,
+        "manaHealPercent": 0.3
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHpEquals",
+      "target": "pure_run_mage",
+      "expected": 8,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterMpEquals",
+      "target": "pure_run_mage",
+      "expected": 6,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "transactionApplicationCountEquals",
+      "expected": 1,
+      "parameters": {
+        "key": "node:layer_04_rest:RestSite"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_rest",
+      "expected": "Resolved",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterHpEquals",
+      "target": "pure_run_mage",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "rosterCharacterMpEquals",
+      "target": "pure_run_mage",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "transactionApplicationCountEquals",
+      "parameters": {
+        "key": "node:layer_04_rest:RestSite"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_rest",
+      "parameters": {}
+    }
+  ]
+}

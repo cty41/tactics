@@ -1,51 +1,54 @@
 {
   "eventId": "lost_villager_001",
-  "title": "迷路的村民",
-  "description": "你在森林中遇到一个瑟瑟发抖的村民，他说自己迷路了，请求你帮助他找到回家的路。",
+  "title": "迷路村民",
+  "description": "一名疲惫的村民迷失在森林中，请求你指引他离开。",
   "options": [
     {
+      "id": "escort_villager",
       "text": "护送村民（体质检定）",
-      "attribute": 3,
+      "attribute": "Constitution",
       "baseSuccessRate": 75,
       "success": {
-        "type": 1,
+        "type": "Gold",
+        "target": "All",
         "amount": 40,
-        "itemId": null,
-        "description": "你成功护送村民回到村庄，村民们感激地给了你报酬。"
+        "description": "你坚持把村民送到安全处，并获得了谢礼。"
       },
       "failure": {
-        "type": 4,
+        "type": "Damage",
+        "target": "Self",
         "amount": 10,
-        "itemId": null,
-        "description": "在护送过程中，你们遭遇了野兽袭击，你受了些轻伤。"
+        "description": "途中遭遇野兽，检定者受到 10 点伤害。"
       }
     },
     {
+      "id": "give_directions",
       "text": "指明方向（智力检定）",
-      "attribute": 4,
+      "attribute": "Intelligence",
       "baseSuccessRate": 60,
       "success": {
-        "type": 1,
+        "type": "Gold",
+        "target": "All",
         "amount": 20,
-        "itemId": null,
-        "description": "你准确地指出了村庄的方向，村民感激地给了你一些金币。"
+        "description": "村民理解了路线，留下金币作为谢礼。"
       },
       "failure": {
-        "type": 0,
+        "type": "Nothing",
+        "target": "All",
         "amount": 0,
-        "itemId": null,
-        "description": "你的方向感似乎不太准确，村民只好自己摸索。"
+        "description": "村民仍然满脸困惑，只能自行摸索。"
       }
     },
     {
+      "id": "ignore",
       "text": "无视村民",
-      "attribute": 0,
+      "attribute": "None",
       "baseSuccessRate": 100,
       "success": {
-        "type": 0,
+        "type": "Nothing",
+        "target": "All",
         "amount": 0,
-        "itemId": null,
-        "description": "你选择继续赶路，没有理会村民的求助。"
+        "description": "你没有停留，继续深入森林。"
       },
       "failure": null
     }

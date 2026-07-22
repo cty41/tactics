@@ -24,6 +24,9 @@ namespace Tactics.RoguelikeMap.Events
     [System.Serializable]
     public class EventOption
     {
+        [JsonProperty("id")]
+        public string stableOptionId;
+
         [JsonProperty("text")]
         public string text;
 
@@ -49,8 +52,8 @@ namespace Tactics.RoguelikeMap.Events
             if (attribute == AttributeType.None)
                 return 100;
 
-            // 公式: 基础成功率 + (属性值 - 10) × 5%
-            int rate = baseSuccessRate + (attributeValue - 10) * 5;
+            // Pure Run baseline attributes start at 5.
+            int rate = baseSuccessRate + (attributeValue - 5) * 5;
             return Mathf.Clamp(rate, 5, 95);
         }
 

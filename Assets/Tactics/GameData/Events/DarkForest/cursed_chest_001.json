@@ -1,51 +1,55 @@
 {
   "eventId": "cursed_chest_001",
   "title": "诅咒宝箱",
-  "description": "一个古老的宝箱散发着不祥的气息，表面刻满了神秘的符文。你感受到一股邪恶的力量在其中涌动。",
+  "description": "一个古老的宝箱散发着不祥的气息，表面刻满了神秘符文。",
   "options": [
     {
-      "text": "打开宝箱（力量检定）",
-      "attribute": 1,
+      "id": "force_open",
+      "text": "用蛮力打开（力量检定）",
+      "attribute": "Strength",
       "baseSuccessRate": 60,
       "success": {
-        "type": 1,
+        "type": "Gold",
+        "target": "All",
         "amount": 50,
-        "itemId": null,
-        "description": "你用力撬开宝箱，发现里面装满了金币！"
+        "description": "箱盖应声而开，沉睡的金币滚落出来。"
       },
       "failure": {
-        "type": 6,
-        "amount": 0,
-        "itemId": "curse_weakness",
-        "description": "宝箱突然喷出一股黑烟，你感到力量被削弱了。"
+        "type": "Debuff",
+        "target": "Self",
+        "amount": 3,
+        "itemId": "Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset",
+        "description": "黑雾缠上检定者：下一场战斗受到伤害提高 30%，持续 3 回合。"
       }
     },
     {
-      "text": "小心检查陷阱（敏捷检定）",
-      "attribute": 2,
+      "id": "disarm_trap",
+      "text": "小心解除陷阱（敏捷检定）",
+      "attribute": "Dexterity",
       "baseSuccessRate": 70,
       "success": {
-        "type": 1,
+        "type": "Gold",
+        "target": "All",
         "amount": 30,
-        "itemId": null,
-        "description": "你发现了隐藏的机关，安全地获取了宝箱中的金币。"
+        "description": "机关被安全解除，你取走了箱中的金币。"
       },
       "failure": {
-        "type": 4,
+        "type": "Damage",
+        "target": "Self",
         "amount": 15,
-        "itemId": null,
-        "description": "你触发了陷阱，被毒针刺伤了！"
+        "description": "毒针骤然弹出，检定者受到 15 点伤害。"
       }
     },
     {
+      "id": "leave",
       "text": "放弃宝箱",
-      "attribute": 0,
+      "attribute": "None",
       "baseSuccessRate": 100,
       "success": {
-        "type": 0,
+        "type": "Nothing",
+        "target": "All",
         "amount": 0,
-        "itemId": null,
-        "description": "你明智地选择离开，避免了潜在的危险。"
+        "description": "你没有触碰宝箱，继续前进。"
       },
       "failure": null
     }

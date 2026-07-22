@@ -166,16 +166,16 @@ namespace Tactics.RoguelikeMap.Events
                 case AttributeType.None:
                     return 0;
                 case AttributeType.Strength:
-                    return character.Strength;
+                    return character.GetTotalStrength();
                 case AttributeType.Dexterity:
                     // CharacterDefinition 使用 Agility 对应 Dexterity
-                    return character.Agility;
+                    return character.GetTotalAgility();
                 case AttributeType.Constitution:
-                    return character.Constitution;
+                    return character.GetTotalConstitution();
                 case AttributeType.Intelligence:
-                    return character.Intelligence;
+                    return character.GetTotalIntelligence();
                 case AttributeType.Charisma:
-                    return character.Charisma;
+                    return character.GetTotalCharisma();
                 default:
                     TLog.Warning($"[EventEffectContext] 未知属性类型: {attributeType}");
                     return 0;

@@ -70,7 +70,7 @@ namespace Tactics.RoguelikeMap.Interaction
                 return new EventEffectContext(new List<CharacterDefinition>(), null, state);
 
             var party = state.Roster
-                .Where(c => state.ActivePartyCharacterIds.Contains(c.Id))
+                .Where(c => c != null && !c.IsDead && state.ActivePartyCharacterIds.Contains(c.Id))
                 .ToList();
 
             string selfCharacterId = party.FirstOrDefault()?.Id;

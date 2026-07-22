@@ -38,6 +38,8 @@ namespace Tactics.RoguelikeMap.Interaction
 
             _currentNode = node;
             _onClose = onClose;
+            var currentMap = Tactics.Roguelike.RoguelikeMapRuntimeState.CurrentMap;
+            RoguelikeNodeTransactionService.Begin(node, currentMap);
 
             // 通过 UIManager 显示 UI
             await UIManager.Instance.ShowAsync(UIManager.UIId.RestSitePanel);
@@ -55,12 +57,34 @@ namespace Tactics.RoguelikeMap.Interaction
             // 绑定休息按钮
             var restBtn = root.Q<Button>("RestButton");
             if (restBtn != null)
-                restBtn.RegisterCallback<ClickEvent>(_ => OnRestClicked());
+            {
+                restBtn.clicked -= OnRestClicked;
+                restBtn.clicked += OnRestClicked;
+            }
 
             // 绑定关闭按钮
             var closeBtn = root.Q<Button>("LeaveButton");
             if (closeBtn != null)
-                closeBtn.RegisterCallback<ClickEvent>(_ => ClosePanel());
+            {
+                closeBtn.clicked -= ClosePanel;
+                closeBtn.clicked += ClosePanel;
+            }
+
+            if (node.Transaction?.Phase >= RoguelikeNodeTransactionPhase.Resolved)
+            {
+                var state = PlayerAdventureStateStore.LoadRepairAndSave();
+                var reward = RewardResult.Empty();
+                reward.HealPercent = 0.3f;
+                reward.ManaHealPercent = 0.3f;
+                RoguelikeNodeTransactionService.TryApplyOnce(
+                    state,
+                    node.Transaction.TransactionKey,
+                    reward);
+                NodeInteractionManager.Instance?.ShowEffectResult(
+                    "休息完成",
+                    node.Transaction.ResultText,
+                    ClosePanel);
+            }
 
             TLog.Info("[RestSiteNodeHandler] 显示篝火营地面板");
         }
@@ -79,7 +103,14 @@ namespace Tactics.RoguelikeMap.Interaction
             var rewardResult = RewardResult.Empty();
             rewardResult.HealPercent = 0.3f;
             rewardResult.ManaHealPercent = 0.3f;
-            NodeInteractionManager.Instance?.ApplyRewardResult(rewardResult, state);
+
+            string resultText = "全队恢复了 30% HP 和 MP";
+            var currentMap = Tactics.Roguelike.RoguelikeMapRuntimeState.CurrentMap;
+            RoguelikeNodeTransactionService.MarkResolved(_currentNode, currentMap, resultText);
+            RoguelikeNodeTransactionService.TryApplyOnce(
+                state,
+                _currentNode.Transaction.TransactionKey,
+                rewardResult);
 
             foreach (var character in state.Roster)
             {
@@ -97,13 +128,15 @@ namespace Tactics.RoguelikeMap.Interaction
             // 显示效果结果弹窗
             NodeInteractionManager.Instance?.ShowEffectResult(
                 "休息完成",
-                $"全队恢复了 HP！\n{summaryLines}",
+                $"{resultText}\n{summaryLines}",
                 ClosePanel
             );
         }
 
         private void ClosePanel()
         {
+            var currentMap = Tactics.Roguelike.RoguelikeMapRuntimeState.CurrentMap;
+            RoguelikeNodeTransactionService.Commit(_currentNode, currentMap, true);
             UIManager.Instance.Hide(UIManager.UIId.RestSitePanel);
             _overlay = null;
             var callback = _onClose;

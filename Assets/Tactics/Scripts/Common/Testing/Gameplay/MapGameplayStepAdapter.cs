@@ -42,7 +42,12 @@ namespace Tactics.Common.Testing.Gameplay
                 or "applyRestSiteResult"
                 or "buyShopEquipment"
                 or "buyShopGood"
-                or "applyEventResult";
+                or "applyEventResult"
+                or "resolveNodeEventOption"
+                or "applyRestNodeTransaction"
+                or "buyShopGoodTransaction"
+                or "commitNodeTransaction"
+                or "reloadPureRunSession";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -85,6 +90,16 @@ namespace Tactics.Common.Testing.Gameplay
                         return BuyShopGood(context, action);
                     case "applyEventResult":
                         return ApplyEventResult(context, action);
+                    case "resolveNodeEventOption":
+                        return ResolveNodeEventOption(context, action);
+                    case "applyRestNodeTransaction":
+                        return ApplyRestNodeTransaction(context, action);
+                    case "buyShopGoodTransaction":
+                        return BuyShopGoodTransaction(context, action);
+                    case "commitNodeTransaction":
+                        return CommitNodeTransaction(context, action);
+                    case "reloadPureRunSession":
+                        return ReloadPureRunSession(context, action);
                     default:
                         return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Unsupported Map action '{action.Kind}'.");
                 }
@@ -126,7 +141,13 @@ namespace Tactics.Common.Testing.Gameplay
                 or "consumableInstanceExists"
                 or "shopGoodCountEquals"
                 or "shopConsumableCountAtLeast"
-                or "shopConsumableIdsUnique";
+                or "shopConsumableIdsUnique"
+                or "mysteryEventIdsUnique"
+                or "nodeEventIdEquals"
+                or "nodeTransactionPhaseEquals"
+                or "nodeTransactionRewardAppliedEquals"
+                or "transactionApplicationCountEquals"
+                or "nodeIsConsumed";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -165,6 +186,12 @@ namespace Tactics.Common.Testing.Gameplay
                     "shopGoodCountEquals" => AssertShopGoodCountEquals(context, assertion),
                     "shopConsumableCountAtLeast" => AssertShopConsumableCountAtLeast(context, assertion),
                     "shopConsumableIdsUnique" => AssertShopConsumableIdsUnique(context, assertion),
+                    "mysteryEventIdsUnique" => AssertMysteryEventIdsUnique(context, assertion),
+                    "nodeEventIdEquals" => AssertNodeEventIdEquals(context, assertion),
+                    "nodeTransactionPhaseEquals" => AssertNodeTransactionPhaseEquals(context, assertion),
+                    "nodeTransactionRewardAppliedEquals" => AssertNodeTransactionRewardAppliedEquals(context, assertion),
+                    "transactionApplicationCountEquals" => AssertTransactionApplicationCountEquals(assertion),
+                    "nodeIsConsumed" => AssertNodeIsConsumed(context, assertion),
                     _ => GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported Map assertion '{assertion.Kind}'.")
                 };
 
@@ -741,6 +768,148 @@ namespace Tactics.Common.Testing.Gameplay
             eventResult.Apply(eventContext);
             context.CurrentAdventureState = state;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Applied event result '{resultType}' to target '{targetType}'.");
+        }
+
+        private static GameplayStepResult ResolveNodeEventOption(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string nodeId = action.Parameters["nodeId"]?.ToString();
+            string optionId = action.Parameters["optionId"]?.ToString();
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var node = map?.GetNode(nodeId);
+            if (node == null || string.IsNullOrWhiteSpace(optionId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "resolveNodeEventOption requires a valid nodeId and optionId.");
+
+            RoguelikeEvent evt = LoadFallbackEventAsset(node.eventId);
+            EventOption option = evt?.options?.FirstOrDefault(candidate => candidate.stableOptionId == optionId);
+            if (option == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Event option '{optionId}' was not found for '{node.eventId}'.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var eventContext = RoguelikeRewardHelper.CreateActivePartyContext(state);
+            RoguelikeNodeTransactionService.Begin(node, map);
+
+            if (node.Transaction.Phase < RoguelikeNodeTransactionPhase.Resolved)
+            {
+                bool succeeded = AttributeCheckSystem.ResolveDeterministic(
+                    option,
+                    eventContext,
+                    state?.RunSeed ?? map.runSeed,
+                    node.nodeId,
+                    out EventResult resolvedResult,
+                    out CharacterDefinition adjudicator,
+                    out int attributeValue,
+                    out int successRate,
+                    out int roll);
+                if (adjudicator != null)
+                    eventContext.SelfCharacterId = adjudicator.Id;
+                RewardResult reward = resolvedResult?.ToRewardResult(eventContext) ?? RewardResult.Empty();
+                string resultText = resolvedResult?.GetDisplayText(eventContext, reward) ?? string.Empty;
+                RoguelikeNodeTransactionService.ResolveEvent(
+                    node,
+                    map,
+                    evt.eventId,
+                    option,
+                    succeeded,
+                    adjudicator,
+                    attributeValue,
+                    successRate,
+                    roll,
+                    resolvedResult,
+                    resultText);
+            }
+
+            RoguelikeNodeTransactionService.EnsureResolvedEventApplied(node, map, eventContext);
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(
+                MapAdapterName,
+                action.Kind,
+                $"Resolved '{node.eventId}:{optionId}' as {node.Transaction.Succeeded} with roll {node.Transaction.Roll}.");
+        }
+
+        private static GameplayStepResult ApplyRestNodeTransaction(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string nodeId = action.Parameters["nodeId"]?.ToString();
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var node = map?.GetNode(nodeId);
+            if (node == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Rest node '{nodeId}' was not found.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var reward = RewardResult.Empty();
+            reward.HealPercent = action.Parameters["healPercent"]?.ToObject<float>() ?? 0.3f;
+            reward.ManaHealPercent = action.Parameters["manaHealPercent"]?.ToObject<float>() ?? 0.3f;
+            RoguelikeNodeTransactionService.MarkResolved(node, map, "全队恢复了 30% HP 和 MP");
+            RoguelikeNodeTransactionService.TryApplyOnce(state, node.Transaction.TransactionKey, reward);
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Applied rest transaction '{node.Transaction.TransactionKey}'.");
+        }
+
+        private static GameplayStepResult BuyShopGoodTransaction(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string nodeId = action.Parameters["nodeId"]?.ToString();
+            string kindName = action.Parameters["itemKind"]?.ToString();
+            string contentId = action.Parameters["contentId"]?.ToString();
+            int price = action.Parameters["price"]?.ToObject<int>() ?? 0;
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var node = map?.GetNode(nodeId);
+            if (node == null || !Enum.TryParse(kindName, true, out StoreGoodKind kind) || string.IsNullOrWhiteSpace(contentId))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "buyShopGoodTransaction requires nodeId, itemKind and contentId.");
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            RoguelikeNodeTransactionService.Begin(node, map);
+            var reward = RewardResult.Empty();
+            reward.GoldCost = price;
+            if (kind == StoreGoodKind.Consumable)
+                reward.ItemIds.Add(contentId);
+            else
+                reward.EquipmentIds.Add(contentId);
+
+            string purchaseKey = $"{(kind == StoreGoodKind.Consumable ? "item" : "equipment")}:{contentId}";
+            string transactionKey = RoguelikeNodeTransactionService.BuildActionKey(node, $"purchase:{purchaseKey}");
+            bool applied = RoguelikeNodeTransactionService.TryApplyOnce(state, transactionKey, reward);
+            if (applied)
+            {
+                map.AddStorePurchase(node.nodeId, purchaseKey);
+                PureRunSessionStore.SaveMap(map);
+            }
+
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Store purchase '{transactionKey}' applied={applied}.");
+        }
+
+        private static GameplayStepResult CommitNodeTransaction(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string nodeId = action.Parameters["nodeId"]?.ToString();
+            bool consumeNode = action.Parameters["consumeNode"]?.ToObject<bool>() ?? true;
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var node = map?.GetNode(nodeId);
+            if (node == null)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Node '{nodeId}' was not found.");
+
+            RoguelikeNodeTransactionService.Commit(node, map, consumeNode);
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, $"Committed node transaction '{nodeId}'.");
+        }
+
+        private static GameplayStepResult ReloadPureRunSession(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            RoguelikeMapRuntimeState.ClearAll();
+            if (!PureRunSessionStore.TryLoad(out var state, out var map))
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "Pure Run session could not be reloaded.");
+
+            context.RoguelikeMap = map;
+            context.CurrentAdventureState = state;
+            context.CurrentNodeId = map.currentNodeId;
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, "Reloaded Pure Run session.");
         }
 
         private static List<CharacterDefinition> ResolveContextParty(PlayerAdventureState state, ExecutableScenarioAction action)
@@ -1332,6 +1501,93 @@ namespace Tactics.Common.Testing.Gameplay
             return actual
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} pending buff '{buffName}' has icon.")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} pending buff '{buffName}' to retain icon after reload.");
+        }
+
+        private static GameplayAssertionResult AssertMysteryEventIdsUnique(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            var eventIds = map?.nodes?
+                .Where(node => node?.nodeType == RoguelikeNodeType.Mystery)
+                .Select(node => node.eventId)
+                .Where(eventId => !string.IsNullOrWhiteSpace(eventId))
+                .ToList() ?? new List<string>();
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = eventIds.Count > 0 && eventIds.Count == eventIds.Distinct(StringComparer.Ordinal).Count();
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"MysteryEventIdsUnique={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected MysteryEventIdsUnique={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertNodeEventIdEquals(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            var node = ResolveAssertionNode(context, assertion);
+            string expected = assertion.Expected?.ToString();
+            return node?.eventId == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{node.nodeId}.eventId={expected}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected eventId={expected}, actual={node?.eventId ?? "null"}.");
+        }
+
+        private static GameplayAssertionResult AssertNodeTransactionPhaseEquals(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            var node = ResolveAssertionNode(context, assertion);
+            string actual = node?.Transaction?.Phase.ToString() ?? RoguelikeNodeTransactionPhase.None.ToString();
+            string expected = assertion.Expected?.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"TransactionPhase={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected TransactionPhase={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertNodeTransactionRewardAppliedEquals(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            var node = ResolveAssertionNode(context, assertion);
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = node?.Transaction?.RewardApplied == true;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"TransactionRewardApplied={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected TransactionRewardApplied={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertTransactionApplicationCountEquals(
+            ExecutableScenarioAssertion assertion)
+        {
+            string key = assertion.Parameters["key"]?.ToString();
+            int expected = assertion.Expected?.ToObject<int>() ?? 1;
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            int actual = state?.AppliedNodeTransactionKeys?.Count(candidate => candidate == key) ?? 0;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"TransactionApplicationCount={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected TransactionApplicationCount={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertNodeIsConsumed(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            var node = ResolveAssertionNode(context, assertion);
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            bool actual = node?.IsConsumed == true;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"NodeIsConsumed={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected NodeIsConsumed={expected}, actual={actual}.");
+        }
+
+        private static RoguelikeMapNode ResolveAssertionNode(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion)
+        {
+            string nodeId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(nodeId))
+                nodeId = assertion.Parameters["nodeId"]?.ToString();
+            var map = context.RoguelikeMap ?? RoguelikeMapRuntimeState.CurrentMap;
+            return map?.GetNode(nodeId);
         }
     }
 }

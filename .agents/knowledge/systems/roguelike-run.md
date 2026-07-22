@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-23T03:00:15+08:00"
+timestamp: "2026-07-23T03:32:16+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -25,7 +25,7 @@ repo_paths:
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:dfd37488e4e6172ec74c3b0bc5f388ab8ac881d7dbfe405bb48492ac00c96d7f
+source_fingerprint: sha256:97a3ee6589e279fecb26af982e13bd010560b0c37776aa71e6aae2c3711bd445
 ---
 
 # Current State
@@ -33,6 +33,10 @@ source_fingerprint: sha256:dfd37488e4e6172ec74c3b0bc5f388ab8ac881d7dbfe405bb4849
 Pure Run v1 由 `RoguelikeMapGenerator.GetPureRunMap` 生成 7 层只前进地图，单局实际战斗数为 5、6 或 7；第 4、6 层均在战斗、休息、商店和随机事件之间四选一。节点沿 outgoing 揭示，已访问节点不会重新可选。地图布局版本为 2。
 
 Demo 使用单一全局 Run，不经过三存档槽。`PureRunSessionStore` 将版本 5 冒险状态与地图作为配对数据保存；Home 提供 New Run 和 Continue Run。普通战斗胜利结算后回到地图，失败或 Boss 胜利显示 RunEndSummary 并清理本局状态。
+
+Pure Run 的 Mystery、Rest 与 Store 通过持久化节点事务保护中断恢复。事务按 `Entered → Resolved → Committed` 推进，并在冒险状态中记录已应用的奖励键：效果结算前先保存 `Resolved` 快照，重入时恢复同一结果并只补发尚未应用的效果，只有继续/关闭等明确完成动作才提交和消费节点；商店按商品使用独立购买键，因此崩溃或返回地图后不会重复扣款或重复发货。
+
+第 4、6 层的两个 Mystery 节点会由 run seed 确定性分配互不重复的正式事件，并在旧存档缺失分配时补全而不覆盖已有值。正式事件为诅咒宝箱、堕落祭坛和迷途村民；选项使用稳定 ID，检定概率以属性 5 为基准并限制在 5%–95%，检定投点由 run seed、节点 ID 和选项 ID 共同决定，因而重入不会重掷。事件结果页可跨重载恢复，事件致死会在提交后进入战败结算。
 
 `CreatePureRunState` 建立法师、死灵法师和亚马逊固定三人队，等级 1、七项基础属性 5。每次胜利只让一名最低等级存活角色获得 1 级和 1 属性；起始分支主属性达到 7 时，高级技能有一次候选保底。
 
@@ -58,7 +62,7 @@ LevelUp 面板按实际 `LearnedSkill.Level` 显示当前技能和混合候选�
 
 # Verification Guidance
 
-实现判断核对地图生成、运行状态、结算代码、配置资产和测试。地图/事件编辑器人工验收使用可复现操作与状态结果，不使用截图证明功能。
+实现判断核对地图生成、运行状态、节点事务、结算代码、配置资产和测试。Mystery/Rest/Store 的自动化验证必须覆盖 Resolved 状态重载、奖励幂等和最终提交；最终玩家流人工验收使用可复现操作与状态结果，不使用截图证明功能。
 
 # Citations
 

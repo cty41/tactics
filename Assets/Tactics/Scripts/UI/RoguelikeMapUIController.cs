@@ -43,6 +43,8 @@ namespace Tactics.UI
         public string BattleSceneName => battleSceneName;
 
         private global::Tactics.RoguelikeMap.RoguelikeMap _currentMap;
+        private string _interruptedEventType;
+        private string _interruptedNodeId;
         private NodeStateManager _nodeStateManager;
         private bool _locked;
 
@@ -149,6 +151,7 @@ namespace Tactics.UI
             ShowMap(_currentMap);
             RefreshPartyPanel();
             yield return StartCoroutine(WaitForMapReadyCoroutine());
+            ResumeInterruptedNodeIfNeeded();
         }
 
         private void LoadOrGenerateMap()
@@ -175,7 +178,8 @@ namespace Tactics.UI
             if (RoguelikeEventReentryManager.IsEventInProgress(out string interruptedEventType, out string interruptedNodeId))
             {
                 TLog.Warning($"[RoguelikeMapUIController] Detected interrupted event: type={interruptedEventType}, nodeId={interruptedNodeId}");
-                RoguelikeEventReentryManager.ClearEventInProgress();
+                _interruptedEventType = interruptedEventType;
+                _interruptedNodeId = interruptedNodeId;
             }
         }
 
@@ -858,6 +862,47 @@ private void EnterNode(RoguelikeMapUINode mapNode)
             CommitPathForNode(mapNode);
             RoguelikeEventReentryManager.ClearEventInProgress();
             _locked = false;
+        }
+
+        private void ResumeInterruptedNodeIfNeeded()
+        {
+            if (string.IsNullOrWhiteSpace(_interruptedNodeId) ||
+                string.Equals(_interruptedEventType, "Battle", System.StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (string.Equals(_interruptedEventType, "Treasure", System.StringComparison.Ordinal))
+            {
+                _interruptedEventType = null;
+                _interruptedNodeId = null;
+                RoguelikeEventReentryManager.ClearEventInProgress();
+                return;
+            }
+
+            var mapNode = _mapNodes.FirstOrDefault(candidate =>
+                candidate?.Node?.nodeId == _interruptedNodeId);
+            _interruptedEventType = null;
+            _interruptedNodeId = null;
+
+            if (mapNode?.Node == null ||
+                mapNode.Node.Transaction?.Phase == RoguelikeNodeTransactionPhase.Committed)
+            {
+                RoguelikeEventReentryManager.ClearEventInProgress();
+                return;
+            }
+
+            if (NodeInteractionManager.Instance == null)
+            {
+                var go = new GameObject("NodeInteractionManager");
+                go.AddComponent<NodeInteractionManager>();
+            }
+
+            _locked = true;
+            NodeInteractionManager.Instance.CurrentMap = _currentMap;
+            NodeInteractionManager.Instance.HandleNodeInteraction(
+                mapNode.Node,
+                () => OnNonBattleNodeInteractionCompleted(mapNode));
         }
 
         private static string GetNodeEventType(RoguelikeNodeType nodeType)

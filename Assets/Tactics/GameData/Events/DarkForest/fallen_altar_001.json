@@ -1,51 +1,57 @@
 {
   "eventId": "fallen_altar_001",
   "title": "堕落祭坛",
-  "description": "一座破败的祭坛矗立在森林深处，上面布满了裂痕和苔藓。曾经神圣的气息已被黑暗力量侵蚀。",
+  "description": "一座被黑暗侵蚀的祭坛矗立在森林深处，残留的神圣气息仍在抵抗。",
   "options": [
     {
-      "text": "祈祷净化（魅力检定）",
-      "attribute": 5,
+      "id": "purify_prayer",
+      "text": "尝试净化（魅力检定）",
+      "attribute": "Charisma",
       "baseSuccessRate": 50,
       "success": {
-        "type": 5,
-        "amount": 20,
-        "itemId": "buff_holy_protection",
-        "description": "你的祈祷得到了回应，神圣的力量保护了你！"
+        "type": "Buff",
+        "target": "Self",
+        "amount": 3,
+        "itemId": "Assets/Tactics/ScriptableObjects/Buffs/EventDamageReduction.asset",
+        "description": "神圣力量回应了检定者：下一场战斗受到伤害降低 20%，持续 3 回合。"
       },
       "failure": {
-        "type": 7,
-        "amount": 10,
-        "itemId": "debuff_dark_mark",
-        "description": "黑暗力量反噬，你在身上留下了黑暗印记。"
+        "type": "Debuff",
+        "target": "Self",
+        "amount": 3,
+        "itemId": "Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset",
+        "description": "黑暗力量反噬检定者：下一场战斗受到伤害提高 30%，持续 3 回合。"
       }
     },
     {
-      "text": "搜刮祭坛（智力检定）",
-      "attribute": 4,
+      "id": "search_altar",
+      "text": "搜寻残留物（智力检定）",
+      "attribute": "Intelligence",
       "baseSuccessRate": 65,
       "success": {
-        "type": 3,
+        "type": "Item",
+        "target": "All",
         "amount": 1,
-        "itemId": "holy_symbol",
-        "description": "你在祭坛下找到了一个神圣护符！"
+        "itemId": "cleansing_potion",
+        "description": "你辨认出一瓶未被污染的净化药水。"
       },
       "failure": {
-        "type": 4,
+        "type": "Damage",
+        "target": "Self",
         "amount": 20,
-        "itemId": null,
-        "description": "你触发了祭坛的防御机制，被闪电击中！"
+        "description": "祭坛释放出残存的闪电，检定者受到 20 点伤害。"
       }
     },
     {
+      "id": "detour",
       "text": "绕道而行",
-      "attribute": 0,
+      "attribute": "None",
       "baseSuccessRate": 100,
       "success": {
-        "type": 0,
+        "type": "Nothing",
+        "target": "All",
         "amount": 0,
-        "itemId": null,
-        "description": "你选择不打扰这座古老的祭坛。"
+        "description": "你没有惊动祭坛中的黑暗。"
       },
       "failure": null
     }
