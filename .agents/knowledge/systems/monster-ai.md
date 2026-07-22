@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-07-22T23:53:53+08:00"
+timestamp: "2026-07-23T02:06:18+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -17,7 +17,7 @@ repo_paths:
   - Assets/Tactics/AI/FireDemonBrain.asset
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:c93f60b02efda1ca3f5243350b87e02d0d09f3d8fa31d1e89bfd5aefad5112c9
+source_fingerprint: sha256:f88cfce413008e3302d9446dd9c47dac9d96e4d9b022cf606d9bebc2c5c1e5e3
 ---
 
 # Current State
@@ -29,6 +29,8 @@ source_fingerprint: sha256:c93f60b02efda1ca3f5243350b87e02d0d09f3d8fa31d1e89bfd5
 单位朝向属于共享战斗状态而不是 AI 私有状态。AI 成功移动后按路径最后一步转向，成功执行目标技能后朝向目标；失败执行恢复原朝向。AI 不在回合末自动面向最近敌人，也不显示独立箭头。方向型技能后续直接读取这一共享朝向与 `SkillTargetingProtocol`。
 
 当前普通/精英怪物仍共用 `BasicMeleeBrain`、`BasicMeleeGraph`、`BasicMeleeProfile`。法师召唤物新增 `FireDemonBrain`，复用 BasicMelee 图与 Profile，但设置 2–3 格偏好距离；火魔与敌人相邻且存在合法站位时优先重定位。`ScoreNode.Parameter` 已序列化但尚未由 `IntentScorer` 消费；除火魔外，后续差异化怪物模式仍未实现。
+
+亚马逊诱饵沿用普通敌人的候选生成与合法性，不建立专用 Brain。若当前生成结果中存在可达诱饵的移动或攻击候选，`IntentGenerator` 会只保留这些诱饵候选；没有可达诱饵候选时继续使用正常敌方目标，避免不可达诱饵令 AI 停摆。
 
 # Relationships
 

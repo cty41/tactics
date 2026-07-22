@@ -239,16 +239,6 @@ namespace Tactics.Common.Skills.Graph
                 return Task.FromResult(SkillNodeExecutionResult.Success());
             }
 
-            // 命中率惩罚检查（HeavyShot 等技能）
-            if (record.AccuracyPenalty > 0f && !CombatComponent.IsHit(caster, target, record.AccuracyPenalty))
-            {
-                TLog.Info($"[ApplyDamage] Attack missed (accuracyPenalty={record.AccuracyPenalty}).");
-                context.SetBlackboard("HasLastDamageResolution", true);
-                context.SetBlackboard("LastDamageHit", false);
-                context.SetBlackboard("LastDamageTarget", target);
-                return Task.FromResult(SkillNodeExecutionResult.Success());
-            }
-
             var resolution = CombatComponent.ApplyDamage(
                 caster, target, record.BaseDamage, record.IsRanged,
                 record.DamageType == SkillGraphDamageType.Physical
@@ -257,7 +247,8 @@ namespace Tactics.Common.Skills.Graph
                 record.ElementType,
                 canTriggerBeforeAttacked: true,
                 canCrit: record.CanCrit,
-                canTriggerDamageTaken: true);
+                canTriggerDamageTaken: true,
+                accuracyPenalty: record.AccuracyPenalty);
 
             context.SetBlackboard("HasLastDamageResolution", true);
             context.SetBlackboard("LastDamageHit", resolution.WasHit);

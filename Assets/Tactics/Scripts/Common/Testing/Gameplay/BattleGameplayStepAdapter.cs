@@ -585,6 +585,16 @@ namespace Tactics.Common.Testing.Gameplay
                 TargetPoint = targetPoint,
                 RuntimeScope = context.RuntimeScope
             };
+            if (action.Parameters["orderedTargetAliases"] is JArray orderedAliases)
+            {
+                foreach (string alias in orderedAliases.Values<string>())
+                {
+                    if (!context.Units.TryGetValue(alias, out var orderedTarget))
+                        return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Ordered target alias '{alias}' not found.");
+                    skillContext.TargetSet.Add(orderedTarget);
+                }
+                skillContext.PrimaryTarget = skillContext.TargetSet.FirstOrDefault();
+            }
 
             var facingTarget = targetPoint ?? primaryTarget?.CurrentCell;
             var originalFacing = caster.Facing;
@@ -611,7 +621,20 @@ namespace Tactics.Common.Testing.Gameplay
             }
 
             if (result == SkillGraphExecutionState.Completed)
+            {
+                var amazonState = AmazonBattleState.For(controller);
+                context.SpearHolderAlias = amazonState.IsSpearHeld(caster) ? casterAlias : "none";
+                var spearCell = amazonState.GetSpearCell(caster);
+                context.SpearCellAlias = context.Cells.FirstOrDefault(pair => ReferenceEquals(pair.Value, spearCell)).Key ?? "none";
+                string decoyAlias = action.Parameters["decoyAlias"]?.ToString();
+                var decoy = amazonState.GetDecoy(caster);
+                if (!string.IsNullOrWhiteSpace(decoyAlias) && decoy != null)
+                {
+                    context.Units[decoyAlias] = decoy;
+                    context.DecoyRemainingActions[decoyAlias] = amazonState.GetDecoyTurnsUntilExpiry(caster);
+                }
                 return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed SkillGraph '{graphAlias}' on {casterAlias}.");
+            }
 
             return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"SkillGraph '{graphAlias}' execution failed: {skillContext.LastError}");
         }

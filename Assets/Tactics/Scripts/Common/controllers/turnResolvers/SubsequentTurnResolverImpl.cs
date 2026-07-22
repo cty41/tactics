@@ -1,4 +1,5 @@
 using System.Linq;
+using Tactics.Common.Battle;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.Controllers.TurnResolvers
@@ -35,7 +36,8 @@ namespace Tactics.Common.Controllers.TurnResolvers
                 TLog.Error("[SubsequentTurnResolverImpl] nextPlayer is null despite non-empty player list.");
                 return default;
             }
-            var allowedUnits = gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber == nextPlayer.PlayerNumber);
+            var allowedUnits = gridController.UnitManager.GetUnits().Where(u =>
+                u.PlayerNumber == nextPlayer.PlayerNumber && !AmazonBattleState.IsDecoy(u));
             return new TurnContext(nextPlayer, allowedUnits);
         }
 
@@ -63,10 +65,12 @@ namespace Tactics.Common.Controllers.TurnResolvers
                 int nextIndex = (currentIndex + offset) % numberToCheck;
                 var candidate = sortedPlayers[nextIndex];
                 if (candidate == null) continue;
-                bool hasUnits = gridController.UnitManager.GetUnits().Any(u => u.PlayerNumber == candidate.PlayerNumber);
+                bool hasUnits = gridController.UnitManager.GetUnits().Any(u =>
+                    u.PlayerNumber == candidate.PlayerNumber && !AmazonBattleState.IsDecoy(u));
                 if (hasUnits)
                 {
-                    var allowedUnits = gridController.UnitManager.GetUnits().Where(u => u.PlayerNumber == candidate.PlayerNumber);
+                    var allowedUnits = gridController.UnitManager.GetUnits().Where(u =>
+                        u.PlayerNumber == candidate.PlayerNumber && !AmazonBattleState.IsDecoy(u));
                     return new TurnContext(candidate, allowedUnits);
                 }
             }

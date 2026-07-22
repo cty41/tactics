@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Tactics.Common.Cells;
+using Tactics.Common.Battle;
 using Tactics.Common.Players;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
@@ -438,6 +439,10 @@ namespace Tactics.Common.Testing.Gameplay
                 PrimaryTarget = primaryTarget,
                 TargetPoint = targetPoint
             });
+            var amazonState = AmazonBattleState.For(world.GridController);
+            context.SpearHolderAlias = amazonState.IsSpearHeld(caster) ? casterAlias : "none";
+            var spearCell = amazonState.GetSpearCell(caster);
+            context.SpearCellAlias = context.Cells.FirstOrDefault(pair => ReferenceEquals(pair.Value, spearCell)).Key ?? "none";
             context.LastStepMessage = context.LastSkillResult?.Summary;
         }
 

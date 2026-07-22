@@ -223,6 +223,8 @@ namespace Tactics.Common.Controllers
             // Capture summon identity before registry cleanup clears ownership. Reanimated
             // units are removed outright and never become valid corpse resources.
             bool wasSummoned = eventArgs.AffectedUnit.OwnerUnitId >= 0;
+            bool wasDecoy = AmazonBattleState.IsDecoy(eventArgs.AffectedUnit);
+            AmazonBattleState.For(this)?.HandleUnitDeath(eventArgs.AffectedUnit);
             SummonRegistry.For(this)?.HandleUnitDeath(eventArgs.AffectedUnit);
 
             // Linked death: if this unit has a summoned unit, kill it
@@ -246,7 +248,7 @@ namespace Tactics.Common.Controllers
             }
 
             // Corpse generation: first time death → create Corpse interactable on grid
-            if (!wasSummoned && !eventArgs.AffectedUnit.IsCorpse)
+            if (!wasSummoned && !wasDecoy && !eventArgs.AffectedUnit.IsCorpse)
             {
                 eventArgs.AffectedUnit.IsCorpse = true;
                 var cell = eventArgs.AffectedUnit.CurrentCell;
@@ -306,6 +308,7 @@ namespace Tactics.Common.Controllers
         /// </summary>
         public async Task HandleUnitDestroyedAsync(IUnit unit)
         {
+            AmazonBattleState.For(this)?.HandleUnitDeath(unit);
             SummonRegistry.For(this)?.HandleUnitDeath(unit);
 
             // Linked death: if this unit has a summoned unit, kill it
@@ -402,6 +405,7 @@ namespace Tactics.Common.Controllers
 
         public void InvokeGameEnded(GameResult gameResult)
         {
+            AmazonBattleState.For(this)?.Clear();
             SummonRegistry.For(this)?.Clear(despawnSummons: true);
             GameEnded?.Invoke(gameResult);
             GridState = new GridStateGameEnded();

@@ -231,7 +231,6 @@ namespace Tactics.Tests.PlayMode
         {
             yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset", 5);
             yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset", 5);
-            yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset", 6);
         }
 
         [Test]
@@ -302,7 +301,8 @@ namespace Tactics.Tests.PlayMode
                 world.SetTurnContext(world.PlayerTwo, new[] { target });
 
                 var ability = new SkillGraphAbilityImpl(caster, config);
-                Task<SkillGraphRuntimeTestResult> task = ability.ExecuteForTestAsync(targetCell, world.GridController);
+                Task<SkillGraphRuntimeTestResult> task = ability.ExecuteOrderedForTestAsync(
+                    new IUnit[] { target, target, target }, world.GridController);
 
                 yield return new WaitUntil(() => task.IsCompleted);
                 Assert.That(task.IsFaulted, Is.False);
@@ -425,6 +425,7 @@ namespace Tactics.Tests.PlayMode
             {
                 var casterCell = world.CreateSquareCell("PoisonCaster", 0, 0);
                 var targetCell = world.CreateSquareCell("PoisonTarget", 1, 0);
+                world.CreateSquareCell("PoisonDrop", 2, 0);
                 var caster = world.CreateUnit("PoisonCasterUnit", 0, casterCell);
                 var target = world.CreateUnit("PoisonTargetUnit", 1, targetCell);
                 caster.Mana = 20f;
@@ -438,7 +439,11 @@ namespace Tactics.Tests.PlayMode
                 Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed), task.Result.LastError);
                 Assert.That(target.BuffComponent.HasBuff(BuffEffectType.Poison), Is.True);
             }
-            finally { world.Dispose(); }
+            finally
+            {
+                AmazonBattleState.For(world.GridController).Clear();
+                world.Dispose();
+            }
         }
 
         [UnityTest]
@@ -470,7 +475,7 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator RecoverSpear_DropsProjectileNearLastHitCell()
+        public IEnumerator RecoverSpear_RecallsExistingDroppedSpear()
         {
             var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
                 "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RecoverSpear_Graph_Ability.asset");
@@ -478,33 +483,27 @@ namespace Tactics.Tests.PlayMode
             try
             {
                 var casterCell = world.CreateSquareCell("RecoverCaster", 0, 0);
-                var targetCell = world.CreateSquareCell("RecoverTarget", 1, 0);
-                world.CreateSquareCell("RecoverDropCell", 1, 1);
+                var spearCell = world.CreateSquareCell("RecoverSpear", 1, 0);
                 var caster = world.CreateUnit("RecoverCasterUnit", 0, casterCell);
-                var target = world.CreateUnit("RecoverTargetUnit", 1, targetCell);
+                caster.Mana = 20f;
                 world.SetTurnContext(world.PlayerOne, new[] { caster });
-                world.SetTurnContext(world.PlayerTwo, new[] { target });
-
-                var runner = new SkillGraphRuntimeTestRunner();
-                var task = runner.ExecuteAsync(new SkillGraphRuntimeTestRequest
-                {
-                    Name = config.DisplayName,
-                    Graph = config.SkillGraph,
-                    GridController = world.GridController,
-                    Caster = caster,
-                    PrimaryTarget = target
-                });
+                var state = AmazonBattleState.For(world.GridController);
+                Assert.That(state.DropSpear(caster, spearCell), Is.True);
+                var task = new SkillGraphAbilityImpl(caster, config)
+                    .ExecuteForTestAsync(spearCell, world.GridController);
                 yield return new WaitUntil(() => task.IsCompleted);
                 Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed));
-                var dropped = task.Result.ExecutionEvents.Find(entry => entry.EventType == "ProjectileDropped");
-                Assert.That(dropped, Is.Not.Null);
-                Assert.That(dropped.CellCoordinates, Is.Not.EqualTo(targetCell.GridCoordinates.ToString()));
+                Assert.That(state.IsSpearHeld(caster), Is.True);
             }
-            finally { world.Dispose(); }
+            finally
+            {
+                AmazonBattleState.For(world.GridController).Clear();
+                world.Dispose();
+            }
         }
 
         [UnityTest]
-        public IEnumerator SummonAndDecoy_SpawnAdjacentUnit()
+        public IEnumerator SummonAndDecoy_CreateTheirDistinctRuntimeEntities()
         {
             var configPaths = new[]
             {
@@ -528,10 +527,24 @@ namespace Tactics.Tests.PlayMode
                     var task = ability.ExecuteForTestAsync(adjacent, world.GridController);
                     yield return new WaitUntil(() => task.IsCompleted);
                     Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed), task.Result.LastError);
-                    Assert.That(caster.SummonedUnit, Is.Not.Null);
-                    Assert.That(caster.SummonedUnit.CurrentCell.GetDistance(casterCell), Is.EqualTo(1));
+                    if (configPath.Contains("Decoy"))
+                    {
+                        var decoy = AmazonBattleState.For(world.GridController).GetDecoy(caster);
+                        Assert.That(decoy, Is.Not.Null);
+                        Assert.That(decoy.CurrentCell, Is.SameAs(casterCell));
+                        Assert.That(caster.CurrentCell, Is.SameAs(adjacent));
+                    }
+                    else
+                    {
+                        Assert.That(caster.SummonedUnit, Is.Not.Null);
+                        Assert.That(caster.SummonedUnit.CurrentCell.GetDistance(casterCell), Is.EqualTo(1));
+                    }
                 }
-                finally { world.Dispose(); }
+                finally
+                {
+                    AmazonBattleState.For(world.GridController).Clear();
+                    world.Dispose();
+                }
             }
         }
 

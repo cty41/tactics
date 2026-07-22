@@ -247,6 +247,10 @@ namespace Tactics.Editor.SkillGraphEditor
                     "Necromancer Skill", "node-effect",
                     hasInput: true, hasOutput: true,
                     info: $"{r.SkillKind} Lv{r.Level}"),
+                AmazonSkillNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Amazon Skill", "node-effect",
+                    hasInput: true, hasOutput: true,
+                    info: $"{r.SkillKind} Lv{r.Level}"),
                 _ => null
             };
 

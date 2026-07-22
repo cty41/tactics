@@ -261,7 +261,8 @@ namespace Tactics.Common.Skills.Graph
                 var cell = context.GridController.CellManager.GetCellAt(coordinate);
                 if (cell == null)
                     break;
-                if (cell.IsTaken && cell.CurrentUnits.Count == 0)
+                if (cell.IsTaken && cell.CurrentUnits.Count == 0 &&
+                    !cell.CurrentInteractables.Any(interactable => interactable is DroppedSpear))
                     break;
                 path.Add(cell);
             }

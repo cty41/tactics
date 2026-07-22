@@ -112,6 +112,7 @@ namespace Tactics.Common.Skills.Graph
             ,SkillGraphNodeType.ApplyShield
             ,SkillGraphNodeType.MageSkill
             ,SkillGraphNodeType.NecromancerSkill
+            ,SkillGraphNodeType.AmazonSkill
         };
 
         /// <summary>

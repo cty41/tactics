@@ -7,6 +7,8 @@ using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Interactables;
+using Tactics.Common.Battle;
+using Tactics.Common.Units;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Runtime.BattleLog;
@@ -48,6 +50,8 @@ namespace Tactics.Common.Units.Abilities
         private HashSet<ICell> _validTargetCells;
         private HashSet<ICell> _displayCells;
         private readonly ISkillGraphUsePolicy _usePolicy;
+        private OrderedTargetSelectionState _orderedSelection;
+        private FacingDirection _lockedSelectionFacing;
 
         public IUnit UnitReference { get; set; }
         public string DisplayName => _usePolicy?.DisplayName ?? _config.DisplayName;
@@ -77,6 +81,11 @@ namespace Tactics.Common.Units.Abilities
         public void OnAbilitySelected(IGridController gridController)
         {
             _gridController = gridController;
+            if (TargetMode == SkillTargetMode.OrderedMultiTarget)
+            {
+                _lockedSelectionFacing = _owner.Facing;
+                _orderedSelection = new OrderedTargetSelectionState(GetOrderedSelectionCount());
+            }
             _validTargetCells = CalculateValidTargetCells();
             _displayCells = CalculateDisplayCells();
         }
@@ -107,6 +116,17 @@ namespace Tactics.Common.Units.Abilities
             if (!CanPerform(gridController)) return;
             if (unit.CurrentCell == null) return;
             if (_validTargetCells == null || !_validTargetCells.Contains(unit.CurrentCell)) return;
+
+            if (_orderedSelection != null)
+            {
+                if (!_orderedSelection.TryAdd(unit)) return;
+                if (_orderedSelection.Stage == OrderedSelectionStage.Ready)
+                {
+                    var targets = _orderedSelection.Commit();
+                    _ = ExecuteSkillGraphAsync(unit.CurrentCell, gridController, targets);
+                }
+                return;
+            }
 
             _ = ExecuteSkillGraphAsync(unit.CurrentCell, gridController);
         }
@@ -147,11 +167,24 @@ namespace Tactics.Common.Units.Abilities
             {
                 return AbilityAvailability.Disabled("当前无法使用");
             }
+            var amazonAvailability = GetAmazonSpearAvailability(gridController);
+            if (!amazonAvailability.CanExecute)
+                return amazonAvailability;
             if (_config.IsBasicAbility && _owner.HasUsedBasicAbilityThisTurn(_config.DisplayName))
                 return AbilityAvailability.Disabled("本回合已使用");
             if (!_config.IsBasicAbility && _owner.Mana < _config.ManaCost)
                 return AbilityAvailability.Disabled($"需要 {_config.ManaCost} 点魔法");
             return AbilityAvailability.Enabled();
+        }
+
+        public OrderedTargetSelectionState OrderedSelection => _orderedSelection;
+
+        public bool UndoLastOrderedTarget() => _orderedSelection?.UndoLast() == true;
+
+        public void CancelOrderedSelection()
+        {
+            _orderedSelection?.Cancel();
+            _orderedSelection = null;
         }
 
         public async Task ExecuteEffectsAsync(IEnumerable<IUnit> targets, IGridController gridController)
@@ -280,7 +313,7 @@ namespace Tactics.Common.Units.Abilities
             if (!legal || !CanPerform(plan.GridController))
                 return AiActionExecutionResult.Failure("Target point is no longer legal.");
 
-            var result = await ExecuteSkillGraphAsync(plan.TargetPoint, plan.GridController);
+            var result = await ExecuteSkillGraphAsync(plan.TargetPoint, plan.GridController, allowCombatTechniqueFollowUp: false);
             return result.ExecutionState == SkillGraphExecutionState.Completed
                 ? AiActionExecutionResult.Success(DisplayName, !Equals(plan.Origin, plan.Destination))
                 : AiActionExecutionResult.Failure(result.LastError ?? "Skill graph failed.");
@@ -333,6 +366,23 @@ namespace Tactics.Common.Units.Abilities
             return await ExecuteSkillGraphAsync(selectedCell, gridController);
         }
 
+        public async Task<SkillGraphRuntimeTestResult> ExecuteOrderedForTestAsync(
+            IEnumerable<IUnit> targets,
+            IGridController gridController)
+        {
+            var ordered = targets?.ToList() ?? new List<IUnit>();
+            OnAbilitySelected(gridController);
+            if (ordered.Count != GetOrderedSelectionCount() || ordered.Any(target =>
+                    target?.CurrentCell == null || !_validTargetCells.Contains(target.CurrentCell)))
+            {
+                var failed = CreateTestResult();
+                failed.ExecutionState = SkillGraphExecutionState.Failed;
+                failed.LastError = "Invalid ordered targets.";
+                return failed;
+            }
+            return await ExecuteSkillGraphAsync(ordered[^1].CurrentCell, gridController, ordered);
+        }
+
         public void InvokeAbilitySelected()
         {
             AbilitySelected?.Invoke(this);
@@ -343,7 +393,11 @@ namespace Tactics.Common.Units.Abilities
             AbilityDeselected?.Invoke(this);
         }
 
-        private async Task<SkillGraphRuntimeTestResult> ExecuteSkillGraphAsync(ICell selectedCell, IGridController gridController)
+        private async Task<SkillGraphRuntimeTestResult> ExecuteSkillGraphAsync(
+            ICell selectedCell,
+            IGridController gridController,
+            IReadOnlyList<IUnit> orderedTargets = null,
+            bool allowCombatTechniqueFollowUp = true)
         {
             var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(_config.SkillGraph);
             var context = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController);
@@ -356,11 +410,17 @@ namespace Tactics.Common.Units.Abilities
                 context.PrimaryTarget = unitsOnCell[0];
             }
             context.TargetPoint = selectedCell;
+            if (orderedTargets != null)
+            {
+                context.TargetSet = orderedTargets.ToList();
+                context.PrimaryTarget = orderedTargets.FirstOrDefault();
+            }
             testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
 
             var originalFacing = _owner.Facing;
             var actionFacing = originalFacing;
-            bool changedFacing = selectedCell != null && _owner.CurrentCell != null &&
+            bool changedFacing = orderedTargets == null && GetAmazonNode()?.SkillKind != AmazonSkillKind.Decoy &&
+                selectedCell != null && _owner.CurrentCell != null &&
                 FacingResolver.TryResolve(
                     _owner.CurrentCell.GridCoordinates,
                     selectedCell.GridCoordinates,
@@ -400,15 +460,32 @@ namespace Tactics.Common.Units.Abilities
                     _owner.MarkBasicAbilityUsed(_config.DisplayName);
                 else
                     _owner.Mana -= _config.ManaCost;
+
+                if (allowCombatTechniqueFollowUp && IsAmazonMeleeBasic() &&
+                    context.GetBlackboard("LastDamageHit", false) && context.PrimaryTarget != null &&
+                    !context.PrimaryTarget.IsDowned && context.PrimaryTarget.Health > 0f &&
+                    CombatComponent.RollCombatTechniqueFollowUp(_owner))
+                {
+                    context.RecordEvent("CombatTechniqueFollowUp", "combat-techniques", context.PrimaryTarget);
+                    var followUp = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController)
+                    {
+                        PrimaryTarget = context.PrimaryTarget,
+                        TargetPoint = context.PrimaryTarget.CurrentCell
+                    };
+                    await runner.Execute(followUp);
+                }
             }
 
             gridController.GridState = new GridStateAwaitInput();
+            _orderedSelection = null;
 
             testResult.ExecutionState = executionState;
             testResult.LastError = context.LastError;
             testResult.StepCount = context.StepCount;
             testResult.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
             testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
+            testResult.ExecutionEvents.AddRange(context.ExecutionEvents);
+            testResult.StageResults.AddRange(context.StageResults);
             return testResult;
         }
 
@@ -461,6 +538,9 @@ namespace Tactics.Common.Units.Abilities
             int minRange = GetMinRangeFromGraph();
             bool cardinalOnly = UsesCardinalDash();
             bool straightLineOnly = RequiresStraightLineEndpoint();
+
+            if (TryAddAmazonSpecialTargets(displayCells, ownerCell, includeOnlyLegal: false))
+                return displayCells;
 
             if (FirstSelectionRequiresSelf())
             {
@@ -563,6 +643,9 @@ namespace Tactics.Common.Units.Abilities
             bool requiresEnemy = FirstSelectionRequiresEnemy();
             bool requiresSelf = FirstSelectionRequiresSelf();
 
+            if (TryAddAmazonSpecialTargets(validCells, ownerCell, includeOnlyLegal: true))
+                return validCells;
+
             if (requiresSelf)
             {
                 validCells.Add(ownerCell);
@@ -636,6 +719,16 @@ namespace Tactics.Common.Units.Abilities
                 }
 
                 if (requiresEnemy && !HasEnemyUnit(cell))
+                    continue;
+
+                if (IsPoisonSpear() && AmazonBattleState.For(_gridController).FindDropCell(_owner, cell, 3) == null)
+                    continue;
+
+                if (IsThrust() && !IsThrustTargetLegal(ownerCell, cell))
+                    continue;
+
+                if (TargetMode == SkillTargetMode.OrderedMultiTarget &&
+                    (!IsWithinOrderedCone(ownerCell, cell) || HasPermanentTerrainOnRay(ownerCell, cell)))
                     continue;
 
                 if (RequiresLineOfSight() && !HasLineOfSight(ownerCell, cell))
@@ -745,6 +838,9 @@ namespace Tactics.Common.Units.Abilities
         {
             if (cell.CurrentUnits.Any(unit => unit != null && !unit.IsDowned))
                 return true;
+
+            if (cell.CurrentInteractables.Any(interactable => interactable is DroppedSpear))
+                return false;
 
             // A taken cell without a live unit represents layout terrain or an occupying
             // interactable. Downed units deliberately do not provide line-of-sight cover.
@@ -885,12 +981,148 @@ namespace Tactics.Common.Units.Abilities
             foreach (var unit in cell.CurrentUnits)
             {
                 if (unit != null && unit.PlayerNumber == _owner.PlayerNumber &&
-                    !unit.IsDowned && unit.Health > 0f &&
+                    !unit.IsDowned && unit.Health > 0f && !AmazonBattleState.IsDecoy(unit) &&
                     (includeSelf || !ReferenceEquals(unit, _owner)))
                     return true;
             }
             return false;
         }
+
+        private AbilityAvailability GetAmazonSpearAvailability(IGridController gridController)
+        {
+            if (!IsAmazonOwner())
+                return AbilityAvailability.Enabled();
+            var state = AmazonBattleState.For(gridController);
+            var node = GetAmazonNode();
+            bool requiresHeldSpear = IsAmazonMeleeBasic() || node?.SkillKind is
+                AmazonSkillKind.Thrust or AmazonSkillKind.MultiStab or AmazonSkillKind.PoisonSpear;
+            if (requiresHeldSpear && !state.IsSpearHeld(_owner))
+                return AbilityAvailability.Disabled("需要先回收长矛");
+
+            if (node?.SkillKind is AmazonSkillKind.RecoverSpear or AmazonSkillKind.PickupSpear)
+            {
+                var spearCell = state.GetSpearCell(_owner);
+                if (spearCell == null)
+                    return AbilityAvailability.Disabled("当前没有需要回收的长矛");
+                if (node.SkillKind == AmazonSkillKind.PickupSpear)
+                {
+                    int dx = Math.Abs(spearCell.GridCoordinates.x - _owner.CurrentCell.GridCoordinates.x);
+                    int dy = Math.Abs(spearCell.GridCoordinates.y - _owner.CurrentCell.GridCoordinates.y);
+                    if (Math.Max(dx, dy) != 1)
+                        return AbilityAvailability.Disabled("需要移动到长矛相邻格");
+                }
+            }
+            return AbilityAvailability.Enabled();
+        }
+
+        private bool TryAddAmazonSpecialTargets(HashSet<ICell> result, ICell ownerCell, bool includeOnlyLegal)
+        {
+            var node = GetAmazonNode();
+            if (node == null)
+                return false;
+            var state = AmazonBattleState.For(_gridController);
+            if (node.SkillKind == AmazonSkillKind.RecoverSpear)
+            {
+                var cell = state.GetSpearCell(_owner);
+                if (cell != null && cell.GetDistance(ownerCell) <= GetTargetRange())
+                    result.Add(cell);
+                return true;
+            }
+            if (node.SkillKind == AmazonSkillKind.PickupSpear)
+            {
+                if (!includeOnlyLegal || GetAmazonSpearAvailability(_gridController).CanExecute)
+                    result.Add(ownerCell);
+                return true;
+            }
+            if (node.SkillKind != AmazonSkillKind.Decoy)
+                return false;
+
+            var allCells = _gridController.CellManager.GetCells().Where(cell => cell != null && !cell.IsTaken).ToList();
+            var firstRing = allCells.Where(cell => GetChebyshevDistance(ownerCell, cell) == 1).ToList();
+            var chosen = firstRing.Count > 0
+                ? firstRing
+                : allCells.Where(cell => GetChebyshevDistance(ownerCell, cell) == 2).ToList();
+            foreach (var cell in chosen)
+                result.Add(cell);
+            return true;
+        }
+
+        private bool IsThrustTargetLegal(ICell origin, ICell target)
+        {
+            int dx = target.GridCoordinates.x - origin.GridCoordinates.x;
+            int dy = target.GridCoordinates.y - origin.GridCoordinates.y;
+            if (dx != 0 && dy != 0)
+                return false;
+            int distance = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            int stepX = Math.Sign(dx);
+            int stepY = Math.Sign(dy);
+            for (int index = 1; index <= distance; index++)
+            {
+                var cell = _gridController.CellManager.GetCellAt(new Tactics.Common.Utilities.Vector2IntImpl(
+                    origin.GridCoordinates.x + stepX * index,
+                    origin.GridCoordinates.y + stepY * index));
+                if (cell == null || cell.IsTaken && cell.CurrentUnits.Count == 0)
+                    return false;
+                if (index < distance && cell.CurrentUnits.Any(unit =>
+                        unit != null && !unit.IsDowned && unit.PlayerNumber == _owner.PlayerNumber))
+                    return false;
+            }
+            return true;
+        }
+
+        private bool IsWithinOrderedCone(ICell origin, ICell target)
+        {
+            int dx = target.GridCoordinates.x - origin.GridCoordinates.x;
+            int dy = target.GridCoordinates.y - origin.GridCoordinates.y;
+            int forward;
+            int lateral;
+            switch (_lockedSelectionFacing)
+            {
+                case FacingDirection.North: forward = dy; lateral = Math.Abs(dx); break;
+                case FacingDirection.South: forward = -dy; lateral = Math.Abs(dx); break;
+                case FacingDirection.West: forward = -dx; lateral = Math.Abs(dy); break;
+                default: forward = dx; lateral = Math.Abs(dy); break;
+            }
+            return forward is >= 1 and <= 3 && lateral <= forward - 1;
+        }
+
+        private bool HasPermanentTerrainOnRay(ICell origin, ICell target)
+        {
+            int dx = target.GridCoordinates.x - origin.GridCoordinates.x;
+            int dy = target.GridCoordinates.y - origin.GridCoordinates.y;
+            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            for (int index = 1; index < steps; index++)
+            {
+                int x = origin.GridCoordinates.x + Mathf.RoundToInt(dx * (index / (float)steps));
+                int y = origin.GridCoordinates.y + Mathf.RoundToInt(dy * (index / (float)steps));
+                var cell = _gridController.CellManager.GetCellAt(new Tactics.Common.Utilities.Vector2IntImpl(x, y));
+                if (cell == null || cell.IsTaken && cell.CurrentUnits.Count == 0 && cell.CurrentInteractables.Count == 0)
+                    return true;
+            }
+            return false;
+        }
+
+        private AmazonSkillNodeRecord GetAmazonNode() =>
+            _config?.SkillGraph?.Nodes?.OfType<AmazonSkillNodeRecord>().FirstOrDefault();
+
+        private bool IsPoisonSpear() => GetAmazonNode()?.SkillKind == AmazonSkillKind.PoisonSpear;
+        private bool IsThrust() => GetAmazonNode()?.SkillKind == AmazonSkillKind.Thrust;
+
+        private bool IsAmazonOwner() => _owner is Unit unit &&
+            (unit.GetLearnedSkillLevel("amazon.thrust") > 0 ||
+             unit.GetLearnedSkillLevel("amazon.poison_spear") > 0 ||
+             unit.GetLearnedSkillLevel("amazon.combat_techniques") > 0 ||
+             unit.GetLearnedSkillLevel("amazon.multi_stab") > 0 ||
+             unit.GetLearnedSkillLevel("amazon.recover_spear") > 0 ||
+             unit.GetLearnedSkillLevel("amazon.decoy") > 0);
+
+        private bool IsAmazonMeleeBasic() => _config.IsBasicAbility && _config.TargetRange <= 1;
+
+        private int GetOrderedSelectionCount() => GetAmazonNode()?.Level >= 2 ? 4 : 3;
+
+        private static int GetChebyshevDistance(ICell left, ICell right) => Math.Max(
+            Math.Abs(left.GridCoordinates.x - right.GridCoordinates.x),
+            Math.Abs(left.GridCoordinates.y - right.GridCoordinates.y));
 
         private bool GraphContainsDashToTarget()
         {

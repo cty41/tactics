@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Cells;
+using Tactics.Common.Battle;
 using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
@@ -77,6 +78,15 @@ namespace Tactics.Common.AI.MonsterAI
                     BasePriority = 10f
                 };
                 GenerateAbilityCandidates(context, implicitIntent, candidates);
+            }
+
+            var decoyCandidates = candidates
+                .Where(candidate => AmazonBattleState.IsDecoy(candidate.Target))
+                .ToList();
+            if (decoyCandidates.Count > 0)
+            {
+                context.DecisionLog.Info($"Decoy reachable: restricting choice to {decoyCandidates.Count} decoy candidates.");
+                return decoyCandidates;
             }
 
             context.DecisionLog.Info($"Generated {candidates.Count} intent candidates.");

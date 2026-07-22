@@ -326,7 +326,8 @@ namespace Tactics.Common.Units
                 ? GetLearnedSkillLevel("amazon.combat_techniques") > 0
                 : !_useInjectedAbilityConfigs && _roleConfig != null && _roleConfig.RoleType == RoleType.Amazon;
             if (hasCombatTechniques)
-                CombatComponent.EnableCombatTechniques(this);
+                CombatComponent.EnableCombatTechniques(this,
+                    _hasExplicitLearnedSkillLoadout ? GetLearnedSkillLevel("amazon.combat_techniques") : 1);
             else
                 CombatComponent.DisableCombatTechniques(this);
 
@@ -404,6 +405,8 @@ namespace Tactics.Common.Units
 
         public virtual void AddBuff(Buff buff)
         {
+            if (AmazonBattleState.IsDecoy(this))
+                return;
             EnsureBuffComponent().AddBuff(buff);
         }
 
@@ -430,6 +433,7 @@ namespace Tactics.Common.Units
         public virtual void OnTurnStart(IGridController gridController)
         {
             PrepareForTurn();
+            AmazonBattleState.For(gridController)?.OnOwnerTurnStart(this);
             _buffComponent.OnTurnStart(gridController);
         }
 
@@ -443,6 +447,7 @@ namespace Tactics.Common.Units
         public virtual void OnTurnEnd(IGridController gridController)
         {
             _buffComponent.OnTurnEnd(gridController);
+            AmazonBattleState.For(gridController)?.OnOwnerTurnEnd(this);
             SummonRegistry.For(gridController)?.NotifyActionCompleted(this);
         }
 

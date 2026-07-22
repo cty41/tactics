@@ -27,23 +27,33 @@ namespace Tactics.Common.Units
         }
 
         private static readonly Dictionary<IUnit, DamageShieldState> DamageShields = new();
-        private static readonly HashSet<IUnit> CombatTechniqueUnits = new();
+        private static readonly Dictionary<IUnit, int> CombatTechniqueLevels = new();
         private static readonly System.Random CombatTechniqueRandom = new();
+        private static double? _combatTechniqueRollOverride;
 
-        public static void EnableCombatTechniques(IUnit unit)
+        public static void EnableCombatTechniques(IUnit unit, int level = 1)
         {
-            if (unit != null) CombatTechniqueUnits.Add(unit);
+            if (unit != null) CombatTechniqueLevels[unit] = Math.Max(1, level);
         }
 
         public static void DisableCombatTechniques(IUnit unit)
         {
-            if (unit != null) CombatTechniqueUnits.Remove(unit);
+            if (unit != null) CombatTechniqueLevels.Remove(unit);
         }
 
         public static bool HasCombatTechniques(IUnit unit)
         {
-            return unit != null && CombatTechniqueUnits.Contains(unit);
+            return GetCombatTechniqueLevel(unit) > 0;
         }
+
+        public static int GetCombatTechniqueLevel(IUnit unit) =>
+            unit != null && CombatTechniqueLevels.TryGetValue(unit, out int level) ? level : 0;
+
+        public static void SetCombatTechniqueRollForTests(double? value) =>
+            _combatTechniqueRollOverride = value;
+
+        public static bool RollCombatTechniqueFollowUp(IUnit unit) =>
+            GetCombatTechniqueLevel(unit) >= 2 && NextCombatTechniqueRoll() < 0.30d;
 
         public static void ApplyDamageShield(IUnit unit, float amount, bool absorbsAllDamage = false)
         {
@@ -176,6 +186,8 @@ namespace Tactics.Common.Units
         public static float GetClampedCritChance(IUnit unitReference)
         {
             var critChance = BaseCritChance + (unitReference.Luck - NeutralAttributeValue) * CritChancePerLuckPoint;
+            if (GetCombatTechniqueLevel(unitReference) >= 3)
+                critChance += 0.20f;
             return Math.Max(0f, Math.Min(1f, critChance));
         }
 
@@ -204,7 +216,8 @@ namespace Tactics.Common.Units
             bool canCrit,
             bool canTriggerDamageTaken,
             string logSourceName = null,
-            bool bypassDefense = false)
+            bool bypassDefense = false,
+            float accuracyPenalty = 0f)
         {
             return ApplyDamage(
                 caster,
@@ -217,7 +230,8 @@ namespace Tactics.Common.Units
                 canCrit,
                 canTriggerDamageTaken,
                 logSourceName,
-                bypassDefense);
+                bypassDefense,
+                accuracyPenalty);
         }
 
         /// <summary>
@@ -234,13 +248,24 @@ namespace Tactics.Common.Units
             bool canCrit,
             bool canTriggerDamageTaken,
             string logSourceName = null,
-            bool bypassDefense = false)
+            bool bypassDefense = false,
+            float accuracyPenalty = 0f)
         {
             if (target == null)
                 return DamageResolution.Invalid();
 
-            if (canTriggerBeforeAttacked && CombatTechniqueUnits.Contains(target)
-                && CombatTechniqueRandom.NextDouble() < 0.30d)
+            float dodgeChance = 0f;
+            if (caster != null && canTriggerBeforeAttacked)
+            {
+                float agilityDodge = Mathf.Clamp01(CalculateDodgeChance(target));
+                float otherDodge = Mathf.Clamp01(target.DodgeRate);
+                float accuracyMiss = Mathf.Clamp01(accuracyPenalty);
+                dodgeChance = 1f -
+                    (1f - agilityDodge) * (1f - otherDodge) * (1f - accuracyMiss);
+                if (GetCombatTechniqueLevel(target) >= 1)
+                    dodgeChance += 0.30f;
+            }
+            if (dodgeChance > 0f && NextCombatTechniqueRoll() < Math.Min(1f, dodgeChance))
             {
                 TLog.Info($"[CombatTechniques] {target.UnitID} dodged direct damage.");
                 LogMiss(caster, target);
@@ -334,6 +359,9 @@ namespace Tactics.Common.Units
 
             return DamageResolution.Hit(damage, isCritical);
         }
+
+        private static double NextCombatTechniqueRoll() =>
+            _combatTechniqueRollOverride ?? CombatTechniqueRandom.NextDouble();
 
         private static void LogDamage(string sourceName, IUnit target, float damage)
         {

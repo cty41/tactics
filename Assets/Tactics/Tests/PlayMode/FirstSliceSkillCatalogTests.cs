@@ -94,7 +94,9 @@ namespace Tactics.Tests.PlayMode
                 new CharacterDefinition.LearnedSkill { SkillId = "amazon.combat_techniques", SkillType = SkillType.Passive, Level = 1 }
             });
 
-            Assert.That(PureRunProgression.BuildSkillChoices(amazon, 31, amazon.Level), Is.Empty);
+            var beforeAttribute = PureRunProgression.BuildSkillChoices(amazon, 31, amazon.Level);
+            Assert.That(beforeAttribute, Is.Not.Empty, "Published learned-skill upgrades remain valid candidates.");
+            Assert.That(beforeAttribute.Select(choice => choice.Id), Does.Not.Contain("amazon.multi_stab"));
 
             amazon.Agility = 7;
             var refreshed = PureRunProgression.BuildSkillChoices(amazon, 31, amazon.Level);

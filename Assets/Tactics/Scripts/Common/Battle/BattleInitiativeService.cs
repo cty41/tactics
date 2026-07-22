@@ -89,7 +89,7 @@ namespace Tactics.Common.Battle
         private void Synchronize(IEnumerable<IUnit> aliveUnits)
         {
             var alive = (aliveUnits ?? Enumerable.Empty<IUnit>())
-                .Where(unit => unit != null && unit.Health > 0)
+                .Where(unit => unit != null && unit.Health > 0 && !AmazonBattleState.IsDecoy(unit))
                 .Distinct()
                 .ToList();
             var aliveSet = alive.ToHashSet();
@@ -107,7 +107,7 @@ namespace Tactics.Common.Battle
         {
             foreach (var unit in units ?? Enumerable.Empty<IUnit>())
             {
-                if (unit == null || unit.Health <= 0 || ReferenceEquals(unit, Current) ||
+                if (unit == null || unit.Health <= 0 || AmazonBattleState.IsDecoy(unit) || ReferenceEquals(unit, Current) ||
                     _acted.Contains(unit) || _remaining.Contains(unit))
                     continue;
                 _remaining.Add(unit);

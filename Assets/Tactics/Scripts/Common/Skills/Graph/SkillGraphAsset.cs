@@ -40,7 +40,8 @@ namespace Tactics.Common.Skills.Graph
         ApplyShield,
         RemoveHarmfulBuffs,
         MageSkill,
-        NecromancerSkill
+        NecromancerSkill,
+        AmazonSkill
     }
 
     public enum SkillGraphPortType
@@ -126,6 +127,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.ApplyShield => new ApplyShieldNodeRecord(),
                 SkillGraphNodeType.MageSkill => new MageSkillNodeRecord(),
                 SkillGraphNodeType.NecromancerSkill => new NecromancerSkillNodeRecord(),
+                SkillGraphNodeType.AmazonSkill => new AmazonSkillNodeRecord(),
                 _ => null
             };
         }

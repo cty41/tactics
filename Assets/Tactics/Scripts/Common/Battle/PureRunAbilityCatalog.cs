@@ -361,27 +361,40 @@ namespace Tactics.Common.Battle
 
             Add(definitions, "amazon.thrust", "突刺", "攻击前方直线上的敌人。", RoleType.Amazon,
                 SkillType.Active, AttributeType.Agility, 5, null, 3,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Lv2_Graph_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Lv3_Graph_Ability.asset")));
             Add(definitions, "amazon.poison_spear", "毒矛", "投掷长矛并使敌人中毒。", RoleType.Amazon,
                 SkillType.Active, AttributeType.Agility, 5, null, 3,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset")),
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Lv2_Graph_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Lv3_Graph_Ability.asset")),
                 tags: new[] { ThrowingTag });
             Add(definitions, "amazon.combat_techniques", "战斗技巧", "通过战斗技巧闪避攻击并强化伤害。", RoleType.Amazon,
                 SkillType.Passive, AttributeType.Luck, 5, null, 3,
-                paths: null, implementedPassiveLevels: new[] { 1 });
+                paths: null, implementedPassiveLevels: new[] { 1, 2, 3 });
             Add(definitions, "amazon.multi_stab", "连续刺击", "连续选择多个目标发动刺击。", RoleType.Amazon,
                 SkillType.Active, AttributeType.Agility, 7, "amazon.thrust", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MultiStab_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MultiStab_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MultiStab_Lv2_Graph_Ability.asset")));
             Add(definitions, "amazon.recover_spear", "召唤长矛", "将落地长矛召回到指定空格。", RoleType.Amazon,
                 SkillType.Active, AttributeType.Agility, 7, "amazon.poison_spear", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RecoverSpear_Graph_Ability.asset")),
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RecoverSpear_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RecoverSpear_Lv2_Graph_Ability.asset")),
                 tags: new[] { ThrowingTag });
             Add(definitions, "amazon.decoy", "分身", "召唤分身吸引敌人攻击。", RoleType.Amazon,
                 SkillType.Active, AttributeType.Luck, 7, "amazon.combat_techniques", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Decoy_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Decoy_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Decoy_Lv2_Graph_Ability.asset")));
 
             Add(definitions, PickupSpearSkillId, "拾取长矛", "在相邻格免费拾取落地长矛。", RoleType.Amazon,
-                SkillType.ExtraUtility, null, 0, null, 1, paths: null,
+                SkillType.ExtraUtility, null, 0, null, 1,
+                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PickupSpear_Graph_Ability.asset")),
                 isMapVisible: false, isUpgradeVisible: false, isBattleVisible: true);
 
             return definitions;

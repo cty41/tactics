@@ -1,9 +1,10 @@
 # Tactics Knowledge Update Log
 
 ## 2026-07-23
-* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:7cb7a7d2fa54409b28b4c40a6abc756a6b7617823974a9a9eda9848c6a9ac464`。
-* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:f5b243fc72f7695c3a0e1da2a314fadc90838ad1856d3cde844bead48ff525f0`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:8fc6d131961904a226e9275b59bb3866a1100e509f6731d3b1805fd91f456f0a`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:547af8677e5bb5c2140ad91c30468b2482471fe207ea90f6bc58a82945a12a3a`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:730918a825b056a227ca4cfd04d4ef9adc4622b17308c5bd9e8356a221a94fe8`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:f88cfce413008e3302d9446dd9c47dac9d96e4d9b022cf606d9bebc2c5c1e5e3`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:55c85731e3c9b7bbf8802afb73ddbb8751f6fe557ca2362d64cdd25c1e2a57f3`。
 
 ## 2026-07-22
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:c93f60b02efda1ca3f5243350b87e02d0d09f3d8fa31d1e89bfd5aefad5112c9`。
