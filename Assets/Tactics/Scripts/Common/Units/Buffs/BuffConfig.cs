@@ -58,6 +58,12 @@ namespace Tactics.Common.Units.Buffs
         [BoxGroup("Effect Params")]
         [SerializeField, Range(0f, 1f)] private float _damageReductionPercent;
 
+        [BoxGroup("Reactive Effect")]
+        [SerializeField] private BuffConfig _meleeRetaliationBuff;
+
+        [BoxGroup("Reactive Effect")]
+        [SerializeField, Min(0)] private int _meleeRetaliationDuration;
+
         [JsonIgnore]
         public string RuntimeSourceAssetPath { get; set; }
 
@@ -75,5 +81,7 @@ namespace Tactics.Common.Units.Buffs
         public BuffRefreshStrategy RefreshStrategy => _refreshStrategy;
         public float SpeedModifier => _speedModifier;
         public float DamageReductionPercent => _damageReductionPercent;
+        public BuffConfig MeleeRetaliationBuff => _meleeRetaliationBuff;
+        public int MeleeRetaliationDuration => _meleeRetaliationDuration;
     }
 }

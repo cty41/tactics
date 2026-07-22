@@ -443,6 +443,7 @@ namespace Tactics.Common.Units
         public virtual void OnTurnEnd(IGridController gridController)
         {
             _buffComponent.OnTurnEnd(gridController);
+            SummonRegistry.For(gridController)?.NotifyActionCompleted(this);
         }
 
         public virtual bool HasUsedBasicAbilityThisTurn(string abilityName)

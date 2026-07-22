@@ -1435,22 +1435,9 @@ function resetAliasState(state: AliasState): void {
   state.units.clear();
   state.abilityConfigs.clear();
   state.abilities.clear();
-  state.useRealAssets = false;
 }
 
 function validateSemanticRules(spec: ScenarioSpec, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
-  // Check for mixed asset modes
-  const hasCreateSkillTestWorld = spec.setup.some(s => s.kind === "createSkillTestWorld");
-  const hasUseRealAssets = spec.setup.some(s => s.kind === "useRealAssets");
-  if (hasCreateSkillTestWorld && hasUseRealAssets) {
-    diagnostics.push({
-      code: "MixedAssetMode",
-      severity: "error",
-      message: "Cannot mix createSkillTestWorld (lightweight mode) with useRealAssets (real asset mode).",
-      path: "setup"
-    });
-  }
-
   const graphKinds = new Map<string, string>();
   for (const step of spec.setup) {
     if (step.kind === "createSkillGraph") {

@@ -295,22 +295,35 @@ namespace Tactics.Common.Battle
                 SkillType.Active, AttributeType.Intelligence, 5, null, 3,
                 Paths(
                     (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset"),
-                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset")));
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv3_Ability.asset")));
             Add(definitions, "mage.ice_bolt", "寒冰箭", "发射寒冰箭伤害并减速敌人。", RoleType.Mage,
                 SkillType.Active, AttributeType.Intelligence, 5, null, 3,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Lv2_Graph_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Lv3_Graph_Ability.asset")));
             Add(definitions, "mage.lightning", "霹雳闪电", "以闪电直接打击指定敌人。", RoleType.Mage,
                 SkillType.Active, AttributeType.Intelligence, 5, null, 3,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Lv2_Graph_Ability.asset"),
+                    (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Lv3_Graph_Ability.asset")));
             Add(definitions, "mage.summon_fire_demon", "召唤火魔", "召唤火魔协助战斗。", RoleType.Mage,
                 SkillType.Active, AttributeType.Intelligence, 7, "mage.fireball", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonFireDemon_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonFireDemon_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonFireDemon_Lv2_Graph_Ability.asset")));
             Add(definitions, "mage.ice_armor", "冰甲", "获得可降低所受伤害的冰甲。", RoleType.Mage,
                 SkillType.Active, AttributeType.Intelligence, 7, "mage.ice_bolt", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceArmor_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceArmor_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceArmor_Lv2_Graph_Ability.asset")));
             Add(definitions, "mage.teleport", "瞬移术", "瞬移到范围内的合法空格。", RoleType.Mage,
                 SkillType.Active, AttributeType.Intelligence, 7, "mage.lightning", 2,
-                Paths((1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Graph_Ability.asset")));
+                Paths(
+                    (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Graph_Ability.asset"),
+                    (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Lv2_Graph_Ability.asset")));
 
             Add(definitions, "necromancer.summon_skeleton", "召唤骷髅", "消耗尸体召唤骷髅战士。", RoleType.Necromancer,
                 SkillType.Active, AttributeType.Charisma, 5, null, 3,

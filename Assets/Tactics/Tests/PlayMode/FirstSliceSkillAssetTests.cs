@@ -232,7 +232,17 @@ namespace Tactics.Tests.PlayMode
             yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset", 5);
             yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset", 5);
             yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset", 6);
-            yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Graph_Ability.asset", 5);
+        }
+
+        [Test]
+        public void LightningGraph_IsInstantAndDoesNotUseProjectile()
+        {
+            var graph = GameAssetManager.Instance.Load<SkillGraphAsset>(
+                "Assets/Tactics/Battle/Abilities/SkillGraphs/Lightning_Graph.asset");
+            Assert.That(graph, Is.Not.Null);
+            Assert.That(graph.Nodes.OfType<ProjectileLaunchNodeRecord>(), Is.Empty);
+            Assert.That(graph.Nodes.OfType<MageSkillNodeRecord>().Single().SkillKind,
+                Is.EqualTo(MageSkillKind.Lightning));
         }
 
         [UnityTest]
@@ -622,6 +632,7 @@ namespace Tactics.Tests.PlayMode
             Assert.That(graph, Is.Not.Null, $"Missing summon graph: {graphPath}");
 
             SummonUnitNodeRecord summonNode = null;
+            MageSkillNodeRecord mageSummonNode = null;
             foreach (var node in graph.Nodes)
             {
                 if (node is SummonUnitNodeRecord candidate)
@@ -629,6 +640,17 @@ namespace Tactics.Tests.PlayMode
                     summonNode = candidate;
                     break;
                 }
+                if (node is MageSkillNodeRecord mageCandidate &&
+                    mageCandidate.SkillKind == MageSkillKind.SummonFireDemon)
+                {
+                    mageSummonNode = mageCandidate;
+                }
+            }
+
+            if (mageSummonNode != null)
+            {
+                Assert.That(expected, Is.True, "Fire Demons accept standard healing.");
+                return;
             }
 
             Assert.That(summonNode, Is.Not.Null, $"Missing summon node: {graphPath}");

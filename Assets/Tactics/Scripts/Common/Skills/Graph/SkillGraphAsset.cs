@@ -38,7 +38,8 @@ namespace Tactics.Common.Skills.Graph
         Teleport,
         MultiStab,
         ApplyShield,
-        RemoveHarmfulBuffs
+        RemoveHarmfulBuffs,
+        MageSkill
     }
 
     public enum SkillGraphPortType
@@ -122,6 +123,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.Teleport => new TeleportNodeRecord(),
                 SkillGraphNodeType.MultiStab => new MultiStabNodeRecord(),
                 SkillGraphNodeType.ApplyShield => new ApplyShieldNodeRecord(),
+                SkillGraphNodeType.MageSkill => new MageSkillNodeRecord(),
                 _ => null
             };
         }
@@ -399,8 +401,10 @@ namespace Tactics.Common.Skills.Graph
     public class TeleportNodeRecord : SkillGraphNodeRecord
     {
         [SerializeField] private int _maxRange = 6;
+        [SerializeField] private bool _requiresLineOfSight = true;
 
         public int MaxRange { get => _maxRange; set => _maxRange = value; }
+        public bool RequiresLineOfSight { get => _requiresLineOfSight; set => _requiresLineOfSight = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.Teleport;
     }
 

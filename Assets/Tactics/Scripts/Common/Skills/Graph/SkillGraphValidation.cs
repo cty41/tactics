@@ -110,6 +110,7 @@ namespace Tactics.Common.Skills.Graph
             ,SkillGraphNodeType.Teleport
             ,SkillGraphNodeType.MultiStab
             ,SkillGraphNodeType.ApplyShield
+            ,SkillGraphNodeType.MageSkill
         };
 
         /// <summary>

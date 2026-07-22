@@ -314,7 +314,7 @@ namespace Tactics.Common.Units
 
             if (canTriggerDamageTaken)
             {
-                target.BuffComponent?.OnDamageTaken(caster, damage);
+                target.BuffComponent?.OnDamageTaken(caster, damage, isRangedDamage);
             }
 
             return DamageResolution.Hit(damage, isCritical);

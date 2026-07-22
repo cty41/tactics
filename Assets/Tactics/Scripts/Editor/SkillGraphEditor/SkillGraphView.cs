@@ -239,6 +239,10 @@ namespace Tactics.Editor.SkillGraphEditor
                     "Execute Move", "node-movement",
                     hasInput: true, hasOutput: true,
                     info: $"ConsumeMP: {r.ConsumeMovementPoints}, MarkUsed: {r.MarkAsBasicAbilityUsed}"),
+                MageSkillNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Mage Skill", "node-effect",
+                    hasInput: true, hasOutput: true,
+                    info: $"{r.SkillKind} Lv{r.Level}"),
                 _ => null
             };
 

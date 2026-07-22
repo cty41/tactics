@@ -13,13 +13,16 @@ namespace Tactics.Common.Battle
         public IUnit Owner { get; }
         public string Category { get; }
         public IUnit Unit { get; }
+        public int LifetimeActions { get; }
+        public int CompletedActions { get; internal set; }
 
-        internal SummonEntry(long sequence, IUnit owner, string category, IUnit unit)
+        internal SummonEntry(long sequence, IUnit owner, string category, IUnit unit, int lifetimeActions)
         {
             Sequence = sequence;
             Owner = owner;
             Category = category;
             Unit = unit;
+            LifetimeActions = Math.Max(0, lifetimeActions);
         }
     }
 
@@ -30,12 +33,18 @@ namespace Tactics.Common.Battle
     public sealed class SummonRegistry
     {
         private static readonly ConditionalWeakTable<IGridController, SummonRegistry> Registries = new();
+        private readonly IGridController _gridController;
         private readonly List<SummonEntry> _entries = new();
         private long _nextSequence;
 
+        private SummonRegistry(IGridController gridController)
+        {
+            _gridController = gridController;
+        }
+
         public static SummonRegistry For(IGridController gridController)
         {
-            return gridController == null ? null : Registries.GetValue(gridController, _ => new SummonRegistry());
+            return gridController == null ? null : Registries.GetValue(gridController, key => new SummonRegistry(key));
         }
 
         public IReadOnlyList<SummonEntry> Entries
@@ -47,7 +56,12 @@ namespace Tactics.Common.Battle
             }
         }
 
-        public IReadOnlyList<IUnit> Register(IUnit owner, string category, IUnit unit, int maximumActive)
+        public IReadOnlyList<IUnit> Register(
+            IUnit owner,
+            string category,
+            IUnit unit,
+            int maximumActive,
+            int lifetimeActions = 0)
         {
             if (owner == null) throw new ArgumentNullException(nameof(owner));
             if (unit == null) throw new ArgumentNullException(nameof(unit));
@@ -71,12 +85,39 @@ namespace Tactics.Common.Battle
 
             unit.OwnerUnit = owner;
             unit.OwnerUnitId = owner.UnitID;
-            _entries.Add(new SummonEntry(++_nextSequence, owner, normalizedCategory, unit));
+            _entries.Add(new SummonEntry(++_nextSequence, owner, normalizedCategory, unit, lifetimeActions));
             foreach (var replacement in replacements)
                 RemoveEntry(replacement);
 
             RefreshLegacyOwnerReference(owner);
             return replacements;
+        }
+
+        /// <summary>
+        /// Registers a validated summon batch without applying per-item capacity replacement.
+        /// Callers use this after all instances have been prepared for an atomic multi-summon.
+        /// </summary>
+        public void RegisterBatch(
+            IUnit owner,
+            string category,
+            IReadOnlyList<IUnit> units,
+            int lifetimeActions = 0)
+        {
+            if (owner == null) throw new ArgumentNullException(nameof(owner));
+            if (units == null) throw new ArgumentNullException(nameof(units));
+            if (units.Any(unit => unit == null)) throw new ArgumentException("Summon batch contains a null unit.", nameof(units));
+
+            RemoveInvalidEntries();
+            string normalizedCategory = NormalizeCategory(category);
+            _entries.RemoveAll(entry => ReferenceEquals(entry.Owner, owner) && entry.Category == normalizedCategory);
+            foreach (var unit in units.Distinct())
+            {
+                unit.OwnerUnit = owner;
+                unit.OwnerUnitId = owner.UnitID;
+                _entries.Add(new SummonEntry(++_nextSequence, owner, normalizedCategory, unit, lifetimeActions));
+            }
+
+            RefreshLegacyOwnerReference(owner);
         }
 
         public IReadOnlyList<IUnit> GetOrdered(IUnit owner, string category)
@@ -96,6 +137,25 @@ namespace Tactics.Common.Battle
             return _entries.FirstOrDefault(entry => ReferenceEquals(entry.Unit, unit))?.Category;
         }
 
+        /// <summary>
+        /// Counts a summon action even when status effects skipped its commands. Summons with
+        /// a positive action lifetime are removed immediately after completing the limit.
+        /// </summary>
+        public bool NotifyActionCompleted(IUnit unit)
+        {
+            RemoveInvalidEntries();
+            var entry = _entries.FirstOrDefault(candidate => ReferenceEquals(candidate.Unit, unit));
+            if (entry == null || entry.LifetimeActions <= 0)
+                return false;
+
+            entry.CompletedActions++;
+            if (entry.CompletedActions < entry.LifetimeActions)
+                return false;
+
+            Despawn(unit);
+            return true;
+        }
+
         public void Unregister(IUnit unit)
         {
             var owner = _entries.FirstOrDefault(entry => ReferenceEquals(entry.Unit, unit))?.Owner;
@@ -111,8 +171,16 @@ namespace Tactics.Common.Battle
             Unregister(unit);
             unit.OwnerUnit = null;
             unit.OwnerUnitId = -1;
+
+            // Intentional replacement/expiry is not a normal combat death. Release the
+            // occupied cell synchronously so an atomic resummon can reuse it, and avoid
+            // leaving a corpse or a stale unit-manager entry behind.
+            unit.Cleanup(_gridController);
+            unit.CurrentCell = null;
+            _gridController?.UnitManager?.RemoveUnit(unit);
             if (!unit.IsDowned && unit.Health > 0)
                 unit.ModifyHealth(-unit.Health - 1f, null);
+            unit.OnDestroyed(_gridController);
         }
 
         public void HandleUnitDeath(IUnit unit)
@@ -134,6 +202,15 @@ namespace Tactics.Common.Battle
         public void Clear(bool despawnSummons)
         {
             var units = _entries.OrderBy(entry => entry.Sequence).Select(entry => entry.Unit).ToList();
+            if (despawnSummons)
+            {
+                foreach (var unit in units)
+                    Despawn(unit);
+                _entries.Clear();
+                _nextSequence = 0;
+                return;
+            }
+
             var owners = _entries.Select(entry => entry.Owner).Where(owner => owner != null).Distinct().ToList();
             _entries.Clear();
             _nextSequence = 0;
@@ -149,8 +226,6 @@ namespace Tactics.Common.Battle
                     continue;
                 unit.OwnerUnit = null;
                 unit.OwnerUnitId = -1;
-                if (despawnSummons && !unit.IsDowned && unit.Health > 0)
-                    unit.ModifyHealth(-unit.Health - 1f, null);
             }
         }
 

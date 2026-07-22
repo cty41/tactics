@@ -38,6 +38,7 @@ namespace Tactics.Common.Skills.Graph
             Register(new ApplyShieldNodeExecutor());
             Register(new SelectCorpseTargetNodeExecutor());
             Register(new SummonUnitNodeExecutor());
+            Register(new MageSkillNodeExecutor());
         }
 
         public static void Register(ISkillNodeExecutor executor)

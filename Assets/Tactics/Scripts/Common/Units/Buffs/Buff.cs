@@ -65,9 +65,9 @@ namespace Tactics.Common.Units.Buffs
             _behavior.OnBeforeAttacked(this, attacker, ref damage, ref isCritical);
         }
 
-        public virtual void OnDamageTaken(IUnit attacker, float damage)
+        public virtual void OnDamageTaken(IUnit attacker, float damage, bool isRangedDamage)
         {
-            _behavior.OnDamageTaken(this, attacker, damage);
+            _behavior.OnDamageTaken(this, attacker, damage, isRangedDamage);
         }
 
         public bool CanAct

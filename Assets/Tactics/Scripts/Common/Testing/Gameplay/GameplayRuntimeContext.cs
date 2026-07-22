@@ -28,6 +28,8 @@ namespace Tactics.Common.Testing.Gameplay
         public GameResult? LastBattleResult { get; set; }
         public Dictionary<string, SkillGraphAsset> SkillGraphs { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, SkillGraphAbilityConfig> SkillAbilityConfigs { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<SkillGraphAsset> OwnedSkillGraphs { get; } = new();
+        public HashSet<SkillGraphAbilityConfig> OwnedSkillAbilityConfigs { get; } = new();
         public Dictionary<string, IAbility> SkillAbilities { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, IUnit> Units { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, ICell> Cells { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -110,18 +112,20 @@ namespace Tactics.Common.Testing.Gameplay
             SkillAbilities.Clear();
 
             // 3. 销毁 ScriptableObject 实例
-            foreach (var config in SkillAbilityConfigs.Values)
+            foreach (var config in OwnedSkillAbilityConfigs)
             {
                 if (config != null)
                     UnityEngine.Object.Destroy(config);
             }
+            OwnedSkillAbilityConfigs.Clear();
             SkillAbilityConfigs.Clear();
 
-            foreach (var graph in SkillGraphs.Values)
+            foreach (var graph in OwnedSkillGraphs)
             {
                 if (graph != null)
                     UnityEngine.Object.Destroy(graph);
             }
+            OwnedSkillGraphs.Clear();
             SkillGraphs.Clear();
 
             foreach (var buffConfig in RuntimeBuffConfigs.Values)

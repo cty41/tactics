@@ -50,8 +50,8 @@ namespace Tactics.Tests.Editor
             Assert.That(PureRunAbilityCatalog.TryGet("mage.fireball", out var fireball), Is.True);
             Assert.That(fireball.IsLevelImplemented(1), Is.True);
             Assert.That(fireball.IsLevelImplemented(2), Is.True);
-            Assert.That(fireball.IsLevelImplemented(3), Is.False,
-                "Lv3 is intentionally unpublished until the Mage slice implements its ignite detonation primitive.");
+            Assert.That(fireball.IsLevelImplemented(3), Is.True,
+                "Mage Slice publishes the ignite detonation level together with its real graph asset.");
         }
 
         [Test]

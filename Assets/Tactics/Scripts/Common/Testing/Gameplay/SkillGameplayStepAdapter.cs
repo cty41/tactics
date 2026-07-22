@@ -243,6 +243,7 @@ namespace Tactics.Common.Testing.Gameplay
             };
 
             context.SkillGraphs[alias] = graph;
+            context.OwnedSkillGraphs.Add(graph);
         }
 
         private static GameplayStepResult LoadSkillGraphAsset(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -342,6 +343,7 @@ namespace Tactics.Common.Testing.Gameplay
             SetPrivateField(typeof(SkillGraphAbilityConfig), config, "_targetRange", targetRange);
 
             context.SkillAbilityConfigs[alias] = config;
+            context.OwnedSkillAbilityConfigs.Add(config);
         }
 
         private static void CreateSkillAbility(GameplayRuntimeContext context, JObject parameters)

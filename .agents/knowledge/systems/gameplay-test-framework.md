@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-22T20:36:34+08:00"
+timestamp: "2026-07-22T23:53:52+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Testing/Gameplay
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:27baff04c7334823ab16a6afe78c5687905ada5a843b01f68d744890167a2454
+source_fingerprint: sha256:ea72a5a682d55be31a4eeda5f33226ab18ac54956d4880bcb16fb7f9882b39ec
 ---
 
 # Current State
@@ -28,6 +28,8 @@ Map adapter 除 Pure Run 路线与胜场外，现可创建独立消耗品实例�
 Map adapter 还可断言角色稳定技能 ID 的实际等级、指定 Pure Run 候选是否包含目标等级，以及候选池是否同时含新技能和升级。`pure-run-mixed-levelup-candidates` 源 spec 覆盖 Fireball Lv1 角色在 Lv2 获得 Fireball Lv2 与新技能混合候选；跨存档绑定和真实 SkillGraph 行为由 PlayMode 测试补足。
 
 `Tests/gameplay-specs/shared/` 是共享战斗原语的维护源，五个场景分别覆盖朝向/当前轮先攻重排、标准状态回合语义、召唤上限与最早替换、可点击禁用原因，以及可撤销的有序多段选择。对应 plan 必须由 CLI 生成，不手改。
+
+`Tests/gameplay-specs/mage/` 以真实法师 SkillGraph 资产验证等级行为；当前场景覆盖火球术 Lv2 的主目标与正交溅射。运行时上下文区分“加载的项目资产”和“测试创建且由上下文拥有的临时资产”，Dispose 只销毁后者，避免真实资产被误销毁。
 
 # Relationships
 

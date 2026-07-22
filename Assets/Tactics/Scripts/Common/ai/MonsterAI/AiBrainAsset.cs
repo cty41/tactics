@@ -43,6 +43,19 @@ namespace Tactics.Common.AI.MonsterAI
         [Min(1)]
         [SerializeField] private int _maxEngageCandidatesPerTarget = 3;
 
+        [Header("Preferred Combat Range")]
+        [Tooltip("Minimum distance this brain tries to maintain. Zero disables preferred-range repositioning.")]
+        [Min(0)]
+        [SerializeField] private int _preferredMinimumRange;
+
+        [Tooltip("Maximum preferred distance. Values below the minimum are clamped during validation.")]
+        [Min(0)]
+        [SerializeField] private int _preferredMaximumRange;
+
+        [Tooltip("Priority added to a legal reposition when the unit is closer than its preferred range.")]
+        [Min(0f)]
+        [SerializeField] private float _preferredRangeRepositionBonus;
+
         [Header("固定 Pattern")]
         [Tooltip("按顺序执行的可学习技能循环。没有合法步骤时回退 Generic AI，且不推进游标")]
         [SerializeField] private List<AiPatternStep> _patternSteps = new List<AiPatternStep>();
@@ -70,6 +83,10 @@ namespace Tactics.Common.AI.MonsterAI
         public float LowHealthTargetBonus => _lowHealthTargetBonus;
         public float RetreatBaseScore => _retreatBaseScore;
         public int MaxEngageCandidatesPerTarget => _maxEngageCandidatesPerTarget;
+        public int PreferredMinimumRange => _preferredMinimumRange;
+        public int PreferredMaximumRange => _preferredMaximumRange;
+        public float PreferredRangeRepositionBonus => _preferredRangeRepositionBonus;
+        public bool UsesPreferredCombatRange => _preferredMinimumRange > 0 && _preferredMaximumRange >= _preferredMinimumRange;
         public IReadOnlyList<AiPatternStep> PatternSteps => _patternSteps;
         public bool EnableVerboseLogging => _enableVerboseLogging;
         public bool EnableDetailedRuleFilterLog => _enableDetailedRuleFilterLog;
@@ -94,6 +111,9 @@ namespace Tactics.Common.AI.MonsterAI
             _lowHealthThreshold = Mathf.Clamp01(_lowHealthThreshold);
             _killableDamageThreshold = Mathf.Clamp01(_killableDamageThreshold);
             _maxEngageCandidatesPerTarget = Mathf.Max(1, _maxEngageCandidatesPerTarget);
+            _preferredMinimumRange = Mathf.Max(0, _preferredMinimumRange);
+            _preferredMaximumRange = Mathf.Max(_preferredMinimumRange, _preferredMaximumRange);
+            _preferredRangeRepositionBonus = Mathf.Max(0f, _preferredRangeRepositionBonus);
         }
     }
 

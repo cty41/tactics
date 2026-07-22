@@ -652,6 +652,8 @@ namespace Tactics.Common.Units.Abilities
 
             foreach (var node in _config.SkillGraph.Nodes)
             {
+                if (node is TeleportNodeRecord teleport)
+                    return teleport.RequiresLineOfSight;
                 if (node is ProjectileLaunchNodeRecord)
                     return true;
                 if (node is ApplyDamageNodeRecord damage && damage.IsRanged)

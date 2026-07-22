@@ -218,6 +218,34 @@ test("rejects clickElement without elementName", () => {
   assert.ok(validation.diagnostics.some(d => d.code === "MissingElementName"));
 });
 
+test("allows real SkillGraph assets inside the lightweight deterministic world", () => {
+  const validation = validateScenarioSpec({
+    feature: "MageSkillLevels",
+    scenario: "RealGraphInLightweightWorld",
+    tags: ["mage", "assets"],
+    requiredAdapters: ["Battle", "Skill"],
+    timeoutMs: 10000,
+    setup: [
+      { kind: "useRealAssets", parameters: {} },
+      { kind: "createSkillTestWorld", parameters: {} },
+      { kind: "loadSkillGraphAsset", parameters: { alias: "graph", assetPath: "Assets/Graph.asset" } },
+      { kind: "createCell", parameters: { alias: "casterCell", x: 0, y: 0 } },
+      { kind: "createCell", parameters: { alias: "targetCell", x: 1, y: 0 } },
+      { kind: "createUnit", parameters: { alias: "caster", playerNumber: 0, cellAlias: "casterCell" } },
+      { kind: "createUnit", parameters: { alias: "target", playerNumber: 1, cellAlias: "targetCell" } },
+      { kind: "setTurnContext", parameters: { currentPlayerNumber: 0, playableUnitAliases: ["caster"] } }
+    ],
+    actions: [
+      { kind: "executeSkillGraph", parameters: { graphAlias: "graph", casterAlias: "caster", targetPointAlias: "targetCell" } }
+    ],
+    assertions: [
+      { kind: "executionStateEquals", expected: "Completed", parameters: {} }
+    ]
+  });
+
+  assert.equal(validation.valid, true, validation.diagnostics.map(diagnostic => diagnostic.message).join("\n"));
+});
+
 test("rejects pressKey without key", () => {
   const validation = validateScenarioSpec({
     feature: "UI",

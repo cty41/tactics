@@ -22,8 +22,16 @@ namespace Tactics.Common.Units.Buffs
             isCritical = true;
         }
 
-        public virtual void OnDamageTaken(Buff buff, IUnit attacker, float damage)
+        public virtual void OnDamageTaken(Buff buff, IUnit attacker, float damage, bool isRangedDamage)
         {
+            if (!isRangedDamage && _config.MeleeRetaliationBuff != null && _config.MeleeRetaliationDuration > 0
+                && buff.Owner != null && attacker != null && !ReferenceEquals(buff.Owner, attacker)
+                && buff.Owner.CurrentCell != null && attacker.CurrentCell != null
+                && buff.Owner.CurrentCell.GetDistance(attacker.CurrentCell) <= 1)
+            {
+                attacker.AddBuff(new Buff(_config.MeleeRetaliationBuff, buff.Owner, _config.MeleeRetaliationDuration));
+            }
+
             if (_config.TriggerTiming != BuffTriggerTiming.DamageTaken)
                 return;
 

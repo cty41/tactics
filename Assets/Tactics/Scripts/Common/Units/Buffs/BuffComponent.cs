@@ -228,10 +228,10 @@ namespace Tactics.Common.Units.Buffs
         /// <summary>
         /// Invokes OnDamageTaken on all active buffs.
         /// </summary>
-        public void OnDamageTaken(IUnit attacker, float damage)
+        public void OnDamageTaken(IUnit attacker, float damage, bool isRangedDamage = false)
         {
             foreach (var buff in new List<Buff>(_activeBuffs))
-                buff.OnDamageTaken(attacker, damage);
+                buff.OnDamageTaken(attacker, damage, isRangedDamage);
         }
 
         /// <summary>

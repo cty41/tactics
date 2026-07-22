@@ -94,6 +94,8 @@ namespace Tactics.Common.AI.MonsterAI
             {
                 if (target.CurrentCell == null) continue;
 
+                AddPreferredRangeRepositionCandidate(context, intent, target, candidates);
+
                 var attackCells = context.ReachableCells
                     .Where(cell => CalcDist(cell, target.CurrentCell) <= context.Self.AttackRange + 0.5f)
                     .OrderBy(cell => CalcDist(context.Self.CurrentCell, cell))
@@ -131,6 +133,50 @@ namespace Tactics.Common.AI.MonsterAI
                     candidates.Add(c);
                 }
             }
+        }
+
+        /// <summary>
+        /// Ranged archetypes can opt into a spacing move without changing the shared decision graph.
+        /// The bonus is asset-authored, so legacy brains retain their exact candidate priorities.
+        /// </summary>
+        private static void AddPreferredRangeRepositionCandidate(
+            AiContext context,
+            IntentNodeRecord intent,
+            IUnit target,
+            List<IntentCandidate> candidates)
+        {
+            var brain = context.BrainAsset;
+            if (!brain.UsesPreferredCombatRange || context.Self.CurrentCell == null)
+                return;
+
+            float currentDistance = CalcDist(context.Self.CurrentCell, target.CurrentCell);
+            if (currentDistance >= brain.PreferredMinimumRange)
+                return;
+
+            var destination = context.ReachableCells
+                .Where(cell => cell != null && !ReferenceEquals(cell, context.Self.CurrentCell))
+                .Where(cell =>
+                {
+                    float distance = CalcDist(cell, target.CurrentCell);
+                    return distance >= brain.PreferredMinimumRange && distance <= brain.PreferredMaximumRange;
+                })
+                .OrderBy(cell => CalcDist(context.Self.CurrentCell, cell))
+                .ThenBy(cell => CalcDist(cell, target.CurrentCell))
+                .ThenBy(cell => cell.GridCoordinates.x)
+                .ThenBy(cell => cell.GridCoordinates.y)
+                .FirstOrDefault();
+
+            if (destination == null)
+                return;
+
+            candidates.Add(new IntentCandidate(
+                IntentType.Engage,
+                ActionType.Move,
+                target,
+                destination,
+                null,
+                intent.BasePriority + brain.PreferredRangeRepositionBonus,
+                sourceIntentNodeId: intent.NodeId));
         }
 
         private static void GenerateBasicAttackCandidates(AiContext context, IntentNodeRecord intent, List<IntentCandidate> candidates)
