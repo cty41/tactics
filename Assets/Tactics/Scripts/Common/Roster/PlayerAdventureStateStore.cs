@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Tactics.Runtime.Utilities;
 using System.IO;
@@ -210,7 +211,7 @@ namespace Tactics.Roster
                 CreatePureRunCharacter("pure_run_amazon", "Amazon", RoleType.Amazon, "Hunter", runSeed, 2)
             };
 
-            return new PlayerAdventureState
+            var state = new PlayerAdventureState
             {
                 Version = CurrentVersion,
                 IsPureRun = true,
@@ -221,6 +222,9 @@ namespace Tactics.Roster
                 Inventory = new List<string>(),
                 ConsumableInstances = new List<ConsumableInstance>()
             };
+
+            RepairInPlace(state);
+            return state;
         }
 
         public static int GetActiveSlotIndex()
@@ -479,6 +483,12 @@ namespace Tactics.Roster
 
                 character.HydratePendingBuffs();
                 character.LearnedSkills ??= new List<CharacterDefinition.LearnedSkill>();
+                if (state.IsPureRun)
+                {
+                    changed |= RepairPureRunCharacterSkills(character);
+                    continue;
+                }
+
                 if (character.LearnedSkills.Count > 0)
                     continue;
 
@@ -504,6 +514,74 @@ namespace Tactics.Roster
                 changed = true;
                 TLog.Info($"[PlayerAdventureStateStore] Added default skill '{defaultSkillId}' to {character.DisplayName}");
             }
+
+            return changed;
+        }
+
+        private static bool RepairPureRunCharacterSkills(CharacterDefinition character)
+        {
+            bool changed = PureRunAbilityCatalog.RepairLearnedSkills(character);
+
+            if (!string.IsNullOrWhiteSpace(character.StartingBranchSkillId) &&
+                PureRunAbilityCatalog.TryNormalizeLegacySkillId(
+                    character.StartingBranchSkillId,
+                    1,
+                    out string stableBranchId,
+                    out _ ) &&
+                !string.Equals(character.StartingBranchSkillId, stableBranchId, StringComparison.Ordinal))
+            {
+                character.StartingBranchSkillId = stableBranchId;
+                changed = true;
+            }
+
+            var learnedFormal = character.LearnedSkills.FirstOrDefault(learned =>
+                learned != null &&
+                PureRunAbilityCatalog.TryGet(learned.SkillId, out var definition) &&
+                definition.IsUpgradeVisible &&
+                definition.RoleType == character.RoleType);
+
+            if (learnedFormal == null)
+            {
+                string fallbackId = character.RoleType switch
+                {
+                    RoleType.Mage => "mage.fireball",
+                    RoleType.Necromancer => "necromancer.summon_skeleton",
+                    RoleType.Amazon => "amazon.thrust",
+                    _ => null
+                };
+
+                string skillId = character.StartingBranchSkillId;
+                if (!PureRunAbilityCatalog.TryGet(skillId, out var branchDefinition) ||
+                    !branchDefinition.IsUpgradeVisible ||
+                    branchDefinition.RoleType != character.RoleType ||
+                    !string.IsNullOrEmpty(branchDefinition.Skill.PrerequisiteSkillId))
+                {
+                    skillId = fallbackId;
+                }
+
+                if (PureRunAbilityCatalog.TryGet(skillId, out var definition))
+                {
+                    character.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+                    {
+                        SkillId = definition.Id,
+                        SkillType = definition.SkillType,
+                        Level = 1
+                    });
+                    learnedFormal = character.LearnedSkills[^1];
+                    changed = true;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(character.StartingBranchSkillId) && learnedFormal != null &&
+                PureRunAbilityCatalog.TryGet(learnedFormal.SkillId, out var learnedDefinition) &&
+                string.IsNullOrEmpty(learnedDefinition.Skill.PrerequisiteSkillId))
+            {
+                character.StartingBranchSkillId = learnedFormal.SkillId;
+                changed = true;
+            }
+
+            if (PureRunAbilityCatalog.EnsurePickupSpearSkill(character))
+                changed = true;
 
             return changed;
         }

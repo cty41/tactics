@@ -182,6 +182,7 @@ namespace Tactics.Common.Battle
         private IList<IUnit> _units;
         private int _unitCount;
         private readonly HashSet<string> _loadedPaths = new();
+        private readonly Dictionary<string, AbilityConfig> _pureRunAbilityConfigCache = new(StringComparer.Ordinal);
 
         #endregion
 
@@ -240,6 +241,7 @@ namespace Tactics.Common.Battle
                     mgr.Release(path);
             }
             _loadedPaths.Clear();
+            _pureRunAbilityConfigCache.Clear();
 
             RoguelikeBattleReturnHandler.Instance.UnregisterController(this);
             base.OnDestroy();
@@ -446,6 +448,14 @@ namespace Tactics.Common.Battle
 
                 CharacterStatsApplicator.ApplyToUnit(def, unit);
 
+                if (state.IsPureRun)
+                {
+                    PureRunAbilityBinder.Bind(
+                        def,
+                        unit,
+                        path => LoadPureRunAbilityConfig(path, mgr));
+                }
+
                 var link = unit.GetComponent<RosterCharacterLink>();
                 if (link == null)
                     link = unit.gameObject.AddComponent<RosterCharacterLink>();
@@ -461,6 +471,24 @@ namespace Tactics.Common.Battle
                     def.ClearPendingBuffs();
                 }
             }
+        }
+
+        private AbilityConfig LoadPureRunAbilityConfig(string configuredPath, GameAssetManager manager)
+        {
+            if (manager == null || string.IsNullOrWhiteSpace(configuredPath))
+                return null;
+
+            string path = GameAssetManager.NormalizeAssetPath(configuredPath);
+            if (_pureRunAbilityConfigCache.TryGetValue(path, out var cached))
+                return cached;
+
+            var config = manager.Load<AbilityConfig>(path);
+            if (config == null)
+                return null;
+
+            _pureRunAbilityConfigCache.Add(path, config);
+            _loadedPaths.Add(path);
+            return config;
         }
 
         private void SpawnEncounterUnit(EncounterUnitEntry unitEntry, Transform container, GameAssetManager mgr, string encounterPath)
@@ -1291,6 +1319,10 @@ namespace Tactics.Common.Battle
 
         public void RemoveUnit(IUnit unit)
         {
+            // Party replacement runs before IUnitManager.Initialize creates the runtime registry.
+            if (_units == null)
+                return;
+
             _units.Remove(unit);
             UnitRemoved?.Invoke(unit);
         }

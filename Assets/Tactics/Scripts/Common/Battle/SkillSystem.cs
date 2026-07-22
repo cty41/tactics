@@ -96,6 +96,12 @@ namespace Tactics.Common.Battle
                 return false;
             }
 
+            if (skill.SkillType == Tactics.Roster.SkillType.ExtraUtility)
+            {
+                TLog.Info($"[SkillSystem] Extra utility skill {skill.Id} is granted by its owning mechanic, not learned from offers.");
+                return false;
+            }
+
             var slotStatus = GetSkillSlotStatus(character, (Tactics.Roster.SkillType)skill.SkillType);
             if (slotStatus.Remaining <= 0)
             {
@@ -135,6 +141,12 @@ namespace Tactics.Common.Battle
                 return false;
             }
 
+            if (skill.SkillType == Tactics.Roster.SkillType.ExtraUtility)
+            {
+                TLog.Warning($"[SkillSystem] Extra utility skill {skill.Id} cannot be learned from a normal skill slot.");
+                return false;
+            }
+
             var slotStatus = GetSkillSlotStatus(character, (Tactics.Roster.SkillType)skill.SkillType);
             if (slotStatus.Remaining <= 0)
             {
@@ -163,12 +175,14 @@ namespace Tactics.Common.Battle
                 Level = 1
             });
 
+            PureRunAbilityCatalog.EnsurePickupSpearSkill(character);
+
             TLog.Info($"[SkillSystem] Character learned skill {skill.Id} ({skill.SkillType}).");
             return true;
         }
 
         /// <summary>
-        /// 升级指定技能（从 Level 1 到 Level 2）。
+        /// 升级指定技能一级，最高等级由稳定技能目录决定。
         /// </summary>
         public static bool UpgradeSkill(CharacterDefinition character, string skillId)
         {
@@ -210,6 +224,9 @@ namespace Tactics.Common.Battle
         /// </summary>
         public static SkillSlotStatus GetSkillSlotStatus(CharacterDefinition character, Tactics.Roster.SkillType type)
         {
+            if (type == Tactics.Roster.SkillType.ExtraUtility)
+                return new SkillSlotStatus(0, 0);
+
             if (character?.LearnedSkills == null)
             {
                 return new SkillSlotStatus(0, type == (Tactics.Roster.SkillType)SkillType.Active ? MaxActiveSlots : MaxPassiveSlots);

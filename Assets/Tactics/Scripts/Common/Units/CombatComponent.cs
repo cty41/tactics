@@ -23,6 +23,16 @@ namespace Tactics.Common.Units
             if (unit != null) CombatTechniqueUnits.Add(unit);
         }
 
+        public static void DisableCombatTechniques(IUnit unit)
+        {
+            if (unit != null) CombatTechniqueUnits.Remove(unit);
+        }
+
+        public static bool HasCombatTechniques(IUnit unit)
+        {
+            return unit != null && CombatTechniqueUnits.Contains(unit);
+        }
+
         public static void ApplyDamageShield(IUnit unit, float amount)
         {
             if (unit != null) DamageShields[unit] = Math.Max(0f, amount);

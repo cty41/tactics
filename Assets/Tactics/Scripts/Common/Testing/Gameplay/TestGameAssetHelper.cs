@@ -16,6 +16,7 @@ namespace Tactics.Common.Testing.Gameplay
 
             // Create new instance
             _managerGo = new GameObject("TestGameAssetManager");
+            _managerGo.SetActive(false);
             var mgr = _managerGo.AddComponent<GameAssetManager>();
 
             // Use reflection to set EditorAssetDatabase mode (no bundles needed)

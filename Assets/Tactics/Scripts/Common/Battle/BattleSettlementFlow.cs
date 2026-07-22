@@ -220,7 +220,9 @@ namespace Tactics.Common.Battle
 
             if (hasLeveledUp)
             {
-                bool needsSkillSelection = SkillSystem.ShouldShowSkillSelection(character, character.Level);
+                bool needsSkillSelection = _state?.IsPureRun == true
+                    ? GenerateSkillOptions(character).Count > 0
+                    : SkillSystem.ShouldShowSkillSelection(character, character.Level);
                 _ = ShowLevelUpAsync(character, needsSkillSelection);
             }
             else
@@ -244,7 +246,7 @@ namespace Tactics.Common.Battle
             }
 
             controller.SetCharacter(character);
-            if (needsSkillSelection)
+            if (needsSkillSelection || _state?.IsPureRun == true)
             {
                 controller.SetSkillOptionProvider(() => GenerateSkillOptions(character));
             }
@@ -302,7 +304,9 @@ namespace Tactics.Common.Battle
 
             TLog.Info($"[BattleSettlementFlow] AttributeAllocation closed for {character.DisplayName}.");
 
-            bool shouldShowSkill = SkillSystem.ShouldShowSkillSelection(character, character.Level);
+            bool shouldShowSkill = _state?.IsPureRun == true
+                ? GenerateSkillOptions(character).Count > 0
+                : SkillSystem.ShouldShowSkillSelection(character, character.Level);
             if (shouldShowSkill)
             {
                 _ = ShowSkillSelectionAsync(character);
@@ -363,7 +367,7 @@ namespace Tactics.Common.Battle
             if (character == null)
                 return options;
 
-            if (_state?.IsPureRun == true && SkillSystem.IsNewSkillLevel(character.Level))
+            if (_state?.IsPureRun == true)
             {
                 return PureRunProgression.BuildSkillChoices(
                     character,

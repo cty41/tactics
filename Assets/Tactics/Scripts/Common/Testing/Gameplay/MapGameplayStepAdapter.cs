@@ -12,6 +12,7 @@ using Tactics.RoguelikeMap.Economy;
 using Tactics.Equipment;
 using Tactics.Consumables;
 using Tactics.AssetPipeline;
+using Tactics.Common.Battle;
 using Tactics.Roster;
 using UnityEngine;
 
@@ -110,6 +111,9 @@ namespace Tactics.Common.Testing.Gameplay
                 or "rosterCharacterExperienceEquals"
                 or "rosterCharacterLevelEquals"
                 or "rosterCharacterHasSkillId"
+                or "rosterCharacterSkillLevelEquals"
+                or "pureRunSkillChoiceContains"
+                or "pureRunSkillChoicesAreMixed"
                 or "rosterCharacterEquipmentEquals"
                 or "rosterCharacterTotalAttributeEquals"
                 or "runtimeRosterCharacterHasPendingBuff"
@@ -145,6 +149,9 @@ namespace Tactics.Common.Testing.Gameplay
                     "rosterCharacterExperienceEquals" => AssertRosterCharacterExperienceEquals(assertion),
                     "rosterCharacterLevelEquals" => AssertRosterCharacterLevelEquals(assertion),
                     "rosterCharacterHasSkillId" => AssertRosterCharacterHasSkillId(assertion),
+                    "rosterCharacterSkillLevelEquals" => AssertRosterCharacterSkillLevelEquals(assertion),
+                    "pureRunSkillChoiceContains" => AssertPureRunSkillChoiceContains(assertion),
+                    "pureRunSkillChoicesAreMixed" => AssertPureRunSkillChoicesAreMixed(assertion),
                     "rosterCharacterEquipmentEquals" => AssertRosterCharacterEquipmentEquals(assertion),
                     "rosterCharacterTotalAttributeEquals" => AssertRosterCharacterTotalAttributeEquals(assertion),
                     "runtimeRosterCharacterHasPendingBuff" => AssertRuntimeRosterCharacterHasPendingBuff(context, assertion),
@@ -982,6 +989,94 @@ namespace Tactics.Common.Testing.Gameplay
             return actual
                 ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId} has learned skill '{expectedSkillId}'.")
                 : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected {characterId} to have learned skill '{expectedSkillId}'.");
+        }
+
+        private static GameplayAssertionResult AssertRosterCharacterSkillLevelEquals(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            string skillId = assertion.Parameters["skillId"]?.ToString();
+            if (string.IsNullOrWhiteSpace(characterId) || string.IsNullOrWhiteSpace(skillId))
+            {
+                return GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    "rosterCharacterSkillLevelEquals requires target characterId and parameters.skillId.");
+            }
+
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(candidate => candidate?.Id == characterId);
+            var learned = character?.LearnedSkills?.FirstOrDefault(skill =>
+                string.Equals(skill?.SkillId, skillId, StringComparison.Ordinal));
+            if (learned == null)
+            {
+                return GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Character '{characterId}' has not learned '{skillId}'.");
+            }
+
+            return learned.Level == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{characterId}.{skillId}=Lv{learned.Level}")
+                : GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Expected {characterId}.{skillId}=Lv{expected}, actual=Lv{learned.Level}.");
+        }
+
+        private static GameplayAssertionResult AssertPureRunSkillChoiceContains(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            string expectedSkillId = assertion.Expected?.ToString();
+            int targetLevel = assertion.Parameters["targetLevel"]?.ToObject<int>() ?? 1;
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(candidate => candidate?.Id == characterId);
+            if (state?.IsPureRun != true || character == null)
+            {
+                return GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Pure Run character '{characterId}' was not found.");
+            }
+
+            var choices = PureRunProgression.BuildSkillChoices(character, state.RunSeed, character.Level);
+            bool actual = choices.Any(skill =>
+                string.Equals(skill?.Id, expectedSkillId, StringComparison.Ordinal) && skill.Level == targetLevel);
+            return actual
+                ? GameplayAssertionResult.Pass(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Offer contains {expectedSkillId} Lv{targetLevel}.")
+                : GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Offer does not contain {expectedSkillId} Lv{targetLevel}.");
+        }
+
+        private static GameplayAssertionResult AssertPureRunSkillChoicesAreMixed(ExecutableScenarioAssertion assertion)
+        {
+            string characterId = assertion.Target;
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(candidate => candidate?.Id == characterId);
+            if (state?.IsPureRun != true || character == null)
+            {
+                return GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Pure Run character '{characterId}' was not found.");
+            }
+
+            var choices = PureRunProgression.BuildSkillChoices(character, state.RunSeed, character.Level);
+            bool hasUpgrade = choices.Any(skill => SkillSystem.HasSkill(character, skill.Id));
+            bool hasNewSkill = choices.Any(skill => !SkillSystem.HasSkill(character, skill.Id));
+            bool actual = hasUpgrade && hasNewSkill;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"Mixed offer={actual}.")
+                : GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Expected mixed offer={expected}, actual={actual}.");
         }
 
         private static GameplayAssertionResult AssertRosterCharacterEquipmentEquals(ExecutableScenarioAssertion assertion)

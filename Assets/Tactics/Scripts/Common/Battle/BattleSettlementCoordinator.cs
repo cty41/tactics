@@ -396,8 +396,8 @@ namespace Tactics.Common.Battle
         }
 
         /// <summary>
-        /// Builds deterministic legal first-slice choices and reserves slot zero for the one-time
-        /// starting-branch advanced guarantee when its base attribute reaches seven.
+        /// Builds a deterministic mixed offer from legal new skills and published next levels.
+        /// Slot zero is reserved for the one-time starting-branch advanced guarantee when eligible.
         /// </summary>
         public static List<SkillDefinition> BuildSkillChoices(
             CharacterDefinition character,
@@ -408,27 +408,70 @@ namespace Tactics.Common.Battle
             if (character == null || count <= 0)
                 return new List<SkillDefinition>();
 
-            var legal = FirstSliceSkillCatalog.All
-                .Where(skill => skill.RoleType == character.RoleType && SkillSystem.CanLearnSkill(character, skill))
+            var newSkills = PureRunAbilityCatalog.FormalSkills
+                .Where(definition =>
+                    definition.RoleType == character.RoleType &&
+                    definition.IsUpgradeVisible &&
+                    definition.IsLevelImplemented(1) &&
+                    SkillSystem.CanLearnSkill(character, definition.Skill))
+                .Select(definition => definition.CreateOffer(1))
+                .OrderBy(skill => skill.Id, StringComparer.Ordinal)
+                .ToList();
+
+            var upgrades = (character.LearnedSkills ?? new List<CharacterDefinition.LearnedSkill>())
+                .Where(learned => learned != null && !string.IsNullOrWhiteSpace(learned.SkillId))
+                .GroupBy(learned => learned.SkillId, StringComparer.Ordinal)
+                .Select(group => group.OrderByDescending(learned => learned.Level).First())
+                .Select(learned =>
+                {
+                    if (!PureRunAbilityCatalog.TryGet(learned.SkillId, out var definition) ||
+                        !definition.IsUpgradeVisible ||
+                        definition.RoleType != character.RoleType)
+                    {
+                        return null;
+                    }
+
+                    int targetLevel = learned.Level + 1;
+                    return targetLevel <= definition.MaxSkillLevel && definition.IsLevelImplemented(targetLevel)
+                        ? definition.CreateOffer(targetLevel)
+                        : null;
+                })
+                .Where(skill => skill != null)
                 .OrderBy(skill => skill.Id, StringComparer.Ordinal)
                 .ToList();
 
             SkillDefinition guaranteed = null;
             TryGetGuaranteedAdvancedSkill(character, out guaranteed);
             if (guaranteed != null)
-                legal.RemoveAll(skill => skill.Id == guaranteed.Id);
+                newSkills.RemoveAll(skill => skill.Id == guaranteed.Id);
 
             int randomSeed = Tactics.Roguelike.RoguelikeMapRuntimeState.DeriveSeed(
                 runSeed,
                 $"skill-offer-{character.Id}",
                 offerOrdinal);
-            Shuffle(legal, new Random(randomSeed));
+            var random = new Random(randomSeed);
+            Shuffle(newSkills, random);
+            Shuffle(upgrades, random);
 
             var result = new List<SkillDefinition>();
             if (guaranteed != null)
                 result.Add(guaranteed);
 
-            result.AddRange(legal.Take(Math.Max(0, count - result.Count)));
+            if (result.Count < count && guaranteed == null && newSkills.Count > 0 && upgrades.Count > 0)
+            {
+                result.Add(newSkills[0]);
+                newSkills.RemoveAt(0);
+            }
+
+            if (result.Count < count && upgrades.Count > 0 && (guaranteed != null || result.Count > 0 || newSkills.Count == 0))
+            {
+                result.Add(upgrades[0]);
+                upgrades.RemoveAt(0);
+            }
+
+            var remaining = newSkills.Concat(upgrades).ToList();
+            Shuffle(remaining, random);
+            result.AddRange(remaining.Take(Math.Max(0, count - result.Count)));
             return result;
         }
 
@@ -473,9 +516,12 @@ namespace Tactics.Common.Battle
 
         private static SkillDefinition FindStartingBranchAdvancedSkill(CharacterDefinition character)
         {
-            return FirstSliceSkillCatalog.All.FirstOrDefault(skill =>
-                skill.RoleType == character.RoleType &&
-                string.Equals(skill.PrerequisiteSkillId, character.StartingBranchSkillId, StringComparison.Ordinal));
+            return PureRunAbilityCatalog.FormalSkills
+                .Where(definition => definition.IsLevelImplemented(1))
+                .Select(definition => definition.CreateOffer(1))
+                .FirstOrDefault(skill =>
+                    skill.RoleType == character.RoleType &&
+                    string.Equals(skill.PrerequisiteSkillId, character.StartingBranchSkillId, StringComparison.Ordinal));
         }
 
         private static bool HasLearnedAdvancedSkill(CharacterDefinition character)
@@ -486,8 +532,9 @@ namespace Tactics.Common.Battle
             foreach (var learnedSkill in character.LearnedSkills)
             {
                 if (learnedSkill != null &&
-                    FirstSliceSkillCatalog.TryGet(learnedSkill.SkillId, out var definition) &&
-                    !string.IsNullOrEmpty(definition.PrerequisiteSkillId))
+                    PureRunAbilityCatalog.TryGet(learnedSkill.SkillId, out var definition) &&
+                    definition.IsUpgradeVisible &&
+                    !string.IsNullOrEmpty(definition.Skill.PrerequisiteSkillId))
                 {
                     return true;
                 }

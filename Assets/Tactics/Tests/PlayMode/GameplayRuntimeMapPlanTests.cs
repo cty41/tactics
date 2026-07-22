@@ -330,6 +330,18 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunMixedLevelUpCandidates()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var task = ExecuteMapPlan(GetSourcePlanPath("map", "pure-run-mixed-levelup-candidates.plan.json"));
+            yield return WaitForTask(task);
+
+            var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesMapBattleDeathWriteback()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;

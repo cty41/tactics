@@ -66,6 +66,9 @@ namespace Tactics.Common.Units
         [SerializeField] private List<AbilityConfig> _abilityConfigs;
         [SerializeField] private RoleConfig _roleConfig;
         private List<IAbility> _baseAbilities;
+        private bool _useInjectedAbilityConfigs;
+        private bool _hasExplicitLearnedSkillLoadout;
+        private readonly Dictionary<string, int> _learnedSkillLevels = new(System.StringComparer.Ordinal);
 
         [SerializeField] Cell _currentCell;
         public virtual ICell CurrentCell { get { return _currentCell; } set { _currentCell = value as Cell; } }
@@ -97,8 +100,38 @@ namespace Tactics.Common.Units
         {
             _abilityConfigs = abilityConfigs?.Where(config => config != null).Distinct().ToList()
                 ?? new List<AbilityConfig>();
-            _roleConfig = null;
+            _useInjectedAbilityConfigs = true;
         }
+
+        /// <summary>
+        /// Supplies the persisted Pure Run skill levels used by passive runtime hooks.
+        /// </summary>
+        public void ApplyLearnedSkillLevels(IEnumerable<CharacterDefinition.LearnedSkill> learnedSkills)
+        {
+            _learnedSkillLevels.Clear();
+            _hasExplicitLearnedSkillLoadout = true;
+            if (learnedSkills == null)
+                return;
+
+            foreach (var learned in learnedSkills)
+            {
+                if (learned == null || string.IsNullOrWhiteSpace(learned.SkillId))
+                    continue;
+
+                if (!_learnedSkillLevels.TryGetValue(learned.SkillId, out int currentLevel) ||
+                    learned.Level > currentLevel)
+                {
+                    _learnedSkillLevels[learned.SkillId] = Mathf.Max(1, learned.Level);
+                }
+            }
+        }
+
+        public int GetLearnedSkillLevel(string skillId) =>
+            !string.IsNullOrWhiteSpace(skillId) && _learnedSkillLevels.TryGetValue(skillId, out int level)
+                ? level
+                : 0;
+
+        public bool UsesInjectedAbilityConfigs => _useInjectedAbilityConfigs;
 
         [SerializeField] private HashSet<string> _usedBasicAbilitiesThisTurn = new();
 
@@ -250,14 +283,21 @@ namespace Tactics.Common.Units
             Mana = Charisma;
             MovementPoints = MaxMovementPoints;
 
-            if (_roleConfig != null && _roleConfig.RoleType == RoleType.Amazon)
+            bool hasCombatTechniques = _hasExplicitLearnedSkillLoadout
+                ? GetLearnedSkillLevel("amazon.combat_techniques") > 0
+                : !_useInjectedAbilityConfigs && _roleConfig != null && _roleConfig.RoleType == RoleType.Amazon;
+            if (hasCombatTechniques)
                 CombatComponent.EnableCombatTechniques(this);
+            else
+                CombatComponent.DisableCombatTechniques(this);
 
             _baseAbilities = new List<IAbility>();
             
-            var abilitySources = _roleConfig != null && _roleConfig.Abilities != null && _roleConfig.Abilities.Count > 0
-                ? _roleConfig.Abilities
-                : _abilityConfigs;
+            var abilitySources = _useInjectedAbilityConfigs
+                ? _abilityConfigs
+                : _roleConfig != null && _roleConfig.Abilities != null && _roleConfig.Abilities.Count > 0
+                    ? _roleConfig.Abilities
+                    : _abilityConfigs;
             
             if (abilitySources != null)
             {
@@ -642,6 +682,8 @@ namespace Tactics.Common.Units
 
         public virtual void OnDestroyed(IGridController gridController)
         {
+            CombatComponent.DisableCombatTechniques(this);
+
             // Linked death: if this unit has a summoned unit, kill it
             if (_summonedUnit != null && !_summonedUnit.IsDowned)
             {
@@ -660,6 +702,11 @@ namespace Tactics.Common.Units
             _highlightManager?.CancelAllHighlights();
             _buffComponent.OnUnitDestroyed();
             Destroy(gameObject);
+        }
+
+        protected virtual void OnDestroy()
+        {
+            CombatComponent.DisableCombatTechniques(this);
         }
 
         public void RemoveFromGame()

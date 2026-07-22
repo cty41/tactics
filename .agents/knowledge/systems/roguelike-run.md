@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-17T20:23:56+08:00"
+timestamp: "2026-07-22T11:10:37+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -14,12 +14,14 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs
   - Assets/Tactics/Scripts/Roguelike/RoguelikeMapRuntimeState.cs
   - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs
+  - Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs
+  - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs
   - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
   - Assets/Tactics/Scripts/Editor/RoguelikeEventEditor
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:2da48e44bf7153720c3a6cd7ced3489e0cae28bcf4146e50d27e0fbe37a43276
+source_fingerprint: sha256:7126ba411d955d4361c94b0430180898d9dc94a4fb3b5dc348953a7872a79a7a
 ---
 
 # Current State
@@ -29,6 +31,8 @@ Pure Run v1 由 `RoguelikeMapGenerator.GetPureRunMap` 生成 7 层只前进地�
 Demo 使用单一全局 Run，不经过三存档槽。`PureRunSessionStore` 将版本 5 冒险状态与地图作为配对数据保存；Home 提供 New Run 和 Continue Run。普通战斗胜利结算后回到地图，失败或 Boss 胜利显示 RunEndSummary 并清理本局状态。
 
 `CreatePureRunState` 建立法师、死灵法师和亚马逊固定三人队，等级 1、七项基础属性 5。每次胜利只让一名最低等级存活角色获得 1 级和 1 属性；起始分支主属性达到 7 时，高级技能有一次候选保底。
+
+Pure Run 存档修复将已知旧等级技能 ID 迁移为稳定逻辑 ID、合并重复记录并保留最高等级。拥有投掷系技能的 Amazon 会幂等获得不占槽的 `amazon.pickup_spear` 持久化记录；其实际战斗拾取行为仍属于 Amazon 技能切片。角色 Lv2 起即可同时看到合法新技能和已学技能的已发布下一等级，选择升级后同一 `LearnedSkill` 等级会进入下一场战斗绑定。
 
 事件编辑器当前支持 UI Toolkit 图编辑、Inspector、Preview、搜索、连线、删除及 JSON 导入导出；进阶编辑效率和专用测试仍属于缺口。
 

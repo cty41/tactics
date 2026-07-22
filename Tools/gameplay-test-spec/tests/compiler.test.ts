@@ -301,6 +301,27 @@ test("compiles run seed and growth assertions from the authored source spec", as
   assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "Map"));
 });
 
+test("compiles Pure Run mixed level-up assertions from the authored source spec", async () => {
+  const markdown = await readFixture("map/pure-run-mixed-levelup-candidates.gameplay-test.md");
+  const generatedPlan = await readFixture("map/pure-run-mixed-levelup-candidates.plan.json");
+  const doc = parseGameplayTestDocument(markdown);
+
+  const compiled = compileScenarioSpec(doc.frontmatter);
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(generatedPlan));
+  assert.deepEqual(
+    compiled.plan.assertionPlans.map(assertion => assertion.kind),
+    [
+      "mapIsActive",
+      "rosterCharacterSkillLevelEquals",
+      "pureRunSkillChoiceContains",
+      "pureRunSkillChoicesAreMixed"
+    ]
+  );
+  assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "Map"));
+});
+
 test("compiles structured AI turn result assertions from the authored source spec", async () => {
   const markdown = await readFixture("battle-ai-turn-result.gameplay-test.md");
   const generatedPlan = await readFixture("battle-ai-turn-result.plan.json");

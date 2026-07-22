@@ -1,7 +1,10 @@
 using System.Collections;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.AssetPipeline;
+using Tactics.Common.Battle;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Testing.Gameplay;
@@ -9,6 +12,8 @@ using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Units.Classes;
+using Tactics.Roster;
+using Tactics.Units;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -51,6 +56,160 @@ namespace Tactics.Tests.PlayMode
             Assert.That(amazon, Is.Not.Null);
             Assert.That(amazon.RoleType, Is.EqualTo(RoleType.Amazon));
             Assert.That(amazon.Abilities.Count, Is.GreaterThanOrEqualTo(4));
+        }
+
+        [Test]
+        public void NonPureUnit_WithoutInjectedLoadoutStillUsesRoleConfigAbilities()
+        {
+            var roleConfig = GameAssetManager.Instance.Load<RoleConfig>(
+                "Assets/Tactics/Battle/Classes/Mage.asset");
+            Assert.That(roleConfig, Is.Not.Null);
+
+            var gameObject = new GameObject("NonPureRoleConfigUnit");
+            try
+            {
+                var unit = gameObject.AddComponent<Unit>();
+                var roleConfigField = typeof(Unit).GetField(
+                    "_roleConfig",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(roleConfigField, Is.Not.Null);
+                roleConfigField.SetValue(unit, roleConfig);
+
+                unit.Initialize(null);
+
+                Assert.That(unit.UsesInjectedAbilityConfigs, Is.False);
+                var actualNames = unit.GetBaseAbilities().Select(ability => ability.DisplayName).ToList();
+                foreach (var config in roleConfig.Abilities.Where(config => config != null))
+                    Assert.That(actualNames, Does.Contain(config.DisplayName), config.DisplayName);
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        [Test]
+        public void PureRunCatalog_AllPublishedAbilityConfigsLoad()
+        {
+            foreach (string path in PureRunAbilityCatalog.GetPublishedAbilityPaths())
+            {
+                var config = GameAssetManager.Instance.Load<AbilityConfig>(path);
+                Assert.That(config, Is.Not.Null, path);
+            }
+        }
+
+        [Test]
+        public void PureRunBinder_InjectsOnlyBaseAttackAndLearnedExactLevel()
+        {
+            var mage = CharacterDefinition.CreateDefault("pure_run_mage", "Mage", roleType: RoleType.Mage);
+            mage.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+            {
+                SkillId = "mage.fireball",
+                SkillType = SkillType.Active,
+                Level = 2
+            });
+
+            var gameObject = new GameObject("PureRunBinderTestUnit");
+            try
+            {
+                var unit = gameObject.AddComponent<TilemapUnit>();
+                var result = PureRunAbilityBinder.Bind(
+                    mage,
+                    unit,
+                    path => GameAssetManager.Instance.Load<AbilityConfig>(path));
+
+                Assert.That(unit.UsesInjectedAbilityConfigs, Is.True);
+                Assert.That(unit.GetLearnedSkillLevel("mage.fireball"), Is.EqualTo(2));
+                Assert.That(result.MissingSkillIds, Is.Empty);
+                Assert.That(result.LoadedPaths, Is.EquivalentTo(new[]
+                {
+                    PureRunAbilityCatalog.MagicBaseAttackPath,
+                    "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset"
+                }));
+                Assert.That(result.LoadedPaths, Does.Not.Contain(
+                    "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset"));
+                Assert.That(result.LoadedPaths, Does.Not.Contain(
+                    "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        [Test]
+        public void PureRunFireballUpgrade_PersistsAndBindsLevelTwoForNextBattle()
+        {
+            const int testSlot = 2;
+            bool hadPreviousSave = PlayerAdventureStateStore.HasSave(testSlot);
+            var previousState = hadPreviousSave
+                ? PlayerAdventureStateStore.Load(testSlot)
+                : null;
+            GameObject gameObject = null;
+            try
+            {
+                var state = PlayerAdventureStateStore.CreatePureRunState(20260722);
+                var mage = state.Roster.Single(character => character.RoleType == RoleType.Mage);
+                mage.Level = 2;
+                mage.StartingBranchSkillId = "mage.fireball";
+                mage.LearnedSkills.Clear();
+                mage.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+                {
+                    SkillId = "mage.fireball",
+                    SkillType = SkillType.Active,
+                    Level = 1
+                });
+
+                var choices = PureRunProgression.BuildSkillChoices(mage, state.RunSeed, mage.Level);
+                Assert.That(choices, Has.Some.Matches<SkillDefinition>(skill =>
+                    skill.Id == "mage.fireball" && skill.Level == 2));
+                Assert.That(SkillSystem.UpgradeSkill(mage, "mage.fireball"), Is.True);
+
+                PlayerAdventureStateStore.Save(testSlot, state);
+                var restored = PlayerAdventureStateStore.Load(testSlot);
+                var restoredMage = restored.Roster.Single(character => character.Id == mage.Id);
+                Assert.That(restoredMage.LearnedSkills.Single(skill => skill.SkillId == "mage.fireball").Level,
+                    Is.EqualTo(2));
+
+                gameObject = new GameObject("PureRunPersistedBinderTestUnit");
+                var unit = gameObject.AddComponent<TilemapUnit>();
+                var result = PureRunAbilityBinder.Bind(
+                    restoredMage,
+                    unit,
+                    path => GameAssetManager.Instance.Load<AbilityConfig>(path));
+
+                Assert.That(result.MissingSkillIds, Is.Empty);
+                Assert.That(result.LoadedPaths, Is.EquivalentTo(new[]
+                {
+                    PureRunAbilityCatalog.MagicBaseAttackPath,
+                    "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset"
+                }));
+                Assert.That(result.LoadedPaths, Does.Not.Contain(
+                    "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset"));
+            }
+            finally
+            {
+                if (gameObject != null)
+                    Object.DestroyImmediate(gameObject);
+
+                if (hadPreviousSave)
+                    PlayerAdventureStateStore.Save(testSlot, previousState);
+                else
+                    PlayerAdventureStateStore.Delete(testSlot);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator FireballPublishedLevels_HaveSingleTargetThenCrossSplashBehavior()
+        {
+            yield return ExecuteFireballLevel(
+                "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset",
+                18f,
+                20f);
+            yield return ExecuteFireballLevel(
+                "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset",
+                16f,
+                18f);
         }
 
         [Test]
@@ -396,6 +555,60 @@ namespace Tactics.Tests.PlayMode
                 Assert.That(task.Result.ExecutionEvents,
                     Has.Some.Matches<SkillGraphExecutionEvent>(entry => entry.EventType == "ProjectileLaunched"));
                 Assert.That(target.Health, Is.LessThan(20f));
+            }
+            finally
+            {
+                world.Dispose();
+            }
+        }
+
+        private static IEnumerator ExecuteFireballLevel(
+            string configPath,
+            float expectedPrimaryHealth,
+            float expectedAdjacentEnemyHealth)
+        {
+            var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(configPath);
+            Assert.That(config, Is.Not.Null, configPath);
+
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                var casterCell = world.CreateSquareCell("FireballCaster", 0, 0);
+                world.CreateSquareCell("FireballLine", 1, 0);
+                var primaryCell = world.CreateSquareCell("FireballPrimary", 2, 0);
+                var adjacentCell = world.CreateSquareCell("FireballAdjacent", 2, 1);
+                var friendlyCell = world.CreateSquareCell("FireballFriendly", 3, 0);
+                var diagonalCell = world.CreateSquareCell("FireballDiagonal", 3, 1);
+
+                var caster = world.CreateUnit("FireballCasterUnit", 0, casterCell);
+                var primary = world.CreateUnit("FireballPrimaryUnit", 1, primaryCell);
+                var adjacentEnemy = world.CreateUnit("FireballAdjacentUnit", 1, adjacentCell);
+                var friendly = world.CreateUnit("FireballFriendlyUnit", 0, friendlyCell);
+                var diagonalEnemy = world.CreateUnit("FireballDiagonalUnit", 1, diagonalCell);
+
+                caster.Mana = 20f;
+                caster.MaxMana = 20f;
+                caster.Luck = 0;
+                foreach (var target in new[] { primary, adjacentEnemy, friendly, diagonalEnemy })
+                {
+                    target.Health = 20f;
+                    target.MaxHealth = 20f;
+                    target.DefenceFactor = 0;
+                }
+
+                world.SetTurnContext(world.PlayerOne, new[] { caster, friendly });
+                world.SetTurnContext(world.PlayerTwo, new[] { primary, adjacentEnemy, diagonalEnemy });
+
+                var ability = new SkillGraphAbilityImpl(caster, config);
+                var task = ability.ExecuteForTestAsync(primaryCell, world.GridController);
+                yield return new WaitUntil(() => task.IsCompleted);
+
+                Assert.That(task.IsFaulted, Is.False);
+                Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed), task.Result.LastError);
+                Assert.That(primary.Health, Is.EqualTo(expectedPrimaryHealth), configPath);
+                Assert.That(adjacentEnemy.Health, Is.EqualTo(expectedAdjacentEnemyHealth), configPath);
+                Assert.That(friendly.Health, Is.EqualTo(20f), "Friendly fire is not allowed.");
+                Assert.That(diagonalEnemy.Health, Is.EqualTo(20f), "Cross splash must not hit diagonal cells.");
             }
             finally
             {

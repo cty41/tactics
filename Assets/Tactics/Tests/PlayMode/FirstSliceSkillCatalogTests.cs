@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using Tactics.Common.Battle;
 using Tactics.Common.Units.Classes;
@@ -17,6 +19,129 @@ namespace Tactics.Tests.PlayMode
             Assert.That(FirstSliceSkillCatalog.All.Count(skill => skill.RoleType == RoleType.Mage), Is.EqualTo(6));
             Assert.That(FirstSliceSkillCatalog.All.Count(skill => skill.RoleType == RoleType.Necromancer), Is.EqualTo(6));
             Assert.That(FirstSliceSkillCatalog.All.Count(skill => skill.RoleType == RoleType.Amazon), Is.EqualTo(6));
+        }
+
+        [Test]
+        public void PureRunCatalog_UsesStableIdsAndKeepsPickupSpearOutsideFormalOffers()
+        {
+            Assert.That(PureRunAbilityCatalog.FormalSkills.Count(), Is.EqualTo(18));
+            Assert.That(PureRunAbilityCatalog.FormalSkills.All(definition =>
+                !definition.Id.EndsWith("_1") && !definition.Id.EndsWith("_2")), Is.True);
+
+            Assert.That(PureRunAbilityCatalog.TryGet(PureRunAbilityCatalog.PickupSpearSkillId, out var pickup), Is.True);
+            Assert.That(pickup.SkillType, Is.EqualTo(SkillType.ExtraUtility));
+            Assert.That(pickup.IsMapVisible, Is.False);
+            Assert.That(pickup.IsUpgradeVisible, Is.False);
+            Assert.That(pickup.IsBattleVisible, Is.True);
+        }
+
+        [Test]
+        public void PureRunProgression_LevelTwoMageOfferMixesFireballUpgradeAndNewSkills()
+        {
+            var mage = CharacterDefinition.CreateDefault("mage", "Mage", roleType: RoleType.Mage);
+            mage.Level = 2;
+            mage.StartingBranchSkillId = "mage.fireball";
+            mage.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+            {
+                SkillId = "mage.fireball",
+                SkillType = SkillType.Active,
+                Level = 1
+            });
+
+            var choices = PureRunProgression.BuildSkillChoices(mage, 20260722, mage.Level);
+
+            Assert.That(choices, Has.Count.EqualTo(3));
+            Assert.That(choices, Has.Some.Matches<SkillDefinition>(skill =>
+                skill.Id == "mage.fireball" && skill.Level == 2));
+            Assert.That(choices, Has.Some.Matches<SkillDefinition>(skill =>
+                skill.Id != "mage.fireball" && skill.Level == 1));
+        }
+
+        [Test]
+        public void PureRunProgression_FullActiveSlotsFilterNewSkillsButKeepPublishedUpgrades()
+        {
+            var mage = CharacterDefinition.CreateDefault("mage", "Mage", roleType: RoleType.Mage);
+            mage.Level = 2;
+            mage.LearnedSkills.AddRange(new[]
+            {
+                new CharacterDefinition.LearnedSkill { SkillId = "mage.fireball", SkillType = SkillType.Active, Level = 1 },
+                new CharacterDefinition.LearnedSkill { SkillId = "mage.ice_bolt", SkillType = SkillType.Active, Level = 1 },
+                new CharacterDefinition.LearnedSkill { SkillId = "mage.lightning", SkillType = SkillType.Active, Level = 1 }
+            });
+
+            var choices = PureRunProgression.BuildSkillChoices(mage, 17, mage.Level);
+
+            Assert.That(choices, Is.Not.Empty);
+            Assert.That(choices.All(skill => SkillSystem.HasSkill(mage, skill.Id)), Is.True);
+            Assert.That(choices, Has.Some.Matches<SkillDefinition>(skill =>
+                skill.Id == "mage.fireball" && skill.Level == 2));
+        }
+
+        [Test]
+        public void PureRunProgression_AttributeAllocationCanRefreshEmptyOfferIntoAdvancedSkills()
+        {
+            var amazon = CharacterDefinition.CreateDefault(
+                "amazon",
+                "Amazon",
+                agilityBonus: 1,
+                roleType: RoleType.Amazon);
+            amazon.Level = 2;
+            amazon.StartingBranchSkillId = "amazon.thrust";
+            amazon.LearnedSkills.AddRange(new[]
+            {
+                new CharacterDefinition.LearnedSkill { SkillId = "amazon.thrust", SkillType = SkillType.Active, Level = 1 },
+                new CharacterDefinition.LearnedSkill { SkillId = "amazon.poison_spear", SkillType = SkillType.Active, Level = 1 },
+                new CharacterDefinition.LearnedSkill { SkillId = "amazon.combat_techniques", SkillType = SkillType.Passive, Level = 1 }
+            });
+
+            Assert.That(PureRunProgression.BuildSkillChoices(amazon, 31, amazon.Level), Is.Empty);
+
+            amazon.Agility = 7;
+            var refreshed = PureRunProgression.BuildSkillChoices(amazon, 31, amazon.Level);
+
+            Assert.That(refreshed, Is.Not.Empty);
+            Assert.That(refreshed, Has.Some.Matches<SkillDefinition>(skill =>
+                skill.Id == "amazon.multi_stab" && skill.Level == 1));
+        }
+
+        [Test]
+        public void PureRunRepair_MigratesLegacyIdsAndGrantsPickupSpearIdempotently()
+        {
+            var state = PlayerAdventureStateStore.CreatePureRunState(41);
+            var amazon = state.Roster.Single(character => character.RoleType == RoleType.Amazon);
+            amazon.StartingBranchSkillId = "amazon_poison_spear_1";
+            amazon.LearnedSkills = new List<CharacterDefinition.LearnedSkill>
+            {
+                new CharacterDefinition.LearnedSkill { SkillId = "amazon_poison_spear_1", SkillType = SkillType.Active, Level = 1 },
+                new CharacterDefinition.LearnedSkill { SkillId = "amazon_poison_spear_2", SkillType = SkillType.Active, Level = 1 }
+            };
+
+            var repair = typeof(PlayerAdventureStateStore).GetMethod(
+                "RepairInPlace",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(repair, Is.Not.Null);
+            repair.Invoke(null, new object[] { state });
+            repair.Invoke(null, new object[] { state });
+
+            Assert.That(amazon.StartingBranchSkillId, Is.EqualTo("amazon.poison_spear"));
+            Assert.That(amazon.LearnedSkills.Count(skill => skill.SkillId == "amazon.poison_spear"), Is.EqualTo(1));
+            Assert.That(amazon.LearnedSkills.Single(skill => skill.SkillId == "amazon.poison_spear").Level, Is.EqualTo(2));
+            Assert.That(amazon.LearnedSkills.Count(skill => skill.SkillId == PureRunAbilityCatalog.PickupSpearSkillId), Is.EqualTo(1));
+            Assert.That(SkillSystem.GetSkillSlotStatus(amazon, SkillType.Active).Used, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void LearnThrowingSkill_ImmediatelyGrantsSlotFreePickupSpear()
+        {
+            var amazon = CharacterDefinition.CreateDefault("amazon", "Amazon", roleType: RoleType.Amazon);
+            Assert.That(FirstSliceSkillCatalog.TryGet("amazon.poison_spear", out var poisonSpear), Is.True);
+
+            Assert.That(SkillSystem.LearnSkill(amazon, poisonSpear), Is.True);
+
+            Assert.That(amazon.LearnedSkills.Count(skill => skill.SkillId == PureRunAbilityCatalog.PickupSpearSkillId),
+                Is.EqualTo(1));
+            Assert.That(SkillSystem.GetSkillSlotStatus(amazon, SkillType.Active).Used, Is.EqualTo(1));
+            Assert.That(PureRunAbilityCatalog.EnsurePickupSpearSkill(amazon), Is.False);
         }
 
         [Test]

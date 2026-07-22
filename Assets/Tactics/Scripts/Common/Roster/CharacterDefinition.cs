@@ -28,7 +28,8 @@ namespace Tactics.Roster
     public enum SkillType
     {
         Active,
-        Passive
+        Passive,
+        ExtraUtility
     }
 
     /// <summary>Serializable character data aligned with <see cref="Tactics.Common.Units.Unit"/> combat fields.</summary>

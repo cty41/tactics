@@ -134,6 +134,9 @@ const supportedAssertionKinds = new Set([
   "rosterCharacterExperienceEquals",
   "rosterCharacterLevelEquals",
   "rosterCharacterHasSkillId",
+  "rosterCharacterSkillLevelEquals",
+  "pureRunSkillChoiceContains",
+  "pureRunSkillChoicesAreMixed",
   "rosterCharacterEquipmentEquals",
   "rosterCharacterTotalAttributeEquals",
   "runtimeRosterCharacterHasPendingBuff",
@@ -484,6 +487,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "aiTurnTargetPointEquals":
     case "aiTurnPatternStepEquals":
     case "rosterCharacterHasSkillId":
+    case "pureRunSkillChoiceContains":
       requireStringExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitHealthEquals":
@@ -493,6 +497,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
       break;
     case "aiTurnTargetCountEquals":
     case "rosterCharacterLevelEquals":
+    case "rosterCharacterSkillLevelEquals":
     case "backpackConsumableCountEquals":
     case "shopGoodCountEquals":
     case "shopConsumableCountAtLeast":
@@ -503,6 +508,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "consumableInstanceExists":
     case "shopConsumableIdsUnique":
     case "unitCanReceiveHealingEquals":
+    case "pureRunSkillChoicesAreMixed":
       if (typeof assertion.expected !== "boolean") {
         diagnostics.push({
           code: "InvalidAssertionExpectedType",

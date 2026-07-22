@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-07-17T13:48:43+08:00"
+timestamp: "2026-07-22T11:11:13+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - Assets/Tactics/AI/BasicMeleeProfile.asset
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:55eb3c23fb677cae86b96acc5a1d3e095e957405aed599c369bdf35785554586
+source_fingerprint: sha256:103445ec2e935a716392b5050cce850e245bfe1749959c7037618ff799c43059
 ---
 
 # Current State

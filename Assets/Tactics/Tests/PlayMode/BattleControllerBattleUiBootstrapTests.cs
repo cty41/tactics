@@ -63,6 +63,16 @@ namespace Tactics.Tests.PlayMode
             Assert.IsTrue(controller.IsBattleActive, "Battle should still become active even when bootstrap is delayed.");
         }
 
+        [Test]
+        public void RemoveUnit_BeforeUnitManagerInitialization_IsSafeNoOp()
+        {
+            _battleRoot = new GameObject("TestBattleController_PreInitRemove");
+            var controller = _battleRoot.AddComponent<BattleController>();
+            SetStartImmediately(controller, false);
+
+            Assert.DoesNotThrow(() => controller.RemoveUnit(null));
+        }
+
         [UnityTest]
         public IEnumerator BattleUI_FailsGracefully_WhenBootstrapTimesOut()
         {
