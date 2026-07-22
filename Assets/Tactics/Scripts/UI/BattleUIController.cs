@@ -10,6 +10,8 @@ using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Players;
 using Tactics.Common.Battle;
+using Tactics.Common.Interactables;
+using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Consumables;
@@ -26,6 +28,7 @@ namespace Tactics.UI
     public sealed class BattleUIController : UIControllerBase
     {
         // Status panel
+        private VisualElement _root;
         private VisualElement _portrait;
         private Label _unitNameLabel;
         private VisualElement _hpBarFill;
@@ -46,6 +49,11 @@ namespace Tactics.UI
         private Label _consumableChargesLabel;
         private VisualElement _skillPanel;
         private VisualElement _bottomPanel;
+        private Label _abilityReasonTooltip;
+        private VisualElement _orderedSelectionPanel;
+        private Label _orderedSelectionPrompt;
+        private VisualElement _orderedMarkerRoot;
+        private VisualElement _spearMarkerRoot;
 
         // State
         private IGridController _gridController;
@@ -54,10 +62,13 @@ namespace Tactics.UI
         private IAbility _currentMoveAbility;
         private ConsumableBattleAbility _currentConsumableAbility;
         private bool _isConsumableTargeting;
+        private SkillGraphAbilityImpl _currentOrderedAbility;
         private readonly List<VisualElement> _skillCards = new List<VisualElement>();
+        private readonly Dictionary<VisualElement, IAbility> _skillCardAbilities = new();
         private readonly List<System.Action> _skillCallbacks = new List<System.Action>();
         private readonly List<VisualElement> _turnOrderItems = new List<VisualElement>();
         private bool _canEndTurn;
+        private readonly Dictionary<DroppedSpear, Label> _spearMarkers = new();
 
         // Damage Numbers
         [SerializeField] private int poolSize = 20;
@@ -132,6 +143,7 @@ namespace Tactics.UI
                 TLog.Warning("[BattleUIController] Could not get root visual element for Battle UI.");
                 return;
             }
+            _root = root;
 
             // Query UI elements
             _portrait = root.Q<VisualElement>("Portrait");
@@ -152,6 +164,13 @@ namespace Tactics.UI
             _consumableChargesLabel = root.Q<Label>("BattleConsumableCharges");
             _skillPanel = root.Q<VisualElement>("SkillPanel");
             _bottomPanel = root.Q<VisualElement>("BottomPanel");
+            _abilityReasonTooltip = root.Q<Label>("AbilityReasonTooltip");
+            _orderedSelectionPanel = root.Q<VisualElement>("OrderedSelectionPanel");
+            _orderedSelectionPrompt = root.Q<Label>("OrderedSelectionPrompt");
+            _orderedMarkerRoot = root.Q<VisualElement>("OrderedTargetMarkerRoot");
+            _spearMarkerRoot = root.Q<VisualElement>("DroppedSpearMarkerRoot");
+            _orderedSelectionPanel?.RegisterCallback<MouseDownEvent>(OnOrderedSelectionMouseDown);
+            _root.RegisterCallback<KeyDownEvent>(OnBattleKeyDown);
 
             _hoverHealthBar = root.Q<VisualElement>("HoverHealthBar");
             _hoverHPBarFill = root.Q<VisualElement>("HoverHPBarFill");
@@ -255,6 +274,8 @@ namespace Tactics.UI
             if (_endTurnButton != null) _endTurnButton.clicked -= OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked -= OnMoveClicked;
             if (_consumableButton != null) _consumableButton.clicked -= OnConsumableClicked;
+            _orderedSelectionPanel?.UnregisterCallback<MouseDownEvent>(OnOrderedSelectionMouseDown);
+            _root?.UnregisterCallback<KeyDownEvent>(OnBattleKeyDown);
 
             SetCurrentConsumableAbility(null);
             _isConsumableTargeting = false;
@@ -274,6 +295,9 @@ namespace Tactics.UI
                 _currentSelectedUnit.BasicAbilityUsed -= OnBasicAbilityUsed;
             }
             _currentSelectedUnit = null;
+            _currentOrderedAbility = null;
+            _orderedMarkerRoot?.Clear();
+            _spearMarkers.Clear();
 
             if (_endTurnAction != null)
             {
@@ -471,20 +495,36 @@ namespace Tactics.UI
             {
                 var ability = abilities[i];
                 var card = CreateSkillCard(ability, i);
+                if (card == null)
+                    continue;
                 _skillPanel.Add(card);
                 _skillCards.Add(card);
+                _skillCardAbilities[card] = ability;
             }
         }
 
         private VisualElement CreateSkillCard(IAbility ability, int index)
         {
             var card = new VisualElement();
+            card.name = $"AbilityCard_{ToElementKey(ability.DisplayName)}";
             card.AddToClassList("skill-card");
 
-            bool canPerform = _gridController != null && ability.CanPerform(_gridController);
-            if (!canPerform)
+            AbilityAvailability availability = ability is IAbilityAvailabilityProvider provider
+                ? provider.GetAvailability(_gridController)
+                : ability.CanPerform(_gridController)
+                    ? AbilityAvailability.Enabled()
+                    : AbilityAvailability.Disabled("当前无法使用");
+            card.userData = availability;
+            if (availability.State == AbilityAvailabilityState.Hidden)
+            {
+                card.AddToClassList("ability-hidden");
+                return null;
+            }
+            if (!availability.CanExecute)
             {
                 card.AddToClassList("disabled");
+                card.AddToClassList("ability-disabled-clickable");
+                card.tooltip = availability.Reason;
             }
 
             // Icon
@@ -511,13 +551,23 @@ namespace Tactics.UI
             card.Add(costLabel);
 
             // Click event
-            if (canPerform)
+            int capturedIndex = index;
+            System.Action callback = () =>
             {
-                int capturedIndex = index;
-                System.Action callback = () => OnSkillButtonClicked(capturedIndex);
-                _skillCallbacks.Add(callback);
-                card.RegisterCallback<ClickEvent>(evt => callback());
-            }
+                var currentAvailability = AbilityAvailabilityResolver.Resolve(ability, _gridController);
+                if (currentAvailability.CanExecute)
+                {
+                    OnSkillButtonClicked(capturedIndex);
+                    return;
+                }
+                ShowAbilityReason(currentAvailability.Reason);
+            };
+            _skillCallbacks.Add(callback);
+            card.RegisterCallback<ClickEvent>(evt =>
+            {
+                callback();
+                evt.StopPropagation();
+            });
 
             return card;
         }
@@ -546,6 +596,7 @@ namespace Tactics.UI
         private void ClearSkillCards()
         {
             _skillCallbacks.Clear();
+            _skillCardAbilities.Clear();
             foreach (var card in _skillCards)
             {
                 if (card.parent != null) card.RemoveFromHierarchy();
@@ -604,6 +655,8 @@ namespace Tactics.UI
             }
 
             var ability = abilities[skillIndex];
+            _currentOrderedAbility = ability as SkillGraphAbilityImpl;
+            HideAbilityReason();
             TLog.Info($"[BattleUIController] Skill {skillIndex + 1} clicked: {ability.DisplayName}");
 
             // Switch to unit selected state - OnStateEnter will handle OnAbilitySelected, CanPerform check, and Display
@@ -612,6 +665,7 @@ namespace Tactics.UI
 
         private void OnConsumableClicked()
         {
+            _currentOrderedAbility = null;
             if (_currentSelectedUnit == null || _gridController == null ||
                 _currentConsumableAbility == null ||
                 !_currentConsumableAbility.CanPerform(_gridController))
@@ -769,11 +823,11 @@ namespace Tactics.UI
 
         private void OnUnitSelected(IUnit unit)
         {
-            if (_currentSelectedUnit != null && _currentSelectedUnit != unit && _currentSelectedUnit is ICombatant oldCombatant)
+            if (_currentSelectedUnit is ICombatant oldCombatant)
             {
                 oldCombatant.HealthChanged -= OnUnitHealthChanged;
             }
-            if (_currentSelectedUnit != null && _currentSelectedUnit != unit)
+            if (_currentSelectedUnit != null)
             {
                 _currentSelectedUnit.ManaChanged -= OnUnitManaChanged;
                 _currentSelectedUnit.BasicAbilityUsed -= OnBasicAbilityUsed;
@@ -781,7 +835,9 @@ namespace Tactics.UI
 
             _currentSelectedUnit = unit;
             UpdateStatusPanel();
+            UpdateMoveButtonState(unit);
             UpdateConsumableButton(unit);
+            UpdateSkillCards(unit);
 
             if (_currentSelectedUnit is ICombatant combatant)
             {
@@ -1157,9 +1213,13 @@ namespace Tactics.UI
 
         private void Update()
         {
+            bool cancelPressed = Keyboard.current?.escapeKey.wasPressedThisFrame == true ||
+                                 Mouse.current?.rightButton.wasPressedThisFrame == true;
+            if (_currentOrderedAbility?.OrderedSelection != null && cancelPressed)
+                UndoOrCancelOrderedSelection();
+
             if (_isConsumableTargeting &&
-                (Keyboard.current?.escapeKey.wasPressedThisFrame == true ||
-                 Mouse.current?.rightButton.wasPressedThisFrame == true))
+                cancelPressed)
             {
                 _isConsumableTargeting = false;
                 _consumableButton?.EnableInClassList("targeting", false);
@@ -1171,7 +1231,154 @@ namespace Tactics.UI
             UpdateHoverHealthBar();
             SyncBuffIcons();
             UpdateBuffIconPositions();
+            SyncSkillCardAvailability();
+            SyncOrderedSelectionUi();
+            SyncDroppedSpearMarkers();
         }
+
+        public void RefreshActionUi()
+        {
+            if (_currentSelectedUnit != null)
+            {
+                UpdateMoveButtonState(_currentSelectedUnit);
+                UpdateConsumableButton(_currentSelectedUnit);
+                UpdateSkillCards(_currentSelectedUnit);
+            }
+            SyncSkillCardAvailability();
+            SyncOrderedSelectionUi();
+            SyncDroppedSpearMarkers();
+        }
+
+        private void OnOrderedSelectionMouseDown(MouseDownEvent evt)
+        {
+            if (evt.button != 1 || _currentOrderedAbility?.OrderedSelection == null)
+                return;
+            UndoOrCancelOrderedSelection();
+            evt.StopPropagation();
+        }
+
+        private void OnBattleKeyDown(KeyDownEvent evt)
+        {
+            if (evt.keyCode != KeyCode.Escape || _currentOrderedAbility?.OrderedSelection == null)
+                return;
+            UndoOrCancelOrderedSelection();
+            evt.StopPropagation();
+        }
+
+        private void UndoOrCancelOrderedSelection()
+        {
+            if (_currentOrderedAbility?.OrderedSelection == null)
+                return;
+            if (!_currentOrderedAbility.UndoLastOrderedTarget())
+            {
+                _currentOrderedAbility.CancelOrderedSelection();
+                _currentOrderedAbility = null;
+                if (_gridController != null)
+                    _gridController.GridState = new GridStateAwaitInput();
+            }
+            SyncOrderedSelectionUi();
+        }
+
+        private void ShowAbilityReason(string reason)
+        {
+            if (_abilityReasonTooltip == null)
+                return;
+            _abilityReasonTooltip.text = string.IsNullOrWhiteSpace(reason) ? "当前无法使用" : reason;
+            _abilityReasonTooltip.style.display = DisplayStyle.Flex;
+        }
+
+        private void SyncSkillCardAvailability()
+        {
+            foreach (var pair in _skillCardAbilities)
+            {
+                var availability = AbilityAvailabilityResolver.Resolve(pair.Value, _gridController);
+                pair.Key.userData = availability;
+                pair.Key.style.display = availability.State == AbilityAvailabilityState.Hidden
+                    ? DisplayStyle.None
+                    : DisplayStyle.Flex;
+                pair.Key.EnableInClassList("disabled", !availability.CanExecute);
+                pair.Key.EnableInClassList("ability-disabled-clickable",
+                    availability.State == AbilityAvailabilityState.DisabledClickable);
+                pair.Key.EnableInClassList("ability-hidden", availability.State == AbilityAvailabilityState.Hidden);
+                pair.Key.tooltip = availability.CanExecute ? null : availability.Reason;
+            }
+        }
+
+        private void HideAbilityReason()
+        {
+            if (_abilityReasonTooltip != null)
+                _abilityReasonTooltip.style.display = DisplayStyle.None;
+        }
+
+        private void SyncOrderedSelectionUi()
+        {
+            var selection = _currentOrderedAbility?.OrderedSelection;
+            if (_orderedSelectionPanel == null || _orderedMarkerRoot == null || selection == null ||
+                selection.Stage is OrderedSelectionStage.Cancelled or OrderedSelectionStage.Committed)
+            {
+                if (_orderedSelectionPanel != null)
+                    _orderedSelectionPanel.style.display = DisplayStyle.None;
+                _orderedMarkerRoot?.Clear();
+                return;
+            }
+
+            _orderedSelectionPanel.style.display = DisplayStyle.Flex;
+            _orderedSelectionPanel.userData = selection.Stage;
+            if (_orderedSelectionPrompt != null)
+                _orderedSelectionPrompt.text = $"第 {selection.Targets.Count + 1}/{selection.RequiredCount} 段";
+
+            _orderedMarkerRoot.Clear();
+            for (int index = 0; index < selection.Targets.Count; index++)
+            {
+                var target = selection.Targets[index];
+                var marker = new Label((index + 1).ToString())
+                {
+                    name = $"OrderedTargetMarker_{index + 1}",
+                    userData = target
+                };
+                marker.AddToClassList("ordered-target-marker");
+                PositionWorldMarker(marker, target?.WorldPosition);
+                _orderedMarkerRoot.Add(marker);
+            }
+        }
+
+        private void SyncDroppedSpearMarkers()
+        {
+            if (_spearMarkerRoot == null)
+                return;
+            var liveSpears = FindObjectsByType<DroppedSpear>(FindObjectsSortMode.None).Where(spear => spear != null).ToHashSet();
+            foreach (var stale in _spearMarkers.Keys.Where(spear => !liveSpears.Contains(spear)).ToList())
+            {
+                _spearMarkers[stale].RemoveFromHierarchy();
+                _spearMarkers.Remove(stale);
+            }
+            foreach (var spear in liveSpears)
+            {
+                if (!_spearMarkers.TryGetValue(spear, out var marker))
+                {
+                    marker = new Label("长矛") { name = $"DroppedSpearMarker_{_spearMarkers.Count}" };
+                    marker.AddToClassList("dropped-spear-marker");
+                    _spearMarkerRoot.Add(marker);
+                    _spearMarkers[spear] = marker;
+                }
+                PositionWorldMarker(marker, spear.CurrentCell?.WorldPosition);
+            }
+        }
+
+        private void PositionWorldMarker(VisualElement marker, Tactics.Common.Utilities.Vector3Impl? worldPosition)
+        {
+            var camera = _mainCamera ?? Camera.main;
+            if (marker == null || worldPosition == null || camera == null)
+                return;
+            var value = worldPosition.Value;
+            Vector3 screen = camera.WorldToScreenPoint(new Vector3(value.x, value.y + 0.8f, value.z));
+            marker.style.left = screen.x - 14f;
+            marker.style.top = Screen.height - screen.y - 14f;
+        }
+
+        private static string ToElementKey(string value) => string.IsNullOrWhiteSpace(value)
+            ? "Unknown"
+            : new string(value.Select(character => char.IsLetterOrDigit(character) ? character : '_').ToArray());
 
         /// <summary>
         /// Keeps the visual buff-icon state aligned with the unit runtime state.

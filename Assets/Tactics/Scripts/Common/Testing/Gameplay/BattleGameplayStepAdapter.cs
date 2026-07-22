@@ -61,7 +61,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "selectOrderedTarget"
                 or "undoOrderedTargetSelection"
                 or "commitOrderedTargetSelection"
-                or "cancelOrderedTargetSelection";
+                or "cancelOrderedTargetSelection"
+                or "bindPureRunAbilityToUnit"
+                or "dropAmazonSpear"
+                or "clickBattleUnit";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -122,6 +125,12 @@ namespace Tactics.Common.Testing.Gameplay
                         return CommitOrderedTargetSelection(context, action);
                     case "cancelOrderedTargetSelection":
                         return CancelOrderedTargetSelection(context, action);
+                    case "bindPureRunAbilityToUnit":
+                        return BindPureRunAbilityToUnit(context, action);
+                    case "dropAmazonSpear":
+                        return DropAmazonSpear(context, action);
+                    case "clickBattleUnit":
+                        return ClickBattleUnit(context, action);
                     default:
                         return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unsupported Battle action '{action.Kind}'.");
                 }
@@ -466,6 +475,83 @@ namespace Tactics.Common.Testing.Gameplay
             }
 
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Bound {units.Count} units ({string.Join(", ", context.Units.Keys)}), {context.Cells.Count} cells.");
+        }
+
+        private static GameplayStepResult BindPureRunAbilityToUnit(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string unitAlias = action.Parameters["unitAlias"]?.ToString();
+            string skillId = action.Parameters["skillId"]?.ToString();
+            int level = action.Parameters["level"]?.ToObject<int>() ?? 1;
+            if (!context.Units.TryGetValue(unitAlias ?? string.Empty, out var unit) || unit is not Unit concreteUnit)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' not found.");
+            if (!PureRunAbilityCatalog.TryResolveAbilityPath(skillId, level, out string path, out int resolvedLevel))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Ability '{skillId}' Lv{level} is not published.");
+            var config = GameAssetManager.Instance?.Load<AbilityConfig>(path);
+            if (config == null)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"AbilityConfig '{path}' could not be loaded.");
+            concreteUnit.ApplyLearnedSkillLevels(new[]
+            {
+                new CharacterDefinition.LearnedSkill
+                {
+                    SkillId = skillId,
+                    SkillType = SkillType.Active,
+                    Level = resolvedLevel
+                }
+            });
+            var ability = config.CreateAbility(unit);
+            unit.RegisterAbility(ability, RequireBattleController(context, action.Kind));
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind,
+                $"Bound '{skillId}' Lv{resolvedLevel} to '{unitAlias}'.");
+        }
+
+        private static GameplayStepResult DropAmazonSpear(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string unitAlias = action.Parameters["unitAlias"]?.ToString();
+            string cellAlias = action.Parameters["cellAlias"]?.ToString();
+            if (!context.Units.TryGetValue(unitAlias ?? string.Empty, out var unit))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' not found.");
+            if (!context.Cells.TryGetValue(cellAlias ?? string.Empty, out var cell))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell '{cellAlias}' not found.");
+            bool dropped = AmazonBattleState.For(RequireBattleController(context, action.Kind)).DropSpear(unit, cell);
+            return dropped
+                ? GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Dropped spear at '{cellAlias}'.")
+                : GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Spear drop failed.");
+        }
+
+        private static GameplayStepResult ClickBattleUnit(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string unitAlias = action.Parameters["unitAlias"]?.ToString();
+            if (!context.Units.TryGetValue(unitAlias ?? string.Empty, out var unit))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' not found.");
+            var controller = RequireBattleController(context, action.Kind);
+            var runtimeController = typeof(BattleController)
+                .GetField("_controller", BindingFlags.Instance | BindingFlags.NonPublic)?
+                .GetValue(controller) as GridController;
+            if (runtimeController == null)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Battle runtime GridController not found.");
+            var orderedAbility = context.Units.Values
+                .SelectMany(candidate => candidate.GetBaseAbilities() ?? Array.Empty<IAbility>())
+                .OfType<SkillGraphAbilityImpl>()
+                .FirstOrDefault(candidate => candidate.OrderedSelection != null);
+            controller.GridState?.OnUnitClicked(unit, runtimeController);
+            if (action.Parameters["expectedOrderedCount"] != null)
+            {
+                int expectedCount = action.Parameters["expectedOrderedCount"].ToObject<int>();
+                int actualCount = orderedAbility?.OrderedSelection?.Targets.Count ?? -1;
+                if (actualCount != expectedCount)
+                {
+                    return GameplayStepResult.Fail(BattleAdapterName, action.Kind,
+                        $"Expected ordered target count {expectedCount}, actual {actualCount}; " +
+                        $"gridState={controller.GridState?.GetType().Name}, targetCell={unit.CurrentCell?.GridCoordinates}.");
+                }
+            }
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Clicked battle unit '{unitAlias}'.");
         }
 
         private static GameplayStepResult AdvanceTurn(GameplayRuntimeContext context, ExecutableScenarioAction action)

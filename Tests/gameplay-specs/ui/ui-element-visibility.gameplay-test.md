@@ -13,14 +13,14 @@ actions:
       uiId: Home
   - kind: clickElement
     parameters:
-      elementName: StartButton
+      elementName: NewGameButton
 assertions:
   - kind: elementVisible
-    target: StartButton
+    target: NewGameButton
     expected: true
     parameters: {}
   - kind: elementEnabled
-    target: StartButton
+    target: NewGameButton
     expected: true
     parameters: {}
 timeoutMs: 10000

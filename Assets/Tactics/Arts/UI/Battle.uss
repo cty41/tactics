@@ -157,6 +157,88 @@
     opacity: 0.35;
 }
 
+.skill-card.ability-disabled-clickable {
+    opacity: 0.58;
+    border-color: rgba(158, 94, 65, 0.95);
+}
+
+.world-marker-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    picking-mode: ignore;
+}
+
+.ordered-target-marker {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    background-color: rgba(115, 35, 22, 0.94);
+    border-width: 2px;
+    border-color: rgb(255, 194, 91);
+    color: rgb(255, 245, 220);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    picking-mode: ignore;
+}
+
+.dropped-spear-marker {
+    position: absolute;
+    min-width: 48px;
+    height: 24px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background-color: rgba(43, 31, 20, 0.9);
+    border-width: 1px;
+    border-color: rgb(207, 151, 66);
+    color: rgb(244, 213, 144);
+    -unity-text-align: middle-center;
+    picking-mode: ignore;
+}
+
+.ability-reason-tooltip {
+    position: absolute;
+    display: none;
+    left: 20px;
+    bottom: 202px;
+    max-width: 320px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background-color: rgba(34, 22, 20, 0.96);
+    border-width: 1px;
+    border-color: rgb(175, 93, 61);
+    color: rgb(255, 220, 194);
+}
+
+.ordered-selection-panel {
+    position: absolute;
+    display: none;
+    left: 50%;
+    bottom: 192px;
+    translate: -50% 0;
+    min-width: 210px;
+    padding: 8px 12px;
+    align-items: center;
+    border-radius: 7px;
+    background-color: rgba(25, 24, 31, 0.94);
+    border-width: 1px;
+    border-color: rgb(180, 135, 76);
+}
+
+.ordered-selection-prompt {
+    color: rgb(255, 223, 154);
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.ordered-selection-help {
+    color: rgb(190, 184, 175);
+    font-size: 13px;
+}
+
 .skill-card-icon {
     width: 44px;
     height: 44px;

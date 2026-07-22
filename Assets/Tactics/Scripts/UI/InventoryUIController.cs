@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.AssetPipeline;
+using Tactics.Common.Battle;
+using Tactics.Common.Units.Abilities;
 using Tactics.Consumables;
 using Tactics.Equipment;
 using Tactics.Roster;
@@ -105,6 +107,17 @@ namespace Tactics.UI
         {
             HideItemPopover();
             UnregisterKeyEvents();
+        }
+
+        /// <summary>
+        /// Reloads the persisted inventory state and redraws the current character view.
+        /// </summary>
+        public void RefreshView()
+        {
+            EnsureUIElements();
+            LoadState();
+            SetupCharacterSwitchButtons();
+            RefreshAll();
         }
 
         private void EnsureUIElements()
@@ -540,8 +553,18 @@ namespace Tactics.UI
 
             _selectedEntry = entry;
             _popoverAnchor = anchor;
+            if (_itemActionButton != null)
+                _itemActionButton.style.display = DisplayStyle.Flex;
             PopulateItemPopover(entry);
             _itemPopover.style.display = DisplayStyle.Flex;
+
+            PositionPopover(anchor);
+        }
+
+        private void PositionPopover(VisualElement anchor)
+        {
+            if (_itemPopover == null || _root == null || anchor == null)
+                return;
 
             Rect rootBounds = _root.worldBound;
             Rect anchorBounds = anchor.worldBound;
@@ -748,14 +771,87 @@ namespace Tactics.UI
             if (_skillSlotsParent == null)
                 return;
 
-            foreach (var slot in _skillSlotsParent.Children())
+            var learnedSkills = _currentCharacter?.LearnedSkills?
+                .Where(learned => learned != null && learned.SkillType != SkillType.ExtraUtility)
+                .Where(learned => !PureRunAbilityCatalog.TryGet(learned.SkillId, out var definition) || definition.IsMapVisible)
+                .OrderBy(learned => learned.SkillType == SkillType.Active ? 0 : 1)
+                .ToList() ?? new List<CharacterDefinition.LearnedSkill>();
+
+            int slotCount = Mathf.Max(3, learnedSkills.Count);
+            _skillSlotsParent.Clear();
+            for (int index = 0; index < slotCount; index++)
             {
-                slot.Clear();
-                var label = new Label("空");
+                var slot = new VisualElement { name = $"InventorySkillSlot_{index}" };
+                slot.AddToClassList("skill-slot");
+                var learned = index < learnedSkills.Count ? learnedSkills[index] : null;
+                var skill = learned == null ? null : ResolveSkill(learned.SkillId);
+                var label = new Label(skill == null ? "空" : $"{skill.DisplayName}\nLv.{Mathf.Max(1, learned.Level)}")
+                {
+                    name = $"InventorySkillLabel_{index}"
+                };
                 label.AddToClassList("inventory-slot-label");
-                label.AddToClassList("empty");
+                if (skill == null)
+                {
+                    label.AddToClassList("empty");
+                }
+                else
+                {
+                    slot.AddToClassList("filled");
+                    var capturedLearned = learned;
+                    var capturedSkill = skill;
+                    slot.RegisterCallback<ClickEvent>(evt =>
+                    {
+                        ShowSkillPopover(capturedLearned, capturedSkill, slot);
+                        evt.StopPropagation();
+                    });
+                }
                 slot.Add(label);
+                _skillSlotsParent.Add(slot);
             }
+        }
+
+        private void ShowSkillPopover(
+            CharacterDefinition.LearnedSkill learned,
+            SkillDefinition skill,
+            VisualElement anchor)
+        {
+            if (_itemPopover == null || learned == null || skill == null || anchor == null)
+                return;
+
+            _selectedEntry = null;
+            _popoverAnchor = anchor;
+            if (_itemName != null)
+                _itemName.text = skill.DisplayName;
+            if (_itemMeta != null)
+                _itemMeta.text = $"{(learned.SkillType == SkillType.Active ? "主动" : "被动")} · Lv.{Mathf.Max(1, learned.Level)}";
+            if (_itemDescription != null)
+                _itemDescription.text = ResolveLevelDescription(learned.SkillId, learned.Level, skill.Description);
+            if (_itemActionButton != null)
+                _itemActionButton.style.display = DisplayStyle.None;
+            SetPopoverIcon(null);
+            _itemPopover.style.display = DisplayStyle.Flex;
+            PositionPopover(anchor);
+        }
+
+        private static SkillDefinition ResolveSkill(string skillId)
+        {
+            if (PureRunAbilityCatalog.TryGet(skillId, out var definition))
+                return definition.Skill;
+            return SkillDatabase.GetSkillById(skillId);
+        }
+
+        private static string ResolveLevelDescription(string skillId, int level, string fallback)
+        {
+            if (!PureRunAbilityCatalog.TryResolveAbilityPath(skillId, level, out string path, out _) ||
+                string.IsNullOrWhiteSpace(path))
+                return fallback ?? string.Empty;
+            var manager = GameAssetManager.Instance;
+            if (manager == null || !manager.IsInitialized)
+                return fallback ?? string.Empty;
+            var config = manager.Load<AbilityConfig>(path);
+            string description = string.IsNullOrWhiteSpace(config?.Description) ? fallback : config.Description;
+            manager.Release(path);
+            return description ?? string.Empty;
         }
 
         private void RefreshPortrait()

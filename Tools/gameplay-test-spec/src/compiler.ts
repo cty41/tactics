@@ -63,6 +63,9 @@ const actionKindToAdapter: Record<string, Adapter> = {
   hoverElement: "UI",
   rightClickElement: "UI",
   pressKey: "UI",
+  configureLevelUpPanel: "UI",
+  refreshBattleActions: "UI",
+  refreshInventory: "UI",
   spawnCorpse: "Battle",
   killUnit: "Battle",
   spawnInteractableCorpse: "Battle",
@@ -77,7 +80,10 @@ const actionKindToAdapter: Record<string, Adapter> = {
   selectOrderedTarget: "Battle",
   undoOrderedTargetSelection: "Battle",
   commitOrderedTargetSelection: "Battle",
-  cancelOrderedTargetSelection: "Battle"
+  cancelOrderedTargetSelection: "Battle",
+  bindPureRunAbilityToUnit: "Battle",
+  dropAmazonSpear: "Battle",
+  clickBattleUnit: "Battle"
 };
 
 const assertionKindToAdapter: Record<string, Adapter> = {

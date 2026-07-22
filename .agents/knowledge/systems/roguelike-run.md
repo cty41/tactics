@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-22T19:28:48+08:00"
+timestamp: "2026-07-23T03:00:15+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -17,11 +17,15 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs
   - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs
   - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
+  - Assets/Tactics/Scripts/UI/InventoryUIController.cs
+  - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
+  - Assets/Tactics/Arts/UI/Inventory.uxml
+  - Assets/Tactics/Arts/UI/Inventory.uss
   - Assets/Tactics/Scripts/Editor/RoguelikeEventEditor
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:1884f4fc252a540b3c156f036c0ec0a17d0e4305ac415b62612081b343c2775c
+source_fingerprint: sha256:dfd37488e4e6172ec74c3b0bc5f388ab8ac881d7dbfe405bb48492ac00c96d7f
 ---
 
 # Current State
@@ -33,6 +37,8 @@ Demo 使用单一全局 Run，不经过三存档槽。`PureRunSessionStore` 将�
 `CreatePureRunState` 建立法师、死灵法师和亚马逊固定三人队，等级 1、七项基础属性 5。每次胜利只让一名最低等级存活角色获得 1 级和 1 属性；起始分支主属性达到 7 时，高级技能有一次候选保底。
 
 Pure Run 存档修复将已知旧等级技能 ID 迁移为稳定逻辑 ID、合并重复记录并保留最高等级。拥有投掷系技能的 Amazon 会幂等获得不占槽的 `amazon.pickup_spear` 持久化记录；其实际战斗拾取行为仍属于 Amazon 技能切片。角色 Lv2 起即可同时看到合法新技能和已学技能的已发布下一等级，选择升级后同一 `LearnedSkill` 等级会进入下一场战斗绑定。
+
+LevelUp 面板按实际 `LearnedSkill.Level` 显示当前技能和混合候选，候选明确区分 Lv1 新技能与下一等级升级，并读取对应等级资产描述。Inventory 的技能区是只读视图：主动技能优先、被动技能随后，显示实际等级；点击仅打开详情 popover，不提供装配、卸载或替换操作，`ExtraUtility` 与其他地图隐藏技能不显示。
 
 地图层待生效 Buff 快照除名称、持续时间和正负面外，还持久化效果/触发类型、诅咒分类、周期伤害、伤害大类、元素、刷新策略、速度修正和减伤比例；进入战斗时按这些字段还原运行时配置。旧存档缺失伤害大类时按 `Magic` 补全，避免升级后改变既有事件 Buff 的语义。
 

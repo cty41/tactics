@@ -5,7 +5,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Tactics.Common.Skills.Graph;
+using Tactics.Common.Battle;
 using Tactics.Common.Units.Abilities;
+using Tactics.Roster;
 using Tactics.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -30,7 +32,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "setElementEnabled"
                 or "hoverElement"
                 or "rightClickElement"
-                or "pressKey";
+                or "pressKey"
+                or "configureLevelUpPanel"
+                or "refreshBattleActions"
+                or "refreshInventory";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -55,6 +60,12 @@ namespace Tactics.Common.Testing.Gameplay
                         return RightClickElement(context, action);
                     case "pressKey":
                         return PressKey(context, action);
+                    case "configureLevelUpPanel":
+                        return ConfigureLevelUpPanel(context, action);
+                    case "refreshBattleActions":
+                        return RefreshBattleActions(action);
+                    case "refreshInventory":
+                        return RefreshInventory(action);
                     default:
                         return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Unsupported UI action '{action.Kind}'.");
                 }
@@ -264,6 +275,56 @@ namespace Tactics.Common.Testing.Gameplay
             keyEvent.target = target;
             target.SendEvent(keyEvent);
             return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Pressed key '{keyCode}'.");
+        }
+
+        private static GameplayStepResult ConfigureLevelUpPanel(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            string characterId = action.Parameters["characterId"]?.ToString();
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var character = state?.Roster?.FirstOrDefault(candidate =>
+                string.Equals(candidate?.Id, characterId, StringComparison.OrdinalIgnoreCase));
+            if (character == null)
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Character '{characterId}' not found.");
+            var controller = FindActiveController<LevelUpPanelController>();
+            if (controller == null)
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, "LevelUpPanelController not found.");
+
+            controller.SetCharacter(character);
+            controller.SetSkillOptionProvider(() => PureRunProgression.BuildSkillChoices(
+                character,
+                state.RunSeed,
+                character.Level,
+                PureRunProgression.SkillChoiceCount));
+            controller.RefreshAll();
+            context.CurrentAdventureState = state;
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind,
+                $"Configured level-up panel for '{characterId}'.");
+        }
+
+        private static GameplayStepResult RefreshBattleActions(ExecutableScenarioAction action)
+        {
+            var controller = FindActiveController<BattleUIController>();
+            if (controller == null)
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, "BattleUIController not found.");
+            controller.RefreshActionUi();
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind, "Refreshed battle action UI.");
+        }
+
+        private static GameplayStepResult RefreshInventory(ExecutableScenarioAction action)
+        {
+            var controller = FindActiveController<InventoryUIController>();
+            if (controller == null)
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, "InventoryUIController not found.");
+            controller.RefreshView();
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind, "Refreshed inventory UI.");
+        }
+
+        private static T FindActiveController<T>() where T : MonoBehaviour
+        {
+            return UnityEngine.Object.FindObjectsByType<T>(FindObjectsSortMode.None)
+                .FirstOrDefault(candidate => candidate != null && candidate.isActiveAndEnabled);
         }
 
         private static GameplayStepResult SetText(GameplayRuntimeContext context, ExecutableScenarioAction action)

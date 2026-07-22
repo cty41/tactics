@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "UI.LevelUpMixedCandidateConfirmation",
+  "requiredAdapters": [
+    "Map",
+    "UI"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 20260722
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "pure_run_mage",
+        "level": 2,
+        "skillId": "mage.fireball",
+        "skillLevel": 1,
+        "attributePoints": 1
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "LevelUp"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "configureLevelUpPanel",
+      "parameters": {
+        "characterId": "pure_run_mage"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "AttributePlus_Strength"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "LevelUpSkillCard_mage_fireball"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "LevelUpSkillLevel_mage_fireball",
+      "expected": "Lv.2",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementEnabled",
+      "target": "ConfirmButton",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 15000,
+  "probeRequests": [
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "LevelUpSkillLevel_mage_fireball",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementEnabled",
+      "target": "ConfirmButton",
+      "parameters": {}
+    }
+  ]
+}

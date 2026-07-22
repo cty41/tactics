@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.Common.Battle;
+using Tactics.AssetPipeline;
+using Tactics.Common.Units.Abilities;
 using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -90,7 +92,7 @@ namespace Tactics.UI
                 var valueLabel = new Label("0");
                 valueLabel.AddToClassList("attr-value");
 
-                var minusBtn = new Button { text = "-" };
+                var minusBtn = new Button { text = "-", name = $"AttributeMinus_{type}" };
                 minusBtn.AddToClassList("attr-btn");
                 minusBtn.AddToClassList("attr-btn-minus");
                 minusBtn.SetEnabled(false);
@@ -99,7 +101,7 @@ namespace Tactics.UI
                 var allocatedLabel = new Label("+0");
                 allocatedLabel.AddToClassList("attr-allocated");
 
-                var plusBtn = new Button { text = "+" };
+                var plusBtn = new Button { text = "+", name = $"AttributePlus_{type}" };
                 plusBtn.AddToClassList("attr-btn");
                 plusBtn.AddToClassList("attr-btn-plus");
                 plusBtn.clicked += () => OnAttributePlus(type);
@@ -292,12 +294,15 @@ namespace Tactics.UI
                 _skillList.Add(sectionHeader);
 
                 // Separate active and passive
-                var activeSkills = _currentCharacter.LearnedSkills
-                    .Select(l => SkillDatabase.GetSkillById(l.SkillId))
-                    .Where(s => s != null && s.SkillType == SkillType.Active).ToList();
-                var passiveSkills = _currentCharacter.LearnedSkills
-                    .Select(l => SkillDatabase.GetSkillById(l.SkillId))
-                    .Where(s => s != null && s.SkillType == SkillType.Passive).ToList();
+                var visibleSkills = _currentCharacter.LearnedSkills
+                    .Where(IsMapVisibleSkill)
+                    .Select(learned => (Learned: learned, Skill: ResolveSkill(learned.SkillId)))
+                    .Where(entry => entry.Skill != null)
+                    .ToList();
+                var activeSkills = visibleSkills
+                    .Where(entry => entry.Learned.SkillType == SkillType.Active).ToList();
+                var passiveSkills = visibleSkills
+                    .Where(entry => entry.Learned.SkillType == SkillType.Passive).ToList();
 
                 if (activeSkills.Count > 0)
                 {
@@ -307,8 +312,8 @@ namespace Tactics.UI
 
                     var grid = new VisualElement();
                     grid.AddToClassList("current-skills-grid");
-                    foreach (var skill in activeSkills)
-                        grid.Add(CreateCurrentSkillIcon(skill));
+                    foreach (var entry in activeSkills)
+                        grid.Add(CreateCurrentSkillIcon(entry.Skill, entry.Learned.Level));
                     _skillList.Add(grid);
                 }
 
@@ -320,8 +325,8 @@ namespace Tactics.UI
 
                     var grid = new VisualElement();
                     grid.AddToClassList("current-skills-grid");
-                    foreach (var skill in passiveSkills)
-                        grid.Add(CreateCurrentSkillIcon(skill));
+                    foreach (var entry in passiveSkills)
+                        grid.Add(CreateCurrentSkillIcon(entry.Skill, entry.Learned.Level));
                     _skillList.Add(grid);
                 }
             }
@@ -335,7 +340,7 @@ namespace Tactics.UI
                 var icon = new Label("★");
                 icon.AddToClassList("section-header-icon");
 
-                var title = new Label("选择新技能");
+                var title = new Label("选择技能或升级");
                 title.AddToClassList("section-header-title");
 
                 sectionHeader.Add(icon);
@@ -361,15 +366,19 @@ namespace Tactics.UI
             }
         }
 
-        private VisualElement CreateCurrentSkillIcon(SkillDefinition skill)
+        private VisualElement CreateCurrentSkillIcon(SkillDefinition skill, int actualLevel)
         {
-            var icon = new VisualElement();
+            var icon = new VisualElement { name = $"CurrentSkill_{ToElementKey(skill.Id)}" };
             icon.AddToClassList("current-skill-icon");
+            icon.tooltip = ResolveLevelDescription(skill.Id, actualLevel, skill.Description);
 
             var nameLabel = new Label(skill.DisplayName);
             nameLabel.AddToClassList("current-skill-name");
 
-            var levelBadge = new Label(skill.Level >= 2 ? "II" : "I");
+            var levelBadge = new Label($"Lv.{Mathf.Max(1, actualLevel)}")
+            {
+                name = $"CurrentSkillLevel_{ToElementKey(skill.Id)}"
+            };
             levelBadge.AddToClassList("skill-level-badge");
 
             var typeColor = new VisualElement();
@@ -384,11 +393,15 @@ namespace Tactics.UI
 
         private VisualElement CreateSkillCard(SkillDefinition skill, bool isSelectable)
         {
-            var card = new VisualElement();
+            var card = new VisualElement { name = $"LevelUpSkillCard_{ToElementKey(skill.Id)}", userData = skill };
             card.AddToClassList("skill-card");
+            card.tooltip = ResolveLevelDescription(skill.Id, skill.Level, skill.Description);
 
             // Level badge (top-right)
-            var levelBadge = new Label(skill.Level >= 2 ? "II" : "I");
+            var levelBadge = new Label($"Lv.{Mathf.Max(1, skill.Level)}")
+            {
+                name = $"LevelUpSkillLevel_{ToElementKey(skill.Id)}"
+            };
             levelBadge.AddToClassList("skill-level-badge");
             levelBadge.AddToClassList("skill-card-level");
             card.Add(levelBadge);
@@ -414,7 +427,7 @@ namespace Tactics.UI
             card.Add(nameRow);
 
             // Description
-            var descLabel = new Label(skill.Description);
+            var descLabel = new Label(ResolveLevelDescription(skill.Id, skill.Level, skill.Description));
             descLabel.AddToClassList("skill-desc");
             card.Add(descLabel);
 
@@ -565,6 +578,39 @@ namespace Tactics.UI
             _selectedSkillId = null;
             _selectedReplaceIndex = null;
         }
+
+        private static bool IsMapVisibleSkill(CharacterDefinition.LearnedSkill learned)
+        {
+            if (learned == null || learned.SkillType == SkillType.ExtraUtility)
+                return false;
+            return !PureRunAbilityCatalog.TryGet(learned.SkillId, out var definition) || definition.IsMapVisible;
+        }
+
+        private static SkillDefinition ResolveSkill(string skillId)
+        {
+            if (PureRunAbilityCatalog.TryGet(skillId, out var definition))
+                return definition.Skill;
+            return SkillDatabase.GetSkillById(skillId);
+        }
+
+        private static string ResolveLevelDescription(string skillId, int level, string fallback)
+        {
+            if (!PureRunAbilityCatalog.TryResolveAbilityPath(skillId, level, out string path, out _) ||
+                string.IsNullOrWhiteSpace(path))
+                return fallback ?? string.Empty;
+
+            var manager = GameAssetManager.Instance;
+            if (manager == null || !manager.IsInitialized)
+                return fallback ?? string.Empty;
+            var config = manager.Load<AbilityConfig>(path);
+            string description = string.IsNullOrWhiteSpace(config?.Description) ? fallback : config.Description;
+            manager.Release(path);
+            return description ?? string.Empty;
+        }
+
+        private static string ToElementKey(string value) => string.IsNullOrWhiteSpace(value)
+            ? "Unknown"
+            : new string(value.Select(character => char.IsLetterOrDigit(character) ? character : '_').ToArray());
 
         private sealed class AttributeRow
         {

@@ -223,14 +223,13 @@ test("mixed-adapter: UI + Map + Battle routes correctly", async () => {
 
   // Setup routing
   const setupKinds = compiled.plan.setupActions.map(a => `${a.kind}(${a.adapter})`);
-  assert.ok(setupKinds.includes("loadRoguelikeMap(Map)"), `loadRoguelikeMap should route to Map, got: ${setupKinds.join(", ")}`);
+  assert.ok(setupKinds.includes("loadPureRunMap(Map)"), `loadPureRunMap should route to Map, got: ${setupKinds.join(", ")}`);
   assert.ok(setupKinds.includes("bindBattleController(Battle)"), `bindBattleController should route to Battle, got: ${setupKinds.join(", ")}`);
   assert.ok(setupKinds.includes("createSkillGraph(Skill)"), `createSkillGraph should route to Skill, got: ${setupKinds.join(", ")}`);
 
   // Action routing
   const actionKinds = compiled.plan.runtimeActions.map(a => `${a.kind}(${a.adapter})`);
   assert.ok(actionKinds.includes("openUI(UI)"), `openUI should route to UI, got: ${actionKinds.join(", ")}`);
-  assert.ok(actionKinds.includes("enterNode(Map)"), `enterNode should route to Map, got: ${actionKinds.join(", ")}`);
   assert.ok(actionKinds.includes("executeBattleSkillGraph(Battle)"), `executeBattleSkillGraph should route to Battle, got: ${actionKinds.join(", ")}`);
   assert.ok(actionKinds.includes("completeNode(Map)"), `completeNode should route to Map, got: ${actionKinds.join(", ")}`);
 

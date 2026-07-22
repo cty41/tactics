@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-23T02:06:17+08:00"
+timestamp: "2026-07-23T03:00:15+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -14,14 +14,14 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Testing/Gameplay
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:55c85731e3c9b7bbf8802afb73ddbb8751f6fe557ca2362d64cdd25c1e2a57f3
+source_fingerprint: sha256:948e82ca28a5ad0784940f465b6c3c54582567dd8971e603b86650b32fcdc213
 ---
 
 # Current State
 
 Agent 编写的 `.gameplay-test.md`/`ScenarioSpec` 经 TypeScript validator 和 compiler 生成 `.plan.json`，Unity `GameplayRuntimeRunner` 再通过 Skill、Battle、Map、UI adapters 执行 setup、action 和 assertion。源 Spec 是维护对象，plan 是生成物。
 
-框架支持真实 Unity 资产，并已有生命、法力、Buff、位置、行动状态、投射物和多阶段等专用断言。Battle adapter 还能创建并推进精确参战顺序，观察朝向、先攻、标准状态、召唤注册、技能可用性原因和有序目标选择；UI adapter 支持点击、右键、悬停、键盘输入，以及文本、样式类、子节点顺序和布局关系断言。adapter 与断言支持面以当前 schema、compiler、Unity 代码和 fixtures 为准，不再按历史 Phase 文档判断。
+框架支持真实 Unity 资产，并已有生命、法力、Buff、位置、行动状态、投射物和多阶段等专用断言。Battle adapter 还能创建并推进精确参战顺序，观察朝向、先攻、标准状态、召唤注册、技能可用性原因和有序目标选择；UI adapter 支持点击、右键、悬停、键盘输入，以及文本、样式类、子节点顺序和布局关系断言。UI 玩家流还可绑定指定等级的 Pure Run 技能、构造落地长矛、点击真实战斗单位，并显式刷新当前激活的升级、背包和战斗控制器。adapter 与断言支持面以当前 schema、compiler、Unity 代码和 fixtures 为准，不再按历史 Phase 文档判断。
 
 Map adapter 除 Pure Run 路线与胜场外，现可创建独立消耗品实例、操作角色携带/卸下、一步替换装备、购买通用商店货物，并断言背包、携带引用及商店数量/药水保底/去重。Battle adapter 可对明确单位使用角色携带药水并构造、断言 `CanReceiveHealing`；UI adapter 可验证统一 Inventory popover 和独立战斗消耗品槽。对应维护源位于 `Tests/gameplay-specs/consumables/`、`map/` 与 `ui/`，生成 plan 不手改。
 
@@ -34,6 +34,8 @@ Map adapter 还可断言角色稳定技能 ID 的实际等级、指定 Pure Run 
 `Tests/gameplay-specs/necromancer/` 使用真实死灵法师等级资产验证尸体事务。轻量 Battle 世界中的 `spawnInteractableCorpse` 创建真实 `Corpse` 组件并按格记录实例，消耗与断言读取同一运行时状态；compiler 对尸体动作和断言显式路由到 Battle adapter，避免混合 Skill/Battle 场景被通用回退误分发。当前场景证明 Lv2 骷髅只消耗选中的一具尸体，未选尸体保留。
 
 `Tests/gameplay-specs/amazon/` 使用真实亚马逊等级资产验证毒矛扩散和落矛状态。Skill adapter 在图执行后同步持矛者与落点别名，Battle adapter 可观察长矛持有、落点、诱饵和有序目标结果，使实体长矛规则无需依赖日志或手工 Inspector 验证。
+
+`Tests/gameplay-specs/ui/` 的 Slice 6 场景覆盖混合升级确认、背包只读技能详情、战斗两行布局、可点击禁用原因及连续刺击多段撤销/取消。`GameplayRuntimeUiPlanTests` 每例销毁 UIManager 缓存实例并维护单位与格子的双向占用，避免跨例复用旧战斗控制器或产生只有坐标没有占用状态的伪世界。
 
 # Relationships
 

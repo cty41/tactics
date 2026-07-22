@@ -17,7 +17,7 @@
       "adapter": "UI",
       "kind": "clickElement",
       "parameters": {
-        "elementName": "StartButton"
+        "elementName": "NewGameButton"
       }
     }
   ],
@@ -25,14 +25,14 @@
     {
       "adapter": "UI",
       "kind": "elementVisible",
-      "target": "StartButton",
+      "target": "NewGameButton",
       "expected": true,
       "parameters": {}
     },
     {
       "adapter": "UI",
       "kind": "elementEnabled",
-      "target": "StartButton",
+      "target": "NewGameButton",
       "expected": true,
       "parameters": {}
     }
@@ -42,13 +42,13 @@
     {
       "adapter": "UI",
       "kind": "elementVisible",
-      "target": "StartButton",
+      "target": "NewGameButton",
       "parameters": {}
     },
     {
       "adapter": "UI",
       "kind": "elementEnabled",
-      "target": "StartButton",
+      "target": "NewGameButton",
       "parameters": {}
     }
   ]

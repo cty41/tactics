@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "UI.InventoryReadonlySkillTooltip",
+  "requiredAdapters": [
+    "Map",
+    "UI"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "pure_run_mage",
+        "skillId": "mage.fireball",
+        "skillLevel": 2
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "pure_run_mage",
+        "skillId": "amazon.pickup_spear",
+        "skillType": "ExtraUtility",
+        "skillLevel": 1
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "Inventory"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "refreshInventory",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "InventorySkillSlot_1"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "InventorySkillLabel_1",
+      "expected": "火球术\nLv.2",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "InventoryItemName",
+      "expected": "火球术",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "InventoryItemMeta",
+      "expected": "主动 · Lv.2",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "InventoryItemActionButton",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementExists",
+      "target": "InventorySkillSlot_2",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 15000,
+  "probeRequests": [
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "InventorySkillLabel_1",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "InventoryItemName",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "InventoryItemMeta",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "InventoryItemActionButton",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementExists",
+      "target": "InventorySkillSlot_2",
+      "parameters": {}
+    }
+  ]
+}

@@ -29,6 +29,9 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             PureRunSessionStore.Clear();
 
+            DestroyCachedUiInstances();
+            yield return null;
+
             // Initialize GameAssetManager for real asset loading
             var initTask = TestGameAssetHelper.EnsureInitialized();
             yield return new WaitUntil(() => initTask.IsCompleted);
@@ -97,12 +100,16 @@ namespace Tactics.Tests.PlayMode
             var unit1 = unit1Go.AddComponent<Unit>();
             unit1.PlayerNumber = 1;
             unit1.CurrentCell = FindCell(_cellManagerRoot, 0, 0);
+            unit1.CurrentCell.CurrentUnits.Add(unit1);
+            unit1.CurrentCell.IsTaken = true;
 
             var unit2Go = new GameObject("Unit_P2");
             unit2Go.transform.SetParent(unitContainer);
             var unit2 = unit2Go.AddComponent<Unit>();
             unit2.PlayerNumber = 2;
             unit2.CurrentCell = FindCell(_cellManagerRoot, 1, 0);
+            unit2.CurrentCell.CurrentUnits.Add(unit2);
+            unit2.CurrentCell.IsTaken = true;
 
             // Initialize and start battle (registers units with UnitManager)
             // 设置 resolver 与 Test1.unity 一致（UnitSpeedTurnResolver）
@@ -132,6 +139,8 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
 
             PureRunSessionStore.Clear();
+            DestroyCachedUiInstances();
+            yield return null;
             TestGameAssetHelper.Cleanup();
 
             if (_cellManagerRoot != null)
@@ -147,6 +156,16 @@ namespace Tactics.Tests.PlayMode
             }
 
             yield return null;
+        }
+
+        private static void DestroyCachedUiInstances()
+        {
+            if (UIManager.Instance == null)
+                return;
+
+            UIManager.Instance.Destroy(UIManager.UIId.Battle);
+            UIManager.Instance.Destroy(UIManager.UIId.Inventory);
+            UIManager.Instance.Destroy(UIManager.UIId.LevelUp);
         }
 
         [UnityTest]
@@ -203,6 +222,52 @@ namespace Tactics.Tests.PlayMode
             yield return WaitForTask(task);
 
             var result = task.Result;
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
+            Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesLevelUpMixedCandidateConfirmation()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("compiled", "levelup-mixed-candidate-confirmation.plan.json"));
+            yield return WaitForTask(task);
+            AssertPlanPassed(task.Result);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesInventoryReadonlySkillTooltip()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("compiled", "inventory-readonly-skill-tooltip.plan.json"));
+            yield return WaitForTask(task);
+            AssertPlanPassed(task.Result);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleUiTwoRowLayout()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("compiled", "battle-ui-two-row-layout.plan.json"));
+            yield return WaitForTask(task);
+            AssertPlanPassed(task.Result);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleDisabledAbilityReason()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("compiled", "battle-disabled-ability-reason.plan.json"));
+            yield return WaitForTask(task);
+            AssertPlanPassed(task.Result);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesAmazonMultiStabUiFlow()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("compiled", "amazon-multi-stab-ui-flow.plan.json"));
+            yield return WaitForTask(task);
+            AssertPlanPassed(task.Result);
+        }
+
+        private static void AssertPlanPassed(GameplayTestResult result)
+        {
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
             Assert.IsTrue(result.Passed, details);
         }

@@ -84,9 +84,11 @@
                         <!-- Skills Column (Right Aligned) -->
                         <ui:VisualElement name="SkillsColumn" class="skills-column">
                             <ui:Label text="技能" class="section-title"/>
-                            <ui:VisualElement name="SkillSlot_0" class="skill-slot"/>
-                            <ui:VisualElement name="SkillSlot_1" class="skill-slot"/>
-                            <ui:VisualElement name="SkillSlot_2" class="skill-slot"/>
+                            <ui:VisualElement name="SkillSlots" class="skill-slots">
+                                <ui:VisualElement name="SkillSlot_0" class="skill-slot"/>
+                                <ui:VisualElement name="SkillSlot_1" class="skill-slot"/>
+                                <ui:VisualElement name="SkillSlot_2" class="skill-slot"/>
+                            </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>

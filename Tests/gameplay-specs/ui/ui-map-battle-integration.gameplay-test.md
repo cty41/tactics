@@ -12,9 +12,9 @@ requiredAdapters:
   - Battle
   - Skill
 setup:
-  - kind: loadRoguelikeMap
+  - kind: loadPureRunMap
     parameters:
-      mapConfigPath: Assets/Tactics/RoguelikeMap/MapConfigs/DefaultMapConfig.asset
+      mapConfigPath: Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset
   - kind: bindBattleController
     parameters: {}
   - kind: createSkillGraph
@@ -27,10 +27,6 @@ actions:
     adapter: UI
     parameters:
       uiId: RoguelikeMap
-  - kind: enterNode
-    adapter: Map
-    parameters:
-      nodeId: battle_node_1
   - kind: executeBattleSkillGraph
     adapter: Battle
     parameters:
@@ -40,7 +36,7 @@ actions:
   - kind: completeNode
     adapter: Map
     parameters:
-      nodeId: battle_node_1
+      nodeId: layer_01_battle
 assertions:
   - kind: mapIsActive
     expected: true
@@ -49,11 +45,11 @@ assertions:
     expected: true
     parameters: {}
   - kind: nodeIsVisited
-    target: battle_node_1
+    target: layer_01_battle
     expected: true
     parameters: {}
   - kind: elementVisible
-    target: RoguelikeMapPanel
+    target: RootContainer
     expected: true
     parameters: {}
 timeoutMs: 25000

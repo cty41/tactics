@@ -3,6 +3,8 @@
     <Style src="project://database/Assets/Tactics/Arts/UI/DamageNumber.uss?fileID=7433441132597879392&amp;guid=166fb99cc7881514d8a9da5d74cdcafb&amp;type=3#DamageNumber"/>
     <ui:VisualElement name="RootContainer" class="root-container">
         <ui:VisualElement name="DamageNumberContainer" class="damage-number-container"/>
+        <ui:VisualElement name="DroppedSpearMarkerRoot" class="world-marker-root"/>
+        <ui:VisualElement name="OrderedTargetMarkerRoot" class="world-marker-root"/>
         <ui:VisualElement name="TopPanel" class="top-panel">
             <ui:Label name="RoundLabel" text="Round 1" class="round-label"/>
             <ui:VisualElement name="TurnOrderContainer" class="turn-order-container"/>
@@ -42,6 +44,11 @@
             <ui:Button name="EndTurnButton" class="end-turn-button">
                 <ui:Label text="End Turn" class="end-turn-text"/>
             </ui:Button>
+        </ui:VisualElement>
+        <ui:Label name="AbilityReasonTooltip" text="" class="ability-reason-tooltip"/>
+        <ui:VisualElement name="OrderedSelectionPanel" class="ordered-selection-panel">
+            <ui:Label name="OrderedSelectionPrompt" text="第 1/3 段" class="ordered-selection-prompt"/>
+            <ui:Label text="右键或 Esc 撤销" class="ordered-selection-help"/>
         </ui:VisualElement>
         <ui:VisualElement name="HoverHealthBar" class="hover-health-bar">
             <ui:VisualElement name="HoverHPBarBg" class="hover-bar-bg">

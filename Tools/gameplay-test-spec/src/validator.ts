@@ -62,6 +62,9 @@ const supportedActionKinds = new Set([
   "hoverElement",
   "rightClickElement",
   "pressKey",
+  "configureLevelUpPanel",
+  "refreshBattleActions",
+  "refreshInventory",
   "spawnCorpse",
   "killUnit",
   "setBattleTestMode",
@@ -77,7 +80,10 @@ const supportedActionKinds = new Set([
   "selectOrderedTarget",
   "undoOrderedTargetSelection",
   "commitOrderedTargetSelection",
-  "cancelOrderedTargetSelection"
+  "cancelOrderedTargetSelection",
+  "bindPureRunAbilityToUnit",
+  "dropAmazonSpear",
+  "clickBattleUnit"
 ]);
 
 const supportedGraphKinds = new Set([

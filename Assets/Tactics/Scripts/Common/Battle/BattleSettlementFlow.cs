@@ -240,8 +240,6 @@ namespace Tactics.Common.Battle
             if (controller == null)
             {
                 TLog.Error("[BattleSettlementFlow] LevelUpPanelController not found.");
-                _currentCharacterIndex++;
-                ProcessNextCharacter();
                 return;
             }
 
@@ -259,22 +257,13 @@ namespace Tactics.Common.Battle
             {
                 if (_state?.IsPureRun == true)
                     PureRunProgression.MarkAdvancedGuaranteeConsumed(character, controller.SkillOptions);
+                PlayerAdventureStateStore.Save(_state);
 
                 controller.OnConfirm -= onConfirmHandler;
                 tcs.TrySetResult(true);
             };
             controller.OnConfirm += onConfirmHandler;
-
-            // Safety fallback: if event never fires, wait up to 6000 frames (~100s)
-            var timeoutTask = Task.Run(async () =>
-            {
-                for (int i = 0; i < 6000; i++)
-                {
-                    await Task.Yield();
-                }
-            });
-
-            await Task.WhenAny(tcs.Task, timeoutTask);
+            await tcs.Task;
             controller.OnConfirm -= onConfirmHandler;
 
             TLog.Info($"[BattleSettlementFlow] LevelUp panel closed for {character.DisplayName}.");
