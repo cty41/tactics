@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Tactics.Consumables;
+using Tactics.RoguelikeMap;
 
 namespace Tactics.Roster
 {
@@ -16,5 +17,7 @@ namespace Tactics.Roster
         public List<string> Inventory { get; set; } = new List<string>();
         public List<ConsumableInstance> ConsumableInstances { get; set; } = new List<ConsumableInstance>();
         public List<string> AppliedNodeTransactionKeys { get; set; } = new List<string>();
+        public RunSummary CurrentRunSummary { get; set; } = new RunSummary();
+        public List<string> AppliedRunSummaryKeys { get; set; } = new List<string>();
     }
 }

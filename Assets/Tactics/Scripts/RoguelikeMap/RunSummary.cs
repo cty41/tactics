@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.RoguelikeMap
@@ -69,7 +70,23 @@ namespace Tactics.RoguelikeMap
         /// <summary>
         /// Run结局
         /// </summary>
+        [JsonProperty]
         private RunOutcome _outcome = RunOutcome.Abandoned;
+
+        public RunSummary Clone()
+        {
+            return new RunSummary
+            {
+                totalGold = totalGold,
+                acquiredEquipment = new List<string>(acquiredEquipment ?? new List<string>()),
+                acquiredItems = new List<string>(acquiredItems ?? new List<string>()),
+                enemiesDefeated = enemiesDefeated,
+                nodesVisited = nodesVisited,
+                eventsCompleted = eventsCompleted,
+                bossDefeated = bossDefeated,
+                _outcome = _outcome
+            };
+        }
 
         /// <summary>
         /// 添加金币

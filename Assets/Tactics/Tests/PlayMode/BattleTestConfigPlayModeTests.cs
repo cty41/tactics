@@ -344,6 +344,33 @@ namespace Tactics.Tests.PlayMode
             Object.DestroyImmediate(corpseGo);
         }
 
+        [Test]
+        public void EncounterBlockedCells_AreAppliedBeforeSpawnAndRestoreOriginalState()
+        {
+            var controller = _battleRoot.GetComponent<BattleController>();
+            var target = _cellManagerRoot.GetComponentsInChildren<Square>()
+                .Single(cell => cell.GridCoordinates.x == 1 && cell.GridCoordinates.y == 1);
+            target.IsTaken = false;
+
+            var apply = typeof(BattleController).GetMethod(
+                "ApplyEncounterBlockedCells",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            var restore = typeof(BattleController).GetMethod(
+                "RestoreEncounterBlockedCells",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(apply, Is.Not.Null);
+            Assert.That(restore, Is.Not.Null);
+            Assert.That(apply.Invoke(controller, new object[]
+            {
+                new List<BattleLayoutCell> { new BattleLayoutCell(1, 1) }
+            }), Is.True);
+            Assert.That(target.IsTaken, Is.True);
+
+            restore.Invoke(controller, null);
+            Assert.That(target.IsTaken, Is.False);
+        }
+
         // --- Helpers ---
 
         private static PartyTestSlot CreatePartySlot(Vector2Int spawnCell, GameObject prefab, string displayName)

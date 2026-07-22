@@ -15,9 +15,8 @@
 
 | 状态 | 缺口与证据 | 未激活原因 | 激活条件 | 历史来源 |
 |---|---|---|---|---|
-| `verified-gap` | 当前怪物和精英共用 `BasicMeleeBrain`、`BasicMeleeGraph`、`BasicMeleeProfile`，尚无分怪物决策图与行为模式。 | 首切片先保证遭遇可运行。 | 确定首批需要差异化的怪物和验收场景。 | 怪物 AI/Monster System 旧计划 |
 | `verified-gap` | `ScoreNode.Parameter` 已序列化，但 `IntentScorer` 尚未消费该参数。 | 参数语义尚未统一。 | 定义每种 scorer 的参数契约与回归测试。 | 怪物 AI 旧计划 |
-| `verified-gap` | 对 AI 资产引用、Pattern 完整性和行为退化的自动校验仍有限。 | 当前资产规模较小。 | 出现第二批 Brain/Profile 或批量生成需求。 | 怪物 AI 旧计划 |
+| `verified-gap` | 首批六类遭遇 Brain/Profile、Pattern 引用和资源可执行性已有自动校验；跨第二批怪物的行为退化基线尚未建立。 | 当前只有首批遭遇资产进入正式目录。 | 出现第二批 Brain/Profile 或批量生成需求。 | 怪物 AI 旧计划 |
 | `idea` | 用热力图展示候选行动及评分，辅助调试。 | 非运行必需。 | 评分系统稳定且调试成本明显增加。 | Monster System 旧计划 |
 
 ## Roguelike Event Editor

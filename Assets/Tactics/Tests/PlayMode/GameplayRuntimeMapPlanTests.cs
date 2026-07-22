@@ -366,6 +366,18 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesEncounterRuntimeContract()
+        {
+            yield return ExecuteAndAssertSourcePlan("encounter-runtime-contract.plan.json");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunSummaryAndDefeat()
+        {
+            yield return ExecuteAndAssertSourcePlan("pure-run-summary-and-defeat.plan.json");
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesMapBattleDeathWriteback()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;

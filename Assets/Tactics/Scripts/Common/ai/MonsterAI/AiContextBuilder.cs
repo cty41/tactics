@@ -5,6 +5,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.AI.MonsterAI
@@ -131,8 +132,18 @@ namespace Tactics.Common.AI.MonsterAI
                             baseDamage += dmg.BaseDamage;
                             if (dmg.IsRanged) tags |= AbilityAiTags.Ranged;
                             break;
-                        case ApplyBuffNodeRecord:
-                            tags |= AbilityAiTags.Buff | AbilityAiTags.Utility;
+                        case ApplyBuffNodeRecord applyBuff:
+                            tags |= applyBuff.BuffConfig?.Polarity == BuffPolarity.Harmful
+                                ? AbilityAiTags.Debuff | AbilityAiTags.Utility
+                                : AbilityAiTags.Buff | AbilityAiTags.Utility;
+                            utilityValue += 0.35f;
+                            break;
+                        case CollectTargetsInAreaNodeRecord:
+                            tags |= AbilityAiTags.Aoe;
+                            break;
+                        case NecromancerSkillNodeRecord necromancer
+                            when necromancer.SkillKind is NecromancerSkillKind.AmplifyDamage or NecromancerSkillKind.FearCurse:
+                            tags |= AbilityAiTags.Debuff | AbilityAiTags.Utility;
                             utilityValue += 0.35f;
                             break;
                         case DashToTargetNodeRecord dash:

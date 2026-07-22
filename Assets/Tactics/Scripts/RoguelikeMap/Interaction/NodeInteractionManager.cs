@@ -282,12 +282,7 @@ namespace Tactics.RoguelikeMap.Interaction
 
         private async void ShowEventDefeatSummary(PlayerAdventureState state)
         {
-            var summary = new RunSummary();
-            summary.SetRunOutcome(RunOutcome.Defeat);
-            summary.AddGold(state?.Gold ?? 0);
-            int visitedCount = CurrentMap?.visitedNodes?.Count ?? 0;
-            for (int i = 0; i < visitedCount; i++)
-                summary.IncrementNodesVisited();
+            var summary = PureRunSessionStore.Finish(PureRunEndReason.Defeat);
 
             await UIManager.Instance.ShowAsync(UIManager.UIId.RunEndSummary);
             var controller = UnityEngine.Object.FindFirstObjectByType<RunEndSummaryUIController>();
@@ -300,7 +295,7 @@ namespace Tactics.RoguelikeMap.Interaction
             controller.ShowSummary(summary, () =>
             {
                 UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
-                PureRunSessionStore.Finish(PureRunEndReason.Defeat);
+                PureRunSessionStore.ConsumeCompletedSummary();
             });
         }
 

@@ -58,6 +58,7 @@ const supportedActionKinds = new Set([
   "buyShopGoodTransaction",
   "commitNodeTransaction",
   "reloadPureRunSession",
+  "exercisePureRunSummaryAndDefeat",
   "useCarriedConsumable",
   "openUI",
   "closeUI",
@@ -181,6 +182,14 @@ const supportedAssertionKinds = new Set([
   "nodeTransactionRewardAppliedEquals",
   "transactionApplicationCountEquals",
   "nodeIsConsumed",
+  "encounterRecipeContract",
+  "monsterAiCatalogValid",
+  "battleDefeatRewardsAreZero",
+  "completedSummaryGoldEquals",
+  "completedSummaryContainsItem",
+  "completedSummaryOutcomeEquals",
+  "completedSummaryNodesVisitedEquals",
+  "completedSummaryEventsCompletedEquals",
   "unitCanReceiveHealingEquals",
   "elementVisible",
   "elementText",
@@ -601,6 +610,8 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "elementClassContains":
     case "elementRectRelationEquals":
     case "abilityCardAvailabilityEquals":
+    case "completedSummaryContainsItem":
+    case "completedSummaryOutcomeEquals":
       requireStringExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitHealthEquals":
@@ -619,6 +630,9 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "actualSkillLevelEquals":
     case "decoyRemainingActionsEquals":
     case "transactionApplicationCountEquals":
+    case "completedSummaryGoldEquals":
+    case "completedSummaryNodesVisitedEquals":
+    case "completedSummaryEventsCompletedEquals":
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "currentRoundOrderEquals":
@@ -638,6 +652,8 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "nodeIsConsumed":
     case "unitCanReceiveHealingEquals":
     case "pureRunSkillChoicesAreMixed":
+    case "monsterAiCatalogValid":
+    case "battleDefeatRewardsAreZero":
       if (typeof assertion.expected !== "boolean") {
         diagnostics.push({
           code: "InvalidAssertionExpectedType",
@@ -719,6 +735,16 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
           code: "InvalidAssertionExpectedType",
           severity: "error",
           message: `${assertion.kind} requires a string expected value.`,
+          path: assertion.id ?? assertion.kind
+        });
+      }
+      break;
+    case "encounterRecipeContract":
+      if (!assertion.target || typeof assertion.expected !== "object" || assertion.expected === null || Array.isArray(assertion.expected)) {
+        diagnostics.push({
+          code: "InvalidAssertionExpectedType",
+          severity: "error",
+          message: "encounterRecipeContract requires a target recipe and object expected value.",
           path: assertion.id ?? assertion.kind
         });
       }

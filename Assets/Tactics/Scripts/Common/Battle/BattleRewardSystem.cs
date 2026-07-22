@@ -37,6 +37,9 @@ namespace Tactics.Common.Battle
             /// <summary>Run-only item drops generated during settlement.</summary>
             public List<string> ItemIds;
 
+            /// <summary>正式敌方单位的实际死亡数量。</summary>
+            public int EnemiesDefeated;
+
             /// <summary>
             /// 转换为统一节点结果结构，供 Roguelike 地图层统一消费。
             /// </summary>
@@ -46,7 +49,7 @@ namespace Tactics.Common.Battle
                 {
                     GoldAmount = TotalGold,
                     ExperienceAmount = ExperiencePerCharacter?.Values.Sum() ?? 0,
-                    EnemiesDefeated = ExperiencePerCharacter?.Count ?? 0,
+                    EnemiesDefeated = EnemiesDefeated,
                     IsBattleReward = true
                 };
                 if (ItemIds != null)
@@ -69,16 +72,28 @@ namespace Tactics.Common.Battle
                 TotalGold = 0,
                 ExperiencePerCharacter = new Dictionary<string, int>(),
                 TotalRounds = totalRounds,
-                ItemIds = new List<string>()
+                ItemIds = new List<string>(),
+                EnemiesDefeated = 0
             };
 
-            if (result.Winners == null)
+            var humanWinners = result.Winners?
+                .Where(player => player != null && player.PlayerType == Tactics.Common.Players.PlayerType.HumanPlayer)
+                .ToList();
+            if (humanWinners == null || humanWinners.Count == 0)
             {
-                TLog.Warning("[BattleRewardSystem] GameResult 没有胜者，返回空奖励。");
+                TLog.Info("[BattleRewardSystem] Player did not win; returning zero rewards.");
                 return rewards;
             }
 
-            var enemyList = enemyUnits?.ToList() ?? new List<IUnit>();
+            var humanPlayerNumbers = humanWinners.Select(player => player.PlayerNumber).ToHashSet();
+            var opponentUnits = enemyUnits?
+                .Where(unit => unit != null && !humanPlayerNumbers.Contains(unit.PlayerNumber))
+                .ToList() ?? new List<IUnit>();
+            var formalEnemies = opponentUnits
+                .Where(IsFormalEncounterUnit)
+                .ToList();
+            var enemyList = formalEnemies.Count > 0 ? formalEnemies : opponentUnits;
+            rewards.EnemiesDefeated = enemyList.Count(unit => unit.IsDowned || unit.Health <= 0f);
 
             // Step 1: 计算击败敌方单位获得的总经验值
             int totalExperience = 0;
@@ -150,6 +165,13 @@ namespace Tactics.Common.Battle
             TLog.Info($"[BattleRewardSystem] 金币：{baseGold}（基础）+ {roundBonus}（回合奖励）= {rewards.TotalGold}");
 
             return rewards;
+        }
+
+        private static bool IsFormalEncounterUnit(IUnit unit)
+        {
+            return unit is Component component &&
+                   component.TryGetComponent<EncounterUnitRuntimeModifiers>(out var modifiers) &&
+                   modifiers.IsFormalEncounterUnit;
         }
 
         /// <summary>

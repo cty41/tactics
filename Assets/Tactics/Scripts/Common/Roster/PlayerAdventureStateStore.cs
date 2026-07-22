@@ -10,6 +10,7 @@ using Tactics.Common.Units.Classes;
 using Tactics.Common.Battle;
 using Tactics.Consumables;
 using Tactics.Roguelike;
+using Tactics.RoguelikeMap;
 
 namespace Tactics.Roster
 {
@@ -296,6 +297,18 @@ namespace Tactics.Roster
             if (state.AppliedNodeTransactionKeys == null)
             {
                 state.AppliedNodeTransactionKeys = new List<string>();
+                changed = true;
+            }
+
+            if (state.CurrentRunSummary == null)
+            {
+                state.CurrentRunSummary = new RunSummary();
+                changed = true;
+            }
+
+            if (state.AppliedRunSummaryKeys == null)
+            {
+                state.AppliedRunSummaryKeys = new List<string>();
                 changed = true;
             }
 

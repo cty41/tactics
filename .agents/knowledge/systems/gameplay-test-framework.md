@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-23T03:32:16+08:00"
+timestamp: "2026-07-23T04:13:50+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Testing/Gameplay
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:b13f41595d22e914c48d55c9c20fde405d238742393d64bb0b4a319fc93293e1
+source_fingerprint: sha256:c2e07d9a6dbed61f0a34d024d440b794793b63b76ce54e17480ed749cbf063bc
 ---
 
 # Current State
@@ -28,6 +28,8 @@ Map adapter 除 Pure Run 路线与胜场外，现可创建独立消耗品实例�
 Map adapter 还可断言角色稳定技能 ID 的实际等级、指定 Pure Run 候选是否包含目标等级，以及候选池是否同时含新技能和升级。`pure-run-mixed-levelup-candidates` 源 spec 覆盖 Fireball Lv1 角色在 Lv2 获得 Fireball Lv2 与新技能混合候选；跨存档绑定和真实 SkillGraph 行为由 PlayMode 测试补足。
 
 Map adapter 的节点事务动作支持确定性解析 Mystery 选项、应用 Rest、购买 Store 商品、提交节点事务和重载 Pure Run 存档；对应断言可检查事件分配去重、事件 ID、事务阶段、奖励应用标记、奖励键应用次数和节点消费状态。`Tests/gameplay-specs/map/` 的 Mystery、结果页重入、Rest 重入与 Store 购买重入场景共同验证“先持久化结果、奖励只应用一次、明确提交后才消费”的恢复约束。
+
+Map adapter 还支持 `encounterRecipeContract`、怪物 AI 目录/Heavy Shot 资源、战败零奖励和终局快照断言。`encounter-runtime-contract` 验证 E1/E2/Special 倍率、中心阻挡与六类独立 AI；`pure-run-summary-and-defeat` 通过真实奖励事务验证累计金币不受消费影响、已使用药水仍保留在获得列表，以及活动 session 清理后仍可读取战败快照。两份源 spec 均由 TypeScript CLI 校验并生成 compiled plan。
 
 `Tests/gameplay-specs/shared/` 是共享战斗原语的维护源，五个场景分别覆盖朝向/当前轮先攻重排、标准状态回合语义、召唤上限与最早替换、可点击禁用原因，以及可撤销的有序多段选择。对应 plan 必须由 CLI 生成，不手改。
 

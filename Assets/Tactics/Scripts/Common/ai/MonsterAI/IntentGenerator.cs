@@ -6,6 +6,7 @@ using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.AI.MonsterAI
@@ -237,6 +238,8 @@ namespace Tactics.Common.AI.MonsterAI
                             intent.NodeId);
 
                         EstimateAbilityOutcome(candidate, context);
+                        if (ShouldRejectAbilityCandidate(candidate))
+                            continue;
                         candidates.Add(candidate);
                     }
                 }
@@ -282,6 +285,46 @@ namespace Tactics.Common.AI.MonsterAI
                 if (CalcDist(origin, target.CurrentCell) > ability.Range + 0.5f) continue;
                 yield return new AbilityTargetOption(target.CurrentCell, new List<IUnit> { target });
             }
+        }
+
+        /// <summary>
+        /// Enforces archetype-safe targeting constraints before scoring. AOE attacks never
+        /// choose a center that damages allies, and Curse prefers a target without the same
+        /// harmful status instead of refreshing an already affected target.
+        /// </summary>
+        private static bool ShouldRejectAbilityCandidate(IntentCandidate candidate)
+        {
+            if (candidate?.Ability == null)
+                return false;
+
+            if (candidate.Ability.HasTag(AbilityAiTags.Aoe) && candidate.EstimatedFriendlyFireDamage > 0f)
+                return true;
+
+            if (!candidate.Ability.HasTag(AbilityAiTags.Debuff) ||
+                candidate.Target == null ||
+                candidate.Ability.Ability is not SkillGraphAbilityImpl skillGraph ||
+                skillGraph.SkillGraphAsset == null)
+            {
+                return false;
+            }
+
+            var harmfulConfigs = skillGraph.SkillGraphAsset.Nodes
+                .OfType<ApplyBuffNodeRecord>()
+                .Select(node => node.BuffConfig)
+                .Concat(skillGraph.SkillGraphAsset.Nodes
+                    .OfType<NecromancerSkillNodeRecord>()
+                    .SelectMany(node => new[] { node.AmplifyDamageBuff, node.FearBuff }))
+                .Where(config => config != null && config.Polarity == BuffPolarity.Harmful)
+                .ToList();
+            if (harmfulConfigs.Count == 0)
+                return false;
+
+            return candidate.Target.GetActiveBuffs().Any(active =>
+                active?.Config != null && harmfulConfigs.Any(config =>
+                    ReferenceEquals(active.Config, config) ||
+                    (!string.IsNullOrWhiteSpace(config.CurseCategory) &&
+                     config.CurseCategory == active.Config.CurseCategory) ||
+                    config.BuffName == active.Config.BuffName));
         }
 
         private static IEnumerable<AbilityTargetOption> EnumerateSkillGraphTargetOptions(

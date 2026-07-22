@@ -183,6 +183,7 @@ namespace Tactics.Common.Battle
         private int _unitCount;
         private readonly HashSet<string> _loadedPaths = new();
         private readonly Dictionary<string, AbilityConfig> _pureRunAbilityConfigCache = new(StringComparer.Ordinal);
+        private readonly Dictionary<ICell, bool> _encounterBlockedCells = new();
 
         #endregion
 
@@ -242,6 +243,7 @@ namespace Tactics.Common.Battle
             }
             _loadedPaths.Clear();
             _pureRunAbilityConfigCache.Clear();
+            RestoreEncounterBlockedCells();
 
             RoguelikeBattleReturnHandler.Instance.UnregisterController(this);
             base.OnDestroy();
@@ -303,6 +305,9 @@ namespace Tactics.Common.Battle
                 TLog.Warning($"[BattleController] No valid encounter found at '{encounterPath}'.");
                 return;
             }
+
+            if (!ApplyEncounterBlockedCells(encounter.BlockedCells))
+                return;
 
             foreach (var unitEntry in encounter.Units)
             {
@@ -515,6 +520,14 @@ namespace Tactics.Common.Battle
             }
 
             unit.PlayerNumber = unitEntry.PlayerNumber;
+            var encounterModifiers = go.GetComponent<EncounterUnitRuntimeModifiers>();
+            if (encounterModifiers == null)
+                encounterModifiers = go.AddComponent<EncounterUnitRuntimeModifiers>();
+            encounterModifiers.Configure(
+                unitEntry.MonsterId,
+                unitEntry.HealthMultiplier,
+                unitEntry.OutputMultiplier,
+                unitEntry.MinimumStartingMana);
 
             if (unitEntry.AbilityConfigPaths != null && unitEntry.AbilityConfigPaths.Count > 0)
             {
@@ -850,6 +863,7 @@ namespace Tactics.Common.Battle
         {
             if (!IsBattleActive) return;
             IsBattleActive = false;
+            RestoreEncounterBlockedCells();
             BattleEnded?.Invoke(result);
             TBattleLog.EndBattle();
             UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
@@ -864,6 +878,7 @@ namespace Tactics.Common.Battle
 
             // 1. 标记战斗不活跃
             IsBattleActive = false;
+            RestoreEncounterBlockedCells();
 
             // 2. 取消 RuntimeScope 中的所有异步操作
             if (RuntimeScope != null)
@@ -942,6 +957,38 @@ namespace Tactics.Common.Battle
             }
 
             return GameAssetManager.Instance != null && GameAssetManager.Instance.IsInitialized;
+        }
+
+        private bool ApplyEncounterBlockedCells(IReadOnlyList<BattleLayoutCell> blockedCells)
+        {
+            RestoreEncounterBlockedCells();
+            if (blockedCells == null || blockedCells.Count == 0)
+                return true;
+
+            foreach (var blocked in blockedCells)
+            {
+                if (blocked == null || !TryGetEncounterCell(blocked.X, blocked.Y, out var cell))
+                {
+                    TLog.Error($"[BattleController] Encounter blocked cell ({blocked?.X},{blocked?.Y}) does not exist.");
+                    RestoreEncounterBlockedCells();
+                    return false;
+                }
+
+                _encounterBlockedCells[cell] = cell.IsTaken;
+                cell.IsTaken = true;
+            }
+
+            return true;
+        }
+
+        private void RestoreEncounterBlockedCells()
+        {
+            foreach (var pair in _encounterBlockedCells)
+            {
+                if (pair.Key != null)
+                    pair.Key.IsTaken = pair.Value;
+            }
+            _encounterBlockedCells.Clear();
         }
 
 

@@ -321,6 +321,8 @@ namespace Tactics.Common.Units
             Health = MaxHealth;
             Mana = Charisma;
             MovementPoints = MaxMovementPoints;
+            if (TryGetComponent<Tactics.Common.Battle.EncounterUnitRuntimeModifiers>(out var encounterModifiers))
+                encounterModifiers.ApplyAfterUnitInitialization(this);
 
             bool hasCombatTechniques = _hasExplicitLearnedSkillLoadout
                 ? GetLearnedSkillLevel("amazon.combat_techniques") > 0

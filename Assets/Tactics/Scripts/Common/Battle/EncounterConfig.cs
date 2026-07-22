@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Tactics.AssetPipeline;
+using Tactics.Common.AI.MonsterAI;
+using Tactics.Common.Units;
+using Tactics.Common.Units.Abilities;
 using Tactics.RoguelikeMap;
 using Tactics.Runtime.Utilities;
+using Tactics.Units;
 using UnityEngine;
 
 namespace Tactics.Common.Battle
@@ -22,6 +27,9 @@ namespace Tactics.Common.Battle
 
         [JsonProperty("units")]
         public List<EncounterUnitEntry> Units = new List<EncounterUnitEntry>();
+
+        [JsonProperty("blockedCells")]
+        public List<BattleLayoutCell> BlockedCells = new List<BattleLayoutCell>();
     }
 
     [Serializable]
@@ -56,6 +64,9 @@ namespace Tactics.Common.Battle
 
         [JsonProperty("outputMultiplier")]
         public float OutputMultiplier = 1f;
+
+        [JsonProperty("minimumStartingMana")]
+        public int MinimumStartingMana;
     }
 
     /// <summary>
@@ -72,6 +83,7 @@ namespace Tactics.Common.Battle
         public string UnitPrefabPath { get; set; }
         public string AiBrainAssetPath { get; set; }
         public List<string> AbilityConfigPaths { get; set; } = new List<string>();
+        public int MinimumStartingMana { get; set; }
     }
 
     /// <summary>
@@ -167,6 +179,9 @@ namespace Tactics.Common.Battle
                 RecipeId = RecipeId,
                 RunSeed = RunSeed
             };
+            config.BlockedCells = Layout?.BlockedCells == null
+                ? new List<BattleLayoutCell>()
+                : Layout.BlockedCells.Select(cell => new BattleLayoutCell(cell.X, cell.Y)).ToList();
 
             foreach (var unit in Units)
             {
@@ -181,7 +196,8 @@ namespace Tactics.Common.Battle
                     SpawnCellX = unit.SpawnCell.X,
                     SpawnCellY = unit.SpawnCell.Y,
                     HealthMultiplier = unit.HealthMultiplier,
-                    OutputMultiplier = unit.OutputMultiplier
+                    OutputMultiplier = unit.OutputMultiplier,
+                    MinimumStartingMana = unit.Monster.MinimumStartingMana
                 });
             }
 
@@ -201,7 +217,7 @@ namespace Tactics.Common.Battle
         public const string EliteChargerId = "elite_charger";
         public const string ElitePoisonCasterId = "elite_poison_caster";
 
-        private const string BasicBrainPath = "Assets/Tactics/AI/BasicMeleeBrain.asset";
+        private const string AiFolder = "Assets/Tactics/AI/Encounters/";
         private const string UnitFolder = "Assets/Tactics/Arts/Prefabs/Units/";
         private const string AbilityFolder = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/";
 
@@ -235,16 +251,16 @@ namespace Tactics.Common.Battle
         {
             return new Dictionary<string, MonsterDefinition>(StringComparer.OrdinalIgnoreCase)
             {
-                [ChargerId] = Monster(ChargerId, "Charger", "Infantry Blue.prefab", "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
-                [RangedId] = Monster(RangedId, "Ranged", "HunterBlue.prefab", "RangedAttack_Graph_Ability.asset", "HeavyShot_Graph_Ability.asset"),
-                [AoeId] = Monster(AoeId, "AOE", "MageBlue.prefab", "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset"),
-                [SupportId] = Monster(SupportId, "Support", "Fighter.prefab", "MeleeAttack_Graph_Ability.asset", "Curse_Graph_Ability.asset"),
-                [EliteChargerId] = Monster(EliteChargerId, "EliteCharger", "Infantry Blue.prefab", "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
-                [ElitePoisonCasterId] = Monster(ElitePoisonCasterId, "ElitePoisonCaster", "MageBlue.prefab", "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset")
+                [ChargerId] = Monster(ChargerId, "Charger", "Infantry Blue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
+                [RangedId] = Monster(RangedId, "Ranged", "HunterBlue.prefab", 15, "RangedAttack_Graph_Ability.asset", "HeavyShot_Graph_Ability.asset"),
+                [AoeId] = Monster(AoeId, "AOE", "MageBlue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset"),
+                [SupportId] = Monster(SupportId, "Support", "Fighter.prefab", 0, "MeleeAttack_Graph_Ability.asset", "Curse_Graph_Ability.asset"),
+                [EliteChargerId] = Monster(EliteChargerId, "EliteCharger", "Infantry Blue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
+                [ElitePoisonCasterId] = Monster(ElitePoisonCasterId, "ElitePoisonCaster", "MageBlue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset")
             };
         }
 
-        private static MonsterDefinition Monster(string id, string displayName, string prefabName, params string[] abilityConfigNames)
+        private static MonsterDefinition Monster(string id, string displayName, string prefabName, int minimumStartingMana, params string[] abilityConfigNames)
         {
             var abilityPaths = new List<string>();
             foreach (string abilityConfigName in abilityConfigNames)
@@ -255,8 +271,9 @@ namespace Tactics.Common.Battle
                 MonsterId = id,
                 DisplayName = displayName,
                 UnitPrefabPath = UnitFolder + prefabName,
-                AiBrainAssetPath = BasicBrainPath,
-                AbilityConfigPaths = abilityPaths
+                AiBrainAssetPath = AiFolder + displayName + "Brain.asset",
+                AbilityConfigPaths = abilityPaths,
+                MinimumStartingMana = minimumStartingMana
             };
         }
 
@@ -521,7 +538,7 @@ namespace Tactics.Common.Battle
                     config = resolved.ToEncounterConfig();
                 }
 
-                if (!Validate(config, normalizedPath))
+                if (!Validate(config, normalizedPath) || !ValidateRuntimeAssets(config, normalizedPath, mgr))
                     return null;
 
                 return config;
@@ -568,6 +585,19 @@ namespace Tactics.Common.Battle
                     return false;
                 }
 
+                if (string.IsNullOrWhiteSpace(unit.AiBrainAssetPath))
+                {
+                    TLog.Error($"[EncounterConfigLoader] Encounter unit #{i} is missing aiBrainAssetPath: {sourcePath}");
+                    return false;
+                }
+
+                if (!float.IsFinite(unit.HealthMultiplier) || unit.HealthMultiplier <= 0f ||
+                    !float.IsFinite(unit.OutputMultiplier) || unit.OutputMultiplier <= 0f)
+                {
+                    TLog.Error($"[EncounterConfigLoader] Encounter unit #{i} has invalid multipliers: {sourcePath}");
+                    return false;
+                }
+
                 var cellKey = $"{unit.SpawnCellX},{unit.SpawnCellY}";
                 if (!occupiedCells.Add(cellKey))
                 {
@@ -576,7 +606,96 @@ namespace Tactics.Common.Battle
                 }
             }
 
+            if (config.BlockedCells != null)
+            {
+                foreach (var blocked in config.BlockedCells)
+                {
+                    if (blocked == null)
+                    {
+                        TLog.Error($"[EncounterConfigLoader] Encounter has a null blocked cell: {sourcePath}");
+                        return false;
+                    }
+
+                    string blockedKey = $"{blocked.X},{blocked.Y}";
+                    if (occupiedCells.Contains(blockedKey))
+                    {
+                        TLog.Error($"[EncounterConfigLoader] Blocked cell overlaps spawn cell '{blockedKey}': {sourcePath}");
+                        return false;
+                    }
+                }
+            }
+
             return true;
+        }
+
+        private static bool ValidateRuntimeAssets(EncounterConfig config, string sourcePath, GameAssetManager manager)
+        {
+            var loadedPaths = new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                foreach (var unit in config.Units)
+                {
+                    string prefabPath = GameAssetManager.NormalizeAssetPath(unit.UnitPrefabPath);
+                    var prefab = manager.Load<GameObject>(prefabPath);
+                    loadedPaths.Add(prefabPath);
+                    var prefabUnit = prefab?.GetComponent<TilemapUnit>();
+                    if (prefabUnit == null)
+                    {
+                        TLog.Error($"[EncounterConfigLoader] Unit prefab is missing TilemapUnit: {prefabPath}");
+                        return false;
+                    }
+
+                    string brainPath = GameAssetManager.NormalizeAssetPath(unit.AiBrainAssetPath);
+                    var brain = manager.Load<AiBrainAsset>(brainPath);
+                    loadedPaths.Add(brainPath);
+                    if (brain == null || !brain.IsValid() || brain.Profile == null)
+                    {
+                        TLog.Error($"[EncounterConfigLoader] AI brain/profile is invalid: {brainPath}");
+                        return false;
+                    }
+
+                    var configuredAbilityNames = new HashSet<string>(StringComparer.Ordinal);
+                    int maximumManaCost = 0;
+                    foreach (string configuredPath in unit.AbilityConfigPaths ?? new List<string>())
+                    {
+                        string abilityPath = GameAssetManager.NormalizeAssetPath(configuredPath);
+                        var ability = manager.Load<AbilityConfig>(abilityPath);
+                        loadedPaths.Add(abilityPath);
+                        if (ability == null)
+                        {
+                            TLog.Error($"[EncounterConfigLoader] Ability config is missing: {abilityPath}");
+                            return false;
+                        }
+
+                        configuredAbilityNames.Add(ability.DisplayName);
+                        maximumManaCost = Math.Max(maximumManaCost, ability.ManaCost);
+                    }
+
+                    int initialMana = Math.Max(prefabUnit.Charisma, unit.MinimumStartingMana);
+                    if (initialMana < maximumManaCost)
+                    {
+                        TLog.Error($"[EncounterConfigLoader] Monster '{unit.MonsterId}' starts with {initialMana} MP but requires {maximumManaCost}: {sourcePath}");
+                        return false;
+                    }
+
+                    foreach (var step in brain.PatternSteps)
+                    {
+                        if (step == null || string.IsNullOrWhiteSpace(step.AbilityName) ||
+                            !configuredAbilityNames.Contains(step.AbilityName))
+                        {
+                            TLog.Error($"[EncounterConfigLoader] Brain '{brainPath}' pattern references an unavailable ability '{step?.AbilityName}'.");
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+            finally
+            {
+                foreach (string path in loadedPaths)
+                    manager.Release(path);
+            }
         }
     }
 }

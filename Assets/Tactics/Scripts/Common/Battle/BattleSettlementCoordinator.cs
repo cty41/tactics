@@ -261,8 +261,28 @@ namespace Tactics.Common.Battle
             AppendPureRunConsumableDrop(ref rewards);
             _currentRewardResult = rewards.ToRewardResult();
 
-            // 保存金币奖励到存档
-            SaveGoldReward(rewards.TotalGold);
+            if (_state?.IsPureRun == true && _isPlayerVictory)
+            {
+                string nodeId = RoguelikeMapRuntimeState.PendingBattleNodeId ?? "unknown";
+                var committedReward = new RewardResult { GoldAmount = rewards.TotalGold };
+                if (rewards.ItemIds != null)
+                    committedReward.ItemIds.AddRange(rewards.ItemIds);
+                RoguelikeNodeTransactionService.TryApplyOnce(
+                    _state,
+                    $"battle:{nodeId}:reward",
+                    committedReward);
+                if (PureRunSummaryRecorder.RecordEnemiesDefeated(
+                        _state,
+                        $"battle:{nodeId}",
+                        rewards.EnemiesDefeated))
+                {
+                    PlayerAdventureStateStore.Save(_state);
+                }
+            }
+            else if (_state?.IsPureRun != true)
+            {
+                SaveGoldReward(rewards.TotalGold);
+            }
 
             TLog.Info($"[BattleSettlementCoordinator] Rewards calculated: Gold={rewards.TotalGold}, Characters={rewards.ExperiencePerCharacter?.Count ?? 0}");
 
@@ -314,7 +334,6 @@ namespace Tactics.Common.Battle
 
             rewards.ItemIds ??= new List<string>();
             rewards.ItemIds.Add(definition.Id);
-            rewards.ToRewardResult().ApplyItemsToState(_state);
             TLog.Info($"[BattleSettlementCoordinator] Consumable drop: {definition.DisplayName}.");
         }
 

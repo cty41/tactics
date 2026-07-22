@@ -297,8 +297,9 @@ namespace Tactics.Roguelike
 
             TLog.Info($"[RoguelikeBattleReturnHandler] Settlement finished. Showing terminal run summary: {endReason}.");
 
-            // 创建 RunSummary 并填充数据
-            var summary = CreateRunSummaryFromCurrentState(result);
+            // Freeze the terminal snapshot before clearing the active session. The UI
+            // owns the snapshot until the player closes the summary.
+            var summary = PureRunSessionStore.Finish(endReason);
 
             // 显示 RunEndSummaryUIController
             await UIManager.Instance.ShowAsync(UIManager.UIId.RunEndSummary);
@@ -309,64 +310,16 @@ namespace Tactics.Roguelike
                 {
                     TLog.Info("[RoguelikeBattleReturnHandler] RunEndSummary closed. Leaving battle scene now.");
                     UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
-                    PureRunSessionStore.Finish(endReason);
+                    PureRunSessionStore.ConsumeCompletedSummary();
                     _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
                 });
             }
             else
             {
                 TLog.Warning("[RoguelikeBattleReturnHandler] RunEndSummaryUIController not found. Leaving battle scene directly.");
-                PureRunSessionStore.Finish(endReason);
+                PureRunSessionStore.ConsumeCompletedSummary();
                 _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
             }
-        }
-
-        /// <summary>
-        /// 从当前状态创建 RunSummary 实例
-        /// </summary>
-        private static RunSummary CreateRunSummaryFromCurrentState(GameResult result)
-        {
-            var summary = new RunSummary();
-
-            // 设置 RunOutcome
-            bool humanWon = result.Winners != null &&
-                            result.Winners.Any(p => p != null && p.PlayerType == PlayerType.HumanPlayer);
-            summary.SetRunOutcome(humanWon ? RunOutcome.Victory : RunOutcome.Defeat);
-
-            // 如果是 Boss 战，标记 Boss 已击败
-            if (humanWon && IsBossBattle())
-            {
-                summary.MarkBossDefeated();
-            }
-
-            // 从 PlayerAdventureState 获取数据
-            var state = PlayerAdventureStateStore.LoadRepairAndSave();
-            if (state != null)
-            {
-                summary.AddGold(state.Gold);
-
-                // 统计装备和物品
-                foreach (var item in state.Inventory)
-                {
-                    if (!string.IsNullOrEmpty(item))
-                    {
-                        summary.AddItem(item);
-                    }
-                }
-            }
-
-            // 从 RoguelikeMapRuntimeState 获取节点访问统计
-            if (RoguelikeMapRuntimeState.HasActiveRun)
-            {
-                int nodesVisited = RoguelikeMapRuntimeState.VisitedPathNodeIds?.Count ?? 0;
-                for (int i = 0; i < nodesVisited; i++)
-                {
-                    summary.IncrementNodesVisited();
-                }
-            }
-
-            TLog.Info($"[RoguelikeBattleReturnHandler] RunSummary created: Outcome={summary.GetRunOutcome()}, Gold={summary.totalGold}, NodesVisited={summary.nodesVisited}, BossDefeated={summary.bossDefeated}");
-            return summary;
         }
 
         /// <summary>

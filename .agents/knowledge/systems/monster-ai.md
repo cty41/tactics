@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-07-23T02:06:18+08:00"
+timestamp: "2026-07-23T04:13:51+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -15,9 +15,10 @@ repo_paths:
   - Assets/Tactics/AI/BasicMeleeGraph.asset
   - Assets/Tactics/AI/BasicMeleeProfile.asset
   - Assets/Tactics/AI/FireDemonBrain.asset
+  - Assets/Tactics/AI/Encounters
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:f88cfce413008e3302d9446dd9c47dac9d96e4d9b022cf606d9bebc2c5c1e5e3
+source_fingerprint: sha256:56b84f3da9900ffab7d9f946303ee5a4acfc1a2ca608b78e657a0709bdd80dca
 ---
 
 # Current State
@@ -28,7 +29,9 @@ source_fingerprint: sha256:f88cfce413008e3302d9446dd9c47dac9d96e4d9b022cf606d9be
 
 单位朝向属于共享战斗状态而不是 AI 私有状态。AI 成功移动后按路径最后一步转向，成功执行目标技能后朝向目标；失败执行恢复原朝向。AI 不在回合末自动面向最近敌人，也不显示独立箭头。方向型技能后续直接读取这一共享朝向与 `SkillTargetingProtocol`。
 
-当前普通/精英怪物仍共用 `BasicMeleeBrain`、`BasicMeleeGraph`、`BasicMeleeProfile`。法师召唤物新增 `FireDemonBrain`，复用 BasicMelee 图与 Profile，但设置 2–3 格偏好距离；火魔与敌人相邻且存在合法站位时优先重定位。`ScoreNode.Parameter` 已序列化但尚未由 `IntentScorer` 消费；除火魔外，后续差异化怪物模式仍未实现。
+Pure Run 的 Charger、Ranged、AOE、Support、EliteCharger 与 ElitePoisonCaster 各自绑定独立 Brain/Profile。Charger 贴近并强化技能效果，Ranged 维持 3–5 格且初始法力足以使用 Heavy Shot，AOE 提高覆盖评分，Support 提高减益评分；两个 Elite 通过固定 Pattern 顺序执行高威胁技能并在不合法时回退 Generic AI。旧 `BasicMeleeBrain` 仍服务未迁移内容，FireDemon 继续使用 2–3 格偏好距离。
+
+SkillGraph AI 元数据会从范围收集节点识别 AOE，并从 Harmful Buff 或死灵诅咒节点识别 Debuff。候选进入评分前拒绝会造成友军伤害的 AOE 中心，也拒绝向已持有同一负面状态/诅咒类别的目标重复施加 Debuff；这两项是硬合法性约束，不依赖权重碰巧压低分数。`ScoreNode.Parameter` 已序列化但仍未由 `IntentScorer` 消费。
 
 亚马逊诱饵沿用普通敌人的候选生成与合法性，不建立专用 Brain。若当前生成结果中存在可达诱饵的移动或攻击候选，`IntentGenerator` 会只保留这些诱饵候选；没有可达诱饵候选时继续使用正常敌方目标，避免不可达诱饵令 AI 停摆。
 

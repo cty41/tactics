@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-23T03:32:16+08:00"
+timestamp: "2026-07-23T04:13:48+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -18,6 +18,9 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs
   - Assets/Tactics/Scripts/Common/Battle/PureRunAbilityBinder.cs
   - Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs
+  - Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs
+  - Assets/Tactics/Scripts/Common/Battle/EncounterUnitRuntimeModifiers.cs
+  - Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs
   - Assets/Tactics/Scripts/Common/Battle/AmazonBattleState.cs
   - Assets/Tactics/Scripts/Common/Battle/SummonRegistry.cs
   - Assets/Tactics/Scripts/Common/Interactables/DroppedSpear.cs
@@ -39,7 +42,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:67d53431891dc5489676a094b91b73323be7a4926b8d1cfffa135dfc957d2936
+source_fingerprint: sha256:73b4a02b7511e6e9ffb84c7d75f62b3ee98ba66f7a8e270a91323437275baa53
 ---
 
 # Current State
@@ -69,6 +72,10 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 `BattleSettlementCoordinator`/`BattleSettlementFlow` 负责战后成长和返回 Run。Pure Run 升级候选从合法新技能 Lv1 与已学技能的下一个已发布等级组成确定性混合池；新技能受槽位限制，已学技能升级不占新槽。升级流程必须等待玩家同时选定属性与技能并显式确认，不再通过帧数超时自动推进；确认后先提交保底消费与成长状态，再统一保存。`TBattleLog` 收集结构化回合、技能、伤害、治疗和 Buff 信息。当前反馈已有伤害数字、Buff 图标与屏幕战斗日志。
 
 Pure Run 战斗只把角色自己携带的独立实例注册成 `ConsumableBattleAbility`。战斗 UI 上排放移动与消耗品按钮，下排保持技能卡；药水可选择自身或正交相邻友军，每名角色每轮最多成功使用一次，且不占移动或普通技能机会。成功后立即提交实例消耗并保存。普通敌人与精英胜利分别按 25% 和 30% 概率从消耗品池掉落，掉落种子由 run seed 与节点 ID 推导；Boss 不追加掉落，因为其结算为终局。
+
+Pure Run 遭遇将 E1/E2 的生命/输出倍率设为 1.3/1.15，Special 设为 1.8/1.25。生命倍率在派生属性完成后向上取整并满血出生；输出倍率在统一伤害入口消费，因此覆盖直接伤害和保留施法来源的持续伤害，不影响治疗、护盾与无来源环境效果。布局阻挡格在单位生成前占用，参与站立、寻路、落点和视线判断，并在战斗结束或控制器销毁时恢复原状态。配置加载会拒绝非法倍率、阻挡/出生重叠、缺失 Brain/Profile/能力、不可支付的已配置能力和 Pattern 悬空引用。
+
+奖励入口先验证玩家方胜利；战败返回零金币、经验、物品和击杀统计。胜利只把带 `EncounterUnitRuntimeModifiers` 的正式敌方死亡计入 `enemiesDefeated`，召唤物、诱饵与测试对象不进入正式统计。
 
 战斗技能卡统一消费 `AbilityAvailability`：隐藏技能不建卡，可点击禁用技能保留卡片并在点击后显示稳定原因。连续刺击等有序多段技能显示当前段数和目标编号；右键或 Esc 每次撤销最后一段，队列为空时再次取消退出。落地长矛以不参与点击和视线判断的独立世界标记显示。
 

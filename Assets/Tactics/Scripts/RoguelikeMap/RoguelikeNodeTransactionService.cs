@@ -101,6 +101,7 @@ namespace Tactics.RoguelikeMap
 
             rewardResult.ApplyToState(state);
             state.AppliedNodeTransactionKeys.Add(key);
+            PureRunSummaryRecorder.RecordReward(state, key, rewardResult);
             PlayerAdventureStateStore.Save(state);
             return true;
         }
@@ -131,6 +132,11 @@ namespace Tactics.RoguelikeMap
             transaction.Phase = RoguelikeNodeTransactionPhase.Committed;
             if (consumeNode)
                 node.IsConsumed = true;
+            if (consumeNode && PlayerAdventureStateStore.LoadRepairAndSave() is { IsPureRun: true } state &&
+                PureRunSummaryRecorder.RecordNodeCompletion(state, node.nodeId, node.nodeType))
+            {
+                PlayerAdventureStateStore.Save(state);
+            }
             SaveMap(map);
         }
 

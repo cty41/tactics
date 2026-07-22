@@ -13,6 +13,9 @@ using Tactics.Equipment;
 using Tactics.Consumables;
 using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
+using Tactics.Common.Controllers;
+using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Players;
 using Tactics.Roster;
 using UnityEngine;
 
@@ -47,7 +50,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "applyRestNodeTransaction"
                 or "buyShopGoodTransaction"
                 or "commitNodeTransaction"
-                or "reloadPureRunSession";
+                or "reloadPureRunSession"
+                or "exercisePureRunSummaryAndDefeat";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -100,6 +104,8 @@ namespace Tactics.Common.Testing.Gameplay
                         return CommitNodeTransaction(context, action);
                     case "reloadPureRunSession":
                         return ReloadPureRunSession(context, action);
+                    case "exercisePureRunSummaryAndDefeat":
+                        return ExercisePureRunSummaryAndDefeat(context, action);
                     default:
                         return GameplayStepResult.Fail(MapAdapterName, action.Kind, $"Unsupported Map action '{action.Kind}'.");
                 }
@@ -147,7 +153,15 @@ namespace Tactics.Common.Testing.Gameplay
                 or "nodeTransactionPhaseEquals"
                 or "nodeTransactionRewardAppliedEquals"
                 or "transactionApplicationCountEquals"
-                or "nodeIsConsumed";
+                or "nodeIsConsumed"
+                or "encounterRecipeContract"
+                or "monsterAiCatalogValid"
+                or "battleDefeatRewardsAreZero"
+                or "completedSummaryGoldEquals"
+                or "completedSummaryContainsItem"
+                or "completedSummaryOutcomeEquals"
+                or "completedSummaryNodesVisitedEquals"
+                or "completedSummaryEventsCompletedEquals";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -192,6 +206,14 @@ namespace Tactics.Common.Testing.Gameplay
                     "nodeTransactionRewardAppliedEquals" => AssertNodeTransactionRewardAppliedEquals(context, assertion),
                     "transactionApplicationCountEquals" => AssertTransactionApplicationCountEquals(assertion),
                     "nodeIsConsumed" => AssertNodeIsConsumed(context, assertion),
+                    "encounterRecipeContract" => AssertEncounterRecipeContract(assertion),
+                    "monsterAiCatalogValid" => AssertMonsterAiCatalogValid(assertion),
+                    "battleDefeatRewardsAreZero" => AssertBattleDefeatRewardsAreZero(assertion),
+                    "completedSummaryGoldEquals" => AssertCompletedSummaryInteger(assertion, "gold", summary => summary.totalGold),
+                    "completedSummaryContainsItem" => AssertCompletedSummaryContainsItem(assertion),
+                    "completedSummaryOutcomeEquals" => AssertCompletedSummaryOutcome(assertion),
+                    "completedSummaryNodesVisitedEquals" => AssertCompletedSummaryInteger(assertion, "nodes", summary => summary.nodesVisited),
+                    "completedSummaryEventsCompletedEquals" => AssertCompletedSummaryInteger(assertion, "events", summary => summary.eventsCompleted),
                     _ => GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Unsupported Map assertion '{assertion.Kind}'.")
                 };
 
@@ -910,6 +932,132 @@ namespace Tactics.Common.Testing.Gameplay
             context.CurrentAdventureState = state;
             context.CurrentNodeId = map.currentNodeId;
             return GameplayStepResult.Pass(MapAdapterName, action.Kind, "Reloaded Pure Run session.");
+        }
+
+        private static GameplayStepResult ExercisePureRunSummaryAndDefeat(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            var state = context.CurrentAdventureState;
+            if (state?.IsPureRun != true)
+                return GameplayStepResult.Fail(MapAdapterName, action.Kind, "A loaded Pure Run state is required.");
+
+            int rewardGold = action.Parameters["rewardGold"]?.ToObject<int>() ?? 20;
+            int spendGold = action.Parameters["spendGold"]?.ToObject<int>() ?? 5;
+            string itemId = action.Parameters["itemId"]?.ToString() ?? "life_potion";
+
+            var acquisition = RewardResult.Empty();
+            acquisition.GoldAmount = rewardGold;
+            acquisition.ItemIds.Add(itemId);
+            RoguelikeNodeTransactionService.TryApplyOnce(state, "gameplay:summary:reward", acquisition);
+            RoguelikeNodeTransactionService.TryApplyOnce(state, "gameplay:summary:reward", acquisition);
+            RoguelikeNodeTransactionService.TryApplyOnce(
+                state,
+                "gameplay:summary:purchase",
+                RewardResult.GoldCostResult(spendGold));
+            state.ConsumableInstances?.Clear();
+            PureRunSummaryRecorder.RecordNodeCompletion(state, "gameplay:mystery", RoguelikeNodeType.Mystery);
+            PlayerAdventureStateStore.Save(state);
+            PureRunSessionStore.Finish(PureRunEndReason.Defeat);
+            return GameplayStepResult.Pass(MapAdapterName, action.Kind, "Recorded and finalized the deterministic defeat summary.");
+        }
+
+        private static GameplayAssertionResult AssertEncounterRecipeContract(ExecutableScenarioAssertion assertion)
+        {
+            string recipeId = assertion.Target;
+            if (string.IsNullOrWhiteSpace(recipeId) || assertion.Expected is not JObject expected)
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "encounterRecipeContract requires target recipe and object expected value.");
+
+            var resolved = EncounterResolver.Resolve(recipeId, 417);
+            float expectedHealth = expected["healthMultiplier"]?.ToObject<float>() ?? 1f;
+            float expectedOutput = expected["outputMultiplier"]?.ToObject<float>() ?? 1f;
+            string expectedBlockedCell = expected["blockedCell"]?.ToString();
+            bool multipliersMatch = Mathf.Approximately(resolved.HealthMultiplier, expectedHealth) &&
+                                    Mathf.Approximately(resolved.OutputMultiplier, expectedOutput);
+            bool blockerMatches = string.IsNullOrWhiteSpace(expectedBlockedCell) ||
+                                  resolved.Layout.BlockedCells.Any(cell => $"{cell.X},{cell.Y}" == expectedBlockedCell);
+            return multipliersMatch && blockerMatches
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"{recipeId} runtime contract matched.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"{recipeId} runtime contract did not match.");
+        }
+
+        private static GameplayAssertionResult AssertMonsterAiCatalogValid(ExecutableScenarioAssertion assertion)
+        {
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            var monsters = EncounterCatalog.Monsters.Values.ToList();
+            bool actual = monsters.Count == 6 &&
+                          monsters.Select(monster => monster.AiBrainAssetPath).Distinct().Count() == 6 &&
+                          monsters.All(monster => File.Exists(monster.AiBrainAssetPath)) &&
+                          EncounterCatalog.Monsters[EncounterCatalog.RangedId].MinimumStartingMana >= 15;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"MonsterAiCatalogValid={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected MonsterAiCatalogValid={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertBattleDefeatRewardsAreZero(ExecutableScenarioAssertion assertion)
+        {
+            bool expected = assertion.Expected?.ToObject<bool>() ?? true;
+            var human = new GameplayTestPlayer(0, PlayerType.HumanPlayer);
+            var ai = new GameplayTestPlayer(1, PlayerType.AutomatedPlayer);
+            var rewards = BattleRewardSystem.CalculateBattleRewards(
+                new GameResult(ai, new[] { human }),
+                2,
+                System.Array.Empty<Tactics.Common.Units.IUnit>());
+            bool actual = rewards.TotalGold == 0 &&
+                          (rewards.ExperiencePerCharacter?.Count ?? 0) == 0 &&
+                          (rewards.ItemIds?.Count ?? 0) == 0;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"BattleDefeatRewardsAreZero={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected zero-defeat-rewards={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertCompletedSummaryInteger(
+            ExecutableScenarioAssertion assertion,
+            string label,
+            System.Func<RunSummary, int> selector)
+        {
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            if (!PureRunSessionStore.TryLoadCompletedSummary(out var summary))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "No completed summary snapshot.");
+            int actual = selector(summary);
+            return actual == expected
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"CompletedSummary {label}={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected completed summary {label}={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertCompletedSummaryContainsItem(ExecutableScenarioAssertion assertion)
+        {
+            string itemId = assertion.Expected?.ToString();
+            bool actual = PureRunSessionStore.TryLoadCompletedSummary(out var summary) &&
+                          summary.acquiredItems.Contains(itemId);
+            return actual
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"Completed summary contains '{itemId}'.")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Completed summary does not contain '{itemId}'.");
+        }
+
+        private static GameplayAssertionResult AssertCompletedSummaryOutcome(ExecutableScenarioAssertion assertion)
+        {
+            string expected = assertion.Expected?.ToString();
+            if (!PureRunSessionStore.TryLoadCompletedSummary(out var summary))
+                return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "No completed summary snapshot.");
+            string actual = summary.GetRunOutcome().ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"CompletedSummary outcome={actual}")
+                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected outcome={expected}, actual={actual}.");
+        }
+
+        private sealed class GameplayTestPlayer : IPlayer
+        {
+            public GameplayTestPlayer(int number, PlayerType type)
+            {
+                PlayerNumber = number;
+                PlayerType = type;
+            }
+
+            public int PlayerNumber { get; set; }
+            public PlayerType PlayerType { get; set; }
+            public void Initialize(GridController gridController) { }
+            public void Play(GridController gridController) { }
         }
 
         private static List<CharacterDefinition> ResolveContextParty(PlayerAdventureState state, ExecutableScenarioAction action)

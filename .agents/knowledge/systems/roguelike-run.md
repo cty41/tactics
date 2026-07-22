@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-23T03:32:16+08:00"
+timestamp: "2026-07-23T04:13:53+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -13,6 +13,8 @@ repo_paths:
   - .agents/docs/roguelike-map-editor-manual-test.md
   - Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs
   - Assets/Tactics/Scripts/Roguelike/RoguelikeMapRuntimeState.cs
+  - Assets/Tactics/Scripts/Roguelike/PureRunSessionStore.cs
+  - Assets/Tactics/Scripts/Roguelike/PureRunSummaryRecorder.cs
   - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs
   - Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs
   - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs
@@ -25,7 +27,7 @@ repo_paths:
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:97a3ee6589e279fecb26af982e13bd010560b0c37776aa71e6aae2c3711bd445
+source_fingerprint: sha256:e7464de689071a61ba54fe83740f3316e7c330a34a5dfc2ac1942f74ba500479
 ---
 
 # Current State
@@ -51,6 +53,10 @@ LevelUp 面板按实际 `LearnedSkill.Level` 显示当前技能和混合候选�
 消耗品按定义、加权池和独立实例三层组织。首批为 `1/1` 的生命药剂、魔法药剂和净化药水；角色各有 1 个携带槽，未携带实例与装备共同显示在统一 Inventory，并通过单击 popover 执行携带、装备、一步替换或卸下。角色死亡在战斗结算或事件应用后自动卸下全部装载。
 
 新局不自带消耗品。普通/精英胜利分别按 25%/30% 概率掉落，Boss 不掉落；每个商店确定性展示 3 件商品、至少 1 件且不重复同一种药水，事件只在配置明确指定时发放。获得反馈显示名称与次数，地图顶部没有消耗品总数或新物品角标。
+
+进行中的 `RunSummary` 与 Pure Run 状态共同持久化，所有奖励、节点和击杀流水都使用稳定 transaction key 去重。`totalGold` 只累计实际提交的正向金币，不因购买扣款回退；获得过的装备和物品记录稳定 ID，即使后来装备、花费或使用仍保留。节点仅在提交完成时计数，Mystery 同时增加事件数，正式敌人死亡只在玩家胜利结算时写入。
+
+战斗失败、Boss 胜利和 Mystery 导致的全灭统一先从进行中统计生成结局快照，再清除活动 session。RunEndSummary 读取该快照并解析装备/消耗品显示名，关闭总结时才消费快照；因此 UI 不依赖已经清理的角色背包或地图运行时状态。
 
 # Relationships
 

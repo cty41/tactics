@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.EncounterRuntimeContract",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 417
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 417
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "encounterRecipeContract",
+      "target": "E1",
+      "expected": {
+        "healthMultiplier": 1.3,
+        "outputMultiplier": 1.15,
+        "blockedCell": "15,27"
+      },
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "encounterRecipeContract",
+      "target": "E2",
+      "expected": {
+        "healthMultiplier": 1.3,
+        "outputMultiplier": 1.15
+      },
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "encounterRecipeContract",
+      "target": "Special",
+      "expected": {
+        "healthMultiplier": 1.8,
+        "outputMultiplier": 1.25
+      },
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "monsterAiCatalogValid",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "battleDefeatRewardsAreZero",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "encounterRecipeContract",
+      "target": "E1",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "encounterRecipeContract",
+      "target": "E2",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "encounterRecipeContract",
+      "target": "Special",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "monsterAiCatalogValid",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "battleDefeatRewardsAreZero",
+      "parameters": {}
+    }
+  ]
+}

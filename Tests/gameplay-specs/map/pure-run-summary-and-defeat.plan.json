@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.PureRunSummaryAndDefeat",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 811
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "exercisePureRunSummaryAndDefeat",
+      "parameters": {
+        "rewardGold": 20,
+        "spendGold": 5,
+        "itemId": "life_potion"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryGoldEquals",
+      "expected": 20,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryContainsItem",
+      "expected": "life_potion",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "expected": "Defeat",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryNodesVisitedEquals",
+      "expected": 1,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryEventsCompletedEquals",
+      "expected": 1,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryGoldEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryContainsItem",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryNodesVisitedEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryEventsCompletedEquals",
+      "parameters": {}
+    }
+  ]
+}

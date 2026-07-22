@@ -291,7 +291,9 @@ namespace Tactics.Common.Units
                 }
             }
 
-            float damage = baseDamage;
+            // Encounter output scaling belongs at the unified damage entry so direct
+            // attacks, abilities, retaliation, and source-traceable DoT share one rule.
+            float damage = baseDamage * Tactics.Common.Battle.EncounterUnitRuntimeModifiers.ResolveOutputMultiplier(caster);
             bool isCritical = false;
 
             // Crit check

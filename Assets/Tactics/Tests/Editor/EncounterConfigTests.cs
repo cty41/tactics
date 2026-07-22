@@ -68,6 +68,7 @@ namespace Tactics.Tests.Editor
             {
                 UnitName = "UnitA",
                 UnitPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/HunterBlue.prefab",
+                AiBrainAssetPath = "Assets/Tactics/AI/BasicMeleeBrain.asset",
                 SpawnCellX = 1,
                 SpawnCellY = 2
             });
@@ -75,6 +76,7 @@ namespace Tactics.Tests.Editor
             {
                 UnitName = "UnitB",
                 UnitPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Infantry Blue.prefab",
+                AiBrainAssetPath = "Assets/Tactics/AI/BasicMeleeBrain.asset",
                 SpawnCellX = 1,
                 SpawnCellY = 2
             });

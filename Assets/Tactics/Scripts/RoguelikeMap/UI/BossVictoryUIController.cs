@@ -1,3 +1,6 @@
+using System.Linq;
+using Tactics.Consumables;
+using Tactics.Equipment;
 using Tactics.RoguelikeMap;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -119,7 +122,7 @@ namespace Tactics.UI
             {
                 if (summary.acquiredEquipment.Count > 0)
                 {
-                    _equipmentLabel.text = string.Join("\n", summary.acquiredEquipment);
+                    _equipmentLabel.text = string.Join("\n", summary.acquiredEquipment.Select(ResolveEquipmentName));
                     _equipmentLabel.parent.style.display = DisplayStyle.Flex;
                 }
                 else
@@ -133,7 +136,7 @@ namespace Tactics.UI
             {
                 if (summary.acquiredItems.Count > 0)
                 {
-                    _itemsLabel.text = string.Join("\n", summary.acquiredItems);
+                    _itemsLabel.text = string.Join("\n", summary.acquiredItems.Select(ResolveItemName));
                     _itemsLabel.parent.style.display = DisplayStyle.Flex;
                 }
                 else
@@ -166,6 +169,16 @@ namespace Tactics.UI
             _onReturnHome?.Invoke();
             _onReturnHome = null;
             _runSummary = null;
+        }
+
+        private static string ResolveEquipmentName(string id)
+        {
+            return EquipmentDatabase.GetById(id)?.DisplayName ?? id;
+        }
+
+        private static string ResolveItemName(string id)
+        {
+            return ConsumableDatabase.GetById(id)?.DisplayName ?? id;
         }
     }
 }

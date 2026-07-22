@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Tactics.RoguelikeMap;
+using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
 
@@ -115,6 +116,13 @@ namespace Tactics.Roguelike
 
             if (VisitedPathNodeIds.Count == 0 || VisitedPathNodeIds[^1] != nodeId)
                 VisitedPathNodeIds.Add(nodeId);
+
+            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            if (state?.IsPureRun == true &&
+                PureRunSummaryRecorder.RecordNodeCompletion(state, nodeId, node.nodeType))
+            {
+                PlayerAdventureStateStore.Save(state);
+            }
 
             return true;
         }
