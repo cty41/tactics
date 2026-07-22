@@ -13,6 +13,10 @@ SkillGraph 是战斗技能的统一行为表达。它把技能行为从单体 C#
 
 节点覆盖伤害、治疗、Buff、位移、召唤、投射物、分支和多阶段行为。目标选择与合法性检查由共享 targeting 规则处理，避免 UI、AI 和测试对同一技能给出不同结论。
 
+`SkillTargetingProtocol` 统一表达主目标、任意格中心、方向扇形、有序多段目标、实体对象格、回收动作和无路径位移。伤害大类与元素分别配置；`ApplyBuff.RequiresSuccessfulHit` 只在明确的“命中附带状态”节点上启用，避免独立 Buff 误读旧伤害结果。`SummonUnit` 通过战斗级 `SummonRegistry` 按召唤者和类别维护顺序、上限与最早替换。
+
+结构化创作时，目标协议写入 `SkillGraphSpec.Targeting`。`SkillGraphSpecCompiler` 的编译、克隆和导出必须完整往返协议字段；若只保存在运行时资产而没有进入 Spec，MCP/JSON 重建会丢失多段选择和格子目标语义。
+
 ## 创作入口
 
 ### Unity 图编辑器

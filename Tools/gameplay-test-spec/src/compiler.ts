@@ -59,7 +59,21 @@ const actionKindToAdapter: Record<string, Adapter> = {
   closeUI: "UI",
   clickElement: "UI",
   setText: "UI",
-  setElementEnabled: "UI"
+  setElementEnabled: "UI",
+  hoverElement: "UI",
+  rightClickElement: "UI",
+  pressKey: "UI",
+  setUnitFacing: "Battle",
+  initializeInitiativeOrder: "Battle",
+  advanceInitiative: "Battle",
+  tickUnitTurnStart: "Battle",
+  tickUnitTurnEnd: "Battle",
+  registerSummon: "Battle",
+  beginOrderedTargetSelection: "Battle",
+  selectOrderedTarget: "Battle",
+  undoOrderedTargetSelection: "Battle",
+  commitOrderedTargetSelection: "Battle",
+  cancelOrderedTargetSelection: "Battle"
 };
 
 const assertionKindToAdapter: Record<string, Adapter> = {
@@ -91,6 +105,22 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   aiTurnTargetCountEquals: "Battle",
   aiTurnUsedFallbackEquals: "Battle",
   aiTurnPatternStepEquals: "Battle",
+  unitFacingEquals: "Battle",
+  currentRoundOrderEquals: "Battle",
+  unitStatusStacksEquals: "Battle",
+  unitStatusRemainingActionsEquals: "Battle",
+  summonOrderEquals: "Battle",
+  summonCategoryEquals: "Battle",
+  abilityAvailabilityEquals: "Battle",
+  abilityAvailabilityReasonEquals: "Battle",
+  actualSkillLevelEquals: "Battle",
+  unitAbilityListEquals: "Battle",
+  orderedTargetSelectionEquals: "Battle",
+  selectionStageEquals: "Battle",
+  spearHolderEquals: "Battle",
+  spearCellEquals: "Battle",
+  decoyRemainingActionsEquals: "Battle",
+  aiTargetEquals: "Battle",
   // Map 独占断言
   currentNodeEquals: "Map",
   mapIsActive: "Map",
@@ -126,7 +156,12 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   elementVisible: "UI",
   elementText: "UI",
   elementEnabled: "UI",
-  elementExists: "UI"
+  elementExists: "UI",
+  elementClassContains: "UI",
+  elementChildOrderEquals: "UI",
+  elementRectRelationEquals: "UI",
+  abilityCardAvailabilityEquals: "UI",
+  targetMarkerOrderEquals: "UI"
   // 注意：unitHealthEquals / unitManaEquals / unitAliveEquals / unitPositionEquals 等
   // 共享断言不在此映射中，会回退到 requiredAdapters[0]，由 spec 上下文决定
 };

@@ -652,6 +652,7 @@ namespace Tactics.Editor.SkillGraphEditor
                 case ApplyDamageNodeRecord r:
                     if (parameters.TryGetValue("baseDamage", out var bd)) r.BaseDamage = ToFloat(bd);
                     if (parameters.TryGetValue("damageType", out var dt)) r.DamageType = (SkillGraphDamageType)ToInt(dt);
+                    if (parameters.TryGetValue("elementType", out var et)) r.ElementType = (Tactics.Common.Units.Buffs.ElementType)ToInt(et);
                     if (parameters.TryGetValue("isRanged", out var ir)) r.IsRanged = ToBool(ir);
                     if (parameters.TryGetValue("canCrit", out var cc)) r.CanCrit = ToBool(cc);
                     if (parameters.TryGetValue("accuracyPenalty", out var ap)) r.AccuracyPenalty = ToFloat(ap);
@@ -669,6 +670,7 @@ namespace Tactics.Editor.SkillGraphEditor
                     break;
                 case ApplyBuffNodeRecord r:
                     if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = ToInt(buffDur);
+                    if (parameters.TryGetValue("requiresSuccessfulHit", out var rsh)) r.RequiresSuccessfulHit = ToBool(rsh);
                     if (parameters.TryGetValue("buffAssetPath", out var bp) && bp is string buffPath && !string.IsNullOrEmpty(buffPath))
                     {
                         var buffConfig = AssetDatabase.LoadAssetAtPath<Tactics.Common.Units.Buffs.BuffConfig>(buffPath);
@@ -700,6 +702,8 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("unitPrefabPath", out var upp) && upp is string prefabPath) r.UnitPrefabPath = prefabPath;
                     if (parameters.TryGetValue("requiresCorpse", out var rc)) r.RequiresCorpse = ToBool(rc);
                     if (parameters.TryGetValue("summonName", out var sn) && sn is string summonName) r.SummonName = summonName;
+                    if (parameters.TryGetValue("summonCategory", out var sc) && sc is string summonCategory) r.SummonCategory = summonCategory;
+                    if (parameters.TryGetValue("maxActive", out var ma)) r.MaxActive = ToInt(ma);
                     if (parameters.TryGetValue("canReceiveHealing", out var crh)) r.CanReceiveHealing = ToBool(crh);
                     break;
                 case SelectMoveDestinationNodeRecord r:
@@ -750,6 +754,7 @@ namespace Tactics.Editor.SkillGraphEditor
                 case ApplyDamageNodeRecord r:
                     dict["baseDamage"] = r.BaseDamage;
                     dict["damageType"] = r.DamageType;
+                    dict["elementType"] = r.ElementType;
                     dict["isRanged"] = r.IsRanged;
                     dict["canCrit"] = r.CanCrit;
                     dict["accuracyPenalty"] = r.AccuracyPenalty;
@@ -767,6 +772,7 @@ namespace Tactics.Editor.SkillGraphEditor
                     break;
                 case ApplyBuffNodeRecord r:
                     dict["duration"] = r.Duration;
+                    dict["requiresSuccessfulHit"] = r.RequiresSuccessfulHit;
                     dict["buffAssetPath"] = r.BuffConfig != null ? AssetDatabase.GetAssetPath(r.BuffConfig) : null;
                     break;
                 case SelectAllyNodeRecord r:
@@ -794,6 +800,8 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["unitPrefabPath"] = r.UnitPrefabPath;
                     dict["requiresCorpse"] = r.RequiresCorpse;
                     dict["summonName"] = r.SummonName;
+                    dict["summonCategory"] = r.SummonCategory;
+                    dict["maxActive"] = r.MaxActive;
                     dict["canReceiveHealing"] = r.CanReceiveHealing;
                     break;
                 case SelectMoveDestinationNodeRecord r:

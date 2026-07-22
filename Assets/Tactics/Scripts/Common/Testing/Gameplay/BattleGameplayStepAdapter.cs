@@ -49,7 +49,18 @@ namespace Tactics.Common.Testing.Gameplay
                 or "spawnCorpse"
                 or "killUnit"
                 or "spawnInteractableCorpse"
-                or "consumeInteractableCorpseAt";
+                or "consumeInteractableCorpseAt"
+                or "setUnitFacing"
+                or "initializeInitiativeOrder"
+                or "advanceInitiative"
+                or "tickUnitTurnStart"
+                or "tickUnitTurnEnd"
+                or "registerSummon"
+                or "beginOrderedTargetSelection"
+                or "selectOrderedTarget"
+                or "undoOrderedTargetSelection"
+                or "commitOrderedTargetSelection"
+                or "cancelOrderedTargetSelection";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -88,6 +99,28 @@ namespace Tactics.Common.Testing.Gameplay
                         return SpawnInteractableCorpse(context, action);
                     case "consumeInteractableCorpseAt":
                         return ConsumeInteractableCorpseAt(context, action);
+                    case "setUnitFacing":
+                        return SetUnitFacing(context, action);
+                    case "initializeInitiativeOrder":
+                        return InitializeInitiativeOrder(context, action);
+                    case "advanceInitiative":
+                        return AdvanceInitiative(context, action);
+                    case "tickUnitTurnStart":
+                        return TickUnitTurn(context, action, turnStart: true);
+                    case "tickUnitTurnEnd":
+                        return TickUnitTurn(context, action, turnStart: false);
+                    case "registerSummon":
+                        return RegisterSummon(context, action);
+                    case "beginOrderedTargetSelection":
+                        return BeginOrderedTargetSelection(context, action);
+                    case "selectOrderedTarget":
+                        return SelectOrderedTarget(context, action);
+                    case "undoOrderedTargetSelection":
+                        return UndoOrderedTargetSelection(context, action);
+                    case "commitOrderedTargetSelection":
+                        return CommitOrderedTargetSelection(context, action);
+                    case "cancelOrderedTargetSelection":
+                        return CancelOrderedTargetSelection(context, action);
                     default:
                         return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unsupported Battle action '{action.Kind}'.");
                 }
@@ -133,7 +166,24 @@ namespace Tactics.Common.Testing.Gameplay
                 or "cellIsBlocked"
                 or "unitIsCorpse"
                 or "interactableCorpseExistsAt"
-                or "cellOccupiedByInteractable";
+                or "cellOccupiedByInteractable"
+                or "unitOwnerEquals"
+                or "unitFacingEquals"
+                or "currentRoundOrderEquals"
+                or "unitStatusStacksEquals"
+                or "unitStatusRemainingActionsEquals"
+                or "summonOrderEquals"
+                or "summonCategoryEquals"
+                or "abilityAvailabilityEquals"
+                or "abilityAvailabilityReasonEquals"
+                or "actualSkillLevelEquals"
+                or "unitAbilityListEquals"
+                or "orderedTargetSelectionEquals"
+                or "selectionStageEquals"
+                or "spearHolderEquals"
+                or "spearCellEquals"
+                or "decoyRemainingActionsEquals"
+                or "aiTargetEquals";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -177,6 +227,22 @@ namespace Tactics.Common.Testing.Gameplay
                     "unitOwnerEquals" => AssertUnitOwnerEquals(context, assertion),
                     "interactableCorpseExistsAt" => AssertInteractableCorpseExistsAt(context, assertion),
                     "cellOccupiedByInteractable" => AssertCellOccupiedByInteractable(context, assertion),
+                    "unitFacingEquals" => AssertUnitFacingEquals(context, assertion),
+                    "currentRoundOrderEquals" => AssertCurrentRoundOrderEquals(context, assertion),
+                    "unitStatusStacksEquals" => AssertUnitStatusValue(context, assertion, stacks: true),
+                    "unitStatusRemainingActionsEquals" => AssertUnitStatusValue(context, assertion, stacks: false),
+                    "summonOrderEquals" => AssertSummonOrderEquals(context, assertion),
+                    "summonCategoryEquals" => AssertSummonCategoryEquals(context, assertion),
+                    "abilityAvailabilityEquals" => AssertAbilityAvailabilityEquals(context, assertion),
+                    "abilityAvailabilityReasonEquals" => AssertAbilityAvailabilityReasonEquals(context, assertion),
+                    "actualSkillLevelEquals" => AssertActualSkillLevelEquals(context, assertion),
+                    "unitAbilityListEquals" => AssertUnitAbilityListEquals(context, assertion),
+                    "orderedTargetSelectionEquals" => AssertOrderedTargetSelectionEquals(context, assertion),
+                    "selectionStageEquals" => AssertSelectionStageEquals(context, assertion),
+                    "spearHolderEquals" => AssertObservedAlias(context, assertion, context.SpearHolderAlias, "spear holder"),
+                    "spearCellEquals" => AssertObservedAlias(context, assertion, context.SpearCellAlias, "spear cell"),
+                    "decoyRemainingActionsEquals" => AssertDecoyRemainingActionsEquals(context, assertion),
+                    "aiTargetEquals" => AssertObservedAlias(context, assertion, context.LastAiTargetAlias, "AI target"),
                     _ => GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unsupported Battle assertion '{assertion.Kind}'.")
                 };
 
@@ -217,7 +283,27 @@ namespace Tactics.Common.Testing.Gameplay
                 data["maxMana"] = unit.MaxMana;
                 data["canAct"] = unit.CanAct;
                 data["canReceiveHealing"] = unit.CanReceiveHealing;
+                data["facing"] = unit.Facing.ToString();
                 data["activeBuffs"] = new JArray(unit.GetActiveBuffs().Select(b => b.BuffName));
+                data["statusStacks"] = JObject.FromObject(unit.GetActiveBuffs()
+                    .GroupBy(buff => buff.BuffName)
+                    .ToDictionary(group => group.Key, group => group.Last().StackCount));
+                data["statusRemainingActions"] = JObject.FromObject(unit.GetActiveBuffs()
+                    .GroupBy(buff => buff.BuffName)
+                    .ToDictionary(group => group.Key, group => group.Last().RemainingTurns));
+            }
+
+            if (context.InitiativeService != null)
+            {
+                data["currentRoundOrder"] = new JArray(context.InitiativeService.GetCurrentRoundOrder()
+                    .Select(unit => FindUnitAlias(context, unit) ?? $"Unit_{unit.UnitID}"));
+            }
+
+            if (context.OrderedTargetSelection != null)
+            {
+                data["selectionStage"] = context.OrderedTargetSelection.Stage.ToString();
+                data["orderedTargets"] = new JArray(context.OrderedTargetSelection.Targets
+                    .Select(unit => FindUnitAlias(context, unit) ?? $"Unit_{unit.UnitID}"));
             }
 
             if (context.LastAiDecisionLog != null)
@@ -499,8 +585,29 @@ namespace Tactics.Common.Testing.Gameplay
                 RuntimeScope = context.RuntimeScope
             };
 
+            var facingTarget = targetPoint ?? primaryTarget?.CurrentCell;
+            var originalFacing = caster.Facing;
+            var actionFacing = originalFacing;
+            bool changedFacing = facingTarget != null && caster.CurrentCell != null &&
+                FacingResolver.TryResolve(
+                    caster.CurrentCell.GridCoordinates,
+                    facingTarget.GridCoordinates,
+                    originalFacing,
+                    out actionFacing);
+            if (changedFacing)
+                caster.Facing = actionFacing;
+
             var runner = new SkillGraphRunner();
-            var result = await runner.Execute(skillContext);
+            var result = SkillGraphExecutionState.Failed;
+            try
+            {
+                result = await runner.Execute(skillContext);
+            }
+            finally
+            {
+                if (result != SkillGraphExecutionState.Completed && changedFacing)
+                    caster.Facing = originalFacing;
+            }
 
             if (result == SkillGraphExecutionState.Completed)
                 return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Executed SkillGraph '{graphAlias}' on {casterAlias}.");
@@ -532,27 +639,29 @@ namespace Tactics.Common.Testing.Gameplay
                     return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell at ({x},{y}) not found.");
             }
 
+            // Check if destination is blocked (e.g., by corpse)
+            if (destCell.IsTaken && !destCell.CurrentUnits.Contains(unit))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell ({destCell.GridCoordinates.x},{destCell.GridCoordinates.y}) is blocked.");
+
+            var oldCell = unit.CurrentCell;
+            if (oldCell != null && FacingResolver.TryResolve(
+                    oldCell.GridCoordinates,
+                    destCell.GridCoordinates,
+                    unit.Facing,
+                    out var moveFacing))
+            {
+                unit.Facing = moveFacing;
+            }
+
             var mono = unit as MonoBehaviour;
             if (mono != null)
                 mono.transform.position = new Vector3(destCell.GridCoordinates.x, destCell.GridCoordinates.y, 0);
 
-            // Remove from old cell
-            if (unit.CurrentCell != null)
+            // Commit occupancy only after every legality check succeeds.
+            if (oldCell != null)
             {
-                unit.CurrentCell.CurrentUnits.Remove(unit);
-                unit.CurrentCell.IsTaken = unit.CurrentCell.CurrentUnits.Count > 0;
-            }
-
-            // Check if destination is blocked (e.g., by corpse)
-            if (destCell.IsTaken)
-            {
-                // Restore old cell
-                if (unit.CurrentCell != null)
-                {
-                    unit.CurrentCell.CurrentUnits.Add(unit);
-                    unit.CurrentCell.IsTaken = true;
-                }
-                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell ({destCell.GridCoordinates.x},{destCell.GridCoordinates.y}) is blocked.");
+                oldCell.CurrentUnits.Remove(unit);
+                oldCell.IsTaken = oldCell.CurrentUnits.Count > 0;
             }
 
             unit.CurrentCell = destCell;
@@ -594,6 +703,48 @@ namespace Tactics.Common.Testing.Gameplay
             var canReceiveHealing = action.Parameters["canReceiveHealing"];
             if (canReceiveHealing != null)
                 unit.CanReceiveHealing = canReceiveHealing.ToObject<bool>();
+
+            var speed = action.Parameters["speed"];
+            if (speed != null)
+                unit.Speed = speed.ToObject<float>();
+
+            var initiative = action.Parameters["initiative"];
+            if (initiative != null)
+                unit.Initiative = initiative.ToObject<float>();
+
+            if (mono != null)
+            {
+                var learnedSkills = new List<CharacterDefinition.LearnedSkill>();
+                if (action.Parameters["learnedSkills"] is JArray learnedArray)
+                {
+                    foreach (var token in learnedArray.OfType<JObject>())
+                    {
+                        string skillId = token["skillId"]?.ToString();
+                        if (string.IsNullOrWhiteSpace(skillId))
+                            continue;
+                        learnedSkills.Add(new CharacterDefinition.LearnedSkill
+                        {
+                            SkillId = skillId,
+                            Level = token["level"]?.ToObject<int>() ?? 1,
+                            SkillType = Enum.TryParse<Tactics.Roster.SkillType>(token["skillType"]?.ToString(), true, out var skillType)
+                                ? skillType
+                                : Tactics.Roster.SkillType.Active
+                        });
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(action.Parameters["skillId"]?.ToString()))
+                {
+                    learnedSkills.Add(new CharacterDefinition.LearnedSkill
+                    {
+                        SkillId = action.Parameters["skillId"].ToString(),
+                        Level = action.Parameters["skillLevel"]?.ToObject<int>() ?? 1,
+                        SkillType = Tactics.Roster.SkillType.Active
+                    });
+                }
+
+                if (learnedSkills.Count > 0)
+                    mono.ApplyLearnedSkillLevels(learnedSkills);
+            }
 
             string characterId = action.Parameters["characterId"]?.ToString();
             if (!string.IsNullOrWhiteSpace(characterId) && unit is MonoBehaviour monoBehaviour)
@@ -698,6 +849,7 @@ namespace Tactics.Common.Testing.Gameplay
             int duration = action.Parameters["duration"]?.ToObject<int>() ?? 3;
 
             string configPath = action.Parameters["configPath"]?.ToString();
+            string configAlias = action.Parameters["configAlias"]?.ToString() ?? buffName;
             BuffConfig config;
 
             if (!string.IsNullOrWhiteSpace(configPath))
@@ -708,11 +860,24 @@ namespace Tactics.Common.Testing.Gameplay
             }
             else
             {
-                config = ScriptableObject.CreateInstance<BuffConfig>();
-                var nameField = typeof(BuffConfig).GetField("_buffName", BindingFlags.NonPublic | BindingFlags.Instance);
-                nameField?.SetValue(config, buffName);
-                var durationField = typeof(BuffConfig).GetField("_defaultDuration", BindingFlags.NonPublic | BindingFlags.Instance);
-                durationField?.SetValue(config, duration);
+                if (!context.RuntimeBuffConfigs.TryGetValue(configAlias, out config) || config == null)
+                {
+                    config = ScriptableObject.CreateInstance<BuffConfig>();
+                    context.RuntimeBuffConfigs[configAlias] = config;
+                }
+
+                SetBuffConfigField(config, "_buffName", buffName);
+                SetBuffConfigField(config, "_defaultDuration", duration);
+                SetBuffConfigField(config, "_canAct", action.Parameters["canAct"]?.ToObject<bool>() ??
+                    !string.Equals(action.Parameters["effectType"]?.ToString(), nameof(BuffEffectType.Stun), StringComparison.OrdinalIgnoreCase));
+                SetBuffConfigEnum(config, "_effectType", action.Parameters["effectType"]?.ToString(), BuffEffectType.None);
+                SetBuffConfigEnum(config, "_triggerTiming", action.Parameters["triggerTiming"]?.ToString(), BuffTriggerTiming.None);
+                SetBuffConfigEnum(config, "_polarity", action.Parameters["polarity"]?.ToString(), BuffPolarity.Harmful);
+                SetBuffConfigEnum(config, "_elementType", action.Parameters["elementType"]?.ToString(), ElementType.None);
+                SetBuffConfigEnum(config, "_damageCategory", action.Parameters["damageCategory"]?.ToString(), DamageCategory.Magic);
+                SetBuffConfigEnum(config, "_refreshStrategy", action.Parameters["refreshStrategy"]?.ToString(), BuffRefreshStrategy.AddDuration);
+                SetBuffConfigField(config, "_damagePerTurn", action.Parameters["damagePerTurn"]?.ToObject<float>() ?? 0f);
+                SetBuffConfigField(config, "_speedModifier", action.Parameters["speedModifier"]?.ToObject<float>() ?? 0f);
             }
 
             var buff = new Buff(config, unit, duration);
@@ -747,10 +912,26 @@ namespace Tactics.Common.Testing.Gameplay
                 ActorManaBefore = unit.Mana,
             };
 
+            var unitStatesBefore = context.Units
+                .Where(pair => pair.Value != null)
+                .GroupBy(pair => pair.Value.UnitID)
+                .ToDictionary(
+                    group => group.Key,
+                    group =>
+                    {
+                        var pair = group.First();
+                        return (
+                            Alias: pair.Key,
+                            Position: pair.Value.CurrentCell?.GridCoordinates ?? default,
+                            Health: pair.Value.Health);
+                    });
+
             // Resolve target alias from context.Units (first enemy unit as default target)
+            context.LastAiTargetAlias = null;
             string targetAlias = action.Parameters["targetAlias"]?.ToString();
             if (!string.IsNullOrWhiteSpace(targetAlias) && context.Units.TryGetValue(targetAlias, out var targetUnit))
             {
+                context.LastAiTargetAlias = targetAlias;
                 snapshot.TargetAlias = targetAlias;
                 snapshot.TargetUnitId = targetUnit.UnitID;
                 snapshot.TargetPositionBefore = targetUnit.CurrentCell?.GridCoordinates ?? default;
@@ -805,6 +986,26 @@ namespace Tactics.Common.Testing.Gameplay
                         var actionMatch = System.Text.RegularExpressions.Regex.Match(execResult.Message, @"ActionType=(\w+)");
                         if (actionMatch.Success)
                             snapshot.SelectedActionType = actionMatch.Groups[1].Value;
+
+                        var targetMatch = System.Text.RegularExpressions.Regex.Match(execResult.Message, @"Target=Unit_(\d+)");
+                        if (targetMatch.Success &&
+                            int.TryParse(targetMatch.Groups[1].Value, out int targetUnitId) &&
+                            unitStatesBefore.TryGetValue(targetUnitId, out var targetBefore))
+                        {
+                            snapshot.TargetAlias = targetBefore.Alias;
+                            snapshot.TargetUnitId = targetUnitId;
+                            snapshot.TargetPositionBefore = targetBefore.Position;
+                            snapshot.TargetHealthBefore = targetBefore.Health;
+                            context.LastAiTargetAlias = targetBefore.Alias;
+
+                            var observedTarget = context.Units.Values.FirstOrDefault(candidate =>
+                                candidate != null && candidate.UnitID == targetUnitId);
+                            if (observedTarget != null)
+                            {
+                                snapshot.TargetPositionAfter = observedTarget.CurrentCell?.GridCoordinates ?? default;
+                                snapshot.TargetHealthAfter = observedTarget.Health;
+                            }
+                        }
                     }
                 }
 
@@ -1439,6 +1640,381 @@ namespace Tactics.Common.Testing.Gameplay
             }
         }
 
+        private static GameplayStepResult SetUnitFacing(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string unitAlias = action.Parameters?["unitAlias"]?.ToString();
+            string facingValue = action.Parameters?["facing"]?.ToString();
+            if (!TryGetUnit(context, unitAlias, out var unit, out var error))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, error);
+            if (!Enum.TryParse<FacingDirection>(facingValue, true, out var facing))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unknown facing '{facingValue}'.");
+
+            unit.Facing = facing;
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Set {unitAlias} facing to {facing}.");
+        }
+
+        private static GameplayStepResult InitializeInitiativeOrder(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            var units = ResolveUnitSequence(context, action.Parameters?["unitAliases"] as JArray);
+            if (units.Count == 0)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "initializeInitiativeOrder requires at least one unit.");
+
+            context.InitiativeService = new BattleInitiativeService();
+            context.InitiativeUnits.Clear();
+            context.InitiativeUnits.AddRange(units);
+            context.InitiativeService.StartRound(units);
+            var gridController = ResolveGridController(context);
+            if (gridController != null)
+                BattleInitiativeService.Attach(gridController, context.InitiativeService);
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Initialized current-round initiative order.");
+        }
+
+        private static GameplayStepResult AdvanceInitiative(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            if (context.InitiativeService == null)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Initiative order has not been initialized.");
+
+            var next = context.InitiativeService.TakeNext(context.InitiativeUnits);
+            string alias = FindUnitAlias(context, next) ?? "none";
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Advanced initiative to '{alias}'.");
+        }
+
+        private static GameplayStepResult TickUnitTurn(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action,
+            bool turnStart)
+        {
+            string unitAlias = action.Parameters?["unitAlias"]?.ToString();
+            if (!TryGetUnit(context, unitAlias, out var unit, out var error))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, error);
+
+            var gridController = ResolveGridController(context);
+            if (turnStart)
+                unit.OnTurnStart(gridController);
+            else
+                unit.OnTurnEnd(gridController);
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Ticked {(turnStart ? "start" : "end")} of {unitAlias}'s turn.");
+        }
+
+        private static GameplayStepResult RegisterSummon(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string ownerAlias = action.Parameters?["ownerAlias"]?.ToString();
+            string summonAlias = action.Parameters?["summonAlias"]?.ToString();
+            if (!TryGetUnit(context, ownerAlias, out var owner, out var ownerError))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, ownerError);
+            if (!TryGetUnit(context, summonAlias, out var summon, out var summonError))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, summonError);
+
+            var gridController = ResolveGridController(context);
+            if (gridController == null)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "registerSummon requires a battle or skill test grid.");
+
+            string category = action.Parameters?["category"]?.ToString() ?? "Default";
+            int maximumActive = action.Parameters?["maximumActive"]?.ToObject<int>() ?? 1;
+            var registry = SummonRegistry.For(gridController);
+            var replacements = registry.Register(owner, category, summon, maximumActive);
+            foreach (var replacement in replacements)
+                registry.Despawn(replacement);
+            return GameplayStepResult.Pass(
+                BattleAdapterName,
+                action.Kind,
+                $"Registered {summonAlias} in '{category}', replaced {replacements.Count} summon(s).");
+        }
+
+        private static GameplayStepResult BeginOrderedTargetSelection(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            int requiredCount = action.Parameters?["requiredCount"]?.ToObject<int>() ?? 1;
+            context.OrderedTargetSelection = new OrderedTargetSelectionState(requiredCount);
+            context.TargetMarkerOrder.Clear();
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Started ordered selection for {requiredCount} target(s).");
+        }
+
+        private static GameplayStepResult SelectOrderedTarget(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            if (context.OrderedTargetSelection == null)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Ordered target selection has not started.");
+
+            string targetAlias = action.Parameters?["targetAlias"]?.ToString();
+            if (!TryGetUnit(context, targetAlias, out var target, out var error))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, error);
+            if (!context.OrderedTargetSelection.TryAdd(target))
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Could not add target '{targetAlias}'.");
+
+            context.TargetMarkerOrder.Add(targetAlias);
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Selected '{targetAlias}' at position {context.TargetMarkerOrder.Count}.");
+        }
+
+        private static GameplayStepResult UndoOrderedTargetSelection(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            if (context.OrderedTargetSelection == null || !context.OrderedTargetSelection.UndoLast())
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "No ordered target segment can be undone.");
+            if (context.TargetMarkerOrder.Count > 0)
+                context.TargetMarkerOrder.RemoveAt(context.TargetMarkerOrder.Count - 1);
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Removed the most recent ordered target.");
+        }
+
+        private static GameplayStepResult CommitOrderedTargetSelection(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            if (context.OrderedTargetSelection == null || context.OrderedTargetSelection.Commit().Count == 0)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Ordered target selection is not ready to commit.");
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Committed ordered target selection.");
+        }
+
+        private static GameplayStepResult CancelOrderedTargetSelection(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            if (context.OrderedTargetSelection == null)
+                return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Ordered target selection has not started.");
+            context.OrderedTargetSelection.Cancel();
+            context.TargetMarkerOrder.Clear();
+            return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Cancelled ordered target selection.");
+        }
+
+        private static GameplayAssertionResult AssertUnitFacingEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (!TryGetUnit(context, assertion.Target, out var unit, out var error))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, error);
+            string expected = assertion.Expected?.ToString();
+            string actual = unit.Facing.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.Facing={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.Facing={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertCurrentRoundOrderEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (context.InitiativeService == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "Initiative order has not been initialized.");
+            var actual = context.InitiativeService.GetCurrentRoundOrder()
+                .Select(unit => FindUnitAlias(context, unit) ?? $"Unit_{unit.UnitID}")
+                .ToList();
+            return AssertStringSequence(assertion, actual, "current-round order");
+        }
+
+        private static GameplayAssertionResult AssertUnitStatusValue(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion,
+            bool stacks)
+        {
+            if (!TryGetUnit(context, assertion.Target, out var unit, out var error))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, error);
+            string buffName = assertion.Parameters?["buffName"]?.ToString();
+            var buff = unit.GetActiveBuffs().FirstOrDefault(candidate =>
+                string.Equals(candidate.BuffName, buffName, StringComparison.OrdinalIgnoreCase));
+            if (buff == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Buff '{buffName}' was not found on '{assertion.Target}'.");
+
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            int actual = stacks ? buff.StackCount : buff.RemainingTurns;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{buffName} {(stacks ? "stacks" : "remaining actions")}={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {buffName} {(stacks ? "stacks" : "remaining actions")}={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertSummonOrderEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (!TryGetUnit(context, assertion.Target, out var owner, out var error))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, error);
+            var gridController = ResolveGridController(context);
+            if (gridController == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "No battle or skill test grid is available.");
+
+            string category = assertion.Parameters?["category"]?.ToString() ?? "Default";
+            var actual = SummonRegistry.For(gridController).GetOrdered(owner, category)
+                .Select(unit => FindUnitAlias(context, unit) ?? $"Unit_{unit.UnitID}")
+                .ToList();
+            return AssertStringSequence(assertion, actual, $"summon order for {assertion.Target}/{category}");
+        }
+
+        private static GameplayAssertionResult AssertSummonCategoryEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (!TryGetUnit(context, assertion.Target, out var summon, out var error))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, error);
+            var gridController = ResolveGridController(context);
+            string actual = gridController == null ? null : SummonRegistry.For(gridController).GetCategory(summon);
+            string expected = assertion.Expected?.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.SummonCategory={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected summon category '{expected}', actual='{actual ?? "<none>"}'.");
+        }
+
+        private static GameplayAssertionResult AssertAbilityAvailabilityEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var ability = ResolveAbility(context, assertion);
+            if (ability == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "Ability could not be resolved.");
+            string actual = AbilityAvailabilityResolver.Resolve(ability, ResolveGridController(context)).State.ToString();
+            string expected = assertion.Expected?.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Ability availability={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected ability availability={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertAbilityAvailabilityReasonEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var ability = ResolveAbility(context, assertion);
+            if (ability == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "Ability could not be resolved.");
+            string actual = AbilityAvailabilityResolver.Resolve(ability, ResolveGridController(context)).Reason;
+            string expected = assertion.Expected?.ToString() ?? string.Empty;
+            return string.Equals(actual, expected, StringComparison.Ordinal)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Ability reason='{actual}'")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected ability reason='{expected}', actual='{actual}'.");
+        }
+
+        private static GameplayAssertionResult AssertActualSkillLevelEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (!TryGetUnit(context, assertion.Target, out var unit, out var error))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, error);
+            if (unit is not Unit concreteUnit)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Unit '{assertion.Target}' does not expose learned skill levels.");
+            string skillId = assertion.Parameters?["skillId"]?.ToString();
+            int actual = concreteUnit.GetLearnedSkillLevel(skillId);
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{skillId} actual level={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {skillId} actual level={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertUnitAbilityListEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (!TryGetUnit(context, assertion.Target, out var unit, out var error))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, error);
+            var actual = unit.GetBaseAbilities().Where(ability => ability != null).Select(ability => ability.DisplayName).ToList();
+            return AssertStringSequence(assertion, actual, $"ability list for {assertion.Target}");
+        }
+
+        private static GameplayAssertionResult AssertOrderedTargetSelectionEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (context.OrderedTargetSelection == null)
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, "Ordered target selection has not started.");
+            var actual = context.OrderedTargetSelection.Targets
+                .Select(unit => FindUnitAlias(context, unit) ?? $"Unit_{unit.UnitID}")
+                .ToList();
+            return AssertStringSequence(assertion, actual, "ordered target selection");
+        }
+
+        private static GameplayAssertionResult AssertSelectionStageEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            string actual = context.OrderedTargetSelection?.Stage.ToString();
+            string expected = assertion.Expected?.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"Selection stage={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected selection stage={expected}, actual={actual ?? "<none>"}.");
+        }
+
+        private static GameplayAssertionResult AssertDecoyRemainingActionsEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            if (!context.DecoyRemainingActions.TryGetValue(assertion.Target ?? string.Empty, out int actual))
+                return GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"No decoy lifecycle observation exists for '{assertion.Target}'.");
+            int expected = assertion.Expected?.ToObject<int>() ?? 0;
+            return actual == expected
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{assertion.Target}.RemainingActions={actual}")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {assertion.Target}.RemainingActions={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertObservedAlias(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAssertion assertion,
+            string actual,
+            string label)
+        {
+            string expected = assertion.Expected?.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{label}='{actual}'")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {label}='{expected}', actual='{actual ?? "<none>"}'.");
+        }
+
+        private static GameplayAssertionResult AssertStringSequence(
+            ExecutableScenarioAssertion assertion,
+            IReadOnlyList<string> actual,
+            string label)
+        {
+            var expected = assertion.Expected is JArray array
+                ? array.Values<string>().ToList()
+                : new List<string>();
+            bool equal = actual.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase);
+            return equal
+                ? GameplayAssertionResult.Pass(BattleAdapterName, assertion.Kind, $"{label}=[{string.Join(", ", actual)}]")
+                : GameplayAssertionResult.Fail(BattleAdapterName, assertion.Kind, $"Expected {label}=[{string.Join(", ", expected)}], actual=[{string.Join(", ", actual)}].");
+        }
+
+        private static IAbility ResolveAbility(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            string abilityAlias = assertion.Parameters?["abilityAlias"]?.ToString();
+            if (string.IsNullOrWhiteSpace(abilityAlias))
+                abilityAlias = assertion.Target;
+            if (!string.IsNullOrWhiteSpace(abilityAlias) && context.SkillAbilities.TryGetValue(abilityAlias, out var aliased))
+                return aliased;
+
+            string unitAlias = assertion.Parameters?["unitAlias"]?.ToString();
+            string abilityName = assertion.Parameters?["abilityName"]?.ToString();
+            if (TryGetUnit(context, unitAlias, out var unit, out _) && !string.IsNullOrWhiteSpace(abilityName))
+            {
+                return unit.GetBaseAbilities().FirstOrDefault(ability =>
+                    string.Equals(ability.DisplayName, abilityName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return null;
+        }
+
+        private static List<IUnit> ResolveUnitSequence(GameplayRuntimeContext context, JArray aliases)
+        {
+            if (aliases == null)
+                return context.Units.Values.Where(unit => unit != null).Distinct().ToList();
+            var units = new List<IUnit>();
+            foreach (string alias in aliases.Values<string>())
+            {
+                if (context.Units.TryGetValue(alias, out var unit) && unit != null && !units.Contains(unit))
+                    units.Add(unit);
+            }
+            return units;
+        }
+
+        private static bool TryGetUnit(
+            GameplayRuntimeContext context,
+            string alias,
+            out IUnit unit,
+            out string error)
+        {
+            if (string.IsNullOrWhiteSpace(alias))
+            {
+                unit = null;
+                error = "A unit alias is required.";
+                return false;
+            }
+            if (!context.Units.TryGetValue(alias, out unit) || unit == null)
+            {
+                error = $"Unit alias '{alias}' not found.";
+                return false;
+            }
+            error = null;
+            return true;
+        }
+
+        private static string FindUnitAlias(GameplayRuntimeContext context, IUnit unit)
+        {
+            return unit == null
+                ? null
+                : context.Units.FirstOrDefault(pair => ReferenceEquals(pair.Value, unit)).Key;
+        }
+
+        private static IGridController ResolveGridController(GameplayRuntimeContext context)
+        {
+            return context.BattleController ?? (IGridController)context.SkillWorld?.GridController;
+        }
+
+        private static void SetBuffConfigField<T>(BuffConfig config, string fieldName, T value)
+        {
+            typeof(BuffConfig).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.SetValue(config, value);
+        }
+
+        private static void SetBuffConfigEnum<TEnum>(BuffConfig config, string fieldName, string rawValue, TEnum fallback)
+            where TEnum : struct, Enum
+        {
+            var value = Enum.TryParse<TEnum>(rawValue, true, out var parsed) ? parsed : fallback;
+            SetBuffConfigField(config, fieldName, value);
+        }
+
         private static BattleController RequireBattleController(GameplayRuntimeContext context, string actionKind)
         {
             return context.BattleController ?? throw new InvalidOperationException($"BattleController has not been bound. Execute 'bindBattleController' before '{actionKind}'.");
@@ -1470,7 +2046,6 @@ namespace Tactics.Common.Testing.Gameplay
 
         private static GameplayStepResult KillUnit(GameplayRuntimeContext context, ExecutableScenarioAction action)
         {
-            var controller = RequireBattleController(context, action.Kind);
             string unitAlias = action.Parameters?["unitAlias"]?.ToString();
             if (string.IsNullOrWhiteSpace(unitAlias))
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "killUnit requires a unitAlias parameter.");
@@ -1479,6 +2054,7 @@ namespace Tactics.Common.Testing.Gameplay
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Unit alias '{unitAlias}' does not exist.");
 
             unit.ModifyHealth(-unit.Health - 1, null);
+            SummonRegistry.For(ResolveGridController(context))?.HandleUnitDeath(unit);
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Unit '{unitAlias}' killed.");
         }
 

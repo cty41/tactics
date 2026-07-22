@@ -140,6 +140,10 @@ namespace Tactics.Common.Players
                 }
                 gridController.EndTurn();
             }
+            catch (OperationCanceledException)
+            {
+                // Turn transitions and battle shutdown cancel in-flight delays by design.
+            }
             catch (Exception ex)
             {
                 TLog.Error($"[AIPlayer] Exception during Play() for Player {PlayerNumber}: {ex}");

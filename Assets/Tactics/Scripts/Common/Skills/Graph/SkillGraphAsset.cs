@@ -188,12 +188,14 @@ namespace Tactics.Common.Skills.Graph
     {
         [SerializeField] private float _baseDamage = 10f;
         [SerializeField] private SkillGraphDamageType _damageType = SkillGraphDamageType.Physical;
+        [SerializeField] private ElementType _elementType = ElementType.None;
         [SerializeField] private bool _isRanged;
         [SerializeField] private bool _canCrit = true;
         [SerializeField] private float _accuracyPenalty;
 
         public float BaseDamage { get => _baseDamage; set => _baseDamage = value; }
         public SkillGraphDamageType DamageType { get => _damageType; set => _damageType = value; }
+        public ElementType ElementType { get => _elementType; set => _elementType = value; }
         public bool IsRanged { get => _isRanged; set => _isRanged = value; }
         public bool CanCrit { get => _canCrit; set => _canCrit = value; }
         public float AccuracyPenalty { get => _accuracyPenalty; set => _accuracyPenalty = value; }
@@ -262,9 +264,11 @@ namespace Tactics.Common.Skills.Graph
     {
         [SerializeField] private BuffConfig _buffConfig;
         [SerializeField] private int _duration;
+        [SerializeField] private bool _requiresSuccessfulHit;
 
         public BuffConfig BuffConfig { get => _buffConfig; set => _buffConfig = value; }
         public int Duration { get => _duration; set => _duration = value; }
+        public bool RequiresSuccessfulHit { get => _requiresSuccessfulHit; set => _requiresSuccessfulHit = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ApplyBuff;
     }
 
@@ -374,11 +378,15 @@ namespace Tactics.Common.Skills.Graph
         [SerializeField] private string _unitPrefabPath;
         [SerializeField] private bool _requiresCorpse = true;
         [SerializeField] private string _summonName;
+        [SerializeField] private string _summonCategory = "Default";
+        [SerializeField] private int _maxActive = 1;
         [SerializeField] private bool _canReceiveHealing = true;
 
         public string UnitPrefabPath { get => _unitPrefabPath; set => _unitPrefabPath = value; }
         public bool RequiresCorpse { get => _requiresCorpse; set => _requiresCorpse = value; }
         public string SummonName { get => _summonName; set => _summonName = value; }
+        public string SummonCategory { get => _summonCategory; set => _summonCategory = value; }
+        public int MaxActive { get => Mathf.Max(1, _maxActive); set => _maxActive = Mathf.Max(1, value); }
         public bool CanReceiveHealing { get => _canReceiveHealing; set => _canReceiveHealing = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.SummonUnit;
     }
@@ -450,14 +458,31 @@ namespace Tactics.Common.Skills.Graph
         [SerializeField] private string _displayName;
         [SerializeField] private int _version = 1;
         [SerializeField] private string[] _tags;
+        [SerializeField] private SkillTargetingProtocol _targeting = new();
         [SerializeReference] private List<SkillGraphNodeRecord> _nodes = new();
         [SerializeField] private List<SkillGraphEdgeRecord> _edges = new();
 
         public string DisplayName { get => _displayName; set => _displayName = value; }
         public int Version { get => _version; set => _version = value; }
         public string[] Tags { get => _tags; set => _tags = value; }
+        public SkillTargetingProtocol Targeting => _targeting ??= new SkillTargetingProtocol();
         public List<SkillGraphNodeRecord> Nodes => _nodes;
         public List<SkillGraphEdgeRecord> Edges => _edges;
+
+        public SkillTargetMode ResolveTargetMode()
+        {
+            if (Targeting.Mode != SkillTargetMode.PrimaryUnit)
+                return Targeting.Mode;
+            if (_nodes.Exists(node => node is TeleportNodeRecord))
+                return SkillTargetMode.PathlessMove;
+            if (_nodes.Exists(node => node is MultiStabNodeRecord))
+                return SkillTargetMode.OrderedMultiTarget;
+            if (_nodes.Exists(node => node is SelectCorpseTargetNodeRecord))
+                return SkillTargetMode.PhysicalObjectCell;
+            if (_nodes.Exists(node => node is SelectTargetPointNodeRecord))
+                return SkillTargetMode.AnyCellCenter;
+            return SkillTargetMode.PrimaryUnit;
+        }
 
         // ── 查询 ──
 

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-07-22T11:45:14+08:00"
+timestamp: "2026-07-22T20:36:34+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -13,6 +13,8 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphAsset.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphRunner.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphSpec.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillTargetingProtocol.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/OrderedTargetSelectionState.cs
   - Assets/Tactics/Scripts/Editor/SkillGraphEditor/SkillGraphSpecCompiler.cs
   - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
@@ -22,7 +24,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
   - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:5b7f5b699d63099fc3447c5a0525d3ea2ce37de6c867cf14f3723eacdc2a3c52
+source_fingerprint: sha256:2fde4a3f715cc26c6d9eb786d1a4f1a39fe80f770b522976c4adbd91e18f15b7
 ---
 
 # Current State
@@ -31,7 +33,11 @@ source_fingerprint: sha256:5b7f5b699d63099fc3447c5a0525d3ea2ce37de6c867cf14f3723
 
 Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent 可通过 `SkillGraphSpec`、`SkillGraphSpecCompiler` 与 `SkillGraphSpecAutoFixer` 建立结构化输入，并使用 MCP 工具生成、校验和应用资产；运行语义继续由 Gameplay Test/PlayMode 测试证明。
 
-节点集合现包含 `ApplyMana` 与 `RemoveHarmfulBuffs`，`SelectAlly` 可显式允许自身成为合法友军目标。`SummonUnit` 可声明召唤物是否接受普通治疗，骷髅与骷髅法师关闭、火焰恶魔保持开启。运行时能力可注入使用策略：策略负责额外合法性、动态显示名和成功完成后的资源提交；图失败时不会扣除资源。Pure Run 消耗品使用该边界实现明确友军目标、每名角色每轮一次，并在图完成后提交对应独立实例。
+`SkillTargetingProtocol` 在图资产上统一表达主目标、任意格中心、方向扇形、有序多段目标、实体对象格、回收动作和无路径移动；`OrderedTargetSelectionState` 维护分段选择、重复拒绝、取消上一段与完成条件。玩家输入、AI 与 Gameplay Test 可消费同一协议，不各自推导一套阶段规则。
+
+结构化入口将该协议保存在 `SkillGraphSpec.Targeting`；Spec 编译、克隆和导出完整往返全部 targeting 字段，保证 MCP/JSON 重建后语义不丢失。
+
+节点集合现包含 `ApplyMana` 与 `RemoveHarmfulBuffs`，`SelectAlly` 可显式允许自身成为合法友军目标。伤害节点分别保存伤害大类和元素；`ApplyBuff.RequiresSuccessfulHit` 只在明确的命中附带状态上读取前一伤害节点结果，独立 Buff 不受历史命中结果污染。`SummonUnit` 可声明召唤物是否接受普通治疗，并通过 `SummonRegistry` 按召唤者、类别、上限和创建顺序管理最早替换；骷髅与骷髅法师关闭普通治疗，火焰恶魔保持开启。运行时能力可注入使用策略与可用性策略：策略负责额外合法性、稳定禁用原因、动态显示名和成功完成后的资源提交；图失败时不会扣除资源，临时朝向也会恢复。Pure Run 消耗品使用该边界实现明确友军目标、每名角色每轮一次，并在图完成后提交对应独立实例。
 
 Pure Run 的首条等级资产链使用独立 AbilityConfig/SkillGraph：火球术 Lv1 保持单体伤害且无 AOE；Lv2 对主目标追加直接伤害，并对命中格与正交相邻敌人造成十字溅射，友军和斜角目标不受伤。资产目录校验当前约束“已发布等级连续且可加载”；完整 1..MaxLevel 发布将在对应职业切片完成。
 

@@ -264,14 +264,33 @@ namespace Tactics.Tests.PlayMode
         public void SpecCompiler_ExportAndRecompile_ProducesEquivalentGraph()
         {
             var spec = CreateValidDamageSpec();
+            spec.Targeting = new SkillTargetingProtocol
+            {
+                Mode = SkillTargetMode.DirectionCone,
+                MinimumSelections = 1,
+                MaximumSelections = 2,
+                ConeDepth = 3,
+                ConeWidth = 5,
+                AllowsEmptyCell = true,
+                UsesPathfinding = false
+            };
             var compileResult = SkillGraphSpecCompiler.Compile(spec);
             Assert.IsTrue(compileResult.Success);
+
+            Assert.AreEqual(SkillTargetMode.DirectionCone, compileResult.Asset.Targeting.Mode);
+            Assert.AreEqual(2, compileResult.Asset.Targeting.MaximumSelections);
+            Assert.AreEqual(3, compileResult.Asset.Targeting.ConeDepth);
+            Assert.AreEqual(5, compileResult.Asset.Targeting.ConeWidth);
+            Assert.IsTrue(compileResult.Asset.Targeting.AllowsEmptyCell);
+            Assert.IsFalse(compileResult.Asset.Targeting.UsesPathfinding);
 
             var exported = SkillGraphSpecCompiler.ExportSpec(compileResult.Asset);
             Assert.IsNotNull(exported);
             Assert.AreEqual(spec.DisplayName, exported.DisplayName);
             Assert.AreEqual(spec.Nodes.Count, exported.Nodes.Count);
             Assert.AreEqual(spec.Edges.Count, exported.Edges.Count);
+            Assert.AreEqual(SkillTargetMode.DirectionCone, exported.Targeting.Mode);
+            Assert.AreEqual(2, exported.Targeting.MaximumSelections);
 
             var recompileResult = SkillGraphSpecCompiler.Compile(exported);
             Assert.IsTrue(recompileResult.Success, $"Recompile failed: {string.Join(", ", recompileResult.Errors)}");
@@ -279,6 +298,8 @@ namespace Tactics.Tests.PlayMode
             var regraph = recompileResult.Asset;
             Assert.AreEqual(compileResult.Asset.Nodes.Count, regraph.Nodes.Count);
             Assert.AreEqual(compileResult.Asset.Edges.Count, regraph.Edges.Count);
+            Assert.AreEqual(SkillTargetMode.DirectionCone, regraph.Targeting.Mode);
+            Assert.AreEqual(3, regraph.Targeting.ConeDepth);
         }
 
         [Test]

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using Tactics.AssetPipeline;
+using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Interactables;
@@ -134,7 +135,7 @@ namespace Tactics.Common.Skills.Graph
                 return;
 
             CombatComponent.ApplyDamage(
-                attacker, target, ChargeCollisionDamage, false, ElementType.None,
+                attacker, target, ChargeCollisionDamage, false, DamageCategory.Physical, ElementType.None,
                 canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: true);
         }
 
@@ -228,6 +229,9 @@ namespace Tactics.Common.Skills.Graph
             var caster = context.Caster;
             var target = context.PrimaryTarget;
 
+            context.SetBlackboard("HasLastDamageResolution", false);
+            context.SetBlackboard<IUnit>("LastDamageTarget", null);
+
             if (target == null)
             {
                 TLog.Info("[ApplyDamage] No target present, skipping damage application.");
@@ -238,17 +242,25 @@ namespace Tactics.Common.Skills.Graph
             if (record.AccuracyPenalty > 0f && !CombatComponent.IsHit(caster, target, record.AccuracyPenalty))
             {
                 TLog.Info($"[ApplyDamage] Attack missed (accuracyPenalty={record.AccuracyPenalty}).");
+                context.SetBlackboard("HasLastDamageResolution", true);
+                context.SetBlackboard("LastDamageHit", false);
+                context.SetBlackboard("LastDamageTarget", target);
                 return Task.FromResult(SkillNodeExecutionResult.Success());
             }
 
-            CombatComponent.ApplyDamage(
+            var resolution = CombatComponent.ApplyDamage(
                 caster, target, record.BaseDamage, record.IsRanged,
                 record.DamageType == SkillGraphDamageType.Physical
-                    ? ElementType.None
-                    : ElementType.Fire,
+                    ? DamageCategory.Physical
+                    : DamageCategory.Magic,
+                record.ElementType,
                 canTriggerBeforeAttacked: true,
                 canCrit: record.CanCrit,
                 canTriggerDamageTaken: true);
+
+            context.SetBlackboard("HasLastDamageResolution", true);
+            context.SetBlackboard("LastDamageHit", resolution.WasHit);
+            context.SetBlackboard("LastDamageTarget", target);
 
             TLog.Info($"[ApplyDamage] Dealt {record.BaseDamage} damage to target.");
             return Task.FromResult(SkillNodeExecutionResult.Success());
@@ -274,7 +286,7 @@ namespace Tactics.Common.Skills.Graph
             for (int i = 0; i < segments; i++)
             {
                 CombatComponent.ApplyDamage(
-                    caster, target, record.DamagePerSegment, false, ElementType.None,
+                    caster, target, record.DamagePerSegment, false, DamageCategory.Physical, ElementType.None,
                     canTriggerBeforeAttacked: true,
                     canCrit: true,
                     canTriggerDamageTaken: true);
@@ -503,6 +515,21 @@ namespace Tactics.Common.Skills.Graph
 
             if (target == null)
                 return Task.FromResult(SkillNodeExecutionResult.Failed("No target for buff application."));
+
+            if (record.RequiresSuccessfulHit)
+            {
+                bool hasResolution = context.GetBlackboard<bool>("HasLastDamageResolution", false);
+                var damageTarget = context.GetBlackboard<IUnit>("LastDamageTarget", null);
+                if (!hasResolution || !ReferenceEquals(damageTarget, target))
+                    return Task.FromResult(SkillNodeExecutionResult.Failed(
+                        $"Buff '{record.BuffConfig.BuffName}' requires a damage result for the same target."));
+
+                if (!context.GetBlackboard<bool>("LastDamageHit", false))
+                {
+                    TLog.Info($"[ApplyBuff] Skipped '{record.BuffConfig.BuffName}' because the attached hit failed.");
+                    return Task.FromResult(SkillNodeExecutionResult.Success());
+                }
+            }
 
             var buff = new Units.Buffs.Buff(record.BuffConfig, caster, record.Duration);
             target.AddBuff(buff);
@@ -792,12 +819,6 @@ namespace Tactics.Common.Skills.Graph
                     : null;
                 if (record.RequiresCorpse && corpse == null) continue;
 
-                if (caster.SummonedUnit != null && !caster.SummonedUnit.IsDowned)
-                {
-                    TLog.Info($"[SummonUnit] Caster {caster.UnitID} already has a living summon.");
-                    break;
-                }
-
                 ICell corpseCell = spawnCell;
                 if (corpseCell == null) continue;
                 corpse?.Consume();
@@ -833,8 +854,6 @@ namespace Tactics.Common.Skills.Graph
                     corpseCell.CurrentUnits.Add(unit);
                     corpseCell.IsTaken = true;
 
-                    caster.SummonedUnit = unit;
-
                     grid.UnitManager.AddUnit(unit);
                     try
                     {
@@ -846,6 +865,23 @@ namespace Tactics.Common.Skills.Graph
                         // The lightweight graph test world intentionally has no tilemap scene;
                         // the base Unit state initialized above is sufficient for behavior tests.
                         TLog.Warning($"[SummonUnit] Skipped scene-only TilemapUnit initialization for test summon '{go.name}'.");
+                    }
+
+                    unit.Facing = caster.Facing;
+                    var registry = SummonRegistry.For(grid);
+                    var replacements = registry?.Register(
+                        caster,
+                        record.SummonCategory,
+                        unit,
+                        record.MaxActive) ?? new List<IUnit>();
+                    foreach (var replacement in replacements)
+                        registry.Despawn(replacement);
+
+                    if (registry == null)
+                    {
+                        unit.OwnerUnit = caster;
+                        unit.OwnerUnitId = caster.UnitID;
+                        caster.SummonedUnit = unit;
                     }
 
                     summoned++;

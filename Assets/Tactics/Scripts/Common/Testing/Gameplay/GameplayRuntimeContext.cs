@@ -9,11 +9,13 @@ using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
 using Tactics.Common.Cells;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using Tactics.RoguelikeMap;
 using Tactics.RoguelikeMap.Events;
 using Tactics.Roster;
 using Tactics.UI;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Tactics.Common.Testing.Gameplay
 {
@@ -30,6 +32,17 @@ namespace Tactics.Common.Testing.Gameplay
         public Dictionary<string, IUnit> Units { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, ICell> Cells { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, AiBrainAsset> AiBrainAssets { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, BuffConfig> RuntimeBuffConfigs { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        // Shared battle primitive observations used by Battle/UI adapters.
+        public BattleInitiativeService InitiativeService { get; set; }
+        public List<IUnit> InitiativeUnits { get; } = new();
+        public OrderedTargetSelectionState OrderedTargetSelection { get; set; }
+        public string SpearHolderAlias { get; set; }
+        public string SpearCellAlias { get; set; }
+        public Dictionary<string, int> DecoyRemainingActions { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public string LastAiTargetAlias { get; set; }
+        public List<string> TargetMarkerOrder { get; } = new();
 
         // Interactable Corpse 测试支持：cell alias -> 是否存在 interactable corpse
         public Dictionary<string, bool> InteractableCorpsesByCell { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -49,6 +62,7 @@ namespace Tactics.Common.Testing.Gameplay
 
         // UI 相关
         public UIManager.UIId? CurrentUiId { get; set; }
+        public VisualElement UiTestRoot { get; set; }
 
         // 真实资产模式
         public bool UseRealAssets { get; set; }
@@ -110,6 +124,13 @@ namespace Tactics.Common.Testing.Gameplay
             }
             SkillGraphs.Clear();
 
+            foreach (var buffConfig in RuntimeBuffConfigs.Values)
+            {
+                if (buffConfig != null)
+                    UnityEngine.Object.Destroy(buffConfig);
+            }
+            RuntimeBuffConfigs.Clear();
+
             // 4. 销毁 GameObjects（通过 SkillWorld）
             SkillWorld?.Dispose();
             SkillWorld = null;
@@ -125,6 +146,15 @@ namespace Tactics.Common.Testing.Gameplay
             PreviousAiSnapshot = null;
             LastAiTurnResult = null;
             RuntimeScope = null;
+            InitiativeService?.Reset();
+            InitiativeService = null;
+            InitiativeUnits.Clear();
+            OrderedTargetSelection = null;
+            SpearHolderAlias = null;
+            SpearCellAlias = null;
+            DecoyRemainingActions.Clear();
+            LastAiTargetAlias = null;
+            TargetMarkerOrder.Clear();
 
             // 6. 清空 Map 相关
             RoguelikeMap = null;
@@ -135,6 +165,7 @@ namespace Tactics.Common.Testing.Gameplay
 
             // 7. 清空 UI 相关
             CurrentUiId = null;
+            UiTestRoot = null;
         }
     }
 }

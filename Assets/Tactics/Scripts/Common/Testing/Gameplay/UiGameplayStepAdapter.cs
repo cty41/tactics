@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using Tactics.Common.Skills.Graph;
+using Tactics.Common.Units.Abilities;
 using Tactics.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -25,7 +27,10 @@ namespace Tactics.Common.Testing.Gameplay
                 or "closeUI"
                 or "clickElement"
                 or "setText"
-                or "setElementEnabled";
+                or "setElementEnabled"
+                or "hoverElement"
+                or "rightClickElement"
+                or "pressKey";
         }
 
         public async Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -44,6 +49,12 @@ namespace Tactics.Common.Testing.Gameplay
                         return SetText(context, action);
                     case "setElementEnabled":
                         return SetElementEnabled(context, action);
+                    case "hoverElement":
+                        return HoverElement(context, action);
+                    case "rightClickElement":
+                        return RightClickElement(context, action);
+                    case "pressKey":
+                        return PressKey(context, action);
                     default:
                         return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Unsupported UI action '{action.Kind}'.");
                 }
@@ -59,7 +70,13 @@ namespace Tactics.Common.Testing.Gameplay
             return assertion.Kind is "elementVisible"
                 or "elementText"
                 or "elementEnabled"
-                or "elementExists";
+                or "elementExists"
+                or "elementClassContains"
+                or "elementChildOrderEquals"
+                or "elementRectRelationEquals"
+                or "abilityCardAvailabilityEquals"
+                or "targetMarkerOrderEquals"
+                or "selectionStageEquals";
         }
 
         public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
@@ -72,6 +89,12 @@ namespace Tactics.Common.Testing.Gameplay
                     "elementText" => AssertElementText(context, assertion),
                     "elementEnabled" => AssertElementEnabled(context, assertion),
                     "elementExists" => AssertElementExists(context, assertion),
+                    "elementClassContains" => AssertElementClassContains(context, assertion),
+                    "elementChildOrderEquals" => AssertElementChildOrderEquals(context, assertion),
+                    "elementRectRelationEquals" => AssertElementRectRelationEquals(context, assertion),
+                    "abilityCardAvailabilityEquals" => AssertAbilityCardAvailabilityEquals(context, assertion),
+                    "targetMarkerOrderEquals" => AssertTargetMarkerOrderEquals(context, assertion),
+                    "selectionStageEquals" => AssertSelectionStageEquals(context, assertion),
                     _ => GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Unsupported UI assertion '{assertion.Kind}'.")
                 };
 
@@ -97,8 +120,20 @@ namespace Tactics.Common.Testing.Gameplay
                     data["visible"] = element.style.display != DisplayStyle.None;
                     data["enabled"] = element.enabledSelf;
                     data["text"] = GetElementText(element);
+                    data["classes"] = new JArray(element.GetClasses());
+                    data["children"] = new JArray(element.Children().Select(child => child.name));
+                    data["rect"] = JObject.FromObject(new
+                    {
+                        x = element.worldBound.x,
+                        y = element.worldBound.y,
+                        width = element.worldBound.width,
+                        height = element.worldBound.height
+                    });
                 }
             }
+
+            if (context.OrderedTargetSelection != null)
+                data["selectionStage"] = context.OrderedTargetSelection.Stage.ToString();
 
             return new ProbeSnapshot
             {
@@ -168,6 +203,67 @@ namespace Tactics.Common.Testing.Gameplay
 
             string elementKind = element is Button ? "button" : "element";
             return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Clicked {elementKind} '{elementName}'.");
+        }
+
+        private static GameplayStepResult HoverElement(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string elementName = action.Parameters["elementName"]?.ToString();
+            if (string.IsNullOrWhiteSpace(elementName))
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, "hoverElement requires elementName.");
+
+            var element = FindElement(context, elementName);
+            if (element == null)
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Element '{elementName}' not found.");
+
+            using var hoverEvent = PointerEnterEvent.GetPooled();
+            hoverEvent.target = element;
+            element.SendEvent(hoverEvent);
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Hovered element '{elementName}'.");
+        }
+
+        private static GameplayStepResult RightClickElement(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string elementName = action.Parameters["elementName"]?.ToString();
+            if (string.IsNullOrWhiteSpace(elementName))
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, "rightClickElement requires elementName.");
+
+            var element = FindElement(context, elementName);
+            if (element == null)
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Element '{elementName}' not found.");
+
+            var systemEvent = new Event
+            {
+                type = EventType.MouseDown,
+                button = 1
+            };
+            using var rightClickEvent = MouseDownEvent.GetPooled(systemEvent);
+            rightClickEvent.target = element;
+            element.SendEvent(rightClickEvent);
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Right-clicked element '{elementName}'.");
+        }
+
+        private static GameplayStepResult PressKey(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        {
+            string keyValue = action.Parameters["key"]?.ToString();
+            if (!Enum.TryParse<KeyCode>(keyValue, true, out var keyCode))
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, $"Unknown key '{keyValue}'.");
+
+            string elementName = action.Parameters["elementName"]?.ToString();
+            var target = string.IsNullOrWhiteSpace(elementName)
+                ? ResolveRoot(context)
+                : FindElement(context, elementName);
+            if (target == null)
+                return GameplayStepResult.Fail(UiAdapterName, action.Kind, "No UI target is available for pressKey.");
+
+            var systemEvent = new Event
+            {
+                type = EventType.KeyDown,
+                keyCode = keyCode
+            };
+            using var keyEvent = KeyDownEvent.GetPooled(systemEvent);
+            keyEvent.target = target;
+            target.SendEvent(keyEvent);
+            return GameplayStepResult.Pass(UiAdapterName, action.Kind, $"Pressed key '{keyCode}'.");
         }
 
         private static GameplayStepResult SetText(GameplayRuntimeContext context, ExecutableScenarioAction action)
@@ -286,10 +382,139 @@ namespace Tactics.Common.Testing.Gameplay
                 : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Expected Element '{elementName}' exists={expected}, actual={actual}.");
         }
 
+        private static GameplayAssertionResult AssertElementClassContains(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var element = FindElement(context, assertion.Target);
+            if (element == null)
+                return GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' not found.");
+            string expectedClass = assertion.Expected?.ToString();
+            bool actual = !string.IsNullOrWhiteSpace(expectedClass) && element.ClassListContains(expectedClass);
+            return actual
+                ? GameplayAssertionResult.Pass(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' contains class '{expectedClass}'.")
+                : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' does not contain class '{expectedClass}'.");
+        }
+
+        private static GameplayAssertionResult AssertElementChildOrderEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var element = FindElement(context, assertion.Target);
+            if (element == null)
+                return GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' not found.");
+            var actual = element.Children().Select(child => child.name).ToList();
+            return AssertStringSequence(assertion, actual, $"child order of '{assertion.Target}'");
+        }
+
+        private static GameplayAssertionResult AssertElementRectRelationEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var element = FindElement(context, assertion.Target);
+            string otherName = assertion.Parameters?["otherElement"]?.ToString()
+                ?? assertion.Parameters?["relativeTo"]?.ToString();
+            var other = FindElement(context, otherName);
+            if (element == null || other == null)
+                return GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, "elementRectRelationEquals requires two existing elements.");
+
+            string relation = assertion.Expected?.ToString() ?? string.Empty;
+            float tolerance = assertion.Parameters?["tolerance"]?.ToObject<float>() ?? 0.5f;
+            Rect actualRect = element.worldBound;
+            Rect otherRect = other.worldBound;
+            bool passed = relation.ToLowerInvariant() switch
+            {
+                "rightof" => actualRect.xMin >= otherRect.xMax - tolerance,
+                "leftof" => actualRect.xMax <= otherRect.xMin + tolerance,
+                "below" => actualRect.yMin >= otherRect.yMax - tolerance,
+                "above" => actualRect.yMax <= otherRect.yMin + tolerance,
+                "overlaps" => actualRect.Overlaps(otherRect),
+                "nonoverlapping" => !actualRect.Overlaps(otherRect),
+                _ => false
+            };
+            return passed
+                ? GameplayAssertionResult.Pass(UiAdapterName, assertion.Kind, $"'{assertion.Target}' is {relation} '{otherName}'.")
+                : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Expected '{assertion.Target}' to be {relation} '{otherName}', actual={actualRect}, other={otherRect}.");
+        }
+
+        private static GameplayAssertionResult AssertAbilityCardAvailabilityEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var element = FindElement(context, assertion.Target);
+            if (element == null)
+                return GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' not found.");
+
+            string actual = element.userData switch
+            {
+                AbilityAvailability availability => availability.State.ToString(),
+                AbilityAvailabilityState state => state.ToString(),
+                _ when element.ClassListContains("ability-hidden") => AbilityAvailabilityState.Hidden.ToString(),
+                _ when element.ClassListContains("ability-disabled-clickable") => AbilityAvailabilityState.DisabledClickable.ToString(),
+                _ => AbilityAvailabilityState.Enabled.ToString()
+            };
+            string expected = assertion.Expected?.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(UiAdapterName, assertion.Kind, $"Ability card availability={actual}.")
+                : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Expected ability card availability={expected}, actual={actual}.");
+        }
+
+        private static GameplayAssertionResult AssertTargetMarkerOrderEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            IReadOnlyList<string> actual;
+            if (!string.IsNullOrWhiteSpace(assertion.Target))
+            {
+                var element = FindElement(context, assertion.Target);
+                if (element == null)
+                    return GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' not found.");
+                actual = element.Children().Select(child => child.name).ToList();
+            }
+            else
+            {
+                actual = context.TargetMarkerOrder;
+            }
+
+            return AssertStringSequence(assertion, actual, "target marker order");
+        }
+
+        private static GameplayAssertionResult AssertSelectionStageEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            string actual = context.OrderedTargetSelection?.Stage.ToString();
+            if (!string.IsNullOrWhiteSpace(assertion.Target))
+            {
+                var element = FindElement(context, assertion.Target);
+                if (element?.userData is OrderedSelectionStage stage)
+                    actual = stage.ToString();
+                else if (element?.userData is string stageText)
+                    actual = stageText;
+            }
+
+            string expected = assertion.Expected?.ToString();
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)
+                ? GameplayAssertionResult.Pass(UiAdapterName, assertion.Kind, $"Selection stage={actual}.")
+                : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Expected selection stage={expected}, actual={actual ?? "<none>"}.");
+        }
+
+        private static GameplayAssertionResult AssertStringSequence(
+            ExecutableScenarioAssertion assertion,
+            IReadOnlyList<string> actual,
+            string label)
+        {
+            var expected = assertion.Expected is JArray array
+                ? array.Values<string>().ToList()
+                : new List<string>();
+            bool equal = actual.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase);
+            return equal
+                ? GameplayAssertionResult.Pass(UiAdapterName, assertion.Kind, $"{label}=[{string.Join(", ", actual)}]")
+                : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Expected {label}=[{string.Join(", ", expected)}], actual=[{string.Join(", ", actual)}].");
+        }
+
         private static VisualElement FindElement(GameplayRuntimeContext context, string elementName)
         {
+            if (string.IsNullOrWhiteSpace(elementName))
+                return null;
+
             // Support hierarchical selectors: "parent >> child"
             string[] parts = elementName.Split(new[] { " >> " }, StringSplitOptions.None);
+
+            if (context.UiTestRoot != null)
+            {
+                var testElement = FindByPath(context.UiTestRoot, parts);
+                if (testElement != null)
+                    return testElement;
+            }
 
             // Try to find element in current UI
             if (context.CurrentUiId.HasValue)
@@ -316,6 +541,19 @@ namespace Tactics.Common.Testing.Gameplay
             }
 
             return null;
+        }
+
+        private static VisualElement ResolveRoot(GameplayRuntimeContext context)
+        {
+            if (context.UiTestRoot != null)
+                return context.UiTestRoot;
+
+            if (context.CurrentUiId.HasValue)
+                return GetUiDocument(context.CurrentUiId.Value)?.rootVisualElement;
+
+            return UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None)
+                .Select(document => document.rootVisualElement)
+                .FirstOrDefault(root => root != null);
         }
 
         private static VisualElement FindByPath(VisualElement root, string[] pathParts)

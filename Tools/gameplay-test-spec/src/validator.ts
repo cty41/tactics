@@ -59,11 +59,25 @@ const supportedActionKinds = new Set([
   "clickElement",
   "setText",
   "setElementEnabled",
+  "hoverElement",
+  "rightClickElement",
+  "pressKey",
   "spawnCorpse",
   "killUnit",
   "setBattleTestMode",
   "spawnInteractableCorpse",
-  "consumeInteractableCorpseAt"
+  "consumeInteractableCorpseAt",
+  "setUnitFacing",
+  "initializeInitiativeOrder",
+  "advanceInitiative",
+  "tickUnitTurnStart",
+  "tickUnitTurnEnd",
+  "registerSummon",
+  "beginOrderedTargetSelection",
+  "selectOrderedTarget",
+  "undoOrderedTargetSelection",
+  "commitOrderedTargetSelection",
+  "cancelOrderedTargetSelection"
 ]);
 
 const supportedGraphKinds = new Set([
@@ -159,8 +173,31 @@ const supportedAssertionKinds = new Set([
   "unitOwnerEquals",
   "unitIsCorpse",
   "interactableCorpseExistsAt",
-  "cellOccupiedByInteractable"
+  "cellOccupiedByInteractable",
+  "unitFacingEquals",
+  "currentRoundOrderEquals",
+  "unitStatusStacksEquals",
+  "unitStatusRemainingActionsEquals",
+  "summonOrderEquals",
+  "summonCategoryEquals",
+  "abilityAvailabilityEquals",
+  "abilityAvailabilityReasonEquals",
+  "actualSkillLevelEquals",
+  "unitAbilityListEquals",
+  "orderedTargetSelectionEquals",
+  "selectionStageEquals",
+  "spearHolderEquals",
+  "spearCellEquals",
+  "decoyRemainingActionsEquals",
+  "aiTargetEquals",
+  "elementClassContains",
+  "elementChildOrderEquals",
+  "elementRectRelationEquals",
+  "abilityCardAvailabilityEquals",
+  "targetMarkerOrderEquals"
 ]);
+
+const supportedFacingValues = new Set(["north", "east", "south", "west"]);
 
 interface AliasState {
   graphs: Set<string>;
@@ -435,13 +472,61 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
       // closeUI 不强制要求参数，会关闭当前 UI
       break;
     case "clickElement":
+    case "hoverElement":
+    case "rightClickElement":
       validateClickElement(step, diagnostics);
+      break;
+    case "pressKey":
+      validatePressKey(step, diagnostics);
       break;
     case "setText":
       validateSetText(step, diagnostics);
       break;
     case "setElementEnabled":
       validateSetElementEnabled(step, diagnostics);
+      break;
+    case "setUnitFacing":
+      requireStepStringParameter(step, "unitAlias", diagnostics);
+      requireStepStringParameter(step, "facing", diagnostics);
+      if (getString(step.parameters.facing) &&
+          !supportedFacingValues.has(getString(step.parameters.facing)!.toLowerCase())) {
+        diagnostics.push({
+          code: "InvalidFacing",
+          severity: "error",
+          message: "setUnitFacing facing must be North, East, South, or West.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
+    case "tickUnitTurnStart":
+    case "tickUnitTurnEnd":
+      requireStepStringParameter(step, "unitAlias", diagnostics);
+      break;
+    case "registerSummon":
+      requireStepStringParameter(step, "ownerAlias", diagnostics);
+      requireStepStringParameter(step, "summonAlias", diagnostics);
+      if (step.parameters.maximumActive !== undefined &&
+          (!Number.isInteger(step.parameters.maximumActive) || Number(step.parameters.maximumActive) < 1)) {
+        diagnostics.push({
+          code: "InvalidMaximumActive",
+          severity: "error",
+          message: "registerSummon maximumActive must be a positive integer.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
+    case "beginOrderedTargetSelection":
+      if (!Number.isInteger(step.parameters.requiredCount) || Number(step.parameters.requiredCount) < 1) {
+        diagnostics.push({
+          code: "InvalidRequiredCount",
+          severity: "error",
+          message: "beginOrderedTargetSelection requires a positive integer requiredCount.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
+    case "selectOrderedTarget":
+      requireStepStringParameter(step, "targetAlias", diagnostics);
       break;
     default:
       break;
@@ -488,6 +573,17 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "aiTurnPatternStepEquals":
     case "rosterCharacterHasSkillId":
     case "pureRunSkillChoiceContains":
+    case "unitFacingEquals":
+    case "summonCategoryEquals":
+    case "abilityAvailabilityEquals":
+    case "abilityAvailabilityReasonEquals":
+    case "selectionStageEquals":
+    case "spearHolderEquals":
+    case "spearCellEquals":
+    case "aiTargetEquals":
+    case "elementClassContains":
+    case "elementRectRelationEquals":
+    case "abilityCardAvailabilityEquals":
       requireStringExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "unitHealthEquals":
@@ -501,7 +597,19 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "backpackConsumableCountEquals":
     case "shopGoodCountEquals":
     case "shopConsumableCountAtLeast":
+    case "unitStatusStacksEquals":
+    case "unitStatusRemainingActionsEquals":
+    case "actualSkillLevelEquals":
+    case "decoyRemainingActionsEquals":
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "currentRoundOrderEquals":
+    case "unitAbilityListEquals":
+    case "orderedTargetSelectionEquals":
+    case "summonOrderEquals":
+    case "elementChildOrderEquals":
+    case "targetMarkerOrderEquals":
+      requireStringArrayExpected(assertion, diagnostics);
       break;
     case "aiTurnSucceededEquals":
     case "aiTurnUsedFallbackEquals":
@@ -670,6 +778,78 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
         });
       }
       break;
+  }
+
+  const unitTargetAssertions = new Set([
+    "unitFacingEquals",
+    "summonCategoryEquals",
+    "unitAbilityListEquals",
+    "summonOrderEquals",
+    "unitStatusStacksEquals",
+    "unitStatusRemainingActionsEquals",
+    "actualSkillLevelEquals",
+    "decoyRemainingActionsEquals"
+  ]);
+  if (unitTargetAssertions.has(assertion.kind) && !assertion.target) {
+    diagnostics.push({
+      code: "MissingUnitTarget",
+      severity: "error",
+      message: `${assertion.kind} requires a target unit alias.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+
+  if ((assertion.kind === "unitStatusStacksEquals" || assertion.kind === "unitStatusRemainingActionsEquals") &&
+      !getString(assertion.parameters.buffName)) {
+    diagnostics.push({
+      code: "MissingBuffName",
+      severity: "error",
+      message: `${assertion.kind} requires a buffName parameter.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+  if (assertion.kind === "actualSkillLevelEquals" && !getString(assertion.parameters.skillId)) {
+    diagnostics.push({
+      code: "MissingSkillId",
+      severity: "error",
+      message: "actualSkillLevelEquals requires a skillId parameter.",
+      path: assertion.id ?? assertion.kind
+    });
+  }
+
+  const elementTargetAssertions = new Set([
+    "elementClassContains",
+    "elementChildOrderEquals",
+    "elementRectRelationEquals",
+    "abilityCardAvailabilityEquals"
+  ]);
+  if (elementTargetAssertions.has(assertion.kind) && !assertion.target) {
+    diagnostics.push({
+      code: "MissingElementTarget",
+      severity: "error",
+      message: `${assertion.kind} requires a target element name.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+  if (assertion.kind === "elementRectRelationEquals" &&
+      !getString(assertion.parameters.otherElement) &&
+      !getString(assertion.parameters.relativeTo)) {
+    diagnostics.push({
+      code: "MissingRelatedElement",
+      severity: "error",
+      message: "elementRectRelationEquals requires otherElement or relativeTo.",
+      path: assertion.id ?? assertion.kind
+    });
+  }
+
+  if ((assertion.kind === "abilityAvailabilityEquals" || assertion.kind === "abilityAvailabilityReasonEquals") &&
+      !assertion.target && !getString(assertion.parameters.abilityAlias)) {
+    diagnostics.push({
+      code: "MissingAbilityTarget",
+      severity: "error",
+      message: `${assertion.kind} requires a target ability alias or abilityAlias parameter.`,
+      path: assertion.id ?? assertion.kind
+    });
   }
 }
 
@@ -992,6 +1172,25 @@ function validateClickElement(step: ScenarioStep, diagnostics: ExpectationDiagno
   }
 }
 
+function validatePressKey(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  requireStepStringParameter(step, "key", diagnostics);
+}
+
+function requireStepStringParameter(
+  step: ScenarioStep,
+  parameter: string,
+  diagnostics: ExpectationDiagnostic[]
+): void {
+  if (!getString(step.parameters[parameter])) {
+    diagnostics.push({
+      code: "MissingActionParameter",
+      severity: "error",
+      message: `${step.kind} requires a ${parameter} parameter.`,
+      path: step.id ?? step.kind
+    });
+  }
+}
+
 function validateSetText(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
   const elementName = getString(step.parameters.elementName);
   if (!elementName) {
@@ -1153,6 +1352,17 @@ function requireIntegerExpected(assertion: ScenarioAssertion, diagnostics: Expec
       code,
       severity: "error",
       message: `${assertion.kind} requires an integer expected value.`,
+      path: assertion.id ?? assertion.kind
+    });
+  }
+}
+
+function requireStringArrayExpected(assertion: ScenarioAssertion, diagnostics: ExpectationDiagnostic[]): void {
+  if (!Array.isArray(assertion.expected) || assertion.expected.some(value => typeof value !== "string")) {
+    diagnostics.push({
+      code: "InvalidAssertionExpectedType",
+      severity: "error",
+      message: `${assertion.kind} requires an array of string expected values.`,
       path: assertion.id ?? assertion.kind
     });
   }

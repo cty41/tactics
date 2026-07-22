@@ -39,6 +39,7 @@ namespace Tactics.Editor.SkillGraphEditor
 
             var asset = ScriptableObject.CreateInstance<SkillGraphAsset>();
             asset.DisplayName = spec.DisplayName ?? "Untitled";
+            CopyTargeting(spec.Targeting, asset.Targeting);
 
             var nodeMap = new Dictionary<string, SkillGraphNodeRecord>(StringComparer.OrdinalIgnoreCase);
 
@@ -109,7 +110,8 @@ namespace Tactics.Editor.SkillGraphEditor
             var spec = new SkillGraphSpec
             {
                 DisplayName = asset.DisplayName,
-                Description = null
+                Description = null,
+                Targeting = CloneTargeting(asset.Targeting)
             };
 
             for (int i = 0; i < asset.Nodes.Count; i++)
@@ -147,6 +149,27 @@ namespace Tactics.Editor.SkillGraphEditor
         private static void ApplyParameters(SkillGraphNodeRecord record, Dictionary<string, object> parameters)
         {
             SkillGraphMcpFacade.ApplyParametersPublic(record, parameters);
+        }
+
+        private static SkillTargetingProtocol CloneTargeting(SkillTargetingProtocol source)
+        {
+            var clone = new SkillTargetingProtocol();
+            CopyTargeting(source, clone);
+            return clone;
+        }
+
+        private static void CopyTargeting(SkillTargetingProtocol source, SkillTargetingProtocol destination)
+        {
+            if (source == null || destination == null)
+                return;
+
+            destination.Mode = source.Mode;
+            destination.MinimumSelections = source.MinimumSelections;
+            destination.MaximumSelections = source.MaximumSelections;
+            destination.ConeDepth = source.ConeDepth;
+            destination.ConeWidth = source.ConeWidth;
+            destination.AllowsEmptyCell = source.AllowsEmptyCell;
+            destination.UsesPathfinding = source.UsesPathfinding;
         }
     }
 }

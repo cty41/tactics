@@ -7,6 +7,7 @@ namespace Tactics.Common.Units.Buffs
         Ice,
         Water,
         Earth,
-        Wind
+        Wind,
+        Lightning
     }
 }

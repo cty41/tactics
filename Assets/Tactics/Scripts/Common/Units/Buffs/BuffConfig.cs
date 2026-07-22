@@ -47,6 +47,15 @@ namespace Tactics.Common.Units.Buffs
         [SerializeField] private ElementType _elementType = ElementType.None;
 
         [BoxGroup("Effect Params")]
+        [SerializeField] private DamageCategory _damageCategory = DamageCategory.Magic;
+
+        [BoxGroup("Effect Params")]
+        [SerializeField] private BuffRefreshStrategy _refreshStrategy = BuffRefreshStrategy.AddDuration;
+
+        [BoxGroup("Effect Params")]
+        [SerializeField] private float _speedModifier;
+
+        [BoxGroup("Effect Params")]
         [SerializeField, Range(0f, 1f)] private float _damageReductionPercent;
 
         [JsonIgnore]
@@ -62,6 +71,9 @@ namespace Tactics.Common.Units.Buffs
         public string CurseCategory => _curseCategory;
         public float DamagePerTurn => _damagePerTurn;
         public ElementType ElementType => _elementType;
+        public DamageCategory DamageCategory => _damageCategory;
+        public BuffRefreshStrategy RefreshStrategy => _refreshStrategy;
+        public float SpeedModifier => _speedModifier;
         public float DamageReductionPercent => _damageReductionPercent;
     }
 }

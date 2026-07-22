@@ -39,23 +39,35 @@ namespace Tactics.Common.Units.Buffs
             float baseDamage = CombatComponent.CalculateBaseDamageBeforeCrit(buff.Owner, false);
 
             CombatComponent.ApplyDamage(
-                buff.Owner, attacker, baseDamage, false, _config.ElementType,
+                buff.Owner, attacker, baseDamage, false, DamageCategory.Physical, _config.ElementType,
                 canTriggerBeforeAttacked: true, canCrit: true, canTriggerDamageTaken: false,
                 logSourceName: buff.BuffName);
         }
 
         public virtual void OnTurnStart(Buff buff, IGridController gridController)
         {
-            if (_config.TriggerTiming != BuffTriggerTiming.TurnStart)
+            if (_config.TriggerTiming != BuffTriggerTiming.TurnStart &&
+                _config.EffectType is not BuffEffectType.Burning and not BuffEffectType.Poison)
                 return;
 
             if (buff.Owner == null) return;
-            if (_config.DamagePerTurn <= 0) return;
+
+            float damage = _config.EffectType switch
+            {
+                BuffEffectType.Burning => buff.StackCount,
+                BuffEffectType.Poison => 2f,
+                _ => _config.DamagePerTurn
+            };
+            if (damage <= 0f) return;
 
             CombatComponent.ApplyDamage(
-                buff.Source, buff.Owner, _config.DamagePerTurn, false, _config.ElementType,
+                buff.Source, buff.Owner, damage, false, _config.DamageCategory, _config.ElementType,
                 canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: false,
-                logSourceName: buff.BuffName);
+                logSourceName: buff.BuffName,
+                bypassDefense: true);
+
+            if (_config.EffectType == BuffEffectType.Burning)
+                buff.ReduceStack();
         }
 
         public virtual void OnTurnEnd(Buff buff, IGridController gridController) { }

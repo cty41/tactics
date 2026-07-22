@@ -9,6 +9,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Common.Players;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Buffs;
@@ -107,11 +108,8 @@ namespace Tactics.Tests.PlayMode
             Assert.AreEqual(1, bc.TurnContext.CurrentPlayer.PlayerNumber,
                 "Frozen human turn should still be active during the 1-second visibility delay.");
 
-            // Wait enough frames for the 1-second delayed auto-EndTurn to fire.
-            for (int i = 0; i < 70; i++)
-            {
-                yield return null;
-            }
+            // Wait against the production delay rather than assuming a frame rate.
+            yield return new WaitForSeconds(TurnSkipHelper.FrozenSkipDelaySeconds + 0.2f);
 
             // The turn must have advanced past the frozen human player.
             Assert.IsNotNull(bc.TurnContext.CurrentPlayer,
@@ -361,10 +359,7 @@ namespace Tactics.Tests.PlayMode
             Assert.IsTrue(bc.IsBattleActive, "Battle should be active after StartBattleAsync.");
             Assert.IsNotNull(BattleController.Instance, "BattleController.Instance should be set.");
 
-            for (int i = 0; i < 15; i++)
-            {
-                yield return null;
-            }
+            yield return new WaitForSeconds(TurnSkipHelper.FrozenSkipDelaySeconds + 0.2f);
 
             Assert.IsNotNull(bc.TurnContext.CurrentPlayer,
                 "TurnContext.CurrentPlayer should not be null after host-null fallback auto-end.");

@@ -90,13 +90,13 @@ namespace Tactics.Common.Skills.Graph
                 {
                     if (unit == null || ReferenceEquals(unit, target)) continue;
                     // 对落点其他单位造成伤害
-                    CombatComponent.ApplyDamage(caster, unit, record.LandingDamage, false, ElementType.None,
+                    CombatComponent.ApplyDamage(caster, unit, record.LandingDamage, false, DamageCategory.Physical, ElementType.None,
                         canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: true);
                     TLog.Info($"[LaunchUnit] Landing damage {record.LandingDamage} to unit at landing cell.");
                 }
 
                 // 对目标也造成落地伤害
-                CombatComponent.ApplyDamage(caster, target, record.LandingDamage, false, ElementType.None,
+                CombatComponent.ApplyDamage(caster, target, record.LandingDamage, false, DamageCategory.Physical, ElementType.None,
                     canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: true);
                 TLog.Info($"[LaunchUnit] Landing damage {record.LandingDamage} to launched target.");
             }

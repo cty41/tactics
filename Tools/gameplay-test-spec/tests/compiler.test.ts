@@ -322,6 +322,55 @@ test("compiles Pure Run mixed level-up assertions from the authored source spec"
   assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "Map"));
 });
 
+test("compiles shared battle primitive specs with stable Battle routing", async () => {
+  const fixtureNames = [
+    "facing-and-initiative",
+    "status-turn-semantics",
+    "summon-registry-order",
+    "ability-availability-reason",
+    "ordered-target-selection-state"
+  ];
+
+  for (const fixtureName of fixtureNames) {
+    const markdown = await readFixture(`shared/${fixtureName}.gameplay-test.md`);
+    const generatedPlan = await readFixture(`shared/${fixtureName}.plan.json`);
+    const compiled = compileScenarioSpec(parseGameplayTestDocument(markdown).frontmatter);
+    assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+    assert.ok(compiled.plan);
+    assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(generatedPlan));
+    assert.ok(compiled.plan.runtimeActions.every(action => action.adapter === "Battle"));
+  }
+});
+
+test("routes shared UI interaction actions and observable assertions to UI", () => {
+  const compiled = compileScenarioSpec({
+    feature: "UI",
+    scenario: "SharedInteractionRouting",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [
+      { kind: "hoverElement", parameters: { elementName: "Card" } },
+      { kind: "rightClickElement", parameters: { elementName: "Card" } },
+      { kind: "pressKey", parameters: { key: "Escape" } }
+    ],
+    assertions: [
+      { kind: "elementClassContains", target: "Card", expected: "selected", parameters: {} },
+      { kind: "elementChildOrderEquals", target: "Deck", expected: ["Card"], parameters: {} },
+      { kind: "elementRectRelationEquals", target: "Card", expected: "rightOf", parameters: { otherElement: "Move" } },
+      { kind: "abilityCardAvailabilityEquals", target: "Card", expected: "DisabledClickable", parameters: {} },
+      { kind: "targetMarkerOrderEquals", target: "Markers", expected: ["1", "2"], parameters: {} },
+      { kind: "selectionStageEquals", adapter: "UI", expected: "Selecting", parameters: {} }
+    ]
+  });
+
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.ok(compiled.plan.runtimeActions.every(action => action.adapter === "UI"));
+  assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "UI"));
+});
+
 test("compiles structured AI turn result assertions from the authored source spec", async () => {
   const markdown = await readFixture("battle-ai-turn-result.gameplay-test.md");
   const generatedPlan = await readFixture("battle-ai-turn-result.plan.json");

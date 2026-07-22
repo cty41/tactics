@@ -77,8 +77,18 @@ scopes:
       - Assets/Tactics/ScriptableObjects/Buffs
       - Assets/Tactics/Scripts/Common/Units/Buffs
       - Assets/Tactics/Scripts/Common/Units/CombatComponent.cs
+      - Assets/Tactics/Scripts/Common/Units/DamageResolution.cs
+      - Assets/Tactics/Scripts/Common/Units/FacingState.cs
       - Assets/Tactics/Scripts/Common/Units/IUnit.cs
+      - Assets/Tactics/Scripts/Common/Units/abilities/AbilityAvailability.cs
+      - Assets/Tactics/Scripts/Common/Units/abilities/MoveCommand.cs
+      - Assets/Tactics/Scripts/Common/UnitSpeedTurnResolver.cs
+      - Assets/Tactics/Scripts/Common/controllers/GridController.cs
+      - Assets/Tactics/Scripts/Common/controllers/gridStates/GridStateAwaitInput.cs
       - Assets/Tactics/Tests/PlayMode/ConsumableBattleUseTests.cs
+      - Assets/Tactics/Tests/PlayMode/HumanPlayerBattleAdapterRegressionTests.cs
+      - Assets/Tactics/Tests/PlayMode/FreezeExpiryEnemyResumeTests.cs
+      - Assets/Tactics/Tests/PlayMode/SharedBattlePrimitivesTests.cs
 
   monster-ai:
     concept: systems/monster-ai.md
@@ -91,6 +101,7 @@ scopes:
       - Assets/Tactics/AI/BasicMeleeProfile.asset
       - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
+      - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
       - Assets/Tactics/Scripts/Common/Units/Unit.cs
 
   mewgenics-reference-analysis:
@@ -147,6 +158,7 @@ scopes:
       - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs
       - Assets/Tactics/Battle/Abilities/SkillGraphs
       - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
+      - Assets/Tactics/Tests/PlayMode/SkillGraphValidationTests.cs
       - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
 
   gameplay-test-framework:

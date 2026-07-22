@@ -181,7 +181,7 @@ namespace Tactics.Common.Units
         /// Unified damage application method used by DamageEffect and BuffBehavior.
         /// Handles element type checks (ice break/immunity), buff hooks, crit, and defense.
         /// </summary>
-        public static void ApplyDamage(
+        public static DamageResolution ApplyDamage(
             IUnit caster,
             IUnit target,
             float baseDamage,
@@ -190,14 +190,48 @@ namespace Tactics.Common.Units
             bool canTriggerBeforeAttacked,
             bool canCrit,
             bool canTriggerDamageTaken,
-            string logSourceName = null)
+            string logSourceName = null,
+            bool bypassDefense = false)
         {
+            return ApplyDamage(
+                caster,
+                target,
+                baseDamage,
+                isRangedDamage,
+                DamageCategory.Physical,
+                elementType,
+                canTriggerBeforeAttacked,
+                canCrit,
+                canTriggerDamageTaken,
+                logSourceName,
+                bypassDefense);
+        }
+
+        /// <summary>
+        /// Applies one damage attempt with independent category and element classification.
+        /// </summary>
+        public static DamageResolution ApplyDamage(
+            IUnit caster,
+            IUnit target,
+            float baseDamage,
+            bool isRangedDamage,
+            DamageCategory damageCategory,
+            ElementType elementType,
+            bool canTriggerBeforeAttacked,
+            bool canCrit,
+            bool canTriggerDamageTaken,
+            string logSourceName = null,
+            bool bypassDefense = false)
+        {
+            if (target == null)
+                return DamageResolution.Invalid();
+
             if (canTriggerBeforeAttacked && CombatTechniqueUnits.Contains(target)
                 && CombatTechniqueRandom.NextDouble() < 0.30d)
             {
                 TLog.Info($"[CombatTechniques] {target.UnitID} dodged direct damage.");
                 LogMiss(caster, target);
-                return;
+                return DamageResolution.Dodged();
             }
 
             // Check for Frozen buff - ice break logic
@@ -215,7 +249,7 @@ namespace Tactics.Common.Units
                 else
                 {
                     LogMiss(caster, target);
-                    return; // Non-fire damage blocked by ice
+                    return DamageResolution.Blocked(); // Non-fire damage blocked by ice
                 }
             }
 
@@ -223,7 +257,7 @@ namespace Tactics.Common.Units
             bool isCritical = false;
 
             // Crit check
-            if (canCrit)
+            if (canCrit && caster != null)
             {
                 isCritical = _rng.NextDouble() < GetClampedCritChance(caster);
             }
@@ -239,7 +273,14 @@ namespace Tactics.Common.Units
                 damage = GetCriticalDamage(damage);
             }
 
-            damage = target.CalculateDamageTaken(caster, damage, caster.CurrentCell, target.CurrentCell);
+            if (!bypassDefense)
+            {
+                damage = target.CalculateDamageTaken(
+                    caster,
+                    damage,
+                    caster?.CurrentCell,
+                    target.CurrentCell);
+            }
 
             // Curse damage amplifier: target takes 30% more damage
             if (target.BuffComponent != null && target.BuffComponent.HasBuff(BuffEffectType.CurseDamageAmplifier))
@@ -257,7 +298,7 @@ namespace Tactics.Common.Units
                 }
             }
 
-            if (!isRangedDamage && elementType == ElementType.None && DamageShields.TryGetValue(target, out var shield))
+            if (damageCategory == DamageCategory.Physical && DamageShields.TryGetValue(target, out var shield))
             {
                 float absorbed = Math.Min(shield, damage);
                 damage -= absorbed;
@@ -275,6 +316,8 @@ namespace Tactics.Common.Units
             {
                 target.BuffComponent?.OnDamageTaken(caster, damage);
             }
+
+            return DamageResolution.Hit(damage, isCritical);
         }
 
         private static void LogDamage(string sourceName, IUnit target, float damage)

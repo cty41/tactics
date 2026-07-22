@@ -26,10 +26,18 @@ namespace Tactics.Common.Units.Abilities
     }
 
     /// <summary>
+    /// Optional policy extension for abilities that need a stable disabled reason.
+    /// </summary>
+    public interface ISkillGraphAvailabilityPolicy : ISkillGraphUsePolicy
+    {
+        AbilityAvailability GetAvailability(IGridController gridController);
+    }
+
+    /// <summary>
     /// SkillGraph 能力实现。
     /// 通过 SkillGraphRunner 执行技能图。
     /// </summary>
-    public class SkillGraphAbilityImpl : IAbility, IAiExecutableAbility, IAbilityTargetingProvider, IPlannedAbilityExecutor
+    public class SkillGraphAbilityImpl : IAbility, IAiExecutableAbility, IAbilityTargetingProvider, IPlannedAbilityExecutor, IAbilityAvailabilityProvider
     {
         public event Action<IAbility> AbilitySelected;
         public event Action<IAbility> AbilityDeselected;
@@ -46,6 +54,8 @@ namespace Tactics.Common.Units.Abilities
         public Sprite Icon => _config.Icon;
         public int Cost => _config.ManaCost;
         public SkillGraphAsset SkillGraphAsset => _config.SkillGraph;
+        public SkillTargetingProtocol TargetingProtocol => _config.SkillGraph?.Targeting;
+        public SkillTargetMode TargetMode => _config.SkillGraph?.ResolveTargetMode() ?? SkillTargetMode.PrimaryUnit;
         public int TargetRange => _config.TargetRange;
 
         public SkillGraphAbilityImpl(
@@ -120,12 +130,28 @@ namespace Tactics.Common.Units.Abilities
 
         public bool CanPerform(IGridController gridController)
         {
-            if (_config.SkillGraph == null) return false;
-            if (_usePolicy != null)
-                return _usePolicy.CanPerform(gridController);
-            if (_config.IsBasicAbility)
-                return !_owner.HasUsedBasicAbilityThisTurn(_config.DisplayName);
-            return _owner.Mana >= _config.ManaCost;
+            return GetAvailability(gridController).CanExecute;
+        }
+
+        public AbilityAvailability GetAvailability(IGridController gridController)
+        {
+            if (_config?.SkillGraph == null)
+                return AbilityAvailability.Disabled("技能配置缺失");
+            if (_usePolicy is ISkillGraphAvailabilityPolicy availabilityPolicy)
+            {
+                var availability = availabilityPolicy.GetAvailability(gridController);
+                if (!availability.CanExecute)
+                    return availability;
+            }
+            else if (_usePolicy != null && !_usePolicy.CanPerform(gridController))
+            {
+                return AbilityAvailability.Disabled("当前无法使用");
+            }
+            if (_config.IsBasicAbility && _owner.HasUsedBasicAbilityThisTurn(_config.DisplayName))
+                return AbilityAvailability.Disabled("本回合已使用");
+            if (!_config.IsBasicAbility && _owner.Mana < _config.ManaCost)
+                return AbilityAvailability.Disabled($"需要 {_config.ManaCost} 点魔法");
+            return AbilityAvailability.Enabled();
         }
 
         public async Task ExecuteEffectsAsync(IEnumerable<IUnit> targets, IGridController gridController)
@@ -332,10 +358,30 @@ namespace Tactics.Common.Units.Abilities
             context.TargetPoint = selectedCell;
             testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
 
+            var originalFacing = _owner.Facing;
+            var actionFacing = originalFacing;
+            bool changedFacing = selectedCell != null && _owner.CurrentCell != null &&
+                FacingResolver.TryResolve(
+                    _owner.CurrentCell.GridCoordinates,
+                    selectedCell.GridCoordinates,
+                    originalFacing,
+                    out actionFacing);
+            if (changedFacing)
+                _owner.Facing = actionFacing;
+
             LogSkillUse(context.PrimaryTarget);
 
             var runner = new SkillGraphRunner();
-            var executionState = await runner.Execute(context);
+            var executionState = SkillGraphExecutionState.Failed;
+            try
+            {
+                executionState = await runner.Execute(context);
+            }
+            finally
+            {
+                if (executionState != SkillGraphExecutionState.Completed && changedFacing)
+                    _owner.Facing = originalFacing;
+            }
 
             if (executionState == SkillGraphExecutionState.Completed)
             {

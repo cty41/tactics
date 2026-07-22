@@ -1,4 +1,5 @@
 using System.Linq;
+using Tactics.Common.Cells;
 using Tactics.Common.Units;
 
 namespace Tactics.Common.Controllers.GridStates
@@ -8,6 +9,27 @@ namespace Tactics.Common.Controllers.GridStates
     /// </summary>
     public class GridStateAwaitInput : GridState
     {
+        public override void OnCellClicked(ICell cell, GridController gridController)
+        {
+            var activeUnit = gridController.TurnContext.PlayableUnits().FirstOrDefault();
+            if (activeUnit?.CurrentCell == null || cell == null ||
+                !FacingResolver.IsOrthogonallyAdjacent(
+                    activeUnit.CurrentCell.GridCoordinates,
+                    cell.GridCoordinates))
+            {
+                return;
+            }
+
+            if (FacingResolver.TryResolve(
+                    activeUnit.CurrentCell.GridCoordinates,
+                    cell.GridCoordinates,
+                    activeUnit.Facing,
+                    out var facing))
+            {
+                activeUnit.Facing = facing;
+            }
+        }
+
         /// <summary>
         /// Called when a unit is clicked while awaiting input.
         /// If the clicked unit is a playable unit, the state transitions to GridStateUnitSelected.

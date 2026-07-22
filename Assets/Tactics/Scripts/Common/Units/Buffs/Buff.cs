@@ -11,7 +11,10 @@ namespace Tactics.Common.Units.Buffs
         public IUnit Owner { get; internal set; }
         public IUnit Source { get; }
         public int RemainingTurns { get; set; }
-        public bool IsExpired => RemainingTurns <= 0;
+        public int StackCount { get; internal set; }
+        public bool IsExpired => _config.EffectType == BuffEffectType.Burning
+            ? StackCount <= 0
+            : RemainingTurns <= 0;
         public BuffConfig Config => _config;
 
         public Buff(BuffConfig config, IUnit source, int duration)
@@ -19,7 +22,15 @@ namespace Tactics.Common.Units.Buffs
             _config = config;
             _behavior = new BuffBehavior(config);
             Source = source;
-            RemainingTurns = duration;
+            RemainingTurns = _config.EffectType switch
+            {
+                BuffEffectType.Poison => 3,
+                BuffEffectType.Stun => 1,
+                _ => duration
+            };
+            StackCount = _config != null && _config.EffectType == BuffEffectType.Burning
+                ? System.Math.Max(0, duration)
+                : 1;
         }
 
         public virtual void OnApplied()
@@ -34,8 +45,14 @@ namespace Tactics.Common.Units.Buffs
 
         public virtual void OnTurnEnd(IGridController gridController)
         {
-            RemainingTurns--;
+            if (_config.EffectType != BuffEffectType.Burning)
+                RemainingTurns--;
             _behavior.OnTurnEnd(this, gridController);
+        }
+
+        internal void ReduceStack(int amount = 1)
+        {
+            StackCount = System.Math.Max(0, StackCount - System.Math.Max(0, amount));
         }
 
         public virtual void OnRemoved()

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Tactics.Common.Battle;
 using Tactics.Common.Controllers;
 using Tactics.Runtime.BattleLog;
 using UnityEngine;
@@ -14,6 +16,7 @@ namespace Tactics.Common.Units.Buffs
     {
         private readonly IUnit _owner;
         private readonly List<Buff> _activeBuffs;
+        private IGridController _gridController;
 
         public event Action<BuffChangedEventArgs> BuffChanged;
 
@@ -21,10 +24,20 @@ namespace Tactics.Common.Units.Buffs
         /// Initializes a new instance of the <see cref="BuffComponent"/> class.
         /// </summary>
         /// <param name="owner">The unit this component manages buffs for.</param>
-        public BuffComponent(IUnit owner)
+        public BuffComponent(IUnit owner, IGridController gridController = null)
         {
             _owner = owner;
+            _gridController = gridController;
             _activeBuffs = new List<Buff>();
+        }
+
+        /// <summary>
+        /// Binds the battle controller after buffs were restored before unit initialization.
+        /// Existing buffs stay active and can participate in initiative refreshes afterwards.
+        /// </summary>
+        public void BindGridController(IGridController gridController)
+        {
+            _gridController = gridController;
         }
 
         /// <summary>
@@ -38,17 +51,30 @@ namespace Tactics.Common.Units.Buffs
                 throw new ArgumentNullException(nameof(buff), "Cannot add a null buff.");
             }
 
-            // Global uniqueness: same Config → refresh duration instead of stacking
+            // Standard statuses merge by effect type; other buffs merge by Config reference.
             if (buff.Config != null)
             {
                 for (int i = 0; i < _activeBuffs.Count; i++)
                 {
-                    if (_activeBuffs[i].Config == buff.Config)
+                    if (IsSameRuntimeStatus(_activeBuffs[i], buff))
                     {
-                        int newDuration = _activeBuffs[i].RemainingTurns + buff.RemainingTurns;
-                        _activeBuffs[i].RemainingTurns = newDuration;
-                        BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Refreshed, _activeBuffs[i]));
-                        LogBuff(buff.Source, _owner, _activeBuffs[i].BuffName, newDuration);
+                        var existing = _activeBuffs[i];
+                        switch (ResolveRefreshStrategy(existing.Config))
+                        {
+                            case BuffRefreshStrategy.RefreshDuration:
+                                existing.RemainingTurns = buff.RemainingTurns;
+                                break;
+                            case BuffRefreshStrategy.AddStacks:
+                                existing.StackCount += buff.StackCount;
+                                break;
+                            default:
+                                existing.RemainingTurns += buff.RemainingTurns;
+                                break;
+                        }
+
+                        NotifyStatusChanged(existing.Config);
+                        BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Refreshed, existing));
+                        LogBuff(buff.Source, _owner, existing.BuffName, GetDisplayedAmount(existing));
                         return;
                     }
                 }
@@ -69,8 +95,9 @@ namespace Tactics.Common.Units.Buffs
             buff.Owner = _owner;
             _activeBuffs.Add(buff);
             buff.OnApplied();
+            NotifyStatusChanged(buff.Config);
             BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Added, buff));
-            LogBuff(buff.Source, _owner, buff.BuffName, buff.RemainingTurns);
+            LogBuff(buff.Source, _owner, buff.BuffName, GetDisplayedAmount(buff));
         }
 
         /// <summary>
@@ -86,6 +113,7 @@ namespace Tactics.Common.Units.Buffs
 
             _activeBuffs.Remove(buff);
             buff.OnRemoved();
+            NotifyStatusChanged(buff.Config);
             BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.Removed, buff));
             LogBuff(buff.Source, _owner, buff.BuffName, 0);
         }
@@ -121,6 +149,14 @@ namespace Tactics.Common.Units.Buffs
             foreach (var buff in new List<Buff>(_activeBuffs))
             {
                 buff.OnTurnStart(gridController);
+                if (buff.IsExpired)
+                {
+                    RemoveBuff(buff);
+                }
+                else if (buff.Config.EffectType == BuffEffectType.Burning)
+                {
+                    BuffChanged?.Invoke(new BuffChangedEventArgs(BuffChangeType.TurnChanged, buff));
+                }
             }
         }
 
@@ -164,6 +200,7 @@ namespace Tactics.Common.Units.Buffs
             }
 
             _activeBuffs.Clear();
+            _owner.RefreshDerivedStats();
         }
 
         /// <summary>
@@ -215,6 +252,54 @@ namespace Tactics.Common.Units.Buffs
         public IReadOnlyList<Buff> GetActiveBuffs()
         {
             return _activeBuffs.AsReadOnly();
+        }
+
+        public float SpeedModifier => _activeBuffs
+            .Where(buff => buff?.Config != null)
+            .Sum(buff => buff.Config.EffectType == BuffEffectType.Slow
+                ? -2f
+                : buff.Config.SpeedModifier);
+
+        private static bool IsSameRuntimeStatus(Buff existing, Buff incoming)
+        {
+            if (existing?.Config == null || incoming?.Config == null)
+                return false;
+            if (existing.Config == incoming.Config)
+                return true;
+
+            return existing.Config.EffectType == incoming.Config.EffectType &&
+                   existing.Config.EffectType is BuffEffectType.Burning
+                       or BuffEffectType.Poison
+                       or BuffEffectType.Slow
+                       or BuffEffectType.Stun;
+        }
+
+        private static BuffRefreshStrategy ResolveRefreshStrategy(BuffConfig config)
+        {
+            return config.EffectType switch
+            {
+                BuffEffectType.Burning => BuffRefreshStrategy.AddStacks,
+                BuffEffectType.Poison => BuffRefreshStrategy.AddDuration,
+                BuffEffectType.Slow => BuffRefreshStrategy.RefreshDuration,
+                BuffEffectType.Stun => BuffRefreshStrategy.RefreshDuration,
+                _ => config.RefreshStrategy
+            };
+        }
+
+        private static int GetDisplayedAmount(Buff buff)
+        {
+            return buff.Config.EffectType == BuffEffectType.Burning
+                ? buff.StackCount
+                : buff.RemainingTurns;
+        }
+
+        private void NotifyStatusChanged(BuffConfig config)
+        {
+            if (config == null || config.EffectType != BuffEffectType.Slow)
+                return;
+
+            _owner.RefreshDerivedStats();
+            BattleInitiativeService.For(_gridController)?.NotifyInitiativeChanged(_owner);
         }
     }
 }

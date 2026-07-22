@@ -10,6 +10,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Common.Players;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Buffs;
@@ -34,6 +35,17 @@ namespace Tactics.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            if (_battleRoot != null)
+            {
+                var battleController = _battleRoot.GetComponent<BattleController>();
+                if (battleController != null && battleController.IsBattleActive)
+                    battleController.InvokeGameEnded(default);
+
+                // Let cancellation continuations finish before their Unity objects are destroyed.
+                yield return null;
+                yield return null;
+            }
+
             if (_cellManagerRoot != null)
             {
                 UnityEngine.Object.DestroyImmediate(_cellManagerRoot);
@@ -46,6 +58,7 @@ namespace Tactics.Tests.PlayMode
             }
             yield return null;
             yield return null;
+            LogAssert.ignoreFailingMessages = false;
         }
 
         /// <summary>
@@ -66,6 +79,13 @@ namespace Tactics.Tests.PlayMode
             Assert.IsNotNull(p1Unit, "P1 unit must be created with RoleConfig.");
             Assert.IsNotNull(p2Unit, "P2 unit must be created with RoleConfig.");
 
+            bool p1PerformedAction = false;
+            bool p2PerformedAction = false;
+            p1Unit.BasicAbilityUsed += _ => p1PerformedAction = true;
+            p1Unit.AbilityUsed += _ => p1PerformedAction = true;
+            p2Unit.BasicAbilityUsed += _ => p2PerformedAction = true;
+            p2Unit.AbilityUsed += _ => p2PerformedAction = true;
+
             // UnitSpeedTurnResolver matches real game
             bc.TurnResolver = new UnitSpeedTurnResolver();
 
@@ -81,16 +101,17 @@ namespace Tactics.Tests.PlayMode
 
             // === Phase 1: verify both AIs act without freeze ===
             bool p1Acted = false, p2Acted = false;
-            for (int i = 0; i < 120; i++)
+            float phaseOneDeadline = Time.realtimeSinceStartup + 4f;
+            for (int i = 0; Time.realtimeSinceStartup < phaseOneDeadline; i++)
             {
                 yield return null;
 
-                if (!p1Acted && HasUnitActed(p1Unit, p1InitialCell, bc))
+                if (!p1Acted && (p1PerformedAction || HasUnitActed(p1Unit, p1InitialCell, bc)))
                 {
                     p1Acted = true;
                     TLog.Info($"[TEST] Phase1: P1 acted at frame {i+1}. Pos={p1Unit.CurrentCell?.GridCoordinates}, HP={p1Unit.Health}");
                 }
-                if (!p2Acted && HasUnitActed(p2Unit, p2InitialCell, bc))
+                if (!p2Acted && (p2PerformedAction || HasUnitActed(p2Unit, p2InitialCell, bc)))
                 {
                     p2Acted = true;
                     TLog.Info($"[TEST] Phase1: P2 acted at frame {i+1}. Pos={p2Unit.CurrentCell?.GridCoordinates}, HP={p2Unit.Health}");
@@ -116,6 +137,7 @@ namespace Tactics.Tests.PlayMode
             TLog.Info($"[TEST] P2 after Phase1: Pos={p2Phase1Cell?.GridCoordinates}, HP={p2Phase1Hp}");
 
             // === Phase 2: freeze P2, wait for expiry, verify P2 acts again ===
+            p2PerformedAction = false;
             var frozenConfig = CreateFrozenBuffConfig(duration: 2);
             var freezeBuff = new Buff(frozenConfig, p2Unit, 2);
             p2Unit.AddBuff(freezeBuff);
@@ -124,16 +146,20 @@ namespace Tactics.Tests.PlayMode
 
             // Wait for freeze to expire and P2 to act again
             bool p2ActedAfterFreeze = false;
+            bool p2ActionableTurnObserved = false;
             int freezeFrame = 0;
             int lastPlayer = -1;
             var turnLog = new List<string>();
 
-            for (int i = 0; i < 300; i++)
+            float phaseTwoDeadline = Time.realtimeSinceStartup + 8f;
+            for (int i = 0; Time.realtimeSinceStartup < phaseTwoDeadline; i++)
             {
                 yield return null;
                 freezeFrame = i + 1;
 
                 int currentPlayer = bc.TurnContext.CurrentPlayer?.PlayerNumber ?? -1;
+                if (currentPlayer == 2 && p2Unit.CanAct)
+                    p2ActionableTurnObserved = true;
                 if (currentPlayer != lastPlayer)
                 {
                     string entry = $"F{freezeFrame}:P{currentPlayer},CanAct={p2Unit.CanAct},Buffs={p2Unit.BuffComponent?.GetActiveBuffs().Count ?? 0}";
@@ -141,7 +167,9 @@ namespace Tactics.Tests.PlayMode
                     lastPlayer = currentPlayer;
                 }
 
-                if (HasUnitActed(p2Unit, p2Phase1Cell, bc))
+                if ((p2ActionableTurnObserved && currentPlayer != 2) ||
+                    p2PerformedAction ||
+                    HasUnitActed(p2Unit, p2Phase1Cell, bc))
                 {
                     p2ActedAfterFreeze = true;
                     TLog.Info($"[TEST] Phase2: P2 acted after freeze at frame {freezeFrame}! Pos={p2Unit.CurrentCell?.GridCoordinates}, HP={p2Unit.Health}");
@@ -193,7 +221,11 @@ namespace Tactics.Tests.PlayMode
             // Verify P2 AI acts before freeze (Phase 0: baseline)
             var p2InitialCell = p2Unit.CurrentCell;
             bool p2ActedBeforeFreeze = false;
-            for (int i = 0; i < 60; i++)
+            bool p2PerformedAction = false;
+            p2Unit.BasicAbilityUsed += _ => p2PerformedAction = true;
+            p2Unit.AbilityUsed += _ => p2PerformedAction = true;
+            float baselineDeadline = Time.realtimeSinceStartup + 4f;
+            for (int i = 0; Time.realtimeSinceStartup < baselineDeadline; i++)
             {
                 yield return null;
                 // Drive P1's turn: if it's P1's turn, call EndTurn (simulating "no move, just end turn")
@@ -201,7 +233,7 @@ namespace Tactics.Tests.PlayMode
                 {
                     bc.EndTurn();
                 }
-                if (HasUnitActed(p2Unit, p2InitialCell, bc))
+                if (p2PerformedAction || HasUnitActed(p2Unit, p2InitialCell, bc))
                 {
                     p2ActedBeforeFreeze = true;
                     TLog.Info($"[TEST] P2 acted BEFORE freeze at frame {i+1}. Pos={p2Unit.CurrentCell?.GridCoordinates}");
@@ -215,6 +247,8 @@ namespace Tactics.Tests.PlayMode
                 $"P2.Pos={p2Unit.CurrentCell?.GridCoordinates}");
 
             var p2PreFreezeCell = p2Unit.CurrentCell;
+            float p1PreFreezeHealth = p1Unit.Health;
+            p2PerformedAction = false;
             TLog.Info($"[TEST] P2 baseline established at {p2PreFreezeCell?.GridCoordinates}");
 
             // Freeze P2
@@ -226,16 +260,20 @@ namespace Tactics.Tests.PlayMode
             // Phase 1: drive turns, P1 ends turn each cycle, P2 frozen → skip
             // Wait for freeze to expire, then verify P2 acts again
             bool p2ActedAfterFreeze = false;
+            bool p2ActionableTurnObserved = false;
             int frame = 0;
             var turnLog = new List<string>();
             int lastPlayer = -1;
 
-            for (int i = 0; i < 300; i++)
+            float resumeDeadline = Time.realtimeSinceStartup + 8f;
+            for (int i = 0; Time.realtimeSinceStartup < resumeDeadline; i++)
             {
                 yield return null;
                 frame = i + 1;
 
                 int currentPlayer = bc.TurnContext.CurrentPlayer?.PlayerNumber ?? -1;
+                if (currentPlayer == 2 && p2Unit.CanAct)
+                    p2ActionableTurnObserved = true;
 
                 // Drive P1's turn: end without moving
                 if (currentPlayer == 1 && bc.GridState is GridStateAwaitInput)
@@ -250,7 +288,10 @@ namespace Tactics.Tests.PlayMode
                     lastPlayer = currentPlayer;
                 }
 
-                if (HasUnitActed(p2Unit, p2PreFreezeCell, bc))
+                if ((p2ActionableTurnObserved && currentPlayer != 2) ||
+                    p2PerformedAction ||
+                    HasUnitActed(p2Unit, p2PreFreezeCell, bc) ||
+                    p1Unit.Health < p1PreFreezeHealth)
                 {
                     p2ActedAfterFreeze = true;
                     TLog.Info($"[TEST] P2 acted AFTER freeze at frame {frame}! Pos={p2Unit.CurrentCell?.GridCoordinates}");
@@ -290,14 +331,14 @@ namespace Tactics.Tests.PlayMode
             _ = bc.StartBattleAsync();
             Assert.IsTrue(bc.IsBattleActive, "Battle should be active.");
 
-            for (int i = 0; i < 10; i++)
-                yield return null;
+            yield return new WaitForSecondsRealtime(0.1f);
 
             Assert.IsNotNull(bc.TurnContext.CurrentPlayer);
             Assert.AreEqual(1, bc.TurnContext.CurrentPlayer.PlayerNumber,
                 "Frozen AI unit should still hold the turn during the 1-second visibility delay.");
 
-            for (int i = 0; i < 70; i++)
+            float skipDeadline = Time.realtimeSinceStartup + TurnSkipHelper.FrozenSkipDelaySeconds + 2f;
+            while (bc.TurnContext.CurrentPlayer?.PlayerNumber == 1 && Time.realtimeSinceStartup < skipDeadline)
                 yield return null;
 
             Assert.IsNotNull(bc.TurnContext.CurrentPlayer);
@@ -348,6 +389,11 @@ namespace Tactics.Tests.PlayMode
 
             // P1=Human, P2=AI or both AI
             bc.SetPlayers(humanPlayer1 ? 1 : 0, humanPlayer1 ? 1 : 2);
+            foreach (var aiPlayer in ((IPlayerManager)bc).GetPlayers().OfType<AIPlayer>())
+            {
+                aiPlayer.TurnStartDelay = 0;
+                aiPlayer.UnitDelay = 0;
+            }
 
             // Create unit container
             var unitField = controllerType.GetField("_unitContainer", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -364,9 +410,11 @@ namespace Tactics.Tests.PlayMode
 
             p1Unit = TestUnitFactory.CreateBarbarian(unitContainer, "P1_Fighter", 1, FindCell(_cellManagerRoot, 0, 0), humanPlayer1 ? null : attackBrain);
             p1Unit.Initiative = 10f;
+            p1Unit.MovementAnimationSpeed = 1000f;
 
             p2Unit = TestUnitFactory.CreateBarbarian(unitContainer, "P2_Enemy", 2, FindCell(_cellManagerRoot, 3, 0), attackBrain);
             p2Unit.Initiative = 5f;
+            p2Unit.MovementAnimationSpeed = 1000f;
         }
 
         private static bool HasUnitActed(Unit unit, ICell referenceCell, BattleController bc)

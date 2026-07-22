@@ -61,16 +61,20 @@ namespace Tactics.Common.Units.Abilities
                 return;
             }
 
-            var pathCost = _path.Prepend(_source).Zip(_path.Prepend(_source).Skip(1), (from, to) => unit.GetMovementCost(from, to)).Sum();
+            var path = _path?.ToList() ?? new List<ICell>();
+            if (path.Count == 0)
+                return;
+
+            var pathCost = path.Prepend(_source).Zip(path.Prepend(_source).Skip(1), (from, to) => unit.GetMovementCost(from, to)).Sum();
             unit.MovementPoints -= pathCost;
 
-            await controller.UnitManager.MarkAsMoving(unit, _source, _destination, _path);
-            await unit.MovementAnimation(_path, _destination);
+            await controller.UnitManager.MarkAsMoving(unit, _source, _destination, path);
+            await unit.MovementAnimation(path, _destination);
 
             if (!CanOccupyDestination(unit))
             {
                 unit.WorldPosition = _source.WorldPosition;
-                await controller.UnitManager.UnMarkAsMoving(unit, _source, _destination, _path);
+                await controller.UnitManager.UnMarkAsMoving(unit, _source, _destination, path);
                 return;
             }
 
@@ -85,8 +89,19 @@ namespace Tactics.Common.Units.Abilities
             unit.CurrentCell.IsTaken = unit.CurrentCell.CurrentUnits.Count > 0;
             unit.WorldPosition = _destination.WorldPosition;
 
-            await controller.UnitManager.UnMarkAsMoving(unit, _source, _destination, _path);
-            unit.InvokeUnitMoved(new UnitMovedEventArgs(unit, _source, _destination, _path));
+            await controller.UnitManager.UnMarkAsMoving(unit, _source, _destination, path);
+
+            var previousCell = path.Count > 1 ? path[path.Count - 2] : _source;
+            if (FacingResolver.TryResolve(
+                    previousCell.GridCoordinates,
+                    _destination.GridCoordinates,
+                    unit.Facing,
+                    out var facing))
+            {
+                unit.Facing = facing;
+            }
+
+            unit.InvokeUnitMoved(new UnitMovedEventArgs(unit, _source, _destination, path));
         }
 
         /// <summary>

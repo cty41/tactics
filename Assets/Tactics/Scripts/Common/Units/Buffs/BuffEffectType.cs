@@ -7,6 +7,9 @@ namespace Tactics.Common.Units.Buffs
         Marked,
         CurseDamageAmplifier,
         DamageReduction,
-        Poison
+        Poison,
+        Burning,
+        Slow,
+        Stun
     }
 }

@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.AI.MonsterAI;
+using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
+using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Consumables;
@@ -32,6 +34,7 @@ namespace Tactics.Common.Units
         private MoveComponent _moveComponent;
         private CombatComponent _combatComponent;
         private BuffComponent _buffComponent;
+        private IGridController _gridController;
 
         public event Action<IUnit> UnitSelected;
         public event Action<IUnit> UnitDeselected;
@@ -52,6 +55,7 @@ namespace Tactics.Common.Units
 
         public event Action<AbilityUsedEventArgs> AbilityUsed;
         public event Action<string> BasicAbilityUsed;
+        public event Action<FacingChangedEventArgs> FacingChanged;
 
         public event Action<BuffChangedEventArgs> BuffChanged;
 
@@ -160,7 +164,16 @@ namespace Tactics.Common.Units
         [SerializeField] private float _movementAnimationSpeed = 1;
         public float MovementAnimationSpeed { get { return _movementAnimationSpeed; } set { _movementAnimationSpeed = value; } }
         [SerializeField] private float _speed = 5f;
-        public virtual float Speed { get { return _speed; } set { _speed = value; } }
+        public virtual float Speed
+        {
+            get { return Mathf.Max(1f, _speed + (_buffComponent?.SpeedModifier ?? 0f)); }
+            set
+            {
+                _speed = value;
+                RefreshDerivedStats();
+                BattleInitiativeService.For(_gridController)?.NotifyInitiativeChanged(this);
+            }
+        }
 
         [SerializeField] private int _strength = 5;
         public int Strength { get { return _strength; } set { _strength = value; } }
@@ -190,6 +203,30 @@ namespace Tactics.Common.Units
         /// Determines turn order. Higher initiative acts first.
         /// </summary>
         public float Initiative { get { return _initiative; } set { _initiative = value; } }
+
+        [SerializeField] private bool _useExplicitInitialFacing;
+        [SerializeField] private FacingDirection _initialFacing = FacingDirection.East;
+        private FacingDirection _facing = FacingDirection.East;
+
+        public FacingDirection Facing
+        {
+            get => _facing;
+            set
+            {
+                if (_facing == value)
+                {
+                    ApplyFacingVisual();
+                    return;
+                }
+
+                var previous = _facing;
+                _facing = value;
+                ApplyFacingVisual();
+                FacingChanged?.Invoke(new FacingChangedEventArgs(previous, _facing));
+            }
+        }
+
+        public string FacingVisualKey => _facing.ToString();
 
         [SerializeField] private int _reach = 1;
         /// <summary>
@@ -269,10 +306,12 @@ namespace Tactics.Common.Units
 
         public virtual void Initialize(IGridController gridController)
         {
+            _gridController = gridController;
             _moveComponent = new UnityMoveComponent(this);
             _combatComponent = new CombatComponent(this);
-            _buffComponent = new BuffComponent(this);
-            _buffComponent.BuffChanged += args => BuffChanged?.Invoke(args);
+            EnsureBuffComponent().BindGridController(gridController);
+
+            Facing = ResolveInitialFacing(gridController);
 
             // Initialize highlight manager with configs
             _highlightManager = new UnitHighlightManager(this, _highlightConfigs);
@@ -365,17 +404,27 @@ namespace Tactics.Common.Units
 
         public virtual void AddBuff(Buff buff)
         {
-            _buffComponent.AddBuff(buff);
+            EnsureBuffComponent().AddBuff(buff);
         }
 
         public virtual void RemoveBuff(Buff buff)
         {
-            _buffComponent.RemoveBuff(buff);
+            _buffComponent?.RemoveBuff(buff);
         }
 
         public virtual IReadOnlyList<Buff> GetActiveBuffs()
         {
-            return _buffComponent.GetActiveBuffs();
+            return _buffComponent?.GetActiveBuffs() ?? Array.Empty<Buff>();
+        }
+
+        private BuffComponent EnsureBuffComponent()
+        {
+            if (_buffComponent != null)
+                return _buffComponent;
+
+            _buffComponent = new BuffComponent(this, _gridController);
+            _buffComponent.BuffChanged += args => BuffChanged?.Invoke(args);
+            return _buffComponent;
         }
         
         public virtual void OnTurnStart(IGridController gridController)
@@ -582,6 +631,62 @@ namespace Tactics.Common.Units
             MaxMana = Mathf.Max(0, Charisma * 3);
             MaxMovementPoints = Mathf.Max(1f, Speed);
             Initiative = Speed * 2;
+        }
+
+        public virtual void RefreshDerivedStats()
+        {
+            RecalculateDerivedStats();
+            MovementPoints = Mathf.Min(MovementPoints, MaxMovementPoints);
+        }
+
+        public void SetInitialFacing(FacingDirection facing)
+        {
+            _useExplicitInitialFacing = true;
+            _initialFacing = facing;
+            Facing = facing;
+        }
+
+        private FacingDirection ResolveInitialFacing(IGridController gridController)
+        {
+            if (_useExplicitInitialFacing)
+                return _initialFacing;
+
+            var player = gridController?.PlayerManager?.GetPlayerByNumber(PlayerNumber);
+            if (player != null)
+                return player.PlayerType == PlayerType.HumanPlayer
+                    ? FacingDirection.East
+                    : FacingDirection.West;
+
+            return PlayerNumber == 0 ? FacingDirection.East : FacingDirection.West;
+        }
+
+        private void ApplyFacingVisual()
+        {
+            foreach (var animator in GetComponentsInChildren<Animator>(true))
+            {
+                if (animator == null || animator.runtimeAnimatorController == null)
+                    continue;
+
+                foreach (var parameter in animator.parameters)
+                {
+                    if (parameter.type == AnimatorControllerParameterType.Int && parameter.name == "Facing")
+                        animator.SetInteger(parameter.nameHash, (int)_facing);
+                    else if (parameter.type == AnimatorControllerParameterType.Float && parameter.name == "DirectionX")
+                        animator.SetFloat(parameter.nameHash, _facing == FacingDirection.East ? 1f : _facing == FacingDirection.West ? -1f : 0f);
+                    else if (parameter.type == AnimatorControllerParameterType.Float && parameter.name == "DirectionY")
+                        animator.SetFloat(parameter.nameHash, _facing == FacingDirection.North ? 1f : _facing == FacingDirection.South ? -1f : 0f);
+                }
+            }
+
+            if (_facing is not FacingDirection.East and not FacingDirection.West)
+                return;
+
+            bool flipX = _facing == FacingDirection.West;
+            foreach (var spriteRenderer in GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (spriteRenderer != null && !spriteRenderer.gameObject.name.Contains("Shadow", StringComparison.OrdinalIgnoreCase))
+                    spriteRenderer.flipX = flipX;
+            }
         }
         /// <summary>
         /// Restores HP and MP after battle. If the unit was downed, it recovers.

@@ -288,6 +288,10 @@ namespace Tactics.Roster
             public string CurseCategory { get; set; }
             public float DamagePerTurn { get; set; }
             public ElementType ElementType { get; set; }
+            public DamageCategory DamageCategory { get; set; } = DamageCategory.Magic;
+            public BuffRefreshStrategy RefreshStrategy { get; set; }
+            public float SpeedModifier { get; set; }
+            public float DamageReductionPercent { get; set; }
 
             public static PendingBuffSnapshot FromConfig(BuffConfig config)
             {
@@ -305,7 +309,11 @@ namespace Tactics.Roster
                     TriggerTiming = config.TriggerTiming,
                     CurseCategory = config.CurseCategory,
                     DamagePerTurn = config.DamagePerTurn,
-                    ElementType = config.ElementType
+                    ElementType = config.ElementType,
+                    DamageCategory = config.DamageCategory,
+                    RefreshStrategy = config.RefreshStrategy,
+                    SpeedModifier = config.SpeedModifier,
+                    DamageReductionPercent = config.DamageReductionPercent
                 };
             }
 
@@ -341,6 +349,10 @@ namespace Tactics.Roster
                 SetPrivateField(config, "_curseCategory", CurseCategory ?? string.Empty);
                 SetPrivateField(config, "_damagePerTurn", DamagePerTurn);
                 SetPrivateField(config, "_elementType", ElementType);
+                SetPrivateField(config, "_damageCategory", DamageCategory);
+                SetPrivateField(config, "_refreshStrategy", RefreshStrategy);
+                SetPrivateField(config, "_speedModifier", SpeedModifier);
+                SetPrivateField(config, "_damageReductionPercent", DamageReductionPercent);
                 config.RuntimeSourceAssetPath = BuffAssetPath;
                 return config;
             }

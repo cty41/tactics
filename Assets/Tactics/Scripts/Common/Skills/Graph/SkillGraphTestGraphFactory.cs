@@ -134,6 +134,7 @@ namespace Tactics.Common.Skills.Graph.Testing
 
             var damage = CreateNode<ApplyDamageNodeRecord>("damage");
             damage.BaseDamage = baseDamage;
+            damage.CanCrit = false;
 
             var finish = CreateNode<FinishNodeRecord>("finish");
 

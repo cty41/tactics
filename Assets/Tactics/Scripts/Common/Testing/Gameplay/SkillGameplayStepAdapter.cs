@@ -353,7 +353,7 @@ namespace Tactics.Common.Testing.Gameplay
             var config = RequireAbilityConfig(context, configAlias);
             var owner = RequireUnit(context, ownerAlias);
             var ability = config.CreateAbility(owner);
-            ability.Initialize(RequireWorld(context).GridController);
+            owner.RegisterAbility(ability, RequireWorld(context).GridController);
 
             context.SkillAbilities[alias] = ability;
         }

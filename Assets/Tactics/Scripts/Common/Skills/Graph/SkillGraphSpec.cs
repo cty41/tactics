@@ -12,6 +12,7 @@ namespace Tactics.Common.Skills.Graph
     {
         public string DisplayName;
         public string Description;
+        public SkillTargetingProtocol Targeting = new();
         public List<SkillNodeSpec> Nodes = new();
         public List<SkillEdgeSpec> Edges = new();
     }

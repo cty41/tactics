@@ -217,3 +217,55 @@ test("rejects clickElement without elementName", () => {
   assert.equal(validation.valid, false);
   assert.ok(validation.diagnostics.some(d => d.code === "MissingElementName"));
 });
+
+test("rejects pressKey without key", () => {
+  const validation = validateScenarioSpec({
+    feature: "UI",
+    scenario: "PressKeyWithoutKey",
+    tags: ["ui"],
+    requiredAdapters: ["UI"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [{ kind: "pressKey", parameters: {} }],
+    assertions: [{ kind: "elementExists", target: "Root", expected: true, parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "MissingActionParameter"));
+});
+
+test("rejects shared sequence assertion with non-string-array expected value", () => {
+  const validation = validateScenarioSpec({
+    feature: "Battle",
+    scenario: "InvalidCurrentRoundOrder",
+    tags: ["battle"],
+    requiredAdapters: ["Battle"],
+    timeoutMs: 10000,
+    setup: [{ kind: "bindBattleController", parameters: {} }],
+    actions: [{ kind: "initializeInitiativeOrder", parameters: {} }],
+    assertions: [{ kind: "currentRoundOrderEquals", expected: "p1_0", parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidAssertionExpectedType"));
+});
+
+test("rejects invalid shared battle primitive parameters", () => {
+  const validation = validateScenarioSpec({
+    feature: "Battle",
+    scenario: "InvalidSharedPrimitiveParameters",
+    tags: ["battle"],
+    requiredAdapters: ["Battle"],
+    timeoutMs: 10000,
+    setup: [],
+    actions: [
+      { kind: "setUnitFacing", parameters: { unitAlias: "actor", facing: "Diagonal" } },
+      { kind: "registerSummon", parameters: { ownerAlias: "actor", summonAlias: "summon", maximumActive: 0 } }
+    ],
+    assertions: [{ kind: "currentRoundOrderEquals", expected: ["actor"], parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidFacing"));
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidMaximumActive"));
+});

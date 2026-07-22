@@ -3,6 +3,7 @@ using Tactics.Runtime.Utilities;
 using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
+using Tactics.Common.Battle;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
@@ -219,6 +220,8 @@ namespace Tactics.Common.Controllers
 
         private async void OnUnitDestroyed(UnitDestroyedEventArgs eventArgs)
         {
+            SummonRegistry.For(this)?.HandleUnitDeath(eventArgs.AffectedUnit);
+
             // Linked death: if this unit has a summoned unit, kill it
             if (eventArgs.AffectedUnit.SummonedUnit != null && !eventArgs.AffectedUnit.SummonedUnit.IsDowned)
             {
@@ -300,6 +303,8 @@ namespace Tactics.Common.Controllers
         /// </summary>
         public async Task HandleUnitDestroyedAsync(IUnit unit)
         {
+            SummonRegistry.For(this)?.HandleUnitDeath(unit);
+
             // Linked death: if this unit has a summoned unit, kill it
             if (unit.SummonedUnit != null && !unit.SummonedUnit.IsDowned)
             {
@@ -394,6 +399,7 @@ namespace Tactics.Common.Controllers
 
         public void InvokeGameEnded(GameResult gameResult)
         {
+            SummonRegistry.For(this)?.Clear(despawnSummons: true);
             GameEnded?.Invoke(gameResult);
             GridState = new GridStateGameEnded();
         }

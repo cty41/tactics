@@ -146,12 +146,14 @@ namespace Tactics.Editor.SkillGraphEditor
         [Header("Apply Damage")]
         [SerializeField] private float _baseDamage = 10f;
         [SerializeField] private SkillGraphDamageType _damageType = SkillGraphDamageType.Physical;
+        [SerializeField] private Tactics.Common.Units.Buffs.ElementType _elementType = Tactics.Common.Units.Buffs.ElementType.None;
         [SerializeField] private bool _isRanged;
         [SerializeField] private bool _canCrit = true;
         [SerializeField] private bool _enabled = true;
 
         public float BaseDamage { get => _baseDamage; set { _baseDamage = value; Apply(); } }
         public SkillGraphDamageType DamageType { get => _damageType; set { _damageType = value; Apply(); } }
+        public Tactics.Common.Units.Buffs.ElementType ElementType { get => _elementType; set { _elementType = value; Apply(); } }
         public bool IsRanged { get => _isRanged; set { _isRanged = value; Apply(); } }
         public bool CanCrit { get => _canCrit; set { _canCrit = value; Apply(); } }
         public bool Enabled { get => _enabled; set { _enabled = value; Apply(); } }
@@ -162,6 +164,7 @@ namespace Tactics.Editor.SkillGraphEditor
             if (r == null) return;
             _baseDamage = r.BaseDamage;
             _damageType = r.DamageType;
+            _elementType = r.ElementType;
             _isRanged = r.IsRanged;
             _canCrit = r.CanCrit;
             _enabled = r.Enabled;
@@ -173,6 +176,7 @@ namespace Tactics.Editor.SkillGraphEditor
             if (r == null) return;
             r.BaseDamage = _baseDamage;
             r.DamageType = _damageType;
+            r.ElementType = _elementType;
             r.IsRanged = _isRanged;
             r.CanCrit = _canCrit;
             r.Enabled = _enabled;

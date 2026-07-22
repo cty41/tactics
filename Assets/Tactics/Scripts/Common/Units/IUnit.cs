@@ -55,6 +55,9 @@ namespace Tactics.Common.Units
         /// </summary>
         event Action<string> BasicAbilityUsed;
 
+        /// <summary>Raised whenever the unit's runtime four-direction facing changes.</summary>
+        event Action<FacingChangedEventArgs> FacingChanged;
+
         /// <summary>
         /// Invokes the ManaChanged event to signal that the unit's mana has changed.
         /// </summary>
@@ -122,6 +125,12 @@ namespace Tactics.Common.Units
         /// 先攻值，由 Speed × 2 计算得出，决定行动顺序。
         /// </summary>
         float Initiative { get; set; }
+
+        /// <summary>Runtime-only four-direction facing for the current battle.</summary>
+        FacingDirection Facing { get; set; }
+
+        /// <summary>Stable visual state key consumed by animation and gameplay tests.</summary>
+        string FacingVisualKey { get; }
 
         /// <summary>
         /// 近战攻击范围，基础值为 1。
@@ -259,6 +268,9 @@ namespace Tactics.Common.Units
         /// Prepares unit resources for its new turn without triggering buff start logic.
         /// </summary>
         void PrepareForTurn() {}
+
+        /// <summary>Recomputes movement and initiative after a runtime status change.</summary>
+        void RefreshDerivedStats() {}
 
 
         /// <summary>
