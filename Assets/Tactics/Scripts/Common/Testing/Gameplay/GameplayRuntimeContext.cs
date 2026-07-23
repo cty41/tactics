@@ -16,6 +16,7 @@ using Tactics.RoguelikeMap.Events;
 using Tactics.Roster;
 using Tactics.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 namespace Tactics.Common.Testing.Gameplay
@@ -37,6 +38,11 @@ namespace Tactics.Common.Testing.Gameplay
         public Dictionary<string, AiBrainAsset> AiBrainAssets { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, BuffConfig> RuntimeBuffConfigs { get; } = new(StringComparer.OrdinalIgnoreCase);
         public List<GameObject> OwnedRuntimeGameObjects { get; } = new();
+        public List<Component> OwnedRuntimeComponents { get; } = new();
+        public List<Action> OwnedCleanupActions { get; } = new();
+        public List<InputDevice> OwnedInputDevices { get; } = new();
+        public Mouse PlayerInputMouse { get; set; }
+        public Keyboard PlayerInputKeyboard { get; set; }
 
         // Shared battle primitive observations used by Battle/UI adapters.
         public BattleInitiativeService InitiativeService { get; set; }
@@ -118,6 +124,26 @@ namespace Tactics.Common.Testing.Gameplay
             Units.Clear();
             Cells.Clear();
             SkillAbilities.Clear();
+
+            foreach (var cleanup in OwnedCleanupActions)
+                cleanup?.Invoke();
+            OwnedCleanupActions.Clear();
+
+            foreach (var device in OwnedInputDevices)
+            {
+                if (device != null && device.added)
+                    InputSystem.RemoveDevice(device);
+            }
+            OwnedInputDevices.Clear();
+            PlayerInputMouse = null;
+            PlayerInputKeyboard = null;
+
+            foreach (var component in OwnedRuntimeComponents)
+            {
+                if (component != null)
+                    UnityEngine.Object.Destroy(component);
+            }
+            OwnedRuntimeComponents.Clear();
 
             foreach (var gameObject in OwnedRuntimeGameObjects)
             {

@@ -11,7 +11,7 @@ namespace Tactics.Common.Testing.Gameplay
         private readonly Dictionary<string, IGameplayStepAdapter> _adapters;
 
         public GameplayRuntimeRunner()
-            : this(new IGameplayStepAdapter[] { new SkillGameplayStepAdapter(), new BattleGameplayStepAdapter(), new MapGameplayStepAdapter(), new UiGameplayStepAdapter() })
+            : this(new IGameplayStepAdapter[] { new SkillGameplayStepAdapter(), new BattleGameplayStepAdapter(), new MapGameplayStepAdapter(), new UiGameplayStepAdapter(), new PlayerInputGameplayStepAdapter() })
         {
         }
 
@@ -25,27 +25,30 @@ namespace Tactics.Common.Testing.Gameplay
             if (plan == null)
                 throw new ArgumentNullException(nameof(plan));
 
-            var executionTask = ExecuteCoreAsync(plan);
+            using var scope = new BattleRuntimeScope();
+            using var context = new GameplayRuntimeContext { RuntimeScope = scope };
+            var executionTask = ExecuteCoreAsync(plan, context, scope);
             _ = executionTask.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
 
             var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
             if (completed != executionTask)
             {
-                // 超时后不再等待原任务，直接返回超时结果
+                // Cancel the runtime before disposing its context so adapters can leave
+                // their current PlayerLoop wait and release owned input devices safely.
+                scope.Cancel();
+                await Task.WhenAny(executionTask, Task.Delay(1000));
                 return BuildTimeoutResult(plan);
             }
 
             return await executionTask;
         }
 
-        private async Task<GameplayTestResult> ExecuteCoreAsync(ExecutableScenarioPlan plan)
+        private async Task<GameplayTestResult> ExecuteCoreAsync(
+            ExecutableScenarioPlan plan,
+            GameplayRuntimeContext context,
+            IBattleRuntimeScope scope)
         {
             var result = new GameplayTestResult { ScenarioName = plan.ScenarioName };
-
-            // 创建 RuntimeScope 管理异步生命周期
-            using var scope = new BattleRuntimeScope();
-            using var context = new GameplayRuntimeContext();
-            context.RuntimeScope = scope;
 
             foreach (var action in plan.SetupActions.Concat(plan.RuntimeActions))
             {
@@ -141,7 +144,8 @@ namespace Tactics.Common.Testing.Gameplay
                 or "loadTestEncounterConfig"
                 or "setBattleTestMode"
                 or "setAdventureGold"
-                or "setRosterCharacterState";
+                or "setRosterCharacterState"
+                or "initializePlayerInput";
         }
 
         private static string ResolvePhase(FailureCategory category, ExecutableScenarioAction action)

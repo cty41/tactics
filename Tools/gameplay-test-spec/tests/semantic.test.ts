@@ -262,6 +262,45 @@ test("rejects pressKey without key", () => {
   assert.ok(validation.diagnostics.some(d => d.code === "MissingActionParameter"));
 });
 
+test("rejects player-input-e2e setup and runtime shortcuts", () => {
+  const validation = validateScenarioSpec({
+    feature: "PlayerInput",
+    scenario: "ShortcutRejected",
+    tags: ["player-input-e2e"],
+    requiredAdapters: ["PlayerInput", "UI", "Map"],
+    timeoutMs: 10000,
+    setup: [{ kind: "loadPureRunMap", adapter: "Map", parameters: { mapConfigPath: "Assets/Map.asset" } }],
+    actions: [{ kind: "clickElement", adapter: "UI", parameters: { elementName: "NewGameButton" } }],
+    assertions: [{ kind: "elementExists", adapter: "UI", target: "NewGameButton", expected: true, parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "PlayerInputE2ESetupShortcut"));
+  assert.ok(validation.diagnostics.some(d => d.code === "PlayerInputE2EActionShortcut"));
+});
+
+test("validates player input semantic target and observable contracts", () => {
+  const validation = validateScenarioSpec({
+    feature: "PlayerInput",
+    scenario: "InvalidSemanticTargets",
+    tags: ["player-input-e2e"],
+    requiredAdapters: ["PlayerInput", "UI"],
+    timeoutMs: 10000,
+    setup: [{ kind: "initializePlayerInput", parameters: {} }],
+    actions: [
+      { kind: "clickPointerTarget", parameters: { targetKind: "Unknown" } },
+      { kind: "waitForPlayerObservable", parameters: { observable: "unknown" } },
+      { kind: "playBattleThroughInput", parameters: { maximumActions: 101 } }
+    ],
+    assertions: [{ kind: "elementExists", adapter: "UI", target: "Root", expected: true, parameters: {} }]
+  });
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidPlayerInputTargetKind"));
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidPlayerObservable"));
+  assert.ok(validation.diagnostics.some(d => d.code === "InvalidMaximumPlayerActions"));
+});
+
 test("rejects shared sequence assertion with non-string-array expected value", () => {
   const validation = validateScenarioSpec({
     feature: "Battle",

@@ -24,7 +24,8 @@ const setupKindToAdapter: Record<string, Adapter> = {
   setAdventureGold: "Map",
   setRosterCharacterState: "Map",
   addInventoryItem: "Map",
-  equipInventoryEquipmentToRosterCharacter: "Map"
+  equipInventoryEquipmentToRosterCharacter: "Map",
+  initializePlayerInput: "PlayerInput"
 };
 
 const actionKindToAdapter: Record<string, Adapter> = {
@@ -103,7 +104,14 @@ const actionKindToAdapter: Record<string, Adapter> = {
   clickBattleUnit: "Battle",
   spawnBattleUnit: "Battle",
   restartBattle: "Battle",
-  waitForBattleEnd: "Battle"
+  waitForBattleEnd: "Battle",
+  initializePlayerInput: "PlayerInput",
+  movePointerToTarget: "PlayerInput",
+  clickPointerTarget: "PlayerInput",
+  rightClickPointerTarget: "PlayerInput",
+  pressInputKey: "PlayerInput",
+  waitForPlayerObservable: "PlayerInput",
+  playBattleThroughInput: "PlayerInput"
 };
 
 const assertionKindToAdapter: Record<string, Adapter> = {

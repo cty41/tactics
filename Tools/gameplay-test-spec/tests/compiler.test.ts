@@ -370,6 +370,32 @@ test("routes shared UI interaction actions and observable assertions to UI", () 
   assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "UI"));
 });
 
+test("routes semantic player input actions to PlayerInput", () => {
+  const compiled = compileScenarioSpec({
+    feature: "PlayerInput",
+    scenario: "PlayerInputRouting",
+    tags: ["player-input-e2e"],
+    requiredAdapters: ["PlayerInput", "UI"],
+    timeoutMs: 10000,
+    setup: [{ kind: "initializePlayerInput", parameters: {} }],
+    actions: [
+      { kind: "movePointerToTarget", target: "NewGameButton", parameters: { targetKind: "UiElement" } },
+      { kind: "clickPointerTarget", target: "NewGameButton", parameters: { targetKind: "UiElement" } },
+      { kind: "rightClickPointerTarget", target: "Card", parameters: { targetKind: "UiElement" } },
+      { kind: "pressInputKey", parameters: { key: "Escape" } },
+      { kind: "waitForPlayerObservable", parameters: { observable: "uiVisible", uiId: "Home" } },
+      { kind: "playBattleThroughInput", parameters: { maximumActions: 100 } }
+    ],
+    assertions: [{ kind: "elementExists", adapter: "UI", target: "NewGameButton", expected: true, parameters: {} }]
+  });
+
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+  assert.ok(compiled.plan);
+  assert.ok(compiled.plan.setupActions.every(action => action.adapter === "PlayerInput"));
+  assert.ok(compiled.plan.runtimeActions.every(action => action.adapter === "PlayerInput"));
+  assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "UI"));
+});
+
 test("compiles structured AI turn result assertions from the authored source spec", async () => {
   const markdown = await readFixture("battle-ai-turn-result.gameplay-test.md");
   const generatedPlan = await readFixture("battle-ai-turn-result.plan.json");

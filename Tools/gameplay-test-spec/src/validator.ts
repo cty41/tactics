@@ -22,7 +22,8 @@ const supportedSetupKinds = new Set([
   "setAdventureGold",
   "setRosterCharacterState",
   "addInventoryItem",
-  "equipInventoryEquipmentToRosterCharacter"
+  "equipInventoryEquipmentToRosterCharacter",
+  "initializePlayerInput"
 ]);
 
 const supportedActionKinds = new Set([
@@ -103,8 +104,28 @@ const supportedActionKinds = new Set([
   "clickBattleUnit",
   "spawnBattleUnit",
   "restartBattle",
-  "waitForBattleEnd"
+  "waitForBattleEnd",
+  "initializePlayerInput",
+  "movePointerToTarget",
+  "clickPointerTarget",
+  "rightClickPointerTarget",
+  "pressInputKey",
+  "waitForPlayerObservable",
+  "playBattleThroughInput"
 ]);
+
+const playerInputActionKinds = new Set([
+  "initializePlayerInput",
+  "movePointerToTarget",
+  "clickPointerTarget",
+  "rightClickPointerTarget",
+  "pressInputKey",
+  "waitForPlayerObservable",
+  "playBattleThroughInput"
+]);
+
+const supportedPointerTargetKinds = new Set(["UiElement", "MapNode", "BattleUnit", "BattleCell"]);
+const supportedPlayerObservables = new Set(["uiElement", "uiVisible", "uiHidden", "mapReady"]);
 
 const supportedGraphKinds = new Set([
   "selfHeal",
@@ -289,11 +310,11 @@ export function validateScenarioSpec(input: unknown): ValidationResult {
     validateAssertion(assertion, state, diagnostics, spec.requiredAdapters, hasBindBattleController);
   }
 
-  if (!spec.requiredAdapters.includes("Skill") && !spec.requiredAdapters.includes("Battle") && !spec.requiredAdapters.includes("Map") && !spec.requiredAdapters.includes("UI")) {
+  if (!spec.requiredAdapters.includes("Skill") && !spec.requiredAdapters.includes("Battle") && !spec.requiredAdapters.includes("Map") && !spec.requiredAdapters.includes("UI") && !spec.requiredAdapters.includes("PlayerInput")) {
     diagnostics.push({
       code: "MissingAdapter",
       severity: "error",
-      message: "Scenarios must include at least one supported adapter (Skill, Battle, Map, or UI)."
+      message: "Scenarios must include at least one supported adapter (Skill, Battle, Map, UI, or PlayerInput)."
     });
   }
 
@@ -568,9 +589,73 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
     case "selectOrderedTarget":
       requireStepStringParameter(step, "targetAlias", diagnostics);
       break;
+    case "movePointerToTarget":
+    case "clickPointerTarget":
+    case "rightClickPointerTarget":
+      validatePlayerInputTarget(step, diagnostics);
+      break;
+    case "pressInputKey":
+      requireStepStringParameter(step, "key", diagnostics);
+      break;
+    case "waitForPlayerObservable":
+      validatePlayerObservable(step, diagnostics);
+      break;
+    case "playBattleThroughInput":
+      if (step.parameters.maximumActions !== undefined &&
+          (!Number.isInteger(step.parameters.maximumActions) || Number(step.parameters.maximumActions) < 1 || Number(step.parameters.maximumActions) > 100)) {
+        diagnostics.push({
+          code: "InvalidMaximumPlayerActions",
+          severity: "error",
+          message: "playBattleThroughInput maximumActions must be an integer from 1 to 100.",
+          path: step.id ?? step.kind
+        });
+      }
+      break;
     default:
       break;
   }
+}
+
+function validatePlayerInputTarget(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const targetKind = getString(step.parameters.targetKind) ?? "UiElement";
+  if (!supportedPointerTargetKinds.has(targetKind)) {
+    diagnostics.push({
+      code: "InvalidPlayerInputTargetKind",
+      severity: "error",
+      message: `${step.kind} targetKind must be UiElement, MapNode, BattleUnit, or BattleCell.`,
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  const locator = step.target ?? getString(step.parameters.elementName) ?? getString(step.parameters.nodeId) ??
+    getString(step.parameters.unitId) ?? getString(step.parameters.cell);
+  if (!locator) {
+    diagnostics.push({
+      code: "MissingPlayerInputTarget",
+      severity: "error",
+      message: `${step.kind} requires a semantic target locator.`,
+      path: step.id ?? step.kind
+    });
+  }
+}
+
+function validatePlayerObservable(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
+  const observable = getString(step.parameters.observable);
+  if (!observable || !supportedPlayerObservables.has(observable)) {
+    diagnostics.push({
+      code: "InvalidPlayerObservable",
+      severity: "error",
+      message: "waitForPlayerObservable observable must be uiElement, uiVisible, uiHidden, or mapReady.",
+      path: step.id ?? step.kind
+    });
+    return;
+  }
+
+  if (observable === "uiElement" && !(step.target ?? getString(step.parameters.elementName)))
+    requireStepStringParameter(step, "elementName", diagnostics);
+  if ((observable === "uiVisible" || observable === "uiHidden") && !getString(step.parameters.uiId))
+    requireStepStringParameter(step, "uiId", diagnostics);
 }
 
 function validateRunSeed(step: ScenarioStep, diagnostics: ExpectationDiagnostic[]): void {
@@ -1499,6 +1584,38 @@ function resetAliasState(state: AliasState): void {
 }
 
 function validateSemanticRules(spec: ScenarioSpec, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
+  if (spec.tags.includes("player-input-e2e")) {
+    if (!spec.requiredAdapters.includes("PlayerInput")) {
+      diagnostics.push({
+        code: "MissingPlayerInputAdapter",
+        severity: "error",
+        message: "player-input-e2e scenarios must require the PlayerInput adapter."
+      });
+    }
+
+    for (const setup of spec.setup) {
+      if (setup.kind !== "initializePlayerInput" || (setup.adapter && setup.adapter !== "PlayerInput")) {
+        diagnostics.push({
+          code: "PlayerInputE2ESetupShortcut",
+          severity: "error",
+          message: `player-input-e2e setup cannot execute '${setup.kind}'. Only initializePlayerInput is allowed.`,
+          path: setup.id ?? setup.kind
+        });
+      }
+    }
+
+    for (const action of spec.actions) {
+      if (!playerInputActionKinds.has(action.kind) || (action.adapter && action.adapter !== "PlayerInput")) {
+        diagnostics.push({
+          code: "PlayerInputE2EActionShortcut",
+          severity: "error",
+          message: `player-input-e2e runtime action '${action.kind}' must execute through PlayerInput.`,
+          path: action.id ?? action.kind
+        });
+      }
+    }
+  }
+
   const graphKinds = new Map<string, string>();
   for (const step of spec.setup) {
     if (step.kind === "createSkillGraph") {

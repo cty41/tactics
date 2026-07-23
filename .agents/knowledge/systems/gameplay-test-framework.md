@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-23T10:32:35+08:00"
+timestamp: "2026-07-23T11:37:15+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Testing/Gameplay
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:e51b850d7cf2765a3a0ef4049d9c39feb5bca67e43a8a9a054658ad799275595
+source_fingerprint: sha256:61def0d3a4e839b703da5ba8da5f1ae949b51307c44117749f6f97e2c1e76538
 ---
 
 # Current State
@@ -41,6 +41,8 @@ Map adapter 还支持 `encounterRecipeContract`、怪物 AI 目录/Heavy Shot �
 
 `Tests/gameplay-specs/ui/` 的 Slice 6 场景覆盖混合升级确认、背包只读技能详情、战斗两行布局、可点击禁用原因及连续刺击多段撤销/取消。`pure-run-ui-lifecycle-reentry` 在单个测试内保留同一 Inventory 缓存实例，连续执行三次关闭/重开并验证隐藏期间新增物品、角色信息和操作回调；测试组级清理仍隔离不同用例的旧战斗控制器。
 
+`PlayerInput` adapter 使用由 runtime context 拥有的虚拟 Mouse/Keyboard，通过 Input System 和生产 UI 输入模块驱动状态变化。UI 目标按稳定元素名解析，坐标由 `worldBound`、Panel scale 与屏幕 Y 轴转换得到，并在发送事件前用 Panel picking 验证；移动、按下和释放各跨真实 PlayerLoop 帧。`player-input-e2e` 标签禁止 setup 写入捷径和 UI/Map/Battle/Skill runtime action，只允许这些 adapter 做只读断言。`inventory-reentry-player-input` 从 Home 实际点击创建 Run，并连续三次通过地图按钮打开 Inventory，证明缓存重入、筛选、关闭和地图恢复交互都经过生产输入链。虚拟设备在成功、action 失败与 Runner 超时后均由 context 释放。
+
 Slice 9 的真实玩家流不再用 `completeNode`、伪造胜负或直接写终点代替操作链。`pure-run-real-player-route` 从 Home 的 New Run 按钮进入，依次以真实伤害产生五次胜利，完成 Fireball Lv2 显式升级确认，经过商店购买与会话重载后击败 Boss，并断言 Victory `RunSummary`；自然战斗团灭和 Mystery 伤害团灭分别验证零奖励、Defeat 快照及活动 session 清理。另有 Mystery 未选择、已解析和已提交三个中断阶段的重入场景。
 
 Battle/Map/UI PlayMode 夹具在激活对象前完成序列化依赖注入，避免重复调用 Unity 生命周期；运行时上下文销毁时取消 AI 任务、解绑结算事件并清理战斗作用域状态。测试 adapter 的失败信息包含当前选中单位、能力、节点与 summary 快照，便于区分业务失败和夹具隔离问题。
@@ -54,7 +56,7 @@ Battle/Map/UI PlayMode 夹具在激活对象前完成序列化依赖注入，避
 
 # Verification Guidance
 
-修改 Spec 工具、adapter 或 fixtures 后运行工具测试、validate/compile 和对应 Unity PlayMode 测试。需要证明实际行为时必须加载真实资产，不能用手写结果或日志文本替代。
+修改 Spec 工具、adapter 或 fixtures 后运行工具测试、validate/compile 和对应 Unity PlayMode 测试。真实玩家输入场景必须带 `player-input-e2e` 标签，状态变化只能来自 `PlayerInput` action；Map、Battle、Skill、UI adapter 仅可用于只读 assertion。需要证明实际行为时必须加载真实资产，不能用手写结果或日志文本替代。
 
 # Citations
 

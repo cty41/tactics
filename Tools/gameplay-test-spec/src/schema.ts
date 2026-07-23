@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const AdapterSchema = z.enum(["Battle", "Skill", "Map", "UI"]);
+export const AdapterSchema = z.enum(["Battle", "Skill", "Map", "UI", "PlayerInput"]);
 
 const JsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
   z.union([
