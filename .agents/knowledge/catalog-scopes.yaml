@@ -64,6 +64,7 @@ scopes:
       - .agents/docs/three-class-skill-design.md
       - Assets/Tactics/Scripts/Common/Battle
       - Assets/Tactics/Scripts/Battle
+      - Assets/Tactics/Scripts/Flow/Battle/BattleFlowCoordinator.cs
       - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
       - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
       - Assets/Tactics/Tests/Editor/EncounterConfigTests.cs
@@ -92,6 +93,7 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/FreezeExpiryEnemyResumeTests.cs
       - Assets/Tactics/Tests/PlayMode/SharedBattlePrimitivesTests.cs
       - Assets/Tactics/Tests/PlayMode/AmazonSkillLevelTests.cs
+      - Assets/Tactics/Tests/PlayMode/PureRunEncounterAndSummaryTests.cs
 
   monster-ai:
     concept: systems/monster-ai.md
@@ -172,5 +174,6 @@ scopes:
       - Assets/Tactics/Scripts/Common/Testing/Gameplay
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeMapPlanTests.cs
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeUiPlanTests.cs
+      - Assets/Tactics/Tests/PlayMode/PlayerInputGameplayPlanTests.cs
       - Tools/gameplay-test-spec
       - Tests/gameplay-specs

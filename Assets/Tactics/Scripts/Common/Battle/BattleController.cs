@@ -184,6 +184,8 @@ namespace Tactics.Common.Battle
         private readonly HashSet<string> _loadedPaths = new();
         private readonly Dictionary<string, AbilityConfig> _pureRunAbilityConfigCache = new(StringComparer.Ordinal);
         private readonly Dictionary<ICell, bool> _encounterBlockedCells = new();
+        private bool UseTestSetupForCurrentBattle =>
+            _useTestSetup && string.IsNullOrEmpty(RoguelikeMapRuntimeState.PendingBattleNodeId);
 
         #endregion
 
@@ -201,8 +203,10 @@ namespace Tactics.Common.Battle
             _controller.CorpsePrefabPath = _corpsePrefabPath;
             _controller.BeforeUnitManagerInitialize = _ =>
             {
-                if (_useTestSetup && _testPartyConfig != null)
+                if (UseTestSetupForCurrentBattle && _testPartyConfig != null)
                     SpawnTestPartyUnits();
+                else
+                    SpawnPartyUnits();
                 SpawnEncounterUnits();
             };
 
@@ -262,8 +266,6 @@ namespace Tactics.Common.Battle
             while (GameAssetManager.Instance == null || !GameAssetManager.Instance.IsInitialized)
                 yield return null;
 
-            SpawnPartyUnits();
-
             if (_startImmediatelly)
             {
                 InitializeGame();
@@ -276,7 +278,7 @@ namespace Tactics.Common.Battle
 
         private void SpawnEncounterUnits()
         {
-            if (_useTestSetup && _testEncounterConfig != null)
+            if (UseTestSetupForCurrentBattle && _testEncounterConfig != null)
             {
                 SpawnTestEncounterUnits();
                 SpawnTestEncounterInteractables();
@@ -323,7 +325,7 @@ namespace Tactics.Common.Battle
 
         private void SpawnPartyUnits()
         {
-            if (_useTestSetup && _testPartyConfig != null)
+            if (UseTestSetupForCurrentBattle && _testPartyConfig != null)
             {
                 // Deferred to BeforeUnitManagerInitialize (after CellManager init)
                 return;
@@ -393,6 +395,7 @@ namespace Tactics.Common.Battle
                 }
             }
 
+            var reservedPartyCells = new HashSet<ICell>();
             for (int i = 0; i < state.ActivePartyCharacterIds.Count; i++)
             {
                 string id = state.ActivePartyCharacterIds[i];
@@ -440,7 +443,34 @@ namespace Tactics.Common.Battle
 
                 unit.PlayerNumber = _humanPlayerNumber;
 
-                if (i < respawnPoints.Count)
+                var roleMapping = _rolePrefabMappings.FirstOrDefault(mapping =>
+                    mapping != null && mapping.RoleType == def.RoleType);
+                var configuredCell = roleMapping == null
+                    ? null
+                    : CellManager?.GetCellAt(roleMapping.StartingCell.ToIVector2Int());
+                if (configuredCell == null ||
+                    reservedPartyCells.Contains(configuredCell) ||
+                    !IsCellVisibleToMainCamera(configuredCell))
+                {
+                    var availableCells = CellManager?.GetCells()
+                        .Where(cell => cell != null &&
+                            !cell.IsTaken &&
+                            cell.CurrentUnits.Count == 0 &&
+                            !reservedPartyCells.Contains(cell) &&
+                            CellManager.IsCellWalkable(cell))
+                        .ToList();
+                    configuredCell = availableCells
+                        ?.Where(IsCellVisibleToMainCamera)
+                        .OrderBy(GetPartySpawnViewportDistance)
+                        .ThenBy(cell => cell.GridCoordinates.y)
+                        .FirstOrDefault();
+                }
+                if (configuredCell != null)
+                {
+                    go.transform.position = configuredCell.WorldPosition.ToVector3();
+                    reservedPartyCells.Add(configuredCell);
+                }
+                else if (i < respawnPoints.Count)
                 {
                     go.transform.position = respawnPoints[i].position;
                 }
@@ -482,6 +512,28 @@ namespace Tactics.Common.Battle
                     def.ClearPendingBuffs();
                 }
             }
+        }
+
+        private static bool IsCellVisibleToMainCamera(ICell cell)
+        {
+            var camera = Camera.main;
+            if (camera == null || cell == null)
+                return false;
+
+            Vector3 viewport = camera.WorldToViewportPoint(cell.WorldPosition.ToVector3());
+            return viewport.z > 0f &&
+                viewport.x >= 0f && viewport.x <= 1f &&
+                viewport.y >= 0f && viewport.y <= 1f;
+        }
+
+        private static float GetPartySpawnViewportDistance(ICell cell)
+        {
+            var camera = Camera.main;
+            if (camera == null || cell == null)
+                return float.MaxValue;
+
+            Vector3 viewport = camera.WorldToViewportPoint(cell.WorldPosition.ToVector3());
+            return (new Vector2(viewport.x, viewport.y) - new Vector2(0.25f, 0.5f)).sqrMagnitude;
         }
 
         private AbilityConfig LoadPureRunAbilityConfig(string configuredPath, GameAssetManager manager)
@@ -1232,6 +1284,7 @@ namespace Tactics.Common.Battle
 
         void IPlayerManager.Initialize(GridController gridController)
         {
+            EnsurePlayersCoverSpawnedUnits();
             if (_runtimePlayers == null || _runtimePlayers.Count == 0)
             {
                 if (_players == null || _players.Length == 0)
@@ -1252,6 +1305,51 @@ namespace Tactics.Common.Battle
             {
                 player.Initialize(gridController);
             }
+        }
+
+        /// <summary>
+        /// Encounter units are spawned immediately before player initialization. Scene
+        /// player entries may therefore omit factions introduced by the encounter asset.
+        /// Preserve configured player types and add every missing spawned faction as AI
+        /// so turn resolution never receives a unit without an owning player.
+        /// </summary>
+        private void EnsurePlayersCoverSpawnedUnits()
+        {
+            if (_units == null)
+                return;
+
+            var existingEntries = (_players ?? Array.Empty<PlayerEntry>()).ToList();
+            var existingNumbers = existingEntries
+                .Select(entry => entry.PlayerNumber)
+                .ToHashSet();
+            bool changed = false;
+
+            foreach (int playerNumber in _units
+                .Where(unit => unit != null)
+                .Select(unit => unit.PlayerNumber)
+                .Distinct()
+                .OrderBy(number => number))
+            {
+                if (!existingNumbers.Add(playerNumber))
+                    continue;
+
+                existingEntries.Add(new PlayerEntry
+                {
+                    PlayerNumber = playerNumber,
+                    Type = playerNumber == 0 ? PlayerType.HumanPlayer : PlayerType.AutomatedPlayer,
+                    AITurnStartDelay = 0,
+                    AIUnitDelay = 250
+                });
+                changed = true;
+            }
+
+            if (!changed)
+                return;
+
+            _players = existingEntries.ToArray();
+            InitializePlayers();
+            TLog.Warning($"[BattleController] Added missing player entries for spawned factions: " +
+                $"{string.Join(", ", existingNumbers.OrderBy(number => number))}.");
         }
 
         IEnumerable<IPlayer> IPlayerManager.GetPlayers()

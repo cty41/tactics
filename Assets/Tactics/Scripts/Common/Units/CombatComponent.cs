@@ -251,7 +251,7 @@ namespace Tactics.Common.Units
             bool bypassDefense = false,
             float accuracyPenalty = 0f)
         {
-            if (target == null)
+            if (!IsUnityUnitAvailable(target))
                 return DamageResolution.Invalid();
 
             float dodgeChance = 0f;
@@ -349,12 +349,21 @@ namespace Tactics.Common.Units
                 else DamageShields[target] = new DamageShieldState(shield, shieldState.AbsorbsAllDamage);
             }
 
-            if (damage > 0f) target.ModifyHealth(-damage, caster);
-            target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
+            string targetName = GetUnitName(target);
+            float healthBeforeDamage = target.Health;
+            if (damage > 0f)
+                target.ModifyHealth(-damage, caster);
 
-            LogDamage(logSourceName ?? GetUnitName(caster), target, damage);
+            bool targetSurvivedResolution = IsUnityUnitAvailable(target);
+            if (targetSurvivedResolution)
+                target.InvokeAttacked(new UnitAttackedEventArgs(target, caster, damage));
 
-            if (canTriggerDamageTaken)
+            float remainingHealth = targetSurvivedResolution
+                ? target.Health
+                : Mathf.Max(0f, healthBeforeDamage - damage);
+            LogDamage(logSourceName ?? GetUnitName(caster), targetName, damage, remainingHealth);
+
+            if (canTriggerDamageTaken && targetSurvivedResolution)
             {
                 target.BuffComponent?.OnDamageTaken(caster, damage, isRangedDamage);
             }
@@ -365,17 +374,17 @@ namespace Tactics.Common.Units
         private static double NextCombatTechniqueRoll() =>
             _combatTechniqueRollOverride ?? CombatTechniqueRandom.NextDouble();
 
-        private static void LogDamage(string sourceName, IUnit target, float damage)
+        private static void LogDamage(string sourceName, string targetName, float damage, float remainingHealth)
         {
-            if (!TBattleLog.IsBattleActive || target == null)
+            if (!TBattleLog.IsBattleActive)
                 return;
 
             TBattleLog.Log(new DamageLogData
             {
                 Source = string.IsNullOrWhiteSpace(sourceName) ? "Unknown" : sourceName,
-                Target = GetUnitName(target),
+                Target = string.IsNullOrWhiteSpace(targetName) ? "Unknown" : targetName,
                 Damage = damage,
-                RemainingHealth = target.Health
+                RemainingHealth = remainingHealth
             });
         }
 
@@ -394,10 +403,18 @@ namespace Tactics.Common.Units
 
         private static string GetUnitName(IUnit unit)
         {
+            if (!IsUnityUnitAvailable(unit))
+                return "Unknown";
             if (unit is INamedUnit named && !string.IsNullOrWhiteSpace(named.UnitName))
                 return named.UnitName;
 
             return unit == null ? "Unknown" : $"Unit_{unit.UnitID}";
+        }
+
+        private static bool IsUnityUnitAvailable(IUnit unit)
+        {
+            return unit != null &&
+                (unit is not UnityEngine.Object unityObject || unityObject != null);
         }
 
         public static float GetCriticalDamage(float baseDamage)

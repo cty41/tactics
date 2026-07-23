@@ -14,6 +14,7 @@ using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Utilities;
 using Tactics.Consumables;
 
 using Tactics.Common.Units.Buffs;
@@ -321,6 +322,8 @@ namespace Tactics.UI
             if (currentUnit != null)
             {
                 _currentSelectedUnit = currentUnit;
+                if (_gridController.TurnContext.CurrentPlayer?.PlayerType == PlayerType.HumanPlayer)
+                    FocusCameraOnUnit(currentUnit);
                 UpdateStatusPanel();
                 UpdateMoveButtonState(currentUnit);
                 UpdateConsumableButton(currentUnit);
@@ -726,6 +729,8 @@ namespace Tactics.UI
                 }
 
                 _currentSelectedUnit = currentUnit;
+                if (isHumanTurn)
+                    FocusCameraOnUnit(currentUnit);
                 UpdateStatusPanel();
                 UpdateMoveButtonState(currentUnit);
                 UpdateConsumableButton(currentUnit);
@@ -1035,9 +1040,16 @@ namespace Tactics.UI
             var camera = _mainCamera ?? Camera.main;
             if (camera == null) return;
 
+            List<IUnit> staleUnits = null;
             foreach (var (unit, unitIcons) in _unitBuffIcons)
             {
-                if (unit == null || unitIcons.Icons.Count == 0) continue;
+                if (!IsUnityUnitAvailable(unit))
+                {
+                    unitIcons.Container?.RemoveFromHierarchy();
+                    (staleUnits ??= new List<IUnit>()).Add(unit);
+                    continue;
+                }
+                if (unitIcons.Icons.Count == 0) continue;
 
                 Vector3 worldPos = new Vector3(
                     unit.WorldPosition.x,
@@ -1059,6 +1071,16 @@ namespace Tactics.UI
                 unitIcons.Container.style.top = uiY;
                 unitIcons.Container.style.display = DisplayStyle.Flex;
             }
+
+            if (staleUnits == null) return;
+            foreach (var staleUnit in staleUnits)
+                _unitBuffIcons.Remove(staleUnit);
+        }
+
+        private static bool IsUnityUnitAvailable(IUnit unit)
+        {
+            return unit != null &&
+                (unit is not UnityEngine.Object unityObject || unityObject != null);
         }
 
         private void UpdateBuffTurnCounters(IUnit unit)
@@ -1228,6 +1250,20 @@ namespace Tactics.UI
                 _consumableButton?.EnableInClassList("targeting", false);
                 if (_gridController != null)
                     _gridController.GridState = new GridStateAwaitInput();
+            }
+
+            bool isHumanTargeting = _gridController?.TurnContext.CurrentPlayer?.PlayerType == PlayerType.HumanPlayer &&
+                _gridController.GridState is not GridStateAwaitInput;
+            if (cancelPressed &&
+                isHumanTargeting &&
+                _currentOrderedAbility?.OrderedSelection == null &&
+                !_isConsumableTargeting)
+            {
+                _currentOrderedAbility = null;
+                _currentMoveAbility = null;
+                _gridController.GridState = new GridStateAwaitInput();
+                HideAbilityReason();
+                RefreshActionUi();
             }
 
             UpdateDamageNumbers();
@@ -1516,7 +1552,8 @@ namespace Tactics.UI
 
         private void OnAnyUnitHealthChanged(HealthChangedEventArgs args)
         {
-            if (args.HealthChangeAmount == 0) return;
+            if (args.HealthChangeAmount == 0 || !IsUnityUnitAvailable(args.AffectedUnit))
+                return;
 
             var worldPos = args.AffectedUnit.WorldPosition;
             var unityPos = new Vector3(worldPos.x, worldPos.y, worldPos.z);
@@ -1532,6 +1569,29 @@ namespace Tactics.UI
                 string text = "+" + Mathf.RoundToInt(args.HealthChangeAmount);
                 SpawnDamageNumber(DamageNumberType.Heal, text, displayPos);
             }
+        }
+
+        private void FocusCameraOnUnit(IUnit unit)
+        {
+            if (!IsUnityUnitAvailable(unit))
+                return;
+
+            var camera = _mainCamera ?? Camera.main;
+            if (camera == null)
+                return;
+
+            var worldPosition = unit.WorldPosition.ToVector3();
+            var screenPosition = camera.WorldToScreenPoint(worldPosition);
+            if (screenPosition.z <= 0f)
+                return;
+
+            var screenCenter = new Vector3(
+                Screen.width * 0.5f,
+                Screen.height * 0.5f,
+                screenPosition.z);
+            var worldAtCenter = camera.ScreenToWorldPoint(screenCenter);
+            camera.transform.position += worldPosition - worldAtCenter;
+            _mainCamera = camera;
         }
 
         private void SpawnDamageNumber(DamageNumberType type, string text, Vector3 worldPosition)

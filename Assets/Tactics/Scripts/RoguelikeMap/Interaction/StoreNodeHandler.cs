@@ -104,9 +104,11 @@ namespace Tactics.RoguelikeMap.Interaction
             if (_goodsContainer == null) return;
             _goodsContainer.Clear();
 
-            foreach (var good in _currentGoods)
+            for (int index = 0; index < _currentGoods.Count; index++)
             {
+                var good = _currentGoods[index];
                 var row = new VisualElement();
+                row.name = $"StoreGood_{index}";
                 row.style.flexDirection = FlexDirection.Row;
                 row.style.marginBottom = 4;
 
@@ -118,7 +120,11 @@ namespace Tactics.RoguelikeMap.Interaction
                 priceLabel.style.marginLeft = 8;
                 row.Add(priceLabel);
 
-                var buyBtn = new Button(() => BuyGood(good)) { text = "购买" };
+                var buyBtn = new Button(() => BuyGood(good))
+                {
+                    name = $"StoreBuyButton_{index}",
+                    text = "购买"
+                };
 
                 if (IsGoodPurchased(good))
                 {

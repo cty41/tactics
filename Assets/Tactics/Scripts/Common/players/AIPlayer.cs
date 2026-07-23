@@ -79,13 +79,17 @@ namespace Tactics.Common.Players
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                var playableUnits = gridController.TurnContext.PlayableUnits().ToList();
+                var playableUnits = gridController.TurnContext.PlayableUnits()
+                    .Where(IsUnityUnitAvailable)
+                    .ToList();
                 foreach (var playableUnit in UnitSelector.SelectNext(() => playableUnits, gridController))
                 {
                     if (_cancellationTokenSource.IsCancellationRequested)
                     {
                         return;
                     }
+                    if (!IsUnityUnitAvailable(playableUnit))
+                        continue;
 
                     await gridController.UnitManager.MarkAsSelected(playableUnit);
                     playableUnit.InvokeUnitSelected();
@@ -121,6 +125,8 @@ namespace Tactics.Common.Players
                     }
 
                     await Awaitable.WaitForSecondsAsync(UnitDelay / 1000f, _cancellationTokenSource.Token);
+                    if (!IsUnityUnitAvailable(playableUnit))
+                        continue;
 
                     if (playableUnit is Unit concreteUnit && concreteUnit.AiBrainAsset != null)
                     {
@@ -133,6 +139,8 @@ namespace Tactics.Common.Players
                         continue;
                     }
 
+                    if (!IsUnityUnitAvailable(playableUnit))
+                        continue;
 
                     await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
                     await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
@@ -148,6 +156,12 @@ namespace Tactics.Common.Players
             {
                 TLog.Error($"[AIPlayer] Exception during Play() for Player {PlayerNumber}: {ex}");
             }
+        }
+
+        private static bool IsUnityUnitAvailable(IUnit unit)
+        {
+            return unit != null &&
+                (unit is not UnityEngine.Object unityObject || unityObject != null);
         }
 
         /// <summary>

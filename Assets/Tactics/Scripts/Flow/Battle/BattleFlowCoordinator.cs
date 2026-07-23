@@ -83,23 +83,13 @@ namespace Tactics.Flow.Battle
 
                 UIManager.Instance.Destroy(UIManager.UIId.Battle);
 
-                var battleScene = SceneManager.GetSceneByName("Test1");
-                if (battleScene.isLoaded)
-                {
-                    var unloadOp = SceneManager.UnloadSceneAsync(battleScene);
-                    if (unloadOp != null)
-                    {
-                        while (!unloadOp.isDone)
-                            await Task.Yield();
-                    }
-                    // Note: UnloadSceneAsync returns null if trying to unload the last loaded scene.
-                    // In that case, we proceed to load the return scene with Single mode which will replace it.
-                }
-
                 var mgr = GameAssetManager.Instance;
                 if (mgr != null && mgr.IsInitialized)
                 {
                     var returnPath = SceneProjectPathHelper.ToProjectPath(returnSceneName);
+                    // Single-mode loading replaces the battle scene atomically. Explicitly
+                    // unloading Test1 first is invalid when it is the only loaded scene and
+                    // emits an engine Error before the return scene can be loaded.
                     await mgr.LoadSceneAsync(returnPath, LoadSceneMode.Single);
                 }
             }

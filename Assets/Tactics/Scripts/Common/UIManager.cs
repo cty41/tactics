@@ -3,6 +3,8 @@ using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tactics.AssetPipeline;
+using Tactics.Common.Battle;
+using Tactics.Common.Controllers.GridStates;
 using Tactics.Flow.Home;
 using Tactics.RoguelikeMap.UI;
 using Tactics.UI;
@@ -292,6 +294,17 @@ namespace Tactics
 
         private void OnToggleMenuPerformed(InputAction.CallbackContext ctx)
         {
+            // The UI Cancel action also receives the mouse right button. In battle that
+            // input belongs to target-selection cancellation and must not open Pause.
+            if (ctx.control?.device is Mouse)
+                return;
+            if (IsVisible(UIId.Battle) &&
+                BattleController.Instance is { } battleController &&
+                battleController.GridState is not GridStateAwaitInput)
+            {
+                return;
+            }
+
             if (IsVisible(UIId.Options))
             {
                 Hide(UIId.Options);

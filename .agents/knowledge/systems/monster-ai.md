@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-07-23T06:43:11+08:00"
+timestamp: "2026-07-23T17:12:49+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Assets/Tactics/AI/Encounters
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:cb849e23a473c32e7cbf8a57ba3de5f21b587228406c012a3e743b1de4173633
+source_fingerprint: sha256:15d9e0d25e7ada8a91d98f94c48038ffd7b97736f996ff251bdc204decf8c8f7
 ---
 
 # Current State
@@ -34,6 +34,8 @@ Pure Run 的 Charger、Ranged、AOE、Support、EliteCharger 与 ElitePoisonCast
 SkillGraph AI 元数据会从范围收集节点识别 AOE，并从 Harmful Buff 或死灵诅咒节点识别 Debuff。候选进入评分前拒绝会造成友军伤害的 AOE 中心，也拒绝向已持有同一负面状态/诅咒类别的目标重复施加 Debuff；这两项是硬合法性约束，不依赖权重碰巧压低分数。`ScoreNode.Parameter` 已序列化但仍未由 `IntentScorer` 消费。
 
 亚马逊诱饵沿用普通敌人的候选生成与合法性，不建立专用 Brain。若当前生成结果中存在可达诱饵的移动或攻击候选，`IntentGenerator` 会只保留这些诱饵候选；没有可达诱饵候选时继续使用正常敌方目标，避免不可达诱饵令 AI 停摆。
+
+低生命撤退只在敌人已经进入其即时攻击包络时生成；拉开一个安全间距后必须恢复正常接敌，避免大地图上永久风筝导致玩家输入旅程无法自然结束。AI 行动队列在选择前和每个异步等待后都会过滤已被同步致死销毁的单位。
 
 # Relationships
 

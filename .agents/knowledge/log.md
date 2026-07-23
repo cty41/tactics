@@ -1,13 +1,14 @@
 # Tactics Knowledge Update Log
 
 ## 2026-07-23
-* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:61def0d3a4e839b703da5ba8da5f1ae949b51307c44117749f6f97e2c1e76538`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:fb7afa85cbc77ea4d447b3cd4a5515ec3c022b754885581623cd976331ec99ee`。
-* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:51180c5dc37239a583a7968135fbec9bbb46a2395d0dc8f0572cb9aeee9cb756`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d4a5bcde1b0a85c275bcd3058f2735d8090671b84a3e4b0d582a221869f363f3`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:8aa2b033fe29c92d67ef221bd721a5c6a83f8537ec83cb47388db2a2c05ffae1`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:db1af15843e908c2a8e72934b9ea494f859d15d1d7d90373c4bd165dba0e4f80`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:15d9e0d25e7ada8a91d98f94c48038ffd7b97736f996ff251bdc204decf8c8f7`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:38f691018a7cb17afb64c79bfa5b59000283f3fb2dad67c45104a7e05daeb3e1`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:c58451ad405dde6f30a64fc4d37a25f5e989f8fd7e274b997c1af39b418b3a89`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:6b118689b913cf29b699e5d22b4b1e7655c9d3f2f3d190fa62c91d6e9bf077cb`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:0303fe6ec11a4fc48cd666c797823178bdcc9bef00a4669519c08b8fa8df9ed0`。
 * **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:67cfe68ebcea5cdba1230c8c18ae935dc45a2b2a7f7c5d1acfbf983ded90ef1b`。
-* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:cb849e23a473c32e7cbf8a57ba3de5f21b587228406c012a3e743b1de4173633`。
-* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:547af8677e5bb5c2140ad91c30468b2482471fe207ea90f6bc58a82945a12a3a`。
 
 ## 2026-07-22
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:c93f60b02efda1ca3f5243350b87e02d0d09f3d8fa31d1e89bfd5aefad5112c9`。

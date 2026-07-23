@@ -125,7 +125,15 @@ const playerInputActionKinds = new Set([
 ]);
 
 const supportedPointerTargetKinds = new Set(["UiElement", "MapNode", "BattleUnit", "BattleCell"]);
-const supportedPlayerObservables = new Set(["uiElement", "uiVisible", "uiHidden", "mapReady"]);
+const supportedPlayerObservables = new Set([
+  "uiElement",
+  "uiVisible",
+  "uiHidden",
+  "mapReady",
+  "battleReady",
+  "humanTurn",
+  "battleEnded",
+]);
 
 const supportedGraphKinds = new Set([
   "selfHeal",
@@ -646,7 +654,7 @@ function validatePlayerObservable(step: ScenarioStep, diagnostics: ExpectationDi
     diagnostics.push({
       code: "InvalidPlayerObservable",
       severity: "error",
-      message: "waitForPlayerObservable observable must be uiElement, uiVisible, uiHidden, or mapReady.",
+      message: "waitForPlayerObservable observable must be uiElement, uiVisible, uiHidden, mapReady, battleReady, humanTurn, or battleEnded.",
       path: step.id ?? step.kind
     });
     return;

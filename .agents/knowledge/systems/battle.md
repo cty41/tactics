@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-23T10:32:38+08:00"
+timestamp: "2026-07-23T17:26:35+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -21,6 +21,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs
   - Assets/Tactics/Scripts/Common/Battle/EncounterUnitRuntimeModifiers.cs
   - Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs
+  - Assets/Tactics/Scripts/Flow/Battle/BattleFlowCoordinator.cs
   - Assets/Tactics/Scripts/Common/Battle/AmazonBattleState.cs
   - Assets/Tactics/Scripts/Common/Battle/SummonRegistry.cs
   - Assets/Tactics/Scripts/Common/Interactables/DroppedSpear.cs
@@ -42,7 +43,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:fb7afa85cbc77ea4d447b3cd4a5515ec3c022b754885581623cd976331ec99ee
+source_fingerprint: sha256:8aa2b033fe29c92d67ef221bd721a5c6a83f8537ec83cb47388db2a2c05ffae1
 ---
 
 # Current State
@@ -80,6 +81,8 @@ Pure Run 遭遇将 E1/E2 的生命/输出倍率设为 1.3/1.15，Special 设为 
 奖励入口先验证玩家方胜利；战败返回零金币、经验、物品和击杀统计。胜利只把带 `EncounterUnitRuntimeModifiers` 的正式敌方死亡计入 `enemiesDefeated`，召唤物、诱饵与测试对象不进入正式统计。
 
 战斗技能卡统一消费 `AbilityAvailability`：隐藏技能不建卡，可点击禁用技能保留卡片并在点击后显示稳定原因。连续刺击等有序多段技能显示当前段数和目标编号；右键或 Esc 每次撤销最后一段，队列为空时再次取消退出。落地长矛以不参与点击和视线判断的独立世界标记显示。
+
+Pure Run 正式战斗会在单位管理器初始化前生成队伍与遭遇，并为所有实际出现的阵营补齐玩家控制器；玩家出生格优先选择相机可见、可行走且未占用的配置或最近合法格。Battle UI 在人类单位行动时将相机平移到该单位，右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
 
 # Relationships
 

@@ -447,6 +447,16 @@ namespace Tactics.Common.AI.MonsterAI
 
         private static void GenerateRetreatCandidates(AiContext context, IntentNodeRecord intent, List<IntentCandidate> candidates)
         {
+            // Retreat is an emergency response, not a permanent low-health mode. It is
+            // available while an enemy is already inside its immediate attack envelope;
+            // after opening a small safety gap the unit must resume normal engagement.
+            bool isThreatened = context.Enemies.Any(enemy =>
+                enemy?.CurrentCell != null &&
+                CalcDist(context.Self.CurrentCell, enemy.CurrentCell) <=
+                    System.Math.Max(1f, enemy.AttackRange + 1f));
+            if (!isThreatened)
+                return;
+
             ICell bestCell = null;
             float bestSafety = float.MinValue;
             foreach (var cell in context.ReachableCells)

@@ -159,6 +159,7 @@ namespace Tactics.RoguelikeMap.UI
         {
             // 选项容器
             var container = new VisualElement();
+            container.name = $"EventOption_{index}";
             container.AddToClassList("option-container");
 
             // 文本行（选项文本 + 成功率）

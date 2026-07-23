@@ -301,6 +301,24 @@ test("validates player input semantic target and observable contracts", () => {
   assert.ok(validation.diagnostics.some(d => d.code === "InvalidMaximumPlayerActions"));
 });
 
+test("allows production battle lifecycle observables for player input", () => {
+  const validation = validateScenarioSpec({
+    feature: "PlayerInput",
+    scenario: "BattleLifecycleObservable",
+    tags: ["player-input-e2e"],
+    requiredAdapters: ["PlayerInput", "UI"],
+    timeoutMs: 10000,
+    setup: [{ kind: "initializePlayerInput", adapter: "PlayerInput", parameters: {} }],
+    actions: [
+      { kind: "waitForPlayerObservable", adapter: "PlayerInput", parameters: { observable: "battleReady" } },
+      { kind: "waitForPlayerObservable", adapter: "PlayerInput", parameters: { observable: "humanTurn" } },
+      { kind: "waitForPlayerObservable", adapter: "PlayerInput", parameters: { observable: "battleEnded" } }
+    ],
+    assertions: [{ kind: "elementExists", adapter: "UI", target: "EndTurnButton", expected: true, parameters: {} }]
+  });
+  assert.equal(validation.valid, true, JSON.stringify(validation.diagnostics));
+});
+
 test("rejects shared sequence assertion with non-string-array expected value", () => {
   const validation = validateScenarioSpec({
     feature: "Battle",

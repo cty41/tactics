@@ -227,6 +227,52 @@ namespace Tactics.Tests.PlayMode
             task.Result.Release("Assets/Tactics/AI/Encounters/AOEBrain.asset");
         }
 
+        [UnityTest]
+        public IEnumerator EncounterAi_RetreatsOnlyWhileAnEnemyIsWithinThreatDistance()
+        {
+            var task = TestGameAssetHelper.EnsureInitialized();
+            yield return new WaitUntil(() => task.IsCompleted);
+            Assert.That(task.Result, Is.Not.Null);
+
+            const string brainPath = "Assets/Tactics/AI/Encounters/RangedBrain.asset";
+            var brain = task.Result.Load<AiBrainAsset>(brainPath);
+            Assert.That(brain, Is.Not.Null);
+
+            using var world = new SkillGraphTestWorld();
+            for (int x = 0; x < 24; x++)
+                world.CreateSquareCell($"Cell_{x}_0", x, 0);
+
+            var ranged = world.CreateUnit(
+                "Ranged",
+                1,
+                world.CellManager.GetCellAt(new Tactics.Common.Utilities.Vector2IntImpl(0, 0)));
+            var enemy = world.CreateUnit(
+                "Enemy",
+                0,
+                world.CellManager.GetCellAt(new Tactics.Common.Utilities.Vector2IntImpl(3, 0)));
+            ranged.MaxHealth = 10;
+            ranged.Health = 1;
+            ranged.MaxMovementPoints = 5;
+            ranged.AttackRange = 3;
+            enemy.AttackRange = 3;
+
+            var threatenedCandidates = IntentGenerator.Generate(
+                AiContextBuilder.Build(ranged, world.GridController, brain));
+            Assert.That(
+                threatenedCandidates.Any(candidate => candidate.IntentType == IntentType.Retreat),
+                Is.True);
+
+            enemy.CurrentCell = world.CellManager.GetCellAt(
+                new Tactics.Common.Utilities.Vector2IntImpl(23, 0));
+            var safeCandidates = IntentGenerator.Generate(
+                AiContextBuilder.Build(ranged, world.GridController, brain));
+            Assert.That(
+                safeCandidates.Any(candidate => candidate.IntentType == IntentType.Retreat),
+                Is.False);
+
+            task.Result.Release(brainPath);
+        }
+
         private sealed class TestPlayer : IPlayer
         {
             public TestPlayer(int number, PlayerType type)

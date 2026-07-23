@@ -123,12 +123,13 @@ namespace Tactics.Common.Skills.Graph
 
         public void RecordEvent(string eventType, string nodeId, IUnit target = null)
         {
+            bool targetAvailable = IsUnityUnitAvailable(target);
             ExecutionEvents.Add(new SkillGraphExecutionEvent
             {
                 EventType = eventType,
                 NodeId = nodeId,
-                TargetUnitName = GetUnitName(target),
-                CellCoordinates = target?.CurrentCell?.GridCoordinates.ToString(),
+                TargetUnitName = targetAvailable ? GetUnitName(target) : null,
+                CellCoordinates = targetAvailable ? target.CurrentCell?.GridCoordinates.ToString() : null,
                 Timestamp = UnityEngine.Time.time
             });
         }
@@ -183,8 +184,14 @@ namespace Tactics.Common.Skills.Graph
 
         private static string GetUnitName(IUnit unit)
         {
-            if (unit == null) return null;
+            if (!IsUnityUnitAvailable(unit)) return null;
             return unit is UnityEngine.MonoBehaviour mb ? mb.gameObject.name : unit.GetType().Name;
+        }
+
+        private static bool IsUnityUnitAvailable(IUnit unit)
+        {
+            return unit != null &&
+                (unit is not UnityEngine.Object unityObject || unityObject != null);
         }
     }
 }

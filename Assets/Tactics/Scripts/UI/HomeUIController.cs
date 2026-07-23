@@ -23,8 +23,16 @@ namespace Tactics.UI
         private Button _cancelNewRunButton;
         private bool _isWired;
 
+        public bool IsReadyForInput =>
+            _isWired &&
+            _newGameButton?.panel != null &&
+            _newGameButton.enabledInHierarchy;
+
         protected override void OnShown()
         {
+            // Cached UI instances can be shown with a rebuilt UIDocument tree after a
+            // scene/fixture re-entry. Unbind the previous tree before querying the new one.
+            UnwireButtons();
             StartCoroutine(WireButtonsDelayed());
         }
 
@@ -50,12 +58,6 @@ namespace Tactics.UI
             _overwritePrompt = root.Q<VisualElement>("OverwritePrompt");
             _confirmNewRunButton = root.Q<Button>("ConfirmNewRunButton");
             _cancelNewRunButton = root.Q<Button>("CancelNewRunButton");
-
-            if (_isWired)
-            {
-                RefreshRunActions();
-                return;
-            }
 
             if (_newGameButton != null)
                 _newGameButton.clicked += OnNewGameClicked;

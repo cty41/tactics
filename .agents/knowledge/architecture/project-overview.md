@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
 tags: [architecture, unity, agent-first]
-timestamp: "2026-07-15T12:00:00+08:00"
+timestamp: "2026-07-23T17:12:49+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -12,7 +12,7 @@ repo_paths:
   - .agents/ARCHITECTURE.md
   - Assets/Tactics/Scripts/Common/UIManager.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:0d4feed7888853a0ca5f469716af441f37f1f2e8ce95009e80e8c6d96cf06637
+source_fingerprint: sha256:38f691018a7cb17afb64c79bfa5b59000283f3fb2dad67c45104a7e05daeb3e1
 ---
 
 # Summary
@@ -23,6 +23,7 @@ Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.a
 
 - 项目采用 ScriptableObject 驱动配置，通过 `GameAssetManager` 管理运行时资产生命周期。
 - `UIManager` 统一加载和管理 UI，不允许直接使用 `Resources.Load`。
+- UI Cancel 会区分键盘 Esc 与鼠标右键；战斗目标选择期间取消输入由 Battle UI 消费，不会同时打开 Pause。
 - 通用日志使用 `TLog`，结构化战斗日志使用 `TBattleLog`。
 - 修改 C# 后必须触发 Unity 编译并检查 Console 错误。
 

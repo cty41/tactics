@@ -522,6 +522,7 @@ namespace Tactics.UI
         {
             RoguelikeNodeBlueprint blueprint = GetBlueprint(node.blueprintName);
             var mapNode = new RoguelikeMapUINode(node, blueprint, visitedColor, lockedColor, _nodeTemplate);
+            mapNode.Root.name = $"MapNode_{node.nodeId}";
             Vector2 vePos = ConvertToVisualElementPosition(GetNodePosition(node));
             mapNode.SetPosition(vePos);
             _nodesLayer.Add(mapNode.Root);

@@ -7,7 +7,10 @@ using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Roguelike;
+using Tactics.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace Tactics.Tests.PlayMode
@@ -21,25 +24,50 @@ namespace Tactics.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            LogAssert.ignoreFailingMessages = true;
-            ResetPureRunState();
-            DestroyOwnedUiInstances();
-            yield return null;
+            LogAssert.ignoreFailingMessages = false;
 
             var initializeTask = TestGameAssetHelper.EnsureInitialized();
             yield return WaitForTask(initializeTask);
             Assume.That(initializeTask.Result, Is.Not.Null, "GameAssetManager should be initialized.");
 
+            foreach (var eventSystem in Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
+            {
+                if (eventSystem != null)
+                    Object.Destroy(eventSystem.gameObject);
+            }
+            yield return null;
+
+            // Always reload Home so prior UI/EventSystem fixtures cannot leave a stale
+            // input module or cached scene object behind even when their final scene name
+            // is also "Home".
+            var loadHomeTask = initializeTask.Result.LoadSceneAsync(
+                SceneProjectPathHelper.ToProjectPath("Home"),
+                LoadSceneMode.Single);
+            yield return WaitForTask(loadHomeTask);
+
+            ResetPureRunState();
+            DestroyOwnedUiInstances();
+            yield return null;
+
             var showHomeTask = UIManager.Instance.ShowAsync(UIManager.UIId.Home);
             yield return WaitForTask(showHomeTask);
-            yield return null;
+
+            HomeUIController homeController = null;
+            for (int frame = 0; frame < 120; frame++)
+            {
+                homeController = Object.FindFirstObjectByType<HomeUIController>();
+                if (homeController?.IsReadyForInput == true)
+                    break;
+                yield return null;
+            }
+            Assert.That(homeController?.IsReadyForInput, Is.True, "Home UI should be wired to the current UIDocument tree.");
             yield return null;
         }
 
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            LogAssert.ignoreFailingMessages = true;
+            LogAssert.ignoreFailingMessages = false;
             ResetPureRunState();
             DestroyOwnedUiInstances();
             yield return null;
@@ -57,6 +85,24 @@ namespace Tactics.Tests.PlayMode
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, " +
                           $"Diagnostics=[{string.Join("; ", result.Diagnostics)}], StepTrace=[{stepTrace}]";
             Assert.IsTrue(result.Passed, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesBattleSmokeThroughPlayerInput()
+        {
+            var task = ExecutePlan(GetPlanPath("battle-player-input-smoke.plan.json"));
+            yield return WaitForTask(task);
+
+            AssertPlanPassed(task.Result);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunJourneyThroughPlayerInput()
+        {
+            var task = ExecutePlan(GetPlanPath("pure-run-player-input-route.plan.json"));
+            yield return WaitForTask(task);
+
+            AssertPlanPassed(task.Result);
         }
 
         [UnityTest]
@@ -96,7 +142,9 @@ namespace Tactics.Tests.PlayMode
             var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[]
             {
                 new PlayerInputGameplayStepAdapter(),
-                new UiGameplayStepAdapter()
+                new UiGameplayStepAdapter(),
+                new MapGameplayStepAdapter(),
+                new BattleGameplayStepAdapter()
             });
             return await runner.ExecuteAsync(plan);
         }
@@ -106,9 +154,19 @@ namespace Tactics.Tests.PlayMode
             var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[]
             {
                 new PlayerInputGameplayStepAdapter(),
-                new UiGameplayStepAdapter()
+                new UiGameplayStepAdapter(),
+                new MapGameplayStepAdapter(),
+                new BattleGameplayStepAdapter()
             });
             return runner.ExecuteAsync(plan);
+        }
+
+        private static void AssertPlanPassed(GameplayTestResult result)
+        {
+            var stepTrace = string.Join("; ", result.ExecutedSteps.Select(step => $"{step.Kind}: {step.Message}"));
+            var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, " +
+                          $"Diagnostics=[{string.Join("; ", result.Diagnostics)}], StepTrace=[{stepTrace}]";
+            Assert.IsTrue(result.Passed, details);
         }
 
         private static ExecutableScenarioPlan CreateInputLifecyclePlan(

@@ -464,6 +464,17 @@ Slice 1–9 由 Codex 无人值守地统一执行以下闭环：
 
 自动验收：成功/失败/重入路线都由真实 Map、UI、Battle、Skill adapter 驱动；至少一条路线从 Home/New Run 开始，经真实战斗、升级确认、Store 或 Mystery、跨场景恢复到 Boss/失败总结；所有源 Spec validate、compile 与 Unity Runner 通过，且没有未解释的 Error 日志；权威文档、Known Gaps 和相关 OKF scopes 已同步。
 
+### Slice 9.1 — UI 生命周期与真实玩家输入自动化
+
+1. 修复 Inventory、LevelUp、BattleSettlement 与 RunEndSummary 的缓存 UI 重入：每次显示重新查询当前树并注册事件，隐藏时注销回调和清除旧引用。
+2. Gameplay Test 新增 `PlayerInput` adapter，以 Input System 虚拟 Mouse/Keyboard 驱动生产 UI、地图和战斗输入；点击前验证 Panel picking 或正式 Camera 坐标。
+3. `player-input-e2e` 场景禁止运行期业务写入捷径；Map、Battle、Skill、UI adapter 只做只读断言。
+4. 新增 `inventory-reentry-player-input`、`battle-player-input-smoke` 和 `pure-run-player-input-route`，覆盖同一缓存界面重复打开、战斗选择/移动/取消/技能、三场自然战斗、升级、商店、Inventory 与跨场景恢复。
+5. 原 `pure-run-real-player-route` 收为 `journey-integration`，继续承担快速 Boss/RunSummary 跨系统回归，但不再宣称覆盖真实玩家输入。
+6. 分三个独立提交交付：缓存 UI 生命周期、真实输入适配器、战斗与跨场景旅程；每次完成编译、自动测试、Review、修复与精确暂存。
+
+自动验收：三条真实输入用例连续运行三轮通过；全部 Gameplay Runtime 回归通过；工具测试、所有源 Spec validate/compile、Unity 编译和 Console 检查通过；最终只把视觉裁切、动画反馈和操作手感留给 Slice 10。
+
 ### Slice 10 — 用户最终人工测试
 
 1. Slice 1–9 全部独立提交且自动化、文档和 OKF 收口通过后，Codex 生成一份可直接执行的最终人工测试清单并停止自动推进，等待用户测试。
@@ -498,6 +509,9 @@ Slice 1–9 由 Codex 无人值守地统一执行以下闭环：
 - `encounter-runtime-contract`：倍率、blocked cell、AI 选择与 HeavyShot 可用。
 - `pure-run-summary-and-defeat`：累计统计、战败零奖励、结局快照。
 - `pure-run-real-player-route`：真实 UI/战斗/结算/升级/事件或商店/跨场景/Boss。
+- `inventory-reentry-player-input`：同一缓存 Inventory 三次真实输入打开/关闭及隐藏期间数据刷新。
+- `battle-player-input-smoke`：真实单位选择、移动、右键取消、技能与目标输入。
+- `pure-run-player-input-route`：Home 到三场自然战斗、升级、Store、Inventory 与多次场景重入；不得直接写业务状态。
 
 ### 自动化交互替代矩阵
 

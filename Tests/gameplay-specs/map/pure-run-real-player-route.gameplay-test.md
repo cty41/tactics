@@ -1,7 +1,7 @@
 ---
 feature: Map
 scenario: PureRunRealPlayerRoute
-tags: [pure-run, e2e, ui, battle, levelup, store, reentry, boss]
+tags: [pure-run, journey-integration, ui, battle, levelup, store, reentry, boss]
 requiredAdapters: [UI, Map, Battle, Skill]
 setup:
   - kind: bindBattleController
@@ -189,6 +189,6 @@ assertions:
 timeoutMs: 45000
 ---
 
-# Map - Pure Run Real Player Route
+# Map - Pure Run Journey Integration
 
-从 Home 的 New Run 按钮开始，以真实战斗伤害触发五次胜利，完成法师火球 Lv2 的显式升级确认，经过商店购买和会话重载，最终击败 Boss 并验证胜利 RunSummary。路线不使用 `completeNode`、伪造战斗结果或直接写入地图终点。
+快速跨系统集成回归：从 Home 的 New Run 按钮开始，以真实战斗伤害触发五次胜利，完成法师火球 Lv2 的显式升级确认，经过商店购买和会话重载，最终击败 Boss 并验证胜利 RunSummary。该用例保留直接适配器操作，不宣称覆盖真实玩家输入。
