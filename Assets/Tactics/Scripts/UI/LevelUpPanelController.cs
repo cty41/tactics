@@ -56,12 +56,18 @@ namespace Tactics.UI
         protected override void OnHidden()
         {
             UnregisterEvents();
+            ClearUIElementReferences();
         }
 
         private void EnsureUIElements()
         {
-            if (_root != null) return;
-            _root = Ui.GetRootElement(UIManager.UIId.LevelUp);
+            var currentRoot = Ui.GetRootElement(UIManager.UIId.LevelUp);
+            if (ReferenceEquals(_root, currentRoot) && _root != null)
+                return;
+
+            UnregisterEvents();
+            ClearUIElementReferences();
+            _root = currentRoot;
             if (_root == null) return;
 
             _characterNameLabel = _root.Q<Label>("CharacterNameLabel");
@@ -79,6 +85,7 @@ namespace Tactics.UI
         private void BuildAttributeRows()
         {
             if (_attributeRows == null) return;
+            _attributeRows.Clear();
             _rows.Clear();
 
             foreach (var type in AllTypes)
@@ -134,6 +141,21 @@ namespace Tactics.UI
         {
             if (_confirmButton != null)
                 _confirmButton.clicked -= OnConfirmClicked;
+        }
+
+        private void ClearUIElementReferences()
+        {
+            _root = null;
+            _characterNameLabel = null;
+            _levelLabel = null;
+            _pointsRemainingLabel = null;
+            _attributeRows = null;
+            _derivedStats = null;
+            _skillList = null;
+            _confirmButton = null;
+            _rightPanel = null;
+            _rows.Clear();
+            _skillCards.Clear();
         }
 
         public void SetCharacter(CharacterDefinition character)

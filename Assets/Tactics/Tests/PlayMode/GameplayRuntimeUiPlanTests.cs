@@ -254,6 +254,14 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_ExecutesPureRunUiLifecycleReentry()
+        {
+            var task = ExecuteUiPlan(GetPlanPath("compiled", "pure-run-ui-lifecycle-reentry.plan.json"));
+            yield return WaitForTask(task);
+            AssertPlanPassed(task.Result);
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_ExecutesBattleUiTwoRowLayout()
         {
             var task = ExecuteUiPlan(GetPlanPath("compiled", "battle-ui-two-row-layout.plan.json"));

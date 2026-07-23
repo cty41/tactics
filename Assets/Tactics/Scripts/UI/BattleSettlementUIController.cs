@@ -41,12 +41,18 @@ namespace Tactics.UI
             UnregisterEvents();
             if (_animCoroutine != null) { StopCoroutine(_animCoroutine); _animCoroutine = null; }
             _isAnimating = false;
+            ClearUIElementReferences();
         }
 
         private void EnsureUIElements()
         {
-            if (_root != null) return;
-            _root = Ui.GetRootElement(UIManager.UIId.BattleSettlement);
+            var currentRoot = Ui.GetRootElement(UIManager.UIId.BattleSettlement);
+            if (ReferenceEquals(_root, currentRoot) && _root != null)
+                return;
+
+            UnregisterEvents();
+            ClearUIElementReferences();
+            _root = currentRoot;
             if (_root == null) return;
 
             _resultLabel = _root.Q<Label>("ResultLabel");
@@ -79,6 +85,17 @@ namespace Tactics.UI
                 _continueButton.clicked -= OnContinueClicked;
             if (_root != null)
                 _root.UnregisterCallback<ClickEvent>(OnRootClicked);
+        }
+
+        private void ClearUIElementReferences()
+        {
+            _root = null;
+            _resultLabel = null;
+            _roundsLabel = null;
+            _goldLabel = null;
+            _itemDropLabel = null;
+            _experienceEntries = null;
+            _continueButton = null;
         }
 
         public void SetBattleResult(BattleRewardSystem.BattleRewards rewards, bool isVictory, Dictionary<string, int> characterLevels = null, Dictionary<string, int> currentCharacterExp = null)

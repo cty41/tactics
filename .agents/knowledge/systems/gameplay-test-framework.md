@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-23T06:43:10+08:00"
+timestamp: "2026-07-23T10:32:35+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Testing/Gameplay
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:537eb1d9473c6cc988cc4188682434962ee1af0f2d0a316cb67b7eb39aa56892
+source_fingerprint: sha256:e51b850d7cf2765a3a0ef4049d9c39feb5bca67e43a8a9a054658ad799275595
 ---
 
 # Current State
@@ -39,7 +39,7 @@ Map adapter 还支持 `encounterRecipeContract`、怪物 AI 目录/Heavy Shot �
 
 `Tests/gameplay-specs/amazon/` 使用真实亚马逊等级资产验证毒矛扩散和落矛状态。Skill adapter 在图执行后同步持矛者与落点别名，Battle adapter 可观察长矛持有、落点、诱饵和有序目标结果，使实体长矛规则无需依赖日志或手工 Inspector 验证。
 
-`Tests/gameplay-specs/ui/` 的 Slice 6 场景覆盖混合升级确认、背包只读技能详情、战斗两行布局、可点击禁用原因及连续刺击多段撤销/取消。`GameplayRuntimeUiPlanTests` 每例销毁 UIManager 缓存实例并维护单位与格子的双向占用，避免跨例复用旧战斗控制器或产生只有坐标没有占用状态的伪世界。
+`Tests/gameplay-specs/ui/` 的 Slice 6 场景覆盖混合升级确认、背包只读技能详情、战斗两行布局、可点击禁用原因及连续刺击多段撤销/取消。`pure-run-ui-lifecycle-reentry` 在单个测试内保留同一 Inventory 缓存实例，连续执行三次关闭/重开并验证隐藏期间新增物品、角色信息和操作回调；测试组级清理仍隔离不同用例的旧战斗控制器。
 
 Slice 9 的真实玩家流不再用 `completeNode`、伪造胜负或直接写终点代替操作链。`pure-run-real-player-route` 从 Home 的 New Run 按钮进入，依次以真实伤害产生五次胜利，完成 Fireball Lv2 显式升级确认，经过商店购买与会话重载后击败 Boss，并断言 Victory `RunSummary`；自然战斗团灭和 Mystery 伤害团灭分别验证零奖励、Defeat 快照及活动 session 清理。另有 Mystery 未选择、已解析和已提交三个中断阶段的重入场景。
 

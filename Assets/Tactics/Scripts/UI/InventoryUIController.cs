@@ -73,6 +73,7 @@ namespace Tactics.UI
         private Button _filterAllButton;
         private Button _filterEquipmentButton;
         private Button _filterConsumableButton;
+        private Button _closeButton;
         private VisualElement _itemPopover;
         private Image _itemIcon;
         private Label _itemIconPlaceholder;
@@ -96,8 +97,7 @@ namespace Tactics.UI
         protected override void OnShown()
         {
             base.OnShown();
-            EnsureUIElements();
-            RegisterKeyEvents();
+            RebindUIElements();
             LoadState();
             SetupCharacterSwitchButtons();
             RefreshAll();
@@ -106,7 +106,8 @@ namespace Tactics.UI
         protected override void OnHidden()
         {
             HideItemPopover();
-            UnregisterKeyEvents();
+            UnregisterUIEvents();
+            ClearUIElementReferences();
         }
 
         /// <summary>
@@ -114,16 +115,18 @@ namespace Tactics.UI
         /// </summary>
         public void RefreshView()
         {
-            EnsureUIElements();
+            var currentRoot = Ui.GetRootElement(UIManager.UIId.Inventory);
+            if (!ReferenceEquals(_root, currentRoot))
+                RebindUIElements();
             LoadState();
             SetupCharacterSwitchButtons();
             RefreshAll();
         }
 
-        private void EnsureUIElements()
+        private void RebindUIElements()
         {
-            if (_root != null)
-                return;
+            UnregisterUIEvents();
+            ClearUIElementReferences();
 
             _root = Ui.GetRootElement(UIManager.UIId.Inventory);
             if (_root == null)
@@ -152,6 +155,7 @@ namespace Tactics.UI
             _filterAllButton = _root.Q<Button>("InventoryFilterAll");
             _filterEquipmentButton = _root.Q<Button>("InventoryFilterEquipment");
             _filterConsumableButton = _root.Q<Button>("InventoryFilterConsumable");
+            _closeButton = _root.Q<Button>("CloseButton");
             _itemPopover = _root.Q<VisualElement>("InventoryItemPopover");
             _itemIcon = _root.Q<Image>("InventoryItemIcon");
             _itemIconPlaceholder = _root.Q<Label>("InventoryItemIconPlaceholder");
@@ -160,23 +164,94 @@ namespace Tactics.UI
             _itemDescription = _root.Q<Label>("InventoryItemDescription");
             _itemActionButton = _root.Q<Button>("InventoryItemActionButton");
 
-            var closeButton = _root.Q<Button>("CloseButton");
-            if (closeButton != null)
-                closeButton.clicked += OnCloseClicked;
+            RegisterUIEvents();
+            InitializeEquippedSlots();
+        }
+
+        private void RegisterUIEvents()
+        {
+            if (_closeButton != null)
+                _closeButton.clicked += OnCloseClicked;
             if (_filterAllButton != null)
-                _filterAllButton.clicked += () => SetFilter(InventoryFilter.All);
+                _filterAllButton.clicked += OnFilterAllClicked;
             if (_filterEquipmentButton != null)
-                _filterEquipmentButton.clicked += () => SetFilter(InventoryFilter.Equipment);
+                _filterEquipmentButton.clicked += OnFilterEquipmentClicked;
             if (_filterConsumableButton != null)
-                _filterConsumableButton.clicked += () => SetFilter(InventoryFilter.Consumable);
+                _filterConsumableButton.clicked += OnFilterConsumableClicked;
             if (_itemActionButton != null)
                 _itemActionButton.clicked += OnItemActionClicked;
             if (_carriedConsumableSlot != null)
-                _carriedConsumableSlot.RegisterCallback<ClickEvent>(_ => OnCarriedConsumableClicked());
+                _carriedConsumableSlot.RegisterCallback<ClickEvent>(OnCarriedConsumableSlotClicked);
 
-            _root.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
-            InitializeEquippedSlots();
+            _root?.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
+            RegisterKeyEvents();
         }
+
+        private void UnregisterUIEvents()
+        {
+            if (_closeButton != null)
+                _closeButton.clicked -= OnCloseClicked;
+            if (_filterAllButton != null)
+                _filterAllButton.clicked -= OnFilterAllClicked;
+            if (_filterEquipmentButton != null)
+                _filterEquipmentButton.clicked -= OnFilterEquipmentClicked;
+            if (_filterConsumableButton != null)
+                _filterConsumableButton.clicked -= OnFilterConsumableClicked;
+            if (_itemActionButton != null)
+                _itemActionButton.clicked -= OnItemActionClicked;
+            if (_carriedConsumableSlot != null)
+                _carriedConsumableSlot.UnregisterCallback<ClickEvent>(OnCarriedConsumableSlotClicked);
+
+            _root?.UnregisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
+            UnregisterKeyEvents();
+        }
+
+        private void ClearUIElementReferences()
+        {
+            _root = null;
+            _characterNameLabel = null;
+            _levelLabel = null;
+            _hpLabel = null;
+            _hpBarFill = null;
+            _strengthValue = null;
+            _agilityValue = null;
+            _constitutionValue = null;
+            _intelligenceValue = null;
+            _charismaValue = null;
+            _luckValue = null;
+            _equippedSlotsParent = null;
+            _carriedConsumableSlot = null;
+            _carriedConsumableLabel = null;
+            _storageGrid = null;
+            _skillSlotsParent = null;
+            _characterSwitchButtons = null;
+            _portraitContainer = null;
+            _filterAllButton = null;
+            _filterEquipmentButton = null;
+            _filterConsumableButton = null;
+            _closeButton = null;
+            _itemPopover = null;
+            _itemIcon = null;
+            _itemIconPlaceholder = null;
+            _itemName = null;
+            _itemMeta = null;
+            _itemDescription = null;
+            _itemActionButton = null;
+            _equippedSlotElements.Clear();
+            _equippedSlotLabels.Clear();
+            _storageSlotElements.Clear();
+            _storageEntries.Clear();
+            _selectedEntry = null;
+            _popoverAnchor = null;
+        }
+
+        private void OnFilterAllClicked() => SetFilter(InventoryFilter.All);
+
+        private void OnFilterEquipmentClicked() => SetFilter(InventoryFilter.Equipment);
+
+        private void OnFilterConsumableClicked() => SetFilter(InventoryFilter.Consumable);
+
+        private void OnCarriedConsumableSlotClicked(ClickEvent _) => OnCarriedConsumableClicked();
 
         private void InitializeEquippedSlots()
         {

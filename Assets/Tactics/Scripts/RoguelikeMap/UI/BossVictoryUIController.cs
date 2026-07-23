@@ -37,12 +37,18 @@ namespace Tactics.UI
         protected override void OnHidden()
         {
             UnregisterEvents();
+            ClearUIElementReferences();
         }
 
         private void EnsureUIElements()
         {
-            if (_root != null) return;
-            _root = Ui.GetRootElement(UIManager.UIId.RunEndSummary);
+            var currentRoot = Ui.GetRootElement(UIManager.UIId.RunEndSummary);
+            if (ReferenceEquals(_root, currentRoot) && _root != null)
+                return;
+
+            UnregisterEvents();
+            ClearUIElementReferences();
+            _root = currentRoot;
             if (_root == null) return;
 
             _panel = _root.Q<VisualElement>("RunEndSummaryPanel");
@@ -65,6 +71,19 @@ namespace Tactics.UI
         {
             if (_returnHomeButton != null)
                 _returnHomeButton.clicked -= OnReturnHomeClicked;
+        }
+
+        private void ClearUIElementReferences()
+        {
+            _root = null;
+            _panel = null;
+            _titleLabel = null;
+            _goldLabel = null;
+            _statsLabel = null;
+            _equipmentLabel = null;
+            _itemsLabel = null;
+            _bossStatusLabel = null;
+            _returnHomeButton = null;
         }
 
         /// <summary>

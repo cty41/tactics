@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-23T06:43:08+08:00"
+timestamp: "2026-07-23T10:32:38+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -42,7 +42,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:36f3eb0fd9b0f563b1a65d2d9a638249d0fe1f90f6706f5cb40d94f0a81593e7
+source_fingerprint: sha256:fb7afa85cbc77ea4d447b3cd4a5515ec3c022b754885581623cd976331ec99ee
 ---
 
 # Current State
@@ -70,6 +70,8 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 亚马逊由 `AmazonBattleState` 维护每名角色唯一长矛、移动增伤和诱饵生命周期。突刺按等级延长直线并在 Lv3 消耗本回合实际移动格数形成无上限增伤；连续刺击按有序选择逐段独立暴击；毒矛命中后按等级扩散中毒并在半径 3 内确定性落矛，找不到合法落点时整次释放失败且不扣资源。落地长矛占格但不阻挡视线、不可受击；持矛攻击在落矛后以可点击禁用状态提示先回收，零消耗拾取要求八方向相邻，召唤回收可无视视线和阻挡。诱饵不进入先攻、不产生尸体或接受增益，敌方存在可达诱饵候选时只选择诱饵；战斗技巧共享一次闪避判定，并按等级追加一次非递归普攻或提高可暴击直接伤害的暴击率。
 
 `BattleSettlementCoordinator`/`BattleSettlementFlow` 负责战后成长和返回 Run。Pure Run 升级候选从合法新技能 Lv1 与已学技能的下一个已发布等级组成确定性混合池；新技能受槽位限制，已学技能升级不占新槽。升级流程必须等待玩家同时选定属性与技能并显式确认，不再通过帧数超时自动推进；确认后先提交保底消费与成长状态，再统一保存。`TBattleLog` 收集结构化回合、技能、伤害、治疗和 Buff 信息。当前反馈已有伤害数字、Buff 图标与屏幕战斗日志。
+
+BattleSettlement UI 在每次显示时重新解析当前 UIDocument 元素并重新注册继续/跳过动画回调，隐藏时释放旧树引用，避免跨战斗复用缓存实例时更新已经脱离面板的结算元素。
 
 Pure Run 战斗只把角色自己携带的独立实例注册成 `ConsumableBattleAbility`。战斗 UI 上排放移动与消耗品按钮，下排保持技能卡；药水可选择自身或正交相邻友军，每名角色每轮最多成功使用一次，且不占移动或普通技能机会。成功后立即提交实例消耗并保存。普通敌人与精英胜利分别按 25% 和 30% 概率从消耗品池掉落，掉落种子由 run seed 与节点 ID 推导；Boss 不追加掉落，因为其结算为终局。
 

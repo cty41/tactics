@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-23T06:43:15+08:00"
+timestamp: "2026-07-23T10:32:34+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -27,7 +27,7 @@ repo_paths:
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:7396326ff9ead83a57c76696cb9b4e208bb8cbc35aebd14303b4ae3fb833cde3
+source_fingerprint: sha256:51180c5dc37239a583a7968135fbec9bbb46a2395d0dc8f0572cb9aeee9cb756
 ---
 
 # Current State
@@ -45,6 +45,8 @@ Pure Run 的 Mystery、Rest 与 Store 通过持久化节点事务保护中断恢
 Pure Run 存档修复将已知旧等级技能 ID 迁移为稳定逻辑 ID、合并重复记录并保留最高等级。拥有投掷系技能的 Amazon 会幂等获得不占槽的 `amazon.pickup_spear` 持久化记录；其实际战斗拾取行为仍属于 Amazon 技能切片。角色 Lv2 起即可同时看到合法新技能和已学技能的已发布下一等级，选择升级后同一 `LearnedSkill` 等级会进入下一场战斗绑定。
 
 LevelUp 面板按实际 `LearnedSkill.Level` 显示当前技能和混合候选，候选明确区分 Lv1 新技能与下一等级升级，并读取对应等级资产描述。Inventory 的技能区是只读视图：主动技能优先、被动技能随后，显示实际等级；点击仅打开详情 popover，不提供装配、卸载或替换操作，`ExtraUtility` 与其他地图隐藏技能不显示。
+
+Inventory、LevelUp、BattleSettlement 与 RunEndSummary 在每次显示时重新绑定当前 UIDocument 的 VisualElement 树，并在隐藏时注销回调、清除旧树引用。Inventory 因而可以在同一缓存实例上反复打开，且会重新读取隐藏期间发生的角色和背包状态变化。
 
 地图层待生效 Buff 快照除名称、持续时间和正负面外，还持久化效果/触发类型、诅咒分类、周期伤害、伤害大类、元素、刷新策略、速度修正和减伤比例；进入战斗时按这些字段还原运行时配置。旧存档缺失伤害大类时按 `Magic` 补全，避免升级后改变既有事件 Buff 的语义。
 
