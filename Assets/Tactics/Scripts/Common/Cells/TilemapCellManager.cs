@@ -399,6 +399,28 @@ namespace Tactics.Cells
             return Task.CompletedTask;
         }
 
+        public override Task MarkAsGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType)
+        {
+            HighlightRenderer?.SetHighlights(cells, ToTileHighlightType(guidanceType));
+            return Task.CompletedTask;
+        }
+
+        public override Task UnMarkGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType)
+        {
+            HighlightRenderer?.RemoveHighlightsOfType(cells, ToTileHighlightType(guidanceType));
+            return Task.CompletedTask;
+        }
+
+        private static TileHighlightType ToTileHighlightType(CellGuidanceType guidanceType)
+        {
+            return guidanceType switch
+            {
+                CellGuidanceType.SpearLocation => TileHighlightType.SpearLocation,
+                CellGuidanceType.SpearPickup => TileHighlightType.SpearPickup,
+                _ => throw new ArgumentOutOfRangeException(nameof(guidanceType), guidanceType, null)
+            };
+        }
+
         /// <summary>
         /// Determines the appropriate arrow segment sprite to use for a given segment of the path based on the relative positions of the previous, current, and next cells.
         /// </summary>

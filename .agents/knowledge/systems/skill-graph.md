@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-07-23T17:12:49+08:00"
+timestamp: "2026-07-23T22:04:06+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -26,7 +26,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
   - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:6b118689b913cf29b699e5d22b4b1e7655c9d3f2f3d190fa62c91d6e9bf077cb
+source_fingerprint: sha256:216702530bf8315f80c2facf3d1a459290d3716cff964da0b5143f6019ea7f8a
 ---
 
 # Current State
@@ -45,7 +45,7 @@ Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent
 
 死灵法师等级链同样使用独立 AbilityConfig/SkillGraph，并由 `NecromancerSkillNodeExecutor` 执行骷髅、骷髅法师、诅咒、恐惧、骨矛和骨盾的等级语义。Projectile 节点可显式关闭通用 LOS 并允许空格端点，骨矛再以自身规则解析墙体、首敌命中或直线穿透；Lv3 目标预览与执行都限制为正交或对角直线。等级资产由编辑器构建器生成，既有 Lv1 路径原位升级以保持 GUID。
 
-亚马逊等级链由 `AmazonSkillNodeExecutor` 执行突刺、连续刺击、毒矛、回收/拾取长矛和诱饵。连续刺击消费 `OrderedTargetSelectionState` 的有序目标序列并逐段结算；毒矛在技能效果提交前预验证确定性落点，实体长矛由共享战斗状态注册。通用 projectile LOS 与骨矛自定义直线解析均忽略落地长矛，但长矛仍保持占格。
+亚马逊等级链由 `AmazonSkillNodeExecutor` 执行突刺、连续刺击、毒矛、回收/拾取长矛和诱饵。连续刺击消费 `OrderedTargetSelectionState` 的有序目标序列并逐段结算；毒矛在技能效果提交前预验证确定性落点，实体长矛由共享战斗状态注册。通用 projectile LOS 与骨矛自定义直线解析均忽略落地长矛，但长矛仍保持占格。未持矛限制只作用于包含直接伤害节点的近战基础图及明确持矛技能，不再误伤移动图；移动预览通过独立 `CellGuidanceType` 图层显示长矛位置和可站立拾取位置，不改变合法目标集合。
 
 技能事件记录允许同步致死在效果结算中立即销毁目标；目标已失效时保留事件类型和节点 ID，但不再访问其名称、格子或其他 Unity 对象属性。
 

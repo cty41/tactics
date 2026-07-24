@@ -206,6 +206,8 @@ namespace Tactics.Common.Skills.Graph.Testing
     {
         private readonly List<ICell> _cells = new();
         private readonly Dictionary<Vector2IntImpl, ICell> _cellsByCoord = new();
+        private readonly HashSet<ICell> _reachableCells = new();
+        private readonly Dictionary<CellGuidanceType, HashSet<ICell>> _guidanceCells = new();
 
 #pragma warning disable CS0067 // Event is never used — required by ICellManager interface
         public event Action<ICell> CellAdded;
@@ -226,6 +228,8 @@ namespace Tactics.Common.Skills.Graph.Testing
         {
             _cells.Clear();
             _cellsByCoord.Clear();
+            _reachableCells.Clear();
+            _guidanceCells.Clear();
         }
 
         public void Initialize(IGridController gridController)
@@ -243,14 +247,64 @@ namespace Tactics.Common.Skills.Graph.Testing
             return cell;
         }
 
-        public Task UnMark(IEnumerable<ICell> cells) => Task.CompletedTask;
-        public Task UnMark(ICell cell) => Task.CompletedTask;
+        public IReadOnlyCollection<ICell> ReachableCells => _reachableCells;
+
+        public IReadOnlyCollection<ICell> GetGuidanceCells(CellGuidanceType guidanceType)
+        {
+            return _guidanceCells.TryGetValue(guidanceType, out var cells)
+                ? cells
+                : Array.Empty<ICell>();
+        }
+
+        public Task UnMark(IEnumerable<ICell> cells)
+        {
+            if (cells != null)
+            {
+                foreach (var cell in cells)
+                    _reachableCells.Remove(cell);
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task UnMark(ICell cell)
+        {
+            _reachableCells.Remove(cell);
+            return Task.CompletedTask;
+        }
         public Task MarkAsHighlighted(ICell cell) => Task.CompletedTask;
         public Task UnMarkAsHighlighted(ICell cell) => Task.CompletedTask;
-        public Task MarkAsReachable(IEnumerable<ICell> cells) => Task.CompletedTask;
-        public Task MarkAsReachable(ICell cell) => Task.CompletedTask;
+        public Task MarkAsReachable(IEnumerable<ICell> cells)
+        {
+            if (cells != null)
+                _reachableCells.UnionWith(cells);
+            return Task.CompletedTask;
+        }
+        public Task MarkAsReachable(ICell cell)
+        {
+            if (cell != null)
+                _reachableCells.Add(cell);
+            return Task.CompletedTask;
+        }
         public Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell) => Task.CompletedTask;
         public Task MarkAsAoE(IEnumerable<ICell> cells) => Task.CompletedTask;
+        public Task MarkAsGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType)
+        {
+            if (!_guidanceCells.TryGetValue(guidanceType, out var guidanceCells))
+            {
+                guidanceCells = new HashSet<ICell>();
+                _guidanceCells[guidanceType] = guidanceCells;
+            }
+            guidanceCells.Clear();
+            if (cells != null)
+                guidanceCells.UnionWith(cells);
+            return Task.CompletedTask;
+        }
+        public Task UnMarkGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType)
+        {
+            if (cells != null && _guidanceCells.TryGetValue(guidanceType, out var guidanceCells))
+                guidanceCells.ExceptWith(cells);
+            return Task.CompletedTask;
+        }
         public void SetColor(ICell cell, float r, float g, float b, float a) { }
         public bool IsCellWalkable(ICell cell) => cell != null && !cell.IsTaken;
     }

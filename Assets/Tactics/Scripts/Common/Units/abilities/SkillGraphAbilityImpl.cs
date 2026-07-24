@@ -49,6 +49,8 @@ namespace Tactics.Common.Units.Abilities
         private IGridController _gridController;
         private HashSet<ICell> _validTargetCells;
         private HashSet<ICell> _displayCells;
+        private HashSet<ICell> _spearLocationGuidanceCells;
+        private HashSet<ICell> _spearPickupGuidanceCells;
         private readonly ISkillGraphUsePolicy _usePolicy;
         private OrderedTargetSelectionState _orderedSelection;
         private FacingDirection _lockedSelectionFacing;
@@ -88,6 +90,7 @@ namespace Tactics.Common.Units.Abilities
             }
             _validTargetCells = CalculateValidTargetCells();
             _displayCells = CalculateDisplayCells();
+            PrepareAmazonSpearMovementGuidance();
         }
 
         public void Display(IGridController gridController)
@@ -95,6 +98,18 @@ namespace Tactics.Common.Units.Abilities
             if (_displayCells != null && _displayCells.Count > 0)
             {
                 gridController.CellManager.MarkAsReachable(_displayCells);
+            }
+            if (_spearLocationGuidanceCells != null && _spearLocationGuidanceCells.Count > 0)
+            {
+                gridController.CellManager.MarkAsGuidance(
+                    _spearLocationGuidanceCells,
+                    CellGuidanceType.SpearLocation);
+            }
+            if (_spearPickupGuidanceCells != null && _spearPickupGuidanceCells.Count > 0)
+            {
+                gridController.CellManager.MarkAsGuidance(
+                    _spearPickupGuidanceCells,
+                    CellGuidanceType.SpearPickup);
             }
         }
 
@@ -108,6 +123,20 @@ namespace Tactics.Common.Units.Abilities
             if (_validTargetCells != null)
             {
                 _validTargetCells = null;
+            }
+            if (_spearLocationGuidanceCells != null)
+            {
+                gridController.CellManager.UnMarkGuidance(
+                    _spearLocationGuidanceCells,
+                    CellGuidanceType.SpearLocation);
+                _spearLocationGuidanceCells = null;
+            }
+            if (_spearPickupGuidanceCells != null)
+            {
+                gridController.CellManager.UnMarkGuidance(
+                    _spearPickupGuidanceCells,
+                    CellGuidanceType.SpearPickup);
+                _spearPickupGuidanceCells = null;
             }
         }
 
@@ -461,7 +490,7 @@ namespace Tactics.Common.Units.Abilities
                 else
                     _owner.Mana -= _config.ManaCost;
 
-                if (allowCombatTechniqueFollowUp && IsAmazonMeleeBasic() &&
+                if (allowCombatTechniqueFollowUp && IsAmazonSpearBasicAttack() &&
                     context.GetBlackboard("LastDamageHit", false) && context.PrimaryTarget != null &&
                     !context.PrimaryTarget.IsDowned && context.PrimaryTarget.Health > 0f &&
                     CombatComponent.RollCombatTechniqueFollowUp(_owner))
@@ -994,7 +1023,7 @@ namespace Tactics.Common.Units.Abilities
                 return AbilityAvailability.Enabled();
             var state = AmazonBattleState.For(gridController);
             var node = GetAmazonNode();
-            bool requiresHeldSpear = IsAmazonMeleeBasic() || node?.SkillKind is
+            bool requiresHeldSpear = IsAmazonSpearBasicAttack() || node?.SkillKind is
                 AmazonSkillKind.Thrust or AmazonSkillKind.MultiStab or AmazonSkillKind.PoisonSpear;
             if (requiresHeldSpear && !state.IsSpearHeld(_owner))
                 return AbilityAvailability.Disabled("需要先回收长矛");
@@ -1116,7 +1145,60 @@ namespace Tactics.Common.Units.Abilities
              unit.GetLearnedSkillLevel("amazon.recover_spear") > 0 ||
              unit.GetLearnedSkillLevel("amazon.decoy") > 0);
 
-        private bool IsAmazonMeleeBasic() => _config.IsBasicAbility && _config.TargetRange <= 1;
+        private bool IsAmazonSpearBasicAttack()
+        {
+            // Basic movement shares the once-per-turn flag and range with melee attacks.
+            // Only direct-damage graphs consume the Amazon's held spear.
+            return _config.IsBasicAbility &&
+                   _config.TargetRange <= 1 &&
+                   !FirstSelectionRequiresMoveDestination() &&
+                   _config.SkillGraph.Nodes.Any(node => node is ApplyDamageNodeRecord);
+        }
+
+        private void PrepareAmazonSpearMovementGuidance()
+        {
+            _spearLocationGuidanceCells = null;
+            _spearPickupGuidanceCells = null;
+
+            if (_gridController?.CellManager == null ||
+                !_config.IsBasicAbility ||
+                !FirstSelectionRequiresMoveDestination() ||
+                !IsAmazonOwner())
+            {
+                return;
+            }
+
+            var state = AmazonBattleState.For(_gridController);
+            var spearCell = state?.GetSpearCell(_owner);
+            if (spearCell == null || state.IsSpearHeld(_owner))
+                return;
+
+            _spearLocationGuidanceCells = new HashSet<ICell> { spearCell };
+            _spearPickupGuidanceCells = _gridController.CellManager.GetCells()
+                .Where(cell => IsAvailableSpearPickupPosition(cell, spearCell))
+                .ToHashSet();
+
+            // Pickup guidance includes standable adjacent cells beyond the current
+            // movement range, but never changes movement legality or cached paths.
+            // It replaces cyan only where both guidance and reachability overlap.
+            _displayCells?.ExceptWith(_spearPickupGuidanceCells);
+        }
+
+        private bool IsAvailableSpearPickupPosition(ICell cell, ICell spearCell)
+        {
+            if (cell == null || spearCell == null)
+                return false;
+
+            int dx = Math.Abs(cell.GridCoordinates.x - spearCell.GridCoordinates.x);
+            int dy = Math.Abs(cell.GridCoordinates.y - spearCell.GridCoordinates.y);
+            if (Math.Max(dx, dy) != 1)
+                return false;
+
+            if (ReferenceEquals(cell, _owner.CurrentCell))
+                return true;
+
+            return !cell.IsTaken && _gridController.CellManager.IsCellWalkable(cell);
+        }
 
         private int GetOrderedSelectionCount() => GetAmazonNode()?.Level >= 2 ? 4 : 3;
 

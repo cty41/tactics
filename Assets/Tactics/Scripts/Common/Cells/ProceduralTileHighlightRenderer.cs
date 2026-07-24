@@ -18,6 +18,8 @@ namespace Tactics.Cells
         Path,
         PathEnd,
         AoE,
+        SpearLocation,
+        SpearPickup,
     }
 
     [RequireComponent(typeof(MeshFilter))]
@@ -33,6 +35,8 @@ namespace Tactics.Cells
         [SerializeField] private Color _pathColor = new Color(1f, 0.85f, 0.2f, 0.55f);
         [SerializeField] private Color _pathEndColor = new Color(1f, 0.5f, 0f, 0.7f);
         [SerializeField] private Color _aoeColor = new Color(1f, 0.5f, 0f, 0.5f);
+        [SerializeField] private Color _spearLocationColor = new Color(1f, 0.55f, 0.15f, 0.7f);
+        [SerializeField] private Color _spearPickupColor = new Color(0.25f, 0.9f, 0.35f, 0.55f);
 
         [SerializeField] private bool _enablePulse = false;
         [SerializeField] private float _pulseSpeed = 2f;
@@ -302,6 +306,8 @@ namespace Tactics.Cells
                 TileHighlightType.Path => _pathColor,
                 TileHighlightType.PathEnd => _pathEndColor,
                 TileHighlightType.AoE => _aoeColor,
+                TileHighlightType.SpearLocation => _spearLocationColor,
+                TileHighlightType.SpearPickup => _spearPickupColor,
                 _ => Color.white,
             };
         }

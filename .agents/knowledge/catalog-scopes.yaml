@@ -63,6 +63,7 @@ scopes:
       - .agents/docs/buff-system-rules.md
       - .agents/docs/three-class-skill-design.md
       - Assets/Tactics/Scripts/Common/Battle
+      - Assets/Tactics/Scripts/Common/Cells
       - Assets/Tactics/Scripts/Battle
       - Assets/Tactics/Scripts/Flow/Battle/BattleFlowCoordinator.cs
       - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs

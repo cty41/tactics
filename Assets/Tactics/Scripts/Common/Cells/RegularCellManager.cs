@@ -113,6 +113,16 @@ namespace Tactics.Common.Cells
             return Task.CompletedTask;
         }
 
+        public override Task MarkAsGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType)
+        {
+            return Task.CompletedTask;
+        }
+
+        public override Task UnMarkGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType)
+        {
+            return Task.CompletedTask;
+        }
+
         public override void SetColor(ICell cell, float r, float g, float b, float a)
         {
             (cell as Cell).SetColor(r, g, b, a);

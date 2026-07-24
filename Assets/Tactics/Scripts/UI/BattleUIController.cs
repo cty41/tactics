@@ -322,8 +322,6 @@ namespace Tactics.UI
             if (currentUnit != null)
             {
                 _currentSelectedUnit = currentUnit;
-                if (_gridController.TurnContext.CurrentPlayer?.PlayerType == PlayerType.HumanPlayer)
-                    FocusCameraOnUnit(currentUnit);
                 UpdateStatusPanel();
                 UpdateMoveButtonState(currentUnit);
                 UpdateConsumableButton(currentUnit);
@@ -729,8 +727,6 @@ namespace Tactics.UI
                 }
 
                 _currentSelectedUnit = currentUnit;
-                if (isHumanTurn)
-                    FocusCameraOnUnit(currentUnit);
                 UpdateStatusPanel();
                 UpdateMoveButtonState(currentUnit);
                 UpdateConsumableButton(currentUnit);
@@ -1569,29 +1565,6 @@ namespace Tactics.UI
                 string text = "+" + Mathf.RoundToInt(args.HealthChangeAmount);
                 SpawnDamageNumber(DamageNumberType.Heal, text, displayPos);
             }
-        }
-
-        private void FocusCameraOnUnit(IUnit unit)
-        {
-            if (!IsUnityUnitAvailable(unit))
-                return;
-
-            var camera = _mainCamera ?? Camera.main;
-            if (camera == null)
-                return;
-
-            var worldPosition = unit.WorldPosition.ToVector3();
-            var screenPosition = camera.WorldToScreenPoint(worldPosition);
-            if (screenPosition.z <= 0f)
-                return;
-
-            var screenCenter = new Vector3(
-                Screen.width * 0.5f,
-                Screen.height * 0.5f,
-                screenPosition.z);
-            var worldAtCenter = camera.ScreenToWorldPoint(screenCenter);
-            camera.transform.position += worldPosition - worldAtCenter;
-            _mainCamera = camera;
         }
 
         private void SpawnDamageNumber(DamageNumberType type, string text, Vector3 worldPosition)

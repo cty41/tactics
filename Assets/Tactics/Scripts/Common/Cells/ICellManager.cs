@@ -7,6 +7,15 @@ using Tactics.Common.Utilities;
 namespace Tactics.Common.Cells
 {
     /// <summary>
+    /// Identifies non-interactive guidance layers rendered independently from legal target highlights.
+    /// </summary>
+    public enum CellGuidanceType
+    {
+        SpearLocation,
+        SpearPickup
+    }
+
+    /// <summary>
     /// Represents a manager responsible for managing cells within a grid, including adding, removing, and marking cells.
     /// </summary>
     public interface ICellManager
@@ -90,6 +99,22 @@ namespace Tactics.Common.Cells
         Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell);
 
         Task MarkAsAoE(IEnumerable<ICell> cells);
+
+        /// <summary>
+        /// Marks cells with a guidance layer that does not change movement or targeting legality.
+        /// </summary>
+        /// <param name="cells">Cells that should display the guidance layer.</param>
+        /// <param name="guidanceType">The semantic guidance layer to display.</param>
+        /// <returns>A task representing the marking operation.</returns>
+        Task MarkAsGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType);
+
+        /// <summary>
+        /// Removes one semantic guidance layer without clearing unrelated highlights.
+        /// </summary>
+        /// <param name="cells">Cells whose guidance should be removed.</param>
+        /// <param name="guidanceType">The semantic guidance layer to remove.</param>
+        /// <returns>A task representing the unmarking operation.</returns>
+        Task UnMarkGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType);
 
         void SetColor(ICell cell, float r, float g, float b, float a);
 

@@ -955,10 +955,6 @@ namespace Tactics.Common.Testing.Gameplay
                     .ToList();
                 if (enemies.Count == 0)
                     return !controller.IsBattleActive;
-                var priorityEnemy = ResolveBattleUnit(context, "PriorityEnemy");
-                if (priorityEnemy == null)
-                    return !controller.IsBattleActive;
-
                 var targetOption = targetingProvider.QueryTargets(new AbilityTargetQuery(
                         current,
                         current.CurrentCell,
@@ -968,8 +964,8 @@ namespace Tactics.Common.Testing.Gameplay
                     .Where(option => option?.TargetPoint != null &&
                         option.Targets.Any(target => target != null &&
                             !target.IsDowned &&
-                            target.PlayerNumber != current.PlayerNumber &&
-                            target.UnitID == priorityEnemy.UnitID))
+                            target.PlayerNumber != current.PlayerNumber) &&
+                        IsWorldTargetVisible(ResolveBattleCellPointerWorldPosition(context, option.TargetPoint)))
                     .OrderByDescending(option => option.Targets
                         .Where(target => target.PlayerNumber != current.PlayerNumber)
                         .Max(target => target.MaxMovementPoints))

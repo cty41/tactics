@@ -22,6 +22,12 @@ namespace Tactics.Tests.PlayMode
     {
         private GameObject _battleRoot;
         private GameObject _cellManagerRoot;
+        private Camera _battleCamera;
+        private bool _ownsBattleCamera;
+        private Vector3 _initialCameraPosition;
+        private Quaternion _initialCameraRotation;
+        private float _initialCameraOrthographicSize;
+        private float _initialCameraFieldOfView;
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -132,6 +138,25 @@ namespace Tactics.Tests.PlayMode
             var initMethod = controllerType.GetMethod("InitializeAndStart", BindingFlags.Instance | BindingFlags.Public);
             initMethod?.Invoke(bc, new object[] { false });
 
+            _battleCamera = Camera.main;
+            if (_battleCamera == null)
+            {
+                var cameraRoot = new GameObject("TestMainCamera");
+                cameraRoot.tag = "MainCamera";
+                _battleCamera = cameraRoot.AddComponent<Camera>();
+                _battleCamera.orthographic = true;
+                _battleCamera.transform.SetPositionAndRotation(
+                    new Vector3(7f, -4f, -10f),
+                    Quaternion.Euler(0f, 0f, 7f));
+                _battleCamera.orthographicSize = 6.5f;
+                _ownsBattleCamera = true;
+            }
+
+            _initialCameraPosition = _battleCamera.transform.position;
+            _initialCameraRotation = _battleCamera.transform.rotation;
+            _initialCameraOrthographicSize = _battleCamera.orthographicSize;
+            _initialCameraFieldOfView = _battleCamera.fieldOfView;
+
             // Show Battle UI through real asset pipeline
             var showTask = UIManager.Instance.ShowAsync(UIManager.UIId.Battle);
             yield return new WaitUntil(() => showTask.IsCompleted);
@@ -166,6 +191,13 @@ namespace Tactics.Tests.PlayMode
                 _battleRoot = null;
             }
 
+            if (_ownsBattleCamera && _battleCamera != null)
+            {
+                UnityEngine.Object.DestroyImmediate(_battleCamera.gameObject);
+            }
+
+            _battleCamera = null;
+            _ownsBattleCamera = false;
             yield return null;
         }
 
@@ -177,6 +209,26 @@ namespace Tactics.Tests.PlayMode
             UIManager.Instance.Destroy(UIManager.UIId.Battle);
             UIManager.Instance.Destroy(UIManager.UIId.Inventory);
             UIManager.Instance.Destroy(UIManager.UIId.LevelUp);
+        }
+
+        [UnityTest]
+        public IEnumerator BattleUi_DoesNotMoveCameraDuringInitializationSelectionOrTurnChanges()
+        {
+            AssertCameraUnchanged();
+
+            var battleController = _battleRoot.GetComponent<BattleController>();
+            Assert.That(battleController, Is.Not.Null);
+            battleController.GetUnits().First().InvokeUnitSelected();
+            yield return null;
+            AssertCameraUnchanged();
+
+            battleController.MakeTurnTransition();
+            yield return null;
+            AssertCameraUnchanged();
+
+            battleController.MakeTurnTransition();
+            yield return null;
+            AssertCameraUnchanged();
         }
 
         [UnityTest]
@@ -299,6 +351,15 @@ namespace Tactics.Tests.PlayMode
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, " +
                           $"Diagnostics=[{string.Join("; ", result.Diagnostics)}], StepTrace=[{stepTrace}]";
             Assert.IsTrue(result.Passed, details);
+        }
+
+        private void AssertCameraUnchanged()
+        {
+            Assert.That(_battleCamera, Is.Not.Null);
+            Assert.That(_battleCamera.transform.position, Is.EqualTo(_initialCameraPosition));
+            Assert.That(_battleCamera.transform.rotation, Is.EqualTo(_initialCameraRotation));
+            Assert.That(_battleCamera.orthographicSize, Is.EqualTo(_initialCameraOrthographicSize));
+            Assert.That(_battleCamera.fieldOfView, Is.EqualTo(_initialCameraFieldOfView));
         }
 
         private static string GetPlanPath(string subDir, string fileName)

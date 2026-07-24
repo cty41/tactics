@@ -143,10 +143,20 @@ namespace Tactics.Tests.PlayMode
                 Assert.That(state.IsSpearHeld(amazon), Is.False);
                 Assert.That(state.GetSpearCell(amazon).IsTaken, Is.True);
 
-                var thrust = Ability("Thrust_Graph_Ability.asset", amazon, world);
-                Assert.That(thrust.GetAvailability(world.GridController).State,
-                    Is.EqualTo(AbilityAvailabilityState.DisabledClickable));
-                Assert.That(thrust.GetAvailability(world.GridController).Reason, Is.EqualTo("需要先回收长矛"));
+                foreach (string configFile in new[]
+                         {
+                             "MeleeAttack_Graph_Ability.asset",
+                             "Thrust_Graph_Ability.asset",
+                             "MultiStab_Graph_Ability.asset",
+                             "PoisonSpear_Graph_Ability.asset"
+                         })
+                {
+                    var heldSpearAttack = Ability(configFile, amazon, world);
+                    Assert.That(heldSpearAttack.GetAvailability(world.GridController).State,
+                        Is.EqualTo(AbilityAvailabilityState.DisabledClickable), configFile);
+                    Assert.That(heldSpearAttack.GetAvailability(world.GridController).Reason,
+                        Is.EqualTo("需要先回收长矛"), configFile);
+                }
 
                 var spearCell = state.GetSpearCell(amazon);
                 yield return Execute(world, amazon, spearCell, "RecoverSpear_Lv2_Graph_Ability.asset");
@@ -176,6 +186,78 @@ namespace Tactics.Tests.PlayMode
                 Assert.That(state.DropSpear(amazon, Cell(world, 2, 1)), Is.True);
                 var pickup = Ability("PickupSpear_Graph_Ability.asset", amazon, world);
                 Assert.That(pickup.GetAvailability(world.GridController).Reason, Is.EqualTo("需要移动到长矛相邻格"));
+            }
+            finally
+            {
+                AmazonBattleState.For(world.GridController).Clear();
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator DroppedSpear_AllowsMovementAndShowsPickupGuidance()
+        {
+            var world = CreateRectangleWorld(5, 5, out var amazon, casterY: 1);
+            try
+            {
+                amazon.MaxMovementPoints = 1f;
+                amazon.MovementPoints = 1f;
+                var blockedPickupCell = Cell(world, 3, 3);
+                var blocker = world.CreateUnit("BlockedPickup", 1, blockedPickupCell);
+                Prepare(blocker);
+
+                var state = AmazonBattleState.For(world.GridController);
+                var spearCell = Cell(world, 2, 2);
+                Assert.That(state.DropSpear(amazon, spearCell), Is.True);
+
+                var move = Ability("Move_Graph_Ability.asset", amazon, world);
+                Assert.That(move.GetAvailability(world.GridController).CanExecute, Is.True);
+                move.OnAbilitySelected(world.GridController);
+                move.Display(world.GridController);
+
+                var cellManager = world.CellManager;
+                CollectionAssert.AreEquivalent(
+                    new[] { spearCell },
+                    cellManager.GetGuidanceCells(CellGuidanceType.SpearLocation));
+                Assert.That(cellManager.GetGuidanceCells(CellGuidanceType.SpearPickup).Count, Is.EqualTo(7));
+                CollectionAssert.Contains(
+                    cellManager.GetGuidanceCells(CellGuidanceType.SpearPickup),
+                    Cell(world, 3, 2));
+                CollectionAssert.DoesNotContain(
+                    cellManager.GetGuidanceCells(CellGuidanceType.SpearPickup),
+                    blockedPickupCell);
+                Assert.That(cellManager.ReachableCells.Intersect(
+                    cellManager.GetGuidanceCells(CellGuidanceType.SpearPickup)), Is.Empty);
+
+                var targetQuery = new AbilityTargetQuery(
+                    amazon,
+                    amazon.CurrentCell,
+                    world.GridController,
+                    world.UnitManager.GetUnits());
+                CollectionAssert.DoesNotContain(
+                    move.QueryTargets(targetQuery).Options.Select(option => option.TargetPoint).ToList(),
+                    Cell(world, 3, 2));
+
+                move.CleanUp(world.GridController);
+                Assert.That(cellManager.GetGuidanceCells(CellGuidanceType.SpearLocation), Is.Empty);
+                Assert.That(cellManager.GetGuidanceCells(CellGuidanceType.SpearPickup), Is.Empty);
+
+                var moveTask = move.ExecuteForTestAsync(Cell(world, 1, 1), world.GridController);
+                yield return new WaitUntil(() => moveTask.IsCompleted);
+                Assert.That(moveTask.IsFaulted, Is.False, moveTask.Exception?.ToString());
+                Assert.That(moveTask.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed));
+                Assert.That(amazon.CurrentCell, Is.SameAs(Cell(world, 1, 1)));
+                Assert.That(state.IsSpearHeld(amazon), Is.False);
+
+                var pickup = Ability("PickupSpear_Graph_Ability.asset", amazon, world);
+                Assert.That(pickup.GetAvailability(world.GridController).CanExecute, Is.True);
+                float mana = amazon.Mana;
+                var pickupTask = pickup.ExecuteForTestAsync(amazon.CurrentCell, world.GridController);
+                yield return new WaitUntil(() => pickupTask.IsCompleted);
+                Assert.That(pickupTask.IsFaulted, Is.False, pickupTask.Exception?.ToString());
+                Assert.That(pickupTask.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed));
+                Assert.That(state.IsSpearHeld(amazon), Is.True);
+                Assert.That(amazon.Mana, Is.EqualTo(mana));
             }
             finally
             {

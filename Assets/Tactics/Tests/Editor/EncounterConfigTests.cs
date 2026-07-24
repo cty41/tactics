@@ -263,6 +263,8 @@ namespace Tactics.Tests.Editor
             public Task MarkAsReachable(ICell cell) => Task.CompletedTask;
             public Task MarkAsPath(IEnumerable<ICell> cells, ICell originCell) => Task.CompletedTask;
             public Task MarkAsAoE(IEnumerable<ICell> cells) => Task.CompletedTask;
+            public Task MarkAsGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType) => Task.CompletedTask;
+            public Task UnMarkGuidance(IEnumerable<ICell> cells, CellGuidanceType guidanceType) => Task.CompletedTask;
             public void SetColor(ICell cell, float r, float g, float b, float a) { }
             public bool IsCellWalkable(ICell cell) => true;
         }
