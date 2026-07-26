@@ -34,11 +34,13 @@ description: "Use when operating Unity Editor via MCP tools — core rules, foun
 
 ## Workflow
 
-1. 先判断目标是否是 Unity 序列化资产或 Editor 状态。
-2. 加载本技能确认核心规则，再按领域加载子技能。
-3. 用搜索/读取工具定位目标对象，不直接读写 Unity YAML。
-4. 对 3 个以上独立操作使用 `batch_execute`。
-5. 对打开的 Prefab 或 Scene 执行保存/关闭配对。
+1. 首次 Unity MCP 调用前，先读取 `.agents/mcp.json`，并运行 `powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check`。
+2. 用该 URL 的 `mcpforunity://project/info` 验证 `projectRoot` 是当前 worktree；根目录不匹配时，禁止后续 Unity 写操作。
+3. 再判断目标是否是 Unity 序列化资产或 Editor 状态。
+4. 加载本技能确认核心规则，再按领域加载子技能。
+5. 用搜索/读取工具定位目标对象，不直接读写 Unity YAML。
+6. 对 3 个以上独立操作使用 `batch_execute`。
+7. 对打开的 Prefab 或 Scene 执行保存/关闭配对。
 
 ## Core Rules
 
@@ -86,31 +88,30 @@ Use `batch_execute` when performing 3+ independent operations。 Reduces latency
 
 ### 必须执行的步骤
 
-1. **首先**读取配置文件检查端口设置：
-   - OpenCode: `.opencode/opencode.json`
-   - Claude Code: `.claude/claude_code_config.json`
-   - 其他工具：检查对应的配置文件
+1. **首先**读取 `.agents/mcp.json`；这是本项目 Unity MCP URL 的唯一真相源。
+2. 运行 `powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check`，确认 Codex/OpenCode 客户端配置与项目 URL 一致。
+3. 调用 `mcpforunity://project/info`，确认返回的 `projectRoot` 是当前 worktree。若不一致，停止所有 Unity 写操作，修复端口或启动正确的 Unity Editor 后再试。
 
-2. **不要**假设默认端口（3000、8080、5000 等）
+4. **不要**假设默认端口（3000、8080、5000 等）
 
-3. **使用**配置文件中的实际端口进行连接测试
+5. **使用**项目 JSON 中的实际端口进行连接测试
 
-4. **确认**Unity Editor 是否已启动，MCP 插件是否已启用
+6. **确认**Unity Editor 是否已启动，MCP 插件是否已启用
 
 ### 故障排除流程
 
 ```mermaid
 graph TD
-    A[MCP 工具调用失败] --> B{读取配置文件}
-    B --> C[提取端口/URL]
+    A[MCP 工具调用失败] --> B[读取项目 .agents/mcp.json]
+    B --> C[运行同步校验]
     C --> D{验证端口是否在监听}
     D -->|否| E[检查 Unity Editor 状态]
-    D -->|是| F[使用正确端口重试]
-    E --> G[启动 Unity/启用 MCP]
+    D -->|是| F[读取 project/info]
+    E --> G[启动正确 worktree 的 Unity]
     G --> F
-    F --> H{仍然失败?}
-    H -->|是| I[报告具体错误信息]
-    H -->|否| J[问题解决]
+    F --> H{projectRoot 正确?}
+    H -->|否| I[停止 Unity 写操作并修复端口]
+    H -->|是| J[使用正确端口重试]
 ```
 
 ### Anti-patterns
@@ -130,6 +131,7 @@ graph TD
 | Loading a scene and leaving it open | Save and close/unload it | Avoids hidden editor state |
 | Repeating many single MCP calls | Use `batch_execute` | Reduces latency and token cost |
 | Assuming a tool exists | Verify available MCP tools or context | Prevents dead-end tool calls |
+| 向未知 `projectRoot` 写资产 | 先检查 `project/info`，不匹配即停止 | 防止写入其他 worktree |
 
 ## Checklist
 
@@ -138,3 +140,4 @@ graph TD
 - [ ] Targets were searched/read before mutation
 - [ ] Open prefab/scene operations have save and close steps
 - [ ] Batch operations use `batch_execute` when appropriate
+- [ ] 已用 `.agents/mcp.json` 和 `project/info` 校验当前 worktree

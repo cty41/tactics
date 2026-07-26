@@ -60,7 +60,7 @@ namespace Tactics
                 await InitializeManagersAsync();
                 var settings = GameSettingsStore.Load();
                 GameSettingsStore.ApplyDisplay(settings);
-                FmodAudioSettingsService.ApplyMaster(settings.MasterVolume, settings.MasterMuted);
+                UnityAudioSettingsService.ApplyMaster(settings.MasterVolume, settings.MasterMuted);
 
                 // 检查初始化是否成功
                 if (GameAssetManager.Instance == null || !GameAssetManager.Instance.IsInitialized)

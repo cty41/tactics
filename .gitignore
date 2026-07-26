@@ -1,6 +1,7 @@
 *.csproj
 *.csproj.meta
 *.sln
+*.slnx
 *.DotSettings
 *.DotSettings.user
 *.suo
@@ -62,7 +63,6 @@ GameAssetBundles/
 
 # Tactics AssetPipeline copy target
 /Assets/StreamingAssets/Bundles/
-tactics.slnx
 .clinerules
 .unity-agentic
 /Assets/Packages/
@@ -70,38 +70,6 @@ tactics.slnx
 Assets/Unity.VisualScripting.Generated
 
 
-# Never ignore DLLs in the FMOD subfolder.
-!/[Aa]ssets/Plugins/FMOD/**/lib/*
-
-# Don't ignore images and gizmos used by FMOD in the Unity Editor.
-!/[Aa]ssets/Gizmos/FMOD/*
-!/[Aa]ssets/Editor Default Resources/FMOD/*
-
-# Ignore the Cache folder since it is updated locally.
-/[Aa]ssets/Plugins/FMOD/Cache/*
-
-# Ignore bank files in the StreamingAssets folder.
-/[Aa]ssets/StreamingAssets/**/*.bank
-/[Aa]ssets/StreamingAssets/**/*.bank.meta
-
-# If the source bank files are kept outside of the StreamingAssets folder then these can be ignored.
-# Log files can be ignored.
-fmod_editor.log
-
-# FMOD Studio project local state
-/Proj_FMod/**/.user/
-/Proj_FMod/**/.unsaved/
-/Proj_FMod/**/.cache/
-/Proj_FMod/**/Cache/
-
-# FMOD Studio generated banks/build output
-/Proj_FMod/**/*.bank
-/Proj_FMod/**/*.bank.meta
-/Proj_FMod/**/Build/
-/Proj_FMod/**/Builds/
-/Proj_FMod/**/Banks/
-
-# FMOD Studio logs
-/Proj_FMod/**/fmod*.log
 .mimocode/plans
+.mimocode/.cron-lock
 Tests/gameplay-specs/compiled

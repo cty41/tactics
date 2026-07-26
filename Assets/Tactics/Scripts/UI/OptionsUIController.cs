@@ -130,8 +130,8 @@ namespace Tactics.UI
 
             GameSettingsStore.Save(settings);
             GameSettingsStore.ApplyDisplay(settings);
-            bool audioApplied = FmodAudioSettingsService.ApplyMaster(settings.MasterVolume, settings.MasterMuted);
-            SetAudioStatus(audioApplied ? "Audio applied" : "FMOD master bus unavailable");
+            bool audioApplied = UnityAudioSettingsService.ApplyMaster(settings.MasterVolume, settings.MasterMuted);
+            SetAudioStatus(audioApplied ? "Audio applied" : "Audio settings could not be applied");
         }
 
         private void OnBackClicked()

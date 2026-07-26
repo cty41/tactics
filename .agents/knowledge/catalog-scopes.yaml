@@ -39,8 +39,11 @@ scopes:
       - AGENTS.md
       - .agents/rules
       - .agents/skills/unity-mcp-core
+      - .agents/skills/mcp-connection-troubleshooting
       - .agents/skills/unity-auto-compile-guard
       - .agents/skills/project-doc-organization
+      - Assets/Tactics/Scripts/Editor/MCP
+      - Tools/unity-mcp
 
   okf-maintenance:
     concept: operations/okf-maintenance.md
