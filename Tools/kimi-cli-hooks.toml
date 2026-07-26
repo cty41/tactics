@@ -5,7 +5,7 @@
 #
 # 安装步骤：
 # 1. 将下方 [[hooks]] 配置复制到 ~/.kimi/config.toml 中（追加到文件末尾）。
-# 2. 确保 Unity Editor 已启动且 MCP HTTP server 在运行（默认 http://127.0.0.1:8080）。
+# 2. 确保 Unity Editor 已启动且 MCP HTTP server 在运行（URL 由 .agents/mcp.json 决定）。
 # 3. 确保 .agents/scripts/trigger-unity-compile.py 存在且 Python 3 可用。
 #
 # 验证：

@@ -11,7 +11,7 @@ MCP 连接故障排除的专用技能。
 
 | 步骤 | 操作 | 说明 |
 |------|------|------|
-| 1 | 读取配置文件 | 检查端口和 URL 设置 |
+| 1 | 读取项目 JSON | 检查唯一端口和 URL 设置 |
 | 2 | 验证端口 | 确认端口是否在监听 |
 | 3 | 检查服务状态 | 确认 Unity Editor 和 MCP 插件 |
 | 4 | 使用正确端口 | 用配置文件中的端口重试 |
@@ -27,16 +27,13 @@ MCP 连接故障排除的专用技能。
 
 ## Workflow
 
-### Step 1: 读取配置文件
+### Step 1: 读取项目 JSON
 
-**首先**读取项目中的 MCP 配置文件：
+**首先**读取项目中的唯一 MCP URL 来源：
 
 ```bash
-# OpenCode
-cat .opencode/opencode.json
-
-# Claude Code
-cat .claude/claude_code_config.json
+cat .agents/mcp.json
+powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check
 ```
 
 **不要**假设默认端口！配置文件中的端口可能不同。
@@ -47,15 +44,15 @@ cat .claude/claude_code_config.json
 
 ```json
 {
-  "mcp": {
-    "unity-MCP": {
-      "url": "http://127.0.0.1:8080/mcp"
+  "mcpServers": {
+    "unityMCP": {
+      "url": "http://127.0.0.1:8081/mcp"
     }
   }
 }
 ```
 
-提取端口号（如 8080）。
+提取端口号（如 8081）。
 
 ### Step 3: 验证端口是否在监听
 
@@ -81,11 +78,17 @@ lsof -i :<端口号>
 
 使用配置文件中的端口进行连接测试。
 
+### Step 6: 校验项目根目录
+
+首次 MCP 调用必须读取 `mcpforunity://project/info`。返回的 `projectRoot` 不是当前 worktree 时，不得继续任何 Unity 写操作；应关闭占用端口的错误 Editor 或启动目标 worktree 的 Editor。
+
 ## 常见配置文件位置
 
 | 工具 | 配置文件路径 |
 |------|-------------|
-| OpenCode | `.opencode/opencode.json` |
+| 项目唯一真相源 | `.agents/mcp.json` |
+| Codex 派生配置 | `.codex/config.toml` |
+| OpenCode 派生配置 | `.opencode/opencode.json` |
 | Claude Code | `.claude/claude_code_config.json` |
 | Cursor | `.cursor/mcp.json` |
 | VS Code | `.vscode/mcp.json` |
@@ -94,7 +97,7 @@ lsof -i :<端口号>
 
 | 工具/框架 | 常见默认端口 |
 |-----------|-------------|
-| Unity MCP | 8080, 3000, 5000 |
+| Unity MCP | 由 `.agents/mcp.json` 指定 |
 | Node.js | 3000 |
 | Python | 5000, 8000 |
 | React | 3000 |
@@ -111,6 +114,7 @@ lsof -i :<端口号>
 | 不检查 Unity 状态 | 确认 Unity Editor 已启动 | MCP 需要 Unity 运行 |
 | 忽略配置文件 | 首先读取配置 | 配置是唯一真相源 |
 | 不验证端口状态 | 使用 netstat 验证端口 | 确认服务是否在运行 |
+| 未检查项目根目录就写操作 | 先读取 `project/info` | 防止写入错误 worktree |
 
 ## Checklist
 
@@ -119,3 +123,4 @@ lsof -i :<端口号>
 - [ ] 确认了 Unity Editor 状态
 - [ ] 使用了正确的端口进行连接
 - [ ] 如果仍然失败，报告了具体错误信息
+- [ ] 已核验 `project/info` 的 `projectRoot` 是当前 worktree

@@ -3,7 +3,6 @@ import sys
 import urllib.request
 from pathlib import Path
 
-URL = "http://127.0.0.1:8080/mcp"
 HEADERS = {
     "Content-Type": "application/json",
     "Accept": "application/json, text/event-stream",
@@ -23,9 +22,21 @@ def find_project_root(start_dir: str) -> Path | None:
     return None
 
 
-def call_mcp(data: dict, timeout: float = 5.0):
+def load_mcp_url(project_root: Path) -> str:
+    """从项目级 .agents/mcp.json 读取 Unity MCP 的唯一 URL。"""
+    config_path = project_root / ".agents" / "mcp.json"
+    with config_path.open(encoding="utf-8") as config_file:
+        config = json.load(config_file)
+
+    url = config.get("mcpServers", {}).get("unityMCP", {}).get("url")
+    if not isinstance(url, str) or not url.startswith("http://127.0.0.1:") or not url.endswith("/mcp"):
+        raise ValueError(f"invalid unityMCP URL in {config_path}: {url!r}")
+    return url
+
+
+def call_mcp(url: str, data: dict, timeout: float = 5.0):
     req = urllib.request.Request(
-        URL,
+        url,
         data=json.dumps(data).encode(),
         headers=HEADERS,
     )
@@ -50,8 +61,15 @@ def main():
         return
 
     try:
+        url = load_mcp_url(project_root)
+    except Exception as e:
+        print(f"[hook] Unity MCP configuration error ({e})", file=sys.stderr)
+        return
+
+    try:
         # 1. Initialize session
         resp = call_mcp(
+            url,
             {
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -72,10 +90,11 @@ def main():
     HEADERS["mcp-session-id"] = session_id
 
     # 2. Send initialized notification
-    call_mcp({"jsonrpc": "2.0", "method": "notifications/initialized"}, timeout=2.0)
+    call_mcp(url, {"jsonrpc": "2.0", "method": "notifications/initialized"}, timeout=2.0)
 
     # 3. Call refresh_unity
     resp2 = call_mcp(
+        url,
         {
             "jsonrpc": "2.0",
             "id": 2,

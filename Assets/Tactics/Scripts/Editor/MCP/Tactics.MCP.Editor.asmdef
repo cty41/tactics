@@ -4,7 +4,7 @@
     "references": [
         "MCPForUnity.Editor",
         "MCPForUnity.Runtime",
-        "Tactics.Common"
+        "com.tactics"
     ],
     "includePlatforms": [
         "Editor"

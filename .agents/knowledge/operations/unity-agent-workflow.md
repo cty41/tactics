@@ -4,17 +4,20 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-07-15T13:51:33+08:00"
+timestamp: "2026-07-26T16:27:55+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
   - AGENTS.md
   - .agents/rules
   - .agents/skills/unity-mcp-core/SKILL.md
+  - .agents/skills/mcp-connection-troubleshooting/SKILL.md
   - .agents/skills/unity-auto-compile-guard/SKILL.md
   - .agents/skills/project-doc-organization/SKILL.md
+  - Assets/Tactics/Scripts/Editor/MCP
+  - Tools/unity-mcp
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:6617411637c9911034d298186c5d4f0c70ea6e65ea82f1cfe9692ed512d5d3c4
+source_fingerprint: sha256:f8f4bcbb59611e373ca43bbda990c18f0c0ffacdd264409d2d2ca6bf3cbea3ba
 ---
 
 # Core Rules
@@ -24,6 +27,7 @@ source_fingerprint: sha256:6617411637c9911034d298186c5d4f0c70ea6e65ea82f1cfe9692
 - 不直接读写 Unity YAML，资产操作通过 Unity MCP 或项目认可工具完成。
 - 修改 C# 后必须显式触发 Unity 编译并检查 Console 错误。
 - 新增、删除或移动 Unity 文件时保持 `.meta` 配对。
+- Unity MCP 的端口从项目 `.agents/mcp.json` 读取；首次操作先同步派生客户端配置，并用 `project/info` 核验当前 worktree。
 - 文档查询先读 OKF index；当前实现仍回到代码、资产和测试。
 
 # Related Systems
