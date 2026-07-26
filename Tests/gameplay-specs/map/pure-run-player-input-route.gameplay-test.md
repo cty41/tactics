@@ -44,17 +44,21 @@ actions:
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: FirstLevelUpSkillCard, maximumFrames: 300 }
+    parameters: { observable: uiElement, elementName: AttributeAllocationRoot, maximumFrames: 300 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: AttributePlus_Strength
+    target: AttrPlus_Strength
+    parameters: { targetKind: UiElement }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: FirstLevelUpSkillCard, maximumFrames: 120 }
+    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 120 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: FirstLevelUpSkillCard
+    target: SkillOption_0
     parameters: { targetKind: UiElement }
   - kind: clickPointerTarget
     adapter: PlayerInput
@@ -104,17 +108,21 @@ actions:
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: FirstLevelUpSkillCard, maximumFrames: 300 }
+    parameters: { observable: uiElement, elementName: AttributeAllocationRoot, maximumFrames: 300 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: AttributePlus_Strength
+    target: AttrPlus_Strength
+    parameters: { targetKind: UiElement }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: FirstLevelUpSkillCard, maximumFrames: 120 }
+    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 120 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: FirstLevelUpSkillCard
+    target: SkillOption_0
     parameters: { targetKind: UiElement }
   - kind: clickPointerTarget
     adapter: PlayerInput
@@ -150,17 +158,21 @@ actions:
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: FirstLevelUpSkillCard, maximumFrames: 300 }
+    parameters: { observable: uiElement, elementName: AttributeAllocationRoot, maximumFrames: 300 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: AttributePlus_Strength
+    target: AttrPlus_Strength
+    parameters: { targetKind: UiElement }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: FirstLevelUpSkillCard, maximumFrames: 120 }
+    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 120 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: FirstLevelUpSkillCard
+    target: SkillOption_0
     parameters: { targetKind: UiElement }
   - kind: clickPointerTarget
     adapter: PlayerInput

@@ -39,6 +39,20 @@ namespace Tactics.Common.Testing.Gameplay
         public static bool HasVirtualTestDevices => InputSystem.devices.Any(device =>
             device.name is "GameplayTestMouse" or "GameplayTestKeyboard");
 
+        /// <summary>
+        /// Clears only test-owned virtual devices left by an interrupted prior scenario.
+        /// Physical devices and production input devices are never included.
+        /// </summary>
+        public static void RemoveResidualVirtualTestDevices()
+        {
+            foreach (var device in InputSystem.devices
+                         .Where(device => device.name is "GameplayTestMouse" or "GameplayTestKeyboard")
+                         .ToArray())
+            {
+                InputSystem.RemoveDevice(device);
+            }
+        }
+
         public bool CanExecute(ExecutableScenarioAction action)
         {
             return action.Kind is "initializePlayerInput"
@@ -100,6 +114,9 @@ namespace Tactics.Common.Testing.Gameplay
             if (context.PlayerInputMouse != null || context.PlayerInputKeyboard != null)
                 return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, "Virtual player input is already initialized.");
 
+            // A failed prior PlayerLoop may not reach its context disposal. Clear only the
+            // dedicated test devices before this independent scenario acquires ownership.
+            RemoveResidualVirtualTestDevices();
             var mouse = InputSystem.AddDevice<Mouse>("GameplayTestMouse");
             var keyboard = InputSystem.AddDevice<Keyboard>("GameplayTestKeyboard");
             foreach (var physicalMouse in InputSystem.devices.OfType<Mouse>()
@@ -190,9 +207,16 @@ namespace Tactics.Common.Testing.Gameplay
             if (context.PlayerInputMouse == null || !context.PlayerInputMouse.added)
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "initializePlayerInput must run before pointer actions.");
 
-            InputSystem.QueueStateEvent(context.PlayerInputMouse, new MouseState { position = position });
-            if (!await WaitForInputFrame(context))
-                return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Pointer movement cancelled.");
+            // Scene transitions can destroy the EventSystem that existed when the virtual devices
+            // were initialized. Rebind the production UI input module before every pointer action
+            // so Home, map and battle UI receive the same device events.
+            EnsureInputSystemUiModule(context);
+
+            if (!await QueueMouseStateAndWaitForProcessing(context, new MouseState { position = position }))
+                return GameplayStepResult.Fail(
+                    PlayerInputAdapterName,
+                    action.Kind,
+                    $"Pointer movement was not processed. {DescribeVirtualInputState(context)}");
             Vector2 actualPosition = context.PlayerInputMouse.position.ReadValue();
             if (Vector2.Distance(actualPosition, position) > 1f)
             {
@@ -249,26 +273,31 @@ namespace Tactics.Common.Testing.Gameplay
                 Vector2 deviceStart = new Vector2(panelStart.x * scale, Screen.height - panelStart.y * scale);
                 Vector2 deviceEnd = new Vector2(panelEnd.x * scale, Screen.height - panelEnd.y * scale);
 
-                InputSystem.QueueStateEvent(context.PlayerInputMouse, new MouseState { position = deviceStart });
-                if (!await WaitForInputFrame(context))
+                if (!await QueueMouseStateAndWaitForProcessing(context, new MouseState { position = deviceStart }))
                     return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Map scroll pointer movement cancelled.");
 
-                InputSystem.QueueStateEvent(
-                    context.PlayerInputMouse,
+                if (!await QueueMouseStateAndWaitForProcessing(
+                    context,
                     new MouseState { position = deviceStart }
-                        .WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left, true));
-                if (!await WaitForInputFrame(context))
+                        .WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left, true),
+                    PointerButton.Left,
+                    true))
                     return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Map scroll pointer press cancelled.");
 
-                InputSystem.QueueStateEvent(
-                    context.PlayerInputMouse,
+                if (!await QueueMouseStateAndWaitForProcessing(
+                    context,
                     new MouseState { position = deviceEnd }
-                        .WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left, true));
-                if (!await WaitForInputFrame(context))
+                        .WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left, true),
+                    PointerButton.Left,
+                    true))
                     return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Map scroll pointer drag cancelled.");
 
-                InputSystem.QueueStateEvent(context.PlayerInputMouse, new MouseState { position = deviceEnd });
-                if (!await WaitForInputFrame(context) || !await WaitForInputFrame(context))
+                if (!await QueueMouseStateAndWaitForProcessing(
+                        context,
+                        new MouseState { position = deviceEnd },
+                        PointerButton.Left,
+                        false) ||
+                    !await WaitForInputFrame(context))
                     return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Map scroll pointer release cancelled.");
 
                 if (TryResolveUiScreenPosition(elementName, out _, out _))
@@ -316,16 +345,16 @@ namespace Tactics.Common.Testing.Gameplay
                         ? UnityEngine.InputSystem.LowLevel.MouseButton.Left
                         : UnityEngine.InputSystem.LowLevel.MouseButton.Right,
                     true);
-            InputSystem.QueueStateEvent(context.PlayerInputMouse, pressedState);
-            if (!await WaitForInputFrame(context))
+            if (!await QueueMouseStateAndWaitForProcessing(context, pressedState, button, true))
             {
                 UnregisterPointerObservers();
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Pointer press cancelled.");
             }
-            InputSystem.QueueStateEvent(
-                context.PlayerInputMouse,
-                new MouseState { position = pointerPosition });
-            if (!await WaitForInputFrame(context))
+            if (!await QueueMouseStateAndWaitForProcessing(
+                    context,
+                    new MouseState { position = pointerPosition },
+                    button,
+                    false))
             {
                 UnregisterPointerObservers();
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Pointer release cancelled.");
@@ -353,11 +382,9 @@ namespace Tactics.Common.Testing.Gameplay
             if (context.PlayerInputKeyboard == null || !context.PlayerInputKeyboard.added)
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "initializePlayerInput must run before keyboard actions.");
 
-            InputSystem.QueueStateEvent(context.PlayerInputKeyboard, new KeyboardState(key));
-            if (!await WaitForInputFrame(context))
+            if (!await QueueKeyboardStateAndWaitForProcessing(context, new KeyboardState(key), key, true))
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Key press cancelled.");
-            InputSystem.QueueStateEvent(context.PlayerInputKeyboard, new KeyboardState());
-            if (!await WaitForInputFrame(context))
+            if (!await QueueKeyboardStateAndWaitForProcessing(context, new KeyboardState(), key, false))
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Key release cancelled.");
             return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Pressed input key '{key}'.");
         }
@@ -1342,6 +1369,108 @@ namespace Tactics.Common.Testing.Gameplay
             while (Time.frameCount == startingFrame);
 
             return context.RuntimeScope?.IsCancelling != true;
+        }
+
+        /// <summary>
+        /// Queues a virtual mouse state and explicitly advances the test-owned Input System queue.
+        /// A rendered frame alone is not proof that queued Input System events were processed.
+        /// </summary>
+        private static Task<bool> QueueMouseStateAndWaitForProcessing(
+            GameplayRuntimeContext context,
+            MouseState state,
+            PointerButton? observedButton = null,
+            bool expectedButtonPressed = false)
+        {
+            if (context.PlayerInputMouse == null || !context.PlayerInputMouse.added)
+                return Task.FromResult(false);
+
+            return QueueInputEventAndWaitForProcessing(
+                context,
+                () => InputSystem.QueueStateEvent(context.PlayerInputMouse, state),
+                () =>
+                {
+                    if (Vector2.Distance(context.PlayerInputMouse.position.ReadValue(), state.position) > 1f)
+                        return false;
+
+                    return observedButton switch
+                    {
+                        PointerButton.Left => context.PlayerInputMouse.leftButton.isPressed == expectedButtonPressed,
+                        PointerButton.Right => context.PlayerInputMouse.rightButton.isPressed == expectedButtonPressed,
+                        _ => true
+                    };
+                });
+        }
+
+        /// <summary>
+        /// Queues a virtual keyboard state through the same deterministic test input boundary as
+        /// pointer input so key presses cannot depend on incidental PlayerLoop timing.
+        /// </summary>
+        private static Task<bool> QueueKeyboardStateAndWaitForProcessing(
+            GameplayRuntimeContext context,
+            KeyboardState state,
+            Key observedKey,
+            bool expectedKeyPressed)
+        {
+            if (context.PlayerInputKeyboard == null || !context.PlayerInputKeyboard.added)
+                return Task.FromResult(false);
+
+            return QueueInputEventAndWaitForProcessing(
+                context,
+                () => InputSystem.QueueStateEvent(context.PlayerInputKeyboard, state),
+                () => context.PlayerInputKeyboard[observedKey].isPressed == expectedKeyPressed);
+        }
+
+        /// <summary>
+        /// Explicitly advances only the test-owned Input System queue and confirms the resulting
+        /// virtual device state. Production UI and world input subscribe to the same Input System
+        /// update phase, so this helper never writes product state directly.
+        /// </summary>
+        private static Task<bool> QueueInputEventAndWaitForProcessing(
+            GameplayRuntimeContext context,
+            Action queueEvent,
+            Func<bool> isApplied)
+        {
+            if (context.RuntimeScope?.IsCancelling == true)
+                return Task.FromResult(false);
+
+            queueEvent();
+            InputSystem.Update();
+            ProcessActiveUiInputModules();
+
+            // InputSystem.Update does not invoke onAfterUpdate consistently for manually driven
+            // PlayMode test updates in the current Unity version. The owned device's state is the
+            // authoritative proof that its queued event was consumed. Do not yield here: the next
+            // automatic Input System update can overwrite the virtual device with stale pointer
+            // data before the caller starts its press/release sequence.
+            return Task.FromResult(isApplied());
+        }
+
+        /// <summary>
+        /// Runs the active production UI input modules against the state just produced by the
+        /// virtual device. This is the same processing EventSystem performs in its normal update,
+        /// but must happen in the current test tick before a later automatic input update clears
+        /// wasPressedThisFrame.
+        /// </summary>
+        private static void ProcessActiveUiInputModules()
+        {
+            foreach (var module in UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None))
+            {
+                if (module != null && module.isActiveAndEnabled)
+                    module.Process();
+            }
+        }
+
+        private static string DescribeVirtualInputState(GameplayRuntimeContext context)
+        {
+            var mouse = context.PlayerInputMouse;
+            var currentMouse = Mouse.current;
+            string virtualMouse = mouse == null
+                ? "null"
+                : $"name={mouse.name},id={mouse.deviceId},added={mouse.added},enabled={mouse.enabled},position={mouse.position.ReadValue()}";
+            string current = currentMouse == null
+                ? "null"
+                : $"name={currentMouse.name},id={currentMouse.deviceId},position={currentMouse.position.ReadValue()}";
+            return $"VirtualMouse=[{virtualMouse}], CurrentMouse=[{current}], Scene='{SceneManager.GetActiveScene().name}'.";
         }
 
         private enum PointerButton

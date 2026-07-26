@@ -41,10 +41,42 @@ namespace Tactics.Cells
         [SerializeField] private Tile _arrowDown;
 
         Dictionary<Vector2IntImpl, VirtualSquareCell> _cells;
+        private InputAction _cellClickAction;
 
         private void Awake()
         {
             EnsureHighlightRenderer();
+        }
+
+        private void OnEnable()
+        {
+            _cellClickAction ??= new InputAction("CellClick", InputActionType.Button, "<Mouse>/leftButton");
+            _cellClickAction.performed += OnCellClickPerformed;
+            _cellClickAction.Enable();
+        }
+
+        private void OnDisable()
+        {
+            if (_cellClickAction == null)
+                return;
+
+            _cellClickAction.performed -= OnCellClickPerformed;
+            _cellClickAction.Disable();
+            _cellClickAction.Dispose();
+            _cellClickAction = null;
+        }
+
+        /// <summary>
+        /// Handles pointer presses through an Input Action callback so physical and virtual mouse
+        /// events are consumed in the same Input System update that produced them.
+        /// </summary>
+        private void OnCellClickPerformed(InputAction.CallbackContext context)
+        {
+            if (_cells == null)
+                return;
+
+            var cell = TryGetCellUnderCursor();
+            cell?.OnMouseDown();
         }
 
         private void EnsureHighlightRenderer()
@@ -165,11 +197,6 @@ namespace Tactics.Cells
         void Update()
         {
             if (_cells == null) return; // 尚未初始化，跳过
-            if (Mouse.current.leftButton.wasPressedThisFrame)
-            {
-                var cell = TryGetCellUnderCursor();
-                cell?.OnMouseDown();
-            }
 
             var currentTime = Time.time;
             if (currentTime - _lastRaycast < _raycastDelay)

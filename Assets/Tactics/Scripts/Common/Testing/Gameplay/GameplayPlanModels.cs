@@ -83,7 +83,7 @@ namespace Tactics.Common.Testing.Gameplay
         public List<string> Diagnostics { get; } = new();
         public List<ProbeSnapshot> Probes { get; } = new();
         public List<FailureInfo> Failures { get; } = new();
-        public bool Passed => Diagnostics.Count == 0 && Assertions.TrueForAll(assertion => assertion.Passed);
+        public bool Passed => Failures.Count == 0 && Diagnostics.Count == 0 && Assertions.TrueForAll(assertion => assertion.Passed);
         public FailureCategory FailureCategory => Failures.FirstOrDefault()?.Category ?? FailureCategory.None;
 
         public void AddFailure(FailureCategory category, string phase, string kind, string adapter, string message)

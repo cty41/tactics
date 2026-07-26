@@ -51,7 +51,7 @@ node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> 
 - 需要真实资产语义时显式引用真实资产；纯框架测试才使用最小测试数据。
 - 技能阶段、投射物落点、Buff 存在性、单位能否行动等应使用专用断言，不用日志文本代替状态验证。
 - 共享战斗原语的维护源位于 `Tests/gameplay-specs/shared/`；其中五个场景分别验证朝向/先攻、状态回合、召唤顺序、禁用原因和有序多段选择。
-- 带 `player-input-e2e` 标签的场景只能用 `PlayerInput` 执行动作；Map、Battle、Skill、UI 只允许做只读断言。点击必须经过 Panel picking 或正式 Camera 坐标转换，并由可观察状态推进等待。
+- 带 `player-input-e2e` 标签的场景只能用 `PlayerInput` 执行动作；Map、Battle、Skill、UI 只允许做只读断言。点击必须经过 Panel picking 或正式 Camera 坐标转换，并由可观察状态推进等待。虚拟设备事件排队后必须显式推进测试拥有的 Input System 队列，并由设备状态确认已消费；战场格点击和取消等生产输入使用 InputAction 回调接收同一事件，单纯等待渲染帧不能证明输入已生效。
 
 ## 测试分层
 

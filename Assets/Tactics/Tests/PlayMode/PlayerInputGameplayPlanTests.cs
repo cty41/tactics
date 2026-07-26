@@ -110,12 +110,15 @@ namespace Tactics.Tests.PlayMode
         {
             var plan = CreateInputLifecyclePlan(
                 timeoutMs: 10000,
-                runtimeActionJson: "{\"adapter\":\"PlayerInput\",\"kind\":\"clickPointerTarget\",\"target\":\"MissingButton\",\"parameters\":{\"targetKind\":\"UiElement\"}}");
+                runtimeActionJson: "{\"adapter\":\"PlayerInput\",\"kind\":\"pressInputKey\",\"parameters\":{\"key\":\"NotARealKey\"}}");
 
             var task = ExecutePlan(plan);
             yield return WaitForTask(task);
 
-            Assert.IsFalse(task.Result.Passed);
+            Assert.That(task.Result.Failures, Is.Not.Empty,
+                $"The invalid key action unexpectedly returned a passing result. Steps=[{string.Join("; ", task.Result.ExecutedSteps.Select(step => step.Message))}]");
+            Assert.IsFalse(task.Result.Passed,
+                $"Failures={task.Result.Failures.Count}, Diagnostics={task.Result.Diagnostics.Count}");
             AssertVirtualInputDevicesReleased();
         }
 
@@ -130,6 +133,8 @@ namespace Tactics.Tests.PlayMode
             var task = ExecutePlan(plan);
             yield return WaitForTask(task);
 
+            Assert.That(task.Result.Failures, Is.Not.Empty,
+                $"The observable wait unexpectedly returned a passing result. Steps=[{string.Join("; ", task.Result.ExecutedSteps.Select(step => step.Message))}]");
             Assert.That(task.Result.FailureCategory, Is.EqualTo(FailureCategory.Timeout));
             Assert.That(PlayerInputGameplayStepAdapter.TotalInitializationCount, Is.GreaterThan(initializationCountBefore));
             AssertVirtualInputDevicesReleased();

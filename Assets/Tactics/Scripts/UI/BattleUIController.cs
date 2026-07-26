@@ -59,6 +59,7 @@ namespace Tactics.UI
         // State
         private IGridController _gridController;
         private InputAction _endTurnAction;
+        private InputAction _cancelTargetingAction;
         private IUnit _currentSelectedUnit;
         private IAbility _currentMoveAbility;
         private ConsumableBattleAbility _currentConsumableAbility;
@@ -113,6 +114,7 @@ namespace Tactics.UI
 
         protected override void OnShown()
         {
+            EnableCancelTargetingInput();
             // Delay one frame to ensure UIDocument.rootVisualElement is ready
             StartCoroutine(WireButtonsDelayed());
         }
@@ -125,6 +127,7 @@ namespace Tactics.UI
 
         protected override void OnHidden()
         {
+            DisableCancelTargetingInput();
             UnwireButtons();
             if (_gridController != null)
             {
@@ -1234,13 +1237,45 @@ namespace Tactics.UI
 
         private void Update()
         {
-            bool cancelPressed = Keyboard.current?.escapeKey.wasPressedThisFrame == true ||
-                                 Mouse.current?.rightButton.wasPressedThisFrame == true;
-            if (_currentOrderedAbility?.OrderedSelection != null && cancelPressed)
+            UpdateDamageNumbers();
+            UpdateHoverHealthBar();
+            SyncBuffIcons();
+            UpdateBuffIconPositions();
+            SyncSkillCardAvailability();
+            SyncOrderedSelectionUi();
+            SyncDroppedSpearMarkers();
+        }
+
+        private void EnableCancelTargetingInput()
+        {
+            _cancelTargetingAction ??= new InputAction("CancelTargeting", InputActionType.Button);
+            _cancelTargetingAction.AddBinding("<Keyboard>/escape");
+            _cancelTargetingAction.AddBinding("<Mouse>/rightButton");
+            _cancelTargetingAction.performed += OnCancelTargetingPerformed;
+            _cancelTargetingAction.Enable();
+        }
+
+        private void DisableCancelTargetingInput()
+        {
+            if (_cancelTargetingAction == null)
+                return;
+
+            _cancelTargetingAction.performed -= OnCancelTargetingPerformed;
+            _cancelTargetingAction.Disable();
+            _cancelTargetingAction.Dispose();
+            _cancelTargetingAction = null;
+        }
+
+        /// <summary>
+        /// Handles cancel input through Input System actions so virtual and physical devices share
+        /// the same production targeting-cancellation path.
+        /// </summary>
+        private void OnCancelTargetingPerformed(InputAction.CallbackContext context)
+        {
+            if (_currentOrderedAbility?.OrderedSelection != null)
                 UndoOrCancelOrderedSelection();
 
-            if (_isConsumableTargeting &&
-                cancelPressed)
+            if (_isConsumableTargeting)
             {
                 _isConsumableTargeting = false;
                 _consumableButton?.EnableInClassList("targeting", false);
@@ -1250,8 +1285,7 @@ namespace Tactics.UI
 
             bool isHumanTargeting = _gridController?.TurnContext.CurrentPlayer?.PlayerType == PlayerType.HumanPlayer &&
                 _gridController.GridState is not GridStateAwaitInput;
-            if (cancelPressed &&
-                isHumanTargeting &&
+            if (isHumanTargeting &&
                 _currentOrderedAbility?.OrderedSelection == null &&
                 !_isConsumableTargeting)
             {
@@ -1261,14 +1295,6 @@ namespace Tactics.UI
                 HideAbilityReason();
                 RefreshActionUi();
             }
-
-            UpdateDamageNumbers();
-            UpdateHoverHealthBar();
-            SyncBuffIcons();
-            UpdateBuffIconPositions();
-            SyncSkillCardAvailability();
-            SyncOrderedSelectionUi();
-            SyncDroppedSpearMarkers();
         }
 
         public void RefreshActionUi()
