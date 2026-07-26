@@ -44,11 +44,34 @@ namespace Tactics.Tests.PlayMode
 
             Assert.That(elite.HealthMultiplier, Is.EqualTo(1.3f));
             Assert.That(elite.OutputMultiplier, Is.EqualTo(1.15f));
-            Assert.That(elite.Layout.BlockedCells.Select(cell => $"{cell.X},{cell.Y}"), Contains.Item("15,27"));
+            Assert.That(elite.Layout.BlockedCells.Select(cell => $"{cell.X},{cell.Y}"), Contains.Item("30,26"));
             Assert.That(special.HealthMultiplier, Is.EqualTo(1.8f));
             Assert.That(special.OutputMultiplier, Is.EqualTo(1.25f));
             Assert.That(EncounterCatalog.Monsters.Values.Select(monster => monster.AiBrainAssetPath).Distinct().Count(), Is.EqualTo(6));
             Assert.That(EncounterCatalog.Monsters[EncounterCatalog.RangedId].MinimumStartingMana, Is.EqualTo(15));
+        }
+
+        [Test]
+        public void PureRunMap_PersistsDeterministicEncounterRecipeIds()
+        {
+            var config = ScriptableObject.CreateInstance<RoguelikeMapConfig>();
+            try
+            {
+                var first = RoguelikeMapGenerator.GetPureRunMap(config, 1203);
+                var second = RoguelikeMapGenerator.GetPureRunMap(config, 1203);
+                var recipes = first.nodes
+                    .Where(node => node.nodeType is RoguelikeNodeType.MinorEnemy or RoguelikeNodeType.EliteEnemy or RoguelikeNodeType.Boss)
+                    .ToDictionary(node => node.nodeId, node => node.encounterConfigPath);
+
+                Assert.That(recipes.Values.All(EncounterConfigLoader.IsEncounterRecipeId), Is.True);
+                Assert.That(recipes["layer_07_special"], Is.EqualTo("Special"));
+                Assert.That(second.nodes.Where(node => recipes.ContainsKey(node.nodeId))
+                    .All(node => recipes[node.nodeId] == node.encounterConfigPath), Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(config);
+            }
         }
 
         [Test]

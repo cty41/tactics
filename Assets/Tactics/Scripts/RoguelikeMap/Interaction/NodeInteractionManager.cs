@@ -110,10 +110,11 @@ namespace Tactics.RoguelikeMap.Interaction
             // 保存当前节点ID用于战后处理
             PlayerPrefs.SetString(RoguelikeMapUIController.RoguelikePendingNodePrefsKey, node.nodeId);
             PlayerPrefs.SetString(RoguelikeMapUIController.RoguelikeReturnScenePrefsKey, "Home");
-            EncounterRuntimeState.SetPendingEncounterPath(
+            EncounterRuntimeState.SetPendingEncounter(
                 string.IsNullOrWhiteSpace(node.encounterConfigPath)
                     ? EncounterConfigLoader.GetDefaultEncounterPath(node.nodeType)
-                    : node.encounterConfigPath);
+                    : node.encounterConfigPath,
+                CurrentMap?.runSeed ?? 0);
             PlayerPrefs.Save();
 
             // 标记事件进行中（支持断线重连恢复）

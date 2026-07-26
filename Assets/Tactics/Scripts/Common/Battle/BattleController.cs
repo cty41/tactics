@@ -307,7 +307,11 @@ namespace Tactics.Common.Battle
             }
 
             var encounterPath = EncounterRuntimeState.GetPendingEncounterPath();
-            var encounter = EncounterConfigLoader.Load(encounterPath, mgr);
+            var encounter = EncounterRuntimeState.TryResolvePendingEncounter(mgr, out var resolvedEncounter, out var resolvedSource)
+                ? resolvedEncounter
+                : EncounterConfigLoader.Load(encounterPath, mgr);
+            if (resolvedEncounter != null)
+                encounterPath = resolvedSource;
             if (encounter == null)
             {
                 TLog.Warning($"[BattleController] No valid encounter found at '{encounterPath}'.");
@@ -556,63 +560,74 @@ namespace Tactics.Common.Battle
 
         private void SpawnEncounterUnit(EncounterUnitEntry unitEntry, Transform container, GameAssetManager mgr, string encounterPath)
         {
+            if (unitEntry == null)
+            {
+                TLog.Error($"[BattleController] Encounter '{encounterPath}' contains a null unit entry.");
+                return;
+            }
+
+            string unitLabel = string.IsNullOrWhiteSpace(unitEntry.UnitName) ? unitEntry.MonsterId : unitEntry.UnitName;
+            if (!TryGetEncounterCell(unitEntry.SpawnCellX, unitEntry.SpawnCellY, out var spawnCell))
+            {
+                TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): cell does not exist.");
+                return;
+            }
+
             var prefabPath = GameAssetManager.NormalizeAssetPath(unitEntry.UnitPrefabPath);
             var prefab = mgr.Load<GameObject>(prefabPath);
             if (prefab == null)
             {
-                TLog.Error($"[BattleController] Encounter prefab not found: {prefabPath} ({encounterPath})");
+                TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): prefab not found '{prefabPath}'.");
                 return;
             }
 
             _loadedPaths.Add(prefabPath);
-
-            var go = Instantiate(prefab, container);
-            go.name = string.IsNullOrWhiteSpace(unitEntry.UnitName) ? prefab.name : unitEntry.UnitName;
-
-            var unit = go.GetComponent<TilemapUnit>();
-            if (unit == null)
+            if (prefab.GetComponent<TilemapUnit>() == null)
             {
-                TLog.Error($"[BattleController] Encounter prefab missing TilemapUnit: {prefabPath}");
-                Destroy(go);
+                TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): prefab '{prefabPath}' is missing TilemapUnit.");
                 return;
             }
 
-            unit.PlayerNumber = unitEntry.PlayerNumber;
-            var encounterModifiers = go.GetComponent<EncounterUnitRuntimeModifiers>();
-            if (encounterModifiers == null)
-                encounterModifiers = go.AddComponent<EncounterUnitRuntimeModifiers>();
-            encounterModifiers.Configure(
-                unitEntry.MonsterId,
-                unitEntry.HealthMultiplier,
-                unitEntry.OutputMultiplier,
-                unitEntry.MinimumStartingMana);
-
+            var abilityConfigs = new List<AbilityConfig>();
             if (unitEntry.AbilityConfigPaths != null && unitEntry.AbilityConfigPaths.Count > 0)
             {
-                var abilityConfigs = new List<AbilityConfig>();
                 foreach (string configuredPath in unitEntry.AbilityConfigPaths)
                 {
                     string abilityPath = GameAssetManager.NormalizeAssetPath(configuredPath);
                     var abilityConfig = mgr.Load<AbilityConfig>(abilityPath);
                     if (abilityConfig == null)
                     {
-                        TLog.Error($"[BattleController] Ability config not found: {abilityPath}. Destroying encounter unit '{go.name}'.");
-                        Destroy(go);
+                        TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): ability config not found '{abilityPath}'.");
                         return;
                     }
 
                     _loadedPaths.Add(abilityPath);
                     abilityConfigs.Add(abilityConfig);
                 }
-                unit.ApplyAbilityConfigs(abilityConfigs);
             }
 
-            if (!TryGetEncounterCell(unitEntry.SpawnCellX, unitEntry.SpawnCellY, out var spawnCell))
+            AiBrainAsset brain = null;
+            if (unitEntry.PlayerNumber != _humanPlayerNumber && !string.IsNullOrWhiteSpace(unitEntry.AiBrainAssetPath))
             {
-                TLog.Error($"[BattleController] Encounter cell ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}) not found for '{go.name}'.");
-                Destroy(go);
-                return;
+                var aiPath = GameAssetManager.NormalizeAssetPath(unitEntry.AiBrainAssetPath);
+                brain = mgr.Load<AiBrainAsset>(aiPath);
+                if (brain == null || !brain.IsValid())
+                {
+                    TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): AI brain is missing or invalid '{aiPath}'.");
+                    return;
+                }
+
+                _loadedPaths.Add(aiPath);
             }
+
+            var go = Instantiate(prefab, container);
+            go.name = string.IsNullOrWhiteSpace(unitEntry.UnitName) ? prefab.name : unitEntry.UnitName;
+            var unit = go.GetComponent<TilemapUnit>();
+            unit.PlayerNumber = unitEntry.PlayerNumber;
+            var encounterModifiers = go.GetComponent<EncounterUnitRuntimeModifiers>() ?? go.AddComponent<EncounterUnitRuntimeModifiers>();
+            encounterModifiers.Configure(unitEntry.MonsterId, unitEntry.HealthMultiplier, unitEntry.OutputMultiplier, unitEntry.MinimumStartingMana);
+            if (abilityConfigs.Count > 0)
+                unit.ApplyAbilityConfigs(abilityConfigs);
 
             go.transform.position = spawnCell.WorldPosition.ToVector3();
             unit.CurrentCell = spawnCell;
@@ -620,33 +635,13 @@ namespace Tactics.Common.Battle
                 spawnCell.CurrentUnits.Add(unit);
             spawnCell.IsTaken = true;
 
-            if (unitEntry.PlayerNumber != _humanPlayerNumber)
+            if (brain != null)
             {
-                if (!string.IsNullOrWhiteSpace(unitEntry.AiBrainAssetPath))
-                {
-                    var aiPath = GameAssetManager.NormalizeAssetPath(unitEntry.AiBrainAssetPath);
-                    var brain = mgr.Load<AiBrainAsset>(aiPath);
-                    if (brain == null)
-                    {
-                        TLog.Error($"[BattleController] AI brain not found: {aiPath}. Destroying AI unit '{go.name}'.");
-                        Destroy(go);
-                        return;
-                    }
-
-                    if (!brain.IsValid())
-                    {
-                        TLog.Error($"[BattleController] AI brain is invalid: {aiPath}. Destroying AI unit '{go.name}'.");
-                        Destroy(go);
-                        return;
-                    }
-
-                    _loadedPaths.Add(aiPath);
-                    unit.ApplyAiBrain(brain);
-                }
-                else
-                {
-                    TLog.Info($"[BattleController] Encounter unit '{go.name}' has no AiBrainAssetPath configured. Unit will have no AI.");
-                }
+                unit.ApplyAiBrain(brain);
+            }
+            else if (unitEntry.PlayerNumber != _humanPlayerNumber)
+            {
+                TLog.Info($"[BattleController] Encounter unit '{go.name}' has no AiBrainAssetPath configured. Unit will have no AI.");
             }
         }
 

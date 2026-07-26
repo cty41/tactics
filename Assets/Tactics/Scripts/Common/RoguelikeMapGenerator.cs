@@ -39,14 +39,14 @@ namespace Tactics.RoguelikeMap
         {
             var layers = new List<List<RoguelikeMapNode>>
             {
-                new List<RoguelikeMapNode> { CreatePureRunNode(config, "start", RoguelikeNodeType.Start, 0, 0) },
-                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_01_battle", RoguelikeNodeType.MinorEnemy, 1, 0) },
-                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_02_battle", RoguelikeNodeType.MinorEnemy, 2, 0) },
-                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_03_battle", RoguelikeNodeType.MinorEnemy, 3, 0) },
-                CreateCompetitionLayer(config, 4, RoguelikeNodeType.MinorEnemy),
-                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_05_battle", RoguelikeNodeType.EliteEnemy, 5, 0) },
-                CreateCompetitionLayer(config, 6, RoguelikeNodeType.EliteEnemy),
-                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_07_special", RoguelikeNodeType.Boss, 7, 0, "Special") }
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "start", RoguelikeNodeType.Start, 0, 0, runSeed) },
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_01_battle", RoguelikeNodeType.MinorEnemy, 1, 0, runSeed) },
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_02_battle", RoguelikeNodeType.MinorEnemy, 2, 0, runSeed) },
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_03_battle", RoguelikeNodeType.MinorEnemy, 3, 0, runSeed) },
+                CreateCompetitionLayer(config, 4, RoguelikeNodeType.MinorEnemy, runSeed),
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_05_battle", RoguelikeNodeType.EliteEnemy, 5, 0, runSeed) },
+                CreateCompetitionLayer(config, 6, RoguelikeNodeType.EliteEnemy, runSeed),
+                new List<RoguelikeMapNode> { CreatePureRunNode(config, "layer_07_special", RoguelikeNodeType.Boss, 7, 0, runSeed, "Special") }
             };
 
             for (int layerIndex = 0; layerIndex < layers.Count - 1; layerIndex++)
@@ -420,14 +420,15 @@ namespace Tactics.RoguelikeMap
         private static List<RoguelikeMapNode> CreateCompetitionLayer(
             RoguelikeMapConfig config,
             int layerIndex,
-            RoguelikeNodeType battleType)
+            RoguelikeNodeType battleType,
+            int runSeed)
         {
             return new List<RoguelikeMapNode>
             {
-                CreatePureRunNode(config, $"layer_{layerIndex:00}_battle", battleType, layerIndex, 0, null, 4),
-                CreatePureRunNode(config, $"layer_{layerIndex:00}_rest", RoguelikeNodeType.RestSite, layerIndex, 1, null, 4),
-                CreatePureRunNode(config, $"layer_{layerIndex:00}_store", RoguelikeNodeType.Store, layerIndex, 2, null, 4),
-                CreatePureRunNode(config, $"layer_{layerIndex:00}_event", RoguelikeNodeType.Mystery, layerIndex, 3, null, 4)
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_battle", battleType, layerIndex, 0, runSeed, null, 4),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_rest", RoguelikeNodeType.RestSite, layerIndex, 1, runSeed, null, 4),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_store", RoguelikeNodeType.Store, layerIndex, 2, runSeed, null, 4),
+                CreatePureRunNode(config, $"layer_{layerIndex:00}_event", RoguelikeNodeType.Mystery, layerIndex, 3, runSeed, null, 4)
             };
         }
 
@@ -437,6 +438,7 @@ namespace Tactics.RoguelikeMap
             RoguelikeNodeType nodeType,
             int layerIndex,
             int branchIndex,
+            int runSeed,
             string blueprintNameOverride = null,
             int branchCount = 1)
         {
@@ -451,7 +453,7 @@ namespace Tactics.RoguelikeMap
                 new Vector2(layerIndex * PureRunLayerSpacing, y))
             {
                 LayerIndex = layerIndex,
-                encounterConfigPath = EncounterConfigLoader.GetDefaultEncounterPath(nodeType)
+                encounterConfigPath = EncounterConfigLoader.GetPureRunEncounterRecipeId(nodeType, runSeed, nodeId)
             };
 
             return node;

@@ -311,6 +311,7 @@ namespace Tactics.Roguelike
                     TLog.Info("[RoguelikeBattleReturnHandler] RunEndSummary closed. Leaving battle scene now.");
                     UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
                     PureRunSessionStore.ConsumeCompletedSummary();
+                    ClearTerminalRunUiAndMapState();
                     _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
                 });
             }
@@ -318,8 +319,20 @@ namespace Tactics.Roguelike
             {
                 TLog.Warning("[RoguelikeBattleReturnHandler] RunEndSummaryUIController not found. Leaving battle scene directly.");
                 PureRunSessionStore.ConsumeCompletedSummary();
+                ClearTerminalRunUiAndMapState();
                 _ = BattleFlowCoordinator.Instance.EndBattleAsync(result);
             }
+        }
+
+        private static void ClearTerminalRunUiAndMapState()
+        {
+            RoguelikeMapRuntimeState.ClearAll();
+            RoguelikeEventReentryManager.ClearEventInProgress();
+            EncounterRuntimeState.ClearPendingEncounter();
+            PlayerPrefs.DeleteKey(RoguelikeMapUIController.RoguelikePendingNodePrefsKey);
+            PlayerPrefs.DeleteKey(RoguelikeMapUIController.RoguelikeReturnScenePrefsKey);
+            PlayerPrefs.Save();
+            UIManager.Instance.Destroy(UIManager.UIId.RoguelikeMap);
         }
 
         /// <summary>

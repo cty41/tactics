@@ -6,7 +6,7 @@
       "unitPrefabPath": "Assets/Tactics/Arts/Prefabs/Units/HunterBlue.prefab",
       "aiBrainAssetPath": "Assets/Tactics/AI/BasicMeleeBrain.asset",
       "playerNumber": 1,
-      "spawnCellX": 13,
+      "spawnCellX": 29,
       "spawnCellY": 25
     },
     {
@@ -14,7 +14,7 @@
       "unitPrefabPath": "Assets/Tactics/Arts/Prefabs/Units/Infantry Blue.prefab",
       "aiBrainAssetPath": "Assets/Tactics/AI/BasicMeleeBrain.asset",
       "playerNumber": 1,
-      "spawnCellX": 17,
+      "spawnCellX": 27,
       "spawnCellY": 29
     }
   ]

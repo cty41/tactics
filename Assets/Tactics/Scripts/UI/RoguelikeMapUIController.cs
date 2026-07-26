@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using Tactics.AssetPipeline;
+using Tactics.Common.Battle;
 using Tactics.Flow.Roguelike;
 using Tactics.Roguelike;
 using Tactics.Flow.Battle;
@@ -921,8 +922,15 @@ private void EnterNode(RoguelikeMapUINode mapNode)
         private async void EnterBattleNode(RoguelikeMapUINode mapNode)
         {
             var nodeId = mapNode.Node.nodeId;
+            if (RoguelikeMapRuntimeState.CurrentMap != null)
+                RoguelikeMapRuntimeState.BeginBattleFromNode(RoguelikeMapRuntimeState.CurrentMap, nodeId, "Home");
             PlayerPrefs.SetString(RoguelikePendingNodePrefsKey, nodeId);
             PlayerPrefs.SetString(RoguelikeReturnScenePrefsKey, "Home");
+            EncounterRuntimeState.SetPendingEncounter(
+                string.IsNullOrWhiteSpace(mapNode.Node.encounterConfigPath)
+                    ? EncounterConfigLoader.GetDefaultEncounterPath(mapNode.Node.nodeType)
+                    : mapNode.Node.encounterConfigPath,
+                RoguelikeMapRuntimeState.RunSeed);
             PlayerPrefs.Save();
 
             RoguelikeEventReentryManager.MarkEventInProgress("Battle", nodeId);

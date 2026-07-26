@@ -96,7 +96,8 @@ namespace Tactics.Common.Controllers
                     "Ensure BattleController._players is configured and players' PlayerNumber matches units' PlayerNumber.");
                 return;
             }
-            foreach (var unit in TurnContext.PlayableUnits())
+            var startingUnits = TurnContext.PlayableUnits().Where(IsUnityUnitAvailable).ToList();
+            foreach (var unit in startingUnits)
             {
                 unit.OnTurnStart(this);
                 foreach (var ability in unit.GetBaseAbilities())
@@ -107,7 +108,7 @@ namespace Tactics.Common.Controllers
 
             GameStarted?.Invoke();
             TurnStarted?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
-            UnitManager.MarkAsFriendly(TurnContext.PlayableUnits());
+            UnitManager.MarkAsFriendly(startingUnits);
             if (TurnContext.CurrentPlayer == null)
             {
                 TLog.Error($"[GridController] MakeTurnTransition: CurrentPlayer is null. UnitPlayerNumber={TurnContext.PlayableUnits().FirstOrDefault()?.PlayerNumber ?? -1}. Skipping turn.");
@@ -360,7 +361,8 @@ namespace Tactics.Common.Controllers
         {
             GridState = new GridStateBlockInput();
 
-            foreach (var unit in TurnContext.PlayableUnits())
+            var endingUnits = TurnContext.PlayableUnits().Where(IsUnityUnitAvailable).ToList();
+            foreach (var unit in endingUnits)
             {
                 unit.OnTurnEnd(this);
                 foreach (var ability in unit.GetBaseAbilities())
@@ -371,7 +373,7 @@ namespace Tactics.Common.Controllers
             TurnEnded?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
 
             var previousPlayer = TurnContext.CurrentPlayer;
-            UnitManager.UnMark(TurnContext.PlayableUnits());
+            UnitManager.UnMark(endingUnits);
             TurnContext = TurnResolver.ResolveTurn(this);
 
             var newUnit = TurnContext.PlayableUnits().FirstOrDefault();
@@ -388,7 +390,8 @@ namespace Tactics.Common.Controllers
                 TLog.Info($"[GridController] Round complete. CurrentRound={CurrentRound}, TotalUnits={totalUnits}");
             }
 
-            foreach (var unit in TurnContext.PlayableUnits())
+            var startingUnits = TurnContext.PlayableUnits().Where(IsUnityUnitAvailable).ToList();
+            foreach (var unit in startingUnits)
             {
                 unit.PrepareForTurn();
                 unit.OnTurnStart(this);
@@ -399,11 +402,16 @@ namespace Tactics.Common.Controllers
             }
 
             TurnStarted?.Invoke(new TurnTransitionParams(TurnContext, isNetworkInvoked));
-            UnitManager.MarkAsFriendly(TurnContext.PlayableUnits());
+            UnitManager.MarkAsFriendly(startingUnits);
             if (!DisableAiAutoPlay || TurnContext.CurrentPlayer.PlayerType != PlayerType.AutomatedPlayer)
             {
                 TurnContext.CurrentPlayer.Play(this);
             }
+        }
+
+        private static bool IsUnityUnitAvailable(IUnit unit)
+        {
+            return unit != null && (unit is not UnityEngine.Object unityObject || unityObject != null);
         }
 
         public void InvokeGameEnded(GameResult gameResult)

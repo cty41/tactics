@@ -6,6 +6,7 @@ using Tactics.AssetPipeline;
 using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
+using Tactics.Roguelike;
 using Tactics.RoguelikeMap;
 using Tactics.Runtime.Utilities;
 using Tactics.Units;
@@ -281,14 +282,14 @@ namespace Tactics.Common.Battle
         {
             return new Dictionary<string, BattleLayout>(StringComparer.OrdinalIgnoreCase)
             {
-                ["open"] = Layout("open", new[] { Cell(13, 25), Cell(17, 29), Cell(13, 29), Cell(17, 25) }),
+                ["open"] = Layout("open", new[] { Cell(28, 24), Cell(32, 28), Cell(28, 28), Cell(32, 24) }),
                 ["center_blocker"] = Layout(
                     "center_blocker",
-                    new[] { Cell(12, 25), Cell(18, 29), Cell(12, 29), Cell(18, 25) },
-                    new[] { Cell(15, 27) }),
+                    new[] { Cell(27, 24), Cell(33, 28), Cell(27, 28), Cell(33, 24) },
+                    new[] { Cell(30, 26) }),
                 ["split_flank"] = Layout(
                     "split_flank",
-                    new[] { Cell(11, 25), Cell(19, 29), Cell(11, 29), Cell(19, 25) })
+                    new[] { Cell(26, 24), Cell(34, 28), Cell(26, 28), Cell(34, 24) })
             };
         }
 
@@ -461,18 +462,72 @@ namespace Tactics.Common.Battle
     public static class EncounterRuntimeState
     {
         public const string PendingEncounterPrefsKey = "RoguelikePendingEncounter";
+        public const string PendingEncounterRecipePrefsKey = "RoguelikePendingEncounterRecipe";
+        public const string PendingEncounterSeedPrefsKey = "RoguelikePendingEncounterSeed";
 
         public static void SetPendingEncounterPath(string encounterPath)
         {
             var normalized = EncounterConfigLoader.NormalizeEncounterPath(encounterPath);
             PlayerPrefs.SetString(PendingEncounterPrefsKey, normalized);
+            PlayerPrefs.DeleteKey(PendingEncounterRecipePrefsKey);
+            PlayerPrefs.DeleteKey(PendingEncounterSeedPrefsKey);
             PlayerPrefs.Save();
+        }
+
+        public static void SetPendingEncounterRecipe(string recipeId, int runSeed)
+        {
+            if (!EncounterConfigLoader.IsEncounterRecipeId(recipeId))
+            {
+                TLog.Warning($"[EncounterRuntimeState] Ignored unknown encounter recipe '{recipeId}'.");
+                return;
+            }
+
+            PlayerPrefs.SetString(PendingEncounterRecipePrefsKey, recipeId);
+            PlayerPrefs.SetInt(PendingEncounterSeedPrefsKey, runSeed);
+            PlayerPrefs.DeleteKey(PendingEncounterPrefsKey);
+            PlayerPrefs.Save();
+        }
+
+        public static void SetPendingEncounter(string encounterPathOrRecipeId, int runSeed)
+        {
+            if (EncounterConfigLoader.IsEncounterRecipeId(encounterPathOrRecipeId))
+                SetPendingEncounterRecipe(encounterPathOrRecipeId, runSeed);
+            else
+                SetPendingEncounterPath(encounterPathOrRecipeId);
         }
 
         public static string GetPendingEncounterPath()
         {
             return EncounterConfigLoader.NormalizeEncounterPath(
                 PlayerPrefs.GetString(PendingEncounterPrefsKey, EncounterConfigLoader.DefaultMinorEnemyEncounterPath));
+        }
+
+        public static bool TryResolvePendingEncounter(GameAssetManager manager, out EncounterConfig encounter, out string source)
+        {
+            encounter = null;
+            source = GetPendingEncounterPath();
+            string recipeId = PlayerPrefs.GetString(PendingEncounterRecipePrefsKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(recipeId))
+                return false;
+
+            int runSeed = PlayerPrefs.GetInt(PendingEncounterSeedPrefsKey, 0);
+            source = $"recipe:{recipeId}@{runSeed}";
+            if (!EncounterResolver.TryResolve(recipeId, runSeed, out var resolved, out var error))
+            {
+                TLog.Error($"[EncounterRuntimeState] Failed to resolve {source}: {error}");
+                return false;
+            }
+
+            encounter = resolved.ToEncounterConfig();
+            return EncounterConfigLoader.ValidateForRuntime(encounter, source, manager);
+        }
+
+        public static void ClearPendingEncounter()
+        {
+            PlayerPrefs.DeleteKey(PendingEncounterPrefsKey);
+            PlayerPrefs.DeleteKey(PendingEncounterRecipePrefsKey);
+            PlayerPrefs.DeleteKey(PendingEncounterSeedPrefsKey);
+            PlayerPrefs.Save();
         }
     }
 
@@ -490,6 +545,30 @@ namespace Tactics.Common.Battle
                 RoguelikeNodeType.Boss => DefaultMinorEnemyEncounterPath,
                 _ => string.Empty
             };
+        }
+
+        public static string GetPureRunEncounterRecipeId(RoguelikeNodeType nodeType, int runSeed, string nodeId)
+        {
+            string[] pool = nodeType switch
+            {
+                RoguelikeNodeType.MinorEnemy => new[] { "N1", "N2", "N3", "N4", "N5", "N6" },
+                RoguelikeNodeType.EliteEnemy => new[] { "E1", "E2" },
+                RoguelikeNodeType.Boss => new[] { "Special" },
+                _ => null
+            };
+
+            if (pool == null)
+                return string.Empty;
+
+            uint index = (uint)RoguelikeMapRuntimeState.DeriveSeed(
+                runSeed,
+                $"pure-run-encounter:{nodeId ?? string.Empty}");
+            return pool[index % (uint)pool.Length];
+        }
+
+        public static bool IsEncounterRecipeId(string recipeId)
+        {
+            return !string.IsNullOrWhiteSpace(recipeId) && EncounterCatalog.TryGetRecipe(recipeId, out _);
         }
 
         public static string NormalizeEncounterPath(string encounterPath)
@@ -553,6 +632,11 @@ namespace Tactics.Common.Battle
                 if (textAsset != null)
                     mgr.Release(normalizedPath);
             }
+        }
+
+        public static bool ValidateForRuntime(EncounterConfig config, string sourcePath, GameAssetManager manager)
+        {
+            return Validate(config, sourcePath) && ValidateRuntimeAssets(config, sourcePath, manager);
         }
 
         public static bool Validate(EncounterConfig config, string sourcePath)
