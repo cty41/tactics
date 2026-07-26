@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-23T17:12:49+08:00"
+timestamp: "2026-07-26T21:29:28+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -27,7 +27,7 @@ repo_paths:
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:c58451ad405dde6f30a64fc4d37a25f5e989f8fd7e274b997c1af39b418b3a89
+source_fingerprint: sha256:c5b464ba43f093f7b028b92c2549ea172445b830088e21ee32e81d14babf21d3
 ---
 
 # Current State
@@ -35,6 +35,10 @@ source_fingerprint: sha256:c58451ad405dde6f30a64fc4d37a25f5e989f8fd7e274b997c1af
 Pure Run v1 由 `RoguelikeMapGenerator.GetPureRunMap` 生成 7 层只前进地图，单局实际战斗数为 5、6 或 7；第 4、6 层均在战斗、休息、商店和随机事件之间四选一。节点沿 outgoing 揭示，已访问节点不会重新可选。地图布局版本为 2。
 
 Demo 使用单一全局 Run，不经过三存档槽。`PureRunSessionStore` 将版本 5 冒险状态与地图作为配对数据保存；Home 提供 New Run 和 Continue Run。普通战斗胜利结算后回到地图，失败或 Boss 胜利显示 RunEndSummary 并清理本局状态。
+
+新建 Pure Run 角色的主属性为 6（法师智力、死灵法师魅力、亚马逊敏捷），其余属性为 5；既有存档不重写。升级时先强制完成属性点分配，再依据更新后的属性计算并展示技能候选；技能选择界面同时列出已学技能及每级实际 MP 消耗。地图每次回显后只根据当前进度节点执行一次 ScrollView 居中，之后仍由玩家自由拖拽浏览。
+
+新建角色以当前魅力值而非最大 MP 开始本局；进入首场战斗时该持久化 MP 会覆盖单位初始化默认值。已有存档中的已保存 MP 保持不变。
 
 Pure Run 的 Mystery、Rest 与 Store 通过持久化节点事务保护中断恢复。事务按 `Entered → Resolved → Committed` 推进，并在冒险状态中记录已应用的奖励键：效果结算前先保存 `Resolved` 快照，重入时恢复同一结果并只补发尚未应用的效果，只有继续/关闭等明确完成动作才提交和消费节点；商店按商品使用独立购买键，因此崩溃或返回地图后不会重复扣款或重复发货。
 

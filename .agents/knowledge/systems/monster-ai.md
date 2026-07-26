@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-07-23T17:12:49+08:00"
+timestamp: "2026-07-26T21:29:19+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Assets/Tactics/AI/Encounters
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:15d9e0d25e7ada8a91d98f94c48038ffd7b97736f996ff251bdc204decf8c8f7
+source_fingerprint: sha256:064d37473ec009a0676a68352ee8b1833069ea81c807fcc0e8234d6a325ea5b6
 ---
 
 # Current State
@@ -30,6 +30,8 @@ source_fingerprint: sha256:15d9e0d25e7ada8a91d98f94c48038ffd7b97736f996ff251bdc2
 单位朝向属于共享战斗状态而不是 AI 私有状态。AI 成功移动后按路径最后一步转向，成功执行目标技能后朝向目标；失败执行恢复原朝向。AI 不在回合末自动面向最近敌人，也不显示独立箭头。方向型技能后续直接读取这一共享朝向与 `SkillTargetingProtocol`。
 
 Pure Run 的 Charger、Ranged、AOE、Support、EliteCharger 与 ElitePoisonCaster 各自绑定独立 Brain/Profile。Charger 贴近并强化技能效果，Ranged 维持 3–5 格且初始法力足以使用 Heavy Shot，AOE 提高覆盖评分，Support 提高减益评分；两个 Elite 通过固定 Pattern 顺序执行高威胁技能并在不合法时回退 Generic AI。旧 `BasicMeleeBrain` 仍服务未迁移内容，FireDemon 继续使用 2–3 格偏好距离。
+
+通用单位资源规则在自身回合结束时按 Intelligence 回复 MP、受 MaxMana 限制；因此敌方与召唤物同样遵循一次回合结束回蓝，AI 的可支付技能候选在下一次决策前读取该更新后的 MP。
 
 SkillGraph AI 元数据会从范围收集节点识别 AOE，并从 Harmful Buff 或死灵诅咒节点识别 Debuff。候选进入评分前拒绝会造成友军伤害的 AOE 中心，也拒绝向已持有同一负面状态/诅咒类别的目标重复施加 Debuff；这两项是硬合法性约束，不依赖权重碰巧压低分数。`ScoreNode.Parameter` 已序列化但仍未由 `IntentScorer` 消费。
 
