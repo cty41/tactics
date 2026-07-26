@@ -6,6 +6,11 @@
             <ui:Label name="TitleLabel" text="选择技能" class="title-label"/>
             <ui:Label name="SubtitleLabel" text="升级获得新技能" class="subtitle-label"/>
 
+            <ui:VisualElement name="CurrentSkillsContainer" class="replace-section">
+                <ui:Label text="当前技能" class="replace-title"/>
+                <ui:VisualElement name="CurrentSkills" class="replace-options"/>
+            </ui:VisualElement>
+
             <!-- 3 个技能选项 -->
             <ui:VisualElement name="SkillsContainer" class="skills-container">
                 <ui:VisualElement name="SkillOption_0" class="skill-option" tabindex="0">

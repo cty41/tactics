@@ -47,6 +47,7 @@ namespace Tactics.Common.Units
         public event Action<UnitDestroyedEventArgs> UnitDestroyed;
         public event Action<HealthChangedEventArgs> HealthChanged;
         public event Action<ManaChangedEventArgs> ManaChanged;
+        public event Action<TurnEndManaRestoredEventArgs> TurnEndManaRestored;
 
         public event Action<UnitMovedEventArgs> UnitMoved;
         public event Action<UnitChangedGridPositionEventArgs> UnitLeftCell;
@@ -443,11 +444,22 @@ namespace Tactics.Common.Units
         {
             MovementPoints = MaxMovementPoints;
             _usedBasicAbilitiesThisTurn.Clear();
-            Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Mathf.FloorToInt(Intelligence / 2f)));
         }
 
         public virtual void OnTurnEnd(IGridController gridController)
         {
+            if (this == null)
+                return;
+
+            float manaBefore = Mana;
+            Mana = Mathf.Min(MaxMana, Mana + Mathf.Max(0, Intelligence));
+            if (Mana > manaBefore && this != null)
+                TurnEndManaRestored?.Invoke(new TurnEndManaRestoredEventArgs(
+                    this,
+                    manaBefore,
+                    Mana,
+                    transform.position));
+
             _buffComponent.OnTurnEnd(gridController);
             AmazonBattleState.For(gridController)?.OnOwnerTurnEnd(this);
             SummonRegistry.For(gridController)?.NotifyActionCompleted(this);

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Tactics.AssetPipeline;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -780,6 +781,57 @@ namespace Tactics.UI
             ClearSkillCards();
         }
 
+        /// <summary>
+        /// Shows the fixed post-victory recovery beat while keeping all battle controls unavailable.
+        /// </summary>
+        public async Task ShowPostBattleRecoveryAsync(IEnumerable<IUnit> units)
+        {
+            if (units == null)
+                return;
+
+            if (_root != null)
+            {
+                _root.pickingMode = PickingMode.Ignore;
+                HideBattleChromeForRecovery();
+            }
+
+            foreach (var unit in units.Where(unit => unit != null && unit.PlayerNumber == 0 && !unit.IsDowned && unit.Health > 0f))
+            {
+                float hpBefore = unit.Health;
+                float mpBefore = unit.Mana;
+                unit.Health = Mathf.Min(unit.MaxHealth, unit.Health + unit.Constitution * 2f);
+                unit.Mana = Mathf.Min(unit.MaxMana, unit.Mana + unit.Charisma);
+
+                var position = unit.WorldPosition.ToVector3() + Vector3.up * 1.5f;
+                int hpGain = Mathf.RoundToInt(unit.Health - hpBefore);
+                int mpGain = Mathf.RoundToInt(unit.Mana - mpBefore);
+                if (hpGain > 0)
+                    SpawnDamageNumber(DamageNumberType.Heal, $"+{hpGain} HP", position, new Color(0.35f, 1f, 0.45f));
+                if (mpGain > 0)
+                    SpawnDamageNumber(DamageNumberType.Heal, $"+{mpGain} MP", position + Vector3.right * 0.3f, new Color(0.35f, 0.65f, 1f));
+            }
+
+            await Task.Delay(800);
+        }
+
+        private void HideBattleChromeForRecovery()
+        {
+            // DamageNumberContainer deliberately stays visible: it is the only feedback during the
+            // recovery beat. The battle ends immediately afterwards, so the hidden chrome is rebuilt
+            // for the next encounter rather than being restored to an interactable state.
+            foreach (string elementName in new[]
+                     {
+                         "TopPanel", "StatusPanel", "BottomPanel", "AbilityReasonTooltip",
+                         "OrderedSelectionPanel", "HoverHealthBar", "DroppedSpearMarkerRoot",
+                         "OrderedTargetMarkerRoot"
+                     })
+            {
+                var element = _root.Q<VisualElement>(elementName);
+                if (element != null)
+                    element.style.display = DisplayStyle.None;
+            }
+        }
+
         #endregion
 
         #region Unit Events
@@ -798,6 +850,7 @@ namespace Tactics.UI
                 {
                     concreteUnit.BuffChanged += args => OnBuffChanged(concreteUnit, args);
                     concreteUnit.UnitDestroyed += _ => OnUnitDestroyed(concreteUnit);
+                    concreteUnit.TurnEndManaRestored += OnTurnEndManaRestored;
 
                     // Sync existing buffs
                     foreach (var buff in concreteUnit.GetActiveBuffs())
@@ -827,6 +880,9 @@ namespace Tactics.UI
             {
                 unit.UnitSelected -= OnUnitSelected;
                 unit.UnitDeselected -= OnUnitDeselected;
+
+                if (unit is Unit concreteUnit)
+                    concreteUnit.TurnEndManaRestored -= OnTurnEndManaRestored;
 
                 if (unit is ICombatant combatant)
                 {
@@ -1581,6 +1637,16 @@ namespace Tactics.UI
             }
         }
 
+        private void OnTurnEndManaRestored(TurnEndManaRestoredEventArgs args)
+        {
+            if (args.NewMana <= args.OldMana || !IsUnityUnitAvailable(args.AffectedUnit))
+                return;
+
+            int restored = Mathf.RoundToInt(args.NewMana - args.OldMana);
+            var worldPosition = args.WorldPosition + Vector3.up * 1.5f;
+            SpawnDamageNumber(DamageNumberType.Heal, $"+{restored} MP", worldPosition, new Color(0.35f, 0.65f, 1f));
+        }
+
         private void OnBasicAbilityUsed(string abilityName)
         {
             UpdateSkillCards(_currentSelectedUnit);
@@ -1608,7 +1674,7 @@ namespace Tactics.UI
             }
         }
 
-        private void SpawnDamageNumber(DamageNumberType type, string text, Vector3 worldPosition)
+        private void SpawnDamageNumber(DamageNumberType type, string text, Vector3 worldPosition, Color? colorOverride = null)
         {
             if (_damageNumberContainer == null || _damageSettings == null) return;
 
@@ -1637,6 +1703,10 @@ namespace Tactics.UI
             string displayText = type == DamageNumberType.Miss ? "Miss" : text;
             label.text = displayText;
             label.style.display = DisplayStyle.Flex;
+            if (colorOverride.HasValue)
+                label.style.color = colorOverride.Value;
+            else
+                label.style.color = StyleKeyword.Null;
             label.AddToClassList("damage-number");
             label.AddToClassList(config.ussClassName);
 

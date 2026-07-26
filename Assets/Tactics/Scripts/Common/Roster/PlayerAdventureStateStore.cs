@@ -199,7 +199,7 @@ namespace Tactics.Roster
 
         /// <summary>
         /// Creates the fixed first-demo party in stable Mage, Necromancer, Amazon order.
-        /// Every base attribute starts at five and the seed selects one basic branch per role.
+        /// Each profession starts with six in its primary attribute and five elsewhere.
         /// </summary>
         public static PlayerAdventureState CreatePureRunState(int runSeed)
         {
@@ -665,6 +665,20 @@ namespace Tactics.Roster
             int partyIndex)
         {
             var character = CharacterDefinition.CreateDefault(id, displayName, roleType: roleType);
+            switch (roleType)
+            {
+                case RoleType.Mage:
+                    character.Intelligence = 6;
+                    break;
+                case RoleType.Necromancer:
+                    character.Charisma = 6;
+                    break;
+                case RoleType.Amazon:
+                    character.Agility = 6;
+                    break;
+            }
+            character.CurrentHp = character.MaxHp;
+            character.CurrentMp = character.Charisma;
             var mapping = TestPrefabMappings.FirstOrDefault(entry => entry.RoleType == roleType);
             character.PrefabPath = mapping?.PrefabPath ?? fallbackPrefabPath;
 

@@ -35,13 +35,17 @@ namespace Tactics.UI
         protected override void OnHidden()
         {
             UnregisterEvents();
+            ClearUIElementReferences();
         }
 
         private void EnsureUIElements()
         {
-            if (_root != null) return;
+            var currentRoot = Ui.GetRootElement(UIManager.UIId.AttributeAllocation);
+            if (ReferenceEquals(_root, currentRoot) && _root != null) return;
 
-            _root = Ui.GetRootElement(UIManager.UIId.AttributeAllocation);
+            UnregisterEvents();
+            ClearUIElementReferences();
+            _root = currentRoot;
             if (_root == null) return;
 
             _characterNameLabel = _root.Q<Label>("CharacterNameLabel");
@@ -69,6 +73,8 @@ namespace Tactics.UI
                     PlusButton = _root.Q<Button>($"AttrPlus_{attrType}"),
                     DescLabel = _root.Q<Label>($"AttrDesc_{attrType}"),
                 };
+                row.PlusCallback = () => OnAttributePlus(attrType);
+                row.MinusCallback = () => OnAttributeMinus(attrType);
                 _attributeRows[attrType] = row;
             }
 
@@ -81,14 +87,13 @@ namespace Tactics.UI
         {
             foreach (var kvp in _attributeRows)
             {
-                var type = kvp.Key;
                 var row = kvp.Value;
 
                 if (row.PlusButton != null)
-                    row.PlusButton.clicked += () => OnAttributePlus(type);
+                    row.PlusButton.clicked += row.PlusCallback;
 
                 if (row.MinusButton != null)
-                    row.MinusButton.clicked += () => OnAttributeMinus(type);
+                    row.MinusButton.clicked += row.MinusCallback;
             }
 
             var confirmButton = _root?.Q<Button>("ConfirmButton");
@@ -100,14 +105,13 @@ namespace Tactics.UI
         {
             foreach (var kvp in _attributeRows)
             {
-                var type = kvp.Key;
                 var row = kvp.Value;
 
                 if (row.PlusButton != null)
-                    row.PlusButton.clicked -= () => OnAttributePlus(type);
+                    row.PlusButton.clicked -= row.PlusCallback;
 
                 if (row.MinusButton != null)
-                    row.MinusButton.clicked -= () => OnAttributeMinus(type);
+                    row.MinusButton.clicked -= row.MinusCallback;
             }
 
             var confirmButton = _root?.Q<Button>("ConfirmButton");
@@ -153,10 +157,8 @@ namespace Tactics.UI
                 if (!_attributeRows.TryGetValue(attrType, out var row))
                     continue;
 
-                // 基础属性值
-                int baseValue = GetBaseAttribute(attrType);
                 int allocated = _currentCharacter.AllocatedAttributes.GetValueOrDefault(attrType, 0);
-                int effectiveValue = baseValue + allocated;
+                int effectiveValue = GetAttributeValue(attrType);
 
                 // 该属性点分配后实际产生的加成值（仅计算分配的属性点）
                 string bonusDesc = allocated > 0
@@ -212,27 +214,26 @@ namespace Tactics.UI
             _currentCharacter.AllocatedAttributes[type] = allocated - 1;
             _currentCharacter.AttributePoints++;
 
-            // 反向应用属性变更
+            // 加点系统每点只增加目标属性 1；撤销时必须严格对称。
             switch (type)
             {
                 case AttributeType.Strength:
-                    _currentCharacter.Strength -= 2;
+                    _currentCharacter.Strength--;
                     break;
                 case AttributeType.Agility:
-                    _currentCharacter.Agility -= 1;
-                    _currentCharacter.Speed -= 1f;
+                    _currentCharacter.Agility--;
                     break;
                 case AttributeType.Intelligence:
-                    _currentCharacter.Intelligence -= 2;
-                    _currentCharacter.Charisma -= 10;
+                    _currentCharacter.Intelligence--;
                     break;
                 case AttributeType.Constitution:
-                    _currentCharacter.Constitution -= 10;
-                    _currentCharacter.DefenceFactor -= 1;
+                    _currentCharacter.Constitution--;
                     break;
                 case AttributeType.Charisma:
-                    _currentCharacter.Charisma -= 1;
-                    _currentCharacter.Luck -= 2;
+                    _currentCharacter.Charisma--;
+                    break;
+                case AttributeType.Luck:
+                    _currentCharacter.Luck--;
                     break;
             }
 
@@ -247,6 +248,8 @@ namespace Tactics.UI
         private void OnConfirm()
         {
             if (_currentCharacter == null) return;
+            if (_currentCharacter.AttributePoints > 0)
+                return;
 
             TLog.Info($"[AttributeAllocationUI] 角色 {_currentCharacter.DisplayName} 属性加点已确认。剩余点数: {_currentCharacter.AttributePoints}");
 
@@ -254,22 +257,29 @@ namespace Tactics.UI
             Ui.Hide(UIManager.UIId.AttributeAllocation);
         }
 
+        private void ClearUIElementReferences()
+        {
+            _root = null;
+            _characterNameLabel = null;
+            _pointsRemainingLabel = null;
+            _confirmButtonLabel = null;
+            _attributeRows.Clear();
+        }
+
         /// <summary>
-        /// 获取指定属性的基础值（不包含已分配的点数）。
+        /// 获取角色当前已生效的属性值。
         /// </summary>
-        private int GetBaseAttribute(AttributeType type)
+        private int GetAttributeValue(AttributeType type)
         {
             if (_currentCharacter == null) return 0;
 
-            int allocated = _currentCharacter.AllocatedAttributes.GetValueOrDefault(type, 0);
-
             return type switch
             {
-                AttributeType.Strength => _currentCharacter.Strength - (allocated * 2),
-                AttributeType.Agility => _currentCharacter.Agility - allocated,
-                AttributeType.Intelligence => _currentCharacter.Intelligence - (allocated * 2),
-                AttributeType.Constitution => _currentCharacter.Constitution - (allocated * 10),
-                AttributeType.Charisma => _currentCharacter.Charisma - allocated,
+                AttributeType.Strength => _currentCharacter.Strength,
+                AttributeType.Agility => _currentCharacter.Agility,
+                AttributeType.Intelligence => _currentCharacter.Intelligence,
+                AttributeType.Constitution => _currentCharacter.Constitution,
+                AttributeType.Charisma => _currentCharacter.Charisma,
                 AttributeType.Luck => _currentCharacter.Luck,
                 _ => 0,
             };
@@ -286,6 +296,8 @@ namespace Tactics.UI
             public Label AllocatedLabel { get; set; }
             public Button PlusButton { get; set; }
             public Label DescLabel { get; set; }
+            public System.Action PlusCallback { get; set; }
+            public System.Action MinusCallback { get; set; }
         }
     }
 }

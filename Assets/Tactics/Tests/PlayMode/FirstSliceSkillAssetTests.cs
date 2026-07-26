@@ -171,6 +171,16 @@ namespace Tactics.Tests.PlayMode
                 Object.DestroyImmediate(gameObject);
             }
         }
+
+        [Test]
+        public void NewPureRunCharacters_StartWithCurrentCharismaMana()
+        {
+            var state = PlayerAdventureStateStore.CreatePureRunState(20260725);
+
+            foreach (var character in state.Roster)
+                Assert.That(character.CurrentMp, Is.EqualTo(character.Charisma), character.DisplayName);
+        }
+
         [Test]
         public void PureRunFireballUpgrade_PersistsAndBindsLevelTwoForNextBattle()
         {

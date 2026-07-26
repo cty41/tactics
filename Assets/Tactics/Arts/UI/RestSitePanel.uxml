@@ -12,19 +12,6 @@
                     <ui:Label text="每人恢复 20% HP" class="rest-btn-desc"/>
                 </ui:Button>
 
-                <!-- Train Button - Disabled -->
-                <ui:VisualElement name="TrainButton" class="rest-option-btn option-disabled">
-                    <ui:Label text="训练" class="option-disabled-label"/>
-                    <ui:Label text="提升 1 点属性" class="option-disabled-desc"/>
-                    <ui:Label text="开发中" class="developing-tag"/>
-                </ui:VisualElement>
-
-                <!-- Meditate Button - Disabled -->
-                <ui:VisualElement name="MeditateButton" class="rest-option-btn option-disabled">
-                    <ui:Label text="冥想" class="option-disabled-label"/>
-                    <ui:Label text="恢复全部 MP" class="option-disabled-desc"/>
-                    <ui:Label text="开发中" class="developing-tag"/>
-                </ui:VisualElement>
             </ui:VisualElement>
 
             <ui:Button name="LeaveButton" text="离开" class="leave-btn"/>

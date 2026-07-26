@@ -1143,6 +1143,7 @@ private void EnterNode(RoguelikeMapUINode mapNode)
                 yield return null;
                 if (IsMapFullyReady())
                 {
+                    FocusCurrentNode();
                     TLog.Info($"[RoguelikeMapUIController] Map ready after {frame + 1} validation frames.");
                     SetMapReady(true);
                     yield break;
@@ -1151,6 +1152,28 @@ private void EnterNode(RoguelikeMapUINode mapNode)
 
             TLog.Error("[RoguelikeMapUIController] Timed out waiting for map to become ready.");
             SetMapReady(false);
+        }
+
+        /// <summary>
+        /// Performs a one-shot focus after layout is valid. Player drag input remains unrestricted afterwards.
+        /// </summary>
+        private void FocusCurrentNode()
+        {
+            if (_scrollView == null || _currentMap == null)
+                return;
+
+            var current = GetNode(ResolveCurrentNodeId());
+            if (current?.Root == null)
+                return;
+
+            var content = _scrollView.contentContainer.worldBound;
+            var viewport = _scrollView.contentViewport.worldBound;
+            float horizontal = current.Root.worldBound.center.x - content.x - viewport.width * 0.5f;
+            float vertical = current.Root.worldBound.center.y - content.y - viewport.height * 0.5f;
+            _scrollView.horizontalScroller.value = Mathf.Clamp(horizontal,
+                _scrollView.horizontalScroller.lowValue, _scrollView.horizontalScroller.highValue);
+            _scrollView.verticalScroller.value = Mathf.Clamp(vertical,
+                _scrollView.verticalScroller.lowValue, _scrollView.verticalScroller.highValue);
         }
 
         private bool IsMapFullyReady()

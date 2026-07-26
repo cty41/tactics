@@ -11,14 +11,6 @@
                 <ui:Label name="RoundsLabel" text="总回合数：0" class="rounds-label"/>
             </ui:VisualElement>
 
-            <!-- 经验值列表 -->
-            <ui:VisualElement name="ExperienceSection" class="experience-section">
-                <ui:Label text="获得经验值" class="section-title"/>
-                <ui:ScrollView name="ExperienceList" class="experience-list">
-                    <ui:VisualElement name="ExperienceEntries" class="experience-entries"/>
-                </ui:ScrollView>
-            </ui:VisualElement>
-
             <!-- 金币奖励 -->
             <ui:VisualElement name="GoldSection" class="gold-section">
                 <ui:Label text="获得金币" class="section-title"/>

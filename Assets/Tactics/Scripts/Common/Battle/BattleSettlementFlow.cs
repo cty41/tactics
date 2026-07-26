@@ -28,6 +28,7 @@ namespace Tactics.Common.Battle
 
         private BattleRewardSystem.BattleRewards _pendingRewards;
         private bool _pendingIsVictory;
+        private CharacterDefinition _skillSelectionCharacter;
 
         private BattleSettlementFlow() { }
 
@@ -234,41 +235,18 @@ namespace Tactics.Common.Battle
 
         private async Task ShowLevelUpAsync(CharacterDefinition character, bool needsSkillSelection)
         {
-            await UIManager.Instance.ShowAsync(UIManager.UIId.LevelUp);
+            await UIManager.Instance.ShowAsync(UIManager.UIId.AttributeAllocation);
 
-            var controller = FindController<LevelUpPanelController>(UIManager.UIId.LevelUp);
+            var controller = FindController<AttributeAllocationUIController>(UIManager.UIId.AttributeAllocation);
             if (controller == null)
             {
-                TLog.Error("[BattleSettlementFlow] LevelUpPanelController not found.");
+                TLog.Error("[BattleSettlementFlow] AttributeAllocationUIController not found.");
                 return;
             }
 
             controller.SetCharacter(character);
-            if (needsSkillSelection || _state?.IsPureRun == true)
-            {
-                controller.SetSkillOptionProvider(() => GenerateSkillOptions(character));
-            }
-            controller.RefreshAll();
-
-            // Wait for user to click confirm via OnConfirm event
-            var tcs = new TaskCompletionSource<bool>();
-            Action onConfirmHandler = null;
-            onConfirmHandler = () =>
-            {
-                if (_state?.IsPureRun == true)
-                    PureRunProgression.MarkAdvancedGuaranteeConsumed(character, controller.SkillOptions);
-                PlayerAdventureStateStore.Save(_state);
-
-                controller.OnConfirm -= onConfirmHandler;
-                tcs.TrySetResult(true);
-            };
-            controller.OnConfirm += onConfirmHandler;
-            await tcs.Task;
-            controller.OnConfirm -= onConfirmHandler;
-
-            TLog.Info($"[BattleSettlementFlow] LevelUp panel closed for {character.DisplayName}.");
-            _currentCharacterIndex++;
-            ProcessNextCharacter();
+            controller.RefreshUI();
+            await WaitForAttributeAllocationCloseAsync(character);
         }
 
         private async Task WaitForAttributeAllocationCloseAsync(CharacterDefinition character)
@@ -321,6 +299,7 @@ namespace Tactics.Common.Battle
             }
 
             controller.SetCharacter(character);
+            _skillSelectionCharacter = character;
 
             var options = GenerateSkillOptions(character);
             if (options.Count > 0)
@@ -335,12 +314,40 @@ namespace Tactics.Common.Battle
         {
             TLog.Info($"[BattleSettlementFlow] Skill confirmed: {skillId}, replaceIndex={replaceIndex}");
 
+            var character = _skillSelectionCharacter;
+            if (character == null)
+            {
+                TLog.Warning("[BattleSettlementFlow] Skill confirmation has no active character.");
+                return;
+            }
+
+            var selected = GenerateSkillOptions(character).FirstOrDefault(option => option.Id == skillId);
+            if (selected == null)
+            {
+                TLog.Warning("[BattleSettlementFlow] Selected skill is no longer a legal offer.");
+                return;
+            }
+
+            bool applied = SkillSystem.HasSkill(character, selected.Id)
+                ? SkillSystem.UpgradeSkill(character, selected.Id)
+                : SkillSystem.LearnSkill(character, selected, replaceIndex);
+            if (!applied)
+            {
+                TLog.Warning($"[BattleSettlementFlow] Failed to apply skill {selected.Id}.");
+                return;
+            }
+
+            if (_state?.IsPureRun == true)
+                PureRunProgression.MarkAdvancedGuaranteeConsumed(character, new List<SkillDefinition> { selected });
+            PlayerAdventureStateStore.Save(_state);
+
             var controller = FindController<SkillSelectionUIController>(UIManager.UIId.SkillSelection);
             if (controller != null)
                 controller.OnSkillConfirmed -= OnSkillConfirmed;
 
             UIManager.Instance.Hide(UIManager.UIId.SkillSelection);
 
+            _skillSelectionCharacter = null;
             _currentCharacterIndex++;
             ProcessNextCharacter();
         }

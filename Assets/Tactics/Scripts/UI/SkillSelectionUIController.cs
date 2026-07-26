@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Linq;
 using Tactics.Common.Battle;
+using Tactics.AssetPipeline;
+using Tactics.Common.Units.Abilities;
 using Tactics.Roster;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -23,8 +26,11 @@ namespace Tactics.UI
         private VisualElement _replaceSection;
         private VisualElement _replaceOptionsContainer;
         private Button _confirmButton;
+        private VisualElement _currentSkillsContainer;
+        private VisualElement _currentSkillsList;
 
         private readonly List<VisualElement> _skillOptionElements = new List<VisualElement>();
+        private readonly Dictionary<VisualElement, EventCallback<ClickEvent>> _optionClickCallbacks = new();
         private readonly List<SkillDefinition> _currentSkills = new List<SkillDefinition>();
         private CharacterDefinition _currentCharacter;
         private int _selectedIndex = -1;
@@ -43,7 +49,8 @@ namespace Tactics.UI
         protected override void OnHidden()
         {
             base.OnHidden();
-            _skillOptionElements.Clear();
+            UnregisterEvents();
+            ClearUIElementReferences();
             _currentSkills.Clear();
             _selectedIndex = -1;
             _isReplaceMode = false;
@@ -52,41 +59,14 @@ namespace Tactics.UI
 
         private void EnsureUIElements()
         {
-            if (_root != null) return;
+            var currentRoot = Ui.GetRootElement(UIManager.UIId.SkillSelection);
+            if (ReferenceEquals(_root, currentRoot) && _root != null) return;
 
-            var uiDoc = GetComponent<UIDocument>();
-            if (uiDoc == null)
-            {
-                TLog.Warning("[SkillSelectionUIController] No UIDocument found on GameObject.");
-                return;
-            }
-
-            _root = uiDoc.rootVisualElement;
+            UnregisterEvents();
+            ClearUIElementReferences();
+            _root = currentRoot;
             if (_root == null) return;
-
-            _titleLabel = _root.Q<Label>("TitleLabel");
-            _subtitleLabel = _root.Q<Label>("SubtitleLabel");
-            _skillsContainer = _root.Q<VisualElement>("SkillsContainer");
-            _replaceSection = _root.Q<VisualElement>("ReplaceSection");
-            _replaceOptionsContainer = _root.Q<VisualElement>("ReplaceOptions");
-            _confirmButton = _root.Q<Button>("ConfirmButton");
-
-            // 缓存 3 个技能选项元素并注册点击
-            for (int i = 0; i < 3; i++)
-            {
-                var option = _root.Q<VisualElement>($"SkillOption_{i}");
-                if (option != null)
-                {
-                    _skillOptionElements.Add(option);
-                    int capturedIndex = i;
-                    option.RegisterCallback<ClickEvent>(evt => OnSkillSelected(capturedIndex));
-                }
-            }
-
-            if (_confirmButton != null)
-                _confirmButton.clicked += OnConfirm;
-
-            UpdateConfirmButton();
+            CacheElements();
         }
 
         /// <summary>
@@ -94,6 +74,8 @@ namespace Tactics.UI
         /// </summary>
         public void SetRootElement(VisualElement root)
         {
+            UnregisterEvents();
+            ClearUIElementReferences();
             _root = root;
             CacheElements();
             _root.style.display = DisplayStyle.Flex;
@@ -109,6 +91,8 @@ namespace Tactics.UI
             _replaceSection = _root.Q<VisualElement>("ReplaceSection");
             _replaceOptionsContainer = _root.Q<VisualElement>("ReplaceOptions");
             _confirmButton = _root.Q<Button>("ConfirmButton");
+            _currentSkillsContainer = _root.Q<VisualElement>("CurrentSkillsContainer");
+            _currentSkillsList = _root.Q<VisualElement>("CurrentSkills");
 
             for (int i = 0; i < 3; i++)
             {
@@ -117,7 +101,9 @@ namespace Tactics.UI
                 {
                     _skillOptionElements.Add(option);
                     int capturedIndex = i;
-                    option.RegisterCallback<ClickEvent>(evt => OnSkillSelected(capturedIndex));
+                    EventCallback<ClickEvent> callback = _ => OnSkillSelected(capturedIndex);
+                    _optionClickCallbacks[option] = callback;
+                    option.RegisterCallback(callback);
                 }
             }
 
@@ -127,12 +113,37 @@ namespace Tactics.UI
             UpdateConfirmButton();
         }
 
+        private void UnregisterEvents()
+        {
+            foreach (var pair in _optionClickCallbacks)
+                pair.Key.UnregisterCallback(pair.Value);
+
+            _optionClickCallbacks.Clear();
+            if (_confirmButton != null)
+                _confirmButton.clicked -= OnConfirm;
+        }
+
+        private void ClearUIElementReferences()
+        {
+            _root = null;
+            _titleLabel = null;
+            _subtitleLabel = null;
+            _skillsContainer = null;
+            _replaceSection = null;
+            _replaceOptionsContainer = null;
+            _confirmButton = null;
+            _currentSkillsContainer = null;
+            _currentSkillsList = null;
+            _skillOptionElements.Clear();
+        }
+
         /// <summary>
         /// 设置当前角色（用于检查技能槽位状态）。
         /// </summary>
         public void SetCharacter(CharacterDefinition character)
         {
             _currentCharacter = character;
+            BuildCurrentSkills();
         }
 
         /// <summary>
@@ -167,7 +178,7 @@ namespace Tactics.UI
                 if (nameLabel != null) nameLabel.text = skill.DisplayName ?? skill.Id;
                 if (typeLabel != null) typeLabel.text = skill.SkillType == SkillType.Active ? "主动" : "被动";
                 if (levelLabel != null) levelLabel.text = $"Lv.{skill.Level}";
-                if (descLabel != null) descLabel.text = skill.Description ?? string.Empty;
+                if (descLabel != null) descLabel.text = BuildSkillDescription(skill, skill.Level);
 
                 option.RemoveFromClassList("selected");
                 option.style.display = DisplayStyle.Flex;
@@ -193,6 +204,49 @@ namespace Tactics.UI
             }
 
             UpdateConfirmButton();
+        }
+
+        private void BuildCurrentSkills()
+        {
+            if (_currentSkillsContainer == null || _currentSkillsList == null)
+                return;
+
+            _currentSkillsList.Clear();
+            var learnedSkills = _currentCharacter?.LearnedSkills?
+                .Where(learned => learned != null && learned.SkillType != SkillType.ExtraUtility)
+                .ToList() ?? new List<CharacterDefinition.LearnedSkill>();
+            _currentSkillsContainer.style.display = learnedSkills.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+
+            foreach (var learned in learnedSkills)
+            {
+                var skill = PureRunAbilityCatalog.TryGet(learned.SkillId, out var definition)
+                    ? definition.Skill
+                    : SkillDatabase.GetSkillById(learned.SkillId);
+                if (skill == null) continue;
+
+                var entry = new Label($"{skill.DisplayName} Lv.{learned.Level}\n{BuildSkillDescription(skill, learned.Level)}");
+                entry.name = $"CurrentSkill_{learned.SkillId}";
+                entry.AddToClassList("replace-option");
+                _currentSkillsList.Add(entry);
+            }
+        }
+
+        private static string BuildSkillDescription(SkillDefinition skill, int level)
+        {
+            string description = skill?.Description ?? string.Empty;
+            int manaCost = skill?.MpCost ?? 0;
+            if (skill != null && PureRunAbilityCatalog.TryResolveAbilityPath(skill.Id, level, out string path, out _) &&
+                GameAssetManager.Instance?.IsInitialized == true)
+            {
+                var config = GameAssetManager.Instance.Load<AbilityConfig>(path);
+                if (config != null)
+                {
+                    description = string.IsNullOrWhiteSpace(config.Description) ? description : config.Description;
+                    manaCost = config.ManaCost;
+                }
+                GameAssetManager.Instance.Release(path);
+            }
+            return $"{description}\n消耗：{manaCost} MP";
         }
 
         /// <summary>

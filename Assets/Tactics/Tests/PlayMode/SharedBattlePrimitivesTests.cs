@@ -17,6 +17,34 @@ namespace Tactics.Tests.PlayMode
     public sealed class SharedBattlePrimitivesTests
     {
         [Test]
+        public void TurnEndManaRegen_UsesIntelligenceExactlyOnceAndSignalsActualGain()
+        {
+            using var world = new SkillGraphTestWorld();
+            var unit = world.CreateUnit("ManaRegen", 0, world.CreateSquareCell("ManaRegenCell", 0, 0));
+            unit.Intelligence = 7;
+            unit.MaxMana = 30f;
+            unit.Mana = 20f;
+
+            TurnEndManaRestoredEventArgs? restoration = null;
+            unit.TurnEndManaRestored += args => restoration = args;
+
+            unit.OnTurnEnd(world.GridController);
+
+            Assert.That(unit.Mana, Is.EqualTo(27f));
+            Assert.That(restoration.HasValue, Is.True);
+            Assert.That(restoration.Value.NewMana - restoration.Value.OldMana, Is.EqualTo(7f));
+            Assert.That(restoration.Value.WorldPosition, Is.EqualTo(unit.transform.position));
+
+            unit.PrepareForTurn();
+            Assert.That(unit.Mana, Is.EqualTo(27f), "回合开始不应再次恢复 MP。");
+
+            restoration = null;
+            unit.Mana = unit.MaxMana;
+            unit.OnTurnEnd(world.GridController);
+            Assert.That(restoration.HasValue, Is.False, "MP 已满时不应触发恢复浮字事件。");
+        }
+
+        [Test]
         public void DamageCategoryAndElement_AreIndependent()
         {
             using var world = new SkillGraphTestWorld();

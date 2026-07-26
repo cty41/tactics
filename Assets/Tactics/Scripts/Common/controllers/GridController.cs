@@ -393,7 +393,6 @@ namespace Tactics.Common.Controllers
             var startingUnits = TurnContext.PlayableUnits().Where(IsUnityUnitAvailable).ToList();
             foreach (var unit in startingUnits)
             {
-                unit.PrepareForTurn();
                 unit.OnTurnStart(this);
                 foreach (var ability in unit.GetBaseAbilities())
                 {

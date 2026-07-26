@@ -56,7 +56,7 @@ namespace Tactics.Roguelike
             controller.BattleEnded -= OnBattleEnded;
         }
 
-        private void OnBattleEnded(GameResult result)
+        private async void OnBattleEnded(GameResult result)
         {
             bool humanWon = result.Winners != null &&
                             result.Winners.Any(p => p != null && p.PlayerType == PlayerType.HumanPlayer);
@@ -67,8 +67,11 @@ namespace Tactics.Roguelike
                 var allUnits = BattleController.Instance?.GetUnits();
                 int totalRounds = BattleController.Instance?.CurrentRound ?? 1;
 
-                // 战后恢复 - 人类单位
-                if (allUnits != null)
+                // Show recovery before settlement so players can see the actual persistent gains.
+                var battleUi = Object.FindFirstObjectByType<BattleUIController>();
+                if (battleUi != null)
+                    await battleUi.ShowPostBattleRecoveryAsync(allUnits);
+                else if (allUnits != null)
                     ApplyPostBattleRegeneration(allUnits);
 
                 // 加载玩家状态供结算流程使用
