@@ -138,6 +138,40 @@ namespace Tactics.Tests.PlayMode
         }
 
         [Test]
+        public void PureRunBinder_DoesNotInjectAmazonSpearUtilitiesIntoNecromancer()
+        {
+            var necromancer = CharacterDefinition.CreateDefault(
+                "pure_run_necromancer",
+                "Necromancer",
+                roleType: RoleType.Necromancer);
+            necromancer.LearnedSkills.Add(new CharacterDefinition.LearnedSkill
+            {
+                SkillId = PureRunAbilityCatalog.PickupSpearSkillId,
+                SkillType = SkillType.ExtraUtility,
+                Level = 1
+            });
+
+            var gameObject = new GameObject("PureRunNecromancerSpearIsolationTestUnit");
+            try
+            {
+                var unit = gameObject.AddComponent<TilemapUnit>();
+                var result = PureRunAbilityBinder.Bind(
+                    necromancer,
+                    unit,
+                    path => GameAssetManager.Instance.Load<AbilityConfig>(path));
+
+                Assert.That(result.MissingSkillIds, Is.Empty);
+                Assert.That(result.LoadedPaths, Does.Not.Contain(
+                    "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PickupSpear_Graph_Ability.asset"));
+                Assert.That(unit.GetLearnedSkillLevel(PureRunAbilityCatalog.PickupSpearSkillId), Is.EqualTo(1),
+                    "Persisted malformed data remains inspectable, but may not become a cross-class battle ability.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
+        }
+        [Test]
         public void PureRunFireballUpgrade_PersistsAndBindsLevelTwoForNextBattle()
         {
             const int testSlot = 2;

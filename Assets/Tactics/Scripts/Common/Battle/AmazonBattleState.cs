@@ -7,6 +7,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
+using Tactics.Runtime.Utilities;
 using UnityEngine;
 
 namespace Tactics.Common.Battle
@@ -37,8 +38,8 @@ namespace Tactics.Common.Battle
 
         public static bool IsDecoy(IUnit unit) => unit != null && Decoys.TryGetValue(unit, out _);
 
-        public bool IsSpearHeld(IUnit owner) => EnsureOwner(owner).Spear == null;
-        public ICell GetSpearCell(IUnit owner) => EnsureOwner(owner).Spear?.CurrentCell;
+        public bool IsSpearHeld(IUnit owner) => ResolveLiveSpear(owner) == null;
+        public ICell GetSpearCell(IUnit owner) => ResolveLiveSpear(owner)?.CurrentCell;
         public int GetActiveMovement(IUnit owner) => EnsureOwner(owner).ActiveMovement;
         public void ResetActiveMovement(IUnit owner) => EnsureOwner(owner).ActiveMovement = 0;
 
@@ -63,9 +64,10 @@ namespace Tactics.Common.Battle
         public bool RecoverSpear(IUnit owner)
         {
             var state = EnsureOwner(owner);
-            if (state.Spear == null)
+            var spear = ResolveLiveSpear(owner);
+            if (spear == null)
                 return false;
-            state.Spear.RemoveFromBattle();
+            spear.RemoveFromBattle();
             state.Spear = null;
             return true;
         }
@@ -172,6 +174,44 @@ namespace Tactics.Common.Battle
             owner.UnitMoved += state.MovementHandler;
             _owners.Add(owner, state);
             return state;
+        }
+
+        /// <summary>
+        /// Keeps the battle-state cache aligned with the live dropped-spear entity. The entity
+        /// carries the ownership invariant, so a cache miss after a UI or turn transition must
+        /// not make an adjacent Amazon unable to recover her still-visible spear.
+        /// </summary>
+        private DroppedSpear ResolveLiveSpear(IUnit owner)
+        {
+            if (owner == null)
+                return null;
+
+            var state = EnsureOwner(owner);
+            if (state.Spear != null)
+            {
+                if (state.Spear.Owner == owner && state.Spear.CurrentCell != null)
+                    return state.Spear;
+
+                TLog.Warning($"[AmazonBattleState] Discarded invalid cached spear: owner={owner?.UnitID}, cachedOwner={state.Spear.Owner?.UnitID}, cell={state.Spear.CurrentCell?.GridCoordinates}.");
+                state.Spear = null;
+            }
+
+            var liveSpears = UnityEngine.Object.FindObjectsByType<DroppedSpear>(FindObjectsSortMode.None)
+                .Where(candidate => candidate != null && ReferenceEquals(candidate.Owner, owner) && candidate.CurrentCell != null)
+                .ToList();
+            if (liveSpears.Count == 0)
+                return null;
+
+            state.Spear = liveSpears[0];
+            if (liveSpears.Count > 1)
+            {
+                TLog.Error($"[AmazonBattleState] Multiple dropped spears for owner={owner?.UnitID}; using '{state.Spear.name}' at {state.Spear.CurrentCell.GridCoordinates}.");
+            }
+            else
+            {
+                TLog.Warning($"[AmazonBattleState] Rehydrated dropped spear state: owner={owner?.UnitID}, cell={state.Spear.CurrentCell.GridCoordinates}.");
+            }
+            return state.Spear;
         }
 
         private HashSet<ICell> CollectTerrainReachable(ICell start)

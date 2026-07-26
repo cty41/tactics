@@ -203,6 +203,49 @@ namespace Tactics.Tests.PlayMode
             }
         }
 
+        [Test]
+        public void BoneSpearAllLevels_RejectNonStraightEndpointsBeforeExecution()
+        {
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                for (int x = 0; x <= 3; x++)
+                for (int y = 0; y <= 3; y++)
+                    world.CreateSquareCell($"Cell{x}_{y}", x, y);
+                var caster = world.CreateUnit("Necromancer", 0, Cell(world, 0, 0));
+                var straightEnemy = world.CreateUnit("StraightEnemy", 1, Cell(world, 0, 3));
+                var offLineEnemy = world.CreateUnit("OffLineEnemy", 1, Cell(world, 1, 3));
+                var diagonalEnemy = world.CreateUnit("DiagonalEnemy", 1, Cell(world, 2, 2));
+                Prepare(caster, straightEnemy, offLineEnemy, diagonalEnemy);
+                world.SetTurnContext(world.PlayerOne, new[] { caster });
+                world.SetTurnContext(world.PlayerTwo, new[] { straightEnemy, offLineEnemy, diagonalEnemy });
+
+                foreach (string configFile in new[]
+                         {
+                             "BoneSpear_Graph_Ability.asset",
+                             "BoneSpear_Lv2_Graph_Ability.asset",
+                             "BoneSpear_Lv3_Graph_Ability.asset"
+                         })
+                {
+                    var ability = Ability(configFile, caster);
+                    ability.OnAbilitySelected(world.GridController);
+                    var query = new AbilityTargetQuery(caster, caster.CurrentCell, world.GridController,
+                        world.UnitManager.GetUnits());
+                    var targets = ability.QueryTargets(query).Options
+                        .Select(option => option.TargetPoint)
+                        .ToList();
+                    CollectionAssert.Contains(targets, straightEnemy.CurrentCell, configFile);
+                    CollectionAssert.DoesNotContain(targets, offLineEnemy.CurrentCell, configFile);
+                    CollectionAssert.DoesNotContain(targets, diagonalEnemy.CurrentCell, configFile);
+                    ability.CleanUp(world.GridController);
+                }
+            }
+            finally
+            {
+                world.Dispose();
+            }
+        }
+
         [UnityTest]
         public IEnumerator Fear_ForcesFarthestReachableMove_ButLeavesTargetAbleToAct()
         {
@@ -319,6 +362,13 @@ namespace Tactics.Tests.PlayMode
             yield return new WaitUntil(() => task.IsCompleted);
             Assert.That(task.IsFaulted, Is.False, task.Exception?.ToString());
             Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed), task.Result.LastError);
+        }
+
+        private static SkillGraphAbilityImpl Ability(string configFile, Unit caster)
+        {
+            var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>($"{ConfigRoot}{configFile}");
+            Assert.That(config, Is.Not.Null, configFile);
+            return new SkillGraphAbilityImpl(caster, config);
         }
     }
 }

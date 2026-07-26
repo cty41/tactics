@@ -168,6 +168,39 @@ namespace Tactics.Common.Units.Abilities
             _ = ExecuteSkillGraphAsync(cell, gridController);
         }
 
+        /// <summary>
+        /// Executes a recovery action against its owner without entering a separate target-selection state.
+        /// </summary>
+        public async Task<SkillGraphRuntimeTestResult> ExecuteRecoveryActionAsync(IGridController gridController)
+        {
+            if (TargetMode != SkillTargetMode.RecoveryAction || gridController == null || _owner?.CurrentCell == null)
+            {
+                var failed = CreateTestResult();
+                failed.ExecutionState = SkillGraphExecutionState.Failed;
+                failed.LastError = "Recovery action is not available.";
+                return failed;
+            }
+
+            OnAbilitySelected(gridController);
+            if (!CanPerform(gridController) || _validTargetCells == null || !_validTargetCells.Contains(_owner.CurrentCell))
+            {
+                var failed = CreateTestResult();
+                failed.ExecutionState = SkillGraphExecutionState.Failed;
+                failed.LastError = "Recovery action has no valid self target.";
+                CleanUp(gridController);
+                return failed;
+            }
+
+            try
+            {
+                return await ExecuteSkillGraphAsync(_owner.CurrentCell, gridController);
+            }
+            finally
+            {
+                CleanUp(gridController);
+            }
+        }
+
         public void OnUnitHighlighted(IUnit unit, IGridController gridController) { }
         public void OnUnitDehighlighted(IUnit unit, IGridController gridController) { }
         public void OnUnitDestroyed(IGridController gridController) { }
@@ -203,6 +236,11 @@ namespace Tactics.Common.Units.Abilities
                 return AbilityAvailability.Disabled("本回合已使用");
             if (!_config.IsBasicAbility && _owner.Mana < _config.ManaCost)
                 return AbilityAvailability.Disabled($"需要 {_config.ManaCost} 点魔法");
+            if (FirstSelectionRequiresCorpse() && !(gridController?.CellManager?.GetCells() ?? Enumerable.Empty<ICell>())
+                    .Any(HasCorpseInteractable))
+            {
+                return AbilityAvailability.Disabled("没有可用尸体");
+            }
             return AbilityAvailability.Enabled();
         }
 
@@ -565,8 +603,7 @@ namespace Tactics.Common.Units.Abilities
             var allCells = _gridController.CellManager.GetCells();
             var ownerCell = _owner.CurrentCell;
             int minRange = GetMinRangeFromGraph();
-            bool cardinalOnly = UsesCardinalDash();
-            bool straightLineOnly = RequiresStraightLineEndpoint();
+            bool cardinalOnly = UsesCardinalDash() || IsThrust() || RequiresStraightLineEndpoint();
 
             if (TryAddAmazonSpecialTargets(displayCells, ownerCell, includeOnlyLegal: false))
                 return displayCells;
@@ -635,14 +672,6 @@ namespace Tactics.Common.Units.Abilities
                         continue;
                 }
 
-                if (straightLineOnly)
-                {
-                    int dx = cell.GridCoordinates.x - ownerCell.GridCoordinates.x;
-                    int dy = cell.GridCoordinates.y - ownerCell.GridCoordinates.y;
-                    if (dx != 0 && dy != 0 && Math.Abs(dx) != Math.Abs(dy))
-                        continue;
-                }
-
                 displayCells.Add(cell);
             }
 
@@ -667,8 +696,7 @@ namespace Tactics.Common.Units.Abilities
             var allCells = _gridController.CellManager.GetCells();
             var ownerCell = originCell ?? _owner.CurrentCell;
             if (ownerCell == null) return validCells;
-            bool cardinalOnly = UsesCardinalDash();
-            bool straightLineOnly = RequiresStraightLineEndpoint();
+            bool cardinalOnly = UsesCardinalDash() || IsThrust() || RequiresStraightLineEndpoint();
             bool requiresEnemy = FirstSelectionRequiresEnemy();
             bool requiresSelf = FirstSelectionRequiresSelf();
 
@@ -739,14 +767,6 @@ namespace Tactics.Common.Units.Abilities
                         continue;
                 }
 
-                if (straightLineOnly)
-                {
-                    int dx = cell.GridCoordinates.x - ownerCell.GridCoordinates.x;
-                    int dy = cell.GridCoordinates.y - ownerCell.GridCoordinates.y;
-                    if (dx != 0 && dy != 0 && Math.Abs(dx) != Math.Abs(dy))
-                        continue;
-                }
-
                 if (requiresEnemy && !HasEnemyUnit(cell))
                     continue;
 
@@ -807,7 +827,7 @@ namespace Tactics.Common.Units.Abilities
         {
             return _config?.SkillGraph?.Nodes?
                 .OfType<NecromancerSkillNodeRecord>()
-                .Any(node => node.SkillKind == NecromancerSkillKind.BoneSpear && node.Level >= 3) == true;
+                .Any(node => node.SkillKind == NecromancerSkillKind.BoneSpear) == true;
         }
 
         private bool HasLineOfSight(ICell origin, ICell target)

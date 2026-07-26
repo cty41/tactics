@@ -244,7 +244,7 @@ namespace Tactics.Common.Skills.Graph
                 return null;
             int dx = end.GridCoordinates.x - start.GridCoordinates.x;
             int dy = end.GridCoordinates.y - start.GridCoordinates.y;
-            if (dx != 0 && dy != 0 && Math.Abs(dx) != Math.Abs(dy))
+            if (dx != 0 && dy != 0)
                 return null;
 
             int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));

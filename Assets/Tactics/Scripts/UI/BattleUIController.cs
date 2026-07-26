@@ -501,7 +501,7 @@ namespace Tactics.UI
             for (int i = 0; i < abilities.Count; i++)
             {
                 var ability = abilities[i];
-                var card = CreateSkillCard(ability, i);
+                var card = CreateSkillCard(unit, ability, i);
                 if (card == null)
                     continue;
                 _skillPanel.Add(card);
@@ -510,7 +510,7 @@ namespace Tactics.UI
             }
         }
 
-        private VisualElement CreateSkillCard(IAbility ability, int index)
+        private VisualElement CreateSkillCard(IUnit owner, IAbility ability, int index)
         {
             var card = new VisualElement();
             card.name = $"AbilityCard_{ToElementKey(ability.DisplayName)}";
@@ -558,13 +558,20 @@ namespace Tactics.UI
             card.Add(costLabel);
 
             // Click event
-            int capturedIndex = index;
             System.Action callback = () =>
             {
+                if (!ReferenceEquals(_currentSelectedUnit, owner) ||
+                    !GetSkillAbilities(owner).Contains(ability))
+                {
+                    TLog.Warning($"[BattleUIController] Ignored stale skill card '{ability.DisplayName}' for '{owner?.UnitID}'.");
+                    RefreshActionUi();
+                    return;
+                }
+
                 var currentAvailability = AbilityAvailabilityResolver.Resolve(ability, _gridController);
                 if (currentAvailability.CanExecute)
                 {
-                    OnSkillButtonClicked(capturedIndex);
+                    OnSkillButtonClicked(owner, ability);
                     return;
                 }
                 ShowAbilityReason(currentAvailability.Reason);
@@ -644,7 +651,7 @@ namespace Tactics.UI
             _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, moveAbility);
         }
 
-        private void OnSkillButtonClicked(int skillIndex)
+        private void OnSkillButtonClicked(IUnit owner, IAbility ability)
         {
             _isConsumableTargeting = false;
             _consumableButton?.EnableInClassList("targeting", false);
@@ -654,17 +661,25 @@ namespace Tactics.UI
                 return;
             }
 
-            var abilities = GetSkillAbilities(_currentSelectedUnit);
-            if (abilities == null || skillIndex >= abilities.Count)
+            if (!ReferenceEquals(_currentSelectedUnit, owner) ||
+                ability == null ||
+                !GetSkillAbilities(owner).Contains(ability))
             {
-                TLog.Warning($"[BattleUIController] Skill index {skillIndex} out of range. Abilities count: {abilities?.Count ?? 0}");
+                TLog.Warning($"[BattleUIController] Rejected unbound skill click: ownerMatches={ReferenceEquals(_currentSelectedUnit, owner)}, ability={ability?.DisplayName ?? "null"}.");
+                RefreshActionUi();
                 return;
             }
 
-            var ability = abilities[skillIndex];
             _currentOrderedAbility = ability as SkillGraphAbilityImpl;
             HideAbilityReason();
-            TLog.Info($"[BattleUIController] Skill {skillIndex + 1} clicked: {ability.DisplayName}");
+            TLog.Info($"[BattleUIController] Skill clicked: {ability.DisplayName}");
+
+            if (ability is SkillGraphAbilityImpl graphAbility &&
+                graphAbility.TargetMode == SkillTargetMode.RecoveryAction)
+            {
+                _ = graphAbility.ExecuteRecoveryActionAsync(_gridController);
+                return;
+            }
 
             // Switch to unit selected state - OnStateEnter will handle OnAbilitySelected, CanPerform check, and Display
             _gridController.GridState = new GridStateUnitSelected(_currentSelectedUnit, ability);

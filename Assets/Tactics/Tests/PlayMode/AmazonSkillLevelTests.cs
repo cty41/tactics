@@ -121,6 +121,43 @@ namespace Tactics.Tests.PlayMode
             }
         }
 
+        [Test]
+        public void ThrustLevels_ExposeOnlyCardinalTargetsAtTheirConfiguredRanges()
+        {
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                for (int x = 0; x <= 6; x++)
+                for (int y = 0; y <= 6; y++)
+                    world.CreateSquareCell($"Cell{x}_{y}", x, y);
+
+                var amazon = world.CreateUnit("Amazon", 0, Cell(world, 3, 3));
+                Prepare(amazon);
+                var enemies = new List<Unit>();
+                foreach (var coordinate in new[]
+                         {
+                             (1, 3), (2, 3), (4, 3), (5, 3), (3, 1), (3, 2), (3, 4), (3, 5),
+                             (2, 2), (4, 2), (2, 4), (4, 4)
+                         })
+                {
+                    var enemy = world.CreateUnit($"Enemy{coordinate.Item1}_{coordinate.Item2}", 1,
+                        Cell(world, coordinate.Item1, coordinate.Item2));
+                    Prepare(enemy);
+                    enemies.Add(enemy);
+                }
+
+                world.SetTurnContext(world.PlayerOne, new[] { amazon });
+                world.SetTurnContext(world.PlayerTwo, enemies);
+                AssertThrustTargets("Thrust_Graph_Ability.asset", amazon, world, 8);
+                AssertThrustTargets("Thrust_Lv2_Graph_Ability.asset", amazon, world, 12);
+                AssertThrustTargets("Thrust_Lv3_Graph_Ability.asset", amazon, world, 12);
+            }
+            finally
+            {
+                world.Dispose();
+            }
+        }
+
         [UnityTest]
         public IEnumerator PoisonSpearAndRecovery_ShareUniqueBlockingSpearAndApplyLevelAreas()
         {
@@ -186,6 +223,68 @@ namespace Tactics.Tests.PlayMode
                 Assert.That(state.DropSpear(amazon, Cell(world, 2, 1)), Is.True);
                 var pickup = Ability("PickupSpear_Graph_Ability.asset", amazon, world);
                 Assert.That(pickup.GetAvailability(world.GridController).Reason, Is.EqualTo("需要移动到长矛相邻格"));
+            }
+            finally
+            {
+                AmazonBattleState.For(world.GridController).Clear();
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator PickupSpear_RecoveryActionExecutesImmediatelyAgainstAmazonCell()
+        {
+            var world = CreateRectangleWorld(3, 2, out var amazon);
+            try
+            {
+                var state = AmazonBattleState.For(world.GridController);
+                Assert.That(state.DropSpear(amazon, Cell(world, 1, 1)), Is.True);
+                var pickup = Ability("PickupSpear_Graph_Ability.asset", amazon, world);
+                Assert.That(pickup.TargetMode, Is.EqualTo(SkillTargetMode.RecoveryAction));
+
+                var task = pickup.ExecuteRecoveryActionAsync(world.GridController);
+                yield return new WaitUntil(() => task.IsCompleted);
+
+                Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed));
+                Assert.That(state.IsSpearHeld(amazon), Is.True);
+            }
+            finally
+            {
+                AmazonBattleState.For(world.GridController).Clear();
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator PickupSpear_RemainsOwnedByAmazonAcrossOtherUnitTurns()
+        {
+            var world = CreateRectangleWorld(4, 3, out var amazon, casterY: 1);
+            try
+            {
+                var necromancer = world.CreateUnit("Necromancer", 0, Cell(world, 0, 2));
+                var enemy = world.CreateUnit("Enemy", 1, Cell(world, 3, 1));
+                Prepare(necromancer, enemy);
+                var state = AmazonBattleState.For(world.GridController);
+                Assert.That(state.DropSpear(amazon, Cell(world, 2, 1)), Is.True);
+
+                world.SetTurnContext(world.PlayerTwo, new[] { enemy });
+                enemy.OnTurnStart(world.GridController);
+                enemy.OnTurnEnd(world.GridController);
+                world.SetTurnContext(world.PlayerOne, new[] { necromancer });
+                necromancer.OnTurnStart(world.GridController);
+                necromancer.OnTurnEnd(world.GridController);
+                world.SetTurnContext(world.PlayerOne, new[] { amazon });
+                amazon.CurrentCell = Cell(world, 1, 1);
+
+                var pickup = Ability("PickupSpear_Graph_Ability.asset", amazon, world);
+                Assert.That(pickup.GetAvailability(world.GridController).CanExecute, Is.True);
+                Assert.That(state.GetSpearCell(amazon), Is.EqualTo(Cell(world, 2, 1)));
+                Assert.That(state.GetSpearCell(necromancer), Is.Null);
+
+                float mana = amazon.Mana;
+                yield return Execute(world, amazon, amazon.CurrentCell, "PickupSpear_Graph_Ability.asset");
+                Assert.That(state.IsSpearHeld(amazon), Is.True);
+                Assert.That(amazon.Mana, Is.EqualTo(mana));
             }
             finally
             {
@@ -490,6 +589,27 @@ namespace Tactics.Tests.PlayMode
             var ability = new SkillGraphAbilityImpl(owner, config);
             ability.Initialize(world.GridController);
             return ability;
+        }
+
+        private static void AssertThrustTargets(
+            string configFile, Unit amazon, SkillGraphTestWorld world, int expectedCount)
+        {
+            var ability = Ability(configFile, amazon, world);
+            ability.OnAbilitySelected(world.GridController);
+            var query = new AbilityTargetQuery(amazon, amazon.CurrentCell, world.GridController,
+                world.UnitManager.GetUnits());
+            var targets = ability.QueryTargets(query).Options
+                .Select(option => option.TargetPoint)
+                .ToList();
+
+            Assert.That(targets, NUnit.Framework.Has.Count.EqualTo(expectedCount), configFile);
+            CollectionAssert.DoesNotContain(targets, Cell(world, 2, 2), configFile);
+            CollectionAssert.DoesNotContain(targets, Cell(world, 4, 2), configFile);
+            CollectionAssert.DoesNotContain(targets, Cell(world, 2, 4), configFile);
+            CollectionAssert.DoesNotContain(targets, Cell(world, 4, 4), configFile);
+            Assert.That(targets.All(cell => (cell.GridCoordinates.x == 3) ^ (cell.GridCoordinates.y == 3)),
+                Is.True, configFile);
+            ability.CleanUp(world.GridController);
         }
 
         private static IEnumerator Execute(
