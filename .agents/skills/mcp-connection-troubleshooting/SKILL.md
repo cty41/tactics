@@ -29,11 +29,17 @@ MCP 连接故障排除的专用技能。
 
 ### Step 1: 读取项目 JSON
 
-**首先**读取项目中的唯一 MCP URL 来源：
+**首先**读取当前 worktree 的本地 MCP URL 来源：
 
 ```bash
 cat .agents/mcp.json
 powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check
+```
+
+若文件不存在，首次运行：
+
+```powershell
+powershell.exe -File Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1 -Url http://127.0.0.1:<端口>/mcp
 ```
 
 **不要**假设默认端口！配置文件中的端口可能不同。
@@ -86,9 +92,10 @@ lsof -i :<端口号>
 
 | 工具 | 配置文件路径 |
 |------|-------------|
-| 项目唯一真相源 | `.agents/mcp.json` |
-| Codex 派生配置 | `.codex/config.toml` |
-| OpenCode 派生配置 | `.opencode/opencode.json` |
+| worktree 本地真相源（忽略） | `.agents/mcp.json` |
+| Codex 本地派生配置（忽略） | `.codex/config.toml` |
+| OpenCode 本地派生配置（忽略） | `.opencode/opencode.json` |
+| Git 跟踪模板 | `*.template.*` |
 | Claude Code | `.claude/claude_code_config.json` |
 | Cursor | `.cursor/mcp.json` |
 | VS Code | `.vscode/mcp.json` |

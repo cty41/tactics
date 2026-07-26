@@ -1,7 +1,7 @@
 # Tactics Knowledge Update Log
 
 ## 2026-07-26
-* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:f8f4bcbb59611e373ca43bbda990c18f0c0ffacdd264409d2d2ca6bf3cbea3ba`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:7d5067a04ea4e6a4fc8b22e3fb17b5271f05d1f2c93a26d7826000898fa307f2`。
 
 ## 2026-07-23
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:0822cab4e0392c57db64cde9c07c55db1809a716e439321e26184326495b582e`。

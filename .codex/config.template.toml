@@ -2,7 +2,7 @@
 rmcp_client = true
 
 [mcp_servers.unityMCP]
-url = "http://127.0.0.1:8081/mcp"
+url = "__UNITY_MCP_URL__"
 
 [mcp_servers.unityMCP.tools.set_active_instance]
 approval_mode = "approve"

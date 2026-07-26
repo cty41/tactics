@@ -34,7 +34,7 @@ description: "Use when operating Unity Editor via MCP tools — core rules, foun
 
 ## Workflow
 
-1. 首次 Unity MCP 调用前，先读取 `.agents/mcp.json`，并运行 `powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check`。
+1. 首次 Unity MCP 调用前，先读取本 worktree 的 `.agents/mcp.json`，并运行 `powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check`。
 2. 用该 URL 的 `mcpforunity://project/info` 验证 `projectRoot` 是当前 worktree；根目录不匹配时，禁止后续 Unity 写操作。
 3. 再判断目标是否是 Unity 序列化资产或 Editor 状态。
 4. 加载本技能确认核心规则，再按领域加载子技能。
@@ -88,7 +88,7 @@ Use `batch_execute` when performing 3+ independent operations。 Reduces latency
 
 ### 必须执行的步骤
 
-1. **首先**读取 `.agents/mcp.json`；这是本项目 Unity MCP URL 的唯一真相源。
+1. **首先**读取本 worktree 的 `.agents/mcp.json`；它是忽略的本地 URL 真相源，不应被 Git 跟踪。
 2. 运行 `powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check`，确认 Codex/OpenCode 客户端配置与项目 URL 一致。
 3. 调用 `mcpforunity://project/info`，确认返回的 `projectRoot` 是当前 worktree。若不一致，停止所有 Unity 写操作，修复端口或启动正确的 Unity Editor 后再试。
 
@@ -132,6 +132,7 @@ graph TD
 | Repeating many single MCP calls | Use `batch_execute` | Reduces latency and token cost |
 | Assuming a tool exists | Verify available MCP tools or context | Prevents dead-end tool calls |
 | 向未知 `projectRoot` 写资产 | 先检查 `project/info`，不匹配即停止 | 防止写入其他 worktree |
+| 将本地 `mcp.json` 提交到 Git | 仅提交模板和工具 | 防止 merge/rebase 覆盖 worktree 端口 |
 
 ## Checklist
 

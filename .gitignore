@@ -73,3 +73,9 @@ Assets/Unity.VisualScripting.Generated
 .mimocode/plans
 .mimocode/.cron-lock
 Tests/gameplay-specs/compiled
+
+# Worktree-local Unity MCP endpoints. Templates and tooling remain tracked.
+/.agents/mcp.json
+/.agents/mcp.local.json
+/.codex/config.toml
+/.opencode/opencode.json
