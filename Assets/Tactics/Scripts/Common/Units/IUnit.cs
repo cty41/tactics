@@ -207,6 +207,19 @@ namespace Tactics.Common.Units
         void MarkBasicAbilityUsed(string abilityName);
 
         /// <summary>
+        /// Gets how many times the named ability has been used during the current turn.
+        /// </summary>
+        /// <param name="abilityName">The ability name to query.</param>
+        /// <returns>The number of uses this turn, or zero when the name is invalid or unused.</returns>
+        int GetAbilityUseCountThisTurn(string abilityName);
+
+        /// <summary>
+        /// Records one use of the named ability during the current turn.
+        /// </summary>
+        /// <param name="abilityName">The ability name to record.</param>
+        void MarkAbilityUsedThisTurn(string abilityName);
+
+        /// <summary>
         /// Registers a new ability for the unit.
         /// </summary>
         /// <param name="ability">The ability to register.</param>

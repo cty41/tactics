@@ -1,5 +1,12 @@
 # Tactics Knowledge Update Log
 
+## 2026-07-27
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:1f4f15f36833e48bdb6de2116f69b3c4f262e88b3527c39f3072fba9db969412`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:27b7fdd07a1478edb0a38d15493f0286419bb5c581fbd78804297a9ae6266b87`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:dd33f78e40c74d2171da787945125ea8a3f001f381ab4509b70b96c818261f98`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:dc40a65a2b1a2a545f3f28b252b65ddf48b2bf3e28e85072499365875ae4ff25`。
+* **Update**: 同步 `MaxUsesPerTurn` cantrip 的权威设计、Unit 回合计数、怪物 AI 统一可用性与正式技能数值。
+
 ## 2026-07-26
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:1917edf6608a303005ad92b48408f13063bb9a9f668bfc07486f9819fdb524a9`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:42e98c00ac118c735de6590654f4994ee19a0eab335656e688ba439b4c523dac`。

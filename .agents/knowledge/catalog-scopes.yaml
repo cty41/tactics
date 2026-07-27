@@ -160,6 +160,8 @@ scopes:
       - .agents/docs/skill-graph-system.md
       - .agents/skills/skill-graph-creation
       - Assets/Tactics/Scripts/Common/Skills/Graph
+      - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs
+      - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs.meta
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityConfig.cs
       - Assets/Tactics/Scripts/Editor/SkillGraphEditor
@@ -169,6 +171,8 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
       - Assets/Tactics/Tests/PlayMode/SkillGraphValidationTests.cs
       - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
+      - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs
+      - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs.meta
 
   gameplay-test-framework:
     concept: systems/gameplay-test-framework.md

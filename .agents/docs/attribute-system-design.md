@@ -35,7 +35,8 @@ Initiative = Speed * 2
 
 ```text
 战斗初始化 Mana = Charisma
-每回合法力恢复 = max(0, floor(Intelligence / 2))
+单位自身回合结束时法力恢复 = max(0, Intelligence)，上限 MaxMana
+回合开始不恢复法力
 战后生命恢复 = Constitution * 2，上限 MaxHealth
 战后法力恢复 = Charisma，上限 MaxMana
 ```

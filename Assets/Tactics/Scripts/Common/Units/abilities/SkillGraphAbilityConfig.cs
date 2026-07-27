@@ -32,10 +32,12 @@ namespace Tactics.Common.Units.Abilities
         public static SkillGraphAbilityConfig CreateRuntime(
             string displayName,
             SkillGraphAsset graph,
-            int targetRange = 1)
+            int targetRange = 1,
+            int maxUsesPerTurn = 0,
+            bool isBasicAbility = false)
         {
             var config = CreateInstance<SkillGraphAbilityConfig>();
-            config.InitializeRuntime(displayName, false);
+            config.InitializeRuntime(displayName, isBasicAbility, maxUsesPerTurn);
             config._skillGraph = graph;
             config._targetRange = Mathf.Max(0, targetRange);
             return config;
