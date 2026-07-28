@@ -220,10 +220,12 @@ namespace Tactics.UI
                 return;
             }
 
-            int runSeed = RoguelikeMapGenerator.CreateRunSeed();
+            var pending = PureRunPendingSetup.Consume();
+            int runSeed = pending?.RunSeed ?? RoguelikeMapGenerator.CreateRunSeed();
             _currentMap = RoguelikeMapGenerator.GetPureRunMap(mapConfig, runSeed);
             _nodeStateManager = CreateNodeStateManager(_currentMap);
-            PureRunSessionStore.StartNew(PlayerAdventureStateStore.CreatePureRunState(runSeed), _currentMap);
+            var state = pending ?? PlayerAdventureStateStore.CreatePureRunState(runSeed);
+            PureRunSessionStore.StartNew(state, _currentMap);
         }
 
         private void SaveMap()
