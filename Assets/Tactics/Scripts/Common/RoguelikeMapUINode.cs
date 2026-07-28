@@ -65,13 +65,18 @@ namespace Tactics.RoguelikeMap
 
             _debugLabel = new Label();
             _debugLabel.name = "DebugLabel";
+            // 完全脱离图标区域：底边贴节点顶，向上排；水平以节点中心居中
             _debugLabel.style.position = UnityEngine.UIElements.Position.Absolute;
-            _debugLabel.style.top = -20f;
-            _debugLabel.style.left = 0f;
-                        _debugLabel.style.fontSize = 16;
+            _debugLabel.style.bottom = 64f;
+            _debugLabel.style.left = Length.Percent(50);
+            _debugLabel.style.translate = new Translate(Length.Percent(-50), 0);
+            _debugLabel.style.width = 160f;
+            _debugLabel.style.fontSize = 13;
+            _debugLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _debugLabel.style.color = Color.white;
             _debugLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-                        _debugLabel.style.width = 120f;
+            _debugLabel.style.unityTextOutlineWidth = 1f;
+            _debugLabel.style.unityTextOutlineColor = Color.black;
             _debugLabel.style.whiteSpace = WhiteSpace.NoWrap;
             _debugLabel.style.overflow = Overflow.Visible;
             _debugLabel.pickingMode = PickingMode.Ignore;
@@ -125,14 +130,17 @@ namespace Tactics.RoguelikeMap
         private void UpdateDebugLabel()
         {
             if (_debugLabel == null) return;
-            _debugLabel.text = $"#{Node.nodeId}\n{Node.nodeType}\nV:{Node.Visibility}\nR:{Node.IsReachable}";
+            string shortId = Node.nodeId != null && Node.nodeId.Length > 6
+                ? Node.nodeId.Substring(0, 6)
+                : Node.nodeId;
+            _debugLabel.text = $"#{shortId} {Node.nodeType}\nV:{Node.Visibility} R:{Node.IsReachable}";
             _debugLabel.style.color = Node.IsReachable
-                ? new Color(0.3f, 1f, 0.3f)
+                ? new Color(0.45f, 1f, 0.45f)
                 : Node.VisitState == NodeVisitState.Visited
-                    ? new Color(0.5f, 0.5f, 0.5f)
+                    ? new Color(0.75f, 0.75f, 0.75f)
                     : Node.Visibility == NodeVisibility.Revealed
-                        ? new Color(0.6f, 0.6f, 0.3f)
-                        : new Color(0.8f, 0.3f, 0.3f); // Hidden/Fogged = red
+                        ? new Color(1f, 0.9f, 0.4f)
+                        : new Color(1f, 0.45f, 0.45f);
         }
 
         [Obsolete("Use ApplyVisualState() which reads Node.Visibility, Node.VisitState, Node.IsReachable directly.")]
