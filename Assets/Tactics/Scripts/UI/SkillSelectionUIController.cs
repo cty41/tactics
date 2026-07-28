@@ -147,6 +147,16 @@ namespace Tactics.UI
         }
 
         /// <summary>
+        /// Sets the panel title/subtitle. Optional; omitting leaves UXML-authored text intact.
+        /// </summary>
+        public void SetHeader(string title, string subtitle)
+        {
+            EnsureUIElements();
+            if (_titleLabel != null && title != null) _titleLabel.text = title;
+            if (_subtitleLabel != null && subtitle != null) _subtitleLabel.text = subtitle;
+        }
+
+        /// <summary>
         /// 设置 3 个可选的技能定义，刷新 UI。
         /// </summary>
         public void SetSkillOptions(List<SkillDefinition> skills)
