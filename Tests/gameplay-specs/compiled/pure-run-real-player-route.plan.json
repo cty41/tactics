@@ -52,6 +52,123 @@
     },
     {
       "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "SkillOption_0",
+        "minimumFrames": 3,
+        "maxFrames": 60
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "ConfirmButton",
+        "minimumFrames": 2,
+        "maxFrames": 30
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "ConfirmButton"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "SkillOption_0",
+        "minimumFrames": 3,
+        "maxFrames": 60
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "ConfirmButton",
+        "minimumFrames": 2,
+        "maxFrames": 30
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "ConfirmButton"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "SkillOption_0",
+        "minimumFrames": 3,
+        "maxFrames": 60
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "ConfirmButton",
+        "minimumFrames": 2,
+        "maxFrames": 30
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "ConfirmButton"
+      }
+    },
+    {
+      "adapter": "UI",
       "kind": "waitForMapReady",
       "parameters": {}
     },

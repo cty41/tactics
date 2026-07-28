@@ -26,6 +26,53 @@ actions:
   - kind: clickElement
     adapter: UI
     parameters: { elementName: NewGameButton }
+  # 开局初始技能自选：依次为 Mage / Necromancer / Amazon 选第 1 个三系技能并确认
+  # 每次连点两下 SkillOption_0（选择幂等，吸收 UI 重建时的首击丢失）
+  - kind: waitForElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0, minimumFrames: 3, maxFrames: 60 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0 }
+  - kind: waitForElement
+    adapter: UI
+    parameters: { elementName: ConfirmButton, minimumFrames: 2, maxFrames: 30 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: ConfirmButton }
+  - kind: waitForElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0, minimumFrames: 3, maxFrames: 60 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0 }
+  - kind: waitForElement
+    adapter: UI
+    parameters: { elementName: ConfirmButton, minimumFrames: 2, maxFrames: 30 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: ConfirmButton }
+  - kind: waitForElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0, minimumFrames: 3, maxFrames: 60 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: SkillOption_0 }
+  - kind: waitForElement
+    adapter: UI
+    parameters: { elementName: ConfirmButton, minimumFrames: 2, maxFrames: 30 }
+  - kind: clickElement
+    adapter: UI
+    parameters: { elementName: ConfirmButton }
   - kind: waitForMapReady
     adapter: UI
     parameters: {}
