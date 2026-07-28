@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-26T21:29:28+08:00"
+timestamp: "2026-07-28T00:46:35+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -21,13 +21,18 @@ repo_paths:
   - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
   - Assets/Tactics/Scripts/UI/InventoryUIController.cs
   - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
+  - Assets/Tactics/Scripts/UI/HomeUIController.cs
+  - Assets/Tactics/Scenes/Home.unity
   - Assets/Tactics/Arts/UI/Inventory.uxml
   - Assets/Tactics/Arts/UI/Inventory.uss
   - Assets/Tactics/Scripts/Editor/RoguelikeEventEditor
   - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
   - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
+  - Assets/Tactics/Tests/Editor/HomeSceneCompositionEditorTests.cs
+  - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
+  - Tests/gameplay-specs/ui/home-options-player-input-smoke.gameplay-test.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:c5b464ba43f093f7b028b92c2549ea172445b830088e21ee32e81d14babf21d3
+source_fingerprint: sha256:a75c15825a5b87fd5a7963a55f6a4b3f6d7bcc66fe5c9895de8843940577f5bc
 ---
 
 # Current State
@@ -35,6 +40,8 @@ source_fingerprint: sha256:c5b464ba43f093f7b028b92c2549ea172445b830088e21ee32e81
 Pure Run v1 由 `RoguelikeMapGenerator.GetPureRunMap` 生成 7 层只前进地图，单局实际战斗数为 5、6 或 7；第 4、6 层均在战斗、休息、商店和随机事件之间四选一。节点沿 outgoing 揭示，已访问节点不会重新可选。地图布局版本为 2。
 
 Demo 使用单一全局 Run，不经过三存档槽。`PureRunSessionStore` 将版本 5 冒险状态与地图作为配对数据保存；Home 提供 New Run 和 Continue Run。普通战斗胜利结算后回到地图，失败或 Boss 胜利显示 RunEndSummary 并清理本局状态。
+
+Home 磁盘场景已精简为 `AudioListener`、`Bootstrap`、`EventSystem`、`Main Camera` 四个无子节点静态 root，不包含 Grid、Tilemap、UnitManager 或战斗单位；Home UI 仍由生产 `GameAssetManager`、`HomeFlowCoordinator` 和 `UIManager` 在运行时创建。Editor 结构测试始终通过 `OpenPreviewScene` 验证磁盘资产的精确 roots、组件白名单和禁用玩法组件。独立 PlayMode source spec 经 compiler 生成 plan，以虚拟 Mouse 通过生产 `PlayerInput` 点击 `OptionsButton`，断言 `OptionsRoot` 存在且可见，并覆盖测试设备释放；该 smoke 与较长旅程夹具隔离。
 
 新建 Pure Run 角色的主属性为 6（法师智力、死灵法师魅力、亚马逊敏捷），其余属性为 5；既有存档不重写。升级时先强制完成属性点分配，再依据更新后的属性计算并展示技能候选；技能选择界面同时列出已学技能及每级实际 MP 消耗。地图每次回显后只根据当前进度节点执行一次 ScrollView 居中，之后仍由玩家自由拖拽浏览。
 
@@ -76,7 +83,7 @@ Inventory、LevelUp、BattleSettlement 与 RunEndSummary 在每次显示时重�
 
 # Verification Guidance
 
-实现判断核对地图生成、运行状态、节点事务、结算代码、配置资产和测试。Mystery/Rest/Store 的自动化验证必须覆盖 Resolved 状态重载、奖励幂等和最终提交；最终玩家流人工验收使用可复现操作与状态结果，不使用截图证明功能。
+实现判断核对地图生成、运行状态、节点事务、结算代码、配置资产和测试。Home 磁盘结构通过 `HomeSceneCompositionEditorTests` 的 preview-scene 契约验证；Home Options 生产输入链通过 `HomeSceneInputSmokeTests` 及 `home-options-player-input-smoke.gameplay-test.md` 编译生成的 plan 独立验证。Mystery/Rest/Store 的自动化验证必须覆盖 Resolved 状态重载、奖励幂等和最终提交；最终玩家流人工验收使用可复现操作与状态结果，不使用截图证明功能。
 
 # Citations
 
