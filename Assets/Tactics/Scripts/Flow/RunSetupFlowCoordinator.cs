@@ -25,23 +25,39 @@ namespace Tactics.Flow
         private static readonly RunSetupFlowCoordinator _instance = new RunSetupFlowCoordinator();
         public static RunSetupFlowCoordinator Instance => _instance;
 
+        private bool _isRunning;
+
         private RunSetupFlowCoordinator() { }
 
         public async Task StartNewRunAsync()
         {
-            PureRunSessionStore.Clear();
-            PureRunPendingSetup.Clear();
+            if (_isRunning)
+            {
+                TLog.Warning("[RunSetupFlowCoordinator] StartNewRunAsync already in progress; ignoring re-entrant call.");
+                return;
+            }
 
-            int runSeed = RoguelikeMapGenerator.CreateRunSeed();
-            var state = PlayerAdventureStateStore.CreatePureRunState(runSeed);
+            _isRunning = true;
+            try
+            {
+                PureRunSessionStore.Clear();
+                PureRunPendingSetup.Clear();
 
-            bool customized = await RunSkillSelectionAsync(state);
-            if (!customized)
-                TLog.Warning("[RunSetupFlowCoordinator] Skill selection UI unavailable; using random starting skills.");
+                int runSeed = RoguelikeMapGenerator.CreateRunSeed();
+                var state = PlayerAdventureStateStore.CreatePureRunState(runSeed);
 
-            PureRunPendingSetup.SetPending(state);
-            UIManager.Instance.Hide(UIManager.UIId.Home);
-            await RoguelikeFlowCoordinator.Instance.OpenMapAsync();
+                bool customized = await RunSkillSelectionAsync(state);
+                if (!customized)
+                    TLog.Warning("[RunSetupFlowCoordinator] Skill selection UI unavailable; using random starting skills.");
+
+                PureRunPendingSetup.SetPending(state);
+                UIManager.Instance.Hide(UIManager.UIId.Home);
+                await RoguelikeFlowCoordinator.Instance.OpenMapAsync();
+            }
+            finally
+            {
+                _isRunning = false;
+            }
         }
 
         private static async Task<bool> RunSkillSelectionAsync(PlayerAdventureState state)

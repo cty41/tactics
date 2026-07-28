@@ -214,13 +214,15 @@ namespace Tactics.UI
 
         private void GenerateNewMap()
         {
+            // Consume first so a stale pending setup can never leak past an early return.
+            var pending = PureRunPendingSetup.Consume();
+
             if (mapConfig == null)
             {
                 TLog.Warning("[RoguelikeMapUIController] mapConfig is null!");
                 return;
             }
 
-            var pending = PureRunPendingSetup.Consume();
             int runSeed = pending?.RunSeed ?? RoguelikeMapGenerator.CreateRunSeed();
             _currentMap = RoguelikeMapGenerator.GetPureRunMap(mapConfig, runSeed);
             _nodeStateManager = CreateNodeStateManager(_currentMap);
