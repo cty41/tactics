@@ -682,27 +682,16 @@ namespace Tactics.Roster
             var mapping = TestPrefabMappings.FirstOrDefault(entry => entry.RoleType == roleType);
             character.PrefabPath = mapping?.PrefabPath ?? fallbackPrefabPath;
 
-            string[] branchSkillIds = roleType switch
-            {
-                RoleType.Mage => new[] { "mage.fireball", "mage.ice_bolt", "mage.lightning" },
-                RoleType.Necromancer => new[]
-                {
-                    "necromancer.summon_skeleton",
-                    "necromancer.amplify_damage",
-                    "necromancer.bone_spear"
-                },
-                RoleType.Amazon => new[] { "amazon.thrust", "amazon.poison_spear", "amazon.combat_techniques" },
-                _ => System.Array.Empty<string>()
-            };
+            var branchSkillIds = PureRunAbilityCatalog.GetStartingBranchSkillIds(roleType);
 
-            if (branchSkillIds.Length == 0)
+            if (branchSkillIds.Count == 0)
                 return character;
 
             int branchSeed = Tactics.Roguelike.RoguelikeMapRuntimeState.DeriveSeed(
                 runSeed,
                 $"starting-branch-{roleType}",
                 partyIndex);
-            int branchIndex = (int)((uint)branchSeed % (uint)branchSkillIds.Length);
+            int branchIndex = (int)((uint)branchSeed % (uint)branchSkillIds.Count);
             character.StartingBranchSkillId = branchSkillIds[branchIndex];
 
             if (FirstSliceSkillCatalog.TryGet(character.StartingBranchSkillId, out var skill))
@@ -716,6 +705,45 @@ namespace Tactics.Roster
             }
 
             return character;
+        }
+
+        /// <summary>
+        /// Applies the player's chosen starting branch skill to a Pure Run character.
+        /// Swaps StartingBranchSkillId and the first formal learned-skill entry (Lv1).
+        /// Never touches attribute values. Returns false (no mutation) for skills that are
+        /// not formal, role-matching and prerequisite-free.
+        /// </summary>
+        public static bool ApplyStartingBranchSkill(CharacterDefinition character, string skillId)
+        {
+            if (character == null ||
+                !PureRunAbilityCatalog.TryGet(skillId, out var definition) ||
+                !definition.IsUpgradeVisible ||
+                definition.RoleType != character.RoleType ||
+                !string.IsNullOrEmpty(definition.Skill.PrerequisiteSkillId))
+            {
+                return false;
+            }
+
+            character.LearnedSkills ??= new List<CharacterDefinition.LearnedSkill>();
+            int formalIndex = character.LearnedSkills.FindIndex(learned =>
+                learned != null &&
+                PureRunAbilityCatalog.TryGet(learned.SkillId, out var learnedDef) &&
+                learnedDef.IsUpgradeVisible &&
+                learnedDef.RoleType == character.RoleType);
+
+            var entry = new CharacterDefinition.LearnedSkill
+            {
+                SkillId = definition.Id,
+                SkillType = definition.SkillType,
+                Level = 1
+            };
+            if (formalIndex >= 0)
+                character.LearnedSkills[formalIndex] = entry;
+            else
+                character.LearnedSkills.Add(entry);
+
+            character.StartingBranchSkillId = definition.Id;
+            return true;
         }
     }
 
