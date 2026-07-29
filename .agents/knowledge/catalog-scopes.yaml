@@ -33,6 +33,15 @@ scopes:
       - .agents/skills/plan-mode-plan-writer
       - .agents/skills/make-dev-plan
 
+  pure-run-artwork:
+    concept: operations/pure-run-artwork.md
+    paths:
+      - .agents/docs/pure-run-artwork-guidelines.md
+      - .agents/skills/pure-run-artwork-pipeline
+      - Tools/artworks/amazon
+      - Tools/artworks/doge
+      - Tools/artworks/pure_run
+
   unity-agent-workflow:
     concept: operations/unity-agent-workflow.md
     paths:

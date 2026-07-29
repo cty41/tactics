@@ -123,7 +123,24 @@ namespace Tactics.Editor.MCP
         {
             endpoint = null;
             error = null;
-            string configPath = Path.Combine(GetProjectRoot(), ".agents", "mcp.json");
+            string agentsPath = Path.Combine(GetProjectRoot(), ".agents");
+            string configPath = Path.Combine(agentsPath, "mcp.json");
+            if (!File.Exists(configPath))
+            {
+                string migrationBackupPath = Path.Combine(agentsPath, "mcp.local.json");
+                if (!File.Exists(migrationBackupPath))
+                {
+                    error = $"Could not find {configPath} or {migrationBackupPath}. Initialize this worktree with " +
+                            "Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1 " +
+                            "-Url http://127.0.0.1:<PORT>/mcp.";
+                    return false;
+                }
+
+                configPath = migrationBackupPath;
+                TLog.Warning(
+                    $"[UnityMCP] Using migration backup {migrationBackupPath}. " +
+                    "Run Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1 -RestoreMigration to restore mcp.json.");
+            }
 
             try
             {

@@ -98,6 +98,31 @@ namespace Tactics.Tests.Editor
             }
         }
 
+        [Test]
+        public void Test1_ContainsOneReusableBattleBackdropBehindTheMap()
+        {
+            BattleBackdropFitter[] backdrops = _scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<BattleBackdropFitter>(true))
+                .ToArray();
+
+            Assert.That(backdrops, Has.Length.EqualTo(1));
+
+            BattleBackdropFitter backdrop = backdrops[0];
+            MeshRenderer backdropRenderer = backdrop.GetComponent<MeshRenderer>();
+            TilemapRenderer mapRenderer = FindInScene("BackgroundLayer").GetComponent<TilemapRenderer>();
+
+            Assert.That(backdropRenderer, Is.Not.Null);
+            Assert.That(backdropRenderer.sharedMaterial, Is.Not.Null);
+            Assert.That(backdropRenderer.sharedMaterial.shader.name, Is.EqualTo("Tactics/Battle/BackdropGradient"));
+            Assert.That(mapRenderer.sharedMaterial, Is.Not.Null);
+            Assert.That(
+                backdropRenderer.sharedMaterial.renderQueue,
+                Is.LessThan(mapRenderer.sharedMaterial.renderQueue));
+            Assert.That(
+                PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(backdrop.gameObject),
+                Is.EqualTo("Assets/Tactics/Arts/Prefabs/BattleBackdrop.prefab"));
+        }
+
         private void AssertSquareBattlefield(Tilemap tilemap)
         {
             BoundsInt bounds = tilemap.cellBounds;
