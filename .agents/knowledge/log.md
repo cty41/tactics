@@ -1,5 +1,10 @@
 # Tactics Knowledge Update Log
 
+## 2026-07-29
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:103b047a1824679669dd50730b263941b6f5875456b11345704519632c1fc038`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e22b7a95d4cec`。
+* **Creation**: 新增 `pure-run-artwork` scope，沉淀角色美术尺寸、生成、去幕、Review、资产状态和提交边界。
+
 ## 2026-07-28
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:f094c7ad4afd293f4ad9475c73cd07d5a3a2545903900bbb52cb0747f54e93d1`。
 
