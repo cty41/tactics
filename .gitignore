@@ -79,3 +79,6 @@ Tests/gameplay-specs/compiled
 /.agents/mcp.local.json
 /.codex/config.toml
 /.opencode/opencode.json
+
+# Hermes agent session artifacts (plans, session-local files)
+/.hermes/

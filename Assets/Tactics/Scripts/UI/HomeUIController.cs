@@ -162,8 +162,7 @@ namespace Tactics.UI
         {
             try
             {
-                PureRunSessionStore.Clear();
-                await OpenRunMapAsync();
+                await Tactics.Flow.RunSetupFlowCoordinator.Instance.StartNewRunAsync();
             }
             catch (System.Exception e)
             {

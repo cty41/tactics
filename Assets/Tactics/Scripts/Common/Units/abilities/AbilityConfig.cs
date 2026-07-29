@@ -27,6 +27,10 @@ namespace Tactics.Common.Units.Abilities
         [BoxGroup("Costs")]
         [SerializeField] private float _cooldown;
 
+        [BoxGroup("Costs")]
+        [Tooltip("每回合最大成功使用次数。0 表示不限次数，1 等价于 cantrip 的每回合一次限制。")]
+        [SerializeField, Min(0)] private int _maxUsesPerTurn;
+
         [BoxGroup("Basic Info")]
         [Tooltip("If true, this ability can be used once per turn without consuming Mana. Examples: Move, MeleeAttack, RangedAttack.")]
         [SerializeField] private bool _isBasicAbility;
@@ -36,15 +40,17 @@ namespace Tactics.Common.Units.Abilities
         public string Description => _description;
         public int ManaCost => _manaCost;
         public float Cooldown => _cooldown;
+        public int MaxUsesPerTurn => _maxUsesPerTurn;
         public bool IsBasicAbility => _isBasicAbility;
 
         /// <summary>
         /// Sets basic config fields for runtime-created instances (e.g., default Move fallback).
         /// </summary>
-        protected void InitializeRuntime(string displayName, bool isBasicAbility)
+        protected void InitializeRuntime(string displayName, bool isBasicAbility, int maxUsesPerTurn = 0)
         {
             _displayName = displayName;
             _isBasicAbility = isBasicAbility;
+            _maxUsesPerTurn = Mathf.Max(0, maxUsesPerTurn);
         }
 
         /// <summary>

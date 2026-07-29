@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-07-25T20:03:40+08:00"
+timestamp: "2026-07-27T12:55:49+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -17,16 +17,21 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Skills/Graph/OrderedTargetSelectionState.cs
   - Assets/Tactics/Scripts/Editor/SkillGraphEditor/SkillGraphSpecCompiler.cs
   - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
+  - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
   - Assets/Tactics/Battle/Abilities/SkillGraphs
+  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/ChargeStrike_Lv1_Ability.asset
+  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/AreaBlast_Lv1_Ability.asset
+  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/HeavyShot_Graph_Ability.asset
   - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset
   - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset
   - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
+  - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs
   - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
   - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
   - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:42e98c00ac118c735de6590654f4994ee19a0eab335656e688ba439b4c523dac
+source_fingerprint: sha256:dd33f78e40c74d2171da787945125ea8a3f001f381ab4509b70b96c818261f98
 ---
 
 # Current State
@@ -38,6 +43,8 @@ Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent
 `SkillTargetingProtocol` 在图资产上统一表达主目标、任意格中心、方向扇形、有序多段目标、实体对象格、回收动作和无路径移动；`OrderedTargetSelectionState` 维护分段选择、重复拒绝、取消上一段与完成条件。玩家输入、AI 与 Gameplay Test 可消费同一协议，不各自推导一套阶段规则。
 
 结构化入口将该协议保存在 `SkillGraphSpec.Targeting`；Spec 编译、克隆和导出完整往返全部 targeting 字段，保证 MCP/JSON 重建后语义不丢失。
+
+`AbilityConfig.MaxUsesPerTurn` 为 SkillGraph 能力提供每回合成功使用上限：`0` 不限，正数按配置的稳定 `DisplayName` 在 Unit 上独立计数，并在 `PrepareForTurn` 重置；缺失稳定名称的限次能力 fail-closed。只有图以 `Completed` 结束才计次，失败或取消不计；AI 与 UI 复用同一 `CanPerform`/可用性结论，use policy、availability policy 与 basic ability 提交边界保持兼容，运行时次数不存入共享资产。`SkillAbilityUsesPerTurnTests` 覆盖稳定 key、回合重置、0/正数上限、Completed/失败边界及 policy/basic 兼容；相关运行时回归由 `SkillGraphRuntimeTests` 覆盖。
 
 节点集合现包含 `ApplyMana`、`RemoveHarmfulBuffs`、法师等级语义节点 `MageSkill`、死灵法师等级语义节点 `NecromancerSkill` 与亚马逊等级语义节点 `AmazonSkill`，`SelectAlly` 可显式允许自身成为合法友军目标。伤害节点分别保存伤害大类和元素；`ApplyBuff.RequiresSuccessfulHit` 只在明确的命中附带状态上读取前一伤害节点结果，独立 Buff 不受历史命中结果污染。`SummonUnit` 可声明召唤物是否接受普通治疗，并通过 `SummonRegistry` 按召唤者、类别、上限和创建顺序管理最早替换；骷髅与骷髅法师关闭普通治疗，火魔保持开启。召唤执行先验证尸体、生成格和替换集合，再以事务顺序提交尸体、法力和旧召唤；选择尸体节点保留玩家实际点击目标而不再扫描并消耗所有尸体。运行时能力可注入使用策略与可用性策略：策略负责额外合法性、稳定禁用原因、动态显示名和成功完成后的资源提交；图失败时不会扣除资源，临时朝向也会恢复。Pure Run 消耗品使用该边界实现明确友军目标、每名角色每轮一次，并在图完成后提交对应独立实例。
 

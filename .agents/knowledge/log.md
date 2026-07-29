@@ -4,11 +4,17 @@
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:103b047a1824679669dd50730b263941b6f5875456b11345704519632c1fc038`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e22b7a95d4cec`。
 * **Creation**: 新增 `pure-run-artwork` scope，沉淀角色美术尺寸、生成、去幕、Review、资产状态和提交边界。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:3246c857bc4055e840180cf5e1d52aab73c142bb636d61060e6da8ccf9542`。
 
 ## 2026-07-28
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:f094c7ad4afd293f4ad9475c73cd07d5a3a2545903900bbb52cb0747f54e93d1`。
-
-## 2026-07-27
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:a75c15825a5b87fd5a7963a55f6a4b3f6d7bcc66fe5c9895de8843940577f5bc`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:f30f1cf05214a2c1c56c8bdfa8e5f229541093fcf3026f38a38e3546cae81a0c`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:1f4f15f36833e48bdb6de2116f69b3c4f262e88b3527c39f3072fba9db969412`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:27b7fdd07a1478edb0a38d15493f0286419bb5c581fbd78804297a9ae6266b87`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:dd33f78e40c74d2171da787945125ea8a3f001f381ab4509b70b96c818261f98`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:dc40a65a2b1a2a545f3f28b252b65ddf48b2bf3e28e85072499365875ae4ff25`。
+* **Update**: 同步 `MaxUsesPerTurn` cantrip 的权威设计、Unit 回合计数、怪物 AI 统一可用性与正式技能数值。
 * **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:feea3f5c79eed1429db582bf4f26c0a988afa724f8858af325e20548c47bfd26`。
 
 ## 2026-07-26

@@ -17,6 +17,12 @@ SkillGraph 是战斗技能的统一行为表达。它把技能行为从单体 C#
 
 结构化创作时，目标协议写入 `SkillGraphSpec.Targeting`。`SkillGraphSpecCompiler` 的编译、克隆和导出必须完整往返协议字段；若只保存在运行时资产而没有进入 Spec，MCP/JSON 重建会丢失多段选择和格子目标语义。
 
+## 每回合限次（cantrip）
+
+`AbilityConfig.MaxUsesPerTurn` 配置每回合成功使用上限：`0` 表示不限次数，正数表示该能力每回合最多成功完成的次数。计数属于 Unit 的回合运行时状态，以配置自身稳定的 `DisplayName` 为 key，并在 `PrepareForTurn` 清空；限次能力缺失稳定名称时禁用，而不是退化为不限次。
+
+只有 SkillGraph 返回 `Completed` 才计次，失败或取消不消耗次数。AI 候选与战斗 UI 都复用能力的 `CanPerform`/统一可用性结果，因此达到上限后自然停止提供该能力。该限制与 use policy、availability policy 和 basic ability 边界兼容；basic ability 仍遵循自身的一次使用语义，完成提交不能重复计数。AbilityConfig/SkillGraph 资产可以被多个单位共享，但不得在资产上保存运行时计数，各单位的次数必须彼此独立。
+
 ## 创作入口
 
 ### Unity 图编辑器

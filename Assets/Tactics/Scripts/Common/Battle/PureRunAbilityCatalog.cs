@@ -128,6 +128,26 @@ namespace Tactics.Common.Battle
         }
 
         /// <summary>
+        /// The three starting-branch skills offered per Pure Run role at run setup.
+        /// All entries are formal (upgrade-visible), role-matching and prerequisite-free.
+        /// </summary>
+        public static IReadOnlyList<string> GetStartingBranchSkillIds(RoleType roleType)
+        {
+            return roleType switch
+            {
+                RoleType.Mage => new[] { "mage.fireball", "mage.ice_bolt", "mage.lightning" },
+                RoleType.Necromancer => new[]
+                {
+                    "necromancer.summon_skeleton",
+                    "necromancer.amplify_damage",
+                    "necromancer.bone_spear"
+                },
+                RoleType.Amazon => new[] { "amazon.thrust", "amazon.poison_spear", "amazon.combat_techniques" },
+                _ => Array.Empty<string>()
+            };
+        }
+
+        /// <summary>
         /// Resolves the exact level when present. Missing levels fall back only to a lower published level.
         /// Callers must report the mismatch; this fallback is a save-safety guard, not release validation.
         /// </summary>

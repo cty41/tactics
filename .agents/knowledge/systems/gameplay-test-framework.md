@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-26T21:29:11+08:00"
+timestamp: "2026-07-28T00:46:37+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -13,9 +13,10 @@ repo_paths:
   - Tools/gameplay-test-spec
   - Assets/Tactics/Scripts/Common/Testing/Gameplay
   - Assets/Tactics/Tests/PlayMode/PlayerInputGameplayPlanTests.cs
+  - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:b28b51a81457cc21f4269b053dfc1c97ac00db461265c2dc4ddacf353d9e3bfa
+source_fingerprint: sha256:f30f1cf05214a2c1c56c8bdfa8e5f229541093fcf3026f38a38e3546cae81a0c
 ---
 
 # Current State
@@ -44,7 +45,7 @@ Map adapter 还支持 `encounterRecipeContract`、怪物 AI 目录/Heavy Shot �
 
 `Tests/gameplay-specs/ui/` 的 Slice 6 场景覆盖混合升级确认、背包只读技能详情、战斗两行布局、可点击禁用原因及连续刺击多段撤销/取消。`pure-run-ui-lifecycle-reentry` 在单个测试内保留同一 Inventory 缓存实例，连续执行三次关闭/重开并验证隐藏期间新增物品、角色信息和操作回调；测试组级清理仍隔离不同用例的旧战斗控制器。
 
-`PlayerInput` adapter 使用由 runtime context 拥有的虚拟 Mouse/Keyboard，通过 Input System 和生产 UI 输入模块驱动状态变化。UI 目标按稳定元素名解析，坐标由 `worldBound`、Panel scale 与屏幕 Y 轴转换得到，并在发送事件前用 Panel picking 验证；世界目标由正式 Camera 转为屏幕坐标。战斗策略只选择固定 Camera 内可点击的合法攻击目标和移动格，不会为测试修改生产 Camera。移动、按下和释放各跨真实 PlayerLoop 帧，地图超出视口的节点通过真实指针拖动滚入可见范围。`player-input-e2e` 标签禁止 setup 写入捷径和 UI/Map/Battle/Skill runtime action，只允许这些 adapter 做只读断言。`inventory-reentry-player-input` 从 Home 实际点击创建 Run，并连续三次通过地图按钮打开 Inventory，证明缓存重入、筛选、关闭和地图恢复交互都经过生产输入链。虚拟设备和临时输入模块在成功、action 失败与 Runner 超时后均由 context 释放；已有生产输入模块不会在清理时被卸载。
+`PlayerInput` adapter 使用由 runtime context 拥有的虚拟 Mouse/Keyboard，通过 Input System 和生产 UI 输入模块驱动状态变化。UI 目标按稳定元素名解析，坐标由 `worldBound`、Panel scale 与屏幕 Y 轴转换得到，并在发送事件前用 Panel picking 验证；世界目标由正式 Camera 转为屏幕坐标。战斗策略只选择固定 Camera 内可点击的合法攻击目标和移动格，不会为测试修改生产 Camera。移动、按下和释放各跨真实 PlayerLoop 帧，地图超出视口的节点通过真实指针拖动滚入可见范围。`player-input-e2e` 标签禁止 setup 写入捷径和 UI/Map/Battle/Skill runtime action，只允许这些 adapter 做只读断言。`inventory-reentry-player-input` 从 Home 实际点击创建 Run，并连续三次通过地图按钮打开 Inventory，证明缓存重入、筛选、关闭和地图恢复交互都经过生产输入链。Home Options smoke 使用独立 fixture，真实加载 Home 并等待 UI ready，再以虚拟 Mouse 通过生产 `PlayerInput` 点击 Options、断言 `OptionsRoot` 存在且可见，从而隔离长旅程残留；其 `.gameplay-test.md` source spec 是维护对象，plan 由 compiler 生成。虚拟设备和临时输入模块在成功、action 失败与 Runner 超时后均由 context 释放；已有生产输入模块不会在清理时被卸载。
 
 真实输入层新增 `battle-player-input-smoke` 与 `pure-run-player-input-route`：前者覆盖正式单位选择、移动、右键取消、技能卡和目标输入；后者从 Home 开始完成三场自然战斗、三次显式升级、Inventory、Store 和多次战斗场景重入。战斗策略可只读查询当前回合、合法技能和目标，但所有位置、资源、生命、节点和成长变化必须由鼠标或键盘输入产生，最多执行 100 个单位行动。原 `pure-run-real-player-route` 已重标为 `journey-integration`，继续快速覆盖五场胜利、Boss、RunSummary、失败和事件团灭，不再宣称覆盖真实玩家输入。
 
@@ -61,7 +62,7 @@ Battle/Map/UI PlayMode 夹具在激活对象前完成序列化依赖注入，避
 
 # Verification Guidance
 
-修改 Spec 工具、adapter 或 fixtures 后运行工具测试、validate/compile 和对应 Unity PlayMode 测试。真实玩家输入场景必须带 `player-input-e2e` 标签，状态变化只能来自 `PlayerInput` action；Map、Battle、Skill、UI adapter 仅可用于只读 assertion。需要证明实际行为时必须加载真实资产，不能用手写结果或日志文本替代。
+修改 Spec 工具、adapter 或 fixtures 后运行工具测试、validate/compile 和对应 Unity PlayMode 测试。Home Options smoke 需从 `home-options-player-input-smoke.gameplay-test.md` 编译 plan，并独立运行 `HomeSceneInputSmokeTests` fixture。真实玩家输入场景必须带 `player-input-e2e` 标签，状态变化只能来自 `PlayerInput` action；Map、Battle、Skill、UI adapter 仅可用于只读 assertion。需要证明实际行为时必须加载真实资产，不能用手写结果或日志文本替代。
 
 # Citations
 

@@ -6,6 +6,7 @@ using DG.Tweening;
 using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
 using Tactics.Flow.Roguelike;
+using Tactics.Flow.Home;
 using Tactics.Roguelike;
 using Tactics.Flow.Battle;
 using Tactics.RoguelikeMap;
@@ -106,6 +107,7 @@ namespace Tactics.UI
             TLog.Info($"[RoguelikeMapUIController] OnShown called. gameObject.active={gameObject.activeSelf}");
             ResetMapReadyState();
             WireOptionalCloseButtons();
+            WireMenuButton();
             WireInventoryButton();
 
             LoadOrGenerateMap();
@@ -214,16 +216,20 @@ namespace Tactics.UI
 
         private void GenerateNewMap()
         {
+            // Consume first so a stale pending setup can never leak past an early return.
+            var pending = PureRunPendingSetup.Consume();
+
             if (mapConfig == null)
             {
                 TLog.Warning("[RoguelikeMapUIController] mapConfig is null!");
                 return;
             }
 
-            int runSeed = RoguelikeMapGenerator.CreateRunSeed();
+            int runSeed = pending?.RunSeed ?? RoguelikeMapGenerator.CreateRunSeed();
             _currentMap = RoguelikeMapGenerator.GetPureRunMap(mapConfig, runSeed);
             _nodeStateManager = CreateNodeStateManager(_currentMap);
-            PureRunSessionStore.StartNew(PlayerAdventureStateStore.CreatePureRunState(runSeed), _currentMap);
+            var state = pending ?? PlayerAdventureStateStore.CreatePureRunState(runSeed);
+            PureRunSessionStore.StartNew(state, _currentMap);
         }
 
         private void SaveMap()
@@ -267,7 +273,8 @@ namespace Tactics.UI
             }
 
             _scrollView.contentViewport.pickingMode = PickingMode.Position;
-            _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            _scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            _scrollView.verticalScrollerVisibility = ScrollerVisibility.Hidden;
 
             _scrollView.RegisterCallback<PointerDownEvent>(OnScrollViewPointerDown, TrickleDown.TrickleDown);
             _scrollView.RegisterCallback<PointerMoveEvent>(OnScrollViewPointerMove, TrickleDown.TrickleDown);
@@ -999,6 +1006,30 @@ private void EnterNode(RoguelikeMapUINode mapNode)
             }
 
             TLog.Info("[RoguelikeMapUIController] No close/back button found in UXML.");
+        }
+
+        private void WireMenuButton()
+        {
+            var root = Ui.GetRootElement(UIManager.UIId.RoguelikeMap);
+            if (root == null) return;
+
+            Button menuButton = root.Q<Button>("SettingsButton");
+            if (menuButton != null)
+            {
+                menuButton.clicked -= OnMenuClicked;
+                menuButton.clicked += OnMenuClicked;
+                TLog.Info("[RoguelikeMapUIController] SettingsButton (MENU) wired.");
+            }
+            else
+            {
+                TLog.Warning("[RoguelikeMapUIController] SettingsButton not found in UXML.");
+            }
+        }
+
+        private static void OnMenuClicked()
+        {
+            // Same path as Esc key: UIManager.OnToggleMenuPerformed -> ToggleMenuAsync
+            _ = HomeFlowCoordinator.Instance.ToggleMenuAsync();
         }
 
         private void WireInventoryButton()

@@ -144,6 +144,7 @@ scopes:
       - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
       - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
       - Assets/Tactics/Scripts/UI/HomeUIController.cs
+      - Assets/Tactics/Scenes/Home.unity
       - Assets/Tactics/Scripts/UI/InventoryUIController.cs
       - Assets/Tactics/Arts/UI/Home.uxml
       - Assets/Tactics/Arts/UI/Home.uss
@@ -161,7 +162,12 @@ scopes:
       - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
       - Assets/Tactics/Tests/Editor/CharacterLoadoutServiceTests.cs
       - Assets/Tactics/Tests/Editor/ConsumableAcquisitionTests.cs
+      - Assets/Tactics/Tests/Editor/HomeSceneCompositionEditorTests.cs
+      - Assets/Tactics/Tests/Editor/HomeSceneCompositionEditorTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/ConsumableUiInteractionTests.cs
+      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
+      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs.meta
+      - Tests/gameplay-specs/ui/home-options-player-input-smoke.gameplay-test.md
 
   skill-graph:
     concept: systems/skill-graph.md
@@ -169,6 +175,8 @@ scopes:
       - .agents/docs/skill-graph-system.md
       - .agents/skills/skill-graph-creation
       - Assets/Tactics/Scripts/Common/Skills/Graph
+      - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs
+      - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs.meta
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityConfig.cs
       - Assets/Tactics/Scripts/Editor/SkillGraphEditor
@@ -178,6 +186,8 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
       - Assets/Tactics/Tests/PlayMode/SkillGraphValidationTests.cs
       - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
+      - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs
+      - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs.meta
 
   gameplay-test-framework:
     concept: systems/gameplay-test-framework.md
@@ -188,5 +198,7 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeMapPlanTests.cs
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeUiPlanTests.cs
       - Assets/Tactics/Tests/PlayMode/PlayerInputGameplayPlanTests.cs
+      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
+      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs.meta
       - Tools/gameplay-test-spec
       - Tests/gameplay-specs

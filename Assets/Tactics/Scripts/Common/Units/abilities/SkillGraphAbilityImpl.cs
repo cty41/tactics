@@ -219,6 +219,8 @@ namespace Tactics.Common.Units.Abilities
         {
             if (_config?.SkillGraph == null)
                 return AbilityAvailability.Disabled("技能配置缺失");
+            if (_config.MaxUsesPerTurn > 0 && string.IsNullOrWhiteSpace(_config.DisplayName))
+                return AbilityAvailability.Disabled("技能标识缺失");
             if (_usePolicy is ISkillGraphAvailabilityPolicy availabilityPolicy)
             {
                 var availability = availabilityPolicy.GetAvailability(gridController);
@@ -234,6 +236,9 @@ namespace Tactics.Common.Units.Abilities
                 return amazonAvailability;
             if (_config.IsBasicAbility && _owner.HasUsedBasicAbilityThisTurn(_config.DisplayName))
                 return AbilityAvailability.Disabled("本回合已使用");
+            if (_config.MaxUsesPerTurn > 0 &&
+                _owner.GetAbilityUseCountThisTurn(_config.DisplayName) >= _config.MaxUsesPerTurn)
+                return AbilityAvailability.Disabled("本回合使用次数已用完");
             if (!_config.IsBasicAbility && _owner.Mana < _config.ManaCost)
                 return AbilityAvailability.Disabled($"需要 {_config.ManaCost} 点魔法");
             if (FirstSelectionRequiresCorpse() && !(gridController?.CellManager?.GetCells() ?? Enumerable.Empty<ICell>())
@@ -510,50 +515,59 @@ namespace Tactics.Common.Units.Abilities
                     _owner.Facing = originalFacing;
             }
 
-            if (executionState == SkillGraphExecutionState.Completed)
+            try
             {
-                TLog.Info($"[SkillGraphAbility] '{DisplayName}' completed successfully.");
-            }
-            else
-            {
-                TLog.Warning($"[SkillGraphAbility] '{DisplayName}' ended with state: {executionState}. Error: {context.LastError}");
-            }
-
-            if (executionState == SkillGraphExecutionState.Completed)
-            {
-                if (_usePolicy != null)
-                    _usePolicy.CommitCompletedUse(context);
-                else if (_config.IsBasicAbility)
-                    _owner.MarkBasicAbilityUsed(_config.DisplayName);
-                else
-                    _owner.Mana -= _config.ManaCost;
-
-                if (allowCombatTechniqueFollowUp && IsAmazonSpearBasicAttack() &&
-                    context.GetBlackboard("LastDamageHit", false) && context.PrimaryTarget != null &&
-                    !context.PrimaryTarget.IsDowned && context.PrimaryTarget.Health > 0f &&
-                    CombatComponent.RollCombatTechniqueFollowUp(_owner))
+                if (executionState == SkillGraphExecutionState.Completed)
                 {
-                    context.RecordEvent("CombatTechniqueFollowUp", "combat-techniques", context.PrimaryTarget);
-                    var followUp = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController)
-                    {
-                        PrimaryTarget = context.PrimaryTarget,
-                        TargetPoint = context.PrimaryTarget.CurrentCell
-                    };
-                    await runner.Execute(followUp);
+                    TLog.Info($"[SkillGraphAbility] '{DisplayName}' completed successfully.");
                 }
+                else
+                {
+                    TLog.Warning($"[SkillGraphAbility] '{DisplayName}' ended with state: {executionState}. Error: {context.LastError}");
+                }
+
+                if (executionState == SkillGraphExecutionState.Completed)
+                {
+                    if (_config.IsBasicAbility)
+                        _owner.MarkBasicAbilityUsed(_config.DisplayName);
+                    else if (_config.MaxUsesPerTurn > 0)
+                        _owner.MarkAbilityUsedThisTurn(_config.DisplayName);
+
+                    if (_usePolicy != null)
+                        _usePolicy.CommitCompletedUse(context);
+                    else if (!_config.IsBasicAbility)
+                        _owner.Mana -= _config.ManaCost;
+
+                    if (allowCombatTechniqueFollowUp && IsAmazonSpearBasicAttack() &&
+                        context.GetBlackboard("LastDamageHit", false) && context.PrimaryTarget != null &&
+                        !context.PrimaryTarget.IsDowned && context.PrimaryTarget.Health > 0f &&
+                        CombatComponent.RollCombatTechniqueFollowUp(_owner))
+                    {
+                        context.RecordEvent("CombatTechniqueFollowUp", "combat-techniques", context.PrimaryTarget);
+                        var followUp = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController)
+                        {
+                            PrimaryTarget = context.PrimaryTarget,
+                            TargetPoint = context.PrimaryTarget.CurrentCell
+                        };
+                        await runner.Execute(followUp);
+                    }
+                }
+
+                testResult.ExecutionState = executionState;
+                testResult.LastError = context.LastError;
+                testResult.StepCount = context.StepCount;
+                testResult.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
+                testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
+                testResult.ExecutionEvents.AddRange(context.ExecutionEvents);
+                testResult.StageResults.AddRange(context.StageResults);
+                return testResult;
             }
-
-            gridController.GridState = new GridStateAwaitInput();
-            _orderedSelection = null;
-
-            testResult.ExecutionState = executionState;
-            testResult.LastError = context.LastError;
-            testResult.StepCount = context.StepCount;
-            testResult.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
-            testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
-            testResult.ExecutionEvents.AddRange(context.ExecutionEvents);
-            testResult.StageResults.AddRange(context.StageResults);
-            return testResult;
+            finally
+            {
+                if (gridController != null)
+                    gridController.GridState = new GridStateAwaitInput();
+                _orderedSelection = null;
+            }
         }
 
         private void LogSkillUse(IUnit target)

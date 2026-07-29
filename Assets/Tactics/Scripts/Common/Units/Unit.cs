@@ -139,6 +139,7 @@ namespace Tactics.Common.Units
         public bool UsesInjectedAbilityConfigs => _useInjectedAbilityConfigs;
 
         [SerializeField] private HashSet<string> _usedBasicAbilitiesThisTurn = new();
+        private Dictionary<string, int> _abilityUsesThisTurn = new(StringComparer.Ordinal);
 
         [SerializeField] private float _health = 10;
         public float Health { get { return _health; } set { _health = value; } }
@@ -318,6 +319,7 @@ namespace Tactics.Common.Units
             _highlightManager = new UnitHighlightManager(this, _highlightConfigs);
 
             _usedBasicAbilitiesThisTurn = new HashSet<string>();
+            _abilityUsesThisTurn = new Dictionary<string, int>(StringComparer.Ordinal);
             RecalculateDerivedStats();
             Health = MaxHealth;
             Mana = Charisma;
@@ -443,7 +445,8 @@ namespace Tactics.Common.Units
         public virtual void PrepareForTurn()
         {
             MovementPoints = MaxMovementPoints;
-            _usedBasicAbilitiesThisTurn.Clear();
+            (_usedBasicAbilitiesThisTurn ??= new HashSet<string>()).Clear();
+            (_abilityUsesThisTurn ??= new Dictionary<string, int>(StringComparer.Ordinal)).Clear();
         }
 
         public virtual void OnTurnEnd(IGridController gridController)
@@ -467,13 +470,39 @@ namespace Tactics.Common.Units
 
         public virtual bool HasUsedBasicAbilityThisTurn(string abilityName)
         {
-            return _usedBasicAbilitiesThisTurn.Contains(abilityName);
+            return !string.IsNullOrEmpty(abilityName) &&
+                   (_usedBasicAbilitiesThisTurn ??= new HashSet<string>()).Contains(abilityName);
         }
 
         public virtual void MarkBasicAbilityUsed(string abilityName)
         {
-            _usedBasicAbilitiesThisTurn.Add(abilityName);
+            if (string.IsNullOrEmpty(abilityName))
+                return;
+
+            if ((_usedBasicAbilitiesThisTurn ??= new HashSet<string>()).Add(abilityName))
+                MarkAbilityUsedThisTurn(abilityName);
+
             InvokeBasicAbilityUsed(abilityName);
+        }
+
+        public virtual int GetAbilityUseCountThisTurn(string abilityName)
+        {
+            if (string.IsNullOrEmpty(abilityName))
+                return 0;
+
+            return (_abilityUsesThisTurn ??= new Dictionary<string, int>(StringComparer.Ordinal))
+                .TryGetValue(abilityName, out int count)
+                    ? count
+                    : 0;
+        }
+
+        public virtual void MarkAbilityUsedThisTurn(string abilityName)
+        {
+            if (string.IsNullOrEmpty(abilityName))
+                return;
+
+            var uses = _abilityUsesThisTurn ??= new Dictionary<string, int>(StringComparer.Ordinal);
+            uses[abilityName] = uses.TryGetValue(abilityName, out int count) ? count + 1 : 1;
         }
 
         /// <summary>
