@@ -11,9 +11,9 @@ namespace Tactics.Editor
 {
     public static class PartyBootstrapSetupEditor
     {
-        private const string FighterPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Fighter.prefab";
-        private const string MagePrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Mage.prefab";
-        private const string HunterPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Hunter.prefab";
+        private const string FighterPrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatSupport.prefab";
+        private const string MagePrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab";
+        private const string HunterPrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab";
 
         [MenuItem("Tactics/Party/Setup Party Bootstrap")]
         private static void SetupPartyBootstrap()

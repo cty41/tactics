@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-28T21:46:47+08:00"
+timestamp: "2026-07-30T00:14:58+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -28,6 +28,9 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Interactables/DroppedSpear.cs
   - Assets/Tactics/Scripts/Common/UnitSpeedTurnResolver.cs
   - Assets/Tactics/Scripts/Common/Units/DamageResolution.cs
+  - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
+  - Assets/Tactics/Scripts/Common/Cells/TilemapCellManager.cs
+  - Assets/Tactics/Scripts/Common/Cells/ProceduralTileHighlightRenderer.cs
   - Assets/Tactics/Scripts/Common/Units/FacingState.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/AbilityAvailability.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/MoveCommand.cs
@@ -50,7 +53,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:f094c7ad4afd293f4ad9475c73cd07d5a3a2545903900bbb52cb0747f54e93d1
+source_fingerprint: sha256:a2c370f95a6dffa0c91fc182418dc7fd375f32992c1f529a484ec189023b27de
 ---
 
 # Current State
@@ -94,6 +97,8 @@ Pure Run 遭遇将 E1/E2 的生命/输出倍率设为 1.3/1.15，Special 设为 
 战斗技能卡统一消费 `AbilityAvailability`：隐藏技能不建卡，可点击禁用技能保留卡片并在点击后显示稳定原因。每张卡的回调捕获建卡角色和对应能力实例，执行前再次确认该角色仍被选中且仍持有该实例，避免角色/回合切换后按可变索引触发另一名角色的技能。连续刺击等有序多段技能显示当前段数和目标编号；右键或 Esc 每次撤销最后一段，队列为空时再次取消退出。落地长矛以不参与点击和视线判断的独立世界标记显示。
 
 当前战斗原始数值、遭遇倍率和实际伤害顺序的审计基线见 `.agents/docs/pure-run-current-combat-values.md`；该文不改变任何运行时数值。
+
+Pure Run 单位状态反馈绑定到单位的 `CurrentCell`：待命、选中、已行动和可攻击状态分别绘制低饱和蓝灰、柔和琥珀、弱灰蓝和暖红等距 Tile 面，不再在角色身上显示方形 Marker。`TilemapUnit` 的主视觉偏移是可重复调用的，阴影以 `Sprite` 子节点的底部 pivot 为脚底锚点，仅作微小下偏移。
 
 Pure Run 正式战斗会在单位管理器初始化前生成队伍与遭遇，并为所有实际出现的阵营补齐玩家控制器；玩家出生格优先选择相机可见、可行走且未占用的配置或最近合法格。战斗 Camera 在初始化、单位选择和回合切换期间保持固定，Battle UI 只读取 Camera 做世界标记投影；右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
 

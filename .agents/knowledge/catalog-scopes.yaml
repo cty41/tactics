@@ -41,6 +41,7 @@ scopes:
       - Tools/artworks/amazon
       - Tools/artworks/doge
       - Tools/artworks/pure_run
+      - Assets/Tactics/Arts/PureRun
 
   unity-agent-workflow:
     concept: operations/unity-agent-workflow.md
@@ -92,6 +93,7 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/Buffs
       - Assets/Tactics/Scripts/Common/Units/CombatComponent.cs
       - Assets/Tactics/Scripts/Common/Units/DamageResolution.cs
+      - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
       - Assets/Tactics/Scripts/Common/Units/FacingState.cs
       - Assets/Tactics/Scripts/Common/Units/IUnit.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/AbilityAvailability.cs

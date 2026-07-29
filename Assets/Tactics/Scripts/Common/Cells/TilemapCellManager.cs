@@ -438,6 +438,23 @@ namespace Tactics.Cells
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Adds a persistent unit-state overlay to a single isometric cell.
+        /// Unit states use their own mesh layer so they never fall back to the legacy square Sprite marker.
+        /// </summary>
+        public void AddUnitStateHighlight(ICell cell, TileHighlightType type)
+        {
+            HighlightRenderer?.AddHighlights(new[] { cell }, type);
+        }
+
+        /// <summary>
+        /// Removes a persistent unit-state overlay without clearing ability range or hover highlights.
+        /// </summary>
+        public void RemoveUnitStateHighlight(ICell cell, TileHighlightType type)
+        {
+            HighlightRenderer?.RemoveHighlightOfType(cell, type);
+        }
+
         private static TileHighlightType ToTileHighlightType(CellGuidanceType guidanceType)
         {
             return guidanceType switch

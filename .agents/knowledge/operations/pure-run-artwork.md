@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-07-29T10:44:04+08:00"
+timestamp: "2026-07-30T00:10:56+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -13,8 +13,9 @@ repo_paths:
   - Tools/artworks/amazon
   - Tools/artworks/doge
   - Tools/artworks/pure_run
+  - Assets/Tactics/Arts/PureRun
 verified_revision: c68dbebe
-source_fingerprint: sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e22b7a95d4cec
+source_fingerprint: sha256:300335a8b7eb58fdcbf10d432449091c2fe14738f39495a949f92887c388d315
 ---
 
 # Pure Run 角色美术流水线
@@ -22,6 +23,7 @@ source_fingerprint: sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e2
 ## Current State
 
 - `c68dbebe` 是当前角色美术提交的验证锚点，Doge `calibrated` 目录包含六个按统一尺寸输出的角色母版和 128 预览。
+- 运行时标准角色纹理为 `128 PPU`，根节点与 `Sprite` 子节点均为 `localScale = 1`；单位状态由等距 Tile 高亮而非角色方形 Marker 表达，阴影锚定 Sprite 底部 pivot。
 - `Tools/artworks/pure_run/enemies/candidates` 中的羊魔和蝙蝠仍待统一校准；`rejected` 中的横胖蛤蟆不符合标准胶囊体宽度。
 - 设计、尺寸和目录语义见 `.agents/docs/pure-run-artwork-guidelines.md`，执行与只读校验见 `.agents/skills/pure-run-artwork-pipeline/SKILL.md`。
 
@@ -33,7 +35,7 @@ source_fingerprint: sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e2
 
 - 设计契约：`.agents/docs/pure-run-artwork-guidelines.md`
 - 执行 skill：`.agents/skills/pure-run-artwork-pipeline`
-- 相关资产：`Tools/artworks/amazon`、`Tools/artworks/doge`、`Tools/artworks/pure_run`
+- 相关资产：`Tools/artworks/amazon`、`Tools/artworks/doge`、`Tools/artworks/pure_run`；已接入 Unity 的纹理、Prefab、Tile 与导入设置位于 `Assets/Tactics/Arts/PureRun`。
 - 提示词库边界：可复用 GPT Image 提示词文档由 `artworks-prompt-library` skill 维护，本 scope 只维护项目执行和验收状态。
 
 ## Verification Guidance
