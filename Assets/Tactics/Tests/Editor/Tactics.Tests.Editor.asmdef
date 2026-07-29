@@ -2,7 +2,8 @@
     "name": "Tactics.Tests.Editor",
     "rootNamespace": "Tactics.Tests.Editor",
     "references": [
-        "GUID:6aaf4f1fe211baf44bf77a9e8adbc0ed"
+        "GUID:6aaf4f1fe211baf44bf77a9e8adbc0ed",
+        "Tactics.MCP.Editor"
     ],
     "includePlatforms": [
         "Editor"

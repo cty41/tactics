@@ -1,8 +1,10 @@
 # Tactics Knowledge Update Log
 
 ## 2026-07-29
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:103b047a1824679669dd50730b263941b6f5875456b11345704519632c1fc038`。
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e22b7a95d4cec`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:0550c020533163fae8da57c9b22961a6989fa574dbef5c3ae3583d285e9179e4`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:24a25b8d0e157c14826f45d226efd7996f7c24ddebed7a8cbbc5f65a330a2e48`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5c32ee885b8ac4fca82b6f06a8c5414c23ee21161118e31e2a438ba64bcfa4df`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:e14364ded10298b483585c30fa2c6c4d0f3a257357adfb2914faf69044493202`。
 * **Creation**: 新增 `pure-run-artwork` scope，沉淀角色美术尺寸、生成、去幕、Review、资产状态和提交边界。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:3246c857bc4055e840180cf5e1d52aab73c142bb636d61060e6da8ccf9542`。
 
