@@ -296,13 +296,20 @@ namespace Tactics.RoguelikeMap.Interaction
             if (controller == null)
             {
                 TLog.Warning("[NodeInteractionManager] 事件全灭后无法显示 RunEndSummary");
+                // Run the full terminal cleanup anyway so the player never gets stuck on a dead map.
+                PureRunSessionStore.ConsumeCompletedSummary();
+                RoguelikeBattleReturnHandler.ClearTerminalRunUiAndMapState();
+                await UIManager.Instance.ShowAsync(UIManager.UIId.Home);
                 return;
             }
 
-            controller.ShowSummary(summary, () =>
+            controller.ShowSummary(summary, async () =>
             {
                 UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
                 PureRunSessionStore.ConsumeCompletedSummary();
+                // Mirror the battle-end terminal flow: clear run UI/map state, then restore the Home menu.
+                RoguelikeBattleReturnHandler.ClearTerminalRunUiAndMapState();
+                await UIManager.Instance.ShowAsync(UIManager.UIId.Home);
             });
         }
 

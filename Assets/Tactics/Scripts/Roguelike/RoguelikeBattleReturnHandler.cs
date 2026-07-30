@@ -327,7 +327,7 @@ namespace Tactics.Roguelike
             }
         }
 
-        private static void ClearTerminalRunUiAndMapState()
+        internal static void ClearTerminalRunUiAndMapState()
         {
             RoguelikeMapRuntimeState.ClearAll();
             RoguelikeEventReentryManager.ClearEventInProgress();
