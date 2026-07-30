@@ -79,7 +79,7 @@ namespace Tactics.RoguelikeMap.Events
         /// 使用此方法加载时，eventFiles在Inspector中分配优先于此方法
         /// </summary>
         /// <param name="regionName">区域名称</param>
-        /// <param name="eventPaths">资产路径列表（如"Assets/Tactics/GameData/Events/DarkForest/event_cursed_chest.json"）</param>
+        /// <param name="eventPaths">资产路径列表（如"Assets/Tactics/GameData/Events/DarkForest/cursed_chest_001.json"）</param>
         public void LoadRegionEventsFromPaths(string regionName, List<string> eventPaths)
         {
             if (_regionEvents.ContainsKey(regionName))
