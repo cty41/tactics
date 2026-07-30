@@ -141,7 +141,9 @@ namespace Tactics.RoguelikeMap.Interaction
             if (mapConfig == null)
             {
                 TLog.Warning("[NodeInteractionManager] 地图配置为空");
-                onCompleted?.Invoke();
+                // Abort so the node stays selectable instead of advancing the map on a broken path.
+                RoguelikeNodeTransactionService.Abort(node, CurrentMap, "地图配置为空");
+                ShowEffectResult("事件错误", "地图配置加载失败，请重试");
                 return;
             }
 
@@ -149,7 +151,8 @@ namespace Tactics.RoguelikeMap.Interaction
             if (eventManager == null)
             {
                 TLog.Warning("[NodeInteractionManager] EventManager 未初始化");
-                onCompleted?.Invoke();
+                RoguelikeNodeTransactionService.Abort(node, CurrentMap, "EventManager 未初始化");
+                ShowEffectResult("事件错误", "事件系统初始化失败，请重试");
                 return;
             }
 
@@ -175,7 +178,8 @@ namespace Tactics.RoguelikeMap.Interaction
             if (evt == null)
             {
                 TLog.Warning("[NodeInteractionManager] 没有可用事件");
-                onCompleted?.Invoke();
+                RoguelikeNodeTransactionService.Abort(node, CurrentMap, "没有可用事件");
+                ShowEffectResult("事件错误", "当前没有可用事件，请稍后再试");
                 return;
             }
 
@@ -203,7 +207,8 @@ namespace Tactics.RoguelikeMap.Interaction
             else
             {
                 TLog.Warning("[NodeInteractionManager] EventUIController未初始化");
-                onCompleted?.Invoke();
+                RoguelikeNodeTransactionService.Abort(node, CurrentMap, "EventUIController 未初始化");
+                ShowEffectResult("事件错误", "事件界面初始化失败，请重试");
             }
         }
 

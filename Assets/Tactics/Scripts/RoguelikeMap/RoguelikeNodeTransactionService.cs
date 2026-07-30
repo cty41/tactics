@@ -140,6 +140,24 @@ namespace Tactics.RoguelikeMap
             SaveMap(map);
         }
 
+        /// <summary>
+        /// Aborts an unfinished node transaction on error paths so the node
+        /// returns to its pre-entry state and stays selectable instead of
+        /// being silently advanced.
+        /// </summary>
+        public static void Abort(
+            RoguelikeMapNode node,
+            global::Tactics.RoguelikeMap.RoguelikeMap map,
+            string reason)
+        {
+            if (node == null)
+                return;
+
+            TLog.Error($"[NodeTransaction] Abort node transaction: node={node.nodeId}, reason={reason}");
+            node.Transaction = null;
+            SaveMap(map);
+        }
+
         public static string BuildActionKey(RoguelikeMapNode node, string actionId)
         {
             return BuildKey(node?.nodeId, actionId);
