@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-07-27T12:55:49+08:00"
+timestamp: "2026-07-29T21:56:20+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -31,7 +31,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
   - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:dd33f78e40c74d2171da787945125ea8a3f001f381ab4509b70b96c818261f98
+source_fingerprint: sha256:a2d637e9e22612d4785cc4ab6da340a3ca016f4c2d2c255f48a2af50ade27333
 ---
 
 # Current State
