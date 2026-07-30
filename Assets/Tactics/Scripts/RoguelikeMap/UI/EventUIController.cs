@@ -65,7 +65,7 @@ namespace Tactics.RoguelikeMap.UI
             ShowEvent(evt, effectContext, null, null, onComplete);
         }
 
-        public async void ShowEvent(
+        public void ShowEvent(
             RoguelikeEvent evt,
             EventEffectContext effectContext,
             RoguelikeMapNode node,
@@ -86,8 +86,8 @@ namespace Tactics.RoguelikeMap.UI
             _currentMap = map;
             _lastExecutionSucceeded = false;
 
-            // 通过 UIManager 显示面板
-            await UIManager.Instance.ShowAsync(UIManager.UIId.EventPanel);
+            // Panel must already be shown by the caller (NodeInteractionManager) via
+            // UIManager.ShowAsync(UIId.EventPanel); only fetch the root element here.
             var root = UIManager.Instance.GetRootElement(UIManager.UIId.EventPanel);
             if (root == null)
             {
