@@ -226,6 +226,7 @@ namespace Tactics.RoguelikeMap.Interaction
                 TLog.Warning("[NodeInteractionManager] TreasureNodeHandler 未找到，使用回退逻辑");
                 int goldAmount = Random.Range(2, 6);
                 ApplyRewardResult(RewardResult.Gold(goldAmount));
+                ShowEffectResult("宝藏", $"获得 {goldAmount} 金币");
                 onCompleted?.Invoke();
             }
         }
@@ -247,7 +248,7 @@ namespace Tactics.RoguelikeMap.Interaction
             else
             {
                 TLog.Warning("[NodeInteractionManager] StoreNodeHandler未初始化");
-                ShowRewardPopup("商店功能开发中...");
+                ShowEffectResult("错误", "商店初始化失败，请重试");
                 onCompleted?.Invoke();
             }
         }
@@ -298,15 +299,6 @@ namespace Tactics.RoguelikeMap.Interaction
                 UIManager.Instance.Hide(UIManager.UIId.RunEndSummary);
                 PureRunSessionStore.ConsumeCompletedSummary();
             });
-        }
-
-        /// <summary>
-        /// 显示奖励提示
-        /// </summary>
-        private void ShowRewardPopup(string message)
-        {
-            // TODO: 实现奖励提示UI
-            TLog.Info($"[NodeInteractionManager] 奖励提示: {message}");
         }
 
         /// <summary>
