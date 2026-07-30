@@ -1,9 +1,10 @@
 # Tactics Knowledge Update Log
 
 ## 2026-07-30
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:085379df987e40c0fceed1ac7b5456c08a516e49e7146abcff95d09b862556fc`。
+* **Update**: Pure Run 方向图改为先用排除耳、口鼻、手脚和装备的纯核心主体蒙版校准；无手臂角色的手掌必须以多像素接触面直接嵌入主体边缘。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:a2d637e9e22612d4785cc4ab6da340a3ca016f4c2d2c255f48a2af50ade27333`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:a2c370f95a6dffa0c91fc182418dc7fd375f32992c1f529a484ec189023b27de`。
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:300335a8b7eb58fdcbf10d432449091c2fe14738f39495a949f92887c388d315`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:6b61cd3b460f02c7a1a49556210e81d9115f6dcb200b531bfc76caec37c36c2d`。
 
 ## 2026-07-29

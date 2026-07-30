@@ -34,6 +34,7 @@ verified_revision: c68dbebe
 - 母图（source/mother image）锁定角色身份、身体比例、脚位、盾牌和已确认的构图。局部编辑必须声明“保持不变”的区域，不得让 ImageGen 重新发明整个人物。
 - 参考图只提供犬种特征、武器结构、姿态骨架或色彩启发，不迁移对方的固定比例、装备、材质、地图或画风。提示词中应明确每张输入图片的职责。
 - 候选图用于比较和复盘；失败图必须隔离，不能被后续任务误当作母图或可用 Sprite。一次只生成一个角色或一个变体，先确认身体再迭代脸部、武器和层级。
+- `Tools/artworks/amazon` 下的黑白亚马逊图只属于造型设定集和早期风格探索，不是 Pure Run 正式单位稿、尺寸基准或方向图母图；正式四方向生产仅面向已确认的胶囊体信徒与胶囊规则下的怪物。
 
 ## 标准流水线
 
@@ -43,22 +44,48 @@ verified_revision: c68dbebe
 4. 在 `256×256` 画布内等比缩放并定位到标准脚底基线，再生成 `128×128` 预览。
 5. 在 128 预览和临时 `64×32` Tile 线框中确认脸部识别、武器轮廓、脚掌接触和遮挡关系。
 6. 按 `concepts / calibrated / candidates / rejected / tmp` 的语义归档，给每个版本保留可追溯的角色名和尺寸状态。
-7. 运行只读校验脚本、OKF 影响报告和 bundle/unit 检查；提交时按路径暂存，排除临时目录。
+7. 运行只读校验脚本及正反案例清单检查，再运行 OKF 影响报告和 bundle/unit 检查；提交时按路径暂存，排除临时目录。
 
 ## 目录语义与当前状态
 
 | 目录 | 语义 | 是否可作为运行时 Sprite |
 | --- | --- | --- |
-| `Tools/artworks/amazon` | 亚马逊线稿与提示词探索记录 | 否，除非另有校准输出 |
+| `Tools/artworks/amazon` | 亚马逊黑白造型设定集与提示词探索记录 | 否，不作为正式单位稿或方向图母图 |
 | `Tools/artworks/doge/concepts` | 角色设计锚点和未发布变体 | 否 |
 | `Tools/artworks/doge/calibrated` | 已按统一尺寸契约校准的 Doge 发布集 | 是设计层面的可用 Sprite |
+| `Tools/artworks/doge/rejected/superseded` | 已被正式版本替代的 Doge 历史失败稿 | 否，只供复盘 |
+| `Tools/artworks/pure_run/enemies/approved` | 已通过人工 Review 的非 Doge 正式敌人集 | 是设计层面的可用 Sprite |
 | `Tools/artworks/pure_run/enemies/candidates` | 外轮廓或尺寸仍待 Review 的怪物候选 | 否 |
 | `Tools/artworks/pure_run/enemies/rejected` | 已明确否决的失败资产 | 否 |
+| `Tools/artworks/pure_run/enemies/rejected/superseded` | 已由 approved 版本替代的历史敌人稿 | 否，只供复盘 |
 | `Tools/artworks/pure_run/tiles` | Tile 占用与配色 Review 参考 | 否 |
 | `tmp` | ImageGen、去幕和临时比较文件 | 否，永不提交 |
 
-`c68dbebe` 是当前已提交美术资源的初始验证 revision。Doge `calibrated` 六角色为发布集；羊魔和蝙蝠仍是候选，未校准怪物不能标记为可用 Sprite；旧横胖蛤蟆位于 `rejected`，仅供失败复盘。
+`calibrated` 和 `approved` 只保留当前正式锚点；旧版本移动到 `rejected/superseded`，保留原文件名与版本号，但禁止再次作为生成母图。`candidates` 只保存仍需人工决定的资产，不能充当历史归档目录。旧横胖蛤蟆继续位于 `rejected`，仅供失败复盘。
+
+## 正式资产锚点
+
+| 单位 | Down-right | Up-left |
+| --- | --- | --- |
+| 赤柴猎犬 | `calibrated v01` | `ul v02` |
+| 墨西哥无毛犬死灵法师 | `calibrated v04` | `ul v07` |
+| 凯利蓝㹴法师 | `calibrated v03` | `ul v05` |
+| 犬骷髅战士 | `calibrated v02` | `ul v01` |
+| 犬骷髅法师 | `calibrated v02` | `ul v01` |
+| 火魔 | `calibrated v03` | `ul v01` |
+| 裂颚羊魔 | `v05` | `ul v01` |
+| 墓穴大嘴蝠 | `v06` | `ul v01` |
+
+机器可读的完整路径位于 [Pure Run Artwork Pipeline 案例清单](../skills/pure-run-artwork-pipeline/examples/cases.json)。山羊和蝙蝠已从 `candidates` 升级到 `approved`；其旧版本进入 `rejected/superseded`。
+
+## 正反案例生命周期
+
+- 最小案例库只保留核心胶囊体、远近手/装备层级、飞行球核三类代表问题，入口见 [正反案例](../skills/pure-run-artwork-pipeline/references/review-casebook.md)。
+- Skill 内的 `128×128` 图片是快速 Review 快照；实际生成必须使用清单中 `approved_source` 或 `approved_assets` 指向的 `256×256` 原图。
+- 反例必须来自真实失败资产，并位于 `rejected`；不能把正确候选误标为反例，也不能为了补案例人为制造失败稿。
+- 反例只用于识别禁止项。即使局部正确，也不得继续编辑、改色或作为方向图母图。
+- 完整历史保留在 `rejected/superseded`，但只将能说明独立错误、且在 128 尺寸仍可辨认的版本加入案例库。
 
 ## 边界与关联
 
-本契约不修改 Unity Prefab、AI、遭遇配置或运行时代码。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。
+本契约不修改 Unity Prefab、AI、遭遇配置或运行时代码。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、案例归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。

@@ -26,6 +26,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--baseline", default=236, type=int)
     parser.add_argument("--preview-size", default=128, type=int)
     parser.add_argument("--include-candidates", action="store_true")
+    parser.add_argument(
+        "--review-examples",
+        action="store_true",
+        help="校验 skill 案例清单、正式锚点和 128 正反快照",
+    )
+    parser.add_argument(
+        "--review-manifest",
+        type=Path,
+        help="覆盖默认的 examples/cases.json 路径",
+    )
     parser.add_argument("--strict", action="store_true")
     return parser.parse_args()
 
@@ -184,6 +194,178 @@ def validate_tiles(directory: Path) -> List[Dict[str, Any]]:
     return reports
 
 
+def resolve_repo_path(repo_root: Path, value: str) -> Optional[Path]:
+    candidate = (repo_root / value).resolve()
+    try:
+        candidate.relative_to(repo_root)
+    except ValueError:
+        return None
+    return candidate
+
+
+def validate_review_examples(
+    repo_root: Path,
+    manifest_path: Path,
+    *,
+    standard_height: int,
+    baseline: int,
+    preview_size: int,
+) -> List[Dict[str, Any]]:
+    reports: List[Dict[str, Any]] = []
+    manifest_report: Dict[str, Any] = {
+        "path": manifest_path.as_posix(),
+        "category": "review-manifest",
+        "issues": [],
+    }
+    reports.append(manifest_report)
+    if not manifest_path.exists():
+        add_issue(manifest_report, "案例清单不存在")
+        return reports
+
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        add_issue(manifest_report, f"无法读取案例清单：{exc}")
+        return reports
+
+    if payload.get("version") != 1:
+        add_issue(manifest_report, "案例清单 version 必须为 1")
+
+    approved_assets = payload.get("approved_assets")
+    if not isinstance(approved_assets, list) or not approved_assets:
+        add_issue(manifest_report, "approved_assets 必须是非空数组")
+        approved_assets = []
+
+    approved_paths: set[str] = set()
+    for asset in approved_assets:
+        if not isinstance(asset, dict):
+            add_issue(manifest_report, "approved_assets 中存在非对象条目")
+            continue
+        asset_id = asset.get("id", "<missing>")
+        for direction in ("down_right", "up_left"):
+            value = asset.get(direction)
+            if not isinstance(value, str):
+                add_issue(manifest_report, f"{asset_id}.{direction} 缺少路径")
+                continue
+            normalized = Path(value).as_posix()
+            if normalized in approved_paths:
+                add_issue(manifest_report, f"正式资产重复引用：{normalized}")
+            approved_paths.add(normalized)
+            source = resolve_repo_path(repo_root, value)
+            if source is None:
+                add_issue(manifest_report, f"正式资产路径越界：{value}")
+                continue
+            parts = {part.lower() for part in source.parts}
+            if "tmp" in parts or "rejected" in parts or "superseded" in parts:
+                add_issue(manifest_report, f"正式资产引用了临时或反例目录：{value}")
+                continue
+            if not ({"calibrated", "approved"} & parts):
+                add_issue(manifest_report, f"正式资产不在 calibrated/approved：{value}")
+            preview = source.with_name(f"{source.stem}_128.png")
+            geometry_required = "calibrated" in parts
+            pair_reports = validate_pair(
+                source,
+                preview,
+                standard_height=standard_height,
+                baseline=baseline,
+                preview_size=preview_size,
+                geometry_required=geometry_required,
+            )
+            for report in pair_reports:
+                report["category"] = "approved-anchor"
+                report["asset_id"] = asset_id
+                report["direction"] = direction
+            reports.extend(pair_reports)
+
+    cases = payload.get("cases")
+    if not isinstance(cases, list) or not cases:
+        add_issue(manifest_report, "cases 必须是非空数组")
+        cases = []
+
+    case_ids: set[str] = set()
+    for case in cases:
+        if not isinstance(case, dict):
+            add_issue(manifest_report, "cases 中存在非对象条目")
+            continue
+        case_id = case.get("id", "<missing>")
+        if case_id in case_ids:
+            add_issue(manifest_report, f"案例 ID 重复：{case_id}")
+        case_ids.add(case_id)
+        approved_value = case.get("approved_source")
+        rejected_value = case.get("rejected_source")
+        if approved_value == rejected_value:
+            add_issue(manifest_report, f"{case_id} 的正例和反例指向同一文件")
+        if case.get("rejected_for_mother_image") is not True:
+            add_issue(manifest_report, f"{case_id} 未禁止把反例作为母图")
+
+        for field, expected_status in (
+            ("approved_source", "approved"),
+            ("rejected_source", "rejected"),
+        ):
+            value = case.get(field)
+            if not isinstance(value, str):
+                add_issue(manifest_report, f"{case_id}.{field} 缺少路径")
+                continue
+            source = resolve_repo_path(repo_root, value)
+            if source is None:
+                add_issue(manifest_report, f"{case_id}.{field} 路径越界")
+                continue
+            parts = {part.lower() for part in source.parts}
+            if "tmp" in parts:
+                add_issue(manifest_report, f"{case_id}.{field} 不能引用 tmp")
+            if expected_status == "approved":
+                if not ({"calibrated", "approved"} & parts):
+                    add_issue(manifest_report, f"{case_id} 正例不在 calibrated/approved")
+                if "rejected" in parts or "superseded" in parts:
+                    add_issue(manifest_report, f"{case_id} 正例位于反例目录")
+                if Path(value).as_posix() not in approved_paths:
+                    add_issue(manifest_report, f"{case_id} 正例未登记在 approved_assets")
+            elif "rejected" not in parts:
+                add_issue(manifest_report, f"{case_id} 反例不在 rejected")
+            source_report = inspect_png(source)
+            source_report["category"] = f"review-{expected_status}-source"
+            source_report["case_id"] = case_id
+            reports.append(source_report)
+
+        for field in ("approved_snapshot", "rejected_snapshot"):
+            value = case.get(field)
+            if not isinstance(value, str):
+                add_issue(manifest_report, f"{case_id}.{field} 缺少路径")
+                continue
+            snapshot = resolve_repo_path(repo_root, value)
+            if snapshot is None:
+                add_issue(manifest_report, f"{case_id}.{field} 路径越界")
+                continue
+            snapshot_report = inspect_png(snapshot)
+            snapshot_report["category"] = "review-snapshot"
+            snapshot_report["case_id"] = case_id
+            if snapshot_report.get("mode") != "RGBA":
+                add_issue(snapshot_report, "案例快照必须为 RGBA")
+            if snapshot_report.get("size") != [preview_size, preview_size]:
+                add_issue(snapshot_report, f"案例快照必须为 {preview_size}×{preview_size}")
+            source_field = (
+                "approved_source"
+                if field == "approved_snapshot"
+                else "rejected_source"
+            )
+            source_value = case.get(source_field)
+            if isinstance(source_value, str):
+                source = resolve_repo_path(repo_root, source_value)
+                if source is not None:
+                    source_preview = source.with_name(f"{source.stem}_128.png")
+                    if not source_preview.exists():
+                        add_issue(
+                            snapshot_report,
+                            f"案例原图缺少配对预览：{source_preview.name}",
+                        )
+                    elif snapshot.exists() and (
+                        snapshot.read_bytes() != source_preview.read_bytes()
+                    ):
+                        add_issue(snapshot_report, "案例快照与原图配对预览不一致")
+            reports.append(snapshot_report)
+    return reports
+
+
 def main() -> int:
     args = parse_args()
     if Image is None:
@@ -204,6 +386,16 @@ def main() -> int:
             category="release",
         )
     )
+    reports.extend(
+        validate_sprite_directory(
+            root / "pure_run" / "enemies" / "approved",
+            standard_height=args.standard_height,
+            baseline=args.baseline,
+            preview_size=args.preview_size,
+            geometry_required=False,
+            category="approved-enemy",
+        )
+    )
     reports.extend(validate_tiles(root / "pure_run" / "tiles"))
 
     if args.include_candidates:
@@ -219,6 +411,26 @@ def main() -> int:
             )
         )
 
+    if args.review_examples:
+        repo_root = root.parent.parent
+        default_manifest = (
+            Path(__file__).resolve().parents[1] / "examples" / "cases.json"
+        )
+        manifest_path = (
+            args.review_manifest.resolve()
+            if args.review_manifest
+            else default_manifest
+        )
+        reports.extend(
+            validate_review_examples(
+                repo_root,
+                manifest_path,
+                standard_height=args.standard_height,
+                baseline=args.baseline,
+                preview_size=args.preview_size,
+            )
+        )
+
     failures = [report for report in reports if report.get("issues")]
     summary = {
         "status": "fail" if failures else "ok",
@@ -227,6 +439,7 @@ def main() -> int:
         "baseline": args.baseline,
         "preview_size": args.preview_size,
         "include_candidates": args.include_candidates,
+        "review_examples": args.review_examples,
         "files_checked": len(reports),
         "failures": len(failures),
         "reports": reports,
