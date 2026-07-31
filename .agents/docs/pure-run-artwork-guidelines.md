@@ -22,6 +22,21 @@ verified_revision: c68dbebe
 - 单位状态不使用角色子节点上的方形 `Marker`。待命、选中、已行动和可攻击状态由 `ProceduralTileHighlightRenderer` 在 `CurrentCell` 的等距 Tile 面上绘制；友方为低饱和蓝灰，选中为柔和琥珀金，已行动为弱灰蓝，敌对/攻击范围为暖红。
 - Sprite 的底部 pivot 是运行时脚底锚点。阴影必须从主 `Sprite` 子节点的该锚点加极小向下偏移定位；不要按整张透明画布的 `Sprite.bounds.min` 或固定负 Y 值定位。
 
+## 双原生图四向显示
+
+- 已接入的胶囊体单位只维护两张原生 `256×256` Sprite：`down-right` 与 `up-left`；`_128` 仅作设计层 QA，不进入运行时纹理目录。
+- `FourDirectionSpriteVisual` 只接管单位根节点下名为 `Sprite` 的主 `SpriteRenderer`，不改变 Transform scale、`Shadow` 或爆炸动画 Renderer。逻辑 `FacingDirection` 与视觉映射固定如下：
+
+| 逻辑朝向 | 原生图 | `flipX` |
+| --- | --- | --- |
+| East | up-left | `true` |
+| West | down-right | `true` |
+| North | up-left | `false` |
+| South | down-right | `false` |
+
+- 逻辑方向沿 Unity 等距网格轴解释：East 在屏幕上朝右上，West 朝左下，North 朝左上，South 朝右下。水平镜像方向明确接受矛、盾、匕首、鬼火、法杖和斧头的视觉换手；不得借此改变移动、技能、AI 或 `FacingResolver` 的语义。未配置该组件的旧单位继续使用原有 East/West 全 Renderer 翻转逻辑。
+- 运行时两张原生纹理均为 `256×256`、Single Sprite、`128 PPU`、底部 Pivot `(0.5, 0.078125)`。已有 down-right 纹理保留 `.meta` 与 GUID，仅更新像素内容；新增 up-left 纹理单独导入。
+
 ## Tile 表面契约
 
 - Pure Run 地面 Tile 使用严格 `64×32` 的平面菱形，四角透明、无侧壁；暖灰与冷蓝灰版本必须共享完全一致的 alpha、轮廓和岩面位置。
@@ -88,4 +103,4 @@ verified_revision: c68dbebe
 
 ## 边界与关联
 
-本契约不修改 Unity Prefab、AI、遭遇配置或运行时代码。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、案例归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。
+默认的生成与校准流程不修改 Unity Prefab、AI、遭遇配置或运行时代码。只有用户明确授权运行时美术接入时，才按“两个原生图 + 水平镜像”的固定映射更新纹理和 Prefab；该接入不得改变玩法朝向、AI 或遭遇语义。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、案例归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。

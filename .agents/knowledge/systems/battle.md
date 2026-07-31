@@ -4,11 +4,12 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-30T00:14:58+08:00"
+timestamp: "2026-07-31T10:53:06+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
   - .agents/docs/attribute-system-design.md
+  - .agents/docs/battle-facing-rules.md
   - .agents/docs/buff-system-rules.md
   - .agents/docs/three-class-skill-design.md
   - Assets/Tactics/Scripts/Common/Battle/BattleController.cs
@@ -32,8 +33,11 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Cells/TilemapCellManager.cs
   - Assets/Tactics/Scripts/Common/Cells/ProceduralTileHighlightRenderer.cs
   - Assets/Tactics/Scripts/Common/Units/FacingState.cs
+  - Assets/Tactics/Scripts/Common/Units/FacingCoordinator.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/AbilityAvailability.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/MoveCommand.cs
+  - Assets/Tactics/Scripts/Common/Units/abilities/UnityMoveComponent.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/Executors/MovementAndEffectExecutors.cs
   - Assets/Tactics/Scripts/UI/BattleUIController.cs
   - Assets/Tactics/Arts/UI/Battle.uxml
   - Assets/Tactics/Arts/UI/Battle.uss
@@ -44,6 +48,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/Test1BattleMapLayoutEditorTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleBackdropFitterTests.cs
   - Assets/Tactics/Tests/PlayMode/SharedBattlePrimitivesTests.cs
+  - Assets/Tactics/Tests/PlayMode/FacingBehaviorPlayModeTests.cs
   - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
   - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
   - Assets/Tactics/Tests/PlayMode/AmazonSkillLevelTests.cs
@@ -53,7 +58,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:a2c370f95a6dffa0c91fc182418dc7fd375f32992c1f529a484ec189023b27de
+source_fingerprint: sha256:af8d0e1ef5e7161c0c8405b06b776c9065d63d77b7a6b2e15d7458ce8c39ecdb
 ---
 
 # Current State
@@ -68,7 +73,7 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 
 正式 Mystery 事件使用真实 `BuffConfig` 资产传递跨战斗效果：诅咒宝箱的伤害承受提高 30% 与堕落祭坛的伤害减免 20% 均持续 3 个行动周期，并分别标记为 Harmful 与 Beneficial；资产通过 `GameAssetManager` 加载并由 PlayMode 测试校验精确效果字段。
 
-单位持有四方向 `Facing` 状态。成功移动后按最后一步更新朝向，成功选择目标的技能按目标方向更新朝向，失败技能恢复原朝向；待输入状态下点击正交相邻格可免费转向。默认人类单位朝东、非人类单位朝西，表现层优先消费 Animator 的 `Facing`/`DirectionX`/`DirectionY` 参数，并为纯横向 Sprite 提供翻转回退。
+单位持有四方向 `Facing` 状态，坐标解析由 `FacingResolver` 保持纯计算，行为更新统一收束到 `FacingCoordinator`。普通玩家/AI 移动、冲锋者与 Dash 施法者在每个新路径段开始前转向；恐惧在逃跑换格前转向；冲锋退让目标、击退、抛飞及受击保持原朝向。技能选择期间，悬停单位或格子都会预览施法者朝向，移动技能优先按可达路径第一段预览，取消或失败保留最后预览；有序多目标技能的合法锥形继续使用进入选择时锁定的方向。待输入状态下点击正交相邻格仍可免费转向。默认人类单位朝东、非人类单位朝西，表现层优先消费 Animator 的 `Facing`/`DirectionX`/`DirectionY` 参数，并为纯横向 Sprite 提供翻转回退。完整规则见 `.agents/docs/battle-facing-rules.md`。
 
 `BattleInitiativeService` 按有效速度派生先攻并维护当前轮待行动顺序；减速等速度变化会立即重排尚未行动单位，不回滚已经行动的单位。Unit 按能力配置的稳定名称维护本回合成功使用次数，并在 `PrepareForTurn` 清空；共享 AbilityConfig 资产不会共享不同单位的运行时计数。`SummonRegistry` 按召唤者和类别记录召唤顺序，支持单体上限替换、原子批量替换和按召唤物已完成行动数计时；主动替换、到期、召唤者死亡与战斗结束会同步释放格子且不留下尸体。`AbilityAvailability` 统一表达可用、可点击禁用及隐藏状态，并携带稳定的禁用原因。
 
@@ -99,6 +104,8 @@ Pure Run 遭遇将 E1/E2 的生命/输出倍率设为 1.3/1.15，Special 设为 
 当前战斗原始数值、遭遇倍率和实际伤害顺序的审计基线见 `.agents/docs/pure-run-current-combat-values.md`；该文不改变任何运行时数值。
 
 Pure Run 单位状态反馈绑定到单位的 `CurrentCell`：待命、选中、已行动和可攻击状态分别绘制低饱和蓝灰、柔和琥珀、弱灰蓝和暖红等距 Tile 面，不再在角色身上显示方形 Marker。`TilemapUnit` 的主视觉偏移是可重复调用的，阴影以 `Sprite` 子节点的底部 pivot 为脚底锚点，仅作微小下偏移。
+
+场景卸载时 CellManager、高亮 Renderer 与单位的销毁顺序不固定。`TilemapUnit` 清理单位状态高亮前会使用 Unity 对象有效性判断；`TilemapCellManager` 的移除操作只消费仍存在的 Renderer，不在销毁阶段懒加载或重建渲染组件。该清理是 best-effort，本地高亮状态无论 Manager 是否已销毁都会复位。
 
 Pure Run 正式战斗会在单位管理器初始化前生成队伍与遭遇，并为所有实际出现的阵营补齐玩家控制器；玩家出生格优先选择相机可见、可行走且未占用的配置或最近合法格。战斗 Camera 在初始化、单位选择和回合切换期间保持固定，Battle UI 只读取 Camera 做世界标记投影；右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
 

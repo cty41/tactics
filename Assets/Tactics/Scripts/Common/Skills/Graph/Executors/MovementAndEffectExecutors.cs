@@ -88,7 +88,12 @@ namespace Tactics.Common.Skills.Graph
                     var blockingUnit = cell.CurrentUnits[0];
                     var blockerStopCell = GetRelativeCell(casterCell, dirX, dirY, i - 1, grid) ?? casterCell;
 
-                    await MoveUnitAsync(caster, casterCell, blockerStopCell, grid);
+                    await MoveUnitAsync(
+                        caster,
+                        casterCell,
+                        blockerStopCell,
+                        grid,
+                        MovementFacingPolicy.FollowPath);
                     ApplyCollisionDamage(caster, blockingUnit);
 
                     return ChargeResolution.Success($"Blocked by '{blockingUnit}'.");
@@ -107,12 +112,27 @@ namespace Tactics.Common.Skills.Graph
                     : casterCell;
 
                 if (approachCell != null && approachCell != casterCell)
-                    await MoveUnitAsync(caster, casterCell, approachCell, grid);
+                    await MoveUnitAsync(
+                        caster,
+                        casterCell,
+                        approachCell,
+                        grid,
+                        MovementFacingPolicy.FollowPath);
 
-                await MoveUnitAsync(target, targetCell, retreatCell, grid);
+                await MoveUnitAsync(
+                    target,
+                    targetCell,
+                    retreatCell,
+                    grid,
+                    MovementFacingPolicy.Preserve);
 
                 var fromCell = (approachCell != null && approachCell != casterCell) ? approachCell : casterCell;
-                await MoveUnitAsync(caster, fromCell, targetCell, grid);
+                await MoveUnitAsync(
+                    caster,
+                    fromCell,
+                    targetCell,
+                    grid,
+                    MovementFacingPolicy.FollowPath);
 
                 ApplyCollisionDamage(caster, target);
                 return ChargeResolution.Success($"Reached target '{targetCell.GridCoordinates}'.");
@@ -123,7 +143,12 @@ namespace Tactics.Common.Skills.Graph
                 : casterCell;
 
             if (stopCell != null && stopCell != casterCell)
-                await MoveUnitAsync(caster, casterCell, stopCell, grid);
+                await MoveUnitAsync(
+                    caster,
+                    casterCell,
+                    stopCell,
+                    grid,
+                    MovementFacingPolicy.FollowPath);
 
             ApplyCollisionDamage(caster, target);
             ApplyCollisionDamage(target, caster);
@@ -140,7 +165,12 @@ namespace Tactics.Common.Skills.Graph
                 canTriggerBeforeAttacked: false, canCrit: false, canTriggerDamageTaken: true);
         }
 
-        private async Task MoveUnitAsync(IUnit unit, ICell source, ICell destination, IGridController grid)
+        private async Task MoveUnitAsync(
+            IUnit unit,
+            ICell source,
+            ICell destination,
+            IGridController grid,
+            MovementFacingPolicy facingPolicy)
         {
             if (unit == null || source == null || destination == null || ReferenceEquals(source, destination))
                 return;
@@ -151,7 +181,7 @@ namespace Tactics.Common.Skills.Graph
                 return;
 
             await grid.UnitManager.MarkAsMoving(unit, source, destination, path);
-            await unit.MovementAnimation(path, destination);
+            await FacingCoordinator.AnimateMovementAsync(unit, path, destination, facingPolicy);
 
             source.CurrentUnits.Remove(unit);
             source.IsTaken = source.CurrentUnits.Count > 0;
@@ -706,7 +736,11 @@ namespace Tactics.Common.Skills.Graph
                 return SkillNodeExecutionResult.Failed("No dash path available.");
 
             await grid.UnitManager.MarkAsMoving(caster, casterCell, stopCell, path);
-            await caster.MovementAnimation(path, stopCell);
+            await FacingCoordinator.AnimateMovementAsync(
+                caster,
+                path,
+                stopCell,
+                MovementFacingPolicy.FollowPath);
 
             casterCell.CurrentUnits.Remove(caster);
             casterCell.IsTaken = casterCell.CurrentUnits.Count > 0;

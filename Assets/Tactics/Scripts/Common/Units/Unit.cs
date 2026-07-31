@@ -727,6 +727,10 @@ namespace Tactics.Common.Units
                 }
             }
 
+            var fourDirectionVisual = GetComponent<FourDirectionSpriteVisual>();
+            if (fourDirectionVisual != null && fourDirectionVisual.TryApply(_facing))
+                return;
+
             if (_facing is not FacingDirection.East and not FacingDirection.West)
                 return;
 

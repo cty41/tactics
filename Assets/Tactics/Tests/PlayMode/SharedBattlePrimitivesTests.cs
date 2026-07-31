@@ -4,13 +4,17 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Tactics.Cells;
 using Tactics.Common.Battle;
+using Tactics.Common.Cells;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Buffs;
+using Tactics.Units;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Tactics.Tests.PlayMode
 {
@@ -141,6 +145,88 @@ namespace Tactics.Tests.PlayMode
 
             FacingResolver.TryResolve(new(0, 0), new(-2, 2), FacingDirection.South, out var horizontalTie);
             Assert.That(horizontalTie, Is.EqualTo(FacingDirection.West));
+        }
+
+        [Test]
+        public void FearMovement_FacesEscapeDestinationBeforeRelocation()
+        {
+            using var world = new SkillGraphTestWorld();
+            var sourceCell = world.CreateSquareCell("FearSource", 0, 0);
+            var targetCell = world.CreateSquareCell("FearTarget", 1, 0);
+            var escapeCell = world.CreateSquareCell("FearEscape", 2, 0);
+            var source = world.CreateUnit("FearSourceUnit", 0, sourceCell);
+            var target = world.CreateUnit("FearTargetUnit", 1, targetCell);
+            var fearConfig = CreateBuffConfig("Fear", BuffEffectType.Fear, 1);
+            try
+            {
+                target.Facing = FacingDirection.West;
+                target.AddBuff(new Buff(fearConfig, source, 1));
+
+                target.OnTurnStart(world.GridController);
+
+                Assert.That(target.CurrentCell, Is.SameAs(escapeCell));
+                Assert.That(target.Facing, Is.EqualTo(FacingDirection.East));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(fearConfig);
+            }
+        }
+
+        [Test]
+        public void TilemapUnitDestroy_AfterCellManagerDestroy_DoesNotAccessDestroyedManager()
+        {
+            var managerObject = new GameObject("DestroyedCellManager");
+            var unitObject = new GameObject("UnitDestroyedAfterCellManager");
+            try
+            {
+                managerObject.AddComponent<TilemapCellManager>();
+                var unit = unitObject.AddComponent<TilemapUnit>();
+                unit.CurrentCell = new VirtualSquareCell(
+                    new(0, 0),
+                    new(0f, 0f, 0f),
+                    1,
+                    false,
+                    null);
+                unit.MarkAsFriendly();
+
+                UnityEngine.Object.DestroyImmediate(managerObject);
+                Assert.DoesNotThrow(() => UnityEngine.Object.DestroyImmediate(unitObject));
+                LogAssert.NoUnexpectedReceived();
+            }
+            finally
+            {
+                if (managerObject != null)
+                    UnityEngine.Object.DestroyImmediate(managerObject);
+                if (unitObject != null)
+                    UnityEngine.Object.DestroyImmediate(unitObject);
+            }
+        }
+
+        [Test]
+        public void RemoveUnitStateHighlight_DoesNotRecreateDestroyedRenderer()
+        {
+            var managerObject = new GameObject("CellManagerWithoutRenderer");
+            try
+            {
+                var manager = managerObject.AddComponent<TilemapCellManager>();
+                var renderer = managerObject.GetComponent<ProceduralTileHighlightRenderer>();
+                Assert.That(renderer, Is.Not.Null);
+                UnityEngine.Object.DestroyImmediate(renderer);
+
+                manager.RemoveUnitStateHighlight(
+                    new VirtualSquareCell(new(0, 0), new(0f, 0f, 0f), 1, false, null),
+                    TileHighlightType.UnitFriendly);
+
+                Assert.That(
+                    managerObject.GetComponent<ProceduralTileHighlightRenderer>(),
+                    Is.Null);
+                LogAssert.NoUnexpectedReceived();
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(managerObject);
+            }
         }
 
         [Test]

@@ -40,6 +40,14 @@
 
 每次只生成一个角色的一个方向变体。方向、身体尺寸或脚位错误时，回到最近正确母图重新生成，不在错误候选上重复叠加修改。
 
+## 运行时双原生图接入
+
+当用户明确授权 Unity 运行时美术接入时，导出并导入两张已确认的 `256×256` 原生图，而不是四张预烘焙图片。逻辑方向沿 Unity 等距网格轴解释，运行时映射固定为：East 使用 `up-left + flipX`，West 使用 `down-right + flipX`，North 使用 `up-left`，South 使用 `down-right`。
+
+镜像补齐方向必须在任务中明示接受视觉换手：非对称的矛盾、匕首鬼火、法杖和长柄斧可以左右交换视觉位置，但不能反向修改 `FacingDirection`、移动、攻击目标或 AI 逻辑。新运行时纹理保持 `256×256`、Single Sprite、`128 PPU`、底部 Pivot `(0.5, 0.078125)`；`_128` 预览只留在 `Tools/artworks` 做 QA。
+
+使用 `FourDirectionSpriteVisual` 时只配置根节点的主 `Sprite` Renderer；不要镜像根 Transform，不能翻转 Shadow、Marker、ExplosionAnimation 或其他特效 Renderer。未配置组件的单位必须继续沿用既有 East/West 翻转回退，以保证老资产不回归。
+
 ## 外部物件
 
 将武器、耳朵、翅膀和法术当作独立剪影处理：规定长度上限、离地状态、画布安全边距和与身体的前后层级。生成后优先检查 128 预览能否把手、物件尖端、脸和脚分开；不能分开时先调整位置或版本，而不是增加内部排线。

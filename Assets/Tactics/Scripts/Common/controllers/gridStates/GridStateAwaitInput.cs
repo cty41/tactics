@@ -20,14 +20,7 @@ namespace Tactics.Common.Controllers.GridStates
                 return;
             }
 
-            if (FacingResolver.TryResolve(
-                    activeUnit.CurrentCell.GridCoordinates,
-                    cell.GridCoordinates,
-                    activeUnit.Facing,
-                    out var facing))
-            {
-                activeUnit.Facing = facing;
-            }
+            FacingCoordinator.FaceTarget(activeUnit, cell);
         }
 
         /// <summary>

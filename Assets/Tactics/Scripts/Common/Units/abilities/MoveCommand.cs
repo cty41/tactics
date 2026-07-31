@@ -69,7 +69,11 @@ namespace Tactics.Common.Units.Abilities
             unit.MovementPoints -= pathCost;
 
             await controller.UnitManager.MarkAsMoving(unit, _source, _destination, path);
-            await unit.MovementAnimation(path, _destination);
+            await FacingCoordinator.AnimateMovementAsync(
+                unit,
+                path,
+                _destination,
+                MovementFacingPolicy.FollowPath);
 
             if (!CanOccupyDestination(unit))
             {
@@ -90,16 +94,6 @@ namespace Tactics.Common.Units.Abilities
             unit.WorldPosition = _destination.WorldPosition;
 
             await controller.UnitManager.UnMarkAsMoving(unit, _source, _destination, path);
-
-            var previousCell = path.Count > 1 ? path[path.Count - 2] : _source;
-            if (FacingResolver.TryResolve(
-                    previousCell.GridCoordinates,
-                    _destination.GridCoordinates,
-                    unit.Facing,
-                    out var facing))
-            {
-                unit.Facing = facing;
-            }
 
             unit.InvokeUnitMoved(new UnitMovedEventArgs(unit, _source, _destination, path));
         }

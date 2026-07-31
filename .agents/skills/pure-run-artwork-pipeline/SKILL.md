@@ -12,6 +12,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 读取尺寸契约 | `references/sprite-size-contract.md` |
 | 规划 ImageGen 单图迭代 | `references/imagegen-iteration.md` |
 | 规划四方向静态图 | `references/imagegen-iteration.md` 的“方向变体 / 双原生视图” |
+| 核对运行时四向映射 | `references/imagegen-iteration.md` 的“运行时双原生图接入” |
 | 查看正反案例与正式母图 | `references/review-casebook.md` 与 `examples/cases.json` |
 | 锁定方向图核心体量 | 以同角色已确认的 `down-right` 为唯一体量锚点；核心蒙版只用于测量、三截面比较和 QA |
 | 校对核心体量 | 地面单位对齐核心胶囊主体；飞行单位对齐球核并以球核中心作为水平锚点 |
@@ -39,7 +40,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 
 ## Guardrails
 
-- 不修改 Unity Prefab、AI、遭遇配置或运行时代码；本 skill 只负责项目艺术资源的执行与验收。
+- 默认不修改 Unity Prefab、AI、遭遇配置或运行时代码；只有用户明确授权“运行时美术接入”时，才可将已确认原生图配置到 Prefab，并且不得改变玩法朝向语义。
 - 不覆盖已确认版本；新设计使用新的版本号，失败候选移动到 `rejected`，而不是删除历史证据。
 - 不把未校准候选标为可用 Sprite；武器或耳朵超出标准包围盒时，优先保持胶囊身体并显式记录例外。
 - 不把正反案例快照当成生成母图；快照只服务于快速 Review，正式母图以 `examples/cases.json` 的 `approved_assets` 原图路径为准。
