@@ -452,7 +452,12 @@ namespace Tactics.Cells
         /// </summary>
         public void RemoveUnitStateHighlight(ICell cell, TileHighlightType type)
         {
-            HighlightRenderer?.RemoveHighlightOfType(cell, type);
+            if (cell == null || _highlightRenderer == null)
+                return;
+
+            // Scene teardown may destroy the renderer before units clear their state.
+            // Removal is best-effort and must not lazily recreate rendering components.
+            _highlightRenderer.RemoveHighlightOfType(cell, type);
         }
 
         private static TileHighlightType ToTileHighlightType(CellGuidanceType guidanceType)

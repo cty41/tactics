@@ -201,10 +201,16 @@ namespace Tactics.Common.Units.Abilities
             }
         }
 
-        public void OnUnitHighlighted(IUnit unit, IGridController gridController) { }
+        public void OnUnitHighlighted(IUnit unit, IGridController gridController)
+        {
+            PreviewFacing(unit?.CurrentCell, gridController);
+        }
         public void OnUnitDehighlighted(IUnit unit, IGridController gridController) { }
         public void OnUnitDestroyed(IGridController gridController) { }
-        public void OnCellHighlighted(ICell cell, IGridController gridController) { }
+        public void OnCellHighlighted(ICell cell, IGridController gridController)
+        {
+            PreviewFacing(cell, gridController);
+        }
         public void OnCellDehighlighted(ICell cell, IGridController gridController) { }
         public void OnAbilityDeselected(IGridController gridController) { }
         public void OnTurnStart(IGridController gridController) { }
@@ -490,16 +496,8 @@ namespace Tactics.Common.Units.Abilities
             testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
 
             var originalFacing = _owner.Facing;
-            var actionFacing = originalFacing;
             bool changedFacing = orderedTargets == null && GetAmazonNode()?.SkillKind != AmazonSkillKind.Decoy &&
-                selectedCell != null && _owner.CurrentCell != null &&
-                FacingResolver.TryResolve(
-                    _owner.CurrentCell.GridCoordinates,
-                    selectedCell.GridCoordinates,
-                    originalFacing,
-                    out actionFacing);
-            if (changedFacing)
-                _owner.Facing = actionFacing;
+                FacingCoordinator.FaceTarget(_owner, selectedCell);
 
             LogSkillUse(context.PrimaryTarget);
 
@@ -581,6 +579,28 @@ namespace Tactics.Common.Units.Abilities
                 SkillName = DisplayName,
                 Target = GetUnitName(target)
             });
+        }
+
+        private void PreviewFacing(ICell targetCell, IGridController gridController)
+        {
+            if (_owner?.CurrentCell == null || targetCell == null || FirstSelectionRequiresSelf())
+                return;
+
+            if (FirstSelectionRequiresMoveDestination() &&
+                _validTargetCells?.Contains(targetCell) == true &&
+                gridController?.CellManager != null)
+            {
+                var path = _owner.FindPath(targetCell, gridController.CellManager);
+                var firstStep = path?.FirstOrDefault(cell =>
+                    cell != null && !ReferenceEquals(cell, _owner.CurrentCell));
+                if (firstStep != null)
+                {
+                    FacingCoordinator.FaceStep(_owner, _owner.CurrentCell, firstStep);
+                    return;
+                }
+            }
+
+            FacingCoordinator.FaceTarget(_owner, targetCell);
         }
 
         private static string GetUnitName(IUnit unit)

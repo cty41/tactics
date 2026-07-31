@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-07-27T12:55:46+08:00"
+timestamp: "2026-07-31T09:46:00+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Assets/Tactics/AI/Encounters
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:dc40a65a2b1a2a545f3f28b252b65ddf48b2bf3e28e85072499365875ae4ff25
+source_fingerprint: sha256:8026bb89e61794a34ef8dd68a329f94839923089a9e0f35de765607789bedbf2
 ---
 
 # Current State
@@ -27,7 +27,9 @@ source_fingerprint: sha256:dc40a65a2b1a2a545f3f28b252b65ddf48b2bf3e28e8507249936
 
 玩家预览、AI 和执行前重验证共享 `IAbilityTargetingProvider`，AI 候选还自然消费能力统一的 `CanPerform`/可用性门禁；因此 `MaxUsesPerTurn` 达到本回合上限后不会继续生成或执行该技能，无需 AI 维护独立次数。`AiBrainAsset` 组合 `AiDecisionGraph`、`AIProfile` 和可选 Pattern；Pattern 游标按单位保存，失败或 Generic fallback 不推进。Brain 可选配置偏好战斗距离和过近时的重定位优先级；关闭时不改变旧 Brain 候选与评分。
 
-单位朝向属于共享战斗状态而不是 AI 私有状态。AI 成功移动后按路径最后一步转向，成功执行目标技能后朝向目标；失败执行恢复原朝向。AI 不在回合末自动面向最近敌人，也不显示独立箭头。方向型技能后续直接读取这一共享朝向与 `SkillTargetingProtocol`。
+单位朝向属于共享战斗状态而不是 AI 私有状态。AI 的普通路径移动通过共享 `FacingCoordinator` 在每个新路径段开始前转向，成功执行目标技能后朝向目标；失败执行恢复到点击/执行前的最后预览朝向。AI 不在回合末自动面向最近敌人，也不显示独立箭头。方向型技能继续读取这一共享朝向与 `SkillTargetingProtocol`。
+
+`Unit.ApplyFacingVisual()` 在 Animator 参数写入后可将主 Sprite 显示委托给 `FourDirectionSpriteVisual`；该组件只按既有 `FacingDirection` 选择两张原生图并水平镜像，不改写朝向状态、`FacingResolver`、移动、技能目标或 AI 决策。未配置组件的单位继续使用原有 East/West Renderer 翻转回退。
 
 Pure Run 的 Charger、Ranged、AOE、Support、EliteCharger 与 ElitePoisonCaster 各自绑定独立 Brain/Profile。三个正式怪物技能当前均为每回合最多成功使用 1 次：Charge Strike 法力 0、基础伤害 8；Area Blast 法力 0、基础伤害 6；Heavy Shot 法力 8、基础伤害 6。Charger 贴近并强化技能效果，Ranged 维持 3–5 格；正式 Ranged 配方最低起始法力为 15，HunterBlue 的 Intelligence 为 5，使首次 Heavy Shot 后的回合末回蓝足以支持下一回合继续支付。AOE 提高覆盖评分，Support 提高减益评分；两个 Elite 通过固定 Pattern 顺序执行高威胁技能并在不合法时回退 Generic AI。旧 `BasicMeleeBrain` 仍服务未迁移内容，FireDemon 继续使用 2–3 格偏好距离。
 

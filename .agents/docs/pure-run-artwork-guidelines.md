@@ -22,6 +22,21 @@ verified_revision: c68dbebe
 - 单位状态不使用角色子节点上的方形 `Marker`。待命、选中、已行动和可攻击状态由 `ProceduralTileHighlightRenderer` 在 `CurrentCell` 的等距 Tile 面上绘制；友方为低饱和蓝灰，选中为柔和琥珀金，已行动为弱灰蓝，敌对/攻击范围为暖红。
 - Sprite 的底部 pivot 是运行时脚底锚点。阴影必须从主 `Sprite` 子节点的该锚点加极小向下偏移定位；不要按整张透明画布的 `Sprite.bounds.min` 或固定负 Y 值定位。
 
+## 双原生图四向显示
+
+- 已接入的胶囊体单位只维护两张原生 `256×256` Sprite：`down-right` 与 `up-left`；`_128` 仅作设计层 QA，不进入运行时纹理目录。
+- `FourDirectionSpriteVisual` 只接管单位根节点下名为 `Sprite` 的主 `SpriteRenderer`，不改变 Transform scale、`Shadow` 或爆炸动画 Renderer。逻辑 `FacingDirection` 与视觉映射固定如下：
+
+| 逻辑朝向 | 原生图 | `flipX` |
+| --- | --- | --- |
+| East | up-left | `true` |
+| West | down-right | `true` |
+| North | up-left | `false` |
+| South | down-right | `false` |
+
+- 逻辑方向沿 Unity 等距网格轴解释：East 在屏幕上朝右上，West 朝左下，North 朝左上，South 朝右下。水平镜像方向明确接受矛、盾、匕首、鬼火、法杖和斧头的视觉换手；不得借此改变移动、技能、AI 或 `FacingResolver` 的语义。未配置该组件的旧单位继续使用原有 East/West 全 Renderer 翻转逻辑。
+- 运行时两张原生纹理均为 `256×256`、Single Sprite、`128 PPU`、底部 Pivot `(0.5, 0.078125)`。已有 down-right 纹理保留 `.meta` 与 GUID，仅更新像素内容；新增 up-left 纹理单独导入。
+
 ## Tile 表面契约
 
 - Pure Run 地面 Tile 使用严格 `64×32` 的平面菱形，四角透明、无侧壁；暖灰与冷蓝灰版本必须共享完全一致的 alpha、轮廓和岩面位置。
@@ -35,6 +50,15 @@ verified_revision: c68dbebe
 - 参考图只提供犬种特征、武器结构、姿态骨架或色彩启发，不迁移对方的固定比例、装备、材质、地图或画风。提示词中应明确每张输入图片的职责。
 - 候选图用于比较和复盘；失败图必须隔离，不能被后续任务误当作母图或可用 Sprite。一次只生成一个角色或一个变体，先确认身体再迭代脸部、武器和层级。
 - `Tools/artworks/amazon` 下的黑白亚马逊图只属于造型设定集和早期风格探索，不是 Pure Run 正式单位稿、尺寸基准或方向图母图；正式四方向生产仅面向已确认的胶囊体信徒与胶囊规则下的怪物。
+
+## 死亡状态静态图
+
+- 死亡图是独立静态状态，不是将站立图旋转或压扁。生成前先分类核心拓扑：胶囊地面单位仰面平躺、头朝画面右上、身体轴约 `60°` 且保持短厚平直；球形飞行单位保持近圆球核，只让耳朵、脸等头部线索朝右上，双翼瘫软贴地。
+- 赤柴死亡图对胶囊单位提供姿态和紧凑体量参考；对球形单位只提供屏幕方向，不能迁移胶囊轮廓、四肢或细长身体轴。
+- 尺寸校准只比较胶囊核心或球核，排除耳朵、四肢、盾牌、武器、法杖、翅膀和特效。完整 alpha AABB 只用于安全边距、裁切和 Tile 占用，不得驱动单轴拉伸。
+- 死亡道具必须脱手；默认移除鬼火、火焰、光晕和粒子等常驻职业特效。任务明确批准的单件道具可贴近手掌或紧凑搭在尸体表面。
+- 无脚底尸体与落地球形单位都使用完整死亡尸体 AABB 中心对准 `64×32` Tile 中心，不沿用站立脚底锚点或活体悬浮锚点。Tile Review 使用 `_128` 预览。
+- 未经人工确认的死亡图只进入 `concepts` 或 `candidates`，不进入 `calibrated/approved`，也不接入 Unity。详细流程、当前锚点和失败清单见 [死亡状态 Sprite 约束](../skills/pure-run-artwork-pipeline/references/death-state-sprites.md)。
 
 ## 标准流水线
 
@@ -88,4 +112,4 @@ verified_revision: c68dbebe
 
 ## 边界与关联
 
-本契约不修改 Unity Prefab、AI、遭遇配置或运行时代码。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、案例归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。
+默认的生成与校准流程不修改 Unity Prefab、AI、遭遇配置或运行时代码。只有用户明确授权运行时美术接入时，才按“两个原生图 + 水平镜像”的固定映射更新纹理和 Prefab；该接入不得改变玩法朝向、AI 或遭遇语义。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、案例归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。

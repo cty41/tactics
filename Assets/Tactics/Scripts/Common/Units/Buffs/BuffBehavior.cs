@@ -113,6 +113,7 @@ namespace Tactics.Common.Units.Buffs
             if (destination == null)
                 return;
 
+            FacingCoordinator.FaceStep(owner, origin, destination);
             origin.CurrentUnits.Remove(owner);
             origin.IsTaken = origin.CurrentUnits.Count > 0 || origin.CurrentInteractables.Any(item => item.OccupiesCell);
             owner.CurrentCell = destination;

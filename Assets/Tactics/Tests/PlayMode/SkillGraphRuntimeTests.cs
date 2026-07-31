@@ -303,6 +303,7 @@ namespace Tactics.Tests.PlayMode
 
                 var caster = world.CreateUnit("Caster", playerNumber: 0, casterCell);
                 var target = world.CreateUnit("Target", playerNumber: 1, targetCell);
+                target.Facing = FacingDirection.North;
                 world.SetTurnContext(world.PlayerOne, new IUnit[] { caster });
                 world.SetTurnContext(world.PlayerTwo, new IUnit[] { target });
 
@@ -321,6 +322,7 @@ namespace Tactics.Tests.PlayMode
                 var result = task.Result;
                 Assert.AreEqual(SkillGraphExecutionState.Completed, result.ExecutionState);
                 Assert.That(result.ValidationErrors, Is.Empty);
+                Assert.That(target.Facing, Is.EqualTo(FacingDirection.North));
             }
             finally
             {

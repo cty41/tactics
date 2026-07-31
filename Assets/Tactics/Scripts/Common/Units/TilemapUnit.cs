@@ -228,11 +228,12 @@ namespace Tactics.Units
 
         private void ClearUnitStateHighlight()
         {
-            if (_unitHighlightCell == null || !_unitHighlightType.HasValue)
-                return;
-
-            if (_cellManager is TilemapCellManager tilemapCellManager)
-                tilemapCellManager.RemoveUnitStateHighlight(_unitHighlightCell, _unitHighlightType.Value);
+            if (_unitHighlightCell != null && _unitHighlightType.HasValue)
+            {
+                var tilemapCellManager = _cellManager as TilemapCellManager;
+                if (tilemapCellManager != null)
+                    tilemapCellManager.RemoveUnitStateHighlight(_unitHighlightCell, _unitHighlightType.Value);
+            }
 
             _unitHighlightCell = null;
             _unitHighlightType = null;
