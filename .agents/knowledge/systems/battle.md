@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-31T10:53:06+08:00"
+timestamp: "2026-07-31T21:18:07+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -38,6 +38,8 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Cells/ProceduralTileHighlightRenderer.cs
   - Assets/Tactics/Scripts/Common/Units/FacingState.cs
   - Assets/Tactics/Scripts/Common/Units/FacingCoordinator.cs
+  - Assets/Tactics/Scripts/Common/Units/Tween
+  - Assets/Tactics/Scripts/Common/Interactables/Corpse.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/AbilityAvailability.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/MoveCommand.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/UnityMoveComponent.cs
@@ -65,8 +67,11 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/BattleSpeedControlUiTests.cs.meta
   - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs
   - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs.meta
+  - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
+  - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
+  - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:af8d0e1ef5e7161c0c8405b06b776c9065d63d77b7a6b2e15d7458ce8c39ecdb
+source_fingerprint: sha256:95b70a6d532480b9ae59d41c48be2cbe150139b20a6128deeae4880adbf73c58
 ---
 
 # Current State
@@ -84,6 +89,10 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 单位持有四方向 `Facing` 状态，坐标解析由 `FacingResolver` 保持纯计算，行为更新统一收束到 `FacingCoordinator`。普通玩家/AI 移动、冲锋者与 Dash 施法者在每个新路径段开始前转向；恐惧在逃跑换格前转向；冲锋退让目标、击退、抛飞及受击保持原朝向。技能选择期间，悬停单位或格子都会预览施法者朝向，移动技能优先按可达路径第一段预览，取消或失败保留最后预览；有序多目标技能的合法锥形继续使用进入选择时锁定的方向。待输入状态下点击正交相邻格仍可免费转向。默认人类单位朝东、非人类单位朝西，表现层优先消费 Animator 的 `Facing`/`DirectionX`/`DirectionY` 参数，并为纯横向 Sprite 提供翻转回退。完整规则见 `.agents/docs/battle-facing-rules.md`。
 
 `BattleInitiativeService` 按有效速度派生先攻并维护当前轮待行动顺序；减速等速度变化会立即重排尚未行动单位，不回滚已经行动的单位。Unit 按能力配置的稳定名称维护本回合成功使用次数，并在 `PrepareForTurn` 清空；共享 AbilityConfig 资产不会共享不同单位的运行时计数。`SummonRegistry` 按召唤者和类别记录召唤顺序，支持单体上限替换、原子批量替换和按召唤物已完成行动数计时；主动替换、到期、召唤者死亡与战斗结束会同步释放格子且不留下尸体。`AbilityAvailability` 统一表达可用、可点击禁用及隐藏状态，并携带稳定的禁用原因。
+
+普通非召唤单位死亡后仍从 `UnitManager` 移除，并在原 Cell 生成可选中、占格且可被死灵技能消耗的 `Corpse`。Pure Run 单位可在视觉配置中提供专用死亡 Sprite；尸体使用中心 Pivot并抵消 Sprite Tight bounds 的可见中心偏移，清除通用尸体的旋转与灰色 Tint，并继承生前主 Renderer 的材质和颜色。未配置专用图的旧单位继续使用通用尸体，召唤物与诱饵继续不生成尸体。
+
+标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态。Cast 的蓝色 Overlay 使用所有地面单位共享的专用透明材质，仅在施法时延迟创建，并在完成、打断、取消、Disable 或 Destroy 时清零和禁用；材质缺失时只跳过发光，不延迟或吞掉玩法释放点。尸体生成和占格立即生效，专用死亡图只异步播放落地回弹。蝙蝠等飞行单位暂不接入。
 
 `PureRunAbilityCatalog` 为三职业 18 个正式技能和隐藏额外技能 `amazon.pickup_spear` 提供稳定 ID、等级元数据与运行时资产解析。`PureRunAbilityBinder` 在玩家单位初始化前只注入职业普通攻击、实际已学主动技能和可解析的额外技能；被动按角色已学记录启用，Amazon 不再因职业身份在 Pure Run 中自动获得战斗技巧。缺少精确等级资产时仅向下回退并记录错误。三职业等级资产均已按各技能设计上限连续发布。
 

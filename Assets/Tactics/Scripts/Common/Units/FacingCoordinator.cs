@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
+using Tactics.Common.Units.Tween;
 
 namespace Tactics.Common.Units
 {
@@ -62,10 +63,23 @@ namespace Tactics.Common.Units
             void OnUnitLeftCell(UnitChangedGridPositionEventArgs eventArgs)
             {
                 if (ReferenceEquals(eventArgs.AffectedUnit, unit))
+                {
                     FaceStep(unit, eventArgs.LeftCell, eventArgs.EnteredCell);
+                    UnitAnimationCoordinator.BeginMoveStep(
+                        unit,
+                        eventArgs.LeftCell,
+                        eventArgs.EnteredCell);
+                }
+            }
+
+            void OnUnitEnteredCell(UnitChangedGridPositionEventArgs eventArgs)
+            {
+                if (ReferenceEquals(eventArgs.AffectedUnit, unit))
+                    UnitAnimationCoordinator.EndMoveStep(unit);
             }
 
             unit.UnitLeftCell += OnUnitLeftCell;
+            unit.UnitEnteredCell += OnUnitEnteredCell;
             try
             {
                 // Apply the first segment before animation begins. UnityMoveComponent
@@ -76,6 +90,8 @@ namespace Tactics.Common.Units
             finally
             {
                 unit.UnitLeftCell -= OnUnitLeftCell;
+                unit.UnitEnteredCell -= OnUnitEnteredCell;
+                UnitAnimationCoordinator.EndMoveStep(unit);
             }
         }
     }

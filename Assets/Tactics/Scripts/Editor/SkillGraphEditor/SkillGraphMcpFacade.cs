@@ -667,6 +667,13 @@ namespace Tactics.Editor.SkillGraphEditor
                     if (parameters.TryGetValue("speed", out var sp)) r.Speed = ToFloat(sp);
                     if (parameters.TryGetValue("dropOnHit", out var doh)) r.DropOnHit = ToBool(doh);
                     if (parameters.TryGetValue("dropSearchRadius", out var dsr)) r.DropSearchRadius = ToInt(dsr);
+                    if (parameters.TryGetValue("requiresLineOfSight", out var rlos)) r.RequiresLineOfSight = ToBool(rlos);
+                    if (parameters.TryGetValue("visualProfilePath", out var vpp) &&
+                        vpp is string visualProfilePath &&
+                        !string.IsNullOrEmpty(visualProfilePath))
+                    {
+                        r.VisualProfile = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(visualProfilePath);
+                    }
                     break;
                 case ApplyBuffNodeRecord r:
                     if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = ToInt(buffDur);
@@ -769,6 +776,10 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["speed"] = r.Speed;
                     dict["dropOnHit"] = r.DropOnHit;
                     dict["dropSearchRadius"] = r.DropSearchRadius;
+                    dict["requiresLineOfSight"] = r.RequiresLineOfSight;
+                    dict["visualProfilePath"] = r.VisualProfile != null
+                        ? AssetDatabase.GetAssetPath(r.VisualProfile)
+                        : null;
                     break;
                 case ApplyBuffNodeRecord r:
                     dict["duration"] = r.Duration;

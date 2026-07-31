@@ -10,8 +10,10 @@ using Tactics.Common.Controllers.TurnResolvers;
 using Tactics.Common.Interactables;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
+using Tactics.Common.Units.Tween;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Utilities;
+using UnityEngine;
 
 namespace Tactics.Common.Controllers
 {
@@ -222,6 +224,24 @@ namespace Tactics.Common.Controllers
 
         private async void OnUnitDestroyed(UnitDestroyedEventArgs eventArgs)
         {
+            Sprite deathSprite = null;
+            Material deathMaterial = null;
+            Color deathColor = Color.white;
+            StandardUnitTweenProfile deathTweenProfile = null;
+            if (eventArgs.AffectedUnit is Unit unityUnit)
+            {
+                var visual = unityUnit.GetComponent<FourDirectionSpriteVisual>();
+                var tweenVisual = unityUnit.GetComponent<UnitTweenVisual>();
+                var sourceRenderer = visual?.TargetRenderer;
+                deathSprite = visual?.DeathSprite;
+                deathTweenProfile = tweenVisual?.Profile;
+                if (sourceRenderer != null)
+                {
+                    deathMaterial = sourceRenderer.sharedMaterial;
+                    deathColor = sourceRenderer.color;
+                }
+            }
+
             // Capture summon identity before registry cleanup clears ownership. Reanimated
             // units are removed outright and never become valid corpse resources.
             bool wasSummoned = eventArgs.AffectedUnit.OwnerUnitId >= 0;
@@ -282,6 +302,7 @@ namespace Tactics.Common.Controllers
                         go.transform.position = cell.WorldPosition.ToVector3();
                     }
 
+                    corpse.ApplyVisual(deathSprite, deathMaterial, deathColor, deathTweenProfile);
                     cell.AddInteractable(corpse);
                     TLog.Info($"[GridController] Unit {eventArgs.AffectedUnit.UnitID} died, Corpse created at {cell.GridCoordinates}");
                 }

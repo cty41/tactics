@@ -464,9 +464,15 @@ namespace Tactics.Common.Skills.Graph
             else
                 context.RecordEventAtCell("ProjectileLaunched", node.NodeId, targetCell);
 
-            float travelTime = UnityEngine.Mathf.Max(0.05f, record.TravelTime);
             var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
-            await GameTimeService.DelayScaledAsync(travelTime, cancellationToken);
+            await ProjectileVisualCoordinator.PlayAsync(
+                caster,
+                target,
+                targetCell,
+                record.VisualProfile,
+                record.Speed,
+                record.TravelTime,
+                cancellationToken);
 
             context.SetBlackboard("ProjectileHit", true);
             context.SetBlackboard("ProjectileTarget", target);

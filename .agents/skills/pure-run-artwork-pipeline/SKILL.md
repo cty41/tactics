@@ -15,6 +15,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 核对运行时四向映射 | `references/imagegen-iteration.md` 的“运行时双原生图接入” |
 | 查看正反案例与正式母图 | `references/review-casebook.md` 与 `examples/cases.json` |
 | 设计与 Review 死亡状态 | `references/death-state-sprites.md` |
+| 设计与 Review 投射物 | `references/projectile-sprites.md` |
 | 锁定方向图核心体量 | 以同角色已确认的 `down-right` 为唯一体量锚点；核心蒙版只用于测量、三截面比较和 QA |
 | 校对核心体量 | 地面单位对齐核心胶囊主体；飞行单位对齐球核并以球核中心作为水平锚点 |
 | 校对 Tile 落点 | 脚底锚点或飞行单位虚拟落点必须精确位于 `64×32` Tile 几何中心 |
@@ -32,7 +33,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 ## Workflow
 
 1. **先查案例，再锁定母图。** 阅读 `references/review-casebook.md` 中与任务相关的正反案例，并从 `examples/cases.json` 的 `approved_assets` 选择唯一正式母图。记录必须保持的身体、脚位、盾牌、武器和构图；把其他图片标为犬种、武器、姿态或色彩参考。不要让参考图替换母图的比例，禁止从 `rejected`、`superseded`、案例快照或 `tmp` 开始编辑。
-2. **一次生成一个变体。** ImageGen 只处理一个角色或一个局部变体。明确“保持不变”区域；新武器、耳朵、翅膀和法术必须在屏幕空间中有清晰的前后层级，并完整留在画布内。
+2. **一次生成一个变体。** ImageGen 只处理一个角色、一个局部变体或一个投射物。明确“保持不变”区域；新武器、耳朵、翅膀和法术必须在屏幕空间中有清晰的前后层级，并完整留在画布内。投射物必须完成单图 Review 并获得人工确认后，才能开始下一张。
 3. **去幕。** 选择纯 `#00ff00` 或 `#ff00ff` 背景，移除背景、软化 matte 边缘并检查绿色/洋红残留。保留真实透明 alpha，不把带色幕截图当母版。
 4. **尺寸校准。** 方向图必须以同角色已确认的 `down-right` 为唯一核心体量锚点，并制作只包含中央胶囊体或球核的纯核心主体蒙版；耳朵、口鼻、眼睛、手掌、脚掌、武器、盾牌、法杖、翅膀和特效全部排除。蒙版只用于测量和 QA，禁止粘贴或参与成品合成。比较主体上缘、下缘、中心、最大宽度以及上中下三个截面的宽度分布；中段近似平行，下段只能持平或内收。飞行单位改用球核体量，把球核中心固定在身体水平锚点 `x=128`，并在垂直方向对齐基准胶囊体上部圆帽中心。完整 alpha 包围盒只用于画布安全、裁切和技术校验：标准母版 `256×256 RGBA`、脚底或虚拟基线 `y=236`。禁止单轴拉伸；外部轮廓超出标准时记录为例外或候选。
 5. **缩小和逐角色 Review。** 生成 `128×128` Mitchell 等比预览，确认脚底基线 `y=118`。再使用真实错列等距 Tile 排布，将预览的脚底锚点 `(64,118)` 精确映射到目标 `64×32` Tile 的几何中心；飞行单位使用同一虚拟落点，不能用可见身体下沿替代。死亡图先按 `references/death-state-sprites.md` 分类拓扑，并使用完整尸体 AABB 中心对齐 Tile。检查脚掌接触或悬浮间距、角色占用、脸部识别和装备分离。每次只校正一个角色，必须展示基准与当前角色并排并等待人工确认；确认后才进入下一个角色或生成其方向变体。
@@ -58,6 +59,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 - 死亡图生成前必须先按 `references/death-state-sprites.md` 分类核心拓扑。赤柴死亡图只为胶囊地面单位提供身体姿态；对球形飞行单位只提供头部朝画面右上的屏幕方向。
 - 死亡图只以胶囊核心或球核校准体量，完整 AABB 只用于裁切和 Tile Review；禁止把耳、四肢、装备、翅膀或特效纳入身体缩放，也禁止单轴拉伸。
 - 死亡道具必须脱手，默认移除所有职业特效；未经人工确认的死亡图只能进入 `concepts` 或 `candidates`，不得接入 Unity。
+- 投射物按 `references/projectile-sprites.md` 使用画布中心锚点并与施法者 `_128` 同屏定尺寸；禁止套用角色脚底基线、孤立判断 AABB 或在前一张未确认时批量生成下一张。
 
 ## Checklist
 
@@ -72,4 +74,5 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 - [ ] 128 预览的脚底/虚拟落点已对准 `64×32` Tile 几何中心，且 Tile Review 通过。
 - [ ] 死亡图已先分类核心拓扑：胶囊单位平直短厚，球形单位保持近圆；两者的头部线索均朝画面右上。
 - [ ] 死亡图只比较核心体量，保留道具已脱手且无未经批准的特效；无脚底图使用尸体 AABB 中心完成 Tile 居中。
+- [ ] 投射物已使用中心锚点、与施法者 `_128` 同屏定尺寸，并在 Tilemap 中按真实攻击方向旋转 Review。
 - [ ] 目录状态、版本号、OKF 验证和暂存范围已复核。

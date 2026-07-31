@@ -17,6 +17,8 @@ namespace Tactics.Editor.SkillGraphEditor
         private const string GraphDirectory = "Assets/Tactics/Battle/Abilities/SkillGraphs";
         private const string ConfigDirectory = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs";
         private const string SkeletonPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Skeleton.prefab";
+        private const string BoneSpearProfilePath =
+            "Assets/Tactics/Arts/PureRun/Tween/Projectiles/BoneSpear.asset";
 
         [MenuItem("Tactics/Tools/Pure Run/Rebuild Necromancer Slice Assets")]
         public static void RebuildAll()
@@ -171,6 +173,8 @@ namespace Tactics.Editor.SkillGraphEditor
             var projectile = Add<ProjectileLaunchNodeRecord>(graph, SkillGraphNodeType.ProjectileLaunch);
             projectile.TravelTime = 0.25f;
             projectile.Speed = 12f;
+            projectile.VisualProfile = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(
+                BoneSpearProfilePath);
             // Bone Spear owns unit piercing and wall stopping itself. Generic projectile
             // line-of-sight would incorrectly reject a farther endpoint behind the first enemy.
             projectile.RequiresLineOfSight = false;

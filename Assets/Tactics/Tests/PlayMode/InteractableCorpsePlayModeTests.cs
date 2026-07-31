@@ -93,6 +93,69 @@ namespace Tactics.Tests.PlayMode
             yield break;
         }
 
+        [UnityTest]
+        public IEnumerator Corpse_AuthoredVisual_ReplacesGenericPresentation()
+        {
+            var corpseGo = new GameObject("TestCorpse");
+            var corpse = corpseGo.AddComponent<Corpse>();
+            var spriteObject = new GameObject("Sprite");
+            spriteObject.transform.SetParent(corpseGo.transform);
+            spriteObject.transform.localPosition = new Vector3(0f, -0.15f, 0f);
+            spriteObject.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            spriteObject.transform.localScale = new Vector3(2f, 2f, 1f);
+
+            var renderer = spriteObject.AddComponent<SpriteRenderer>();
+            renderer.color = new Color(0.4f, 0.4f, 0.4f, 0.8f);
+            renderer.flipX = true;
+
+            var texture = new Texture2D(2, 2);
+            var deathSprite = Sprite.Create(texture, new Rect(0f, 0f, 2f, 2f), new Vector2(0.25f, 0.75f));
+            var material = new Material(Shader.Find("Sprites/Default"));
+            var sourceColor = new Color(0.8f, 0.7f, 0.6f, 1f);
+
+            corpse.ApplyVisual(deathSprite, material, sourceColor);
+
+            Assert.That(renderer.sprite, Is.EqualTo(deathSprite));
+            Assert.That(renderer.sharedMaterial, Is.EqualTo(material));
+            Assert.That(renderer.color, Is.EqualTo(sourceColor));
+            Assert.That(renderer.flipX, Is.False);
+            Assert.That(spriteObject.transform.localPosition,
+                Is.EqualTo(new Vector3(-deathSprite.bounds.center.x, -deathSprite.bounds.center.y, 0f)));
+            Assert.That(spriteObject.transform.localRotation, Is.EqualTo(Quaternion.identity));
+            Assert.That(spriteObject.transform.localScale, Is.EqualTo(Vector3.one));
+
+            Object.Destroy(material);
+            Object.Destroy(deathSprite);
+            Object.Destroy(texture);
+            Object.Destroy(corpseGo);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator Corpse_MissingAuthoredVisual_KeepsGenericPresentation()
+        {
+            var corpseGo = new GameObject("TestCorpse");
+            var corpse = corpseGo.AddComponent<Corpse>();
+            var spriteObject = new GameObject("Sprite");
+            spriteObject.transform.SetParent(corpseGo.transform);
+            spriteObject.transform.localPosition = new Vector3(0f, -0.15f, 0f);
+            spriteObject.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            var renderer = spriteObject.AddComponent<SpriteRenderer>();
+            var genericColor = new Color(0.4f, 0.4f, 0.4f, 0.8f);
+            renderer.color = genericColor;
+
+            corpse.ApplyVisual(null, null, Color.white);
+
+            Assert.That(renderer.sprite, Is.Null);
+            Assert.That(renderer.color, Is.EqualTo(genericColor));
+            Assert.That(spriteObject.transform.localPosition, Is.EqualTo(new Vector3(0f, -0.15f, 0f)));
+            Assert.That(Quaternion.Angle(spriteObject.transform.localRotation, Quaternion.Euler(0f, 0f, 90f)),
+                Is.LessThan(0.001f));
+
+            Object.Destroy(corpseGo);
+            yield return null;
+        }
+
         private ICell FindCell(int x, int y)
         {
             return _cellManagerRoot.GetComponentsInChildren<Square>()

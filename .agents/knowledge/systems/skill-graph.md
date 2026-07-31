@@ -4,13 +4,16 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-07-31T10:52:44+08:00"
+timestamp: "2026-07-31T20:44:06+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
   - .agents/docs/skill-graph-system.md
   - .agents/skills/skill-graph-creation/SKILL.md
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphAsset.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileVisualProfile.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileVisualCoordinator.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileTweenBuilder.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphRunner.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphSpec.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillTargetingProtocol.cs
@@ -31,13 +34,19 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
   - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
   - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
+  - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
+  - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:778838d28186e5e57742c017435700f45975177cb1e4732f72558c641652404b
+source_fingerprint: sha256:3b4574e67f461d2445d6614206fd48603547d4332b0b0dd67a6ef96899fe4edd
 ---
 
 # Current State
 
 `SkillGraphAsset` 保存编辑态节点图，`SkillGraphRunner` 解释执行，`SkillGraphAbilityImpl` 接入既有 `IAbility`、共享 targeting 和计划执行接口。玩家预览、AI 候选及执行前重验证复用射程、阵营、AOE 展开和 LOS 结论；多目标 AOE 只执行一次图并扣除一次资源。
+
+`SkillGraphAbilityConfig` 以显式 `VisualAction` 选择 None、Melee、Ranged 或 Cast。视觉 release 标记至多一次启动图执行；恢复段与图后续节点并行，Ability 等待两者完成。缺少视觉组件或 Profile 时立即执行图，不让表现依赖改变玩法成功边界。
+
+`ProjectileLaunchNodeRecord` 可选引用 `ProjectileVisualProfile`，并继续完整往返 TravelTime、Speed、DropOnHit、LOS 与 Profile 资产路径。运行时按 `worldDistance / Speed` 计算并限制飞行时长，缺图时只保留延迟；有图时创建临时 SpriteRenderer，终点在发射时锁定，到达后才进入 OnHit。取消会先标记等待任务为取消，再 Kill Tween 并清理 Renderer，避免 `OnKill` 抢先完成。毒矛已显式接入 `ProjectileLaunch → OnHit → AmazonSkill`，实体落矛仍由 Amazon 效果节点独立处理；物理基础、普通/毒矛及羊魔临时物理远程复用赤柴长矛，奥术/火焰/冰霜共用法师奥术弹并以 Tint 区分，Bone Spear 使用死灵飞行能量球。
 
 Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent 可通过 `SkillGraphSpec`、`SkillGraphSpecCompiler` 与 `SkillGraphSpecAutoFixer` 建立结构化输入，并使用 MCP 工具生成、校验和应用资产；运行语义继续由 Gameplay Test/PlayMode 测试证明。
 

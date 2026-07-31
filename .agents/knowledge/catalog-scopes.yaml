@@ -103,6 +103,7 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
       - Assets/Tactics/Scripts/Common/Units/FacingState.cs
       - Assets/Tactics/Scripts/Common/Units/FacingCoordinator.cs
+      - Assets/Tactics/Scripts/Common/Units/Tween
       - Assets/Tactics/Scripts/Common/Units/IUnit.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/UnityMoveComponent.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/AbilityAvailability.cs
@@ -116,6 +117,7 @@ scopes:
       - Assets/Tactics/Scripts/Common/players/TurnSkipHelper.cs
       - Assets/Tactics/Scripts/Common/controllers/GridController.cs
       - Assets/Tactics/Scripts/Common/controllers/turnResolvers/SubsequentTurnResolverImpl.cs
+      - Assets/Tactics/Scripts/Common/Interactables/Corpse.cs
       - Assets/Tactics/Scripts/Common/Interactables/DroppedSpear.cs
       - Assets/Tactics/Scripts/Common/controllers/gridStates/GridStateAwaitInput.cs
       - Assets/Tactics/Tests/PlayMode/ConsumableBattleUseTests.cs
@@ -127,6 +129,13 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/SharedBattlePrimitivesTests.cs
       - Assets/Tactics/Tests/PlayMode/FacingBehaviorPlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/InteractableCorpsePlayModeTests.cs
+      - Assets/Tactics/Scripts/Editor/PureRunTweenAssetConfigurator.cs
+      - Assets/Tactics/Scripts/Editor/PureRunTweenAssetConfigurator.cs.meta
+      - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
+      - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/AmazonSkillLevelTests.cs
       - Assets/Tactics/Tests/PlayMode/PureRunEncounterAndSummaryTests.cs
 

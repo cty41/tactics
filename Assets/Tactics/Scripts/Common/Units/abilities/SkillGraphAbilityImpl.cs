@@ -9,6 +9,7 @@ using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Interactables;
 using Tactics.Common.Battle;
 using Tactics.Common.Units;
+using Tactics.Common.Units.Tween;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Runtime.BattleLog;
@@ -505,7 +506,13 @@ namespace Tactics.Common.Units.Abilities
             var executionState = SkillGraphExecutionState.Failed;
             try
             {
-                executionState = await runner.Execute(context);
+                var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
+                executionState = await UnitAnimationCoordinator.PlayActionAsync(
+                    _owner,
+                    _config.VisualAction,
+                    selectedCell,
+                    () => runner.Execute(context),
+                    cancellationToken);
             }
             finally
             {

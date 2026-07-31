@@ -249,12 +249,14 @@ namespace Tactics.Common.Skills.Graph
     {
         [SerializeField] private float _travelTime = 0.3f;
         [SerializeField] private float _speed = 10f;
+        [SerializeField] private ProjectileVisualProfile _visualProfile;
         [SerializeField] private bool _dropOnHit;
         [SerializeField] private int _dropSearchRadius = 1;
         [SerializeField] private bool _requiresLineOfSight = true;
 
         public float TravelTime { get => _travelTime; set => _travelTime = value; }
         public float Speed { get => _speed; set => _speed = value; }
+        public ProjectileVisualProfile VisualProfile { get => _visualProfile; set => _visualProfile = value; }
         public bool DropOnHit { get => _dropOnHit; set => _dropOnHit = value; }
         public int DropSearchRadius { get => _dropSearchRadius; set => _dropSearchRadius = value; }
         public bool RequiresLineOfSight { get => _requiresLineOfSight; set => _requiresLineOfSight = value; }

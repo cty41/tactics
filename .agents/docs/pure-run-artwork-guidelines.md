@@ -60,6 +60,25 @@ verified_revision: c68dbebe
 - 无脚底尸体与落地球形单位都使用完整死亡尸体 AABB 中心对准 `64×32` Tile 中心，不沿用站立脚底锚点或活体悬浮锚点。Tile Review 使用 `_128` 预览。
 - 未经人工确认的死亡图只进入 `concepts` 或 `candidates`，不进入 `calibrated/approved`，也不接入 Unity。详细流程、当前锚点和失败清单见 [死亡状态 Sprite 约束](../skills/pure-run-artwork-pipeline/references/death-state-sprites.md)。
 
+## 基础投射物静态图
+
+- 基础投射物采用单帧中心锚点素材：母版 `256×256 RGBA` 的中心为 `(128,128)`，预览中心为 `(64,64)`；不使用角色脚底基线。
+- 一次只生成并 Review 一个投射物，上一张未获人工确认前不得开始下一个职业。施法者正式图只提供配色、线宽和法术语言，不能带入角色、手掌或装备。
+- 尺寸必须与施法者 `_128` 主体和真实 `64×32` Tilemap 同屏判断。有方向轮廓保留一张朝右原图，Tile Review 时按攻击轴旋转；未来平移与旋转由运行时负责。
+- 手持或悬浮的静态火焰允许短火舌向上；飞行火焰必须让火舌逆飞行方向后掠，同时保留圆钝能量核心。流线化只调整外焰，不把核心拉成尖头或长彗星。
+- 去幕和 Mitchell 缩小后都要重新合成到透明黑底，保证精确色幕为零且所有 `alpha=0` 像素 RGB 清零。详细流程见 [投射物 Sprite 约束](../skills/pure-run-artwork-pipeline/references/projectile-sprites.md)。
+- 当前运行时正式投射物源为赤柴长矛 `v01`、法师奥术弹 `v02` 和死灵飞行能量球 `v03`。运行时副本必须与设计源 PNG 哈希一致，统一导入为 `256×256`、Single Sprite、`128 PPU`、中心 Pivot、无 Mipmap/压缩；颜色职业变体由 `ProjectileVisualProfile.Tint` 表达，不复制新 Sprite。
+- 已明确批准接入运行时的死亡图复制为独立 `256×256`、Single Sprite、`128 PPU`、中心 Pivot `(0.5, 0.5)` 与 Tight Mesh 纹理；它们配置在单位视觉组件上，单位死亡后由同一通用 `Corpse` 实例显示。尸体以 Sprite Tight bounds 中心抵消透明画布内偏移，不继承生前方向镜像，但继承主 Renderer 的材质和颜色，使羊魔职责换色继续生效。
+- 当前运行时尸体图覆盖赤柴猎人、死灵法师、凯利蓝㹴法师与六种羊魔职责。骷髅、骷髅法师和火魔属于召唤物，仍按战斗规则直接移除且不生成尸体；蝙蝠尚无运行时 Prefab，不提前导入。
+
+## 运行时极简 Tween 表现
+
+- 标准地面胶囊单位共用 `StandardUnitTweenProfile`。Idle、移动纸片摆动、近战突进、远程后坐、施法发光和受击回弹只作用于名为 `Sprite` 的隔离视觉 Transform；逻辑 Root、Shadow、血条、飘字和 Tile 高亮不得参与 Tween。
+- 前景表现优先级为尸体落地、受击、攻击/施法、移动、Idle。打断使用 `Kill(false)` 并恢复 Prefab 原始局部姿态，不用 `Kill(true)` 强制完成旧回调。
+- 施法发光使用所有标准地面单位共享的 `Tactics/PureRun/GlowOverlay` 专用透明材质。Overlay 只在 Cast 首次需要时创建，颜色和透明度由 `SpriteRenderer.color` 驱动；正常完成、受击/移动打断、取消、Disable、Destroy 与场景卸载都必须清零并禁用。禁止给 Overlay 使用 `null` 默认材质，也禁止复用不读取顶点色的主 Sprite Shader。
+- 远程/施法动作在 release 标记启动 SkillGraph；`ProjectileLaunch` 抵达后才继续 `OnHit` 和玩法效果。场景卸载或取消必须先把等待任务标记为取消，再 Kill 临时 Tween 并销毁 Renderer，避免 `OnKill` 抢先报告成功。
+- 飞行蝙蝠不使用这套地面胶囊动画；其独立悬浮与飞行动画留待专用 Profile。
+
 ## 标准流水线
 
 1. 先确认唯一母图、角色方向、保留区域和尺寸契约；不同时生成多个角色。

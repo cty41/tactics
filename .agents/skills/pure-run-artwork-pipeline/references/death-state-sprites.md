@@ -97,14 +97,14 @@
 
 ## 当前参考锚点
 
-- 胶囊死亡方向与紧凑体量：`Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v02.png`
-- 死灵法师当前候选：`Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v03.png`
-- 法师当前候选：`Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v02.png`
-- 羊魔当前候选：`Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v01.png`
+- 胶囊死亡方向与紧凑体量：`Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v02.png`；已批准复制到运行时。
+- 死灵法师：`Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v03.png`；已批准复制到运行时。
+- 法师：`Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v02.png`；已批准复制到运行时。
+- 羊魔：`Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v01.png`；已批准复制到运行时并由六个职责共享。
 - 蝙蝠过大反例：`Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v01.png`
 - 蝙蝠当前候选：`Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png`
 
-正式活体母图必须从 `../examples/cases.json` 的 `approved_assets` 取得；上述死亡图均是设计参考或候选，不自动获得运行时发布资格。
+正式活体母图必须从 `../examples/cases.json` 的 `approved_assets` 取得。死亡图仍以设计层原图作为外观真相源；只有获得明确运行时接入授权的版本才能复制到 `Assets/Tactics/Arts/PureRun/Textures`。运行时死亡纹理使用中心 Pivot，不沿用活体底部 Pivot。
 
 ## Checklist
 

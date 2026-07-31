@@ -11,12 +11,14 @@ namespace Tactics.Common.Units
         [SerializeField] private SpriteRenderer _targetRenderer;
         [SerializeField] private Sprite _downRightSprite;
         [SerializeField] private Sprite _upLeftSprite;
+        [SerializeField] private Sprite _deathSprite;
 
         public SpriteRenderer TargetRenderer => _targetRenderer != null
             ? _targetRenderer
             : FindTargetRenderer();
         public Sprite DownRightSprite => _downRightSprite;
         public Sprite UpLeftSprite => _upLeftSprite;
+        public Sprite DeathSprite => _deathSprite;
 
         /// <summary>
         /// Configures this visual for generated or test-only units. Prefabs normally use the

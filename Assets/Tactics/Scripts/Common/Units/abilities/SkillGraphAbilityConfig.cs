@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Tactics.Common.Skills.Graph;
+using Tactics.Common.Units.Tween;
 using UnityEngine;
 
 namespace Tactics.Common.Units.Abilities
@@ -18,8 +19,12 @@ namespace Tactics.Common.Units.Abilities
         [BoxGroup("Skill Graph")]
         [SerializeField] private int _targetRange = 1;
 
+        [BoxGroup("Visuals")]
+        [SerializeField] private UnitVisualAction _visualAction;
+
         public SkillGraphAsset SkillGraph => _skillGraph;
         public int TargetRange => _targetRange;
+        public UnitVisualAction VisualAction => _visualAction;
 
         public override IAbility CreateAbility(IUnit owner)
         {
@@ -34,12 +39,14 @@ namespace Tactics.Common.Units.Abilities
             SkillGraphAsset graph,
             int targetRange = 1,
             int maxUsesPerTurn = 0,
-            bool isBasicAbility = false)
+            bool isBasicAbility = false,
+            UnitVisualAction visualAction = UnitVisualAction.None)
         {
             var config = CreateInstance<SkillGraphAbilityConfig>();
             config.InitializeRuntime(displayName, isBasicAbility, maxUsesPerTurn);
             config._skillGraph = graph;
             config._targetRange = Mathf.Max(0, targetRange);
+            config._visualAction = visualAction;
             return config;
         }
 

@@ -9,14 +9,21 @@ namespace Tactics.Tests.Editor
 {
     public sealed class FourDirectionSpriteVisualEditorTests
     {
+        private const string HunterPrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab";
+        private const string NecromancerPrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab";
+        private const string MagePrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab";
+        private const string SkeletonWarriorPrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonWarrior.prefab";
+        private const string SkeletonMagePrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonMage.prefab";
+        private const string FireDemonPrefabPath = "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunFireDemon.prefab";
+
         private static readonly string[] PureRunPrefabPaths =
         {
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab",
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab",
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab",
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonWarrior.prefab",
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonMage.prefab",
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunFireDemon.prefab",
+            HunterPrefabPath,
+            NecromancerPrefabPath,
+            MagePrefabPath,
+            SkeletonWarriorPrefabPath,
+            SkeletonMagePrefabPath,
+            FireDemonPrefabPath,
             "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatCharger.prefab",
             "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatRanged.prefab",
             "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatAoe.prefab",
@@ -44,15 +51,43 @@ namespace Tactics.Tests.Editor
         [Test]
         public void GoatPrefabs_ShareTheSameDirectionalSpritePair()
         {
-            var goatSprites = PureRunPrefabPaths
+            var goatVisuals = PureRunPrefabPaths
                 .Where(path => path.Contains("PureRunGoat", System.StringComparison.Ordinal))
                 .Select(path => AssetDatabase.LoadAssetAtPath<GameObject>(path).GetComponent<FourDirectionSpriteVisual>())
-                .Select(visual => (visual.DownRightSprite, visual.UpLeftSprite))
                 .ToList();
 
-            Assert.That(goatSprites, Has.Count.EqualTo(6));
-            Assert.That(goatSprites.All(pair => pair.DownRightSprite == goatSprites[0].DownRightSprite), Is.True);
-            Assert.That(goatSprites.All(pair => pair.UpLeftSprite == goatSprites[0].UpLeftSprite), Is.True);
+            Assert.That(goatVisuals, Has.Count.EqualTo(6));
+            Assert.That(goatVisuals.All(visual => visual.DownRightSprite == goatVisuals[0].DownRightSprite), Is.True);
+            Assert.That(goatVisuals.All(visual => visual.UpLeftSprite == goatVisuals[0].UpLeftSprite), Is.True);
+            Assert.That(goatVisuals.All(visual => visual.DeathSprite == goatVisuals[0].DeathSprite), Is.True);
+            Assert.That(goatVisuals[0].DeathSprite, Is.Not.Null);
+            AssertDeathSpriteContract(goatVisuals[0].DeathSprite, "Goat prefabs");
+            Assert.That(goatVisuals.Select(visual => visual.TargetRenderer.sharedMaterial).Distinct().Count(),
+                Is.EqualTo(6), "Goat role prefabs should keep distinct body-tint materials.");
+        }
+
+        [TestCase(HunterPrefabPath, "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_death.png")]
+        [TestCase(NecromancerPrefabPath, "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer_death.png")]
+        [TestCase(MagePrefabPath, "Assets/Tactics/Arts/PureRun/Textures/doge_mage_death.png")]
+        public void CorpseProducingPlayerPrefab_UsesExpectedDeathSprite(string prefabPath, string expectedSpritePath)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            var visual = prefab.GetComponent<FourDirectionSpriteVisual>();
+
+            Assert.That(visual.DeathSprite, Is.Not.Null, prefabPath);
+            Assert.That(AssetDatabase.GetAssetPath(visual.DeathSprite), Is.EqualTo(expectedSpritePath), prefabPath);
+            AssertDeathSpriteContract(visual.DeathSprite, prefabPath);
+        }
+
+        [TestCase(SkeletonWarriorPrefabPath)]
+        [TestCase(SkeletonMagePrefabPath)]
+        [TestCase(FireDemonPrefabPath)]
+        public void SummonedPrefab_DoesNotConfigureCorpseSprite(string prefabPath)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            var visual = prefab.GetComponent<FourDirectionSpriteVisual>();
+
+            Assert.That(visual.DeathSprite, Is.Null, prefabPath);
         }
 
         private static void AssertRuntimeSpriteContract(Sprite sprite, string prefabPath)
@@ -61,6 +96,20 @@ namespace Tactics.Tests.Editor
             Assert.That(sprite.texture.height, Is.EqualTo(256), prefabPath);
             Assert.That(sprite.pixelsPerUnit, Is.EqualTo(128f), prefabPath);
             Assert.That(sprite.pivot, Is.EqualTo(new Vector2(128f, 20f)), prefabPath);
+        }
+
+        private static void AssertDeathSpriteContract(Sprite sprite, string context)
+        {
+            Assert.That(sprite.texture.width, Is.EqualTo(256), context);
+            Assert.That(sprite.texture.height, Is.EqualTo(256), context);
+            Assert.That(sprite.pixelsPerUnit, Is.EqualTo(128f), context);
+            Assert.That(sprite.pivot, Is.EqualTo(new Vector2(128f, 128f)), context);
+
+            var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(sprite)) as TextureImporter;
+            Assert.That(importer, Is.Not.Null, context);
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            Assert.That(settings.spriteMeshType, Is.EqualTo(SpriteMeshType.Tight), context);
         }
     }
 }

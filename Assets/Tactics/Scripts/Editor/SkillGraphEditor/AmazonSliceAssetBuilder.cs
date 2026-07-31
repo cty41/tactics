@@ -13,6 +13,8 @@ namespace Tactics.Editor.SkillGraphEditor
     {
         private const string GraphDirectory = "Assets/Tactics/Battle/Abilities/SkillGraphs";
         private const string ConfigDirectory = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs";
+        private const string PoisonSpearProfilePath =
+            "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset";
 
         [MenuItem("Tactics/Tools/Pure Run/Rebuild Amazon Slice Assets")]
         public static void RebuildAll()
@@ -66,7 +68,22 @@ namespace Tactics.Editor.SkillGraphEditor
             select.MaxRange = range;
             var effect = AddAmazon(graph, kind, level, poison);
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
-            Link(graph, start, select, effect, finish);
+            if (kind == AmazonSkillKind.PoisonSpear)
+            {
+                var projectile = Add<ProjectileLaunchNodeRecord>(graph, SkillGraphNodeType.ProjectileLaunch);
+                projectile.Speed = 7f;
+                projectile.TravelTime = 0.3f;
+                projectile.DropOnHit = false;
+                projectile.RequiresLineOfSight = true;
+                projectile.VisualProfile = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(
+                    PoisonSpearProfilePath);
+                var onHit = Add<OnHitNodeRecord>(graph, SkillGraphNodeType.OnHit);
+                Link(graph, start, select, projectile, onHit, effect, finish);
+            }
+            else
+            {
+                Link(graph, start, select, effect, finish);
+            }
             Save(graph);
         }
 

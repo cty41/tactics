@@ -23,6 +23,7 @@ namespace Tactics.Editor.SkillGraphEditor
         private const string BuffDirectory = "Assets/Tactics/ScriptableObjects/Buffs";
         private const string FireDemonPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/FireDemon.prefab";
         private const string MageBluePrefabPath = "Assets/Tactics/Arts/Prefabs/Units/MageBlue.prefab";
+        private const string ProjectileProfileRoot = "Assets/Tactics/Arts/PureRun/Tween/Projectiles";
         private const string FireDemonRolePath = "Assets/Tactics/Battle/Classes/FireDemon.asset";
         private const string FireDemonBrainPath = "Assets/Tactics/AI/FireDemonBrain.asset";
 
@@ -105,6 +106,9 @@ namespace Tactics.Editor.SkillGraphEditor
             var projectile = Add<ProjectileLaunchNodeRecord>(graph, SkillGraphNodeType.ProjectileLaunch);
             projectile.TravelTime = kind == MageSkillKind.IceBolt ? 0.25f : 0.5f;
             projectile.Speed = kind == MageSkillKind.IceBolt ? 12f : 8f;
+            string profileName = kind == MageSkillKind.IceBolt ? "Ice" : "Fire";
+            projectile.VisualProfile = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(
+                $"{ProjectileProfileRoot}/{profileName}.asset");
             var onHit = Add<OnHitNodeRecord>(graph, SkillGraphNodeType.OnHit);
             var effect = AddMageNode(graph, kind, level, ignite, slow, stun, armor);
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
@@ -175,12 +179,18 @@ namespace Tactics.Editor.SkillGraphEditor
             damage.ElementType = ElementType.Fire;
             damage.IsRanged = true;
             damage.CanCrit = false;
+            var projectile = Add<ProjectileLaunchNodeRecord>(graph, SkillGraphNodeType.ProjectileLaunch);
+            projectile.Speed = 8f;
+            projectile.TravelTime = 0.3f;
+            projectile.VisualProfile = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(
+                $"{ProjectileProfileRoot}/Fire.asset");
+            var onHit = Add<OnHitNodeRecord>(graph, SkillGraphNodeType.OnHit);
             var buff = Add<ApplyBuffNodeRecord>(graph, SkillGraphNodeType.ApplyBuff);
             buff.BuffConfig = ignite;
             buff.Duration = 1;
             buff.RequiresSuccessfulHit = true;
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
-            Link(graph, start, select, damage, buff, finish);
+            Link(graph, start, select, projectile, onHit, damage, buff, finish);
             Save(graph);
             return graph;
         }
