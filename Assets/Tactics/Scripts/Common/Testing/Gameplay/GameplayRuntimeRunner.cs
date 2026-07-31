@@ -9,38 +9,75 @@ namespace Tactics.Common.Testing.Gameplay
     public sealed class GameplayRuntimeRunner
     {
         private readonly Dictionary<string, IGameplayStepAdapter> _adapters;
+        private readonly GamePlaybackSpeed _executionSpeed;
 
         public GameplayRuntimeRunner()
-            : this(new IGameplayStepAdapter[] { new SkillGameplayStepAdapter(), new BattleGameplayStepAdapter(), new MapGameplayStepAdapter(), new UiGameplayStepAdapter(), new PlayerInputGameplayStepAdapter() })
+            : this(CreateDefaultAdapters(), GamePlaybackSpeed.Quadruple)
         {
         }
 
         public GameplayRuntimeRunner(IEnumerable<IGameplayStepAdapter> adapters)
+            : this(adapters, GamePlaybackSpeed.Quadruple)
         {
-            _adapters = adapters.ToDictionary(adapter => adapter.AdapterName, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public GameplayRuntimeRunner(GamePlaybackSpeed executionSpeed)
+            : this(CreateDefaultAdapters(), executionSpeed)
+        {
+        }
+
+        public GameplayRuntimeRunner(IEnumerable<IGameplayStepAdapter> adapters, GamePlaybackSpeed executionSpeed)
+        {
+            _adapters = (adapters ?? throw new ArgumentNullException(nameof(adapters)))
+                .ToDictionary(adapter => adapter.AdapterName, StringComparer.OrdinalIgnoreCase);
+            _executionSpeed = executionSpeed;
         }
 
         public async Task<GameplayTestResult> ExecuteAsync(ExecutableScenarioPlan plan)
         {
             if (plan == null)
                 throw new ArgumentNullException(nameof(plan));
+            if (GameTimeService.IsPaused)
+                throw new InvalidOperationException("Gameplay runtime execution cannot start while gameplay is paused.");
 
-            using var scope = new BattleRuntimeScope();
-            using var context = new GameplayRuntimeContext { RuntimeScope = scope };
-            var executionTask = ExecuteCoreAsync(plan, context, scope);
-            _ = executionTask.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            var enteringSpeed = GameTimeService.PlaybackSpeed;
+            GameTimeService.SetPlaybackSpeed(_executionSpeed);
 
-            var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
-            if (completed != executionTask)
+            try
             {
-                // Cancel the runtime before disposing its context so adapters can leave
-                // their current PlayerLoop wait and release owned input devices safely.
-                scope.Cancel();
-                await Task.WhenAny(executionTask, Task.Delay(1000));
-                return BuildTimeoutResult(plan);
-            }
+                using var scope = new BattleRuntimeScope();
+                using var context = new GameplayRuntimeContext { RuntimeScope = scope };
+                var executionTask = ExecuteCoreAsync(plan, context, scope);
+                _ = executionTask.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
 
-            return await executionTask;
+                var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
+                if (completed != executionTask)
+                {
+                    // Cancel the runtime before disposing its context so adapters can leave
+                    // their current PlayerLoop wait and release owned input devices safely.
+                    scope.Cancel();
+                    await Task.WhenAny(executionTask, Task.Delay(1000));
+                    return BuildTimeoutResult(plan);
+                }
+
+                return await executionTask;
+            }
+            finally
+            {
+                GameTimeService.SetPlaybackSpeed(enteringSpeed);
+            }
+        }
+
+        private static IEnumerable<IGameplayStepAdapter> CreateDefaultAdapters()
+        {
+            return new IGameplayStepAdapter[]
+            {
+                new SkillGameplayStepAdapter(),
+                new BattleGameplayStepAdapter(),
+                new MapGameplayStepAdapter(),
+                new UiGameplayStepAdapter(),
+                new PlayerInputGameplayStepAdapter()
+            };
         }
 
         private async Task<GameplayTestResult> ExecuteCoreAsync(

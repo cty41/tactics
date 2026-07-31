@@ -220,6 +220,7 @@ scopes:
       - .agents/docs/gameplay-test-framework.md
       - .agents/skills/gameplay-test-framework
       - Assets/Tactics/Scripts/Common/Testing/Gameplay
+      - Assets/Tactics/Tests/PlayMode/GameplayRuntimePlanTests.cs
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeMapPlanTests.cs
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeUiPlanTests.cs
       - Assets/Tactics/Tests/PlayMode/PlayerInputGameplayPlanTests.cs

@@ -262,6 +262,179 @@ namespace Tactics.Tests.PlayMode
             Assert.That(result.ExecutedSteps.Any(step => step.Kind == "timeout"), Is.True);
         }
 
+        [UnityTest]
+        public IEnumerator RuntimeRunner_RestoresSpeedAfterTimeout()
+        {
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Double);
+
+            try
+            {
+                var plan = new ExecutableScenarioPlan
+                {
+                    ScenarioName = "SkillGraph.TimeoutRestoresSpeed",
+                    TimeoutMs = 50
+                };
+
+                plan.RequiredAdapters.Add("Skill");
+                plan.SetupActions.Add(new ExecutableScenarioAction
+                {
+                    Adapter = "Skill",
+                    Kind = "slowAction"
+                });
+
+                var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { new SlowSkillStepAdapter() });
+                var startedAt = Time.realtimeSinceStartup;
+                var task = runner.ExecuteAsync(plan);
+
+                Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Quadruple));
+                Assert.That(Time.timeScale, Is.EqualTo(4f));
+
+                yield return WaitForTask(task);
+
+                var result = task.Result;
+                Assert.IsFalse(result.Passed, string.Join("\n", result.Diagnostics));
+                Assert.That(result.ExecutedSteps.Any(step => step.Kind == "timeout"), Is.True);
+                Assert.That(Time.realtimeSinceStartup - startedAt, Is.GreaterThanOrEqualTo(0.04f));
+                Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Double));
+                Assert.That(Time.timeScale, Is.EqualTo(2f));
+            }
+            finally
+            {
+                GameTimeService.ForceResume();
+                GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_DefaultsToQuadrupleAndRestoresEnteringSpeed()
+        {
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Double);
+
+            try
+            {
+                var adapter = new PlaybackSpeedObservingAdapter();
+                var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { adapter });
+                var task = runner.ExecuteAsync(CreateSpeedObservationPlan());
+                yield return WaitForTask(task);
+
+                Assert.That(adapter.ObservedPlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Quadruple));
+                Assert.That(adapter.ObservedTimeScale, Is.EqualTo(4f));
+                Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Double));
+                Assert.That(Time.timeScale, Is.EqualTo(2f));
+            }
+            finally
+            {
+                GameTimeService.ForceResume();
+                GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_CanOptOutToNormalSpeed()
+        {
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Double);
+
+            try
+            {
+                var adapter = new PlaybackSpeedObservingAdapter();
+                var runner = new GameplayRuntimeRunner(
+                    new IGameplayStepAdapter[] { adapter },
+                    GamePlaybackSpeed.Normal);
+                var task = runner.ExecuteAsync(CreateSpeedObservationPlan());
+                yield return WaitForTask(task);
+
+                Assert.That(adapter.ObservedPlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Normal));
+                Assert.That(adapter.ObservedTimeScale, Is.EqualTo(1f));
+                Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Double));
+                Assert.That(Time.timeScale, Is.EqualTo(2f));
+            }
+            finally
+            {
+                GameTimeService.ForceResume();
+                GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_RestoresSpeedAfterAdapterException()
+        {
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Double);
+
+            try
+            {
+                var adapter = new ThrowingSpeedObservingAdapter();
+                var plan = new ExecutableScenarioPlan { ScenarioName = "RuntimeRunner.AdapterExceptionRestoresSpeed" };
+                plan.RuntimeActions.Add(new ExecutableScenarioAction
+                {
+                    Adapter = ThrowingSpeedObservingAdapter.Name,
+                    Kind = ThrowingSpeedObservingAdapter.ActionKind
+                });
+
+                var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { adapter });
+                var task = runner.ExecuteAsync(plan);
+                yield return WaitForTask(Task.WhenAny(task));
+
+                Assert.That(task.IsFaulted, Is.True);
+                var exception = task.Exception?.GetBaseException();
+                Assert.That(exception, Is.TypeOf<InvalidOperationException>());
+                Assert.That(exception.Message, Is.EqualTo("adapter boom"));
+                Assert.That(adapter.ObservedPlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Quadruple));
+                Assert.That(adapter.ObservedTimeScale, Is.EqualTo(4f));
+                Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Double));
+                Assert.That(Time.timeScale, Is.EqualTo(2f));
+            }
+            finally
+            {
+                GameTimeService.ForceResume();
+                GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_FailsFastWhenEnteringPaused()
+        {
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Double);
+            GameTimeService.Pause();
+
+            try
+            {
+                var adapter = new PlaybackSpeedObservingAdapter();
+                var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { adapter });
+                var task = runner.ExecuteAsync(CreateSpeedObservationPlan());
+                yield return WaitForTask(task.ContinueWith(_ => true));
+
+                Assert.That(task.IsFaulted, Is.True);
+                var exception = task.Exception?.GetBaseException();
+                Assert.That(exception, Is.TypeOf<InvalidOperationException>());
+                Assert.That(exception.Message.IndexOf("paused", StringComparison.OrdinalIgnoreCase), Is.GreaterThanOrEqualTo(0));
+                Assert.That(adapter.WasExecuted, Is.False);
+                Assert.That(GameTimeService.IsPaused, Is.True);
+                Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Double));
+                Assert.That(Time.timeScale, Is.EqualTo(0f));
+            }
+            finally
+            {
+                GameTimeService.ForceResume();
+                GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
+            }
+        }
+
+        private static ExecutableScenarioPlan CreateSpeedObservationPlan()
+        {
+            var plan = new ExecutableScenarioPlan { ScenarioName = "RuntimeRunner.DefaultSpeed" };
+            plan.RuntimeActions.Add(new ExecutableScenarioAction
+            {
+                Adapter = PlaybackSpeedObservingAdapter.Name,
+                Kind = PlaybackSpeedObservingAdapter.ActionKind
+            });
+            return plan;
+        }
+
         private static string GetPlanPath(string fileName)
         {
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Tests", "gameplay-specs", fileName));
@@ -320,6 +493,82 @@ namespace Tactics.Tests.PlayMode
             public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
             {
                 return Task.FromResult(GameplayAssertionResult.Fail("Skill", assertion.Kind, "Assertions are not supported in the timeout adapter."));
+            }
+
+            public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
+            {
+                return null;
+            }
+        }
+
+        private sealed class ThrowingSpeedObservingAdapter : IGameplayStepAdapter
+        {
+            public const string Name = "ThrowingSpeedObserver";
+            public const string ActionKind = "throwAfterObservingSpeed";
+
+            public string AdapterName => Name;
+            public GamePlaybackSpeed ObservedPlaybackSpeed { get; private set; }
+            public float ObservedTimeScale { get; private set; }
+
+            public bool CanExecute(ExecutableScenarioAction action)
+            {
+                return string.Equals(action.Kind, ActionKind, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
+            {
+                ObservedPlaybackSpeed = GameTimeService.PlaybackSpeed;
+                ObservedTimeScale = Time.timeScale;
+                throw new InvalidOperationException("adapter boom");
+            }
+
+            public bool CanAssert(ExecutableScenarioAssertion assertion)
+            {
+                return false;
+            }
+
+            public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+            {
+                return Task.FromResult(GameplayAssertionResult.Fail(Name, assertion.Kind, "Assertions are not supported by the throwing speed observer."));
+            }
+
+            public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
+            {
+                return null;
+            }
+        }
+
+        private sealed class PlaybackSpeedObservingAdapter : IGameplayStepAdapter
+        {
+            public const string Name = "SpeedObserver";
+            public const string ActionKind = "observeSpeed";
+
+            public string AdapterName => Name;
+            public bool WasExecuted { get; private set; }
+            public GamePlaybackSpeed ObservedPlaybackSpeed { get; private set; }
+            public float ObservedTimeScale { get; private set; }
+
+            public bool CanExecute(ExecutableScenarioAction action)
+            {
+                return string.Equals(action.Kind, ActionKind, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public Task<GameplayStepResult> ExecuteAsync(GameplayRuntimeContext context, ExecutableScenarioAction action)
+            {
+                WasExecuted = true;
+                ObservedPlaybackSpeed = GameTimeService.PlaybackSpeed;
+                ObservedTimeScale = Time.timeScale;
+                return Task.FromResult(GameplayStepResult.Pass(Name, action.Kind));
+            }
+
+            public bool CanAssert(ExecutableScenarioAssertion assertion)
+            {
+                return false;
+            }
+
+            public Task<GameplayAssertionResult> AssertAsync(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+            {
+                return Task.FromResult(GameplayAssertionResult.Fail(Name, assertion.Kind, "Assertions are not supported by the speed observer."));
             }
 
             public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
