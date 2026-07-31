@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-07-31T15:13:45+08:00"
+timestamp: "2026-07-31T15:21:59+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Tools/artworks/pure_run
   - Assets/Tactics/Arts/PureRun
 verified_revision: c68dbebe
-source_fingerprint: sha256:58633f3252add6003beae028f5867527154f2db1535909eaa82efd02f35db055
+source_fingerprint: sha256:1ede2dcf3498c69c198b0647ff7bfb3eca15ec509d46b3c1b4e19b08d0bab85f
 ---
 
 # Pure Run 角色美术流水线
