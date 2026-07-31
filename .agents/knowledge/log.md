@@ -1,8 +1,26 @@
 # Tactics Knowledge Update Log
 
+## 2026-07-31
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:e1c57e802eb3635bbb0ed25157f98b55681f44a2e036ca52042edc38903dd526`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:9781161bcccb96d44d673207cf1f050e91c471289fb41fb2f3e31382fc2a2866`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:c0399c6a5e22f83268d07bd35e260f2e2de0d1eb881a184fdeb28b96cb34cbcb`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:cc2b86d403d34d9da429396e6e348cd4ba003f307f412cf30a0aef716b07806a`。
+
+## 2026-07-30
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:085379df987e40c0fceed1ac7b5456c08a516e49e7146abcff95d09b862556fc`。
+* **Update**: Pure Run 方向图改为先用排除耳、口鼻、手脚和装备的纯核心主体蒙版校准；无手臂角色的手掌必须以多像素接触面直接嵌入主体边缘。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:2d92453e876618b718cde40cef55d235774620335f74114e1e2efd52b8e2a48a`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:0820098ef9c4869b66ff00e787d4a378c95f467f043bf77e1a8ccc2c0c372571`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:9781161bcccb96d44d673207cf1f050e91c471289fb41fb2f3e31382fc2a2866`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:2ad6b06e6d022bb041402d5a1e68816c7870669ce1ed2f0c7a8c8cd87256e00c`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:a2d637e9e22612d4785cc4ab6da340a3ca016f4c2d2c255f48a2af50ade27333`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:a2c370f95a6dffa0c91fc182418dc7fd375f32992c1f529a484ec189023b27de`。
+
 ## 2026-07-29
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:103b047a1824679669dd50730b263941b6f5875456b11345704519632c1fc038`。
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e22b7a95d4cec`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:44a4fde38bd8dd0859970e34d2ba54ce2067651d3dd526dc43b5d470f001be7f`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:0550c020533163fae8da57c9b22961a6989fa574dbef5c3ae3583d285e9179e4`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5c32ee885b8ac4fca82b6f06a8c5414c23ee21161118e31e2a438ba64bcfa4df`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:e14364ded10298b483585c30fa2c6c4d0f3a257357adfb2914faf69044493202`。
 * **Creation**: 新增 `pure-run-artwork` scope，沉淀角色美术尺寸、生成、去幕、Review、资产状态和提交边界。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:3246c857bc4055e840180cf5e1d52aab73c142bb636d61060e6da8ccf9542`。
 

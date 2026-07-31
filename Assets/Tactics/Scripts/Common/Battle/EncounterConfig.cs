@@ -219,7 +219,7 @@ namespace Tactics.Common.Battle
         public const string ElitePoisonCasterId = "elite_poison_caster";
 
         private const string AiFolder = "Assets/Tactics/AI/Encounters/";
-        private const string UnitFolder = "Assets/Tactics/Arts/Prefabs/Units/";
+        private const string UnitFolder = "Assets/Tactics/Arts/PureRun/Prefabs/Units/";
         private const string AbilityFolder = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/";
 
         private static readonly Dictionary<string, MonsterDefinition> _monsters = BuildMonsters();
@@ -252,12 +252,12 @@ namespace Tactics.Common.Battle
         {
             return new Dictionary<string, MonsterDefinition>(StringComparer.OrdinalIgnoreCase)
             {
-                [ChargerId] = Monster(ChargerId, "Charger", "Infantry Blue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
-                [RangedId] = Monster(RangedId, "Ranged", "HunterBlue.prefab", 15, "RangedAttack_Graph_Ability.asset", "HeavyShot_Graph_Ability.asset"),
-                [AoeId] = Monster(AoeId, "AOE", "MageBlue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset"),
-                [SupportId] = Monster(SupportId, "Support", "Fighter.prefab", 0, "MeleeAttack_Graph_Ability.asset", "Curse_Graph_Ability.asset"),
-                [EliteChargerId] = Monster(EliteChargerId, "EliteCharger", "Infantry Blue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
-                [ElitePoisonCasterId] = Monster(ElitePoisonCasterId, "ElitePoisonCaster", "MageBlue.prefab", 0, "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset")
+                [ChargerId] = Monster(ChargerId, "Charger", "PureRunGoatCharger.prefab", 0, "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
+                [RangedId] = Monster(RangedId, "Ranged", "PureRunGoatRanged.prefab", 15, "RangedAttack_Graph_Ability.asset", "HeavyShot_Graph_Ability.asset"),
+                [AoeId] = Monster(AoeId, "AOE", "PureRunGoatAoe.prefab", 0, "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset"),
+                [SupportId] = Monster(SupportId, "Support", "PureRunGoatSupport.prefab", 0, "MeleeAttack_Graph_Ability.asset", "Curse_Graph_Ability.asset"),
+                [EliteChargerId] = Monster(EliteChargerId, "EliteCharger", "PureRunGoatEliteCharger.prefab", 0, "MeleeAttack_Graph_Ability.asset", "ChargeStrike_Lv1_Ability.asset"),
+                [ElitePoisonCasterId] = Monster(ElitePoisonCasterId, "ElitePoisonCaster", "PureRunGoatElitePoisonCaster.prefab", 0, "MeleeAttack_Graph_Ability.asset", "AreaBlast_Lv1_Ability.asset")
             };
         }
 

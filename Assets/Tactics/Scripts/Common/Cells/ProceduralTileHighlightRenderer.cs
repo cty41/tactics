@@ -20,6 +20,10 @@ namespace Tactics.Cells
         AoE,
         SpearLocation,
         SpearPickup,
+        UnitFriendly,
+        UnitSelected,
+        UnitFinished,
+        UnitTargetable,
     }
 
     [RequireComponent(typeof(MeshFilter))]
@@ -37,6 +41,10 @@ namespace Tactics.Cells
         [SerializeField] private Color _aoeColor = new Color(1f, 0.5f, 0f, 0.5f);
         [SerializeField] private Color _spearLocationColor = new Color(1f, 0.55f, 0.15f, 0.7f);
         [SerializeField] private Color _spearPickupColor = new Color(0.25f, 0.9f, 0.35f, 0.55f);
+        [SerializeField] private Color _unitFriendlyColor = new Color(0.34f, 0.52f, 0.62f, 0.22f);
+        [SerializeField] private Color _unitSelectedColor = new Color(0.95f, 0.66f, 0.24f, 0.45f);
+        [SerializeField] private Color _unitFinishedColor = new Color(0.36f, 0.42f, 0.48f, 0.18f);
+        [SerializeField] private Color _unitTargetableColor = new Color(0.82f, 0.30f, 0.24f, 0.34f);
 
         [SerializeField] private bool _enablePulse = false;
         [SerializeField] private float _pulseSpeed = 2f;
@@ -308,6 +316,10 @@ namespace Tactics.Cells
                 TileHighlightType.AoE => _aoeColor,
                 TileHighlightType.SpearLocation => _spearLocationColor,
                 TileHighlightType.SpearPickup => _spearPickupColor,
+                TileHighlightType.UnitFriendly => _unitFriendlyColor,
+                TileHighlightType.UnitSelected => _unitSelectedColor,
+                TileHighlightType.UnitFinished => _unitFinishedColor,
+                TileHighlightType.UnitTargetable => _unitTargetableColor,
                 _ => Color.white,
             };
         }

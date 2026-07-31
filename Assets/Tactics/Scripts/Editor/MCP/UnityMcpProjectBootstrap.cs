@@ -21,8 +21,10 @@ namespace Tactics.Editor.MCP
     {
         private const string AutoStartOnLoadKey = "MCPForUnity.AutoStartOnLoad";
         private const string ResumeHttpAfterReloadKey = "MCPForUnity.ResumeHttpAfterReload";
-        private const int ServerReadyAttempts = 20;
+        private const int ServerReadyAttempts = 240;
         private const int ServerReadyDelayMilliseconds = 250;
+        private const int ServerReadyTimeoutSeconds =
+            ServerReadyAttempts * ServerReadyDelayMilliseconds / 1000;
         private const int BridgeRegistrationDelayMilliseconds = 1000;
 
         private static bool _reconcileInProgress;
@@ -91,7 +93,11 @@ namespace Tactics.Editor.MCP
 
                     if (!await WaitForServerAsync())
                     {
-                        TLog.Error($"[UnityMCP] Local server did not become reachable on {endpoint}.");
+                        string launchLogPath = GetServerLaunchLogPath(endpoint.Port);
+                        TLog.Error(
+                            $"[UnityMCP] Local server did not become reachable on {endpoint} after " +
+                            $"{ServerReadyTimeoutSeconds} seconds ({ServerReadyAttempts} attempts). " +
+                            $"Inspect {launchLogPath}.");
                         return;
                     }
                 }
@@ -185,14 +191,33 @@ namespace Tactics.Editor.MCP
 
         private static async Task<bool> WaitForServerAsync()
         {
+            return await WaitForServerAsync(
+                () => MCPServiceLocator.Server.IsLocalHttpServerReachable(),
+                () => Task.Delay(ServerReadyDelayMilliseconds));
+        }
+
+        private static async Task<bool> WaitForServerAsync(
+            Func<bool> isServerReachable,
+            Func<Task> waitAsync)
+        {
+            if (isServerReachable == null)
+            {
+                throw new ArgumentNullException(nameof(isServerReachable));
+            }
+
+            if (waitAsync == null)
+            {
+                throw new ArgumentNullException(nameof(waitAsync));
+            }
+
             for (int attempt = 0; attempt < ServerReadyAttempts; attempt++)
             {
-                if (MCPServiceLocator.Server.IsLocalHttpServerReachable())
+                if (isServerReachable())
                 {
                     return true;
                 }
 
-                await Task.Delay(ServerReadyDelayMilliseconds);
+                await waitAsync();
             }
 
             return false;
@@ -237,6 +262,12 @@ namespace Tactics.Editor.MCP
             {
                 return false;
             }
+        }
+
+        private static string GetServerLaunchLogPath(int port)
+        {
+            return Path.Combine(
+                GetProjectRoot(), "Library", "MCPForUnity", "Logs", $"server-launch-{port}.log");
         }
 
         private static string GetProjectRoot()

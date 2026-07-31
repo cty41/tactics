@@ -15,7 +15,7 @@
       "AttackFactor": 1,
       "DefenceFactor": 1,
       "RoleType": "Barbarian",
-      "PrefabPath": "Fighter"
+      "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatSupport.prefab"
     },
     {
       "Id": "mage",
@@ -32,7 +32,7 @@
       "AttackFactor": 1,
       "DefenceFactor": 1,
       "RoleType": "Mage",
-      "PrefabPath": "Mage"
+      "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab"
     },
     {
       "Id": "hunter",
@@ -49,7 +49,7 @@
       "AttackFactor": 1,
       "DefenceFactor": 1,
       "RoleType": "Hunter",
-      "PrefabPath": "Hunter"
+      "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab"
     },
     {
       "Id": "necromancer",
@@ -66,14 +66,15 @@
       "AttackFactor": 1,
       "DefenceFactor": 1,
       "RoleType": "Necromancer",
-      "PrefabPath": "Necromancer"
+      "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab"
     }
   ],
   "ActivePartyCharacterIds": ["warrior", "mage", "hunter", "necromancer"],
   "PrefabMappings": [
-    { "RoleType": "Barbarian", "PrefabPath": "Fighter" },
-    { "RoleType": "Mage", "PrefabPath": "Mage" },
-    { "RoleType": "Hunter", "PrefabPath": "Hunter" },
-    { "RoleType": "Necromancer", "PrefabPath": "Necromancer" }
+    { "RoleType": "Barbarian", "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatSupport.prefab" },
+    { "RoleType": "Mage", "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab" },
+    { "RoleType": "Hunter", "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab" },
+    { "RoleType": "Necromancer", "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab" },
+    { "RoleType": "Amazon", "PrefabPath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab" }
   ]
 }

@@ -461,8 +461,9 @@ namespace Tactics.UI
             {
                 int damage = SkillDatabase.CalculateSkillDamage(_currentCharacter, skill);
 
-                var damageIcon = new Label("⚔");
+                var damageIcon = new VisualElement();
                 damageIcon.AddToClassList("skill-stat-icon");
+                damageIcon.AddToClassList("skill-stat-sword-icon");
 
                 var damageLabel = new Label($"伤害 {damage}");
                 damageLabel.AddToClassList("skill-stat-damage");

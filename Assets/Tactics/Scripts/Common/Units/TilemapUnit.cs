@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Tactics.Cells;
 using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
@@ -22,8 +23,13 @@ namespace Tactics.Units
         [SerializeField] private Tilemap _gridTilemap;
         [SerializeField, Tooltip("垂直偏移量，用于将单位视觉居中于 tile 中心")]
         private float _visualYOffset = 0.25f;
+        [SerializeField, Tooltip("阴影相对角色脚底的微小向下偏移")]
+        private float _shadowFootOffset = -0.03f;
 
         private float baseMovementSpeed;
+        private float _appliedVisualYOffset;
+        private ICell _unitHighlightCell;
+        private TileHighlightType? _unitHighlightType;
 
         private void Awake()
         {
@@ -129,9 +135,7 @@ namespace Tactics.Units
 
         private void ApplyVisualYOffset()
         {
-            if (Mathf.Approximately(_visualYOffset, 0f)) return;
-
-            var spriteRenderers = GetComponentsInChildren<SpriteRenderer>(false);
+            var spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
             SpriteRenderer mainSr = null;
             SpriteRenderer shadowSr = null;
             float maxArea = 0f;
@@ -139,6 +143,18 @@ namespace Tactics.Units
             {
                 if (sr.sprite == null) continue;
                 if (sr.name == "Shadow") shadowSr = sr;
+                if (sr.name == "Shadow" || sr.name == "Marker") continue;
+
+                // The gameplay visual is conventionally the child named "Sprite".
+                // Prefer it over inactive VFX SpriteRenderers whose bounds would place the shadow incorrectly.
+                if (sr.name == "Sprite")
+                {
+                    mainSr = sr;
+                    continue;
+                }
+
+                if (mainSr != null && mainSr.name == "Sprite") continue;
+
                 var area = sr.sprite.rect.width * sr.sprite.rect.height;
                 if (area > maxArea)
                 {
@@ -150,16 +166,88 @@ namespace Tactics.Units
             if (mainSr != null && mainSr.transform != transform)
             {
                 var localPos = mainSr.transform.localPosition;
-                localPos.y += _visualYOffset;
+                localPos.y += _visualYOffset - _appliedVisualYOffset;
                 mainSr.transform.localPosition = localPos;
+                _appliedVisualYOffset = _visualYOffset;
 
                 if (shadowSr != null && shadowSr != mainSr)
                 {
                     var shadowPos = shadowSr.transform.localPosition;
-                    shadowPos.y = localPos.y + mainSr.sprite.bounds.min.y;
+                    // Pure Run sprites use their bottom pivot as the visual foot baseline.
+                    // Sprite.bounds includes transparent canvas padding, so using bounds.min would
+                    // incorrectly push the shadow down by nearly a full sprite height.
+                    float footY = localPos.y;
+                    shadowPos.y = footY + _shadowFootOffset;
                     shadowSr.transform.localPosition = shadowPos;
                 }
             }
+        }
+
+        public override Task UnMark()
+        {
+            ClearUnitStateHighlight();
+            return base.UnMark();
+        }
+
+        public override Task MarkAsSelected()
+        {
+            SetUnitStateHighlight(TileHighlightType.UnitSelected);
+            return base.MarkAsSelected();
+        }
+
+        public override Task MarkAsFriendly()
+        {
+            SetUnitStateHighlight(TileHighlightType.UnitFriendly);
+            return base.MarkAsFriendly();
+        }
+
+        public override Task MarkAsFinished()
+        {
+            SetUnitStateHighlight(TileHighlightType.UnitFinished);
+            return base.MarkAsFinished();
+        }
+
+        public override Task MarkAsTargetable()
+        {
+            SetUnitStateHighlight(TileHighlightType.UnitTargetable);
+            return base.MarkAsTargetable();
+        }
+
+        private void SetUnitStateHighlight(TileHighlightType type, ICell cell = null)
+        {
+            ClearUnitStateHighlight();
+            var tilemapCellManager = _cellManager as TilemapCellManager;
+            var targetCell = cell ?? CurrentCell;
+            if (tilemapCellManager == null || targetCell == null)
+                return;
+
+            tilemapCellManager.AddUnitStateHighlight(targetCell, type);
+            _unitHighlightCell = targetCell;
+            _unitHighlightType = type;
+        }
+
+        private void ClearUnitStateHighlight()
+        {
+            if (_unitHighlightCell == null || !_unitHighlightType.HasValue)
+                return;
+
+            if (_cellManager is TilemapCellManager tilemapCellManager)
+                tilemapCellManager.RemoveUnitStateHighlight(_unitHighlightCell, _unitHighlightType.Value);
+
+            _unitHighlightCell = null;
+            _unitHighlightType = null;
+        }
+
+        public override void OnDestroyed(IGridController gridController)
+        {
+            ClearUnitStateHighlight();
+            base.OnDestroyed(gridController);
+        }
+
+        protected override void OnDestroy()
+        {
+            ClearUnitStateHighlight();
+            base.OnDestroy();
         }
 
         private void OnUnitMoved(UnitMovedEventArgs obj)
@@ -170,7 +258,8 @@ namespace Tactics.Units
         private void OnUnitEnteredCell(UnitChangedGridPositionEventArgs obj)
         {
             MovementAnimationSpeed = baseMovementSpeed / obj.EnteredCell.MovementCost;
-
+            if (_unitHighlightType.HasValue)
+                SetUnitStateHighlight(_unitHighlightType.Value, obj.EnteredCell);
         }
 
         public override void OnPointerEnter(PointerEventData eventData)

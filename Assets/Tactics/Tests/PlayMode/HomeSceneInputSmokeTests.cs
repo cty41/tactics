@@ -9,7 +9,10 @@ using Tactics.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.TextCore.LowLevel;
+using UnityEngine.TextCore.Text;
 using UnityEngine.TestTools;
+using UnityEngine.UIElements;
 
 namespace Tactics.Tests.PlayMode
 {
@@ -79,6 +82,47 @@ namespace Tactics.Tests.PlayMode
             AssertPlanPassed(task.Result);
             Assert.That(PlayerInputGameplayStepAdapter.HasVirtualTestDevices, Is.False,
                 "The runtime runner should release all test-owned virtual input devices.");
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeDefaultFont_AddsChineseGlyphsAndIsInherited()
+        {
+            var root = UIManager.Instance.GetRootElement(UIManager.UIId.Home);
+            Assert.That(root, Is.Not.Null);
+
+            var probe = new Label("中文测试 ABC");
+            root.Add(probe);
+            yield return null;
+
+            FontAsset rootFontAsset = root.style.unityFontDefinition.value.fontAsset;
+            FontAsset probeFontAsset = probe.resolvedStyle.unityFontDefinition.fontAsset;
+
+            Assert.That(rootFontAsset, Is.Not.Null);
+            Assert.That(probeFontAsset, Is.SameAs(rootFontAsset),
+                "Child text should inherit the shared runtime FontAsset from the UIDocument root.");
+            Assert.That(rootFontAsset.atlasPopulationMode, Is.EqualTo(AtlasPopulationMode.Dynamic));
+            Assert.That(rootFontAsset.isMultiAtlasTexturesEnabled, Is.True);
+            Assert.That(rootFontAsset.hideFlags & HideFlags.DontSave, Is.EqualTo(HideFlags.DontSave));
+            Assert.That(rootFontAsset.sourceFontFile, Is.Not.Null,
+                "The runtime FontAsset must retain its source TTF reference.");
+            Assert.That(rootFontAsset.sourceFontFile.HasCharacter('中'), Is.True,
+                "The source TTF must contain Chinese glyphs.");
+            Assert.That(FontEngine.InitializeFontEngine(), Is.EqualTo(FontEngineError.Success));
+            Assert.That(
+                FontEngine.LoadFontFace(
+                    rootFontAsset.sourceFontFile,
+                    (int)rootFontAsset.faceInfo.pointSize),
+                Is.EqualTo(FontEngineError.Success));
+            Assert.That(FontEngine.TryGetGlyphIndex('中', out uint chineseGlyphIndex), Is.True);
+            Assert.That(chineseGlyphIndex, Is.GreaterThan(0u));
+            Assert.That(FontEngine.TryGetGlyphIndex('A', out uint latinGlyphIndex), Is.True);
+            Assert.That(latinGlyphIndex, Is.GreaterThan(0u));
+            Assert.That(rootFontAsset.TryAddCharacters("中文测试 ABC"), Is.True,
+                "Runtime font should add or already contain all requested glyphs.");
+            Assert.That(rootFontAsset.HasCharacter('中'), Is.True);
+            Assert.That(rootFontAsset.HasCharacter('A'), Is.True);
+
+            root.Remove(probe);
         }
 
         private static async Task<GameplayTestResult> ExecutePlan(string planPath)
