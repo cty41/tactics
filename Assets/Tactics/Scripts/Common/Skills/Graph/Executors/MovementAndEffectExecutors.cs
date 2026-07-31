@@ -466,7 +466,7 @@ namespace Tactics.Common.Skills.Graph
 
             float travelTime = UnityEngine.Mathf.Max(0.05f, record.TravelTime);
             var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
-            await Task.Delay((int)(travelTime * 1000), cancellationToken);
+            await GameTimeService.DelayScaledAsync(travelTime, cancellationToken);
 
             context.SetBlackboard("ProjectileHit", true);
             context.SetBlackboard("ProjectileTarget", target);

@@ -110,6 +110,10 @@ scopes:
       - Assets/Tactics/Scripts/Common/Skills/Graph/Executors/MovementAndEffectExecutors.cs
       - Assets/Tactics/Scripts/AssemblyInfo.cs
       - Assets/Tactics/Scripts/Common/UnitSpeedTurnResolver.cs
+      - Assets/Tactics/Scripts/Common/GamePauseService.cs
+      - Assets/Tactics/Scripts/Common/GameTimeService.cs
+      - Assets/Tactics/Scripts/Common/GameTimeService.cs.meta
+      - Assets/Tactics/Scripts/Common/players/TurnSkipHelper.cs
       - Assets/Tactics/Scripts/Common/controllers/GridController.cs
       - Assets/Tactics/Scripts/Common/controllers/turnResolvers/SubsequentTurnResolverImpl.cs
       - Assets/Tactics/Scripts/Common/Interactables/DroppedSpear.cs
@@ -117,6 +121,10 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/ConsumableBattleUseTests.cs
       - Assets/Tactics/Tests/PlayMode/HumanPlayerBattleAdapterRegressionTests.cs
       - Assets/Tactics/Tests/PlayMode/FreezeExpiryEnemyResumeTests.cs
+      - Assets/Tactics/Tests/PlayMode/BattleSpeedControlUiTests.cs
+      - Assets/Tactics/Tests/PlayMode/BattleSpeedControlUiTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs
+      - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/SharedBattlePrimitivesTests.cs
       - Assets/Tactics/Tests/PlayMode/FacingBehaviorPlayModeTests.cs
       - Assets/Tactics/Tests/PlayMode/AmazonSkillLevelTests.cs

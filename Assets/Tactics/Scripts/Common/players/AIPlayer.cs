@@ -73,18 +73,23 @@ namespace Tactics.Common.Players
         /// </summary>
         public async void Play(GridController gridController)
         {
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _cancellationTokenSource.Token;
+
             try
             {
-                await Awaitable.WaitForSecondsAsync(TurnStartDelay / 1000f);
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = new CancellationTokenSource();
+                await global::Tactics.GameTimeService.DelayScaledAsync(
+                    TurnStartDelay / 1000f,
+                    cancellationToken);
 
                 var playableUnits = gridController.TurnContext.PlayableUnits()
                     .Where(IsUnityUnitAvailable)
                     .ToList();
                 foreach (var playableUnit in UnitSelector.SelectNext(() => playableUnits, gridController))
                 {
-                    if (_cancellationTokenSource.IsCancellationRequested)
+                    if (cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
@@ -106,7 +111,7 @@ namespace Tactics.Common.Players
                             BattleController.Instance,
                             () => !playableUnit.CanAct || playableUnit.IsDowned,
                             TurnSkipHelper.FrozenSkipDelaySeconds,
-                            _cancellationTokenSource.Token);
+                            cancellationToken);
 
                         if (endedTurn)
                         {
@@ -124,7 +129,9 @@ namespace Tactics.Common.Players
                         await WaitForKeypress(Key.N);
                     }
 
-                    await Awaitable.WaitForSecondsAsync(UnitDelay / 1000f, _cancellationTokenSource.Token);
+                    await global::Tactics.GameTimeService.DelayScaledAsync(
+                        UnitDelay / 1000f,
+                        cancellationToken);
                     if (!IsUnityUnitAvailable(playableUnit))
                         continue;
 
@@ -146,6 +153,7 @@ namespace Tactics.Common.Players
                     await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
                     playableUnit.InvokeUnitDeselected();
                 }
+                cancellationToken.ThrowIfCancellationRequested();
                 gridController.EndTurn();
             }
             catch (OperationCanceledException)

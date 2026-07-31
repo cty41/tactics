@@ -1,55 +1,24 @@
-using Tactics.Runtime.Utilities;
-using UnityEngine;
-
 namespace Tactics
 {
+    /// <summary>
+    /// Backward-compatible pause API. GameTimeService owns pause state and Time.timeScale.
+    /// </summary>
+    /// <remarks>
+    /// New gameplay code should use <see cref="GameTimeService"/> directly. This facade does not
+    /// keep independent state, so legacy pause calls compose with playback speed and nested pauses.
+    /// </remarks>
     public static class GamePauseService
     {
-        private static int s_pauseDepth;
-        private static float s_previousTimeScale = 1f;
+        /// <summary>Gets whether at least one pause owner is active.</summary>
+        public static bool IsPaused => GameTimeService.IsPaused;
 
-        public static bool IsPaused => s_pauseDepth > 0;
+        /// <summary>Adds one pause owner.</summary>
+        public static void Pause() => GameTimeService.Pause();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics()
-        {
-            s_pauseDepth = 0;
-            s_previousTimeScale = 1f;
-            Time.timeScale = 1f;
-        }
+        /// <summary>Releases one pause owner without underflowing the pause depth.</summary>
+        public static void Resume() => GameTimeService.Resume();
 
-        public static void Pause()
-        {
-            if (s_pauseDepth == 0)
-            {
-                s_previousTimeScale = Time.timeScale <= 0f ? 1f : Time.timeScale;
-                Time.timeScale = 0f;
-                TLog.Info("[GamePauseService] Game paused.");
-            }
-
-            s_pauseDepth++;
-        }
-
-        public static void Resume()
-        {
-            if (s_pauseDepth <= 0)
-            {
-                Time.timeScale = 1f;
-                return;
-            }
-
-            s_pauseDepth--;
-            if (s_pauseDepth != 0)
-                return;
-
-            Time.timeScale = s_previousTimeScale <= 0f ? 1f : s_previousTimeScale;
-            TLog.Info("[GamePauseService] Game resumed.");
-        }
-
-        public static void ForceResume()
-        {
-            s_pauseDepth = 0;
-            Time.timeScale = s_previousTimeScale <= 0f ? 1f : s_previousTimeScale;
-        }
+        /// <summary>Clears every pause owner and restores the selected playback speed.</summary>
+        public static void ForceResume() => GameTimeService.ForceResume();
     }
 }

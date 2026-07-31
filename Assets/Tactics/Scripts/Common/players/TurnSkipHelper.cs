@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Tactics.Common.Battle;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
-using UnityEngine;
 
 namespace Tactics.Common.Players
 {
@@ -34,7 +33,7 @@ namespace Tactics.Common.Players
 
             try
             {
-                await Awaitable.WaitForSecondsAsync(delaySeconds, cancellationToken);
+                await global::Tactics.GameTimeService.DelayScaledAsync(delaySeconds, cancellationToken);
             }
             catch (OperationCanceledException)
             {

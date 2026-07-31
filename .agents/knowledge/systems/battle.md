@@ -28,6 +28,10 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Battle/SummonRegistry.cs
   - Assets/Tactics/Scripts/Common/Interactables/DroppedSpear.cs
   - Assets/Tactics/Scripts/Common/UnitSpeedTurnResolver.cs
+  - Assets/Tactics/Scripts/Common/GamePauseService.cs
+  - Assets/Tactics/Scripts/Common/GameTimeService.cs
+  - Assets/Tactics/Scripts/Common/GameTimeService.cs.meta
+  - Assets/Tactics/Scripts/Common/players/TurnSkipHelper.cs
   - Assets/Tactics/Scripts/Common/Units/DamageResolution.cs
   - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
   - Assets/Tactics/Scripts/Common/Cells/TilemapCellManager.cs
@@ -57,6 +61,10 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
+  - Assets/Tactics/Tests/PlayMode/BattleSpeedControlUiTests.cs
+  - Assets/Tactics/Tests/PlayMode/BattleSpeedControlUiTests.cs.meta
+  - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs
+  - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs.meta
 verified_revision: c56d71ad4ebd
 source_fingerprint: sha256:af8d0e1ef5e7161c0c8405b06b776c9065d63d77b7a6b2e15d7458ce8c39ecdb
 ---
@@ -88,6 +96,8 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 `BattleSettlementCoordinator`/`BattleSettlementFlow` 负责战后成长和返回 Run。Pure Run 升级候选从合法新技能 Lv1 与已学技能的下一个已发布等级组成确定性混合池；新技能受槽位限制，已学技能升级不占新槽。升级流程必须等待玩家同时选定属性与技能并显式确认，不再通过帧数超时自动推进；确认后先提交保底消费与成长状态，再统一保存。`TBattleLog` 收集结构化回合、技能、伤害、治疗和 Buff 信息。当前反馈已有伤害数字、Buff 图标与屏幕战斗日志。
 
 BattleSettlement UI 在每次显示时重新解析当前 UIDocument 元素并重新注册继续/跳过动画回调，隐藏时释放旧树引用，避免跨战斗复用缓存实例时更新已经脱离面板的结算元素。
+
+`GameTimeService` 是 production 中 `Time.timeScale`、当前进程播放倍率和嵌套暂停深度的唯一所有者；支持固定 `1× → 2× → 4× → 1×` 循环，暂停期间只更新恢复目标，最后一层 Resume 才恢复所选倍率。倍率跨场景和后续战斗保留，Unity subsystem 初始化时重置为 `1×` 且未暂停；`GamePauseService` 仅保留兼容转发。Battle UI 右上角速度按钮直接读取服务状态，缓存重进时重新接线且不复制倍率状态。游戏世界异步等待统一使用可取消、pause-aware 的 scaled delay；战后恢复等待绑定 Battle UI 销毁令牌，异常退出不会留下暂停中的悬挂任务。测试 timeout、AI deadlock ceiling、资源加载保护等基础设施 deadline 继续使用 realtime。
 
 Pure Run 胜利结算只展示胜负、金币与总回合数。结算前先进入约 0.8 秒的不可交互恢复阶段：所有存活玩家单位按 `Constitution × 2` 恢复 HP、按 `Charisma` 恢复 MP（均受最大值限制），并分别显示绿色 HP 与蓝色 MP 浮字；死亡单位不恢复。恢复阶段隐藏战斗操作界面，之后才同步持久化状态并进入结算。
 

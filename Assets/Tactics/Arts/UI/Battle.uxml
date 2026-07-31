@@ -56,5 +56,6 @@
             </ui:VisualElement>
             <ui:Label name="HoverHPText" text="20/20" class="hover-hp-text"/>
         </ui:VisualElement>
+        <ui:Button name="BattleSpeedButton" text="⚙ 1×" tooltip="调整游戏速度" class="battle-speed-button"/>
     </ui:VisualElement>
 </ui:UXML>

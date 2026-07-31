@@ -22,12 +22,16 @@ namespace Tactics.Tests.PlayMode
         public void SetUp()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
         }
 
         [TearDown]
         public void TearDown()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
         }
 
         [UnityTest]
@@ -456,6 +460,46 @@ namespace Tactics.Tests.PlayMode
             }
 
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_ProjectileTravelStopsWhileGameIsPaused()
+        {
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                var graph = SkillGraphTestGraphFactory.CreateProjectileGraph(
+                    "PausedProjectile",
+                    baseDamage: 7f,
+                    travelTime: 0.05f);
+                var casterCell = world.CreateSquareCell("CasterCell", 0, 0);
+                var targetCell = world.CreateSquareCell("TargetCell", 1, 0);
+                var caster = world.CreateUnit("Caster", playerNumber: 0, casterCell);
+                var target = world.CreateUnit("Target", playerNumber: 1, targetCell);
+                world.SetTurnContext(world.PlayerOne, new IUnit[] { caster });
+                world.SetTurnContext(world.PlayerTwo, new IUnit[] { target });
+
+                var task = new SkillGraphRuntimeTestRunner().ExecuteAsync(new SkillGraphRuntimeTestRequest
+                {
+                    Name = "PausedProjectile",
+                    Graph = graph,
+                    GridController = world.GridController,
+                    Caster = caster,
+                    PrimaryTarget = target
+                });
+
+                GameTimeService.Pause();
+                yield return new WaitForSecondsRealtime(0.08f);
+                Assert.That(task.IsCompleted, Is.False, "Projectile travel must stop while gameplay is paused.");
+
+                GameTimeService.Resume();
+                yield return WaitForTask(task);
+                Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed));
+            }
+            finally
+            {
+                world.Dispose();
+            }
         }
 
         // ── 真资产集成验证 ──

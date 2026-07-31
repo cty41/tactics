@@ -4,6 +4,30 @@
     position: relative;
 }
 
+.battle-speed-button {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    width: 96px;
+    height: 38px;
+    font-size: 17px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    background-color: rgba(30, 30, 30, 0.82);
+    border-width: 1px;
+    border-color: rgba(190, 210, 235, 0.75);
+    border-radius: 8px;
+}
+
+.battle-speed-button:hover {
+    background-color: rgba(60, 85, 115, 0.92);
+    border-color: rgb(225, 235, 255);
+}
+
+.battle-speed-button:active {
+    background-color: rgba(95, 125, 160, 0.95);
+}
+
 .top-panel {
     position: absolute;
     top: 10px;

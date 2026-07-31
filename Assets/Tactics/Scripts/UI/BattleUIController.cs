@@ -46,6 +46,8 @@ namespace Tactics.UI
         private Button _endTurnButton;
         private Button _moveButton;
         private Button _consumableButton;
+        private Button _speedButton;
+        private bool _speedButtonWired;
         private VisualElement _consumableIcon;
         private Label _consumableNameLabel;
         private Label _consumableChargesLabel;
@@ -164,6 +166,7 @@ namespace Tactics.UI
             _endTurnButton = root.Q<Button>("EndTurnButton");
             _moveButton = root.Q<Button>("MoveButton");
             _consumableButton = root.Q<Button>("BattleConsumableButton");
+            _speedButton = root.Q<Button>("BattleSpeedButton");
             _consumableIcon = root.Q<VisualElement>("BattleConsumableIcon");
             _consumableNameLabel = root.Q<Label>("BattleConsumableName");
             _consumableChargesLabel = root.Q<Label>("BattleConsumableCharges");
@@ -207,6 +210,15 @@ namespace Tactics.UI
             if (_endTurnButton != null) _endTurnButton.clicked += OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked += OnMoveClicked;
             if (_consumableButton != null) _consumableButton.clicked += OnConsumableClicked;
+            if (_speedButton != null)
+            {
+                if (!_speedButtonWired)
+                {
+                    _speedButton.clicked += OnSpeedClicked;
+                    _speedButtonWired = true;
+                }
+                RefreshSpeedButton();
+            }
 
             // Find GridController from the currently loaded battle scene
             _gridController = Object.FindFirstObjectByType<BattleController>();
@@ -282,6 +294,11 @@ namespace Tactics.UI
             if (_endTurnButton != null) _endTurnButton.clicked -= OnEndTurnClicked;
             if (_moveButton != null) _moveButton.clicked -= OnMoveClicked;
             if (_consumableButton != null) _consumableButton.clicked -= OnConsumableClicked;
+            if (_speedButton != null && _speedButtonWired)
+            {
+                _speedButton.clicked -= OnSpeedClicked;
+                _speedButtonWired = false;
+            }
             _orderedSelectionPanel?.UnregisterCallback<MouseDownEvent>(OnOrderedSelectionMouseDown);
             _root?.UnregisterCallback<KeyDownEvent>(OnBattleKeyDown);
 
@@ -312,6 +329,18 @@ namespace Tactics.UI
                 _endTurnAction.performed -= OnEndTurnPerformed;
                 _endTurnAction.Disable();
             }
+        }
+
+        private void OnSpeedClicked()
+        {
+            GameTimeService.CyclePlaybackSpeed();
+            RefreshSpeedButton();
+        }
+
+        private void RefreshSpeedButton()
+        {
+            if (_speedButton != null)
+                _speedButton.text = $"⚙ {(int)GameTimeService.PlaybackSpeed}×";
         }
 
         private void InitializeCurrentTurnUI()
@@ -784,6 +813,8 @@ namespace Tactics.UI
         /// <summary>
         /// Shows the fixed post-victory recovery beat while keeping all battle controls unavailable.
         /// </summary>
+        /// <param name="units">The units whose persistent recovery is applied after the presentation beat.</param>
+        /// <returns>A task that completes after the scaled recovery beat or is canceled with this UI.</returns>
         public async Task ShowPostBattleRecoveryAsync(IEnumerable<IUnit> units)
         {
             if (units == null)
@@ -811,7 +842,7 @@ namespace Tactics.UI
                     SpawnDamageNumber(DamageNumberType.Heal, $"+{mpGain} MP", position + Vector3.right * 0.3f, new Color(0.35f, 0.65f, 1f));
             }
 
-            await Task.Delay(800);
+            await GameTimeService.DelayScaledAsync(0.8f, destroyCancellationToken);
         }
 
         private void HideBattleChromeForRecovery()
@@ -821,9 +852,9 @@ namespace Tactics.UI
             // for the next encounter rather than being restored to an interactable state.
             foreach (string elementName in new[]
                      {
-                         "TopPanel", "StatusPanel", "BottomPanel", "AbilityReasonTooltip",
-                         "OrderedSelectionPanel", "HoverHealthBar", "DroppedSpearMarkerRoot",
-                         "OrderedTargetMarkerRoot"
+                         "TopPanel", "StatusPanel", "BottomPanel", "BattleSpeedButton",
+                         "AbilityReasonTooltip", "OrderedSelectionPanel", "HoverHealthBar",
+                         "DroppedSpearMarkerRoot", "OrderedTargetMarkerRoot"
                      })
             {
                 var element = _root.Q<VisualElement>(elementName);
