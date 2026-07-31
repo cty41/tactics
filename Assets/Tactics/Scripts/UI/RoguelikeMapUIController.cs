@@ -62,6 +62,8 @@ namespace Tactics.UI
         private VisualTreeAsset _nodeTemplate;
         private float _cachedViewportHeight;
         private Sprite _mapBackgroundSprite;
+        private Vector2 _mapLayoutMin;
+        private Vector2 _mapLayoutMax;
 
         private bool _isDragging;
         private float _dragStartX;
@@ -495,6 +497,7 @@ namespace Tactics.UI
         {
             if (_mapContent == null || _currentMap == null) return;
 
+            CacheMapLayoutBounds();
             float mapWidth = padding * 2 + CalculateMapXSpan() * unitsToPixelsMultiplier;
             float mapHeight = padding * 2 + CalculateMapYSpan() * unitsToPixelsMultiplier;
             
@@ -506,6 +509,24 @@ namespace Tactics.UI
             _mapContent.style.minHeight = mapHeight;
             _mapContent.style.position = Position.Relative;
             _cachedViewportHeight = mapHeight;
+        }
+
+        private void CacheMapLayoutBounds()
+        {
+            if (_currentMap?.nodes == null || _currentMap.nodes.Count == 0)
+            {
+                _mapLayoutMin = Vector2.zero;
+                _mapLayoutMax = Vector2.zero;
+                return;
+            }
+
+            _mapLayoutMin = _currentMap.nodes[0].position;
+            _mapLayoutMax = _mapLayoutMin;
+            foreach (var node in _currentMap.nodes)
+            {
+                _mapLayoutMin = Vector2.Min(_mapLayoutMin, node.position);
+                _mapLayoutMax = Vector2.Max(_mapLayoutMax, node.position);
+            }
         }
 
         private void ScrollToOrigin()
@@ -548,35 +569,17 @@ namespace Tactics.UI
         private Vector2 GetNodePosition(RoguelikeMapNode node)
         {
             if (_currentMap == null) return Vector2.zero;
-            return new Vector2(padding, padding) + node.position * unitsToPixelsMultiplier;
+            return new Vector2(padding, padding) + (node.position - _mapLayoutMin) * unitsToPixelsMultiplier;
         }
 
         private float CalculateMapXSpan()
         {
-            if (_currentMap == null || _currentMap.nodes == null || _currentMap.nodes.Count == 0)
-                return 0f;
-            float minX = float.MaxValue;
-            float maxX = float.MinValue;
-            foreach (var node in _currentMap.nodes)
-            {
-                if (node.position.x < minX) minX = node.position.x;
-                if (node.position.x > maxX) maxX = node.position.x;
-            }
-            return maxX - minX;
+            return _mapLayoutMax.x - _mapLayoutMin.x;
         }
 
         private float CalculateMapYSpan()
         {
-            if (_currentMap == null || _currentMap.nodes == null || _currentMap.nodes.Count == 0)
-                return 0f;
-            float minY = float.MaxValue;
-            float maxY = float.MinValue;
-            foreach (var node in _currentMap.nodes)
-            {
-                if (node.position.y < minY) minY = node.position.y;
-                if (node.position.y > maxY) maxY = node.position.y;
-            }
-            return maxY - minY;
+            return _mapLayoutMax.y - _mapLayoutMin.y;
         }
 
         public void SetAttainableNodes()

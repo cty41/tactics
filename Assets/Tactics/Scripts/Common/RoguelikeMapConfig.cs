@@ -38,5 +38,8 @@ namespace Tactics.RoguelikeMap
 
         [Tooltip("事件JSON文件列表，用于加载区域事件")]
         public List<TextAsset> eventFiles = new List<TextAsset>();
+
+        [Tooltip("事件JSON资产路径列表。当运行时丢失 eventFiles 的嵌套引用时用于恢复加载。")]
+        public List<string> eventPaths = new List<string>();
     }
 }

@@ -375,7 +375,7 @@ test("routes semantic player input actions to PlayerInput", () => {
     feature: "PlayerInput",
     scenario: "PlayerInputRouting",
     tags: ["player-input-e2e"],
-    requiredAdapters: ["PlayerInput", "UI"],
+    requiredAdapters: ["UI", "PlayerInput"],
     timeoutMs: 10000,
     setup: [{ kind: "initializePlayerInput", parameters: {} }],
     actions: [
@@ -384,6 +384,7 @@ test("routes semantic player input actions to PlayerInput", () => {
       { kind: "rightClickPointerTarget", target: "Card", parameters: { targetKind: "UiElement" } },
       { kind: "pressInputKey", parameters: { key: "Escape" } },
       { kind: "waitForPlayerObservable", parameters: { observable: "uiVisible", uiId: "Home" } },
+      { kind: "waitForFrames", parameters: { frames: 3 } },
       { kind: "playBattleThroughInput", parameters: { maximumActions: 100 } }
     ],
     assertions: [{ kind: "elementExists", adapter: "UI", target: "NewGameButton", expected: true, parameters: {} }]
@@ -394,6 +395,77 @@ test("routes semantic player input actions to PlayerInput", () => {
   assert.ok(compiled.plan.setupActions.every(action => action.adapter === "PlayerInput"));
   assert.ok(compiled.plan.runtimeActions.every(action => action.adapter === "PlayerInput"));
   assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "UI"));
+});
+
+test("rejects every strict PlayerInput setup and runtime shortcut boundary", () => {
+  const createSpec = (): ScenarioSpec => ({
+    feature: "PlayerInput",
+    scenario: "StrictPlayerInputBoundary",
+    tags: ["player-input-e2e"],
+    requiredAdapters: ["UI", "PlayerInput"],
+    timeoutMs: 10000,
+    setup: [{ kind: "initializePlayerInput", adapter: "PlayerInput", parameters: {} }],
+    actions: [{ kind: "pressInputKey", adapter: "PlayerInput", parameters: { key: "Escape" } }],
+    assertions: [{ kind: "elementExists", adapter: "UI", target: "Home", expected: true, parameters: {} }]
+  });
+
+  const cases: Array<{
+    name: string;
+    diagnosticCode: string;
+    mutate: (spec: ScenarioSpec) => void;
+  }> = [
+    {
+      name: "missing required PlayerInput adapter",
+      diagnosticCode: "MissingPlayerInputAdapter",
+      mutate: spec => { spec.requiredAdapters = ["UI"]; }
+    },
+    {
+      name: "Map setup action",
+      diagnosticCode: "PlayerInputE2ESetupShortcut",
+      mutate: spec => { spec.setup = [{ kind: "setRunSeed", adapter: "Map", parameters: { seed: 1 } }]; }
+    },
+    {
+      name: "initializePlayerInput with a wrong adapter",
+      diagnosticCode: "PlayerInputE2ESetupShortcut",
+      mutate: spec => { spec.setup[0].adapter = "Map"; }
+    },
+    {
+      name: "Map runtime action",
+      diagnosticCode: "PlayerInputE2EActionShortcut",
+      mutate: spec => { spec.actions = [{ kind: "enterNode", adapter: "Map", target: "node", parameters: {} }]; }
+    },
+    {
+      name: "UI runtime action",
+      diagnosticCode: "PlayerInputE2EActionShortcut",
+      mutate: spec => { spec.actions = [{ kind: "clickElement", adapter: "UI", target: "button", parameters: {} }]; }
+    },
+    {
+      name: "Battle runtime action",
+      diagnosticCode: "PlayerInputE2EActionShortcut",
+      mutate: spec => { spec.actions = [{ kind: "advanceTurn", adapter: "Battle", parameters: {} }]; }
+    },
+    {
+      name: "Skill runtime action",
+      diagnosticCode: "PlayerInputE2EActionShortcut",
+      mutate: spec => { spec.actions = [{ kind: "executeSkillGraph", adapter: "Skill", parameters: {} }]; }
+    },
+    {
+      name: "allowed action kind with a wrong adapter",
+      diagnosticCode: "PlayerInputE2EActionShortcut",
+      mutate: spec => { spec.actions[0].adapter = "UI"; }
+    }
+  ];
+
+  for (const testCase of cases) {
+    const spec = createSpec();
+    testCase.mutate(spec);
+    const validation = validateScenarioSpec(spec);
+    assert.equal(validation.valid, false, `${testCase.name} unexpectedly validated.`);
+    assert.ok(
+      validation.diagnostics.some(diagnostic => diagnostic.code === testCase.diagnosticCode),
+      `${testCase.name} did not report ${testCase.diagnosticCode}. Diagnostics=${validation.diagnostics.map(diagnostic => diagnostic.code).join(",")}`
+    );
+  }
 });
 
 test("compiles structured AI turn result assertions from the authored source spec", async () => {
@@ -417,6 +489,39 @@ test("compiles structured AI turn result assertions from the authored source spe
   const fixtureCompiled = compileScenarioSpec(parseGameplayTestDocument(markdown).frontmatter);
   assert.ok(fixtureCompiled.plan);
   assert.deepEqual(normalizePlan(fixtureCompiled.plan), JSON.parse(generatedPlan));
+});
+
+test("deep-compares all strict PlayerInput sources with the runtime plans consumed by Unity", async () => {
+  for (const [sourceName, runtimePlanName] of [
+    ["battle/battle-player-input-smoke.gameplay-test.md", "compiled/battle-player-input-smoke.plan.json"],
+    ["ui/inventory-reentry-player-input.gameplay-test.md", "compiled/inventory-reentry-player-input.plan.json"],
+    ["map/pure-run-real-player-route.gameplay-test.md", "compiled/pure-run-real-player-route.plan.json"],
+    ["map/pure-run-mystery-real-player-commit.gameplay-test.md", "compiled/pure-run-mystery-real-player-commit.plan.json"],
+    ["map/pure-run-mystery-real-player-result-page.gameplay-test.md", "compiled/pure-run-mystery-real-player-result-page.plan.json"]
+  ] as const) {
+    const spec = parseGameplayTestDocument(await readFixture(sourceName)).frontmatter as ScenarioSpec;
+    const compiled = compileScenarioSpec(spec);
+    assert.equal(compiled.valid, true, compiled.diagnostics.map(d => d.message).join("\n"));
+    assert.ok(compiled.plan);
+    assert.deepEqual(normalizePlan(compiled.plan), JSON.parse(await readFixture(runtimePlanName)));
+  }
+});
+
+test("validates and compiles both shortcut-free Mystery player-input E2E fixtures", async () => {
+  for (const fixtureName of [
+    "map/pure-run-mystery-real-player-commit.gameplay-test.md",
+    "map/pure-run-mystery-real-player-result-page.gameplay-test.md"
+  ]) {
+    const spec = parseGameplayTestDocument(await readFixture(fixtureName)).frontmatter as ScenarioSpec;
+    assert.ok(spec.tags.includes("player-input-e2e"));
+    assert.deepEqual(spec.setup.map(step => step.kind), ["initializePlayerInput"]);
+    assert.ok(spec.actions.every(action => action.adapter === "PlayerInput"));
+    assert.equal(spec.actions.filter(action => action.kind === "playBattleThroughInput").length, 3);
+
+    const validation = validateScenarioSpec(spec);
+    assert.equal(validation.valid, true, validation.diagnostics.map(d => d.message).join("\n"));
+    assert.equal(compileScenarioSpec(spec).valid, true);
+  }
 });
 
 test("rejects malformed run seed, strict asset, and AI turn result expected values", async () => {

@@ -111,6 +111,7 @@ const actionKindToAdapter: Record<string, Adapter> = {
   rightClickPointerTarget: "PlayerInput",
   pressInputKey: "PlayerInput",
   waitForPlayerObservable: "PlayerInput",
+  waitForFrames: "PlayerInput",
   playBattleThroughInput: "PlayerInput"
 };
 
@@ -212,6 +213,7 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   elementEnabled: "UI",
   elementExists: "UI",
   elementClassContains: "UI",
+  elementClassContainsAny: "UI",
   elementChildOrderEquals: "UI",
   elementRectRelationEquals: "UI",
   abilityCardAvailabilityEquals: "UI",

@@ -89,6 +89,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "elementEnabled"
                 or "elementExists"
                 or "elementClassContains"
+                or "elementClassContainsAny"
                 or "elementChildOrderEquals"
                 or "elementRectRelationEquals"
                 or "abilityCardAvailabilityEquals"
@@ -107,6 +108,7 @@ namespace Tactics.Common.Testing.Gameplay
                     "elementEnabled" => AssertElementEnabled(context, assertion),
                     "elementExists" => AssertElementExists(context, assertion),
                     "elementClassContains" => AssertElementClassContains(context, assertion),
+                    "elementClassContainsAny" => AssertElementClassContainsAny(context, assertion),
                     "elementChildOrderEquals" => AssertElementChildOrderEquals(context, assertion),
                     "elementRectRelationEquals" => AssertElementRectRelationEquals(context, assertion),
                     "abilityCardAvailabilityEquals" => AssertAbilityCardAvailabilityEquals(context, assertion),
@@ -508,6 +510,27 @@ namespace Tactics.Common.Testing.Gameplay
             return actual
                 ? GameplayAssertionResult.Pass(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' contains class '{expectedClass}'.")
                 : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' does not contain class '{expectedClass}'.");
+        }
+
+        /// <summary>
+        /// Asserts that the target element carries at least one of the expected classes.
+        /// Expected must be an array of class names; used for seed-dependent outcomes
+        /// (e.g. mystery result-success/result-failure) where either styling is valid.
+        /// </summary>
+        private static GameplayAssertionResult AssertElementClassContainsAny(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)
+        {
+            var element = FindElement(context, assertion.Target);
+            if (element == null)
+                return GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' not found.");
+            var expectedClasses = assertion.Expected is JArray array
+                ? array.Values<string>().Where(value => !string.IsNullOrWhiteSpace(value)).ToList()
+                : new List<string>();
+            if (expectedClasses.Count == 0)
+                return GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, "elementClassContainsAny requires a non-empty string array expected value.");
+            string matched = expectedClasses.FirstOrDefault(element.ClassListContains);
+            return matched != null
+                ? GameplayAssertionResult.Pass(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' contains class '{matched}'.")
+                : GameplayAssertionResult.Fail(UiAdapterName, assertion.Kind, $"Element '{assertion.Target}' contains none of [{string.Join(", ", expectedClasses)}].");
         }
 
         private static GameplayAssertionResult AssertElementChildOrderEquals(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)

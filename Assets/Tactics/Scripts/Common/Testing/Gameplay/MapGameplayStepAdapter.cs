@@ -1143,6 +1143,7 @@ namespace Tactics.Common.Testing.Gameplay
                 $"Committed node transaction '{nodeId}' (summary nodes={visitedCount}).");
         }
 
+
         private static GameplayStepResult ReloadPureRunSession(
             GameplayRuntimeContext context,
             ExecutableScenarioAction action)
@@ -1308,10 +1309,19 @@ namespace Tactics.Common.Testing.Gameplay
             if (string.IsNullOrWhiteSpace(expected))
                 return GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, "currentNodeEquals requires expected nodeId.");
 
-            string actual = context.CurrentNodeId ?? RoguelikeMapRuntimeState.CurrentNodeId;
+            string runtimeNodeId = RoguelikeMapRuntimeState.CurrentNodeId;
+            string contextNodeId = context.CurrentNodeId;
+            string actual = runtimeNodeId ?? contextNodeId;
             return actual == expected
-                ? GameplayAssertionResult.Pass(MapAdapterName, assertion.Kind, $"CurrentNode={actual}")
-                : GameplayAssertionResult.Fail(MapAdapterName, assertion.Kind, $"Expected CurrentNode={expected}, actual={actual}.");
+                ? GameplayAssertionResult.Pass(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"CurrentNode={actual} (runtime={runtimeNodeId ?? "<null>"}, context={contextNodeId ?? "<null>"})")
+                : GameplayAssertionResult.Fail(
+                    MapAdapterName,
+                    assertion.Kind,
+                    $"Expected CurrentNode={expected}, actual={actual ?? "<null>"} " +
+                    $"(runtime={runtimeNodeId ?? "<null>"}, context={contextNodeId ?? "<null>"}).");
         }
 
         private static GameplayAssertionResult AssertMapIsActive(GameplayRuntimeContext context, ExecutableScenarioAssertion assertion)

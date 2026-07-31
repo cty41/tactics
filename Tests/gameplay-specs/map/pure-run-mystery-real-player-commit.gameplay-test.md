@@ -1,7 +1,7 @@
 ---
 feature: PlayerInput
-scenario: PureRunPlayerInputRoute
-tags: [pure-run, journey, reentry, player-input-e2e]
+scenario: PureRunMysteryRealPlayerCommit
+tags: [pure-run, mystery, commit, player-input-e2e]
 requiredAdapters: [PlayerInput, UI, Map, Battle]
 setup:
   - kind: initializePlayerInput
@@ -69,69 +69,6 @@ actions:
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: mapReady, maximumFrames: 300 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: Reachable
-    parameters: { targetKind: MapNode, nodeType: Battle }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: battleReady, maximumFrames: 600 }
-  - kind: playBattleThroughInput
-    adapter: PlayerInput
-    parameters: { maximumActions: 100 }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: BattleSettlementRoot, maximumFrames: 600 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: BattleSettlementRoot
-    parameters: { targetKind: UiElement }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: ContinueButton, interactable: true, maximumFrames: 300 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: ContinueButton
-    parameters: { targetKind: UiElement }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: AttributeAllocationRoot, maximumFrames: 300 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: AttrPlus_Strength
-    parameters: { targetKind: UiElement }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: ConfirmButton
-    parameters: { targetKind: UiElement }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 120 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: SkillOption_0
-    parameters: { targetKind: UiElement }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: ConfirmButton
-    parameters: { targetKind: UiElement }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: mapReady, maximumFrames: 600 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: InventoryButton
-    parameters: { targetKind: UiElement }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: CharacterNameLabel }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: CloseButton
-    parameters: { targetKind: UiElement }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: mapReady, maximumFrames: 300 }
 
   - kind: clickPointerTarget
     adapter: PlayerInput
@@ -236,51 +173,91 @@ actions:
   - kind: clickPointerTarget
     adapter: PlayerInput
     target: Reachable
-    parameters: { targetKind: MapNode, nodeType: Store }
+    parameters: { targetKind: MapNode, nodeType: Battle }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: FirstStoreBuyButton, interactable: true, maximumFrames: 600 }
-  - kind: clickPointerTarget
+    parameters: { observable: battleReady, maximumFrames: 600 }
+  - kind: playBattleThroughInput
     adapter: PlayerInput
-    target: FirstStoreBuyButton
-    parameters: { targetKind: UiElement }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: CloseButton
-    parameters: { targetKind: UiElement }
+    parameters: { maximumActions: 100 }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: mapReady, maximumFrames: 300 }
+    parameters: { observable: uiElement, elementName: BattleSettlementRoot, maximumFrames: 600 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: InventoryButton
+    target: BattleSettlementRoot
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: StorageSlot_0, maximumFrames: 180 }
+    parameters: { observable: uiElement, elementName: ContinueButton, interactable: true, maximumFrames: 300 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: StorageSlot_0
+    target: ContinueButton
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: uiElement, elementName: InventoryItemPopover, maximumFrames: 180 }
+    parameters: { observable: uiElement, elementName: AttributeAllocationRoot, maximumFrames: 300 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: CloseButton
+    target: AttrPlus_Strength
+    parameters: { targetKind: UiElement }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
+    parameters: { targetKind: UiElement }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 120 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: SkillOption_0
+    parameters: { targetKind: UiElement }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
+    parameters: { targetKind: UiElement }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: mapReady, maximumFrames: 600 }
+
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: Reachable
+    parameters: { targetKind: MapNode, nodeType: Mystery }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: EventOption_0, maximumFrames: 600 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: EventOption_0
+    parameters: { targetKind: UiElement }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: ResultText, maximumFrames: 300 }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: ContinueButton, interactable: true, maximumFrames: 300 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ContinueButton
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: mapReady, maximumFrames: 300 }
 assertions:
-  - kind: elementExists
-    adapter: UI
-    target: InventoryButton
+  - kind: nodeIsConsumed
+    adapter: Map
+    target: layer_04_event
     expected: true
     parameters: {}
-  - kind: mapIsActive
+  - kind: nodeTransactionPhaseEquals
     adapter: Map
-    expected: true
+    target: layer_04_event
+    expected: Committed
+    parameters: {}
+  - kind: currentNodeEquals
+    adapter: Map
+    expected: layer_04_event
     parameters: {}
   - kind: visitedNodeCountEquals
     adapter: Map
@@ -290,24 +267,13 @@ assertions:
     adapter: Map
     expected: 3
     parameters: {}
-  - kind: rosterCharacterLevelEquals
+  - kind: mapIsActive
     adapter: Map
-    target: pure_run_mage
-    expected: 2
+    expected: true
     parameters: {}
-  - kind: rosterCharacterLevelEquals
-    adapter: Map
-    target: pure_run_necromancer
-    expected: 2
-    parameters: {}
-  - kind: rosterCharacterLevelEquals
-    adapter: Map
-    target: pure_run_amazon
-    expected: 2
-    parameters: {}
-timeoutMs: 360000
+timeoutMs: 180000
 ---
 
-# Pure Run Player Input Journey
+# Pure Run Mystery Real Player Commit
 
-从 Home 通过正式输入完成三场动态可达战斗、三次结算与显式升级，进入首个可达商店购买物品，并在多次战斗场景重入后从 Inventory 打开该物品详情。路线不依赖固定节点 ID，不允许适配器直接执行技能、授予等级、生成敌人或提交结算。
+从 Home 开始，经三次初始技能选择、三场真实输入战斗和升级流程到达第四层，再真实点击 Mystery、事件选项与结果页“继续”按钮提交事务并回到地图。断言 layer_04_event 已消耗、事务阶段为 Committed、当前节点停留在事件节点，且三场战斗与五段访问路径完整保留。中断/重进后的会话恢复由 mystery-result-page-reentry 在存档层覆盖；本 spec 的 runtime action 全部通过 PlayerInput，不使用 Map/UI 业务捷径。

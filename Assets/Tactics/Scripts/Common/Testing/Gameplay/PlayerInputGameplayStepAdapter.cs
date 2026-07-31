@@ -61,6 +61,7 @@ namespace Tactics.Common.Testing.Gameplay
                 or "rightClickPointerTarget"
                 or "pressInputKey"
                 or "waitForPlayerObservable"
+                or "waitForFrames"
                 or "playBattleThroughInput";
         }
 
@@ -76,6 +77,7 @@ namespace Tactics.Common.Testing.Gameplay
                     "rightClickPointerTarget" => await ClickPointerTarget(context, action, PointerButton.Right),
                     "pressInputKey" => await PressInputKey(context, action),
                     "waitForPlayerObservable" => await WaitForPlayerObservable(context, action),
+                    "waitForFrames" => await WaitForFrames(context, action),
                     "playBattleThroughInput" => await PlayBattleThroughInput(context, action),
                     _ => GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, $"Unsupported PlayerInput action '{action.Kind}'.")
                 };
@@ -114,6 +116,42 @@ namespace Tactics.Common.Testing.Gameplay
             if (context.PlayerInputMouse != null || context.PlayerInputKeyboard != null)
                 return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, "Virtual player input is already initialized.");
 
+#if UNITY_EDITOR
+            var inputSettings = InputSystem.settings;
+            var previousEditorInputBehavior = inputSettings.editorInputBehaviorInPlayMode;
+            if (previousEditorInputBehavior != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
+            {
+                // Keep unfocused Editor PlayMode E2E on the production InputAction/UI path;
+                // this test-owned policy override is restored when the runner context cleans up.
+                inputSettings.editorInputBehaviorInPlayMode =
+                    InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+                bool editorInputBehaviorRestored = false;
+                context.OwnedCleanupActions.Add(() =>
+                {
+                    if (editorInputBehaviorRestored)
+                        return;
+
+                    editorInputBehaviorRestored = true;
+                    inputSettings.editorInputBehaviorInPlayMode = previousEditorInputBehavior;
+                });
+            }
+
+            var previousBackgroundBehavior = inputSettings.backgroundBehavior;
+            if (previousBackgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
+            {
+                inputSettings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+                bool backgroundBehaviorRestored = false;
+                context.OwnedCleanupActions.Add(() =>
+                {
+                    if (backgroundBehaviorRestored)
+                        return;
+
+                    backgroundBehaviorRestored = true;
+                    inputSettings.backgroundBehavior = previousBackgroundBehavior;
+                });
+            }
+#endif
+
             // A failed prior PlayerLoop may not reach its context disposal. Clear only the
             // dedicated test devices before this independent scenario acquires ownership.
             RemoveResidualVirtualTestDevices();
@@ -144,50 +182,139 @@ namespace Tactics.Common.Testing.Gameplay
             context.OwnedInputDevices.Add(keyboard);
             System.Threading.Interlocked.Increment(ref _totalInitializationCount);
 
-            EnsureInputSystemUiModule(context);
+            if (!TryPrepareProductionInputSystemUiModule(context, out string inputModuleFailure))
+                return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, inputModuleFailure);
             if (!await WaitForInputFrame(context) || !await WaitForInputFrame(context))
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Virtual player input initialization was cancelled.");
             return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, "Initialized virtual Mouse and Keyboard devices.");
         }
 
-        private static void EnsureInputSystemUiModule(GameplayRuntimeContext context)
+        private static bool TryPrepareProductionInputSystemUiModule(
+            GameplayRuntimeContext context,
+            out string failure)
         {
-            var existingModule = UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None)
-                .FirstOrDefault(module => module != null && module.isActiveAndEnabled);
-            if (existingModule != null)
+            var module = UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None)
+                .FirstOrDefault(candidate => candidate != null && candidate.isActiveAndEnabled);
+            if (module == null)
             {
-                var existingEventSystem = existingModule.GetComponent<EventSystem>();
-                if (existingEventSystem != null)
-                {
-                    existingEventSystem.enabled = true;
-                    EventSystem.current = existingEventSystem;
-                }
-                if (existingModule.actionsAsset == null)
-                {
-                    existingModule.AssignDefaultActions();
-                    context.OwnedCleanupActions.Add(existingModule.UnassignActions);
-                }
-                return;
+                failure = "A production InputSystemUIInputModule must be active; PlayerInput E2E does not create a replacement input module.";
+                return false;
             }
 
-            var eventSystem = UnityEngine.Object.FindFirstObjectByType<EventSystem>();
-            if (eventSystem == null)
+            var eventSystem = module.GetComponent<EventSystem>();
+            if (eventSystem == null || !eventSystem.isActiveAndEnabled ||
+                !ReferenceEquals(EventSystem.current, eventSystem))
             {
-                var eventSystemObject = new GameObject("GameplayTestInputEventSystem");
-                eventSystem = eventSystemObject.AddComponent<EventSystem>();
-                var createdModule = eventSystemObject.AddComponent<InputSystemUIInputModule>();
-                createdModule.AssignDefaultActions();
-                context.OwnedCleanupActions.Add(createdModule.UnassignActions);
-                context.OwnedRuntimeGameObjects.Add(eventSystemObject);
-                EventSystem.current = eventSystem;
-                return;
+                failure = "The production InputSystemUIInputModule must belong to the active EventSystem.current.";
+                return false;
             }
 
-            var module = eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
-            module.AssignDefaultActions();
-            context.OwnedCleanupActions.Add(module.UnassignActions);
-            context.OwnedRuntimeComponents.Add(module);
-            EventSystem.current = eventSystem;
+            if (module.actionsAsset == null ||
+                module.point?.action == null ||
+                module.leftClick?.action == null ||
+                module.rightClick?.action == null ||
+                module.scrollWheel?.action == null)
+            {
+                failure = "The production InputSystemUIInputModule must provide its configured actions asset and pointer actions.";
+                return false;
+            }
+
+            var pointerActions = new[]
+                {
+                    module.point?.action,
+                    module.leftClick?.action,
+                    module.rightClick?.action,
+                    module.middleClick?.action,
+                    module.scrollWheel?.action
+                }
+                .Where(pointerAction => pointerAction != null)
+                .Distinct()
+                .ToArray();
+            CaptureProductionInputActionBaselines(context, pointerActions);
+
+            bool hasDisabledPointerAction = pointerActions.Any(pointerAction => !pointerAction.enabled);
+            if (hasDisabledPointerAction)
+            {
+                // Removing a virtual device can leave shared production actions disabled between
+                // fixtures. Re-enter the existing module's own lifecycle to rebuild those action
+                // bindings; never install or configure a replacement module/action asset. Cleanup
+                // restores the first enabled-state baseline captured for each action in this context.
+                module.enabled = false;
+                module.enabled = true;
+                if (!module.point.action.enabled || !module.leftClick.action.enabled ||
+                    !module.rightClick.action.enabled || !module.scrollWheel.action.enabled)
+                {
+                    failure = "The production InputSystemUIInputModule did not enable its configured pointer actions through its own lifecycle.";
+                    return false;
+                }
+            }
+
+            RefreshUiPointerActionsForVirtualMouse(module, context.PlayerInputMouse);
+            failure = null;
+            return true;
+        }
+
+        private static void CaptureProductionInputActionBaselines(
+            GameplayRuntimeContext context,
+            IEnumerable<InputAction> actions)
+        {
+            foreach (var action in actions)
+            {
+                if (!context.PlayerInputActionEnabledBaselines.ContainsKey(action))
+                    context.PlayerInputActionEnabledBaselines.Add(action, action.enabled);
+            }
+
+            if (context.PlayerInputActionBaselineCleanupRegistered)
+                return;
+
+            context.PlayerInputActionBaselineCleanupRegistered = true;
+            context.OwnedCleanupActions.Add(() =>
+            {
+                foreach (var baseline in context.PlayerInputActionEnabledBaselines)
+                {
+                    if (baseline.Key == null || baseline.Key.enabled == baseline.Value)
+                        continue;
+                    if (baseline.Value)
+                        baseline.Key.Enable();
+                    else
+                        baseline.Key.Disable();
+                }
+
+                context.PlayerInputActionEnabledBaselines.Clear();
+                context.PlayerInputActionBaselineCleanupRegistered = false;
+            });
+        }
+
+        private static void RefreshUiPointerActionsForVirtualMouse(
+            InputSystemUIInputModule module,
+            Mouse virtualMouse)
+        {
+            if (module == null || virtualMouse == null || !virtualMouse.added)
+                return;
+
+            RefreshInputActionForDevice(module.point, virtualMouse);
+            RefreshInputActionForDevice(module.leftClick, virtualMouse);
+            RefreshInputActionForDevice(module.rightClick, virtualMouse);
+            RefreshInputActionForDevice(module.middleClick, virtualMouse);
+            RefreshInputActionForDevice(module.scrollWheel, virtualMouse);
+        }
+
+        private static void RefreshInputActionForDevice(InputActionReference actionReference, InputDevice device)
+        {
+            var action = actionReference?.action;
+            if (action == null || !action.enabled)
+                return;
+
+            bool hasDeviceControl = action.controls.Any(control => ReferenceEquals(control.device, device));
+            bool hasCompetingActiveControl = action.activeControl != null &&
+                !ReferenceEquals(action.activeControl.device, device);
+            if (hasDeviceControl && !hasCompetingActiveControl)
+                return;
+
+            // Re-enable only the affected production action to rebuild its stale control cache or
+            // active control without replacing the asset or bypassing the production EventSystem path.
+            action.Disable();
+            action.Enable();
         }
 
         private static async Task<GameplayStepResult> MovePointerToTarget(
@@ -207,10 +334,10 @@ namespace Tactics.Common.Testing.Gameplay
             if (context.PlayerInputMouse == null || !context.PlayerInputMouse.added)
                 return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "initializePlayerInput must run before pointer actions.");
 
-            // Scene transitions can destroy the EventSystem that existed when the virtual devices
-            // were initialized. Rebind the production UI input module before every pointer action
-            // so Home, map and battle UI receive the same device events.
-            EnsureInputSystemUiModule(context);
+            // Scene transitions replace the production EventSystem. Verify the live scene's own
+            // module and configured actions before every pointer action; never install a test chain.
+            if (!TryPrepareProductionInputSystemUiModule(context, out string inputModuleFailure))
+                return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, inputModuleFailure);
 
             if (!await QueueMouseStateAndWaitForProcessing(context, new MouseState { position = position }))
                 return GameplayStepResult.Fail(
@@ -242,7 +369,7 @@ namespace Tactics.Common.Testing.Gameplay
                 return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Map node '{elementName}' is already visible.");
 
             var target = FindActiveElement(elementName);
-            var scrollView = FindActiveElement("MapScrollView");
+            var scrollView = FindActiveElement("MapScrollView") as ScrollView;
             if (target?.panel == null || scrollView?.panel == null || target.panel != scrollView.panel)
             {
                 return GameplayStepResult.Fail(
@@ -251,16 +378,28 @@ namespace Tactics.Common.Testing.Gameplay
                     $"Map node '{elementName}' cannot be brought into view because MapScrollView is unavailable.");
             }
 
-            for (int attempt = 0; attempt < 8; attempt++)
+            if (!TryPrepareProductionInputSystemUiModule(context, out string inputModuleFailure))
+                return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, inputModuleFailure);
+            const int maxScrollAttempts = 8;
+            for (int attempt = 0; attempt < maxScrollAttempts; attempt++)
             {
-                Rect viewport = scrollView.worldBound;
+                // Map UI rebuilds settle over several frames. Re-read the live target and the
+                // clipping viewport on every attempt, then move the content only through the
+                // production pointer-drag path. ScrollView.worldBound includes non-clipping
+                // content and is not authoritative for what the player can actually hit.
+                target = FindActiveElement(elementName);
+                scrollView = FindActiveElement("MapScrollView") as ScrollView;
+                if (target?.panel == null || scrollView?.panel == null || target.panel != scrollView.panel)
+                    break;
+
+                Rect viewportBounds = scrollView.contentViewport.worldBound;
                 Rect targetBounds = target.worldBound;
-                Vector2 panelStart = viewport.center;
-                float horizontalStep = Mathf.Sign(targetBounds.center.x - viewport.center.x) * viewport.width * 0.35f;
-                float verticalStep = Mathf.Sign(targetBounds.center.y - viewport.center.y) * viewport.height * 0.35f;
-                if (Mathf.Abs(targetBounds.center.x - viewport.center.x) <= viewport.width * 0.35f)
+                Vector2 panelStart = viewportBounds.center;
+                float horizontalStep = Mathf.Sign(targetBounds.center.x - viewportBounds.center.x) * viewportBounds.width * 0.35f;
+                float verticalStep = Mathf.Sign(targetBounds.center.y - viewportBounds.center.y) * viewportBounds.height * 0.35f;
+                if (Mathf.Abs(targetBounds.center.x - viewportBounds.center.x) <= viewportBounds.width * 0.35f)
                     horizontalStep = 0f;
-                if (Mathf.Abs(targetBounds.center.y - viewport.center.y) <= viewport.height * 0.35f)
+                if (Mathf.Abs(targetBounds.center.y - viewportBounds.center.y) <= viewportBounds.height * 0.35f)
                     verticalStep = 0f;
 
                 if (Mathf.Approximately(horizontalStep, 0f) && Mathf.Approximately(verticalStep, 0f))
@@ -301,11 +440,28 @@ namespace Tactics.Common.Testing.Gameplay
                     return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Map scroll pointer release cancelled.");
 
                 if (TryResolveUiScreenPosition(elementName, out _, out _))
-                    return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Scrolled map node '{elementName}' into view through pointer input.");
+                    return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Scrolled map node '{elementName}' into contentViewport through pointer input.");
             }
 
             TryResolveUiScreenPosition(elementName, out _, out string failure);
-            return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, failure);
+            target = FindActiveElement(elementName);
+            string viewportDiagnostic = scrollView?.contentViewport == null
+                ? "<none>"
+                : scrollView.contentViewport.worldBound.ToString();
+            string contentDiagnostic = scrollView?.contentContainer == null
+                ? "<none>"
+                : scrollView.contentContainer.worldBound.ToString();
+            string horizontalDiagnostic = scrollView?.horizontalScroller == null
+                ? "<none>"
+                : $"{scrollView.horizontalScroller.value:F0}/{scrollView.horizontalScroller.highValue:F0}";
+            string verticalDiagnostic = scrollView?.verticalScroller == null
+                ? "<none>"
+                : $"{scrollView.verticalScroller.value:F0}/{scrollView.verticalScroller.highValue:F0}";
+            return GameplayStepResult.Fail(
+                PlayerInputAdapterName,
+                action.Kind,
+                $"{failure} [target={target?.worldBound}, viewport={viewportDiagnostic}, " +
+                $"content={contentDiagnostic}, h={horizontalDiagnostic}, v={verticalDiagnostic}]");
         }
 
         private static async Task<GameplayStepResult> ClickPointerTarget(
@@ -313,64 +469,214 @@ namespace Tactics.Common.Testing.Gameplay
             ExecutableScenarioAction action,
             PointerButton button)
         {
-            var moveResult = await MovePointerToTarget(context, action);
-            if (!moveResult.Passed)
-                return moveResult;
+            // A click can be swallowed when the target panel rebuilds between resolving the
+            // position and processing the pointer state. Re-resolve and retry the full click a
+            // few times; a retry only happens when the element provably received no event, so
+            // it cannot double-trigger the control.
+            const int maxClickAttempts = 3;
+            for (int attempt = 1; ; attempt++)
+            {
+                VisualElement observedElement = null;
+                bool observedPointerDown = false;
+                bool observedClick = false;
+                EventCallback<PointerDownEvent> pointerDownObserver = _ => observedPointerDown = true;
+                EventCallback<ClickEvent> clickObserver = _ => observedClick = true;
+                string targetKind = action.Parameters["targetKind"]?.ToString() ?? "UiElement";
+                bool requiresElementObservation = targetKind is "UiElement" or "MapNode";
+                if (requiresElementObservation)
+                {
+                    string elementName = targetKind == "MapNode"
+                        ? ResolveMapNodeElementName(action, ResolveLocator(action))
+                        : ResolveUiElementName(ResolveLocator(action));
+                    observedElement = FindActiveElement(elementName);
+                    observedElement?.RegisterCallback(pointerDownObserver, TrickleDown.TrickleDown);
+                    observedElement?.RegisterCallback(clickObserver, TrickleDown.TrickleDown);
+                }
+                bool observersRegistered = observedElement != null;
+                void UnregisterPointerObservers()
+                {
+                    if (!observersRegistered)
+                        return;
 
-            VisualElement observedElement = null;
-            bool observedPointerDown = false;
-            bool observedClick = false;
-            EventCallback<PointerDownEvent> pointerDownObserver = _ => observedPointerDown = true;
-            EventCallback<ClickEvent> clickObserver = _ => observedClick = true;
-            string targetKind = action.Parameters["targetKind"]?.ToString();
-            if (targetKind is "UiElement" or "MapNode")
-            {
-                string elementName = targetKind == "MapNode"
-                    ? ResolveMapNodeElementName(action, ResolveLocator(action))
-                    : ResolveUiElementName(ResolveLocator(action));
-                observedElement = FindActiveElement(elementName);
-                observedElement?.RegisterCallback(pointerDownObserver, TrickleDown.TrickleDown);
-                observedElement?.RegisterCallback(clickObserver, TrickleDown.TrickleDown);
-            }
-            void UnregisterPointerObservers()
-            {
-                observedElement?.UnregisterCallback(pointerDownObserver, TrickleDown.TrickleDown);
-                observedElement?.UnregisterCallback(clickObserver, TrickleDown.TrickleDown);
-            }
+                    observedElement?.UnregisterCallback(pointerDownObserver, TrickleDown.TrickleDown);
+                    observedElement?.UnregisterCallback(clickObserver, TrickleDown.TrickleDown);
+                    observersRegistered = false;
+                }
+                if (observersRegistered)
+                    context.OwnedCleanupActions.Add(UnregisterPointerObservers);
 
-            Vector2 pointerPosition = context.PlayerInputMouse.position.ReadValue();
-            var pressedState = new MouseState { position = pointerPosition }
-                .WithButton(
-                    button == PointerButton.Left
-                        ? UnityEngine.InputSystem.LowLevel.MouseButton.Left
-                        : UnityEngine.InputSystem.LowLevel.MouseButton.Right,
-                    true);
-            if (!await QueueMouseStateAndWaitForProcessing(context, pressedState, button, true))
-            {
+                if (requiresElementObservation && observedElement == null)
+                {
+                    if (attempt >= maxClickAttempts)
+                    {
+                        return GameplayStepResult.Fail(
+                            PlayerInputAdapterName,
+                            action.Kind,
+                            $"UI target '{ResolveLocator(action)}' disappeared before pointer observers could be registered after {maxClickAttempts} attempts.");
+                    }
+
+                    for (int settle = 0; settle < 15; settle++)
+                    {
+                        if (!await WaitForInputFrame(context))
+                            return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Pointer click retry cancelled.");
+                    }
+                    continue;
+                }
+
+                // Observers must be live before any geometry resolve, map scroll, pointer move or
+                // panel rebuild. If MovePointerToTarget throws, context disposal still unregisters
+                // them through the owned cleanup action above.
+                var moveResult = await MovePointerToTarget(context, action);
+                if (!moveResult.Passed)
+                {
+                    UnregisterPointerObservers();
+                    return moveResult;
+                }
+
+                Vector2 pointerPosition = context.PlayerInputMouse.position.ReadValue();
+                var pressedState = new MouseState { position = pointerPosition }
+                    .WithButton(
+                        button == PointerButton.Left
+                            ? UnityEngine.InputSystem.LowLevel.MouseButton.Left
+                            : UnityEngine.InputSystem.LowLevel.MouseButton.Right,
+                        true);
+                if (!await QueueMouseStateAndWaitForProcessing(context, pressedState, button, true))
+                {
+                    UnregisterPointerObservers();
+                    return GameplayStepResult.Fail(
+                        PlayerInputAdapterName,
+                        action.Kind,
+                        $"Pointer press was not applied. {DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick)}");
+                }
+
+                // UI Toolkit buttons complete their click across a real press -> frame ->
+                // release transaction. Preserve the pressed state across that frame for every
+                // observed UI target, not only when PointerDown was delayed: the automatic
+                // PlayerLoop tick can overwrite the owned virtual mouse before release even
+                // after the initial automatic input pass observed PointerDown.
+                if (observedElement != null)
+                {
+                    if (!await WaitForInputFrame(context))
+                    {
+                        UnregisterPointerObservers();
+                        return GameplayStepResult.Fail(
+                            PlayerInputAdapterName,
+                            action.Kind,
+                            $"Pointer press UI-frame wait was cancelled. {DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick)}");
+                    }
+                    // Re-arm the same in-flight press (not a second click), regardless of whether
+                    // the virtual device still looks enabled. The automatic PlayerLoop owns both
+                    // state application and production UI/InputAction dispatch.
+                    if (!context.PlayerInputMouse.enabled)
+                        InputSystem.EnableDevice(context.PlayerInputMouse);
+                    context.PlayerInputMouse.MakeCurrent();
+                    if (!await QueueMouseStateAndWaitForProcessing(context, pressedState, button, true))
+                    {
+                        UnregisterPointerObservers();
+                        return GameplayStepResult.Fail(
+                            PlayerInputAdapterName,
+                            action.Kind,
+                            $"Pointer press could not be re-armed after the UI frame. {DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick)}");
+                    }
+                }
+
+                bool targetWasAttachedBeforeRelease = observedElement == null ||
+                    (observedElement.panel != null && observedElement.enabledInHierarchy &&
+                     observedElement.resolvedStyle.display != DisplayStyle.None);
+
+                if (!await QueueMouseStateAndWaitForProcessing(
+                        context,
+                        new MouseState { position = pointerPosition },
+                        button,
+                        false))
+                {
+                    UnregisterPointerObservers();
+                    return GameplayStepResult.Fail(
+                        PlayerInputAdapterName,
+                        action.Kind,
+                        $"Pointer release was not applied. {DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick)}");
+                }
+
+                // Keep observers registered for one frame so release-side ClickEvent delivery
+                // is observed before deciding whether a completely unobserved transaction may
+                // be retried.
+                if (!await WaitForInputFrame(context))
+                {
+                    UnregisterPointerObservers();
+                    return GameplayStepResult.Fail(
+                        PlayerInputAdapterName,
+                        action.Kind,
+                        $"Pointer release observation wait was cancelled. {DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick)}");
+                }
+
+                bool targetDetachedAfterRelease = observedElement != null && observedElement.panel == null;
+                bool targetBecameInactiveAfterRelease = observedElement != null &&
+                    (!observedElement.enabledInHierarchy || observedElement.resolvedStyle.display == DisplayStyle.None);
                 UnregisterPointerObservers();
-                return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Pointer press cancelled.");
-            }
-            if (!await QueueMouseStateAndWaitForProcessing(
-                    context,
-                    new MouseState { position = pointerPosition },
-                    button,
-                    false))
-            {
-                UnregisterPointerObservers();
-                return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Pointer release cancelled.");
-            }
+                bool completedReleaseTransition = observedPointerDown && targetWasAttachedBeforeRelease &&
+                    (targetDetachedAfterRelease || targetBecameInactiveAfterRelease);
+                if ((!requiresElementObservation && observedElement == null) || observedClick || completedReleaseTransition)
+                {
+                    string transitionDetail = completedReleaseTransition
+                        ? " and the production release transition detached or hid the target"
+                        : string.Empty;
+                    return GameplayStepResult.Pass(
+                        PlayerInputAdapterName,
+                        action.Kind,
+                        $"Clicked '{ResolveLocator(action)}' with {button} button{transitionDetail}.");
+                }
 
-            UnregisterPointerObservers();
-            if (observedElement != null && !observedPointerDown && !observedClick)
-            {
-                return GameplayStepResult.Fail(
-                    PlayerInputAdapterName,
-                    action.Kind,
-                    $"Pointer input reached device position {pointerPosition}, but UI element '{observedElement.name}' received no pointer event.");
-            }
+                if (observedPointerDown)
+                {
+                    return GameplayStepResult.Fail(
+                        PlayerInputAdapterName,
+                        action.Kind,
+                        $"Pointer press reached UI element '{observedElement.name}', but release produced no ClickEvent. " +
+                        DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick) + " " +
+                        DescribeElementAtPointer(observedElement, pointerPosition));
+                }
 
-            return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Clicked '{ResolveLocator(action)}' with {button} button.");
+                if (attempt >= maxClickAttempts)
+                {
+                    return GameplayStepResult.Fail(
+                        PlayerInputAdapterName,
+                        action.Kind,
+                        $"Pointer input reached device position {pointerPosition}, but UI element '{observedElement.name}' received no pointer event after {maxClickAttempts}. " +
+                        DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick) + " " +
+                        DescribeElementAtPointer(observedElement, pointerPosition));
+                }
+
+                // Let the rebuilt panel settle before re-resolving the click position. A short
+                // wait also absorbs transient un-clickable windows (HUD animations, input
+                // provider startup) that swallow pointer input for a handful of frames.
+                for (int settle = 0; settle < 15; settle++)
+                {
+                    if (!await WaitForInputFrame(context))
+                        return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Pointer click retry cancelled.");
+                }
+            }
         }
+
+        /// <summary>
+        /// Captures the target element state and what its panel currently picks at the device
+        /// position, to diagnose clicks that never reach an apparently visible element.
+        /// </summary>
+        private static string DescribeElementAtPointer(VisualElement element, Vector2 devicePosition)
+        {
+            if (element?.panel == null)
+                return "Element is no longer attached to a panel.";
+
+            var panelInputPosition = new Vector2(devicePosition.x, Screen.height - devicePosition.y);
+            var picked = element.panel.Pick(RuntimePanelUtils.ScreenToPanel(element.panel, panelInputPosition));
+            var pickedChain = new System.Text.StringBuilder();
+            for (var current = picked; current != null && pickedChain.Length < 300; current = current.parent)
+                pickedChain.Append(current.GetType().Name).Append('/').Append(string.IsNullOrEmpty(current.name) ? "?" : current.name).Append(pickedChain.Length == 0 ? "" : " <- ");
+            return $"State: enabledInHierarchy={element.enabledInHierarchy}, " +
+                $"display={element.resolvedStyle.display}, pickingMode={element.pickingMode}, " +
+                $"worldBound={element.worldBound}, elementContainsPicked={picked != null && element.Contains(picked)}, " +
+                $"pickedChain=[{pickedChain}].";
+        }
+
 
         private static async Task<GameplayStepResult> PressInputKey(
             GameplayRuntimeContext context,
@@ -415,6 +721,27 @@ namespace Tactics.Common.Testing.Gameplay
                 DescribeObservableState());
         }
 
+        /// <summary>
+        /// Waits a fixed number of input frames so async UI flows (event re-subscription, panel
+        /// refresh between characters) can settle before the next pointer action.
+        /// </summary>
+        private static async Task<GameplayStepResult> WaitForFrames(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
+        {
+            int frames = Math.Max(1, action.Parameters["frames"]?.ToObject<int>() ?? 1);
+            for (int frame = 0; frame < frames; frame++)
+            {
+                if (context.RuntimeScope?.IsCancelling == true)
+                    return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Frame wait cancelled.");
+
+                if (!await WaitForInputFrame(context))
+                    return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Frame wait cancelled.");
+            }
+
+            return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Waited {frames} frames.");
+        }
+
         private static string DescribeObservableState()
         {
             string visibleUi = UIManager.Instance == null
@@ -443,9 +770,12 @@ namespace Tactics.Common.Testing.Gameplay
             switch (observable)
             {
                 case "uiElement":
-                    var element = FindActiveElement(ResolveUiElementName(
-                        action.Target ?? action.Parameters["elementName"]?.ToString()));
                     bool requiresInteractable = action.Parameters["interactable"]?.ToObject<bool>() == true;
+                    string elementName = ResolveUiElementName(
+                        action.Target ?? action.Parameters["elementName"]?.ToString());
+                    var element = requiresInteractable
+                        ? FindPickableActiveElement(elementName)
+                        : FindActiveElement(elementName);
                     return IsElementLayoutReady(element) &&
                         (!requiresInteractable || element.enabledInHierarchy);
                 case "uiVisible":
@@ -571,7 +901,9 @@ namespace Tactics.Common.Testing.Gameplay
 
             var typedNodeList = typedNodes.ToList();
             IEnumerable<RoguelikeMapNode> candidates = typedNodeList
-                .Where(node => node.IsReachable && !node.IsConsumed);
+                .Where(node => node.IsReachable &&
+                    node.VisitState == NodeVisitState.Unvisited &&
+                    !node.IsConsumed);
             int reachableIndex = Math.Max(0, action.Parameters["reachableIndex"]?.ToObject<int>() ?? 0);
             var selected = candidates
                 .OrderBy(node => node.LayerIndex)
@@ -587,6 +919,7 @@ namespace Tactics.Common.Testing.Gameplay
             // Preserve the requested semantic type so a transient state cannot silently
             // turn a Store click into a Battle, Rest, or Mystery click.
             var eligibleElementNames = typedNodeList
+                .Where(node => node.VisitState == NodeVisitState.Unvisited && !node.IsConsumed)
                 .Select(node => $"MapNode_{node.nodeId}")
                 .ToHashSet(StringComparer.Ordinal);
             return FindActiveElements()
@@ -782,6 +1115,9 @@ namespace Tactics.Common.Testing.Gameplay
             int maximumActions = Math.Clamp(action.Parameters["maximumActions"]?.ToObject<int>() ?? 100, 1, 100);
             int actions = 0;
             int consecutiveNoEffectTurns = 0;
+            SettlementPhase baselineSettlementPhase = BattleSettlementCoordinator.Instance.CurrentPhase;
+            object baselineRewardResult = BattleSettlementCoordinator.Instance.CurrentRewardResult;
+            VisualElement baselineSettlementRoot = FindActiveElement("BattleSettlementRoot");
 
             while (actions < maximumActions)
             {
@@ -789,26 +1125,52 @@ namespace Tactics.Common.Testing.Gameplay
                     return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "Battle input policy cancelled.");
 
                 var controller = ResolveBattleController(context);
-                if (controller == null)
+                if (controller == null || !controller.IsBattleActive)
                 {
-                    bool settlementStarted = IsBattleSettlementObservable();
-                    if (!settlementStarted)
+                    bool hasPendingRoguelikeBattle = RoguelikeMapRuntimeState.HasActiveRun &&
+                        !string.IsNullOrEmpty(RoguelikeMapRuntimeState.PendingBattleNodeId);
+                    if (!hasPendingRoguelikeBattle)
                     {
-                        settlementStarted = await WaitForObservableChange(
-                            context,
-                            IsBattleSettlementObservable,
-                            180);
+                        return GameplayStepResult.Pass(
+                            PlayerInputAdapterName,
+                            action.Kind,
+                            $"Battle completed through input after {actions} unit actions.");
                     }
+
+                    bool settlementStarted = await WaitForFreshBattleSettlementTransaction(
+                        context,
+                        baselineSettlementPhase,
+                        baselineRewardResult,
+                        baselineSettlementRoot);
                     if (settlementStarted)
-                        return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Battle completed through input after {actions} unit actions.");
+                    {
+                        return GameplayStepResult.Pass(
+                            PlayerInputAdapterName,
+                            action.Kind,
+                            $"Battle completed through input after {actions} unit actions and published a fresh settlement transaction.");
+                    }
+
+                    var currentRewardResult = BattleSettlementCoordinator.Instance.CurrentRewardResult;
+                    bool rewardIdentityChanged = currentRewardResult != null &&
+                        !ReferenceEquals(currentRewardResult, baselineRewardResult);
+                    string settlementDiagnostic =
+                        $"baselinePhase={baselineSettlementPhase}, " +
+                        $"currentPhase={BattleSettlementCoordinator.Instance.CurrentPhase}, " +
+                        $"rewardIdentityChanged={rewardIdentityChanged}, " +
+                        $"pendingNode={RoguelikeMapRuntimeState.PendingBattleNodeId ?? "<none>"}";
+                    if (context.RuntimeScope?.IsCancelling == true)
+                    {
+                        return GameplayStepResult.Fail(
+                            PlayerInputAdapterName,
+                            action.Kind,
+                            $"Fresh battle settlement wait cancelled ({settlementDiagnostic}).");
+                    }
 
                     return GameplayStepResult.Fail(
                         PlayerInputAdapterName,
                         action.Kind,
-                        "No production BattleController is active and no settlement became observable.");
+                        $"Pending roguelike battle did not publish a fresh settlement transaction within 5 realtime seconds ({settlementDiagnostic}).");
                 }
-                if (!controller.IsBattleActive)
-                    return GameplayStepResult.Pass(PlayerInputAdapterName, action.Kind, $"Battle completed through input after {actions} unit actions.");
 
                 var player = controller.TurnContext.CurrentPlayer;
                 var current = controller.TurnContext.PlayableUnits?.Invoke()
@@ -869,29 +1231,90 @@ namespace Tactics.Common.Testing.Gameplay
                 if (controller.IsBattleActive &&
                     controller.TurnContext.CurrentPlayer?.PlayerType == PlayerType.HumanPlayer)
                 {
-                    var endTurnResult = FindActiveElement("EndTurnButton") != null
-                        ? await ClickSemanticTarget(context, "UiElement", "EndTurnButton")
-                        : await PressInputKey(
+                    // Verify EndTurn by its effect, not by input acceptance alone: pointer or
+                    // hotkey delivery can silently no-op, so retry the whole input cycle until
+                    // the battle observably advances (other playable unit, new round, or end).
+                    bool advanced = false;
+                    string lastEndTurnMessage = null;
+                    for (int endTurnAttempt = 1; endTurnAttempt <= 3 && !advanced; endTurnAttempt++)
+                    {
+                        // Ending the turn only works while the grid accepts input; ability/move
+                        // resolution animations temporarily make the EndTurn button unclickable.
+                        bool endTurnReady = await WaitForObservableChange(
+                            context,
+                            () => !controller.IsBattleActive ||
+                                (controller.GridState is GridStateAwaitInput &&
+                                    FindActiveElement("EndTurnButton")?.enabledInHierarchy == true),
+                            TimeSpan.FromSeconds(5));
+                        if (!endTurnReady)
+                        {
+                            return GameplayStepResult.Fail(
+                                PlayerInputAdapterName,
+                                action.Kind,
+                                $"Grid did not return to input-ready state before EndTurn for unit {current.UnitID}.");
+                        }
+                        if (!controller.IsBattleActive ||
+                            controller.TurnContext.CurrentPlayer?.PlayerType != PlayerType.HumanPlayer)
+                            break;
+
+                        int roundBeforeAdvance = controller.CurrentRound;
+                        var currentBeforeAdvance = controller.TurnContext.PlayableUnits?.Invoke()?.FirstOrDefault();
+                        Func<bool> hasEndTurnAdvanced = () =>
+                            !controller.IsBattleActive ||
+                            controller.CurrentRound != roundBeforeAdvance ||
+                            !ReferenceEquals(
+                                controller.TurnContext.PlayableUnits?.Invoke()?.FirstOrDefault(),
+                                currentBeforeAdvance) ||
+                            controller.TurnContext.CurrentPlayer?.PlayerType != PlayerType.HumanPlayer;
+
+                        var pointerEndTurnResult = FindActiveElement("EndTurnButton") != null
+                            ? await ClickSemanticTarget(context, "UiElement", "EndTurnButton")
+                            : GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, "EndTurnButton not found on an active panel.");
+                        bool pointerAdvanced = hasEndTurnAdvanced();
+                        if (pointerEndTurnResult.Passed && !pointerAdvanced)
+                            pointerAdvanced = await WaitForObservableChange(context, hasEndTurnAdvanced, 120);
+
+                        lastEndTurnMessage =
+                            $"Pointer=[{pointerEndTurnResult.Message}] PointerAdvanced=[{pointerAdvanced}]";
+                        if (pointerAdvanced)
+                        {
+                            advanced = true;
+                            break;
+                        }
+
+                        if (!controller.IsBattleActive ||
+                            controller.TurnContext.CurrentPlayer?.PlayerType != PlayerType.HumanPlayer)
+                            continue;
+
+                        // Pointer delivery failure and effect-verified pointer no-op both fall back
+                        // to the production M hotkey. Never send it after pointer advancement.
+                        var keyboardEndTurnResult = await PressInputKey(
                             context,
                             new ExecutableScenarioAction
                             {
                                 Kind = "pressInputKey",
                                 Parameters = new JObject { ["key"] = Key.M.ToString() }
                             });
-                    if (!endTurnResult.Passed)
+                        bool keyboardAdvanced = hasEndTurnAdvanced();
+                        if (!keyboardAdvanced)
+                            keyboardAdvanced = await WaitForObservableChange(context, hasEndTurnAdvanced, 120);
+
+                        lastEndTurnMessage +=
+                            $" Keyboard=[{keyboardEndTurnResult.Message}] KeyboardAdvanced=[{keyboardAdvanced}]";
+                        if (keyboardAdvanced)
+                        {
+                            advanced = true;
+                            break;
+                        }
+                    }
+
+                    if (!advanced && controller.IsBattleActive)
                     {
                         return GameplayStepResult.Fail(
                             PlayerInputAdapterName,
                             action.Kind,
-                            $"No legal input changed state and EndTurn failed: {endTurnResult.Message}");
+                            $"EndTurn input did not advance battle state for unit {current.UnitID} after 3 attempts. Last: {lastEndTurnMessage}");
                     }
-                }
-
-                if (!changed && controller.IsBattleActive &&
-                    !await WaitForObservableChange(context, () =>
-                        !ReferenceEquals(controller.TurnContext.PlayableUnits?.Invoke()?.FirstOrDefault(), current), 60))
-                {
-                    return GameplayStepResult.Fail(PlayerInputAdapterName, action.Kind, $"Input did not advance battle state for unit {current.UnitID}.");
                 }
 
                 // A legal player flow may deliberately end several consecutive unit actions
@@ -914,10 +1337,54 @@ namespace Tactics.Common.Testing.Gameplay
                 $"Battle exceeded the maximum of {maximumActions} player-controlled unit actions.");
         }
 
-        private static bool IsBattleSettlementObservable()
+        private static async Task<bool> WaitForFreshBattleSettlementTransaction(
+            GameplayRuntimeContext context,
+            SettlementPhase baselinePhase,
+            object baselineRewardResult,
+            VisualElement baselineSettlementRoot)
         {
-            return BattleSettlementCoordinator.Instance.CurrentPhase != SettlementPhase.None ||
-                FindActiveElement("BattleSettlementRoot") != null;
+            if (IsFreshBattleSettlementTransactionObservable(
+                    baselinePhase,
+                    baselineRewardResult,
+                    baselineSettlementRoot))
+            {
+                return true;
+            }
+
+            var timeout = System.Diagnostics.Stopwatch.StartNew();
+            while (timeout.Elapsed < TimeSpan.FromSeconds(5))
+            {
+                if (!await WaitForInputFrame(context))
+                    return false;
+                if (IsFreshBattleSettlementTransactionObservable(
+                        baselinePhase,
+                        baselineRewardResult,
+                        baselineSettlementRoot))
+                {
+                    return true;
+                }
+            }
+
+            return IsFreshBattleSettlementTransactionObservable(
+                baselinePhase,
+                baselineRewardResult,
+                baselineSettlementRoot);
+        }
+
+        private static bool IsFreshBattleSettlementTransactionObservable(
+            SettlementPhase baselinePhase,
+            object baselineRewardResult,
+            VisualElement baselineSettlementRoot)
+        {
+            var coordinator = BattleSettlementCoordinator.Instance;
+            var currentRewardResult = coordinator.CurrentRewardResult;
+            SettlementPhase currentPhase = coordinator.CurrentPhase;
+            VisualElement currentSettlementRoot = FindActiveElement("BattleSettlementRoot");
+            return (currentRewardResult != null &&
+                    !ReferenceEquals(currentRewardResult, baselineRewardResult)) ||
+                (currentPhase != baselinePhase && currentPhase != SettlementPhase.None) ||
+                (currentSettlementRoot != null &&
+                    !ReferenceEquals(currentSettlementRoot, baselineSettlementRoot));
         }
 
         private static string DescribeBattleInputAvailability(GameplayRuntimeContext context)
@@ -1170,6 +1637,27 @@ namespace Tactics.Common.Testing.Gameplay
             return predicate();
         }
 
+        /// <summary>
+        /// Waits for production animation or transition state using real time rather than a
+        /// frame budget. An unfocused Editor can consume hundreds of frames before a one-second
+        /// animation completes, so frame counts are not a stable readiness deadline here.
+        /// </summary>
+        private static async Task<bool> WaitForObservableChange(
+            GameplayRuntimeContext context,
+            Func<bool> predicate,
+            TimeSpan maximumDuration)
+        {
+            var timeout = System.Diagnostics.Stopwatch.StartNew();
+            while (timeout.Elapsed < maximumDuration)
+            {
+                if (predicate())
+                    return true;
+                if (!await WaitForInputFrame(context))
+                    return false;
+            }
+            return predicate();
+        }
+
         private static IEnumerable<VisualElement> FindActiveElements()
         {
             return UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None)
@@ -1244,7 +1732,7 @@ namespace Tactics.Common.Testing.Gameplay
 
         private static bool TryResolveUiScreenPosition(string elementName, out Vector2 screenPosition, out string failure)
         {
-            var element = FindActiveElement(elementName);
+            var element = FindPickableActiveElement(elementName);
             if (element?.panel == null)
             {
                 screenPosition = default;
@@ -1271,19 +1759,29 @@ namespace Tactics.Common.Testing.Gameplay
             var panelCenter = worldBound.center;
             screenPosition = new Vector2(panelCenter.x * scale, Screen.height - panelCenter.y * scale);
 
-            // Mouse positions use a bottom-left origin. UI Toolkit panel positions use
-            // a top-left origin, so validate the exact device coordinate after applying
-            // the same Y conversion performed by the production UI input module.
-            var panelInputPosition = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
-            var picked = element.panel.Pick(RuntimePanelUtils.ScreenToPanel(element.panel, panelInputPosition));
-            if (picked == element || (picked != null && element.Contains(picked)))
+            if (IsElementPickableAtScreenPosition(element, screenPosition))
             {
                 failure = null;
                 return true;
             }
 
+            var panelInputPosition = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
+            var picked = element.panel.Pick(RuntimePanelUtils.ScreenToPanel(element.panel, panelInputPosition));
             failure = $"Panel picking mismatch for '{elementName}' at device screen {screenPosition}; picked '{picked?.name ?? "<none>"}'.";
             return false;
+        }
+
+        private static bool IsElementPickableAtScreenPosition(VisualElement element, Vector2 screenPosition)
+        {
+            if (element?.panel == null)
+                return false;
+
+            // Mouse positions use a bottom-left origin. UI Toolkit panel positions use
+            // a top-left origin, so validate the exact device coordinate after applying
+            // the same Y conversion performed by the production UI input module.
+            var panelInputPosition = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
+            var picked = element.panel.Pick(RuntimePanelUtils.ScreenToPanel(element.panel, panelInputPosition));
+            return picked == element || (picked != null && element.Contains(picked));
         }
 
         private static bool TryResolveWorldScreenPosition(
@@ -1327,6 +1825,26 @@ namespace Tactics.Common.Testing.Gameplay
                     IsElementLayoutReady(element));
         }
 
+        private static VisualElement FindPickableActiveElement(string elementName)
+        {
+            if (string.IsNullOrWhiteSpace(elementName))
+                return null;
+
+            return UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None)
+                .Where(document => document != null && document.isActiveAndEnabled && document.rootVisualElement != null)
+                .Select(document => document.rootVisualElement.Q<VisualElement>(elementName))
+                .FirstOrDefault(element => element != null &&
+                    element.resolvedStyle.display != DisplayStyle.None &&
+                    element.visible &&
+                    IsElementLayoutReady(element) &&
+                    IsElementPickableAtScreenPosition(
+                        element,
+                        new Vector2(
+                            element.worldBound.center.x * element.panel.scaledPixelsPerPoint,
+                            Screen.height - element.worldBound.center.y * element.panel.scaledPixelsPerPoint)));
+        }
+
+
         private static bool IsElementLayoutReady(VisualElement element)
         {
             if (element?.panel == null)
@@ -1359,21 +1877,25 @@ namespace Tactics.Common.Testing.Gameplay
 
         private static async Task<bool> WaitForInputFrame(GameplayRuntimeContext context)
         {
-            int startingFrame = Time.frameCount;
-            do
+            if (context.RuntimeScope?.IsCancelling == true)
+                return false;
+
+            try
             {
-                if (context.RuntimeScope?.IsCancelling == true)
-                    return false;
-                await Task.Yield();
+                // Task.Yield may resume in the same frame and starve the PlayerLoop.
+                await Awaitable.NextFrameAsync(context.RuntimeScope?.Token ?? default);
             }
-            while (Time.frameCount == startingFrame);
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
 
             return context.RuntimeScope?.IsCancelling != true;
         }
 
         /// <summary>
-        /// Queues a virtual mouse state and explicitly advances the test-owned Input System queue.
-        /// A rendered frame alone is not proof that queued Input System events were processed.
+        /// Queues a virtual mouse state for the automatic PlayerLoop input update and waits until
+        /// the owned device reflects it without manually consuming production UI/InputAction events.
         /// </summary>
         private static Task<bool> QueueMouseStateAndWaitForProcessing(
             GameplayRuntimeContext context,
@@ -1402,8 +1924,8 @@ namespace Tactics.Common.Testing.Gameplay
         }
 
         /// <summary>
-        /// Queues a virtual keyboard state through the same deterministic test input boundary as
-        /// pointer input so key presses cannot depend on incidental PlayerLoop timing.
+        /// Queues a virtual keyboard state through the same automatic PlayerLoop boundary as
+        /// pointer input so production InputAction subscribers observe the event.
         /// </summary>
         private static Task<bool> QueueKeyboardStateAndWaitForProcessing(
             GameplayRuntimeContext context,
@@ -1421,43 +1943,48 @@ namespace Tactics.Common.Testing.Gameplay
         }
 
         /// <summary>
-        /// Explicitly advances only the test-owned Input System queue and confirms the resulting
-        /// virtual device state. Production UI and world input subscribe to the same Input System
-        /// update phase, so this helper never writes product state directly.
+        /// Queues an input event exactly once, then lets the automatic PlayerLoop update apply and
+        /// dispatch it to production InputForUI/InputAction consumers. Never call InputSystem.Update
+        /// or process UI modules manually here: doing so consumes the event outside that context.
         /// </summary>
-        private static Task<bool> QueueInputEventAndWaitForProcessing(
+        private static async Task<bool> QueueInputEventAndWaitForProcessing(
             GameplayRuntimeContext context,
             Action queueEvent,
             Func<bool> isApplied)
         {
             if (context.RuntimeScope?.IsCancelling == true)
-                return Task.FromResult(false);
+                return false;
 
             queueEvent();
-            InputSystem.Update();
-            ProcessActiveUiInputModules();
+            const int maximumFrames = 8;
+            for (int frame = 0; frame < maximumFrames; frame++)
+            {
+                if (!await WaitForInputFrame(context))
+                    return false;
+                if (isApplied())
+                    return true;
+            }
 
-            // InputSystem.Update does not invoke onAfterUpdate consistently for manually driven
-            // PlayMode test updates in the current Unity version. The owned device's state is the
-            // authoritative proof that its queued event was consumed. Do not yield here: the next
-            // automatic Input System update can overwrite the virtual device with stale pointer
-            // data before the caller starts its press/release sequence.
-            return Task.FromResult(isApplied());
+            return false;
         }
 
-        /// <summary>
-        /// Runs the active production UI input modules against the state just produced by the
-        /// virtual device. This is the same processing EventSystem performs in its normal update,
-        /// but must happen in the current test tick before a later automatic input update clears
-        /// wasPressedThisFrame.
-        /// </summary>
-        private static void ProcessActiveUiInputModules()
+        private static string DescribePointerTransaction(
+            GameplayRuntimeContext context,
+            PointerButton button,
+            int attempt,
+            bool observedPointerDown,
+            bool observedClick)
         {
-            foreach (var module in UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None))
+            var mouse = context.PlayerInputMouse;
+            bool buttonPressed = mouse != null && button switch
             {
-                if (module != null && module.isActiveAndEnabled)
-                    module.Process();
-            }
+                PointerButton.Left => mouse.leftButton.isPressed,
+                PointerButton.Right => mouse.rightButton.isPressed,
+                _ => false
+            };
+            return $"PointerTransaction=[attempt={attempt},button={button},scopeCancelling={context.RuntimeScope?.IsCancelling == true}, " +
+                $"mouseAdded={mouse?.added == true},mouseEnabled={mouse?.enabled == true},buttonPressed={buttonPressed}, " +
+                $"pointerDownObserved={observedPointerDown},clickObserved={observedClick}]. {DescribeVirtualInputState(context)}";
         }
 
         private static string DescribeVirtualInputState(GameplayRuntimeContext context)
@@ -1470,7 +1997,34 @@ namespace Tactics.Common.Testing.Gameplay
             string current = currentMouse == null
                 ? "null"
                 : $"name={currentMouse.name},id={currentMouse.deviceId},position={currentMouse.position.ReadValue()}";
-            return $"VirtualMouse=[{virtualMouse}], CurrentMouse=[{current}], Scene='{SceneManager.GetActiveScene().name}'.";
+            string modules = string.Join("; ",
+                UnityEngine.Object.FindObjectsByType<InputSystemUIInputModule>(FindObjectsSortMode.None)
+                    .Where(module => module != null && module.isActiveAndEnabled)
+                    .Select(module =>
+                    {
+                        var pointAction = module.point?.action;
+                        var clickAction = module.leftClick?.action;
+                        var moduleEventSystem = module.GetComponent<EventSystem>();
+                        Vector2 pointValue = pointAction?.enabled == true
+                            ? pointAction.ReadValue<Vector2>()
+                            : default;
+                        float clickValue = clickAction?.enabled == true
+                            ? clickAction.ReadValue<float>()
+                            : 0f;
+                        string pointControls = pointAction == null
+                            ? "<none>"
+                            : string.Join(",", pointAction.controls.Select(control => $"{control.device.name}:{control.path}"));
+                        string clickControls = clickAction == null
+                            ? "<none>"
+                            : string.Join(",", clickAction.controls.Select(control => $"{control.device.name}:{control.path}"));
+                        return $"module={module.name},eventSystemCurrent={ReferenceEquals(moduleEventSystem, EventSystem.current)}," +
+                            $"currentModule={ReferenceEquals(moduleEventSystem?.currentInputModule, module)}," +
+                            $"pointEnabled={pointAction?.enabled == true},point={pointValue}," +
+                            $"pointControl={pointAction?.activeControl?.device?.name ?? "<none>"},pointControls=[{pointControls}]," +
+                            $"clickEnabled={clickAction?.enabled == true},click={clickValue:F0}," +
+                            $"clickControl={clickAction?.activeControl?.device?.name ?? "<none>"},clickControls=[{clickControls}]";
+                    }));
+            return $"VirtualMouse=[{virtualMouse}], CurrentMouse=[{current}], UiModules=[{modules}], Scene='{SceneManager.GetActiveScene().name}'.";
         }
 
         private enum PointerButton

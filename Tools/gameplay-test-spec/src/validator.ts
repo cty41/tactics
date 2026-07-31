@@ -111,6 +111,7 @@ const supportedActionKinds = new Set([
   "rightClickPointerTarget",
   "pressInputKey",
   "waitForPlayerObservable",
+  "waitForFrames",
   "playBattleThroughInput"
 ]);
 
@@ -121,6 +122,7 @@ const playerInputActionKinds = new Set([
   "rightClickPointerTarget",
   "pressInputKey",
   "waitForPlayerObservable",
+  "waitForFrames",
   "playBattleThroughInput"
 ]);
 
@@ -260,6 +262,7 @@ const supportedAssertionKinds = new Set([
   "decoyRemainingActionsEquals",
   "aiTargetEquals",
   "elementClassContains",
+  "elementClassContainsAny",
   "elementChildOrderEquals",
   "elementRectRelationEquals",
   "abilityCardAvailabilityEquals",
@@ -534,6 +537,7 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
     case "completeNode":
       // completeNode 不强制要求参数，会使用 currentNodeId
       break;
+
     case "openUI":
       validateOpenUI(step, diagnostics);
       break;
@@ -748,6 +752,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "summonOrderEquals":
     case "elementChildOrderEquals":
     case "targetMarkerOrderEquals":
+    case "elementClassContainsAny":
       requireStringArrayExpected(assertion, diagnostics);
       break;
     case "aiTurnSucceededEquals":
@@ -973,6 +978,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
 
   const elementTargetAssertions = new Set([
     "elementClassContains",
+    "elementClassContainsAny",
     "elementChildOrderEquals",
     "elementRectRelationEquals",
     "abilityCardAvailabilityEquals"

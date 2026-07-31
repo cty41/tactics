@@ -35,43 +35,23 @@ namespace Tactics.RoguelikeMap.Events
         /// </summary>
         public void LoadRegionEvents(string regionName, RoguelikeMapConfig config)
         {
-            if (_regionEvents.ContainsKey(regionName))
+            if (HasLoadedEvents(regionName))
+                return;
+
+            if (config == null)
             {
-                TLog.Info($"[EventManager] 区域 {regionName} 的事件已加载");
+                TLog.Warning($"[EventManager] 配置为空: {regionName}");
                 return;
             }
 
-            if (config == null || config.eventFiles == null || config.eventFiles.Count == 0)
+            var events = LoadEventsFromAssets(config.eventFiles);
+            if (events.Count == 0 && config.eventPaths != null && config.eventPaths.Count > 0)
             {
-                TLog.Warning($"[EventManager] 配置为空或无事件文件: {regionName}");
-                _regionEvents[regionName] = new List<RoguelikeEvent>();
-                return;
+                TLog.Warning($"[EventManager] 事件文件引用为空或未能加载，改用运行时事件路径: {regionName}");
+                events = LoadEventsFromPaths(config.eventPaths);
             }
 
-            List<RoguelikeEvent> events = new List<RoguelikeEvent>();
-
-            foreach (var file in config.eventFiles)
-            {
-                if (file == null) continue;
-
-                try
-                {
-                    var evt = RoguelikeEvent.FromJson(file.text);
-                    if (evt != null)
-                    {
-                        events.Add(evt);
-                        _events[evt.eventId] = evt;
-                        TLog.Info($"[EventManager] 加载事件: {evt.eventId} - {evt.title}");
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    TLog.Error($"[EventManager] 加载事件文件失败: {file.name}, 错误: {e.Message}");
-                }
-            }
-
-            _regionEvents[regionName] = events;
-            TLog.Info($"[EventManager] 区域 {regionName} 共加载 {events.Count} 个事件");
+            CacheRegionEvents(regionName, events);
         }
 
         /// <summary>
@@ -82,48 +62,108 @@ namespace Tactics.RoguelikeMap.Events
         /// <param name="eventPaths">资产路径列表（如"Assets/Tactics/GameData/Events/DarkForest/cursed_chest_001.json"）</param>
         public void LoadRegionEventsFromPaths(string regionName, List<string> eventPaths)
         {
-            if (_regionEvents.ContainsKey(regionName))
+            if (HasLoadedEvents(regionName))
+                return;
+
+            CacheRegionEvents(regionName, LoadEventsFromPaths(eventPaths));
+        }
+
+        private bool HasLoadedEvents(string regionName)
+        {
+            if (!_regionEvents.TryGetValue(regionName, out var events))
+                return false;
+
+            if (events.Count > 0)
             {
                 TLog.Info($"[EventManager] 区域 {regionName} 的事件已加载");
-                return;
+                return true;
             }
 
-            if (eventPaths == null || eventPaths.Count == 0)
-            {
-                TLog.Warning($"[EventManager] 事件路径列表为空: {regionName}");
-                _regionEvents[regionName] = new List<RoguelikeEvent>();
-                return;
-            }
+            _regionEvents.Remove(regionName);
+            TLog.Warning($"[EventManager] 丢弃区域 {regionName} 的空事件缓存并允许重试");
+            return false;
+        }
 
-            List<RoguelikeEvent> events = new List<RoguelikeEvent>();
+        private List<RoguelikeEvent> LoadEventsFromAssets(List<TextAsset> eventFiles)
+        {
+            var events = new List<RoguelikeEvent>();
+            if (eventFiles == null)
+                return events;
 
-            foreach (var path in eventPaths)
+            foreach (var file in eventFiles)
             {
-                if (string.IsNullOrEmpty(path)) continue;
+                if (file == null)
+                    continue;
 
                 try
                 {
-                    TextAsset file = GameAssetManager.Instance.Load<TextAsset>(path);
+                    AddEvent(events, RoguelikeEvent.FromJson(file.text));
+                }
+                catch (Exception e)
+                {
+                    TLog.Error($"[EventManager] 加载事件文件失败: {file.name}, 错误: {e.Message}");
+                }
+            }
+
+            return events;
+        }
+
+        private List<RoguelikeEvent> LoadEventsFromPaths(List<string> eventPaths)
+        {
+            var events = new List<RoguelikeEvent>();
+            if (eventPaths == null || eventPaths.Count == 0)
+            {
+                TLog.Warning("[EventManager] 事件路径列表为空");
+                return events;
+            }
+
+            foreach (var path in eventPaths)
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    continue;
+
+                TextAsset file = null;
+                try
+                {
+                    file = GameAssetManager.Instance?.Load<TextAsset>(path);
                     if (file == null)
                     {
                         TLog.Warning($"[EventManager] GameAssetManager无法加载: {path}");
                         continue;
                     }
 
-                    var evt = RoguelikeEvent.FromJson(file.text);
-                    GameAssetManager.Instance.Release(path);
-
-                    if (evt != null)
-                    {
-                        events.Add(evt);
-                        _events[evt.eventId] = evt;
-                        TLog.Info($"[EventManager] 加载事件: {evt.eventId} - {evt.title}");
-                    }
+                    AddEvent(events, RoguelikeEvent.FromJson(file.text));
                 }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                     TLog.Error($"[EventManager] 通过GameAssetManager加载事件文件失败: {path}, 错误: {e.Message}");
                 }
+                finally
+                {
+                    if (file != null)
+                        GameAssetManager.Instance.Release(path);
+                }
+            }
+
+            return events;
+        }
+
+        private void AddEvent(List<RoguelikeEvent> events, RoguelikeEvent evt)
+        {
+            if (evt == null)
+                return;
+
+            events.Add(evt);
+            _events[evt.eventId] = evt;
+            TLog.Info($"[EventManager] 加载事件: {evt.eventId} - {evt.title}");
+        }
+
+        private void CacheRegionEvents(string regionName, List<RoguelikeEvent> events)
+        {
+            if (events == null || events.Count == 0)
+            {
+                TLog.Warning($"[EventManager] 区域 {regionName} 未加载到事件，不缓存空目录");
+                return;
             }
 
             _regionEvents[regionName] = events;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using Tactics.AssetPipeline;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Roguelike;
@@ -63,6 +64,37 @@ namespace Tactics.Tests.PlayMode
             finally
             {
                 Object.DestroyImmediate(config);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator DarkForestRuntimeConfig_LoadsAssignedEventsWhenSerializedReferencesAreNull()
+        {
+            const string configPath = "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset";
+            var assetTask = TestGameAssetHelper.EnsureInitialized();
+            yield return new WaitUntil(() => assetTask.IsCompleted);
+            Assert.That(assetTask.Result, Is.Not.Null);
+
+            var sourceConfig = assetTask.Result.Load<RoguelikeMapConfig>(configPath);
+            Assert.That(sourceConfig, Is.Not.Null, "The real DarkForest config must load through the runtime asset pipeline.");
+            var runtimeConfig = Object.Instantiate(sourceConfig);
+            var eventManager = EventManager.Instance;
+            eventManager.ClearEvents();
+            try
+            {
+                runtimeConfig.eventFiles = new List<TextAsset> { null, null, null };
+
+                eventManager.LoadRegionEvents("DarkForest", runtimeConfig);
+
+                Assert.That(eventManager.GetEventCount("DarkForest"), Is.GreaterThan(0));
+                Assert.That(eventManager.GetEvent("cursed_chest_001"), Is.Not.Null);
+            }
+            finally
+            {
+                eventManager.ClearEvents();
+                assetTask.Result.Release(configPath);
+                Object.Destroy(runtimeConfig);
+                TestGameAssetHelper.Cleanup();
             }
         }
 

@@ -15,6 +15,57 @@ actions:
     adapter: PlayerInput
     target: NewGameButton
     parameters: { targetKind: UiElement }
+  - kind: waitForFrames
+    adapter: PlayerInput
+    parameters: { frames: 10 }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 300 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: SkillOption_0
+    parameters: { targetKind: UiElement }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: ConfirmButton, interactable: true, maximumFrames: 120 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
+    parameters: { targetKind: UiElement }
+  - kind: waitForFrames
+    adapter: PlayerInput
+    parameters: { frames: 3 }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 120 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: SkillOption_0
+    parameters: { targetKind: UiElement }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: ConfirmButton, interactable: true, maximumFrames: 120 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
+    parameters: { targetKind: UiElement }
+  - kind: waitForFrames
+    adapter: PlayerInput
+    parameters: { frames: 3 }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: SkillOption_0, maximumFrames: 120 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: SkillOption_0
+    parameters: { targetKind: UiElement }
+  - kind: waitForPlayerObservable
+    adapter: PlayerInput
+    parameters: { observable: uiElement, elementName: ConfirmButton, interactable: true, maximumFrames: 120 }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: ConfirmButton
+    parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: mapReady, maximumFrames: 300 }

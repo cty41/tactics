@@ -41,6 +41,8 @@ namespace Tactics.Common.Testing.Gameplay
         public List<Component> OwnedRuntimeComponents { get; } = new();
         public List<Action> OwnedCleanupActions { get; } = new();
         public List<InputDevice> OwnedInputDevices { get; } = new();
+        public Dictionary<InputAction, bool> PlayerInputActionEnabledBaselines { get; } = new();
+        public bool PlayerInputActionBaselineCleanupRegistered { get; set; }
         public Mouse PlayerInputMouse { get; set; }
         public Keyboard PlayerInputKeyboard { get; set; }
 
@@ -129,23 +131,14 @@ namespace Tactics.Common.Testing.Gameplay
                 cleanup?.Invoke();
             OwnedCleanupActions.Clear();
 
-            bool removedInputDevice = false;
             foreach (var device in OwnedInputDevices)
             {
                 if (device != null && device.added)
-                {
                     InputSystem.RemoveDevice(device);
-                    removedInputDevice = true;
-                }
             }
             OwnedInputDevices.Clear();
             PlayerInputMouse = null;
             PlayerInputKeyboard = null;
-
-            // Device removal is queued by the Input System. Flush it before the test
-            // result is returned so the next scenario cannot inherit virtual input.
-            if (removedInputDevice)
-                InputSystem.Update();
 
             foreach (var component in OwnedRuntimeComponents)
             {
