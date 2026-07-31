@@ -80,5 +80,6 @@ Tests/gameplay-specs/compiled
 /.codex/config.toml
 /.opencode/opencode.json
 tmp
-# Hermes agent session artifacts (plans, session-local files)
-/.hermes/
+
+# Hermes project plans are intentionally not ignored here.
+# Ignore /.hermes/plans via .git/info/exclude to keep them desktop-visible.
