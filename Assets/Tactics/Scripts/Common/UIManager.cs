@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Tactics.Runtime.Utilities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,7 +14,9 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
-using System.IO;
+using AtlasPopulationMode = UnityEngine.TextCore.Text.AtlasPopulationMode;
+using GlyphRenderMode = UnityEngine.TextCore.LowLevel.GlyphRenderMode;
+using TextCoreFontAsset = UnityEngine.TextCore.Text.FontAsset;
 
 namespace Tactics
 {
@@ -45,6 +48,8 @@ namespace Tactics
             s_configLoaded = false;
             s_uiPaths = null;
             s_uiTypeMap = null;
+            _instance._runtimeDefaultFontSource = null;
+            _instance._runtimeDefaultFontAsset = null;
         }
 
 
@@ -125,6 +130,7 @@ namespace Tactics
         }
 
         private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
+        private const string RuntimeDefaultFontSourcePath = "Assets/Tactics/Arts/Fonts/NotoSansSC.ttf";
 
         private static Dictionary<UIId, UIType> s_uiTypeMap;
         private static Dictionary<UIId, (string uxml, string uss)> s_uiPaths;
@@ -200,6 +206,8 @@ namespace Tactics
         private readonly Dictionary<UIId, Task<UIInstance>> _loadingTasks = new();
 
         private PanelSettings _panelSettings;
+        private Font _runtimeDefaultFontSource;
+        private TextCoreFontAsset _runtimeDefaultFontAsset;
 
         private async Task<PanelSettings> GetPanelSettingsAsync(GameAssetManager mgr)
         {
@@ -223,6 +231,72 @@ namespace Tactics
             return _panelSettings;
         }
 
+        private async Task<TextCoreFontAsset> GetRuntimeDefaultFontAsync(GameAssetManager mgr)
+        {
+            if (_runtimeDefaultFontSource == null)
+            {
+                _runtimeDefaultFontSource =
+                    await mgr.LoadAsync<Font>(RuntimeDefaultFontSourcePath);
+            }
+
+            if (_runtimeDefaultFontSource == null)
+                TLog.Warning("[UIManager] Failed to load the runtime font source. UI Toolkit will use its fallback font.");
+
+            EnsureRuntimeDefaultFontAsset();
+            return _runtimeDefaultFontAsset;
+        }
+
+        private TextCoreFontAsset GetRuntimeDefaultFontSync(GameAssetManager mgr)
+        {
+            if (_runtimeDefaultFontSource == null)
+            {
+                _runtimeDefaultFontSource =
+                    mgr.Load<Font>(RuntimeDefaultFontSourcePath);
+            }
+
+            if (_runtimeDefaultFontSource == null)
+                TLog.Warning("[UIManager] Failed to load the runtime font source. UI Toolkit will use its fallback font.");
+
+            EnsureRuntimeDefaultFontAsset();
+            return _runtimeDefaultFontAsset;
+        }
+
+        private void EnsureRuntimeDefaultFontAsset()
+        {
+            if (_runtimeDefaultFontAsset != null || _runtimeDefaultFontSource == null)
+                return;
+
+            // Keep the dynamic glyph atlas in memory so Play Mode never mutates a project FontAsset.
+            _runtimeDefaultFontAsset = TextCoreFontAsset.CreateFontAsset(
+                _runtimeDefaultFontSource,
+                90,
+                9,
+                GlyphRenderMode.SDFAA,
+                1024,
+                1024,
+                AtlasPopulationMode.Dynamic,
+                true);
+
+            if (_runtimeDefaultFontAsset == null)
+            {
+                TLog.Warning("[UIManager] Failed to create the runtime FontAsset. UI Toolkit will use its fallback font.");
+                return;
+            }
+
+            _runtimeDefaultFontAsset.name = "NotoSansSC Runtime";
+            _runtimeDefaultFontAsset.hideFlags = HideFlags.DontSave;
+        }
+
+        private static void ApplyRuntimeDefaultFont(UIDocument uiDoc, TextCoreFontAsset defaultFont)
+        {
+            if (uiDoc?.rootVisualElement != null && defaultFont != null)
+            {
+                uiDoc.rootVisualElement.style.unityFont = StyleKeyword.Null;
+                uiDoc.rootVisualElement.style.unityFontDefinition =
+                    new StyleFontDefinition(FontDefinition.FromSDFFont(defaultFont));
+            }
+        }
+
         private InputAction _toggleConsoleAction;
         private InputAction _toggleMenuAction;
         private bool _inputInitialized;
@@ -243,13 +317,13 @@ namespace Tactics
 
             if (_instances.TryGetValue(id, out var existing) && existing?.ContainerGO != null)
             {
-                existing.ContainerGO.SetActive(true);
+                ActivateInstance(existing);
                 return;
             }
 
             var instance = LoadAndCreateSync(id, GetAssetPath(id));
             _instances[id] = instance;
-            instance.ContainerGO.SetActive(true);
+            ActivateInstance(instance);
         }
 
         private void EnsureInputInitialized()
@@ -357,9 +431,12 @@ namespace Tactics
         public void RegisterTestUI(UIId id, UIDocument uiDoc)
         {
             var go = uiDoc.gameObject;
+            var manager = GameAssetManager.Instance;
+            if (manager != null && manager.IsInitialized)
+                ApplyRuntimeDefaultFont(uiDoc, GetRuntimeDefaultFontSync(manager));
             EnsureUIController(id, go);
             _instances[id] = new UIInstance(UIType.UiToolkitUxml, go, uiDoc);
-            go.SetActive(true);
+            ActivateInstance(_instances[id]);
         }
 
         [Obsolete("Use ShowAsync(UIId.Menu) from a domain coordinator.")]
@@ -398,7 +475,7 @@ namespace Tactics
             if (_instances.TryGetValue(id, out var existing) && existing?.ContainerGO != null)
             {
                 EnsureUIController(id, existing.ContainerGO);
-                existing.ContainerGO.SetActive(true);
+                ActivateInstance(existing);
                 return;
             }
 
@@ -412,7 +489,7 @@ namespace Tactics
             {
                 var instance = await loadTask;
                 _instances[id] = instance;
-                instance.ContainerGO.SetActive(true);
+                ActivateInstance(instance);
             }
             finally
             {
@@ -500,11 +577,17 @@ namespace Tactics
             }
 
             var panelSettings = await GetPanelSettingsAsync(mgr);
+            var defaultFont = await GetRuntimeDefaultFontAsync(mgr);
 
-            return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
+            return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings, defaultFont);
         }
 
-        private UIInstance CreateUiToolkitInstance(UIId id, VisualTreeAsset visualTree, StyleSheet styleSheet, PanelSettings panelSettings)
+        private UIInstance CreateUiToolkitInstance(
+            UIId id,
+            VisualTreeAsset visualTree,
+            StyleSheet styleSheet,
+            PanelSettings panelSettings,
+            TextCoreFontAsset defaultFont)
         {
             var hostGo = new GameObject(id.ToString());
 
@@ -516,6 +599,8 @@ namespace Tactics
 
             if (styleSheet != null && uiDoc.rootVisualElement != null)
                 uiDoc.rootVisualElement.styleSheets.Add(styleSheet);
+
+            ApplyRuntimeDefaultFont(uiDoc, defaultFont);
 
             EnsureUIController(id, hostGo);
 
@@ -538,8 +623,9 @@ namespace Tactics
             }
 
             var panelSettings = GetPanelSettingsSync(mgr);
+            var defaultFont = GetRuntimeDefaultFontSync(mgr);
 
-            return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings);
+            return CreateUiToolkitInstance(id, visualTree, styleSheet, panelSettings, defaultFont);
         }
 
         private static void EnsureUIController(UIId id, GameObject root)
@@ -609,6 +695,15 @@ namespace Tactics
                 default:
                     break;
             }
+        }
+
+        private void ActivateInstance(UIInstance instance)
+        {
+            instance.ContainerGO.SetActive(true);
+
+            // UIDocument rebuilds its root when reactivated, so inherited font state must be restored.
+            if (instance.Type == UIType.UiToolkitUxml)
+                ApplyRuntimeDefaultFont(instance.UiDoc, _runtimeDefaultFontAsset);
         }
     }
 }

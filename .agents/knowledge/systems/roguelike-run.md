@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-29T10:24:43+08:00"
+timestamp: "2026-07-31T01:10:25+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -32,7 +32,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs/ui/home-options-player-input-smoke.gameplay-test.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:3246c857bc4055e840180cf5e1d52aab73c142bb636d61078560e6da8ccf9542
+source_fingerprint: sha256:e1c57e802eb3635bbb0ed25157f98b55681f44a2e036ca52042edc38903dd526
 ---
 
 # Current State

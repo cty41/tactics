@@ -23,6 +23,9 @@ scopes:
       - AGENTS.md
       - .agents/ARCHITECTURE.md
       - Assets/Tactics/Scripts/Common/UIManager.cs
+      - Assets/Tactics/Arts/Fonts
+      - Assets/Tactics/Arts/UI
+      - Assets/Tactics/UIToolkit/TextSettings.asset
 
   project-documentation:
     concept: operations/project-documentation.md

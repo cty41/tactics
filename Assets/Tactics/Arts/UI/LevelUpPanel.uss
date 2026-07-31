@@ -407,8 +407,14 @@
 }
 
 .skill-stat-icon {
-    font-size: 14px;
+    width: 14px;
+    height: 14px;
     margin-right: 4px;
+}
+
+.skill-stat-sword-icon {
+    background-image: url("Icons/sword.svg");
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .skill-card-passive {

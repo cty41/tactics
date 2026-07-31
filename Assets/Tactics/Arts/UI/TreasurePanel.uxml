@@ -6,12 +6,12 @@
 
             <ui:VisualElement name="RewardSection" class="reward-section">
                 <ui:VisualElement name="GoldRow" class="reward-row">
-                    <ui:Label text="💰" class="reward-icon"/>
+                    <ui:VisualElement class="reward-icon reward-coin-icon"/>
                     <ui:Label name="GoldAmountLabel" text="+0 金币" class="gold-amount"/>
                 </ui:VisualElement>
 
                 <ui:VisualElement name="EquipmentRow" class="reward-row equipment-row" style="display: none;">
-                    <ui:Label text="⚔️" class="reward-icon"/>
+                    <ui:VisualElement class="reward-icon reward-sword-icon"/>
                     <ui:Label name="EquipmentLabel" text="" class="equipment-text"/>
                 </ui:VisualElement>
             </ui:VisualElement>
