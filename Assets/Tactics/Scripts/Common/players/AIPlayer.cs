@@ -69,6 +69,12 @@ namespace Tactics.Common.Players
         }
 
         /// <summary>
+        /// Test seam: when set, replaces the brain execution call so mid-action
+        /// cancellation can be exercised deterministically. Null in production.
+        /// </summary>
+        private Func<IUnit, GridController, AiBrainAsset, CancellationToken, Task> _brainExecutor;
+
+        /// <summary>
         /// Executes the AI player's turn by selecting and commanding units in sequence.
         /// </summary>
         public async void Play(GridController gridController)
@@ -126,7 +132,7 @@ namespace Tactics.Common.Players
                     if (DebugMode)
                     {
                         TLog.Info($"Current unit: {playableUnit}; Press {Key.N} to proceed to the next action");
-                        await WaitForKeypress(Key.N);
+                        await WaitForKeypress(Key.N, cancellationToken);
                     }
 
                     await global::Tactics.GameTimeService.DelayScaledAsync(
@@ -138,13 +144,24 @@ namespace Tactics.Common.Players
                     if (playableUnit is Unit concreteUnit && concreteUnit.AiBrainAsset != null)
                     {
                         TLog.Info($"[AIPlayer] EXECUTE AI: CanAct={playableUnit.CanAct}, Brain={concreteUnit.AiBrainAsset.name}, MovePts={concreteUnit.MovementPoints:F1}, Player={playableUnit.PlayerNumber}");
-                        await AiBrainRunner.Execute(playableUnit, gridController, concreteUnit.AiBrainAsset);
+                        if (_brainExecutor != null)
+                        {
+                            await _brainExecutor(playableUnit, gridController, concreteUnit.AiBrainAsset, cancellationToken);
+                        }
+                        else
+                        {
+                            await AiBrainRunner.Execute(playableUnit, gridController, concreteUnit.AiBrainAsset, cancellationToken);
+                        }
                     }
                     else
                     {
                         TLog.Error($"[AIPlayer] Unit {playableUnit} has no AiBrainAsset configured. Skipping.");
                         continue;
                     }
+
+                    // Cancellation that landed while the AI action ran must stop the
+                    // post-action finalization (mark friendly/finished, deselect).
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     if (!IsUnityUnitAvailable(playableUnit))
                         continue;
@@ -175,11 +192,13 @@ namespace Tactics.Common.Players
         /// <summary>
         /// Waits for the user to press the specified key in debug mode before continuing.
         /// </summary>
-        private async Task WaitForKeypress(Key key)
+        private async Task WaitForKeypress(Key key, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             KeyControl keyControl = Keyboard.current[key];
             while (!keyControl.wasPressedThisFrame)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await Awaitable.NextFrameAsync();
             }
         }

@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using System.Reflection;
 using Tactics.Common.AI;
+using Tactics.Common.AI.MonsterAI;
+using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
@@ -258,6 +261,192 @@ namespace Tactics.Tests.PlayMode
             finally
             {
                 LogAssert.ignoreFailingMessages = previousIgnoreFailingMessages;
+            }
+        }
+
+        [Test]
+        public async Task AiBrainRunner_Execute_ThrowsWhenCancellationAlreadyRequested()
+        {
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            Assert.CatchAsync<System.OperationCanceledException>(async () =>
+                await AiBrainRunner.Execute(null, null, null, cts.Token));
+        }
+
+        [UnityTest]
+        public IEnumerator AIPlayer_CancelDuringBrainExecution_SkipsUnitFinalization()
+        {
+            var gridController = new GridController();
+            var unitManager = new RecordingUnitManager();
+            gridController.UnitManager = unitManager;
+
+            var unitObject = new GameObject("CancelDuringBrainUnit");
+            var unit = unitObject.AddComponent<Unit>();
+            unit.ApplyAiBrain(ScriptableObject.CreateInstance<AiBrainAsset>());
+
+            var aiPlayer = new AIPlayer(debugMode: false, turnStartDelay: 0, unitDelay: 0)
+            {
+                UnitSelector = new SingleUnitSelector(unit)
+            };
+            var turnContext = new Tactics.Common.Controllers.TurnResolvers.TurnContext(
+                aiPlayer,
+                new IUnit[] { unit });
+            typeof(GridController).GetProperty(nameof(GridController.TurnContext))?
+                .SetValue(gridController, turnContext);
+            aiPlayer.Initialize(gridController);
+
+            var brainExecutorField = typeof(AIPlayer).GetField(
+                "_brainExecutor",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            bool previousIgnoreFailingMessages = LogAssert.ignoreFailingMessages;
+            LogAssert.ignoreFailingMessages = true;
+            bool deselected = false;
+            unit.UnitDeselected += _ => deselected = true;
+            try
+            {
+                Assert.That(
+                    brainExecutorField,
+                    Is.Not.Null,
+                    "AIPlayer must expose a brain-execution seam so mid-action cancellation can be tested.");
+                brainExecutorField.SetValue(
+                    aiPlayer,
+                    new System.Func<IUnit, GridController, AiBrainAsset, CancellationToken, Task>(
+                        (u, g, brain, ct) =>
+                        {
+                            // Reproduces the reviewed race: cancellation lands while the AI
+                            // action runs, but the action itself completes normally.
+                            typeof(AIPlayer).GetMethod(
+                                    "CancelOngoingAction",
+                                    BindingFlags.Instance | BindingFlags.NonPublic)?
+                                .Invoke(aiPlayer, null);
+                            return Task.CompletedTask;
+                        }));
+
+                aiPlayer.Play(gridController);
+                yield return new WaitUntil(() => unitManager.MarkAsSelectedCount > 0);
+                yield return new WaitForSecondsRealtime(0.3f);
+
+                Assert.That(
+                    unitManager.MarkAsSelectedCount,
+                    Is.EqualTo(1),
+                    "The AI turn must enter unit selection before cancellation lands.");
+                Assert.That(
+                    unitManager.MarkAsFriendlyCount,
+                    Is.Zero,
+                    "A unit whose AI action was cancelled mid-execution must not be marked friendly afterwards.");
+                Assert.That(
+                    unitManager.MarkAsFinishedCount,
+                    Is.Zero,
+                    "A unit whose AI action was cancelled mid-execution must not be marked finished.");
+                Assert.That(
+                    deselected,
+                    Is.False,
+                    "A cancelled AI action must not emit UnitDeselected during finalization.");
+            }
+            finally
+            {
+                LogAssert.ignoreFailingMessages = previousIgnoreFailingMessages;
+                if (unitObject != null)
+                {
+                    Object.DestroyImmediate(unitObject);
+                }
+            }
+        }
+
+        [Test]
+        public async Task AIPlayer_WaitForKeypress_ThrowsWhenCancellationAlreadyRequested()
+        {
+            var aiPlayer = new AIPlayer(debugMode: true, turnStartDelay: 0, unitDelay: 0);
+            var method = typeof(AIPlayer).GetMethod(
+                "WaitForKeypress",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null, "WaitForKeypress should exist.");
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            Task task;
+            try
+            {
+                var keyType = method.GetParameters()[0].ParameterType;
+                var keyN = System.Enum.Parse(keyType, "N");
+                task = (Task)method.Invoke(aiPlayer, new object[] { keyN, cts.Token });
+            }
+            catch (TargetParameterCountException)
+            {
+                Assert.Fail("WaitForKeypress must accept a CancellationToken.");
+                return;
+            }
+
+            Assert.CatchAsync<System.OperationCanceledException>(async () => await task);
+        }
+
+#pragma warning disable CS0067
+        private sealed class RecordingUnitManager : IUnitManager
+        {
+            public int MarkAsSelectedCount { get; private set; }
+            public int MarkAsFriendlyCount { get; private set; }
+            public int MarkAsFinishedCount { get; private set; }
+
+            public event System.Action<IUnit> UnitAdded;
+            public event System.Action<IUnit> UnitRemoved;
+            public Transform ContainerTransform => null;
+
+            public void Initialize(IGridController gridController) { }
+            public IEnumerable<IUnit> GetUnits() => System.Array.Empty<IUnit>();
+            public IEnumerable<IUnit> GetFriendlyUnits(IPlayer player) => System.Array.Empty<IUnit>();
+            public IEnumerable<IUnit> GetFriendlyUnits(int playerNumber) => System.Array.Empty<IUnit>();
+            public IEnumerable<IUnit> GetEnemyUnits(IPlayer player) => System.Array.Empty<IUnit>();
+            public IEnumerable<IUnit> GetEnemyUnits(int playerNumber) => System.Array.Empty<IUnit>();
+            public void AddUnit(IUnit unit) { }
+            public void RemoveUnit(IUnit unit) { }
+            public Task UnMark(IEnumerable<IUnit> units) => Task.CompletedTask;
+
+            public Task MarkAsSelected(IUnit unit)
+            {
+                MarkAsSelectedCount++;
+                return Task.CompletedTask;
+            }
+
+            public Task MarkAsFriendly(IEnumerable<IUnit> units)
+            {
+                MarkAsFriendlyCount++;
+                return Task.CompletedTask;
+            }
+
+            public Task MarkAsFinished(IEnumerable<IUnit> units)
+            {
+                MarkAsFinishedCount++;
+                return Task.CompletedTask;
+            }
+
+            public Task MarkAsTargetable(IEnumerable<IUnit> units) => Task.CompletedTask;
+            public Task MarkAsAttacking(IUnit unit, IUnit target) => Task.CompletedTask;
+            public Task MarkAsDefending(IUnit unit, IUnit aggressor) => Task.CompletedTask;
+            public Task MarkAsMoving(IUnit unit, ICell source, ICell destination, IEnumerable<ICell> path)
+                => Task.CompletedTask;
+            public Task UnMarkAsMoving(IUnit unit, ICell source, ICell destination, IEnumerable<ICell> path)
+                => Task.CompletedTask;
+            public Task MarkAsDestroyed(IUnit unit) => Task.CompletedTask;
+        }
+#pragma warning restore CS0067
+
+        private sealed class SingleUnitSelector : IUnitSelector
+        {
+            private readonly IUnit _unit;
+
+            public SingleUnitSelector(IUnit unit)
+            {
+                _unit = unit;
+            }
+
+            public IEnumerable<IUnit> SelectNext(
+                System.Func<IEnumerable<IUnit>> getUnits,
+                GridController gridController)
+            {
+                return new[] { _unit };
             }
         }
 

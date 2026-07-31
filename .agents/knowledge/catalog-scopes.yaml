@@ -140,6 +140,8 @@ scopes:
       - Assets/Tactics/AI/BasicMeleeGraph.asset
       - Assets/Tactics/AI/BasicMeleeProfile.asset
       - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
+      - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs
+      - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs.meta
       - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
       - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
       - Assets/Tactics/Scripts/Common/Units/Unit.cs

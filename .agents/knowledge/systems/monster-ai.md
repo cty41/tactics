@@ -39,7 +39,7 @@ SkillGraph AI 元数据会从范围收集节点识别 AOE，并从 Harmful Buff 
 
 亚马逊诱饵沿用普通敌人的候选生成与合法性，不建立专用 Brain。若当前生成结果中存在可达诱饵的移动或攻击候选，`IntentGenerator` 会只保留这些诱饵候选；没有可达诱饵候选时继续使用正常敌方目标，避免不可达诱饵令 AI 停摆。
 
-低生命撤退只在敌人已经进入其即时攻击包络时生成；拉开一个安全间距后必须恢复正常接敌，避免大地图上永久风筝导致玩家输入旅程无法自然结束。AI 行动队列在选择前和每个异步等待后都会过滤已被同步致死销毁的单位。回合启动与单位间表现等待使用全局 scaled gameplay 时钟，随暂停冻结并随 2×/4× 加速；每次 `AIPlayer.Play` 创建并全程复用独立取消令牌，回合结束、战斗结束或新一轮 Play 会取消旧流程。防死锁保护仍按 realtime 边界处理。
+低生命撤退只在敌人已经进入其即时攻击包络时生成；拉开一个安全间距后必须恢复正常接敌，避免大地图上永久风筝导致玩家输入旅程无法自然结束。AI 行动队列在选择前和每个异步等待后都会过滤已被同步致死销毁的单位。回合启动与单位间表现等待使用全局 scaled gameplay 时钟，随暂停冻结并随 2×/4× 加速；每次 `AIPlayer.Play` 创建并全程复用独立取消令牌，回合结束、战斗结束或新一轮 Play 会取消旧流程。取消令牌贯穿 `AiBrainRunner.Execute`/`ExecuteTurn` 与 `IntentExecutor.ExecuteWithResult` 及其各 intent handler：入口与每个异步步骤后都会检查令牌，`OperationCanceledException` 穿透执行器的通用异常恢复直接上抛；AI 动作执行期间发生的取消会中止后续步骤（含 Engage 追击），并跳过该单位的收尾标记（MarkAsFriendly/MarkAsFinished/UnitDeselected）。防死锁保护仍按 realtime 边界处理。
 
 # Relationships
 

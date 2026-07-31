@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.Common.AI.MonsterAI;
@@ -144,6 +145,79 @@ namespace Tactics.Tests.PlayMode
 
         #region Helpers
 
+        [Test]
+        public async Task ExecuteWithResult_ThrowsBeforeExecuting_WhenCancellationAlreadyRequested()
+        {
+            var targetObject = new GameObject("IntentExecutorPrecancelledTarget");
+            var target = targetObject.AddComponent<Unit>();
+            var aiAbility = new FakeAiExecutableAbility();
+            var abilityInfo = new AbilityInfo(
+                "Melee Attack",
+                1,
+                true,
+                aiAbility,
+                AbilityAiTags.Damage,
+                5f,
+                0f,
+                0f,
+                0f
+            );
+            var context = CreateContextWithAbilities(new[] { abilityInfo }, new[] { target });
+            var selected = CreateSelectedCandidate(IntentType.BasicAttack, context);
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            try
+            {
+                Assert.CatchAsync<System.OperationCanceledException>(
+                    async () => await IntentExecutor.ExecuteWithResult(selected, context, cts.Token));
+                Assert.IsFalse(aiAbility.EffectsAsyncCalled,
+                    "A cancelled intent must not execute any ability.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(targetObject);
+            }
+        }
+
+        [Test]
+        public async Task ExecuteWithResult_CancelDuringAbilityExecution_PropagatesCancellation()
+        {
+            var targetObject = new GameObject("IntentExecutorMidCancelTarget");
+            var target = targetObject.AddComponent<Unit>();
+            using var cts = new CancellationTokenSource();
+            var aiAbility = new FakeAiExecutableAbility { CancelDuringExecuteEffects = cts };
+            var abilityInfo = new AbilityInfo(
+                "Melee Attack",
+                1,
+                true,
+                aiAbility,
+                AbilityAiTags.Damage,
+                5f,
+                0f,
+                0f,
+                0f
+            );
+            var context = CreateContextWithAbilities(new[] { abilityInfo }, new[] { target });
+            var selected = CreateSelectedCandidate(IntentType.BasicAttack, context);
+
+            try
+            {
+                Assert.CatchAsync<System.OperationCanceledException>(
+                    async () => await IntentExecutor.ExecuteWithResult(selected, context, cts.Token));
+                Assert.IsTrue(aiAbility.EffectsAsyncCalled,
+                    "The ability starts before cancellation lands mid-execution.");
+                var executionEntry = context.DecisionLog.GetEntries()
+                    .LastOrDefault(e => e.Type == AiDecisionLog.LogType.ExecutionResult);
+                Assert.IsNull(executionEntry,
+                    "No execution result may be recorded once cancellation interrupts the action.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(targetObject);
+            }
+        }
+
         /// <summary>
         /// Creates an AiContext with a single ability of the given name.
         /// Uses reflection to build the context since AiContext has no public constructor for testing.
@@ -212,7 +286,7 @@ namespace Tactics.Tests.PlayMode
         {
             var method = typeof(IntentExecutor).GetMethod("ExecuteBasicAttack", BindingFlags.NonPublic | BindingFlags.Static);
             Assert.IsNotNull(method, "ExecuteBasicAttack method should exist.");
-            var task = (Task)method.Invoke(null, new object[] { selected, context });
+            var task = (Task)method.Invoke(null, new object[] { selected, context, CancellationToken.None });
             Assert.IsNotNull(task);
             await task;
         }
@@ -226,6 +300,7 @@ namespace Tactics.Tests.PlayMode
         private sealed class FakeAiExecutableAbility : IAbility, IAiExecutableAbility
         {
             public bool EffectsAsyncCalled { get; private set; }
+            public CancellationTokenSource CancelDuringExecuteEffects { get; set; }
             public event System.Action<IAbility> AbilitySelected;
             public event System.Action<IAbility> AbilityDeselected;
             public IUnit UnitReference { get; set; }
@@ -253,6 +328,7 @@ namespace Tactics.Tests.PlayMode
             public Task ExecuteEffectsAsync(IEnumerable<IUnit> targets, IGridController gridController)
             {
                 EffectsAsyncCalled = true;
+                CancelDuringExecuteEffects?.Cancel();
                 return Task.CompletedTask;
             }
 

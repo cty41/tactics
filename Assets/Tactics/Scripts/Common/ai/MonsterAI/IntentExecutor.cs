@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -18,16 +19,18 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行选中的意图。
         /// </summary>
-        public static async Task Execute(IntentCandidate selected, AiContext context)
+        public static async Task Execute(IntentCandidate selected, AiContext context, CancellationToken cancellationToken = default)
         {
-            await ExecuteWithResult(selected, context);
+            await ExecuteWithResult(selected, context, cancellationToken);
         }
 
         /// <summary>
         /// Executes an intent and returns a structured result for patterns and gameplay tests.
         /// </summary>
-        public static async Task<AiActionExecutionResult> ExecuteWithResult(IntentCandidate selected, AiContext context)
+        public static async Task<AiActionExecutionResult> ExecuteWithResult(IntentCandidate selected, AiContext context, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (selected == null)
             {
                 TLog.Warning("[IntentExecutor] Selected intent is null.");
@@ -41,18 +44,18 @@ namespace Tactics.Common.AI.MonsterAI
                 switch (selected.IntentType)
                 {
                     case IntentType.Engage:
-                        await ExecuteEngage(selected, context);
+                        await ExecuteEngage(selected, context, cancellationToken);
                         return AiActionExecutionResult.Success("Engage", !Equals(selected.Destination, context.Self.CurrentCell));
                     case IntentType.BasicAttack:
-                        await ExecuteBasicAttack(selected, context);
+                        await ExecuteBasicAttack(selected, context, cancellationToken);
                         return AiActionExecutionResult.Success("BasicAttack");
                     case IntentType.AbilityUse:
-                        return await ExecuteAbilityUse(selected, context);
+                        return await ExecuteAbilityUse(selected, context, cancellationToken);
                     case IntentType.Retreat:
-                        await ExecuteRetreat(selected, context);
+                        await ExecuteRetreat(selected, context, cancellationToken);
                         return AiActionExecutionResult.Success("Retreat", true);
                     case IntentType.FinishOff:
-                        await ExecuteFinishOff(selected, context);
+                        await ExecuteFinishOff(selected, context, cancellationToken);
                         return AiActionExecutionResult.Success("FinishOff", selected.Destination != null);
                     case IntentType.HoldPosition:
                         await ExecuteHoldPosition(selected, context);
@@ -61,6 +64,12 @@ namespace Tactics.Common.AI.MonsterAI
                         TLog.Warning($"[IntentExecutor] Unknown intent type: {selected.IntentType}");
                         return AiActionExecutionResult.Failure($"Unknown intent type: {selected.IntentType}");
                 }
+            }
+            catch (System.OperationCanceledException)
+            {
+                // Cancellation must propagate to the caller (turn transition / battle shutdown);
+                // it is not an execution failure to recover from.
+                throw;
             }
             catch (System.Exception ex)
             {
@@ -84,7 +93,7 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行接敌意图 - 移动到可攻击位置，复用现有 Move 能力系统。
         /// </summary>
-        private static async Task ExecuteEngage(IntentCandidate selected, AiContext context)
+        private static async Task ExecuteEngage(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
         {
             if (selected.Destination == null) return;
 
@@ -99,6 +108,7 @@ namespace Tactics.Common.AI.MonsterAI
             }
 
             await ExecuteMoveAsync(selected.Destination, context, moveAbility);
+            cancellationToken.ThrowIfCancellationRequested();
             context.DecisionLog.ExecutionResult(moveAbility.Name, "Move");
 
             // 移动成功后，若目标在攻击范围内，追加一次攻击
@@ -108,6 +118,7 @@ namespace Tactics.Common.AI.MonsterAI
                 if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
                 {
                     await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                    cancellationToken.ThrowIfCancellationRequested();
                     context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
                 }
                 else
@@ -120,7 +131,7 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行普攻意图。
         /// </summary>
-        private static async Task ExecuteBasicAttack(IntentCandidate selected, AiContext context)
+        private static async Task ExecuteBasicAttack(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
         {
             if (selected.Target == null) return;
 
@@ -130,6 +141,7 @@ namespace Tactics.Common.AI.MonsterAI
             if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
             {
                 await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                cancellationToken.ThrowIfCancellationRequested();
                 context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
                 return;
             }
@@ -141,7 +153,7 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行技能释放意图 - 复用现有 AIExecuteAbility 链路。
         /// </summary>
-        private static async Task<AiActionExecutionResult> ExecuteAbilityUse(IntentCandidate selected, AiContext context)
+        private static async Task<AiActionExecutionResult> ExecuteAbilityUse(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
         {
             if (selected.Ability?.Ability == null || selected.AbilityTargetCell == null)
                 return AiActionExecutionResult.Failure("Ability or target point is missing.");
@@ -159,6 +171,7 @@ namespace Tactics.Common.AI.MonsterAI
                     return AiActionExecutionResult.Failure("Movement failed; ability was not cast.");
                 }
                 moved = true;
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             var plan = new AiActionPlan(
@@ -173,6 +186,7 @@ namespace Tactics.Common.AI.MonsterAI
             if (selected.Ability.Ability is IPlannedAbilityExecutor plannedExecutor)
             {
                 var result = await plannedExecutor.ExecuteAsync(plan);
+                cancellationToken.ThrowIfCancellationRequested();
                 context.DecisionLog.ExecutionResult(selected.Ability.Name, result.Succeeded ? "UseAbility" : "AbilityFailed", selected.Target?.UnitID);
                 if (!result.Succeeded)
                     context.DecisionLog.Info($"AbilityUse failed: {result.FailureReason}");
@@ -184,6 +198,7 @@ namespace Tactics.Common.AI.MonsterAI
             if (selected.Ability.Ability is IAiExecutableAbility aiAbility)
             {
                 await aiAbility.ExecuteEffectsAsync(selected.Targets, context.GridController);
+                cancellationToken.ThrowIfCancellationRequested();
                 context.DecisionLog.ExecutionResult(selected.Ability.Name, "UseAbility", selected.Target?.UnitID);
                 return AiActionExecutionResult.Success(selected.Ability.Name, moved);
             }
@@ -195,7 +210,7 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行撤退意图 - 复用现有 Move 能力系统。
         /// </summary>
-        private static async Task ExecuteRetreat(IntentCandidate selected, AiContext context)
+        private static async Task ExecuteRetreat(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
         {
             if (selected.Destination == null) return;
 
@@ -210,13 +225,14 @@ namespace Tactics.Common.AI.MonsterAI
             }
 
             await ExecuteMoveAsync(selected.Destination, context, moveAbility);
+            cancellationToken.ThrowIfCancellationRequested();
             context.DecisionLog.ExecutionResult(moveAbility.Name, "Move");
         }
 
         /// <summary>
         /// 执行追击残血意图。
         /// </summary>
-        private static async Task ExecuteFinishOff(IntentCandidate selected, AiContext context)
+        private static async Task ExecuteFinishOff(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
         {
             if (selected.Target == null) return;
 
@@ -234,6 +250,7 @@ namespace Tactics.Common.AI.MonsterAI
                 }
 
                 bool moved = await ExecuteMoveAsync(selected.Destination, context, moveAbility);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (!moved)
                 {
                     TLog.Warning("[IntentExecutor] FinishOff movement failed; skipping follow-up attack.");
@@ -247,6 +264,7 @@ namespace Tactics.Common.AI.MonsterAI
             if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
             {
                 await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
+                cancellationToken.ThrowIfCancellationRequested();
                 context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
                 return;
             }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -22,16 +23,18 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行 AI 决策和行动。
         /// </summary>
-        public static async Task Execute(IUnit unit, IGridController gridController, AiBrainAsset brainAsset)
+        public static async Task Execute(IUnit unit, IGridController gridController, AiBrainAsset brainAsset, CancellationToken cancellationToken = default)
         {
-            await ExecuteTurn(unit, gridController, brainAsset);
+            await ExecuteTurn(unit, gridController, brainAsset, cancellationToken);
         }
 
         /// <summary>
         /// Executes one AI turn and exposes the selected plan and execution outcome.
         /// </summary>
-        public static async Task<AiTurnResult> ExecuteTurn(IUnit unit, IGridController gridController, AiBrainAsset brainAsset)
+        public static async Task<AiTurnResult> ExecuteTurn(IUnit unit, IGridController gridController, AiBrainAsset brainAsset, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (unit == null)
             {
                 TLog.Error("[AiBrainRunner] Unit is null.");
@@ -94,7 +97,8 @@ namespace Tactics.Common.AI.MonsterAI
             var selected = IntentResolver.Resolve(candidatesToResolve, context);
 
             // 6. 调用执行器落地
-            var execution = await IntentExecutor.ExecuteWithResult(selected, context);
+            var execution = await IntentExecutor.ExecuteWithResult(selected, context, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (IsDestroyed(unit))
                 return new AiTurnResult(null, execution, patternStep);
             if (execution.Succeeded && !usedFallback && expectedAbility != null && selected?.Ability?.Name == expectedAbility)
