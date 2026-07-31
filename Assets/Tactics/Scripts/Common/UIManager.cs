@@ -20,6 +20,24 @@ using TextCoreFontAsset = UnityEngine.TextCore.Text.FontAsset;
 
 namespace Tactics
 {
+    internal sealed class RuntimeDefaultFontOwner : ScriptableObject
+    {
+        [SerializeField] private string marker;
+        [SerializeField] private Font source;
+        [SerializeField] private TextCoreFontAsset fontAsset;
+
+        internal string Marker => marker;
+        internal Font Source => source;
+        internal TextCoreFontAsset FontAsset => fontAsset;
+
+        internal void Initialize(string ownerMarker, Font fontSource, TextCoreFontAsset ownedFontAsset)
+        {
+            marker = ownerMarker;
+            source = fontSource;
+            fontAsset = ownedFontAsset;
+        }
+    }
+
     [Serializable]
     internal class UIConfigEntry
     {
@@ -48,8 +66,20 @@ namespace Tactics
             s_configLoaded = false;
             s_uiPaths = null;
             s_uiTypeMap = null;
+
+            // Native DontSave objects can outlive managed statics. Preserve every owned graph
+            // before dropping managed references; recovery waits for the expected source TTF.
+            SynchronizeOwnedRuntimeDefaultFonts();
             _instance._runtimeDefaultFontSource = null;
             _instance._runtimeDefaultFontAsset = null;
+            _instance._runtimeDefaultFontOwner = null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RegisterRuntimeDefaultFontQuitBoundary()
+        {
+            Application.quitting -= SynchronizeOwnedRuntimeDefaultFonts;
+            Application.quitting += SynchronizeOwnedRuntimeDefaultFonts;
         }
 
 
@@ -131,6 +161,8 @@ namespace Tactics
 
         private const string PanelSettingsPath = "Assets/Tactics/UIToolkit/PanelSettings.asset";
         private const string RuntimeDefaultFontSourcePath = "Assets/Tactics/Arts/Fonts/NotoSansSC.ttf";
+        private const string RuntimeDefaultFontAssetName = "NotoSansSC Runtime";
+        private const string RuntimeDefaultFontOwnerMarker = "Tactics.UIManager.RuntimeDefaultFont.v1";
 
         private static Dictionary<UIId, UIType> s_uiTypeMap;
         private static Dictionary<UIId, (string uxml, string uss)> s_uiPaths;
@@ -208,6 +240,7 @@ namespace Tactics
         private PanelSettings _panelSettings;
         private Font _runtimeDefaultFontSource;
         private TextCoreFontAsset _runtimeDefaultFontAsset;
+        private RuntimeDefaultFontOwner _runtimeDefaultFontOwner;
 
         private async Task<PanelSettings> GetPanelSettingsAsync(GameAssetManager mgr)
         {
@@ -242,6 +275,7 @@ namespace Tactics
             if (_runtimeDefaultFontSource == null)
                 TLog.Warning("[UIManager] Failed to load the runtime font source. UI Toolkit will use its fallback font.");
 
+            TryRecoverRuntimeDefaultFontAsset(_runtimeDefaultFontSource);
             EnsureRuntimeDefaultFontAsset();
             return _runtimeDefaultFontAsset;
         }
@@ -257,14 +291,18 @@ namespace Tactics
             if (_runtimeDefaultFontSource == null)
                 TLog.Warning("[UIManager] Failed to load the runtime font source. UI Toolkit will use its fallback font.");
 
+            TryRecoverRuntimeDefaultFontAsset(_runtimeDefaultFontSource);
             EnsureRuntimeDefaultFontAsset();
             return _runtimeDefaultFontAsset;
         }
 
         private void EnsureRuntimeDefaultFontAsset()
         {
-            if (_runtimeDefaultFontAsset != null || _runtimeDefaultFontSource == null)
+            if (HasUsableRuntimeDefaultFontAsset() || _runtimeDefaultFontSource == null)
                 return;
+
+            _runtimeDefaultFontAsset = null;
+            _runtimeDefaultFontOwner = null;
 
             // Keep the dynamic glyph atlas in memory so Play Mode never mutates a project FontAsset.
             _runtimeDefaultFontAsset = TextCoreFontAsset.CreateFontAsset(
@@ -283,12 +321,290 @@ namespace Tactics
                 return;
             }
 
-            _runtimeDefaultFontAsset.name = "NotoSansSC Runtime";
-            _runtimeDefaultFontAsset.hideFlags = HideFlags.DontSave;
+            _runtimeDefaultFontAsset.name = RuntimeDefaultFontAssetName;
+            _runtimeDefaultFontOwner = ScriptableObject.CreateInstance<RuntimeDefaultFontOwner>();
+            _runtimeDefaultFontOwner.name = RuntimeDefaultFontOwnerMarker;
+            _runtimeDefaultFontOwner.Initialize(
+                RuntimeDefaultFontOwnerMarker,
+                _runtimeDefaultFontSource,
+                _runtimeDefaultFontAsset);
+            _runtimeDefaultFontOwner.hideFlags |= HideFlags.DontSave;
+            ApplyRuntimeDefaultFontResourceHideFlags(_runtimeDefaultFontAsset);
+        }
+
+        private bool HasUsableRuntimeDefaultFontAsset()
+        {
+            return _runtimeDefaultFontSource != null &&
+                   IsOwnedRuntimeDefaultFontAsset(
+                       _runtimeDefaultFontOwner,
+                       _runtimeDefaultFontSource,
+                       _runtimeDefaultFontAsset);
+        }
+
+        private void TryRecoverRuntimeDefaultFontAsset(Font expectedSource)
+        {
+            if (expectedSource == null || HasUsableRuntimeDefaultFontAsset())
+                return;
+
+            RuntimeDefaultFontOwner recoveredOwner = null;
+            var owners = Resources.FindObjectsOfTypeAll<RuntimeDefaultFontOwner>();
+            Array.Sort(owners, (left, right) => left.GetInstanceID().CompareTo(right.GetInstanceID()));
+            var trustedOwners = new List<RuntimeDefaultFontOwner>();
+            foreach (var owner in owners)
+            {
+                if (owner == null)
+                    continue;
+
+                if (!HasRuntimeDefaultFontOwnerProvenance(owner))
+                    continue;
+
+                trustedOwners.Add(owner);
+
+                if (HasRuntimeDefaultFontOwnershipAndGraph(owner, expectedSource, owner.FontAsset))
+                    ApplyRuntimeDefaultFontResourceHideFlags(owner.FontAsset);
+
+                if (recoveredOwner == null &&
+                    IsOwnedRuntimeDefaultFontAsset(owner, expectedSource, owner.FontAsset))
+                    recoveredOwner = owner;
+            }
+
+            var protectedResourceIds = CollectProtectedRuntimeDefaultFontResourceIds(recoveredOwner, owners);
+            foreach (var owner in trustedOwners)
+            {
+                if (ReferenceEquals(owner, recoveredOwner))
+                    continue;
+
+                if (recoveredOwner != null && ReferenceEquals(owner.FontAsset, recoveredOwner.FontAsset))
+                    UnityEngine.Object.Destroy(owner);
+                else
+                    DestroyOwnedRuntimeDefaultFont(owner, protectedResourceIds);
+            }
+
+            if (recoveredOwner == null)
+                return;
+
+            _runtimeDefaultFontOwner = recoveredOwner;
+            _runtimeDefaultFontSource = expectedSource;
+            _runtimeDefaultFontAsset = recoveredOwner.FontAsset;
+            _runtimeDefaultFontAsset.name = RuntimeDefaultFontAssetName;
+            ApplyRuntimeDefaultFontResourceHideFlags(_runtimeDefaultFontAsset);
+        }
+
+        private static bool IsOwnedRuntimeDefaultFontAsset(
+            RuntimeDefaultFontOwner owner,
+            Font expectedSource,
+            TextCoreFontAsset fontAsset)
+        {
+            if (!HasRuntimeDefaultFontOwnershipAndGraph(owner, expectedSource, fontAsset) ||
+                (owner.hideFlags & HideFlags.DontSave) != HideFlags.DontSave ||
+                (fontAsset.hideFlags & HideFlags.DontSave) != HideFlags.DontSave ||
+                (fontAsset.material.hideFlags & HideFlags.DontSave) != HideFlags.DontSave)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < fontAsset.atlasTextureCount; index++)
+            {
+                var atlasTexture = fontAsset.atlasTextures[index];
+                if (atlasTexture == null ||
+                    (atlasTexture.hideFlags & HideFlags.DontSave) != HideFlags.DontSave)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool HasRuntimeDefaultFontOwnershipAndGraph(
+            RuntimeDefaultFontOwner owner,
+            Font expectedSource,
+            TextCoreFontAsset fontAsset)
+        {
+            if (!HasRuntimeDefaultFontOwnerProvenance(owner) ||
+                expectedSource == null ||
+                owner.Source != expectedSource ||
+                owner.FontAsset != fontAsset ||
+                fontAsset == null ||
+                fontAsset.sourceFontFile != expectedSource ||
+                fontAsset.atlasPopulationMode != AtlasPopulationMode.Dynamic ||
+                !fontAsset.isMultiAtlasTexturesEnabled ||
+                fontAsset.material == null ||
+                fontAsset.atlasTextures == null ||
+                fontAsset.atlasTextureCount <= 0 ||
+                fontAsset.atlasTextureCount > fontAsset.atlasTextures.Length ||
+                fontAsset.material.mainTexture != fontAsset.atlasTextures[0])
+            {
+                return false;
+            }
+
+            for (int index = 0; index < fontAsset.atlasTextureCount; index++)
+            {
+                if (fontAsset.atlasTextures[index] == null)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool HasRuntimeDefaultFontOwnerProvenance(RuntimeDefaultFontOwner owner)
+        {
+            return owner != null &&
+                   owner.Marker == RuntimeDefaultFontOwnerMarker &&
+                   (owner.hideFlags & HideFlags.DontSave) == HideFlags.DontSave;
+        }
+
+        private static void DestroyOwnedRuntimeDefaultFont(
+            RuntimeDefaultFontOwner owner,
+            HashSet<int> protectedResourceIds)
+        {
+            if (owner == null)
+                return;
+
+            var fontAsset = owner.FontAsset;
+            if (fontAsset != null)
+            {
+                if (IsRuntimeDefaultFontResourceProtected(fontAsset, protectedResourceIds))
+                {
+                    UnityEngine.Object.Destroy(owner);
+                    return;
+                }
+
+                var material = fontAsset.material;
+                var atlasTextures = fontAsset.atlasTextures;
+                var atlasTexturesToDestroy = new List<Texture2D>();
+                var atlasTextureIdsToDestroy = new HashSet<int>();
+                if (atlasTextures != null)
+                {
+                    int usedAtlasCount = Math.Min(
+                        Math.Max(fontAsset.atlasTextureCount, 0),
+                        atlasTextures.Length);
+                    for (int index = 0; index < usedAtlasCount; index++)
+                    {
+                        var atlasTexture = atlasTextures[index];
+                        if (atlasTexture != null &&
+                            !IsRuntimeDefaultFontResourceProtected(atlasTexture, protectedResourceIds) &&
+                            atlasTextureIdsToDestroy.Add(atlasTexture.GetInstanceID()))
+                            atlasTexturesToDestroy.Add(atlasTexture);
+                    }
+                }
+
+                // Detach every referenced sub-resource before destroying the FontAsset. TextCore may
+                // otherwise release shared resources or unused atlas capacity from its destruction path.
+                fontAsset.material = null;
+                if (atlasTextures != null)
+                    fontAsset.atlasTextures = new Texture2D[atlasTextures.Length];
+
+                if (material != null && !IsRuntimeDefaultFontResourceProtected(material, protectedResourceIds))
+                    UnityEngine.Object.Destroy(material);
+                foreach (var atlasTexture in atlasTexturesToDestroy)
+                    UnityEngine.Object.Destroy(atlasTexture);
+                UnityEngine.Object.Destroy(fontAsset);
+            }
+
+            UnityEngine.Object.Destroy(owner);
+        }
+
+        private static HashSet<int> CollectProtectedRuntimeDefaultFontResourceIds(
+            RuntimeDefaultFontOwner retainedOwner,
+            RuntimeDefaultFontOwner[] owners)
+        {
+            var protectedResourceIds = new HashSet<int>();
+            AddRuntimeDefaultFontResourceIds(retainedOwner?.FontAsset, protectedResourceIds);
+            foreach (var owner in owners)
+            {
+                if (owner != null && !HasRuntimeDefaultFontOwnerProvenance(owner))
+                    AddRuntimeDefaultFontResourceIds(owner.FontAsset, protectedResourceIds);
+            }
+            return protectedResourceIds;
+        }
+
+        private static void AddRuntimeDefaultFontResourceIds(
+            TextCoreFontAsset fontAsset,
+            HashSet<int> resourceIds)
+        {
+            if (fontAsset == null)
+                return;
+
+            resourceIds.Add(fontAsset.GetInstanceID());
+            if (fontAsset.material != null)
+                resourceIds.Add(fontAsset.material.GetInstanceID());
+            if (fontAsset.atlasTextures == null)
+                return;
+
+            foreach (var atlasTexture in fontAsset.atlasTextures)
+            {
+                if (atlasTexture != null)
+                    resourceIds.Add(atlasTexture.GetInstanceID());
+            }
+        }
+
+        private static bool IsRuntimeDefaultFontResourceProtected(
+            UnityEngine.Object resource,
+            HashSet<int> protectedResourceIds)
+        {
+            return resource != null &&
+                   protectedResourceIds != null &&
+                   protectedResourceIds.Contains(resource.GetInstanceID());
+        }
+
+        private static void SynchronizeOwnedRuntimeDefaultFonts()
+        {
+            var owners = Resources.FindObjectsOfTypeAll<RuntimeDefaultFontOwner>();
+            Array.Sort(owners, (left, right) => left.GetInstanceID().CompareTo(right.GetInstanceID()));
+            var trustedOwners = new List<RuntimeDefaultFontOwner>();
+            RuntimeDefaultFontOwner retainedOwner = null;
+            RuntimeDefaultFontOwner preferredOwner = _instance?._runtimeDefaultFontOwner;
+
+            foreach (var owner in owners)
+            {
+                if (!HasRuntimeDefaultFontOwnerProvenance(owner))
+                    continue;
+
+                trustedOwners.Add(owner);
+                if (HasRuntimeDefaultFontOwnershipAndGraph(owner, owner.Source, owner.FontAsset))
+                    ApplyRuntimeDefaultFontResourceHideFlags(owner.FontAsset);
+
+                if (IsOwnedRuntimeDefaultFontAsset(owner, owner.Source, owner.FontAsset) &&
+                    (retainedOwner == null || ReferenceEquals(owner, preferredOwner)))
+                    retainedOwner = owner;
+            }
+
+            var protectedResourceIds = CollectProtectedRuntimeDefaultFontResourceIds(retainedOwner, owners);
+            foreach (var owner in trustedOwners)
+            {
+                if (ReferenceEquals(owner, retainedOwner))
+                    continue;
+
+                if (retainedOwner != null && ReferenceEquals(owner.FontAsset, retainedOwner.FontAsset))
+                    UnityEngine.Object.Destroy(owner);
+                else
+                    DestroyOwnedRuntimeDefaultFont(owner, protectedResourceIds);
+            }
+        }
+
+        private static void ApplyRuntimeDefaultFontResourceHideFlags(TextCoreFontAsset fontAsset)
+        {
+            if (fontAsset == null)
+                return;
+
+            fontAsset.hideFlags |= HideFlags.DontSave;
+            if (fontAsset.material != null)
+                fontAsset.material.hideFlags |= HideFlags.DontSave;
+
+            if (fontAsset.atlasTextures == null)
+                return;
+
+            int usedAtlasCount = Math.Min(fontAsset.atlasTextureCount, fontAsset.atlasTextures.Length);
+            for (int index = 0; index < usedAtlasCount; index++)
+            {
+                var atlasTexture = fontAsset.atlasTextures[index];
+                if (atlasTexture != null)
+                    atlasTexture.hideFlags |= HideFlags.DontSave;
+            }
         }
 
         private static void ApplyRuntimeDefaultFont(UIDocument uiDoc, TextCoreFontAsset defaultFont)
         {
+            ApplyRuntimeDefaultFontResourceHideFlags(defaultFont);
             if (uiDoc?.rootVisualElement != null && defaultFont != null)
             {
                 uiDoc.rootVisualElement.style.unityFont = StyleKeyword.Null;
@@ -398,12 +714,14 @@ namespace Tactics
 
         public void Hide(UIId id)
         {
+            SynchronizeOwnedRuntimeDefaultFonts();
             if (_instances.TryGetValue(id, out var instance) && instance?.ContainerGO != null)
                 instance.ContainerGO.SetActive(false);
         }
 
         public void Destroy(UIId id)
         {
+            SynchronizeOwnedRuntimeDefaultFonts();
             if (_instances.TryGetValue(id, out var instance) && instance?.ContainerGO != null)
             {
                 UnityEngine.Object.Destroy(instance.ContainerGO);

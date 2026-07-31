@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-07-31T01:10:25+08:00"
+timestamp: "2026-08-01T00:20:12+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -32,7 +32,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs/ui/home-options-player-input-smoke.gameplay-test.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:e1c57e802eb3635bbb0ed25157f98b55681f44a2e036ca52042edc38903dd526
+source_fingerprint: sha256:3d258f5eac44ca5b51737f094baa4474681b3c9722a14fef61e8a207dd807ce1
 ---
 
 # Current State
@@ -42,6 +42,8 @@ Pure Run v1 由 `RoguelikeMapGenerator.GetPureRunMap` 生成 7 层只前进地�
 Demo 使用单一全局 Run，不经过三存档槽。`PureRunSessionStore` 将版本 5 冒险状态与地图作为配对数据保存；Home 提供 New Run 和 Continue Run。普通战斗胜利结算后回到地图，失败或 Boss 胜利显示 RunEndSummary 并清理本局状态。
 
 Home 磁盘场景已精简为 `AudioListener`、`Bootstrap`、`EventSystem`、`Main Camera` 四个无子节点静态 root，不包含 Grid、Tilemap、UnitManager 或战斗单位；Home UI 仍由生产 `GameAssetManager`、`HomeFlowCoordinator` 和 `UIManager` 在运行时创建。Editor 结构测试始终通过 `OpenPreviewScene` 验证磁盘资产的精确 roots、组件白名单和禁用玩法组件。独立 PlayMode source spec 经 compiler 生成 plan，以虚拟 Mouse 通过生产 `PlayerInput` 点击 `OptionsButton`，断言 `OptionsRoot` 存在且可见，并覆盖测试设备释放；该 smoke 与较长旅程夹具隔离。
+
+Home smoke 同时守护中文 runtime FontAsset 的动态 atlas、隐藏/重开、直接打开另一个 UI 时的可修复资源标志、静态引用丢失后的 owner 恢复、无 provenance owner 隔离，以及完整或部分共享 FontAsset/Material/atlas 时的引用感知清理；未使用 atlas 容量尾槽不会被当作自有资源销毁。修改 Home UI 字体或 UIManager 生命周期时，先运行 `PlayerInputGameplayPlanTests`，再运行完整 `HomeSceneInputSmokeTests`；这些自动测试模拟资源边界，不宣称单个 UnityTest 真正跨越 Play Mode 退出边界。
 
 新建 Pure Run 角色的主属性为 6（法师智力、死灵法师魅力、亚马逊敏捷），其余属性为 5；既有存档不重写。升级时先强制完成属性点分配，再依据更新后的属性计算并展示技能候选；技能选择界面同时列出已学技能及每级实际 MP 消耗。地图每次回显后只根据当前进度节点执行一次 ScrollView 居中，之后仍由玩家自由拖拽浏览。
 

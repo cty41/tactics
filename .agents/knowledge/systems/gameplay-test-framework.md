@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-31T01:10:09+08:00"
+timestamp: "2026-08-01T00:20:10+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:c0399c6a5e22f83268d07bd35e260f2e2de0d1eb881a184fdeb28b96cb34cbcb
+source_fingerprint: sha256:b33460aefbe1875a2d47df1e5bf23780ef6b8a61dfb140c42c0e1ce81a407ffe
 ---
 
 # Current State
@@ -49,7 +49,9 @@ Map adapter 还支持 `encounterRecipeContract`、怪物 AI 目录/Heavy Shot �
 
 `PlayerInput` adapter 使用由 runtime context 拥有的虚拟 Mouse/Keyboard，通过 Input System 和生产 UI 输入模块驱动状态变化；production `EventSystem`、`InputSystemUIInputModule`、action asset 或 pointer actions 缺失时 fail-closed，不创建替代 module，也不调用 `AssignDefaultActions`。UI 目标按稳定元素名解析，坐标由 `worldBound`、Panel scale 与屏幕 Y 轴转换得到，并在发送事件前用 Panel picking 验证；`Reachable` map resolver 的主候选必须同时满足 reachable、`VisitState.Unvisited` 与未 consumed，transient rendered fallback 可暂不要求 reachability，但仍必须排除 visited/consumed，避免旧 battle node 收到 ClickEvent 后被产品点击权限静默拒绝。地图节点还会按自身 panel 的 viewport、scroll geometry 和最终 pick 结果重新获取目标，不使用固定设备坐标。世界目标由正式 Camera 转为屏幕坐标。战斗策略只选择固定 Camera 内可点击的合法攻击目标和移动格，不会为测试修改生产 Camera。输入状态只入队一次并交给自动 PlayerLoop 消费；等待下一帧使用可取消的 `Awaitable.NextFrameAsync`，避免 Unity SynchronizationContext 中的同帧忙循环；动画完成类 readiness（例如 EndTurn 解锁）使用 realtime deadline，避免无焦点 Editor 在动画结束前耗尽 frame budget。EndTurn 必须按 battle inactive、round、current unit 或 current player 的真实变化判定推进；pointer 已投递但无业务效果时才 fallback production `M` hotkey，不能用此前 ability/move 的变化替代 EndTurn 证据。fixture 重建虚拟设备后会仅刷新 controls 或 `activeControl` 陈旧的 production actions；若共享 actions 因前一虚拟设备移除而 disabled，只通过现有 production module 自身的 disable/enable lifecycle 重建，不替换配置。测试期间保存并在结束时恢复 Editor PlayMode input behavior、Input System background behavior 和物理 Mouse/Keyboard enabled 状态，action-failure 与 timeout 回归会逐项断言这些状态。pointer observer 只证明事件投递；普通 readiness 可观察已布局但 non-pickable 的 UI，只有声明 `interactable` 时才要求真实 pick。点击成功由 `ClickEvent`、release 前仍 attached 且 release 后发生的 production target transition，或后续业务 observable 闭环；PointerDown 时已经 detach 不算成功。`player-input-e2e` 标签禁止 setup 写入捷径和 UI/Map/Battle/Skill runtime action，只允许这些 adapter 做只读断言；Journey 与两条 Mystery 路线都从 Home 经三次初始技能选择和三场真实输入战斗推进，不使用 Map fast-forward/refresh seam。`inventory-reentry-player-input` 从 Home 实际点击创建 Run，并连续三次通过地图按钮打开 Inventory，证明缓存重入、筛选、关闭和地图恢复交互都经过生产输入链。Home Options smoke 使用独立 fixture，真实加载 Home 并等待 UI ready，再以虚拟 Mouse 通过生产 `PlayerInput` 点击 Options、断言 `OptionsRoot` 存在且可见，从而隔离长旅程残留；其 `.gameplay-test.md` source spec 是维护对象，plan 由 compiler 生成。pending roguelike battle 在 `IsBattleActive=false` 后仍须相对入口 baseline 观察新的 phase、reward identity 或 active settlement root，并以 realtime observable-first polling 覆盖产品异步恢复延迟；上一场遗留的 `Complete` 不算本场 settlement transaction。虚拟设备在成功、action 失败与 Runner 超时后均由 context 释放；已有生产输入模块不会在清理时被卸载。
 
-真实输入层新增 `battle-player-input-smoke` 与 `pure-run-player-input-route`：前者覆盖正式单位选择、移动、右键取消、技能卡和目标输入；后者从 Home 开始完成三场自然战斗、三次显式升级、Inventory、Store 和多次战斗场景重入。战斗策略可只读查询当前回合、合法技能和目标，但所有位置、资源、生命、节点和成长变化必须由鼠标或键盘输入产生，最多执行 100 个单位行动。原 `pure-run-real-player-route` 已重标为 `journey-integration`，继续快速覆盖五场胜利、Boss、RunSummary、失败和事件团灭，不再宣称覆盖真实玩家输入。
+`HomeSceneInputSmokeTests` 还强制扩展动态中文字形 atlas 并经过隐藏/重开，验证 FontAsset、Material 与全部已使用 atlas 的 `DontSave` 生命周期；测试会模拟新增 atlas 标志尚未同步时直接打开另一个 UI，要求修复自有资源图而不替换共享实例。托管静态引用丢失后必须通过带运行时 provenance 的确定性 owner 恢复同一 source、FontAsset、Material 和 atlas 实例；无 provenance owner 及其外部资源图不得被采用、修改或销毁，并逐一断言其 Material、已使用 atlas 身份及候选数量不变。测试还覆盖结构损坏 owner 与保留 owner 共享同一 FontAsset 的恢复/同步顺序，以及独立 FontAsset 部分共享保留 Material、首 atlas 并携带未使用 atlas 尾槽的清理；保留图身份先确定，清理只销毁未受保护的已使用资源。
+
+真实输入层新增 `battle-player-input-smoke` 与 `pure-run-player-input-route`：前者覆盖正式单位选择、移动、右键取消、技能卡和目标输入；后者从 Home 开始完成三场自然战斗、三次显式升级、Inventory、Store 和多次场景重入。战斗策略可只读查询当前回合、合法技能和目标，但所有位置、资源、生命、节点和成长变化必须由鼠标或键盘输入产生，最多执行 100 个单位行动。原 `pure-run-real-player-route` 已重标为 `journey-integration`，继续快速覆盖五场胜利、Boss、RunSummary、失败和事件团灭，不再宣称覆盖真实玩家输入。
 
 长期测试分为四层：逻辑测试验证规则和事务，语义 UI 测试验证元素与布局，`player-input-e2e` 验证生产输入和场景旅程，最终人工测试只判断视觉裁切、动画反馈、可读性与操作手感。
 
@@ -65,6 +67,8 @@ Battle/Map/UI PlayMode 夹具在激活对象前完成序列化依赖注入，避
 # Verification Guidance
 
 修改 Spec 工具、adapter 或 fixtures 后运行工具测试、validate/compile 和对应 Unity PlayMode 测试。Home Options smoke 需从 `home-options-player-input-smoke.gameplay-test.md` 编译 plan，并独立运行 `HomeSceneInputSmokeTests` fixture。真实玩家输入场景必须带 `player-input-e2e` 标签，状态变化只能来自 `PlayerInput` action；Map、Battle、Skill、UI adapter 仅可用于只读 assertion。需要证明实际行为时必须加载真实资产，不能用手写结果或日志文本替代。
+
+涉及 UIManager runtime font 生命周期时，验证顺序必须为 `PlayerInputGameplayPlanTests` → 完整 `HomeSceneInputSmokeTests`，以捕获前序大型字形 atlas 对后序 Home 首绘制的测试运行时污染。单个 UnityTest 对静态引用丢失、重复/损坏 owner、动态 atlas 和资源身份的模拟不等同于真实退出并重新进入 Play Mode。
 
 # Citations
 

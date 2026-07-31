@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
 tags: [architecture, unity, agent-first]
-timestamp: "2026-07-31T01:10:02+08:00"
+timestamp: "2026-08-01T00:20:09+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Assets/Tactics/Arts/UI
   - Assets/Tactics/UIToolkit/TextSettings.asset
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:cc2b86d403d34d9da429396e6e348cd4ba003f307f412cf30a0aef716b07806a
+source_fingerprint: sha256:42385fa3f1f6a3a9f09b7ac12a439cb9b0babf9f2d4019a005835401b4c4b391
 ---
 
 # Summary
@@ -25,7 +25,7 @@ Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.a
 # Runtime Foundation
 
 - 项目采用 ScriptableObject 驱动配置，通过 `GameAssetManager` 管理运行时资产生命周期。
-- `UIManager` 统一加载和管理 UI，不允许直接使用 `Resources.Load`；运行时从只读的 `NotoSansSC.ttf` 创建共享的 Dynamic TextCore FontAsset（SDFAA、1024×1024、Multi Atlas、`DontSave`），并在每次 UIDocument 激活后从根节点统一继承。运行时缓存会在 Subsystem Registration 时清空，字形 atlas 只存在于内存，不生成或修改项目内 FontAsset。
+- `UIManager` 统一加载和管理 UI，不允许直接使用 `Resources.Load`；运行时从只读的 `NotoSansSC.ttf` 创建共享的 Dynamic TextCore FontAsset（SDFAA、1024×1024、Multi Atlas、`DontSave`），并在每次 UIDocument 激活后从根节点统一继承。内存 `RuntimeDefaultFontOwner` 以确定性 marker 持有 source、FontAsset、Material 与已使用 atlas；owner 自身必须在修复前已带运行时 `DontSave` provenance，恢复时再匹配目标 source、Dynamic/Multi Atlas、Material→首 atlas 绑定和完整资源图，然后同步可修复的资源 `DontSave` 标志并执行严格校验，同名或无 provenance owner 对象不会被采用或修改。恢复和生命周期同步采用两阶段处理：先从全部可信 owner 中选定唯一保留图并冻结保留图及无 provenance 外部图的资源身份，再引用感知地清理失效或重复 owner；共享保留 FontAsset、Material 或已使用 atlas 的资源不会被销毁，销毁独立 FontAsset 前会先断开其资源引用，且只清理索引小于 `atlasTextureCount` 的已使用 atlas，未使用容量尾槽不属于销毁范围。Hide、Destroy、Subsystem Registration 与 Application quit 边界都会同步动态新增 atlas 的生命周期；字形 atlas 只存在于内存，不生成或修改项目内 FontAsset。
 - UI Cancel 会区分键盘 Esc 与鼠标右键；战斗目标选择期间取消输入由 Battle UI 消费，不会同时打开 Pause。
 - 通用日志使用 `TLog`，结构化战斗日志使用 `TBattleLog`。
 - 修改 C# 后必须触发 Unity 编译并检查 Console 错误。
