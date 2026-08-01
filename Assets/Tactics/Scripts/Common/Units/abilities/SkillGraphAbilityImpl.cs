@@ -10,6 +10,7 @@ using Tactics.Common.Interactables;
 using Tactics.Common.Battle;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Tween;
+using Tactics.Common.Utilities;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Runtime.BattleLog;
@@ -341,7 +342,7 @@ namespace Tactics.Common.Units.Abilities
             bool allyIncludesSelf = first is SelectAllyNodeRecord allySelection && allySelection.IncludeSelf;
             bool requiresCorpse = first is SelectCorpseTargetNodeRecord;
 
-            if (first is SelectTargetPointNodeRecord)
+            if (first is SelectTargetPointNodeRecord || IsThrust())
             {
                 var area = FindAreaCollectionNode();
                 foreach (var targetCell in validCells)
@@ -479,7 +480,12 @@ namespace Tactics.Common.Units.Abilities
             bool allowCombatTechniqueFollowUp = true)
         {
             var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(_config.SkillGraph);
-            var context = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController);
+            var context = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController)
+            {
+                VfxSink = _config.SkillVfxRecipe != null
+                    ? new SkillVfxCoordinator(_config.SkillVfxRecipe, _owner)
+                    : null
+            };
             var testResult = CreateTestResult();
 
             // Pre-set target from cell click
@@ -507,6 +513,21 @@ namespace Tactics.Common.Units.Abilities
             try
             {
                 var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
+                if (_config.VisualAction == UnitVisualAction.Cast)
+                {
+                    Vector3 sourceWorldPosition = SkillVfxPositionUtility.ResolveUnitCenter(_owner);
+                    Vector3 targetWorldPosition = context.PrimaryTarget != null
+                        ? SkillVfxPositionUtility.ResolveUnitCenter(context.PrimaryTarget)
+                        : selectedCell.WorldPosition.ToVector3();
+                    await context.PlayVfxAsync(
+                        SkillVfxCueKind.CastCharge,
+                        new SkillVfxCueContext(
+                            context.ResolveSkillLevel(),
+                            sourceWorldPosition,
+                            targetWorldPosition,
+                            targetWorldPosition - sourceWorldPosition,
+                            primaryHitWorldPosition: sourceWorldPosition));
+                }
                 executionState = await UnitAnimationCoordinator.PlayActionAsync(
                     _owner,
                     _config.VisualAction,
@@ -552,7 +573,8 @@ namespace Tactics.Common.Units.Abilities
                         var followUp = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController)
                         {
                             PrimaryTarget = context.PrimaryTarget,
-                            TargetPoint = context.PrimaryTarget.CurrentCell
+                            TargetPoint = context.PrimaryTarget.CurrentCell,
+                            VfxSink = context.VfxSink
                         };
                         await runner.Execute(followUp);
                     }
@@ -738,7 +760,9 @@ namespace Tactics.Common.Units.Abilities
             var ownerCell = originCell ?? _owner.CurrentCell;
             if (ownerCell == null) return validCells;
             bool cardinalOnly = UsesCardinalDash() || IsThrust() || RequiresStraightLineEndpoint();
-            bool requiresEnemy = FirstSelectionRequiresEnemy();
+            // Thrust selects a direction endpoint rather than a unit. An empty endpoint must remain
+            // legal because enemies can be hit on any earlier cell along the scanned ray.
+            bool requiresEnemy = FirstSelectionRequiresEnemy() && !IsThrust();
             bool requiresSelf = FirstSelectionRequiresSelf();
 
             if (TryAddAmazonSpecialTargets(validCells, ownerCell, includeOnlyLegal: true))
@@ -821,7 +845,9 @@ namespace Tactics.Common.Units.Abilities
                     (!IsWithinOrderedCone(ownerCell, cell) || HasPermanentTerrainOnRay(ownerCell, cell)))
                     continue;
 
-                if (RequiresLineOfSight() && !HasLineOfSight(ownerCell, cell))
+                // Thrust resolves every cell on its authored ray. An enemy on an earlier cell is a
+                // valid hit, not an obstruction that should hide the farther directional endpoint.
+                if (!IsThrust() && RequiresLineOfSight() && !HasLineOfSight(ownerCell, cell))
                     continue;
 
                 if (distance <= range)

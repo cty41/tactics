@@ -30,7 +30,7 @@ namespace Tactics.Common.Skills.Graph
             var record = (MageSkillNodeRecord)node;
             return record.SkillKind switch
             {
-                MageSkillKind.Fireball => Task.FromResult(ExecuteFireball(record, context)),
+                MageSkillKind.Fireball => ExecuteFireball(record, context),
                 MageSkillKind.IceBolt => Task.FromResult(ExecuteIceBolt(record, context)),
                 MageSkillKind.Lightning => Task.FromResult(ExecuteLightning(record, context)),
                 MageSkillKind.SummonFireDemon => ExecuteSummonFireDemon(record, context),
@@ -39,13 +39,23 @@ namespace Tactics.Common.Skills.Graph
             };
         }
 
-        private static SkillNodeExecutionResult ExecuteFireball(MageSkillNodeRecord record, SkillExecutionContext context)
+        private static async Task<SkillNodeExecutionResult> ExecuteFireball(
+            MageSkillNodeRecord record,
+            SkillExecutionContext context)
         {
             var target = ResolveFirstEnemyOnPath(context) ?? context.PrimaryTarget;
             if (target == null)
                 return SkillNodeExecutionResult.Failed("No target for Fireball.");
 
             context.PrimaryTarget = target;
+            Vector3 sourcePosition = SkillVfxPositionUtility.ResolveUnitCenter(context.Caster);
+            Vector3 targetPosition = SkillVfxPositionUtility.ResolveUnitCenter(target);
+            var splashTargets = record.Level >= 2
+                ? GetOrthogonalEnemies(context, target).ToList()
+                : new List<IUnit>();
+            var splashPositions = splashTargets.ToDictionary(
+                splashTarget => splashTarget,
+                SkillVfxPositionUtility.ResolveUnitCenter);
             if (record.Level >= 3)
             {
                 var oldBurning = target.GetActiveBuffs()
@@ -53,6 +63,14 @@ namespace Tactics.Common.Skills.Graph
                 if (oldBurning != null)
                 {
                     int detonationDamage = oldBurning.StackCount;
+                    await context.PlayVfxAsync(
+                        SkillVfxCueKind.ConditionalDetonation,
+                        new SkillVfxCueContext(
+                            record.Level,
+                            sourcePosition,
+                            targetPosition,
+                            targetPosition - sourcePosition,
+                            primaryHitWorldPosition: targetPosition));
                     target.RemoveBuff(oldBurning);
                     if (detonationDamage > 0)
                     {
@@ -74,11 +92,29 @@ namespace Tactics.Common.Skills.Graph
                 return SkillNodeExecutionResult.Success();
 
             float splashDamage = Mathf.Max(1f, Mathf.Floor(directDamage * 0.5f));
-            foreach (var splashTarget in GetOrthogonalEnemies(context, target))
+            var actualSplashPositions = new List<Vector3>();
+            foreach (var splashTarget in splashTargets)
             {
                 var splashResolution = ApplyMagicDamage(context.Caster, splashTarget, splashDamage, ElementType.Fire);
                 if (splashResolution.WasHit)
+                {
                     ApplyStatus(splashTarget, context.Caster, record.BurningBuff, 3);
+                    actualSplashPositions.Add(splashPositions[splashTarget]);
+                }
+            }
+
+            if (actualSplashPositions.Count > 0)
+            {
+                await context.PlayVfxAsync(
+                    SkillVfxCueKind.SecondaryTargetHit,
+                    new SkillVfxCueContext(
+                        record.Level,
+                        sourcePosition,
+                        targetPosition,
+                        targetPosition - sourcePosition,
+                        hitWorldPositions: actualSplashPositions,
+                        primaryHitWorldPosition: targetPosition,
+                        strengthMultiplier: 0.55f));
             }
 
             context.PrimaryTarget = target;

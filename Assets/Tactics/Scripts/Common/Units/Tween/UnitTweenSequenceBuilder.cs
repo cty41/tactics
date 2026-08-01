@@ -84,7 +84,6 @@ namespace Tactics.Common.Units.Tween
         public static UnitTweenActionPlan BuildAction(
             UnitVisualAction action,
             Transform target,
-            SpriteRenderer glowOverlay,
             StandardUnitTweenProfile profile,
             Vector3 basePosition,
             Quaternion baseRotation,
@@ -98,7 +97,7 @@ namespace Tactics.Common.Units.Tween
                 UnitVisualAction.Ranged => BuildRanged(
                     target, profile, basePosition, baseRotation, baseScale, worldDirection),
                 UnitVisualAction.Cast => BuildCast(
-                    target, glowOverlay, profile, basePosition, baseRotation, baseScale),
+                    target, profile, basePosition, baseRotation, baseScale),
                 _ => new UnitTweenActionPlan(DOTween.Sequence(), 0f)
             };
         }
@@ -208,7 +207,6 @@ namespace Tactics.Common.Units.Tween
 
         private static UnitTweenActionPlan BuildCast(
             Transform target,
-            SpriteRenderer glowOverlay,
             StandardUnitTweenProfile profile,
             Vector3 basePosition,
             Quaternion baseRotation,
@@ -221,21 +219,11 @@ namespace Tactics.Common.Units.Tween
                     basePosition.y + profile.IdleLift,
                     profile.CastChargeDuration).SetEase(Ease.InOutSine));
 
-            if (glowOverlay != null)
-            {
-                Color glow = profile.CastGlowColor;
-                glow.a = 0f;
-                glowOverlay.color = glow;
-                sequence.Join(glowOverlay.DOFade(profile.CastOverlayAlpha, profile.CastChargeDuration));
-            }
-
             float releaseTime = profile.CastChargeDuration;
             sequence.AppendInterval(profile.CastReleaseHold)
                 .Append(target.DOLocalMove(basePosition, profile.CastRecoverDuration).SetEase(Ease.OutQuad))
                 .Join(target.DOLocalRotateQuaternion(baseRotation, profile.CastRecoverDuration))
                 .Join(target.DOScale(baseScale, profile.CastRecoverDuration).SetEase(Ease.OutQuad));
-            if (glowOverlay != null)
-                sequence.Join(glowOverlay.DOFade(0f, profile.CastRecoverDuration));
             return new UnitTweenActionPlan(sequence, releaseTime);
         }
 

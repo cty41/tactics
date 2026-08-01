@@ -594,7 +594,14 @@ namespace Tactics.Tests.PlayMode
         private static void AssertThrustTargets(
             string configFile, Unit amazon, SkillGraphTestWorld world, int expectedCount)
         {
-            var ability = Ability(configFile, amazon, world);
+            var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>($"{ConfigRoot}{configFile}");
+            Assert.That(config, Is.Not.Null, configFile);
+            int selectionRange = config.SkillGraph?.Nodes
+                .OfType<SelectPrimaryTargetNodeRecord>()
+                .Select(node => node.MaxRange)
+                .FirstOrDefault() ?? 0;
+            var ability = new SkillGraphAbilityImpl(amazon, config);
+            ability.Initialize(world.GridController);
             ability.OnAbilitySelected(world.GridController);
             var query = new AbilityTargetQuery(amazon, amazon.CurrentCell, world.GridController,
                 world.UnitManager.GetUnits());
@@ -602,7 +609,9 @@ namespace Tactics.Tests.PlayMode
                 .Select(option => option.TargetPoint)
                 .ToList();
 
-            Assert.That(targets, NUnit.Framework.Has.Count.EqualTo(expectedCount), configFile);
+            Assert.That(targets, NUnit.Framework.Has.Count.EqualTo(expectedCount),
+                $"{configFile}: config range={config.TargetRange}, selection range={selectionRange}, " +
+                $"targets={string.Join(",", targets.Select(cell => cell.GridCoordinates))}");
             CollectionAssert.DoesNotContain(targets, Cell(world, 2, 2), configFile);
             CollectionAssert.DoesNotContain(targets, Cell(world, 4, 2), configFile);
             CollectionAssert.DoesNotContain(targets, Cell(world, 2, 4), configFile);

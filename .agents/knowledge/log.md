@@ -1,10 +1,25 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-01
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:19985d23c69fea65fd9345bf0e35b361355b1dc0618011aba29b4ef5811dff1e`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:ae1029f3c2c081510c5ce38cfa10c0d1ba252dad2d5ad8f2d09be9e73cf623aa`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:9a5c070add50ec62060c4ce3b9c5bb56ef33ff5bb98e93dba9f75c2e47f5d93d`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:412ed84cd7cc42afb35ae2d833beb40700288d46a34a47578f59402af74d6ea1`。
+* **Update**: 程序化火球、骨矛和突刺已完成可玩验收，但定位为传统美术特效逐技能替换前的临时视觉基线；Tween 长期保留角色/投射物运动、受击等简单动画，简单光环、闪光和短尾迹仍可程序化，复杂技能不再默认扩展有限原语。
+* **Fix**: 废弃 Cast 整张人物 `GlowOverlay` 白膜，改为人物与阴影后方的非阻塞 `CastCharge` 径向光环；所有 Cast 都有默认蓝色 Recipe，骨矛与火球分别覆写苍白青和暖橙红，主 Sprite 的 Sprite、Material 和 Color 保持不变。
+* **Validation**: Cast 光环与 Pure Run Tween 资产 EditMode 48/48，三职业技能、骨矛清理和战斗倍速联合 PlayMode 72/72，Sprite 严格校验 38 文件/0 失败。
+* **Update**: Battle 全局播放倍率新增 `0.5×`，按钮循环固定为 `1× → 2× → 4× → 0.5× → 1×`；初始默认仍为 `1×`，暂停恢复与跨场景保留继续由 `GameTimeService` 统一负责。
+* **Update**: 经人工确认的骨矛 `v01` 已接入独立运行时 Sprite；使用中心 Pivot、`128 PPU`、`Scale=1`、切线旋转与最多两个非阻塞短残影，不再复用死灵飞行能量球。
+* **Fix**: Sprite 投射物和残影只在 Profile 显式提供 Material 时覆盖 `SpriteRenderer` 默认材质，修复空 Material 导致骨矛显示为洋红错误线的问题；程序化 VFX Material 继续只用于 Mesh 原语。
+* **Validation**: Pure Run VFX 资产 EditMode 46/46、相关技能与 VFX PlayMode 48/48 通过；测试同时验证默认/显式 Sprite Material、骨矛残影上限和取消清理。
+
 ## 2026-07-31
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:cb35d60f4e830d61537b5af2a9f4f02db8582382aee4539462ecf51825a11d74`。
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:5e9a4e734b4558ee0dbc935a41887fe37bbbf217c92f33037278f7b18266c860`。
-* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:3b4574e67f461d2445d6614206fd48603547d4332b0b0dd67a6ef96899fe4edd`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:95b70a6d532480b9ae59d41c48be2cbe150139b20a6128deeae4880adbf73c58`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:ad6f9994669477d3e6d6b351856b95832b7a2d9840c5061e411bcc8c007062c9`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:89818c025b2730669f248d438f8dd025425a1a4ae274339f1a574aecb298cc52`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:32ba7eb650697ee3ec72986dbc10a04198773974cecf9f4137d72a3b693b5ca8`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:3ff4e929873881ea8d07d3c2b6cddc0561321ab135a1446c920781be2caa501e`。
+* **Update**: SkillGraph 新增五种语义 Cue、六种有限原语 Recipe、接触关键帧阻塞、程序化火球与三技能命中反馈；骨矛新 Sprite 保持人工确认门禁，未接入运行时。
+* **Update**: Pure Run 技能 VFX 预览支持 Recipe/Cue/等级/路径/命中数、固定种子及可拖动时间轴；突刺端点不再被中途敌人的通用 LOS 误裁剪。
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:8026bb89e61794a34ef8dd68a329f94839923089a9e0f35de765607789bedbf2`。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:e1c57e802eb3635bbb0ed25157f98b55681f44a2e036ca52042edc38903dd526`。
 * **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:9781161bcccb96d44d673207cf1f050e91c471289fb41fb2f3e31382fc2a2866`。

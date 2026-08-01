@@ -37,8 +37,6 @@ namespace Tactics.Common.Units.Tween
         [SerializeField, Min(0f)] private float _castChargeDuration = 0.28f;
         [SerializeField, Min(0f)] private float _castReleaseHold = 0.06f;
         [SerializeField, Min(0f)] private float _castRecoverDuration = 0.2f;
-        [SerializeField, Range(0f, 1f)] private float _castOverlayAlpha = 0.7f;
-        [SerializeField] private Color _castGlowColor = new(0.35f, 0.75f, 1f, 1f);
 
         [Header("Hit")]
         [SerializeField, Min(0f)] private float _hitRecoilDuration = 0.07f;
@@ -73,8 +71,6 @@ namespace Tactics.Common.Units.Tween
         public float CastChargeDuration => _castChargeDuration;
         public float CastReleaseHold => _castReleaseHold;
         public float CastRecoverDuration => _castRecoverDuration;
-        public float CastOverlayAlpha => _castOverlayAlpha;
-        public Color CastGlowColor => _castGlowColor;
         public float HitRecoilDuration => _hitRecoilDuration;
         public float HitShakeDuration => _hitShakeDuration;
         public float HitRecoverDuration => _hitRecoverDuration;

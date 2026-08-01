@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-07-31T20:44:06+08:00"
+timestamp: "2026-08-01T21:22:28+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -14,11 +14,15 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileVisualProfile.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileVisualCoordinator.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileTweenBuilder.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxRecipe.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxCoordinator.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxPrimitiveBuilder.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphRunner.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphSpec.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillTargetingProtocol.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/OrderedTargetSelectionState.cs
   - Assets/Tactics/Scripts/Editor/SkillGraphEditor/SkillGraphSpecCompiler.cs
+  - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs
   - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
@@ -37,7 +41,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
   - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:3b4574e67f461d2445d6614206fd48603547d4332b0b0dd67a6ef96899fe4edd
+source_fingerprint: sha256:9a5c070add50ec62060c4ce3b9c5bb56ef33ff5bb98e93dba9f75c2e47f5d93d
 ---
 
 # Current State
@@ -46,7 +50,11 @@ source_fingerprint: sha256:3b4574e67f461d2445d6614206fd48603547d4332b0b0dd67a6ef
 
 `SkillGraphAbilityConfig` 以显式 `VisualAction` 选择 None、Melee、Ranged 或 Cast。视觉 release 标记至多一次启动图执行；恢复段与图后续节点并行，Ability 等待两者完成。缺少视觉组件或 Profile 时立即执行图，不让表现依赖改变玩法成功边界。
 
-`ProjectileLaunchNodeRecord` 可选引用 `ProjectileVisualProfile`，并继续完整往返 TravelTime、Speed、DropOnHit、LOS 与 Profile 资产路径。运行时按 `worldDistance / Speed` 计算并限制飞行时长，缺图时只保留延迟；有图时创建临时 SpriteRenderer，终点在发射时锁定，到达后才进入 OnHit。取消会先标记等待任务为取消，再 Kill Tween 并清理 Renderer，避免 `OnKill` 抢先完成。毒矛已显式接入 `ProjectileLaunch → OnHit → AmazonSkill`，实体落矛仍由 Amazon 效果节点独立处理；物理基础、普通/毒矛及羊魔临时物理远程复用赤柴长矛，奥术/火焰/冰霜共用法师奥术弹并以 Tint 区分，Bone Spear 使用死灵飞行能量球。
+`ProjectileLaunchNodeRecord` 可选引用 `ProjectileVisualProfile`，并继续完整往返 TravelTime、Speed、DropOnHit、LOS 与 Profile 资产路径。运行时按 `worldDistance / Speed` 计算并限制飞行时长；终点在发射时锁定，抵达后先等待 `ProjectileImpact` 接触关键帧，再写入 `ProjectileHit` 和进入 OnHit。火球现使用程序化软圆热核与 World-space 尾火；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，其他已批准 Sprite 继续由 Profile 驱动。Sprite Profile 的 Material 为空时，主投射物和残影保留 `SpriteRenderer` 默认兼容材质，避免空引用覆盖后落入洋红错误 Shader；显式 Sprite Material 仍会传递给残影。取消会先标记等待任务为取消，再 Kill Tween 并清理 Renderer、残影和相关 Tween，避免 `OnKill` 抢先完成或留下临时对象。
+
+Skill VFX 使用有限原语 Recipe：六种强类型 Cue 只携带结算前捕获的世界坐标快照，六种固定原语由 `SkillVfxCoordinator` 统一创建、排序、等待和清理。只有层的 `BlockingMarker` 影响玩法继续时点；粒子与残影强制非阻塞。Cast 开始时以施法者 Sprite 中心发送 `CastCharge`，其 `BlockingMarker=0`；Recipe 按明确技能族、已有专属、默认 Cast 的顺序解析，在人物与阴影后生成单个径向光环，不修改主 Renderer。火球终点/溅射/Lv3 条件引爆、骨矛实际命中交叉闪光、突刺方向刺痕和实际命中反馈已分别接入；空 Recipe 或无 Sink 时保持 no-op。`PureRunSkillVfxPreviewWindow` 复用 Builder 时间采样，支持 Recipe/Cue/等级/路径/命中数与可拖动时间轴。
+
+当前火球、骨矛和突刺 Recipe 是已验收的可玩临时视觉基线，不是复杂技能的目标品质或永久回退。长期制作策略保留 Tween 处理角色姿态、位移、受击、后坐和投射物运动，也允许简单光环、短闪光、短尾迹与颜色脉冲继续程序化；多阶段、形态复杂或承担职业识别的技能特效后续逐个改用美术可直接调整的 Prefab、ParticleSystem、Shader/Material、Sprite 序列或 AnimationClip。替换完成前保留现有 Recipe，不继续将有限原语扩充为通用复杂 VFX 框架。
 
 Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent 可通过 `SkillGraphSpec`、`SkillGraphSpecCompiler` 与 `SkillGraphSpecAutoFixer` 建立结构化输入，并使用 MCP 工具生成、校验和应用资产；运行语义继续由 Gameplay Test/PlayMode 测试证明。
 
@@ -64,7 +72,7 @@ Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent
 
 死灵法师等级链同样使用独立 AbilityConfig/SkillGraph，并由 `NecromancerSkillNodeExecutor` 执行骷髅、骷髅法师、诅咒、恐惧、骨矛和骨盾的等级语义。Projectile 节点可显式关闭通用 LOS 并允许空格端点，骨矛再以自身规则解析墙体、首敌命中或直线穿透；Lv1–Lv3 的目标预览与执行都限制为正交或 45° 对角直线，Lv1/Lv2 只接受直线首敌，Lv3 才允许空格/单位端点并贯穿路径。等级资产由编辑器构建器生成，既有 Lv1 路径原位升级以保持 GUID。
 
-亚马逊等级链由 `AmazonSkillNodeExecutor` 执行突刺、连续刺击、毒矛、回收/拾取长矛和诱饵。连续刺击消费 `OrderedTargetSelectionState` 的有序目标序列并逐段结算；毒矛在技能效果提交前预验证确定性落点，实体长矛由共享战斗状态注册，并以拥有者引用为唯一归属真相；缓存丢失时从活体实体重建，拥有者、落点、占格与卡片可用性不一致会输出诊断。通用 projectile LOS 与骨矛自定义直线解析均忽略落地长矛，但长矛仍保持占格。未持矛限制只作用于包含直接伤害节点的近战基础图及明确持矛技能，不再误伤移动图；移动预览通过独立 `CellGuidanceType` 图层显示长矛位置和可站立拾取位置，不改变合法目标集合。
+亚马逊等级链由 `AmazonSkillNodeExecutor` 执行突刺、连续刺击、毒矛、回收/拾取长矛和诱饵。突刺端点代表方向而非必须有敌人的单位目标，通用 LOS 不会因为射线上先命中的敌人隐藏更远端点；执行器仍在友军、墙体或非法格处截断，并只对实际成功命中发送 VFX Cue。连续刺击消费 `OrderedTargetSelectionState` 的有序目标序列并逐段结算；毒矛在技能效果提交前预验证确定性落点，实体长矛由共享战斗状态注册，并以拥有者引用为唯一归属真相；缓存丢失时从活体实体重建，拥有者、落点、占格与卡片可用性不一致会输出诊断。通用 projectile LOS 与骨矛自定义直线解析均忽略落地长矛，但长矛仍保持占格。未持矛限制只作用于包含直接伤害节点的近战基础图及明确持矛技能，不再误伤移动图；移动预览通过独立 `CellGuidanceType` 图层显示长矛位置和可站立拾取位置，不改变合法目标集合。
 
 技能事件记录允许同步致死在效果结算中立即销毁目标；目标已失效时保留事件类型和节点 ID，但不再访问其名称、格子或其他 Unity 对象属性。Projectile travel 属于游戏世界时长，统一通过可取消的 scaled delay 执行，因此暂停期间不会提前命中，并随所选 2×/4× 倍率加速；SkillGraph watchdog 继续使用 realtime，避免暂停使保护失效。
 

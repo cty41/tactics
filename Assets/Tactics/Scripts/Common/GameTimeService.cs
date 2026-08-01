@@ -10,6 +10,9 @@ namespace Tactics
     /// </summary>
     public enum GamePlaybackSpeed
     {
+        /// <summary>Runs gameplay at half normal speed.</summary>
+        Half = -1,
+
         /// <summary>Runs gameplay at normal speed.</summary>
         Normal = 1,
 
@@ -37,7 +40,14 @@ namespace Tactics
         public static GamePlaybackSpeed PlaybackSpeed => _playbackSpeed;
 
         /// <summary>Gets the requested playback speed as a numeric scale.</summary>
-        public static float PlaybackScale => (float)_playbackSpeed;
+        public static float PlaybackScale => _playbackSpeed switch
+        {
+            GamePlaybackSpeed.Half => 0.5f,
+            GamePlaybackSpeed.Normal => 1f,
+            GamePlaybackSpeed.Double => 2f,
+            GamePlaybackSpeed.Quadruple => 4f,
+            _ => throw new InvalidOperationException($"Unsupported playback speed state: {_playbackSpeed}.")
+        };
 
         /// <summary>Gets whether at least one pause owner is active.</summary>
         public static bool IsPaused => _pauseDepth > 0;
@@ -56,22 +66,23 @@ namespace Tactics
         /// <summary>
         /// Selects one of the supported playback speeds and applies it unless gameplay is paused.
         /// </summary>
-        /// <param name="speed">The requested 1x, 2x, or 4x playback speed.</param>
+        /// <param name="speed">The requested 0.5x, 1x, 2x, or 4x playback speed.</param>
         /// <exception cref="ArgumentOutOfRangeException">Thrown for unsupported enum values.</exception>
         public static void SetPlaybackSpeed(GamePlaybackSpeed speed)
         {
-            if (speed is not GamePlaybackSpeed.Normal
+            if (speed is not GamePlaybackSpeed.Half
+                and not GamePlaybackSpeed.Normal
                 and not GamePlaybackSpeed.Double
                 and not GamePlaybackSpeed.Quadruple)
             {
-                throw new ArgumentOutOfRangeException(nameof(speed), speed, "Playback speed must be 1x, 2x, or 4x.");
+                throw new ArgumentOutOfRangeException(nameof(speed), speed, "Playback speed must be 0.5x, 1x, 2x, or 4x.");
             }
 
             _playbackSpeed = speed;
             ApplyEffectiveTimeScale();
         }
 
-        /// <summary>Advances the requested speed through 1x, 2x, 4x, then back to 1x.</summary>
+        /// <summary>Advances the requested speed through 1x, 2x, 4x, 0.5x, then back to 1x.</summary>
         /// <returns>The newly selected playback speed.</returns>
         public static GamePlaybackSpeed CyclePlaybackSpeed()
         {
@@ -79,6 +90,7 @@ namespace Tactics
             {
                 GamePlaybackSpeed.Normal => GamePlaybackSpeed.Double,
                 GamePlaybackSpeed.Double => GamePlaybackSpeed.Quadruple,
+                GamePlaybackSpeed.Quadruple => GamePlaybackSpeed.Half,
                 _ => GamePlaybackSpeed.Normal
             };
 

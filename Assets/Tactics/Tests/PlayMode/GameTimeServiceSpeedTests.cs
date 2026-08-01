@@ -31,6 +31,7 @@ namespace Tactics.Tests.PlayMode
             GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
         }
 
+        [TestCase(GamePlaybackSpeed.Half, 0.5f)]
         [TestCase(GamePlaybackSpeed.Normal, 1f)]
         [TestCase(GamePlaybackSpeed.Double, 2f)]
         [TestCase(GamePlaybackSpeed.Quadruple, 4f)]
@@ -59,10 +60,11 @@ namespace Tactics.Tests.PlayMode
         }
 
         [Test]
-        public void CyclePlaybackSpeed_UsesOneTwoFourOneOrder()
+        public void CyclePlaybackSpeed_UsesOneTwoFourHalfOneOrder()
         {
             Assert.That(GameTimeService.CyclePlaybackSpeed(), Is.EqualTo(GamePlaybackSpeed.Double));
             Assert.That(GameTimeService.CyclePlaybackSpeed(), Is.EqualTo(GamePlaybackSpeed.Quadruple));
+            Assert.That(GameTimeService.CyclePlaybackSpeed(), Is.EqualTo(GamePlaybackSpeed.Half));
             Assert.That(GameTimeService.CyclePlaybackSpeed(), Is.EqualTo(GamePlaybackSpeed.Normal));
             Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Normal));
             Assert.That(Time.timeScale, Is.EqualTo(1f));
@@ -94,15 +96,15 @@ namespace Tactics.Tests.PlayMode
         {
             GameTimeService.Pause();
 
-            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Double);
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Half);
 
-            Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Double));
-            Assert.That(GameTimeService.PlaybackScale, Is.EqualTo(2f));
+            Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Half));
+            Assert.That(GameTimeService.PlaybackScale, Is.EqualTo(0.5f));
             Assert.That(GameTimeService.EffectiveTimeScale, Is.EqualTo(0f));
             Assert.That(Time.timeScale, Is.EqualTo(0f));
 
             GameTimeService.Resume();
-            Assert.That(Time.timeScale, Is.EqualTo(2f));
+            Assert.That(Time.timeScale, Is.EqualTo(0.5f));
         }
 
         [Test]

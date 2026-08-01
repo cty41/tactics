@@ -9,6 +9,7 @@ using Tactics.Common.Units.Tween;
 using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Tactics.Editor
 {
@@ -23,17 +24,25 @@ namespace Tactics.Editor
     {
         private const string Root = "Assets/Tactics/Arts/PureRun/Tween";
         private const string ProjectileRoot = Root + "/Projectiles";
+        private const string SkillVfxRoot = Root + "/SkillVfx";
+        private const string SkillVfxMaterialRoot = SkillVfxRoot + "/Materials";
+        private const string SkillVfxRecipeRoot = SkillVfxRoot + "/Recipes";
         private const string RuntimeProjectileTextureRoot =
             "Assets/Tactics/Arts/PureRun/Textures/Projectiles";
         private const string ApprovedProjectileSourceRoot = "Tools/artworks/doge/concepts";
         private const string StandardProfilePath = Root + "/StandardUnitTweenProfile.asset";
-        private const string GlowOverlayShaderName = "Tactics/PureRun/GlowOverlay";
-        private const string GlowOverlayMaterialPath = Root + "/PureRunGlowOverlay.mat";
+        private const string SkillVfxShaderName = "Tactics/PureRun/SkillVfxPrimitive";
+        private const string SkillVfxTransparentMaterialPath =
+            SkillVfxMaterialRoot + "/SkillVfxTransparent.mat";
+        private const string SkillVfxAdditiveMaterialPath =
+            SkillVfxMaterialRoot + "/SkillVfxAdditive.mat";
         private const string SpearTexturePath = RuntimeProjectileTextureRoot + "/pure_run_spear_projectile.png";
         private const string ArcaneTexturePath = RuntimeProjectileTextureRoot +
             "/pure_run_arcane_bolt_projectile.png";
         private const string NecromancerOrbTexturePath = RuntimeProjectileTextureRoot +
             "/pure_run_necromancer_orb_projectile.png";
+        private const string BoneSpearTexturePath = RuntimeProjectileTextureRoot +
+            "/pure_run_bone_spear_projectile.png";
 
         private static readonly string[] PrefabPaths =
         {
@@ -136,40 +145,32 @@ namespace Tactics.Editor
         {
             EnsureFolder(Root);
             EnsureFolder(ProjectileRoot);
+            EnsureFolder(SkillVfxMaterialRoot);
+            EnsureFolder(SkillVfxRecipeRoot);
             EnsureFolder(RuntimeProjectileTextureRoot);
             CopyApprovedProjectileTextures();
             ConfigureTexture(SpearTexturePath);
             ConfigureTexture(ArcaneTexturePath);
             ConfigureTexture(NecromancerOrbTexturePath);
+            ConfigureTexture(BoneSpearTexturePath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             var standardProfile = LoadOrCreate<StandardUnitTweenProfile>(StandardProfilePath);
-            Material glowOverlayMaterial = LoadOrCreateGlowOverlayMaterial();
+            (Material transparentVfxMaterial, Material additiveVfxMaterial) =
+                LoadOrCreateSkillVfxMaterials();
+            var recipes = CreateSkillVfxRecipes(transparentVfxMaterial, additiveVfxMaterial);
             Sprite spear = AssetDatabase.LoadAssetAtPath<Sprite>(SpearTexturePath);
             Sprite arcane = AssetDatabase.LoadAssetAtPath<Sprite>(ArcaneTexturePath);
             Sprite necromancerOrb = AssetDatabase.LoadAssetAtPath<Sprite>(NecromancerOrbTexturePath);
-            var profiles = CreateProjectileProfiles(spear, arcane, necromancerOrb);
+            Sprite boneSpear = AssetDatabase.LoadAssetAtPath<Sprite>(BoneSpearTexturePath);
+            var profiles = CreateProjectileProfiles(spear, arcane, boneSpear, additiveVfxMaterial);
 
-            ConfigureAbilityActions();
+            ConfigureAbilityActions(recipes);
             ConfigureProjectileGraphs(profiles);
-            ConfigurePrefabs(standardProfile, glowOverlayMaterial);
+            ConfigurePrefabs(standardProfile);
 
             EditorUtility.SetDirty(standardProfile);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-        }
-
-        [MenuItem("Tactics/Tools/Pure Run/Repair Glow Overlay Assets")]
-        public static void ConfigureGlowOverlayAssets()
-        {
-            EnsureFolder(Root);
-            var standardProfile = AssetDatabase.LoadAssetAtPath<StandardUnitTweenProfile>(StandardProfilePath);
-            if (standardProfile == null)
-                throw new InvalidOperationException($"Standard tween profile is missing: {StandardProfilePath}");
-
-            Material glowOverlayMaterial = LoadOrCreateGlowOverlayMaterial();
-            ConfigurePrefabs(standardProfile, glowOverlayMaterial);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
@@ -177,9 +178,10 @@ namespace Tactics.Editor
         private static Dictionary<string, ProjectileVisualProfile> CreateProjectileProfiles(
             Sprite spear,
             Sprite arcane,
-            Sprite necromancerOrb)
+            Sprite boneSpear,
+            Material additiveVfxMaterial)
         {
-            return new Dictionary<string, ProjectileVisualProfile>(StringComparer.Ordinal)
+            var profiles = new Dictionary<string, ProjectileVisualProfile>(StringComparer.Ordinal)
             {
                 ["Physical"] = ConfigureProjectileProfile(
                     "PhysicalBasic", spear, new Color(0.82f, 0.85f, 0.86f), 0.55f,
@@ -194,8 +196,8 @@ namespace Tactics.Editor
                     "Ice", arcane, new Color(0.5f, 0.92f, 1f), 0.72f,
                     ProjectileTrajectoryStyle.MagicStraight, 0.035f, false, 0.1f),
                 ["Bone"] = ConfigureProjectileProfile(
-                    "BoneSpear", necromancerOrb, Color.white, 0.72f,
-                    ProjectileTrajectoryStyle.MagicStraight, 0f, true, 0.08f),
+                    "BoneSpear", boneSpear, Color.white, 1f,
+                    ProjectileTrajectoryStyle.MagicStraight, 0f, true, 0f),
                 ["Spear"] = ConfigureProjectileProfile(
                     "AmazonSpear", spear, Color.white, 0.72f,
                     ProjectileTrajectoryStyle.SpearArc, 0.07f, true, 0f),
@@ -203,6 +205,9 @@ namespace Tactics.Editor
                     "AmazonPoisonSpear", spear, new Color(0.33f, 0.9f, 0.28f), 0.72f,
                     ProjectileTrajectoryStyle.SpearArc, 0.07f, true, 0.04f)
             };
+            ConfigureFireProjectileProfile(profiles["Fire"], additiveVfxMaterial);
+            ConfigureBoneSpearProjectileProfile(profiles["Bone"]);
+            return profiles;
         }
 
         private static ProjectileVisualProfile ConfigureProjectileProfile(
@@ -218,6 +223,7 @@ namespace Tactics.Editor
             string path = $"{ProjectileRoot}/{name}.asset";
             var profile = LoadOrCreate<ProjectileVisualProfile>(path);
             var serialized = new SerializedObject(profile);
+            serialized.FindProperty("_visualKind").enumValueIndex = (int)ProjectileVisualKind.Sprite;
             serialized.FindProperty("_sprite").objectReferenceValue = sprite;
             serialized.FindProperty("_material").objectReferenceValue = null;
             serialized.FindProperty("_tint").colorValue = tint;
@@ -228,12 +234,65 @@ namespace Tactics.Editor
             serialized.FindProperty("_pulseAmount").floatValue = pulseAmount;
             serialized.FindProperty("_pulseCycles").floatValue = 2f;
             serialized.FindProperty("_sortingOrderOffset").intValue = 20;
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            EditorUtility.SetDirty(profile);
+            serialized.FindProperty("_particleTrail").FindPropertyRelative("_enabled").boolValue = false;
+            serialized.FindProperty("_ghostTrail").FindPropertyRelative("_enabled").boolValue = false;
+            if (serialized.hasModifiedProperties)
+            {
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(profile);
+            }
             return profile;
         }
 
-        private static void ConfigureAbilityActions()
+        private static void ConfigureFireProjectileProfile(
+            ProjectileVisualProfile profile,
+            Material additiveVfxMaterial)
+        {
+            var serialized = new SerializedObject(profile);
+            serialized.FindProperty("_visualKind").enumValueIndex = (int)ProjectileVisualKind.SoftDisc;
+            serialized.FindProperty("_sprite").objectReferenceValue = null;
+            serialized.FindProperty("_material").objectReferenceValue = additiveVfxMaterial;
+            serialized.FindProperty("_tint").colorValue = new Color(1f, 0.36f, 0.10f, 1f);
+            serialized.FindProperty("_scale").floatValue = 0.17f;
+            serialized.FindProperty("_pulseAmount").floatValue = 0.06f;
+            serialized.FindProperty("_pulseCycles").floatValue = 2f;
+
+            SerializedProperty trail = serialized.FindProperty("_particleTrail");
+            trail.FindPropertyRelative("_enabled").boolValue = true;
+            trail.FindPropertyRelative("_emissionInterval").floatValue = 0.05f;
+            trail.FindPropertyRelative("_maximumParticles").intValue = 3;
+            trail.FindPropertyRelative("_lifetimeMin").floatValue = 0.12f;
+            trail.FindPropertyRelative("_lifetimeMax").floatValue = 0.18f;
+            trail.FindPropertyRelative("_sizeMin").floatValue = 0.025f;
+            trail.FindPropertyRelative("_sizeMax").floatValue = 0.045f;
+            trail.FindPropertyRelative("_color").colorValue = new Color(1f, 0.38f, 0.09f, 0.8f);
+            trail.FindPropertyRelative("_randomSeed").longValue = 417u;
+            if (serialized.hasModifiedProperties)
+            {
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(profile);
+            }
+        }
+
+        private static void ConfigureBoneSpearProjectileProfile(ProjectileVisualProfile profile)
+        {
+            var serialized = new SerializedObject(profile);
+            SerializedProperty trail = serialized.FindProperty("_ghostTrail");
+            trail.FindPropertyRelative("_enabled").boolValue = true;
+            trail.FindPropertyRelative("_sampleInterval").floatValue = 0.055f;
+            trail.FindPropertyRelative("_lifetime").floatValue = 0.12f;
+            trail.FindPropertyRelative("_alpha").floatValue = 0.28f;
+            trail.FindPropertyRelative("_scale").floatValue = 0.92f;
+            trail.FindPropertyRelative("_maximumAlive").intValue = 2;
+            if (serialized.hasModifiedProperties)
+            {
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(profile);
+            }
+        }
+
+        private static void ConfigureAbilityActions(
+            IReadOnlyDictionary<string, SkillVfxRecipe> recipes)
         {
             string[] guids = AssetDatabase.FindAssets(
                 "t:SkillGraphAbilityConfig",
@@ -253,10 +312,50 @@ namespace Tactics.Editor
                         $"[PureRunTweenAssetConfigurator] Unknown ability '{config.name}' remains None.");
                 }
                 var serialized = new SerializedObject(config);
-                serialized.FindProperty("_visualAction").enumValueIndex = (int)action;
-                serialized.ApplyModifiedPropertiesWithoutUndo();
-                EditorUtility.SetDirty(config);
+                bool changed = false;
+                SerializedProperty visualAction = serialized.FindProperty("_visualAction");
+                if (visualAction.enumValueIndex != (int)action)
+                {
+                    visualAction.enumValueIndex = (int)action;
+                    changed = true;
+                }
+                SerializedProperty skillVfxRecipe = serialized.FindProperty("_skillVfxRecipe");
+                SkillVfxRecipe recipe = ResolveSkillVfxRecipe(
+                    config.name,
+                    action,
+                    skillVfxRecipe.objectReferenceValue as SkillVfxRecipe,
+                    recipes);
+                if (recipe != null)
+                {
+                    if (skillVfxRecipe.objectReferenceValue != recipe)
+                    {
+                        skillVfxRecipe.objectReferenceValue = recipe;
+                        changed = true;
+                    }
+                }
+                if (changed)
+                {
+                    serialized.ApplyModifiedPropertiesWithoutUndo();
+                    EditorUtility.SetDirty(config);
+                }
             }
+        }
+
+        private static SkillVfxRecipe ResolveSkillVfxRecipe(
+            string assetName,
+            UnitVisualAction action,
+            SkillVfxRecipe existingRecipe,
+            IReadOnlyDictionary<string, SkillVfxRecipe> recipes)
+        {
+            if (assetName.StartsWith("Fireball", StringComparison.Ordinal))
+                return recipes["Fireball"];
+            if (assetName.StartsWith("BoneSpear", StringComparison.Ordinal))
+                return recipes["BoneSpear"];
+            if (assetName.StartsWith("Thrust", StringComparison.Ordinal))
+                return recipes["Thrust"];
+            if (existingRecipe != null)
+                return existingRecipe;
+            return action == UnitVisualAction.Cast ? recipes["DefaultCast"] : null;
         }
 
         private static bool TryResolveAction(string assetName, out UnitVisualAction action)
@@ -297,6 +396,10 @@ namespace Tactics.Editor
             CopyApprovedProjectileTexture(
                 ApprovedProjectileSourceRoot + "/doge_capsule_necromancer_pale_orb_projectile_color_v03.png",
                 NecromancerOrbTexturePath);
+            CopyApprovedProjectileTexture(
+                ApprovedProjectileSourceRoot +
+                "/doge_capsule_necromancer_bone_spear_projectile_color_v01.png",
+                BoneSpearTexturePath);
             AssetDatabase.Refresh();
         }
 
@@ -304,6 +407,12 @@ namespace Tactics.Editor
         {
             if (!File.Exists(sourcePath))
                 throw new FileNotFoundException("Approved projectile source is missing.", sourcePath);
+
+            if (File.Exists(destinationPath) &&
+                File.ReadAllBytes(sourcePath).SequenceEqual(File.ReadAllBytes(destinationPath)))
+            {
+                return;
+            }
 
             File.Copy(sourcePath, destinationPath, true);
         }
@@ -450,9 +559,7 @@ namespace Tactics.Editor
             EditorUtility.SetDirty(graph);
         }
 
-        private static void ConfigurePrefabs(
-            StandardUnitTweenProfile profile,
-            Material glowOverlayMaterial)
+        private static void ConfigurePrefabs(StandardUnitTweenProfile profile)
         {
             foreach (string path in PrefabPaths)
             {
@@ -479,8 +586,11 @@ namespace Tactics.Editor
                     serialized.FindProperty("_visualRoot").objectReferenceValue = visualRoot;
                     serialized.FindProperty("_primaryRenderer").objectReferenceValue = sprite;
                     serialized.FindProperty("_profile").objectReferenceValue = profile;
-                    serialized.FindProperty("_glowOverlayMaterial").objectReferenceValue = glowOverlayMaterial;
                     serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                    Transform staleOverlay = visualRoot.Find("GlowOverlay");
+                    if (staleOverlay != null)
+                        UnityEngine.Object.DestroyImmediate(staleOverlay.gameObject);
 
                     PrefabUtility.SaveAsPrefabAsset(root, path);
                 }
@@ -491,28 +601,377 @@ namespace Tactics.Editor
             }
         }
 
-        private static Material LoadOrCreateGlowOverlayMaterial()
+        private static Dictionary<string, SkillVfxRecipe> CreateSkillVfxRecipes(
+            Material transparentMaterial,
+            Material additiveMaterial)
         {
-            Shader shader = Shader.Find(GlowOverlayShaderName);
+            var defaultCastBindings = new[]
+            {
+                CreateCastChargeBinding(new Color(0.32f, 0.62f, 0.85f, 1f))
+            };
+            var fireballBindings = new[]
+            {
+                CreateCastChargeBinding(new Color(1.00f, 0.36f, 0.08f, 1f)),
+                new VfxBindingSpec(
+                    SkillVfxCueKind.ProjectileImpact,
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.RadialCore,
+                        ShapeMode = SkillVfxShapeMode.SoftDisc,
+                        Color = new Color(1f, 0.86f, 0.58f, 1f),
+                        StartSize = 0.16f,
+                        UseMiddleKey = true,
+                        MiddleSize = 0.12f,
+                        MiddleTime = 0.04f,
+                        PeakSize = 0.22f,
+                        PeakTime = 0.10f,
+                        EndSize = 0.22f,
+                        Duration = 0.28f,
+                        StartAlpha = 1f,
+                        MiddleAlpha = 1f,
+                        PeakAlpha = 1f,
+                        EndAlpha = 0f,
+                        BlockingMarker = 0.10f,
+                        Emission = 2.2f,
+                        Softness = 0.22f
+                    },
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.RadialRing,
+                        ShapeMode = SkillVfxShapeMode.Ring,
+                        Color = new Color(1f, 0.24f, 0.05f, 1f),
+                        StartSize = 0.10f,
+                        PeakSize = 0.32f,
+                        EndSize = 0.48f,
+                        PeakTime = 0.10f,
+                        Duration = 0.28f,
+                        StartAlpha = 0f,
+                        PeakAlpha = 0.85f,
+                        EndAlpha = 0f,
+                        BlockingMarker = 0.10f,
+                        RadialInner = 0.72f,
+                        RadialOuter = 1f,
+                        Softness = 0.11f,
+                        Emission = 1.6f
+                    },
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.ParticleBurst,
+                        ShapeMode = SkillVfxShapeMode.Solid,
+                        Color = new Color(1f, 0.48f, 0.08f, 1f),
+                        Duration = 0.28f,
+                        ParticleCount = 3,
+                        ParticleSize = 0.035f,
+                        ParticleSpeed = 0.34f,
+                        ParticleLifetimeMin = 0.16f,
+                        ParticleLifetimeMax = 0.28f,
+                        ParticleDrag = 0.15f,
+                        RandomSeed = 7301u,
+                        SortingOrderOffset = 31
+                    }),
+                new VfxBindingSpec(
+                    SkillVfxCueKind.SecondaryTargetHit,
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.RadialRing,
+                        ShapeMode = SkillVfxShapeMode.Ring,
+                        Color = new Color(1f, 0.30f, 0.08f, 1f),
+                        StartSize = 0.08f,
+                        PeakSize = 0.22f,
+                        EndSize = 0.22f,
+                        PeakTime = 0.06f,
+                        Duration = 0.16f,
+                        StartAlpha = 0f,
+                        PeakAlpha = 0.62f,
+                        EndAlpha = 0f,
+                        RadialInner = 0.72f,
+                        RadialOuter = 1f,
+                        Softness = 0.12f,
+                        Emission = 1.2f
+                    }),
+                new VfxBindingSpec(
+                    SkillVfxCueKind.ConditionalDetonation,
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.RadialRing,
+                        ShapeMode = SkillVfxShapeMode.Ring,
+                        Color = new Color(1f, 0.55f, 0.13f, 1f),
+                        StartSize = 0.34f,
+                        PeakSize = 0.13f,
+                        EndSize = 0.13f,
+                        PeakTime = 0.06f,
+                        Duration = 0.14f,
+                        StartAlpha = 0.62f,
+                        PeakAlpha = 0.90f,
+                        EndAlpha = 0f,
+                        BlockingMarker = 0.06f,
+                        RadialInner = 0.72f,
+                        RadialOuter = 1f,
+                        Softness = 0.10f,
+                        Emission = 1.6f
+                    })
+            };
+
+            var boneSpearBindings = new[]
+            {
+                CreateCastChargeBinding(new Color(0.68f, 0.90f, 0.88f, 1f)),
+                new VfxBindingSpec(
+                    SkillVfxCueKind.PrimaryTargetHit,
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.CrossFlash,
+                        BlendMode = SkillVfxBlendMode.Transparent,
+                        ShapeMode = SkillVfxShapeMode.Solid,
+                        Color = new Color(0.94f, 0.91f, 0.78f, 1f),
+                        StartSize = 0.05f,
+                        PeakSize = 0.15f,
+                        EndSize = 0.15f,
+                        PeakTime = 0.05f,
+                        Duration = 0.13f,
+                        StartAlpha = 0.25f,
+                        PeakAlpha = 1f,
+                        EndAlpha = 0f,
+                        BlockingMarker = 0.05f,
+                        RootWidth = 0.018f,
+                        Angle = 35f
+                    },
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.ParticleBurst,
+                        Color = new Color(0.88f, 0.92f, 0.84f, 1f),
+                        Duration = 0.13f,
+                        ParticleCount = 2,
+                        ParticleSize = 0.024f,
+                        ParticleSpeed = 0.22f,
+                        ParticleLifetimeMin = 0.08f,
+                        ParticleLifetimeMax = 0.13f,
+                        RandomSeed = 7302u,
+                        MaximumInstances = 4,
+                        SortingOrderOffset = 31
+                    })
+            };
+
+            var thrustBindings = new[]
+            {
+                new VfxBindingSpec(
+                    SkillVfxCueKind.DirectionalStrike,
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.TaperedLine,
+                        BlendMode = SkillVfxBlendMode.Transparent,
+                        ShapeMode = SkillVfxShapeMode.Solid,
+                        Color = new Color(0.72f, 0.50f, 0.22f, 1f),
+                        StartSize = 0f,
+                        PeakSize = 1f,
+                        EndSize = 1f,
+                        PeakTime = 0.065f,
+                        Duration = 0.16f,
+                        StartAlpha = 0.12f,
+                        PeakAlpha = 0.55f,
+                        EndAlpha = 0f,
+                        BlockingMarker = 0.065f,
+                        RootWidth = 0.060f,
+                        TipWidth = 0.014f,
+                        Emission = 0.25f,
+                        SortingOrderOffset = 29
+                    },
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.TaperedLine,
+                        BlendMode = SkillVfxBlendMode.Transparent,
+                        ShapeMode = SkillVfxShapeMode.Solid,
+                        Color = new Color(0.98f, 0.94f, 0.78f, 1f),
+                        StartSize = 0f,
+                        PeakSize = 1f,
+                        EndSize = 1f,
+                        PeakTime = 0.065f,
+                        Duration = 0.16f,
+                        StartAlpha = 0.20f,
+                        PeakAlpha = 0.85f,
+                        EndAlpha = 0f,
+                        BlockingMarker = 0.065f,
+                        RootWidth = 0.045f,
+                        TipWidth = 0.010f,
+                        Emission = 0.45f,
+                        SortingOrderOffset = 30
+                    }),
+                new VfxBindingSpec(
+                    SkillVfxCueKind.PrimaryTargetHit,
+                    new VfxLayerSpec
+                    {
+                        PrimitiveKind = SkillVfxPrimitiveKind.CrossFlash,
+                        BlendMode = SkillVfxBlendMode.Transparent,
+                        ShapeMode = SkillVfxShapeMode.Solid,
+                        Color = new Color(0.93f, 0.72f, 0.35f, 1f),
+                        StartSize = 0.04f,
+                        PeakSize = 0.13f,
+                        EndSize = 0.13f,
+                        PeakTime = 0.05f,
+                        Duration = 0.13f,
+                        StartAlpha = 0.20f,
+                        PeakAlpha = 0.85f,
+                        EndAlpha = 0f,
+                        BlockingMarker = 0.05f,
+                        RootWidth = 0.016f,
+                        Angle = 35f
+                    })
+            };
+
+            return new Dictionary<string, SkillVfxRecipe>(StringComparer.Ordinal)
+            {
+                ["DefaultCast"] = ConfigureSkillVfxRecipe(
+                    SkillVfxRecipeRoot + "/DefaultCastSkillVfxRecipe.asset",
+                    transparentMaterial,
+                    additiveMaterial,
+                    defaultCastBindings),
+                ["Fireball"] = ConfigureSkillVfxRecipe(
+                    SkillVfxRecipeRoot + "/FireballSkillVfxRecipe.asset",
+                    transparentMaterial,
+                    additiveMaterial,
+                    fireballBindings),
+                ["BoneSpear"] = ConfigureSkillVfxRecipe(
+                    SkillVfxRecipeRoot + "/BoneSpearSkillVfxRecipe.asset",
+                    transparentMaterial,
+                    additiveMaterial,
+                    boneSpearBindings),
+                ["Thrust"] = ConfigureSkillVfxRecipe(
+                    SkillVfxRecipeRoot + "/ThrustSkillVfxRecipe.asset",
+                    transparentMaterial,
+                    additiveMaterial,
+                    thrustBindings)
+            };
+        }
+
+        private static VfxBindingSpec CreateCastChargeBinding(Color color)
+        {
+            return new VfxBindingSpec(
+                SkillVfxCueKind.CastCharge,
+                new VfxLayerSpec
+                {
+                    PrimitiveKind = SkillVfxPrimitiveKind.RadialRing,
+                    BlendMode = SkillVfxBlendMode.Additive,
+                    ShapeMode = SkillVfxShapeMode.Ring,
+                    Color = color,
+                    StartSize = 0.22f,
+                    PeakSize = 0.42f,
+                    EndSize = 0.48f,
+                    PeakTime = 0.28f,
+                    Duration = 0.54f,
+                    StartAlpha = 0f,
+                    PeakAlpha = 0.36f,
+                    EndAlpha = 0f,
+                    BlockingMarker = 0f,
+                    RadialInner = 0.72f,
+                    RadialOuter = 1f,
+                    Softness = 0.12f,
+                    Emission = 0.7f,
+                    MaximumInstances = 1,
+                    SortingOrderOffset = -2
+                });
+        }
+
+        private static SkillVfxRecipe ConfigureSkillVfxRecipe(
+            string path,
+            Material transparentMaterial,
+            Material additiveMaterial,
+            IReadOnlyList<VfxBindingSpec> bindings)
+        {
+            var recipe = LoadOrCreate<SkillVfxRecipe>(path);
+            var serialized = new SerializedObject(recipe);
+            serialized.FindProperty("_transparentMaterial").objectReferenceValue = transparentMaterial;
+            serialized.FindProperty("_additiveMaterial").objectReferenceValue = additiveMaterial;
+            SerializedProperty serializedBindings = serialized.FindProperty("_bindings");
+            serializedBindings.arraySize = bindings.Count;
+            for (int bindingIndex = 0; bindingIndex < bindings.Count; bindingIndex++)
+            {
+                VfxBindingSpec binding = bindings[bindingIndex];
+                SerializedProperty serializedBinding = serializedBindings.GetArrayElementAtIndex(bindingIndex);
+                serializedBinding.FindPropertyRelative("_cue").enumValueIndex = (int)binding.Cue;
+                SerializedProperty serializedLayers = serializedBinding.FindPropertyRelative("_layers");
+                serializedLayers.arraySize = binding.Layers.Count;
+                for (int layerIndex = 0; layerIndex < binding.Layers.Count; layerIndex++)
+                    WriteVfxLayer(serializedLayers.GetArrayElementAtIndex(layerIndex), binding.Layers[layerIndex]);
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(recipe);
+            return recipe;
+        }
+
+        private static void WriteVfxLayer(SerializedProperty layer, VfxLayerSpec value)
+        {
+            layer.FindPropertyRelative("_primitiveKind").enumValueIndex = (int)value.PrimitiveKind;
+            layer.FindPropertyRelative("_blendMode").enumValueIndex = (int)value.BlendMode;
+            layer.FindPropertyRelative("_shapeMode").enumValueIndex = (int)value.ShapeMode;
+            layer.FindPropertyRelative("_color").colorValue = value.Color;
+            layer.FindPropertyRelative("_secondaryColor").colorValue = value.SecondaryColor;
+            layer.FindPropertyRelative("_startSize").floatValue = value.StartSize;
+            layer.FindPropertyRelative("_useMiddleKey").boolValue = value.UseMiddleKey;
+            layer.FindPropertyRelative("_middleSize").floatValue = value.MiddleSize;
+            layer.FindPropertyRelative("_middleTime").floatValue = value.MiddleTime;
+            layer.FindPropertyRelative("_peakSize").floatValue = value.PeakSize;
+            layer.FindPropertyRelative("_endSize").floatValue = value.EndSize;
+            layer.FindPropertyRelative("_peakTime").floatValue = value.PeakTime;
+            layer.FindPropertyRelative("_duration").floatValue = value.Duration;
+            layer.FindPropertyRelative("_blockingMarker").floatValue = value.BlockingMarker;
+            layer.FindPropertyRelative("_startAlpha").floatValue = value.StartAlpha;
+            layer.FindPropertyRelative("_middleAlpha").floatValue = value.MiddleAlpha;
+            layer.FindPropertyRelative("_peakAlpha").floatValue = value.PeakAlpha;
+            layer.FindPropertyRelative("_endAlpha").floatValue = value.EndAlpha;
+            layer.FindPropertyRelative("_radialInner").floatValue = value.RadialInner;
+            layer.FindPropertyRelative("_radialOuter").floatValue = value.RadialOuter;
+            layer.FindPropertyRelative("_softness").floatValue = value.Softness;
+            layer.FindPropertyRelative("_emission").floatValue = value.Emission;
+            layer.FindPropertyRelative("_angle").floatValue = value.Angle;
+            layer.FindPropertyRelative("_rootWidth").floatValue = value.RootWidth;
+            layer.FindPropertyRelative("_tipWidth").floatValue = value.TipWidth;
+            layer.FindPropertyRelative("_particleCount").intValue = value.ParticleCount;
+            layer.FindPropertyRelative("_particleSize").floatValue = value.ParticleSize;
+            layer.FindPropertyRelative("_particleSpeed").floatValue = value.ParticleSpeed;
+            layer.FindPropertyRelative("_particleLifetimeMin").floatValue = value.ParticleLifetimeMin;
+            layer.FindPropertyRelative("_particleLifetimeMax").floatValue = value.ParticleLifetimeMax;
+            layer.FindPropertyRelative("_particleDrag").floatValue = value.ParticleDrag;
+            layer.FindPropertyRelative("_randomSeed").longValue = value.RandomSeed;
+            layer.FindPropertyRelative("_maximumInstances").intValue = value.MaximumInstances;
+            layer.FindPropertyRelative("_sortingOrderOffset").intValue = value.SortingOrderOffset;
+        }
+
+        private static (Material transparent, Material additive) LoadOrCreateSkillVfxMaterials()
+        {
+            Shader shader = Shader.Find(SkillVfxShaderName);
             if (shader == null || !shader.isSupported)
                 throw new InvalidOperationException(
-                    $"Glow overlay shader is missing or unsupported: {GlowOverlayShaderName}");
+                    $"Skill VFX shader is missing or unsupported: {SkillVfxShaderName}");
 
-            var material = AssetDatabase.LoadAssetAtPath<Material>(GlowOverlayMaterialPath);
+            Material transparent = LoadOrCreateSkillVfxMaterial(
+                SkillVfxTransparentMaterialPath,
+                "SkillVfxTransparent",
+                shader,
+                UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            Material additive = LoadOrCreateSkillVfxMaterial(
+                SkillVfxAdditiveMaterialPath,
+                "SkillVfxAdditive",
+                shader,
+                UnityEngine.Rendering.BlendMode.One);
+            return (transparent, additive);
+        }
+
+        private static Material LoadOrCreateSkillVfxMaterial(
+            string path,
+            string name,
+            Shader shader,
+            UnityEngine.Rendering.BlendMode destinationBlend)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             {
-                material = new Material(shader)
-                {
-                    name = "PureRunGlowOverlay"
-                };
-                AssetDatabase.CreateAsset(material, GlowOverlayMaterialPath);
+                material = new Material(shader) { name = name };
+                AssetDatabase.CreateAsset(material, path);
             }
-            else if (material.shader != shader)
-            {
-                material.shader = shader;
-                EditorUtility.SetDirty(material);
-            }
-
+            material.shader = shader;
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)destinationBlend);
+            material.renderQueue = (int)RenderQueue.Transparent;
+            EditorUtility.SetDirty(material);
             return material;
         }
 
@@ -555,6 +1014,56 @@ namespace Tactics.Editor
             if (!string.IsNullOrEmpty(parent))
                 EnsureFolder(parent);
             AssetDatabase.CreateFolder(parent, name);
+        }
+
+        private sealed class VfxBindingSpec
+        {
+            public SkillVfxCueKind Cue { get; }
+            public IReadOnlyList<VfxLayerSpec> Layers { get; }
+
+            public VfxBindingSpec(SkillVfxCueKind cue, params VfxLayerSpec[] layers)
+            {
+                Cue = cue;
+                Layers = layers;
+            }
+        }
+
+        private sealed class VfxLayerSpec
+        {
+            public SkillVfxPrimitiveKind PrimitiveKind = SkillVfxPrimitiveKind.RadialCore;
+            public SkillVfxBlendMode BlendMode = SkillVfxBlendMode.Additive;
+            public SkillVfxShapeMode ShapeMode = SkillVfxShapeMode.Solid;
+            public Color Color = Color.white;
+            public Color SecondaryColor = Color.white;
+            public float StartSize = 0.05f;
+            public bool UseMiddleKey;
+            public float MiddleSize = 0.10f;
+            public float MiddleTime = 0.04f;
+            public float PeakSize = 0.15f;
+            public float EndSize = 0.20f;
+            public float PeakTime = 0.05f;
+            public float Duration = 0.15f;
+            public float BlockingMarker;
+            public float StartAlpha;
+            public float MiddleAlpha = 1f;
+            public float PeakAlpha = 1f;
+            public float EndAlpha;
+            public float RadialInner = 0.5f;
+            public float RadialOuter = 1f;
+            public float Softness = 0.12f;
+            public float Emission = 1f;
+            public float Angle = 35f;
+            public float RootWidth = 0.045f;
+            public float TipWidth = 0.010f;
+            public int ParticleCount;
+            public float ParticleSize = 0.03f;
+            public float ParticleSpeed = 0.2f;
+            public float ParticleLifetimeMin = 0.12f;
+            public float ParticleLifetimeMax = 0.18f;
+            public float ParticleDrag;
+            public uint RandomSeed = 1u;
+            public int MaximumInstances = 16;
+            public int SortingOrderOffset = 30;
         }
     }
 }

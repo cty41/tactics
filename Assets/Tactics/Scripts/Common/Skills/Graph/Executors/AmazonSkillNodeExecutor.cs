@@ -24,7 +24,7 @@ namespace Tactics.Common.Skills.Graph
             var record = (AmazonSkillNodeRecord)node;
             return record.SkillKind switch
             {
-                AmazonSkillKind.Thrust => Task.FromResult(ExecuteThrust(record, context)),
+                AmazonSkillKind.Thrust => ExecuteThrust(record, context),
                 AmazonSkillKind.MultiStab => Task.FromResult(ExecuteMultiStab(record, context)),
                 AmazonSkillKind.PoisonSpear => Task.FromResult(ExecutePoisonSpear(record, context)),
                 AmazonSkillKind.RecoverSpear => Task.FromResult(ExecuteRecoverSpear(record, context)),
@@ -34,7 +34,9 @@ namespace Tactics.Common.Skills.Graph
             };
         }
 
-        private static SkillNodeExecutionResult ExecuteThrust(AmazonSkillNodeRecord record, SkillExecutionContext context)
+        private static async Task<SkillNodeExecutionResult> ExecuteThrust(
+            AmazonSkillNodeRecord record,
+            SkillExecutionContext context)
         {
             var caster = context.Caster;
             var selected = context.PrimaryTarget;
@@ -52,6 +54,8 @@ namespace Tactics.Common.Skills.Graph
                 ? AmazonBattleState.For(context.GridController).GetActiveMovement(caster)
                 : 0f);
             var targets = new List<IUnit>();
+            var targetPositions = new Dictionary<IUnit, Vector3>();
+            var checkedCells = new List<ICell>();
             for (int index = 1; index <= length; index++)
             {
                 var cell = context.GridController.CellManager.GetCellAt(new Vector2IntImpl(
@@ -62,12 +66,60 @@ namespace Tactics.Common.Skills.Graph
                 var liveUnits = cell.CurrentUnits.Where(unit => unit != null && !unit.IsDowned).ToList();
                 if (liveUnits.Any(unit => unit.PlayerNumber == caster.PlayerNumber))
                     break;
+                checkedCells.Add(cell);
                 foreach (var target in liveUnits.Where(unit => unit.PlayerNumber != caster.PlayerNumber))
                 {
-                    CombatComponent.ApplyDamage(caster, target, damage, false, DamageCategory.Physical, ElementType.None,
-                        true, true, true, "Thrust");
                     targets.Add(target);
+                    targetPositions[target] = SkillVfxPositionUtility.ResolveUnitCenter(target);
                 }
+            }
+
+            if (checkedCells.Count > 0)
+            {
+                Vector3 casterCenter = SkillVfxPositionUtility.ResolveUnitCenter(caster);
+                Vector3 endpoint = checkedCells[^1].WorldPosition.ToVector3() + Vector3.up * 0.45f;
+                Vector3 direction = (endpoint - casterCenter).normalized;
+                Vector3 source = casterCenter + direction * 0.10f;
+                await context.PlayVfxAsync(
+                    SkillVfxCueKind.DirectionalStrike,
+                    new SkillVfxCueContext(
+                        record.Level,
+                        source,
+                        endpoint,
+                        direction,
+                        checkedCells.Select(cell => cell.WorldPosition.ToVector3()).ToList()));
+            }
+
+            var actualHitPositions = new List<Vector3>();
+            foreach (IUnit target in targets)
+            {
+                DamageResolution resolution = CombatComponent.ApplyDamage(
+                    caster,
+                    target,
+                    damage,
+                    false,
+                    DamageCategory.Physical,
+                    ElementType.None,
+                    true,
+                    true,
+                    true,
+                    "Thrust");
+                if (resolution.WasHit)
+                    actualHitPositions.Add(targetPositions[target]);
+            }
+
+            if (actualHitPositions.Count > 0)
+            {
+                Vector3 source = SkillVfxPositionUtility.ResolveUnitCenter(caster);
+                await context.PlayVfxAsync(
+                    SkillVfxCueKind.PrimaryTargetHit,
+                    new SkillVfxCueContext(
+                        record.Level,
+                        source,
+                        actualHitPositions[^1],
+                        actualHitPositions[^1] - source,
+                        hitWorldPositions: actualHitPositions,
+                        primaryHitWorldPosition: actualHitPositions[0]));
             }
             if (record.Level >= 3)
                 AmazonBattleState.For(context.GridController).ResetActiveMovement(caster);

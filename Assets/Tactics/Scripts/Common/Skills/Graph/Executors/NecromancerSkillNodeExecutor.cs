@@ -33,7 +33,7 @@ namespace Tactics.Common.Skills.Graph
                 NecromancerSkillKind.SummonSkeletonMage => ExecuteSummon(record, context, true),
                 NecromancerSkillKind.AmplifyDamage => Task.FromResult(ExecuteCurse(record, context, record.AmplifyDamageBuff)),
                 NecromancerSkillKind.FearCurse => Task.FromResult(ExecuteCurse(record, context, record.FearBuff)),
-                NecromancerSkillKind.BoneSpear => Task.FromResult(ExecuteBoneSpear(record, context)),
+                NecromancerSkillKind.BoneSpear => ExecuteBoneSpear(record, context),
                 NecromancerSkillKind.BoneShield => Task.FromResult(ExecuteBoneShield(record, context)),
                 _ => Task.FromResult(SkillNodeExecutionResult.Failed("Unsupported Necromancer skill kind."))
             };
@@ -195,17 +195,31 @@ namespace Tactics.Common.Skills.Graph
             }
         }
 
-        private static SkillNodeExecutionResult ExecuteBoneSpear(
+        private static async Task<SkillNodeExecutionResult> ExecuteBoneSpear(
             NecromancerSkillNodeRecord record,
             SkillExecutionContext context)
         {
+            Vector3 sourcePosition = SkillVfxPositionUtility.ResolveUnitCenter(context.Caster);
             if (record.Level < 3)
             {
                 var target = ResolveFirstEnemyOnLine(context, context.PrimaryTarget?.CurrentCell);
                 if (target == null)
                     return SkillNodeExecutionResult.Failed("No enemy for Bone Spear.");
-                ApplyBoneSpearDamage(context.Caster, target);
+                Vector3 hitPosition = SkillVfxPositionUtility.ResolveUnitCenter(target);
+                DamageResolution resolution = ApplyBoneSpearDamage(context.Caster, target);
                 context.PrimaryTarget = target;
+                if (resolution.WasHit)
+                {
+                    await context.PlayVfxAsync(
+                        SkillVfxCueKind.PrimaryTargetHit,
+                        new SkillVfxCueContext(
+                            record.Level,
+                            sourcePosition,
+                            hitPosition,
+                            hitPosition - sourcePosition,
+                            hitWorldPositions: new[] { hitPosition },
+                            primaryHitWorldPosition: hitPosition));
+                }
                 return SkillNodeExecutionResult.Success();
             }
 
@@ -215,18 +229,38 @@ namespace Tactics.Common.Skills.Graph
                 return SkillNodeExecutionResult.Failed("Bone Spear requires a straight-line endpoint.");
 
             var targets = new List<IUnit>();
+            var hitPositions = new List<Vector3>();
             foreach (var cell in path)
             {
                 foreach (var target in cell.CurrentUnits
                     .Where(unit => unit != null && !unit.IsDowned && unit.PlayerNumber != context.Caster.PlayerNumber)
                     .OrderBy(unit => unit.UnitID))
                 {
-                    ApplyBoneSpearDamage(context.Caster, target);
                     targets.Add(target);
+                    Vector3 hitPosition = SkillVfxPositionUtility.ResolveUnitCenter(target);
+                    DamageResolution resolution = ApplyBoneSpearDamage(context.Caster, target);
+                    if (resolution.WasHit)
+                        hitPositions.Add(hitPosition);
                 }
             }
 
             context.TargetSet = targets;
+            if (hitPositions.Count > 0)
+            {
+                Vector3 endpointPosition = path.Count > 0
+                    ? path[^1].WorldPosition.ToVector3() + Vector3.up * 0.45f
+                    : hitPositions[^1];
+                await context.PlayVfxAsync(
+                    SkillVfxCueKind.PrimaryTargetHit,
+                    new SkillVfxCueContext(
+                        record.Level,
+                        sourcePosition,
+                        endpointPosition,
+                        endpointPosition - sourcePosition,
+                        path.Select(cell => cell.WorldPosition.ToVector3()).ToList(),
+                        hitPositions,
+                        hitPositions[0]));
+            }
             return SkillNodeExecutionResult.Success();
         }
 
@@ -269,9 +303,9 @@ namespace Tactics.Common.Skills.Graph
             return path;
         }
 
-        private static void ApplyBoneSpearDamage(IUnit caster, IUnit target)
+        private static DamageResolution ApplyBoneSpearDamage(IUnit caster, IUnit target)
         {
-            CombatComponent.ApplyDamage(
+            return CombatComponent.ApplyDamage(
                 caster, target, 7f, true, DamageCategory.Magic, ElementType.None,
                 canTriggerBeforeAttacked: true, canCrit: false, canTriggerDamageTaken: true,
                 logSourceName: "Bone Spear");

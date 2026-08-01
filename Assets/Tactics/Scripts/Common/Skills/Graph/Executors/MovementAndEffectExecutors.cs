@@ -465,6 +465,10 @@ namespace Tactics.Common.Skills.Graph
                 context.RecordEventAtCell("ProjectileLaunched", node.NodeId, targetCell);
 
             var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
+            Vector3 sourceWorldPosition = SkillVfxPositionUtility.ResolveUnitCenter(caster);
+            Vector3 targetWorldPosition = target != null
+                ? SkillVfxPositionUtility.ResolveUnitCenter(target)
+                : targetCell.WorldPosition.ToVector3() + Vector3.up * 0.45f;
             await ProjectileVisualCoordinator.PlayAsync(
                 caster,
                 target,
@@ -473,6 +477,15 @@ namespace Tactics.Common.Skills.Graph
                 record.Speed,
                 record.TravelTime,
                 cancellationToken);
+
+            await context.PlayVfxAsync(
+                SkillVfxCueKind.ProjectileImpact,
+                new SkillVfxCueContext(
+                    context.ResolveSkillLevel(),
+                    sourceWorldPosition,
+                    targetWorldPosition,
+                    targetWorldPosition - sourceWorldPosition,
+                    primaryHitWorldPosition: targetWorldPosition));
 
             context.SetBlackboard("ProjectileHit", true);
             context.SetBlackboard("ProjectileTarget", target);

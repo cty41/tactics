@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
@@ -80,6 +81,9 @@ namespace Tactics.Common.Skills.Graph
         // ── 运行时作用域 ──
         public IBattleRuntimeScope RuntimeScope { get; set; }
 
+        // ── 可选表现层 ──
+        public ISkillVfxSink VfxSink { get; set; }
+
         // ── 结构化事件追踪 ──
         public List<SkillGraphExecutionEvent> ExecutionEvents { get; } = new();
 
@@ -117,6 +121,37 @@ namespace Tactics.Common.Skills.Graph
         public void ClearBlackboard()
         {
             _blackboard.Clear();
+        }
+
+        public int ResolveSkillLevel()
+        {
+            if (GraphAsset?.Nodes == null)
+                return 1;
+            foreach (SkillGraphNodeRecord node in GraphAsset.Nodes)
+            {
+                switch (node)
+                {
+                    case AmazonSkillNodeRecord amazon:
+                        return amazon.Level;
+                    case MageSkillNodeRecord mage:
+                        return mage.Level;
+                    case NecromancerSkillNodeRecord necromancer:
+                        return necromancer.Level;
+                }
+            }
+            return 1;
+        }
+
+        /// <summary>
+        /// Plays an optional semantic VFX cue without making visual availability a gameplay dependency.
+        /// </summary>
+        public Task PlayVfxAsync(SkillVfxCueKind cue, SkillVfxCueContext cueContext)
+        {
+            if (VfxSink == null || cueContext == null)
+                return Task.CompletedTask;
+
+            var cancellationToken = RuntimeScope?.Token ?? CancellationToken;
+            return VfxSink.PlayAsync(cue, cueContext, cancellationToken);
         }
 
         // ── 事件记录 ──

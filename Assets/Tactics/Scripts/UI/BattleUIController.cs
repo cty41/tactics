@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Tactics.AssetPipeline;
@@ -340,7 +341,10 @@ namespace Tactics.UI
         private void RefreshSpeedButton()
         {
             if (_speedButton != null)
-                _speedButton.text = $"⚙ {(int)GameTimeService.PlaybackSpeed}×";
+            {
+                string scale = GameTimeService.PlaybackScale.ToString("0.#", CultureInfo.InvariantCulture);
+                _speedButton.text = $"⚙ {scale}×";
+            }
         }
 
         private void InitializeCurrentTurnUI()

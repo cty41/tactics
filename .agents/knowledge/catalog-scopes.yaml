@@ -213,6 +213,8 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityConfig.cs
       - Assets/Tactics/Scripts/Editor/SkillGraphEditor
+      - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs
+      - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs.meta
       - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
       - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs
       - Assets/Tactics/Battle/Abilities/SkillGraphs

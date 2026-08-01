@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-07-31T21:18:07+08:00"
+timestamp: "2026-08-01T20:06:53+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -71,7 +71,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:95b70a6d532480b9ae59d41c48be2cbe150139b20a6128deeae4880adbf73c58
+source_fingerprint: sha256:412ed84cd7cc42afb35ae2d833beb40700288d46a34a47578f59402af74d6ea1
 ---
 
 # Current State
@@ -92,7 +92,11 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 
 普通非召唤单位死亡后仍从 `UnitManager` 移除，并在原 Cell 生成可选中、占格且可被死灵技能消耗的 `Corpse`。Pure Run 单位可在视觉配置中提供专用死亡 Sprite；尸体使用中心 Pivot并抵消 Sprite Tight bounds 的可见中心偏移，清除通用尸体的旋转与灰色 Tint，并继承生前主 Renderer 的材质和颜色。未配置专用图的旧单位继续使用通用尸体，召唤物与诱饵继续不生成尸体。
 
-标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态。Cast 的蓝色 Overlay 使用所有地面单位共享的专用透明材质，仅在施法时延迟创建，并在完成、打断、取消、Disable 或 Destroy 时清零和禁用；材质缺失时只跳过发光，不延迟或吞掉玩法释放点。尸体生成和占格立即生效，专用死亡图只异步播放落地回弹。蝙蝠等飞行单位暂不接入。
+标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态。Cast 开始时以施法者 Sprite 中心为锚点发送非阻塞 `CastCharge`，由有限原语 Recipe 在人物和阴影后方生成径向光环；专属 Recipe 优先，其他 Cast 回退默认低饱和蓝。禁止复制整人物 Sprite 做白膜/换色 Overlay，施法全程不改主 Renderer 的 Sprite、Material 或 Color。尸体生成和占格立即生效，专用死亡图只异步播放落地回弹。蝙蝠等飞行单位暂不接入。
+
+Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径，而是由后续美术特效资产承担。当前技能 Recipe 在逐个替换前继续作为可玩基线。
+
+技能接触反馈由可选 `SkillVfxRecipe` 驱动。执行器在伤害前保存世界坐标，只发送强类型 Cue；Coordinator 只等待释放/接触关键帧，淡出、粒子和残影非阻塞。投射物抵达时先完成 `ProjectileImpact` 接触点再写入命中黑板；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，并在取消时同步清理。Sprite 投射物未显式配置 Material 时保留 `SpriteRenderer` 默认材质，残影遵循同一规则，不会用空材质触发洋红错误 Shader。实际伤害仍以 `DamageResolution.WasHit` 决定次目标/命中反馈，表现缺失或取消不能改变玩法结果。突刺方向端点不因射线上先命中的敌人被通用 LOS 隐藏，但扫描仍在友军、永久地形和非法格处结束。
 
 `PureRunAbilityCatalog` 为三职业 18 个正式技能和隐藏额外技能 `amazon.pickup_spear` 提供稳定 ID、等级元数据与运行时资产解析。`PureRunAbilityBinder` 在玩家单位初始化前只注入职业普通攻击、实际已学主动技能和可解析的额外技能；被动按角色已学记录启用，Amazon 不再因职业身份在 Pure Run 中自动获得战斗技巧。缺少精确等级资产时仅向下回退并记录错误。三职业等级资产均已按各技能设计上限连续发布。
 
@@ -106,7 +110,7 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 
 BattleSettlement UI 在每次显示时重新解析当前 UIDocument 元素并重新注册继续/跳过动画回调，隐藏时释放旧树引用，避免跨战斗复用缓存实例时更新已经脱离面板的结算元素。
 
-`GameTimeService` 是 production 中 `Time.timeScale`、当前进程播放倍率和嵌套暂停深度的唯一所有者；支持固定 `1× → 2× → 4× → 1×` 循环，暂停期间只更新恢复目标，最后一层 Resume 才恢复所选倍率。倍率跨场景和后续战斗保留，Unity subsystem 初始化时重置为 `1×` 且未暂停；`GamePauseService` 仅保留兼容转发。Battle UI 右上角速度按钮直接读取服务状态，缓存重进时重新接线且不复制倍率状态。游戏世界异步等待统一使用可取消、pause-aware 的 scaled delay；战后恢复等待绑定 Battle UI 销毁令牌，异常退出不会留下暂停中的悬挂任务。测试 timeout、AI deadlock ceiling、资源加载保护等基础设施 deadline 继续使用 realtime。
+`GameTimeService` 是 production 中 `Time.timeScale`、当前进程播放倍率和嵌套暂停深度的唯一所有者；支持固定 `1× → 2× → 4× → 0.5× → 1×` 循环，暂停期间只更新恢复目标，最后一层 Resume 才恢复所选倍率。倍率跨场景和后续战斗保留，Unity subsystem 初始化时重置为 `1×` 且未暂停；`GamePauseService` 仅保留兼容转发。Battle UI 右上角速度按钮直接读取服务的显式浮点倍率，缓存重进时重新接线且不复制倍率状态。游戏世界异步等待统一使用可取消、pause-aware 的 scaled delay；战后恢复等待绑定 Battle UI 销毁令牌，异常退出不会留下暂停中的悬挂任务。测试 timeout、AI deadlock ceiling、资源加载保护等基础设施 deadline 继续使用 realtime。
 
 Pure Run 胜利结算只展示胜负、金币与总回合数。结算前先进入约 0.8 秒的不可交互恢复阶段：所有存活玩家单位按 `Constitution × 2` 恢复 HP、按 `Charisma` 恢复 MP（均受最大值限制），并分别显示绿色 HP 与蓝色 MP 浮字；死亡单位不恢复。恢复阶段隐藏战斗操作界面，之后才同步持久化状态并进入结算。
 

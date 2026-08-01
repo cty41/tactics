@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-07-31T21:18:13+08:00"
+timestamp: "2026-08-01T20:07:02+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Tools/artworks/pure_run
   - Assets/Tactics/Arts/PureRun
 verified_revision: c68dbebe
-source_fingerprint: sha256:5e9a4e734b4558ee0dbc935a41887fe37bbbf217c92f33037278f7b18266c860
+source_fingerprint: sha256:ae1029f3c2c081510c5ce38cfa10c0d1ba252dad2d5ad8f2d09be9e73cf623aa
 ---
 
 # Pure Run 角色美术流水线
@@ -33,12 +33,13 @@ source_fingerprint: sha256:5e9a4e734b4558ee0dbc935a41887fe37bbbf217c92f33037278f
 - 蝙蝠死亡图 `tomb_maw_bat_ranged_death_color_v02` 当前位于 `Tools/artworks/pure_run/enemies/candidates`：保持近圆球核并缩小到活体球核之下，耳朵与脸部线索朝画面右上，双翼随朝向旋转后贴地瘫软；赤柴只提供屏幕朝向，不能提供胶囊体轮廓或细长身体轴。`v01` 保留为球核过大的历史候选；两版均未接入 Unity。
 - 无脚底尸体使用完整死亡尸体 AABB 中心对齐 Tile，不沿用站立脚底或活体悬浮锚点；道具必须脱手，默认移除常驻职业特效。未经人工确认或未获得运行时授权的死亡图继续留在 `concepts/candidates`。
 - 法师基础奥术弹 `doge_capsule_mage_arcane_bolt_projectile_color_v02` 已通过人工尺寸 Review并接入运行时：使用短梭形蓝紫轮廓、单帧中心锚点，在 `_128` 中约 `22×10 px`，对应法师主体宽度约 `42%`。`v01` 是偏大的历史候选；奥术、火焰和冰霜 Profile 共用该 Sprite 并通过 Tint 区分。
-- 死灵基础投射物以静态鬼火和飞行版分工：`doge_capsule_necromancer_pale_orb_projectile_color_v02` 保留近圆核心与向上火舌，作为静态造型锚点；正式飞行版 `v03` 朝右、亮核略靠前、短火舌向左后拖曳，`_128` 可见 AABB 约 `22×13 px`，现已作为 Bone Spear 的运行时 Sprite。粗黑圆环的 `v01` 已归入 `rejected/superseded`。
-- 赤柴长矛 `doge_capsule_hunter_spear_projectile_color_v01`、法师奥术弹 `v02` 与死灵飞行能量球 `v03` 的运行时 PNG 由幂等配置器从批准源复制并做哈希/导入约束校验。物理基础、普通/毒矛和羊魔临时物理远程复用长矛；毒矛只使用绿色 Tint，不新增专用 Sprite 或 Shader。
+- 死灵基础投射物以静态鬼火和飞行版分工：`doge_capsule_necromancer_pale_orb_projectile_color_v02` 保留近圆核心与向上火舌，作为静态造型锚点；正式飞行版 `v03` 朝右、亮核略靠前、短火舌向左后拖曳，`_128` 可见 AABB 约 `22×13 px`，继续用于死灵基础魔法表现，不再作为 Bone Spear 的运行时 Sprite。粗黑圆环的 `v01` 已归入 `rejected/superseded`。
+- 骨矛实体 Sprite `doge_capsule_necromancer_bone_spear_projectile_color_v01` 已完成中心校准、Tile Review 和人工确认：母版约 `66×14 px`、`_128` 约 `34×8 px`。运行时使用独立 `pure_run_bone_spear_projectile.png`、中心 Pivot、`128 PPU`、`Scale=1` 和切线旋转；最多两个短残影由 Profile 驱动，交叉闪光与骨屑继续由 Skill VFX Recipe 表达。
+- 赤柴长矛 `doge_capsule_hunter_spear_projectile_color_v01`、法师奥术弹 `v02`、死灵飞行能量球 `v03` 与骨矛 `v01` 的运行时 PNG 由幂等配置器从批准源复制并做内容/导入约束校验。物理基础、普通/毒矛和羊魔临时物理远程复用长矛；毒矛只使用绿色 Tint，不新增专用 Sprite 或 Shader。
 - 三组代表性正反案例覆盖核心胶囊体、远近手/装备层级和飞行球核。案例快照只用于 Review，正式原图路径与禁止复用的反例路径由 skill 的 `examples/cases.json` 管理。
 - 设计、尺寸和目录语义见 `.agents/docs/pure-run-artwork-guidelines.md`，执行、案例库与只读校验见 `.agents/skills/pure-run-artwork-pipeline/SKILL.md`。
 - 七个已接入视觉原型（猎人、死灵、法师、两类骷髅、火魔、羊魔）使用两张原生图补齐四向：East/up-left 镜像、West/down-right 镜像、North/up-left、South/down-right。该映射遵循 Unity 等距网格轴，而不是直接把原画文件名当作逻辑方向。`FourDirectionSpriteVisual` 只负责 `Sprite` 子节点的显示，不改变 `FacingResolver`、移动、技能或 AI；12 个现有 Pure Run Prefab 已分别配置对应的两张 Sprite，六个羊魔职责共用同一对羊魔图。蝙蝠仍是设计层资产，尚未接入运行时 Prefab。
-- 标准地面单位现共用一套 `StandardUnitTweenProfile`，主 `Sprite` Transform 承担 Idle、移动、攻击、施法和受击纸片 Tween；Shadow 与逻辑 Root 不参与。Cast 使用共享的 `Tactics/PureRun/GlowOverlay` 透明材质，Overlay 延迟创建并在完成、打断、取消或销毁时禁用，不能回退到默认 2D Lit 或复用主 Sprite 换色材质。飞行蝙蝠暂不接入该 Profile。
+- 标准地面单位现共用一套 `StandardUnitTweenProfile`，主 `Sprite` Transform 承担 Idle、移动、攻击、施法和受击纸片 Tween；Shadow 与逻辑 Root 不参与。Cast 通过 `SkillVfxRecipe` 发送非阻塞 `CastCharge` 径向光环，光环位于人物和阴影后方；无专属 Recipe 时使用默认低饱和蓝，骨矛与火球分别覆写为苍白青和暖橙红。不得再创建或染色整人物 `GlowOverlay`，主 `SpriteRenderer` 材质与颜色在施法中保持不变。飞行蝙蝠暂不接入该 Profile。
 
 ## Workflow
 

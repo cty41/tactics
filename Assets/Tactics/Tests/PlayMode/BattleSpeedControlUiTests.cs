@@ -145,8 +145,8 @@ namespace Tactics.Tests.PlayMode
             Assert.That(button.text, Is.EqualTo("⚙ 4×"));
 
             ClickThroughProductionAdapter(button);
-            Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Normal));
-            Assert.That(button.text, Is.EqualTo("⚙ 1×"));
+            Assert.That(GameTimeService.PlaybackSpeed, Is.EqualTo(GamePlaybackSpeed.Half));
+            Assert.That(button.text, Is.EqualTo("⚙ 0.5×"));
         }
 
         private static void ClickThroughProductionAdapter(Button button)
@@ -163,7 +163,7 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ProductionButton_ClicksCycleOneTwoFourOne()
+        public IEnumerator ProductionButton_ClicksCycleOneTwoFourHalfOne()
         {
             var root = UIManager.Instance.GetRootElement(UIManager.UIId.Battle);
             var button = root?.Q<Button>("BattleSpeedButton");
@@ -174,6 +174,7 @@ namespace Tactics.Tests.PlayMode
             {
                 (GamePlaybackSpeed.Double, "⚙ 2×", 2f),
                 (GamePlaybackSpeed.Quadruple, "⚙ 4×", 4f),
+                (GamePlaybackSpeed.Half, "⚙ 0.5×", 0.5f),
                 (GamePlaybackSpeed.Normal, "⚙ 1×", 1f)
             };
 

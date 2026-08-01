@@ -16,9 +16,10 @@ namespace Tactics.Tests.Editor
             "Assets/Tactics/Arts/PureRun/Textures/Projectiles";
         private const string ProjectileProfileRoot =
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles";
-        private const string GlowOverlayShaderName = "Tactics/PureRun/GlowOverlay";
         private const string GlowOverlayMaterialPath =
             "Assets/Tactics/Arts/PureRun/Tween/PureRunGlowOverlay.mat";
+        private const string GlowOverlayShaderPath =
+            "Assets/Tactics/Arts/PureRun/Shaders/PureRunGlowOverlay.shader";
 
         private static readonly string[] PrefabPaths =
         {
@@ -41,12 +42,9 @@ namespace Tactics.Tests.Editor
         {
             var expectedProfile = AssetDatabase.LoadAssetAtPath<StandardUnitTweenProfile>(
                 "Assets/Tactics/Arts/PureRun/Tween/StandardUnitTweenProfile.asset");
-            var expectedGlowMaterial = AssetDatabase.LoadAssetAtPath<Material>(GlowOverlayMaterialPath);
             Assert.That(expectedProfile, Is.Not.Null);
-            Assert.That(expectedGlowMaterial, Is.Not.Null);
-            Assert.That(expectedGlowMaterial.shader, Is.Not.Null);
-            Assert.That(expectedGlowMaterial.shader.name, Is.EqualTo(GlowOverlayShaderName));
-            Assert.That(expectedGlowMaterial.shader.isSupported, Is.True);
+            Assert.That(AssetDatabase.LoadMainAssetAtPath(GlowOverlayMaterialPath), Is.Null);
+            Assert.That(AssetDatabase.LoadMainAssetAtPath(GlowOverlayShaderPath), Is.Null);
 
             foreach (string path in PrefabPaths)
             {
@@ -59,9 +57,8 @@ namespace Tactics.Tests.Editor
                 Assert.That(visual.VisualRoot.name, Is.EqualTo("Sprite"), path);
                 Assert.That(visual.PrimaryRenderer, Is.Not.Null, path);
                 Assert.That(visual.PrimaryRenderer.gameObject.name, Is.EqualTo("Sprite"), path);
-                Assert.That(visual.GlowOverlayMaterial, Is.SameAs(expectedGlowMaterial), path);
-                Assert.That(visual.PrimaryRenderer.sharedMaterial, Is.Not.SameAs(expectedGlowMaterial), path);
                 Assert.That(visual.VisualRoot.Find("GlowOverlay"), Is.Null, path);
+                Assert.That(new SerializedObject(visual).FindProperty("_glowOverlayMaterial"), Is.Null, path);
             }
         }
 
@@ -70,7 +67,7 @@ namespace Tactics.Tests.Editor
         {
             string[] profileNames =
             {
-                "PhysicalBasic", "MagicBasic", "Fire", "Ice",
+                "PhysicalBasic", "MagicBasic", "Ice",
                 "BoneSpear", "AmazonSpear", "AmazonPoisonSpear"
             };
 
@@ -93,6 +90,9 @@ namespace Tactics.Tests.Editor
         [TestCase(
             "Tools/artworks/doge/concepts/doge_capsule_necromancer_pale_orb_projectile_color_v03.png",
             RuntimeProjectileRoot + "/pure_run_necromancer_orb_projectile.png")]
+        [TestCase(
+            "Tools/artworks/doge/concepts/doge_capsule_necromancer_bone_spear_projectile_color_v01.png",
+            RuntimeProjectileRoot + "/pure_run_bone_spear_projectile.png")]
         public void RuntimeProjectileTextures_MatchApprovedSourcesAndImportContract(
             string approvedSourcePath,
             string runtimePath)
@@ -127,9 +127,18 @@ namespace Tactics.Tests.Editor
             AssertProfile("AmazonSpear", "pure_run_spear_projectile.png");
             AssertProfile("AmazonPoisonSpear", "pure_run_spear_projectile.png");
             AssertProfile("MagicBasic", "pure_run_arcane_bolt_projectile.png");
-            AssertProfile("Fire", "pure_run_arcane_bolt_projectile.png");
             AssertProfile("Ice", "pure_run_arcane_bolt_projectile.png");
-            AssertProfile("BoneSpear", "pure_run_necromancer_orb_projectile.png");
+            AssertProfile("BoneSpear", "pure_run_bone_spear_projectile.png");
+
+            var fire = LoadProfile("Fire");
+            Assert.That(fire.VisualKind, Is.EqualTo(ProjectileVisualKind.SoftDisc));
+            Assert.That(fire.Sprite, Is.Null);
+            Assert.That(fire.Material, Is.Not.Null);
+            Assert.That(fire.Material.shader.name, Is.EqualTo("Tactics/PureRun/SkillVfxPrimitive"));
+            Assert.That(fire.Scale, Is.EqualTo(0.17f).Within(0.001f));
+            Assert.That(fire.PulseAmount, Is.EqualTo(0.06f).Within(0.001f));
+            Assert.That(fire.ParticleTrail.Enabled, Is.True);
+            Assert.That(fire.ParticleTrail.MaximumParticles, Is.EqualTo(3));
 
             var normalSpear = LoadProfile("AmazonSpear");
             var poisonSpear = LoadProfile("AmazonPoisonSpear");
@@ -137,8 +146,20 @@ namespace Tactics.Tests.Editor
             Assert.That(normalSpear.Tint, Is.EqualTo(Color.white));
             Assert.That(poisonSpear.Tint.g, Is.GreaterThan(poisonSpear.Tint.r));
             Assert.That(poisonSpear.Tint.g, Is.GreaterThan(poisonSpear.Tint.b));
+            Assert.That(boneSpear.VisualKind, Is.EqualTo(ProjectileVisualKind.Sprite));
+            Assert.That(boneSpear.Material, Is.Null,
+                "Sprite projectiles must retain SpriteRenderer's compatible default material.");
             Assert.That(boneSpear.Tint, Is.EqualTo(Color.white));
             Assert.That(boneSpear.RotateAlongTangent, Is.True);
+            Assert.That(boneSpear.Scale, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(boneSpear.PulseAmount, Is.Zero.Within(0.001f));
+            Assert.That(boneSpear.ParticleTrail.Enabled, Is.False);
+            Assert.That(boneSpear.GhostTrail.Enabled, Is.True);
+            Assert.That(boneSpear.GhostTrail.SampleInterval, Is.EqualTo(0.055f).Within(0.001f));
+            Assert.That(boneSpear.GhostTrail.Lifetime, Is.EqualTo(0.12f).Within(0.001f));
+            Assert.That(boneSpear.GhostTrail.Alpha, Is.EqualTo(0.28f).Within(0.001f));
+            Assert.That(boneSpear.GhostTrail.Scale, Is.EqualTo(0.92f).Within(0.001f));
+            Assert.That(boneSpear.GhostTrail.MaximumAlive, Is.EqualTo(2));
         }
 
         [TestCase("RangedAttack_Graph")]
@@ -154,7 +175,152 @@ namespace Tactics.Tests.Editor
             Assert.That(graph, Is.Not.Null, graphName);
             var projectile = graph.Nodes.OfType<ProjectileLaunchNodeRecord>().Single();
             Assert.That(projectile.VisualProfile, Is.Not.Null, graphName);
-            Assert.That(projectile.VisualProfile.Sprite, Is.Not.Null, graphName);
+            if (projectile.VisualProfile.VisualKind == ProjectileVisualKind.SoftDisc)
+                Assert.That(projectile.VisualProfile.Material, Is.Not.Null, graphName);
+            else
+                Assert.That(projectile.VisualProfile.Sprite, Is.Not.Null, graphName);
+        }
+
+        [Test]
+        public void SkillVfxRecipes_UseFinitePrimitivesAndAuthoredBlockingMarkers()
+        {
+            SkillVfxRecipe defaultCast = LoadRecipe("DefaultCastSkillVfxRecipe");
+            SkillVfxRecipe fireball = LoadRecipe("FireballSkillVfxRecipe");
+            SkillVfxRecipe boneSpear = LoadRecipe("BoneSpearSkillVfxRecipe");
+            SkillVfxRecipe thrust = LoadRecipe("ThrustSkillVfxRecipe");
+
+            foreach (SkillVfxRecipe recipe in new[] { defaultCast, fireball, boneSpear })
+            {
+                SkillVfxPrimitiveLayer castCharge = recipe.GetLayers(SkillVfxCueKind.CastCharge).Single();
+                Assert.That(castCharge.PrimitiveKind, Is.EqualTo(SkillVfxPrimitiveKind.RadialRing));
+                Assert.That(castCharge.BlendMode, Is.EqualTo(SkillVfxBlendMode.Additive));
+                Assert.That(castCharge.StartSize, Is.EqualTo(0.22f).Within(0.001f));
+                Assert.That(castCharge.PeakSize, Is.EqualTo(0.42f).Within(0.001f));
+                Assert.That(castCharge.EndSize, Is.EqualTo(0.48f).Within(0.001f));
+                Assert.That(castCharge.PeakTime, Is.EqualTo(0.28f).Within(0.001f));
+                Assert.That(castCharge.Duration, Is.EqualTo(0.54f).Within(0.001f));
+                Assert.That(castCharge.PeakAlpha, Is.EqualTo(0.36f).Within(0.001f));
+                Assert.That(castCharge.BlockingMarker, Is.Zero);
+                Assert.That(castCharge.RadialInner, Is.EqualTo(0.72f).Within(0.001f));
+                Assert.That(castCharge.Softness, Is.EqualTo(0.12f).Within(0.001f));
+                Assert.That(castCharge.Emission, Is.EqualTo(0.7f).Within(0.001f));
+                Assert.That(castCharge.MaximumInstances, Is.EqualTo(1));
+                Assert.That(castCharge.SortingOrderOffset, Is.EqualTo(-2));
+            }
+
+            AssertColor(defaultCast, new Color(0.32f, 0.62f, 0.85f, 1f));
+            AssertColor(fireball, new Color(1.00f, 0.36f, 0.08f, 1f));
+            AssertColor(boneSpear, new Color(0.68f, 0.90f, 0.88f, 1f));
+
+            Assert.That(
+                fireball.GetLayers(SkillVfxCueKind.ProjectileImpact).Max(layer => layer.BlockingMarker),
+                Is.EqualTo(0.10f).Within(0.001f));
+            Assert.That(
+                fireball.GetLayers(SkillVfxCueKind.ConditionalDetonation).Max(layer => layer.BlockingMarker),
+                Is.EqualTo(0.06f).Within(0.001f));
+            Assert.That(
+                boneSpear.GetLayers(SkillVfxCueKind.PrimaryTargetHit).Max(layer => layer.BlockingMarker),
+                Is.EqualTo(0.05f).Within(0.001f));
+            Assert.That(
+                thrust.GetLayers(SkillVfxCueKind.DirectionalStrike).Max(layer => layer.BlockingMarker),
+                Is.EqualTo(0.065f).Within(0.001f));
+
+            foreach (SkillVfxRecipe recipe in new[] { defaultCast, fireball, boneSpear, thrust })
+            {
+                Assert.That(recipe.TransparentMaterial, Is.Not.Null, recipe.name);
+                Assert.That(recipe.AdditiveMaterial, Is.Not.Null, recipe.name);
+                foreach (SkillVfxCueKind cue in System.Enum.GetValues(typeof(SkillVfxCueKind)))
+                {
+                    foreach (SkillVfxPrimitiveLayer layer in recipe.GetLayers(cue))
+                    {
+                        if (layer.PrimitiveKind is SkillVfxPrimitiveKind.ParticleBurst or
+                            SkillVfxPrimitiveKind.ProjectileGhostTrail)
+                        {
+                            Assert.That(layer.BlockingMarker, Is.Zero, $"{recipe.name}/{cue}");
+                        }
+                    }
+                }
+            }
+
+            SkillVfxPrimitiveLayer boneParticles = boneSpear
+                .GetLayers(SkillVfxCueKind.PrimaryTargetHit)
+                .Single(layer => layer.PrimitiveKind == SkillVfxPrimitiveKind.ParticleBurst);
+            Assert.That(boneParticles.ParticleCount, Is.EqualTo(2));
+            Assert.That(boneParticles.MaximumInstances, Is.EqualTo(4));
+        }
+
+        private static void AssertColor(SkillVfxRecipe recipe, Color expected)
+        {
+            Color actual = recipe.GetLayers(SkillVfxCueKind.CastCharge).Single().Color;
+            Assert.That(actual.r, Is.EqualTo(expected.r).Within(0.001f), recipe.name);
+            Assert.That(actual.g, Is.EqualTo(expected.g).Within(0.001f), recipe.name);
+            Assert.That(actual.b, Is.EqualTo(expected.b).Within(0.001f), recipe.name);
+            Assert.That(actual.a, Is.EqualTo(expected.a).Within(0.001f), recipe.name);
+        }
+
+        [Test]
+        public void SkillVfxPreviewSampling_UsesAuthoredRuntimeTimelineKeys()
+        {
+            SkillVfxPrimitiveLayer fireCore = LoadRecipe("FireballSkillVfxRecipe")
+                .GetLayers(SkillVfxCueKind.ProjectileImpact)
+                .Single(layer => layer.PrimitiveKind == SkillVfxPrimitiveKind.RadialCore);
+            Assert.That(SkillVfxPrimitiveBuilder.EvaluatePreviewState(fireCore, 0f).Size,
+                Is.EqualTo(0.16f).Within(0.001f));
+            Assert.That(SkillVfxPrimitiveBuilder.EvaluatePreviewState(fireCore, 0.04f).Size,
+                Is.EqualTo(0.12f).Within(0.001f));
+            Assert.That(SkillVfxPrimitiveBuilder.EvaluatePreviewState(fireCore, 0.10f).Size,
+                Is.EqualTo(0.22f).Within(0.001f));
+
+            SkillVfxPrimitiveLayer thrustLine = LoadRecipe("ThrustSkillVfxRecipe")
+                .GetLayers(SkillVfxCueKind.DirectionalStrike)
+                .Where(layer => layer.PrimitiveKind == SkillVfxPrimitiveKind.TaperedLine)
+                .OrderByDescending(layer => layer.PeakAlpha)
+                .First();
+            SkillVfxPrimitivePreviewState contact =
+                SkillVfxPrimitiveBuilder.EvaluatePreviewState(thrustLine, 0.065f);
+            Assert.That(contact.Size, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(contact.Alpha, Is.GreaterThan(0.8f));
+            Assert.That(SkillVfxPrimitiveBuilder.EvaluatePreviewState(thrustLine, thrustLine.Duration + 0.01f)
+                .IsVisible, Is.False);
+        }
+
+        [TestCase("Fireball_Lv1_Ability", "FireballSkillVfxRecipe")]
+        [TestCase("Fireball_Lv2_Ability", "FireballSkillVfxRecipe")]
+        [TestCase("Fireball_Lv3_Ability", "FireballSkillVfxRecipe")]
+        [TestCase("BoneSpear_Graph_Ability", "BoneSpearSkillVfxRecipe")]
+        [TestCase("BoneSpear_Lv2_Graph_Ability", "BoneSpearSkillVfxRecipe")]
+        [TestCase("BoneSpear_Lv3_Graph_Ability", "BoneSpearSkillVfxRecipe")]
+        [TestCase("Thrust_Graph_Ability", "ThrustSkillVfxRecipe")]
+        [TestCase("Thrust_Lv2_Graph_Ability", "ThrustSkillVfxRecipe")]
+        [TestCase("Thrust_Lv3_Graph_Ability", "ThrustSkillVfxRecipe")]
+        [TestCase("MagicAttack_Graph_Ability", "DefaultCastSkillVfxRecipe")]
+        public void AbilityAssets_ReferenceSharedFamilyRecipe(string abilityName, string recipeName)
+        {
+            var config = AssetDatabase.LoadAssetAtPath<SkillGraphAbilityConfig>(
+                $"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/{abilityName}.asset");
+            Assert.That(config, Is.Not.Null, abilityName);
+            Assert.That(config.SkillVfxRecipe, Is.SameAs(LoadRecipe(recipeName)), abilityName);
+        }
+
+        [Test]
+        public void EveryCastAbility_ResolvesCastChargeRecipe()
+        {
+            string[] guids = AssetDatabase.FindAssets(
+                "t:SkillGraphAbilityConfig",
+                new[] { "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs" });
+            foreach (string guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var config = AssetDatabase.LoadAssetAtPath<SkillGraphAbilityConfig>(path);
+                if (config == null || config.VisualAction != UnitVisualAction.Cast)
+                    continue;
+
+                Assert.That(config.SkillVfxRecipe, Is.Not.Null, config.name);
+                Assert.That(
+                    config.SkillVfxRecipe.GetLayers(SkillVfxCueKind.CastCharge),
+                    Has.Count.EqualTo(1),
+                    config.name);
+            }
         }
 
         [TestCase("RangedAttack_Graph")]
@@ -255,6 +421,14 @@ namespace Tactics.Tests.Editor
                 $"{ProjectileProfileRoot}/{profileName}.asset");
             Assert.That(profile, Is.Not.Null, profileName);
             return profile;
+        }
+
+        private static SkillVfxRecipe LoadRecipe(string recipeName)
+        {
+            var recipe = AssetDatabase.LoadAssetAtPath<SkillVfxRecipe>(
+                $"Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/{recipeName}.asset");
+            Assert.That(recipe, Is.Not.Null, recipeName);
+            return recipe;
         }
 
         private static void AssertProfile(string profileName, string expectedTextureName)

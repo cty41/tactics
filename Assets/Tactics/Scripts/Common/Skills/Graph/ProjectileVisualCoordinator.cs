@@ -25,26 +25,57 @@ namespace Tactics.Common.Skills.Graph
             float fallbackTravelTime,
             CancellationToken cancellationToken)
         {
-            Vector3 start = ResolveUnitCenter(caster);
+            Vector3 start = SkillVfxPositionUtility.ResolveUnitCenter(caster);
             Vector3 end = target != null
-                ? ResolveUnitCenter(target)
+                ? SkillVfxPositionUtility.ResolveUnitCenter(target)
                 : targetCell.WorldPosition.ToVector3() + Vector3.up * 0.45f;
             Vector3 towardTarget = (end - start).normalized;
             start += towardTarget * 0.12f;
             float duration = ResolveDuration(Vector3.Distance(start, end), speed, fallbackTravelTime);
 
-            if (profile == null || profile.Sprite == null)
+            bool missingSprite = profile?.VisualKind == ProjectileVisualKind.Sprite && profile.Sprite == null;
+            bool missingProceduralMaterial = profile?.VisualKind == ProjectileVisualKind.SoftDisc && profile.Material == null;
+            if (profile == null || missingSprite || missingProceduralMaterial)
             {
                 await global::Tactics.GameTimeService.DelayScaledAsync(duration, cancellationToken);
                 return;
             }
 
             var projectileObject = new GameObject("ProjectileVisual");
-            var renderer = projectileObject.AddComponent<SpriteRenderer>();
-            renderer.sprite = profile.Sprite;
-            renderer.color = profile.Tint;
-            renderer.sharedMaterial = profile.Material;
-            var sourceRenderer = ResolveRenderer(caster);
+            Renderer renderer;
+            if (profile.VisualKind == ProjectileVisualKind.SoftDisc)
+            {
+                var filter = projectileObject.AddComponent<MeshFilter>();
+                filter.sharedMesh = SkillVfxPrimitiveBuilder.SharedQuadMesh;
+                var meshRenderer = projectileObject.AddComponent<MeshRenderer>();
+                meshRenderer.sharedMaterial = profile.Material;
+                var propertyBlock = new MaterialPropertyBlock();
+                SkillVfxPrimitiveBuilder.ApplyStandaloneProperties(
+                    meshRenderer,
+                    propertyBlock,
+                    profile.Tint,
+                    1f,
+                    1.8f,
+                    SkillVfxShapeMode.SoftDisc,
+                    radialInner: 0f,
+                    radialOuter: 1f,
+                    softness: 0.24f);
+                renderer = meshRenderer;
+            }
+            else
+            {
+                var spriteRenderer = projectileObject.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = profile.Sprite;
+                spriteRenderer.color = profile.Tint;
+                // A newly created SpriteRenderer already owns Unity's compatible default
+                // sprite material. Assigning a null profile material replaces that fallback
+                // and can render the sprite with the magenta error shader.
+                if (profile.Material != null)
+                    spriteRenderer.sharedMaterial = profile.Material;
+                renderer = spriteRenderer;
+            }
+
+            var sourceRenderer = SkillVfxPositionUtility.ResolveRenderer(caster);
             if (sourceRenderer != null)
             {
                 renderer.sortingLayerID = sourceRenderer.sortingLayerID;
@@ -52,10 +83,13 @@ namespace Tactics.Common.Skills.Graph
             }
 
             Tween tween = null;
+            ProjectileTrailRuntime trail = null;
             var completion = new TaskCompletionSource<bool>();
             try
             {
+                trail = new ProjectileTrailRuntime(profile, renderer, start);
                 tween = ProjectileTweenBuilder.Build(projectileObject.transform, profile, start, end, duration)
+                    .OnUpdate(() => trail.Sample(projectileObject.transform))
                     .OnComplete(() => completion.TrySetResult(true))
                     .OnKill(() => completion.TrySetResult(true));
                 using var registration = cancellationToken.Register(() =>
@@ -69,6 +103,7 @@ namespace Tactics.Common.Skills.Graph
             }
             finally
             {
+                trail?.Stop(cancellationToken);
                 if (tween != null && tween.IsActive())
                     tween.Kill(false);
                 if (projectileObject != null)
@@ -84,31 +119,5 @@ namespace Tactics.Common.Skills.Graph
             return Mathf.Clamp(worldDistance / speed, MinTravelDuration, MaxTravelDuration);
         }
 
-        private static Vector3 ResolveUnitCenter(IUnit unit)
-        {
-            var renderer = ResolveRenderer(unit);
-            if (renderer != null)
-                return renderer.bounds.center;
-
-            return unit?.WorldPosition.ToVector3() ?? Vector3.zero;
-        }
-
-        private static SpriteRenderer ResolveRenderer(IUnit unit)
-        {
-            if (unit is not Component component)
-                return null;
-
-            var directional = component.GetComponent<FourDirectionSpriteVisual>();
-            if (directional?.TargetRenderer != null)
-                return directional.TargetRenderer;
-
-            foreach (var renderer in component.GetComponentsInChildren<SpriteRenderer>(true))
-            {
-                if (renderer.gameObject.name == "Sprite")
-                    return renderer;
-            }
-
-            return null;
-        }
     }
 }

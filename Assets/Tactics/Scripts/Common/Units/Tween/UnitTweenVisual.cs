@@ -20,9 +20,7 @@ namespace Tactics.Common.Units.Tween
         [SerializeField] private Transform _visualRoot;
         [SerializeField] private SpriteRenderer _primaryRenderer;
         [SerializeField] private StandardUnitTweenProfile _profile;
-        [SerializeField] private Material _glowOverlayMaterial;
 
-        private SpriteRenderer _glowOverlay;
         private Sequence _idleSequence;
         private Sequence _foregroundSequence;
         private Sequence _moveSequence;
@@ -31,7 +29,6 @@ namespace Tactics.Common.Units.Tween
         private Vector3 _baseScale;
         private VisualPriority _priority;
         private Unit _unit;
-        private bool _previewConfigured;
         private int _foregroundVersion;
 
         public Transform VisualRoot
@@ -44,9 +41,7 @@ namespace Tactics.Common.Units.Tween
             get { return ResolvePrimaryRenderer(); }
         }
 
-        public SpriteRenderer GlowOverlay => _glowOverlay;
         public StandardUnitTweenProfile Profile => _profile;
-        public Material GlowOverlayMaterial => _glowOverlayMaterial;
         public Vector3 BasePosition => _basePosition;
         public Quaternion BaseRotation => _baseRotation;
         public Vector3 BaseScale => _baseScale;
@@ -54,7 +49,6 @@ namespace Tactics.Common.Units.Tween
         private void Awake()
         {
             CaptureBaseline();
-            ResetGlowOverlay();
         }
 
         private void OnEnable()
@@ -86,17 +80,12 @@ namespace Tactics.Common.Units.Tween
         public void ConfigureForPreview(
             Transform visualRoot,
             SpriteRenderer primaryRenderer,
-            StandardUnitTweenProfile profile,
-            Material glowOverlayMaterial = null)
+            StandardUnitTweenProfile profile)
         {
             _visualRoot = visualRoot;
             _primaryRenderer = primaryRenderer;
             _profile = profile;
-            if (glowOverlayMaterial != null)
-                _glowOverlayMaterial = glowOverlayMaterial;
-            _previewConfigured = true;
             CaptureBaseline();
-            ResetGlowOverlay();
         }
 
         /// <summary>
@@ -119,13 +108,9 @@ namespace Tactics.Common.Units.Tween
                 () =>
                 {
                     Vector3 direction = targetWorldPosition - transform.position;
-                    SpriteRenderer glowOverlay = action == UnitVisualAction.Cast
-                        ? PrepareGlowOverlay()
-                        : null;
                     var plan = UnitTweenSequenceBuilder.BuildAction(
                         action,
                         _visualRoot,
-                        glowOverlay,
                         _profile,
                         _basePosition,
                         _baseRotation,
@@ -216,7 +201,6 @@ namespace Tactics.Common.Units.Tween
             InterruptForeground();
             _priority = VisualPriority.Idle;
             RestoreBaseline();
-            ResetGlowOverlay();
         }
 
         private async Task PlayForegroundAsync(
@@ -231,7 +215,6 @@ namespace Tactics.Common.Units.Tween
             KillSequence(ref _moveSequence);
             int foregroundVersion = ++_foregroundVersion;
             KillSequence(ref _foregroundSequence);
-            ResetGlowOverlay();
             RestoreBaseline();
             _priority = requestedPriority;
 
@@ -269,7 +252,6 @@ namespace Tactics.Common.Units.Tween
                 {
                     if (_foregroundSequence == ownedSequence)
                         _foregroundSequence = null;
-                    ResetGlowOverlay();
                     RestoreBaseline();
                     if (this != null && isActiveAndEnabled)
                     {
@@ -364,86 +346,10 @@ namespace Tactics.Common.Units.Tween
             return _primaryRenderer;
         }
 
-        private SpriteRenderer EnsureGlowOverlay()
-        {
-            var primary = ResolvePrimaryRenderer();
-            var visualRoot = ResolveVisualRoot();
-            if (primary == null || visualRoot == null)
-                return null;
-
-            if (_glowOverlayMaterial == null)
-            {
-                ResetGlowOverlay();
-                return null;
-            }
-
-            if (_glowOverlay == null)
-            {
-                var existing = visualRoot.Find("GlowOverlay");
-                if (existing != null)
-                    _glowOverlay = existing.GetComponent<SpriteRenderer>();
-            }
-
-            if (_glowOverlay == null && (Application.isPlaying || _previewConfigured))
-            {
-                var overlayObject = new GameObject("GlowOverlay");
-                overlayObject.transform.SetParent(visualRoot, false);
-                _glowOverlay = overlayObject.AddComponent<SpriteRenderer>();
-                _glowOverlay.enabled = false;
-            }
-
-            if (_glowOverlay != null)
-                _glowOverlay.sharedMaterial = _glowOverlayMaterial;
-
-            return _glowOverlay;
-        }
-
-        private SpriteRenderer PrepareGlowOverlay()
-        {
-            SpriteRenderer overlay = EnsureGlowOverlay();
-            SpriteRenderer primary = ResolvePrimaryRenderer();
-            if (overlay == null || primary == null)
-                return null;
-
-            overlay.sprite = primary.sprite;
-            overlay.flipX = primary.flipX;
-            overlay.flipY = primary.flipY;
-            overlay.sortingLayerID = primary.sortingLayerID;
-            overlay.sortingOrder = primary.sortingOrder + 1;
-            overlay.maskInteraction = primary.maskInteraction;
-            overlay.spriteSortPoint = primary.spriteSortPoint;
-            overlay.sharedMaterial = _glowOverlayMaterial;
-            Color color = _profile != null ? _profile.CastGlowColor : Color.white;
-            color.a = 0f;
-            overlay.color = color;
-            overlay.enabled = true;
-            return overlay;
-        }
-
-        private void ResetGlowOverlay()
-        {
-            if (_glowOverlay == null)
-            {
-                Transform visualRoot = ResolveVisualRoot();
-                Transform existing = visualRoot != null ? visualRoot.Find("GlowOverlay") : null;
-                if (existing != null)
-                    _glowOverlay = existing.GetComponent<SpriteRenderer>();
-            }
-
-            if (_glowOverlay == null)
-                return;
-
-            Color color = _glowOverlay.color;
-            color.a = 0f;
-            _glowOverlay.color = color;
-            _glowOverlay.enabled = false;
-        }
-
         private void InterruptForeground()
         {
             ++_foregroundVersion;
             KillSequence(ref _foregroundSequence);
-            ResetGlowOverlay();
         }
 
         private static void KillSequence(ref Sequence sequence)
