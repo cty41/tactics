@@ -68,6 +68,7 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref.meta
       - Assets/Tactics/Scripts/UI/RadialFillElement.cs
       - Assets/Tactics/Scripts/Editor/MCP
+      - Assets/Tactics/Tests/Editor/UnityMcpProjectBootstrapTests.cs
       - Tools/unity-mcp
 
   okf-maintenance:

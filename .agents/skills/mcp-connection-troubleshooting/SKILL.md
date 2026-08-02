@@ -61,6 +61,15 @@ powershell.exe -File Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1 -RestoreMig
 
 项目会关闭 MCPForUnity 包级共享 auto-start，由 `UnityMcpProjectBootstrap` 独占每个 worktree 的桥启动。缺少 `mcp.json` 时，旧版本 bootstrap 会在重启桥之前返回，因此每次 domain reload 都会断线。当前 bootstrap 可临时回退到 `mcp.local.json` 并输出 Warning，但仍应立即运行 `-RestoreMigration` 恢复正式配置；若两个文件都不存在，则用显式 `-Url` 完整初始化。
 
+正常的脚本编译或 Play Mode 切换会短暂关闭 Unity 插件 Session。当前 bootstrap 在每个新 Editor Domain 中只通过一次 `EditorApplication.delayCall` 执行重连：
+
+- 已验证的活动 Bridge 保持不动。
+- 本地 MCP Server 已可达时直接连接 Bridge，不依赖 PID 文件，也不重启 Server。
+- Server 不可达时才启动并等待它就绪。
+- Bridge 启动或验证暂时失败时有限重试；不会停止未知端口进程。
+
+验证自动恢复时只轮询 `mcpforunity://instances`。短暂的 `no_unity_session` 可以重试；若超过重连窗口仍无实例，再检查 Console 和 server launch log。不要通过反复点击 Connect 或窗口焦点自动化掩盖 bootstrap 故障。
+
 ### Step 2: 提取端口信息
 
 从配置文件中找到 MCP 服务器的 URL：
@@ -152,6 +161,7 @@ Unity 编译、测试、构建和连接恢复必须优先使用 MCP 工具与只
 | 未检查项目根目录就写操作 | 先读取 `project/info` | 防止写入错误 worktree |
 | 手动反复启动 MCP server | 恢复或初始化 `.agents/mcp.json` | 手动启动不能跨 domain reload，未修复唯一自动重启路径 |
 | 激活 Unity 窗口并发送 Refresh/测试快捷键 | 使用 `refresh_unity`、`run_tests`、`get_test_job`、`manage_build` | 避免抢占用户前台焦点；断线时应停下请用户手动恢复 |
+| 同时注册多个 reload 重连入口 | 每个新 Domain 只调度一次重连 | 多个 `Bridge.StartAsync` 会形成互相抢占的 WebSocket 重连循环 |
 
 ## Checklist
 
@@ -162,3 +172,4 @@ Unity 编译、测试、构建和连接恢复必须优先使用 MCP 工具与只
 - [ ] 如果仍然失败，报告了具体错误信息
 - [ ] 已核验 `project/info` 的 `projectRoot` 是当前 worktree
 - [ ] 未通过窗口自动化抢占 Unity Editor 焦点或触发编译、测试、构建
+- [ ] Domain Reload 后只通过 MCP 轮询确认 Session 自动恢复，未控制 Unity 窗口焦点

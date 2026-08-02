@@ -142,6 +142,30 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
+        public void TweenPreviewWindow_RebuildStopAndActionChange_PreserveVisibleSpriteScale()
+        {
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                Invoke(window, "RebuildStage");
+                AssertPreviewSpriteIsAuthoredAndVisible(window, "_actorInstance");
+                AssertPreviewSpriteIsAuthoredAndVisible(window, "_targetInstance");
+
+                Invoke(window, "StopPreview", true);
+                AssertPreviewSpriteIsAuthoredAndVisible(window, "_actorInstance");
+                AssertPreviewSpriteIsAuthoredAndVisible(window, "_targetInstance");
+
+                Invoke(window, "RebuildSequence", false);
+                AssertPreviewSpriteIsAuthoredAndVisible(window, "_actorInstance");
+                AssertPreviewSpriteIsAuthoredAndVisible(window, "_targetInstance");
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
         public void TweenPreviewWindow_ApplySupportsUndo_AndRevertRestoresSandbox()
         {
             var source = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
@@ -197,6 +221,30 @@ namespace Tactics.Tests.Editor
                  value.name.StartsWith("PreviewProjectile") ||
                  value.name == "PureRunHunter(Clone)" ||
                  value.name == "PureRunGoatCharger(Clone)"));
+        }
+
+        private static void AssertPreviewSpriteIsAuthoredAndVisible(
+            PureRunTweenPreviewWindow window,
+            string instanceFieldName)
+        {
+            GameObject instance = GetField<GameObject>(window, instanceFieldName);
+            Assert.That(instance, Is.Not.Null, instanceFieldName);
+            SpriteRenderer renderer = instance
+                .GetComponentsInChildren<SpriteRenderer>(true)
+                .Single(value => value.gameObject.name == "Sprite");
+            UnitTweenVisual visual = instance.GetComponent<UnitTweenVisual>();
+
+            Assert.That(renderer.sprite, Is.Not.Null);
+            Assert.That(renderer.transform.localScale.x, Is.GreaterThan(0f));
+            Assert.That(renderer.transform.localScale.y, Is.GreaterThan(0f));
+            Assert.That(renderer.bounds.size.x, Is.GreaterThan(0f));
+            Assert.That(renderer.bounds.size.y, Is.GreaterThan(0f));
+            Assert.That(visual, Is.Not.Null);
+            Assert.That(
+                visual.VisualRoot == renderer.transform ||
+                renderer.transform.IsChildOf(visual.VisualRoot),
+                Is.True,
+                "Tween root must own the visible Sprite hierarchy.");
         }
 
         private static ProjectileVisualProfile LoadProfile(string name)

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-08-02T20:33:46+08:00"
+timestamp: "2026-08-02T21:36:39+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -21,7 +21,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
   - Tools/unity-mcp
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:143e2062675fc116e9f216333d8ffaea69cedb3870612c96f394d791110242f6
+source_fingerprint: sha256:18225d1c4bcd2ac8b7467e5c2718aeb02ee8be85ce7abedac5a2c498881fe20c
 ---
 
 # Core Rules
@@ -32,7 +32,7 @@ source_fingerprint: sha256:143e2062675fc116e9f216333d8ffaea69cedb3870612c96f394d
 - 修改 C# 后必须显式触发 Unity 编译并检查 Console 错误。
 - Unity 编译、测试和构建必须通过 MCP 调用；不得用窗口自动化、激活窗口或抢占 Editor 焦点来驱动或恢复测试。MCP bridge 不可用时只做端点、进程和日志等只读诊断，不能以干扰前台工作的方式绕过连接问题。
 - 新增、删除或移动 Unity 文件时保持 `.meta` 配对。
-- Unity MCP 的端口从 worktree 本地且忽略的 `.agents/mcp.json` 读取；首次操作先同步模板生成的派生客户端配置，并用 `project/info` 核验当前 worktree。项目 bootstrap 独占 domain reload 后的桥重启，并为 uv/Python 冷启动保留 60 秒本地服务可达性等待；超时日志必须给出端点、尝试次数和 `Library/MCPForUnity/Logs/server-launch-{port}.log` 诊断路径。正式配置缺失时可从迁移备份 `.agents/mcp.local.json` 临时恢复连接并给出修复提示，但仍须执行 `Initialize-ProjectMcpConfig.ps1 -RestoreMigration`，两个配置都缺失时则用显式 `-Url` 初始化。
+- Unity MCP 的端口从 worktree 本地且忽略的 `.agents/mcp.json` 读取；首次操作先同步模板生成的派生客户端配置，并用 `project/info` 核验当前 worktree。项目 bootstrap 在每个新 Editor Domain 中只调度一次桥重连：已验证 Bridge 保持不动，Server 已可达时直接连接且不依赖 PID 文件，Server 不可达时才启动并等待最多 60 秒；Bridge 使用有限重试，超时日志必须给出端点和 `Library/MCPForUnity/Logs/server-launch-{port}.log` 诊断路径。正式配置缺失时可从迁移备份 `.agents/mcp.local.json` 临时恢复连接并给出修复提示，但仍须执行 `Initialize-ProjectMcpConfig.ps1 -RestoreMigration`，两个配置都缺失时则用显式 `-Url` 初始化。
 - 文档查询先读 OKF index；当前实现仍回到代码、资产和测试。
 
 # Related Systems

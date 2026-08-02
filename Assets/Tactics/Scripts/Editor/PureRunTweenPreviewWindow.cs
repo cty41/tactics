@@ -356,6 +356,11 @@ namespace Tactics.EditorTools
                 _targetInstance = _previewUtility.InstantiatePrefabInScene(_targetPrefab);
             SetPreviewObjectState(_actorInstance, Vector3.zero, _facing);
             SetPreviewObjectState(_targetInstance, ResolveTargetPosition(), Opposite(_facing));
+            // Edit Mode does not invoke UnitTweenVisual.Awake. Capture each authored Sprite pose
+            // before RebuildSequence stops/restores any preview state, otherwise the default
+            // zero-valued baseline collapses the renderer.
+            ResolveVisual(_actorInstance, _unitSandbox);
+            ResolveVisual(_targetInstance, _unitSandbox);
             CaptureStandingSpriteStates();
             CreateTileStage();
             RebuildSequence(false);
@@ -539,9 +544,29 @@ namespace Tactics.EditorTools
             if (visual == null)
                 visual = instance.AddComponent<UnitTweenVisual>();
             SpriteRenderer renderer = FindSpriteRenderer(instance);
-            Transform visualRoot = instance.transform.Find("VisualRoot") ?? renderer?.transform;
+            Transform visualRoot = ResolvePreviewVisualRoot(visual, renderer);
             visual.ConfigureForPreview(visualRoot, renderer, profile);
             return visual;
+        }
+
+        private static Transform ResolvePreviewVisualRoot(
+            UnitTweenVisual visual,
+            SpriteRenderer renderer)
+        {
+            Transform authoredRoot = visual?.VisualRoot;
+            if (renderer == null)
+                return authoredRoot;
+
+            Transform spriteTransform = renderer.transform;
+            if (authoredRoot != null &&
+                (authoredRoot == spriteTransform || spriteTransform.IsChildOf(authoredRoot)))
+            {
+                return authoredRoot;
+            }
+
+            // Some Pure Run prefabs contain an unrelated sibling named VisualRoot. It must not
+            // receive the tween because it does not own the visible Sprite hierarchy.
+            return spriteTransform;
         }
 
         private static SpriteRenderer FindSpriteRenderer(GameObject instance)

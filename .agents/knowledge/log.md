@@ -3,7 +3,7 @@
 ## 2026-08-02
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:66622df99da280c97e0a08a4d3131360be4a3f605d5a9fa236d6aac80409b4cc`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:c722156cad98360da87bd8b373c02a9411d1ef07b5143b46ac457e8639608c52`。
-* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:143e2062675fc116e9f216333d8ffaea69cedb3870612c96f394d791110242f6`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:18225d1c4bcd2ac8b7467e5c2718aeb02ee8be85ce7abedac5a2c498881fe20c`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:0f080e8691e67e947e7f50ca642b48b764777091eff0732a16a62a78779ba7f8`。
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:b9a548d829c25b09ed8a90950fe0add3d71ea16b6dde169c4a8935f18040b03e`。
 

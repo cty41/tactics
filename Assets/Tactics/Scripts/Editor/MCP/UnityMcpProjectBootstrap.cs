@@ -1,7 +1,5 @@
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using MCPForUnity.Editor.Helpers;
 using MCPForUnity.Editor.Services;
@@ -26,13 +24,17 @@ namespace Tactics.Editor.MCP
         private const int ServerReadyTimeoutSeconds =
             ServerReadyAttempts * ServerReadyDelayMilliseconds / 1000;
         private const int BridgeRegistrationDelayMilliseconds = 1000;
+        private const int BridgeConnectAttempts = 5;
+        private const int BridgeConnectRetryDelayMilliseconds = 500;
 
         private static bool _reconcileInProgress;
 
         static UnityMcpProjectBootstrap()
         {
             DisableSharedAutoStart();
-            AssemblyReloadEvents.afterAssemblyReload += ScheduleReconcile;
+            // InitializeOnLoad runs once in every new editor domain. A single delayCall is enough
+            // to reconnect after reload; also subscribing to afterAssemblyReload can schedule a
+            // second Bridge.StartAsync and leave competing WebSocket reconnect loops alive.
             EditorApplication.delayCall += ScheduleReconcile;
         }
 
@@ -56,12 +58,10 @@ namespace Tactics.Editor.MCP
 
         private static async Task ReconcileAsync()
         {
-            if (_reconcileInProgress)
+            if (!TryBeginReconcile())
             {
                 return;
             }
-
-            _reconcileInProgress = true;
             try
             {
                 if (!TryReadProjectEndpoint(out Uri endpoint, out string error))
@@ -71,45 +71,25 @@ namespace Tactics.Editor.MCP
                 }
 
                 ConfigureLocalHttp(endpoint);
-                MCPServiceLocator.TransportManager.ForceStop(TransportMode.Http);
-
-                bool serverReachable = await IsPortReachableAsync(endpoint.Port);
-                if (serverReachable && !IsExpectedProjectServerRunning(endpoint.Port))
+                string connectionError = await ReconcileConnectionAsync(
+                    () => MCPServiceLocator.TransportManager.IsRunning(TransportMode.Http),
+                    () => MCPServiceLocator.TransportManager.VerifyAsync(TransportMode.Http),
+                    () => MCPServiceLocator.TransportManager.ForceStop(TransportMode.Http),
+                    () => MCPServiceLocator.Server.IsLocalHttpServerReachable(),
+                    () => MCPServiceLocator.Server.StartLocalHttpServer(quiet: true),
+                    WaitForServerAsync,
+                    () => MCPServiceLocator.Bridge.StartAsync(),
+                    () => Task.Delay(BridgeRegistrationDelayMilliseconds),
+                    () => Task.Delay(BridgeConnectRetryDelayMilliseconds),
+                    BridgeConnectAttempts);
+                if (!string.IsNullOrEmpty(connectionError))
                 {
-                    TLog.Error(
-                        $"[UnityMCP] Port {endpoint.Port} is occupied by an unknown process. " +
-                        "The bootstrap will not stop it; close the owner or use this project's configured port.");
-                    return;
-                }
-
-                if (!serverReachable)
-                {
-                    bool serverStarted = MCPServiceLocator.Server.StartLocalHttpServer(quiet: true);
-                    if (!serverStarted)
-                    {
-                        TLog.Error($"[UnityMCP] Could not start the local server on {endpoint}.");
-                        return;
-                    }
-
-                    if (!await WaitForServerAsync())
-                    {
-                        string launchLogPath = GetServerLaunchLogPath(endpoint.Port);
-                        TLog.Error(
-                            $"[UnityMCP] Local server did not become reachable on {endpoint} after " +
-                            $"{ServerReadyTimeoutSeconds} seconds ({ServerReadyAttempts} attempts). " +
-                            $"Inspect {launchLogPath}.");
-                        return;
-                    }
-                }
-
-                bool bridgeStarted = await MCPServiceLocator.Bridge.StartAsync();
-                // StartAsync returns once the WebSocket is open. Give the server time to assign the
-                // plugin session before VerifyAsync sends its session-bound pong.
-                await Task.Delay(BridgeRegistrationDelayMilliseconds);
-                bool verified = bridgeStarted && await MCPServiceLocator.TransportManager.VerifyAsync(TransportMode.Http);
-                if (!verified)
-                {
-                    TLog.Error($"[UnityMCP] Bridge verification failed for {endpoint}.");
+                    string launchLogHint = connectionError.StartsWith(
+                        "Local HTTP server did not become reachable",
+                        StringComparison.Ordinal)
+                        ? $" Inspect {GetServerLaunchLogPath(endpoint.Port)}."
+                        : string.Empty;
+                    TLog.Error($"[UnityMCP] {connectionError} Endpoint: {endpoint}.{launchLogHint}");
                     return;
                 }
 
@@ -121,8 +101,94 @@ namespace Tactics.Editor.MCP
             }
             finally
             {
-                _reconcileInProgress = false;
+                EndReconcile();
             }
+        }
+
+        private static bool TryBeginReconcile()
+        {
+            return TryBeginReconcile(ref _reconcileInProgress);
+        }
+
+        private static bool TryBeginReconcile(ref bool reconcileInProgress)
+        {
+            if (reconcileInProgress)
+            {
+                return false;
+            }
+
+            reconcileInProgress = true;
+            return true;
+        }
+
+        private static void EndReconcile()
+        {
+            _reconcileInProgress = false;
+        }
+
+        private static async Task<string> ReconcileConnectionAsync(
+            Func<bool> isBridgeRunning,
+            Func<Task<bool>> verifyBridgeAsync,
+            Action stopBridge,
+            Func<bool> isServerReachable,
+            Func<bool> startServer,
+            Func<Task<bool>> waitForServerAsync,
+            Func<Task<bool>> startBridgeAsync,
+            Func<Task> waitAfterBridgeStartAsync,
+            Func<Task> retryDelayAsync,
+            int bridgeConnectAttempts)
+        {
+            if (isBridgeRunning())
+            {
+                if (await verifyBridgeAsync())
+                {
+                    return null;
+                }
+
+                stopBridge();
+            }
+
+            if (!isServerReachable())
+            {
+                if (!startServer())
+                {
+                    return "Could not start the local HTTP server.";
+                }
+
+                if (!await waitForServerAsync())
+                {
+                    return $"Local HTTP server did not become reachable after " +
+                           $"{ServerReadyTimeoutSeconds} seconds ({ServerReadyAttempts} attempts).";
+                }
+            }
+
+            int attempts = Math.Max(1, bridgeConnectAttempts);
+            for (int attempt = 0; attempt < attempts; attempt++)
+            {
+                bool bridgeStarted = await startBridgeAsync();
+                if (bridgeStarted)
+                {
+                    // StartAsync completes when the WebSocket opens. Registration on the server is
+                    // asynchronous, so verification must wait for the session to become visible.
+                    await waitAfterBridgeStartAsync();
+                    if (await verifyBridgeAsync())
+                    {
+                        return null;
+                    }
+                }
+
+                if (isBridgeRunning())
+                {
+                    stopBridge();
+                }
+
+                if (attempt + 1 < attempts)
+                {
+                    await retryDelayAsync();
+                }
+            }
+
+            return $"Bridge did not reconnect after {attempts} attempts.";
         }
 
         private static bool TryReadProjectEndpoint(out Uri endpoint, out string error)
@@ -221,47 +287,6 @@ namespace Tactics.Editor.MCP
             }
 
             return false;
-        }
-
-        private static async Task<bool> IsPortReachableAsync(int port)
-        {
-            using var client = new TcpClient();
-            Task connectTask = client.ConnectAsync("127.0.0.1", port);
-            Task completedTask = await Task.WhenAny(connectTask, Task.Delay(500));
-            if (completedTask != connectTask)
-            {
-                return false;
-            }
-
-            try
-            {
-                await connectTask;
-                return client.Connected;
-            }
-            catch (SocketException)
-            {
-                return false;
-            }
-        }
-
-        private static bool IsExpectedProjectServerRunning(int port)
-        {
-            string pidFile = Path.Combine(
-                GetProjectRoot(), "Library", "MCPForUnity", "RunState", $"mcp_http_{port}.pid");
-            if (!File.Exists(pidFile) || !int.TryParse(File.ReadAllText(pidFile).Trim(), out int processId))
-            {
-                return false;
-            }
-
-            try
-            {
-                using Process process = Process.GetProcessById(processId);
-                return !process.HasExited;
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
         }
 
         private static string GetServerLaunchLogPath(int port)
