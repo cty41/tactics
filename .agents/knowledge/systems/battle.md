@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-01T20:06:53+08:00"
+timestamp: "2026-08-01T23:36:33+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -71,7 +71,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:412ed84cd7cc42afb35ae2d833beb40700288d46a34a47578f59402af74d6ea1
+source_fingerprint: sha256:870a8cc20de52924fa1f0a2618d1d5005269833e5f961599f97b84412f9f6fa1
 ---
 
 # Current State
@@ -95,6 +95,8 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态。Cast 开始时以施法者 Sprite 中心为锚点发送非阻塞 `CastCharge`，由有限原语 Recipe 在人物和阴影后方生成径向光环；专属 Recipe 优先，其他 Cast 回退默认低饱和蓝。禁止复制整人物 Sprite 做白膜/换色 Overlay，施法全程不改主 Renderer 的 Sprite、Material 或 Color。尸体生成和占格立即生效，专用死亡图只异步播放落地回弹。蝙蝠等飞行单位暂不接入。
 
 Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径，而是由后续美术特效资产承担。当前技能 Recipe 在逐个替换前继续作为可玩基线。
+
+`Tactics/Pure Run/Tween Preview` 在不进入 Play Mode 的隔离场景中复用上述运行时 Sequence Builder，提供 Idle、移动、近战、远程、施法、受击、尸体落地和投射物组合预览。窗口只在 Apply 时通过 Undo 写回共享 Profile，并在 Stop、资源切换、关闭或程序集重载时恢复站立 Sprite、方向和 Transform。它只标记 Release/ProjectileImpact；Recipe 命中层仍由独立 Skill VFX Preview 负责。飞行蝙蝠继续排除，待地面参数人工确认后另建球核悬浮和翼展动画。
 
 技能接触反馈由可选 `SkillVfxRecipe` 驱动。执行器在伤害前保存世界坐标，只发送强类型 Cue；Coordinator 只等待释放/接触关键帧，淡出、粒子和残影非阻塞。投射物抵达时先完成 `ProjectileImpact` 接触点再写入命中黑板；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，并在取消时同步清理。Sprite 投射物未显式配置 Material 时保留 `SpriteRenderer` 默认材质，残影遵循同一规则，不会用空材质触发洋红错误 Shader。实际伤害仍以 `DamageResolution.WasHit` 决定次目标/命中反馈，表现缺失或取消不能改变玩法结果。突刺方向端点不因射线上先命中的敌人被通用 LOS 隐藏，但扫描仍在友军、永久地形和非法格处结束。
 

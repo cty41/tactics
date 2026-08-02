@@ -30,29 +30,56 @@ namespace Tactics.Common.Skills.Graph
                     progress =>
                     {
                         float t = Mathf.Clamp01(progress);
-                        Vector3 position = Vector3.LerpUnclamped(start, end, t);
-                        position.y += 4f * arcHeight * t * (1f - t);
-                        projectile.position = position;
+                        projectile.position = EvaluatePosition(start, end, arcHeight, t);
 
                         if (profile.RotateAlongTangent)
-                        {
-                            Vector3 tangent = end - start;
-                            tangent.y += 4f * arcHeight * (1f - 2f * t);
-                            float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
-                            projectile.rotation = Quaternion.Euler(0f, 0f, angle);
-                        }
+                            projectile.rotation = EvaluateRotation(start, end, arcHeight, t);
 
-                        if (profile.PulseAmount > 0f)
-                        {
-                            float pulse = 1f + Mathf.Sin(t * Mathf.PI * 2f * profile.PulseCycles) *
-                                profile.PulseAmount;
-                            projectile.localScale = baseScale * pulse;
-                        }
+                        projectile.localScale = EvaluateScale(profile, baseScale, t);
                     },
                     1f,
                     Mathf.Max(0.01f, duration))
                 .SetEase(Ease.Linear)
                 .Pause();
+        }
+
+        internal static Vector3 EvaluatePosition(
+            Vector3 start,
+            Vector3 end,
+            float arcHeight,
+            float normalizedTime)
+        {
+            float t = Mathf.Clamp01(normalizedTime);
+            Vector3 position = Vector3.LerpUnclamped(start, end, t);
+            position.y += 4f * arcHeight * t * (1f - t);
+            return position;
+        }
+
+        internal static Quaternion EvaluateRotation(
+            Vector3 start,
+            Vector3 end,
+            float arcHeight,
+            float normalizedTime)
+        {
+            float t = Mathf.Clamp01(normalizedTime);
+            Vector3 tangent = end - start;
+            tangent.y += 4f * arcHeight * (1f - 2f * t);
+            float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
+            return Quaternion.Euler(0f, 0f, angle);
+        }
+
+        internal static Vector3 EvaluateScale(
+            ProjectileVisualProfile profile,
+            Vector3 baseScale,
+            float normalizedTime)
+        {
+            if (profile.PulseAmount <= 0f)
+                return baseScale;
+
+            float pulse = 1f + Mathf.Sin(
+                Mathf.Clamp01(normalizedTime) * Mathf.PI * 2f * profile.PulseCycles) *
+                profile.PulseAmount;
+            return baseScale * pulse;
         }
     }
 }

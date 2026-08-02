@@ -1,10 +1,11 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-01
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:19985d23c69fea65fd9345bf0e35b361355b1dc0618011aba29b4ef5811dff1e`。
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:ae1029f3c2c081510c5ce38cfa10c0d1ba252dad2d5ad8f2d09be9e73cf623aa`。
-* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:9a5c070add50ec62060c4ce3b9c5bb56ef33ff5bb98e93dba9f75c2e47f5d93d`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:412ed84cd7cc42afb35ae2d833beb40700288d46a34a47578f59402af74d6ea1`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:07a592fba3f9ce26eea1990aae4e30e8873274fba231ab1138ac083b93003c3f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:9efa57e5d37dab9188590e9498d6ecf631d635e50959135c16af79d196fb8c60`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:9c5bb7f2aaa67ce42b9b5d02c8992d2de27641a835d44f967e40ee3e3d7940ee`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:870a8cc20de52924fa1f0a2618d1d5005269833e5f961599f97b84412f9f6fa1`。
+* **Update**: 新增独立 `Tactics/Pure Run/Tween Preview`，以隔离 PreviewRenderUtility 舞台复用运行时单位 Sequence、投射物 Renderer/材质/轨迹与尾迹构建；支持十种动作组合、四方向、距离、循环、倍速、时间拖动和可 Undo 的 Profile 沙盒。该窗口只标记 Release/ProjectileImpact，Skill Recipe 仍由独立 VFX Preview 检查，蝙蝠动画继续延期。
 * **Update**: 程序化火球、骨矛和突刺已完成可玩验收，但定位为传统美术特效逐技能替换前的临时视觉基线；Tween 长期保留角色/投射物运动、受击等简单动画，简单光环、闪光和短尾迹仍可程序化，复杂技能不再默认扩展有限原语。
 * **Fix**: 废弃 Cast 整张人物 `GlowOverlay` 白膜，改为人物与阴影后方的非阻塞 `CastCharge` 径向光环；所有 Cast 都有默认蓝色 Recipe，骨矛与火球分别覆写苍白青和暖橙红，主 Sprite 的 Sprite、Material 和 Color 保持不变。
 * **Validation**: Cast 光环与 Pure Run Tween 资产 EditMode 48/48，三职业技能、骨矛清理和战斗倍速联合 PlayMode 72/72，Sprite 严格校验 38 文件/0 失败。

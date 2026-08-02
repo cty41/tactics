@@ -46,6 +46,8 @@ SkillGraph 和三个职业执行器只发送 `CastCharge`、`ProjectileImpact`�
 
 编辑器入口 `Tactics/Pure Run/Skill VFX Preview` 支持选择 Recipe、Cue、等级、路径长度和命中点数量，并提供播放、暂停、重播与时间拖动。窗口直接调用运行时 Builder 的时间采样函数；粒子使用固定种子的隐藏 ParticleSystem 并通过绝对时间 `Simulate` 重放。窗口同时显示 `64×32` Tile 参考线与阻塞关键帧，便于在不改变资产的情况下检查最高亮阶段。
 
+独立入口 `Tactics/Pure Run/Tween Preview` 负责角色纸片 Tween 与投射物运动。它复用运行时 `UnitTweenSequenceBuilder`、投射物 Renderer/材质构建及轨迹采样，并在时间轴标记 Release 与 ProjectileImpact；Sprite、SoftDisc、弧线、旋转、脉冲、Particle Trail 和 Ghost Trail 都在隔离预览场景中确定性重放。它不创建命中 Recipe，也不修改伤害或 SkillGraph 时序。Profile 调参只作用于隐藏沙盒，Apply 才通过 Undo 写回，Revert、Stop、资源切换、窗口关闭和程序集重载都必须恢复 Sprite/Transform 并清理临时对象。
+
 `SkillTargetingProtocol` 统一表达主目标、任意格中心、方向扇形、有序多段目标、实体对象格、回收动作和无路径位移。伤害大类与元素分别配置；`ApplyBuff.RequiresSuccessfulHit` 只在明确的“命中附带状态”节点上启用，避免独立 Buff 误读旧伤害结果。`SummonUnit` 通过战斗级 `SummonRegistry` 按召唤者和类别维护顺序、上限与最早替换。
 
 目标选择期间，`SkillGraphAbilityImpl` 通过共享战斗朝向协调器预览施法者方向：单位和格子悬停都可改变视觉朝向，移动目标优先使用可达路径第一段，非法或无路径目标直接使用鼠标格方向。取消、离开目标或失败释放保留最后预览；有序多目标的合法锥形仍使用进入选择时锁定的方向，不随视觉预览漂移。完整生命周期见[战斗单位朝向规则](battle-facing-rules.md)。

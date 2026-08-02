@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-08-01T21:22:28+08:00"
+timestamp: "2026-08-01T23:36:35+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -41,7 +41,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
   - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:9a5c070add50ec62060c4ce3b9c5bb56ef33ff5bb98e93dba9f75c2e47f5d93d
+source_fingerprint: sha256:9c5bb7f2aaa67ce42b9b5d02c8992d2de27641a835d44f967e40ee3e3d7940ee
 ---
 
 # Current State
@@ -53,6 +53,8 @@ source_fingerprint: sha256:9a5c070add50ec62060c4ce3b9c5bb56ef33ff5bb98e93dba9f75
 `ProjectileLaunchNodeRecord` 可选引用 `ProjectileVisualProfile`，并继续完整往返 TravelTime、Speed、DropOnHit、LOS 与 Profile 资产路径。运行时按 `worldDistance / Speed` 计算并限制飞行时长；终点在发射时锁定，抵达后先等待 `ProjectileImpact` 接触关键帧，再写入 `ProjectileHit` 和进入 OnHit。火球现使用程序化软圆热核与 World-space 尾火；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，其他已批准 Sprite 继续由 Profile 驱动。Sprite Profile 的 Material 为空时，主投射物和残影保留 `SpriteRenderer` 默认兼容材质，避免空引用覆盖后落入洋红错误 Shader；显式 Sprite Material 仍会传递给残影。取消会先标记等待任务为取消，再 Kill Tween 并清理 Renderer、残影和相关 Tween，避免 `OnKill` 抢先完成或留下临时对象。
 
 Skill VFX 使用有限原语 Recipe：六种强类型 Cue 只携带结算前捕获的世界坐标快照，六种固定原语由 `SkillVfxCoordinator` 统一创建、排序、等待和清理。只有层的 `BlockingMarker` 影响玩法继续时点；粒子与残影强制非阻塞。Cast 开始时以施法者 Sprite 中心发送 `CastCharge`，其 `BlockingMarker=0`；Recipe 按明确技能族、已有专属、默认 Cast 的顺序解析，在人物与阴影后生成单个径向光环，不修改主 Renderer。火球终点/溅射/Lv3 条件引爆、骨矛实际命中交叉闪光、突刺方向刺痕和实际命中反馈已分别接入；空 Recipe 或无 Sink 时保持 no-op。`PureRunSkillVfxPreviewWindow` 复用 Builder 时间采样，支持 Recipe/Cue/等级/路径/命中数与可拖动时间轴。
+
+`PureRunTweenPreviewWindow` 与 Skill VFX Preview 保持独立：前者复用运行时单位 Sequence、投射物视觉 Factory 和轨迹采样，预览 Sprite/SoftDisc、Particle/Ghost Trail，并只标记 Release 与 ProjectileImpact；后者负责 Recipe 的命中与分层效果。Tween Preview 的隐藏 Profile 沙盒只有 Apply 才借助 Undo 写回，Revert 或生命周期清理不会污染正式资产。
 
 当前火球、骨矛和突刺 Recipe 是已验收的可玩临时视觉基线，不是复杂技能的目标品质或永久回退。长期制作策略保留 Tween 处理角色姿态、位移、受击、后坐和投射物运动，也允许简单光环、短闪光、短尾迹与颜色脉冲继续程序化；多阶段、形态复杂或承担职业识别的技能特效后续逐个改用美术可直接调整的 Prefab、ParticleSystem、Shader/Material、Sprite 序列或 AnimationClip。替换完成前保留现有 Recipe，不继续将有限原语扩充为通用复杂 VFX 框架。
 

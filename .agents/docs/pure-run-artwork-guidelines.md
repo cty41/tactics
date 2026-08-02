@@ -78,6 +78,8 @@ verified_revision: c68dbebe
 - Cast 蓄力使用 `SkillVfxRecipe` 的非阻塞 `CastCharge` 径向光环，以施法者可见 Sprite 中心为锚点并排在人物与阴影后方。无专属 Recipe 的 Cast 回退到低饱和蓝色光环，火球和骨矛可由技能族 Recipe 覆写颜色；禁止复制、染色或实心覆盖整张人物 Sprite。施法期间主 `SpriteRenderer` 的 Sprite、Material 和 Color 必须保持不变。
 - 远程/施法动作在 release 标记启动 SkillGraph；`ProjectileLaunch` 抵达后才继续 `OnHit` 和玩法效果。场景卸载或取消必须先把等待任务标记为取消，再 Kill 临时 Tween 并销毁 Renderer，避免 `OnKill` 抢先报告成功。
 - 飞行蝙蝠不使用这套地面胶囊动画；其独立悬浮与飞行动画留待专用 Profile。
+- 编辑器入口 `Tactics/Pure Run/Tween Preview` 在隔离的 `PreviewRenderUtility` 舞台中复用运行时单位 Sequence 和投射物视觉构建，支持十种单项/组合动作、四方向、2–6 格距离、循环、倍速和时间拖动。Profile 始终通过隐藏沙盒编辑，只有明确点击 Apply 才借助 Undo 写回资产；切换 Profile、Stop、关闭窗口和程序集重载必须销毁全部 Tween 与临时对象。
+- Tween Preview 只显示角色动作、Release、ProjectileImpact 及 Sprite/SoftDisc 弹道、脉冲和尾迹；技能光环、命中特效与 Recipe 分层继续由独立的 `Tactics/Pure Run/Skill VFX Preview` 检查，两套工具不互相复制职责。
 
 ## 标准流水线
 

@@ -53,18 +53,13 @@ namespace Tactics.Common.Skills.Graph
                 oldest.KillAndDestroy();
             }
 
-            var ghost = new GameObject("ProjectileGhostTrail");
+            SpriteRenderer renderer = ProjectileVisualFactory.CreateGhost(_profile, _sourceSprite);
+            if (renderer == null)
+                return;
+
+            GameObject ghost = renderer.gameObject;
             ghost.transform.SetPositionAndRotation(projectile.position, projectile.rotation);
             ghost.transform.localScale = projectile.localScale * settings.Scale;
-            var renderer = ghost.AddComponent<SpriteRenderer>();
-            renderer.sprite = _sourceSprite.sprite;
-            // Preserve the SpriteRenderer default material for profiles without an
-            // explicitly authored sprite material. This mirrors the main projectile
-            // and avoids propagating a null/error material to every ghost.
-            if (_profile.Material != null)
-                renderer.sharedMaterial = _sourceSprite.sharedMaterial;
-            renderer.sortingLayerID = _sourceSprite.sortingLayerID;
-            renderer.sortingOrder = _sourceSprite.sortingOrder - 1;
             Color color = _sourceSprite.color;
             color.a *= settings.Alpha;
             renderer.color = color;
@@ -110,64 +105,11 @@ namespace Tactics.Common.Skills.Graph
 
         private void CreateParticleTrail(Vector3 start)
         {
-            ProjectileParticleTrailSettings settings = _profile.ParticleTrail;
-            _particleObject = new GameObject("ProjectileParticleTrail");
-            _particleObject.transform.position = start;
-            _particles = _particleObject.AddComponent<ParticleSystem>();
-            _particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            _particles.useAutoRandomSeed = false;
-            _particles.randomSeed = settings.RandomSeed;
+            _particles = ProjectileVisualFactory.CreateParticleTrail(_profile, _sourceRenderer, start);
+            if (_particles == null)
+                return;
 
-            var main = _particles.main;
-            main.playOnAwake = false;
-            main.loop = true;
-            main.duration = Mathf.Max(0.1f, settings.LifetimeMax);
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = settings.MaximumParticles;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(settings.LifetimeMin, settings.LifetimeMax);
-            main.startSize = new ParticleSystem.MinMaxCurve(settings.SizeMin, settings.SizeMax);
-            main.startSpeed = 0.01f;
-            main.startColor = settings.Color;
-
-            var emission = _particles.emission;
-            emission.enabled = true;
-            emission.rateOverTime = 1f / settings.EmissionInterval;
-            var shape = _particles.shape;
-            shape.enabled = true;
-            shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = 0.002f;
-            shape.randomDirectionAmount = 1f;
-
-            var colorOverLifetime = _particles.colorOverLifetime;
-            colorOverLifetime.enabled = true;
-            var gradient = new Gradient();
-            gradient.SetKeys(
-                new[]
-                {
-                    new GradientColorKey(Color.white, 0f),
-                    new GradientColorKey(Color.white, 1f)
-                },
-                new[]
-                {
-                    new GradientAlphaKey(0.75f, 0f),
-                    new GradientAlphaKey(0f, 1f)
-                });
-            colorOverLifetime.color = gradient;
-
-            var renderer = _particleObject.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Mesh;
-            renderer.mesh = SkillVfxPrimitiveBuilder.SharedDiamondMesh;
-            renderer.sharedMaterial = _profile.Material;
-            renderer.sortingLayerID = _sourceRenderer.sortingLayerID;
-            renderer.sortingOrder = _sourceRenderer.sortingOrder - 1;
-            var block = new MaterialPropertyBlock();
-            SkillVfxPrimitiveBuilder.ApplyStandaloneProperties(
-                renderer,
-                block,
-                Color.white,
-                1f,
-                1f,
-                SkillVfxShapeMode.Solid);
+            _particleObject = _particles.gameObject;
             _particles.Play();
         }
 

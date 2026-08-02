@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-08-01T20:07:02+08:00"
+timestamp: "2026-08-01T23:36:41+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Tools/artworks/pure_run
   - Assets/Tactics/Arts/PureRun
 verified_revision: c68dbebe
-source_fingerprint: sha256:ae1029f3c2c081510c5ce38cfa10c0d1ba252dad2d5ad8f2d09be9e73cf623aa
+source_fingerprint: sha256:9efa57e5d37dab9188590e9498d6ecf631d635e50959135c16af79d196fb8c60
 ---
 
 # Pure Run 角色美术流水线
@@ -40,6 +40,7 @@ source_fingerprint: sha256:ae1029f3c2c081510c5ce38cfa10c0d1ba252dad2d5ad8f2d09be
 - 设计、尺寸和目录语义见 `.agents/docs/pure-run-artwork-guidelines.md`，执行、案例库与只读校验见 `.agents/skills/pure-run-artwork-pipeline/SKILL.md`。
 - 七个已接入视觉原型（猎人、死灵、法师、两类骷髅、火魔、羊魔）使用两张原生图补齐四向：East/up-left 镜像、West/down-right 镜像、North/up-left、South/down-right。该映射遵循 Unity 等距网格轴，而不是直接把原画文件名当作逻辑方向。`FourDirectionSpriteVisual` 只负责 `Sprite` 子节点的显示，不改变 `FacingResolver`、移动、技能或 AI；12 个现有 Pure Run Prefab 已分别配置对应的两张 Sprite，六个羊魔职责共用同一对羊魔图。蝙蝠仍是设计层资产，尚未接入运行时 Prefab。
 - 标准地面单位现共用一套 `StandardUnitTweenProfile`，主 `Sprite` Transform 承担 Idle、移动、攻击、施法和受击纸片 Tween；Shadow 与逻辑 Root 不参与。Cast 通过 `SkillVfxRecipe` 发送非阻塞 `CastCharge` 径向光环，光环位于人物和阴影后方；无专属 Recipe 时使用默认低饱和蓝，骨矛与火球分别覆写为苍白青和暖橙红。不得再创建或染色整人物 `GlowOverlay`，主 `SpriteRenderer` 材质与颜色在施法中保持不变。飞行蝙蝠暂不接入该 Profile。
+- `Tactics/Pure Run/Tween Preview` 在隔离舞台中复用运行时动作与投射物构建，提供十种动作/组合、四方向、距离、循环、倍速和时间轴；Profile 编辑使用隐藏沙盒，Apply/Undo 与 Revert 边界明确。它只检查角色动作、Release 和弹道，复杂技能 Recipe 继续使用独立 Skill VFX Preview。蝙蝠专用悬浮/翼展动画和传统复杂 VFX 资产替换均为后续任务。
 
 ## Workflow
 
