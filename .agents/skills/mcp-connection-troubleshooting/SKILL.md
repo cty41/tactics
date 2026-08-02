@@ -15,6 +15,7 @@ MCP 连接故障排除的专用技能。
 | 2 | 验证端口 | 确认端口是否在监听 |
 | 3 | 检查服务状态 | 确认 Unity Editor 和 MCP 插件 |
 | 4 | 使用正确端口 | 用配置文件中的端口重试 |
+| 5 | 保持后台操作 | 编译、测试和构建仅通过 MCP 调用，不抢占 Editor 窗口焦点 |
 
 ## When to use
 
@@ -104,6 +105,17 @@ lsof -i :<端口号>
 
 首次 MCP 调用必须读取 `mcpforunity://project/info`。返回的 `projectRoot` 不是当前 worktree 时，不得继续任何 Unity 写操作；应关闭占用端口的错误 Editor 或启动目标 worktree 的 Editor。
 
+### Step 7: 保持 Editor 后台运行
+
+Unity 编译、测试、构建和连接恢复必须优先使用 MCP 工具与只读进程/端口诊断，不得通过窗口自动化激活 Unity、切换焦点或发送快捷键，以免干扰用户前台工作。
+
+若 MCP bridge 断线且无法通过 MCP 自身恢复：
+
+1. 保留当前测试 job id 和错误证据。
+2. 通过配置、端口、进程和日志做只读诊断。
+3. 停止自动化并请用户在方便时手动刷新或重启 bridge。
+4. 用户确认恢复后，从 `mcpforunity://instances` 和 `mcpforunity://project/info` 重新校验，再继续原 job 或重跑测试。
+
 ## 常见配置文件位置
 
 | 工具 | 配置文件路径 |
@@ -139,6 +151,7 @@ lsof -i :<端口号>
 | 不验证端口状态 | 使用 netstat 验证端口 | 确认服务是否在运行 |
 | 未检查项目根目录就写操作 | 先读取 `project/info` | 防止写入错误 worktree |
 | 手动反复启动 MCP server | 恢复或初始化 `.agents/mcp.json` | 手动启动不能跨 domain reload，未修复唯一自动重启路径 |
+| 激活 Unity 窗口并发送 Refresh/测试快捷键 | 使用 `refresh_unity`、`run_tests`、`get_test_job`、`manage_build` | 避免抢占用户前台焦点；断线时应停下请用户手动恢复 |
 
 ## Checklist
 
@@ -148,3 +161,4 @@ lsof -i :<端口号>
 - [ ] 使用了正确的端口进行连接
 - [ ] 如果仍然失败，报告了具体错误信息
 - [ ] 已核验 `project/info` 的 `projectRoot` 是当前 worktree
+- [ ] 未通过窗口自动化抢占 Unity Editor 焦点或触发编译、测试、构建

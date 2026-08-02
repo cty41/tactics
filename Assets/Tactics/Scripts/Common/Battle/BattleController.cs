@@ -3,6 +3,7 @@ using Tactics.Runtime.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Tactics.AssetPipeline;
@@ -109,7 +110,22 @@ namespace Tactics.Common.Battle
         /// <summary>
         /// 战斗运行时作用域，管理所有异步操作的生命周期。
         /// </summary>
-        public IBattleRuntimeScope RuntimeScope { get; set; }
+        public IBattleRuntimeScope RuntimeScope { get; private set; }
+
+        /// <summary>
+        /// 最近一次运行时作用域清理期间观察到的非取消异常。
+        /// 清理仍会完成，调用方可通过该属性显式检查 drain/dispose 失败。
+        /// </summary>
+        public Exception RuntimeScopeTeardownException
+        {
+            get
+            {
+                lock (_runtimeScopeTeardownGate)
+                {
+                    return _runtimeScopeTeardownException;
+                }
+            }
+        }
 
         /// <summary>
         /// 当设置为 true 时，OnAbilityUsed 跳过活跃单位检查，允许 AI 测试直接执行命令。
@@ -184,6 +200,14 @@ namespace Tactics.Common.Battle
         private readonly HashSet<string> _loadedPaths = new();
         private readonly Dictionary<string, AbilityConfig> _pureRunAbilityConfigCache = new(StringComparer.Ordinal);
         private readonly Dictionary<ICell, bool> _encounterBlockedCells = new();
+        private Action<string> _runtimeAssetReleaseOverrideForTests;
+        private readonly object _runtimeScopeTeardownGate = new();
+        private Task _runtimeScopeTeardownTask = Task.CompletedTask;
+        private IBattleRuntimeScope _tearingDownRuntimeScope;
+        private Exception _runtimeScopeTeardownException;
+        private bool _battleStartInProgress;
+        private bool _isDestroying;
+        private int _lifecycleGeneration;
         private bool UseTestSetupForCurrentBattle =>
             _useTestSetup && string.IsNullOrEmpty(RoguelikeMapRuntimeState.PendingBattleNodeId);
 
@@ -231,6 +255,10 @@ namespace Tactics.Common.Battle
 
         protected override void OnDestroy()
         {
+            _isDestroying = true;
+            Interlocked.Increment(ref _lifecycleGeneration);
+            Task runtimeTeardownTask = TeardownRuntimeScopeAsync();
+
             if (_runtimePlayers != null)
             {
                 foreach (var aiPlayer in _runtimePlayers.OfType<AIPlayer>())
@@ -245,18 +273,54 @@ namespace Tactics.Common.Battle
 
             UnitRemoved -= OnUnitRemoved;
 
-            var mgr = GameAssetManager.Instance;
-            if (mgr != null)
-            {
-                foreach (var path in _loadedPaths)
-                    mgr.Release(path);
-            }
+            var manager = GameAssetManager.Instance;
+            Action<string> releasePath = _runtimeAssetReleaseOverrideForTests;
+            if (releasePath == null && manager != null)
+                releasePath = manager.Release;
+            string[] loadedPathSnapshot = _loadedPaths.ToArray();
             _loadedPaths.Clear();
+            _ = ReleaseLoadedPathsAfterTeardownAsync(
+                runtimeTeardownTask,
+                loadedPathSnapshot,
+                releasePath);
             _pureRunAbilityConfigCache.Clear();
             RestoreEncounterBlockedCells();
 
             RoguelikeBattleReturnHandler.Instance.UnregisterController(this);
             base.OnDestroy();
+        }
+
+        private static async Task ReleaseLoadedPathsAfterTeardownAsync(
+            Task runtimeTeardownTask,
+            IReadOnlyList<string> loadedPaths,
+            Action<string> releasePath)
+        {
+            try
+            {
+                await runtimeTeardownTask;
+            }
+            catch (Exception ex)
+            {
+                // The fallback release must continue even if a future teardown implementation
+                // starts propagating faults instead of reporting them on the controller.
+                TLog.Error($"[BattleController] Runtime teardown faulted before asset release: {ex}");
+            }
+
+            if (releasePath == null)
+                return;
+
+            foreach (string path in loadedPaths)
+            {
+                try
+                {
+                    releasePath(path);
+                }
+                catch (Exception ex)
+                {
+                    // One invalid release must not prevent the remaining owned paths from draining.
+                    TLog.Error($"[BattleController] Failed to release runtime asset '{path}': {ex}");
+                }
+            }
         }
 
         private IEnumerator Start()
@@ -898,15 +962,34 @@ namespace Tactics.Common.Battle
         /// </summary>
         public async Task StartBattleAsync()
         {
-            if (IsBattleActive) return;
-            IsBattleActive = true;
-            if (!TBattleLog.IsBattleActive)
-                TBattleLog.BeginBattle();
+            if (IsBattleActive || _battleStartInProgress || _isDestroying) return;
 
-            _ = ShowBattleUIAsync();
-            _ = ShowBattleConsoleAsync();
+            int generation = Volatile.Read(ref _lifecycleGeneration);
+            _battleStartInProgress = true;
+            try
+            {
+                await TeardownRuntimeScopeAsync();
 
-            BattleStarted?.Invoke();
+                if (_isDestroying || generation != Volatile.Read(ref _lifecycleGeneration))
+                    return;
+
+                var scope = new BattleRuntimeScope();
+                RuntimeScope = scope;
+                IsBattleActive = true;
+                if (!TBattleLog.IsBattleActive)
+                    TBattleLog.BeginBattle();
+
+                Task battleUiTask = ShowBattleUIAsync(scope.Token);
+                scope.Track(battleUiTask);
+                Task battleConsoleTask = ShowBattleConsoleAsync(scope.Token);
+                scope.Track(battleConsoleTask);
+
+                BattleStarted?.Invoke();
+            }
+            finally
+            {
+                _battleStartInProgress = false;
+            }
         }
 
         /// <summary>
@@ -914,9 +997,17 @@ namespace Tactics.Common.Battle
         /// </summary>
         public void EndBattle(GameResult result)
         {
-            if (!IsBattleActive) return;
+            Interlocked.Increment(ref _lifecycleGeneration);
+
+            if (!IsBattleActive)
+            {
+                _ = TeardownRuntimeScopeAsync();
+                return;
+            }
+
             IsBattleActive = false;
             RestoreEncounterBlockedCells();
+            _ = TeardownRuntimeScopeAsync();
             BattleEnded?.Invoke(result);
             TBattleLog.EndBattle();
             UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
@@ -927,43 +1018,146 @@ namespace Tactics.Common.Battle
         /// </summary>
         public async Task EndBattleAsync(GameResult result)
         {
-            if (!IsBattleActive) return;
+            Interlocked.Increment(ref _lifecycleGeneration);
 
-            // 1. 标记战斗不活跃
-            IsBattleActive = false;
-            RestoreEncounterBlockedCells();
-
-            // 2. 取消 RuntimeScope 中的所有异步操作
-            if (RuntimeScope != null)
+            bool shouldPublish = IsBattleActive;
+            if (shouldPublish)
             {
-                RuntimeScope.Cancel();
-                try
-                {
-                    await RuntimeScope.WhenIdleAsync();
-                }
-                catch
-                {
-                    // 忽略取消异常
-                }
+                IsBattleActive = false;
+                RestoreEncounterBlockedCells();
             }
 
-            // 3. 触发 BattleEnded 事件
+            await TeardownRuntimeScopeAsync();
+
+            if (!shouldPublish)
+                return;
+
             BattleEnded?.Invoke(result);
             TBattleLog.EndBattle();
             UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
         }
 
-        private async Task ShowBattleUIAsync()
+        /// <summary>
+        /// Cancels, drains, and disposes the current battle runtime scope.
+        /// Repeated calls for the same scope return the same teardown task.
+        /// </summary>
+        public Task TeardownRuntimeScopeAsync()
+        {
+            IBattleRuntimeScope scope;
+            TaskCompletionSource<bool> completion;
+
+            lock (_runtimeScopeTeardownGate)
+            {
+                scope = RuntimeScope;
+                if (scope == null)
+                    return _runtimeScopeTeardownTask;
+
+                if (ReferenceEquals(scope, _tearingDownRuntimeScope))
+                    return _runtimeScopeTeardownTask;
+
+                completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _runtimeScopeTeardownTask = completion.Task;
+                _tearingDownRuntimeScope = scope;
+                _runtimeScopeTeardownException = null;
+            }
+
+            _ = TeardownRuntimeScopeCoreAsync(scope, completion);
+            return completion.Task;
+        }
+
+        private async Task TeardownRuntimeScopeCoreAsync(
+            IBattleRuntimeScope scope,
+            TaskCompletionSource<bool> completion)
         {
             try
             {
-                if (!await WaitForGameAssetReady())
+                try
+                {
+                    scope.Cancel();
+                }
+                catch (OperationCanceledException)
+                {
+                    // Cancellation is the expected shutdown path.
+                }
+                catch (Exception ex)
+                {
+                    RecordRuntimeScopeTeardownException(ex);
+                    TLog.Error($"[BattleController] Runtime scope cancellation failed: {ex}");
+                }
+
+                try
+                {
+                    await scope.WhenIdleAsync();
+                }
+                catch (OperationCanceledException)
+                {
+                    // Cancellation is the expected shutdown path.
+                }
+                catch (Exception ex)
+                {
+                    RecordRuntimeScopeTeardownException(ex);
+                    TLog.Error($"[BattleController] Runtime scope drain failed: {ex}");
+                }
+            }
+            finally
+            {
+                try
+                {
+                    scope.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    RecordRuntimeScopeTeardownException(ex);
+                    TLog.Error($"[BattleController] Runtime scope disposal failed: {ex}");
+                }
+                finally
+                {
+                    lock (_runtimeScopeTeardownGate)
+                    {
+                        if (ReferenceEquals(RuntimeScope, scope))
+                            RuntimeScope = null;
+
+                        if (ReferenceEquals(_tearingDownRuntimeScope, scope))
+                            _tearingDownRuntimeScope = null;
+                    }
+
+                    completion.TrySetResult(true);
+                }
+            }
+        }
+
+        private void RecordRuntimeScopeTeardownException(Exception exception)
+        {
+            lock (_runtimeScopeTeardownGate)
+            {
+                _runtimeScopeTeardownException = _runtimeScopeTeardownException == null
+                    ? exception
+                    : new AggregateException(_runtimeScopeTeardownException, exception);
+            }
+        }
+
+        private async Task ShowBattleUIAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (!await WaitForGameAssetReady(cancellationToken))
                 {
                     TLog.Warning("[BattleController] Battle UI skipped: GameAssetManager bootstrap did not complete in time.");
                     return;
                 }
 
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!IsBattleActive)
+                    return;
+
                 await UIManager.Instance.ShowAsync(UIManager.UIId.Battle);
+
+                if (cancellationToken.IsCancellationRequested || !IsBattleActive)
+                    UIManager.Instance.Hide(UIManager.UIId.Battle);
+            }
+            catch (OperationCanceledException)
+            {
+                // Battle teardown cancels startup UI work.
             }
             catch (Exception ex)
             {
@@ -971,23 +1165,28 @@ namespace Tactics.Common.Battle
             }
         }
 
-        private async Task ShowBattleConsoleAsync()
+        private async Task ShowBattleConsoleAsync(CancellationToken cancellationToken)
         {
             try
             {
-                if (!await WaitForGameAssetReady())
+                if (!await WaitForGameAssetReady(cancellationToken))
                 {
                     TLog.Warning("[BattleController] Battle console skipped: GameAssetManager bootstrap did not complete in time.");
                     return;
                 }
 
+                cancellationToken.ThrowIfCancellationRequested();
                 if (!IsBattleActive)
                     return;
 
                 await UIManager.Instance.ShowAsync(UIManager.UIId.CheatConsole);
 
-                if (!IsBattleActive)
+                if (cancellationToken.IsCancellationRequested || !IsBattleActive)
                     UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
+            }
+            catch (OperationCanceledException)
+            {
+                // Battle teardown cancels startup UI work.
             }
             catch (Exception ex)
             {
@@ -995,11 +1194,15 @@ namespace Tactics.Common.Battle
             }
         }
 
-        private static async Task<bool> WaitForGameAssetReady(float timeoutSeconds = 5f)
+        private static async Task<bool> WaitForGameAssetReady(
+            CancellationToken cancellationToken,
+            float timeoutSeconds = 5f)
         {
             float deadline = Time.realtimeSinceStartup + timeoutSeconds;
             while (Time.realtimeSinceStartup < deadline)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var manager = GameAssetManager.Instance;
                 if (manager != null && manager.IsInitialized)
                 {
@@ -1009,6 +1212,7 @@ namespace Tactics.Common.Battle
                 await Awaitable.NextFrameAsync();
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             return GameAssetManager.Instance != null && GameAssetManager.Instance.IsInitialized;
         }
 

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-01T23:36:33+08:00"
+timestamp: "2026-08-02T20:33:28+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -13,6 +13,7 @@ repo_paths:
   - .agents/docs/buff-system-rules.md
   - .agents/docs/three-class-skill-design.md
   - Assets/Tactics/Scripts/Common/Battle/BattleController.cs
+  - Assets/Tactics/Scripts/Common/Battle/Runtime/BattleRuntimeScope.cs
   - Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs
   - Assets/Tactics/Scripts/Common/Battle/BattleSettlementFlow.cs
   - Assets/Tactics/Scripts/Common/Battle/FirstSliceSkillCatalog.cs
@@ -69,9 +70,11 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/GameTimeServiceSpeedTests.cs.meta
   - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
   - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
+  - Assets/Tactics/Tests/PlayMode/BattleRuntimeScopePlayModeTests.cs
+  - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:870a8cc20de52924fa1f0a2618d1d5005269833e5f961599f97b84412f9f6fa1
+source_fingerprint: sha256:53ad02dbe8da20cb94dd931dbe5a53661e9f1de4207420c9346a8665fe12cb09
 ---
 
 # Current State
@@ -101,6 +104,8 @@ Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态�
 技能接触反馈由可选 `SkillVfxRecipe` 驱动。执行器在伤害前保存世界坐标，只发送强类型 Cue；Coordinator 只等待释放/接触关键帧，淡出、粒子和残影非阻塞。投射物抵达时先完成 `ProjectileImpact` 接触点再写入命中黑板；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，并在取消时同步清理。Sprite 投射物未显式配置 Material 时保留 `SpriteRenderer` 默认材质，残影遵循同一规则，不会用空材质触发洋红错误 Shader。实际伤害仍以 `DamageResolution.WasHit` 决定次目标/命中反馈，表现缺失或取消不能改变玩法结果。突刺方向端点不因射线上先命中的敌人被通用 LOS 隐藏，但扫描仍在友军、永久地形和非法格处结束。
 
 `PureRunAbilityCatalog` 为三职业 18 个正式技能和隐藏额外技能 `amazon.pickup_spear` 提供稳定 ID、等级元数据与运行时资产解析。`PureRunAbilityBinder` 在玩家单位初始化前只注入职业普通攻击、实际已学主动技能和可解析的额外技能；被动按角色已学记录启用，Amazon 不再因职业身份在 Pure Run 中自动获得战斗技巧。缺少精确等级资产时仅向下回退并记录错误。三职业等级资产均已按各技能设计上限连续发布。
+
+`BattleController` 每场创建并独占替换一个 `BattleRuntimeScope`，外部只能读取、不能公开设置；启动期 UI 注册到该 scope。结束、返回和场景切换先取消、等待 tracked drain，再释放 scope；`OnDestroy` fallback 同步取得 teardown task 和已加载路径快照，并仅在 drain 完成后释放这些资产，不让异步 continuation 访问已销毁组件。teardown 即使观察到 tracked fault 也会完成资源释放并保持既有结束事件流程，同时通过 `RuntimeScopeTeardownException` 显式暴露非取消异常，不依赖日志策略判断成功。并发完成、timeout、取消回调重入 Dispose、pending start、replacement scope、faulted task 观察和回调异常边界由 PlayMode 回归约束，已完成任务的异常不能在 teardown 中静默丢失。
 
 火魔是独立可治疗召唤物：生命 12、Speed/移动 4，使用 1–3 格火焰攻击并施加点燃；Lv2 召唤可在半径 3 内部分成功生成，重施法原子替换旧火魔。每只火魔在完成第 5 次自身行动后退场，跳过行动同样计数，战斗结束统一清理。
 

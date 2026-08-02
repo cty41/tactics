@@ -44,19 +44,16 @@ namespace Tactics.Common.AI.MonsterAI
                 switch (selected.IntentType)
                 {
                     case IntentType.Engage:
-                        await ExecuteEngage(selected, context, cancellationToken);
-                        return AiActionExecutionResult.Success("Engage", !Equals(selected.Destination, context.Self.CurrentCell));
+                        return await ExecuteEngage(selected, context, cancellationToken);
                     case IntentType.BasicAttack:
-                        await ExecuteBasicAttack(selected, context, cancellationToken);
-                        return AiActionExecutionResult.Success("BasicAttack");
+                        return await ExecuteBasicAttack(selected, context, cancellationToken);
                     case IntentType.AbilityUse:
                         return await ExecuteAbilityUse(selected, context, cancellationToken);
                     case IntentType.Retreat:
                         await ExecuteRetreat(selected, context, cancellationToken);
                         return AiActionExecutionResult.Success("Retreat", true);
                     case IntentType.FinishOff:
-                        await ExecuteFinishOff(selected, context, cancellationToken);
-                        return AiActionExecutionResult.Success("FinishOff", selected.Destination != null);
+                        return await ExecuteFinishOff(selected, context, cancellationToken);
                     case IntentType.HoldPosition:
                         await ExecuteHoldPosition(selected, context);
                         return AiActionExecutionResult.Success("Wait");
@@ -79,7 +76,7 @@ namespace Tactics.Common.AI.MonsterAI
                         $"Intent '{selected.IntentType}' was cancelled because a combatant was destroyed.");
                 }
 
-                TLog.Error($"[IntentExecutor] Error executing intent {selected.IntentType}: {ex.Message}");
+                TLog.Error($"[IntentExecutor] Error executing intent {selected.IntentType}: {ex}");
                 await ExecuteHoldPosition(selected, context);
                 return AiActionExecutionResult.Failure(ex.Message);
             }
@@ -93,9 +90,13 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行接敌意图 - 移动到可攻击位置，复用现有 Move 能力系统。
         /// </summary>
-        private static async Task ExecuteEngage(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
+        private static async Task<AiActionExecutionResult> ExecuteEngage(
+            IntentCandidate selected,
+            AiContext context,
+            CancellationToken cancellationToken)
         {
-            if (selected.Destination == null) return;
+            if (selected.Destination == null)
+                return AiActionExecutionResult.Failure("Engage destination is missing.");
 
             context.DecisionLog.Info($"Engage: Moving to ({selected.Destination.GridCoordinates.x}, {selected.Destination.GridCoordinates.y})");
 
@@ -104,50 +105,79 @@ namespace Tactics.Common.AI.MonsterAI
             {
                 TLog.Warning("[IntentExecutor] Move ability not found for Engage.");
                 context.DecisionLog.ExecutionResult(null, "Move");
-                return;
+                return AiActionExecutionResult.Failure("Move ability not found for Engage.");
             }
 
-            await ExecuteMoveAsync(selected.Destination, context, moveAbility);
+            var origin = context.Self.CurrentCell;
+            bool moved = await ExecuteMoveAsync(selected.Destination, context, moveAbility);
             cancellationToken.ThrowIfCancellationRequested();
-            context.DecisionLog.ExecutionResult(moveAbility.Name, "Move");
+            context.DecisionLog.ExecutionResult(moveAbility.Name, moved ? "Move" : "MoveFailed");
+            if (!moved)
+                return AiActionExecutionResult.Failure("Engage movement failed.");
 
-            // 移动成功后，若目标在攻击范围内，追加一次攻击
-            if (selected.Target != null)
+            if (!IsDestroyed(selected.Target) &&
+                AiBasicAttackTargeting.Resolve(context, selected.Target, context.Self.CurrentCell).Succeeded)
             {
-                var attackAbility = FindAttackAbility(context);
-                if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
-                {
-                    await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
-                    cancellationToken.ThrowIfCancellationRequested();
-                    context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
-                }
-                else
-                {
-                    TLog.Warning("[IntentExecutor] Engage follow-up attack: no executable attack ability found.");
-                }
+                var attackResult = await ExecuteBasicAttack(selected, context, cancellationToken);
+                return attackResult.Succeeded
+                    ? AiActionExecutionResult.Success(attackResult.AbilityName, !Equals(origin, context.Self.CurrentCell))
+                    : AiActionExecutionResult.Failure(attackResult.FailureReason, !Equals(origin, context.Self.CurrentCell));
             }
+
+            return AiActionExecutionResult.Success("Engage", !Equals(origin, context.Self.CurrentCell));
         }
 
         /// <summary>
         /// 执行普攻意图。
         /// </summary>
-        private static async Task ExecuteBasicAttack(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
+        private static async Task<AiActionExecutionResult> ExecuteBasicAttack(
+            IntentCandidate selected,
+            AiContext context,
+            CancellationToken cancellationToken)
         {
-            if (selected.Target == null) return;
+            if (IsDestroyed(selected.Target))
+                return AiActionExecutionResult.Failure("BasicAttack target is missing or destroyed.");
 
             context.DecisionLog.Info($"BasicAttack: Attacking Unit_{selected.Target.UnitID}");
 
-            var attackAbility = FindAttackAbility(context);
-            if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
+            var attack = AiBasicAttackTargeting.Resolve(
+                context,
+                selected.Target,
+                context.Self?.CurrentCell);
+            if (!attack.Succeeded)
             {
-                await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
-                cancellationToken.ThrowIfCancellationRequested();
-                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
-                return;
+                context.DecisionLog.ExecutionResult(
+                    attack.Ability?.Name,
+                    "AttackFailed",
+                    selected.Target.UnitID);
+                return AiActionExecutionResult.Failure(attack.FailureReason);
             }
 
-            TLog.Warning("[IntentExecutor] No executable attack ability found for BasicAttack.");
-            context.DecisionLog.ExecutionResult(attackAbility?.Name, "Attack", selected.Target.UnitID);
+            if (attack.Ability.Ability is not IPlannedAbilityExecutor plannedExecutor)
+            {
+                string reason = $"BasicAttack ability '{attack.Ability.Name}' does not support planned execution.";
+                context.DecisionLog.ExecutionResult(attack.Ability.Name, "AttackFailed", selected.Target.UnitID);
+                return AiActionExecutionResult.Failure(reason);
+            }
+
+            var origin = context.Self.CurrentCell;
+            var plan = new AiActionPlan(
+                context.Self,
+                context.GridController,
+                origin,
+                origin,
+                attack.TargetOption.TargetPoint,
+                attack.TargetOption.Targets,
+                attack.Ability);
+            var result = await plannedExecutor.ExecuteAsync(plan);
+            cancellationToken.ThrowIfCancellationRequested();
+            context.DecisionLog.ExecutionResult(
+                attack.Ability.Name,
+                result.Succeeded ? "Attack" : "AttackFailed",
+                selected.Target.UnitID);
+            return result.Succeeded
+                ? AiActionExecutionResult.Success(attack.Ability.Name)
+                : AiActionExecutionResult.Failure(result.FailureReason);
         }
 
         /// <summary>
@@ -232,13 +262,17 @@ namespace Tactics.Common.AI.MonsterAI
         /// <summary>
         /// 执行追击残血意图。
         /// </summary>
-        private static async Task ExecuteFinishOff(IntentCandidate selected, AiContext context, CancellationToken cancellationToken)
+        private static async Task<AiActionExecutionResult> ExecuteFinishOff(
+            IntentCandidate selected,
+            AiContext context,
+            CancellationToken cancellationToken)
         {
-            if (selected.Target == null) return;
+            if (IsDestroyed(selected.Target))
+                return AiActionExecutionResult.Failure("FinishOff target is missing or destroyed.");
 
             context.DecisionLog.Info($"FinishOff: Attacking low health target Unit_{selected.Target.UnitID}");
 
-            // 先移动到目标附近（如果需要）
+            var origin = context.Self.CurrentCell;
             if (selected.Destination != null)
             {
                 var moveAbility = FindMoveAbility(context);
@@ -246,7 +280,7 @@ namespace Tactics.Common.AI.MonsterAI
                 {
                     TLog.Warning("[IntentExecutor] Move ability not found for FinishOff.");
                     context.DecisionLog.ExecutionResult(null, "Move");
-                    return;
+                    return AiActionExecutionResult.Failure("Move ability not found for FinishOff.");
                 }
 
                 bool moved = await ExecuteMoveAsync(selected.Destination, context, moveAbility);
@@ -255,22 +289,14 @@ namespace Tactics.Common.AI.MonsterAI
                 {
                     TLog.Warning("[IntentExecutor] FinishOff movement failed; skipping follow-up attack.");
                     context.DecisionLog.ExecutionResult(null, "Move");
-                    return;
+                    return AiActionExecutionResult.Failure("FinishOff movement failed.");
                 }
             }
 
-            // 攻击目标
-            var attackAbility = FindAttackAbility(context);
-            if (attackAbility?.Ability is IAiExecutableAbility aiAttack)
-            {
-                await aiAttack.ExecuteEffectsAsync(new[] { selected.Target }, context.GridController);
-                cancellationToken.ThrowIfCancellationRequested();
-                context.DecisionLog.ExecutionResult(attackAbility.Name, "Attack", selected.Target.UnitID);
-                return;
-            }
-
-            TLog.Warning("[IntentExecutor] No executable attack ability found for FinishOff.");
-            context.DecisionLog.ExecutionResult(attackAbility?.Name, "Attack", selected.Target.UnitID);
+            var attackResult = await ExecuteBasicAttack(selected, context, cancellationToken);
+            return attackResult.Succeeded
+                ? AiActionExecutionResult.Success(attackResult.AbilityName, !Equals(origin, context.Self.CurrentCell))
+                : AiActionExecutionResult.Failure(attackResult.FailureReason, !Equals(origin, context.Self.CurrentCell));
         }
 
         /// <summary>
@@ -285,14 +311,7 @@ namespace Tactics.Common.AI.MonsterAI
 
         private static AbilityInfo FindAttackAbility(AiContext context)
         {
-            foreach (var ability in context.AvailableAbilities)
-            {
-                var name = ability.Name ?? "";
-                if (name == "Melee Attack" || name == "Ranged Attack" || name == "Magic Attack" ||
-                    name == "Attack" || name == "MeleeAttack" || name == "RangedAttack")
-                    return ability;
-            }
-            return null;
+            return AiBasicAttackTargeting.FindAttackAbility(context);
         }
 
         private static AbilityInfo FindMoveAbility(AiContext context)

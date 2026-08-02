@@ -109,7 +109,7 @@ namespace Tactics.Tests.PlayMode
         }
 
         [Test]
-        public async Task ExecuteBasicAttack_UsesAiExecutableAbility_WhenAvailable()
+        public async Task ExecuteBasicAttack_WithoutAuthoritativeContext_ReturnsStructuredFailure()
         {
             var targetObject = new GameObject("IntentExecutorTarget");
             var target = targetObject.AddComponent<Unit>();
@@ -130,12 +130,15 @@ namespace Tactics.Tests.PlayMode
 
             try
             {
-                await InvokeExecuteBasicAttack(selected, context);
+                var result = await IntentExecutor.ExecuteWithResult(selected, context);
 
-                Assert.IsTrue(aiAbility.EffectsAsyncCalled, "IAiExecutableAbility.ExecuteEffectsAsync should be called.");
+                Assert.IsFalse(result.Succeeded,
+                    "BasicAttack must fail closed when its authoritative actor/grid context is missing.");
+                Assert.IsFalse(aiAbility.EffectsAsyncCalled,
+                    "Legacy IAiExecutableAbility execution must not bypass the planned target contract.");
                 var executionEntry = context.DecisionLog.GetEntries().LastOrDefault(e => e.Type == AiDecisionLog.LogType.ExecutionResult);
                 Assert.IsNotNull(executionEntry, "ExecutionResult should be recorded.");
-                Assert.IsTrue(executionEntry.Message.Contains("Melee Attack"), executionEntry.Message);
+                Assert.IsTrue(executionEntry.Message.Contains("AttackFailed"), executionEntry.Message);
             }
             finally
             {
@@ -185,6 +188,9 @@ namespace Tactics.Tests.PlayMode
         {
             var targetObject = new GameObject("IntentExecutorMidCancelTarget");
             var target = targetObject.AddComponent<Unit>();
+            var cellObject = new GameObject("IntentExecutorMidCancelCell");
+            var targetCell = cellObject.AddComponent<Square>();
+            target.CurrentCell = targetCell;
             using var cts = new CancellationTokenSource();
             var aiAbility = new FakeAiExecutableAbility { CancelDuringExecuteEffects = cts };
             var abilityInfo = new AbilityInfo(
@@ -199,7 +205,15 @@ namespace Tactics.Tests.PlayMode
                 0f
             );
             var context = CreateContextWithAbilities(new[] { abilityInfo }, new[] { target });
-            var selected = CreateSelectedCandidate(IntentType.BasicAttack, context);
+            var selected = new IntentCandidate(
+                IntentType.AbilityUse,
+                ActionType.UseAbility,
+                target,
+                targetCell,
+                abilityInfo,
+                10f,
+                new List<IUnit> { target },
+                targetCell);
 
             try
             {
@@ -215,6 +229,7 @@ namespace Tactics.Tests.PlayMode
             finally
             {
                 Object.DestroyImmediate(targetObject);
+                Object.DestroyImmediate(cellObject);
             }
         }
 
@@ -247,14 +262,15 @@ namespace Tactics.Tests.PlayMode
 
         private static AiContext CreateContextWithAbilities(AbilityInfo[] abilities, IEnumerable<IUnit> candidateTargets = null)
         {
+            var targetList = candidateTargets?.ToList();
             // AiContext constructor: (self, gridController, enemies, allies, reachableCells, candidateTargets, availableAbilities, brainAsset, decisionLog)
             var context = new AiContext(
-                null,   // self
+                targetList?.FirstOrDefault(),
                 null,   // gridController
                 null,   // enemies
                 null,   // allies
                 null,   // reachableCells
-                candidateTargets?.ToList(),
+                targetList,
                 abilities.ToList(),
                 null,   // brainAsset
                 new AiDecisionLog(false)
@@ -280,15 +296,6 @@ namespace Tactics.Tests.PlayMode
             var method = typeof(IntentExecutor).GetMethod("FindMoveAbility", BindingFlags.NonPublic | BindingFlags.Static);
             Assert.IsNotNull(method, "FindMoveAbility method should exist.");
             return (AbilityInfo)method.Invoke(null, new object[] { context });
-        }
-
-        private static async Task InvokeExecuteBasicAttack(IntentCandidate selected, AiContext context)
-        {
-            var method = typeof(IntentExecutor).GetMethod("ExecuteBasicAttack", BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.IsNotNull(method, "ExecuteBasicAttack method should exist.");
-            var task = (Task)method.Invoke(null, new object[] { selected, context, CancellationToken.None });
-            Assert.IsNotNull(task);
-            await task;
         }
 
         private static IntentCandidate CreateSelectedCandidate(IntentType intentType, AiContext context)

@@ -108,7 +108,7 @@ namespace Tactics.Common.AI.MonsterAI
                 AddPreferredRangeRepositionCandidate(context, intent, target, candidates);
 
                 var attackCells = context.ReachableCells
-                    .Where(cell => CalcDist(cell, target.CurrentCell) <= context.Self.AttackRange + 0.5f)
+                    .Where(cell => AiBasicAttackTargeting.Resolve(context, target, cell).Succeeded)
                     .OrderBy(cell => CalcDist(context.Self.CurrentCell, cell))
                     .ThenBy(cell => CalcDist(cell, target.CurrentCell))
                     .Take(maxPerTarget)
@@ -117,24 +117,15 @@ namespace Tactics.Common.AI.MonsterAI
                 var selectedCells = attackCells.Count > 0
                     ? attackCells
                     : context.ReachableCells
+                        .Where(cell => !Equals(cell, context.Self.CurrentCell))
                         .OrderBy(cell => CalcDist(cell, target.CurrentCell))
                         .ThenBy(cell => CalcDist(context.Self.CurrentCell, cell))
                         .Take(maxPerTarget)
                         .ToList();
 
-                // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
-                TLog.Info($"[IntentGen] Engage target Unit_{target.UnitID}: " +
-                    $"reachableCells={context.ReachableCells.Count}, " +
-                    $"attackCells={attackCells.Count}, " +
-                    $"selectedCells={selectedCells.Count}, " +
-                    $"distToTarget={CalcDist(context.Self.CurrentCell, target.CurrentCell):F2}, " +
-                    $"attackRange={context.Self.AttackRange}, " +
-                    $"selfPos=({context.Self.CurrentCell?.GridCoordinates.x},{context.Self.CurrentCell?.GridCoordinates.y}), " +
-                    $"targetPos=({target.CurrentCell?.GridCoordinates.x},{target.CurrentCell?.GridCoordinates.y})");
-
                 foreach (var cell in selectedCells)
                 {
-                    bool canAttackFromCell = CalcDist(cell, target.CurrentCell) <= context.Self.AttackRange + 0.5f;
+                    bool canAttackFromCell = AiBasicAttackTargeting.Resolve(context, target, cell).Succeeded;
                     var c = new IntentCandidate(IntentType.Engage, ActionType.Move, target, cell, null, intent.BasePriority, sourceIntentNodeId: intent.NodeId);
                     if (canAttackFromCell)
                     {
@@ -195,15 +186,21 @@ namespace Tactics.Common.AI.MonsterAI
             foreach (var target in context.CandidateTargets)
             {
                 if (target.CurrentCell == null) continue;
-                if (CalcDist(context.Self.CurrentCell, target.CurrentCell) > context.Self.AttackRange + 0.5f) continue;
+                var attack = AiBasicAttackTargeting.Resolve(
+                    context,
+                    target,
+                    context.Self.CurrentCell);
+                if (!attack.Succeeded) continue;
 
                 var candidate = new IntentCandidate(
                     IntentType.BasicAttack,
                     ActionType.Attack,
                     target,
                     context.Self.CurrentCell,
-                    null,
+                    attack.Ability,
                     intent.BasePriority,
+                    attack.TargetOption.Targets.ToList(),
+                    attack.TargetOption.TargetPoint,
                     sourceIntentNodeId: intent.NodeId);
                 candidate.EstimatedDamage = context.Self.CalculateDamageDealt(target, target.CurrentCell, context.Self.CurrentCell);
                 candidate.EstimatedKillChance = target.Health > 0 ? System.Math.Min(1f, candidate.EstimatedDamage / target.Health) : 1f;

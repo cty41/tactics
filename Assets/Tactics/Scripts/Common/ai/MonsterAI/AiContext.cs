@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Units;
@@ -153,6 +154,126 @@ namespace Tactics.Common.AI.MonsterAI
         public bool HasTag(AbilityAiTags tag)
         {
             return (Tags & tag) != 0;
+        }
+    }
+
+    /// <summary>
+    /// Describes the authoritative BasicAttack ability and target option selected for one origin.
+    /// </summary>
+    public sealed class BasicAttackTargetQueryResult
+    {
+        public AbilityInfo Ability { get; }
+        public AbilityTargetOption TargetOption { get; }
+        public string FailureReason { get; }
+        public bool Succeeded => Ability != null && TargetOption != null;
+
+        private BasicAttackTargetQueryResult(
+            AbilityInfo ability,
+            AbilityTargetOption targetOption,
+            string failureReason)
+        {
+            Ability = ability;
+            TargetOption = targetOption;
+            FailureReason = failureReason;
+        }
+
+        public static BasicAttackTargetQueryResult Success(
+            AbilityInfo ability,
+            AbilityTargetOption targetOption)
+        {
+            return new BasicAttackTargetQueryResult(ability, targetOption, null);
+        }
+
+        public static BasicAttackTargetQueryResult Failure(string reason, AbilityInfo ability = null)
+        {
+            return new BasicAttackTargetQueryResult(ability, null, reason);
+        }
+    }
+
+    /// <summary>
+    /// Resolves BasicAttack legality through the same ability query used by player input and
+    /// execution-time revalidation.
+    /// </summary>
+    /// <remarks>
+    /// BasicAttack planning must never reconstruct range from Unit.AttackRange. A missing
+    /// targeting provider is a structured failure because it cannot prove execution legality.
+    /// </remarks>
+    public static class AiBasicAttackTargeting
+    {
+        private static readonly HashSet<string> AttackAbilityNames = new()
+        {
+            "Melee Attack",
+            "Ranged Attack",
+            "Magic Attack",
+            "Attack",
+            "MeleeAttack",
+            "RangedAttack"
+        };
+
+        public static AbilityInfo FindAttackAbility(AiContext context)
+        {
+            return context?.AvailableAbilities?
+                .FirstOrDefault(ability => AttackAbilityNames.Contains(ability?.Name ?? string.Empty));
+        }
+
+        public static BasicAttackTargetQueryResult Resolve(
+            AiContext context,
+            IUnit target,
+            ICell origin = null)
+        {
+            if (context?.Self == null || context.GridController == null)
+                return BasicAttackTargetQueryResult.Failure("AI context is missing its actor or grid.");
+            if (IsDestroyed(target) || target.IsDowned || target.CurrentCell == null)
+                return BasicAttackTargetQueryResult.Failure("BasicAttack target is no longer valid.");
+
+            var ability = FindAttackAbility(context);
+            if (ability?.Ability == null)
+                return BasicAttackTargetQueryResult.Failure("No BasicAttack ability is available.");
+            if (!ability.IsReady || !ability.Ability.CanPerform(context.GridController))
+                return BasicAttackTargetQueryResult.Failure("BasicAttack ability is not currently available.", ability);
+            if (ability.Ability is not IAbilityTargetingProvider targetingProvider)
+            {
+                return BasicAttackTargetQueryResult.Failure(
+                    $"BasicAttack ability '{ability.Name}' has no authoritative target query.",
+                    ability);
+            }
+
+            var potentialTargets = new List<IUnit>();
+            AddDistinct(potentialTargets, context.Enemies);
+            AddDistinct(potentialTargets, context.Allies);
+            AddDistinct(potentialTargets, new[] { context.Self, target });
+
+            var query = new AbilityTargetQuery(
+                context.Self,
+                origin ?? context.Self.CurrentCell,
+                context.GridController,
+                potentialTargets);
+            var option = targetingProvider.QueryTargets(query).Options.FirstOrDefault(candidate =>
+                Equals(candidate.TargetPoint, target.CurrentCell) && candidate.Targets.Contains(target));
+
+            return option != null
+                ? BasicAttackTargetQueryResult.Success(ability, option)
+                : BasicAttackTargetQueryResult.Failure(
+                    $"Target Unit_{target.UnitID} is not legal for '{ability.Name}'.",
+                    ability);
+        }
+
+        private static void AddDistinct(List<IUnit> destination, IEnumerable<IUnit> candidates)
+        {
+            if (candidates == null)
+                return;
+
+            foreach (var candidate in candidates)
+            {
+                if (!IsDestroyed(candidate) && !destination.Contains(candidate))
+                    destination.Add(candidate);
+            }
+        }
+
+        private static bool IsDestroyed(IUnit unit)
+        {
+            return unit == null ||
+                   unit is UnityEngine.Object unityObject && unityObject == null;
         }
     }
 }

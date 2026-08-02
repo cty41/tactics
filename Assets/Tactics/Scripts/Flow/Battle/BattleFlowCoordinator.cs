@@ -76,6 +76,13 @@ namespace Tactics.Flow.Battle
             {
                 UIManager.Instance.Show(UIManager.UIId.Loading);
 
+                // Drain tracked runtime work before replacing the battle scene.
+                var controller = BattleController.Instance;
+                if (controller != null)
+                {
+                    await controller.TeardownRuntimeScopeAsync();
+                }
+
                 string returnSceneName = PlayerPrefs.GetString(
                     RoguelikeMapUIController.RoguelikeReturnScenePrefsKey, "Home");
                 if (string.IsNullOrWhiteSpace(returnSceneName))

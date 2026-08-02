@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-07-31T09:46:00+08:00"
+timestamp: "2026-08-02T20:33:20+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -17,8 +17,10 @@ repo_paths:
   - Assets/Tactics/AI/FireDemonBrain.asset
   - Assets/Tactics/AI/Encounters
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
+  - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs
+  - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:8026bb89e61794a34ef8dd68a329f94839923089a9e0f35de765607789bedbf2
+source_fingerprint: sha256:b9a548d829c25b09ed8a90950fe0add3d71ea16b6dde169c4a8935f18040b03e
 ---
 
 # Current State
@@ -26,6 +28,8 @@ source_fingerprint: sha256:8026bb89e61794a34ef8dd68a329f94839923089a9e0f35de7656
 `AiContextBuilder` 构建战斗快照，`IntentGenerator` 生成“可达站位 × 合法技能目标点”候选，`RuleFilter` 执行硬门禁，`IntentScorer` 评分，`IntentResolver` 稳定选取结果，`IntentExecutor` 执行移动与技能计划。
 
 玩家预览、AI 和执行前重验证共享 `IAbilityTargetingProvider`，AI 候选还自然消费能力统一的 `CanPerform`/可用性门禁；因此 `MaxUsesPerTurn` 达到本回合上限后不会继续生成或执行该技能，无需 AI 维护独立次数。`AiBrainAsset` 组合 `AiDecisionGraph`、`AIProfile` 和可选 Pattern；Pattern 游标按单位保存，失败或 Generic fallback 不推进。Brain 可选配置偏好战斗距离和过近时的重定位优先级；关闭时不改变旧 Brain 候选与评分。
+
+普通攻击的合法性不再由 `Unit.AttackRange` 形成第二套真值。`AiBasicAttackTargeting` 统一解析 canonical basic attack、`CanPerform` 和 `IAbilityTargetingProvider.QueryTargets`；`RuleFilter`、`IntentGenerator`、Engage/FinishOff follow-up 与 `IntentExecutor` 都消费同一合法目标及目标点。执行前目标失效、能力不再可用或 executor 缺失时返回结构化失败，不再把 legacy no-op 当成功推进回合。
 
 单位朝向属于共享战斗状态而不是 AI 私有状态。AI 的普通路径移动通过共享 `FacingCoordinator` 在每个新路径段开始前转向，成功执行目标技能后朝向目标；失败执行恢复到点击/执行前的最后预览朝向。AI 不在回合末自动面向最近敌人，也不显示独立箭头。方向型技能继续读取这一共享朝向与 `SkillTargetingProtocol`。
 

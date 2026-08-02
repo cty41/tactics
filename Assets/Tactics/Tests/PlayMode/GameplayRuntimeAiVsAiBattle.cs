@@ -204,6 +204,7 @@ namespace Tactics.Tests.PlayMode
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
             var controller = BattleController.Instance;
             Assert.IsNotNull(controller, "BattleController.Instance should exist.");
+            controller.DisableAiAutoPlay = true;
 
             var units = controller.GetUnits().ToList();
             var p1Unit = units.FirstOrDefault(u => u.PlayerNumber == 1);
@@ -216,30 +217,19 @@ namespace Tactics.Tests.PlayMode
             // Move P1 to an adjacent cell
             var cellManager = controller.CellManager;
             var targetCell = cellManager.GetCells().FirstOrDefault(c =>
-                c.GridCoordinates.x == originalCell.GridCoordinates.x + 1 &&
-                c.GridCoordinates.y == originalCell.GridCoordinates.y);
+                !c.IsTaken &&
+                c.GetDistance(originalCell) == 1);
 
-            if (targetCell != null)
-            {
-                // 绕过活跃单位检查，允许 P1 在 AI 回合执行命令
-                controller.BypassActiveUnitCheck = true;
+            Assert.That(targetCell, Is.Not.Null, "An unoccupied adjacent target cell should exist.");
 
-                var moveCommand = new MoveCommand(originalCell, targetCell, new[] { originalCell, targetCell });
-                var moveTask = p1Unit.HumanExecuteAbility(moveCommand, controller);
-                yield return new WaitUntil(() => moveTask.IsCompleted);
-                
-                // 等待移动动画完成
-                yield return new WaitForSeconds(2.0f);
+            var moveCommand = new MoveCommand(originalCell, targetCell, new[] { targetCell });
+            var moveTask = UnitHelper.ExecuteAbilityAsync(p1Unit, moveCommand, controller);
+            yield return WaitForTask(moveTask, 5d, "Move P1 to an adjacent cell");
+            Assert.That(moveTask.IsFaulted, Is.False, moveTask.Exception?.ToString());
 
-                controller.BypassActiveUnitCheck = false;
-
-                Debug.Log($"[Test] P1 new position: ({p1Unit.CurrentCell.GridCoordinates.x}, {p1Unit.CurrentCell.GridCoordinates.y})");
-                Assert.That(p1Unit.CurrentCell, Is.EqualTo(targetCell), "P1 should have moved to target cell.");
-            }
-            else
-            {
-                Debug.Log("[Test] No adjacent cell found, skipping movement test.");
-            }
+            TestContext.Progress.WriteLine(
+                $"[Test] P1 new position: ({p1Unit.CurrentCell.GridCoordinates.x}, {p1Unit.CurrentCell.GridCoordinates.y})");
+            Assert.That(p1Unit.CurrentCell, Is.EqualTo(targetCell), "P1 should have moved to target cell.");
 
             yield return null;
         }
@@ -308,6 +298,20 @@ namespace Tactics.Tests.PlayMode
             Assert.IsFalse(controller.IsBattleActive, "Battle should have ended.");
 
             yield return null;
+        }
+
+        private static IEnumerator WaitForTask(Task task, double timeoutSeconds, string label)
+        {
+            double deadline = Time.realtimeSinceStartupAsDouble + timeoutSeconds;
+            int frameCount = 0;
+            while (!task.IsCompleted && Time.realtimeSinceStartupAsDouble < deadline)
+            {
+                frameCount++;
+                yield return null;
+            }
+
+            Assert.That(task.IsCompleted, Is.True,
+                $"{label} timed out after {timeoutSeconds:F1}s and {frameCount} frames; status={task.Status}.");
         }
 
         [UnityTest]

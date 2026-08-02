@@ -141,12 +141,10 @@ namespace Tactics.Common.AI.MonsterAI
             switch (rule.RuleType)
             {
                 case RuleType.TargetInRange:
-                    bool inRange = candidate.Target?.CurrentCell != null &&
-                           CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
-                    if (!inRange && candidate.Target?.CurrentCell != null)
-                        // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
-                        TLog.Info($"[RuleFilter] TargetInRange FAILED: dist={CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell):F2}, attackRange={context.Self.AttackRange}");
-                    return inRange;
+                    return AiBasicAttackTargeting.Resolve(
+                        context,
+                        candidate.Target,
+                        context.Self.CurrentCell).Succeeded;
                 case RuleType.TargetInMoveAttackRange:
                     return IsTargetInMoveAttackRange(candidate, context);
                 case RuleType.HealthAboveThreshold:
@@ -234,25 +232,20 @@ namespace Tactics.Common.AI.MonsterAI
                 return false;
 
             if (candidate.Destination == null)
-            {
-                bool result = CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f;
-                // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
-                TLog.Info($"[RuleFilter] TargetInMoveAttackRange: no destination, distToTarget={CalcDist(context.Self.CurrentCell, candidate.Target.CurrentCell):F2}, attackRange={context.Self.AttackRange}, result={result}");
-                return result;
-            }
+                return AiBasicAttackTargeting.Resolve(
+                    context,
+                    candidate.Target,
+                    context.Self.CurrentCell).Succeeded;
 
-            if (CalcDist(candidate.Destination, candidate.Target.CurrentCell) <= context.Self.AttackRange + 0.5f)
+            if (AiBasicAttackTargeting.Resolve(
+                    context,
+                    candidate.Target,
+                    candidate.Destination).Succeeded)
                 return true;
 
-            bool fallbackResult = candidate.IntentType == IntentType.Engage &&
+            return candidate.IntentType == IntentType.Engage &&
                    candidate.Action == ActionType.Move &&
                    !HasReachableAttackCell(context, candidate.Target);
-            // TEMP: diagnostic log for freeze bug investigation — remove after fix confirmed
-            TLog.Info($"[RuleFilter] TargetInMoveAttackRange: destDist={CalcDist(candidate.Destination, candidate.Target.CurrentCell):F2}, " +
-                $"isEngage={candidate.IntentType == IntentType.Engage}, " +
-                $"hasReachableAttackCell={HasReachableAttackCell(context, candidate.Target)}, " +
-                $"result={fallbackResult}");
-            return fallbackResult;
         }
 
         private static bool HasReachableAttackCell(AiContext context, IUnit target)
@@ -262,7 +255,7 @@ namespace Tactics.Common.AI.MonsterAI
 
             foreach (var cell in context.ReachableCells)
             {
-                if (CalcDist(cell, target.CurrentCell) <= context.Self.AttackRange + 0.5f)
+                if (AiBasicAttackTargeting.Resolve(context, target, cell).Succeeded)
                     return true;
             }
 

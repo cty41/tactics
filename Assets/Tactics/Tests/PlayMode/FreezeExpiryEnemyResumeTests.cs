@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Tactics.Common;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
@@ -35,15 +36,22 @@ namespace Tactics.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            bool runtimeTeardownCompleted = true;
+            bool runtimeTeardownFaulted = false;
+            Exception runtimeTeardownException = null;
             if (_battleRoot != null)
             {
                 var battleController = _battleRoot.GetComponent<BattleController>();
-                if (battleController != null && battleController.IsBattleActive)
-                    battleController.InvokeGameEnded(default);
+                if (battleController != null)
+                {
+                    Task teardownTask = battleController.TeardownRuntimeScopeAsync();
+                    for (int frame = 0; frame < 60 && !teardownTask.IsCompleted; frame++)
+                        yield return null;
 
-                // Let cancellation continuations finish before their Unity objects are destroyed.
-                yield return null;
-                yield return null;
+                    runtimeTeardownCompleted = teardownTask.IsCompleted;
+                    runtimeTeardownFaulted = teardownTask.IsFaulted;
+                    runtimeTeardownException = battleController.RuntimeScopeTeardownException;
+                }
             }
 
             if (_cellManagerRoot != null)
@@ -57,8 +65,20 @@ namespace Tactics.Tests.PlayMode
                 _battleRoot = null;
             }
             yield return null;
+            GameTimeService.ForceResume();
+            GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
+            TestGameAssetHelper.Cleanup();
             yield return null;
             LogAssert.ignoreFailingMessages = false;
+
+            Assert.That(runtimeTeardownCompleted, Is.True,
+                "Freeze fixture runtime teardown did not complete within 60 frames.");
+            Assert.That(runtimeTeardownFaulted, Is.False,
+                "Freeze fixture runtime teardown task faulted.");
+            Assert.That(runtimeTeardownException, Is.Null,
+                "Freeze fixture runtime teardown observed a tracked failure.");
+            Assert.That(BattleController.Instance, Is.Null,
+                "Freeze fixture leaked the BattleController singleton.");
         }
 
         /// <summary>
@@ -68,12 +88,16 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator FreezeExpires_EnemyAIResumesWithoutCasterAction()
         {
-            LogAssert.ignoreFailingMessages = true;
-
             // Initialize GameAssetManager for RoleConfig loading
             var initTask = TestGameAssetHelper.EnsureInitialized();
-            yield return new WaitUntil(() => initTask.IsCompleted);
-            Assume.That(initTask.Result, Is.Not.Null, "GameAssetManager must initialize for RoleConfig loading.");
+            float initializationDeadline = Time.realtimeSinceStartup + 10f;
+            while (!initTask.IsCompleted && Time.realtimeSinceStartup < initializationDeadline)
+                yield return null;
+            Assert.That(initTask.IsCompleted, Is.True,
+                "GameAssetManager initialization exceeded the 10 second realtime deadline.");
+            Assert.That(initTask.IsFaulted, Is.False, initTask.Exception?.ToString());
+            Assume.That(initTask.Result, Is.Not.Null,
+                "GameAssetManager must initialize for RoleConfig loading.");
 
             CreateBattleScaffolding(out var bc, out Unit p1Unit, out Unit p2Unit);
             Assert.IsNotNull(p1Unit, "P1 unit must be created with RoleConfig.");
@@ -351,6 +375,7 @@ namespace Tactics.Tests.PlayMode
         private void CreateBattleScaffolding(out BattleController bc, out Unit p1Unit, out Unit p2Unit, bool humanPlayer1 = false)
         {
             _battleRoot = new GameObject("TestBattleController_FreezeTest");
+            _battleRoot.SetActive(false);
             bc = _battleRoot.AddComponent<BattleController>();
 
             var controllerType = typeof(BattleController);
@@ -376,8 +401,7 @@ namespace Tactics.Tests.PlayMode
             var cellMgrField = controllerType.GetField("_cellManager", BindingFlags.Instance | BindingFlags.NonPublic);
             cellMgrField?.SetValue(bc, cellMgr);
 
-            var awake = controllerType.GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic);
-            awake?.Invoke(bc, null);
+            _battleRoot.SetActive(true);
 
             var gridControllerField = controllerType.GetField("_controller", BindingFlags.Instance | BindingFlags.NonPublic);
             var gridController = gridControllerField?.GetValue(bc);
@@ -409,11 +433,13 @@ namespace Tactics.Tests.PlayMode
             var attackBrain = AiBrainTestHelper.CreateAttackBrain();
 
             p1Unit = TestUnitFactory.CreateBarbarian(unitContainer, "P1_Fighter", 1, FindCell(_cellManagerRoot, 0, 0), humanPlayer1 ? null : attackBrain);
+            p1Unit.Constitution = 250;
             p1Unit.Initiative = 10f;
             p1Unit.MovementAnimationSpeed = 1000f;
 
-            p2Unit = TestUnitFactory.CreateBarbarian(unitContainer, "P2_Enemy", 2, FindCell(_cellManagerRoot, 3, 0), attackBrain);
-            p2Unit.Initiative = 5f;
+            p2Unit = TestUnitFactory.CreateBarbarian(unitContainer, "P2_Fighter", 2, FindCell(_cellManagerRoot, 1, 0), attackBrain);
+            p2Unit.Constitution = 250;
+            p2Unit.Initiative = 10f;
             p2Unit.MovementAnimationSpeed = 1000f;
         }
 
