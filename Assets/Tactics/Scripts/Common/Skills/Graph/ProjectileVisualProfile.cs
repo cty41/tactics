@@ -11,6 +11,10 @@ namespace Tactics.Common.Skills.Graph
         [SerializeField] private ProjectileVisualKind _visualKind = ProjectileVisualKind.Sprite;
         [SerializeField] private Sprite _sprite;
         [SerializeField] private Material _material;
+        [SerializeField] private GameObject _flightPrefab;
+        [SerializeField] private GameObject _impactPrefab;
+        [SerializeField, Min(0.05f)] private float _impactLifetime = 0.45f;
+        [SerializeField, Min(0.01f)] private float _impactScale = 1f;
         [SerializeField] private Color _tint = Color.white;
         [SerializeField, Min(0.01f)] private float _scale = 1f;
         [SerializeField] private ProjectileTrajectoryStyle _trajectoryStyle = ProjectileTrajectoryStyle.MagicStraight;
@@ -25,6 +29,10 @@ namespace Tactics.Common.Skills.Graph
         public ProjectileVisualKind VisualKind => _visualKind;
         public Sprite Sprite => _sprite;
         public Material Material => _material;
+        public GameObject FlightPrefab => _flightPrefab;
+        public GameObject ImpactPrefab => _impactPrefab;
+        public float ImpactLifetime => _impactLifetime;
+        public float ImpactScale => _impactScale;
         public Color Tint => _tint;
         public float Scale => _scale;
         public ProjectileTrajectoryStyle TrajectoryStyle => _trajectoryStyle;

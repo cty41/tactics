@@ -1,10 +1,13 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using DG.Tweening;
 using Tactics.Common.Skills.Graph;
 using UnityEngine;
 using Object = UnityEngine.Object;
+
+[assembly: InternalsVisibleTo("Tactics.Tests.Editor")]
 
 namespace Tactics.EditorTools
 {

@@ -8,6 +8,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Interactables;
 using Tactics.Common.Battle;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Tween;
 using Tactics.Common.Utilities;
@@ -399,7 +400,10 @@ namespace Tactics.Common.Units.Abilities
                 : AiActionExecutionResult.Failure(result.LastError ?? "Skill graph failed.");
         }
 
-        public async Task<SkillGraphRuntimeTestResult> ExecuteForTestAsync(ICell selectedCell, IGridController gridController)
+        public async Task<SkillGraphRuntimeTestResult> ExecuteForTestAsync(
+            ICell selectedCell,
+            IGridController gridController,
+            IBattleRuntimeScope runtimeScope = null)
         {
             if (gridController == null)
                 throw new ArgumentNullException(nameof(gridController));
@@ -443,7 +447,10 @@ namespace Tactics.Common.Units.Abilities
                 return result;
             }
 
-            return await ExecuteSkillGraphAsync(selectedCell, gridController);
+            return await ExecuteSkillGraphAsync(
+                selectedCell,
+                gridController,
+                runtimeScope: runtimeScope);
         }
 
         public async Task<SkillGraphRuntimeTestResult> ExecuteOrderedForTestAsync(
@@ -477,7 +484,8 @@ namespace Tactics.Common.Units.Abilities
             ICell selectedCell,
             IGridController gridController,
             IReadOnlyList<IUnit> orderedTargets = null,
-            bool allowCombatTechniqueFollowUp = true)
+            bool allowCombatTechniqueFollowUp = true,
+            IBattleRuntimeScope runtimeScope = null)
         {
             var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(_config.SkillGraph);
             var context = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController)
@@ -486,6 +494,8 @@ namespace Tactics.Common.Units.Abilities
                     ? new SkillVfxCoordinator(_config.SkillVfxRecipe, _owner)
                     : null
             };
+            if (runtimeScope != null)
+                context.RuntimeScope = runtimeScope;
             var testResult = CreateTestResult();
 
             // Pre-set target from cell click

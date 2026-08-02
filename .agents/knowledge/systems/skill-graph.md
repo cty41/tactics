@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-08-01T23:36:35+08:00"
+timestamp: "2026-08-02T21:14:22+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -17,6 +17,9 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxRecipe.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxCoordinator.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxPrimitiveBuilder.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/TransientVfxPool.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/VisualCueProfile.cs
+  - Assets/Tactics/Scripts/Common/Skills/Graph/VisualCueCoordinator.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphRunner.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphSpec.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillTargetingProtocol.cs
@@ -40,8 +43,11 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
   - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
   - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
+  - Assets/Tactics/Tests/PlayMode/TransientVfxLifecyclePlayModeTests.cs
+  - Assets/Tactics/Tests/PlayMode/PilotoVfxPerformancePlayModeTests.cs
+  - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:9c5bb7f2aaa67ce42b9b5d02c8992d2de27641a835d44f967e40ee3e3d7940ee
+source_fingerprint: sha256:66622df99da280c97e0a08a4d3131360be4a3f605d5a9fa236d6aac80409b4cc
 ---
 
 # Current State
@@ -50,13 +56,16 @@ source_fingerprint: sha256:9c5bb7f2aaa67ce42b9b5d02c8992d2de27641a835d44f967e40e
 
 `SkillGraphAbilityConfig` 以显式 `VisualAction` 选择 None、Melee、Ranged 或 Cast。视觉 release 标记至多一次启动图执行；恢复段与图后续节点并行，Ability 等待两者完成。缺少视觉组件或 Profile 时立即执行图，不让表现依赖改变玩法成功边界。
 
-`ProjectileLaunchNodeRecord` 可选引用 `ProjectileVisualProfile`，并继续完整往返 TravelTime、Speed、DropOnHit、LOS 与 Profile 资产路径。运行时按 `worldDistance / Speed` 计算并限制飞行时长；终点在发射时锁定，抵达后先等待 `ProjectileImpact` 接触关键帧，再写入 `ProjectileHit` 和进入 OnHit。火球现使用程序化软圆热核与 World-space 尾火；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，其他已批准 Sprite 继续由 Profile 驱动。Sprite Profile 的 Material 为空时，主投射物和残影保留 `SpriteRenderer` 默认兼容材质，避免空引用覆盖后落入洋红错误 Shader；显式 Sprite Material 仍会传递给残影。取消会先标记等待任务为取消，再 Kill Tween 并清理 Renderer、残影和相关 Tween，避免 `OnKill` 抢先完成或留下临时对象。
+`ProjectileLaunchNodeRecord` 可选引用 `ProjectileVisualProfile`，并继续完整往返 TravelTime、Speed、DropOnHit、LOS 与 Profile 资产路径。Profile 可选择程序化 Sprite/SoftDisc 或 Flight Prefab，并可配置 Impact Prefab、命中寿命和缩放；运行时按 `worldDistance / Speed` 计算并限制飞行时长，终点在发射时锁定。无 Flight Prefab 时由共享 Factory 创建程序化投射物和 Particle/Ghost Trail；有 Flight Prefab 时从 `TransientVfxPool` 租用并复用同一弹道、轨迹和取消清理路径。火球使用程序化软圆热核与 World-space 尾火，骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，毒矛使用 Piloto 飞行与命中 Prefab。Sprite Material 为空时保留 `SpriteRenderer` 默认兼容材质，显式 Material 继续传递给残影。抵达后先等待 Recipe 的 `ProjectileImpact` 接触关键帧，再写入 `ProjectileHit`；Prefab impact 有战斗 scope 时注册后允许玩法继续，无 scope 时由 caller 等待回收。取消先标记等待任务为取消，再 Kill Tween 并清理或回池所有临时对象，避免 `OnKill` 抢先完成或留下实例。
 
 Skill VFX 使用有限原语 Recipe：六种强类型 Cue 只携带结算前捕获的世界坐标快照，六种固定原语由 `SkillVfxCoordinator` 统一创建、排序、等待和清理。只有层的 `BlockingMarker` 影响玩法继续时点；粒子与残影强制非阻塞。Cast 开始时以施法者 Sprite 中心发送 `CastCharge`，其 `BlockingMarker=0`；Recipe 按明确技能族、已有专属、默认 Cast 的顺序解析，在人物与阴影后生成单个径向光环，不修改主 Renderer。火球终点/溅射/Lv3 条件引爆、骨矛实际命中交叉闪光、突刺方向刺痕和实际命中反馈已分别接入；空 Recipe 或无 Sink 时保持 no-op。`PureRunSkillVfxPreviewWindow` 复用 Builder 时间采样，支持 Recipe/Cue/等级/路径/命中数与可拖动时间轴。
 
 `PureRunTweenPreviewWindow` 与 Skill VFX Preview 保持独立：前者复用运行时单位 Sequence、投射物视觉 Factory 和轨迹采样，预览 Sprite/SoftDisc、Particle/Ghost Trail，并只标记 Release 与 ProjectileImpact；后者负责 Recipe 的命中与分层效果。Tween Preview 的隐藏 Profile 沙盒只有 Apply 才借助 Undo 写回，Revert 或生命周期清理不会污染正式资产。
 
 当前火球、骨矛和突刺 Recipe 是已验收的可玩临时视觉基线，不是复杂技能的目标品质或永久回退。长期制作策略保留 Tween 处理角色姿态、位移、受击、后坐和投射物运动，也允许简单光环、短闪光、短尾迹与颜色脉冲继续程序化；多阶段、形态复杂或承担职业识别的技能特效后续逐个改用美术可直接调整的 Prefab、ParticleSystem、Shader/Material、Sprite 序列或 AnimationClip。替换完成前保留现有 Recipe，不继续将有限原语扩充为通用复杂 VFX 框架。
+`PlayVisualCue` 是纯表现通用节点：Profile 声明 Prefab、Caster/PrimaryTarget/TargetPoint 锚点、缩放、透明排序偏移、寿命以及 FireAndForget/AwaitCompletion。节点通过 Spec/MCP 往返 Profile 路径并记录 `VisualCueStarted` 事件，不修改伤害、Buff、目标集合或实体状态。霹雳闪电和伤害加深诅咒的 Lv1–Lv3 图在效果节点前插入该节点；当前样本使用 FireAndForget，因此先启动落点视觉但不等待粒子自然结束。FireAndForget 先交给当前战斗的 `BattleRuntimeScope` 跟踪；若 scope 已进入取消边界，执行器立即重新 await 播放任务接回 owner，使取消和非取消异常继续可观察，且不允许 teardown 后留下悬空实例。
+
+`TransientVfxPool` 按 Prefab 共享临时粒子实例，每个 Prefab 最多缓存 8 个对象；重复 Return 不会把同一对象入池两次，超额实例直接销毁。`SubsystemRegistration` 会清空静态缓存，避免禁用 Domain Reload 时把上一轮 Play 状态带入下一轮。one-shot 取消仍会在 `finally` 回池并作为正常 teardown 被 scope 忽略，其他异常保留为 fault 交给 scope 或 await caller 观察。暖池 Rent/Return 的 PlayMode 回归要求 0 B managed allocation；暂停、2×/4× gameplay speed、目标在途销毁和 scope drain 前 impact 回池也由真实 coordinator 路径验证。
 
 Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent 可通过 `SkillGraphSpec`、`SkillGraphSpecCompiler` 与 `SkillGraphSpecAutoFixer` 建立结构化输入，并使用 MCP 工具生成、校验和应用资产；运行语义继续由 Gameplay Test/PlayMode 测试证明。
 
@@ -68,7 +77,7 @@ Unity 图编辑器支持创建、连线、属性编辑、搜索和校验。Agent
 
 `AbilityConfig.MaxUsesPerTurn` 为 SkillGraph 能力提供每回合成功使用上限：`0` 不限，正数按配置的稳定 `DisplayName` 在 Unit 上独立计数，并在 `PrepareForTurn` 重置；缺失稳定名称的限次能力 fail-closed。只有图以 `Completed` 结束才计次，失败或取消不计；AI 与 UI 复用同一 `CanPerform`/可用性结论，use policy、availability policy 与 basic ability 提交边界保持兼容，运行时次数不存入共享资产。`SkillAbilityUsesPerTurnTests` 覆盖稳定 key、回合重置、0/正数上限、Completed/失败边界及 policy/basic 兼容；相关运行时回归由 `SkillGraphRuntimeTests` 覆盖。
 
-节点集合现包含 `ApplyMana`、`RemoveHarmfulBuffs`、法师等级语义节点 `MageSkill`、死灵法师等级语义节点 `NecromancerSkill` 与亚马逊等级语义节点 `AmazonSkill`，`SelectAlly` 可显式允许自身成为合法友军目标。伤害节点分别保存伤害大类和元素；`ApplyBuff.RequiresSuccessfulHit` 只在明确的命中附带状态上读取前一伤害节点结果，独立 Buff 不受历史命中结果污染。`SummonUnit` 可声明召唤物是否接受普通治疗，并通过 `SummonRegistry` 按召唤者、类别、上限和创建顺序管理最早替换；骷髅与骷髅法师关闭普通治疗，火魔保持开启。召唤执行先验证尸体、生成格和替换集合，再以事务顺序提交尸体、法力和旧召唤；选择尸体节点保留玩家实际点击目标而不再扫描并消耗所有尸体。运行时能力可注入使用策略与可用性策略：策略负责额外合法性、稳定禁用原因、动态显示名和成功完成后的资源提交；图失败时不会扣除资源，执行失败时恢复到点击前的最后预览朝向。Pure Run 消耗品使用该边界实现明确友军目标、每名角色每轮一次，并在图完成后提交对应独立实例。
+节点集合现包含 `ApplyMana`、`RemoveHarmfulBuffs`、纯表现 `PlayVisualCue`、法师等级语义节点 `MageSkill`、死灵法师等级语义节点 `NecromancerSkill` 与亚马逊等级语义节点 `AmazonSkill`，`SelectAlly` 可显式允许自身成为合法友军目标。伤害节点分别保存伤害大类和元素；`ApplyBuff.RequiresSuccessfulHit` 只在明确的命中附带状态上读取前一伤害节点结果，独立 Buff 不受历史命中结果污染。`SummonUnit` 可声明召唤物是否接受普通治疗，并通过 `SummonRegistry` 按召唤者、类别、上限和创建顺序管理最早替换；骷髅与骷髅法师关闭普通治疗，火魔保持开启。召唤执行先验证尸体、生成格和替换集合，再以事务顺序提交尸体、法力和旧召唤；选择尸体节点保留玩家实际点击目标而不再扫描并消耗所有尸体。运行时能力可注入使用策略与可用性策略：策略负责额外合法性、稳定禁用原因、动态显示名和成功完成后的资源提交；图失败时不会扣除资源，执行失败时恢复到点击前的最后预览朝向。Pure Run 消耗品使用该边界实现明确友军目标、每名角色每轮一次，并在图完成后提交对应独立实例。
 
 法师等级链使用独立 AbilityConfig/SkillGraph：火球术 Lv1 单体、Lv2 十字溅射、Lv3 先引爆主目标旧点燃；寒冰箭 Lv3 增加一次稳定最近目标反弹；霹雳闪电为无 projectile/LOS 的瞬时直击；召唤火魔支持原子批量替换；冰甲 Lv2 对相邻近战攻击者附加 Slow；瞬移 Lv2 取消可见性要求。资产目录校验约束“已发布等级连续且可加载”，法师已完成 1..MaxLevel 发布，其他职业将在对应切片完成。
 

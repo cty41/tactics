@@ -41,7 +41,8 @@ namespace Tactics.Common.Skills.Graph
         RemoveHarmfulBuffs,
         MageSkill,
         NecromancerSkill,
-        AmazonSkill
+        AmazonSkill,
+        PlayVisualCue
     }
 
     public enum SkillGraphPortType
@@ -128,6 +129,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.MageSkill => new MageSkillNodeRecord(),
                 SkillGraphNodeType.NecromancerSkill => new NecromancerSkillNodeRecord(),
                 SkillGraphNodeType.AmazonSkill => new AmazonSkillNodeRecord(),
+                SkillGraphNodeType.PlayVisualCue => new PlayVisualCueNodeRecord(),
                 _ => null
             };
         }
@@ -261,6 +263,18 @@ namespace Tactics.Common.Skills.Graph
         public int DropSearchRadius { get => _dropSearchRadius; set => _dropSearchRadius = value; }
         public bool RequiresLineOfSight { get => _requiresLineOfSight; set => _requiresLineOfSight = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.ProjectileLaunch;
+    }
+
+    /// <summary>
+    /// Plays an authored visual cue without changing battle state.
+    /// </summary>
+    [System.Serializable]
+    public class PlayVisualCueNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private VisualCueProfile _profile;
+
+        public VisualCueProfile Profile { get => _profile; set => _profile = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.PlayVisualCue;
     }
 
     [System.Serializable]

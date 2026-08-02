@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -5,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Testing.Gameplay;
@@ -13,6 +16,7 @@ using Tactics.Common.Units.Buffs;
 using Tactics.Common.Units.Tween;
 using UnityEngine;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace Tactics.Tests.PlayMode
 {
@@ -21,17 +25,100 @@ namespace Tactics.Tests.PlayMode
         [UnitySetUp]
         public System.Collections.IEnumerator SetUp()
         {
+            GameTimeService.ForceResume();
             GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
             var task = TestGameAssetHelper.EnsureInitialized();
-            yield return new WaitUntil(() => task.IsCompleted);
+            yield return WaitForTask(task, 10d, "Complete async test operation");
             Assert.That(task.Result, Is.Not.Null);
         }
 
         [UnityTearDown]
         public System.Collections.IEnumerator TearDown()
         {
-            TestGameAssetHelper.Cleanup();
+            bool runtimeTeardownCompleted = true;
+            Exception runtimeTeardownException = null;
+            bool managerRestoreCompleted = true;
+            bool managerRestoreFaulted = false;
+            var cleanupFailures = new List<Exception>();
+            BattleController controller = null;
+            RecordCleanupFailure(cleanupFailures, "Resolve BattleController", () =>
+                controller = BattleController.Instance);
+            if (controller != null)
+            {
+                Task teardownTask = null;
+                RecordCleanupFailure(cleanupFailures, "Start BattleController runtime teardown", () =>
+                    teardownTask = controller.TeardownRuntimeScopeAsync());
+                if (teardownTask == null)
+                {
+                    runtimeTeardownCompleted = false;
+                }
+                else
+                {
+                    for (int frame = 0; frame < 30 && !teardownTask.IsCompleted; frame++)
+                        yield return null;
+
+                    runtimeTeardownCompleted = teardownTask.IsCompleted;
+                    RecordCleanupFailure(cleanupFailures, "Read BattleController teardown result", () =>
+                        runtimeTeardownException = controller.RuntimeScopeTeardownException);
+                }
+
+                RecordCleanupFailure(cleanupFailures, "Destroy BattleController", () =>
+                    Object.Destroy(controller.gameObject));
+                yield return null;
+            }
+
+            GameAssetManager manager = null;
+            RecordCleanupFailure(cleanupFailures, "Resolve GameAssetManager", () =>
+                manager = GameAssetManager.Instance);
+            if (manager == null)
+            {
+                Task<GameAssetManager> restoreManagerTask = null;
+                RecordCleanupFailure(cleanupFailures, "Start GameAssetManager restore", () =>
+                    restoreManagerTask = TestGameAssetHelper.EnsureInitialized());
+                if (restoreManagerTask == null)
+                {
+                    managerRestoreCompleted = false;
+                    managerRestoreFaulted = true;
+                }
+                else
+                {
+                    for (int frame = 0; frame < 30 && !restoreManagerTask.IsCompleted; frame++)
+                        yield return null;
+
+                    managerRestoreCompleted = restoreManagerTask.IsCompleted;
+                    managerRestoreFaulted = restoreManagerTask.IsFaulted;
+                }
+            }
+
+            for (int frame = 0; frame < 3; frame++)
+                yield return null;
+
+            RecordCleanupFailure(cleanupFailures, "Destroy Battle UI", () =>
+                UIManager.Instance?.Destroy(UIManager.UIId.Battle));
+            RecordCleanupFailure(cleanupFailures, "Destroy CheatConsole UI", () =>
+                UIManager.Instance?.Destroy(UIManager.UIId.CheatConsole));
             yield return null;
+
+            RecordCleanupFailure(cleanupFailures, "Reset transient VFX pool", ResetTransientVfxPoolForTests);
+            RecordCleanupFailure(cleanupFailures, "Resume game time", GameTimeService.ForceResume);
+            RecordCleanupFailure(cleanupFailures, "Reset playback speed", () =>
+                GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal));
+            RecordCleanupFailure(cleanupFailures, "Cleanup test assets", TestGameAssetHelper.Cleanup);
+            yield return null;
+
+            Assert.That(runtimeTeardownCompleted, Is.True,
+                "BattleController runtime scope teardown must complete within 30 frames during fixture cleanup.");
+            Assert.That(runtimeTeardownException, Is.Null,
+                "BattleController runtime scope teardown must not observe tracked-task, cancellation, or disposal failures.");
+            Assert.That(managerRestoreCompleted, Is.True,
+                "Fixture cleanup must restore GameAssetManager within 30 frames.");
+            Assert.That(managerRestoreFaulted, Is.False,
+                "Fixture cleanup must restore GameAssetManager without faulting.");
+            Assert.That(BattleController.Instance, Is.Null,
+                "Fixture cleanup must leave no BattleController singleton behind.");
+            Assert.That(cleanupFailures, Is.Empty,
+                "Fixture cleanup steps failed after all remaining cleanup steps were attempted: " +
+                string.Join(" | ", cleanupFailures.Select(exception => exception.Message)));
         }
 
         [UnityTest]
@@ -93,7 +180,7 @@ namespace Tactics.Tests.PlayMode
             Assert.That(renderer.color, Is.EqualTo(originalColor));
             Assert.That(renderer.sharedMaterial, Is.SameAs(originalMaterial));
 
-            yield return new WaitUntil(() => task.IsCompleted);
+            yield return WaitForTask(task, 10d, "Complete async test operation");
             Assert.That(task.IsFaulted, Is.False);
             Assert.That(releases, Is.EqualTo(1));
             Assert.That(spriteObject.transform.Find("GlowOverlay"), Is.Null);
@@ -128,7 +215,7 @@ namespace Tactics.Tests.PlayMode
             Assert.That(spriteObject.transform.Find("GlowOverlay"), Is.Null);
 
             cancellation.Cancel();
-            yield return new WaitUntil(() => task.IsCompleted);
+            yield return WaitForTask(task, 10d, "Complete async test operation");
             Assert.That(task.IsCanceled, Is.True);
             Assert.That(spriteObject.transform.Find("GlowOverlay"), Is.Null);
             Assert.That(spriteObject.transform.localPosition.sqrMagnitude, Is.LessThan(0.00001f));
@@ -158,7 +245,7 @@ namespace Tactics.Tests.PlayMode
             Assert.That(spriteObject.transform.Find("GlowOverlay"), Is.Null);
 
             visual.BeginMoveStep(Vector3.right);
-            yield return new WaitUntil(() => task.IsCompleted);
+            yield return WaitForTask(task, 10d, "Complete async test operation");
             Assert.That(task.IsCompleted, Is.True);
             Assert.That(spriteObject.transform.Find("GlowOverlay"), Is.Null);
 
@@ -184,7 +271,7 @@ namespace Tactics.Tests.PlayMode
                 Vector3.right,
                 () => releases++,
                 CancellationToken.None);
-            yield return new WaitUntil(() => task.IsCompleted);
+            yield return WaitForTask(task, 10d, "Complete async test operation");
 
             Assert.That(task.IsFaulted, Is.False);
             Assert.That(releases, Is.EqualTo(1));
@@ -214,6 +301,7 @@ namespace Tactics.Tests.PlayMode
             var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
                 "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset");
             var world = new SkillGraphTestWorld();
+            using var runtimeScope = new BattleRuntimeScope();
             try
             {
                 var casterCell = world.CreateSquareCell("TweenPoisonCaster", 0, 0);
@@ -231,22 +319,34 @@ namespace Tactics.Tests.PlayMode
                 var ability = new SkillGraphAbilityImpl(caster, config);
                 Task<SkillGraphRuntimeTestResult> task = ability.ExecuteForTestAsync(
                     targetCell,
-                    world.GridController);
+                    world.GridController,
+                    runtimeScope);
                 yield return null;
 
                 Assert.That(task.IsCompleted, Is.False);
                 Assert.That(target.BuffComponent.HasBuff(BuffEffectType.Poison), Is.False);
-                Assert.That(GameObject.Find("ProjectileVisual"), Is.Not.Null);
+                var projectile = GameObject.Find("ProjectileVisual");
+                Assert.That(projectile, Is.Not.Null);
+                Assert.That(projectile.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
 
-                yield return new WaitUntil(() => task.IsCompleted);
+                yield return WaitForTask(task, 10d, "Complete async test operation");
                 Assert.That(task.IsFaulted, Is.False);
                 Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed));
                 Assert.That(target.BuffComponent.HasBuff(BuffEffectType.Poison), Is.True);
                 yield return null;
                 Assert.That(GameObject.Find("ProjectileVisual"), Is.Null);
+                var impact = GameObject.Find("PoisonSpearImpact_Vfx");
+                Assert.That(impact, Is.Not.Null);
+                Assert.That(impact.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
+                runtimeScope.Cancel();
+                Task drainTask = runtimeScope.WhenIdleAsync();
+                yield return WaitForTask(drainTask, 10d, "Drain Poison Spear impact");
+                Assert.That(drainTask.IsFaulted, Is.False);
+                Assert.That(GameObject.Find("PoisonSpearImpact_Vfx"), Is.Null);
             }
             finally
             {
+                runtimeScope.Cancel();
                 AmazonBattleState.For(world.GridController).Clear();
                 world.Dispose();
             }
@@ -275,7 +375,7 @@ namespace Tactics.Tests.PlayMode
 
                 Assert.That(task.IsCompleted, Is.False);
                 Assert.That(GameObject.Find("ProjectileVisual"), Is.Null);
-                yield return new WaitUntil(() => task.IsCompleted);
+                yield return WaitForTask(task, 10d, "Complete async test operation");
                 Assert.That(task.IsFaulted, Is.False);
             }
             finally
@@ -288,7 +388,7 @@ namespace Tactics.Tests.PlayMode
         public System.Collections.IEnumerator CancelledProjectile_CleansTemporaryRenderer()
         {
             var profile = GameAssetManager.Instance.Load<ProjectileVisualProfile>(
-                "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonSpear.asset");
+                "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset");
             var world = new SkillGraphTestWorld();
             using var cancellation = new CancellationTokenSource();
             try
@@ -307,13 +407,16 @@ namespace Tactics.Tests.PlayMode
                     0.3f,
                     cancellation.Token);
                 yield return null;
-                Assert.That(GameObject.Find("ProjectileVisual"), Is.Not.Null);
+                var projectile = GameObject.Find("ProjectileVisual");
+                Assert.That(projectile, Is.Not.Null);
+                Assert.That(projectile.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
 
                 cancellation.Cancel();
-                yield return new WaitUntil(() => task.IsCompleted);
+                yield return WaitForTask(task, 10d, "Complete async test operation");
                 Assert.That(task.IsCanceled, Is.True);
                 yield return null;
                 Assert.That(GameObject.Find("ProjectileVisual"), Is.Null);
+                Assert.That(GameObject.Find("PoisonSpearImpact_Vfx"), Is.Null);
             }
             finally
             {
@@ -611,6 +714,209 @@ namespace Tactics.Tests.PlayMode
             Assert.That(renderer.sharedMaterial.shader, Is.Not.Null);
             Assert.That(renderer.sharedMaterial.shader.isSupported, Is.True);
             Assert.That(renderer.sharedMaterial.shader.name, Is.Not.EqualTo("Hidden/InternalErrorShader"));
+        }
+
+        [UnityTest]
+        public System.Collections.IEnumerator PausedProjectile_DoesNotCompleteUntilGameplayResumes()
+        {
+            var profile = GameAssetManager.Instance.Load<ProjectileVisualProfile>(
+                "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset");
+            var world = new SkillGraphTestWorld();
+            using var cancellation = new CancellationTokenSource();
+            try
+            {
+                var casterCell = world.CreateSquareCell("PausedProjectileCaster", 0, 0);
+                var targetCell = world.CreateSquareCell("PausedProjectileTarget", 4, 0);
+                var caster = world.CreateUnit("PausedProjectileCasterUnit", 0, casterCell);
+                var target = world.CreateUnit("PausedProjectileTargetUnit", 1, targetCell);
+
+                GameTimeService.Pause();
+                Task task = ProjectileVisualCoordinator.PlayAsync(
+                    caster, target, targetCell, profile, 1f, 0.3f, cancellation.Token);
+                yield return new WaitForSecondsRealtime(0.2f);
+
+                Assert.That(task.IsCompleted, Is.False,
+                    "Paused scaled time must not advance projectile arrival.");
+                Assert.That(GameObject.Find("ProjectileVisual"), Is.Not.Null);
+
+                GameTimeService.Resume();
+                yield return WaitForTask(task, 10d, "Complete async test operation");
+                Assert.That(task.IsFaulted, Is.False);
+            }
+            finally
+            {
+                cancellation.Cancel();
+                GameTimeService.ForceResume();
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public System.Collections.IEnumerator DoubleSpeedProjectile_UsesScaledGameplayTime()
+        {
+            yield return VerifyProjectilePlaybackSpeed(GamePlaybackSpeed.Double, 0.65d);
+        }
+
+        [UnityTest]
+        public System.Collections.IEnumerator QuadrupleSpeedProjectile_UsesScaledGameplayTime()
+        {
+            yield return VerifyProjectilePlaybackSpeed(GamePlaybackSpeed.Quadruple, 0.4d);
+        }
+
+        [UnityTest]
+        public System.Collections.IEnumerator DestroyedTargetDuringProjectile_DoesNotLeakOrFault()
+        {
+            var profile = GameAssetManager.Instance.Load<ProjectileVisualProfile>(
+                "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset");
+            var world = new SkillGraphTestWorld();
+            using var cancellation = new CancellationTokenSource();
+            try
+            {
+                var casterCell = world.CreateSquareCell("DestroyedTargetCaster", 0, 0);
+                var targetCell = world.CreateSquareCell("DestroyedTargetCell", 4, 0);
+                var caster = world.CreateUnit("DestroyedTargetCasterUnit", 0, casterCell);
+                var target = world.CreateUnit("DestroyedTargetUnit", 1, targetCell);
+
+                Task task = ProjectileVisualCoordinator.PlayAsync(
+                    caster, target, targetCell, profile, 1f, 0.3f, cancellation.Token);
+                yield return null;
+                Assert.That(GameObject.Find("ProjectileVisual"), Is.Not.Null);
+
+                Object.Destroy(target.gameObject);
+                yield return null;
+                yield return WaitForTask(task, 10d, "Complete async test operation");
+
+                Assert.That(task.IsFaulted, Is.False,
+                    "Projectile cleanup must use its resolved endpoint, not a destroyed target object.");
+                yield return null;
+                Assert.That(GameObject.Find("ProjectileVisual"), Is.Null);
+            }
+            finally
+            {
+                cancellation.Cancel();
+                world.Dispose();
+            }
+        }
+
+        private static System.Collections.IEnumerator VerifyProjectilePlaybackSpeed(
+            GamePlaybackSpeed playbackSpeed,
+            double maximumRealtimeSeconds)
+        {
+            var profile = GameAssetManager.Instance.Load<ProjectileVisualProfile>(
+                "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset");
+            var world = new SkillGraphTestWorld();
+            using var cancellation = new CancellationTokenSource();
+            using var runtimeScope = new BattleRuntimeScope();
+            try
+            {
+                var casterCell = world.CreateSquareCell($"{playbackSpeed}ProjectileCaster", 0, 0);
+                var targetCell = world.CreateSquareCell($"{playbackSpeed}ProjectileTarget", 4, 0);
+                var caster = world.CreateUnit($"{playbackSpeed}ProjectileCasterUnit", 0, casterCell);
+                var target = world.CreateUnit($"{playbackSpeed}ProjectileTargetUnit", 1, targetCell);
+
+                GameTimeService.SetPlaybackSpeed(playbackSpeed);
+                double startedAt = Time.realtimeSinceStartupAsDouble;
+                Task task = ProjectileVisualCoordinator.PlayAsync(
+                    caster,
+                    target,
+                    targetCell,
+                    profile,
+                    1f,
+                    0.3f,
+                    cancellation.Token,
+                    runtimeScope);
+                yield return WaitForTask(task, 10d, "Complete async test operation");
+                double elapsed = Time.realtimeSinceStartupAsDouble - startedAt;
+
+                Assert.That(task.IsFaulted, Is.False);
+                Assert.That(elapsed, Is.LessThan(maximumRealtimeSeconds),
+                    $"A max-duration projectile took {elapsed:F3}s at {playbackSpeed} speed.");
+
+                runtimeScope.Cancel();
+                Task drainTask = runtimeScope.WhenIdleAsync();
+                yield return WaitForTask(drainTask, 10d, "Drain projectile impact");
+                Assert.That(drainTask.IsFaulted, Is.False);
+            }
+            finally
+            {
+                cancellation.Cancel();
+                runtimeScope.Cancel();
+                GameTimeService.ForceResume();
+                GameTimeService.SetPlaybackSpeed(GamePlaybackSpeed.Normal);
+                world.Dispose();
+            }
+        }
+
+        private static object GetTransientVfxCache()
+        {
+            return typeof(TransientVfxPool).GetField(
+                    "Available",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                ?.GetValue(null);
+        }
+
+        private static Transform GetTransientVfxPoolRoot()
+        {
+            return typeof(TransientVfxPool).GetField(
+                    "_poolRoot",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                ?.GetValue(null) as Transform;
+        }
+
+        private static void RecordCleanupFailure(
+            ICollection<Exception> failures,
+            string stepName,
+            Action cleanup)
+        {
+            try
+            {
+                cleanup();
+            }
+            catch (Exception exception)
+            {
+                failures.Add(new InvalidOperationException(
+                    $"{stepName} failed during fixture cleanup.",
+                    exception));
+            }
+        }
+
+        private static System.Collections.IEnumerator WaitForTask(
+            Task task,
+            double timeoutSeconds,
+            string label)
+        {
+            double deadline = Time.realtimeSinceStartupAsDouble + timeoutSeconds;
+            int frameCount = 0;
+            while (!task.IsCompleted && Time.realtimeSinceStartupAsDouble < deadline)
+            {
+                frameCount++;
+                yield return null;
+            }
+
+            Assert.That(task.IsCompleted, Is.True,
+                $"{label} timed out after {timeoutSeconds:F1}s and {frameCount} frames; status={task.Status}.");
+        }
+
+        private static void ResetTransientVfxPoolForTests()
+        {
+            var resetMethod = typeof(TransientVfxPool).GetMethod(
+                "ResetStatics",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            if (resetMethod != null)
+            {
+                resetMethod.Invoke(null, null);
+                return;
+            }
+
+            object cache = GetTransientVfxCache();
+            cache?.GetType().GetMethod("Clear")?.Invoke(cache, null);
+            Transform root = GetTransientVfxPoolRoot();
+            if (root != null)
+                Object.Destroy(root.gameObject);
+            typeof(TransientVfxPool).GetField(
+                    "_poolRoot",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(null, null);
         }
     }
 }

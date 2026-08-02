@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Editor.SkillGraphEditor;
+using UnityEditor;
 using UnityEngine;
 
 namespace Tactics.Tests.PlayMode
@@ -300,6 +301,52 @@ namespace Tactics.Tests.PlayMode
             Assert.AreEqual(compileResult.Asset.Edges.Count, regraph.Edges.Count);
             Assert.AreEqual(SkillTargetMode.DirectionCone, regraph.Targeting.Mode);
             Assert.AreEqual(3, regraph.Targeting.ConeDepth);
+        }
+
+        [Test]
+        public void SpecCompiler_PlayVisualCueProfilePath_RoundTrips()
+        {
+            const string profilePath =
+                "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Profiles/LightningLv1.asset";
+            var profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(profilePath);
+            Assert.That(profile, Is.Not.Null, $"Missing profile fixture: {profilePath}");
+            var spec = new SkillGraphSpec
+            {
+                DisplayName = "VisualCueRoundTrip",
+                Nodes = new List<SkillNodeSpec>
+                {
+                    new() { Id = "start", Type = "Start" },
+                    new()
+                    {
+                        Id = "cue",
+                        Type = "PlayVisualCue",
+                        Parameters = new Dictionary<string, object> { ["profilePath"] = profilePath }
+                    },
+                    new() { Id = "finish", Type = "Finish" }
+                },
+                Edges = new List<SkillEdgeSpec>
+                {
+                    new() { Source = "start", Target = "cue" },
+                    new() { Source = "cue", Target = "finish" }
+                }
+            };
+
+            var compileResult = SkillGraphSpecCompiler.Compile(spec);
+            Assert.That(compileResult.Success, Is.True,
+                $"Compile failed: {string.Join(", ", compileResult.Errors)}");
+            var compiledCue = compileResult.Asset.FindNode("cue") as PlayVisualCueNodeRecord;
+            Assert.That(compiledCue?.Profile, Is.SameAs(profile));
+
+            SkillGraphSpec exported = SkillGraphSpecCompiler.ExportSpec(compileResult.Asset);
+            SkillNodeSpec exportedCue = exported.Nodes.Find(node => node.Id == "cue");
+            Assert.That(exportedCue, Is.Not.Null);
+            Assert.That(exportedCue.Parameters["profilePath"], Is.EqualTo(profilePath));
+
+            var recompileResult = SkillGraphSpecCompiler.Compile(exported);
+            Assert.That(recompileResult.Success, Is.True,
+                $"Recompile failed: {string.Join(", ", recompileResult.Errors)}");
+            var recompiledCue = recompileResult.Asset.FindNode("cue") as PlayVisualCueNodeRecord;
+            Assert.That(recompiledCue?.Profile, Is.SameAs(profile));
         }
 
         [Test]

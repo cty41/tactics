@@ -8,6 +8,10 @@
 *.h   text eol=lf
 *.txt text eol=lf
 
+# Unity-generated metadata and imported vendor sources are preserved byte-for-byte.
+*.meta -whitespace
+"Assets/Piloto Studio/**" -whitespace
+
 # Specific merge drivers
 Assets/TBSFramework/**/Excel/** merge=excel
 

@@ -675,6 +675,14 @@ namespace Tactics.Editor.SkillGraphEditor
                         r.VisualProfile = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(visualProfilePath);
                     }
                     break;
+                case PlayVisualCueNodeRecord r:
+                    if (parameters.TryGetValue("profilePath", out var cueProfile) &&
+                        cueProfile is string cueProfilePath &&
+                        !string.IsNullOrEmpty(cueProfilePath))
+                    {
+                        r.Profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(cueProfilePath);
+                    }
+                    break;
                 case ApplyBuffNodeRecord r:
                     if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = ToInt(buffDur);
                     if (parameters.TryGetValue("requiresSuccessfulHit", out var rsh)) r.RequiresSuccessfulHit = ToBool(rsh);
@@ -779,6 +787,11 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["requiresLineOfSight"] = r.RequiresLineOfSight;
                     dict["visualProfilePath"] = r.VisualProfile != null
                         ? AssetDatabase.GetAssetPath(r.VisualProfile)
+                        : null;
+                    break;
+                case PlayVisualCueNodeRecord r:
+                    dict["profilePath"] = r.Profile != null
+                        ? AssetDatabase.GetAssetPath(r.Profile)
                         : null;
                     break;
                 case ApplyBuffNodeRecord r:

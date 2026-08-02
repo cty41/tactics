@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Tactics.AssetPipeline;
 using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Battle;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Testing.Gameplay;
@@ -192,6 +193,7 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator LightningLevels_AreInstantAndUseDeterministicStunChance()
         {
             var world = new SkillGraphTestWorld();
+            var runtimeScope = new BattleRuntimeScope();
             try
             {
                 var casterCell = world.CreateSquareCell("Caster", 0, 0);
@@ -204,16 +206,29 @@ namespace Tactics.Tests.PlayMode
                 world.SetTurnContext(world.PlayerTwo, new[] { target });
                 MageSkillRandom.SetProviderForTests(() => 0d);
 
-                var task = ExecuteTask(world, caster, targetCell, "Lightning_Lv3_Graph_Ability.asset");
+                var task = ExecuteTask(
+                    world,
+                    caster,
+                    targetCell,
+                    "Lightning_Lv3_Graph_Ability.asset",
+                    runtimeScope);
                 yield return new WaitUntil(() => task.IsCompleted);
                 AssertExecution(task);
                 Assert.That(task.Result.ExecutionEvents.Any(entry => entry.EventType == "ProjectileLaunched"), Is.False);
+                Assert.That(task.Result.ExecutionEvents.Any(entry => entry.EventType == "VisualCueStarted"), Is.True);
+                var lightningCue = GameObject.Find("LightningImpact_Vfx");
+                Assert.That(lightningCue, Is.Not.Null);
+                Assert.That(lightningCue.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
                 Assert.That(target.Health, Is.EqualTo(9f));
                 Assert.That(Status(target, BuffEffectType.Stun), Is.Not.Null);
                 Assert.That(wallCell, Is.Not.Null, "Intervening blocked terrain does not stop instant lightning.");
+                yield return new WaitForSeconds(0.7f);
+                Assert.That(GameObject.Find("LightningImpact_Vfx"), Is.Null);
             }
             finally
             {
+                runtimeScope.Cancel();
+                runtimeScope.Dispose();
                 world.Dispose();
             }
         }
@@ -338,11 +353,18 @@ namespace Tactics.Tests.PlayMode
         }
 
         private static Task<SkillGraphRuntimeTestResult> ExecuteTask(
-            SkillGraphTestWorld world, Unit caster, Tactics.Common.Cells.ICell targetCell, string configFile)
+            SkillGraphTestWorld world,
+            Unit caster,
+            Tactics.Common.Cells.ICell targetCell,
+            string configFile,
+            IBattleRuntimeScope runtimeScope = null)
         {
             var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>($"{ConfigRoot}{configFile}");
             Assert.That(config, Is.Not.Null, configFile);
-            return new SkillGraphAbilityImpl(caster, config).ExecuteForTestAsync(targetCell, world.GridController);
+            return new SkillGraphAbilityImpl(caster, config).ExecuteForTestAsync(
+                targetCell,
+                world.GridController,
+                runtimeScope);
         }
 
         private static void AssertExecution(Task<SkillGraphRuntimeTestResult> task)

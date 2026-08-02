@@ -19,6 +19,8 @@ namespace Tactics.Editor.SkillGraphEditor
         private const string SkeletonPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Skeleton.prefab";
         private const string BoneSpearProfilePath =
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles/BoneSpear.asset";
+        private const string VisualCueProfileRoot =
+            "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Profiles";
 
         [MenuItem("Tactics/Tools/Pure Run/Rebuild Necromancer Slice Assets")]
         public static void RebuildAll()
@@ -104,6 +106,48 @@ namespace Tactics.Editor.SkillGraphEditor
             TLog.Info("[NecromancerSliceAssetBuilder] Necromancer level assets rebuilt.");
         }
 
+        /// <summary>
+        /// Rebuilds only the three Amplify Damage graphs after their visual cue profiles change.
+        /// </summary>
+        public static void RebuildAmplifyDamageVisualSample()
+        {
+            PatchVisualCueProfile("Curse_Graph", "AmplifyDamageLv1");
+            PatchVisualCueProfile("Curse_Lv2_Graph", "AmplifyDamageLv2");
+            PatchVisualCueProfile("Curse_Lv3_Graph", "AmplifyDamageLv3");
+        }
+
+        private static void PatchVisualCueProfile(string assetName, string profileName)
+        {
+            string graphPath = $"{GraphDirectory}/{assetName}.asset";
+            var graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(graphPath);
+            if (graph == null)
+                throw new FileNotFoundException($"Amplify Damage graph is missing: {graphPath}");
+
+            PlayVisualCueNodeRecord cue = null;
+            foreach (SkillGraphNodeRecord node in graph.Nodes)
+            {
+                if (node is not PlayVisualCueNodeRecord candidate)
+                    continue;
+                if (cue != null)
+                    throw new InvalidDataException($"Amplify Damage graph has multiple visual cues: {graphPath}");
+                cue = candidate;
+            }
+
+            if (cue == null)
+                throw new InvalidDataException($"Amplify Damage graph has no visual cue: {graphPath}");
+
+            string profilePath = $"{VisualCueProfileRoot}/{profileName}.asset";
+            var profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(profilePath);
+            if (profile == null)
+                throw new FileNotFoundException($"Amplify Damage visual cue profile is missing: {profilePath}");
+            if (cue.Profile == profile)
+                return;
+
+            cue.Profile = profile;
+            EditorUtility.SetDirty(graph);
+            AssetDatabase.SaveAssetIfDirty(graph);
+        }
+
         private static SkillGraphAsset BuildSummon(
             string name, string displayName, NecromancerSkillKind kind, int level, AbilityConfig attack)
         {
@@ -123,7 +167,8 @@ namespace Tactics.Editor.SkillGraphEditor
 
         private static SkillGraphAsset BuildCurse(
             string name, string displayName, NecromancerSkillKind kind, int level,
-            BuffConfig amplify, BuffConfig fear)
+            BuffConfig amplify, BuffConfig fear,
+            string summonPrefabPath = SkeletonPrefabPath)
         {
             var mode = level == 1 ? SkillTargetMode.PrimaryUnit : SkillTargetMode.AnyCellCenter;
             var graph = ResetGraph(name, displayName, mode);
@@ -143,9 +188,20 @@ namespace Tactics.Editor.SkillGraphEditor
                 point.MaxRange = 5;
                 select = point;
             }
-            var effect = AddNecromancerNode(graph, kind, level, amplify, fear, null);
+            var effect = AddNecromancerNode(
+                graph, kind, level, amplify, fear, null, summonPrefabPath);
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
-            Link(graph, start, select, effect, finish);
+            if (kind == NecromancerSkillKind.AmplifyDamage)
+            {
+                var cue = Add<PlayVisualCueNodeRecord>(graph, SkillGraphNodeType.PlayVisualCue);
+                cue.Profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(
+                    $"{VisualCueProfileRoot}/AmplifyDamageLv{level}.asset");
+                Link(graph, start, select, cue, effect, finish);
+            }
+            else
+            {
+                Link(graph, start, select, effect, finish);
+            }
             Save(graph);
             return graph;
         }
@@ -219,14 +275,15 @@ namespace Tactics.Editor.SkillGraphEditor
 
         private static NecromancerSkillNodeRecord AddNecromancerNode(
             SkillGraphAsset graph, NecromancerSkillKind kind, int level,
-            BuffConfig amplify, BuffConfig fear, AbilityConfig attack)
+            BuffConfig amplify, BuffConfig fear, AbilityConfig attack,
+            string summonPrefabPath = SkeletonPrefabPath)
         {
             var node = Add<NecromancerSkillNodeRecord>(graph, SkillGraphNodeType.NecromancerSkill);
             node.SkillKind = kind;
             node.Level = level;
             node.AmplifyDamageBuff = amplify;
             node.FearBuff = fear;
-            node.SummonPrefabPath = SkeletonPrefabPath;
+            node.SummonPrefabPath = summonPrefabPath;
             node.SummonAttack = attack;
             node.SummonBrain = AssetDatabase.LoadAssetAtPath<AiBrainAsset>(
                 kind == NecromancerSkillKind.SummonSkeletonMage

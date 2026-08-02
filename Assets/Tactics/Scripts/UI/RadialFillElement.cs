@@ -9,8 +9,6 @@ namespace Tactics.UI
     /// </summary>
     public sealed class RadialFillElement : VisualElement
     {
-        public new class UxmlFactory : UxmlFactory<RadialFillElement> { }
-
         private float _fillAmount;
         private Color _fillColor = Color.white;
         private int _segments = 64;

@@ -476,7 +476,8 @@ namespace Tactics.Common.Skills.Graph
                 record.VisualProfile,
                 record.Speed,
                 record.TravelTime,
-                cancellationToken);
+                cancellationToken,
+                context.RuntimeScope);
 
             await context.PlayVfxAsync(
                 SkillVfxCueKind.ProjectileImpact,
@@ -522,6 +523,49 @@ namespace Tactics.Common.Skills.Graph
             }
             candidates.Sort((a, b) => a.GetDistance(origin).CompareTo(b.GetDistance(origin)));
             return candidates.Count > 0 ? candidates[0] : null;
+        }
+    }
+
+    /// <summary>
+    /// Plays a transient visual cue while leaving all gameplay resolution to adjacent nodes.
+    /// </summary>
+    public class PlayVisualCueNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.PlayVisualCue;
+
+        public async Task<SkillNodeExecutionResult> Execute(
+            SkillGraphNodeRecord node,
+            SkillExecutionContext context)
+        {
+            var record = (PlayVisualCueNodeRecord)node;
+            var targetCell = context.TargetPoint ?? context.PrimaryTarget?.CurrentCell;
+            var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
+
+            if (context.PrimaryTarget != null)
+                context.RecordEvent("VisualCueStarted", node.NodeId, context.PrimaryTarget);
+            else if (targetCell != null)
+                context.RecordEventAtCell("VisualCueStarted", node.NodeId, targetCell);
+
+            Task playbackTask = VisualCueCoordinator.PlayAsync(
+                context.Caster,
+                context.PrimaryTarget,
+                targetCell,
+                record.Profile,
+                cancellationToken);
+
+            if (record.Profile != null &&
+                record.Profile.CompletionPolicy == VisualCueCompletionPolicy.FireAndForget &&
+                context.RuntimeScope != null)
+            {
+                context.RuntimeScope.Track(playbackTask);
+                if (context.RuntimeScope.IsCancelling)
+                    await playbackTask;
+
+                return SkillNodeExecutionResult.Success();
+            }
+
+            await playbackTask;
+            return SkillNodeExecutionResult.Success();
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Tactics.Common.Battle;
 using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
@@ -97,6 +98,7 @@ namespace Tactics.Common.Skills.Graph
             RuntimeDef = runtimeDef;
             GridController = gridController;
             CurrentNodeId = runtimeDef.EntryNodeId;
+            RuntimeScope = (gridController as BattleController)?.RuntimeScope;
         }
 
         // ── 黑板操作 ──

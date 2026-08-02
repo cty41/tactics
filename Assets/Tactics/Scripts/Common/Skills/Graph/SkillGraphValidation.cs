@@ -113,6 +113,7 @@ namespace Tactics.Common.Skills.Graph
             ,SkillGraphNodeType.MageSkill
             ,SkillGraphNodeType.NecromancerSkill
             ,SkillGraphNodeType.AmazonSkill
+            ,SkillGraphNodeType.PlayVisualCue
         };
 
         /// <summary>
@@ -534,6 +535,7 @@ namespace Tactics.Common.Skills.Graph
             "ForEachTarget", "DashToTarget", "ApplyDamage", "ApplyKnockback",
             "Branch", "Finish", "Fail", "ProjectileLaunch", "OnHit",
             "ApplyBuff", "SelectSelf", "SelectAlly", "ApplyHeal", "ApplyMana",
+            "PlayVisualCue",
             "Teleport",
             "MultiStab",
             "ApplyShield",

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-08-01T23:36:41+08:00"
+timestamp: "2026-08-02T20:33:41+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Tools/artworks/pure_run
   - Assets/Tactics/Arts/PureRun
 verified_revision: c68dbebe
-source_fingerprint: sha256:9efa57e5d37dab9188590e9498d6ecf631d635e50959135c16af79d196fb8c60
+source_fingerprint: sha256:0f080e8691e67e947e7f50ca642b48b764777091eff0732a16a62a78779ba7f8
 ---
 
 # Pure Run 角色美术流水线
@@ -41,6 +41,8 @@ source_fingerprint: sha256:9efa57e5d37dab9188590e9498d6ecf631d635e50959135c16af7
 - 七个已接入视觉原型（猎人、死灵、法师、两类骷髅、火魔、羊魔）使用两张原生图补齐四向：East/up-left 镜像、West/down-right 镜像、North/up-left、South/down-right。该映射遵循 Unity 等距网格轴，而不是直接把原画文件名当作逻辑方向。`FourDirectionSpriteVisual` 只负责 `Sprite` 子节点的显示，不改变 `FacingResolver`、移动、技能或 AI；12 个现有 Pure Run Prefab 已分别配置对应的两张 Sprite，六个羊魔职责共用同一对羊魔图。蝙蝠仍是设计层资产，尚未接入运行时 Prefab。
 - 标准地面单位现共用一套 `StandardUnitTweenProfile`，主 `Sprite` Transform 承担 Idle、移动、攻击、施法和受击纸片 Tween；Shadow 与逻辑 Root 不参与。Cast 通过 `SkillVfxRecipe` 发送非阻塞 `CastCharge` 径向光环，光环位于人物和阴影后方；无专属 Recipe 时使用默认低饱和蓝，骨矛与火球分别覆写为苍白青和暖橙红。不得再创建或染色整人物 `GlowOverlay`，主 `SpriteRenderer` 材质与颜色在施法中保持不变。飞行蝙蝠暂不接入该 Profile。
 - `Tactics/Pure Run/Tween Preview` 在隔离舞台中复用运行时动作与投射物构建，提供十种动作/组合、四方向、距离、循环、倍速和时间轴；Profile 编辑使用隐藏沙盒，Apply/Undo 与 Revert 边界明确。它只检查角色动作、Release 和弹道，复杂技能 Recipe 继续使用独立 Skill VFX Preview。蝙蝠专用悬浮/翼展动画和传统复杂 VFX 资产替换均为后续任务。
+- `Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted` 保存 Piloto Roguelike VFX Pack 的项目侧轻量适配：毒矛飞行/命中、霹雳闪电落点爆发和伤害加深诅咒区域。适配器只复制选中的粒子子节点，禁用局部速度、Force/External Force、碰撞和软粒子，将 Renderer 固定为面向相机的 Billboard，并复制独立材质；第三方原 Prefab 不修改。运行时通过共享池重播和回收。供应商 Showcase 脚本被 Editor-only asmdef 隔离。本轮只确认技术闭包，不宣称购买来源或 EULA 已审核；授权事项按项目决定延期处理，不阻塞本轮技术提交。
+- 8 个 Lightning 实例在 640×360 RenderTexture、正交相机和显式逐帧渲染下的 Profiler 样本为 66 Draw Calls、10 Batches、10 SetPass、514 Triangles、1030 Vertices；同路径空相机基线为 0。原始 Draw Calls 严格 `<10` 的目标尚未满足，Frame Debugger 在 Test Runner 手动渲染路径没有提供事件，因此 overdraw 仍需真实 Game View/目标设备人工采样。不得把暖池 Rent/Return 的 0 B 回归或混合帧 GC 数字替代为渲染性能结论。
 
 ## Workflow
 
@@ -55,6 +57,7 @@ source_fingerprint: sha256:9efa57e5d37dab9188590e9498d6ecf631d635e50959135c16af7
 - 投射物 Sprite 约束：`.agents/skills/pure-run-artwork-pipeline/references/projectile-sprites.md`
 - 正式母图清单：`.agents/skills/pure-run-artwork-pipeline/examples/cases.json`
 - 相关资产：`Tools/artworks/amazon`、`Tools/artworks/doge`、`Tools/artworks/pure_run`；已接入 Unity 的纹理、Prefab、Tile 与导入设置位于 `Assets/Tactics/Arts/PureRun`，显示委托实现位于 `Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs`。
+- 第三方 VFX 适配构建入口：`Tactics/Tools/Pure Run/Rebuild Piloto VFX Sample Assets`；生成器仅重建三个样本及六张对应技能图，不批量重写其他职业资产。
 - 提示词库边界：可复用 GPT Image 提示词文档由 `artworks-prompt-library` skill 维护，本 scope 只维护项目执行和验收状态。
 
 ## Verification Guidance
@@ -72,6 +75,8 @@ python -m unittest discover Tools/okf -p "test_*.py"
 死亡图仍以人工 QA 为发布门槛：胶囊单位检查与赤柴同向且平直短厚，球形单位检查近圆球核与头部朝右上；两类都只以核心体量比较大小，检查脱手道具层级、去幕后的 RGBA/透明四角、无精确色幕残边，以及以死亡尸体 AABB 中心完成的 Tile 居中。未经人工确认和明确运行时授权不得接入 Unity。
 
 投射物同样以逐图人工 QA 为门槛：检查与施法者的相对体量、中心偏差、Tile 攻击轴、精确色幕和透明像素 RGB；确认前不得开始下一职业或接入运行时。
+
+Piloto VFX 技术提交仍要求人工完成真实 Battle Camera 下的三个技能视觉 Review与 Frame Debugger overdraw 检查。购买来源/EULA 核验是独立延期事项，当前状态不得被描述为已通过。自动化性能 harness 必须通过 exact test name 单独选择；它们标记为 Explicit，不进入常规 PlayMode 全量运行。
 
 ## Citations
 

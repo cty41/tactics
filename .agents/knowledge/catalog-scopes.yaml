@@ -58,6 +58,15 @@ scopes:
       - .agents/skills/mcp-connection-troubleshooting
       - .agents/skills/unity-auto-compile-guard
       - .agents/skills/project-doc-organization
+      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef
+      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef.meta
+      - Assets/Tactics/Scripts/Common/Editor/Tactics.Editor.asmref
+      - Assets/Tactics/Scripts/Common/Editor/Tactics.Editor.asmref.meta
+      - Assets/Tactics/Scripts/Common/RuleTiles/Editor/Tactics.Editor.asmref
+      - Assets/Tactics/Scripts/Common/RuleTiles/Editor/Tactics.Editor.asmref.meta
+      - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
+      - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref.meta
+      - Assets/Tactics/Scripts/UI/RadialFillElement.cs
       - Assets/Tactics/Scripts/Editor/MCP
       - Tools/unity-mcp
 
@@ -143,6 +152,10 @@ scopes:
       - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
       - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
       - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/BattleRuntimeScopePlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/BattleRuntimeScopePlayModeTests.cs.meta
+      - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
+      - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/AmazonSkillLevelTests.cs
       - Assets/Tactics/Tests/PlayMode/PureRunEncounterAndSummaryTests.cs
 
@@ -156,8 +169,11 @@ scopes:
       - Assets/Tactics/AI/BasicMeleeGraph.asset
       - Assets/Tactics/AI/BasicMeleeProfile.asset
       - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
+      - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs
       - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/GameplayRuntimeAiVsAiBattle.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
       - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
       - Assets/Tactics/Scripts/Common/Units/Unit.cs
@@ -238,6 +254,21 @@ scopes:
       - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
       - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs
       - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/TransientVfxLifecyclePlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/TransientVfxLifecyclePlayModeTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/PilotoVfxPerformancePlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/PilotoVfxPerformancePlayModeTests.cs.meta
+      - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs
+      - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs.meta
+      - Assets/Tactics/Tests/Editor/EditorAssemblyBoundaryTests.cs
+      - Assets/Tactics/Tests/Editor/EditorAssemblyBoundaryTests.cs.meta
+      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef
+      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef.meta
+      - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
+      - Assets/Tactics/Tests/PlayMode/Tactics.Tests.PlayMode.asmdef
+      - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
+      - Assets/Tactics/Tests/PlayMode/NecromancerPlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
 
   gameplay-test-framework:
     concept: systems/gameplay-test-framework.md

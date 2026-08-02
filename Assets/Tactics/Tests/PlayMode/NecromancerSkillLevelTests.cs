@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Cells;
 using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
@@ -137,24 +138,41 @@ namespace Tactics.Tests.PlayMode
         public IEnumerator AmplifyDamageLevels_UseSingleCrossAndSquareAreas()
         {
             var world = CreateAreaWorld(out var caster, out var center, out var cross, out var diagonal);
+            var runtimeScope = new BattleRuntimeScope();
             try
             {
-                yield return Execute(world, caster, center.CurrentCell, "Curse_Graph_Ability.asset");
+                yield return Execute(world, caster, center.CurrentCell, "Curse_Graph_Ability.asset", runtimeScope);
                 Assert.That(Has(center, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(Has(cross, BuffEffectType.CurseDamageAmplifier), Is.False);
+                var firstCue = GameObject.Find("AmplifyDamageCurse_Vfx");
+                Assert.That(firstCue, Is.Not.Null);
+                Assert.That(firstCue.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
+                int pooledCueId = firstCue.GetInstanceID();
+                yield return new WaitForSeconds(0.8f);
+                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Null);
                 center.RemoveBuff(center.GetActiveBuffs().Single());
 
-                yield return Execute(world, caster, center.CurrentCell, "Curse_Lv2_Graph_Ability.asset");
+                yield return Execute(world, caster, center.CurrentCell, "Curse_Lv2_Graph_Ability.asset", runtimeScope);
                 Assert.That(Has(center, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(Has(cross, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(Has(diagonal, BuffEffectType.CurseDamageAmplifier), Is.False);
+                var secondCue = GameObject.Find("AmplifyDamageCurse_Vfx");
+                Assert.That(secondCue, Is.Not.Null);
+                Assert.That(secondCue.GetInstanceID(), Is.EqualTo(pooledCueId));
+                yield return new WaitForSeconds(0.9f);
+                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Null);
 
-                yield return Execute(world, caster, center.CurrentCell, "Curse_Lv3_Graph_Ability.asset");
+                yield return Execute(world, caster, center.CurrentCell, "Curse_Lv3_Graph_Ability.asset", runtimeScope);
                 Assert.That(Has(diagonal, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(center.GetActiveBuffs().Single().RemainingTurns, Is.EqualTo(5));
+                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Not.Null);
+                yield return new WaitForSeconds(1f);
+                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Null);
             }
             finally
             {
+                runtimeScope.Cancel();
+                runtimeScope.Dispose();
                 world.Dispose();
             }
         }
@@ -353,12 +371,19 @@ namespace Tactics.Tests.PlayMode
             unit.GetActiveBuffs().Any(buff => buff.Config.EffectType == type);
 
         private static IEnumerator Execute(
-            SkillGraphTestWorld world, Unit caster, ICell target, string configFile)
+            SkillGraphTestWorld world,
+            Unit caster,
+            ICell target,
+            string configFile,
+            IBattleRuntimeScope runtimeScope = null)
         {
             var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>($"{ConfigRoot}{configFile}");
             Assert.That(config, Is.Not.Null, configFile);
             Task<SkillGraphRuntimeTestResult> task =
-                new SkillGraphAbilityImpl(caster, config).ExecuteForTestAsync(target, world.GridController);
+                new SkillGraphAbilityImpl(caster, config).ExecuteForTestAsync(
+                    target,
+                    world.GridController,
+                    runtimeScope);
             yield return new WaitUntil(() => task.IsCompleted);
             Assert.That(task.IsFaulted, Is.False, task.Exception?.ToString());
             Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed), task.Result.LastError);

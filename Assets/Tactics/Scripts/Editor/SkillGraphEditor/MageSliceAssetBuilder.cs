@@ -24,6 +24,8 @@ namespace Tactics.Editor.SkillGraphEditor
         private const string FireDemonPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/FireDemon.prefab";
         private const string MageBluePrefabPath = "Assets/Tactics/Arts/Prefabs/Units/MageBlue.prefab";
         private const string ProjectileProfileRoot = "Assets/Tactics/Arts/PureRun/Tween/Projectiles";
+        private const string VisualCueProfileRoot =
+            "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Profiles";
         private const string FireDemonRolePath = "Assets/Tactics/Battle/Classes/FireDemon.asset";
         private const string FireDemonBrainPath = "Assets/Tactics/AI/FireDemonBrain.asset";
 
@@ -94,6 +96,48 @@ namespace Tactics.Editor.SkillGraphEditor
             TLog.Info("[MageSliceAssetBuilder] Mage level assets and Fire Demon prefab rebuilt.");
         }
 
+        /// <summary>
+        /// Rebuilds only the three Lightning graphs after their visual cue profiles change.
+        /// </summary>
+        public static void RebuildLightningVisualSample()
+        {
+            PatchVisualCueProfile("Lightning_Graph", "LightningLv1");
+            PatchVisualCueProfile("Lightning_Lv2_Graph", "LightningLv2");
+            PatchVisualCueProfile("Lightning_Lv3_Graph", "LightningLv3");
+        }
+
+        private static void PatchVisualCueProfile(string assetName, string profileName)
+        {
+            string graphPath = $"{GraphDirectory}/{assetName}.asset";
+            var graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(graphPath);
+            if (graph == null)
+                throw new FileNotFoundException($"Lightning graph is missing: {graphPath}");
+
+            PlayVisualCueNodeRecord cue = null;
+            foreach (SkillGraphNodeRecord node in graph.Nodes)
+            {
+                if (node is not PlayVisualCueNodeRecord candidate)
+                    continue;
+                if (cue != null)
+                    throw new InvalidDataException($"Lightning graph has multiple visual cues: {graphPath}");
+                cue = candidate;
+            }
+
+            if (cue == null)
+                throw new InvalidDataException($"Lightning graph has no visual cue: {graphPath}");
+
+            string profilePath = $"{VisualCueProfileRoot}/{profileName}.asset";
+            var profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(profilePath);
+            if (profile == null)
+                throw new FileNotFoundException($"Lightning visual cue profile is missing: {profilePath}");
+            if (cue.Profile == profile)
+                return;
+
+            cue.Profile = profile;
+            EditorUtility.SetDirty(graph);
+            AssetDatabase.SaveAssetIfDirty(graph);
+        }
+
         private static SkillGraphAsset BuildProjectileMageGraph(
             string assetName, string displayName, MageSkillKind kind, int level, int range,
             BuffConfig ignite, BuffConfig slow, BuffConfig stun, BuffConfig armor)
@@ -119,16 +163,21 @@ namespace Tactics.Editor.SkillGraphEditor
 
         private static SkillGraphAsset BuildDirectMageGraph(
             string assetName, string displayName, MageSkillKind kind, int level, int range,
-            BuffConfig ignite, BuffConfig slow, BuffConfig stun, BuffConfig armor)
+            BuffConfig ignite, BuffConfig slow, BuffConfig stun, BuffConfig armor,
+            string fireDemonPrefabPath = FireDemonPrefabPath)
         {
             var graph = ResetGraph(assetName, displayName, SkillTargetMode.PrimaryUnit);
             var start = Add<StartNodeRecord>(graph, SkillGraphNodeType.Start);
             var select = Add<SelectPrimaryTargetNodeRecord>(graph, SkillGraphNodeType.SelectPrimaryTarget);
             select.MinRange = 1;
             select.MaxRange = range;
-            var effect = AddMageNode(graph, kind, level, ignite, slow, stun, armor);
+            var cue = Add<PlayVisualCueNodeRecord>(graph, SkillGraphNodeType.PlayVisualCue);
+            cue.Profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(
+                $"{VisualCueProfileRoot}/LightningLv{level}.asset");
+            var effect = AddMageNode(
+                graph, kind, level, ignite, slow, stun, armor, fireDemonPrefabPath);
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
-            Link(graph, start, select, effect, finish);
+            Link(graph, start, select, cue, effect, finish);
             Save(graph);
             return graph;
         }
@@ -197,7 +246,8 @@ namespace Tactics.Editor.SkillGraphEditor
 
         private static MageSkillNodeRecord AddMageNode(
             SkillGraphAsset graph, MageSkillKind kind, int level,
-            BuffConfig ignite, BuffConfig slow, BuffConfig stun, BuffConfig armor)
+            BuffConfig ignite, BuffConfig slow, BuffConfig stun, BuffConfig armor,
+            string fireDemonPrefabPath = FireDemonPrefabPath)
         {
             var node = Add<MageSkillNodeRecord>(graph, SkillGraphNodeType.MageSkill);
             node.SkillKind = kind;
@@ -206,7 +256,7 @@ namespace Tactics.Editor.SkillGraphEditor
             node.SlowBuff = slow;
             node.StunBuff = stun;
             node.IceArmorBuff = armor;
-            node.FireDemonPrefabPath = FireDemonPrefabPath;
+            node.FireDemonPrefabPath = fireDemonPrefabPath;
             return node;
         }
 
