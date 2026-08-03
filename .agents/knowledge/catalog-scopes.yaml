@@ -163,6 +163,8 @@ scopes:
       - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
       - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
       - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/UnitActionPosePlayModeTests.cs
+      - Assets/Tactics/Tests/PlayMode/UnitActionPosePlayModeTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/BattleRuntimeScopePlayModeTests.cs
       - Assets/Tactics/Tests/PlayMode/BattleRuntimeScopePlayModeTests.cs.meta
       - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs

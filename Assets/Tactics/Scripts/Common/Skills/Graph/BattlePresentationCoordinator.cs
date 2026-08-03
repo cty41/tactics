@@ -24,7 +24,9 @@ namespace Tactics.Common.Skills.Graph
             ICell targetPoint,
             int skillLevel,
             CancellationToken cancellationToken,
-            IBattleRuntimeScope runtimeScope = null)
+            IBattleRuntimeScope runtimeScope = null,
+            UnitPoseFamily poseFamily = null,
+            Action prepareRelease = null)
         {
             Caster = caster;
             PrimaryTarget = primaryTarget;
@@ -32,6 +34,8 @@ namespace Tactics.Common.Skills.Graph
             SkillLevel = Mathf.Max(1, skillLevel);
             CancellationToken = cancellationToken;
             RuntimeScope = runtimeScope;
+            PoseFamily = poseFamily;
+            PrepareRelease = prepareRelease;
             SourceWorldPosition = SkillVfxPositionUtility.ResolveUnitCenter(caster);
             TargetWorldPosition = primaryTarget != null
                 ? SkillVfxPositionUtility.ResolveUnitCenter(primaryTarget)
@@ -61,6 +65,8 @@ namespace Tactics.Common.Skills.Graph
             SkillLevel = Mathf.Max(1, skillLevel);
             CancellationToken = cancellationToken;
             RuntimeScope = runtimeScope;
+            PoseFamily = null;
+            PrepareRelease = null;
             SourceWorldPosition = sourceWorldPosition;
             TargetWorldPosition = targetWorldPosition;
             TargetGroundWorldPosition = primaryTarget != null
@@ -76,6 +82,8 @@ namespace Tactics.Common.Skills.Graph
         public int SkillLevel { get; }
         public CancellationToken CancellationToken { get; }
         public IBattleRuntimeScope RuntimeScope { get; }
+        public UnitPoseFamily PoseFamily { get; }
+        public Action PrepareRelease { get; }
         public Vector3 SourceWorldPosition { get; }
         public Vector3 TargetWorldPosition { get; }
         public Vector3 TargetGroundWorldPosition { get; }
@@ -292,7 +300,9 @@ namespace Tactics.Common.Skills.Graph
             await UnitAnimationCoordinator.PlayActionAsync(
                 _context.Caster,
                 tween.Action,
+                _context.PoseFamily,
                 _context.TargetPoint,
+                _context.PrepareRelease,
                 () =>
                 {
                     if (tween.EmitReleaseMarker)

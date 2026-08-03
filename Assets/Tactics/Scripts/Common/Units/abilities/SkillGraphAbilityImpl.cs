@@ -539,6 +539,13 @@ namespace Tactics.Common.Units.Abilities
                             targetWorldPosition - sourceWorldPosition,
                             primaryHitWorldPosition: sourceWorldPosition));
                 }
+                int prepared = 0;
+                void PrepareRelease()
+                {
+                    if (System.Threading.Interlocked.Exchange(ref prepared, 1) == 0 && IsPoisonSpear())
+                        PreparePoisonSpearReleaseVisual();
+                }
+
                 if (BattlePresentationCoordinator.HasEntry(
                         _config.PresentationGraph,
                         PresentationCueKind.Action))
@@ -550,7 +557,8 @@ namespace Tactics.Common.Units.Abilities
                         if (marker == PresentationMarkerKind.Release &&
                             System.Threading.Interlocked.Exchange(ref released, 1) == 0)
                         {
-                            gameplayTask = runner.Execute(context);
+                            PrepareRelease();
+                            gameplayTask = ExecuteReleasedGraphAsync(runner, context);
                         }
                     }
 
@@ -560,7 +568,9 @@ namespace Tactics.Common.Units.Abilities
                         selectedCell,
                         context.ResolveSkillLevel(),
                         cancellationToken,
-                        context.RuntimeScope);
+                        context.RuntimeScope,
+                        _config.PoseFamily,
+                        PrepareRelease);
                     bool handled = await BattlePresentationCoordinator.TryPlayCueAsync(
                         _config.PresentationGraph,
                         PresentationCueKind.Action,
@@ -571,8 +581,10 @@ namespace Tactics.Common.Units.Abilities
                         executionState = await UnitAnimationCoordinator.PlayActionAsync(
                             _owner,
                             _config.VisualAction,
+                            _config.PoseFamily,
                             selectedCell,
-                            () => runner.Execute(context),
+                            PrepareRelease,
+                            () => ExecuteReleasedGraphAsync(runner, context),
                             cancellationToken);
                     }
                     else
@@ -590,8 +602,10 @@ namespace Tactics.Common.Units.Abilities
                     executionState = await UnitAnimationCoordinator.PlayActionAsync(
                         _owner,
                         _config.VisualAction,
+                        _config.PoseFamily,
                         selectedCell,
-                        () => runner.Execute(context),
+                        PrepareRelease,
+                        () => ExecuteReleasedGraphAsync(runner, context),
                         cancellationToken);
                 }
             }
@@ -1284,6 +1298,40 @@ namespace Tactics.Common.Units.Abilities
 
         private bool IsPoisonSpear() => GetAmazonNode()?.SkillKind == AmazonSkillKind.PoisonSpear;
         private bool IsThrust() => GetAmazonNode()?.SkillKind == AmazonSkillKind.Thrust;
+
+        private void PreparePoisonSpearReleaseVisual()
+        {
+            // Release ordering is visual state, pose clear, then graph execution. Gameplay state
+            // remains authoritative and is reconciled after every graph outcome.
+            UnitAnimationCoordinator.SetVisualState(_owner, UnitVisualState.Unarmed);
+            UnitAnimationCoordinator.ClearPose(_owner);
+        }
+
+        private async Task<SkillGraphExecutionState> ExecuteReleasedGraphAsync(
+            SkillGraphRunner runner,
+            SkillExecutionContext context)
+        {
+            try
+            {
+                return await runner.Execute(context);
+            }
+            finally
+            {
+                if (IsPoisonSpear())
+                    ReconcileAmazonSpearVisual(context.GridController);
+            }
+        }
+
+        private void ReconcileAmazonSpearVisual(IGridController gridController)
+        {
+            var state = AmazonBattleState.For(gridController);
+            if (state == null)
+                return;
+
+            UnitAnimationCoordinator.SetVisualState(
+                _owner,
+                state.IsSpearHeld(_owner) ? UnitVisualState.Default : UnitVisualState.Unarmed);
+        }
 
         private bool IsAmazonOwner() => _owner is Unit unit &&
             (unit.GetLearnedSkillLevel("amazon.thrust") > 0 ||

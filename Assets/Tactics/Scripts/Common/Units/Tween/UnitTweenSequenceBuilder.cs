@@ -79,7 +79,7 @@ namespace Tactics.Common.Units.Tween
         }
 
         /// <summary>
-        /// Builds a foreground action and returns the release time in sequence seconds.
+        /// Builds a foreground action and returns its release and pose-restore markers.
         /// </summary>
         public static UnitTweenActionPlan BuildAction(
             UnitVisualAction action,
@@ -88,9 +88,10 @@ namespace Tactics.Common.Units.Tween
             Vector3 basePosition,
             Quaternion baseRotation,
             Vector3 baseScale,
-            Vector3 worldDirection)
+            Vector3 worldDirection,
+            UnitPoseExitPolicy poseExitPolicy = UnitPoseExitPolicy.RecoveryStart)
         {
-            return action switch
+            UnitTweenActionPlan plan = action switch
             {
                 UnitVisualAction.Melee => BuildMelee(
                     target, profile, basePosition, baseRotation, baseScale, worldDirection),
@@ -98,8 +99,12 @@ namespace Tactics.Common.Units.Tween
                     target, profile, basePosition, baseRotation, baseScale, worldDirection),
                 UnitVisualAction.Cast => BuildCast(
                     target, profile, basePosition, baseRotation, baseScale),
-                _ => new UnitTweenActionPlan(DOTween.Sequence(), 0f)
+                _ => new UnitTweenActionPlan(DOTween.Sequence(), 0f, 0f)
             };
+
+            return poseExitPolicy == UnitPoseExitPolicy.Release
+                ? plan.WithPoseRestoreTime(plan.ReleaseTime)
+                : plan;
         }
 
         /// <summary>
@@ -113,11 +118,31 @@ namespace Tactics.Common.Units.Tween
             Vector3 baseScale,
             Vector3 incomingDirection)
         {
+            return BuildHitPlan(
+                target,
+                profile,
+                basePosition,
+                baseRotation,
+                baseScale,
+                incomingDirection).Sequence;
+        }
+
+        /// <summary>
+        /// Builds deterministic recoil and exposes the start of its recovery segment.
+        /// </summary>
+        public static UnitTweenPosePlan BuildHitPlan(
+            Transform target,
+            StandardUnitTweenProfile profile,
+            Vector3 basePosition,
+            Quaternion baseRotation,
+            Vector3 baseScale,
+            Vector3 incomingDirection)
+        {
             Vector3 recoil = -NormalizeDirection(incomingDirection) * profile.HitRecoilDistance;
             var squash = new Vector3(baseScale.x * 1.06f, baseScale.y * 0.92f, baseScale.z);
             float sign = incomingDirection.x >= 0f ? -1f : 1f;
 
-            return DOTween.Sequence()
+            var sequence = DOTween.Sequence()
                 .Append(target.DOLocalMove(basePosition + recoil, profile.HitRecoilDuration).SetEase(Ease.OutQuad))
                 .Join(target.DOScale(squash, profile.HitRecoilDuration).SetEase(Ease.OutQuad))
                 .Join(target.DOLocalRotate(
@@ -129,6 +154,9 @@ namespace Tactics.Common.Units.Tween
                 .Append(target.DOLocalMove(basePosition, profile.HitRecoverDuration).SetEase(Ease.OutBack))
                 .Join(target.DOLocalRotateQuaternion(baseRotation, profile.HitRecoverDuration).SetEase(Ease.OutQuad))
                 .Join(target.DOScale(baseScale, profile.HitRecoverDuration).SetEase(Ease.OutQuad));
+            return new UnitTweenPosePlan(
+                sequence,
+                profile.HitRecoilDuration + profile.HitShakeDuration);
         }
 
         /// <summary>
@@ -177,7 +205,10 @@ namespace Tactics.Common.Units.Tween
                 .Append(target.DOLocalMove(basePosition, profile.MeleeRecoverDuration).SetEase(Ease.OutBack))
                 .Join(target.DOLocalRotateQuaternion(baseRotation, profile.MeleeRecoverDuration))
                 .Join(target.DOScale(baseScale, profile.MeleeRecoverDuration).SetEase(Ease.OutQuad));
-            return new UnitTweenActionPlan(sequence, releaseTime);
+            return new UnitTweenActionPlan(
+                sequence,
+                releaseTime,
+                releaseTime + profile.MeleeImpactHold);
         }
 
         private static UnitTweenActionPlan BuildRanged(
@@ -202,7 +233,10 @@ namespace Tactics.Common.Units.Tween
             sequence.Append(target.DOLocalMove(basePosition, profile.RangedRecoverDuration).SetEase(Ease.OutBack))
                 .Join(target.DOLocalRotateQuaternion(baseRotation, profile.RangedRecoverDuration))
                 .Join(target.DOScale(baseScale, profile.RangedRecoverDuration).SetEase(Ease.OutQuad));
-            return new UnitTweenActionPlan(sequence, releaseTime);
+            return new UnitTweenActionPlan(
+                sequence,
+                releaseTime,
+                releaseTime + profile.RangedReleaseDuration);
         }
 
         private static UnitTweenActionPlan BuildCast(
@@ -224,7 +258,10 @@ namespace Tactics.Common.Units.Tween
                 .Append(target.DOLocalMove(basePosition, profile.CastRecoverDuration).SetEase(Ease.OutQuad))
                 .Join(target.DOLocalRotateQuaternion(baseRotation, profile.CastRecoverDuration))
                 .Join(target.DOScale(baseScale, profile.CastRecoverDuration).SetEase(Ease.OutQuad));
-            return new UnitTweenActionPlan(sequence, releaseTime);
+            return new UnitTweenActionPlan(
+                sequence,
+                releaseTime,
+                releaseTime + profile.CastReleaseHold);
         }
 
         private static Vector3 NormalizeDirection(Vector3 direction)
@@ -250,13 +287,33 @@ namespace Tactics.Common.Units.Tween
     /// </summary>
     public readonly struct UnitTweenActionPlan
     {
-        public UnitTweenActionPlan(Sequence sequence, float releaseTime)
+        public UnitTweenActionPlan(Sequence sequence, float releaseTime, float poseRestoreTime)
         {
             Sequence = sequence;
             ReleaseTime = releaseTime;
+            PoseRestoreTime = poseRestoreTime;
         }
 
         public Sequence Sequence { get; }
         public float ReleaseTime { get; }
+        public float PoseRestoreTime { get; }
+
+        public UnitTweenActionPlan WithPoseRestoreTime(float poseRestoreTime) =>
+            new(Sequence, ReleaseTime, poseRestoreTime);
+    }
+
+    /// <summary>
+    /// Couples a visual-only sequence with its pose-restore marker.
+    /// </summary>
+    public readonly struct UnitTweenPosePlan
+    {
+        public UnitTweenPosePlan(Sequence sequence, float poseRestoreTime)
+        {
+            Sequence = sequence;
+            PoseRestoreTime = poseRestoreTime;
+        }
+
+        public Sequence Sequence { get; }
+        public float PoseRestoreTime { get; }
     }
 }

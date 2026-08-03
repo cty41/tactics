@@ -20,6 +20,10 @@ namespace Tactics.Tests.Editor
             "Assets/Tactics/Arts/PureRun/Tween/PureRunGlowOverlay.mat";
         private const string GlowOverlayShaderPath =
             "Assets/Tactics/Arts/PureRun/Shaders/PureRunGlowOverlay.shader";
+        private const string AmazonActionRoot =
+            "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon";
+        private const string AmazonPoseRoot =
+            "Assets/Tactics/Arts/PureRun/Tween/ActionPoses";
 
         private static readonly string[] PrefabPaths =
         {
@@ -60,6 +64,94 @@ namespace Tactics.Tests.Editor
                 Assert.That(visual.VisualRoot.Find("GlowOverlay"), Is.Null, path);
                 Assert.That(new SerializedObject(visual).FindProperty("_glowOverlayMaterial"), Is.Null, path);
             }
+        }
+
+        [TestCase("idle_unarmed_dr_v02", "idle_unarmed_dr")]
+        [TestCase("idle_unarmed_ul_v01", "idle_unarmed_ul")]
+        [TestCase("melee_attack_held_dr_v03", "melee_attack_dr")]
+        [TestCase("melee_attack_held_ul_v08", "melee_attack_ul")]
+        [TestCase("cast_spear_hidden_dr_v02", "cast_dr")]
+        [TestCase("cast_spear_hidden_ul_v04", "cast_ul")]
+        [TestCase("hit_spear_hidden_dr_v02", "hit_dr")]
+        [TestCase("hit_spear_hidden_ul_v02", "hit_ul")]
+        public void AmazonActionSprites_MatchApprovedSourceAndImportContract(
+            string approvedName,
+            string runtimeName)
+        {
+            string sourcePath = $"Tools/artworks/doge/candidates/doge_hunter_{approvedName}.png";
+            string runtimePath = $"{AmazonActionRoot}/doge_hunter_{runtimeName}.png";
+            CollectionAssert.AreEqual(File.ReadAllBytes(sourcePath), File.ReadAllBytes(runtimePath), runtimePath);
+
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(runtimePath);
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(runtimePath);
+            var importer = AssetImporter.GetAtPath(runtimePath) as TextureImporter;
+            Assert.That(texture, Is.Not.Null, runtimePath);
+            Assert.That(texture.width, Is.EqualTo(256), runtimePath);
+            Assert.That(texture.height, Is.EqualTo(256), runtimePath);
+            Assert.That(sprite, Is.Not.Null, runtimePath);
+            Assert.That(sprite.pixelsPerUnit, Is.EqualTo(128f), runtimePath);
+            Assert.That(sprite.pivot, Is.EqualTo(new Vector2(128f, 20f)), runtimePath);
+            Assert.That(importer, Is.Not.Null, runtimePath);
+            Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite), runtimePath);
+            Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single), runtimePath);
+            Assert.That(importer.mipmapEnabled, Is.False, runtimePath);
+            Assert.That(importer.alphaIsTransparency, Is.True, runtimePath);
+            Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Bilinear), runtimePath);
+            Assert.That(importer.textureCompression, Is.EqualTo(TextureImporterCompression.Compressed), runtimePath);
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            Assert.That(settings.spriteMeshType, Is.EqualTo(SpriteMeshType.Tight), runtimePath);
+        }
+
+        [Test]
+        public void AmazonActionPoseAssets_UseApprovedMinimalMapping()
+        {
+            UnitPoseFamily melee = LoadPoseFamily("MeleeAttack");
+            UnitPoseFamily thrown = LoadPoseFamily("ThrownAttack");
+            UnitPoseFamily cast = LoadPoseFamily("Cast");
+            UnitPoseFamily hit = LoadPoseFamily("Hit");
+            var profile = AssetDatabase.LoadAssetAtPath<UnitActionPoseProfile>(
+                $"{AmazonPoseRoot}/AmazonActionPoseProfile.asset");
+
+            Assert.That(melee.ExitPolicy, Is.EqualTo(UnitPoseExitPolicy.RecoveryStart));
+            Assert.That(thrown.ExitPolicy, Is.EqualTo(UnitPoseExitPolicy.Release));
+            Assert.That(cast.ExitPolicy, Is.EqualTo(UnitPoseExitPolicy.RecoveryStart));
+            Assert.That(hit.ExitPolicy, Is.EqualTo(UnitPoseExitPolicy.RecoveryStart));
+            Assert.That(profile, Is.Not.Null);
+            Assert.That(profile.ResolveFamily(UnitVisualAction.Melee), Is.SameAs(melee));
+            Assert.That(profile.ResolveFamily(UnitVisualAction.Ranged), Is.SameAs(thrown));
+            Assert.That(profile.ResolveFamily(UnitVisualAction.Cast), Is.SameAs(cast));
+            Assert.That(profile.HitFamily, Is.SameAs(hit));
+
+            AssertIdle(profile, UnitVisualState.Default, "doge_hunter.png", "doge_hunter_ul.png");
+            AssertIdle(profile, UnitVisualState.Unarmed,
+                "doge_hunter_idle_unarmed_dr.png", "doge_hunter_idle_unarmed_ul.png");
+            AssertPose(profile, melee, UnitVisualState.Default,
+                "doge_hunter_melee_attack_dr.png", "doge_hunter_melee_attack_ul.png");
+            AssertPose(profile, thrown, UnitVisualState.Default,
+                "doge_hunter_melee_attack_dr.png", "doge_hunter_melee_attack_ul.png");
+            AssertPose(profile, cast, UnitVisualState.Default,
+                "doge_hunter_cast_dr.png", "doge_hunter_cast_ul.png");
+            AssertPose(profile, cast, UnitVisualState.Unarmed,
+                "doge_hunter_cast_dr.png", "doge_hunter_cast_ul.png");
+            AssertPose(profile, hit, UnitVisualState.Default,
+                "doge_hunter_hit_dr.png", "doge_hunter_hit_ul.png");
+            AssertPose(profile, hit, UnitVisualState.Unarmed,
+                "doge_hunter_hit_dr.png", "doge_hunter_hit_ul.png");
+
+            GameObject hunter = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPaths[0]);
+            Assert.That(hunter.GetComponent<Tactics.Common.Units.FourDirectionSpriteVisual>().ActionPoseProfile,
+                Is.SameAs(profile));
+        }
+
+        [TestCase("PoisonSpear_Graph_Ability")]
+        [TestCase("PoisonSpear_Lv2_Graph_Ability")]
+        [TestCase("PoisonSpear_Lv3_Graph_Ability")]
+        public void PoisonSpearAbilities_ExplicitlyUseThrownPose(string abilityName)
+        {
+            SkillGraphAbilityConfig config = AssetDatabase.LoadAssetAtPath<SkillGraphAbilityConfig>(
+                $"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/{abilityName}.asset");
+            Assert.That(config.PoseFamily, Is.SameAs(LoadPoseFamily("ThrownAttack")), abilityName);
         }
 
         [Test]
@@ -436,6 +528,46 @@ namespace Tactics.Tests.Editor
             var profile = LoadProfile(profileName);
             string spritePath = AssetDatabase.GetAssetPath(profile.Sprite);
             Assert.That(Path.GetFileName(spritePath), Is.EqualTo(expectedTextureName), profileName);
+        }
+
+        private static UnitPoseFamily LoadPoseFamily(string familyName)
+        {
+            var family = AssetDatabase.LoadAssetAtPath<UnitPoseFamily>(
+                $"{AmazonPoseRoot}/{familyName}.asset");
+            Assert.That(family, Is.Not.Null, familyName);
+            return family;
+        }
+
+        private static void AssertIdle(
+            UnitActionPoseProfile profile,
+            UnitVisualState state,
+            string expectedDownRight,
+            string expectedUpLeft)
+        {
+            Assert.That(
+                profile.TryResolveIdle(state, out Sprite downRight, out Sprite upLeft),
+                Is.True,
+                state.ToString());
+            Assert.That(Path.GetFileName(AssetDatabase.GetAssetPath(downRight)), Is.EqualTo(expectedDownRight));
+            Assert.That(Path.GetFileName(AssetDatabase.GetAssetPath(upLeft)), Is.EqualTo(expectedUpLeft));
+        }
+
+        private static void AssertPose(
+            UnitActionPoseProfile profile,
+            UnitPoseFamily family,
+            UnitVisualState state,
+            string expectedDownRight,
+            string expectedUpLeft)
+        {
+            Assert.That(profile.TryResolvePose(
+                family,
+                state,
+                out Sprite downRight,
+                out Sprite upLeft,
+                out UnitPoseResolution resolution), Is.True, $"{family.name}/{state}");
+            Assert.That(resolution, Is.EqualTo(UnitPoseResolution.ExactPoseState));
+            Assert.That(Path.GetFileName(AssetDatabase.GetAssetPath(downRight)), Is.EqualTo(expectedDownRight));
+            Assert.That(Path.GetFileName(AssetDatabase.GetAssetPath(upLeft)), Is.EqualTo(expectedUpLeft));
         }
     }
 }

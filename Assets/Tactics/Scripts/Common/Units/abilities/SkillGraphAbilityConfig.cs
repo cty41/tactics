@@ -23,6 +23,9 @@ namespace Tactics.Common.Units.Abilities
         [SerializeField] private UnitVisualAction _visualAction;
 
         [BoxGroup("Visuals")]
+        [SerializeField] private UnitPoseFamily _poseFamily;
+
+        [BoxGroup("Visuals")]
         [SerializeField] private SkillVfxRecipe _skillVfxRecipe;
 
         [BoxGroup("Visuals")]
@@ -31,6 +34,7 @@ namespace Tactics.Common.Units.Abilities
         public SkillGraphAsset SkillGraph => _skillGraph;
         public int TargetRange => _targetRange;
         public UnitVisualAction VisualAction => _visualAction;
+        public UnitPoseFamily PoseFamily => _poseFamily;
         public SkillVfxRecipe SkillVfxRecipe => _skillVfxRecipe;
         public BattlePresentationGraph PresentationGraph => _presentationGraph;
 
@@ -50,13 +54,15 @@ namespace Tactics.Common.Units.Abilities
             bool isBasicAbility = false,
             UnitVisualAction visualAction = UnitVisualAction.None,
             SkillVfxRecipe skillVfxRecipe = null,
-            BattlePresentationGraph presentationGraph = null)
+            BattlePresentationGraph presentationGraph = null,
+            UnitPoseFamily poseFamily = null)
         {
             var config = CreateInstance<SkillGraphAbilityConfig>();
             config.InitializeRuntime(displayName, isBasicAbility, maxUsesPerTurn);
             config._skillGraph = graph;
             config._targetRange = Mathf.Max(0, targetRange);
             config._visualAction = visualAction;
+            config._poseFamily = poseFamily;
             config._skillVfxRecipe = skillVfxRecipe;
             config._presentationGraph = presentationGraph;
             return config;

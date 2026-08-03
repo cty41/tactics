@@ -29,6 +29,7 @@ namespace Tactics.Common.Units.Tween
         private Vector3 _baseScale;
         private VisualPriority _priority;
         private Unit _unit;
+        private FourDirectionSpriteVisual _directionalVisual;
         private int _foregroundVersion;
 
         public Transform VisualRoot
@@ -54,6 +55,7 @@ namespace Tactics.Common.Units.Tween
         private void OnEnable()
         {
             _unit = GetComponent<Unit>();
+            _directionalVisual = GetComponent<FourDirectionSpriteVisual>();
             if (_unit != null)
                 _unit.UnitAttacked += OnUnitAttacked;
             if (Application.isPlaying)
@@ -97,14 +99,45 @@ namespace Tactics.Common.Units.Tween
             Action release,
             CancellationToken cancellationToken)
         {
+            return PlayActionAsync(
+                action,
+                null,
+                targetWorldPosition,
+                null,
+                release,
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// Starts one foreground action with an optional semantic pose and release preparation.
+        /// </summary>
+        /// <remarks>
+        /// Release ordering is prepare visual state, restore a release-bound pose, then invoke
+        /// gameplay. This prevents a projectile from starting while its carried weapon remains.
+        /// </remarks>
+        public Task PlayActionAsync(
+            UnitVisualAction action,
+            UnitPoseFamily poseFamily,
+            Vector3 targetWorldPosition,
+            Action prepareRelease,
+            Action release,
+            CancellationToken cancellationToken)
+        {
             if (action == UnitVisualAction.None || _profile == null || ResolveVisualRoot() == null)
             {
+                prepareRelease?.Invoke();
                 release?.Invoke();
                 return Task.CompletedTask;
             }
 
+            UnitPoseFamily resolvedFamily = ResolvePoseFamily(action, poseFamily);
+            UnitPoseExitPolicy exitPolicy = resolvedFamily != null
+                ? resolvedFamily.ExitPolicy
+                : UnitPoseExitPolicy.RecoveryStart;
+
             return PlayForegroundAsync(
                 VisualPriority.Action,
+                () => ApplyPose(resolvedFamily),
                 () =>
                 {
                     Vector3 direction = targetWorldPosition - transform.position;
@@ -115,8 +148,17 @@ namespace Tactics.Common.Units.Tween
                         _basePosition,
                         _baseRotation,
                         _baseScale,
-                        direction);
-                    plan.Sequence.InsertCallback(plan.ReleaseTime, () => release?.Invoke());
+                        direction,
+                        exitPolicy);
+                    plan.Sequence.InsertCallback(plan.ReleaseTime, () =>
+                    {
+                        prepareRelease?.Invoke();
+                        if (plan.PoseRestoreTime <= plan.ReleaseTime + 0.0001f)
+                            ClearActionPose();
+                        release?.Invoke();
+                    });
+                    if (plan.PoseRestoreTime > plan.ReleaseTime + 0.0001f)
+                        plan.Sequence.InsertCallback(plan.PoseRestoreTime, ClearActionPose);
                     return plan.Sequence;
                 },
                 cancellationToken);
@@ -127,13 +169,14 @@ namespace Tactics.Common.Units.Tween
         /// </summary>
         public void BeginMoveStep(Vector3 worldDirection)
         {
-            if (_profile == null || ResolveVisualRoot() == null || _priority > VisualPriority.Move)
+            if (_profile == null || ResolveVisualRoot() == null || _priority > VisualPriority.Action)
                 return;
 
             KillSequence(ref _moveSequence);
             InterruptForeground();
             StopIdle();
             RestoreBaseline();
+            ClearActionPose();
             _priority = VisualPriority.Move;
             _moveSequence = UnitTweenSequenceBuilder.BuildMoveLoop(
                     _visualRoot,
@@ -155,6 +198,7 @@ namespace Tactics.Common.Units.Tween
             KillSequence(ref _moveSequence);
             InterruptForeground();
             RestoreBaseline();
+            ClearActionPose();
             _foregroundSequence = UnitTweenSequenceBuilder.BuildSettle(
                     _visualRoot,
                     _profile,
@@ -181,14 +225,36 @@ namespace Tactics.Common.Units.Tween
             Vector3 direction = transform.position - attackerWorldPosition;
             _ = PlayForegroundAsync(
                 VisualPriority.Hit,
-                () => UnitTweenSequenceBuilder.BuildHit(
-                    _visualRoot,
-                    _profile,
-                    _basePosition,
-                    _baseRotation,
-                    _baseScale,
-                    direction),
+                () => ApplyPose(ResolveDirectionalVisual()?.ActionPoseProfile?.HitFamily),
+                () =>
+                {
+                    var plan = UnitTweenSequenceBuilder.BuildHitPlan(
+                        _visualRoot,
+                        _profile,
+                        _basePosition,
+                        _baseRotation,
+                        _baseScale,
+                        direction);
+                    plan.Sequence.InsertCallback(plan.PoseRestoreTime, ClearActionPose);
+                    return plan.Sequence;
+                },
                 destroyCancellationToken);
+        }
+
+        /// <summary>
+        /// Changes equipment-dependent artwork without changing gameplay state.
+        /// </summary>
+        public void SetVisualState(UnitVisualState state)
+        {
+            ResolveDirectionalVisual()?.SetVisualState(state, ResolveFacing());
+        }
+
+        /// <summary>
+        /// Clears any transient pose and re-resolves idle for the current visual state.
+        /// </summary>
+        public void ClearActionPose()
+        {
+            ResolveDirectionalVisual()?.ClearPose(ResolveFacing());
         }
 
         /// <summary>
@@ -201,10 +267,12 @@ namespace Tactics.Common.Units.Tween
             InterruptForeground();
             _priority = VisualPriority.Idle;
             RestoreBaseline();
+            ClearActionPose();
         }
 
         private async Task PlayForegroundAsync(
             VisualPriority requestedPriority,
+            Action beginVisual,
             Func<Sequence> sequenceFactory,
             CancellationToken cancellationToken)
         {
@@ -216,6 +284,7 @@ namespace Tactics.Common.Units.Tween
             int foregroundVersion = ++_foregroundVersion;
             KillSequence(ref _foregroundSequence);
             RestoreBaseline();
+            beginVisual?.Invoke();
             _priority = requestedPriority;
 
             var completion = new TaskCompletionSource<bool>();
@@ -253,6 +322,7 @@ namespace Tactics.Common.Units.Tween
                     if (_foregroundSequence == ownedSequence)
                         _foregroundSequence = null;
                     RestoreBaseline();
+                    ClearActionPose();
                     if (this != null && isActiveAndEnabled)
                     {
                         _priority = VisualPriority.Idle;
@@ -344,6 +414,32 @@ namespace Tactics.Common.Units.Tween
             }
 
             return _primaryRenderer;
+        }
+
+        private FourDirectionSpriteVisual ResolveDirectionalVisual()
+        {
+            if (_directionalVisual == null)
+                _directionalVisual = GetComponent<FourDirectionSpriteVisual>();
+            return _directionalVisual;
+        }
+
+        private UnitPoseFamily ResolvePoseFamily(UnitVisualAction action, UnitPoseFamily explicitFamily)
+        {
+            var profile = ResolveDirectionalVisual()?.ActionPoseProfile;
+            return profile != null ? profile.ResolveFamily(action, explicitFamily) : explicitFamily;
+        }
+
+        private FacingDirection ResolveFacing()
+        {
+            return _unit != null
+                ? _unit.Facing
+                : ResolveDirectionalVisual()?.LastFacing ?? FacingDirection.South;
+        }
+
+        private void ApplyPose(UnitPoseFamily family)
+        {
+            if (family != null)
+                ResolveDirectionalVisual()?.SetPose(family, ResolveFacing());
         }
 
         private void InterruptForeground()

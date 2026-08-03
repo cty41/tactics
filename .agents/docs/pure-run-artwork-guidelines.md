@@ -82,9 +82,10 @@ verified_revision: c68dbebe
 
 ## 运行时极简 Tween 表现
 
-- 标准地面胶囊单位共用 `StandardUnitTweenProfile`。Idle、移动纸片摆动、近战突进、远程后坐、施法发光和受击回弹只作用于名为 `Sprite` 的隔离视觉 Transform；逻辑 Root、Shadow、血条、飘字和 Tile 高亮不得参与 Tween。
+- 标准地面胶囊单位共用 `StandardUnitTweenProfile`。Idle、移动纸片摆动、近战突进、远程后坐、施法发光和受击回弹只作用于名为 `Sprite` 的隔离视觉 Transform；动作期间可由 `UnitActionPoseProfile` 配置化切换同一主 Renderer 的单帧 Sprite。逻辑 Root、Shadow、血条、飘字和 Tile 高亮不得参与 Tween 或姿态切换。
 - 前景表现优先级为尸体落地、受击、攻击/施法、移动、Idle。打断使用 `Kill(false)` 并恢复 Prefab 原始局部姿态，不用 `Kill(true)` 强制完成旧回调。
-- Cast 蓄力使用 `SkillVfxRecipe` 的非阻塞 `CastCharge` 径向光环，以施法者可见 Sprite 中心为锚点并排在人物与阴影后方。无专属 Recipe 的 Cast 回退到低饱和蓝色光环，火球和骨矛可由技能族 Recipe 覆写颜色；禁止复制、染色或实心覆盖整张人物 Sprite。施法期间主 `SpriteRenderer` 的 Sprite、Material 和 Color 必须保持不变。
+- 赤柴 Hit 的 `Default / Unarmed` 共用同一对无矛受击 Sprite；受击姿态只隐藏图内长矛，不修改 `AmazonBattleState.IsSpearHeld`，并在恢复段开始按权威视觉状态回到持矛或空手 Idle。
+- Cast 蓄力使用 `SkillVfxRecipe` 的非阻塞 `CastCharge` 径向光环，以施法者可见 Sprite 中心为锚点并排在人物与阴影后方。无专属 Recipe 的 Cast 回退到低饱和蓝色光环，火球和骨矛可由技能族 Recipe 覆写颜色；禁止复制、染色或实心覆盖整张人物 Sprite。施法期间允许由姿态 Profile 切换主 Sprite，但不得改变 `Material`、`Color`、Sorting 或烘焙 VFX、投射物和阴影。
 - 远程/施法动作在 release 标记启动 SkillGraph；`ProjectileLaunch` 抵达后才继续 `OnHit` 和玩法效果。场景卸载或取消必须先把等待任务标记为取消，再 Kill 临时 Tween 并销毁 Renderer，避免 `OnKill` 抢先报告成功。
 - 飞行蝙蝠不使用这套地面胶囊动画；其独立悬浮与飞行动画留待专用 Profile。
 - 编辑器入口 `Tactics/Pure Run/Tween Preview` 在隔离的 `PreviewRenderUtility` 舞台中复用运行时单位 Sequence 和投射物视觉构建，支持十种单项/组合动作、四方向、2–6 格距离、循环、倍速和时间拖动。Profile 始终通过隐藏沙盒编辑，只有明确点击 Apply 才借助 Undo 写回资产；切换 Profile、Stop、关闭窗口和程序集重载必须销毁全部 Tween 与临时对象。

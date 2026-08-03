@@ -11,6 +11,7 @@ using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Testing.Gameplay;
+using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Units.Tween;
@@ -349,6 +350,103 @@ namespace Tactics.Tests.PlayMode
                 runtimeScope.Cancel();
                 AmazonBattleState.For(world.GridController).Clear();
                 world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public System.Collections.IEnumerator CancelledPoisonSpear_ReconcilesTemporaryUnarmedVisualToHeldState()
+        {
+            var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
+                "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset");
+            var world = new SkillGraphTestWorld();
+            using var runtimeScope = new BattleRuntimeScope();
+            Texture2D texture = null;
+            Sprite heldDownRight = null;
+            Sprite heldUpLeft = null;
+            Sprite unarmedDownRight = null;
+            Sprite unarmedUpLeft = null;
+            UnitActionPoseProfile poseProfile = null;
+            StandardUnitTweenProfile tweenProfile = null;
+            try
+            {
+                var casterCell = world.CreateSquareCell("CancelledPoseCaster", 0, 0);
+                world.CreateSquareCell("CancelledPoseLine1", 1, 0);
+                world.CreateSquareCell("CancelledPoseLine2", 2, 0);
+                var targetCell = world.CreateSquareCell("CancelledPoseTarget", 3, 0);
+                world.CreateSquareCell("CancelledPoseDrop", 4, 0);
+                var caster = world.CreateUnit("CancelledPoseCasterUnit", 0, casterCell);
+                var target = world.CreateUnit("CancelledPoseTargetUnit", 1, targetCell);
+                caster.Facing = FacingDirection.South;
+                caster.Mana = 20f;
+                caster.MaxMana = 20f;
+                world.SetTurnContext(world.PlayerOne, new[] { caster });
+                world.SetTurnContext(world.PlayerTwo, new[] { target });
+
+                texture = new Texture2D(4, 1);
+                heldDownRight = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), Vector2.one * 0.5f);
+                heldUpLeft = Sprite.Create(texture, new Rect(1f, 0f, 1f, 1f), Vector2.one * 0.5f);
+                unarmedDownRight = Sprite.Create(texture, new Rect(2f, 0f, 1f, 1f), Vector2.one * 0.5f);
+                unarmedUpLeft = Sprite.Create(texture, new Rect(3f, 0f, 1f, 1f), Vector2.one * 0.5f);
+                poseProfile = ScriptableObject.CreateInstance<UnitActionPoseProfile>();
+                poseProfile.SetIdleSprites(UnitVisualState.Unarmed, unarmedDownRight, unarmedUpLeft);
+                tweenProfile = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
+
+                var casterObject = ((Component)caster).gameObject;
+                var spriteObject = new GameObject("Sprite");
+                spriteObject.transform.SetParent(casterObject.transform, false);
+                var renderer = spriteObject.AddComponent<SpriteRenderer>();
+                var directional = casterObject.AddComponent<FourDirectionSpriteVisual>();
+                directional.Configure(renderer, heldDownRight, heldUpLeft, poseProfile);
+                directional.TryApply(FacingDirection.South);
+                var tweenVisual = casterObject.AddComponent<UnitTweenVisual>();
+                tweenVisual.ConfigureForPreview(spriteObject.transform, renderer, tweenProfile);
+
+                var ability = new SkillGraphAbilityImpl(caster, config);
+                Task<SkillGraphRuntimeTestResult> task = ability.ExecuteForTestAsync(
+                    targetCell,
+                    world.GridController,
+                    runtimeScope);
+                float deadline = Time.realtimeSinceStartup + 5f;
+                while (GameObject.Find("ProjectileVisual") == null && !task.IsCompleted &&
+                       Time.realtimeSinceStartup < deadline)
+                {
+                    yield return null;
+                }
+
+                Assert.That(task.IsCompleted, Is.False);
+                Assert.That(GameObject.Find("ProjectileVisual"), Is.Not.Null);
+                Assert.That(directional.VisualState, Is.EqualTo(UnitVisualState.Unarmed));
+                Assert.That(new[] { unarmedDownRight, unarmedUpLeft }, Does.Contain(renderer.sprite));
+
+                LogAssert.Expect(
+                    LogType.Error,
+                    new System.Text.RegularExpressions.Regex(
+                        "\\[SkillGraphRunner\\] Exception in node '5': System\\.Threading\\.Tasks\\.TaskCanceledException"));
+                runtimeScope.Cancel();
+                yield return WaitForTask(task, 10d, "Cancel Poison Spear after release");
+                Assert.That(task.IsCanceled || task.IsFaulted, Is.True);
+                deadline = Time.realtimeSinceStartup + 5f;
+                while (directional.VisualState != UnitVisualState.Default &&
+                       Time.realtimeSinceStartup < deadline)
+                {
+                    yield return null;
+                }
+                Assert.That(AmazonBattleState.For(world.GridController).IsSpearHeld(caster), Is.True);
+                Assert.That(directional.VisualState, Is.EqualTo(UnitVisualState.Default));
+                Assert.That(new[] { heldDownRight, heldUpLeft }, Does.Contain(renderer.sprite));
+            }
+            finally
+            {
+                runtimeScope.Cancel();
+                AmazonBattleState.For(world.GridController).Clear();
+                world.Dispose();
+                Object.Destroy(tweenProfile);
+                Object.Destroy(poseProfile);
+                Object.Destroy(heldDownRight);
+                Object.Destroy(heldUpLeft);
+                Object.Destroy(unarmedDownRight);
+                Object.Destroy(unarmedUpLeft);
+                Object.Destroy(texture);
             }
         }
 

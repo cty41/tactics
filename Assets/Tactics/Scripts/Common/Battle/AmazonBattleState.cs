@@ -6,6 +6,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers;
 using Tactics.Common.Interactables;
 using Tactics.Common.Units;
+using Tactics.Common.Units.Tween;
 using Tactics.Common.Utilities;
 using Tactics.Runtime.Utilities;
 using UnityEngine;
@@ -58,6 +59,7 @@ namespace Tactics.Common.Battle
             spear.CurrentCell = cell;
             cell.AddInteractable(spear);
             state.Spear = spear;
+            UnitAnimationCoordinator.SetVisualState(owner, UnitVisualState.Unarmed);
             return true;
         }
 
@@ -69,6 +71,7 @@ namespace Tactics.Common.Battle
                 return false;
             spear.RemoveFromBattle();
             state.Spear = null;
+            UnitAnimationCoordinator.SetVisualState(owner, UnitVisualState.Default);
             return true;
         }
 
@@ -153,6 +156,7 @@ namespace Tactics.Common.Battle
                     pair.Value.Spear.RemoveFromBattle();
                 if (pair.Value.Decoy != null)
                     DespawnDecoy(pair.Value.Decoy);
+                UnitAnimationCoordinator.SetVisualState(pair.Key, UnitVisualState.Default);
                 Detach(pair.Key, pair.Value);
             }
             _owners.Clear();
@@ -190,7 +194,10 @@ namespace Tactics.Common.Battle
             if (state.Spear != null)
             {
                 if (state.Spear.Owner == owner && state.Spear.CurrentCell != null)
+                {
+                    UnitAnimationCoordinator.SetVisualState(owner, UnitVisualState.Unarmed);
                     return state.Spear;
+                }
 
                 TLog.Warning($"[AmazonBattleState] Discarded invalid cached spear: owner={owner?.UnitID}, cachedOwner={state.Spear.Owner?.UnitID}, cell={state.Spear.CurrentCell?.GridCoordinates}.");
                 state.Spear = null;
@@ -200,9 +207,13 @@ namespace Tactics.Common.Battle
                 .Where(candidate => candidate != null && ReferenceEquals(candidate.Owner, owner) && candidate.CurrentCell != null)
                 .ToList();
             if (liveSpears.Count == 0)
+            {
+                UnitAnimationCoordinator.SetVisualState(owner, UnitVisualState.Default);
                 return null;
+            }
 
             state.Spear = liveSpears[0];
+            UnitAnimationCoordinator.SetVisualState(owner, UnitVisualState.Unarmed);
             if (liveSpears.Count > 1)
             {
                 TLog.Error($"[AmazonBattleState] Multiple dropped spears for owner={owner?.UnitID}; using '{state.Spear.name}' at {state.Spear.CurrentCell.GridCoordinates}.");

@@ -63,9 +63,13 @@ namespace Tactics.EditorTools
         private float _distanceTiles = 3f;
         private float _singleLoopDuration = 1f;
         private float _releaseTime = -1f;
+        private float _poseRestoreTime = -1f;
         private float _impactTime = -1f;
         private PreviewAction _action = PreviewAction.Idle;
         private FacingDirection _facing = FacingDirection.South;
+        private UnitPoseFamily _poseFamily;
+        private UnitVisualState _visualState;
+        private string _poseResolution = "No pose requested";
 
         [MenuItem("Tactics/Pure Run/Tween Preview")]
         private static void Open()
@@ -163,8 +167,17 @@ namespace Tactics.EditorTools
                 _facing = (FacingDirection)EditorGUILayout.EnumPopup("Facing", _facing);
                 _distanceTiles = EditorGUILayout.Slider("Distance", _distanceTiles, 2f, 6f);
             }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                _poseFamily = (UnitPoseFamily)EditorGUILayout.ObjectField(
+                    "Pose Family", _poseFamily, typeof(UnitPoseFamily), false);
+                _visualState = (UnitVisualState)EditorGUILayout.EnumPopup("Visual State", _visualState);
+            }
             if (EditorGUI.EndChangeCheck())
                 RebuildStage();
+
+            if (_action is PreviewAction.Melee or PreviewAction.Ranged or PreviewAction.Cast or PreviewAction.Hit)
+                EditorGUILayout.HelpBox($"Pose resolution: {_poseResolution}", MessageType.Info);
 
             if (UsesProjectile(_action) && !CanRenderSelectedProjectile())
             {
@@ -197,7 +210,7 @@ namespace Tactics.EditorTools
                 }
 
                 GUILayout.Label("Speed", GUILayout.Width(42f));
-                foreach (float speed in new[] { 0.25f, 0.5f, 1f, 2f })
+                foreach (float speed in new[] { 0.25f, 0.5f, 1f, 2f, 4f })
                 {
                     bool selected = Mathf.Approximately(_playbackSpeed, speed);
                     if (GUILayout.Toggle(selected, $"{speed:0.##}x", EditorStyles.toolbarButton) && !selected)
@@ -233,6 +246,7 @@ namespace Tactics.EditorTools
                 Repaint();
             }
             DrawMarker(sliderRect, _releaseTime, "Release", new Color(0.35f, 0.85f, 1f));
+            DrawMarker(sliderRect, _poseRestoreTime, "Pose Restore", new Color(0.55f, 1f, 0.45f));
             DrawMarker(sliderRect, _impactTime, "Impact", new Color(1f, 0.55f, 0.25f));
         }
 
@@ -400,6 +414,8 @@ namespace Tactics.EditorTools
 
             ApplyFacing(_actorInstance, _facing);
             ApplyFacing(_targetInstance, Opposite(_facing));
+            _actorInstance?.GetComponent<FourDirectionSpriteVisual>()?
+                .SetVisualState(_visualState, _facing);
             CaptureStandingSpriteStates();
             UnitTweenVisual actorVisual = ResolveVisual(_actorInstance, _unitSandbox);
             UnitTweenVisual targetVisual = ResolveVisual(_targetInstance, _unitSandbox);
@@ -408,7 +424,9 @@ namespace Tactics.EditorTools
 
             Vector3 direction = ResolveTargetPosition();
             _releaseTime = -1f;
+            _poseRestoreTime = -1f;
             _impactTime = -1f;
+            _poseResolution = "No pose requested";
             if (_presentationGraph != null)
             {
                 _previewSequence = BuildPresentationPreview(actorVisual, targetVisual, direction);
@@ -435,14 +453,24 @@ namespace Tactics.EditorTools
                     _previewSequence.SetLoops(1);
                     break;
                 case PreviewAction.Hit:
-                    _previewSequence = UnitTweenSequenceBuilder.BuildHit(
+                {
+                    var hitPlan = UnitTweenSequenceBuilder.BuildHitPlan(
                         actorVisual.VisualRoot,
                         _unitSandbox,
                         actorVisual.BasePosition,
                         actorVisual.BaseRotation,
                         actorVisual.BaseScale,
                         -direction);
+                    UnitPoseFamily hitFamily = ResolvePreviewHitFamily(_actorInstance);
+                    ApplyPreviewPose(_actorInstance, hitFamily, _facing);
+                    hitPlan.Sequence.InsertCallback(0f, () =>
+                        ApplyPreviewPose(_actorInstance, hitFamily, _facing));
+                    hitPlan.Sequence.InsertCallback(hitPlan.PoseRestoreTime, () =>
+                        ClearPreviewPose(_actorInstance, _facing));
+                    _previewSequence = hitPlan.Sequence;
+                    _poseRestoreTime = hitPlan.PoseRestoreTime;
                     break;
+                }
                 case PreviewAction.CorpseLanding:
                     _previewSequence = BuildCorpsePreview(actorVisual);
                     break;
@@ -478,6 +506,10 @@ namespace Tactics.EditorTools
             Vector3 direction)
         {
             UnitVisualAction action = ResolveUnitAction(_action);
+            UnitPoseFamily resolvedFamily = ResolvePreviewFamily(_actorInstance, action);
+            UnitPoseExitPolicy exitPolicy = resolvedFamily != null
+                ? resolvedFamily.ExitPolicy
+                : UnitPoseExitPolicy.RecoveryStart;
             UnitTweenActionPlan actionPlan = UnitTweenSequenceBuilder.BuildAction(
                 action,
                 actorVisual.VisualRoot,
@@ -485,9 +517,16 @@ namespace Tactics.EditorTools
                 actorVisual.BasePosition,
                 actorVisual.BaseRotation,
                 actorVisual.BaseScale,
-                direction);
+                direction,
+                exitPolicy);
             _previewSequence = actionPlan.Sequence;
             _releaseTime = actionPlan.ReleaseTime;
+            _poseRestoreTime = actionPlan.PoseRestoreTime;
+            ApplyPreviewPose(_actorInstance, resolvedFamily, _facing);
+            _previewSequence.InsertCallback(0f, () =>
+                ApplyPreviewPose(_actorInstance, resolvedFamily, _facing));
+            _previewSequence.InsertCallback(_poseRestoreTime, () =>
+                ClearPreviewPose(_actorInstance, _facing));
 
             float projectileDuration = 0f;
             if (UsesProjectile(_action))
@@ -503,15 +542,52 @@ namespace Tactics.EditorTools
                 return;
 
             float hitTime = UsesProjectile(_action) ? _impactTime : _releaseTime;
-            _previewSequence.Insert(
-                hitTime,
-                UnitTweenSequenceBuilder.BuildHit(
-                    targetVisual.VisualRoot,
-                    _unitSandbox,
-                    targetVisual.BasePosition,
-                    targetVisual.BaseRotation,
-                    targetVisual.BaseScale,
-                    direction));
+            var targetHitPlan = UnitTweenSequenceBuilder.BuildHitPlan(
+                targetVisual.VisualRoot,
+                _unitSandbox,
+                targetVisual.BasePosition,
+                targetVisual.BaseRotation,
+                targetVisual.BaseScale,
+                direction);
+            UnitPoseFamily targetHitFamily = ResolvePreviewHitFamily(_targetInstance);
+            targetHitPlan.Sequence.InsertCallback(0f, () =>
+                ApplyPreviewPose(_targetInstance, targetHitFamily, Opposite(_facing)));
+            targetHitPlan.Sequence.InsertCallback(targetHitPlan.PoseRestoreTime, () =>
+                ClearPreviewPose(_targetInstance, Opposite(_facing)));
+            _previewSequence.Insert(hitTime, targetHitPlan.Sequence);
+        }
+
+        private UnitPoseFamily ResolvePreviewFamily(GameObject instance, UnitVisualAction action)
+        {
+            if (_poseFamily != null)
+                return _poseFamily;
+            return instance?.GetComponent<FourDirectionSpriteVisual>()?.ActionPoseProfile?
+                .ResolveFamily(action);
+        }
+
+        private UnitPoseFamily ResolvePreviewHitFamily(GameObject instance)
+        {
+            return _poseFamily != null
+                ? _poseFamily
+                : instance?.GetComponent<FourDirectionSpriteVisual>()?.ActionPoseProfile?.HitFamily;
+        }
+
+        private void ApplyPreviewPose(GameObject instance, UnitPoseFamily family, FacingDirection facing)
+        {
+            var directional = instance?.GetComponent<FourDirectionSpriteVisual>();
+            if (directional == null || family == null)
+            {
+                _poseResolution = directional == null ? "No FourDirectionSpriteVisual" : "No family; idle fallback";
+                return;
+            }
+
+            directional.SetPose(family, facing);
+            _poseResolution = $"{family.StableId} -> {directional.LastResolution}";
+        }
+
+        private static void ClearPreviewPose(GameObject instance, FacingDirection facing)
+        {
+            instance?.GetComponent<FourDirectionSpriteVisual>()?.ClearPose(facing);
         }
 
         private Sequence BuildProjectilePreview()

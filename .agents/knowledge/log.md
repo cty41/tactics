@@ -1,7 +1,22 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-04
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:f663ca48fe3610cf0789bb585ad9c215b4a2b2dfcc69292dc9639d7b2aa54fa5`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:c84dac81982aeb3423df1a1e9ee26907d37428f50289ddd766a4b4e4fdc23ce8`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:1f4e3893e6689264aff86ca690309a126486fe46bb4d972ac43595e6dd9cdc73`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:dadef3571680d20710e43bdf75ab6b99157ad1e9bbe877d7659b5c1f5c55b58d`。
+
 ## 2026-08-03
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:beefc72b435c5465e91e7279449590201c1d0f72010d56036773cb05d8caa9b2`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:e1bcdee710dbdc67e8a5456a9a0f71cd5d5a82340cfbb0ff4714a37e89077a2f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:212eac94f2b0e22c185874665db3575a1c3c14677b9e897c314dc42abb023087`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:ecc12e1ce9eb237734f5748f435c86c49040fe6392de40abb6220ff28bf0ea3d`。
+* **Update**: 赤柴基础动作真实战斗试玩通过后，接入获批的无矛 Hit DR/UL；`Default/Unarmed` 共用同一方向对，`Hit` 在恢复段开始退出且不修改 `IsSpearHeld`，运行时赤柴姿态纹理由 6 张增至 8 张。
+* **Validation**: Hit 纹理逐字节与 Importer 契约、Profile 双状态映射、四向镜像、恢复段退出、连续受击和显式停止恢复纳入自动化；相关 EditMode 60/60、PlayMode 28/28 通过，羊魔生产继续等待真实战斗受击 QA。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:1f4e3893e6689264aff86ca690309a126486fe46bb4d972ac43595e6dd9cdc73`。
+* **Update**: 只将获批的赤柴空手 idle、近战和无矛施法 3 对接入运行时；`ThrownAttack` 复用近战图，`Cast Default/Unarmed` 共用无矛图，Hit 与羊魔继续延期。
+* **Validation**: 运行时纹理逐字节/Importer 契约、Amazon Profile/Prefab/毒矛引用、四向镜像、Release/恢复时序与长矛状态均纳入 Editor/PlayMode 自动化；真实战斗人工试玩通过前不继续批量美术。
+* **Update**: 赤柴 Cast 简化为 `Default / Unarmed` 共用一对无矛施法 Sprite；姿态期间不修改 `IsSpearHeld`，恢复段按权威状态返回对应 idle，首批唯一动作图由 18 张调整为 16 张。
+* **Update**: 赤柴 `ThrownAttack` 改为复用已批准的 `MeleeAttack` 方向 Sprite，同时保留 Release 当帧退出与空手切换语义；首批唯一动作图由 20 张调整为 18 张，专用投掷失败稿归档到 `rejected/superseded`。
 * **Fix**: 修正首次运行态视觉误判：`TilemapUnit` 不再用会被 Idle Tween 改写的 `Sprite.localPosition` 计算 Shadow，而是把 Shadow 固定在单位根节点的 Tile 落点 `localY=-0.03`。Test1 2× 后台截图确认死灵与羊魔均出现可辨识椭圆，回归测试新增初始化时序断言。
 * **Fix**: Pure Run 单格单位 Shadow 从第三方 `HeliSprite/FloatingUnitShader` 切换到静态 `PureRunUnitShadow.mat`（`Sprites/Default`），恢复 Renderer alpha 契约并移除顶点悬浮；目录级 Editor 测试新增共享材质断言。
 * **Fix**: Pure Run 单格单位的 Prefab 作者状态不再保留历史 Shadow `localY=-0.42`；共享 Fighter 链和三个直接 Prefab 统一按脚底偏移 `-0.03`，并清除 PureRunNecromancer 的禁用覆盖。目录级 Editor 测试新增激活状态与根空间脚底对齐回归。
@@ -25,6 +40,7 @@
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:a11db2e61d2bfb3f84bf0c96b6654b202fc71f62547c0564b5d9021c8bd07f1e`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:27885e3884c37298f2b48fca07c2d27bb559861674c1b7936a672b5b75cbc1cc`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:1ed9b97b1092b21a0dda79377c6cb72821a0650c369c05b39afb412d8c8aa93b`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:dba31cfaea224654b9f87f7f891880eb18c27bcbbcd3698e6da255a4c290053c`。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:3d258f5eac44ca5b51737f094baa4474681b3c9722a14fef61e8a207dd807ce1`。
 * **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:b33460aefbe1875a2d47df1e5bf23780ef6b8a61dfb140c42c0e1ce81a407ffe`。
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:42385fa3f1f6a3a9f09b7ac12a439cb9b0babf9f2d4019a005835401b4c4b391`。
