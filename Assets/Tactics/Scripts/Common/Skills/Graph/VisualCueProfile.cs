@@ -30,7 +30,8 @@ namespace Tactics.Common.Skills.Graph
     {
         Caster,
         PrimaryTarget,
-        TargetPoint
+        TargetPoint,
+        PrimaryTargetGround
     }
 
     /// <summary>

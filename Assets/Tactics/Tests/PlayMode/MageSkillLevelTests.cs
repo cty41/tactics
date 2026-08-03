@@ -219,6 +219,10 @@ namespace Tactics.Tests.PlayMode
                 var lightningCue = GameObject.Find("LightningImpact_Vfx");
                 Assert.That(lightningCue, Is.Not.Null);
                 Assert.That(lightningCue.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
+                Assert.That(
+                    Vector3.Distance(lightningCue.transform.position, target.transform.position),
+                    Is.LessThan(0.1f),
+                    "Lightning should use the snapshotted primary-target body center.");
                 Assert.That(target.Health, Is.EqualTo(9f));
                 Assert.That(Status(target, BuffEffectType.Stun), Is.Not.Null);
                 Assert.That(wallCell, Is.Not.Null, "Intervening blocked terrain does not stop instant lightning.");

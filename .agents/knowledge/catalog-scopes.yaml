@@ -144,12 +144,17 @@ scopes:
       - Assets/Tactics/Scripts/Editor/PureRunTweenAssetConfigurator.cs.meta
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs.meta
+      - Assets/Tactics/Scripts/Editor/PresentationGraph
+      - Assets/Tactics/Scripts/Editor/ProceduralVfxPreviewAdapter.cs
+      - Assets/Tactics/Scripts/Editor/ProceduralVfxPreviewAdapter.cs.meta
       - Assets/Tactics/Scripts/Editor/ProjectileVisualPreviewAdapter.cs
       - Assets/Tactics/Scripts/Editor/ProjectileVisualPreviewAdapter.cs.meta
       - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
       - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs.meta
       - Assets/Tactics/Tests/Editor/PureRunTweenPreviewEditorTests.cs
       - Assets/Tactics/Tests/Editor/PureRunTweenPreviewEditorTests.cs.meta
+      - Assets/Tactics/Tests/Editor/BattlePresentationGraphEditorTests.cs
+      - Assets/Tactics/Tests/Editor/BattlePresentationGraphEditorTests.cs.meta
       - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
       - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
       - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs.meta

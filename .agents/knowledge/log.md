@@ -1,5 +1,12 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-03
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:f9a9ab0f14e32770d20645b5982133d2e624f5ddad3228e8707ddcd91d08f1c3`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352527dc4aea37`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:39fb942e4cf502aa3113564e8afc3081515e0b214b6f9f77e57c5f76c887d0bf`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:82d54dd1ec9fb21b326b45f24a87b7ebeb45d6d695294216ca9779e1c059933a`。
+* **Update**: 伤害加深诅咒正式表现升级为三层 V2 法阵：独立校准暗盘、双圆环、符文和中央符号，十二个固定尺寸火焰节点从 12 点方向顺时针延迟点燃，并按远近半圈使用 `-1/+2` 层级；V1 双层资产保留回退。
+
 ## 2026-08-02
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:66622df99da280c97e0a08a4d3131360be4a3f605d5a9fa236d6aac80409b4cc`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:c722156cad98360da87bd8b373c02a9411d1ef07b5143b46ac457e8639608c52`。

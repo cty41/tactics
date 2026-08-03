@@ -27,7 +27,32 @@ namespace Tactics.Common.Skills.Graph
             Vector3 start = SkillVfxPositionUtility.ResolveUnitCenter(caster);
             Vector3 end = target != null
                 ? SkillVfxPositionUtility.ResolveUnitCenter(target)
-                : targetCell.WorldPosition.ToVector3() + Vector3.up * 0.45f;
+                : targetCell != null
+                    ? targetCell.WorldPosition.ToVector3() + Vector3.up * 0.45f
+                    : start;
+            await PlayFromSnapshotAsync(
+                caster,
+                start,
+                end,
+                profile,
+                speed,
+                fallbackTravelTime,
+                cancellationToken,
+                runtimeScope);
+        }
+
+        internal static async Task PlayFromSnapshotAsync(
+            IUnit caster,
+            Vector3 sourceWorldPosition,
+            Vector3 targetWorldPosition,
+            ProjectileVisualProfile profile,
+            float speed,
+            float fallbackTravelTime,
+            CancellationToken cancellationToken,
+            IBattleRuntimeScope runtimeScope = null)
+        {
+            Vector3 start = sourceWorldPosition;
+            Vector3 end = targetWorldPosition;
             Vector3 towardTarget = (end - start).normalized;
             start += towardTarget * 0.12f;
             float duration = ProjectileVisualFactory.ResolveDuration(

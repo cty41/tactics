@@ -469,15 +469,38 @@ namespace Tactics.Common.Skills.Graph
             Vector3 targetWorldPosition = target != null
                 ? SkillVfxPositionUtility.ResolveUnitCenter(target)
                 : targetCell.WorldPosition.ToVector3() + Vector3.up * 0.45f;
-            await ProjectileVisualCoordinator.PlayAsync(
-                caster,
-                target,
-                targetCell,
-                record.VisualProfile,
-                record.Speed,
-                record.TravelTime,
-                cancellationToken,
-                context.RuntimeScope);
+            bool presentationHandled = false;
+            if (BattlePresentationCoordinator.HasEntry(
+                    context.PresentationGraph,
+                    PresentationCueKind.Projectile))
+            {
+                var presentationContext = new PresentationExecutionContext(
+                    caster,
+                    target,
+                    targetCell,
+                    context.ResolveSkillLevel(),
+                    cancellationToken,
+                    context.RuntimeScope,
+                    sourceWorldPosition,
+                    targetWorldPosition);
+                presentationHandled = await BattlePresentationCoordinator.TryPlayCueUntilMarkerAsync(
+                    context.PresentationGraph,
+                    PresentationCueKind.Projectile,
+                    presentationContext,
+                    PresentationMarkerKind.Impact);
+            }
+            if (!presentationHandled)
+            {
+                await ProjectileVisualCoordinator.PlayAsync(
+                    caster,
+                    target,
+                    targetCell,
+                    record.VisualProfile,
+                    record.Speed,
+                    record.TravelTime,
+                    cancellationToken,
+                    context.RuntimeScope);
+            }
 
             await context.PlayVfxAsync(
                 SkillVfxCueKind.ProjectileImpact,
@@ -565,6 +588,51 @@ namespace Tactics.Common.Skills.Graph
             }
 
             await playbackTask;
+            return SkillNodeExecutionResult.Success();
+        }
+    }
+
+    /// <summary>
+    /// Plays one semantic entry from the ability's presentation graph.
+    /// </summary>
+    public class PlayPresentationCueNodeExecutor : ISkillNodeExecutor
+    {
+        public SkillGraphNodeType NodeType => SkillGraphNodeType.PlayPresentationCue;
+
+        public async Task<SkillNodeExecutionResult> Execute(
+            SkillGraphNodeRecord node,
+            SkillExecutionContext context)
+        {
+            var record = (PlayPresentationCueNodeRecord)node;
+            if (!BattlePresentationCoordinator.HasEntry(context.PresentationGraph, record.Cue))
+                return SkillNodeExecutionResult.Success();
+
+            var targetCell = context.TargetPoint ?? context.PrimaryTarget?.CurrentCell;
+            if (context.PrimaryTarget != null)
+                context.RecordEvent("VisualCueStarted", node.NodeId, context.PrimaryTarget);
+            else if (targetCell != null)
+                context.RecordEventAtCell("VisualCueStarted", node.NodeId, targetCell);
+
+            var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
+            Vector3 sourceWorldPosition = SkillVfxPositionUtility.ResolveUnitCenter(context.Caster);
+            Vector3 targetWorldPosition = context.PrimaryTarget != null
+                ? SkillVfxPositionUtility.ResolveUnitCenter(context.PrimaryTarget)
+                : targetCell != null
+                    ? targetCell.WorldPosition.ToVector3() + Vector3.up * 0.45f
+                    : sourceWorldPosition;
+            var presentationContext = new PresentationExecutionContext(
+                context.Caster,
+                context.PrimaryTarget,
+                context.TargetPoint,
+                context.ResolveSkillLevel(),
+                cancellationToken,
+                context.RuntimeScope,
+                sourceWorldPosition,
+                targetWorldPosition);
+            await BattlePresentationCoordinator.TryPlayCueAsync(
+                context.PresentationGraph,
+                record.Cue,
+                presentationContext);
             return SkillNodeExecutionResult.Success();
         }
     }

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using DG.DOTweenEditor;
 using DG.Tweening;
 using Tactics.Common.Skills.Graph;
@@ -40,9 +41,13 @@ namespace Tactics.EditorTools
         private ProjectileVisualProfile _projectileProfile;
         private ProjectileVisualProfile _projectileSandbox;
         private ProjectileVisualProfile _transientProjectileProfile;
+        private BattlePresentationGraph _presentationGraph;
+        private PresentationCueKind _presentationCue = PresentationCueKind.Action;
+        private readonly List<GameObject> _presentationPreviewObjects = new();
         private UnityEditor.Editor _unitSandboxEditor;
         private UnityEditor.Editor _projectileSandboxEditor;
         private ProjectileVisualPreviewAdapter _projectileAdapter;
+        private ProceduralVfxPreviewAdapter _proceduralVfxAdapter;
         private Sequence _previewSequence;
         private Texture2D _tileTexture;
         private Texture2D _placeholderTexture;
@@ -68,6 +73,23 @@ namespace Tactics.EditorTools
             var window = GetWindow<PureRunTweenPreviewWindow>();
             window.titleContent = new GUIContent("Pure Run Tween");
             window.minSize = new Vector2(720f, 620f);
+            window.Show();
+        }
+
+        internal static void OpenPresentationGraph(BattlePresentationGraph graph)
+        {
+            var window = GetWindow<PureRunTweenPreviewWindow>();
+            window.titleContent = new GUIContent("Presentation Preview");
+            window.minSize = new Vector2(720f, 620f);
+            window._presentationGraph = graph;
+            if (graph != null)
+            {
+                PresentationEntryNodeRecord firstEntry = graph.Nodes
+                    .Find(node => node is PresentationEntryNodeRecord) as PresentationEntryNodeRecord;
+                if (firstEntry != null)
+                    window._presentationCue = firstEntry.Cue;
+            }
+            window.RebuildStage();
             window.Show();
         }
 
@@ -121,16 +143,23 @@ namespace Tactics.EditorTools
                 "Unit Tween Profile", _unitProfile, typeof(StandardUnitTweenProfile), false);
             var projectileProfile = (ProjectileVisualProfile)EditorGUILayout.ObjectField(
                 "Projectile Profile", _projectileProfile, typeof(ProjectileVisualProfile), false);
+            var presentationGraph = (BattlePresentationGraph)EditorGUILayout.ObjectField(
+                "Presentation Graph", _presentationGraph, typeof(BattlePresentationGraph), false);
             if (EditorGUI.EndChangeCheck() &&
                 TryCommitAssetSelection(actor, target, unitProfile, projectileProfile))
             {
+                _presentationGraph = presentationGraph;
                 RebuildStage();
             }
 
             EditorGUI.BeginChangeCheck();
             using (new EditorGUILayout.HorizontalScope())
             {
-                _action = (PreviewAction)EditorGUILayout.EnumPopup("Action", _action);
+                if (_presentationGraph == null)
+                    _action = (PreviewAction)EditorGUILayout.EnumPopup("Action", _action);
+                else
+                    _presentationCue = (PresentationCueKind)EditorGUILayout.EnumPopup(
+                        "Entry", _presentationCue);
                 _facing = (FacingDirection)EditorGUILayout.EnumPopup("Facing", _facing);
                 _distanceTiles = EditorGUILayout.Slider("Distance", _distanceTiles, 2f, 6f);
             }
@@ -330,15 +359,11 @@ namespace Tactics.EditorTools
 
         private void StopPreview(bool restoreVisuals)
         {
-            if (_previewSequence != null && _previewSequence.IsActive())
-            {
-                _previewSequence.Goto(0f, false);
-                _previewSequence.Kill(false);
-            }
+            DOTweenEditorPreview.Stop(true, true);
             _previewSequence = null;
-            DOTweenEditorPreview.Stop(false, true);
             _projectileAdapter?.Dispose();
             _projectileAdapter = null;
+            ClearPresentationPreviewObjects();
             if (restoreVisuals)
                 RestorePreviewVisuals();
             Repaint();
@@ -384,6 +409,12 @@ namespace Tactics.EditorTools
             Vector3 direction = ResolveTargetPosition();
             _releaseTime = -1f;
             _impactTime = -1f;
+            if (_presentationGraph != null)
+            {
+                _previewSequence = BuildPresentationPreview(actorVisual, targetVisual, direction);
+            }
+            else
+            {
             switch (_action)
             {
                 case PreviewAction.Idle:
@@ -423,6 +454,7 @@ namespace Tactics.EditorTools
                 default:
                     BuildActionPreview(actorVisual, targetVisual, direction);
                     break;
+            }
             }
 
             if (_previewSequence == null)
@@ -484,13 +516,21 @@ namespace Tactics.EditorTools
 
         private Sequence BuildProjectilePreview()
         {
+            ProjectileVisualProfile profile = _projectileSandbox != null
+                ? _projectileSandbox
+                : CreateTransientProjectileProfile();
+            return BuildProjectilePreview(profile, 10f, 0.3f);
+        }
+
+        private Sequence BuildProjectilePreview(
+            ProjectileVisualProfile profile,
+            float speed,
+            float fallbackTravelTime)
+        {
             _projectileAdapter?.Dispose();
             _projectileAdapter = new ProjectileVisualPreviewAdapter(
                 gameObject => _previewUtility?.AddSingleGO(gameObject),
                 CreatePlaceholderSprite());
-            ProjectileVisualProfile profile = _projectileSandbox != null
-                ? _projectileSandbox
-                : CreateTransientProjectileProfile();
             Renderer sourceRenderer = FindSpriteRenderer(_actorInstance);
             Vector3 direction = ResolveTargetPosition().normalized;
             Vector3 start = _actorInstance.transform.position + Vector3.up * 0.45f + direction * 0.12f;
@@ -502,7 +542,273 @@ namespace Tactics.EditorTools
                 sourceRenderer,
                 start,
                 end,
-                ResolvePreviewProjectileDuration());
+                ProjectileVisualFactory.ResolveDuration(
+                    Vector3.Distance(start, end),
+                    speed,
+                    fallbackTravelTime));
+        }
+
+        private Sequence BuildPresentationPreview(
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction)
+        {
+            PresentationEntryNodeRecord entry = _presentationGraph.FindEntry(_presentationCue);
+            if (entry == null)
+                return DOTween.Sequence().AppendInterval(0.01f);
+            var visited = new HashSet<string>();
+            return BuildPresentationPath(
+                entry.NodeId,
+                null,
+                actorVisual,
+                targetVisual,
+                direction,
+                visited);
+        }
+
+        private Sequence BuildPresentationPath(
+            string sourceNodeId,
+            string stopBeforeNodeId,
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction,
+            HashSet<string> visited,
+            bool firstIdIsNode = false)
+        {
+            var result = DOTween.Sequence();
+            string currentId = sourceNodeId;
+            while (true)
+            {
+                PresentationNodeRecord node;
+                if (firstIdIsNode)
+                {
+                    node = _presentationGraph.FindNode(currentId);
+                    firstIdIsNode = false;
+                }
+                else
+                {
+                    List<PresentationEdgeRecord> edges = _presentationGraph.GetEdgesFrom(currentId);
+                    if (edges.Count == 0)
+                        break;
+                    node = _presentationGraph.FindNode(edges[0].TargetNodeId);
+                }
+                if (node == null || node.NodeId == stopBeforeNodeId || node is PresentationFinishNodeRecord)
+                    break;
+                if (!visited.Add(node.NodeId))
+                    break;
+
+                float insertionTime = result.Duration(false);
+                switch (node)
+                {
+                    case PresentationUnitTweenNodeRecord tween:
+                    {
+                        UnitTweenActionPlan plan = UnitTweenSequenceBuilder.BuildAction(
+                            tween.Action,
+                            actorVisual.VisualRoot,
+                            _unitSandbox,
+                            actorVisual.BasePosition,
+                            actorVisual.BaseRotation,
+                            actorVisual.BaseScale,
+                            direction);
+                        result.Append(plan.Sequence);
+                        if (tween.EmitReleaseMarker)
+                            _releaseTime = insertionTime + plan.ReleaseTime;
+                        break;
+                    }
+                    case PresentationProjectileNodeRecord projectile:
+                    {
+                        float duration = ResolvePresentationProjectileDuration(projectile);
+                        result.Append(BuildProjectilePreview(
+                            projectile.Profile,
+                            projectile.Speed,
+                            projectile.FallbackTravelTime));
+                        if (projectile.EmitImpactMarker)
+                            _impactTime = insertionTime + duration;
+                        break;
+                    }
+                    case PresentationPrefabFxNodeRecord prefabFx:
+                        result.Append(BuildPrefabFxPreview(prefabFx.Profile));
+                        break;
+                    case PresentationProceduralVfxNodeRecord procedural:
+                        result.Append(BuildProceduralVfxPreview(procedural));
+                        break;
+                    case PresentationDelayNodeRecord delay:
+                        result.AppendInterval(delay.Duration);
+                        break;
+                    case PresentationMarkerNodeRecord marker:
+                        if (marker.Marker == PresentationMarkerKind.Release)
+                            _releaseTime = insertionTime;
+                        else if (marker.Marker == PresentationMarkerKind.Impact)
+                            _impactTime = insertionTime;
+                        break;
+                    case PresentationForkNodeRecord fork:
+                    {
+                        var parallel = DOTween.Sequence();
+                        foreach (PresentationEdgeRecord branch in _presentationGraph.GetEdgesFrom(fork.NodeId))
+                        {
+                            var branchVisited = new HashSet<string>(visited);
+                            Sequence branchSequence = BuildPresentationBranch(
+                                branch.TargetNodeId,
+                                fork.JoinNodeId,
+                                actorVisual,
+                                targetVisual,
+                                direction,
+                                branchVisited);
+                            parallel.Insert(0f, branchSequence);
+                        }
+                        result.Append(parallel);
+                        PresentationNodeRecord join = _presentationGraph.FindNode(fork.JoinNodeId);
+                        currentId = join?.NodeId;
+                        if (string.IsNullOrEmpty(currentId))
+                            return result;
+                        continue;
+                    }
+                }
+                currentId = node.NodeId;
+            }
+            return result;
+        }
+
+        private Sequence BuildPresentationBranch(
+            string firstNodeId,
+            string joinNodeId,
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction,
+            HashSet<string> visited)
+        {
+            var shim = DOTween.Sequence();
+            PresentationNodeRecord first = _presentationGraph.FindNode(firstNodeId);
+            if (first == null || first.NodeId == joinNodeId)
+                return shim;
+            return BuildPresentationPath(
+                firstNodeId,
+                joinNodeId,
+                actorVisual,
+                targetVisual,
+                direction,
+                visited,
+                true);
+        }
+
+        private float ResolvePresentationProjectileDuration(PresentationProjectileNodeRecord node)
+        {
+            Vector3 direction = ResolveTargetPosition().normalized;
+            Vector3 start = _actorInstance.transform.position + Vector3.up * 0.45f + direction * 0.12f;
+            Vector3 end = (_targetInstance != null
+                ? _targetInstance.transform.position
+                : ResolveTargetPosition()) + Vector3.up * 0.45f;
+            return ProjectileVisualFactory.ResolveDuration(
+                Vector3.Distance(start, end),
+                node.Speed,
+                node.FallbackTravelTime);
+        }
+
+        private Sequence BuildPrefabFxPreview(VisualCueProfile profile)
+        {
+            if (profile?.Prefab == null || _previewUtility == null)
+                return DOTween.Sequence().AppendInterval(0.01f);
+            GameObject instance = _previewUtility.InstantiatePrefabInScene(profile.Prefab);
+            if (instance == null)
+                return DOTween.Sequence().AppendInterval(0.01f);
+            instance.hideFlags = HideFlags.HideAndDontSave;
+            instance.transform.position = ResolveVisualCueAnchor(
+                profile,
+                _actorInstance,
+                _targetInstance,
+                ResolveTargetPosition());
+            instance.transform.localScale = Vector3.one * profile.Scale;
+            SpriteRenderer referenceRenderer = FindSpriteRenderer(_targetInstance) ??
+                FindSpriteRenderer(_actorInstance);
+            int sortingLayerId = referenceRenderer != null ? referenceRenderer.sortingLayerID : 0;
+            int sortingOrder = (referenceRenderer != null ? referenceRenderer.sortingOrder : 0) +
+                profile.SortingOrderOffset;
+            TransientVfxPool.ApplySorting(instance, sortingLayerId, sortingOrder);
+            _presentationPreviewObjects.Add(instance);
+            ParticleSystem[] systems = instance.GetComponentsInChildren<ParticleSystem>(true);
+            foreach (ParticleSystem system in systems)
+            {
+                system.useAutoRandomSeed = false;
+                system.randomSeed = 1u;
+                system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+            float duration = Mathf.Max(0.05f, profile.Lifetime);
+            return DOTween.Sequence().Append(DOTween.To(
+                    () => 0f,
+                    elapsed => SimulatePrefabFx(systems, elapsed),
+                    duration,
+                    duration)
+                .SetEase(Ease.Linear));
+        }
+
+        internal static Vector3 ResolveVisualCueAnchor(
+            VisualCueProfile profile,
+            GameObject actor,
+            GameObject target,
+            Vector3 targetPoint)
+        {
+            if (profile == null)
+                return targetPoint;
+
+            return profile.Anchor switch
+            {
+                VisualCueAnchor.Caster => ResolveSpriteCenter(actor, actor != null
+                    ? actor.transform.position
+                    : Vector3.zero),
+                VisualCueAnchor.PrimaryTarget => ResolveSpriteCenter(target, targetPoint),
+                VisualCueAnchor.PrimaryTargetGround => ResolveSpriteGround(target, targetPoint),
+                _ => targetPoint
+            };
+        }
+
+        private static Vector3 ResolveSpriteCenter(GameObject instance, Vector3 fallback)
+        {
+            SpriteRenderer renderer = FindSpriteRenderer(instance);
+            return renderer != null ? renderer.bounds.center : fallback;
+        }
+
+        private static Vector3 ResolveSpriteGround(GameObject instance, Vector3 fallback)
+        {
+            // Unit roots are authored at the logical tile landing point. Sprite bounds
+            // include transparent padding below the feet and must not move ground FX.
+            return instance != null ? instance.transform.position : fallback;
+        }
+
+        private static void SimulatePrefabFx(ParticleSystem[] systems, float elapsed)
+        {
+            foreach (ParticleSystem system in systems)
+            {
+                if (system == null)
+                    continue;
+                system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                system.Simulate(elapsed, true, true, true);
+                system.Pause(true);
+            }
+        }
+
+        private Sequence BuildProceduralVfxPreview(PresentationProceduralVfxNodeRecord node)
+        {
+            if (node?.Recipe == null)
+                return DOTween.Sequence().AppendInterval(0.01f);
+            _proceduralVfxAdapter ??= new ProceduralVfxPreviewAdapter(
+                gameObject => _previewUtility?.AddSingleGO(gameObject));
+            Vector3 source = _actorInstance.transform.position + Vector3.up * 0.45f;
+            Vector3 target = (_targetInstance != null
+                ? _targetInstance.transform.position
+                : ResolveTargetPosition()) + Vector3.up * 0.45f;
+            return _proceduralVfxAdapter.Build(node.Recipe, node.Cue, source, target);
+        }
+
+        private void ClearPresentationPreviewObjects()
+        {
+            _proceduralVfxAdapter?.Dispose();
+            _proceduralVfxAdapter = null;
+            foreach (GameObject value in _presentationPreviewObjects)
+            {
+                if (value != null)
+                    DestroyImmediate(value);
+            }
+            _presentationPreviewObjects.Clear();
         }
 
         private Sequence BuildCorpsePreview(UnitTweenVisual actorVisual)
@@ -864,24 +1170,30 @@ namespace Tactics.EditorTools
 
         private void Cleanup()
         {
-            StopPreview(false);
-            if (_previewUtility != null)
+            try
             {
-                _previewUtility.Cleanup();
-                _previewUtility = null;
+                StopPreview(false);
             }
-            _actorInstance = null;
-            _targetInstance = null;
-            DestroyImmediateSafe(_unitSandboxEditor);
-            DestroyImmediateSafe(_projectileSandboxEditor);
-            DestroyImmediateSafe(_unitSandbox);
-            DestroyImmediateSafe(_projectileSandbox);
-            DestroyImmediateSafe(_transientProjectileProfile);
-            _transientProjectileProfile = null;
-            DestroyImmediateSafe(_tileSprite);
-            DestroyImmediateSafe(_tileTexture);
-            DestroyImmediateSafe(_placeholderSprite);
-            DestroyImmediateSafe(_placeholderTexture);
+            finally
+            {
+                if (_previewUtility != null)
+                {
+                    _previewUtility.Cleanup();
+                    _previewUtility = null;
+                }
+                _actorInstance = null;
+                _targetInstance = null;
+                DestroyImmediateSafe(_unitSandboxEditor);
+                DestroyImmediateSafe(_projectileSandboxEditor);
+                DestroyImmediateSafe(_unitSandbox);
+                DestroyImmediateSafe(_projectileSandbox);
+                DestroyImmediateSafe(_transientProjectileProfile);
+                _transientProjectileProfile = null;
+                DestroyImmediateSafe(_tileSprite);
+                DestroyImmediateSafe(_tileTexture);
+                DestroyImmediateSafe(_placeholderSprite);
+                DestroyImmediateSafe(_placeholderTexture);
+            }
         }
 
         private static void DestroyImmediateSafe(Object value)

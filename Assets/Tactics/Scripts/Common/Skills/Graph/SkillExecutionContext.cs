@@ -85,6 +85,9 @@ namespace Tactics.Common.Skills.Graph
         // ── 可选表现层 ──
         public ISkillVfxSink VfxSink { get; set; }
 
+        // ── 可选统一表现图 ──
+        public BattlePresentationGraph PresentationGraph { get; set; }
+
         // ── 结构化事件追踪 ──
         public List<SkillGraphExecutionEvent> ExecutionEvents { get; } = new();
 
@@ -147,13 +150,49 @@ namespace Tactics.Common.Skills.Graph
         /// <summary>
         /// Plays an optional semantic VFX cue without making visual availability a gameplay dependency.
         /// </summary>
-        public Task PlayVfxAsync(SkillVfxCueKind cue, SkillVfxCueContext cueContext)
+        public async Task PlayVfxAsync(SkillVfxCueKind cue, SkillVfxCueContext cueContext)
         {
-            if (VfxSink == null || cueContext == null)
-                return Task.CompletedTask;
+            if (cueContext == null)
+                return;
 
             var cancellationToken = RuntimeScope?.Token ?? CancellationToken;
-            return VfxSink.PlayAsync(cue, cueContext, cancellationToken);
+            PresentationCueKind presentationCue = MapPresentationCue(cue);
+            if (BattlePresentationCoordinator.HasEntry(PresentationGraph, presentationCue))
+            {
+                var presentationContext = new PresentationExecutionContext(
+                    Caster,
+                    PrimaryTarget,
+                    TargetPoint,
+                    cueContext.Level,
+                    cancellationToken,
+                    RuntimeScope,
+                    cueContext.SourceWorldPosition,
+                    cueContext.TargetWorldPosition);
+                if (await BattlePresentationCoordinator.TryPlayCueAsync(
+                        PresentationGraph,
+                        presentationCue,
+                        presentationContext))
+                {
+                    return;
+                }
+            }
+
+            if (VfxSink != null)
+                await VfxSink.PlayAsync(cue, cueContext, cancellationToken);
+        }
+
+        private static PresentationCueKind MapPresentationCue(SkillVfxCueKind cue)
+        {
+            return cue switch
+            {
+                SkillVfxCueKind.ProjectileImpact => PresentationCueKind.ProjectileImpact,
+                SkillVfxCueKind.DirectionalStrike => PresentationCueKind.DirectionalStrike,
+                SkillVfxCueKind.PrimaryTargetHit => PresentationCueKind.PrimaryTargetHit,
+                SkillVfxCueKind.SecondaryTargetHit => PresentationCueKind.SecondaryTargetHit,
+                SkillVfxCueKind.ConditionalDetonation => PresentationCueKind.ConditionalDetonation,
+                SkillVfxCueKind.CastCharge => PresentationCueKind.CastCharge,
+                _ => PresentationCueKind.PrimaryTargetHit
+            };
         }
 
         // ── 事件记录 ──

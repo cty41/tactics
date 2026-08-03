@@ -3,6 +3,7 @@ using Tactics.Common.Skills.Graph;
 using Tactics.Common.AI.MonsterAI;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
+using Tactics.Editor.PresentationGraph;
 using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -21,6 +22,8 @@ namespace Tactics.Editor.SkillGraphEditor
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles/BoneSpear.asset";
         private const string VisualCueProfileRoot =
             "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Profiles";
+        private const string PresentationGraphRoot =
+            "Assets/Tactics/Arts/PureRun/Presentation";
 
         [MenuItem("Tactics/Tools/Pure Run/Rebuild Necromancer Slice Assets")]
         public static void RebuildAll()
@@ -111,9 +114,7 @@ namespace Tactics.Editor.SkillGraphEditor
         /// </summary>
         public static void RebuildAmplifyDamageVisualSample()
         {
-            PatchVisualCueProfile("Curse_Graph", "AmplifyDamageLv1");
-            PatchVisualCueProfile("Curse_Lv2_Graph", "AmplifyDamageLv2");
-            PatchVisualCueProfile("Curse_Lv3_Graph", "AmplifyDamageLv3");
+            PureRunPresentationGraphAssetBuilder.RebuildCurseSigilSamples();
         }
 
         private static void PatchVisualCueProfile(string assetName, string profileName)
@@ -123,29 +124,54 @@ namespace Tactics.Editor.SkillGraphEditor
             if (graph == null)
                 throw new FileNotFoundException($"Amplify Damage graph is missing: {graphPath}");
 
-            PlayVisualCueNodeRecord cue = null;
+            PlayVisualCueNodeRecord legacyCue = null;
             foreach (SkillGraphNodeRecord node in graph.Nodes)
             {
                 if (node is not PlayVisualCueNodeRecord candidate)
                     continue;
-                if (cue != null)
+                if (legacyCue != null)
                     throw new InvalidDataException($"Amplify Damage graph has multiple visual cues: {graphPath}");
-                cue = candidate;
+                legacyCue = candidate;
             }
-
-            if (cue == null)
-                throw new InvalidDataException($"Amplify Damage graph has no visual cue: {graphPath}");
 
             string profilePath = $"{VisualCueProfileRoot}/{profileName}.asset";
             var profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(profilePath);
             if (profile == null)
                 throw new FileNotFoundException($"Amplify Damage visual cue profile is missing: {profilePath}");
+
+            if (legacyCue != null)
+            {
+                if (legacyCue.Profile == profile)
+                    return;
+                legacyCue.Profile = profile;
+                EditorUtility.SetDirty(graph);
+                AssetDatabase.SaveAssetIfDirty(graph);
+                return;
+            }
+
+            string presentationName = assetName.EndsWith("_Graph", System.StringComparison.Ordinal)
+                ? assetName[..^6]
+                : assetName;
+            string presentationPath = $"{PresentationGraphRoot}/{presentationName}_Presentation.asset";
+            var presentation = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(presentationPath);
+            if (presentation == null)
+                throw new FileNotFoundException($"Amplify Damage presentation graph is missing: {presentationPath}");
+            PresentationPrefabFxNodeRecord cue = null;
+            foreach (PresentationNodeRecord node in presentation.Nodes)
+            {
+                if (node is not PresentationPrefabFxNodeRecord candidate)
+                    continue;
+                if (cue != null)
+                    throw new InvalidDataException($"Amplify Damage presentation graph has multiple prefab FX nodes: {presentationPath}");
+                cue = candidate;
+            }
+            if (cue == null)
+                throw new InvalidDataException($"Amplify Damage presentation graph has no prefab FX node: {presentationPath}");
             if (cue.Profile == profile)
                 return;
-
             cue.Profile = profile;
-            EditorUtility.SetDirty(graph);
-            AssetDatabase.SaveAssetIfDirty(graph);
+            EditorUtility.SetDirty(presentation);
+            AssetDatabase.SaveAssetIfDirty(presentation);
         }
 
         private static SkillGraphAsset BuildSummon(

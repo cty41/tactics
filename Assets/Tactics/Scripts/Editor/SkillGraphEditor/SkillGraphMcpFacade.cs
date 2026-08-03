@@ -683,6 +683,10 @@ namespace Tactics.Editor.SkillGraphEditor
                         r.Profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(cueProfilePath);
                     }
                     break;
+                case PlayPresentationCueNodeRecord r:
+                    if (parameters.TryGetValue("cue", out var presentationCue))
+                        r.Cue = (PresentationCueKind)ToInt(presentationCue);
+                    break;
                 case ApplyBuffNodeRecord r:
                     if (parameters.TryGetValue("duration", out var buffDur)) r.Duration = ToInt(buffDur);
                     if (parameters.TryGetValue("requiresSuccessfulHit", out var rsh)) r.RequiresSuccessfulHit = ToBool(rsh);
@@ -793,6 +797,9 @@ namespace Tactics.Editor.SkillGraphEditor
                     dict["profilePath"] = r.Profile != null
                         ? AssetDatabase.GetAssetPath(r.Profile)
                         : null;
+                    break;
+                case PlayPresentationCueNodeRecord r:
+                    dict["cue"] = r.Cue;
                     break;
                 case ApplyBuffNodeRecord r:
                     dict["duration"] = r.Duration;

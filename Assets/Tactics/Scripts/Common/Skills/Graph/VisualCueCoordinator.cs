@@ -61,6 +61,49 @@ namespace Tactics.Common.Skills.Graph
                 cancellationToken);
         }
 
+        internal static Task PlayFromSnapshotAsync(
+            IUnit caster,
+            IUnit primaryTarget,
+            VisualCueProfile profile,
+            Vector3 sourceWorldPosition,
+            Vector3 targetWorldPosition,
+            Vector3 targetGroundWorldPosition,
+            CancellationToken cancellationToken)
+        {
+            if (profile == null || profile.Prefab == null)
+                return Task.CompletedTask;
+
+            Vector3 position = profile.Anchor switch
+            {
+                VisualCueAnchor.Caster => sourceWorldPosition,
+                VisualCueAnchor.PrimaryTargetGround => targetGroundWorldPosition,
+                _ => targetWorldPosition
+            };
+            var referenceRenderer = ResolveRenderer(primaryTarget) ?? ResolveRenderer(caster);
+            int sortingLayerId = referenceRenderer != null ? referenceRenderer.sortingLayerID : 0;
+            int sortingOrder = (referenceRenderer != null ? referenceRenderer.sortingOrder : 0) +
+                profile.SortingOrderOffset;
+            return profile.CompletionPolicy == VisualCueCompletionPolicy.FireAndForget
+                ? TransientVfxPool.PlayOneShot(
+                    profile.Prefab,
+                    position,
+                    Quaternion.identity,
+                    profile.Scale,
+                    profile.Lifetime,
+                    sortingLayerId,
+                    sortingOrder,
+                    cancellationToken)
+                : TransientVfxPool.PlayAsync(
+                    profile.Prefab,
+                    position,
+                    Quaternion.identity,
+                    profile.Scale,
+                    profile.Lifetime,
+                    sortingLayerId,
+                    sortingOrder,
+                    cancellationToken);
+        }
+
         private static bool TryResolvePosition(
             IUnit caster,
             IUnit primaryTarget,
@@ -74,6 +117,8 @@ namespace Tactics.Common.Skills.Graph
                     return TryResolveUnitCenter(caster, out position);
                 case VisualCueAnchor.PrimaryTarget:
                     return TryResolveUnitCenter(primaryTarget, out position);
+                case VisualCueAnchor.PrimaryTargetGround:
+                    return TryResolveUnitGround(primaryTarget, out position);
                 default:
                     if (!IsMissingUnityObject(targetPoint))
                     {
@@ -108,6 +153,18 @@ namespace Tactics.Common.Skills.Graph
             }
 
             position = unit.WorldPosition.ToVector3();
+            return true;
+        }
+
+        private static bool TryResolveUnitGround(IUnit unit, out Vector3 position)
+        {
+            if (IsMissingUnityObject(unit))
+            {
+                position = default;
+                return false;
+            }
+
+            position = SkillVfxPositionUtility.ResolveUnitGround(unit);
             return true;
         }
 

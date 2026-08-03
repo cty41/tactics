@@ -63,7 +63,7 @@ namespace Tactics.Tests.PlayMode
                 var targetCell = world.CreateSquareCell("CancelledCueTarget", 1, 0);
                 var caster = world.CreateUnit("CancelledCueCasterUnit", 0, casterCell);
                 var target = world.CreateUnit("CancelledCueTargetUnit", 1, targetCell);
-                var cue = graph.Nodes.OfType<PlayVisualCueNodeRecord>().Single();
+                var cue = CreateLegacyLightningCueFixture();
                 var context = new SkillExecutionContext(
                     caster,
                     graph,
@@ -220,7 +220,7 @@ namespace Tactics.Tests.PlayMode
                 var targetCell = world.CreateSquareCell("ScopedCueTarget", 1, 0);
                 var caster = world.CreateUnit("ScopedCueCasterUnit", 0, casterCell);
                 var target = world.CreateUnit("ScopedCueTargetUnit", 1, targetCell);
-                var cue = graph.Nodes.OfType<PlayVisualCueNodeRecord>().Single();
+                var cue = CreateLegacyLightningCueFixture();
                 var context = new SkillExecutionContext(
                     caster,
                     graph,
@@ -266,7 +266,7 @@ namespace Tactics.Tests.PlayMode
                 var targetCell = world.CreateSquareCell("UnscopedCueTarget", 1, 0);
                 var caster = world.CreateUnit("UnscopedCueCasterUnit", 0, casterCell);
                 var target = world.CreateUnit("UnscopedCueTargetUnit", 1, targetCell);
-                var cue = graph.Nodes.OfType<PlayVisualCueNodeRecord>().Single();
+                var cue = CreateLegacyLightningCueFixture();
                 var context = new SkillExecutionContext(
                     caster,
                     graph,
@@ -322,6 +322,21 @@ namespace Tactics.Tests.PlayMode
                 Object.DestroyImmediate(profile);
                 Object.DestroyImmediate(prefab);
             }
+        }
+
+        private static PlayVisualCueNodeRecord CreateLegacyLightningCueFixture()
+        {
+            var presentation = GameAssetManager.Instance.Load<BattlePresentationGraph>(
+                "Assets/Tactics/Arts/PureRun/Presentation/Lightning_Presentation.asset");
+            VisualCueProfile profile = presentation.Nodes
+                .OfType<PresentationPrefabFxNodeRecord>()
+                .Single()
+                .Profile;
+            return new PlayVisualCueNodeRecord
+            {
+                NodeId = "legacy-lightning-cue-fixture",
+                Profile = profile
+            };
         }
 
         [UnityTest]

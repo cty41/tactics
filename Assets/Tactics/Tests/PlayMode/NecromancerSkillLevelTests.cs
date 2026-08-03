@@ -144,30 +144,61 @@ namespace Tactics.Tests.PlayMode
                 yield return Execute(world, caster, center.CurrentCell, "Curse_Graph_Ability.asset", runtimeScope);
                 Assert.That(Has(center, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(Has(cross, BuffEffectType.CurseDamageAmplifier), Is.False);
-                var firstCue = GameObject.Find("AmplifyDamageCurse_Vfx");
-                Assert.That(firstCue, Is.Not.Null);
-                Assert.That(firstCue.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
-                int pooledCueId = firstCue.GetInstanceID();
-                yield return new WaitForSeconds(0.8f);
-                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Null);
+                var firstGround = GameObject.Find("AmplifyDamageSigilGroundV2_Vfx");
+                var firstRear = GameObject.Find("AmplifyDamageSigilRearFlamesV2_Vfx");
+                var firstForeground = GameObject.Find("AmplifyDamageSigilForegroundFlamesV2_Vfx");
+                Assert.That(firstGround, Is.Not.Null);
+                Assert.That(firstRear, Is.Not.Null);
+                Assert.That(firstForeground, Is.Not.Null);
+                Assert.That(firstGround.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
+                Assert.That(firstRear.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
+                Assert.That(firstForeground.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
+                yield return new WaitForSeconds(0.36f);
+                Assert.That(
+                    firstRear.GetComponentsInChildren<ParticleSystem>(true)
+                        .Sum(system => system.particleCount),
+                    Is.GreaterThan(0));
+                Assert.That(
+                    firstForeground.GetComponentsInChildren<ParticleSystem>(true)
+                        .Sum(system => system.particleCount),
+                    Is.GreaterThan(0));
+                int pooledGroundId = firstGround.GetInstanceID();
+                int pooledRearId = firstRear.GetInstanceID();
+                int pooledForegroundId = firstForeground.GetInstanceID();
+                yield return new WaitForSeconds(0.7f);
+                Assert.That(GameObject.Find("AmplifyDamageSigilGroundV2_Vfx"), Is.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilRearFlamesV2_Vfx"), Is.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilForegroundFlamesV2_Vfx"), Is.Null);
                 center.RemoveBuff(center.GetActiveBuffs().Single());
 
                 yield return Execute(world, caster, center.CurrentCell, "Curse_Lv2_Graph_Ability.asset", runtimeScope);
                 Assert.That(Has(center, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(Has(cross, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(Has(diagonal, BuffEffectType.CurseDamageAmplifier), Is.False);
-                var secondCue = GameObject.Find("AmplifyDamageCurse_Vfx");
-                Assert.That(secondCue, Is.Not.Null);
-                Assert.That(secondCue.GetInstanceID(), Is.EqualTo(pooledCueId));
-                yield return new WaitForSeconds(0.9f);
-                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Null);
+                var secondGround = GameObject.Find("AmplifyDamageSigilGroundV2_Vfx");
+                var secondRear = GameObject.Find("AmplifyDamageSigilRearFlamesV2_Vfx");
+                var secondForeground = GameObject.Find("AmplifyDamageSigilForegroundFlamesV2_Vfx");
+                Assert.That(secondGround, Is.Not.Null);
+                Assert.That(secondRear, Is.Not.Null);
+                Assert.That(secondForeground, Is.Not.Null);
+                Assert.That(secondGround.GetInstanceID(), Is.EqualTo(pooledGroundId));
+                Assert.That(secondRear.GetInstanceID(), Is.EqualTo(pooledRearId));
+                Assert.That(secondForeground.GetInstanceID(), Is.EqualTo(pooledForegroundId));
+                yield return new WaitForSeconds(1.1f);
+                Assert.That(GameObject.Find("AmplifyDamageSigilGroundV2_Vfx"), Is.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilRearFlamesV2_Vfx"), Is.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilForegroundFlamesV2_Vfx"), Is.Null);
 
                 yield return Execute(world, caster, center.CurrentCell, "Curse_Lv3_Graph_Ability.asset", runtimeScope);
                 Assert.That(Has(diagonal, BuffEffectType.CurseDamageAmplifier), Is.True);
                 Assert.That(center.GetActiveBuffs().Single().RemainingTurns, Is.EqualTo(5));
-                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Not.Null);
-                yield return new WaitForSeconds(1f);
-                Assert.That(GameObject.Find("AmplifyDamageCurse_Vfx"), Is.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilGroundV2_Vfx"), Is.Not.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilRearFlamesV2_Vfx"), Is.Not.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilForegroundFlamesV2_Vfx"), Is.Not.Null);
+                yield return new WaitForSeconds(1.2f);
+                Assert.That(GameObject.Find("AmplifyDamageSigilGroundV2_Vfx"), Is.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilRearFlamesV2_Vfx"), Is.Null);
+                Assert.That(GameObject.Find("AmplifyDamageSigilForegroundFlamesV2_Vfx"), Is.Null);
             }
             finally
             {

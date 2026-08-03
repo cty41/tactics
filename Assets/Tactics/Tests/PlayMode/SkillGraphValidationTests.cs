@@ -350,6 +350,44 @@ namespace Tactics.Tests.PlayMode
         }
 
         [Test]
+        public void SpecCompiler_PlayPresentationCue_RoundTrips()
+        {
+            var spec = new SkillGraphSpec
+            {
+                DisplayName = "PresentationCueRoundTrip",
+                Nodes = new List<SkillNodeSpec>
+                {
+                    new() { Id = "start", Type = "Start" },
+                    new()
+                    {
+                        Id = "cue",
+                        Type = "PlayPresentationCue",
+                        Parameters = new Dictionary<string, object>
+                        {
+                            ["cue"] = (int)PresentationCueKind.ProjectileImpact
+                        }
+                    },
+                    new() { Id = "finish", Type = "Finish" }
+                },
+                Edges = new List<SkillEdgeSpec>
+                {
+                    new() { Source = "start", Target = "cue" },
+                    new() { Source = "cue", Target = "finish" }
+                }
+            };
+
+            var compiled = SkillGraphSpecCompiler.Compile(spec);
+            Assert.That(compiled.Success, Is.True, string.Join(", ", compiled.Errors));
+            Assert.That(
+                (compiled.Asset.FindNode("cue") as PlayPresentationCueNodeRecord)?.Cue,
+                Is.EqualTo(PresentationCueKind.ProjectileImpact));
+
+            SkillGraphSpec exported = SkillGraphSpecCompiler.ExportSpec(compiled.Asset);
+            SkillNodeSpec exportedCue = exported.Nodes.Find(node => node.Id == "cue");
+            Assert.That(exportedCue.Parameters["cue"], Is.EqualTo(PresentationCueKind.ProjectileImpact));
+        }
+
+        [Test]
         public void SpecCompiler_UnknownNodeType_ReportsUnsupportedError()
         {
             var spec = new SkillGraphSpec

@@ -492,7 +492,8 @@ namespace Tactics.Common.Units.Abilities
             {
                 VfxSink = _config.SkillVfxRecipe != null
                     ? new SkillVfxCoordinator(_config.SkillVfxRecipe, _owner)
-                    : null
+                    : null,
+                PresentationGraph = _config.PresentationGraph
             };
             if (runtimeScope != null)
                 context.RuntimeScope = runtimeScope;
@@ -538,12 +539,61 @@ namespace Tactics.Common.Units.Abilities
                             targetWorldPosition - sourceWorldPosition,
                             primaryHitWorldPosition: sourceWorldPosition));
                 }
-                executionState = await UnitAnimationCoordinator.PlayActionAsync(
-                    _owner,
-                    _config.VisualAction,
-                    selectedCell,
-                    () => runner.Execute(context),
-                    cancellationToken);
+                if (BattlePresentationCoordinator.HasEntry(
+                        _config.PresentationGraph,
+                        PresentationCueKind.Action))
+                {
+                    Task<SkillGraphExecutionState> gameplayTask = null;
+                    int released = 0;
+                    void Release(PresentationMarkerKind marker)
+                    {
+                        if (marker == PresentationMarkerKind.Release &&
+                            System.Threading.Interlocked.Exchange(ref released, 1) == 0)
+                        {
+                            gameplayTask = runner.Execute(context);
+                        }
+                    }
+
+                    var presentationContext = new PresentationExecutionContext(
+                        _owner,
+                        context.PrimaryTarget,
+                        selectedCell,
+                        context.ResolveSkillLevel(),
+                        cancellationToken,
+                        context.RuntimeScope);
+                    bool handled = await BattlePresentationCoordinator.TryPlayCueAsync(
+                        _config.PresentationGraph,
+                        PresentationCueKind.Action,
+                        presentationContext,
+                        Release);
+                    if (!handled)
+                    {
+                        executionState = await UnitAnimationCoordinator.PlayActionAsync(
+                            _owner,
+                            _config.VisualAction,
+                            selectedCell,
+                            () => runner.Execute(context),
+                            cancellationToken);
+                    }
+                    else
+                    {
+                        if (gameplayTask == null && !cancellationToken.IsCancellationRequested)
+                            Release(PresentationMarkerKind.Release);
+                        cancellationToken.ThrowIfCancellationRequested();
+                        executionState = gameplayTask != null
+                            ? await gameplayTask
+                            : SkillGraphExecutionState.Aborted;
+                    }
+                }
+                else
+                {
+                    executionState = await UnitAnimationCoordinator.PlayActionAsync(
+                        _owner,
+                        _config.VisualAction,
+                        selectedCell,
+                        () => runner.Execute(context),
+                        cancellationToken);
+                }
             }
             finally
             {
@@ -584,7 +634,8 @@ namespace Tactics.Common.Units.Abilities
                         {
                             PrimaryTarget = context.PrimaryTarget,
                             TargetPoint = context.PrimaryTarget.CurrentCell,
-                            VfxSink = context.VfxSink
+                            VfxSink = context.VfxSink,
+                            PresentationGraph = context.PresentationGraph
                         };
                         await runner.Execute(followUp);
                     }

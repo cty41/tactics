@@ -25,10 +25,14 @@ namespace Tactics.Common.Units.Abilities
         [BoxGroup("Visuals")]
         [SerializeField] private SkillVfxRecipe _skillVfxRecipe;
 
+        [BoxGroup("Visuals")]
+        [SerializeField] private BattlePresentationGraph _presentationGraph;
+
         public SkillGraphAsset SkillGraph => _skillGraph;
         public int TargetRange => _targetRange;
         public UnitVisualAction VisualAction => _visualAction;
         public SkillVfxRecipe SkillVfxRecipe => _skillVfxRecipe;
+        public BattlePresentationGraph PresentationGraph => _presentationGraph;
 
         public override IAbility CreateAbility(IUnit owner)
         {
@@ -45,7 +49,8 @@ namespace Tactics.Common.Units.Abilities
             int maxUsesPerTurn = 0,
             bool isBasicAbility = false,
             UnitVisualAction visualAction = UnitVisualAction.None,
-            SkillVfxRecipe skillVfxRecipe = null)
+            SkillVfxRecipe skillVfxRecipe = null,
+            BattlePresentationGraph presentationGraph = null)
         {
             var config = CreateInstance<SkillGraphAbilityConfig>();
             config.InitializeRuntime(displayName, isBasicAbility, maxUsesPerTurn);
@@ -53,6 +58,7 @@ namespace Tactics.Common.Units.Abilities
             config._targetRange = Mathf.Max(0, targetRange);
             config._visualAction = visualAction;
             config._skillVfxRecipe = skillVfxRecipe;
+            config._presentationGraph = presentationGraph;
             return config;
         }
 

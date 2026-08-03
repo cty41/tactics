@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-08-02T20:33:41+08:00"
+timestamp: "2026-08-03T23:21:22+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Tools/artworks/pure_run
   - Assets/Tactics/Arts/PureRun
 verified_revision: c68dbebe
-source_fingerprint: sha256:0f080e8691e67e947e7f50ca642b48b764777091eff0732a16a62a78779ba7f8
+source_fingerprint: sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352527dc4aea37
 ---
 
 # Pure Run 角色美术流水线
@@ -40,8 +40,8 @@ source_fingerprint: sha256:0f080e8691e67e947e7f50ca642b48b764777091eff0732a16a62
 - 设计、尺寸和目录语义见 `.agents/docs/pure-run-artwork-guidelines.md`，执行、案例库与只读校验见 `.agents/skills/pure-run-artwork-pipeline/SKILL.md`。
 - 七个已接入视觉原型（猎人、死灵、法师、两类骷髅、火魔、羊魔）使用两张原生图补齐四向：East/up-left 镜像、West/down-right 镜像、North/up-left、South/down-right。该映射遵循 Unity 等距网格轴，而不是直接把原画文件名当作逻辑方向。`FourDirectionSpriteVisual` 只负责 `Sprite` 子节点的显示，不改变 `FacingResolver`、移动、技能或 AI；12 个现有 Pure Run Prefab 已分别配置对应的两张 Sprite，六个羊魔职责共用同一对羊魔图。蝙蝠仍是设计层资产，尚未接入运行时 Prefab。
 - 标准地面单位现共用一套 `StandardUnitTweenProfile`，主 `Sprite` Transform 承担 Idle、移动、攻击、施法和受击纸片 Tween；Shadow 与逻辑 Root 不参与。Cast 通过 `SkillVfxRecipe` 发送非阻塞 `CastCharge` 径向光环，光环位于人物和阴影后方；无专属 Recipe 时使用默认低饱和蓝，骨矛与火球分别覆写为苍白青和暖橙红。不得再创建或染色整人物 `GlowOverlay`，主 `SpriteRenderer` 材质与颜色在施法中保持不变。飞行蝙蝠暂不接入该 Profile。
-- `Tactics/Pure Run/Tween Preview` 在隔离舞台中复用运行时动作与投射物构建，提供十种动作/组合、四方向、距离、循环、倍速和时间轴；Profile 编辑使用隐藏沙盒，Apply/Undo 与 Revert 边界明确。它只检查角色动作、Release 和弹道，复杂技能 Recipe 继续使用独立 Skill VFX Preview。蝙蝠专用悬浮/翼展动画和传统复杂 VFX 资产替换均为后续任务。
-- `Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted` 保存 Piloto Roguelike VFX Pack 的项目侧轻量适配：毒矛飞行/命中、霹雳闪电落点爆发和伤害加深诅咒区域。适配器只复制选中的粒子子节点，禁用局部速度、Force/External Force、碰撞和软粒子，将 Renderer 固定为面向相机的 Billboard，并复制独立材质；第三方原 Prefab 不修改。运行时通过共享池重播和回收。供应商 Showcase 脚本被 Editor-only asmdef 隔离。本轮只确认技术闭包，不宣称购买来源或 EULA 已审核；授权事项按项目决定延期处理，不阻塞本轮技术提交。
+- `Tactics/Pure Run/Presentation Graph Editor` 是新的统一表现编排入口：GraphView 连接 Tween、投射物、第三方 Prefab FX 与程序化 Recipe，隔离舞台以固定随机种子和运行时采样逻辑预览完整语义子图，并标记 Release/Impact。旧 Tween Preview 与 Skill VFX Preview 暂时保留为叶资产调试入口；蝙蝠专用悬浮/翼展动画仍为后续任务。
+- `Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted` 保存 Piloto Roguelike VFX Pack 的项目侧轻量适配：毒矛飞行/命中、霹雳闪电落点爆发和伤害加深诅咒法阵。适配器只复制选中的粒子子节点，去除供应商 Showcase 的绝对摆放坐标、3D 朝向、力场、碰撞、软粒子和无关烟柱/散点，并复制独立材质；项目材质副本关闭 Piloto Shader 的 `_USESOFTALPHA`，必要时使用 `Tactics/PureRun/ParticleTextureUnlit` 保留原纹理与顶点色。诅咒正式表现由三个项目自有 V2 适配 Prefab 构成：`AmplifyDamageSigilGroundV2` 分别校准暗盘、双圆环、低亮符文和中央符号，`AmplifyDamageSigilRearFlamesV2` 与 `AmplifyDamageSigilForegroundFlamesV2` 将八个固定尺寸主火柱按屏幕远近拆为三根后层与五根前层；火柱可见根部锚定外环，从 12 点方向开始以 `0.06s` 间隔顺时针点燃，火尖允许向上越过圆环。三层分别使用目标主 Sprite Sorting Order 的 `-2/-1/+2`；Lv2/Lv3 只扩大法阵和节点半径。旧 `AmplifyDamageCurse` 及 V1 双层法阵保留回退但不再由正式 Presentation Graph 引用。第三方原 Prefab和材质不修改。Lightning 与贴地法阵的 `PrimaryTargetGround` 统一锚定单位逻辑 Root 对应的 Tile 落点，不使用包含透明画布留白的 Sprite Bounds 底边；雷击适配 Prefab仍把可见下边界归一到根原点，因此向上贯穿主体但不穿过地面。运行时通过共享池重播和回收。供应商 Showcase 脚本被 Editor-only asmdef 隔离。本轮只确认技术闭包，不宣称购买来源或 EULA 已审核；授权事项按项目决定延期处理，不阻塞本轮技术提交。
 - 8 个 Lightning 实例在 640×360 RenderTexture、正交相机和显式逐帧渲染下的 Profiler 样本为 66 Draw Calls、10 Batches、10 SetPass、514 Triangles、1030 Vertices；同路径空相机基线为 0。原始 Draw Calls 严格 `<10` 的目标尚未满足，Frame Debugger 在 Test Runner 手动渲染路径没有提供事件，因此 overdraw 仍需真实 Game View/目标设备人工采样。不得把暖池 Rent/Return 的 0 B 回归或混合帧 GC 数字替代为渲染性能结论。
 
 ## Workflow
@@ -57,7 +57,7 @@ source_fingerprint: sha256:0f080e8691e67e947e7f50ca642b48b764777091eff0732a16a62
 - 投射物 Sprite 约束：`.agents/skills/pure-run-artwork-pipeline/references/projectile-sprites.md`
 - 正式母图清单：`.agents/skills/pure-run-artwork-pipeline/examples/cases.json`
 - 相关资产：`Tools/artworks/amazon`、`Tools/artworks/doge`、`Tools/artworks/pure_run`；已接入 Unity 的纹理、Prefab、Tile 与导入设置位于 `Assets/Tactics/Arts/PureRun`，显示委托实现位于 `Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs`。
-- 第三方 VFX 适配构建入口：`Tactics/Tools/Pure Run/Rebuild Piloto VFX Sample Assets`；生成器仅重建三个样本及六张对应技能图，不批量重写其他职业资产。
+- 第三方 VFX 适配构建入口：`Tactics/Tools/Pure Run/Rebuild Piloto VFX Sample Assets`；生成器只重建毒矛、闪电、诅咒回退稿与正式三层 V2 法阵，以及对应的代表技能表现图，不批量重写其他职业资产。
 - 提示词库边界：可复用 GPT Image 提示词文档由 `artworks-prompt-library` skill 维护，本 scope 只维护项目执行和验收状态。
 
 ## Verification Guidance

@@ -251,6 +251,14 @@ namespace Tactics.Editor.SkillGraphEditor
                     "Amazon Skill", "node-effect",
                     hasInput: true, hasOutput: true,
                     info: $"{r.SkillKind} Lv{r.Level}"),
+                PlayVisualCueNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Play Visual Cue (Legacy)", "node-effect",
+                    hasInput: true, hasOutput: true,
+                    info: r.Profile?.name ?? "No Profile"),
+                PlayPresentationCueNodeRecord r => new SkillGraphNode(r.NodeId,
+                    "Play Presentation Cue", "node-effect",
+                    hasInput: true, hasOutput: true,
+                    info: r.Cue.ToString()),
                 _ => null
             };
 
@@ -318,6 +326,7 @@ namespace Tactics.Editor.SkillGraphEditor
                 ("Branch", SkillGraphNodeType.Branch),
                 ("Finish", SkillGraphNodeType.Finish),
                 ("Fail", SkillGraphNodeType.Fail),
+                ("Play Presentation Cue", SkillGraphNodeType.PlayPresentationCue),
             };
 
             foreach (var (label, type) in nodeTypes)

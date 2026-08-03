@@ -102,6 +102,13 @@ namespace Tactics.Common.Skills.Graph
             return unit?.WorldPosition.ToVector3() ?? Vector3.zero;
         }
 
+        public static Vector3 ResolveUnitGround(IUnit unit)
+        {
+            // The unit root is the stable logical tile landing point. Renderer bounds
+            // include transparent sprite padding and vary between character sheets.
+            return unit?.WorldPosition.ToVector3() ?? Vector3.zero;
+        }
+
         public static SpriteRenderer ResolveRenderer(IUnit unit)
         {
             if (unit is not Component component)

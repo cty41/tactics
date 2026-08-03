@@ -42,7 +42,8 @@ namespace Tactics.Common.Skills.Graph
         MageSkill,
         NecromancerSkill,
         AmazonSkill,
-        PlayVisualCue
+        PlayVisualCue,
+        PlayPresentationCue
     }
 
     public enum SkillGraphPortType
@@ -130,6 +131,7 @@ namespace Tactics.Common.Skills.Graph
                 SkillGraphNodeType.NecromancerSkill => new NecromancerSkillNodeRecord(),
                 SkillGraphNodeType.AmazonSkill => new AmazonSkillNodeRecord(),
                 SkillGraphNodeType.PlayVisualCue => new PlayVisualCueNodeRecord(),
+                SkillGraphNodeType.PlayPresentationCue => new PlayPresentationCueNodeRecord(),
                 _ => null
             };
         }
@@ -275,6 +277,18 @@ namespace Tactics.Common.Skills.Graph
 
         public VisualCueProfile Profile { get => _profile; set => _profile = value; }
         public override SkillGraphNodeType NodeType => SkillGraphNodeType.PlayVisualCue;
+    }
+
+    /// <summary>
+    /// Requests a visual-only semantic entry from the configured presentation graph.
+    /// </summary>
+    [System.Serializable]
+    public class PlayPresentationCueNodeRecord : SkillGraphNodeRecord
+    {
+        [SerializeField] private PresentationCueKind _cue = PresentationCueKind.PrimaryTargetHit;
+
+        public PresentationCueKind Cue { get => _cue; set => _cue = value; }
+        public override SkillGraphNodeType NodeType => SkillGraphNodeType.PlayPresentationCue;
     }
 
     [System.Serializable]

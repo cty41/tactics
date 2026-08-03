@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using DG.Tweening;
 using NUnit.Framework;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units.Tween;
@@ -104,6 +106,27 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
+        public void ProceduralPreviewAdapter_BuildsRecipePrimitives_ThenCleansThem()
+        {
+            var recipe = AssetDatabase.LoadAssetAtPath<SkillVfxRecipe>(
+                "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/DefaultCastSkillVfxRecipe.asset");
+            Assert.That(recipe, Is.Not.Null);
+            var registered = new List<GameObject>();
+            using (var adapter = new ProceduralVfxPreviewAdapter(registered.Add))
+            {
+                var sequence = adapter.Build(
+                    recipe,
+                    SkillVfxCueKind.CastCharge,
+                    Vector3.zero,
+                    Vector3.right);
+                Assert.That(sequence.Duration(false), Is.GreaterThan(0f));
+                Assert.That(registered, Is.Not.Empty);
+                sequence.Kill(false);
+            }
+            Assert.That(registered.All(value => value == null), Is.True);
+        }
+
+        [Test]
         public void PreviewSpriteState_RestoresStandingSpriteFlipAndColor()
         {
             var rendererObject = new GameObject("Sprite");
@@ -126,6 +149,151 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
+        public void PresentationPreview_ResolvesCueAnchorsFromSpriteCentersAndTilePoint()
+        {
+            var actor = CreateSpriteAnchor("Actor", new Vector3(-1f, 0.25f, 0f));
+            var target = CreateSpriteAnchor("Target", new Vector3(2f, -0.5f, 0f));
+            var profile = ScriptableObject.CreateInstance<VisualCueProfile>();
+            _objectsToDestroy.Add(profile);
+            var serialized = new SerializedObject(profile);
+            Vector3 targetPoint = new Vector3(3f, -1f, 0f);
+
+            SetAnchor(serialized, VisualCueAnchor.Caster);
+            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+                profile, actor, target, targetPoint), Is.EqualTo(FindSprite(actor).bounds.center));
+
+            SetAnchor(serialized, VisualCueAnchor.PrimaryTarget);
+            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+                profile, actor, target, targetPoint), Is.EqualTo(FindSprite(target).bounds.center));
+
+            SetAnchor(serialized, VisualCueAnchor.PrimaryTargetGround);
+            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+                profile, actor, target, targetPoint), Is.EqualTo(target.transform.position));
+
+            SetAnchor(serialized, VisualCueAnchor.TargetPoint);
+            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+                profile, actor, target, targetPoint), Is.EqualTo(targetPoint));
+        }
+
+        [Test]
+        public void PresentationPreview_AppliesRuntimeSortingToPrefabFx()
+        {
+            var graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                "Assets/Tactics/Arts/PureRun/Presentation/Curse_Presentation.asset");
+            Assert.That(graph, Is.Not.Null);
+            VisualCueProfile[] profiles = graph.Nodes.OfType<PresentationPrefabFxNodeRecord>()
+                .Select(node => node.Profile)
+                .ToArray();
+            Assert.That(profiles, Has.Length.EqualTo(3));
+            Assert.That(profiles, Has.All.Not.Null);
+
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                SetField(window, "_presentationGraph", graph);
+                SetField(window, "_presentationCue", PresentationCueKind.PrimaryTargetHit);
+                Invoke(window, "RebuildStage");
+
+                GameObject target = GetField<GameObject>(window, "_targetInstance");
+                SpriteRenderer targetRenderer = FindSprite(target);
+                var previewObjects = GetField<List<GameObject>>(window, "_presentationPreviewObjects");
+                Assert.That(previewObjects, Has.Count.EqualTo(3));
+                foreach (VisualCueProfile profile in profiles)
+                {
+                    GameObject effect = previewObjects.Single(candidate =>
+                        candidate.name.StartsWith(profile.Prefab.name, StringComparison.Ordinal));
+                    foreach (Renderer renderer in effect.GetComponentsInChildren<Renderer>(true))
+                    {
+                        Assert.That(renderer.sortingLayerID, Is.EqualTo(targetRenderer.sortingLayerID));
+                        Assert.That(
+                            renderer.sortingOrder,
+                            Is.EqualTo(targetRenderer.sortingOrder + profile.SortingOrderOffset));
+                    }
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
+        public void CursePresentationPreview_SimulatesVisibleParticlesOverTarget()
+        {
+            var graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                "Assets/Tactics/Arts/PureRun/Presentation/Curse_Presentation.asset");
+            Assert.That(graph, Is.Not.Null);
+
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                SetField(window, "_presentationGraph", graph);
+                SetField(window, "_presentationCue", PresentationCueKind.PrimaryTargetHit);
+                Invoke(window, "RebuildStage");
+
+                Sequence sequence = GetField<Sequence>(window, "_previewSequence");
+                Assert.That(sequence, Is.Not.Null);
+                sequence.Goto(0.4f, false);
+
+                GameObject target = GetField<GameObject>(window, "_targetInstance");
+                Bounds targetBounds = FindSprite(target).bounds;
+                List<GameObject> effects = GetField<List<GameObject>>(
+                    window,
+                    "_presentationPreviewObjects");
+                Assert.That(effects, Has.Count.EqualTo(3));
+                Assert.That(effects.All(effect => effect.activeInHierarchy), Is.True);
+                GameObject ground = effects.Single(effect =>
+                    effect.name.StartsWith("AmplifyDamageSigilGroundV2", StringComparison.Ordinal));
+                GameObject rearFlames = effects.Single(effect =>
+                    effect.name.StartsWith("AmplifyDamageSigilRearFlamesV2", StringComparison.Ordinal));
+                GameObject foregroundFlames = effects.Single(effect =>
+                    effect.name.StartsWith(
+                        "AmplifyDamageSigilForegroundFlamesV2",
+                        StringComparison.Ordinal));
+                Assert.That(ground, Is.Not.Null);
+                Assert.That(
+                    rearFlames.GetComponentsInChildren<ParticleSystem>(true)
+                        .Sum(system => system.particleCount),
+                    Is.GreaterThan(0));
+                Assert.That(
+                    foregroundFlames.GetComponentsInChildren<ParticleSystem>(true)
+                        .Sum(system => system.particleCount),
+                    Is.GreaterThan(0));
+                ParticleSystem[] systems = effects
+                    .SelectMany(effect => effect.GetComponentsInChildren<ParticleSystem>(true))
+                    .ToArray();
+                Assert.That(systems.Sum(system => system.particleCount), Is.GreaterThan(0));
+
+                Bounds effectBounds = default;
+                bool hasBounds = false;
+                foreach (ParticleSystemRenderer renderer in
+                         effects.SelectMany(effect =>
+                             effect.GetComponentsInChildren<ParticleSystemRenderer>(true)))
+                {
+                    if (!renderer.enabled || renderer.bounds.size.sqrMagnitude < 0.0001f)
+                        continue;
+                    if (hasBounds)
+                        effectBounds.Encapsulate(renderer.bounds);
+                    else
+                    {
+                        effectBounds = renderer.bounds;
+                        hasBounds = true;
+                    }
+                }
+
+                Assert.That(hasBounds, Is.True);
+                Assert.That(effectBounds.max.x, Is.GreaterThan(targetBounds.min.x), effectBounds.ToString());
+                Assert.That(effectBounds.min.x, Is.LessThan(targetBounds.max.x), effectBounds.ToString());
+                Assert.That(effectBounds.max.y, Is.GreaterThan(targetBounds.min.y), effectBounds.ToString());
+                Assert.That(effectBounds.min.y, Is.LessThan(targetBounds.max.y), effectBounds.ToString());
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
         public void TweenPreviewWindow_RebuildAndDestroy_LeavesNoPreviewObjects()
         {
             int before = CountPreviewObjects();
@@ -139,6 +307,26 @@ namespace Tactics.Tests.Editor
 
             Object.DestroyImmediate(window);
             Assert.That(CountPreviewObjects(), Is.EqualTo(before));
+        }
+
+        [Test]
+        public void TweenPreviewWindow_RepeatedPlayStopAndRebuild_DoesNotCorruptTweenManager()
+        {
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                Invoke(window, "RebuildStage");
+                for (int iteration = 0; iteration < 3; iteration++)
+                {
+                    Assert.DoesNotThrow(() => Invoke(window, "PlayPreview"));
+                    Assert.DoesNotThrow(() => Invoke(window, "StopPreview", true));
+                    Assert.DoesNotThrow(() => Invoke(window, "RebuildSequence", false));
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
         }
 
         [Test]
@@ -221,6 +409,34 @@ namespace Tactics.Tests.Editor
                  value.name.StartsWith("PreviewProjectile") ||
                  value.name == "PureRunHunter(Clone)" ||
                  value.name == "PureRunGoatCharger(Clone)"));
+        }
+
+        private GameObject CreateSpriteAnchor(string name, Vector3 position)
+        {
+            var root = new GameObject(name);
+            _objectsToDestroy.Add(root);
+            root.transform.position = position;
+
+            var spriteObject = new GameObject("Sprite");
+            spriteObject.transform.SetParent(root.transform, false);
+            SpriteRenderer renderer = spriteObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = LoadProfile("BoneSpear").Sprite;
+            return root;
+        }
+
+        private static SpriteRenderer FindSprite(GameObject root)
+        {
+            return root
+                .GetComponentsInChildren<SpriteRenderer>(true)
+                .Single(value => value.gameObject.name == "Sprite");
+        }
+
+        private static void SetAnchor(SerializedObject serializedObject, VisualCueAnchor anchor)
+        {
+            SerializedProperty property = serializedObject.FindProperty("_anchor");
+            Assert.That(property, Is.Not.Null, "_anchor");
+            property.enumValueIndex = (int)anchor;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void AssertPreviewSpriteIsAuthoredAndVisible(
