@@ -173,11 +173,10 @@ namespace Tactics.Units
                 if (shadowSr != null && shadowSr != mainSr)
                 {
                     var shadowPos = shadowSr.transform.localPosition;
-                    // Pure Run sprites use their bottom pivot as the visual foot baseline.
-                    // Sprite.bounds includes transparent canvas padding, so using bounds.min would
-                    // incorrectly push the shadow down by nearly a full sprite height.
-                    float footY = localPos.y;
-                    shadowPos.y = footY + _shadowFootOffset;
+                    // Shadow remains anchored to the unit root because that root is the Tile landing point.
+                    // Sprite-only tween baselines can overwrite localPos.y after initialization, so deriving
+                    // the shadow from the Sprite pose would move it inside the character silhouette.
+                    shadowPos.y = _shadowFootOffset;
                     shadowSr.transform.localPosition = shadowPos;
                 }
             }

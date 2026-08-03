@@ -46,7 +46,11 @@ scopes:
       - Tools/artworks/pure_run
       - Assets/Tactics/Arts/PureRun
       - Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs
+      - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
+      - Assets/Tactics/Arts/Prefabs/Units/Fighter.prefab
       - Assets/Tactics/Tests/Editor/FourDirectionSpriteVisualEditorTests.cs
+      - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs
+      - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/FourDirectionSpriteVisualPlayModeTests.cs
 
   unity-agent-workflow:
@@ -70,6 +74,7 @@ scopes:
       - Assets/Tactics/Scripts/Editor/MCP
       - Assets/Tactics/Tests/Editor/UnityMcpProjectBootstrapTests.cs
       - Tools/unity-mcp
+      - Tools/agent-policy
 
   okf-maintenance:
     concept: operations/okf-maintenance.md

@@ -22,6 +22,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 去幕与 alpha 校验 | `references/chroma-key-validation.md` |
 | Review、归档和提交 | `references/artwork-review-and-git.md` |
 | 只读批量检查 | `python scripts/validate_sprite_assets.py --root Tools/artworks --strict --review-examples` |
+| 运行时视觉 QA | 使用 Unity MCP 截图或 PlayMode 虚拟输入；不控制真实 Editor 窗口 |
 
 ## When to use
 
@@ -36,13 +37,14 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 2. **一次生成一个变体。** ImageGen 只处理一个角色、一个局部变体或一个投射物。明确“保持不变”区域；新武器、耳朵、翅膀和法术必须在屏幕空间中有清晰的前后层级，并完整留在画布内。投射物必须完成单图 Review 并获得人工确认后，才能开始下一张。
 3. **去幕。** 选择纯 `#00ff00` 或 `#ff00ff` 背景，移除背景、软化 matte 边缘并检查绿色/洋红残留。保留真实透明 alpha，不把带色幕截图当母版。
 4. **尺寸校准。** 方向图必须以同角色已确认的 `down-right` 为唯一核心体量锚点，并制作只包含中央胶囊体或球核的纯核心主体蒙版；耳朵、口鼻、眼睛、手掌、脚掌、武器、盾牌、法杖、翅膀和特效全部排除。蒙版只用于测量和 QA，禁止粘贴或参与成品合成。比较主体上缘、下缘、中心、最大宽度以及上中下三个截面的宽度分布；中段近似平行，下段只能持平或内收。飞行单位改用球核体量，把球核中心固定在身体水平锚点 `x=128`，并在垂直方向对齐基准胶囊体上部圆帽中心。完整 alpha 包围盒只用于画布安全、裁切和技术校验：标准母版 `256×256 RGBA`、脚底或虚拟基线 `y=236`。禁止单轴拉伸；外部轮廓超出标准时记录为例外或候选。
-5. **缩小和逐角色 Review。** 生成 `128×128` Mitchell 等比预览，确认脚底基线 `y=118`。再使用真实错列等距 Tile 排布，将预览的脚底锚点 `(64,118)` 精确映射到目标 `64×32` Tile 的几何中心；飞行单位使用同一虚拟落点，不能用可见身体下沿替代。死亡图先按 `references/death-state-sprites.md` 分类拓扑，并使用完整尸体 AABB 中心对齐 Tile。检查脚掌接触或悬浮间距、角色占用、脸部识别和装备分离。每次只校正一个角色，必须展示基准与当前角色并排并等待人工确认；确认后才进入下一个角色或生成其方向变体。
+5. **缩小和逐角色 Review。** 生成 `128×128` Mitchell 等比预览，确认脚底基线 `y=118`。再使用真实错列等距 Tile 排布，将预览的脚底锚点 `(64,118)` 精确映射到目标 `64×32` Tile 的几何中心；飞行单位使用同一虚拟落点，不能用可见身体下沿替代。死亡图先按 `references/death-state-sprites.md` 分类拓扑，并使用完整尸体 AABB 中心对齐 Tile。检查脚掌接触或悬浮间距、角色占用、脸部识别和装备分离。每次只校正一个角色，必须展示基准与当前角色并排并等待人工确认；确认后才进入下一个角色或生成其方向变体。运行时 Game View Review 必须遵循[前台交互与焦点保护规则](../../rules/foreground-interaction.md)：使用 MCP 截图、自动测试或虚拟输入；如果代表状态只能靠点击真实窗口获得，停止并标记 `manual_visual_qa_pending`。
 6. **归档并验证。** 用版本名保存成对的母版与 `_128` 预览，按目录语义归类；正式敌人进入 `approved`，失败历史进入 `rejected/superseded`。运行 `scripts/validate_sprite_assets.py --review-examples`，需要查看尚未确认的候选时再加 `--include-candidates`。
 7. **提交准备。** 运行 OKF report/sync、bundle 校验和单元测试；按路径暂存，排除 `.hermes/`、`tmp/` 和运行时 Unity 文件。展示精确暂存清单，等待用户确认后再提交。
 
 ## Guardrails
 
 - 默认不修改 Unity Prefab、AI、遭遇配置或运行时代码；只有用户明确授权“运行时美术接入”时，才可将已确认原生图配置到 Prefab，并且不得改变玩法朝向语义。
+- 运行时接入授权、视觉 QA、截图要求或“补齐代表单位”都不授权 Computer Use、`activate_window` 或真实鼠标键盘输入。后台验证不足时记录 `manual_visual_qa_pending`，不得抢占用户焦点。
 - 不覆盖已确认版本；新设计使用新的版本号，失败候选移动到 `rejected`，而不是删除历史证据。
 - 不把未校准候选标为可用 Sprite；武器或耳朵超出标准包围盒时，优先保持胶囊身体并显式记录例外。
 - 不把正反案例快照当成生成母图；快照只服务于快速 Review，正式母图以 `examples/cases.json` 的 `approved_assets` 原图路径为准。
@@ -75,4 +77,6 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 - [ ] 死亡图已先分类核心拓扑：胶囊单位平直短厚，球形单位保持近圆；两者的头部线索均朝画面右上。
 - [ ] 死亡图只比较核心体量，保留道具已脱手且无未经批准的特效；无脚底图使用尸体 AABB 中心完成 Tile 居中。
 - [ ] 投射物已使用中心锚点、与施法者 `_128` 同屏定尺寸，并在 Tilemap 中按真实攻击方向旋转 Review。
+- [ ] 运行时视觉 QA 仅使用 MCP 截图、自动测试或虚拟输入；没有通过 Computer Use 控制真实 Unity 窗口。
+- [ ] 后台无法得到代表状态时已标记 `manual_visual_qa_pending`，没有自动降级到前台交互。
 - [ ] 目录状态、版本号、OKF 验证和暂存范围已复核。

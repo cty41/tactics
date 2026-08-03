@@ -15,7 +15,7 @@ MCP 连接故障排除的专用技能。
 | 2 | 验证端口 | 确认端口是否在监听 |
 | 3 | 检查服务状态 | 确认 Unity Editor 和 MCP 插件 |
 | 4 | 使用正确端口 | 用配置文件中的端口重试 |
-| 5 | 保持后台操作 | 编译、测试和构建仅通过 MCP 调用，不抢占 Editor 窗口焦点 |
+| 5 | 保持后台操作 | 所有 Unity 操作和视觉 QA 均遵循前台交互规则，不抢占 Editor 窗口焦点 |
 
 ## When to use
 
@@ -116,7 +116,7 @@ lsof -i :<端口号>
 
 ### Step 7: 保持 Editor 后台运行
 
-Unity 编译、测试、构建和连接恢复必须优先使用 MCP 工具与只读进程/端口诊断，不得通过窗口自动化激活 Unity、切换焦点或发送快捷键，以免干扰用户前台工作。
+Unity 编译、测试、构建、截图、视觉 QA 和连接恢复必须遵循[前台交互与焦点保护规则](../../rules/foreground-interaction.md)，优先使用 MCP 工具与只读进程/端口诊断。不得通过窗口自动化激活 Unity、切换焦点、点击真实 Game View 或发送快捷键，以免干扰用户前台工作。
 
 若 MCP bridge 断线且无法通过 MCP 自身恢复：
 
@@ -124,6 +124,8 @@ Unity 编译、测试、构建和连接恢复必须优先使用 MCP 工具与只
 2. 通过配置、端口、进程和日志做只读诊断。
 3. 停止自动化并请用户在方便时手动刷新或重启 bridge。
 4. 用户确认恢复后，从 `mcpforunity://instances` 和 `mcpforunity://project/info` 重新校验，再继续原 job 或重跑测试。
+
+需要点击技能、切换方向或进入特定 Game View 状态才能补齐视觉证据时，也不能把连接故障当作使用 Computer Use 的理由。没有后台测试或虚拟输入路径时，停止并标记 `manual_visual_qa_pending`。
 
 ## 常见配置文件位置
 
@@ -161,6 +163,7 @@ Unity 编译、测试、构建和连接恢复必须优先使用 MCP 工具与只
 | 未检查项目根目录就写操作 | 先读取 `project/info` | 防止写入错误 worktree |
 | 手动反复启动 MCP server | 恢复或初始化 `.agents/mcp.json` | 手动启动不能跨 domain reload，未修复唯一自动重启路径 |
 | 激活 Unity 窗口并发送 Refresh/测试快捷键 | 使用 `refresh_unity`、`run_tests`、`get_test_job`、`manage_build` | 避免抢占用户前台焦点；断线时应停下请用户手动恢复 |
+| MCP 截图缺少代表状态后点击真实 Game View 补图 | 使用自动测试或虚拟输入；否则记录 `manual_visual_qa_pending` | 视觉完整性不构成前台控制授权 |
 | 同时注册多个 reload 重连入口 | 每个新 Domain 只调度一次重连 | 多个 `Bridge.StartAsync` 会形成互相抢占的 WebSocket 重连循环 |
 
 ## Checklist
@@ -171,5 +174,6 @@ Unity 编译、测试、构建和连接恢复必须优先使用 MCP 工具与只
 - [ ] 使用了正确的端口进行连接
 - [ ] 如果仍然失败，报告了具体错误信息
 - [ ] 已核验 `project/info` 的 `projectRoot` 是当前 worktree
-- [ ] 未通过窗口自动化抢占 Unity Editor 焦点或触发编译、测试、构建
+- [ ] 未通过窗口自动化抢占 Unity Editor 焦点或触发编译、测试、构建、截图或视觉 QA
 - [ ] Domain Reload 后只通过 MCP 轮询确认 Session 自动恢复，未控制 Unity 窗口焦点
+- [ ] 后台无法构造视觉状态时已标记 `manual_visual_qa_pending`，没有自动改用 Computer Use

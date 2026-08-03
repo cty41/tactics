@@ -44,6 +44,15 @@ verified_revision: c68dbebe
 - 顶面使用单一低饱和底色表达简化岩石；禁止内部亮暗色块、渐变、镜面高光、裂缝、苔藓、颗粒噪声、随机污渍和独立装饰插画。
 - 颜色变化只承担地面节奏和格子辨识，不改变 Grid Cell Size、Tilemap 几何、相机或角色逻辑占位；角色向上超出 Tile 的可见图像属于正常视觉范围。
 
+## 单格单位脚底阴影契约
+
+- Pure Run 单格单位统一使用等距视角下的屏幕水平软椭圆阴影；阴影本身不带方向性投影，不随角色朝向翻转。批准源为 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png`，运行时副本为 `Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png`，两者必须保持原字节一致。
+- 纹理固定为 `64×32 RGBA`、Single Sprite、`64 PPU`、中心 Pivot、Full Rect、Bilinear、Clamp，关闭 Mipmap、压缩、Read/Write 与 fallback physics shape，并启用 Alpha Is Transparency。Sprite 世界尺寸为 `(1, 0.5)`，与单格等距 Tile 几何一致。
+- 地面单位的 `Shadow` 保持 `localScale = (1, 1, 1)`、Renderer RGB 白色且 alpha `1.0`；飞行单位使用同一 PNG，固定 `localScale = (0.75, 0.75, 0.75)`、Renderer RGB 白色且 alpha `0.60`。两者的虚拟落点都是单位所在 `64×32` Tile 几何中心，飞行阴影不随可见身体下沿或悬浮高度移动。
+- `TilemapUnit` 以单位根节点作为 Tile 几何落点，并把地面 `Shadow` 固定在根空间 `localY = _shadowFootOffset = -0.03`；Prefab 作者状态必须保存同一落点，不能保留历史 `-0.42` 偏移并依赖初始化纠正。阴影位置不得从 `Sprite.localPosition` 推导：`_visualYOffset` 与 Idle/动作 Tween 都可能改写 Sprite 姿态，但不能把阴影带进角色轮廓。朝向与 Tween 只处理 `Sprite` 子节点，不处理 `Shadow`。当前仓库没有使用 `AirUnitMovementRules` 的单位 Prefab，飞行参数是可执行的作者契约，不代表蝙蝠已接入运行时。
+- 当前共享 `Fighter.prefab` 的阴影供其 Pure Run 派生链及接受该共享变更的其他派生单位使用；`PureRunGoatSupport`、`PureRunSkeletonMage` 与 `PureRunSkeletonWarrior` 直接保存同一新 Sprite 引用。12 个 Pure Run 单位的 Shadow 都必须默认激活；`PureRunNecromancer` 不得保留禁用覆盖。独立 legacy `Skeleton.prefab`、GroundTiles Palette 和第三方示例继续保留历史资源。
+- 所有 Pure Run `Shadow` 必须使用静态材质 `Assets/Tactics/Arts/PureRun/Materials/PureRunUnitShadow.mat`（`Sprites/Default`）。禁止复用第三方 `HeliSprite.mat` 或 `Custom/FloatingUnitShader`：该 Shader 会按世界坐标与时间摆动顶点，并忽略 `SpriteRenderer` 的颜色与 alpha，无法满足固定格心以及地面/飞行透明度契约。
+
 ## 母图、参考图与候选
 
 - 母图（source/mother image）锁定角色身份、身体比例、脚位、盾牌和已确认的构图。局部编辑必须声明“保持不变”的区域，不得让 ImageGen 重新发明整个人物。
@@ -104,6 +113,7 @@ verified_revision: c68dbebe
 | `Tools/artworks/pure_run/enemies/rejected` | 已明确否决的失败资产 | 否 |
 | `Tools/artworks/pure_run/enemies/rejected/superseded` | 已由 approved 版本替代的历史敌人稿 | 否，只供复盘 |
 | `Tools/artworks/pure_run/tiles` | Tile 占用与配色 Review 参考 | 否 |
+| `Tools/artworks/pure_run/shadows/approved` | 已确认的单格等距脚底阴影设计源 | 是，需原字节复制到运行时路径 |
 | `tmp` | ImageGen、去幕和临时比较文件 | 否，永不提交 |
 
 `calibrated` 和 `approved` 只保留当前正式锚点；旧版本移动到 `rejected/superseded`，保留原文件名与版本号，但禁止再次作为生成母图。`candidates` 只保存仍需人工决定的资产，不能充当历史归档目录。旧横胖蛤蟆继续位于 `rejected`，仅供失败复盘。

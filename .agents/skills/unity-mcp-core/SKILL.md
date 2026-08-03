@@ -11,6 +11,7 @@ description: "Use when operating Unity Editor via MCP tools — core rules, foun
 |------|------|
 | 禁止直接读写 YAML | 不碰 .asset/.prefab/.unity/.mat/.meta 文件 |
 | 必须使用 MCP 工具 | `manage_asset`, `manage_gameobject`, `manage_components` 等 |
+| 保护用户焦点 | 默认禁止 Computer Use、窗口激活和真实输入；后台不足时停止人工 QA |
 | Open/Close 配对 | 打开 Prefab/Scene → 保存 → 关闭 |
 | 批量操作用 batch | `batch_execute` 减少延迟 |
 | 先搜索再操作 | `find_gameobjects` → `manage_*` |
@@ -36,11 +37,12 @@ description: "Use when operating Unity Editor via MCP tools — core rules, foun
 
 1. 首次 Unity MCP 调用前，先读取本 worktree 的 `.agents/mcp.json`，并运行 `powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check`。
 2. 用该 URL 的 `mcpforunity://project/info` 验证 `projectRoot` 是当前 worktree；根目录不匹配时，禁止后续 Unity 写操作。
-3. 再判断目标是否是 Unity 序列化资产或 Editor 状态。
-4. 加载本技能确认核心规则，再按领域加载子技能。
-5. 用搜索/读取工具定位目标对象，不直接读写 Unity YAML。
-6. 对 3 个以上独立操作使用 `batch_execute`。
-7. 对打开的 Prefab 或 Scene 执行保存/关闭配对。
+3. 按[前台交互与焦点保护规则](../../rules/foreground-interaction.md)确认任务能用后台 MCP、测试或虚拟输入完成；普通视觉 QA 不授权前台窗口控制。
+4. 再判断目标是否是 Unity 序列化资产或 Editor 状态。
+5. 加载本技能确认核心规则，再按领域加载子技能。
+6. 用搜索/读取工具定位目标对象，不直接读写 Unity YAML。
+7. 对 3 个以上独立操作使用 `batch_execute`。
+8. 对打开的 Prefab 或 Scene 执行保存/关闭配对。
 
 ## Core Rules
 
@@ -52,6 +54,14 @@ description: "Use when operating Unity Editor via MCP tools — core rules, foun
 4. **ALWAYS** use MCP tools for asset inspection and operations (`manage_asset`, `manage_gameobject`, `manage_components`, etc.)。
 5. **ALWAYS** pair open/close operations (open prefab stage → close prefab stage, load scene → close/unload scene)。
 6. **NEVER** assume tools exist — verify MCP server is configured via `debug_request_context` if needed。
+7. **NEVER** use Computer Use, `activate_window`, physical mouse/keyboard input, or shortcuts for Unity work unless the current task passes the explicit-request and action-time-confirmation gate in the foreground interaction policy。
+
+### Foreground Interaction Boundary
+
+- Unity screenshots use `manage_camera`; compilation, tests and builds use MCP tools; interaction coverage uses PlayMode tests and Input System virtual devices.
+- Needing a representative Game View state, clicking a skill, entering Play Mode, or recovering a disconnected bridge does not justify controlling the real Editor window.
+- If the required evidence cannot be obtained in the background, stop with `manual_visual_qa_pending` and give the user the smallest manual verification step.
+- The single exception path is defined by the [foreground interaction policy](../../rules/foreground-interaction.md); do not invent broader exceptions in child skills.
 
 ### Open/Close Pairing
 
@@ -133,6 +143,7 @@ graph TD
 | Assuming a tool exists | Verify available MCP tools or context | Prevents dead-end tool calls |
 | 向未知 `projectRoot` 写资产 | 先检查 `project/info`，不匹配即停止 | 防止写入其他 worktree |
 | 将本地 `mcp.json` 提交到 Git | 仅提交模板和工具 | 防止 merge/rebase 覆盖 worktree 端口 |
+| 为视觉 QA 激活 Unity 或点击真实 Game View | 使用 MCP 截图、PlayMode 虚拟输入；不足时标记人工 QA | 避免抢占用户正在进行的前台工作 |
 
 ## Checklist
 
@@ -142,3 +153,4 @@ graph TD
 - [ ] Open prefab/scene operations have save and close steps
 - [ ] Batch operations use `batch_execute` when appropriate
 - [ ] 已用 `.agents/mcp.json` 和 `project/info` 校验当前 worktree
+- [ ] 未使用 Computer Use、窗口激活或真实输入控制 Unity；后台不足时已标记 `manual_visual_qa_pending`

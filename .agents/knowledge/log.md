@@ -1,6 +1,13 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-03
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:beefc72b435c5465e91e7279449590201c1d0f72010d56036773cb05d8caa9b2`。
+* **Fix**: 修正首次运行态视觉误判：`TilemapUnit` 不再用会被 Idle Tween 改写的 `Sprite.localPosition` 计算 Shadow，而是把 Shadow 固定在单位根节点的 Tile 落点 `localY=-0.03`。Test1 2× 后台截图确认死灵与羊魔均出现可辨识椭圆，回归测试新增初始化时序断言。
+* **Fix**: Pure Run 单格单位 Shadow 从第三方 `HeliSprite/FloatingUnitShader` 切换到静态 `PureRunUnitShadow.mat`（`Sprites/Default`），恢复 Renderer alpha 契约并移除顶点悬浮；目录级 Editor 测试新增共享材质断言。
+* **Fix**: Pure Run 单格单位的 Prefab 作者状态不再保留历史 Shadow `localY=-0.42`；共享 Fighter 链和三个直接 Prefab 统一按脚底偏移 `-0.03`，并清除 PureRunNecromancer 的禁用覆盖。目录级 Editor 测试新增激活状态与根空间脚底对齐回归。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:2581b747a7543a03256dc340e4ecad5e48a33b38537ca6e3d71a112814ecc7e1`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:33186db7ceac3a37f1e2fc666fa3c9ceb373780e07e81d5d28c8dce073e0f0a8`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:9d439c87c139d73831a6db5bac4519c90c3a6aa503c97acd74ac746bbe988949`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:f9a9ab0f14e32770d20645b5982133d2e624f5ddad3228e8707ddcd91d08f1c3`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352527dc4aea37`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:39fb942e4cf502aa3113564e8afc3081515e0b214b6f9f77e57c5f76c887d0bf`。

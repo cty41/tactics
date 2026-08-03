@@ -14,6 +14,10 @@ repo_paths:
   - Tools/artworks/doge
   - Tools/artworks/pure_run
   - Assets/Tactics/Arts/PureRun
+  - Assets/Tactics/Arts/Prefabs/Units/Fighter.prefab
+  - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
+  - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs
+  - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs.meta
 verified_revision: c68dbebe
 source_fingerprint: sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352527dc4aea37
 ---
@@ -23,7 +27,9 @@ source_fingerprint: sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352
 ## Current State
 
 - `c68dbebe` 是当前已提交角色美术的初始验证锚点；设计层正式资产由 Doge `calibrated` 与敌人 `approved` 共同组成，旧版本保留在 `rejected/superseded`，不得作为母图。
-- 运行时标准角色纹理为 `128 PPU`，根节点与 `Sprite` 子节点均为 `localScale = 1`；单位状态由等距 Tile 高亮而非角色方形 Marker 表达，阴影锚定 Sprite 底部 pivot。
+- 运行时标准角色纹理为 `128 PPU`，根节点与 `Sprite` 子节点均为 `localScale = 1`；单位状态由等距 Tile 高亮而非角色方形 Marker 表达，阴影锚定单位根节点代表的 Tile 几何落点，不跟随 Sprite Tween。
+- 已确认的单格单位通用阴影以 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png` 为设计源，并原字节复制到 `Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png`。它是屏幕水平的 `64×32` 等距软椭圆，导入为 Single Sprite、`64 PPU`、中心 Pivot、Full Rect、Bilinear、Clamp、无 Mipmap/压缩/Read-Write/fallback physics shape。地面作者参数为 Scale `1.0` / Renderer alpha `1.0`，飞行为同图 Scale `0.75` / alpha `0.60`，两者都以 Tile 几何中心为虚拟落点；当前没有 `AirUnitMovementRules` Prefab。
+- `Fighter.prefab` 的共享 Shadow 与 `PureRunGoatSupport`、`PureRunSkeletonMage`、`PureRunSkeletonWarrior` 的三个直接 Shadow 已指向新通用阴影，因而覆盖当前 12 个 Pure Run 单位。它们统一使用 `Assets/Tactics/Arts/PureRun/Materials/PureRunUnitShadow.mat` 的静态 `Sprites/Default` Shader；不得复用会摆动顶点且忽略 Renderer 颜色/alpha 的第三方 `HeliSprite/FloatingUnitShader`。Prefab 与生产初始化都把 Shadow 固定在单位根空间 `localY=-0.03`，即 Tile 几何落点附近；不能再从可能被 Idle/动作 Tween 改写的 `Sprite.localPosition` 推导阴影位置。12 个单位的 Shadow 均默认激活，`PureRunNecromancer` 不再保留禁用覆盖。legacy `Skeleton.prefab`、双方 GroundTiles Palette 与第三方 Heli 继续保留历史引用；目录级 Editor 测试自动检查新增 Pure Run 单位的 Land/Air 二选一、对应阴影参数、激活状态、静态材质和 Tile 根空间落点。
 - 羊魔 `down-right v05 / up-left v01` 与蝙蝠 `down-right v06 / up-left v01` 已通过人工 Review，并从 `candidates` 升级到 `Tools/artworks/pure_run/enemies/approved`。小型蝙蝠按普通单位约 `75%` 的球核体量校准，球核中心在垂直方向对齐地面胶囊体上部圆帽中心，翅膀属于外部轮廓，球核中心、虚拟落点与 Tile 中心保持同轴。
 - 亚马逊黑白资产只作为造型设定集保留，不进入正式四方向 Sprite 生产；方向变体从已确认的胶囊体信徒或胶囊规则怪物基础图开始。
 - 方向变体以同角色已确认的 `down-right` 为唯一体量锚点；纯核心主体蒙版排除耳朵、口鼻、手脚、装备与特效，只用于测量和 QA，不参与成品合成。验收同时比较上下缘、中心、最大宽度与上中下三个截面，避免窄柱体或梨形下段。采用无手臂策略时，手掌必须以多像素接触面直接嵌入主体边缘，不能浮空或用细线连接。
@@ -40,6 +46,7 @@ source_fingerprint: sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352
 - 设计、尺寸和目录语义见 `.agents/docs/pure-run-artwork-guidelines.md`，执行、案例库与只读校验见 `.agents/skills/pure-run-artwork-pipeline/SKILL.md`。
 - 七个已接入视觉原型（猎人、死灵、法师、两类骷髅、火魔、羊魔）使用两张原生图补齐四向：East/up-left 镜像、West/down-right 镜像、North/up-left、South/down-right。该映射遵循 Unity 等距网格轴，而不是直接把原画文件名当作逻辑方向。`FourDirectionSpriteVisual` 只负责 `Sprite` 子节点的显示，不改变 `FacingResolver`、移动、技能或 AI；12 个现有 Pure Run Prefab 已分别配置对应的两张 Sprite，六个羊魔职责共用同一对羊魔图。蝙蝠仍是设计层资产，尚未接入运行时 Prefab。
 - 标准地面单位现共用一套 `StandardUnitTweenProfile`，主 `Sprite` Transform 承担 Idle、移动、攻击、施法和受击纸片 Tween；Shadow 与逻辑 Root 不参与。Cast 通过 `SkillVfxRecipe` 发送非阻塞 `CastCharge` 径向光环，光环位于人物和阴影后方；无专属 Recipe 时使用默认低饱和蓝，骨矛与火球分别覆写为苍白青和暖橙红。不得再创建或染色整人物 `GlowOverlay`，主 `SpriteRenderer` 材质与颜色在施法中保持不变。飞行蝙蝠暂不接入该 Profile。
+- Pure Run 运行时视觉 QA 只使用 Unity MCP 截图、自动测试或 Input System 虚拟输入；运行时接入、补截图、点击技能或补齐代表单位都不授权 Computer Use、窗口激活或真实输入。后台无法构造目标状态时标记 `manual_visual_qa_pending` 并交由用户手动确认，完整边界见[前台交互与焦点保护规则](https://github.com/cty41/tactics/blob/main/.agents/rules/foreground-interaction.md)。
 - `Tactics/Pure Run/Presentation Graph Editor` 是新的统一表现编排入口：GraphView 连接 Tween、投射物、第三方 Prefab FX 与程序化 Recipe，隔离舞台以固定随机种子和运行时采样逻辑预览完整语义子图，并标记 Release/Impact。旧 Tween Preview 与 Skill VFX Preview 暂时保留为叶资产调试入口；蝙蝠专用悬浮/翼展动画仍为后续任务。
 - `Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted` 保存 Piloto Roguelike VFX Pack 的项目侧轻量适配：毒矛飞行/命中、霹雳闪电落点爆发和伤害加深诅咒法阵。适配器只复制选中的粒子子节点，去除供应商 Showcase 的绝对摆放坐标、3D 朝向、力场、碰撞、软粒子和无关烟柱/散点，并复制独立材质；项目材质副本关闭 Piloto Shader 的 `_USESOFTALPHA`，必要时使用 `Tactics/PureRun/ParticleTextureUnlit` 保留原纹理与顶点色。诅咒正式表现由三个项目自有 V2 适配 Prefab 构成：`AmplifyDamageSigilGroundV2` 分别校准暗盘、双圆环、低亮符文和中央符号，`AmplifyDamageSigilRearFlamesV2` 与 `AmplifyDamageSigilForegroundFlamesV2` 将八个固定尺寸主火柱按屏幕远近拆为三根后层与五根前层；火柱可见根部锚定外环，从 12 点方向开始以 `0.06s` 间隔顺时针点燃，火尖允许向上越过圆环。三层分别使用目标主 Sprite Sorting Order 的 `-2/-1/+2`；Lv2/Lv3 只扩大法阵和节点半径。旧 `AmplifyDamageCurse` 及 V1 双层法阵保留回退但不再由正式 Presentation Graph 引用。第三方原 Prefab和材质不修改。Lightning 与贴地法阵的 `PrimaryTargetGround` 统一锚定单位逻辑 Root 对应的 Tile 落点，不使用包含透明画布留白的 Sprite Bounds 底边；雷击适配 Prefab仍把可见下边界归一到根原点，因此向上贯穿主体但不穿过地面。运行时通过共享池重播和回收。供应商 Showcase 脚本被 Editor-only asmdef 隔离。本轮只确认技术闭包，不宣称购买来源或 EULA 已审核；授权事项按项目决定延期处理，不阻塞本轮技术提交。
 - 8 个 Lightning 实例在 640×360 RenderTexture、正交相机和显式逐帧渲染下的 Profiler 样本为 66 Draw Calls、10 Batches、10 SetPass、514 Triangles、1030 Vertices；同路径空相机基线为 0。原始 Draw Calls 严格 `<10` 的目标尚未满足，Frame Debugger 在 Test Runner 手动渲染路径没有提供事件，因此 overdraw 仍需真实 Game View/目标设备人工采样。不得把暖池 Rent/Return 的 0 B 回归或混合帧 GC 数字替代为渲染性能结论。
@@ -56,9 +63,10 @@ source_fingerprint: sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352
 - 死亡状态 Sprite 约束：`.agents/skills/pure-run-artwork-pipeline/references/death-state-sprites.md`
 - 投射物 Sprite 约束：`.agents/skills/pure-run-artwork-pipeline/references/projectile-sprites.md`
 - 正式母图清单：`.agents/skills/pure-run-artwork-pipeline/examples/cases.json`
-- 相关资产：`Tools/artworks/amazon`、`Tools/artworks/doge`、`Tools/artworks/pure_run`；已接入 Unity 的纹理、Prefab、Tile 与导入设置位于 `Assets/Tactics/Arts/PureRun`，显示委托实现位于 `Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs`。
+- 相关资产：`Tools/artworks/amazon`、`Tools/artworks/doge`、`Tools/artworks/pure_run`；已接入 Unity 的纹理、Prefab、Tile 与导入设置位于 `Assets/Tactics/Arts/PureRun`，共享阴影入口位于 `Assets/Tactics/Arts/Prefabs/Units/Fighter.prefab`，Tile 落点布局实现位于 `Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs`，显示委托实现位于 `Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs`，阴影目录回归位于 `Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs`。
 - 第三方 VFX 适配构建入口：`Tactics/Tools/Pure Run/Rebuild Piloto VFX Sample Assets`；生成器只重建毒矛、闪电、诅咒回退稿与正式三层 V2 法阵，以及对应的代表技能表现图，不批量重写其他职业资产。
 - 提示词库边界：可复用 GPT Image 提示词文档由 `artworks-prompt-library` skill 维护，本 scope 只维护项目执行和验收状态。
+- 前台交互边界：[前台交互与焦点保护规则](https://github.com/cty41/tactics/blob/main/.agents/rules/foreground-interaction.md)；本 scope 只补充 Pure Run 视觉 QA 的具体停止条件，不另行定义授权例外。
 
 ## Verification Guidance
 
@@ -70,7 +78,7 @@ python Tools/okf/validate_bundle.py
 python -m unittest discover Tools/okf -p "test_*.py"
 ```
 
-校验脚本只读 PNG 并输出机器可读摘要；`--review-examples` 同时验证正式母图清单、正反路径状态和 128 案例快照。候选资产需使用 `--include-candidates` 额外查看，但外部武器轮廓不会被错误地当成发布尺寸失败。Git 提交前按路径暂存并排除 `.hermes/`、`tmp/` 和任何 Unity 运行时文件。
+校验脚本只读 PNG 并输出机器可读摘要；`--review-examples` 同时验证正式母图清单、正反路径状态和 128 案例快照。`PureRunUnitShadowEditorTests` 还必须覆盖当前全部 Pure Run 单位的 Sprite、静态材质、Renderer 启用状态、Land/Air 参数、Tile 根空间落点，以及 `ApplyVisualYOffset` 不会把阴影重新挂到 Sprite 姿态。候选资产需使用 `--include-candidates` 额外查看，但外部武器轮廓不会被错误地当成发布尺寸失败。Git 提交前按路径暂存并排除 `.hermes/`、`tmp/` 和任何 Unity 运行时文件。
 
 死亡图仍以人工 QA 为发布门槛：胶囊单位检查与赤柴同向且平直短厚，球形单位检查近圆球核与头部朝右上；两类都只以核心体量比较大小，检查脱手道具层级、去幕后的 RGBA/透明四角、无精确色幕残边，以及以死亡尸体 AABB 中心完成的 Tile 居中。未经人工确认和明确运行时授权不得接入 Unity。
 

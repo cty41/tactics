@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
 tags: [architecture, unity, agent-first]
-timestamp: "2026-08-01T00:20:09+08:00"
+timestamp: "2026-08-03T13:15:33+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Assets/Tactics/Arts/UI
   - Assets/Tactics/UIToolkit/TextSettings.asset
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:42385fa3f1f6a3a9f09b7ac12a439cb9b0babf9f2d4019a005835401b4c4b391
+source_fingerprint: sha256:33186db7ceac3a37f1e2fc666fa3c9ceb373780e07e81d5d28c8dce073e0f0a8
 ---
 
 # Summary
@@ -29,6 +29,7 @@ Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.a
 - UI Cancel 会区分键盘 Esc 与鼠标右键；战斗目标选择期间取消输入由 Battle UI 消费，不会同时打开 Pause。
 - 通用日志使用 `TLog`，结构化战斗日志使用 `TBattleLog`。
 - 修改 C# 后必须触发 Unity 编译并检查 Console 错误。
+- Agent 默认禁止 Computer Use、窗口激活和真实鼠标键盘等前台交互；实现、截图、视觉 QA、测试或连接恢复不构成例外授权。后台验证不足时停止为人工验证待办，完整规则由 [Unity Agent Workflow](../operations/unity-agent-workflow.md) 导航。
 
 # System Map
 
