@@ -1,12 +1,17 @@
 using System.Collections;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using Tactics.Common.Cells;
+using Tactics.Common.Controllers;
 using Tactics.Common.Interactables;
+using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Units;
+using Tactics.Common.Units.Tween;
 using Tactics.Common.Utilities;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 
 namespace Tactics.Tests.PlayMode
 {
@@ -153,6 +158,87 @@ namespace Tactics.Tests.PlayMode
                 Is.LessThan(0.001f));
 
             Object.Destroy(corpseGo);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator UnitDestroyedEvent_CreatesCenteredAuthoredCorpseOnOriginalCell()
+        {
+            ICell cell = FindCell(1, 1);
+            var unitManager = new SkillGraphTestUnitManager();
+            var controller = new GridController
+            {
+                UnitManager = unitManager,
+                CorpsePrefabPath = null
+            };
+
+            var unitObject = new GameObject("DoomedUnit");
+            var spriteObject = new GameObject("Sprite");
+            spriteObject.transform.SetParent(unitObject.transform);
+            var sourceRenderer = spriteObject.AddComponent<SpriteRenderer>();
+            var sourceMaterial = new Material(Shader.Find("Sprites/Default"));
+            var sourceColor = new Color(0.35f, 0.7f, 0.55f, 1f);
+            sourceRenderer.sharedMaterial = sourceMaterial;
+            sourceRenderer.color = sourceColor;
+
+            var texture = new Texture2D(8, 8);
+            var deathSprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, 8f, 8f),
+                new Vector2(0.25f, 0.75f),
+                8f);
+            var profile = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
+            var directional = unitObject.AddComponent<FourDirectionSpriteVisual>();
+            directional.Configure(sourceRenderer, deathSprite, deathSprite);
+            typeof(FourDirectionSpriteVisual)
+                .GetField("_deathSprite", BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.SetValue(directional, deathSprite);
+            var tweenVisual = unitObject.AddComponent<UnitTweenVisual>();
+            tweenVisual.ConfigureForPreview(spriteObject.transform, sourceRenderer, profile);
+            var unit = unitObject.AddComponent<Unit>();
+            unit.CurrentCell = cell;
+            cell.CurrentUnits.Add(unit);
+            cell.IsTaken = true;
+            unitManager.AddUnit(unit);
+
+            MethodInfo registerUnit = typeof(GridController).GetMethod(
+                "RegisterUnit",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(registerUnit, Is.Not.Null);
+            registerUnit.Invoke(controller, new object[] { unit });
+
+            unit.RemoveFromGame();
+            yield return null;
+
+            Corpse corpse = cell.CurrentInteractables.OfType<Corpse>().SingleOrDefault();
+            Assert.That(corpse, Is.Not.Null);
+            Assert.That(unitManager.GetUnits().Contains(unit), Is.False);
+            Assert.That(corpse.transform.position,
+                Is.EqualTo(cell.WorldPosition.ToVector3())
+                    .Using(Vector3ComparerWithEqualsOperator.Instance));
+            SpriteRenderer corpseRenderer = corpse.GetComponentsInChildren<SpriteRenderer>(true)
+                .Single(value => value.gameObject.name == "Sprite");
+            Assert.That(corpseRenderer.sprite, Is.SameAs(deathSprite));
+            Assert.That(corpseRenderer.sharedMaterial, Is.SameAs(sourceMaterial));
+            Assert.That(corpseRenderer.color, Is.EqualTo(sourceColor));
+            Assert.That(corpseRenderer.flipX, Is.False);
+
+            yield return new WaitForSeconds(
+                profile.CorpseDropDuration + profile.CorpseImpactDuration +
+                profile.CorpseSettleDuration + 0.02f);
+            Assert.That(corpseRenderer.transform.localPosition,
+                Is.EqualTo(new Vector3(
+                    -deathSprite.bounds.center.x,
+                    -deathSprite.bounds.center.y,
+                    0f)).Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(corpseRenderer.transform.localScale,
+                Is.EqualTo(Vector3.one).Using(Vector3ComparerWithEqualsOperator.Instance));
+
+            corpse.Consume();
+            Object.Destroy(profile);
+            Object.Destroy(deathSprite);
+            Object.Destroy(texture);
+            Object.Destroy(sourceMaterial);
             yield return null;
         }
 

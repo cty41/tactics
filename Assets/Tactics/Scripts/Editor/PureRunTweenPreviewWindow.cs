@@ -1,8 +1,10 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DG.DOTweenEditor;
 using DG.Tweening;
+using Tactics.Common.Interactables;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Tween;
@@ -30,19 +32,21 @@ namespace Tactics.EditorTools
             "Assets/Tactics/Arts/PureRun/Tween/StandardUnitTweenProfile.asset";
         private const string DefaultProjectileProfilePath =
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles/MagicBasic.asset";
+        private const string DefaultCorpsePrefabPath =
+            "Assets/Tactics/Arts/Prefabs/Units/TestCorpse.prefab";
 
         private PreviewRenderUtility _previewUtility;
         private GameObject _actorPrefab;
         private GameObject _targetPrefab;
         private GameObject _actorInstance;
         private GameObject _targetInstance;
+        private GameObject _corpseInstance;
         private StandardUnitTweenProfile _unitProfile;
         private StandardUnitTweenProfile _unitSandbox;
         private ProjectileVisualProfile _projectileProfile;
         private ProjectileVisualProfile _projectileSandbox;
         private ProjectileVisualProfile _transientProjectileProfile;
         private BattlePresentationGraph _presentationGraph;
-        private PresentationCueKind _presentationCue = PresentationCueKind.Action;
         private readonly List<GameObject> _presentationPreviewObjects = new();
         private UnityEditor.Editor _unitSandboxEditor;
         private UnityEditor.Editor _projectileSandboxEditor;
@@ -65,6 +69,11 @@ namespace Tactics.EditorTools
         private float _releaseTime = -1f;
         private float _poseRestoreTime = -1f;
         private float _impactTime = -1f;
+        private float _blockingTime = -1f;
+        private float _hitTime = -1f;
+        private float _corpseDropTime = -1f;
+        private float _corpseImpactTime = -1f;
+        private float _corpseSettledTime = -1f;
         private PreviewAction _action = PreviewAction.Idle;
         private FacingDirection _facing = FacingDirection.South;
         private UnitPoseFamily _poseFamily;
@@ -86,15 +95,29 @@ namespace Tactics.EditorTools
             window.titleContent = new GUIContent("Presentation Preview");
             window.minSize = new Vector2(720f, 620f);
             window._presentationGraph = graph;
-            if (graph != null)
-            {
-                PresentationEntryNodeRecord firstEntry = graph.Nodes
-                    .Find(node => node is PresentationEntryNodeRecord) as PresentationEntryNodeRecord;
-                if (firstEntry != null)
-                    window._presentationCue = firstEntry.Cue;
-            }
+            if (graph?.PreviewActorPrefab != null)
+                window._actorPrefab = graph.PreviewActorPrefab;
+            if (graph?.PreviewTargetPrefab != null)
+                window._targetPrefab = graph.PreviewTargetPrefab;
             window.RebuildStage();
             window.Show();
+        }
+
+        internal static PresentationCueKind ResolveDefaultPreviewCue(BattlePresentationGraph graph)
+        {
+            if (graph == null)
+                return PresentationCueKind.Action;
+            if (graph.FindEntry(graph.DefaultPreviewEntry) != null)
+                return graph.DefaultPreviewEntry;
+
+            PresentationEntryNodeRecord firstEnabledEntry = graph.Nodes.Find(node =>
+                node is PresentationEntryNodeRecord entry && entry.Enabled) as PresentationEntryNodeRecord;
+            if (firstEnabledEntry != null)
+                return firstEnabledEntry.Cue;
+
+            PresentationEntryNodeRecord firstEntry = graph.Nodes
+                .Find(node => node is PresentationEntryNodeRecord) as PresentationEntryNodeRecord;
+            return firstEntry?.Cue ?? PresentationCueKind.Action;
         }
 
         private void OnEnable()
@@ -102,6 +125,10 @@ namespace Tactics.EditorTools
             saveChangesMessage = "Apply the Pure Run tween preview sandbox changes before closing?";
             _actorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultActorPath);
             _targetPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultTargetPath);
+            if (_presentationGraph?.PreviewActorPrefab != null)
+                _actorPrefab = _presentationGraph.PreviewActorPrefab;
+            if (_presentationGraph?.PreviewTargetPrefab != null)
+                _targetPrefab = _presentationGraph.PreviewTargetPrefab;
             SetUnitProfile(AssetDatabase.LoadAssetAtPath<StandardUnitTweenProfile>(DefaultUnitProfilePath));
             SetProjectileProfile(
                 AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(DefaultProjectileProfilePath));
@@ -149,6 +176,11 @@ namespace Tactics.EditorTools
                 "Projectile Profile", _projectileProfile, typeof(ProjectileVisualProfile), false);
             var presentationGraph = (BattlePresentationGraph)EditorGUILayout.ObjectField(
                 "Presentation Graph", _presentationGraph, typeof(BattlePresentationGraph), false);
+            if (presentationGraph != _presentationGraph && presentationGraph != null)
+            {
+                actor = presentationGraph.PreviewActorPrefab ?? actor;
+                target = presentationGraph.PreviewTargetPrefab ?? target;
+            }
             if (EditorGUI.EndChangeCheck() &&
                 TryCommitAssetSelection(actor, target, unitProfile, projectileProfile))
             {
@@ -156,14 +188,25 @@ namespace Tactics.EditorTools
                 RebuildStage();
             }
 
+            if (_presentationGraph != null)
+            {
+                EditorGUILayout.LabelField("Preview", _presentationGraph.HasPreviewScenario
+                    ? "Full Skill Preview"
+                    : $"Legacy {_presentationGraph.DefaultPreviewEntry} fallback");
+                if (!_presentationGraph.HasPreviewScenario)
+                {
+                    EditorGUILayout.HelpBox(
+                        "This graph has no full preview scenario. The preview is using its legacy " +
+                        "DefaultPreviewEntry fallback.",
+                        MessageType.Warning);
+                }
+            }
+
             EditorGUI.BeginChangeCheck();
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (_presentationGraph == null)
                     _action = (PreviewAction)EditorGUILayout.EnumPopup("Action", _action);
-                else
-                    _presentationCue = (PresentationCueKind)EditorGUILayout.EnumPopup(
-                        "Entry", _presentationCue);
                 _facing = (FacingDirection)EditorGUILayout.EnumPopup("Facing", _facing);
                 _distanceTiles = EditorGUILayout.Slider("Distance", _distanceTiles, 2f, 6f);
             }
@@ -247,7 +290,12 @@ namespace Tactics.EditorTools
             }
             DrawMarker(sliderRect, _releaseTime, "Release", new Color(0.35f, 0.85f, 1f));
             DrawMarker(sliderRect, _poseRestoreTime, "Pose Restore", new Color(0.55f, 1f, 0.45f));
-            DrawMarker(sliderRect, _impactTime, "Impact", new Color(1f, 0.55f, 0.25f));
+            DrawMarker(sliderRect, _impactTime, "Projectile Impact", new Color(1f, 0.55f, 0.25f));
+            DrawMarker(sliderRect, _blockingTime, "VFX Contact", new Color(1f, 0.78f, 0.3f));
+            DrawMarker(sliderRect, _hitTime, "Hit", new Color(1f, 0.35f, 0.35f));
+            DrawMarker(sliderRect, _corpseDropTime, "Drop", new Color(0.65f, 0.85f, 1f));
+            DrawMarker(sliderRect, _corpseImpactTime, "Impact", new Color(1f, 0.62f, 0.25f));
+            DrawMarker(sliderRect, _corpseSettledTime, "Settled", new Color(0.55f, 1f, 0.55f));
         }
 
         private void DrawMarker(Rect sliderRect, float markerTime, string label, Color color)
@@ -426,6 +474,11 @@ namespace Tactics.EditorTools
             _releaseTime = -1f;
             _poseRestoreTime = -1f;
             _impactTime = -1f;
+            _blockingTime = -1f;
+            _hitTime = -1f;
+            _corpseDropTime = -1f;
+            _corpseImpactTime = -1f;
+            _corpseSettledTime = -1f;
             _poseResolution = "No pose requested";
             if (_presentationGraph != null)
             {
@@ -629,17 +682,149 @@ namespace Tactics.EditorTools
             UnitTweenVisual targetVisual,
             Vector3 direction)
         {
-            PresentationEntryNodeRecord entry = _presentationGraph.FindEntry(_presentationCue);
-            if (entry == null)
-                return DOTween.Sequence().AppendInterval(0.01f);
-            var visited = new HashSet<string>();
-            return BuildPresentationPath(
-                entry.NodeId,
-                null,
+            if (_presentationGraph.HasPreviewScenario)
+                return BuildFullPresentationPreview(actorVisual, targetVisual, direction);
+
+            PresentationCueKind previewCue = ResolveDefaultPreviewCue(_presentationGraph);
+            PresentationPreviewTrack track = BuildPresentationEntryTrack(
+                previewCue,
                 actorVisual,
                 targetVisual,
-                direction,
-                visited);
+                direction);
+            RecordTrackMarkers(track, 0f);
+            return track.Sequence;
+        }
+
+        private Sequence BuildFullPresentationPreview(
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction)
+        {
+            var result = DOTween.Sequence();
+            float phaseStart = 0f;
+            foreach (PresentationPreviewPhaseRecord phase in _presentationGraph.PreviewPhases)
+            {
+                if (phase == null || phase.Cues == null || phase.Cues.Count == 0)
+                    continue;
+
+                PresentationPreviewTrack continuationTrack = null;
+                foreach (PresentationCueKind cue in phase.Cues)
+                {
+                    PresentationPreviewTrack track = BuildPresentationEntryTrack(
+                        cue,
+                        actorVisual,
+                        targetVisual,
+                        direction);
+                    result.Insert(phaseStart, track.Sequence);
+                    RecordTrackMarkers(
+                        track,
+                        phaseStart,
+                        phase.AdvanceKind == PresentationPreviewAdvanceKind.Blocking &&
+                        cue == phase.ContinuationCue);
+                    if (cue == phase.ContinuationCue)
+                        continuationTrack = track;
+                }
+
+                if (phase.PlayTargetHitReaction && targetVisual != null)
+                {
+                    float hitOffset = phase.AdvanceKind == PresentationPreviewAdvanceKind.Impact &&
+                                      continuationTrack != null
+                        ? continuationTrack.ResolveAdvanceTime(phase.AdvanceKind)
+                        : 0f;
+                    Sequence hit = BuildRepresentativeTargetHitPreview(targetVisual, direction);
+                    result.Insert(phaseStart + hitOffset, hit);
+                    if (_hitTime < 0f)
+                        _hitTime = phaseStart + hitOffset;
+                }
+
+                if (continuationTrack != null)
+                    phaseStart += continuationTrack.ResolveAdvanceTime(phase.AdvanceKind);
+            }
+            if (result.Duration(false) <= 0f)
+                result.AppendInterval(0.01f);
+            return result;
+        }
+
+        private PresentationPreviewTrack BuildPresentationEntryTrack(
+            PresentationCueKind cue,
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction)
+        {
+            float savedRelease = _releaseTime;
+            float savedPoseRestore = _poseRestoreTime;
+            float savedImpact = _impactTime;
+            float savedBlocking = _blockingTime;
+            _releaseTime = -1f;
+            _poseRestoreTime = -1f;
+            _impactTime = -1f;
+            _blockingTime = -1f;
+
+            Sequence sequence;
+            PresentationEntryNodeRecord entry = _presentationGraph.FindEntry(cue);
+            if (entry == null || !entry.Enabled)
+            {
+                sequence = DOTween.Sequence().AppendInterval(0.01f);
+            }
+            else
+            {
+                sequence = BuildPresentationPath(
+                    entry.NodeId,
+                    null,
+                    actorVisual,
+                    targetVisual,
+                    direction,
+                    new HashSet<string>());
+            }
+
+            var track = new PresentationPreviewTrack(
+                sequence,
+                _releaseTime,
+                _poseRestoreTime,
+                _impactTime,
+                _blockingTime);
+            _releaseTime = savedRelease;
+            _poseRestoreTime = savedPoseRestore;
+            _impactTime = savedImpact;
+            _blockingTime = savedBlocking;
+            return track;
+        }
+
+        private void RecordTrackMarkers(
+            PresentationPreviewTrack track,
+            float phaseStart,
+            bool includeBlocking = true)
+        {
+            if (_releaseTime < 0f && track.ReleaseTime >= 0f)
+                _releaseTime = phaseStart + track.ReleaseTime;
+            if (_poseRestoreTime < 0f && track.PoseRestoreTime >= 0f)
+                _poseRestoreTime = phaseStart + track.PoseRestoreTime;
+            if (_impactTime < 0f && track.ImpactTime >= 0f)
+                _impactTime = phaseStart + track.ImpactTime;
+            if (includeBlocking && _blockingTime < 0f && track.BlockingTime >= 0f)
+                _blockingTime = phaseStart + track.BlockingTime;
+        }
+
+        private Sequence BuildRepresentativeTargetHitPreview(
+            UnitTweenVisual targetVisual,
+            Vector3 direction)
+        {
+            UnitTweenPosePlan hitPlan = UnitTweenSequenceBuilder.BuildHitPlan(
+                targetVisual.VisualRoot,
+                _unitSandbox,
+                targetVisual.BasePosition,
+                targetVisual.BaseRotation,
+                targetVisual.BaseScale,
+                direction);
+            UnitPoseFamily targetHitFamily = _targetInstance?
+                .GetComponent<FourDirectionSpriteVisual>()?
+                .ActionPoseProfile?
+                .HitFamily;
+            hitPlan.Sequence.InsertCallback(0f, () =>
+                ApplyPreviewPose(_targetInstance, targetHitFamily, Opposite(_facing)));
+            hitPlan.Sequence.InsertCallback(hitPlan.PoseRestoreTime, () =>
+                ClearPreviewPose(_targetInstance, Opposite(_facing)));
+            return hitPlan.Sequence;
         }
 
         private Sequence BuildPresentationPath(
@@ -678,6 +863,10 @@ namespace Tactics.EditorTools
                 {
                     case PresentationUnitTweenNodeRecord tween:
                     {
+                        UnitPoseFamily family = ResolvePreviewFamily(_actorInstance, tween.Action);
+                        UnitPoseExitPolicy exitPolicy = family != null
+                            ? family.ExitPolicy
+                            : UnitPoseExitPolicy.RecoveryStart;
                         UnitTweenActionPlan plan = UnitTweenSequenceBuilder.BuildAction(
                             tween.Action,
                             actorVisual.VisualRoot,
@@ -685,10 +874,16 @@ namespace Tactics.EditorTools
                             actorVisual.BasePosition,
                             actorVisual.BaseRotation,
                             actorVisual.BaseScale,
-                            direction);
+                            direction,
+                            exitPolicy);
+                        plan.Sequence.InsertCallback(0f, () =>
+                            ApplyPreviewPose(_actorInstance, family, _facing));
+                        plan.Sequence.InsertCallback(plan.PoseRestoreTime, () =>
+                            ClearPreviewPose(_actorInstance, _facing));
                         result.Append(plan.Sequence);
                         if (tween.EmitReleaseMarker)
                             _releaseTime = insertionTime + plan.ReleaseTime;
+                        _poseRestoreTime = insertionTime + plan.PoseRestoreTime;
                         break;
                     }
                     case PresentationProjectileNodeRecord projectile:
@@ -706,8 +901,17 @@ namespace Tactics.EditorTools
                         result.Append(BuildPrefabFxPreview(prefabFx.Profile));
                         break;
                     case PresentationProceduralVfxNodeRecord procedural:
+                    {
                         result.Append(BuildProceduralVfxPreview(procedural));
+                        float blockingMarker = procedural.Recipe.GetLayers(procedural.Cue)
+                            .Where(layer => layer != null)
+                            .Select(layer => layer.BlockingMarker)
+                            .DefaultIfEmpty(0f)
+                            .Max();
+                        if (blockingMarker > 0f)
+                            _blockingTime = Mathf.Max(_blockingTime, insertionTime + blockingMarker);
                         break;
+                    }
                     case PresentationDelayNodeRecord delay:
                         result.AppendInterval(delay.Duration);
                         break;
@@ -793,7 +997,20 @@ namespace Tactics.EditorTools
                 _actorInstance,
                 _targetInstance,
                 ResolveTargetPosition());
-            instance.transform.localScale = Vector3.one * profile.Scale;
+            Vector3 sourcePosition = ResolveSpriteCenter(
+                _actorInstance,
+                _actorInstance != null ? _actorInstance.transform.position : Vector3.zero);
+            Vector3 targetPosition = ResolveSpriteCenter(
+                _targetInstance,
+                ResolveTargetPosition());
+            instance.transform.rotation = VisualCueTransformUtility.ResolveRotation(
+                profile,
+                sourcePosition,
+                targetPosition);
+            instance.transform.localScale = VisualCueTransformUtility.ResolveScale(
+                profile,
+                sourcePosition,
+                targetPosition);
             SpriteRenderer referenceRenderer = FindSpriteRenderer(_targetInstance) ??
                 FindSpriteRenderer(_actorInstance);
             int sortingLayerId = referenceRenderer != null ? referenceRenderer.sortingLayerID : 0;
@@ -868,11 +1085,35 @@ namespace Tactics.EditorTools
                 return DOTween.Sequence().AppendInterval(0.01f);
             _proceduralVfxAdapter ??= new ProceduralVfxPreviewAdapter(
                 gameObject => _previewUtility?.AddSingleGO(gameObject));
-            Vector3 source = _actorInstance.transform.position + Vector3.up * 0.45f;
-            Vector3 target = (_targetInstance != null
-                ? _targetInstance.transform.position
-                : ResolveTargetPosition()) + Vector3.up * 0.45f;
+            ResolveProceduralVfxAnchors(
+                node.Cue,
+                _actorInstance,
+                _targetInstance,
+                ResolveTargetPosition(),
+                out Vector3 source,
+                out Vector3 target);
             return _proceduralVfxAdapter.Build(node.Recipe, node.Cue, source, target);
+        }
+
+        internal static void ResolveProceduralVfxAnchors(
+            SkillVfxCueKind cue,
+            GameObject actor,
+            GameObject target,
+            Vector3 targetPoint,
+            out Vector3 source,
+            out Vector3 targetPosition)
+        {
+            Vector3 actorRoot = actor != null ? actor.transform.position : Vector3.zero;
+            Vector3 targetRoot = target != null ? target.transform.position : targetPoint;
+            targetPosition = targetRoot + Vector3.up * 0.45f;
+            source = actorRoot + Vector3.up * 0.45f;
+            if (cue != SkillVfxCueKind.DirectionalStrike)
+                return;
+
+            Vector3 visualCenter = ResolveSpriteCenter(actor, source);
+            Vector3 direction = targetPosition - visualCenter;
+            direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.right;
+            source = visualCenter + direction * 0.10f;
         }
 
         private void ClearPresentationPreviewObjects()
@@ -885,23 +1126,51 @@ namespace Tactics.EditorTools
                     DestroyImmediate(value);
             }
             _presentationPreviewObjects.Clear();
+            _corpseInstance = null;
         }
 
         private Sequence BuildCorpsePreview(UnitTweenVisual actorVisual)
         {
             var directional = _actorInstance.GetComponent<FourDirectionSpriteVisual>();
-            if (directional?.DeathSprite != null && actorVisual.PrimaryRenderer != null)
+            SpriteRenderer sourceRenderer = actorVisual.PrimaryRenderer;
+            if (directional?.DeathSprite == null || sourceRenderer == null)
+                return null;
+
+            GameObject corpsePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultCorpsePrefabPath);
+            if (corpsePrefab != null)
             {
-                actorVisual.PrimaryRenderer.sprite = directional.DeathSprite;
-                actorVisual.PrimaryRenderer.flipX = false;
+                _corpseInstance = _previewUtility.InstantiatePrefabInScene(corpsePrefab);
+            }
+            else
+            {
+                _corpseInstance = new GameObject("PreviewCorpse");
+                _previewUtility.AddSingleGO(_corpseInstance);
             }
 
-            return UnitTweenSequenceBuilder.BuildCorpseLanding(
-                actorVisual.VisualRoot,
-                _unitSandbox,
-                actorVisual.BasePosition,
-                actorVisual.BaseRotation,
-                actorVisual.BaseScale);
+            _corpseInstance.name = "PreviewCorpse";
+            _corpseInstance.hideFlags = HideFlags.HideAndDontSave;
+            _corpseInstance.transform.position = _actorInstance.transform.position;
+            _corpseInstance.transform.rotation = Quaternion.identity;
+            _corpseInstance.transform.localScale = Vector3.one;
+            _presentationPreviewObjects.Add(_corpseInstance);
+
+            Corpse corpse = _corpseInstance.GetComponent<Corpse>() ??
+                _corpseInstance.AddComponent<Corpse>();
+            Sequence sequence = corpse.ApplyVisualForPreview(
+                directional.DeathSprite,
+                sourceRenderer.sharedMaterial,
+                sourceRenderer.color,
+                _unitSandbox);
+            if (sequence == null)
+                return null;
+
+            _actorInstance.SetActive(false);
+            _corpseDropTime = 0f;
+            _corpseImpactTime = _unitSandbox.CorpseDropDuration;
+            _corpseSettledTime = _unitSandbox.CorpseDropDuration +
+                _unitSandbox.CorpseImpactDuration +
+                _unitSandbox.CorpseSettleDuration;
+            return sequence;
         }
 
         private ProjectileVisualProfile CreateTransientProjectileProfile()
@@ -1223,6 +1492,7 @@ namespace Tactics.EditorTools
             };
             _actorInstance = null;
             _targetInstance = null;
+            _corpseInstance = null;
         }
 
         private void CaptureStandingSpriteStates()
@@ -1233,6 +1503,8 @@ namespace Tactics.EditorTools
 
         private void RestorePreviewVisuals()
         {
+            if (_actorInstance != null)
+                _actorInstance.SetActive(true);
             RestoreVisual(_actorInstance, _actorSpriteState);
             RestoreVisual(_targetInstance, _targetSpriteState);
         }
@@ -1259,6 +1531,7 @@ namespace Tactics.EditorTools
                 }
                 _actorInstance = null;
                 _targetInstance = null;
+                _corpseInstance = null;
                 DestroyImmediateSafe(_unitSandboxEditor);
                 DestroyImmediateSafe(_projectileSandboxEditor);
                 DestroyImmediateSafe(_unitSandbox);
@@ -1345,6 +1618,41 @@ namespace Tactics.EditorTools
             renderer.sprite = Sprite;
             renderer.flipX = FlipX;
             renderer.color = Color;
+        }
+    }
+
+    internal sealed class PresentationPreviewTrack
+    {
+        internal PresentationPreviewTrack(
+            Sequence sequence,
+            float releaseTime,
+            float poseRestoreTime,
+            float impactTime,
+            float blockingTime)
+        {
+            Sequence = sequence ?? DOTween.Sequence().AppendInterval(0.01f);
+            ReleaseTime = releaseTime;
+            PoseRestoreTime = poseRestoreTime;
+            ImpactTime = impactTime;
+            BlockingTime = blockingTime;
+        }
+
+        internal Sequence Sequence { get; }
+        internal float ReleaseTime { get; }
+        internal float PoseRestoreTime { get; }
+        internal float ImpactTime { get; }
+        internal float BlockingTime { get; }
+
+        internal float ResolveAdvanceTime(PresentationPreviewAdvanceKind advanceKind)
+        {
+            float marker = advanceKind switch
+            {
+                PresentationPreviewAdvanceKind.Release => ReleaseTime,
+                PresentationPreviewAdvanceKind.Impact => ImpactTime,
+                PresentationPreviewAdvanceKind.Blocking => BlockingTime,
+                _ => Sequence.Duration(false)
+            };
+            return marker >= 0f ? marker : Sequence.Duration(false);
         }
     }
 }

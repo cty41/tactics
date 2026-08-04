@@ -36,14 +36,27 @@ namespace Tactics.Common.Skills.Graph
             int sortingLayerId = referenceRenderer != null ? referenceRenderer.sortingLayerID : 0;
             int sortingOrder = (referenceRenderer != null ? referenceRenderer.sortingOrder : 0) +
                 profile.SortingOrderOffset;
+            Vector3 sourceWorldPosition = ResolveUnitCenter(caster, position);
+            Vector3 targetWorldPosition = ResolveDirectionTarget(
+                primaryTarget,
+                targetPoint,
+                position);
+            Quaternion rotation = VisualCueTransformUtility.ResolveRotation(
+                profile,
+                sourceWorldPosition,
+                targetWorldPosition);
+            Vector3 scale = VisualCueTransformUtility.ResolveScale(
+                profile,
+                sourceWorldPosition,
+                targetWorldPosition);
 
             if (profile.CompletionPolicy == VisualCueCompletionPolicy.FireAndForget)
             {
                 return TransientVfxPool.PlayOneShot(
                     profile.Prefab,
                     position,
-                    Quaternion.identity,
-                    profile.Scale,
+                    rotation,
+                    scale,
                     profile.Lifetime,
                     sortingLayerId,
                     sortingOrder,
@@ -53,8 +66,8 @@ namespace Tactics.Common.Skills.Graph
             return TransientVfxPool.PlayAsync(
                 profile.Prefab,
                 position,
-                Quaternion.identity,
-                profile.Scale,
+                rotation,
+                scale,
                 profile.Lifetime,
                 sortingLayerId,
                 sortingOrder,
@@ -83,12 +96,20 @@ namespace Tactics.Common.Skills.Graph
             int sortingLayerId = referenceRenderer != null ? referenceRenderer.sortingLayerID : 0;
             int sortingOrder = (referenceRenderer != null ? referenceRenderer.sortingOrder : 0) +
                 profile.SortingOrderOffset;
+            Quaternion rotation = VisualCueTransformUtility.ResolveRotation(
+                profile,
+                sourceWorldPosition,
+                targetWorldPosition);
+            Vector3 scale = VisualCueTransformUtility.ResolveScale(
+                profile,
+                sourceWorldPosition,
+                targetWorldPosition);
             return profile.CompletionPolicy == VisualCueCompletionPolicy.FireAndForget
                 ? TransientVfxPool.PlayOneShot(
                     profile.Prefab,
                     position,
-                    Quaternion.identity,
-                    profile.Scale,
+                    rotation,
+                    scale,
                     profile.Lifetime,
                     sortingLayerId,
                     sortingOrder,
@@ -96,8 +117,8 @@ namespace Tactics.Common.Skills.Graph
                 : TransientVfxPool.PlayAsync(
                     profile.Prefab,
                     position,
-                    Quaternion.identity,
-                    profile.Scale,
+                    rotation,
+                    scale,
                     profile.Lifetime,
                     sortingLayerId,
                     sortingOrder,
@@ -154,6 +175,23 @@ namespace Tactics.Common.Skills.Graph
 
             position = unit.WorldPosition.ToVector3();
             return true;
+        }
+
+        private static Vector3 ResolveUnitCenter(IUnit unit, Vector3 fallback)
+        {
+            return TryResolveUnitCenter(unit, out Vector3 position) ? position : fallback;
+        }
+
+        private static Vector3 ResolveDirectionTarget(
+            IUnit primaryTarget,
+            ICell targetPoint,
+            Vector3 fallback)
+        {
+            if (TryResolveUnitCenter(primaryTarget, out Vector3 position))
+                return position;
+            if (!IsMissingUnityObject(targetPoint))
+                return targetPoint.WorldPosition.ToVector3();
+            return fallback;
         }
 
         private static bool TryResolveUnitGround(IUnit unit, out Vector3 position)

@@ -72,6 +72,76 @@ namespace Tactics.Common.Skills.Graph
             return new ProjectileVisualHandle(projectileObject, renderer);
         }
 
+        internal static Renderer ConfigurePrefabProjectile(
+            ProjectileVisualProfile profile,
+            GameObject projectileObject)
+        {
+            if (profile == null || projectileObject == null)
+                return null;
+
+            var marker = projectileObject.GetComponent<TransientVfxPoolMember>();
+            SpriteRenderer spriteRenderer = projectileObject.GetComponent<SpriteRenderer>();
+            if (profile.Sprite != null)
+            {
+                bool addedAtRuntime = spriteRenderer == null;
+                if (addedAtRuntime)
+                    spriteRenderer = projectileObject.AddComponent<SpriteRenderer>();
+                spriteRenderer.enabled = true;
+                spriteRenderer.sprite = profile.Sprite;
+                spriteRenderer.color = profile.Tint;
+                if (profile.Material != null)
+                    spriteRenderer.sharedMaterial = profile.Material;
+                if (addedAtRuntime)
+                    marker?.RegisterRuntimeSpriteRenderer(spriteRenderer);
+                return spriteRenderer;
+            }
+
+            if (profile.VisualKind != ProjectileVisualKind.SoftDisc || profile.Material == null)
+                return projectileObject.GetComponentInChildren<Renderer>(true);
+
+            const string coreName = "RuntimeProjectileCore";
+            Transform coreTransform = projectileObject.transform.Find(coreName);
+            GameObject coreObject;
+            MeshRenderer meshRenderer;
+            if (coreTransform == null)
+            {
+                coreObject = new GameObject(coreName);
+                coreObject.transform.SetParent(projectileObject.transform, false);
+                var filter = coreObject.AddComponent<MeshFilter>();
+                filter.sharedMesh = SkillVfxPrimitiveBuilder.SharedQuadMesh;
+                meshRenderer = coreObject.AddComponent<MeshRenderer>();
+                marker?.RegisterRuntimeProjectileRenderer(meshRenderer);
+            }
+            else
+            {
+                coreObject = coreTransform.gameObject;
+                meshRenderer = coreObject.GetComponent<MeshRenderer>();
+                if (meshRenderer == null)
+                {
+                    var filter = coreObject.GetComponent<MeshFilter>() ?? coreObject.AddComponent<MeshFilter>();
+                    filter.sharedMesh = SkillVfxPrimitiveBuilder.SharedQuadMesh;
+                    meshRenderer = coreObject.AddComponent<MeshRenderer>();
+                    marker?.RegisterRuntimeProjectileRenderer(meshRenderer);
+                }
+            }
+
+            coreObject.SetActive(true);
+            meshRenderer.enabled = true;
+            meshRenderer.sharedMaterial = profile.Material;
+            var propertyBlock = new MaterialPropertyBlock();
+            SkillVfxPrimitiveBuilder.ApplyStandaloneProperties(
+                meshRenderer,
+                propertyBlock,
+                profile.Tint,
+                1f,
+                1.8f,
+                SkillVfxShapeMode.SoftDisc,
+                radialInner: 0f,
+                radialOuter: 1f,
+                softness: 0.24f);
+            return meshRenderer;
+        }
+
         internal static ParticleSystem CreateParticleTrail(
             ProjectileVisualProfile profile,
             Renderer sourceRenderer,

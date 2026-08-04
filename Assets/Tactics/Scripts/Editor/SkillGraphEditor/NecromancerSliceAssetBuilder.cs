@@ -104,6 +104,9 @@ namespace Tactics.Editor.SkillGraphEditor
             CreateConfig("BoneShield_Lv2_Graph_Ability", Graph("BoneShield_Lv2_Graph"), 8, 0,
                 "获得魅力两倍的全伤害护盾。", false);
 
+            PureRunPresentationGraphAssetBuilder.BindSkeletonMageFireballConsumers();
+            PureRunPresentationGraphAssetBuilder.RebuildBoneSpearSamples();
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             TLog.Info("[NecromancerSliceAssetBuilder] Necromancer level assets rebuilt.");

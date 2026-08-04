@@ -2,6 +2,7 @@ using System.IO;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
+using Tactics.Editor.PresentationGraph;
 using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -52,6 +53,9 @@ namespace Tactics.Editor.SkillGraphEditor
             CreateConfig("PickupSpear_Graph_Ability", Graph("PickupSpear_Graph"), 0, 0, "免费拾取相邻落地长矛。", false);
             CreateConfig("Decoy_Graph_Ability", Graph("Decoy_Graph"), 6, 2, "后撤并在原地留下分身。", false);
             CreateConfig("Decoy_Lv2_Graph_Ability", Graph("Decoy_Lv2_Graph"), 6, 2, "后撤、留下分身并净化自身。", false);
+
+            PureRunPresentationGraphAssetBuilder.RebuildThrustSamples();
+            PureRunPresentationGraphAssetBuilder.RebuildPoisonSpearSamples();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

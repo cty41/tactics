@@ -10,6 +10,7 @@ using Tactics.Common.Units.Tween;
 using Tactics.EditorTools;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools.Utils;
 using Object = UnityEngine.Object;
 
 namespace Tactics.Tests.Editor
@@ -83,9 +84,15 @@ namespace Tactics.Tests.Editor
                     Vector3.right,
                     0.25f);
                 Assert.That(registered.Any(value => value.name == "PreviewProjectile"), Is.True);
+                GameObject projectile = registered.Single(value => value.name == "PreviewProjectile");
+                Assert.That(projectile.GetComponentsInChildren<ParticleSystem>(true), Is.Not.Empty);
+                Assert.That(particleAdapter.PrimaryRenderer, Is.TypeOf<MeshRenderer>());
                 Assert.That(
-                    registered.Any(value => value.name == "PreviewProjectileParticleTrail"),
-                    Is.True);
+                    particleAdapter.PrimaryRenderer.gameObject.name,
+                    Is.EqualTo("RuntimeProjectileCore"));
+                Assert.That(
+                    particleAdapter.PrimaryRenderer.sharedMaterial,
+                    Is.SameAs(LoadProfile("Fire").Material));
             }
             Assert.That(registered.All(value => value == null), Is.True);
 
@@ -106,6 +113,37 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
+        public void VisualCueTransform_SourceToTargetMatchesFourDirectionsAndDistance()
+        {
+            var profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(
+                "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Profiles/ThrustStrikeLv1.asset");
+            Assert.That(profile, Is.Not.Null);
+
+            var cases = new[]
+            {
+                (Vector3.right * 3f, 0f),
+                (Vector3.up * 3f, 90f),
+                (Vector3.left * 3f, 180f),
+                (Vector3.down * 3f, -90f)
+            };
+            foreach ((Vector3 target, float expectedAngle) in cases)
+            {
+                Quaternion rotation = VisualCueTransformUtility.ResolveRotation(
+                    profile,
+                    Vector3.zero,
+                    target);
+                Assert.That(Mathf.DeltaAngle(rotation.eulerAngles.z, expectedAngle),
+                    Is.EqualTo(0f).Within(0.001f));
+                Vector3 scale = VisualCueTransformUtility.ResolveScale(
+                    profile,
+                    Vector3.zero,
+                    target);
+                Assert.That(scale.x, Is.EqualTo(3f).Within(0.001f));
+                Assert.That(scale.y, Is.EqualTo(1f).Within(0.001f));
+            }
+        }
+
+        [Test]
         public void ProceduralPreviewAdapter_BuildsRecipePrimitives_ThenCleansThem()
         {
             var recipe = AssetDatabase.LoadAssetAtPath<SkillVfxRecipe>(
@@ -121,6 +159,70 @@ namespace Tactics.Tests.Editor
                     Vector3.right);
                 Assert.That(sequence.Duration(false), Is.GreaterThan(0f));
                 Assert.That(registered, Is.Not.Empty);
+                sequence.Kill(false);
+            }
+            Assert.That(registered.All(value => value == null), Is.True);
+        }
+
+        [Test]
+        public void ProceduralPreviewAdapter_ThrustUsesRuntimeTaperedGeometryAndTimeline()
+        {
+            var recipe = AssetDatabase.LoadAssetAtPath<SkillVfxRecipe>(
+                "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/ThrustSkillVfxRecipe.asset");
+            Assert.That(recipe, Is.Not.Null);
+            SkillVfxPrimitiveLayer[] layers = recipe.GetLayers(SkillVfxCueKind.DirectionalStrike)
+                .ToArray();
+            Assert.That(layers, Has.Length.EqualTo(2));
+            Assert.That(layers.All(layer =>
+                layer.PrimitiveKind == SkillVfxPrimitiveKind.TaperedLine), Is.True);
+
+            var registered = new List<GameObject>();
+            Vector3 source = new Vector3(-0.4f, 0.25f, 0f);
+            Vector3 target = new Vector3(1.1f, 0.85f, 0f);
+            float distance = Vector3.Distance(source, target);
+            float angle = Mathf.Atan2(target.y - source.y, target.x - source.x) * Mathf.Rad2Deg;
+            using (var adapter = new ProceduralVfxPreviewAdapter(registered.Add))
+            {
+                Sequence sequence = adapter.Build(
+                    recipe,
+                    SkillVfxCueKind.DirectionalStrike,
+                    source,
+                    target);
+                sequence.Pause();
+                Assert.That(registered, Has.Count.EqualTo(2));
+
+                for (int index = 0; index < registered.Count; index++)
+                {
+                    GameObject line = registered[index];
+                    SkillVfxPrimitiveLayer layer = layers[index];
+                    Mesh mesh = line.GetComponent<MeshFilter>().sharedMesh;
+                    Vector3[] vertices = mesh.vertices;
+
+                    Assert.That(mesh, Is.Not.SameAs(SkillVfxPrimitiveBuilder.SharedQuadMesh));
+                    Assert.That(vertices[1].y - vertices[0].y, Is.EqualTo(1f).Within(0.001f));
+                    Assert.That(
+                        vertices[3].y - vertices[2].y,
+                        Is.EqualTo(layer.TipWidth / layer.RootWidth).Within(0.001f));
+                    Assert.That(line.transform.position, Is.EqualTo(source));
+                    Assert.That(line.transform.eulerAngles.z, Is.EqualTo(angle).Within(0.001f));
+                }
+
+                sequence.Goto(0f, false);
+                AssertLineScales(registered, layers, 0f, distance, 1f, true);
+                sequence.Goto(0.0325f, false);
+                AssertLineScales(registered, layers, 0.5f, distance, 1f, true);
+                sequence.Goto(0.065f, false);
+                AssertLineScales(registered, layers, 1f, distance, 1f, true);
+                for (int index = 0; index < registered.Count; index++)
+                {
+                    var propertyBlock = new MaterialPropertyBlock();
+                    registered[index].GetComponent<MeshRenderer>().GetPropertyBlock(propertyBlock);
+                    Assert.That(
+                        propertyBlock.GetFloat(Shader.PropertyToID("_Alpha")),
+                        Is.EqualTo(layers[index].PeakAlpha).Within(0.001f));
+                }
+                sequence.Goto(0.16f, false);
+                AssertLineScales(registered, layers, 1f, distance, 0.8f, false);
                 sequence.Kill(false);
             }
             Assert.That(registered.All(value => value == null), Is.True);
@@ -176,6 +278,207 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
+        public void PresentationPreview_DirectionalStrikeUsesRuntimeRepresentativeAnchors()
+        {
+            var actor = CreateSpriteAnchor("Actor", new Vector3(-1f, 0.25f, 0f));
+            var target = CreateSpriteAnchor("Target", new Vector3(2f, -0.5f, 0f));
+            Vector3 actorCenter = FindSprite(actor).bounds.center;
+            Vector3 expectedTarget = target.transform.position + Vector3.up * 0.45f;
+            Vector3 expectedDirection = (expectedTarget - actorCenter).normalized;
+
+            PureRunTweenPreviewWindow.ResolveProceduralVfxAnchors(
+                SkillVfxCueKind.DirectionalStrike,
+                actor,
+                target,
+                new Vector3(9f, 9f, 0f),
+                out Vector3 source,
+                out Vector3 targetPosition);
+
+            Assert.That(targetPosition, Is.EqualTo(expectedTarget));
+            Assert.That(source, Is.EqualTo(actorCenter + expectedDirection * 0.10f));
+
+            PureRunTweenPreviewWindow.ResolveProceduralVfxAnchors(
+                SkillVfxCueKind.PrimaryTargetHit,
+                actor,
+                target,
+                Vector3.zero,
+                out source,
+                out targetPosition);
+            Assert.That(source, Is.EqualTo(actor.transform.position + Vector3.up * 0.45f));
+            Assert.That(targetPosition, Is.EqualTo(expectedTarget));
+        }
+
+        [Test]
+        public void PresentationPreview_UsesGraphDefaultEntry()
+        {
+            BattlePresentationGraph graph = ScriptableObject.CreateInstance<BattlePresentationGraph>();
+            _objectsToDestroy.Add(graph);
+            graph.DefaultPreviewEntry = PresentationCueKind.DirectionalStrike;
+            var action = graph.AddNode(PresentationNodeType.Entry, Vector2.zero)
+                as PresentationEntryNodeRecord;
+            action.Cue = PresentationCueKind.Action;
+            var strike = graph.AddNode(PresentationNodeType.Entry, Vector2.right)
+                as PresentationEntryNodeRecord;
+            strike.Cue = PresentationCueKind.DirectionalStrike;
+
+            Assert.That(
+                PureRunTweenPreviewWindow.ResolveDefaultPreviewCue(graph),
+                Is.EqualTo(PresentationCueKind.DirectionalStrike));
+        }
+
+        [Test]
+        public void PresentationPreview_DoesNotKeepEntryOverrideState()
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+
+            Assert.That(typeof(PureRunTweenPreviewWindow).GetField("_presentationCue", flags), Is.Null);
+            Assert.That(
+                typeof(PureRunTweenPreviewWindow).GetField("_overridePresentationCue", flags),
+                Is.Null);
+        }
+
+        [Test]
+        public void FullThrustPreview_OverlapsActionStrikeContactAndTargetHit()
+        {
+            var graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                "Assets/Tactics/Arts/PureRun/Presentation/Thrust_Presentation.asset");
+            Assert.That(graph, Is.Not.Null);
+            Assert.That(graph.HasPreviewScenario, Is.True);
+
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                SetField(window, "_presentationGraph", graph);
+                SetField(window, "_actorPrefab", graph.PreviewActorPrefab);
+                SetField(window, "_targetPrefab", graph.PreviewTargetPrefab);
+                Invoke(window, "RebuildStage");
+
+                Sequence sequence = GetField<Sequence>(window, "_previewSequence");
+                float release = GetField<float>(window, "_releaseTime");
+                float poseRestore = GetField<float>(window, "_poseRestoreTime");
+                float contact = GetField<float>(window, "_blockingTime");
+                float hit = GetField<float>(window, "_hitTime");
+
+                Assert.That(release, Is.GreaterThan(0f));
+                Assert.That(poseRestore, Is.GreaterThan(release),
+                    "The action pose tail must keep restoring while the strike phase has started.");
+                Assert.That(contact, Is.EqualTo(release + 0.065f).Within(0.003f));
+                Assert.That(hit, Is.EqualTo(contact).Within(0.003f));
+                Assert.That(sequence.Duration(false), Is.GreaterThan(hit));
+
+                sequence.Goto(release + 0.0325f, false);
+                GameObject[] taperedLines = Resources.FindObjectsOfTypeAll<GameObject>()
+                    .Where(effect => effect != null && effect.name == "PresentationPreview_TaperedLine")
+                    .ToArray();
+                Assert.That(taperedLines, Has.Length.EqualTo(2));
+                Assert.That(taperedLines.All(line => line.activeSelf), Is.True);
+
+                GameObject target = GetField<GameObject>(window, "_targetInstance");
+                UnitTweenVisual targetVisual = target.GetComponent<UnitTweenVisual>();
+                Vector3 basePosition = targetVisual.BasePosition;
+                sequence.Goto(hit + 0.02f, false);
+                Assert.That(targetVisual.VisualRoot.localPosition, Is.Not.EqualTo(basePosition));
+
+                Invoke(window, "StopPreview", true);
+                Assert.That(targetVisual.VisualRoot.localPosition, Is.EqualTo(basePosition));
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [TestCase("Fireball", false)]
+        [TestCase("Fireball_Lv3", true)]
+        [TestCase("BoneSpear", false)]
+        public void FullCastProjectilePreview_UsesReleaseImpactAndFinalHitOrder(
+            string presentationName,
+            bool hasConditionalDetonation)
+        {
+            var graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                $"Assets/Tactics/Arts/PureRun/Presentation/{presentationName}_Presentation.asset");
+            Assert.That(graph, Is.Not.Null);
+
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                SetField(window, "_presentationGraph", graph);
+                SetField(window, "_actorPrefab", graph.PreviewActorPrefab);
+                SetField(window, "_targetPrefab", graph.PreviewTargetPrefab);
+                Invoke(window, "RebuildStage");
+
+                float release = GetField<float>(window, "_releaseTime");
+                float impact = GetField<float>(window, "_impactTime");
+                float blocking = GetField<float>(window, "_blockingTime");
+                float hit = GetField<float>(window, "_hitTime");
+                Assert.That(release, Is.GreaterThan(0f), presentationName);
+                Assert.That(impact, Is.GreaterThan(release), presentationName);
+                Assert.That(hit, Is.GreaterThanOrEqualTo(impact), presentationName);
+
+                if (presentationName.StartsWith("Fireball", StringComparison.Ordinal))
+                {
+                    Assert.That(blocking, Is.GreaterThan(impact), presentationName);
+                    Assert.That(hit, hasConditionalDetonation
+                        ? Is.GreaterThan(blocking)
+                        : Is.EqualTo(blocking).Within(0.003f), presentationName);
+                    Assert.That(
+                        graph.PreviewPhases.Any(phase =>
+                            phase.Cues.Contains(PresentationCueKind.ConditionalDetonation)),
+                        Is.EqualTo(hasConditionalDetonation));
+                }
+                else
+                {
+                    Assert.That(blocking, Is.LessThan(0f), presentationName);
+                    Assert.That(hit, Is.EqualTo(impact).Within(0.003f), presentationName);
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
+        public void FullCursePreview_DoesNotPlayDamageHitReaction()
+        {
+            var graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                "Assets/Tactics/Arts/PureRun/Presentation/Curse_Presentation.asset");
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                SetField(window, "_presentationGraph", graph);
+                SetField(window, "_actorPrefab", graph.PreviewActorPrefab);
+                SetField(window, "_targetPrefab", graph.PreviewTargetPrefab);
+                Invoke(window, "RebuildStage");
+
+                Assert.That(GetField<float>(window, "_hitTime"), Is.LessThan(0f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
+        public void PresentationPreview_MissingDefaultEntry_FallsBackToFirstEnabledEntry()
+        {
+            BattlePresentationGraph graph = ScriptableObject.CreateInstance<BattlePresentationGraph>();
+            _objectsToDestroy.Add(graph);
+            graph.DefaultPreviewEntry = PresentationCueKind.Projectile;
+            var disabled = graph.AddNode(PresentationNodeType.Entry, Vector2.zero)
+                as PresentationEntryNodeRecord;
+            disabled.Cue = PresentationCueKind.Action;
+            disabled.Enabled = false;
+            var enabled = graph.AddNode(PresentationNodeType.Entry, Vector2.right)
+                as PresentationEntryNodeRecord;
+            enabled.Cue = PresentationCueKind.PrimaryTargetHit;
+
+            Assert.That(
+                PureRunTweenPreviewWindow.ResolveDefaultPreviewCue(graph),
+                Is.EqualTo(PresentationCueKind.PrimaryTargetHit));
+        }
+
+        [Test]
         public void PresentationPreview_AppliesRuntimeSortingToPrefabFx()
         {
             var graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
@@ -191,7 +494,6 @@ namespace Tactics.Tests.Editor
             try
             {
                 SetField(window, "_presentationGraph", graph);
-                SetField(window, "_presentationCue", PresentationCueKind.PrimaryTargetHit);
                 Invoke(window, "RebuildStage");
 
                 GameObject target = GetField<GameObject>(window, "_targetInstance");
@@ -228,12 +530,12 @@ namespace Tactics.Tests.Editor
             try
             {
                 SetField(window, "_presentationGraph", graph);
-                SetField(window, "_presentationCue", PresentationCueKind.PrimaryTargetHit);
                 Invoke(window, "RebuildStage");
 
                 Sequence sequence = GetField<Sequence>(window, "_previewSequence");
                 Assert.That(sequence, Is.Not.Null);
-                sequence.Goto(0.4f, false);
+                float release = GetField<float>(window, "_releaseTime");
+                sequence.Goto(release + 0.4f, false);
 
                 GameObject target = GetField<GameObject>(window, "_targetInstance");
                 Bounds targetBounds = FindSprite(target).bounds;
@@ -354,6 +656,76 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
+        public void TweenPreviewWindow_CorpseLanding_UsesIndependentRuntimeCorpsePresentation()
+        {
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                SetField(window, "_loop", false);
+                SetField(window, "_action", PureRunTweenPreviewWindow.PreviewAction.CorpseLanding);
+                Invoke(window, "RebuildStage");
+
+                GameObject actor = GetField<GameObject>(window, "_actorInstance");
+                GameObject corpse = GetField<GameObject>(window, "_corpseInstance");
+                Sequence sequence = GetField<Sequence>(window, "_previewSequence");
+                StandardUnitTweenProfile profile = GetField<StandardUnitTweenProfile>(window, "_unitSandbox");
+                SpriteRenderer actorRenderer = actor.GetComponentsInChildren<SpriteRenderer>(true)
+                    .Single(value => value.gameObject.name == "Sprite");
+                SpriteRenderer corpseRenderer = corpse.GetComponentsInChildren<SpriteRenderer>(true)
+                    .Single(value => value.gameObject.name == "Sprite");
+                Sprite deathSprite = actor.GetComponent<Tactics.Common.Units.FourDirectionSpriteVisual>().DeathSprite;
+                Vector3 basePosition = new(
+                    -deathSprite.bounds.center.x,
+                    -deathSprite.bounds.center.y,
+                    0f);
+
+                Assert.That(actor.activeSelf, Is.False);
+                Assert.That(corpse, Is.Not.SameAs(actor));
+                Assert.That(corpseRenderer.sprite, Is.SameAs(deathSprite));
+                Assert.That(corpseRenderer.sharedMaterial, Is.SameAs(actorRenderer.sharedMaterial));
+                Assert.That(corpseRenderer.color, Is.EqualTo(actorRenderer.color));
+                Assert.That(corpseRenderer.flipX, Is.False);
+                Assert.That(GetField<float>(window, "_corpseDropTime"), Is.Zero);
+                Assert.That(GetField<float>(window, "_corpseImpactTime"),
+                    Is.EqualTo(profile.CorpseDropDuration).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_corpseSettledTime"),
+                    Is.EqualTo(profile.CorpseDropDuration + profile.CorpseImpactDuration +
+                        profile.CorpseSettleDuration).Within(0.0001f));
+
+                sequence.Goto(0f, false);
+                Assert.That(corpseRenderer.transform.localPosition,
+                    Is.EqualTo(basePosition + Vector3.up * profile.CorpseStartHeight)
+                        .Using(Vector3ComparerWithEqualsOperator.Instance));
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(new Vector3(0.85f, 0.85f, 1f))
+                        .Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                sequence.Goto(profile.CorpseDropDuration, false);
+                Assert.That(corpseRenderer.transform.localPosition,
+                    Is.EqualTo(basePosition).Using(Vector3ComparerWithEqualsOperator.Instance));
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(Vector3.one).Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                sequence.Goto(profile.CorpseDropDuration + profile.CorpseImpactDuration, false);
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(new Vector3(1.08f, 0.88f, 1f))
+                        .Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                sequence.Goto(sequence.Duration(false), false);
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(Vector3.one).Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                Invoke(window, "StopPreview", true);
+                Assert.That(actor.activeSelf, Is.True);
+                Assert.That(corpse == null, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
         public void TweenPreviewWindow_ApplySupportsUndo_AndRevertRestoresSandbox()
         {
             var source = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
@@ -409,6 +781,26 @@ namespace Tactics.Tests.Editor
                  value.name.StartsWith("PreviewProjectile") ||
                  value.name == "PureRunHunter(Clone)" ||
                  value.name == "PureRunGoatCharger(Clone)"));
+        }
+
+        private static void AssertLineScales(
+            IReadOnlyList<GameObject> lines,
+            IReadOnlyList<SkillVfxPrimitiveLayer> layers,
+            float expectedSize,
+            float distance,
+            float expectedWidthScale,
+            bool expectedVisible)
+        {
+            for (int index = 0; index < lines.Count; index++)
+            {
+                Assert.That(lines[index].activeSelf, Is.EqualTo(expectedVisible));
+                Assert.That(
+                    lines[index].transform.localScale.x,
+                    Is.EqualTo(distance * expectedSize).Within(0.001f));
+                Assert.That(
+                    lines[index].transform.localScale.y,
+                    Is.EqualTo(layers[index].RootWidth * expectedWidthScale).Within(0.001f));
+            }
         }
 
         private GameObject CreateSpriteAnchor(string name, Vector3 position)

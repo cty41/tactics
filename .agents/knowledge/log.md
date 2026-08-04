@@ -1,10 +1,23 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-04
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:f663ca48fe3610cf0789bb585ad9c215b4a2b2dfcc69292dc9639d7b2aa54fa5`。
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:c84dac81982aeb3423df1a1e9ee26907d37428f50289ddd766a4b4e4fdc23ce8`。
-* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:1f4e3893e6689264aff86ca690309a126486fe46bb4d972ac43595e6dd9cdc73`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:dadef3571680d20710e43bdf75ab6b99157ad1e9bbe877d7659b5c1f5c55b58d`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:0ea87ccd20eb3bb8d4c7423ea02173c53c8eea7635522ea2ad3e1ecf4034957e`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:1960b31098ec1dbe988582d7a397b81ca7e933f1357e3a02f3a59ba504c5d5ed`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:004065f1b6210b6dfce81ebe7062ca75ece3a4fa61b4250ba27f81bddc683b5a`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:f378f4d9a7bf691764e1cecd961535ce37df08b23ce278e29736161657182270`。
+* **Fix**: Tween Preview 的 `CorpseLanding` 改为独立 Corpse 并复用运行时 `ApplyVisual`，统一死亡 Sprite bounds 居中、材质/Tint、镜像清理及 Drop/Impact/Settled 时间轴；新增真实 `UnitDestroyed` 尸体生成与逐时刻落地采样回归。
+* **Review**: Hunter、Mage、Necromancer 与 Goat 死亡图完成等比体量候选和统一 Tile Review；候选仍待人工确认，未替换运行时纹理、未提交。
+* **Update**: 火球、骨矛与突刺 Lv1-Lv3 升级为 Piloto 粒子混合表现；9 个正式 Presentation Graph 以 Fork/Join 并行保留程序化 Blocking/路径快照与新蓄力、飞行、定向枪芒和命中粒子，玩法时序及首批三技能保持不变。
+* **Validation**: 新适配 Prefab/Profile、Graph、Preview 四向和池化生命周期已纳入自动化；真实 Battle Camera 的遮挡、强度和多实例观感仍为 `manual_visual_qa_pending`，人工确认前不提交。
+* **Correction**: 羊魔 UL 武器轴改为按动作分别投影：Melee UL 保持斧刃左上/杆尾右下；Thrown UL 从 DR 过顶姿势转到背向视图后保留上下关系并翻转水平斜向，使用斧刃右上/杆尾左下。
+* **Update**: 裂颚羊魔动作生成经验改为 3D 世界关系、固定等距摄像机与 2D 屏幕验收三层约束；UL Melee/Thrown 锁定左倾主体、左上斧刃/右下杆尾、武器与双手后层及贴身无手臂规则，并废止旧的 UL 长柄斧固定前层结论。
+* **Update**: 经本轮明确批准，法师 `Cast DR v04 / UL v01`、`Hit DR v02 / UL v04` 与死灵 `Cast DR v03 / UL v01`、`Hit DR v01 / UL v01` 已晋升到 `calibrated`，生成 `_128` Review 图并接入各自 Cast/Hit-only Profile；后续换图不改变运行时接口。
+* **Validation**: 新动作纹理逐字节/Importer 契约、Profile/Prefab、四向镜像、恢复 Idle 与非主 Renderer 不翻转纳入自动化；严格 Sprite 校验 99/0，相关 EditMode 89/89、PlayMode 30/30 通过。
+* **Update**: 补齐单帧动作姿态经验沉淀：标准胶囊角色 Hit 统一参考已批准赤柴的后仰、压耳、大眼白/小瞳孔与双侧蓝白泪线；法杖 Cast 锁定前指施法轴与直杆中点握持。规则已写入权威美术指南、法师/死灵提示词与 Pure Run 美术 skill 参考。
+* **Update**: 法师逐图候选已生成到 `Cast DR v04 / UL v01` 与 `Hit DR v02`；全部仍是待完整核心蒙版、`_128` 和 Tile Review 的 `candidates`，未晋升、未导入 Unity。单图生成不代表赤柴真实战斗 QA 已通过。
+* **Update**: 单帧动作姿态范围扩展为赤柴 3 对、羊魔 4 对、法师 2 对与死灵法师 2 对，共 22 张动作图；法师/死灵仅覆盖当前技能实际使用的 `Cast / Hit`，死灵动作图移除只属于 Idle 的蓝色鬼火。
+* **Update**: 新增法师与死灵法师可复用动作提示词库，并锁定用户手动启动的 DR/UL 两阶段夜间候选队列；每槽位两个候选，夜间只完成技术加工，不自动批准或运行时接入。
+* **Validation**: `03ca6488` 基线上 Unity 强制编译无错误，动作姿态相关 EditMode 79/79、PlayMode 28/28 通过；仓库没有真实战斗代表画面的后台 Gameplay Test，赤柴受击视觉闸门保持 `manual_visual_qa_pending`。
 
 ## 2026-08-03
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:e1bcdee710dbdc67e8a5456a9a0f71cd5d5a82340cfbb0ff4714a37e89077a2f`。

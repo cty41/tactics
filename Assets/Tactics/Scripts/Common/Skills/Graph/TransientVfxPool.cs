@@ -38,6 +38,23 @@ namespace Tactics.Common.Skills.Graph
             int sortingLayerId,
             int sortingOrder)
         {
+            return Rent(
+                prefab,
+                position,
+                rotation,
+                Vector3.one * Mathf.Max(0.01f, scale),
+                sortingLayerId,
+                sortingOrder);
+        }
+
+        internal static GameObject Rent(
+            GameObject prefab,
+            Vector3 position,
+            Quaternion rotation,
+            Vector3 scale,
+            int sortingLayerId,
+            int sortingOrder)
+        {
             if (prefab == null)
                 return null;
 
@@ -62,7 +79,10 @@ namespace Tactics.Common.Skills.Graph
             marker.IsPooled = false;
             instance.transform.SetParent(null, false);
             instance.transform.SetPositionAndRotation(position, rotation);
-            instance.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
+            instance.transform.localScale = new Vector3(
+                Mathf.Max(0.01f, scale.x),
+                Mathf.Max(0.01f, scale.y),
+                Mathf.Max(0.01f, scale.z));
             instance.SetActive(true);
             marker.ApplySorting(sortingLayerId, sortingOrder);
             marker.RestartParticles();
@@ -131,11 +151,59 @@ namespace Tactics.Common.Skills.Graph
             }
         }
 
+        internal static async Task PlayAsync(
+            GameObject prefab,
+            Vector3 position,
+            Quaternion rotation,
+            Vector3 scale,
+            float lifetime,
+            int sortingLayerId,
+            int sortingOrder,
+            CancellationToken cancellationToken)
+        {
+            var instance = Rent(prefab, position, rotation, scale, sortingLayerId, sortingOrder);
+            if (instance == null)
+                return;
+
+            instance.name = $"{prefab.name}_Vfx";
+            try
+            {
+                await global::Tactics.GameTimeService.DelayScaledAsync(
+                    Mathf.Max(0.05f, lifetime),
+                    cancellationToken);
+            }
+            finally
+            {
+                Return(instance);
+            }
+        }
+
         public static Task PlayOneShot(
             GameObject prefab,
             Vector3 position,
             Quaternion rotation,
             float scale,
+            float lifetime,
+            int sortingLayerId,
+            int sortingOrder,
+            CancellationToken cancellationToken)
+        {
+            return PlayAsync(
+                prefab,
+                position,
+                rotation,
+                scale,
+                lifetime,
+                sortingLayerId,
+                sortingOrder,
+                cancellationToken);
+        }
+
+        internal static Task PlayOneShot(
+            GameObject prefab,
+            Vector3 position,
+            Quaternion rotation,
+            Vector3 scale,
             float lifetime,
             int sortingLayerId,
             int sortingOrder,
@@ -198,6 +266,7 @@ namespace Tactics.Common.Skills.Graph
         private Renderer[] _renderers;
         private SpriteRendererBaseline[] _spriteRendererBaselines;
         private SpriteRenderer _runtimeSpriteRenderer;
+        private Renderer _runtimeProjectileRenderer;
 
         public int PrefabKey { get; set; }
         public bool IsPooled { get; set; }
@@ -220,6 +289,13 @@ namespace Tactics.Common.Skills.Graph
             if (renderer == null || IsBaselineSpriteRenderer(renderer))
                 return;
             _runtimeSpriteRenderer = renderer;
+        }
+
+        public void RegisterRuntimeProjectileRenderer(Renderer renderer)
+        {
+            if (renderer == null)
+                return;
+            _runtimeProjectileRenderer = renderer;
         }
 
         public void ApplySorting(int sortingLayerId, int sortingOrder)
@@ -262,12 +338,20 @@ namespace Tactics.Common.Skills.Graph
                     baseline.Restore();
             }
 
-            if (_runtimeSpriteRenderer == null)
-                return;
-            _runtimeSpriteRenderer.sprite = null;
-            _runtimeSpriteRenderer.sharedMaterial = null;
-            _runtimeSpriteRenderer.color = Color.white;
-            _runtimeSpriteRenderer.enabled = false;
+            if (_runtimeSpriteRenderer != null)
+            {
+                _runtimeSpriteRenderer.sprite = null;
+                _runtimeSpriteRenderer.sharedMaterial = null;
+                _runtimeSpriteRenderer.color = Color.white;
+                _runtimeSpriteRenderer.enabled = false;
+            }
+
+            if (_runtimeProjectileRenderer != null)
+            {
+                _runtimeProjectileRenderer.SetPropertyBlock(null);
+                _runtimeProjectileRenderer.sharedMaterial = null;
+                _runtimeProjectileRenderer.enabled = false;
+            }
         }
 
         private bool IsBaselineSpriteRenderer(SpriteRenderer renderer)

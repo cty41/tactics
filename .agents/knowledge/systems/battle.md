@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-03T23:21:19+08:00"
+timestamp: "2026-08-04T17:09:16+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -75,7 +75,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:82d54dd1ec9fb21b326b45f24a87b7ebeb45d6d695294216ca9779e1c059933a
+source_fingerprint: sha256:f378f4d9a7bf691764e1cecd961535ce37df08b23ce278e29736161657182270
 ---
 
 # Current State
@@ -94,19 +94,21 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 
 `BattleInitiativeService` 按有效速度派生先攻并维护当前轮待行动顺序；减速等速度变化会立即重排尚未行动单位，不回滚已经行动的单位。Unit 按能力配置的稳定名称维护本回合成功使用次数，并在 `PrepareForTurn` 清空；共享 AbilityConfig 资产不会共享不同单位的运行时计数。`SummonRegistry` 按召唤者和类别记录召唤顺序，支持单体上限替换、原子批量替换和按召唤物已完成行动数计时；主动替换、到期、召唤者死亡与战斗结束会同步释放格子且不留下尸体。`AbilityAvailability` 统一表达可用、可点击禁用及隐藏状态，并携带稳定的禁用原因。
 
-普通非召唤单位死亡后仍从 `UnitManager` 移除，并在原 Cell 生成可选中、占格且可被死灵技能消耗的 `Corpse`。Pure Run 单位可在视觉配置中提供专用死亡 Sprite；尸体使用中心 Pivot并抵消 Sprite Tight bounds 的可见中心偏移，清除通用尸体的旋转与灰色 Tint，并继承生前主 Renderer 的材质和颜色。未配置专用图的旧单位继续使用通用尸体，召唤物与诱饵继续不生成尸体。
+普通非召唤单位死亡后仍从 `UnitManager` 移除，并在原 Cell 生成可选中、占格且可被死灵技能消耗的 `Corpse`。Pure Run 单位可在视觉配置中提供专用死亡 Sprite；尸体使用中心 Pivot并抵消 Sprite Tight bounds 的可见中心偏移，清除通用尸体的旋转与灰色 Tint，并继承生前主 Renderer 的材质和颜色。尸体随后播放非阻塞的 `0.13s` 下落、`0.07s` 冲击压缩与 `0.08s` 回弹；Tween Preview 的 `CorpseLanding` 使用同一独立 Corpse 和 `ApplyVisual` 路径，并标记 Drop/Impact/Settled。未配置专用图的旧单位继续使用通用尸体，召唤物与诱饵继续不生成尸体。
 
-标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态和当前装备状态的 idle。`UnitPoseFamily` 为单帧姿态声明 Release/恢复段退出语义，`UnitActionPoseProfile` 把角色默认动作族、`Default/Unarmed` 状态与双原生方向图分开配置；显式缺图只回退同族默认状态或 idle，不借用无关姿态，表现缺失不影响图执行。Cast 开始时仍以施法者 Sprite 中心发送非阻塞 `CastCharge`；允许 Profile 配置化切换人物 Sprite，但禁止复制整人物 Overlay，并保持主 Renderer 的 Material、Color、Sorting、Shadow 和 Transform 契约。赤柴 Cast 与 Hit 的 `Default / Unarmed` 分别显式共用各自的一对无矛方向图；姿态期间只隐藏 Sprite 内长矛而不改 `IsSpearHeld`，恢复段按权威状态回到对应 idle。尸体继续使用独立死亡 Sprite，不继承动作姿态或镜像。蝙蝠等飞行单位暂不接入。
+标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态和当前装备状态的 idle。`UnitPoseFamily` 为单帧姿态声明 Release/恢复段退出语义，`UnitActionPoseProfile` 把角色默认动作族、`Default/Unarmed` 状态与双原生方向图分开配置；显式缺图只回退同族默认状态或 idle，不借用无关姿态，表现缺失不影响图执行。Cast 开始时仍以施法者 Sprite 中心发送非阻塞 `CastCharge`；允许 Profile 配置化切换人物 Sprite，但禁止复制整人物 Overlay，并保持主 Renderer 的 Material、Color、Sorting、Shadow 和 Transform 契约。赤柴 Cast 与 Hit 的 `Default / Unarmed` 分别显式共用各自的一对无矛方向图；姿态期间只隐藏 Sprite 内长矛而不改 `IsSpearHeld`，恢复段按权威状态回到对应 idle。法师与死灵法师分别使用只含 Default Cast/Hit 的独立 Profile，Melee、Ranged 与 Idle 覆盖为空，未来换图不改变动作族和时序接口。尸体继续使用独立死亡 Sprite，不继承动作姿态或镜像。蝙蝠等飞行单位暂不接入。
 
-Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径，而是由后续美术特效资产承担。当前技能 Recipe 在逐个替换前继续作为可玩基线。
+Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径。火球、骨矛和突刺已采用 Piloto 项目侧粒子与程序化接触骨架混合，Recipe 保留 Marker、多命中位置和缺资产回退，但不再承担主要画面。
 
-`Tactics/Pure Run/Presentation Graph Editor` 将角色 Tween、投射物、第三方 Prefab FX 和程序化 Recipe 作为同一纯表现图的叶节点预览；Graph 本身不写伤害、Buff 或目标状态。隔离舞台支持方向、距离、倍速、时间拖动和第三方粒子从零固定种子重建，Stop、资源切换、窗口关闭和程序集重载会恢复站立 Sprite/Transform 并清理临时对象。旧 Tween/Skill VFX Preview 暂留作迁移期调试工具；飞行蝙蝠继续排除。
+`Tactics/Pure Run/Presentation Graph Editor` 将角色 Tween、投射物、第三方 Prefab FX 和程序化 Recipe 作为同一纯表现图的叶节点预览；Graph 本身不写伤害、Buff 或目标状态。18 个正式图通过 Editor-only Preview Scenario 播放代表性完整技能，按 Release、Projectile Impact、程序化 Blocking 或 Track 完成推进 Phase，同时保留动作恢复与视觉尾段重叠。目标受击使用目标自己的 Hit Family，伤害加深不模拟伤害受击；突刺完整顺序为动作 Release、程序化接触骨架与定向 Piloto 枪芒并行、粒子命中爆点和目标受击。Preview 无手动 Entry 覆盖，旧图才回退 `DefaultPreviewEntry`。`SourceToTarget` 粒子在 Preview 与 Runtime 共享旋转/距离伸展公式；隔离舞台支持方向、距离、倍速、时间拖动和固定种子重建，Stop、资源切换、窗口关闭和程序集重载会恢复 Sprite/Transform/Shadow 并清理临时对象；Scenario 不参与 Runtime 或玩法结算。
 
 技能接触反馈由可选 `SkillVfxRecipe` 驱动。执行器在伤害前保存世界坐标，只发送强类型 Cue；Coordinator 只等待释放/接触关键帧，淡出、粒子和残影非阻塞。投射物抵达时先完成 `ProjectileImpact` 接触点再写入命中黑板；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，并在取消时同步清理。Sprite 投射物未显式配置 Material 时保留 `SpriteRenderer` 默认材质，残影遵循同一规则，不会用空材质触发洋红错误 Shader。实际伤害仍以 `DamageResolution.WasHit` 决定次目标/命中反馈，表现缺失或取消不能改变玩法结果。突刺方向端点不因射线上先命中的敌人被通用 LOS 隐藏，但扫描仍在友军、永久地形和非法格处结束。
 
 `PureRunAbilityCatalog` 为三职业 18 个正式技能和隐藏额外技能 `amazon.pickup_spear` 提供稳定 ID、等级元数据与运行时资产解析。`PureRunAbilityBinder` 在玩家单位初始化前只注入职业普通攻击、实际已学主动技能和可解析的额外技能；被动按角色已学记录启用，Amazon 不再因职业身份在 Pure Run 中自动获得战斗技巧。缺少精确等级资产时仅向下回退并记录错误。三职业等级资产均已按各技能设计上限连续发布。
 
-三职业首批技能 VFX 垂直样本已通过 Presentation Graph 收束：毒矛由 `Action/Release` 与 `Projectile/Impact` 两个入口保证到达后才进入中毒和实体落矛结算；霹雳闪电通过 `PlayPresentationCue` 请求目标命中 Prefab FX。伤害加深诅咒使用闭合三分支 Fork/Join 同时播放目标脚下的地面双环法阵、后层远侧火焰和前层近侧火焰；八个主火柱以可见根部锚定外环并按顺时针依次点燃，三层均为 FireAndForget，粒子寿命不并入 Buff 结算时长。未迁移技能继续走兼容路径。
+三职业首批完整 VFX 垂直样本继续由 Presentation Graph 收束：毒矛由 `Action/Release` 与 `Projectile/Impact` 两个入口保证到达后才进入中毒和实体落矛结算；霹雳闪电通过 `PlayPresentationCue` 请求目标命中 Prefab FX。伤害加深诅咒使用闭合三分支 Fork/Join 同时播放目标脚下的地面双环法阵、后层远侧火焰和前层近侧火焰；八个主火柱以可见根部锚定外环并按顺时针依次点燃，三层均为 FireAndForget，粒子寿命不并入 Buff 结算时长。
+
+第二批突刺、火球和骨矛的全部已发布等级也已统一到 Presentation Graph，但叶资产仍是临时程序化视觉基线。9 个正式图成为 12 个 Ability 消费端的唯一表现入口，顶层 legacy 动作/Recipe 与玩法图 projectile Profile 均清空；图内继续复用既有 Recipe、Fire/BoneSpear Profile、速度与接触时序。内部 Cue 快照会把路径、多个实际命中点、主命中点和强度完整透传到程序化节点，表现层不写伤害、Buff、目标或资源消耗。
 
 `BattleController` 每场创建并独占替换一个 `BattleRuntimeScope`，外部只能读取、不能公开设置；启动期 UI、FireAndForget cue 和 projectile impact 都注册到该 scope。结束、返回和场景切换先取消、等待 tracked drain，再释放 scope；`OnDestroy` fallback 同步取得 teardown task 和已加载路径快照，并仅在 drain 完成后释放这些资产，不让异步 continuation 访问已销毁组件。teardown 即使观察到 tracked fault 也会完成资源释放并保持既有结束事件流程，同时通过 `RuntimeScopeTeardownException` 显式暴露非取消异常，不依赖日志策略判断成功。并发完成、timeout、取消回调重入 Dispose、pending start、replacement scope、faulted task 观察和回调异常边界由 PlayMode 回归约束，已完成任务的异常不能在池回收或 teardown 中静默丢失。
 

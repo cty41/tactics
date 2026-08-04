@@ -108,6 +108,12 @@ namespace Tactics.Common.Skills.Graph
         internal static Mesh SharedQuadMesh => QuadMesh;
         internal static Mesh SharedDiamondMesh => DiamondMesh;
 
+        internal static Mesh GetSharedTaperedMesh(float rootWidth, float tipWidth)
+        {
+            float safeRootWidth = Mathf.Max(0.001f, rootWidth);
+            return GetTaperedMesh(Mathf.Clamp01(tipWidth / safeRootWidth));
+        }
+
         /// <summary>
         /// Samples the authored timeline without creating renderers. Editor previews use this exact
         /// interpolation so scrubbing cannot drift from runtime primitive timing.
@@ -206,10 +212,9 @@ namespace Tactics.Common.Skills.Graph
                 return Array.Empty<Task>();
 
             float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
-            float tipRatio = layer.TipWidth / layer.RootWidth;
             var visual = CreateMeshVisual(
                 "SkillVfx_TaperedLine",
-                GetTaperedMesh(tipRatio),
+                GetSharedTaperedMesh(layer.RootWidth, layer.TipWidth),
                 material,
                 context.SourceWorldPosition,
                 angle,

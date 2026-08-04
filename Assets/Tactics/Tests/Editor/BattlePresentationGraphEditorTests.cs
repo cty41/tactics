@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Tween;
 using Tactics.Editor.PresentationGraph;
 using UnityEditor;
 using UnityEngine;
@@ -274,6 +275,249 @@ namespace Tactics.Tests.Editor
             Assert.That(config.PresentationGraph.FindEntry(PresentationCueKind.Action), Is.Not.Null);
         }
 
+        [TestCase("Lightning", PresentationCueKind.PrimaryTargetHit)]
+        [TestCase("Lightning_Lv2", PresentationCueKind.PrimaryTargetHit)]
+        [TestCase("Lightning_Lv3", PresentationCueKind.PrimaryTargetHit)]
+        [TestCase("Curse", PresentationCueKind.PrimaryTargetHit)]
+        [TestCase("Curse_Lv2", PresentationCueKind.PrimaryTargetHit)]
+        [TestCase("Curse_Lv3", PresentationCueKind.PrimaryTargetHit)]
+        [TestCase("PoisonSpear", PresentationCueKind.Projectile)]
+        [TestCase("PoisonSpear_Lv2", PresentationCueKind.Projectile)]
+        [TestCase("PoisonSpear_Lv3", PresentationCueKind.Projectile)]
+        public void FirstBatchPresentation_HasExplicitDefaultPreviewEntry(
+            string presentationName,
+            PresentationCueKind expectedEntry)
+        {
+            BattlePresentationGraph graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                $"Assets/Tactics/Arts/PureRun/Presentation/{presentationName}_Presentation.asset");
+
+            Assert.That(graph, Is.Not.Null, presentationName);
+            Assert.That(graph.DefaultPreviewEntry, Is.EqualTo(expectedEntry), presentationName);
+            Assert.That(graph.FindEntry(expectedEntry), Is.Not.Null, presentationName);
+        }
+
+        [TestCase("Lightning", "PureRunMage", 2)]
+        [TestCase("Lightning_Lv2", "PureRunMage", 2)]
+        [TestCase("Lightning_Lv3", "PureRunMage", 2)]
+        [TestCase("Curse", "PureRunNecromancer", 2)]
+        [TestCase("Curse_Lv2", "PureRunNecromancer", 2)]
+        [TestCase("Curse_Lv3", "PureRunNecromancer", 2)]
+        [TestCase("PoisonSpear", "PureRunHunter", 2)]
+        [TestCase("PoisonSpear_Lv2", "PureRunHunter", 2)]
+        [TestCase("PoisonSpear_Lv3", "PureRunHunter", 2)]
+        [TestCase("Thrust", "PureRunHunter", 3)]
+        [TestCase("Thrust_Lv2", "PureRunHunter", 3)]
+        [TestCase("Thrust_Lv3", "PureRunHunter", 3)]
+        [TestCase("Fireball", "PureRunMage", 4)]
+        [TestCase("Fireball_Lv2", "PureRunMage", 4)]
+        [TestCase("Fireball_Lv3", "PureRunMage", 5)]
+        [TestCase("BoneSpear", "PureRunNecromancer", 3)]
+        [TestCase("BoneSpear_Lv2", "PureRunNecromancer", 3)]
+        [TestCase("BoneSpear_Lv3", "PureRunNecromancer", 3)]
+        public void PublishedPresentation_HasValidFullPreviewScenario(
+            string presentationName,
+            string actorName,
+            int phaseCount)
+        {
+            BattlePresentationGraph graph = LoadPresentation(presentationName);
+
+            Assert.That(graph.HasPreviewScenario, Is.True, presentationName);
+            Assert.That(graph.PreviewActorPrefab, Is.Not.Null, presentationName);
+            Assert.That(graph.PreviewActorPrefab.name, Is.EqualTo(actorName), presentationName);
+            Assert.That(graph.PreviewTargetPrefab, Is.Not.Null, presentationName);
+            Assert.That(graph.PreviewTargetPrefab.name, Is.EqualTo("PureRunGoatCharger"), presentationName);
+            Assert.That(graph.PreviewPhases, Has.Count.EqualTo(phaseCount), presentationName);
+            Assert.That(
+                PresentationPreviewScenarioValidation.Validate(graph, out List<string> errors),
+                Is.True,
+                $"{presentationName}: {string.Join("; ", errors)}");
+
+            AssertPublishedScenarioShape(graph, presentationName);
+        }
+
+        [Test]
+        public void PreviewScenarioValidation_DoesNotChangeRuntimeGraphValidity()
+        {
+            BattlePresentationGraph graph = CreateGraph();
+            var entry = Add<PresentationEntryNodeRecord>(graph, PresentationNodeType.Entry);
+            entry.Cue = PresentationCueKind.Action;
+            var marker = Add<PresentationMarkerNodeRecord>(graph, PresentationNodeType.Marker);
+            marker.Marker = PresentationMarkerKind.Release;
+            var finish = Add<PresentationFinishNodeRecord>(graph, PresentationNodeType.Finish);
+            Connect(graph, entry, marker, finish);
+
+            Assert.That(BattlePresentationGraphValidation.Validate(graph, out var runtimeErrors), Is.True,
+                string.Join("; ", runtimeErrors.ConvertAll(error => error.Code)));
+            Assert.That(PresentationPreviewScenarioValidation.Validate(graph, out var previewErrors), Is.False);
+            Assert.That(previewErrors, Has.Some.Contains("PreviewScenarioMissing"));
+        }
+
+        [TestCase("Thrust_Graph_Ability", "Thrust")]
+        [TestCase("Thrust_Lv2_Graph_Ability", "Thrust_Lv2")]
+        [TestCase("Thrust_Lv3_Graph_Ability", "Thrust_Lv3")]
+        [TestCase("Fireball_Graph_Ability", "Fireball")]
+        [TestCase("Fireball_Lv1_Ability", "Fireball")]
+        [TestCase("Fireball_Lv2_Ability", "Fireball_Lv2")]
+        [TestCase("Fireball_Lv3_Ability", "Fireball_Lv3")]
+        [TestCase("SkeletonMageFireball_Lv1_Ability", "Fireball")]
+        [TestCase("SkeletonMageFireball_Lv2_Ability", "Fireball_Lv2")]
+        [TestCase("BoneSpear_Graph_Ability", "BoneSpear")]
+        [TestCase("BoneSpear_Lv2_Graph_Ability", "BoneSpear_Lv2")]
+        [TestCase("BoneSpear_Lv3_Graph_Ability", "BoneSpear_Lv3")]
+        public void ProgrammaticAbility_UsesGraphOnlyPresentation(
+            string configName,
+            string presentationName)
+        {
+            SkillGraphAbilityConfig config = AssetDatabase.LoadAssetAtPath<SkillGraphAbilityConfig>(
+                $"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/{configName}.asset");
+            BattlePresentationGraph expected = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                $"Assets/Tactics/Arts/PureRun/Presentation/{presentationName}_Presentation.asset");
+
+            Assert.That(config, Is.Not.Null, configName);
+            Assert.That(expected, Is.Not.Null, presentationName);
+            Assert.That(config.PresentationGraph, Is.SameAs(expected), configName);
+            Assert.That(config.VisualAction, Is.EqualTo(UnitVisualAction.None), configName);
+            Assert.That(config.SkillVfxRecipe, Is.Null, configName);
+            Assert.That(BattlePresentationGraphValidation.Validate(expected, out var errors), Is.True,
+                string.Join("; ", errors.ConvertAll(error => error.Code)));
+            Assert.That(expected.FindEntry(PresentationCueKind.Action), Is.Not.Null, presentationName);
+        }
+
+        [TestCase("Thrust", UnitVisualAction.Melee, false, 2, PresentationCueKind.DirectionalStrike)]
+        [TestCase("Thrust_Lv2", UnitVisualAction.Melee, false, 2, PresentationCueKind.DirectionalStrike)]
+        [TestCase("Thrust_Lv3", UnitVisualAction.Melee, false, 2, PresentationCueKind.DirectionalStrike)]
+        [TestCase("Fireball", UnitVisualAction.Cast, true, 4, PresentationCueKind.Projectile)]
+        [TestCase("Fireball_Lv2", UnitVisualAction.Cast, true, 4, PresentationCueKind.Projectile)]
+        [TestCase("Fireball_Lv3", UnitVisualAction.Cast, true, 4, PresentationCueKind.Projectile)]
+        [TestCase("BoneSpear", UnitVisualAction.Cast, true, 2, PresentationCueKind.Projectile)]
+        [TestCase("BoneSpear_Lv2", UnitVisualAction.Cast, true, 2, PresentationCueKind.Projectile)]
+        [TestCase("BoneSpear_Lv3", UnitVisualAction.Cast, true, 2, PresentationCueKind.Projectile)]
+        public void ProgrammaticPresentation_HasExpectedSemanticEntries(
+            string presentationName,
+            UnitVisualAction action,
+            bool hasProjectile,
+            int proceduralCount,
+            PresentationCueKind defaultPreviewEntry)
+        {
+            BattlePresentationGraph graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                $"Assets/Tactics/Arts/PureRun/Presentation/{presentationName}_Presentation.asset");
+
+            Assert.That(graph, Is.Not.Null, presentationName);
+            Assert.That(graph.DefaultPreviewEntry, Is.EqualTo(defaultPreviewEntry), presentationName);
+            Assert.That(graph.Nodes.OfType<PresentationUnitTweenNodeRecord>().Single().Action,
+                Is.EqualTo(action), presentationName);
+            Assert.That(graph.Nodes.OfType<PresentationProceduralVfxNodeRecord>().ToArray(),
+                Has.Length.EqualTo(proceduralCount), presentationName);
+            Assert.That(graph.FindEntry(PresentationCueKind.Projectile) != null,
+                Is.EqualTo(hasProjectile), presentationName);
+            PresentationProjectileNodeRecord[] projectiles = graph.Nodes
+                .OfType<PresentationProjectileNodeRecord>()
+                .ToArray();
+            if (!hasProjectile)
+            {
+                Assert.That(projectiles, Is.Empty, presentationName);
+                return;
+            }
+
+            Assert.That(projectiles, Has.Length.EqualTo(1), presentationName);
+            bool fireball = presentationName.StartsWith("Fireball");
+            Assert.That(AssetDatabase.GetAssetPath(projectiles[0].Profile),
+                Is.EqualTo($"Assets/Tactics/Arts/PureRun/Tween/Projectiles/{(fireball ? "Fire" : "BoneSpear")}.asset"),
+                presentationName);
+            Assert.That(projectiles[0].Speed, Is.EqualTo(fireball ? 8f : 12f), presentationName);
+            Assert.That(projectiles[0].FallbackTravelTime,
+                Is.EqualTo(fireball ? 0.5f : 0.25f), presentationName);
+        }
+
+        [TestCase("Thrust", "ThrustStrikeLv1|ThrustHitLv1")]
+        [TestCase("Thrust_Lv2", "ThrustStrikeLv2|ThrustHitLv2")]
+        [TestCase("Thrust_Lv3", "ThrustStrikeLv3|ThrustHitLv3")]
+        [TestCase("Fireball", "FireballChargeLv1|FireballImpactLv1")]
+        [TestCase("Fireball_Lv2", "FireballChargeLv2|FireballImpactLv2")]
+        [TestCase("Fireball_Lv3", "FireballChargeLv3|FireballImpactLv3|FireballDetonationLv3")]
+        [TestCase("BoneSpear", "BoneSpearChargeLv1|BoneSpearImpactLv1")]
+        [TestCase("BoneSpear_Lv2", "BoneSpearChargeLv2|BoneSpearImpactLv2")]
+        [TestCase("BoneSpear_Lv3", "BoneSpearChargeLv3|BoneSpearImpactLv3")]
+        public void HybridPresentation_UsesClosedProceduralAndPrefabForks(
+            string presentationName,
+            string expectedProfileNames)
+        {
+            BattlePresentationGraph graph = LoadPresentation(presentationName);
+            string[] expected = expectedProfileNames.Split('|');
+            PresentationPrefabFxNodeRecord[] effects = graph.Nodes
+                .OfType<PresentationPrefabFxNodeRecord>()
+                .ToArray();
+            Assert.That(effects.Select(effect => effect.Profile?.name), Is.EquivalentTo(expected));
+
+            PresentationForkNodeRecord[] forks = graph.Nodes
+                .OfType<PresentationForkNodeRecord>()
+                .ToArray();
+            Assert.That(forks, Has.Length.EqualTo(expected.Length));
+            foreach (PresentationForkNodeRecord fork in forks)
+            {
+                PresentationJoinNodeRecord join = graph.Nodes
+                    .OfType<PresentationJoinNodeRecord>()
+                    .Single(candidate => candidate.NodeId == fork.JoinNodeId);
+                PresentationEdgeRecord[] branches = graph.GetEdgesFrom(fork.NodeId).ToArray();
+                Assert.That(branches, Has.Length.EqualTo(2));
+                Assert.That(branches.Select(edge => graph.FindNode(edge.TargetNodeId)),
+                    Has.Exactly(1).InstanceOf<PresentationProceduralVfxNodeRecord>());
+                Assert.That(branches.Select(edge => graph.FindNode(edge.TargetNodeId)),
+                    Has.Exactly(1).InstanceOf<PresentationPrefabFxNodeRecord>());
+                Assert.That(branches.All(edge => graph.GetEdgesFrom(edge.TargetNodeId)
+                    .Exists(candidate => candidate.TargetNodeId == join.NodeId)), Is.True);
+            }
+        }
+
+        [Test]
+        public void PresentationExecutionContext_PreservesFullVfxCueSnapshot()
+        {
+            var path = new[] { Vector3.left, Vector3.zero, Vector3.right };
+            var hits = new[] { Vector3.up, Vector3.down };
+            var snapshot = new SkillVfxCueContext(
+                3,
+                Vector3.left,
+                Vector3.right,
+                Vector3.right,
+                path,
+                hits,
+                hits[1],
+                0.55f);
+            var context = new PresentationExecutionContext(
+                null,
+                null,
+                null,
+                3,
+                CancellationToken.None,
+                null,
+                snapshot.SourceWorldPosition,
+                snapshot.TargetWorldPosition,
+                snapshot);
+
+            Assert.That(context.VfxCueContext, Is.SameAs(snapshot));
+            Assert.That(context.VfxCueContext.PathWorldPositions, Is.EqualTo(path));
+            Assert.That(context.VfxCueContext.HitWorldPositions, Is.EqualTo(hits));
+            Assert.That(context.VfxCueContext.PrimaryHitWorldPosition, Is.EqualTo(hits[1]));
+            Assert.That(context.VfxCueContext.StrengthMultiplier, Is.EqualTo(0.55f));
+        }
+
+        [TestCase("Fireball_Graph")]
+        [TestCase("Fireball_Lv1_Graph")]
+        [TestCase("Fireball_Lv2_Graph")]
+        [TestCase("Fireball_Lv3_Graph")]
+        [TestCase("BoneSpear_Graph")]
+        [TestCase("BoneSpear_Lv2_Graph")]
+        [TestCase("BoneSpear_Lv3_Graph")]
+        public void GraphOwnedProjectile_ClearsGameplayVisualProfile(string graphName)
+        {
+            SkillGraphAsset graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(
+                $"Assets/Tactics/Battle/Abilities/SkillGraphs/{graphName}.asset");
+
+            Assert.That(graph, Is.Not.Null, graphName);
+            Assert.That(graph.Nodes.OfType<ProjectileLaunchNodeRecord>().Single().VisualProfile,
+                Is.Null, graphName);
+        }
+
         [TestCase("Lightning")]
         [TestCase("Lightning_Lv2")]
         [TestCase("Lightning_Lv3")]
@@ -338,6 +582,82 @@ namespace Tactics.Tests.Editor
             var graph = ScriptableObject.CreateInstance<BattlePresentationGraph>();
             _owned.Add(graph);
             return graph;
+        }
+
+        private static BattlePresentationGraph LoadPresentation(string presentationName)
+        {
+            BattlePresentationGraph graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
+                $"Assets/Tactics/Arts/PureRun/Presentation/{presentationName}_Presentation.asset");
+            Assert.That(graph, Is.Not.Null, presentationName);
+            return graph;
+        }
+
+        private static void AssertPublishedScenarioShape(
+            BattlePresentationGraph graph,
+            string presentationName)
+        {
+            PresentationPreviewPhaseRecord[] phases = graph.PreviewPhases.ToArray();
+            bool castProjectile = presentationName.StartsWith("Fireball") ||
+                                  presentationName.StartsWith("BoneSpear");
+            if (!castProjectile)
+                AssertPhase(phases[0], PresentationCueKind.Action, PresentationPreviewAdvanceKind.Release);
+
+            if (presentationName.StartsWith("Lightning"))
+            {
+                AssertPhase(phases[1], PresentationCueKind.PrimaryTargetHit, PresentationPreviewAdvanceKind.Complete, true);
+                return;
+            }
+            if (presentationName.StartsWith("Curse"))
+            {
+                AssertPhase(phases[1], PresentationCueKind.PrimaryTargetHit, PresentationPreviewAdvanceKind.Complete);
+                return;
+            }
+            if (presentationName.StartsWith("PoisonSpear"))
+            {
+                AssertPhase(phases[1], PresentationCueKind.Projectile, PresentationPreviewAdvanceKind.Impact, true);
+                return;
+            }
+            if (presentationName.StartsWith("Thrust"))
+            {
+                AssertPhase(phases[1], PresentationCueKind.DirectionalStrike, PresentationPreviewAdvanceKind.Blocking);
+                AssertPhase(phases[2], PresentationCueKind.PrimaryTargetHit, PresentationPreviewAdvanceKind.Complete, true);
+                return;
+            }
+
+            Assert.That(phases[0].Cues, Is.EqualTo(new[]
+            {
+                PresentationCueKind.CastCharge,
+                PresentationCueKind.Action
+            }), presentationName);
+            Assert.That(phases[0].ContinuationCue, Is.EqualTo(PresentationCueKind.Action), presentationName);
+
+            AssertPhase(phases[1], PresentationCueKind.Projectile, PresentationPreviewAdvanceKind.Impact);
+            if (presentationName.StartsWith("BoneSpear"))
+            {
+                AssertPhase(phases[2], PresentationCueKind.PrimaryTargetHit, PresentationPreviewAdvanceKind.Complete, true);
+                return;
+            }
+
+            AssertPhase(phases[2], PresentationCueKind.ProjectileImpact, PresentationPreviewAdvanceKind.Blocking);
+            int finalIndex = 3;
+            if (presentationName == "Fireball_Lv3")
+            {
+                AssertPhase(phases[3], PresentationCueKind.ConditionalDetonation, PresentationPreviewAdvanceKind.Blocking);
+                finalIndex = 4;
+            }
+            AssertPhase(phases[finalIndex], PresentationCueKind.SecondaryTargetHit, PresentationPreviewAdvanceKind.Complete, true);
+        }
+
+        private static void AssertPhase(
+            PresentationPreviewPhaseRecord phase,
+            PresentationCueKind cue,
+            PresentationPreviewAdvanceKind advanceKind,
+            bool playTargetHitReaction = false)
+        {
+            Assert.That(phase.Cues, Is.EqualTo(new[] { cue }));
+            Assert.That(phase.ContinuationCue, Is.EqualTo(cue));
+            Assert.That(phase.AdvanceKind, Is.EqualTo(advanceKind));
+            Assert.That(phase.PlayTargetHitReaction, Is.EqualTo(playTargetHitReaction));
         }
 
         private static T Add<T>(BattlePresentationGraph graph, PresentationNodeType type)

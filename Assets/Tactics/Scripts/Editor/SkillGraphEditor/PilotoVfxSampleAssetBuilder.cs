@@ -26,6 +26,10 @@ namespace Tactics.Editor.SkillGraphEditor
             "Assets/Piloto Studio/Textures/Tx_Fire_ground_01.png";
         private const string PoisonSpearProfilePath =
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset";
+        private const string FireballProfilePath =
+            "Assets/Tactics/Arts/PureRun/Tween/Projectiles/Fire.asset";
+        private const string BoneSpearProfilePath =
+            "Assets/Tactics/Arts/PureRun/Tween/Projectiles/BoneSpear.asset";
         private const string PreviewCompatibleParticleShader =
             "Tactics/PureRun/ParticleTextureUnlit";
 
@@ -85,10 +89,54 @@ namespace Tactics.Editor.SkillGraphEditor
             var amplifyDamageSigilGroundV2 = BuildAmplifyDamageSigilGroundV2();
             var amplifyDamageSigilRearFlamesV2 = BuildAmplifyDamageSigilFlamesV2(false);
             var amplifyDamageSigilForegroundFlamesV2 = BuildAmplifyDamageSigilFlamesV2(true);
+            var fireballFlight = BuildPrefab(
+                "FireballFlight",
+                VendorPrefabRoot + "/FireWhale.prefab",
+                new[]
+                {
+                    "holder/Whale_Base/Fire_Alpha_Rough",
+                    "holder/Whale_Base/Trail_FireWhale"
+                },
+                new Color(1f, 0.34f, 0.08f, 1f),
+                true,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 1f,
+                normalizedHeight: 0.45f);
+            var boneSpearFlight = BuildPrefab(
+                "BoneSpearFlight",
+                VendorPrefabRoot + "/MagicMissiles.prefab",
+                new[]
+                {
+                    "MagicMissiles_Rough/Flare_FatDot_Alpha",
+                    "MagicMissiles_Rough/Trail_RoughWave_White"
+                },
+                new Color(0.58f, 0.92f, 0.82f, 1f),
+                true,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 0.42f,
+                normalizedHeight: 0.14f);
+
+            GameObject[] fireballCharges = new GameObject[3];
+            GameObject[] fireballImpacts = new GameObject[3];
+            GameObject[] boneSpearCharges = new GameObject[3];
+            GameObject[] boneSpearImpacts = new GameObject[3];
+            GameObject[] thrustStrikes = new GameObject[3];
+            GameObject[] thrustHits = new GameObject[3];
+            for (int level = 1; level <= 3; level++)
+            {
+                fireballCharges[level - 1] = BuildFireballChargePrefab(level);
+                fireballImpacts[level - 1] = BuildFireballImpactPrefab(level);
+                boneSpearCharges[level - 1] = BuildBoneSpearChargePrefab(level);
+                boneSpearImpacts[level - 1] = BuildBoneSpearImpactPrefab(level);
+                thrustStrikes[level - 1] = BuildThrustStrikePrefab(level);
+                thrustHits[level - 1] = BuildThrustHitPrefab(level);
+            }
+            GameObject fireballDetonation = BuildFireballDetonationPrefab();
 
             PruneUnreferencedGeneratedMaterials();
 
             ConfigurePoisonSpearProfile(poisonFlight, poisonImpact);
+            ConfigureHybridProjectileProfiles(fireballFlight, boneSpearFlight);
             CreateOrUpdateCueProfile(
                 "LightningLv1", lightningImpact, 0.48f, 0.48f, VisualCueAnchor.PrimaryTargetGround);
             CreateOrUpdateCueProfile(
@@ -167,16 +215,208 @@ namespace Tactics.Editor.SkillGraphEditor
                     scale,
                     VisualCueAnchor.PrimaryTargetGround,
                     2);
+                CreateOrUpdateCueProfile(
+                    $"FireballChargeLv{level}",
+                    fireballCharges[level - 1],
+                    0.54f,
+                    0.32f + level * 0.035f,
+                    VisualCueAnchor.Caster,
+                    -1);
+                CreateOrUpdateCueProfile(
+                    $"FireballImpactLv{level}",
+                    fireballImpacts[level - 1],
+                    0.34f + level * 0.03f,
+                    0.72f + level * 0.08f,
+                    VisualCueAnchor.PrimaryTarget,
+                    32);
+                CreateOrUpdateCueProfile(
+                    $"BoneSpearChargeLv{level}",
+                    boneSpearCharges[level - 1],
+                    0.54f,
+                    0.30f + level * 0.03f,
+                    VisualCueAnchor.Caster,
+                    -1);
+                CreateOrUpdateCueProfile(
+                    $"BoneSpearImpactLv{level}",
+                    boneSpearImpacts[level - 1],
+                    0.22f + level * 0.025f,
+                    0.52f + level * 0.06f,
+                    VisualCueAnchor.PrimaryTarget,
+                    32);
+                CreateOrUpdateCueProfile(
+                    $"ThrustStrikeLv{level}",
+                    thrustStrikes[level - 1],
+                    0.18f + level * 0.015f,
+                    1f,
+                    VisualCueAnchor.Caster,
+                    29,
+                    VisualCueOrientationMode.SourceToTarget,
+                    true,
+                    1f);
+                CreateOrUpdateCueProfile(
+                    $"ThrustHitLv{level}",
+                    thrustHits[level - 1],
+                    0.16f + level * 0.02f,
+                    0.44f + level * 0.06f,
+                    VisualCueAnchor.PrimaryTarget,
+                    32);
             }
+            CreateOrUpdateCueProfile(
+                "FireballDetonationLv3",
+                fireballDetonation,
+                0.28f,
+                0.92f,
+                VisualCueAnchor.PrimaryTarget,
+                33);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             MageSliceAssetBuilder.RebuildLightningVisualSample();
             PureRunPresentationGraphAssetBuilder.RebuildCurseSigilSamples();
+            PureRunPresentationGraphAssetBuilder.RebuildThrustSamples();
+            PureRunPresentationGraphAssetBuilder.RebuildFireballSamples();
+            PureRunPresentationGraphAssetBuilder.RebuildBoneSpearSamples();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            TLog.Info("[PilotoVfxSampleAssetBuilder] Three vertical VFX samples rebuilt.");
+            TLog.Info("[PilotoVfxSampleAssetBuilder] Published adapted VFX samples rebuilt.");
+        }
+
+        private static GameObject BuildFireballChargePrefab(int level)
+        {
+            var nodes = new List<string>
+            {
+                "FillingBar_RoughTrail_MagicCircle/Trail_RoughWave_White"
+            };
+            if (level >= 2)
+                nodes.Add("FillingBar_RoughTrail_MagicCircle/Trail_RoughWave_Green");
+            if (level >= 3)
+                nodes.Add("FillingBar_RoughTrail_MagicCircle/Hit_Punch_Burst_Outline");
+            return BuildPrefab(
+                $"FireballChargeLv{level}",
+                VendorPrefabRoot + "/FireWhale.prefab",
+                nodes.ToArray(),
+                new Color(1f, 0.30f + level * 0.035f, 0.06f, 0.82f),
+                false,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 0.7f,
+                normalizedHeight: 0.36f);
+        }
+
+        private static GameObject BuildFireballImpactPrefab(int level)
+        {
+            var nodes = new List<string>
+            {
+                "holder/Whale_Dark/DefaultHDParticleMaterial/Hit_Punch_Burst_Outline",
+                "holder/Whale_Dark/DefaultHDParticleMaterial/Fire_Alpha_Rough"
+            };
+            if (level >= 2)
+                nodes.Add("holder/Whale_Dark/DefaultHDParticleMaterial/Tx_Fire_ground_01_Alpha");
+            if (level >= 3)
+                nodes.Add("holder/Whale_Dark/DefaultHDParticleMaterial/GroundCracks_Spiky_002");
+            return BuildPrefab(
+                $"FireballImpactLv{level}",
+                VendorPrefabRoot + "/FireWhale.prefab",
+                nodes.ToArray(),
+                new Color(1f, 0.28f + level * 0.04f, 0.06f, 1f),
+                false,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 0.52f + level * 0.08f,
+                normalizedHeight: 0.42f + level * 0.07f);
+        }
+
+        private static GameObject BuildFireballDetonationPrefab()
+        {
+            return BuildPrefab(
+                "FireballDetonationLv3",
+                VendorPrefabRoot + "/FireWhale.prefab",
+                new[]
+                {
+                    "FillingBar_RoughTrail_MagicCircle/Hit_Punch_Burst_Outline",
+                    "holder/Whale_Base/mat_Glow_Add",
+                    "holder/Whale_Dark/DefaultHDParticleMaterial/Fire_Alpha_Rough"
+                },
+                new Color(1f, 0.56f, 0.12f, 1f),
+                false,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 0.82f,
+                normalizedHeight: 0.68f);
+        }
+
+        private static GameObject BuildBoneSpearChargePrefab(int level)
+        {
+            var nodes = new List<string> { "Rough_Star_White/mat_Glow_Add" };
+            if (level >= 2)
+                nodes.Add("Rough_Star_White/Dot_Rough");
+            if (level >= 3)
+                nodes.Add("Rough_Star_White/mat_GOW_Flare_Cross_Add");
+            return BuildPrefab(
+                $"BoneSpearChargeLv{level}",
+                VendorPrefabRoot + "/DarkSummon.prefab",
+                nodes.ToArray(),
+                new Color(0.50f, 0.86f, 0.76f, 0.78f),
+                false,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 0.58f,
+                normalizedHeight: 0.38f);
+        }
+
+        private static GameObject BuildBoneSpearImpactPrefab(int level)
+        {
+            var nodes = new List<string>
+            {
+                "Rough_Star_White/Hit_Punch_Burst_Outline",
+                "Rough_Star_White/Rough_Star_White"
+            };
+            if (level >= 2)
+                nodes.Add("mat_Glow_Alpha_NoSoft/WispySmoke");
+            if (level >= 3)
+                nodes.Add("Rough_Star_White/mat_GOW_Flare_Cross_Add");
+            return BuildPrefab(
+                $"BoneSpearImpactLv{level}",
+                VendorPrefabRoot + "/DarkSummon.prefab",
+                nodes.ToArray(),
+                new Color(0.58f, 0.88f, 0.78f, 0.94f),
+                false,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 0.38f + level * 0.05f,
+                normalizedHeight: 0.34f + level * 0.05f);
+        }
+
+        private static GameObject BuildThrustStrikePrefab(int level)
+        {
+            var nodes = new List<string> { "Sword_Remap_Yellow/Trail_RoughWave_White" };
+            if (level >= 2)
+                nodes.Add("Sword_Remap_Yellow/Dot_Rough");
+            if (level >= 3)
+                nodes.Add("Sword_Remap_Yellow/Trail_RoughBurst_White");
+            return BuildPrefab(
+                $"ThrustStrikeLv{level}",
+                VendorPrefabRoot + "/PaladinSword.prefab",
+                nodes.ToArray(),
+                new Color(1f, 0.82f, 0.38f, 0.9f),
+                false,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 1f,
+                normalizedHeight: 0.12f + level * 0.015f);
+        }
+
+        private static GameObject BuildThrustHitPrefab(int level)
+        {
+            var nodes = new List<string> { "Sword_Remap_Yellow/Hit_Punch_Burst_Outline" };
+            if (level >= 2)
+                nodes.Add("Sword_Remap_Yellow/Rough_Star_White");
+            if (level >= 3)
+                nodes.Add("Sword_Remap_Yellow/Dot_Rough");
+            return BuildPrefab(
+                $"ThrustHitLv{level}",
+                VendorPrefabRoot + "/PaladinSword.prefab",
+                nodes.ToArray(),
+                new Color(1f, 0.78f, 0.34f, 0.94f),
+                false,
+                flattenRotationToCameraPlane: true,
+                normalizedWidth: 0.30f + level * 0.04f,
+                normalizedHeight: 0.28f + level * 0.04f);
         }
 
         private static GameObject BuildAmplifyDamageSigilGround()
@@ -877,7 +1117,7 @@ namespace Tactics.Editor.SkillGraphEditor
             bool hasBounds = false;
             Bounds combined = default;
             ParticleSystem[] systems = targetRoot.GetComponentsInChildren<ParticleSystem>(true);
-            foreach (float time in new[] { 0.15f, 0.3f, 0.5f, 0.72f })
+            foreach (float time in new[] { 0.05f, 0.15f, 0.3f, 0.5f, 0.72f, 1f, 1.25f })
             {
                 foreach (ParticleSystem system in systems)
                 {
@@ -909,7 +1149,9 @@ namespace Tactics.Editor.SkillGraphEditor
             Color tint,
             bool looping,
             bool alignParticleBottomToRoot = false,
-            bool flattenRotationToCameraPlane = false)
+            bool flattenRotationToCameraPlane = false,
+            float normalizedWidth = 0f,
+            float normalizedHeight = 0f)
         {
             var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath);
             if (sourcePrefab == null)
@@ -945,11 +1187,15 @@ namespace Tactics.Editor.SkillGraphEditor
                         looping,
                         flattenRotationToCameraPlane);
                 }
+                if (flattenRotationToCameraPlane)
+                    FlattenParticleHierarchy(targetRoot.transform);
                 if (alignParticleBottomToRoot)
                     AlignParticleBottomToRoot(targetRoot);
                 foreach (var forceField in targetRoot.GetComponentsInChildren<ParticleSystemForceField>(true))
                     UnityEngine.Object.DestroyImmediate(forceField);
                 CloneMaterials(targetRoot, targetName);
+                if (normalizedWidth > 0f && normalizedHeight > 0f)
+                    NormalizeParticleFootprint(targetRoot, normalizedWidth, normalizedHeight);
 
                 string targetPath = $"{PrefabRoot}/{targetName}.prefab";
                 return PrefabUtility.SaveAsPrefabAsset(targetRoot, targetPath);
@@ -1024,6 +1270,16 @@ namespace Tactics.Editor.SkillGraphEditor
             main.stopAction = ParticleSystemStopAction.None;
             main.maxParticles = Mathf.Min(main.maxParticles, 64);
             main.startColor = new ParticleSystem.MinMaxGradient(tint);
+            if (looping)
+            {
+                // Vendor flight motifs are often emitted by showcase-object movement.
+                // Pooled projectiles need a stable time-based fallback so a stationary
+                // preview sample and a freshly rented instance both become visible.
+                var emission = particleSystem.emission;
+                emission.enabled = true;
+                if (emission.rateOverTime.constantMax <= 0.001f)
+                    emission.rateOverTime = 12f;
+            }
             if (flattenRotationToCameraPlane)
             {
                 // The vendor effect contains X/Y start rotations intended for a 3D camera.
@@ -1110,7 +1366,10 @@ namespace Tactics.Editor.SkillGraphEditor
                 EditorUtility.CopySerialized(source, clone);
             }
             clone.name = cloneName;
-            if (targetName.StartsWith("AmplifyDamage", StringComparison.Ordinal))
+            if (targetName.StartsWith("AmplifyDamage", StringComparison.Ordinal) ||
+                targetName.StartsWith("Fireball", StringComparison.Ordinal) ||
+                targetName.StartsWith("BoneSpear", StringComparison.Ordinal) ||
+                targetName.StartsWith("Thrust", StringComparison.Ordinal))
                 ConfigurePreviewCompatibleParticleMaterial(clone, source);
             clone.DisableKeyword("_SOFTPARTICLES_ON");
             clone.DisableKeyword("_USESOFTALPHA_ON");
@@ -1211,13 +1470,68 @@ namespace Tactics.Editor.SkillGraphEditor
             EditorUtility.SetDirty(profile);
         }
 
+        internal static void RestoreHybridProjectileProfiles()
+        {
+            var fireballFlight = AssetDatabase.LoadAssetAtPath<GameObject>(
+                $"{PrefabRoot}/FireballFlight.prefab");
+            var boneSpearFlight = AssetDatabase.LoadAssetAtPath<GameObject>(
+                $"{PrefabRoot}/BoneSpearFlight.prefab");
+            if (fireballFlight == null || boneSpearFlight == null)
+                return;
+            ConfigureHybridProjectileProfiles(fireballFlight, boneSpearFlight);
+        }
+
+        private static void ConfigureHybridProjectileProfiles(
+            GameObject fireballFlight,
+            GameObject boneSpearFlight)
+        {
+            ConfigureHybridProjectileProfile(
+                FireballProfilePath,
+                fireballFlight,
+                disableParticleTrail: true,
+                weakenGhostTrail: false);
+            ConfigureHybridProjectileProfile(
+                BoneSpearProfilePath,
+                boneSpearFlight,
+                disableParticleTrail: false,
+                weakenGhostTrail: true);
+        }
+
+        private static void ConfigureHybridProjectileProfile(
+            string path,
+            GameObject flightPrefab,
+            bool disableParticleTrail,
+            bool weakenGhostTrail)
+        {
+            var profile = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(path);
+            if (profile == null)
+                throw new FileNotFoundException("Hybrid projectile visual profile is required.", path);
+            var serialized = new SerializedObject(profile);
+            serialized.FindProperty("_flightPrefab").objectReferenceValue = flightPrefab;
+            serialized.FindProperty("_impactPrefab").objectReferenceValue = null;
+            if (disableParticleTrail)
+                serialized.FindProperty("_particleTrail").FindPropertyRelative("_enabled").boolValue = false;
+            if (weakenGhostTrail)
+            {
+                SerializedProperty trail = serialized.FindProperty("_ghostTrail");
+                trail.FindPropertyRelative("_enabled").boolValue = true;
+                trail.FindPropertyRelative("_alpha").floatValue = 0.14f;
+                trail.FindPropertyRelative("_maximumAlive").intValue = 1;
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(profile);
+        }
+
         private static VisualCueProfile CreateOrUpdateCueProfile(
             string name,
             GameObject prefab,
             float lifetime,
             float scale,
             VisualCueAnchor anchor = VisualCueAnchor.TargetPoint,
-            int sortingOrderOffset = 20)
+            int sortingOrderOffset = 20,
+            VisualCueOrientationMode orientationMode = VisualCueOrientationMode.World,
+            bool stretchXToSourceTarget = false,
+            float referenceDistance = 1f)
         {
             string path = $"{ProfileRoot}/{name}.asset";
             var profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(path);
@@ -1236,6 +1550,9 @@ namespace Tactics.Editor.SkillGraphEditor
             serialized.FindProperty("_lifetime").floatValue = lifetime;
             serialized.FindProperty("_scale").floatValue = scale;
             serialized.FindProperty("_sortingOrderOffset").intValue = sortingOrderOffset;
+            serialized.FindProperty("_orientationMode").enumValueIndex = (int)orientationMode;
+            serialized.FindProperty("_stretchXToSourceTarget").boolValue = stretchXToSourceTarget;
+            serialized.FindProperty("_referenceDistance").floatValue = referenceDistance;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(profile);
             return profile;

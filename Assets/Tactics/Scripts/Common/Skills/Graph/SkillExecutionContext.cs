@@ -167,7 +167,8 @@ namespace Tactics.Common.Skills.Graph
                     cancellationToken,
                     RuntimeScope,
                     cueContext.SourceWorldPosition,
-                    cueContext.TargetWorldPosition);
+                    cueContext.TargetWorldPosition,
+                    cueContext);
                 if (await BattlePresentationCoordinator.TryPlayCueAsync(
                         PresentationGraph,
                         presentationCue,

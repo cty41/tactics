@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-03T22:39:21+08:00"
+timestamp: "2026-08-04T17:09:18+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -13,7 +13,7 @@ repo_paths:
   - .agents/skills/project-doc-organization/SKILL.md
   - .agents/skills/plan-mode-plan-writer/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:39fb942e4cf502aa3113564e8afc3081515e0b214b6f9f77e57c5f76c887d0bf
+source_fingerprint: sha256:004065f1b6210b6dfce81ebe7062ca75ece3a4fa61b4250ba27f81bddc683b5a
 ---
 
 # Current State
@@ -23,6 +23,10 @@ source_fingerprint: sha256:39fb942e4cf502aa3113564e8afc3081515e0b214b6f9f77e57c5
 `.agents/plans/` 只保存仍需执行且 decision-complete 的计划。实现完成并验证后，长期规则回写 docs，未实施项进入已知缺口或经批准的新计划，completed plan 随后删除并由 Git 保留历史。
 
 `.agents/knowledge/` 负责跨系统摘要、关系和导航，不复制完整设计或已完成计划。代码、Unity 资产和测试仍是当前行为的最终事实源。
+
+编辑器演示元数据必须与 Runtime/玩法真相源明确分离。例如 Battle Presentation Graph 的 Preview Scenario 只描述代表性完整演示，运行时仍以语义 Entry 驱动，SkillGraph 仍负责伤害、Buff、目标和资源消耗；文档不得把 Preview Phase 当成真实结算流程。
+
+技能表现文档必须区分程序化时序骨架、项目侧第三方 Prefab FX 与玩法结算责任。火球、骨矛和突刺的 Piloto 混合增强仍由 Presentation Graph 编排，Recipe 只保留 Marker、路径/命中快照与安全回退；供应商原资产保持只读，Runtime/Preview 的方向变换以共享实现为准。
 
 # Relationships
 

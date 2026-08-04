@@ -41,8 +41,21 @@ namespace Tactics.Common.Interactables
             Color color,
             StandardUnitTweenProfile tweenProfile = null)
         {
+            ApplyVisualForPreview(sprite, material, color, tweenProfile);
+        }
+
+        /// <summary>
+        /// Applies the runtime corpse presentation and exposes its sequence to the editor preview.
+        /// </summary>
+        /// <returns>The non-blocking landing sequence, or null when no sprite or profile is supplied.</returns>
+        internal Sequence ApplyVisualForPreview(
+            Sprite sprite,
+            Material material,
+            Color color,
+            StandardUnitTweenProfile tweenProfile = null)
+        {
             if (sprite == null)
-                return;
+                return null;
 
             var spriteRenderer = ResolveSpriteRenderer();
             spriteRenderer.sprite = sprite;
@@ -69,6 +82,8 @@ namespace Tactics.Common.Interactables
                     .SetLink(gameObject, LinkBehaviour.KillOnDestroy)
                     .OnComplete(() => _landingSequence = null);
             }
+
+            return _landingSequence;
         }
 
         private void OnDestroy()

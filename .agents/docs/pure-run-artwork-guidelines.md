@@ -79,16 +79,25 @@ verified_revision: c68dbebe
 - 当前运行时正式投射物源为赤柴长矛 `v01`、法师奥术弹 `v02`、死灵飞行能量球 `v03` 和骨矛 `v01`。运行时副本必须与设计源 PNG 内容一致，统一导入为 `256×256`、Single Sprite、`128 PPU`、中心 Pivot、无 Mipmap/压缩；颜色职业变体由 `ProjectileVisualProfile.Tint` 表达，不复制新 Sprite。骨矛使用原生比例、沿飞行切线旋转，并以最多两个短残影提供运动反馈；残影不烘进 PNG，也不阻塞技能结算。
 - 已明确批准接入运行时的死亡图复制为独立 `256×256`、Single Sprite、`128 PPU`、中心 Pivot `(0.5, 0.5)` 与 Tight Mesh 纹理；它们配置在单位视觉组件上，单位死亡后由同一通用 `Corpse` 实例显示。尸体以 Sprite Tight bounds 中心抵消透明画布内偏移，不继承生前方向镜像，但继承主 Renderer 的材质和颜色，使羊魔职责换色继续生效。
 - 当前运行时尸体图覆盖赤柴猎人、死灵法师、凯利蓝㹴法师与六种羊魔职责。骷髅、骷髅法师和火魔属于召唤物，仍按战斗规则直接移除且不生成尸体；蝙蝠尚无运行时 Prefab，不提前导入。
+- 现有死亡图的等比体量复核使用 Hunter `1.00×` 为倒地投影基准，并生成 Mage `1.04×`、Necromancer `1.16×`、Goat `1.05×` 候选与统一 Tile Review。候选只用于人工比较；在批准前不得覆盖上述运行时纹理。
+
+## 单帧动作姿态视觉语言
+
+- 标准地面胶囊角色的 `Hit` 以已批准赤柴受击图作为统一漫画夸张程度参考：核心主体整体向来击反侧后仰，耳朵后折或压低，可见眼睛放大眼白并缩小瞳孔。正面两眼都可见时，默认从双眼画出两条短而清晰的蓝白泪线；泪线是面部反应符号，不是 VFX，不扩展为水花、粒子或命中闪光。
+- `up-left` Hit 必须把已批准 DR 的同一冻结受击时刻原生转到背向三分之四视角，保留主体倾斜、耳朵惯性、装备偏转和可见泪线方向；不得从直立 UL idle 只重画一张受伤表情，也不得为展示双眼而变成正面。
+- 法杖类 `Cast` 姿态必须由“主体向目标前倾 + 法杖同向前指”共同建立施法轴。持杖手以杆尾至晶体底座之间的直杆中点为默认握点，手掌两侧可见杆身约为 `45:55–55:45`；晶体是指向目标的最前端，杆身不得遮挡眼睛或口鼻。短匕首等非杆状装备只迁移指向语义，不套用中点握杖规则。
+- 跨角色参考图只迁移动作骨架、夸张程度或握点，不迁移犬种、配色、核心体量、脸部解剖或装备清单。角色原有装备必须按姿态规则保留：法师继续持有唯一晶体法杖，死灵继续持有唯一匕首且 `Cast / Hit` 完全移除 Idle 蓝色鬼火。
 
 ## 运行时极简 Tween 表现
 
 - 标准地面胶囊单位共用 `StandardUnitTweenProfile`。Idle、移动纸片摆动、近战突进、远程后坐、施法发光和受击回弹只作用于名为 `Sprite` 的隔离视觉 Transform；动作期间可由 `UnitActionPoseProfile` 配置化切换同一主 Renderer 的单帧 Sprite。逻辑 Root、Shadow、血条、飘字和 Tile 高亮不得参与 Tween 或姿态切换。
+- 凯利蓝㹴法师和墨西哥无毛犬死灵法师分别使用 `MageActionPoseProfile` 与 `NecromancerActionPoseProfile`，只映射 Default 状态的 `Cast / Hit`。正式源位于 `Tools/artworks/doge/calibrated`，运行时副本位于 `Textures/Actions/Mage` 与 `Textures/Actions/Necromancer`；后续换图保持 Profile 与姿态族不变，只替换批准源、运行时纹理和引用。
 - 前景表现优先级为尸体落地、受击、攻击/施法、移动、Idle。打断使用 `Kill(false)` 并恢复 Prefab 原始局部姿态，不用 `Kill(true)` 强制完成旧回调。
 - 赤柴 Hit 的 `Default / Unarmed` 共用同一对无矛受击 Sprite；受击姿态只隐藏图内长矛，不修改 `AmazonBattleState.IsSpearHeld`，并在恢复段开始按权威视觉状态回到持矛或空手 Idle。
 - Cast 蓄力使用 `SkillVfxRecipe` 的非阻塞 `CastCharge` 径向光环，以施法者可见 Sprite 中心为锚点并排在人物与阴影后方。无专属 Recipe 的 Cast 回退到低饱和蓝色光环，火球和骨矛可由技能族 Recipe 覆写颜色；禁止复制、染色或实心覆盖整张人物 Sprite。施法期间允许由姿态 Profile 切换主 Sprite，但不得改变 `Material`、`Color`、Sorting 或烘焙 VFX、投射物和阴影。
 - 远程/施法动作在 release 标记启动 SkillGraph；`ProjectileLaunch` 抵达后才继续 `OnHit` 和玩法效果。场景卸载或取消必须先把等待任务标记为取消，再 Kill 临时 Tween 并销毁 Renderer，避免 `OnKill` 抢先报告成功。
 - 飞行蝙蝠不使用这套地面胶囊动画；其独立悬浮与飞行动画留待专用 Profile。
-- 编辑器入口 `Tactics/Pure Run/Tween Preview` 在隔离的 `PreviewRenderUtility` 舞台中复用运行时单位 Sequence 和投射物视觉构建，支持十种单项/组合动作、四方向、2–6 格距离、循环、倍速和时间拖动。Profile 始终通过隐藏沙盒编辑，只有明确点击 Apply 才借助 Undo 写回资产；切换 Profile、Stop、关闭窗口和程序集重载必须销毁全部 Tween 与临时对象。
+- 编辑器入口 `Tactics/Pure Run/Tween Preview` 在隔离的 `PreviewRenderUtility` 舞台中复用运行时单位 Sequence 和投射物视觉构建，支持十种单项/组合动作、四方向、2–6 格距离、循环、倍速和时间拖动。`CorpseLanding` 使用独立 `Corpse` 实例并直接调用运行时 `ApplyVisual`，因此 Sprite bounds 居中、材质、Tint、镜像清理及 Drop/Impact/Settled 时序与战斗一致；活体 Sprite 与 Shadow 在该预览期间整体隐藏。Profile 始终通过隐藏沙盒编辑，只有明确点击 Apply 才借助 Undo 写回资产；切换 Profile、Stop、关闭窗口和程序集重载必须销毁全部 Tween 与临时对象。
 - Tween Preview 只显示角色动作、Release、ProjectileImpact 及 Sprite/SoftDisc 弹道、脉冲和尾迹；技能光环、命中特效与 Recipe 分层继续由独立的 `Tactics/Pure Run/Skill VFX Preview` 检查，两套工具不互相复制职责。
 
 ## 标准流水线

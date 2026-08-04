@@ -524,7 +524,10 @@ namespace Tactics.Common.Units.Abilities
             try
             {
                 var cancellationToken = context.RuntimeScope?.Token ?? context.CancellationToken;
-                if (_config.VisualAction == UnitVisualAction.Cast)
+                if (_config.VisualAction == UnitVisualAction.Cast ||
+                    BattlePresentationCoordinator.HasEntry(
+                        _config.PresentationGraph,
+                        PresentationCueKind.CastCharge))
                 {
                     Vector3 sourceWorldPosition = SkillVfxPositionUtility.ResolveUnitCenter(_owner);
                     Vector3 targetWorldPosition = context.PrimaryTarget != null

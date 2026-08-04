@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,10 @@ namespace Tactics.Tests.Editor
             "Assets/Tactics/Arts/PureRun/Shaders/PureRunGlowOverlay.shader";
         private const string AmazonActionRoot =
             "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon";
+        private const string MageActionRoot =
+            "Assets/Tactics/Arts/PureRun/Textures/Actions/Mage";
+        private const string NecromancerActionRoot =
+            "Assets/Tactics/Arts/PureRun/Textures/Actions/Necromancer";
         private const string AmazonPoseRoot =
             "Assets/Tactics/Arts/PureRun/Tween/ActionPoses";
 
@@ -80,27 +85,23 @@ namespace Tactics.Tests.Editor
         {
             string sourcePath = $"Tools/artworks/doge/candidates/doge_hunter_{approvedName}.png";
             string runtimePath = $"{AmazonActionRoot}/doge_hunter_{runtimeName}.png";
-            CollectionAssert.AreEqual(File.ReadAllBytes(sourcePath), File.ReadAllBytes(runtimePath), runtimePath);
+            AssertActionSpriteMatchesApprovedSource(sourcePath, runtimePath, true);
+        }
 
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(runtimePath);
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(runtimePath);
-            var importer = AssetImporter.GetAtPath(runtimePath) as TextureImporter;
-            Assert.That(texture, Is.Not.Null, runtimePath);
-            Assert.That(texture.width, Is.EqualTo(256), runtimePath);
-            Assert.That(texture.height, Is.EqualTo(256), runtimePath);
-            Assert.That(sprite, Is.Not.Null, runtimePath);
-            Assert.That(sprite.pixelsPerUnit, Is.EqualTo(128f), runtimePath);
-            Assert.That(sprite.pivot, Is.EqualTo(new Vector2(128f, 20f)), runtimePath);
-            Assert.That(importer, Is.Not.Null, runtimePath);
-            Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite), runtimePath);
-            Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single), runtimePath);
-            Assert.That(importer.mipmapEnabled, Is.False, runtimePath);
-            Assert.That(importer.alphaIsTransparency, Is.True, runtimePath);
-            Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Bilinear), runtimePath);
-            Assert.That(importer.textureCompression, Is.EqualTo(TextureImporterCompression.Compressed), runtimePath);
-            var settings = new TextureImporterSettings();
-            importer.ReadTextureSettings(settings);
-            Assert.That(settings.spriteMeshType, Is.EqualTo(SpriteMeshType.Tight), runtimePath);
+        [TestCase("doge_capsule_mage_cast_dr_v04.png", MageActionRoot + "/doge_mage_cast_dr.png")]
+        [TestCase("doge_capsule_mage_cast_ul_v01.png", MageActionRoot + "/doge_mage_cast_ul.png")]
+        [TestCase("doge_capsule_mage_hit_dr_v02.png", MageActionRoot + "/doge_mage_hit_dr.png")]
+        [TestCase("doge_capsule_mage_hit_ul_v04.png", MageActionRoot + "/doge_mage_hit_ul.png")]
+        [TestCase("doge_capsule_necromancer_cast_dr_v03.png", NecromancerActionRoot + "/doge_necromancer_cast_dr.png")]
+        [TestCase("doge_capsule_necromancer_cast_ul_v01.png", NecromancerActionRoot + "/doge_necromancer_cast_ul.png")]
+        [TestCase("doge_capsule_necromancer_hit_dr_v01.png", NecromancerActionRoot + "/doge_necromancer_hit_dr.png")]
+        [TestCase("doge_capsule_necromancer_hit_ul_v01.png", NecromancerActionRoot + "/doge_necromancer_hit_ul.png")]
+        public void MageAndNecromancerActionSprites_MatchApprovedSourceAndImportContract(
+            string approvedName,
+            string runtimePath)
+        {
+            string sourcePath = $"Tools/artworks/doge/calibrated/{approvedName}";
+            AssertActionSpriteMatchesApprovedSource(sourcePath, runtimePath);
         }
 
         [Test]
@@ -142,6 +143,48 @@ namespace Tactics.Tests.Editor
             GameObject hunter = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPaths[0]);
             Assert.That(hunter.GetComponent<Tactics.Common.Units.FourDirectionSpriteVisual>().ActionPoseProfile,
                 Is.SameAs(profile));
+        }
+
+        [TestCase(
+            "MageActionPoseProfile.asset",
+            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab",
+            "doge_mage_cast_dr.png",
+            "doge_mage_cast_ul.png",
+            "doge_mage_hit_dr.png",
+            "doge_mage_hit_ul.png")]
+        [TestCase(
+            "NecromancerActionPoseProfile.asset",
+            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab",
+            "doge_necromancer_cast_dr.png",
+            "doge_necromancer_cast_ul.png",
+            "doge_necromancer_hit_dr.png",
+            "doge_necromancer_hit_ul.png")]
+        public void MageAndNecromancerActionPoseAssets_UseCastAndHitOnly(
+            string profileName,
+            string prefabPath,
+            string castDownRight,
+            string castUpLeft,
+            string hitDownRight,
+            string hitUpLeft)
+        {
+            UnitPoseFamily cast = LoadPoseFamily("Cast");
+            UnitPoseFamily hit = LoadPoseFamily("Hit");
+            var profile = AssetDatabase.LoadAssetAtPath<UnitActionPoseProfile>(
+                $"{AmazonPoseRoot}/{profileName}");
+
+            Assert.That(profile, Is.Not.Null, profileName);
+            Assert.That(profile.ResolveFamily(UnitVisualAction.Melee), Is.Null, profileName);
+            Assert.That(profile.ResolveFamily(UnitVisualAction.Ranged), Is.Null, profileName);
+            Assert.That(profile.ResolveFamily(UnitVisualAction.Cast), Is.SameAs(cast), profileName);
+            Assert.That(profile.HitFamily, Is.SameAs(hit), profileName);
+            Assert.That(profile.TryResolveIdle(UnitVisualState.Default, out _, out _), Is.False, profileName);
+            AssertPose(profile, cast, UnitVisualState.Default, castDownRight, castUpLeft);
+            AssertPose(profile, hit, UnitVisualState.Default, hitDownRight, hitUpLeft);
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            Assert.That(prefab, Is.Not.Null, prefabPath);
+            Assert.That(prefab.GetComponent<Tactics.Common.Units.FourDirectionSpriteVisual>().ActionPoseProfile,
+                Is.SameAs(profile), prefabPath);
         }
 
         [TestCase("PoisonSpear_Graph_Ability")]
@@ -229,8 +272,10 @@ namespace Tactics.Tests.Editor
             Assert.That(fire.Material.shader.name, Is.EqualTo("Tactics/PureRun/SkillVfxPrimitive"));
             Assert.That(fire.Scale, Is.EqualTo(0.17f).Within(0.001f));
             Assert.That(fire.PulseAmount, Is.EqualTo(0.06f).Within(0.001f));
-            Assert.That(fire.ParticleTrail.Enabled, Is.True);
-            Assert.That(fire.ParticleTrail.MaximumParticles, Is.EqualTo(3));
+            Assert.That(fire.FlightPrefab, Is.Not.Null);
+            Assert.That(fire.FlightPrefab.name, Is.EqualTo("FireballFlight"));
+            Assert.That(fire.ParticleTrail.Enabled, Is.False,
+                "Piloto flight particles replace the legacy generated fire trail.");
 
             var normalSpear = LoadProfile("AmazonSpear");
             var poisonSpear = LoadProfile("AmazonPoisonSpear");
@@ -246,19 +291,19 @@ namespace Tactics.Tests.Editor
             Assert.That(boneSpear.Scale, Is.EqualTo(1f).Within(0.001f));
             Assert.That(boneSpear.PulseAmount, Is.Zero.Within(0.001f));
             Assert.That(boneSpear.ParticleTrail.Enabled, Is.False);
+            Assert.That(boneSpear.FlightPrefab, Is.Not.Null);
+            Assert.That(boneSpear.FlightPrefab.name, Is.EqualTo("BoneSpearFlight"));
             Assert.That(boneSpear.GhostTrail.Enabled, Is.True);
             Assert.That(boneSpear.GhostTrail.SampleInterval, Is.EqualTo(0.055f).Within(0.001f));
             Assert.That(boneSpear.GhostTrail.Lifetime, Is.EqualTo(0.12f).Within(0.001f));
-            Assert.That(boneSpear.GhostTrail.Alpha, Is.EqualTo(0.28f).Within(0.001f));
+            Assert.That(boneSpear.GhostTrail.Alpha, Is.EqualTo(0.14f).Within(0.001f));
             Assert.That(boneSpear.GhostTrail.Scale, Is.EqualTo(0.92f).Within(0.001f));
-            Assert.That(boneSpear.GhostTrail.MaximumAlive, Is.EqualTo(2));
+            Assert.That(boneSpear.GhostTrail.MaximumAlive, Is.EqualTo(1));
         }
 
         [TestCase("RangedAttack_Graph")]
         [TestCase("MagicAttack_Graph")]
-        [TestCase("Fireball_Graph")]
         [TestCase("IceBolt_Graph")]
-        [TestCase("BoneSpear_Graph")]
         [TestCase("FireDemonAttack_Graph")]
         public void PublishedRangedGraphs_HaveVisibleProjectileProfile(string graphName)
         {
@@ -376,15 +421,6 @@ namespace Tactics.Tests.Editor
                 .IsVisible, Is.False);
         }
 
-        [TestCase("Fireball_Lv1_Ability", "FireballSkillVfxRecipe")]
-        [TestCase("Fireball_Lv2_Ability", "FireballSkillVfxRecipe")]
-        [TestCase("Fireball_Lv3_Ability", "FireballSkillVfxRecipe")]
-        [TestCase("BoneSpear_Graph_Ability", "BoneSpearSkillVfxRecipe")]
-        [TestCase("BoneSpear_Lv2_Graph_Ability", "BoneSpearSkillVfxRecipe")]
-        [TestCase("BoneSpear_Lv3_Graph_Ability", "BoneSpearSkillVfxRecipe")]
-        [TestCase("Thrust_Graph_Ability", "ThrustSkillVfxRecipe")]
-        [TestCase("Thrust_Lv2_Graph_Ability", "ThrustSkillVfxRecipe")]
-        [TestCase("Thrust_Lv3_Graph_Ability", "ThrustSkillVfxRecipe")]
         [TestCase("MagicAttack_Graph_Ability", "DefaultCastSkillVfxRecipe")]
         public void AbilityAssets_ReferenceSharedFamilyRecipe(string abilityName, string recipeName)
         {
@@ -439,7 +475,8 @@ namespace Tactics.Tests.Editor
             Assert.That(graph, Is.Not.Null, graphName);
             var projectile = graph.Nodes.OfType<ProjectileLaunchNodeRecord>().Single();
             var onHit = graph.Nodes.OfType<OnHitNodeRecord>().Single();
-            Assert.That(projectile.VisualProfile, Is.Not.Null, graphName);
+            Assert.That(projectile.VisualProfile == null,
+                Is.EqualTo(IsGraphOwnedProjectile(graphName)), graphName);
             Assert.That(
                 graph.GetEdgesFrom(projectile.NodeId).Select(edge => edge.TargetNodeId),
                 Does.Contain(onHit.NodeId),
@@ -481,7 +518,19 @@ namespace Tactics.Tests.Editor
             var intentionalNone = new HashSet<string>
             {
                 "Move_Graph_Ability",
-                "PickupSpear_Graph_Ability"
+                "PickupSpear_Graph_Ability",
+                "Thrust_Graph_Ability",
+                "Thrust_Lv2_Graph_Ability",
+                "Thrust_Lv3_Graph_Ability",
+                "Fireball_Graph_Ability",
+                "Fireball_Lv1_Ability",
+                "Fireball_Lv2_Ability",
+                "Fireball_Lv3_Ability",
+                "SkeletonMageFireball_Lv1_Ability",
+                "SkeletonMageFireball_Lv2_Ability",
+                "BoneSpear_Graph_Ability",
+                "BoneSpear_Lv2_Graph_Ability",
+                "BoneSpear_Lv3_Graph_Ability"
             };
             string[] guids = AssetDatabase.FindAssets(
                 "t:SkillGraphAbilityConfig",
@@ -493,10 +542,20 @@ namespace Tactics.Tests.Editor
                 var config = AssetDatabase.LoadAssetAtPath<SkillGraphAbilityConfig>(path);
                 Assert.That(config, Is.Not.Null, path);
                 if (intentionalNone.Contains(config.name))
+                {
                     Assert.That(config.VisualAction, Is.EqualTo(UnitVisualAction.None), config.name);
+                    if (config.name is not "Move_Graph_Ability" and not "PickupSpear_Graph_Ability")
+                        Assert.That(config.PresentationGraph, Is.Not.Null, config.name);
+                }
                 else
                     Assert.That(config.VisualAction, Is.Not.EqualTo(UnitVisualAction.None), config.name);
             }
+        }
+
+        private static bool IsGraphOwnedProjectile(string graphName)
+        {
+            return graphName.StartsWith("Fireball", StringComparison.Ordinal) ||
+                graphName.StartsWith("BoneSpear", StringComparison.Ordinal);
         }
 
         private static void AssertAction(string assetName, UnitVisualAction expected)
@@ -528,6 +587,40 @@ namespace Tactics.Tests.Editor
             var profile = LoadProfile(profileName);
             string spritePath = AssetDatabase.GetAssetPath(profile.Sprite);
             Assert.That(Path.GetFileName(spritePath), Is.EqualTo(expectedTextureName), profileName);
+        }
+
+        private static void AssertActionSpriteMatchesApprovedSource(
+            string sourcePath,
+            string runtimePath,
+            bool expectedFallbackPhysicsShape = false)
+        {
+            CollectionAssert.AreEqual(File.ReadAllBytes(sourcePath), File.ReadAllBytes(runtimePath), runtimePath);
+
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(runtimePath);
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(runtimePath);
+            var importer = AssetImporter.GetAtPath(runtimePath) as TextureImporter;
+            Assert.That(texture, Is.Not.Null, runtimePath);
+            Assert.That(texture.width, Is.EqualTo(256), runtimePath);
+            Assert.That(texture.height, Is.EqualTo(256), runtimePath);
+            Assert.That(sprite, Is.Not.Null, runtimePath);
+            Assert.That(sprite.pixelsPerUnit, Is.EqualTo(128f), runtimePath);
+            Assert.That(sprite.pivot, Is.EqualTo(new Vector2(128f, 20f)), runtimePath);
+            Assert.That(importer, Is.Not.Null, runtimePath);
+            Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite), runtimePath);
+            Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single), runtimePath);
+            Assert.That(importer.mipmapEnabled, Is.False, runtimePath);
+            Assert.That(importer.alphaIsTransparency, Is.True, runtimePath);
+            Assert.That(importer.isReadable, Is.False, runtimePath);
+            Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Bilinear), runtimePath);
+            Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp), runtimePath);
+            Assert.That(importer.textureCompression, Is.EqualTo(TextureImporterCompression.Compressed), runtimePath);
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            Assert.That(settings.spriteMeshType, Is.EqualTo(SpriteMeshType.Tight), runtimePath);
+            Assert.That(
+                settings.spriteGenerateFallbackPhysicsShape,
+                Is.EqualTo(expectedFallbackPhysicsShape),
+                runtimePath);
         }
 
         private static UnitPoseFamily LoadPoseFamily(string familyName)

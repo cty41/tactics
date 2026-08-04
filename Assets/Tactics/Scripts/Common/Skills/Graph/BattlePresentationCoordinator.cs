@@ -36,6 +36,7 @@ namespace Tactics.Common.Skills.Graph
             RuntimeScope = runtimeScope;
             PoseFamily = poseFamily;
             PrepareRelease = prepareRelease;
+            VfxCueContext = null;
             SourceWorldPosition = SkillVfxPositionUtility.ResolveUnitCenter(caster);
             TargetWorldPosition = primaryTarget != null
                 ? SkillVfxPositionUtility.ResolveUnitCenter(primaryTarget)
@@ -57,7 +58,8 @@ namespace Tactics.Common.Skills.Graph
             CancellationToken cancellationToken,
             IBattleRuntimeScope runtimeScope,
             Vector3 sourceWorldPosition,
-            Vector3 targetWorldPosition)
+            Vector3 targetWorldPosition,
+            SkillVfxCueContext vfxCueContext = null)
         {
             Caster = caster;
             PrimaryTarget = primaryTarget;
@@ -67,6 +69,7 @@ namespace Tactics.Common.Skills.Graph
             RuntimeScope = runtimeScope;
             PoseFamily = null;
             PrepareRelease = null;
+            VfxCueContext = vfxCueContext;
             SourceWorldPosition = sourceWorldPosition;
             TargetWorldPosition = targetWorldPosition;
             TargetGroundWorldPosition = primaryTarget != null
@@ -84,6 +87,7 @@ namespace Tactics.Common.Skills.Graph
         public IBattleRuntimeScope RuntimeScope { get; }
         public UnitPoseFamily PoseFamily { get; }
         public Action PrepareRelease { get; }
+        internal SkillVfxCueContext VfxCueContext { get; }
         public Vector3 SourceWorldPosition { get; }
         public Vector3 TargetWorldPosition { get; }
         public Vector3 TargetGroundWorldPosition { get; }
@@ -341,7 +345,7 @@ namespace Tactics.Common.Skills.Graph
         private Task PlayProceduralVfxAsync(PresentationProceduralVfxNodeRecord node)
         {
             var coordinator = new SkillVfxCoordinator(node.Recipe, _context.Caster);
-            var cueContext = new SkillVfxCueContext(
+            SkillVfxCueContext cueContext = _context.VfxCueContext ?? new SkillVfxCueContext(
                 _context.SkillLevel,
                 _context.SourceWorldPosition,
                 _context.TargetWorldPosition,

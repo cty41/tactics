@@ -15,6 +15,7 @@ using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Units.Tween;
+using Tactics.Common.Utilities;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -26,6 +27,8 @@ namespace Tactics.Tests.PlayMode
     {
         private const string ProjectileProfilePath =
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset";
+        private const string FireProjectileProfilePath =
+            "Assets/Tactics/Arts/PureRun/Tween/Projectiles/Fire.asset";
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -137,6 +140,36 @@ namespace Tactics.Tests.PlayMode
                 scope.Cancel();
                 world.Dispose();
             }
+        }
+
+        [UnityTest]
+        public IEnumerator DirectionalVisualCue_NonUniformScaleSurvivesRentAndReturnsToPool()
+        {
+            var prefab = GameAssetManager.Instance.Load<GameObject>(
+                "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Prefabs/ThrustStrikeLv1.prefab");
+            Assert.That(prefab, Is.Not.Null);
+            Vector3 expectedScale = new(3f, 0.75f, 0.75f);
+            Task playback = TransientVfxPool.PlayOneShot(
+                prefab,
+                Vector3.zero,
+                Quaternion.Euler(0f, 0f, 90f),
+                expectedScale,
+                0.08f,
+                0,
+                20,
+                CancellationToken.None);
+
+            yield return null;
+            GameObject instance = GameObject.Find("ThrustStrikeLv1_Vfx");
+            Assert.That(instance, Is.Not.Null);
+            Assert.That(instance.transform.localScale, Is.EqualTo(expectedScale));
+            Assert.That(Mathf.DeltaAngle(instance.transform.eulerAngles.z, 90f),
+                Is.EqualTo(0f).Within(0.001f));
+
+            yield return WaitForTask(playback, 2d, "Recycle directional visual cue");
+            Assert.That(playback.IsFaulted, Is.False);
+            Assert.That(GameObject.Find("ThrustStrikeLv1_Vfx"), Is.Null);
+            Assert.That(GetCachedCount(prefab), Is.EqualTo(1));
         }
 
         private static IEnumerator WaitForTask(Task task, double timeoutSeconds, string label)
@@ -324,6 +357,63 @@ namespace Tactics.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public System.Collections.IEnumerator VisualCueCoordinator_SourceToTargetUsesTargetInsteadOfCasterAnchor()
+        {
+            var prefab = CreateParticlePrefab("DirectionalCuePrefab");
+            var profile = ScriptableObject.CreateInstance<VisualCueProfile>();
+            var world = new SkillGraphTestWorld();
+            using var cancellation = new CancellationTokenSource();
+            try
+            {
+                var casterCell = world.CreateSquareCell("DirectionalCaster", 0, 0);
+                var targetCell = world.CreateSquareCell("DirectionalTarget", 2, 1);
+                var caster = world.CreateUnit("DirectionalCasterUnit", 0, casterCell);
+                var target = world.CreateUnit("DirectionalTargetUnit", 1, targetCell);
+                SetVisualCueProfileField(profile, "_prefab", prefab);
+                SetVisualCueProfileField(profile, "_anchor", VisualCueAnchor.Caster);
+                SetVisualCueProfileField(
+                    profile,
+                    "_orientationMode",
+                    VisualCueOrientationMode.SourceToTarget);
+                SetVisualCueProfileField(profile, "_stretchXToSourceTarget", true);
+                SetVisualCueProfileField(profile, "_referenceDistance", 1f);
+                SetVisualCueProfileField(profile, "_lifetime", 10f);
+
+                Task playback = VisualCueCoordinator.PlayAsync(
+                    caster,
+                    target,
+                    targetCell,
+                    profile,
+                    cancellation.Token);
+                GameObject instance = GameObject.Find("DirectionalCuePrefab_Vfx");
+                Assert.That(instance, Is.Not.Null);
+                Vector3 source = caster.WorldPosition.ToVector3();
+                Vector3 destination = target.WorldPosition.ToVector3();
+                Quaternion expectedRotation = VisualCueTransformUtility.ResolveRotation(
+                    profile,
+                    source,
+                    destination);
+                Vector3 expectedScale = VisualCueTransformUtility.ResolveScale(
+                    profile,
+                    source,
+                    destination);
+                Assert.That(Quaternion.Angle(instance.transform.rotation, expectedRotation), Is.LessThan(0.01f));
+                Assert.That(instance.transform.localScale, Is.EqualTo(expectedScale));
+
+                cancellation.Cancel();
+                yield return WaitForTask(playback, 10d, "Cancel directional VFX playback");
+            }
+            finally
+            {
+                cancellation.Cancel();
+                world.Dispose();
+                ResetTransientVfxPoolForTests();
+                Object.DestroyImmediate(profile);
+                Object.DestroyImmediate(prefab);
+            }
+        }
+
         private static PlayVisualCueNodeRecord CreateLegacyLightningCueFixture()
         {
             var presentation = GameAssetManager.Instance.Load<BattlePresentationGraph>(
@@ -386,6 +476,64 @@ namespace Tactics.Tests.PlayMode
                 Object.DestroyImmediate(spriteProfile);
                 Object.DestroyImmediate(prefabOnlyProfile);
                 Object.DestroyImmediate(flightPrefab);
+            }
+        }
+
+        [UnityTest]
+        public System.Collections.IEnumerator ProjectileVisualCoordinator_FireFlightKeepsSoftDiscCoreAndResetsItInPool()
+        {
+            var profile = GameAssetManager.Instance.Load<ProjectileVisualProfile>(
+                FireProjectileProfilePath);
+            var world = new SkillGraphTestWorld();
+            using var cancellation = new CancellationTokenSource();
+            GameObject reused = null;
+            try
+            {
+                var casterCell = world.CreateSquareCell("FireCoreCaster", 0, 0);
+                var targetCell = world.CreateSquareCell("FireCoreTarget", 2, 0);
+                var caster = world.CreateUnit("FireCoreCasterUnit", 0, casterCell);
+                var target = world.CreateUnit("FireCoreTargetUnit", 1, targetCell);
+
+                Task playback = ProjectileVisualCoordinator.PlayAsync(
+                    caster,
+                    target,
+                    targetCell,
+                    profile,
+                    1f,
+                    0.75f,
+                    cancellation.Token);
+                GameObject projectile = GameObject.Find("ProjectileVisual");
+                Assert.That(projectile, Is.Not.Null);
+                Transform core = projectile.transform.Find("RuntimeProjectileCore");
+                Assert.That(core, Is.Not.Null);
+                var renderer = core.GetComponent<MeshRenderer>();
+                Assert.That(renderer, Is.Not.Null);
+                Assert.That(renderer.enabled, Is.True);
+                Assert.That(renderer.sharedMaterial, Is.SameAs(profile.Material));
+                Assert.That(renderer.sortingOrder, Is.EqualTo(profile.SortingOrderOffset));
+
+                cancellation.Cancel();
+                yield return WaitForTask(playback, 10d, "Cancel fire core projectile");
+
+                reused = TransientVfxPool.Rent(
+                    profile.FlightPrefab,
+                    Vector3.zero,
+                    Quaternion.identity,
+                    1f,
+                    0,
+                    0);
+                MeshRenderer reusedCore = reused.transform
+                    .Find("RuntimeProjectileCore")
+                    .GetComponent<MeshRenderer>();
+                Assert.That(reusedCore.enabled, Is.False);
+                Assert.That(reusedCore.sharedMaterial, Is.Null);
+            }
+            finally
+            {
+                cancellation.Cancel();
+                TransientVfxPool.Return(reused);
+                world.Dispose();
+                ResetTransientVfxPoolForTests();
             }
         }
 

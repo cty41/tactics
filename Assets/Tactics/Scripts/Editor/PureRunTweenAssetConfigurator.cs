@@ -6,6 +6,8 @@ using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Tween;
+using Tactics.Editor.PresentationGraph;
+using Tactics.Editor.SkillGraphEditor;
 using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -140,6 +142,33 @@ namespace Tactics.Editor
             "Teleport_Lv2_Graph_Ability"
         };
 
+        private static readonly HashSet<string> PresentationGraphOnlyAbilities = new(StringComparer.Ordinal)
+        {
+            "Thrust_Graph_Ability",
+            "Thrust_Lv2_Graph_Ability",
+            "Thrust_Lv3_Graph_Ability",
+            "Fireball_Graph_Ability",
+            "Fireball_Lv1_Ability",
+            "Fireball_Lv2_Ability",
+            "Fireball_Lv3_Ability",
+            "SkeletonMageFireball_Lv1_Ability",
+            "SkeletonMageFireball_Lv2_Ability",
+            "BoneSpear_Graph_Ability",
+            "BoneSpear_Lv2_Graph_Ability",
+            "BoneSpear_Lv3_Graph_Ability"
+        };
+
+        private static readonly HashSet<string> PresentationGraphOnlyProjectileGraphs = new(StringComparer.Ordinal)
+        {
+            "Fireball_Graph",
+            "Fireball_Lv1_Graph",
+            "Fireball_Lv2_Graph",
+            "Fireball_Lv3_Graph",
+            "BoneSpear_Graph",
+            "BoneSpear_Lv2_Graph",
+            "BoneSpear_Lv3_Graph"
+        };
+
         [MenuItem("Tactics/Tools/Pure Run/Configure Tween Visual Assets")]
         public static void Configure()
         {
@@ -165,9 +194,13 @@ namespace Tactics.Editor
             Sprite necromancerOrb = AssetDatabase.LoadAssetAtPath<Sprite>(NecromancerOrbTexturePath);
             Sprite boneSpear = AssetDatabase.LoadAssetAtPath<Sprite>(BoneSpearTexturePath);
             var profiles = CreateProjectileProfiles(spear, arcane, boneSpear, additiveVfxMaterial);
+            PilotoVfxSampleAssetBuilder.RestoreHybridProjectileProfiles();
 
             ConfigureAbilityActions(recipes);
             ConfigureProjectileGraphs(profiles);
+            PureRunPresentationGraphAssetBuilder.RebuildThrustSamples();
+            PureRunPresentationGraphAssetBuilder.RebuildFireballSamples();
+            PureRunPresentationGraphAssetBuilder.RebuildBoneSpearSamples();
             ConfigurePrefabs(standardProfile);
 
             EditorUtility.SetDirty(standardProfile);
@@ -314,12 +347,31 @@ namespace Tactics.Editor
                 var serialized = new SerializedObject(config);
                 bool changed = false;
                 SerializedProperty visualAction = serialized.FindProperty("_visualAction");
+                SerializedProperty skillVfxRecipe = serialized.FindProperty("_skillVfxRecipe");
+                if (PresentationGraphOnlyAbilities.Contains(config.name))
+                {
+                    if (visualAction.enumValueIndex != (int)UnitVisualAction.None)
+                    {
+                        visualAction.enumValueIndex = (int)UnitVisualAction.None;
+                        changed = true;
+                    }
+                    if (skillVfxRecipe.objectReferenceValue != null)
+                    {
+                        skillVfxRecipe.objectReferenceValue = null;
+                        changed = true;
+                    }
+                    if (changed)
+                    {
+                        serialized.ApplyModifiedPropertiesWithoutUndo();
+                        EditorUtility.SetDirty(config);
+                    }
+                    continue;
+                }
                 if (visualAction.enumValueIndex != (int)action)
                 {
                     visualAction.enumValueIndex = (int)action;
                     changed = true;
                 }
-                SerializedProperty skillVfxRecipe = serialized.FindProperty("_skillVfxRecipe");
                 SkillVfxRecipe recipe = ResolveSkillVfxRecipe(
                     config.name,
                     action,
@@ -439,6 +491,15 @@ namespace Tactics.Editor
                 bool changed = false;
                 foreach (var node in graph.Nodes.OfType<ProjectileLaunchNodeRecord>())
                 {
+                    if (PresentationGraphOnlyProjectileGraphs.Contains(graph.name))
+                    {
+                        if (node.VisualProfile != null)
+                        {
+                            node.VisualProfile = null;
+                            changed = true;
+                        }
+                        continue;
+                    }
                     if (profile != null && node.VisualProfile != profile)
                     {
                         node.VisualProfile = profile;

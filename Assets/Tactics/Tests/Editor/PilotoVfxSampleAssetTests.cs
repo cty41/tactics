@@ -19,6 +19,10 @@ namespace Tactics.Tests.Editor
         private const string AdaptedRoot = "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted";
         private const string ProjectileProfilePath =
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset";
+        private const string FireballProfilePath =
+            "Assets/Tactics/Arts/PureRun/Tween/Projectiles/Fire.asset";
+        private const string BoneSpearProfilePath =
+            "Assets/Tactics/Arts/PureRun/Tween/Projectiles/BoneSpear.asset";
 
         [Test]
         public void VendorShowcaseAssembly_IsEditorOnly()
@@ -624,6 +628,112 @@ namespace Tactics.Tests.Editor
             Assert.That(impactProperty, Is.Not.Null);
             Assert.That(flightProperty.GetValue(profile), Is.Not.Null);
             Assert.That(impactProperty.GetValue(profile), Is.Not.Null);
+        }
+
+        [Test]
+        public void HybridProjectileProfiles_PreserveCoreProfilesAndUseAdaptedFlightPrefabs()
+        {
+            ProjectileVisualProfile fireball = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(
+                FireballProfilePath);
+            ProjectileVisualProfile boneSpear = AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(
+                BoneSpearProfilePath);
+
+            Assert.That(fireball, Is.Not.Null);
+            Assert.That(boneSpear, Is.Not.Null);
+            Assert.That(AssetDatabase.GetAssetPath(fireball.FlightPrefab),
+                Is.EqualTo(AdaptedRoot + "/Prefabs/FireballFlight.prefab"));
+            Assert.That(AssetDatabase.GetAssetPath(boneSpear.FlightPrefab),
+                Is.EqualTo(AdaptedRoot + "/Prefabs/BoneSpearFlight.prefab"));
+            Assert.That(fireball.ImpactPrefab, Is.Null);
+            Assert.That(boneSpear.ImpactPrefab, Is.Null);
+            Assert.That(fireball.ParticleTrail.Enabled, Is.False);
+            Assert.That(boneSpear.Sprite, Is.Not.Null);
+            Assert.That(boneSpear.RotateAlongTangent, Is.True);
+            Assert.That(boneSpear.GhostTrail.Enabled, Is.True);
+            Assert.That(boneSpear.GhostTrail.MaximumAlive, Is.EqualTo(1));
+            Assert.That(boneSpear.GhostTrail.Alpha, Is.EqualTo(0.14f).Within(0.001f));
+        }
+
+        [TestCase("FireballFlight", 2, true)]
+        [TestCase("BoneSpearFlight", 2, true)]
+        [TestCase("FireballChargeLv1", 1, false)]
+        [TestCase("FireballChargeLv2", 2, false)]
+        [TestCase("FireballChargeLv3", 3, false)]
+        [TestCase("FireballImpactLv1", 2, false)]
+        [TestCase("FireballImpactLv2", 3, false)]
+        [TestCase("FireballImpactLv3", 4, false)]
+        [TestCase("FireballDetonationLv3", 3, false)]
+        [TestCase("BoneSpearChargeLv1", 1, false)]
+        [TestCase("BoneSpearChargeLv2", 2, false)]
+        [TestCase("BoneSpearChargeLv3", 3, false)]
+        [TestCase("BoneSpearImpactLv1", 2, false)]
+        [TestCase("BoneSpearImpactLv2", 3, false)]
+        [TestCase("BoneSpearImpactLv3", 4, false)]
+        [TestCase("ThrustStrikeLv1", 1, false)]
+        [TestCase("ThrustStrikeLv2", 2, false)]
+        [TestCase("ThrustStrikeLv3", 3, false)]
+        [TestCase("ThrustHitLv1", 1, false)]
+        [TestCase("ThrustHitLv2", 2, false)]
+        [TestCase("ThrustHitLv3", 3, false)]
+        public void HybridAdaptedPrefab_IsFlattenedAndSelfContained(
+            string prefabName,
+            int particleCount,
+            bool looping)
+        {
+            string path = $"{AdaptedRoot}/Prefabs/{prefabName}.prefab";
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Assert.That(prefab, Is.Not.Null, path);
+            ParticleSystem[] systems = prefab.GetComponentsInChildren<ParticleSystem>(true);
+            Assert.That(systems, Has.Length.EqualTo(particleCount), path);
+            Assert.That(prefab.GetComponentsInChildren<ParticleSystemForceField>(true), Is.Empty, path);
+
+            foreach (ParticleSystem system in systems)
+            {
+                Assert.That(system.main.loop, Is.EqualTo(looping), $"{path}/{system.name}");
+                Assert.That(system.main.playOnAwake, Is.True, $"{path}/{system.name}");
+                Assert.That(system.main.simulationSpace,
+                    Is.EqualTo(ParticleSystemSimulationSpace.Local), $"{path}/{system.name}");
+                Assert.That(system.collision.enabled, Is.False, $"{path}/{system.name}");
+                Assert.That(system.trigger.enabled, Is.False, $"{path}/{system.name}");
+                Assert.That(system.trails.enabled, Is.False, $"{path}/{system.name}");
+                Assert.That(system.transform.localPosition.z, Is.EqualTo(0f).Within(0.0001f));
+                Assert.That(system.transform.localRotation, Is.EqualTo(Quaternion.identity));
+                var renderer = system.GetComponent<ParticleSystemRenderer>();
+                Assert.That(renderer, Is.Not.Null);
+                Assert.That(renderer.renderMode, Is.EqualTo(ParticleSystemRenderMode.Billboard));
+                Assert.That(renderer.alignment, Is.EqualTo(ParticleSystemRenderSpace.View));
+                Assert.That(renderer.trailMaterial, Is.Null);
+                Assert.That(renderer.sharedMaterial, Is.Not.Null);
+                Assert.That(AssetDatabase.GetAssetPath(renderer.sharedMaterial),
+                    Does.StartWith(AdaptedRoot + "/Materials/"));
+            }
+        }
+
+        [TestCase("FireballCharge", VisualCueAnchor.Caster, false)]
+        [TestCase("FireballImpact", VisualCueAnchor.PrimaryTarget, false)]
+        [TestCase("BoneSpearCharge", VisualCueAnchor.Caster, false)]
+        [TestCase("BoneSpearImpact", VisualCueAnchor.PrimaryTarget, false)]
+        [TestCase("ThrustStrike", VisualCueAnchor.Caster, true)]
+        [TestCase("ThrustHit", VisualCueAnchor.PrimaryTarget, false)]
+        public void HybridProfiles_AreLevelSpecificAndUseExpectedTransformContract(
+            string profilePrefix,
+            VisualCueAnchor anchor,
+            bool directional)
+        {
+            for (int level = 1; level <= 3; level++)
+            {
+                string path = $"{AdaptedRoot}/Profiles/{profilePrefix}Lv{level}.asset";
+                VisualCueProfile profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(path);
+                Assert.That(profile, Is.Not.Null, path);
+                Assert.That(profile.Anchor, Is.EqualTo(anchor), path);
+                Assert.That(profile.OrientationMode, Is.EqualTo(directional
+                    ? VisualCueOrientationMode.SourceToTarget
+                    : VisualCueOrientationMode.World), path);
+                Assert.That(profile.StretchXToSourceTarget,
+                    Is.EqualTo(profilePrefix == "ThrustStrike"), path);
+                Assert.That(profile.CompletionPolicy,
+                    Is.EqualTo(VisualCueCompletionPolicy.FireAndForget), path);
+            }
         }
 
         [Test]

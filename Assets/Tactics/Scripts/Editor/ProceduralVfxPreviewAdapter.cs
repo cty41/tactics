@@ -110,16 +110,16 @@ namespace Tactics.EditorTools
             float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
             RendererState renderer = CreateRenderer(
                 "PresentationPreview_TaperedLine",
-                SkillVfxPrimitiveBuilder.SharedQuadMesh,
+                SkillVfxPrimitiveBuilder.GetSharedTaperedMesh(layer.RootWidth, layer.TipWidth),
                 material,
-                Vector3.Lerp(source, target, 0.5f),
+                source,
                 Quaternion.Euler(0f, 0f, angle));
             return new PreviewLayer(layer, elapsed =>
             {
                 SkillVfxPrimitivePreviewState state = SkillVfxPrimitiveBuilder.EvaluatePreviewState(layer, elapsed);
                 renderer.GameObject.SetActive(state.IsVisible);
                 renderer.Transform.localScale = new Vector3(
-                    distance,
+                    distance * Mathf.Max(0f, state.Size),
                     Mathf.Max(0.001f, layer.RootWidth * state.WidthScale),
                     1f);
                 Apply(renderer, layer, state.Alpha);

@@ -7,7 +7,7 @@ Primary request: preserve the approved Pure Run capsule-monster style exactly
 Style/medium: clean flat-color cartoon sprite, thick near-black contour, sparse interior lines, subtle cel-shaded blocks, crisp antialiased edges
 Composition/framing: isolated full body on 256x256 canvas, capsule center x=128, hoof baseline y=236, safe transparent margins
 Lighting/mood: neutral readable battle lighting
-Constraints: match the approved splitjaw goat mother image's core body, horns, ears, muzzle, hooves, tail, pole weapon, palette and line weight; one character only
+Constraints: match the approved splitjaw goat mother image's core body, horns, ears, muzzle, hooves, single pole weapon, palette and line weight; the dark fork attached to the red-brown shaft is the weapon head, not a separate tail; one character only
 Avoid: pixel art, painterly rendering, glossy highlights, smooth 3D light, background, floor, cast shadow, VFX, projectile, motion trail, text, watermark, UI
 ```
 

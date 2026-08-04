@@ -17,6 +17,8 @@ SkillGraph 是战斗技能的统一行为表达。它把技能行为从单体 C#
 
 新能力可选引用 `BattlePresentationGraph`，以 `Action`、`Projectile`、`PrimaryTargetHit` 等强类型入口编排纯视觉节点。节点只允许 Tween、Projectile、Prefab FX、Procedural Recipe、Delay、Marker 与显式 Fork/Join；禁止循环、条件玩法分支、伤害和 Buff。运行时优先执行新入口，缺失时回退既有 `VisualAction`、Projectile Profile 与 Recipe。Release/Impact 回调按一次执行保护，场景取消时不补发玩法回调。
 
+突刺、火球和骨矛的全部已发布等级现以 Presentation Graph 作为唯一表现入口：9 个正式图分别引用既有 Recipe 与投射物 Profile，12 个消费端配置清空顶层 `VisualAction`/`SkillVfxRecipe`，对应玩法图的 `ProjectileLaunch` 也不再直连视觉 Profile。火球经典配置、Pure Run Lv1-Lv3 与骷髅法师 Lv1-Lv2 按等级共享同一表现图。Graph 内存在 `CastCharge` 或 `Action` 入口时，即使顶层 `VisualAction=None`，仍由图驱动蓄力、Release 与玩法启动；程序化叶节点接收完整 Cue 快照，保留路径、多个实际命中点、主命中点与强度倍率。
+
 `ProjectileLaunch` 可选引用 `ProjectileVisualProfile`。飞行时长按世界距离除以 Speed 计算并限制在 `0.12–0.75s`；`Speed <= 0` 时回退到至少 `0.05s` 的旧 `TravelTime`。投射物在发射时锁定终点，到达后先发送 `ProjectileImpact` 语义 Cue，等待接触关键帧，再写入 `ProjectileHit` 并继续 `OnHit`；缺少 Profile、VFX Sink 或 Recipe 时仍保留玩法时序且立即完成表现调用。投射物是无碰撞、无占格、无阴影的临时视觉对象，不通过 `Resources.Load` 获取资产。
 
 Pure Run 当前正式中心锚点 Sprite 包含赤柴长矛、法师奥术弹、死灵飞行能量球和独立骨矛；火球飞行改用程序化软圆热核，不再复用奥术梭形轮廓。骨矛使用 `128 PPU`、中心 Pivot、原生 `Scale=1`，沿飞行切线旋转并最多保留两个短残影，不再复用死灵能量球。Sprite Profile 未显式提供 Material 时，主投射物和残影必须保留 `SpriteRenderer` 的兼容默认材质；只有显式 Sprite Material 才允许覆盖，程序化 `SkillVfxPrimitive` 材质不得作为 Sprite 回退。配置器只对明确能力清单写入 `VisualAction`；未知能力保持 `None` 并报告，禁止按名称或射程猜测动画类型。
@@ -31,7 +33,7 @@ SkillGraph 和三个职业执行器只发送 `CastCharge`、`ProjectileImpact`�
 
 每层只有一个 `BlockingMarker`。释放、飞行抵达和接触关键帧可以阻塞玩法；淡出、火星、骨屑和残影继续异步且不得拖延结算。`ParticleBurst` 与 `ProjectileGhostTrail` 强制非阻塞。取消技能或退出战斗必须清理临时 Renderer、ParticleSystem、Tween 和未完成任务；空 Recipe、缺材质或没有 Unity Renderer 的测试世界仍须正常完成技能。
 
-当前首批配方：
+当前第二批临时配方：
 
 - 火球：飞行软圆热核直径约 `0.17` 世界单位并带最多三粒 World-space 尾火；终点爆环在 `0.10s` 接触关键帧后结算，实际溅射目标使用弱环，Lv3 只有确实移除旧 Burning 时才发收缩引爆环。
 - 骨矛：已确认的独立骨矛 Sprite 沿飞行切线旋转，残影每 `0.055s` 采样、寿命 `0.12s`、最多两个且非阻塞；实际命中点使用 `±35°` 交叉骨白闪光，`0.05s` 达峰，每点两粒骨屑且单次最多八粒。
@@ -48,7 +50,11 @@ SkillGraph 和三个职业执行器只发送 `CastCharge`、`ProjectileImpact`�
 
 编辑器入口 `Tactics/Pure Run/Skill VFX Preview` 支持选择 Recipe、Cue、等级、路径长度和命中点数量，并提供播放、暂停、重播与时间拖动。窗口直接调用运行时 Builder 的时间采样函数；粒子使用固定种子的隐藏 ParticleSystem 并通过绝对时间 `Simulate` 重放。窗口同时显示 `64×32` Tile 参考线与阻塞关键帧，便于在不改变资产的情况下检查最高亮阶段。
 
-入口 `Tactics/Pure Run/Presentation Graph Editor` 提供 GraphView 编辑、节点属性、结构校验与当前图预览。预览舞台复用运行时 `UnitTweenSequenceBuilder`、投射物 Factory/轨迹采样和 Recipe 时间采样；Sprite、SoftDisc、粒子/残影、第三方 Particle Prefab 和程序化原语都可在同一时间轴中确定性重放。Profile 调参仍使用隐藏沙盒，Apply 才通过 Undo 写回；Stop、资源切换、窗口关闭和程序集重载必须恢复 Sprite/Transform 并清理临时对象。旧两个预览菜单在代表图迁移期间保留，不作为新的编排真相源。
+入口 `Tactics/Pure Run/Presentation Graph Editor` 提供 GraphView 编辑、节点属性、结构校验与当前图预览。正式 `BattlePresentationGraph` 以 Editor-only Preview Scenario 声明一次成功命中的代表性完整演示：Phase 内 Cue 并行启动，由指定 Cue 的 `Release`、`Impact`、程序化 Recipe `Blocking` 或完整结束推进下一 Phase；视觉尾段继续播放而不阻塞后续阶段。Scenario 同时保存默认 Actor/Target，仅用于首次打开舞台，用户仍可替换角色；目标受击使用目标自己的 Hit Family，并与相应命中 Cue 同时开始。Preview 不提供 Entry 或 Scenario 覆盖，时间轴只读显示 Release、Pose Restore、Projectile Impact、VFX Contact 与 Hit。旧图缺少 Scenario 时才回退 `DefaultPreviewEntry` 并显示兼容警告。
+
+当前 18 个正式图均配置完整 Scenario：伤害加深只演示诅咒表现而不模拟伤害受击；毒矛和骨矛在投射物 Impact 后触发目标受击；霹雳闪电在 Release 后触发命中与受击；突刺按 `Action/Release → DirectionalStrike/Blocking → PrimaryTargetHit + Target Hit` 播放；火球按 Release、飞行 Impact、爆炸接触、条件引爆（仅 Lv3）及溅射命中推进。预览舞台复用运行时 `UnitTweenSequenceBuilder`、投射物 Factory/轨迹采样、Recipe 时间采样和 tapered mesh 缓存；Preview Scenario 只描述 Editor 演示，不参与 Runtime Entry 编排、玩法 SkillGraph、伤害、Buff、目标或资源消耗。Profile 调参仍使用隐藏沙盒，Apply 才通过 Undo 写回；Stop、资源切换、窗口关闭和程序集重载必须恢复 Sprite/Transform/Shadow 并清理临时对象。旧两个预览菜单在代表图迁移期间保留，不作为新的编排真相源。
+
+火球、骨矛与突刺 Lv1-Lv3 的正式图使用“程序化时序骨架 + Piloto 项目侧 Prefab FX”的闭合 Fork/Join：Recipe 保留接触 Blocking Marker、完整路径/实际命中快照和缺资产回退，粒子分支只承担蓄力、飞行外层、定向枪芒及命中爆发，视觉尾段不阻塞玩法。火球与骨矛的 `ProjectileVisualProfile` 继续决定 Sprite/软圆核心、速度、弹道和切线旋转，并通过 `FlightPrefab` 叠加池化粒子；突刺 `VisualCueProfile` 使用内部 `SourceToTarget` 方向模式和可选 X 轴距离伸展，Runtime 与 Preview 必须调用同一变换公式。Lv1-Lv3 共享视觉语言并逐级增加粒子层；火球 Lv3 的首次爆发、程序化收缩和二段引爆仍由既有 Scenario 顺序表达。
 
 Prefab FX 锚点语义必须与运行时一致：`Caster` 与 `PrimaryTarget` 取对应主 Sprite 的 Bounds 中心，`PrimaryTargetGround` 取单位逻辑 Root 对应的 Tile 落点，`TargetPoint` 取目标 Tile 的几何中心；不得用包含透明留白的 Sprite Bounds 底边或固定角色高度偏移替代地面锚点。贴地第三方 FX 的项目侧适配 Prefab必须先把采样后的粒子 Bounds 中心归一到适配根节点，再做尺寸规范化，避免供应商粒子自身偏心与语义锚点叠加造成跨 Tile 偏移。
 
@@ -59,6 +65,8 @@ Prefab FX Preview 必须像运行时一样，以目标主 Renderer 的 Sorting L
 需要同时跨越单位前后层的贴地效果必须拆成多个 `VisualCueProfile`，并在 Presentation Graph 中使用闭合 `Fork/Join` 并行播放。伤害加深诅咒的正式样本采用目标脚下快照：暗盘、独立双圆环、符文带和中央符号位于 `sortingOrder - 2`，远侧火焰位于 `-1`，近侧火焰位于 `+2`。八个固定尺寸主火柱以可见根部锚定外环，从 12 点方向开始按 `0.06s` 间隔顺时针点燃；远侧三根、近侧五根，火尖允许向上越过圆环。Lv2/Lv3 只扩大节点圆周和地面主体，不放大火焰粒子。三层均为 FireAndForget，因此 Impact 与 Buff 结算不等待粒子寿命。
 
 项目侧适配的第三方 Prefab FX 材质不得依赖场景深度纹理。构建器必须同时关闭 Unity 软粒子关键字与供应商 Shader 的 `_USESOFTALPHA` 属性；若供应商 Shader 在隔离 `PreviewRenderUtility` 中仍不能稳定输出片元，应只对项目适配材质副本切换到 `Tactics/PureRun/ParticleTextureUnlit`，保留原粒子纹理、顶点色和生命周期。第三方源材质始终只读。
+
+适配 Builder 只复制批准的供应商粒子子节点，并在项目侧 Prefab 中统一关闭 Loop、Play On Awake 之外的自动持续播放、Collision、Trigger、Force Field、软粒子和 Trail 模块，清除供应商绝对坐标与异常 Z 朝向，复制独立材质并归一尺寸/Bounds/Sorting。所有 one-shot 与飞行粒子均由共享池管理；缺少适配 Prefab 时对应分支安全跳过，Sprite 与程序化 Recipe 仍可完成表现和时序。
 
 `SkillTargetingProtocol` 统一表达主目标、任意格中心、方向扇形、有序多段目标、实体对象格、回收动作和无路径位移。伤害大类与元素分别配置；`ApplyBuff.RequiresSuccessfulHit` 只在明确的“命中附带状态”节点上启用，避免独立 Buff 误读旧伤害结果。`SummonUnit` 通过战斗级 `SummonRegistry` 按召唤者和类别维护顺序、上限与最早替换。
 

@@ -6,6 +6,7 @@ using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Units.Classes;
+using Tactics.Editor.PresentationGraph;
 using Tactics.Runtime.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -92,6 +93,8 @@ namespace Tactics.Editor.SkillGraphEditor
             var role = CreateOrUpdateFireDemonRole(fireAttackConfig);
             var brain = CreateOrUpdateFireDemonBrain();
             CreateOrUpdateFireDemonPrefab(role, brain);
+            PureRunPresentationGraphAssetBuilder.RebuildFireballSamples();
+            PureRunPresentationGraphAssetBuilder.RebuildLightningSamples();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

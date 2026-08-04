@@ -14,6 +14,9 @@ namespace Tactics.Common.Skills.Graph
         [SerializeField, Min(0.05f)] private float _lifetime = 0.6f;
         [SerializeField, Min(0.01f)] private float _scale = 1f;
         [SerializeField, Range(-50, 100)] private int _sortingOrderOffset = 20;
+        [SerializeField] private VisualCueOrientationMode _orientationMode;
+        [SerializeField] private bool _stretchXToSourceTarget;
+        [SerializeField, Min(0.01f)] private float _referenceDistance = 1f;
 
         public GameObject Prefab => _prefab;
         public VisualCueAnchor Anchor => _anchor;
@@ -21,6 +24,9 @@ namespace Tactics.Common.Skills.Graph
         public float Lifetime => _lifetime;
         public float Scale => _scale;
         public int SortingOrderOffset => _sortingOrderOffset;
+        internal VisualCueOrientationMode OrientationMode => _orientationMode;
+        internal bool StretchXToSourceTarget => _stretchXToSourceTarget;
+        internal float ReferenceDistance => Mathf.Max(0.01f, _referenceDistance);
     }
 
     /// <summary>
@@ -41,5 +47,55 @@ namespace Tactics.Common.Skills.Graph
     {
         FireAndForget,
         AwaitCompletion
+    }
+
+    /// <summary>
+    /// Selects the internal orientation rule used by project-owned adapted VFX.
+    /// </summary>
+    internal enum VisualCueOrientationMode
+    {
+        World,
+        SourceToTarget
+    }
+
+    /// <summary>
+    /// Resolves the shared runtime and editor-preview transform for a visual cue.
+    /// </summary>
+    internal static class VisualCueTransformUtility
+    {
+        internal static Quaternion ResolveRotation(
+            VisualCueProfile profile,
+            Vector3 sourceWorldPosition,
+            Vector3 targetWorldPosition)
+        {
+            if (profile == null || profile.OrientationMode != VisualCueOrientationMode.SourceToTarget)
+                return Quaternion.identity;
+
+            Vector3 direction = targetWorldPosition - sourceWorldPosition;
+            if (direction.sqrMagnitude <= 0.000001f)
+                return Quaternion.identity;
+
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            return Quaternion.Euler(0f, 0f, angle);
+        }
+
+        internal static Vector3 ResolveScale(
+            VisualCueProfile profile,
+            Vector3 sourceWorldPosition,
+            Vector3 targetWorldPosition)
+        {
+            if (profile == null)
+                return Vector3.one;
+
+            float scale = Mathf.Max(0.01f, profile.Scale);
+            if (!profile.StretchXToSourceTarget)
+                return Vector3.one * scale;
+
+            float distance = Vector3.Distance(sourceWorldPosition, targetWorldPosition);
+            return new Vector3(
+                scale * distance / profile.ReferenceDistance,
+                scale,
+                scale);
+        }
     }
 }

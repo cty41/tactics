@@ -31,6 +31,44 @@ namespace Tactics.Common.Skills.Graph
         Impact
     }
 
+    internal enum PresentationPreviewAdvanceKind
+    {
+        Complete,
+        Release,
+        Impact,
+        Blocking
+    }
+
+    /// <summary>
+    /// Describes one editor-only representative preview phase without changing runtime cue flow.
+    /// </summary>
+    [Serializable]
+    internal sealed class PresentationPreviewPhaseRecord
+    {
+        [SerializeField] private List<PresentationCueKind> _cues = new();
+        [SerializeField] private PresentationCueKind _continuationCue = PresentationCueKind.Action;
+        [SerializeField] private PresentationPreviewAdvanceKind _advanceKind =
+            PresentationPreviewAdvanceKind.Complete;
+        [SerializeField] private bool _playTargetHitReaction;
+
+        internal List<PresentationCueKind> Cues => _cues;
+        internal PresentationCueKind ContinuationCue
+        {
+            get => _continuationCue;
+            set => _continuationCue = value;
+        }
+        internal PresentationPreviewAdvanceKind AdvanceKind
+        {
+            get => _advanceKind;
+            set => _advanceKind = value;
+        }
+        internal bool PlayTargetHitReaction
+        {
+            get => _playTargetHitReaction;
+            set => _playTargetHitReaction = value;
+        }
+    }
+
     public enum PresentationNodeType
     {
         Entry,
@@ -181,13 +219,35 @@ namespace Tactics.Common.Skills.Graph
     {
         [SerializeField] private string _displayName;
         [SerializeField] private int _version = 1;
+        [SerializeField] private PresentationCueKind _defaultPreviewEntry = PresentationCueKind.Action;
+        [SerializeField] private GameObject _previewActorPrefab;
+        [SerializeField] private GameObject _previewTargetPrefab;
+        [SerializeField] private List<PresentationPreviewPhaseRecord> _previewPhases = new();
         [SerializeReference] private List<PresentationNodeRecord> _nodes = new();
         [SerializeField] private List<PresentationEdgeRecord> _edges = new();
 
         public string DisplayName { get => _displayName; set => _displayName = value; }
         public int Version { get => _version; set => _version = Mathf.Max(1, value); }
+        public PresentationCueKind DefaultPreviewEntry
+        {
+            get => _defaultPreviewEntry;
+            set => _defaultPreviewEntry = value;
+        }
         public List<PresentationNodeRecord> Nodes => _nodes;
         public List<PresentationEdgeRecord> Edges => _edges;
+
+        internal GameObject PreviewActorPrefab
+        {
+            get => _previewActorPrefab;
+            set => _previewActorPrefab = value;
+        }
+        internal GameObject PreviewTargetPrefab
+        {
+            get => _previewTargetPrefab;
+            set => _previewTargetPrefab = value;
+        }
+        internal List<PresentationPreviewPhaseRecord> PreviewPhases => _previewPhases;
+        internal bool HasPreviewScenario => _previewPhases != null && _previewPhases.Count > 0;
 
         public PresentationEntryNodeRecord FindEntry(PresentationCueKind cue)
         {

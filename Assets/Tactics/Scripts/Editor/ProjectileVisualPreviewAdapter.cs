@@ -48,10 +48,12 @@ namespace Tactics.EditorTools
             DisposeObjects();
             UsesPlaceholder = false;
 
-            ProjectileVisualHandle handle = ProjectileVisualFactory.CreateProjectile(
-                profile,
-                sourceRenderer,
-                "PreviewProjectile");
+            ProjectileVisualHandle handle = profile?.FlightPrefab != null
+                ? CreatePrefabProjectile(profile, sourceRenderer)
+                : ProjectileVisualFactory.CreateProjectile(
+                    profile,
+                    sourceRenderer,
+                    "PreviewProjectile");
             GameObject projectileObject;
             if (handle.IsValid)
             {
@@ -76,11 +78,69 @@ namespace Tactics.EditorTools
 
             if (!UsesPlaceholder)
             {
+                AddPrefabParticleSimulation(sequence, profile, projectileObject, duration);
                 AddParticleTrail(sequence, profile, PrimaryRenderer, start, end, duration);
                 AddGhostTrail(sequence, profile, PrimaryRenderer as SpriteRenderer, start, end, duration);
             }
 
             return sequence;
+        }
+
+        private static ProjectileVisualHandle CreatePrefabProjectile(
+            ProjectileVisualProfile profile,
+            Renderer sourceRenderer)
+        {
+            var projectileObject = Object.Instantiate(profile.FlightPrefab);
+            projectileObject.name = "PreviewProjectile";
+            Renderer renderer = ProjectileVisualFactory.ConfigurePrefabProjectile(
+                profile,
+                projectileObject);
+
+            int sortingLayerId = sourceRenderer != null ? sourceRenderer.sortingLayerID : 0;
+            int sortingOrder = (sourceRenderer != null ? sourceRenderer.sortingOrder : 0) +
+                profile.SortingOrderOffset;
+            TransientVfxPool.ApplySorting(projectileObject, sortingLayerId, sortingOrder);
+            return new ProjectileVisualHandle(projectileObject, renderer);
+        }
+
+        private static void AddPrefabParticleSimulation(
+            Sequence sequence,
+            ProjectileVisualProfile profile,
+            GameObject projectileObject,
+            float duration)
+        {
+            if (profile?.FlightPrefab == null || projectileObject == null)
+                return;
+
+            ParticleSystem[] systems = projectileObject.GetComponentsInChildren<ParticleSystem>(true);
+            if (systems.Length == 0)
+                return;
+            foreach (ParticleSystem system in systems)
+            {
+                system.useAutoRandomSeed = false;
+                system.randomSeed = 1u;
+                system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            Tween simulation = DOTween.To(
+                    () => 0f,
+                    elapsed => SimulatePrefabParticles(systems, elapsed),
+                    duration,
+                    duration)
+                .SetEase(Ease.Linear);
+            sequence.Insert(0f, simulation);
+        }
+
+        private static void SimulatePrefabParticles(ParticleSystem[] systems, float elapsed)
+        {
+            foreach (ParticleSystem system in systems)
+            {
+                if (system == null)
+                    continue;
+                system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                system.Simulate(elapsed, true, true, true);
+                system.Pause(true);
+            }
         }
 
         public void Dispose()

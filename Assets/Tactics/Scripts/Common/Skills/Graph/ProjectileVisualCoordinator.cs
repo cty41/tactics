@@ -82,26 +82,15 @@ namespace Tactics.Common.Skills.Graph
                     sortingLayerId,
                     sortingOrder);
                 projectileObject.name = "ProjectileVisual";
-                var spriteRenderer = projectileObject.GetComponent<SpriteRenderer>();
-                if (profile.Sprite != null)
-                {
-                    if (spriteRenderer == null)
-                        spriteRenderer = projectileObject.AddComponent<SpriteRenderer>();
-                    projectileObject.GetComponent<TransientVfxPoolMember>()?
-                        .RegisterRuntimeSpriteRenderer(spriteRenderer);
-                    spriteRenderer.enabled = true;
-                    spriteRenderer.sprite = profile.Sprite;
-                    spriteRenderer.color = profile.Tint;
-                    if (profile.Material != null)
-                        spriteRenderer.sharedMaterial = profile.Material;
-                    spriteRenderer.sortingLayerID = sortingLayerId;
-                    spriteRenderer.sortingOrder = sortingOrder;
-                }
-
+                renderer = ProjectileVisualFactory.ConfigurePrefabProjectile(profile, projectileObject);
                 TransientVfxPool.ApplySorting(projectileObject, sortingLayerId, sortingOrder);
-                renderer = spriteRenderer != null
-                    ? spriteRenderer
-                    : projectileObject.GetComponentInChildren<Renderer>(true);
+                if (renderer != null)
+                {
+                    // Runtime-added core/Sprite renderers are not part of the pool member's
+                    // prefab-time renderer cache, so apply their sorting explicitly.
+                    renderer.sortingLayerID = sortingLayerId;
+                    renderer.sortingOrder = sortingOrder;
+                }
             }
             else
             {
