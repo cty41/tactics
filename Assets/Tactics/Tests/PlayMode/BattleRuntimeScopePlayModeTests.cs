@@ -337,6 +337,35 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public System.Collections.IEnumerator StartBattleAsync_DoesNotOpenCheatConsole()
+        {
+            UIManager.Instance.Destroy(UIManager.UIId.CheatConsole);
+            var controllerObject = new GameObject("BattleWithoutDefaultCheatConsole");
+            controllerObject.SetActive(false);
+            var controller = controllerObject.AddComponent<BattleController>();
+
+            try
+            {
+                Task startTask = controller.StartBattleAsync();
+                yield return WaitForTask(startTask, 10d, "Complete battle startup");
+                Assert.That(startTask.IsFaulted, Is.False);
+
+                Task startupUiTask = controller.RuntimeScope.WhenIdleAsync();
+                yield return WaitForTask(startupUiTask, 10d, "Complete battle UI startup");
+
+                Assert.That(UIManager.Instance.IsVisible(UIManager.UIId.CheatConsole), Is.False,
+                    "Starting a battle must not open the cheat console; it remains available through ToggleConsole.");
+            }
+            finally
+            {
+                controller.EndBattle(default);
+                Object.Destroy(controllerObject);
+            }
+
+            yield return null;
+        }
+
+        [UnityTest]
         public System.Collections.IEnumerator EndBattle_CancelsScopeBeforePublishingBattleEnded()
         {
             var controllerObject = new GameObject("EndScopedBattleController");
@@ -746,7 +775,7 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
-        public System.Collections.IEnumerator StartBattleAsync_TracksStartupUiTasksInRuntimeScope()
+        public System.Collections.IEnumerator StartBattleAsync_TracksBattleUiTaskInRuntimeScope()
         {
             TestGameAssetHelper.Cleanup();
             yield return null;
@@ -773,7 +802,7 @@ namespace Tactics.Tests.PlayMode
                 Task idleTask = scope.WhenIdleAsync();
                 yield return null;
                 Assert.That(idleTask.IsCompleted, Is.False,
-                    "Both startup UI readiness waits must remain tracked while GameAssetManager is absent.");
+                    "The battle UI readiness wait must remain tracked while GameAssetManager is absent.");
                 Assert.That(startTask.IsFaulted, Is.False,
                     "Starting a battle without GameAssetManager must not fault.");
 

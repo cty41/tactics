@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-05T11:38:09+08:00"
+timestamp: "2026-08-05T12:04:50+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -75,7 +75,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:107ada8174b658392e881280aca0e414dabc494feecda90f27018503ceb967da
+source_fingerprint: sha256:3fc4c4df4d092447e0859105219394136ea97a2e32edace9c5007a9835babe8e
 ---
 
 # Current State
@@ -148,7 +148,7 @@ Pure Run 单位状态反馈绑定到单位根：待命、选中、已行动和�
 
 场景卸载时 CellManager、高亮 Renderer 与单位的销毁顺序不固定。`TilemapUnit` 清理单位状态高亮前会使用 Unity 对象有效性判断；`TilemapCellManager` 的移除操作只消费仍存在的 Renderer，不在销毁阶段懒加载或重建渲染组件。该清理是 best-effort，本地高亮状态无论 Manager 是否已销毁都会复位。
 
-Pure Run 正式战斗会在单位管理器初始化前生成队伍与遭遇，并为所有实际出现的阵营补齐玩家控制器；玩家出生格优先选择相机可见、可行走且未占用的配置或最近合法格。战斗 Camera 在初始化、单位选择和回合切换期间保持固定，Battle UI 只读取 Camera 做世界标记投影；右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
+Pure Run 正式战斗会在单位管理器初始化前生成队伍与遭遇，并为所有实际出现的阵营补齐玩家控制器；玩家出生格优先选择相机可见、可行走且未占用的配置或最近合法格。战斗开始只自动打开 Battle UI，不再默认创建或显示 Cheat Console；调试控制台继续由 ToggleConsole 输入显式打开，并在战斗结束时关闭。战斗 Camera 在初始化、单位选择和回合切换期间保持固定，Battle UI 只读取 Camera 做世界标记投影；右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
 
 战斗场景通过单个 `BattleBackdrop` Prefab 提供静态深蓝渐变背景。Prefab 序列化引用 URP Unlit 材质和 Quad 网格，`BattleBackdropFitter` 在正交相机的尺寸、宽高比或位姿变化后以 2% overscan 重新铺满视口；相机缺失或为透视模式时隐藏背景并仅警告一次。当前 `Test1` 已接入该 Prefab，新战斗场景沿用同一单实例规则，不由战斗流程动态创建。
 

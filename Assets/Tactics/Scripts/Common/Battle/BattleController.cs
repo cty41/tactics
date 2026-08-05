@@ -981,8 +981,6 @@ namespace Tactics.Common.Battle
 
                 Task battleUiTask = ShowBattleUIAsync(scope.Token);
                 scope.Track(battleUiTask);
-                Task battleConsoleTask = ShowBattleConsoleAsync(scope.Token);
-                scope.Track(battleConsoleTask);
 
                 BattleStarted?.Invoke();
             }
@@ -1162,35 +1160,6 @@ namespace Tactics.Common.Battle
             catch (Exception ex)
             {
                 TLog.Warning($"[BattleController] Failed to show Battle UI: {ex.Message}");
-            }
-        }
-
-        private async Task ShowBattleConsoleAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                if (!await WaitForGameAssetReady(cancellationToken))
-                {
-                    TLog.Warning("[BattleController] Battle console skipped: GameAssetManager bootstrap did not complete in time.");
-                    return;
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!IsBattleActive)
-                    return;
-
-                await UIManager.Instance.ShowAsync(UIManager.UIId.CheatConsole);
-
-                if (cancellationToken.IsCancellationRequested || !IsBattleActive)
-                    UIManager.Instance.Hide(UIManager.UIId.CheatConsole);
-            }
-            catch (OperationCanceledException)
-            {
-                // Battle teardown cancels startup UI work.
-            }
-            catch (Exception ex)
-            {
-                TLog.Warning($"[BattleController] Failed to show battle console: {ex.Message}");
             }
         }
 

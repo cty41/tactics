@@ -1,7 +1,8 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-05
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:107ada8174b658392e881280aca0e414dabc494feecda90f27018503ceb967da`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:3fc4c4df4d092447e0859105219394136ea97a2e32edace9c5007a9835babe8e`。
+* **Fix**: 战斗启动不再调度 Cheat Console UI，只自动显示 Battle UI；调试控制台保留 ToggleConsole 手动入口并继续在战斗结束时关闭。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:7780144e3385c77380256d81a0aca323ed26c15f12e89ababbdd5750b31be49e`。
 * **Fix**: Friendly、Selected、Finished、Targetable 单位状态改为独立动态 Mesh，并在 `LateUpdate` 连续跟随单位根；`UnitLeftCell` 不再提前跳格，非 0 阵营隐藏被动状态但保留 Targetable 红色提示。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800`。
