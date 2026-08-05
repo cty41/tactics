@@ -97,10 +97,10 @@
 
 ## 当前参考锚点
 
-- 胶囊死亡方向与紧凑体量：`Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v02.png`；已批准复制到运行时。
-- 死灵法师：`Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v03.png`；已批准复制到运行时。
-- 法师：`Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v02.png`；已批准复制到运行时。
-- 羊魔：`Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v01.png`；已批准复制到运行时并由六个职责共享。
+- 胶囊死亡方向与紧凑体量：`Tools/artworks/doge/calibrated/doge_capsule_hunter_death_color_v04.png`；Alpha AABB 居中并已接入运行时。
+- 死灵法师：`Tools/artworks/doge/calibrated/doge_capsule_necromancer_death_color_v05.png`；Alpha AABB 居中并已接入运行时。
+- 法师：`Tools/artworks/doge/calibrated/doge_capsule_mage_death_color_v04.png`；Alpha AABB 居中并已接入运行时。
+- 羊魔：`Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_death_color_v03.png`；Alpha AABB 居中、已接入运行时并由六个职责共享。
 - 蝙蝠过大反例：`Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v01.png`
 - 蝙蝠当前候选：`Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png`
 

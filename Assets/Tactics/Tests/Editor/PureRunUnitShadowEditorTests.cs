@@ -75,41 +75,17 @@ namespace Tactics.Tests.Editor
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(FighterPrefabPath);
             Assert.That(prefab, Is.Not.Null, FighterPrefabPath);
 
-            AssertShadowContract(prefab, FighterPrefabPath, false);
+            AssertShadowContract(prefab, FighterPrefabPath, false, 0.25f);
         }
 
         [Test]
-        public void TilemapUnitVisualLayout_KeepsShadowAnchoredToTileLandingPoint()
+        public void TilemapUnitVisualLayout_DoesNotExposeRuntimeBaselineOffsets()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(FighterPrefabPath);
-            Assert.That(prefab, Is.Not.Null, FighterPrefabPath);
-
-            GameObject instance = UnityEngine.Object.Instantiate(prefab);
-            try
-            {
-                var unit = instance.GetComponent<TilemapUnit>();
-                Transform sprite = instance.transform.Find("Sprite");
-                Transform shadow = instance.transform.Find("Shadow");
-                MethodInfo applyVisualYOffset = typeof(TilemapUnit).GetMethod(
-                    "ApplyVisualYOffset",
-                    BindingFlags.Instance | BindingFlags.NonPublic);
-                Assert.That(unit, Is.Not.Null);
-                Assert.That(sprite, Is.Not.Null);
-                Assert.That(shadow, Is.Not.Null);
-                Assert.That(applyVisualYOffset, Is.Not.Null);
-
-                sprite.localPosition = Vector3.zero;
-                shadow.localPosition = new Vector3(0f, ExpectedGroundShadowFootOffset, 0f);
-                applyVisualYOffset.Invoke(unit, null);
-
-                Assert.That(sprite.localPosition.y, Is.EqualTo(0.25f).Within(0.001f));
-                Assert.That(shadow.localPosition,
-                    Is.EqualTo(new Vector3(0f, ExpectedGroundShadowFootOffset, 0f)));
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(instance);
-            }
+            const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            Assert.That(typeof(TilemapUnit).GetField("_visualYOffset", Flags), Is.Null);
+            Assert.That(typeof(TilemapUnit).GetField("_appliedVisualYOffset", Flags), Is.Null);
+            Assert.That(typeof(TilemapUnit).GetField("_shadowFootOffset", Flags), Is.Null);
+            Assert.That(typeof(TilemapUnit).GetMethod("ApplyVisualYOffset", Flags), Is.Null);
         }
 
         [Test]
@@ -133,7 +109,7 @@ namespace Tactics.Tests.Editor
                 Assert.That(hasLandRules ^ hasAirRules, Is.True,
                     $"{path} must use exactly one supported movement rule type.");
 
-                AssertShadowContract(prefab, path, hasAirRules);
+                AssertShadowContract(prefab, path, hasAirRules, 0f);
             }
         }
 
@@ -199,7 +175,11 @@ namespace Tactics.Tests.Editor
             }
         }
 
-        private static void AssertShadowContract(GameObject prefab, string context, bool isAirUnit)
+        private static void AssertShadowContract(
+            GameObject prefab,
+            string context,
+            bool isAirUnit,
+            float expectedSpriteRootY)
         {
             Sprite expectedSprite = AssetDatabase.LoadAssetAtPath<Sprite>(RuntimeShadowPath);
             Material expectedMaterial = AssetDatabase.LoadAssetAtPath<Material>(RuntimeShadowMaterialPath);
@@ -213,10 +193,10 @@ namespace Tactics.Tests.Editor
             Assert.That(shadows, Has.Length.EqualTo(1), context);
 
             SpriteRenderer shadow = shadows[0];
-            var serializedUnit = new SerializedObject(prefab.GetComponent<TilemapUnit>());
-            SerializedProperty shadowFootOffset = serializedUnit.FindProperty("_shadowFootOffset");
-            Assert.That(shadowFootOffset, Is.Not.Null, context);
-
+            Transform sprite = prefab.GetComponentsInChildren<SpriteRenderer>(true)
+                .First(renderer => renderer.name == "Sprite")
+                .transform;
+            Vector3 spriteRootPosition = prefab.transform.InverseTransformPoint(sprite.position);
             Vector3 shadowRootPosition = prefab.transform.InverseTransformPoint(shadow.transform.position);
             float expectedScale = isAirUnit ? 0.75f : 1f;
             float expectedAlpha = isAirUnit ? 0.60f : 1f;
@@ -225,11 +205,12 @@ namespace Tactics.Tests.Editor
             Assert.That(shadow.gameObject.activeSelf, Is.True, context);
             Assert.That(shadow.enabled, Is.True, context);
             Assert.That(shadow.forceRenderingOff, Is.False, context);
-            Assert.That(shadowFootOffset.floatValue,
-                Is.EqualTo(ExpectedGroundShadowFootOffset).Within(0.001f), context);
+            Assert.That(spriteRootPosition.x, Is.Zero.Within(0.001f), context);
+            Assert.That(spriteRootPosition.y, Is.EqualTo(expectedSpriteRootY).Within(0.001f), context);
+            Assert.That(spriteRootPosition.z, Is.Zero.Within(0.001f), context);
             Assert.That(shadowRootPosition.x, Is.Zero.Within(0.001f), context);
             Assert.That(shadowRootPosition.y,
-                Is.EqualTo(shadowFootOffset.floatValue).Within(0.001f), context);
+                Is.EqualTo(ExpectedGroundShadowFootOffset).Within(0.001f), context);
             Assert.That(shadowRootPosition.z, Is.Zero.Within(0.001f), context);
             Assert.That(shadow.transform.localScale.x, Is.EqualTo(expectedScale).Within(0.001f), context);
             Assert.That(shadow.transform.localScale.y, Is.EqualTo(expectedScale).Within(0.001f), context);

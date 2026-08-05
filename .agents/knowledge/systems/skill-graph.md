@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-08-04T17:09:25+08:00"
+timestamp: "2026-08-04T22:59:35+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -54,7 +54,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs
   - Assets/Tactics/Tests/Editor/BattlePresentationGraphEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:1960b31098ec1dbe988582d7a397b81ca7e933f1357e3a02f3a59ba504c5d5ed
+source_fingerprint: sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800
 ---
 
 # Current State
@@ -71,7 +71,7 @@ source_fingerprint: sha256:1960b31098ec1dbe988582d7a397b81ca7e933f1357e3a02f3a59
 
 Skill VFX 使用有限原语 Recipe：六种强类型 Cue 只携带结算前捕获的世界坐标快照，六种固定原语由 `SkillVfxCoordinator` 统一创建、排序、等待和清理。只有层的 `BlockingMarker` 影响玩法继续时点；粒子与残影强制非阻塞。Cast 开始时以施法者 Sprite 中心发送 `CastCharge`，其 `BlockingMarker=0`；Recipe 按明确技能族、已有专属、默认 Cast 的顺序解析，在人物与阴影后生成单个径向光环，不修改主 Renderer。火球终点/溅射/Lv3 条件引爆、骨矛实际命中交叉闪光、突刺方向刺痕和实际命中反馈已分别接入；空 Recipe 或无 Sink 时保持 no-op。`PureRunSkillVfxPreviewWindow` 复用 Builder 时间采样，支持 Recipe/Cue/等级/路径/命中数与可拖动时间轴。
 
-`Tactics/Pure Run/Presentation Graph Editor` 提供 GraphView 创建、连线、复制删除、Undo/Redo、节点属性、运行时结构校验和独立 Preview Scenario 校验，并可把当前 Graph 直接送入隔离舞台。18 个正式图以 Editor-only Phase/Cue 场景完整演示一次代表性成功命中，指定 Cue 的 Release、Projectile Impact、程序化 Blocking 或完整结束负责推进；Action 恢复和 VFX 淡出继续与后续阶段重叠。Preview 不开放 Entry/Scenario 覆盖，时间轴只读显示 Release、Pose Restore、Projectile Impact、VFX Contact 与 Hit；目标受击使用目标自己的 Hit Family，伤害加深例外地不模拟伤害受击。缺少 Scenario 的旧图才回退 `DefaultPreviewEntry` 并显示警告。该元数据不参与 Runtime 编排或玩法结算。预览继续复用运行时 Tween/投射物构建、Recipe 时间采样与 tapered mesh 缓存；旧 Tween Preview 与 Skill VFX Preview 暂时保留为叶资产调试入口。
+`Tactics/Pure Run/Presentation Graph Editor` 提供 GraphView 创建、连线、复制删除、Undo/Redo、节点属性、运行时结构校验和独立 Preview Scenario 校验，并可把当前 Graph 直接送入隔离舞台。18 个正式图以 Editor-only Phase/Cue 场景完整演示一次代表性成功命中，指定 Cue 的 Release、Projectile Impact、程序化 Blocking 或完整结束负责推进；Action 恢复和 VFX 淡出继续与后续阶段重叠。Preview 不开放 Entry/Scenario 覆盖，时间轴只读显示 Release、Pose Restore、Projectile Impact、VFX Contact 与 Hit；目标受击使用目标自己的 Hit Family，伤害加深例外地不模拟伤害受击。缺少 Scenario 的旧图才回退 `DefaultPreviewEntry` 并显示警告。该元数据不参与 Runtime 编排或玩法结算。预览继续复用运行时 Tween/投射物构建、Recipe 时间采样与 tapered mesh 缓存；Tween Preview 作为叶资产调试入口另提供 `Lethal Hit → Corpse`，以 `0.20s` 的 recoil/shake/collapse 完成表现生命周期交接但不进入 Presentation Graph 或 SkillGraph；Skill VFX Preview 继续检查单个 Recipe。
 
 火球、骨矛和突刺已由单一程序化临时基线升级为 Piloto 粒子混合表现；Recipe 不再承担主要画面，但继续作为接触 Marker、路径/多命中反馈与缺资产安全回退。长期制作策略仍保留 Tween 处理角色姿态、位移、受击、后坐和投射物运动，也允许简单光环、短闪光、短尾迹与颜色脉冲继续程序化；多阶段、形态复杂或承担职业识别的技能特效优先使用项目侧 Prefab、ParticleSystem、Shader/Material、Sprite 序列或 AnimationClip，不把有限原语扩充为通用复杂 VFX 框架。
 

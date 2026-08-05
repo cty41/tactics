@@ -49,7 +49,7 @@ verified_revision: c68dbebe
 - Pure Run 单格单位统一使用等距视角下的屏幕水平软椭圆阴影；阴影本身不带方向性投影，不随角色朝向翻转。批准源为 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png`，运行时副本为 `Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png`，两者必须保持原字节一致。
 - 纹理固定为 `64×32 RGBA`、Single Sprite、`64 PPU`、中心 Pivot、Full Rect、Bilinear、Clamp，关闭 Mipmap、压缩、Read/Write 与 fallback physics shape，并启用 Alpha Is Transparency。Sprite 世界尺寸为 `(1, 0.5)`，与单格等距 Tile 几何一致。
 - 地面单位的 `Shadow` 保持 `localScale = (1, 1, 1)`、Renderer RGB 白色且 alpha `1.0`；飞行单位使用同一 PNG，固定 `localScale = (0.75, 0.75, 0.75)`、Renderer RGB 白色且 alpha `0.60`。两者的虚拟落点都是单位所在 `64×32` Tile 几何中心，飞行阴影不随可见身体下沿或悬浮高度移动。
-- `TilemapUnit` 以单位根节点作为 Tile 几何落点，并把地面 `Shadow` 固定在根空间 `localY = _shadowFootOffset = -0.03`；Prefab 作者状态必须保存同一落点，不能保留历史 `-0.42` 偏移并依赖初始化纠正。阴影位置不得从 `Sprite.localPosition` 推导：`_visualYOffset` 与 Idle/动作 Tween 都可能改写 Sprite 姿态，但不能把阴影带进角色轮廓。朝向与 Tween 只处理 `Sprite` 子节点，不处理 `Shadow`。当前仓库没有使用 `AirUnitMovementRules` 的单位 Prefab，飞行参数是可执行的作者契约，不代表蝙蝠已接入运行时。
+- `TilemapUnit` 根节点只表示 Tile Ground Center；Pure Run `VisualRoot/Sprite` 的作者根空间基线为零，地面 `Shadow` 由 Prefab 明确保存 `localY=-0.03`。运行时不再提供 `_visualYOffset` 或 `_shadowFootOffset` 二次写入，`UnitTweenVisual` 只捕获并恢复 Prefab 基线。阴影位置不得从会被 Idle/动作 Tween 改写的 Sprite 姿态推导。完整网格术语与禁止补偿规则见[等距战场网格与视觉锚点契约](isometric-grid-anchor-contract.md)。当前仓库没有使用 `AirUnitMovementRules` 的单位 Prefab，飞行参数是可执行的作者契约，不代表蝙蝠已接入运行时。
 - 当前共享 `Fighter.prefab` 的阴影供其 Pure Run 派生链及接受该共享变更的其他派生单位使用；`PureRunGoatSupport`、`PureRunSkeletonMage` 与 `PureRunSkeletonWarrior` 直接保存同一新 Sprite 引用。12 个 Pure Run 单位的 Shadow 都必须默认激活；`PureRunNecromancer` 不得保留禁用覆盖。独立 legacy `Skeleton.prefab`、GroundTiles Palette 和第三方示例继续保留历史资源。
 - 所有 Pure Run `Shadow` 必须使用静态材质 `Assets/Tactics/Arts/PureRun/Materials/PureRunUnitShadow.mat`（`Sprites/Default`）。禁止复用第三方 `HeliSprite.mat` 或 `Custom/FloatingUnitShader`：该 Shader 会按世界坐标与时间摆动顶点，并忽略 `SpriteRenderer` 的颜色与 alpha，无法满足固定格心以及地面/飞行透明度契约。
 
@@ -77,9 +77,9 @@ verified_revision: c68dbebe
 - 手持或悬浮的静态火焰允许短火舌向上；飞行火焰必须让火舌逆飞行方向后掠，同时保留圆钝能量核心。流线化只调整外焰，不把核心拉成尖头或长彗星。
 - 去幕和 Mitchell 缩小后都要重新合成到透明黑底，保证精确色幕为零且所有 `alpha=0` 像素 RGB 清零。详细流程见 [投射物 Sprite 约束](../skills/pure-run-artwork-pipeline/references/projectile-sprites.md)。
 - 当前运行时正式投射物源为赤柴长矛 `v01`、法师奥术弹 `v02`、死灵飞行能量球 `v03` 和骨矛 `v01`。运行时副本必须与设计源 PNG 内容一致，统一导入为 `256×256`、Single Sprite、`128 PPU`、中心 Pivot、无 Mipmap/压缩；颜色职业变体由 `ProjectileVisualProfile.Tint` 表达，不复制新 Sprite。骨矛使用原生比例、沿飞行切线旋转，并以最多两个短残影提供运动反馈；残影不烘进 PNG，也不阻塞技能结算。
-- 已明确批准接入运行时的死亡图复制为独立 `256×256`、Single Sprite、`128 PPU`、中心 Pivot `(0.5, 0.5)` 与 Tight Mesh 纹理；它们配置在单位视觉组件上，单位死亡后由同一通用 `Corpse` 实例显示。尸体以 Sprite Tight bounds 中心抵消透明画布内偏移，不继承生前方向镜像，但继承主 Renderer 的材质和颜色，使羊魔职责换色继续生效。
+- 已明确批准接入运行时的死亡图复制为独立 `256×256`、Single Sprite、`128 PPU`、中心 Pivot `(0.5, 0.5)` 与 Tight Mesh 纹理；它们配置在单位视觉组件上，单位死亡后由同一通用 `Corpse` 实例显示。正式死亡图的完整 Alpha AABB 已以整数像素对齐画布中心，尸体 Sprite 使用零局部偏移，不再通过 Tight bounds 修补美术画布。尸体不继承生前方向镜像，但继承主 Renderer 的材质、颜色、Sorting Layer 与当前 Sorting Order，使羊魔职责换色和既有战场遮挡规则继续生效；缺少来源 Renderer 的旧单位保留尸体 Prefab 原始排序。
 - 当前运行时尸体图覆盖赤柴猎人、死灵法师、凯利蓝㹴法师与六种羊魔职责。骷髅、骷髅法师和火魔属于召唤物，仍按战斗规则直接移除且不生成尸体；蝙蝠尚无运行时 Prefab，不提前导入。
-- 现有死亡图的等比体量复核使用 Hunter `1.00×` 为倒地投影基准，并生成 Mage `1.04×`、Necromancer `1.16×`、Goat `1.05×` 候选与统一 Tile Review。候选只用于人工比较；在批准前不得覆盖上述运行时纹理。
+- 现有死亡图的等比体量复核使用 Hunter `1.00×` 为倒地投影基准，并生成 Mage `1.04×`、Necromancer `1.16×`、Goat `1.05×` 候选。第二轮只做整数像素平移，形成并正式接入 Hunter `v04`、Mage `v04`、Necromancer `v05`、Goat `v03`；不缩放、不旋转、不改姿态。批准依据为多 Tile 的 `death_state_volume_review_v03.png` 左列精确 AABB 居中；右列 `+8px` 只保留诊断意义。旧 `v02` 单 Tile 版曾把 Sprite 中心错误放在 Tile 中心上方 `25px`，仅保留为历史，不得作为落地判断依据。
 
 ## 单帧动作姿态视觉语言
 
@@ -92,12 +92,12 @@ verified_revision: c68dbebe
 
 - 标准地面胶囊单位共用 `StandardUnitTweenProfile`。Idle、移动纸片摆动、近战突进、远程后坐、施法发光和受击回弹只作用于名为 `Sprite` 的隔离视觉 Transform；动作期间可由 `UnitActionPoseProfile` 配置化切换同一主 Renderer 的单帧 Sprite。逻辑 Root、Shadow、血条、飘字和 Tile 高亮不得参与 Tween 或姿态切换。
 - 凯利蓝㹴法师和墨西哥无毛犬死灵法师分别使用 `MageActionPoseProfile` 与 `NecromancerActionPoseProfile`，只映射 Default 状态的 `Cast / Hit`。正式源位于 `Tools/artworks/doge/calibrated`，运行时副本位于 `Textures/Actions/Mage` 与 `Textures/Actions/Necromancer`；后续换图保持 Profile 与姿态族不变，只替换批准源、运行时纹理和引用。
-- 前景表现优先级为尸体落地、受击、攻击/施法、移动、Idle。打断使用 `Kill(false)` 并恢复 Prefab 原始局部姿态，不用 `Kill(true)` 强制完成旧回调。
+- `UnitTweenVisual` 以轻量生命周期 `Alive → Dying → Removed` 约束前景表现。Alive 内保留受击、攻击/施法、移动、Idle 的优先级；Dying 是终止性抢占，拒绝后续动作且不恢复 Idle。致死攻击按 `0.07s` recoil、`0.05s` shake、`0.08s` collapse 播放：末段回到 Tile 基准与基础旋转，并从底部 Pivot 压到约 `1.02× / 0.58×`，在 `0.20s` 幂等交接独立尸体。取消和销毁也必须执行同一交接。玩法尸体在死亡当帧已经占格和可交互，只延迟 Renderer 显示；交接后继续播放 `0.28s` 落地。普通打断使用 `Kill(false)` 并恢复 Prefab 原始局部姿态，不用 `Kill(true)` 强制完成旧回调。
 - 赤柴 Hit 的 `Default / Unarmed` 共用同一对无矛受击 Sprite；受击姿态只隐藏图内长矛，不修改 `AmazonBattleState.IsSpearHeld`，并在恢复段开始按权威视觉状态回到持矛或空手 Idle。
 - Cast 蓄力使用 `SkillVfxRecipe` 的非阻塞 `CastCharge` 径向光环，以施法者可见 Sprite 中心为锚点并排在人物与阴影后方。无专属 Recipe 的 Cast 回退到低饱和蓝色光环，火球和骨矛可由技能族 Recipe 覆写颜色；禁止复制、染色或实心覆盖整张人物 Sprite。施法期间允许由姿态 Profile 切换主 Sprite，但不得改变 `Material`、`Color`、Sorting 或烘焙 VFX、投射物和阴影。
 - 远程/施法动作在 release 标记启动 SkillGraph；`ProjectileLaunch` 抵达后才继续 `OnHit` 和玩法效果。场景卸载或取消必须先把等待任务标记为取消，再 Kill 临时 Tween 并销毁 Renderer，避免 `OnKill` 抢先报告成功。
 - 飞行蝙蝠不使用这套地面胶囊动画；其独立悬浮与飞行动画留待专用 Profile。
-- 编辑器入口 `Tactics/Pure Run/Tween Preview` 在隔离的 `PreviewRenderUtility` 舞台中复用运行时单位 Sequence 和投射物视觉构建，支持十种单项/组合动作、四方向、2–6 格距离、循环、倍速和时间拖动。`CorpseLanding` 使用独立 `Corpse` 实例并直接调用运行时 `ApplyVisual`，因此 Sprite bounds 居中、材质、Tint、镜像清理及 Drop/Impact/Settled 时序与战斗一致；活体 Sprite 与 Shadow 在该预览期间整体隐藏。Profile 始终通过隐藏沙盒编辑，只有明确点击 Apply 才借助 Undo 写回资产；切换 Profile、Stop、关闭窗口和程序集重载必须销毁全部 Tween 与临时对象。
+- 编辑器入口 `Tactics/Pure Run/Tween Preview` 在隔离的 `PreviewRenderUtility` 舞台中复用运行时单位 Sequence 和投射物视觉构建，支持单项/组合动作、四方向、2–6 格距离、循环、倍速和时间拖动。`CorpseLanding` 继续单独检查落地；`Lethal Hit → Corpse` 使用 Target 作为攻击来源并复用运行时生命周期，标记 Recoil `0s`、Shake `0.07s`、Collapse `0.12s`、Handoff `0.20s`、Impact `0.33s`、Impact End `0.40s` 与 Settled `0.48s`。Stop、Restart、Loop、Actor 切换和窗口关闭必须恢复活体 Sprite/Shadow、销毁临时 Corpse 并清除 Tween。Play Mode 选中 `UnitTweenVisual` 时，Inspector 只读显示 Lifecycle、Priority、活动 Tween、generation 与 Handoff；不得提供强制状态按钮。Profile 始终通过隐藏沙盒编辑，只有明确点击 Apply 才借助 Undo 写回资产。
 - Tween Preview 只显示角色动作、Release、ProjectileImpact 及 Sprite/SoftDisc 弹道、脉冲和尾迹；技能光环、命中特效与 Recipe 分层继续由独立的 `Tactics/Pure Run/Skill VFX Preview` 检查，两套工具不互相复制职责。
 
 ## 标准流水线

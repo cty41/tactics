@@ -228,17 +228,20 @@ namespace Tactics.Common.Controllers
             Material deathMaterial = null;
             Color deathColor = Color.white;
             StandardUnitTweenProfile deathTweenProfile = null;
-            if (eventArgs.AffectedUnit is Unit unityUnit)
+            SpriteRenderer deathSourceRenderer = null;
+            Unit unityUnit = eventArgs.AffectedUnit as Unit;
+            UnitTweenVisual tweenVisual = null;
+            if (unityUnit != null)
             {
                 var visual = unityUnit.GetComponent<FourDirectionSpriteVisual>();
-                var tweenVisual = unityUnit.GetComponent<UnitTweenVisual>();
-                var sourceRenderer = visual?.TargetRenderer;
+                tweenVisual = unityUnit.GetComponent<UnitTweenVisual>();
+                deathSourceRenderer = visual?.TargetRenderer;
                 deathSprite = visual?.DeathSprite;
                 deathTweenProfile = tweenVisual?.Profile;
-                if (sourceRenderer != null)
+                if (deathSourceRenderer != null)
                 {
-                    deathMaterial = sourceRenderer.sharedMaterial;
-                    deathColor = sourceRenderer.color;
+                    deathMaterial = deathSourceRenderer.sharedMaterial;
+                    deathColor = deathSourceRenderer.color;
                 }
             }
 
@@ -246,6 +249,8 @@ namespace Tactics.Common.Controllers
             // units are removed outright and never become valid corpse resources.
             bool wasSummoned = eventArgs.AffectedUnit.OwnerUnitId >= 0;
             bool wasDecoy = AmazonBattleState.IsDecoy(eventArgs.AffectedUnit);
+            Corpse authoredCorpse = null;
+            bool useAuthoredDeathPresentation = false;
             AmazonBattleState.For(this)?.HandleUnitDeath(eventArgs.AffectedUnit);
             SummonRegistry.For(this)?.HandleUnitDeath(eventArgs.AffectedUnit);
 
@@ -302,7 +307,19 @@ namespace Tactics.Common.Controllers
                         go.transform.position = cell.WorldPosition.ToVector3();
                     }
 
-                    corpse.ApplyVisual(deathSprite, deathMaterial, deathColor, deathTweenProfile);
+                    corpse.InheritSortingFrom(deathSourceRenderer);
+                    useAuthoredDeathPresentation = deathSprite != null &&
+                        deathTweenProfile != null && tweenVisual != null &&
+                        corpse.PrepareVisual(
+                            deathSprite,
+                            deathMaterial,
+                            deathColor,
+                            deathTweenProfile,
+                            false);
+                    if (useAuthoredDeathPresentation)
+                        authoredCorpse = corpse;
+                    else
+                        corpse.ApplyVisual(deathSprite, deathMaterial, deathColor, deathTweenProfile);
                     cell.AddInteractable(corpse);
                     TLog.Info($"[GridController] Unit {eventArgs.AffectedUnit.UnitID} died, Corpse created at {cell.GridCoordinates}");
                 }
@@ -324,6 +341,32 @@ namespace Tactics.Common.Controllers
             eventArgs.AffectedUnit.UnitDestroyed -= OnUnitDestroyed;
 
             eventArgs.AffectedUnit.Cleanup(this);
+            if (useAuthoredDeathPresentation && authoredCorpse != null && unityUnit != null)
+            {
+                bool handoffCompleted = false;
+                void CompleteDeathPresentation()
+                {
+                    if (handoffCompleted)
+                        return;
+
+                    handoffCompleted = true;
+                    if (authoredCorpse != null)
+                        authoredCorpse.BeginLanding();
+                    eventArgs.AffectedUnit.OnDestroyed(this);
+                }
+
+                if (eventArgs.AttackingUnit == null)
+                {
+                    CompleteDeathPresentation();
+                    return;
+                }
+
+                tweenVisual.PlayDying(
+                    eventArgs.AttackingUnit.WorldPosition.ToVector3(),
+                    CompleteDeathPresentation);
+                return;
+            }
+
             await UnitManager.MarkAsDestroyed(eventArgs.AffectedUnit);
             eventArgs.AffectedUnit.OnDestroyed(this);
         }

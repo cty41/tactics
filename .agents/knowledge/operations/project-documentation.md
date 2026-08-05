@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-04T17:09:18+08:00"
+timestamp: "2026-08-05T11:38:10+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -13,7 +13,7 @@ repo_paths:
   - .agents/skills/project-doc-organization/SKILL.md
   - .agents/skills/plan-mode-plan-writer/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:004065f1b6210b6dfce81ebe7062ca75ece3a4fa61b4250ba27f81bddc683b5a
+source_fingerprint: sha256:7780144e3385c77380256d81a0aca323ed26c15f12e89ababbdd5750b31be49e
 ---
 
 # Current State
@@ -26,7 +26,15 @@ source_fingerprint: sha256:004065f1b6210b6dfce81ebe7062ca75ece3a4fa61b4250ba27f8
 
 编辑器演示元数据必须与 Runtime/玩法真相源明确分离。例如 Battle Presentation Graph 的 Preview Scenario 只描述代表性完整演示，运行时仍以语义 Entry 驱动，SkillGraph 仍负责伤害、Buff、目标和资源消耗；文档不得把 Preview Phase 当成真实结算流程。
 
+Tween Preview 的组合演示也必须标明复用边界：`Lethal Hit → Corpse` 复用 Runtime 的致死受击、Handoff 和落地 Sequence，但不执行伤害结算或死亡判定。时间轴用于验证表现生命周期，尸体当帧占格、活体移除等玩法事实仍以战斗系统实现为准。
+
+表现状态调试只允许通过 Play Mode Inspector 的只读快照呈现，不得把 Lifecycle、活动 Tween、generation 或 Handoff 序列化为可编辑配置，也不得提供绕过运行时入口的强制状态按钮。
+
 技能表现文档必须区分程序化时序骨架、项目侧第三方 Prefab FX 与玩法结算责任。火球、骨矛和突刺的 Piloto 混合增强仍由 Presentation Graph 编排，Recipe 只保留 Marker、路径/命中快照与安全回退；供应商原资产保持只读，Runtime/Preview 的方向变换以共享实现为准。
+
+等距战场坐标的权威术语、消费者职责与防漂移规则集中在 `.agents/docs/isometric-grid-anchor-contract.md`。实现或工具不得分别发明半格补偿；当前事实必须回到共享几何代码、Prefab 作者基线和对应测试核对。
+
+该契约也区分锁定逻辑格的静态提示与连续跟随单位根的动态状态高亮；移动中的脚底状态不得重新通过 Cell 事件或世界点拾取换算位置，阵营可见性及 Targetable 例外同样以该文档为准。
 
 # Relationships
 

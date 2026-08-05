@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-08-01T00:20:10+08:00"
+timestamp: "2026-08-05T10:57:19+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:b33460aefbe1875a2d47df1e5bf23780ef6b8a61dfb140c42c0e1ce81a407ffe
+source_fingerprint: sha256:41a19adad1671169b500fae8807330c8fe3398a4bfbe02f38701ea96e689980e
 ---
 
 # Current State
@@ -56,6 +56,8 @@ Map adapter 还支持 `encounterRecipeContract`、怪物 AI 目录/Heavy Shot �
 长期测试分为四层：逻辑测试验证规则和事务，语义 UI 测试验证元素与布局，`player-input-e2e` 验证生产输入和场景旅程，最终人工测试只判断视觉裁切、动画反馈、可读性与操作手感。
 
 Battle/Map/UI PlayMode 夹具在激活对象前完成序列化依赖注入，避免重复调用 Unity 生命周期；运行时上下文销毁时取消 AI 任务、解绑结算事件并清理战斗作用域状态。测试 adapter 的失败信息包含当前选中单位、能力、节点与 summary 快照，便于区分业务失败和夹具隔离问题。
+
+战斗格的虚拟 Pointer 目标直接使用 `ICell.WorldPosition` 并由正式 Camera 投影；不得使用 `CellToWorld` 生成测试专属的菱形下顶点，也不得叠加半格补偿。该规则与运行时 Ground Center 契约一致。
 
 # Relationships
 

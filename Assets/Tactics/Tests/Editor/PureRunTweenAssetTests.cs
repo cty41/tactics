@@ -52,6 +52,10 @@ namespace Tactics.Tests.Editor
             var expectedProfile = AssetDatabase.LoadAssetAtPath<StandardUnitTweenProfile>(
                 "Assets/Tactics/Arts/PureRun/Tween/StandardUnitTweenProfile.asset");
             Assert.That(expectedProfile, Is.Not.Null);
+            Assert.That(expectedProfile.LethalShakeDuration, Is.EqualTo(0.05f).Within(0.0001f));
+            Assert.That(expectedProfile.LethalCollapseDuration, Is.EqualTo(0.08f).Within(0.0001f));
+            Assert.That(expectedProfile.LethalCollapseScaleX, Is.EqualTo(1.02f).Within(0.0001f));
+            Assert.That(expectedProfile.LethalCollapseScaleY, Is.EqualTo(0.58f).Within(0.0001f));
             Assert.That(AssetDatabase.LoadMainAssetAtPath(GlowOverlayMaterialPath), Is.Null);
             Assert.That(AssetDatabase.LoadMainAssetAtPath(GlowOverlayShaderPath), Is.Null);
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +13,7 @@ using Tactics.Common.Skills.Graph.Testing;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Buffs;
+using Tactics.Common.Utilities;
 using Tactics.Units;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -230,6 +232,130 @@ namespace Tactics.Tests.PlayMode
         }
 
         [Test]
+        public void TilemapUnit_UnitStateVisibilityUsesPlayerZeroAndKeepsEnemyTargetable()
+        {
+            var gridObject = new GameObject("Grid");
+            var tilemapObject = new GameObject("Tilemap");
+            var managerObject = new GameObject("CellManager");
+            var friendlyObject = new GameObject("FriendlyUnit");
+            var enemyObject = new GameObject("EnemyUnit");
+
+            try
+            {
+                var grid = gridObject.AddComponent<Grid>();
+                grid.cellLayout = GridLayout.CellLayout.Isometric;
+                grid.cellSize = new Vector3(1f, 0.5f, 1f);
+                tilemapObject.transform.SetParent(gridObject.transform, false);
+                var tilemap = tilemapObject.AddComponent<UnityEngine.Tilemaps.Tilemap>();
+                var manager = managerObject.AddComponent<TilemapCellManager>();
+                var renderer = managerObject.GetComponent<ProceduralTileHighlightRenderer>();
+                renderer.SetDataLayer(tilemap);
+
+                var friendly = friendlyObject.AddComponent<TilemapUnit>();
+                SetPrivateField(friendly, "_cellManager", manager);
+                friendly.PlayerNumber = 0;
+                friendly.MarkAsFriendly().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.EqualTo(1));
+                friendly.MarkAsSelected().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.EqualTo(1));
+                friendly.MarkAsFinished().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.EqualTo(1));
+                friendly.MarkAsTargetable().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.EqualTo(1));
+                friendly.UnMark().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.Zero);
+
+                var enemy = enemyObject.AddComponent<TilemapUnit>();
+                SetPrivateField(enemy, "_cellManager", manager);
+                enemy.PlayerNumber = 1;
+                enemy.MarkAsFriendly().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.Zero);
+                enemy.MarkAsSelected().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.Zero);
+                enemy.MarkAsFinished().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.Zero);
+                enemy.MarkAsTargetable().GetAwaiter().GetResult();
+                Assert.That(renderer.UnitStateHighlightCount, Is.EqualTo(1));
+
+                UnityEngine.Object.DestroyImmediate(enemyObject);
+                enemyObject = null;
+                Assert.That(renderer.UnitStateHighlightCount, Is.Zero);
+            }
+            finally
+            {
+                if (enemyObject != null)
+                    UnityEngine.Object.DestroyImmediate(enemyObject);
+                UnityEngine.Object.DestroyImmediate(friendlyObject);
+                UnityEngine.Object.DestroyImmediate(managerObject);
+                UnityEngine.Object.DestroyImmediate(tilemapObject);
+                UnityEngine.Object.DestroyImmediate(gridObject);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator UnitStateHighlight_FollowsUnitRootContinuouslyWithoutMovingStaticHighlights()
+        {
+            var gridObject = new GameObject("Grid");
+            var tilemapObject = new GameObject("Tilemap");
+            var rendererObject = new GameObject("HighlightRenderer");
+            var unitRoot = new GameObject("UnitRoot");
+            var visualRoot = new GameObject("VisualRoot");
+
+            try
+            {
+                var grid = gridObject.AddComponent<Grid>();
+                grid.cellLayout = GridLayout.CellLayout.Isometric;
+                grid.cellSize = new Vector3(1f, 0.5f, 1f);
+                tilemapObject.transform.SetParent(gridObject.transform, false);
+                var tilemap = tilemapObject.AddComponent<UnityEngine.Tilemaps.Tilemap>();
+                var renderer = rendererObject.AddComponent<ProceduralTileHighlightRenderer>();
+                renderer.SetDataLayer(tilemap);
+
+                Vector3 start = TilemapCellGeometry.GetGroundCenterWorld(tilemap, Vector3Int.zero);
+                Vector3 end = TilemapCellGeometry.GetGroundCenterWorld(tilemap, Vector3Int.right);
+                var staticCell = new VirtualSquareCell(
+                    new(0, 0),
+                    start.ToIVector3(),
+                    1,
+                    false,
+                    null);
+                renderer.AddHighlights(new[] { staticCell }, TileHighlightType.Highlighted);
+                Mesh staticMesh = rendererObject.GetComponent<MeshFilter>().sharedMesh;
+                Vector3[] staticVertices = staticMesh.vertices;
+
+                unitRoot.transform.position = start;
+                visualRoot.transform.SetParent(unitRoot.transform, false);
+                renderer.SetUnitStateHighlight(
+                    unitRoot.GetInstanceID(),
+                    unitRoot.transform,
+                    TileHighlightType.UnitSelected);
+
+                visualRoot.transform.localPosition = new Vector3(0.2f, 0.3f, 0f);
+                yield return null;
+                AssertVectorApproximately(
+                    rendererObject.transform.TransformPoint(renderer.UnitStateHighlightMesh.bounds.center),
+                    unitRoot.transform.position);
+
+                foreach (float fraction in new[] { 0f, 0.25f, 0.5f, 0.75f, 1f })
+                {
+                    unitRoot.transform.position = Vector3.Lerp(start, end, fraction);
+                    yield return null;
+                    AssertVectorApproximately(
+                        rendererObject.transform.TransformPoint(renderer.UnitStateHighlightMesh.bounds.center),
+                        unitRoot.transform.position);
+                    CollectionAssert.AreEqual(staticVertices, staticMesh.vertices);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(unitRoot);
+                UnityEngine.Object.DestroyImmediate(rendererObject);
+                UnityEngine.Object.DestroyImmediate(tilemapObject);
+                UnityEngine.Object.DestroyImmediate(gridObject);
+            }
+        }
+
+        [Test]
         public void SummonRegistry_CleansAllCategoriesWhenOwnerDies()
         {
             using var world = new SkillGraphTestWorld();
@@ -426,6 +552,18 @@ namespace Tactics.Tests.PlayMode
         private static void SetField<T>(BuffConfig config, string fieldName, T value)
         {
             typeof(BuffConfig).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(config, value);
+        }
+
+        private static void SetPrivateField(object target, string fieldName, object value)
+        {
+            target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(target, value);
+        }
+
+        private static void AssertVectorApproximately(Vector3 actual, Vector3 expected)
+        {
+            Assert.That(actual.x, Is.EqualTo(expected.x).Within(0.0001f));
+            Assert.That(actual.y, Is.EqualTo(expected.y).Within(0.0001f));
+            Assert.That(actual.z, Is.EqualTo(expected.z).Within(0.0001f));
         }
 
     }

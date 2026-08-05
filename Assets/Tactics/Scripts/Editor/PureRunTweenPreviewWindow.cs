@@ -73,7 +73,12 @@ namespace Tactics.EditorTools
         private float _hitTime = -1f;
         private float _corpseDropTime = -1f;
         private float _corpseImpactTime = -1f;
+        private float _corpseImpactEndTime = -1f;
         private float _corpseSettledTime = -1f;
+        private float _deathHandoffTime = -1f;
+        private float _lethalRecoilTime = -1f;
+        private float _lethalShakeTime = -1f;
+        private float _lethalCollapseTime = -1f;
         private PreviewAction _action = PreviewAction.Idle;
         private FacingDirection _facing = FacingDirection.South;
         private UnitPoseFamily _poseFamily;
@@ -219,7 +224,8 @@ namespace Tactics.EditorTools
             if (EditorGUI.EndChangeCheck())
                 RebuildStage();
 
-            if (_action is PreviewAction.Melee or PreviewAction.Ranged or PreviewAction.Cast or PreviewAction.Hit)
+            if (_action is PreviewAction.Melee or PreviewAction.Ranged or PreviewAction.Cast or
+                PreviewAction.Hit or PreviewAction.LethalHitToCorpse)
                 EditorGUILayout.HelpBox($"Pose resolution: {_poseResolution}", MessageType.Info);
 
             if (UsesProjectile(_action) && !CanRenderSelectedProjectile())
@@ -293,8 +299,13 @@ namespace Tactics.EditorTools
             DrawMarker(sliderRect, _impactTime, "Projectile Impact", new Color(1f, 0.55f, 0.25f));
             DrawMarker(sliderRect, _blockingTime, "VFX Contact", new Color(1f, 0.78f, 0.3f));
             DrawMarker(sliderRect, _hitTime, "Hit", new Color(1f, 0.35f, 0.35f));
+            DrawMarker(sliderRect, _lethalRecoilTime, "Recoil", new Color(1f, 0.46f, 0.3f));
+            DrawMarker(sliderRect, _lethalShakeTime, "Shake", new Color(1f, 0.7f, 0.25f));
+            DrawMarker(sliderRect, _lethalCollapseTime, "Collapse", new Color(0.95f, 0.55f, 1f));
+            DrawMarker(sliderRect, _deathHandoffTime, "Death Handoff", new Color(1f, 0.3f, 0.65f));
             DrawMarker(sliderRect, _corpseDropTime, "Drop", new Color(0.65f, 0.85f, 1f));
             DrawMarker(sliderRect, _corpseImpactTime, "Impact", new Color(1f, 0.62f, 0.25f));
+            DrawMarker(sliderRect, _corpseImpactEndTime, "Impact End", new Color(1f, 0.78f, 0.45f));
             DrawMarker(sliderRect, _corpseSettledTime, "Settled", new Color(0.55f, 1f, 0.55f));
         }
 
@@ -478,7 +489,12 @@ namespace Tactics.EditorTools
             _hitTime = -1f;
             _corpseDropTime = -1f;
             _corpseImpactTime = -1f;
+            _corpseImpactEndTime = -1f;
             _corpseSettledTime = -1f;
+            _deathHandoffTime = -1f;
+            _lethalRecoilTime = -1f;
+            _lethalShakeTime = -1f;
+            _lethalCollapseTime = -1f;
             _poseResolution = "No pose requested";
             if (_presentationGraph != null)
             {
@@ -526,6 +542,9 @@ namespace Tactics.EditorTools
                 }
                 case PreviewAction.CorpseLanding:
                     _previewSequence = BuildCorpsePreview(actorVisual);
+                    break;
+                case PreviewAction.LethalHitToCorpse:
+                    _previewSequence = BuildLethalDeathPreview(actorVisual);
                     break;
                 case PreviewAction.ProjectileOnly:
                     _releaseTime = 0f;
@@ -1136,6 +1155,74 @@ namespace Tactics.EditorTools
             if (directional?.DeathSprite == null || sourceRenderer == null)
                 return null;
 
+            Corpse corpse = CreatePreviewCorpse();
+            if (corpse == null)
+                return null;
+            corpse.InheritSortingFrom(sourceRenderer);
+            Sequence sequence = corpse.ApplyVisualForPreview(
+                directional.DeathSprite,
+                sourceRenderer.sharedMaterial,
+                sourceRenderer.color,
+                _unitSandbox);
+            if (sequence == null)
+                return null;
+
+            _actorInstance.SetActive(false);
+            _corpseDropTime = 0f;
+            _corpseImpactTime = _unitSandbox.CorpseDropDuration;
+            _corpseImpactEndTime = _corpseImpactTime + _unitSandbox.CorpseImpactDuration;
+            _corpseSettledTime = _corpseImpactEndTime + _unitSandbox.CorpseSettleDuration;
+            return sequence;
+        }
+
+        private Sequence BuildLethalDeathPreview(UnitTweenVisual actorVisual)
+        {
+            var directional = _actorInstance.GetComponent<FourDirectionSpriteVisual>();
+            SpriteRenderer sourceRenderer = actorVisual.PrimaryRenderer;
+            if (directional?.DeathSprite == null || sourceRenderer == null ||
+                _targetInstance == null)
+            {
+                return null;
+            }
+
+            Corpse corpse = CreatePreviewCorpse();
+            if (corpse == null)
+                return null;
+            corpse.InheritSortingFrom(sourceRenderer);
+            if (!corpse.PrepareVisual(
+                    directional.DeathSprite,
+                    sourceRenderer.sharedMaterial,
+                    sourceRenderer.color,
+                    _unitSandbox,
+                    false))
+            {
+                return null;
+            }
+
+            ApplyPreviewPose(_actorInstance, ResolvePreviewHitFamily(_actorInstance), _facing);
+            Sequence lethalHit = actorVisual.PlayDying(
+                _targetInstance.transform.position,
+                corpse.ShowPreparedVisual);
+            Sequence landing = corpse.BuildLandingSequenceForPreview();
+            if (lethalHit == null || landing == null)
+                return null;
+
+            _hitTime = -1f;
+            _lethalRecoilTime = 0f;
+            _lethalShakeTime = _unitSandbox.HitRecoilDuration;
+            _lethalCollapseTime = _lethalShakeTime + _unitSandbox.LethalShakeDuration;
+            _deathHandoffTime = _lethalCollapseTime + _unitSandbox.LethalCollapseDuration;
+            _corpseDropTime = _deathHandoffTime;
+            _corpseImpactTime = _corpseDropTime + _unitSandbox.CorpseDropDuration;
+            _corpseImpactEndTime = _corpseImpactTime + _unitSandbox.CorpseImpactDuration;
+            _corpseSettledTime = _corpseImpactEndTime + _unitSandbox.CorpseSettleDuration;
+            return DOTween.Sequence()
+                .Append(lethalHit)
+                .Append(landing);
+        }
+
+        private Corpse CreatePreviewCorpse()
+        {
             GameObject corpsePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultCorpsePrefabPath);
             if (corpsePrefab != null)
             {
@@ -1154,23 +1241,8 @@ namespace Tactics.EditorTools
             _corpseInstance.transform.localScale = Vector3.one;
             _presentationPreviewObjects.Add(_corpseInstance);
 
-            Corpse corpse = _corpseInstance.GetComponent<Corpse>() ??
+            return _corpseInstance.GetComponent<Corpse>() ??
                 _corpseInstance.AddComponent<Corpse>();
-            Sequence sequence = corpse.ApplyVisualForPreview(
-                directional.DeathSprite,
-                sourceRenderer.sharedMaterial,
-                sourceRenderer.color,
-                _unitSandbox);
-            if (sequence == null)
-                return null;
-
-            _actorInstance.SetActive(false);
-            _corpseDropTime = 0f;
-            _corpseImpactTime = _unitSandbox.CorpseDropDuration;
-            _corpseSettledTime = _unitSandbox.CorpseDropDuration +
-                _unitSandbox.CorpseImpactDuration +
-                _unitSandbox.CorpseSettleDuration;
-            return sequence;
         }
 
         private ProjectileVisualProfile CreateTransientProjectileProfile()
@@ -1512,7 +1584,7 @@ namespace Tactics.EditorTools
         private static void RestoreVisual(GameObject instance, PreviewSpriteState spriteState)
         {
             UnitTweenVisual visual = instance != null ? instance.GetComponent<UnitTweenVisual>() : null;
-            visual?.StopAllVisualTweens();
+            visual?.ResetPresentationForPreview();
             spriteState.Restore(FindSpriteRenderer(instance));
         }
 
@@ -1580,6 +1652,7 @@ namespace Tactics.EditorTools
             Cast,
             Hit,
             CorpseLanding,
+            LethalHitToCorpse,
             ProjectileOnly,
             RangedWithProjectile,
             CastWithProjectile

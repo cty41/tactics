@@ -1,10 +1,26 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-05
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:107ada8174b658392e881280aca0e414dabc494feecda90f27018503ceb967da`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:7780144e3385c77380256d81a0aca323ed26c15f12e89ababbdd5750b31be49e`。
+* **Fix**: Friendly、Selected、Finished、Targetable 单位状态改为独立动态 Mesh，并在 `LateUpdate` 连续跟随单位根；`UnitLeftCell` 不再提前跳格，非 0 阵营隐藏被动状态但保留 Targetable 红色提示。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:e03a9bbd9a8c56830f83e40ebbbd21c52bf88627f1d3644680f005c71dadf0b6`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:41a19adad1671169b500fae8807330c8fe3398a4bfbe02f38701ea96e689980e`。
+
+* **Update**: 等距战场统一以 `TilemapCellGeometry` 定义 Ground Center、世界点拾取和菱形顶点；高亮、虚拟输入、Scene Handle、Brush、单位根与尸体不再各自维护半格补偿。
+* **Migration**: Legacy Fighter/Skeleton 将非 Tween Sprite 高度烘焙到 Prefab，12 个 Pure Run Prefab 显式保持零 Sprite/VisualRoot 基线与 Shadow `localY=-0.03`；`TilemapUnit` 移除重复运行时视觉偏移字段。
+* **Documentation**: 新增等距网格与视觉锚点权威契约，并同步 Battle、Gameplay Test、Pure Run Artwork 与 Project Documentation 导航。
+
 ## 2026-08-04
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:0ea87ccd20eb3bb8d4c7423ea02173c53c8eea7635522ea2ad3e1ecf4034957e`。
-* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:1960b31098ec1dbe988582d7a397b81ca7e933f1357e3a02f3a59ba504c5d5ed`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:004065f1b6210b6dfce81ebe7062ca75ece3a4fa61b4250ba27f81bddc683b5a`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:f378f4d9a7bf691764e1cecd961535ce37df08b23ce278e29736161657182270`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:df7d7e02411cda4b081d7f5ee2bd342348669e8aa477b13a4932d29720ae9ded`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:8da8298c973a9aa54026b50fafa3d5134de6881ebf4c3f3c8d701fbf21b514a8`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:70bad24a950c50b4b4a12381846644433bbfb170467a617365917d636c15866a`。
+* **Fix**: 尸体在隐藏准备阶段继承死者主 Sprite Renderer 的 Sorting Layer 与当前 Sorting Order，修复运行时从单位 `order 4` 回落到 Prefab `order 0` 的遮挡错误；Handoff、落地和 Preview 共用该契约。
+* **Update**: 多 Tile `death_state_volume_review_v03` 左列获批；Hunter `v04`、Mage `v04`、Necromancer `v05`、Goat `v03` 已晋升正式源并逐字节替换 Runtime，尸体改用 Alpha AABB 居中的零局部偏移。
+* **Fix**: 致死受击改为 `0.07s recoil → 0.05s shake → 0.08s collapse`，`0.20s` Handoff 前回到 Tile 基准并从底部 Pivot 压至 `1.02× / 0.58×`；Tween Preview 同步显示完整阶段标记。
+* **Tooling**: `UnitTweenVisual` 新增 Play Mode Inspector 只读状态面板，显示 Lifecycle、Priority、活动 Tween、generation 与 Handoff，不提供状态写入或强制按钮。
 * **Fix**: Tween Preview 的 `CorpseLanding` 改为独立 Corpse 并复用运行时 `ApplyVisual`，统一死亡 Sprite bounds 居中、材质/Tint、镜像清理及 Drop/Impact/Settled 时间轴；新增真实 `UnitDestroyed` 尸体生成与逐时刻落地采样回归。
 * **Review**: Hunter、Mage、Necromancer 与 Goat 死亡图完成等比体量候选和统一 Tile Review；候选仍待人工确认，未替换运行时纹理、未提交。
 * **Update**: 火球、骨矛与突刺 Lv1-Lv3 升级为 Piloto 粒子混合表现；9 个正式 Presentation Graph 以 Fork/Join 并行保留程序化 Blocking/路径快照与新蓄力、飞行、定向枪芒和命中粒子，玩法时序及首批三技能保持不变。
@@ -202,3 +218,8 @@
 * **Creation**: 添加项目架构、SkillGraph、怪物 AI、战斗、Roguelike Run、三职业首切计划和 Unity Agent 工作流概念。
 * **Creation**: 登记 OKF v0.1 规范与 Karpathy LLM Wiki 方法来源。
 * **Lint**: 建立仓库内 frontmatter、链接、index、状态和 `catalog_scope` 校验工具。
+* **Fix**: `UnitTweenVisual` 正式化 `Alive / Dying / Removed` 生命周期；致死受击以 `0.14s` recoil+shake 抢占前景表现并幂等交接已即时注册的 Corpse，玩法占格和交互不等待视觉，旧单位与召唤物规则保持不变。
+* **Preview**: Tween Preview 新增 `Lethal Hit → Corpse`，复用 Runtime Handoff 与尸体落地，完整标记 `0.14s / 0.27s / 0.42s`，并覆盖 Stop/Restart 的 Renderer、Shadow 和临时对象恢复。
+* **Review**: 在已确认体量候选上仅做整数像素平移，生成 Hunter `v04`、Mage `v04`、Necromancer `v05`、Goat `v03` 与 `death_state_volume_review_v02.png`；仍待人工批准，未替换 Runtime 纹理、未提交。
+* **Review Fix**: 旧 `death_state_volume_review_v02.png` 的单 Tile 合成将尸体错误放在 Tile 中心上方 `25px`；新增多 Tile `v03`，同时展示精确 Alpha AABB 居中与仅诊断用 `+8px` 屏幕 Y 对照，候选与 Runtime 均未改变。
+* **Fix**: 移除鼠标世界坐标进入 `WorldToCell` 前重复施加的半格 Anchor 补偿，修复等距战场光标与高亮 Tile 固定 `(0.5, 0.5)` 偏移；新增格内多点坐标回归。

@@ -99,6 +99,24 @@ def expected_preview_height(standard_height: int, preview_size: int) -> int:
     return round(standard_height * preview_size / 256) + 1
 
 
+def validate_centered_alpha_bbox(report: Dict[str, Any]) -> None:
+    """Require a visible alpha AABB to be centered on its sprite canvas."""
+    size = report.get("size")
+    bbox = report.get("bbox")
+    if not isinstance(size, list) or len(size) != 2:
+        return
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        return
+
+    expected_x = (size[0] - 1) * 0.5
+    expected_y = (size[1] - 1) * 0.5
+    actual_x = (bbox[0] + bbox[2]) * 0.5
+    actual_y = (bbox[1] + bbox[3]) * 0.5
+    report["bbox_center"] = [actual_x, actual_y]
+    if abs(actual_x - expected_x) > 0.5 or abs(actual_y - expected_y) > 0.5:
+        add_issue(report, "死亡图 Alpha AABB 中心未对齐画布中心（误差必须不超过 0.5 px）")
+
+
 def validate_pair(
     master: Path,
     preview: Path,
@@ -119,7 +137,11 @@ def validate_pair(
     if preview_report.get("size") != [preview_size, preview_size]:
         add_issue(preview_report, f"预览必须为 {preview_size}×{preview_size}")
 
-    if geometry_required:
+    is_death_sprite = "_death_" in master.stem.lower()
+    if is_death_sprite:
+        validate_centered_alpha_bbox(master_report)
+        validate_centered_alpha_bbox(preview_report)
+    elif geometry_required:
         if master_report.get("bbox_size", [None, None])[1] != standard_height:
             add_issue(master_report, f"母版轮廓高度不是 {standard_height} px")
         if master_report.get("bbox_baseline") != baseline:

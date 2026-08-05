@@ -14,6 +14,7 @@ namespace Tactics.Common.Interactables
     {
         [SerializeField] private SpriteRenderer _spriteRenderer;
         private Sequence _landingSequence;
+        private StandardUnitTweenProfile _tweenProfile;
 
         public override bool OccupiesCell => true;
         public override bool Selectable => true;
@@ -41,11 +42,14 @@ namespace Tactics.Common.Interactables
             Color color,
             StandardUnitTweenProfile tweenProfile = null)
         {
-            ApplyVisualForPreview(sprite, material, color, tweenProfile);
+            if (!PrepareVisual(sprite, material, color, tweenProfile, true))
+                return;
+
+            BeginLanding();
         }
 
         /// <summary>
-        /// Applies the runtime corpse presentation and exposes its sequence to the editor preview.
+        /// Applies the immediate corpse presentation and exposes its landing sequence to preview tools.
         /// </summary>
         /// <returns>The non-blocking landing sequence, or null when no sprite or profile is supplied.</returns>
         internal Sequence ApplyVisualForPreview(
@@ -54,8 +58,42 @@ namespace Tactics.Common.Interactables
             Color color,
             StandardUnitTweenProfile tweenProfile = null)
         {
-            if (sprite == null)
+            if (!PrepareVisual(sprite, material, color, tweenProfile, true))
                 return null;
+
+            return BeginLanding();
+        }
+
+        /// <summary>
+        /// Inherits the defeated unit's renderer ordering before the corpse is revealed.
+        /// </summary>
+        /// <param name="sourceRenderer">The defeated unit's primary sprite renderer.</param>
+        internal void InheritSortingFrom(SpriteRenderer sourceRenderer)
+        {
+            if (sourceRenderer == null)
+                return;
+
+            SpriteRenderer corpseRenderer = ResolveSpriteRenderer();
+            corpseRenderer.sortingLayerID = sourceRenderer.sortingLayerID;
+            corpseRenderer.sortingOrder = sourceRenderer.sortingOrder;
+        }
+
+        /// <summary>
+        /// Prepares an authored corpse while keeping gameplay interaction active independently of rendering.
+        /// </summary>
+        /// <returns>True when an authored sprite was prepared; otherwise false.</returns>
+        internal bool PrepareVisual(
+            Sprite sprite,
+            Material material,
+            Color color,
+            StandardUnitTweenProfile tweenProfile,
+            bool visible)
+        {
+            if (sprite == null)
+                return false;
+
+            KillLandingSequence();
+            _tweenProfile = tweenProfile;
 
             var spriteRenderer = ResolveSpriteRenderer();
             spriteRenderer.sprite = sprite;
@@ -63,30 +101,70 @@ namespace Tactics.Common.Interactables
                 spriteRenderer.sharedMaterial = material;
             spriteRenderer.color = color;
             spriteRenderer.flipX = false;
+            spriteRenderer.enabled = visible;
 
             var spriteTransform = spriteRenderer.transform;
-            var boundsCenter = sprite.bounds.center;
-            spriteTransform.localPosition = new Vector3(-boundsCenter.x, -boundsCenter.y, 0f);
+            spriteTransform.localPosition = Vector3.zero;
             spriteTransform.localRotation = Quaternion.identity;
             spriteTransform.localScale = Vector3.one;
+            return true;
+        }
 
-            if (tweenProfile != null)
-            {
-                _landingSequence?.Kill(false);
-                _landingSequence = UnitTweenSequenceBuilder.BuildCorpseLanding(
-                        spriteTransform,
-                        tweenProfile,
-                        spriteTransform.localPosition,
-                        spriteTransform.localRotation,
-                        spriteTransform.localScale)
-                    .SetLink(gameObject, LinkBehaviour.KillOnDestroy)
-                    .OnComplete(() => _landingSequence = null);
-            }
+        /// <summary>
+        /// Reveals the prepared corpse and starts its non-blocking landing presentation.
+        /// </summary>
+        /// <returns>The landing sequence, or null when the prepared corpse has no tween profile.</returns>
+        internal Sequence BeginLanding()
+        {
+            ResolveSpriteRenderer().enabled = true;
+            return BuildLandingSequence();
+        }
 
-            return _landingSequence;
+        /// <summary>
+        /// Builds the prepared landing tail without changing renderer visibility.
+        /// </summary>
+        internal Sequence BuildLandingSequenceForPreview()
+        {
+            return BuildLandingSequence();
+        }
+
+        /// <summary>
+        /// Reveals a prepared corpse at the runtime death handoff marker.
+        /// </summary>
+        internal void ShowPreparedVisual()
+        {
+            ResolveSpriteRenderer().enabled = true;
         }
 
         private void OnDestroy()
+        {
+            KillLandingSequence();
+        }
+
+        private Sequence BuildLandingSequence()
+        {
+            KillLandingSequence();
+            if (_tweenProfile == null)
+                return null;
+
+            var spriteTransform = ResolveSpriteRenderer().transform;
+            Sequence ownedSequence = UnitTweenSequenceBuilder.BuildCorpseLanding(
+                    spriteTransform,
+                    _tweenProfile,
+                    spriteTransform.localPosition,
+                    spriteTransform.localRotation,
+                    spriteTransform.localScale)
+                .SetLink(gameObject, LinkBehaviour.KillOnDestroy);
+            _landingSequence = ownedSequence;
+            ownedSequence.OnComplete(() =>
+            {
+                if (_landingSequence == ownedSequence)
+                    _landingSequence = null;
+            });
+            return ownedSequence;
+        }
+
+        private void KillLandingSequence()
         {
             if (_landingSequence != null && _landingSequence.IsActive())
                 _landingSequence.Kill(false);

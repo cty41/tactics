@@ -1,6 +1,7 @@
 using Tactics.Common.Units;
 using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
+using Tactics.Cells;
 using UnityEditor;
 using UnityEngine;
 
@@ -29,7 +30,8 @@ namespace Tactics.Common.Editor
                 return;
             }
 
-            var worldPos = gridLayout.CellToWorld(position);
+            // _offset is an explicit authoring adjustment applied after the canonical ground anchor.
+            var worldPos = TilemapCellGeometry.GetGroundCenterWorld(gridLayout, position);
             var unitGO = PrefabUtility.InstantiatePrefab(_unitPrefab, _unitsParent) as GameObject;
             if (!unitGO)
             {

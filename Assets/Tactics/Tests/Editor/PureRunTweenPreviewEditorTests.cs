@@ -674,10 +674,7 @@ namespace Tactics.Tests.Editor
                 SpriteRenderer corpseRenderer = corpse.GetComponentsInChildren<SpriteRenderer>(true)
                     .Single(value => value.gameObject.name == "Sprite");
                 Sprite deathSprite = actor.GetComponent<Tactics.Common.Units.FourDirectionSpriteVisual>().DeathSprite;
-                Vector3 basePosition = new(
-                    -deathSprite.bounds.center.x,
-                    -deathSprite.bounds.center.y,
-                    0f);
+                Vector3 basePosition = Vector3.zero;
 
                 Assert.That(actor.activeSelf, Is.False);
                 Assert.That(corpse, Is.Not.SameAs(actor));
@@ -685,9 +682,14 @@ namespace Tactics.Tests.Editor
                 Assert.That(corpseRenderer.sharedMaterial, Is.SameAs(actorRenderer.sharedMaterial));
                 Assert.That(corpseRenderer.color, Is.EqualTo(actorRenderer.color));
                 Assert.That(corpseRenderer.flipX, Is.False);
+                Assert.That(corpseRenderer.sortingLayerID, Is.EqualTo(actorRenderer.sortingLayerID));
+                Assert.That(corpseRenderer.sortingOrder, Is.EqualTo(actorRenderer.sortingOrder));
                 Assert.That(GetField<float>(window, "_corpseDropTime"), Is.Zero);
                 Assert.That(GetField<float>(window, "_corpseImpactTime"),
                     Is.EqualTo(profile.CorpseDropDuration).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_corpseImpactEndTime"),
+                    Is.EqualTo(profile.CorpseDropDuration + profile.CorpseImpactDuration)
+                        .Within(0.0001f));
                 Assert.That(GetField<float>(window, "_corpseSettledTime"),
                     Is.EqualTo(profile.CorpseDropDuration + profile.CorpseImpactDuration +
                         profile.CorpseSettleDuration).Within(0.0001f));
@@ -723,6 +725,213 @@ namespace Tactics.Tests.Editor
             {
                 Object.DestroyImmediate(window);
             }
+        }
+
+        [Test]
+        public void TweenPreviewWindow_LethalHitToCorpse_UsesRuntimeHandoffAndCombinedTimeline()
+        {
+            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            try
+            {
+                SetField(window, "_loop", false);
+                SetField(window, "_action", PureRunTweenPreviewWindow.PreviewAction.LethalHitToCorpse);
+                Invoke(window, "RebuildStage");
+
+                GameObject actor = GetField<GameObject>(window, "_actorInstance");
+                GameObject corpse = GetField<GameObject>(window, "_corpseInstance");
+                Sequence sequence = GetField<Sequence>(window, "_previewSequence");
+                StandardUnitTweenProfile profile = GetField<StandardUnitTweenProfile>(window, "_unitSandbox");
+                UnitTweenVisual actorVisual = actor.GetComponent<UnitTweenVisual>();
+                SpriteRenderer actorRenderer = actor.GetComponentsInChildren<SpriteRenderer>(true)
+                    .Single(value => value.gameObject.name == "Sprite");
+                SpriteRenderer corpseRenderer = corpse.GetComponentsInChildren<SpriteRenderer>(true)
+                    .Single(value => value.gameObject.name == "Sprite");
+                SpriteRenderer[] actorRenderers = actor.GetComponentsInChildren<SpriteRenderer>(true);
+                Dictionary<SpriteRenderer, bool> originalVisibility = actorRenderers
+                    .ToDictionary(value => value, value => value.enabled);
+                Vector3 corpseBasePosition = Vector3.zero;
+                float shakeTime = profile.HitRecoilDuration;
+                float collapseTime = shakeTime + profile.LethalShakeDuration;
+                float handoffTime = collapseTime + profile.LethalCollapseDuration;
+                float impactTime = handoffTime + profile.CorpseDropDuration;
+                float impactEndTime = impactTime + profile.CorpseImpactDuration;
+                float settledTime = impactEndTime + profile.CorpseSettleDuration;
+
+                Assert.That(actorVisual.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Dying));
+                Assert.That(corpseRenderer.enabled, Is.False);
+                Assert.That(corpseRenderer.sortingLayerID, Is.EqualTo(actorRenderer.sortingLayerID));
+                Assert.That(corpseRenderer.sortingOrder, Is.EqualTo(actorRenderer.sortingOrder));
+                Assert.That(GetField<float>(window, "_lethalRecoilTime"), Is.Zero);
+                Assert.That(GetField<float>(window, "_lethalShakeTime"),
+                    Is.EqualTo(shakeTime).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_lethalCollapseTime"),
+                    Is.EqualTo(collapseTime).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_deathHandoffTime"),
+                    Is.EqualTo(handoffTime).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_corpseDropTime"),
+                    Is.EqualTo(handoffTime).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_corpseImpactTime"),
+                    Is.EqualTo(impactTime).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_corpseImpactEndTime"),
+                    Is.EqualTo(impactEndTime).Within(0.0001f));
+                Assert.That(GetField<float>(window, "_corpseSettledTime"),
+                    Is.EqualTo(settledTime).Within(0.0001f));
+
+                sequence.Goto(profile.HitRecoilDuration, false);
+                Assert.That(Vector3.Distance(
+                    actorVisual.VisualRoot.localPosition,
+                    actorVisual.BasePosition), Is.GreaterThan(0.001f));
+                Assert.That(corpseRenderer.enabled, Is.False);
+
+                sequence.Goto(collapseTime, false);
+                Assert.That(corpseRenderer.enabled, Is.False);
+
+                sequence.Goto(handoffTime, false);
+                Assert.That(actorVisual.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Removed));
+                Assert.That(actorRenderers.All(value => !value.enabled), Is.True);
+                Assert.That(actorVisual.VisualRoot.localPosition,
+                    Is.EqualTo(actorVisual.BasePosition).Using(Vector3ComparerWithEqualsOperator.Instance));
+                Assert.That(Quaternion.Angle(
+                    actorVisual.VisualRoot.localRotation,
+                    actorVisual.BaseRotation), Is.LessThan(0.001f));
+                Assert.That(actorVisual.VisualRoot.localScale,
+                    Is.EqualTo(new Vector3(
+                        actorVisual.BaseScale.x * profile.LethalCollapseScaleX,
+                        actorVisual.BaseScale.y * profile.LethalCollapseScaleY,
+                        actorVisual.BaseScale.z)).Using(Vector3ComparerWithEqualsOperator.Instance));
+                Assert.That(corpseRenderer.enabled, Is.True);
+                Assert.That(corpseRenderer.transform.localPosition,
+                    Is.EqualTo(corpseBasePosition + Vector3.up * profile.CorpseStartHeight)
+                        .Using(Vector3ComparerWithEqualsOperator.Instance));
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(new Vector3(0.85f, 0.85f, 1f))
+                        .Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                sequence.Goto(impactTime, false);
+                Assert.That(corpseRenderer.transform.localPosition,
+                    Is.EqualTo(corpseBasePosition).Using(Vector3ComparerWithEqualsOperator.Instance));
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(Vector3.one).Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                sequence.Goto(impactEndTime, false);
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(new Vector3(1.08f, 0.88f, 1f))
+                        .Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                sequence.Goto(settledTime, false);
+                Assert.That(corpseRenderer.transform.localScale,
+                    Is.EqualTo(Vector3.one).Using(Vector3ComparerWithEqualsOperator.Instance));
+
+                Invoke(window, "StopPreview", true);
+                Assert.That(actorVisual.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Alive));
+                Assert.That(originalVisibility.All(entry => entry.Key.enabled == entry.Value), Is.True);
+                Assert.That(corpse == null, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
+        public void UnitTweenVisual_DyingPreemptsForegroundAndCompletesHandoffOnce()
+        {
+            var unitObject = new GameObject("DyingUnit");
+            var spriteObject = new GameObject("Sprite");
+            spriteObject.transform.SetParent(unitObject.transform);
+            var renderer = spriteObject.AddComponent<SpriteRenderer>();
+            var profile = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
+            var visual = unitObject.AddComponent<UnitTweenVisual>();
+            visual.ConfigureForPreview(spriteObject.transform, renderer, profile);
+            _objectsToDestroy.Add(unitObject);
+            _objectsToDestroy.Add(profile);
+
+            visual.BeginMoveStep(Vector3.right);
+            int handoffCount = 0;
+            Sequence sequence = visual.PlayDying(Vector3.right, () => handoffCount++);
+            int releaseCount = 0;
+            visual.PlayActionAsync(
+                UnitVisualAction.Melee,
+                Vector3.right,
+                () => releaseCount++,
+                default).GetAwaiter().GetResult();
+            visual.PlayHit(Vector3.right);
+            visual.BeginMoveStep(Vector3.right);
+
+            Assert.That(sequence, Is.Not.Null);
+            Assert.That(visual.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Dying));
+            Assert.That(releaseCount, Is.Zero);
+
+            sequence.Kill(false);
+            visual.StopAllVisualTweens();
+            Assert.That(handoffCount, Is.EqualTo(1));
+            Assert.That(visual.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Removed));
+            Assert.That(renderer.enabled, Is.False);
+
+            visual.ResetPresentationForPreview();
+            Assert.That(visual.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Alive));
+            Assert.That(renderer.enabled, Is.True);
+        }
+
+        [TestCase(1f, 0f)]
+        [TestCase(-1f, 0f)]
+        [TestCase(0f, 1f)]
+        [TestCase(0f, -1f)]
+        public void UnitTweenVisual_LethalRecoilMovesAwayFromAttacker(float attackerX, float attackerY)
+        {
+            var unitObject = new GameObject("DirectionalDyingUnit");
+            var spriteObject = new GameObject("Sprite");
+            spriteObject.transform.SetParent(unitObject.transform);
+            var renderer = spriteObject.AddComponent<SpriteRenderer>();
+            var profile = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
+            var visual = unitObject.AddComponent<UnitTweenVisual>();
+            visual.ConfigureForPreview(spriteObject.transform, renderer, profile);
+            _objectsToDestroy.Add(unitObject);
+            _objectsToDestroy.Add(profile);
+
+            var attackerPosition = new Vector3(attackerX, attackerY, 0f);
+            Sequence sequence = visual.PlayDying(attackerPosition, null);
+            sequence.Goto(profile.HitRecoilDuration, false);
+
+            Vector3 expectedDirection = -attackerPosition.normalized;
+            Vector3 displacement = visual.VisualRoot.localPosition - visual.BasePosition;
+            Assert.That(Vector3.Dot(displacement.normalized, expectedDirection),
+                Is.EqualTo(1f).Within(0.001f));
+            Assert.That(displacement.magnitude,
+                Is.EqualTo(profile.HitRecoilDistance).Within(0.001f));
+        }
+
+        [Test]
+        public void UnitTweenVisualEditor_UsesReadOnlyRuntimeDebugSnapshot()
+        {
+            var unitObject = new GameObject("DebugUnit");
+            var spriteObject = new GameObject("Sprite");
+            spriteObject.transform.SetParent(unitObject.transform);
+            var renderer = spriteObject.AddComponent<SpriteRenderer>();
+            var profile = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
+            var visual = unitObject.AddComponent<UnitTweenVisual>();
+            visual.ConfigureForPreview(spriteObject.transform, renderer, profile);
+            _objectsToDestroy.Add(unitObject);
+            _objectsToDestroy.Add(profile);
+
+            int handoffCount = 0;
+            Sequence sequence = visual.PlayDying(Vector3.right, () => handoffCount++);
+            UnitTweenVisualDebugSnapshot dying = visual.GetDebugSnapshot();
+            UnityEditor.Editor editor = UnityEditor.Editor.CreateEditor(visual);
+            _objectsToDestroy.Add(editor);
+
+            Assert.That(editor, Is.TypeOf<Tactics.Editor.UnitTweenVisualEditor>());
+            Assert.That(editor.RequiresConstantRepaint(), Is.False);
+            Assert.That(dying.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Dying));
+            Assert.That(dying.ForegroundPriority, Is.EqualTo("Corpse"));
+            Assert.That(dying.IsForegroundTweenActive, Is.True);
+            Assert.That(dying.IsDeathHandoffComplete, Is.False);
+
+            sequence.Goto(sequence.Duration(false), false);
+            UnitTweenVisualDebugSnapshot removed = visual.GetDebugSnapshot();
+            Assert.That(handoffCount, Is.EqualTo(1));
+            Assert.That(removed.Lifecycle, Is.EqualTo(UnitPresentationLifecycle.Removed));
+            Assert.That(removed.IsDeathHandoffComplete, Is.True);
         }
 
         [Test]

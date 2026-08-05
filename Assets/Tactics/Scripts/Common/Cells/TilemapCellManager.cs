@@ -7,6 +7,7 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using Tactics.Runtime.Utilities;
+using Tactics.Units;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -90,7 +91,6 @@ namespace Tactics.Cells
         private Vector3 _lastRawWorldPos;
 
         private ProceduralTileHighlightRenderer _highlightRenderer;
-        private Vector3 _anchorWorldOffset;
 
         public bool ShowDebugOverlay { get; set; }
 
@@ -115,9 +115,6 @@ namespace Tactics.Cells
             EnsureHighlightRenderer();
             HighlightRenderer.SetDataLayer(_gridLayer);
 
-            _anchorWorldOffset = _gridLayer.GetCellCenterWorld(Vector3Int.zero)
-                               - _gridLayer.CellToWorld(Vector3Int.zero);
-
             var bounds = _gridLayer.cellBounds;
             _cells = new Dictionary<Vector2IntImpl, VirtualSquareCell>();
 
@@ -127,7 +124,7 @@ namespace Tactics.Cells
                 if (tile == null)
                     continue;
 
-                var worldPosition = _gridLayer.GetCellCenterWorld(pos).ToIVector3();
+                var worldPosition = TilemapCellGeometry.GetGroundCenterWorld(_gridLayer, pos).ToIVector3();
                 var gridPosition = new Vector2IntImpl(pos.x, pos.y);
                 var cell = new VirtualSquareCell(gridPosition, worldPosition, 1, false, null);
                 _cells.Add(gridPosition, cell);
@@ -232,12 +229,14 @@ namespace Tactics.Cells
             var screenPos = Mouse.current.position.ReadValue();
             var cellCoords = _selectedCell.GridCoordinates;
             var raw = _lastRawWorldPos;
-            var center = _gridLayer.CellToWorld(new Vector3Int(cellCoords.x, cellCoords.y, 0));
+            var coordinates = new Vector3Int(cellCoords.x, cellCoords.y, 0);
+            var origin = _gridLayer.CellToWorld(coordinates);
+            var center = TilemapCellGeometry.GetGroundCenterWorld(_gridLayer, coordinates);
             float dx = raw.x - center.x;
             float dy = raw.y - center.y;
 
             GUI.Label(new Rect(10, y, 600, lineH), $"Cell: ({cellCoords.x},{cellCoords.y})", style); y += lineH;
-            GUI.Label(new Rect(10, y, 600, lineH), $"CellCenter: ({center.x:F2}, {center.y:F2})", style); y += lineH;
+            GUI.Label(new Rect(10, y, 600, lineH), $"GroundCenter: ({center.x:F2}, {center.y:F2})", style); y += lineH;
             GUI.Label(new Rect(10, y, 600, lineH), $"MouseWorld: ({raw.x:F2}, {raw.y:F2})", style); y += lineH;
 
             style.normal.textColor = Mathf.Abs(dy) > 0.1f ? Color.yellow : Color.green;
@@ -246,12 +245,11 @@ namespace Tactics.Cells
             style.normal.textColor = Color.cyan;
             GUI.Label(new Rect(10, y, 600, lineH), $"Screen: ({screenPos.x:F0}, {screenPos.y:F0})", style); y += lineH;
 
-            var cellWorldPos = _gridLayer.CellToWorld(new Vector3Int(cellCoords.x, cellCoords.y, 0));
             style.normal.textColor = Color.white;
-            GUI.Label(new Rect(10, y, 600, lineH), $"CellToWorld: ({cellWorldPos.x:F2}, {cellWorldPos.y:F2})", style); y += lineH;
+            GUI.Label(new Rect(10, y, 600, lineH), $"CellOrigin: ({origin.x:F2}, {origin.y:F2})", style); y += lineH;
 
             var screenCenter = _mainCamera.WorldToScreenPoint(center);
-            var screenCellOrigin = _mainCamera.WorldToScreenPoint(cellWorldPos);
+            var screenCellOrigin = _mainCamera.WorldToScreenPoint(origin);
             style.normal.textColor = Color.green;
             GUI.Label(new Rect(10, y, 600, lineH), $"Center→Screen: ({screenCenter.x:F0}, {screenCenter.y:F0})", style); y += lineH;
             style.normal.textColor = Color.magenta;
@@ -287,18 +285,18 @@ namespace Tactics.Cells
                 var srPos = sr.transform.position;
                 var bounds = sr.sprite.bounds;
                 var bottomCenter = srPos + new Vector3(0, bounds.min.y, 0);
-                var cellPos = _gridLayer.WorldToCell(u.transform.position);
-                var cellCenter = _gridLayer.CellToWorld(cellPos);
-                var cellTop = _gridLayer.GetCellCenterWorld(cellPos);
+                var cellPos = TilemapCellGeometry.WorldToCell(_gridLayer, u.transform.position);
+                var cellOrigin = _gridLayer.CellToWorld(cellPos);
+                var cellCenter = TilemapCellGeometry.GetGroundCenterWorld(_gridLayer, cellPos);
 
                 smallStyle.normal.textColor = Color.yellow;
                 GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"{u.name}:", smallStyle); y += lineH;
                 smallStyle.normal.textColor = Color.white;
                 GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  spriteBottom=({bottomCenter.x:F2},{bottomCenter.y:F2})", smallStyle); y += lineH;
                 smallStyle.normal.textColor = Color.magenta;
-                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  cellCenter=({cellCenter.x:F2},{cellCenter.y:F2})", smallStyle); y += lineH;
+                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  cellOrigin=({cellOrigin.x:F2},{cellOrigin.y:F2})", smallStyle); y += lineH;
                 smallStyle.normal.textColor = Color.green;
-                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  cellTop=({cellTop.x:F2},{cellTop.y:F2})", smallStyle); y += lineH;
+                GUI.Label(new Rect(Screen.width - 350, y, 340, lineH), $"  groundCenter=({cellCenter.x:F2},{cellCenter.y:F2})", smallStyle); y += lineH;
 
                 float deltaBottom = bottomCenter.y - cellCenter.y;
                 smallStyle.normal.textColor = Mathf.Abs(deltaBottom) < 0.05f ? Color.green : Color.red;
@@ -344,7 +342,7 @@ namespace Tactics.Cells
             
             Vector3 mouseWorldPos = ray.GetPoint(enter);
             _lastRawWorldPos = mouseWorldPos;
-            Vector3Int cellPos = _gridLayer.WorldToCell(mouseWorldPos + _anchorWorldOffset);
+            Vector3Int cellPos = TilemapCellGeometry.WorldToCell(_gridLayer, mouseWorldPos);
 
             var gridPosition = new Vector2IntImpl(cellPos.x, cellPos.y);
 
@@ -353,7 +351,7 @@ namespace Tactics.Cells
                 return null;
             }
 
-            Vector3 cellWorldCenter = _gridLayer.GetCellCenterWorld(cellPos);
+            Vector3 cellWorldCenter = TilemapCellGeometry.GetGroundCenterWorld(_gridLayer, cellPos);
 
             Collider2D[] colliders2D = Physics2D.OverlapPointAll(cellWorldCenter);
             var blocking2D = colliders2D.Where(c => !c.isTrigger && c.GetComponent<Unit>() == null).ToArray();
@@ -458,6 +456,23 @@ namespace Tactics.Cells
             // Scene teardown may destroy the renderer before units clear their state.
             // Removal is best-effort and must not lazily recreate rendering components.
             _highlightRenderer.RemoveHighlightOfType(cell, type);
+        }
+
+        internal void SetUnitStateHighlight(TilemapUnit unit, TileHighlightType type)
+        {
+            if (unit == null)
+                return;
+
+            HighlightRenderer?.SetUnitStateHighlight(unit.GetInstanceID(), unit.transform, type);
+        }
+
+        internal void RemoveUnitStateHighlight(TilemapUnit unit)
+        {
+            if (unit == null || _highlightRenderer == null)
+                return;
+
+            // Unit teardown must not recreate a renderer that the scene has already destroyed.
+            _highlightRenderer.RemoveUnitStateHighlight(unit.GetInstanceID());
         }
 
         private static TileHighlightType ToTileHighlightType(CellGuidanceType guidanceType)

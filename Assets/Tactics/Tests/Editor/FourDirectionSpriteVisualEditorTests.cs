@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Tactics.Common.Units;
@@ -90,6 +91,58 @@ namespace Tactics.Tests.Editor
             Assert.That(visual.DeathSprite, Is.Null, prefabPath);
         }
 
+        [TestCase(
+            "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_death.png",
+            "Tools/artworks/doge/calibrated/doge_capsule_hunter_death_color_v04.png")]
+        [TestCase(
+            "Assets/Tactics/Arts/PureRun/Textures/doge_mage_death.png",
+            "Tools/artworks/doge/calibrated/doge_capsule_mage_death_color_v04.png")]
+        [TestCase(
+            "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer_death.png",
+            "Tools/artworks/doge/calibrated/doge_capsule_necromancer_death_color_v05.png")]
+        [TestCase(
+            "Assets/Tactics/Arts/PureRun/Textures/splitjaw_goat_death.png",
+            "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_death_color_v03.png")]
+        public void RuntimeDeathSprite_MatchesApprovedCenteredSource(
+            string runtimePath,
+            string approvedSourcePath)
+        {
+            byte[] runtimeBytes = File.ReadAllBytes(runtimePath);
+            byte[] sourceBytes = File.ReadAllBytes(approvedSourcePath);
+            Assert.That(runtimeBytes, Is.EqualTo(sourceBytes), runtimePath);
+
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                Assert.That(ImageConversion.LoadImage(texture, runtimeBytes, false), Is.True, runtimePath);
+                Color32[] pixels = texture.GetPixels32();
+                int minX = texture.width;
+                int minY = texture.height;
+                int maxX = -1;
+                int maxY = -1;
+                for (int y = 0; y < texture.height; y++)
+                {
+                    for (int x = 0; x < texture.width; x++)
+                    {
+                        if (pixels[y * texture.width + x].a == 0)
+                            continue;
+
+                        minX = Mathf.Min(minX, x);
+                        minY = Mathf.Min(minY, y);
+                        maxX = Mathf.Max(maxX, x);
+                        maxY = Mathf.Max(maxY, y);
+                    }
+                }
+
+                Assert.That((minX + maxX) * 0.5f, Is.EqualTo(127.5f).Within(0.5f), runtimePath);
+                Assert.That((minY + maxY) * 0.5f, Is.EqualTo(127.5f).Within(0.5f), runtimePath);
+            }
+            finally
+            {
+                Object.DestroyImmediate(texture);
+            }
+        }
+
         private static void AssertRuntimeSpriteContract(Sprite sprite, string prefabPath)
         {
             Assert.That(sprite.texture.width, Is.EqualTo(256), prefabPath);
@@ -110,6 +163,11 @@ namespace Tactics.Tests.Editor
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
             Assert.That(settings.spriteMeshType, Is.EqualTo(SpriteMeshType.Tight), context);
+            Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite), context);
+            Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single), context);
+            Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Bilinear), context);
+            Assert.That(importer.wrapMode, Is.EqualTo(TextureWrapMode.Clamp), context);
+            Assert.That(importer.mipmapEnabled, Is.False, context);
         }
     }
 }

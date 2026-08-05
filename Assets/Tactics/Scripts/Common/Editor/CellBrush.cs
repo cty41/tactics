@@ -3,6 +3,7 @@ using Tactics.Runtime.Utilities;
 using Tactics.Common.Cells;
 using Tactics.Common.Utilities;
 using Tactics.Common.Units;
+using Tactics.Cells;
 using UnityEditor;
 using UnityEngine;
 
@@ -60,7 +61,8 @@ namespace Tactics.Common.Editor
                 Undo.DestroyObjectImmediate(existingCell);
             }
 
-            var worldPosition = gridLayout.CellToWorld(position);
+            // _offset is an explicit authoring adjustment applied after the canonical ground anchor.
+            var worldPosition = TilemapCellGeometry.GetGroundCenterWorld(gridLayout, position);
             if (_is2D)
             {
                 cellGO.transform.SetPositionAndRotation(
@@ -113,7 +115,9 @@ namespace Tactics.Common.Editor
             for (int i = 0; i < parent.childCount; i++)
             {
                 var child = parent.GetChild(i);
-                var childPos = grid.WorldToCell(new Vector3(child.position.x, child.position.y, child.position.z));
+                var childPos = TilemapCellGeometry.WorldToCell(
+                    grid,
+                    new Vector3(child.position.x, child.position.y, child.position.z));
                 if (childPos.x == position.x && childPos.y == position.y && childPos.z == position.z)
                 {
                     return child.gameObject;

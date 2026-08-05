@@ -117,21 +117,28 @@ namespace Tactics.Tests.PlayMode
             var deathSprite = Sprite.Create(texture, new Rect(0f, 0f, 2f, 2f), new Vector2(0.25f, 0.75f));
             var material = new Material(Shader.Find("Sprites/Default"));
             var sourceColor = new Color(0.8f, 0.7f, 0.6f, 1f);
+            var sourceObject = new GameObject("SourceSprite");
+            var sourceRenderer = sourceObject.AddComponent<SpriteRenderer>();
+            sourceRenderer.sortingLayerID = renderer.sortingLayerID;
+            sourceRenderer.sortingOrder = 19;
 
+            corpse.InheritSortingFrom(sourceRenderer);
             corpse.ApplyVisual(deathSprite, material, sourceColor);
 
             Assert.That(renderer.sprite, Is.EqualTo(deathSprite));
             Assert.That(renderer.sharedMaterial, Is.EqualTo(material));
             Assert.That(renderer.color, Is.EqualTo(sourceColor));
             Assert.That(renderer.flipX, Is.False);
-            Assert.That(spriteObject.transform.localPosition,
-                Is.EqualTo(new Vector3(-deathSprite.bounds.center.x, -deathSprite.bounds.center.y, 0f)));
+            Assert.That(renderer.sortingLayerID, Is.EqualTo(sourceRenderer.sortingLayerID));
+            Assert.That(renderer.sortingOrder, Is.EqualTo(sourceRenderer.sortingOrder));
+            Assert.That(spriteObject.transform.localPosition, Is.EqualTo(Vector3.zero));
             Assert.That(spriteObject.transform.localRotation, Is.EqualTo(Quaternion.identity));
             Assert.That(spriteObject.transform.localScale, Is.EqualTo(Vector3.one));
 
             Object.Destroy(material);
             Object.Destroy(deathSprite);
             Object.Destroy(texture);
+            Object.Destroy(sourceObject);
             Object.Destroy(corpseGo);
             yield return null;
         }
@@ -148,21 +155,29 @@ namespace Tactics.Tests.PlayMode
             var renderer = spriteObject.AddComponent<SpriteRenderer>();
             var genericColor = new Color(0.4f, 0.4f, 0.4f, 0.8f);
             renderer.color = genericColor;
+            var sourceObject = new GameObject("SourceSprite");
+            var sourceRenderer = sourceObject.AddComponent<SpriteRenderer>();
+            sourceRenderer.sortingLayerID = renderer.sortingLayerID;
+            sourceRenderer.sortingOrder = 13;
 
+            corpse.InheritSortingFrom(sourceRenderer);
             corpse.ApplyVisual(null, null, Color.white);
 
             Assert.That(renderer.sprite, Is.Null);
             Assert.That(renderer.color, Is.EqualTo(genericColor));
+            Assert.That(renderer.sortingLayerID, Is.EqualTo(sourceRenderer.sortingLayerID));
+            Assert.That(renderer.sortingOrder, Is.EqualTo(sourceRenderer.sortingOrder));
             Assert.That(spriteObject.transform.localPosition, Is.EqualTo(new Vector3(0f, -0.15f, 0f)));
             Assert.That(Quaternion.Angle(spriteObject.transform.localRotation, Quaternion.Euler(0f, 0f, 90f)),
                 Is.LessThan(0.001f));
 
+            Object.Destroy(sourceObject);
             Object.Destroy(corpseGo);
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator UnitDestroyedEvent_CreatesCenteredAuthoredCorpseOnOriginalCell()
+        public IEnumerator LethalDamage_RegistersHiddenCorpseImmediately_ThenHandsOffPresentation()
         {
             ICell cell = FindCell(1, 1);
             var unitManager = new SkillGraphTestUnitManager();
@@ -176,10 +191,16 @@ namespace Tactics.Tests.PlayMode
             var spriteObject = new GameObject("Sprite");
             spriteObject.transform.SetParent(unitObject.transform);
             var sourceRenderer = spriteObject.AddComponent<SpriteRenderer>();
+            var shadowObject = new GameObject("Shadow");
+            shadowObject.transform.SetParent(unitObject.transform);
+            var shadowRenderer = shadowObject.AddComponent<SpriteRenderer>();
             var sourceMaterial = new Material(Shader.Find("Sprites/Default"));
             var sourceColor = new Color(0.35f, 0.7f, 0.55f, 1f);
             sourceRenderer.sharedMaterial = sourceMaterial;
             sourceRenderer.color = sourceColor;
+            sourceRenderer.sortingOrder = 17;
+            int expectedSortingLayerId = sourceRenderer.sortingLayerID;
+            int expectedSortingOrder = sourceRenderer.sortingOrder;
 
             var texture = new Texture2D(8, 8);
             var deathSprite = Sprite.Create(
@@ -207,8 +228,10 @@ namespace Tactics.Tests.PlayMode
             Assert.That(registerUnit, Is.Not.Null);
             registerUnit.Invoke(controller, new object[] { unit });
 
-            unit.RemoveFromGame();
-            yield return null;
+            var attackerObject = new GameObject("Attacker");
+            attackerObject.transform.position = Vector3.right;
+            var attacker = attackerObject.AddComponent<Unit>();
+            unit.ModifyHealth(-unit.Health, attacker);
 
             Corpse corpse = cell.CurrentInteractables.OfType<Corpse>().SingleOrDefault();
             Assert.That(corpse, Is.Not.Null);
@@ -222,15 +245,27 @@ namespace Tactics.Tests.PlayMode
             Assert.That(corpseRenderer.sharedMaterial, Is.SameAs(sourceMaterial));
             Assert.That(corpseRenderer.color, Is.EqualTo(sourceColor));
             Assert.That(corpseRenderer.flipX, Is.False);
+            Assert.That(corpseRenderer.sortingLayerID, Is.EqualTo(expectedSortingLayerId));
+            Assert.That(corpseRenderer.sortingOrder, Is.EqualTo(expectedSortingOrder));
+            Assert.That(corpseRenderer.enabled, Is.False);
+            Assert.That(sourceRenderer.enabled, Is.True);
+            Assert.That(shadowRenderer.enabled, Is.True);
+            Assert.That(corpse.OccupiesCell, Is.True);
+
+            float handoffTime = profile.HitRecoilDuration +
+                profile.LethalShakeDuration +
+                profile.LethalCollapseDuration;
+            yield return new WaitForSeconds(handoffTime + 0.02f);
+            Assert.That(corpseRenderer.enabled, Is.True);
+            Assert.That(corpseRenderer.sortingLayerID, Is.EqualTo(expectedSortingLayerId));
+            Assert.That(corpseRenderer.sortingOrder, Is.EqualTo(expectedSortingOrder));
+            Assert.That(unitObject == null, Is.True);
 
             yield return new WaitForSeconds(
                 profile.CorpseDropDuration + profile.CorpseImpactDuration +
                 profile.CorpseSettleDuration + 0.02f);
             Assert.That(corpseRenderer.transform.localPosition,
-                Is.EqualTo(new Vector3(
-                    -deathSprite.bounds.center.x,
-                    -deathSprite.bounds.center.y,
-                    0f)).Using(Vector3ComparerWithEqualsOperator.Instance));
+                Is.EqualTo(Vector3.zero).Using(Vector3ComparerWithEqualsOperator.Instance));
             Assert.That(corpseRenderer.transform.localScale,
                 Is.EqualTo(Vector3.one).Using(Vector3ComparerWithEqualsOperator.Instance));
 
@@ -239,6 +274,7 @@ namespace Tactics.Tests.PlayMode
             Object.Destroy(deathSprite);
             Object.Destroy(texture);
             Object.Destroy(sourceMaterial);
+            Object.Destroy(attackerObject);
             yield return null;
         }
 

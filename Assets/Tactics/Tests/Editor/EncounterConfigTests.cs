@@ -11,10 +11,12 @@ using Tactics.Common.Utilities;
 using UnityEngine;
 using Tactics.RoguelikeMap;
 using UnityEngine.TestTools;
+using UnityEngine.Tilemaps;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace Tactics.Tests.Editor
 {
@@ -203,6 +205,233 @@ namespace Tactics.Tests.Editor
             {
                 UnityEngine.Object.DestroyImmediate(go);
             }
+        }
+
+        [TestCase(0, 0, 0.10f, 0.10f)]
+        [TestCase(0, 0, 0.75f, 0.75f)]
+        [TestCase(-3, 2, 0.25f, 0.80f)]
+        [TestCase(4, -2, 0.90f, 0.20f)]
+        public void TilemapCellGeometry_WorldToCell_PreservesIsometricCellBoundaries(
+            int cellX,
+            int cellY,
+            float offsetX,
+            float offsetY)
+        {
+            var gridObject = new GameObject("Grid");
+            var tilemapObject = new GameObject("Tilemap");
+
+            try
+            {
+                var grid = gridObject.AddComponent<Grid>();
+                grid.cellLayout = GridLayout.CellLayout.Isometric;
+                grid.cellSize = new Vector3(1f, 0.5f, 1f);
+
+                tilemapObject.transform.SetParent(gridObject.transform, false);
+                var tilemap = tilemapObject.AddComponent<Tilemap>();
+
+                Vector3 interpolatedCell = new Vector3(cellX + offsetX, cellY + offsetY, 0f);
+                Vector3 worldPosition = tilemap.transform.TransformPoint(
+                    tilemap.CellToLocalInterpolated(interpolatedCell));
+
+                Vector3Int result = TilemapCellGeometry.WorldToCell(tilemap, worldPosition);
+
+                Assert.That(result, Is.EqualTo(new Vector3Int(cellX, cellY, 0)));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(tilemapObject);
+                UnityEngine.Object.DestroyImmediate(gridObject);
+            }
+        }
+
+        [Test]
+        public void TilemapCellGeometry_GroundCenterAndDiamondRemainAlignedUnderTransform()
+        {
+            var gridObject = new GameObject("Grid");
+            var tilemapObject = new GameObject("Tilemap");
+
+            try
+            {
+                gridObject.transform.SetPositionAndRotation(
+                    new Vector3(3.25f, -2.5f, 0f),
+                    Quaternion.Euler(0f, 0f, 11f));
+                var grid = gridObject.AddComponent<Grid>();
+                grid.cellLayout = GridLayout.CellLayout.Isometric;
+                grid.cellSize = new Vector3(1f, 0.5f, 1f);
+
+                tilemapObject.transform.SetParent(gridObject.transform, false);
+                var tilemap = tilemapObject.AddComponent<Tilemap>();
+                var coordinates = new Vector3Int(2, -3, 0);
+
+                Vector3 center = TilemapCellGeometry.GetGroundCenterWorld(tilemap, coordinates);
+                Assert.That(center, Is.EqualTo(tilemap.GetCellCenterWorld(coordinates)));
+                Assert.That(TilemapCellGeometry.WorldToCell(tilemap, center), Is.EqualTo(coordinates));
+
+                TilemapCellGeometry.GetCellBasisWorld(
+                    tilemap,
+                    coordinates,
+                    out Vector3 xAxis,
+                    out Vector3 yAxis);
+                TilemapCellGeometry.GetDiamondVerticesWorld(
+                    tilemap,
+                    coordinates,
+                    out Vector3 top,
+                    out Vector3 right,
+                    out Vector3 bottom,
+                    out Vector3 left);
+
+                AssertVectorApproximately((top + right + bottom + left) * 0.25f, center);
+                AssertVectorApproximately(top - center, (xAxis + yAxis) * 0.5f);
+                AssertVectorApproximately(right - center, (xAxis - yAxis) * 0.5f);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(tilemapObject);
+                UnityEngine.Object.DestroyImmediate(gridObject);
+            }
+        }
+
+        [Test]
+        public void ProceduralTileHighlightRenderer_MeshUsesCanonicalGroundCenter()
+        {
+            var gridObject = new GameObject("Grid");
+            var tilemapObject = new GameObject("Tilemap");
+            var rendererObject = new GameObject("HighlightRenderer");
+
+            try
+            {
+                var grid = gridObject.AddComponent<Grid>();
+                grid.cellLayout = GridLayout.CellLayout.Isometric;
+                grid.cellSize = new Vector3(1f, 0.5f, 1f);
+                tilemapObject.transform.SetParent(gridObject.transform, false);
+                var tilemap = tilemapObject.AddComponent<Tilemap>();
+
+                rendererObject.transform.position = new Vector3(1.25f, -0.75f, 0f);
+                var highlightRenderer = rendererObject.AddComponent<ProceduralTileHighlightRenderer>();
+                typeof(ProceduralTileHighlightRenderer)
+                    .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.Invoke(highlightRenderer, null);
+                highlightRenderer.SetDataLayer(tilemap);
+
+                var coordinates = new Vector2IntImpl(2, 3);
+                Vector3 groundCenter = TilemapCellGeometry.GetGroundCenterWorld(
+                    tilemap,
+                    new Vector3Int(coordinates.x, coordinates.y, 0));
+                var cell = new VirtualSquareCell(
+                    coordinates,
+                    groundCenter.ToIVector3(),
+                    1,
+                    false,
+                    null);
+
+                highlightRenderer.AddHighlights(new[] { cell }, TileHighlightType.Highlighted);
+
+                Mesh mesh = rendererObject.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(mesh, Is.Not.Null);
+                Assert.That(mesh.vertexCount, Is.EqualTo(4));
+                AssertVectorApproximately(
+                    rendererObject.transform.TransformPoint(mesh.bounds.center),
+                    groundCenter);
+
+                TilemapCellGeometry.GetDiamondVerticesWorld(
+                    tilemap,
+                    new Vector3Int(coordinates.x, coordinates.y, 0),
+                    out Vector3 top,
+                    out Vector3 right,
+                    out Vector3 bottom,
+                    out Vector3 left);
+                Vector3[] vertices = mesh.vertices;
+                AssertVectorApproximately(rendererObject.transform.TransformPoint(vertices[0]), top);
+                AssertVectorApproximately(rendererObject.transform.TransformPoint(vertices[1]), right);
+                AssertVectorApproximately(rendererObject.transform.TransformPoint(vertices[2]), bottom);
+                AssertVectorApproximately(rendererObject.transform.TransformPoint(vertices[3]), left);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(rendererObject);
+                UnityEngine.Object.DestroyImmediate(tilemapObject);
+                UnityEngine.Object.DestroyImmediate(gridObject);
+            }
+        }
+
+        [Test]
+        public void ProceduralTileHighlightRenderer_UnitStateMeshFollowsWorldAnchorWithoutChangingStaticMesh()
+        {
+            var gridObject = new GameObject("Grid");
+            var tilemapObject = new GameObject("Tilemap");
+            var rendererObject = new GameObject("HighlightRenderer");
+            var unitRoot = new GameObject("UnitRoot");
+
+            try
+            {
+                var grid = gridObject.AddComponent<Grid>();
+                grid.cellLayout = GridLayout.CellLayout.Isometric;
+                grid.cellSize = new Vector3(1f, 0.5f, 1f);
+                tilemapObject.transform.SetParent(gridObject.transform, false);
+                var tilemap = tilemapObject.AddComponent<Tilemap>();
+
+                var highlightRenderer = rendererObject.AddComponent<ProceduralTileHighlightRenderer>();
+                typeof(ProceduralTileHighlightRenderer)
+                    .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.Invoke(highlightRenderer, null);
+                highlightRenderer.SetDataLayer(tilemap);
+
+                Vector3 staticCenter = TilemapCellGeometry.GetGroundCenterWorld(tilemap, Vector3Int.zero);
+                var staticCell = new VirtualSquareCell(
+                    new Vector2IntImpl(0, 0),
+                    staticCenter.ToIVector3(),
+                    1,
+                    false,
+                    null);
+                highlightRenderer.AddHighlights(new[] { staticCell }, TileHighlightType.Highlighted);
+                Mesh staticMesh = rendererObject.GetComponent<MeshFilter>().sharedMesh;
+                Vector3[] staticVertices = staticMesh.vertices;
+
+                unitRoot.transform.position = staticCenter + new Vector3(0.37f, 0.11f, 0f);
+                highlightRenderer.SetUnitStateHighlight(
+                    unitRoot.GetInstanceID(),
+                    unitRoot.transform,
+                    TileHighlightType.UnitSelected);
+
+                Mesh unitStateMesh = highlightRenderer.UnitStateHighlightMesh;
+                Assert.That(unitStateMesh.vertexCount, Is.EqualTo(4));
+                AssertVectorApproximately(
+                    rendererObject.transform.TransformPoint(unitStateMesh.bounds.center),
+                    unitRoot.transform.position);
+
+                TilemapCellGeometry.GetCellBasisWorld(
+                    tilemap,
+                    Vector3Int.zero,
+                    out Vector3 xAxis,
+                    out Vector3 yAxis);
+                Vector3[] dynamicVertices = unitStateMesh.vertices;
+                AssertVectorApproximately(
+                    rendererObject.transform.TransformPoint(dynamicVertices[0]),
+                    unitRoot.transform.position + (xAxis + yAxis) * 0.5f);
+
+                unitRoot.transform.position += new Vector3(0.18f, -0.09f, 0f);
+                typeof(ProceduralTileHighlightRenderer)
+                    .GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.Invoke(highlightRenderer, null);
+                AssertVectorApproximately(
+                    rendererObject.transform.TransformPoint(unitStateMesh.bounds.center),
+                    unitRoot.transform.position);
+                CollectionAssert.AreEqual(staticVertices, staticMesh.vertices);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(unitRoot);
+                UnityEngine.Object.DestroyImmediate(rendererObject);
+                UnityEngine.Object.DestroyImmediate(tilemapObject);
+                UnityEngine.Object.DestroyImmediate(gridObject);
+            }
+        }
+
+        private static void AssertVectorApproximately(Vector3 actual, Vector3 expected)
+        {
+            Assert.That(actual.x, Is.EqualTo(expected.x).Within(0.0001f));
+            Assert.That(actual.y, Is.EqualTo(expected.y).Within(0.0001f));
+            Assert.That(actual.z, Is.EqualTo(expected.z).Within(0.0001f));
         }
 
         [Test]

@@ -1,5 +1,6 @@
 using Tactics.Common.Cells;
 using Tactics.Common.Utilities;
+using Tactics.Cells;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,8 +15,6 @@ namespace Tactics.Editor.BattleTest
 
         private static ICellManager _cachedCellManager;
         private static Grid _cachedGrid;
-        private static Vector3 _anchorOffset;
-        private static bool _anchorCached;
 
         public static void SetCellManager(ICellManager cellManager)
         {
@@ -28,7 +27,6 @@ namespace Tactics.Editor.BattleTest
                 return _cachedGrid;
 
             _cachedGrid = Object.FindFirstObjectByType<Grid>();
-            _anchorCached = false;
             return _cachedGrid;
         }
 
@@ -36,19 +34,7 @@ namespace Tactics.Editor.BattleTest
         {
             _cachedCellManager = null;
             _cachedGrid = null;
-            _anchorCached = false;
-        }
-
-        private static Vector3 GetAnchorOffset(Grid grid)
-        {
-            if (!_anchorCached || _cachedGrid != grid)
-            {
-                _anchorOffset = grid.GetCellCenterWorld(Vector3Int.zero)
-                              - grid.CellToWorld(Vector3Int.zero);
-                _anchorCached = true;
-                _cachedGrid = grid;
-            }
-            return _anchorOffset;
+            _cachedTilemap = null;
         }
 
         public static bool TryGetCellWorldPosition(Vector2Int cell, out Vector3 worldPosition)
@@ -68,8 +54,9 @@ namespace Tactics.Editor.BattleTest
             var grid = GetGrid();
             if (grid != null)
             {
-                worldPosition = grid.CellToWorld(new Vector3Int(cell.x, cell.y, 0))
-                              + GetAnchorOffset(grid);
+                worldPosition = TilemapCellGeometry.GetGroundCenterWorld(
+                    grid,
+                    new Vector3Int(cell.x, cell.y, 0));
                 return true;
             }
 
@@ -94,7 +81,7 @@ namespace Tactics.Editor.BattleTest
                 var grid = GetGrid();
                 if (grid != null)
                 {
-                    var cellPos = grid.WorldToCell(worldPosition);
+                    var cellPos = TilemapCellGeometry.WorldToCell(grid, worldPosition);
                     var icell = _cachedCellManager.GetCellAt(new Vector2IntImpl(cellPos.x, cellPos.y));
                     if (icell != null)
                     {
@@ -107,7 +94,7 @@ namespace Tactics.Editor.BattleTest
             var gridOnly = GetGrid();
             if (gridOnly != null)
             {
-                var cellPos = gridOnly.WorldToCell(worldPosition);
+                var cellPos = TilemapCellGeometry.WorldToCell(gridOnly, worldPosition);
                 if (HasTile(gridOnly, cellPos))
                 {
                     cell = new Vector2Int(cellPos.x, cellPos.y);

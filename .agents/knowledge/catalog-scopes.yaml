@@ -97,8 +97,13 @@ scopes:
       - .agents/docs/attribute-system-design.md
       - .agents/docs/buff-system-rules.md
       - .agents/docs/three-class-skill-design.md
+      - .agents/docs/isometric-grid-anchor-contract.md
       - Assets/Tactics/Scripts/Common/Battle
       - Assets/Tactics/Scripts/Common/Cells
+      - Assets/Tactics/Scripts/Common/Editor/CellBrush.cs
+      - Assets/Tactics/Scripts/Common/Editor/GridCoordinatesGizmo.cs
+      - Assets/Tactics/Scripts/Common/Editor/UnitBrush.cs
+      - Assets/Tactics/Scripts/Editor/BattleTest/BattleTestSpawnCellSceneGuiUtility.cs
       - Assets/Tactics/Scripts/Battle
       - Assets/Tactics/Scripts/Flow/Battle/BattleFlowCoordinator.cs
       - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
@@ -116,6 +121,7 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/CombatComponent.cs
       - Assets/Tactics/Scripts/Common/Units/DamageResolution.cs
       - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
+      - Assets/Tactics/Arts/Prefabs/Units/Skeleton.prefab
       - Assets/Tactics/Scripts/Common/Units/FacingState.cs
       - Assets/Tactics/Scripts/Common/Units/FacingCoordinator.cs
       - Assets/Tactics/Scripts/Common/Units/Tween
@@ -149,6 +155,8 @@ scopes:
       - Assets/Tactics/Scripts/Editor/PureRunTweenAssetConfigurator.cs.meta
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs.meta
+      - Assets/Tactics/Scripts/Editor/UnitTweenVisualEditor.cs
+      - Assets/Tactics/Scripts/Editor/UnitTweenVisualEditor.cs.meta
       - Assets/Tactics/Scripts/Editor/PresentationGraph
       - Assets/Tactics/Scripts/Editor/ProceduralVfxPreviewAdapter.cs
       - Assets/Tactics/Scripts/Editor/ProceduralVfxPreviewAdapter.cs.meta

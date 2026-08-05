@@ -1070,15 +1070,6 @@ namespace Tactics.Common.Testing.Gameplay
             GameplayRuntimeContext context,
             ICell cell)
         {
-            var controller = ResolveBattleController(context);
-            if (controller?.CellManager is TilemapCellManager tilemapCellManager &&
-                tilemapCellManager.GridLayer != null)
-            {
-                var coordinates = cell.GridCoordinates;
-                return tilemapCellManager.GridLayer.CellToWorld(
-                    new Vector3Int(coordinates.x, coordinates.y, 0));
-            }
-
             return cell.WorldPosition.ToVector3();
         }
 

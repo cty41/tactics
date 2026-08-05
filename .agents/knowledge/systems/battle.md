@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-04T17:09:16+08:00"
+timestamp: "2026-08-05T11:38:09+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -75,7 +75,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:f378f4d9a7bf691764e1cecd961535ce37df08b23ce278e29736161657182270
+source_fingerprint: sha256:107ada8174b658392e881280aca0e414dabc494feecda90f27018503ceb967da
 ---
 
 # Current State
@@ -94,9 +94,11 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 
 `BattleInitiativeService` 按有效速度派生先攻并维护当前轮待行动顺序；减速等速度变化会立即重排尚未行动单位，不回滚已经行动的单位。Unit 按能力配置的稳定名称维护本回合成功使用次数，并在 `PrepareForTurn` 清空；共享 AbilityConfig 资产不会共享不同单位的运行时计数。`SummonRegistry` 按召唤者和类别记录召唤顺序，支持单体上限替换、原子批量替换和按召唤物已完成行动数计时；主动替换、到期、召唤者死亡与战斗结束会同步释放格子且不留下尸体。`AbilityAvailability` 统一表达可用、可点击禁用及隐藏状态，并携带稳定的禁用原因。
 
-普通非召唤单位死亡后仍从 `UnitManager` 移除，并在原 Cell 生成可选中、占格且可被死灵技能消耗的 `Corpse`。Pure Run 单位可在视觉配置中提供专用死亡 Sprite；尸体使用中心 Pivot并抵消 Sprite Tight bounds 的可见中心偏移，清除通用尸体的旋转与灰色 Tint，并继承生前主 Renderer 的材质和颜色。尸体随后播放非阻塞的 `0.13s` 下落、`0.07s` 冲击压缩与 `0.08s` 回弹；Tween Preview 的 `CorpseLanding` 使用同一独立 Corpse 和 `ApplyVisual` 路径，并标记 Drop/Impact/Settled。未配置专用图的旧单位继续使用通用尸体，召唤物与诱饵继续不生成尸体。
+普通非召唤单位死亡当帧即从 `UnitManager` 和原 Cell 的活体列表移除，并在原 Cell 注册可选中、占格且可被死灵技能消耗的 `Corpse`；这些玩法语义不等待表现。Pure Run 单位有专用死亡 Sprite 和标准 Tween 时，尸体先应用 Sprite、材质、Tint 及死者主 Renderer 当时的 Sorting Layer/Order，但隐藏 Renderer；活体进入 `Dying`，依次播放 `0.07s` recoil、`0.05s` shake 与 `0.08s` collapse，在 `0.20s` 幂等 Handoff，隐藏活体全部 Sprite/Shadow、显示尸体并开始 `0.13s` 下落、`0.07s` 冲击压缩与 `0.08s` 回弹。Handoff 和落地不再改变尸体排序，缺少来源 Renderer 的兼容单位保留尸体 Prefab 排序。collapse 末帧回到 Tile 基准和基础旋转，并从底部 Pivot 压到 `1.02× / 0.58×`，避免 Hit Sprite 直接跳为扁平尸体。取消、Disable、Destroy 或缺少攻击来源时立即执行同一 Handoff，不能留下永久隐藏的尸体。正式死亡图已按 Alpha AABB 居中并使用零局部偏移；未配置完整新链路的旧单位继续使用原销毁回退，召唤物与诱饵继续不生成尸体。
 
-标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态和当前装备状态的 idle。`UnitPoseFamily` 为单帧姿态声明 Release/恢复段退出语义，`UnitActionPoseProfile` 把角色默认动作族、`Default/Unarmed` 状态与双原生方向图分开配置；显式缺图只回退同族默认状态或 idle，不借用无关姿态，表现缺失不影响图执行。Cast 开始时仍以施法者 Sprite 中心发送非阻塞 `CastCharge`；允许 Profile 配置化切换人物 Sprite，但禁止复制整人物 Overlay，并保持主 Renderer 的 Material、Color、Sorting、Shadow 和 Transform 契约。赤柴 Cast 与 Hit 的 `Default / Unarmed` 分别显式共用各自的一对无矛方向图；姿态期间只隐藏 Sprite 内长矛而不改 `IsSpearHeld`，恢复段按权威状态回到对应 idle。法师与死灵法师分别使用只含 Default Cast/Hit 的独立 Profile，Melee、Ranged 与 Idle 覆盖为空，未来换图不改变动作族和时序接口。尸体继续使用独立死亡 Sprite，不继承动作姿态或镜像。蝙蝠等飞行单位暂不接入。
+标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和受击。内部生命周期为 `Alive → Dying → Removed`：Alive 内继续用优先级协调动作；Dying 终止性抢占 Move、Action 与普通 Hit，并通过 generation/version 和幂等 Handoff 阻止旧 Tween 回调恢复 Idle 或重复交接；Removed 不再启动 Tween。方向、技能、VFX 和姿态族仍作为状态载荷，不扩张生命周期枚举。`UnitPoseFamily` 为单帧姿态声明 Release/恢复段退出语义，`UnitActionPoseProfile` 把角色默认动作族、`Default/Unarmed` 状态与双原生方向图分开配置；显式缺图只回退同族默认状态或 idle，不借用无关姿态，表现缺失不影响图执行。Cast 开始时仍以施法者 Sprite 中心发送非阻塞 `CastCharge`；允许 Profile 配置化切换人物 Sprite，但禁止复制整人物 Overlay，并保持主 Renderer 的 Material、Color、Sorting、Shadow 和 Transform 契约。赤柴 Cast 与 Hit 的 `Default / Unarmed` 分别显式共用各自的一对无矛方向图；姿态期间只隐藏 Sprite 内长矛而不改 `IsSpearHeld`，恢复段按权威状态回到对应 idle。法师与死灵法师分别使用只含 Default Cast/Hit 的独立 Profile，Melee、Ranged 与 Idle 覆盖为空，未来换图不改变动作族和时序接口。尸体继续使用独立死亡 Sprite，不继承动作姿态或镜像。蝙蝠等飞行单位暂不接入。
+
+`UnitTweenVisual` 的状态不序列化；Play Mode Inspector 通过 internal 快照只读显示 Lifecycle、Foreground Priority、Idle/Move/Foreground Tween 活跃状态、Foreground Version 与 Death Handoff，自动刷新但不能强制切状态或写回资产。
 
 Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径。火球、骨矛和突刺已采用 Piloto 项目侧粒子与程序化接触骨架混合，Recipe 保留 Marker、多命中位置和缺资产回退，但不再承担主要画面。
 
@@ -138,7 +140,11 @@ Pure Run 遭遇将 E1/E2 的生命/输出倍率设为 1.3/1.15，Special 设为 
 
 当前战斗原始数值、遭遇倍率和实际伤害顺序的审计基线见 `.agents/docs/pure-run-current-combat-values.md`；该文不改变任何运行时数值。
 
-Pure Run 单位状态反馈绑定到单位的 `CurrentCell`：待命、选中、已行动和可攻击状态分别绘制低饱和蓝灰、柔和琥珀、弱灰蓝和暖红等距 Tile 面，不再在角色身上显示方形 Marker。`TilemapUnit` 的主视觉偏移是可重复调用的，阴影以 `Sprite` 子节点的底部 pivot 为脚底锚点，仅作微小下偏移。
+Pure Run 单位状态反馈绑定到单位根：待命、选中、已行动和可攻击状态分别绘制低饱和蓝灰、柔和琥珀、弱灰蓝和暖红等距 Tile 面，不再在角色身上显示方形 Marker。单位根与 `ICell.WorldPosition` 在静止时统一表示 Ground Center；Pure Run Sprite/VisualRoot 使用 Prefab 零基线，Shadow 作者基线为根空间 `localY=-0.03`，运行时不再二次改写 Sprite 或 Shadow。
+
+鼠标格子拾取先以战场平面 Raycast 得到精确世界坐标，再通过 `TilemapCellGeometry.WorldToCell` 直接解析；禁止额外叠加 `GetCellCenterWorld - CellToWorld` 半格补偿。`CellToWorld` 只表示 Cell Origin，`TilemapCellGeometry.GetGroundCenterWorld` 才是单位、尸体、高亮、Scene Handle 和自动化点击共用的地面落点。高亮从相邻 Ground Center 构造菱形，不再用世界 Y 偏移处理渲染层级。完整契约见 `.agents/docs/isometric-grid-anchor-contract.md`。
+
+高亮 Renderer 将锁定逻辑格的 Hover、范围、路径、AoE 与技能引导，和绑定单位根的 Friendly、Selected、Finished、Targetable 分为两个 Mesh。单位状态在 `LateUpdate` 连续跟随根节点，禁止由 `UnitLeftCell`、`CurrentCell` 或 `WorldToCell` 驱动，因此逻辑格提前切换不会再让脚底高亮抢先跳格，Sprite/VisualRoot 的局部 Tween 也不会影响地面位置。`PlayerNumber == 0` 固定为友方；非 0 阵营不显示 Friendly、Selected、Finished，但 Targetable 红色提示仍可见。
 
 场景卸载时 CellManager、高亮 Renderer 与单位的销毁顺序不固定。`TilemapUnit` 清理单位状态高亮前会使用 Unity 对象有效性判断；`TilemapCellManager` 的移除操作只消费仍存在的 Renderer，不在销毁阶段懒加载或重建渲染组件。该清理是 best-effort，本地高亮状态无论 Manager 是否已销毁都会复位。
 

@@ -21,6 +21,7 @@
 //SOFTWARE.
 
 using System.Collections.Generic;
+using Tactics.Cells;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -74,7 +75,7 @@ namespace Utils.Editor.Gizmos
 
             foreach (var cell in cellsToDraw)
             {
-                Vector3 cellCenter = grid.GetCellCenterWorld(cell);
+                Vector3 cellCenter = TilemapCellGeometry.GetGroundCenterWorld(grid, cell);
                 Vector3 labelPos = cellCenter + new Vector3(0, offset * 0.5f, 0);
 
                 string label = $"{cell.x} ; {cell.y}";
@@ -85,8 +86,8 @@ namespace Utils.Editor.Gizmos
         private static void GetGridBounds(Grid grid, Vector3 bottomLeftWorld, Vector3 topRightWorld,
             out Vector3Int minCell, out Vector3Int maxCell)
         {
-            Vector3Int cellA = grid.WorldToCell(bottomLeftWorld);
-            Vector3Int cellB = grid.WorldToCell(topRightWorld);
+            Vector3Int cellA = TilemapCellGeometry.WorldToCell(grid, bottomLeftWorld);
+            Vector3Int cellB = TilemapCellGeometry.WorldToCell(grid, topRightWorld);
 
             minCell = new Vector3Int(
                 Mathf.Min(cellA.x, cellB.x),

@@ -45,6 +45,12 @@ namespace Tactics.Common.Units.Tween
         [SerializeField, Min(0f)] private float _hitRecoilDistance = 0.1f;
         [SerializeField, Range(0f, 10f)] private float _hitRotationDegrees = 4f;
 
+        [Header("Lethal Hit")]
+        [SerializeField, Min(0f)] private float _lethalShakeDuration = 0.05f;
+        [SerializeField, Min(0f)] private float _lethalCollapseDuration = 0.08f;
+        [SerializeField, Range(0.1f, 2f)] private float _lethalCollapseScaleX = 1.02f;
+        [SerializeField, Range(0.1f, 2f)] private float _lethalCollapseScaleY = 0.58f;
+
         [Header("Corpse Landing")]
         [SerializeField, Min(0f)] private float _corpseDropDuration = 0.13f;
         [SerializeField, Min(0f)] private float _corpseImpactDuration = 0.07f;
@@ -76,6 +82,10 @@ namespace Tactics.Common.Units.Tween
         public float HitRecoverDuration => _hitRecoverDuration;
         public float HitRecoilDistance => _hitRecoilDistance;
         public float HitRotationDegrees => _hitRotationDegrees;
+        internal float LethalShakeDuration => _lethalShakeDuration;
+        internal float LethalCollapseDuration => _lethalCollapseDuration;
+        internal float LethalCollapseScaleX => _lethalCollapseScaleX;
+        internal float LethalCollapseScaleY => _lethalCollapseScaleY;
         public float CorpseDropDuration => _corpseDropDuration;
         public float CorpseImpactDuration => _corpseImpactDuration;
         public float CorpseSettleDuration => _corpseSettleDuration;

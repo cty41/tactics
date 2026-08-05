@@ -160,6 +160,49 @@ namespace Tactics.Common.Units.Tween
         }
 
         /// <summary>
+        /// Builds the terminal recoil and shake used before corpse presentation takes ownership.
+        /// </summary>
+        /// <remarks>
+        /// The plan deliberately omits normal hit recovery. Its marker is the only legal visual
+        /// handoff point from the living unit to the independently registered corpse.
+        /// </remarks>
+        internal static UnitTweenPosePlan BuildLethalHitPlan(
+            Transform target,
+            StandardUnitTweenProfile profile,
+            Vector3 basePosition,
+            Quaternion baseRotation,
+            Vector3 baseScale,
+            Vector3 incomingDirection)
+        {
+            Vector3 recoil = NormalizeDirection(incomingDirection) * profile.HitRecoilDistance;
+            var recoilScale = new Vector3(baseScale.x * 1.06f, baseScale.y * 0.92f, baseScale.z);
+            var collapseScale = new Vector3(
+                baseScale.x * profile.LethalCollapseScaleX,
+                baseScale.y * profile.LethalCollapseScaleY,
+                baseScale.z);
+            float sign = incomingDirection.x >= 0f ? -1f : 1f;
+
+            var sequence = DOTween.Sequence()
+                .Append(target.DOLocalMove(basePosition + recoil, profile.HitRecoilDuration).SetEase(Ease.OutQuad))
+                .Join(target.DOScale(recoilScale, profile.HitRecoilDuration).SetEase(Ease.OutQuad))
+                .Join(target.DOLocalRotate(
+                    new Vector3(0f, 0f, sign * profile.HitRotationDegrees),
+                    profile.HitRecoilDuration).SetEase(Ease.OutQuad))
+                .Append(target.DOLocalRotate(
+                    new Vector3(0f, 0f, -sign * profile.HitRotationDegrees * 0.45f),
+                    profile.LethalShakeDuration).SetEase(Ease.InOutQuad))
+                .Append(target.DOLocalMove(basePosition, profile.LethalCollapseDuration).SetEase(Ease.InQuad))
+                .Join(target.DOLocalRotateQuaternion(baseRotation, profile.LethalCollapseDuration)
+                    .SetEase(Ease.InQuad))
+                .Join(target.DOScale(collapseScale, profile.LethalCollapseDuration).SetEase(Ease.InQuad));
+            return new UnitTweenPosePlan(
+                sequence,
+                profile.HitRecoilDuration +
+                profile.LethalShakeDuration +
+                profile.LethalCollapseDuration);
+        }
+
+        /// <summary>
         /// Builds the authored corpse sprite landing without delaying corpse gameplay state.
         /// </summary>
         public static Sequence BuildCorpseLanding(
