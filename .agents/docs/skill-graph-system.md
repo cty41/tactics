@@ -48,11 +48,17 @@ SkillGraph 和三个职业执行器只发送 `CastCharge`、`ProjectileImpact`�
 - 多阶段爆炸、明显形态变化、职业标志性技能或需要精细分层的效果，后续使用美术可直接调整的 Prefab、ParticleSystem、Shader/Material、Sprite 序列或 AnimationClip 制作。
 - 传统特效按技能逐个接入并替换对应临时 Recipe；未实施替换前，当前程序化效果继续正常使用。
 
-编辑器入口 `Tactics/Pure Run/Skill VFX Preview` 支持选择 Recipe、Cue、等级、路径长度和命中点数量，并提供播放、暂停、重播与时间拖动。窗口直接调用运行时 Builder 的时间采样函数；粒子使用固定种子的隐藏 ParticleSystem 并通过绝对时间 `Simulate` 重放。窗口同时显示 `64×32` Tile 参考线与阻塞关键帧，便于在不改变资产的情况下检查最高亮阶段。
+唯一编辑器入口 `Tactics/Pure Run/Presentation Workbench` 将 GraphView、隔离 Preview Stage、节点/Graph Inspector、Tween/Projectile 沙盒和时间线放在同一窗口。中央舞台、播放控制和时间线使用 retained UI Toolkit；独立 RenderController 最高 30 FPS 写入固定 `1280×720` 持久纹理，窗口或分栏 resize 期间暂停 GPU 渲染并保留最后有效帧。工作台把 `BattlePresentationGraph` 克隆到隐藏会话中；浏览、拖动、校验和预览只修改临时对象，`Apply All` 才以单一 Undo group 写回正式 Graph 与已修改 Profile，`Revert All` 放弃整套沙盒修改。关闭存在未 Apply 修改的窗口时使用 Unity 的 Save/Discard/Cancel 契约。旧 Presentation Graph、Tween Preview 和 Skill VFX Preview 菜单均已移除。
 
-入口 `Tactics/Pure Run/Presentation Graph Editor` 提供 GraphView 编辑、节点属性、结构校验与当前图预览。正式 `BattlePresentationGraph` 以 Editor-only Preview Scenario 声明一次成功命中的代表性完整演示：Phase 内 Cue 并行启动，由指定 Cue 的 `Release`、`Impact`、程序化 Recipe `Blocking` 或完整结束推进下一 Phase；视觉尾段继续播放而不阻塞后续阶段。Scenario 同时保存默认 Actor/Target，仅用于首次打开舞台，用户仍可替换角色；目标受击使用目标自己的 Hit Family，并与相应命中 Cue 同时开始。Preview 不提供 Entry 或 Scenario 覆盖，时间轴只读显示 Release、Pose Restore、Projectile Impact、VFX Contact 与 Hit。旧图缺少 Scenario 时才回退 `DefaultPreviewEntry` 并显示兼容警告。
+正式 `BattlePresentationGraph` 以 Editor-only Preview Scenario 声明一次成功命中的代表性完整演示：Phase 内 Cue 并行启动，由指定 Cue 的 `Release`、`Impact`、程序化 Recipe `Blocking` 或完整结束推进下一 Phase；视觉尾段继续播放而不阻塞后续阶段。Scenario 同时保存默认 Actor/Target，仅用于首次打开舞台，用户仍可替换角色；目标受击使用目标自己的 Hit Family，并与相应命中 Cue 同时开始。旧图缺少 Scenario 时才回退 `DefaultPreviewEntry` 并显示兼容警告。
 
-当前 18 个正式图均配置完整 Scenario：伤害加深只演示诅咒表现而不模拟伤害受击；毒矛和骨矛在投射物 Impact 后触发目标受击；霹雳闪电在 Release 后触发命中与受击；突刺按 `Action/Release → DirectionalStrike/Blocking → PrimaryTargetHit + Target Hit` 播放；火球按 Release、飞行 Impact、爆炸接触、条件引爆（仅 Lv3）及溅射命中推进。预览舞台复用运行时 `UnitTweenSequenceBuilder`、投射物 Factory/轨迹采样、Recipe 时间采样和 tapered mesh 缓存；Preview Scenario 只描述 Editor 演示，不参与 Runtime Entry 编排、玩法 SkillGraph、伤害、Buff、目标或资源消耗。Profile 调参仍使用隐藏沙盒，Apply 才通过 Undo 写回；Stop、资源切换、窗口关闭和程序集重载必须恢复 Sprite/Transform/Shadow 并清理临时对象。旧两个预览菜单在代表图迁移期间保留，不作为新的编排真相源。
+当前 18 个正式图均配置完整 Scenario：伤害加深只演示诅咒表现而不模拟伤害受击；毒矛和骨矛在投射物 Impact 后触发目标受击；霹雳闪电在 Release 后触发命中与受击；突刺按 `Action/Release → DirectionalStrike/Blocking → PrimaryTargetHit + Target Hit` 播放；火球按 Release、飞行 Impact、爆炸接触、条件引爆（仅 Lv3）及溅射命中推进。预览舞台复用运行时 `UnitTweenSequenceBuilder`、投射物 Factory/轨迹采样、Recipe 时间采样和 tapered mesh 缓存；Preview Scenario 只描述 Editor 演示，不参与 Runtime Entry 编排、玩法 SkillGraph、伤害、Buff、目标或资源消耗。Stop、资源切换、窗口关闭和程序集重载必须恢复 Sprite/Transform/Shadow 并清理临时对象。
+
+Runtime 与 Preview 不再各自解释图遍历，而是共同消费纯数据 `PresentationExecutionPlan`。编译器把 Entry 后的顺序、禁用节点透传、Finish 截断、Fork 到指定 Join 的并行分支，以及 Join 后单次继续编译为 Sequence/Parallel/Leaf 树；DOTween、Editor 和玩法状态都不进入该共享结构。
+
+Agent 可通过 `list_presentation_graphs`、`get_presentation_graph`、`validate_presentation_changeset`、`apply_presentation_changeset` 与 `preview_presentation` 操作表现图。读接口返回 GUID/路径、规范化 SHA-256 revision、节点、边、依赖和诊断；validate 只在临时克隆上执行 typed Graph/节点/边/绑定操作，apply 必须匹配 expected revision，并默认拒绝无效结果。preview 使用同一执行计划并通过 `PreviewRenderUtility` 返回 base64 PNG 与结构化节点时间线。接口不接受任意 SerializedProperty 路径，也不删除 Unity 资产。
+
+具体工作台会话和 ChangeSet JSON 契约见 [Presentation Workbench 实现说明](presentation-workbench-implementation.md)。
 
 火球、骨矛与突刺 Lv1-Lv3 的正式图使用“程序化时序骨架 + Piloto 项目侧 Prefab FX”的闭合 Fork/Join：Recipe 保留接触 Blocking Marker、完整路径/实际命中快照和缺资产回退，粒子分支只承担蓄力、飞行外层、定向枪芒及命中爆发，视觉尾段不阻塞玩法。火球与骨矛的 `ProjectileVisualProfile` 继续决定 Sprite/软圆核心、速度、弹道和切线旋转，并通过 `FlightPrefab` 叠加池化粒子；突刺 `VisualCueProfile` 使用内部 `SourceToTarget` 方向模式和可选 X 轴距离伸展，Runtime 与 Preview 必须调用同一变换公式。Lv1-Lv3 共享视觉语言并逐级增加粒子层；火球 Lv3 的首次爆发、程序化收缩和二段引爆仍由既有 Scenario 顺序表达。
 

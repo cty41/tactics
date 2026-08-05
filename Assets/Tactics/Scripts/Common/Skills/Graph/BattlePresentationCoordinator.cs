@@ -230,28 +230,33 @@ namespace Tactics.Common.Skills.Graph
 
         public Task PlayAsync(PresentationCueKind cue)
         {
-            PresentationEntryNodeRecord entry = _graph.FindEntry(cue);
-            return entry == null ? Task.CompletedTask : ExecuteNextAsync(entry.NodeId, null);
+            PresentationExecutionPlan plan = PresentationExecutionPlanCompiler.Compile(_graph, cue);
+            return ExecuteStepAsync(plan.Root);
         }
 
-        private async Task ExecuteNextAsync(string sourceNodeId, string stopBeforeNodeId)
-        {
-            List<PresentationEdgeRecord> edges = _graph.GetEdgesFrom(sourceNodeId);
-            if (edges.Count == 0)
-                return;
-            await ExecuteNodeAsync(_graph.FindNode(edges[0].TargetNodeId), stopBeforeNodeId);
-        }
-
-        private async Task ExecuteNodeAsync(PresentationNodeRecord node, string stopBeforeNodeId)
+        private async Task ExecuteStepAsync(PresentationPlanStep step)
         {
             _context.CancellationToken.ThrowIfCancellationRequested();
-            if (node == null || node.NodeId == stopBeforeNodeId || node is PresentationFinishNodeRecord)
-                return;
-            if (!node.Enabled)
+            switch (step)
             {
-                await ExecuteNextAsync(node.NodeId, stopBeforeNodeId);
-                return;
+                case PresentationSequenceStep sequence:
+                    foreach (PresentationPlanStep child in sequence.Children)
+                        await ExecuteStepAsync(child);
+                    break;
+                case PresentationParallelStep parallel:
+                    await Task.WhenAll(parallel.Branches.Select(ExecuteStepAsync));
+                    break;
+                case PresentationLeafStep leaf:
+                    await ExecuteLeafAsync(leaf.Node);
+                    break;
             }
+        }
+
+        private async Task ExecuteLeafAsync(PresentationNodeRecord node)
+        {
+            _context.CancellationToken.ThrowIfCancellationRequested();
+            if (node == null)
+                return;
 
             _nodeVisitedCallback?.Invoke(node);
 
@@ -290,12 +295,9 @@ namespace Tactics.Common.Skills.Graph
                 case PresentationMarkerNodeRecord marker:
                     Emit(marker.Marker);
                     break;
-                case PresentationForkNodeRecord fork:
-                    await PlayForkAsync(fork, stopBeforeNodeId);
-                    return;
+                case PresentationForkNodeRecord:
+                    break;
             }
-
-            await ExecuteNextAsync(node.NodeId, stopBeforeNodeId);
         }
 
         private async Task PlayUnitTweenAsync(PresentationUnitTweenNodeRecord tween)
@@ -352,19 +354,6 @@ namespace Tactics.Common.Skills.Graph
                 _context.Direction,
                 primaryHitWorldPosition: _context.TargetWorldPosition);
             return coordinator.PlayAsync(node.Cue, cueContext, _context.CancellationToken);
-        }
-
-        private async Task PlayForkAsync(
-            PresentationForkNodeRecord fork,
-            string stopBeforeNodeId)
-        {
-            List<PresentationEdgeRecord> branches = _graph.GetEdgesFrom(fork.NodeId);
-            Task[] tasks = branches.Select(edge =>
-                ExecuteNodeAsync(_graph.FindNode(edge.TargetNodeId), fork.JoinNodeId)).ToArray();
-            await Task.WhenAll(tasks);
-            PresentationNodeRecord join = _graph.FindNode(fork.JoinNodeId);
-            if (join != null)
-                await ExecuteNextAsync(join.NodeId, stopBeforeNodeId);
         }
 
         private void Emit(PresentationMarkerKind marker)

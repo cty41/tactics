@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-08-03T13:15:18+08:00"
+timestamp: "2026-08-05T16:29:27+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -22,7 +22,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
   - Tools/unity-mcp
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:2581b747a7543a03256dc340e4ecad5e48a33b38537ca6e3d71a112814ecc7e1
+source_fingerprint: sha256:34829606800536b4f2ae60e6b6c0ec83fa02487a15e6c11a7f09e3996c770549
 ---
 
 # Core Rules
@@ -36,6 +36,8 @@ source_fingerprint: sha256:2581b747a7543a03256dc340e4ecad5e48a33b38537ca6e3d71a1
 - 新增、删除或移动 Unity 文件时保持 `.meta` 配对。
 - Unity MCP 的端口从 worktree 本地且忽略的 `.agents/mcp.json` 读取；首次操作先同步模板生成的派生客户端配置，并用 `project/info` 核验当前 worktree。项目 bootstrap 在每个新 Editor Domain 中只调度一次桥重连：已验证 Bridge 保持不动，Server 已可达时直接连接且不依赖 PID 文件，Server 不可达时才启动并等待最多 60 秒；Bridge 使用有限重试，超时日志必须给出端点和 `Library/MCPForUnity/Logs/server-launch-{port}.log` 诊断路径。正式配置缺失时可从迁移备份 `.agents/mcp.local.json` 临时恢复连接并给出修复提示，但仍须执行 `Initialize-ProjectMcpConfig.ps1 -RestoreMigration`，两个配置都缺失时则用显式 `-Url` 初始化。
 - 文档查询先读 OKF index；当前实现仍回到代码、资产和测试。
+- Presentation Graph 的 Agent 创作使用专用 list/get/validate/apply/preview MCP 工具。get 一次返回 Graph 与全部可编辑叶资产的规范化 SHA-256 revision、GUID/路径及引用者；写操作先在隐藏副本完成 Graph/叶资产/绑定的 typed ChangeSet 与校验，再以单一 Undo group 和一次 SaveAssets 原子写回。创建 Graph 使用与 expectedRevision 互斥的 createGraph，Recipe 只接受 replaceRecipeBindings 整表操作；禁止任意 SerializedProperty 路径和用户资产删除。preview 明确选择 Full Scenario、Phase、Entry、Leaf 或 Fork Region，并返回固定 seed 的 PNG、实际轨道时间线、诊断和 fallback。
+- Editor GPU 崩溃修复必须区分结构测试、Null/离屏渲染与真实图形设备压力验收。Presentation Workbench 的 RenderController 自动测试可证明限频、resize 暂停和资源释放，但 Intel Arc/D3D11 下连续拖动外部窗口与分栏仍须人工完成；通过编译、离屏 PNG 或 Null device 测试不得替代该门禁。
 
 # Related Systems
 

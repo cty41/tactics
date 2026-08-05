@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-05T11:38:10+08:00"
+timestamp: "2026-08-05T16:29:28+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -13,7 +13,7 @@ repo_paths:
   - .agents/skills/project-doc-organization/SKILL.md
   - .agents/skills/plan-mode-plan-writer/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:7780144e3385c77380256d81a0aca323ed26c15f12e89ababbdd5750b31be49e
+source_fingerprint: sha256:b29ac70db0543418488a7d2af16e89be5cc3a81f471663a3f71ca26559c65243
 ---
 
 # Current State
@@ -31,6 +31,8 @@ Tween Preview 的组合演示也必须标明复用边界：`Lethal Hit → Corps
 表现状态调试只允许通过 Play Mode Inspector 的只读快照呈现，不得把 Lifecycle、活动 Tween、generation 或 Handoff 序列化为可编辑配置，也不得提供绕过运行时入口的强制状态按钮。
 
 技能表现文档必须区分程序化时序骨架、项目侧第三方 Prefab FX 与玩法结算责任。火球、骨矛和突刺的 Piloto 混合增强仍由 Presentation Graph 编排，Recipe 只保留 Marker、路径/命中快照与安全回退；供应商原资产保持只读，Runtime/Preview 的方向变换以共享实现为准。
+
+Editor 稳定性文档必须把自动验证能力与人工硬件门禁分开记录。Presentation Workbench 的 retained Image、固定 RenderTexture 和 resize 状态机属于当前实现事实；真实 D3D11 连续 resize 在目标 GPU 上通过之前，只能标记为 `manual_visual_qa_pending`，不能写成“自动测试已证明崩溃解决”。
 
 等距战场坐标的权威术语、消费者职责与防漂移规则集中在 `.agents/docs/isometric-grid-anchor-contract.md`。实现或工具不得分别发明半格补偿；当前事实必须回到共享几何代码、Prefab 作者基线和对应测试核对。
 

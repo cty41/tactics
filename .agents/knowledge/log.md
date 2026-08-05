@@ -1,11 +1,12 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-05
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:3fc4c4df4d092447e0859105219394136ea97a2e32edace9c5007a9835babe8e`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:b29ac70db0543418488a7d2af16e89be5cc3a81f471663a3f71ca26559c65243`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:34829606800536b4f2ae60e6b6c0ec83fa02487a15e6c11a7f09e3996c770549`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:f1827f93a982ed163cdf662a48b7ba629a58c64ed9e0ee38f18b009fb0a0f6eb`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:2db17fd21a80c57916d40e567c60fff5e3e4bf2cecb883258b7fbc1a28be89ac`。
 * **Fix**: 战斗启动不再调度 Cheat Console UI，只自动显示 Battle UI；调试控制台保留 ToggleConsole 手动入口并继续在战斗结束时关闭。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:7780144e3385c77380256d81a0aca323ed26c15f12e89ababbdd5750b31be49e`。
 * **Fix**: Friendly、Selected、Finished、Targetable 单位状态改为独立动态 Mesh，并在 `LateUpdate` 连续跟随单位根；`UnitLeftCell` 不再提前跳格，非 0 阵营隐藏被动状态但保留 Targetable 红色提示。
-* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:e03a9bbd9a8c56830f83e40ebbbd21c52bf88627f1d3644680f005c71dadf0b6`。
 * **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:41a19adad1671169b500fae8807330c8fe3398a4bfbe02f38701ea96e689980e`。
 

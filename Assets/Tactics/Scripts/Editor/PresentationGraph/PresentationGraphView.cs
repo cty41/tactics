@@ -13,6 +13,7 @@ namespace Tactics.Editor.PresentationGraph
     internal sealed class PresentationGraphView : GraphView
     {
         private readonly Dictionary<string, PresentationNodeView> _views = new();
+        private readonly HashSet<string> _previewActiveNodeIds = new();
         private BattlePresentationGraph _graph;
         private bool _isReloading;
 
@@ -39,6 +40,7 @@ namespace Tactics.Editor.PresentationGraph
             {
                 DeleteElements(graphElements.ToList());
                 _views.Clear();
+                _previewActiveNodeIds.Clear();
             }
             finally
             {
@@ -82,6 +84,27 @@ namespace Tactics.Editor.PresentationGraph
                     record.Position = view.GetPosition().position;
             }
             EditorUtility.SetDirty(_graph);
+        }
+
+        internal bool SelectNode(string nodeId)
+        {
+            if (string.IsNullOrEmpty(nodeId) || !_views.TryGetValue(nodeId, out PresentationNodeView view))
+                return false;
+            ClearSelection();
+            AddToSelection(view);
+            FrameSelection();
+            return true;
+        }
+
+        internal void SetPreviewActiveNodes(IEnumerable<string> nodeIds)
+        {
+            var active = new HashSet<string>(nodeIds ?? Enumerable.Empty<string>());
+            if (_previewActiveNodeIds.SetEquals(active))
+                return;
+            _previewActiveNodeIds.Clear();
+            _previewActiveNodeIds.UnionWith(active);
+            foreach ((string nodeId, PresentationNodeView view) in _views)
+                view.SetPreviewActive(active.Contains(nodeId));
         }
 
         private void PopulateContextMenu(ContextualMenuPopulateEvent evt)
@@ -283,6 +306,7 @@ namespace Tactics.Editor.PresentationGraph
 
         private sealed class PresentationNodeView : Node
         {
+            private bool _previewActive;
             internal PresentationNodeView(
                 PresentationNodeRecord record,
                 string titleText,
@@ -324,6 +348,16 @@ namespace Tactics.Editor.PresentationGraph
             internal string NodeId { get; }
             internal Port Input { get; }
             internal Port Output { get; }
+
+            internal void SetPreviewActive(bool active)
+            {
+                if (_previewActive == active)
+                    return;
+                _previewActive = active;
+                titleContainer.style.backgroundColor = active
+                    ? new Color(0.16f, 0.55f, 0.78f, 1f)
+                    : StyleKeyword.Null;
+            }
 
             public override void OnSelected()
             {

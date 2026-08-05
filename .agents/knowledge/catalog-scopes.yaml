@@ -155,9 +155,12 @@ scopes:
       - Assets/Tactics/Scripts/Editor/PureRunTweenAssetConfigurator.cs.meta
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs.meta
+      - Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs
+      - Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs.meta
       - Assets/Tactics/Scripts/Editor/UnitTweenVisualEditor.cs
       - Assets/Tactics/Scripts/Editor/UnitTweenVisualEditor.cs.meta
       - Assets/Tactics/Scripts/Editor/PresentationGraph
+      - Assets/Tactics/Scripts/Editor/PresentationWorkbench
       - Assets/Tactics/Scripts/Editor/ProceduralVfxPreviewAdapter.cs
       - Assets/Tactics/Scripts/Editor/ProceduralVfxPreviewAdapter.cs.meta
       - Assets/Tactics/Scripts/Editor/ProjectileVisualPreviewAdapter.cs
@@ -257,10 +260,13 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityConfig.cs
       - Assets/Tactics/Scripts/Editor/SkillGraphEditor
+      - Assets/Tactics/Scripts/Editor/PresentationWorkbench
       - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs
       - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs.meta
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs.meta
+      - Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs
+      - Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs.meta
       - Assets/Tactics/Scripts/Editor/ProjectileVisualPreviewAdapter.cs
       - Assets/Tactics/Scripts/Editor/ProjectileVisualPreviewAdapter.cs.meta
       - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
@@ -272,6 +278,10 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
       - Assets/Tactics/Tests/Editor/PureRunTweenPreviewEditorTests.cs
       - Assets/Tactics/Tests/Editor/PureRunTweenPreviewEditorTests.cs.meta
+      - Assets/Tactics/Tests/Editor/PresentationExecutionPlanEditorTests.cs
+      - Assets/Tactics/Tests/Editor/PresentationExecutionPlanEditorTests.cs.meta
+      - Assets/Tactics/Tests/Editor/PresentationAuthoringFacadeEditorTests.cs
+      - Assets/Tactics/Tests/Editor/PresentationAuthoringFacadeEditorTests.cs.meta
       - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
       - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs
       - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs.meta

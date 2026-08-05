@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-08-04T22:59:35+08:00"
+timestamp: "2026-08-05T16:29:25+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -28,8 +28,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Skills/Graph/SkillTargetingProtocol.cs
   - Assets/Tactics/Scripts/Common/Skills/Graph/OrderedTargetSelectionState.cs
   - Assets/Tactics/Scripts/Editor/SkillGraphEditor/SkillGraphSpecCompiler.cs
-  - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs
-  - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs
+  - Assets/Tactics/Scripts/Editor/PresentationWorkbench
   - Assets/Tactics/Scripts/Editor/PresentationGraph
   - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
   - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs
@@ -54,7 +53,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs
   - Assets/Tactics/Tests/Editor/BattlePresentationGraphEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800
+source_fingerprint: sha256:f1827f93a982ed163cdf662a48b7ba629a58c64ed9e0ee38f18b009fb0a0f6eb
 ---
 
 # Current State
@@ -69,9 +68,11 @@ source_fingerprint: sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7
 
 `ProjectileLaunchNodeRecord` 可选引用 `ProjectileVisualProfile`，并继续完整往返 TravelTime、Speed、DropOnHit、LOS 与 Profile 资产路径。Profile 可选择程序化 Sprite/SoftDisc 或 Flight Prefab，并可配置 Impact Prefab、命中寿命和缩放；运行时按 `worldDistance / Speed` 计算并限制飞行时长，终点在发射时锁定。无 Flight Prefab 时由共享 Factory 创建程序化投射物和 Particle/Ghost Trail；有 Flight Prefab 时从 `TransientVfxPool` 租用并复用同一弹道、轨迹和取消清理路径。火球保留白热软圆核心并叠加 Piloto 短尾焰/火星，旧程序化粒子尾迹关闭；骨矛保留独立中心 Sprite、切线旋转和一个弱残影，并叠加苍白冷色 Piloto 飞行层；毒矛继续使用既有 Piloto 飞行与命中 Prefab。Sprite Material 为空时保留 `SpriteRenderer` 默认兼容材质，显式 Material 继续传递给残影。抵达后先等待 Recipe 的 `ProjectileImpact` 接触关键帧，再写入 `ProjectileHit`；Prefab impact 有战斗 scope 时注册后允许玩法继续，无 scope 时由 caller 等待回收。取消先标记等待任务为取消，再 Kill Tween 并清理或回池所有临时对象，避免 `OnKill` 抢先完成或留下实例。
 
-Skill VFX 使用有限原语 Recipe：六种强类型 Cue 只携带结算前捕获的世界坐标快照，六种固定原语由 `SkillVfxCoordinator` 统一创建、排序、等待和清理。只有层的 `BlockingMarker` 影响玩法继续时点；粒子与残影强制非阻塞。Cast 开始时以施法者 Sprite 中心发送 `CastCharge`，其 `BlockingMarker=0`；Recipe 按明确技能族、已有专属、默认 Cast 的顺序解析，在人物与阴影后生成单个径向光环，不修改主 Renderer。火球终点/溅射/Lv3 条件引爆、骨矛实际命中交叉闪光、突刺方向刺痕和实际命中反馈已分别接入；空 Recipe 或无 Sink 时保持 no-op。`PureRunSkillVfxPreviewWindow` 复用 Builder 时间采样，支持 Recipe/Cue/等级/路径/命中数与可拖动时间轴。
+Skill VFX 使用有限原语 Recipe：六种强类型 Cue 只携带结算前捕获的世界坐标快照，六种固定原语由 `SkillVfxCoordinator` 统一创建、排序、等待和清理。只有层的 `BlockingMarker` 影响玩法继续时点；粒子与残影强制非阻塞。Cast 开始时以施法者 Sprite 中心发送 `CastCharge`，其 `BlockingMarker=0`；Recipe 按明确技能族、已有专属、默认 Cast 的顺序解析，在人物与阴影后生成单个径向光环，不修改主 Renderer。火球终点/溅射/Lv3 条件引爆、骨矛实际命中交叉闪光、突刺方向刺痕和实际命中反馈已分别接入；空 Recipe 或无 Sink 时保持 no-op。统一 Presentation Workbench 复用 Builder 时间采样，支持 Recipe/Cue/等级/路径/命中数与可拖动时间轴。
 
-`Tactics/Pure Run/Presentation Graph Editor` 提供 GraphView 创建、连线、复制删除、Undo/Redo、节点属性、运行时结构校验和独立 Preview Scenario 校验，并可把当前 Graph 直接送入隔离舞台。18 个正式图以 Editor-only Phase/Cue 场景完整演示一次代表性成功命中，指定 Cue 的 Release、Projectile Impact、程序化 Blocking 或完整结束负责推进；Action 恢复和 VFX 淡出继续与后续阶段重叠。Preview 不开放 Entry/Scenario 覆盖，时间轴只读显示 Release、Pose Restore、Projectile Impact、VFX Contact 与 Hit；目标受击使用目标自己的 Hit Family，伤害加深例外地不模拟伤害受击。缺少 Scenario 的旧图才回退 `DefaultPreviewEntry` 并显示警告。该元数据不参与 Runtime 编排或玩法结算。预览继续复用运行时 Tween/投射物构建、Recipe 时间采样与 tapered mesh 缓存；Tween Preview 作为叶资产调试入口另提供 `Lethal Hit → Corpse`，以 `0.20s` 的 recoil/shake/collapse 完成表现生命周期交接但不进入 Presentation Graph 或 SkillGraph；Skill VFX Preview 继续检查单个 Recipe。
+唯一入口 `Tactics/Pure Run/Presentation Workbench` 把 GraphView、隔离 Preview Stage、节点/Graph Inspector、Profile 沙盒和时间线统一到以 `BattlePresentationGraph` 为根的编辑会话。会话编辑隐藏克隆，Apply All 才以单一 Undo group 写回，Revert All 或关闭时 Discard 不污染正式资产；旧 Presentation Graph、Tween Preview 与 Skill VFX Preview 菜单已移除。交互 Preview 的 retained UI Toolkit `Image` 显示固定 `1280×720` 持久 RenderTexture，独立控制器在播放时最高 30 FPS；连续窗口或分栏 resize 会暂停 GPU 渲染，稳定 500ms 且至少三个 update 后只补最新一帧。中央预览不再经过 IMGUI 绘制或 `EndAndDrawPreview()`。18 个正式图仍以 Editor-only Phase/Cue 场景完整演示代表性成功命中，Scenario 不参与 Runtime 编排或玩法结算。
+
+Runtime 与 Preview 共用纯数据 `PresentationExecutionPlan` 解释顺序、禁用节点、Finish 和嵌套 Fork/Join，叶执行器仍分别负责 Tween、Projectile、Prefab FX、Recipe、Delay 与 Marker。Agent 侧提供五个 Presentation MCP 工具；图快照除 Graph revision 外还返回所有可编辑叶资产的 GUID、路径、类型、revision 与引用者，节点资产引用携带同一 revision。typed ChangeSet 支持在单一 Undo/SaveAssets 事务中创建 Graph、创建/复制/修改叶资产并重绑，Recipe 以 `replaceRecipeBindings` 整表替换，不开放任意 SerializedProperty。preview 的 Full Scenario、Phase、Entry、Leaf 与 Fork Region scope 共用 Workbench 无窗口内核，返回对应 PNG、固定 seed、真实节点/Marker/Phase 时间线、诊断与实际 fallback。
 
 火球、骨矛和突刺已由单一程序化临时基线升级为 Piloto 粒子混合表现；Recipe 不再承担主要画面，但继续作为接触 Marker、路径/多命中反馈与缺资产安全回退。长期制作策略仍保留 Tween 处理角色姿态、位移、受击、后坐和投射物运动，也允许简单光环、短闪光、短尾迹与颜色脉冲继续程序化；多阶段、形态复杂或承担职业识别的技能特效优先使用项目侧 Prefab、ParticleSystem、Shader/Material、Sprite 序列或 AnimationClip，不把有限原语扩充为通用复杂 VFX 框架。
 

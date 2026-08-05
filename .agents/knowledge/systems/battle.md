@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-05T12:04:50+08:00"
+timestamp: "2026-08-05T16:29:23+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -75,7 +75,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:3fc4c4df4d092447e0859105219394136ea97a2e32edace9c5007a9835babe8e
+source_fingerprint: sha256:2db17fd21a80c57916d40e567c60fff5e3e4bf2cecb883258b7fbc1a28be89ac
 ---
 
 # Current State
@@ -102,7 +102,11 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 
 Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径。火球、骨矛和突刺已采用 Piloto 项目侧粒子与程序化接触骨架混合，Recipe 保留 Marker、多命中位置和缺资产回退，但不再承担主要画面。
 
-`Tactics/Pure Run/Presentation Graph Editor` 将角色 Tween、投射物、第三方 Prefab FX 和程序化 Recipe 作为同一纯表现图的叶节点预览；Graph 本身不写伤害、Buff 或目标状态。18 个正式图通过 Editor-only Preview Scenario 播放代表性完整技能，按 Release、Projectile Impact、程序化 Blocking 或 Track 完成推进 Phase，同时保留动作恢复与视觉尾段重叠。目标受击使用目标自己的 Hit Family，伤害加深不模拟伤害受击；突刺完整顺序为动作 Release、程序化接触骨架与定向 Piloto 枪芒并行、粒子命中爆点和目标受击。Preview 无手动 Entry 覆盖，旧图才回退 `DefaultPreviewEntry`。`SourceToTarget` 粒子在 Preview 与 Runtime 共享旋转/距离伸展公式；隔离舞台支持方向、距离、倍速、时间拖动和固定种子重建，Stop、资源切换、窗口关闭和程序集重载会恢复 Sprite/Transform/Shadow 并清理临时对象；Scenario 不参与 Runtime 或玩法结算。
+`Tactics/Pure Run/Presentation Workbench` 将 GraphView、角色 Tween、投射物、第三方 Prefab FX、程序化 Recipe、隔离 Preview Stage 和资产沙盒收束为唯一表现编辑入口；Graph 本身不写伤害、Buff 或目标状态。18 个正式图通过 Editor-only Preview Scenario 播放代表性完整技能，按 Release、Projectile Impact、程序化 Blocking 或 Track 完成推进 Phase，同时保留动作恢复与视觉尾段重叠。工作台只在明确 Apply All 后写资产；Stop、资源切换、窗口关闭和程序集重载会恢复 Sprite/Transform/Shadow 并清理临时对象。交互 Preview 由独立控制器按需或最高 30 FPS 写入固定 `1280×720` 持久 RenderTexture，UI Toolkit `Image` 只负责缩放显示；外部窗口或分栏 resize 期间暂停 GPU 渲染，稳定 500ms 且至少三个 update 后补最新一帧。中央预览不再依赖 `IMGUIContainer`、`EndAndDrawPreview()` 或嵌套 `TwoPaneSplitView`。
+
+Runtime 与 Preview 共同消费 `PresentationExecutionPlan` 的 Sequence/Parallel/Leaf 结构，不再分别遍历 Fork/Join。禁用节点透传、Finish 终止、Join 后只继续一次；Marker 单次发送、Impact 后视觉尾段、取消与异常观察仍由既有执行器保持。Scenario 继续只用于 Editor 演示，不参与 Runtime 或玩法结算。
+
+Workbench 与 MCP 的离屏预览共用同一无窗口内核，并可限定 Full Scenario、单 Phase、Entry、Leaf 或完整 Fork Region。输出时间线来自实际构造的 Tween、Projectile 与 VFX 轨道，保留节点起止、Release、PoseRestore、Impact、Blocking、Hit 和 PhaseAdvance 的绝对时间、lane 与 phase；固定随机种子保证相同输入可重复。预览 scope 和失败回退不会改变 Runtime 或玩法结算。
 
 技能接触反馈由可选 `SkillVfxRecipe` 驱动。执行器在伤害前保存世界坐标，只发送强类型 Cue；Coordinator 只等待释放/接触关键帧，淡出、粒子和残影非阻塞。投射物抵达时先完成 `ProjectileImpact` 接触点再写入命中黑板；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，并在取消时同步清理。Sprite 投射物未显式配置 Material 时保留 `SpriteRenderer` 默认材质，残影遵循同一规则，不会用空材质触发洋红错误 Shader。实际伤害仍以 `DamageResolution.WasHit` 决定次目标/命中反馈，表现缺失或取消不能改变玩法结果。突刺方向端点不因射线上先命中的敌人被通用 LOS 隐藏，但扫描仍在友军、永久地形和非法格处结束。
 

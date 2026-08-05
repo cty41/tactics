@@ -11,6 +11,7 @@ using Tactics.EditorTools;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
+using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
 namespace Tactics.Tests.Editor
@@ -261,19 +262,19 @@ namespace Tactics.Tests.Editor
             Vector3 targetPoint = new Vector3(3f, -1f, 0f);
 
             SetAnchor(serialized, VisualCueAnchor.Caster);
-            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+            Assert.That(PresentationWorkbenchWindow.ResolveVisualCueAnchor(
                 profile, actor, target, targetPoint), Is.EqualTo(FindSprite(actor).bounds.center));
 
             SetAnchor(serialized, VisualCueAnchor.PrimaryTarget);
-            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+            Assert.That(PresentationWorkbenchWindow.ResolveVisualCueAnchor(
                 profile, actor, target, targetPoint), Is.EqualTo(FindSprite(target).bounds.center));
 
             SetAnchor(serialized, VisualCueAnchor.PrimaryTargetGround);
-            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+            Assert.That(PresentationWorkbenchWindow.ResolveVisualCueAnchor(
                 profile, actor, target, targetPoint), Is.EqualTo(target.transform.position));
 
             SetAnchor(serialized, VisualCueAnchor.TargetPoint);
-            Assert.That(PureRunTweenPreviewWindow.ResolveVisualCueAnchor(
+            Assert.That(PresentationWorkbenchWindow.ResolveVisualCueAnchor(
                 profile, actor, target, targetPoint), Is.EqualTo(targetPoint));
         }
 
@@ -286,7 +287,7 @@ namespace Tactics.Tests.Editor
             Vector3 expectedTarget = target.transform.position + Vector3.up * 0.45f;
             Vector3 expectedDirection = (expectedTarget - actorCenter).normalized;
 
-            PureRunTweenPreviewWindow.ResolveProceduralVfxAnchors(
+            PresentationWorkbenchWindow.ResolveProceduralVfxAnchors(
                 SkillVfxCueKind.DirectionalStrike,
                 actor,
                 target,
@@ -297,7 +298,7 @@ namespace Tactics.Tests.Editor
             Assert.That(targetPosition, Is.EqualTo(expectedTarget));
             Assert.That(source, Is.EqualTo(actorCenter + expectedDirection * 0.10f));
 
-            PureRunTweenPreviewWindow.ResolveProceduralVfxAnchors(
+            PresentationWorkbenchWindow.ResolveProceduralVfxAnchors(
                 SkillVfxCueKind.PrimaryTargetHit,
                 actor,
                 target,
@@ -322,7 +323,7 @@ namespace Tactics.Tests.Editor
             strike.Cue = PresentationCueKind.DirectionalStrike;
 
             Assert.That(
-                PureRunTweenPreviewWindow.ResolveDefaultPreviewCue(graph),
+                PresentationWorkbenchWindow.ResolveDefaultPreviewCue(graph),
                 Is.EqualTo(PresentationCueKind.DirectionalStrike));
         }
 
@@ -331,9 +332,9 @@ namespace Tactics.Tests.Editor
         {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-            Assert.That(typeof(PureRunTweenPreviewWindow).GetField("_presentationCue", flags), Is.Null);
+            Assert.That(typeof(PresentationWorkbenchWindow).GetField("_presentationCue", flags), Is.Null);
             Assert.That(
-                typeof(PureRunTweenPreviewWindow).GetField("_overridePresentationCue", flags),
+                typeof(PresentationWorkbenchWindow).GetField("_overridePresentationCue", flags),
                 Is.Null);
         }
 
@@ -345,7 +346,7 @@ namespace Tactics.Tests.Editor
             Assert.That(graph, Is.Not.Null);
             Assert.That(graph.HasPreviewScenario, Is.True);
 
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 SetField(window, "_presentationGraph", graph);
@@ -399,7 +400,7 @@ namespace Tactics.Tests.Editor
                 $"Assets/Tactics/Arts/PureRun/Presentation/{presentationName}_Presentation.asset");
             Assert.That(graph, Is.Not.Null);
 
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 SetField(window, "_presentationGraph", graph);
@@ -443,7 +444,7 @@ namespace Tactics.Tests.Editor
         {
             var graph = AssetDatabase.LoadAssetAtPath<BattlePresentationGraph>(
                 "Assets/Tactics/Arts/PureRun/Presentation/Curse_Presentation.asset");
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 SetField(window, "_presentationGraph", graph);
@@ -474,7 +475,7 @@ namespace Tactics.Tests.Editor
             enabled.Cue = PresentationCueKind.PrimaryTargetHit;
 
             Assert.That(
-                PureRunTweenPreviewWindow.ResolveDefaultPreviewCue(graph),
+                PresentationWorkbenchWindow.ResolveDefaultPreviewCue(graph),
                 Is.EqualTo(PresentationCueKind.PrimaryTargetHit));
         }
 
@@ -490,7 +491,7 @@ namespace Tactics.Tests.Editor
             Assert.That(profiles, Has.Length.EqualTo(3));
             Assert.That(profiles, Has.All.Not.Null);
 
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 SetField(window, "_presentationGraph", graph);
@@ -526,7 +527,7 @@ namespace Tactics.Tests.Editor
                 "Assets/Tactics/Arts/PureRun/Presentation/Curse_Presentation.asset");
             Assert.That(graph, Is.Not.Null);
 
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 SetField(window, "_presentationGraph", graph);
@@ -599,8 +600,8 @@ namespace Tactics.Tests.Editor
         public void TweenPreviewWindow_RebuildAndDestroy_LeavesNoPreviewObjects()
         {
             int before = CountPreviewObjects();
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
-            MethodInfo rebuild = typeof(PureRunTweenPreviewWindow).GetMethod(
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
+            MethodInfo rebuild = typeof(PresentationWorkbenchWindow).GetMethod(
                 "RebuildStage",
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.That(rebuild, Is.Not.Null);
@@ -614,7 +615,7 @@ namespace Tactics.Tests.Editor
         [Test]
         public void TweenPreviewWindow_RepeatedPlayStopAndRebuild_DoesNotCorruptTweenManager()
         {
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 Invoke(window, "RebuildStage");
@@ -634,7 +635,7 @@ namespace Tactics.Tests.Editor
         [Test]
         public void TweenPreviewWindow_RebuildStopAndActionChange_PreserveVisibleSpriteScale()
         {
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 Invoke(window, "RebuildStage");
@@ -658,11 +659,11 @@ namespace Tactics.Tests.Editor
         [Test]
         public void TweenPreviewWindow_CorpseLanding_UsesIndependentRuntimeCorpsePresentation()
         {
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 SetField(window, "_loop", false);
-                SetField(window, "_action", PureRunTweenPreviewWindow.PreviewAction.CorpseLanding);
+                SetField(window, "_action", PresentationWorkbenchWindow.PreviewAction.CorpseLanding);
                 Invoke(window, "RebuildStage");
 
                 GameObject actor = GetField<GameObject>(window, "_actorInstance");
@@ -730,11 +731,11 @@ namespace Tactics.Tests.Editor
         [Test]
         public void TweenPreviewWindow_LethalHitToCorpse_UsesRuntimeHandoffAndCombinedTimeline()
         {
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             try
             {
                 SetField(window, "_loop", false);
-                SetField(window, "_action", PureRunTweenPreviewWindow.PreviewAction.LethalHitToCorpse);
+                SetField(window, "_action", PresentationWorkbenchWindow.PreviewAction.LethalHitToCorpse);
                 Invoke(window, "RebuildStage");
 
                 GameObject actor = GetField<GameObject>(window, "_actorInstance");
@@ -935,18 +936,18 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
-        public void TweenPreviewWindow_ApplySupportsUndo_AndRevertRestoresSandbox()
+        public void Workbench_ApplyAllSupportsUndo_AndRevertAllRestoresSandbox()
         {
             var source = ScriptableObject.CreateInstance<StandardUnitTweenProfile>();
             _objectsToDestroy.Add(source);
             float originalDuration = source.IdleDuration;
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             Invoke(window, "SetUnitProfile", source);
 
             var sandbox = GetField<StandardUnitTweenProfile>(window, "_unitSandbox");
             SetSerializedFloat(sandbox, "_idleDuration", originalDuration + 0.5f);
             SetField(window, "_unitSandboxDirty", true);
-            Invoke(window, "ApplyUnitSandbox");
+            Invoke(window, "ApplyWorkbench");
             Assert.That(source.IdleDuration, Is.EqualTo(originalDuration + 0.5f).Within(0.0001f));
 
             Undo.PerformUndo();
@@ -954,7 +955,7 @@ namespace Tactics.Tests.Editor
 
             SetSerializedFloat(sandbox, "_idleDuration", originalDuration + 0.75f);
             SetField(window, "_unitSandboxDirty", true);
-            Invoke(window, "RevertUnitSandbox");
+            Invoke(window, "RevertWorkbench");
             StandardUnitTweenProfile reverted = GetField<StandardUnitTweenProfile>(window, "_unitSandbox");
             Assert.That(reverted.IdleDuration, Is.EqualTo(source.IdleDuration).Within(0.0001f));
 
@@ -964,7 +965,7 @@ namespace Tactics.Tests.Editor
         [Test]
         public void TweenPreviewWindow_Destroy_CleansTransientProjectileProfile()
         {
-            var window = ScriptableObject.CreateInstance<PureRunTweenPreviewWindow>();
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
             var transient = (ProjectileVisualProfile)Invoke(window, "CreateTransientProjectileProfile");
             Assert.That(transient, Is.Not.Null);
 
@@ -975,11 +976,254 @@ namespace Tactics.Tests.Editor
         [Test]
         public void TweenPreviewWindow_UsesCompliantMenuAndCurrentActionApi()
         {
-            const string path = "Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs";
+            const string path = "Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs";
             string source = File.ReadAllText(path);
-            StringAssert.Contains("[MenuItem(\"Tactics/Pure Run/Tween Preview\")]", source);
+            StringAssert.Contains("[MenuItem(\"Tactics/Pure Run/Presentation Workbench\")]", source);
             StringAssert.DoesNotContain("GlowOverlay", source);
             StringAssert.DoesNotContain("Tactics/Tools/Pure Run/Tween Preview", source);
+        }
+
+        [Test]
+        public void PresentationAuthoring_ExposesOnlyUnifiedWorkbenchMenu()
+        {
+            string[] sources = Directory.GetFiles(
+                "Assets/Tactics/Scripts/Editor",
+                "*.cs",
+                SearchOption.AllDirectories);
+            string combined = string.Join("\n", sources.Select(File.ReadAllText));
+
+            Assert.That(combined.Split(new[]
+            {
+                "[MenuItem(\"Tactics/Pure Run/Presentation Workbench\")]"
+            }, StringSplitOptions.None).Length - 1, Is.EqualTo(1));
+            StringAssert.DoesNotContain(
+                "[MenuItem(\"Tactics/Pure Run/Presentation Graph Editor\")]",
+                combined);
+            StringAssert.DoesNotContain(
+                "[MenuItem(\"Tactics/Pure Run/Tween Preview\")]",
+                combined);
+            StringAssert.DoesNotContain(
+                "[MenuItem(\"Tactics/Pure Run/Skill VFX Preview\")]",
+                combined);
+        }
+
+        [Test]
+        public void WorkbenchInteractivePreview_RendersDirtyAndPlayingFramesAtCappedRate()
+        {
+            double now = 0d;
+            bool playing = false;
+            int renderCount = 0;
+            var texture = new RenderTexture(1280, 720, 0);
+            _objectsToDestroy.Add(texture);
+            using var controller = new PresentationPreviewRenderController(
+                () => now,
+                () => new Vector2(1200f, 700f),
+                () => playing,
+                _ => renderCount++,
+                textureFactory: () => texture,
+                textureDisposer: _ => { },
+                subscribeToEditorUpdate: false);
+
+            controller.Tick();
+            controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(1));
+            Assert.That(controller.State, Is.EqualTo(PresentationPreviewRenderState.Idle));
+
+            playing = true;
+            now += 0.01d;
+            controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(1));
+            now += PresentationPreviewRenderController.PlayingFrameIntervalSeconds;
+            controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(2));
+            Assert.That(controller.State, Is.EqualTo(PresentationPreviewRenderState.Playing));
+        }
+
+        [Test]
+        public void WorkbenchInteractivePreview_UsesStableRenderTargetDuringWindowResize()
+        {
+            double now = 0d;
+            Vector2 windowSize = new(1200f, 700f);
+            int renderCount = 0;
+            var texture = new RenderTexture(1280, 720, 0);
+            _objectsToDestroy.Add(texture);
+            var surface = new PresentationPreviewSurface();
+            using var controller = new PresentationPreviewRenderController(
+                () => now,
+                () => windowSize,
+                () => false,
+                _ => renderCount++,
+                surface,
+                () => texture,
+                _ => { },
+                false);
+
+            controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(1));
+            Assert.That(controller.CurrentFrame.Texture, Is.SameAs(texture));
+
+            windowSize = new Vector2(1500f, 900f);
+            controller.Tick();
+            Assert.That(controller.State, Is.EqualTo(PresentationPreviewRenderState.ResizeSuspended));
+            Assert.That(surface.IsResizeOverlayVisible, Is.True);
+            Assert.That(renderCount, Is.EqualTo(1));
+
+            now += PresentationPreviewRenderController.ResizeStableSeconds + 0.01d;
+            for (int i = 0; i < PresentationPreviewRenderController.ResizeStableUpdateCount; i++)
+                controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(2));
+            Assert.That(controller.CurrentFrame.Texture, Is.SameAs(texture));
+            Assert.That(surface.ImageTexture, Is.SameAs(texture));
+            Assert.That(surface.IsResizeOverlayVisible, Is.False);
+
+            Rect renderRect = PresentationWorkbenchWindow.ResolveInteractivePreviewRenderRect();
+
+            Assert.That(renderRect.width, Is.EqualTo(1280f));
+            Assert.That(renderRect.height, Is.EqualTo(720f));
+            Assert.That(renderRect.position, Is.EqualTo(Vector2.zero));
+
+            const string layoutPath =
+                "Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationWorkbenchWindowLayout.cs";
+            StringAssert.DoesNotContain("TwoPaneSplitView", File.ReadAllText(layoutPath));
+            const string stagePath =
+                "Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs";
+            string stageSource = File.ReadAllText(stagePath);
+            StringAssert.DoesNotContain("EndAndDrawPreview", stageSource);
+            StringAssert.DoesNotContain("DrawPreviewWorkspace", stageSource);
+        }
+
+        [Test]
+        public void WorkbenchInteractivePreview_ExplicitResizeAndDisposeBlockRendering()
+        {
+            double now = 0d;
+            int renderCount = 0;
+            var texture = new RenderTexture(1280, 720, 0);
+            _objectsToDestroy.Add(texture);
+            var controller = new PresentationPreviewRenderController(
+                () => now,
+                () => new Vector2(1200f, 700f),
+                () => true,
+                _ => renderCount++,
+                textureFactory: () => texture,
+                textureDisposer: _ => { },
+                subscribeToEditorUpdate: false);
+
+            controller.Tick();
+            controller.BeginResize();
+            now += 1d;
+            controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(1));
+            Assert.That(controller.State, Is.EqualTo(PresentationPreviewRenderState.ResizeSuspended));
+
+            controller.EndResize();
+            now += PresentationPreviewRenderController.ResizeStableSeconds + 0.01d;
+            for (int i = 0; i < PresentationPreviewRenderController.ResizeStableUpdateCount; i++)
+                controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(2));
+
+            controller.Dispose();
+            controller.RequestRender();
+            now += 1d;
+            controller.Tick();
+            Assert.That(renderCount, Is.EqualTo(2));
+            Assert.That(controller.State, Is.EqualTo(PresentationPreviewRenderState.Disposed));
+        }
+
+        [Test]
+        public void WorkbenchPreviewSurface_UsesRetainedImageWithoutImguiContainer()
+        {
+            var surface = new PresentationPreviewSurface();
+
+            Assert.That(surface.Q<Image>("presentation-preview-image"), Is.Not.Null);
+            Assert.That(surface.Query<IMGUIContainer>().ToList(), Is.Empty);
+        }
+
+        [Test]
+        public void WorkbenchPreviewWorkspace_ContainsNoImguiContainer()
+        {
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
+            try
+            {
+                Invoke(window, "CreateGUI");
+
+                VisualElement workspace = window.rootVisualElement.Q(
+                    "presentation-preview-workspace");
+                Assert.That(workspace, Is.Not.Null);
+                Assert.That(workspace.Q<Image>("presentation-preview-image"), Is.Not.Null);
+                Assert.That(workspace.Query<IMGUIContainer>().ToList(), Is.Empty);
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
+        public void WorkbenchPreview_AssemblyReloadDisposesRenderController()
+        {
+            var window = ScriptableObject.CreateInstance<PresentationWorkbenchWindow>();
+            try
+            {
+                Invoke(window, "CreateGUI");
+                var controller = GetField<PresentationPreviewRenderController>(
+                    window,
+                    "_previewRenderController");
+
+                Invoke(window, "BeforeAssemblyReload");
+
+                Assert.That(
+                    controller.State,
+                    Is.EqualTo(PresentationPreviewRenderState.Disposed));
+                Assert.That(
+                    GetField<PresentationPreviewRenderController>(
+                        window,
+                        "_previewRenderController"),
+                    Is.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [Test]
+        public void WorkbenchInteractivePreview_RapidAndInvalidResizeNeverRenders()
+        {
+            double now = 0d;
+            Vector2 windowSize = new(1200f, 700f);
+            int renderCount = 0;
+            var texture = new RenderTexture(1280, 720, 0);
+            _objectsToDestroy.Add(texture);
+            using var controller = new PresentationPreviewRenderController(
+                () => now,
+                () => windowSize,
+                () => true,
+                _ => renderCount++,
+                textureFactory: () => texture,
+                textureDisposer: _ => { },
+                subscribeToEditorUpdate: false);
+
+            controller.Tick();
+            for (int index = 0; index < 12; index++)
+            {
+                now += 0.1d;
+                windowSize = index % 3 == 0
+                    ? Vector2.zero
+                    : new Vector2(1200f + index * 17f, 700f + index * 11f);
+                controller.Tick();
+            }
+
+            Assert.That(renderCount, Is.EqualTo(1));
+            Assert.That(controller.State, Is.EqualTo(PresentationPreviewRenderState.ResizeSuspended));
+
+            windowSize = new Vector2(1450f, 850f);
+            controller.Tick();
+            now += PresentationPreviewRenderController.ResizeStableSeconds + 0.01d;
+            for (int index = 0; index < PresentationPreviewRenderController.ResizeStableUpdateCount; index++)
+                controller.Tick();
+
+            Assert.That(renderCount, Is.EqualTo(2));
+            Assert.That(controller.CurrentFrame.Texture, Is.SameAs(texture));
         }
 
         private static int CountPreviewObjects()
@@ -1041,7 +1285,7 @@ namespace Tactics.Tests.Editor
         }
 
         private static void AssertPreviewSpriteIsAuthoredAndVisible(
-            PureRunTweenPreviewWindow window,
+            PresentationWorkbenchWindow window,
             string instanceFieldName)
         {
             GameObject instance = GetField<GameObject>(window, instanceFieldName);

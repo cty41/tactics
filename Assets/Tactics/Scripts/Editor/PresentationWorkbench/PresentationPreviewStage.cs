@@ -9,7 +9,9 @@ using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Tween;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
 namespace Tactics.EditorTools
@@ -22,8 +24,55 @@ namespace Tactics.EditorTools
     /// explicit Apply operations, which participate in Unity Undo. Skill VFX recipes remain in
     /// the separate Skill VFX Preview; this window only marks release and projectile impact.
     /// </remarks>
-    public sealed class PureRunTweenPreviewWindow : EditorWindow
+    public sealed partial class PresentationWorkbenchWindow : EditorWindow
     {
+        internal enum PresentationPreviewScopeKind
+        {
+            FullScenario,
+            Phase,
+            Entry,
+            Leaf,
+            ForkRegion
+        }
+
+        internal sealed class PresentationPreviewScope
+        {
+            internal PresentationPreviewScopeKind Kind { get; set; } = PresentationPreviewScopeKind.FullScenario;
+            internal int PhaseIndex { get; set; }
+            internal PresentationCueKind Cue { get; set; } = PresentationCueKind.Action;
+            internal string NodeId { get; set; }
+
+            internal PresentationPreviewScope Clone() => new()
+            {
+                Kind = Kind,
+                PhaseIndex = PhaseIndex,
+                Cue = Cue,
+                NodeId = NodeId
+            };
+        }
+
+        internal sealed class PresentationPreviewTimelineEvent
+        {
+            internal string Event { get; set; }
+            internal string NodeId { get; set; }
+            internal string NodeType { get; set; }
+            internal float Time { get; set; }
+            internal float Duration { get; set; }
+            internal int Lane { get; set; }
+            internal int PhaseIndex { get; set; } = -1;
+            internal string Marker { get; set; }
+        }
+
+        internal sealed class PresentationPreviewRenderResult
+        {
+            internal Texture2D Texture { get; set; }
+            internal PresentationPreviewScope RequestedScope { get; set; }
+            internal PresentationPreviewScope ResolvedScope { get; set; }
+            internal IReadOnlyList<PresentationPreviewTimelineEvent> Timeline { get; set; }
+            internal IReadOnlyList<string> ActualFallbacks { get; set; }
+            internal int RandomSeed { get; set; }
+        }
+
         private const string DefaultActorPath =
             "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab";
         private const string DefaultTargetPath =
@@ -34,6 +83,8 @@ namespace Tactics.EditorTools
             "Assets/Tactics/Arts/PureRun/Tween/Projectiles/MagicBasic.asset";
         private const string DefaultCorpsePrefabPath =
             "Assets/Tactics/Arts/Prefabs/Units/TestCorpse.prefab";
+        private const float InteractivePreviewWidth = 1280f;
+        private const float InteractivePreviewHeight = 720f;
 
         private PreviewRenderUtility _previewUtility;
         private GameObject _actorPrefab;
@@ -62,7 +113,6 @@ namespace Tactics.EditorTools
         private bool _unitSandboxDirty;
         private bool _projectileSandboxDirty;
         private bool _loop = true;
-        private bool _showParameters = true;
         private float _playbackSpeed = 1f;
         private float _distanceTiles = 3f;
         private float _singleLoopDuration = 1f;
@@ -84,27 +134,43 @@ namespace Tactics.EditorTools
         private UnitPoseFamily _poseFamily;
         private UnitVisualState _visualState;
         private string _poseResolution = "No pose requested";
+        private PresentationPreviewScope _previewScope = new();
+        private PresentationPreviewScope _resolvedPreviewScope = new();
+        private readonly List<PresentationPreviewTimelineEvent> _previewTimeline = new();
+        private readonly List<string> _previewFallbacks = new();
+        private ObjectField _previewActorField;
+        private ObjectField _previewTargetField;
+        private ObjectField _previewUnitProfileField;
+        private ObjectField _previewProjectileProfileField;
+        private ObjectField _previewPoseFamilyField;
+        private EnumField _previewActionField;
+        private EnumField _previewFacingField;
+        private EnumField _previewVisualStateField;
+        private Slider _previewDistanceField;
+        private Slider _previewTimelineSlider;
+        private Label _previewTimeLabel;
+        private Label _previewPoseResolutionLabel;
+        private HelpBox _previewModeHelpBox;
+        private HelpBox _previewWarningHelpBox;
+        private VisualElement _previewMarkerLayer;
+        private VisualElement _previewTimelineEvents;
+        private int _retainedStageRefreshVersion;
 
-        [MenuItem("Tactics/Pure Run/Tween Preview")]
+        [MenuItem("Tactics/Pure Run/Presentation Workbench")]
         private static void Open()
         {
-            var window = GetWindow<PureRunTweenPreviewWindow>();
-            window.titleContent = new GUIContent("Pure Run Tween");
-            window.minSize = new Vector2(720f, 620f);
+            var window = GetWindow<PresentationWorkbenchWindow>();
+            window.titleContent = new GUIContent("Presentation Workbench");
+            window.minSize = new Vector2(1180f, 680f);
             window.Show();
         }
 
-        internal static void OpenPresentationGraph(BattlePresentationGraph graph)
+        internal static void OpenGraph(BattlePresentationGraph graph)
         {
-            var window = GetWindow<PureRunTweenPreviewWindow>();
-            window.titleContent = new GUIContent("Presentation Preview");
-            window.minSize = new Vector2(720f, 620f);
-            window._presentationGraph = graph;
-            if (graph?.PreviewActorPrefab != null)
-                window._actorPrefab = graph.PreviewActorPrefab;
-            if (graph?.PreviewTargetPrefab != null)
-                window._targetPrefab = graph.PreviewTargetPrefab;
-            window.RebuildStage();
+            var window = GetWindow<PresentationWorkbenchWindow>();
+            window.titleContent = new GUIContent("Presentation Workbench");
+            window.minSize = new Vector2(1180f, 680f);
+            window.SetWorkbenchGraph(graph);
             window.Show();
         }
 
@@ -138,254 +204,434 @@ namespace Tactics.EditorTools
             SetProjectileProfile(
                 AssetDatabase.LoadAssetAtPath<ProjectileVisualProfile>(DefaultProjectileProfilePath));
             CreatePreviewUtility();
-            AssemblyReloadEvents.beforeAssemblyReload += Cleanup;
+            AssemblyReloadEvents.beforeAssemblyReload += BeforeAssemblyReload;
         }
 
         private void OnDisable()
         {
-            AssemblyReloadEvents.beforeAssemblyReload -= Cleanup;
+            AssemblyReloadEvents.beforeAssemblyReload -= BeforeAssemblyReload;
+            _retainedStageRefreshVersion++;
+            _previewRenderController?.Dispose();
+            _previewRenderController = null;
+            _previewSurface = null;
+            Cleanup();
+            DisposeWorkbenchSession();
+        }
+
+        private void BeforeAssemblyReload()
+        {
+            _retainedStageRefreshVersion++;
+            _previewRenderController?.Dispose();
+            _previewRenderController = null;
             Cleanup();
         }
 
-        private void OnGUI()
+        internal static Rect ResolveInteractivePreviewRenderRect()
         {
-            DrawAssetControls();
-            DrawPlaybackControls();
+            return new Rect(0f, 0f, InteractivePreviewWidth, InteractivePreviewHeight);
+        }
+        private VisualElement BuildRetainedPreviewWorkspace()
+        {
+            var root = new VisualElement
+            {
+                name = "presentation-preview-workspace"
+            };
+            root.style.flexGrow = 1f;
+            root.style.minWidth = 320f;
+            root.style.minHeight = 0f;
+            root.style.paddingLeft = 6f;
+            root.style.paddingRight = 6f;
 
-            Rect previewRect = GUILayoutUtility.GetRect(
-                100f,
-                2048f,
-                300f,
-                720f,
-                GUILayout.ExpandWidth(true),
-                GUILayout.ExpandHeight(true));
-            DrawPreview(previewRect);
-            DrawTimeline();
-            DrawSandboxEditors();
-
-            if (_previewSequence != null && _previewSequence.IsActive() && _previewSequence.IsPlaying())
-                Repaint();
+            root.Add(BuildRetainedPreviewSettings());
+            root.Add(BuildRetainedPlaybackToolbar());
+            _previewSurface = new PresentationPreviewSurface();
+            root.Add(_previewSurface);
+            root.Add(BuildRetainedTimeline());
+            SyncRetainedPreviewControls();
+            return root;
         }
 
-        private void DrawAssetControls()
+        private VisualElement BuildRetainedPreviewSettings()
         {
-            EditorGUILayout.LabelField("Preview Stage", EditorStyles.boldLabel);
-            EditorGUI.BeginChangeCheck();
-            var actor = (GameObject)EditorGUILayout.ObjectField(
-                "Actor Prefab", _actorPrefab, typeof(GameObject), false);
-            var target = (GameObject)EditorGUILayout.ObjectField(
-                "Target Prefab", _targetPrefab, typeof(GameObject), false);
-            var unitProfile = (StandardUnitTweenProfile)EditorGUILayout.ObjectField(
-                "Unit Tween Profile", _unitProfile, typeof(StandardUnitTweenProfile), false);
-            var projectileProfile = (ProjectileVisualProfile)EditorGUILayout.ObjectField(
-                "Projectile Profile", _projectileProfile, typeof(ProjectileVisualProfile), false);
-            var presentationGraph = (BattlePresentationGraph)EditorGUILayout.ObjectField(
-                "Presentation Graph", _presentationGraph, typeof(BattlePresentationGraph), false);
-            if (presentationGraph != _presentationGraph && presentationGraph != null)
+            var foldout = new Foldout
             {
-                actor = presentationGraph.PreviewActorPrefab ?? actor;
-                target = presentationGraph.PreviewTargetPrefab ?? target;
-            }
-            if (EditorGUI.EndChangeCheck() &&
-                TryCommitAssetSelection(actor, target, unitProfile, projectileProfile))
+                text = "Preview Stage",
+                value = false
+            };
+
+            var assets = new VisualElement();
+            assets.style.flexDirection = FlexDirection.Row;
+            assets.style.flexWrap = Wrap.Wrap;
+            _previewActorField = CreatePreviewObjectField("Actor", typeof(GameObject), _actorPrefab, assets);
+            _previewTargetField = CreatePreviewObjectField("Target", typeof(GameObject), _targetPrefab, assets);
+            _previewUnitProfileField = CreatePreviewObjectField(
+                "Unit Profile", typeof(StandardUnitTweenProfile), _unitProfile, assets);
+            _previewProjectileProfileField = CreatePreviewObjectField(
+                "Projectile", typeof(ProjectileVisualProfile), _projectileProfile, assets);
+            foldout.Add(assets);
+
+            foreach (ObjectField field in new[]
+                     {
+                         _previewActorField,
+                         _previewTargetField,
+                         _previewUnitProfileField,
+                         _previewProjectileProfileField
+                     })
             {
-                _presentationGraph = presentationGraph;
-                RebuildStage();
+                field.RegisterValueChangedCallback(_ => ApplyRetainedPreviewAssetSelection());
             }
 
-            if (_presentationGraph != null)
+            var options = new VisualElement();
+            options.style.flexDirection = FlexDirection.Row;
+            options.style.flexWrap = Wrap.Wrap;
+            _previewActionField = new EnumField("Action", _action);
+            _previewFacingField = new EnumField("Facing", _facing);
+            _previewVisualStateField = new EnumField("Visual State", _visualState);
+            _previewDistanceField = new Slider("Distance", 2f, 6f) { value = _distanceTiles };
+            _previewPoseFamilyField = new ObjectField("Pose Family")
             {
-                EditorGUILayout.LabelField("Preview", _presentationGraph.HasPreviewScenario
-                    ? "Full Skill Preview"
-                    : $"Legacy {_presentationGraph.DefaultPreviewEntry} fallback");
-                if (!_presentationGraph.HasPreviewScenario)
+                objectType = typeof(UnitPoseFamily),
+                allowSceneObjects = false,
+                value = _poseFamily
+            };
+            foreach (VisualElement field in new VisualElement[]
+                     {
+                         _previewActionField,
+                         _previewFacingField,
+                         _previewVisualStateField,
+                         _previewDistanceField,
+                         _previewPoseFamilyField
+                     })
+            {
+                field.style.minWidth = 180f;
+                field.style.flexGrow = 1f;
+                options.Add(field);
+            }
+            foldout.Add(options);
+
+            _previewActionField.RegisterValueChangedCallback(evt =>
+            {
+                _action = (PreviewAction)evt.newValue;
+                QueueRetainedStageRefresh();
+            });
+            _previewFacingField.RegisterValueChangedCallback(evt =>
+            {
+                _facing = (FacingDirection)evt.newValue;
+                QueueRetainedStageRefresh();
+            });
+            _previewVisualStateField.RegisterValueChangedCallback(evt =>
+            {
+                _visualState = (UnitVisualState)evt.newValue;
+                QueueRetainedStageRefresh();
+            });
+            _previewDistanceField.RegisterValueChangedCallback(evt =>
+            {
+                _distanceTiles = evt.newValue;
+                QueueRetainedStageRefresh();
+            });
+            _previewPoseFamilyField.RegisterValueChangedCallback(evt =>
+            {
+                _poseFamily = evt.newValue as UnitPoseFamily;
+                QueueRetainedStageRefresh();
+            });
+
+            _previewModeHelpBox = new HelpBox(string.Empty, HelpBoxMessageType.Info);
+            _previewWarningHelpBox = new HelpBox(string.Empty, HelpBoxMessageType.Warning);
+            _previewPoseResolutionLabel = new Label();
+            _previewPoseResolutionLabel.style.marginLeft = 4f;
+            _previewPoseResolutionLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+            foldout.Add(_previewModeHelpBox);
+            foldout.Add(_previewWarningHelpBox);
+            foldout.Add(_previewPoseResolutionLabel);
+            return foldout;
+        }
+
+        private ObjectField CreatePreviewObjectField(
+            string label,
+            Type objectType,
+            UnityEngine.Object value,
+            VisualElement parent)
+        {
+            var field = new ObjectField(label)
+            {
+                objectType = objectType,
+                allowSceneObjects = false,
+                value = value
+            };
+            field.style.minWidth = 220f;
+            field.style.flexGrow = 1f;
+            parent.Add(field);
+            return field;
+        }
+
+        private VisualElement BuildRetainedPlaybackToolbar()
+        {
+            var toolbar = new Toolbar();
+            toolbar.Add(new ToolbarButton(PlayPreview) { text = "Play" });
+            toolbar.Add(new ToolbarButton(() =>
+            {
+                _previewSequence?.Pause();
+                RequestInteractivePreviewFrame();
+            }) { text = "Pause" });
+            toolbar.Add(new ToolbarButton(() => StopPreview(true)) { text = "Stop" });
+            toolbar.Add(new ToolbarButton(RestartPreview) { text = "Restart" });
+            toolbar.Add(new ToolbarSpacer());
+            var loopToggle = new ToolbarToggle { text = "Loop", value = _loop };
+            loopToggle.RegisterValueChangedCallback(evt =>
+            {
+                _loop = evt.newValue;
+                RebuildSequence(false);
+            });
+            toolbar.Add(loopToggle);
+
+            var speedMenu = new ToolbarMenu { text = $"Speed {_playbackSpeed:0.##}x" };
+            foreach (float speed in new[] { 0.25f, 0.5f, 1f, 2f, 4f })
+            {
+                float selectedSpeed = speed;
+                speedMenu.menu.AppendAction($"{speed:0.##}x", _ =>
                 {
-                    EditorGUILayout.HelpBox(
-                        "This graph has no full preview scenario. The preview is using its legacy " +
-                        "DefaultPreviewEntry fallback.",
-                        MessageType.Warning);
-                }
+                    _playbackSpeed = selectedSpeed;
+                    speedMenu.text = $"Speed {selectedSpeed:0.##}x";
+                    if (_previewSequence != null)
+                        _previewSequence.timeScale = selectedSpeed;
+                    RequestInteractivePreviewFrame();
+                });
+            }
+            toolbar.Add(speedMenu);
+            return toolbar;
+        }
+
+        private VisualElement BuildRetainedTimeline()
+        {
+            var root = new VisualElement
+            {
+                name = "presentation-preview-timeline"
+            };
+            root.style.flexShrink = 0f;
+            _previewTimelineSlider = new Slider("Timeline", 0f, 1f);
+            _previewTimelineSlider.RegisterValueChangedCallback(evt =>
+            {
+                if (_previewSequence == null || !_previewSequence.IsActive())
+                    return;
+                _previewSequence.Pause();
+                _previewSequence.Goto(evt.newValue * _singleLoopDuration, false);
+                RequestInteractivePreviewFrame();
+                RefreshRetainedPreviewUi();
+            });
+            root.Add(_previewTimelineSlider);
+
+            _previewMarkerLayer = new VisualElement
+            {
+                name = "presentation-preview-markers",
+                pickingMode = PickingMode.Ignore
+            };
+            _previewMarkerLayer.style.height = 12f;
+            _previewMarkerLayer.style.position = Position.Relative;
+            root.Add(_previewMarkerLayer);
+
+            _previewTimeLabel = new Label("0 / 0s");
+            _previewTimeLabel.style.unityTextAlign = TextAnchor.MiddleRight;
+            root.Add(_previewTimeLabel);
+
+            var eventScroll = new ScrollView(ScrollViewMode.Horizontal);
+            eventScroll.style.height = 28f;
+            _previewTimelineEvents = new VisualElement
+            {
+                name = "presentation-preview-node-events"
+            };
+            _previewTimelineEvents.style.flexDirection = FlexDirection.Row;
+            eventScroll.Add(_previewTimelineEvents);
+            root.Add(eventScroll);
+            return root;
+        }
+
+        private void ApplyRetainedPreviewAssetSelection()
+        {
+            if (!TryCommitAssetSelection(
+                    _previewActorField?.value as GameObject,
+                    _previewTargetField?.value as GameObject,
+                    _previewUnitProfileField?.value as StandardUnitTweenProfile,
+                    _previewProjectileProfileField?.value as ProjectileVisualProfile))
+            {
+                SyncRetainedPreviewControls();
+                return;
             }
 
-            EditorGUI.BeginChangeCheck();
-            using (new EditorGUILayout.HorizontalScope())
+            DrawWorkbenchInspector(null);
+            RebuildStage();
+            SyncRetainedPreviewControls();
+        }
+
+        private void QueueRetainedStageRefresh()
+        {
+            int refreshVersion = ++_retainedStageRefreshVersion;
+            if (_previewSurface == null)
             {
-                if (_presentationGraph == null)
-                    _action = (PreviewAction)EditorGUILayout.EnumPopup("Action", _action);
-                _facing = (FacingDirection)EditorGUILayout.EnumPopup("Facing", _facing);
-                _distanceTiles = EditorGUILayout.Slider("Distance", _distanceTiles, 2f, 6f);
-            }
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                _poseFamily = (UnitPoseFamily)EditorGUILayout.ObjectField(
-                    "Pose Family", _poseFamily, typeof(UnitPoseFamily), false);
-                _visualState = (UnitVisualState)EditorGUILayout.EnumPopup("Visual State", _visualState);
-            }
-            if (EditorGUI.EndChangeCheck())
                 RebuildStage();
-
-            if (_action is PreviewAction.Melee or PreviewAction.Ranged or PreviewAction.Cast or
-                PreviewAction.Hit or PreviewAction.LethalHitToCorpse)
-                EditorGUILayout.HelpBox($"Pose resolution: {_poseResolution}", MessageType.Info);
-
-            if (UsesProjectile(_action) && !CanRenderSelectedProjectile())
+                return;
+            }
+            _previewSurface.schedule.Execute(() =>
             {
-                EditorGUILayout.HelpBox(
-                    "Projectile visual is incomplete. Preview uses an editor-only magenta " +
-                    "placeholder; runtime remains invisible while preserving travel timing.",
-                    MessageType.Warning);
+                if (refreshVersion != _retainedStageRefreshVersion || this == null)
+                    return;
+                RebuildStage();
+            }).StartingIn(100);
+        }
+
+        private void SyncRetainedPreviewControls()
+        {
+            _previewActorField?.SetValueWithoutNotify(_actorPrefab);
+            _previewTargetField?.SetValueWithoutNotify(_targetPrefab);
+            _previewUnitProfileField?.SetValueWithoutNotify(_unitProfile);
+            _previewProjectileProfileField?.SetValueWithoutNotify(_projectileProfile);
+            _previewActionField?.SetValueWithoutNotify(_action);
+            _previewFacingField?.SetValueWithoutNotify(_facing);
+            _previewVisualStateField?.SetValueWithoutNotify(_visualState);
+            _previewDistanceField?.SetValueWithoutNotify(_distanceTiles);
+            _previewPoseFamilyField?.SetValueWithoutNotify(_poseFamily);
+            if (_previewActionField != null)
+                _previewActionField.style.display = _presentationGraph == null
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
+
+            if (_previewModeHelpBox != null)
+            {
+                _previewModeHelpBox.text = _presentationGraph == null
+                    ? "Standalone profile preview."
+                    : _presentationGraph.HasPreviewScenario
+                        ? "Full Preview Scenario"
+                        : $"Legacy {_presentationGraph.DefaultPreviewEntry} fallback";
+            }
+            if (_previewWarningHelpBox != null)
+            {
+                bool legacyFallback = _presentationGraph != null && !_presentationGraph.HasPreviewScenario;
+                bool projectileFallback = UsesProjectile(_action) && !CanRenderSelectedProjectile();
+                _previewWarningHelpBox.text = legacyFallback
+                    ? "This graph has no full Preview Scenario and uses DefaultPreviewEntry."
+                    : "Projectile visual is incomplete; preview uses an editor-only placeholder.";
+                _previewWarningHelpBox.style.display = legacyFallback || projectileFallback
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
+            }
+            if (_previewPoseResolutionLabel != null)
+            {
+                _previewPoseResolutionLabel.text = $"Pose resolution: {_poseResolution}";
+                _previewPoseResolutionLabel.style.display =
+                    _action is PreviewAction.Melee or PreviewAction.Ranged or PreviewAction.Cast or
+                        PreviewAction.Hit or PreviewAction.LethalHitToCorpse
+                        ? DisplayStyle.Flex
+                        : DisplayStyle.None;
             }
         }
 
-        private void DrawPlaybackControls()
+        private void RebuildRetainedTimeline()
         {
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+            if (_previewMarkerLayer == null || _previewTimelineEvents == null)
+                return;
+            _previewMarkerLayer.Clear();
+            AddRetainedTimelineMarker(_releaseTime, "Release", new Color(0.35f, 0.85f, 1f));
+            AddRetainedTimelineMarker(_poseRestoreTime, "Pose Restore", new Color(0.55f, 1f, 0.45f));
+            AddRetainedTimelineMarker(_impactTime, "Projectile Impact", new Color(1f, 0.55f, 0.25f));
+            AddRetainedTimelineMarker(_blockingTime, "VFX Contact", new Color(1f, 0.78f, 0.3f));
+            AddRetainedTimelineMarker(_hitTime, "Hit", new Color(1f, 0.35f, 0.35f));
+            AddRetainedTimelineMarker(_lethalRecoilTime, "Recoil", new Color(1f, 0.46f, 0.3f));
+            AddRetainedTimelineMarker(_lethalShakeTime, "Shake", new Color(1f, 0.7f, 0.25f));
+            AddRetainedTimelineMarker(_lethalCollapseTime, "Collapse", new Color(0.95f, 0.55f, 1f));
+            AddRetainedTimelineMarker(_deathHandoffTime, "Death Handoff", new Color(1f, 0.3f, 0.65f));
+            AddRetainedTimelineMarker(_corpseDropTime, "Drop", new Color(0.65f, 0.85f, 1f));
+            AddRetainedTimelineMarker(_corpseImpactTime, "Impact", new Color(1f, 0.62f, 0.25f));
+            AddRetainedTimelineMarker(_corpseImpactEndTime, "Impact End", new Color(1f, 0.78f, 0.45f));
+            AddRetainedTimelineMarker(_corpseSettledTime, "Settled", new Color(0.55f, 1f, 0.55f));
+
+            _previewTimelineEvents.Clear();
+            _previewTimelineEvents.Add(new Label("Node Events"));
+            foreach (PresentationPreviewTimelineEvent value in _previewTimeline
+                         .Where(item => item.Event == "NodeStart" && !string.IsNullOrEmpty(item.NodeId))
+                         .OrderBy(item => item.Time)
+                         .ThenBy(item => item.Lane))
             {
-                if (GUILayout.Button("Play", EditorStyles.toolbarButton))
-                    PlayPreview();
-                if (GUILayout.Button("Pause", EditorStyles.toolbarButton))
-                    _previewSequence?.Pause();
-                if (GUILayout.Button("Stop", EditorStyles.toolbarButton))
-                    StopPreview(true);
-                if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
-                    RestartPreview();
-
-                GUILayout.Space(12f);
-                bool nextLoop = GUILayout.Toggle(_loop, "Loop", EditorStyles.toolbarButton);
-                if (nextLoop != _loop)
+                PresentationPreviewTimelineEvent timelineEvent = value;
+                var button = new Button(() =>
                 {
-                    _loop = nextLoop;
-                    RebuildSequence(false);
-                }
-
-                GUILayout.Label("Speed", GUILayout.Width(42f));
-                foreach (float speed in new[] { 0.25f, 0.5f, 1f, 2f, 4f })
-                {
-                    bool selected = Mathf.Approximately(_playbackSpeed, speed);
-                    if (GUILayout.Toggle(selected, $"{speed:0.##}x", EditorStyles.toolbarButton) && !selected)
+                    if (_previewSequence != null && _previewSequence.IsActive())
                     {
-                        _playbackSpeed = speed;
-                        if (_previewSequence != null)
-                            _previewSequence.timeScale = speed;
+                        _previewSequence.Pause();
+                        _previewSequence.Goto(timelineEvent.Time, false);
                     }
-                }
+                    SelectWorkbenchTimelineNode(timelineEvent.NodeId);
+                    RequestInteractivePreviewFrame();
+                    RefreshRetainedPreviewUi();
+                })
+                {
+                    text = $"{value.Time:0.###} {value.NodeType}"
+                };
+                button.style.marginLeft = 3f;
+                _previewTimelineEvents.Add(button);
             }
         }
 
-        private void DrawTimeline()
+        private void AddRetainedTimelineMarker(float time, string label, Color color)
         {
+            if (time < 0f || _singleLoopDuration <= 0f)
+                return;
+            var marker = new VisualElement
+            {
+                tooltip = $"{label}: {time:0.###}s",
+                pickingMode = PickingMode.Ignore
+            };
+            marker.style.position = Position.Absolute;
+            marker.style.left = Length.Percent(Mathf.Clamp01(time / _singleLoopDuration) * 100f);
+            marker.style.top = 0f;
+            marker.style.bottom = 0f;
+            marker.style.width = 2f;
+            marker.style.backgroundColor = color;
+            _previewMarkerLayer.Add(marker);
+        }
+
+        private void RefreshRetainedPreviewUi()
+        {
+            bool sequenceActive = _previewSequence != null && _previewSequence.IsActive();
+            bool isPlaying = sequenceActive && _previewSequence.IsPlaying();
             float elapsed = 0f;
-            if (_previewSequence != null && _previewSequence.IsActive())
+            if (sequenceActive)
             {
                 elapsed = _previewSequence.Elapsed(false);
-                if (_loop && _singleLoopDuration > 0f)
-                    elapsed %= _singleLoopDuration;
-                else
-                    elapsed = Mathf.Min(elapsed, _singleLoopDuration);
+                elapsed = _loop && _singleLoopDuration > 0f
+                    ? elapsed % _singleLoopDuration
+                    : Mathf.Min(elapsed, _singleLoopDuration);
             }
+            float normalized = _singleLoopDuration > 0f
+                ? Mathf.Clamp01(elapsed / _singleLoopDuration)
+                : 0f;
+            _previewTimelineSlider?.SetValueWithoutNotify(normalized);
+            if (_previewTimeLabel != null)
+                _previewTimeLabel.text = $"{elapsed:0.###} / {_singleLoopDuration:0.###}s";
+            _previewSurface?.SetPlaying(isPlaying);
 
-            float normalized = _singleLoopDuration > 0f ? elapsed / _singleLoopDuration : 0f;
-            Rect sliderRect = EditorGUILayout.GetControlRect();
-            EditorGUI.BeginChangeCheck();
-            float next = EditorGUI.Slider(sliderRect, "Timeline", normalized, 0f, 1f);
-            if (EditorGUI.EndChangeCheck() && _previewSequence != null && _previewSequence.IsActive())
-            {
-                _previewSequence.Pause();
-                _previewSequence.Goto(next * _singleLoopDuration, false);
-                Repaint();
-            }
-            DrawMarker(sliderRect, _releaseTime, "Release", new Color(0.35f, 0.85f, 1f));
-            DrawMarker(sliderRect, _poseRestoreTime, "Pose Restore", new Color(0.55f, 1f, 0.45f));
-            DrawMarker(sliderRect, _impactTime, "Projectile Impact", new Color(1f, 0.55f, 0.25f));
-            DrawMarker(sliderRect, _blockingTime, "VFX Contact", new Color(1f, 0.78f, 0.3f));
-            DrawMarker(sliderRect, _hitTime, "Hit", new Color(1f, 0.35f, 0.35f));
-            DrawMarker(sliderRect, _lethalRecoilTime, "Recoil", new Color(1f, 0.46f, 0.3f));
-            DrawMarker(sliderRect, _lethalShakeTime, "Shake", new Color(1f, 0.7f, 0.25f));
-            DrawMarker(sliderRect, _lethalCollapseTime, "Collapse", new Color(0.95f, 0.55f, 1f));
-            DrawMarker(sliderRect, _deathHandoffTime, "Death Handoff", new Color(1f, 0.3f, 0.65f));
-            DrawMarker(sliderRect, _corpseDropTime, "Drop", new Color(0.65f, 0.85f, 1f));
-            DrawMarker(sliderRect, _corpseImpactTime, "Impact", new Color(1f, 0.62f, 0.25f));
-            DrawMarker(sliderRect, _corpseImpactEndTime, "Impact End", new Color(1f, 0.78f, 0.45f));
-            DrawMarker(sliderRect, _corpseSettledTime, "Settled", new Color(0.55f, 1f, 0.55f));
+            IEnumerable<string> activeNodeIds = isPlaying
+                ? _previewTimeline.Where(value => value.Event == "NodeStart" &&
+                        value.Time <= elapsed && elapsed <= value.Time + Mathf.Max(value.Duration, 0.001f))
+                    .Select(value => value.NodeId)
+                    .Where(value => !string.IsNullOrEmpty(value))
+                : Enumerable.Empty<string>();
+            _workbenchGraphView?.SetPreviewActiveNodes(activeNodeIds);
         }
 
-        private void DrawMarker(Rect sliderRect, float markerTime, string label, Color color)
+        private void RequestInteractivePreviewFrame()
         {
-            if (markerTime < 0f || _singleLoopDuration <= 0f)
+            _previewRenderController?.RequestRender();
+        }
+
+        private bool IsInteractivePreviewPlaying()
+        {
+            return _previewSequence != null && _previewSequence.IsActive() &&
+                   _previewSequence.IsPlaying();
+        }
+
+        private void RenderInteractivePreviewFrame(RenderTexture target)
+        {
+            if (target == null)
                 return;
-
-            float controlLabelWidth = EditorGUIUtility.labelWidth;
-            float availableWidth = sliderRect.width - controlLabelWidth;
-            float normalized = Mathf.Clamp01(markerTime / _singleLoopDuration);
-            float x = sliderRect.x + controlLabelWidth + availableWidth * normalized;
-            EditorGUI.DrawRect(new Rect(x, sliderRect.y + 1f, 2f, sliderRect.height - 2f), color);
-            var labelRect = new Rect(
-                Mathf.Clamp(x - 24f, sliderRect.x + controlLabelWidth, sliderRect.xMax - 48f),
-                sliderRect.yMax,
-                52f,
-                EditorGUIUtility.singleLineHeight);
-            GUI.Label(labelRect, label, EditorStyles.miniLabel);
-        }
-
-        private void DrawSandboxEditors()
-        {
-            EditorGUILayout.Space(EditorGUIUtility.singleLineHeight);
-            _showParameters = EditorGUILayout.Foldout(_showParameters, "Sandbox Parameters", true);
-            if (!_showParameters)
-                return;
-
-            if (_unitSandboxEditor != null)
-            {
-                EditorGUILayout.LabelField("Unit Profile", EditorStyles.boldLabel);
-                EditorGUI.BeginChangeCheck();
-                _unitSandboxEditor.OnInspectorGUI();
-                if (EditorGUI.EndChangeCheck())
-                {
-                    _unitSandboxDirty = true;
-                    UpdateUnsavedChangesState();
-                    RebuildSequence(false);
-                }
-                DrawApplyButtons(
-                    _unitSandboxDirty,
-                    ApplyUnitSandbox,
-                    RevertUnitSandbox);
-            }
-
-            if (_projectileSandboxEditor != null)
-            {
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField("Projectile Profile", EditorStyles.boldLabel);
-                EditorGUI.BeginChangeCheck();
-                _projectileSandboxEditor.OnInspectorGUI();
-                if (EditorGUI.EndChangeCheck())
-                {
-                    _projectileSandboxDirty = true;
-                    UpdateUnsavedChangesState();
-                    RebuildSequence(false);
-                }
-                DrawApplyButtons(
-                    _projectileSandboxDirty,
-                    ApplyProjectileSandbox,
-                    RevertProjectileSandbox);
-            }
-        }
-
-        private static void DrawApplyButtons(bool dirty, Action apply, Action revert)
-        {
-            using (new EditorGUILayout.HorizontalScope())
-            using (new EditorGUI.DisabledScope(!dirty))
-            {
-                if (GUILayout.Button("Apply"))
-                    apply();
-                if (GUILayout.Button("Revert"))
-                    revert();
-            }
-        }
-
-        private void DrawPreview(Rect rect)
-        {
-            rect.width = Mathf.Clamp(rect.width, 1f, 2048f);
-            rect.height = Mathf.Clamp(rect.height, 1f, 1024f);
             if (_previewUtility == null)
                 CreatePreviewUtility();
             if (_actorInstance == null)
@@ -395,15 +641,126 @@ namespace Tactics.EditorTools
 
             Vector3 stageCenter = ResolveTargetPosition() * 0.5f;
             float verticalSpan = Mathf.Abs(ResolveTargetPosition().y) + 1.3f;
-            _previewUtility.BeginPreview(rect, GUIStyle.none);
-            _previewUtility.camera.orthographic = true;
-            _previewUtility.camera.orthographicSize = Mathf.Max(1.55f, verticalSpan * 0.65f);
-            _previewUtility.camera.transform.position = new Vector3(stageCenter.x, stageCenter.y + 0.55f, -10f);
-            _previewUtility.camera.transform.rotation = Quaternion.identity;
-            _previewUtility.camera.clearFlags = CameraClearFlags.SolidColor;
-            _previewUtility.camera.backgroundColor = new Color(0.08f, 0.075f, 0.08f, 1f);
-            _previewUtility.Render(true, false);
-            _previewUtility.EndAndDrawPreview(rect);
+            bool previewBegan = false;
+            try
+            {
+                _previewUtility.BeginPreview(ResolveInteractivePreviewRenderRect(), GUIStyle.none);
+                previewBegan = true;
+                _previewUtility.camera.orthographic = true;
+                _previewUtility.camera.orthographicSize = Mathf.Max(1.55f, verticalSpan * 0.65f);
+                _previewUtility.camera.transform.position =
+                    new Vector3(stageCenter.x, stageCenter.y + 0.55f, -10f);
+                _previewUtility.camera.transform.rotation = Quaternion.identity;
+                _previewUtility.camera.clearFlags = CameraClearFlags.SolidColor;
+                _previewUtility.camera.backgroundColor = new Color(0.08f, 0.075f, 0.08f, 1f);
+                _previewUtility.Render(true, false);
+                Texture previewTexture = _previewUtility.EndPreview();
+                previewBegan = false;
+                Graphics.Blit(previewTexture, target);
+                RefreshRetainedPreviewUi();
+            }
+            finally
+            {
+                if (previewBegan)
+                    _previewUtility.EndPreview();
+            }
+        }
+
+        internal static Texture2D RenderOffscreen(
+            BattlePresentationGraph graph,
+            int width,
+            int height)
+        {
+            PresentationPreviewRenderResult result = RenderOffscreen(
+                graph,
+                new PresentationPreviewScope(),
+                width,
+                height,
+                1337);
+            return result.Texture;
+        }
+
+        internal static PresentationPreviewRenderResult RenderOffscreen(
+            BattlePresentationGraph graph,
+            PresentationPreviewScope scope,
+            int width,
+            int height,
+            int randomSeed)
+        {
+            var window = CreateInstance<PresentationWorkbenchWindow>();
+            UnityEngine.Random.State previousRandomState = UnityEngine.Random.state;
+            try
+            {
+                UnityEngine.Random.InitState(randomSeed);
+                window._loop = false;
+                window._previewScope = scope?.Clone() ?? new PresentationPreviewScope();
+                window.SetWorkbenchGraph(graph);
+                if (window._previewSequence != null && window._previewSequence.IsActive())
+                    window._previewSequence.Goto(window._previewSequence.Duration(false) * 0.35f, false);
+                return new PresentationPreviewRenderResult
+                {
+                    Texture = window.RenderOffscreenFrame(width, height),
+                    RequestedScope = window._previewScope.Clone(),
+                    ResolvedScope = window._resolvedPreviewScope.Clone(),
+                    Timeline = window._previewTimeline
+                        .OrderBy(value => value.Time)
+                        .ThenBy(value => value.Lane)
+                        .ThenBy(value => value.Event, StringComparer.Ordinal)
+                        .ToList(),
+                    ActualFallbacks = window._previewFallbacks.ToList(),
+                    RandomSeed = randomSeed
+                };
+            }
+            finally
+            {
+                UnityEngine.Random.state = previousRandomState;
+                DestroyImmediate(window);
+            }
+        }
+
+        private Texture2D RenderOffscreenFrame(int width, int height)
+        {
+            width = Mathf.Clamp(width, 64, 2048);
+            height = Mathf.Clamp(height, 64, 1024);
+            if (_previewUtility == null)
+                CreatePreviewUtility();
+            if (_actorInstance == null)
+                RebuildStage();
+
+            var rect = new Rect(0f, 0f, width, height);
+            Vector3 stageCenter = ResolveTargetPosition() * 0.5f;
+            float verticalSpan = Mathf.Abs(ResolveTargetPosition().y) + 1.3f;
+            RenderTexture previous = RenderTexture.active;
+            Texture2D result = null;
+            bool previewBegan = false;
+            try
+            {
+                _previewUtility.BeginPreview(rect, GUIStyle.none);
+                previewBegan = true;
+                _previewUtility.camera.orthographic = true;
+                _previewUtility.camera.orthographicSize = Mathf.Max(1.55f, verticalSpan * 0.65f);
+                _previewUtility.camera.transform.position = new Vector3(stageCenter.x, stageCenter.y + 0.55f, -10f);
+                _previewUtility.camera.transform.rotation = Quaternion.identity;
+                _previewUtility.camera.clearFlags = CameraClearFlags.SolidColor;
+                _previewUtility.camera.backgroundColor = new Color(0.08f, 0.075f, 0.08f, 1f);
+                _previewUtility.Render(true, false);
+
+                RenderTexture.active = _previewUtility.camera.targetTexture;
+                result = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                result.ReadPixels(rect, 0, 0, false);
+                result.Apply(false, false);
+                Texture2D completed = result;
+                result = null;
+                return completed;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                if (previewBegan)
+                    _previewUtility.EndPreview();
+                if (result != null)
+                    DestroyImmediate(result);
+            }
         }
 
         private void PlayPreview()
@@ -415,7 +772,8 @@ namespace Tactics.EditorTools
 
             _previewSequence.timeScale = _playbackSpeed;
             _previewSequence.Play();
-            DOTweenEditorPreview.Start(Repaint);
+            DOTweenEditorPreview.Start(RequestInteractivePreviewFrame);
+            RequestInteractivePreviewFrame();
         }
 
         private void RestartPreview()
@@ -427,7 +785,8 @@ namespace Tactics.EditorTools
                 return;
 
             _previewSequence.timeScale = _playbackSpeed;
-            DOTweenEditorPreview.Start(Repaint);
+            DOTweenEditorPreview.Start(RequestInteractivePreviewFrame);
+            RequestInteractivePreviewFrame();
         }
 
         private void StopPreview(bool restoreVisuals)
@@ -439,7 +798,8 @@ namespace Tactics.EditorTools
             ClearPresentationPreviewObjects();
             if (restoreVisuals)
                 RestorePreviewVisuals();
-            Repaint();
+            RequestInteractivePreviewFrame();
+            RefreshRetainedPreviewUi();
         }
 
         private void RebuildStage()
@@ -569,7 +929,9 @@ namespace Tactics.EditorTools
             _previewSequence.Goto(0f, false);
             if (wasPlaying)
                 PlayPreview();
-            Repaint();
+            RebuildRetainedTimeline();
+            SyncRetainedPreviewControls();
+            RequestInteractivePreviewFrame();
         }
 
         private void BuildActionPreview(
@@ -701,17 +1063,83 @@ namespace Tactics.EditorTools
             UnitTweenVisual targetVisual,
             Vector3 direction)
         {
-            if (_presentationGraph.HasPreviewScenario)
-                return BuildFullPresentationPreview(actorVisual, targetVisual, direction);
+            _previewTimeline.Clear();
+            _previewFallbacks.Clear();
+            _resolvedPreviewScope = _previewScope.Clone();
+            switch (_previewScope.Kind)
+            {
+                case PresentationPreviewScopeKind.FullScenario when _presentationGraph.HasPreviewScenario:
+                    return BuildFullPresentationPreview(actorVisual, targetVisual, direction);
+                case PresentationPreviewScopeKind.FullScenario:
+                    _previewFallbacks.Add("FullScenarioMissing: default entry was used.");
+                    _resolvedPreviewScope = new PresentationPreviewScope
+                    {
+                        Kind = PresentationPreviewScopeKind.Entry,
+                        Cue = ResolveDefaultPreviewCue(_presentationGraph)
+                    };
+                    return BuildEntryPreview(_resolvedPreviewScope.Cue, actorVisual, targetVisual, direction, -1);
+                case PresentationPreviewScopeKind.Phase:
+                    if (_previewScope.PhaseIndex < 0 || _previewScope.PhaseIndex >= _presentationGraph.PreviewPhases.Count)
+                        throw new InvalidOperationException($"Preview phase {_previewScope.PhaseIndex} does not exist.");
+                    return BuildSinglePhasePreview(
+                        _presentationGraph.PreviewPhases[_previewScope.PhaseIndex],
+                        _previewScope.PhaseIndex,
+                        actorVisual,
+                        targetVisual,
+                        direction);
+                case PresentationPreviewScopeKind.Entry:
+                    return BuildEntryPreview(_previewScope.Cue, actorVisual, targetVisual, direction, -1);
+                case PresentationPreviewScopeKind.Leaf:
+                case PresentationPreviewScopeKind.ForkRegion:
+                    return BuildNodeScopePreview(actorVisual, targetVisual, direction);
+                default:
+                    throw new InvalidOperationException($"Unsupported preview scope '{_previewScope.Kind}'.");
+            }
+        }
 
-            PresentationCueKind previewCue = ResolveDefaultPreviewCue(_presentationGraph);
+        private Sequence BuildEntryPreview(
+            PresentationCueKind cue,
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction,
+            int phaseIndex)
+        {
+            PresentationEntryNodeRecord entry = _presentationGraph.FindEntry(cue);
+            if (entry == null || !entry.Enabled)
+                throw new InvalidOperationException($"Preview entry '{cue}' does not exist or is disabled.");
             PresentationPreviewTrack track = BuildPresentationEntryTrack(
-                previewCue,
+                cue,
                 actorVisual,
                 targetVisual,
-                direction);
+                direction,
+                phaseIndex,
+                0f);
             RecordTrackMarkers(track, 0f);
             return track.Sequence;
+        }
+
+        private Sequence BuildNodeScopePreview(
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction)
+        {
+            PresentationNodeRecord node = _presentationGraph.FindNode(_previewScope.NodeId)
+                ?? throw new InvalidOperationException($"Preview node '{_previewScope.NodeId}' does not exist.");
+            if (_previewScope.Kind == PresentationPreviewScopeKind.ForkRegion &&
+                node is not PresentationForkNodeRecord)
+            {
+                throw new InvalidOperationException($"Preview node '{_previewScope.NodeId}' is not a Fork.");
+            }
+            if (_previewScope.Kind == PresentationPreviewScopeKind.Leaf &&
+                node is PresentationForkNodeRecord or PresentationEntryNodeRecord or
+                    PresentationFinishNodeRecord or PresentationJoinNodeRecord)
+            {
+                throw new InvalidOperationException("Leaf scope requires an executable leaf node.");
+            }
+            PresentationExecutionPlan plan = PresentationExecutionPlanCompiler.CompileNodeScope(
+                _presentationGraph,
+                node.NodeId);
+            return BuildPresentationPlanStep(plan.Root, actorVisual, targetVisual, direction, 0f, 0, -1);
         }
 
         private Sequence BuildFullPresentationPreview(
@@ -723,52 +1151,76 @@ namespace Tactics.EditorTools
             float phaseStart = 0f;
             foreach (PresentationPreviewPhaseRecord phase in _presentationGraph.PreviewPhases)
             {
+                int phaseIndex = _presentationGraph.PreviewPhases.IndexOf(phase);
                 if (phase == null || phase.Cues == null || phase.Cues.Count == 0)
                     continue;
-
-                PresentationPreviewTrack continuationTrack = null;
-                foreach (PresentationCueKind cue in phase.Cues)
-                {
-                    PresentationPreviewTrack track = BuildPresentationEntryTrack(
-                        cue,
-                        actorVisual,
-                        targetVisual,
-                        direction);
-                    result.Insert(phaseStart, track.Sequence);
-                    RecordTrackMarkers(
-                        track,
-                        phaseStart,
-                        phase.AdvanceKind == PresentationPreviewAdvanceKind.Blocking &&
-                        cue == phase.ContinuationCue);
-                    if (cue == phase.ContinuationCue)
-                        continuationTrack = track;
-                }
-
-                if (phase.PlayTargetHitReaction && targetVisual != null)
-                {
-                    float hitOffset = phase.AdvanceKind == PresentationPreviewAdvanceKind.Impact &&
-                                      continuationTrack != null
-                        ? continuationTrack.ResolveAdvanceTime(phase.AdvanceKind)
-                        : 0f;
-                    Sequence hit = BuildRepresentativeTargetHitPreview(targetVisual, direction);
-                    result.Insert(phaseStart + hitOffset, hit);
-                    if (_hitTime < 0f)
-                        _hitTime = phaseStart + hitOffset;
-                }
-
-                if (continuationTrack != null)
-                    phaseStart += continuationTrack.ResolveAdvanceTime(phase.AdvanceKind);
+                phaseStart += AppendPresentationPhase(
+                    result, phase, phaseIndex, phaseStart, actorVisual, targetVisual, direction);
             }
             if (result.Duration(false) <= 0f)
                 result.AppendInterval(0.01f);
             return result;
         }
 
+        private Sequence BuildSinglePhasePreview(
+            PresentationPreviewPhaseRecord phase,
+            int phaseIndex,
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction)
+        {
+            var result = DOTween.Sequence();
+            AppendPresentationPhase(result, phase, phaseIndex, 0f, actorVisual, targetVisual, direction);
+            if (result.Duration(false) <= 0f)
+                result.AppendInterval(0.01f);
+            return result;
+        }
+
+        private float AppendPresentationPhase(
+            Sequence result,
+            PresentationPreviewPhaseRecord phase,
+            int phaseIndex,
+            float phaseStart,
+            UnitTweenVisual actorVisual,
+            UnitTweenVisual targetVisual,
+            Vector3 direction)
+        {
+            PresentationPreviewTrack continuationTrack = null;
+            foreach (PresentationCueKind cue in phase.Cues)
+            {
+                PresentationPreviewTrack track = BuildPresentationEntryTrack(
+                    cue, actorVisual, targetVisual, direction, phaseIndex, phaseStart);
+                result.Insert(phaseStart, track.Sequence);
+                RecordTrackMarkers(
+                    track,
+                    phaseStart,
+                    phase.AdvanceKind == PresentationPreviewAdvanceKind.Blocking &&
+                    cue == phase.ContinuationCue);
+                if (cue == phase.ContinuationCue)
+                    continuationTrack = track;
+            }
+
+            float advance = continuationTrack?.ResolveAdvanceTime(phase.AdvanceKind) ?? 0f;
+            if (phase.PlayTargetHitReaction && targetVisual != null)
+            {
+                float hitOffset = phase.AdvanceKind == PresentationPreviewAdvanceKind.Impact ? advance : 0f;
+                Sequence hit = BuildRepresentativeTargetHitPreview(targetVisual, direction);
+                result.Insert(phaseStart + hitOffset, hit);
+                RecordTimelineMarker("Hit", phaseStart + hitOffset, phaseIndex, 0, null);
+                if (_hitTime < 0f)
+                    _hitTime = phaseStart + hitOffset;
+            }
+            RecordTimelineMarker("PhaseAdvance", phaseStart + advance, phaseIndex, 0, phase.AdvanceKind.ToString());
+            return advance;
+        }
+
         private PresentationPreviewTrack BuildPresentationEntryTrack(
             PresentationCueKind cue,
             UnitTweenVisual actorVisual,
             UnitTweenVisual targetVisual,
-            Vector3 direction)
+            Vector3 direction,
+            int phaseIndex = -1,
+            float timelineOffset = 0f)
         {
             float savedRelease = _releaseTime;
             float savedPoseRestore = _poseRestoreTime;
@@ -787,26 +1239,35 @@ namespace Tactics.EditorTools
             }
             else
             {
-                sequence = BuildPresentationPath(
-                    entry.NodeId,
-                    null,
+                PresentationExecutionPlan plan = PresentationExecutionPlanCompiler.Compile(
+                    _presentationGraph,
+                    cue);
+                sequence = BuildPresentationPlanStep(
+                    plan.Root,
                     actorVisual,
                     targetVisual,
                     direction,
-                    new HashSet<string>());
+                    timelineOffset,
+                    0,
+                    phaseIndex);
             }
 
             var track = new PresentationPreviewTrack(
                 sequence,
-                _releaseTime,
-                _poseRestoreTime,
-                _impactTime,
-                _blockingTime);
+                ToTrackLocalTime(_releaseTime, timelineOffset),
+                ToTrackLocalTime(_poseRestoreTime, timelineOffset),
+                ToTrackLocalTime(_impactTime, timelineOffset),
+                ToTrackLocalTime(_blockingTime, timelineOffset));
             _releaseTime = savedRelease;
             _poseRestoreTime = savedPoseRestore;
             _impactTime = savedImpact;
             _blockingTime = savedBlocking;
             return track;
+        }
+
+        private static float ToTrackLocalTime(float absoluteTime, float timelineOffset)
+        {
+            return absoluteTime < 0f ? absoluteTime : absoluteTime - timelineOffset;
         }
 
         private void RecordTrackMarkers(
@@ -846,148 +1307,214 @@ namespace Tactics.EditorTools
             return hitPlan.Sequence;
         }
 
-        private Sequence BuildPresentationPath(
-            string sourceNodeId,
-            string stopBeforeNodeId,
+        private Sequence BuildPresentationPlanStep(
+            PresentationPlanStep step,
             UnitTweenVisual actorVisual,
             UnitTweenVisual targetVisual,
             Vector3 direction,
-            HashSet<string> visited,
-            bool firstIdIsNode = false)
+            float absoluteStart,
+            int lane,
+            int phaseIndex)
         {
             var result = DOTween.Sequence();
-            string currentId = sourceNodeId;
-            while (true)
+            switch (step)
             {
-                PresentationNodeRecord node;
-                if (firstIdIsNode)
-                {
-                    node = _presentationGraph.FindNode(currentId);
-                    firstIdIsNode = false;
-                }
-                else
-                {
-                    List<PresentationEdgeRecord> edges = _presentationGraph.GetEdgesFrom(currentId);
-                    if (edges.Count == 0)
-                        break;
-                    node = _presentationGraph.FindNode(edges[0].TargetNodeId);
-                }
-                if (node == null || node.NodeId == stopBeforeNodeId || node is PresentationFinishNodeRecord)
-                    break;
-                if (!visited.Add(node.NodeId))
-                    break;
-
-                float insertionTime = result.Duration(false);
-                switch (node)
-                {
-                    case PresentationUnitTweenNodeRecord tween:
+                case PresentationSequenceStep sequence:
+                    foreach (PresentationPlanStep child in sequence.Children)
                     {
-                        UnitPoseFamily family = ResolvePreviewFamily(_actorInstance, tween.Action);
-                        UnitPoseExitPolicy exitPolicy = family != null
-                            ? family.ExitPolicy
-                            : UnitPoseExitPolicy.RecoveryStart;
-                        UnitTweenActionPlan plan = UnitTweenSequenceBuilder.BuildAction(
-                            tween.Action,
-                            actorVisual.VisualRoot,
-                            _unitSandbox,
-                            actorVisual.BasePosition,
-                            actorVisual.BaseRotation,
-                            actorVisual.BaseScale,
+                        float childStart = absoluteStart + result.Duration(false);
+                        result.Append(BuildPresentationPlanStep(
+                            child,
+                            actorVisual,
+                            targetVisual,
                             direction,
-                            exitPolicy);
-                        plan.Sequence.InsertCallback(0f, () =>
-                            ApplyPreviewPose(_actorInstance, family, _facing));
-                        plan.Sequence.InsertCallback(plan.PoseRestoreTime, () =>
-                            ClearPreviewPose(_actorInstance, _facing));
-                        result.Append(plan.Sequence);
-                        if (tween.EmitReleaseMarker)
-                            _releaseTime = insertionTime + plan.ReleaseTime;
-                        _poseRestoreTime = insertionTime + plan.PoseRestoreTime;
-                        break;
+                            childStart,
+                            lane,
+                            phaseIndex));
                     }
-                    case PresentationProjectileNodeRecord projectile:
+                    break;
+                case PresentationParallelStep parallel:
+                    for (int branchIndex = 0; branchIndex < parallel.Branches.Count; branchIndex++)
                     {
-                        float duration = ResolvePresentationProjectileDuration(projectile);
-                        result.Append(BuildProjectilePreview(
-                            projectile.Profile,
-                            projectile.Speed,
-                            projectile.FallbackTravelTime));
-                        if (projectile.EmitImpactMarker)
-                            _impactTime = insertionTime + duration;
-                        break;
+                        result.Insert(0f, BuildPresentationPlanStep(
+                            parallel.Branches[branchIndex],
+                            actorVisual,
+                            targetVisual,
+                            direction,
+                            absoluteStart,
+                            lane + branchIndex + 1,
+                            phaseIndex));
                     }
-                    case PresentationPrefabFxNodeRecord prefabFx:
-                        result.Append(BuildPrefabFxPreview(prefabFx.Profile));
-                        break;
-                    case PresentationProceduralVfxNodeRecord procedural:
-                    {
-                        result.Append(BuildProceduralVfxPreview(procedural));
-                        float blockingMarker = procedural.Recipe.GetLayers(procedural.Cue)
-                            .Where(layer => layer != null)
-                            .Select(layer => layer.BlockingMarker)
-                            .DefaultIfEmpty(0f)
-                            .Max();
-                        if (blockingMarker > 0f)
-                            _blockingTime = Mathf.Max(_blockingTime, insertionTime + blockingMarker);
-                        break;
-                    }
-                    case PresentationDelayNodeRecord delay:
-                        result.AppendInterval(delay.Duration);
-                        break;
-                    case PresentationMarkerNodeRecord marker:
-                        if (marker.Marker == PresentationMarkerKind.Release)
-                            _releaseTime = insertionTime;
-                        else if (marker.Marker == PresentationMarkerKind.Impact)
-                            _impactTime = insertionTime;
-                        break;
-                    case PresentationForkNodeRecord fork:
-                    {
-                        var parallel = DOTween.Sequence();
-                        foreach (PresentationEdgeRecord branch in _presentationGraph.GetEdgesFrom(fork.NodeId))
-                        {
-                            var branchVisited = new HashSet<string>(visited);
-                            Sequence branchSequence = BuildPresentationBranch(
-                                branch.TargetNodeId,
-                                fork.JoinNodeId,
-                                actorVisual,
-                                targetVisual,
-                                direction,
-                                branchVisited);
-                            parallel.Insert(0f, branchSequence);
-                        }
-                        result.Append(parallel);
-                        PresentationNodeRecord join = _presentationGraph.FindNode(fork.JoinNodeId);
-                        currentId = join?.NodeId;
-                        if (string.IsNullOrEmpty(currentId))
-                            return result;
-                        continue;
-                    }
-                }
-                currentId = node.NodeId;
+                    break;
+                case PresentationLeafStep leaf:
+                    result.Append(BuildPresentationLeaf(
+                        leaf.Node,
+                        actorVisual,
+                        targetVisual,
+                        direction,
+                        absoluteStart,
+                        lane,
+                        phaseIndex));
+                    break;
             }
             return result;
         }
 
-        private Sequence BuildPresentationBranch(
-            string firstNodeId,
-            string joinNodeId,
+        private Sequence BuildPresentationLeaf(
+            PresentationNodeRecord node,
             UnitTweenVisual actorVisual,
             UnitTweenVisual targetVisual,
             Vector3 direction,
-            HashSet<string> visited)
+            float insertionTime,
+            int lane,
+            int phaseIndex)
         {
-            var shim = DOTween.Sequence();
-            PresentationNodeRecord first = _presentationGraph.FindNode(firstNodeId);
-            if (first == null || first.NodeId == joinNodeId)
-                return shim;
-            return BuildPresentationPath(
-                firstNodeId,
-                joinNodeId,
-                actorVisual,
-                targetVisual,
-                direction,
-                visited,
-                true);
+            var result = DOTween.Sequence();
+            switch (node)
+            {
+                case PresentationUnitTweenNodeRecord tween:
+                {
+                    UnitPoseFamily family = ResolvePreviewFamily(_actorInstance, tween.Action);
+                    UnitPoseExitPolicy exitPolicy = family != null
+                        ? family.ExitPolicy
+                        : UnitPoseExitPolicy.RecoveryStart;
+                    UnitTweenActionPlan plan = UnitTweenSequenceBuilder.BuildAction(
+                        tween.Action,
+                        actorVisual.VisualRoot,
+                        _unitSandbox,
+                        actorVisual.BasePosition,
+                        actorVisual.BaseRotation,
+                        actorVisual.BaseScale,
+                        direction,
+                        exitPolicy);
+                    plan.Sequence.InsertCallback(0f, () =>
+                        ApplyPreviewPose(_actorInstance, family, _facing));
+                    plan.Sequence.InsertCallback(plan.PoseRestoreTime, () =>
+                        ClearPreviewPose(_actorInstance, _facing));
+                    result.Append(plan.Sequence);
+                    if (tween.EmitReleaseMarker)
+                    {
+                        RecordEarliest(ref _releaseTime, insertionTime + plan.ReleaseTime);
+                        RecordTimelineMarker("Release", insertionTime + plan.ReleaseTime, phaseIndex, lane, "Release");
+                    }
+                    RecordEarliest(ref _poseRestoreTime, insertionTime + plan.PoseRestoreTime);
+                    RecordTimelineMarker(
+                        "PoseRestore",
+                        insertionTime + plan.PoseRestoreTime,
+                        phaseIndex,
+                        lane,
+                        null);
+                    break;
+                }
+                case PresentationProjectileNodeRecord projectile:
+                {
+                    if (projectile.Profile == null)
+                        _previewFallbacks.Add($"ProjectileProfileMissing:{projectile.NodeId}:placeholder visual used.");
+                    float projectileDuration = ResolvePresentationProjectileDuration(projectile);
+                    result.Append(BuildProjectilePreview(
+                        projectile.Profile,
+                        projectile.Speed,
+                        projectile.FallbackTravelTime));
+                    if (projectile.EmitImpactMarker)
+                    {
+                        RecordEarliest(ref _impactTime, insertionTime + projectileDuration);
+                        RecordTimelineMarker(
+                            "Impact",
+                            insertionTime + projectileDuration,
+                            phaseIndex,
+                            lane,
+                            "Impact");
+                    }
+                    break;
+                }
+                case PresentationPrefabFxNodeRecord prefabFx:
+                    if (prefabFx.Profile?.Prefab == null)
+                        _previewFallbacks.Add($"PrefabFxMissing:{prefabFx.NodeId}:empty interval used.");
+                    result.Append(BuildPrefabFxPreview(prefabFx.Profile));
+                    break;
+                case PresentationProceduralVfxNodeRecord procedural:
+                {
+                    if (procedural.Recipe == null)
+                        _previewFallbacks.Add($"RecipeMissing:{procedural.NodeId}:empty interval used.");
+                    result.Append(BuildProceduralVfxPreview(procedural));
+                    float blockingMarker = procedural.Recipe?.GetLayers(procedural.Cue)
+                        ?.Where(layer => layer != null)
+                        .Select(layer => layer.BlockingMarker)
+                        .DefaultIfEmpty(0f)
+                        .Max() ?? 0f;
+                    if (blockingMarker > 0f)
+                    {
+                        _blockingTime = Mathf.Max(_blockingTime, insertionTime + blockingMarker);
+                        RecordTimelineMarker(
+                            "Blocking",
+                            insertionTime + blockingMarker,
+                            phaseIndex,
+                            lane,
+                            "Blocking");
+                    }
+                    break;
+                }
+                case PresentationDelayNodeRecord delay:
+                    result.AppendInterval(delay.Duration);
+                    break;
+                case PresentationMarkerNodeRecord marker:
+                    if (marker.Marker == PresentationMarkerKind.Release)
+                    {
+                        RecordEarliest(ref _releaseTime, insertionTime);
+                        RecordTimelineMarker("Release", insertionTime, phaseIndex, lane, marker.Marker.ToString());
+                    }
+                    else if (marker.Marker == PresentationMarkerKind.Impact)
+                    {
+                        RecordEarliest(ref _impactTime, insertionTime);
+                        RecordTimelineMarker("Impact", insertionTime, phaseIndex, lane, marker.Marker.ToString());
+                    }
+                    break;
+            }
+            float duration = result.Duration(false);
+            _previewTimeline.Add(new PresentationPreviewTimelineEvent
+            {
+                Event = "NodeStart",
+                NodeId = node.NodeId,
+                NodeType = node.NodeType.ToString(),
+                Time = insertionTime,
+                Duration = duration,
+                Lane = lane,
+                PhaseIndex = phaseIndex
+            });
+            _previewTimeline.Add(new PresentationPreviewTimelineEvent
+            {
+                Event = "NodeEnd",
+                NodeId = node.NodeId,
+                NodeType = node.NodeType.ToString(),
+                Time = insertionTime + duration,
+                Duration = duration,
+                Lane = lane,
+                PhaseIndex = phaseIndex
+            });
+            return result;
+        }
+
+        private void RecordTimelineMarker(
+            string eventName,
+            float time,
+            int phaseIndex,
+            int lane,
+            string marker)
+        {
+            _previewTimeline.Add(new PresentationPreviewTimelineEvent
+            {
+                Event = eventName,
+                Time = time,
+                Lane = lane,
+                PhaseIndex = phaseIndex,
+                Marker = marker
+            });
+        }
+
+        private static void RecordEarliest(ref float destination, float value)
+        {
+            if (destination < 0f || value < destination)
+                destination = value;
         }
 
         private float ResolvePresentationProjectileDuration(PresentationProjectileNodeRecord node)
@@ -1514,37 +2041,28 @@ namespace Tactics.EditorTools
             UpdateUnsavedChangesState();
         }
 
-        private void RevertUnitSandbox()
-        {
-            SetUnitProfile(_unitProfile);
-            RebuildSequence(false);
-        }
-
-        private void RevertProjectileSandbox()
-        {
-            SetProjectileProfile(_projectileProfile);
-            RebuildSequence(false);
-        }
-
         public override void SaveChanges()
         {
-            ApplyUnitSandbox();
-            ApplyProjectileSandbox();
+            if (!ApplyWorkbench())
+                return;
             UpdateUnsavedChangesState();
             base.SaveChanges();
         }
 
         public override void DiscardChanges()
         {
-            SetUnitProfile(_unitProfile);
-            SetProjectileProfile(_projectileProfile);
-            RebuildSequence(false);
+            RevertWorkbench();
+            UpdateUnsavedChangesState();
             base.DiscardChanges();
         }
 
         private void UpdateUnsavedChangesState()
         {
-            hasUnsavedChanges = _unitSandboxDirty || _projectileSandboxDirty;
+            bool graphDirty = _sourceGraph != null && _graphSandbox != null &&
+                PresentationAuthoringFacade.Revision(_sourceGraph) !=
+                PresentationAuthoringFacade.Revision(_graphSandbox);
+            hasUnsavedChanges = graphDirty || _unitSandboxDirty || _projectileSandboxDirty ||
+                _dirtyLeafSandboxes.Count > 0 || _pendingLeafPaths.Count > 0;
         }
 
         private bool CanRenderSelectedProjectile()
