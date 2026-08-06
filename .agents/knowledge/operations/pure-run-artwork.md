@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-08-05T10:57:57+08:00"
+timestamp: "2026-08-06T10:57:02+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -19,7 +19,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs
   - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs.meta
 verified_revision: c68dbebe
-source_fingerprint: sha256:e03a9bbd9a8c56830f83e40ebbbd21c52bf88627f1d3644680f005c71dadf0b6
+source_fingerprint: sha256:9e3bab058975d650aad70afe843d530ff7b227d9135cff4f848e433c14430956
 ---
 
 # Pure Run 角色美术流水线
@@ -31,6 +31,7 @@ source_fingerprint: sha256:e03a9bbd9a8c56830f83e40ebbbd21c52bf88627f1d3644680f00
 - 已确认的单格单位通用阴影以 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png` 为设计源，并原字节复制到 `Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png`。它是屏幕水平的 `64×32` 等距软椭圆，导入为 Single Sprite、`64 PPU`、中心 Pivot、Full Rect、Bilinear、Clamp、无 Mipmap/压缩/Read-Write/fallback physics shape。地面作者参数为 Scale `1.0` / Renderer alpha `1.0`，飞行为同图 Scale `0.75` / alpha `0.60`，两者都以 Tile 几何中心为虚拟落点；当前没有 `AirUnitMovementRules` Prefab。
 - `Fighter.prefab` 的共享 Shadow 与 `PureRunGoatSupport`、`PureRunSkeletonMage`、`PureRunSkeletonWarrior` 的三个直接 Shadow 已指向新通用阴影，因而覆盖当前 12 个 Pure Run 单位。它们统一使用 `Assets/Tactics/Arts/PureRun/Materials/PureRunUnitShadow.mat` 的静态 `Sprites/Default` Shader；不得复用会摆动顶点且忽略 Renderer 颜色/alpha 的第三方 `HeliSprite/FloatingUnitShader`。Shadow 只由 Prefab 保存根空间 `localY=-0.03`，不能从 Sprite 姿态推导，也不能由 `TilemapUnit.Initialize` 重写。12 个单位的 Shadow 均默认激活，`PureRunNecromancer` 不再保留禁用覆盖。legacy Fighter/Skeleton 将其非 Tween Sprite 高度显式烘焙在 Prefab 中；Pure Run 派生链显式保持零视觉基线。
 - 羊魔 `down-right v05 / up-left v01` 与蝙蝠 `down-right v06 / up-left v01` 已通过人工 Review，并从 `candidates` 升级到 `Tools/artworks/pure_run/enemies/approved`。小型蝙蝠按普通单位约 `75%` 的球核体量校准，球核中心在垂直方向对齐地面胶囊体上部圆帽中心，翅膀属于外部轮廓，球核中心、虚拟落点与 Tile 中心保持同轴。
+- 蝙蝠风刃攻击 `down-right` 单帧姿态 `tomb_maw_bat_wind_blade_attack_dr_v03` 已获人工批准并于 2026-08-06 从 `candidates` 升级到 `approved`，作为当前生成状态下的临时收尾：双翼同步横扫、球核仅轻微反向旋转，设计与验收契约见 `.agents/docs/2026-08-06-pure-run-bat-wind-blade-pose-design.md`。`up-left` 姿态、飞行单位专用 Tween/Profile 与运行时接入均未开始；`v01/v02/v04` 失败稿保留在 `rejected/superseded`，`v03` 的色幕源图保留在 `concepts`。
 - 亚马逊黑白资产只作为造型设定集保留，不进入正式四方向 Sprite 生产；方向变体从已确认的胶囊体信徒或胶囊规则怪物基础图开始。
 - 方向变体以同角色已确认的 `down-right` 为唯一体量锚点；纯核心主体蒙版排除耳朵、口鼻、手脚、装备与特效，只用于测量和 QA，不参与成品合成。验收同时比较上下缘、中心、最大宽度与上中下三个截面，避免窄柱体或梨形下段。采用无手臂策略时，手掌必须以多像素接触面直接嵌入主体边缘，不能浮空或用细线连接。
 - 死亡状态必须先按核心拓扑分类：胶囊地面单位以赤柴死亡图约束仰面、头朝右上、约 `60°` 且短厚平直的姿态；球形飞行单位保持近圆球核，赤柴只提供头部朝右上的屏幕方向。尺寸只比较胶囊核心或球核，完整 AABB 仅用于裁切与 Tile Review；详细约束见 skill 的死亡状态参考。
