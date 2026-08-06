@@ -1,0 +1,24 @@
+{
+  "$schema": "https://mimo.xiaomi.com/mimocode/config.json",
+  "plugin": [
+    "./.opencode/plugin/auto-compile.js"
+  ],
+  "mcp": {
+    "unity-MCP": {
+      "type": "remote",
+      "url": "__UNITY_MCP_URL__",
+      "timeout": 300000
+    }
+  },
+  "lsp": {
+    "csharp": {
+      "command": [
+        "roslyn-language-server",
+        "--stdio"
+      ],
+      "extensions": [
+        ".cs"
+      ]
+    }
+  }
+}

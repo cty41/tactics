@@ -43,11 +43,13 @@ powershell.exe -File Tools/unity-mcp/Sync-ProjectMcpConfig.ps1 --check
 powershell.exe -File Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1 -Url http://127.0.0.1:<端口>/mcp
 ```
 
-若 `.agents/mcp.local.json` 存在，它是迁移时保留且 Restore 后仍会存在的端点备份。`mcp.json` 缺失时优先从该备份恢复，避免重新选择错误端口：
+若 `.agents/mcp.local.json` 存在，它是迁移前创建的一次性备份，包含目标端点与当时完整的 OpenCode/MiMoCode 本地 JSON。`mcp.json` 缺失时从该备份恢复，避免重新选择错误端口或丢失个人字段：
 
 ```powershell
 powershell.exe -File Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1 -RestoreMigration
 ```
+
+成功 Restore 会在同一事务最后删除该备份；失败则保留备份和原文件字节。Restore 成功后不要再把 `.agents/mcp.local.json` 当作长期 fallback。
 
 **不要**假设默认端口！配置文件中的端口可能不同。
 
