@@ -14,10 +14,6 @@ namespace Tactics.Tests.Editor
     public sealed class Test1BattleMapLayoutEditorTests
     {
         private const string ScenePath = "Assets/Tactics/Scenes/Test1.unity";
-        private const int MinimumCell = 18;
-        private const int MaximumCell = 35;
-        private const int ExpectedCellCount = 18 * 18;
-
         private Scene _scene;
         private bool _openedForTest;
 
@@ -40,7 +36,7 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
-        public void Test1_UsesUnscaledGridAndAnEighteenByEighteenBattlefield()
+        public void Test1_UsesUnscaledGridAndTheFixedTenByTenBattlefield()
         {
             Transform grid = FindInScene("Grid").transform;
             Transform unitManager = FindInScene("UnitManager").transform;
@@ -54,7 +50,7 @@ namespace Tactics.Tests.Editor
             Assert.That(unitManager.parent, Is.Null);
 
             AssertSquareBattlefield(background);
-            Assert.That(CountTiles(background), Is.EqualTo(ExpectedCellCount));
+            Assert.That(CountTiles(background), Is.EqualTo(BattleBoardSpec.CellCount));
             AssertAllTilesStayInsideBattlefield(foreground);
             Assert.That(highlight.GetUsedTilesCount(), Is.EqualTo(0));
         }
@@ -99,13 +95,27 @@ namespace Tactics.Tests.Editor
         }
 
         [Test]
-        public void Test1_ContainsOneReusableBattleBackdropBehindTheMap()
+        public void Test1_ContainsOneConfiguredCameraFitterAndReusableBackdropBehindTheMap()
         {
+            Camera[] cameras = _scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Camera>(true))
+                .ToArray();
+            BattleBoardCameraFitter[] cameraFitters = _scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<BattleBoardCameraFitter>(true))
+                .ToArray();
             BattleBackdropFitter[] backdrops = _scene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<BattleBackdropFitter>(true))
                 .ToArray();
 
+            Assert.That(cameras, Has.Length.EqualTo(1));
+            Assert.That(cameraFitters, Has.Length.EqualTo(1));
             Assert.That(backdrops, Has.Length.EqualTo(1));
+
+            Camera camera = cameras[0];
+            Tilemap background = FindInScene("BackgroundLayer").GetComponent<Tilemap>();
+            var boardFitter = new SerializedObject(cameraFitters[0]);
+            Assert.That(boardFitter.FindProperty("_targetCamera").objectReferenceValue, Is.SameAs(camera));
+            Assert.That(boardFitter.FindProperty("_boardTilemap").objectReferenceValue, Is.SameAs(background));
 
             BattleBackdropFitter backdrop = backdrops[0];
             MeshRenderer backdropRenderer = backdrop.GetComponent<MeshRenderer>();
@@ -126,10 +136,11 @@ namespace Tactics.Tests.Editor
         private void AssertSquareBattlefield(Tilemap tilemap)
         {
             BoundsInt bounds = tilemap.cellBounds;
-            Assert.That(bounds.xMin, Is.EqualTo(MinimumCell));
-            Assert.That(bounds.yMin, Is.EqualTo(MinimumCell));
-            Assert.That(bounds.size.x, Is.EqualTo(18));
-            Assert.That(bounds.size.y, Is.EqualTo(18));
+            Assert.That(bounds.position, Is.EqualTo(Vector3Int.zero));
+            Assert.That(bounds.size, Is.EqualTo(new Vector3Int(
+                BattleBoardSpec.Width,
+                BattleBoardSpec.Height,
+                1)));
         }
 
         private void AssertAllTilesStayInsideBattlefield(Tilemap tilemap)
@@ -139,8 +150,8 @@ namespace Tactics.Tests.Editor
                 if (tilemap.GetTile(position) == null)
                     continue;
 
-                Assert.That(position.x, Is.InRange(MinimumCell, MaximumCell));
-                Assert.That(position.y, Is.InRange(MinimumCell, MaximumCell));
+                Assert.That(BattleBoardSpec.Contains(position.x, position.y), Is.True,
+                    $"Tile {position} is outside the fixed board.");
             }
         }
 
@@ -148,8 +159,8 @@ namespace Tactics.Tests.Editor
         {
             foreach (Vector2Int cell in cells)
             {
-                Assert.That(cell.x, Is.InRange(MinimumCell, MaximumCell));
-                Assert.That(cell.y, Is.InRange(MinimumCell, MaximumCell));
+                Assert.That(BattleBoardSpec.Contains(cell), Is.True,
+                    $"Spawn {cell} is outside the fixed board.");
             }
         }
 

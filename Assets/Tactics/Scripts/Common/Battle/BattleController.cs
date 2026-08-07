@@ -35,6 +35,7 @@ namespace Tactics.Common.Battle
     {
         public RoleType RoleType;
         public GameObject Prefab;
+        [HideInInspector]
         public Vector2Int StartingCell;
     }
 
@@ -198,8 +199,16 @@ namespace Tactics.Common.Battle
         private IList<IUnit> _units;
         private int _unitCount;
         private readonly HashSet<string> _loadedPaths = new();
+        private readonly Dictionary<string, GameObject> _runtimePrefabCache = new(StringComparer.Ordinal);
         private readonly Dictionary<string, AbilityConfig> _pureRunAbilityConfigCache = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, AiBrainAsset> _runtimeAiBrainCache = new(StringComparer.Ordinal);
         private readonly Dictionary<ICell, bool> _encounterBlockedCells = new();
+        private Func<EncounterConfig> _encounterLoaderOverrideForTests;
+        private Func<PlayerAdventureState> _partyStateLoaderOverrideForTests;
+        private Func<string, GameObject> _runtimePrefabLoadOverrideForTests;
+        private Func<string, AiBrainAsset> _runtimeAiBrainLoadOverrideForTests;
+        private Action<string> _encounterSpawnStepObserverForTests;
+        private Action<TilemapUnit> _stageSceneUnitObserverForTests;
         private Action<string> _runtimeAssetReleaseOverrideForTests;
         private readonly object _runtimeScopeTeardownGate = new();
         private Task _runtimeScopeTeardownTask = Task.CompletedTask;
@@ -227,11 +236,9 @@ namespace Tactics.Common.Battle
             _controller.CorpsePrefabPath = _corpsePrefabPath;
             _controller.BeforeUnitManagerInitialize = _ =>
             {
-                if (UseTestSetupForCurrentBattle && _testPartyConfig != null)
-                    SpawnTestPartyUnits();
-                else
-                    SpawnPartyUnits();
-                SpawnEncounterUnits();
+                if (!PrepareEncounterAndSpawnUnits())
+                    throw new InvalidOperationException(
+                        "[BattleController] Battle preparation failed; unit initialization was aborted.");
             };
 
             // Initialize players (will be configured in IPlayerManager.Initialize after UnitManager is ready)
@@ -283,7 +290,9 @@ namespace Tactics.Common.Battle
                 runtimeTeardownTask,
                 loadedPathSnapshot,
                 releasePath);
+            _runtimePrefabCache.Clear();
             _pureRunAbilityConfigCache.Clear();
+            _runtimeAiBrainCache.Clear();
             RestoreEncounterBlockedCells();
 
             RoguelikeBattleReturnHandler.Instance.UnregisterController(this);
@@ -340,268 +349,562 @@ namespace Tactics.Common.Battle
             }
         }
 
+        // Compatibility wrappers retained for BattleTestConfigPlayModeTests, which invoke
+        // these private methods directly. Production initialization uses the single transaction below.
+        private void SpawnPartyUnits()
+        {
+            if (UseTestSetupForCurrentBattle)
+            {
+                if (_testPartyConfig == null)
+                {
+                    TLog.Error("[BattleController] UseTestSetup=true but TestPartyConfig is null.");
+                    return;
+                }
+                SpawnTestPartyUnits();
+                return;
+            }
+
+            PrepareEncounterAndSpawnUnits();
+        }
+
         private void SpawnEncounterUnits()
         {
-            if (UseTestSetupForCurrentBattle && _testEncounterConfig != null)
+            if (UseTestSetupForCurrentBattle)
             {
+                if (_testEncounterConfig == null)
+                {
+                    TLog.Error("[BattleController] UseTestSetup=true but TestEncounterConfig is null.");
+                    return;
+                }
                 SpawnTestEncounterUnits();
                 SpawnTestEncounterInteractables();
                 return;
             }
 
-            var mgr = GameAssetManager.Instance;
-            if (mgr == null)
-            {
-                TLog.Error("[BattleController] GameAssetManager unavailable while spawning encounter units.");
-                return;
-            }
-
-            Transform container = UnitContainerTransform;
-            if (container == null)
-                container = transform;
-
-            var existingUnits = FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var existing in existingUnits)
-            {
-                if (existing == null || existing.PlayerNumber == _humanPlayerNumber)
-                    continue;
-
-                existing.gameObject.SetActive(false);
-                Destroy(existing.gameObject);
-            }
-
-            var encounterPath = EncounterRuntimeState.GetPendingEncounterPath();
-            var encounter = EncounterRuntimeState.TryResolvePendingEncounter(mgr, out var resolvedEncounter, out var resolvedSource)
-                ? resolvedEncounter
-                : EncounterConfigLoader.Load(encounterPath, mgr);
-            if (resolvedEncounter != null)
-                encounterPath = resolvedSource;
-            if (encounter == null)
-            {
-                TLog.Warning($"[BattleController] No valid encounter found at '{encounterPath}'.");
-                return;
-            }
-
-            if (!ApplyEncounterBlockedCells(encounter.BlockedCells))
-                return;
-
-            foreach (var unitEntry in encounter.Units)
-            {
-                SpawnEncounterUnit(unitEntry, container, mgr, encounterPath);
-            }
+            PrepareEncounterAndSpawnUnits();
         }
 
-        private void SpawnPartyUnits()
+        private bool PrepareEncounterAndSpawnUnits()
         {
-            if (UseTestSetupForCurrentBattle && _testPartyConfig != null)
+            if (UseTestSetupForCurrentBattle)
             {
-                // Deferred to BeforeUnitManagerInitialize (after CellManager init)
-                return;
+                if (_testPartyConfig == null || _testEncounterConfig == null)
+                {
+                    TLog.Error("[BattleController] Test setup is authoritative, but its party or encounter config is missing.");
+                    return false;
+                }
+
+                var testSetupManager = GameAssetManager.Instance;
+                var testLoadedPathsBeforeTransaction = new HashSet<string>(_loadedPaths, StringComparer.Ordinal);
+                var testCorpsesBeforeTransaction = new HashSet<Corpse>(FindOwnedSceneCorpses());
+                var stagedTestSceneUnits = new List<StagedSceneUnit>();
+                try
+                {
+                    StageExistingSceneUnits(FindOwnedSceneUnits(), stagedTestSceneUnits);
+                    if (!TrySpawnTestPartyUnits() ||
+                        !TrySpawnTestEncounterUnits() ||
+                        !TrySpawnTestEncounterInteractables())
+                    {
+                        RollBackTestSetupSpawn(
+                            stagedTestSceneUnits,
+                            testSetupManager,
+                            testLoadedPathsBeforeTransaction,
+                            testCorpsesBeforeTransaction);
+                        return false;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    RollBackTestSetupSpawn(
+                        stagedTestSceneUnits,
+                        testSetupManager,
+                        testLoadedPathsBeforeTransaction,
+                        testCorpsesBeforeTransaction);
+                    TLog.Error($"[BattleController] Test setup spawn transaction failed and was rolled back: {ex}");
+                    return false;
+                }
+
+                CommitStagedSceneUnits(stagedTestSceneUnits);
+                return true;
             }
 
-            var state = PlayerAdventureStateStore.LoadRepairAndSave();
+            var manager = GameAssetManager.Instance;
+            string encounterPath = EncounterRuntimeState.GetPendingEncounterPath();
+            EncounterConfig encounter;
+            if (_encounterLoaderOverrideForTests != null)
+            {
+                encounter = _encounterLoaderOverrideForTests();
+            }
+            else
+            {
+                if (manager == null)
+                {
+                    TLog.Error("[BattleController] GameAssetManager unavailable while preparing encounter.");
+                    return false;
+                }
+
+                if (!EncounterRuntimeState.TryLoadPendingEncounter(manager, out encounter, out encounterPath))
+                    return false;
+            }
+
+            if (encounter == null)
+            {
+                TLog.Error($"[BattleController] No valid encounter found at '{encounterPath}'.");
+                return false;
+            }
+
+            PlayerAdventureState state = _partyStateLoaderOverrideForTests != null
+                ? _partyStateLoaderOverrideForTests()
+                : PlayerAdventureStateStore.LoadRepairAndSave();
+
+            Transform container = UnitContainerTransform ?? transform;
+            var ownedSceneUnits = FindOwnedSceneUnits();
+            var replaceableUnits = new HashSet<TilemapUnit>(ownedSceneUnits);
+            var loadedPathsBeforeTransaction = new HashSet<string>(_loadedPaths, StringComparer.Ordinal);
+            var spawnedUnits = new List<TilemapUnit>();
+            var consumedPendingBuffOwners = new List<CharacterDefinition>();
+            var stagedSceneUnits = new List<StagedSceneUnit>();
+            try
+            {
+                if (!TryPreparePartySpawns(encounter, state, manager, replaceableUnits, out var partySpawns))
+                {
+                    ReleaseEncounterTransactionAssets(manager, loadedPathsBeforeTransaction);
+                    return false;
+                }
+                if (!ValidateEncounterBlockedCells(encounter.BlockedCells, partySpawns.Select(spawn => spawn.Cell)))
+                {
+                    ReleaseEncounterTransactionAssets(manager, loadedPathsBeforeTransaction);
+                    return false;
+                }
+
+                StageExistingSceneUnits(ownedSceneUnits, stagedSceneUnits);
+
+                if (!ApplyEncounterBlockedCells(encounter.BlockedCells))
+                {
+                    RollBackEncounterSpawn(spawnedUnits, stagedSceneUnits);
+                    ReleaseEncounterTransactionAssets(manager, loadedPathsBeforeTransaction);
+                    return false;
+                }
+                _encounterSpawnStepObserverForTests?.Invoke("blocked");
+
+                for (int i = 0; i < partySpawns.Count; i++)
+                {
+                    var spawn = partySpawns[i];
+                    var go = Instantiate(spawn.Prefab, container);
+                    go.name = $"PartyUnit_{spawn.Definition.DisplayName}";
+                    var unit = go.GetComponent<TilemapUnit>();
+                    spawnedUnits.Add(unit);
+                    unit.PlayerNumber = _humanPlayerNumber;
+                    PlaceUnit(unit, spawn.Cell);
+                    CharacterStatsApplicator.ApplyToUnit(spawn.Definition, unit);
+
+                    if (state.IsPureRun)
+                    {
+                        PureRunAbilityBinder.Bind(
+                            spawn.Definition,
+                            unit,
+                            path => LoadPureRunAbilityConfig(path, manager));
+                    }
+
+                    var link = unit.GetComponent<RosterCharacterLink>() ?? unit.gameObject.AddComponent<RosterCharacterLink>();
+                    link.CharacterId = spawn.Definition.Id;
+
+                    if (spawn.Definition.PendingBuffs.Count > 0)
+                    {
+                        foreach (var buffConfig in spawn.Definition.PendingBuffs)
+                            unit.AddBuff(new Buff(buffConfig, null, buffConfig.DefaultDuration));
+                        consumedPendingBuffOwners.Add(spawn.Definition);
+                    }
+
+                    _encounterSpawnStepObserverForTests?.Invoke($"party:{i}");
+                }
+
+                var encounterUnits = encounter.Units ?? new List<EncounterUnitEntry>();
+                for (int i = 0; i < encounterUnits.Count; i++)
+                {
+                    if (!SpawnEncounterUnit(encounterUnits[i], container, manager, encounterPath, spawnedUnits))
+                    {
+                        RollBackEncounterSpawn(spawnedUnits, stagedSceneUnits);
+                        ReleaseEncounterTransactionAssets(manager, loadedPathsBeforeTransaction);
+                        return false;
+                    }
+                    _encounterSpawnStepObserverForTests?.Invoke($"enemy:{i}");
+                }
+
+                foreach (var definition in consumedPendingBuffOwners)
+                    definition.ClearPendingBuffs();
+
+            }
+            catch (Exception ex)
+            {
+                RollBackEncounterSpawn(spawnedUnits, stagedSceneUnits);
+                ReleaseEncounterTransactionAssets(manager, loadedPathsBeforeTransaction);
+                TLog.Error($"[BattleController] Encounter spawn transaction failed and was rolled back: {ex}");
+                return false;
+            }
+
+            CommitStagedSceneUnits(stagedSceneUnits);
+            return true;
+        }
+
+        private bool TryPreparePartySpawns(
+            EncounterConfig encounter,
+            PlayerAdventureState state,
+            GameAssetManager manager,
+            ISet<TilemapUnit> replaceableUnits,
+            out List<(CharacterDefinition Definition, ICell Cell, GameObject Prefab)> spawns)
+        {
+            spawns = new List<(CharacterDefinition, ICell, GameObject)>();
             if (state?.ActivePartyCharacterIds == null || state.ActivePartyCharacterIds.Count == 0)
             {
-                TLog.Warning("[BattleController] No active party characters found.");
-                return;
+                TLog.Error("[BattleController] Production party has no active character ids.");
+                return false;
             }
-
-            Transform container = UnitContainerTransform;
-            if (container == null)
-                container = transform;
-
-            var unitManager = (this as IUnitManager);
-            var existingUnits = FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var existing in existingUnits)
+            if (state.Roster == null)
             {
-                if (existing.PlayerNumber == _humanPlayerNumber)
-                {
-                    unitManager.RemoveUnit(existing);
-                    Destroy(existing.gameObject);
-                }
+                TLog.Error("[BattleController] Production party roster is missing.");
+                return false;
+            }
+            if (encounter.PartySpawnCells == null || encounter.PartySpawnCells.Count < state.ActivePartyCharacterIds.Count)
+            {
+                TLog.Error($"[BattleController] Party spawn layout requires at least {state.ActivePartyCharacterIds.Count} cells.");
+                return false;
             }
 
-            var prefabLookup = new Dictionary<RoleType, GameObject>();
-            var mgr = GameAssetManager.Instance;
+            var blockedCoordinates = new HashSet<Vector2Int>(
+                (encounter.BlockedCells ?? new List<BattleLayoutCell>())
+                    .Where(cell => cell != null)
+                    .Select(cell => new Vector2Int(cell.X, cell.Y)));
+            var reservedCells = new HashSet<ICell>();
+            var rolePrefabs = new Dictionary<RoleType, GameObject>();
 
             foreach (var jsonMapping in PlayerAdventureStateStore.TestPrefabMappings)
             {
-                if (string.IsNullOrEmpty(jsonMapping.PrefabPath))
+                string path = CharacterDefinition.ResolvePrefabPath(jsonMapping.PrefabPath);
+                if (string.IsNullOrEmpty(path))
                     continue;
-
-                GameObject prefab = null;
-                if (mgr != null)
-                {
-                    var resolvedPath = CharacterDefinition.ResolvePrefabPath(jsonMapping.PrefabPath);
-                    if (!string.IsNullOrEmpty(resolvedPath))
-                        prefab = mgr.Load<GameObject>(resolvedPath);
-                }
-
+                var prefab = LoadRuntimePrefab(path, manager);
                 if (prefab != null)
-                {
-                    _loadedPaths.Add(CharacterDefinition.ResolvePrefabPath(jsonMapping.PrefabPath));
-                    prefabLookup[jsonMapping.RoleType] = prefab;
-                }
+                    rolePrefabs[jsonMapping.RoleType] = prefab;
             }
-
-            foreach (var mapping in _rolePrefabMappings)
+            foreach (var mapping in _rolePrefabMappings ?? new List<RolePrefabMapping>())
             {
-                if (mapping.Prefab != null && !prefabLookup.ContainsKey(mapping.RoleType))
-                    prefabLookup[mapping.RoleType] = mapping.Prefab;
+                if (mapping != null && mapping.Prefab != null && !rolePrefabs.ContainsKey(mapping.RoleType))
+                    rolePrefabs[mapping.RoleType] = mapping.Prefab;
             }
 
-            GameObject fallbackPrefab = prefabLookup.Values.FirstOrDefault();
-
-            var respawnPoints = new List<Transform>();
-            var unitManagerGo = container.gameObject;
-            if (unitManagerGo != null)
-            {
-                foreach (Transform child in unitManagerGo.transform)
-                {
-                    if (child.CompareTag("Respawn"))
-                        respawnPoints.Add(child);
-                }
-            }
-
-            var reservedPartyCells = new HashSet<ICell>();
             for (int i = 0; i < state.ActivePartyCharacterIds.Count; i++)
             {
                 string id = state.ActivePartyCharacterIds[i];
-                var def = state.Roster.FirstOrDefault(c => c.Id == id);
-                if (def == null)
+                if (string.IsNullOrWhiteSpace(id))
                 {
-                    TLog.Warning($"[BattleController] Party id '{id}' not in roster; skipping slot {i}.");
-                    continue;
+                    TLog.Error($"[BattleController] Active party id at slot {i} is empty.");
+                    return false;
                 }
 
-                GameObject prefab = null;
-
-                var characterPath = CharacterDefinition.ResolvePrefabPath(def.PrefabPath);
-                if (!string.IsNullOrEmpty(characterPath) && mgr != null)
+                var definition = state.Roster.FirstOrDefault(character => character != null && character.Id == id);
+                if (definition == null)
                 {
-                    prefab = mgr.Load<GameObject>(characterPath);
-                    if (prefab != null)
-                        _loadedPaths.Add(characterPath);
+                    TLog.Error($"[BattleController] Active party id '{id}' is missing from the roster.");
+                    return false;
                 }
 
-                if (prefab == null && !prefabLookup.TryGetValue(def.RoleType, out prefab))
-                    prefab = null;
-
-                if (prefab == null)
+                var layoutCell = encounter.PartySpawnCells[i];
+                if (layoutCell == null || !BattleBoardSpec.Contains(layoutCell.X, layoutCell.Y))
                 {
-                    prefab = fallbackPrefab;
-                    if (prefab == null)
-                    {
-                        TLog.Error($"[BattleController] No prefab for {def.Id} (path={def.PrefabPath}, role={def.RoleType}) and no fallback available.");
-                        continue;
-                    }
-                    TLog.Warning($"[BattleController] No prefab for {def.Id}, using fallback.");
+                    TLog.Error($"[BattleController] Party spawn cell at slot {i} is outside BattleBoardSpec.");
+                    return false;
+                }
+                if (!TryGetEncounterCell(layoutCell.X, layoutCell.Y, out var cell))
+                {
+                    TLog.Error($"[BattleController] Party spawn cell ({layoutCell.X},{layoutCell.Y}) does not exist.");
+                    return false;
+                }
+                if (!reservedCells.Add(cell))
+                {
+                    TLog.Error($"[BattleController] Party spawn layout duplicates cell ({layoutCell.X},{layoutCell.Y}).");
+                    return false;
+                }
+                if (blockedCoordinates.Contains(new Vector2Int(layoutCell.X, layoutCell.Y)))
+                {
+                    TLog.Error($"[BattleController] Party spawn cell ({layoutCell.X},{layoutCell.Y}) overlaps an encounter blocker.");
+                    return false;
+                }
+                if (!CellManager.IsCellWalkable(cell))
+                {
+                    TLog.Error($"[BattleController] Party spawn cell ({layoutCell.X},{layoutCell.Y}) is not walkable.");
+                    return false;
+                }
+                bool hasNonReplaceableOccupant = cell.CurrentUnits.Any(
+                    unit => unit != null && !replaceableUnits.Contains(unit));
+                bool hasOccupyingInteractable = cell.CurrentInteractables.Any(
+                    interactable => interactable != null && interactable.OccupiesCell);
+                if (hasNonReplaceableOccupant || hasOccupyingInteractable ||
+                    cell.IsTaken && cell.CurrentUnits.Count == 0)
+                {
+                    TLog.Error($"[BattleController] Party spawn cell ({layoutCell.X},{layoutCell.Y}) is occupied.");
+                    return false;
                 }
 
-                var go = Instantiate(prefab, container);
-                go.name = $"PartyUnit_{def.DisplayName}";
-
-                var unit = go.GetComponent<TilemapUnit>();
-                if (unit == null)
-                {
-                    TLog.Error($"[BattleController] Prefab for {def.RoleType} does not have a TilemapUnit component.");
-                    Destroy(go);
-                    continue;
-                }
-
-                unit.PlayerNumber = _humanPlayerNumber;
-
-                var roleMapping = _rolePrefabMappings.FirstOrDefault(mapping =>
-                    mapping != null && mapping.RoleType == def.RoleType);
-                var configuredCell = roleMapping == null
+                string characterPath = CharacterDefinition.ResolvePrefabPath(definition.PrefabPath);
+                GameObject prefab = string.IsNullOrEmpty(characterPath)
                     ? null
-                    : CellManager?.GetCellAt(roleMapping.StartingCell.ToIVector2Int());
-                if (configuredCell == null ||
-                    reservedPartyCells.Contains(configuredCell) ||
-                    !IsCellVisibleToMainCamera(configuredCell))
+                    : LoadRuntimePrefab(characterPath, manager);
+                if (prefab == null)
+                    rolePrefabs.TryGetValue(definition.RoleType, out prefab);
+                if (prefab == null || prefab.GetComponent<TilemapUnit>() == null)
                 {
-                    var availableCells = CellManager?.GetCells()
-                        .Where(cell => cell != null &&
-                            !cell.IsTaken &&
-                            cell.CurrentUnits.Count == 0 &&
-                            !reservedPartyCells.Contains(cell) &&
-                            CellManager.IsCellWalkable(cell))
-                        .ToList();
-                    configuredCell = availableCells
-                        ?.Where(IsCellVisibleToMainCamera)
-                        .OrderBy(GetPartySpawnViewportDistance)
-                        .ThenBy(cell => cell.GridCoordinates.y)
-                        .FirstOrDefault();
-                }
-                if (configuredCell != null)
-                {
-                    go.transform.position = configuredCell.WorldPosition.ToVector3();
-                    reservedPartyCells.Add(configuredCell);
-                }
-                else if (i < respawnPoints.Count)
-                {
-                    go.transform.position = respawnPoints[i].position;
-                }
-                else
-                {
-                    var referenceUnit = GameObject.Find("Infantry Blue");
-                    if (referenceUnit != null)
-                    {
-                        go.transform.position = referenceUnit.transform.position + new Vector3(i * 2.5f, 0, 0);
-                    }
-                    else
-                    {
-                        TLog.Warning($"[BattleController] No Respawn point for slot {i} and no Infantry Blue reference. Using prefab default position.");
-                    }
+                    TLog.Error($"[BattleController] No valid TilemapUnit prefab for party character '{id}'.");
+                    return false;
                 }
 
-                CharacterStatsApplicator.ApplyToUnit(def, unit);
+                spawns.Add((definition, cell, prefab));
+            }
 
-                if (state.IsPureRun)
+            return true;
+        }
+
+        private GameObject LoadRuntimePrefab(string path, GameAssetManager manager)
+        {
+            string normalizedPath = GameAssetManager.NormalizeAssetPath(path);
+            if (_runtimePrefabCache.TryGetValue(normalizedPath, out var cached))
+                return cached;
+
+            GameObject prefab = _runtimePrefabLoadOverrideForTests != null
+                ? _runtimePrefabLoadOverrideForTests(normalizedPath)
+                : manager?.Load<GameObject>(normalizedPath);
+            if (prefab != null && !string.IsNullOrEmpty(normalizedPath))
+            {
+                _runtimePrefabCache.Add(normalizedPath, prefab);
+                _loadedPaths.Add(normalizedPath);
+            }
+            return prefab;
+        }
+
+        private AiBrainAsset LoadRuntimeAiBrain(string path, GameAssetManager manager)
+        {
+            string normalizedPath = GameAssetManager.NormalizeAssetPath(path);
+            if (_runtimeAiBrainCache.TryGetValue(normalizedPath, out var cached))
+                return cached;
+
+            AiBrainAsset brain = _runtimeAiBrainLoadOverrideForTests != null
+                ? _runtimeAiBrainLoadOverrideForTests(normalizedPath)
+                : manager?.Load<AiBrainAsset>(normalizedPath);
+            if (brain != null && !string.IsNullOrEmpty(normalizedPath))
+            {
+                _runtimeAiBrainCache.Add(normalizedPath, brain);
+                _loadedPaths.Add(normalizedPath);
+            }
+            return brain;
+        }
+
+        private bool ValidateEncounterBlockedCells(
+            IReadOnlyList<BattleLayoutCell> blockedCells,
+            IEnumerable<ICell> partyCells)
+        {
+            var partySet = new HashSet<ICell>(partyCells);
+            var seen = new HashSet<ICell>();
+            foreach (var blocked in blockedCells ?? Array.Empty<BattleLayoutCell>())
+            {
+                if (blocked == null || !BattleBoardSpec.Contains(blocked.X, blocked.Y) ||
+                    !TryGetEncounterCell(blocked.X, blocked.Y, out var cell))
                 {
-                    PureRunAbilityBinder.Bind(
-                        def,
-                        unit,
-                        path => LoadPureRunAbilityConfig(path, mgr));
+                    TLog.Error($"[BattleController] Encounter blocked cell ({blocked?.X},{blocked?.Y}) does not exist.");
+                    return false;
                 }
-
-                var link = unit.GetComponent<RosterCharacterLink>();
-                if (link == null)
-                    link = unit.gameObject.AddComponent<RosterCharacterLink>();
-                link.CharacterId = def.Id;
-
-                // Apply PendingBuffs from CharacterDefinition (map-layer buffs → combat start)
-                if (def.PendingBuffs.Count > 0)
+                if (!seen.Add(cell) || partySet.Contains(cell))
                 {
-                    foreach (var buffConfig in def.PendingBuffs)
-                    {
-                        unit.AddBuff(new Buff(buffConfig, null, buffConfig.DefaultDuration));
-                    }
-                    def.ClearPendingBuffs();
+                    TLog.Error($"[BattleController] Encounter blocked cell ({blocked.X},{blocked.Y}) is duplicated or overlaps the party.");
+                    return false;
                 }
+            }
+            return true;
+        }
+
+        private sealed class StagedSceneUnit
+        {
+            public TilemapUnit Unit;
+            public Transform Parent;
+            public int SiblingIndex;
+            public bool WasActive;
+            public ICell Cell;
+            public bool CellWasTaken;
+            public int RegistryIndex;
+        }
+
+        private List<TilemapUnit> FindOwnedSceneUnits()
+        {
+            return FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Where(existing => existing != null &&
+                    (existing.transform.IsChildOf(transform) ||
+                     UnitContainerTransform != null && existing.transform.IsChildOf(UnitContainerTransform)))
+                .ToList();
+        }
+
+        private List<Corpse> FindOwnedSceneCorpses()
+        {
+            return FindObjectsByType<Corpse>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Where(corpse => corpse != null &&
+                    (corpse.transform.IsChildOf(transform) ||
+                     UnitContainerTransform != null && corpse.transform.IsChildOf(UnitContainerTransform)))
+                .ToList();
+        }
+
+        private void StageExistingSceneUnits(
+            IEnumerable<TilemapUnit> existingUnits,
+            ICollection<StagedSceneUnit> staged)
+        {
+            foreach (var existing in existingUnits)
+            {
+                if (existing == null)
+                    continue;
+
+                var snapshot = new StagedSceneUnit
+                {
+                    Unit = existing,
+                    Parent = existing.transform.parent,
+                    SiblingIndex = existing.transform.GetSiblingIndex(),
+                    WasActive = existing.gameObject.activeSelf,
+                    Cell = existing.CurrentCell,
+                    CellWasTaken = existing.CurrentCell?.IsTaken ?? false,
+                    RegistryIndex = _units?.IndexOf(existing) ?? -1
+                };
+                staged.Add(snapshot);
+                _stageSceneUnitObserverForTests?.Invoke(existing);
+
+                DetachUnitFromCell(existing);
+                _units?.Remove(existing);
+                existing.gameObject.SetActive(false);
+                existing.transform.SetParent(null);
             }
         }
 
-        private static bool IsCellVisibleToMainCamera(ICell cell)
+        private void CommitStagedSceneUnits(IEnumerable<StagedSceneUnit> stagedSceneUnits)
         {
-            var camera = Camera.main;
-            if (camera == null || cell == null)
-                return false;
-
-            Vector3 viewport = camera.WorldToViewportPoint(cell.WorldPosition.ToVector3());
-            return viewport.z > 0f &&
-                viewport.x >= 0f && viewport.x <= 1f &&
-                viewport.y >= 0f && viewport.y <= 1f;
+            foreach (var staged in stagedSceneUnits ?? Enumerable.Empty<StagedSceneUnit>())
+            {
+                if (staged.Unit == null)
+                    continue;
+                staged.Unit.gameObject.SetActive(false);
+                staged.Unit.transform.SetParent(null);
+                Destroy(staged.Unit.gameObject);
+            }
         }
 
-        private static float GetPartySpawnViewportDistance(ICell cell)
+        private void RestoreStagedSceneUnits(IEnumerable<StagedSceneUnit> stagedSceneUnits)
         {
-            var camera = Camera.main;
-            if (camera == null || cell == null)
-                return float.MaxValue;
+            foreach (var staged in (stagedSceneUnits ?? Enumerable.Empty<StagedSceneUnit>())
+                         .Where(snapshot => snapshot.Unit != null)
+                         .OrderBy(snapshot => snapshot.RegistryIndex < 0 ? int.MaxValue : snapshot.RegistryIndex))
+            {
+                var unit = staged.Unit;
+                if (staged.Parent != null)
+                {
+                    unit.transform.SetParent(staged.Parent);
+                    unit.transform.SetSiblingIndex(Mathf.Min(staged.SiblingIndex, staged.Parent.childCount - 1));
+                }
 
-            Vector3 viewport = camera.WorldToViewportPoint(cell.WorldPosition.ToVector3());
-            return (new Vector2(viewport.x, viewport.y) - new Vector2(0.25f, 0.5f)).sqrMagnitude;
+                if (staged.Cell != null)
+                {
+                    unit.CurrentCell = staged.Cell;
+                    if (!staged.Cell.CurrentUnits.Contains(unit))
+                        staged.Cell.CurrentUnits.Add(unit);
+                    staged.Cell.IsTaken = staged.CellWasTaken || staged.Cell.CurrentUnits.Count > 0;
+                }
+
+                if (staged.RegistryIndex >= 0 && _units != null && !_units.Contains(unit))
+                    _units.Insert(Mathf.Min(staged.RegistryIndex, _units.Count), unit);
+                unit.gameObject.SetActive(staged.WasActive);
+            }
+        }
+
+        private static void PlaceUnit(TilemapUnit unit, ICell cell)
+        {
+            unit.transform.position = cell.WorldPosition.ToVector3();
+            unit.CurrentCell = cell;
+            if (!cell.CurrentUnits.Contains(unit))
+                cell.CurrentUnits.Add(unit);
+            cell.IsTaken = true;
+        }
+
+        private static void DetachUnitFromCell(TilemapUnit unit)
+        {
+            var cell = unit?.CurrentCell;
+            if (cell == null)
+                return;
+            cell.CurrentUnits.Remove(unit);
+            if (cell.CurrentUnits.Count == 0 &&
+                !cell.CurrentInteractables.Any(interactable => interactable != null && interactable.OccupiesCell))
+                cell.IsTaken = false;
+            unit.CurrentCell = null;
+        }
+
+        private void RollBackEncounterSpawn(
+            IEnumerable<TilemapUnit> spawnedUnits,
+            IEnumerable<StagedSceneUnit> stagedSceneUnits)
+        {
+            foreach (var unit in spawnedUnits.Where(unit => unit != null).Reverse())
+            {
+                DetachUnitFromCell(unit);
+                unit.gameObject.SetActive(false);
+                unit.transform.SetParent(null);
+                Destroy(unit.gameObject);
+            }
+            RestoreEncounterBlockedCells();
+            RestoreStagedSceneUnits(stagedSceneUnits);
+        }
+
+        private void RollBackTestSetupSpawn(
+            IEnumerable<StagedSceneUnit> stagedSceneUnits,
+            GameAssetManager manager,
+            ISet<string> loadedPathsBeforeTransaction,
+            ISet<Corpse> corpsesBeforeTransaction)
+        {
+            var spawnedCorpses = FindOwnedSceneCorpses()
+                .Where(corpse => !corpsesBeforeTransaction.Contains(corpse))
+                .ToArray();
+            foreach (var corpse in spawnedCorpses)
+            {
+                corpse.CurrentCell?.RemoveInteractable(corpse);
+                corpse.CurrentCell = null;
+                corpse.gameObject.SetActive(false);
+                corpse.transform.SetParent(null);
+                Destroy(corpse.gameObject);
+            }
+
+            RollBackEncounterSpawn(FindOwnedSceneUnits(), stagedSceneUnits);
+            ReleaseEncounterTransactionAssets(manager, loadedPathsBeforeTransaction);
+        }
+
+        private void ReleaseEncounterTransactionAssets(
+            GameAssetManager manager,
+            ISet<string> loadedPathsBeforeTransaction)
+        {
+            string[] transactionPaths = _loadedPaths
+                .Where(path => !loadedPathsBeforeTransaction.Contains(path))
+                .ToArray();
+            Action<string> releasePath = _runtimeAssetReleaseOverrideForTests;
+            if (releasePath == null && manager != null)
+                releasePath = manager.Release;
+
+            foreach (string path in transactionPaths)
+            {
+                _loadedPaths.Remove(path);
+                _runtimePrefabCache.Remove(path);
+                _pureRunAbilityConfigCache.Remove(path);
+                _runtimeAiBrainCache.Remove(path);
+                if (releasePath == null)
+                    continue;
+                try
+                {
+                    releasePath(path);
+                }
+                catch (Exception ex)
+                {
+                    TLog.Error($"[BattleController] Failed to release rolled-back runtime asset '{path}': {ex}");
+                }
+            }
         }
 
         private AbilityConfig LoadPureRunAbilityConfig(string configuredPath, GameAssetManager manager)
@@ -622,50 +925,63 @@ namespace Tactics.Common.Battle
             return config;
         }
 
-        private void SpawnEncounterUnit(EncounterUnitEntry unitEntry, Transform container, GameAssetManager mgr, string encounterPath)
+        private bool SpawnEncounterUnit(
+            EncounterUnitEntry unitEntry,
+            Transform container,
+            GameAssetManager mgr,
+            string encounterPath,
+            ICollection<TilemapUnit> spawnedUnits)
         {
             if (unitEntry == null)
             {
                 TLog.Error($"[BattleController] Encounter '{encounterPath}' contains a null unit entry.");
-                return;
+                return false;
             }
 
             string unitLabel = string.IsNullOrWhiteSpace(unitEntry.UnitName) ? unitEntry.MonsterId : unitEntry.UnitName;
-            if (!TryGetEncounterCell(unitEntry.SpawnCellX, unitEntry.SpawnCellY, out var spawnCell))
+            if (!BattleBoardSpec.Contains(unitEntry.SpawnCellX, unitEntry.SpawnCellY) ||
+                !TryGetEncounterCell(unitEntry.SpawnCellX, unitEntry.SpawnCellY, out var spawnCell))
             {
                 TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): cell does not exist.");
-                return;
+                return false;
+            }
+            if (!CellManager.IsCellWalkable(spawnCell) || spawnCell.IsTaken || spawnCell.CurrentUnits.Count > 0)
+            {
+                TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): cell is blocked or occupied.");
+                return false;
             }
 
             var prefabPath = GameAssetManager.NormalizeAssetPath(unitEntry.UnitPrefabPath);
-            var prefab = mgr.Load<GameObject>(prefabPath);
+            var prefab = LoadRuntimePrefab(prefabPath, mgr);
             if (prefab == null)
             {
                 TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): prefab not found '{prefabPath}'.");
-                return;
+                return false;
             }
-
-            _loadedPaths.Add(prefabPath);
             if (prefab.GetComponent<TilemapUnit>() == null)
             {
                 TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): prefab '{prefabPath}' is missing TilemapUnit.");
-                return;
+                return false;
             }
 
             var abilityConfigs = new List<AbilityConfig>();
             if (unitEntry.AbilityConfigPaths != null && unitEntry.AbilityConfigPaths.Count > 0)
             {
+                if (mgr == null)
+                {
+                    TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot load abilities for '{unitLabel}': GameAssetManager is unavailable.");
+                    return false;
+                }
                 foreach (string configuredPath in unitEntry.AbilityConfigPaths)
                 {
                     string abilityPath = GameAssetManager.NormalizeAssetPath(configuredPath);
-                    var abilityConfig = mgr.Load<AbilityConfig>(abilityPath);
+                    var abilityConfig = LoadPureRunAbilityConfig(abilityPath, mgr);
                     if (abilityConfig == null)
                     {
                         TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): ability config not found '{abilityPath}'.");
-                        return;
+                        return false;
                     }
 
-                    _loadedPaths.Add(abilityPath);
                     abilityConfigs.Add(abilityConfig);
                 }
             }
@@ -673,31 +989,31 @@ namespace Tactics.Common.Battle
             AiBrainAsset brain = null;
             if (unitEntry.PlayerNumber != _humanPlayerNumber && !string.IsNullOrWhiteSpace(unitEntry.AiBrainAssetPath))
             {
+                if (mgr == null && _runtimeAiBrainLoadOverrideForTests == null)
+                {
+                    TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot load AI for '{unitLabel}': GameAssetManager is unavailable.");
+                    return false;
+                }
                 var aiPath = GameAssetManager.NormalizeAssetPath(unitEntry.AiBrainAssetPath);
-                brain = mgr.Load<AiBrainAsset>(aiPath);
+                brain = LoadRuntimeAiBrain(aiPath, mgr);
                 if (brain == null || !brain.IsValid())
                 {
                     TLog.Error($"[BattleController] Encounter '{encounterPath}' cannot spawn '{unitLabel}' at ({unitEntry.SpawnCellX},{unitEntry.SpawnCellY}): AI brain is missing or invalid '{aiPath}'.");
-                    return;
+                    return false;
                 }
-
-                _loadedPaths.Add(aiPath);
             }
 
             var go = Instantiate(prefab, container);
             go.name = string.IsNullOrWhiteSpace(unitEntry.UnitName) ? prefab.name : unitEntry.UnitName;
             var unit = go.GetComponent<TilemapUnit>();
+            spawnedUnits.Add(unit);
             unit.PlayerNumber = unitEntry.PlayerNumber;
             var encounterModifiers = go.GetComponent<EncounterUnitRuntimeModifiers>() ?? go.AddComponent<EncounterUnitRuntimeModifiers>();
             encounterModifiers.Configure(unitEntry.MonsterId, unitEntry.HealthMultiplier, unitEntry.OutputMultiplier, unitEntry.MinimumStartingMana);
             if (abilityConfigs.Count > 0)
                 unit.ApplyAbilityConfigs(abilityConfigs);
 
-            go.transform.position = spawnCell.WorldPosition.ToVector3();
-            unit.CurrentCell = spawnCell;
-            if (!spawnCell.CurrentUnits.Contains(unit))
-                spawnCell.CurrentUnits.Add(unit);
-            spawnCell.IsTaken = true;
+            PlaceUnit(unit, spawnCell);
 
             if (brain != null)
             {
@@ -707,20 +1023,26 @@ namespace Tactics.Common.Battle
             {
                 TLog.Info($"[BattleController] Encounter unit '{go.name}' has no AiBrainAssetPath configured. Unit will have no AI.");
             }
+            return true;
         }
 
         private void SpawnTestPartyUnits()
         {
+            TrySpawnTestPartyUnits();
+        }
+
+        private bool TrySpawnTestPartyUnits()
+        {
             if (_testPartyConfig == null)
             {
-                TLog.Error("[BattleController] UseTestSetup=true but TestPartyConfig is null. Falling back to production spawn.");
-                SpawnPartyUnits();
-                return;
+                TLog.Error("[BattleController] UseTestSetup=true but TestPartyConfig is null; test spawn aborted.");
+                return false;
             }
 
+            bool succeeded = true;
             Transform container = UnitContainerTransform ?? transform;
             var unitManager = this as IUnitManager;
-            var existingUnits = FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var existingUnits = FindOwnedSceneUnits();
             foreach (var existing in existingUnits)
             {
                 if (existing.PlayerNumber == _humanPlayerNumber)
@@ -737,17 +1059,20 @@ namespace Tactics.Common.Battle
                 if (slot == null)
                 {
                     TLog.Warning($"[BattleController] TestPartySlot[{i}] is null. Skipping.");
+                    succeeded = false;
                     continue;
                 }
 
                 if (slot.UnitPrefab == null)
                 {
                     TLog.Error($"[BattleController] TestPartySlot[{i}] has null UnitPrefab. Skipping.");
+                    succeeded = false;
                     continue;
                 }
 
                 if (!TryGetTestSetupCell(slot.SpawnCell, $"TestPartySlot[{i}]", out var cell))
                 {
+                    succeeded = false;
                     continue;
                 }
 
@@ -759,6 +1084,7 @@ namespace Tactics.Common.Battle
                 {
                     TLog.Error($"[BattleController] TestPartySlot[{i}] prefab missing TilemapUnit.");
                     Destroy(go);
+                    succeeded = false;
                     continue;
                 }
 
@@ -779,19 +1105,25 @@ namespace Tactics.Common.Battle
                     cell.CurrentUnits.Add(unit);
                 cell.IsTaken = true;
             }
+            return succeeded;
         }
 
         private void SpawnTestEncounterUnits()
         {
+            TrySpawnTestEncounterUnits();
+        }
+
+        private bool TrySpawnTestEncounterUnits()
+        {
             if (_testEncounterConfig == null)
             {
-                TLog.Error("[BattleController] UseTestSetup=true but TestEncounterConfig is null. Falling back to production spawn.");
-                SpawnEncounterUnits();
-                return;
+                TLog.Error("[BattleController] UseTestSetup=true but TestEncounterConfig is null; test spawn aborted.");
+                return false;
             }
 
+            bool succeeded = true;
             Transform container = UnitContainerTransform ?? transform;
-            var existingUnits = FindObjectsByType<TilemapUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var existingUnits = FindOwnedSceneUnits();
             foreach (var existing in existingUnits)
             {
                 if (existing == null || existing.PlayerNumber == _humanPlayerNumber)
@@ -809,17 +1141,20 @@ namespace Tactics.Common.Battle
                 if (slot == null)
                 {
                     TLog.Warning($"[BattleController] TestEncounterSlot[{i}] is null. Skipping.");
+                    succeeded = false;
                     continue;
                 }
 
                 if (slot.UnitPrefab == null)
                 {
                     TLog.Error($"[BattleController] TestEncounterSlot[{i}] has null UnitPrefab. Skipping.");
+                    succeeded = false;
                     continue;
                 }
 
                 if (!TryGetTestSetupCell(slot.SpawnCell, $"TestEncounterSlot[{i}]", out var cell))
                 {
+                    succeeded = false;
                     continue;
                 }
 
@@ -831,6 +1166,7 @@ namespace Tactics.Common.Battle
                 {
                     TLog.Error($"[BattleController] TestEncounterSlot[{i}] prefab missing TilemapUnit.");
                     Destroy(go);
+                    succeeded = false;
                     continue;
                 }
 
@@ -844,25 +1180,29 @@ namespace Tactics.Common.Battle
 
                 if (slot.PlayerNumber != _humanPlayerNumber)
                 {
-                    if (!string.IsNullOrWhiteSpace(slot.AiBrainAssetPath) && mgr != null)
+                    if (!string.IsNullOrWhiteSpace(slot.AiBrainAssetPath) &&
+                        (mgr != null || _runtimeAiBrainLoadOverrideForTests != null))
                     {
                         var aiPath = GameAssetManager.NormalizeAssetPath(slot.AiBrainAssetPath);
-                        var brain = mgr.Load<AiBrainAsset>(aiPath);
+                        var brain = LoadRuntimeAiBrain(aiPath, mgr);
                         if (brain == null)
                         {
                             TLog.Error($"[BattleController] Test encounter AI brain not found: {aiPath}. Destroying AI unit '{go.name}'.");
+                            DetachUnitFromCell(unit);
                             Destroy(go);
+                            succeeded = false;
                             continue;
                         }
 
                         if (!brain.IsValid())
                         {
                             TLog.Error($"[BattleController] Test encounter AI brain is invalid: {aiPath}. Destroying AI unit '{go.name}'.");
+                            DetachUnitFromCell(unit);
                             Destroy(go);
+                            succeeded = false;
                             continue;
                         }
 
-                        _loadedPaths.Add(aiPath);
                         unit.ApplyAiBrain(brain);
                     }
                     else
@@ -871,15 +1211,22 @@ namespace Tactics.Common.Battle
                     }
                 }
             }
+            return succeeded;
         }
 
         private void SpawnTestEncounterInteractables()
         {
-            if (_testEncounterConfig == null) return;
+            TrySpawnTestEncounterInteractables();
+        }
+
+        private bool TrySpawnTestEncounterInteractables()
+        {
+            if (_testEncounterConfig == null) return false;
 
             var corpseSlots = _testEncounterConfig.CorpseSlots;
-            if (corpseSlots == null || corpseSlots.Count == 0) return;
+            if (corpseSlots == null || corpseSlots.Count == 0) return true;
 
+            bool succeeded = true;
             Transform container = UnitContainerTransform ?? transform;
 
             for (int i = 0; i < corpseSlots.Count; i++)
@@ -888,17 +1235,20 @@ namespace Tactics.Common.Battle
                 if (slot == null)
                 {
                     TLog.Warning($"[BattleController] CorpseTestSlot[{i}] is null. Skipping.");
+                    succeeded = false;
                     continue;
                 }
 
                 if (slot.UnitPrefab == null)
                 {
                     TLog.Error($"[BattleController] CorpseTestSlot[{i}] has null UnitPrefab. Skipping.");
+                    succeeded = false;
                     continue;
                 }
 
                 if (!TryGetTestSetupCell(slot.SpawnCell, $"CorpseTestSlot[{i}]", out var cell))
                 {
+                    succeeded = false;
                     continue;
                 }
 
@@ -911,6 +1261,7 @@ namespace Tactics.Common.Battle
                 {
                     TLog.Error($"[BattleController] CorpseTestSlot[{i}] prefab missing Corpse component.");
                     Destroy(go);
+                    succeeded = false;
                     continue;
                 }
 
@@ -919,6 +1270,7 @@ namespace Tactics.Common.Battle
 
                 TLog.Info($"[BattleController] Corpse '{go.name}' spawned at {cell.GridCoordinates}.");
             }
+            return succeeded;
         }
 
         private bool TryGetEncounterCell(int x, int y, out ICell cell)
@@ -996,6 +1348,7 @@ namespace Tactics.Common.Battle
         public void EndBattle(GameResult result)
         {
             Interlocked.Increment(ref _lifecycleGeneration);
+            RestoreEncounterBlockedCells();
 
             if (!IsBattleActive)
             {
@@ -1004,7 +1357,6 @@ namespace Tactics.Common.Battle
             }
 
             IsBattleActive = false;
-            RestoreEncounterBlockedCells();
             _ = TeardownRuntimeScopeAsync();
             BattleEnded?.Invoke(result);
             TBattleLog.EndBattle();
@@ -1017,12 +1369,12 @@ namespace Tactics.Common.Battle
         public async Task EndBattleAsync(GameResult result)
         {
             Interlocked.Increment(ref _lifecycleGeneration);
+            RestoreEncounterBlockedCells();
 
             bool shouldPublish = IsBattleActive;
             if (shouldPublish)
             {
                 IsBattleActive = false;
-                RestoreEncounterBlockedCells();
             }
 
             await TeardownRuntimeScopeAsync();
@@ -1478,8 +1830,9 @@ namespace Tactics.Common.Battle
         /// <summary>
         /// Encounter units are spawned immediately before player initialization. Scene
         /// player entries may therefore omit factions introduced by the encounter asset.
-        /// Preserve configured player types and add every missing spawned faction as AI
-        /// so turn resolution never receives a unit without an owning player.
+        /// Preserve configured player types and add missing spawned factions only when
+        /// they have an executable AI brain. Legacy marker/test units without a brain
+        /// must not create an AI player that repeatedly attempts to execute them.
         /// </summary>
         private void EnsurePlayersCoverSpawnedUnits()
         {
@@ -1492,8 +1845,21 @@ namespace Tactics.Common.Battle
                 .ToHashSet();
             bool changed = false;
 
+            for (int i = 0; i < existingEntries.Count; i++)
+            {
+                var entry = existingEntries[i];
+                if (entry.PlayerNumber != _humanPlayerNumber || entry.Type == PlayerType.HumanPlayer)
+                    continue;
+
+                entry.Type = PlayerType.HumanPlayer;
+                existingEntries[i] = entry;
+                changed = true;
+            }
+
             foreach (int playerNumber in _units
-                .Where(unit => unit != null)
+                .Where(unit => unit != null &&
+                    (unit.PlayerNumber == _humanPlayerNumber ||
+                     unit is TilemapUnit { AiBrainAsset: not null }))
                 .Select(unit => unit.PlayerNumber)
                 .Distinct()
                 .OrderBy(number => number))
@@ -1504,7 +1870,9 @@ namespace Tactics.Common.Battle
                 existingEntries.Add(new PlayerEntry
                 {
                     PlayerNumber = playerNumber,
-                    Type = playerNumber == 0 ? PlayerType.HumanPlayer : PlayerType.AutomatedPlayer,
+                    Type = playerNumber == _humanPlayerNumber
+                        ? PlayerType.HumanPlayer
+                        : PlayerType.AutomatedPlayer,
                     AITurnStartDelay = 0,
                     AIUnitDelay = 250
                 });

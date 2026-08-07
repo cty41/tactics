@@ -229,10 +229,13 @@ namespace Tactics.Tests.PlayMode
             {
                 Assert.That(character.Level, Is.EqualTo(1));
                 Assert.That(character.Strength, Is.EqualTo(5));
-                Assert.That(character.Agility, Is.EqualTo(5));
+                Assert.That(character.Agility,
+                    Is.EqualTo(character.RoleType == RoleType.Amazon ? 6 : 5));
                 Assert.That(character.Constitution, Is.EqualTo(5));
-                Assert.That(character.Intelligence, Is.EqualTo(5));
-                Assert.That(character.Charisma, Is.EqualTo(5));
+                Assert.That(character.Intelligence,
+                    Is.EqualTo(character.RoleType == RoleType.Mage ? 6 : 5));
+                Assert.That(character.Charisma,
+                    Is.EqualTo(character.RoleType == RoleType.Necromancer ? 6 : 5));
                 Assert.That(character.Luck, Is.EqualTo(5));
                 Assert.That(character.Speed, Is.EqualTo(5f));
                 Assert.That(character.StartingBranchSkillId, Is.Not.Empty);

@@ -1,22 +1,33 @@
 using System;
 using Tactics.Runtime.Utilities;
+using System.Collections.Generic;
 using System.Linq;
 using TbsFramework.EditorUtils.GridGenerators;
 using Tactics.Common.Players;
 using Tactics.Common.Cells;
+using Tactics.Common.Battle;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
+using Tactics.Common.Interactables;
 using Tactics.Common.Units;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
 namespace TbsFramework.EditorUtils
 {
     class GridHelper : EditorWindow
     {
+        [InitializeOnLoadMethod]
+        private static void RegisterOccupancyUndoRepair()
+        {
+            Undo.undoRedoPerformed -= RepairOccupancyAfterUndoRedo;
+            Undo.undoRedoPerformed += RepairOccupancyAfterUndoRedo;
+        }
+
         public bool keepMainCamera = false;
 
         public int nHumanPlayer = 2;
@@ -24,8 +35,8 @@ namespace TbsFramework.EditorUtils
 
         bool is2D = false;
         GameObject cellPrefab = null;
-        int mapHeight = 0;
-        int mapWidth = 0;
+        int mapHeight = BattleBoardSpec.Height;
+        int mapWidth = BattleBoardSpec.Width;
 
         GameObject gridController;
         GameObject cellManager;
@@ -62,6 +73,7 @@ namespace TbsFramework.EditorUtils
 
         public void OnEnable()
         {
+            ApplyFixedBoardDimensions();
             var gridGameObject = GameObject.Find("GridController");
             var cellManagerGameObject = GameObject.Find("CellManager");
             var unitsGameObject = GameObject.Find("UnitManager");
@@ -349,14 +361,20 @@ namespace TbsFramework.EditorUtils
             GUILayout.Label("Grid", EditorStyles.boldLabel);
             is2D = (bool)EditorGUILayout.Toggle("Is 2D", is2D);
             cellPrefab = (GameObject)EditorGUILayout.ObjectField("Cell Prefab", cellPrefab, typeof(GameObject), false);
-            mapHeight = (int)EditorGUILayout.IntField("Map Height", mapHeight);
-            mapWidth = (int)EditorGUILayout.IntField("Map Width", mapWidth);
+            ApplyFixedBoardDimensions();
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.IntField("Map Height", mapHeight);
+                EditorGUILayout.IntField("Map Width", mapWidth);
+            }
+            EditorGUILayout.HelpBox("Pure Run battle scenes use the fixed 10×10 board contract.", MessageType.Info);
 
             keepMainCamera = EditorGUILayout.Toggle(new GUIContent("Keep main camera", "Determines whether to keep the current Main Camera or create a new one"), keepMainCamera, new GUILayoutOption[0]);
 
             if (GUILayout.Button("Generate scene"))
             {
                 Undo.ClearAll();
+                ApplyFixedBoardDimensions();
                 GenerateBaseStructure();
             }
             if (GUILayout.Button("Clear scene"))
@@ -412,17 +430,18 @@ namespace TbsFramework.EditorUtils
                 return;
             }
 
+            if (!TryValidatePaintTarget(selectedCell, true, out string validationMessage))
+            {
+                DrawPaintValidationFeedback(selectedCell, validationMessage);
+                return;
+            }
+
             Handles.color = Color.red;
             Handles.DrawWireDisc(selectedCell.transform.position, Vector3.up, (is2D ? selectedCell.CellDimensions.y : selectedCell.CellDimensions.z) / 2);
             Handles.DrawWireDisc(selectedCell.transform.position, Vector3.forward, (is2D ? selectedCell.CellDimensions.y : selectedCell.CellDimensions.z) / 2);
             HandleUtility.Repaint();
             if (Event.current.button == 0 && (Event.current.type == EventType.MouseDrag || Event.current.type == EventType.MouseDown))
             {
-                if (unitEditModeOn.value && selectedCell.IsTaken)
-                {
-                    return;
-                }
-
                 Undo.SetCurrentGroupName("Unit painting");
                 int group = Undo.GetCurrentGroup();
 
@@ -453,6 +472,12 @@ namespace TbsFramework.EditorUtils
                 return;
             }
 
+            if (!TryValidatePaintTarget(selectedCell, false, out string validationMessage))
+            {
+                DrawPaintValidationFeedback(selectedCell, validationMessage);
+                return;
+            }
+
             Handles.color = Color.red;
             Handles.DrawWireDisc(selectedCell.transform.position, Vector3.up, (is2D ? selectedCell.CellDimensions.y : selectedCell.CellDimensions.z) * (tilePaintingRadius - 0.5f));
             Handles.DrawWireDisc(selectedCell.transform.position, Vector3.forward, (is2D ? selectedCell.CellDimensions.y : selectedCell.CellDimensions.z) * (tilePaintingRadius - 0.5f));
@@ -466,7 +491,13 @@ namespace TbsFramework.EditorUtils
                     Undo.SetCurrentGroupName("Tile painting");
                     int group = Undo.GetCurrentGroup();
                     var cells = cellManager.GetComponentsInChildren<Cell>();
-                    var cellsInRange = cells.Where(c => c.GetDistance(selectedCell) <= tilePaintingRadius - 1).ToList();
+                    var cellsInRange = GetValidTilePaintTargets(
+                        cells,
+                        selectedCell,
+                        tilePaintingRadius,
+                        out string brushValidationMessage);
+                    if (!string.IsNullOrEmpty(brushValidationMessage))
+                        DrawPaintValidationFeedback(selectedCell, brushValidationMessage);
 
                     foreach (var c in cellsInRange)
                     {
@@ -482,6 +513,7 @@ namespace TbsFramework.EditorUtils
 
                         try
                         {
+                            TransferCellOccupancy(c, newCell);
                             Undo.RegisterCreatedObjectUndo(newCell.gameObject, "Tile painting");
                             Undo.DestroyObjectImmediate(c.gameObject);
                         }
@@ -496,6 +528,188 @@ namespace TbsFramework.EditorUtils
                     Undo.IncrementCurrentGroup();
                 }
             }
+        }
+
+        private void ApplyFixedBoardDimensions()
+        {
+            mapWidth = BattleBoardSpec.Width;
+            mapHeight = BattleBoardSpec.Height;
+        }
+
+        private static bool TryValidatePaintTarget(Cell cell, bool requireVacant, out string message)
+        {
+            if (cell == null)
+            {
+                message = "Select a board cell before painting.";
+                return false;
+            }
+
+            int x = cell.GridCoordinates.x;
+            int y = cell.GridCoordinates.y;
+            if (!BattleBoardSpec.Contains(x, y))
+            {
+                message = $"Coordinate ({x}, {y}) is outside the fixed board; valid coordinates are 0-9 on both axes.";
+                return false;
+            }
+
+            if (requireVacant && (cell.IsTaken || (cell.CurrentUnits != null && cell.CurrentUnits.Count > 0)))
+            {
+                message = $"Cell ({x}, {y}) is occupied; only one unit may occupy a board cell.";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
+        private static List<Cell> GetValidTilePaintTargets(
+            IEnumerable<Cell> cells,
+            Cell selectedCell,
+            int radius,
+            out string message)
+        {
+            var validTargets = new List<Cell>();
+            int skippedCount = 0;
+            foreach (Cell candidate in cells.Where(cell => cell.GetDistance(selectedCell) <= radius - 1))
+            {
+                if (!TryValidatePaintTarget(candidate, false, out _))
+                {
+                    skippedCount++;
+                    continue;
+                }
+
+                validTargets.Add(candidate);
+            }
+
+            message = skippedCount == 0
+                ? string.Empty
+                : $"Brush skipped {skippedCount} cell(s) outside the fixed 10x10 board.";
+            return validTargets;
+        }
+
+        private static void TransferCellOccupancy(Cell oldCell, Cell newCell)
+        {
+            if (oldCell == null)
+                throw new ArgumentNullException(nameof(oldCell));
+            if (newCell == null)
+                throw new ArgumentNullException(nameof(newCell));
+
+            Undo.RecordObject(oldCell, "Tile painting occupancy");
+            Undo.RecordObject(newCell, "Tile painting occupancy");
+
+            var units = oldCell.CurrentUnits.Where(unit => unit != null).ToArray();
+            foreach (IUnit unit in units)
+            {
+                if (unit is UnityEngine.Object unitObject)
+                    Undo.RecordObject(unitObject, "Tile painting occupancy");
+
+                oldCell.CurrentUnits.Remove(unit);
+                if (!newCell.CurrentUnits.Contains(unit))
+                    newCell.CurrentUnits.Add(unit);
+                unit.CurrentCell = newCell;
+            }
+
+            var interactables = oldCell.CurrentInteractables.Where(interactable => interactable != null).ToArray();
+            foreach (var interactable in interactables)
+            {
+                if (interactable is UnityEngine.Object interactableObject)
+                    Undo.RecordObject(interactableObject, "Tile painting occupancy");
+
+                oldCell.RemoveInteractable(interactable);
+                newCell.AddInteractable(interactable);
+            }
+
+            oldCell.IsTaken = oldCell.CurrentUnits.Count > 0
+                || oldCell.CurrentInteractables.Any(interactable => interactable.OccupiesCell);
+            newCell.IsTaken = newCell.CurrentUnits.Count > 0
+                || newCell.CurrentInteractables.Any(interactable => interactable.OccupiesCell);
+        }
+
+        private static void RepairOccupancyAfterUndoRedo()
+        {
+            Cell[] sceneCells = Resources.FindObjectsOfTypeAll<Cell>()
+                .Where(cell => cell != null && cell.gameObject.scene.IsValid())
+                .ToArray();
+            Unit[] sceneUnits = Resources.FindObjectsOfTypeAll<Unit>()
+                .Where(unit => unit != null && unit.gameObject.scene.IsValid())
+                .ToArray();
+            Interactable[] sceneInteractables = Resources.FindObjectsOfTypeAll<Interactable>()
+                .Where(interactable => interactable != null && interactable.gameObject.scene.IsValid())
+                .ToArray();
+
+            foreach (Unit unit in sceneUnits)
+            {
+                Cell currentCell = unit.CurrentCell as Cell;
+                if (currentCell == null || !sceneCells.Contains(currentCell))
+                {
+                    Vector3 position = unit.transform.position;
+                    currentCell = FindCellInSceneAtPosition(
+                        sceneCells,
+                        unit.gameObject.scene,
+                        position);
+                }
+
+                if (currentCell == null)
+                    continue;
+
+                unit.CurrentCell = currentCell;
+                if (!currentCell.CurrentUnits.Contains(unit))
+                    currentCell.CurrentUnits.Add(unit);
+            }
+
+            foreach (Interactable interactable in sceneInteractables)
+            {
+                Cell currentCell = interactable.CurrentCell as Cell;
+                if (currentCell == null || !sceneCells.Contains(currentCell))
+                {
+                    Vector3 position = interactable.transform.position;
+                    currentCell = FindCellInSceneAtPosition(
+                        sceneCells,
+                        interactable.gameObject.scene,
+                        position);
+                }
+
+                if (currentCell != null && !currentCell.CurrentInteractables.Contains(interactable))
+                    currentCell.AddInteractable(interactable);
+            }
+
+            foreach (Cell cell in sceneCells)
+            {
+                foreach (IUnit unit in cell.CurrentUnits.ToArray())
+                {
+                    bool isDestroyedObject = unit is UnityEngine.Object unityObject && unityObject == null;
+                    if (unit == null || isDestroyedObject || !ReferenceEquals(unit.CurrentCell, cell))
+                        cell.CurrentUnits.Remove(unit);
+                }
+
+                foreach (var interactable in cell.CurrentInteractables.ToArray())
+                {
+                    bool isDestroyedObject = interactable is UnityEngine.Object unityObject && unityObject == null;
+                    if (interactable == null || isDestroyedObject || !ReferenceEquals(interactable.CurrentCell, cell))
+                        cell.RemoveInteractable(interactable);
+                }
+
+                cell.IsTaken = cell.CurrentUnits.Count > 0
+                    || cell.CurrentInteractables.Any(interactable => interactable.OccupiesCell);
+            }
+        }
+
+        private static Cell FindCellInSceneAtPosition(
+            IReadOnlyList<Cell> cells,
+            Scene scene,
+            Vector3 position)
+        {
+            return cells.FirstOrDefault(cell =>
+                cell != null
+                && cell.gameObject.scene == scene
+                && (cell.transform.position - position).sqrMagnitude <= 0.000001f);
+        }
+
+        private static void DrawPaintValidationFeedback(Cell cell, string message)
+        {
+            Handles.color = Color.red;
+            Handles.Label(cell.transform.position, message, EditorStyles.helpBox);
+            HandleUtility.Repaint();
         }
 
         private Cell GetSelectedCell()
@@ -518,6 +732,7 @@ namespace TbsFramework.EditorUtils
 
         void GenerateBaseStructure()
         {
+            ApplyFixedBoardDimensions();
             GridHelperUtils.ClearScene(keepMainCamera);
 
             gridController = new GameObject("GridController");

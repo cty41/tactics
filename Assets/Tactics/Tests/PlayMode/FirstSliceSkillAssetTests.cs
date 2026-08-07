@@ -273,8 +273,8 @@ namespace Tactics.Tests.PlayMode
         [UnityTest]
         public IEnumerator ProjectileGraphs_LoadAndExecuteAgainstRealAssets()
         {
-            yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset", 5);
-            yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset", 5);
+            yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset", 4);
+            yield return ExecuteProjectile("Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset", 4);
         }
 
         [Test]
@@ -294,12 +294,13 @@ namespace Tactics.Tests.PlayMode
             var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
                 "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Graph_Ability.asset");
             Assert.That(config, Is.Not.Null);
-            Assert.That(config.TargetRange, Is.EqualTo(6));
+            Assert.That(config.TargetRange, Is.EqualTo(4));
 
             var world = new SkillGraphTestWorld();
             try
             {
                 var source = world.CreateSquareCell("TeleportSource", 0, 0);
+                world.CreateSquareCell("TeleportPath", 1, 0);
                 var destination = world.CreateSquareCell("TeleportDestination", 2, 0);
                 var caster = world.CreateUnit("Caster", 0, source);
                 caster.Mana = 20f;

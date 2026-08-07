@@ -48,8 +48,11 @@ namespace Tactics.Common.Skills.Graph
             var grid = context.GridController;
             var corpse = ResolveCorpse(context);
             var spawnCell = corpse?.CurrentCell;
-            if (caster == null || grid?.UnitManager == null || corpse == null || spawnCell == null)
+            if (caster == null || grid?.UnitManager == null || grid.CellManager == null || corpse == null || spawnCell == null)
                 return SkillNodeExecutionResult.Failed("A valid corpse is required.");
+
+            if (!NecromancerCorpseTargetRules.IsLegalCorpseTarget(spawnCell, grid))
+                return SkillNodeExecutionResult.Failed("The corpse cell is outside the board or occupied.");
 
             var manager = GameAssetManager.Instance;
             var prefab = manager?.Load<GameObject>(GameAssetManager.NormalizeAssetPath(record.SummonPrefabPath));
@@ -134,8 +137,7 @@ namespace Tactics.Common.Skills.Graph
             if (isMage)
             {
                 concrete.Speed = 4f;
-                concrete.MaxMovementPoints = 3f;
-                concrete.MovementPoints = 3f;
+                concrete.MovementPoints = concrete.MaxMovementPoints;
                 concrete.MaxHealth = level >= 2 ? 8f : 6f;
             }
             else

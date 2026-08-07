@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.AssetPipeline;
@@ -109,10 +110,20 @@ namespace Tactics.Tests.PlayMode
                     corpses.Add(corpse);
                 }
 
+                AssertCorpseTargetAdmission(
+                    Ability("SummonSkeleton_Lv2_Graph_Ability.asset", caster),
+                    world,
+                    corpses[1].CurrentCell,
+                    expectedLegal: true);
+
                 yield return Execute(world, caster, corpses[1].CurrentCell, "SummonSkeleton_Lv2_Graph_Ability.asset");
                 Assert.That(corpses[0].IsDestroyed, Is.False, "Non-selected corpse must remain.");
                 Assert.That(corpses[1].IsDestroyed, Is.True);
                 var first = SummonRegistry.For(world.GridController).GetOrdered(caster, "Skeleton").Single();
+                ICell firstCell = Cell(world, 2, 0);
+                Assert.That(first.CurrentCell, Is.SameAs(firstCell));
+                Assert.That(firstCell.CurrentUnits, Is.EqualTo(new IUnit[] { first }));
+                Assert.That(firstCell.IsTaken, Is.True);
                 Assert.That(first.MaxHealth, Is.EqualTo(10f));
                 Assert.That(first.CanReceiveHealing, Is.False);
                 first.Health = 5f;
@@ -124,12 +135,151 @@ namespace Tactics.Tests.PlayMode
                 var active = SummonRegistry.For(world.GridController).GetOrdered(caster, "Skeleton");
                 Assert.That(active.Count, Is.EqualTo(2));
                 Assert.That(active.Contains(first), Is.False, "Third successful summon replaces the oldest.");
+                Assert.That(firstCell.CurrentUnits, Is.Empty, "Replacing the oldest summon releases its cell.");
+                Assert.That(firstCell.IsTaken, Is.False);
+                foreach (IUnit summon in active)
+                {
+                    Assert.That(summon.CurrentCell.CurrentUnits, Is.EqualTo(new IUnit[] { summon }));
+                    Assert.That(summon.CurrentCell.IsTaken, Is.True);
+                }
             }
             finally
             {
                 SummonRegistry.For(world.GridController).Clear(true);
                 foreach (var corpseObject in corpseObjects)
                     if (corpseObject != null) Object.DestroyImmediate(corpseObject);
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SummonSkeletonMage_UsesSpeedDerivedMovementWithoutLegacyOverride()
+        {
+            var world = CreateLineWorld(3, out var caster);
+            var corpseObject = new GameObject("SkeletonMageCorpse");
+            try
+            {
+                var corpse = corpseObject.AddComponent<Corpse>();
+                corpse.CurrentCell = Cell(world, 1, 0);
+                corpse.CurrentCell.AddInteractable(corpse);
+
+                yield return Execute(world, caster, corpse.CurrentCell, "SkeletonMage_Graph_Ability.asset");
+
+                var skeletonMage = SummonRegistry.For(world.GridController)
+                    .GetOrdered(caster, "SkeletonMage")
+                    .Single();
+                Assert.That(skeletonMage.Speed, Is.EqualTo(4f));
+                Assert.That(skeletonMage.MaxMovementPoints, Is.EqualTo(2f));
+                Assert.That(skeletonMage.MovementPoints, Is.EqualTo(2f));
+                Assert.That(skeletonMage.Initiative, Is.EqualTo(8f),
+                    "Movement recalibration must not alter speed-derived initiative.");
+            }
+            finally
+            {
+                SummonRegistry.For(world.GridController).Clear(true);
+                if (corpseObject != null) Object.DestroyImmediate(corpseObject);
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SummonSkeleton_RejectsCorpseCellOccupiedByLiveUnitWithoutConsumingCorpse()
+        {
+            var world = CreateLineWorld(3, out var caster);
+            var corpseObject = new GameObject("OccupiedCorpse");
+            try
+            {
+                ICell occupiedCell = Cell(world, 1, 0);
+                var occupant = world.CreateUnit("Occupant", 1, occupiedCell);
+                Prepare(occupant);
+                var corpse = corpseObject.AddComponent<Corpse>();
+                corpse.CurrentCell = occupiedCell;
+                occupiedCell.AddInteractable(corpse);
+
+                var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
+                    $"{ConfigRoot}SummonSkeleton_Graph_Ability.asset");
+                var ability = new SkillGraphAbilityImpl(caster, config);
+                AssertCorpseTargetAdmission(ability, world, occupiedCell, expectedLegal: false);
+                var task = ability.ExecuteForTestAsync(
+                    occupiedCell,
+                    world.GridController);
+                yield return new WaitUntil(() => task.IsCompleted);
+
+                Assert.That(task.IsFaulted, Is.False, task.Exception?.ToString());
+                Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Failed));
+                Assert.That(corpse.IsDestroyed, Is.False);
+                Assert.That(occupiedCell.CurrentUnits, Is.EqualTo(new IUnit[] { occupant }));
+                Assert.That(occupiedCell.IsTaken, Is.True);
+                Assert.That(SummonRegistry.For(world.GridController).GetOrdered(caster, "Skeleton"), Is.Empty);
+            }
+            finally
+            {
+                SummonRegistry.For(world.GridController).Clear(true);
+                if (corpseObject != null)
+                    Object.DestroyImmediate(corpseObject);
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SummonSkeleton_RejectsEmptyCellWithoutCreatingSummon()
+        {
+            var world = CreateLineWorld(3, out var caster);
+            try
+            {
+                ICell emptyCell = Cell(world, 1, 0);
+                var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
+                    $"{ConfigRoot}SummonSkeleton_Graph_Ability.asset");
+                var task = new SkillGraphAbilityImpl(caster, config).ExecuteForTestAsync(
+                    emptyCell,
+                    world.GridController);
+                yield return new WaitUntil(() => task.IsCompleted);
+
+                Assert.That(task.IsFaulted, Is.False, task.Exception?.ToString());
+                Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Failed));
+                Assert.That(emptyCell.CurrentUnits, Is.Empty);
+                Assert.That(emptyCell.IsTaken, Is.False);
+                Assert.That(SummonRegistry.For(world.GridController).GetOrdered(caster, "Skeleton"), Is.Empty);
+            }
+            finally
+            {
+                SummonRegistry.For(world.GridController).Clear(true);
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SummonSkeleton_RejectsCorpseOutsideFixedBoardWithoutConsumingCorpse()
+        {
+            var world = CreateLineWorld(3, out var caster);
+            var corpseObject = new GameObject("OutsideBoardCorpse");
+            try
+            {
+                ICell outsideCell = world.CreateSquareCell("OutsideBoardCell", 10, 0);
+                var corpse = corpseObject.AddComponent<Corpse>();
+                corpse.CurrentCell = outsideCell;
+                outsideCell.AddInteractable(corpse);
+                var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>(
+                    $"{ConfigRoot}SummonSkeleton_Graph_Ability.asset");
+                var ability = new SkillGraphAbilityImpl(caster, config);
+                AssertCorpseTargetAdmission(ability, world, outsideCell, expectedLegal: false);
+                var task = ability.ExecuteForTestAsync(
+                    outsideCell,
+                    world.GridController);
+                yield return new WaitUntil(() => task.IsCompleted);
+
+                Assert.That(task.IsFaulted, Is.False, task.Exception?.ToString());
+                Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Failed));
+                Assert.That(corpse.IsDestroyed, Is.False);
+                Assert.That(outsideCell.CurrentUnits, Is.Empty);
+                Assert.That(outsideCell.IsTaken, Is.True, "Rejected corpse remains an interactable occupant.");
+                Assert.That(SummonRegistry.For(world.GridController).GetOrdered(caster, "Skeleton"), Is.Empty);
+            }
+            finally
+            {
+                SummonRegistry.For(world.GridController).Clear(true);
+                if (corpseObject != null)
+                    Object.DestroyImmediate(corpseObject);
                 world.Dispose();
             }
         }
@@ -309,7 +459,8 @@ namespace Tactics.Tests.PlayMode
                 yield return Execute(world, caster, target.CurrentCell, "FearCurse_Graph_Ability.asset");
                 target.OnTurnStart(world.GridController);
 
-                Assert.That(target.CurrentCell.GridCoordinates.x, Is.EqualTo(3));
+                Assert.That(target.CurrentCell.GridCoordinates.x, Is.EqualTo(2),
+                    "Speed 2 grants one movement point under the fixed-board movement rule.");
                 Assert.That(target.MovementPoints, Is.Zero);
                 Assert.That(target.CanAct, Is.True, "Fear consumes movement, not the whole action.");
                 target.OnTurnEnd(world.GridController);
@@ -425,6 +576,46 @@ namespace Tactics.Tests.PlayMode
             var config = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>($"{ConfigRoot}{configFile}");
             Assert.That(config, Is.Not.Null, configFile);
             return new SkillGraphAbilityImpl(caster, config);
+        }
+
+        private static void AssertCorpseTargetAdmission(
+            SkillGraphAbilityImpl ability,
+            SkillGraphTestWorld world,
+            ICell targetCell,
+            bool expectedLegal)
+        {
+            Assert.That(
+                ability.GetAvailability(world.GridController).CanExecute,
+                Is.EqualTo(expectedLegal),
+                "Availability must use the canonical corpse-target rule.");
+
+            ability.OnAbilitySelected(world.GridController);
+            try
+            {
+                var displayCells = (HashSet<ICell>)typeof(SkillGraphAbilityImpl)
+                    .GetField("_displayCells", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.GetValue(ability);
+                Assert.That(
+                    displayCells?.Contains(targetCell) == true,
+                    Is.EqualTo(expectedLegal),
+                    "Preview/highlight must use the canonical corpse-target rule.");
+
+                var query = new AbilityTargetQuery(
+                    ability.UnitReference,
+                    ability.UnitReference.CurrentCell,
+                    world.GridController,
+                    world.UnitManager.GetUnits());
+                bool queryContainsTarget = ability.QueryTargets(query).Options
+                    .Any(option => ReferenceEquals(option.TargetPoint, targetCell));
+                Assert.That(
+                    queryContainsTarget,
+                    Is.EqualTo(expectedLegal),
+                    "AI QueryTargets must use the canonical corpse-target rule.");
+            }
+            finally
+            {
+                ability.CleanUp(world.GridController);
+            }
         }
     }
 }

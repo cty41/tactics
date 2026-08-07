@@ -91,7 +91,7 @@ namespace Tactics.Common.Players
                     cancellationToken);
 
                 var playableUnits = gridController.TurnContext.PlayableUnits()
-                    .Where(IsUnityUnitAvailable)
+                    .Where(unit => IsUnityUnitAvailable(unit) && unit.PlayerNumber == PlayerNumber)
                     .ToList();
                 foreach (var playableUnit in UnitSelector.SelectNext(() => playableUnits, gridController))
                 {
@@ -155,7 +155,11 @@ namespace Tactics.Common.Players
                     }
                     else
                     {
-                        TLog.Error($"[AIPlayer] Unit {playableUnit} has no AiBrainAsset configured. Skipping.");
+                        TLog.Warning($"[AIPlayer] Unit {playableUnit} has no AiBrainAsset configured. " +
+                            "Skipping this unit for the current turn.");
+                        await gridController.UnitManager.MarkAsFriendly(new IUnit[] { playableUnit });
+                        await gridController.UnitManager.MarkAsFinished(new IUnit[] { playableUnit });
+                        playableUnit.InvokeUnitDeselected();
                         continue;
                     }
 

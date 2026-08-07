@@ -73,31 +73,44 @@ namespace Tactics.Editor.SkillGraphEditor
             BuildSelf("BoneShield_Graph", "骨盾 Lv1", 1, amplify, fear);
             BuildSelf("BoneShield_Lv2_Graph", "骨盾 Lv2", 2, amplify, fear);
 
-            CreateConfig("SummonSkeleton_Graph_Ability", Graph("SummonSkeleton_Graph"), 3, 999,
+            CreateConfig("SummonSkeleton_Graph_Ability", Graph("SummonSkeleton_Graph"), 3,
+                PureRunRangeCalibrationAssetBuilder.CorpseSelectionRange,
                 "消耗1具尸体召唤1个骷髅，上限1。", false);
-            CreateConfig("SummonSkeleton_Lv2_Graph_Ability", Graph("SummonSkeleton_Lv2_Graph"), 3, 999,
+            CreateConfig("SummonSkeleton_Lv2_Graph_Ability", Graph("SummonSkeleton_Lv2_Graph"), 3,
+                PureRunRangeCalibrationAssetBuilder.CorpseSelectionRange,
                 "消耗1具尸体召唤强化骷髅，上限2。", false);
-            CreateConfig("SummonSkeleton_Lv3_Graph_Ability", Graph("SummonSkeleton_Lv3_Graph"), 3, 999,
+            CreateConfig("SummonSkeleton_Lv3_Graph_Ability", Graph("SummonSkeleton_Lv3_Graph"), 3,
+                PureRunRangeCalibrationAssetBuilder.CorpseSelectionRange,
                 "消耗1具尸体召唤强化骷髅，上限3。", false);
-            CreateConfig("Curse_Graph_Ability", Graph("Curse_Graph"), 3, 5,
+            CreateConfig("Curse_Graph_Ability", Graph("Curse_Graph"), 3,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "令单个敌人受到的所有伤害提高30%，持续5次行动。", false);
-            CreateConfig("Curse_Lv2_Graph_Ability", Graph("Curse_Lv2_Graph"), 3, 5,
+            CreateConfig("Curse_Lv2_Graph_Ability", Graph("Curse_Lv2_Graph"), 3,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "令十字5格内敌人受到的所有伤害提高30%。", false);
-            CreateConfig("Curse_Lv3_Graph_Ability", Graph("Curse_Lv3_Graph"), 3, 5,
+            CreateConfig("Curse_Lv3_Graph_Ability", Graph("Curse_Lv3_Graph"), 3,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "令3x3范围内敌人受到的所有伤害提高30%。", false);
-            CreateConfig("BoneSpear_Graph_Ability", Graph("BoneSpear_Graph"), 6, 5,
+            CreateConfig("BoneSpear_Graph_Ability", Graph("BoneSpear_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "对直线首个敌人造成7点魔法伤害。", false);
-            CreateConfig("BoneSpear_Lv2_Graph_Ability", Graph("BoneSpear_Lv2_Graph"), 4, 5,
+            CreateConfig("BoneSpear_Lv2_Graph_Ability", Graph("BoneSpear_Lv2_Graph"), 4,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "以更低消耗对直线首个敌人造成7点魔法伤害。", false);
-            CreateConfig("BoneSpear_Lv3_Graph_Ability", Graph("BoneSpear_Lv3_Graph"), 4, 5,
+            CreateConfig("BoneSpear_Lv3_Graph_Ability", Graph("BoneSpear_Lv3_Graph"), 4,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "对终点前直线上的所有敌人造成7点魔法伤害。", false);
-            CreateConfig("SkeletonMage_Graph_Ability", Graph("SkeletonMage_Graph"), 7, 999,
+            CreateConfig("SkeletonMage_Graph_Ability", Graph("SkeletonMage_Graph"), 7,
+                PureRunRangeCalibrationAssetBuilder.CorpseSelectionRange,
                 "消耗1具尸体召唤使用火球术 Lv1 的骷髅法师。", false);
-            CreateConfig("SkeletonMage_Lv2_Graph_Ability", Graph("SkeletonMage_Lv2_Graph"), 7, 999,
+            CreateConfig("SkeletonMage_Lv2_Graph_Ability", Graph("SkeletonMage_Lv2_Graph"), 7,
+                PureRunRangeCalibrationAssetBuilder.CorpseSelectionRange,
                 "消耗1具尸体召唤使用火球术 Lv2 的骷髅法师，上限2。", false);
-            CreateConfig("FearCurse_Graph_Ability", Graph("FearCurse_Graph"), 7, 5,
+            CreateConfig("FearCurse_Graph_Ability", Graph("FearCurse_Graph"), 7,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "令单个敌人下一次行动开始时远离施法者。", false);
-            CreateConfig("FearCurse_Lv2_Graph_Ability", Graph("FearCurse_Lv2_Graph"), 7, 5,
+            CreateConfig("FearCurse_Lv2_Graph_Ability", Graph("FearCurse_Lv2_Graph"), 7,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange,
                 "令十字5格内敌人下一次行动开始时远离施法者。", false);
             CreateConfig("BoneShield_Graph_Ability", Graph("BoneShield_Graph"), 8, 0,
                 "获得魅力两倍的物理伤害护盾。", false);
@@ -186,7 +199,7 @@ namespace Tactics.Editor.SkillGraphEditor
             var start = Add<StartNodeRecord>(graph, SkillGraphNodeType.Start);
             var select = Add<SelectCorpseTargetNodeRecord>(graph, SkillGraphNodeType.SelectCorpseTarget);
             select.MinRange = 0;
-            select.MaxRange = 999;
+            select.MaxRange = PureRunRangeCalibrationAssetBuilder.CorpseSelectionRange;
             var effect = AddNecromancerNode(graph, kind, level, null, null, attack);
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
             Link(graph, start, select, effect, finish);
@@ -208,13 +221,13 @@ namespace Tactics.Editor.SkillGraphEditor
             {
                 var primary = Add<SelectPrimaryTargetNodeRecord>(graph, SkillGraphNodeType.SelectPrimaryTarget);
                 primary.MinRange = 1;
-                primary.MaxRange = 5;
+                primary.MaxRange = PureRunRangeCalibrationAssetBuilder.StandardPlayerRange;
                 select = primary;
             }
             else
             {
                 var point = Add<SelectTargetPointNodeRecord>(graph, SkillGraphNodeType.SelectTargetPoint);
-                point.MaxRange = 5;
+                point.MaxRange = PureRunRangeCalibrationAssetBuilder.StandardPlayerRange;
                 select = point;
             }
             var effect = AddNecromancerNode(
@@ -222,9 +235,8 @@ namespace Tactics.Editor.SkillGraphEditor
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
             if (kind == NecromancerSkillKind.AmplifyDamage)
             {
-                var cue = Add<PlayVisualCueNodeRecord>(graph, SkillGraphNodeType.PlayVisualCue);
-                cue.Profile = AssetDatabase.LoadAssetAtPath<VisualCueProfile>(
-                    $"{VisualCueProfileRoot}/AmplifyDamageLv{level}.asset");
+                var cue = Add<PlayPresentationCueNodeRecord>(graph, SkillGraphNodeType.PlayPresentationCue);
+                cue.Cue = PresentationCueKind.PrimaryTargetHit;
                 Link(graph, start, select, cue, effect, finish);
             }
             else
@@ -245,14 +257,14 @@ namespace Tactics.Editor.SkillGraphEditor
             if (level >= 3)
             {
                 var point = Add<SelectTargetPointNodeRecord>(graph, SkillGraphNodeType.SelectTargetPoint);
-                point.MaxRange = 5;
+                point.MaxRange = PureRunRangeCalibrationAssetBuilder.StandardPlayerRange;
                 select = point;
             }
             else
             {
                 var primary = Add<SelectPrimaryTargetNodeRecord>(graph, SkillGraphNodeType.SelectPrimaryTarget);
                 primary.MinRange = 1;
-                primary.MaxRange = 5;
+                primary.MaxRange = PureRunRangeCalibrationAssetBuilder.StandardPlayerRange;
                 select = primary;
             }
             var projectile = Add<ProjectileLaunchNodeRecord>(graph, SkillGraphNodeType.ProjectileLaunch);

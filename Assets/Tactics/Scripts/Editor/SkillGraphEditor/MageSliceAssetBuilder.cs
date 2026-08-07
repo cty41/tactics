@@ -50,13 +50,19 @@ namespace Tactics.Editor.SkillGraphEditor
             BuildProjectileMageGraph("Fireball_Lv2_Graph", "火球术 Lv2", MageSkillKind.Fireball, 2, 4, ignite, slow, stun, null);
             BuildProjectileMageGraph("Fireball_Lv3_Graph", "火球术 Lv3", MageSkillKind.Fireball, 3, 4, ignite, slow, stun, null);
 
-            BuildProjectileMageGraph("IceBolt_Graph", "寒冰箭 Lv1", MageSkillKind.IceBolt, 1, 5, ignite, slow, stun, null);
-            BuildProjectileMageGraph("IceBolt_Lv2_Graph", "寒冰箭 Lv2", MageSkillKind.IceBolt, 2, 5, ignite, slow, stun, null);
-            BuildProjectileMageGraph("IceBolt_Lv3_Graph", "寒冰箭 Lv3", MageSkillKind.IceBolt, 3, 5, ignite, slow, stun, null);
+            BuildProjectileMageGraph("IceBolt_Graph", "寒冰箭 Lv1", MageSkillKind.IceBolt, 1,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, ignite, slow, stun, null);
+            BuildProjectileMageGraph("IceBolt_Lv2_Graph", "寒冰箭 Lv2", MageSkillKind.IceBolt, 2,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, ignite, slow, stun, null);
+            BuildProjectileMageGraph("IceBolt_Lv3_Graph", "寒冰箭 Lv3", MageSkillKind.IceBolt, 3,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, ignite, slow, stun, null);
 
-            BuildDirectMageGraph("Lightning_Graph", "霹雳闪电 Lv1", MageSkillKind.Lightning, 1, 5, ignite, slow, stun, null);
-            BuildDirectMageGraph("Lightning_Lv2_Graph", "霹雳闪电 Lv2", MageSkillKind.Lightning, 2, 5, ignite, slow, stun, null);
-            BuildDirectMageGraph("Lightning_Lv3_Graph", "霹雳闪电 Lv3", MageSkillKind.Lightning, 3, 5, ignite, slow, stun, null);
+            BuildDirectMageGraph("Lightning_Graph", "霹雳闪电 Lv1", MageSkillKind.Lightning, 1,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, ignite, slow, stun, null);
+            BuildDirectMageGraph("Lightning_Lv2_Graph", "霹雳闪电 Lv2", MageSkillKind.Lightning, 2,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, ignite, slow, stun, null);
+            BuildDirectMageGraph("Lightning_Lv3_Graph", "霹雳闪电 Lv3", MageSkillKind.Lightning, 3,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, ignite, slow, stun, null);
 
             var summonLv1 = BuildSelfMageGraph("SummonFireDemon_Graph", "召唤火魔 Lv1", MageSkillKind.SummonFireDemon, 1,
                 ignite, slow, stun, null, includeSelfSelection: false);
@@ -75,18 +81,28 @@ namespace Tactics.Editor.SkillGraphEditor
             CreateConfig("Fireball_Lv1_Ability", Graph("Fireball_Lv1_Graph"), 7, 4, "对首个敌人造成2点魔法伤害并施加2层点燃。");
             CreateConfig("Fireball_Lv2_Ability", Graph("Fireball_Lv2_Graph"), 7, 4, "主目标伤害提高，并对正交相邻敌人造成溅射与3层点燃。");
             CreateConfig("Fireball_Lv3_Ability", Graph("Fireball_Lv3_Graph"), 7, 4, "引爆主目标已有点燃后，结算二级火球效果。");
-            CreateConfig("IceBolt_Graph_Ability", Graph("IceBolt_Graph"), 6, 5, "造成8点冰霜魔法伤害并减速1回合。");
-            CreateConfig("IceBolt_Lv2_Graph_Ability", Graph("IceBolt_Lv2_Graph"), 4, 5, "造成8点冰霜魔法伤害并减速2回合。");
-            CreateConfig("IceBolt_Lv3_Graph_Ability", Graph("IceBolt_Lv3_Graph"), 4, 5, "命中后反弹至3格内最近的另一敌人。");
-            CreateConfig("Lightning_Graph_Ability", Graph("Lightning_Graph"), 6, 5, "无视路径与视线直接造成9点闪电魔法伤害。");
-            CreateConfig("Lightning_Lv2_Graph_Ability", Graph("Lightning_Lv2_Graph"), 6, 5, "直接造成9点闪电魔法伤害，并有25%概率眩晕。");
-            CreateConfig("Lightning_Lv3_Graph_Ability", Graph("Lightning_Lv3_Graph"), 6, 5, "直接造成11点闪电魔法伤害，并有50%概率眩晕。");
-            CreateConfig("SummonFireDemon_Graph_Ability", summonLv1, 7, 3, "替换旧火魔并在附近召唤1只火魔。");
-            CreateConfig("SummonFireDemon_Lv2_Graph_Ability", summonLv2, 7, 3, "替换旧火魔并在3格内尝试召唤2只火魔。");
+            CreateConfig("IceBolt_Graph_Ability", Graph("IceBolt_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "造成8点冰霜魔法伤害并减速1回合。");
+            CreateConfig("IceBolt_Lv2_Graph_Ability", Graph("IceBolt_Lv2_Graph"), 4,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "造成8点冰霜魔法伤害并减速2回合。");
+            CreateConfig("IceBolt_Lv3_Graph_Ability", Graph("IceBolt_Lv3_Graph"), 4,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "命中后反弹至3格内最近的另一敌人。");
+            CreateConfig("Lightning_Graph_Ability", Graph("Lightning_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "无视路径与视线直接造成9点闪电魔法伤害。");
+            CreateConfig("Lightning_Lv2_Graph_Ability", Graph("Lightning_Lv2_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "直接造成9点闪电魔法伤害，并有25%概率眩晕。");
+            CreateConfig("Lightning_Lv3_Graph_Ability", Graph("Lightning_Lv3_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "直接造成11点闪电魔法伤害，并有50%概率眩晕。");
+            CreateConfig("SummonFireDemon_Graph_Ability", summonLv1, 7,
+                PureRunRangeCalibrationAssetBuilder.FireDemonSummonRange, "替换旧火魔并在附近召唤1只火魔。");
+            CreateConfig("SummonFireDemon_Lv2_Graph_Ability", summonLv2, 7,
+                PureRunRangeCalibrationAssetBuilder.FireDemonSummonRange, "替换旧火魔并在3格内尝试召唤2只火魔。");
             CreateConfig("IceArmor_Graph_Ability", armorLv1, 5, 0, "2回合内受到的伤害降低25%。");
             CreateConfig("IceArmor_Lv2_Graph_Ability", armorLv2, 5, 0, "冰甲减伤期间，近战攻击者会被减速2回合。");
-            CreateConfig("Teleport_Graph_Ability", teleportLv1, 8, 6, "瞬移到6格内可见的合法空格。");
-            CreateConfig("Teleport_Lv2_Graph_Ability", teleportLv2, 5, 6, "瞬移到6格内任意合法空格，无需视线。");
+            CreateConfig("Teleport_Graph_Ability", teleportLv1, 8,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "瞬移到4格内可见的合法空格。");
+            CreateConfig("Teleport_Lv2_Graph_Ability", teleportLv2, 5,
+                PureRunRangeCalibrationAssetBuilder.StandardPlayerRange, "瞬移到4格内任意合法空格，无需视线。");
             var fireAttackConfig = CreateConfig("FireDemonAttack_Ability", fireDemonAttack, 0, 3,
                 "对1至3格内敌人造成4点火焰魔法伤害并施加1层点燃。", isBasic: true);
 
@@ -237,7 +253,7 @@ namespace Tactics.Editor.SkillGraphEditor
             graph.Targeting.UsesPathfinding = false;
             var start = Add<StartNodeRecord>(graph, SkillGraphNodeType.Start);
             var teleport = Add<TeleportNodeRecord>(graph, SkillGraphNodeType.Teleport);
-            teleport.MaxRange = 6;
+            teleport.MaxRange = PureRunRangeCalibrationAssetBuilder.StandardPlayerRange;
             teleport.RequiresLineOfSight = requiresLineOfSight;
             var finish = Add<FinishNodeRecord>(graph, SkillGraphNodeType.Finish);
             Link(graph, start, teleport, finish);

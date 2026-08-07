@@ -1,4 +1,5 @@
 using NUnit.Framework;
+
 using System.Text.RegularExpressions;
 using Tactics.Cells;
 using Tactics.Common.Battle;
@@ -9,6 +10,7 @@ using Tactics.Common.Players;
 using Tactics.Common.Units;
 using Tactics.Common.Utilities;
 using UnityEngine;
+using UnityEditor;
 using Tactics.RoguelikeMap;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
@@ -45,46 +47,129 @@ namespace Tactics.Tests.Editor
         [Test]
         public void Validate_ReturnsFalse_WhenUnitPrefabPathMissing()
         {
-            var config = new EncounterConfig
-            {
-                EncounterId = "broken"
-            };
-            config.Units.Add(new EncounterUnitEntry
-            {
-                UnitName = "BrokenUnit"
-            });
+            var config = CreateValidConfig();
+            config.EncounterId = "broken";
+            config.Units[0].UnitName = "BrokenUnit";
+            config.Units[0].UnitPrefabPath = null;
 
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[EncounterConfigLoader\] Encounter unit #0 is missing unitPrefabPath: broken\.json"));
+                new Regex(@".*\[EncounterConfigLoader\] Encounter unit #0 is missing unitPrefabPath: broken\.json.*"));
             Assert.IsFalse(EncounterConfigLoader.Validate(config, "broken.json"));
+        }
+
+        [TestCase("party")]
+        [TestCase("enemy")]
+        [TestCase("blocked")]
+        public void Validate_ReturnsFalse_WhenAnyCellIsOutsideBattleBoard(string group)
+        {
+            var config = CreateValidConfig();
+            const string source = "bounds.json";
+            switch (group)
+            {
+                case "party":
+                    config.PartySpawnCells[0] = new BattleLayoutCell(10, 2);
+                    break;
+                case "enemy":
+                    config.Units[0].SpawnCellX = 10;
+                    config.Units[0].SpawnCellY = 2;
+                    break;
+                case "blocked":
+                    config.BlockedCells.Add(new BattleLayoutCell(10, 2));
+                    break;
+            }
+
+            LogAssert.Expect(
+                LogType.Error,
+                new Regex(@".*'10,2'.*bounds\.json.*"));
+            Assert.IsFalse(EncounterConfigLoader.Validate(config, source));
+        }
+
+        [TestCase(-1)]
+        [TestCase(0)]
+        [TestCase(2)]
+        public void Validate_ReturnsFalse_WhenPartySpawnCellsAreMissingOrFewerThanThree(int count)
+        {
+            var config = CreateValidConfig();
+            const string source = "party-count.json";
+            config.PartySpawnCells = count < 0
+                ? null
+                : config.PartySpawnCells.Take(count).ToList();
+
+            LogAssert.Expect(LogType.Error, new Regex(@".*party spawn cells.*party-count\.json.*"));
+            Assert.IsFalse(EncounterConfigLoader.Validate(config, source));
+        }
+
+        [TestCase("party")]
+        [TestCase("enemy")]
+        [TestCase("blocked")]
+        public void Validate_ReturnsFalse_WhenCellGroupContainsDuplicate(string group)
+        {
+            var config = CreateValidConfig();
+            const string source = "duplicate-group.json";
+            const string coordinate = "1,4";
+            switch (group)
+            {
+                case "party":
+                    config.PartySpawnCells[1] = new BattleLayoutCell(1, 4);
+                    break;
+                case "enemy":
+                    config.Units.Add(CreateValidUnit("EnemyDuplicate", 7, 4));
+                    break;
+                case "blocked":
+                    config.BlockedCells.Add(new BattleLayoutCell(4, 4));
+                    config.BlockedCells.Add(new BattleLayoutCell(4, 4));
+                    break;
+            }
+
+            string expectedCoordinate = group == "enemy" ? "7,4" : group == "blocked" ? "4,4" : coordinate;
+            LogAssert.Expect(
+                LogType.Error,
+                new Regex($@".*uplicate.*'{expectedCoordinate}'.*duplicate-group\.json.*"));
+            Assert.IsFalse(EncounterConfigLoader.Validate(config, source));
+        }
+
+        [TestCase("party-enemy")]
+        [TestCase("party-blocked")]
+        [TestCase("enemy-blocked")]
+        public void Validate_ReturnsFalse_WhenCellGroupsOverlap(string overlap)
+        {
+            var config = CreateValidConfig();
+            const string source = "overlap.json";
+            string coordinate;
+            switch (overlap)
+            {
+                case "party-enemy":
+                    coordinate = "1,4";
+                    config.Units[0].SpawnCellX = 1;
+                    config.Units[0].SpawnCellY = 4;
+                    break;
+                case "party-blocked":
+                    coordinate = "1,4";
+                    config.BlockedCells.Add(new BattleLayoutCell(1, 4));
+                    break;
+                default:
+                    coordinate = "7,4";
+                    config.BlockedCells.Add(new BattleLayoutCell(7, 4));
+                    break;
+            }
+
+            LogAssert.Expect(
+                LogType.Error,
+                new Regex($@".*overlap.*'{coordinate}'.*overlap\.json.*"));
+            Assert.IsFalse(EncounterConfigLoader.Validate(config, source));
         }
 
         [Test]
         public void Validate_ReturnsFalse_WhenSpawnCellsDuplicate()
         {
-            var config = new EncounterConfig
-            {
-                EncounterId = "duplicate-spawn"
-            };
-            config.Units.Add(new EncounterUnitEntry
-            {
-                UnitName = "UnitA",
-                UnitPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/HunterBlue.prefab",
-                AiBrainAssetPath = "Assets/Tactics/AI/BasicMeleeBrain.asset",
-                SpawnCellX = 1,
-                SpawnCellY = 2
-            });
-            config.Units.Add(new EncounterUnitEntry
-            {
-                UnitName = "UnitB",
-                UnitPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/Infantry Blue.prefab",
-                AiBrainAssetPath = "Assets/Tactics/AI/BasicMeleeBrain.asset",
-                SpawnCellX = 1,
-                SpawnCellY = 2
-            });
+            var config = CreateValidConfig();
+            config.EncounterId = "duplicate-spawn";
+            config.Units[0].SpawnCellX = 1;
+            config.Units[0].SpawnCellY = 2;
+            config.Units.Add(CreateValidUnit("UnitB", 1, 2));
 
             LogAssert.Expect(LogType.Error,
-                new Regex(@"\[EncounterConfigLoader\] Duplicate spawn cell '1,2' in encounter: duplicate\.json"));
+                new Regex(@".*\[EncounterConfigLoader\] Duplicate spawn cell '1,2' in encounter: duplicate\.json.*"));
             Assert.IsFalse(EncounterConfigLoader.Validate(config, "duplicate.json"));
         }
 
@@ -127,14 +212,72 @@ namespace Tactics.Tests.Editor
             var first = EncounterResolver.Resolve("Special", 7788);
             var second = EncounterResolver.Resolve("Special", 7788);
 
-            Assert.AreEqual("open", first.Layout.LayoutId);
+            Assert.AreEqual("special_open", first.Layout.LayoutId);
             Assert.AreEqual(1.8f, first.HealthMultiplier, 0.0001f);
             Assert.AreEqual(1.25f, first.OutputMultiplier, 0.0001f);
             Assert.AreEqual(1, first.Units.Count);
+            Assert.That(CellKey(first.Units[0].SpawnCell), Is.EqualTo("7,4"));
             Assert.AreEqual(first.Units[0].Monster.MonsterId, second.Units[0].Monster.MonsterId);
             Assert.That(
                 first.Units[0].Monster.MonsterId,
                 Is.EqualTo(EncounterCatalog.EliteChargerId).Or.EqualTo(EncounterCatalog.ElitePoisonCasterId));
+        }
+
+        [TestCase("open", "6,4|7,3|7,5|8,4", "")]
+        [TestCase("center_blocker", "6,3|6,6|7,4|7,5", "4,4|4,5|5,4|5,5")]
+        [TestCase("split_flank", "6,2|6,7|7,2|7,7", "4,3|5,4|4,6|5,5")]
+        public void EncounterCatalog_LayoutsMatchApprovedTenByTenMatrix(
+            string layoutId,
+            string expectedEnemyCells,
+            string expectedBlockedCells)
+        {
+            Assert.That(EncounterCatalog.TryGetLayout(layoutId, out var layout), Is.True);
+            Assert.That(
+                string.Join("|", layout.PartySpawnCells.Select(CellKey)),
+                Is.EqualTo("1,4|1,5|2,4"));
+            Assert.That(
+                string.Join("|", layout.SpawnCells.Select(CellKey)),
+                Is.EqualTo(expectedEnemyCells));
+            Assert.That(
+                string.Join("|", layout.BlockedCells.Select(CellKey)),
+                Is.EqualTo(expectedBlockedCells));
+        }
+
+        [Test]
+        public void ProductionSpawnConfigs_MatchApprovedTenByTenCoordinates()
+        {
+            var party = AssetDatabase.LoadAssetAtPath<BattlePartyTestConfig>(
+                "Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestParty.asset");
+            var encounter = AssetDatabase.LoadAssetAtPath<BattleEncounterTestConfig>(
+                "Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestEncounter.asset");
+            var corpseEncounter = AssetDatabase.LoadAssetAtPath<BattleEncounterTestConfig>(
+                "Assets/Tactics/ScriptableObjects/BattleTest/CorpseTestEncounter.asset");
+            var basicMeleeAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                "Assets/Tactics/GameData/Encounters/basic_melee.json");
+
+            Assert.That(party, Is.Not.Null);
+            Assert.That(encounter, Is.Not.Null);
+            Assert.That(corpseEncounter, Is.Not.Null);
+            Assert.That(basicMeleeAsset, Is.Not.Null);
+            Assert.That(
+                string.Join("|", party.Slots.Select(slot => $"{slot.SpawnCell.x},{slot.SpawnCell.y}")),
+                Is.EqualTo("1,4"));
+            Assert.That(
+                string.Join("|", encounter.Slots.Select(slot => $"{slot.SpawnCell.x},{slot.SpawnCell.y}")),
+                Is.EqualTo("6,4|7,3"));
+            Assert.That(
+                string.Join("|", corpseEncounter.Slots.Select(slot => $"{slot.SpawnCell.x},{slot.SpawnCell.y}")),
+                Is.EqualTo("6,4"));
+            Assert.That(
+                string.Join("|", corpseEncounter.CorpseSlots.Select(slot => $"{slot.SpawnCell.x},{slot.SpawnCell.y}")),
+                Is.EqualTo("4,4"));
+
+            string compactJson = Regex.Replace(basicMeleeAsset.text, @"\s+", string.Empty);
+            Assert.That(
+                compactJson,
+                Does.Contain("\"partySpawnCells\":[{\"X\":1,\"Y\":4},{\"X\":1,\"Y\":5},{\"X\":2,\"Y\":4}]"));
+            Assert.That(compactJson, Does.Contain("\"spawnCellX\":6,\"spawnCellY\":4"));
+            Assert.That(compactJson, Does.Contain("\"spawnCellX\":7,\"spawnCellY\":3"));
         }
 
         [Test]
@@ -154,9 +297,42 @@ namespace Tactics.Tests.Editor
                 !string.IsNullOrWhiteSpace(unit.AiBrainAssetPath) &&
                 unit.AbilityConfigPaths != null &&
                 unit.AbilityConfigPaths.Count >= 2 &&
+                unit.PlayerNumber == 2 &&
                 Math.Abs(unit.HealthMultiplier - 1.3f) < 0.0001f &&
                 Math.Abs(unit.OutputMultiplier - 1.15f) < 0.0001f));
             Assert.IsTrue(EncounterConfigLoader.Validate(config, "resolved-e1"));
+        }
+
+        [Test]
+        public void ResolvedEncounter_ToEncounterConfig_DeepCopiesAllLayoutCellGroups()
+        {
+            var layoutPartyProperty = typeof(BattleLayout).GetProperty("PartySpawnCells");
+            var configPartyField = typeof(EncounterConfig).GetField("PartySpawnCells");
+            Assert.That(layoutPartyProperty, Is.Not.Null, "BattleLayout.PartySpawnCells contract is missing.");
+            Assert.That(configPartyField, Is.Not.Null, "EncounterConfig.PartySpawnCells contract is missing.");
+
+            var resolved = EncounterResolver.Resolve("E1", 44);
+            var config = resolved.ToEncounterConfig();
+            var layoutParty = (List<BattleLayoutCell>)layoutPartyProperty.GetValue(resolved.Layout);
+            var configParty = (List<BattleLayoutCell>)configPartyField.GetValue(config);
+
+            Assert.That(configParty.Select(CellKey), Is.EqualTo(layoutParty.Select(CellKey)));
+            Assert.That(config.BlockedCells.Select(CellKey), Is.EqualTo(resolved.Layout.BlockedCells.Select(CellKey)));
+            Assert.That(config.Units.Select(unit => $"{unit.SpawnCellX},{unit.SpawnCellY}"),
+                Is.EqualTo(resolved.Units.Select(unit => CellKey(unit.SpawnCell))));
+            Assert.That(configParty.Zip(layoutParty, ReferenceEquals).Any(referenceEquals => referenceEquals), Is.False);
+            Assert.That(config.BlockedCells.Zip(resolved.Layout.BlockedCells, ReferenceEquals).Any(referenceEquals => referenceEquals), Is.False);
+
+            string originalParty = CellKey(layoutParty[0]);
+            string originalBlocked = CellKey(resolved.Layout.BlockedCells[0]);
+            string originalEnemy = CellKey(resolved.Units[0].SpawnCell);
+            configParty[0].X = 99;
+            config.BlockedCells[0].X = 99;
+            config.Units[0].SpawnCellX = 99;
+
+            Assert.That(CellKey(layoutParty[0]), Is.EqualTo(originalParty));
+            Assert.That(CellKey(resolved.Layout.BlockedCells[0]), Is.EqualTo(originalBlocked));
+            Assert.That(CellKey(resolved.Units[0].SpawnCell), Is.EqualTo(originalEnemy));
         }
 
         [Test]
@@ -504,6 +680,39 @@ namespace Tactics.Tests.Editor
                 .GroupBy(unit => unit.Monster.MonsterId)
                 .OrderBy(group => group.Key, StringComparer.Ordinal)
                 .Select(group => $"{group.Key}:{group.Count()}"));
+        }
+
+        private static string CellKey(BattleLayoutCell cell)
+        {
+            return $"{cell.X},{cell.Y}";
+        }
+
+        private static EncounterConfig CreateValidConfig()
+        {
+            var config = new EncounterConfig
+            {
+                EncounterId = "valid",
+                PartySpawnCells = new List<BattleLayoutCell>
+                {
+                    new BattleLayoutCell(1, 4),
+                    new BattleLayoutCell(1, 5),
+                    new BattleLayoutCell(2, 4)
+                }
+            };
+            config.Units.Add(CreateValidUnit("Enemy", 7, 4));
+            return config;
+        }
+
+        private static EncounterUnitEntry CreateValidUnit(string unitName, int x, int y)
+        {
+            return new EncounterUnitEntry
+            {
+                UnitName = unitName,
+                UnitPrefabPath = "Assets/Tactics/Arts/Prefabs/Units/HunterBlue.prefab",
+                AiBrainAssetPath = "Assets/Tactics/AI/BasicMeleeBrain.asset",
+                SpawnCellX = x,
+                SpawnCellY = y
+            };
         }
 
         private sealed class FakeUnitManager : IUnitManager

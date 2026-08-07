@@ -24,7 +24,7 @@ assertions:
     expected:
       healthMultiplier: 1.3
       outputMultiplier: 1.15
-      blockedCell: 15,27
+      blockedCell: 4,4
     parameters: {}
   - kind: encounterRecipeContract
     target: E2

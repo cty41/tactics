@@ -31,6 +31,9 @@ namespace Tactics.Common.Battle
 
         [JsonProperty("blockedCells")]
         public List<BattleLayoutCell> BlockedCells = new List<BattleLayoutCell>();
+
+        [JsonProperty("partySpawnCells")]
+        public List<BattleLayoutCell> PartySpawnCells = new List<BattleLayoutCell>();
     }
 
     [Serializable]
@@ -114,6 +117,7 @@ namespace Tactics.Common.Battle
     public sealed class BattleLayout
     {
         public string LayoutId { get; set; }
+        public List<BattleLayoutCell> PartySpawnCells { get; set; } = new List<BattleLayoutCell>();
         public List<BattleLayoutCell> SpawnCells { get; set; } = new List<BattleLayoutCell>();
         public List<BattleLayoutCell> BlockedCells { get; set; } = new List<BattleLayoutCell>();
     }
@@ -183,6 +187,9 @@ namespace Tactics.Common.Battle
             config.BlockedCells = Layout?.BlockedCells == null
                 ? new List<BattleLayoutCell>()
                 : Layout.BlockedCells.Select(cell => new BattleLayoutCell(cell.X, cell.Y)).ToList();
+            config.PartySpawnCells = Layout?.PartySpawnCells == null
+                ? new List<BattleLayoutCell>()
+                : Layout.PartySpawnCells.Select(cell => new BattleLayoutCell(cell.X, cell.Y)).ToList();
 
             foreach (var unit in Units)
             {
@@ -193,7 +200,7 @@ namespace Tactics.Common.Battle
                     UnitPrefabPath = unit.Monster.UnitPrefabPath,
                     AiBrainAssetPath = unit.Monster.AiBrainAssetPath,
                     AbilityConfigPaths = new List<string>(unit.Monster.AbilityConfigPaths),
-                    PlayerNumber = 1,
+                    PlayerNumber = 2,
                     SpawnCellX = unit.SpawnCell.X,
                     SpawnCellY = unit.SpawnCell.Y,
                     HealthMultiplier = unit.HealthMultiplier,
@@ -282,14 +289,16 @@ namespace Tactics.Common.Battle
         {
             return new Dictionary<string, BattleLayout>(StringComparer.OrdinalIgnoreCase)
             {
-                ["open"] = Layout("open", new[] { Cell(28, 24), Cell(32, 28), Cell(28, 28), Cell(32, 24) }),
+                ["open"] = Layout("open", new[] { Cell(6, 4), Cell(7, 3), Cell(7, 5), Cell(8, 4) }),
                 ["center_blocker"] = Layout(
                     "center_blocker",
-                    new[] { Cell(27, 24), Cell(33, 28), Cell(27, 28), Cell(33, 24) },
-                    new[] { Cell(30, 26) }),
+                    new[] { Cell(6, 3), Cell(6, 6), Cell(7, 4), Cell(7, 5) },
+                    new[] { Cell(4, 4), Cell(4, 5), Cell(5, 4), Cell(5, 5) }),
                 ["split_flank"] = Layout(
                     "split_flank",
-                    new[] { Cell(26, 24), Cell(34, 28), Cell(26, 28), Cell(34, 24) })
+                    new[] { Cell(6, 2), Cell(6, 7), Cell(7, 2), Cell(7, 7) },
+                    new[] { Cell(4, 3), Cell(5, 4), Cell(4, 6), Cell(5, 5) }),
+                ["special_open"] = Layout("special_open", new[] { Cell(7, 4) })
             };
         }
 
@@ -298,6 +307,12 @@ namespace Tactics.Common.Battle
             return new BattleLayout
             {
                 LayoutId = id,
+                PartySpawnCells = new List<BattleLayoutCell>
+                {
+                    Cell(1, 4),
+                    Cell(1, 5),
+                    Cell(2, 4)
+                },
                 SpawnCells = new List<BattleLayoutCell>(spawnCells),
                 BlockedCells = blockedCells == null
                     ? new List<BattleLayoutCell>()
@@ -324,7 +339,7 @@ namespace Tactics.Common.Battle
                 ["E2"] = Recipe("E2", "split_flank", 1.3f, 1.15f, Variant(RangedId, RangedId, AoeId, ChargerId)),
                 ["Special"] = Recipe(
                     "Special",
-                    "open",
+                    "special_open",
                     1.8f,
                     1.25f,
                     Variant(EliteChargerId),
@@ -522,6 +537,24 @@ namespace Tactics.Common.Battle
             return EncounterConfigLoader.ValidateForRuntime(encounter, source, manager);
         }
 
+        /// <summary>
+        /// Loads exactly one pending encounter source. A pending recipe is authoritative and
+        /// fails closed instead of falling back to a legacy encounter path.
+        /// </summary>
+        public static bool TryLoadPendingEncounter(
+            GameAssetManager manager,
+            out EncounterConfig encounter,
+            out string source)
+        {
+            string recipeId = PlayerPrefs.GetString(PendingEncounterRecipePrefsKey, string.Empty);
+            if (!string.IsNullOrWhiteSpace(recipeId))
+                return TryResolvePendingEncounter(manager, out encounter, out source);
+
+            source = GetPendingEncounterPath();
+            encounter = EncounterConfigLoader.Load(source, manager);
+            return encounter != null;
+        }
+
         public static void ClearPendingEncounter()
         {
             PlayerPrefs.DeleteKey(PendingEncounterPrefsKey);
@@ -653,7 +686,39 @@ namespace Tactics.Common.Battle
                 return false;
             }
 
+            if (config.PartySpawnCells == null || config.PartySpawnCells.Count < 3)
+            {
+                TLog.Error($"[EncounterConfigLoader] Encounter requires at least 3 party spawn cells: {sourcePath}");
+                return false;
+            }
+
+            var partyCells = new HashSet<string>(StringComparer.Ordinal);
             var occupiedCells = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var partyCell in config.PartySpawnCells)
+            {
+                if (partyCell == null)
+                {
+                    TLog.Error($"[EncounterConfigLoader] Encounter has a null party spawn cell: {sourcePath}");
+                    return false;
+                }
+
+                string partyKey = $"{partyCell.X},{partyCell.Y}";
+                if (!BattleBoardSpec.Contains(partyCell.X, partyCell.Y))
+                {
+                    TLog.Error($"[EncounterConfigLoader] Party spawn cell '{partyKey}' is outside battle board: {sourcePath}");
+                    return false;
+                }
+
+                if (!partyCells.Add(partyKey))
+                {
+                    TLog.Error($"[EncounterConfigLoader] Duplicate party spawn cell '{partyKey}' in encounter: {sourcePath}");
+                    return false;
+                }
+
+                occupiedCells.Add(partyKey);
+            }
+
+            var enemyCells = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < config.Units.Count; i++)
             {
                 var unit = config.Units[i];
@@ -683,15 +748,28 @@ namespace Tactics.Common.Battle
                 }
 
                 var cellKey = $"{unit.SpawnCellX},{unit.SpawnCellY}";
-                if (!occupiedCells.Add(cellKey))
+                if (!BattleBoardSpec.Contains(unit.SpawnCellX, unit.SpawnCellY))
+                {
+                    TLog.Error($"[EncounterConfigLoader] Enemy spawn cell '{cellKey}' is outside battle board: {sourcePath}");
+                    return false;
+                }
+
+                if (!enemyCells.Add(cellKey))
                 {
                     TLog.Error($"[EncounterConfigLoader] Duplicate spawn cell '{cellKey}' in encounter: {sourcePath}");
+                    return false;
+                }
+
+                if (!occupiedCells.Add(cellKey))
+                {
+                    TLog.Error($"[EncounterConfigLoader] Enemy spawn cell overlaps party spawn cell '{cellKey}': {sourcePath}");
                     return false;
                 }
             }
 
             if (config.BlockedCells != null)
             {
+                var blockedCells = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var blocked in config.BlockedCells)
                 {
                     if (blocked == null)
@@ -701,7 +779,19 @@ namespace Tactics.Common.Battle
                     }
 
                     string blockedKey = $"{blocked.X},{blocked.Y}";
-                    if (occupiedCells.Contains(blockedKey))
+                    if (!BattleBoardSpec.Contains(blocked.X, blocked.Y))
+                    {
+                        TLog.Error($"[EncounterConfigLoader] Blocked cell '{blockedKey}' is outside battle board: {sourcePath}");
+                        return false;
+                    }
+
+                    if (!blockedCells.Add(blockedKey))
+                    {
+                        TLog.Error($"[EncounterConfigLoader] Duplicate blocked cell '{blockedKey}' in encounter: {sourcePath}");
+                        return false;
+                    }
+
+                    if (!occupiedCells.Add(blockedKey))
                     {
                         TLog.Error($"[EncounterConfigLoader] Blocked cell overlaps spawn cell '{blockedKey}': {sourcePath}");
                         return false;

@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.Common.Skills.Graph;
 using Tactics.Common.Units.Abilities;
+using Tactics.Common.Units.Buffs;
 using Tactics.Common.Units.Tween;
 using Tactics.Editor.PresentationGraph;
+using Tactics.Editor.SkillGraphEditor;
 using UnityEditor;
 using UnityEngine;
 
@@ -531,6 +534,47 @@ namespace Tactics.Tests.Editor
 
             Assert.That(graph.Nodes.Exists(node => node is PlayPresentationCueNodeRecord), Is.True);
             Assert.That(graph.Nodes.Exists(node => node is PlayVisualCueNodeRecord), Is.False);
+        }
+
+        [Test]
+        public void NecromancerRebuildCurse_ProducesCanonicalPresentationCue()
+        {
+            const string graphName = "__Finding9_Curse_Graph";
+            const string graphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/__Finding9_Curse_Graph.asset";
+            AssetDatabase.DeleteAsset(graphPath);
+            try
+            {
+                var amplify = AssetDatabase.LoadAssetAtPath<BuffConfig>(
+                    "Assets/Tactics/ScriptableObjects/Buffs/CurseDamageAmplifier.asset");
+                var fear = AssetDatabase.LoadAssetAtPath<BuffConfig>(
+                    "Assets/Tactics/ScriptableObjects/Buffs/Fear.asset");
+                Assert.That(amplify, Is.Not.Null);
+                Assert.That(fear, Is.Not.Null);
+
+                MethodInfo buildCurse = typeof(NecromancerSliceAssetBuilder).GetMethod(
+                    "BuildCurse",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                Assert.That(buildCurse, Is.Not.Null);
+                buildCurse.Invoke(null, new object[]
+                {
+                    graphName,
+                    "Finding 9 Curse",
+                    NecromancerSkillKind.AmplifyDamage,
+                    1,
+                    amplify,
+                    fear,
+                    "Assets/Tactics/Arts/Prefabs/Units/Skeleton.prefab"
+                });
+
+                var graph = AssetDatabase.LoadAssetAtPath<SkillGraphAsset>(graphPath);
+                Assert.That(graph, Is.Not.Null);
+                Assert.That(graph.Nodes.Count(node => node is PlayPresentationCueNodeRecord), Is.EqualTo(1));
+                Assert.That(graph.Nodes.Any(node => node is PlayVisualCueNodeRecord), Is.False);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(graphPath);
+            }
         }
 
         [TestCase("PoisonSpear")]

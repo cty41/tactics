@@ -44,11 +44,31 @@ namespace Tactics.Tests.PlayMode
 
             Assert.That(elite.HealthMultiplier, Is.EqualTo(1.3f));
             Assert.That(elite.OutputMultiplier, Is.EqualTo(1.15f));
-            Assert.That(elite.Layout.BlockedCells.Select(cell => $"{cell.X},{cell.Y}"), Contains.Item("30,26"));
+            Assert.That(
+                elite.Layout.BlockedCells.Select(cell => $"{cell.X},{cell.Y}"),
+                Is.EqualTo(new[] { "4,4", "4,5", "5,4", "5,5" }));
             Assert.That(special.HealthMultiplier, Is.EqualTo(1.8f));
             Assert.That(special.OutputMultiplier, Is.EqualTo(1.25f));
+            Assert.That(
+                special.Layout.SpawnCells.Select(cell => $"{cell.X},{cell.Y}"),
+                Is.EqualTo(new[] { "7,4" }));
             Assert.That(EncounterCatalog.Monsters.Values.Select(monster => monster.AiBrainAssetPath).Distinct().Count(), Is.EqualTo(6));
             Assert.That(EncounterCatalog.Monsters[EncounterCatalog.RangedId].MinimumStartingMana, Is.EqualTo(15));
+        }
+
+        [Test]
+        public void EncounterRecipes_AllProvideThreePartySpawnCells()
+        {
+            var partyProperty = typeof(BattleLayout).GetProperty("PartySpawnCells");
+            Assert.That(partyProperty, Is.Not.Null, "BattleLayout.PartySpawnCells contract is missing.");
+
+            string[] recipeIds = { "N1", "N2", "N3", "N4", "N5", "N6", "E1", "E2", "Special" };
+            foreach (string recipeId in recipeIds)
+            {
+                var resolved = EncounterResolver.Resolve(recipeId, 1203);
+                var partyCells = (List<BattleLayoutCell>)partyProperty.GetValue(resolved.Layout);
+                Assert.That(partyCells, Has.Count.EqualTo(3), recipeId);
+            }
         }
 
         [Test]

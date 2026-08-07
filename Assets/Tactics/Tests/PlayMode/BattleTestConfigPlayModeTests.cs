@@ -20,6 +20,7 @@ namespace Tactics.Tests.PlayMode
         private GameObject _battleRoot;
         private GameObject _cellManagerRoot;
         private GameObject _unitContainer;
+        private bool _previousIgnoreFailingMessages;
 
         private GameObject CreateUnitTemplate()
         {
@@ -30,7 +31,8 @@ namespace Tactics.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            LogAssert.ignoreFailingMessages = true;
+            _previousIgnoreFailingMessages = LogAssert.ignoreFailingMessages;
+            LogAssert.ignoreFailingMessages = false;
 
             // Create cell grid
             _cellManagerRoot = new GameObject("TestCellManager");
@@ -79,19 +81,26 @@ namespace Tactics.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            LogAssert.ignoreFailingMessages = true;
-            yield return null;
-            yield return null;
-
-            // Destroy any leftover TilemapUnits from tests
-            foreach (var unit in Object.FindObjectsByType<TilemapUnit>(FindObjectsSortMode.None))
+            try
             {
-                if (unit != null && unit.gameObject != null)
-                    Object.DestroyImmediate(unit.gameObject);
+                yield return null;
+                yield return null;
+
+                // Destroy any leftover TilemapUnits from tests
+                foreach (var unit in Object.FindObjectsByType<TilemapUnit>(FindObjectsSortMode.None))
+                {
+                    if (unit != null && unit.gameObject != null)
+                        Object.DestroyImmediate(unit.gameObject);
+                }
+
+                if (_cellManagerRoot != null) Object.DestroyImmediate(_cellManagerRoot);
+                if (_battleRoot != null) Object.DestroyImmediate(_battleRoot);
+            }
+            finally
+            {
+                LogAssert.ignoreFailingMessages = _previousIgnoreFailingMessages;
             }
 
-            if (_cellManagerRoot != null) Object.DestroyImmediate(_cellManagerRoot);
-            if (_battleRoot != null) Object.DestroyImmediate(_battleRoot);
             yield return null;
         }
 
@@ -218,9 +227,10 @@ namespace Tactics.Tests.PlayMode
             SetPrivateField(bc, "_useTestSetup", false);
             SetPrivateField(bc, "_testPartyConfig", null);
 
-            // Act: production path runs (will try to load from save data and fail to find prefabs)
-            // Multiple error logs expected - suppress them all
-            LogAssert.ignoreFailingMessages = true;
+            // Act: production path runs without a GameAssetManager and fails closed.
+            LogAssert.Expect(
+                LogType.Error,
+                new System.Text.RegularExpressions.Regex(".*GameAssetManager unavailable while preparing encounter.*"));
             CallPrivate(bc, "SpawnPartyUnits");
             yield return null;
 

@@ -240,7 +240,7 @@ namespace Tactics.Units
         private float PreviewMaxMana => Mathf.Max(0f, Charisma * 3f);
 
         [FoldoutGroup("Derived Stats (Resources)"), ShowInInspector, ReadOnly, PropertyOrder(102), LabelText("Derived Max Movement Points")]
-        private float PreviewMaxMovementPoints => Mathf.Max(1f, Speed);
+        private float PreviewMaxMovementPoints => UnitDerivedStatRules.CalculateMovement(Speed);
 
         [FoldoutGroup("Derived Stats (Resources)"), ShowInInspector, ReadOnly, PropertyOrder(103), LabelText("Mana Regen per Turn (End)")]
         private int PreviewManaRegenPerTurn => Mathf.Max(0, Intelligence);

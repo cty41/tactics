@@ -678,7 +678,7 @@ namespace Tactics.Common.Units
         {
             MaxHealth = Mathf.Max(1, Constitution * 4);
             MaxMana = Mathf.Max(0, Charisma * 3);
-            MaxMovementPoints = Mathf.Max(1f, Speed);
+            MaxMovementPoints = UnitDerivedStatRules.CalculateMovement(Speed);
             Initiative = Speed * 2;
         }
 

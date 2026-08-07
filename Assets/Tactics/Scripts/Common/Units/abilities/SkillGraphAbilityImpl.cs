@@ -251,7 +251,7 @@ namespace Tactics.Common.Units.Abilities
             if (!_config.IsBasicAbility && _owner.Mana < _config.ManaCost)
                 return AbilityAvailability.Disabled($"需要 {_config.ManaCost} 点魔法");
             if (FirstSelectionRequiresCorpse() && !(gridController?.CellManager?.GetCells() ?? Enumerable.Empty<ICell>())
-                    .Any(HasCorpseInteractable))
+                    .Any(cell => NecromancerCorpseTargetRules.IsLegalCorpseTarget(cell, gridController)))
             {
                 return AbilityAvailability.Disabled("没有可用尸体");
             }
@@ -779,7 +779,7 @@ namespace Tactics.Common.Units.Abilities
             {
                 foreach (var cell in allCells)
                 {
-                    if (HasCorpseInteractable(cell))
+                    if (NecromancerCorpseTargetRules.IsLegalCorpseTarget(cell, _gridController))
                         displayCells.Add(cell);
                 }
                 return displayCells;
@@ -863,11 +863,17 @@ namespace Tactics.Common.Units.Abilities
 
             if (FirstSelectionRequiresTeleport())
             {
+                bool requiresLineOfSight = RequiresLineOfSight();
                 foreach (var cell in allCells)
                 {
                     int distance = cell.GetDistance(ownerCell);
-                    if (distance > 0 && distance <= range && !cell.IsTaken)
+                    if (distance > 0 &&
+                        distance <= range &&
+                        !cell.IsTaken &&
+                        (!requiresLineOfSight || HasLineOfSight(ownerCell, cell)))
+                    {
                         validCells.Add(cell);
+                    }
                 }
                 return validCells;
             }
@@ -876,7 +882,7 @@ namespace Tactics.Common.Units.Abilities
             {
                 foreach (var cell in allCells)
                 {
-                    if (HasCorpseInteractable(cell))
+                    if (NecromancerCorpseTargetRules.IsLegalCorpseTarget(cell, _gridController))
                         validCells.Add(cell);
                 }
                 return validCells;
@@ -1003,8 +1009,16 @@ namespace Tactics.Common.Units.Abilities
                 long vertical = (1L + 2L * iy) * nx;
                 if (horizontal == vertical)
                 {
-                    x += signX;
-                    y += signY;
+                    int cornerX = x + signX;
+                    int cornerY = y + signY;
+                    if (IsBlockingIntermediateCell(cornerX, y, targetX, targetY) ||
+                        IsBlockingIntermediateCell(x, cornerY, targetX, targetY))
+                    {
+                        return false;
+                    }
+
+                    x = cornerX;
+                    y = cornerY;
                     ix++;
                     iy++;
                 }
@@ -1026,6 +1040,16 @@ namespace Tactics.Common.Units.Abilities
             }
 
             return true;
+        }
+
+        private bool IsBlockingIntermediateCell(int x, int y, int targetX, int targetY)
+        {
+            if (x == targetX && y == targetY)
+                return false;
+
+            var cell = _gridController.CellManager.GetCellAt(
+                new Tactics.Common.Utilities.Vector2IntImpl(x, y));
+            return cell == null || IsLineBlocker(cell);
         }
 
         private static bool IsLineBlocker(ICell cell)
@@ -1145,16 +1169,6 @@ namespace Tactics.Common.Units.Abilities
             return first is SelectCorpseTargetNodeRecord;
         }
 
-        private bool HasCorpseInteractable(ICell cell)
-        {
-            if (cell == null) return false;
-            foreach (var interactable in cell.CurrentInteractables)
-            {
-                if (interactable is Corpse corpse && !corpse.IsDestroyed)
-                    return true;
-            }
-            return false;
-        }
 
         private int GetAllyRangeFromGraph()
         {

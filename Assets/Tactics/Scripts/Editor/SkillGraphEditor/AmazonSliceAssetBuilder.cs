@@ -31,11 +31,16 @@ namespace Tactics.Editor.SkillGraphEditor
             BuildPrimary("Thrust_Lv3_Graph", "突刺 Lv3", AmazonSkillKind.Thrust, 3, 3, null);
             BuildOrdered("MultiStab_Graph", "连续刺击 Lv1", 1, 3);
             BuildOrdered("MultiStab_Lv2_Graph", "连续刺击 Lv2", 2, 4);
-            BuildPrimary("PoisonSpear_Graph", "毒矛 Lv1", AmazonSkillKind.PoisonSpear, 1, 6, poison);
-            BuildPrimary("PoisonSpear_Lv2_Graph", "毒矛 Lv2", AmazonSkillKind.PoisonSpear, 2, 6, poison);
-            BuildPrimary("PoisonSpear_Lv3_Graph", "毒矛 Lv3", AmazonSkillKind.PoisonSpear, 3, 6, poison);
-            BuildPoint("RecoverSpear_Graph", "召唤长矛 Lv1", AmazonSkillKind.RecoverSpear, 1, 6);
-            BuildPoint("RecoverSpear_Lv2_Graph", "召唤长矛 Lv2", AmazonSkillKind.RecoverSpear, 2, 6);
+            BuildPrimary("PoisonSpear_Graph", "毒矛 Lv1", AmazonSkillKind.PoisonSpear, 1,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, poison);
+            BuildPrimary("PoisonSpear_Lv2_Graph", "毒矛 Lv2", AmazonSkillKind.PoisonSpear, 2,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, poison);
+            BuildPrimary("PoisonSpear_Lv3_Graph", "毒矛 Lv3", AmazonSkillKind.PoisonSpear, 3,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, poison);
+            BuildPoint("RecoverSpear_Graph", "召唤长矛 Lv1", AmazonSkillKind.RecoverSpear, 1,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange);
+            BuildPoint("RecoverSpear_Lv2_Graph", "召唤长矛 Lv2", AmazonSkillKind.RecoverSpear, 2,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange);
             BuildSelf("PickupSpear_Graph", "拾取长矛", AmazonSkillKind.PickupSpear, 1);
             BuildPoint("Decoy_Graph", "分身 Lv1", AmazonSkillKind.Decoy, 1, 2);
             BuildPoint("Decoy_Lv2_Graph", "分身 Lv2", AmazonSkillKind.Decoy, 2, 2);
@@ -45,11 +50,16 @@ namespace Tactics.Editor.SkillGraphEditor
             CreateConfig("Thrust_Lv3_Graph_Ability", Graph("Thrust_Lv3_Graph"), 3, 3, "移动距离会提高本次突刺伤害。", false);
             CreateConfig("MultiStab_Graph_Ability", Graph("MultiStab_Graph"), 8, 3, "依次选择3段刺击目标。", false);
             CreateConfig("MultiStab_Lv2_Graph_Ability", Graph("MultiStab_Lv2_Graph"), 8, 3, "依次选择4段刺击目标。", false);
-            CreateConfig("PoisonSpear_Graph_Ability", Graph("PoisonSpear_Graph"), 6, 6, "造成8点物理伤害并使目标中毒。", false);
-            CreateConfig("PoisonSpear_Lv2_Graph_Ability", Graph("PoisonSpear_Lv2_Graph"), 6, 6, "造成10点伤害并使十字5格敌人中毒。", false);
-            CreateConfig("PoisonSpear_Lv3_Graph_Ability", Graph("PoisonSpear_Lv3_Graph"), 6, 6, "造成10点伤害并使九宫格敌人中毒。", false);
-            CreateConfig("RecoverSpear_Graph_Ability", Graph("RecoverSpear_Graph"), 4, 6, "召回6格内的落地长矛。", false);
-            CreateConfig("RecoverSpear_Lv2_Graph_Ability", Graph("RecoverSpear_Lv2_Graph"), 4, 6, "召回长矛并电击相邻敌人。", false);
+            CreateConfig("PoisonSpear_Graph_Ability", Graph("PoisonSpear_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, "造成8点物理伤害并使目标中毒。", false);
+            CreateConfig("PoisonSpear_Lv2_Graph_Ability", Graph("PoisonSpear_Lv2_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, "造成10点伤害并使十字5格敌人中毒。", false);
+            CreateConfig("PoisonSpear_Lv3_Graph_Ability", Graph("PoisonSpear_Lv3_Graph"), 6,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, "造成10点伤害并使九宫格敌人中毒。", false);
+            CreateConfig("RecoverSpear_Graph_Ability", Graph("RecoverSpear_Graph"), 4,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, "召回5格内的落地长矛。", false);
+            CreateConfig("RecoverSpear_Lv2_Graph_Ability", Graph("RecoverSpear_Lv2_Graph"), 4,
+                PureRunRangeCalibrationAssetBuilder.ExtendedPlayerRange, "召回长矛并电击相邻敌人。", false);
             CreateConfig("PickupSpear_Graph_Ability", Graph("PickupSpear_Graph"), 0, 0, "免费拾取相邻落地长矛。", false);
             CreateConfig("Decoy_Graph_Ability", Graph("Decoy_Graph"), 6, 2, "后撤并在原地留下分身。", false);
             CreateConfig("Decoy_Lv2_Graph_Ability", Graph("Decoy_Lv2_Graph"), 6, 2, "后撤、留下分身并净化自身。", false);

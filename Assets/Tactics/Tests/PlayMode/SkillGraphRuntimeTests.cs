@@ -346,6 +346,7 @@ namespace Tactics.Tests.PlayMode
 
                 var casterCell = world.CreateSquareCell("CasterCell", 0, 0);
                 var targetCell = world.CreateSquareCell("TargetCell", 1, 0);
+                var destinationCell = world.CreateSquareCell("DestinationCell", 3, 0);
 
                 var caster = world.CreateUnit("Caster", playerNumber: 0, casterCell);
                 var target = world.CreateUnit("Target", playerNumber: 1, targetCell);
@@ -367,6 +368,55 @@ namespace Tactics.Tests.PlayMode
                 var result = task.Result;
                 Assert.AreEqual(SkillGraphExecutionState.Completed, result.ExecutionState);
                 Assert.That(result.ValidationErrors, Is.Empty);
+                Assert.That(targetCell.CurrentUnits, Is.Empty);
+                Assert.That(targetCell.IsTaken, Is.False);
+                Assert.That(destinationCell.CurrentUnits, Is.EqualTo(new IUnit[] { target }));
+                Assert.That(destinationCell.IsTaken, Is.True);
+                Assert.That(target.CurrentCell, Is.SameAs(destinationCell));
+            }
+            finally
+            {
+                world.Dispose();
+            }
+
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_KnockbackBeyondMaximumEdgeLeavesOccupancyUnchanged()
+        {
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                var graph = SkillGraphTestGraphFactory.CreateKnockbackGraph("KnockbackEdge", distance: 2, maxRange: 1);
+                var casterCell = world.CreateSquareCell("CasterCell", 7, 9);
+                var targetCell = world.CreateSquareCell("TargetCell", 8, 9);
+                var edgeCell = world.CreateSquareCell("EdgeCell", 9, 9);
+                var caster = world.CreateUnit("Caster", playerNumber: 0, casterCell);
+                var target = world.CreateUnit("Target", playerNumber: 1, targetCell);
+                world.SetTurnContext(world.PlayerOne, new IUnit[] { caster });
+                world.SetTurnContext(world.PlayerTwo, new IUnit[] { target });
+
+                var runner = new SkillGraphRuntimeTestRunner();
+                var task = runner.ExecuteAsync(new SkillGraphRuntimeTestRequest
+                {
+                    Name = "KnockbackEdge",
+                    Graph = graph,
+                    GridController = world.GridController,
+                    Caster = caster,
+                    PrimaryTarget = target
+                });
+                yield return WaitForTask(task);
+
+                Assert.That(task.Result.ExecutionState, Is.EqualTo(SkillGraphExecutionState.Completed));
+                Assert.That(targetCell.CurrentUnits, Is.EqualTo(new IUnit[] { target }));
+                Assert.That(targetCell.IsTaken, Is.True);
+                Assert.That(edgeCell.CurrentUnits, Is.Empty,
+                    "Out-of-bounds knockback must not clamp the target onto the legal edge cell.");
+                Assert.That(edgeCell.IsTaken, Is.False);
+                Assert.That(target.CurrentCell, Is.SameAs(targetCell));
+                Assert.That(target.CurrentCell.GridCoordinates.x, Is.EqualTo(8));
+                Assert.That(target.CurrentCell.GridCoordinates.y, Is.EqualTo(9));
             }
             finally
             {

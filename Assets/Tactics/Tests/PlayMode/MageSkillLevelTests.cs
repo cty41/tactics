@@ -93,8 +93,8 @@ namespace Tactics.Tests.PlayMode
                 var enemy = world.CreateUnit("Enemy", 1, world.CellManager.GetCellAt(new Tactics.Common.Utilities.Vector2IntImpl(1, 0)));
                 Prepare(fireDemon, enemy);
                 fireDemon.AttackRange = 3;
-                fireDemon.MovementPoints = 4f;
-                fireDemon.MaxMovementPoints = 4f;
+                fireDemon.MovementPoints = 2f;
+                fireDemon.MaxMovementPoints = 2f;
 
                 var brain = GameAssetManager.Instance.Load<AiBrainAsset>("Assets/Tactics/AI/FireDemonBrain.asset");
                 var context = AiContextBuilder.Build(fireDemon, world.GridController, brain);
@@ -161,8 +161,8 @@ namespace Tactics.Tests.PlayMode
                 var casterCell = world.CreateSquareCell("Caster", 0, 0);
                 world.CreateSquareCell("Line", 1, 0);
                 var primaryCell = world.CreateSquareCell("Primary", 2, 0);
-                var bounceCell = world.CreateSquareCell("Bounce", 2, 2);
-                var farCell = world.CreateSquareCell("Far", 6, 2);
+                var bounceCell = world.CreateSquareCell("BounceAtRadius", 2, 3);
+                var farCell = world.CreateSquareCell("BeyondBounceRadius", 2, 4);
                 var caster = world.CreateUnit("Mage", 0, casterCell);
                 var primary = world.CreateUnit("PrimaryEnemy", 1, primaryCell);
                 var bounce = world.CreateUnit("BounceEnemy", 1, bounceCell);
@@ -178,10 +178,42 @@ namespace Tactics.Tests.PlayMode
 
                 yield return Execute(world, caster, primaryCell, "IceBolt_Lv3_Graph_Ability.asset");
                 Assert.That(primary.Health, Is.EqualTo(12f));
-                Assert.That(bounce.Health, Is.EqualTo(16f));
-                Assert.That(far.Health, Is.EqualTo(20f));
+                Assert.That(bounce.Health, Is.EqualTo(16f),
+                    "Level-three bounce accepts a target exactly three cells away.");
+                Assert.That(far.Health, Is.EqualTo(20f),
+                    "Level-three bounce rejects a target four cells away.");
                 Assert.That(Status(primary, BuffEffectType.Slow).RemainingTurns, Is.EqualTo(2));
                 Assert.That(Status(bounce, BuffEffectType.Slow).RemainingTurns, Is.EqualTo(1));
+            }
+            finally
+            {
+                world.Dispose();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator IceBoltLevelThree_RejectsBounceAtDistanceFourWithoutNearerCandidate()
+        {
+            var world = new SkillGraphTestWorld();
+            try
+            {
+                var casterCell = world.CreateSquareCell("Caster", 0, 0);
+                world.CreateSquareCell("Line", 1, 0);
+                var primaryCell = world.CreateSquareCell("Primary", 2, 0);
+                var farCell = world.CreateSquareCell("BeyondBounceRadius", 2, 4);
+                var caster = world.CreateUnit("Mage", 0, casterCell);
+                var primary = world.CreateUnit("PrimaryEnemy", 1, primaryCell);
+                var far = world.CreateUnit("FarEnemy", 1, farCell);
+                Prepare(caster, primary, far);
+                world.SetTurnContext(world.PlayerOne, new[] { caster });
+                world.SetTurnContext(world.PlayerTwo, new[] { primary, far });
+
+                yield return Execute(world, caster, primaryCell, "IceBolt_Lv3_Graph_Ability.asset");
+
+                Assert.That(primary.Health, Is.EqualTo(12f));
+                Assert.That(far.Health, Is.EqualTo(20f),
+                    "Level-three bounce rejects distance four when no nearer candidate can mask the boundary.");
+                Assert.That(Status(far, BuffEffectType.Slow), Is.Null);
             }
             finally
             {
@@ -254,6 +286,11 @@ namespace Tactics.Tests.PlayMode
                 var first = registry.GetOrdered(caster, "FireDemon").Single();
                 Assert.That(first.CurrentCell, Is.SameAs(onlyOpenCell));
                 Assert.That(first.CanReceiveHealing, Is.True);
+                Assert.That(first.Speed, Is.EqualTo(4f));
+                Assert.That(first.MaxMovementPoints, Is.EqualTo(2f));
+                Assert.That(first.MovementPoints, Is.EqualTo(2f));
+                Assert.That(first.Initiative, Is.EqualTo(8f),
+                    "Movement recalibration must not alter speed-derived initiative.");
 
                 var secondOpenCell = world.CreateSquareCell("SecondOpen", 0, 1);
                 caster.Mana = 20f;
@@ -307,7 +344,7 @@ namespace Tactics.Tests.PlayMode
         }
 
         [Test]
-        public void TeleportLevels_ChangeManaAndVisibilityRequirementOnly()
+        public void TeleportLevels_ChangeManaAndVisibilityWhileSharingFixedBoardRange()
         {
             var levelOne = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>($"{ConfigRoot}Teleport_Graph_Ability.asset");
             var levelTwo = GameAssetManager.Instance.Load<SkillGraphAbilityConfig>($"{ConfigRoot}Teleport_Lv2_Graph_Ability.asset");
@@ -315,8 +352,8 @@ namespace Tactics.Tests.PlayMode
             Assert.That(levelTwo.ManaCost, Is.EqualTo(5));
             Assert.That(levelOne.SkillGraph.Nodes.OfType<TeleportNodeRecord>().Single().RequiresLineOfSight, Is.True);
             Assert.That(levelTwo.SkillGraph.Nodes.OfType<TeleportNodeRecord>().Single().RequiresLineOfSight, Is.False);
-            Assert.That(levelOne.TargetRange, Is.EqualTo(6));
-            Assert.That(levelTwo.TargetRange, Is.EqualTo(6));
+            Assert.That(levelOne.TargetRange, Is.EqualTo(4));
+            Assert.That(levelTwo.TargetRange, Is.EqualTo(4));
         }
 
         private static SkillGraphTestWorld CreateLineWorld(out Unit caster, out Unit primary, out Unit adjacent)
