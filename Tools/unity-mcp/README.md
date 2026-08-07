@@ -48,3 +48,40 @@ This safety boundary prevents project code from overriding a manual Disconnect o
 Current status (2026-08-07): automatic recovery remains `0/5`, `blocked_upstream`, and unverified. MCPForUnity 10.1.0 can still create concurrent reconnect continuations and evict sessions after a reload; 10.1.2 has no relevant source fix. A future automatic-recovery design requires a user-cancellable per-Editor owner and a new stable package/server that passes the source gate before the five-reload matrix is restarted.
 
 The current stable 10.1.2 release does not modify the HTTP reload handler, WebSocket registered-message path, or tool discovery implementation relative to 10.1.0. It therefore does not satisfy this project's source gate and is not adopted as a reconnect fix. Future upgrades must use an exact stable Unity package and matching `mcpforunityserver` version, pass the relevant source diff, then pass the five-reload matrix. Forks and edits under `Library/PackageCache` are prohibited.
+
+## Timeout layers
+
+| Layer | Setting | Unit | Project guidance |
+|---|---|---:|---:|
+| MiMoCode MCP request | `mcp.unity-MCP.timeout` | milliseconds | `300000` |
+| Test initialization | `run_tests.init_timeout` | milliseconds | `120000` |
+| Test job long poll | `get_test_job.wait_timeout` | seconds | `30` |
+
+The MiMoCode timeout prevents the client from abandoning a legitimate long request after its default five seconds. It does not change server command/readiness budgets, WebSocket heartbeat behavior, tool discovery, or bridge reconnection.
+
+## Batched Unity test gates
+
+`Manage-UnityTestGate.ps1` creates canonical `run_tests` payloads and records MCP job IDs/results under the ignored `Library/MCPForUnity/TestGates` directory. It does not implement MCP HTTP or call Unity itself.
+
+Create one targeted gate with all related names grouped by mode:
+
+```powershell
+$gate = & Tools/unity-mcp/Manage-UnityTestGate.ps1 `
+    -Create -Scope Targeted `
+    -EditModeTestName @('Namespace.EditorTestA', 'Namespace.EditorTestB') `
+    -PlayModeTestName @('Namespace.PlayTestA') | ConvertFrom-Json
+```
+
+Use `-Next -GateId $gate.gateId` to atomically reserve the one project-wide test slot and retrieve the next canonical payload plus `reservationId`. After `run_tests` returns, bind its ID with `-RecordStart -ReservationId <id>`; after `get_test_job` reaches a terminal state, use `-RecordResult`. Finish with `-Validate`. A reserved/running job blocks every gate in the worktree, and a replacement reservation requires the failed job ID plus a supersede reason.
+
+Rules:
+
+- Compile once after the final C# edit.
+- Use at most one targeted job per mode.
+- Final regular coverage is one full EditMode job plus one full PlayMode job.
+- `[Explicit]` profiler/benchmark tests use an `Explicit` gate and exact test names.
+- If `run_tests` returns a job ID, record it immediately. A later client timeout does not prove the job failed; reconnect and query that ID.
+- If `run_tests` itself times out before returning an ID, keep the reservation and stop. Only after independent evidence proves no job was created may `-CancelReservation` release it; do not retry blindly.
+- Cancellation requires a non-whitespace evidence reason and persists the reservation ID, reason, and cancellation time in gate state.
+- Every attempt persists the consumed reservation ID; idempotent `RecordStart` must replay both that reservation ID and the MCP job ID.
+- Do not put two `run_tests` calls in `batch_execute`; Unity MCP permits only one active test job.

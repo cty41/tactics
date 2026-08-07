@@ -140,6 +140,9 @@ find_gameobjects → manage_vfx (particle_play / particle_stop / line_set_positi
 - **Asset refresh**: Use `refresh_unity` after external asset changes to sync the AssetDatabase.
 - **Console monitoring**: Use `read_console` to check for errors after operations. Filter by `types=["error","warning"]`.
 - **Test workflow**: `run_tests` (async) → `get_test_job` (poll) — tests run asynchronously.
+- **Development-only batched test helper**: `Tools/unity-mcp/Manage-UnityTestGate.ps1` is a local draft helper, not a mandatory `run_tests` prerequisite or a CI/release authority. When used, group all related names into at most one targeted job per mode; `-Next` reserves the single worktree test slot, and its reservation must be passed to `-RecordStart` immediately after receiving the MCP job ID. Whether tests are started directly or through the helper, one MCP timeout does not authorize a duplicate job.
+- **Final coverage**: Run one unfiltered EditMode job and one unfiltered PlayMode job. Keep `[Explicit]` profiler and benchmark tests in separate exact-name gates. Never start both modes concurrently or use `batch_execute` as a test batching mechanism.
+- **Timeout units**: `run_tests.init_timeout=120000` is milliseconds; `get_test_job.wait_timeout=30` is seconds. The project MiMoCode MCP timeout is a separate 300000-millisecond client budget.
 
 ## Anti-patterns
 
@@ -148,6 +151,9 @@ find_gameobjects → manage_vfx (particle_play / particle_stop / line_set_positi
 | Editing C# and skipping compile | `validate_script` then `refresh_unity(compile="request")` | Catches compile errors immediately |
 | Using `execute_code` for routine edits | Use script edit tools | Keeps changes reviewable and persistent |
 | Polling tests without wait timeout | Use `get_test_job(wait_timeout=30)` | Avoids tight polling loops |
+| Running one `run_tests` per test name | Pass the gate's grouped `test_names` array | Avoids repeated dirty preflight, reload, and duplicate jobs |
+| Retrying after a client timeout without the old job state | Query the gate's recorded job ID first | A timeout does not prove that Unity failed to create or finish the job |
+| Retrying when `run_tests` timed out before returning an ID | Keep the reservation and stop until independent evidence proves no job exists | Without an ID, a retry can create an orphaned duplicate job |
 | Ignoring console errors after operations | Read console errors/warnings | Unity failures often appear only in Console |
 
 ## Checklist

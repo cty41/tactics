@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-08-07T09:13:33+08:00"
+timestamp: "2026-08-07T10:37:42+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -29,7 +29,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
   - Tools/unity-mcp
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:58dae0f77b675c43de501a3bb39a711a44a68958810697313b3eb07f5ee461d6
+source_fingerprint: sha256:c2b2296bdaedd44ac3bc4841178b03f7b7d52427768d7872c822e8f78d471ea2
 ---
 
 # Core Rules

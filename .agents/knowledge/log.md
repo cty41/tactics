@@ -1,7 +1,7 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-07
-* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:58dae0f77b675c43de501a3bb39a711a44a68958810697313b3eb07f5ee461d6`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:c2b2296bdaedd44ac3bc4841178b03f7b7d52427768d7872c822e8f78d471ea2`。
 * **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:b644433ffd83779a27c50b1bf13cb3304aef10f0e43dd30200ab1ad9dfa565d3`。
 
 ## 2026-08-06

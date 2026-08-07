@@ -136,6 +136,7 @@ Unity 编译、测试、构建、截图、视觉 QA 和连接恢复必须遵循[
 | worktree 本地真相源（忽略） | `.agents/mcp.json` |
 | Codex 本地派生配置（忽略） | `.codex/config.toml` |
 | OpenCode 本地派生配置（忽略） | `.opencode/opencode.json` |
+| MiMoCode 本地派生配置（忽略） | `.mimocode/mimocode.json` |
 | Git 跟踪模板 | `*.template.*` |
 | Claude Code | `.claude/claude_code_config.json` |
 | Cursor | `.cursor/mcp.json` |

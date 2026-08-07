@@ -59,6 +59,7 @@ scopes:
       - AGENTS.md
       - .agents/rules
       - .agents/skills/unity-mcp-core
+      - .agents/skills/unity-mcp-advanced
       - .agents/skills/mcp-connection-troubleshooting
       - .agents/skills/unity-auto-compile-guard
       - .agents/skills/project-doc-organization
@@ -73,7 +74,12 @@ scopes:
       - Assets/Tactics/Scripts/UI/RadialFillElement.cs
       - Assets/Tactics/Scripts/Editor/MCP
       - Assets/Tactics/Tests/Editor/UnityMcpProjectBootstrapTests.cs
+      - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
+      - Packages/manifest.json
+      - Packages/packages-lock.json
       - Tools/unity-mcp
+      - .mimocode/mimocode.template.json
+      - .gitignore
       - Tools/agent-policy
 
   okf-maintenance:
@@ -89,6 +95,11 @@ scopes:
     concept: plans/project-known-gaps.md
     paths:
       - .agents/docs/project-known-gaps.md
+      - Assets/Tactics/Scripts/Editor/MCP/UnityMcpProjectBootstrap.cs
+      - Assets/Tactics/Tests/Editor/UnityMcpProjectBootstrapTests.cs
+      - Packages/manifest.json
+      - Packages/packages-lock.json
+      - Tools/unity-mcp/README.md
 
   battle-system:
     concept: systems/battle.md
