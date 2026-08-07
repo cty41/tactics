@@ -55,22 +55,22 @@ powershell.exe -File Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1 -RestoreMig
 
 ### Domain reload 后反复断线
 
-若 MCP 手动启动后可用，但编译、进出 Play Mode 或资源重导入后再次出现 `Session not found`，检查 Console 是否包含：
+若 MCP 手动启动后可用，但编译、进出 Play Mode 或资源重导入后再次出现 `Session not found`，不要等待项目 bootstrap 自动恢复。`UnityMcpProjectBootstrap` 现在只做 batch/import-worker 进程 guard，普通 Editor 路径显式 no-op；它不读取配置、不写 `EditorPrefs`/`SessionState`、不注册 callback，也不启动、停止、连接、验证或重试 server/bridge。
 
-```text
-[UnityMCP] Project bootstrap skipped: Could not read <worktree>/.agents/mcp.json
-```
+这意味着项目代码不再覆盖 manual Disconnect，也不再与 package reload handler 竞争 lifecycle ownership；但 MCPForUnity 10.1.x 自身仍可能按机器级偏好和 package 实现重连，项目不保证 domain reload 后恢复，也不承诺并行 Editor/worktree 隔离。
 
-项目会关闭 MCPForUnity 包级共享 auto-start，由 `UnityMcpProjectBootstrap` 独占每个 worktree 的桥启动。缺少 `mcp.json` 时，旧版本 bootstrap 会在重启桥之前返回，因此每次 domain reload 都会断线。当前 bootstrap 可临时回退到 `mcp.local.json` 并输出 Warning，但仍应立即运行 `-RestoreMigration` 恢复正式配置；若两个文件都不存在，则用显式 `-Url` 完整初始化。
+断线时：
 
-正常的脚本编译或 Play Mode 切换会短暂关闭 Unity 插件 Session。当前 bootstrap 在每个新 Editor Domain 中只通过一次 `EditorApplication.delayCall` 执行重连：
+1. 保留已有 test job ID，不重复启动未知 job。
+2. 重新读取 `.agents/mcp.json`，运行配置 `--check`，验证端口和 Unity 进程。
+3. MCP 仍可调用时读取 `instances`/`project/info`；若 bridge 不可用则停止自动化，请用户手动恢复。
+4. 用户恢复后重新核对 `projectRoot`，再查询原 job 或继续任务。
 
-- 已验证的活动 Bridge 保持不动。
-- 本地 MCP Server 已可达时直接连接 Bridge，不依赖 PID 文件，也不重启 Server。
-- Server 不可达时才启动并等待它就绪。
-- Bridge 启动或验证暂时失败时有限重试；不会停止未知端口进程。
+不要通过反复点击 Connect、窗口焦点自动化或启动第二个 server 掩盖连接问题。自动恢复正式验收仍是延期项：当前状态 `0/5`、`blocked_upstream`；只有新的上游 stable 通过源码门后才从 0 重启连续五次 reload。MiMoCode 项目配置的 `timeout: 300000`、`run_tests.init_timeout=120000` 和 `get_test_job.wait_timeout=30` 只控制各自等待预算，不能修复 bridge 或 receive loop。
 
-验证自动恢复时只轮询 `mcpforunity://instances`。短暂的 `no_unity_session` 可以重试；若超过重连窗口仍无实例，再检查 Console 和 server launch log。不要通过反复点击 Connect 或窗口焦点自动化掩盖 bootstrap 故障。
+`Manage-UnityTestGate.ps1` 当前只是未正式发布的本地 draft helper，不是运行 Unity 测试的强制前置，也不是 CI/发布事实源。开发期保持单 Editor、单执行者、单 test job；直接或通过 helper 取得 job ID 后都只查询原 job。`run_tests` 在返回 ID 前超时时停止并确认状态，禁止盲目重启。
+
+截至 2026-08-07，项目 bootstrap 已收缩为 guard 后 no-op；项目层 lifecycle 干预已移除，但 MCPForUnity 10.1.0 的 reconnect continuation/session eviction 和 10.1.2 未修复的 receive-loop/tool-discovery 路径仍在。当前仍是 `0/5`、`blocked_upstream`，不得把本地冷启动或一次定向测试成功写成自动恢复通过。
 
 ### Step 2: 提取端口信息
 

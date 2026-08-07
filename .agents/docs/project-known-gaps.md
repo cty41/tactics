@@ -38,6 +38,17 @@
 | `deferred` | Gameplay Test 未接入 CI。 | 项目当前没有 CI 流程。 | 建立可稳定启动 Unity 的 CI 环境。 | Framework Roadmap 旧计划 |
 | `needs-decision` | SkillGraph 更强的循环、阶段与目标语义静态检查仍可扩展。 | 静态校验与运行测试的职责边界需先确定。 | 收集真实误配案例并定义可判定规则。 | SkillGraph 旧计划 |
 
+## Unity MCP 可靠性
+
+| 状态 | 缺口与证据 | 未激活原因 | 激活条件 | 历史来源 |
+|---|---|---|---|---|
+| `verified-gap` | MCPForUnity 10.1.0/10.1.2 在 `registered` 处理期间同步等待 Unity 主线程工具发现，receive loop 无法同时处理 ping；10.1.2 的相关三个源码文件没有变化。 | 当前任务只允许稳定版升级，禁止 fork；尚无满足源码门的发布版。 | 上游 stable 同时发布匹配 Unity package/server，并让工具发现 pending 时 receive loop 仍可响应、旧 session 结果不会写入新连接。 | Unity MCP 重连调查 2026-08-06 |
+| `verified-gap` | 后台测试轮询的上游 focus nudge 可能调用 Windows 前台激活，与项目焦点保护规则冲突，当前 10.1.x 未提供正式 opt-out。 | 项目不允许用窗口激活推进后台测试；本地不能安全补丁 PackageCache。 | 上游提供可配置关闭开关，或新稳定版移除对前台焦点的依赖并通过后台测试。 | Unity MCP 测试合批调查 2026-08-06 |
+| `verified-gap` | 自动恢复仍为 `0/5`、`blocked_upstream`。项目 bootstrap 已收缩为 batch/import-worker guard 后显式 no-op，5 个定向 EditMode case 通过；项目不再覆盖 manual Disconnect、不再写 endpoint/preference，也不再 start/stop/connect/verify/retry。包层 10.1.0 仍可能创建并发 reconnect continuation 和 session eviction，10.1.2 相关源码未修复。 | 开发期优先消除项目层副作用，不在当前切片建设新的自动恢复 owner；定向 guard 测试不能替代真实 reload 稳定性。 | 先等待上游 stable 通过 receive-loop/tool-discovery 源码门；若未来确需自动恢复，再设计可被用户接管的 per-Editor owner，并在同一 Editor、零手动 Connect/重启/前台自动化条件下从 0 完成连续 5 次 reload。 | Unity MCP 安全收缩 2026-08-07 |
+| `verified-gap` | MCPForUnity 10.1.x 的 transport、scope、local endpoint 与 auto-start 公共 API 最终写入机器级 `EditorPrefs`；并行打开其他 Unity 项目时仍可能观察到本项目配置。项目 bootstrap 已停止每 Domain 重写 endpoint，因此只保证项目层不再扩大竞争，不提供跨项目存储隔离。 | 当前只允许上游稳定版升级，不能 fork 包并改写配置存储。 | 上游提供 project/editor-instance scoped 配置 API，或稳定版实现不依赖机器级偏好，并通过多 Editor/worktree 隔离验证。 | Unity MCP 生命周期审查 2026-08-07 |
+| `deferred` | `Manage-UnityTestGate.ps1` 仍是本地 draft helper，尚未完成无歧义 canonical commitment、attempt-local result、单次 StateRoot snapshot、全根 fail-closed、严格 migration/replay 与确定性并发，因此不能作为 CI、发布或审计事实源。 | 当前开发只要求单 Editor、单执行者、单 test job；完善 final v3 的收益低于玩法回归。 | 建立 CI/发布认证、多执行者并发或正式审计需求，并为 final-v3 契约建立独立计划。 | Unity Test Gate closing review 2026-08-06 |
+| `deferred` | 历史 Git 提交曾包含 Context7 凭据；当前 tracked tree 与 Phase A 新 blob 已移除凭据形态，但服务端撤销/轮换状态未知，Git 历史未重写。 | 用户明确接受开发期剩余风险，先完成仓库侧防复发与逻辑开发。 | 在 Context7 供应商侧撤销/轮换旧 key，并只记录完成确认，不记录凭据值。 | Unity MCP 配置迁移 2026-08-07 |
+
 ## Pure Run、奖励与内容扩展
 
 | 状态 | 缺口与证据 | 未激活原因 | 激活条件 | 历史来源 |

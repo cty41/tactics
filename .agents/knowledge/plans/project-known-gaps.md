@@ -4,20 +4,27 @@ resource: https://github.com/cty41/tactics/blob/main/.agents/docs/project-known-
 title: Project Known Gaps
 description: 已从当前实现确认但尚未获批为活跃开发计划的集中缺口目录。
 tags: [planning, backlog, gaps]
-timestamp: "2026-07-23T06:43:13+08:00"
+timestamp: "2026-08-07T09:12:05+08:00"
 status: active
 catalog_scope: project-known-gaps
 repo_paths:
   - .agents/docs/project-known-gaps.md
+  - Assets/Tactics/Scripts/Editor/MCP/UnityMcpProjectBootstrap.cs
+  - Assets/Tactics/Tests/Editor/UnityMcpProjectBootstrapTests.cs
+  - Packages/manifest.json
+  - Packages/packages-lock.json
+  - Tools/unity-mcp/README.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:67cfe68ebcea5cdba1230c8c18ae935dc45a2b2a7f7c5d1acfbf983ded90ef1b
+source_fingerprint: sha256:b644433ffd83779a27c50b1bf13cb3304aef10f0e43dd30200ab1ad9dfa565d3
 ---
 
 # Current State
 
-权威缺口清单按 `verified-gap`、`needs-decision`、`deferred` 和 `idea` 区分确定性。当前覆盖 Monster AI、事件编辑器、Gameplay Test、SkillGraph、Pure Run 内容扩展、战斗反馈和配置硬编码。
+权威缺口清单按 `verified-gap`、`needs-decision`、`deferred` 和 `idea` 区分确定性。当前覆盖 Monster AI、事件编辑器、Gameplay Test、SkillGraph、Unity MCP 可靠性、Pure Run 内容扩展、战斗反馈和配置硬编码。
 
 该清单不是活跃开发计划。某项只有在满足文档中的激活条件、范围获得确认并建立可验收计划后才进入执行。
+
+Unity MCP 自动恢复当前明确为 `0/5`、`blocked_upstream`：项目 bootstrap 已安全收缩为 batch/import-worker guard 后 no-op，不再覆盖 manual Disconnect，也不再写 endpoint/preference 或持有 start/stop/connect/verify/retry owner；MCPForUnity 10.1.0 包内部 reconnect continuation/session eviction 与 10.1.2 未通过的源码门仍是上游缺口。Test Gate final v3、Context7 旧凭据撤销和连续 5 次 reload 均为 deferred；仅在各自激活条件满足后建立独立计划。
 
 # Relationships
 

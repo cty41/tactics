@@ -38,3 +38,13 @@ Initialize, prepare, restore, and sync serialize on the tracked `ProjectMcpConfi
 - `__UNITY_MCP_URL__` must appear exactly once as the complete managed URL value, and rendered output is validated again.
 
 `--check` is read-only: it opens the existing lock anchor but does not create directories/files, clean residuals, or modify bytes/timestamps. Mutating operations clean only tool-owned `<target>.<positive-pid>.<32-hex-guid>.tmp|bak` residuals after preflight. Git ignore patterns are intentionally broader than this deletion grammar so crash artifacts or hand-created backups cannot be staged accidentally. Ordinary caught write/delete failures restore the original file bytes and existence; the source is committed after derived outputs, and restore deletes its migration backup last. A process hard-kill or power loss is not claimed to be cross-file atomic; ignored sidecars are recovered by the next successful mutating operation.
+
+## Domain reload ownership
+
+`UnityMcpProjectBootstrap` is intentionally a guarded no-op. It returns immediately in batch mode and Asset Import Worker processes; in an interactive main Editor it still does not read endpoint configuration, write `EditorPrefs` or `SessionState`, register callbacks, or start, stop, connect, verify, poll, or retry the MCP server or bridge. MCPForUnity and explicit user actions retain lifecycle ownership.
+
+This safety boundary prevents project code from overriding a manual Disconnect or competing with package reload handling. It does not disable package-owned behavior, make machine-global package preferences worktree-safe, or guarantee reconnection after compilation, Play Mode transitions, or domain reload. If the bridge does not recover in the background, preserve any test job ID and ask the user to restore it manually; do not use foreground-window automation.
+
+Current status (2026-08-07): automatic recovery remains `0/5`, `blocked_upstream`, and unverified. MCPForUnity 10.1.0 can still create concurrent reconnect continuations and evict sessions after a reload; 10.1.2 has no relevant source fix. A future automatic-recovery design requires a user-cancellable per-Editor owner and a new stable package/server that passes the source gate before the five-reload matrix is restarted.
+
+The current stable 10.1.2 release does not modify the HTTP reload handler, WebSocket registered-message path, or tool discovery implementation relative to 10.1.0. It therefore does not satisfy this project's source gate and is not adopted as a reconnect fix. Future upgrades must use an exact stable Unity package and matching `mcpforunityserver` version, pass the relevant source diff, then pass the five-reload matrix. Forks and edits under `Library/PackageCache` are prohibited.
