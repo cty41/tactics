@@ -110,6 +110,12 @@ scopes:
       - .agents/docs/three-class-skill-design.md
       - .agents/docs/isometric-grid-anchor-contract.md
       - Assets/Tactics/Scripts/Common/Battle
+      - Assets/Tactics/Scripts/Common/Editor/GridHelper.cs
+      - Assets/Tactics/GameData/Encounters
+      - Assets/Tactics/ScriptableObjects/BattleTest/CorpseTestEncounter.asset
+      - Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestEncounter.asset
+      - Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestParty.asset
+      - Assets/Tactics/Scenes/Test1.unity
       - Assets/Tactics/Scripts/Common/Cells
       - Assets/Tactics/Scripts/Common/Editor/CellBrush.cs
       - Assets/Tactics/Scripts/Common/Editor/GridCoordinatesGizmo.cs
@@ -120,6 +126,13 @@ scopes:
       - Assets/Tactics/Tests/PlayMode/BattleControllerBattleUiBootstrapTests.cs
       - Assets/Tactics/Tests/PlayMode/BattleLogConsoleTests.cs
       - Assets/Tactics/Tests/Editor/EncounterConfigTests.cs
+      - Assets/Tactics/Tests/Editor/Test1BattleMapLayoutEditorTests.cs
+      - Assets/Tactics/Tests/Editor/UnitDerivedStatRulesTests.cs
+      - Assets/Tactics/Tests/Editor/UnitDerivedStatRulesTests.cs.meta
+      - Assets/Tactics/Tests/Editor/GridHelperFixedBoardTests.cs
+      - Assets/Tactics/Tests/Editor/GridHelperFixedBoardTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/Test1BattleSmokeTests.cs
+      - Assets/Tactics/Tests/PlayMode/Test1BattleSmokeTests.cs.meta
       - Assets/Tactics/Tests/Editor/PureRunAbilityCatalogEditorTests.cs
       - Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs
       - Assets/Tactics/Scripts/UI/BattleSettlementUIController.cs
@@ -129,8 +142,11 @@ scopes:
       - Assets/Tactics/Battle/Buffs
       - Assets/Tactics/ScriptableObjects/Buffs
       - Assets/Tactics/Scripts/Common/Units/Buffs
+      - Assets/Tactics/Tests/PlayMode/PendingBuffPersistenceTests.cs
       - Assets/Tactics/Scripts/Common/Units/CombatComponent.cs
       - Assets/Tactics/Scripts/Common/Units/DamageResolution.cs
+      - Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs
+      - Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs.meta
       - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
       - Assets/Tactics/Arts/Prefabs/Units/Skeleton.prefab
       - Assets/Tactics/Scripts/Common/Units/FacingState.cs
@@ -148,6 +164,7 @@ scopes:
       - Assets/Tactics/Scripts/Common/GameTimeService.cs.meta
       - Assets/Tactics/Scripts/Common/players/TurnSkipHelper.cs
       - Assets/Tactics/Scripts/Common/controllers/GridController.cs
+      - Assets/Tactics/Scripts/Common/controllers/IGridController.cs
       - Assets/Tactics/Scripts/Common/controllers/turnResolvers/SubsequentTurnResolverImpl.cs
       - Assets/Tactics/Scripts/Common/Interactables/Corpse.cs
       - Assets/Tactics/Scripts/Common/Interactables/DroppedSpear.cs
@@ -192,7 +209,19 @@ scopes:
       - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
       - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/AmazonSkillLevelTests.cs
+      - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
+      - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
       - Assets/Tactics/Tests/PlayMode/PureRunEncounterAndSummaryTests.cs
+      - Assets/Tactics/Scripts/Common/Skills/Graph/Executors/NecromancerSkillNodeExecutor.cs
+      - Assets/Tactics/Tests/Editor/BattleBoardSpecTests.cs
+      - Assets/Tactics/Tests/Editor/BattleBoardSpecTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/BattleBoardCameraFitterTests.cs
+      - Assets/Tactics/Tests/PlayMode/BattleBoardCameraFitterTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/BattleControllerEncounterSpawnTests.cs
+      - Assets/Tactics/Tests/PlayMode/BattleControllerEncounterSpawnTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/FixedBoardGameplayBoundaryTests.cs
+      - Assets/Tactics/Tests/PlayMode/FixedBoardGameplayBoundaryTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/BattleTestConfigPlayModeTests.cs
 
   monster-ai:
     concept: systems/monster-ai.md
@@ -203,12 +232,16 @@ scopes:
       - Assets/Tactics/AI/BasicMeleeBrain.asset
       - Assets/Tactics/AI/BasicMeleeGraph.asset
       - Assets/Tactics/AI/BasicMeleeProfile.asset
+      - Assets/Tactics/AI/Encounters
       - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
       - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs
       - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs
       - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeAiVsAiBattle.cs
+      - Assets/Tactics/Tests/PlayMode/PureRunAiVsAiBenchmarkTests.cs
+      - Assets/Tactics/Tests/PlayMode/PureRunAiVsAiBenchmarkTests.cs.meta
+      - Tools/balance/pure-run-playtest-template.csv
       - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
       - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
       - Assets/Tactics/Scripts/Common/Units/Unit.cs
@@ -272,6 +305,8 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityConfig.cs
       - Assets/Tactics/Scripts/Editor/SkillGraphEditor
       - Assets/Tactics/Scripts/Editor/PresentationWorkbench
+      - Assets/Tactics/Tests/Editor/SkillGraphAssetMenuEditorTests.cs
+      - Assets/Tactics/Tests/Editor/SkillGraphAssetMenuEditorTests.cs.meta
       - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs
       - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs.meta
       - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs
@@ -319,6 +354,7 @@ scopes:
       - .agents/skills/gameplay-test-framework
       - Assets/Tactics/Scripts/Common/Testing/Gameplay
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimePlanTests.cs
+      - Assets/Tactics/Tests/PlayMode/GameplayRuntimeBattlePlanTests.cs
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeMapPlanTests.cs
       - Assets/Tactics/Tests/PlayMode/GameplayRuntimeUiPlanTests.cs
       - Assets/Tactics/Tests/PlayMode/PlayerInputGameplayPlanTests.cs
