@@ -74,6 +74,10 @@ namespace Tactics.Common.Skills.Graph
                 {
                     result = await executor.Execute(currentNode, context);
                 }
+                catch (System.OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
                 catch (System.Exception ex)
                 {
                     context.Abort($"Exception in node '{currentNode.NodeId}': {ex.Message}");

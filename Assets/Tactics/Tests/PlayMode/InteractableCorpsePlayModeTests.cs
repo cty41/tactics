@@ -278,6 +278,60 @@ namespace Tactics.Tests.PlayMode
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator DeathPath_CorpsePlacedBeforeUnitCleanup_KeepsCellOccupied()
+        {
+            // Mirrors GridController.OnUnitDestroyed: the corpse interactable is placed
+            // before the defeated unit's Cleanup runs, and Cleanup must preserve its occupancy.
+            var cell = FindCell(0, 1);
+            Assert.IsNotNull(cell, "Cell should exist.");
+
+            var unitGo = new GameObject("DyingUnit");
+            var unit = unitGo.AddComponent<Unit>();
+            unit.Health = 10;
+            unit.MaxHealth = 10;
+            unit.CurrentCell = cell;
+            cell.CurrentUnits.Add(unit);
+            cell.IsTaken = true;
+
+            var corpseGo = new GameObject("DeathCorpse");
+            var corpse = corpseGo.AddComponent<Corpse>();
+            cell.AddInteractable(corpse);
+            Assert.IsTrue(cell.IsTaken, "Corpse placement should keep the cell occupied.");
+
+            unit.Cleanup(null);
+
+            Assert.IsFalse(cell.CurrentUnits.Contains(unit), "Cleanup should detach the dead unit from the cell.");
+            Assert.IsTrue(cell.IsTaken, "Cleanup must not free a cell still occupied by a corpse interactable.");
+
+            Object.DestroyImmediate(corpseGo);
+            Object.DestroyImmediate(unitGo);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator DeathPath_UnitCleanupWithoutOccupyingInteractable_FreesCell()
+        {
+            var cell = FindCell(1, 1);
+            Assert.IsNotNull(cell, "Cell should exist.");
+
+            var unitGo = new GameObject("DyingUnit");
+            var unit = unitGo.AddComponent<Unit>();
+            unit.Health = 10;
+            unit.MaxHealth = 10;
+            unit.CurrentCell = cell;
+            cell.CurrentUnits.Add(unit);
+            cell.IsTaken = true;
+
+            unit.Cleanup(null);
+
+            Assert.IsFalse(cell.CurrentUnits.Contains(unit), "Cleanup should detach the dead unit from the cell.");
+            Assert.IsFalse(cell.IsTaken, "Cleanup should free a cell with no remaining units or occupying interactables.");
+
+            Object.DestroyImmediate(unitGo);
+            yield return null;
+        }
+
         private ICell FindCell(int x, int y)
         {
             return _cellManagerRoot.GetComponentsInChildren<Square>()

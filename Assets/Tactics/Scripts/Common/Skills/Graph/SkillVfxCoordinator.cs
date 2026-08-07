@@ -96,6 +96,9 @@ namespace Tactics.Common.Skills.Graph
     {
         public static Vector3 ResolveUnitCenter(IUnit unit)
         {
+            if (!IsUnitAvailable(unit))
+                return Vector3.zero;
+
             SpriteRenderer renderer = ResolveRenderer(unit);
             if (renderer != null)
                 return renderer.bounds.center;
@@ -104,6 +107,9 @@ namespace Tactics.Common.Skills.Graph
 
         public static Vector3 ResolveUnitGround(IUnit unit)
         {
+            if (!IsUnitAvailable(unit))
+                return Vector3.zero;
+
             // The unit root is the stable logical tile landing point. Renderer bounds
             // include transparent sprite padding and vary between character sheets.
             return unit?.WorldPosition.ToVector3() ?? Vector3.zero;
@@ -111,7 +117,7 @@ namespace Tactics.Common.Skills.Graph
 
         public static SpriteRenderer ResolveRenderer(IUnit unit)
         {
-            if (unit is not Component component)
+            if (!IsUnitAvailable(unit) || unit is not Component component)
                 return null;
 
             var directional = component.GetComponent<FourDirectionSpriteVisual>();
@@ -124,6 +130,13 @@ namespace Tactics.Common.Skills.Graph
                     return renderer;
             }
             return null;
+        }
+
+        private static bool IsUnitAvailable(IUnit unit)
+        {
+            // Interface null checks bypass Unity fake-null semantics after a unit is destroyed.
+            return unit != null &&
+                   (unit is not UnityEngine.Object unityObject || unityObject != null);
         }
     }
 }

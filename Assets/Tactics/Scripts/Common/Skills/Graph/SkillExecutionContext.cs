@@ -101,7 +101,7 @@ namespace Tactics.Common.Skills.Graph
             RuntimeDef = runtimeDef;
             GridController = gridController;
             CurrentNodeId = runtimeDef.EntryNodeId;
-            RuntimeScope = (gridController as BattleController)?.RuntimeScope;
+            RuntimeScope = gridController?.RuntimeScope;
         }
 
         // ── 黑板操作 ──

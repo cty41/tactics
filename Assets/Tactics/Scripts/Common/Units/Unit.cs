@@ -826,7 +826,14 @@ namespace Tactics.Common.Units
             if (CurrentCell != null)
             {
                 CurrentCell.CurrentUnits.Remove(this);
-                CurrentCell.IsTaken = CurrentCell.CurrentUnits.Count > 0;
+                // Align with BattleController.DetachUnitFromCell: an interactable that
+                // occupies the cell (e.g. a corpse placed before this cleanup runs) must
+                // keep the cell taken, otherwise movement blocking on IsTaken is lost.
+                if (CurrentCell.CurrentUnits.Count == 0 &&
+                    !CurrentCell.CurrentInteractables.Any(interactable => interactable != null && interactable.OccupiesCell))
+                {
+                    CurrentCell.IsTaken = false;
+                }
 
                 #if UNITY_EDITOR
                 if (!Application.isPlaying && CurrentCell is Cell cell)

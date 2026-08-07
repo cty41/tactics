@@ -58,6 +58,7 @@ namespace Tactics.Common.Testing.Gameplay
 
         // Interactable Corpse 测试支持：cell alias -> 是否存在 interactable corpse
         public Dictionary<string, Corpse> InteractableCorpsesByCell { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public List<(ICell Cell, Corpse Corpse)> CompletedBattleCorpseResidue { get; } = new();
         public AiDecisionLog LastAiDecisionLog { get; set; }
 
         // AI 执行快照（用于验证 AI 是否真正产出了效果）
@@ -124,6 +125,7 @@ namespace Tactics.Common.Testing.Gameplay
 
             // 2. 先清除所有对 MonoBehaviour 的引用（在 GameObject 销毁之前）
             Units.Clear();
+            CompletedBattleCorpseResidue.Clear();
             Cells.Clear();
             SkillAbilities.Clear();
 

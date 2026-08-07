@@ -522,6 +522,76 @@ namespace Tactics.Tests.PlayMode
             }
         }
 
+        [Test]
+        public void BattleRuntimeScope_TryTrackReportsWhetherOwnershipWasAccepted()
+        {
+            using var scope = new BattleRuntimeScope();
+            var acceptedCompletion = new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            var rejectedCompletion = new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            try
+            {
+                var tryTrack = typeof(BattleRuntimeScope).GetMethod(
+                    "TryTrack",
+                    BindingFlags.Instance | BindingFlags.Public);
+                Assert.That(tryTrack, Is.Not.Null,
+                    "The scope must expose an atomic ownership-acceptance result.");
+                Assert.That((bool)tryTrack.Invoke(scope, new object[] { acceptedCompletion.Task }), Is.True);
+                scope.Cancel();
+                Assert.That((bool)tryTrack.Invoke(scope, new object[] { rejectedCompletion.Task }), Is.False);
+            }
+            finally
+            {
+                acceptedCompletion.TrySetResult(true);
+                rejectedCompletion.TrySetResult(true);
+            }
+        }
+
+        [UnityTest]
+        public System.Collections.IEnumerator PlayerSkillExecutionOwner_IsDrainedAndRejectedAfterCancellation()
+        {
+            var startTrackedExecution = typeof(Tactics.Common.Units.Abilities.SkillGraphAbilityImpl).GetMethod(
+                "StartTrackedPlayerExecution",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(startTrackedExecution, Is.Not.Null,
+                "Player-triggered SkillGraph execution must have one tracked ownership boundary.");
+
+            using var scope = new BattleRuntimeScope();
+            var executionGate = new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            bool executionStarted = false;
+            Func<Task> executionFactory = async () =>
+            {
+                executionStarted = true;
+                await executionGate.Task;
+            };
+
+            startTrackedExecution.Invoke(null, new object[] { scope, executionFactory });
+            Assert.That(executionStarted, Is.True);
+            scope.Cancel();
+            Task idleTask = scope.WhenIdleAsync();
+            yield return null;
+            Assert.That(idleTask.IsCompleted, Is.False,
+                "Runtime teardown must drain the complete player SkillGraph task.");
+
+            executionGate.TrySetResult(true);
+            yield return WaitForTask(idleTask, 10d, "Drain tracked player SkillGraph execution");
+            Assert.That(idleTask.IsFaulted, Is.False);
+
+            bool rejectedFactoryStarted = false;
+            startTrackedExecution.Invoke(
+                null,
+                new object[] { scope, new Func<Task>(() =>
+                {
+                    rejectedFactoryStarted = true;
+                    return Task.CompletedTask;
+                }) });
+            Assert.That(rejectedFactoryStarted, Is.False,
+                "A cancelling scope must reject a new cast before its execution factory starts.");
+        }
+
         [UnityTest]
         public System.Collections.IEnumerator PendingStart_IsInvalidatedByEndBattleDuringPreviousScopeTeardown()
         {
@@ -595,11 +665,13 @@ namespace Tactics.Tests.PlayMode
 
             try
             {
-                for (int frame = 0; frame < 30 && !scope.Token.IsCancellationRequested; frame++)
+                var timeoutWait = System.Diagnostics.Stopwatch.StartNew();
+                while (!scope.Token.IsCancellationRequested &&
+                       timeoutWait.Elapsed < System.TimeSpan.FromSeconds(1))
                     yield return null;
 
                 Assert.That(scope.Token.IsCancellationRequested, Is.True,
-                    "The runtime scope timeout must cancel its token within 30 frames.");
+                    "The runtime scope timeout must cancel its token within one second of real time.");
                 scope.Track(trackedCompletion.Task);
                 Task idleTask = scope.WhenIdleAsync();
                 yield return null;

@@ -155,12 +155,16 @@ namespace Tactics.Common.Units.Abilities
                 if (_orderedSelection.Stage == OrderedSelectionStage.Ready)
                 {
                     var targets = _orderedSelection.Commit();
-                    _ = ExecuteSkillGraphAsync(unit.CurrentCell, gridController, targets);
+                    StartTrackedPlayerExecution(
+                        gridController.RuntimeScope,
+                        () => ExecuteSkillGraphAsync(unit.CurrentCell, gridController, targets));
                 }
                 return;
             }
 
-            _ = ExecuteSkillGraphAsync(unit.CurrentCell, gridController);
+            StartTrackedPlayerExecution(
+                gridController.RuntimeScope,
+                () => ExecuteSkillGraphAsync(unit.CurrentCell, gridController));
         }
 
         public void OnCellClicked(ICell cell, IGridController gridController)
@@ -168,8 +172,52 @@ namespace Tactics.Common.Units.Abilities
             if (!CanPerform(gridController)) return;
             if (_validTargetCells == null || !_validTargetCells.Contains(cell)) return;
 
-            _ = ExecuteSkillGraphAsync(cell, gridController);
+            StartTrackedPlayerExecution(
+                gridController.RuntimeScope,
+                () => ExecuteSkillGraphAsync(cell, gridController));
         }
+
+        private static void StartTrackedPlayerExecution(
+            IBattleRuntimeScope runtimeScope,
+            Func<Task> executionFactory)
+        {
+            if (executionFactory == null)
+                return;
+
+            if (runtimeScope == null)
+                return;
+
+            if (runtimeScope.IsCancelling)
+                return;
+
+            var owner = new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!runtimeScope.TryTrack(owner.Task))
+                return;
+
+            _ = CompleteTrackedPlayerExecutionAsync(runtimeScope, executionFactory, owner);
+        }
+
+        private static async Task CompleteTrackedPlayerExecutionAsync(
+            IBattleRuntimeScope runtimeScope,
+            Func<Task> executionFactory,
+            TaskCompletionSource<bool> owner)
+        {
+            try
+            {
+                await executionFactory();
+                owner.TrySetResult(true);
+            }
+            catch (OperationCanceledException) when (runtimeScope.IsCancelling)
+            {
+                owner.TrySetCanceled();
+            }
+            catch (Exception ex)
+            {
+                owner.TrySetException(ex);
+            }
+        }
+
 
         /// <summary>
         /// Executes a recovery action against its owner without entering a separate target-selection state.
@@ -450,7 +498,8 @@ namespace Tactics.Common.Units.Abilities
             return await ExecuteSkillGraphAsync(
                 selectedCell,
                 gridController,
-                runtimeScope: runtimeScope);
+                runtimeScope: runtimeScope,
+                captureTestSnapshots: true);
         }
 
         public async Task<SkillGraphRuntimeTestResult> ExecuteOrderedForTestAsync(
@@ -467,7 +516,11 @@ namespace Tactics.Common.Units.Abilities
                 failed.LastError = "Invalid ordered targets.";
                 return failed;
             }
-            return await ExecuteSkillGraphAsync(ordered[^1].CurrentCell, gridController, ordered);
+            return await ExecuteSkillGraphAsync(
+                ordered[^1].CurrentCell,
+                gridController,
+                ordered,
+                captureTestSnapshots: true);
         }
 
         public void InvokeAbilitySelected()
@@ -485,7 +538,8 @@ namespace Tactics.Common.Units.Abilities
             IGridController gridController,
             IReadOnlyList<IUnit> orderedTargets = null,
             bool allowCombatTechniqueFollowUp = true,
-            IBattleRuntimeScope runtimeScope = null)
+            IBattleRuntimeScope runtimeScope = null,
+            bool captureTestSnapshots = false)
         {
             var runtimeDef = SkillGraphRuntimeDefinition.FromAsset(_config.SkillGraph);
             var context = new SkillExecutionContext(_owner, _config.SkillGraph, runtimeDef, gridController)
@@ -511,7 +565,8 @@ namespace Tactics.Common.Units.Abilities
                 context.TargetSet = orderedTargets.ToList();
                 context.PrimaryTarget = orderedTargets.FirstOrDefault();
             }
-            testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
+            if (captureTestSnapshots)
+                testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
 
             var originalFacing = _owner.Facing;
             bool changedFacing = orderedTargets == null && GetAmazonNode()?.SkillKind != AmazonSkillKind.Decoy &&
@@ -661,8 +716,11 @@ namespace Tactics.Common.Units.Abilities
                 testResult.ExecutionState = executionState;
                 testResult.LastError = context.LastError;
                 testResult.StepCount = context.StepCount;
-                testResult.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
-                testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
+                if (captureTestSnapshots)
+                {
+                    testResult.Caster = SkillGraphTestUnitSnapshot.Capture(_owner);
+                    testResult.PrimaryTarget = SkillGraphTestUnitSnapshot.Capture(context.PrimaryTarget);
+                }
                 testResult.ExecutionEvents.AddRange(context.ExecutionEvents);
                 testResult.StageResults.AddRange(context.StageResults);
                 return testResult;

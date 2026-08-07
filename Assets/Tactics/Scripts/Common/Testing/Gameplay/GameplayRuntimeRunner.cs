@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Battle.Runtime;
+using Tactics.Runtime.Utilities;
 
 namespace Tactics.Common.Testing.Gameplay
 {
     public sealed class GameplayRuntimeRunner
     {
+        private const int CancellationDrainTimeoutMs = 1000;
+
         private readonly Dictionary<string, IGameplayStepAdapter> _adapters;
         private readonly GamePlaybackSpeed _executionSpeed;
 
@@ -45,22 +48,50 @@ namespace Tactics.Common.Testing.Gameplay
 
             try
             {
-                using var scope = new BattleRuntimeScope();
-                using var context = new GameplayRuntimeContext { RuntimeScope = scope };
-                var executionTask = ExecuteCoreAsync(plan, context, scope);
-                _ = executionTask.ContinueWith(task => { _ = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
-
-                var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
-                if (completed != executionTask)
+                var scope = new BattleRuntimeScope();
+                var context = new GameplayRuntimeContext { RuntimeScope = scope };
+                bool cleanupDeferred = false;
+                try
                 {
-                    // Cancel the runtime before disposing its context so adapters can leave
-                    // their current PlayerLoop wait and release owned input devices safely.
-                    scope.Cancel();
-                    await Task.WhenAny(executionTask, Task.Delay(1000));
-                    return BuildTimeoutResult(plan);
-                }
+                    var executionTask = ExecuteCoreAsync(plan, context, scope);
 
-                return await executionTask;
+                    var completed = await Task.WhenAny(executionTask, Task.Delay(plan.TimeoutMs));
+                    if (completed != executionTask)
+                    {
+                        // Cancel the runtime before disposing its context so adapters can leave
+                        // their current PlayerLoop wait and release owned input devices safely.
+                        scope.Cancel();
+                        Task<Exception> cancellationDrainTask = ObserveTimedOutExecutionAsync(executionTask, scope);
+                        Task drainCompleted = await Task.WhenAny(
+                            cancellationDrainTask,
+                            Task.Delay(CancellationDrainTimeoutMs));
+                        if (drainCompleted != cancellationDrainTask)
+                        {
+                            // A non-cooperative adapter must not turn the plan timeout into an
+                            // unbounded wait. Keep its context alive and clean it up when the
+                            // adapter eventually returns.
+                            cleanupDeferred = true;
+                            _ = CompleteDeferredCleanupAsync(
+                                cancellationDrainTask,
+                                context,
+                                scope,
+                                plan.ScenarioName);
+                            return BuildTimeoutResult(plan, cancellationDrainExceeded: true);
+                        }
+
+                        Exception cancellationDrainException = await cancellationDrainTask;
+                        return BuildTimeoutResult(
+                            plan,
+                            cancellationDrainException: cancellationDrainException);
+                    }
+
+                    return await executionTask;
+                }
+                finally
+                {
+                    if (!cleanupDeferred)
+                        await CleanupRuntimeAsync(context, scope);
+                }
             }
             finally
             {
@@ -199,10 +230,92 @@ namespace Tactics.Common.Testing.Gameplay
             };
         }
 
-        private static GameplayTestResult BuildTimeoutResult(ExecutableScenarioPlan plan)
+        private static async Task<Exception> ObserveTimedOutExecutionAsync(
+            Task executionTask,
+            IBattleRuntimeScope scope)
+        {
+            try
+            {
+                await executionTask;
+                return null;
+            }
+            catch (OperationCanceledException) when (scope.IsCancelling)
+            {
+                // Cancellation is the expected terminal state after a timeout.
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        private static async Task CompleteDeferredCleanupAsync(
+            Task<Exception> cancellationDrainTask,
+            GameplayRuntimeContext context,
+            BattleRuntimeScope scope,
+            string scenarioName)
+        {
+            Exception cancellationDrainException = await cancellationDrainTask;
+            if (cancellationDrainException != null)
+                TLog.Error($"[GameplayRuntimeRunner] Timed-out scenario '{scenarioName}' failed while draining: {cancellationDrainException}");
+
+            try
+            {
+                await CleanupRuntimeAsync(context, scope);
+            }
+            catch (Exception ex)
+            {
+                TLog.Error($"[GameplayRuntimeRunner] Deferred cleanup failed for scenario '{scenarioName}': {ex}");
+            }
+        }
+
+        private static async Task CleanupRuntimeAsync(
+            GameplayRuntimeContext context,
+            BattleRuntimeScope scope)
+        {
+            try
+            {
+                scope.Cancel();
+            }
+            finally
+            {
+                try
+                {
+                    await scope.WhenIdleAsync();
+                }
+                finally
+                {
+                    try
+                    {
+                        if (context.BattleController != null)
+                            await context.BattleController.TeardownRuntimeScopeAsync();
+                    }
+                    finally
+                    {
+                        context.Dispose();
+                        scope.Dispose();
+                    }
+                }
+            }
+        }
+
+        private static GameplayTestResult BuildTimeoutResult(
+            ExecutableScenarioPlan plan,
+            bool cancellationDrainExceeded = false,
+            Exception cancellationDrainException = null)
         {
             var result = new GameplayTestResult { ScenarioName = plan.ScenarioName };
-            var message = $"Scenario '{plan.ScenarioName}' timed out after {plan.TimeoutMs} ms.";
+            string drainDetail = cancellationDrainExceeded
+                ? $" Cancellation did not drain within {CancellationDrainTimeoutMs} ms; cleanup was deferred."
+                : string.Empty;
+            if (cancellationDrainException != null)
+            {
+                drainDetail +=
+                    $" Cancellation drain failed with {cancellationDrainException.GetType().Name}: " +
+                    cancellationDrainException.Message;
+            }
+            var message = $"Scenario '{plan.ScenarioName}' timed out after {plan.TimeoutMs} ms.{drainDetail}";
             result.ExecutedSteps.Add(GameplayStepResult.Fail("Runner", "timeout", message));
             result.AddFailure(FailureCategory.Timeout, "timeout", "timeout", "Runner", message);
             return result;

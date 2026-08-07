@@ -215,7 +215,7 @@ namespace Tactics.Common.Skills.Graph
 
         private static SpriteRenderer ResolveRenderer(IUnit unit)
         {
-            if (unit is not Component component)
+            if (IsMissingUnityObject(unit) || unit is not Component component)
                 return null;
 
             var directional = component.GetComponent<FourDirectionSpriteVisual>();

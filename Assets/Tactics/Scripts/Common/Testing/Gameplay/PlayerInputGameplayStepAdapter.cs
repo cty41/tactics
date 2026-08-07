@@ -479,8 +479,10 @@ namespace Tactics.Common.Testing.Gameplay
                 VisualElement observedElement = null;
                 bool observedPointerDown = false;
                 bool observedClick = false;
+                bool observedButtonClicked = false;
                 EventCallback<PointerDownEvent> pointerDownObserver = _ => observedPointerDown = true;
                 EventCallback<ClickEvent> clickObserver = _ => observedClick = true;
+                Action buttonClickedObserver = () => observedButtonClicked = true;
                 string targetKind = action.Parameters["targetKind"]?.ToString() ?? "UiElement";
                 bool requiresElementObservation = targetKind is "UiElement" or "MapNode";
                 if (requiresElementObservation)
@@ -491,6 +493,8 @@ namespace Tactics.Common.Testing.Gameplay
                     observedElement = FindActiveElement(elementName);
                     observedElement?.RegisterCallback(pointerDownObserver, TrickleDown.TrickleDown);
                     observedElement?.RegisterCallback(clickObserver, TrickleDown.TrickleDown);
+                    if (observedElement is Button observedButton)
+                        observedButton.clicked += buttonClickedObserver;
                 }
                 bool observersRegistered = observedElement != null;
                 void UnregisterPointerObservers()
@@ -500,6 +504,8 @@ namespace Tactics.Common.Testing.Gameplay
 
                     observedElement?.UnregisterCallback(pointerDownObserver, TrickleDown.TrickleDown);
                     observedElement?.UnregisterCallback(clickObserver, TrickleDown.TrickleDown);
+                    if (observedElement is Button observedButton)
+                        observedButton.clicked -= buttonClickedObserver;
                     observersRegistered = false;
                 }
                 if (observersRegistered)
@@ -550,10 +556,8 @@ namespace Tactics.Common.Testing.Gameplay
                 }
 
                 // UI Toolkit buttons complete their click across a real press -> frame ->
-                // release transaction. Preserve the pressed state across that frame for every
-                // observed UI target, not only when PointerDown was delayed: the automatic
-                // PlayerLoop tick can overwrite the owned virtual mouse before release even
-                // after the initial automatic input pass observed PointerDown.
+                // release transaction. Queue the press exactly once: a second identical state
+                // event can desynchronize ClickEvent from Button.clicked across device contexts.
                 if (observedElement != null)
                 {
                     if (!await WaitForInputFrame(context))
@@ -563,20 +567,6 @@ namespace Tactics.Common.Testing.Gameplay
                             PlayerInputAdapterName,
                             action.Kind,
                             $"Pointer press UI-frame wait was cancelled. {DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick)}");
-                    }
-                    // Re-arm the same in-flight press (not a second click), regardless of whether
-                    // the virtual device still looks enabled. The automatic PlayerLoop owns both
-                    // state application and production UI/InputAction dispatch.
-                    if (!context.PlayerInputMouse.enabled)
-                        InputSystem.EnableDevice(context.PlayerInputMouse);
-                    context.PlayerInputMouse.MakeCurrent();
-                    if (!await QueueMouseStateAndWaitForProcessing(context, pressedState, button, true))
-                    {
-                        UnregisterPointerObservers();
-                        return GameplayStepResult.Fail(
-                            PlayerInputAdapterName,
-                            action.Kind,
-                            $"Pointer press could not be re-armed after the UI frame. {DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick)}");
                     }
                 }
 
@@ -615,7 +605,13 @@ namespace Tactics.Common.Testing.Gameplay
                 UnregisterPointerObservers();
                 bool completedReleaseTransition = observedPointerDown && targetWasAttachedBeforeRelease &&
                     (targetDetachedAfterRelease || targetBecameInactiveAfterRelease);
-                if ((!requiresElementObservation && observedElement == null) || observedClick || completedReleaseTransition)
+                bool semanticClickObserved = observedElement is Button
+                    ? observedButtonClicked
+                    : observedClick;
+                bool completedNonButtonTransition = observedElement is not Button && completedReleaseTransition;
+                if ((!requiresElementObservation && observedElement == null) ||
+                    semanticClickObserved ||
+                    completedNonButtonTransition)
                 {
                     string transitionDetail = completedReleaseTransition
                         ? " and the production release transition detached or hid the target"
@@ -628,10 +624,28 @@ namespace Tactics.Common.Testing.Gameplay
 
                 if (observedPointerDown)
                 {
+                    string missingSemanticEvent = observedElement is Button && observedClick
+                        ? "ClickEvent was observed, but Button.clicked was not invoked."
+                        : "Release produced no semantic click event.";
+                    if (observedElement is Button && !observedButtonClicked && attempt < maxClickAttempts)
+                    {
+                        for (int settle = 0; settle < 15; settle++)
+                        {
+                            if (!await WaitForInputFrame(context))
+                            {
+                                return GameplayStepResult.Fail(
+                                    PlayerInputAdapterName,
+                                    action.Kind,
+                                    "Pointer click retry cancelled after Button.clicked was not observed.");
+                            }
+                        }
+                        continue;
+                    }
+
                     return GameplayStepResult.Fail(
                         PlayerInputAdapterName,
                         action.Kind,
-                        $"Pointer press reached UI element '{observedElement.name}', but release produced no ClickEvent. " +
+                        $"Pointer press reached UI element '{observedElement.name}'. {missingSemanticEvent} " +
                         DescribePointerTransaction(context, button, attempt, observedPointerDown, observedClick) + " " +
                         DescribeElementAtPointer(observedElement, pointerPosition));
                 }
@@ -1094,9 +1108,15 @@ namespace Tactics.Common.Testing.Gameplay
 
         private static BattleController ResolveBattleController(GameplayRuntimeContext context)
         {
-            return context?.BattleController
-                ?? BattleController.Instance
-                ?? UnityEngine.Object.FindFirstObjectByType<BattleController>();
+            BattleController contextController = context?.BattleController;
+            BattleController singleton = BattleController.Instance;
+            if (singleton != null)
+                return singleton;
+
+            if (contextController != null)
+                return contextController;
+
+            return UnityEngine.Object.FindFirstObjectByType<BattleController>();
         }
 
         private static async Task<GameplayStepResult> PlayBattleThroughInput(
@@ -1122,6 +1142,12 @@ namespace Tactics.Common.Testing.Gameplay
                         !string.IsNullOrEmpty(RoguelikeMapRuntimeState.PendingBattleNodeId);
                     if (!hasPendingRoguelikeBattle)
                     {
+                        GameplayStepResult drainFailure = await WaitForCompletedBattleDrainAsync(
+                            context,
+                            controller,
+                            action.Kind);
+                        if (drainFailure != null)
+                            return drainFailure;
                         return GameplayStepResult.Pass(
                             PlayerInputAdapterName,
                             action.Kind,
@@ -1135,6 +1161,12 @@ namespace Tactics.Common.Testing.Gameplay
                         baselineSettlementRoot);
                     if (settlementStarted)
                     {
+                        GameplayStepResult drainFailure = await WaitForCompletedBattleDrainAsync(
+                            context,
+                            controller,
+                            action.Kind);
+                        if (drainFailure != null)
+                            return drainFailure;
                         return GameplayStepResult.Pass(
                             PlayerInputAdapterName,
                             action.Kind,
@@ -1326,6 +1358,34 @@ namespace Tactics.Common.Testing.Gameplay
                 PlayerInputAdapterName,
                 action.Kind,
                 $"Battle exceeded the maximum of {maximumActions} player-controlled unit actions.");
+        }
+
+        private static async Task<GameplayStepResult> WaitForCompletedBattleDrainAsync(
+            GameplayRuntimeContext context,
+            BattleController controller,
+            string actionKind)
+        {
+            if (controller == null)
+                return null;
+
+            bool drained = await WaitForObservableChange(
+                context,
+                () => controller == null || controller.RuntimeScope == null,
+                TimeSpan.FromSeconds(10));
+            if (!drained)
+            {
+                return GameplayStepResult.Fail(
+                    PlayerInputAdapterName,
+                    actionKind,
+                    "Completed battle runtime scope did not drain within 10 realtime seconds.");
+            }
+
+            return controller == null || controller.RuntimeScopeTeardownException == null
+                ? null
+                : GameplayStepResult.Fail(
+                    PlayerInputAdapterName,
+                    actionKind,
+                    $"Battle runtime teardown failed: {controller.RuntimeScopeTeardownException}");
         }
 
         private static async Task<bool> WaitForFreshBattleSettlementTransaction(

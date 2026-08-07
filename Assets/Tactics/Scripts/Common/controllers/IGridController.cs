@@ -3,6 +3,7 @@ using Tactics.Common.Cells;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Players;
 using Tactics.Common.Units;
 
@@ -27,6 +28,11 @@ namespace Tactics.Common.Controllers
         /// Gets or sets the player manager responsible for managing players in the game.
         /// </summary>
         IPlayerManager PlayerManager { get; set; }
+
+        /// <summary>
+        /// Gets the runtime scope that owns asynchronous work for the active battle.
+        /// </summary>
+        IBattleRuntimeScope RuntimeScope { get; }
 
         /// <summary>
         /// Gets or sets the turn resolver responsible for determining the order of player turns.

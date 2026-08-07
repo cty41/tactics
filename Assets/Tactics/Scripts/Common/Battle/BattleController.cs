@@ -1327,6 +1327,7 @@ namespace Tactics.Common.Battle
 
                 var scope = new BattleRuntimeScope();
                 RuntimeScope = scope;
+                _controller.RuntimeScope = scope;
                 IsBattleActive = true;
                 if (!TBattleLog.IsBattleActive)
                     TBattleLog.BeginBattle();
@@ -1419,8 +1420,12 @@ namespace Tactics.Common.Battle
             IBattleRuntimeScope scope,
             TaskCompletionSource<bool> completion)
         {
+            AIPlayer[] aiPlayers = _runtimePlayers?.OfType<AIPlayer>().ToArray() ?? Array.Empty<AIPlayer>();
             try
             {
+                foreach (AIPlayer aiPlayer in aiPlayers)
+                    aiPlayer.CancelOngoingAction();
+
                 try
                 {
                     scope.Cancel();
@@ -1448,6 +1453,20 @@ namespace Tactics.Common.Battle
                     RecordRuntimeScopeTeardownException(ex);
                     TLog.Error($"[BattleController] Runtime scope drain failed: {ex}");
                 }
+
+                try
+                {
+                    await Task.WhenAll(aiPlayers.Select(aiPlayer => aiPlayer.WhenIdleAsync()));
+                }
+                catch (OperationCanceledException)
+                {
+                    // Cancellation is the expected shutdown path.
+                }
+                catch (Exception ex)
+                {
+                    RecordRuntimeScopeTeardownException(ex);
+                    TLog.Error($"[BattleController] AI player drain failed: {ex}");
+                }
             }
             finally
             {
@@ -1465,7 +1484,11 @@ namespace Tactics.Common.Battle
                     lock (_runtimeScopeTeardownGate)
                     {
                         if (ReferenceEquals(RuntimeScope, scope))
+                        {
                             RuntimeScope = null;
+                            if (ReferenceEquals(_controller.RuntimeScope, scope))
+                                _controller.RuntimeScope = null;
+                        }
 
                         if (ReferenceEquals(_tearingDownRuntimeScope, scope))
                             _tearingDownRuntimeScope = null;

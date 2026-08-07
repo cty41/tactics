@@ -143,6 +143,27 @@ namespace Tactics.Tests.PlayMode
         }
 
         [Test]
+        public void BattleRewards_DestroyedUnityUnitReference_IsIgnored()
+        {
+            var human = new TestPlayer(0, PlayerType.HumanPlayer);
+            var ai = new TestPlayer(1, PlayerType.AutomatedPlayer);
+            var unitObject = new GameObject("DestroyedRewardUnit");
+            var unit = unitObject.AddComponent<Unit>();
+            unit.PlayerNumber = ai.PlayerNumber;
+            unit.MaxHealth = 10f;
+            unit.Health = 0f;
+            Object.DestroyImmediate(unitObject);
+
+            BattleRewardSystem.BattleRewards rewards = default;
+            Assert.DoesNotThrow(() => rewards = BattleRewardSystem.CalculateBattleRewards(
+                new GameResult(human, new[] { ai }),
+                2,
+                new IUnit[] { unit }));
+
+            Assert.That(rewards.EnemiesDefeated, Is.Zero);
+        }
+
+        [Test]
         public void Summary_IsIdempotentTracksGrossAcquisitionAndSurvivesInventoryChanges()
         {
             var state = PlayerAdventureStateStore.CreatePureRunState(1203);

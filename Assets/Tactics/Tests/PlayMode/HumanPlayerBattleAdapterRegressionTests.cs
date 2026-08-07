@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
@@ -9,12 +10,14 @@ using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
+using Tactics.Common.Interactables;
 using Tactics.Common.Players;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Buffs;
 using Tactics.Common.Utilities;
 using Tactics.Controllers.TurnResolvers;
+using Tactics.Roguelike;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -47,6 +50,42 @@ namespace Tactics.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            Exception teardownFailure = null;
+            var battleController = _battleRoot != null
+                ? _battleRoot.GetComponent<BattleController>()
+                : null;
+            if (battleController != null)
+            {
+                Task teardownTask = null;
+                try
+                {
+                    teardownTask = battleController.IsBattleActive
+                        ? battleController.EndBattleAsync(new GameResult())
+                        : battleController.TeardownRuntimeScopeAsync();
+                }
+                catch (Exception ex)
+                {
+                    teardownFailure = ex;
+                }
+
+                if (teardownTask != null)
+                {
+                    float deadline = Time.realtimeSinceStartup + 10f;
+                    while (!teardownTask.IsCompleted && Time.realtimeSinceStartup < deadline)
+                        yield return null;
+
+                    if (!teardownTask.IsCompleted)
+                    {
+                        teardownFailure = new TimeoutException(
+                            "BattleController runtime teardown exceeded 10 seconds.");
+                    }
+                    else if (teardownTask.IsFaulted)
+                    {
+                        teardownFailure = teardownTask.Exception?.Flatten();
+                    }
+                }
+            }
+
             if (_cellManagerRoot != null)
             {
                 UnityEngine.Object.DestroyImmediate(_cellManagerRoot);
@@ -61,6 +100,9 @@ namespace Tactics.Tests.PlayMode
 
             yield return null;
             yield return null;
+
+            if (teardownFailure != null)
+                Assert.Fail(teardownFailure.ToString());
         }
 
         /// <summary>
@@ -499,14 +541,94 @@ namespace Tactics.Tests.PlayMode
             context.Dispose();
         }
 
+        /// <summary>
+        /// Journey regression: a battle world reused across nodes must clear only the previous
+        /// battle's corpse residue before the next spawn/restart sequence, while preserving
+        /// corpse resources staged after the completed battle.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator RestartBattle_ClearsCorpseResidueSoNextSpawnSucceeds()
+        {
+            CreateBattleScaffolding(out var bc, createUnits: true);
+            SetUnitSpeedResolver(bc);
+            bc.InitializeAndStart(false);
+            yield return null;
+            yield return null;
+
+            var adapter = new BattleGameplayStepAdapter();
+            var context = new GameplayRuntimeContext();
+            var bindAction = new ExecutableScenarioAction { Kind = "bindBattleController", Adapter = "Battle" };
+            var bindTask = adapter.ExecuteAsync(context, bindAction);
+            yield return new WaitUntil(() => bindTask.IsCompleted);
+            Assert.IsTrue(bindTask.Result.Passed, bindTask.Result.Message);
+
+            bc.DisableAiAutoPlay = true;
+
+            // Kill the AI unit through the production death path so its corpse occupies the cell.
+            var victim = bc.GetUnits().First(u => u.PlayerNumber == 2);
+            var victimCell = victim.CurrentCell;
+            victim.ModifyHealth(-999, null);
+
+            var corpseAppeared = false;
+            for (int i = 0; i < 120 && !corpseAppeared; i++)
+            {
+                corpseAppeared = victimCell.CurrentInteractables.OfType<Corpse>().Any();
+                yield return null;
+            }
+            Assert.IsTrue(corpseAppeared, "Production death path must leave a corpse interactable on the victim cell.");
+            Assert.IsTrue(victimCell.IsTaken, "The corpse must keep the victim cell occupied before restart.");
+
+            for (int i = 0; i < 240 && bc.IsBattleActive; i++)
+            {
+                yield return null;
+            }
+            Assert.IsFalse(bc.IsBattleActive, "Battle should end once the AI faction is wiped out.");
+
+            var waitAction = new ExecutableScenarioAction { Kind = "waitForBattleEnd", Adapter = "Battle" };
+            var waitTask = adapter.ExecuteAsync(context, waitAction);
+            yield return new WaitUntil(() => waitTask.IsCompleted);
+            Assert.IsTrue(waitTask.Result.Passed, waitTask.Result.Message);
+
+            var stagedCell = FindCell(_cellManagerRoot, 1, 1);
+            var stagedCorpseObject = new GameObject("NextBattleCorpse");
+            var stagedCorpse = stagedCorpseObject.AddComponent<Corpse>();
+            stagedCell.AddInteractable(stagedCorpse);
+
+            var spawnAction = new ExecutableScenarioAction { Kind = "spawnBattleUnit", Adapter = "Battle" };
+            SetActionParametersJson(spawnAction, "{\"alias\":\"enemy_02\",\"cellAlias\":\"cell_1_0\",\"playerNumber\":\"2\"}");
+            var spawnTask = adapter.ExecuteAsync(context, spawnAction);
+            yield return new WaitUntil(() => spawnTask.IsCompleted);
+            Assert.IsTrue(spawnTask.Result.Passed, spawnTask.Result.Message);
+            Assert.IsTrue(context.Units.ContainsKey("enemy_02"),
+                "spawnBattleUnit must register the spawned unit after the completed battle's corpse was cleared.");
+
+            var restartAction = new ExecutableScenarioAction { Kind = "restartBattle", Adapter = "Battle" };
+            var restartTask = adapter.ExecuteAsync(context, restartAction);
+            yield return new WaitUntil(() => restartTask.IsCompleted);
+            Assert.IsTrue(restartTask.Result.Passed, restartTask.Result.Message);
+
+            Assert.IsFalse(victimCell.CurrentInteractables.OfType<Corpse>().Any(),
+                "restartBattle must remove corpse residue left by the previous battle.");
+            Assert.IsTrue(victimCell.IsTaken,
+                "The newly spawned unit must remain on the cell after restart cleared only the corpse residue.");
+            Assert.IsTrue(stagedCell.CurrentInteractables.Contains(stagedCorpse),
+                "restartBattle must preserve corpses staged after the completed battle.");
+            Assert.IsTrue(stagedCell.IsTaken,
+                "A corpse staged for the next battle must continue occupying its cell.");
+
+            stagedCorpse.Consume();
+            context.Dispose();
+        }
+
         #region Helpers
 
         private void CreateBattleScaffolding(out BattleController bc, bool createUnits)
         {
             _battleRoot = new GameObject("TestBattleController_Regression");
+            _battleRoot.SetActive(false);
             bc = _battleRoot.AddComponent<BattleController>();
 
-            // Disable auto-start (Awake will be re-invoked manually after fields are set)
+            // Configure serialized dependencies before the single Awake invocation.
             var controllerType = typeof(BattleController);
             var startFlag = controllerType.GetField("_startImmediatelly", BindingFlags.Instance | BindingFlags.NonPublic);
             startFlag?.SetValue(bc, false);
@@ -531,9 +653,8 @@ namespace Tactics.Tests.PlayMode
             var cellMgrField = controllerType.GetField("_cellManager", BindingFlags.Instance | BindingFlags.NonPublic);
             cellMgrField?.SetValue(bc, cellMgr);
 
-            // Re-invoke Awake to register singleton and wire _controller dependencies
-            var awake = controllerType.GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic);
-            awake?.Invoke(bc, null);
+            _battleRoot.SetActive(true);
+            RoguelikeBattleReturnHandler.Instance.UnregisterController(bc);
 
             // Clear BeforeUnitManagerInitialize callback (prevent SpawnEncounterUnits from running)
             var gridControllerField = controllerType.GetField("_controller", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -629,11 +750,16 @@ namespace Tactics.Tests.PlayMode
 
         private static void SetActionParameter(ExecutableScenarioAction action, string key, string value)
         {
-            // Build a JSON object { key: value } and assign to action.Parameters via reflection,
-            // avoiding a direct Newtonsoft.Json reference in the test assembly.
+            SetActionParametersJson(action, $"{{\"{key}\":\"{value}\"}}");
+        }
+
+        private static void SetActionParametersJson(ExecutableScenarioAction action, string json)
+        {
+            // Assign action.Parameters via reflection, avoiding a direct Newtonsoft.Json
+            // reference in the test assembly.
             var parameters = action.GetType().GetProperty("Parameters")?.GetValue(action);
             var parseMethod = parameters?.GetType().GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
-            var newParams = parseMethod?.Invoke(null, new object[] { $"{{\"{key}\":\"{value}\"}}" });
+            var newParams = parseMethod?.Invoke(null, new object[] { json });
             action.GetType().GetProperty("Parameters")?.SetValue(action, newParams);
         }
 

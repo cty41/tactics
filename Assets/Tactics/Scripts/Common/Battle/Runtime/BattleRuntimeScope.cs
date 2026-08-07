@@ -67,22 +67,28 @@ namespace Tactics.Common.Battle.Runtime
 
         public void Track(Task task)
         {
+            _ = TryTrack(task);
+        }
+
+        public bool TryTrack(Task task)
+        {
             if (task == null)
-                return;
+                return false;
 
             lock (_gate)
             {
                 if (_disposed || _isCancelling)
-                    return;
+                    return false;
 
                 if (task.IsCompleted)
                 {
                     RecordFaultIfNeeded(task);
-                    return;
+                    return true;
                 }
 
                 _trackedTasks.Add(task);
                 _ = RemoveWhenCompleteAsync(task);
+                return true;
             }
         }
 

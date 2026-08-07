@@ -81,7 +81,7 @@ namespace Tactics.Common.Testing.Gameplay
                     case "advanceTurn":
                         return AdvanceTurn(context, action);
                     case "endBattleWithResult":
-                        return EndBattleWithResult(context, action);
+                        return await EndBattleWithResult(context, action);
                     case "executeBattleSkillGraph":
                         return await ExecuteBattleSkillGraph(context, action);
                     case "moveUnit":
@@ -542,6 +542,10 @@ namespace Tactics.Common.Testing.Gameplay
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "spawnBattleUnit requires a unique alias.");
             if (!context.Cells.TryGetValue(cellAlias ?? string.Empty, out var cell))
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell '{cellAlias}' not found.");
+
+            // Real journey plans configure the next battle's units before restartBattle.
+            // Clear only corpses snapshotted from the completed battle before occupancy checks.
+            ClearCompletedBattleCorpseResidue(context);
             if (cell.IsTaken)
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, $"Cell '{cellAlias}' is occupied.");
 
@@ -571,11 +575,53 @@ namespace Tactics.Common.Testing.Gameplay
             if (controller.IsBattleActive)
                 return GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Cannot restart an active battle.");
 
+            // Only corpses captured when the previous battle ended are residue. Corpses
+            // staged afterwards belong to the next battle and must remain intact.
+            ClearCompletedBattleCorpseResidue(context);
             context.LastBattleResult = null;
             await controller.StartBattleAsync();
             return controller.IsBattleActive
                 ? GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Battle restarted with the current units.")
                 : GameplayStepResult.Fail(BattleAdapterName, action.Kind, "Battle did not become active.");
+        }
+
+        private static void CaptureCompletedBattleCorpseResidue(
+            GameplayRuntimeContext context,
+            BattleController controller)
+        {
+            context.CompletedBattleCorpseResidue.Clear();
+            IEnumerable<ICell> cells = controller?.CellManager?.GetCells() ?? Array.Empty<ICell>();
+            foreach (ICell cell in cells)
+            {
+                foreach (Corpse corpse in cell.CurrentInteractables.OfType<Corpse>())
+                    context.CompletedBattleCorpseResidue.Add((cell, corpse));
+            }
+        }
+
+        private static void ClearCompletedBattleCorpseResidue(GameplayRuntimeContext context)
+        {
+            foreach ((ICell cell, Corpse corpse) in context.CompletedBattleCorpseResidue)
+            {
+                if (corpse != null && !corpse.IsDestroyed)
+                {
+                    corpse.Consume();
+                }
+                else
+                {
+                    // Unity fake-null can leave the managed wrapper in the Cell list when
+                    // a corpse GameObject was destroyed without going through Consume().
+                    cell?.RemoveInteractable(corpse);
+                }
+
+                string[] aliases = context.InteractableCorpsesByCell
+                    .Where(pair => ReferenceEquals(pair.Value, corpse))
+                    .Select(pair => pair.Key)
+                    .ToArray();
+                foreach (string alias in aliases)
+                    context.InteractableCorpsesByCell.Remove(alias);
+            }
+
+            context.CompletedBattleCorpseResidue.Clear();
         }
 
         private static async Task<GameplayStepResult> WaitForBattleEnd(
@@ -586,7 +632,10 @@ namespace Tactics.Common.Testing.Gameplay
             for (int frame = 0; frame < Math.Max(1, maxFrames); frame++)
             {
                 if (context.LastBattleResult.HasValue)
+                {
+                    CaptureCompletedBattleCorpseResidue(context, context.BattleController);
                     return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Natural battle result was observed.");
+                }
                 await Task.Yield();
             }
 
@@ -649,7 +698,9 @@ namespace Tactics.Common.Testing.Gameplay
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, $"Advanced turn. CurrentRound={controller.CurrentRound}");
         }
 
-        private static GameplayStepResult EndBattleWithResult(GameplayRuntimeContext context, ExecutableScenarioAction action)
+        private static async Task<GameplayStepResult> EndBattleWithResult(
+            GameplayRuntimeContext context,
+            ExecutableScenarioAction action)
         {
             var controller = RequireBattleController(context, action.Kind);
             GameResult result;
@@ -691,12 +742,13 @@ namespace Tactics.Common.Testing.Gameplay
 
             bool skipControllerEndBattle = action.Parameters["skipControllerEndBattle"]?.ToObject<bool>() ?? false;
             if (!skipControllerEndBattle)
-                controller.EndBattle(result);
+                await controller.EndBattleAsync(result);
 
             bool applyRoguelikeWriteback = action.Parameters["applyRoguelikeWriteback"]?.ToObject<bool>() ?? false;
             if (applyRoguelikeWriteback)
                 ApplyRoguelikeWriteback(controller, result);
 
+            CaptureCompletedBattleCorpseResidue(context, controller);
             context.LastBattleResult = result;
             return GameplayStepResult.Pass(BattleAdapterName, action.Kind, "Battle ended.");
         }

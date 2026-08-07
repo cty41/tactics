@@ -24,11 +24,13 @@ namespace Tactics.Tests.PlayMode
     public sealed class NecromancerSkillLevelTests
     {
         private const string ConfigRoot = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/";
+        private bool _originalIgnoreFailingMessages;
 
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            LogAssert.ignoreFailingMessages = true;
+            _originalIgnoreFailingMessages = LogAssert.ignoreFailingMessages;
+            LogAssert.ignoreFailingMessages = false;
             var initializeTask = TestGameAssetHelper.EnsureInitialized();
             yield return new WaitUntil(() => initializeTask.IsCompleted);
             Assert.That(initializeTask.Result, Is.Not.Null);
@@ -37,7 +39,15 @@ namespace Tactics.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            TestGameAssetHelper.Cleanup();
+            try
+            {
+                TestGameAssetHelper.Cleanup();
+            }
+            finally
+            {
+                LogAssert.ignoreFailingMessages = _originalIgnoreFailingMessages;
+            }
+
             yield return null;
         }
 

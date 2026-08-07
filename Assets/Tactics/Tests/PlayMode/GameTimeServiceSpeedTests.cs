@@ -357,6 +357,68 @@ namespace Tactics.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator AIPlayer_CancelOngoingAction_WhenIdleAsyncDrainsPlayContinuation()
+        {
+            var gridController = new GridController();
+            var unitManager = new RecordingUnitManager();
+            gridController.UnitManager = unitManager;
+
+            var unitObject = new GameObject("DrainCancelledBrainUnit");
+            var unit = unitObject.AddComponent<Unit>();
+            var brain = ScriptableObject.CreateInstance<AiBrainAsset>();
+            unit.ApplyAiBrain(brain);
+
+            var aiPlayer = new AIPlayer(debugMode: false, turnStartDelay: 0, unitDelay: 0)
+            {
+                UnitSelector = new SingleUnitSelector(unit)
+            };
+            typeof(GridController).GetProperty(nameof(GridController.TurnContext))?
+                .SetValue(
+                    gridController,
+                    new Tactics.Common.Controllers.TurnResolvers.TurnContext(
+                        aiPlayer,
+                        new IUnit[] { unit }));
+            aiPlayer.Initialize(gridController);
+
+            var brainEntered = new TaskCompletionSource<bool>();
+            typeof(AIPlayer).GetField("_brainExecutor", BindingFlags.Instance | BindingFlags.NonPublic)?
+                .SetValue(
+                    aiPlayer,
+                    new System.Func<IUnit, GridController, AiBrainAsset, CancellationToken, Task>(
+                        async (u, g, brain, ct) =>
+                        {
+                            brainEntered.TrySetResult(true);
+                            await Task.Delay(Timeout.Infinite, ct);
+                        }));
+
+            bool previousIgnoreFailingMessages = LogAssert.ignoreFailingMessages;
+            LogAssert.ignoreFailingMessages = true;
+            try
+            {
+                aiPlayer.Play(gridController);
+                yield return new WaitUntil(() => brainEntered.Task.IsCompleted);
+                typeof(AIPlayer).GetMethod(
+                        "CancelOngoingAction",
+                        BindingFlags.Instance | BindingFlags.NonPublic)?
+                    .Invoke(aiPlayer, null);
+
+                Task idleTask = aiPlayer.WhenIdleAsync();
+                float deadline = Time.realtimeSinceStartup + 1f;
+                while (!idleTask.IsCompleted && Time.realtimeSinceStartup < deadline)
+                    yield return null;
+
+                Assert.That(idleTask.IsCompletedSuccessfully, Is.True,
+                    idleTask.Exception?.ToString() ?? "Cancelled AI Play continuation did not drain.");
+            }
+            finally
+            {
+                LogAssert.ignoreFailingMessages = previousIgnoreFailingMessages;
+                Object.DestroyImmediate(unitObject);
+                Object.DestroyImmediate(brain);
+            }
+        }
+
         [Test]
         public async Task AIPlayer_WaitForKeypress_ThrowsWhenCancellationAlreadyRequested()
         {

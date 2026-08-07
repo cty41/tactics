@@ -87,7 +87,8 @@ namespace Tactics.Common.Battle
 
             var humanPlayerNumbers = humanWinners.Select(player => player.PlayerNumber).ToHashSet();
             var opponentUnits = enemyUnits?
-                .Where(unit => unit != null && !humanPlayerNumbers.Contains(unit.PlayerNumber))
+                .Where(unit => IsUnityUnitAvailable(unit) &&
+                               !humanPlayerNumbers.Contains(unit.PlayerNumber))
                 .ToList() ?? new List<IUnit>();
             var formalEnemies = opponentUnits
                 .Where(IsFormalEncounterUnit)
@@ -117,7 +118,8 @@ namespace Tactics.Common.Battle
                     var units = BattleController.Instance.GetFriendlyUnits(winner);
                     if (units != null)
                     {
-                        friendlyUnits.AddRange(units.Where(u => u.Health > 0));
+                        friendlyUnits.AddRange(units.Where(unit =>
+                            IsUnityUnitAvailable(unit) && unit.Health > 0));
                     }
                 }
             }
@@ -169,9 +171,18 @@ namespace Tactics.Common.Battle
 
         private static bool IsFormalEncounterUnit(IUnit unit)
         {
-            return unit is Component component &&
+            return IsUnityUnitAvailable(unit) &&
+                   unit is Component component &&
                    component.TryGetComponent<EncounterUnitRuntimeModifiers>(out var modifiers) &&
                    modifiers.IsFormalEncounterUnit;
+        }
+
+        private static bool IsUnityUnitAvailable(IUnit unit)
+        {
+            // Battle snapshots can outlive destroyed MonoBehaviour wrappers. Interface null
+            // checks bypass Unity's fake-null semantics, so exclude those wrappers explicitly.
+            return unit != null &&
+                   (unit is not UnityEngine.Object unityObject || unityObject != null);
         }
 
         /// <summary>

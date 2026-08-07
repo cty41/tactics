@@ -418,13 +418,10 @@ namespace Tactics.Tests.PlayMode
                 Assert.That(directional.VisualState, Is.EqualTo(UnitVisualState.Unarmed));
                 Assert.That(new[] { unarmedDownRight, unarmedUpLeft }, Does.Contain(renderer.sprite));
 
-                LogAssert.Expect(
-                    LogType.Error,
-                    new System.Text.RegularExpressions.Regex(
-                        "\\[SkillGraphRunner\\] Exception in node '5': System\\.Threading\\.Tasks\\.TaskCanceledException"));
                 runtimeScope.Cancel();
                 yield return WaitForTask(task, 10d, "Cancel Poison Spear after release");
-                Assert.That(task.IsCanceled || task.IsFaulted, Is.True);
+                Assert.That(task.IsCanceled, Is.True);
+                Assert.That(GameObject.Find("ProjectileVisual"), Is.Null);
                 deadline = Time.realtimeSinceStartup + 5f;
                 while (directional.VisualState != UnitVisualState.Default &&
                        Time.realtimeSinceStartup < deadline)
@@ -681,6 +678,18 @@ namespace Tactics.Tests.PlayMode
                 Object.Destroy(graph);
                 world.Dispose();
             }
+        }
+
+        [Test]
+        public void SkillVfxPositionUtility_DestroyedUnit_ReturnsSafeFallbacks()
+        {
+            var unitObject = new GameObject("DestroyedVfxAnchorUnit");
+            IUnit unit = unitObject.AddComponent<Unit>();
+            Object.DestroyImmediate(unitObject);
+
+            Assert.That(SkillVfxPositionUtility.ResolveRenderer(unit), Is.Null);
+            Assert.That(SkillVfxPositionUtility.ResolveUnitCenter(unit), Is.EqualTo(Vector3.zero));
+            Assert.That(SkillVfxPositionUtility.ResolveUnitGround(unit), Is.EqualTo(Vector3.zero));
         }
 
         [UnityTest]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,7 @@ using NUnit.Framework;
 using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
 using Tactics.Common.Cells;
+using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
@@ -22,12 +24,28 @@ namespace Tactics.Tests.PlayMode
     {
         private GameObject _battleRoot;
         private GameObject _cellManagerRoot;
+        private bool _originalIgnoreFailingMessages;
+        private bool _suiteOriginalIgnoreFailingMessages;
+
+        [OneTimeSetUp]
+        public void CaptureSuiteLogAssertState()
+        {
+            _suiteOriginalIgnoreFailingMessages = LogAssert.ignoreFailingMessages;
+            LogAssert.ignoreFailingMessages = false;
+        }
+
+        [OneTimeTearDown]
+        public void RestoreSuiteLogAssertState()
+        {
+            LogAssert.ignoreFailingMessages = _suiteOriginalIgnoreFailingMessages;
+        }
 
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            _originalIgnoreFailingMessages = LogAssert.ignoreFailingMessages;
             // 忽略前一个测试残留的 AIPlayer 异步错误（async void Play() 跨帧执行）
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            LogAssert.ignoreFailingMessages = true;
 
             var assetTask = TestGameAssetHelper.EnsureInitialized();
             yield return new WaitUntil(() => assetTask.IsCompleted);
@@ -141,19 +159,14 @@ namespace Tactics.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            // ignoreFailingMessages 由 SetUp 设置为 true，这里确保仍然为 true
-            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
-
-            // 等待几帧让 AIPlayer 异步操作完成
-            yield return null;
-            yield return null;
-            yield return null;
+            var failures = new List<Exception>();
+            BattleController battleController = null;
 
             // 取消 RoguelikeBattleReturnHandler 的订阅，防止访问已销毁对象
             if (_battleRoot != null)
             {
-                var bc = _battleRoot.GetComponent<BattleController>();
-                if (bc != null)
+                battleController = _battleRoot.GetComponent<BattleController>();
+                if (battleController != null)
                 {
                     try
                     {
@@ -166,31 +179,109 @@ namespace Tactics.Tests.PlayMode
                             if (instance != null)
                             {
                                 var unregisterMethod = handlerType.GetMethod("UnregisterController", BindingFlags.Public | BindingFlags.Instance);
-                                unregisterMethod?.Invoke(instance, new object[] { bc });
+                                unregisterMethod?.Invoke(instance, new object[] { battleController });
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning($"[TearDown] Failed to unregister BattleController: {ex.Message}");
+                        failures.Add(new InvalidOperationException("Unregister BattleController failed.", ex));
                     }
                 }
             }
 
-            if (_cellManagerRoot != null)
+            Task runtimeTeardownTask = null;
+            if (battleController != null)
             {
-                UnityEngine.Object.DestroyImmediate(_cellManagerRoot);
+                try
+                {
+                    runtimeTeardownTask = battleController.IsBattleActive
+                        ? battleController.EndBattleAsync(new GameResult())
+                        : battleController.TeardownRuntimeScopeAsync();
+                }
+                catch (Exception ex)
+                {
+                    failures.Add(new InvalidOperationException("Starting BattleController teardown failed.", ex));
+                }
+            }
+
+            if (runtimeTeardownTask != null)
+            {
+                yield return new WaitUntil(() => runtimeTeardownTask.IsCompleted);
+                if (runtimeTeardownTask.IsFaulted)
+                    failures.Add(runtimeTeardownTask.Exception.Flatten());
+            }
+            if (battleController?.RuntimeScopeTeardownException != null)
+                failures.Add(battleController.RuntimeScopeTeardownException);
+
+            try
+            {
+                if (_cellManagerRoot != null)
+                    UnityEngine.Object.DestroyImmediate(_cellManagerRoot);
+            }
+            catch (Exception ex)
+            {
+                failures.Add(new InvalidOperationException("Destroying test cell manager failed.", ex));
+            }
+            finally
+            {
                 _cellManagerRoot = null;
             }
 
-            if (_battleRoot != null)
+            try
             {
-                UnityEngine.Object.DestroyImmediate(_battleRoot);
+                if (_battleRoot != null)
+                    UnityEngine.Object.DestroyImmediate(_battleRoot);
+            }
+            catch (Exception ex)
+            {
+                failures.Add(new InvalidOperationException("Destroying test BattleController failed.", ex));
+            }
+            finally
+            {
                 _battleRoot = null;
             }
 
-            TestGameAssetHelper.Cleanup();
+            try
+            {
+                TestGameAssetHelper.Cleanup();
+            }
+            catch (Exception ex)
+            {
+                failures.Add(new InvalidOperationException("Cleaning test assets failed.", ex));
+            }
+
             yield return null;
+            LogAssert.ignoreFailingMessages = _originalIgnoreFailingMessages;
+            if (failures.Count > 0)
+                Assert.Fail(string.Join("\n", failures.Select(failure => failure.ToString())));
+        }
+
+        [UnityTest]
+        [Order(-1000)]
+        public IEnumerator CleanupProbe_FirstRunCapturesSuiteLogAssertState()
+        {
+            AssertCapturedLogAssertStateIsFalse();
+            yield return null;
+        }
+
+        [UnityTest]
+        [Order(-999)]
+        public IEnumerator CleanupProbe_PreviousTeardownRestoredSuiteLogAssertState()
+        {
+            AssertCapturedLogAssertStateIsFalse();
+            yield return null;
+        }
+
+        private void AssertCapturedLogAssertStateIsFalse()
+        {
+            var capturedState = GetType().GetField(
+                "_originalIgnoreFailingMessages",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(capturedState, Is.Not.Null,
+                "The fixture must capture the entering LogAssert state before changing it.");
+            Assert.That((bool)capturedState.GetValue(this), Is.False,
+                "Each SetUp must observe the false value restored by the previous TearDown.");
         }
 
         [UnityTest]
@@ -218,6 +309,46 @@ namespace Tactics.Tests.PlayMode
             var details = $"Passed={result.Passed}, Steps={result.ExecutedSteps.Count}, Assertions={result.Assertions.Count}, Diagnostics=[{string.Join("; ", result.Diagnostics)}]";
             Assert.IsTrue(result.Passed, details);
             Assert.That(result.Assertions.Any(assertion => assertion.Kind == "battleIsActive" && assertion.Passed), Is.True, details);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_BattleEndActionWaitsForControllerScopeDrain()
+        {
+            var plan = ExecutableScenarioPlanLoader.FromFile(GetPlanPath("battle-end-result.plan.json"));
+            var gate = new GateStepAdapter();
+            plan.RequiredAdapters.Add(gate.AdapterName);
+            plan.RuntimeActions.Insert(0, new ExecutableScenarioAction
+            {
+                Adapter = gate.AdapterName,
+                Kind = GateStepAdapter.ActionKind
+            });
+
+            var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[]
+            {
+                new BattleGameplayStepAdapter(),
+                gate
+            });
+            Task<GameplayTestResult> runnerTask = runner.ExecuteAsync(plan);
+            yield return new WaitUntil(() => gate.Entered.Task.IsCompleted);
+
+            var controller = _battleRoot.GetComponent<BattleController>();
+            Assert.That(controller.RuntimeScope, Is.Not.Null,
+                "bindBattleController must establish the production battle runtime scope before the next action runs.");
+            var trackedCompletion = new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            controller.RuntimeScope.Track(trackedCompletion.Task);
+
+            gate.Release();
+            yield return null;
+
+            Assert.That(runnerTask.IsCompleted, Is.False,
+                "endBattleWithResult must not let the gameplay runner return before the controller scope drains.");
+            trackedCompletion.TrySetResult(true);
+            yield return WaitForTask(runnerTask);
+
+            Assert.That(runnerTask.Result.Passed, Is.True, string.Join("; ", runnerTask.Result.Diagnostics));
+            Assert.That(controller.RuntimeScope, Is.Null,
+                "The controller runtime scope must be released before the gameplay runner returns.");
         }
 
         [UnityTest]
@@ -545,6 +676,53 @@ namespace Tactics.Tests.PlayMode
                 }
 
                 throw exception ?? new System.Exception("Task faulted.");
+            }
+        }
+
+        private sealed class GateStepAdapter : IGameplayStepAdapter
+        {
+            public const string ActionKind = "waitForBattleDrainProbe";
+            private readonly TaskCompletionSource<bool> _release = new(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            public string AdapterName => "Gate";
+            public TaskCompletionSource<bool> Entered { get; } = new(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            public bool CanExecute(ExecutableScenarioAction action)
+            {
+                return action.Kind == ActionKind;
+            }
+
+            public async Task<GameplayStepResult> ExecuteAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAction action)
+            {
+                Entered.TrySetResult(true);
+                await _release.Task;
+                return GameplayStepResult.Pass(AdapterName, action.Kind, "Gate released.");
+            }
+
+            public bool CanAssert(ExecutableScenarioAssertion assertion)
+            {
+                return false;
+            }
+
+            public Task<GameplayAssertionResult> AssertAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAssertion assertion)
+            {
+                return Task.FromResult<GameplayAssertionResult>(null);
+            }
+
+            public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
+            {
+                return null;
+            }
+
+            public void Release()
+            {
+                _release.TrySetResult(true);
             }
         }
 

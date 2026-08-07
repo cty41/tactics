@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.Common.Testing.Gameplay;
@@ -263,6 +264,77 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_TimeoutWaitsForTopLevelExecutionBeforeDisposingContext()
+        {
+            var adapter = new CancellationGateAdapter();
+            var plan = new ExecutableScenarioPlan
+            {
+                ScenarioName = "RuntimeRunner.TimeoutDrainsTopLevelExecution",
+                TimeoutMs = 50
+            };
+            plan.RuntimeActions.Add(new ExecutableScenarioAction
+            {
+                Adapter = CancellationGateAdapter.Name,
+                Kind = CancellationGateAdapter.ActionKind
+            });
+
+            var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { adapter });
+            Task<GameplayTestResult> runnerTask = runner.ExecuteAsync(plan);
+
+            try
+            {
+                yield return new WaitUntil(() => adapter.CancellationObserved.IsCompleted);
+                float boundedReturnDeadline = Time.realtimeSinceStartup + 2.5f;
+                yield return new WaitUntil(() =>
+                    runnerTask.IsCompleted || Time.realtimeSinceStartup >= boundedReturnDeadline);
+
+                Assert.That(runnerTask.IsCompleted, Is.True,
+                    "A non-cooperative adapter must not turn TimeoutMs into an unbounded runner wait.");
+                Assert.That(runnerTask.Result.Passed, Is.False);
+                Assert.That(
+                    runnerTask.Result.ExecutedSteps.Any(step => step.Kind == "timeout"),
+                    Is.True);
+                Assert.That(adapter.CleanupObserved.IsCompleted, Is.False,
+                    "Deferred cleanup must keep the context alive until the adapter returns.");
+
+                adapter.ReleaseExecution();
+                yield return WaitForTask(adapter.CleanupObserved);
+
+                Assert.That(adapter.AccessedDisposedContext, Is.False);
+            }
+            finally
+            {
+                adapter.ReleaseExecution();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_TimeoutReturnsStructuredResultWhenCancellationDrainFaults()
+        {
+            var adapter = new CancellationFaultAdapter();
+            var plan = new ExecutableScenarioPlan
+            {
+                ScenarioName = "RuntimeRunner.TimeoutCancellationDrainFault",
+                TimeoutMs = 50
+            };
+            plan.RuntimeActions.Add(new ExecutableScenarioAction
+            {
+                Adapter = CancellationFaultAdapter.Name,
+                Kind = CancellationFaultAdapter.ActionKind
+            });
+
+            var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { adapter });
+            Task<GameplayTestResult> runnerTask = runner.ExecuteAsync(plan);
+            yield return WaitForTask(runnerTask);
+
+            Assert.That(runnerTask.IsFaulted, Is.False);
+            Assert.That(runnerTask.Result.Passed, Is.False);
+            Assert.That(
+                runnerTask.Result.ExecutedSteps.Single(step => step.Kind == "timeout").Message,
+                Does.Contain(nameof(InvalidOperationException)));
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_RestoresSpeedAfterTimeout()
         {
             GameTimeService.ForceResume();
@@ -395,6 +467,34 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RuntimeRunner_DrainsTrackedCleanupBeforeReturning()
+        {
+            var adapter = new TrackedCleanupAdapter();
+            var plan = new ExecutableScenarioPlan
+            {
+                ScenarioName = "RuntimeRunner.DrainsTrackedCleanup",
+                TimeoutMs = 1000
+            };
+            plan.RuntimeActions.Add(new ExecutableScenarioAction
+            {
+                Adapter = TrackedCleanupAdapter.Name,
+                Kind = TrackedCleanupAdapter.ActionKind
+            });
+
+            var runner = new GameplayRuntimeRunner(new IGameplayStepAdapter[] { adapter });
+            Task<GameplayTestResult> task = runner.ExecuteAsync(plan);
+            bool cleanupCompletedWhenRunnerReturned = false;
+            _ = task.ContinueWith(
+                _ => cleanupCompletedWhenRunnerReturned = adapter.CleanupCompleted,
+                TaskContinuationOptions.ExecuteSynchronously);
+            yield return WaitForTask(task);
+
+            Assert.That(task.Result.Passed, Is.True, string.Join("\n", task.Result.Diagnostics));
+            Assert.That(cleanupCompletedWhenRunnerReturned, Is.True,
+                "ExecuteAsync must cancel and drain tracked cleanup before returning to the next fixture.");
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeRunner_FailsFastWhenEnteringPaused()
         {
             GameTimeService.ForceResume();
@@ -498,6 +598,164 @@ namespace Tactics.Tests.PlayMode
             public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
             {
                 return null;
+            }
+        }
+
+        private sealed class CancellationGateAdapter : IGameplayStepAdapter
+        {
+            public const string Name = "CancellationGate";
+            public const string ActionKind = "waitPastTimeout";
+            private const string ContextMarker = "cancellation-gate-marker";
+
+            private readonly TaskCompletionSource<bool> _cancellationObserved = new(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            private readonly TaskCompletionSource<bool> _releaseExecution = new(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            private readonly TaskCompletionSource<bool> _cleanupObserved = new(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            public string AdapterName => Name;
+            public Task CancellationObserved => _cancellationObserved.Task;
+            public Task<bool> CleanupObserved => _cleanupObserved.Task;
+            public bool AccessedDisposedContext { get; private set; }
+
+            public bool CanExecute(ExecutableScenarioAction action)
+            {
+                return string.Equals(action.Kind, ActionKind, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public async Task<GameplayStepResult> ExecuteAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAction action)
+            {
+                context.Cells[ContextMarker] = null;
+                context.OwnedCleanupActions.Add(() => _cleanupObserved.TrySetResult(true));
+                using var registration = context.RuntimeScope.Token.Register(
+                    () => _cancellationObserved.TrySetResult(true));
+                await _releaseExecution.Task;
+                AccessedDisposedContext = !context.Cells.ContainsKey(ContextMarker);
+                return GameplayStepResult.Pass(Name, action.Kind);
+            }
+
+            public bool CanAssert(ExecutableScenarioAssertion assertion)
+            {
+                return false;
+            }
+
+            public Task<GameplayAssertionResult> AssertAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAssertion assertion)
+            {
+                return Task.FromResult(GameplayAssertionResult.Fail(
+                    Name,
+                    assertion.Kind,
+                    "Assertions are not supported by the cancellation gate adapter."));
+            }
+
+            public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
+            {
+                return null;
+            }
+
+            public void ReleaseExecution()
+            {
+                _releaseExecution.TrySetResult(true);
+            }
+        }
+
+        private sealed class CancellationFaultAdapter : IGameplayStepAdapter
+        {
+            public const string Name = "CancellationFault";
+            public const string ActionKind = "faultAfterCancellation";
+
+            public string AdapterName => Name;
+
+            public bool CanExecute(ExecutableScenarioAction action)
+            {
+                return action.Kind == ActionKind;
+            }
+
+            public async Task<GameplayStepResult> ExecuteAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAction action)
+            {
+                var cancellationObserved = new TaskCompletionSource<bool>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+                using var registration = context.RuntimeScope.Token.Register(
+                    () => cancellationObserved.TrySetResult(true));
+                await cancellationObserved.Task;
+                throw new InvalidOperationException("Synthetic cancellation drain failure.");
+            }
+
+            public bool CanAssert(ExecutableScenarioAssertion assertion) => false;
+
+            public Task<GameplayAssertionResult> AssertAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAssertion assertion)
+            {
+                return Task.FromResult<GameplayAssertionResult>(null);
+            }
+
+            public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
+            {
+                return null;
+            }
+        }
+
+        private sealed class TrackedCleanupAdapter : IGameplayStepAdapter
+        {
+            public const string Name = "TrackedCleanup";
+            public const string ActionKind = "trackCleanup";
+
+            public string AdapterName => Name;
+            public bool CleanupCompleted { get; private set; }
+
+            public bool CanExecute(ExecutableScenarioAction action)
+            {
+                return string.Equals(action.Kind, ActionKind, StringComparison.OrdinalIgnoreCase);
+            }
+
+            public Task<GameplayStepResult> ExecuteAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAction action)
+            {
+                context.RuntimeScope.Track(CompleteAfterCancellationAsync(context.RuntimeScope.Token));
+                return Task.FromResult(GameplayStepResult.Pass(Name, action.Kind));
+            }
+
+            public bool CanAssert(ExecutableScenarioAssertion assertion)
+            {
+                return false;
+            }
+
+            public Task<GameplayAssertionResult> AssertAsync(
+                GameplayRuntimeContext context,
+                ExecutableScenarioAssertion assertion)
+            {
+                return Task.FromResult(GameplayAssertionResult.Fail(
+                    Name,
+                    assertion.Kind,
+                    "Assertions are not supported by the tracked cleanup adapter."));
+            }
+
+            public ProbeSnapshot CaptureProbe(GameplayRuntimeContext context, GameplayProbeRequest request)
+            {
+                return null;
+            }
+
+            private async Task CompleteAfterCancellationAsync(CancellationToken cancellationToken)
+            {
+                try
+                {
+                    await Task.Delay(Timeout.Infinite, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // The cleanup continuation intentionally crosses the cancellation callback boundary.
+                }
+
+                await Task.Delay(50);
+                CleanupCompleted = true;
             }
         }
 

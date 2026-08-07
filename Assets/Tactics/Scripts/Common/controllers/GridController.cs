@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
 using Tactics.Common.Battle;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
 using Tactics.Common.Controllers.TurnResolvers;
@@ -26,6 +27,7 @@ namespace Tactics.Common.Controllers
         public ICellManager CellManager { get; set; }
         public IUnitManager UnitManager { get; set; }
         public IPlayerManager PlayerManager { get; set; }
+        public IBattleRuntimeScope RuntimeScope { get; set; }
         public ITurnResolver TurnResolver { get; set; }
         public Action<IGridController> BeforeUnitManagerInitialize { get; set; }
         public string CorpsePrefabPath { get; set; }

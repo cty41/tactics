@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Tactics.AssetPipeline;
 using Tactics.Common.Battle;
+using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Testing.Gameplay;
 using Tactics.Roguelike;
 using Tactics.UI;
@@ -24,9 +25,12 @@ namespace Tactics.Tests.PlayMode
     /// </summary>
     public sealed class PlayerInputGameplayPlanTests
     {
+        private bool _originalIgnoreFailingMessages;
+
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            _originalIgnoreFailingMessages = LogAssert.ignoreFailingMessages;
             LogAssert.ignoreFailingMessages = false;
 
             var initializeTask = TestGameAssetHelper.EnsureInitialized();
@@ -85,11 +89,34 @@ namespace Tactics.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            LogAssert.ignoreFailingMessages = false;
+            Task battleTeardownTask = DrainBattleControllerAsync();
+            yield return new WaitUntil(() => battleTeardownTask.IsCompleted);
+            string teardownFailure = battleTeardownTask.Exception?.Flatten().InnerException?.ToString();
+            bool projectileVisualRemainedAfterDrain = GameObject.Find("ProjectileVisual") != null;
             ResetPureRunState();
             DestroyOwnedUiInstances();
             yield return null;
             TestGameAssetHelper.Cleanup();
+            LogAssert.ignoreFailingMessages = _originalIgnoreFailingMessages;
+            Assert.IsFalse(battleTeardownTask.IsFaulted, teardownFailure);
+            Assert.IsFalse(
+                projectileVisualRemainedAfterDrain,
+                "Battle runtime drain must complete before any ProjectileVisual survives into the next fixture.");
+        }
+
+        private static async Task DrainBattleControllerAsync()
+        {
+            BattleController battleController = BattleController.Instance;
+            if (battleController == null)
+                return;
+
+            if (battleController.IsBattleActive)
+            {
+                await battleController.EndBattleAsync(new GameResult());
+                return;
+            }
+
+            await battleController.TeardownRuntimeScopeAsync();
         }
 
         [UnityTest]
@@ -112,6 +139,34 @@ namespace Tactics.Tests.PlayMode
             yield return WaitForTask(task);
 
             AssertPlanPassed(task.Result);
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_DrainsProjectileBeforeCameraGeometryConsumer()
+        {
+            var task = ExecutePlan(GetPlanPath("battle-player-input-smoke.plan.json"));
+            yield return WaitForTask(task);
+
+            AssertPlanPassed(task.Result);
+            BattleController battleController = BattleController.Instance;
+            Assert.That(battleController?.RuntimeScope, Is.Null,
+                "The player-input producer must release its battle scope before the camera consumer starts.");
+            Assert.That(battleController?.RuntimeScopeTeardownException, Is.Null,
+                "The player-input producer must expose no runtime scope teardown failure.");
+            Assert.That(GameObject.Find("ProjectileVisual"), Is.Null,
+                "The player-input producer must drain ProjectileVisual before the camera consumer starts.");
+
+            var cameraConsumer = new BattleBoardCameraFitterTests();
+            try
+            {
+                IEnumerator consumer = cameraConsumer.Camera_RepairsExternallyMutatedManagedOutputsWithoutInputChange();
+                while (consumer.MoveNext())
+                    yield return consumer.Current;
+            }
+            finally
+            {
+                cameraConsumer.TearDown();
+            }
         }
 
         [UnityTest]
@@ -282,7 +337,7 @@ namespace Tactics.Tests.PlayMode
                 Assert.That(task.Result.Passed, Is.False,
                     "PointerDown followed by target detach must not be reported as a completed click.");
                 Assert.That(
-                    task.Result.ExecutedSteps.Any(step => step.Message.Contains("no ClickEvent")),
+                    task.Result.ExecutedSteps.Any(step => step.Message.Contains("no semantic click event")),
                     Is.True,
                     $"Expected a release-without-click diagnostic. Steps=[{string.Join("; ", task.Result.ExecutedSteps.Select(step => step.Message))}]");
             }
@@ -366,6 +421,41 @@ namespace Tactics.Tests.PlayMode
                 }
 
                 yield return null;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRunner_DoesNotTreatDetachedButtonAsClickedCallback()
+        {
+            var document = Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None)
+                .FirstOrDefault(candidate => candidate?.rootVisualElement?.panel != null);
+            Assert.That(document, Is.Not.Null, "Home must provide an active UIDocument.");
+            var button = new Button { name = "DetachBeforeButtonClicked" };
+            button.style.position = Position.Absolute;
+            button.style.left = 720f;
+            button.style.top = 100f;
+            button.style.width = 180f;
+            button.style.height = 60f;
+            button.RegisterCallback<PointerUpEvent>(
+                _ => button.RemoveFromHierarchy(),
+                TrickleDown.TrickleDown);
+            document.rootVisualElement.Add(button);
+
+            try
+            {
+                yield return null;
+                var plan = CreateInputLifecyclePlan(
+                    timeoutMs: 10000,
+                    runtimeActionJson: "{\"adapter\":\"PlayerInput\",\"kind\":\"clickPointerTarget\",\"target\":\"DetachBeforeButtonClicked\",\"parameters\":{\"targetKind\":\"UiElement\"}}");
+                Task<GameplayTestResult> task = ExecutePlan(plan);
+                yield return WaitForTask(task);
+
+                Assert.That(task.Result.Passed, Is.False,
+                    "A Button must not pass when it detaches before Button.clicked is observed.");
+            }
+            finally
+            {
+                button.RemoveFromHierarchy();
             }
         }
 

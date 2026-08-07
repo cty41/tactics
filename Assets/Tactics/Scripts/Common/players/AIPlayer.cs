@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Tactics.Runtime.Utilities;
 using System.Linq;
 using System.Threading;
@@ -32,6 +33,7 @@ namespace Tactics.Common.Players
         public IUnitSelector UnitSelector;
 
         private CancellationTokenSource _cancellationTokenSource;
+        private readonly HashSet<Task> _activePlayTasks = new();
 
         public AIPlayer()
         {
@@ -78,6 +80,41 @@ namespace Tactics.Common.Players
         /// Executes the AI player's turn by selecting and commanding units in sequence.
         /// </summary>
         public async void Play(GridController gridController)
+        {
+            Task playTask = PlayAsync(gridController);
+            _activePlayTasks.Add(playTask);
+            try
+            {
+                await playTask;
+            }
+            finally
+            {
+                _activePlayTasks.Remove(playTask);
+            }
+        }
+
+        /// <summary>
+        /// Waits until every AI turn continuation started by <see cref="Play"/> has completed.
+        /// Callers must cancel ongoing work before awaiting this during teardown.
+        /// </summary>
+        public async Task WhenIdleAsync()
+        {
+            while (_activePlayTasks.Count > 0)
+            {
+                await Task.WhenAll(_activePlayTasks.ToArray());
+            }
+        }
+
+        /// <summary>
+        /// Cancels in-flight AI work and waits for all associated continuations to finish.
+        /// </summary>
+        public async Task CancelAndDrainAsync()
+        {
+            CancelOngoingAction();
+            await WhenIdleAsync();
+        }
+
+        private async Task PlayAsync(GridController gridController)
         {
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();

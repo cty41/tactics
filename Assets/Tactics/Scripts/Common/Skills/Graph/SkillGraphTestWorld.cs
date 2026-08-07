@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tactics.Common.Cells;
+using Tactics.Common.Battle.Runtime;
 using Tactics.Common.Controllers;
 using Tactics.Common.Controllers.GameResolvers;
 using Tactics.Common.Controllers.GridStates;
@@ -150,6 +151,7 @@ namespace Tactics.Common.Skills.Graph.Testing
         public ICellManager CellManager { get; set; }
         public IUnitManager UnitManager { get; set; }
         public IPlayerManager PlayerManager { get; set; }
+        public IBattleRuntimeScope RuntimeScope => null;
         public ITurnResolver TurnResolver { get; set; }
         public TurnContext TurnContext { get; private set; }
         public int CurrentRound { get; private set; } = 1;

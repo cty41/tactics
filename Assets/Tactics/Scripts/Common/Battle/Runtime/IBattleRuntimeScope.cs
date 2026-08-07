@@ -25,6 +25,12 @@ namespace Tactics.Common.Battle.Runtime
         void Track(Task task);
 
         /// <summary>
+        /// Attempts to register an asynchronous task and reports whether this scope accepted
+        /// ownership of its lifecycle.
+        /// </summary>
+        bool TryTrack(Task task);
+
+        /// <summary>
         /// 等待所有已注册的异步任务完成或取消。
         /// </summary>
         Task WhenIdleAsync();
