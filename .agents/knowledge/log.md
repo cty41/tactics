@@ -1,11 +1,11 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-07
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5c2a7beea0ac94e6033e4f9803f335049d60c2f6b4f90cb3a6077355abfad65a`。
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:f7343cca8b6a1be119b37eca91a352a1f031df5581b99ccdf61a79d202511686`。
 * **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:b8fe65377040410d8e8b35ba2efad7359aa931b1e468196e6fd10d4763987abe`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:bb48d556cc8faccf19f828eab9d60b1959e062371855dc45cc8178f789681a0a`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:c76f0f290332940dcf149ad3533d9e7127351ae31f7c47e1f2e799822dff2fd4`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:961524b71609df6f7902cfd3510fb3214690ec2dfffca878a9f252b611ceb018`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:604eba8fa0540790fae8f493c93a84be7712b88c82ce958ab517d0336e0b74b3`。
 * **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:c2b2296bdaedd44ac3bc4841178b03f7b7d52427768d7872c822e8f78d471ea2`。
 * **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:b644433ffd83779a27c50b1bf13cb3304aef10f0e43dd30200ab1ad9dfa565d3`。
