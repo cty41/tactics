@@ -1,11 +1,26 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-07
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:f7343cca8b6a1be119b37eca91a352a1f031df5581b99ccdf61a79d202511686`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:b8fe65377040410d8e8b35ba2efad7359aa931b1e468196e6fd10d4763987abe`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:bb48d556cc8faccf19f828eab9d60b1959e062371855dc45cc8178f789681a0a`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:c76f0f290332940dcf149ad3533d9e7127351ae31f7c47e1f2e799822dff2fd4`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:961524b71609df6f7902cfd3510fb3214690ec2dfffca878a9f252b611ceb018`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:604eba8fa0540790fae8f493c93a84be7712b88c82ce958ab517d0336e0b74b3`。
 * **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:c2b2296bdaedd44ac3bc4841178b03f7b7d52427768d7872c822e8f78d471ea2`。
 * **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:b644433ffd83779a27c50b1bf13cb3304aef10f0e43dd30200ab1ad9dfa565d3`。
 
 ## 2026-08-06
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:7734cd3872290366624a21cdf92c0acb67977ab2bdb0c4c26993a1f4ac1c4277`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:ed519ce2b3494970093bd02145046d881d10881160a5e25acacbb85b755c619d`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:1b01a568b2d0c93827bc85892505ea98c6e1e8749b1fa2974986541cd0bdd754`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:47708ede8b3648fe382d14ae4bd22a91470299607a8d307e8f70e3d31f3a7721`。
+* **Update**: Unity MCP 自动恢复保持 `0/5`、`blocked_upstream`；除 10.1.0 包内约 15 秒周期的并发 reconnect/session eviction 外，closing review 还确认 manual Disconnect、batch/import-worker、machine-global endpoint、cold-start ownership 与 Play Mode compile gate 等项目层阻断项，当前 bootstrap 不具备提交条件。
+* **Validation**: bootstrap 定向 EditMode gate `17/17` 通过但不足以关闭 lifecycle findings；MCP 配置与测试 gate 黑盒回归当前 `35/35` 通过，C# 工程与 Unity domain reload 编译无错误。连续 5 轮与全量 EditMode/PlayMode 未执行。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:0f88291a600f37945f06e0d685b44582aac4a9677c99547b3bf4d680514c9dca`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:098794df49f10c4f16ceba41c9408f3a76310deedde27d0ed5f727ae1c3c40c2`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:e1fb883441dbe29028dbeefe3b888573d92fc65a6c646998a53562afcaca6f5f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:d729106f7bd8e396980267889b7544e8be9e5ffde166b49448a6fd04cfa6654b`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:653fd5013cf174409755182e449008943be5069a749199ffd5565a567cb7d10f`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:9e3bab058975d650aad70afe843d530ff7b227d9135cff4f848e433c14430956`。
 
 ## 2026-08-05
@@ -23,6 +38,12 @@
 * **Documentation**: 新增等距网格与视觉锚点权威契约，并同步 Battle、Gameplay Test、Pure Run Artwork 与 Project Documentation 导航。
 
 ## 2026-08-04
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:4bdbad6bbe32df967c2d0473fee6c7a7c7f518551ac9dbccd4cd09f750397b5b`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:a6465d9a98503acfd535c85bf4d85578982ca7722ab0dd04cbe35c8e048f289a`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5777c9188ba246f7efde654d3b13f3983292a42433d7d2ab7312419403e94205`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:71a44d19fa8b7bbc7124bbc0811f0b8f7f03945c137ab685eb4bb6feac18c2aa`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:0e3c28b8674e2abcc365b1155618490180676c89e263daf1a45450ab6cbac5a6`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:5769b15100129494f34a58149e040443d92a2affa58eb95099c997c673051e84`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:df7d7e02411cda4b081d7f5ee2bd342348669e8aa477b13a4932d29720ae9ded`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:8da8298c973a9aa54026b50fafa3d5134de6881ebf4c3f3c8d701fbf21b514a8`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800`。

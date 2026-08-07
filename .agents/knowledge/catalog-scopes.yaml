@@ -115,6 +115,12 @@ scopes:
       - Assets/Tactics/ScriptableObjects/BattleTest/CorpseTestEncounter.asset
       - Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestEncounter.asset
       - Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestParty.asset
+      - Assets/Tactics/Scenes/Test1_10x10_Probe.unity
+      - Assets/Tactics/Scenes/Test1_10x10_Probe.unity.meta
+      - Assets/Tactics/ScriptableObjects/BattleTest/Probe10x10Encounter.asset
+      - Assets/Tactics/ScriptableObjects/BattleTest/Probe10x10Encounter.asset.meta
+      - Assets/Tactics/ScriptableObjects/BattleTest/Probe10x10Party.asset
+      - Assets/Tactics/ScriptableObjects/BattleTest/Probe10x10Party.asset.meta
       - Assets/Tactics/Scenes/Test1.unity
       - Assets/Tactics/Scripts/Common/Cells
       - Assets/Tactics/Scripts/Common/Editor/CellBrush.cs
@@ -131,8 +137,12 @@ scopes:
       - Assets/Tactics/Tests/Editor/UnitDerivedStatRulesTests.cs.meta
       - Assets/Tactics/Tests/Editor/GridHelperFixedBoardTests.cs
       - Assets/Tactics/Tests/Editor/GridHelperFixedBoardTests.cs.meta
+      - Assets/Tactics/Tests/Editor/Probe10x10BattleMapLayoutEditorTests.cs
+      - Assets/Tactics/Tests/Editor/Probe10x10BattleMapLayoutEditorTests.cs.meta
       - Assets/Tactics/Tests/PlayMode/Test1BattleSmokeTests.cs
       - Assets/Tactics/Tests/PlayMode/Test1BattleSmokeTests.cs.meta
+      - Assets/Tactics/Tests/PlayMode/Probe10x10BattleSmokeTests.cs
+      - Assets/Tactics/Tests/PlayMode/Probe10x10BattleSmokeTests.cs.meta
       - Assets/Tactics/Tests/Editor/PureRunAbilityCatalogEditorTests.cs
       - Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs
       - Assets/Tactics/Scripts/UI/BattleSettlementUIController.cs

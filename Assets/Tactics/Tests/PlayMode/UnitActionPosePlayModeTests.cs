@@ -317,67 +317,6 @@ namespace Tactics.Tests.PlayMode
             yield return null;
         }
 
-        [TestCase(
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab",
-            "Mage",
-            "doge_mage")]
-        [TestCase(
-            "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab",
-            "Necromancer",
-            "doge_necromancer")]
-        public void PureRunCasterAssets_ResolveCastAndHitWithoutFlippingSecondaryRenderers(
-            string prefabPath,
-            string actionFolder,
-            string texturePrefix)
-        {
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-            Assert.That(prefab, Is.Not.Null, prefabPath);
-            GameObject instance = Track(Object.Instantiate(prefab));
-            FourDirectionSpriteVisual visual = instance.GetComponent<FourDirectionSpriteVisual>();
-            Assert.That(visual, Is.Not.Null, prefabPath);
-            SpriteRenderer renderer = visual.TargetRenderer;
-            UnitActionPoseProfile profile = visual.ActionPoseProfile;
-            Assert.That(renderer, Is.Not.Null, prefabPath);
-            Assert.That(profile, Is.Not.Null, prefabPath);
-
-            UnitPoseFamily cast = profile.ResolveFamily(UnitVisualAction.Cast);
-            UnitPoseFamily hit = profile.HitFamily;
-            Assert.That(cast, Is.Not.Null, prefabPath);
-            Assert.That(hit, Is.Not.Null, prefabPath);
-            Assert.That(profile.ResolveFamily(UnitVisualAction.Melee), Is.Null, prefabPath);
-            Assert.That(profile.ResolveFamily(UnitVisualAction.Ranged), Is.Null, prefabPath);
-
-            string actionRoot = $"Assets/Tactics/Arts/PureRun/Textures/Actions/{actionFolder}";
-            Sprite castDownRight = LoadSprite(actionRoot, $"{texturePrefix}_cast_dr.png");
-            Sprite castUpLeft = LoadSprite(actionRoot, $"{texturePrefix}_cast_ul.png");
-            Sprite hitDownRight = LoadSprite(actionRoot, $"{texturePrefix}_hit_dr.png");
-            Sprite hitUpLeft = LoadSprite(actionRoot, $"{texturePrefix}_hit_ul.png");
-            var secondaryFlipState = new Dictionary<SpriteRenderer, bool>();
-            foreach (SpriteRenderer candidate in instance.GetComponentsInChildren<SpriteRenderer>(true))
-            {
-                if (candidate != renderer)
-                    secondaryFlipState.Add(candidate, candidate.flipX);
-            }
-
-            visual.SetPose(cast, FacingDirection.South);
-            AssertFacing(visual, renderer, FacingDirection.South, castDownRight, false);
-            AssertFacing(visual, renderer, FacingDirection.West, castDownRight, true);
-            AssertFacing(visual, renderer, FacingDirection.North, castUpLeft, false);
-            AssertFacing(visual, renderer, FacingDirection.East, castUpLeft, true);
-
-            visual.SetPose(hit, FacingDirection.South);
-            AssertFacing(visual, renderer, FacingDirection.South, hitDownRight, false);
-            AssertFacing(visual, renderer, FacingDirection.West, hitDownRight, true);
-            AssertFacing(visual, renderer, FacingDirection.North, hitUpLeft, false);
-            AssertFacing(visual, renderer, FacingDirection.East, hitUpLeft, true);
-
-            visual.ClearPose(FacingDirection.South);
-            Assert.That(renderer.sprite, Is.SameAs(visual.DownRightSprite), prefabPath);
-            Assert.That(renderer.flipX, Is.False, prefabPath);
-            foreach (KeyValuePair<SpriteRenderer, bool> pair in secondaryFlipState)
-                Assert.That(pair.Key.flipX, Is.EqualTo(pair.Value), pair.Key.name);
-        }
-
         [UnityTest]
         public IEnumerator PureRunHunterHitPose_RestoresAuthoritativeIdle_AndExplicitStopClearsPose()
         {

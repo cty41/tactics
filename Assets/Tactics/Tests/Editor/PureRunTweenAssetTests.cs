@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Tactics.Common.Skills.Graph;
+using Tactics.Common.Units;
 using Tactics.Common.Units.Abilities;
 using Tactics.Common.Units.Tween;
 using UnityEditor;
@@ -187,8 +188,40 @@ namespace Tactics.Tests.Editor
 
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             Assert.That(prefab, Is.Not.Null, prefabPath);
-            Assert.That(prefab.GetComponent<Tactics.Common.Units.FourDirectionSpriteVisual>().ActionPoseProfile,
-                Is.SameAs(profile), prefabPath);
+            FourDirectionSpriteVisual prefabVisual = prefab.GetComponent<FourDirectionSpriteVisual>();
+            Assert.That(prefabVisual, Is.Not.Null, prefabPath);
+            Assert.That(prefabVisual.ActionPoseProfile, Is.SameAs(profile), prefabPath);
+
+            GameObject instance = UnityEngine.Object.Instantiate(prefab);
+            try
+            {
+                FourDirectionSpriteVisual visual = instance.GetComponent<FourDirectionSpriteVisual>();
+                Assert.That(visual, Is.Not.Null, prefabPath);
+                SpriteRenderer renderer = visual.TargetRenderer;
+                Assert.That(renderer, Is.Not.Null, prefabPath);
+                var secondaryFlipState = new Dictionary<SpriteRenderer, bool>();
+                foreach (SpriteRenderer candidate in instance.GetComponentsInChildren<SpriteRenderer>(true))
+                {
+                    if (candidate != renderer)
+                        secondaryFlipState.Add(candidate, candidate.flipX);
+                }
+
+                AssertPoseFacing(visual, renderer, cast, FacingDirection.South, castDownRight, false);
+                AssertPoseFacing(visual, renderer, cast, FacingDirection.West, castDownRight, true);
+                AssertPoseFacing(visual, renderer, cast, FacingDirection.North, castUpLeft, false);
+                AssertPoseFacing(visual, renderer, cast, FacingDirection.East, castUpLeft, true);
+                AssertPoseFacing(visual, renderer, hit, FacingDirection.South, hitDownRight, false);
+                AssertPoseFacing(visual, renderer, hit, FacingDirection.West, hitDownRight, true);
+                AssertPoseFacing(visual, renderer, hit, FacingDirection.North, hitUpLeft, false);
+                AssertPoseFacing(visual, renderer, hit, FacingDirection.East, hitUpLeft, true);
+
+                foreach (KeyValuePair<SpriteRenderer, bool> pair in secondaryFlipState)
+                    Assert.That(pair.Key.flipX, Is.EqualTo(pair.Value), pair.Key.name);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+            }
         }
 
         [TestCase("PoisonSpear_Graph_Ability")]
@@ -665,6 +698,19 @@ namespace Tactics.Tests.Editor
             Assert.That(resolution, Is.EqualTo(UnitPoseResolution.ExactPoseState));
             Assert.That(Path.GetFileName(AssetDatabase.GetAssetPath(downRight)), Is.EqualTo(expectedDownRight));
             Assert.That(Path.GetFileName(AssetDatabase.GetAssetPath(upLeft)), Is.EqualTo(expectedUpLeft));
+        }
+
+        private static void AssertPoseFacing(
+            FourDirectionSpriteVisual visual,
+            SpriteRenderer renderer,
+            UnitPoseFamily family,
+            FacingDirection facing,
+            string expectedSpriteName,
+            bool expectedFlip)
+        {
+            visual.SetPose(family, facing);
+            Assert.That(Path.GetFileName(AssetDatabase.GetAssetPath(renderer.sprite)), Is.EqualTo(expectedSpriteName));
+            Assert.That(renderer.flipX, Is.EqualTo(expectedFlip), facing.ToString());
         }
     }
 }

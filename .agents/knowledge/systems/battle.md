@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-05T16:29:23+08:00"
+timestamp: "2026-08-07T19:15:34+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -13,6 +13,12 @@ repo_paths:
   - .agents/docs/buff-system-rules.md
   - .agents/docs/three-class-skill-design.md
   - Assets/Tactics/Scripts/Common/Battle/BattleController.cs
+  - Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs
+  - Assets/Tactics/Scripts/Common/controllers/GridController.cs
+  - Assets/Tactics/Scripts/Common/controllers/IGridController.cs
+  - Assets/Tactics/Scripts/Common/Units/Unit.cs
+  - Assets/Tactics/Tests/PlayMode/InteractableCorpsePlayModeTests.cs
+  - Assets/Tactics/Tests/PlayMode/PureRunEncounterAndSummaryTests.cs
   - Assets/Tactics/Scripts/Common/Battle/Runtime/BattleRuntimeScope.cs
   - Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs
   - Assets/Tactics/Scripts/Common/Battle/BattleSettlementFlow.cs
@@ -22,8 +28,11 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs
   - Assets/Tactics/Scripts/Common/Battle/BattleBackdropFitter.cs
   - Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs
+  - Assets/Tactics/GameData/Encounters/basic_melee.json
+  - Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestParty.asset
+  - Assets/Tactics/ScriptableObjects/BattleTest/DefaultTestEncounter.asset
+  - Assets/Tactics/ScriptableObjects/BattleTest/CorpseTestEncounter.asset
   - Assets/Tactics/Scripts/Common/Battle/EncounterUnitRuntimeModifiers.cs
-  - Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs
   - Assets/Tactics/Scripts/Flow/Battle/BattleFlowCoordinator.cs
   - Assets/Tactics/Scripts/Common/Battle/AmazonBattleState.cs
   - Assets/Tactics/Scripts/Common/Battle/SummonRegistry.cs
@@ -73,14 +82,25 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
   - Assets/Tactics/Tests/PlayMode/BattleRuntimeScopePlayModeTests.cs
   - Assets/Tactics/Tests/Editor/BattleRuntimeScopeApiContractTests.cs
+  - Assets/Tactics/Scenes/Test1_10x10_Probe.unity
+  - Assets/Tactics/ScriptableObjects/BattleTest/Probe10x10Encounter.asset
+  - Assets/Tactics/ScriptableObjects/BattleTest/Probe10x10Party.asset
+  - Assets/Tactics/Tests/Editor/BattleBoardSpecTests.cs
+  - Assets/Tactics/Tests/Editor/Probe10x10BattleMapLayoutEditorTests.cs
+  - Assets/Tactics/Tests/PlayMode/BattleBoardCameraFitterTests.cs
+  - Assets/Tactics/Tests/PlayMode/BattleControllerEncounterSpawnTests.cs
+  - Assets/Tactics/Tests/PlayMode/BattleTestConfigPlayModeTests.cs
+  - Assets/Tactics/Tests/PlayMode/Probe10x10BattleSmokeTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:2db17fd21a80c57916d40e567c60fff5e3e4bf2cecb883258b7fbc1a28be89ac
+source_fingerprint: sha256:604eba8fa0540790fae8f493c93a84be7712b88c82ce958ab517d0336e0b74b3
 ---
 
 # Current State
 
-`BattleController` 承接棋盘、玩家、单位、回合事件和战斗生命周期。当前属性集合为力量、敏捷、体质、智力、魅力、幸运和速度；派生生命、法力、移动、先攻与恢复公式由当前属性文档和代码共同约束，不存在统一幸运暴击/闪避公式。
+`BattleController` 承接棋盘、玩家、单位、回合事件和战斗生命周期。当前属性集合为力量、敏捷、体质、智力、魅力、幸运和速度；固定 10×10 战场的移动力统一由 `UnitDerivedStatRules.CalculateMovement` 计算为 `clamp(ceil(Speed / 2), 1, 4)`，运行时与 TilemapUnit Inspector 预览共用该函数；先攻仍为 `Speed × 2`。派生生命、法力与恢复公式继续由当前属性文档和代码共同约束，不存在统一幸运暴击/闪避公式。
+
+固定战场的运行时边界由 `BattleBoardSpec` 约束为坐标 `0..9`：投射技能从 `(0,0)` 与 `(9,9)` 选出的目标格都不得越界；对角 supercover LOS 会检查角点两侧的正交格，任一侧阻挡即不可穿角；传送必须遵循各等级图中声明的 LOS 策略，需要 LOS 的等级不可穿过阻挡，不需要 LOS 的等级保持可选；十字 AOE 在角、边和中心按棋盘裁剪；击退目标若越过边界则保持原格及占格状态。尸体召唤在加载 Prefab 或消耗尸体前拒绝空格、越界格以及已有活体单位的格子；成功召唤与上限替换必须同步维护 `CurrentCell`、`CurrentUnits` 和 `IsTaken`。
 
 伤害大类与元素是两个独立维度：`DamageCategory` 区分物理/魔法，`ElementType` 区分无元素、火、冰、水、土、风和电，允许无元素魔法伤害。直接伤害把命中、闪避、格挡和暴击结果写入 `DamageResolution`；只有显式设置 `RequiresSuccessfulHit` 的后续 Buff 节点才依赖同一目标的成功命中。
 
@@ -94,31 +114,23 @@ Buff 以标准状态类型、配置引用和 `CurseCategory` 决定刷新/替换
 
 `BattleInitiativeService` 按有效速度派生先攻并维护当前轮待行动顺序；减速等速度变化会立即重排尚未行动单位，不回滚已经行动的单位。Unit 按能力配置的稳定名称维护本回合成功使用次数，并在 `PrepareForTurn` 清空；共享 AbilityConfig 资产不会共享不同单位的运行时计数。`SummonRegistry` 按召唤者和类别记录召唤顺序，支持单体上限替换、原子批量替换和按召唤物已完成行动数计时；主动替换、到期、召唤者死亡与战斗结束会同步释放格子且不留下尸体。`AbilityAvailability` 统一表达可用、可点击禁用及隐藏状态，并携带稳定的禁用原因。
 
-普通非召唤单位死亡当帧即从 `UnitManager` 和原 Cell 的活体列表移除，并在原 Cell 注册可选中、占格且可被死灵技能消耗的 `Corpse`；这些玩法语义不等待表现。Pure Run 单位有专用死亡 Sprite 和标准 Tween 时，尸体先应用 Sprite、材质、Tint 及死者主 Renderer 当时的 Sorting Layer/Order，但隐藏 Renderer；活体进入 `Dying`，依次播放 `0.07s` recoil、`0.05s` shake 与 `0.08s` collapse，在 `0.20s` 幂等 Handoff，隐藏活体全部 Sprite/Shadow、显示尸体并开始 `0.13s` 下落、`0.07s` 冲击压缩与 `0.08s` 回弹。Handoff 和落地不再改变尸体排序，缺少来源 Renderer 的兼容单位保留尸体 Prefab 排序。collapse 末帧回到 Tile 基准和基础旋转，并从底部 Pivot 压到 `1.02× / 0.58×`，避免 Hit Sprite 直接跳为扁平尸体。取消、Disable、Destroy 或缺少攻击来源时立即执行同一 Handoff，不能留下永久隐藏的尸体。正式死亡图已按 Alpha AABB 居中并使用零局部偏移；未配置完整新链路的旧单位继续使用原销毁回退，召唤物与诱饵继续不生成尸体。
+普通非召唤单位死亡后仍从 `UnitManager` 移除，并在原 Cell 生成可选中、占格且可被死灵技能消耗的 `Corpse`。死亡路径先在原 Cell `AddInteractable(corpse)` 再执行 `Unit.Cleanup`；`Cleanup` 与 `DetachUnitFromCell` 同为 interactable 感知——格子仍被占位 interactable 占用时保持 `IsTaken`，尸体格不会被误判为可通行，该行为由 `InteractableCorpsePlayModeTests` 的死亡路径用例锁定。Pure Run 单位可在视觉配置中提供专用死亡 Sprite；尸体使用中心 Pivot并抵消 Sprite Tight bounds 的可见中心偏移，清除通用尸体的旋转与灰色 Tint，并继承生前主 Renderer 的材质和颜色。未配置专用图的旧单位继续使用通用尸体，召唤物与诱饵继续不生成尸体。
 
-标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和受击。内部生命周期为 `Alive → Dying → Removed`：Alive 内继续用优先级协调动作；Dying 终止性抢占 Move、Action 与普通 Hit，并通过 generation/version 和幂等 Handoff 阻止旧 Tween 回调恢复 Idle 或重复交接；Removed 不再启动 Tween。方向、技能、VFX 和姿态族仍作为状态载荷，不扩张生命周期枚举。`UnitPoseFamily` 为单帧姿态声明 Release/恢复段退出语义，`UnitActionPoseProfile` 把角色默认动作族、`Default/Unarmed` 状态与双原生方向图分开配置；显式缺图只回退同族默认状态或 idle，不借用无关姿态，表现缺失不影响图执行。Cast 开始时仍以施法者 Sprite 中心发送非阻塞 `CastCharge`；允许 Profile 配置化切换人物 Sprite，但禁止复制整人物 Overlay，并保持主 Renderer 的 Material、Color、Sorting、Shadow 和 Transform 契约。赤柴 Cast 与 Hit 的 `Default / Unarmed` 分别显式共用各自的一对无矛方向图；姿态期间只隐藏 Sprite 内长矛而不改 `IsSpearHeld`，恢复段按权威状态回到对应 idle。法师与死灵法师分别使用只含 Default Cast/Hit 的独立 Profile，Melee、Ranged 与 Idle 覆盖为空，未来换图不改变动作族和时序接口。尸体继续使用独立死亡 Sprite，不继承动作姿态或镜像。蝙蝠等飞行单位暂不接入。
+标准地面 Pure Run 单位通过共享 `StandardUnitTweenProfile` 与 `UnitTweenVisual` 表现 Idle、逐路径段移动、近战、远程、施法和非致死受击。Tween 只作用于主 `Sprite` 视觉 Transform，前景优先级为尸体落地、受击、攻击/施法、移动、Idle；打断后恢复 Prefab 原始局部姿态和当前装备状态的 idle。`UnitPoseFamily` 为单帧姿态声明 Release/恢复段退出语义，`UnitActionPoseProfile` 把角色默认动作族、`Default/Unarmed` 状态与双原生方向图分开配置；显式缺图只回退同族默认状态或 idle，不借用无关姿态，表现缺失不影响图执行。Cast 开始时仍以施法者 Sprite 中心发送非阻塞 `CastCharge`；允许 Profile 配置化切换人物 Sprite，但禁止复制整人物 Overlay，并保持主 Renderer 的 Material、Color、Sorting、Shadow 和 Transform 契约。赤柴 Cast 与 Hit 的 `Default / Unarmed` 分别显式共用各自的一对无矛方向图；姿态期间只隐藏 Sprite 内长矛而不改 `IsSpearHeld`，恢复段按权威状态回到对应 idle。尸体继续使用独立死亡 Sprite，不继承动作姿态或镜像。蝙蝠等飞行单位暂不接入。
 
-`UnitTweenVisual` 的状态不序列化；Play Mode Inspector 通过 internal 快照只读显示 Lifecycle、Foreground Priority、Idle/Move/Foreground Tween 活跃状态、Foreground Version 与 Death Handoff，自动刷新但不能强制切状态或写回资产。
+Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径，而是由后续美术特效资产承担。当前技能 Recipe 在逐个替换前继续作为可玩基线。
 
-Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态、移动、受击、攻击后坐、施法准备和投射物位移。低复杂度光环、闪光、短尾迹和颜色脉冲仍可使用程序化原语；复杂技能的核心美术表现不再以扩充 Tween/有限原语为默认路径。火球、骨矛和突刺已采用 Piloto 项目侧粒子与程序化接触骨架混合，Recipe 保留 Marker、多命中位置和缺资产回退，但不再承担主要画面。
-
-`Tactics/Pure Run/Presentation Workbench` 将 GraphView、角色 Tween、投射物、第三方 Prefab FX、程序化 Recipe、隔离 Preview Stage 和资产沙盒收束为唯一表现编辑入口；Graph 本身不写伤害、Buff 或目标状态。18 个正式图通过 Editor-only Preview Scenario 播放代表性完整技能，按 Release、Projectile Impact、程序化 Blocking 或 Track 完成推进 Phase，同时保留动作恢复与视觉尾段重叠。工作台只在明确 Apply All 后写资产；Stop、资源切换、窗口关闭和程序集重载会恢复 Sprite/Transform/Shadow 并清理临时对象。交互 Preview 由独立控制器按需或最高 30 FPS 写入固定 `1280×720` 持久 RenderTexture，UI Toolkit `Image` 只负责缩放显示；外部窗口或分栏 resize 期间暂停 GPU 渲染，稳定 500ms 且至少三个 update 后补最新一帧。中央预览不再依赖 `IMGUIContainer`、`EndAndDrawPreview()` 或嵌套 `TwoPaneSplitView`。
-
-Runtime 与 Preview 共同消费 `PresentationExecutionPlan` 的 Sequence/Parallel/Leaf 结构，不再分别遍历 Fork/Join。禁用节点透传、Finish 终止、Join 后只继续一次；Marker 单次发送、Impact 后视觉尾段、取消与异常观察仍由既有执行器保持。Scenario 继续只用于 Editor 演示，不参与 Runtime 或玩法结算。
-
-Workbench 与 MCP 的离屏预览共用同一无窗口内核，并可限定 Full Scenario、单 Phase、Entry、Leaf 或完整 Fork Region。输出时间线来自实际构造的 Tween、Projectile 与 VFX 轨道，保留节点起止、Release、PoseRestore、Impact、Blocking、Hit 和 PhaseAdvance 的绝对时间、lane 与 phase；固定随机种子保证相同输入可重复。预览 scope 和失败回退不会改变 Runtime 或玩法结算。
+`Tactics/Pure Run/Presentation Graph Editor` 将角色 Tween、投射物、第三方 Prefab FX 和程序化 Recipe 作为同一纯表现图的叶节点预览；Graph 本身不写伤害、Buff 或目标状态。隔离舞台支持方向、距离、倍速、时间拖动和第三方粒子从零固定种子重建，Stop、资源切换、窗口关闭和程序集重载会恢复站立 Sprite/Transform 并清理临时对象。旧 Tween/Skill VFX Preview 暂留作迁移期调试工具；飞行蝙蝠继续排除。
 
 技能接触反馈由可选 `SkillVfxRecipe` 驱动。执行器在伤害前保存世界坐标，只发送强类型 Cue；Coordinator 只等待释放/接触关键帧，淡出、粒子和残影非阻塞。投射物抵达时先完成 `ProjectileImpact` 接触点再写入命中黑板；骨矛使用独立中心 Sprite、切线旋转与最多两个短残影，并在取消时同步清理。Sprite 投射物未显式配置 Material 时保留 `SpriteRenderer` 默认材质，残影遵循同一规则，不会用空材质触发洋红错误 Shader。实际伤害仍以 `DamageResolution.WasHit` 决定次目标/命中反馈，表现缺失或取消不能改变玩法结果。突刺方向端点不因射线上先命中的敌人被通用 LOS 隐藏，但扫描仍在友军、永久地形和非法格处结束。
 
 `PureRunAbilityCatalog` 为三职业 18 个正式技能和隐藏额外技能 `amazon.pickup_spear` 提供稳定 ID、等级元数据与运行时资产解析。`PureRunAbilityBinder` 在玩家单位初始化前只注入职业普通攻击、实际已学主动技能和可解析的额外技能；被动按角色已学记录启用，Amazon 不再因职业身份在 Pure Run 中自动获得战斗技巧。缺少精确等级资产时仅向下回退并记录错误。三职业等级资产均已按各技能设计上限连续发布。
 
-三职业首批完整 VFX 垂直样本继续由 Presentation Graph 收束：毒矛由 `Action/Release` 与 `Projectile/Impact` 两个入口保证到达后才进入中毒和实体落矛结算；霹雳闪电通过 `PlayPresentationCue` 请求目标命中 Prefab FX。伤害加深诅咒使用闭合三分支 Fork/Join 同时播放目标脚下的地面双环法阵、后层远侧火焰和前层近侧火焰；八个主火柱以可见根部锚定外环并按顺时针依次点燃，三层均为 FireAndForget，粒子寿命不并入 Buff 结算时长。
-
-第二批突刺、火球和骨矛的全部已发布等级也已统一到 Presentation Graph，但叶资产仍是临时程序化视觉基线。9 个正式图成为 12 个 Ability 消费端的唯一表现入口，顶层 legacy 动作/Recipe 与玩法图 projectile Profile 均清空；图内继续复用既有 Recipe、Fire/BoneSpear Profile、速度与接触时序。内部 Cue 快照会把路径、多个实际命中点、主命中点和强度完整透传到程序化节点，表现层不写伤害、Buff、目标或资源消耗。
+三职业首批技能 VFX 垂直样本已通过 Presentation Graph 收束：毒矛由 `Action/Release` 与 `Projectile/Impact` 两个入口保证到达后才进入中毒和实体落矛结算；霹雳闪电通过 `PlayPresentationCue` 请求目标命中 Prefab FX。伤害加深诅咒使用闭合三分支 Fork/Join 同时播放目标脚下的地面双环法阵、后层远侧火焰和前层近侧火焰；八个主火柱以可见根部锚定外环并按顺时针依次点燃，三层均为 FireAndForget，粒子寿命不并入 Buff 结算时长。未迁移技能继续走兼容路径。
 
 `BattleController` 每场创建并独占替换一个 `BattleRuntimeScope`，外部只能读取、不能公开设置；启动期 UI、FireAndForget cue 和 projectile impact 都注册到该 scope。结束、返回和场景切换先取消、等待 tracked drain，再释放 scope；`OnDestroy` fallback 同步取得 teardown task 和已加载路径快照，并仅在 drain 完成后释放这些资产，不让异步 continuation 访问已销毁组件。teardown 即使观察到 tracked fault 也会完成资源释放并保持既有结束事件流程，同时通过 `RuntimeScopeTeardownException` 显式暴露非取消异常，不依赖日志策略判断成功。并发完成、timeout、取消回调重入 Dispose、pending start、replacement scope、faulted task 观察和回调异常边界由 PlayMode 回归约束，已完成任务的异常不能在池回收或 teardown 中静默丢失。
 
-火魔是独立可治疗召唤物：生命 12、Speed/移动 4，使用 1–3 格火焰攻击并施加点燃；Lv2 召唤可在半径 3 内部分成功生成，重施法原子替换旧火魔。每只火魔在完成第 5 次自身行动后退场，跳过行动同样计数，战斗结束统一清理。
+火魔是独立可治疗召唤物：生命 12、Speed 4、移动 2，使用 1–3 格火焰攻击并施加点燃；Lv2 召唤可在半径 3 内部分成功生成，重施法原子替换旧火魔。每只火魔在完成第 5 次自身行动后退场，跳过行动同样计数，战斗结束统一清理。骷髅法师同样以 Speed 4 派生移动 2，不再通过 executor 保留旧的移动 3 覆盖。
 
 死灵法师召唤严格选择并消耗一具尸体，骷髅战士与骷髅法师分别维护等级上限并最早替换；释放前找不到合法生成格时不消耗尸体、法力或旧召唤物。复活类召唤物不会产生新尸体，可被普通治疗选中但恢复结算为 0。伤害加深按等级扩展单体、十字和九宫格，骨矛支持首敌命中与直线穿透，骨盾重施法重置次数且 Lv2 可吸收全部战斗伤害。恐惧在目标下次行动开始时强制移动到离施法者最远的稳定可达格并消耗移动，随后仍可攻击或施法；重复施加刷新而不叠加。
 
@@ -138,23 +150,19 @@ Pure Run 战斗只把角色自己携带的独立实例注册成 `ConsumableBattl
 
 Pure Run 遭遇将 E1/E2 的生命/输出倍率设为 1.3/1.15，Special 设为 1.8/1.25。生命倍率在派生属性完成后向上取整并满血出生；输出倍率在统一伤害入口消费，因此覆盖直接伤害和保留施法来源的持续伤害，不影响治疗、护盾与无来源环境效果。布局阻挡格在单位生成前占用，参与站立、寻路、落点和视线判断，并在战斗结束或控制器销毁时恢复原状态。配置加载会拒绝非法倍率、阻挡/出生重叠、缺失 Brain/Profile/能力、不可支付的已配置能力和 Pattern 悬空引用。
 
-奖励入口先验证玩家方胜利；战败返回零金币、经验、物品和击杀统计。胜利只把带 `EncounterUnitRuntimeModifiers` 的正式敌方死亡计入 `enemiesDefeated`，召唤物、诱饵与测试对象不进入正式统计。
+奖励入口先验证玩家方胜利；战败返回零金币、经验、物品和击杀统计。胜利只把带 `EncounterUnitRuntimeModifiers` 的正式敌方死亡计入 `enemiesDefeated`，召唤物、诱饵与测试对象不进入正式统计。战后异步结算持有的 `IUnit` 快照可能跨过单位销毁边界；奖励系统会先显式排除 Unity fake-null wrapper，再读取 `PlayerNumber`、`Health` 或 Component，避免接口静态类型绕过 Unity 对象有效性检查。
 
 战斗技能卡统一消费 `AbilityAvailability`：隐藏技能不建卡，可点击禁用技能保留卡片并在点击后显示稳定原因。每张卡的回调捕获建卡角色和对应能力实例，执行前再次确认该角色仍被选中且仍持有该实例，避免角色/回合切换后按可变索引触发另一名角色的技能。连续刺击等有序多段技能显示当前段数和目标编号；右键或 Esc 每次撤销最后一段，队列为空时再次取消退出。落地长矛以不参与点击和视线判断的独立世界标记显示。
 
 当前战斗原始数值、遭遇倍率和实际伤害顺序的审计基线见 `.agents/docs/pure-run-current-combat-values.md`；该文不改变任何运行时数值。
 
-Pure Run 单位状态反馈绑定到单位根：待命、选中、已行动和可攻击状态分别绘制低饱和蓝灰、柔和琥珀、弱灰蓝和暖红等距 Tile 面，不再在角色身上显示方形 Marker。单位根与 `ICell.WorldPosition` 在静止时统一表示 Ground Center；Pure Run Sprite/VisualRoot 使用 Prefab 零基线，Shadow 作者基线为根空间 `localY=-0.03`，运行时不再二次改写 Sprite 或 Shadow。
-
-鼠标格子拾取先以战场平面 Raycast 得到精确世界坐标，再通过 `TilemapCellGeometry.WorldToCell` 直接解析；禁止额外叠加 `GetCellCenterWorld - CellToWorld` 半格补偿。`CellToWorld` 只表示 Cell Origin，`TilemapCellGeometry.GetGroundCenterWorld` 才是单位、尸体、高亮、Scene Handle 和自动化点击共用的地面落点。高亮从相邻 Ground Center 构造菱形，不再用世界 Y 偏移处理渲染层级。完整契约见 `.agents/docs/isometric-grid-anchor-contract.md`。
-
-高亮 Renderer 将锁定逻辑格的 Hover、范围、路径、AoE 与技能引导，和绑定单位根的 Friendly、Selected、Finished、Targetable 分为两个 Mesh。单位状态在 `LateUpdate` 连续跟随根节点，禁止由 `UnitLeftCell`、`CurrentCell` 或 `WorldToCell` 驱动，因此逻辑格提前切换不会再让脚底高亮抢先跳格，Sprite/VisualRoot 的局部 Tween 也不会影响地面位置。`PlayerNumber == 0` 固定为友方；非 0 阵营不显示 Friendly、Selected、Finished，但 Targetable 红色提示仍可见。
+Pure Run 单位状态反馈绑定到单位的 `CurrentCell`：待命、选中、已行动和可攻击状态分别绘制低饱和蓝灰、柔和琥珀、弱灰蓝和暖红等距 Tile 面，不再在角色身上显示方形 Marker。`TilemapUnit` 的主视觉偏移是可重复调用的，阴影以 `Sprite` 子节点的底部 pivot 为脚底锚点，仅作微小下偏移。
 
 场景卸载时 CellManager、高亮 Renderer 与单位的销毁顺序不固定。`TilemapUnit` 清理单位状态高亮前会使用 Unity 对象有效性判断；`TilemapCellManager` 的移除操作只消费仍存在的 Renderer，不在销毁阶段懒加载或重建渲染组件。该清理是 best-effort，本地高亮状态无论 Manager 是否已销毁都会复位。
 
-Pure Run 正式战斗会在单位管理器初始化前生成队伍与遭遇，并为所有实际出现的阵营补齐玩家控制器；玩家出生格优先选择相机可见、可行走且未占用的配置或最近合法格。战斗开始只自动打开 Battle UI，不再默认创建或显示 Cheat Console；调试控制台继续由 ToggleConsole 输入显式打开，并在战斗结束时关闭。战斗 Camera 在初始化、单位选择和回合切换期间保持固定，Battle UI 只读取 Camera 做世界标记投影；右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
+Pure Run 正式战斗以 `BattleBoardSpec` 固定 10×10 合法边界。`GridHelper` 的生成界面只读显示固定宽高，生成前再次强制写回 10×10；Scene GUI 的地块和单位绘制在任何实例化、替换或占格变更前拒绝坐标轴不在 0–9 的 Cell，并显示明确反馈，单位绘制同时拒绝 `IsTaken` 或已有 `CurrentUnits` 的格子。单位管理器初始化前只准备一次 Encounter：先应用阻挡格，再按 `ActivePartyCharacterIds` 顺序将玩家映射到 Encounter 的 `PartySpawnCells`，最后生成敌人；玩家出生格缺失、越界、重复、不可行走或被占用时直接失败并回滚，不再按相机可见性、最近格或职业 Prefab 寻找替代位置。准备事务会在修改战场前完成验证，暂存待替换的场景单位并在失败时恢复其层级、格子和 UnitManager 顺序；事务新增的 Prefab、Ability 和 AI Brain 按路径缓存并在失败时成对释放，地图 pending Buff 只在玩家和敌人全部生成成功后提交消费。pending recipe 是权威来源，解析或运行时验证失败不会回退到 legacy encounter path；测试模式继续只消费 Battle Party/Encounter Test Config。正式 10×10 数据使用玩家 `(1,4)(1,5)(2,4)`、open 敌人 `(6,4)(7,3)(7,5)(8,4)`、center blocker 四格 `(4,4)(4,5)(5,4)(5,5)`、split blocker 四格 `(4,3)(5,4)(4,6)(5,5)`；Special 使用独立 `special_open` 的唯一敌人格 `(7,4)`。战斗结束（包括尚未进入 active 状态的准备窗口）或控制器销毁都会恢复阻挡格原状态。战斗 Camera 在初始化、单位选择和回合切换期间保持固定，Battle UI 只读取 Camera 做世界标记投影；右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
 
-战斗场景通过单个 `BattleBackdrop` Prefab 提供静态深蓝渐变背景。Prefab 序列化引用 URP Unlit 材质和 Quad 网格，`BattleBackdropFitter` 在正交相机的尺寸、宽高比或位姿变化后以 2% overscan 重新铺满视口；相机缺失或为透视模式时隐藏背景并仅警告一次。当前 `Test1` 已接入该 Prefab，新战斗场景沿用同一单实例规则，不由战斗流程动态创建。
+战斗场景通过单个 `BattleBackdrop` Prefab 提供静态深蓝渐变背景。Prefab 序列化引用 URP Unlit 材质和 Quad 网格，`BattleBackdropFitter` 在正交相机的尺寸、宽高比或位姿变化后以 2% overscan 重新铺满视口；相机缺失或为透视模式时隐藏背景并仅警告一次。正式 `Test1` 已推广为原点起始的固定 10×10、100 格战场，并接入单个 `BattleBoardCameraFitter` 与该 Backdrop；正式测试配置仍使用 `DefaultTestParty` 和 `CorpseTestEncounter`。获批 probe 场景及隔离配置保留到最终人工视觉验收完成。新战斗场景沿用同一单实例规则，不由战斗流程动态创建。
 
 # Relationships
 

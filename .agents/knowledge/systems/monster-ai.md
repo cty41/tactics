@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: Monster AI
 description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
 tags: [gameplay, ai, combat, unity]
-timestamp: "2026-08-02T20:33:20+08:00"
+timestamp: "2026-08-07T19:16:07+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -19,13 +19,17 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
   - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs
   - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs
+  - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
+  - Assets/Tactics/Scripts/Common/Units/Unit.cs
+  - Assets/Tactics/Tests/PlayMode/PureRunAiVsAiBenchmarkTests.cs
+  - Tools/balance/pure-run-playtest-template.csv
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:b9a548d829c25b09ed8a90950fe0add3d71ea16b6dde169c4a8935f18040b03e
+source_fingerprint: sha256:f7343cca8b6a1be119b37eca91a352a1f031df5581b99ccdf61a79d202511686
 ---
 
 # Current State
 
-`AiContextBuilder` 构建战斗快照，`IntentGenerator` 生成“可达站位 × 合法技能目标点”候选，`RuleFilter` 执行硬门禁，`IntentScorer` 评分，`IntentResolver` 稳定选取结果，`IntentExecutor` 执行移动与技能计划。
+`AiContextBuilder` 构建战斗快照，`IntentGenerator` 生成“可达站位 × 合法技能目标点”候选，`RuleFilter` 执行硬门禁，`IntentScorer` 评分，`IntentResolver` 稳定选取结果，`IntentExecutor` 执行移动与技能计划。可达站位消费 Battle System 已派生的移动预算；固定 10×10 战场统一使用 `clamp(ceil(Speed / 2), 1, 4)`，AI 不另行放大 Speed 或维护第二套移动公式。
 
 玩家预览、AI 和执行前重验证共享 `IAbilityTargetingProvider`，AI 候选还自然消费能力统一的 `CanPerform`/可用性门禁；因此 `MaxUsesPerTurn` 达到本回合上限后不会继续生成或执行该技能，无需 AI 维护独立次数。`AiBrainAsset` 组合 `AiDecisionGraph`、`AIProfile` 和可选 Pattern；Pattern 游标按单位保存，失败或 Generic fallback 不推进。Brain 可选配置偏好战斗距离和过近时的重定位优先级；关闭时不改变旧 Brain 候选与评分。
 
@@ -35,7 +39,7 @@ source_fingerprint: sha256:b9a548d829c25b09ed8a90950fe0add3d71ea16b6dde169c4a893
 
 `Unit.ApplyFacingVisual()` 在 Animator 参数写入后可将主 Sprite 显示委托给 `FourDirectionSpriteVisual`；该组件只按既有 `FacingDirection` 选择两张原生图并水平镜像，不改写朝向状态、`FacingResolver`、移动、技能目标或 AI 决策。未配置组件的单位继续使用原有 East/West Renderer 翻转回退。
 
-Pure Run 的 Charger、Ranged、AOE、Support、EliteCharger 与 ElitePoisonCaster 各自绑定独立 Brain/Profile。三个正式怪物技能当前均为每回合最多成功使用 1 次：Charge Strike 法力 0、基础伤害 8；Area Blast 法力 0、基础伤害 6；Heavy Shot 法力 8、基础伤害 6。Charger 贴近并强化技能效果，Ranged 维持 3–5 格；正式 Ranged 配方最低起始法力为 15，HunterBlue 的 Intelligence 为 5，使首次 Heavy Shot 后的回合末回蓝足以支持下一回合继续支付。AOE 提高覆盖评分，Support 提高减益评分；两个 Elite 通过固定 Pattern 顺序执行高威胁技能并在不合法时回退 Generic AI。旧 `BasicMeleeBrain` 仍服务未迁移内容，FireDemon 继续使用 2–3 格偏好距离。
+Pure Run 的 Charger、Ranged、AOE、Support、EliteCharger 与 ElitePoisonCaster 各自绑定独立 Brain/Profile。三个正式怪物技能当前均为每回合最多成功使用 1 次：Charge Strike 法力 0、基础伤害 8、射程 3；Area Blast 法力 0、基础伤害 6、中心射程 3、半径 2；Heavy Shot 法力 8、基础伤害 6、射程 4。普通 Ranged Attack 的合法区间为 2–4，Support 的伤害加深射程为 4。Charger 贴近并强化技能效果，Ranged 维持 2–4 格，AOE 与 Support 维持 2–3 格；正式 Ranged 配方最低起始法力为 15，HunterBlue 的 Intelligence 为 5，使首次 Heavy Shot 后的回合末回蓝足以支持下一回合继续支付。AOE 提高覆盖评分，Support 提高减益评分；两个 Elite 通过固定 Pattern 顺序执行高威胁技能并在不合法时回退 Generic AI。旧 `BasicMeleeBrain` 仍服务未迁移内容，FireDemon 继续使用 2–3 格偏好距离。
 
 通用单位资源规则在自身回合结束时按 Intelligence 回复 MP、受 MaxMana 限制；因此敌方与召唤物同样遵循一次回合结束回蓝，AI 的可支付技能候选在下一次决策前读取该更新后的 MP。
 
@@ -43,7 +47,9 @@ SkillGraph AI 元数据会从范围收集节点识别 AOE，并从 Harmful Buff 
 
 亚马逊诱饵沿用普通敌人的候选生成与合法性，不建立专用 Brain。若当前生成结果中存在可达诱饵的移动或攻击候选，`IntentGenerator` 会只保留这些诱饵候选；没有可达诱饵候选时继续使用正常敌方目标，避免不可达诱饵令 AI 停摆。
 
-低生命撤退只在敌人已经进入其即时攻击包络时生成；拉开一个安全间距后必须恢复正常接敌，避免大地图上永久风筝导致玩家输入旅程无法自然结束。AI 行动队列在选择前和每个异步等待后都会过滤已被同步致死销毁的单位。回合启动与单位间表现等待使用全局 scaled gameplay 时钟，随暂停冻结并随 2×/4× 加速；每次 `AIPlayer.Play` 创建并全程复用独立取消令牌，回合结束、战斗结束或新一轮 Play 会取消旧流程。取消令牌贯穿 `AiBrainRunner.Execute`/`ExecuteTurn` 与 `IntentExecutor.ExecuteWithResult` 及其各 intent handler：入口与每个异步步骤后都会检查令牌，`OperationCanceledException` 穿透执行器的通用异常恢复直接上抛；AI 动作执行期间发生的取消会中止后续步骤（含 Engage 追击），并跳过该单位的收尾标记（MarkAsFriendly/MarkAsFinished/UnitDeselected）。防死锁保护仍按 realtime 边界处理。
+低生命撤退只在敌人已经进入其即时攻击包络时生成；拉开一个安全间距后必须恢复正常接敌，避免大地图上永久风筝导致玩家输入旅程无法自然结束。AI 行动队列在选择前和每个异步等待后都会过滤已被同步致死销毁的单位。回合启动与单位间表现等待使用全局 scaled gameplay 时钟，随暂停冻结并随 2×/4× 加速；每次 `AIPlayer.Play` 创建并全程复用独立取消令牌，回合结束、战斗结束或新一轮 Play 会取消旧流程。取消令牌贯穿 `AiBrainRunner.Execute`/`ExecuteTurn` 与 `IntentExecutor.ExecuteWithResult` 及其各 intent handler：入口与每个异步步骤后都会检查令牌，`OperationCanceledException` 穿透执行器的通用异常恢复直接上抛；AI 动作执行期间发生的取消会中止后续步骤（含 Engage 追击），并跳过该单位的收尾标记（MarkAsFriendly/MarkAsFinished/UnitDeselected）。取消只是信号，不代表 `async void Play` continuation 已退出；销毁战斗对象或切换自动模拟样本前必须调用并等待 `AIPlayer.CancelAndDrainAsync()`。该 contract 会追踪并 drain 所有仍活跃的 Play task，而不只等待最新一轮。防死锁保护仍按 realtime 边界处理。
+
+Pure Run 平衡探测由 `[Explicit]` `PureRunAiVsAiBenchmarkTests` 承担：固定三人 party 按已记录通用 AI policy（Mage=AOEBrain、Necromancer=SupportBrain、Amazon=RangedBrain）在 N1–N6 配方 × 3 个模拟种子下各打一场，单场 15 秒 realtime 超时，逐场把结果写入 `temporaryCachePath` 下的 baseline CSV；它是 AI 代理指标，不能替代人工 playtest 协议。teardown fail-safe：每场结束与 fixture 收尾都先 cancel+drain AI players、再等待 runtime scope drain，`finally` 恢复 `Random.state`、1× 速度与资产初始化状态，观察到的 fault 显式暴露而非吞掉。最近独立终态（2026-08-06，PlayMode job `5e84917d5ee44f418c2e509b78ac1b1f`）：18 场全部产生 CSV 行并完成清理，但 18/18 在 round 1 超时、测试按设计失败于 no-timeout 断言——该结果只证明 harness 行为，不构成平衡成功或实战胜率证据；战斗为何停在 round 1 仍需单独调查，平衡结论以人工 playtest 为准。
 
 # Relationships
 
