@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-08-07T10:37:42+08:00"
+timestamp: "2026-08-08T12:09:07+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -29,7 +29,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
   - Tools/unity-mcp
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:c2b2296bdaedd44ac3bc4841178b03f7b7d52427768d7872c822e8f78d471ea2
+source_fingerprint: sha256:6d295eaf4833a52821e55453d0b080ba6742e66959f55b8c5a267c99094bfd29
 ---
 
 # Core Rules
@@ -38,6 +38,7 @@ source_fingerprint: sha256:c2b2296bdaedd44ac3bc4841178b03f7b7d52427768d7872c822e
 - 不直接调用 `Debug.Log`，使用 `TLog` 或 `TBattleLog`。
 - 不直接读写 Unity YAML，资产操作通过 Unity MCP 或项目认可工具完成。
 - 修改 C# 后必须显式触发 Unity 编译并检查 Console 错误。
+- Agent 默认复用用户当前指定的 worktree；除非活跃计划或用户明确要求，不创建、删除或切换 worktree。Unity 项目导入和启动成本高，不能以“隔离方便”“并行”或“改动较大”为理由自动打开第二份项目；冻结 worktree 只有在用户明确授权修复时才可临时写入。完整约束见 `.agents/rules/agent-worktree.md`。
 - 所有桌面前台交互默认禁止；Computer Use、窗口激活、真实鼠标键盘和快捷键只有在当前任务明确要求、Agent 说明焦点影响且用户对本次动作确认后才允许。普通实现、截图、视觉 QA、编译、测试、构建和连接恢复不构成前台控制授权；后台无法提供证据时标记 `manual_visual_qa_pending`。完整定义见[前台交互与焦点保护规则](https://github.com/cty41/tactics/blob/main/.agents/rules/foreground-interaction.md)。
 - Unity 编译、测试、构建和截图必须通过 MCP 调用，交互验证优先使用 PlayMode 自动测试与 Input System 虚拟设备。MCP bridge 不可用时只做端点、进程和日志等只读诊断，不能以干扰前台工作的方式绕过连接问题。
 - 新增、删除或移动 Unity 文件时保持 `.meta` 配对。

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-07T19:15:34+08:00"
+timestamp: "2026-08-08T12:09:04+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -93,7 +93,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/Probe10x10BattleSmokeTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:604eba8fa0540790fae8f493c93a84be7712b88c82ce958ab517d0336e0b74b3
+source_fingerprint: sha256:ac5b4478d4d1661f2f895fc0a2f4f5730ef16956403799548a289fb814033cd6
 ---
 
 # Current State
@@ -158,7 +158,7 @@ Pure Run 遭遇将 E1/E2 的生命/输出倍率设为 1.3/1.15，Special 设为 
 
 Pure Run 单位状态反馈绑定到单位的 `CurrentCell`：待命、选中、已行动和可攻击状态分别绘制低饱和蓝灰、柔和琥珀、弱灰蓝和暖红等距 Tile 面，不再在角色身上显示方形 Marker。`TilemapUnit` 的主视觉偏移是可重复调用的，阴影以 `Sprite` 子节点的底部 pivot 为脚底锚点，仅作微小下偏移。
 
-场景卸载时 CellManager、高亮 Renderer 与单位的销毁顺序不固定。`TilemapUnit` 清理单位状态高亮前会使用 Unity 对象有效性判断；`TilemapCellManager` 的移除操作只消费仍存在的 Renderer，不在销毁阶段懒加载或重建渲染组件。该清理是 best-effort，本地高亮状态无论 Manager 是否已销毁都会复位。
+场景卸载时 CellManager、高亮 Renderer 与单位的销毁顺序不固定。`TilemapUnit` 的指针进入/离开回调只有在单位、单位脚本和 CellManager 都仍有效且启用时才触碰当前格子；`TilemapCellManager.HighlightRenderer` 在自身已销毁或禁用时直接返回空，不会在销毁阶段通过 getter 懒加载或重建 Renderer。移除高亮仍是 best-effort，本地高亮状态无论 Manager 是否已销毁都会复位；`Probe10x10BattleSmokeTests.PointerExitAfterCellManagerDestruction_DoesNotTouchDestroyedRenderer` 锁定该 teardown 边界。
 
 Pure Run 正式战斗以 `BattleBoardSpec` 固定 10×10 合法边界。`GridHelper` 的生成界面只读显示固定宽高，生成前再次强制写回 10×10；Scene GUI 的地块和单位绘制在任何实例化、替换或占格变更前拒绝坐标轴不在 0–9 的 Cell，并显示明确反馈，单位绘制同时拒绝 `IsTaken` 或已有 `CurrentUnits` 的格子。单位管理器初始化前只准备一次 Encounter：先应用阻挡格，再按 `ActivePartyCharacterIds` 顺序将玩家映射到 Encounter 的 `PartySpawnCells`，最后生成敌人；玩家出生格缺失、越界、重复、不可行走或被占用时直接失败并回滚，不再按相机可见性、最近格或职业 Prefab 寻找替代位置。准备事务会在修改战场前完成验证，暂存待替换的场景单位并在失败时恢复其层级、格子和 UnitManager 顺序；事务新增的 Prefab、Ability 和 AI Brain 按路径缓存并在失败时成对释放，地图 pending Buff 只在玩家和敌人全部生成成功后提交消费。pending recipe 是权威来源，解析或运行时验证失败不会回退到 legacy encounter path；测试模式继续只消费 Battle Party/Encounter Test Config。正式 10×10 数据使用玩家 `(1,4)(1,5)(2,4)`、open 敌人 `(6,4)(7,3)(7,5)(8,4)`、center blocker 四格 `(4,4)(4,5)(5,4)(5,5)`、split blocker 四格 `(4,3)(5,4)(4,6)(5,5)`；Special 使用独立 `special_open` 的唯一敌人格 `(7,4)`。战斗结束（包括尚未进入 active 状态的准备窗口）或控制器销毁都会恢复阻挡格原状态。战斗 Camera 在初始化、单位选择和回合切换期间保持固定，Battle UI 只读取 Camera 做世界标记投影；右键优先取消目标选择而不打开 Pause。战斗返回直接以 Single 模式原子加载目标场景，不先卸载唯一的 Battle 场景。同步致死可能立即销毁单位，伤害日志、受击事件、Buff 回调、AI 和 UI 都会先验证 Unity 对象仍有效，避免战斗结束帧访问已销毁目标。
 

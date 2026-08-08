@@ -98,6 +98,9 @@ namespace Tactics.Cells
         {
             get
             {
+                if (this == null || !isActiveAndEnabled)
+                    return null;
+
                 if (_highlightRenderer == null)
                 {
                     _highlightRenderer = GetComponent<ProceduralTileHighlightRenderer>();

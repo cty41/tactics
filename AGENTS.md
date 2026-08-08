@@ -10,6 +10,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | 禁止 `Debug.Log` | 用 `TLog`/`TBattleLog`（详见 `rules/unity-logging.md`） |
 | 禁止直接读写 Unity YAML | 必须通过 MCP 工具（详见 `unity-mcp-core` skill） |
 | 禁止抢占前台焦点 | 默认不使用 Computer Use、窗口激活或真实输入（详见 `.agents/rules/foreground-interaction.md`） |
+| Worktree 默认复用 | 除非计划或用户明确要求，禁止自动创建/删除/切换 worktree（详见 `.agents/rules/agent-worktree.md`） |
 | `.cs` 修改后必须编译 | 调用 `refresh_unity` |
 | 写 C# 代码前必须验证 | 遵循 `rules/unity-code-generation.md` 工作流 |
 | git commit 前必须检查 | 加载 `unity-git-commit` skill |
@@ -29,6 +30,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | `.agents/rules/unity-code-generation.md` | C# 代码生成强制工作流、防编译错误 |
 | `.agents/rules/code-documentation.md` | 代码注释规范（XML doc + // 块注释，英文，系统规则必须注释） |
 | `.agents/rules/foreground-interaction.md` | Computer Use、窗口激活、真实输入与人工验证边界 |
+| `.agents/rules/agent-worktree.md` | worktree 创建、复用、切换与 Unity 项目启动约束 |
 | `.agents/rules/knowledge-maintenance.md` | OKF 知识查询、写回、替代和校验规范 |
 
 ## 核心原则
