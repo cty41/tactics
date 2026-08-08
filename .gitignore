@@ -6,12 +6,31 @@
 *.DotSettings.user
 *.suo
 *.userprefs
+
+# Migration-side C# project descriptors are tracked explicitly.
+!src/
+!src/**/*.csproj
+!src/**/*.props
+!src/**/*.targets
+!godot/
+!godot/**/*.csproj
+!godot/**/*.props
+!godot/**/*.targets
+/godot/gdunit4_testadapter_v5/
+/godot/tests/gdunit4_testadapter_v5/
+/godot/addons/godot_ai/*
+!/godot/addons/godot_ai/README.md
 *.DS_Store
 *.unityproj
 *.mayaSwatches
 *.patch
 
 /obj/
+/src/**/bin/
+/src/**/obj/
+/godot/.godot/
+/godot/**/bin/
+/godot/**/obj/
 /Library*/
 /Temp/
 /Build/

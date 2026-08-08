@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="PoisonSpearPresentationResource" format=3 uid="uid://c0wk7kb5m0147"]
+
+[ext_resource type="Script" uid="uid://c38dv1ln1mrdr" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearPresentationResource.cs" id="1_8iyog"]
+
+[resource]
+script = ExtResource("1_8iyog")

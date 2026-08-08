@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "Tools/migration/converter.py",
+  "entries": [],
+  "note": "Temporary audit index; not a runtime asset format."
+}

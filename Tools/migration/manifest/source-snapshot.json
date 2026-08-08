@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "unityTag": "unity-final-2026-08-08",
+  "unityCommit": "168d1934",
+  "unityVersion": "6000.3.11f1",
+  "windowsStandaloneSmoke": "excluded_by_project_rule",
+  "sourcePolicy": "read_only_snapshot",
+  "dependencyAudit": {
+    "odin": "exclude",
+    "tbsframework": "exclude",
+    "tilemapset": "exclude",
+    "dotween": "reimplement_with_godot_tween",
+    "projectOwnedTiles": [
+      "pure_run_tile_warm_gray",
+      "pure_run_tile_cool_gray"
+    ]
+  }
+}

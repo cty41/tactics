@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c3525yd0esr0y"]
+
+[ext_resource type="Script" uid="uid://jgqigg8kr452" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearImpact.cs" id="1_r0fvs"]
+
+[node name="PoisonSpearImpact" type="Node2D" unique_id=876500533]
+script = ExtResource("1_r0fvs")

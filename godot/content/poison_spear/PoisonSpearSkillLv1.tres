@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PoisonSpearSkillResource" format=3 uid="uid://n4swajo5tftl"]
+
+[ext_resource type="Script" uid="uid://c38dv1ln1mrdr" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearPresentationResource.cs" id="1_e6cfm"]
+[ext_resource type="Script" uid="uid://jupbw0f2wi77" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearSkillResource.cs" id="2_mrnsn"]
+
+[sub_resource type="Resource" id="Resource_1sox8"]
+script = ExtResource("1_e6cfm")
+
+[resource]
+script = ExtResource("2_mrnsn")
+Presentation = SubResource("Resource_1sox8")

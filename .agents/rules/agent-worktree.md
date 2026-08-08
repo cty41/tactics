@@ -19,6 +19,7 @@ Agent 默认复用用户当前指定的 worktree，不自动创建、删除或�
 - `w1-unity-final`、归档源或其他被声明为冻结的 worktree 默认只读；只有用户明确要求在其中修复时，才允许把它临时视为修复工作区。
 - 已存在的 worktree 必须优先复用，不能重复创建等价路径或等价分支的副本。
 - 不自动删除已有 worktree。删除、移动或覆盖前必须核对分支、未提交修改和用户是否仍在使用。
+- Godot 迁移只保留 `D:\codes\tactics-worktrees\godot` worktree 及其下的 `godot\project.godot`；不得为编辑器能力、测试或资产 Spike 另建 Godot 项目。验证脚本和测试统一放在该 worktree 的 `Tools\migration`、`godot\tests` 或正式 Godot 工程内。
 
 ## 创建前检查
 

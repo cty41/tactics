@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "categories": [
+    {"name": "Core", "owner": "UnityOwned", "batch": "phase-1"},
+    {"name": "Unit", "owner": "UnityOwned", "batch": "batch-a"},
+    {"name": "Buff", "owner": "UnityOwned", "batch": "batch-b"},
+    {"name": "Item", "owner": "UnityOwned", "batch": "batch-b"},
+    {"name": "Skill", "owner": "UnityOwned", "batch": "batch-c"},
+    {"name": "AI", "owner": "UnityOwned", "batch": "batch-d"},
+    {"name": "Encounter", "owner": "UnityOwned", "batch": "batch-e"},
+    {"name": "UIInput", "owner": "UnityOwned", "batch": "batch-f"},
+    {"name": "Presentation", "owner": "UnityOwned", "batch": "batch-g"}
+  ],
+  "excludedThirdParty": ["Odin", "TBSFramework", "TilemapSet"],
+  "rebuildAssets": ["pure_run_tile_warm_gray", "pure_run_tile_cool_gray"]
+}

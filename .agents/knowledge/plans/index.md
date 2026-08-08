@@ -3,6 +3,7 @@
 ## Backlog
 
 * [Project Known Gaps](project-known-gaps.md) - 已确认但尚未激活为开发计划的集中缺口。
+* [Godot migration implementation](godot-migration.md) - 当前迁移 worktree 的 Core、Godot Adapter、测试与 Poison Spear 垂直切片状态。
 
 ## Archived Outcomes
 

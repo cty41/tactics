@@ -238,6 +238,18 @@ scopes:
     paths:
       - .agents/skills/monster-ai-mcp-workflow
       - Assets/Tactics/Scripts/Common/ai/MonsterAI
+
+  godot-migration:
+    concept: plans/godot-migration.md
+    paths:
+      - global.json
+      - Assets/Tactics/Shared/Core
+      - Assets/Tactics/UnityAdapter
+      - src/Tactics.Core
+      - src/Tactics.Core.Tests
+      - godot
+      - Tests/golden
+      - Tools/migration
       - Assets/Tactics/Scripts/Editor/MonsterAIEditor
       - Assets/Tactics/AI/BasicMeleeBrain.asset
       - Assets/Tactics/AI/BasicMeleeGraph.asset
