@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
 tags: [architecture, unity, agent-first]
-timestamp: "2026-08-08T12:09:10+08:00"
+timestamp: "2026-08-08T12:48:45+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Assets/Tactics/Arts/UI
   - Assets/Tactics/UIToolkit/TextSettings.asset
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:d160a9e68456215e94a019ec08f71287436dc759ea40bd3c4c87d91c13e7ca8b
+source_fingerprint: sha256:12ef168aa8859e70e0ef312aa06474b7e1adbadcffbf07ddedc158e7f95f0159
 ---
 
 # Summary
@@ -30,6 +30,7 @@ Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.a
 - 通用日志使用 `TLog`，结构化战斗日志使用 `TBattleLog`。
 - 修改 C# 后必须触发 Unity 编译并检查 Console 错误。
 - Agent 默认在用户指定的 worktree 中完成审计和修复；新建、删除或切换 worktree 必须有活跃计划或用户明确授权。Unity worktree 的高成本导入和启动是该约束的一部分，具体规则见 `.agents/rules/agent-worktree.md`。
+- Unity → Godot 迁移的 Unity 源快照不执行 Windows Standalone Smoke；迁移门禁采用 Editor/PlayMode、OKF 和依赖审计，平台发布验收另行处理，具体规则见 `.agents/rules/godot-migration.md`。
 - Agent 默认禁止 Computer Use、窗口激活和真实鼠标键盘等前台交互；实现、截图、视觉 QA、测试或连接恢复不构成例外授权。后台验证不足时停止为人工验证待办，完整规则由 [Unity Agent Workflow](../operations/unity-agent-workflow.md) 导航。
 
 # System Map

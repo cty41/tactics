@@ -220,6 +220,12 @@ Agent/MCP 只是传输入口，不是领域核心：离线验证、迁移、审�
 
 ## 测试、对照基线与验收
 
+### Unity Windows Standalone 验证规约
+
+迁移阶段不构建或启动 Unity Windows Standalone，也不把 Unity Player Smoke Test 作为 Unity 终版冻结、迁移启动或迁移批次的阻塞门禁。Unity 源快照使用 Editor 编译、定向 EditMode/PlayMode 测试、固定探针场景人工验证、OKF 校验和依赖审计作为验收证据；这次生命周期修复已由 Editor PlayMode 回归测试覆盖。
+
+该规约只约束 Unity → Godot 迁移过程中的中间验证，不改变 Windows/Steam 的产品目标。Godot Windows 导出是否通过最终发布验收，属于 Godot 产品发布阶段的独立决策，不反向要求 Unity 侧构建 Standalone。
+
 ### 三层测试
 
 ```text
@@ -248,7 +254,7 @@ Unity 测试在最终切换前继续保留；不为保持 Godot 工程整洁而�
 - `BattleRuntimeScope` 的取消、排空、异常可见性和销毁后 continuation 隔离；
 - PresentationExecutionPlan 的 Sequence / Parallel / Leaf 结构在 Runtime 与 Preview 中语义一致；
 - Core 与 Godot 测试；
-- Windows 导出包加载 Smoke Test；
+- Unity Windows Standalone Smoke Test 不属于迁移批次门禁；
 - 必要的截图回归和人工视觉验收。
 
 覆盖率是辅助指标，不设置统一适用于 Core、Runtime、UI 和 EditorPlugin 的百分比硬门槛；关键系统以契约清单覆盖为准。
