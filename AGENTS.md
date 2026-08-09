@@ -12,6 +12,8 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | 禁止抢占前台焦点 | 默认不使用 Computer Use、窗口激活或真实输入（详见 `.agents/rules/foreground-interaction.md`） |
 | Worktree 默认复用 | 除非计划或用户明确要求，禁止自动创建/删除/切换 worktree（详见 `.agents/rules/agent-worktree.md`） |
 | Godot 迁移验证边界 | 迁移阶段不执行 Unity Windows Standalone，使用 Editor/PlayMode/OKF 证据（详见 `.agents/rules/godot-migration.md`） |
+| Godot 项目唯一且研究先行 | 只使用 `godot/project.godot`；未知引擎行为先研究、复现和分级取证（详见 `.agents/rules/godot-agent-workflow.md`） |
+| Godot MCP 项目隔离 | godot-ai 只允许由迁移 worktree 的本地 `.codex/config.toml` Attach，并按阶段白名单启用工具（详见 `.agents/rules/godot-agent-workflow.md`） |
 | `.cs` 修改后必须编译 | 调用 `refresh_unity` |
 | 写 C# 代码前必须验证 | 遵循 `rules/unity-code-generation.md` 工作流 |
 | git commit 前必须检查 | 加载 `unity-git-commit` skill |
@@ -33,6 +35,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | `.agents/rules/foreground-interaction.md` | Computer Use、窗口激活、真实输入与人工验证边界 |
 | `.agents/rules/agent-worktree.md` | worktree 创建、复用、切换与 Unity 项目启动约束 |
 | `.agents/rules/godot-migration.md` | Unity → Godot 迁移期间的验证边界与 Windows Standalone 约束 |
+| `.agents/rules/godot-agent-workflow.md` | Godot 项目、C# 分层、资产生成、EditorPlugin、测试与知识晋升约束 |
 | `.agents/rules/knowledge-maintenance.md` | OKF 知识查询、写回、替代和校验规范 |
 
 ## 核心原则
@@ -43,19 +46,23 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 2. **严禁** `Debug.Log` — 通用日志用 `TLog`，战斗日志用 `TBattleLog`
 3. **严禁** 直接读写 Unity YAML 文件 — 必须通过 MCP 工具
 4. **严禁** 未经当前任务明确请求和动作时确认的前台 UI 自动化 — 不得调用 Computer Use、`activate_window`、真实鼠标键盘或快捷键抢占用户焦点；普通实现、QA、截图和测试授权不构成例外。后台无法完成时按 `.agents/rules/foreground-interaction.md` 标记 `manual_visual_qa_pending`
+5. **严禁** 随意创建第二个 Godot 项目、迁移 worktree，或手写/机械修改 `.tres`、`.tscn` — 必须复用 `godot/project.godot` 并通过 ResourceSaver、Editor API 或受测转换器生成资产
+6. **严禁** 把 godot-ai 写入用户级长期配置，或通过 `script_*`、`filesystem_manage`、`client_manage`、`autoload_manage` 绕过项目代码、配置与资产管线
 
 ### 必须执行
 
-5. **必须** `refresh_unity` — 修改 `.cs` 后显式编译
-6. **必须** 加载 `unity-git-commit` — git commit 前执行提交前检查（`.meta` 配对、GUID 校验）
-7. **必须** 用户确认 — Unity Editor 内手动验证的功能，禁止自动提交
-8. **必须** OKF 影响检测 — 修改 `catalog-scopes.yaml` 监控范围内的代码、文档、规则或工具后，先运行 `report --worktree`；核对并更新本任务影响的概念正文，再运行 `sync --worktree --scope <scope> --write`
+7. **必须** `refresh_unity` — 修改 Unity 工程内 `.cs` 后显式编译；Godot/Core/Application `.cs` 使用统一迁移验证脚本
+8. **必须** 加载 `unity-git-commit` — git commit 前执行提交前检查（`.meta` 配对、GUID 校验）
+9. **必须** 用户确认 — Unity Editor 内手动验证的功能，禁止自动提交
+10. **必须** OKF 影响检测 — 修改 `catalog-scopes.yaml` 监控范围内的代码、文档、规则或工具后，先运行 `report --worktree`；核对并更新本任务影响的概念正文，再运行 `sync --worktree --scope <scope> --write`
+11. **必须** Godot 未知问题研究 — 版本、API、生命周期、插件或引擎错误不得凭 LLM 记忆定论；按 `godot-workflow` Research Guide 调查并本地验证
+12. **必须** godot-ai 写操作预检 — 先用 Session 与 Editor 状态确认只有一个会话，且项目解析到当前迁移 worktree 的 `godot/project.godot`
 
 ### 最佳实践
 
-9. Inspector 适当时优先使用 Odin API
-10. 标识符遵循 .NET 命名规范（PascalCase、camelCase 等）
-11. `execute_code` 仅当用户明确要求时使用
+13. Inspector 适当时优先使用 Odin API
+14. 标识符遵循 .NET 命名规范（PascalCase、camelCase 等）
+15. `execute_code` 仅当用户明确要求时使用
 
 ## Agent 约束
 

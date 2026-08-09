@@ -3,6 +3,8 @@
   "unityTag": "unity-final-2026-08-08",
   "unityCommit": "168d1934",
   "unityVersion": "6000.3.11f1",
+  "migrationSpikeCommit": "d092a955",
+  "migrationSpikeClassification": "technical_spike_not_parity_evidence",
   "windowsStandaloneSmoke": "excluded_by_project_rule",
   "sourcePolicy": "read_only_snapshot",
   "dependencyAudit": {

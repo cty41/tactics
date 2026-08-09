@@ -1,6 +1,11 @@
 [gd_resource type="Resource" script_class="PoisonSpearFixtureResource" format=3 uid="uid://c1u2bwisfgkk1"]
 
-[ext_resource type="Script" uid="uid://b6ascmoi8xmdg" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearFixtureResource.cs" id="1_vtm0v"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearFixtureResource.cs" id="1_vtm0v"]
 
 [resource]
 script = ExtResource("1_vtm0v")
+ContentIdValue = "encounter.poison-spear.10x10"
+BoardWidth = 10
+BoardHeight = 10
+CasterCell = Vector2i(1, 1)
+TargetCell = Vector2i(3, 2)

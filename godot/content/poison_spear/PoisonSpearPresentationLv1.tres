@@ -1,6 +1,26 @@
 [gd_resource type="Resource" script_class="PoisonSpearPresentationResource" format=3 uid="uid://c0wk7kb5m0147"]
 
-[ext_resource type="Script" uid="uid://c38dv1ln1mrdr" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearPresentationResource.cs" id="1_8iyog"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearPresentationResource.cs" id="1_8iyog"]
 
 [resource]
 script = ExtResource("1_8iyog")
+ContentIdValue = "presentation.poison-spear.lv1"
+SchemaVersion = 1
+Revision = "sha256:fff0ad01ebb996fd3e9d3231e71126656d1fd7613e9ad9ab72f73a751c2c98a5"
+NodeIds = PackedStringArray("__poison_spear.runtime", "fca3d17f7c4a465dabef4376ad33eb9b", "0b9503ec0b6249fc9ed6e83ca017d906")
+NodeTypes = PackedStringArray("sequence", "unit.tween.ranged", "projectile.flight-impact")
+NodeChildren = PackedStringArray("fca3d17f7c4a465dabef4376ad33eb9b,0b9503ec0b6249fc9ed6e83ca017d906", "", "")
+AuthoringNodeIds = PackedStringArray("d4cca0c52c004cf5bd8062c666980a07", "fca3d17f7c4a465dabef4376ad33eb9b", "31f10266a3d841309a51b68cb409f841", "d3b71351436f4fc499626c880a169151", "0b9503ec0b6249fc9ed6e83ca017d906", "0c5199eb72aa445cb7ab0fb2aa843097")
+AuthoringNodeTypes = PackedStringArray("PresentationEntryNodeRecord", "PresentationUnitTweenNodeRecord", "PresentationFinishNodeRecord", "PresentationEntryNodeRecord", "PresentationProjectileNodeRecord", "PresentationFinishNodeRecord")
+AuthoringNodeKinds = PackedStringArray("entry", "leaf", "finish", "entry", "leaf", "finish")
+AuthoringNodeCues = PackedStringArray("Action", "", "", "Projectile", "", "")
+AuthoringNodeEnabled = PackedInt32Array(1, 1, 1, 1, 1, 1)
+AuthoringNodePositions = PackedVector2Array(0, 20, 270, 20, 560, 20, 0, 220, 280, 220, 570, 220)
+EdgeIds = PackedStringArray("1e07cdd9c11c42b0a289501403a387cb", "058bade596c0499da57c7c8e069a7e6b", "3385eb687f464fce8bc160d1c03d6ff7", "6a2797a93d7744efa10194b5f607922b")
+EdgeSources = PackedStringArray("d4cca0c52c004cf5bd8062c666980a07", "fca3d17f7c4a465dabef4376ad33eb9b", "d3b71351436f4fc499626c880a169151", "0b9503ec0b6249fc9ed6e83ca017d906")
+EdgeTargets = PackedStringArray("fca3d17f7c4a465dabef4376ad33eb9b", "31f10266a3d841309a51b68cb409f841", "0b9503ec0b6249fc9ed6e83ca017d906", "0c5199eb72aa445cb7ab0fb2aa843097")
+ProjectileScenePath = "res://content/poison_spear/PoisonSpearProjectile.tscn"
+ImpactScenePath = "res://content/poison_spear/PoisonSpearImpact.tscn"
+PlanRootNodeId = "__poison_spear.runtime"
+ProjectileSpeed = 10.0
+FallbackTravelTime = 0.3

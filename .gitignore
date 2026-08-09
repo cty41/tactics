@@ -16,6 +16,11 @@
 !godot/**/*.csproj
 !godot/**/*.props
 !godot/**/*.targets
+!Tactics.Migration.slnx
+!Tactics.Migration.runsettings
+!src/**/packages.lock.json
+!godot/**/packages.lock.json
+!godot/*.packages.lock.json
 /godot/gdunit4_testadapter_v5/
 /godot/tests/gdunit4_testadapter_v5/
 /godot/addons/godot_ai/*
@@ -53,6 +58,8 @@ __pycache__/
 # Local Node tool outputs
 /Tools/gameplay-test-spec/node_modules/
 /Tools/gameplay-test-spec/dist/
+/Tools/migration/out/
+/.migration-staging/
 
 # Gameplay test spec batch compile output
 Tests/gameplay-specs/**/*.gameplay-test.plan.json

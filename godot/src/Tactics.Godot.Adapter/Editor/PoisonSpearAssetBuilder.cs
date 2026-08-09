@@ -1,3 +1,4 @@
+#if TOOLS
 using Godot;
 
 namespace Tactics.Godot.Adapter.Editor;
@@ -23,3 +24,4 @@ public partial class PoisonSpearAssetBuilder : SceneTree
         }
     }
 }
+#endif

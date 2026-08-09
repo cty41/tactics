@@ -1,6 +1,6 @@
 # Tactics Unity → Godot 迁移设计
 
-状态：已完成设计确认，尚未进入实现计划或迁移执行。
+状态：设计已确认；`d092a955` 是技术 Spike。当前真实 Poison Spear Lv1 已达到 `Validated/UnityOwned`，Revision/typed ChangeSet/Undo/保存回滚、自动等价性门禁以及 canonical Editor 中的 Graph/Undo/Reload/Runtime/等比 Preview 人工验收均已收口。Unity authoring 坐标由 DTO 一次迁移到最终 Godot Resource，后续位置拖动、自动布局、保存和 Reload 均由 Godot typed ChangeSet 管理。当前 VFX 是已通过人工验收、且不复制未确认 Piloto 资产的项目自有程序化占位；该结论不代表 Unity Piloto 粒子视觉等价，也不把 Skill/Presentation 整类切换为 `GodotOwned`。
 
 日期：2026-08-07
 
@@ -35,15 +35,15 @@ Godot Runtime Adapter
 
 ## 仓库、分支与代码边界
 
-建立长期 Godot migration branch 和独立 worktree。Unity 主线继续作为当前 Unity 与共享 Core 的权威源，需要保留的变更只单向汇入迁移分支；Godot 专属工程、Resource、场景和 Adapter 不反向合并到 Unity 主线。
+长期分支固定为 `migration/godot`，复用现有 worktree。Unity `w1` 与 `unity-final-2026-08-08` 已冻结为只读 Oracle；Godot 专属工程、Resource、场景和 Adapter 不反向合并到 Unity 主线。
 
-共存期，正在剥离的 Pure .NET 源文件仍放在 Unity 能管理 `.meta` 的位置；独立 `.csproj`、测试项目和 Godot 工程通过显式 `Compile Include` 或 `ProjectReference` 复用，不维护两份源码，也不使用目录软链接。
+冻结后不再需要 Unity 对共享 Core 的源码管理。Core 已移至 `src/Tactics.Core`，Application 位于 `src/Tactics.Application`；迁移 worktree 中的 Unity 工程只作为 AssetDatabase 导出宿主。早期未接入冻结运行时的临时 Unity Adapter 已移除，避免制造虚假的双引擎共用状态。
 
 最终代码层次为：
 
 ```text
 Tactics.Core
-Tactics.Unity.Adapter       # 迁移期临时存在
+Tactics.Application
 Tactics.Godot.Adapter
 Godot Editor / Content
 ```
@@ -52,9 +52,9 @@ Godot Editor / Content
 
 ## 内容真相源、身份与迁移批次
 
-### 所有权状态
+### 所有权与处理状态
 
-每类内容（Unit、Skill、Buff、AI、Encounter、Presentation 等）独立迁移，并且只能处于一个状态：
+每类内容（Unit、Skill、Buff、AI、Encounter、Presentation 等）独立迁移。内容所有权与迁移处理进度是两条正交状态，不得混用：
 
 ```text
 UnityOwned
@@ -64,9 +64,14 @@ FreezePending
 GodotOwned
 ```
 
+```text
+Planned → Exported → Generated → Validated
+```
+
 - `UnityOwned`：Unity 资产是真相源，Godot 产物仅供试验；
 - `FreezePending`：该类别停止 Unity 编辑，绑定明确的源 commit 并开始验收；
 - `GodotOwned`：Godot 资产成为唯一真相源，禁止再从 Unity 覆盖；
+- `Planned/Exported/Generated/Validated`：只表示该批次加工与验证进度，不自动改变所有权；
 - 失败时保持原状态，不允许一半 Unity、一半 Godot 的混合生产状态；
 - 不建立长期双向同步。
 
@@ -81,10 +86,11 @@ Godot Resource path + uid://
 ```
 
 - `ContentId` 是项目稳定的业务身份，用于存档、运行时查询、跨版本兼容和内容语义引用；
+- `UnitInstanceId` 是单场战斗、重放或存档中的运行时实体身份；多个实例可以共享同一个单位定义 `ContentId`，二者禁止混用；
 - Unity GUID/LocalFileId 只负责迁移期定位来源；
 - Godot `uid://` 负责 Godot 工程内 Resource 的物理身份和路径移动后的引用稳定性；
 - 重命名或移动保留 `ContentId`，复制成新内容必须生成新 ID；
-- 存档和 Core 只保存 `ContentId`，不保存 `uid://` 或 `res://` 路径；
+- 存档和 Core 保存业务 `ContentId` 与需要持久化的 `UnitInstanceId`，不保存 `uid://` 或 `res://` 路径；
 - 删除先检查反向引用和存档迁移策略，不自动级联删除；
 - 迁移完成后可以删除 Unity 来源映射，但保留最终 `ContentId`。
 
@@ -172,7 +178,7 @@ ContentCompiler
 Pure .NET Core
 ```
 
-Locator Catalog 记录 `ContentId → ResourceType + uid://`，运行时不扫描内容目录。`ContentId` 只在 Core/存档层使用，UID 只在 Godot 适配层使用。
+Locator Catalog 记录 `ContentId → ResourceType + uid://`，运行时不扫描内容目录。Core/存档使用 `ContentId` 表达业务内容、使用 `UnitInstanceId` 表达具体战斗实体；UID 只在 Godot 适配层使用。
 
 正式 `.tres/.tscn` 直接进入主 PCK。Godot 原生 `ResourceLoader`、`PackedScene` 和场景作用域替代 Unity AssetBundle、BundleCache、依赖加载顺序和手工引用计数。第一阶段不机械模拟 AssetBundle，也不建设 DLC、Mod 或运行时下载包。
 
@@ -198,7 +204,7 @@ Undo 或 typed ChangeSet
 
 Graph 根资产为独立 `.tres`；图独占节点优先作为派生 C# Resource 子资源；可复用叶资产保存为外部 `.tres`；视觉 Prefab 转为 `PackedScene`。节点复制由领域 Kernel 显式完成，叶资产默认共享，只有显式 Duplicate & Rebind 才复制叶资产。
 
-当前 Unity 基线已经提供 `PresentationExecutionPlan`：Graph 编译为纯数据的 Sequence / Parallel / Leaf 结构，Runtime 和 Preview 使用不同叶执行器消费同一计划。Godot 应迁移这一语义契约和编译边界，不迁移 DOTween、Unity Editor 或玩法状态到计划对象中。
+当前 Unity 基线已经提供 `PresentationExecutionPlan`：Graph 编译为纯数据的 Sequence / Parallel / Leaf 结构，Runtime 和 Preview 使用不同叶执行器消费同一计划。Core 的 `PresentationGraphCompiler` 已由冻结 Unity linked-source Oracle 验证 Fork/Join 结构：每条 branch 在 Join 前停止，Join 后 continuation 只追加一次；Godot 应消费这一计划，不迁移 DOTween、Unity Editor 或玩法状态到计划对象中。
 
 持久化使用稳定 `NodeId`、`PortId` 和端口基数语义 `Single / UnorderedMany / OrderedMany`，不依赖 GraphEdit 的临时整数端口或数组首项。图 Schema 使用统一 `SchemaVersion`、稳定 `NodeTypeId` 和显式逐版本迁移。
 
@@ -232,8 +238,8 @@ Agent/MCP 只是传输入口，不是领域核心：离线验证、迁移、审�
 Tactics.Core.Tests
     └─ NUnit / .NET 9
 
-Tactics.Godot.Tests
-    └─ GdUnit4Net，Resource、Node、Scene、输入和运行时
+Tactics.Godot.TestHost
+    └─ GdUnit4Net 隔离测试宿主，使用项目程序集名注册 Resource、Node、Scene、输入和运行时脚本；生产 Release 不引用测试包
 
 Tactics.Godot.EditorSpike
     └─ EditorPlugin、GraphEdit、Undo、SubViewport、Assembly Reload
@@ -242,6 +248,12 @@ Tactics.Godot.EditorSpike
 Unity 测试在最终切换前继续保留；不为保持 Godot 工程整洁而提前删除。修改 Core 时按影响范围运行 Unity、Core 和 Godot 测试，垂直切片完成及合并前执行关键路径双引擎全量验证。
 
 迁移前生成并提交固定 Golden Test Vectors，记录固定种子、棋盘、单位、技能和指令序列，以及合法行动、路径、伤害、状态和事件结果。向量默认只读，更新必须单独审查。
+
+当前 Golden schema v6 已把显式 SplitMix64 状态与 `MoveUnitCommand → UsePoisonSpearCommand → EndTurnCommand` 重放为不可变 `BattleTransition(State + Events)`，并严格区分单位定义 `ContentId` 与运行时 `UnitInstanceId`。冻结 Unity 的纯 C# Dijkstra、堆、`BattleInitiativeService`、`BattleRuntimeScope` 和 `PresentationExecutionPlanCompiler` 以 linked source 方式编译到独立测试程序集；Poison Spear 的冻结 Amazon/Ability/Buff 源码以 blob + 语义断言补充真实资产 DTO。测试程序集不得成为 Core、Godot Adapter 或 Release 依赖。
+
+当前轮先攻以 `InitiativeRoundState` 表达不可变 partition：当前单位与已行动集合保持稳定，只有 remaining 在 Initiative 变化后重新排序；`BattleState.WithInitiativeChanged` 是技能/Buff 后续接入这一合同的显式入口。冻结 Unity 不存在统一不可变 Command/Event 边界，且随机源混用 `UnityEngine.Random`、无种子 `System.Random` 与 `Guid.NewGuid` 排序，因此 `battle-transition-v2` 明确定性为版本化迁移合同，`splitmix64-v1` 明确定性为确定性替代合同；不得把二者宣传为逐语句 Unity parity。
+
+真实内容源管线使用 Unity Editor-only AssetDatabase exporter，不解析 YAML。Poison Spear Lv1 的 7 个根资产已通过 `unity-assetdatabase-v1` 导出 GUID、LocalFileId、最终 Tag blob、dependency hash、对象层级、字段和引用，补入技术 Spike 漏掉的 Poison Buff；两次 DTO byte-identical。临时 DTO 经 Application diagnostics 后只作为 ResourceSaver 的一次性输入，现已生成 Poison、Skill、Presentation、10×10 fixture、Projectile/Impact PackedScene 与 Catalog。目标语义显式序列化，UID、hash、人工修改保护、回滚和 byte idempotency 受测；项目自有程序化 Projectile/Impact 已通过人工视觉验收，因此 real batch 晋升为 `Validated/UnityOwned`。Piloto 纹理、材质、Prefab 或派生视觉 payload 仍需独立的购买/EULA 证据和重新验收，当前晋升不覆盖它们，也不改变类别所有权。
 
 每批次必须通过：
 
@@ -263,12 +275,11 @@ Unity 测试在最终切换前继续保留；不为保持 Godot 工程整洁而�
 
 所有内容类别进入 `GodotOwned` 且最终 Windows Release 验收通过后：
 
-1. 冻结 Unity 工程和最后源代码提交；
-2. 创建 Unity 最终归档分支和 Tag，并完成最后构建、测试和依赖审计；
-3. 将 Godot 迁移分支提升为后续主线；
-4. 从 Godot 主线整体移除 Unity 工程、Unity Adapter、Unity `.meta`、临时 DTO、GUID 映射台账、转换器和不再需要的第三方包；
-5. 保留最终 Godot `ContentId`、Catalog、Resource 和测试规范；
-6. 用干净 worktree 验证主线可以独立完成 Windows 构建。
+1. 继续保持既有 Unity 最终归档分支与 `unity-final-2026-08-08` Tag 只读；
+2. 将 Godot 迁移分支提升为后续主线；
+3. 从 Godot 主线整体移除 Unity 工程、Unity `.meta`、临时 DTO、GUID 映射台账、转换器和不再需要的第三方包；
+4. 保留最终 Godot `ContentId`、Catalog、Resource 和测试规范；
+5. 在发布阶段用干净环境验证 Godot Windows Release/PCK。
 
 Unity 历史通过归档分支和 Tag 保留，不在 Git 主线长期维护双引擎工程。
 

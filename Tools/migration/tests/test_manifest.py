@@ -10,13 +10,17 @@ from Tools.migration.manifest import (
 
 
 class ManifestTests(unittest.TestCase):
-    def test_content_id_is_normalized_and_stable(self) -> None:
-        self.assertEqual(normalize_content_id("  Amazon.Poison_Spear "), "amazon.poison_spear")
+    def test_content_id_trims_but_does_not_rewrite_business_identity(self) -> None:
+        self.assertEqual(normalize_content_id("  amazon.poison-spear  "), "amazon.poison-spear")
+        for invalid in ("Amazon.Poison-Spear", "amazon.poison_spear", "amazon..poison"):
+            with self.subTest(invalid=invalid):
+                with self.assertRaisesRegex(ValueError, "invalid ContentId"):
+                    normalize_content_id(invalid)
 
     def test_duplicate_content_ids_are_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "duplicate ContentId"):
             validate_unique_content_ids(
-                [{"contentId": "unit.amazon"}, {"contentId": "UNIT.AMAZON"}]
+                [{"contentId": "unit.amazon"}, {"contentId": "unit.amazon"}]
             )
 
     def test_manifest_hash_is_order_independent(self) -> None:
@@ -37,10 +41,14 @@ class ManifestTests(unittest.TestCase):
             {
                 "skill.poison-spear.lv1",
                 "presentation.poison-spear.lv1",
+                "encounter.poison-spear.10x10",
                 "projectile.poison-spear",
                 "impact.poison-spear",
             },
         )
+        self.assertEqual(batch["classification"], "technical_spike")
+        self.assertEqual(batch["status"], "Generated")
+        self.assertEqual(batch["owner"], "UnityOwned")
         for relative_path in batch["targetAssets"]:
             self.assertTrue((root / relative_path).is_file(), relative_path)
 

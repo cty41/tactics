@@ -1,11 +1,25 @@
 [gd_resource type="Resource" script_class="PoisonSpearSkillResource" format=3 uid="uid://n4swajo5tftl"]
 
-[ext_resource type="Script" uid="uid://c38dv1ln1mrdr" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearPresentationResource.cs" id="1_e6cfm"]
-[ext_resource type="Script" uid="uid://jupbw0f2wi77" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearSkillResource.cs" id="2_mrnsn"]
-
-[sub_resource type="Resource" id="Resource_1sox8"]
-script = ExtResource("1_e6cfm")
+[ext_resource type="Resource" path="res://content/poison_spear/PoisonBuff.tres" id="1_mrnsn"]
+[ext_resource type="Resource" path="res://content/poison_spear/PoisonSpearPresentationLv1.tres" id="2_1sox8"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearSkillResource.cs" id="2_mrnsn"]
 
 [resource]
 script = ExtResource("2_mrnsn")
-Presentation = SubResource("Resource_1sox8")
+ContentIdValue = "skill.poison-spear.lv1"
+SchemaVersion = 1
+DisplayName = "毒矛 Lv1"
+Description = "造成8点物理伤害并使目标中毒。"
+Range = 5
+ManaCost = 6
+Damage = 8
+PoisonTurns = 3
+PoisonDamagePerTurn = 2
+RequiresLineOfSight = true
+ProjectileSpeed = 7.0
+ProjectileTravelTime = 0.3
+DropOnHit = false
+DropSearchRadius = 3
+DropsSpearOnCompletion = true
+Poison = ExtResource("1_mrnsn")
+Presentation = ExtResource("2_1sox8")

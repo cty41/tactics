@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Testing Diagnostics"
+  short_description: "Run and diagnose the migration test stack"
+  default_prompt: "Use $godot-testing-diagnostics to run the sequential migration checks and diagnose failures."

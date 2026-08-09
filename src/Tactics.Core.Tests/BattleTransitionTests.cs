@@ -1,0 +1,353 @@
+using NUnit.Framework;
+using Tactics.Core.Battle;
+using Tactics.Core.Board;
+using Tactics.Core.Combat;
+using Tactics.Core.Content;
+using Tactics.Core.Randomness;
+using Tactics.Core.Units;
+
+namespace Tactics.Core.Tests;
+
+public sealed class BattleTransitionTests
+{
+    [Test]
+    public void CommandSequence_ProducesImmutableStateAndOrderedGameplayEvents()
+    {
+        BattleState initial = CreateBattleState();
+        var service = new BattleTransitionService();
+
+        BattleTransition movement = service.Apply(
+            initial,
+            new MoveUnitCommand(new UnitInstanceId("party.caster.0"), new GridPoint(2, 1)));
+        BattleTransition skill = service.Apply(
+            movement.State,
+            new UsePoisonSpearCommand(
+                new UnitInstanceId("party.caster.0"),
+                new UnitInstanceId("enemy.target.0"),
+                new PoisonSpearDefinition(
+                    new ContentId("skill.poison-spear.lv1"),
+                    5,
+                    8,
+                    3,
+                    poisonDamagePerTurn: 2,
+                    manaCost: 6)));
+        BattleTransition turn = service.Apply(skill.State, new EndTurnCommand(new UnitInstanceId("party.caster.0")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(movement.Succeeded, Is.True);
+            Assert.That(movement.Events, Has.Count.EqualTo(1));
+            Assert.That(movement.Events[0], Is.TypeOf<UnitMovedEvent>());
+            Assert.That(skill.Succeeded, Is.True);
+            Assert.That(skill.Events.Select(item => item.GetType()), Is.EqualTo(new[]
+            {
+                typeof(SkillUsedEvent),
+                typeof(ManaSpentEvent),
+                typeof(DamageAppliedEvent),
+                typeof(StatusAppliedEvent),
+                typeof(SpearDroppedEvent)
+            }));
+            Assert.That(turn.Succeeded, Is.True);
+            Assert.That(turn.Events.Select(item => item.GetType()), Is.EqualTo(new[]
+            {
+                typeof(TurnAdvancedEvent),
+                typeof(StatusTickedEvent)
+            }));
+        });
+
+        BattleUnitState originalCaster = initial.Units[new UnitInstanceId("party.caster.0")];
+        BattleUnitState finalCaster = turn.State.Units[new UnitInstanceId("party.caster.0")];
+        BattleUnitState finalTarget = turn.State.Units[new UnitInstanceId("enemy.target.0")];
+        Assert.Multiple(() =>
+        {
+            Assert.That(originalCaster.Unit.Position, Is.EqualTo(new GridPoint(1, 1)));
+            Assert.That(originalCaster.HasMovedThisTurn, Is.False);
+            Assert.That(finalCaster.Unit.Position, Is.EqualTo(new GridPoint(2, 1)));
+            Assert.That(finalCaster.HasMovedThisTurn, Is.True);
+            Assert.That(finalCaster.CurrentMana, Is.EqualTo(14));
+            Assert.That(finalTarget.CurrentHealth, Is.EqualTo(10));
+            Assert.That(finalTarget.StatusDurations[new ContentId("buff.poison")], Is.EqualTo(3));
+            Assert.That(finalTarget.Statuses[new ContentId("buff.poison")].DamagePerTurn, Is.EqualTo(2));
+            Assert.That(turn.State.Round, Is.EqualTo(1));
+            Assert.That(turn.State.ActiveUnitId, Is.EqualTo(new UnitInstanceId("enemy.target.0")));
+            Assert.That(turn.State.RandomState, Is.EqualTo(42UL));
+            Assert.That(turn.State.DroppedSpears[new UnitInstanceId("party.caster.0")],
+                Is.EqualTo(new GridPoint(5, 1)));
+        });
+    }
+
+    [Test]
+    public void PoisonSpear_ReapplicationAddsDurationAndCapturesLatestSource()
+    {
+        var casterId = new UnitInstanceId("party.caster.0");
+        var poisonId = new ContentId("buff.poison");
+        BattleState initial = CreateBattleState(new BattleStatusState(poisonId, casterId, 2, 2));
+
+        BattleTransition transition = new BattleTransitionService().Apply(
+            initial,
+            new UsePoisonSpearCommand(
+                casterId,
+                new UnitInstanceId("enemy.target.0"),
+                new PoisonSpearDefinition(
+                    new ContentId("skill.poison-spear.lv1"),
+                    5,
+                    8,
+                    3,
+                    poisonId,
+                    poisonDamagePerTurn: 2,
+                    manaCost: 6)));
+
+        BattleStatusState poison = transition.State.Units[new UnitInstanceId("enemy.target.0")].Statuses[poisonId];
+        Assert.Multiple(() =>
+        {
+            Assert.That(transition.Succeeded, Is.True);
+            Assert.That(poison.RemainingTurns, Is.EqualTo(5));
+            Assert.That(poison.DamagePerTurn, Is.EqualTo(2));
+            Assert.That(poison.SourceId, Is.EqualTo(casterId));
+            Assert.That(transition.Events.OfType<StatusAppliedEvent>().Single().RemainingTurns, Is.EqualTo(5));
+        });
+    }
+
+    [Test]
+    public void PoisonSpear_RejectsASecondUseUntilTheDroppedSpearIsRecovered()
+    {
+        var casterId = new UnitInstanceId("party.caster.0");
+        var targetId = new UnitInstanceId("enemy.target.0");
+        var definition = new PoisonSpearDefinition(
+            new ContentId("skill.poison-spear.lv1"),
+            5,
+            8,
+            3,
+            manaCost: 6);
+        var service = new BattleTransitionService();
+        BattleTransition first = service.Apply(
+            CreateBattleState(),
+            new UsePoisonSpearCommand(casterId, targetId, definition));
+        BattleTransition second = service.Apply(
+            first.State,
+            new UsePoisonSpearCommand(casterId, targetId, definition));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.Succeeded, Is.True);
+            Assert.That(first.Events.OfType<SpearDroppedEvent>().Single().Cell,
+                Is.EqualTo(new GridPoint(5, 1)));
+            Assert.That(second.Succeeded, Is.False);
+            Assert.That(second.State, Is.SameAs(first.State));
+            Assert.That(second.Events.Single(), Is.EqualTo(
+                new CommandRejectedEvent(casterId, "spear_not_held")));
+        });
+    }
+
+    [Test]
+    public void EndTurn_ExpiresOutgoingStatusBeforeAdvancing()
+    {
+        var casterId = new UnitInstanceId("party.caster.0");
+        var targetId = new UnitInstanceId("enemy.target.0");
+        var poisonId = new ContentId("buff.poison");
+        BattleState initial = CreateBattleState(
+            new BattleStatusState(poisonId, casterId, 1, 2),
+            activeIndex: 1);
+
+        BattleTransition transition = new BattleTransitionService().Apply(
+            initial,
+            new EndTurnCommand(targetId));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(transition.Events.Select(item => item.GetType()), Is.EqualTo(new[]
+            {
+                typeof(StatusExpiredEvent),
+                typeof(TurnAdvancedEvent)
+            }));
+            Assert.That(transition.State.Units[targetId].Statuses, Is.Empty);
+            Assert.That(transition.State.ActiveUnitId, Is.EqualTo(casterId));
+            Assert.That(transition.State.Round, Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void PoisonSpear_RejectsWithoutManaAndLeavesStateUnchanged()
+    {
+        BattleState initial = CreateBattleState(casterMana: 5);
+        BattleTransition transition = new BattleTransitionService().Apply(
+            initial,
+            new UsePoisonSpearCommand(
+                new UnitInstanceId("party.caster.0"),
+                new UnitInstanceId("enemy.target.0"),
+                new PoisonSpearDefinition(
+                    new ContentId("skill.poison-spear.lv1"),
+                    5,
+                    8,
+                    3,
+                    manaCost: 6)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(transition.Succeeded, Is.False);
+            Assert.That(transition.State, Is.SameAs(initial));
+            Assert.That(transition.Events.Single(), Is.EqualTo(
+                new CommandRejectedEvent(new UnitInstanceId("party.caster.0"), "insufficient_mana")));
+        });
+    }
+
+    [Test]
+    public void RejectedCommand_ReturnsOriginalStateAndSingleStableReason()
+    {
+        BattleState initial = CreateBattleState();
+
+        BattleTransition transition = new BattleTransitionService().Apply(
+            initial,
+            new EndTurnCommand(new UnitInstanceId("enemy.target.0")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(transition.Succeeded, Is.False);
+            Assert.That(transition.State, Is.SameAs(initial));
+            Assert.That(transition.Events, Is.EqualTo(new BattleEvent[]
+            {
+                new CommandRejectedEvent(new UnitInstanceId("enemy.target.0"), "not_active_unit")
+            }));
+        });
+    }
+
+    [Test]
+    public void DeterministicRandom_UsesVersionedSplitMix64Sequence()
+    {
+        var random = new DeterministicRandom(42UL);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(random.NextUInt64(), Is.EqualTo(13679457532755275413UL));
+            Assert.That(random.NextInt(100), Is.EqualTo(91));
+            Assert.That(random.NextInt(7), Is.EqualTo(0));
+            Assert.That(random.NextUInt64(), Is.EqualTo(6349198060258255764UL));
+            Assert.That(random.State, Is.EqualTo(8709371129873690750UL));
+        });
+    }
+
+    [Test]
+    public void BattleState_AllowsDistinctInstancesOfTheSameUnitDefinition()
+    {
+        BattleState baseline = CreateBattleState();
+        var secondTargetId = new UnitInstanceId("enemy.target.1");
+        var secondTarget = new BattleUnitState(new UnitState(
+            secondTargetId,
+            new ContentId("unit.target"),
+            new GridPoint(5, 1),
+            3,
+            8,
+            1,
+            2), 20, 20);
+        var state = new BattleState(
+            baseline.Board,
+            baseline.Units.Values.Append(secondTarget),
+            baseline.TurnOrder.Append(secondTargetId).ToArray(),
+            randomState: baseline.RandomState);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(state.Units, Has.Count.EqualTo(3));
+            Assert.That(
+                state.Units.Values.Count(unit => unit.Unit.DefinitionId == new ContentId("unit.target")),
+                Is.EqualTo(2));
+            Assert.That(state.Units.ContainsKey(new UnitInstanceId("enemy.target.0")), Is.True);
+            Assert.That(state.Units.ContainsKey(new UnitInstanceId("enemy.target.1")), Is.True);
+        });
+    }
+
+    [Test]
+    public void InitiativeChange_ReordersOnlyPendingBattleStateSuffix()
+    {
+        BattleState baseline = CreateBattleState();
+        BattleUnitState target = baseline.Units[new UnitInstanceId("enemy.target.0")];
+        var earlierId = new UnitInstanceId("enemy.earlier.0");
+        var earlier = new BattleUnitState(new UnitState(
+            earlierId,
+            new ContentId("unit.target"),
+            new GridPoint(5, 1),
+            3,
+            8,
+            1,
+            0), 20, 20);
+        var state = new BattleState(
+            baseline.Board,
+            baseline.Units.Values.Append(earlier),
+            new[] { baseline.ActiveUnitId, earlierId, target.Unit.InstanceId },
+            randomState: baseline.RandomState);
+
+        BattleUnitState acceleratedTarget = new(
+            target.Unit with { Initiative = 12 },
+            target.MaxHealth,
+            target.CurrentHealth,
+            target.HasMovedThisTurn,
+            maxMana: target.MaxMana,
+            currentMana: target.CurrentMana,
+            statuses: target.Statuses);
+        BattleState reordered = state.WithInitiativeChanged(acceleratedTarget);
+        BattleUnitState slowedCurrent = new(
+            reordered.Units[reordered.ActiveUnitId].Unit with { Initiative = 1 },
+            20,
+            20);
+        BattleState currentUnchanged = reordered.WithInitiativeChanged(slowedCurrent);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reordered.TurnOrder.Select(id => id.Value), Is.EqualTo(new[]
+            {
+                "party.caster.0", "enemy.target.0", "enemy.earlier.0"
+            }));
+            Assert.That(currentUnchanged.TurnOrder, Is.EqualTo(reordered.TurnOrder));
+            Assert.That(currentUnchanged.ActiveUnitId, Is.EqualTo(state.ActiveUnitId));
+        });
+    }
+
+    private static BattleState CreateBattleState(
+        BattleStatusState? targetStatus = null,
+        int activeIndex = 0,
+        int casterMana = 20)
+    {
+        var cells = Enumerable.Range(0, BoardSpec.Width)
+            .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
+                .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var casterId = new UnitInstanceId("party.caster.0");
+        var targetId = new UnitInstanceId("enemy.target.0");
+        return new BattleState(
+            new BoardSnapshot(cells),
+            new[]
+            {
+                new BattleUnitState(new UnitState(
+                    casterId,
+                    new ContentId("unit.caster"),
+                    new GridPoint(1, 1),
+                    3,
+                    10,
+                    0,
+                    0),
+                    20,
+                    20,
+                    maxMana: 20,
+                    currentMana: casterMana),
+                new BattleUnitState(new UnitState(
+                    targetId,
+                    new ContentId("unit.target"),
+                    new GridPoint(4, 1),
+                    3,
+                    8,
+                    1,
+                    1),
+                    20,
+                    20,
+                    statuses: targetStatus is null
+                        ? null
+                        : new Dictionary<ContentId, BattleStatusState>
+                        {
+                            [targetStatus.ContentId] = targetStatus
+                        })
+            },
+            new[] { casterId, targetId },
+            activeIndex: activeIndex,
+            randomState: 42UL);
+    }
+}

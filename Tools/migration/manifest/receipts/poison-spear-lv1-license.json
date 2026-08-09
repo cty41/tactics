@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "batchId": "poison-spear-lv1-real",
+  "classification": "technical_provenance_review_not_legal_advice",
+  "reviewedSourceRoots": [
+    "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted",
+    "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset"
+  ],
+  "localLicenseEvidence": {
+    "pilotoLicenseFileFound": false,
+    "purchaseOrEntitlementRecordFound": false,
+    "priorProjectConclusion": "source_or_eula_not_audited"
+  },
+  "generatedGodotPayload": {
+    "thirdPartyBinaryOrTextureCopied": false,
+    "unityPrefabMaterialOrTextureReferenced": false,
+    "implementation": "project_owned_procedural_line_circle_placeholder",
+    "sourceValuesUsed": [
+      "tint",
+      "scale",
+      "arcHeight",
+      "travelTime",
+      "impactLifetime"
+    ]
+  },
+  "decision": "pass_for_procedural_placeholder_only",
+  "limitations": [
+    "This receipt is a technical provenance audit, not legal advice.",
+    "The current Godot Projectile and Impact do not provide visual parity with the Unity Piloto particle prefabs.",
+    "Migrating Piloto textures, materials, prefabs, or derivative visual payload requires separate purchase and EULA evidence before GodotOwned promotion."
+  ],
+  "visualAcceptance": "passed_for_programmatic_placeholder_only"
+}

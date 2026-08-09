@@ -5,10 +5,7 @@
     <RootNamespace>Tactics.Core</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="../../Assets/Tactics/Shared/Core/**/*.cs" />
-  </ItemGroup>
 </Project>

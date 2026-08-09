@@ -5,15 +5,23 @@
     <IsTestProject>true</IsTestProject>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="NUnit" Version="4.3.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Tactics.Core/Tactics.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../Tests/golden/10x10-core-vectors.json" Link="Golden/10x10-core-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../Tests/golden/oracle-matrix.json" Link="Golden/oracle-matrix.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../Tests/golden/contract-decisions.json" Link="Golden/contract-decisions.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

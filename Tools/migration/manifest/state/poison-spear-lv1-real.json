@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "batchId": "poison-spear-lv1-real",
+  "source": {
+    "sourceTag": "unity-final-2026-08-08",
+    "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+    "exporterVersion": "unity-assetdatabase-v1",
+    "exportHash": "sha256:d3b6fd9ff624a4ab88d0a627b81963aa8f269e5795474f0a3f90c5797ca9645f"
+  },
+  "artifacts": [
+    {
+      "resourcePath": "res://content/poison_spear/ContentCatalog.tres",
+      "resourceUid": "uid://3c5ynhv5gblk",
+      "targetHash": "sha256:01bc06dc95b09bbcdf9f5a1371f6bcdfc614c3396e1d63fd20a0a45124877f56",
+      "semanticHash": "sha256:1cd6b7e61a9f165def589e60683972433914f25b937d52db8ec56e72eff3a496"
+    },
+    {
+      "resourcePath": "res://content/poison_spear/PoisonBuff.tres",
+      "resourceUid": "uid://byvdudy464o8b",
+      "targetHash": "sha256:2b6dcec960c7d4ddae43a5b17f5103ea9390995b59129446d8294ea4a5669387",
+      "semanticHash": "sha256:734398f77abcda42d71e9e21e00619cb3fe2c6966fdd91698e5446402f3af8bf"
+    },
+    {
+      "resourcePath": "res://content/poison_spear/PoisonSpear10x10Fixture.tres",
+      "resourceUid": "uid://c1u2bwisfgkk1",
+      "targetHash": "sha256:560b1d2b1bd164ef18b93a78fe0e3d4ed3fb7e0ecb68a600ef145e2c2e57792e",
+      "semanticHash": "sha256:dc5f5181ddc881b8f1728188c8232c66141cd82eadd3f061efe2b90b284fb219"
+    },
+    {
+      "resourcePath": "res://content/poison_spear/PoisonSpearImpact.tscn",
+      "resourceUid": "uid://c3525yd0esr0y",
+      "targetHash": "sha256:1f27a954982ffee0d39991b23ca2824a3495e616c2485afcbc593167c39bef48",
+      "semanticHash": "sha256:56f364d93b7010eaa69d0f4b3f2d7bb74116884d1e8b5e686c217e34dd7e4337"
+    },
+    {
+      "resourcePath": "res://content/poison_spear/PoisonSpearPresentationLv1.tres",
+      "resourceUid": "uid://c0wk7kb5m0147",
+      "targetHash": "sha256:7e24030e72769306197b66b0217b21ee76dd0a571258068116a3e246a39eb106",
+      "semanticHash": "sha256:422959f464c7d9388bb6ef27f0472a2da43fc9c56b73e72375d82cf412d5d25a"
+    },
+    {
+      "resourcePath": "res://content/poison_spear/PoisonSpearProjectile.tscn",
+      "resourceUid": "uid://dewosssqq8p7p",
+      "targetHash": "sha256:046dd78c1cc1bd790adeca58a27ef7fb1ba7545370211971b6def39bcd13e92b",
+      "semanticHash": "sha256:b4f0359fa0edd9c9cdc04334b7f44294f6d2df729579088e195c4b7c1ee471e5"
+    },
+    {
+      "resourcePath": "res://content/poison_spear/PoisonSpearSkillLv1.tres",
+      "resourceUid": "uid://n4swajo5tftl",
+      "targetHash": "sha256:8ca6ce84b8c782342e89c282231f3503dcf9574fd86e476aa85f75b88f1b3f2d",
+      "semanticHash": "sha256:2fee53010777286a6d12d7633fbf85baf7adcd4c2b3482d996ebce3faa0f0f5a"
+    }
+  ]
+}

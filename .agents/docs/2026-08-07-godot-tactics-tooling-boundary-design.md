@@ -2,7 +2,7 @@
 
 ## 状态
 
-本设计已由用户确认。当前仅固化架构边界，不代表已经开始 Godot 实现或迁移执行。
+本设计已由用户确认。`d092a955` 完成了 C# EditorPlugin、GraphEdit、Undo、SubViewport、ResourceSaver、Assembly Reload、GdUnit 和 headless 技术 Spike。当前真实 Poison Spear 已由 AssetDatabase DTO → typed Draft → ResourceSaver 生成；Application 的 SHA-256 Revision/typed ChangeSet/原子校验与 Godot Undo/保存回滚已受测。图节点位置是 Resource 中受 Revision 保护的 authoring 数据，拖动和自动布局各对应一个 typed ChangeSet/Undo action；稳定 ID 只用于引用和诊断，GraphEdit 显示语义标题。Tactics Tooling 现为 Godot 中央 Main Screen；Graph 与 SubViewport 使用可折叠、可调的 64/36 左右分栏，Preview 由居中的 `AspectRatioContainer(Fit)` 保持 `640:180`。完整重启后的 Main Screen、Graph、Undo/Redo、保存、Assembly Reload、Runtime 与等比 Preview 人工验收均已通过。
 
 ## 结论
 
@@ -62,6 +62,10 @@ Tactics.Application / Tactics.Core
 ### `godot-ai` 通用操作
 
 场景树、Node、Resource、文件、运行、输入、截图和日志继续优先使用 `godot-ai` 原始接口。它们适合基础编辑和观察，但不自动提供 Tactics 的 revision、领域校验、跨资产 ChangeSet 或领域级事务。
+
+Codex 接入采用项目级 Attach 与分阶段白名单：被 Git 忽略的 `.codex/config.toml` 只在 `migration/godot` worktree 生效，启动块固定 `godot-ai==3.1.2`、Windows `pythonw.exe` 无窗口 bootstrap、8000/9500 端口。Profile 从只读观察逐步扩展到内容、UI/Input 和 Presentation authoring；脚本、任意文件系统、客户端自配置与 Autoload 管理始终禁用。配置策略和精确 Tool 集合由 `Tools/migration/manifest/godot-tooling.json` 与受测同步脚本维护，不复制到用户级长期配置。
+
+MCP 能自动承担 Editor 状态、资源/场景读取、运行、日志、截图和已批准的重复编辑，但统一验证、台账晋升和语义 Diff 仍由确定性工具执行；Graph drag/Undo、Dock/SubViewport、Assembly Reload 后视觉状态和最终 VFX/UX 接受仍是人工门禁。
 
 ## C# 与 GDScript 边界
 
@@ -129,10 +133,4 @@ GDScript 不负责 Graph 规则、ChangeSet 校验或资产事务。若上游未
 
 ## 下一阶段边界
 
-下一阶段应先做设计确认后的技术 Spike，而不是直接批量迁移：
-
-1. Pure C# `validate_encounter`/内容审计 CLI；
-2. Godot Resource/Scene headless 读写验证；
-3. Presentation ChangeSet 的 C# Godot Editor Service 原型；
-4. 薄 GDScript custom adapter 与 C# reload/rebind；
-5. 通过后再确定采用上游 custom registry、backport/fork，还是独立 Tactics MCP。
+技术 Spike、Application/Parity、真实导出管线、Presentation ChangeSet/Revision 和 Poison Spear 程序化占位视觉验收均已完成，real batch 为 `Validated/UnityOwned`。下一阶段进入 Unit 批次并将项目 MCP Profile 切换为 `content-authoring`；custom MCP adapter 继续延后，届时再比较上游 registry、backport/fork 或独立 Tactics MCP。Piloto 第三方视觉仍需单独的购买/EULA 证据与验收，不能由本次 Phase 3 结论外推。

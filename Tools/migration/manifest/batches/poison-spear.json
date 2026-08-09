@@ -1,13 +1,15 @@
 {
   "schemaVersion": 1,
   "batchId": "poison-spear-lv1",
+  "classification": "technical_spike",
   "sourceCommit": "168d1934",
   "sourcePathSetHash": "sha256:c6eb1ca1b7caf71cbbe5a11a7c56de64f701ec81d8726afa6ee34f588bb744f6",
   "owner": "UnityOwned",
-  "status": "FreezePending",
+  "status": "Generated",
   "contentIds": [
     "skill.poison-spear.lv1",
     "presentation.poison-spear.lv1",
+    "encounter.poison-spear.10x10",
     "projectile.poison-spear",
     "impact.poison-spear"
   ],
@@ -28,7 +30,8 @@
     "godot/content/poison_spear/ContentCatalog.tres"
   ],
   "validation": {
-    "coreGoldenVectors": "passed",
+    "unityParity": "pending_oracle_matrix",
+    "coreGoldenVectors": "spike_only_not_oracle_bound",
     "godotRuntime": "passed",
     "editorSpike": "passed",
     "visualAcceptance": "pending"

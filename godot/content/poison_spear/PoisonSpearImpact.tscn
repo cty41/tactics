@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://c3525yd0esr0y"]
 
-[ext_resource type="Script" uid="uid://jgqigg8kr452" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearImpact.cs" id="1_r0fvs"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearImpact.cs" id="1_r0fvs"]
 
 [node name="PoisonSpearImpact" type="Node2D" unique_id=876500533]
 script = ExtResource("1_r0fvs")
+TailSeconds = 0.45
+SourceScale = 0.55
+Tint = Color(0.33, 0.9, 0.28, 1)

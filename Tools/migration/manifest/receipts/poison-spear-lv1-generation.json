@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "batchId": "poison-spear-lv1-real",
+  "classification": "real_godot_resource_generation",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:d3b6fd9ff624a4ab88d0a627b81963aa8f269e5795474f0a3f90c5797ca9645f",
+  "typedDraftHash": "sha256:c85460e0a8033a0f7b04915280716019072be8cc486d51e83a6e2e9bd6b63e85",
+  "generationLedger": "Tools/migration/manifest/state/poison-spear-lv1-real.json",
+  "generationLedgerHash": "sha256:6803a1adcf722bbc29748b553cd68630ef4cf249085b963946997f9d902f7b68",
+  "contentEntryCount": 6,
+  "artifactCount": 7,
+  "sourceValues": {
+    "range": 5,
+    "manaCost": 6,
+    "damage": 8,
+    "poisonDuration": 3,
+    "poisonDamagePerTurn": 2.0,
+    "poisonRefreshStrategy": "AddDuration",
+    "poisonTriggerTiming": "TurnStart",
+    "skillProjectileSpeed": 7.0,
+    "skillProjectileTravelTime": 0.30000001192092896,
+    "authoredDropSearchRadius": 1,
+    "runtimeDropSearchRadius": 3,
+    "dropsSpearOnCompletion": true,
+    "presentationAuthoringNodeCount": 6,
+    "presentationAuthoringEdgeCount": 4
+  },
+  "automatedValidation": {
+    "applicationCompilation": "passed",
+    "resourceSaver": "passed",
+    "uidPreservation": "passed",
+    "byteIdempotencyRuns": 2,
+    "byteIdentical": true,
+    "headlessEditorFilesystemScan": "passed",
+    "coreRuntime": "passed",
+    "godotRuntime": "passed",
+    "rendererHeadlessStartup": [
+      "gl_compatibility",
+      "forward_plus"
+    ]
+  },
+  "ownership": "UnityOwned",
+  "state": "Validated",
+  "visualAcceptance": "passed_for_programmatic_placeholder_only"
+}

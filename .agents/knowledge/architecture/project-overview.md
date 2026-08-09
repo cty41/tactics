@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
 tags: [architecture, unity, agent-first]
-timestamp: "2026-08-08T12:48:45+08:00"
+timestamp: "2026-08-09T19:24:05+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -15,12 +15,12 @@ repo_paths:
   - Assets/Tactics/Arts/UI
   - Assets/Tactics/UIToolkit/TextSettings.asset
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:12ef168aa8859e70e0ef312aa06474b7e1adbadcffbf07ddedc158e7f95f0159
+source_fingerprint: sha256:17d5e30f02792662a57e595639c435dd84a26ef97ad7ca483664420db0c372b7
 ---
 
 # Summary
 
-Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、Unity 资产和测试证明；本 OKF bundle 只提供跨系统综合和导航。
+Tactics 是 Agent 优先维护、正在从冻结 Unity 终版迁移到 Godot 的战棋项目。Unity `w1`/最终 Tag 是只读 Oracle；新运行时架构以纯 .NET Core/Application 和唯一 `godot/project.godot` 为目标。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、资产和测试证明；本 OKF bundle 只提供跨系统综合和导航。
 
 # Runtime Foundation
 
@@ -31,6 +31,7 @@ Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.a
 - 修改 C# 后必须触发 Unity 编译并检查 Console 错误。
 - Agent 默认在用户指定的 worktree 中完成审计和修复；新建、删除或切换 worktree 必须有活跃计划或用户明确授权。Unity worktree 的高成本导入和启动是该约束的一部分，具体规则见 `.agents/rules/agent-worktree.md`。
 - Unity → Godot 迁移的 Unity 源快照不执行 Windows Standalone Smoke；迁移门禁采用 Editor/PlayMode、OKF 和依赖审计，平台发布验收另行处理，具体规则见 `.agents/rules/godot-migration.md`。
+- Godot 迁移只使用 `godot/project.godot`；Core/Application 不引用引擎，未知 Godot 行为先研究与本地复现，详细路由见 [Godot Agent Workflow](../operations/godot-agent-workflow.md)。
 - Agent 默认禁止 Computer Use、窗口激活和真实鼠标键盘等前台交互；实现、截图、视觉 QA、测试或连接恢复不构成例外授权。后台验证不足时停止为人工验证待办，完整规则由 [Unity Agent Workflow](../operations/unity-agent-workflow.md) 导航。
 
 # System Map
@@ -40,6 +41,7 @@ Tactics 是 Agent 优先维护的 Unity 战棋项目。当前设计保存在 `.a
 - [Battle System](../systems/battle.md)承接棋盘、回合、单位、结算和战斗反馈。
 - [Roguelike Run](../systems/roguelike-run.md)组织地图、节点、冒险状态和 run 内成长。
 - [Unity Agent Workflow](../operations/unity-agent-workflow.md)定义 Agent 修改和验证项目的安全路径。
+- [Godot Agent Workflow](../operations/godot-agent-workflow.md)定义 Godot 迁移、研究证据、测试与 Incident 晋升路径。
 - [Project Documentation](../operations/project-documentation.md)定义设计、活跃计划、统一缺口和历史清理的生命周期。
 - [OKF Maintenance](../operations/okf-maintenance.md)将实现和文档变更反向映射到需要更新的知识 scope。
 

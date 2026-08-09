@@ -7,7 +7,16 @@ tracked_roots:
   - .agents/plans
   - .agents/rules
   - .agents/skills
+  - .agents/incidents
   - Assets/Tactics
+  - src
+  - godot
+  - Tests/golden
+  - Tools/migration
+  - Tools/agent-policy
+  - global.json
+  - Tactics.Migration.slnx
+  - Tactics.Migration.runsettings
   - Packages
   - ProjectSettings
   - Tools/okf
@@ -245,11 +254,18 @@ scopes:
       - global.json
       - Assets/Tactics/Shared/Core
       - Assets/Tactics/UnityAdapter
+      - Assets/Tactics/Scripts/Editor/Migration
       - src/Tactics.Core
       - src/Tactics.Core.Tests
+      - src/Tactics.Application
+      - src/Tactics.Application.Tests
+      - src/Tactics.UnityOracle.Tests
       - godot
       - Tests/golden
       - Tools/migration
+      - .agents/docs/2026-08-07-godot-tactics-migration-design.md
+      - .agents/docs/2026-08-07-godot-tactics-tooling-boundary-design.md
+      - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
       - Assets/Tactics/Scripts/Editor/MonsterAIEditor
       - Assets/Tactics/AI/BasicMeleeBrain.asset
       - Assets/Tactics/AI/BasicMeleeGraph.asset
@@ -267,6 +283,32 @@ scopes:
       - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
       - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
       - Assets/Tactics/Scripts/Common/Units/Unit.cs
+
+  godot-agent-workflow:
+    concept: operations/godot-agent-workflow.md
+    paths:
+      - AGENTS.md
+      - .agents/rules/godot-agent-workflow.md
+      - .agents/rules/godot-migration.md
+      - .agents/skills/godot-workflow
+      - .agents/skills/godot-csharp-development
+      - .agents/skills/godot-content-migration
+      - .agents/skills/godot-editor-tooling
+      - .agents/skills/godot-testing-diagnostics
+      - .agents/skills/godot-ai-workflow
+      - .agents/incidents/godot
+      - global.json
+      - Tactics.Migration.slnx
+      - Tactics.Migration.runsettings
+      - godot/project.godot
+      - godot/Tactics.Godot.Adapter.csproj
+      - Tools/migration/manifest/godot-tooling.json
+      - Tools/migration/Verify-GodotMigration.ps1
+      - Tools/migration/Sync-GodotAiCodexConfig.ps1
+      - Tools/migration/godot_ai_codex_config.py
+      - Tools/migration/tests/test_godot_ai_codex_config.py
+      - Tools/agent-policy/validate_godot_incidents.py
+      - .agents/scripts/validate-skills.ps1
 
   mewgenics-reference-analysis:
     concept: references/mewgenics-analysis.md

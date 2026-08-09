@@ -1,0 +1,74 @@
+---
+type: Game System
+resource: https://github.com/cty41/tactics
+title: Godot agent workflow
+description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
+tags: [godot, agent, workflow, research, incidents]
+timestamp: "2026-08-09T20:37:27+08:00"
+status: active
+catalog_scope: godot-agent-workflow
+repo_paths:
+  - AGENTS.md
+  - .agents/rules/godot-agent-workflow.md
+  - .agents/skills/godot-workflow
+  - .agents/incidents/godot
+  - Tools/migration/Verify-GodotMigration.ps1
+  - Tools/migration/Sync-GodotAiCodexConfig.ps1
+  - Tools/migration/godot_ai_codex_config.py
+  - Tools/migration/manifest/godot-tooling.json
+verified_revision: d092a955
+source_fingerprint: sha256:de15f3e15f4154beee89dad04ef3a464a7a1e495bc9cbe1dd52da14cb398774f
+---
+
+# Current state
+
+Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9.0.312。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容迁移、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
+
+## Verified boundaries
+
+- `Tactics.Core` 与 `Tactics.Application` 是纯 .NET，Godot 对象只存在于 Adapter。
+- `ContentId` 使用严格小写业务 ID；Catalog 保存 ResourceType、UID、诊断路径和 SchemaVersion。
+- `UnitInstanceId` 是战斗/重放实体身份，不能用单位定义 `ContentId` 替代；冻结 Unity 纯 C# Oracle 只存在于独立测试程序集。
+- GdUnit4Net 3.1.1 Runtime Runner 需要脚本位于 `project.godot` 指定的主程序集。`Tactics.Godot.TestHost.csproj` 使用同一程序集名，但拥有独立 `obj`、lock 和测试包；生产 `Tactics.Godot.Adapter.csproj` 不引用 GdUnit/TestPlatform。Core/Application NUnit 仍为独立测试程序集。
+- 构建和测试必须串行；并行 Core/Godot 进程已在本地造成共享 `obj` 争抢。
+- godot-ai 固定 v3.1.2，只做通用 Editor/MCP 操作，不是 Runtime、Core、Application 或资产真相源。
+- Codex godot-ai 采用项目级 Attach：本机忽略的 `.codex/config.toml` 优先于用户配置，用户级 godot-ai 表只允许作为 Godot Configure 的一次性输入。`Sync-GodotAiCodexConfig.ps1` 验证 `pythonw.exe` 无窗口 bootstrap、v3.1.2、8000/9500，并按 `phase3-observe → content-authoring → ui-input → presentation` 累积白名单生成配置。
+- `script_create/script_attach/script_patch`、`filesystem_manage`、`client_manage` 与 `autoload_manage` 始终禁用；写操作前必须用 Session/Editor 状态确认唯一 canonical 项目。
+- Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
+- Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
+
+## Validation
+
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。人工 Editor Reload、Undo/Redo 和视觉验收仍按迁移计划单独记录。
+
+若本机 `.codex/config.toml` 已存在，统一入口会先运行项目 MCP 配置检查；CI 或尚未执行首次 Configure 的机器明确跳过该本机接入检查。配置脚本的 Python unittest 独立覆盖首次迁入、重复 no-op、无关用户配置字节保持、Profile 累积、永久禁用、版本/端口/launcher/双配置漂移拒绝、事务回滚与 PowerShell 默认项目根解析。
+
+2026-08-09 已在 canonical Editor 执行一次 Codex Configure；同步脚本验证 Windows `pythonw.exe` 无窗口 bootstrap、`godot-ai==3.1.2` 和 8000/9500 后，将表原子迁入本机忽略的项目配置，并从用户配置移除。重复迁入为 no-op，`-Check` 与 Godot worktree 的 `codex mcp list` 均确认 `phase3-observe` 的 16 个工具和 pinned Attach。随后从 Godot worktree 重启 Codex 并完成在线 smoke：唯一 Session 指向 `godot/project.godot`，Editor/Scene/Resource 读取与 `godot_ai_smoke` 3/3 通过；main run 的 helper/log/screenshot、stop 以及 plugin reload/reconnect 均成功。首次 cold `project_run` 曾在调用侧 5 秒窗口报 timeout，但即时回读证明同一次 run 已进入 live；reload 后窄重试正常返回，此非稳定复现问题记录在 `.agents/incidents/godot/godot-ai-project-run-cold-timeout.md`。
+
+2026-08-09 Phase 1A worktree 完整验证通过：Core NUnit 23、Application NUnit 3、迁移工具 14、Agent policy 8、OKF 14、GdUnit 4、verified Incident 7、Godot Skill 6；生产 Release 的程序集和 `.deps.json` 均不含 GdUnit/TestPlatform，Poison Spear catalog/Core/Tween/Scope 与 EditorPlugin enter/exit headless 通过。Core 与 Godot TestHost 均重放 Golden schema v3 的命令、显式 RNG、顺序事件和最终状态；这证明 Core replay 合同，不代表冻结 Unity Poison Spear 的完整资产与数值等价。
+
+同日人工重新打开 canonical Editor 后确认：`Tactics Tooling` 正常进入 tree 并注册 Dock，Poison Spear Lv1 Presentation 加载 3 个节点，GraphEdit/SubViewport 就绪，godot-ai v3.1.2 启动并连接，未复现 duplicate type 或 assembly unload/reload 错误。Zed `settings.json` 的 JSON parse warning 不影响本次 godot-ai 连接闸门。
+
+Phase 1B 完整验证通过：Core NUnit 24、Application NUnit 3、冻结 Unity linked-source Oracle 3、迁移工具 16、Agent policy 8、OKF 14、GdUnit 4、verified Incident 7、Godot Skill 6。迁移工具同时核对 Oracle Matrix blob、冻结 commit 与 C# harness 常量；生产 Release 不含测试依赖，Poison Spear runtime/presentation、EditorPlugin headless 生命周期通过，并在 GdUnit 后恢复生产 Debug Adapter。
+
+Phase 1C 扩展 linked-source Oracle 到 9 个冻结 blob，覆盖当前轮 remaining 动态重排、RuntimeScope ownership/fault/re-entrant dispose/timeout 和 Presentation Fork/Join。Golden schema v5 由 Core、冻结 Oracle 与 Godot TestHost 消费；完整门禁为 Core 26、Application 3、Unity Oracle 8、迁移工具 16、Agent policy 8、OKF 14、GdUnit 4，生产 Release/Debug、Poison Spear 和 EditorPlugin headless 均通过。
+
+Phase 1D 将无可逐语句对齐的边界显式记为版本化合同：`battle-transition-v1` 是迁移合同，`splitmix64-v1` 是替代冻结 Unity 混合随机源的确定性合同；六个证据 blob、运行时 ID、Golden 与 Godot TestHost 相互校验。完整门禁为 Core 27、Application 3、Unity Oracle 8、迁移工具 20、Agent policy 8、OKF 14、GdUnit 4。
+
+Phase 2 源侧真实管线已运行：Unity 6000.3.11f1 后台 AssetDatabase exporter 从最终 Tag 对应的 7 个 Poison Spear Lv1 根资产导出 25 个对象/24761 个字段，记录 GUID/LocalFileId/blob/dependency hash/引用，补入 `buff.poison`，并在 Gradient 支持补齐后达到 0 warning。连续两次导出 byte-identical，receipt 固定为 `Tools/migration/manifest/receipts/poison-spear-lv1-export.json`。真实 batch 当前只到 `Exported/UnityOwned`；`Tools/migration/staging.py` 的冲突、UID、回滚和幂等测试通过，但 ResourceSaver 真正生成目标资产仍是 Phase 3。
+
+Phase 3 自动生成已把真实 DTO 编译为一次性 typed Draft，并经 Application 生成 6 个内容条目。ResourceSaver 直接生成 Poison、Skill、Presentation、10×10 fixture、Projectile/Impact PackedScene 和 Catalog；连续两次运行 7 个目标与 ledger 全部 byte-identical，generation receipt 由 draft/ledger 自动刷新。最终资产显式序列化迁移数值，不依赖 C# 默认值。Core `battle-transition-v2` 采用真实 Range=5、Mana=6、Damage=8、Poison AddDuration、TurnStart 2 点 tick、TurnEnd duration、持矛与半径 3 确定性掉落语义；Oracle Matrix 绑定 15 个冻结 blob。Application/Godot Editor Adapter 已加入 SHA-256 Revision、expectedRevision、typed ChangeSet、Undo plan 同步与保存失败回滚。当前 Godot VFX 是未复制 Piloto 资产的程序化占位；batch 为 `Generated/UnityOwned`，人工 Editor/视觉验收仍 pending。
+
+Phase 3 人工闸门前统一验证通过：Core NUnit 31、Application NUnit 10、冻结 Unity Oracle 9、迁移 Python 44、Agent policy 8、GdUnit 5、OKF 14；ResourceSaver 双生成、UID scan、Release 测试依赖隔离、Compatibility/Forward+、Runtime/Tween/Scope、6 scopes/0 unmapped 与 patch whitespace 均通过。
+
+Phase 3 Editor authoring 可用性修复后再次通过统一门禁：Core 31、Application 13、Unity Oracle 9、迁移 Python 44、Agent policy 8、GdUnit 5、OKF 14；真实坐标、Revision/position ChangeSet、ResourceSaver 双生成、UID scan、Release 隔离、两个 renderer、Runtime/Tween/Scope 和 EditorPlugin headless 生命周期均通过。人工 Graph drag/Undo、Split Preview、Save 与 Assembly Reload 仍必须在 canonical Editor 验收。
+
+Tactics Tooling 随后从 Bottom `EditorDock` 迁为官方 Main Screen Plugin，在中央工作区通过 `Tactics Tooling` 入口切换；内部 Graph/SubViewport 改为 64/36 左右分栏。首次热重载暴露了 live tool 字段从 `VSplitContainer` 直接改为 `HSplitContainer` 时的 `RestoreGodotObjectData` 类型恢复错误，字段收敛为共同 `SplitContainer` 基类后，后续 Build/Reload 无新增错误。横向初始比例使用 child stretch ratio，而不是在 dragger 初始化前调用 `ClampSplitOffset`；Preview 使用居中的 `AspectRatioContainer(Fit)` 保持 `640:180`，避免 SubViewport 随右侧面板非等比压缩。Graph 的 `SaveWithRollback` 在 `ResourceSaver.Save` 后恢复原 Resource UID，避免语义 revision 正确但迁移 ledger target hash 漂移；成功保存的 UID 保留、失败保存的 byte rollback 和 Preview Fit 配置由 GdUnit 覆盖。完整 Editor 重启后，Main Screen、6 节点/4 edge、Undo/Redo、Save、Assembly Reload、Runtime 与等比 Preview 人工验收均通过；随后完整门禁为 Core 31、Application 13、Unity Oracle 9、GdUnit 6，headless Editor 日志干净。
+
+## Navigation
+
+- 规则：`.agents/rules/godot-agent-workflow.md`
+- 研究方法：`.agents/skills/godot-workflow/references/research-guide.md`
+- Incident 路由：`.agents/incidents/godot/index.md`
+- 工具链版本：`Tools/migration/manifest/godot-tooling.json`
+- 迁移架构与状态：`.agents/knowledge/plans/godot-migration.md`

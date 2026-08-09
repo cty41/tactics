@@ -5,11 +5,21 @@ using Tactics.Core.Content;
 using Tactics.Core.Pathfinding;
 using Tactics.Core.Presentation;
 using Tactics.Core.Turns;
+using Tactics.Core.Units;
 
 namespace Tactics.Core.Tests;
 
 public sealed class BoardAndRulesTests
 {
+    [TestCase("Skill.Poison-Spear.Lv1")]
+    [TestCase("skill_poison_spear")]
+    [TestCase("skill..poison")]
+    [TestCase("skill.poison-")]
+    public void ContentId_RejectsNonCanonicalBusinessIds(string value)
+    {
+        Assert.Throws<ArgumentException>(() => _ = new ContentId(value));
+    }
+
     [Test]
     public void BoardSpec_UsesFixedTenByTenLocalBounds()
     {
@@ -32,7 +42,7 @@ public sealed class BoardAndRulesTests
             .ToDictionary(pair => pair.Key, pair => pair.Value);
         cells[new GridPoint(1, 0)] = new CellState(blocksMovement: true);
 
-        var path = new AStarPathfinder().FindPath(
+        var path = new DeterministicDijkstraPathfinder().FindPath(
             new BoardSnapshot(cells),
             new GridPoint(0, 0),
             new GridPoint(2, 0));
@@ -81,18 +91,19 @@ public sealed class BoardAndRulesTests
     }
 
     [Test]
-    public void InitiativeOrder_UsesSpeedThenStableContentId()
+    public void InitiativeOrder_UsesFrozenInitiativePlayerAndSpawnOrdinalTieBreak()
     {
         var result = InitiativeOrder.Sort(new[]
         {
-            new InitiativeEntry(new ContentId("unit.zombie"), 4),
-            new InitiativeEntry(new ContentId("unit.amazon"), 4),
-            new InitiativeEntry(new ContentId("unit.mage"), 5)
+            new InitiativeEntry(new UnitInstanceId("enemy.zombie.0"), 8, 1, 2),
+            new InitiativeEntry(new UnitInstanceId("enemy.mage.0"), 10, 1, 5),
+            new InitiativeEntry(new UnitInstanceId("party.amazon.0"), 8, 0, 9),
+            new InitiativeEntry(new UnitInstanceId("enemy.zombie.1"), 8, 1, 1)
         });
 
         Assert.That(result.Select(entry => entry.UnitId.Value), Is.EqualTo(new[]
         {
-            "unit.mage", "unit.amazon", "unit.zombie"
+            "enemy.mage.0", "party.amazon.0", "enemy.zombie.1", "enemy.zombie.0"
         }));
     }
 
@@ -104,8 +115,22 @@ public sealed class BoardAndRulesTests
                 .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
             .ToDictionary(pair => pair.Key, pair => pair.Value);
         var board = new BoardSnapshot(cells);
-        var caster = new UnitState(new ContentId("unit.caster"), new GridPoint(1, 1), 3, 5);
-        var target = new UnitState(new ContentId("unit.target"), new GridPoint(3, 2), 3, 4);
+        var caster = new UnitState(
+            new UnitInstanceId("party.caster.0"),
+            new ContentId("unit.caster"),
+            new GridPoint(1, 1),
+            3,
+            10,
+            0,
+            0);
+        var target = new UnitState(
+            new UnitInstanceId("enemy.target.0"),
+            new ContentId("unit.target"),
+            new GridPoint(3, 2),
+            3,
+            8,
+            1,
+            1);
 
         var result = new PoisonSpearResolver().Resolve(
             board,

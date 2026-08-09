@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-08T12:42:54+08:00"
+timestamp: "2026-08-09T22:03:30+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -13,7 +13,7 @@ repo_paths:
   - .agents/skills/project-doc-organization/SKILL.md
   - .agents/skills/plan-mode-plan-writer/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:d774457918649e9b91b15693998531622bddcb0045bb2333533a983c6fa55aa3
+source_fingerprint: sha256:72a75ed078f89a8893d0440fe04c5b3ea9f2c12aee838cd26da5cbbff311281f
 ---
 
 # Current State
@@ -26,11 +26,14 @@ source_fingerprint: sha256:d774457918649e9b91b15693998531622bddcb0045bb2333533a9
 
 迁移阶段的验证边界以 `.agents/docs/2026-08-07-godot-tactics-migration-design.md` 为准；其中明确 Unity Windows Standalone 不属于迁移门禁，避免在 OKF 摘要中复制整份迁移设计。
 
+当前 Godot 实施任务保存在 `.agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md`。它把 `d092a955` 限定为技术 Spike，并继续跟踪 Parity Closure、真实导出和批量迁移；完成前不得删除或改写成已验收历史。
+
 # Relationships
 
 - [OKF Maintenance](okf-maintenance.md)负责从路径变更反向同步知识 scope。
 - [Unity Agent Workflow](unity-agent-workflow.md)定义代码、资产和验证的安全边界。
 - [Project Known Gaps](../plans/project-known-gaps.md)集中保存尚未激活的真实缺口。
+- [Godot Agent Workflow](godot-agent-workflow.md)导航 Research Guide、Incidents 与 verified 结论。
 
 # Verification Guidance
 

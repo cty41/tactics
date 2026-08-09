@@ -7,11 +7,11 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 
-_CONTENT_ID = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
+_CONTENT_ID = re.compile(r"^[a-z0-9]+(?:[.-][a-z0-9]+)*$")
 
 
 def normalize_content_id(value: str) -> str:
-    normalized = value.strip().lower()
+    normalized = value.strip()
     if not _CONTENT_ID.fullmatch(normalized):
         raise ValueError(f"invalid ContentId: {value!r}")
     return normalized

@@ -1,11 +1,16 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 6,
+  "sourceOracle": {
+    "unityTag": "unity-final-2026-08-08",
+    "unityCommit": "168d1934",
+    "oracleMatrix": "oracle-matrix.json"
+  },
   "board": {
     "width": 10,
     "height": 10,
     "coordinateSystem": "local-zero-based"
   },
-  "cases": [
+  "layouts": [
     {
       "id": "center-blocker",
       "blockers": [[4, 4], [4, 5], [5, 4], [5, 5]],
@@ -17,6 +22,312 @@
       "blockers": [[4, 3], [5, 4], [4, 6], [5, 5]],
       "partySpawnCells": [[1, 4], [1, 5], [2, 4]],
       "enemySpawnCells": [[6, 4], [7, 3], [7, 5], [8, 4]]
+    }
+  ],
+  "pathQueries": [
+    {
+      "id": "four-neighbour-single-blocker",
+      "origin": [0, 0],
+      "destination": [2, 0],
+      "movementBlockers": [[1, 0]],
+      "algorithm": "deterministic-dijkstra-unity-final-v1",
+      "expectedPath": [[0, 1], [1, 1], [2, 1], [2, 0]],
+      "oracleStatus": "unity_final_linked_source_oracle"
+    }
+  ],
+  "lineOfSightQueries": [
+    {
+      "id": "diagonal-corner-supercover",
+      "origin": [0, 0],
+      "target": [2, 2],
+      "lineOfSightBlockers": [[1, 0]],
+      "expectedVisible": false,
+      "oracleStatus": "unity_test_bound"
+    }
+  ],
+  "movementCases": [
+    {
+      "id": "once-per-turn-no-remaining-points",
+      "moveRange": 3,
+      "attempts": [
+        {"pathLength": 2, "expectedAccepted": true},
+        {"pathLength": 1, "expectedAccepted": false}
+      ],
+      "reset": "prepare-for-turn",
+      "postResetPathLength": 3,
+      "expectedPostResetAccepted": true,
+      "oracleStatus": "approved_design_contract"
+    }
+  ],
+  "initiativeCases": [
+    {
+      "id": "initiative-then-player-then-spawn-ordinal",
+      "entries": [
+        {"instanceId": "enemy.zombie.0", "definitionId": "unit.zombie", "initiative": 8, "playerNumber": 1, "spawnOrdinal": 2},
+        {"instanceId": "enemy.mage.0", "definitionId": "unit.mage", "initiative": 10, "playerNumber": 1, "spawnOrdinal": 5},
+        {"instanceId": "party.amazon.0", "definitionId": "unit.amazon", "initiative": 8, "playerNumber": 0, "spawnOrdinal": 9},
+        {"instanceId": "enemy.zombie.1", "definitionId": "unit.zombie", "initiative": 8, "playerNumber": 1, "spawnOrdinal": 1}
+      ],
+      "expectedOrder": ["enemy.mage.0", "party.amazon.0", "enemy.zombie.1", "enemy.zombie.0"],
+      "oracleStatus": "unity_final_linked_source_oracle"
+    }
+  ],
+  "initiativeRoundCases": [
+    {
+      "id": "reorder-only-current-round-remaining-partition",
+      "entries": [
+        {"instanceId": "enemy.later.0", "initiative": 8, "playerNumber": 1, "spawnOrdinal": 2},
+        {"instanceId": "enemy.fastest.0", "initiative": 10, "playerNumber": 1, "spawnOrdinal": 5},
+        {"instanceId": "party.friendly.0", "initiative": 8, "playerNumber": 0, "spawnOrdinal": 9},
+        {"instanceId": "enemy.earlier.0", "initiative": 8, "playerNumber": 1, "spawnOrdinal": 1}
+      ],
+      "expectedFirst": "enemy.fastest.0",
+      "changes": [
+        {"instanceId": "enemy.later.0", "initiative": 12}
+      ],
+      "currentInitiativeChange": {"instanceId": "enemy.fastest.0", "initiative": 1},
+      "expectedOrderAfterChange": [
+        "enemy.fastest.0",
+        "enemy.later.0",
+        "party.friendly.0",
+        "enemy.earlier.0"
+      ],
+      "expectedSecond": "enemy.later.0",
+      "expectedActedAfterSecond": ["enemy.fastest.0", "enemy.later.0"],
+      "expectedRemainingAfterSecond": ["party.friendly.0", "enemy.earlier.0"],
+      "oracleStatus": "unity_final_linked_source_oracle"
+    }
+  ],
+  "runtimeScopeCases": [
+    {
+      "id": "ownership-fault-and-reentrant-dispose",
+      "faultMessage": "phase-1c-fault",
+      "expectedAcceptedNull": false,
+      "expectedAcceptedCompleted": true,
+      "expectedAcceptedAfterCancel": false,
+      "expectedReentrantDisposeDrain": true,
+      "oracleStatus": "unity_final_linked_source_oracle"
+    }
+  ],
+  "presentationCases": [
+    {
+      "id": "fork-branches-join-and-continue-once",
+      "schemaVersion": 1,
+      "cueId": "action",
+      "nodes": [
+        {"id": "entry", "nodeTypeId": "entry", "kind": "entry", "cueId": "action"},
+        {"id": "fork", "nodeTypeId": "fork", "kind": "fork", "joinNodeId": "join"},
+        {"id": "left", "nodeTypeId": "delay", "kind": "leaf"},
+        {"id": "right", "nodeTypeId": "marker", "kind": "leaf"},
+        {"id": "join", "nodeTypeId": "join", "kind": "join"},
+        {"id": "after", "nodeTypeId": "delay", "kind": "leaf"},
+        {"id": "finish", "nodeTypeId": "finish", "kind": "finish"}
+      ],
+      "edges": [
+        {"source": "entry", "target": "fork"},
+        {"source": "fork", "target": "left"},
+        {"source": "fork", "target": "right"},
+        {"source": "left", "target": "join"},
+        {"source": "right", "target": "join"},
+        {"source": "join", "target": "after"},
+        {"source": "after", "target": "finish"}
+      ],
+      "expectedSnapshot": "S[L(fork),P(fork->join)[S[L(left)]|S[L(right)]],L(after)]",
+      "oracleStatus": "unity_final_linked_source_oracle"
+    }
+  ],
+  "randomCases": [
+    {
+      "id": "splitmix64-seed-42",
+      "algorithm": "splitmix64-v1",
+      "seed": "42",
+      "operations": [
+        {"type": "uint64", "expected": "13679457532755275413"},
+        {"type": "bounded-int", "exclusiveUpperBound": 100, "expected": "91"},
+        {"type": "bounded-int", "exclusiveUpperBound": 7, "expected": "0"},
+        {"type": "uint64", "expected": "6349198060258255764"}
+      ],
+      "expectedFinalState": "8709371129873690750",
+      "oracleStatus": "deterministic_replacement_contract"
+    }
+  ],
+  "actionCases": [
+    {
+      "id": "poison-spear-lv1-open-los",
+      "caster": {"instanceId": "party.caster.0", "definitionId": "unit.caster", "cell": [1, 1], "moveRange": 3, "initiative": 10, "playerNumber": 0, "spawnOrdinal": 0},
+      "target": {"instanceId": "enemy.target.0", "definitionId": "unit.target", "cell": [3, 2], "moveRange": 3, "initiative": 8, "playerNumber": 1, "spawnOrdinal": 1},
+      "skill": {"contentId": "skill.poison-spear.lv1", "range": 5, "damage": 8, "poisonTurns": 3, "poisonDamagePerTurn": 2, "manaCost": 6, "dropSearchRadius": 3},
+      "lineOfSightBlockers": [],
+      "expected": {"succeeded": true, "damage": 8, "poisonTurns": 3, "failureReason": ""},
+      "oracleStatus": "real_unity_assetdatabase_export"
+    }
+  ],
+  "battleScenarios": [
+    {
+      "id": "move-poison-spear-end-turn",
+      "randomState": "42",
+      "round": 1,
+      "activeIndex": 0,
+      "turnOrder": ["party.caster.0", "enemy.target.0"],
+      "movementBlockers": [],
+      "lineOfSightBlockers": [],
+      "units": [
+        {
+          "instanceId": "party.caster.0",
+          "definitionId": "unit.caster",
+          "cell": [1, 1],
+          "moveRange": 3,
+          "initiative": 10,
+          "playerNumber": 0,
+          "spawnOrdinal": 0,
+          "maxHealth": 20,
+          "currentHealth": 20,
+          "maxMana": 20,
+          "currentMana": 20,
+          "hasMovedThisTurn": false,
+          "statuses": []
+        },
+        {
+          "instanceId": "enemy.target.0",
+          "definitionId": "unit.target",
+          "cell": [4, 1],
+          "moveRange": 3,
+          "initiative": 8,
+          "playerNumber": 1,
+          "spawnOrdinal": 1,
+          "maxHealth": 20,
+          "currentHealth": 20,
+          "maxMana": 0,
+          "currentMana": 0,
+          "hasMovedThisTurn": false,
+          "statuses": []
+        }
+      ],
+      "commands": [
+        {
+          "type": "move",
+          "actorId": "party.caster.0",
+          "destination": [2, 1],
+          "expectedSucceeded": true,
+          "expectedEvents": [
+            {
+              "type": "unit-moved",
+              "unitId": "party.caster.0",
+              "origin": [1, 1],
+              "destination": [2, 1],
+              "path": [[2, 1]]
+            }
+          ]
+        },
+        {
+          "type": "use-poison-spear",
+          "actorId": "party.caster.0",
+          "targetId": "enemy.target.0",
+          "skill": {
+            "contentId": "skill.poison-spear.lv1",
+            "range": 5,
+            "damage": 8,
+            "poisonTurns": 3,
+            "poisonDamagePerTurn": 2,
+            "manaCost": 6,
+            "dropSearchRadius": 3,
+            "poisonStatusId": "buff.poison"
+          },
+          "expectedSucceeded": true,
+          "expectedEvents": [
+            {
+              "type": "skill-used",
+              "actorId": "party.caster.0",
+              "targetId": "enemy.target.0",
+              "skillId": "skill.poison-spear.lv1"
+            },
+            {
+              "type": "mana-spent",
+              "unitId": "party.caster.0",
+              "skillId": "skill.poison-spear.lv1",
+              "amount": 6,
+              "remainingMana": 14
+            },
+            {
+              "type": "damage-applied",
+              "actorId": "party.caster.0",
+              "targetId": "enemy.target.0",
+              "skillId": "skill.poison-spear.lv1",
+              "amount": 8,
+              "remainingHealth": 12
+            },
+            {
+              "type": "status-applied",
+              "actorId": "party.caster.0",
+              "targetId": "enemy.target.0",
+              "statusId": "buff.poison",
+              "remainingTurns": 3
+            },
+            {
+              "type": "spear-dropped",
+              "unitId": "party.caster.0",
+              "cell": [5, 1]
+            }
+          ]
+        },
+        {
+          "type": "end-turn",
+          "actorId": "party.caster.0",
+          "expectedSucceeded": true,
+          "expectedEvents": [
+            {
+              "type": "turn-advanced",
+              "actorId": "party.caster.0",
+              "activeUnitId": "enemy.target.0",
+              "round": 1
+            },
+            {
+              "type": "status-ticked",
+              "actorId": "party.caster.0",
+              "targetId": "enemy.target.0",
+              "statusId": "buff.poison",
+              "amount": 2,
+              "remainingHealth": 10
+            }
+          ]
+        }
+      ],
+      "expectedFinalState": {
+        "randomState": "42",
+        "round": 1,
+        "activeIndex": 1,
+        "activeUnitId": "enemy.target.0",
+        "droppedSpears": [
+          {"ownerId": "party.caster.0", "cell": [5, 1]}
+        ],
+        "units": [
+          {
+            "instanceId": "party.caster.0",
+            "definitionId": "unit.caster",
+            "cell": [2, 1],
+            "maxHealth": 20,
+            "currentHealth": 20,
+            "maxMana": 20,
+            "currentMana": 14,
+            "hasMovedThisTurn": true,
+            "statuses": []
+          },
+          {
+            "instanceId": "enemy.target.0",
+            "definitionId": "unit.target",
+            "cell": [4, 1],
+            "maxHealth": 20,
+            "currentHealth": 10,
+            "maxMana": 0,
+            "currentMana": 0,
+            "hasMovedThisTurn": false,
+            "statuses": [
+              {"contentId": "buff.poison", "sourceId": "party.caster.0", "remainingTurns": 3, "damagePerTurn": 2}
+            ]
+          }
+        ]
+      },
+      "oracleStatus": "versioned_migration_contract"
     }
   ]
 }

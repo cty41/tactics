@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "batchId": "poison-spear-lv1-real",
+  "classification": "real_content_migration",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "exportSpecification": "Tools/migration/manifest/export-batches/poison-spear-lv1.json",
+  "exportReceipt": "Tools/migration/manifest/receipts/poison-spear-lv1-export.json",
+  "owner": "UnityOwned",
+  "status": "Validated",
+  "contentIds": [
+    "buff.poison",
+    "encounter.poison-spear.10x10",
+    "impact.poison-spear",
+    "presentation.poison-spear.lv1",
+    "projectile.poison-spear",
+    "skill.poison-spear.lv1"
+  ],
+  "plannedTargetAssets": [
+    "godot/content/poison_spear/PoisonBuff.tres",
+    "godot/content/poison_spear/PoisonSpearSkillLv1.tres",
+    "godot/content/poison_spear/PoisonSpearPresentationLv1.tres",
+    "godot/content/poison_spear/PoisonSpear10x10Fixture.tres",
+    "godot/content/poison_spear/PoisonSpearProjectile.tscn",
+    "godot/content/poison_spear/PoisonSpearImpact.tscn",
+    "godot/content/poison_spear/ContentCatalog.tres"
+  ],
+  "generation": "godot-resource-saver-real-v1",
+  "generationLedger": "Tools/migration/manifest/state/poison-spear-lv1-real.json",
+  "generationReceipt": "Tools/migration/manifest/receipts/poison-spear-lv1-generation.json",
+  "licenseReceipt": "Tools/migration/manifest/receipts/poison-spear-lv1-license.json",
+  "validation": {
+    "applicationDiagnostics": "passed_contract_tests",
+    "sourceIdentity": "passed",
+    "exportIdempotency": "passed",
+    "godotGeneration": "passed",
+    "semanticDiff": "passed",
+    "byteIdempotency": "passed_two_consecutive_runs",
+    "coreRuntime": "passed",
+    "godotRuntime": "passed",
+    "editorFilesystemScan": "passed",
+    "rendererHeadlessStartup": "compatibility_and_forward_plus_passed",
+    "licenseProvenance": "passed_for_procedural_placeholder_only",
+    "visualAcceptance": "passed_for_programmatic_placeholder_only"
+  }
+}

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-08-08T16:50:15+08:00"
+timestamp: "2026-08-09T19:24:07+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -29,7 +29,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
   - Tools/unity-mcp
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:03c514ae199440d587af87c81eab358535d0e33f021d562d72648f714ce8dfa0
+source_fingerprint: sha256:4f1a779daf7de034106a25a2beadac13a46493f3b55e67b31d85df68354d1b8d
 ---
 
 # Core Rules
@@ -40,6 +40,7 @@ source_fingerprint: sha256:03c514ae199440d587af87c81eab358535d0e33f021d562d72648
 - 修改 C# 后必须显式触发 Unity 编译并检查 Console 错误。
 - Agent 默认复用用户当前指定的 worktree；除非活跃计划或用户明确要求，不创建、删除或切换 worktree。Unity 项目导入和启动成本高，不能以“隔离方便”“并行”或“改动较大”为理由自动打开第二份项目；冻结 worktree 只有在用户明确授权修复时才可临时写入。完整约束见 `.agents/rules/agent-worktree.md`。
 - Unity → Godot 迁移阶段不执行 Unity Windows Standalone，Unity Player Smoke 不属于迁移门禁；迁移证据使用 Editor 编译、定向 EditMode/PlayMode、固定探针人工验证、OKF 和依赖审计。具体边界见 `.agents/rules/godot-migration.md`，Godot 最终发布验收另行决定。
+- `w1` 与 `unity-final-2026-08-08` 现在是只读 Oracle；迁移 worktree 的 Unity 工程只允许作为 AssetDatabase 导出宿主。Godot/Core/Application 变更改走独立的 [Godot Agent Workflow](godot-agent-workflow.md)，不要求 `refresh_unity`，也不得反向演化冻结 Unity 玩法。
 - 所有桌面前台交互默认禁止；Computer Use、窗口激活、真实鼠标键盘和快捷键只有在当前任务明确要求、Agent 说明焦点影响且用户对本次动作确认后才允许。普通实现、截图、视觉 QA、编译、测试、构建和连接恢复不构成前台控制授权；后台无法提供证据时标记 `manual_visual_qa_pending`。完整定义见[前台交互与焦点保护规则](https://github.com/cty41/tactics/blob/main/.agents/rules/foreground-interaction.md)。
 - Unity 编译、测试、构建和截图必须通过 MCP 调用，交互验证优先使用 PlayMode 自动测试与 Input System 虚拟设备。MCP bridge 不可用时只做端点、进程和日志等只读诊断，不能以干扰前台工作的方式绕过连接问题。
 - 新增、删除或移动 Unity 文件时保持 `.meta` 配对。
@@ -62,6 +63,8 @@ source_fingerprint: sha256:03c514ae199440d587af87c81eab358535d0e33f021d562d72648
 修改 `catalog-scopes.yaml` 监控范围内的实现或文档后，继续执行 [OKF Maintenance](okf-maintenance.md) 的影响检测与 scope 同步；这一步发生在提交准备之前，不依赖 pre-commit 或 CI。
 
 设计、活跃计划和完成后清理遵循 [Project Documentation](project-documentation.md)。
+
+Godot 迁移任务、引擎研究和 Incident 晋升遵循 [Godot Agent Workflow](godot-agent-workflow.md)。
 
 # Verification
 

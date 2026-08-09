@@ -8,13 +8,95 @@
     "commit": "678b16a6a0a335cf80cbb7d3f85c183cd3e616de",
     "pluginCfgSha256": "6290daf20479a1ad215abce7b489f78bd6b43154909fd7317ee3f4551c299514",
     "sourceMutation": "forbidden",
-    "customTacticsTooling": "deferred"
+    "customTacticsTooling": "deferred",
+    "codexMcp": {
+      "scope": "project",
+      "configPath": ".codex/config.toml",
+      "transport": "attach",
+      "httpPort": 8000,
+      "websocketPort": 9500,
+      "startupTimeoutSec": 60,
+      "toolTimeoutSec": 360,
+      "defaultProfile": "phase3-observe",
+      "profileOrder": [
+        "phase3-observe",
+        "content-authoring",
+        "ui-input",
+        "presentation"
+      ],
+      "profiles": {
+        "phase3-observe": {
+          "extends": null,
+          "tools": [
+            "api_manage",
+            "editor_reload_plugin",
+            "editor_screenshot",
+            "editor_state",
+            "logs_read",
+            "node_find",
+            "node_get_properties",
+            "project_manage",
+            "project_run",
+            "resource_manage",
+            "scene_get_hierarchy",
+            "scene_open",
+            "session_activate",
+            "session_manage",
+            "test_manage",
+            "test_run"
+          ]
+        },
+        "content-authoring": {
+          "extends": "phase3-observe",
+          "tools": [
+            "batch_execute",
+            "node_create",
+            "node_manage",
+            "node_set_property",
+            "scene_manage",
+            "scene_save",
+            "signal_manage"
+          ]
+        },
+        "ui-input": {
+          "extends": "content-authoring",
+          "tools": [
+            "game_manage",
+            "input_map_manage",
+            "theme_manage",
+            "ui_manage"
+          ]
+        },
+        "presentation": {
+          "extends": "ui-input",
+          "tools": [
+            "animation_create",
+            "animation_manage",
+            "audio_manage",
+            "camera_manage",
+            "material_manage",
+            "particle_manage"
+          ]
+        }
+      },
+      "alwaysForbiddenTools": [
+        "autoload_manage",
+        "client_manage",
+        "filesystem_manage",
+        "script_attach",
+        "script_create",
+        "script_patch"
+      ]
+    }
   },
   "gdu4": {
     "apiPackage": "gdUnit4.api",
     "apiVersion": "5.1.0-rc5",
     "testAdapterPackage": "gdUnit4.test.adapter",
     "testAdapterVersion": "3.1.1",
-    "runtimeSmoke": "passed_with_GODOT_BIN"
+    "runtimeSmoke": "passed_with_GODOT_BIN",
+    "runtimeHostConstraint": "CSharp runner must be compiled into project.godot main assembly",
+    "testHost": "Tactics.Godot.TestHost.csproj uses the project assembly name with isolated obj, lock and packages",
+    "releaseDependency": "forbidden_and_excluded"
   }
 }

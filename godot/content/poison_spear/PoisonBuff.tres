@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PoisonBuffResource" format=3 uid="uid://byvdudy464o8b"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonBuffResource.cs" id="1_au67f"]
+
+[resource]
+script = ExtResource("1_au67f")
+ContentIdValue = "buff.poison"
+SchemaVersion = 1
+DisplayName = "Poison"
+DefaultDuration = 3
+DamagePerTurn = 2
+DamageCategory = "Magic"
+EffectType = "Poison"
+Polarity = "Harmful"
+RefreshStrategy = "AddDuration"
+TriggerTiming = "TurnStart"

@@ -15,10 +15,24 @@ public partial class GodotResourceCatalog : Resource
         {
             if (string.IsNullOrWhiteSpace(entry.ContentIdValue))
                 throw new InvalidOperationException("Content catalog contains an empty ContentId.");
-            if (string.IsNullOrWhiteSpace(entry.ResourcePathValue))
-                throw new InvalidOperationException($"Content '{entry.ContentIdValue}' has an empty Resource path.");
-            if (!ids.Add(entry.ContentIdValue))
-                throw new InvalidOperationException($"Duplicate ContentId '{entry.ContentIdValue}'.");
+            ContentId contentId = ToContentId(entry);
+            if (string.IsNullOrWhiteSpace(entry.ResourceTypeIdValue))
+                throw new InvalidOperationException($"Content '{contentId}' has an empty ResourceTypeId.");
+            if (string.IsNullOrWhiteSpace(entry.ResourceUidValue) || !entry.ResourceUidValue.StartsWith("uid://", StringComparison.Ordinal))
+                throw new InvalidOperationException($"Content '{contentId}' has an invalid Resource UID.");
+            if (string.IsNullOrWhiteSpace(entry.DiagnosticPathValue))
+                throw new InvalidOperationException($"Content '{contentId}' has an empty diagnostic path.");
+            if (entry.SchemaVersion < 1)
+                throw new InvalidOperationException($"Content '{contentId}' has an invalid SchemaVersion.");
+            if (!ids.Add(contentId.Value))
+                throw new InvalidOperationException($"Duplicate ContentId '{contentId}'.");
+
+            long uid = ResourceUid.TextToId(entry.ResourceUidValue);
+            if (uid == ResourceUid.InvalidId || !ResourceUid.HasId(uid))
+                throw new InvalidOperationException($"Content '{contentId}' has an unregistered Resource UID '{entry.ResourceUidValue}'.");
+            string resolvedPath = ResourceUid.GetIdPath(uid);
+            if (!string.Equals(resolvedPath, entry.DiagnosticPathValue, StringComparison.Ordinal))
+                throw new InvalidOperationException($"Content '{contentId}' UID resolves to '{resolvedPath}', expected '{entry.DiagnosticPathValue}'.");
         }
     }
 
@@ -32,7 +46,7 @@ public partial class GodotResourceCatalog : Resource
         {
             if (!string.Equals(entry.ContentIdValue, contentId, StringComparison.Ordinal))
                 continue;
-            resource = ResourceLoader.Load(entry.ResourcePathValue);
+            resource = ResourceLoader.Load(entry.ResourceLocator);
             return resource is not null;
         }
 

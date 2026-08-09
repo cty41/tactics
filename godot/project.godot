@@ -31,7 +31,7 @@ project/assembly_name="Tactics.Godot.Adapter"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/tactics_tooling/plugin.cfg", "res://addons/godot_ai/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/tactics_tooling/plugin.cfg")
 
 [input]
 

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/okf
 title: OKF Maintenance
 description: 将工作区变更映射到 catalog_scope，并由 Agent 同步受影响知识概念的维护流程。
 tags: [agent, okf, knowledge, automation]
-timestamp: "2026-08-08T12:48:43+08:00"
+timestamp: "2026-08-09T19:24:04+08:00"
 status: active
 catalog_scope: okf-maintenance
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Tools/okf/catalog_impact.py
   - Tools/okf/validate_bundle.py
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:c0996caf765b41380c2373a1fffabbe5224d60b72389915774836050bfc8f1ce
+source_fingerprint: sha256:5f7c2ab7738b81af63cb515f85c72654113acdf96eb1020fd1a24f76c1b7a217
 ---
 
 # Current State
@@ -28,10 +28,13 @@ source_fingerprint: sha256:c0996caf765b41380c2373a1fffabbe5224d60b72389915774836
 
 当前设计来自 `.agents/docs/` 的主题权威文档，`brainstorm.md` 仅保存未经验证的临时灵感。当前任务只来自仍活跃的 `.agents/plans/`。计划完成后应先迁移长期知识并删除计划；OKF 中需要保留的历史概念使用 `archived` 或 `superseded`，不继续把旧计划当当前依据。
 
+Godot 引擎/工具链问题增加一层证据晋升：完整错误与复现先进入 `.agents/incidents/godot`，只有 `verified` 摘要进入 `godot-agent-workflow` OKF；研究方法和重复流程分别属于 Research Guide 与 Skill。`catalog-scopes.yaml` 已将 Incidents、Godot Skills、`src/`、`godot/` 和迁移验证工具纳入相应 scope。
+
 # Relationships
 
 - [Unity Agent Workflow](unity-agent-workflow.md)规定代码、资产、文档和验证的通用安全边界。
 - [Project Documentation](project-documentation.md)规定 docs、活跃 plans、统一缺口和完成后清理的职责。
+- [Godot Agent Workflow](godot-agent-workflow.md)规定 Godot Incident 到 OKF/Skill 的证据晋升边界。
 - [Open Knowledge Format v0.1](../references/okf-v0.1.md)定义 bundle、概念、索引和日志的基础格式。
 
 # Verification Guidance
