@@ -21,5 +21,6 @@
 
   <ItemGroup>
     <None Include="../../Tests/golden/unit-batch-v1.json" Link="Golden/unit-batch-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../Tests/golden/buff-item-batch-v1.json" Link="Golden/buff-item-batch-v1.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
+using Tactics.Core.Items;
 
 namespace Tactics.Core.Battle;
 
@@ -15,6 +16,7 @@ public sealed class BattleUnitState
 {
     private readonly IReadOnlyDictionary<ContentId, BattleStatusState> _statuses;
     private readonly IReadOnlyDictionary<ContentId, int> _statusDurations;
+    private readonly IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> _consumables;
 
     /// <summary>
     /// Creates runtime state for a unit.
@@ -32,7 +34,10 @@ public sealed class BattleUnitState
         IReadOnlyDictionary<ContentId, int>? statusDurations = null,
         int maxMana = 0,
         int currentMana = 0,
-        IReadOnlyDictionary<ContentId, BattleStatusState>? statuses = null)
+        IReadOnlyDictionary<ContentId, BattleStatusState>? statuses = null,
+        float? baseSpeed = null,
+        IReadOnlyDictionary<ItemInstanceId, BattleConsumableState>? consumables = null,
+        int lastSuccessfulConsumableUseRound = 0)
     {
         if (maxHealth <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxHealth));
@@ -42,6 +47,10 @@ public sealed class BattleUnitState
             throw new ArgumentOutOfRangeException(nameof(maxMana));
         if (currentMana < 0 || currentMana > maxMana)
             throw new ArgumentOutOfRangeException(nameof(currentMana));
+        if (baseSpeed is not null && (!float.IsFinite(baseSpeed.Value) || baseSpeed.Value < 0f))
+            throw new ArgumentOutOfRangeException(nameof(baseSpeed));
+        if (lastSuccessfulConsumableUseRound < 0)
+            throw new ArgumentOutOfRangeException(nameof(lastSuccessfulConsumableUseRound));
         if (statusDurations is not null && statusDurations.Count > 0 && statuses is not null && statuses.Count > 0)
             throw new ArgumentException("Provide either legacy status durations or detailed statuses, not both.");
 
@@ -51,6 +60,8 @@ public sealed class BattleUnitState
         HasMovedThisTurn = hasMovedThisTurn;
         MaxMana = maxMana;
         CurrentMana = currentMana;
+        BaseSpeed = baseSpeed ?? Math.Max(0f, unit.Initiative * 0.5f);
+        LastSuccessfulConsumableUseRound = lastSuccessfulConsumableUseRound;
 
         var detailedStatuses = new Dictionary<ContentId, BattleStatusState>();
         foreach ((ContentId statusId, int remainingTurns) in statusDurations ?? new Dictionary<ContentId, int>())
@@ -70,6 +81,16 @@ public sealed class BattleUnitState
         _statuses = new ReadOnlyDictionary<ContentId, BattleStatusState>(detailedStatuses);
         _statusDurations = new ReadOnlyDictionary<ContentId, int>(
             detailedStatuses.ToDictionary(item => item.Key, item => item.Value.RemainingTurns));
+
+        var consumableMap = new Dictionary<ItemInstanceId, BattleConsumableState>();
+        foreach ((ItemInstanceId instanceId, BattleConsumableState consumable) in consumables ??
+                 new Dictionary<ItemInstanceId, BattleConsumableState>())
+        {
+            if (instanceId != consumable.InstanceId)
+                throw new ArgumentException("Consumable key must match its InstanceId.", nameof(consumables));
+            consumableMap.Add(instanceId, consumable);
+        }
+        _consumables = new ReadOnlyDictionary<ItemInstanceId, BattleConsumableState>(consumableMap);
     }
 
     /// <summary>
@@ -98,6 +119,13 @@ public sealed class BattleUnitState
     public int CurrentMana { get; }
 
     /// <summary>
+    /// Gets the immutable unmodified speed used to recalculate Slow effects.
+    /// </summary>
+    public float BaseSpeed { get; }
+
+    public int LastSuccessfulConsumableUseRound { get; }
+
+    /// <summary>
     /// Gets whether the unit has consumed its one movement use this turn.
     /// </summary>
     public bool HasMovedThisTurn { get; }
@@ -111,6 +139,8 @@ public sealed class BattleUnitState
     /// Gets detailed immutable status instances keyed by stable content ID.
     /// </summary>
     public IReadOnlyDictionary<ContentId, BattleStatusState> Statuses => _statuses;
+
+    public IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> Consumables => _consumables;
 
     /// <summary>
     /// Gets whether this runtime unit can still participate in battle.
@@ -131,7 +161,10 @@ public sealed class BattleUnitState
             hasMovedThisTurn,
             maxMana: MaxMana,
             currentMana: CurrentMana,
-            statuses: _statuses);
+            statuses: _statuses,
+            baseSpeed: BaseSpeed,
+            consumables: _consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
 
     /// <summary>
     /// Returns a copy with clamped health and matching alive state.
@@ -146,7 +179,10 @@ public sealed class BattleUnitState
             HasMovedThisTurn,
             maxMana: MaxMana,
             currentMana: CurrentMana,
-            statuses: _statuses);
+            statuses: _statuses,
+            baseSpeed: BaseSpeed,
+            consumables: _consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
 
     /// <summary>
     /// Returns a copy with clamped mana.
@@ -159,7 +195,10 @@ public sealed class BattleUnitState
             HasMovedThisTurn,
             maxMana: MaxMana,
             currentMana: Math.Clamp(currentMana, 0, MaxMana),
-            statuses: _statuses);
+            statuses: _statuses,
+            baseSpeed: BaseSpeed,
+            consumables: _consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
 
     /// <summary>
     /// Returns a copy with the given status duration.
@@ -173,7 +212,7 @@ public sealed class BattleUnitState
             throw new ArgumentOutOfRangeException(nameof(remainingTurns));
 
         BattleStatusState status = _statuses.TryGetValue(statusId, out BattleStatusState? current)
-            ? new BattleStatusState(statusId, current.SourceId, remainingTurns, current.DamagePerTurn)
+            ? current.WithRemainingTurns(remainingTurns)
             : new BattleStatusState(statusId, Unit.InstanceId, remainingTurns, 0);
         return WithStatus(status);
     }
@@ -195,7 +234,10 @@ public sealed class BattleUnitState
             HasMovedThisTurn,
             maxMana: MaxMana,
             currentMana: CurrentMana,
-            statuses: statuses);
+            statuses: statuses,
+            baseSpeed: BaseSpeed,
+            consumables: _consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
     }
 
     /// <summary>
@@ -212,8 +254,55 @@ public sealed class BattleUnitState
             HasMovedThisTurn,
             maxMana: MaxMana,
             currentMana: CurrentMana,
-            statuses: statuses);
+            statuses: statuses,
+            baseSpeed: BaseSpeed,
+            consumables: _consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
     }
+
+    public BattleUnitState WithUnitFacts(UnitState unit) => new(
+        unit,
+        MaxHealth,
+        CurrentHealth,
+        HasMovedThisTurn,
+        maxMana: MaxMana,
+        currentMana: CurrentMana,
+        statuses: _statuses,
+        baseSpeed: BaseSpeed,
+        consumables: _consumables,
+        lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+
+    public BattleUnitState WithConsumable(BattleConsumableState consumable)
+    {
+        ArgumentNullException.ThrowIfNull(consumable);
+        var consumables = new Dictionary<ItemInstanceId, BattleConsumableState>(_consumables)
+        {
+            [consumable.InstanceId] = consumable
+        };
+        return new BattleUnitState(
+            Unit,
+            MaxHealth,
+            CurrentHealth,
+            HasMovedThisTurn,
+            maxMana: MaxMana,
+            currentMana: CurrentMana,
+            statuses: _statuses,
+            baseSpeed: BaseSpeed,
+            consumables: consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+    }
+
+    public BattleUnitState WithSuccessfulConsumableUse(int round) => new(
+        Unit,
+        MaxHealth,
+        CurrentHealth,
+        HasMovedThisTurn,
+        maxMana: MaxMana,
+        currentMana: CurrentMana,
+        statuses: _statuses,
+        baseSpeed: BaseSpeed,
+        consumables: _consumables,
+        lastSuccessfulConsumableUseRound: round);
 
     /// <summary>
     /// Returns a copy whose one-per-turn movement use is available again.
@@ -227,5 +316,8 @@ public sealed class BattleUnitState
             hasMovedThisTurn: false,
             maxMana: MaxMana,
             currentMana: CurrentMana,
-            statuses: _statuses);
+            statuses: _statuses,
+            baseSpeed: BaseSpeed,
+            consumables: _consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
 }

@@ -1,5 +1,6 @@
 using Tactics.Core.Board;
 using Tactics.Core.Content;
+using Tactics.Core.Items;
 using Tactics.Core.Units;
 
 namespace Tactics.Core.Battle;
@@ -100,6 +101,42 @@ public sealed record StatusDurationChangedEvent(
 /// Reports status removal after its duration reaches zero.
 /// </summary>
 public sealed record StatusExpiredEvent(UnitInstanceId TargetId, ContentId StatusId) : BattleEvent;
+
+public sealed record StatusStackChangedEvent(
+    UnitInstanceId TargetId,
+    ContentId StatusId,
+    int StackCount) : BattleEvent;
+
+public sealed record ConsumableUsedEvent(
+    UnitInstanceId ActorId,
+    UnitInstanceId TargetId,
+    ItemInstanceId ItemInstanceId,
+    ContentId ConsumableId) : BattleEvent;
+
+public sealed record HealthRestoredEvent(
+    UnitInstanceId SourceId,
+    UnitInstanceId TargetId,
+    ContentId ConsumableId,
+    int Amount,
+    int CurrentHealth) : BattleEvent;
+
+public sealed record ManaRestoredEvent(
+    UnitInstanceId SourceId,
+    UnitInstanceId TargetId,
+    ContentId ConsumableId,
+    int Amount,
+    int CurrentMana) : BattleEvent;
+
+public sealed record StatusesCleansedEvent(
+    UnitInstanceId SourceId,
+    UnitInstanceId TargetId,
+    ContentId ConsumableId,
+    IReadOnlyList<ContentId> RemovedStatusIds) : BattleEvent;
+
+public sealed record ConsumableChargesChangedEvent(
+    UnitInstanceId UnitId,
+    ItemInstanceId ItemInstanceId,
+    int RemainingCharges) : BattleEvent;
 
 /// <summary>
 /// Reports that an Amazon committed its held spear to a deterministic board cell.

@@ -155,7 +155,7 @@ public class CoreGoldenVectorGodotTests
             .Single(unit => unit.GetProperty("instanceId").GetString() == "enemy.target.0");
         BattleUnitState target = state.Units[new UnitInstanceId("enemy.target.0")];
         JsonElement expectedSpear = expected.GetProperty("droppedSpears")[0];
-        AssertThat(document.RootElement.GetProperty("schemaVersion").GetInt32()).IsEqual(6);
+        AssertThat(document.RootElement.GetProperty("schemaVersion").GetInt32()).IsEqual(7);
         AssertThat(state.ActiveUnitId.Value).IsEqual(expected.GetProperty("activeUnitId").GetString()!);
         AssertThat(target.CurrentHealth).IsEqual(expectedTarget.GetProperty("currentHealth").GetInt32());
         AssertThat(target.StatusDurations[new ContentId("buff.poison")]).IsEqual(3);

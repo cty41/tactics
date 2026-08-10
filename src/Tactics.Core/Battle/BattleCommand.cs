@@ -1,6 +1,7 @@
 using Tactics.Core.Board;
 using Tactics.Core.Combat;
 using Tactics.Core.Content;
+using Tactics.Core.Items;
 using Tactics.Core.Units;
 
 namespace Tactics.Core.Battle;
@@ -31,6 +32,15 @@ public sealed record UsePoisonSpearCommand(
     UnitInstanceId ActorId,
     UnitInstanceId TargetId,
     PoisonSpearDefinition Definition) : BattleCommand(ActorId);
+
+/// <summary>
+/// Requests use of one carried consumable against a validated battle target.
+/// </summary>
+public sealed record UseConsumableCommand(
+    UnitInstanceId ActorId,
+    UnitInstanceId TargetId,
+    ItemInstanceId ItemInstanceId,
+    ConsumableDefinition Definition) : BattleCommand(ActorId);
 
 /// <summary>
 /// Ends the active unit's turn and advances deterministic turn order.

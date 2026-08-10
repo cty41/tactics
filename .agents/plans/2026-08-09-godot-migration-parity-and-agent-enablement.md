@@ -35,7 +35,7 @@
 - [x] Core 新增不可变 `InitiativeRoundState`，明确“当前/已行动不重排，只排序 remaining”合同；`BattleState.WithInitiativeChanged` 将该合同接入不可变战斗状态更新。
 - [x] Core `PresentationGraphCompiler` 保留 Fork/Join 边界，分支在 Join 前停止，Join 后 continuation 只编译一次；Runtime/Preview 后续消费同一 `PresentationExecutionPlan`。
 - [x] Phase 1C 完整统一门禁通过：Core 26、Application 3、Unity Oracle 8、迁移工具 16、Agent policy 8、OKF 14、GdUnit 4；Release 隔离、Poison Spear runtime/presentation、EditorPlugin headless 生命周期、生产 Debug 恢复与 6 scopes/0 unmapped 均通过。
-- [x] Phase 1D 通过 `contract-decisions.json` 明确关闭剩余合同：冻结 Unity 没有统一不可变 Command/Event 边界且混用全局/非确定 RNG，因此 Battle Transition 定性为版本化迁移合同，`splitmix64-v1` 定性为确定性替代合同；Phase 3 加入真实 Poison Spear 语义后，运行时合同升级为 `battle-transition-v2`。
+- [x] Phase 1D 通过 `contract-decisions.json` 明确关闭剩余合同：冻结 Unity 没有统一不可变 Command/Event 边界且混用全局/非确定 RNG，因此 Battle Transition 定性为版本化迁移合同，`splitmix64-v1` 定性为确定性替代合同；Phase 3 加入真实 Poison Spear 语义后升级为 v2，Phase 5A 加入 Status/Consumable 后升级为 `battle-transition-v3`。
 - [x] Phase 1D 完整统一门禁通过：Core 27、Application 3、Unity Oracle 8、迁移工具 20、Agent policy 8、OKF 14、GdUnit 4；没有把迁移合同错误宣称为逐语句 Unity parity。真实 Poison Spear 数值、Buff tick/stack 与资产引用继续留在 Phase 2–3。
 
 ## Phase 2：真实内容管线
@@ -66,6 +66,8 @@
 按 Unit → Buff/Item → Skill → AI/Encounter → Pure Run/Persistence → Scene/UI/Input → Presentation/VFX/Audio 批量迁移；最终完成新开档到继续游戏闭环，并在发布阶段首次执行 Godot Windows Release/PCK Smoke。
 
 - [ ] 当前只执行子计划 [Godot Phase 4：Pure Run Unit 批次迁移](2026-08-10-godot-phase4-unit-batch-migration.md)：完成 12 Unit 的定义、基础视觉、Catalog、Factory、Gallery/Spawn、自动门禁和人工验收；不进入 Buff/Item、Skill、AI/Encounter、Persistence 或后续 Profile。
+- [ ] Phase 4 自动实施已在 `2b341cb3` checkpoint，仍等待 Unit Gallery/Spawn/Reload 人工视觉闸门，不因后续无视觉批次而晋升。
+- [ ] 当前并行收口子计划 [Godot Phase 5A：Buff/Item 夜间迁移](2026-08-11-godot-phase5-buff-item-overnight.md)：源合同已冻结；`battle-transition-v3`、Golden schema v7、Status/Consumable/Equipment Core/Application 已实现，待统一门禁后进入 Godot Resource/Catalog checkpoint。
 
 ## 自动与人工门禁
 

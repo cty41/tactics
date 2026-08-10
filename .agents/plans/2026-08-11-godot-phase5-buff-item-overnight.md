@@ -21,6 +21,8 @@
 
 ## Checkpoint 2：冻结源合同
 
+状态：completed（`0d20bdf5`）
+
 - 用固定 Unity 6000.3.11f1 Editor batchmode 连续独立导出 14 个 Buff 根资产，两份 DTO 必须 byte-identical。
 - `Consumables.json` 与 `Equipment.json` 直接按最终 Tag blob/SHA 冻结，不经过 Unity YAML。
 - typed converter 严格检查 14 Buff、3 Consumable、12 Equipment 的字段、枚举、引用、ContentId、SourceId 与 icon audit-only 边界。
@@ -28,6 +30,8 @@
 - 批次停在 `Exported/UnityOwned`，不得生成 Godot 资产。
 
 ## Checkpoint 3：确定性运行时
+
+状态：implemented，等待本 checkpoint 统一门禁与提交
 
 - 新增 StatusDefinition、polarity/effect/trigger/refresh、运行时状态与 `StatusRuntimeService`。
 - 兼容扩展 BattleStatusState/BattleUnitState，加入基础速度、状态参数、消耗品与本轮使用记录。

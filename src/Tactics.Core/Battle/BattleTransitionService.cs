@@ -1,7 +1,9 @@
 using Tactics.Core.Board;
 using Tactics.Core.Combat;
 using Tactics.Core.Content;
+using Tactics.Core.Items;
 using Tactics.Core.Pathfinding;
+using Tactics.Core.Statuses;
 using Tactics.Core.Units;
 
 namespace Tactics.Core.Battle;
@@ -19,20 +21,25 @@ public sealed class BattleTransitionService
     /// <summary>
     /// Identifies the versioned normalized command/state/event contract introduced by the migration.
     /// </summary>
-    public const string ContractId = "battle-transition-v2";
+    public const string ContractId = "battle-transition-v3";
 
     private readonly IPathfinder _pathfinder;
     private readonly PoisonSpearResolver _poisonSpearResolver;
+    private readonly StatusRuntimeService _statusRuntime;
 
     /// <summary>
     /// Creates the deterministic transition service.
     /// </summary>
     /// <param name="pathfinder">Optional deterministic path implementation.</param>
     /// <param name="lineOfSight">Optional deterministic line-of-sight implementation.</param>
-    public BattleTransitionService(IPathfinder? pathfinder = null, ILineOfSightService? lineOfSight = null)
+    public BattleTransitionService(
+        IPathfinder? pathfinder = null,
+        ILineOfSightService? lineOfSight = null,
+        StatusRuntimeService? statusRuntime = null)
     {
         _pathfinder = pathfinder ?? new DeterministicDijkstraPathfinder();
         _poisonSpearResolver = new PoisonSpearResolver(lineOfSight);
+        _statusRuntime = statusRuntime ?? new StatusRuntimeService();
     }
 
     /// <summary>
@@ -52,11 +59,14 @@ public sealed class BattleTransitionService
             return Rejected(state, command.ActorId, "actor_defeated");
         if (state.ActiveUnitId != command.ActorId)
             return Rejected(state, command.ActorId, "not_active_unit");
+        if (command is not EndTurnCommand && !_statusRuntime.CanAct(actor))
+            return Rejected(state, command.ActorId, "status_prevents_action");
 
         return command switch
         {
             MoveUnitCommand move => ApplyMove(state, actor, move),
             UsePoisonSpearCommand poisonSpear => ApplyPoisonSpear(state, actor, poisonSpear),
+            UseConsumableCommand consumable => ApplyConsumable(state, actor, consumable),
             EndTurnCommand endTurn => ApplyEndTurn(state, endTurn),
             _ => Rejected(state, command.ActorId, "unsupported_command")
         };
@@ -142,22 +152,27 @@ public sealed class BattleTransitionService
 
         if (updatedTarget.IsAlive && action.PoisonTurns > 0)
         {
-            int currentDuration = updatedTarget.Statuses.TryGetValue(
+            var poison = new StatusDefinition(
                 command.Definition.PoisonStatusId,
-                out BattleStatusState? activeStatus)
-                ? activeStatus.RemainingTurns
-                : 0;
-            int resultingDuration = checked(currentDuration + action.PoisonTurns);
-            updatedTarget = updatedTarget.WithStatus(new BattleStatusState(
-                command.Definition.PoisonStatusId,
+                "Poison",
+                action.PoisonTurns,
+                canAct: true,
+                StatusPolarity.Harmful,
+                StatusEffectKind.Poison,
+                StatusTriggerTiming.TurnStart,
+                StatusRefreshStrategy.AddDuration,
+                damagePerTurn: command.Definition.PoisonDamagePerTurn);
+            StatusApplicationResult application = _statusRuntime.Apply(
+                updatedTarget,
+                poison,
                 command.ActorId,
-                resultingDuration,
-                command.Definition.PoisonDamagePerTurn));
+                action.PoisonTurns);
+            updatedTarget = application.Unit;
             events.Add(new StatusAppliedEvent(
                 command.ActorId,
                 command.TargetId,
                 command.Definition.PoisonStatusId,
-                resultingDuration));
+                application.AppliedStatus.RemainingTurns));
         }
 
         if (!updatedTarget.IsAlive)
@@ -171,6 +186,103 @@ public sealed class BattleTransitionService
             .WithDroppedSpear(command.ActorId, dropCell.Value);
         return new BattleTransition(nextState, events);
     }
+
+    private BattleTransition ApplyConsumable(
+        BattleState state,
+        BattleUnitState actor,
+        UseConsumableCommand command)
+    {
+        if (!state.TryGetUnit(command.TargetId, out BattleUnitState? target) || target is null)
+            return Rejected(state, command.ActorId, "target_not_found");
+        if (!target.IsAlive)
+            return Rejected(state, command.ActorId, "target_defeated");
+        if (!actor.Consumables.TryGetValue(command.ItemInstanceId, out BattleConsumableState? item))
+            return Rejected(state, command.ActorId, "consumable_not_carried");
+        if (item.DefinitionId != command.Definition.ContentId)
+            return Rejected(state, command.ActorId, "consumable_definition_mismatch");
+        if (item.MaxCharges != command.Definition.MaxCharges)
+            return Rejected(state, command.ActorId, "consumable_charge_contract_mismatch");
+        if (item.RemainingCharges <= 0)
+            return Rejected(state, command.ActorId, "consumable_depleted");
+        if (actor.LastSuccessfulConsumableUseRound == state.Round)
+            return Rejected(state, command.ActorId, "consumable_already_used_this_round");
+        if (actor.Unit.PlayerNumber != target.Unit.PlayerNumber)
+            return Rejected(state, command.ActorId, "consumable_target_not_ally");
+        if (command.Definition.TargetMode == ConsumableTargetMode.Self && command.TargetId != command.ActorId)
+            return Rejected(state, command.ActorId, "consumable_target_not_self");
+        if (Manhattan(actor.Unit.Position, target.Unit.Position) > command.Definition.MaxRange)
+            return Rejected(state, command.ActorId, "consumable_target_out_of_range");
+
+        var events = new List<BattleEvent>
+        {
+            new ConsumableUsedEvent(
+                command.ActorId,
+                command.TargetId,
+                command.ItemInstanceId,
+                command.Definition.ContentId)
+        };
+        BattleUnitState updatedTarget = target;
+        switch (command.Definition.EffectKind)
+        {
+            case ConsumableEffectKind.RestoreHealth:
+            {
+                int before = updatedTarget.CurrentHealth;
+                updatedTarget = updatedTarget.WithHealth(checked(before + command.Definition.Magnitude));
+                events.Add(new HealthRestoredEvent(
+                    command.ActorId,
+                    command.TargetId,
+                    command.Definition.ContentId,
+                    updatedTarget.CurrentHealth - before,
+                    updatedTarget.CurrentHealth));
+                break;
+            }
+            case ConsumableEffectKind.RestoreMana:
+            {
+                int before = updatedTarget.CurrentMana;
+                updatedTarget = updatedTarget.WithMana(checked(before + command.Definition.Magnitude));
+                events.Add(new ManaRestoredEvent(
+                    command.ActorId,
+                    command.TargetId,
+                    command.Definition.ContentId,
+                    updatedTarget.CurrentMana - before,
+                    updatedTarget.CurrentMana));
+                break;
+            }
+            case ConsumableEffectKind.RemoveHarmfulBuffs:
+                updatedTarget = _statusRuntime.RemoveHarmful(updatedTarget, out IReadOnlyList<ContentId> removed);
+                events.Add(new StatusesCleansedEvent(
+                    command.ActorId,
+                    command.TargetId,
+                    command.Definition.ContentId,
+                    removed));
+                break;
+            default:
+                return Rejected(state, command.ActorId, "unsupported_consumable_effect");
+        }
+
+        BattleConsumableState updatedItem = item.WithRemainingCharges(item.RemainingCharges - 1);
+        BattleUnitState updatedActor = command.TargetId == command.ActorId ? updatedTarget : actor;
+        updatedActor = updatedActor
+            .WithConsumable(updatedItem)
+            .WithSuccessfulConsumableUse(state.Round);
+        events.Add(new ConsumableChargesChangedEvent(
+            command.ActorId,
+            command.ItemInstanceId,
+            updatedItem.RemainingCharges));
+
+        BattleState nextState = WithUnitAndInitiative(state, actor, updatedActor);
+        if (command.TargetId != command.ActorId)
+            nextState = WithUnitAndInitiative(nextState, target, updatedTarget);
+        return new BattleTransition(nextState, events);
+    }
+
+    private static BattleState WithUnitAndInitiative(
+        BattleState state,
+        BattleUnitState previous,
+        BattleUnitState updated) =>
+        previous.Unit.Initiative == updated.Unit.Initiative
+            ? state.WithUnit(updated)
+            : state.WithInitiativeChanged(updated);
 
     private static GridPoint? FindSpearDropCell(
         BattleState state,
@@ -223,17 +335,19 @@ public sealed class BattleTransitionService
     private static int Manhattan(GridPoint left, GridPoint right) =>
         Math.Abs(left.X - right.X) + Math.Abs(left.Y - right.Y);
 
-    private static BattleTransition ApplyEndTurn(BattleState state, EndTurnCommand command)
+    private BattleTransition ApplyEndTurn(BattleState state, EndTurnCommand command)
     {
         var events = new List<BattleEvent>();
         BattleUnitState outgoing = state.Units[command.ActorId];
         foreach (BattleStatusState status in outgoing.Statuses.Values
                      .OrderBy(item => item.ContentId.Value, StringComparer.Ordinal))
         {
+            if (status.EffectKind == StatusEffectKind.Burning)
+                continue;
             int remainingTurns = status.RemainingTurns - 1;
             if (remainingTurns == 0)
             {
-                outgoing = outgoing.WithoutStatus(status.ContentId);
+                outgoing = _statusRuntime.Remove(outgoing, status.ContentId);
                 events.Add(new StatusExpiredEvent(command.ActorId, status.ContentId));
             }
             else
@@ -253,9 +367,14 @@ public sealed class BattleTransitionService
         foreach (BattleStatusState status in incoming.Statuses.Values
                      .OrderBy(item => item.ContentId.Value, StringComparer.Ordinal))
         {
-            if (!incoming.IsAlive || status.DamagePerTurn <= 0)
+            if (!incoming.IsAlive)
                 continue;
-            int healthAfterDamage = Math.Max(0, incoming.CurrentHealth - status.DamagePerTurn);
+            int tickDamage = status.EffectKind == StatusEffectKind.Burning
+                ? status.StackCount
+                : status.DamagePerTurn;
+            if (tickDamage <= 0)
+                continue;
+            int healthAfterDamage = Math.Max(0, incoming.CurrentHealth - tickDamage);
             int appliedDamage = incoming.CurrentHealth - healthAfterDamage;
             incoming = incoming.WithHealth(healthAfterDamage);
             events.Add(new StatusTickedEvent(
@@ -266,6 +385,23 @@ public sealed class BattleTransitionService
                 healthAfterDamage));
             if (!incoming.IsAlive)
                 events.Add(new UnitDefeatedEvent(incoming.Unit.InstanceId));
+            if (status.EffectKind == StatusEffectKind.Burning)
+            {
+                int remainingStacks = status.StackCount - 1;
+                if (remainingStacks == 0)
+                {
+                    incoming = _statusRuntime.Remove(incoming, status.ContentId);
+                    events.Add(new StatusExpiredEvent(incoming.Unit.InstanceId, status.ContentId));
+                }
+                else
+                {
+                    incoming = incoming.WithStatus(status.WithStackCount(remainingStacks));
+                    events.Add(new StatusStackChangedEvent(
+                        incoming.Unit.InstanceId,
+                        status.ContentId,
+                        remainingStacks));
+                }
+            }
         }
 
         nextState = nextState.WithUnit(incoming);

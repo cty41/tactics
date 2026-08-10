@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "sourceOracle": {
     "unityTag": "unity-final-2026-08-08",
     "unityCommit": "168d1934",
@@ -160,6 +160,41 @@
       "lineOfSightBlockers": [],
       "expected": {"succeeded": true, "damage": 8, "poisonTurns": 3, "failureReason": ""},
       "oracleStatus": "real_unity_assetdatabase_export"
+    }
+  ],
+  "statusCases": [
+    {
+      "id": "status-refresh-tick-cleanse-v1",
+      "contractId": "status-runtime-v1",
+      "refreshOverrides": {
+        "Poison": "AddDuration",
+        "Burning": "AddStacks",
+        "Slow": "RefreshDuration",
+        "Stun": "RefreshDuration"
+      },
+      "turnStartOrder": "content-id-ordinal",
+      "turnEnd": "non-burning-duration-burning-stack",
+      "cleanse": "harmful-only",
+      "oracleStatus": "unity_final_linked_source_oracle"
+    }
+  ],
+  "consumableCases": [
+    {
+      "id": "ally-range-charge-and-round-use-v1",
+      "validTargets": "living-self-or-manhattan-one-ally",
+      "successfulZeroRecoveryConsumesCharge": true,
+      "successfulUsesPerUnitPerRound": 1,
+      "invalidTargetConsumesCharge": false,
+      "oracleStatus": "approved_migration_contract"
+    }
+  ],
+  "equipmentCases": [
+    {
+      "id": "unique-slot-six-attribute-projection-v1",
+      "contractId": "equipment-stat-projection-v1",
+      "derivedContractId": "unity-unit-derived-v1",
+      "duplicateSlotAccepted": false,
+      "oracleStatus": "unity_final_linked_source_oracle"
     }
   ],
   "battleScenarios": [
