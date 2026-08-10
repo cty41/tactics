@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://brrayrlqqtwoh"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_3mjce"]
+
+[resource]
+script = ExtResource("1_3mjce")
+ContentIdValue = "item.equipment.iron-helmet-01"
+SourceId = "iron_helmet_01"
+DisplayName = "铁盔"
+SlotValue = "Helmet"
+RarityValue = "Common"
+Price = 7
+ConstitutionBonus = 2

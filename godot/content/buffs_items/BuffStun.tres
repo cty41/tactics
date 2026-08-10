@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://woijxs12u8uj"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_16kqm"]
+
+[resource]
+script = ExtResource("1_16kqm")
+ContentIdValue = "buff.stun"
+SourceId = "Stun"
+DefaultDuration = 1
+CanAct = false
+PolarityValue = "Harmful"
+EffectKindValue = "Stun"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/Stun.asset"
+SourceGuid = "6ab884424ea2dc74b8568ab224ffae53"
+SourceLocalFileId = 11400000

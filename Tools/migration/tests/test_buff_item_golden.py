@@ -31,8 +31,17 @@ class BuffItemGoldenTests(unittest.TestCase):
         self.assertEqual(29, len(ids))
         self.assertEqual(29, len(set(ids)))
         self.assertEqual(["buff.poison"], self.golden["externalContentDependencies"])
-        self.assertEqual("Exported", self.batch["status"])
+        self.assertEqual("Validated", self.batch["status"])
         self.assertEqual("UnityOwned", self.batch["owner"])
+        self.assertEqual("godot-resource-saver-buff-item-v1", self.batch["generation"])
+        self.assertEqual(
+            "Tools/migration/manifest/state/pure-run-buffs-items-v1.json",
+            self.batch["generationLedger"],
+        )
+        self.assertEqual(
+            "Tools/migration/manifest/receipts/pure-run-buffs-items-v1-generation.json",
+            self.batch["generationReceipt"],
+        )
         self.assertEqual("not_applicable_no_visual_payload", self.batch["validation"]["visualAcceptance"])
 
     def test_specification_asset_blobs_match_final_tag_without_yaml_parsing(self):

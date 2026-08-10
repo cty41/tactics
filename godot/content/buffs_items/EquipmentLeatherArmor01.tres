@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://dp02ugh85tbyn"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_glgot"]
+
+[resource]
+script = ExtResource("1_glgot")
+ContentIdValue = "item.equipment.leather-armor-01"
+SourceId = "leather_armor_01"
+DisplayName = "皮甲"
+SlotValue = "Armor"
+RarityValue = "Common"
+Price = 8
+AgilityBonus = 2
+ConstitutionBonus = 3

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://cavos15760hys"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_kittp"]
+
+[resource]
+script = ExtResource("1_kittp")
+ContentIdValue = "buff.fear"
+SourceId = "Fear"
+DefaultDuration = 1
+PolarityValue = "Harmful"
+EffectKindValue = "Fear"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+CurseCategory = "Curse"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/Fear.asset"
+SourceGuid = "c3c660c78586e9a4fa9c13f099933834"
+SourceLocalFileId = 11400000

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://dsebgsadlwftq"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_0tail"]
+
+[resource]
+script = ExtResource("1_0tail")
+ContentIdValue = "buff.ice-armor.lv1"
+SourceId = "IceArmor_Lv1"
+DefaultDuration = 2
+PolarityValue = "Beneficial"
+EffectKindValue = "DamageReduction"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+DamageReductionPercent = 0.25
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/IceArmor_Lv1.asset"
+SourceGuid = "1de7f18ba6f7b0541ac56b07c2d5bc74"
+SourceLocalFileId = 11400000

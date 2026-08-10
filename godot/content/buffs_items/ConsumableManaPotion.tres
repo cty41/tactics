@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ConsumableDefinitionResource" format=3 uid="uid://cs3aa1n5kwi05"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/ConsumableDefinitionResource.cs" id="1_g6r3q"]
+
+[resource]
+script = ExtResource("1_g6r3q")
+ContentIdValue = "item.consumable.mana-potion"
+SourceId = "mana_potion"
+DisplayName = "魔法药剂"
+Description = "为自身或相邻友军恢复 6 点魔法。"
+RarityValue = "Common"
+Price = 5
+MaxCharges = 1
+EffectKindValue = "RestoreMana"
+Magnitude = 6
+MaxRange = 1
+TargetModeValue = "AllyIncludingSelf"

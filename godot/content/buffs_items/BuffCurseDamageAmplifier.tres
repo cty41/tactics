@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://0x3slbg3mal"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_g6yre"]
+
+[resource]
+script = ExtResource("1_g6yre")
+ContentIdValue = "buff.curse-damage-amplifier"
+SourceId = "CurseDamageAmplifier"
+DefaultDuration = 5
+PolarityValue = "Harmful"
+EffectKindValue = "CurseDamageAmplifier"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+CurseCategory = "Curse"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/CurseDamageAmplifier.asset"
+SourceGuid = "128eb87d465bbd84cbf20fa0b57578d0"
+SourceLocalFileId = 11400000

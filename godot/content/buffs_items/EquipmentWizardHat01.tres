@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://bv0c8ch1the3y"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_mja1t"]
+
+[resource]
+script = ExtResource("1_mja1t")
+ContentIdValue = "item.equipment.wizard-hat-01"
+SourceId = "wizard_hat_01"
+DisplayName = "法师帽"
+SlotValue = "Helmet"
+RarityValue = "Common"
+Price = 8
+IntelligenceBonus = 3
+CharismaBonus = 1

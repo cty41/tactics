@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://w410f7x47itg"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_dwqb2"]
+
+[resource]
+script = ExtResource("1_dwqb2")
+ContentIdValue = "item.equipment.sword-01"
+SourceId = "sword_01"
+DisplayName = "铁剑"
+SlotValue = "Weapon"
+RarityValue = "Common"
+Price = 10
+StrengthBonus = 5

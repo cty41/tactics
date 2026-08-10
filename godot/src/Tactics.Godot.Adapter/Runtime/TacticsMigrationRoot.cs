@@ -31,6 +31,12 @@ public partial class TacticsMigrationRoot : Node
             GetTree().Quit();
             return;
         }
+        if (commandLine.Contains("--validate-buffs-items"))
+        {
+            ValidateBuffsItems();
+            GetTree().Quit();
+            return;
+        }
         if (commandLine.Contains("--play-unit-gallery"))
         {
             PlayUnitGallery();
@@ -115,6 +121,20 @@ public partial class TacticsMigrationRoot : Node
         GD.Print(
             $"Pure Run Unit validation OK: entries={validation.CatalogEntryCount}, " +
             $"units={validation.UnitCount}, states={states.Count}");
+    }
+
+    private static void ValidateBuffsItems()
+    {
+        var batchCatalog = ResourceLoader.Load<GodotResourceCatalog>(
+            "res://content/buffs_items/ContentCatalog.tres")
+            ?? throw new InvalidOperationException("Pure Run Buff/Item ContentCatalog is missing.");
+        var globalCatalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")
+            ?? throw new InvalidOperationException("Canonical global ContentCatalog is missing.");
+        BuffItemBatchValidation validation = BuffItemBatchValidator.Validate(batchCatalog, globalCatalog);
+        GD.Print(
+            $"Pure Run Buff/Item validation OK: entries={validation.BatchCatalogEntryCount}, " +
+            $"global={validation.GlobalCatalogEntryCount}, statuses={validation.StatusCount}, " +
+            $"consumables={validation.ConsumableCount}, equipment={validation.EquipmentCount}");
     }
 
     private void PlayUnitGallery()

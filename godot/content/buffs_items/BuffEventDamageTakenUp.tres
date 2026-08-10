@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://b762tyyv1r8k3"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_lqxsn"]
+
+[resource]
+script = ExtResource("1_lqxsn")
+ContentIdValue = "buff.event-damage-taken-up"
+SourceId = "EventDamageTakenUp"
+DefaultDuration = 3
+PolarityValue = "Harmful"
+EffectKindValue = "CurseDamageAmplifier"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+CurseCategory = "Curse"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset"
+SourceGuid = "6b3d7d945617e2e4a9eb5907ab662fa4"
+SourceLocalFileId = 11400000

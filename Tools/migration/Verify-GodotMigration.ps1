@@ -33,6 +33,8 @@ $buffItemDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-buffs-items-v
 $buffItemGolden = Join-Path $repoRoot 'Tests\golden\buff-item-batch-v1.json'
 $buffItemSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-buffs-items-v1.json'
 $buffItemExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-buffs-items-v1-export.json'
+$buffItemGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-buffs-items-v1.json'
+$buffItemGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-buffs-items-v1-generation.json'
 $consumablesJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Consumables.json'
 $equipmentJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Equipment.json'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
@@ -278,6 +280,30 @@ try {
                 --draft $buffItemDraft `
                 --output $buffItemExportReceipt
         }
+
+        Invoke-Checked 'Generate Pure Run Buff/Item Godot assets through ResourceSaver' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/BuffItemAssetBuilder.cs'
+        }
+        $buffItemGeneratedTargets = @(
+            (Get-Content -LiteralPath $buffItemGenerationLedger -Raw | ConvertFrom-Json).artifacts |
+                ForEach-Object { Join-Path $projectRoot $_.resourcePath.Substring('res://'.Length) }
+        ) + @($buffItemGenerationLedger)
+        $firstBuffItemGenerationHashes = @{}
+        foreach ($target in $buffItemGeneratedTargets) {
+            $firstBuffItemGenerationHashes[$target] = (
+                Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+        }
+        Invoke-Checked 'Repeat Pure Run Buff/Item generation for idempotency' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/BuffItemAssetBuilder.cs'
+        }
+        foreach ($target in $buffItemGeneratedTargets) {
+            $secondHash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+            if ($firstBuffItemGenerationHashes[$target] -ne $secondHash) {
+                throw "Pure Run Buff/Item generation is not byte-idempotent: $target"
+            }
+        }
     }
     else {
         Write-Host '== Skip real Pure Run Buff/Item draft: disposable Unity DTO is not present =='
@@ -331,6 +357,16 @@ try {
             --validate-units --quit-after 6000
     }
 
+    Invoke-Checked 'Pure Run Buff/Item and canonical catalog validation (Compatibility)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            --validate-buffs-items --quit-after 6000
+    }
+
+    Invoke-Checked 'Pure Run Buff/Item and canonical catalog validation (Forward+)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
+            --validate-buffs-items --quit-after 6000
+    }
+
     Invoke-Checked 'Capture deterministic Pure Run Unit programmatic gallery' {
         & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
             -- --capture-unit-gallery
@@ -373,6 +409,22 @@ try {
 
         Invoke-Checked 'Validate regenerated Pure Run Unit ledger and receipt' {
             python -m unittest Tools.migration.tests.test_unit_generation
+        }
+    }
+
+    if (Test-Path -LiteralPath $buffItemExport -PathType Leaf) {
+        # This batch carries no visual payload, so successful deterministic generation,
+        # both renderer paths, and typed runtime validation complete its acceptance gate.
+        Invoke-Checked 'Refresh Pure Run Buff/Item generation receipt' {
+            python -m Tools.migration.buff_item_generation_receipt `
+                --export-receipt $buffItemExportReceipt `
+                --draft $buffItemDraft `
+                --ledger $buffItemGenerationLedger `
+                --output $buffItemGenerationReceipt
+        }
+
+        Invoke-Checked 'Validate regenerated Pure Run Buff/Item ledger and receipt' {
+            python -m unittest Tools.migration.tests.test_buff_item_generation
         }
     }
 

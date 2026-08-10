@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ConsumableDefinitionResource" format=3 uid="uid://ltyukggslgcv"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/ConsumableDefinitionResource.cs" id="1_k0q00"]
+
+[resource]
+script = ExtResource("1_k0q00")
+ContentIdValue = "item.consumable.cleansing-potion"
+SourceId = "cleansing_potion"
+DisplayName = "净化药水"
+Description = "清除自身或相邻友军的全部减益效果。"
+RarityValue = "Uncommon"
+Price = 9
+MaxCharges = 1
+EffectKindValue = "RemoveHarmfulBuffs"
+MaxRange = 1
+TargetModeValue = "AllyIncludingSelf"

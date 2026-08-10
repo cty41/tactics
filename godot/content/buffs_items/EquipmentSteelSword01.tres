@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://cwd1tlqwoyay0"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_u0eix"]
+
+[resource]
+script = ExtResource("1_u0eix")
+ContentIdValue = "item.equipment.steel-sword-01"
+SourceId = "steel_sword_01"
+DisplayName = "精钢剑"
+SlotValue = "Weapon"
+RarityValue = "Rare"
+Price = 15
+StrengthBonus = 7
+AgilityBonus = 1

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://cey0ta2haejeo"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_lpale"]
+
+[resource]
+script = ExtResource("1_lpale")
+ContentIdValue = "buff.slow"
+SourceId = "Slow"
+DefaultDuration = 2
+PolarityValue = "Harmful"
+EffectKindValue = "Slow"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/Slow.asset"
+SourceGuid = "f0bb5d3dc43cb5146a9202a3d5a14406"
+SourceLocalFileId = 11400000

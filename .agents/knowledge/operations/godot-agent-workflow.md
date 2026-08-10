@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-11T01:44:09+08:00"
+timestamp: "2026-08-11T02:36:17+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:68ab0697655caa2fb4a48a0f9bf5182de4fb0844257429de3bd31a8b33c967af
+source_fingerprint: sha256:dfab95e90fe7458d351d8dce6084ac111c0752b3428d969bff8cfc7f01597403
 ---
 
 # Current state
@@ -38,11 +38,11 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - `godot-editor-lifecycle` 可在已授权 Godot 修改任务需要 session `0` 时自动挂起并恢复唯一 canonical Editor：只使用精确 PID 的正常窗口关闭与 pinned GUI executable，不强杀、不注入输入、不打开原本关闭的 Editor。
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
-- Buff/Item disposable DTO 存在时，统一入口会先严格编译 14 Buff、3 Consumable、12 Equipment typed draft 并重建 `Exported/UnityOwned` receipt；该步骤不生成 Godot Resource，也不复制只审计的 Buff icon。
+- Buff/Item disposable DTO 存在时，统一入口会严格编译 14 Buff、3 Consumable、12 Equipment typed draft，重建 export receipt，再连续两次通过 ResourceSaver 生成 28 个定义 Resource、29 项分批 Catalog 与 47 项 canonical Catalog；该链路不复制只审计的 Buff icon，并在两个 renderer 的 typed runtime 验证后才刷新 `Validated/UnityOwned` generation receipt。
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后无条件验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。人工 Editor Reload、Undo/Redo 和视觉验收仍按迁移计划单独记录。
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item DTO 存在时同样先刷新 source draft/receipt，连续两次生成并逐项比较 30 个 ledger artifact，再经 Editor UID scan、Compatibility/Forward+ 的 29/47 Catalog/runtime 验证和 generation receipt 校验。人工 Editor Reload、Undo/Redo 和 Unit 视觉验收仍按迁移计划单独记录。
 
 Editor lifecycle Skill 的 PowerShell 内核另由迁移 Python 测试验证 canonical path、精确 PID、dry-run 和禁用强杀；真实可见 close/reopen smoke 只在用户允许窗口出现后执行，并以新 MCP session/path/version/plugin/readiness 和日志为验收。
 
@@ -71,6 +71,8 @@ Phase 3 Editor authoring 可用性修复后再次通过统一门禁：Core 31、
 Tactics Tooling 随后从 Bottom `EditorDock` 迁为官方 Main Screen Plugin，在中央工作区通过 `Tactics Tooling` 入口切换；内部 Graph/SubViewport 改为 64/36 左右分栏。首次热重载暴露了 live tool 字段从 `VSplitContainer` 直接改为 `HSplitContainer` 时的 `RestoreGodotObjectData` 类型恢复错误，字段收敛为共同 `SplitContainer` 基类后，后续 Build/Reload 无新增错误。横向初始比例使用 child stretch ratio，而不是在 dragger 初始化前调用 `ClampSplitOffset`；Preview 使用居中的 `AspectRatioContainer(Fit)` 保持 `640:180`，避免 SubViewport 随右侧面板非等比压缩。Graph 的 `SaveWithRollback` 在 `ResourceSaver.Save` 后恢复原 Resource UID，避免语义 revision 正确但迁移 ledger target hash 漂移；成功保存的 UID 保留、失败保存的 byte rollback 和 Preview Fit 配置由 GdUnit 覆盖。完整 Editor 重启后，Main Screen、6 节点/4 edge、Undo/Redo、Save、Assembly Reload、Runtime 与等比 Preview 人工验收均通过；随后完整门禁为 Core 31、Application 13、Unity Oracle 9、GdUnit 6，headless Editor 日志干净。
 
 Phase 4 执行前项目级 MCP Profile 已从 `phase3-observe` 切换到 `content-authoring`，统一入口确认 pinned Attach 与 23 个白名单工具；写入前均确认 live Editor session 为 0，因此 Unity AssetDatabase export 通过后台 Unity batchmode，Godot 生成/导入/双 renderer/截图均通过 console/headless 完成，没有用前台 UI 自动化替代人工验收。Unit 方向/Reset/山羊身体 shader/1600×900 等比窗口及 Sprite pivot/Shadow PPU/Transform 修复后，Gallery 又把旧贴图中心排版修正为独立 `ground-baseline-v1` 脚底/尸体落点布局；自动门禁为 Core 35、Application 19、Unity Oracle 11、迁移 Python 86、GdUnit 11、Agent policy 8、OKF 14，Release 不含测试依赖；batch 继续保持 `Generated/UnityOwned + manual_visual_qa_pending`。
+
+Phase 5A 在不重启 GUI Editor 的情况下完成：冻结的 14 Buff/3 Consumable/12 Equipment draft 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment Resource，`buff.poison` 只引用既有 Poison Spear Resource；分批 Catalog 为 29 项，canonical Catalog 合并为 47 个唯一 ContentId。ResourceSaver 两轮对 30 个 artifact byte-identical，独立 Editor scan 固化 UID；Compatibility 与 Forward+ 均运行 typed Catalog/Status/Consumable/Equipment smoke，GdUnit 覆盖外部 Poison ownership、audit-only icon、typed resource 和全局 UID 唯一性。该批不含 PNG、Material、Shader 或第三方 payload，因此达到 `Validated/UnityOwned + not_applicable_no_visual_payload`，不会改变仍待人工验收的 Phase 4 状态。
 
 ## Navigation
 

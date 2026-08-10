@@ -1,6 +1,6 @@
 # Tactics Unity → Godot 迁移设计
 
-状态：设计已确认；`d092a955` 是技术 Spike。当前真实 Poison Spear Lv1 已达到 `Validated/UnityOwned`，Revision/typed ChangeSet/Undo/保存回滚、自动等价性门禁以及 canonical Editor 中的 Graph/Undo/Reload/Runtime/等比 Preview 人工验收均已收口。Unity authoring 坐标由 DTO 一次迁移到最终 Godot Resource，后续位置拖动、自动布局、保存和 Reload 均由 Godot typed ChangeSet 管理。当前 VFX 是已通过人工验收、且不复制未确认 Piloto 资产的项目自有程序化占位；该结论不代表 Unity Piloto 粒子视觉等价，也不把 Skill/Presentation 整类切换为 `GodotOwned`。
+状态：设计已确认；`d092a955` 是技术 Spike。当前真实 Poison Spear Lv1 与无视觉载荷的 Phase 5A Buff/Item batch 已达到 `Validated/UnityOwned`；Phase 4 Unit 自动门禁完成但仍保持 `Generated/UnityOwned + manual_visual_qa_pending`。Poison Spear 的 Revision/typed ChangeSet/Undo/保存回滚、自动等价性门禁以及 canonical Editor 中的 Graph/Undo/Reload/Runtime/等比 Preview 人工验收均已收口。Unity authoring 坐标由 DTO 一次迁移到最终 Godot Resource，后续位置拖动、自动布局、保存和 Reload 均由 Godot typed ChangeSet 管理。当前 VFX 是已通过人工验收、且不复制未确认 Piloto 资产的项目自有程序化占位；该结论不代表 Unity Piloto 粒子视觉等价，也不把 Skill/Presentation 整类切换为 `GodotOwned`。
 
 日期：2026-08-07
 
@@ -254,6 +254,8 @@ Unity 测试在最终切换前继续保留；不为保持 Godot 工程整洁而�
 当前轮先攻以 `InitiativeRoundState` 表达不可变 partition：当前单位与已行动集合保持稳定，只有 remaining 在 Initiative 变化后重新排序；`BattleState.WithInitiativeChanged` 是 Slow/cleanse 等 initiative 变化接入这一合同的显式入口。`StatusRuntimeService` 捕获不可变状态参数，以 ContentId 顺序执行 Poison/Burning tick，按冻结规则覆盖 refresh strategy，并将 Mark、伤害倍率、Counter、Ice Armor retaliation 与 Fear 输出为强类型 policy，不提前依赖尚未迁移的 Skill/AI。Consumable 只处理存活的自身/相邻友军、charge 与每轮成功使用记录；Equipment 先验证唯一 slot、投影六项属性，再复用 `unity-unit-derived-v1`。冻结 Unity 不存在统一不可变 Command/Event 边界，且随机源混用全局/非确定 RNG，因此 `battle-transition-v3` 明确定性为版本化迁移合同，`splitmix64-v1` 明确定性为确定性替代合同；不得把二者宣传为逐语句 Unity parity。
 
 真实内容源管线使用 Unity Editor-only AssetDatabase exporter，不解析 YAML。Poison Spear Lv1 的 7 个根资产已通过 `unity-assetdatabase-v1` 导出 GUID、LocalFileId、最终 Tag blob、dependency hash、对象层级、字段和引用，补入技术 Spike 漏掉的 Poison Buff；两次 DTO byte-identical。临时 DTO 经 Application diagnostics 后只作为 ResourceSaver 的一次性输入，现已生成 Poison、Skill、Presentation、10×10 fixture、Projectile/Impact PackedScene 与 Catalog。目标语义显式序列化，UID、hash、人工修改保护、回滚和 byte idempotency 受测；项目自有程序化 Projectile/Impact 已通过人工视觉验收，因此 real batch 晋升为 `Validated/UnityOwned`。Piloto 纹理、材质、Prefab 或派生视觉 payload 仍需独立的购买/EULA 证据和重新验收，当前晋升不覆盖它们，也不改变类别所有权。
+
+Phase 5A `pure-run-buffs-items-v1` 继续复用同一源管线：14 个 Buff 由固定 Unity AssetDatabase exporter 冻结，3 个 Consumable 与 12 个 Equipment 绑定最终 Tag JSON；typed draft 保留 `SourceId`，并将 `buff.poison` 声明为 `poison-spear-lv1-real` 的唯一外部内容依赖。ResourceSaver 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment 和 29 项分批 Catalog，再将 Poison 6 项、Unit 13 项与本批内容去重合成为 47 个唯一 `ContentId` 的 canonical Catalog。30 个 ledger artifact、UID、目标/语义 hash 和两次 byte-identical 生成均受测；Compatibility 与 Forward+ 使用同一 typed runtime validator。三个 Buff 图标只保存路径、GUID、LocalFileId 与 dependency hash，没有复制 PNG、Unity Material/Shader 或第三方 payload，因此本批以 `visualAcceptance=not_applicable_no_visual_payload` 晋升为 `Validated/UnityOwned`，不会替代 Phase 4 Unit 的人工视觉闸门。
 
 每批次必须通过：
 

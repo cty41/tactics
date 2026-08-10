@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://cuny5a2atywxk"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_pj5pt"]
+
+[resource]
+script = ExtResource("1_pj5pt")
+ContentIdValue = "item.equipment.bow-01"
+SourceId = "bow_01"
+DisplayName = "短弓"
+SlotValue = "Weapon"
+RarityValue = "Common"
+Price = 10
+StrengthBonus = 1
+AgilityBonus = 4
