@@ -33,5 +33,6 @@
     <Compile Include="../../Assets/Tactics/Scripts/Common/Battle/Runtime/IBattleRuntimeScope.cs" Link="FrozenUnity/Runtime/IBattleRuntimeScope.cs" />
     <Compile Include="../../Assets/Tactics/Scripts/Common/Battle/Runtime/BattleRuntimeScope.cs" Link="FrozenUnity/Runtime/BattleRuntimeScope.cs" />
     <Compile Include="../../Assets/Tactics/Scripts/Common/Skills/Graph/PresentationExecutionPlan.cs" Link="FrozenUnity/Presentation/PresentationExecutionPlan.cs" />
+    <Compile Include="../../Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs" Link="FrozenUnity/Units/UnitDerivedStatRules.cs" />
   </ItemGroup>
 </Project>

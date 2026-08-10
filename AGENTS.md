@@ -14,6 +14,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | Godot 迁移验证边界 | 迁移阶段不执行 Unity Windows Standalone，使用 Editor/PlayMode/OKF 证据（详见 `.agents/rules/godot-migration.md`） |
 | Godot 项目唯一且研究先行 | 只使用 `godot/project.godot`；未知引擎行为先研究、复现和分级取证（详见 `.agents/rules/godot-agent-workflow.md`） |
 | Godot MCP 项目隔离 | godot-ai 只允许由迁移 worktree 的本地 `.codex/config.toml` Attach，并按阶段白名单启用工具（详见 `.agents/rules/godot-agent-workflow.md`） |
+| Godot Editor 自动生命周期 | 已授权 Godot 修改任务需要 session=0 时使用 `godot-editor-lifecycle` 正常关闭并恢复；不强杀、不打开原本关闭的 Editor |
 | `.cs` 修改后必须编译 | 调用 `refresh_unity` |
 | 写 C# 代码前必须验证 | 遵循 `rules/unity-code-generation.md` 工作流 |
 | git commit 前必须检查 | 加载 `unity-git-commit` skill |

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/AGENTS.md
 title: Unity Agent Workflow
 description: Agent修改代码、Unity资产、UI、文档和提交时的项目级安全工作流。
 tags: [operations, unity, agents, validation]
-timestamp: "2026-08-09T19:24:07+08:00"
+timestamp: "2026-08-10T21:51:55+08:00"
 status: active
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -29,7 +29,7 @@ repo_paths:
   - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
   - Tools/unity-mcp
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:4f1a779daf7de034106a25a2beadac13a46493f3b55e67b31d85df68354d1b8d
+source_fingerprint: sha256:08841dca2fc848b1046fdd8f0357eead75a492e9c5cb16d3b27d682cf7b1fa84
 ---
 
 # Core Rules
@@ -41,7 +41,7 @@ source_fingerprint: sha256:4f1a779daf7de034106a25a2beadac13a46493f3b55e67b31d85d
 - Agent 默认复用用户当前指定的 worktree；除非活跃计划或用户明确要求，不创建、删除或切换 worktree。Unity 项目导入和启动成本高，不能以“隔离方便”“并行”或“改动较大”为理由自动打开第二份项目；冻结 worktree 只有在用户明确授权修复时才可临时写入。完整约束见 `.agents/rules/agent-worktree.md`。
 - Unity → Godot 迁移阶段不执行 Unity Windows Standalone，Unity Player Smoke 不属于迁移门禁；迁移证据使用 Editor 编译、定向 EditMode/PlayMode、固定探针人工验证、OKF 和依赖审计。具体边界见 `.agents/rules/godot-migration.md`，Godot 最终发布验收另行决定。
 - `w1` 与 `unity-final-2026-08-08` 现在是只读 Oracle；迁移 worktree 的 Unity 工程只允许作为 AssetDatabase 导出宿主。Godot/Core/Application 变更改走独立的 [Godot Agent Workflow](godot-agent-workflow.md)，不要求 `refresh_unity`，也不得反向演化冻结 Unity 玩法。
-- 所有桌面前台交互默认禁止；Computer Use、窗口激活、真实鼠标键盘和快捷键只有在当前任务明确要求、Agent 说明焦点影响且用户对本次动作确认后才允许。普通实现、截图、视觉 QA、编译、测试、构建和连接恢复不构成前台控制授权；后台无法提供证据时标记 `manual_visual_qa_pending`。完整定义见[前台交互与焦点保护规则](https://github.com/cty41/tactics/blob/main/.agents/rules/foreground-interaction.md)。
+- 所有桌面前台交互默认禁止；Computer Use、窗口激活、真实鼠标键盘和快捷键只有在当前任务明确要求、Agent 说明焦点影响且用户对本次动作确认后才允许。普通实现、截图、视觉 QA、编译、测试、构建和连接恢复不构成前台控制授权；后台无法提供证据时标记 `manual_visual_qa_pending`。canonical Godot 的 `godot-editor-lifecycle` 仅是精确 PID 正常关闭/恢复例外，不授权 Unity 窗口生命周期、焦点或输入操作。完整定义见[前台交互与焦点保护规则](https://github.com/cty41/tactics/blob/main/.agents/rules/foreground-interaction.md)。
 - Unity 编译、测试、构建和截图必须通过 MCP 调用，交互验证优先使用 PlayMode 自动测试与 Input System 虚拟设备。MCP bridge 不可用时只做端点、进程和日志等只读诊断，不能以干扰前台工作的方式绕过连接问题。
 - 新增、删除或移动 Unity 文件时保持 `.meta` 配对。
 - Unity MCP 的端口从 worktree 本地且忽略的 `.agents/mcp.json` 读取；Initialize/Prepare/Restore/Sync 共用 tracked `FileShare.None` lock anchor。同步在首个写操作前以 Windows PowerShell 5.1 strict UTF-8/JSON 和有限 TOML allowlist 校验 source、模板及受管字段，`--check` 不创建、清理或改写文件；caught write/delete failure 恢复原字节与存在性。OpenCode/MiMoCode 的无关本地字段与 JSON number lexeme 保留，one-shot migration backup 同时保存完整本地 JSON；tracked 模板不含凭据，MiMoCode timeout 固定为 300000 毫秒。首次操作先执行同步检查并核验当前 worktree。`UnityMcpProjectBootstrap` 当前只做 batch/import-worker guard，普通 Editor 路径显式 no-op；项目层不读配置、不写 package preference/endpoint、不注册 callback，也不 start/stop/connect/verify/retry。MCP lifecycle 由 package 或用户显式操作负责。

@@ -12,6 +12,7 @@ using Tactics.Core.Units;
 using CoreRuntimeScope = Tactics.Core.Runtime.BattleRuntimeScope;
 using FrozenPresentation = Tactics.Common.Skills.Graph;
 using FrozenRuntimeScope = Tactics.Common.Battle.Runtime.BattleRuntimeScope;
+using FrozenUnitDerivedStatRules = Tactics.Common.Units.UnitDerivedStatRules;
 
 namespace Tactics.UnityOracle.Tests;
 
@@ -24,6 +25,9 @@ namespace Tactics.UnityOracle.Tests;
 /// </remarks>
 public sealed class FrozenUnitySourceTests
 {
+    private const string ExpectedGoatBodyTintShaderBlob =
+        "d4da8e21404ac1b5d134b0f1455f36839900e7c2";
+
     private static readonly IReadOnlyDictionary<string, string> ExpectedBlobIds =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
@@ -41,7 +45,13 @@ public sealed class FrozenUnitySourceTests
             ["Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs"] = "84d04546bda0ab8121439a2285fa5065be642cc2",
             ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs"] = "31a2739f51ab47c1a24e41240083db6dfbcb9053",
             ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs"] = "bc93aee09577d3bd9e1dda94c062c5c006383d61",
-            ["Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs"] = "54a463c642c59d1550c0454a9388c3f68c7e89b1"
+            ["Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs"] = "54a463c642c59d1550c0454a9388c3f68c7e89b1",
+            ["Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs"] = "4f0d131a1f809c920f01cf137087dc0dc63d312a",
+            ["Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs"] = "8a3a14a1392bb57562fb6ae286eb79508ce6fe75",
+            ["Assets/Tactics/Scripts/Common/Units/Unit.cs"] = "5a9776a61dd698b439dd19845a5979bce73d419a",
+            ["Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs"] = "4da3c885cfd9df5ed4128f8ef446815e760a2b0a",
+            ["Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs"] = "9528f7c17f3a782b16c4ceaa9b6b97e25893acfb",
+            ["Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs"] = "850f23e53869c04c8ff28adbd85c1d4f12da9bae"
         };
 
     [Test]
@@ -93,6 +103,124 @@ public sealed class FrozenUnitySourceTests
             Assert.That(ability, Does.Contain("_owner.Mana -= _config.ManaCost"));
             Assert.That(ability, Does.Contain("FindDropCell(_owner, cell, 3)"));
         });
+    }
+
+    [Test]
+    public void UnitDerivedStats_FrozenFormulaAndSourceSemanticsMatchGolden()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string characterDefinition = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs");
+        string playerState = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs");
+        string unit = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Units/Unit.cs");
+        string encounter = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs");
+        using JsonDocument golden = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Tests", "golden", "unit-batch-v1.json")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(characterDefinition, Does.Contain("MaxHp => System.Math.Max(1, Constitution * 4)"));
+            Assert.That(characterDefinition, Does.Contain("MaxMp => System.Math.Max(0, Charisma * 3)"));
+            Assert.That(playerState, Does.Contain("CreatePureRunCharacter(\"pure_run_mage\""));
+            Assert.That(playerState, Does.Contain("CreatePureRunCharacter(\"pure_run_necromancer\""));
+            Assert.That(playerState, Does.Contain("CreatePureRunCharacter(\"pure_run_amazon\""));
+            Assert.That(unit, Does.Contain("MaxHealth = Mathf.Max(1, Constitution * 4)"));
+            Assert.That(unit, Does.Contain("MaxMana = Mathf.Max(0, Charisma * 3)"));
+            Assert.That(unit, Does.Contain("Initiative = Speed * 2"));
+            Assert.That(encounter, Does.Contain("PureRunGoatElitePoisonCaster.prefab"));
+        });
+
+        foreach (JsonElement formulaCase in golden.RootElement.GetProperty("formulaCases").EnumerateArray())
+        {
+            float speed = formulaCase.GetProperty("speed").GetSingle();
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    FrozenUnitDerivedStatRules.CalculateMovement(speed),
+                    Is.EqualTo(formulaCase.GetProperty("moveRange").GetSingle()),
+                    $"speed={speed}");
+                Assert.That(
+                    speed * 2f,
+                    Is.EqualTo(formulaCase.GetProperty("initiative").GetSingle()),
+                    $"speed={speed}");
+            });
+        }
+
+        foreach (JsonElement definition in golden.RootElement.GetProperty("units").EnumerateArray())
+        {
+            JsonElement attributes = definition.GetProperty("attributes");
+            JsonElement derived = definition.GetProperty("derived");
+            float speed = definition.GetProperty("speed").GetSingle();
+            string contentId = definition.GetProperty("contentId").GetString()!;
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    derived.GetProperty("maxHealth").GetInt32(),
+                    Is.EqualTo(Math.Max(1, attributes.GetProperty("constitution").GetInt32() * 4)),
+                    contentId);
+                Assert.That(
+                    derived.GetProperty("maxMana").GetInt32(),
+                    Is.EqualTo(Math.Max(0, attributes.GetProperty("charisma").GetInt32() * 3)),
+                    contentId);
+                Assert.That(
+                    derived.GetProperty("startingMana").GetInt32(),
+                    Is.EqualTo(attributes.GetProperty("charisma").GetInt32()),
+                    contentId);
+                Assert.That(
+                    derived.GetProperty("moveRange").GetSingle(),
+                    Is.EqualTo(FrozenUnitDerivedStatRules.CalculateMovement(speed)),
+                    contentId);
+                Assert.That(derived.GetProperty("initiative").GetSingle(), Is.EqualTo(speed * 2f), contentId);
+            });
+        }
+    }
+
+    [Test]
+    public void UnitPresentation_FrozenDirectionAndGoatTintContractsMatchGolden()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string directionSource = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs").ReplaceLineEndings("\n");
+        string shaderSource = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Arts/PureRun/Shaders/GoatBodyTint.shader");
+        using JsonDocument golden = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Tests", "golden", "unit-batch-v1.json")));
+        JsonElement tintContract = golden.RootElement.GetProperty("tintContract");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(directionSource, Does.Contain(
+                "case FacingDirection.East:\n                    // Unity's isometric +X axis points up-right on screen.\n                    targetRenderer.sprite = upLeft;\n                    targetRenderer.flipX = true;"));
+            Assert.That(directionSource, Does.Contain(
+                "case FacingDirection.West:\n                    targetRenderer.sprite = downRight;\n                    targetRenderer.flipX = true;"));
+            Assert.That(directionSource, Does.Contain(
+                "case FacingDirection.North:\n                    targetRenderer.sprite = upLeft;\n                    targetRenderer.flipX = false;"));
+            Assert.That(directionSource, Does.Contain(
+                "case FacingDirection.South:\n                    targetRenderer.sprite = downRight;\n                    targetRenderer.flipX = false;"));
+            Assert.That(shaderSource, Does.Contain(
+                "return 1.0h - smoothstep(0.10h, 0.28h, sourceDistance);"));
+            Assert.That(shaderSource, Does.Contain(
+                "half3 recoloredBody = _BodyTint.rgb * (sourceLuminance / baseLuminance);"));
+            Assert.That(shaderSource, Does.Contain(
+                "half3 finalRgb = lerp(source.rgb, recoloredBody, mask);"));
+            Assert.That(tintContract.GetProperty("unityShaderGitBlobSha1").GetString(),
+                Is.EqualTo(ExpectedGoatBodyTintShaderBlob));
+            Assert.That(tintContract.GetProperty("maskSmoothstep").EnumerateArray()
+                .Select(item => item.GetSingle()), Is.EqualTo(new[] { 0.10f, 0.28f }));
+            Assert.That(tintContract.GetProperty("luminanceWeights").EnumerateArray()
+                .Select(item => item.GetSingle()), Is.EqualTo(new[] { 0.299f, 0.587f, 0.114f }));
+        });
+
+        JsonElement[] units = golden.RootElement.GetProperty("units").EnumerateArray().ToArray();
+        Assert.That(units.Where(unit => unit.GetProperty("familyId").GetString() == "goat")
+            .All(unit => unit.GetProperty("visual").GetProperty("tintMode").GetString() ==
+                "goat-body-mask-v1"), Is.True);
+        Assert.That(units.Where(unit => unit.GetProperty("familyId").GetString() != "goat")
+            .All(unit => unit.GetProperty("visual").GetProperty("tintMode").GetString() ==
+                "multiply"), Is.True);
     }
 
     [Test]

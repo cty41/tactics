@@ -4,20 +4,21 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-09T20:37:27+08:00"
+timestamp: "2026-08-10T21:58:29+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
   - AGENTS.md
   - .agents/rules/godot-agent-workflow.md
   - .agents/skills/godot-workflow
+  - .agents/skills/godot-editor-lifecycle
   - .agents/incidents/godot
   - Tools/migration/Verify-GodotMigration.ps1
   - Tools/migration/Sync-GodotAiCodexConfig.ps1
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:de15f3e15f4154beee89dad04ef3a464a7a1e495bc9cbe1dd52da14cb398774f
+source_fingerprint: sha256:3865baa09721e42b26b6fb001e1c97bf8033d2e43cd29e8f115dc1a1929c06c4
 ---
 
 # Current state
@@ -34,12 +35,15 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - godot-ai 固定 v3.1.2，只做通用 Editor/MCP 操作，不是 Runtime、Core、Application 或资产真相源。
 - Codex godot-ai 采用项目级 Attach：本机忽略的 `.codex/config.toml` 优先于用户配置，用户级 godot-ai 表只允许作为 Godot Configure 的一次性输入。`Sync-GodotAiCodexConfig.ps1` 验证 `pythonw.exe` 无窗口 bootstrap、v3.1.2、8000/9500，并按 `phase3-observe → content-authoring → ui-input → presentation` 累积白名单生成配置。
 - `script_create/script_attach/script_patch`、`filesystem_manage`、`client_manage` 与 `autoload_manage` 始终禁用；写操作前必须用 Session/Editor 状态确认唯一 canonical 项目。
+- `godot-editor-lifecycle` 可在已授权 Godot 修改任务需要 session `0` 时自动挂起并恢复唯一 canonical Editor：只使用精确 PID 的正常窗口关闭与 pinned GUI executable，不强杀、不注入输入、不打开原本关闭的 Editor。
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。人工 Editor Reload、Undo/Redo 和视觉验收仍按迁移计划单独记录。
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后无条件验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。人工 Editor Reload、Undo/Redo 和视觉验收仍按迁移计划单独记录。
+
+Editor lifecycle Skill 的 PowerShell 内核另由迁移 Python 测试验证 canonical path、精确 PID、dry-run 和禁用强杀；真实可见 close/reopen smoke 只在用户允许窗口出现后执行，并以新 MCP session/path/version/plugin/readiness 和日志为验收。
 
 若本机 `.codex/config.toml` 已存在，统一入口会先运行项目 MCP 配置检查；CI 或尚未执行首次 Configure 的机器明确跳过该本机接入检查。配置脚本的 Python unittest 独立覆盖首次迁入、重复 no-op、无关用户配置字节保持、Profile 累积、永久禁用、版本/端口/launcher/双配置漂移拒绝、事务回滚与 PowerShell 默认项目根解析。
 
@@ -64,6 +68,8 @@ Phase 3 人工闸门前统一验证通过：Core NUnit 31、Application NUnit 10
 Phase 3 Editor authoring 可用性修复后再次通过统一门禁：Core 31、Application 13、Unity Oracle 9、迁移 Python 44、Agent policy 8、GdUnit 5、OKF 14；真实坐标、Revision/position ChangeSet、ResourceSaver 双生成、UID scan、Release 隔离、两个 renderer、Runtime/Tween/Scope 和 EditorPlugin headless 生命周期均通过。人工 Graph drag/Undo、Split Preview、Save 与 Assembly Reload 仍必须在 canonical Editor 验收。
 
 Tactics Tooling 随后从 Bottom `EditorDock` 迁为官方 Main Screen Plugin，在中央工作区通过 `Tactics Tooling` 入口切换；内部 Graph/SubViewport 改为 64/36 左右分栏。首次热重载暴露了 live tool 字段从 `VSplitContainer` 直接改为 `HSplitContainer` 时的 `RestoreGodotObjectData` 类型恢复错误，字段收敛为共同 `SplitContainer` 基类后，后续 Build/Reload 无新增错误。横向初始比例使用 child stretch ratio，而不是在 dragger 初始化前调用 `ClampSplitOffset`；Preview 使用居中的 `AspectRatioContainer(Fit)` 保持 `640:180`，避免 SubViewport 随右侧面板非等比压缩。Graph 的 `SaveWithRollback` 在 `ResourceSaver.Save` 后恢复原 Resource UID，避免语义 revision 正确但迁移 ledger target hash 漂移；成功保存的 UID 保留、失败保存的 byte rollback 和 Preview Fit 配置由 GdUnit 覆盖。完整 Editor 重启后，Main Screen、6 节点/4 edge、Undo/Redo、Save、Assembly Reload、Runtime 与等比 Preview 人工验收均通过；随后完整门禁为 Core 31、Application 13、Unity Oracle 9、GdUnit 6，headless Editor 日志干净。
+
+Phase 4 执行前项目级 MCP Profile 已从 `phase3-observe` 切换到 `content-authoring`，统一入口确认 pinned Attach 与 23 个白名单工具；写入前均确认 live Editor session 为 0，因此 Unity AssetDatabase export 通过后台 Unity batchmode，Godot 生成/导入/双 renderer/截图均通过 console/headless 完成，没有用前台 UI 自动化替代人工验收。Unit 方向/Reset/山羊身体 shader/1600×900 等比窗口及 Sprite pivot/Shadow PPU/Transform 修复后，Gallery 又把旧贴图中心排版修正为独立 `ground-baseline-v1` 脚底/尸体落点布局；自动门禁为 Core 35、Application 19、Unity Oracle 11、迁移 Python 86、GdUnit 11、Agent policy 8、OKF 14，Release 不含测试依赖；batch 继续保持 `Generated/UnityOwned + manual_visual_qa_pending`。
 
 ## Navigation
 

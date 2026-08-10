@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-09T22:03:25+08:00"
+timestamp: "2026-08-10T21:52:00+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -17,8 +17,9 @@ repo_paths:
   - Tests/golden
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
+  - .agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md
 verified_revision: d092a955
-source_fingerprint: sha256:859fc54bb74c6c4f0789901d0eab5af818720f34b6b4bb8bd0d75d4a5d179846
+source_fingerprint: sha256:7452844dcb6ecae999e919ceb2a983efcd29a49bcb03fcb323caf692aedce8c5
 ---
 
 # Current state
@@ -47,14 +48,18 @@ Phase 3 Editor authoring 坐标由 Unity AssetDatabase DTO 一次迁入最终 Go
 
 状态晋升后的 Phase 3 closure 统一门禁通过：Core NUnit 31、Application NUnit 13、冻结 Unity Oracle 9、迁移 Python 58、Agent policy 8、GdUnit 6、OKF 14；ResourceSaver 连续两次生成 byte-identical，真实两行坐标进入 Resource，Compatibility/Forward+、Runtime/Tween/Scope、Release 测试依赖隔离和 EditorPlugin headless enter/exit 均通过。real batch 已晋升为 `Validated/UnityOwned`；该状态只覆盖当前项目自有程序化占位，不得把 Presentation/Skill 整类直接切换为 GodotOwned。
 
+Phase 4 Unit 自动实施已完成但仍等待人工视觉闸门：冻结 Golden 与 Unity AssetDatabase export 覆盖 12 个 Pure Run Unit、12 个 Prefab audit root、19 个项目自有 PNG payload 和 6 个只审计 Material root；29 个运行时依赖继续 deferred，第三方与 Unity Material/Shader payload 未复制。项目自有 `GoatBodyTint` 算法等价移植为共享 Godot CanvasItem shader，每只山羊 Resource 保存独立 BodyTint/BaseBodyColor 参数；普通单位继续使用 multiply。Core/Application 新增 engine-neutral Unit Definition、派生数值规则和编译器，运行时实例继续使用独立 `UnitInstanceId`。事务管线先复制 19 个 PNG，再由 ResourceSaver 生成 12 个 Unit Resource、共享 Unit Actor、精确 13 项 Catalog、4×3 Gallery 与可视 10×10 SpawnFixture，共 16 个 ledger artifact。方向契约为 South=DR、North=UL、East=UL+Body 水平镜像、West=DR+Body 水平镜像；死亡图不继承镜像，Shadow 永不镜像，召唤物缺少死亡图时安全回退。`unity-unit-sprite-geometry-v1` 另行冻结 living pivot `(0.5,0.078125)`、death pivot `(0.5,0.5)`、Body/Shadow 128/64 PPU 和 Shadow `localY=-0.03`、scale `0.8`、alpha `0.9`；Godot Resource 显式保存 Body offsets `(0,-108)/(0,0)` 与 Shadow offset `(0,3.84)`、scale `1.6`、alpha `0.9`。Gallery 另用 `ground-baseline-v1`，Actor 根节点统一表示脚底/尸体落点，三行 Y 为 `155/385/615`，标签独立放置，避免 pivot 修复后把旧贴图中心布局解释为地面而导致整批上移。Gallery 初始与 `R` 均为全 South/存活/tint 开启，`T` 仅切换六种山羊身体 shader；Gallery/Fixture 使用可辨阴影的中性灰蓝底，1280×720 逻辑画布使用 1600×900 F6 override 与 `canvas_items + keep`。当前 batch 与 generation receipt 为 `Generated/UnityOwned`，`visualAcceptance=manual_visual_qa_pending`；只有用户完成 Gallery/Spawn/Reload 人验后才能晋升为 `Validated/UnityOwned`。
+
+Phase 4 二次视觉修复后自动门禁通过：Core 35、Application 19、冻结 Unity Oracle 11、迁移 Python 86、Agent policy 8、GdUnit 11、OKF 14；Debug/Release 零警告零错误，Unity export 两次独立运行、PNG 事务复制和 ResourceSaver 连续两次生成均 byte-identical，headless Editor UID/import 扫描、Compatibility/Forward+ Catalog/Factory/Fixture 运行和程序化 Gallery/10×10 Spawn 截图均通过。程序化截图由 Godot Image 使用已导入纹理、`goat-body-mask-v1` CPU 参考和 Sprite pivot/Shadow 几何换算确定性合成；共享 goat 图像在缩放前复制，避免后续实例逐个缩小，并有源纹理尺寸不变测试。截图只证明资源组合、位置与可检查性，不替代用户对 tint、体量、朝向、死亡图与 Shadow 的视觉接受。
+
 ## Verification model
 
 `Tools/migration/Verify-GodotMigration.ps1` 串行执行 locked restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、隔离的 GdUnit test host、Release build、Godot runtime/editor headless 与 OKF。GdUnit 3.1.1 的 Runtime Runner 要求 C# runner 位于 `project.godot` 主程序集，因此 test host 使用相同程序集名，但测试源码、`obj`、lock 和包与生产 csproj 分离；Release 明确排除。
 
 ## Next gates
 
-1. 为 Unit 批次编制详细范围、依赖、Oracle、转换器、台账和人工验收清单；
-2. 将项目 MCP Profile 从 `phase3-observe` 切换为 `content-authoring`，再开始 Unit 批量迁移；
-3. 后续按 Buff/Item → Skill → AI/Encounter → Run/Persistence → UI/Input → Presentation 批量迁移；Skill/Presentation 整类仍保持 `UnityOwned`，未来迁移真实 Piloto 第三方视觉前必须补齐购买/EULA 证据并重新验收。
+1. 当前活跃的 Phase 4 Unit 计划 `.agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md` 以 checkpoint `2ef51954` 为基线；自动实施和统一门禁已经完成，下一步只做 canonical Editor 中的 Gallery/方向/死亡/Shadow/Reload 人工验收，未通过前不关闭计划。
+2. 项目 MCP Profile 已切换为 `content-authoring` 并由统一入口校验 23 个阶段白名单工具；本轮没有可用 live Editor session，所有实现与自动 QA 均在后台/无窗口完成。人工视觉、Assembly Reload 和组合场景接受仍留给用户，不使用前台 UI 自动化。
+3. Buff/Item、Skill、AI/Encounter、Run/Persistence、UI/Input 与完整 Presentation/VFX/Audio 均不进入 Phase 4；Unit batch 完成人验后保持 `Validated/UnityOwned`，不会自动开始下一批或晋升类别 ownership。
 
 Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行，Godot Windows Release/PCK Smoke 延后到发布阶段。

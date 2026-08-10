@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="UnitDefinitionResource" format=3 uid="uid://bqysyhov6sk7s"]
+
+[ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_efo34"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_mage_death.png" id="2_geum4"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_mage.png" id="3_0htet"]
+[ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="4_jf5fr"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_mage_ul.png" id="5_ffidl"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="6_qmiws"]
+
+[resource]
+script = ExtResource("6_qmiws")
+ContentIdValue = "unit.pure-run.mage"
+SourceId = "pure_run_mage"
+DisplayName = "Mage"
+Category = "player"
+FamilyId = "player"
+RoleId = "mage"
+Strength = 5
+Agility = 5
+Constitution = 5
+Intelligence = 6
+Charisma = 5
+Luck = 5
+Speed = 5.0
+MaxHealth = 20
+MaxMana = 15
+StartingMana = 5
+MoveRange = 3
+Initiative = 10.0
+AttackRange = 1
+AttackFactor = 1.0
+DefenceFactor = 1.0
+CanProduceCorpse = true
+ActorContentIdValue = "packed-scene.unit-actor"
+ActorScene = ExtResource("1_efo34")
+DownRightTexture = ExtResource("3_0htet")
+UpLeftTexture = ExtResource("5_ffidl")
+DeathTexture = ExtResource("2_geum4")
+ShadowTexture = ExtResource("4_jf5fr")
+DownRightBodyOffset = Vector2(0, -108)
+UpLeftBodyOffset = Vector2(0, -108)
+ShadowOffset = Vector2(0, 3.84)
+ShadowScale = Vector2(1.6, 1.6)
+ShadowOpacity = 0.9
+DeferredDependencies = PackedStringArray("starting-branch-skill")

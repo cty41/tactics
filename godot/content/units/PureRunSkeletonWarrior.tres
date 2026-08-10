@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="UnitDefinitionResource" format=3 uid="uid://k70sjv3othgm"]
+
+[ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_wqyyb"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_skeleton_warrior.png" id="2_g7pi7"]
+[ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="3_lygfo"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_skeleton_warrior_ul.png" id="4_15jpd"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="5_gagac"]
+
+[resource]
+script = ExtResource("5_gagac")
+ContentIdValue = "unit.pure-run.skeleton-warrior"
+SourceId = "pure_run_skeleton_warrior"
+DisplayName = "Skeleton Warrior"
+Category = "summon"
+FamilyId = "summon"
+RoleId = "skeleton-warrior"
+Strength = 4
+Agility = 4
+Constitution = 2
+Intelligence = 2
+Charisma = 2
+Luck = 2
+Speed = 4.0
+MaxHealth = 8
+MaxMana = 6
+StartingMana = 2
+MoveRange = 2
+Initiative = 8.0
+AttackRange = 1
+AttackFactor = 1.0
+ActorContentIdValue = "packed-scene.unit-actor"
+ActorScene = ExtResource("1_wqyyb")
+DownRightTexture = ExtResource("2_g7pi7")
+UpLeftTexture = ExtResource("4_15jpd")
+ShadowTexture = ExtResource("3_lygfo")
+DownRightBodyOffset = Vector2(0, -108)
+UpLeftBodyOffset = Vector2(0, -108)
+ShadowOffset = Vector2(0, 3.84)
+ShadowScale = Vector2(1.6, 1.6)
+ShadowOpacity = 0.9
+DeferredDependencies = PackedStringArray("summon-lifecycle")

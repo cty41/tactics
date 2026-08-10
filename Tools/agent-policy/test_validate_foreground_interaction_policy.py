@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from validate_foreground_interaction_policy import (  # noqa: E402
     AGENTS_PATH,
     CATALOG_PATH,
+    GODOT_LIFECYCLE_SKILL_PATH,
     MCP_TROUBLESHOOTING_SKILL_PATH,
     POLICY_PATH,
     PURE_RUN_ARTWORK_SKILL_PATH,
@@ -23,12 +24,17 @@ default-deny
 current-turn-explicit-request
 action-time-confirmation
 manual_visual_qa_pending
+godot-editor-lifecycle
 """
 
 VALID_CONSUMER = "See ../../rules/foreground-interaction.md.\n"
 
 VALID_CATALOG = """version: 1
 scopes:
+  godot-agent-workflow:
+    concept: operations/godot-agent-workflow.md
+    paths:
+      - .agents/skills/godot-editor-lifecycle
   unity-agent-workflow:
     concept: operations/unity-agent-workflow.md
     paths:
@@ -57,6 +63,7 @@ class ForegroundInteractionPolicyTests(unittest.TestCase):
         )
         self.write(root, UNITY_CORE_SKILL_PATH, VALID_CONSUMER)
         self.write(root, MCP_TROUBLESHOOTING_SKILL_PATH, VALID_CONSUMER)
+        self.write(root, GODOT_LIFECYCLE_SKILL_PATH, VALID_CONSUMER)
         self.write(
             root,
             PURE_RUN_ARTWORK_SKILL_PATH,
@@ -104,6 +111,13 @@ class ForegroundInteractionPolicyTests(unittest.TestCase):
             (root / PURE_RUN_ARTWORK_SKILL_PATH).write_text(VALID_CONSUMER, encoding="utf-8")
             errors = validate_policy(root)
             self.assertTrue(any(PURE_RUN_ARTWORK_SKILL_PATH in error and "manual_visual_qa_pending" in error for error in errors))
+
+    def test_godot_lifecycle_skill_without_authority_reference_fails(self) -> None:
+        temporary, root = self.create_repository()
+        with temporary:
+            (root / GODOT_LIFECYCLE_SKILL_PATH).write_text("missing link\n", encoding="utf-8")
+            errors = validate_policy(root)
+            self.assertTrue(any(GODOT_LIFECYCLE_SKILL_PATH in error and "未引用" in error for error in errors))
 
     def test_catalog_without_validator_mapping_fails(self) -> None:
         temporary, root = self.create_repository()

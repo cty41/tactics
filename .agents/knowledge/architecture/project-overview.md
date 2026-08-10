@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
 tags: [architecture, unity, agent-first]
-timestamp: "2026-08-09T19:24:05+08:00"
+timestamp: "2026-08-10T21:52:04+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Assets/Tactics/Arts/UI
   - Assets/Tactics/UIToolkit/TextSettings.asset
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:17d5e30f02792662a57e595639c435dd84a26ef97ad7ca483664420db0c372b7
+source_fingerprint: sha256:bc22d2ca557cdf6f0cf872de8e013afa62348c6a16afe19eb0a6dc72499a7fb0
 ---
 
 # Summary

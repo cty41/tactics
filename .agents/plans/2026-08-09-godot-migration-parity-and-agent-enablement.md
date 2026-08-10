@@ -65,6 +65,8 @@
 
 按 Unit → Buff/Item → Skill → AI/Encounter → Pure Run/Persistence → Scene/UI/Input → Presentation/VFX/Audio 批量迁移；最终完成新开档到继续游戏闭环，并在发布阶段首次执行 Godot Windows Release/PCK Smoke。
 
+- [ ] 当前只执行子计划 [Godot Phase 4：Pure Run Unit 批次迁移](2026-08-10-godot-phase4-unit-batch-migration.md)：完成 12 Unit 的定义、基础视觉、Catalog、Factory、Gallery/Spawn、自动门禁和人工验收；不进入 Buff/Item、Skill、AI/Encounter、Persistence 或后续 Profile。
+
 ## 自动与人工门禁
 
 Agent 自动执行代码、转换器、台账、NUnit/GdUnit/headless、Skill/Incident/OKF 验证；godot-ai 按阶段白名单自动执行 Editor 状态、Resource/Scene 读取、运行、日志、截图和重复结构编辑。Editor Assembly Reload/Undo、Poison Spear SubViewport 和每批次视觉验收暂停等待人工确认。禁止新增 worktree、第二个 Godot 项目和 Unity Windows Standalone。

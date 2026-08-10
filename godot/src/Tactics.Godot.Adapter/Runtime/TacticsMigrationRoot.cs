@@ -1,4 +1,5 @@
 using Godot;
+using Tactics.Core.Battle;
 using Tactics.Core.Runtime;
 
 namespace Tactics.Godot.Adapter.Runtime;
@@ -10,15 +11,41 @@ public partial class TacticsMigrationRoot : Node
 {
     public override void _Ready()
     {
-        if (OS.GetCmdlineArgs().Contains("--validate-poison-spear"))
+        string[] commandLine = OS.GetCmdlineArgs()
+            .Concat(OS.GetCmdlineUserArgs())
+            .ToArray();
+        if (commandLine.Contains("--validate-poison-spear"))
         {
             ValidatePoisonSpear();
             GetTree().Quit();
             return;
         }
-        if (OS.GetCmdlineArgs().Contains("--play-poison-spear"))
+        if (commandLine.Contains("--play-poison-spear"))
         {
             _ = PlayPoisonSpearAsync();
+            return;
+        }
+        if (commandLine.Contains("--validate-units"))
+        {
+            ValidateUnits();
+            GetTree().Quit();
+            return;
+        }
+        if (commandLine.Contains("--play-unit-gallery"))
+        {
+            PlayUnitGallery();
+            return;
+        }
+        if (commandLine.Contains("--capture-unit-gallery"))
+        {
+            CaptureUnitGallery();
+            GetTree().Quit();
+            return;
+        }
+        if (commandLine.Contains("--capture-unit-spawn"))
+        {
+            CaptureUnitSpawnFixture();
+            GetTree().Quit();
             return;
         }
         GD.Print("Tactics Godot migration runtime ready");
@@ -61,5 +88,222 @@ public partial class TacticsMigrationRoot : Node
         }
 
         GetTree().Quit();
+    }
+
+    private static void ValidateUnits()
+    {
+        var catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/units/ContentCatalog.tres")
+            ?? throw new InvalidOperationException("Pure Run Unit ContentCatalog is missing.");
+        UnitBatchValidation validation = UnitBatchValidator.Validate(catalog);
+        var fixtureScene = ResourceLoader.Load<PackedScene>("res://content/units/UnitSpawnFixture.tscn")
+            ?? throw new InvalidOperationException("Pure Run Unit spawn fixture is missing.");
+        Node fixtureInstance = fixtureScene.Instantiate();
+        if (fixtureInstance is not GodotUnitSpawnFixture fixture)
+        {
+            fixtureInstance.Free();
+            throw new InvalidOperationException("Pure Run Unit spawn fixture has the wrong root type.");
+        }
+        IReadOnlyList<BattleUnitState> states = fixture.CreateStates();
+        fixture.Free();
+        var galleryScene = ResourceLoader.Load<PackedScene>("res://content/units/UnitGallery.tscn")
+            ?? throw new InvalidOperationException("Pure Run Unit gallery is missing.");
+        Node galleryInstance = galleryScene.Instantiate();
+        bool validGallery = galleryInstance is GodotUnitGallery;
+        galleryInstance.Free();
+        if (!validGallery || states.Count != 12)
+            throw new InvalidOperationException("Pure Run Unit validation fixtures are incomplete.");
+        GD.Print(
+            $"Pure Run Unit validation OK: entries={validation.CatalogEntryCount}, " +
+            $"units={validation.UnitCount}, states={states.Count}");
+    }
+
+    private void PlayUnitGallery()
+    {
+        var galleryScene = ResourceLoader.Load<PackedScene>("res://content/units/UnitGallery.tscn")
+            ?? throw new InvalidOperationException("Pure Run Unit gallery is missing.");
+        Node gallery = galleryScene.Instantiate();
+        AddChild(gallery);
+        GD.Print("Pure Run Unit gallery ready: units=12");
+    }
+
+    private static void CaptureUnitGallery()
+    {
+        var catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/units/ContentCatalog.tres")
+            ?? throw new InvalidOperationException("Pure Run Unit ContentCatalog is missing.");
+        UnitBatchValidator.Validate(catalog);
+
+        Image canvas = Image.CreateEmpty(1280, 720, false, Image.Format.Rgba8);
+        canvas.Fill(GodotUnitGallery.PreviewBackgroundColor);
+        GodotResourceEntry[] entries = catalog.Entries
+            .Where(entry => entry.ResourceTypeIdValue == "unit")
+            .OrderBy(entry => entry.ContentIdValue, StringComparer.Ordinal)
+            .ToArray();
+        for (int index = 0; index < entries.Length; index++)
+        {
+            if (!catalog.TryGet(entries[index].ContentIdValue, out Resource? loaded) ||
+                loaded is not UnitDefinitionResource definition)
+            {
+                throw new InvalidOperationException(
+                    $"Unit gallery capture cannot load '{entries[index].ContentIdValue}'.");
+            }
+
+            Vector2 groundPosition = GodotUnitGallery.GetActorGroundPosition(index);
+            var center = new Vector2I(
+                Mathf.RoundToInt(groundPosition.X),
+                Mathf.RoundToInt(groundPosition.Y));
+            CompositeUnit(
+                canvas,
+                definition,
+                GodotUnitFacing.South,
+                false,
+                center,
+                GodotUnitGallery.ActorScale);
+        }
+
+        string outputPath = ProjectSettings.GlobalizePath(
+            "res://../Tools/migration/out/pure-run-units-v1-gallery.png");
+        string? outputDirectory = Path.GetDirectoryName(outputPath);
+        if (string.IsNullOrWhiteSpace(outputDirectory))
+            throw new InvalidOperationException("Unit gallery capture path has no parent directory.");
+        Directory.CreateDirectory(outputDirectory);
+
+        Error saveError = canvas.SavePng(outputPath);
+        if (saveError != Error.Ok)
+            throw new InvalidOperationException($"Unit gallery capture failed with Godot error {saveError}.");
+        GD.Print($"Pure Run Unit gallery captured: {outputPath}");
+    }
+
+    private static void CaptureUnitSpawnFixture()
+    {
+        var catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/units/ContentCatalog.tres")
+            ?? throw new InvalidOperationException("Pure Run Unit ContentCatalog is missing.");
+        var fixtureScene = ResourceLoader.Load<PackedScene>("res://content/units/UnitSpawnFixture.tscn")
+            ?? throw new InvalidOperationException("Pure Run Unit spawn fixture is missing.");
+        Node fixtureInstance = fixtureScene.Instantiate();
+        if (fixtureInstance is not GodotUnitSpawnFixture fixture)
+        {
+            fixtureInstance.Free();
+            throw new InvalidOperationException("Pure Run Unit spawn fixture has the wrong root type.");
+        }
+        IReadOnlyList<BattleUnitState> states = fixture.CreateStates();
+        fixture.Free();
+
+        Image canvas = Image.CreateEmpty(1280, 720, false, Image.Format.Rgba8);
+        canvas.Fill(GodotUnitSpawnFixture.PreviewBackgroundColor);
+        const int originX = 320;
+        const int originY = 40;
+        const int cellSize = 64;
+        for (int line = 0; line <= 10; line++)
+        {
+            int offset = line * cellSize;
+            canvas.FillRect(
+                new Rect2I(originX + offset, originY, 1, cellSize * 10 + 1),
+                GodotUnitSpawnFixture.PreviewGridColor);
+            canvas.FillRect(
+                new Rect2I(originX, originY + offset, cellSize * 10 + 1, 1),
+                GodotUnitSpawnFixture.PreviewGridColor);
+        }
+
+        foreach ((BattleUnitState state, int index) in states.Select((state, index) => (state, index)))
+        {
+            if (!catalog.TryGet(state.Unit.DefinitionId.Value, out Resource? loaded) ||
+                loaded is not UnitDefinitionResource definition)
+            {
+                throw new InvalidOperationException(
+                    $"Unit spawn capture cannot load '{state.Unit.DefinitionId.Value}'.");
+            }
+            var center = new Vector2I(
+                originX + state.Unit.Position.X * cellSize + cellSize / 2,
+                originY + state.Unit.Position.Y * cellSize + cellSize / 2);
+            CompositeUnit(
+                canvas,
+                definition,
+                (GodotUnitFacing)(index % 4),
+                false,
+                center,
+                0.3f);
+        }
+
+        string outputPath = ProjectSettings.GlobalizePath(
+            "res://../Tools/migration/out/pure-run-units-v1-spawn.png");
+        string? outputDirectory = Path.GetDirectoryName(outputPath);
+        if (string.IsNullOrWhiteSpace(outputDirectory))
+            throw new InvalidOperationException("Unit spawn capture path has no parent directory.");
+        Directory.CreateDirectory(outputDirectory);
+        Error saveError = canvas.SavePng(outputPath);
+        if (saveError != Error.Ok)
+            throw new InvalidOperationException($"Unit spawn capture failed with Godot error {saveError}.");
+        GD.Print($"Pure Run Unit spawn fixture captured: {outputPath}");
+    }
+
+    private static void CompositeUnit(
+        Image canvas,
+        UnitDefinitionResource definition,
+        GodotUnitFacing facing,
+        bool showDeath,
+        Vector2I center,
+        float scale)
+    {
+        bool usesUpLeft = facing is GodotUnitFacing.North or GodotUnitFacing.East;
+        Texture2D bodyTexture = showDeath
+            ? definition.DeathTexture!
+            : usesUpLeft
+                ? definition.UpLeftTexture!
+                : definition.DownRightTexture!;
+        Image body = GodotUnitTintReference.CopyTextureImage(bodyTexture);
+        if (!showDeath && (facing == GodotUnitFacing.East || facing == GodotUnitFacing.West))
+            body.FlipX();
+        ResizeForCapture(body, scale);
+        GodotUnitTintReference.Apply(
+            body,
+            definition.BodyTintModeValue,
+            definition.BodyTint,
+            definition.BaseBodyColor);
+
+        Image shadow = GodotUnitTintReference.CopyTextureImage(definition.ShadowTexture!);
+        ApplyOpacity(shadow, definition.ShadowOpacity);
+        ResizeForCapture(shadow, scale * definition.ShadowScale.X);
+        var shadowCenter = center + new Vector2I(
+            Mathf.RoundToInt(definition.ShadowOffset.X * scale),
+            Mathf.RoundToInt(definition.ShadowOffset.Y * scale));
+        Vector2 bodyOffset = showDeath
+            ? definition.DeathBodyOffset
+            : usesUpLeft
+                ? definition.UpLeftBodyOffset
+                : definition.DownRightBodyOffset;
+        if (!showDeath && (facing == GodotUnitFacing.East || facing == GodotUnitFacing.West))
+            bodyOffset.X = -bodyOffset.X;
+        var bodyCenter = center + new Vector2I(
+            Mathf.RoundToInt(bodyOffset.X * scale),
+            Mathf.RoundToInt(bodyOffset.Y * scale));
+        BlendCentered(canvas, shadow, shadowCenter);
+        BlendCentered(canvas, body, bodyCenter);
+    }
+
+    private static void ApplyOpacity(Image image, float opacity)
+    {
+        for (int y = 0; y < image.GetHeight(); y++)
+        {
+            for (int x = 0; x < image.GetWidth(); x++)
+            {
+                Color pixel = image.GetPixel(x, y);
+                pixel.A *= opacity;
+                image.SetPixel(x, y, pixel);
+            }
+        }
+    }
+
+    private static void ResizeForCapture(Image image, float scale)
+    {
+        image.Resize(
+            Math.Max(1, Mathf.RoundToInt(image.GetWidth() * scale)),
+            Math.Max(1, Mathf.RoundToInt(image.GetHeight() * scale)),
+            Image.Interpolation.Lanczos);
+    }
+
+    private static void BlendCentered(Image canvas, Image source, Vector2I center)
+    {
+        Vector2I destination = center - source.GetSize() / 2;
+        canvas.BlendRect(source, new Rect2I(Vector2I.Zero, source.GetSize()), destination);
     }
 }

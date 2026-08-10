@@ -23,6 +23,7 @@
     <None Include="../Tests/golden/10x10-core-vectors.json" Link="Golden/10x10-core-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Tests/golden/oracle-matrix.json" Link="Golden/oracle-matrix.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Tests/golden/contract-decisions.json" Link="Golden/contract-decisions.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Tests/golden/unit-batch-v1.json" Link="Golden/unit-batch-v1.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\Tactics.Core\Tactics.Core.csproj" />

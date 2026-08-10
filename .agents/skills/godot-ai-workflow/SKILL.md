@@ -23,6 +23,7 @@ Use for validated, repeatable Godot Editor/MCP operations after Core/Application
 1. Verify the pin, ports and selected profile in the manifest; never mutate vendored godot-ai source.
 2. For first setup, let Godot generate the Windows Codex block once, then run `Sync-GodotAiCodexConfig.ps1 -ImportFromUser -Profile phase3-observe`. Restart a Codex task rooted at the migration worktree.
 3. Before every write sequence, call `session_manage` and `editor_state`. Require exactly one session, Godot 4.7.1 and the canonical project path; otherwise stop.
+   Repository writes that require session count `0` must use `godot-editor-lifecycle` to close and conditionally restore the verified Editor; do not improvise process commands.
 4. Use only tools exposed by the selected cumulative profile. See `references/tool-boundary.md` for the stage matrix and permanent deny-list.
 5. Keep domain validation in C# services/CLI/tests. Run GdUnit and headless verification independently of godot-ai smoke.
 6. After changing version, ports or profile, rerun sync/check and restart the Codex task. Stop and investigate any project-root or launch drift.

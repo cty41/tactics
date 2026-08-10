@@ -11,6 +11,7 @@
 | Unity 截图与视觉检查 | Unity MCP `manage_camera`、测试产物、已有图片 | 不激活 Unity，不用物理鼠标键盘补画面 |
 | Unity 交互验证 | PlayMode 自动测试、Input System 虚拟设备 | 不点击真实 Game View；后台无法构造状态时标记 `manual_visual_qa_pending` |
 | MCP 故障恢复 | 配置、端口、进程、日志和 MCP 状态的只读诊断 | 不点击 Connect、发送快捷键或切换 Editor 焦点 |
+| Canonical Godot 生命周期 | 已授权 Godot 修改任务通过 `godot-editor-lifecycle` 正常关闭并恢复原 Editor | 不激活窗口、不注入输入、不强杀、不打开原本关闭的 Editor |
 | 其他桌面应用 | 后台 API、专用 connector、文件级工具 | 默认不调用 Computer Use 或窗口激活 |
 
 ## 定义
@@ -24,6 +25,16 @@
 
 普通的“实现计划”“完成测试”“做视觉 QA”“生成截图”或类似任务授权不等于前台交互授权。
 
+## Canonical Godot 生命周期例外
+
+用户已授权：在明确的 canonical Godot 修改任务中，如果项目规则要求 Editor session 为 `0`，Agent 可自动加载 `godot-editor-lifecycle`，正常关闭经 MCP 验证的唯一 Editor，并在任务结束后恢复它，不需要逐次 `action-time-confirmation`。该例外只允许：
+
+- 对 `session_manage` 返回的精确 canonical Editor PID 发送正常窗口关闭请求；
+- 通过 pinned Godot GUI executable 重新打开同一 `godot/project.godot`；
+- 接受操作系统在创建可见窗口时可能产生的短暂焦点变化。
+
+不得调用 Computer Use、`activate_window`、键鼠输入、按进程名批量关闭或任何强制终止。正常关闭超时表示可能有未保存提示：保留进程并停止。Editor 原本未打开时不得在任务结束后新开；中间任务失败时仍优先恢复由本流程关闭的 Editor。
+
 ## 默认工作流
 
 1. 先判断计划动作是否会激活窗口或注入真实输入；会则按前台交互处理。
@@ -32,7 +43,7 @@
 4. 不得因为 MCP 暂时不可用、截图不完整、需要点击技能或希望补齐代表性画面而自动降级到 Computer Use。
 5. Agent 自己造成了临时 Play Mode、场景或任务状态时，优先通过不抢焦点的后台接口恢复；不得为了恢复而激活窗口。
 
-## 唯一例外门槛
+## 其他前台交互的唯一例外门槛
 
 只有同时满足以下条件时才允许前台交互：
 

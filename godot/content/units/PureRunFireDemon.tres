@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="UnitDefinitionResource" format=3 uid="uid://cyqpcrxrpb846"]
+
+[ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_t4ilv"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_fire_demon.png" id="2_4xbki"]
+[ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="3_67m8o"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_fire_demon_ul.png" id="4_rnfix"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="5_xh778"]
+
+[resource]
+script = ExtResource("5_xh778")
+ContentIdValue = "unit.pure-run.fire-demon"
+SourceId = "pure_run_fire_demon"
+DisplayName = "Fire Demon"
+Category = "summon"
+FamilyId = "summon"
+RoleId = "fire-demon"
+Strength = 5
+Agility = 5
+Constitution = 3
+Intelligence = 5
+Luck = 5
+Speed = 4.0
+MaxHealth = 12
+MoveRange = 2
+Initiative = 8.0
+AttackRange = 3
+AttackFactor = 4.0
+ActorContentIdValue = "packed-scene.unit-actor"
+ActorScene = ExtResource("1_t4ilv")
+DownRightTexture = ExtResource("2_4xbki")
+UpLeftTexture = ExtResource("4_rnfix")
+ShadowTexture = ExtResource("3_67m8o")
+DownRightBodyOffset = Vector2(0, -108)
+UpLeftBodyOffset = Vector2(0, -108)
+ShadowOffset = Vector2(0, 3.84)
+ShadowScale = Vector2(1.6, 1.6)
+ShadowOpacity = 0.9
+BodyTint = Color(1, 0.35, 0.08, 1)
+DeferredDependencies = PackedStringArray("summon-lifecycle")

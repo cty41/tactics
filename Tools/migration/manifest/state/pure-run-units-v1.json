@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-units-v1",
+  "source": {
+    "sourceTag": "unity-final-2026-08-08",
+    "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+    "unityVersion": "6000.3.11f1",
+    "exporterVersion": "unity-assetdatabase-v1",
+    "exportHash": "sha256:27654bc63e4e902be8b51fd883f505ffe84b1268fe8d8a31e37946a0b869c0b1",
+    "derivedContract": "unity-unit-derived-v1"
+  },
+  "artifacts": [
+    {
+      "resourcePath": "res://content/units/ContentCatalog.tres",
+      "resourceUid": "uid://kw1noc3hf72l",
+      "targetHash": "sha256:1c72993b14e5141c94ac8f1ab0a5e6ce7cff1af042242ce75a565516a6123c27",
+      "semanticHash": "sha256:8ef414738d0b5c1a61963388a10b928e4af8ef88d70b3424b3a0f8bf5ac1c1be"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunAmazon.tres",
+      "resourceUid": "uid://b4c2fbja1m4p1",
+      "targetHash": "sha256:34b9c41e1203f32d8cd90b3ed805941c1e3ebfa1b3b7e364c58b07404a6ab1d8",
+      "semanticHash": "sha256:540f92f50cb2e226c6ee67e8d2075a35d0d3bc7c1cfafaf51f37af1bd1fff93d"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunFireDemon.tres",
+      "resourceUid": "uid://cyqpcrxrpb846",
+      "targetHash": "sha256:41cb0cf7ab1096c5fd534791ef4e43258d298ef02b285a777a6866717b080576",
+      "semanticHash": "sha256:266c251aad2960f1b267a963f077c89824023bc5b1ca852a60ed8be16b396814"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunGoatAoe.tres",
+      "resourceUid": "uid://bsvl836s078sr",
+      "targetHash": "sha256:7a08aae4aad2c6ec44afaeb7e686fdd27c0edbe96a81b596c47744455440abbb",
+      "semanticHash": "sha256:e4b3b70b845e477bbeae0bcfbed5dbbc8b94857b20534bf926431cbf7c070ff3"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunGoatCharger.tres",
+      "resourceUid": "uid://c67q02uinwgul",
+      "targetHash": "sha256:5a8bc3898b5a3d8fe07d33ec7010f7b0fe5a07c4c59b1d050fc35e6d30fb48ef",
+      "semanticHash": "sha256:733130a5eed8ef0d0171baf61ecbf2ec4d3f82182cec9472ae329862b7415dba"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunGoatEliteCharger.tres",
+      "resourceUid": "uid://dmon1v6ocr7vc",
+      "targetHash": "sha256:065ec14a973446a27c9d5b97ee8d88c2857afc918fd1459a92383c29dd4db553",
+      "semanticHash": "sha256:a3ef9b8ebb54e84f3905a4f7029724e85ef1fb3a656d4b9f8a3f5cd6a827e0be"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunGoatElitePoisonCaster.tres",
+      "resourceUid": "uid://bs0w3pfcur15y",
+      "targetHash": "sha256:f95e6d7febd9ed5cdee5ccb1734d41fdef1fa340a234f25291090a6452209e23",
+      "semanticHash": "sha256:16aa6444a7472360d795170b775809947a17c579e71f6c76f736059df56b66b5"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunGoatRanged.tres",
+      "resourceUid": "uid://c1l2k4devxblc",
+      "targetHash": "sha256:cd34dbfa19e2fc9d6be4fe421125d1a04a49d8cd46552a7faecdc5851d556763",
+      "semanticHash": "sha256:335fe9416077a07201b1e954decc3b21298603896c78e38912d4424965a6c9ca"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunGoatSupport.tres",
+      "resourceUid": "uid://m1nxdafgwl1m",
+      "targetHash": "sha256:ef5ea498dde3cf576880319e88d151335a336a7cca566fa407010744c9766fb1",
+      "semanticHash": "sha256:95bef42e9bbfd12514fa6a5a82b5afc3eb9b164594bc50542caf6ffb5b7a58bd"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunMage.tres",
+      "resourceUid": "uid://bqysyhov6sk7s",
+      "targetHash": "sha256:541fb709e9fe19280e22fcbbaf9bbdcbb68ecb64d4834fceb5a25806e99af080",
+      "semanticHash": "sha256:282cb3b540b377aa19b48af876b4b308094fb9b846892dbf542485d2468a8907"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunNecromancer.tres",
+      "resourceUid": "uid://chihlradw121e",
+      "targetHash": "sha256:a5730dafc9c70795c4670b5e1986fff375e2dd6db111ef8e2ca3a05d866fb02f",
+      "semanticHash": "sha256:6eb42edeb943b6bb40479ad784827889c83db064647ebc7163416d5f12fefbc5"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunSkeletonMage.tres",
+      "resourceUid": "uid://d3aux6gs6gy3r",
+      "targetHash": "sha256:613682879ea9cb6e9d324bc1234b6e475ce8e5331c671cf0da251246cf008c56",
+      "semanticHash": "sha256:04a4fcffc39f86140b912358db1cffc688acd568d5a35989ace671d216ef8cf4"
+    },
+    {
+      "resourcePath": "res://content/units/PureRunSkeletonWarrior.tres",
+      "resourceUid": "uid://k70sjv3othgm",
+      "targetHash": "sha256:ad497238e844fc64ae5d5f71e8ad1128537043331508760aa2cd379a1da39db6",
+      "semanticHash": "sha256:a4fd5c73ce55032b556103f0ef5f7ccf71ee41759e3ff24eed5ade978a8687f1"
+    },
+    {
+      "resourcePath": "res://content/units/UnitActor.tscn",
+      "resourceUid": "uid://c1frlvegnpcpp",
+      "targetHash": "sha256:e968501faf62549d5cf0f26774c0deed128395a0cea205b809966506956f2822",
+      "semanticHash": "sha256:f289c69d3953a5f1af8a901a770fcb76036a4f99fc345c7444d9b06a59390bcd"
+    },
+    {
+      "resourcePath": "res://content/units/UnitGallery.tscn",
+      "resourceUid": "uid://bx2p3yfyuseog",
+      "targetHash": "sha256:237b53b06c138304bc990ac2ec097d3a770f650f70ed47001e0a48e2c5540e19",
+      "semanticHash": "sha256:f05eb79c81ba40347a393ad9d408b3442edc0e9c95c5072ad3448a80501ad7d3"
+    },
+    {
+      "resourcePath": "res://content/units/UnitSpawnFixture.tscn",
+      "resourceUid": "uid://ck5v3sdiu4rsb",
+      "targetHash": "sha256:771e9c36dec9eae8eef0f75393c7a2195f912ebb66995f1aece08d343c554b3b",
+      "semanticHash": "sha256:4a523d99e71bba58c55f4e3abf4790810d2b3f040f8007c8a0189bde10a82936"
+    }
+  ]
+}

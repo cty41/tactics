@@ -1,0 +1,124 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://kw1noc3hf72l"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_47ob6"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_gnkqo"]
+
+[sub_resource type="Resource" id="Resource_47ob6"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "packed-scene.unit-actor"
+ResourceTypeIdValue = "packed-scene"
+ResourceUidValue = "uid://c1frlvegnpcpp"
+DiagnosticPathValue = "res://content/units/UnitActor.tscn"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_gnkqo"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.amazon"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://b4c2fbja1m4p1"
+DiagnosticPathValue = "res://content/units/PureRunAmazon.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_hwtti"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.fire-demon"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://cyqpcrxrpb846"
+DiagnosticPathValue = "res://content/units/PureRunFireDemon.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_2kyyw"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.goat-aoe"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://bsvl836s078sr"
+DiagnosticPathValue = "res://content/units/PureRunGoatAoe.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_f6ntw"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.goat-charger"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://c67q02uinwgul"
+DiagnosticPathValue = "res://content/units/PureRunGoatCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_s4ylw"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.goat-elite-charger"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://dmon1v6ocr7vc"
+DiagnosticPathValue = "res://content/units/PureRunGoatEliteCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_rmy2p"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.goat-elite-poison-caster"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://bs0w3pfcur15y"
+DiagnosticPathValue = "res://content/units/PureRunGoatElitePoisonCaster.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_2cwuf"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.goat-ranged"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://c1l2k4devxblc"
+DiagnosticPathValue = "res://content/units/PureRunGoatRanged.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_krs78"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.goat-support"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://m1nxdafgwl1m"
+DiagnosticPathValue = "res://content/units/PureRunGoatSupport.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_gpq2p"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.mage"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://bqysyhov6sk7s"
+DiagnosticPathValue = "res://content/units/PureRunMage.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_nw7xw"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.necromancer"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://chihlradw121e"
+DiagnosticPathValue = "res://content/units/PureRunNecromancer.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_2y5cx"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.skeleton-mage"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://d3aux6gs6gy3r"
+DiagnosticPathValue = "res://content/units/PureRunSkeletonMage.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_veidf"]
+script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.skeleton-warrior"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://k70sjv3othgm"
+DiagnosticPathValue = "res://content/units/PureRunSkeletonWarrior.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[resource]
+script = ExtResource("2_gnkqo")
+Entries = [SubResource("Resource_47ob6"), SubResource("Resource_gnkqo"), SubResource("Resource_hwtti"), SubResource("Resource_2kyyw"), SubResource("Resource_f6ntw"), SubResource("Resource_s4ylw"), SubResource("Resource_rmy2p"), SubResource("Resource_2cwuf"), SubResource("Resource_krs78"), SubResource("Resource_gpq2p"), SubResource("Resource_nw7xw"), SubResource("Resource_2y5cx"), SubResource("Resource_veidf")]

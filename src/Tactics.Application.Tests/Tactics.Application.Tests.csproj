@@ -18,4 +18,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Tactics.Application\Tactics.Application.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../Tests/golden/unit-batch-v1.json" Link="Golden/unit-batch-v1.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

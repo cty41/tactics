@@ -33,6 +33,7 @@
 - 固定使用 `godot-ai==3.1.2` 的 Windows Attach 启动方式：绝对路径 `pythonw.exe`、无窗口 bootstrap、HTTP 8000、WebSocket 9500。配置以 `Tools/migration/manifest/godot-tooling.json` 为策略真相源。
 - 首次接入先在 canonical Godot Editor 中执行一次 Clients → Codex → Configure，再运行 `Tools/migration/Sync-GodotAiCodexConfig.ps1 -ImportFromUser -Profile phase3-observe`。后续用 `-Check` 验证，用 `-Profile <name>` 切换累积白名单。
 - 更换 godot-ai 版本、端口、启动方式或工具 Profile 后，必须重新生成/同步配置并重启根目录为迁移 worktree 的 Codex 任务。
+- 已授权 Godot 修改任务需要 session 为 `0` 时，必须使用 `godot-editor-lifecycle` 对唯一 canonical PID 做正常关闭，并且只在 Editor 原本打开时恢复；超时不强杀、不继续写入。
 - MCP 写操作前必须先调用 Session 与 Editor 状态接口，确认仅有一个会话、Godot 版本为 4.7.1，且项目指向当前 worktree 的 `godot/project.godot`；不满足时停止写入。
 - Profile 按 `phase3-observe → content-authoring → ui-input → presentation` 累积扩展。未进入对应迁移阶段，不得提前扩大工具面。
 - 始终禁用 `script_create`、`script_attach`、`script_patch`、`filesystem_manage`、`client_manage` 和 `autoload_manage`。生产 C# 使用 `apply_patch` 与 Build；Godot 资产使用 ResourceSaver、Editor API 或受测转换器。

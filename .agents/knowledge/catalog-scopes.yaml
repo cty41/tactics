@@ -294,6 +294,7 @@ scopes:
       - .agents/skills/godot-csharp-development
       - .agents/skills/godot-content-migration
       - .agents/skills/godot-editor-tooling
+      - .agents/skills/godot-editor-lifecycle
       - .agents/skills/godot-testing-diagnostics
       - .agents/skills/godot-ai-workflow
       - .agents/incidents/godot
@@ -307,6 +308,7 @@ scopes:
       - Tools/migration/Sync-GodotAiCodexConfig.ps1
       - Tools/migration/godot_ai_codex_config.py
       - Tools/migration/tests/test_godot_ai_codex_config.py
+      - Tools/migration/tests/test_godot_editor_lifecycle.py
       - Tools/agent-policy/validate_godot_incidents.py
       - .agents/scripts/validate-skills.ps1
 

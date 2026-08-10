@@ -17,6 +17,17 @@ $poisonSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batc
 $poisonExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\poison-spear-lv1-export.json'
 $poisonGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\poison-spear-lv1-real.json'
 $poisonGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\poison-spear-lv1-generation.json'
+$unitExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1.unity.json'
+$unitDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1.draft.json'
+$unitGolden = Join-Path $repoRoot 'Tests\golden\unit-batch-v1.json'
+$unitSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-units-v1.json'
+$unitExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-units-v1-export.json'
+$unitGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-units-v1.json'
+$unitTextureLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-unit-textures-v1.json'
+$unitGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-units-v1-generation.json'
+$unitGalleryCapture = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1-gallery.png'
+$unitSpawnCapture = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1-spawn.png'
+$unitGoatTintShader = Join-Path $projectRoot 'src\Tactics.Godot.Adapter\Runtime\Shaders\GoatBodyTint.gdshader'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 $releaseVerificationDirectory = [System.IO.Path]::GetFullPath(
     (Join-Path $systemTempRoot ("tactics-godot-release-" + [Guid]::NewGuid().ToString('N'))))
@@ -101,6 +112,7 @@ try {
         'godot-csharp-development',
         'godot-content-migration',
         'godot-editor-tooling',
+        'godot-editor-lifecycle',
         'godot-testing-diagnostics',
         'godot-ai-workflow')) {
         Invoke-Checked "Validate Codex/OpenCode skill: $skill" {
@@ -166,6 +178,81 @@ try {
         Write-Host '== Skip real Poison Spear regeneration: disposable Unity DTO is not present =='
     }
 
+    if (Test-Path -LiteralPath $unitExport -PathType Leaf) {
+        Invoke-Checked 'Compile real Pure Run Unit typed migration draft' {
+            python -m Tools.migration.unit_converter `
+                --export $unitExport `
+                --specification $unitSpecification `
+                --golden $unitGolden `
+                --output $unitDraft
+        }
+
+        Invoke-Checked 'Copy approved project-owned Unit PNG payload transactionally' {
+            python -m Tools.migration.unit_texture_migration --root $repoRoot --draft $unitDraft
+        }
+        $firstTextureHashes = @{}
+        foreach ($artifact in (Get-Content -LiteralPath $unitTextureLedger -Raw | ConvertFrom-Json).artifacts) {
+            $firstTextureHashes[$artifact.relativePath] = (
+                Get-FileHash -LiteralPath (Join-Path $repoRoot $artifact.relativePath) -Algorithm SHA256).Hash
+        }
+        Invoke-Checked 'Repeat Unit PNG migration for idempotency' {
+            python -m Tools.migration.unit_texture_migration --root $repoRoot --draft $unitDraft
+        }
+        foreach ($target in $firstTextureHashes.Keys) {
+            $secondHash = (Get-FileHash -LiteralPath (Join-Path $repoRoot $target) -Algorithm SHA256).Hash
+            if ($firstTextureHashes[$target] -ne $secondHash) {
+                throw "Pure Run Unit PNG migration is not byte-idempotent: $target"
+            }
+        }
+
+        # ResourceSaver must resolve imported Texture2D resources on a clean checkout.
+        Invoke-Checked 'Import Pure Run Unit PNG payload in headless Editor' {
+            & $GodotExecutable --headless --editor --path $projectRoot --quit-after 6000
+        }
+
+        $unitGeneratedTargets = @(
+            'godot/content/units/ContentCatalog.tres',
+            'godot/content/units/PureRunAmazon.tres',
+            'godot/content/units/PureRunFireDemon.tres',
+            'godot/content/units/PureRunGoatAoe.tres',
+            'godot/content/units/PureRunGoatCharger.tres',
+            'godot/content/units/PureRunGoatEliteCharger.tres',
+            'godot/content/units/PureRunGoatElitePoisonCaster.tres',
+            'godot/content/units/PureRunGoatRanged.tres',
+            'godot/content/units/PureRunGoatSupport.tres',
+            'godot/content/units/PureRunMage.tres',
+            'godot/content/units/PureRunNecromancer.tres',
+            'godot/content/units/PureRunSkeletonMage.tres',
+            'godot/content/units/PureRunSkeletonWarrior.tres',
+            'godot/content/units/UnitActor.tscn',
+            'godot/content/units/UnitGallery.tscn',
+            'godot/content/units/UnitSpawnFixture.tscn',
+            'Tools/migration/manifest/state/pure-run-units-v1.json'
+        )
+        Invoke-Checked 'Generate Pure Run Unit Godot assets through ResourceSaver' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/UnitAssetBuilder.cs'
+        }
+        $firstUnitGenerationHashes = @{}
+        foreach ($target in $unitGeneratedTargets) {
+            $firstUnitGenerationHashes[$target] = (
+                Get-FileHash -LiteralPath (Join-Path $repoRoot $target) -Algorithm SHA256).Hash
+        }
+        Invoke-Checked 'Repeat Pure Run Unit generation for idempotency' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/UnitAssetBuilder.cs'
+        }
+        foreach ($target in $unitGeneratedTargets) {
+            $secondHash = (Get-FileHash -LiteralPath (Join-Path $repoRoot $target) -Algorithm SHA256).Hash
+            if ($firstUnitGenerationHashes[$target] -ne $secondHash) {
+                throw "Pure Run Unit generation is not byte-idempotent: $target"
+            }
+        }
+    }
+    else {
+        Write-Host '== Skip real Pure Run Unit regeneration: disposable Unity DTO is not present =='
+    }
+
     # A ResourceSaver script can register a newly created UID only in its current process.
     # The headless Editor filesystem scan persists the project UID cache before Runtime validation.
     Invoke-Checked 'Godot editor filesystem scan and plugin initialization' {
@@ -204,6 +291,26 @@ try {
         & $GodotExecutable --headless --path $projectRoot --play-poison-spear --quit-after 6000
     }
 
+    Invoke-Checked 'Pure Run Unit catalog, factory, and fixture validation (Compatibility)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            --validate-units --quit-after 6000
+    }
+
+    Invoke-Checked 'Pure Run Unit catalog, factory, and fixture validation (Forward+)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
+            --validate-units --quit-after 6000
+    }
+
+    Invoke-Checked 'Capture deterministic Pure Run Unit programmatic gallery' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            -- --capture-unit-gallery
+    }
+
+    Invoke-Checked 'Capture deterministic Pure Run Unit 10x10 spawn fixture' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            -- --capture-unit-spawn
+    }
+
     if (Test-Path -LiteralPath $poisonExport -PathType Leaf) {
         # Only write a "passed" generation receipt after UID scan, both renderer paths,
         # runtime semantics, Tween, and scope validation have actually succeeded.
@@ -217,6 +324,25 @@ try {
 
         Invoke-Checked 'Validate regenerated Poison Spear ledger and receipt' {
             python -m unittest Tools.migration.tests.test_poison_spear_generation
+        }
+    }
+
+    if (Test-Path -LiteralPath $unitExport -PathType Leaf) {
+        # Visual acceptance remains manual even after the deterministic gallery is captured.
+        Invoke-Checked 'Refresh Pure Run Unit generation receipt' {
+            python -m Tools.migration.unit_generation_receipt `
+                --export-receipt $unitExportReceipt `
+                --draft $unitDraft `
+                --generation-ledger $unitGenerationLedger `
+                --texture-ledger $unitTextureLedger `
+                --gallery-capture $unitGalleryCapture `
+                --spawn-capture $unitSpawnCapture `
+                --goat-tint-shader $unitGoatTintShader `
+                --output $unitGenerationReceipt
+        }
+
+        Invoke-Checked 'Validate regenerated Pure Run Unit ledger and receipt' {
+            python -m unittest Tools.migration.tests.test_unit_generation
         }
     }
 

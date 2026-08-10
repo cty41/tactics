@@ -21,6 +21,9 @@ namespace Tactics.Editor.Migration
         private const string PoisonSpearSpecPath =
             "Tools/migration/manifest/export-batches/poison-spear-lv1.json";
 
+        private const string PureRunUnitsSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-units-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -39,6 +42,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPoisonSpearBatchFromCommandLine()
         {
             ExportPoisonSpearBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run Units V1")]
+        public static void ExportPureRunUnitBatch()
+        {
+            string outputPath = Export(PureRunUnitsSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run Units V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunUnitBatchFromCommandLine()
+        {
+            ExportPureRunUnitBatch();
         }
 
         public static string Export(string relativeSpecPath)
@@ -120,7 +135,12 @@ namespace Tactics.Editor.Migration
         private static List<ExportedObject> ExportObjects(string sourcePath, Object mainAsset)
         {
             if (mainAsset is not GameObject)
-                return new List<ExportedObject> { ExportObject("main", mainAsset) };
+            {
+                var objects = new List<ExportedObject> { ExportObject("main", mainAsset) };
+                if (mainAsset is Texture2D && AssetImporter.GetAtPath(sourcePath) is AssetImporter importer)
+                    objects.Add(ExportObject("importer", importer));
+                return objects.OrderBy(item => item.ObjectPath, StringComparer.Ordinal).ToList();
+            }
 
             GameObject root = PrefabUtility.LoadPrefabContents(sourcePath);
             try
@@ -166,6 +186,11 @@ namespace Tactics.Editor.Migration
             while (iterator.Next(enterChildren))
             {
                 enterChildren = true;
+                if (iterator.propertyPath.EndsWith(".m_FileID", StringComparison.Ordinal) ||
+                    iterator.propertyPath.EndsWith(".m_PathID", StringComparison.Ordinal))
+                {
+                    continue;
+                }
                 properties.Add(ExportProperty(iterator));
             }
 

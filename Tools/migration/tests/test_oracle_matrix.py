@@ -37,6 +37,10 @@ class OracleMatrixTests(unittest.TestCase):
                 with self.subTest(contract=contract["id"], runtime=runtime_file):
                     self.assertTrue((self.root / runtime_file).is_file(), runtime_file)
 
+            for asset_test_file in contract.get("sourceAssetTests", []):
+                with self.subTest(contract=contract["id"], asset_test=asset_test_file):
+                    self.assertTrue((self.root / asset_test_file).is_file(), asset_test_file)
+
             harness_file = contract.get("oracleHarnessFile")
             if harness_file is None:
                 continue
@@ -63,6 +67,22 @@ class OracleMatrixTests(unittest.TestCase):
                 )
                 self.assertEqual(result.stdout.strip(), expected_blob_id)
                 self.assertIn(expected_blob_id, harness)
+
+    def test_frozen_unit_asset_blob_ids_match_without_parsing_unity_yaml(self) -> None:
+        commit = self.matrix["unityOracle"]["commit"]
+        frozen_assets = self.matrix["frozenAssetBlobs"]
+        self.assertEqual(len(frozen_assets), 38)
+        for path, expected_blob_id in frozen_assets.items():
+            with self.subTest(path=path):
+                self.assertTrue((self.root / path).is_file(), path)
+                result = subprocess.run(
+                    ["git", "rev-parse", f"{commit}:{path}"],
+                    cwd=self.root,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(result.stdout.strip(), expected_blob_id)
 
     def test_oracle_and_contract_statuses_are_explicit(self) -> None:
         statuses = {contract["status"] for contract in self.matrix["contracts"]}
@@ -99,6 +119,10 @@ class OracleMatrixTests(unittest.TestCase):
         )
         self.assertEqual(
             contract_statuses["skill.poison-spear-lv1"],
+            "unity_final_asset_export_and_linked_source_oracle",
+        )
+        self.assertEqual(
+            contract_statuses["unit.pure-run-v1"],
             "unity_final_asset_export_and_linked_source_oracle",
         )
 

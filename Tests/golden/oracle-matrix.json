@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 7,
   "unityOracle": {
     "tag": "unity-final-2026-08-08",
     "commit": "168d1934",
@@ -26,7 +26,53 @@
     "Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs": "84d04546bda0ab8121439a2285fa5065be642cc2",
     "Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs": "31a2739f51ab47c1a24e41240083db6dfbcb9053",
     "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs": "bc93aee09577d3bd9e1dda94c062c5c006383d61",
-    "Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs": "54a463c642c59d1550c0454a9388c3f68c7e89b1"
+    "Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs": "54a463c642c59d1550c0454a9388c3f68c7e89b1",
+    "Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs": "4f0d131a1f809c920f01cf137087dc0dc63d312a",
+    "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs": "8a3a14a1392bb57562fb6ae286eb79508ce6fe75",
+    "Assets/Tactics/Scripts/Common/Units/Unit.cs": "5a9776a61dd698b439dd19845a5979bce73d419a",
+    "Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs": "4da3c885cfd9df5ed4128f8ef446815e760a2b0a",
+    "Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs": "9528f7c17f3a782b16c4ceaa9b6b97e25893acfb",
+    "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs": "850f23e53869c04c8ff28adbd85c1d4f12da9bae"
+  },
+  "frozenAssetBlobs": {
+    "Assets/Tactics/Arts/PureRun/Materials/goat_aoe.mat": "7cf0570cb728a47af148624bd86ba67dd3112586",
+    "Assets/Tactics/Arts/PureRun/Materials/goat_charger.mat": "7f44664c723d7b67fb14d6154631c9ae4e9e1c72",
+    "Assets/Tactics/Arts/PureRun/Materials/goat_elite_charger.mat": "5191db89017a001a2c74b01ff048c1ad4f67de81",
+    "Assets/Tactics/Arts/PureRun/Materials/goat_elite_poison_caster.mat": "473d3512ea78e05437df92090d42a4f86d0eeecd",
+    "Assets/Tactics/Arts/PureRun/Materials/goat_ranged.mat": "1c1c8e11733b3195d9d2bb18297d2dcad9960031",
+    "Assets/Tactics/Arts/PureRun/Materials/goat_support.mat": "310daaa4ac5593b0543ea4f95724ce9780d25546",
+    "Assets/Tactics/Arts/PureRun/Shaders/GoatBodyTint.shader": "d4da8e21404ac1b5d134b0f1455f36839900e7c2",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunFireDemon.prefab": "43be522fea961b738d943ba0361b19bc74247493",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatAoe.prefab": "fbefa41165995ca77119ead236a052de00705ac0",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatCharger.prefab": "46d6a45b8876a02f328ef661c0b83a9548d701e9",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatEliteCharger.prefab": "7d09ef16e1159b13b92d7fc737799e81ac5d4dc0",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatElitePoisonCaster.prefab": "5da1552e902050165cc5dfe648b29e0561ab75e4",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatRanged.prefab": "c720bbf84f4884861888ce9b6b96783a382b821b",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatSupport.prefab": "7a3c753d5cf99a7984404dad1e227df0dbe2bf28",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab": "71048fc1ee37b6db15688712dd3db278ef6eae57",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab": "691214a00e7493a8ff062b56ec09b4dffb0fb6bd",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab": "9656de7166cf30d2163af47f13cd687ceafac8ec",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonMage.prefab": "a8727d356d33f665c39f5bde9426d9196b455148",
+    "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonWarrior.prefab": "41bb60e04be8fde67ca1c544c3a19e2aa88648cf",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_hunter.png": "5e501e2d9b3ddc1ce6fbe0d16f7ed51c6fd361c3",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_ul.png": "8b9b6d05d10aff56e70826237e1690f85bd69747",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_death.png": "12edbff78f75afa3b0d67a779e79892bbbb0a788",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_mage.png": "3be624dc054da7cc04bdccd3ef14c2d278b0ffc8",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_mage_ul.png": "5fca4882295f46f5d8958824e74bb701cd75818b",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_mage_death.png": "f1b82cc1680ad90e2ec845cc485c9c4c198a75f9",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer.png": "b70a395ffa1daafc5e92774d9dbe477148a6c94a",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer_ul.png": "10e68858b037f7232c7fe5dd395fe049ef487587",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer_death.png": "ccd30575b97fe91d147ebe30106c867c5191db18",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_warrior.png": "1dacd9b4b97f24073635cee0b3d2a48d89bebf8a",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_warrior_ul.png": "92bd1f9430b38d57813e621a9cf26204a9f34fbd",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_mage.png": "eeeb938bf71008a3e25b9f4da1057e569143f165",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_mage_ul.png": "7be34ec507dd932e0a5b867c211592de43d02db7",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_fire_demon.png": "dce3e3fa261f1f05443880cc814065e880c7d1d2",
+    "Assets/Tactics/Arts/PureRun/Textures/doge_fire_demon_ul.png": "df4a59cdac608df5e847036367ce0067dbf3f1ca",
+    "Assets/Tactics/Arts/PureRun/Textures/splitjaw_goat.png": "3dcbbb3bd2c15ea6cf42ba9c701e4a3b694942f0",
+    "Assets/Tactics/Arts/PureRun/Textures/splitjaw_goat_ul.png": "df4abd965e9d0a029f238e9ededde2411d2bf18c",
+    "Assets/Tactics/Arts/PureRun/Textures/splitjaw_goat_death.png": "aaac2cb7add469f96d2c83bc2f360a60536d82c1",
+    "Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png": "db69d966319f918e950c9999dc8f48aedc2c53b0"
   },
   "contracts": [
     {
@@ -159,6 +205,44 @@
         "PoisonSpearLv1_SourceContractMatchesExportedCoreSemantics"
       ],
       "goldenVector": "10x10-core-vectors.json#/actionCases/0",
+      "status": "unity_final_asset_export_and_linked_source_oracle"
+    },
+    {
+      "id": "unit.pure-run-v1",
+      "sourceFile": "Assets/Tactics/Tests/Editor/UnitDerivedStatRulesTests.cs",
+      "sourceTests": [
+        "Speed_UsesCappedHalfStepMovement_WithoutChangingInitiative"
+      ],
+      "sourceRuntimeFiles": [
+        "Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs",
+        "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs",
+        "Assets/Tactics/Scripts/Common/Units/Unit.cs",
+        "Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs",
+        "Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs",
+        "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs"
+      ],
+      "sourceVisualFiles": [
+        "Assets/Tactics/Arts/PureRun/Shaders/GoatBodyTint.shader"
+      ],
+      "sourceAssetTests": [
+        "Assets/Tactics/Tests/Editor/FourDirectionSpriteVisualEditorTests.cs",
+        "Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs",
+        "Assets/Tactics/Tests/Editor/EncounterConfigTests.cs"
+      ],
+      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleTests": [
+        "LinkedSources_MatchUnityFinalGitBlobs",
+        "UnitDerivedStats_FrozenFormulaAndSourceSemanticsMatchGolden",
+        "UnitPresentation_FrozenDirectionAndGoatTintContractsMatchGolden"
+      ],
+      "goldenVector": "unit-batch-v1.json#/units",
+      "exportReceipt": "Tools/migration/manifest/receipts/pure-run-units-v1-export.json",
+      "evidence": {
+        "derivedMovement": "unity_final_linked_source_oracle",
+        "healthManaInitiative": "unity_final_source_semantic_assertion",
+        "prefabAndVisuals": "unity_assetdatabase_export_and_frozen_asset_snapshot",
+        "contentIdentity": "versioned_migration_contract"
+      },
       "status": "unity_final_asset_export_and_linked_source_oracle"
     }
   ]

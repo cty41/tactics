@@ -1,5 +1,18 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-10
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:3865baa09721e42b26b6fb001e1c97bf8033d2e43cd29e8f115dc1a1929c06c4`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:bc22d2ca557cdf6f0cf872de8e013afa62348c6a16afe19eb0a6dc72499a7fb0`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:373388547b69513949378063417dd401298121712e5d369a925775a1c13645fb`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:7452844dcb6ecae999e919ceb2a983efcd29a49bcb03fcb323caf692aedce8c5`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:08841dca2fc848b1046fdd8f0357eead75a492e9c5cb16d3b27d682cf7b1fa84`。
+* **Creation**: 新增项目级 `godot-editor-lifecycle` Skill：已授权 canonical Godot 修改任务需要 session `0` 时，可用精确 PID 的正常窗口关闭自动挂起并恢复原 Editor；原本关闭则不新开，关闭超时不强杀，恢复后重新核对 MCP path/version/plugin/readiness 和日志。未扩大 godot-ai Profile 或修改 pinned source。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:4454e303703cc67fc8be63dbb5822dc74fa5c4d130a778c95878f036b9bd66bd`。
+* **Fix**: Phase 4 二次人验截图确认 Gallery 整批上移并非 Sprite pivot 再次错误，而是旧 `Y=105/335/565` 贴图中心布局在 Actor 已改为脚底/尸体落点后仍被复用；新增 `ground-baseline-v1`，三行根节点改为 `Y=155/385/615`、标签净下移 10，并让运行 Gallery、程序化截图、ResourceSaver semantic 与 GdUnit 共用同一布局常量。batch 继续等待人工确认。
+* **Fix**: Phase 4 首轮人验确认死亡显示偏上与 Fixture 阴影不可辨：AssetDatabase DTO 证明 living/death pivot 分别为 `(0.5,0.078125)`/`(0.5,0.5)`，12 Prefab Shadow 均为 64 PPU、`localY=-0.03`、scale `0.8`、alpha `0.9`。新增 `unity-unit-sprite-geometry-v1` 并换算为 Godot living/death offset `(0,-108)/(0,0)`、Shadow offset `(0,3.84)`、scale `1.6`、alpha `0.9`，Gallery/Fixture 改为可辨阴影的中性灰蓝底；batch 仍待二次人工确认。
+* **Update**: Phase 4 Unit Gallery 视觉一致性修复完成：冻结精确四向矩阵，Reset 恢复全 South/存活/tint 开启，将项目自有 GoatBodyTint 算法等价移植到 Godot shader，并把 F6 override 设为 1600×900 等比；修复程序化截图共享 Image 连续缩小问题，完整门禁为 Core 35、Application 18、Unity Oracle 11、Python 84、GdUnit 11。batch 仍等待用户 Gallery/Spawn/Reload 人验。
+* **Update**: Phase 4 Unit 自动实施完成：12 个 Unit、19 个项目自有 PNG、13 项 Catalog、共享 Actor、Gallery/可视 10×10 SpawnFixture 与双 renderer 门禁通过；batch 保持 `Generated/UnityOwned`，人工视觉与 Reload 仍 pending。
+
 ## 2026-08-09
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:72a75ed078f89a8893d0440fe04c5b3ea9f2c12aee838cd26da5cbbff311281f`。
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:859fc54bb74c6c4f0789901d0eab5af818720f34b6b4bb8bd0d75d4a5d179846`。

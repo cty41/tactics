@@ -72,3 +72,17 @@ namespace Tactics.Runtime.Utilities
         }
     }
 }
+
+namespace UnityEngine
+{
+    /// <summary>
+    /// Minimal deterministic surface required to compile the frozen Unity movement formula.
+    /// </summary>
+    public static class Mathf
+    {
+        public static float Ceil(float value) => (float)Math.Ceiling(value);
+
+        public static float Clamp(float value, float minimum, float maximum) =>
+            Math.Min(maximum, Math.Max(minimum, value));
+    }
+}

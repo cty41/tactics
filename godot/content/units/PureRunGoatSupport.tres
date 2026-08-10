@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="UnitDefinitionResource" format=3 uid="uid://m1nxdafgwl1m"]
+
+[ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_fabcx"]
+[ext_resource type="Shader" path="res://src/Tactics.Godot.Adapter/Runtime/Shaders/GoatBodyTint.gdshader" id="2_p2gnr"]
+[ext_resource type="Texture2D" path="res://assets/units/splitjaw_goat_death.png" id="2_x2ay7"]
+[ext_resource type="Texture2D" path="res://assets/units/splitjaw_goat.png" id="3_p2gnr"]
+[ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="4_0koe1"]
+[ext_resource type="Texture2D" path="res://assets/units/splitjaw_goat_ul.png" id="5_iu8k3"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="6_t75kp"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0koe1"]
+shader = ExtResource("2_p2gnr")
+shader_parameter/body_tint = Color(0.353, 0.294, 0.404, 1)
+shader_parameter/base_body_color = Color(0.365, 0.243, 0.4, 1)
+
+[resource]
+script = ExtResource("6_t75kp")
+ContentIdValue = "unit.pure-run.goat-support"
+SourceId = "pure_run_goat_support"
+DisplayName = "Support"
+Category = "goat"
+FamilyId = "goat"
+RoleId = "support"
+Strength = 5
+Agility = 5
+Constitution = 5
+Intelligence = 5
+Charisma = 5
+Luck = 5
+Speed = 8.0
+MaxHealth = 20
+MaxMana = 15
+StartingMana = 5
+MoveRange = 4
+Initiative = 16.0
+AttackRange = 1
+AttackFactor = 1.0
+CanProduceCorpse = true
+ActorContentIdValue = "packed-scene.unit-actor"
+ActorScene = ExtResource("1_fabcx")
+DownRightTexture = ExtResource("3_p2gnr")
+UpLeftTexture = ExtResource("5_iu8k3")
+DeathTexture = ExtResource("2_x2ay7")
+ShadowTexture = ExtResource("4_0koe1")
+DownRightBodyOffset = Vector2(0, -108)
+UpLeftBodyOffset = Vector2(0, -108)
+ShadowOffset = Vector2(0, 3.84)
+ShadowScale = Vector2(1.6, 1.6)
+ShadowOpacity = 0.9
+BodyTint = Color(0.353, 0.294, 0.404, 1)
+BodyTintModeValue = "goat-body-mask-v1"
+BaseBodyColor = Color(0.365, 0.243, 0.4, 1)
+BodyTintMaterial = SubResource("ShaderMaterial_0koe1")
+DeferredDependencies = PackedStringArray("ai-profile", "skill.curse", "skill.melee-attack")

@@ -16,6 +16,7 @@ AGENTS_PATH = "AGENTS.md"
 UNITY_CORE_SKILL_PATH = ".agents/skills/unity-mcp-core/SKILL.md"
 MCP_TROUBLESHOOTING_SKILL_PATH = ".agents/skills/mcp-connection-troubleshooting/SKILL.md"
 PURE_RUN_ARTWORK_SKILL_PATH = ".agents/skills/pure-run-artwork-pipeline/SKILL.md"
+GODOT_LIFECYCLE_SKILL_PATH = ".agents/skills/godot-editor-lifecycle/SKILL.md"
 CATALOG_PATH = ".agents/knowledge/catalog-scopes.yaml"
 
 REQUIRED_POLICY_TOKENS = (
@@ -24,6 +25,7 @@ REQUIRED_POLICY_TOKENS = (
     "current-turn-explicit-request",
     "action-time-confirmation",
     "manual_visual_qa_pending",
+    "godot-editor-lifecycle",
 )
 
 REQUIRED_CONSUMER_REFERENCES = (
@@ -31,6 +33,7 @@ REQUIRED_CONSUMER_REFERENCES = (
     UNITY_CORE_SKILL_PATH,
     MCP_TROUBLESHOOTING_SKILL_PATH,
     PURE_RUN_ARTWORK_SKILL_PATH,
+    GODOT_LIFECYCLE_SKILL_PATH,
 )
 
 REQUIRED_SCOPE_PATHS = {
@@ -43,6 +46,7 @@ REQUIRED_SCOPE_PATHS = {
         "Tools/agent-policy/test_validate_foreground_interaction_policy.py",
     ),
     "pure-run-artwork": (PURE_RUN_ARTWORK_SKILL_PATH,),
+    "godot-agent-workflow": (GODOT_LIFECYCLE_SKILL_PATH,),
 }
 
 
