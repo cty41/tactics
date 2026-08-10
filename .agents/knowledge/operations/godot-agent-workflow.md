@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-10T21:58:29+08:00"
+timestamp: "2026-08-11T01:44:09+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:3865baa09721e42b26b6fb001e1c97bf8033d2e43cd29e8f115dc1a1929c06c4
+source_fingerprint: sha256:68ab0697655caa2fb4a48a0f9bf5182de4fb0844257429de3bd31a8b33c967af
 ---
 
 # Current state
@@ -38,6 +38,7 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - `godot-editor-lifecycle` 可在已授权 Godot 修改任务需要 session `0` 时自动挂起并恢复唯一 canonical Editor：只使用精确 PID 的正常窗口关闭与 pinned GUI executable，不强杀、不注入输入、不打开原本关闭的 Editor。
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
+- Buff/Item disposable DTO 存在时，统一入口会先严格编译 14 Buff、3 Consumable、12 Equipment typed draft 并重建 `Exported/UnityOwned` receipt；该步骤不生成 Godot Resource，也不复制只审计的 Buff icon。
 
 ## Validation
 

@@ -45,6 +45,13 @@ public sealed class FrozenUnitySourceTests
             ["Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs"] = "84d04546bda0ab8121439a2285fa5065be642cc2",
             ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs"] = "31a2739f51ab47c1a24e41240083db6dfbcb9053",
             ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs"] = "bc93aee09577d3bd9e1dda94c062c5c006383d61",
+            ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffConfig.cs"] = "b263a63e34ba7084e8b90bf557b1f553957d413e",
+            ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffEffectType.cs"] = "3e16349893caa94593519085518ba333e367c540",
+            ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffRefreshStrategy.cs"] = "d12f701a2bfb6589f0f3722d75dce82465c56d7f",
+            ["Assets/Tactics/Scripts/Common/Units/Buffs/BuffTriggerTiming.cs"] = "92690c614870fe24b53d069685bffb71e9439358",
+            ["Assets/Tactics/Scripts/Common/Consumables/ConsumableDefinition.cs"] = "e1f0c75872bf1df506216570bfb7c8618ef1cf93",
+            ["Assets/Tactics/Scripts/Common/Equipment/EquipmentDefinition.cs"] = "bfa8dbf215905a8c2c78a64fb3bb449297a05c6c",
+            ["Assets/Tactics/Scripts/Common/Equipment/EquipmentSlot.cs"] = "414b4f21b7e9110a3c16ca7f22bb9822561274fe",
             ["Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs"] = "54a463c642c59d1550c0454a9388c3f68c7e89b1",
             ["Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs"] = "4f0d131a1f809c920f01cf137087dc0dc63d312a",
             ["Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs"] = "8a3a14a1392bb57562fb6ae286eb79508ce6fe75",
@@ -103,6 +110,55 @@ public sealed class FrozenUnitySourceTests
             Assert.That(ability, Does.Contain("_owner.Mana -= _config.ManaCost"));
             Assert.That(ability, Does.Contain("FindDropCell(_owner, cell, 3)"));
         });
+    }
+
+    [Test]
+    public void BuffAndItemFrozenContracts_MatchGolden()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string buffConfig = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Units/Buffs/BuffConfig.cs");
+        string buff = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs");
+        string buffBehavior = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs");
+        string buffComponent = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs");
+        string consumableDefinition = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Consumables/ConsumableDefinition.cs");
+        string equipmentDefinition = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Equipment/EquipmentDefinition.cs");
+        using JsonDocument golden = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Tests", "golden", "buff-item-batch-v1.json")));
+        using JsonDocument consumables = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Assets", "Tactics", "GameData", "Consumables.json")));
+        using JsonDocument equipment = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Assets", "Tactics", "GameData", "Equipment.json")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(buffConfig, Does.Contain("public enum BuffPolarity"));
+            Assert.That(buffConfig, Does.Contain("public BuffRefreshStrategy RefreshStrategy"));
+            Assert.That(buff, Does.Contain("StackCount <= 0"));
+            Assert.That(buff, Does.Contain("RemainingTurns--;"));
+            Assert.That(buffBehavior, Does.Contain("BuffEffectType.Poison => 2f"));
+            Assert.That(buffBehavior, Does.Contain("BuffEffectType.Burning => buff.StackCount"));
+            Assert.That(buffComponent, Does.Contain("BuffEffectType.Burning => BuffRefreshStrategy.AddStacks"));
+            Assert.That(buffComponent, Does.Contain("BuffEffectType.Slow => BuffRefreshStrategy.RefreshDuration"));
+            Assert.That(buffComponent, Does.Contain("existing.RemainingTurns += buff.RemainingTurns"));
+            Assert.That(consumableDefinition, Does.Contain("RemoveHarmfulBuffs"));
+            Assert.That(consumableDefinition, Does.Contain("AllyIncludingSelf"));
+            Assert.That(equipmentDefinition, Does.Contain("public int StrengthBonus"));
+            Assert.That(equipmentDefinition, Does.Contain("public int LuckBonus"));
+        });
+
+        JsonElement root = golden.RootElement;
+        Assert.That(root.GetProperty("buffs").GetArrayLength(), Is.EqualTo(14));
+        Assert.That(root.GetProperty("consumables").GetArrayLength(), Is.EqualTo(3));
+        Assert.That(root.GetProperty("equipment").GetArrayLength(), Is.EqualTo(12));
+        Assert.That(consumables.RootElement.GetProperty("Definitions").GetArrayLength(), Is.EqualTo(3));
+        Assert.That(equipment.RootElement.GetArrayLength(), Is.EqualTo(12));
+        Assert.That(root.GetProperty("externalContentDependencies")[0].GetString(), Is.EqualTo("buff.poison"));
     }
 
     [Test]

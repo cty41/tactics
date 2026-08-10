@@ -41,6 +41,10 @@ class OracleMatrixTests(unittest.TestCase):
                 with self.subTest(contract=contract["id"], asset_test=asset_test_file):
                     self.assertTrue((self.root / asset_test_file).is_file(), asset_test_file)
 
+            for data_file in contract.get("sourceDataFiles", []):
+                with self.subTest(contract=contract["id"], data=data_file):
+                    self.assertTrue((self.root / data_file).is_file(), data_file)
+
             harness_file = contract.get("oracleHarnessFile")
             if harness_file is None:
                 continue
@@ -75,6 +79,21 @@ class OracleMatrixTests(unittest.TestCase):
         for path, expected_blob_id in frozen_assets.items():
             with self.subTest(path=path):
                 self.assertTrue((self.root / path).is_file(), path)
+                result = subprocess.run(
+                    ["git", "rev-parse", f"{commit}:{path}"],
+                    cwd=self.root,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(result.stdout.strip(), expected_blob_id)
+
+    def test_frozen_json_blob_ids_match_final_commit_without_line_ending_assumptions(self) -> None:
+        commit = self.matrix["unityOracle"]["commit"]
+        frozen_data = self.matrix["frozenDataBlobs"]
+        self.assertEqual(2, len(frozen_data))
+        for path, expected_blob_id in frozen_data.items():
+            with self.subTest(path=path):
                 result = subprocess.run(
                     ["git", "rev-parse", f"{commit}:{path}"],
                     cwd=self.root,
@@ -123,6 +142,10 @@ class OracleMatrixTests(unittest.TestCase):
         )
         self.assertEqual(
             contract_statuses["unit.pure-run-v1"],
+            "unity_final_asset_export_and_linked_source_oracle",
+        )
+        self.assertEqual(
+            contract_statuses["buff-item.pure-run-v1"],
             "unity_final_asset_export_and_linked_source_oracle",
         )
 

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-10T18:23:32+08:00"
+timestamp: "2026-08-11T01:44:10+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -13,7 +13,7 @@ repo_paths:
   - .agents/skills/project-doc-organization/SKILL.md
   - .agents/skills/plan-mode-plan-writer/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:4454e303703cc67fc8be63dbb5822dc74fa5c4d130a778c95878f036b9bd66bd
+source_fingerprint: sha256:7d6636c35163a95515ffcdc5fa980ad3f2ea59b3419a81d0091665dfbaef5e6d
 ---
 
 # Current State
@@ -26,7 +26,7 @@ source_fingerprint: sha256:4454e303703cc67fc8be63dbb5822dc74fa5c4d130a778c95878f
 
 迁移阶段的验证边界以 `.agents/docs/2026-08-07-godot-tactics-migration-design.md` 为准；其中明确 Unity Windows Standalone 不属于迁移门禁，避免在 OKF 摘要中复制整份迁移设计。
 
-当前 Godot 总迁移任务保存在 `.agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md`；Phase 0–3 的 checkpoint 为 `2ef51954`。当前只激活 `.agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md`，范围为 12 个 Pure Run Unit，不包含后续内容类别；实现、自动门禁与程序化 Gallery/10×10 Spawn 已完成，计划保持 active 直到用户完成 canonical Editor 视觉与 Reload 验收。两份计划完成前不得删除或改写成已验收历史；完成后仍按计划生命周期迁移长期知识并删除 completed plan。
+当前 Godot 总迁移任务保存在 `.agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md`；Phase 0–3 checkpoint 为 `2ef51954`，Phase 4 自动实施与 Editor lifecycle checkpoint 为 `2b341cb3`。当前同时保留两个互不替代的 active plan：`.agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md` 等待 Unit Gallery/Spawn/Reload 人工视觉验收；`.agents/plans/2026-08-11-godot-phase5-buff-item-overnight.md` 执行无视觉载荷的 Buff/Item 源合同、运行时和 ResourceSaver 批次。Phase 5A 自动门禁不得代替 Phase 4 人工闸门；各计划完成后仍按计划生命周期迁移长期知识并删除 completed plan。
 
 # Relationships
 

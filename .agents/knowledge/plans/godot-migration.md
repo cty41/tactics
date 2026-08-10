@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-10T21:52:00+08:00"
+timestamp: "2026-08-11T01:44:07+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,8 +18,9 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
   - .agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md
-verified_revision: d092a955
-source_fingerprint: sha256:7452844dcb6ecae999e919ceb2a983efcd29a49bcb03fcb323caf692aedce8c5
+  - .agents/plans/2026-08-11-godot-phase5-buff-item-overnight.md
+verified_revision: 2b341cb3
+source_fingerprint: sha256:a9a042f709b0575bc78a63da8f1492a33f901451f0b33a56661e1707133c0ad3
 ---
 
 # Current state
@@ -52,14 +53,16 @@ Phase 4 Unit 自动实施已完成但仍等待人工视觉闸门：冻结 Golden
 
 Phase 4 二次视觉修复后自动门禁通过：Core 35、Application 19、冻结 Unity Oracle 11、迁移 Python 86、Agent policy 8、GdUnit 11、OKF 14；Debug/Release 零警告零错误，Unity export 两次独立运行、PNG 事务复制和 ResourceSaver 连续两次生成均 byte-identical，headless Editor UID/import 扫描、Compatibility/Forward+ Catalog/Factory/Fixture 运行和程序化 Gallery/10×10 Spawn 截图均通过。程序化截图由 Godot Image 使用已导入纹理、`goat-body-mask-v1` CPU 参考和 Sprite pivot/Shadow 几何换算确定性合成；共享 goat 图像在缩放前复制，避免后续实例逐个缩小，并有源纹理尺寸不变测试。截图只证明资源组合、位置与可检查性，不替代用户对 tint、体量、朝向、死亡图与 Shadow 的视觉接受。
 
+Phase 5A Buff/Item 源合同已冻结为独立 `pure-run-buffs-items-v1` batch：Unity 6000.3.11f1 通过 AssetDatabase/SerializedObject 导出 14 个 Buff 根资产，两次独立 batchmode 输出 SHA-256 均为 `c01194701068cf8447063ff8ac26d787c2f99ded4f1442f647a93ad4fb8d0ad8`；3 个 Consumable 与 12 个 Equipment 直接绑定最终 Tag 的 JSON Git blob 和工作树 SHA-256。typed converter 严格核对字段、枚举、GUID、依赖 hash、ContentId/SourceId、Ice Armor Lv2 → Slow 引用与唯一的外部 `buff.poison` 依赖。3 个 Buff icon 只保存路径、GUID、LocalFileId 和 dependency hash，未复制 PNG。当前批次为 `Exported/UnityOwned`，`visualAcceptance=not_applicable_no_visual_payload`；尚未实现 Core/Application runtime 或生成 Godot Resource。
+
 ## Verification model
 
 `Tools/migration/Verify-GodotMigration.ps1` 串行执行 locked restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、隔离的 GdUnit test host、Release build、Godot runtime/editor headless 与 OKF。GdUnit 3.1.1 的 Runtime Runner 要求 C# runner 位于 `project.godot` 主程序集，因此 test host 使用相同程序集名，但测试源码、`obj`、lock 和包与生产 csproj 分离；Release 明确排除。
 
 ## Next gates
 
-1. 当前活跃的 Phase 4 Unit 计划 `.agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md` 以 checkpoint `2ef51954` 为基线；自动实施和统一门禁已经完成，下一步只做 canonical Editor 中的 Gallery/方向/死亡/Shadow/Reload 人工验收，未通过前不关闭计划。
+1. 当前活跃的 Phase 4 Unit 计划 `.agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md` 已在 checkpoint `2b341cb3` 保存自动实施结果；下一步仍只做 canonical Editor 中的 Gallery/方向/死亡/Shadow/Reload 人工验收，未通过前不关闭或晋升。
 2. 项目 MCP Profile 已切换为 `content-authoring` 并由统一入口校验 23 个阶段白名单工具；本轮没有可用 live Editor session，所有实现与自动 QA 均在后台/无窗口完成。人工视觉、Assembly Reload 和组合场景接受仍留给用户，不使用前台 UI 自动化。
-3. Buff/Item、Skill、AI/Encounter、Run/Persistence、UI/Input 与完整 Presentation/VFX/Audio 均不进入 Phase 4；Unit batch 完成人验后保持 `Validated/UnityOwned`，不会自动开始下一批或晋升类别 ownership。
+3. Phase 5A 活跃计划 `.agents/plans/2026-08-11-godot-phase5-buff-item-overnight.md` 已完成源合同冻结，下一 checkpoint 只实现计划内的 Status/Consumable/Equipment Core/Application 合同；Skill、AI/Encounter、Run/Persistence、UI/Input 与完整 Presentation/VFX/Audio 仍不进入本批。
 
 Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行，Godot Windows Release/PCK Smoke 延后到发布阶段。

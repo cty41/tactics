@@ -28,6 +28,13 @@ $unitGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\
 $unitGalleryCapture = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1-gallery.png'
 $unitSpawnCapture = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1-spawn.png'
 $unitGoatTintShader = Join-Path $projectRoot 'src\Tactics.Godot.Adapter\Runtime\Shaders\GoatBodyTint.gdshader'
+$buffItemExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-buffs-items-v1.unity.json'
+$buffItemDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-buffs-items-v1.draft.json'
+$buffItemGolden = Join-Path $repoRoot 'Tests\golden\buff-item-batch-v1.json'
+$buffItemSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-buffs-items-v1.json'
+$buffItemExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-buffs-items-v1-export.json'
+$consumablesJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Consumables.json'
+$equipmentJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Equipment.json'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 $releaseVerificationDirectory = [System.IO.Path]::GetFullPath(
     (Join-Path $systemTempRoot ("tactics-godot-release-" + [Guid]::NewGuid().ToString('N'))))
@@ -251,6 +258,29 @@ try {
     }
     else {
         Write-Host '== Skip real Pure Run Unit regeneration: disposable Unity DTO is not present =='
+    }
+
+    if (Test-Path -LiteralPath $buffItemExport -PathType Leaf) {
+        Invoke-Checked 'Compile real Pure Run Buff/Item typed migration draft' {
+            python -m Tools.migration.buff_item_converter `
+                --export $buffItemExport `
+                --specification $buffItemSpecification `
+                --golden $buffItemGolden `
+                --consumables $consumablesJson `
+                --equipment $equipmentJson `
+                --output $buffItemDraft
+        }
+
+        Invoke-Checked 'Refresh Pure Run Buff/Item export receipt' {
+            python -m Tools.migration.buff_item_receipt `
+                --export $buffItemExport `
+                --specification $buffItemSpecification `
+                --draft $buffItemDraft `
+                --output $buffItemExportReceipt
+        }
+    }
+    else {
+        Write-Host '== Skip real Pure Run Buff/Item draft: disposable Unity DTO is not present =='
     }
 
     # A ResourceSaver script can register a newly created UID only in its current process.

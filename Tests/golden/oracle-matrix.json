@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "unityOracle": {
     "tag": "unity-final-2026-08-08",
     "commit": "168d1934",
@@ -26,6 +26,13 @@
     "Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs": "84d04546bda0ab8121439a2285fa5065be642cc2",
     "Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs": "31a2739f51ab47c1a24e41240083db6dfbcb9053",
     "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs": "bc93aee09577d3bd9e1dda94c062c5c006383d61",
+    "Assets/Tactics/Scripts/Common/Units/Buffs/BuffConfig.cs": "b263a63e34ba7084e8b90bf557b1f553957d413e",
+    "Assets/Tactics/Scripts/Common/Units/Buffs/BuffEffectType.cs": "3e16349893caa94593519085518ba333e367c540",
+    "Assets/Tactics/Scripts/Common/Units/Buffs/BuffRefreshStrategy.cs": "d12f701a2bfb6589f0f3722d75dce82465c56d7f",
+    "Assets/Tactics/Scripts/Common/Units/Buffs/BuffTriggerTiming.cs": "92690c614870fe24b53d069685bffb71e9439358",
+    "Assets/Tactics/Scripts/Common/Consumables/ConsumableDefinition.cs": "e1f0c75872bf1df506216570bfb7c8618ef1cf93",
+    "Assets/Tactics/Scripts/Common/Equipment/EquipmentDefinition.cs": "bfa8dbf215905a8c2c78a64fb3bb449297a05c6c",
+    "Assets/Tactics/Scripts/Common/Equipment/EquipmentSlot.cs": "414b4f21b7e9110a3c16ca7f22bb9822561274fe",
     "Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs": "54a463c642c59d1550c0454a9388c3f68c7e89b1",
     "Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs": "4f0d131a1f809c920f01cf137087dc0dc63d312a",
     "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs": "8a3a14a1392bb57562fb6ae286eb79508ce6fe75",
@@ -33,6 +40,10 @@
     "Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs": "4da3c885cfd9df5ed4128f8ef446815e760a2b0a",
     "Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs": "9528f7c17f3a782b16c4ceaa9b6b97e25893acfb",
     "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs": "850f23e53869c04c8ff28adbd85c1d4f12da9bae"
+  },
+  "frozenDataBlobs": {
+    "Assets/Tactics/GameData/Consumables.json": "626f45f2fabe2e957d6eeb327a57e4b695935ef8",
+    "Assets/Tactics/GameData/Equipment.json": "fdc13a13402f4f15aaa6ef97bcd1d118fdf76802"
   },
   "frozenAssetBlobs": {
     "Assets/Tactics/Arts/PureRun/Materials/goat_aoe.mat": "7cf0570cb728a47af148624bd86ba67dd3112586",
@@ -241,6 +252,40 @@
         "derivedMovement": "unity_final_linked_source_oracle",
         "healthManaInitiative": "unity_final_source_semantic_assertion",
         "prefabAndVisuals": "unity_assetdatabase_export_and_frozen_asset_snapshot",
+        "contentIdentity": "versioned_migration_contract"
+      },
+      "status": "unity_final_asset_export_and_linked_source_oracle"
+    },
+    {
+      "id": "buff-item.pure-run-v1",
+      "sourceFile": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffConfig.cs",
+      "sourceTests": [],
+      "sourceRuntimeFiles": [
+        "Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs",
+        "Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs",
+        "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",
+        "Assets/Tactics/Scripts/Common/Units/Buffs/BuffEffectType.cs",
+        "Assets/Tactics/Scripts/Common/Units/Buffs/BuffRefreshStrategy.cs",
+        "Assets/Tactics/Scripts/Common/Units/Buffs/BuffTriggerTiming.cs",
+        "Assets/Tactics/Scripts/Common/Consumables/ConsumableDefinition.cs",
+        "Assets/Tactics/Scripts/Common/Equipment/EquipmentDefinition.cs",
+        "Assets/Tactics/Scripts/Common/Equipment/EquipmentSlot.cs"
+      ],
+      "sourceDataFiles": [
+        "Assets/Tactics/GameData/Consumables.json",
+        "Assets/Tactics/GameData/Equipment.json"
+      ],
+      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleTests": [
+        "LinkedSources_MatchUnityFinalGitBlobs",
+        "BuffAndItemFrozenContracts_MatchGolden"
+      ],
+      "goldenVector": "buff-item-batch-v1.json",
+      "exportReceipt": "Tools/migration/manifest/receipts/pure-run-buffs-items-v1-export.json",
+      "evidence": {
+        "buffAssets": "unity_assetdatabase_export_and_frozen_asset_snapshot",
+        "itemDefinitions": "frozen_json_and_source_semantic_assertion",
+        "iconPayloads": "audit_only_not_copied",
         "contentIdentity": "versioned_migration_contract"
       },
       "status": "unity_final_asset_export_and_linked_source_oracle"

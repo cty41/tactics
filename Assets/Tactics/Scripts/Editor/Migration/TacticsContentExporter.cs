@@ -24,6 +24,9 @@ namespace Tactics.Editor.Migration
         private const string PureRunUnitsSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-units-v1.json";
 
+        private const string PureRunBuffsItemsSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-buffs-items-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -54,6 +57,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPureRunUnitBatchFromCommandLine()
         {
             ExportPureRunUnitBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run Buffs and Items V1")]
+        public static void ExportPureRunBuffItemBatch()
+        {
+            string outputPath = Export(PureRunBuffsItemsSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run Buffs and Items V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunBuffItemBatchFromCommandLine()
+        {
+            ExportPureRunBuffItemBatch();
         }
 
         public static string Export(string relativeSpecPath)
@@ -313,14 +328,18 @@ namespace Tactics.Editor.Migration
             if (target == null)
                 return null;
             AssetDatabase.TryGetGUIDAndLocalFileIdentifier(target, out string guid, out long localFileId);
+            string sourcePath = AssetDatabase.GetAssetPath(target);
             return new ExportedReference
             {
                 Name = target.name,
                 ObjectType = target.GetType().FullName ?? target.GetType().Name,
-                SourcePath = AssetDatabase.GetAssetPath(target),
+                SourcePath = sourcePath,
                 SourceGuid = guid,
                 SourceLocalFileId = localFileId,
-                GlobalObjectId = GlobalObjectId.GetGlobalObjectIdSlow(target).ToString()
+                GlobalObjectId = GlobalObjectId.GetGlobalObjectIdSlow(target).ToString(),
+                DependencyHash = string.IsNullOrEmpty(sourcePath)
+                    ? string.Empty
+                    : AssetDatabase.GetAssetDependencyHash(sourcePath).ToString()
             };
         }
 
@@ -486,6 +505,7 @@ namespace Tactics.Editor.Migration
             public string SourceGuid { get; set; }
             public long SourceLocalFileId { get; set; }
             public string GlobalObjectId { get; set; }
+            public string DependencyHash { get; set; }
         }
 
         [Serializable]
