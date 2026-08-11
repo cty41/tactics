@@ -58,7 +58,7 @@ public sealed class BattleTransitionService
 
         if (!state.TryGetUnit(command.ActorId, out BattleUnitState? actor) || actor is null)
             return Rejected(state, command.ActorId, "actor_not_found");
-        if (!actor.IsAlive)
+        if (!actor.IsAlive && command is not EndTurnCommand)
             return Rejected(state, command.ActorId, "actor_defeated");
         if (state.ActiveUnitId != command.ActorId)
             return Rejected(state, command.ActorId, "not_active_unit");

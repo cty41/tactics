@@ -1,8 +1,8 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-11
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:3bf252dc1a085d9722c2cde2b0a71233d8293b5c00c7c748f3069055b65504f3`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5fff0644ed35a874013411370580d7b1850de8e5dc6820469df9e8ffd5195186`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:d35450903ee7608942eefeee14257190545107049f16448daf810f5f98cdb2e8`。
 * **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:432a6927290c7ccde03e8bdaa5d09eae600e6b597d4f31bf70626c90559fec78`。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:4f9f82936ce9c67f56a50c9421668551e4e38d2f0cd294273425c3b7847609b0`。
 * **Validation**: 用户在 canonical Godot Editor 完成 Phase 4 Unit Gallery/Spawn/Reload 人工验收；四向、死亡/Reset、Goat tint、比例/Shadow、原生1600×900 resize 与网格外框均通过。`pure-run-units-v1` 晋升为 `Validated/UnityOwned + passed_for_migrated_project_owned_unit_visuals`，完成子计划按文档生命周期删除。
