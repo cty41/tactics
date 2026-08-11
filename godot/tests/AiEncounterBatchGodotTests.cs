@@ -28,10 +28,49 @@ public class AiEncounterBatchGodotTests
     {
         var fixture = new GodotAiEncounterFixture();
         fixture._Ready();
-        string result = fixture.ExecuteStep();
-        AssertThat(result).Contains("actor=fixture.enemy.0");
-        AssertThat(result).Contains("selected=");
-        AssertThat(result).Contains("Commands/events:");
+        AiFixtureTurnResult result = fixture.ExecuteSingleTurn();
+        AssertThat(result.ActorId).IsEqual("fixture.enemy.0");
+        AssertThat(result.GlobalStep).IsEqual(1);
+        AssertThat(result.CandidateCount).IsGreater(0);
+        fixture.Free();
+    }
+
+    [TestCase(0, 3)]
+    [TestCase(1, 3)]
+    [TestCase(2, 4)]
+    [TestCase(3, 1)]
+    [TestCase(4, 1)]
+    [RequireGodotRuntime]
+    public void AutoRoundExecutesEveryAiActorExactlyOnce(int scenario, int expectedTurns)
+    {
+        var fixture = new GodotAiEncounterFixture();
+        fixture._Ready();
+        fixture.SelectScenario(scenario);
+        AiFixtureRoundResult result = fixture.ExecuteCurrentRound();
+        AssertThat(result.Turns.Count).IsEqual(expectedTurns);
+        AssertThat(result.RoundAfter).IsEqual(result.RoundBefore + 1);
+        AssertThat(result.HitCommandLimit).IsFalse();
+        fixture.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void ResetReplaysTheSameRoundAndEliteSingleMatchesRound()
+    {
+        var fixture = new GodotAiEncounterFixture();
+        fixture._Ready();
+        AiFixtureRoundResult first = fixture.ExecuteCurrentRound();
+        fixture.ResetCurrentScenario();
+        AiFixtureRoundResult replay = fixture.ExecuteCurrentRound();
+        AssertThat(replay.StateFingerprint).IsEqual(first.StateFingerprint);
+        AssertThat(string.Join('|', replay.Turns.Select(value => value.Events))).IsEqual(string.Join('|', first.Turns.Select(value => value.Events)));
+
+        fixture.SelectScenario(3);
+        AiFixtureTurnResult eliteSingle = fixture.ExecuteSingleTurn();
+        fixture.ResetCurrentScenario();
+        AiFixtureRoundResult eliteRound = fixture.ExecuteCurrentRound();
+        AssertThat(eliteRound.Turns.Count).IsEqual(1);
+        AssertThat(eliteRound.StateFingerprint).IsEqual(eliteSingle.StateFingerprint);
         fixture.Free();
     }
 }

@@ -9,6 +9,28 @@ using Tactics.Core.Units;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
+public sealed record AiFixtureTurnResult(
+    int GlobalStep,
+    int RoundBefore,
+    int RoundAfter,
+    string ActorId,
+    string NextActorId,
+    int CandidateCount,
+    string SelectedIntent,
+    string SelectedSkill,
+    bool UsedPattern,
+    int PatternBefore,
+    int PatternAfter,
+    string Events,
+    string StateFingerprint);
+
+public sealed record AiFixtureRoundResult(
+    int RoundBefore,
+    int RoundAfter,
+    IReadOnlyList<AiFixtureTurnResult> Turns,
+    bool HitCommandLimit,
+    string StateFingerprint);
+
 /// <summary>1600x900 gameplay fixture exposing deterministic AI scenario selection and logs.</summary>
 public partial class GodotAiEncounterFixture : Control
 {
@@ -27,6 +49,7 @@ public partial class GodotAiEncounterFixture : Control
     private BattleState? _state;
     private Label? _title;
     private Label? _log;
+    private readonly List<string> _history = new();
     private int _index;
     private int _step;
     private string _last = "Ready.";
@@ -43,14 +66,45 @@ public partial class GodotAiEncounterFixture : Control
         if (e is not InputEventKey { Pressed: true, Echo: false } key) return;
         if (key.Keycode == Key.Left) { _index = (_index + Scenarios.Length - 1) % Scenarios.Length; ResetScenario(); }
         else if (key.Keycode == Key.Right) { _index = (_index + 1) % Scenarios.Length; ResetScenario(); }
-        else if (key.Keycode == Key.Space) ExecuteStep();
-        else if (key.Keycode is Key.Enter or Key.KpEnter) ExecuteRound();
-        else if (key.Keycode == Key.R) ResetScenario();
+        else if (key.Keycode == Key.Space) ExecuteSingleTurn();
+        else if (key.Keycode is Key.Enter or Key.KpEnter) ExecuteCurrentRound();
+        else if (key.Keycode == Key.R) ResetCurrentScenario();
     }
 
-    public string ExecuteStep()
+    public AiFixtureTurnResult ExecuteSingleTurn() => ExecuteSingleTurnCore(refresh: true);
+
+    public AiFixtureRoundResult ExecuteCurrentRound()
     {
-        if (_state is null) return "ERROR: scenario is not initialized.";
+        if (_state is null) throw new InvalidOperationException("Scenario is not initialized.");
+        int startRound = _state.Round;
+        var turns = new List<AiFixtureTurnResult>();
+        while (_state.Round == startRound && turns.Count < 64)
+            turns.Add(ExecuteSingleTurnCore(refresh: false));
+        bool hitLimit = turns.Count >= 64;
+        _last = hitLimit
+            ? "LAST ACTION: AUTO ROUND FAILED — structured command limit reached (64)."
+            : $"LAST ACTION: AUTO ROUND — {turns.Count} AI actors completed round {startRound}.";
+        _history.Add($"=== ROUND {startRound} COMPLETE: {turns.Count} turns; next round {_state.Round} ===");
+        Refresh();
+        return new AiFixtureRoundResult(startRound, _state.Round, turns, hitLimit, CreateStateFingerprint());
+    }
+
+    public void SelectScenario(int index)
+    {
+        if (index < 0 || index >= Scenarios.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        _index = index;
+        ResetCurrentScenario();
+    }
+
+    public void ResetCurrentScenario()
+    {
+        ResetScenario();
+    }
+
+    private AiFixtureTurnResult ExecuteSingleTurnCore(bool refresh)
+    {
+        if (_state is null) throw new InvalidOperationException("Scenario is not initialized.");
+        int roundBefore = _state.Round;
         UnitInstanceId actorId = _state.ActiveUnitId;
         AiDefinition definition = _unitAi[actorId];
         int patternIndex = _patternCursors.GetValueOrDefault(actorId);
@@ -61,27 +115,21 @@ public partial class GodotAiEncounterFixture : Control
         _step++;
         string scores = string.Join("; ", plan.Candidates.Where(value => value.IsLegal).Take(6).Select(value => $"{value.Intent}/{value.SkillId?.Value ?? "-"}={value.TotalScore:0.##}"));
         string events = string.Join(" -> ", result.Events.Select(value => value.GetType().Name));
-        _last = $"Step {_step}: actor={actorId}; candidates={plan.Candidates.Count}; selected={plan.Selected.Intent}/{plan.Selected.SkillId?.Value ?? "-"}; score={plan.Selected.TotalScore:0.##}; pattern={plan.UsesPattern}; cursor={patternIndex}->{result.NextPatternIndex}\nScores: {scores}\nCommands/events: {events}";
-        Refresh();
-        return _last;
-    }
-
-    private void ExecuteRound()
-    {
-        if (_state is null) return;
-        int startRound = _state.Round;
-        int commands = 0;
-        while (_state.Round == startRound && commands < 64) { ExecuteStep(); commands++; }
-        _last = commands >= 64 ? "ERROR: structured command limit reached (64)." : $"Auto round complete: {commands} AI turns; now round {_state.Round}.";
-        Refresh();
+        string skill = plan.Selected.SkillId?.Value ?? "-";
+        string line = $"#{_step} R{roundBefore} {actorId} -> {plan.Selected.Intent}/{skill}; candidates={plan.Candidates.Count}; pattern={plan.UsesPattern} {patternIndex}->{result.NextPatternIndex}; next={_state.ActiveUnitId}";
+        _history.Add(line);
+        _last = $"LAST ACTION: SINGLE TURN — exactly 1 AI actor.\n{line}\nScores: {scores}\nEvents: {events}";
+        if (refresh) Refresh();
+        return new AiFixtureTurnResult(_step, roundBefore, _state.Round, actorId.Value, _state.ActiveUnitId.Value, plan.Candidates.Count, plan.Selected.Intent.ToString(), skill, plan.UsesPattern, patternIndex, result.NextPatternIndex, events, CreateStateFingerprint());
     }
 
     private void ResetScenario()
     {
         (_state, _unitAi) = CreateScenario(_index);
         _patternCursors = _unitAi.Keys.ToDictionary(value => value, _ => 0);
+        _history.Clear();
         _step = 0;
-        _last = "Reset: fixed seed=6 and deterministic event sequence restored.";
+        _last = $"RESET — fixed seed=6; {_unitAi.Count} AI actors. Space advances 1 actor; Enter advances all {_unitAi.Count} actors in the round.";
         Refresh();
     }
 
@@ -151,6 +199,16 @@ public partial class GodotAiEncounterFixture : Control
         if (_title is null || _log is null || _state is null) return;
         _title.Text = $"{_index + 1}/5  {Scenarios[_index]} — round {_state.Round}, active {_state.ActiveUnitId}";
         string units = string.Join(" | ", _state.Units.Values.OrderBy(value => value.Unit.InstanceId.Value, StringComparer.Ordinal).Select(value => $"{value.Unit.InstanceId}: HP {value.CurrentHealth}, MP {value.CurrentMana}, cell {value.Unit.Position}"));
-        _log.Text = $"Seed/state: {_state.RandomState}  Step: {_step}\n{_last}\n\nState: {units}\n\nPresentation: migrated Unit sprites + semantic cues only; formal enemy VFX not copied.";
+        string history = _history.Count == 0 ? "(no turns executed)" : string.Join('\n', _history.TakeLast(12));
+        string eliteNote = _unitAi.Count == 1 ? "\nNOTE: Single-enemy Elite scenario — Space and Enter both execute one actor, so their state result is intentionally identical." : string.Empty;
+        _log.Text = $"Seed/state: {_state.RandomState}  Global step: {_step}\n{_last}{eliteNote}\n\nTURN HISTORY\n{history}\n\nState: {units}\n\nPresentation: semantic gameplay diagnostics only; formal enemy VFX not copied.";
+    }
+
+    private string CreateStateFingerprint()
+    {
+        if (_state is null) return string.Empty;
+        string units = string.Join(';', _state.Units.Values.OrderBy(value => value.Unit.InstanceId.Value, StringComparer.Ordinal).Select(value => $"{value.Unit.InstanceId.Value}:{value.CurrentHealth}:{value.CurrentMana}:{value.Unit.Position.X},{value.Unit.Position.Y}"));
+        string cursors = string.Join(';', _patternCursors.OrderBy(value => value.Key.Value, StringComparer.Ordinal).Select(value => $"{value.Key.Value}:{value.Value}"));
+        return $"r={_state.Round}|a={_state.ActiveUnitId.Value}|rng={_state.RandomState}|u={units}|p={cursors}";
     }
 }

@@ -9,9 +9,9 @@ RECEIPT=ROOT/"Tools/migration/manifest/receipts/pure-run-ai-encounter-v1-generat
 BATCH=ROOT/"Tools/migration/manifest/batches/pure-run-ai-encounter-v1.json"
 
 class AiEncounterGenerationTests(unittest.TestCase):
-    def test_generated_batch_preserves_manual_gate(self):
+    def test_validated_batch_records_passed_manual_gate(self):
         batch=json.loads(BATCH.read_text(encoding="utf-8")); receipt=json.loads(RECEIPT.read_text(encoding="utf-8"))
-        self.assertEqual("Generated",batch["status"]); self.assertEqual("UnityOwned",batch["ownership"]); self.assertEqual("pending",receipt["manualGameplayAcceptance"]); self.assertEqual(73,receipt["canonicalCatalogEntryCount"])
+        self.assertEqual("Validated",batch["status"]); self.assertEqual("UnityOwned",batch["ownership"]); self.assertEqual("passed",receipt["manualGameplayAcceptance"]); self.assertEqual(73,receipt["canonicalCatalogEntryCount"])
     def test_ledger_owns_exactly_seventeen_artifacts(self):
         ledger=json.loads(LEDGER.read_text(encoding="utf-8")); self.assertEqual(17,len(ledger["artifacts"])); paths={item["resourcePath"] for item in ledger["artifacts"]}; self.assertNotIn("res://content/ContentCatalog.tres",paths); self.assertIn("res://content/ai_encounters/AiEncounterFixture.tscn",paths)
         for item in ledger["artifacts"]:
