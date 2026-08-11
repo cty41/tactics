@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ui-input-v1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "outputPath": "Tools/migration/out/pure-run-ui-input-v1.unity.json",
+  "assets": [
+    {"sourceKey":"ui.home","sourcePath":"Assets/Tactics/Arts/UI/Home.uxml","gitBlobSha1":"de447ae8fa1231ec5fabe4e9ba33bac78efbd289","targetContentIds":["ui.pure-run.home"],"exportMode":"audit-only-file"},
+    {"sourceKey":"ui.battle","sourcePath":"Assets/Tactics/Arts/UI/Battle.uxml","gitBlobSha1":"f2695f11ff0d9d9b69708af4ab6054128cb81768","targetContentIds":["ui.pure-run.battle"],"exportMode":"audit-only-file"},
+    {"sourceKey":"ui.settlement","sourcePath":"Assets/Tactics/Arts/UI/BattleSettlement.uxml","gitBlobSha1":"a8d1e5f9b4173e9e4bab6cf95fb2ebccaa8d8e01","targetContentIds":["ui.pure-run.settlement"],"exportMode":"audit-only-file"},
+    {"sourceKey":"ui.summary","sourcePath":"Assets/Tactics/Arts/UI/RunEndSummary.uxml","gitBlobSha1":"86bfaaab0a4953864bb3cda71dbb054118cfc05b","targetContentIds":["ui.pure-run.summary"],"exportMode":"audit-only-file"},
+    {"sourceKey":"input.actions","sourcePath":"Assets/Tactics/Input/InputSystem_Actions.inputactions","gitBlobSha1":"116594d250950e2680fcfc35308209f7270f514a","targetContentIds":["input.pure-run.desktop"],"exportMode":"audit-only-file"}
+  ]
+}

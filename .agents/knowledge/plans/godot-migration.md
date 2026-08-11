@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-11T18:24:18+08:00"
+timestamp: "2026-08-11T19:33:26+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:02d30eba69d8b5587cca655c10b2bffd7530f79841d59cf5d379add46fe58b68
+source_fingerprint: sha256:d35450903ee7608942eefeee14257190545107049f16448daf810f5f98cdb2e8
 ---
 
 # Current state
@@ -59,6 +59,8 @@ Phase 6A 已完成并关闭：两次 Unity AssetDatabase 后台导出冻结六�
 
 Phase 6B 已完成三战 Pure Run 持久化垂直切片：冻结 Unity v5 的会话、结算、恢复与摘要语义，Core/Application 实现 N1→N2→N3、战前 checkpoint、确定性奖励/恢复/死亡卸装、成长待办、稳定事务去重和终局摘要。Godot Adapter 提供版本化 canonical JSON 单槽存档，正式路径为 `user://pure-run/save-v1.json`，写入经 temp 重读校验、有效 backup 保留、损坏证据 quarantine 和 revision 并发保护；PendingBattle 跨进程从战前快照重开，不序列化逐回合 BattleState。ResourceSaver 新增 1 个 Run Resource、Catalog 与自动诊断 Fixture，canonical Catalog 达到 74 项；该批无视觉载荷，由 Compatibility/Forward+、故障恢复与全量回归自动验收后晋升为 `Validated/UnityOwned`。完整七层地图、Rest/Store/Mystery、N4–N6、Boss、成长消费和正式 Run UI/Input 仍不在本批范围。
 
+Phase 7A 已进入合同冻结 checkpoint：`pure-run-ui-input-v1` 绑定最终 Unity Home、Battle、Settlement、Summary UXML 与 Input Actions。五个根资产均采用 `audit-only-file`，只记录 GUID、LocalFileId、AssetDatabase dependency hash、原文件 SHA-256 和字节数，不遍历 Unity 导入对象、不复制 UI Toolkit/Input payload。两次独立 Unity 6000.3.11f1 batch 输出 byte-identical；batch 当前为 `Exported/UnityOwned`，可玩 Battle Session、Godot Scene/UI/Input 以及人工 UI/Input 闸门尚未完成。
+
 `AiEncounterFixture` 的单步与整轮可观测性已改为真实结构化结果：Space 精确执行一个 AI actor，Enter 执行当前轮剩余全部 actor，并累计 actor、intent、skill、candidate、pattern cursor、events 与 state fingerprint。自动测试固定 N1/N2/N3 为 3/3/4 turns、两个 Elite 为 1 turn，验证整轮推进、64-command guard、Reset 重放及 Elite 单步/整轮等价；Compatibility/Forward+ 均实际执行单步和 N1 整轮，GdUnit 增至 26。人工闸门因此只保留 1600×900 可读性、操作响应与 Reload/Output smoke。
 
 Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-transition-v3` 与 Golden schema v7。`BattleStatusState` 捕获 polarity/effect/trigger/refresh、stack、速度与减伤/反击参数；`BattleUnitState` 捕获基础速度、携带 Consumable 和每轮成功使用记录。Poison/Burning 按 ContentId 顺序 tick，非 Burning 回合末递减、Burning 按 stack 消耗，Frozen/Stun 只阻止非 EndTurn，Slow 从基础速度重算 MoveRange/Initiative，同 curse category 后应用替换。Consumable 只允许存活的自身或曼哈顿距离 1 友军，合法零恢复仍消耗 charge，非法目标不消耗，净化只移除 Harmful，每单位每轮只成功使用一次。Equipment 唯一 slot 后投影六项属性并复用 `unity-unit-derived-v1`。Mark、伤害倍率、Counter、Ice Armor retaliation 与 Fear 仅输出强类型 policy，不越界接入 Skill/AI。
@@ -70,7 +72,7 @@ Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-tra
 ## Next gates
 
 1. Phase 4 Unit 与 Phase 5A Buff/Item 均已完成并删除各自 active plan；结果由代码、设计、manifest、测试、OKF 与 Git 历史保存。
-2. 项目 MCP Profile 保持 `content-authoring`，统一入口校验 23 个阶段白名单工具；不因 Phase 4 收口自动切换到后续 Profile。
-3. Phase 6A 与 Phase 6B 已完成并删除 active plan。下一批 Phase 7 Scene/UI/Input 与完整 Presentation/VFX/Audio 仍须单独决策和确认。
+2. 项目 MCP Profile 已按 Phase 7A 切换为 `ui-input`，统一入口校验 27 个阶段白名单工具。
+3. Phase 6A 与 Phase 6B 已关闭；Phase 7A active plan 正在执行，当前下一 checkpoint 是通用可玩 Battle Session。完整 Presentation/VFX/Audio 仍属于 Phase 8。
 
 Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行，Godot Windows Release/PCK Smoke 延后到发布阶段。

@@ -13,6 +13,7 @@ from Tools.migration.manifest import normalize_content_id
 
 _HEX_32 = re.compile(r"^[0-9a-f]{32}$")
 _HEX_40 = re.compile(r"^[0-9a-f]{40}$")
+_HEX_64 = re.compile(r"^[0-9a-f]{64}$")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -65,9 +66,25 @@ def validate_export_document(
             raise ValueError(f"{source_key} has empty Unity LocalFileId")
         if not _HEX_32.fullmatch(str(asset.get("dependencyHash", ""))):
             raise ValueError(f"{source_key} has invalid AssetDatabase dependency hash")
+        expected_mode = str(expected.get("exportMode", "serialized-object"))
+        export_mode = str(asset.get("exportMode", "serialized-object"))
+        if export_mode != expected_mode:
+            raise ValueError(f"{source_key} has mismatched export mode")
         objects = asset.get("objects")
-        if not isinstance(objects, list) or not objects:
-            raise ValueError(f"{source_key} contains no serialized objects")
+        if not isinstance(objects, list):
+            raise ValueError(f"{source_key} has invalid serialized objects")
+        if export_mode == "audit-only-file":
+            if objects:
+                raise ValueError(f"{source_key} audit-only export contains serialized objects")
+            if not _HEX_64.fullmatch(str(asset.get("sourceFileSha256", ""))):
+                raise ValueError(f"{source_key} has invalid source file SHA-256")
+            if int(asset.get("sourceByteLength", 0)) <= 0:
+                raise ValueError(f"{source_key} has invalid source byte length")
+        elif export_mode == "serialized-object":
+            if not objects:
+                raise ValueError(f"{source_key} contains no serialized objects")
+        else:
+            raise ValueError(f"{source_key} has unsupported export mode {export_mode}")
         object_paths = [str(item.get("objectPath", "")) for item in objects]
         if object_paths != sorted(object_paths):
             raise ValueError(f"{source_key} object paths are not sorted")
@@ -115,6 +132,15 @@ def build_export_receipt(
                 "sourceGuid": asset["sourceGuid"],
                 "sourceLocalFileId": asset["sourceLocalFileId"],
                 "dependencyHash": asset["dependencyHash"],
+                **(
+                    {
+                        "exportMode": "audit-only-file",
+                        "sourceFileSha256": asset["sourceFileSha256"],
+                        "sourceByteLength": asset["sourceByteLength"],
+                    }
+                    if asset.get("exportMode") == "audit-only-file"
+                    else {}
+                ),
                 "serializedObjectCount": len(asset["objects"]),
                 "serializedPropertyCount": sum(
                     len(item.get("properties", [])) for item in asset["objects"]

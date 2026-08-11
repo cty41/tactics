@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Tactics.Runtime.Utilities;
@@ -35,6 +36,9 @@ namespace Tactics.Editor.Migration
 
         private const string PureRunPersistenceSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-persistence-v1.json";
+
+        private const string PureRunUiInputSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-ui-input-v1.json";
 
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
@@ -116,6 +120,18 @@ namespace Tactics.Editor.Migration
             ExportPureRunPersistenceBatch();
         }
 
+        [MenuItem("Tactics/Migration/Export Pure Run UI and Input V1")]
+        public static void ExportPureRunUiInputBatch()
+        {
+            string outputPath = Export(PureRunUiInputSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run UI and Input V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunUiInputBatchFromCommandLine()
+        {
+            ExportPureRunUiInputBatch();
+        }
+
         public static string Export(string relativeSpecPath)
         {
             string projectRoot = Directory.GetParent(Application.dataPath)?.FullName
@@ -165,6 +181,18 @@ namespace Tactics.Editor.Migration
             if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(mainAsset, out string guid, out long localFileId))
                 throw new InvalidOperationException($"Cannot resolve GUID/LocalFileId for '{specification.SourcePath}'.");
 
+            bool auditOnlyFile = string.Equals(
+                specification.ExportMode,
+                "audit-only-file",
+                StringComparison.Ordinal);
+            string absoluteSourcePath = Path.Combine(
+                Directory.GetParent(Application.dataPath)?.FullName
+                    ?? throw new InvalidOperationException("Cannot resolve Unity project root."),
+                NormalizeFilePath(specification.SourcePath));
+            byte[] sourceBytes = auditOnlyFile
+                ? File.ReadAllBytes(absoluteSourcePath)
+                : Array.Empty<byte>();
+
             var result = new ExportedAsset
             {
                 SourceKey = specification.SourceKey,
@@ -175,7 +203,12 @@ namespace Tactics.Editor.Migration
                 SourceLocalFileId = localFileId,
                 DependencyHash = AssetDatabase.GetAssetDependencyHash(specification.SourcePath).ToString(),
                 MainAssetType = mainAsset.GetType().FullName ?? mainAsset.GetType().Name,
-                Objects = ExportObjects(specification.SourcePath, mainAsset),
+                ExportMode = auditOnlyFile ? "audit-only-file" : "serialized-object",
+                SourceFileSha256 = auditOnlyFile ? ComputeSha256(sourceBytes) : null,
+                SourceByteLength = auditOnlyFile ? sourceBytes.LongLength : 0,
+                Objects = auditOnlyFile
+                    ? new List<ExportedObject>()
+                    : ExportObjects(specification.SourcePath, mainAsset),
                 Dependencies = AssetDatabase.GetDependencies(specification.SourcePath, false)
                     .Where(path => !string.Equals(path, specification.SourcePath, StringComparison.Ordinal))
                     .Select(ExportDependency)
@@ -190,6 +223,12 @@ namespace Tactics.Editor.Migration
                 .OrderBy(item => item, StringComparer.Ordinal)
                 .ToArray();
             return result;
+        }
+
+        private static string ComputeSha256(byte[] bytes)
+        {
+            using SHA256 sha256 = SHA256.Create();
+            return string.Concat(sha256.ComputeHash(bytes).Select(value => value.ToString("x2", CultureInfo.InvariantCulture)));
         }
 
         private static List<ExportedObject> ExportObjects(string sourcePath, Object mainAsset)
@@ -467,6 +506,13 @@ namespace Tactics.Editor.Migration
                 {
                     throw new InvalidDataException($"Invalid export asset specification '{asset.SourceKey}'.");
                 }
+                if (!string.IsNullOrEmpty(asset.ExportMode) &&
+                    !string.Equals(asset.ExportMode, "serialized-object", StringComparison.Ordinal) &&
+                    !string.Equals(asset.ExportMode, "audit-only-file", StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException(
+                        $"Invalid export mode '{asset.ExportMode}' for '{asset.SourceKey}'.");
+                }
             }
         }
 
@@ -492,6 +538,7 @@ namespace Tactics.Editor.Migration
             public string SourcePath { get; set; }
             public string GitBlobSha1 { get; set; }
             public string[] TargetContentIds { get; set; }
+            public string ExportMode { get; set; }
         }
 
         [Serializable]
@@ -517,6 +564,9 @@ namespace Tactics.Editor.Migration
             public long SourceLocalFileId { get; set; }
             public string DependencyHash { get; set; }
             public string MainAssetType { get; set; }
+            public string ExportMode { get; set; }
+            public string SourceFileSha256 { get; set; }
+            public long SourceByteLength { get; set; }
             public List<ExportedObject> Objects { get; set; }
             public List<ExportedDependency> Dependencies { get; set; }
             public string[] UnsupportedPropertyKinds { get; set; }
