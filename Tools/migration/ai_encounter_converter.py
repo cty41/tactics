@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 from Tools.migration.export_document import export_semantic_hash, load_json, validate_export_document
@@ -34,14 +35,48 @@ ENCOUNTERS = [
 def _properties(asset):
     return {p["propertyPath"]: p for p in asset["objects"][0]["properties"]}
 
+def _value(properties, path, default=None):
+    item = properties.get(path)
+    return default if item is None else item.get("value", default)
+
+def _compile_decision_graph(asset):
+    props = _properties(asset)
+    nodes = []
+    count = int(_value(props, "_nodes.Array.size", 0))
+    for index in range(count):
+        prefix = f"_nodes.Array.data[{index}]"
+        node_id = str(_value(props, prefix + "._nodeId", ""))
+        enabled = bool(_value(props, prefix + "._enabled", True))
+        if prefix + "._intentType" in props:
+            nodes.append({"nodeId":node_id,"kind":"intent","type":str(_value(props,prefix+"._intentType")),"basePriority":float(_value(props,prefix+"._basePriority",0)),"enabled":enabled})
+        elif prefix + "._ruleType" in props:
+            nodes.append({"nodeId":node_id,"kind":"rule","type":str(_value(props,prefix+"._ruleType")),"parameter":float(_value(props,prefix+"._parameter",0)),"enabled":enabled})
+        elif prefix + "._scoreType" in props:
+            keys=[]
+            key_count=int(_value(props,prefix+"._responseCurve.m_Curve.Array.size",0))
+            for key_index in range(key_count):
+                key=f"{prefix}._responseCurve.m_Curve.Array.data[{key_index}]"
+                keys.append({"time":float(_value(props,key+".time",0)),"value":float(_value(props,key+".value",0)),"inSlope":float(_value(props,key+".inSlope",0)),"outSlope":float(_value(props,key+".outSlope",0))})
+            nodes.append({"nodeId":node_id,"kind":"score","type":str(_value(props,prefix+"._scoreType")),"weight":float(_value(props,prefix+"._weight",0)),"curve":keys,"enabled":enabled})
+        else:
+            raise ValueError(f"unknown AI graph node at {prefix}")
+    edges=[]
+    for index in range(int(_value(props,"_edges.Array.size",0))):
+        prefix=f"_edges.Array.data[{index}]"
+        edges.append({"sourceNodeId":str(_value(props,prefix+"._sourceNodeId","")),"targetNodeId":str(_value(props,prefix+"._targetNodeId",""))})
+    if not nodes or not edges:
+        raise ValueError("AI decision graph must contain nodes and edges")
+    return {"nodes":nodes,"edges":edges,"sourcePath":asset["sourcePath"],"sourceGuid":asset["sourceGuid"],"dependencyHash":asset["dependencyHash"]}
+
 def compile_ai_encounter_draft(export, specification):
     warnings = validate_export_document(export, specification)
     if warnings:
         raise ValueError("AI/Encounter export contains unsupported values: " + "; ".join(warnings))
     assets = {a["sourceKey"]: a for a in export["assets"]}
-    if len(assets) != 20:
-        raise ValueError("AI/Encounter export must contain exactly 20 roots")
+    if len(assets) != 21:
+        raise ValueError("AI/Encounter export must contain exactly 21 roots")
     definitions = []
+    graph = _compile_decision_graph(assets["ai.shared.basic-melee-graph"])
     for content_id in AI_IDS:
         stem = content_id.removeprefix("ai.pure-run.")
         brain, profile = assets[f"ai.{stem}.brain"], assets[f"ai.{stem}.profile"]
@@ -50,7 +85,7 @@ def compile_ai_encounter_draft(export, specification):
         if profile["sourcePath"] not in refs:
             raise ValueError(f"{content_id} profile reference drift")
         pattern = [p["value"] for p in brain["objects"][0]["properties"] if p["propertyPath"].endswith("._abilityName")]
-        definitions.append({"contentId":content_id,"kind":"ai","archetype":stem,"brainPath":brain["sourcePath"],"brainGuid":brain["sourceGuid"],"brainLocalFileId":brain["sourceLocalFileId"],"profilePath":profile["sourcePath"],"profileGuid":profile["sourceGuid"],"decisionGraphPath":bp["_decisionGraph"]["reference"]["sourcePath"],"decisionGraphHash":bp["_decisionGraph"]["reference"]["dependencyHash"],"pattern":pattern})
+        definitions.append({"contentId":content_id,"kind":"ai","archetype":stem,"brainPath":brain["sourcePath"],"brainGuid":brain["sourceGuid"],"brainLocalFileId":brain["sourceLocalFileId"],"profilePath":profile["sourcePath"],"profileGuid":profile["sourceGuid"],"decisionGraphPath":bp["_decisionGraph"]["reference"]["sourcePath"],"decisionGraphHash":bp["_decisionGraph"]["reference"]["dependencyHash"],"pattern":pattern,"decisionGraph":graph,"maximumEngageCandidatesPerTarget":int(_value(bp,"_maxEngageCandidatesPerTarget",3)),"preferredMinimumRange":int(_value(bp,"_preferredMinimumRange",1)),"preferredMaximumRange":int(_value(bp,"_preferredMaximumRange",1)),"preferredRangeRepositionBonus":float(_value(bp,"_preferredRangeRepositionBonus",0))})
     for content_id, (mana, min_range, max_range, execution, damage, radius) in sorted(SKILLS.items()):
         config, graph = assets[content_id], assets["graph." + content_id.removeprefix("skill.")]
         cp, gp = _properties(config), _properties(graph)

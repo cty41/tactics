@@ -6,6 +6,7 @@
   "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
   "outputPath": "Tools/migration/out/pure-run-ai-encounter-v1.unity.json",
   "assets": [
+    {"sourceKey":"ai.shared.basic-melee-graph","sourcePath":"Assets/Tactics/AI/BasicMeleeGraph.asset","gitBlobSha1":"a950c16237e88c8dc0e81ccd69acf6330cc2597c","targetContentIds":["ai.pure-run.aoe","ai.pure-run.charger","ai.pure-run.elite-charger","ai.pure-run.elite-poison-caster","ai.pure-run.ranged","ai.pure-run.support"]},
     {"sourceKey":"ai.aoe.brain","sourcePath":"Assets/Tactics/AI/Encounters/AOEBrain.asset","gitBlobSha1":"0bee7cde24e5914cd99f9b1646a4d51d9643a59d","targetContentIds":["ai.pure-run.aoe"]},
     {"sourceKey":"ai.aoe.profile","sourcePath":"Assets/Tactics/AI/Encounters/AOEProfile.asset","gitBlobSha1":"2b37e382cf9a17bc5991b342bb34e8a41ace9ea1","targetContentIds":["ai.pure-run.aoe"]},
     {"sourceKey":"ai.charger.brain","sourcePath":"Assets/Tactics/AI/Encounters/ChargerBrain.asset","gitBlobSha1":"d331217ece11d79a9070b86bdfe50ba84180784a","targetContentIds":["ai.pure-run.charger"]},
