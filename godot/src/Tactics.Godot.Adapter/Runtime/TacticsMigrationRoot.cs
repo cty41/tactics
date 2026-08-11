@@ -37,6 +37,12 @@ public partial class TacticsMigrationRoot : Node
             GetTree().Quit();
             return;
         }
+        if (commandLine.Contains("--validate-starting-skills"))
+        {
+            ValidateStartingSkills();
+            GetTree().Quit();
+            return;
+        }
         if (commandLine.Contains("--play-unit-gallery"))
         {
             PlayUnitGallery();
@@ -135,6 +141,23 @@ public partial class TacticsMigrationRoot : Node
             $"Pure Run Buff/Item validation OK: entries={validation.BatchCatalogEntryCount}, " +
             $"global={validation.GlobalCatalogEntryCount}, statuses={validation.StatusCount}, " +
             $"consumables={validation.ConsumableCount}, equipment={validation.EquipmentCount}");
+    }
+
+    private static void ValidateStartingSkills()
+    {
+        var batchCatalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/skills/ContentCatalog.tres")
+            ?? throw new InvalidOperationException("Starting-skill ContentCatalog is missing.");
+        var globalCatalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")
+            ?? throw new InvalidOperationException("Canonical global ContentCatalog is missing.");
+        StartingSkillBatchValidation validation = StartingSkillBatchValidator.Validate(batchCatalog, globalCatalog);
+        var fixtureScene = ResourceLoader.Load<PackedScene>("res://content/skills/SkillFixture.tscn")
+            ?? throw new InvalidOperationException("Starting-skill fixture is missing.");
+        Node fixture = fixtureScene.Instantiate();
+        bool validFixture = fixture is GodotStartingSkillFixture;
+        fixture.Free();
+        if (!validFixture)
+            throw new InvalidOperationException("Starting-skill fixture has the wrong root type.");
+        GD.Print($"Starting-skill validation OK: entries={validation.BatchCount}, global={validation.GlobalCount}, generated={validation.GeneratedCount}");
     }
 
     private void PlayUnitGallery()

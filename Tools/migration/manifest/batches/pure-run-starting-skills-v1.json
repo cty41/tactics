@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "batchId": "pure-run-starting-skills-v1",
-  "status": "Exported",
+  "status": "Generated",
   "ownership": "UnityOwned",
   "sourceTag": "unity-final-2026-08-08",
   "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",

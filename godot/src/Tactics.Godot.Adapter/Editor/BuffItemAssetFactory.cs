@@ -20,6 +20,7 @@ public static class BuffItemAssetFactory
     private const string PoisonPath = "res://content/poison_spear/PoisonBuff.tres";
     private const string PoisonCatalogPath = "res://content/poison_spear/ContentCatalog.tres";
     private const string UnitCatalogPath = "res://content/units/ContentCatalog.tres";
+    private const string SkillCatalogPath = "res://content/skills/ContentCatalog.tres";
 
     public static void Build(string? draftPath = null, string root = DefaultRoot)
     {
@@ -60,7 +61,6 @@ public static class BuffItemAssetFactory
             .ToArray();
         string[] targetPaths = generatedDefinitionPaths
             .Append(BatchCatalogPath)
-            .Append(GlobalCatalogPath)
             .Order(StringComparer.Ordinal)
             .ToArray();
         string ledgerPath = Path.Combine(
@@ -131,8 +131,11 @@ public static class BuffItemAssetFactory
 
             GodotResourceCatalog poisonCatalog = LoadCatalog(PoisonCatalogPath);
             GodotResourceCatalog unitCatalog = LoadCatalog(UnitCatalogPath);
+            GodotResourceCatalog? skillCatalog = TryLoadCatalog(SkillCatalogPath);
             var globalCatalog = new GodotResourceCatalog();
-            globalCatalog.Entries = ComposeGlobalEntries(poisonCatalog, unitCatalog, batchCatalog);
+            globalCatalog.Entries = skillCatalog is null
+                ? ComposeGlobalEntries(poisonCatalog, unitCatalog, batchCatalog)
+                : ComposeGlobalEntries(poisonCatalog, unitCatalog, batchCatalog, skillCatalog);
             SaveResource(globalCatalog, GlobalCatalogPath);
             globalCatalog.Validate();
             BuffItemBatchValidator.Validate(batchCatalog, globalCatalog);
@@ -145,7 +148,6 @@ public static class BuffItemAssetFactory
             foreach (BuffItemDraftEquipment item in draft.Equipment)
                 semantics[ResourcePath(item.ContentId)] = JsonSerializer.SerializeToElement(item);
             semantics[BatchCatalogPath] = CatalogSemantic(batchCatalog);
-            semantics[GlobalCatalogPath] = CatalogSemantic(globalCatalog);
             transaction.Commit(targetPaths, semantics);
         }
         catch
@@ -224,7 +226,7 @@ public static class BuffItemAssetFactory
         {
             if (entries.TryGetValue(source.ContentIdValue, out GodotResourceEntry? existing))
             {
-                if (source.ContentIdValue != "buff.poison" ||
+                if (source.ContentIdValue is not ("buff.poison" or "skill.poison-spear.lv1") ||
                     existing.ResourceUidValue != source.ResourceUidValue ||
                     existing.DiagnosticPathValue != source.DiagnosticPathValue ||
                     existing.ResourceTypeIdValue != source.ResourceTypeIdValue)
@@ -236,8 +238,8 @@ public static class BuffItemAssetFactory
             }
             entries.Add(source.ContentIdValue, CopyEntry(source));
         }
-        if (entries.Count != 47)
-            throw new InvalidOperationException($"Canonical global Catalog must contain 47 entries, got {entries.Count}.");
+        if (entries.Count is not (47 or 58))
+            throw new InvalidOperationException($"Canonical global Catalog must contain 47 or 58 entries, got {entries.Count}.");
         return entries.Values.OrderBy(entry => entry.ContentIdValue, StringComparer.Ordinal).ToArray();
     }
 
@@ -267,6 +269,11 @@ public static class BuffItemAssetFactory
         string.Empty,
         ResourceLoader.CacheMode.Ignore)
         ?? throw new InvalidOperationException($"Required source Catalog '{path}' is missing.");
+
+    private static GodotResourceCatalog? TryLoadCatalog(string path) =>
+        File.Exists(ProjectSettings.GlobalizePath(path))
+            ? LoadCatalog(path)
+            : null;
 
     private static T LoadOrCreate<T>(string path) where T : Resource, new() =>
         File.Exists(ProjectSettings.GlobalizePath(path))
@@ -381,7 +388,9 @@ public static class BuffItemAssetFactory
             {
                 throw new InvalidOperationException("Pure Run Buff/Item migration ledger source binding changed.");
             }
-            JsonElement[] artifacts = root.GetProperty("artifacts").EnumerateArray().ToArray();
+            JsonElement[] artifacts = root.GetProperty("artifacts").EnumerateArray()
+                .Where(artifact => artifact.GetProperty("resourcePath").GetString() != GlobalCatalogPath)
+                .ToArray();
             if (artifacts.Length != paths.Length)
                 throw new InvalidOperationException("Pure Run Buff/Item migration ledger artifact count changed.");
             var expected = artifacts.ToDictionary(
@@ -401,7 +410,8 @@ public static class BuffItemAssetFactory
             {
                 string absolutePath = ProjectSettings.GlobalizePath(resourcePath);
                 if (!expected.TryGetValue(resourcePath, out string? expectedHash) ||
-                    !File.Exists(absolutePath) || Hash(File.ReadAllBytes(absolutePath)) != expectedHash)
+                    !File.Exists(absolutePath) ||
+                    (resourcePath != GlobalCatalogPath && Hash(File.ReadAllBytes(absolutePath)) != expectedHash))
                 {
                     throw new InvalidOperationException($"Generated Buff/Item target changed: {resourcePath}");
                 }

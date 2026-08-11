@@ -35,6 +35,12 @@ $buffItemSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-ba
 $buffItemExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-buffs-items-v1-export.json'
 $buffItemGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-buffs-items-v1.json'
 $buffItemGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-buffs-items-v1-generation.json'
+$startingSkillExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-starting-skills-v1.unity.json'
+$startingSkillDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-starting-skills-v1.draft.json'
+$startingSkillSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-starting-skills-v1.json'
+$startingSkillExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-starting-skills-v1-export.json'
+$startingSkillGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-starting-skills-v1.json'
+$startingSkillGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-starting-skills-v1-generation.json'
 $consumablesJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Consumables.json'
 $equipmentJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Equipment.json'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
@@ -309,6 +315,39 @@ try {
         Write-Host '== Skip real Pure Run Buff/Item draft: disposable Unity DTO is not present =='
     }
 
+    if (Test-Path -LiteralPath $startingSkillExport -PathType Leaf) {
+        Invoke-Checked 'Compile real Pure Run starting-skill typed migration draft' {
+            python -m Tools.migration.starting_skill_converter `
+                --export $startingSkillExport `
+                --specification $startingSkillSpecification `
+                --output $startingSkillDraft
+        }
+        Invoke-Checked 'Generate Pure Run starting-skill Godot assets through ResourceSaver' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/StartingSkillAssetBuilder.cs'
+        }
+        $startingSkillTargets = @(
+            (Get-Content -LiteralPath $startingSkillGenerationLedger -Raw | ConvertFrom-Json).artifacts |
+                ForEach-Object { Join-Path $projectRoot $_.resourcePath.Substring('res://'.Length) }
+        ) + @($startingSkillGenerationLedger)
+        $firstStartingSkillHashes = @{}
+        foreach ($target in $startingSkillTargets) {
+            $firstStartingSkillHashes[$target] = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+        }
+        Invoke-Checked 'Repeat Pure Run starting-skill generation for idempotency' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/StartingSkillAssetBuilder.cs'
+        }
+        foreach ($target in $startingSkillTargets) {
+            if ($firstStartingSkillHashes[$target] -ne (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash) {
+                throw "Pure Run starting-skill generation is not byte-idempotent: $target"
+            }
+        }
+    }
+    else {
+        Write-Host '== Skip real Pure Run starting-skill draft: disposable Unity DTO is not present =='
+    }
+
     # A ResourceSaver script can register a newly created UID only in its current process.
     # The headless Editor filesystem scan persists the project UID cache before Runtime validation.
     Invoke-Checked 'Godot editor filesystem scan and plugin initialization' {
@@ -365,6 +404,16 @@ try {
     Invoke-Checked 'Pure Run Buff/Item and canonical catalog validation (Forward+)' {
         & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
             --validate-buffs-items --quit-after 6000
+    }
+
+    Invoke-Checked 'Pure Run starting-skill catalog and fixture validation (Compatibility)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            --validate-starting-skills --quit-after 6000
+    }
+
+    Invoke-Checked 'Pure Run starting-skill catalog and fixture validation (Forward+)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
+            --validate-starting-skills --quit-after 6000
     }
 
     Invoke-Checked 'Capture deterministic Pure Run Unit programmatic gallery' {
@@ -425,6 +474,20 @@ try {
 
         Invoke-Checked 'Validate regenerated Pure Run Buff/Item ledger and receipt' {
             python -m unittest Tools.migration.tests.test_buff_item_generation
+        }
+    }
+
+
+    if (Test-Path -LiteralPath $startingSkillExport -PathType Leaf) {
+        Invoke-Checked 'Refresh Pure Run starting-skill generation receipt' {
+            python -m Tools.migration.starting_skill_generation_receipt `
+                --export-receipt $startingSkillExportReceipt `
+                --draft $startingSkillDraft `
+                --ledger $startingSkillGenerationLedger `
+                --output $startingSkillGenerationReceipt
+        }
+        Invoke-Checked 'Validate regenerated Pure Run starting-skill ledger and receipt' {
+            python -m unittest Tools.migration.tests.test_starting_skill_generation
         }
     }
 

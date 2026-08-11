@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-11T11:47:42+08:00"
+timestamp: "2026-08-11T15:13:29+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:d7d8ecb881496836c0f26b7031ac31881707430b36957216641628ff502cc053
+source_fingerprint: sha256:7d5f44fa6357acc3e5b98960af3fb652b00cdd42b7704ae63a2244ae13909479
 ---
 
 # Current state
@@ -35,7 +35,7 @@ Phase 1B 完整统一门禁已通过，覆盖 locked restore、单节点 solutio
 
 Phase 1C 将冻结 `IBattleRuntimeScope/BattleRuntimeScope` 与 `PresentationExecutionPlanCompiler` 加入 linked-source Oracle，并将 Golden 升级为 schema v5。`InitiativeRoundState` 只重排当前轮 remaining，`BattleState.WithInitiativeChanged` 保留当前/已行动前缀；RuntimeScope 的 ownership、fault observation、re-entrant dispose 和 timeout callback 边界由冻结/Core 双实现测试；Presentation branch 在 Join 前停止且 continuation 只追加一次。完整统一门禁通过：Core 26、Application 3、Unity Oracle 8、迁移工具 16、Agent policy 8、OKF 14、GdUnit 4；Release 隔离、Poison Spear runtime/presentation、EditorPlugin headless 生命周期、生产 Debug 恢复与 6 scopes/0 unmapped 均通过。
 
-Phase 1D 用版本化决策而不是伪造 parity 关闭剩余合同：冻结 Unity 没有统一不可变 `BattleCommand → BattleTransition`，其技能执行由 Controller/Executor 直接产生副作用；随机源同时存在 `UnityEngine.Random`、无种子 `System.Random` 与 `Guid.NewGuid` 排序。Battle Transition 是迁移合同，`splitmix64-v1` 是确定性替代合同；Phase 3 加入真实 Poison Spear 语义后升级为 v2，Phase 5A 加入 Status/Consumable 后升级为 `battle-transition-v3`。
+Phase 1D 用版本化决策而不是伪造 parity 关闭剩余合同：冻结 Unity 没有统一不可变 `BattleCommand → BattleTransition`，其技能执行由 Controller/Executor 直接产生副作用；随机源同时存在 `UnityEngine.Random`、无种子 `System.Random` 与 `Guid.NewGuid` 排序。Battle Transition 是迁移合同，`splitmix64-v1` 是确定性替代合同；Phase 3 加入真实 Poison Spear 语义后升级为 v2，Phase 5A 加入 Status/Consumable 后升级为 `battle-transition-v3`，Phase 5B 的统一技能入口升级为 `battle-transition-v4`。
 
 Phase 1A 的自动完整门禁及随后 canonical Godot Editor 人工 reopen/reload 闸门均已通过；EditorPlugin、Dock、3 节点 Presentation、GraphEdit/SubViewport 和 godot-ai 连接正常，未复现已记录的 C# Assembly Reload 重复类型故障。
 
@@ -51,7 +51,9 @@ Phase 4 Unit 已完成并通过人工视觉闸门：冻结 Golden 与 Unity Asse
 
 Phase 4 二次视觉修复后自动门禁通过：Core 35、Application 19、冻结 Unity Oracle 11、迁移 Python 86、Agent policy 8、GdUnit 11、OKF 14；Debug/Release 零警告零错误，Unity export 两次独立运行、PNG 事务复制和 ResourceSaver 连续两次生成均 byte-identical，headless Editor UID/import 扫描、Compatibility/Forward+ Catalog/Factory/Fixture 运行和程序化 Gallery/10×10 Spawn 截图均通过。程序化截图由 Godot Image 使用已导入纹理、`goat-body-mask-v1` CPU 参考和 Sprite pivot/Shadow 几何换算确定性合成；共享 goat 图像在缩放前复制，避免后续实例逐个缩小，并有源纹理尺寸不变测试。截图只证明资源组合、位置与可检查性，不替代用户对 tint、体量、朝向、死亡图与 Shadow 的视觉接受。
 
-Phase 5A Buff/Item 已完成为独立 `pure-run-buffs-items-v1` batch：Unity 6000.3.11f1 通过 AssetDatabase/SerializedObject 导出 14 个 Buff 根资产，两次独立 batchmode 输出 SHA-256 均为 `c01194701068cf8447063ff8ac26d787c2f99ded4f1442f647a93ad4fb8d0ad8`；3 个 Consumable 与 12 个 Equipment 直接绑定最终 Tag 的 JSON Git blob 和工作树 SHA-256。typed converter 严格核对字段、枚举、GUID、依赖 hash、ContentId/SourceId、Ice Armor Lv2 → Slow 引用与唯一的外部 `buff.poison` 依赖。ResourceSaver 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment、29 项分批 Catalog，并把 Poison 6 项、Unit 13 项与本批合成为 47 个唯一 ContentId 的 canonical Catalog；30 个 ledger artifact、UID、目标/语义 hash 和连续两次 byte-identical 生成受测。Compatibility/Forward+ 与 GdUnit 均加载同一 typed Resource。3 个 Buff icon 只保存路径、GUID、LocalFileId 和 dependency hash，未复制 PNG、Unity Material/Shader 或第三方 payload。该批已达到 `Validated/UnityOwned`，`visualAcceptance=not_applicable_no_visual_payload`。
+Phase 5A Buff/Item 已完成为独立 `pure-run-buffs-items-v1` batch：Unity 6000.3.11f1 通过 AssetDatabase/SerializedObject 导出 14 个 Buff 根资产，两次独立 batchmode 输出 SHA-256 均为 `c01194701068cf8447063ff8ac26d787c2f99ded4f1442f647a93ad4fb8d0ad8`；3 个 Consumable 与 12 个 Equipment 直接绑定最终 Tag 的 JSON Git blob 和工作树 SHA-256。typed converter 严格核对字段、枚举、GUID、依赖 hash、ContentId/SourceId、Ice Armor Lv2 → Slow 引用与唯一的外部 `buff.poison` 依赖。ResourceSaver 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment 与 29 项分批 Catalog；29 个批次独占 ledger artifact、UID、目标/语义 hash 和连续两次 byte-identical 生成受测。Phase 5B 加入后 canonical Catalog 为 58 个唯一 ContentId，作为跨批次组合输出运行验证而不由单批 ledger 独占。3 个 Buff icon 只审计不复制；该批保持 `Validated/UnityOwned`。
+
+Phase 5B 已冻结并生成 12 项起始技能合同：Mage、Necromancer、Amazon 各 3 项，公共 Magic/Melee Attack 与隐藏 Pickup Spear；`skill.poison-spear.lv1` 继续引用原 Poison Spear batch。通用技能运行时处理 Mana 原子性、确定性命中/闪避/暴击、直线首目标、状态、Summon Skeleton、Pickup Spear 与 Combat Techniques Lv1，并通过兼容入口保持 Poison Spear 语义。ResourceSaver 生成 11 个新 Skill Resource、12 项 Catalog、1600×900 `SkillFixture`，canonical Catalog 达到 58 项；13 个批次独占 artifact 两轮 byte-identical，Compatibility/Forward+ 与 GdUnit 通过。当前状态为 `Generated/UnityOwned + manual_gameplay_qa_pending`，正式 VFX、AI、Persistence、升级 UI/Input 不在本批范围。
 
 Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-transition-v3` 与 Golden schema v7。`BattleStatusState` 捕获 polarity/effect/trigger/refresh、stack、速度与减伤/反击参数；`BattleUnitState` 捕获基础速度、携带 Consumable 和每轮成功使用记录。Poison/Burning 按 ContentId 顺序 tick，非 Burning 回合末递减、Burning 按 stack 消耗，Frozen/Stun 只阻止非 EndTurn，Slow 从基础速度重算 MoveRange/Initiative，同 curse category 后应用替换。Consumable 只允许存活的自身或曼哈顿距离 1 友军，合法零恢复仍消耗 charge，非法目标不消耗，净化只移除 Harmful，每单位每轮只成功使用一次。Equipment 唯一 slot 后投影六项属性并复用 `unity-unit-derived-v1`。Mark、伤害倍率、Counter、Ice Armor retaliation 与 Fear 仅输出强类型 policy，不越界接入 Skill/AI。
 

@@ -12,12 +12,6 @@
   },
   "artifacts": [
     {
-      "resourcePath": "res://content/ContentCatalog.tres",
-      "resourceUid": "uid://bd7k2rl30h63x",
-      "targetHash": "sha256:73259a7d392ba68155fd36c7242a565fec819a5b2d1dfb005e0bbd2172b0f284",
-      "semanticHash": "sha256:23ec1c920b19c49187f0a4b2c59b788d291a99870794df961c19d1551d7c4bc6"
-    },
-    {
       "resourcePath": "res://content/buffs_items/BuffCounter.tres",
       "resourceUid": "uid://2voebbkatqrn",
       "targetHash": "sha256:aafe197fa15305cde8df01cf3a2ddbc1b7ddc16e9ec975a4682af48336eb3005",

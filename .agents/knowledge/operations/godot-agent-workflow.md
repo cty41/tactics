@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-11T11:47:40+08:00"
+timestamp: "2026-08-11T15:13:28+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:3c7ec96ebe018856f1896b3ffd2263e25b951e47d1f1cbd7a52aa10443abf280
+source_fingerprint: sha256:3bd9fac4202cf81d85a2ba9cb6c7b6ab5f7352f3638966990cabda96cf61c6c4
 ---
 
 # Current state
@@ -38,11 +38,12 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - `godot-editor-lifecycle` 可在已授权 Godot 修改任务需要 session `0` 时自动挂起并恢复唯一 canonical Editor：只使用精确 PID 的正常窗口关闭与 pinned GUI executable，不强杀、不注入输入、不打开原本关闭的 Editor。
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
-- Buff/Item disposable DTO 存在时，统一入口会严格编译 14 Buff、3 Consumable、12 Equipment typed draft，重建 export receipt，再连续两次通过 ResourceSaver 生成 28 个定义 Resource、29 项分批 Catalog 与 47 项 canonical Catalog；该链路不复制只审计的 Buff icon，并在两个 renderer 的 typed runtime 验证后才刷新 `Validated/UnityOwned` generation receipt。
+- Buff/Item disposable DTO 存在时，统一入口会严格编译 14 Buff、3 Consumable、12 Equipment typed draft，重建 export receipt，再连续两次通过 ResourceSaver 生成 28 个定义 Resource 与 29 项分批 Catalog；Phase 5B 存在时 canonical Catalog 为 58 项。该链路不复制只审计的 Buff icon，并在两个 renderer 的 typed runtime 验证后才刷新 `Validated/UnityOwned` generation receipt。
+- Starting Skill disposable DTO 存在时，统一入口会编译 12 项 typed draft，通过 ResourceSaver 生成 11 个新 Skill Resource、12 项分批 Catalog 与原生 1600×900 Gameplay Fixture；`skill.poison-spear.lv1` 保持外部依赖。两轮生成比较 13 个批次独占 artifact，canonical Catalog 组合为 58 个唯一 ContentId，并在 Compatibility/Forward+ 验证后刷新 `Generated/UnityOwned + manual_gameplay_qa_pending` receipt。
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item DTO 存在时同样先刷新 source draft/receipt，连续两次生成并逐项比较 30 个 ledger artifact，再经 Editor UID scan、Compatibility/Forward+ 的 29/47 Catalog/runtime 验证和 generation receipt 校验。人工 Editor Reload、Undo/Redo 和 Unit 视觉验收仍按迁移计划单独记录。
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item DTO 存在时连续两次比较 29 个批次独占 artifact，并验证 29/58 Catalog/runtime；Starting Skill DTO 比较 13 个批次独占 artifact，并验证 12/58 Catalog 与 Fixture。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉验收与 Skill Gameplay 验收仍单独记录。
 
 Editor lifecycle Skill 的 PowerShell 内核另由迁移 Python 测试验证 canonical path、精确 PID、dry-run 和禁用强杀；真实可见 close/reopen smoke 只在用户允许窗口出现后执行，并以新 MCP session/path/version/plugin/readiness 和日志为验收。
 
@@ -72,7 +73,9 @@ Tactics Tooling 随后从 Bottom `EditorDock` 迁为官方 Main Screen Plugin，
 
 Phase 4 执行前项目级 MCP Profile 已从 `phase3-observe` 切换到 `content-authoring`，统一入口确认 pinned Attach 与 23 个白名单工具；写入前均确认 live Editor session 为 0，因此 Unity AssetDatabase export 通过后台 Unity batchmode，Godot 生成/导入/双 renderer/截图均通过 console/headless 完成。Unit 方向/Reset/山羊身体 shader、Sprite pivot/Shadow PPU/Transform 修复后，Gallery 使用脚底/尸体落点合同。项目已从 1280×720 stretch 源改为原生 1600×900 逻辑/窗口画布；Spawn 固定出生格收在1..8，并验证8px网格外框与24px viewport完整 Body/Shadow AABB安全区。运行 fixture、软件截图、ResourceSaver semantic、receipt 和 GdUnit 共用 `native-1600x900-v1`。canonical Editor 人工验收已覆盖四向、死亡/Reset、Goat tint、比例/Shadow、resize、Spawn 外框与 Assembly Reload/Output；batch 为 `Validated/UnityOwned + passed_for_migrated_project_owned_unit_visuals`。
 
-Phase 5A 在不重启 GUI Editor 的情况下完成：冻结的 14 Buff/3 Consumable/12 Equipment draft 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment Resource，`buff.poison` 只引用既有 Poison Spear Resource；分批 Catalog 为 29 项，canonical Catalog 合并为 47 个唯一 ContentId。ResourceSaver 两轮对 30 个 artifact byte-identical，独立 Editor scan 固化 UID；Compatibility 与 Forward+ 均运行 typed Catalog/Status/Consumable/Equipment smoke，GdUnit 覆盖外部 Poison ownership、audit-only icon、typed resource 和全局 UID 唯一性。该批不含 PNG、Material、Shader 或第三方 payload，因此达到 `Validated/UnityOwned + not_applicable_no_visual_payload`，不会改变仍待人工验收的 Phase 4 状态。
+Phase 5A 冻结的 14 Buff/3 Consumable/12 Equipment draft 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment Resource，`buff.poison` 只引用既有 Poison Spear Resource；分批 Catalog 为 29 项，29 个批次独占 artifact 两轮 byte-identical。该批不含视觉 payload，保持 `Validated/UnityOwned`。
+
+Phase 5B 当前生成三名角色的起始 Lv1/隐藏技能与两个公共基础攻击，共 11 个新 Skill Resource；Poison Spear 继续由原 batch 所有。Core/Application 使用 `battle-transition-v4` 与统一 `UseSkillCommand` 解释伤害、状态、直线首目标、召唤、拾矛及被动修正。12 项 Skill Catalog 与 canonical 58 项 Catalog、UID、13 个批次 artifact、双次 byte-identical、GdUnit 17、Compatibility/Forward+ 均通过。正式 VFX 未复制，batch 保持 `Generated/UnityOwned + manual_gameplay_qa_pending`。
 
 ## Navigation
 

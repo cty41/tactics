@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://to8x8dbr6p04"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_m0l2i"]
+
+[resource]
+script = ExtResource("1_m0l2i")
+ContentIdValue = "skill.mage.ice-bolt.lv1"
+SourceId = "mage.ice_bolt"
+DisplayName = "寒冰箭 Lv1"
+Description = "造成8点冰霜魔法伤害并减速1回合。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 1
+ManaCost = 6
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "IceBolt"
+Damage = 8
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.slow"
+StatusDuration = 1
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset"
+SourceGuid = "7098a425965bd9043ba603d9c6a82f2a"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/IceBolt_Graph.asset"
+GraphDependencyHash = "aa8ffc24afc80d17d966380e7999247c"

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_alrkk"]
 [ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_7ktjk"]
 
-[sub_resource type="Resource" id="Resource_3v4uf"]
+[sub_resource type="Resource" id="Resource_alrkk"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.counter"
 ResourceTypeIdValue = "buff"
@@ -11,7 +11,7 @@ ResourceUidValue = "uid://2voebbkatqrn"
 DiagnosticPathValue = "res://content/buffs_items/BuffCounter.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_25yxx"]
+[sub_resource type="Resource" id="Resource_7ktjk"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.curse-damage-amplifier"
 ResourceTypeIdValue = "buff"
@@ -19,7 +19,7 @@ ResourceUidValue = "uid://0x3slbg3mal"
 DiagnosticPathValue = "res://content/buffs_items/BuffCurseDamageAmplifier.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_qn5wl"]
+[sub_resource type="Resource" id="Resource_3v4uf"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.event-damage-reduction"
 ResourceTypeIdValue = "buff"
@@ -27,7 +27,7 @@ ResourceUidValue = "uid://do1aw18ye2rgm"
 DiagnosticPathValue = "res://content/buffs_items/BuffEventDamageReduction.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_3mgu5"]
+[sub_resource type="Resource" id="Resource_25yxx"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.event-damage-taken-up"
 ResourceTypeIdValue = "buff"
@@ -35,7 +35,7 @@ ResourceUidValue = "uid://b762tyyv1r8k3"
 DiagnosticPathValue = "res://content/buffs_items/BuffEventDamageTakenUp.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_dhim2"]
+[sub_resource type="Resource" id="Resource_qn5wl"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.fear"
 ResourceTypeIdValue = "buff"
@@ -43,7 +43,7 @@ ResourceUidValue = "uid://cavos15760hys"
 DiagnosticPathValue = "res://content/buffs_items/BuffFear.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_s116p"]
+[sub_resource type="Resource" id="Resource_3mgu5"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.frozen"
 ResourceTypeIdValue = "buff"
@@ -51,7 +51,7 @@ ResourceUidValue = "uid://q0xhmr1xwwrm"
 DiagnosticPathValue = "res://content/buffs_items/BuffFrozen.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_k3en5"]
+[sub_resource type="Resource" id="Resource_dhim2"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.ice-armor"
 ResourceTypeIdValue = "buff"
@@ -59,7 +59,7 @@ ResourceUidValue = "uid://bqgpx2ubhp6yn"
 DiagnosticPathValue = "res://content/buffs_items/BuffIceArmor.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_pscyn"]
+[sub_resource type="Resource" id="Resource_s116p"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.ice-armor.lv1"
 ResourceTypeIdValue = "buff"
@@ -67,7 +67,7 @@ ResourceUidValue = "uid://dsebgsadlwftq"
 DiagnosticPathValue = "res://content/buffs_items/BuffIceArmorLv1.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_0757x"]
+[sub_resource type="Resource" id="Resource_k3en5"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.ice-armor.lv2"
 ResourceTypeIdValue = "buff"
@@ -76,7 +76,7 @@ DiagnosticPathValue = "res://content/buffs_items/BuffIceArmorLv2.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("buff.slow")
 
-[sub_resource type="Resource" id="Resource_cua4i"]
+[sub_resource type="Resource" id="Resource_pscyn"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.ignite"
 ResourceTypeIdValue = "buff"
@@ -84,7 +84,7 @@ ResourceUidValue = "uid://dnv3b20bruf60"
 DiagnosticPathValue = "res://content/buffs_items/BuffIgnite.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_m71co"]
+[sub_resource type="Resource" id="Resource_0757x"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.mark"
 ResourceTypeIdValue = "buff"
@@ -92,7 +92,7 @@ ResourceUidValue = "uid://c0ilwkb5ygvwg"
 DiagnosticPathValue = "res://content/buffs_items/BuffMark.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_ovk60"]
+[sub_resource type="Resource" id="Resource_cua4i"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.poison"
 ResourceTypeIdValue = "buff"
@@ -100,7 +100,7 @@ ResourceUidValue = "uid://byvdudy464o8b"
 DiagnosticPathValue = "res://content/poison_spear/PoisonBuff.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_dxrgf"]
+[sub_resource type="Resource" id="Resource_m71co"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.slow"
 ResourceTypeIdValue = "buff"
@@ -108,7 +108,7 @@ ResourceUidValue = "uid://cey0ta2haejeo"
 DiagnosticPathValue = "res://content/buffs_items/BuffSlow.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_t8emu"]
+[sub_resource type="Resource" id="Resource_ovk60"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "buff.stun"
 ResourceTypeIdValue = "buff"
@@ -116,7 +116,7 @@ ResourceUidValue = "uid://woijxs12u8uj"
 DiagnosticPathValue = "res://content/buffs_items/BuffStun.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_j3y4e"]
+[sub_resource type="Resource" id="Resource_dxrgf"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "encounter.poison-spear.10x10"
 ResourceTypeIdValue = "encounter"
@@ -125,7 +125,7 @@ DiagnosticPathValue = "res://content/poison_spear/PoisonSpear10x10Fixture.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("skill.poison-spear.lv1")
 
-[sub_resource type="Resource" id="Resource_1s0ay"]
+[sub_resource type="Resource" id="Resource_t8emu"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "impact.poison-spear"
 ResourceTypeIdValue = "packed-scene"
@@ -133,7 +133,7 @@ ResourceUidValue = "uid://c3525yd0esr0y"
 DiagnosticPathValue = "res://content/poison_spear/PoisonSpearImpact.tscn"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_nch75"]
+[sub_resource type="Resource" id="Resource_j3y4e"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.consumable.cleansing-potion"
 ResourceTypeIdValue = "item"
@@ -141,7 +141,7 @@ ResourceUidValue = "uid://ltyukggslgcv"
 DiagnosticPathValue = "res://content/buffs_items/ConsumableCleansingPotion.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_m3t66"]
+[sub_resource type="Resource" id="Resource_1s0ay"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.consumable.life-potion"
 ResourceTypeIdValue = "item"
@@ -149,7 +149,7 @@ ResourceUidValue = "uid://clv1d4n1x46rg"
 DiagnosticPathValue = "res://content/buffs_items/ConsumableLifePotion.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_cf3oj"]
+[sub_resource type="Resource" id="Resource_nch75"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.consumable.mana-potion"
 ResourceTypeIdValue = "item"
@@ -157,7 +157,7 @@ ResourceUidValue = "uid://cs3aa1n5kwi05"
 DiagnosticPathValue = "res://content/buffs_items/ConsumableManaPotion.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_1giqk"]
+[sub_resource type="Resource" id="Resource_m3t66"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.bow-01"
 ResourceTypeIdValue = "item"
@@ -165,7 +165,7 @@ ResourceUidValue = "uid://cuny5a2atywxk"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentBow01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_q3ul1"]
+[sub_resource type="Resource" id="Resource_cf3oj"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.iron-helmet-01"
 ResourceTypeIdValue = "item"
@@ -173,7 +173,7 @@ ResourceUidValue = "uid://brrayrlqqtwoh"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentIronHelmet01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_hf8yp"]
+[sub_resource type="Resource" id="Resource_1giqk"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.leather-armor-01"
 ResourceTypeIdValue = "item"
@@ -181,7 +181,7 @@ ResourceUidValue = "uid://dp02ugh85tbyn"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentLeatherArmor01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_borai"]
+[sub_resource type="Resource" id="Resource_q3ul1"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.leather-boots-01"
 ResourceTypeIdValue = "item"
@@ -189,7 +189,7 @@ ResourceUidValue = "uid://df2jtiktwna0g"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentLeatherBoots01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_daerc"]
+[sub_resource type="Resource" id="Resource_hf8yp"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.lucky-ring-01"
 ResourceTypeIdValue = "item"
@@ -197,7 +197,7 @@ ResourceUidValue = "uid://daf8ufg4gk48g"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentLuckyRing01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_ok1ri"]
+[sub_resource type="Resource" id="Resource_borai"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.shadow-cloak-01"
 ResourceTypeIdValue = "item"
@@ -205,7 +205,7 @@ ResourceUidValue = "uid://cjajivuxlyobg"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentShadowCloak01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_kront"]
+[sub_resource type="Resource" id="Resource_daerc"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.shield-01"
 ResourceTypeIdValue = "item"
@@ -213,7 +213,7 @@ ResourceUidValue = "uid://bh7frgpoqefli"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentShield01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_8nj7b"]
+[sub_resource type="Resource" id="Resource_ok1ri"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.silver-ring-01"
 ResourceTypeIdValue = "item"
@@ -221,7 +221,7 @@ ResourceUidValue = "uid://53tbtgag4l7q"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentSilverRing01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_odikj"]
+[sub_resource type="Resource" id="Resource_kront"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.staff-01"
 ResourceTypeIdValue = "item"
@@ -229,7 +229,7 @@ ResourceUidValue = "uid://kctafdu01i2n"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentStaff01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_du0xd"]
+[sub_resource type="Resource" id="Resource_8nj7b"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.steel-sword-01"
 ResourceTypeIdValue = "item"
@@ -237,7 +237,7 @@ ResourceUidValue = "uid://cwd1tlqwoyay0"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentSteelSword01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_437oe"]
+[sub_resource type="Resource" id="Resource_odikj"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.sword-01"
 ResourceTypeIdValue = "item"
@@ -245,7 +245,7 @@ ResourceUidValue = "uid://w410f7x47itg"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentSword01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_nyocb"]
+[sub_resource type="Resource" id="Resource_du0xd"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "item.equipment.wizard-hat-01"
 ResourceTypeIdValue = "item"
@@ -253,7 +253,7 @@ ResourceUidValue = "uid://bv0c8ch1the3y"
 DiagnosticPathValue = "res://content/buffs_items/EquipmentWizardHat01.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_k3oyh"]
+[sub_resource type="Resource" id="Resource_437oe"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "packed-scene.unit-actor"
 ResourceTypeIdValue = "packed-scene"
@@ -261,7 +261,7 @@ ResourceUidValue = "uid://c1frlvegnpcpp"
 DiagnosticPathValue = "res://content/units/UnitActor.tscn"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_pi5ta"]
+[sub_resource type="Resource" id="Resource_nyocb"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "presentation.poison-spear.lv1"
 ResourceTypeIdValue = "presentation"
@@ -270,7 +270,7 @@ DiagnosticPathValue = "res://content/poison_spear/PoisonSpearPresentationLv1.tre
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("impact.poison-spear", "projectile.poison-spear")
 
-[sub_resource type="Resource" id="Resource_ybh32"]
+[sub_resource type="Resource" id="Resource_k3oyh"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "projectile.poison-spear"
 ResourceTypeIdValue = "packed-scene"
@@ -278,7 +278,98 @@ ResourceUidValue = "uid://dewosssqq8p7p"
 DiagnosticPathValue = "res://content/poison_spear/PoisonSpearProjectile.tscn"
 SchemaVersion = 1
 
+[sub_resource type="Resource" id="Resource_pi5ta"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.combat-techniques.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://by7ora41sorsi"
+DiagnosticPathValue = "res://content/skills/AmazonCombatTechniquesLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ybh32"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.pickup-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://d4nhj5nyd6sk7"
+DiagnosticPathValue = "res://content/skills/AmazonPickupSpearLv1.tres"
+SchemaVersion = 1
+
 [sub_resource type="Resource" id="Resource_8xuaj"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.thrust.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://rntj7qgaym5p"
+DiagnosticPathValue = "res://content/skills/AmazonThrustLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_7d2bs"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.basic.magic"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bra6jwtsiowk7"
+DiagnosticPathValue = "res://content/skills/BasicMagic.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_w4vik"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.basic.melee"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cjytprsb6ycgm"
+DiagnosticPathValue = "res://content/skills/BasicMelee.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_7vuwv"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.fireball.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://u6t4ogddty4j"
+DiagnosticPathValue = "res://content/skills/MageFireballLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_q7413"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.ice-bolt.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://to8x8dbr6p04"
+DiagnosticPathValue = "res://content/skills/MageIceBoltLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.slow")
+
+[sub_resource type="Resource" id="Resource_b2bq6"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.lightning.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://8ypqfoeepiq5"
+DiagnosticPathValue = "res://content/skills/MageLightningLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_alep5"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.amplify-damage.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c5y67uuebcl2w"
+DiagnosticPathValue = "res://content/skills/NecromancerAmplifyDamageLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.curse-damage-amplifier")
+
+[sub_resource type="Resource" id="Resource_ojvqo"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.bone-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bodkqw7srjkd2"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneSpearLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_0wa12"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c0tjm5iteo1dv"
+DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_i4u7p"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "skill.poison-spear.lv1"
 ResourceTypeIdValue = "skill"
@@ -287,7 +378,7 @@ DiagnosticPathValue = "res://content/poison_spear/PoisonSpearSkillLv1.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("buff.poison", "presentation.poison-spear.lv1")
 
-[sub_resource type="Resource" id="Resource_7d2bs"]
+[sub_resource type="Resource" id="Resource_rixq5"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.amazon"
 ResourceTypeIdValue = "unit"
@@ -296,7 +387,7 @@ DiagnosticPathValue = "res://content/units/PureRunAmazon.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_w4vik"]
+[sub_resource type="Resource" id="Resource_cagl8"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.fire-demon"
 ResourceTypeIdValue = "unit"
@@ -305,7 +396,7 @@ DiagnosticPathValue = "res://content/units/PureRunFireDemon.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_7vuwv"]
+[sub_resource type="Resource" id="Resource_rm7yc"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-aoe"
 ResourceTypeIdValue = "unit"
@@ -314,7 +405,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatAoe.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_q7413"]
+[sub_resource type="Resource" id="Resource_5mawl"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-charger"
 ResourceTypeIdValue = "unit"
@@ -323,7 +414,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatCharger.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_b2bq6"]
+[sub_resource type="Resource" id="Resource_41wyn"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-elite-charger"
 ResourceTypeIdValue = "unit"
@@ -332,7 +423,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatEliteCharger.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_alep5"]
+[sub_resource type="Resource" id="Resource_d1oog"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-elite-poison-caster"
 ResourceTypeIdValue = "unit"
@@ -341,7 +432,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatElitePoisonCaster.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_ojvqo"]
+[sub_resource type="Resource" id="Resource_sf0mq"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-ranged"
 ResourceTypeIdValue = "unit"
@@ -350,7 +441,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatRanged.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_0wa12"]
+[sub_resource type="Resource" id="Resource_6km46"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-support"
 ResourceTypeIdValue = "unit"
@@ -359,7 +450,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatSupport.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_i4u7p"]
+[sub_resource type="Resource" id="Resource_pas1r"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.mage"
 ResourceTypeIdValue = "unit"
@@ -368,7 +459,7 @@ DiagnosticPathValue = "res://content/units/PureRunMage.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_rixq5"]
+[sub_resource type="Resource" id="Resource_yynvf"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.necromancer"
 ResourceTypeIdValue = "unit"
@@ -377,7 +468,7 @@ DiagnosticPathValue = "res://content/units/PureRunNecromancer.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_cagl8"]
+[sub_resource type="Resource" id="Resource_n8clc"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.skeleton-mage"
 ResourceTypeIdValue = "unit"
@@ -386,7 +477,7 @@ DiagnosticPathValue = "res://content/units/PureRunSkeletonMage.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_rm7yc"]
+[sub_resource type="Resource" id="Resource_qc0md"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.skeleton-warrior"
 ResourceTypeIdValue = "unit"
@@ -397,4 +488,4 @@ ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
 [resource]
 script = ExtResource("2_7ktjk")
-Entries = [SubResource("Resource_3v4uf"), SubResource("Resource_25yxx"), SubResource("Resource_qn5wl"), SubResource("Resource_3mgu5"), SubResource("Resource_dhim2"), SubResource("Resource_s116p"), SubResource("Resource_k3en5"), SubResource("Resource_pscyn"), SubResource("Resource_0757x"), SubResource("Resource_cua4i"), SubResource("Resource_m71co"), SubResource("Resource_ovk60"), SubResource("Resource_dxrgf"), SubResource("Resource_t8emu"), SubResource("Resource_j3y4e"), SubResource("Resource_1s0ay"), SubResource("Resource_nch75"), SubResource("Resource_m3t66"), SubResource("Resource_cf3oj"), SubResource("Resource_1giqk"), SubResource("Resource_q3ul1"), SubResource("Resource_hf8yp"), SubResource("Resource_borai"), SubResource("Resource_daerc"), SubResource("Resource_ok1ri"), SubResource("Resource_kront"), SubResource("Resource_8nj7b"), SubResource("Resource_odikj"), SubResource("Resource_du0xd"), SubResource("Resource_437oe"), SubResource("Resource_nyocb"), SubResource("Resource_k3oyh"), SubResource("Resource_pi5ta"), SubResource("Resource_ybh32"), SubResource("Resource_8xuaj"), SubResource("Resource_7d2bs"), SubResource("Resource_w4vik"), SubResource("Resource_7vuwv"), SubResource("Resource_q7413"), SubResource("Resource_b2bq6"), SubResource("Resource_alep5"), SubResource("Resource_ojvqo"), SubResource("Resource_0wa12"), SubResource("Resource_i4u7p"), SubResource("Resource_rixq5"), SubResource("Resource_cagl8"), SubResource("Resource_rm7yc")]
+Entries = [SubResource("Resource_alrkk"), SubResource("Resource_7ktjk"), SubResource("Resource_3v4uf"), SubResource("Resource_25yxx"), SubResource("Resource_qn5wl"), SubResource("Resource_3mgu5"), SubResource("Resource_dhim2"), SubResource("Resource_s116p"), SubResource("Resource_k3en5"), SubResource("Resource_pscyn"), SubResource("Resource_0757x"), SubResource("Resource_cua4i"), SubResource("Resource_m71co"), SubResource("Resource_ovk60"), SubResource("Resource_dxrgf"), SubResource("Resource_t8emu"), SubResource("Resource_j3y4e"), SubResource("Resource_1s0ay"), SubResource("Resource_nch75"), SubResource("Resource_m3t66"), SubResource("Resource_cf3oj"), SubResource("Resource_1giqk"), SubResource("Resource_q3ul1"), SubResource("Resource_hf8yp"), SubResource("Resource_borai"), SubResource("Resource_daerc"), SubResource("Resource_ok1ri"), SubResource("Resource_kront"), SubResource("Resource_8nj7b"), SubResource("Resource_odikj"), SubResource("Resource_du0xd"), SubResource("Resource_437oe"), SubResource("Resource_nyocb"), SubResource("Resource_k3oyh"), SubResource("Resource_pi5ta"), SubResource("Resource_ybh32"), SubResource("Resource_8xuaj"), SubResource("Resource_7d2bs"), SubResource("Resource_w4vik"), SubResource("Resource_7vuwv"), SubResource("Resource_q7413"), SubResource("Resource_b2bq6"), SubResource("Resource_alep5"), SubResource("Resource_ojvqo"), SubResource("Resource_0wa12"), SubResource("Resource_i4u7p"), SubResource("Resource_rixq5"), SubResource("Resource_cagl8"), SubResource("Resource_rm7yc"), SubResource("Resource_5mawl"), SubResource("Resource_41wyn"), SubResource("Resource_d1oog"), SubResource("Resource_sf0mq"), SubResource("Resource_6km46"), SubResource("Resource_pas1r"), SubResource("Resource_yynvf"), SubResource("Resource_n8clc"), SubResource("Resource_qc0md")]

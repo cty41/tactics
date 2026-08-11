@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://by7ora41sorsi"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_lq8ct"]
+
+[resource]
+script = ExtResource("1_lq8ct")
+ContentIdValue = "skill.amazon.combat-techniques.lv1"
+SourceId = "amazon.combat_techniques"
+RoleValue = "Amazon"
+KindValue = "Passive"
+Level = 1
+ExecutionKindValue = "CombatTechniques"
+DamageKindValue = "None"

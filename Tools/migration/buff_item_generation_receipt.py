@@ -71,13 +71,13 @@ def compile_buff_item_generation_receipt(
         raise ValueError("Buff/Item payload boundary differs from the no-visual contract")
 
     artifacts = ledger.get("artifacts", [])
-    if len(artifacts) != 30:
-        raise ValueError("Buff/Item generation ledger must contain exactly 30 artifacts")
+    if len(artifacts) != 29:
+        raise ValueError("Buff/Item generation ledger must contain exactly 29 batch-owned artifacts")
     paths = [artifact.get("resourcePath") for artifact in artifacts]
     if len(paths) != len(set(paths)) or any(path is None for path in paths):
         raise ValueError("Buff/Item generation ledger contains missing or duplicate paths")
-    if "res://content/buffs_items/ContentCatalog.tres" not in paths or "res://content/ContentCatalog.tres" not in paths:
-        raise ValueError("Buff/Item generation ledger is missing a required Catalog")
+    if "res://content/buffs_items/ContentCatalog.tres" not in paths or "res://content/ContentCatalog.tres" in paths:
+        raise ValueError("Buff/Item ledger must own only its batch Catalog")
     if "res://content/buffs_items/BuffPoison.tres" in paths:
         raise ValueError("Buff/Item generation created a duplicate Poison resource")
     if any(not _HASH.fullmatch(artifact.get("targetHash", "")) for artifact in artifacts):
@@ -102,7 +102,7 @@ def compile_buff_item_generation_receipt(
         "batchCatalog": "godot/content/buffs_items/ContentCatalog.tres",
         "batchCatalogEntryCount": 29,
         "canonicalCatalog": "godot/content/ContentCatalog.tres",
-        "canonicalCatalogEntryCount": 47,
+        "canonicalCatalogEntryCount": 58,
         "generatedBuffDefinitionCount": 13,
         "externalBuffDefinitionCount": 1,
         "consumableDefinitionCount": 3,

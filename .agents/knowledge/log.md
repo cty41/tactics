@@ -1,9 +1,9 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-11
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:7d5f44fa6357acc3e5b98960af3fb652b00cdd42b7704ae63a2244ae13909479`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:3bd9fac4202cf81d85a2ba9cb6c7b6ab5f7352f3638966990cabda96cf61c6c4`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:e192b33bcf9985f9dd99816229c3b488b590e5bd8e2281bf9fbf23c9f0ca94d7`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:d7d8ecb881496836c0f26b7031ac31881707430b36957216641628ff502cc053`。
-* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:3c7ec96ebe018856f1896b3ffd2263e25b951e47d1f1cbd7a52aa10443abf280`。
 * **Validation**: 用户在 canonical Godot Editor 完成 Phase 4 Unit Gallery/Spawn/Reload 人工验收；四向、死亡/Reset、Goat tint、比例/Shadow、原生1600×900 resize 与网格外框均通过。`pure-run-units-v1` 晋升为 `Validated/UnityOwned + passed_for_migrated_project_owned_unit_visuals`，完成子计划按文档生命周期删除。
 * **Fix**: Phase 4 Unit 预览切换为原生 1600×900 逻辑/窗口画布；Gallery 以 1.25 倍迁移保持既有屏幕观感。Spawn 固定出生格从0/9边缘收至1/8，并同时验证8px网格外框与24px viewport Body/Shadow AABB安全区；角色可跨内部格线但不得跨网格外框。运行场景、程序化截图、ResourceSaver semantic、receipt 和 GdUnit 共用布局合同，batch 仍等待用户最终视觉与 Reload 复验。
 

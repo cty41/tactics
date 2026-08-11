@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-starting-skills-v1",
+  "classification": "real_godot_resource_generation",
+  "exportHash": "sha256:c04e9da8758c6f6144d8c98b04a61111cd218bb6280a486d61288486e918f163",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "sourceTag": "unity-final-2026-08-08",
+  "unityVersion": "6000.3.11f1",
+  "typedDraftHash": "sha256:2278fe46911949afeccc5fc9dbd42ad1dde14848c74c01b62f0cab0987a7b8c1",
+  "generationLedger": "Tools/migration/manifest/state/pure-run-starting-skills-v1.json",
+  "generationLedgerHash": "sha256:d21e1edcce5997373cc577a53d5fd02c6f30fa10910b797436550ba9ecfaf89d",
+  "batchCatalogEntryCount": 12,
+  "canonicalCatalogEntryCount": 58,
+  "generatedSkillDefinitionCount": 11,
+  "externalContentDependencies": [
+    {
+      "contentId": "skill.poison-spear.lv1",
+      "ownerBatch": "poison-spear-lv1-real",
+      "resourcePath": "godot/content/poison_spear/PoisonSpearSkillLv1.tres"
+    }
+  ],
+  "artifactCount": 13,
+  "automatedValidation": {
+    "resourceSaver": "passed",
+    "uidPreservation": "passed",
+    "byteIdempotencyRuns": 2,
+    "byteIdentical": true,
+    "gdUnitRuntimeTests": "passed",
+    "rendererHeadlessStartup": [
+      "gl_compatibility",
+      "forward_plus"
+    ]
+  },
+  "ownership": "UnityOwned",
+  "state": "Generated",
+  "visualAcceptance": "not_applicable_gameplay_only_no_visual_payload",
+  "manualGameplayAcceptance": "pending"
+}

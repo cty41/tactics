@@ -45,7 +45,7 @@ class BuffItemGenerationTests(unittest.TestCase):
 
     def test_ledger_targets_match_generated_bytes_and_unique_uids(self):
         artifacts = self.ledger["artifacts"]
-        self.assertEqual(30, len(artifacts))
+        self.assertEqual(29, len(artifacts))
         uids = [artifact["resourceUid"] for artifact in artifacts]
         paths = [artifact["resourcePath"] for artifact in artifacts]
         self.assertEqual(len(uids), len(set(uids)))
@@ -59,18 +59,18 @@ class BuffItemGenerationTests(unittest.TestCase):
     def test_generation_is_exact_and_keeps_poison_external(self):
         paths = {artifact["resourcePath"] for artifact in self.ledger["artifacts"]}
         self.assertIn("res://content/buffs_items/ContentCatalog.tres", paths)
-        self.assertIn("res://content/ContentCatalog.tres", paths)
+        self.assertNotIn("res://content/ContentCatalog.tres", paths)
         self.assertNotIn("res://content/buffs_items/BuffPoison.tres", paths)
         self.assertEqual(13, sum("/Buff" in path for path in paths))
         self.assertEqual(3, sum("/Consumable" in path for path in paths))
         self.assertEqual(12, sum("/Equipment" in path for path in paths))
         self.assertEqual(29, self.receipt["batchCatalogEntryCount"])
-        self.assertEqual(47, self.receipt["canonicalCatalogEntryCount"])
+        self.assertEqual(58, self.receipt["canonicalCatalogEntryCount"])
         self.assertEqual("buff.poison", self.receipt["externalContentDependencies"][0]["contentId"])
 
     def test_receipt_is_bound_to_current_ledger_and_no_visual_payload(self):
         self.assertEqual(sha256(LEDGER_PATH), self.receipt["generationLedgerHash"])
-        self.assertEqual(30, self.receipt["artifactCount"])
+        self.assertEqual(29, self.receipt["artifactCount"])
         self.assertEqual(3, self.receipt["dependencyBoundary"]["buffIconReferenceCount"])
         self.assertFalse(self.receipt["dependencyBoundary"]["buffIconPayloadCopied"])
         self.assertFalse(self.receipt["dependencyBoundary"]["unityMaterialOrShaderPayloadCopied"])
