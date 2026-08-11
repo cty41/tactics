@@ -26,12 +26,22 @@ public partial class GodotPlayableRunMain : Control
     private readonly Dictionary<ContentId, BattleLayoutDefinition> _layouts = new();
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = new();
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
+    private readonly Dictionary<GridPoint, Button> _cells = new();
+    private readonly List<BattleUiLogEntry> _logs = new();
     private PureRunSessionService? _run;
     private PlayableBattleSessionService? _battle;
     private Control? _page;
     private Label? _status;
     private VBoxContainer? _skillPanel;
     private Control? _board;
+    private RichTextLabel? _eventLog;
+    private Label? _hoverInfo;
+    private Label? _turnOrder;
+    private global::Godot.Timer? _playbackTimer;
+    private bool _playbackPaused;
+    private int _logFilter;
+    private BattleUiSnapshot? _visibleSnapshot;
+    private GridPoint? _hoveredCell;
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
         _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count == 2 && _encounters.Count == 3;
@@ -40,8 +50,11 @@ public partial class GodotPlayableRunMain : Control
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         LoadCatalogs();
+        _playbackTimer=new global::Godot.Timer{WaitTime=.45,OneShot=false};_playbackTimer.Timeout+=OnPlaybackTimer;AddChild(_playbackTimer);
         ShowHome();
     }
+
+    public override void _ExitTree(){if(_playbackTimer is not null)_playbackTimer.Timeout-=OnPlaybackTimer;}
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
@@ -105,6 +118,7 @@ public partial class GodotPlayableRunMain : Control
 
     private void ShowHome()
     {
+        _playbackTimer?.Stop();_logs.Clear();_visibleSnapshot=null;
         _battle = null;
         Control root = NewPage("PURE RUN", "Three-encounter Godot vertical slice");
         VBoxContainer menu = new() { Position = new Vector2(620, 310), Size = new Vector2(360, 320) };
@@ -160,22 +174,33 @@ public partial class GodotPlayableRunMain : Control
     private void BuildBattlePage()
     {
         Control root = NewPage("PURE RUN BATTLE", "Left click: select/confirm   Right click or Esc: cancel   Enter: end turn");
+        _cells.Clear();_logs.Clear();_playbackPaused=false;
         _board = new Control { Position = BoardOrigin, Size = new Vector2(CellSize * 10, CellSize * 10) }; root.AddChild(_board);
         for (int y = 0; y < 10; y++) for (int x = 0; x < 10; x++)
         {
             GridPoint cell = new(x, y);
             var button = new Button { Position = new Vector2(x * CellSize, y * CellSize), Size = new Vector2(CellSize, CellSize), Text = $"{x},{y}", Modulate = new Color(0.75f, 0.82f, 0.86f, 0.75f) };
-            button.AddThemeFontSizeOverride("font_size", 12); button.Pressed += () => ApplyIntent(new ConfirmCellIntent(cell)); _board.AddChild(button);
+            button.AddThemeFontSizeOverride("font_size", 12); button.Pressed += () => ApplyIntent(new ConfirmCellIntent(cell));button.MouseEntered+=()=>HoverCell(cell);button.MouseExited+=ClearHover; _board.AddChild(button);_cells[cell]=button;
         }
-        _skillPanel = new VBoxContainer { Position = new Vector2(840, 145), Size = new Vector2(660, 610) }; root.AddChild(_skillPanel);
-        _status = LabelAt(root, string.Empty, new Vector2(840, 760), 18); _status.Size = new Vector2(680, 110); _status.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
+        _turnOrder=LabelAt(root,string.Empty,new Vector2(800,88),18);_turnOrder.Size=new Vector2(720,32);
+        _hoverInfo=LabelAt(root,"Hover a cell",new Vector2(800,780),16);_hoverInfo.Size=new Vector2(720,80);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
+        var logPanel=new VBoxContainer{Position=new Vector2(1145,125),Size=new Vector2(390,650)};root.AddChild(logPanel);
+        var controls=new HBoxContainer();logPanel.AddChild(controls);
+        controls.AddChild(SmallButton("Pause/Resume",TogglePause));controls.AddChild(SmallButton("Step",()=>PlaybackStep(true)));controls.AddChild(SmallButton("1x/2x",ToggleSpeed));
+        var filters=new OptionButton();foreach(string name in new[]{"All","Gameplay","AI","Rejected"})filters.AddItem(name);filters.ItemSelected+=index=>{_logFilter=(int)index;RefreshLog();};logPanel.AddChild(filters);
+        logPanel.AddChild(Button("Clear Log",()=>{_logs.Clear();RefreshLog();}));
+        var scroll=new ScrollContainer{CustomMinimumSize=new Vector2(390,500)};logPanel.AddChild(scroll);
+        _eventLog=new RichTextLabel{FitContent=false,CustomMinimumSize=new Vector2(370,500),ScrollActive=true};_eventLog.AddThemeFontSizeOverride("normal_font_size",15);scroll.AddChild(_eventLog);
+        _status = _hoverInfo;
         RefreshBattle();
+        if(_battle!.HasPendingAutomaticFrames){PlaybackStep(true);_playbackTimer!.Start();}
     }
 
-    private void RefreshBattle()
+    private void RefreshBattle(BattleUiSnapshot? presented=null)
     {
         if (_battle is null || _board is null || _skillPanel is null) return;
-        BattleUiSnapshot snapshot = _battle.CaptureSnapshot();
+        BattleUiSnapshot snapshot = presented??_battle.CaptureSnapshot();_visibleSnapshot=snapshot;
         foreach (GodotUnitActor actor in _actors.Values) actor.QueueFree(); _actors.Clear();
         foreach (BattleUiUnitSnapshot unit in snapshot.Units)
         {
@@ -185,29 +210,100 @@ public partial class GodotPlayableRunMain : Control
         }
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
         _skillPanel.AddChild(Label($"Round {snapshot.Round} | Active {snapshot.ActiveUnitId.Value}\nMode {snapshot.TargetingMode} | {snapshot.Phase}", 25));
-        _skillPanel.AddChild(Button("Move", () => ApplyIntent(new BeginMoveIntent())));
-        foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.Hidden))
-            _skillPanel.AddChild(Button($"{skill.ContentId.Value}  MP {skill.ManaCost}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId))));
-        _skillPanel.AddChild(Button("End Turn (Enter)", () => ApplyIntent(new EndTurnIntent())));
+        bool aiPlayback=_battle.HasPendingAutomaticFrames;
+        Button moveButton=Button("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(moveButton);
+        bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
+        _skillPanel.AddChild(Label($"Spear: {(spearDropped?"Dropped":"Held")}",18));
+        foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
+        {Button skillButton=Button($"{skill.ContentId.Value}  MP {skill.ManaCost}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback;_skillPanel.AddChild(skillButton);}
+        foreach(SkillDefinition passive in snapshot.ActiveSkills.Where(skill=>skill.IsPassive))_skillPanel.AddChild(Label($"Passive: {passive.ContentId.Value}",16));
+        Button endTurn=Button("End Turn (Enter)", () => ApplyIntent(new EndTurnIntent()));endTurn.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(endTurn);
         _skillPanel.AddChild(Button("Abandon Run", AbandonRun));
-        string units = string.Join('\n', snapshot.Units.Select(unit => $"{unit.UnitId.Value}: HP {unit.CurrentHealth}/{unit.MaxHealth} MP {unit.CurrentMana}/{unit.MaxMana} {string.Join(',', unit.StatusIds.Select(id => id.Value))}"));
-        string events = string.Join(" -> ", snapshot.RecentEvents.TakeLast(8).Select(value => value.GetType().Name));
-        SetStatus($"{units}\nEvents: {events}\n{snapshot.FailureCode}");
+        ApplyHighlights(snapshot);
+        if(_turnOrder is not null)_turnOrder.Text="Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
+        RefreshLog();
     }
+
+    private void ApplyHighlights(BattleUiSnapshot snapshot)
+    {
+        var colors=new Dictionary<GridPoint,Color>();
+        foreach(GridPoint cell in _cells.Keys)colors[cell]=new Color(.75f,.82f,.86f,.75f);
+        foreach(BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive))
+            colors[unit.Cell]=unit.UnitId==snapshot.ActiveUnitId?new Color(.95f,.66f,.24f,.75f):unit.PlayerNumber==0?new Color(.34f,.52f,.62f,.6f):colors[unit.Cell];
+        foreach(BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive&&unit.HasMovedThisTurn&&unit.UnitId!=snapshot.ActiveUnitId))colors[unit.Cell]=new Color(.36f,.42f,.48f,.55f);
+        foreach(GridPoint corpse in snapshot.Corpses)colors[corpse]=new Color(.38f,.18f,.48f,.8f);
+        foreach(GridPoint spear in snapshot.DroppedSpears.Values)colors[spear]=new Color(1f,.55f,.15f,.85f);
+        if(snapshot.TargetingMode==BattleTargetingMode.Move)foreach(GridPoint cell in snapshot.LegalMoveCells)colors[cell]=new Color(.2f,.8f,1f,.75f);
+        if(snapshot.TargetingMode==BattleTargetingMode.Skill&&snapshot.SelectedSkillId is ContentId skillId)
+            foreach(BattleUiTarget target in snapshot.LegalTargets.Where(target=>target.SkillId==skillId))
+                colors[target.Cell]=_skills[skillId].ExecutionKind==SkillExecutionKind.PickupSpear?new Color(.25f,.9f,.35f,.82f):new Color(1f,.3f,.2f,.78f);
+        if(_hoveredCell is GridPoint hovered)
+        {
+            if(snapshot.TargetingMode==BattleTargetingMode.Move&&snapshot.LegalMoveCells.Contains(hovered))
+            {IReadOnlyList<GridPoint> path=_battle?.PreviewMovePath(hovered)??Array.Empty<GridPoint>();foreach(GridPoint cell in path)colors[cell]=new Color(1f,.85f,.2f,.85f);colors[hovered]=new Color(1f,.5f,0,.9f);}
+            if(snapshot.TargetingMode==BattleTargetingMode.Skill&&snapshot.SelectedSkillId is ContentId selected&&_skills[selected].ExecutionKind==SkillExecutionKind.AreaBlast)
+                foreach(GridPoint cell in _cells.Keys.Where(cell=>Math.Abs(cell.X-hovered.X)+Math.Abs(cell.Y-hovered.Y)<=2))colors[cell]=new Color(1f,.5f,0,.72f);
+            colors[hovered]=colors[hovered].Lightened(.22f);
+        }
+        foreach((GridPoint cell,Button button) in _cells)button.Modulate=colors[cell];
+    }
+
+    private void HoverCell(GridPoint cell)
+    {
+        _hoveredCell=cell;if(_visibleSnapshot is not BattleUiSnapshot snapshot)return;
+        BattleUiUnitSnapshot? unit=snapshot.Units.FirstOrDefault(value=>value.Cell==cell);
+        string detail=unit is null?$"Cell {cell}":$"Cell {cell} | {unit.UnitId.Value} | HP {unit.CurrentHealth}/{unit.MaxHealth} MP {unit.CurrentMana}/{unit.MaxMana} | {string.Join(',',unit.StatusIds.Select(id=>id.Value))}";
+        if(snapshot.Corpses.Contains(cell))detail+=" | Corpse";
+        if(snapshot.TargetingMode==BattleTargetingMode.Move)detail+=snapshot.LegalMoveCells.Contains(cell)?$" | Legal move, path {_battle?.PreviewMovePath(cell).Count??0}":" | Illegal move";
+        if(snapshot.TargetingMode==BattleTargetingMode.Skill&&snapshot.SelectedSkillId is ContentId skillId)
+        {bool legal=snapshot.LegalTargets.Any(target=>target.SkillId==skillId&&target.Cell==cell);detail+=legal?" | Legal target":" | Illegal target";if(legal&&_skills[skillId].ExecutionKind==SkillExecutionKind.AreaBlast)detail+=$" | AOE targets {snapshot.Units.Count(value=>value.IsAlive&&value.PlayerNumber!=0&&Math.Abs(value.Cell.X-cell.X)+Math.Abs(value.Cell.Y-cell.Y)<=2)}";}
+        if(_hoverInfo is not null)_hoverInfo.Text=detail;ApplyHighlights(snapshot);
+    }
+    private void ClearHover(){_hoveredCell=null;if(_hoverInfo is not null)_hoverInfo.Text="Hover a cell";if(_visibleSnapshot is not null)ApplyHighlights(_visibleSnapshot);}
 
     private void ApplyIntent(BattleUiIntent intent)
     {
         if (_battle is null) return;
         BattleUiIntentResult result = _battle.Submit(intent);
+        AddEvents(result.Events);
+        if(!result.Succeeded&&result.Events.Count==0&&result.FailureCode is not null)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,result.FailureCode,"CommandRejectedEvent"));
+        if(_battle.HasPendingAutomaticFrames){PlaybackStep(true);_playbackTimer!.Start();return;}
         if (result.BattleResult is PureRunBattleResult battleResult)
         {
-            RunSessionResult settled = _run!.ApplyBattleResult(battleResult);
-            if (!settled.Succeeded) { SetStatus(settled.ErrorCode); return; }
-            ShowSettlement(settled.Snapshot!); return;
+            CompleteBattle(battleResult);return;
         }
         RefreshBattle();
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
+
+    private void CompleteBattle(PureRunBattleResult battleResult){RunSessionResult settled=_run!.ApplyBattleResult(battleResult);if(!settled.Succeeded){SetStatus(settled.ErrorCode);return;}ShowSettlement(settled.Snapshot!);}
+
+    private void OnPlaybackTimer(){if(!_playbackPaused)PlaybackStep(false);}
+    private void PlaybackStep(bool forced)
+    {
+        if(_battle is null||(_playbackPaused&&!forced))return;
+        BattleUiFrame? frame=_battle.DequeueAutomaticFrame();
+        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; score {decision.Score:0.##}; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);return;}
+        _playbackTimer?.Stop();RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
+    }
+    private void TogglePause(){_playbackPaused=!_playbackPaused;AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));RefreshLog();}
+    private void ToggleSpeed(){if(_playbackTimer is null)return;_playbackTimer.WaitTime=_playbackTimer.WaitTime>.3?.225:.45;AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"Playback {(_playbackTimer.WaitTime<.3?"2x":"1x")}","Playback"));RefreshLog();}
+
+    private void AddEvents(IEnumerable<BattleEvent> events){foreach(BattleEvent item in events)AddLog(FormatEvent(item));}
+    private void AddLog(BattleUiLogEntry entry){if(_logs.Count>=100)_logs.RemoveAt(0);_logs.Add(entry);}
+    private static BattleUiLogEntry FormatEvent(BattleEvent item)=>item switch
+    {
+        UnitMovedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.UnitId.Value} moved {e.Origin} → {e.Destination}",nameof(UnitMovedEvent)),
+        DamageAppliedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.TargetId.Value} took {e.Amount} damage; HP {e.RemainingHealth}",nameof(DamageAppliedEvent)),
+        UnitDefeatedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.UnitId.Value} was defeated",nameof(UnitDefeatedEvent)),
+        CorpseCreatedEvent e=>new(BattleUiLogCategory.Gameplay,$"Corpse created at {e.Cell} from {e.UnitId.Value}",nameof(CorpseCreatedEvent)),
+        SkillUsedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.ActorId.Value} used {e.SkillId.Value} on {e.TargetId.Value}",nameof(SkillUsedEvent)),
+        SpearDroppedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.OwnerId.Value} dropped spear at {e.Cell}",nameof(SpearDroppedEvent)),
+        SpearRecoveredEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.OwnerId.Value} recovered spear at {e.Cell}",nameof(SpearRecoveredEvent)),
+        CommandRejectedEvent e=>new(BattleUiLogCategory.Rejected,$"{e.ActorId.Value}: {e.Reason}",nameof(CommandRejectedEvent)),
+        _=>new(BattleUiLogCategory.Gameplay,item.ToString()??item.GetType().Name,item.GetType().Name)
+    };
+    private void RefreshLog(){if(_eventLog is null)return;IEnumerable<BattleUiLogEntry> shown=_logs;if(_logFilter>0)shown=shown.Where(item=>(int)item.Category==_logFilter-1);_eventLog.Text=string.Join('\n',shown.Select(item=>$"[{item.EventType}] {item.Message}"));_eventLog.ScrollToLine(Math.Max(0,_eventLog.GetLineCount()-1));}
 
     private void ShowSettlement(PureRunSaveSnapshot snapshot)
     {
@@ -243,6 +339,10 @@ public partial class GodotPlayableRunMain : Control
     private static Button Button(string text, Action action)
     {
         var button = new Button { Text = text, CustomMinimumSize = new Vector2(300, 56) }; button.AddThemeFontSizeOverride("font_size", 21); button.Pressed += action; return button;
+    }
+    private static Button SmallButton(string text, Action action)
+    {
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(118, 44) }; button.AddThemeFontSizeOverride("font_size", 15); button.Pressed += action; return button;
     }
     private static Label Label(string text, int size) { var label = new Label { Text = text }; label.AddThemeFontSizeOverride("font_size", size); return label; }
     private static Label LabelAt(Control parent, string text, Vector2 position, int size) { Label label = Label(text, size); label.Position = position; parent.AddChild(label); return label; }

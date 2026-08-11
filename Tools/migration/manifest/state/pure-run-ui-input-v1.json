@@ -19,7 +19,7 @@
   "artifacts": [
     {
       "resourcePath": "res://scenes/Main.tscn",
-      "targetHash": "sha256:6e9b9b07c3534b894b23b0e710a28f772434dea2883272a947e2cc89ce3e9b64"
+      "targetHash": "sha256:aeaee66da1f1a077470731d52b35ea2d1df7c84b3c1bbd7c1ee0f284d41050f7"
     }
   ]
 }

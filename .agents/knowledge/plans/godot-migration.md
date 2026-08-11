@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-11T19:56:24+08:00"
+timestamp: "2026-08-11T21:43:03+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:2e74fab7b396c89cb2b627e66053a7b7070ef6e8765ab8766972f98371443fdd
+source_fingerprint: sha256:58534a52343be695a6e9fbc621347dd7a856dfee6d9f77af08da6f3e1548c9bf
 ---
 
 # Current state
@@ -55,7 +55,7 @@ Phase 5A Buff/Item 已完成为独立 `pure-run-buffs-items-v1` batch：Unity 60
 
 Phase 5B 已冻结并生成 12 项起始技能合同：Mage、Necromancer、Amazon 各 3 项，公共 Magic/Melee Attack 与隐藏 Pickup Spear；`skill.poison-spear.lv1` 继续引用原 Poison Spear batch。通用技能运行时处理 Mana 原子性、确定性命中/闪避/暴击、直线首目标、状态、Summon Skeleton、Pickup Spear 与 Combat Techniques Lv1，并通过兼容入口保持 Poison Spear 语义。ResourceSaver 生成 11 个新 Skill Resource、12 项 Catalog、1600×900 `SkillFixture`，canonical Catalog 达到 58 项；13 个批次独占 artifact 两轮 byte-identical，Compatibility/Forward+ 与 GdUnit 通过。用户已完成 Fixture、操作与 Assembly Reload 人工 smoke，状态晋升为 `Validated/UnityOwned`；正式 VFX、AI、Persistence、升级 UI/Input 不在本批范围。
 
-Phase 6A 已完成并关闭：两次 Unity AssetDatabase 后台导出冻结六类 Brain/Profile、四项敌方技能及 N1–N3 Encounter 合同；Core/Application 增加确定性 AI 候选、评分、Turn Plan、Encounter/Layout 解析，并把统一战斗入口升级为 `battle-transition-v5`。ResourceSaver 生成 4 个敌方 Skill、6 个 AI、2 个 Layout、3 个 Encounter 与原生 1600×900 `AiEncounterFixture`，canonical Catalog 达到 73 项；17 个批次 artifact 连续两次生成稳定，Compatibility/Forward+、Core 54、Application 25、Oracle 12、GdUnit 26 与迁移 Python 117 全绿。用户已确认 Fixture 布局、操作响应与 Output smoke，batch 晋升为 `Validated/UnityOwned`；N4–N6、E1/E2/Special、Run/Persistence 与正式 VFX 不在本批范围。
+Phase 6A 的初次 Fixture 已验收，但 Phase 7A 可玩联调暴露了 parity 缺陷：旧 typed draft 只保存 archetype 与四个权重，Godot AI 也只在当前格无合法攻击时生成移动。收口修复把共享 `BasicMeleeGraph` 作为第 21 个 Unity AssetDatabase 根，两次导出 byte-identical，并冻结 13 个 Intent/Rule/Score 节点与 12 条边；Core 现在共同生成当前格攻击、Engage、移动后技能、FinishOff、Retreat 与 Hold 候选，一个 Turn Plan 可经 canonical transition 执行 Move→Skill→EndTurn。六类 AI、4 Skill、2 Layout、3 Encounter 与 canonical 73 项身份不变；自动 parity 重验通过后保持 `Validated/UnityOwned`，可视逐步行为仍由 Phase 7A 人工闸门确认。
 
 Phase 6B 已完成三战 Pure Run 持久化垂直切片：冻结 Unity v5 的会话、结算、恢复与摘要语义，Core/Application 实现 N1→N2→N3、战前 checkpoint、确定性奖励/恢复/死亡卸装、成长待办、稳定事务去重和终局摘要。Godot Adapter 提供版本化 canonical JSON 单槽存档，正式路径为 `user://pure-run/save-v1.json`，写入经 temp 重读校验、有效 backup 保留、损坏证据 quarantine 和 revision 并发保护；PendingBattle 跨进程从战前快照重开，不序列化逐回合 BattleState。ResourceSaver 新增 1 个 Run Resource、Catalog 与自动诊断 Fixture，canonical Catalog 达到 74 项；该批无视觉载荷，由 Compatibility/Forward+、故障恢复与全量回归自动验收后晋升为 `Validated/UnityOwned`。完整七层地图、Rest/Store/Mystery、N4–N6、Boss、成长消费和正式 Run UI/Input 仍不在本批范围。
 
@@ -63,7 +63,7 @@ Phase 7A 已进入合同冻结 checkpoint：`pure-run-ui-input-v1` 绑定最终 
 
 Phase 7A 的 Application checkpoint 已加入 `PlayableBattleSessionFactory/Service`：由 `EncounterRequest`、Encounter/Layout 与 Unit/Skill/AI Catalog 组合确定性 BattleState；玩家 UI intent 只经 `BattleTransitionService`，敌方只经 `AiDecisionService/AiTurnService`，并输出只读棋盘、技能、合法移动/目标、状态、尸体、投矛与事件快照。AI 自动推进有 64-command guard，胜负只生成一个经过 Run/revision/Encounter 绑定的 `PureRunBattleResult`。死亡活动单位现在只允许 canonical EndTurn 跳过，仍禁止其移动或施法。Godot Scene/UI/Input 生成尚未开始。
 
-Phase 7A 已生成原生 1600×900 可玩 Main：Home 支持 New/Continue/覆盖确认，Battle 以鼠标选择移动/技能/格子并以右键/Esc 取消、Enter/按钮共用 EndTurn intent，敌方自动推进；Settlement 只展示 PendingProgression，N3/失败/放弃进入 terminal summary 并显式消费后返回 Home。棋盘复用 10×10 Core 坐标和已迁移 `GodotUnitActor` Sprite/Shadow/tint，正式 VFX/Audio 仍后移。Main PackedScene 由 ResourceSaver 生成并保留 `uid://c0mlqoh7vensn`，连续两次 byte-identical；Compatibility/Forward+、GdUnit、Release 和统一门禁已通过。batch 保持 `Generated/UnityOwned + manual_ui_input_qa_pending`，不得在用户人工验收前关闭 Phase 7A。
+Phase 7A 已生成原生 1600×900 可玩 Main，并在人工验收反馈后加入收口修复：普通可产尸体单位首次死亡原子写入 `BattleState.Corpses`，Summon Skeleton 消费同一状态；Amazon 显示 Held/Dropped/Pickup；AI Decision/Move/Skill/EndTurn 通过可暂停、单步、1×/2× frame 展示。Battle UI 渲染 canonical legal move/target、路径、AOE、尸体与掉矛高亮，并提供 Turn Order、悬停详情及可筛选结构化日志。Home、Settlement、Summary、Run/Persistence 与 canonical 74 项身份不变，正式 VFX/Audio 仍后移；batch 保持 `Generated/UnityOwned + manual_ui_input_qa_pending`，不得在用户复验前关闭。
 
 `AiEncounterFixture` 的单步与整轮可观测性已改为真实结构化结果：Space 精确执行一个 AI actor，Enter 执行当前轮剩余全部 actor，并累计 actor、intent、skill、candidate、pattern cursor、events 与 state fingerprint。自动测试固定 N1/N2/N3 为 3/3/4 turns、两个 Elite 为 1 turn，验证整轮推进、64-command guard、Reset 重放及 Elite 单步/整轮等价；Compatibility/Forward+ 均实际执行单步和 N1 整轮，GdUnit 增至 26。人工闸门因此只保留 1600×900 可读性、操作响应与 Reload/Output smoke。
 
@@ -77,6 +77,6 @@ Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-tra
 
 1. Phase 4 Unit 与 Phase 5A Buff/Item 均已完成并删除各自 active plan；结果由代码、设计、manifest、测试、OKF 与 Git 历史保存。
 2. 项目 MCP Profile 已按 Phase 7A 切换为 `ui-input`，统一入口校验 27 个阶段白名单工具。
-3. Phase 6A 与 Phase 6B 已关闭；Phase 7A active plan 正在执行，当前下一 checkpoint 是通用可玩 Battle Session。完整 Presentation/VFX/Audio 仍属于 Phase 8。
+3. Phase 6B 已关闭；Phase 6A 自动 parity 已按完整图合同重验，Phase 7A active plan 等待收口 UI/Input 人工复验。完整 Presentation/VFX/Audio 仍属于 Phase 8。
 
 Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行，Godot Windows Release/PCK Smoke 延后到发布阶段。

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c0mlqoh7vensn"]
 
-[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/TacticsMigrationRoot.cs" id="1_elqb8"]
+[ext_resource type="Script" uid="uid://mxxo32p2atql" path="res://src/Tactics.Godot.Adapter/Runtime/TacticsMigrationRoot.cs" id="1_elqb8"]
 
 [node name="TacticsMigrationRoot" type="Node" unique_id=554349422]
 script = ExtResource("1_elqb8")
