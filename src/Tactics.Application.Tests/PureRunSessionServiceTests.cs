@@ -118,6 +118,31 @@ public sealed class PureRunSessionServiceTests
         });
     }
 
+    [Test]
+    public void ResumeRun_RepairsLegacyAllZeroAttributesAndPersistsOnNextTransaction()
+    {
+        PureRunDefinition definition = Definition();
+        var store = new MemoryRunStore();
+        var zero = new UnitAttributes(0,0,0,0,0,0);
+        RunCharacterState[] party = definition.Party.Select(template => new RunCharacterState(template.CharacterId,
+            template.UnitContentId,1,zero,20,20,5,18,false,new[]{template.StartingSkillContentId})).ToArray();
+        store.Snapshot = new PureRunSaveSnapshot(1,new PureRunState("run-legacy",7,1,PureRunPhase.Ready,0,
+            definition.Encounters[0],party),null);
+        var service = new PureRunSessionService(definition,store);
+
+        RunSessionResult resumed = service.ResumeRun();
+        RunSessionResult begun = service.BeginEncounter();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(resumed.Succeeded,Is.True);
+            Assert.That(resumed.Diagnostics,Does.Contain("save.attributes_repaired_from_run_definition"));
+            Assert.That(resumed.Snapshot!.ActiveRun!.Party[0].Attributes.Strength,Is.EqualTo(5));
+            Assert.That(begun.Succeeded,Is.True);
+            Assert.That(store.Snapshot!.ActiveRun!.Party.All(member=>member.Attributes.Strength>0),Is.True);
+        });
+    }
+
     private static PureRunBattleResult Victory(PureRunState run) => new(
         run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, true, 3, 3,
         run.Party.Select(member => new BattlePartyResult(
@@ -136,7 +161,7 @@ public sealed class PureRunSessionServiceTests
 
     private sealed class MemoryRunStore : IRunSaveStore
     {
-        public PureRunSaveSnapshot? Snapshot { get; private set; }
+        public PureRunSaveSnapshot? Snapshot { get; set; }
 
         public RunStoreResult Load() => new(true, null, Snapshot ?? new PureRunSaveSnapshot(0, null, null));
 

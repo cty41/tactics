@@ -44,6 +44,8 @@ public partial class GodotPlayableRunMain : Control
     private int _logFilter;
     private BattleUiSnapshot? _visibleSnapshot;
     private GridPoint? _hoveredCell;
+    private ContentId? _currentEncounterId;
+    private bool _settlementCommitted;
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
         _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count == 2 && _encounters.Count == 3;
@@ -163,6 +165,7 @@ public partial class GodotPlayableRunMain : Control
 
     private void BeginReadyEncounter()
     {
+        AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,"Settlement Continue requested the next encounter","EncounterNavigationEvent"));
         RunSessionResult begun = _run!.BeginEncounter();
         if (!begun.Succeeded || begun.EncounterRequest is null) { SetStatus(begun.ErrorCode); return; }
         StartBattle(begun.EncounterRequest);
@@ -170,14 +173,20 @@ public partial class GodotPlayableRunMain : Control
 
     private void StartBattle(EncounterRequest request)
     {
+        _playbackTimer?.Stop();
+        _settlementCommitted=false;
+        _currentEncounterId=request.EncounterContentId;
         EncounterDefinition encounter = _encounters[request.EncounterContentId];
         _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units, _skills, _ai, _balance);
         BuildBattlePage();
+        AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,$"Entered {EncounterLabel(request.EncounterContentId)} ({request.EncounterContentId.Value})","EncounterNavigationEvent"));
+        RefreshLog();
     }
 
     private void BuildBattlePage()
     {
-        Control root = NewPage("PURE RUN BATTLE", "Left click: select/confirm   Right click or Esc: cancel   Enter: end turn");
+        ContentId encounterId=_currentEncounterId??throw new InvalidOperationException("Battle encounter identity is missing.");
+        Control root = NewPage($"PURE RUN BATTLE — {EncounterLabel(encounterId)}", $"{encounterId.Value}   |   Left click: select/confirm   Right click or Esc: cancel   Enter: end turn");
         _cells.Clear();_logs.Clear();_playbackPaused=false;
         _board = new Control { Position = BoardOrigin, Size = new Vector2(CellSize * 10, CellSize * 10) }; root.AddChild(_board);
         for (int y = 0; y < 10; y++) for (int x = 0; x < 10; x++)
@@ -297,7 +306,13 @@ public partial class GodotPlayableRunMain : Control
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
 
-    private void CompleteBattle(PureRunBattleResult battleResult){RunSessionResult settled=_run!.ApplyBattleResult(battleResult);if(!settled.Succeeded){SetStatus(settled.ErrorCode);return;}ShowSettlement(settled.Snapshot!);}
+    private void CompleteBattle(PureRunBattleResult battleResult)
+    {
+        if(_settlementCommitted)return;
+        _settlementCommitted=true;_playbackTimer?.Stop();
+        AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,$"Submitting {EncounterLabel(battleResult.EncounterContentId)} BattleResult","EncounterNavigationEvent"));
+        RunSessionResult settled=_run!.ApplyBattleResult(battleResult);if(!settled.Succeeded){_settlementCommitted=false;SetStatus(settled.ErrorCode);return;}ShowSettlement(settled.Snapshot!);
+    }
 
     private void OnPlaybackTimer(){if(!_playbackPaused)PlaybackStep(false);}
     private void PlaybackStep(bool forced)
@@ -318,6 +333,9 @@ public partial class GodotPlayableRunMain : Control
         DamageAppliedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.TargetId.Value} took {e.Amount} damage; HP {e.RemainingHealth}",nameof(DamageAppliedEvent)),
         UnitDefeatedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.UnitId.Value} was defeated",nameof(UnitDefeatedEvent)),
         CorpseCreatedEvent e=>new(BattleUiLogCategory.Gameplay,$"Corpse created at {e.Cell} from {e.UnitId.Value}",nameof(CorpseCreatedEvent)),
+        CorpseConsumedEvent e=>new(BattleUiLogCategory.Gameplay,$"Corpse consumed at {e.Cell}",nameof(CorpseConsumedEvent)),
+        UnitSummonedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.OwnerId.Value} summoned {e.SummonId.Value} at {e.Cell}",nameof(UnitSummonedEvent)),
+        ManaRestoredEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.TargetId.Value} restored {e.Amount} MP; MP {e.CurrentMana}",nameof(ManaRestoredEvent)),
         SkillUsedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.ActorId.Value} used {e.SkillId.Value} on {e.TargetId.Value}",nameof(SkillUsedEvent)),
         SpearDroppedEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.OwnerId.Value} dropped spear at {e.Cell}",nameof(SpearDroppedEvent)),
         SpearRecoveredEvent e=>new(BattleUiLogCategory.Gameplay,$"{e.OwnerId.Value} recovered spear at {e.Cell}",nameof(SpearRecoveredEvent)),
@@ -331,9 +349,12 @@ public partial class GodotPlayableRunMain : Control
         _battle = null;
         if (snapshot.TerminalSummary is PureRunSummary summary) { ShowSummary(summary); return; }
         PureRunState run = snapshot.ActiveRun!;
-        Control root = NewPage("BATTLE SETTLEMENT", $"Completed {run.BattlesCompleted}/3 battles");
+        string completed=_currentEncounterId is ContentId completedId?EncounterLabel(completedId):$"Battle {run.BattlesCompleted}";
+        string next=EncounterLabel(run.EncounterContentId);
+        Control root = NewPage("BATTLE SETTLEMENT", $"{completed} completed → Next: {next}");
         LabelAt(root, $"Gold: {run.Gold}\nItems: {string.Join(", ", run.AcquiredItems.Select(id => id.Value))}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
-        Button next = Button("Continue", BeginReadyEncounter); next.Position = new Vector2(650, 610); next.Size = new Vector2(300, 70); root.AddChild(next);
+        bool continueRequested=false;
+        Button nextButton = Button($"Continue to {next}",()=>{if(continueRequested)return;continueRequested=true;BeginReadyEncounter();}); nextButton.Position = new Vector2(650, 610); nextButton.Size = new Vector2(300, 70); root.AddChild(nextButton);
     }
 
     private void ShowSummary(PureRunSummary summary)
@@ -368,4 +389,5 @@ public partial class GodotPlayableRunMain : Control
     private static Label Label(string text, int size) { var label = new Label { Text = text }; label.AddThemeFontSizeOverride("font_size", size); return label; }
     private static Label LabelAt(Control parent, string text, Vector2 position, int size) { Label label = Label(text, size); label.Position = position; parent.AddChild(label); return label; }
     private void SetStatus(string? text) { if (_status is not null) _status.Text = text ?? string.Empty; }
+    private static string EncounterLabel(ContentId id)=>id.Value.EndsWith(".n1",StringComparison.Ordinal)?"N1":id.Value.EndsWith(".n2",StringComparison.Ordinal)?"N2":id.Value.EndsWith(".n3",StringComparison.Ordinal)?"N3":id.Value;
 }

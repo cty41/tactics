@@ -25,7 +25,7 @@ public sealed class PureRunSettlementService
         if (rejection is not null)
             return new PureRunSettlementResult(false, rejection, state, null, false);
 
-        RunCharacterState[] party = MergeParty(state, result);
+        RunCharacterState[] party = MergeParty(state, result, recoverAfterVictory: result.PlayerVictory);
         string[] transactions = state.AppliedTransactionKeys.Append(transactionKey)
             .Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray();
         if (!result.PlayerVictory)
@@ -106,21 +106,22 @@ public sealed class PureRunSettlementService
         return null;
     }
 
-    private static RunCharacterState[] MergeParty(PureRunState state, PureRunBattleResult result)
+    private static RunCharacterState[] MergeParty(PureRunState state, PureRunBattleResult result, bool recoverAfterVictory)
     {
         return state.Party.Select(prior =>
         {
             BattlePartyResult current = result.Party.Single(item => item.CharacterId == prior.CharacterId);
-            bool dead = current.IsDead;
-            int health = dead ? 0 : Math.Min(prior.MaxHealth,
-                checked(current.CurrentHealth + prior.Attributes.Constitution * 2));
-            int mana = dead ? 0 : Math.Min(prior.MaxMana,
-                checked(current.CurrentMana + prior.Attributes.Charisma));
+            bool wasDead = current.IsDead;
+            int health = recoverAfterVictory ? Math.Min(prior.MaxHealth,
+                checked(current.CurrentHealth + prior.Attributes.Constitution * 2)) : current.CurrentHealth;
+            int mana = recoverAfterVictory ? Math.Min(prior.MaxMana,
+                checked(current.CurrentMana + prior.Attributes.Charisma)) : current.CurrentMana;
+            bool dead = health == 0;
             return new RunCharacterState(
                 prior.CharacterId, prior.UnitContentId, prior.Level, prior.Attributes,
                 health, prior.MaxHealth, mana, prior.MaxMana, dead, prior.LearnedSkills,
-                dead ? Array.Empty<RunEquipmentState>() : prior.Equipment,
-                dead ? Array.Empty<BattleConsumableState>() : current.CarriedConsumables);
+                wasDead ? Array.Empty<RunEquipmentState>() : prior.Equipment,
+                wasDead ? Array.Empty<BattleConsumableState>() : current.CarriedConsumables);
         }).ToArray();
     }
 

@@ -24,7 +24,8 @@ public sealed class PureRunRuntimeTests
             Assert.That(settled.ActiveRun!.EncounterContentId.Value, Is.EqualTo("encounter.pure-run.n2"));
             Assert.That(settled.ActiveRun.Gold, Is.EqualTo(8));
             Assert.That(settled.ActiveRun.Party[0].CurrentHealth, Is.EqualTo(20));
-            Assert.That(settled.ActiveRun.Party[1].IsDead, Is.True);
+            Assert.That(settled.ActiveRun.Party[1].IsDead, Is.False);
+            Assert.That(settled.ActiveRun.Party[1].CurrentHealth, Is.EqualTo(10));
             Assert.That(settled.ActiveRun.Party[2].CurrentMana, Is.EqualTo(6));
             Assert.That(settled.ActiveRun.PendingProgression.Single().CharacterId, Is.EqualTo("mage"));
             Assert.That(settled.ActiveRun.Party.Select(member => member.Level), Is.All.EqualTo(1));
@@ -45,6 +46,20 @@ public sealed class PureRunRuntimeTests
             Assert.That(result.ActiveRun, Is.Null);
             Assert.That(result.TerminalSummary!.Outcome, Is.EqualTo(PureRunOutcome.SliceCompleted));
             Assert.That(result.TerminalSummary.BattlesCompleted, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Settlement_DefeatDoesNotRecoverOrReviveParty()
+    {
+        PureRunDefinition definition=TestDefinition();PureRunState pending=PendingState(definition,13);
+        PureRunSettlementResult result=new PureRunSettlementService().Apply(definition,pending,
+            Result(pending,false,4,new[]{0,7,8},new[]{0,1,2}),Array.Empty<ContentId>());
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ActiveRun,Is.Null);
+            Assert.That(result.TerminalSummary!.Outcome,Is.EqualTo(PureRunOutcome.Defeated));
+            Assert.That(result.TerminalSummary.DeadCharacters,Does.Contain("mage"));
         });
     }
 

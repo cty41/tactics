@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Tactics.Core.Content;
 using Tactics.Core.Items;
+using Tactics.Core.Units;
 
 namespace Tactics.Application.Runs;
 
@@ -82,6 +83,7 @@ public static class RunSaveDocumentV1
         options.Converters.Add(new JsonStringEnumConverter());
         options.Converters.Add(new ContentIdJsonConverter());
         options.Converters.Add(new ItemInstanceIdJsonConverter());
+        options.Converters.Add(new UnitAttributesJsonConverter());
         return options;
     }
 
@@ -120,5 +122,28 @@ public static class RunSaveDocumentV1
 
         public override void Write(Utf8JsonWriter writer, ItemInstanceId value, JsonSerializerOptions options) =>
             writer.WriteStringValue(value.Value);
+    }
+
+    private sealed class UnitAttributesJsonConverter : JsonConverter<UnitAttributes>
+    {
+        public override UnitAttributes Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            using JsonDocument document = JsonDocument.ParseValue(ref reader);
+            JsonElement root = document.RootElement;
+            string[] names = { "strength", "agility", "constitution", "intelligence", "charisma", "luck" };
+            if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Count() != names.Length ||
+                names.Any(name => !root.TryGetProperty(name, out JsonElement value) || value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out _)))
+                throw new JsonException("UnitAttributes must contain exactly six integer fields.");
+            return new UnitAttributes(root.GetProperty("strength").GetInt32(), root.GetProperty("agility").GetInt32(),
+                root.GetProperty("constitution").GetInt32(), root.GetProperty("intelligence").GetInt32(),
+                root.GetProperty("charisma").GetInt32(), root.GetProperty("luck").GetInt32());
+        }
+
+        public override void Write(Utf8JsonWriter writer, UnitAttributes value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject(); writer.WriteNumber("strength", value.Strength); writer.WriteNumber("agility", value.Agility);
+            writer.WriteNumber("constitution", value.Constitution); writer.WriteNumber("intelligence", value.Intelligence);
+            writer.WriteNumber("charisma", value.Charisma); writer.WriteNumber("luck", value.Luck); writer.WriteEndObject();
+        }
     }
 }

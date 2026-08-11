@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-11T21:43:03+08:00"
+timestamp: "2026-08-12T00:41:55+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:58534a52343be695a6e9fbc621347dd7a856dfee6d9f77af08da6f3e1548c9bf
+source_fingerprint: sha256:5644afe85bb5f892e587762b33a6b7cf3915efbd29961c7aa966109a58c9c502
 ---
 
 # Current state
@@ -64,6 +64,10 @@ Phase 7A 已进入合同冻结 checkpoint：`pure-run-ui-input-v1` 绑定最终 
 Phase 7A 的 Application checkpoint 已加入 `PlayableBattleSessionFactory/Service`：由 `EncounterRequest`、Encounter/Layout 与 Unit/Skill/AI Catalog 组合确定性 BattleState；玩家 UI intent 只经 `BattleTransitionService`，敌方只经 `AiDecisionService/AiTurnService`，并输出只读棋盘、技能、合法移动/目标、状态、尸体、投矛与事件快照。AI 自动推进有 64-command guard，胜负只生成一个经过 Run/revision/Encounter 绑定的 `PureRunBattleResult`。死亡活动单位现在只允许 canonical EndTurn 跳过，仍禁止其移动或施法。Godot Scene/UI/Input 生成尚未开始。
 
 Phase 7A 已生成原生 1600×900 可玩 Main，并在人工验收反馈后加入收口修复：普通可产尸体单位首次死亡原子写入 `BattleState.Corpses`，Summon Skeleton 消费同一状态；Amazon 显示 Held/Dropped/Pickup；AI Decision/Move/Skill/EndTurn 通过可暂停、单步、1×/2× frame 展示。Battle UI 渲染 canonical legal move/target、路径、AOE、尸体与掉矛高亮，并提供 Turn Order、悬停详情及可筛选结构化日志。Home、Settlement、Summary、Run/Persistence 与 canonical 74 项身份不变，正式 VFX/Audio 仍后移；batch 保持 `Generated/UnityOwned + manual_ui_input_qa_pending`，不得在用户复验前关闭。
+
+Phase 7A 第二轮收口将 Unity 的基础技能回合限制显式迁入 `SkillDefinition/BattleUnitState`：每项基础攻击每回合只成功一次，非基础技能仅在冻结 `MaxUsesPerTurn>0` 时计数，失败不消耗并在该单位下次回合清零。Godot 可玩切片通过非 Catalog 的 `godot-playable-lv1-balance-v1` Resource 覆盖 Lv1 Mana/伤害和玩家/召唤物基础攻击，冻结 Phase 5 资源值保持不变；结束自身回合按 Intelligence 恢复 MP。召唤骷髅动态获得近战基础攻击，尸体消费后死亡 Sprite、标记和数值条一起移除；AI BasicAttack 接入冻结 `TargetHealth` score，日志保留目标类型、ID 与分项评分。所有可见单位显示即时 HP/MP 调试条。
+
+Pure Run schema 仍为 v1，但 `UnitAttributes` 现在由显式 JSON converter 稳定读写六项字段。已存在的固定三人全零属性存档在身份匹配时从 Run Definition 修复，并在下一次合法事务写回；部分损坏或身份不匹配拒绝。胜利结算对本场阵亡角色也应用 `Constitution×2` HP 与 `Charisma` MP 恢复，恢复后可进入下一场，死亡卸装仍保留；失败不复活。Battle/Settlement 明示 N1/N2/N3，只有结算 Continue 可开始下一场，并以一次性提交与导航日志阻止旧 Timer、重复 BattleResult 或双击创建重复战斗。
 
 `AiEncounterFixture` 的单步与整轮可观测性已改为真实结构化结果：Space 精确执行一个 AI actor，Enter 执行当前轮剩余全部 actor，并累计 actor、intent、skill、candidate、pattern cursor、events 与 state fingerprint。自动测试固定 N1/N2/N3 为 3/3/4 turns、两个 Elite 为 1 turn，验证整轮推进、64-command guard、Reset 重放及 Elite 单步/整轮等价；Compatibility/Forward+ 均实际执行单步和 N1 整轮，GdUnit 增至 26。人工闸门因此只保留 1600×900 可读性、操作响应与 Reload/Output smoke。
 

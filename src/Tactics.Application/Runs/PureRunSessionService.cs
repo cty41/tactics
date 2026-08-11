@@ -25,7 +25,8 @@ public sealed record RunSessionResult(
     string? ErrorCode,
     PureRunSaveSnapshot? Snapshot,
     EncounterRequest? EncounterRequest,
-    bool WasDuplicate = false);
+    bool WasDuplicate = false,
+    IReadOnlyList<string>? Diagnostics = null);
 
 public sealed class PureRunSessionService
 {
@@ -61,7 +62,7 @@ public sealed class PureRunSessionService
 
     public RunSessionResult BeginEncounter()
     {
-        RunStoreResult loaded = _store.Load();
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run");
         if (run.Phase != PureRunPhase.Ready)
@@ -75,26 +76,26 @@ public sealed class PureRunSessionService
             run.BackpackEquipment, run.PendingProgression, run.AppliedTransactionKeys,
             run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint);
         RunSessionResult saved = Save(new PureRunSaveSnapshot(pending.Revision, pending, loaded.Snapshot.TerminalSummary), run.Revision);
-        return saved.Succeeded ? saved with { EncounterRequest = CreateRequest(pending) } : saved;
+        return saved.Succeeded ? saved with { EncounterRequest = CreateRequest(pending), Diagnostics = diagnostics } : saved;
     }
 
     public RunSessionResult ResumeRun()
     {
-        RunStoreResult loaded = _store.Load();
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
         return run.Phase switch
         {
-            PureRunPhase.Ready => new RunSessionResult(true, null, loaded.Snapshot, null),
+            PureRunPhase.Ready => new RunSessionResult(true, null, loaded.Snapshot, null, Diagnostics: diagnostics),
             PureRunPhase.PendingBattle when run.Checkpoint is not null =>
-                new RunSessionResult(true, null, loaded.Snapshot, CreateRequest(run)),
+                new RunSessionResult(true, null, loaded.Snapshot, CreateRequest(run), Diagnostics: diagnostics),
             _ => Fail("run.not_resumable", loaded.Snapshot)
         };
     }
 
     public RunSessionResult ApplyBattleResult(PureRunBattleResult battleResult)
     {
-        RunStoreResult loaded = _store.Load();
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
         if (!loaded.Succeeded || loaded.Snapshot is null)
             return Fail(loaded.ErrorCode ?? "run.no_save", loaded.Snapshot);
         if (loaded.Snapshot.ActiveRun is not PureRunState run)
@@ -117,15 +118,15 @@ public sealed class PureRunSessionService
         long nextRevision = settlement.ActiveRun?.Revision ?? run.Revision + 1;
         var snapshot = new PureRunSaveSnapshot(nextRevision, settlement.ActiveRun, settlement.TerminalSummary);
         RunSessionResult saved = Save(snapshot, run.Revision);
-        return saved with { WasDuplicate = false };
+        return saved with { WasDuplicate = false, Diagnostics = diagnostics };
     }
 
     public RunSessionResult AbandonRun()
     {
-        RunStoreResult loaded = _store.Load();
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
-        return Save(new PureRunSaveSnapshot(run.Revision + 1, null, _settlement.Abandon(run)), run.Revision);
+        return Save(new PureRunSaveSnapshot(run.Revision + 1, null, _settlement.Abandon(run)), run.Revision) with { Diagnostics = diagnostics };
     }
 
     public RunSessionResult ConsumeCompletedSummary()
@@ -159,4 +160,47 @@ public sealed class PureRunSessionService
 
     private static RunSessionResult Fail(string? code, PureRunSaveSnapshot? snapshot = null) =>
         new(false, code ?? "run.store_failure", snapshot, null);
+
+    private RunStoreResult LoadWithAttributeRepair(out string[] diagnostics)
+    {
+        diagnostics = Array.Empty<string>();
+        RunStoreResult loaded = _store.Load();
+        if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run) return loaded;
+        try
+        {
+            bool repaired = false;
+            RunCharacterState[] party = run.Party.Select(character => RepairCharacter(character, ref repaired)).ToArray();
+            RunEncounterCheckpoint? checkpoint = run.Checkpoint;
+            if (checkpoint is not null)
+            {
+                RunCharacterState[] checkpointParty = checkpoint.Party.Select(character => RepairCharacter(character, ref repaired)).ToArray();
+                checkpoint = checkpoint with { Party = checkpointParty };
+            }
+            if (!repaired) return loaded;
+            var repairedRun = new PureRunState(run.RunId, run.Seed, run.Revision, run.Phase, run.EncounterIndex,
+                run.EncounterContentId, party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
+                run.AppliedTransactionKeys, run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint);
+            diagnostics = new[] { "save.attributes_repaired_from_run_definition" };
+            return loaded with { Snapshot = loaded.Snapshot with { ActiveRun = repairedRun } };
+        }
+        catch (InvalidDataException error)
+        {
+            return new RunStoreResult(false, error.Message, loaded.Snapshot);
+        }
+    }
+
+    private RunCharacterState RepairCharacter(RunCharacterState character, ref bool repaired)
+    {
+        int[] values = { character.Attributes.Strength, character.Attributes.Agility, character.Attributes.Constitution,
+            character.Attributes.Intelligence, character.Attributes.Charisma, character.Attributes.Luck };
+        if (values.All(value => value != 0)) return character;
+        if (values.Any(value => value != 0)) throw new InvalidDataException("save.partial_attributes_invalid");
+        PureRunPartyTemplate? template = _definition.Party.FirstOrDefault(item =>
+            item.CharacterId == character.CharacterId && item.UnitContentId == character.UnitContentId);
+        if (template is null) throw new InvalidDataException("save.zero_attributes_identity_mismatch");
+        repaired = true;
+        return new RunCharacterState(character.CharacterId, character.UnitContentId, character.Level, template.Attributes,
+            character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
+            character.LearnedSkills, character.Equipment, character.CarriedConsumables);
+    }
 }

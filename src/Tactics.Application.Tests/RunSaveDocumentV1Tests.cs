@@ -23,6 +23,8 @@ public sealed class RunSaveDocumentV1Tests
             Assert.That(decoded.Envelope!.Revision, Is.EqualTo(1));
             Assert.That(decoded.Envelope.Payload.ActiveRun!.EncounterContentId.Value,
                 Is.EqualTo("encounter.pure-run.n1"));
+            Assert.That(decoded.Envelope.Payload.ActiveRun.Party[0].Attributes,
+                Is.EqualTo(new UnitAttributes(5, 5, 5, 6, 5, 5)));
         });
     }
 
