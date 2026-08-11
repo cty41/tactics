@@ -199,15 +199,13 @@ public sealed class BattleTransitionService
                 application.AppliedStatus.RemainingTurns));
         }
 
-        if (!updatedTarget.IsAlive)
-            events.Add(new UnitDefeatedEvent(command.TargetId));
-
         events.Add(new SpearDroppedEvent(command.ActorId, dropCell.Value));
 
         BattleState nextState = state
             .WithUnit(updatedActor)
             .WithUnit(updatedTarget)
             .WithDroppedSpear(command.ActorId, dropCell.Value);
+        nextState = BattleDefeatResolver.Apply(nextState, target, updatedTarget, events);
         return new BattleTransition(nextState, events);
     }
 
@@ -390,6 +388,7 @@ public sealed class BattleTransitionService
         events.Add(new TurnAdvancedEvent(command.ActorId, nextState.ActiveUnitId, nextState.Round));
 
         BattleUnitState incoming = nextState.Units[nextState.ActiveUnitId];
+        BattleUnitState incomingBeforeTicks = incoming;
         foreach (BattleStatusState status in incoming.Statuses.Values
                      .OrderBy(item => item.ContentId.Value, StringComparer.Ordinal))
         {
@@ -409,8 +408,6 @@ public sealed class BattleTransitionService
                 status.ContentId,
                 appliedDamage,
                 healthAfterDamage));
-            if (!incoming.IsAlive)
-                events.Add(new UnitDefeatedEvent(incoming.Unit.InstanceId));
             if (status.EffectKind == StatusEffectKind.Burning)
             {
                 int remainingStacks = status.StackCount - 1;
@@ -431,6 +428,7 @@ public sealed class BattleTransitionService
         }
 
         nextState = nextState.WithUnit(incoming);
+        nextState = BattleDefeatResolver.Apply(nextState, incomingBeforeTicks, incoming, events);
         return new BattleTransition(nextState, events);
     }
 

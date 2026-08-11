@@ -82,8 +82,23 @@ public sealed class StartingSkillRuntimeTests
             Assert.That(result.Succeeded, Is.True);
             Assert.That(result.State.Corpses, Does.Not.Contain(corpse));
             Assert.That(created.CanReceiveStandardHealing, Is.False);
+            Assert.That(created.CanProduceCorpse, Is.False);
             Assert.That(result.Events.OfType<UnitSummonedEvent>(), Has.Exactly(1).Items);
             Assert.That(result.Events.OfType<DamageAppliedEvent>(), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void DefeatCreatesOneConsumableCorpseAtOriginalCell()
+    {
+        GridPoint cell=new(2,1);BattleState state=State(new GridPoint(1,1),new[]{("enemy.target.0",cell)});
+        SkillDefinition lethal=Skill("skill.test.lethal",SkillExecutionKind.Thrust,0,1,30);
+        BattleTransition result=new BattleTransitionService().Apply(state,new UseSkillCommand(state.ActiveUnitId,new UnitInstanceId("enemy.target.0"),cell,lethal));
+        Assert.Multiple(()=>
+        {
+            Assert.That(result.State.Corpses,Does.Contain(cell));
+            Assert.That(result.Events.OfType<UnitDefeatedEvent>(),Has.Exactly(1).Items);
+            Assert.That(result.Events.OfType<CorpseCreatedEvent>().Single().Cell,Is.EqualTo(cell));
         });
     }
 

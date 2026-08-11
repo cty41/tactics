@@ -104,7 +104,8 @@ public sealed class UnitDefinition
             DerivedStats.MaxHealth,
             maxMana: DerivedStats.MaxMana,
             currentMana: DerivedStats.StartingMana,
-            baseSpeed: Speed);
+            baseSpeed: Speed,
+            canProduceCorpse: CanProduceCorpse);
     }
 
     private static string Required(string value, string parameterName) =>

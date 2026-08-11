@@ -75,8 +75,8 @@ public sealed class SkillRuntimeService
                 target = application.Unit;
                 events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, statusId, application.AppliedStatus.RemainingTurns));
             }
-            if (!target.IsAlive) events.Add(new UnitDefeatedEvent(target.Unit.InstanceId));
             next = next.WithUnit(target);
+            next = BattleDefeatResolver.Apply(next, originalTarget, target, events);
         }
         events.Add(new SemanticCueEmittedEvent(actor.Unit.InstanceId, targets[0].Unit.InstanceId, skill.ContentId, "resolution"));
         return new BattleTransition(next, events);
@@ -116,7 +116,7 @@ public sealed class SkillRuntimeService
         int ordinal = state.Units.Values.Where(unit => unit.SummonOwnerId == actor.Unit.InstanceId).Select(unit => unit.Unit.SpawnOrdinal).DefaultIfEmpty(-1).Max() + 1;
         var summonId = new UnitInstanceId($"{actor.Unit.InstanceId.Value}.skeleton.{ordinal}");
         var facts = new UnitState(summonId, SkeletonDefinitionId, cell, 3, 10f, actor.Unit.PlayerNumber, ordinal);
-        var summon = new BattleUnitState(facts, 12, 12, maxMana: 0, currentMana: 0, physicalAttack: 2, magicalAttack: 0, summonOwnerId: actor.Unit.InstanceId, canReceiveStandardHealing: false);
+        var summon = new BattleUnitState(facts, 12, 12, maxMana: 0, currentMana: 0, physicalAttack: 2, magicalAttack: 0, summonOwnerId: actor.Unit.InstanceId, canReceiveStandardHealing: false, canProduceCorpse: false);
         BattleUnitState updatedActor = actor.WithMana(actor.CurrentMana - command.Definition.ManaCost);
         BattleState next = state.WithUnit(updatedActor).WithoutCorpse(cell).WithSummon(summon);
         var events = new List<BattleEvent> { new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, command.Definition.ContentId) };

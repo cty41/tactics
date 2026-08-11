@@ -30,9 +30,13 @@ public sealed record BattleUiUnitSnapshot(
     int MaxHealth,
     int CurrentMana,
     int MaxMana,
+    bool HasMovedThisTurn,
     IReadOnlyList<ContentId> StatusIds);
 
 public sealed record BattleUiTarget(ContentId SkillId, GridPoint Cell, UnitInstanceId? UnitId);
+public enum BattleUiLogCategory { Gameplay, Ai, Rejected }
+public sealed record BattleUiLogEntry(BattleUiLogCategory Category,string Message,string EventType);
+public sealed record BattleUiFrame(string Stage,BattleUiSnapshot Snapshot,AiDecisionEvent? Decision,IReadOnlyList<BattleEvent> Events);
 
 public sealed record BattleUiSnapshot(
     PlayableBattlePhase Phase,
@@ -47,6 +51,8 @@ public sealed record BattleUiSnapshot(
     IReadOnlyCollection<GridPoint> Corpses,
     IReadOnlyDictionary<UnitInstanceId, GridPoint> DroppedSpears,
     IReadOnlyList<BattleEvent> RecentEvents,
+    IReadOnlyList<UnitInstanceId> TurnOrder,
+    int ActiveTurnIndex,
     string? FailureCode);
 
 public sealed record PlayableBattleSessionContext(
@@ -78,6 +84,7 @@ public sealed class PlayableBattleSessionService
     private readonly Dictionary<UnitInstanceId, int> _patternIndices = new();
     private readonly List<BattleEvent> _recentEvents = new();
     private readonly int _initialEnemyCount;
+    private readonly Queue<(string Stage,BattleState State,AiDecisionEvent? Decision,IReadOnlyList<BattleEvent> Events)> _automaticFrames=new();
     private BattleTargetingMode _targetingMode;
     private ContentId? _selectedSkillId;
     private string? _failureCode;
@@ -100,6 +107,12 @@ public sealed class PlayableBattleSessionService
 
     public BattleState State { get; private set; }
     public PureRunBattleResult? BattleResult => _battleResult;
+    public bool HasPendingAutomaticFrames => _automaticFrames.Count>0;
+    public BattleUiFrame? DequeueAutomaticFrame()
+    {
+        if(!_automaticFrames.TryDequeue(out var frame))return null;
+        return new BattleUiFrame(frame.Stage,CaptureSnapshot(frame.State,false),frame.Decision,frame.Events);
+    }
 
     public BattleUiIntentResult Submit(BattleUiIntent intent)
     {
@@ -127,21 +140,28 @@ public sealed class PlayableBattleSessionService
         };
     }
 
-    public BattleUiSnapshot CaptureSnapshot()
+    public BattleUiSnapshot CaptureSnapshot()=>CaptureSnapshot(State,true);
+    private BattleUiSnapshot CaptureSnapshot(BattleState view,bool interactive)
     {
-        BattleUnitState active = State.Units[State.ActiveUnitId];
+        BattleUnitState active = view.Units[view.ActiveUnitId];
         IReadOnlyList<SkillDefinition> skills = _context.SkillsByUnit.TryGetValue(active.Unit.InstanceId, out IReadOnlyList<SkillDefinition>? values)
             ? values.OrderBy(skill => skill.ContentId.Value, StringComparer.Ordinal).ToArray()
             : Array.Empty<SkillDefinition>();
-        GridPoint[] moves = active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && !active.HasMovedThisTurn
-            ? State.Board.Cells.Keys.Where(cell => _transitions.Apply(State, new MoveUnitCommand(active.Unit.InstanceId, cell)).Succeeded).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
+        GridPoint[] moves = interactive&&active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && !active.HasMovedThisTurn
+            ? view.Board.Cells.Keys.Where(cell => _transitions.Apply(view, new MoveUnitCommand(active.Unit.InstanceId, cell)).Succeeded).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
             : Array.Empty<GridPoint>();
-        BattleUiTarget[] targets = skills.SelectMany(skill => LegalTargets(active, skill)).ToArray();
+        BattleUiTarget[] targets = interactive?skills.SelectMany(skill => LegalTargets(active, skill)).ToArray():Array.Empty<BattleUiTarget>();
         return new BattleUiSnapshot(
-            DeterminePhase(), State.Round, State.ActiveUnitId, _targetingMode, _selectedSkillId,
-            State.Units.Values.OrderBy(unit => unit.Unit.SpawnOrdinal).Select(ToSnapshot).ToArray(),
-            skills, moves, targets, State.Corpses.ToArray(), State.DroppedSpears,
-            _recentEvents.TakeLast(64).ToArray(), _failureCode);
+            DeterminePhase(view), view.Round, view.ActiveUnitId, interactive?_targetingMode:BattleTargetingMode.None, interactive?_selectedSkillId:null,
+            view.Units.Values.OrderBy(unit => unit.Unit.SpawnOrdinal).Select(ToSnapshot).ToArray(),
+            skills, moves, targets, view.Corpses.ToArray(), view.DroppedSpears,
+            _recentEvents.TakeLast(100).ToArray(),view.TurnOrder.ToArray(),view.ActiveIndex, _failureCode);
+    }
+
+    public IReadOnlyList<GridPoint> PreviewMovePath(GridPoint destination)
+    {
+        BattleTransition probe=_transitions.Apply(State,new MoveUnitCommand(State.ActiveUnitId,destination));
+        return probe.Succeeded?probe.Events.OfType<UnitMovedEvent>().Single().Path:Array.Empty<GridPoint>();
     }
 
     private BattleUiIntentResult SelectUnit(SelectUnitIntent intent) =>
@@ -231,6 +251,8 @@ public sealed class PlayableBattleSessionService
             int patternIndex = _patternIndices.GetValueOrDefault(active.Unit.InstanceId);
             AiTurnPlan plan = _decisions.Decide(State, definition, _context.SkillCatalog, patternIndex);
             AiPlanExecutionResult result = _aiTurns.Execute(State, plan, _context.SkillCatalog);
+            _automaticFrames.Enqueue(("Decision",State,result.Decision,Array.Empty<BattleEvent>()));
+            foreach(AiExecutionFrame frame in result.Frames??Array.Empty<AiExecutionFrame>())_automaticFrames.Enqueue((frame.Stage,frame.State,null,frame.Events));
             State = result.State;
             _patternIndices[active.Unit.InstanceId] = result.NextPatternIndex;
             Append(result.Events);
@@ -270,19 +292,24 @@ public sealed class PlayableBattleSessionService
             playerAlive && !enemyAlive, State.Round, defeated, party);
     }
 
-    private PlayableBattlePhase DeterminePhase()
+    private PlayableBattlePhase DeterminePhase()=>DeterminePhase(State);
+    private PlayableBattlePhase DeterminePhase(BattleState view)
     {
         if (_failureCode is not null) return PlayableBattlePhase.Faulted;
-        if (_battleResult is not null) return _battleResult.PlayerVictory ? PlayableBattlePhase.Victory : PlayableBattlePhase.Defeat;
-        return State.Units[State.ActiveUnitId].Unit.PlayerNumber == _context.PlayerNumber ? PlayableBattlePhase.PlayerTurn : PlayableBattlePhase.AiTurn;
+        bool playerAlive=view.Units.Values.Any(unit=>unit.IsAlive&&unit.Unit.PlayerNumber==_context.PlayerNumber);
+        bool enemyAlive=view.Units.Values.Any(unit=>unit.IsAlive&&unit.Unit.PlayerNumber!=_context.PlayerNumber);
+        if(!playerAlive)return PlayableBattlePhase.Defeat;
+        if(!enemyAlive)return PlayableBattlePhase.Victory;
+        return view.Units[view.ActiveUnitId].Unit.PlayerNumber == _context.PlayerNumber ? PlayableBattlePhase.PlayerTurn : PlayableBattlePhase.AiTurn;
     }
 
     private void Append(IEnumerable<BattleEvent> events) => _recentEvents.AddRange(events);
     private BattleUiIntentResult Result(bool succeeded, string? failureCode, IReadOnlyList<BattleEvent> events) =>
-        new(succeeded, failureCode, CaptureSnapshot(), events, _battleResult);
+        new(succeeded, failureCode, CaptureSnapshot(), events,HasPendingAutomaticFrames?null:_battleResult);
 
     private static BattleUiUnitSnapshot ToSnapshot(BattleUnitState unit) => new(
         unit.Unit.InstanceId, unit.Unit.DefinitionId, unit.Unit.Position, unit.Unit.PlayerNumber,
         unit.IsAlive, unit.CurrentHealth, unit.MaxHealth, unit.CurrentMana, unit.MaxMana,
+        unit.HasMovedThisTurn,
         unit.Statuses.Keys.OrderBy(id => id.Value, StringComparer.Ordinal).ToArray());
 }

@@ -67,7 +67,10 @@ public sealed class PlayableBattleSessionServiceTests
             Assert.That(result.Snapshot.Phase, Is.EqualTo(PlayableBattlePhase.PlayerTurn));
             Assert.That(result.Snapshot.Round, Is.EqualTo(2));
             Assert.That(result.Snapshot.RecentEvents.OfType<SkillUsedEvent>(), Is.Not.Empty);
+            Assert.That(service.HasPendingAutomaticFrames,Is.True);
         });
+        var frames=new List<BattleUiFrame>();while(service.DequeueAutomaticFrame() is { } frame)frames.Add(frame);
+        Assert.That(frames.Select(frame=>frame.Stage),Does.Contain("Decision").And.Contain("Skill").And.Contain("EndTurn"));
     }
 
     [Test]

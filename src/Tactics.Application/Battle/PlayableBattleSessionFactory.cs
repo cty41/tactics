@@ -17,6 +17,8 @@ public sealed class PlayableBattleSessionFactory
 {
     private static readonly ContentId MagicAttackId = new("skill.basic.magic");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
+    private static readonly ContentId PickupSpearId = new("skill.amazon.pickup-spear.lv1");
+    private static readonly ContentId CombatTechniquesId = new("skill.amazon.combat-techniques.lv1");
     private readonly EncounterResolver _encounters = new();
 
     public PlayableBattleSessionService Create(
@@ -49,7 +51,9 @@ public sealed class PlayableBattleSessionFactory
             ContentId basicId = definition.RoleId.Contains("amazon", StringComparison.OrdinalIgnoreCase)
                 ? MeleeAttackId
                 : MagicAttackId;
-            skillsByUnit.Add(instanceId, character.LearnedSkills.Append(basicId).Distinct()
+            IEnumerable<ContentId> learned=character.LearnedSkills.Append(basicId);
+            if(definition.RoleId.Contains("amazon",StringComparison.OrdinalIgnoreCase))learned=learned.Append(PickupSpearId);
+            skillsByUnit.Add(instanceId, learned.Distinct()
                 .Select(id => skills[id]).OrderBy(skill => skill.ContentId.Value, StringComparer.Ordinal).ToArray());
         }
 
@@ -91,10 +95,12 @@ public sealed class PlayableBattleSessionFactory
             definition.DerivedStats.Initiative, 0, spawnOrdinal, !character.IsDead);
         IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> consumables = character.CarriedConsumables
             .ToDictionary(item => item.InstanceId);
-        return new BattleUnitState(
+        BattleUnitState state=new BattleUnitState(
             facts, character.MaxHealth, character.CurrentHealth,
             maxMana: character.MaxMana, currentMana: character.CurrentMana,
             baseSpeed: definition.Speed, consumables: consumables,
-            physicalAttack: 2, magicalAttack: 2);
+            physicalAttack: 2, magicalAttack: 2,
+            canProduceCorpse: definition.CanProduceCorpse);
+        return character.LearnedSkills.Contains(CombatTechniquesId)?state.WithCombatTechniquesLevelOne(true):state;
     }
 }

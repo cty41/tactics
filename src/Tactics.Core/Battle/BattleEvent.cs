@@ -154,6 +154,7 @@ public sealed record SemanticCueEmittedEvent(
     string CueId) : BattleEvent;
 
 public sealed record CorpseConsumedEvent(GridPoint Cell, UnitInstanceId SourceId) : BattleEvent;
+public sealed record CorpseCreatedEvent(GridPoint Cell, UnitInstanceId UnitId) : BattleEvent;
 
 public sealed record UnitSummonedEvent(
     UnitInstanceId OwnerId,
