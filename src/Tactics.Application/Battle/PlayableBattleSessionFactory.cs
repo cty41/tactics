@@ -36,6 +36,8 @@ public sealed class PlayableBattleSessionFactory
         ResolvedEncounter resolved = _encounters.Resolve(encounter, layout);
         if (request.Party.Count > layout.PartySpawns.Count)
             throw new ArgumentException("Party exceeds layout spawn capacity.", nameof(request));
+        IReadOnlyDictionary<ContentId, SkillDefinition> playableSkills = skills.ToDictionary(
+            item => item.Key, item => balance?.Apply(item.Value) ?? item.Value);
 
         var states = new List<BattleUnitState>();
         var skillsByUnit = new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>();
@@ -55,7 +57,7 @@ public sealed class PlayableBattleSessionFactory
             IEnumerable<ContentId> learned=new[] { basicId }.Concat(character.LearnedSkills);
             if(definition.RoleId.Contains("amazon",StringComparison.OrdinalIgnoreCase))learned=learned.Append(PickupSpearId);
             skillsByUnit.Add(instanceId, learned.Distinct()
-                .Select(id => balance?.Apply(skills[id]) ?? skills[id]).ToArray());
+                .Select(id => playableSkills[id]).ToArray());
         }
 
         for (int index = 0; index < resolved.Enemies.Count; index++)
@@ -63,7 +65,7 @@ public sealed class PlayableBattleSessionFactory
             (EncounterMonsterDefinition monster, GridPoint cell) = resolved.Enemies[index];
             var instanceId = new UnitInstanceId($"enemy-{index:D2}");
             states.Add(units[monster.UnitId].CreateBattleState(instanceId, cell, 1, request.Party.Count + index));
-            skillsByUnit.Add(instanceId, monster.SkillIds.Select(id => skills[id]).ToArray());
+            skillsByUnit.Add(instanceId, monster.SkillIds.Select(id => playableSkills[id]).ToArray());
             aiByUnit.Add(instanceId, aiDefinitions[monster.AiId]);
         }
 
@@ -81,7 +83,7 @@ public sealed class PlayableBattleSessionFactory
         var battle = new BattleState(new BoardSnapshot(cells), states, order,
             randomState: unchecked((ulong)request.CheckpointRevision));
         return new PlayableBattleSessionService(new PlayableBattleSessionContext(
-            battle, 0, skillsByUnit, aiByUnit, skills, request, characterIds));
+            battle, 0, skillsByUnit, aiByUnit, playableSkills, request, characterIds));
     }
 
     private static BattleUnitState CreatePartyState(

@@ -118,7 +118,7 @@ public sealed class SkillRuntimeService
         int ordinal = state.Units.Values.Where(unit => unit.SummonOwnerId == actor.Unit.InstanceId).Select(unit => unit.Unit.SpawnOrdinal).DefaultIfEmpty(-1).Max() + 1;
         var summonId = new UnitInstanceId($"{actor.Unit.InstanceId.Value}.skeleton.{ordinal}");
         var facts = new UnitState(summonId, SkeletonDefinitionId, cell, 3, 10f, actor.Unit.PlayerNumber, ordinal);
-        var summon = new BattleUnitState(facts, 12, 12, maxMana: 0, currentMana: 0, physicalAttack: 2, magicalAttack: 0, summonOwnerId: actor.Unit.InstanceId, canReceiveStandardHealing: false, canProduceCorpse: false);
+        var summon = new BattleUnitState(facts, 12, 12, maxMana: 0, currentMana: 0, physicalAttack: 4, magicalAttack: 0, summonOwnerId: actor.Unit.InstanceId, canReceiveStandardHealing: false, canProduceCorpse: false);
         BattleUnitState updatedActor = actor.WithMana(actor.CurrentMana - command.Definition.ManaCost).WithSuccessfulSkillUse(command.Definition.ContentId);
         BattleState next = state.WithUnit(updatedActor).WithoutCorpse(cell).WithSummon(summon);
         var events = new List<BattleEvent> { new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, command.Definition.ContentId) };

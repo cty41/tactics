@@ -42,7 +42,8 @@ public sealed class AiDecisionService
                 float basePriority = basic ? IntentPriority(definition, "BasicAttack", 25) : 10;
                 float proximity = GraphScore(definition, "BasicAttack", "DistanceToTarget", Math.Clamp(distance / 10f, 0f, 1f), 5f);
                 float damage = skill.Damage * definition.Profile.DamageWeight;
-                float targetScore = targets * definition.Profile.TargetCountWeight;
+                float targetScore = targets * definition.Profile.TargetCountWeight +
+                    GraphScore(definition, "BasicAttack", "TargetHealth", target.CurrentHealth / (float)target.MaxHealth, 0f);
                 float status = intent == AiIntentKind.Debuff ? definition.Profile.HarmfulStatusWeight : 0;
                 float reposition = PreferredRangeBonus(definition, actor.Unit.Position, origin, target.Unit.Position);
                 candidates.Add(new AiIntentCandidate(intent, skillId, origin, target.Unit.InstanceId, target.Unit.Position,

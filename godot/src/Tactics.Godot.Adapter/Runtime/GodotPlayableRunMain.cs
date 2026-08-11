@@ -27,6 +27,7 @@ public partial class GodotPlayableRunMain : Control
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = new();
     private PlayableBattleBalanceProfile? _balance;
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
+    private readonly Dictionary<UnitInstanceId, Control> _unitMeters = new();
     private readonly Dictionary<GridPoint, Button> _cells = new();
     private readonly List<BattleUiLogEntry> _logs = new();
     private PureRunSessionService? _run;
@@ -205,11 +206,13 @@ public partial class GodotPlayableRunMain : Control
         if (_battle is null || _board is null || _skillPanel is null) return;
         BattleUiSnapshot snapshot = presented??_battle.CaptureSnapshot();_visibleSnapshot=snapshot;
         foreach (GodotUnitActor actor in _actors.Values) actor.QueueFree(); _actors.Clear();
-        foreach (BattleUiUnitSnapshot unit in snapshot.Units)
+        foreach (Control meter in _unitMeters.Values) meter.QueueFree(); _unitMeters.Clear();
+        foreach (BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive||snapshot.Corpses.Contains(unit.Cell)))
         {
             GodotUnitActor actor = GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);
             actor.Position = new Vector2((unit.Cell.X + .5f) * CellSize, (unit.Cell.Y + .72f) * CellSize);
             actor.Scale = Vector2.One * .34f; actor.SetDeathVisual(!unit.IsAlive); _board.AddChild(actor); _actors[unit.UnitId] = actor;
+            Control meter=CreateUnitMeters(unit);_board.AddChild(meter);_unitMeters[unit.UnitId]=meter;
         }
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
         _skillPanel.AddChild(Label($"Round {snapshot.Round} | Active {snapshot.ActiveUnitId.Value}\nMode {snapshot.TargetingMode} | {snapshot.Phase}", 25));
@@ -230,6 +233,16 @@ public partial class GodotPlayableRunMain : Control
         ApplyHighlights(snapshot);
         if(_turnOrder is not null)_turnOrder.Text="Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
         RefreshLog();
+    }
+
+    private static Control CreateUnitMeters(BattleUiUnitSnapshot unit)
+    {
+        var root=new Control{Position=new Vector2((unit.Cell.X+.5f)*CellSize-42,(unit.Cell.Y+.14f)*CellSize),Size=new Vector2(84,34),ZIndex=20,MouseFilter=MouseFilterEnum.Ignore};
+        var hp=new ProgressBar{Position=Vector2.Zero,Size=new Vector2(84,15),MinValue=0,MaxValue=unit.MaxHealth,Value=unit.CurrentHealth,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};hp.Modulate=new Color(.35f,1f,.4f);root.AddChild(hp);
+        var hpText=Label($"HP {unit.CurrentHealth}/{unit.MaxHealth}",11);hpText.Position=new Vector2(3,-2);hpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(hpText);
+        var mp=new ProgressBar{Position=new Vector2(0,17),Size=new Vector2(84,15),MinValue=0,MaxValue=Math.Max(1,unit.MaxMana),Value=unit.CurrentMana,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};mp.Modulate=new Color(.35f,.65f,1f);root.AddChild(mp);
+        var mpText=Label($"MP {unit.CurrentMana}/{unit.MaxMana}",11);mpText.Position=new Vector2(3,15);mpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(mpText);
+        return root;
     }
 
     private void ApplyHighlights(BattleUiSnapshot snapshot)
@@ -291,7 +304,7 @@ public partial class GodotPlayableRunMain : Control
     {
         if(_battle is null||(_playbackPaused&&!forced))return;
         BattleUiFrame? frame=_battle.DequeueAutomaticFrame();
-        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; score {decision.Score:0.##}; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);return;}
+        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);return;}
         _playbackTimer?.Stop();RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
     }
     private void TogglePause(){_playbackPaused=!_playbackPaused;AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));RefreshLog();}

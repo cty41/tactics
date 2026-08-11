@@ -52,4 +52,23 @@ public sealed class AiEncounterRuntimeTests
             Assert.That(plan.Candidates.Any(item=>item.SkillId==skill.ContentId&&item.MoveBeforeSkill),Is.True);
         });
     }
+
+    [Test]
+    public void BasicAttack_TargetHealthCurveCanSelectLowHealthSummon()
+    {
+        var cells=new Dictionary<GridPoint,CellState>();for(int x=0;x<4;x++)for(int y=0;y<4;y++)cells[new GridPoint(x,y)]=new CellState();
+        var actorId=new UnitInstanceId("enemy");var heroId=new UnitInstanceId("party.hero");var skeletonId=new UnitInstanceId("party.skeleton.0");
+        var actor=new BattleUnitState(new UnitState(actorId,new ContentId("unit.enemy"),new GridPoint(1,1),0,5,1,0),20,20);
+        var hero=new BattleUnitState(new UnitState(heroId,new ContentId("unit.hero"),new GridPoint(2,1),0,4,0,1),20,20);
+        var skeleton=new BattleUnitState(new UnitState(skeletonId,new ContentId("unit.pure-run.skeleton-warrior"),new GridPoint(1,2),0,4,0,2),12,2,summonOwnerId:heroId,canProduceCorpse:false);
+        var state=new BattleState(new BoardSnapshot(cells),new[]{actor,hero,skeleton},new[]{actorId,heroId,skeletonId});
+        var skill=new SkillDefinition(new ContentId("skill.basic.melee"),"melee",SkillRole.Any,SkillKind.Basic,1,0,1,1,SkillExecutionKind.MeleeAttack,2,SkillDamageKind.Physical);
+        var graph=new AiDecisionGraphDefinition(
+            new[]{new AiIntentDefinition("intent","BasicAttack",25,true)},Array.Empty<AiRuleDefinition>(),
+            new[]{new AiScoreDefinition("health","TargetHealth",10,true,new[]{new AiCurveKey(0,1,0,-1),new AiCurveKey(1,0,-1,0)})},
+            new[]{new AiDecisionEdge("intent","health")},"sha256:test");
+        var definition=new AiDefinition(new ContentId("ai.test"),AiArchetype.Charger,new AiProfileDefinition(0,0,0,0),new[]{skill.ContentId},Array.Empty<ContentId>(),graph);
+        AiTurnPlan plan=new AiDecisionService().Decide(state,definition,new Dictionary<ContentId,SkillDefinition>{{skill.ContentId,skill}});
+        Assert.That(plan.Selected.TargetId,Is.EqualTo(skeletonId));
+    }
 }

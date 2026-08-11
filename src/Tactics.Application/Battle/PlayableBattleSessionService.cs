@@ -90,6 +90,8 @@ public sealed class PlayableBattleSessionService
     private ContentId? _selectedSkillId;
     private string? _failureCode;
     private PureRunBattleResult? _battleResult;
+    private static readonly ContentId SkeletonUnitId = new("unit.pure-run.skeleton-warrior");
+    private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
 
     public PlayableBattleSessionService(
         PlayableBattleSessionContext context,
@@ -145,9 +147,7 @@ public sealed class PlayableBattleSessionService
     private BattleUiSnapshot CaptureSnapshot(BattleState view,bool interactive)
     {
         BattleUnitState active = view.Units[view.ActiveUnitId];
-        IReadOnlyList<SkillDefinition> skills = _context.SkillsByUnit.TryGetValue(active.Unit.InstanceId, out IReadOnlyList<SkillDefinition>? values)
-            ? values.ToArray()
-            : Array.Empty<SkillDefinition>();
+        IReadOnlyList<SkillDefinition> skills = SkillsFor(active);
         GridPoint[] moves = interactive&&active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && !active.HasMovedThisTurn
             ? view.Board.Cells.Keys.Where(cell => _transitions.Apply(view, new MoveUnitCommand(active.Unit.InstanceId, cell)).Succeeded).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
             : Array.Empty<GridPoint>();
@@ -179,8 +179,7 @@ public sealed class PlayableBattleSessionService
 
     private BattleUiIntentResult SetSkillMode(SelectSkillIntent intent)
     {
-        if (!_context.SkillsByUnit.TryGetValue(State.ActiveUnitId, out IReadOnlyList<SkillDefinition>? skills) ||
-            skills.All(skill => skill.ContentId != intent.SkillId))
+        if (SkillsFor(State.Units[State.ActiveUnitId]).All(skill => skill.ContentId != intent.SkillId))
             return Result(false, "battle.skill_not_available", Array.Empty<BattleEvent>());
         _targetingMode = BattleTargetingMode.Skill;
         _selectedSkillId = intent.SkillId;
@@ -305,6 +304,13 @@ public sealed class PlayableBattleSessionService
     }
 
     private void Append(IEnumerable<BattleEvent> events) => _recentEvents.AddRange(events);
+    private IReadOnlyList<SkillDefinition> SkillsFor(BattleUnitState unit)
+    {
+        if (_context.SkillsByUnit.TryGetValue(unit.Unit.InstanceId, out IReadOnlyList<SkillDefinition>? skills)) return skills;
+        if (unit.SummonOwnerId is not null && unit.Unit.DefinitionId == SkeletonUnitId)
+            return new[] { _context.SkillCatalog[MeleeAttackId] };
+        return Array.Empty<SkillDefinition>();
+    }
     private BattleUiIntentResult Result(bool succeeded, string? failureCode, IReadOnlyList<BattleEvent> events) =>
         new(succeeded, failureCode, CaptureSnapshot(), events,HasPendingAutomaticFrames?null:_battleResult);
 

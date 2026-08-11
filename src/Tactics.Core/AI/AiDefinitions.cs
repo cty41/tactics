@@ -54,6 +54,6 @@ public sealed record AiIntentCandidate(
 
 public sealed record AiTurnPlan(UnitInstanceId ActorId, AiIntentCandidate Selected, IReadOnlyList<AiIntentCandidate> Candidates, int PatternIndex, bool UsesPattern);
 
-public sealed record AiDecisionEvent(UnitInstanceId ActorId, int CandidateCount, AiIntentKind Intent, ContentId? SkillId, GridPoint Destination, UnitInstanceId? TargetId, float Score);
+public sealed record AiDecisionEvent(UnitInstanceId ActorId, int CandidateCount, AiIntentKind Intent, ContentId? SkillId, GridPoint Destination, UnitInstanceId? TargetId, float Score, ContentId? TargetDefinitionId = null, float DistanceScore = 0, float DamageScore = 0, float TargetScore = 0, float StatusScore = 0);
 public sealed record AiExecutionFrame(string Stage,Tactics.Core.Battle.BattleState State,IReadOnlyList<Tactics.Core.Battle.BattleEvent> Events);
 public sealed record AiPlanExecutionResult(Tactics.Core.Battle.BattleState State, IReadOnlyList<Tactics.Core.Battle.BattleEvent> Events, AiDecisionEvent Decision, int NextPatternIndex,IReadOnlyList<AiExecutionFrame>? Frames=null);

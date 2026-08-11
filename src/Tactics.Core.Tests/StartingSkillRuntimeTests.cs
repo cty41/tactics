@@ -83,6 +83,7 @@ public sealed class StartingSkillRuntimeTests
             Assert.That(result.State.Corpses, Does.Not.Contain(corpse));
             Assert.That(created.CanReceiveStandardHealing, Is.False);
             Assert.That(created.CanProduceCorpse, Is.False);
+            Assert.That(created.PhysicalAttack, Is.EqualTo(4));
             Assert.That(result.Events.OfType<UnitSummonedEvent>(), Has.Exactly(1).Items);
             Assert.That(result.Events.OfType<DamageAppliedEvent>(), Is.Empty);
         });
