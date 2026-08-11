@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://c3r25esce5umd"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotRunPersistenceFixture.cs" id="1_j3erw"]
+
+[node name="RunPersistenceFixture" type="Control" unique_id=590282701]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_j3erw")

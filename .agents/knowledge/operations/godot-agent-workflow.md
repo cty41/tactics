@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-11T16:40:44+08:00"
+timestamp: "2026-08-11T18:08:34+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:414a7b221429ced027306aad7f5b126e171e2c32f3de1f8de4aed848f5e27457
+source_fingerprint: sha256:432a6927290c7ccde03e8bdaa5d09eae600e6b597d4f31bf70626c90559fec78
 ---
 
 # Current state
@@ -41,10 +41,11 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - Buff/Item disposable DTO 存在时，统一入口会严格编译 14 Buff、3 Consumable、12 Equipment typed draft，重建 export receipt，再连续两次通过 ResourceSaver 生成 28 个定义 Resource 与 29 项分批 Catalog；Phase 6A 存在时 canonical Catalog 为 73 项。该链路不复制只审计的 Buff icon，并在两个 renderer 的 typed runtime 验证后才刷新 `Validated/UnityOwned` generation receipt。
 - Starting Skill disposable DTO 存在时，统一入口会编译 12 项 typed draft，通过 ResourceSaver 生成 11 个新 Skill Resource、12 项分批 Catalog 与原生 1600×900 Gameplay Fixture；`skill.poison-spear.lv1` 保持外部依赖。两轮生成比较 13 个批次独占 artifact；Phase 6A 存在时 canonical Catalog 组合为 73 个唯一 ContentId，并在 Compatibility/Forward+ 后保留已人工接受的 `Validated/UnityOwned` receipt。
 - AI/Encounter disposable DTO 存在时，统一入口会编译六类 AI、四项敌方技能、两个 Layout 与 N1–N3 Encounter，连续两次通过 ResourceSaver 比较 17 个批次 artifact，并在 Compatibility/Forward+ 验证 15 项分批 Catalog 与 73 项 canonical Catalog。`AiEncounterFixture` 人工 gameplay/reload 验收已通过，该批保持 `Validated/UnityOwned`。
+- Pure Run persistence disposable DTO 存在时，统一入口会重编三战 typed draft，通过 ResourceSaver 连续两次比较 Run Resource、分批 Catalog、自动诊断 Fixture 与 ledger，并在 Editor UID scan 后用 Compatibility/Forward+ 验证 1/74 Catalog、canonical JSON、revision、temp/backup/quarantine 恢复与终局摘要。该批没有视觉载荷，自动可观测性门禁通过后直接保持 `Validated/UnityOwned`。
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill 与 AI/Encounter DTO 分别比较 29、13、17 个批次独占 artifact，并在 Phase 6A 组合状态验证 29/73、12/73、15/73 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉、Skill Gameplay 与 AI/Encounter Gameplay 验收仍单独记录。
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter 与 Run/Persistence DTO 分别比较 29、13、17、3 个批次独占 artifact，并在 Phase 6B 组合状态验证 canonical 74 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉、Skill Gameplay 与 AI/Encounter Gameplay 验收仍单独记录。
 
 Editor lifecycle Skill 的 PowerShell 内核另由迁移 Python 测试验证 canonical path、精确 PID、dry-run 和禁用强杀；真实可见 close/reopen smoke 只在用户允许窗口出现后执行，并以新 MCP session/path/version/plugin/readiness 和日志为验收。
 

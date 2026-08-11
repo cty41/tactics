@@ -62,9 +62,9 @@ public sealed record RunCharacterState
         int currentMana,
         int maxMana,
         bool isDead,
-        IEnumerable<ContentId> learnedSkills,
-        IEnumerable<RunEquipmentState>? equipment = null,
-        IEnumerable<BattleConsumableState>? carriedConsumables = null)
+        IReadOnlyList<ContentId> learnedSkills,
+        IReadOnlyList<RunEquipmentState>? equipment = null,
+        IReadOnlyList<BattleConsumableState>? carriedConsumables = null)
     {
         if (string.IsNullOrWhiteSpace(characterId))
             throw new ArgumentException("Character ID cannot be empty.", nameof(characterId));
@@ -134,15 +134,15 @@ public sealed record PureRunState
         PureRunPhase phase,
         int encounterIndex,
         ContentId encounterContentId,
-        IEnumerable<RunCharacterState> party,
-        IEnumerable<BattleConsumableState>? backpackConsumables = null,
-        IEnumerable<RunEquipmentState>? backpackEquipment = null,
-        IEnumerable<PendingProgression>? pendingProgression = null,
-        IEnumerable<string>? appliedTransactionKeys = null,
+        IReadOnlyList<RunCharacterState> party,
+        IReadOnlyList<BattleConsumableState>? backpackConsumables = null,
+        IReadOnlyList<RunEquipmentState>? backpackEquipment = null,
+        IReadOnlyList<PendingProgression>? pendingProgression = null,
+        IReadOnlyList<string>? appliedTransactionKeys = null,
         int gold = 0,
         int battlesCompleted = 0,
         int enemiesDefeated = 0,
-        IEnumerable<ContentId>? acquiredItems = null,
+        IReadOnlyList<ContentId>? acquiredItems = null,
         RunEncounterCheckpoint? checkpoint = null)
     {
         if (string.IsNullOrWhiteSpace(runId))

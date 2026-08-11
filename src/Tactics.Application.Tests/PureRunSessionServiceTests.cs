@@ -112,11 +112,11 @@ public sealed class PureRunSessionServiceTests
     {
         public PureRunSaveSnapshot? Snapshot { get; private set; }
 
-        public RunStoreResult Load() => new(true, null, Snapshot ?? new PureRunSaveSnapshot(null, null));
+        public RunStoreResult Load() => new(true, null, Snapshot ?? new PureRunSaveSnapshot(0, null, null));
 
         public RunStoreResult Save(PureRunSaveSnapshot snapshot, long expectedRevision)
         {
-            long current = Snapshot?.ActiveRun?.Revision ?? 0;
+            long current = Snapshot?.Revision ?? 0;
             if (current != expectedRevision)
                 return new RunStoreResult(false, "save.revision_conflict", Snapshot);
             Snapshot = snapshot;

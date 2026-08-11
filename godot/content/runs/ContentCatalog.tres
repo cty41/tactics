@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://dbr7tp88sdkcq"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_3pu88"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_o8voj"]
+
+[sub_resource type="Resource" id="Resource_q4dvc"]
+script = ExtResource("1_3pu88")
+ContentIdValue = "run.pure-run.three-encounter-v1"
+ResourceTypeIdValue = "run"
+ResourceUidValue = "uid://dy2d31awtdhgm"
+DiagnosticPathValue = "res://content/runs/PureRunThreeEncounterV1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3", "skill.amazon.thrust.lv1", "skill.mage.fireball.lv1", "skill.necromancer.summon-skeleton.lv1", "unit.pure-run.amazon", "unit.pure-run.mage", "unit.pure-run.necromancer")
+
+[resource]
+script = ExtResource("2_o8voj")
+Entries = [SubResource("Resource_q4dvc")]

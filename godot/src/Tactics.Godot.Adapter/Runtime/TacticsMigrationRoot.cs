@@ -49,6 +49,12 @@ public partial class TacticsMigrationRoot : Node
             GetTree().Quit();
             return;
         }
+        if (commandLine.Contains("--validate-run-persistence"))
+        {
+            ValidateRunPersistence();
+            GetTree().Quit();
+            return;
+        }
         if (commandLine.Contains("--play-unit-gallery"))
         {
             PlayUnitGallery();
@@ -173,6 +179,15 @@ public partial class TacticsMigrationRoot : Node
         AiEncounterBatchValidation validation=AiEncounterBatchValidator.Validate(batch,global);
         PackedScene scene=ResourceLoader.Load<PackedScene>("res://content/ai_encounters/AiEncounterFixture.tscn")??throw new InvalidOperationException("AI/Encounter Fixture is missing.");Node fixture=scene.Instantiate();bool valid=fixture is GodotAiEncounterFixture;if(fixture is GodotAiEncounterFixture gameplay){gameplay._Ready();AiFixtureTurnResult single=gameplay.ExecuteSingleTurn();gameplay.ResetCurrentScenario();AiFixtureRoundResult round=gameplay.ExecuteCurrentRound();if(single.ActorId!="fixture.enemy.0"||round.Turns.Count!=3||round.RoundAfter!=round.RoundBefore+1||round.HitCommandLimit)throw new InvalidOperationException("AI/Encounter Fixture single-turn or full-round execution is invalid.");}fixture.Free();if(!valid)throw new InvalidOperationException("AI/Encounter Fixture root type is invalid.");
         GD.Print($"AI/Encounter validation OK: entries={validation.BatchCount}, global={validation.GlobalCount}, skills={validation.Skills}, ai={validation.Ai}, layouts={validation.Layouts}, encounters={validation.Encounters}");
+    }
+
+    private static void ValidateRunPersistence()
+    {
+        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/runs/ContentCatalog.tres")??throw new InvalidOperationException("Pure Run persistence Catalog is missing.");
+        var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")??throw new InvalidOperationException("Canonical Catalog is missing.");
+        var scene=ResourceLoader.Load<PackedScene>("res://content/runs/RunPersistenceFixture.tscn")??throw new InvalidOperationException("Pure Run persistence Fixture is missing.");
+        RunPersistenceBatchValidation validation=RunPersistenceBatchValidator.Validate(batch,global,scene);
+        GD.Print($"Pure Run persistence validation OK: entries={validation.BatchCount}, global={validation.GlobalCount}, resumes={validation.Fixture.Resumes}, backup={validation.Fixture.BackupRecovered}");
     }
 
     private void PlayUnitGallery()

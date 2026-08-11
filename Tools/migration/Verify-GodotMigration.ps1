@@ -45,6 +45,12 @@ $aiEncounterExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ai-encoun
 $aiEncounterDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ai-encounter-v1.draft.json'
 $aiEncounterSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-ai-encounter-v1.json'
 $aiEncounterGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-ai-encounter-v1.json'
+$runPersistenceExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-persistence-v1.unity.json'
+$runPersistenceDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-persistence-v1.draft.json'
+$runPersistenceSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-persistence-v1.json'
+$runPersistenceExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-persistence-v1-export.json'
+$runPersistenceGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-persistence-v1.json'
+$runPersistenceGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-persistence-v1-generation.json'
 $consumablesJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Consumables.json'
 $equipmentJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Equipment.json'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
@@ -385,6 +391,35 @@ try {
         Write-Host '== Skip real Pure Run AI/Encounter draft: disposable Unity DTO is not present =='
     }
 
+    if (Test-Path -LiteralPath $runPersistenceExport -PathType Leaf) {
+        Invoke-Checked 'Compile real Pure Run persistence typed migration draft' {
+            python -m Tools.migration.pure_run_persistence_converter `
+                --export $runPersistenceExport `
+                --specification $runPersistenceSpecification `
+                --output $runPersistenceDraft
+        }
+        Invoke-Checked 'Generate Pure Run persistence Godot assets through ResourceSaver' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/RunPersistenceAssetBuilder.cs'
+        }
+        $runPersistenceTargets = @(
+            (Get-Content -LiteralPath $runPersistenceGenerationLedger -Raw | ConvertFrom-Json).artifacts |
+                ForEach-Object { Join-Path $projectRoot $_.resourcePath.Substring('res://'.Length) }
+        ) + @($runPersistenceGenerationLedger)
+        $firstRunPersistenceHashes = @{}
+        foreach ($target in $runPersistenceTargets) { $firstRunPersistenceHashes[$target] = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash }
+        Invoke-Checked 'Repeat Pure Run persistence generation for idempotency' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/RunPersistenceAssetBuilder.cs'
+        }
+        foreach ($target in $runPersistenceTargets) {
+            if ($firstRunPersistenceHashes[$target] -ne (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash) {
+                throw "Pure Run persistence generation is not byte-idempotent: $target"
+            }
+        }
+    }
+    else { Write-Host '== Skip real Pure Run persistence draft: disposable Unity DTO is not present ==' }
+
     # A ResourceSaver script can register a newly created UID only in its current process.
     # The headless Editor filesystem scan persists the project UID cache before Runtime validation.
     Invoke-Checked 'Godot editor filesystem scan and plugin initialization' {
@@ -463,6 +498,16 @@ try {
             --validate-ai-encounters --quit-after 6000
     }
 
+    Invoke-Checked 'Pure Run persistence catalog and fixture validation (Compatibility)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            --validate-run-persistence --quit-after 6000
+    }
+
+    Invoke-Checked 'Pure Run persistence catalog and fixture validation (Forward+)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
+            --validate-run-persistence --quit-after 6000
+    }
+
     Invoke-Checked 'Capture deterministic Pure Run Unit programmatic gallery' {
         & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
             -- --capture-unit-gallery
@@ -535,6 +580,19 @@ try {
         }
         Invoke-Checked 'Validate regenerated Pure Run starting-skill ledger and receipt' {
             python -m unittest Tools.migration.tests.test_starting_skill_generation
+        }
+    }
+
+    if (Test-Path -LiteralPath $runPersistenceExport -PathType Leaf) {
+        Invoke-Checked 'Refresh Pure Run persistence generation receipt' {
+            python -m Tools.migration.pure_run_persistence_generation_receipt `
+                --export-receipt $runPersistenceExportReceipt `
+                --draft $runPersistenceDraft `
+                --ledger $runPersistenceGenerationLedger `
+                --output $runPersistenceGenerationReceipt
+        }
+        Invoke-Checked 'Validate Pure Run persistence ledger and receipt' {
+            python -m unittest Tools.migration.tests.test_pure_run_persistence_generation
         }
     }
 

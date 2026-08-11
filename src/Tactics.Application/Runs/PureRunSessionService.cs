@@ -4,7 +4,7 @@ using Tactics.Core.Units;
 
 namespace Tactics.Application.Runs;
 
-public sealed record PureRunSaveSnapshot(PureRunState? ActiveRun, PureRunSummary? TerminalSummary);
+public sealed record PureRunSaveSnapshot(long Revision, PureRunState? ActiveRun, PureRunSummary? TerminalSummary);
 
 public sealed record RunStoreResult(bool Succeeded, string? ErrorCode, PureRunSaveSnapshot? Snapshot);
 
@@ -51,12 +51,12 @@ public sealed class PureRunSessionService
         RunStoreResult loaded = _store.Load();
         if (!loaded.Succeeded)
             return Fail(loaded.ErrorCode);
-        long expected = loaded.Snapshot?.ActiveRun?.Revision ?? 0;
+        long expected = loaded.Snapshot?.Revision ?? 0;
         string runId = $"run-{unchecked((uint)PureRunSettlementService.DeriveSeed(seed, "run-id")):x8}";
         RunCharacterState[] party = _definition.Party.Select(template => CreateCharacter(template)).ToArray();
         var run = new PureRunState(runId, seed, expected + 1, PureRunPhase.Ready, 0,
             _definition.Encounters[0], party);
-        return Save(new PureRunSaveSnapshot(run, null), expected);
+        return Save(new PureRunSaveSnapshot(run.Revision, run, null), expected);
     }
 
     public RunSessionResult BeginEncounter()
@@ -74,7 +74,7 @@ public sealed class PureRunSessionService
             run.EncounterIndex, run.EncounterContentId, run.Party, run.BackpackConsumables,
             run.BackpackEquipment, run.PendingProgression, run.AppliedTransactionKeys,
             run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint);
-        RunSessionResult saved = Save(new PureRunSaveSnapshot(pending, loaded.Snapshot.TerminalSummary), run.Revision);
+        RunSessionResult saved = Save(new PureRunSaveSnapshot(pending.Revision, pending, loaded.Snapshot.TerminalSummary), run.Revision);
         return saved.Succeeded ? saved with { EncounterRequest = CreateRequest(pending) } : saved;
     }
 
@@ -102,7 +102,8 @@ public sealed class PureRunSessionService
             return Fail(settlement.RejectionCode, loaded.Snapshot);
         if (settlement.WasDuplicate)
             return new RunSessionResult(true, null, loaded.Snapshot, null, true);
-        var snapshot = new PureRunSaveSnapshot(settlement.ActiveRun, settlement.TerminalSummary);
+        long nextRevision = settlement.ActiveRun?.Revision ?? run.Revision + 1;
+        var snapshot = new PureRunSaveSnapshot(nextRevision, settlement.ActiveRun, settlement.TerminalSummary);
         RunSessionResult saved = Save(snapshot, run.Revision);
         return saved with { WasDuplicate = false };
     }
@@ -112,7 +113,7 @@ public sealed class PureRunSessionService
         RunStoreResult loaded = _store.Load();
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
-        return Save(new PureRunSaveSnapshot(null, _settlement.Abandon(run)), run.Revision);
+        return Save(new PureRunSaveSnapshot(run.Revision + 1, null, _settlement.Abandon(run)), run.Revision);
     }
 
     public RunSessionResult ConsumeCompletedSummary()
@@ -120,8 +121,8 @@ public sealed class PureRunSessionService
         RunStoreResult loaded = _store.Load();
         if (!loaded.Succeeded || loaded.Snapshot is null)
             return Fail(loaded.ErrorCode ?? "run.no_save");
-        long revision = loaded.Snapshot.ActiveRun?.Revision ?? 0;
-        return Save(new PureRunSaveSnapshot(loaded.Snapshot.ActiveRun, null), revision);
+        long revision = loaded.Snapshot.Revision;
+        return Save(new PureRunSaveSnapshot(revision + 1, loaded.Snapshot.ActiveRun, null), revision);
     }
 
     private RunSessionResult Save(PureRunSaveSnapshot snapshot, long expectedRevision)

@@ -38,6 +38,7 @@ public sealed class ContentSchemaCatalog
         new ContentSchemaDefinition("battle-layout", 1, 1),
         new ContentSchemaDefinition("buff", 1, 1),
         new ContentSchemaDefinition("encounter", 1, 1),
+        new ContentSchemaDefinition("run", 1, 1),
         new ContentSchemaDefinition("item", 1, 1),
         new ContentSchemaDefinition("packed-scene", 1, 1),
         new ContentSchemaDefinition("presentation", 1, 1),

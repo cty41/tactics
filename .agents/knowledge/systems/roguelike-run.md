@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Rogu
 title: Roguelike Run
 description: 7 层只前进地图、节点交互、冒险状态和三人小队局内成长主链。
 tags: [gameplay, roguelike, map, progression]
-timestamp: "2026-08-01T00:20:12+08:00"
+timestamp: "2026-08-11T18:08:06+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -32,7 +32,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs/ui/home-options-player-input-smoke.gameplay-test.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:3d258f5eac44ca5b51737f094baa4474681b3c9722a14fef61e8a207dd807ce1
+source_fingerprint: sha256:4f9f82936ce9c67f56a50c9421668551e4e38d2f0cd294273425c3b7847609b0
 ---
 
 # Current State
@@ -40,6 +40,10 @@ source_fingerprint: sha256:3d258f5eac44ca5b51737f094baa4474681b3c9722a14fef61e8a
 Pure Run v1 由 `RoguelikeMapGenerator.GetPureRunMap` 生成 7 层只前进地图，单局实际战斗数为 5、6 或 7；第 4、6 层均在战斗、休息、商店和随机事件之间四选一。节点沿 outgoing 揭示，已访问节点不会重新可选。地图布局版本为 2。
 
 Demo 使用单一全局 Run，不经过三存档槽。`PureRunSessionStore` 将版本 5 冒险状态与地图作为配对数据保存；Home 提供 New Run 和 Continue Run。普通战斗胜利结算后回到地图，失败或 Boss 胜利显示 RunEndSummary 并清理本局状态。
+
+Godot Phase 6B 只迁移 N1→N2→N3 三战垂直切片，不宣称完整七层 Run parity。它使用单一 `user://pure-run/save-v1.json`，以固定字段顺序 JSON、payload SHA-256 和单调 revision 保存 active run 与 terminal summary；写入先生成并重读 temp，再保留最后有效 backup 并提升，主档损坏时回退 backup，双档损坏时以内容 hash 前缀隔离证据且不静默覆盖。每场战斗前先持久化完整队伍 checkpoint；进程退出后重开同一 Encounter，而非恢复逐回合 BattleState。
+
+Godot Run 层不结算战斗命令，只发出带 Run/revision/Encounter 的请求并消费验证后的 `BattleResult`。胜利奖励、恢复、死亡卸装、击杀和掉落由冻结规则重新计算，稳定 transaction key 防止重复结算；N1/N2 推进，N3 产生明确的 `SliceCompleted` 而非 Boss Victory。失败、放弃与完成摘要在 active run 清除后保留到显式消费；成长只记录最低等级存活角色的 pending identity，尚不应用等级、属性或技能。
 
 Home 磁盘场景已精简为 `AudioListener`、`Bootstrap`、`EventSystem`、`Main Camera` 四个无子节点静态 root，不包含 Grid、Tilemap、UnitManager 或战斗单位；Home UI 仍由生产 `GameAssetManager`、`HomeFlowCoordinator` 和 `UIManager` 在运行时创建。Editor 结构测试始终通过 `OpenPreviewScene` 验证磁盘资产的精确 roots、组件白名单和禁用玩法组件。独立 PlayMode source spec 经 compiler 生成 plan，以虚拟 Mouse 通过生产 `PlayerInput` 点击 `OptionsButton`，断言 `OptionsRoot` 存在且可见，并覆盖测试设备释放；该 smoke 与较长旅程夹具隔离。
 

@@ -1,0 +1,17 @@
+{
+  "batchId": "pure-run-persistence-v1",
+  "canonicalCatalogEntryCount": 74,
+  "draftSha256": "sha256:4239bb61beec417a30136dcba8543ec4c1c7fc43d728b551ce665426d1f4101f",
+  "exportReceiptSha256": "sha256:a89d91c314e3acc0e4b5f423abaaa53723e34fc9f26173d0c1399c72d0806833",
+  "ledgerSha256": "sha256:97409c1c5d4fe485137efdb521dff2f2224d4f24144090130a5851d32d424a86",
+  "manualGameplayAcceptance": "not_required_automated_observability",
+  "ownership": "UnityOwned",
+  "recoveryPolicy": "validated-temp-backup-quarantine",
+  "saveFormatId": "tactics-pure-run-save",
+  "saveSchemaVersion": 1,
+  "schemaVersion": 1,
+  "sourceExportHash": "2743cfb8ce2bddcb00315c06e3cc8d0ede898b10c6dfe30e23515becd78f4784",
+  "status": "Validated",
+  "storagePath": "user://pure-run/save-v1.json",
+  "visualAcceptance": "not_applicable_no_visual_payload"
+}
