@@ -9,11 +9,13 @@ public partial class PlayableRunSceneBuilder : SceneTree
 {
     private const string MainScenePath = "res://scenes/Main.tscn";
     private const string MainSceneUid = "uid://c0mlqoh7vensn";
+    private const string BalancePath = "res://content/ui/PlayableLv1BalanceProfile.tres";
 
     public override void _Initialize()
     {
         try
         {
+            SaveBalanceProfile();
             if (ResourceLoader.Load<PackedScene>(MainScenePath, string.Empty, ResourceLoader.CacheMode.Ignore) is PackedScene existing)
             {
                 RequireUid();
@@ -41,6 +43,23 @@ public partial class PlayableRunSceneBuilder : SceneTree
             GD.PushError(exception.ToString());
             Quit(1);
         }
+    }
+
+    private static void SaveBalanceProfile()
+    {
+        DirAccess.MakeDirRecursiveAbsolute(ProjectSettings.GlobalizePath("res://content/ui"));
+        var profile = new PlayableLv1BalanceProfileResource
+        {
+            SkillContentIds = new[] { "skill.mage.fireball.lv1", "skill.mage.ice-bolt.lv1", "skill.mage.lightning.lv1", "skill.necromancer.summon-skeleton.lv1", "skill.necromancer.amplify-damage.lv1", "skill.necromancer.bone-spear.lv1", "skill.amazon.thrust.lv1", "skill.poison-spear.lv1", "skill.basic.magic", "skill.basic.melee" },
+            SkillManaCosts = new[] { 5, 4, 5, 3, 3, 5, 2, 5, 0, 0 },
+            SkillDamages = new[] { 6, 8, 10, 0, 0, 8, 6, 9, 0, 0 },
+            UnitContentIds = new[] { "unit.pure-run.mage", "unit.pure-run.necromancer", "unit.pure-run.amazon", "unit.pure-run.skeleton-warrior" },
+            UnitPhysicalAttacks = new[] { 2, 2, 5, 4 },
+            UnitMagicalAttacks = new[] { 6, 5, 2, 0 }
+        };
+        profile.ToCoreProfile();
+        Error save = ResourceSaver.Save(profile, BalancePath);
+        if (save != Error.Ok) throw new InvalidOperationException($"Cannot save playable balance profile: {save}.");
     }
 
     private static void RequireUid()

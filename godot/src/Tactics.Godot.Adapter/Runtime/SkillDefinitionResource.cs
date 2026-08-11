@@ -25,6 +25,8 @@ public partial class SkillDefinitionResource : Resource
     [Export] public int StatusDuration { get; set; }
     [Export] public bool Hidden { get; set; }
     [Export] public bool ExternalDependency { get; set; }
+    [Export] public bool IsBasicAbility { get; set; }
+    [Export] public int MaxUsesPerTurn { get; set; }
     [Export] public string SourcePath { get; set; } = string.Empty;
     [Export] public string SourceGuid { get; set; } = string.Empty;
     [Export] public long SourceLocalFileId { get; set; }
@@ -40,7 +42,7 @@ public partial class SkillDefinitionResource : Resource
         if (!ExternalDependency && ExecutionKindValue != nameof(SkillExecutionKind.CombatTechniques) &&
             (string.IsNullOrWhiteSpace(SourcePath) || string.IsNullOrWhiteSpace(SourceGuid) || SourceLocalFileId <= 0 || string.IsNullOrWhiteSpace(GraphPath) || string.IsNullOrWhiteSpace(GraphDependencyHash)))
             throw new InvalidOperationException($"Skill '{ContentIdValue}' has incomplete source audit fields.");
-        return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency);
+        return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency, IsBasicAbility, MaxUsesPerTurn);
     }
 
     private static T Parse<T>(string value) where T : struct, Enum =>

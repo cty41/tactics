@@ -434,7 +434,9 @@ try {
                 --script 'res://src/Tactics.Godot.Adapter/Editor/PlayableRunSceneBuilder.cs'
         }
         $mainScene = Join-Path $projectRoot 'scenes\Main.tscn'
+        $playableBalance = Join-Path $projectRoot 'content\ui\PlayableLv1BalanceProfile.tres'
         $firstMainHash = (Get-FileHash -LiteralPath $mainScene -Algorithm SHA256).Hash
+        $firstPlayableBalanceHash = (Get-FileHash -LiteralPath $playableBalance -Algorithm SHA256).Hash
         Invoke-Checked 'Repeat playable Run Main generation for idempotency' {
             & $GodotExecutable --headless --path $projectRoot `
                 --script 'res://src/Tactics.Godot.Adapter/Editor/PlayableRunSceneBuilder.cs'
@@ -442,9 +444,12 @@ try {
         if ($firstMainHash -ne (Get-FileHash -LiteralPath $mainScene -Algorithm SHA256).Hash) {
             throw 'Playable Run Main generation is not byte-idempotent.'
         }
+        if ($firstPlayableBalanceHash -ne (Get-FileHash -LiteralPath $playableBalance -Algorithm SHA256).Hash) {
+            throw 'Playable Lv1 balance generation is not byte-idempotent.'
+        }
         Invoke-Checked 'Refresh playable Run UI generation evidence' {
             python -m Tools.migration.pure_run_ui_input_generation `
-                --draft $uiDraft --scene $mainScene `
+                --draft $uiDraft --scene $mainScene --balance $playableBalance `
                 --state (Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-ui-input-v1.json') `
                 --receipt (Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-ui-input-v1-generation.json')
         }

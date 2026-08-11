@@ -27,12 +27,12 @@
     {
       "resourcePath": "res://content/skills/BasicMagic.tres",
       "resourceUid": "uid://bra6jwtsiowk7",
-      "targetHash": "sha256:ab70db52ce3752ee842c3f56e5731c022072ecb7ca3c58ef386180ace9087129"
+      "targetHash": "sha256:9d060ece6b32d42a46ca922d5e896e620bb56011928cfb96d6ca848399dac47d"
     },
     {
       "resourcePath": "res://content/skills/BasicMelee.tres",
       "resourceUid": "uid://cjytprsb6ycgm",
-      "targetHash": "sha256:5852dd37facf2fe39815a482713eb7bc728a29a5410cbdc10cf1ee898c78df32"
+      "targetHash": "sha256:11f5dd589fd39c2ac7bb96e6c265fc75f6feb1920041e27e3afe928742f67045"
     },
     {
       "resourcePath": "res://content/skills/ContentCatalog.tres",

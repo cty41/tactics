@@ -10,6 +10,8 @@
   },
   "canonicalCatalogEntries": 74,
   "sceneHash": "sha256:aeaee66da1f1a077470731d52b35ea2d1df7c84b3c1bbd7c1ee0f284d41050f7",
+  "playableBalanceContract": "godot-playable-lv1-balance-v1",
+  "playableBalanceHash": "sha256:518d632437d8cd34572cc4fea5680719640a3094c754aec08d4b886b26964006",
   "idempotency": {
     "resourceSaverRuns": 2,
     "byteIdentical": true

@@ -23,6 +23,8 @@ public sealed record SkillDefinitionDraft
     public int StatusDuration { get; init; }
     public bool Hidden { get; init; }
     public bool ExternalDependency { get; init; }
+    public bool IsBasicAbility { get; init; }
+    public int MaxUsesPerTurn { get; init; }
 }
 
 public sealed record SkillDefinitionCompileResult(
@@ -60,13 +62,15 @@ public sealed class SkillDefinitionCompiler
             }
             try
             {
-                var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency);
+                var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn);
                 definitions.Add(contentId, definition);
                 contentDrafts.Add(new ContentDraft(contentId, "skill", 1, statusId is null ? null : new[] { statusId.Value }, new Dictionary<string, string>(StringComparer.Ordinal)
                 {
                     ["sourceId"] = draft.SourceId,
                     ["executionKind"] = draft.ExecutionKind,
                     ["externalDependency"] = draft.ExternalDependency ? "true" : "false"
+                    ,["isBasicAbility"] = draft.IsBasicAbility ? "true" : "false"
+                    ,["maxUsesPerTurn"] = draft.MaxUsesPerTurn.ToString(System.Globalization.CultureInfo.InvariantCulture)
                 }));
             }
             catch (ArgumentException error) { diagnostics.Add(Error("skill.invalid_parameter", error.Message, contentId)); }

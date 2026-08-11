@@ -25,6 +25,7 @@ public partial class GodotPlayableRunMain : Control
     private readonly Dictionary<ContentId, AiDefinition> _ai = new();
     private readonly Dictionary<ContentId, BattleLayoutDefinition> _layouts = new();
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = new();
+    private PlayableBattleBalanceProfile? _balance;
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
     private readonly Dictionary<GridPoint, Button> _cells = new();
     private readonly List<BattleUiLogEntry> _logs = new();
@@ -72,6 +73,8 @@ public partial class GodotPlayableRunMain : Control
     {
         GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")
             ?? throw new InvalidOperationException("Canonical Catalog is missing.");
+        _balance = (ResourceLoader.Load<PlayableLv1BalanceProfileResource>("res://content/ui/PlayableLv1BalanceProfile.tres")
+            ?? throw new InvalidOperationException("Playable Lv1 balance profile is missing.")).ToCoreProfile();
         PureRunDefinitionResource? runResource = null;
         foreach (GodotResourceEntry entry in catalog.Entries)
         {
@@ -167,7 +170,7 @@ public partial class GodotPlayableRunMain : Control
     private void StartBattle(EncounterRequest request)
     {
         EncounterDefinition encounter = _encounters[request.EncounterContentId];
-        _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units, _skills, _ai);
+        _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units, _skills, _ai, _balance);
         BuildBattlePage();
     }
 
@@ -215,7 +218,12 @@ public partial class GodotPlayableRunMain : Control
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
         _skillPanel.AddChild(Label($"Spear: {(spearDropped?"Dropped":"Held")}",18));
         foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
-        {Button skillButton=Button($"{skill.ContentId.Value}  MP {skill.ManaCost}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback;_skillPanel.AddChild(skillButton);}
+        {
+            BattleUiUnitSnapshot activeUnit=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
+            int uses=activeUnit.SuccessfulSkillUses.TryGetValue(skill.ContentId,out int count)?count:0;
+            string? usageFailure=skill.IsBasicAbility&&uses>=1?"basic_ability_already_used":!skill.IsBasicAbility&&skill.MaxUsesPerTurn>0&&uses>=skill.MaxUsesPerTurn?"ability_use_limit_reached":null;
+            Button skillButton=Button($"{skill.ContentId.Value}  MP {skill.ManaCost}{(usageFailure is null?string.Empty:"  [USED]")}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??string.Empty;_skillPanel.AddChild(skillButton);
+        }
         foreach(SkillDefinition passive in snapshot.ActiveSkills.Where(skill=>skill.IsPassive))_skillPanel.AddChild(Label($"Passive: {passive.ContentId.Value}",16));
         Button endTurn=Button("End Turn (Enter)", () => ApplyIntent(new EndTurnIntent()));endTurn.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(endTurn);
         _skillPanel.AddChild(Button("Abandon Run", AbandonRun));

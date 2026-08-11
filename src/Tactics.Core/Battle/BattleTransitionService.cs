@@ -80,9 +80,12 @@ public sealed class BattleTransitionService
     {
         if (command.Definition.ExecutionKind != SkillExecutionKind.PoisonSpear)
             return _skillRuntime.Apply(state, actor, command);
+        string? usageFailure = SkillRuntimeService.UsageFailure(actor, command.Definition);
+        if (usageFailure is not null)
+            return Rejected(state, command.ActorId, usageFailure);
         if (command.TargetId is not UnitInstanceId targetId)
             return Rejected(state, command.ActorId, "target_not_found");
-        return ApplyPoisonSpear(state, actor, new UsePoisonSpearCommand(
+        BattleTransition transition = ApplyPoisonSpear(state, actor, new UsePoisonSpearCommand(
             command.ActorId,
             targetId,
             new PoisonSpearDefinition(
@@ -94,6 +97,10 @@ public sealed class BattleTransitionService
                 poisonDamagePerTurn: 2,
                 manaCost: command.Definition.ManaCost,
                 dropSearchRadius: 3)));
+        if (transition.Events.OfType<CommandRejectedEvent>().Any()) return transition;
+        BattleUnitState usedActor = transition.State.Units[actor.Unit.InstanceId]
+            .WithSuccessfulSkillUse(command.Definition.ContentId);
+        return new BattleTransition(transition.State.WithUnit(usedActor), transition.Events);
     }
 
     private BattleTransition ApplyMove(BattleState state, BattleUnitState actor, MoveUnitCommand command)
@@ -363,6 +370,13 @@ public sealed class BattleTransitionService
     {
         var events = new List<BattleEvent>();
         BattleUnitState outgoing = state.Units[command.ActorId];
+        int restoredMana = Math.Min(outgoing.ManaRecoveryPerTurn, outgoing.MaxMana - outgoing.CurrentMana);
+        if (restoredMana > 0)
+        {
+            outgoing = outgoing.WithMana(outgoing.CurrentMana + restoredMana);
+            events.Add(new ManaRestoredEvent(command.ActorId, command.ActorId,
+                new ContentId("system.turn-end-mana"), restoredMana, outgoing.CurrentMana));
+        }
         foreach (BattleStatusState status in outgoing.Statuses.Values
                      .OrderBy(item => item.ContentId.Value, StringComparer.Ordinal))
         {

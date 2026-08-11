@@ -25,6 +25,8 @@ public sealed class SkillRuntimeService
     public BattleTransition Apply(BattleState state, BattleUnitState actor, UseSkillCommand command)
     {
         SkillDefinition skill = command.Definition;
+        string? usageFailure = UsageFailure(actor, skill);
+        if (usageFailure is not null) return Reject(state, actor, usageFailure);
         if (skill.IsPassive) return ApplyPassive(state, actor, skill);
         if (actor.CurrentMana < skill.ManaCost) return Reject(state, actor, "insufficient_mana");
         if (skill.ExecutionKind == SkillExecutionKind.PickupSpear) return ApplyPickup(state, actor, command);
@@ -34,7 +36,7 @@ public sealed class SkillRuntimeService
         if (targets.Length == 0) return Reject(state, actor, "no_valid_target");
         var events = new List<BattleEvent> { new SkillUsedEvent(actor.Unit.InstanceId, targets[0].Unit.InstanceId, skill.ContentId) };
         BattleState next = state;
-        BattleUnitState updatedActor = actor.WithMana(actor.CurrentMana - skill.ManaCost);
+        BattleUnitState updatedActor = actor.WithMana(actor.CurrentMana - skill.ManaCost).WithSuccessfulSkillUse(skill.ContentId);
         if (skill.ManaCost > 0) events.Add(new ManaSpentEvent(actor.Unit.InstanceId, skill.ContentId, skill.ManaCost, updatedActor.CurrentMana));
         next = next.WithUnit(updatedActor);
 
@@ -85,7 +87,7 @@ public sealed class SkillRuntimeService
     private BattleTransition ApplyPassive(BattleState state, BattleUnitState actor, SkillDefinition skill)
     {
         if (skill.ExecutionKind != SkillExecutionKind.CombatTechniques) return Reject(state, actor, "unsupported_passive");
-        BattleUnitState updated = actor.WithCombatTechniquesLevelOne(true);
+        BattleUnitState updated = actor.WithCombatTechniquesLevelOne(true).WithSuccessfulSkillUse(skill.ContentId);
         return new BattleTransition(state.WithUnit(updated), new BattleEvent[]
         {
             new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId),
@@ -117,7 +119,7 @@ public sealed class SkillRuntimeService
         var summonId = new UnitInstanceId($"{actor.Unit.InstanceId.Value}.skeleton.{ordinal}");
         var facts = new UnitState(summonId, SkeletonDefinitionId, cell, 3, 10f, actor.Unit.PlayerNumber, ordinal);
         var summon = new BattleUnitState(facts, 12, 12, maxMana: 0, currentMana: 0, physicalAttack: 2, magicalAttack: 0, summonOwnerId: actor.Unit.InstanceId, canReceiveStandardHealing: false, canProduceCorpse: false);
-        BattleUnitState updatedActor = actor.WithMana(actor.CurrentMana - command.Definition.ManaCost);
+        BattleUnitState updatedActor = actor.WithMana(actor.CurrentMana - command.Definition.ManaCost).WithSuccessfulSkillUse(command.Definition.ContentId);
         BattleState next = state.WithUnit(updatedActor).WithoutCorpse(cell).WithSummon(summon);
         var events = new List<BattleEvent> { new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, command.Definition.ContentId) };
         if (command.Definition.ManaCost > 0) events.Add(new ManaSpentEvent(actor.Unit.InstanceId, command.Definition.ContentId, command.Definition.ManaCost, updatedActor.CurrentMana));
@@ -167,4 +169,13 @@ public sealed class SkillRuntimeService
     };
 
     private static BattleTransition Reject(BattleState state, BattleUnitState actor, string reason) => new(state, new BattleEvent[] { new CommandRejectedEvent(actor.Unit.InstanceId, reason) });
+
+    public static string? UsageFailure(BattleUnitState actor, SkillDefinition skill)
+    {
+        int uses = actor.SuccessfulUsesOf(skill.ContentId);
+        if (skill.IsBasicAbility && uses >= 1) return "basic_ability_already_used";
+        if (!skill.IsBasicAbility && skill.MaxUsesPerTurn > 0 && uses >= skill.MaxUsesPerTurn)
+            return "ability_use_limit_reached";
+        return null;
+    }
 }

@@ -18,6 +18,7 @@ public sealed class BattleUnitState
     private readonly IReadOnlyDictionary<ContentId, BattleStatusState> _statuses;
     private readonly IReadOnlyDictionary<ContentId, int> _statusDurations;
     private readonly IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> _consumables;
+    private readonly IReadOnlyDictionary<ContentId, int> _successfulSkillUses;
 
     /// <summary>
     /// Creates runtime state for a unit.
@@ -44,7 +45,9 @@ public sealed class BattleUnitState
         UnitInstanceId? summonOwnerId = null,
         bool canReceiveStandardHealing = true,
         bool hasCombatTechniquesLevelOne = false,
-        bool canProduceCorpse = true)
+        bool canProduceCorpse = true,
+        IReadOnlyDictionary<ContentId, int>? successfulSkillUses = null,
+        int manaRecoveryPerTurn = 0)
     {
         if (maxHealth <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxHealth));
@@ -60,6 +63,8 @@ public sealed class BattleUnitState
             throw new ArgumentOutOfRangeException(nameof(lastSuccessfulConsumableUseRound));
         if (physicalAttack < 0 || magicalAttack < 0)
             throw new ArgumentOutOfRangeException(nameof(physicalAttack));
+        if (manaRecoveryPerTurn < 0)
+            throw new ArgumentOutOfRangeException(nameof(manaRecoveryPerTurn));
         if (statusDurations is not null && statusDurations.Count > 0 && statuses is not null && statuses.Count > 0)
             throw new ArgumentException("Provide either legacy status durations or detailed statuses, not both.");
 
@@ -77,6 +82,14 @@ public sealed class BattleUnitState
         CanReceiveStandardHealing = canReceiveStandardHealing;
         HasCombatTechniquesLevelOne = hasCombatTechniquesLevelOne;
         CanProduceCorpse = canProduceCorpse;
+        ManaRecoveryPerTurn = manaRecoveryPerTurn;
+        var skillUses = new Dictionary<ContentId, int>();
+        foreach ((ContentId skillId, int count) in successfulSkillUses ?? new Dictionary<ContentId, int>())
+        {
+            if (count <= 0) throw new ArgumentOutOfRangeException(nameof(successfulSkillUses));
+            skillUses.Add(skillId, count);
+        }
+        _successfulSkillUses = new ReadOnlyDictionary<ContentId, int>(skillUses);
 
         var detailedStatuses = new Dictionary<ContentId, BattleStatusState>();
         foreach ((ContentId statusId, int remainingTurns) in statusDurations ?? new Dictionary<ContentId, int>())
@@ -145,6 +158,19 @@ public sealed class BattleUnitState
     public bool CanReceiveStandardHealing { get; }
     public bool HasCombatTechniquesLevelOne { get; }
     public bool CanProduceCorpse { get; }
+    public int ManaRecoveryPerTurn { get; }
+    public IReadOnlyDictionary<ContentId, int> SuccessfulSkillUses => _successfulSkillUses;
+
+    public int SuccessfulUsesOf(ContentId skillId) => _successfulSkillUses.TryGetValue(skillId, out int count) ? count : 0;
+
+    public BattleUnitState WithSuccessfulSkillUse(ContentId skillId)
+    {
+        var uses = new Dictionary<ContentId, int>(_successfulSkillUses)
+        {
+            [skillId] = SuccessfulUsesOf(skillId) + 1
+        };
+        return Copy(successfulSkillUses: uses);
+    }
 
     /// <summary>
     /// Gets whether the unit has consumed its one movement use this turn.
@@ -187,7 +213,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
 
     /// <summary>
     /// Returns a copy with clamped health and matching alive state.
@@ -207,7 +233,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
 
     /// <summary>
     /// Returns a copy with clamped mana.
@@ -225,7 +251,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
 
     /// <summary>
     /// Returns a copy with the given status duration.
@@ -266,7 +292,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
     }
 
     /// <summary>
@@ -288,7 +314,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
     }
 
     public BattleUnitState WithUnitFacts(UnitState unit) => new(
@@ -303,7 +329,7 @@ public sealed class BattleUnitState
         consumables: _consumables,
         lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
         physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
 
     public BattleUnitState WithConsumable(BattleConsumableState consumable)
     {
@@ -324,7 +350,7 @@ public sealed class BattleUnitState
             consumables: consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
     }
 
     public BattleUnitState WithSuccessfulConsumableUse(int round) => new(
@@ -339,7 +365,7 @@ public sealed class BattleUnitState
         consumables: _consumables,
         lastSuccessfulConsumableUseRound: round,
         physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
 
     /// <summary>
     /// Returns a copy whose one-per-turn movement use is available again.
@@ -358,12 +384,21 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: null, manaRecoveryPerTurn: ManaRecoveryPerTurn);
 
     public BattleUnitState WithCombatTechniquesLevelOne(bool enabled) => new(
         Unit, MaxHealth, CurrentHealth, HasMovedThisTurn, maxMana: MaxMana, currentMana: CurrentMana,
         statuses: _statuses, baseSpeed: BaseSpeed, consumables: _consumables,
         lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
         physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: enabled, canProduceCorpse: CanProduceCorpse);
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: enabled, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn);
+
+    private BattleUnitState Copy(IReadOnlyDictionary<ContentId, int>? successfulSkillUses = null) => new(
+        Unit, MaxHealth, CurrentHealth, HasMovedThisTurn, maxMana: MaxMana, currentMana: CurrentMana,
+        statuses: _statuses, baseSpeed: BaseSpeed, consumables: _consumables,
+        lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+        physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
+        canProduceCorpse: CanProduceCorpse, successfulSkillUses: successfulSkillUses ?? _successfulSkillUses,
+        manaRecoveryPerTurn: ManaRecoveryPerTurn);
 }

@@ -27,6 +27,9 @@ CONTRACT: dict[str, dict[str, Any]] = {
     "skill.amazon.combat-techniques.lv1": dict(sourceId="amazon.combat_techniques", role="Amazon", kind="Passive", manaCost=0, minRange=0, maxRange=0, executionKind="CombatTechniques", damage=0, damageKind="None", statusContentId="", statusDuration=0, hidden=False),
     "skill.amazon.pickup-spear.lv1": dict(sourceId="amazon.pickup_spear", role="Amazon", kind="Utility", manaCost=0, minRange=0, maxRange=1, executionKind="PickupSpear", damage=0, damageKind="None", statusContentId="", statusDuration=0, hidden=True),
 }
+for _content_id, _contract in CONTRACT.items():
+    _contract["isBasicAbility"] = _content_id in {"skill.basic.magic", "skill.basic.melee"}
+    _contract["maxUsesPerTurn"] = 0
 
 
 def _properties(asset: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
@@ -41,6 +44,16 @@ def _integer(properties: Mapping[str, Mapping[str, Any]], path: str) -> int:
         return int(properties[path]["value"])
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError(f"missing integer field {path}") from error
+
+
+def _boolean(properties: Mapping[str, Mapping[str, Any]], path: str) -> bool:
+    try:
+        value = properties[path]["value"]
+    except KeyError as error:
+        raise ValueError(f"missing boolean field {path}") from error
+    if value not in (True, False, "true", "false"):
+        raise ValueError(f"invalid boolean field {path}")
+    return value is True or value == "true"
 
 
 def _reference(properties: Mapping[str, Mapping[str, Any]], path: str) -> Mapping[str, Any]:
@@ -73,6 +86,10 @@ def compile_starting_skill_draft(export: Mapping[str, Any], specification: Mappi
         if asset is None:
             raise ValueError(f"missing config {content_id}")
         properties = _properties(asset)
+        if _boolean(properties, "_isBasicAbility") != contract["isBasicAbility"]:
+            raise ValueError(f"{content_id} basic-ability flag differs from contract")
+        if _integer(properties, "_maxUsesPerTurn") != contract["maxUsesPerTurn"]:
+            raise ValueError(f"{content_id} max uses per turn differs from contract")
         if _integer(properties, "_manaCost") != contract["manaCost"]:
             raise ValueError(f"{content_id} mana cost differs from contract")
         if _integer(properties, "_targetRange") != contract["maxRange"] and content_id != "skill.amazon.pickup-spear.lv1":

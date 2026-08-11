@@ -102,6 +102,44 @@ public sealed class StartingSkillRuntimeTests
         });
     }
 
+    [Test]
+    public void BasicAbilityConsumesOneSuccessfulUseUntilNextOwnTurn()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target.0", new GridPoint(2, 1)) });
+        SkillDefinition basic = new(new ContentId("skill.basic.magic"), "basic.magic", SkillRole.Any,
+            SkillKind.Basic, 1, 0, 1, 3, SkillExecutionKind.MagicAttack, 0, SkillDamageKind.Magical,
+            isBasicAbility: true);
+        var target = new UnitInstanceId("enemy.target.0");
+        BattleTransition first = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, target, new GridPoint(2, 1), basic));
+        BattleTransition repeated = new BattleTransitionService().Apply(first.State,
+            new UseSkillCommand(state.ActiveUnitId, target, new GridPoint(2, 1), basic));
+        BattleTransition enemyTurn = new BattleTransitionService().Apply(first.State, new EndTurnCommand(state.ActiveUnitId));
+        BattleTransition ownTurn = new BattleTransitionService().Apply(enemyTurn.State, new EndTurnCommand(target));
+        BattleTransition afterReset = new BattleTransitionService().Apply(ownTurn.State,
+            new UseSkillCommand(state.ActiveUnitId, target, new GridPoint(2, 1), basic));
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.Succeeded, Is.True);
+            Assert.That(repeated.Events.OfType<CommandRejectedEvent>().Single().Reason, Is.EqualTo("basic_ability_already_used"));
+            Assert.That(afterReset.Succeeded, Is.True);
+        });
+    }
+
+    [Test]
+    public void EndTurnRestoresManaFromImmutableRecoveryAmount()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target.0", new GridPoint(2, 1)) });
+        BattleUnitState caster = new(new UnitState(state.ActiveUnitId, new ContentId("unit.caster"), new GridPoint(1, 1), 3, 10, 0, 0),
+            20, 20, maxMana: 20, currentMana: 13, manaRecoveryPerTurn: 5);
+        BattleTransition result = new BattleTransitionService().Apply(state.WithUnit(caster), new EndTurnCommand(state.ActiveUnitId));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.State.Units[state.ActiveUnitId].CurrentMana, Is.EqualTo(18));
+            Assert.That(result.Events.OfType<ManaRestoredEvent>().Single().Amount, Is.EqualTo(5));
+        });
+    }
+
     private static SkillDefinition Skill(string id, SkillExecutionKind execution, int mana, int range, int damage, string? status = null, int duration = 0) =>
         new(new ContentId(id), id, SkillRole.Any, execution == SkillExecutionKind.PickupSpear ? SkillKind.Utility : SkillKind.Active, 1, mana, execution == SkillExecutionKind.SummonSkeleton ? 0 : execution == SkillExecutionKind.PickupSpear ? 0 : 1, range, execution, damage, damage == 0 ? SkillDamageKind.None : SkillDamageKind.Physical, status is null ? null : new ContentId(status), duration);
 

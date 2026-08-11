@@ -27,7 +27,8 @@ public sealed class PlayableBattleSessionFactory
         BattleLayoutDefinition layout,
         IReadOnlyDictionary<ContentId, UnitDefinition> units,
         IReadOnlyDictionary<ContentId, SkillDefinition> skills,
-        IReadOnlyDictionary<ContentId, AiDefinition> aiDefinitions)
+        IReadOnlyDictionary<ContentId, AiDefinition> aiDefinitions,
+        PlayableBattleBalanceProfile? balance = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.EncounterContentId != encounter.ContentId)
@@ -45,16 +46,16 @@ public sealed class PlayableBattleSessionFactory
             RunCharacterState character = request.Party[index];
             UnitDefinition definition = units[character.UnitContentId];
             var instanceId = new UnitInstanceId($"party-{character.CharacterId}");
-            BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[index], index);
+            BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[index], index, balance);
             states.Add(state);
             characterIds.Add(instanceId, character.CharacterId);
             ContentId basicId = definition.RoleId.Contains("amazon", StringComparison.OrdinalIgnoreCase)
                 ? MeleeAttackId
                 : MagicAttackId;
-            IEnumerable<ContentId> learned=character.LearnedSkills.Append(basicId);
+            IEnumerable<ContentId> learned=new[] { basicId }.Concat(character.LearnedSkills);
             if(definition.RoleId.Contains("amazon",StringComparison.OrdinalIgnoreCase))learned=learned.Append(PickupSpearId);
             skillsByUnit.Add(instanceId, learned.Distinct()
-                .Select(id => skills[id]).OrderBy(skill => skill.ContentId.Value, StringComparer.Ordinal).ToArray());
+                .Select(id => balance?.Apply(skills[id]) ?? skills[id]).ToArray());
         }
 
         for (int index = 0; index < resolved.Enemies.Count; index++)
@@ -88,19 +89,22 @@ public sealed class PlayableBattleSessionFactory
         RunCharacterState character,
         UnitInstanceId instanceId,
         GridPoint cell,
-        int spawnOrdinal)
+        int spawnOrdinal,
+        PlayableBattleBalanceProfile? balance)
     {
         var facts = new UnitState(
             instanceId, definition.ContentId, cell, definition.DerivedStats.MoveRange,
             definition.DerivedStats.Initiative, 0, spawnOrdinal, !character.IsDead);
         IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> consumables = character.CarriedConsumables
             .ToDictionary(item => item.InstanceId);
+        (int physical, int magical) = balance?.Attacks(definition.ContentId) ?? (2, 2);
         BattleUnitState state=new BattleUnitState(
             facts, character.MaxHealth, character.CurrentHealth,
             maxMana: character.MaxMana, currentMana: character.CurrentMana,
             baseSpeed: definition.Speed, consumables: consumables,
-            physicalAttack: 2, magicalAttack: 2,
-            canProduceCorpse: definition.CanProduceCorpse);
+            physicalAttack: physical, magicalAttack: magical,
+            canProduceCorpse: definition.CanProduceCorpse,
+            manaRecoveryPerTurn: character.Attributes.Intelligence);
         return character.LearnedSkills.Contains(CombatTechniquesId)?state.WithCombatTechniquesLevelOne(true):state;
     }
 }

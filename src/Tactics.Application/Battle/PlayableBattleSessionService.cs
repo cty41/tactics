@@ -31,7 +31,8 @@ public sealed record BattleUiUnitSnapshot(
     int CurrentMana,
     int MaxMana,
     bool HasMovedThisTurn,
-    IReadOnlyList<ContentId> StatusIds);
+    IReadOnlyList<ContentId> StatusIds,
+    IReadOnlyDictionary<ContentId, int> SuccessfulSkillUses);
 
 public sealed record BattleUiTarget(ContentId SkillId, GridPoint Cell, UnitInstanceId? UnitId);
 public enum BattleUiLogCategory { Gameplay, Ai, Rejected }
@@ -145,7 +146,7 @@ public sealed class PlayableBattleSessionService
     {
         BattleUnitState active = view.Units[view.ActiveUnitId];
         IReadOnlyList<SkillDefinition> skills = _context.SkillsByUnit.TryGetValue(active.Unit.InstanceId, out IReadOnlyList<SkillDefinition>? values)
-            ? values.OrderBy(skill => skill.ContentId.Value, StringComparer.Ordinal).ToArray()
+            ? values.ToArray()
             : Array.Empty<SkillDefinition>();
         GridPoint[] moves = interactive&&active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && !active.HasMovedThisTurn
             ? view.Board.Cells.Keys.Where(cell => _transitions.Apply(view, new MoveUnitCommand(active.Unit.InstanceId, cell)).Succeeded).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
@@ -311,5 +312,6 @@ public sealed class PlayableBattleSessionService
         unit.Unit.InstanceId, unit.Unit.DefinitionId, unit.Unit.Position, unit.Unit.PlayerNumber,
         unit.IsAlive, unit.CurrentHealth, unit.MaxHealth, unit.CurrentMana, unit.MaxMana,
         unit.HasMovedThisTurn,
-        unit.Statuses.Keys.OrderBy(id => id.Value, StringComparer.Ordinal).ToArray());
+        unit.Statuses.Keys.OrderBy(id => id.Value, StringComparer.Ordinal).ToArray(),
+        unit.SuccessfulSkillUses);
 }

@@ -44,11 +44,13 @@ public sealed record SkillDefinition
         ContentId? statusContentId = null,
         int statusDuration = 0,
         bool hidden = false,
-        bool externalDependency = false)
+        bool externalDependency = false,
+        bool? isBasicAbility = null,
+        int maxUsesPerTurn = 0)
     {
         if (string.IsNullOrWhiteSpace(sourceId)) throw new ArgumentException("SourceId cannot be empty.", nameof(sourceId));
         if (!Enum.IsDefined(role) || !Enum.IsDefined(kind) || !Enum.IsDefined(executionKind) || !Enum.IsDefined(damageKind)) throw new ArgumentOutOfRangeException(nameof(executionKind));
-        if (level <= 0 || manaCost < 0 || minRange < 0 || maxRange < minRange || damage < 0) throw new ArgumentOutOfRangeException(nameof(level));
+        if (level <= 0 || manaCost < 0 || minRange < 0 || maxRange < minRange || damage < 0 || maxUsesPerTurn < 0) throw new ArgumentOutOfRangeException(nameof(level));
         if ((statusContentId is null) != (statusDuration == 0)) throw new ArgumentException("Status identity and duration must be configured together.");
         ContentId = contentId;
         SourceId = sourceId.Trim();
@@ -65,6 +67,8 @@ public sealed record SkillDefinition
         StatusDuration = statusDuration;
         Hidden = hidden;
         ExternalDependency = externalDependency;
+        IsBasicAbility = isBasicAbility ?? kind == SkillKind.Basic;
+        MaxUsesPerTurn = maxUsesPerTurn;
     }
 
     public ContentId ContentId { get; }
@@ -82,6 +86,8 @@ public sealed record SkillDefinition
     public int StatusDuration { get; }
     public bool Hidden { get; }
     public bool ExternalDependency { get; }
+    public bool IsBasicAbility { get; }
+    public int MaxUsesPerTurn { get; }
     public bool IsPassive => Kind == SkillKind.Passive;
     public bool UsesLineTargeting => ExecutionKind is SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.Thrust;
     public bool RequiresLineOfSight => ExecutionKind is SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.ChargeStrike;

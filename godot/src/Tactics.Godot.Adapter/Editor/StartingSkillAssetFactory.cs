@@ -30,7 +30,7 @@ public static class StartingSkillAssetFactory
         string[] definitionPaths = draft.Definitions.Where(item => !item.ExternalDependency).Select(item => ResourcePath(item.ContentId)).Order(StringComparer.Ordinal).ToArray();
         string[] targets = definitionPaths.Append(BatchCatalogPath).Append(FixturePath).Order(StringComparer.Ordinal).ToArray();
         string ledgerPath = Path.Combine(repositoryPath, "Tools", "migration", "manifest", "state", BatchId + ".json");
-        Preflight(ledgerPath, targets, draft.Source.ExportHash);
+        Preflight(ledgerPath, targets, draft);
 
         foreach (StartingSkillDraftDefinition item in draft.Definitions.Where(item => !item.ExternalDependency).OrderBy(item => item.ContentId, StringComparer.Ordinal))
         {
@@ -49,10 +49,14 @@ public static class StartingSkillAssetFactory
         batch.Validate();
 
         GodotResourceCatalog previousGlobal = ResourceLoader.Load<GodotResourceCatalog>(GlobalCatalogPath, string.Empty, ResourceLoader.CacheMode.Ignore) ?? throw new InvalidOperationException("Canonical Catalog is missing.");
-        var entries = previousGlobal.Entries.Where(item => !item.ContentIdValue.StartsWith("skill.", StringComparison.Ordinal) || item.ContentIdValue == "skill.poison-spear.lv1").ToDictionary(item => item.ContentIdValue, Copy, StringComparer.Ordinal);
+        HashSet<string> ownedStartingSkills = draft.Definitions.Where(item => !item.ExternalDependency)
+            .Select(item => item.ContentId).ToHashSet(StringComparer.Ordinal);
+        var entries = previousGlobal.Entries.Where(item => !ownedStartingSkills.Contains(item.ContentIdValue))
+            .ToDictionary(item => item.ContentIdValue, Copy, StringComparer.Ordinal);
         foreach (GodotResourceEntry entry in batch.Entries.Where(item => item.ContentIdValue != "skill.poison-spear.lv1")) entries.Add(entry.ContentIdValue, Copy(entry));
         var global = new GodotResourceCatalog { Entries = entries.Values.OrderBy(item => item.ContentIdValue, StringComparer.Ordinal).ToArray() };
-        if (global.Entries.Length != 58) throw new InvalidOperationException($"Canonical Catalog must contain 58 entries, got {global.Entries.Length}.");
+        if (global.Entries.Length is not 58 and not 74)
+            throw new InvalidOperationException($"Canonical Catalog must contain the Phase 5B 58-entry baseline or current 74-entry aggregate, got {global.Entries.Length}.");
         Save(global, GlobalCatalogPath);
         global.Validate();
 
@@ -78,6 +82,7 @@ public static class StartingSkillAssetFactory
         resource.RoleValue = item.Role; resource.KindValue = item.Kind; resource.Level = item.Level; resource.ManaCost = item.ManaCost; resource.MinRange = item.MinRange; resource.MaxRange = item.MaxRange;
         resource.ExecutionKindValue = item.ExecutionKind; resource.Damage = item.Damage; resource.DamageKindValue = item.DamageKind; resource.StatusContentIdValue = item.StatusContentId; resource.StatusDuration = item.StatusDuration;
         resource.Hidden = item.Hidden; resource.ExternalDependency = item.ExternalDependency; resource.SourcePath = item.SourcePath; resource.SourceGuid = item.SourceGuid; resource.SourceLocalFileId = item.SourceLocalFileId;
+        resource.IsBasicAbility = item.IsBasicAbility; resource.MaxUsesPerTurn = item.MaxUsesPerTurn;
         resource.GraphPath = item.GraphPath; resource.GraphDependencyHash = item.GraphDependencyHash; resource.PresentationPayloadCopied = item.SourceAudit.PresentationPayloadCopied; resource.ThirdPartyPayloadCopied = item.SourceAudit.ThirdPartyPayloadCopied;
     }
 
@@ -89,7 +94,7 @@ public static class StartingSkillAssetFactory
     private static void Save(Resource resource, string path) { long uid = Uid(path); Error error = ResourceSaver.Save(resource, path); if (error != Error.Ok) throw new InvalidOperationException($"Cannot save '{path}': {error}"); error = ResourceSaver.SetUid(path, uid); if (error != Error.Ok) throw new InvalidOperationException($"Cannot persist UID for '{path}': {error}"); }
     private static void EnsureDirectory(string path) { Error error = DirAccess.MakeDirRecursiveAbsolute(ProjectSettings.GlobalizePath(path)); if (error is not Error.Ok and not Error.AlreadyExists) throw new InvalidOperationException($"Cannot create '{path}': {error}"); }
 
-    private static void Preflight(string ledgerPath, IEnumerable<string> targets, string exportHash)
+    private static void Preflight(string ledgerPath, IEnumerable<string> targets, StartingSkillMigrationDraft draft)
     {
         if (!File.Exists(ledgerPath))
         {
@@ -104,18 +109,30 @@ public static class StartingSkillAssetFactory
         JsonElement recordedExportHash = source.TryGetProperty("exportHash", out JsonElement camelCaseHash)
             ? camelCaseHash
             : source.GetProperty("ExportHash");
-        if (recordedExportHash.GetString() != exportHash)
+        if (recordedExportHash.GetString() != draft.Source.ExportHash)
             throw new InvalidOperationException("Starting-skill ledger source changed.");
         foreach (JsonElement artifact in document.RootElement.GetProperty("artifacts").EnumerateArray()
                      .Where(artifact => artifact.GetProperty("resourcePath").GetString() != GlobalCatalogPath))
         {
             string path = artifact.GetProperty("resourcePath").GetString()!; string absolute = ProjectSettings.GlobalizePath(path);
-            if (!File.Exists(absolute) ||
-                (path != GlobalCatalogPath && Hash(File.ReadAllBytes(absolute)) != artifact.GetProperty("targetHash").GetString()))
+            bool changed = !File.Exists(absolute) || Hash(File.ReadAllBytes(absolute)) != artifact.GetProperty("targetHash").GetString();
+            bool expectedContractUpgrade = changed && path.StartsWith(Root + "/", StringComparison.Ordinal) &&
+                draft.Definitions.FirstOrDefault(item => !item.ExternalDependency && ResourcePath(item.ContentId) == path) is { } definition &&
+                ResourceLoader.Load<SkillDefinitionResource>(path, string.Empty, ResourceLoader.CacheMode.Ignore) is { } resource &&
+                Matches(resource, definition);
+            if (changed && !expectedContractUpgrade)
                 throw new InvalidOperationException($"Generated starting-skill target changed: {path}");
             long uid = ResourceUid.TextToId(artifact.GetProperty("resourceUid").GetString()!); if (!ResourceUid.HasId(uid)) ResourceUid.AddId(uid, path);
         }
     }
+
+    private static bool Matches(SkillDefinitionResource resource, StartingSkillDraftDefinition item) =>
+        resource.ContentIdValue == item.ContentId && resource.SourceId == item.SourceId && resource.RoleValue == item.Role &&
+        resource.KindValue == item.Kind && resource.Level == item.Level && resource.ManaCost == item.ManaCost &&
+        resource.MinRange == item.MinRange && resource.MaxRange == item.MaxRange && resource.ExecutionKindValue == item.ExecutionKind &&
+        resource.Damage == item.Damage && resource.DamageKindValue == item.DamageKind &&
+        resource.StatusContentIdValue == item.StatusContentId && resource.StatusDuration == item.StatusDuration &&
+        resource.Hidden == item.Hidden && resource.IsBasicAbility == item.IsBasicAbility && resource.MaxUsesPerTurn == item.MaxUsesPerTurn;
 
     private static void WriteLedger(string ledgerPath, IEnumerable<string> targets, StartingSkillMigrationDraft draft)
     {
