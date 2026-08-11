@@ -30,6 +30,9 @@ namespace Tactics.Editor.Migration
         private const string PureRunStartingSkillsSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-starting-skills-v1.json";
 
+        private const string PureRunAiEncounterSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-ai-encounter-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -84,6 +87,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPureRunStartingSkillBatchFromCommandLine()
         {
             ExportPureRunStartingSkillBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run AI and Encounter V1")]
+        public static void ExportPureRunAiEncounterBatch()
+        {
+            string outputPath = Export(PureRunAiEncounterSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run AI and Encounter V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunAiEncounterBatchFromCommandLine()
+        {
+            ExportPureRunAiEncounterBatch();
         }
 
         public static string Export(string relativeSpecPath)

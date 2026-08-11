@@ -87,6 +87,28 @@
   },
   "contracts": [
     {
+      "id": "ai-encounter.pure-run-v1",
+      "sourceFile": "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs",
+      "sourceTests": [],
+      "sourceRuntimeFiles": [
+        "Assets/Tactics/Scripts/Common/AI/MonsterAI/AiBrainAsset.cs",
+        "Assets/Tactics/Scripts/Common/AI/MonsterAI/AiDecisionGraph.cs",
+        "Assets/Tactics/Scripts/Common/AI/MonsterAI/AIProfile.cs",
+        "Assets/Tactics/Scripts/Common/AI/MonsterAI/IntentGenerator.cs",
+        "Assets/Tactics/Scripts/Common/AI/MonsterAI/RuleFilter.cs",
+        "Assets/Tactics/Scripts/Common/AI/MonsterAI/IntentScorer.cs",
+        "Assets/Tactics/Scripts/Common/AI/MonsterAI/AiBrainRunner.cs"
+      ],
+      "exportReceipt": "Tools/migration/manifest/receipts/pure-run-ai-encounter-v1-export.json",
+      "evidence": {
+        "brainProfileGraph": "unity_assetdatabase_export_and_frozen_asset_snapshot",
+        "enemySkills": "unity_assetdatabase_export_and_frozen_asset_snapshot",
+        "encounters": "frozen_source_blob_and_strict_typed_draft",
+        "presentationPayloads": "audit_only_not_copied"
+      },
+      "status": "unity_final_asset_export_and_source_blob"
+    },
+    {
       "id": "skill.pure-run-starting-v1",
       "sourceFile": "Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs",
       "sourceRuntimeFiles": [

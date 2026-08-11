@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ai-encounter-v1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "outputPath": "Tools/migration/out/pure-run-ai-encounter-v1.unity.json",
+  "assets": [
+    {"sourceKey":"ai.aoe.brain","sourcePath":"Assets/Tactics/AI/Encounters/AOEBrain.asset","gitBlobSha1":"0bee7cde24e5914cd99f9b1646a4d51d9643a59d","targetContentIds":["ai.pure-run.aoe"]},
+    {"sourceKey":"ai.aoe.profile","sourcePath":"Assets/Tactics/AI/Encounters/AOEProfile.asset","gitBlobSha1":"2b37e382cf9a17bc5991b342bb34e8a41ace9ea1","targetContentIds":["ai.pure-run.aoe"]},
+    {"sourceKey":"ai.charger.brain","sourcePath":"Assets/Tactics/AI/Encounters/ChargerBrain.asset","gitBlobSha1":"d331217ece11d79a9070b86bdfe50ba84180784a","targetContentIds":["ai.pure-run.charger"]},
+    {"sourceKey":"ai.charger.profile","sourcePath":"Assets/Tactics/AI/Encounters/ChargerProfile.asset","gitBlobSha1":"b80c04921415a07e6246c089de0cc7f1136f1439","targetContentIds":["ai.pure-run.charger"]},
+    {"sourceKey":"ai.elite-charger.brain","sourcePath":"Assets/Tactics/AI/Encounters/EliteChargerBrain.asset","gitBlobSha1":"599e7db82512fbbb4de7dcc919996b7e2ba7d8df","targetContentIds":["ai.pure-run.elite-charger"]},
+    {"sourceKey":"ai.elite-charger.profile","sourcePath":"Assets/Tactics/AI/Encounters/EliteChargerProfile.asset","gitBlobSha1":"c5004b30ee0c91b7f94d439afc8d4bc2a1adae40","targetContentIds":["ai.pure-run.elite-charger"]},
+    {"sourceKey":"ai.elite-poison-caster.brain","sourcePath":"Assets/Tactics/AI/Encounters/ElitePoisonCasterBrain.asset","gitBlobSha1":"9abb2fd47bb48d7cd2baa130e13e9ed7e863df64","targetContentIds":["ai.pure-run.elite-poison-caster"]},
+    {"sourceKey":"ai.elite-poison-caster.profile","sourcePath":"Assets/Tactics/AI/Encounters/ElitePoisonCasterProfile.asset","gitBlobSha1":"2629e152f4da38b339c775f0e60e3a4a950aff54","targetContentIds":["ai.pure-run.elite-poison-caster"]},
+    {"sourceKey":"ai.ranged.brain","sourcePath":"Assets/Tactics/AI/Encounters/RangedBrain.asset","gitBlobSha1":"cd8ca05d85fe238d236438684f1ea6d08d5ad0cf","targetContentIds":["ai.pure-run.ranged"]},
+    {"sourceKey":"ai.ranged.profile","sourcePath":"Assets/Tactics/AI/Encounters/RangedProfile.asset","gitBlobSha1":"d1e818eae1df34d782683d911ece10e912a37d0b","targetContentIds":["ai.pure-run.ranged"]},
+    {"sourceKey":"ai.support.brain","sourcePath":"Assets/Tactics/AI/Encounters/SupportBrain.asset","gitBlobSha1":"49d92522fc0ec9890497b336f9ef72b784995255","targetContentIds":["ai.pure-run.support"]},
+    {"sourceKey":"ai.support.profile","sourcePath":"Assets/Tactics/AI/Encounters/SupportProfile.asset","gitBlobSha1":"8b3a633d7c40e00e4d5d0e2f4fceee5112ca3c9a","targetContentIds":["ai.pure-run.support"]},
+    {"sourceKey":"skill.enemy.area-blast.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/AreaBlast_Lv1_Ability.asset","gitBlobSha1":"ac59a0de410e24c6352ac6aedadd392b4c8b6bac","targetContentIds":["skill.enemy.area-blast.lv1"]},
+    {"sourceKey":"skill.enemy.charge-strike.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/ChargeStrike_Lv1_Ability.asset","gitBlobSha1":"e6d97e23836eb87c22efcca6b22acd0bb7d1c322","targetContentIds":["skill.enemy.charge-strike.lv1"]},
+    {"sourceKey":"skill.enemy.heavy-shot.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/HeavyShot_Graph_Ability.asset","gitBlobSha1":"c090be6ad36d9f80264012e9e56c08092122ba3b","targetContentIds":["skill.enemy.heavy-shot.lv1"]},
+    {"sourceKey":"skill.enemy.ranged-attack.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RangedAttack_Graph_Ability.asset","gitBlobSha1":"bce279195d5b918f919f97a84845c95e4cc92105","targetContentIds":["skill.enemy.ranged-attack.lv1"]},
+    {"sourceKey":"graph.enemy.area-blast.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphs/AreaBlast_Lv1.asset","gitBlobSha1":"c14dc7c7b060a76fe56e75b74bb22376ad877201","targetContentIds":["skill.enemy.area-blast.lv1"]},
+    {"sourceKey":"graph.enemy.charge-strike.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphs/ChargeStrike_Lv1.asset","gitBlobSha1":"cd138d718bfb798ddcc858803ba761c2b5b9bd11","targetContentIds":["skill.enemy.charge-strike.lv1"]},
+    {"sourceKey":"graph.enemy.heavy-shot.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphs/HeavyShot_Graph.asset","gitBlobSha1":"991b7e7c32b1e7ced26837d48f8e5f1a5bde7ac3","targetContentIds":["skill.enemy.heavy-shot.lv1"]},
+    {"sourceKey":"graph.enemy.ranged-attack.lv1","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphs/RangedAttack_Graph.asset","gitBlobSha1":"02aedc76e616c3b39789c264405f7a5345e694d1","targetContentIds":["skill.enemy.ranged-attack.lv1"]}
+  ]
+}
