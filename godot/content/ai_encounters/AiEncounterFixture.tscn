@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://npgg27kbxgyk"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotAiEncounterFixture.cs" id="1_h5yir"]
+
+[node name="AiEncounterFixture" type="Control" unique_id=405381424]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_h5yir")

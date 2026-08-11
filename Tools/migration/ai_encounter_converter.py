@@ -26,9 +26,9 @@ ALLOWED_SKILL_NODES = {
     "DashToTargetNodeRecord", "ApplyKnockbackNodeRecord",
 }
 ENCOUNTERS = [
-    {"contentId":"encounter.pure-run.n1","layout":"battle-layout.pure-run.open","monsters":["unit.pure-run.charger","unit.pure-run.charger","unit.pure-run.ranged"]},
-    {"contentId":"encounter.pure-run.n2","layout":"battle-layout.pure-run.open","monsters":["unit.pure-run.ranged","unit.pure-run.ranged","unit.pure-run.support"]},
-    {"contentId":"encounter.pure-run.n3","layout":"battle-layout.pure-run.center-blocker","monsters":["unit.pure-run.aoe","unit.pure-run.charger","unit.pure-run.charger","unit.pure-run.support"]},
+    {"contentId":"encounter.pure-run.n1","layout":"battle-layout.pure-run.open","monsters":["unit.pure-run.goat-charger","unit.pure-run.goat-charger","unit.pure-run.goat-ranged"]},
+    {"contentId":"encounter.pure-run.n2","layout":"battle-layout.pure-run.open","monsters":["unit.pure-run.goat-ranged","unit.pure-run.goat-ranged","unit.pure-run.goat-support"]},
+    {"contentId":"encounter.pure-run.n3","layout":"battle-layout.pure-run.center-blocker","monsters":["unit.pure-run.goat-aoe","unit.pure-run.goat-charger","unit.pure-run.goat-charger","unit.pure-run.goat-support"]},
 ]
 
 def _properties(asset):
@@ -50,7 +50,7 @@ def compile_ai_encounter_draft(export, specification):
         if profile["sourcePath"] not in refs:
             raise ValueError(f"{content_id} profile reference drift")
         pattern = [p["value"] for p in brain["objects"][0]["properties"] if p["propertyPath"].endswith("._abilityName")]
-        definitions.append({"contentId":content_id,"kind":"ai","archetype":stem,"brainPath":brain["sourcePath"],"profilePath":profile["sourcePath"],"decisionGraphPath":bp["_decisionGraph"]["reference"]["sourcePath"],"pattern":pattern})
+        definitions.append({"contentId":content_id,"kind":"ai","archetype":stem,"brainPath":brain["sourcePath"],"brainGuid":brain["sourceGuid"],"brainLocalFileId":brain["sourceLocalFileId"],"profilePath":profile["sourcePath"],"profileGuid":profile["sourceGuid"],"decisionGraphPath":bp["_decisionGraph"]["reference"]["sourcePath"],"decisionGraphHash":bp["_decisionGraph"]["reference"]["dependencyHash"],"pattern":pattern})
     for content_id, (mana, min_range, max_range, execution, damage, radius) in sorted(SKILLS.items()):
         config, graph = assets[content_id], assets["graph." + content_id.removeprefix("skill.")]
         cp, gp = _properties(config), _properties(graph)
@@ -62,7 +62,7 @@ def compile_ai_encounter_draft(export, specification):
         unknown = nodes - ALLOWED_SKILL_NODES
         if unknown:
             raise ValueError(f"{content_id} unknown nodes: {sorted(unknown)}")
-        definitions.append({"contentId":content_id,"kind":"skill","executionKind":execution,"manaCost":mana,"minRange":min_range,"maxRange":max_range,"damage":damage,"areaRadius":radius,"graphNodes":sorted(nodes),"sourcePath":config["sourcePath"],"graphPath":graph["sourcePath"]})
+        definitions.append({"contentId":content_id,"kind":"skill","sourceId":content_id.removeprefix("skill."),"displayName":cp["_displayName"]["value"],"description":cp["_description"]["value"],"executionKind":execution,"manaCost":mana,"minRange":min_range,"maxRange":max_range,"damage":damage,"areaRadius":radius,"graphNodes":sorted(nodes),"sourcePath":config["sourcePath"],"sourceGuid":config["sourceGuid"],"sourceLocalFileId":config["sourceLocalFileId"],"graphPath":graph["sourcePath"],"graphDependencyHash":graph["dependencyHash"]})
     layouts = [
         {"contentId":"battle-layout.pure-run.open","enemySpawns":[[6,4],[7,3],[7,5],[8,4]],"blocked":[]},
         {"contentId":"battle-layout.pure-run.center-blocker","enemySpawns":[[6,3],[6,6],[7,4],[7,5]],"blocked":[[4,4],[4,5],[5,4],[5,5]]},

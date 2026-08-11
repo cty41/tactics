@@ -43,6 +43,12 @@ public partial class TacticsMigrationRoot : Node
             GetTree().Quit();
             return;
         }
+        if (commandLine.Contains("--validate-ai-encounters"))
+        {
+            ValidateAiEncounters();
+            GetTree().Quit();
+            return;
+        }
         if (commandLine.Contains("--play-unit-gallery"))
         {
             PlayUnitGallery();
@@ -158,6 +164,15 @@ public partial class TacticsMigrationRoot : Node
         if (!validFixture)
             throw new InvalidOperationException("Starting-skill fixture has the wrong root type.");
         GD.Print($"Starting-skill validation OK: entries={validation.BatchCount}, global={validation.GlobalCount}, generated={validation.GeneratedCount}");
+    }
+
+    private static void ValidateAiEncounters()
+    {
+        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/ai_encounters/ContentCatalog.tres")??throw new InvalidOperationException("AI/Encounter Catalog is missing.");
+        var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")??throw new InvalidOperationException("Canonical Catalog is missing.");
+        AiEncounterBatchValidation validation=AiEncounterBatchValidator.Validate(batch,global);
+        PackedScene scene=ResourceLoader.Load<PackedScene>("res://content/ai_encounters/AiEncounterFixture.tscn")??throw new InvalidOperationException("AI/Encounter Fixture is missing.");Node fixture=scene.Instantiate();bool valid=fixture is GodotAiEncounterFixture;if(fixture is GodotAiEncounterFixture gameplay){gameplay._Ready();string result=gameplay.ExecuteStep();if(!result.Contains("selected=",StringComparison.Ordinal))throw new InvalidOperationException("AI/Encounter Fixture did not execute a real AI turn.");}fixture.Free();if(!valid)throw new InvalidOperationException("AI/Encounter Fixture root type is invalid.");
+        GD.Print($"AI/Encounter validation OK: entries={validation.BatchCount}, global={validation.GlobalCount}, skills={validation.Skills}, ai={validation.Ai}, layouts={validation.Layouts}, encounters={validation.Encounters}");
     }
 
     private void PlayUnitGallery()

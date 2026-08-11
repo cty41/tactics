@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://5jkpcuaunf6s"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_rfuur"]
+
+[resource]
+script = ExtResource("1_rfuur")
+ContentIdValue = "skill.enemy.area-blast.lv1"
+SourceId = "enemy.area-blast.lv1"
+DisplayName = "Area Blast Lv1"
+Description = "Area Blast Lv1"
+RoleValue = "Any"
+KindValue = "Active"
+Level = 1
+MinRange = 1
+MaxRange = 3
+ExecutionKindValue = "AreaBlast"
+Damage = 6
+DamageKindValue = "Magical"
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/AreaBlast_Lv1_Ability.asset"
+SourceGuid = "3ffc68b0adefa5547be6675db9b2373f"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/AreaBlast_Lv1.asset"
+GraphDependencyHash = "7bf3f42b7043a7bbadd44306938e8ade"

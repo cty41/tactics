@@ -9,6 +9,11 @@ namespace Tactics.Core.AI;
 /// <summary>Builds and stably ranks legal intents by probing the canonical battle transition service.</summary>
 public sealed class AiDecisionService
 {
+    private readonly BattleTransitionService _transitions;
+
+    public AiDecisionService(BattleTransitionService? transitions = null) =>
+        _transitions = transitions ?? new BattleTransitionService();
+
     public AiTurnPlan Decide(BattleState state, AiDefinition definition, IReadOnlyDictionary<ContentId, SkillDefinition> skills, int patternIndex = 0)
     {
         BattleUnitState actor = state.Units[state.ActiveUnitId];
@@ -19,11 +24,14 @@ public sealed class AiDecisionService
             foreach (BattleUnitState target in state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber).OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal))
             {
                 int distance = Manhattan(actor.Unit.Position, target.Unit.Position);
-                bool legal = distance >= skill.MinRange && distance <= skill.MaxRange && actor.CurrentMana >= skill.ManaCost;
+                BattleTransition probe = _transitions.Apply(
+                    state,
+                    new UseSkillCommand(actor.Unit.InstanceId, target.Unit.InstanceId, target.Unit.Position, skill));
+                bool legal = probe.Succeeded;
                 int targetCount = skill.ExecutionKind == SkillExecutionKind.AreaBlast ? state.Units.Values.Count(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber && Manhattan(unit.Unit.Position,target.Unit.Position)<=2) : 1;
                 AiIntentKind intent = skill.ExecutionKind == SkillExecutionKind.AreaBlast ? AiIntentKind.AreaAttack : skill.ExecutionKind == SkillExecutionKind.AmplifyDamage ? AiIntentKind.Debuff : AiIntentKind.Attack;
                 float distanceScore = definition.Archetype == AiArchetype.Ranged ? -Math.Abs(distance-3)*definition.Profile.DistanceWeight : -distance*definition.Profile.DistanceWeight;
-                candidates.Add(new AiIntentCandidate(intent,skillId,actor.Unit.Position,target.Unit.InstanceId,target.Unit.Position,distanceScore,skill.Damage*definition.Profile.DamageWeight,targetCount*definition.Profile.TargetCountWeight,intent==AiIntentKind.Debuff?definition.Profile.HarmfulStatusWeight:0,legal,legal?string.Empty:"range_or_mana"));
+                candidates.Add(new AiIntentCandidate(intent,skillId,actor.Unit.Position,target.Unit.InstanceId,target.Unit.Position,distanceScore,skill.Damage*definition.Profile.DamageWeight,targetCount*definition.Profile.TargetCountWeight,intent==AiIntentKind.Debuff?definition.Profile.HarmfulStatusWeight:0,legal,legal?string.Empty:probe.Events.LastOrDefault()?.GetType().Name??"rejected"));
             }
         }
         if (!candidates.Any(item=>item.IsLegal))
@@ -32,8 +40,11 @@ public sealed class AiDecisionService
             GridPoint destination=nearest is null?actor.Unit.Position:state.Board.GetNeighbours(actor.Unit.Position).Where(cell=>!state.Board.GetCell(cell).BlocksMovement&&!state.Units.Values.Any(unit=>unit.IsAlive&&unit.Unit.Position==cell)).OrderBy(cell=>Manhattan(cell,nearest.Unit.Position)).ThenBy(cell=>cell.X).ThenBy(cell=>cell.Y).FirstOrDefault(actor.Unit.Position);
             candidates.Add(new AiIntentCandidate(destination==actor.Unit.Position?AiIntentKind.EndTurn:AiIntentKind.Move,null,destination,null,destination,0,0,0,0,true,string.Empty));
         }
-        AiIntentCandidate selected=candidates.Where(item=>item.IsLegal).OrderByDescending(item=>item.TotalScore).ThenBy(item=>item.Intent).ThenBy(item=>item.SkillId?.Value??string.Empty,StringComparer.Ordinal).ThenBy(item=>item.Destination.X).ThenBy(item=>item.Destination.Y).ThenBy(item=>item.TargetId?.Value??string.Empty,StringComparer.Ordinal).First();
-        bool pattern=definition.PatternSkillIds.Count>0&&selected.SkillId==definition.PatternSkillIds[patternIndex%definition.PatternSkillIds.Count];
+        IEnumerable<AiIntentCandidate> ranked=candidates.Where(item=>item.IsLegal).OrderByDescending(item=>item.TotalScore).ThenBy(item=>item.Intent).ThenBy(item=>item.SkillId?.Value??string.Empty,StringComparer.Ordinal).ThenBy(item=>item.Destination.X).ThenBy(item=>item.Destination.Y).ThenBy(item=>item.TargetId?.Value??string.Empty,StringComparer.Ordinal);
+        ContentId? patternSkill=definition.PatternSkillIds.Count==0?null:definition.PatternSkillIds[patternIndex%definition.PatternSkillIds.Count];
+        AiIntentCandidate? patternCandidate=patternSkill is null?null:ranked.FirstOrDefault(item=>item.SkillId==patternSkill);
+        AiIntentCandidate selected=patternCandidate??ranked.First();
+        bool pattern=patternCandidate is not null;
         return new AiTurnPlan(actor.Unit.InstanceId,selected,candidates,patternIndex,pattern);
     }
 

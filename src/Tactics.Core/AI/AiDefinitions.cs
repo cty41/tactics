@@ -36,4 +36,4 @@ public sealed record AiIntentCandidate(
 public sealed record AiTurnPlan(UnitInstanceId ActorId, AiIntentCandidate Selected, IReadOnlyList<AiIntentCandidate> Candidates, int PatternIndex, bool UsesPattern);
 
 public sealed record AiDecisionEvent(UnitInstanceId ActorId, int CandidateCount, AiIntentKind Intent, ContentId? SkillId, float Score);
-public sealed record AiPlanExecutionResult(Tactics.Core.Battle.BattleState State, IReadOnlyList<Tactics.Core.Battle.BattleEvent> Events, AiDecisionEvent Decision);
+public sealed record AiPlanExecutionResult(Tactics.Core.Battle.BattleState State, IReadOnlyList<Tactics.Core.Battle.BattleEvent> Events, AiDecisionEvent Decision, int NextPatternIndex);

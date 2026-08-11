@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AiDefinitionResource" format=3 uid="uid://d0gim665iwky8"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/AiDefinitionResource.cs" id="1_bblbp"]
+
+[resource]
+script = ExtResource("1_bblbp")
+ContentIdValue = "ai.pure-run.ranged"
+ArchetypeValue = "ranged"
+SkillContentIds = PackedStringArray("skill.enemy.ranged-attack.lv1", "skill.enemy.heavy-shot.lv1")
+DistanceWeight = 2.0
+BrainPath = "Assets/Tactics/AI/Encounters/RangedBrain.asset"
+BrainGuid = "19a9314a7ef98e54e8813f1fe95ba926"
+BrainLocalFileId = 11400000
+ProfilePath = "Assets/Tactics/AI/Encounters/RangedProfile.asset"
+ProfileGuid = "e84119b11e7829944af9205fbc6a8c28"
+DecisionGraphPath = "Assets/Tactics/AI/BasicMeleeGraph.asset"
+DecisionGraphHash = "3ccb90fe7b983e6ce5daadd2ea041178"

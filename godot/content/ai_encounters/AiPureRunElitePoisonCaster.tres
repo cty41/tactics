@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AiDefinitionResource" format=3 uid="uid://cbh88q2lk5ih4"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/AiDefinitionResource.cs" id="1_ylxor"]
+
+[resource]
+script = ExtResource("1_ylxor")
+ContentIdValue = "ai.pure-run.elite-poison-caster"
+ArchetypeValue = "elite-poison-caster"
+SkillContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.area-blast.lv1")
+PatternSkillContentIds = PackedStringArray("skill.enemy.area-blast.lv1", "skill.basic.melee")
+DamageWeight = 2.0
+TargetCountWeight = 2.0
+BrainPath = "Assets/Tactics/AI/Encounters/ElitePoisonCasterBrain.asset"
+BrainGuid = "9f26fba7ada3508449f5476f218a7a92"
+BrainLocalFileId = 11400000
+ProfilePath = "Assets/Tactics/AI/Encounters/ElitePoisonCasterProfile.asset"
+ProfileGuid = "a0409d0aed2186d4abc1f8b4b741818f"
+DecisionGraphPath = "Assets/Tactics/AI/BasicMeleeGraph.asset"
+DecisionGraphHash = "3ccb90fe7b983e6ce5daadd2ea041178"

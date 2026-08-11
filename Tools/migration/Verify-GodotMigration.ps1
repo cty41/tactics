@@ -41,6 +41,10 @@ $startingSkillSpecification = Join-Path $repoRoot 'Tools\migration\manifest\expo
 $startingSkillExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-starting-skills-v1-export.json'
 $startingSkillGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-starting-skills-v1.json'
 $startingSkillGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-starting-skills-v1-generation.json'
+$aiEncounterExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ai-encounter-v1.unity.json'
+$aiEncounterDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ai-encounter-v1.draft.json'
+$aiEncounterSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-ai-encounter-v1.json'
+$aiEncounterGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-ai-encounter-v1.json'
 $consumablesJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Consumables.json'
 $equipmentJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Equipment.json'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
@@ -348,6 +352,39 @@ try {
         Write-Host '== Skip real Pure Run starting-skill draft: disposable Unity DTO is not present =='
     }
 
+    if (Test-Path -LiteralPath $aiEncounterExport -PathType Leaf) {
+        Invoke-Checked 'Compile real Pure Run AI/Encounter typed migration draft' {
+            python -m Tools.migration.ai_encounter_converter `
+                --export $aiEncounterExport `
+                --specification $aiEncounterSpecification `
+                --output $aiEncounterDraft
+        }
+        Invoke-Checked 'Generate Pure Run AI/Encounter Godot assets through ResourceSaver' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/AiEncounterAssetBuilder.cs'
+        }
+        $aiEncounterTargets = @(
+            (Get-Content -LiteralPath $aiEncounterGenerationLedger -Raw | ConvertFrom-Json).artifacts |
+                ForEach-Object { Join-Path $projectRoot $_.resourcePath.Substring('res://'.Length) }
+        ) + @($aiEncounterGenerationLedger)
+        $firstAiEncounterHashes = @{}
+        foreach ($target in $aiEncounterTargets) {
+            $firstAiEncounterHashes[$target] = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+        }
+        Invoke-Checked 'Repeat Pure Run AI/Encounter generation for idempotency' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/AiEncounterAssetBuilder.cs'
+        }
+        foreach ($target in $aiEncounterTargets) {
+            if ($firstAiEncounterHashes[$target] -ne (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash) {
+                throw "Pure Run AI/Encounter generation is not byte-idempotent: $target"
+            }
+        }
+    }
+    else {
+        Write-Host '== Skip real Pure Run AI/Encounter draft: disposable Unity DTO is not present =='
+    }
+
     # A ResourceSaver script can register a newly created UID only in its current process.
     # The headless Editor filesystem scan persists the project UID cache before Runtime validation.
     Invoke-Checked 'Godot editor filesystem scan and plugin initialization' {
@@ -414,6 +451,16 @@ try {
     Invoke-Checked 'Pure Run starting-skill catalog and fixture validation (Forward+)' {
         & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
             --validate-starting-skills --quit-after 6000
+    }
+
+    Invoke-Checked 'Pure Run AI/Encounter catalog and fixture validation (Compatibility)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            --validate-ai-encounters --quit-after 6000
+    }
+
+    Invoke-Checked 'Pure Run AI/Encounter catalog and fixture validation (Forward+)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
+            --validate-ai-encounters --quit-after 6000
     }
 
     Invoke-Checked 'Capture deterministic Pure Run Unit programmatic gallery' {

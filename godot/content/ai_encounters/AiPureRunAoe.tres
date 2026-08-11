@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AiDefinitionResource" format=3 uid="uid://belreeyliit7t"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/AiDefinitionResource.cs" id="1_7o7wj"]
+
+[resource]
+script = ExtResource("1_7o7wj")
+ContentIdValue = "ai.pure-run.aoe"
+ArchetypeValue = "aoe"
+SkillContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.area-blast.lv1")
+TargetCountWeight = 3.0
+BrainPath = "Assets/Tactics/AI/Encounters/AOEBrain.asset"
+BrainGuid = "4a3b077b51c6f114797c1be503ecc08f"
+BrainLocalFileId = 11400000
+ProfilePath = "Assets/Tactics/AI/Encounters/AOEProfile.asset"
+ProfileGuid = "44cdc1ffc9cf93740b39d01c818b34e4"
+DecisionGraphPath = "Assets/Tactics/AI/BasicMeleeGraph.asset"
+DecisionGraphHash = "3ccb90fe7b983e6ce5daadd2ea041178"

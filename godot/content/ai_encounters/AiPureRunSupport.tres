@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AiDefinitionResource" format=3 uid="uid://dy5703mscymtx"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/AiDefinitionResource.cs" id="1_7cny6"]
+
+[resource]
+script = ExtResource("1_7cny6")
+ContentIdValue = "ai.pure-run.support"
+ArchetypeValue = "support"
+SkillContentIds = PackedStringArray("skill.basic.melee", "skill.necromancer.amplify-damage.lv1")
+DamageWeight = 0.0
+HarmfulStatusWeight = 4.0
+BrainPath = "Assets/Tactics/AI/Encounters/SupportBrain.asset"
+BrainGuid = "de0b215b67a6af0489e2511780a03a8a"
+BrainLocalFileId = 11400000
+ProfilePath = "Assets/Tactics/AI/Encounters/SupportProfile.asset"
+ProfileGuid = "b11db1d967a6f6549a793d0fa60b6113"
+DecisionGraphPath = "Assets/Tactics/AI/BasicMeleeGraph.asset"
+DecisionGraphHash = "3ccb90fe7b983e6ce5daadd2ea041178"

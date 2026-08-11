@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AiDefinitionResource" format=3 uid="uid://dwc6sac2lva3a"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/AiDefinitionResource.cs" id="1_bbhuu"]
+
+[resource]
+script = ExtResource("1_bbhuu")
+ContentIdValue = "ai.pure-run.charger"
+ArchetypeValue = "charger"
+SkillContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.charge-strike.lv1")
+DistanceWeight = 3.0
+DamageWeight = 2.0
+BrainPath = "Assets/Tactics/AI/Encounters/ChargerBrain.asset"
+BrainGuid = "44cf97dce4f75884b9ea356a90764a06"
+BrainLocalFileId = 11400000
+ProfilePath = "Assets/Tactics/AI/Encounters/ChargerProfile.asset"
+ProfileGuid = "28ded6b6a381417499228ea61c7c979b"
+DecisionGraphPath = "Assets/Tactics/AI/BasicMeleeGraph.asset"
+DecisionGraphHash = "3ccb90fe7b983e6ce5daadd2ea041178"
