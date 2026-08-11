@@ -7,7 +7,7 @@
   "exportSpecification": "Tools/migration/manifest/export-batches/pure-run-units-v1.json",
   "exportReceipt": "Tools/migration/manifest/receipts/pure-run-units-v1-export.json",
   "owner": "UnityOwned",
-  "status": "Generated",
+  "status": "Validated",
   "contentIds": [
     "packed-scene.unit-actor",
     "unit.pure-run.amazon",
@@ -74,6 +74,6 @@
     "rendererHeadlessStartup": "compatibility_and_forward_plus_passed",
     "programmaticGalleryCapture": "passed",
     "programmaticSpawnCapture": "passed",
-    "visualAcceptance": "manual_visual_qa_pending"
+    "visualAcceptance": "passed_for_migrated_project_owned_unit_visuals"
   }
 }

@@ -200,12 +200,23 @@ public class UnitBatchGodotTests
         {
             typedGallery.BuildGallery();
             AssertThat(typedGallery.Actors.Count).IsEqual(12);
-            AssertThat(typedGallery.Actors[0].Position).IsEqual(new Vector2(170f, 155f));
-            AssertThat(typedGallery.Actors[11].Position).IsEqual(new Vector2(1100f, 615f));
+            AssertThat(typedGallery.Actors[0].Position).IsEqual(new Vector2(212.5f, 193.75f));
+            AssertThat(typedGallery.Actors[11].Position).IsEqual(new Vector2(1375f, 768.75f));
+            AssertThat(typedGallery.Actors.All(actor =>
+                actor.Scale.IsEqualApprox(new Vector2(0.725f, 0.725f)))).IsTrue();
             Label amazonLabel = typedGallery.GetChildren()
                 .OfType<Label>()
                 .Single(label => label.Text == "Amazon");
-            AssertThat(amazonLabel.Position).IsEqual(new Vector2(65f, 197f));
+            AssertThat(amazonLabel.Position).IsEqual(new Vector2(81.25f, 246.25f));
+            AssertThat(amazonLabel.Size).IsEqual(new Vector2(262.5f, 42.5f));
+            AssertThat(amazonLabel.GetThemeFontSize("font_size")).IsEqual(20);
+            Label instructions = typedGallery.GetChildren()
+                .OfType<Label>()
+                .Single(label => label.Text.StartsWith("1 South", StringComparison.Ordinal));
+            AssertThat(instructions.Position).IsEqual(new Vector2(25f, 5f));
+            AssertThat(instructions.Size).IsEqual(new Vector2(1550f, 35f));
+            ColorRect background = typedGallery.GetChildren().OfType<ColorRect>().Single();
+            AssertThat(background.Size).IsEqual(new Vector2(1600f, 900f));
             AssertThat(typedGallery.Actors.All(actor =>
                 actor.Facing == GodotUnitFacing.South && !actor.IsShowingDeath)).IsTrue();
             AssertThat(typedGallery.CurrentFacing).IsEqual(GodotUnitFacing.South);
@@ -236,9 +247,31 @@ public class UnitBatchGodotTests
             AssertThat(states.All(state =>
                 state.Unit.Position.X >= 0 && state.Unit.Position.X < 10 &&
                 state.Unit.Position.Y >= 0 && state.Unit.Position.Y < 10)).IsTrue();
+            AssertThat(states.All(state =>
+                state.Unit.Position.X >= 1 && state.Unit.Position.X <= 8 &&
+                state.Unit.Position.Y >= 1 && state.Unit.Position.Y <= 8)).IsTrue();
             typedFixture.BuildPreview();
-            AssertThat(typedFixture.GetChildren().OfType<GodotUnitActor>().Count()).IsEqual(12);
+            GodotUnitActor[] actors = typedFixture.GetChildren().OfType<GodotUnitActor>().ToArray();
+            AssertThat(actors.Length).IsEqual(12);
+            AssertThat(actors.All(actor =>
+                actor.Scale.IsEqualApprox(new Vector2(0.375f, 0.375f)))).IsTrue();
+            for (int index = 0; index < actors.Length; index++)
+            {
+                Vector2 expectedCenter = GodotUnitSpawnFixture.GetCellCenter(states[index].Unit.Position);
+                AssertThat(actors[index].Position).IsEqual(expectedCenter);
+                Rect2 bounds = GodotUnitSpawnFixture.ComputeActorVisualBounds(actors[index]);
+                AssertThat(IsWithin(bounds, GodotUnitSpawnFixture.BoardVisualSafeRect)).IsTrue();
+                AssertThat(IsWithin(bounds, GodotUnitSpawnFixture.ViewportVisualSafeRect)).IsTrue();
+            }
         }
+        AssertThat(UnitPreviewLayout.CanvasSize).IsEqual(new Vector2I(1600, 900));
+        AssertThat(GodotUnitSpawnFixture.GridOrigin).IsEqual(new Vector2(440f, 90f));
+        AssertThat(GodotUnitSpawnFixture.CellSize).IsEqual(72f);
+        AssertThat(GodotUnitSpawnFixture.ViewportSafeInset).IsEqual(24f);
+        AssertThat(GodotUnitSpawnFixture.BoardSafeInset).IsEqual(8f);
+        AssertThat(GodotUnitSpawnFixture.OverflowPolicy)
+            .IsEqual(
+                "internal-grid-overflow-allowed; board-frame-and-viewport-clipping-forbidden");
         AssertThat(GodotUnitSpawnFixture.PreviewBackgroundColor)
             .IsEqual(new Color("82909b"));
         AssertThat(GodotUnitSpawnFixture.PreviewGridColor)
@@ -252,9 +285,9 @@ public class UnitBatchGodotTests
     public void ProjectWindowUsesSixteenByNineCanvasItemScaling()
     {
         AssertThat(ProjectSettings.GetSetting("display/window/size/viewport_width").AsInt32())
-            .IsEqual(1280);
+            .IsEqual(1600);
         AssertThat(ProjectSettings.GetSetting("display/window/size/viewport_height").AsInt32())
-            .IsEqual(720);
+            .IsEqual(900);
         AssertThat(ProjectSettings.GetSetting("display/window/size/window_width_override").AsInt32())
             .IsEqual(1600);
         AssertThat(ProjectSettings.GetSetting("display/window/size/window_height_override").AsInt32())
@@ -269,5 +302,15 @@ public class UnitBatchGodotTests
     {
         string path = Path.Combine(AppContext.BaseDirectory, "Golden", "unit-batch-v1.json");
         return JsonDocument.Parse(File.ReadAllText(path));
+    }
+
+    private static bool IsWithin(Rect2 bounds, Rect2 safeRect)
+    {
+        Vector2 boundsEnd = bounds.Position + bounds.Size;
+        Vector2 safeEnd = safeRect.Position + safeRect.Size;
+        return bounds.Position.X >= safeRect.Position.X &&
+            bounds.Position.Y >= safeRect.Position.Y &&
+            boundsEnd.X <= safeEnd.X &&
+            boundsEnd.Y <= safeEnd.Y;
     }
 }

@@ -98,13 +98,13 @@
       "resourcePath": "res://content/units/UnitGallery.tscn",
       "resourceUid": "uid://bx2p3yfyuseog",
       "targetHash": "sha256:237b53b06c138304bc990ac2ec097d3a770f650f70ed47001e0a48e2c5540e19",
-      "semanticHash": "sha256:f05eb79c81ba40347a393ad9d408b3442edc0e9c95c5072ad3448a80501ad7d3"
+      "semanticHash": "sha256:95d8ba3369a3fbfd965e230d70b71b5ecfc7fdd36851ad37ac59984f3a22b4e7"
     },
     {
       "resourcePath": "res://content/units/UnitSpawnFixture.tscn",
       "resourceUid": "uid://ck5v3sdiu4rsb",
       "targetHash": "sha256:771e9c36dec9eae8eef0f75393c7a2195f912ebb66995f1aece08d343c554b3b",
-      "semanticHash": "sha256:4a523d99e71bba58c55f4e3abf4790810d2b3f040f8007c8a0189bde10a82936"
+      "semanticHash": "sha256:1d04fcb4d02cd094930e40a468b4f4d1d21069664d33e49491b4305ed0d9228e"
     }
   ]
 }

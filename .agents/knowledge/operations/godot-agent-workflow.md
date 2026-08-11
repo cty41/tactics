@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-11T02:36:17+08:00"
+timestamp: "2026-08-11T11:47:40+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:dfab95e90fe7458d351d8dce6084ac111c0752b3428d969bff8cfc7f01597403
+source_fingerprint: sha256:3c7ec96ebe018856f1896b3ffd2263e25b951e47d1f1cbd7a52aa10443abf280
 ---
 
 # Current state
@@ -70,7 +70,7 @@ Phase 3 Editor authoring 可用性修复后再次通过统一门禁：Core 31、
 
 Tactics Tooling 随后从 Bottom `EditorDock` 迁为官方 Main Screen Plugin，在中央工作区通过 `Tactics Tooling` 入口切换；内部 Graph/SubViewport 改为 64/36 左右分栏。首次热重载暴露了 live tool 字段从 `VSplitContainer` 直接改为 `HSplitContainer` 时的 `RestoreGodotObjectData` 类型恢复错误，字段收敛为共同 `SplitContainer` 基类后，后续 Build/Reload 无新增错误。横向初始比例使用 child stretch ratio，而不是在 dragger 初始化前调用 `ClampSplitOffset`；Preview 使用居中的 `AspectRatioContainer(Fit)` 保持 `640:180`，避免 SubViewport 随右侧面板非等比压缩。Graph 的 `SaveWithRollback` 在 `ResourceSaver.Save` 后恢复原 Resource UID，避免语义 revision 正确但迁移 ledger target hash 漂移；成功保存的 UID 保留、失败保存的 byte rollback 和 Preview Fit 配置由 GdUnit 覆盖。完整 Editor 重启后，Main Screen、6 节点/4 edge、Undo/Redo、Save、Assembly Reload、Runtime 与等比 Preview 人工验收均通过；随后完整门禁为 Core 31、Application 13、Unity Oracle 9、GdUnit 6，headless Editor 日志干净。
 
-Phase 4 执行前项目级 MCP Profile 已从 `phase3-observe` 切换到 `content-authoring`，统一入口确认 pinned Attach 与 23 个白名单工具；写入前均确认 live Editor session 为 0，因此 Unity AssetDatabase export 通过后台 Unity batchmode，Godot 生成/导入/双 renderer/截图均通过 console/headless 完成，没有用前台 UI 自动化替代人工验收。Unit 方向/Reset/山羊身体 shader/1600×900 等比窗口及 Sprite pivot/Shadow PPU/Transform 修复后，Gallery 又把旧贴图中心排版修正为独立 `ground-baseline-v1` 脚底/尸体落点布局；自动门禁为 Core 35、Application 19、Unity Oracle 11、迁移 Python 86、GdUnit 11、Agent policy 8、OKF 14，Release 不含测试依赖；batch 继续保持 `Generated/UnityOwned + manual_visual_qa_pending`。
+Phase 4 执行前项目级 MCP Profile 已从 `phase3-observe` 切换到 `content-authoring`，统一入口确认 pinned Attach 与 23 个白名单工具；写入前均确认 live Editor session 为 0，因此 Unity AssetDatabase export 通过后台 Unity batchmode，Godot 生成/导入/双 renderer/截图均通过 console/headless 完成。Unit 方向/Reset/山羊身体 shader、Sprite pivot/Shadow PPU/Transform 修复后，Gallery 使用脚底/尸体落点合同。项目已从 1280×720 stretch 源改为原生 1600×900 逻辑/窗口画布；Spawn 固定出生格收在1..8，并验证8px网格外框与24px viewport完整 Body/Shadow AABB安全区。运行 fixture、软件截图、ResourceSaver semantic、receipt 和 GdUnit 共用 `native-1600x900-v1`。canonical Editor 人工验收已覆盖四向、死亡/Reset、Goat tint、比例/Shadow、resize、Spawn 外框与 Assembly Reload/Output；batch 为 `Validated/UnityOwned + passed_for_migrated_project_owned_unit_visuals`。
 
 Phase 5A 在不重启 GUI Editor 的情况下完成：冻结的 14 Buff/3 Consumable/12 Equipment draft 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment Resource，`buff.poison` 只引用既有 Poison Spear Resource；分批 Catalog 为 29 项，canonical Catalog 合并为 47 个唯一 ContentId。ResourceSaver 两轮对 30 个 artifact byte-identical，独立 Editor scan 固化 UID；Compatibility 与 Forward+ 均运行 typed Catalog/Status/Consumable/Equipment smoke，GdUnit 覆盖外部 Poison ownership、audit-only icon、typed resource 和全局 UID 唯一性。该批不含 PNG、Material、Shader 或第三方 payload，因此达到 `Validated/UnityOwned + not_applicable_no_visual_payload`，不会改变仍待人工验收的 Phase 4 状态。
 

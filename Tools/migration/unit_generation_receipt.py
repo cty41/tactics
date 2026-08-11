@@ -6,12 +6,14 @@ import argparse
 import hashlib
 import json
 import re
+import struct
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 
 _HASH = re.compile(r"^sha256:[0-9a-f]{64}$")
+_EXPECTED_CAPTURE_SIZE = (1600, 900)
 
 
 def _sha256(path: Path) -> str:
@@ -20,6 +22,17 @@ def _sha256(path: Path) -> str:
 
 def _load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _png_size(path: Path) -> tuple[int, int]:
+    header = path.read_bytes()[:24]
+    if (
+        len(header) != 24
+        or header[:8] != b"\x89PNG\r\n\x1a\n"
+        or header[12:16] != b"IHDR"
+    ):
+        raise ValueError(f"Unit capture is not a valid PNG: {path}")
+    return struct.unpack(">II", header[16:24])
 
 
 def compile_unit_generation_receipt(
@@ -31,7 +44,9 @@ def compile_unit_generation_receipt(
     texture_ledger: Mapping[str, Any],
     texture_ledger_hash: str,
     gallery_capture_hash: str,
+    gallery_capture_size: tuple[int, int],
     spawn_capture_hash: str,
+    spawn_capture_size: tuple[int, int],
     goat_tint_shader_hash: str,
 ) -> dict[str, Any]:
     """Bind final ResourceSaver and texture artifacts to the frozen Unity export."""
@@ -60,6 +75,11 @@ def compile_unit_generation_receipt(
         raise ValueError("Unit generation ledger must contain exactly 16 artifacts")
     if len(texture_ledger["artifacts"]) != 19:
         raise ValueError("Unit texture ledger must contain exactly 19 artifacts")
+    if (
+        gallery_capture_size != _EXPECTED_CAPTURE_SIZE
+        or spawn_capture_size != _EXPECTED_CAPTURE_SIZE
+    ):
+        raise ValueError("Unit captures must use the native 1600x900 canvas")
 
     dependency_audit = draft["dependencyAudit"]
     tint_contract = draft["tintContract"]
@@ -86,12 +106,42 @@ def compile_unit_generation_receipt(
         "textureLedgerHash": texture_ledger_hash,
         "galleryCapture": "Tools/migration/out/pure-run-units-v1-gallery.png",
         "galleryCaptureHash": gallery_capture_hash,
+        "galleryCaptureSize": list(gallery_capture_size),
         "spawnCapture": "Tools/migration/out/pure-run-units-v1-spawn.png",
         "spawnCaptureHash": spawn_capture_hash,
+        "spawnCaptureSize": list(spawn_capture_size),
         "captureMode": (
             "godot-image-software-reference-with-goat-body-mask-"
-            "sprite-pivot-and-ground-baseline-v1"
+            "sprite-pivot-and-native-1600x900-v2"
         ),
+        "previewCanvas": {
+            "contract": "native-1600x900-v1",
+            "logicalSize": {"width": 1600, "height": 900},
+            "windowOverride": {"width": 1600, "height": 900},
+            "stretchMode": "canvas_items",
+            "stretchAspect": "keep",
+            "gallery": {
+                "layoutContract": "ground-baseline-native-1600x900-v2",
+                "actorScale": 0.725,
+                "firstGround": [212.5, 193.75],
+                "spacing": [387.5, 287.5],
+                "labelOffset": [-131.25, 52.5],
+                "labelSize": [262.5, 42.5],
+                "fontSize": 20,
+            },
+            "spawn": {
+                "layoutContract": "native-1600x900-spawn-v1",
+                "gridOrigin": [440, 90],
+                "cellSize": 72,
+                "actorScale": 0.375,
+                "viewportSafeInset": 24,
+                "boardSafeInset": 8,
+                "overflowPolicy": (
+                    "internal-grid-overflow-allowed; "
+                    "board-frame-and-viewport-clipping-forbidden"
+                ),
+            },
+        },
         "contentEntryCount": 13,
         "unitDefinitionCount": len(draft["units"]),
         "texturePayloadCount": len(draft["textureAssets"]),
@@ -142,9 +192,19 @@ def compile_unit_generation_receipt(
             "programmaticGalleryCapture": "passed",
             "programmaticSpawnCapture": "passed",
         },
+        "manualValidation": {
+            "acceptedOn": "2026-08-11",
+            "environment": "canonical-godot-editor",
+            "checks": [
+                "gallery-facing-death-reset-and-goat-tint",
+                "native-1600x900-layout-and-aspect-preservation",
+                "spawn-board-frame-and-viewport-bounds",
+                "assembly-reload-and-clean-output",
+            ],
+        },
         "ownership": "UnityOwned",
-        "state": "Generated",
-        "visualAcceptance": "manual_visual_qa_pending",
+        "state": "Validated",
+        "visualAcceptance": "passed_for_migrated_project_owned_unit_visuals",
     }
 
 
@@ -169,7 +229,9 @@ def main() -> int:
         _load(arguments.texture_ledger),
         _sha256(arguments.texture_ledger),
         _sha256(arguments.gallery_capture),
+        _png_size(arguments.gallery_capture),
         _sha256(arguments.spawn_capture),
+        _png_size(arguments.spawn_capture),
         _sha256(arguments.goat_tint_shader),
     )
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

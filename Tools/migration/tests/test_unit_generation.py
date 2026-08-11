@@ -37,13 +37,21 @@ class UnitGenerationTests(unittest.TestCase):
         self.generation_ledger = json.loads(GENERATION_LEDGER_PATH.read_text(encoding="utf-8"))
         self.texture_ledger = json.loads(TEXTURE_LEDGER_PATH.read_text(encoding="utf-8"))
 
-    def test_batch_is_validated_but_visual_acceptance_remains_manual(self):
+    def test_batch_and_receipt_record_scoped_manual_visual_acceptance(self):
         self.assertEqual("UnityOwned", self.batch["owner"])
-        self.assertEqual("Generated", self.batch["status"])
-        self.assertEqual("manual_visual_qa_pending", self.batch["validation"]["visualAcceptance"])
+        self.assertEqual("Validated", self.batch["status"])
+        self.assertEqual(
+            "passed_for_migrated_project_owned_unit_visuals",
+            self.batch["validation"]["visualAcceptance"],
+        )
         self.assertEqual("UnityOwned", self.receipt["ownership"])
-        self.assertEqual("Generated", self.receipt["state"])
-        self.assertEqual("manual_visual_qa_pending", self.receipt["visualAcceptance"])
+        self.assertEqual("Validated", self.receipt["state"])
+        self.assertEqual(
+            "passed_for_migrated_project_owned_unit_visuals",
+            self.receipt["visualAcceptance"],
+        )
+        self.assertEqual("2026-08-11", self.receipt["manualValidation"]["acceptedOn"])
+        self.assertEqual(4, len(self.receipt["manualValidation"]["checks"]))
 
     def test_resource_ledger_targets_match_generated_bytes_and_unique_uids(self):
         artifacts = self.generation_ledger["artifacts"]
@@ -77,9 +85,28 @@ class UnitGenerationTests(unittest.TestCase):
         self.assertFalse(self.receipt["dependencyBoundary"]["thirdPartyPayloadCopied"])
         self.assertEqual(
             "godot-image-software-reference-with-goat-body-mask-"
-            "sprite-pivot-and-ground-baseline-v1",
+            "sprite-pivot-and-native-1600x900-v2",
             self.receipt["captureMode"],
         )
+        self.assertEqual([1600, 900], self.receipt["galleryCaptureSize"])
+        self.assertEqual([1600, 900], self.receipt["spawnCaptureSize"])
+        self.assertEqual(
+            {
+                "width": 1600,
+                "height": 900,
+            },
+            self.receipt["previewCanvas"]["logicalSize"],
+        )
+        self.assertEqual(
+            "ground-baseline-native-1600x900-v2",
+            self.receipt["previewCanvas"]["gallery"]["layoutContract"],
+        )
+        self.assertEqual(
+            "internal-grid-overflow-allowed; "
+            "board-frame-and-viewport-clipping-forbidden",
+            self.receipt["previewCanvas"]["spawn"]["overflowPolicy"],
+        )
+        self.assertEqual(8, self.receipt["previewCanvas"]["spawn"]["boardSafeInset"])
         self.assertEqual("unity-goat-body-tint-v1", self.receipt["tintContract"]["id"])
         self.assertEqual(sha256(SHADER_PATH), self.receipt["tintContract"]["godotShaderSha256"])
         self.assertFalse(self.receipt["tintContract"]["unityPayloadCopied"])
@@ -111,7 +138,29 @@ class UnitGenerationTests(unittest.TestCase):
                 self.texture_ledger,
                 sha256(TEXTURE_LEDGER_PATH),
                 "sha256:" + "1" * 64,
+                (1600, 900),
                 "sha256:" + "2" * 64,
+                (1600, 900),
+                "sha256:" + "3" * 64,
+            )
+
+    def test_receipt_compiler_rejects_non_native_capture_dimensions(self):
+        if not DRAFT_PATH.is_file():
+            self.skipTest("real typed draft is a disposable local artifact")
+        draft = json.loads(DRAFT_PATH.read_text(encoding="utf-8"))
+        with self.assertRaisesRegex(ValueError, "1600x900"):
+            compile_unit_generation_receipt(
+                self.export_receipt,
+                draft,
+                sha256(DRAFT_PATH),
+                self.generation_ledger,
+                sha256(GENERATION_LEDGER_PATH),
+                self.texture_ledger,
+                sha256(TEXTURE_LEDGER_PATH),
+                "sha256:" + "1" * 64,
+                (1280, 720),
+                "sha256:" + "2" * 64,
+                (1600, 900),
                 "sha256:" + "3" * 64,
             )
 

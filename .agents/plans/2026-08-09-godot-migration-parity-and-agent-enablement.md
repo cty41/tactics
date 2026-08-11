@@ -65,8 +65,8 @@
 
 按 Unit → Buff/Item → Skill → AI/Encounter → Pure Run/Persistence → Scene/UI/Input → Presentation/VFX/Audio 批量迁移；最终完成新开档到继续游戏闭环，并在发布阶段首次执行 Godot Windows Release/PCK Smoke。
 
-- [ ] 当前仍保留子计划 [Godot Phase 4：Pure Run Unit 批次迁移](2026-08-10-godot-phase4-unit-batch-migration.md)：12 Unit 的定义、基础视觉、Catalog、Factory、Gallery/Spawn 与自动门禁已完成，只剩人工验收；不进入 Skill、AI/Encounter、Persistence 或后续 Profile。
-- [ ] Phase 4 自动实施已在 `2b341cb3` checkpoint，仍等待 Unit Gallery/Spawn/Reload 人工视觉闸门，不因后续无视觉批次而晋升。
+- [x] Phase 4 Pure Run Unit 已收口：12 Unit、19 个项目自有 PNG、共享 Actor、13 项 Catalog、Gallery/Spawn、四向/死亡/Shadow/Goat tint 与原生 1600×900 布局通过自动及 canonical Editor 人工验收，batch 达到 `Validated/UnityOwned`。
+- [x] Phase 4 完成计划已从 active plan 目录删除，由 Git 历史保留；该晋升只覆盖已迁移的项目自有 Unit 视觉，不扩大到 deferred/第三方依赖或后续类别。
 - [x] Phase 5A Buff/Item 已收口：冻结 14 Buff/3 Consumable/12 Equipment，完成 `status-runtime-v1`、`battle-transition-v3`、Golden schema v7、28 个新 Resource、29 项分批 Catalog 与 47 项 canonical Catalog；双生成、UID、Compatibility/Forward+、GdUnit 与 receipt 门禁通过后达到 `Validated/UnityOwned`，且没有视觉 payload。完成计划已从 active plan 目录删除，由 Git 历史保留。
 
 ## 自动与人工门禁

@@ -152,7 +152,11 @@ public partial class TacticsMigrationRoot : Node
             ?? throw new InvalidOperationException("Pure Run Unit ContentCatalog is missing.");
         UnitBatchValidator.Validate(catalog);
 
-        Image canvas = Image.CreateEmpty(1280, 720, false, Image.Format.Rgba8);
+        Image canvas = Image.CreateEmpty(
+            UnitPreviewLayout.CanvasWidth,
+            UnitPreviewLayout.CanvasHeight,
+            false,
+            Image.Format.Rgba8);
         canvas.Fill(GodotUnitGallery.PreviewBackgroundColor);
         GodotResourceEntry[] entries = catalog.Entries
             .Where(entry => entry.ResourceTypeIdValue == "unit")
@@ -208,19 +212,31 @@ public partial class TacticsMigrationRoot : Node
         IReadOnlyList<BattleUnitState> states = fixture.CreateStates();
         fixture.Free();
 
-        Image canvas = Image.CreateEmpty(1280, 720, false, Image.Format.Rgba8);
+        Image canvas = Image.CreateEmpty(
+            UnitPreviewLayout.CanvasWidth,
+            UnitPreviewLayout.CanvasHeight,
+            false,
+            Image.Format.Rgba8);
         canvas.Fill(GodotUnitSpawnFixture.PreviewBackgroundColor);
-        const int originX = 320;
-        const int originY = 40;
-        const int cellSize = 64;
-        for (int line = 0; line <= 10; line++)
+        int originX = Mathf.RoundToInt(GodotUnitSpawnFixture.GridOrigin.X);
+        int originY = Mathf.RoundToInt(GodotUnitSpawnFixture.GridOrigin.Y);
+        int cellSize = Mathf.RoundToInt(GodotUnitSpawnFixture.CellSize);
+        for (int line = 0; line <= GodotUnitSpawnFixture.GridSize; line++)
         {
             int offset = line * cellSize;
             canvas.FillRect(
-                new Rect2I(originX + offset, originY, 1, cellSize * 10 + 1),
+                new Rect2I(
+                    originX + offset,
+                    originY,
+                    1,
+                    cellSize * GodotUnitSpawnFixture.GridSize + 1),
                 GodotUnitSpawnFixture.PreviewGridColor);
             canvas.FillRect(
-                new Rect2I(originX, originY + offset, cellSize * 10 + 1, 1),
+                new Rect2I(
+                    originX,
+                    originY + offset,
+                    cellSize * GodotUnitSpawnFixture.GridSize + 1,
+                    1),
                 GodotUnitSpawnFixture.PreviewGridColor);
         }
 
@@ -232,16 +248,17 @@ public partial class TacticsMigrationRoot : Node
                 throw new InvalidOperationException(
                     $"Unit spawn capture cannot load '{state.Unit.DefinitionId.Value}'.");
             }
+            Vector2 cellCenter = GodotUnitSpawnFixture.GetCellCenter(state.Unit.Position);
             var center = new Vector2I(
-                originX + state.Unit.Position.X * cellSize + cellSize / 2,
-                originY + state.Unit.Position.Y * cellSize + cellSize / 2);
+                Mathf.RoundToInt(cellCenter.X),
+                Mathf.RoundToInt(cellCenter.Y));
             CompositeUnit(
                 canvas,
                 definition,
                 (GodotUnitFacing)(index % 4),
                 false,
                 center,
-                0.3f);
+                GodotUnitSpawnFixture.ActorScale);
         }
 
         string outputPath = ProjectSettings.GlobalizePath(

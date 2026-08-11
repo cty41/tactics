@@ -11,13 +11,17 @@ public partial class GodotUnitGallery : Node2D
     public static readonly Color PreviewBackgroundColor = new("596875");
 
     // Gallery rows use Actor ground/corpse anchors; texture centers are derived from sprite pivots.
-    internal const float ActorScale = 0.58f;
-    internal const float FirstColumnGroundX = 170f;
-    internal const float FirstRowGroundY = 155f;
-    internal const float ColumnSpacing = 310f;
-    internal const float RowSpacing = 230f;
-    internal const float LabelOffsetX = -105f;
-    internal const float LabelOffsetY = 42f;
+    internal const string LayoutContract = "ground-baseline-native-1600x900-v2";
+    internal const float ActorScale = 0.725f;
+    internal const float FirstColumnGroundX = 212.5f;
+    internal const float FirstRowGroundY = 193.75f;
+    internal const float ColumnSpacing = 387.5f;
+    internal const float RowSpacing = 287.5f;
+    internal const float LabelOffsetX = -131.25f;
+    internal const float LabelOffsetY = 52.5f;
+    internal const float LabelWidth = 262.5f;
+    internal const float LabelHeight = 42.5f;
+    internal const int PreviewFontSize = 20;
 
     private const int ColumnCount = 4;
 
@@ -86,7 +90,7 @@ public partial class GodotUnitGallery : Node2D
         var background = new ColorRect
         {
             Color = PreviewBackgroundColor,
-            Size = new Vector2(1280f, 720f),
+            Size = UnitPreviewLayout.CanvasRect.Size,
             MouseFilter = Control.MouseFilterEnum.Ignore,
             ZIndex = -100
         };
@@ -95,20 +99,22 @@ public partial class GodotUnitGallery : Node2D
         var instructions = new Label
         {
             Text = "1 South (DR)  |  2 North (UL)  |  3 East (UL mirrored)  |  4 West (DR mirrored)",
-            Position = new Vector2(20f, 4f),
-            Size = new Vector2(1240f, 28f),
+            Position = new Vector2(25f, 5f),
+            Size = new Vector2(1550f, 35f),
             HorizontalAlignment = HorizontalAlignment.Center,
             Modulate = new Color("e3edf7")
         };
+        instructions.AddThemeFontSizeOverride("font_size", PreviewFontSize);
         AddChild(instructions);
 
         _status = new Label
         {
-            Position = new Vector2(20f, 30f),
-            Size = new Vector2(1240f, 28f),
+            Position = new Vector2(25f, 37.5f),
+            Size = new Vector2(1550f, 35f),
             HorizontalAlignment = HorizontalAlignment.Center,
             Modulate = new Color("9ec7df")
         };
+        _status.AddThemeFontSizeOverride("font_size", PreviewFontSize);
         AddChild(_status);
         UpdateStatus();
 
@@ -138,10 +144,11 @@ public partial class GodotUnitGallery : Node2D
             {
                 Text = definition.DisplayName,
                 Position = GetLabelPosition(index),
-                Size = new Vector2(210f, 34f),
+                Size = new Vector2(LabelWidth, LabelHeight),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Modulate = new Color("e3edf7")
             };
+            label.AddThemeFontSizeOverride("font_size", PreviewFontSize);
             AddChild(label);
         }
     }

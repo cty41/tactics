@@ -9,14 +9,68 @@
   "exportHash": "sha256:27654bc63e4e902be8b51fd883f505ffe84b1268fe8d8a31e37946a0b869c0b1",
   "typedDraftHash": "sha256:90989c11c55fb405f00b6431d3443b81728b5551b4a7a31985adb235ed6ddecc",
   "generationLedger": "Tools/migration/manifest/state/pure-run-units-v1.json",
-  "generationLedgerHash": "sha256:ea214d3737aaa34c75bdc72cebe54ccedc4bb5b7969a8bc50ab3940ca24733d7",
+  "generationLedgerHash": "sha256:42ad36af83ace3dc79e3ee44465b861661e6c002a2d9b5b12c15a2ebb9d3e1c1",
   "textureLedger": "Tools/migration/manifest/state/pure-run-unit-textures-v1.json",
   "textureLedgerHash": "sha256:76f95c00d5d7aa9169383229dad785838dd4bfc156a56909497456c620a9830f",
   "galleryCapture": "Tools/migration/out/pure-run-units-v1-gallery.png",
-  "galleryCaptureHash": "sha256:d08d45900c1d0b3e514fe8f8074d49bbdb79a54cacc29ca44c9bccd14b755c6d",
+  "galleryCaptureHash": "sha256:314051a2d7c315f28578bee08a0b7f4ca4f27fb38aabec4886dc47087fbbfa68",
+  "galleryCaptureSize": [
+    1600,
+    900
+  ],
   "spawnCapture": "Tools/migration/out/pure-run-units-v1-spawn.png",
-  "spawnCaptureHash": "sha256:89f5c8aa4819f82c6a25f7fc7a6ed0ffdd04a35613f52851690556c02d5d4099",
-  "captureMode": "godot-image-software-reference-with-goat-body-mask-sprite-pivot-and-ground-baseline-v1",
+  "spawnCaptureHash": "sha256:325408862040fe7173fdc0bdce48d503b508acf4d5ea862a8cbaad20008373b7",
+  "spawnCaptureSize": [
+    1600,
+    900
+  ],
+  "captureMode": "godot-image-software-reference-with-goat-body-mask-sprite-pivot-and-native-1600x900-v2",
+  "previewCanvas": {
+    "contract": "native-1600x900-v1",
+    "logicalSize": {
+      "width": 1600,
+      "height": 900
+    },
+    "windowOverride": {
+      "width": 1600,
+      "height": 900
+    },
+    "stretchMode": "canvas_items",
+    "stretchAspect": "keep",
+    "gallery": {
+      "layoutContract": "ground-baseline-native-1600x900-v2",
+      "actorScale": 0.725,
+      "firstGround": [
+        212.5,
+        193.75
+      ],
+      "spacing": [
+        387.5,
+        287.5
+      ],
+      "labelOffset": [
+        -131.25,
+        52.5
+      ],
+      "labelSize": [
+        262.5,
+        42.5
+      ],
+      "fontSize": 20
+    },
+    "spawn": {
+      "layoutContract": "native-1600x900-spawn-v1",
+      "gridOrigin": [
+        440,
+        90
+      ],
+      "cellSize": 72,
+      "actorScale": 0.375,
+      "viewportSafeInset": 24,
+      "boardSafeInset": 8,
+      "overflowPolicy": "internal-grid-overflow-allowed; board-frame-and-viewport-clipping-forbidden"
+    }
+  },
   "contentEntryCount": 13,
   "unitDefinitionCount": 12,
   "texturePayloadCount": 19,
@@ -92,7 +146,17 @@
     "programmaticGalleryCapture": "passed",
     "programmaticSpawnCapture": "passed"
   },
+  "manualValidation": {
+    "acceptedOn": "2026-08-11",
+    "environment": "canonical-godot-editor",
+    "checks": [
+      "gallery-facing-death-reset-and-goat-tint",
+      "native-1600x900-layout-and-aspect-preservation",
+      "spawn-board-frame-and-viewport-bounds",
+      "assembly-reload-and-clean-output"
+    ]
+  },
   "ownership": "UnityOwned",
-  "state": "Generated",
-  "visualAcceptance": "manual_visual_qa_pending"
+  "state": "Validated",
+  "visualAcceptance": "passed_for_migrated_project_owned_unit_visuals"
 }

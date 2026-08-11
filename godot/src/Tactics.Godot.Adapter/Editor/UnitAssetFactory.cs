@@ -149,11 +149,22 @@ public static class UnitAssetFactory
                     "1=south", "2=north", "3=east", "4=west", "d=death", "t=goat-tint", "r=reset"
                 },
                 reset = "south+living+goat-tint-enabled",
-                layoutContract = "ground-baseline-v1",
+                canvas = new
+                {
+                    width = UnitPreviewLayout.CanvasWidth,
+                    height = UnitPreviewLayout.CanvasHeight,
+                    contract = UnitPreviewLayout.CanvasContract
+                },
+                layoutContract = GodotUnitGallery.LayoutContract,
                 actorScale = GodotUnitGallery.ActorScale,
+                firstColumnGroundX = GodotUnitGallery.FirstColumnGroundX,
                 firstRowGroundY = GodotUnitGallery.FirstRowGroundY,
+                columnSpacing = GodotUnitGallery.ColumnSpacing,
                 rowSpacing = GodotUnitGallery.RowSpacing,
+                labelOffsetX = GodotUnitGallery.LabelOffsetX,
                 labelOffsetY = GodotUnitGallery.LabelOffsetY,
+                labelSize = new { width = GodotUnitGallery.LabelWidth, height = GodotUnitGallery.LabelHeight },
+                fontSize = GodotUnitGallery.PreviewFontSize,
                 background = GodotUnitGallery.PreviewBackgroundColor.ToHtml(),
                 fixture = nameof(GodotUnitGallery)
             });
@@ -162,6 +173,23 @@ public static class UnitAssetFactory
                 unitCount = 12,
                 board = new { width = 10, height = 10 },
                 spawnCells = GodotUnitSpawnFixture.FixedSpawnCells,
+                canvas = new
+                {
+                    width = UnitPreviewLayout.CanvasWidth,
+                    height = UnitPreviewLayout.CanvasHeight,
+                    contract = UnitPreviewLayout.CanvasContract
+                },
+                layoutContract = GodotUnitSpawnFixture.LayoutContract,
+                gridOrigin = new
+                {
+                    x = GodotUnitSpawnFixture.GridOrigin.X,
+                    y = GodotUnitSpawnFixture.GridOrigin.Y
+                },
+                cellSize = GodotUnitSpawnFixture.CellSize,
+                actorScale = GodotUnitSpawnFixture.ActorScale,
+                viewportSafeInset = GodotUnitSpawnFixture.ViewportSafeInset,
+                boardSafeInset = GodotUnitSpawnFixture.BoardSafeInset,
+                overflowPolicy = GodotUnitSpawnFixture.OverflowPolicy,
                 background = GodotUnitSpawnFixture.PreviewBackgroundColor.ToHtml(),
                 grid = GodotUnitSpawnFixture.PreviewGridColor.ToHtml(),
                 fixture = nameof(GodotUnitSpawnFixture),
