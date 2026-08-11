@@ -155,7 +155,7 @@ class OracleMatrixTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        self.assertEqual(golden["schemaVersion"], 7)
+        self.assertEqual(golden["schemaVersion"], 8)
         self.assertTrue(golden["randomCases"])
         self.assertTrue(golden["battleScenarios"])
         self.assertTrue(golden["statusCases"])

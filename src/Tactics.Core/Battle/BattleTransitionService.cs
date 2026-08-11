@@ -4,6 +4,7 @@ using Tactics.Core.Content;
 using Tactics.Core.Items;
 using Tactics.Core.Pathfinding;
 using Tactics.Core.Statuses;
+using Tactics.Core.Skills;
 using Tactics.Core.Units;
 
 namespace Tactics.Core.Battle;
@@ -21,11 +22,12 @@ public sealed class BattleTransitionService
     /// <summary>
     /// Identifies the versioned normalized command/state/event contract introduced by the migration.
     /// </summary>
-    public const string ContractId = "battle-transition-v3";
+    public const string ContractId = "battle-transition-v4";
 
     private readonly IPathfinder _pathfinder;
     private readonly PoisonSpearResolver _poisonSpearResolver;
     private readonly StatusRuntimeService _statusRuntime;
+    private readonly SkillRuntimeService _skillRuntime;
 
     /// <summary>
     /// Creates the deterministic transition service.
@@ -40,6 +42,7 @@ public sealed class BattleTransitionService
         _pathfinder = pathfinder ?? new DeterministicDijkstraPathfinder();
         _poisonSpearResolver = new PoisonSpearResolver(lineOfSight);
         _statusRuntime = statusRuntime ?? new StatusRuntimeService();
+        _skillRuntime = new SkillRuntimeService(lineOfSight, _statusRuntime);
     }
 
     /// <summary>
@@ -66,10 +69,31 @@ public sealed class BattleTransitionService
         {
             MoveUnitCommand move => ApplyMove(state, actor, move),
             UsePoisonSpearCommand poisonSpear => ApplyPoisonSpear(state, actor, poisonSpear),
+            UseSkillCommand skill => ApplySkill(state, actor, skill),
             UseConsumableCommand consumable => ApplyConsumable(state, actor, consumable),
             EndTurnCommand endTurn => ApplyEndTurn(state, endTurn),
             _ => Rejected(state, command.ActorId, "unsupported_command")
         };
+    }
+
+    private BattleTransition ApplySkill(BattleState state, BattleUnitState actor, UseSkillCommand command)
+    {
+        if (command.Definition.ExecutionKind != SkillExecutionKind.PoisonSpear)
+            return _skillRuntime.Apply(state, actor, command);
+        if (command.TargetId is not UnitInstanceId targetId)
+            return Rejected(state, command.ActorId, "target_not_found");
+        return ApplyPoisonSpear(state, actor, new UsePoisonSpearCommand(
+            command.ActorId,
+            targetId,
+            new PoisonSpearDefinition(
+                command.Definition.ContentId,
+                command.Definition.MaxRange,
+                command.Definition.Damage,
+                command.Definition.StatusDuration,
+                command.Definition.StatusContentId,
+                poisonDamagePerTurn: 2,
+                manaCost: command.Definition.ManaCost,
+                dropSearchRadius: 3)));
     }
 
     private BattleTransition ApplyMove(BattleState state, BattleUnitState actor, MoveUnitCommand command)
@@ -212,6 +236,8 @@ public sealed class BattleTransitionService
             return Rejected(state, command.ActorId, "consumable_target_not_self");
         if (Manhattan(actor.Unit.Position, target.Unit.Position) > command.Definition.MaxRange)
             return Rejected(state, command.ActorId, "consumable_target_out_of_range");
+        if (command.Definition.EffectKind == ConsumableEffectKind.RestoreHealth && !target.CanReceiveStandardHealing)
+            return Rejected(state, command.ActorId, "target_rejects_standard_healing");
 
         var events = new List<BattleEvent>
         {

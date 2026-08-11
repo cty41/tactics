@@ -138,6 +138,31 @@ public sealed record ConsumableChargesChangedEvent(
     ItemInstanceId ItemInstanceId,
     int RemainingCharges) : BattleEvent;
 
+public sealed record CombatRollResolvedEvent(
+    UnitInstanceId SourceId,
+    UnitInstanceId TargetId,
+    ContentId SkillId,
+    int Roll,
+    int Threshold,
+    string Outcome,
+    ulong RandomState) : BattleEvent;
+
+public sealed record SemanticCueEmittedEvent(
+    UnitInstanceId SourceId,
+    UnitInstanceId? TargetId,
+    ContentId SkillId,
+    string CueId) : BattleEvent;
+
+public sealed record CorpseConsumedEvent(GridPoint Cell, UnitInstanceId SourceId) : BattleEvent;
+
+public sealed record UnitSummonedEvent(
+    UnitInstanceId OwnerId,
+    UnitInstanceId SummonId,
+    ContentId DefinitionId,
+    GridPoint Cell) : BattleEvent;
+
+public sealed record SpearRecoveredEvent(UnitInstanceId OwnerId, GridPoint Cell) : BattleEvent;
+
 /// <summary>
 /// Reports that an Amazon committed its held spear to a deterministic board cell.
 /// </summary>

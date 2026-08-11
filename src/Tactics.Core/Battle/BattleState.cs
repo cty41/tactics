@@ -19,6 +19,7 @@ public sealed class BattleState
     private readonly IReadOnlyDictionary<UnitInstanceId, BattleUnitState> _units;
     private readonly IReadOnlyList<UnitInstanceId> _turnOrder;
     private readonly IReadOnlyDictionary<UnitInstanceId, GridPoint> _droppedSpears;
+    private readonly IReadOnlyCollection<GridPoint> _corpses;
 
     /// <summary>
     /// Creates a battle snapshot.
@@ -36,7 +37,8 @@ public sealed class BattleState
         int round = 1,
         int activeIndex = 0,
         ulong randomState = 0,
-        IReadOnlyDictionary<UnitInstanceId, GridPoint>? droppedSpears = null)
+        IReadOnlyDictionary<UnitInstanceId, GridPoint>? droppedSpears = null,
+        IReadOnlyCollection<GridPoint>? corpses = null)
     {
         ArgumentNullException.ThrowIfNull(board);
         ArgumentNullException.ThrowIfNull(units);
@@ -82,6 +84,9 @@ public sealed class BattleState
             spearMap.Add(ownerId, cell);
         }
         _droppedSpears = new ReadOnlyDictionary<UnitInstanceId, GridPoint>(spearMap);
+        GridPoint[] corpseArray = (corpses ?? Array.Empty<GridPoint>()).Distinct().OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray();
+        if (corpseArray.Any(cell => !board.Contains(cell))) throw new ArgumentException("Corpse is outside the board.", nameof(corpses));
+        _corpses = Array.AsReadOnly(corpseArray);
     }
 
     /// <summary>
@@ -123,6 +128,7 @@ public sealed class BattleState
     /// Gets Amazon spear locations keyed by their owning unit. Missing means the owner is holding the spear.
     /// </summary>
     public IReadOnlyDictionary<UnitInstanceId, GridPoint> DroppedSpears => _droppedSpears;
+    public IReadOnlyCollection<GridPoint> Corpses => _corpses;
 
     /// <summary>
     /// Gets the versioned random algorithm associated with <see cref="RandomState"/>.
@@ -151,7 +157,7 @@ public sealed class BattleState
         {
             [unit.Unit.InstanceId] = unit
         };
-        return new BattleState(Board, units.Values, _turnOrder, Round, ActiveIndex, RandomState, _droppedSpears);
+        return new BattleState(Board, units.Values, _turnOrder, Round, ActiveIndex, RandomState, _droppedSpears, _corpses);
     }
 
     /// <summary>
@@ -179,7 +185,7 @@ public sealed class BattleState
         UnitInstanceId[] reordered = stablePrefix
             .Concat(pending.Remaining.Select(entry => entry.UnitId))
             .ToArray();
-        return new BattleState(Board, updated._units.Values, reordered, Round, ActiveIndex, RandomState, _droppedSpears);
+        return new BattleState(Board, updated._units.Values, reordered, Round, ActiveIndex, RandomState, _droppedSpears, _corpses);
     }
 
     /// <summary>
@@ -199,7 +205,7 @@ public sealed class BattleState
         var units = new Dictionary<UnitInstanceId, BattleUnitState>(_units);
         UnitInstanceId incomingUnitId = _turnOrder[nextIndex];
         units[incomingUnitId] = units[incomingUnitId].PrepareForTurn();
-        return new BattleState(Board, units.Values, _turnOrder, nextRound, nextIndex, RandomState, _droppedSpears);
+        return new BattleState(Board, units.Values, _turnOrder, nextRound, nextIndex, RandomState, _droppedSpears, _corpses);
     }
 
     /// <summary>
@@ -228,7 +234,46 @@ public sealed class BattleState
         {
             [ownerId] = cell
         };
-        return new BattleState(Board, _units.Values, _turnOrder, Round, ActiveIndex, RandomState, spears);
+        return new BattleState(Board, _units.Values, _turnOrder, Round, ActiveIndex, RandomState, spears, _corpses);
+    }
+
+    public BattleState WithoutDroppedSpear(UnitInstanceId ownerId)
+    {
+        var spears = new Dictionary<UnitInstanceId, GridPoint>(_droppedSpears);
+        spears.Remove(ownerId);
+        return new BattleState(Board, _units.Values, _turnOrder, Round, ActiveIndex, RandomState, spears, _corpses);
+    }
+
+    public BattleState WithRandomState(ulong randomState) =>
+        new(Board, _units.Values, _turnOrder, Round, ActiveIndex, randomState, _droppedSpears, _corpses);
+
+    public BattleState WithCorpse(GridPoint cell)
+    {
+        if (!Board.Contains(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
+        return new BattleState(Board, _units.Values, _turnOrder, Round, ActiveIndex, RandomState, _droppedSpears, _corpses.Append(cell).ToArray());
+    }
+
+    public BattleState WithoutCorpse(GridPoint cell) =>
+        new(Board, _units.Values, _turnOrder, Round, ActiveIndex, RandomState, _droppedSpears, _corpses.Where(value => value != cell).ToArray());
+
+    public BattleState WithSummon(BattleUnitState summon, int maximumPerOwner = 1)
+    {
+        if (summon.SummonOwnerId is not UnitInstanceId ownerId || !_units.ContainsKey(ownerId))
+            throw new ArgumentException("Summon must reference an owner in the battle.", nameof(summon));
+        if (_units.ContainsKey(summon.Unit.InstanceId)) throw new ArgumentException("Summon ID already exists.", nameof(summon));
+        var units = new Dictionary<UnitInstanceId, BattleUnitState>(_units);
+        var order = _turnOrder.ToList();
+        BattleUnitState[] existing = units.Values.Where(unit => unit.SummonOwnerId == ownerId).OrderBy(unit => unit.Unit.SpawnOrdinal).ToArray();
+        while (existing.Length >= maximumPerOwner)
+        {
+            BattleUnitState removed = existing[0];
+            units.Remove(removed.Unit.InstanceId);
+            order.Remove(removed.Unit.InstanceId);
+            existing = existing.Skip(1).ToArray();
+        }
+        units.Add(summon.Unit.InstanceId, summon);
+        order.Add(summon.Unit.InstanceId);
+        return new BattleState(Board, units.Values, order, Round, ActiveIndex, RandomState, _droppedSpears, _corpses);
     }
 
     /// <summary>

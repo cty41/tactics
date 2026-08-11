@@ -2,6 +2,7 @@ using Tactics.Core.Board;
 using Tactics.Core.Combat;
 using Tactics.Core.Content;
 using Tactics.Core.Items;
+using Tactics.Core.Skills;
 using Tactics.Core.Units;
 
 namespace Tactics.Core.Battle;
@@ -32,6 +33,13 @@ public sealed record UsePoisonSpearCommand(
     UnitInstanceId ActorId,
     UnitInstanceId TargetId,
     PoisonSpearDefinition Definition) : BattleCommand(ActorId);
+
+/// <summary>Requests one normalized migrated skill against a unit or board cell.</summary>
+public sealed record UseSkillCommand(
+    UnitInstanceId ActorId,
+    UnitInstanceId? TargetId,
+    GridPoint TargetCell,
+    SkillDefinition Definition) : BattleCommand(ActorId);
 
 /// <summary>
 /// Requests use of one carried consumable against a validated battle target.

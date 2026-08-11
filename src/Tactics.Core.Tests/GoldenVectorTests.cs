@@ -23,7 +23,7 @@ public sealed class GoldenVectorTests
         GoldenDocument golden = LoadGolden();
         Assert.Multiple(() =>
         {
-            Assert.That(golden.SchemaVersion, Is.EqualTo(7));
+            Assert.That(golden.SchemaVersion, Is.EqualTo(8));
             Assert.That(golden.SourceOracle.UnityCommit, Is.EqualTo("168d1934"));
             Assert.That(golden.Board.Width, Is.EqualTo(BoardSpec.Width));
             Assert.That(golden.Board.Height, Is.EqualTo(BoardSpec.Height));

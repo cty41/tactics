@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Items;
+using Tactics.Core.Units;
 
 namespace Tactics.Core.Battle;
 
@@ -37,7 +38,12 @@ public sealed class BattleUnitState
         IReadOnlyDictionary<ContentId, BattleStatusState>? statuses = null,
         float? baseSpeed = null,
         IReadOnlyDictionary<ItemInstanceId, BattleConsumableState>? consumables = null,
-        int lastSuccessfulConsumableUseRound = 0)
+        int lastSuccessfulConsumableUseRound = 0,
+        int physicalAttack = 2,
+        int magicalAttack = 2,
+        UnitInstanceId? summonOwnerId = null,
+        bool canReceiveStandardHealing = true,
+        bool hasCombatTechniquesLevelOne = false)
     {
         if (maxHealth <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxHealth));
@@ -51,6 +57,8 @@ public sealed class BattleUnitState
             throw new ArgumentOutOfRangeException(nameof(baseSpeed));
         if (lastSuccessfulConsumableUseRound < 0)
             throw new ArgumentOutOfRangeException(nameof(lastSuccessfulConsumableUseRound));
+        if (physicalAttack < 0 || magicalAttack < 0)
+            throw new ArgumentOutOfRangeException(nameof(physicalAttack));
         if (statusDurations is not null && statusDurations.Count > 0 && statuses is not null && statuses.Count > 0)
             throw new ArgumentException("Provide either legacy status durations or detailed statuses, not both.");
 
@@ -62,6 +70,11 @@ public sealed class BattleUnitState
         CurrentMana = currentMana;
         BaseSpeed = baseSpeed ?? Math.Max(0f, unit.Initiative * 0.5f);
         LastSuccessfulConsumableUseRound = lastSuccessfulConsumableUseRound;
+        PhysicalAttack = physicalAttack;
+        MagicalAttack = magicalAttack;
+        SummonOwnerId = summonOwnerId;
+        CanReceiveStandardHealing = canReceiveStandardHealing;
+        HasCombatTechniquesLevelOne = hasCombatTechniquesLevelOne;
 
         var detailedStatuses = new Dictionary<ContentId, BattleStatusState>();
         foreach ((ContentId statusId, int remainingTurns) in statusDurations ?? new Dictionary<ContentId, int>())
@@ -124,6 +137,11 @@ public sealed class BattleUnitState
     public float BaseSpeed { get; }
 
     public int LastSuccessfulConsumableUseRound { get; }
+    public int PhysicalAttack { get; }
+    public int MagicalAttack { get; }
+    public UnitInstanceId? SummonOwnerId { get; }
+    public bool CanReceiveStandardHealing { get; }
+    public bool HasCombatTechniquesLevelOne { get; }
 
     /// <summary>
     /// Gets whether the unit has consumed its one movement use this turn.
@@ -164,7 +182,9 @@ public sealed class BattleUnitState
             statuses: _statuses,
             baseSpeed: BaseSpeed,
             consumables: _consumables,
-            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
 
     /// <summary>
     /// Returns a copy with clamped health and matching alive state.
@@ -182,7 +202,9 @@ public sealed class BattleUnitState
             statuses: _statuses,
             baseSpeed: BaseSpeed,
             consumables: _consumables,
-            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
 
     /// <summary>
     /// Returns a copy with clamped mana.
@@ -198,7 +220,9 @@ public sealed class BattleUnitState
             statuses: _statuses,
             baseSpeed: BaseSpeed,
             consumables: _consumables,
-            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
 
     /// <summary>
     /// Returns a copy with the given status duration.
@@ -237,7 +261,9 @@ public sealed class BattleUnitState
             statuses: statuses,
             baseSpeed: BaseSpeed,
             consumables: _consumables,
-            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
     }
 
     /// <summary>
@@ -257,7 +283,9 @@ public sealed class BattleUnitState
             statuses: statuses,
             baseSpeed: BaseSpeed,
             consumables: _consumables,
-            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
     }
 
     public BattleUnitState WithUnitFacts(UnitState unit) => new(
@@ -270,7 +298,9 @@ public sealed class BattleUnitState
         statuses: _statuses,
         baseSpeed: BaseSpeed,
         consumables: _consumables,
-        lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+        lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+        physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
 
     public BattleUnitState WithConsumable(BattleConsumableState consumable)
     {
@@ -289,7 +319,9 @@ public sealed class BattleUnitState
             statuses: _statuses,
             baseSpeed: BaseSpeed,
             consumables: consumables,
-            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
     }
 
     public BattleUnitState WithSuccessfulConsumableUse(int round) => new(
@@ -302,7 +334,9 @@ public sealed class BattleUnitState
         statuses: _statuses,
         baseSpeed: BaseSpeed,
         consumables: _consumables,
-        lastSuccessfulConsumableUseRound: round);
+        lastSuccessfulConsumableUseRound: round,
+        physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
 
     /// <summary>
     /// Returns a copy whose one-per-turn movement use is available again.
@@ -319,5 +353,14 @@ public sealed class BattleUnitState
             statuses: _statuses,
             baseSpeed: BaseSpeed,
             consumables: _consumables,
-            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound);
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne);
+
+    public BattleUnitState WithCombatTechniquesLevelOne(bool enabled) => new(
+        Unit, MaxHealth, CurrentHealth, HasMovedThisTurn, maxMana: MaxMana, currentMana: CurrentMana,
+        statuses: _statuses, baseSpeed: BaseSpeed, consumables: _consumables,
+        lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+        physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: enabled);
 }

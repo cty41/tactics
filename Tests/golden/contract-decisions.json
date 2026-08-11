@@ -9,7 +9,7 @@
     {
       "id": "battle.command-event-transition",
       "resolution": "versioned_migration_contract",
-      "runtimeContractId": "battle-transition-v3",
+      "runtimeContractId": "battle-transition-v4",
       "reason": "The frozen runtime applies movement, damage, status and turn effects imperatively across controllers and SkillGraph executors; it has no immutable command-to-state-plus-events boundary to link as an exact Oracle.",
       "invariants": [
         "commands contain engine-neutral values",
