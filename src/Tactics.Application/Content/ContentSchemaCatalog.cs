@@ -34,6 +34,8 @@ public sealed class ContentSchemaCatalog
     public static ContentSchemaCatalog RuntimeV1 { get; } = new(new[]
     {
         new ContentSchemaDefinition("ai-profile", 1, 1),
+        new ContentSchemaDefinition("ai", 1, 1),
+        new ContentSchemaDefinition("battle-layout", 1, 1),
         new ContentSchemaDefinition("buff", 1, 1),
         new ContentSchemaDefinition("encounter", 1, 1),
         new ContentSchemaDefinition("item", 1, 1),

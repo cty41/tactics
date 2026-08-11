@@ -133,6 +133,14 @@ public sealed class SkillRuntimeService
         int distance = Math.Abs(actor.Unit.Position.X - command.TargetCell.X) + Math.Abs(actor.Unit.Position.Y - command.TargetCell.Y);
         if (!state.Board.Contains(command.TargetCell) || distance < skill.MinRange || distance > skill.MaxRange) yield break;
         if (skill.RequiresLineOfSight && !_lineOfSight.HasLineOfSight(state.Board, actor.Unit.Position, command.TargetCell)) yield break;
+        if (skill.ExecutionKind == SkillExecutionKind.AreaBlast)
+        {
+            BattleUnitState[] area = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
+                .Where(unit => Math.Abs(unit.Unit.Position.X-command.TargetCell.X)+Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y) <= 2)
+                .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray();
+            foreach (BattleUnitState unit in area) yield return unit;
+            yield break;
+        }
         if (skill.UsesLineTargeting)
         {
             int dx = command.TargetCell.X - actor.Unit.Position.X;

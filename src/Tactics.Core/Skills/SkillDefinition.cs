@@ -19,7 +19,11 @@ public enum SkillExecutionKind
     Thrust,
     PoisonSpear,
     CombatTechniques,
-    PickupSpear
+    PickupSpear,
+    RangedAttack,
+    ChargeStrike,
+    HeavyShot,
+    AreaBlast
 }
 
 /// <summary>Normalized engine-neutral execution contract for one migrated skill level.</summary>
@@ -80,7 +84,7 @@ public sealed record SkillDefinition
     public bool ExternalDependency { get; }
     public bool IsPassive => Kind == SkillKind.Passive;
     public bool UsesLineTargeting => ExecutionKind is SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.Thrust;
-    public bool RequiresLineOfSight => ExecutionKind is SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt;
+    public bool RequiresLineOfSight => ExecutionKind is SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.ChargeStrike;
 }
 
 public sealed class SkillCatalogDefinition

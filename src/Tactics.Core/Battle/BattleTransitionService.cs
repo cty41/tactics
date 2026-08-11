@@ -22,7 +22,7 @@ public sealed class BattleTransitionService
     /// <summary>
     /// Identifies the versioned normalized command/state/event contract introduced by the migration.
     /// </summary>
-    public const string ContractId = "battle-transition-v4";
+    public const string ContractId = "battle-transition-v5";
 
     private readonly IPathfinder _pathfinder;
     private readonly PoisonSpearResolver _poisonSpearResolver;
