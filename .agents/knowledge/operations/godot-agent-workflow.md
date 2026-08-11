@@ -39,7 +39,7 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
 - Buff/Item disposable DTO 存在时，统一入口会严格编译 14 Buff、3 Consumable、12 Equipment typed draft，重建 export receipt，再连续两次通过 ResourceSaver 生成 28 个定义 Resource 与 29 项分批 Catalog；Phase 5B 存在时 canonical Catalog 为 58 项。该链路不复制只审计的 Buff icon，并在两个 renderer 的 typed runtime 验证后才刷新 `Validated/UnityOwned` generation receipt。
-- Starting Skill disposable DTO 存在时，统一入口会编译 12 项 typed draft，通过 ResourceSaver 生成 11 个新 Skill Resource、12 项分批 Catalog 与原生 1600×900 Gameplay Fixture；`skill.poison-spear.lv1` 保持外部依赖。两轮生成比较 13 个批次独占 artifact，canonical Catalog 组合为 58 个唯一 ContentId，并在 Compatibility/Forward+ 验证后刷新 `Generated/UnityOwned + manual_gameplay_qa_pending` receipt。
+- Starting Skill disposable DTO 存在时，统一入口会编译 12 项 typed draft，通过 ResourceSaver 生成 11 个新 Skill Resource、12 项分批 Catalog 与原生 1600×900 Gameplay Fixture；`skill.poison-spear.lv1` 保持外部依赖。两轮生成比较 13 个批次独占 artifact，canonical Catalog 组合为 58 个唯一 ContentId，并在 Compatibility/Forward+ 后刷新已人工接受的 `Validated/UnityOwned` receipt。
 
 ## Validation
 
@@ -75,7 +75,7 @@ Phase 4 执行前项目级 MCP Profile 已从 `phase3-observe` 切换到 `conten
 
 Phase 5A 冻结的 14 Buff/3 Consumable/12 Equipment draft 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment Resource，`buff.poison` 只引用既有 Poison Spear Resource；分批 Catalog 为 29 项，29 个批次独占 artifact 两轮 byte-identical。该批不含视觉 payload，保持 `Validated/UnityOwned`。
 
-Phase 5B 当前生成三名角色的起始 Lv1/隐藏技能与两个公共基础攻击，共 11 个新 Skill Resource；Poison Spear 继续由原 batch 所有。Core/Application 使用 `battle-transition-v4` 与统一 `UseSkillCommand` 解释伤害、状态、直线首目标、召唤、拾矛及被动修正。12 项 Skill Catalog 与 canonical 58 项 Catalog、UID、13 个批次 artifact、双次 byte-identical、GdUnit 17、Compatibility/Forward+ 均通过。正式 VFX 未复制，batch 保持 `Generated/UnityOwned + manual_gameplay_qa_pending`。
+Phase 5B 已生成三名角色的起始 Lv1/隐藏技能与两个公共基础攻击，共 11 个新 Skill Resource；Poison Spear 继续由原 batch 所有。Core/Application 使用 `battle-transition-v4` 与统一 `UseSkillCommand` 解释伤害、状态、直线首目标、召唤、拾矛及被动修正。12 项 Skill Catalog 与 canonical 58 项 Catalog、UID、13 个批次 artifact、双次 byte-identical、GdUnit 17、Compatibility/Forward+ 均通过；用户已验收 1600×900 Fixture、操作与 Reload smoke，batch 晋升为 `Validated/UnityOwned`。正式 VFX 仍未复制。
 
 ## Navigation
 

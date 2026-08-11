@@ -54,9 +54,9 @@ def main() -> int:
         "artifactCount": 13,
         "automatedValidation": {"resourceSaver": "passed", "uidPreservation": "passed", "byteIdempotencyRuns": 2, "byteIdentical": True, "gdUnitRuntimeTests": "passed", "rendererHeadlessStartup": ["gl_compatibility", "forward_plus"]},
         "ownership": "UnityOwned",
-        "state": "Generated",
+        "state": "Validated",
         "visualAcceptance": "not_applicable_gameplay_only_no_visual_payload",
-        "manualGameplayAcceptance": "pending",
+        "manualGameplayAcceptance": "passed",
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")

@@ -33,7 +33,7 @@
     ]
   },
   "ownership": "UnityOwned",
-  "state": "Generated",
+  "state": "Validated",
   "visualAcceptance": "not_applicable_gameplay_only_no_visual_payload",
-  "manualGameplayAcceptance": "pending"
+  "manualGameplayAcceptance": "passed"
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "batchId": "pure-run-starting-skills-v1",
-  "status": "Generated",
+  "status": "Validated",
   "ownership": "UnityOwned",
   "sourceTag": "unity-final-2026-08-08",
   "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
@@ -9,5 +9,5 @@
   "generatedContentCount": 11,
   "externalContentDependencies": ["skill.poison-spear.lv1"],
   "visualAcceptance": "not_applicable_gameplay_only_no_visual_payload",
-  "manualGameplayAcceptance": "pending"
+  "manualGameplayAcceptance": "passed"
 }

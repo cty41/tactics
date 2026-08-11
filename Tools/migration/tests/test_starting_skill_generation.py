@@ -10,12 +10,12 @@ BATCH = ROOT / "Tools/migration/manifest/batches/pure-run-starting-skills-v1.jso
 
 
 class StartingSkillGenerationTests(unittest.TestCase):
-    def test_generated_batch_remains_manual_gameplay_pending(self):
+    def test_validated_batch_records_manual_gameplay_acceptance(self):
         batch = json.loads(BATCH.read_text(encoding="utf-8"))
         receipt = json.loads(RECEIPT.read_text(encoding="utf-8"))
-        self.assertEqual("Generated", batch["status"])
-        self.assertEqual("Generated", receipt["state"])
-        self.assertEqual("pending", receipt["manualGameplayAcceptance"])
+        self.assertEqual("Validated", batch["status"])
+        self.assertEqual("Validated", receipt["state"])
+        self.assertEqual("passed", receipt["manualGameplayAcceptance"])
         self.assertEqual(58, receipt["canonicalCatalogEntryCount"])
 
     def test_ledger_bytes_and_external_poison_ownership(self):
