@@ -92,6 +92,32 @@ public sealed class PureRunSessionServiceTests
         });
     }
 
+    [Test]
+    public void DuplicateTerminalSettlement_ReturnsExistingSummaryWithoutRewrite()
+    {
+        var store = new MemoryRunStore();
+        var service = new PureRunSessionService(Definition(), store);
+        service.StartNewRun(23);
+        PureRunBattleResult? finalResult = null;
+        for (int index = 0; index < 3; index++)
+        {
+            service.BeginEncounter();
+            finalResult = Victory(store.Snapshot!.ActiveRun!);
+            Assert.That(service.ApplyBattleResult(finalResult).Succeeded, Is.True);
+        }
+        long terminalRevision = store.Snapshot!.Revision;
+
+        RunSessionResult duplicate = service.ApplyBattleResult(finalResult!);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(duplicate.Succeeded, Is.True);
+            Assert.That(duplicate.WasDuplicate, Is.True);
+            Assert.That(duplicate.Snapshot!.Revision, Is.EqualTo(terminalRevision));
+            Assert.That(duplicate.Snapshot.TerminalSummary!.Outcome, Is.EqualTo(PureRunOutcome.SliceCompleted));
+        });
+    }
+
     private static PureRunBattleResult Victory(PureRunState run) => new(
         run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, true, 3, 3,
         run.Party.Select(member => new BattlePartyResult(

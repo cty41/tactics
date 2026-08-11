@@ -95,8 +95,20 @@ public sealed class PureRunSessionService
     public RunSessionResult ApplyBattleResult(PureRunBattleResult battleResult)
     {
         RunStoreResult loaded = _store.Load();
-        if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
-            return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
+        if (!loaded.Succeeded || loaded.Snapshot is null)
+            return Fail(loaded.ErrorCode ?? "run.no_save", loaded.Snapshot);
+        if (loaded.Snapshot.ActiveRun is not PureRunState run)
+        {
+            string transactionKey = $"battle:{battleResult.EncounterContentId.Value}:settlement";
+            PureRunSummary? summary = loaded.Snapshot.TerminalSummary;
+            if (summary is not null &&
+                string.Equals(summary.RunId, battleResult.RunId, StringComparison.Ordinal) &&
+                summary.AppliedTransactionKeys.Contains(transactionKey, StringComparer.Ordinal))
+            {
+                return new RunSessionResult(true, null, loaded.Snapshot, null, true);
+            }
+            return Fail("run.no_active_run", loaded.Snapshot);
+        }
         PureRunSettlementResult settlement = _settlement.Apply(_definition, run, battleResult, _dropPool);
         if (!settlement.Succeeded)
             return Fail(settlement.RejectionCode, loaded.Snapshot);
