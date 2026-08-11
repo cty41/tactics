@@ -420,6 +420,36 @@ try {
     }
     else { Write-Host '== Skip real Pure Run persistence draft: disposable Unity DTO is not present ==' }
 
+    $uiExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.unity.json'
+    $uiDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.draft.json'
+    if (Test-Path -LiteralPath $uiExport -PathType Leaf) {
+        Invoke-Checked 'Compile Pure Run UI/Input typed audit draft' {
+            python -m Tools.migration.pure_run_ui_input_converter `
+                --export $uiExport `
+                --specification (Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-ui-input-v1.json') `
+                --output $uiDraft
+        }
+        Invoke-Checked 'Generate playable Run Main PackedScene through ResourceSaver' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/PlayableRunSceneBuilder.cs'
+        }
+        $mainScene = Join-Path $projectRoot 'scenes\Main.tscn'
+        $firstMainHash = (Get-FileHash -LiteralPath $mainScene -Algorithm SHA256).Hash
+        Invoke-Checked 'Repeat playable Run Main generation for idempotency' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/PlayableRunSceneBuilder.cs'
+        }
+        if ($firstMainHash -ne (Get-FileHash -LiteralPath $mainScene -Algorithm SHA256).Hash) {
+            throw 'Playable Run Main generation is not byte-idempotent.'
+        }
+        Invoke-Checked 'Refresh playable Run UI generation evidence' {
+            python -m Tools.migration.pure_run_ui_input_generation `
+                --draft $uiDraft --scene $mainScene `
+                --state (Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-ui-input-v1.json') `
+                --receipt (Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-ui-input-v1-generation.json')
+        }
+    }
+
     # A ResourceSaver script can register a newly created UID only in its current process.
     # The headless Editor filesystem scan persists the project UID cache before Runtime validation.
     Invoke-Checked 'Godot editor filesystem scan and plugin initialization' {
@@ -506,6 +536,16 @@ try {
     Invoke-Checked 'Pure Run persistence catalog and fixture validation (Forward+)' {
         & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
             --validate-run-persistence --quit-after 6000
+    }
+
+    Invoke-Checked 'Playable Pure Run UI validation (Compatibility)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility `
+            --validate-playable-run-ui --quit-after 6000
+    }
+
+    Invoke-Checked 'Playable Pure Run UI validation (Forward+)' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method forward_plus `
+            --validate-playable-run-ui --quit-after 6000
     }
 
     Invoke-Checked 'Capture deterministic Pure Run Unit programmatic gallery' {

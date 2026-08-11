@@ -55,6 +55,16 @@ public partial class TacticsMigrationRoot : Node
             GetTree().Quit();
             return;
         }
+        if (commandLine.Contains("--validate-playable-run-ui"))
+        {
+            var playable = new GodotPlayableRunMain();
+            AddChild(playable);
+            if (!playable.IsReadyForInput)
+                throw new InvalidOperationException("Playable Run UI failed its startup contract.");
+            GD.Print("Playable Run UI validation OK: canvas=1600x900, catalog=74, home=ready");
+            GetTree().Quit();
+            return;
+        }
         if (commandLine.Contains("--play-unit-gallery"))
         {
             PlayUnitGallery();
@@ -72,7 +82,8 @@ public partial class TacticsMigrationRoot : Node
             GetTree().Quit();
             return;
         }
-        GD.Print("Tactics Godot migration runtime ready");
+        AddChild(new GodotPlayableRunMain());
+        GD.Print("Tactics Godot playable run UI ready");
     }
 
     private static void ValidatePoisonSpear()

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-11T19:42:41+08:00"
+timestamp: "2026-08-11T19:56:24+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:3bf252dc1a085d9722c2cde2b0a71233d8293b5c00c7c748f3069055b65504f3
+source_fingerprint: sha256:2e74fab7b396c89cb2b627e66053a7b7070ef6e8765ab8766972f98371443fdd
 ---
 
 # Current state
@@ -62,6 +62,8 @@ Phase 6B 已完成三战 Pure Run 持久化垂直切片：冻结 Unity v5 的会
 Phase 7A 已进入合同冻结 checkpoint：`pure-run-ui-input-v1` 绑定最终 Unity Home、Battle、Settlement、Summary UXML 与 Input Actions。五个根资产均采用 `audit-only-file`，只记录 GUID、LocalFileId、AssetDatabase dependency hash、原文件 SHA-256 和字节数，不遍历 Unity 导入对象、不复制 UI Toolkit/Input payload。两次独立 Unity 6000.3.11f1 batch 输出 byte-identical；batch 当前为 `Exported/UnityOwned`，可玩 Battle Session、Godot Scene/UI/Input 以及人工 UI/Input 闸门尚未完成。
 
 Phase 7A 的 Application checkpoint 已加入 `PlayableBattleSessionFactory/Service`：由 `EncounterRequest`、Encounter/Layout 与 Unit/Skill/AI Catalog 组合确定性 BattleState；玩家 UI intent 只经 `BattleTransitionService`，敌方只经 `AiDecisionService/AiTurnService`，并输出只读棋盘、技能、合法移动/目标、状态、尸体、投矛与事件快照。AI 自动推进有 64-command guard，胜负只生成一个经过 Run/revision/Encounter 绑定的 `PureRunBattleResult`。死亡活动单位现在只允许 canonical EndTurn 跳过，仍禁止其移动或施法。Godot Scene/UI/Input 生成尚未开始。
+
+Phase 7A 已生成原生 1600×900 可玩 Main：Home 支持 New/Continue/覆盖确认，Battle 以鼠标选择移动/技能/格子并以右键/Esc 取消、Enter/按钮共用 EndTurn intent，敌方自动推进；Settlement 只展示 PendingProgression，N3/失败/放弃进入 terminal summary 并显式消费后返回 Home。棋盘复用 10×10 Core 坐标和已迁移 `GodotUnitActor` Sprite/Shadow/tint，正式 VFX/Audio 仍后移。Main PackedScene 由 ResourceSaver 生成并保留 `uid://c0mlqoh7vensn`，连续两次 byte-identical；Compatibility/Forward+、GdUnit、Release 和统一门禁已通过。batch 保持 `Generated/UnityOwned + manual_ui_input_qa_pending`，不得在用户人工验收前关闭 Phase 7A。
 
 `AiEncounterFixture` 的单步与整轮可观测性已改为真实结构化结果：Space 精确执行一个 AI actor，Enter 执行当前轮剩余全部 actor，并累计 actor、intent、skill、candidate、pattern cursor、events 与 state fingerprint。自动测试固定 N1/N2/N3 为 3/3/4 turns、两个 Elite 为 1 turn，验证整轮推进、64-command guard、Reset 重放及 Elite 单步/整轮等价；Compatibility/Forward+ 均实际执行单步和 N1 整轮，GdUnit 增至 26。人工闸门因此只保留 1600×900 可读性、操作响应与 Reload/Output smoke。
 

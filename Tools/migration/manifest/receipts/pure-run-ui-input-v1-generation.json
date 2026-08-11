@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ui-input-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "canvas": {
+    "width": 1600,
+    "height": 900,
+    "stretch": "canvas_items+keep"
+  },
+  "canonicalCatalogEntries": 74,
+  "sceneHash": "sha256:6e9b9b07c3534b894b23b0e710a28f772434dea2883272a947e2cc89ce3e9b64",
+  "idempotency": {
+    "resourceSaverRuns": 2,
+    "byteIdentical": true
+  },
+  "visualPayload": "existing_migrated_unit_visuals_only",
+  "manualUiInputAcceptance": "pending"
+}

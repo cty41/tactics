@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-11T18:08:34+08:00"
+timestamp: "2026-08-11T19:56:26+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:432a6927290c7ccde03e8bdaa5d09eae600e6b597d4f31bf70626c90559fec78
+source_fingerprint: sha256:e0a00a384d4bd8c3767efea89bea891d2fc329656b4418bfa518ce80b26b00e8
 ---
 
 # Current state
@@ -42,6 +42,7 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - Starting Skill disposable DTO 存在时，统一入口会编译 12 项 typed draft，通过 ResourceSaver 生成 11 个新 Skill Resource、12 项分批 Catalog 与原生 1600×900 Gameplay Fixture；`skill.poison-spear.lv1` 保持外部依赖。两轮生成比较 13 个批次独占 artifact；Phase 6A 存在时 canonical Catalog 组合为 73 个唯一 ContentId，并在 Compatibility/Forward+ 后保留已人工接受的 `Validated/UnityOwned` receipt。
 - AI/Encounter disposable DTO 存在时，统一入口会编译六类 AI、四项敌方技能、两个 Layout 与 N1–N3 Encounter，连续两次通过 ResourceSaver 比较 17 个批次 artifact，并在 Compatibility/Forward+ 验证 15 项分批 Catalog 与 73 项 canonical Catalog。`AiEncounterFixture` 人工 gameplay/reload 验收已通过，该批保持 `Validated/UnityOwned`。
 - Pure Run persistence disposable DTO 存在时，统一入口会重编三战 typed draft，通过 ResourceSaver 连续两次比较 Run Resource、分批 Catalog、自动诊断 Fixture 与 ledger，并在 Editor UID scan 后用 Compatibility/Forward+ 验证 1/74 Catalog、canonical JSON、revision、temp/backup/quarantine 恢复与终局摘要。该批没有视觉载荷，自动可观测性门禁通过后直接保持 `Validated/UnityOwned`。
+- Phase 7A UI/Input DTO 存在时，统一入口会重编 audit-only draft，通过 `PlayableRunSceneBuilder` 校验或生成 canonical `Main.tscn`，显式保留 Main UID 并比较两轮 SHA-256；随后刷新 `Generated/UnityOwned` evidence，并在 Compatibility/Forward+ 启动 Home/74 Catalog smoke。UI/Input 的鼠标、键盘、resize、完整三战导航与 Reload 仍保留人工闸门。
 
 ## Validation
 
