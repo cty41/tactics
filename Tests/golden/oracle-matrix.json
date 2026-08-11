@@ -87,6 +87,29 @@
   },
   "contracts": [
     {
+      "id": "skill.pure-run-starting-v1",
+      "sourceFile": "Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs",
+      "sourceRuntimeFiles": [
+        "Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs",
+        "Assets/Tactics/Scripts/Common/Skills/Graph/Executors/MageSkillNodeExecutor.cs",
+        "Assets/Tactics/Scripts/Common/Skills/Graph/Executors/NecromancerSkillNodeExecutor.cs",
+        "Assets/Tactics/Scripts/Common/Skills/Graph/Executors/AmazonSkillNodeExecutor.cs",
+        "Assets/Tactics/Scripts/Common/Units/CombatComponent.cs"
+      ],
+      "sourceTests": [
+        "Catalog_ContainsExactlySixSkillsPerFirstSliceRole",
+        "PureRunCatalog_UsesStableIdsAndKeepsPickupSpearOutsideFormalOffers",
+        "LearnThrowingSkill_ImmediatelyGrantsSlotFreePickupSpear"
+      ],
+      "exportReceipt": "Tools/migration/manifest/receipts/pure-run-starting-skills-v1-export.json",
+      "evidence": {
+        "abilityConfigsAndGraphs": "unity_assetdatabase_export_and_frozen_asset_snapshot",
+        "runtimeSemantics": "unity_final_linked_source_oracle",
+        "presentationPayloads": "audit_only_not_copied"
+      },
+      "status": "unity_final_asset_export_and_source_tests"
+    },
+    {
       "id": "board.fixed-10x10-bounds",
       "sourceFile": "Assets/Tactics/Tests/Editor/BattleBoardSpecTests.cs",
       "sourceTests": [

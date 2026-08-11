@@ -27,6 +27,9 @@ namespace Tactics.Editor.Migration
         private const string PureRunBuffsItemsSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-buffs-items-v1.json";
 
+        private const string PureRunStartingSkillsSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-starting-skills-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -69,6 +72,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPureRunBuffItemBatchFromCommandLine()
         {
             ExportPureRunBuffItemBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run Starting Skills V1")]
+        public static void ExportPureRunStartingSkillBatch()
+        {
+            string outputPath = Export(PureRunStartingSkillsSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run Starting Skills V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunStartingSkillBatchFromCommandLine()
+        {
+            ExportPureRunStartingSkillBatch();
         }
 
         public static string Export(string relativeSpecPath)
