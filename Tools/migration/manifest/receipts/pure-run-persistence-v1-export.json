@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-persistence-v1",
+  "classification": "real_unity_assetdatabase_export",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:814ba5aba9c96e5341d30d6deb31451d701e3c28991199e55c54bacd5beb1087",
+  "outputSha256": "2743cfb8ce2bddcb00315c06e3cc8d0ede898b10c6dfe30e23515becd78f4784",
+  "typedDraftSha256": "4239bb61beec417a30136dcba8543ec4c1c7fc43d728b551ce665426d1f4101f",
+  "assetRoots": 3,
+  "runDefinitions": 1,
+  "encounterReferences": 3,
+  "unitySemanticSchemaVersion": 5,
+  "idempotency": {"measuredIndependentRuns": 2, "byteIdentical": true},
+  "compatibility": {"unityPlayerPrefsImport": false, "unityV5SemanticOracleOnly": true},
+  "payloadBoundary": {"visualPayload": "none", "thirdPartyPayloadCopied": false},
+  "ownership": "UnityOwned",
+  "nextState": "Exported"
+}

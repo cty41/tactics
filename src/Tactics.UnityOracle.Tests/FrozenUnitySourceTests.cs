@@ -59,6 +59,16 @@ public sealed class FrozenUnitySourceTests
             ["Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs"] = "4da3c885cfd9df5ed4128f8ef446815e760a2b0a",
             ["Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs"] = "9528f7c17f3a782b16c4ceaa9b6b97e25893acfb",
             ["Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs"] = "850f23e53869c04c8ff28adbd85c1d4f12da9bae"
+            , ["Assets/Tactics/Scripts/Roguelike/PureRunSessionStore.cs"] = "597614e4e4c201c99c1a79ef75fce3cd6c40e4e6"
+            , ["Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs"] = "f4c7e392fbc1dc1abef0f10ded0f3002457215f4"
+            , ["Assets/Tactics/Scripts/Roguelike/RoguelikeMapRuntimeState.cs"] = "1aff7a4f228fe8c8827152302c86d17d79be8645"
+            , ["Assets/Tactics/Scripts/RoguelikeMap/RoguelikeNodeTransactionService.cs"] = "4435413dfe4b56b787a870f7c43786cce6777774"
+            , ["Assets/Tactics/Scripts/RoguelikeMap/RunSummary.cs"] = "3086080b45a036108758905624b09598e9c1b512"
+            , ["Assets/Tactics/Scripts/Roguelike/PureRunSummaryRecorder.cs"] = "7d532c2d7297f39335024e442bbe932bc23c8f76"
+            , ["Assets/Tactics/Scripts/Roguelike/RoguelikeBattleReturnHandler.cs"] = "20da7982e99da5a81f34d6efa3d9613e749c43fc"
+            , ["Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs"] = "f8e3eb4c9136f4935585f86e4d2010738ff9e207"
+            , ["Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs"] = "1d6e4997dfb8801329003f545e823ea5e3f01a49"
+            , ["Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs"] = "4f0feeb252d95f3d213fd96ede48a694b2cba9ed"
         };
 
     [Test]
@@ -159,6 +169,51 @@ public sealed class FrozenUnitySourceTests
         Assert.That(consumables.RootElement.GetProperty("Definitions").GetArrayLength(), Is.EqualTo(3));
         Assert.That(equipment.RootElement.GetArrayLength(), Is.EqualTo(12));
         Assert.That(root.GetProperty("externalContentDependencies")[0].GetString(), Is.EqualTo("buff.poison"));
+    }
+
+    [Test]
+    public void PureRunPersistenceFrozenContracts_MatchGolden()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string sessionStore = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Roguelike/PureRunSessionStore.cs");
+        string playerState = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs");
+        string playerStore = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs");
+        string runtimeState = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Roguelike/RoguelikeMapRuntimeState.cs");
+        string transactions = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/RoguelikeMap/RoguelikeNodeTransactionService.cs");
+        string rewards = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs");
+        string settlement = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs");
+        string returnHandler = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Roguelike/RoguelikeBattleReturnHandler.cs");
+        using JsonDocument golden = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Tests", "golden", "pure-run-persistence-v1.json")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sessionStore, Does.Contain("PlayerPrefs.SetString"));
+            Assert.That(playerStore, Does.Contain("CurrentVersion = 5"));
+            Assert.That(playerState, Does.Contain("AppliedNodeTransactionKeys"));
+            Assert.That(playerState, Does.Contain("CurrentRunSummary"));
+            Assert.That(runtimeState, Does.Contain("TryCommitPendingBattleVictory"));
+            Assert.That(transactions, Does.Contain("TryApplyOnce"));
+            Assert.That(rewards, Does.Contain("int baseGold = 3"));
+            Assert.That(rewards, Does.Contain("<= 3 => 5"));
+            Assert.That(settlement, Does.Contain("SelectLowestLevelLivingCharacter"));
+            Assert.That(settlement, Does.Contain("Active-party order is the stable tie-breaker"));
+            Assert.That(returnHandler, Does.Contain("unit.Constitution * 2"));
+            Assert.That(returnHandler, Does.Contain("unit.Charisma"));
+        });
+
+        JsonElement root = golden.RootElement;
+        Assert.That(root.GetProperty("encounters").EnumerateArray().Select(value => value.GetString()),
+            Is.EqualTo(new[] { "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3" }));
+        Assert.That(root.GetProperty("save").GetProperty("unityPlayerPrefsImport").GetBoolean(), Is.False);
     }
 
     [Test]
