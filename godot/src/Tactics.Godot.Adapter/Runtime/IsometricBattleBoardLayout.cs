@@ -10,11 +10,11 @@ public static class IsometricBattleBoardLayout
     public const float TileWidth = 96f;
     public const float TileHeight = 48f;
     public static readonly Vector2 TopCenter = new(550f, 145f);
-    public static readonly Vector2 FirstCellCenter = new(550f, 169f);
+    public static readonly Vector2 FirstCellCenter = new(550f, 601f);
 
     public static Vector2 GridToScreen(GridPoint cell) => FirstCellCenter + new Vector2(
         (cell.X - cell.Y) * TileWidth * 0.5f,
-        (cell.X + cell.Y) * TileHeight * 0.5f);
+        -(cell.X + cell.Y) * TileHeight * 0.5f);
 
     public static bool TryScreenToGrid(Vector2 screen, out GridPoint cell)
     {

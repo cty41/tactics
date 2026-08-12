@@ -56,7 +56,7 @@ public partial class GodotIsometricBattleBoard : Control
 
     public override void _Draw()
     {
-        for (int sum = 0; sum <= 18; sum++)
+        for (int sum = 18; sum >= 0; sum--)
         for (int x = 0; x < IsometricBattleBoardLayout.GridSize; x++)
         {
             int y = sum - x;

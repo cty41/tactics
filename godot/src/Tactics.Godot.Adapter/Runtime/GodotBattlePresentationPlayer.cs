@@ -13,6 +13,7 @@ public partial class GodotBattlePresentationPlayer : Node
     private float _speed = 1f;
     private readonly Dictionary<string, SkillPresentationResource> _skillProfiles = new(StringComparer.Ordinal);
     public bool IsPlaying => _activeTweens.Any(GodotObject.IsInstanceValid);
+    public event Action? FrameFinished;
 
     public void Configure(StandardUnitPresentationResource profile) => _profile = profile ?? throw new ArgumentNullException(nameof(profile));
     public void ConfigureSkills(IEnumerable<SkillPresentationResource> profiles)
@@ -26,8 +27,16 @@ public partial class GodotBattlePresentationPlayer : Node
     {
         ArgumentNullException.ThrowIfNull(frame);
         Clear();
-        foreach (BattlePresentationCue cue in frame.Cues) PlayCue(cue, actors);
+        Tween sequence=CreateTween().SetSpeedScale(_speed);_activeTweens.Add(sequence);
+        foreach (BattlePresentationCue cue in frame.Cues) PlayCue(sequence,cue,actors);
+        sequence.TweenCallback(Callable.From(()=>FrameFinished?.Invoke()));
+        sequence.Finished+=()=>_activeTweens.Remove(sequence);
     }
+
+    public static double EstimateMoveDuration(int segmentCount, double segmentDuration, double settleDuration) =>
+        segmentCount * segmentDuration + settleDuration;
+
+    public void SetPaused(bool paused){foreach(Tween tween in _activeTweens.Where(GodotObject.IsInstanceValid)){if(paused)tween.Pause();else tween.Play();}}
 
     public void Clear()
     {
@@ -38,26 +47,33 @@ public partial class GodotBattlePresentationPlayer : Node
 
     public override void _ExitTree() => Clear();
 
-    private void PlayCue(BattlePresentationCue cue, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
+    private void PlayCue(Tween tween,BattlePresentationCue cue, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
     {
         if (!actors.TryGetValue(cue.ActorId, out GodotUnitActor? actor) || !GodotObject.IsInstanceValid(actor)) return;
-        Tween tween = CreateTween().SetSpeedScale(_speed);
-        _activeTweens.Add(tween);
         switch (cue.Kind)
         {
             case PresentationCueKind.Move:
                 actor.Position = IsometricBattleBoardLayout.GridToScreen(cue.Origin);
+                GridPoint stepOrigin=cue.Origin;
                 foreach (var cell in cue.Path)
+                {
+                    GridPoint from=stepOrigin,to=cell;
+                    tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(from,to,actor.PresentationFacing))));
                     tween.TweenProperty(actor, "position", IsometricBattleBoardLayout.GridToScreen(cell), _profile.MoveSegmentDuration).SetTrans(Tween.TransitionType.Sine);
+                    stepOrigin=cell;
+                }
                 tween.TweenInterval(_profile.MoveSettleDuration);
                 break;
             case PresentationCueKind.Melee:
+                tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayLunge(tween, actor, cue, _profile.MeleeWindupDuration, _profile.MeleeLungeDuration, _profile.MeleeImpactHold, _profile.MeleeRecoverDuration, 18f);
                 break;
             case PresentationCueKind.Ranged:
+                tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayLunge(tween, actor, cue, _profile.RangedAimDuration, _profile.RangedReleaseDuration, 0f, _profile.RangedRecoverDuration, -8f);
                 break;
             case PresentationCueKind.Cast:
+                tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 Vector2 baseScale = actor.Scale;
                 tween.TweenProperty(actor, "scale", baseScale * 1.12f, _profile.CastChargeDuration).SetTrans(Tween.TransitionType.Sine);
                 tween.TweenInterval(_profile.CastReleaseHold);
@@ -81,7 +97,6 @@ public partial class GodotBattlePresentationPlayer : Node
                 break;
         }
         if(cue.SkillId is not null)PlaySkillFx(cue);
-        tween.Finished += () => _activeTweens.Remove(tween);
     }
 
     private void PlaySkillFx(BattlePresentationCue cue)

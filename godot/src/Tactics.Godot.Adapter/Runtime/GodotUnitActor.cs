@@ -29,6 +29,7 @@ public partial class GodotUnitActor : Node2D
 
     public GodotUnitFacing Facing { get; private set; } = GodotUnitFacing.South;
     public bool IsShowingDeath { get; private set; }
+    public GodotUnitFacing PresentationFacing => Facing;
     public bool IsBodyTintEnabled { get; private set; } = true;
     public bool UsesGoatBodyMaskTint =>
         _definition?.BodyTintModeValue == UnitBodyTintModes.GoatBodyMaskV1;

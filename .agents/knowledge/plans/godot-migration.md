@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-12T18:17:43+08:00"
+timestamp: "2026-08-12T21:17:31+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:85b961ecb230385d79316c8d38a691b16ff5e07850ac3dffc9d6a964a7b94b1f
+source_fingerprint: sha256:3aee1278540cf5d854dabce9bf779dda3863bd5c413bb023ccbe69cc7e7dcbe6
 ---
 
 # Current state
@@ -82,6 +82,8 @@ Phase 8A 已建立 gameplay 与 timing 隔离的通用单位表现通道：Appli
 Phase 8B 已为 Fireball、Bone Spear 与 Thrust 建立首批 programmatic-only 技能表现：三个 Skill Presentation Resource 只保存颜色、travel/impact timing、ghost 数及明确的 `no-piloto-payload` 边界。运行时坐标、射线和受影响单位全部来自 Application cue 与真实 Damage event；Fireball Lv1 明确无 AOE，Bone Spear 不自行推导穿透，Thrust 不改变 gameplay cell。Godot 临时 Node2D 只绘制火核/尾迹/Impact 环、矛形/短尾迹和轴向枪芒/命中交叉光，页面离开或 reload 时由队列统一清理。canonical Catalog 为 119；冻结 graph/recipe blob、两次 ResourceSaver、Compatibility/Forward+ 与统一门禁均通过，状态保持 `Generated/UnityOwned + manual_isometric_and_presentation_qa_pending`。
 
 Phase 8C–8D 自动实现已完成：Ice Bolt、Lightning、Poison Spear 与 Amplify Damage 的程序化表现只消费已提交的路径、Damage/Status 和 Spear event；结构化状态快照驱动独立于 Body 的稳定覆盖层，展示 Poison、Burning、Frozen、Slow、Stun、Fear、Curse 与防护状态。棋盘镜头使用固定有界平移和非随机震动，支持 Motion toggle，异常或 reload 时复位且不参与玩法。新增四个技能、一个状态和一个镜头 Resource，canonical Catalog 为125；完整统一门禁通过，等待 Phase 7B–8D 合并人工验收。
+
+Phase 8 等距表现定向修复将屏幕投影垂直镜像而不改变任何 Core GridPoint、Encounter 出生格或存档：玩家逻辑出生格现在显示在左下、敌方显示在右上，初始朝向分别采用 Unity 合同的 East/West，移动分段与攻击目标朝向复用等价 `FacingResolver`。单位表现由固定时间出队改为单 Frame 串行 Tween：先显示 Before snapshot，再依次完成 Move、Attack/Cast、Hit、Defeat，最后对齐 After snapshot 并驱动下一 AI frame；Pause/Step/1×/2×直接控制当前队列，避免 Refresh 提前覆盖移动 Actor 造成瞬移。完整统一门禁通过，仍并入 Phase 7B–8D 合并人工验收。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

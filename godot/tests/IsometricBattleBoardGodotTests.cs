@@ -25,10 +25,10 @@ public sealed class IsometricBattleBoardGodotTests
     [TestCase]
     public void ProjectionMatchesNativeCanvasContract()
     {
-        AssertThat(IsometricBattleBoardLayout.GridToScreen(new GridPoint(0, 0))).IsEqual(new Vector2(550f, 169f));
+        AssertThat(IsometricBattleBoardLayout.GridToScreen(new GridPoint(0, 0))).IsEqual(new Vector2(550f, 601f));
         AssertThat(IsometricBattleBoardLayout.GridToScreen(new GridPoint(9, 0))).IsEqual(new Vector2(982f, 385f));
         AssertThat(IsometricBattleBoardLayout.GridToScreen(new GridPoint(0, 9))).IsEqual(new Vector2(118f, 385f));
-        AssertThat(IsometricBattleBoardLayout.GridToScreen(new GridPoint(9, 9))).IsEqual(new Vector2(550f, 601f));
+        AssertThat(IsometricBattleBoardLayout.GridToScreen(new GridPoint(9, 9))).IsEqual(new Vector2(550f, 169f));
     }
 
     [TestCase]
@@ -38,6 +38,30 @@ public sealed class IsometricBattleBoardGodotTests
         Vector2 sharedEdge = IsometricBattleBoardLayout.GridToScreen(new GridPoint(2, 2)) + new Vector2(48, 0);
         AssertThat(IsometricBattleBoardLayout.TryScreenToGrid(sharedEdge, out GridPoint selected)).IsTrue();
         AssertThat(selected).IsEqual(new GridPoint(2, 1));
+    }
+
+    [TestCase]
+    public void PartyProjectsBelowEnemiesWithoutChangingLogicalSpawns()
+    {
+        Vector2 party=IsometricBattleBoardLayout.GridToScreen(new GridPoint(1,4));
+        Vector2 enemy=IsometricBattleBoardLayout.GridToScreen(new GridPoint(7,4));
+        AssertThat(party.Y).IsGreater(enemy.Y);
+        AssertThat(party.X).IsLess(enemy.X);
+    }
+
+    [TestCase]
+    public void PresentationFacingMatchesFrozenUnityRules()
+    {
+        AssertThat(GodotPresentationFacingResolver.Initial(0)).IsEqual(GodotUnitFacing.East);
+        AssertThat(GodotPresentationFacingResolver.Initial(1)).IsEqual(GodotUnitFacing.West);
+        AssertThat(GodotPresentationFacingResolver.Resolve(new GridPoint(0,0),new GridPoint(1,3),GodotUnitFacing.East)).IsEqual(GodotUnitFacing.North);
+        AssertThat(GodotPresentationFacingResolver.Resolve(new GridPoint(2,2),new GridPoint(1,1),GodotUnitFacing.West)).IsEqual(GodotUnitFacing.West);
+    }
+
+    [TestCase]
+    public void MultiCellMoveDurationExceedsLegacyTimerAndMustSerializeAttack()
+    {
+        AssertThat(GodotBattlePresentationPlayer.EstimateMoveDuration(3, .22d, .06d)).IsGreater(.45d);
     }
 
     [TestCase]

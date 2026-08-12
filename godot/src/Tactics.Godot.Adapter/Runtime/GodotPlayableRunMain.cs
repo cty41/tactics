@@ -51,6 +51,9 @@ public partial class GodotPlayableRunMain : Control
     private bool _settlementCommitted;
     private GodotBattlePresentationPlayer? _presentationPlayer;
     private GodotBattleCameraFeedback? _cameraFeedback;
+    private BattleUiSnapshot? _presentationAfter;
+    private bool _continueAutomaticAfterPresentation;
+    private bool _pauseAfterCurrentFrame;
     private StandardUnitPresentationResource? _presentationProfile;
     private readonly List<SkillPresentationResource> _skillPresentationProfiles=new();
 
@@ -66,6 +69,11 @@ public partial class GodotPlayableRunMain : Control
     }
 
     public override void _ExitTree(){if(_playbackTimer is not null)_playbackTimer.Timeout-=OnPlaybackTimer;}
+    public override void _Process(double delta)
+    {
+        foreach((UnitInstanceId id,Control meter) in _unitMeters)
+            if(_actors.TryGetValue(id,out GodotUnitActor? actor)&&GodotObject.IsInstanceValid(actor)&&GodotObject.IsInstanceValid(meter))meter.Position=actor.Position+new Vector2(-42,-76);
+    }
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
@@ -228,6 +236,7 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer = new GodotBattlePresentationPlayer();
         _presentationPlayer.Configure(_presentationProfile ?? new StandardUnitPresentationResource());
         _presentationPlayer.ConfigureSkills(_skillPresentationProfiles);
+        _presentationPlayer.FrameFinished+=OnPresentationFrameFinished;
         _board.AddChild(_presentationPlayer);
         _cameraFeedback=new GodotBattleCameraFeedback();root.AddChild(_cameraFeedback);_cameraFeedback.Configure(_board);
         _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
@@ -257,11 +266,11 @@ public partial class GodotPlayableRunMain : Control
         foreach (BattleUiUnitSnapshot unit in visible)
         {
             if(!_actors.TryGetValue(unit.UnitId,out GodotUnitActor? actor)||!GodotObject.IsInstanceValid(actor))
-            {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;_board.AddChild(actor);_actors[unit.UnitId]=actor;}
-            actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
+            {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));_board.AddChild(actor);_actors[unit.UnitId]=actor;}
+            if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
             actor.SetStatuses(unit.Statuses);
-            actor.ZIndex = 100 + (unit.Cell.X + unit.Cell.Y) * 12 + unit.Cell.X;
+            actor.ZIndex = 100 + (18-unit.Cell.X-unit.Cell.Y) * 12 + unit.Cell.X;
             if(_unitMeters.Remove(unit.UnitId,out Control? oldMeter)&&GodotObject.IsInstanceValid(oldMeter))oldMeter.QueueFree();
             Control meter=CreateUnitMeters(unit);_board.AddChild(meter);_unitMeters[unit.UnitId]=meter;
         }
@@ -289,7 +298,7 @@ public partial class GodotPlayableRunMain : Control
     private static Control CreateUnitMeters(BattleUiUnitSnapshot unit)
     {
         Vector2 foot=IsometricBattleBoardLayout.GridToScreen(unit.Cell);
-        var root=new Control{Position=foot+new Vector2(-42,-76),Size=new Vector2(84,34),ZIndex=400+(unit.Cell.X+unit.Cell.Y)*12+unit.Cell.X,MouseFilter=MouseFilterEnum.Ignore};
+        var root=new Control{Position=foot+new Vector2(-42,-76),Size=new Vector2(84,34),ZIndex=400+(18-unit.Cell.X-unit.Cell.Y)*12+unit.Cell.X,MouseFilter=MouseFilterEnum.Ignore};
         var hp=new ProgressBar{Position=Vector2.Zero,Size=new Vector2(84,15),MinValue=0,MaxValue=unit.MaxHealth,Value=unit.CurrentHealth,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};hp.Modulate=new Color(.35f,1f,.4f);root.AddChild(hp);
         var hpText=Label($"HP {unit.CurrentHealth}/{unit.MaxHealth}",11);hpText.Position=new Vector2(3,-2);hpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(hpText);
         var mp=new ProgressBar{Position=new Vector2(0,17),Size=new Vector2(84,15),MinValue=0,MaxValue=Math.Max(1,unit.MaxMana),Value=unit.CurrentMana,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};mp.Modulate=new Color(.35f,.65f,1f);root.AddChild(mp);
@@ -362,13 +371,12 @@ public partial class GodotPlayableRunMain : Control
         BattleUiIntentResult result = _battle.Submit(intent);
         AddEvents(result.Events);
         if(!result.Succeeded&&result.Events.Count==0&&result.FailureCode is not null)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,result.FailureCode,"CommandRejectedEvent"));
-        if(_battle.HasPendingAutomaticFrames){RefreshBattle(result.Snapshot);if(result.Presentation is BattlePresentationFrame pendingPresentation){_presentationPlayer?.Play(pendingPresentation,_actors);_cameraFeedback?.Play(pendingPresentation);}PlaybackStep(true);_playbackTimer!.Start();return;}
+        if(_battle.HasPendingAutomaticFrames){if(result.Presentation is BattlePresentationFrame pendingPresentation)BeginPresentation(pendingPresentation,true);else PlaybackStep(true);return;}
         if (result.BattleResult is PureRunBattleResult battleResult)
         {
             CompleteBattle(battleResult);return;
         }
-        RefreshBattle();
-        if(result.Presentation is BattlePresentationFrame presentation){_presentationPlayer?.Play(presentation,_actors);_cameraFeedback?.Play(presentation);}
+        if(result.Presentation is BattlePresentationFrame presentation)BeginPresentation(presentation,false);else RefreshBattle();
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
 
@@ -402,16 +410,30 @@ public partial class GodotPlayableRunMain : Control
         RunSessionResult settled=_run!.ApplyBattleResult(battleResult);if(!settled.Succeeded){_settlementCommitted=false;SetStatus(settled.ErrorCode);return;}ShowSettlement(settled.Snapshot!);
     }
 
-    private void OnPlaybackTimer(){if(!_playbackPaused)PlaybackStep(false);}
+    private void OnPlaybackTimer(){if(!_playbackPaused&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);}
     private void PlaybackStep(bool forced)
     {
-        if(_battle is null||(_playbackPaused&&!forced))return;
+        if(_battle is null||(_playbackPaused&&!forced)||(_presentationPlayer?.IsPlaying??false))return;
         BattleUiFrame? frame=_battle.DequeueAutomaticFrame();
-        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);_presentationPlayer?.Play(frame.Presentation,_actors);_cameraFeedback?.Play(frame.Presentation);return;}
+        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);BeginPresentation(frame.Presentation,true,forced&&_playbackPaused);return;}
         _playbackTimer?.Stop();RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
     }
-    private void TogglePause(){_playbackPaused=!_playbackPaused;AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));RefreshLog();}
+    private void TogglePause(){_playbackPaused=!_playbackPaused;_presentationPlayer?.SetPaused(_playbackPaused);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));if(!_playbackPaused&&_battle?.HasPendingAutomaticFrames==true&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);RefreshLog();}
     private void ToggleSpeed(){if(_playbackTimer is null)return;_playbackTimer.WaitTime=_playbackTimer.WaitTime>.3?.225:.45;_presentationPlayer?.SetSpeed(_playbackTimer.WaitTime<.3?2f:1f);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"Playback {(_playbackTimer.WaitTime<.3?"2x":"1x")}","Playback"));RefreshLog();}
+
+    private void BeginPresentation(BattlePresentationFrame frame,bool continueAutomatic,bool pauseAfter=false)
+    {
+        _presentationAfter=frame.After;_continueAutomaticAfterPresentation=continueAutomatic;_pauseAfterCurrentFrame=pauseAfter;
+        RefreshBattle(frame.Before);_presentationPlayer?.Play(frame,_actors);_cameraFeedback?.Play(frame);
+        if(_playbackPaused&&!pauseAfter)_presentationPlayer?.SetPaused(true);
+    }
+    private void OnPresentationFrameFinished()
+    {
+        BattleUiSnapshot? after=_presentationAfter;_presentationAfter=null;if(after is not null)RefreshBattle(after);
+        bool shouldContinue=_continueAutomaticAfterPresentation;_continueAutomaticAfterPresentation=false;
+        if(_pauseAfterCurrentFrame){_pauseAfterCurrentFrame=false;_playbackPaused=true;RefreshLog();return;}
+        if(shouldContinue&&!_playbackPaused)PlaybackStep(false);
+    }
 
     private void AddEvents(IEnumerable<BattleEvent> events){foreach(BattleEvent item in events)AddLog(FormatEvent(item));}
     private void AddLog(BattleUiLogEntry entry){if(_logs.Count>=100)_logs.RemoveAt(0);_logs.Add(entry);}
