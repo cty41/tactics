@@ -19,6 +19,7 @@ DamageKindValue = "None"
 StatusContentIdValue = "buff.fear"
 StatusDuration = 1
 BranchId = "necromancer.fear-curse"
+PrerequisiteBranchId = "necromancer.amplify-damage"
 RequiredAttribute = "Charisma"
 MinimumAttribute = 7
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Graph_Ability.asset"

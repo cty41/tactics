@@ -20,6 +20,7 @@ StatusContentIdValue = "buff.fear"
 StatusDuration = 1
 BranchId = "necromancer.fear-curse"
 PrerequisiteContentIdValue = "skill.necromancer.fear-curse.lv1"
+PrerequisiteBranchId = "necromancer.amplify-damage"
 RequiredAttribute = "Charisma"
 MinimumAttribute = 7
 AreaRadius = 1

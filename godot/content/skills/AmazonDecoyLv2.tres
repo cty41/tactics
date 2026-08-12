@@ -18,6 +18,7 @@ ExecutionKindValue = "Decoy"
 DamageKindValue = "None"
 BranchId = "amazon.decoy"
 PrerequisiteContentIdValue = "skill.amazon.decoy.lv1"
+PrerequisiteBranchId = "amazon.combat-techniques"
 RequiredAttribute = "Luck"
 MinimumAttribute = 7
 CleanseHarmful = true

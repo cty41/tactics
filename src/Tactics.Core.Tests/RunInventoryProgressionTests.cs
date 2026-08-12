@@ -37,7 +37,7 @@ public sealed class RunInventoryProgressionTests
         var service = new RunInventoryProgressionService();
         RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
         RunMutationResult result = service.CompleteProgression(allocated.State, allocated.State.Revision,
-            "progression:n1", raised, levelTwo.ContentId, new Dictionary<ContentId, SkillDefinition> { [levelTwo.ContentId] = levelTwo });
+            "progression:n1", raised, levelTwo.ContentId, new Dictionary<ContentId, SkillDefinition> { [levelTwo.ContentId] = levelTwo }, Definition(state));
         Assert.Multiple(() =>
         {
             Assert.That(result.Succeeded, Is.True);
@@ -106,7 +106,7 @@ public sealed class RunInventoryProgressionTests
         UnitAttributes raised = new(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck);
         RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
         RunMutationResult result = service.CompleteProgression(allocated.State, allocated.State.Revision, "progression:n1",
-            raised, candidate.ContentId, skills);
+            raised, candidate.ContentId, skills, Definition(state));
         Assert.Multiple(() => { Assert.That(result.Succeeded, Is.True); Assert.That(result.State.PendingProgression, Is.Empty); });
     }
 
@@ -120,7 +120,7 @@ public sealed class RunInventoryProgressionTests
         RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
         RunMutationResult result = service.CompleteProgression(allocated.State, allocated.State.Revision,
             "progression:n1", raised, null,
-            new Dictionary<ContentId, SkillDefinition>());
+            new Dictionary<ContentId, SkillDefinition>(), Definition(state));
         Assert.Multiple(() => { Assert.That(result.Succeeded, Is.True); Assert.That(result.State.Party[0].Level, Is.EqualTo(2)); });
     }
 
@@ -146,9 +146,9 @@ public sealed class RunInventoryProgressionTests
 
         RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
         RunMutationResult skipped = service.CompleteProgression(allocated.State, allocated.State.Revision,
-            "progression:n1", raised, null, skills);
+            "progression:n1", raised, null, skills, Definition(state));
         RunMutationResult crossRole = service.CompleteProgression(allocated.State, allocated.State.Revision,
-            "progression:n1", raised, amazonSkill.ContentId, skills);
+            "progression:n1", raised, amazonSkill.ContentId, skills, Definition(state));
 
         Assert.That(skipped.RejectionCode, Is.EqualTo("progression.skill_required"));
         Assert.That(crossRole.RejectionCode, Is.EqualTo("progression.invalid_skill"));
@@ -162,10 +162,72 @@ public sealed class RunInventoryProgressionTests
         UnitAttributes raised = new(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck);
 
         RunMutationResult result = new RunInventoryProgressionService().CompleteProgression(
-            state, state.Revision, "progression:n1", raised, null, new Dictionary<ContentId, SkillDefinition>());
+            state, state.Revision, "progression:n1", raised, null, new Dictionary<ContentId, SkillDefinition>(), Definition(state));
 
         Assert.That(result.RejectionCode, Is.EqualTo("progression.attributes_not_allocated"));
         Assert.That(result.State, Is.SameAs(state));
+    }
+
+    [Test]
+    public void GrowthOfferIsDeterministicLimitedToThreeAndNeverRepeatsLearnedLevel()
+    {
+        PureRunState state = State(withProgression: true, frozenCharacterIds: true);
+        RunCharacterState mage = state.Party[0];
+        SkillDefinition Skill(string branch, int level) => new(
+            new ContentId($"skill.{branch}.lv{level}"), branch, SkillRole.Mage, SkillKind.Active,
+            level, 1, 1, 4, SkillExecutionKind.Fireball, 4, SkillDamageKind.Magical,
+            branchId: branch, prerequisiteContentId: level == 2 ? new ContentId($"skill.{branch}.lv1") : null);
+        SkillDefinition[] values =
+        [
+            Skill("mage.fireball", 1), Skill("mage.fireball", 2),
+            Skill("mage.ice-bolt", 1), Skill("mage.lightning", 1),
+            Skill("mage.ice-armor", 1), Skill("mage.teleport", 1), Skill("mage.summon-fire-demon", 1)
+        ];
+        var skills = values.ToDictionary(value => value.ContentId);
+        var service = new RunInventoryProgressionService();
+
+        ContentId[] first = service.GrowthOffer(state, mage, skills, Definition(state)).Select(value => value.ContentId).ToArray();
+        ContentId[] replay = service.GrowthOffer(state, mage, skills, Definition(state)).Select(value => value.ContentId).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first, Has.Length.EqualTo(3));
+            Assert.That(replay, Is.EqualTo(first));
+            Assert.That(first, Does.Not.Contain(new ContentId("skill.mage.fireball.lv1")));
+            Assert.That(first, Does.Contain(new ContentId("skill.mage.fireball.lv2")));
+        });
+    }
+
+    [Test]
+    public void GrowthOfferPinsAndConsumesTheStartingBranchAdvancedGuarantee()
+    {
+        PureRunState state = State(withProgression: true, frozenCharacterIds: true);
+        RunCharacterState mage = state.Party[0];
+        ContentId starting = new("skill.mage.fireball.lv1");
+        SkillDefinition fireball = new(starting,"fireball",SkillRole.Mage,SkillKind.Active,1,1,1,4,
+            SkillExecutionKind.Fireball,4,SkillDamageKind.Magical,branchId:"mage.fireball");
+        SkillDefinition fireballTwo = new(new ContentId("skill.mage.fireball.lv2"),"fireball2",SkillRole.Mage,SkillKind.Active,2,1,1,4,
+            SkillExecutionKind.Fireball,5,SkillDamageKind.Magical,branchId:"mage.fireball",prerequisiteContentId:starting);
+        SkillDefinition advanced = new(new ContentId("skill.mage.summon-fire-demon.lv1"),"advanced",SkillRole.Mage,SkillKind.Active,1,1,1,3,
+            SkillExecutionKind.SummonFireDemon,0,SkillDamageKind.None,branchId:"mage.summon-fire-demon",prerequisiteBranchId:"mage.fireball");
+        SkillDefinition other = new(new ContentId("skill.mage.ice-bolt.lv1"),"other",SkillRole.Mage,SkillKind.Active,1,1,1,4,
+            SkillExecutionKind.IceBolt,4,SkillDamageKind.Magical,branchId:"mage.ice-bolt");
+        SkillDefinition lockedAdvanced = new(new ContentId("skill.mage.ice-armor.lv1"),"locked",SkillRole.Mage,SkillKind.Active,1,1,0,0,
+            SkillExecutionKind.IceArmor,0,SkillDamageKind.None,branchId:"mage.ice-armor",prerequisiteBranchId:"mage.ice-bolt");
+        var skills = new[] { fireball, fireballTwo, advanced, other, lockedAdvanced }.ToDictionary(value=>value.ContentId);
+        var service = new RunInventoryProgressionService();
+        PureRunDefinition definition=Definition(state);
+        SkillDefinition[] offer = service.GrowthOffer(state,mage,skills,definition).ToArray();
+        Assert.That(offer[0].ContentId,Is.EqualTo(advanced.ContentId));
+        Assert.That(offer.Select(value=>value.ContentId),Does.Not.Contain(lockedAdvanced.ContentId));
+
+        UnitAttributes a=mage.Attributes;
+        UnitAttributes raised=new(a.Strength,a.Agility,a.Constitution,a.Intelligence+1,a.Charisma,a.Luck);
+        RunMutationResult allocated=service.AllocateProgressionAttributes(state,state.Revision,"progression:n1",raised);
+        RunMutationResult completed=service.CompleteProgression(allocated.State,allocated.State.Revision,"progression:n1",raised,
+            fireballTwo.ContentId,skills,definition);
+        Assert.That(completed.Succeeded,Is.True);
+        Assert.That(completed.State.AppliedTransactionKeys,Does.Contain("growth-guarantee:pure_run_mage"));
     }
 
     private static PureRunState State(bool withProgression = false, bool frozenCharacterIds = false)
@@ -186,4 +248,10 @@ public sealed class RunInventoryProgressionTests
         return new PureRunState("run-1", 7, 3, PureRunPhase.Ready, 1, new ContentId("encounter.pure-run.n2"), party,
             backpackConsumables: backpack, pendingProgression: pending);
     }
+
+    private static PureRunDefinition Definition(PureRunState state) => new(
+        new ContentId("run.test"),
+        new[] { new ContentId("encounter.n1"), new ContentId("encounter.n2"), new ContentId("encounter.n3") },
+        state.Party.Select(character => new PureRunPartyTemplate(character.CharacterId, character.UnitContentId,
+            character.LearnedSkills.First(), character.Attributes)));
 }

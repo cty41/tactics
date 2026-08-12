@@ -59,6 +59,28 @@ public sealed class BattlePresentationFrameCompilerTests
         Assert.That(cue.Effects!.Single(value=>value.Kind==BattlePresentationEffectKind.SpearDropped).Cell,Is.EqualTo(drop));
     }
 
+    [Test]
+    public void SummonCastFacesTheCommittedSummonCellInsteadOfTheCaster()
+    {
+        UnitInstanceId actor=new("necromancer"),summon=new("skeleton");
+        ContentId skillId=new("skill.necromancer.summon-skeleton.lv1");
+        BattleUiSnapshot before=Snapshot(actor,new UnitInstanceId("corpse"),new GridPoint(1,4),new GridPoint(3,4),false);
+        BattleUiSnapshot after=before;
+        SkillDefinition skill=new(skillId,"summon",SkillRole.Necromancer,SkillKind.Active,1,3,1,5,
+            SkillExecutionKind.SummonSkeleton,0,SkillDamageKind.None);
+        GridPoint summonedCell=new(3,4);
+        BattleEvent[] events=
+        [
+            new SkillUsedEvent(actor,actor,skillId),
+            new UnitSummonedEvent(actor,summon,new ContentId("unit.pure-run.skeleton-warrior"),summonedCell)
+        ];
+
+        BattlePresentationCue cue=BattlePresentationFrameCompiler.Compile("summon",before,after,events,
+            new Dictionary<ContentId,SkillDefinition>{{skillId,skill}}).Cues.Single();
+
+        Assert.That(cue.Destination,Is.EqualTo(summonedCell));
+    }
+
     private static BattleUiSnapshot Snapshot(UnitInstanceId actor,UnitInstanceId target,GridPoint actorCell,GridPoint targetCell,bool targetAlive)
     {
         BattleUiUnitSnapshot Unit(UnitInstanceId id,GridPoint cell,bool alive)=>new(id,new ContentId("unit.test"),cell,id==actor?0:1,alive,alive?10:0,10,5,5,false,[],new Dictionary<ContentId,int>());

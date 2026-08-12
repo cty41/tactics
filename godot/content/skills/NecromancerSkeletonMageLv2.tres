@@ -18,6 +18,7 @@ ExecutionKindValue = "SummonSkeletonMage"
 DamageKindValue = "None"
 BranchId = "necromancer.skeleton-mage"
 PrerequisiteContentIdValue = "skill.necromancer.skeleton-mage.lv1"
+PrerequisiteBranchId = "necromancer.summon-skeleton"
 RequiredAttribute = "Charisma"
 MinimumAttribute = 7
 SummonLimit = 2

@@ -76,7 +76,8 @@ public sealed record SkillDefinition
         bool growthVisible = true,
         SkillExecutionProfile? executionProfile = null,
         string requiredAttribute = "",
-        int minimumAttribute = 0)
+        int minimumAttribute = 0,
+        string prerequisiteBranchId = "")
     {
         if (string.IsNullOrWhiteSpace(sourceId)) throw new ArgumentException("SourceId cannot be empty.", nameof(sourceId));
         if (!Enum.IsDefined(role) || !Enum.IsDefined(kind) || !Enum.IsDefined(executionKind) || !Enum.IsDefined(damageKind)) throw new ArgumentOutOfRangeException(nameof(executionKind));
@@ -105,6 +106,7 @@ public sealed record SkillDefinition
         ExecutionProfile = executionProfile ?? new SkillExecutionProfile();
         RequiredAttribute = requiredAttribute.Trim();
         MinimumAttribute = minimumAttribute;
+        PrerequisiteBranchId = prerequisiteBranchId.Trim();
     }
 
     public ContentId ContentId { get; }
@@ -130,6 +132,7 @@ public sealed record SkillDefinition
     public SkillExecutionProfile ExecutionProfile { get; }
     public string RequiredAttribute { get; }
     public int MinimumAttribute { get; }
+    public string PrerequisiteBranchId { get; }
     public bool IsPassive => Kind == SkillKind.Passive;
     public int AreaRadius => ExecutionProfile.AreaRadius > 0 ? ExecutionProfile.AreaRadius : ExecutionKind == SkillExecutionKind.AreaBlast ? 2 : 0;
     public bool UsesLineTargeting => ExecutionKind is SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.Thrust;

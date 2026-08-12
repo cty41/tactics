@@ -14,6 +14,19 @@ namespace Tactics.Application.Tests;
 public sealed class PlayableBattleSessionServiceTests
 {
     [Test]
+    public void DynamicSummonsReceiveTheirExplicitBasicAttackBindings()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(PlayableBattleSessionService.DynamicSummonBasicSkill(new ContentId("unit.pure-run.skeleton-warrior")),
+                Is.EqualTo(new ContentId("skill.basic.melee")));
+            Assert.That(PlayableBattleSessionService.DynamicSummonBasicSkill(new ContentId("unit.pure-run.fire-demon")),
+                Is.EqualTo(new ContentId("skill.basic.magic")));
+            Assert.That(PlayableBattleSessionService.DynamicSummonBasicSkill(new ContentId("unit.pure-run.decoy")), Is.Null);
+        });
+    }
+
+    [Test]
     public void TargetingCancelAndIllegalCell_DoNotMutateBattleState()
     {
         PlayableBattleSessionService service = CreateService(out _, out _);

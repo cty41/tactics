@@ -38,6 +38,19 @@ public class PlayableRunUiGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
+    public void CompactMeterKeepsExactBoundsWithoutThemeExpansion()
+    {
+        var actor = new GodotUnitActor { Position = new Vector2(200, 300) };
+        var meter = new GodotCompactUnitMeter();
+        meter.Bind(actor, 10, 20, 4, 8);
+
+        AssertThat(meter.Size).IsEqual(GodotPlayableRunMain.UnitMeterSize);
+        AssertThat(meter.GetChildCount()).IsEqual(0);
+        meter.Free(); actor.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
     public void HomeLoadsCanonical101CatalogWithoutWritingSave()
     {
         var ui = new GodotPlayableRunMain();
@@ -88,7 +101,8 @@ public class PlayableRunUiGodotTests
             new[] { mage }.Concat(others).ToArray(), pendingProgression: new[] { pending });
         typeof(GodotPlayableRunMain).GetMethod("ShowProgression", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(ui, new object[] { run, pending });
         string[] buttonTexts = Descendants<Button>(ui).Select(button => button.Text).ToArray();
-        AssertThat(buttonTexts.Any(text => text.Contains("mage.fireball Lv2", StringComparison.Ordinal))).IsTrue();
+        AssertThat(buttonTexts.Count(text => text.StartsWith("Learn ", StringComparison.Ordinal) || text.StartsWith("Upgrade ", StringComparison.Ordinal))).IsLessEqual(3);
+        AssertThat(buttonTexts.Any(text => text.Contains("Upgrade Fireball Lv1 → Lv2", StringComparison.Ordinal))).IsTrue();
         ui.Free();
     }
 

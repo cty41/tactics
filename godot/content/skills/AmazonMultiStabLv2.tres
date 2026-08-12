@@ -19,6 +19,7 @@ Damage = 4
 DamageKindValue = "Physical"
 BranchId = "amazon.multi-stab"
 PrerequisiteContentIdValue = "skill.amazon.multi-stab.lv1"
+PrerequisiteBranchId = "amazon.thrust"
 RequiredAttribute = "Agility"
 MinimumAttribute = 7
 OrderedTargetCount = 4

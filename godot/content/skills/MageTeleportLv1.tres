@@ -17,6 +17,7 @@ MaxRange = 4
 ExecutionKindValue = "Teleport"
 DamageKindValue = "None"
 BranchId = "mage.teleport"
+PrerequisiteBranchId = "mage.lightning"
 RequiredAttribute = "Intelligence"
 MinimumAttribute = 7
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Graph_Ability.asset"

@@ -18,6 +18,7 @@ ExecutionKindValue = "Teleport"
 DamageKindValue = "None"
 BranchId = "mage.teleport"
 PrerequisiteContentIdValue = "skill.mage.teleport.lv1"
+PrerequisiteBranchId = "mage.lightning"
 RequiredAttribute = "Intelligence"
 MinimumAttribute = 7
 IgnoreLineOfSight = true

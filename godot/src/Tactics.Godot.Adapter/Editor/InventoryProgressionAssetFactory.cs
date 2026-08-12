@@ -51,7 +51,7 @@ public static class InventoryProgressionAssetFactory
         r.RoleValue=d.Role;r.KindValue=d.Kind;r.Level=d.Level;r.ManaCost=d.ManaCost;r.MinRange=d.Kind=="Passive"||d.ExecutionKind is "IceArmor" or "BoneShield"?0:1;r.MaxRange=d.TargetRange;
         r.ExecutionKindValue=d.ExecutionKind.Length>0?d.ExecutionKind:"CombatTechniques";r.Damage=d.Damage;r.DamageKindValue=d.DamageKind.Length>0?d.DamageKind:"None";
         r.StatusContentIdValue=d.StatusContentId;r.StatusDuration=d.StatusDuration;r.IsBasicAbility=d.IsBasicAbility;r.MaxUsesPerTurn=d.MaxUsesPerTurn;
-        r.BranchId=d.BranchId;r.PrerequisiteContentIdValue=PrerequisiteId(d);r.GrowthVisible=d.GrowthVisible;
+        r.BranchId=d.BranchId;r.PrerequisiteContentIdValue=PrerequisiteId(d);r.PrerequisiteBranchId=d.PrerequisiteBranchId;r.GrowthVisible=d.GrowthVisible;
         r.RequiredAttribute=d.RequiredAttribute;r.MinimumAttribute=d.MinimumAttribute;
         r.AreaRadius=d.AreaRadius;r.OrderedTargetCount=d.OrderedTargetCount;r.SummonCount=d.SummonCount;r.SummonLimit=d.SummonLimit;r.SummonCategory=d.SummonCategory;
         r.RequiresCorpse=d.RequiresCorpse;r.IgnoreLineOfSight=d.IgnoreLineOfSight;r.ShieldMultiplier=d.ShieldMultiplier;r.ShieldAbsorbsAllDamage=d.ShieldAbsorbsAllDamage;r.CleanseHarmful=d.CleanseHarmful;r.SecondaryDamage=d.SecondaryDamage;
@@ -69,7 +69,7 @@ public static class InventoryProgressionAssetFactory
         public string ContentId{get;init;}="";public string BranchId{get;init;}="";public string Role{get;init;}="";public string Kind{get;init;}="";public int Level{get;init;}public int ManaCost{get;init;}public int TargetRange{get;init;}
         public string DisplayName{get;init;}="";public string Description{get;init;}="";public string ExecutionKind{get;init;}="";public int Damage{get;init;}public string DamageKind{get;init;}="";public string StatusContentId{get;init;}="";public int StatusDuration{get;init;}
         public bool IsBasicAbility{get;init;}public int MaxUsesPerTurn{get;init;}public bool GrowthVisible{get;init;}public int AreaRadius{get;init;}public int OrderedTargetCount{get;init;}public int SummonCount{get;init;}public int SummonLimit{get;init;}public string SummonCategory{get;init;}="";public bool RequiresCorpse{get;init;}public bool IgnoreLineOfSight{get;init;}public int ShieldMultiplier{get;init;}public bool ShieldAbsorbsAllDamage{get;init;}public bool CleanseHarmful{get;init;}public int SecondaryDamage{get;init;}
-        public string RequiredAttribute{get;init;}="";public int MinimumAttribute{get;init;}
+        public string RequiredAttribute{get;init;}="";public int MinimumAttribute{get;init;}public string PrerequisiteBranchId{get;init;}="";
         public string SourcePath{get;init;}="";public string SourceGuid{get;init;}="";public long SourceLocalFileId{get;init;}public string GraphPath{get;init;}="";public string GraphDependencyHash{get;init;}="";
     }
 }

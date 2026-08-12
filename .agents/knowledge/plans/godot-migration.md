@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-12T23:11:21+08:00"
+timestamp: "2026-08-13T01:54:44+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:bf6119f12fad378f299a499c77603757a886a89550ff08e1cea846841213ddb3
+source_fingerprint: sha256:2466aeefd2b00562a4d45cb2defdbecdc13f1490dfda79085459112721cd29c0
 ---
 
 # Current state
@@ -84,6 +84,8 @@ Phase 8B 已为 Fireball、Bone Spear 与 Thrust 建立首批 programmatic-only 
 Phase 8C–8D 自动实现已完成：Ice Bolt、Lightning、Poison Spear 与 Amplify Damage 的程序化表现只消费已提交的路径、Damage/Status 和 Spear event；结构化状态快照驱动独立于 Body 的稳定覆盖层，展示 Poison、Burning、Frozen、Slow、Stun、Fear、Curse 与防护状态。人工 parity 反馈确认 Unity 不存在整棋盘聚焦/震动合同后，Godot 已移除多做的 camera motion 运行时与内容 Resource，命中反馈继续限定在单位局部表现。等距 Tile 使用项目 warm/cool 双色交替，并由项目自有 Battle Backdrop shader 的等价 Godot CanvasItem 实现背景层；相关 Unity 纹理、材质与 shader blob 仅审计、不复制 payload。canonical Catalog 回落并固定为124；完整统一门禁通过后仍等待 Phase 7B–8D 合并人工验收。
 
 Phase 8 等距表现定向修复将屏幕投影垂直镜像而不改变任何 Core GridPoint、Encounter 出生格或存档：玩家逻辑出生格现在显示在左下、敌方显示在右上，初始朝向分别采用 Unity 合同的 East/West，移动分段、targeting hover 与攻击目标朝向复用等价 `FacingResolver`。单位表现由固定时间出队改为单 Frame 串行 Tween：先显示 Before snapshot，再依次完成 Move、Attack/Cast、Hit、Defeat，最后对齐 After snapshot并由完成事件驱动下一 AI frame；玩家动作的表现 After 在自动 AI 推进前捕获，防止未来伤害或死亡泄漏进当前帧。Pause/Step/0.5×/1×/2×/4×直接控制当前队列，避免 Refresh 提前覆盖移动 Actor 造成瞬移或自动播放停顿。移动棋盘把未消费尸体作为阻挡，召唤消费后才释放格子。完整统一门禁通过后仍并入 Phase 7B–8D 合并人工验收。
+
+Phase 7B–8D 合并验收前的第二轮定向修复把成长技能阶段收紧为 Unity 合同的确定性三选一：候选在属性事务持久化后由 Run seed、角色和 offer ordinal 稳定生成，已学等级不再重复出现，升级项明确显示旧/新等级。动态 Skeleton Warrior 显式绑定现有 Melee Attack；经用户授权，Godot playable slice 为 Unity 冻结 Prefab 中无 AbilityConfig 的 Fire Demon 显式绑定现有 Magic Attack，此差异只存在于 Application 会话装配，不改写冻结 Unit DTO。等距移动每段改为线性恒速，召唤施法朝向消费已提交的 `UnitSummonedEvent.Cell`，诊断 HP/MP 显示改为主题无关的精确 60×18 自绘 Overlay 并持续跟随 Actor。Catalog 仍为124，Save V4、玩法数值和事件顺序不变；播放期间输入锁的人验后移。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

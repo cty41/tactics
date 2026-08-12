@@ -18,6 +18,7 @@ StatusContentIdValue = "buff.ice-armor"
 StatusDuration = 2
 BranchId = "mage.ice-armor"
 PrerequisiteContentIdValue = "skill.mage.ice-armor.lv1"
+PrerequisiteBranchId = "mage.ice-bolt"
 RequiredAttribute = "Intelligence"
 MinimumAttribute = 7
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceArmor_Lv2_Graph_Ability.asset"

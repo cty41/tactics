@@ -116,7 +116,9 @@ public sealed class PlayableBattleSessionService
     private PureRunBattleResult? _battleResult;
     private BattleUiSnapshot? _lastPresentedSnapshot;
     private static readonly ContentId SkeletonUnitId = new("unit.pure-run.skeleton-warrior");
+    private static readonly ContentId FireDemonUnitId = new("unit.pure-run.fire-demon");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
+    private static readonly ContentId MagicAttackId = new("skill.basic.magic");
 
     public PlayableBattleSessionService(
         PlayableBattleSessionContext context,
@@ -421,9 +423,18 @@ public sealed class PlayableBattleSessionService
     private IReadOnlyList<SkillDefinition> SkillsFor(BattleUnitState unit)
     {
         if (_context.SkillsByUnit.TryGetValue(unit.Unit.InstanceId, out IReadOnlyList<SkillDefinition>? skills)) return skills;
-        if (unit.SummonOwnerId is not null && unit.Unit.DefinitionId == SkeletonUnitId)
-            return new[] { _context.SkillCatalog[MeleeAttackId] };
+        ContentId? summonSkill = unit.SummonOwnerId is null ? null : DynamicSummonBasicSkill(unit.Unit.DefinitionId);
+        if (summonSkill is ContentId id) return new[] { _context.SkillCatalog[id] };
         return Array.Empty<SkillDefinition>();
+    }
+
+    public static ContentId? DynamicSummonBasicSkill(ContentId unitDefinitionId)
+    {
+        if (unitDefinitionId == SkeletonUnitId) return MeleeAttackId;
+        // Intentional Godot playable-slice divergence: the frozen Unity Fire Demon prefab has
+        // no AbilityConfig, but the migrated summon must be player-operable like Skeleton Warrior.
+        if (unitDefinitionId == FireDemonUnitId) return MagicAttackId;
+        return null;
     }
     private BattleUiIntentResult Result(bool succeeded, string? failureCode, IReadOnlyList<BattleEvent> events, BattlePresentationFrame? presentation=null) =>
         new(succeeded, failureCode, CaptureSnapshot(), events,HasPendingAutomaticFrames?null:_battleResult,presentation);

@@ -77,7 +77,8 @@ public partial class GodotBattlePresentationPlayer : Node
                 {
                     GridPoint from=stepOrigin,to=cell;
                     tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(from,to,actor.PresentationFacing))));
-                    tween.TweenProperty(actor, "position", IsometricBattleBoardLayout.GridToScreen(cell), _profile.MoveSegmentDuration).SetTrans(Tween.TransitionType.Sine);
+                    tween.TweenProperty(actor, "position", IsometricBattleBoardLayout.GridToScreen(cell), _profile.MoveSegmentDuration)
+                        .SetTrans(Tween.TransitionType.Linear).SetEase(Tween.EaseType.InOut);
                     stepOrigin=cell;
                 }
                 tween.TweenInterval(_profile.MoveSettleDuration);

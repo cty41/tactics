@@ -18,6 +18,7 @@ ExecutionKindValue = "SummonFireDemon"
 DamageKindValue = "None"
 BranchId = "mage.summon-fire-demon"
 PrerequisiteContentIdValue = "skill.mage.summon-fire-demon.lv1"
+PrerequisiteBranchId = "mage.fireball"
 RequiredAttribute = "Intelligence"
 MinimumAttribute = 7
 SummonCount = 2

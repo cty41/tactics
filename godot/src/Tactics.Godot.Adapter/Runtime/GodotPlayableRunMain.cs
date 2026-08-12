@@ -32,6 +32,7 @@ public partial class GodotPlayableRunMain : Control
     private readonly Dictionary<ContentId, ConsumableDefinition> _consumables = new();
     private readonly Dictionary<string, string> _layerFourEventPayloads = new(StringComparer.Ordinal);
     private PlayableBattleBalanceProfile? _balance;
+    private PureRunDefinition? _runDefinition;
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
     private readonly Dictionary<UnitInstanceId, Control> _unitMeters = new();
     private readonly List<BattleUiLogEntry> _logs = new();
@@ -161,7 +162,8 @@ public partial class GodotPlayableRunMain : Control
                 }).ToArray(),resource.HealthMultiplier,resource.OutputMultiplier,resource.MinimumStartingMana,
                 Enum.Parse<EncounterClass>(resource.EncounterClassValue));
         }
-        _run = new PureRunSessionService((runResource ?? throw new InvalidOperationException("Run definition is missing.")).ToCoreDefinition(), new GodotRunSaveStore());
+        _runDefinition=(runResource ?? throw new InvalidOperationException("Run definition is missing.")).ToCoreDefinition();
+        _run = new PureRunSessionService(_runDefinition, new GodotRunSaveStore());
     }
 
     private void ShowHome()
@@ -273,8 +275,13 @@ public partial class GodotPlayableRunMain : Control
             actor.SetDeathVisual(!unit.IsAlive);
             actor.SetStatuses(unit.Statuses);
             actor.ZIndex = 100 + (18-unit.Cell.X-unit.Cell.Y) * 12 + unit.Cell.X;
-            if(_unitMeters.Remove(unit.UnitId,out Control? oldMeter)&&GodotObject.IsInstanceValid(oldMeter))oldMeter.QueueFree();
-            Control meter=CreateUnitMeters(unit);_board.AddChild(meter);_unitMeters[unit.UnitId]=meter;
+            if(!_unitMeters.TryGetValue(unit.UnitId,out Control? meter)||meter is not GodotCompactUnitMeter compact||!GodotObject.IsInstanceValid(meter))
+            {
+                if(meter is not null&&GodotObject.IsInstanceValid(meter))meter.QueueFree();
+                compact=new GodotCompactUnitMeter();_board.AddChild(compact);_unitMeters[unit.UnitId]=compact;
+            }
+            compact.ZIndex=400+(18-unit.Cell.X-unit.Cell.Y)*12+unit.Cell.X;
+            compact.Bind(actor,unit.CurrentHealth,unit.MaxHealth,unit.CurrentMana,unit.MaxMana);
         }
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
         _skillPanel.AddChild(Label($"Round {snapshot.Round} | Active {snapshot.ActiveUnitId.Value}\nMode {snapshot.TargetingMode} | {snapshot.Phase}", 25));
@@ -295,17 +302,6 @@ public partial class GodotPlayableRunMain : Control
         ApplyHighlights(snapshot);
         if(_turnOrder is not null)_turnOrder.Text="Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
         RefreshLog();
-    }
-
-    private static Control CreateUnitMeters(BattleUiUnitSnapshot unit)
-    {
-        Vector2 foot=IsometricBattleBoardLayout.GridToScreen(unit.Cell);
-        var root=new Control{Position=foot+new Vector2(-30,-62),Size=UnitMeterSize,ZIndex=400+(18-unit.Cell.X-unit.Cell.Y)*12+unit.Cell.X,MouseFilter=MouseFilterEnum.Ignore};
-        var hp=new ProgressBar{Position=Vector2.Zero,Size=new Vector2(UnitMeterSize.X,UnitMeterBarHeight),MinValue=0,MaxValue=unit.MaxHealth,Value=unit.CurrentHealth,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};hp.Modulate=new Color(.35f,1f,.4f);root.AddChild(hp);
-        var hpText=Label($"HP {unit.CurrentHealth}/{unit.MaxHealth}",8);hpText.Position=new Vector2(2,-4);hpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(hpText);
-        var mp=new ProgressBar{Position=new Vector2(0,9),Size=new Vector2(UnitMeterSize.X,UnitMeterBarHeight),MinValue=0,MaxValue=Math.Max(1,unit.MaxMana),Value=unit.CurrentMana,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};mp.Modulate=new Color(.35f,.65f,1f);root.AddChild(mp);
-        var mpText=Label($"MP {unit.CurrentMana}/{unit.MaxMana}",8);mpText.Position=new Vector2(2,5);mpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(mpText);
-        return root;
     }
 
     private void ApplyHighlights(BattleUiSnapshot snapshot)
@@ -716,18 +712,28 @@ public partial class GodotPlayableRunMain : Control
                 character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
                 character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
             menu.AddChild(Label($"Step 2/2 — choose a skill\nSTR {proposed.Strength}  AGI {proposed.Agility}  CON {proposed.Constitution}\nINT {proposed.Intelligence}  CHA {proposed.Charisma}  LUCK {proposed.Luck}",22));
-            SkillDefinition[] candidates=progressionService.GrowthCandidates(preview,_skills)
-                .Where(skill=>progressionService.CanUnlockWithAttributePoints(preview,skill,0)).ToArray();
+            SkillDefinition[] candidates=progressionService.GrowthOffer(run,preview,_skills,_runDefinition!).ToArray();
             foreach(SkillDefinition skill in candidates)
-                menu.AddChild(Button($"{skill.BranchId} Lv{skill.Level} (requires {skill.RequiredAttribute} {skill.MinimumAttribute})",()=>
-                    CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,skill.ContentId,_skills))));
+                menu.AddChild(Button(GrowthChoiceLabel(preview,skill),()=>
+                    CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,skill.ContentId,_skills,_runDefinition!))));
             if(candidates.Length==0)
             {
                 menu.AddChild(Label("No skill candidate is legal after this allocation. Attribute-only confirmation is allowed.",18));
-                menu.AddChild(Button("Confirm Attribute",()=>CommitMutation(state=>progressionService.CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,null,_skills))));
+                menu.AddChild(Button("Confirm Attribute",()=>CommitMutation(state=>progressionService.CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,null,_skills,_runDefinition!))));
             }
         }
         root.AddChild(PlaceControl(Button("Back",()=>ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null))),new Vector2(650,820),new Vector2(300,55)));
+    }
+
+    private static string GrowthChoiceLabel(RunCharacterState character,SkillDefinition skill)
+    {
+        RunLearnedSkillState? learned=character.LearnedSkillStates.FirstOrDefault(value=>value.BranchId==skill.BranchId);
+        string raw=skill.BranchId.Split('.').Last();
+        string name=string.Join(' ',raw.Split('-').Select(value=>char.ToUpperInvariant(value[0])+value[1..]));
+        string requirement=string.IsNullOrEmpty(skill.RequiredAttribute)?string.Empty:$" (requires {skill.RequiredAttribute} {skill.MinimumAttribute})";
+        return learned is null
+            ? $"Learn {name} Lv{skill.Level}{requirement}"
+            : $"Upgrade {name} Lv{learned.Level} → Lv{skill.Level}{requirement}";
     }
 
     private void AllocateProgressionAttribute(string transactionKey, UnitAttributes attributes)

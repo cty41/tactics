@@ -17,6 +17,7 @@ MaxRange = 3
 ExecutionKindValue = "SummonFireDemon"
 DamageKindValue = "None"
 BranchId = "mage.summon-fire-demon"
+PrerequisiteBranchId = "mage.fireball"
 RequiredAttribute = "Intelligence"
 MinimumAttribute = 7
 SummonCount = 1

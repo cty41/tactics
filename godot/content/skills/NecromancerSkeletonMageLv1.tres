@@ -17,6 +17,7 @@ MaxRange = 999
 ExecutionKindValue = "SummonSkeletonMage"
 DamageKindValue = "None"
 BranchId = "necromancer.skeleton-mage"
+PrerequisiteBranchId = "necromancer.summon-skeleton"
 RequiredAttribute = "Charisma"
 MinimumAttribute = 7
 SummonLimit = 1

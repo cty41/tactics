@@ -16,6 +16,7 @@ ExecutionKindValue = "BoneShield"
 DamageKindValue = "None"
 BranchId = "necromancer.bone-shield"
 PrerequisiteContentIdValue = "skill.necromancer.bone-shield.lv1"
+PrerequisiteBranchId = "necromancer.bone-spear"
 RequiredAttribute = "Charisma"
 MinimumAttribute = 7
 ShieldMultiplier = 2

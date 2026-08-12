@@ -18,6 +18,7 @@ ExecutionKindValue = "RecoverSpear"
 DamageKindValue = "None"
 BranchId = "amazon.recover-spear"
 PrerequisiteContentIdValue = "skill.amazon.recover-spear.lv1"
+PrerequisiteBranchId = "amazon.poison-spear"
 RequiredAttribute = "Agility"
 MinimumAttribute = 7
 SecondaryDamage = 6

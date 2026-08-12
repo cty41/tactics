@@ -57,8 +57,10 @@ public static class BattlePresentationFrameCompiler
                 case SkillUsedEvent used:
                     BattleUiUnitSnapshot actor = Find(before, after, used.ActorId);
                     BattleUiUnitSnapshot target = Find(before, after, used.TargetId);
-                    PresentationCueKind actionKind = ResolveAction(skills[used.SkillId]);
-                    cues.Add(Cue(actionKind, used.ActorId, used.TargetId, used.SkillId, actor.Cell, target.Cell, [], [used.TargetId]));
+                    SkillDefinition definition = skills[used.SkillId];
+                    GridPoint destination = ResolveActionDestination(definition, used, target.Cell, events);
+                    PresentationCueKind actionKind = ResolveAction(definition);
+                    cues.Add(Cue(actionKind, used.ActorId, used.TargetId, used.SkillId, actor.Cell, destination, [], [used.TargetId]));
                     break;
                 case DamageAppliedEvent damage:
                     BattleUiUnitSnapshot source = Find(before, after, damage.SourceId);
@@ -102,6 +104,16 @@ public static class BattlePresentationFrameCompiler
         SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.PoisonSpear => PresentationCueKind.Ranged,
         _ => PresentationCueKind.Cast
     };
+
+    private static GridPoint ResolveActionDestination(SkillDefinition skill, SkillUsedEvent used,
+        GridPoint fallback, IReadOnlyList<BattleEvent> events)
+    {
+        if (skill.ExecutionKind is not (SkillExecutionKind.SummonSkeleton or
+            SkillExecutionKind.SummonSkeletonMage or SkillExecutionKind.SummonFireDemon or SkillExecutionKind.Decoy))
+            return fallback;
+        return events.OfType<UnitSummonedEvent>()
+            .FirstOrDefault(value => value.OwnerId == used.ActorId)?.Cell ?? fallback;
+    }
 
     private static BattlePresentationCue Cue(PresentationCueKind kind, UnitInstanceId actor, UnitInstanceId? target,
         ContentId? skill, GridPoint origin, GridPoint destination, IReadOnlyList<GridPoint> path,

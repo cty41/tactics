@@ -17,6 +17,7 @@ MaxRange = 5
 ExecutionKindValue = "RecoverSpear"
 DamageKindValue = "None"
 BranchId = "amazon.recover-spear"
+PrerequisiteBranchId = "amazon.poison-spear"
 RequiredAttribute = "Agility"
 MinimumAttribute = 7
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RecoverSpear_Graph_Ability.asset"
