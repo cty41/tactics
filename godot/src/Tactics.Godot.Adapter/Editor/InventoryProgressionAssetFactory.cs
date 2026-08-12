@@ -62,7 +62,7 @@ public static class InventoryProgressionAssetFactory
     private static GodotResourceEntry Entry(string id,string path,string[] refs)=>new(){ContentIdValue=id,ResourceTypeIdValue="skill",ResourceUidValue=ResourceUid.IdToText(Uid(path)),DiagnosticPathValue=path,SchemaVersion=1,ReferenceContentIds=refs};
     private static GodotResourceEntry Copy(GodotResourceEntry v)=>new(){ContentIdValue=v.ContentIdValue,ResourceTypeIdValue=v.ResourceTypeIdValue,ResourceUidValue=v.ResourceUidValue,DiagnosticPathValue=v.DiagnosticPathValue,SchemaVersion=v.SchemaVersion,ReferenceContentIds=v.ReferenceContentIds.ToArray()};
     private static long Uid(string path){string text=ResourceUid.PathToUid(path);long uid=text.StartsWith("uid://")?ResourceUid.TextToId(text):ResourceUid.CreateIdForPath(path);if(!ResourceUid.HasId(uid))ResourceUid.AddId(uid,path);return uid;}
-    private static void Save(Resource value,string path){long uid=Uid(path);if(ResourceSaver.Save(value,path)!=Error.Ok)throw new InvalidOperationException($"Cannot save {path}");ResourceSaver.SetUid(path,uid);}
+    private static void Save(Resource value,string path)=>DeterministicResourceSaver.Save(value,path,Uid(path));
     private sealed class Draft{public string BatchId{get;init;}="";public Definition[] Definitions{get;init;}=Array.Empty<Definition>();}
     private sealed class Definition
     {

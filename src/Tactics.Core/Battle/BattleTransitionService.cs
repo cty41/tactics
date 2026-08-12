@@ -131,6 +131,8 @@ public sealed class BattleTransitionService
             return Rejected(state, command.ActorId, "destination_out_of_bounds");
         if (state.Units.Values.Any(unit => unit.IsAlive && unit.Unit.Position == command.Destination))
             return Rejected(state, command.ActorId, "destination_occupied");
+        if (state.Corpses.Contains(command.Destination))
+            return Rejected(state, command.ActorId, "destination_occupied_by_corpse");
 
         IReadOnlyList<GridPoint> path = _pathfinder.FindPath(
             state.CreateMovementBoard(command.ActorId),
@@ -348,6 +350,7 @@ public sealed class BattleTransitionService
             .Where(unit => unit.IsAlive)
             .Select(unit => unit.Unit.Position)
             .Concat(state.DroppedSpears.Values)
+            .Concat(state.Corpses)
             .ToHashSet();
 
         return state.Board.Cells.Keys

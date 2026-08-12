@@ -20,6 +20,8 @@ public partial class GodotPlayableRunMain : Control
 {
     public const int CanvasWidth = 1600;
     public const int CanvasHeight = 900;
+    public static readonly Vector2 UnitMeterSize = new(60, 18);
+    public const int UnitMeterBarHeight = 7;
     private readonly Dictionary<ContentId, UnitDefinition> _units = new();
     private readonly Dictionary<ContentId, UnitDefinitionResource> _unitResources = new();
     private readonly Dictionary<ContentId, SkillDefinition> _skills = new();
@@ -42,18 +44,21 @@ public partial class GodotPlayableRunMain : Control
     private RichTextLabel? _eventLog;
     private Label? _hoverInfo;
     private Label? _turnOrder;
-    private global::Godot.Timer? _playbackTimer;
+    private Button? _speedButton;
     private bool _playbackPaused;
+    private float _playbackSpeed = 1f;
     private int _logFilter;
     private BattleUiSnapshot? _visibleSnapshot;
     private GridPoint? _hoveredCell;
+    private (UnitInstanceId UnitId, GodotUnitFacing Facing)? _targetingFacingPreview;
     private ContentId? _currentEncounterId;
     private bool _settlementCommitted;
     private GodotBattlePresentationPlayer? _presentationPlayer;
-    private GodotBattleCameraFeedback? _cameraFeedback;
     private BattleUiSnapshot? _presentationAfter;
+    private PureRunBattleResult? _battleResultAfterPresentation;
     private bool _continueAutomaticAfterPresentation;
     private bool _pauseAfterCurrentFrame;
+    private bool _presentationInputLocked;
     private StandardUnitPresentationResource? _presentationProfile;
     private readonly List<SkillPresentationResource> _skillPresentationProfiles=new();
 
@@ -64,15 +69,14 @@ public partial class GodotPlayableRunMain : Control
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         LoadCatalogs();
-        _playbackTimer=new global::Godot.Timer{WaitTime=.45,OneShot=false};_playbackTimer.Timeout+=OnPlaybackTimer;AddChild(_playbackTimer);
         ShowHome();
     }
 
-    public override void _ExitTree(){if(_playbackTimer is not null)_playbackTimer.Timeout-=OnPlaybackTimer;}
+    public override void _ExitTree()=>DisposePresentationPlayer();
     public override void _Process(double delta)
     {
         foreach((UnitInstanceId id,Control meter) in _unitMeters)
-            if(_actors.TryGetValue(id,out GodotUnitActor? actor)&&GodotObject.IsInstanceValid(actor)&&GodotObject.IsInstanceValid(meter))meter.Position=actor.Position+new Vector2(-42,-76);
+            if(_actors.TryGetValue(id,out GodotUnitActor? actor)&&GodotObject.IsInstanceValid(actor)&&GodotObject.IsInstanceValid(meter))meter.Position=actor.Position+new Vector2(-30,-62);
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -162,7 +166,7 @@ public partial class GodotPlayableRunMain : Control
 
     private void ShowHome()
     {
-        _playbackTimer?.Stop();_logs.Clear();_visibleSnapshot=null;
+        _logs.Clear();_visibleSnapshot=null;
         _battle = null;
         Control root = NewPage("PURE RUN", "Three-encounter Godot vertical slice");
         VBoxContainer menu = new() { Position = new Vector2(620, 310), Size = new Vector2(360, 320) };
@@ -213,7 +217,6 @@ public partial class GodotPlayableRunMain : Control
 
     private void StartBattle(EncounterRequest request)
     {
-        _playbackTimer?.Stop();
         _settlementCommitted=false;
         _currentEncounterId=request.EncounterContentId;
         EncounterDefinition encounter = _encounters[request.EncounterContentId];
@@ -226,8 +229,8 @@ public partial class GodotPlayableRunMain : Control
     private void BuildBattlePage()
     {
         ContentId encounterId=_currentEncounterId??throw new InvalidOperationException("Battle encounter identity is missing.");
-        Control root = NewPage($"PURE RUN BATTLE — {EncounterLabel(encounterId)}", $"{encounterId.Value}   |   Left click: select/confirm   Right click or Esc: cancel   Enter: end turn");
-        _logs.Clear();_playbackPaused=false;
+        Control root = NewPage($"PURE RUN BATTLE — {EncounterLabel(encounterId)}", $"{encounterId.Value}   |   Left click: select/confirm   Right click or Esc: cancel   Enter: end turn", true);
+        _logs.Clear();_playbackPaused=false;_playbackSpeed=1f;
         _board = new GodotIsometricBattleBoard { Position = Vector2.Zero, Size = new Vector2(1100, 900) };
         _board.CellPressed += OnBoardCellPressed;
         _board.CellHovered += HoverCell;
@@ -236,23 +239,22 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer = new GodotBattlePresentationPlayer();
         _presentationPlayer.Configure(_presentationProfile ?? new StandardUnitPresentationResource());
         _presentationPlayer.ConfigureSkills(_skillPresentationProfiles);
+        _presentationPlayer.SetSpeed(_playbackSpeed);
         _presentationPlayer.FrameFinished+=OnPresentationFrameFinished;
         _board.AddChild(_presentationPlayer);
-        _cameraFeedback=new GodotBattleCameraFeedback();root.AddChild(_cameraFeedback);_cameraFeedback.Configure(_board);
         _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
         _turnOrder=LabelAt(root,string.Empty,new Vector2(800,88),18);_turnOrder.Size=new Vector2(720,32);
         _hoverInfo=LabelAt(root,"Hover a cell",new Vector2(800,780),16);_hoverInfo.Size=new Vector2(720,80);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
         var logPanel=new VBoxContainer{Position=new Vector2(1145,125),Size=new Vector2(390,650)};root.AddChild(logPanel);
         var controls=new HBoxContainer();logPanel.AddChild(controls);
-        controls.AddChild(SmallButton("Pause/Resume",TogglePause));controls.AddChild(SmallButton("Step",()=>PlaybackStep(true)));controls.AddChild(SmallButton("1x/2x",ToggleSpeed));
-        controls.AddChild(SmallButton("Camera On/Off",()=>_cameraFeedback?.SetEnabled(!(_cameraFeedback?.MotionEnabled??false))));
+        controls.AddChild(SmallButton("Pause/Resume",TogglePause));controls.AddChild(SmallButton("Step",()=>PlaybackStep(true)));_speedButton=SmallButton("Speed 1x",ToggleSpeed);controls.AddChild(_speedButton);
         var filters=new OptionButton();foreach(string name in new[]{"All","Gameplay","AI","Rejected"})filters.AddItem(name);filters.ItemSelected+=index=>{_logFilter=(int)index;RefreshLog();};logPanel.AddChild(filters);
         logPanel.AddChild(Button("Clear Log",()=>{_logs.Clear();RefreshLog();}));
         var scroll=new ScrollContainer{CustomMinimumSize=new Vector2(390,500)};logPanel.AddChild(scroll);
         _eventLog=new RichTextLabel{FitContent=false,CustomMinimumSize=new Vector2(370,500),ScrollActive=true};_eventLog.AddThemeFontSizeOverride("normal_font_size",15);scroll.AddChild(_eventLog);
         _status = _hoverInfo;
         RefreshBattle();
-        if(_battle!.HasPendingAutomaticFrames){PlaybackStep(true);_playbackTimer!.Start();}
+        if(_battle!.HasPendingAutomaticFrames)PlaybackStep(false);
     }
 
     private void RefreshBattle(BattleUiSnapshot? presented=null)
@@ -276,7 +278,7 @@ public partial class GodotPlayableRunMain : Control
         }
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
         _skillPanel.AddChild(Label($"Round {snapshot.Round} | Active {snapshot.ActiveUnitId.Value}\nMode {snapshot.TargetingMode} | {snapshot.Phase}", 25));
-        bool aiPlayback=_battle.HasPendingAutomaticFrames;
+        bool aiPlayback=_battle.HasPendingAutomaticFrames||_presentationInputLocked;
         Button moveButton=Button("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(moveButton);
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
         _skillPanel.AddChild(Label($"Spear: {(spearDropped?"Dropped":"Held")}",18));
@@ -298,11 +300,11 @@ public partial class GodotPlayableRunMain : Control
     private static Control CreateUnitMeters(BattleUiUnitSnapshot unit)
     {
         Vector2 foot=IsometricBattleBoardLayout.GridToScreen(unit.Cell);
-        var root=new Control{Position=foot+new Vector2(-42,-76),Size=new Vector2(84,34),ZIndex=400+(18-unit.Cell.X-unit.Cell.Y)*12+unit.Cell.X,MouseFilter=MouseFilterEnum.Ignore};
-        var hp=new ProgressBar{Position=Vector2.Zero,Size=new Vector2(84,15),MinValue=0,MaxValue=unit.MaxHealth,Value=unit.CurrentHealth,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};hp.Modulate=new Color(.35f,1f,.4f);root.AddChild(hp);
-        var hpText=Label($"HP {unit.CurrentHealth}/{unit.MaxHealth}",11);hpText.Position=new Vector2(3,-2);hpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(hpText);
-        var mp=new ProgressBar{Position=new Vector2(0,17),Size=new Vector2(84,15),MinValue=0,MaxValue=Math.Max(1,unit.MaxMana),Value=unit.CurrentMana,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};mp.Modulate=new Color(.35f,.65f,1f);root.AddChild(mp);
-        var mpText=Label($"MP {unit.CurrentMana}/{unit.MaxMana}",11);mpText.Position=new Vector2(3,15);mpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(mpText);
+        var root=new Control{Position=foot+new Vector2(-30,-62),Size=UnitMeterSize,ZIndex=400+(18-unit.Cell.X-unit.Cell.Y)*12+unit.Cell.X,MouseFilter=MouseFilterEnum.Ignore};
+        var hp=new ProgressBar{Position=Vector2.Zero,Size=new Vector2(UnitMeterSize.X,UnitMeterBarHeight),MinValue=0,MaxValue=unit.MaxHealth,Value=unit.CurrentHealth,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};hp.Modulate=new Color(.35f,1f,.4f);root.AddChild(hp);
+        var hpText=Label($"HP {unit.CurrentHealth}/{unit.MaxHealth}",8);hpText.Position=new Vector2(2,-4);hpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(hpText);
+        var mp=new ProgressBar{Position=new Vector2(0,9),Size=new Vector2(UnitMeterSize.X,UnitMeterBarHeight),MinValue=0,MaxValue=Math.Max(1,unit.MaxMana),Value=unit.CurrentMana,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};mp.Modulate=new Color(.35f,.65f,1f);root.AddChild(mp);
+        var mpText=Label($"MP {unit.CurrentMana}/{unit.MaxMana}",8);mpText.Position=new Vector2(2,5);mpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(mpText);
         return root;
     }
 
@@ -345,6 +347,7 @@ public partial class GodotPlayableRunMain : Control
 
     private void HoverCell(GridPoint cell)
     {
+        RestoreTargetingFacing();
         _hoveredCell=cell;if(_visibleSnapshot is not BattleUiSnapshot snapshot)return;
         BattleUiUnitSnapshot? unit=snapshot.Units.FirstOrDefault(value=>value.Cell==cell);
         string detail=unit is null?$"Cell {cell}":$"Cell {cell} | {unit.UnitId.Value} | HP {unit.CurrentHealth}/{unit.MaxHealth} MP {unit.CurrentMana}/{unit.MaxMana} | {string.Join(',',unit.StatusIds.Select(id=>id.Value))}";
@@ -361,29 +364,65 @@ public partial class GodotPlayableRunMain : Control
                 if(preview.ImpactUnitIds.Count>1||_skills[skillId].ExecutionKind==SkillExecutionKind.AreaBlast)detail+=$" | AOE targets {preview.ImpactUnitIds.Count}";
             }
         }
+        PreviewTargetingFacing(snapshot, cell);
         if(_hoverInfo is not null)_hoverInfo.Text=detail;ApplyHighlights(snapshot);
     }
-    private void ClearHover(){_hoveredCell=null;if(_hoverInfo is not null)_hoverInfo.Text="Hover a cell";if(_visibleSnapshot is not null)ApplyHighlights(_visibleSnapshot);}
+    private void ClearHover(){RestoreTargetingFacing();_hoveredCell=null;if(_hoverInfo is not null)_hoverInfo.Text="Hover a cell";if(_visibleSnapshot is not null)ApplyHighlights(_visibleSnapshot);}
+
+    private void PreviewTargetingFacing(BattleUiSnapshot snapshot, GridPoint cell)
+    {
+        if (!_actors.TryGetValue(snapshot.ActiveUnitId, out GodotUnitActor? actor) || !GodotObject.IsInstanceValid(actor)) return;
+        GodotUnitFacing current = actor.PresentationFacing;
+        GodotUnitFacing preview = current;
+        if (snapshot.TargetingMode == BattleTargetingMode.Move && snapshot.LegalMoveCells.Contains(cell))
+            preview = GodotPresentationFacingResolver.PreviewMove(snapshot.Units.Single(unit => unit.UnitId == snapshot.ActiveUnitId).Cell,
+                _battle?.PreviewMovePath(cell) ?? Array.Empty<GridPoint>(), current);
+        else if (snapshot.TargetingMode == BattleTargetingMode.Skill && snapshot.SkillPreview?.RangeCells.Contains(cell) == true)
+            preview = GodotPresentationFacingResolver.PreviewTarget(snapshot.Units.Single(unit => unit.UnitId == snapshot.ActiveUnitId).Cell, cell, current);
+        else return;
+        _targetingFacingPreview = (snapshot.ActiveUnitId, current);
+        actor.SetFacing(preview);
+    }
+
+    private void RestoreTargetingFacing()
+    {
+        if (_targetingFacingPreview is not { } preview) return;
+        if (_actors.TryGetValue(preview.UnitId, out GodotUnitActor? actor) && GodotObject.IsInstanceValid(actor)) actor.SetFacing(preview.Facing);
+        _targetingFacingPreview = null;
+    }
 
     private void ApplyIntent(BattleUiIntent intent)
     {
         if (_battle is null) return;
+        if(_presentationInputLocked)
+        {
+            AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,"presentation_in_progress","CommandRejectedEvent"));
+            RefreshLog();
+            return;
+        }
+        RestoreTargetingFacing();
         BattleUiIntentResult result = _battle.Submit(intent);
         AddEvents(result.Events);
         if(!result.Succeeded&&result.Events.Count==0&&result.FailureCode is not null)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,result.FailureCode,"CommandRejectedEvent"));
         if(_battle.HasPendingAutomaticFrames){if(result.Presentation is BattlePresentationFrame pendingPresentation)BeginPresentation(pendingPresentation,true);else PlaybackStep(true);return;}
-        if (result.BattleResult is PureRunBattleResult battleResult)
+        if(result.Presentation is BattlePresentationFrame presentation)
         {
-            CompleteBattle(battleResult);return;
+            // A terminal player action still owns its release, hit and defeat
+            // presentation. Settlement starts only after that committed frame
+            // reaches After; otherwise the page change hides the final action.
+            _battleResultAfterPresentation=result.BattleResult;
+            BeginPresentation(presentation,false);
+            return;
         }
-        if(result.Presentation is BattlePresentationFrame presentation)BeginPresentation(presentation,false);else RefreshBattle();
+        if (result.BattleResult is PureRunBattleResult battleResult){CompleteBattle(battleResult);return;}
+        RefreshBattle();
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
 
     private void CompleteBattle(PureRunBattleResult battleResult)
     {
         if(_settlementCommitted)return;
-        _settlementCommitted=true;_playbackTimer?.Stop();
+        _settlementCommitted=true;
         AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,$"Submitting {EncounterLabel(battleResult.EncounterContentId)} BattleResult","EncounterNavigationEvent"));
         if(battleResult.EncounterContentId.Value=="encounter.pure-run.n4")
         {
@@ -410,27 +449,37 @@ public partial class GodotPlayableRunMain : Control
         RunSessionResult settled=_run!.ApplyBattleResult(battleResult);if(!settled.Succeeded){_settlementCommitted=false;SetStatus(settled.ErrorCode);return;}ShowSettlement(settled.Snapshot!);
     }
 
-    private void OnPlaybackTimer(){if(!_playbackPaused&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);}
     private void PlaybackStep(bool forced)
     {
         if(_battle is null||(_playbackPaused&&!forced)||(_presentationPlayer?.IsPlaying??false))return;
         BattleUiFrame? frame=_battle.DequeueAutomaticFrame();
         if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);BeginPresentation(frame.Presentation,true,forced&&_playbackPaused);return;}
-        _playbackTimer?.Stop();RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
+        RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
     }
     private void TogglePause(){_playbackPaused=!_playbackPaused;_presentationPlayer?.SetPaused(_playbackPaused);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));if(!_playbackPaused&&_battle?.HasPendingAutomaticFrames==true&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);RefreshLog();}
-    private void ToggleSpeed(){if(_playbackTimer is null)return;_playbackTimer.WaitTime=_playbackTimer.WaitTime>.3?.225:.45;_presentationPlayer?.SetSpeed(_playbackTimer.WaitTime<.3?2f:1f);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"Playback {(_playbackTimer.WaitTime<.3?"2x":"1x")}","Playback"));RefreshLog();}
+    private void ToggleSpeed()
+    {
+        _playbackSpeed = _playbackSpeed switch { 1f => 2f, 2f => 4f, 4f => .5f, _ => 1f };
+        _presentationPlayer?.SetSpeed(_playbackSpeed);
+        if (_speedButton is not null) _speedButton.Text = $"Speed {_playbackSpeed:0.#}x";
+        AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"Playback {_playbackSpeed:0.#}x","Playback"));
+        RefreshLog();
+    }
 
     private void BeginPresentation(BattlePresentationFrame frame,bool continueAutomatic,bool pauseAfter=false)
     {
+        _presentationInputLocked=true;
         _presentationAfter=frame.After;_continueAutomaticAfterPresentation=continueAutomatic;_pauseAfterCurrentFrame=pauseAfter;
-        RefreshBattle(frame.Before);_presentationPlayer?.Play(frame,_actors);_cameraFeedback?.Play(frame);
+        RefreshBattle(frame.Before);_presentationPlayer?.Play(frame,_actors);
         if(_playbackPaused&&!pauseAfter)_presentationPlayer?.SetPaused(true);
     }
     private void OnPresentationFrameFinished()
     {
+        _presentationInputLocked=false;
         BattleUiSnapshot? after=_presentationAfter;_presentationAfter=null;if(after is not null)RefreshBattle(after);
+        PureRunBattleResult? deferredResult=_battleResultAfterPresentation;_battleResultAfterPresentation=null;
         bool shouldContinue=_continueAutomaticAfterPresentation;_continueAutomaticAfterPresentation=false;
+        if(deferredResult is not null){CompleteBattle(deferredResult);return;}
         if(_pauseAfterCurrentFrame){_pauseAfterCurrentFrame=false;_playbackPaused=true;RefreshLog();return;}
         if(shouldContinue&&!_playbackPaused)PlaybackStep(false);
     }
@@ -648,28 +697,52 @@ public partial class GodotPlayableRunMain : Control
     private void ShowProgression(PureRunState run, PendingProgression pending)
     {
         RunCharacterState character=run.Party.Single(value=>value.CharacterId==pending.CharacterId);
-        Control root=NewPage("PROGRESSION",$"{character.CharacterId}: allocate 1 point, then learn/upgrade one skill");
+        Control root=NewPage("PROGRESSION",$"{character.CharacterId}: attribute allocation → skill selection");
         var menu=new VBoxContainer{Position=new Vector2(430,160),Size=new Vector2(740,650)};root.AddChild(menu);
-        menu.AddChild(Label($"Current Lv{character.Level} | INT {character.Attributes.Intelligence} AGI {character.Attributes.Agility} CHA {character.Attributes.Charisma} LUCK {character.Attributes.Luck}",22));
         var progressionService=new RunInventoryProgressionService();
-        SkillDefinition[] candidates=progressionService.GrowthCandidates(character,_skills).Where(skill=>progressionService.CanUnlockWithAttributePoints(character,skill,pending.AttributePoints)).ToArray();
-        foreach(SkillDefinition skill in candidates)
+        if (pending.ProposedAttributes is not UnitAttributes proposed)
         {
-            menu.AddChild(Button($"+1 {skill.RequiredAttribute} → {skill.BranchId} Lv{skill.Level} (requires {skill.MinimumAttribute})",()=>
+            menu.AddChild(Label($"Step 1/2 — choose one attribute\nSTR {character.Attributes.Strength}  AGI {character.Attributes.Agility}  CON {character.Attributes.Constitution}\nINT {character.Attributes.Intelligence}  CHA {character.Attributes.Charisma}  LUCK {character.Attributes.Luck}",22));
+            foreach (string attribute in new[] { "Strength", "Agility", "Constitution", "Intelligence", "Charisma", "Luck" })
             {
-                UnitAttributes raised=Raise(character.Attributes,skill.RequiredAttribute);
-                CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,raised,skill.ContentId,_skills));
-            }));
+                string selectedAttribute = attribute;
+                menu.AddChild(Button($"+1 {selectedAttribute}", () => AllocateProgressionAttribute(pending.TransactionKey,
+                    Raise(character.Attributes, selectedAttribute))));
+            }
         }
-        if(candidates.Length==0)
+        else
         {
-            menu.AddChild(Label("No skill candidate can be unlocked with this progression point. Attribute-only confirmation is allowed.",18));
-            menu.AddChild(Button("+1 primary attribute and confirm",()=>CommitMutation(state=>progressionService.CompleteProgression(state,state.Revision,pending.TransactionKey,Raise(character.Attributes,PrimaryAttribute(character.UnitContentId)),null,_skills))));
+            RunCharacterState preview = new(character.CharacterId, character.UnitContentId, character.Level, proposed,
+                character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
+                character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
+            menu.AddChild(Label($"Step 2/2 — choose a skill\nSTR {proposed.Strength}  AGI {proposed.Agility}  CON {proposed.Constitution}\nINT {proposed.Intelligence}  CHA {proposed.Charisma}  LUCK {proposed.Luck}",22));
+            SkillDefinition[] candidates=progressionService.GrowthCandidates(preview,_skills)
+                .Where(skill=>progressionService.CanUnlockWithAttributePoints(preview,skill,0)).ToArray();
+            foreach(SkillDefinition skill in candidates)
+                menu.AddChild(Button($"{skill.BranchId} Lv{skill.Level} (requires {skill.RequiredAttribute} {skill.MinimumAttribute})",()=>
+                    CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,skill.ContentId,_skills))));
+            if(candidates.Length==0)
+            {
+                menu.AddChild(Label("No skill candidate is legal after this allocation. Attribute-only confirmation is allowed.",18));
+                menu.AddChild(Button("Confirm Attribute",()=>CommitMutation(state=>progressionService.CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,null,_skills))));
+            }
         }
         root.AddChild(PlaceControl(Button("Back",()=>ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null))),new Vector2(650,820),new Vector2(300,55)));
     }
 
-    private static string PrimaryAttribute(ContentId unitId)=>unitId.Value switch{"unit.pure-run.mage"=>"Intelligence","unit.pure-run.necromancer"=>"Charisma","unit.pure-run.amazon"=>"Agility",_=>throw new InvalidOperationException($"Unknown progression unit '{unitId.Value}'.")};
+    private void AllocateProgressionAttribute(string transactionKey, UnitAttributes attributes)
+    {
+        RunSessionResult result = _run!.ApplyMutation(state => new RunInventoryProgressionService()
+            .AllocateProgressionAttributes(state, state.Revision, transactionKey, attributes));
+        if (!result.Succeeded || result.Snapshot?.ActiveRun is not PureRunState run)
+        {
+            SetStatus(result.ErrorCode);
+            return;
+        }
+        PendingProgression pending = run.PendingProgression.Single(value => value.TransactionKey == transactionKey);
+        ShowProgression(run, pending);
+    }
+
     private static UnitAttributes Raise(UnitAttributes a,string name)=>name switch{"Strength"=>new(a.Strength+1,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Agility"=>new(a.Strength,a.Agility+1,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Constitution"=>new(a.Strength,a.Agility,a.Constitution+1,a.Intelligence,a.Charisma,a.Luck),"Intelligence"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence+1,a.Charisma,a.Luck),"Charisma"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma+1,a.Luck),"Luck"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck+1),_=>a};
     private void CommitMutation(Func<PureRunState,RunMutationResult> mutation){RunSessionResult result=_run!.ApplyMutation(mutation);if(!result.Succeeded){SetStatus(result.ErrorCode);return;}ShowSettlement(result.Snapshot!);}
     private static Control PlaceControl(Control control,Vector2 position,Vector2 size){control.Position=position;control.Size=size;return control;}
@@ -687,7 +760,7 @@ public partial class GodotPlayableRunMain : Control
         if (result.Snapshot?.TerminalSummary is PureRunSummary summary) ShowSummary(summary); else SetStatus(result.ErrorCode);
     }
 
-    private Control NewPage(string title, string subtitle)
+    private Control NewPage(string title, string subtitle, bool battleBackdrop = false)
     {
         // The old page owns every actor and meter. Queueing the page frees those
         // children, so page navigation must forget their managed references rather
@@ -697,14 +770,30 @@ public partial class GodotPlayableRunMain : Control
         _unitMeters.Clear();
         _visibleSnapshot=null;
         _hoveredCell=null;
-        _cameraFeedback?.Reset();_cameraFeedback=null;_board=null;
+        _targetingFacingPreview=null;
+        DisposePresentationPlayer();_board=null;
         _skillPanel=null;
         _turnOrder=null;
+        _speedButton=null;
         _hoverInfo=null;
         _eventLog=null;
         var root = new Control(); root.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); AddChild(root); _page = root;
-        var background = new ColorRect { Color = new Color("657784") }; background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);
+        Control background = battleBackdrop ? new GodotBattleBackdrop() : new ColorRect { Color = new Color("657784") };
+        background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);
         LabelAt(root, title, new Vector2(70, 35), 40); LabelAt(root, subtitle, new Vector2(70, 82), 20); return root;
+    }
+
+    private void DisposePresentationPlayer()
+    {
+        if(_presentationPlayer is null)return;
+        _presentationPlayer.FrameFinished-=OnPresentationFrameFinished;
+        _presentationPlayer.Clear();
+        _presentationPlayer=null;
+        _presentationAfter=null;
+        _battleResultAfterPresentation=null;
+        _continueAutomaticAfterPresentation=false;
+        _pauseAfterCurrentFrame=false;
+        _presentationInputLocked=false;
     }
 
     private static Button Button(string text, Action action)

@@ -59,9 +59,45 @@ public sealed class IsometricBattleBoardGodotTests
     }
 
     [TestCase]
+    public void TargetingFacingUsesFirstMoveStepAndSkillTarget()
+    {
+        GridPoint origin = new(1, 4);
+        AssertThat(GodotPresentationFacingResolver.PreviewMove(origin,
+            new[] { new GridPoint(2, 4), new GridPoint(3, 4) }, GodotUnitFacing.North)).IsEqual(GodotUnitFacing.East);
+        AssertThat(GodotPresentationFacingResolver.PreviewTarget(origin,
+            new GridPoint(1, 2), GodotUnitFacing.East)).IsEqual(GodotUnitFacing.South);
+    }
+
+    [TestCase]
     public void MultiCellMoveDurationExceedsLegacyTimerAndMustSerializeAttack()
     {
         AssertThat(GodotBattlePresentationPlayer.EstimateMoveDuration(3, .22d, .06d)).IsGreater(.45d);
+    }
+
+    [TestCase]
+    public void PlaybackSpeedSupportsUnityCycleValues()
+    {
+        AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(.5f)).IsTrue();
+        AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(1f)).IsTrue();
+        AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(2f)).IsTrue();
+        AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(4f)).IsTrue();
+        AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(.75f)).IsFalse();
+    }
+
+    [TestCase]
+    public void BaseTilesAlternateWarmAndCoolProjectPalette()
+    {
+        Color first = GodotIsometricBattleBoard.BaseTileColor(new GridPoint(0, 0), false);
+        Color neighbor = GodotIsometricBattleBoard.BaseTileColor(new GridPoint(1, 0), false);
+        AssertThat(first).IsNotEqual(neighbor);
+        AssertThat(GodotIsometricBattleBoard.BaseTileColor(new GridPoint(2, 0), false)).IsEqual(first);
+    }
+
+    [TestCase]
+    public void BattleBackdropUsesProjectOwnedGradientContract()
+    {
+        AssertThat(GodotBattleBackdrop.ShaderCode.Contains("vignette_strength", StringComparison.Ordinal)).IsTrue();
+        AssertThat(GodotBattleBackdrop.ShaderCode.Contains("noise_strength", StringComparison.Ordinal)).IsTrue();
     }
 
     [TestCase]
@@ -74,7 +110,7 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(catalog).IsNotNull();
         if (board is null || catalog is null) return;
         AssertThat(board.TileSize).IsEqual(new Vector2(96, 48));
-        AssertThat(catalog.Entries.Length is 115 or 116 or 119 or 123 or 124 or 125).IsTrue();
+        AssertThat(catalog.Entries.Length).IsEqual(124);
         AssertThat(catalog.Entries.Count(entry => entry.ContentIdValue == "battle-board.pure-run.isometric-v1")).IsEqual(1);
     }
 
@@ -89,18 +125,17 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="fireball").LevelOneHasAreaEffect).IsFalse();
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="bone-spear").MaximumGhosts).IsEqual(2);
         var catalog=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")!;
-        AssertThat(catalog.Entries.Length is 123 or 124 or 125).IsTrue();
+        AssertThat(catalog.Entries.Length).IsEqual(124);
     }
 
     [TestCase]
     [RequireGodotRuntime]
-    public void StatusAndCameraProfilesHaveBoundedContracts()
+    public void StatusProfileRemainsAndNonUnityBoardCameraProfileIsRemoved()
     {
         var status=ResourceLoader.Load<StatusPresentationResource>("res://content/presentation/StandardStatusPresentationV1.tres");
-        var camera=ResourceLoader.Load<BattleCameraPresentationResource>("res://content/presentation/BattleFocusCameraPresentationV1.tres");
-        AssertThat(status).IsNotNull();AssertThat(camera).IsNotNull();if(status is null||camera is null)return;
+        var catalog=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres");
+        AssertThat(status).IsNotNull();AssertThat(catalog).IsNotNull();if(status is null||catalog is null)return;
         AssertThat(status.MaximumVisibleStatuses).IsEqual(4);
-        AssertThat(camera.MaximumTranslation).IsLessEqual(28f);
-        AssertThat(camera.MaximumScale).IsLessEqual(1.04f);
+        AssertThat(catalog.Entries.Any(entry=>entry.ContentIdValue=="presentation.camera.battle-focus-v1")).IsFalse();
     }
 }

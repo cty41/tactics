@@ -46,6 +46,39 @@ public sealed class RunInventoryProgressionTests
     }
 
     [Test]
+    public void AttributeAllocationIsPersistedBeforeSkillSelection()
+    {
+        PureRunState state = State(withProgression: true);
+        RunCharacterState mage = state.Party[0];
+        UnitAttributes proposed = new(mage.Attributes.Strength + 1, mage.Attributes.Agility,
+            mage.Attributes.Constitution, mage.Attributes.Intelligence, mage.Attributes.Charisma, mage.Attributes.Luck);
+
+        RunMutationResult result = new RunInventoryProgressionService().AllocateProgressionAttributes(
+            state, state.Revision, "progression:n1", proposed);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.State.Party[0].Attributes, Is.EqualTo(mage.Attributes), "Allocation is a draft until skill confirmation.");
+            Assert.That(result.State.PendingProgression.Single().ProposedAttributes, Is.EqualTo(proposed));
+            Assert.That(result.State.PendingProgression.Single().SelectedSkillContentId, Is.Null);
+        });
+
+        var service = new RunInventoryProgressionService();
+        RunMutationResult duplicate = service.AllocateProgressionAttributes(
+            result.State, result.State.Revision, "progression:n1", proposed);
+        Assert.That(duplicate.Succeeded, Is.True);
+        Assert.That(duplicate.State, Is.SameAs(result.State));
+
+        UnitAttributes changed = new(proposed.Strength - 1, proposed.Agility, proposed.Constitution,
+            proposed.Intelligence, proposed.Charisma, proposed.Luck + 1);
+        RunMutationResult changedAllocation = service.AllocateProgressionAttributes(
+            result.State, result.State.Revision, "progression:n1", changed);
+        Assert.That(changedAllocation.Succeeded, Is.False);
+        Assert.That(changedAllocation.RejectionCode, Is.EqualTo("progression.attributes_already_allocated"));
+    }
+
+    [Test]
     public void StaleRevisionLeavesInventoryUntouched()
     {
         PureRunState state = State();
@@ -82,6 +115,35 @@ public sealed class RunInventoryProgressionTests
             "progression:n1", new UnitAttributes(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck), null,
             new Dictionary<ContentId, SkillDefinition>());
         Assert.Multiple(() => { Assert.That(result.Succeeded, Is.True); Assert.That(result.State.Party[0].Level, Is.EqualTo(2)); });
+    }
+
+    [Test]
+    public void ProgressionRejectsCrossRoleSkillAndCannotSkipAvailableCandidate()
+    {
+        PureRunState state = State(withProgression: true, frozenCharacterIds: true);
+        RunCharacterState mage = state.Party[0];
+        UnitAttributes a = mage.Attributes;
+        UnitAttributes raised = new(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck);
+        SkillDefinition mageSkill = new(new ContentId("skill.mage.fireball.lv2"), "fireball", SkillRole.Mage,
+            SkillKind.Active, 2, 7, 1, 4, SkillExecutionKind.Fireball, 4, SkillDamageKind.Magical,
+            branchId: "mage.fireball", prerequisiteContentId: new ContentId("skill.mage.fireball.lv1"));
+        SkillDefinition amazonSkill = new(new ContentId("skill.amazon.thrust.lv1"), "thrust", SkillRole.Amazon,
+            SkillKind.Active, 1, 2, 1, 2, SkillExecutionKind.Thrust, 4, SkillDamageKind.Physical,
+            branchId: "amazon.thrust");
+        var skills = new Dictionary<ContentId, SkillDefinition>
+        {
+            [mageSkill.ContentId] = mageSkill,
+            [amazonSkill.ContentId] = amazonSkill
+        };
+        var service = new RunInventoryProgressionService();
+
+        RunMutationResult skipped = service.CompleteProgression(state, state.Revision,
+            "progression:n1", raised, null, skills);
+        RunMutationResult crossRole = service.CompleteProgression(state, state.Revision,
+            "progression:n1", raised, amazonSkill.ContentId, skills);
+
+        Assert.That(skipped.RejectionCode, Is.EqualTo("progression.skill_required"));
+        Assert.That(crossRole.RejectionCode, Is.EqualTo("progression.invalid_skill"));
     }
 
     private static PureRunState State(bool withProgression = false, bool frozenCharacterIds = false)

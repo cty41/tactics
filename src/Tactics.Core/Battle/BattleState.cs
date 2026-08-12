@@ -225,7 +225,7 @@ public sealed class BattleState
             throw new InvalidOperationException($"Unit '{ownerId}' already has a dropped spear.");
         if (!Board.Contains(cell) || Board.GetCell(cell).BlocksMovement ||
             _units.Values.Any(unit => unit.IsAlive && unit.Unit.Position == cell) ||
-            _droppedSpears.Values.Contains(cell))
+            _droppedSpears.Values.Contains(cell) || _corpses.Contains(cell))
         {
             throw new InvalidOperationException($"Cell '{cell}' cannot receive a dropped spear.");
         }
@@ -288,5 +288,6 @@ public sealed class BattleState
         _units.Values
             .Where(unit => unit.IsAlive && unit.Unit.InstanceId != movingUnitId)
             .Select(unit => unit.Unit.Position)
-            .Concat(_droppedSpears.Values));
+            .Concat(_droppedSpears.Values)
+            .Concat(_corpses));
 }

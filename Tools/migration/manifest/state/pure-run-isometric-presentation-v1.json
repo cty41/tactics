@@ -4,15 +4,23 @@
   "state": "Generated",
   "ownership": "UnityOwned",
   "visualAcceptance": "manual_isometric_and_presentation_qa_pending",
-  "catalogCount": 125,
+  "catalogCount": 124,
   "sourceAudit": [
     {
       "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",
       "gitBlobSha1": "audit-current-final-tag"
     },
     {
-      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/BattleBoardCameraFitter.cs",
-      "gitBlobSha1": "910847d0088086a8c9b5ff1addf4df2649484935"
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_warm_gray.png",
+      "gitBlobSha1": "5781e4e5f9de0d6fee99cf0beb28218890c7f440"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_cool_gray.png",
+      "gitBlobSha1": "dfc6f3cc6c32889224217dffef146879ad2e84f1"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Shaders/BattleBackdrop.shader",
+      "gitBlobSha1": "5ab8814f03d843b07ceaf73c8d74b449f50c7589"
     }
   ],
   "payloadBoundary": "programmatic-only-no-piloto-prefab-texture-material-shader-audio",
@@ -66,11 +74,6 @@
       "resourcePath": "res://content/presentation/StandardStatusPresentationV1.tres",
       "resourceUid": "uid://u7ig8dq5qjc4",
       "targetHash": "sha256:f8e7372aa65a352637cdd1ff2ac1a256e9aad104f106c28bca0ef6eab60a6981"
-    },
-    {
-      "resourcePath": "res://content/presentation/BattleFocusCameraPresentationV1.tres",
-      "resourceUid": "uid://fp0034xgbtpu",
-      "targetHash": "sha256:f2b3b92085f157512132b8fbf5aa4c5bb0777ed5a7f8cc81992fdb3c294d0774"
     }
   ]
 }

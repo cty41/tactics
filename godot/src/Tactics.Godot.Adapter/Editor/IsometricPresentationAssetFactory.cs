@@ -15,7 +15,6 @@ public static class IsometricPresentationAssetFactory
     private const string BoardPath = Root + "/BattleBoardPureRunIsometricV1.tres";
     private const string UnitPresentationPath = Root + "/StandardUnitPresentationV1.tres";
     private const string StatusPresentationPath = Root + "/StandardStatusPresentationV1.tres";
-    private const string CameraPresentationPath = Root + "/BattleFocusCameraPresentationV1.tres";
     private static readonly (string Id,string Path,string Branch,string Kind,Color Primary,Color Secondary,int Ghosts)[] SkillProfiles=
     [
         ("presentation.skill.mage.fireball",Root+"/FireballPresentation.tres","mage.fireball","fireball",new Color(1f,.28f,.04f),new Color(1f,.72f,.1f),0),
@@ -58,7 +57,11 @@ public static class IsometricPresentationAssetFactory
             {
                 new { sourcePath = "Assets/Tactics/Scripts/Common/Cells/TilemapCellGeometry.cs", gitBlobSha1 = "fffcbff3278cb8973926cb70d7b3c4decb253bbd" },
                 new { sourcePath = "Assets/Tactics/Scripts/Common/Battle/BattleBoardCameraFitter.cs", gitBlobSha1 = "910847d0088086a8c9b5ff1addf4df2649484935" },
-                new { sourcePath = "Assets/Tactics/Scripts/Common/Cells/ProceduralTileHighlightRenderer.cs", gitBlobSha1 = "55edd6bea0a2baea0f95cce8a204bd0f978e2708" }
+                new { sourcePath = "Assets/Tactics/Scripts/Common/Cells/ProceduralTileHighlightRenderer.cs", gitBlobSha1 = "55edd6bea0a2baea0f95cce8a204bd0f978e2708" },
+                new { sourcePath = "Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_warm_gray.png", gitBlobSha1 = "5781e4e5f9de0d6fee99cf0beb28218890c7f440" },
+                new { sourcePath = "Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_cool_gray.png", gitBlobSha1 = "dfc6f3cc6c32889224217dffef146879ad2e84f1" },
+                new { sourcePath = "Assets/Tactics/Shaders/BattleBackdrop.shader", gitBlobSha1 = "5ab8814f03d843b07ceaf73c8d74b449f50c7589" },
+                new { sourcePath = "Assets/Tactics/Arts/Materials/BattleBackdrop.mat", gitBlobSha1 = "6595e0755e0d6a06efaa373652b4f55dacc3eb2d" }
             },
             artifacts = new[] { new { resourcePath = BoardPath, resourceUid = ResourceUid.IdToText(Uid(BoardPath)), targetHash = Hash(BoardPath) } }
         }, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
@@ -121,16 +124,12 @@ public static class IsometricPresentationAssetFactory
     public static void BuildStatusPresentation()
     {
         BuildSkillPresentations();
+        string staleCameraPath = Root + "/BattleFocusCameraPresentationV1.tres";
+        string staleCameraAbsolute = ProjectSettings.GlobalizePath(staleCameraPath);
+        if (File.Exists(staleCameraAbsolute)) File.Delete(staleCameraAbsolute);
         var profile=new StatusPresentationResource();Save(profile,StatusPresentationPath);
         AppendPresentationEntry(profile.ContentIdValue,StatusPresentationPath,124);
         RewriteLedger(124,[BoardPath,UnitPresentationPath,..SkillProfiles.Select(value=>value.Path),StatusPresentationPath]);
-    }
-
-    public static void BuildCameraPresentation()
-    {
-        BuildStatusPresentation();var profile=new BattleCameraPresentationResource();Save(profile,CameraPresentationPath);
-        AppendPresentationEntry(profile.ContentIdValue,CameraPresentationPath,125);
-        RewriteLedger(125,[BoardPath,UnitPresentationPath,..SkillProfiles.Select(value=>value.Path),StatusPresentationPath,CameraPresentationPath]);
     }
 
     private static void AppendPresentationEntry(string id,string path,int expected)
@@ -147,7 +146,7 @@ public static class IsometricPresentationAssetFactory
         string project=Path.TrimEndingDirectorySeparator(Path.GetFullPath(ProjectSettings.GlobalizePath("res://"))),repo=Directory.GetParent(project)!.FullName;
         string ledger=Path.Combine(repo,"Tools","migration","manifest","state",BatchId+".json");
         File.WriteAllText(ledger,JsonSerializer.Serialize(new{schemaVersion=1,batchId=BatchId,state="Generated",ownership="UnityOwned",visualAcceptance="manual_isometric_and_presentation_qa_pending",catalogCount=count,
-            sourceAudit=new[]{new{sourcePath="Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",gitBlobSha1="audit-current-final-tag"},new{sourcePath="Assets/Tactics/Scripts/Common/Battle/BattleBoardCameraFitter.cs",gitBlobSha1="910847d0088086a8c9b5ff1addf4df2649484935"}},payloadBoundary="programmatic-only-no-piloto-prefab-texture-material-shader-audio",artifacts=artifacts.Select(path=>new{resourcePath=path,resourceUid=ResourceUid.IdToText(Uid(path)),targetHash=Hash(path)})},new JsonSerializerOptions{WriteIndented=true})+"\n",new UTF8Encoding(false));
+            sourceAudit=new[]{new{sourcePath="Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",gitBlobSha1="audit-current-final-tag"},new{sourcePath="Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_warm_gray.png",gitBlobSha1="5781e4e5f9de0d6fee99cf0beb28218890c7f440"},new{sourcePath="Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_cool_gray.png",gitBlobSha1="dfc6f3cc6c32889224217dffef146879ad2e84f1"},new{sourcePath="Assets/Tactics/Shaders/BattleBackdrop.shader",gitBlobSha1="5ab8814f03d843b07ceaf73c8d74b449f50c7589"}},payloadBoundary="programmatic-only-no-piloto-prefab-texture-material-shader-audio",artifacts=artifacts.Select(path=>new{resourcePath=path,resourceUid=ResourceUid.IdToText(Uid(path)),targetHash=Hash(path)})},new JsonSerializerOptions{WriteIndented=true})+"\n",new UTF8Encoding(false));
     }
 
     private static GodotResourceEntry Entry(string id, string type, string path) => new()
@@ -163,7 +162,7 @@ public static class IsometricPresentationAssetFactory
     };
     private static void Ensure(string path) { Error result = DirAccess.MakeDirRecursiveAbsolute(ProjectSettings.GlobalizePath(path)); if (result is not Error.Ok and not Error.AlreadyExists) throw new InvalidOperationException(path); }
     private static long Uid(string path) { string text = ResourceUid.PathToUid(path); long id = text.StartsWith("uid://", StringComparison.Ordinal) ? ResourceUid.TextToId(text) : ResourceUid.CreateIdForPath(path); if (!ResourceUid.HasId(id)) ResourceUid.AddId(id, path); return id; }
-    private static void Save(Resource value, string path) { long uid = Uid(path); if (ResourceSaver.Save(value, path) != Error.Ok || ResourceSaver.SetUid(path, uid) != Error.Ok) throw new InvalidOperationException(path); }
+    private static void Save(Resource value, string path) => DeterministicResourceSaver.Save(value, path, Uid(path));
     private static string Hash(string path) => "sha256:" + Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(ProjectSettings.GlobalizePath(path)))).ToLowerInvariant();
     private static void RegisterLedgerUids(string path)
     {
@@ -183,6 +182,28 @@ public static class IsometricPresentationAssetFactory
             long uid=ResourceUid.TextToId(entry.ResourceUidValue);
             if(uid!=ResourceUid.InvalidId&&!ResourceUid.HasId(uid))ResourceUid.AddId(uid,entry.DiagnosticPathValue);
         }
+    }
+}
+
+/// <summary>Retries bounded Windows sharing violations between consecutive headless ResourceSaver processes.</summary>
+internal static class DeterministicResourceSaver
+{
+    private const int MaximumAttempts = 6;
+
+    public static void Save(Resource value,string path,long uid)
+    {
+        Error saveError=Error.Failed,uidError=Error.Failed;
+        for(int attempt=1;attempt<=MaximumAttempts;attempt++)
+        {
+            saveError=ResourceSaver.Save(value,path);
+            if(saveError==Error.Ok)
+            {
+                uidError=ResourceSaver.SetUid(path,uid);
+                if(uidError==Error.Ok)return;
+            }
+            if(attempt<MaximumAttempts)System.Threading.Thread.Sleep(attempt*75);
+        }
+        throw new InvalidOperationException($"Cannot save '{path}' after {MaximumAttempts} attempts (save={saveError}, uid={uidError}).");
     }
 }
 #endif

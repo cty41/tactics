@@ -280,11 +280,12 @@ public sealed class PlayableBattleSessionService
         _targetingMode = BattleTargetingMode.None;
         _selectedSkillId = null;
         EvaluateTerminal();
+        BattleUiSnapshot presentationAfter = CaptureSnapshot(State, false);
+        _lastPresentedSnapshot = presentationAfter;
         if (_battleResult is null)
             AdvanceAutomaticTurns();
         BattleUiSnapshot after = CaptureSnapshot();
-        _lastPresentedSnapshot=after;
-        return Result(true, null, transition.Events, BattlePresentationFrameCompiler.Compile("Player",before,after,transition.Events,_context.SkillCatalog));
+        return Result(true, null, transition.Events, BattlePresentationFrameCompiler.Compile("Player",before,presentationAfter,transition.Events,_context.SkillCatalog));
     }
 
     private void AdvanceAutomaticTurns()

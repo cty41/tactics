@@ -24,6 +24,6 @@ public static class LayerFourAssetFactory
     }
     private static GodotResourceEntry Copy(GodotResourceEntry e)=>new(){ContentIdValue=e.ContentIdValue,ResourceTypeIdValue=e.ResourceTypeIdValue,ResourceUidValue=e.ResourceUidValue,DiagnosticPathValue=e.DiagnosticPathValue,SchemaVersion=e.SchemaVersion,ReferenceContentIds=e.ReferenceContentIds};
     private static long Uid(string p){string text=ResourceUid.PathToUid(p);long uid=text.StartsWith("uid://",StringComparison.Ordinal)?ResourceUid.TextToId(text):ResourceUid.CreateIdForPath(p);if(!ResourceUid.HasId(uid))ResourceUid.AddId(uid,p);return uid;}
-    private static void Save(Resource r,string p){long uid=Uid(p);if(ResourceSaver.Save(r,p)!=Error.Ok||ResourceSaver.SetUid(p,uid)!=Error.Ok)throw new InvalidOperationException(p);}
+    private static void Save(Resource r,string p)=>DeterministicResourceSaver.Save(r,p,Uid(p));
 }
 #endif

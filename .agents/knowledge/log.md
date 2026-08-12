@@ -1,8 +1,9 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-12
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:3aee1278540cf5d854dabce9bf779dda3863bd5c413bb023ccbe69cc7e7dcbe6`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:ad2c0abe730fa4fe50c3a0899d37defeabb5f73d2eb03acbb6113f8e67aae8c9`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:15f68888f6fdbc75cff51629f8c8ebac91d93794ee7734bb845f710f135f62d3`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:cc0657212e93c8e0f3e67d10a36ca922f65bcd13ad5d17049b0dd783870b653f`。
+* **Update**: Phase 7B–8D 合并人验前收口恢复 Unity 时间线、尸体占格、targeting Facing、属性后技能两阶段成长、warm/cool tile 与 BattleBackdrop parity；移除无 Unity 合同的全棋盘镜头震动，canonical Catalog 调整为 124。
 * **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:44ef7f3d400e229be4a3be2c8f604ff8ae2e25043b415424b0647bdcf643e838`。
 
 ## 2026-08-11

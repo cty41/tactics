@@ -259,6 +259,10 @@ Phase 4 Unit 预览使用原生 1600×900 逻辑画布与同尺寸窗口 overrid
 
 Phase 5A `pure-run-buffs-items-v1` 继续复用同一源管线：14 个 Buff 由固定 Unity AssetDatabase exporter 冻结，3 个 Consumable 与 12 个 Equipment 绑定最终 Tag JSON；typed draft 保留 `SourceId`，并将 `buff.poison` 声明为 `poison-spear-lv1-real` 的唯一外部内容依赖。ResourceSaver 生成 13 个新 Buff、3 个 Consumable、12 个 Equipment 和 29 项分批 Catalog，再将 Poison 6 项、Unit 13 项与本批内容去重合成为 47 个唯一 `ContentId` 的 canonical Catalog。30 个 ledger artifact、UID、目标/语义 hash 和两次 byte-identical 生成均受测；Compatibility 与 Forward+ 使用同一 typed runtime validator。三个 Buff 图标只保存路径、GUID、LocalFileId 与 dependency hash，没有复制 PNG、Unity Material/Shader 或第三方 payload，因此本批以 `visualAcceptance=not_applicable_no_visual_payload` 晋升为 `Validated/UnityOwned`，不会替代 Phase 4 Unit 的人工视觉闸门。
 
+Phase 7B–8D 合并人验前的战斗表现必须保持严格时间边界：玩家 Transition 的表现 `After` snapshot 在任何 AI 自动推进前捕获；AI Decision、Move、Attack/Cast、Hit、Defeat 与 EndTurn 由 Tween 完成事件串行驱动，不使用固定 Timer 猜测动作完成。Pause、Step 和 `0.5x/1x/2x/4x` 只改变表现节奏。尸体与掉矛都属于 movement board 占格，玩家与 AI 共享同一 Core 校验。目标选择阶段只读预览 Unity FacingResolver 的结果，取消后恢复权威朝向。
+
+Pure Run 棋盘外观复用项目自有 warm/cool gray tile 调色和 `BattleBackdrop` 算法的 Godot CanvasItem 等价实现；不复制第三方视觉载荷。Unity 当前未提供全棋盘 focus/shake 合同，因此 Godot 不保留 `presentation.camera.battle-focus-v1`，单位局部受击反馈仍由 StandardUnitTweenProfile 管理。状态与七项程序化技能表现保留后，canonical Catalog 为 124 项。成长 UI 与运行事务采用可恢复的 `AttributeAllocation → SkillSelection` 两阶段：六项属性独立可选，分配草稿持久化后再按新属性刷新技能候选，最终确认才原子升级角色。
+
 每批次必须通过：
 
 - 源/目标数量核对；

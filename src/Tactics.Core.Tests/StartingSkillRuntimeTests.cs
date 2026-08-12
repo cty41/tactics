@@ -141,6 +141,34 @@ public sealed class StartingSkillRuntimeTests
     }
 
     [Test]
+    public void MovementRejectsCorpseDestinationAndTreatsCorpsesAsPathObstacles()
+    {
+        GridPoint corpse = new(2, 1);
+        BattleState state = State(new GridPoint(1, 1), Array.Empty<(string, GridPoint)>()).WithCorpse(corpse);
+
+        BattleTransition result = new BattleTransitionService().Apply(
+            state,
+            new MoveUnitCommand(state.ActiveUnitId, corpse));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Events.OfType<CommandRejectedEvent>().Single().Reason, Is.EqualTo("destination_occupied_by_corpse"));
+            Assert.That(state.CreateMovementBoard(state.ActiveUnitId).Cells[corpse].IsOccupied, Is.True);
+        });
+    }
+
+    [Test]
+    public void DroppedSpearCannotOccupyCorpseCell()
+    {
+        BattleState state = State(new GridPoint(1, 1), Array.Empty<(string, GridPoint)>())
+            .WithCorpse(new GridPoint(2, 2));
+
+        Assert.Throws<InvalidOperationException>(() => state.WithDroppedSpear(
+            new UnitInstanceId("party.caster.0"), new GridPoint(2, 2)));
+    }
+
+    [Test]
     public void BasicAbilityConsumesOneSuccessfulUseUntilNextOwnTurn()
     {
         BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target.0", new GridPoint(2, 1)) });

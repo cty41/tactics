@@ -445,12 +445,7 @@ public static class UnitAssetFactory
             ResourceUid.AddId(uid, path);
         else if (!string.Equals(ResourceUid.GetIdPath(uid), path, StringComparison.Ordinal))
             throw new InvalidOperationException($"Resource UID collision for '{path}'.");
-        Error error = ResourceSaver.Save(resource, path);
-        if (error != Error.Ok)
-            throw new InvalidOperationException($"Cannot save '{path}': {error}");
-        Error uidError = ResourceSaver.SetUid(path, uid);
-        if (uidError != Error.Ok)
-            throw new InvalidOperationException($"Cannot persist Resource UID for '{path}': {uidError}");
+        DeterministicResourceSaver.Save(resource,path,uid);
     }
 
     private static long UidForPath(string path)

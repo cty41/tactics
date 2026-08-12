@@ -15,6 +15,14 @@ public partial class GodotIsometricBattleBoard : Control
     public event Action<GridPoint>? CellHovered;
     public event Action? HoverCleared;
 
+    public static Color BaseTileColor(GridPoint cell, bool blocked)
+    {
+        if (blocked) return new Color(0.14f, 0.19f, 0.22f, 0.96f);
+        return (cell.X + cell.Y) % 2 == 0
+            ? new Color(0.39f, 0.36f, 0.32f, 0.96f)
+            : new Color(0.32f, 0.38f, 0.41f, 0.96f);
+    }
+
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Stop;
@@ -62,7 +70,7 @@ public partial class GodotIsometricBattleBoard : Control
             int y = sum - x;
             if (y < 0 || y >= IsometricBattleBoardLayout.GridSize) continue;
             GridPoint cell = new(x, y);
-            Color baseColor = _blocked.Contains(cell) ? new Color(0.14f, 0.19f, 0.22f, 0.96f) : new Color(0.25f, 0.32f, 0.36f, 0.96f);
+            Color baseColor = BaseTileColor(cell, _blocked.Contains(cell));
             Color fill = _colors.TryGetValue(cell, out Color overlay) ? baseColor.Lerp(overlay, Math.Clamp(overlay.A, 0f, 1f)) : baseColor;
             Vector2[] diamond = IsometricBattleBoardLayout.Diamond(cell);
             DrawColoredPolygon(diamond, fill);

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-12T21:17:31+08:00"
+timestamp: "2026-08-12T23:04:29+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:3aee1278540cf5d854dabce9bf779dda3863bd5c413bb023ccbe69cc7e7dcbe6
+source_fingerprint: sha256:cc0657212e93c8e0f3e67d10a36ca922f65bcd13ad5d17049b0dd783870b653f
 ---
 
 # Current state
@@ -69,7 +69,7 @@ Phase 7A 第二轮收口将 Unity 的基础技能回合限制显式迁入 `Skill
 
 Phase 7A 的技能目标预览分离 `RangeCells`、canonical `LegalTargets` 与只读 `ImpactPreview`：选择技能时即使当前无合法敌人也显示弱色几何射程，可执行目标使用强色；悬停后由同一次 `BattleTransitionService` 探测提供首个命中、受影响单位与拒绝原因。Fireball Lv1 保持单目标首个命中且无 AOE，Thrust 保持轴向，Summon/Pickup 只暴露尸体或掉矛特殊目标；Godot 不复制伤害、LOS 或目标结算规则。用户已完成复验。
 
-Phase 7B 已完成自动实现 checkpoint，等待 Inventory/成长人工闸门。18 条玩家职业分支的 Lv1/Lv2 合同已冻结；通用 `SkillDefinition` 显式保存 branch、前置、成长可见性、所需属性/门槛及规范化执行参数。Skill Runtime 支持 Lv2 十字范围、分类召唤上限、尸体召唤、Teleport/Decoy 位移、Multi Stab 有序段数、Recover Spear 邻近电击、Ice Armor、Bone Shield 伤害吸收及 Combat Techniques 等级。Run 角色显式保存技能分支/等级，Inventory 与成长通过 revision-checked 原子服务执行装备、替换、卸下、携带、属性和技能选择；V2 单槽存档兼容读取 V1 并在下次写入升级。ResourceSaver 已生成 27 个新增 Skill Resource 和 27 项批次 Catalog，canonical Catalog 达 101 项；Inventory/Progression 功能占位页已接入 Home/Settlement，成长未消费时禁止进入下一战。冻结 Unity Skill Resource 仍保持来源值，Godot playable balance 仅覆盖既有 Lv1 切片；batch 保持 `Generated/UnityOwned + manual_inventory_progression_qa_pending`。
+Phase 7B 已完成自动实现 checkpoint，等待 Inventory/成长人工闸门。18 条玩家职业分支的 Lv1/Lv2 合同已冻结；通用 `SkillDefinition` 显式保存 branch、前置、成长可见性、所需属性/门槛及规范化执行参数。Skill Runtime 支持 Lv2 十字范围、分类召唤上限、尸体召唤、Teleport/Decoy 位移、Multi Stab 有序段数、Recover Spear 邻近电击、Ice Armor、Bone Shield 伤害吸收及 Combat Techniques 等级。Run 角色显式保存技能分支/等级，Inventory 与成长通过 revision-checked 原子服务执行装备、替换、卸下、携带、属性和技能选择；成长事务先独立持久化六选一属性分配，再基于更新后的属性进入技能学习/升级选择，页面不再把某个技能候选反向绑定为固定 Intelligence。V2 单槽存档兼容读取 V1 并在下次写入升级。ResourceSaver 已生成 27 个新增 Skill Resource 和 27 项批次 Catalog，canonical Catalog 达 101 项；Inventory/Progression 功能占位页已接入 Home/Settlement，成长未消费时禁止进入下一战。冻结 Unity Skill Resource 仍保持来源值，Godot playable balance 仅覆盖既有 Lv1 切片；batch 保持 `Generated/UnityOwned + manual_inventory_progression_qa_pending`。
 
 Phase 7C 自动实现 checkpoint 已完成，等待与 Phase 7B 合并人工闸门。Unity 七层图合同只授权到 Layer 4：N1→N3 胜利且成长消费后进入 battle/rest/store/mystery 四选一，选择后锁定其余路线；节点以可恢复的 Selected/Pending/Resolved/Committed 生命周期执行，完成后停在 `ReadyForLayerFive`，N5/N6/Elite/Boss 与 Lv3 后移。N4 使用标准 BattleResult 校验、队伍同步、恢复、奖励、掉落和失败摘要；Rest 原子恢复存活角色 30% HP/MP；Store 保存固定 3 件库存、稳定实例与购买状态；Mystery 保存角色、成功率、roll、结果及待带入下一战的状态。Save V3 可读 V1/V2 并保存全部 Layer 4 事务；Godot 页面只提交 Application intent。ResourceSaver 生成 7 个 Resource，canonical Catalog 保持 108 项；batch 为 `Generated/UnityOwned + manual_inventory_progression_and_layer4_qa_pending`。
 
@@ -81,9 +81,9 @@ Phase 8A 已建立 gameplay 与 timing 隔离的通用单位表现通道：Appli
 
 Phase 8B 已为 Fireball、Bone Spear 与 Thrust 建立首批 programmatic-only 技能表现：三个 Skill Presentation Resource 只保存颜色、travel/impact timing、ghost 数及明确的 `no-piloto-payload` 边界。运行时坐标、射线和受影响单位全部来自 Application cue 与真实 Damage event；Fireball Lv1 明确无 AOE，Bone Spear 不自行推导穿透，Thrust 不改变 gameplay cell。Godot 临时 Node2D 只绘制火核/尾迹/Impact 环、矛形/短尾迹和轴向枪芒/命中交叉光，页面离开或 reload 时由队列统一清理。canonical Catalog 为 119；冻结 graph/recipe blob、两次 ResourceSaver、Compatibility/Forward+ 与统一门禁均通过，状态保持 `Generated/UnityOwned + manual_isometric_and_presentation_qa_pending`。
 
-Phase 8C–8D 自动实现已完成：Ice Bolt、Lightning、Poison Spear 与 Amplify Damage 的程序化表现只消费已提交的路径、Damage/Status 和 Spear event；结构化状态快照驱动独立于 Body 的稳定覆盖层，展示 Poison、Burning、Frozen、Slow、Stun、Fear、Curse 与防护状态。棋盘镜头使用固定有界平移和非随机震动，支持 Motion toggle，异常或 reload 时复位且不参与玩法。新增四个技能、一个状态和一个镜头 Resource，canonical Catalog 为125；完整统一门禁通过，等待 Phase 7B–8D 合并人工验收。
+Phase 8C–8D 自动实现已完成：Ice Bolt、Lightning、Poison Spear 与 Amplify Damage 的程序化表现只消费已提交的路径、Damage/Status 和 Spear event；结构化状态快照驱动独立于 Body 的稳定覆盖层，展示 Poison、Burning、Frozen、Slow、Stun、Fear、Curse 与防护状态。人工 parity 反馈确认 Unity 不存在整棋盘聚焦/震动合同后，Godot 已移除多做的 camera motion 运行时与内容 Resource，命中反馈继续限定在单位局部表现。等距 Tile 使用项目 warm/cool 双色交替，并由项目自有 Battle Backdrop shader 的等价 Godot CanvasItem 实现背景层；相关 Unity 纹理、材质与 shader blob 仅审计、不复制 payload。canonical Catalog 回落并固定为124；完整统一门禁通过后仍等待 Phase 7B–8D 合并人工验收。
 
-Phase 8 等距表现定向修复将屏幕投影垂直镜像而不改变任何 Core GridPoint、Encounter 出生格或存档：玩家逻辑出生格现在显示在左下、敌方显示在右上，初始朝向分别采用 Unity 合同的 East/West，移动分段与攻击目标朝向复用等价 `FacingResolver`。单位表现由固定时间出队改为单 Frame 串行 Tween：先显示 Before snapshot，再依次完成 Move、Attack/Cast、Hit、Defeat，最后对齐 After snapshot 并驱动下一 AI frame；Pause/Step/1×/2×直接控制当前队列，避免 Refresh 提前覆盖移动 Actor 造成瞬移。完整统一门禁通过，仍并入 Phase 7B–8D 合并人工验收。
+Phase 8 等距表现定向修复将屏幕投影垂直镜像而不改变任何 Core GridPoint、Encounter 出生格或存档：玩家逻辑出生格现在显示在左下、敌方显示在右上，初始朝向分别采用 Unity 合同的 East/West，移动分段、targeting hover 与攻击目标朝向复用等价 `FacingResolver`。单位表现由固定时间出队改为单 Frame 串行 Tween：先显示 Before snapshot，再依次完成 Move、Attack/Cast、Hit、Defeat，最后对齐 After snapshot并由完成事件驱动下一 AI frame；玩家动作的表现 After 在自动 AI 推进前捕获，防止未来伤害或死亡泄漏进当前帧。Pause/Step/0.5×/1×/2×/4×直接控制当前队列，避免 Refresh 提前覆盖移动 Actor 造成瞬移或自动播放停顿。移动棋盘把未消费尸体作为阻挡，召唤消费后才释放格子。完整统一门禁通过后仍并入 Phase 7B–8D 合并人工验收。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

@@ -62,7 +62,7 @@ public static class FullRunAssetFactory
     private static GodotResourceEntry Entry(string id,string type,string path,string[] refs)=>new(){ContentIdValue=id,ResourceTypeIdValue=type,ResourceUidValue=ResourceUid.IdToText(Uid(path)),DiagnosticPathValue=path,SchemaVersion=1,ReferenceContentIds=refs.Order(StringComparer.Ordinal).ToArray()};
     private static GodotResourceEntry Copy(GodotResourceEntry value)=>new(){ContentIdValue=value.ContentIdValue,ResourceTypeIdValue=value.ResourceTypeIdValue,ResourceUidValue=value.ResourceUidValue,DiagnosticPathValue=value.DiagnosticPathValue,SchemaVersion=value.SchemaVersion,ReferenceContentIds=value.ReferenceContentIds};
     private static long Uid(string path){string text=ResourceUid.PathToUid(path);long id=text.StartsWith("uid://",StringComparison.Ordinal)?ResourceUid.TextToId(text):ResourceUid.CreateIdForPath(path);if(!ResourceUid.HasId(id))ResourceUid.AddId(id,path);return id;}
-    private static void Save(Resource value,string path){long uid=Uid(path);if(ResourceSaver.Save(value,path)!=Error.Ok||ResourceSaver.SetUid(path,uid)!=Error.Ok)throw new InvalidOperationException(path);}
+    private static void Save(Resource value,string path)=>DeterministicResourceSaver.Save(value,path,Uid(path));
     private static string Hash(string path)=>"sha256:"+Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(ProjectSettings.GlobalizePath(path)))).ToLowerInvariant();
     private static void RegisterLedgerUids(string path)
     {

@@ -138,6 +138,26 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void PlayerPresentationAfter_DoesNotContainFutureAiTurnResults()
+    {
+        PlayableBattleSessionService service = CreateService(out _, out UnitInstanceId enemyId);
+        UnitInstanceId playerId = service.State.Units.Values.Single(unit => unit.Unit.PlayerNumber == 0).Unit.InstanceId;
+        int playerHealthBefore = service.State.Units[playerId].CurrentHealth;
+
+        BattleUiIntentResult result = service.Submit(new EndTurnIntent());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Presentation, Is.Not.Null);
+            Assert.That(result.Presentation!.After.ActiveUnitId, Is.EqualTo(enemyId));
+            Assert.That(result.Presentation.After.Units.Single(unit => unit.UnitId == playerId).CurrentHealth,
+                Is.EqualTo(playerHealthBefore));
+            Assert.That(result.Snapshot.ActiveUnitId, Is.EqualTo(playerId),
+                "The authoritative session may already have drained AI turns, but the player frame must remain chronological.");
+        });
+    }
+
+    [Test]
     public void DefeatedActiveUnit_IsSkippedThroughCanonicalEndTurn()
     {
         PlayableBattleSessionService service = CreateService(out _, out _, defeatedLeader: true);

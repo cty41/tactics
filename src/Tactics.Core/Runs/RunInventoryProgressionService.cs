@@ -70,6 +70,25 @@ public sealed class RunInventoryProgressionService
         return Success(Copy(state, party: Replace(state.Party, updated), backpackConsumables: state.BackpackConsumables.Concat(character.CarriedConsumables).ToArray()));
     }
 
+    public RunMutationResult AllocateProgressionAttributes(PureRunState state, long revision, string transactionKey,
+        UnitAttributes attributes)
+    {
+        if (state.Revision != revision) return Reject(state, "run.revision_mismatch");
+        PendingProgression? pending = state.PendingProgression.FirstOrDefault(value => value.TransactionKey == transactionKey);
+        if (pending is null) return Reject(state, "progression.not_found");
+        if (pending.ProposedAttributes is UnitAttributes existing)
+            return existing == attributes
+                ? new RunMutationResult(true, null, state)
+                : Reject(state, "progression.attributes_already_allocated");
+        RunCharacterState character = state.Party.Single(value => value.CharacterId == pending.CharacterId);
+        int spent = AttributeTotal(attributes) - AttributeTotal(character.Attributes);
+        if (spent != pending.AttributePoints || AnyAttributeLower(attributes, character.Attributes))
+            return Reject(state, "progression.invalid_attributes");
+        PendingProgression updated = pending with { ProposedAttributes = attributes, SelectedSkillContentId = null };
+        return Success(Copy(state, pending: state.PendingProgression.Select(value =>
+            value.TransactionKey == transactionKey ? updated : value).ToArray()));
+    }
+
     public RunMutationResult CompleteProgression(PureRunState state, long revision, string transactionKey,
         UnitAttributes attributes, ContentId? skillId, IReadOnlyDictionary<ContentId, SkillDefinition> skills)
     {
@@ -77,8 +96,18 @@ public sealed class RunInventoryProgressionService
         PendingProgression? pending = state.PendingProgression.FirstOrDefault(value => value.TransactionKey == transactionKey);
         if (pending is null) return Reject(state, "progression.not_found");
         RunCharacterState character = state.Party.Single(value => value.CharacterId == pending.CharacterId);
+        if (pending.ProposedAttributes is UnitAttributes proposed && proposed != attributes)
+            return Reject(state, "progression.attributes_not_allocated");
         int spent = AttributeTotal(attributes) - AttributeTotal(character.Attributes);
         if (spent != pending.AttributePoints || AnyAttributeLower(attributes, character.Attributes)) return Reject(state, "progression.invalid_attributes");
+        RunCharacterState preview = new(character.CharacterId, character.UnitContentId, character.Level, attributes,
+            character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
+            character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
+        IReadOnlyList<SkillDefinition> candidates = GrowthCandidates(preview, skills)
+            .Where(skill => CanUnlockWithAttributePoints(preview, skill, 0)).ToArray();
+        if (skillId is null && candidates.Count > 0) return Reject(state, "progression.skill_required");
+        if (skillId is ContentId candidateId && candidates.All(skill => skill.ContentId != candidateId))
+            return Reject(state, "progression.invalid_skill");
         RunLearnedSkillState[] learned = character.LearnedSkillStates.ToArray();
         if (skillId is ContentId selected)
         {
@@ -116,7 +145,8 @@ public sealed class RunInventoryProgressionService
     private static PureRunState Copy(PureRunState value, IReadOnlyList<RunCharacterState>? party = null, IReadOnlyList<BattleConsumableState>? backpackConsumables = null, IReadOnlyList<RunEquipmentState>? backpackEquipment = null, IReadOnlyList<PendingProgression>? pending = null, string? transaction = null) =>
         new(value.RunId, value.Seed, value.Revision + 1, value.Phase, value.EncounterIndex, value.EncounterContentId, party ?? value.Party,
             backpackConsumables ?? value.BackpackConsumables, backpackEquipment ?? value.BackpackEquipment, pending ?? value.PendingProgression,
-            transaction is null ? value.AppliedTransactionKeys : value.AppliedTransactionKeys.Append(transaction).ToArray(), value.Gold, value.BattlesCompleted, value.EnemiesDefeated, value.AcquiredItems, value.Checkpoint);
+            transaction is null ? value.AppliedTransactionKeys : value.AppliedTransactionKeys.Append(transaction).ToArray(), value.Gold, value.BattlesCompleted, value.EnemiesDefeated, value.AcquiredItems, value.Checkpoint,
+            value.MapState, value.NodeTransaction);
     private static RunMutationResult Success(PureRunState state) => new(true, null, state);
     private static RunMutationResult Reject(PureRunState state, string code) => new(false, code, state);
 }

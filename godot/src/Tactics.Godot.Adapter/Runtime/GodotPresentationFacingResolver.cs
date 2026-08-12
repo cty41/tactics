@@ -19,4 +19,10 @@ public static class GodotPresentationFacingResolver
         if(vertical&&((current==GodotUnitFacing.North&&dy>0)||(current==GodotUnitFacing.South&&dy<0)))return current;
         return dx>0?GodotUnitFacing.East:GodotUnitFacing.West;
     }
+
+    public static GodotUnitFacing PreviewMove(GridPoint origin, IReadOnlyList<GridPoint> path, GodotUnitFacing current) =>
+        path.Count == 0 ? current : Resolve(origin, path[0], current);
+
+    public static GodotUnitFacing PreviewTarget(GridPoint origin, GridPoint target, GodotUnitFacing current) =>
+        Resolve(origin, target, current);
 }
