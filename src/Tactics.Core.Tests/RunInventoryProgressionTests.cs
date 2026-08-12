@@ -212,14 +212,26 @@ public sealed class RunInventoryProgressionTests
             SkillExecutionKind.SummonFireDemon,0,SkillDamageKind.None,branchId:"mage.summon-fire-demon",prerequisiteBranchId:"mage.fireball");
         SkillDefinition other = new(new ContentId("skill.mage.ice-bolt.lv1"),"other",SkillRole.Mage,SkillKind.Active,1,1,1,4,
             SkillExecutionKind.IceBolt,4,SkillDamageKind.Magical,branchId:"mage.ice-bolt");
+        SkillDefinition lightning = new(new ContentId("skill.mage.lightning.lv1"),"lightning",SkillRole.Mage,SkillKind.Active,1,1,1,4,
+            SkillExecutionKind.Lightning,4,SkillDamageKind.Magical,branchId:"mage.lightning");
+        SkillDefinition teleport = new(new ContentId("skill.mage.teleport.lv1"),"teleport",SkillRole.Mage,SkillKind.Active,1,1,1,4,
+            SkillExecutionKind.Teleport,0,SkillDamageKind.None,branchId:"mage.teleport");
         SkillDefinition lockedAdvanced = new(new ContentId("skill.mage.ice-armor.lv1"),"locked",SkillRole.Mage,SkillKind.Active,1,1,0,0,
             SkillExecutionKind.IceArmor,0,SkillDamageKind.None,branchId:"mage.ice-armor",prerequisiteBranchId:"mage.ice-bolt");
-        var skills = new[] { fireball, fireballTwo, advanced, other, lockedAdvanced }.ToDictionary(value=>value.ContentId);
+        var skills = new[] { fireball, fireballTwo, advanced, other, lightning, teleport, lockedAdvanced }.ToDictionary(value=>value.ContentId);
         var service = new RunInventoryProgressionService();
         PureRunDefinition definition=Definition(state);
         SkillDefinition[] offer = service.GrowthOffer(state,mage,skills,definition).ToArray();
-        Assert.That(offer[0].ContentId,Is.EqualTo(advanced.ContentId));
-        Assert.That(offer.Select(value=>value.ContentId),Does.Not.Contain(lockedAdvanced.ContentId));
+        Assert.Multiple(() =>
+        {
+            Assert.That(offer.Select(value => value.ContentId), Is.EqualTo(new[]
+            {
+                advanced.ContentId,
+                fireballTwo.ContentId,
+                new ContentId("skill.mage.lightning.lv1")
+            }));
+            Assert.That(offer.Select(value=>value.ContentId),Does.Not.Contain(lockedAdvanced.ContentId));
+        });
 
         UnitAttributes a=mage.Attributes;
         UnitAttributes raised=new(a.Strength,a.Agility,a.Constitution,a.Intelligence+1,a.Charisma,a.Luck);

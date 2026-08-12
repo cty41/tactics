@@ -40,8 +40,6 @@ public sealed class RunInventoryProgressionService
         int seed = PureRunSettlementService.DeriveSeed(state.Seed,
             $"skill-offer-{character.CharacterId}", character.Level + 1);
         var random = new Random(seed);
-        Shuffle(newBranches, random);
-        Shuffle(upgrades, random);
         var offer = new List<SkillDefinition>(GrowthOfferSize);
         SkillDefinition? guaranteed = GuaranteedAdvancedSkill(state, character, skills, legal, startingSkillContentId);
         if (guaranteed is not null)
@@ -50,6 +48,11 @@ public sealed class RunInventoryProgressionService
             newBranches.RemoveAll(value => value.ContentId == guaranteed.ContentId);
             upgrades.RemoveAll(value => value.ContentId == guaranteed.ContentId);
         }
+        // Unity removes the guaranteed advanced branch before either pool consumes RNG.
+        // Keeping this order is part of the frozen three-slot offer contract: changing it
+        // preserves slot zero but deterministically changes slots one and two.
+        Shuffle(newBranches, random);
+        Shuffle(upgrades, random);
         if (offer.Count == 0 && newBranches.Count > 0 && upgrades.Count > 0)
         { offer.Add(newBranches[0]); newBranches.RemoveAt(0); }
         if (upgrades.Count > 0 && (guaranteed is not null || offer.Count > 0 || newBranches.Count == 0))
