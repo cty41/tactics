@@ -74,11 +74,13 @@ public sealed record SkillDefinition
         string branchId = "",
         ContentId? prerequisiteContentId = null,
         bool growthVisible = true,
-        SkillExecutionProfile? executionProfile = null)
+        SkillExecutionProfile? executionProfile = null,
+        string requiredAttribute = "",
+        int minimumAttribute = 0)
     {
         if (string.IsNullOrWhiteSpace(sourceId)) throw new ArgumentException("SourceId cannot be empty.", nameof(sourceId));
         if (!Enum.IsDefined(role) || !Enum.IsDefined(kind) || !Enum.IsDefined(executionKind) || !Enum.IsDefined(damageKind)) throw new ArgumentOutOfRangeException(nameof(executionKind));
-        if (level <= 0 || manaCost < 0 || minRange < 0 || maxRange < minRange || damage < 0 || maxUsesPerTurn < 0) throw new ArgumentOutOfRangeException(nameof(level));
+        if (level <= 0 || manaCost < 0 || minRange < 0 || maxRange < minRange || damage < 0 || maxUsesPerTurn < 0 || minimumAttribute < 0) throw new ArgumentOutOfRangeException(nameof(level));
         if ((statusContentId is null) != (statusDuration == 0)) throw new ArgumentException("Status identity and duration must be configured together.");
         ContentId = contentId;
         SourceId = sourceId.Trim();
@@ -101,6 +103,8 @@ public sealed record SkillDefinition
         PrerequisiteContentId = prerequisiteContentId;
         GrowthVisible = growthVisible;
         ExecutionProfile = executionProfile ?? new SkillExecutionProfile();
+        RequiredAttribute = requiredAttribute.Trim();
+        MinimumAttribute = minimumAttribute;
     }
 
     public ContentId ContentId { get; }
@@ -124,6 +128,8 @@ public sealed record SkillDefinition
     public ContentId? PrerequisiteContentId { get; }
     public bool GrowthVisible { get; }
     public SkillExecutionProfile ExecutionProfile { get; }
+    public string RequiredAttribute { get; }
+    public int MinimumAttribute { get; }
     public bool IsPassive => Kind == SkillKind.Passive;
     public int AreaRadius => ExecutionProfile.AreaRadius > 0 ? ExecutionProfile.AreaRadius : ExecutionKind == SkillExecutionKind.AreaBlast ? 2 : 0;
     public bool UsesLineTargeting => ExecutionKind is SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.Thrust;

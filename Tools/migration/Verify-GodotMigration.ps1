@@ -51,6 +51,10 @@ $runPersistenceSpecification = Join-Path $repoRoot 'Tools\migration\manifest\exp
 $runPersistenceExportReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-persistence-v1-export.json'
 $runPersistenceGenerationLedger = Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-persistence-v1.json'
 $runPersistenceGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-persistence-v1-generation.json'
+$inventoryProgressionExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-inventory-progression-v1.unity.json'
+$inventoryProgressionDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-inventory-progression-v1.draft.json'
+$inventoryProgressionSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-inventory-progression-v1.json'
+$inventoryProgressionGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-inventory-progression-v1-generation.json'
 $consumablesJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Consumables.json'
 $equipmentJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Equipment.json'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
@@ -416,6 +420,21 @@ try {
             if ($firstRunPersistenceHashes[$target] -ne (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash) {
                 throw "Pure Run persistence generation is not byte-idempotent: $target"
             }
+        }
+    }
+
+    if (Test-Path -LiteralPath $inventoryProgressionExport -PathType Leaf) {
+        Invoke-Checked 'Compile Pure Run inventory/progression typed draft' {
+            python -m Tools.migration.inventory_progression_converter --export $inventoryProgressionExport --specification $inventoryProgressionSpecification --output $inventoryProgressionDraft
+        }
+        Invoke-Checked 'Generate Pure Run inventory/progression resources first pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/InventoryProgressionAssetBuilder.cs'
+        }
+        Invoke-Checked 'Generate Pure Run inventory/progression resources second pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/InventoryProgressionAssetBuilder.cs'
+        }
+        Invoke-Checked 'Refresh Pure Run inventory/progression generation evidence' {
+            python -m Tools.migration.inventory_progression_generation_receipt --draft $inventoryProgressionDraft --output $inventoryProgressionGenerationReceipt
         }
     }
     else { Write-Host '== Skip real Pure Run persistence draft: disposable Unity DTO is not present ==' }

@@ -138,6 +138,17 @@ public sealed class PureRunSessionService
         return Save(new PureRunSaveSnapshot(revision + 1, loaded.Snapshot.ActiveRun, null), revision);
     }
 
+    public RunSessionResult ApplyMutation(Func<PureRunState, RunMutationResult> mutation)
+    {
+        ArgumentNullException.ThrowIfNull(mutation);
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
+            return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
+        RunMutationResult result = mutation(run);
+        if (!result.Succeeded) return Fail(result.RejectionCode, loaded.Snapshot);
+        return Save(new PureRunSaveSnapshot(result.State.Revision, result.State, loaded.Snapshot.TerminalSummary), run.Revision) with { Diagnostics = diagnostics };
+    }
+
     private RunSessionResult Save(PureRunSaveSnapshot snapshot, long expectedRevision)
     {
         RunStoreResult stored = _store.Save(snapshot, expectedRevision);

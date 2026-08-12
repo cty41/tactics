@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://dphkfsvbnpa37"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_q5vit"]
+
+[resource]
+script = ExtResource("1_q5vit")
+ContentIdValue = "skill.mage.lightning.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Lv2_Graph_Ability.asset"
+DisplayName = "霹雳闪电 Lv2"
+Description = "直接造成9点闪电魔法伤害，并有25%概率眩晕。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 2
+ManaCost = 6
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Lightning"
+Damage = 9
+DamageKindValue = "Magical"
+BranchId = "mage.lightning"
+PrerequisiteContentIdValue = "skill.mage.lightning.lv1"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 5
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Lv2_Graph_Ability.asset"
+SourceGuid = "14dd85765f9576949a62e3af8700201d"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Lightning_Lv2_Graph.asset"
+GraphDependencyHash = "82082666605eaf56c94c2c3b9e735629"

@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-inventory-progression-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "artifacts": [
+    {
+      "resourcePath": "godot/content/skills/AmazonCombatTechniquesLv2.tres",
+      "targetHash": "sha256:b2a977b5b93c89caa0d72cc541a5d40b479d4f41a48ed5a9c24dca09ec23366b"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonDecoyLv1.tres",
+      "targetHash": "sha256:65cbb5d56afcbed00937af0086d25b8c3a81971a1a413d174562563dbf6a4a18"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonDecoyLv2.tres",
+      "targetHash": "sha256:a07e7eea53c74fa0af2b903579e7d3f13e994eea37be52732bfa14e38e67a15b"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonMultiStabLv1.tres",
+      "targetHash": "sha256:499a140bd7879c578b30425410f9986dbe1de48875735cd1f75b9cdd16dacdc0"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonMultiStabLv2.tres",
+      "targetHash": "sha256:11b6e110fd1e3b2f57a33380c6ce4526944d0b034f42d6c3a947db5b68f1dcc8"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonPoisonSpearLv2.tres",
+      "targetHash": "sha256:d106de3acb1841cad285ae9043c8e514a05fc83f273f48dc3a11e5287c3738ad"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonRecoverSpearLv1.tres",
+      "targetHash": "sha256:22eb3243879a44a7720870e3e0868a0aeed542274a122785b1f84abfe5c869a2"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonRecoverSpearLv2.tres",
+      "targetHash": "sha256:c5eb775579635d0f9c98582499e40ee421e8957eb903610fdcf5064d705e6458"
+    },
+    {
+      "resourcePath": "godot/content/skills/AmazonThrustLv2.tres",
+      "targetHash": "sha256:3b9397f077ebf76e123fc74762d46951534c4b4d580c2fe422183c15186af3ea"
+    },
+    {
+      "resourcePath": "godot/content/skills/InventoryProgressionCatalog.tres",
+      "targetHash": "sha256:a953dc9c26a5eb2e869944c209c7e4e70ceef89123c9382313843b41dfe22e05"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageFireballLv2.tres",
+      "targetHash": "sha256:835dd333fe0d2b75892930ca0d997f5010a1cd5e6f49924cd9bbe3ce520e0ddd"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageIceArmorLv1.tres",
+      "targetHash": "sha256:8be6101d661ac3d0955caee734685207e245d11c629071c498f8ca2f67adfdc2"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageIceArmorLv2.tres",
+      "targetHash": "sha256:5d50b8bbaadf3fa473f66b6bcac5737b5be8e6c9e6dd69c32cf1450a2310f995"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageIceBoltLv2.tres",
+      "targetHash": "sha256:2cdf5ff6cdbffd93c32913522065ad131ef9668a2687f82ab493a2a36facff25"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageLightningLv2.tres",
+      "targetHash": "sha256:94d4e05125d8f5908195913a0e1199382bddee64d33937e2d4efed359d4c1c0f"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageSummonFireDemonLv1.tres",
+      "targetHash": "sha256:4b9bcf8c5153bb9b86a5113bd244fe96c7b833ebaef1e4789f427620edb7654d"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageSummonFireDemonLv2.tres",
+      "targetHash": "sha256:272c2a61536e4833500fcf322303482c36a65cc3a4bf2174de79643465553f96"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageTeleportLv1.tres",
+      "targetHash": "sha256:857c4cd402dde63258b670a17d77c0f23a97f7cc2132c6c62ddae9b3afbbdd3f"
+    },
+    {
+      "resourcePath": "godot/content/skills/MageTeleportLv2.tres",
+      "targetHash": "sha256:49cb3cffecfbbd392f7ae638ff17aba6a3f1d2cf21d2a643f5121dd1f81bfd7a"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerAmplifyDamageLv2.tres",
+      "targetHash": "sha256:47b5f5641e9c27e4e54de711c94998c808998ff7e7386b242628de939b554c38"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerBoneShieldLv1.tres",
+      "targetHash": "sha256:f799cf6e72280ada86aecd7a8e275e7c9729ce78f2635e1e610d2ecd3f8fe8a7"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerBoneShieldLv2.tres",
+      "targetHash": "sha256:0bf0d61080cf0884fd0d17f9bd83ca78a5d9b151c2043b769ae0bf360483a43f"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerBoneSpearLv2.tres",
+      "targetHash": "sha256:f6a8b22c6b423f73c9506e51e75ca5cd7a266b2600359bdc46bc656002e8e065"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerFearCurseLv1.tres",
+      "targetHash": "sha256:d06f61f7edcc3090eefefdf1f4297cdcec2b7d0131d6a0d69b23f6cf4bf556cc"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerFearCurseLv2.tres",
+      "targetHash": "sha256:058c6478bfe3db47dabb3382f1da25b0324ee602eeaabee041f9fa9c0aebd4b5"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerSkeletonMageLv1.tres",
+      "targetHash": "sha256:3408445da72d2ddaeff856733bd91cc4c072c1878dc9549f116f5e5b4e41ed25"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerSkeletonMageLv2.tres",
+      "targetHash": "sha256:306d611ebc7a579bfcb645918f050c2eaf09f4988abf79f2e587e8ae7a76a211"
+    },
+    {
+      "resourcePath": "godot/content/skills/NecromancerSummonSkeletonLv2.tres",
+      "targetHash": "sha256:4539d50630f9c30c22648323530e5f86d0aab9cdbdf2d514f61f120dbf03a127"
+    }
+  ]
+}

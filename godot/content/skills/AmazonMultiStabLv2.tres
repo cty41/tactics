@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://bxu68x78k1cwl"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_pkob3"]
+
+[resource]
+script = ExtResource("1_pkob3")
+ContentIdValue = "skill.amazon.multi-stab.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MultiStab_Lv2_Graph_Ability.asset"
+DisplayName = "连续刺击 Lv2"
+Description = "依次选择4段刺击目标。"
+RoleValue = "Amazon"
+KindValue = "Active"
+Level = 2
+ManaCost = 8
+MinRange = 1
+MaxRange = 3
+ExecutionKindValue = "MultiStab"
+Damage = 4
+DamageKindValue = "Physical"
+BranchId = "amazon.multi-stab"
+PrerequisiteContentIdValue = "skill.amazon.multi-stab.lv1"
+RequiredAttribute = "Agility"
+MinimumAttribute = 7
+OrderedTargetCount = 4
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MultiStab_Lv2_Graph_Ability.asset"
+SourceGuid = "e8bd822ec1c5ea74693e72fa33837c44"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/MultiStab_Lv2_Graph.asset"
+GraphDependencyHash = "4949a00eadd76218aea33338a71154d2"

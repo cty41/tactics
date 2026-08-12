@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://bbubdmk42lpfl"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_dmfai"]
+
+[resource]
+script = ExtResource("1_dmfai")
+ContentIdValue = "skill.amazon.decoy.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Decoy_Lv2_Graph_Ability.asset"
+DisplayName = "分身 Lv2"
+Description = "后撤、留下分身并净化自身。"
+RoleValue = "Amazon"
+KindValue = "Active"
+Level = 2
+ManaCost = 6
+MinRange = 1
+MaxRange = 2
+ExecutionKindValue = "Decoy"
+DamageKindValue = "None"
+BranchId = "amazon.decoy"
+PrerequisiteContentIdValue = "skill.amazon.decoy.lv1"
+RequiredAttribute = "Luck"
+MinimumAttribute = 7
+CleanseHarmful = true
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Decoy_Lv2_Graph_Ability.asset"
+SourceGuid = "bc8ba2af6f6b85045a8c7e5509c4ad05"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Decoy_Lv2_Graph.asset"
+GraphDependencyHash = "0d631dc9f4ffe02c39935e372f306557"

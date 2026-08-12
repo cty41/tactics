@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://cd07l0ckxhf5h"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_t8yu3"]
+
+[resource]
+script = ExtResource("1_t8yu3")
+ContentIdValue = "skill.amazon.recover-spear.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RecoverSpear_Lv2_Graph_Ability.asset"
+DisplayName = "召唤长矛 Lv2"
+Description = "召回长矛并电击相邻敌人。"
+RoleValue = "Amazon"
+KindValue = "Active"
+Level = 2
+ManaCost = 4
+MinRange = 1
+MaxRange = 5
+ExecutionKindValue = "RecoverSpear"
+DamageKindValue = "None"
+BranchId = "amazon.recover-spear"
+PrerequisiteContentIdValue = "skill.amazon.recover-spear.lv1"
+RequiredAttribute = "Agility"
+MinimumAttribute = 7
+SecondaryDamage = 6
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RecoverSpear_Lv2_Graph_Ability.asset"
+SourceGuid = "29acc46c9ee9a624ca54f9e569493cd5"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/RecoverSpear_Lv2_Graph.asset"
+GraphDependencyHash = "145116bd8ae3ebb3ba23f513af14f0d2"

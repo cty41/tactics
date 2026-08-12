@@ -71,6 +71,7 @@ public sealed class RunInventoryProgressionService
         if (skillId is ContentId selected)
         {
             if (!skills.TryGetValue(selected, out SkillDefinition? definition) || !definition.GrowthVisible || definition.Level > 2) return Reject(state, "progression.invalid_skill");
+            if (AttributeValue(attributes, definition.RequiredAttribute) < definition.MinimumAttribute) return Reject(state, "progression.attribute_requirement_not_met");
             RunLearnedSkillState? prior = learned.FirstOrDefault(value => value.BranchId == definition.BranchId);
             if (definition.Level != (prior?.Level ?? 0) + 1) return Reject(state, "progression.invalid_skill_level");
             learned = learned.Where(value => value.BranchId != definition.BranchId).Append(new RunLearnedSkillState(definition.BranchId, definition.Level, selected)).ToArray();
@@ -83,6 +84,12 @@ public sealed class RunInventoryProgressionService
     }
 
     private static int AttributeTotal(UnitAttributes value) => value.Strength + value.Agility + value.Constitution + value.Intelligence + value.Charisma + value.Luck;
+    private static int AttributeValue(UnitAttributes value, string name) => name switch
+    {
+        "Strength" => value.Strength, "Agility" => value.Agility, "Constitution" => value.Constitution,
+        "Intelligence" => value.Intelligence, "Charisma" => value.Charisma, "Luck" => value.Luck,
+        "" => int.MaxValue, _ => int.MinValue
+    };
     private static bool AnyAttributeLower(UnitAttributes value, UnitAttributes prior) => value.Strength < prior.Strength || value.Agility < prior.Agility || value.Constitution < prior.Constitution || value.Intelligence < prior.Intelligence || value.Charisma < prior.Charisma || value.Luck < prior.Luck;
     private static RunCharacterState[] Replace(IReadOnlyList<RunCharacterState> party, RunCharacterState updated) => party.Select(value => value.CharacterId == updated.CharacterId ? updated : value).ToArray();
     private static RunCharacterState Copy(RunCharacterState value, IReadOnlyList<RunEquipmentState>? equipment = null, IReadOnlyList<BattleConsumableState>? carried = null, int? maxHealth = null, int? maxMana = null) =>

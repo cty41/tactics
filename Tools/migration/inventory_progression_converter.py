@@ -58,7 +58,7 @@ def _execution_contract(branch_id: str, level: int) -> dict[str, Any]:
     if branch_id == "mage.ice-armor": result.update({"statusContentId": "buff.ice-armor", "statusDuration": 2})
     if branch_id == "necromancer.amplify-damage": result.update({"statusContentId": "buff.curse-damage-amplifier", "statusDuration": 5})
     if branch_id == "necromancer.fear-curse": result.update({"statusContentId": "buff.fear", "statusDuration": 1})
-    if branch_id == "necromancer.bone-shield": result.update({"shieldMultiplier": 2, "shieldAbsorbsAllDamage": level == 2, "statusDuration": 99})
+    if branch_id == "necromancer.bone-shield": result.update({"shieldMultiplier": 2, "shieldAbsorbsAllDamage": level == 2})
     if branch_id == "amazon.recover-spear" and level == 2: result["secondaryDamage"] = 6
     if branch_id == "amazon.decoy" and level == 2: result["cleanseHarmful"] = True
     return result

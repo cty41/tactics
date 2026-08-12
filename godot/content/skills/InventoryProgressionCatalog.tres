@@ -1,0 +1,244 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://cygw3rli0076r"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_bpiob"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_jgl7m"]
+
+[sub_resource type="Resource" id="Resource_ap8ty"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.combat-techniques.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bsu74sp32d1cp"
+DiagnosticPathValue = "res://content/skills/AmazonCombatTechniquesLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.combat-techniques.lv1")
+
+[sub_resource type="Resource" id="Resource_vsjby"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.decoy.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c2iwo7bdhnveh"
+DiagnosticPathValue = "res://content/skills/AmazonDecoyLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_467fq"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.decoy.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bbubdmk42lpfl"
+DiagnosticPathValue = "res://content/skills/AmazonDecoyLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.decoy.lv1")
+
+[sub_resource type="Resource" id="Resource_3t5tf"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.multi-stab.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://ju44plnyvqjr"
+DiagnosticPathValue = "res://content/skills/AmazonMultiStabLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ker1y"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.multi-stab.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bxu68x78k1cwl"
+DiagnosticPathValue = "res://content/skills/AmazonMultiStabLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.multi-stab.lv1")
+
+[sub_resource type="Resource" id="Resource_e1laa"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.poison-spear.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://mt0e0emwpigf"
+DiagnosticPathValue = "res://content/skills/AmazonPoisonSpearLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.poison-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_y2744"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.recover-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://buxpysnpvqdnj"
+DiagnosticPathValue = "res://content/skills/AmazonRecoverSpearLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_resnx"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.recover-spear.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cd07l0ckxhf5h"
+DiagnosticPathValue = "res://content/skills/AmazonRecoverSpearLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.recover-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_o7sv5"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.amazon.thrust.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cth8imi44y5wl"
+DiagnosticPathValue = "res://content/skills/AmazonThrustLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.thrust.lv1")
+
+[sub_resource type="Resource" id="Resource_3ypvd"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.fireball.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bqswj2otavis4"
+DiagnosticPathValue = "res://content/skills/MageFireballLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.fireball.lv1")
+
+[sub_resource type="Resource" id="Resource_lbg25"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.ice-armor.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bnopqqdd2ru2c"
+DiagnosticPathValue = "res://content/skills/MageIceArmorLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ice-armor")
+
+[sub_resource type="Resource" id="Resource_u3631"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.ice-armor.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://emngtl4tjls4"
+DiagnosticPathValue = "res://content/skills/MageIceArmorLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ice-armor", "skill.mage.ice-armor.lv1")
+
+[sub_resource type="Resource" id="Resource_3xps4"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.ice-bolt.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cu7yd7wxmi3p1"
+DiagnosticPathValue = "res://content/skills/MageIceBoltLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.ice-bolt.lv1")
+
+[sub_resource type="Resource" id="Resource_nx7bm"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.lightning.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://dphkfsvbnpa37"
+DiagnosticPathValue = "res://content/skills/MageLightningLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.lightning.lv1")
+
+[sub_resource type="Resource" id="Resource_mj7oa"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.summon-fire-demon.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bqhtiix7uax65"
+DiagnosticPathValue = "res://content/skills/MageSummonFireDemonLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_bmtuw"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.summon-fire-demon.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cijl7f7n1a0qy"
+DiagnosticPathValue = "res://content/skills/MageSummonFireDemonLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.summon-fire-demon.lv1")
+
+[sub_resource type="Resource" id="Resource_qj28j"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.teleport.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://d0ucjhvlp4eyx"
+DiagnosticPathValue = "res://content/skills/MageTeleportLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_6wyol"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.mage.teleport.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://6ujihcdoas7d"
+DiagnosticPathValue = "res://content/skills/MageTeleportLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.teleport.lv1")
+
+[sub_resource type="Resource" id="Resource_nvq6r"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.amplify-damage.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://clfflbusn1ytt"
+DiagnosticPathValue = "res://content/skills/NecromancerAmplifyDamageLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.curse-damage-amplifier", "skill.necromancer.amplify-damage.lv1")
+
+[sub_resource type="Resource" id="Resource_tptq7"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.bone-shield.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://v6ch7iuo4rag"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneShieldLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_jmm3e"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.bone-shield.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bxyeeofms81pq"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneShieldLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.bone-shield.lv1")
+
+[sub_resource type="Resource" id="Resource_oa1wn"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.bone-spear.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://b6053ej6r10wy"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneSpearLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.bone-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_jun38"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.fear-curse.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bhp17ta374hqn"
+DiagnosticPathValue = "res://content/skills/NecromancerFearCurseLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.fear")
+
+[sub_resource type="Resource" id="Resource_3466w"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.fear-curse.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://ubojngbmyide"
+DiagnosticPathValue = "res://content/skills/NecromancerFearCurseLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.fear", "skill.necromancer.fear-curse.lv1")
+
+[sub_resource type="Resource" id="Resource_qg50d"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.skeleton-mage.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bdm5p1jmjvqib"
+DiagnosticPathValue = "res://content/skills/NecromancerSkeletonMageLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_kju66"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.skeleton-mage.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://dr0u02vunhtj0"
+DiagnosticPathValue = "res://content/skills/NecromancerSkeletonMageLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.skeleton-mage.lv1")
+
+[sub_resource type="Resource" id="Resource_t3h62"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://8s8bmpy34g8p"
+DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.summon-skeleton.lv1")
+
+[resource]
+script = ExtResource("2_jgl7m")
+Entries = [SubResource("Resource_ap8ty"), SubResource("Resource_vsjby"), SubResource("Resource_467fq"), SubResource("Resource_3t5tf"), SubResource("Resource_ker1y"), SubResource("Resource_e1laa"), SubResource("Resource_y2744"), SubResource("Resource_resnx"), SubResource("Resource_o7sv5"), SubResource("Resource_3ypvd"), SubResource("Resource_lbg25"), SubResource("Resource_u3631"), SubResource("Resource_3xps4"), SubResource("Resource_nx7bm"), SubResource("Resource_mj7oa"), SubResource("Resource_bmtuw"), SubResource("Resource_qj28j"), SubResource("Resource_6wyol"), SubResource("Resource_nvq6r"), SubResource("Resource_tptq7"), SubResource("Resource_jmm3e"), SubResource("Resource_oa1wn"), SubResource("Resource_jun38"), SubResource("Resource_3466w"), SubResource("Resource_qg50d"), SubResource("Resource_kju66"), SubResource("Resource_t3h62")]

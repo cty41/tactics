@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-11T19:56:26+08:00"
+timestamp: "2026-08-12T12:01:35+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:e0a00a384d4bd8c3767efea89bea891d2fc329656b4418bfa518ce80b26b00e8
+source_fingerprint: sha256:b843ac67e199361dc2a2c8a678d020a2863962408c4e4654b72cb9a4ca809a8a
 ---
 
 # Current state
@@ -46,7 +46,7 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter 与 Run/Persistence DTO 分别比较 29、13、17、3 个批次独占 artifact，并在 Phase 6B 组合状态验证 canonical 74 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉、Skill Gameplay 与 AI/Encounter Gameplay 验收仍单独记录。
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter、Run/Persistence 与 Inventory/Progression 各自维护批次证据；Phase 7B 在两轮 ResourceSaver 后验证 27 个新增技能与 canonical 101 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉、Skill Gameplay、AI/Encounter Gameplay 与 Inventory/Progression 验收仍单独记录。
 
 Editor lifecycle Skill 的 PowerShell 内核另由迁移 Python 测试验证 canonical path、精确 PID、dry-run 和禁用强杀；真实可见 close/reopen smoke 只在用户允许窗口出现后执行，并以新 MCP session/path/version/plugin/readiness 和日志为验收。
 

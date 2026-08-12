@@ -19,7 +19,7 @@ public class StartingSkillBatchGodotTests
         if (batch is null || global is null) return;
         StartingSkillBatchValidation result = StartingSkillBatchValidator.Validate(batch, global);
         AssertThat(result.BatchCount).IsEqual(12);
-        AssertThat(result.GlobalCount).IsEqual(74);
+        AssertThat(result.GlobalCount is 74 or 101).IsTrue();
         AssertThat(result.GeneratedCount).IsEqual(11);
         AssertThat(batch.Entries.Single(entry => entry.ContentIdValue == "skill.poison-spear.lv1").DiagnosticPathValue)
             .IsEqual("res://content/poison_spear/PoisonSpearSkillLv1.tres");

@@ -27,6 +27,22 @@ public partial class SkillDefinitionResource : Resource
     [Export] public bool ExternalDependency { get; set; }
     [Export] public bool IsBasicAbility { get; set; }
     [Export] public int MaxUsesPerTurn { get; set; }
+    [Export] public string BranchId { get; set; } = string.Empty;
+    [Export] public string PrerequisiteContentIdValue { get; set; } = string.Empty;
+    [Export] public bool GrowthVisible { get; set; } = true;
+    [Export] public string RequiredAttribute { get; set; } = string.Empty;
+    [Export] public int MinimumAttribute { get; set; }
+    [Export] public int AreaRadius { get; set; }
+    [Export] public int OrderedTargetCount { get; set; }
+    [Export] public int SummonCount { get; set; }
+    [Export] public int SummonLimit { get; set; }
+    [Export] public string SummonCategory { get; set; } = string.Empty;
+    [Export] public bool RequiresCorpse { get; set; }
+    [Export] public bool IgnoreLineOfSight { get; set; }
+    [Export] public int ShieldMultiplier { get; set; }
+    [Export] public bool ShieldAbsorbsAllDamage { get; set; }
+    [Export] public bool CleanseHarmful { get; set; }
+    [Export] public int SecondaryDamage { get; set; }
     [Export] public string SourcePath { get; set; } = string.Empty;
     [Export] public string SourceGuid { get; set; } = string.Empty;
     [Export] public long SourceLocalFileId { get; set; }
@@ -42,7 +58,10 @@ public partial class SkillDefinitionResource : Resource
         if (!ExternalDependency && ExecutionKindValue != nameof(SkillExecutionKind.CombatTechniques) &&
             (string.IsNullOrWhiteSpace(SourcePath) || string.IsNullOrWhiteSpace(SourceGuid) || SourceLocalFileId <= 0 || string.IsNullOrWhiteSpace(GraphPath) || string.IsNullOrWhiteSpace(GraphDependencyHash)))
             throw new InvalidOperationException($"Skill '{ContentIdValue}' has incomplete source audit fields.");
-        return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency, IsBasicAbility, MaxUsesPerTurn);
+        var profile = new SkillExecutionProfile(AreaRadius, OrderedTargetCount, null, SummonCount, SummonLimit,
+            SummonCategory, RequiresCorpse, IgnoreLineOfSight, ShieldMultiplier, ShieldAbsorbsAllDamage,
+            CleanseHarmful, SecondaryDamage);
+        return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency, IsBasicAbility, MaxUsesPerTurn, BranchId, string.IsNullOrEmpty(PrerequisiteContentIdValue) ? null : new ContentId(PrerequisiteContentIdValue), GrowthVisible, profile, RequiredAttribute, MinimumAttribute);
     }
 
     private static T Parse<T>(string value) where T : struct, Enum =>

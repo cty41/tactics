@@ -6,6 +6,7 @@ using Tactics.Core.Battle;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Encounters;
+using Tactics.Core.Items;
 using Tactics.Core.Runs;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
@@ -25,6 +26,7 @@ public partial class GodotPlayableRunMain : Control
     private readonly Dictionary<ContentId, AiDefinition> _ai = new();
     private readonly Dictionary<ContentId, BattleLayoutDefinition> _layouts = new();
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = new();
+    private readonly Dictionary<ContentId, EquipmentDefinition> _equipment = new();
     private PlayableBattleBalanceProfile? _balance;
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
     private readonly Dictionary<UnitInstanceId, Control> _unitMeters = new();
@@ -104,6 +106,7 @@ public partial class GodotPlayableRunMain : Control
                                 _ai.TryGetValue(new ContentId(encounter.MonsterAiContentIds[index]), out AiDefinition? definition)
                                     ? definition.SkillIds : Array.Empty<ContentId>())).ToArray()); break;
                 case PureRunDefinitionResource run: runResource = run; break;
+                case EquipmentDefinitionResource equipment: _equipment[id] = equipment.ToCoreDefinition(); break;
             }
         }
         // Encounter resources can sort before AI entries in the canonical catalog; rebuild their skill bindings now.
@@ -132,6 +135,7 @@ public partial class GodotPlayableRunMain : Control
         Button newRun = Button("New Run", () => StartNewRun()); menu.AddChild(newRun);
         RunStoreResult loaded = new GodotRunSaveStore().Load();
         Button continueRun = Button("Continue", ContinueRun); continueRun.Disabled = !loaded.Succeeded || loaded.Snapshot?.ActiveRun is null; menu.AddChild(continueRun);
+        if (loaded.Snapshot?.ActiveRun is not null) menu.AddChild(Button("Inventory", () => ShowInventory(loaded.Snapshot.ActiveRun)));
         menu.AddChild(Button("Quit", () => GetTree().Quit()));
         _status = LabelAt(root, loaded.Snapshot?.ActiveRun is null ? "No active run" : $"Active run: {loaded.Snapshot.ActiveRun.EncounterContentId.Value}", new Vector2(620, 560), 22);
     }
@@ -377,9 +381,60 @@ public partial class GodotPlayableRunMain : Control
         string next=EncounterLabel(run.EncounterContentId);
         Control root = NewPage("BATTLE SETTLEMENT", $"{completed} completed → Next: {next}");
         LabelAt(root, $"Gold: {run.Gold}\nItems: {string.Join(", ", run.AcquiredItems.Select(id => id.Value))}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
+        root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run)),new Vector2(480,520),new Vector2(260,60)));
+        PendingProgression? pending=run.PendingProgression.FirstOrDefault();
+        if(pending is not null)root.AddChild(PlaceControl(Button("Complete Progression",()=>ShowProgression(run,pending)),new Vector2(780,520),new Vector2(320,60)));
         bool continueRequested=false;
         Button nextButton = Button($"Continue to {next}",()=>{if(continueRequested)return;continueRequested=true;BeginReadyEncounter();}); nextButton.Position = new Vector2(650, 610); nextButton.Size = new Vector2(300, 70); root.AddChild(nextButton);
+        nextButton.Disabled=pending is not null;
     }
+
+    private void ShowInventory(PureRunState run)
+    {
+        Control root=NewPage("INVENTORY","Functional placeholder — equipment, carried consumable, attributes and skill levels");
+        var columns=new HBoxContainer{Position=new Vector2(90,150),Size=new Vector2(1420,610)};root.AddChild(columns);
+        foreach(RunCharacterState character in run.Party)
+        {
+            var panel=new VBoxContainer{CustomMinimumSize=new Vector2(440,580)};columns.AddChild(panel);
+            panel.AddChild(Label($"{character.CharacterId}  Lv{character.Level}\nHP {character.CurrentHealth}/{character.MaxHealth}  MP {character.CurrentMana}/{character.MaxMana}\nSTR {character.Attributes.Strength} AGI {character.Attributes.Agility} CON {character.Attributes.Constitution}\nINT {character.Attributes.Intelligence} CHA {character.Attributes.Charisma} LUCK {character.Attributes.Luck}",20));
+            panel.AddChild(Label("Skills:\n"+string.Join('\n',character.LearnedSkillStates.Select(value=>$"{value.BranchId} Lv{value.Level}")),17));
+            panel.AddChild(Label("Equipment:\n"+string.Join('\n',character.Equipment.Select(value=>$"{value.Slot}: {value.DefinitionId.Value}")),17));
+            panel.AddChild(Label("Carried: "+(character.CarriedConsumables.FirstOrDefault()?.DefinitionId.Value??"none"),17));
+            foreach(RunEquipmentState equipped in character.Equipment)
+                panel.AddChild(Button($"Unequip {equipped.Slot}",()=>CommitMutation(state=>new RunInventoryProgressionService().Unequip(state,state.Revision,character.CharacterId,equipped.Slot))));
+            foreach(RunEquipmentState item in run.BackpackEquipment)
+                panel.AddChild(Button($"Equip {_equipment.GetValueOrDefault(item.DefinitionId)?.DisplayName ?? item.DefinitionId.Value}",()=>CommitMutation(state=>new RunInventoryProgressionService().Equip(state,state.Revision,character.CharacterId,item.InstanceId,_equipment,_units[character.UnitContentId].Speed))));
+            foreach(BattleConsumableState item in run.BackpackConsumables)
+                panel.AddChild(Button($"Carry {item.DefinitionId.Value}",()=>CommitMutation(state=>new RunInventoryProgressionService().Carry(state,state.Revision,character.CharacterId,item.InstanceId))));
+            if(character.CarriedConsumables.Count>0)panel.AddChild(Button("Unload Consumable",()=>CommitMutation(state=>new RunInventoryProgressionService().Unload(state,state.Revision,character.CharacterId))));
+        }
+        root.AddChild(PlaceControl(Button("Back",()=>ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null))),new Vector2(650,800),new Vector2(300,55)));
+    }
+
+    private void ShowProgression(PureRunState run, PendingProgression pending)
+    {
+        RunCharacterState character=run.Party.Single(value=>value.CharacterId==pending.CharacterId);
+        Control root=NewPage("PROGRESSION",$"{character.CharacterId}: allocate 1 point, then learn/upgrade one skill");
+        var menu=new VBoxContainer{Position=new Vector2(430,160),Size=new Vector2(740,650)};root.AddChild(menu);
+        menu.AddChild(Label($"Current Lv{character.Level} | INT {character.Attributes.Intelligence} AGI {character.Attributes.Agility} CHA {character.Attributes.Charisma} LUCK {character.Attributes.Luck}",22));
+        SkillDefinition[] candidates=GrowthCandidates(character).Where(skill=>AttributeValue(character.Attributes,skill.RequiredAttribute)+(string.IsNullOrEmpty(skill.RequiredAttribute)?0:1)>=skill.MinimumAttribute).ToArray();
+        foreach(SkillDefinition skill in candidates)
+        {
+            menu.AddChild(Button($"+1 {skill.RequiredAttribute} → {skill.BranchId} Lv{skill.Level} (requires {skill.MinimumAttribute})",()=>
+            {
+                UnitAttributes raised=Raise(character.Attributes,skill.RequiredAttribute);
+                CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,raised,skill.ContentId,_skills));
+            }));
+        }
+        if(candidates.Length==0)menu.AddChild(Label("No skill candidate can be unlocked with this progression point.",18));
+        root.AddChild(PlaceControl(Button("Back",()=>ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null))),new Vector2(650,820),new Vector2(300,55)));
+    }
+
+    private IEnumerable<SkillDefinition> GrowthCandidates(RunCharacterState character)=>_skills.Values.Where(skill=>skill.GrowthVisible&&!skill.Hidden&&skill.Role.ToString().Equals(character.CharacterId,StringComparison.OrdinalIgnoreCase)).Where(skill=>skill.Level==(character.LearnedSkillStates.FirstOrDefault(value=>value.BranchId==skill.BranchId)?.Level??0)+1).OrderBy(skill=>skill.BranchId,StringComparer.Ordinal);
+    private static int AttributeValue(UnitAttributes value,string name)=>name switch{"Strength"=>value.Strength,"Agility"=>value.Agility,"Constitution"=>value.Constitution,"Intelligence"=>value.Intelligence,"Charisma"=>value.Charisma,"Luck"=>value.Luck,_=>int.MaxValue};
+    private static UnitAttributes Raise(UnitAttributes a,string name)=>name switch{"Strength"=>new(a.Strength+1,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Agility"=>new(a.Strength,a.Agility+1,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Constitution"=>new(a.Strength,a.Agility,a.Constitution+1,a.Intelligence,a.Charisma,a.Luck),"Intelligence"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence+1,a.Charisma,a.Luck),"Charisma"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma+1,a.Luck),"Luck"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck+1),_=>a};
+    private void CommitMutation(Func<PureRunState,RunMutationResult> mutation){RunSessionResult result=_run!.ApplyMutation(mutation);if(!result.Succeeded){SetStatus(result.ErrorCode);return;}ShowSettlement(result.Snapshot!);}
+    private static Control PlaceControl(Control control,Vector2 position,Vector2 size){control.Position=position;control.Size=size;return control;}
 
     private void ShowSummary(PureRunSummary summary)
     {
