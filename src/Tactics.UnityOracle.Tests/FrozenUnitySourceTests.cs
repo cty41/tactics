@@ -279,6 +279,7 @@ public sealed class FrozenUnitySourceTests
             Assert.That(transactions, Does.Contain("TryApplyOnce"));
             Assert.That(rest, Does.Contain("0.3f"));
             Assert.That(store, Does.Contain("ShopManager"));
+            Assert.That(store, Does.Contain("GenerateGoods(3"));
             Assert.That(attributeChecks, Does.Contain("if (rate < 5) return 5"));
             Assert.That(attributeChecks, Does.Contain("if (rate > 95) return 95"));
         });

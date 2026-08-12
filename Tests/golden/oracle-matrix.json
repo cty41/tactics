@@ -102,6 +102,7 @@
     {
       "id": "run.pure-run-layer4-map-nodes-v1",
       "sourceFile": "Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs",
+      "sourceTests": [],
       "sourceRuntimeFiles": [
         "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs",
         "Assets/Tactics/Scripts/RoguelikeMap/RoguelikeNodeTransactionService.cs",

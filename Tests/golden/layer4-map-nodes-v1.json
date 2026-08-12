@@ -12,6 +12,7 @@
     "monsters": ["ranged", "ranged", "aoe", "charger"]
   },
   "rest": {"healPercent": 30, "manaPercent": 30},
+  "store": {"stockSize": 3, "consumableGuarantee": 1},
   "events": {
     "count": 3,
     "attributeSuccessFormula": "clamp(base + (attribute - 5) * 5, 5, 95)"
