@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-12T12:01:34+08:00"
+timestamp: "2026-08-12T14:58:10+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:95041cb107d17e0b79c1ec6421ea4f12d327e2ab833f686b0f2a29c076bf6d66
+source_fingerprint: sha256:ec1631c410bb4e5b9a7c589efab6c2f81e6aa3006deaecf9739c65c4c8fe2140
 ---
 
 # Current state
@@ -70,6 +70,8 @@ Phase 7A 第二轮收口将 Unity 的基础技能回合限制显式迁入 `Skill
 Phase 7A 的技能目标预览分离 `RangeCells`、canonical `LegalTargets` 与只读 `ImpactPreview`：选择技能时即使当前无合法敌人也显示弱色几何射程，可执行目标使用强色；悬停后由同一次 `BattleTransitionService` 探测提供首个命中、受影响单位与拒绝原因。Fireball Lv1 保持单目标首个命中且无 AOE，Thrust 保持轴向，Summon/Pickup 只暴露尸体或掉矛特殊目标；Godot 不复制伤害、LOS 或目标结算规则。用户已完成复验。
 
 Phase 7B 已完成自动实现 checkpoint，等待 Inventory/成长人工闸门。18 条玩家职业分支的 Lv1/Lv2 合同已冻结；通用 `SkillDefinition` 显式保存 branch、前置、成长可见性、所需属性/门槛及规范化执行参数。Skill Runtime 支持 Lv2 十字范围、分类召唤上限、尸体召唤、Teleport/Decoy 位移、Multi Stab 有序段数、Recover Spear 邻近电击、Ice Armor、Bone Shield 伤害吸收及 Combat Techniques 等级。Run 角色显式保存技能分支/等级，Inventory 与成长通过 revision-checked 原子服务执行装备、替换、卸下、携带、属性和技能选择；V2 单槽存档兼容读取 V1 并在下次写入升级。ResourceSaver 已生成 27 个新增 Skill Resource 和 27 项批次 Catalog，canonical Catalog 达 101 项；Inventory/Progression 功能占位页已接入 Home/Settlement，成长未消费时禁止进入下一战。冻结 Unity Skill Resource 仍保持来源值，Godot playable balance 仅覆盖既有 Lv1 切片；batch 保持 `Generated/UnityOwned + manual_inventory_progression_qa_pending`。
+
+Phase 7C 自动实现 checkpoint 已完成，等待与 Phase 7B 合并人工闸门。Unity 七层图合同只授权到 Layer 4：N1→N3 胜利后进入 battle/rest/store/mystery 四选一，完成一个节点即停在 `ReadyForLayerFive`，N5/N6/Elite/Boss 与 Lv3 后移。Core/Application 提供确定性地图、节点事务、Rest 30% HP/MP、3 件且至少一件消耗品的 Store、稳定 Mystery 分配/掷骰及 N4 Encounter 请求；Save V3 可读 V1/V2 并保存 map/pending transaction。ResourceSaver 生成 7 个新 Resource，canonical Catalog 达 108 项；batch 保持 `Generated/UnityOwned + manual_layer4_qa_pending`。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

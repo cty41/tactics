@@ -35,11 +35,13 @@ public sealed record PureRunDefinition
     public PureRunDefinition(
         ContentId contentId,
         IEnumerable<ContentId> encounters,
-        IEnumerable<PureRunPartyTemplate> party)
+        IEnumerable<PureRunPartyTemplate> party,
+        ContentId? layerFourMapContentId = null)
     {
         ContentId = contentId;
         Encounters = encounters?.ToArray() ?? throw new ArgumentNullException(nameof(encounters));
         Party = party?.ToArray() ?? throw new ArgumentNullException(nameof(party));
+        LayerFourMapContentId = layerFourMapContentId;
         if (Encounters.Count != 3 || Encounters.Distinct().Count() != 3)
             throw new ArgumentException("The Phase 6B slice requires exactly three unique encounters.", nameof(encounters));
         if (Party.Count != 3 || Party.Select(item => item.CharacterId).Distinct(StringComparer.Ordinal).Count() != 3)
@@ -49,6 +51,7 @@ public sealed record PureRunDefinition
     public ContentId ContentId { get; }
     public IReadOnlyList<ContentId> Encounters { get; }
     public IReadOnlyList<PureRunPartyTemplate> Party { get; }
+    public ContentId? LayerFourMapContentId { get; }
 }
 
 public sealed record RunEquipmentState(ItemInstanceId InstanceId, ContentId DefinitionId, EquipmentSlot Slot);

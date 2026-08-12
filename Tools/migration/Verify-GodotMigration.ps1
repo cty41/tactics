@@ -439,6 +439,19 @@ try {
     }
     else { Write-Host '== Skip real Pure Run persistence draft: disposable Unity DTO is not present ==' }
 
+    $layerFourExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-layer4-map-nodes-v1.unity.json'
+    if (Test-Path -LiteralPath $layerFourExport -PathType Leaf) {
+        Invoke-Checked 'Compile Pure Run layer four typed draft' {
+            python -m Tools.migration.layer4_map_nodes_converter --export $layerFourExport --specification (Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-layer4-map-nodes-v1.json') --output (Join-Path $repoRoot 'Tools\migration\out\pure-run-layer4-map-nodes-v1.draft.json')
+        }
+        Invoke-Checked 'Generate Pure Run layer four resources first pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/LayerFourAssetBuilder.cs'
+        }
+        Invoke-Checked 'Generate Pure Run layer four resources second pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/LayerFourAssetBuilder.cs'
+        }
+    }
+
     $uiExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.unity.json'
     $uiDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.draft.json'
     if (Test-Path -LiteralPath $uiExport -PathType Leaf) {

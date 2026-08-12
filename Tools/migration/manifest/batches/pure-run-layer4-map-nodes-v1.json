@@ -1,8 +1,9 @@
 {
   "schemaVersion": 1,
   "batchId": "pure-run-layer4-map-nodes-v1",
-  "state": "Exported",
+  "state": "Generated",
   "ownership": "UnityOwned",
-  "manualLayer4MapAcceptance": "pending",
+  "manualLayer4MapAcceptance": "pending_combined_phase7b_phase7c",
+  "visualAcceptance": "not_applicable_functional_placeholder_ui",
   "scope": ["N4", "Rest", "Store", "Mystery", "Layer4Map"]
 }

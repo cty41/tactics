@@ -10,6 +10,7 @@ using Tactics.Core.Items;
 using Tactics.Core.Runs;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
+using System.Text.Json;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
@@ -50,7 +51,7 @@ public partial class GodotPlayableRunMain : Control
     private bool _settlementCommitted;
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
-        _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count == 2 && _encounters.Count == 3;
+        _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3;
 
     public override void _Ready()
     {
@@ -107,11 +108,23 @@ public partial class GodotPlayableRunMain : Control
                                     ? definition.SkillIds : Array.Empty<ContentId>())).ToArray()); break;
                 case PureRunDefinitionResource run: runResource = run; break;
                 case EquipmentDefinitionResource equipment: _equipment[id] = equipment.ToCoreDefinition(); break;
+                case PureRunLayerFourResource layerFour when layerFour.KindValue == "encounter":
+                    using (JsonDocument payload = JsonDocument.Parse(layerFour.PayloadJson))
+                    {
+                        string[] units=payload.RootElement.GetProperty("monsters").EnumerateArray().Select(value=>value.GetString()!).ToArray();
+                        string[] aiIds=units.Select(value=>"ai.pure-run."+value["unit.pure-run.".Length..].Replace("goat-",string.Empty)).ToArray();
+                        var layoutId=new ContentId("battle-layout.pure-run.split-flank");
+                        _layouts[layoutId]=new BattleLayoutDefinition(layoutId,[new GridPoint(1,4),new GridPoint(1,5),new GridPoint(2,4)],[new GridPoint(6,2),new GridPoint(6,7),new GridPoint(7,2),new GridPoint(7,7)],[new GridPoint(4,3),new GridPoint(5,4),new GridPoint(4,6),new GridPoint(5,5)]);
+                        _encounters[id]=new EncounterDefinition(id,layoutId,units.Select((unit,index)=>new EncounterMonsterDefinition(new ContentId(unit),new ContentId(aiIds[index]),_ai[new ContentId(aiIds[index])].SkillIds)).ToArray());
+                    }
+                    break;
             }
         }
         // Encounter resources can sort before AI entries in the canonical catalog; rebuild their skill bindings now.
         foreach (GodotResourceEntry entry in catalog.Entries.Where(value =>
-                     value.ContentIdValue.StartsWith("encounter.pure-run.", StringComparison.Ordinal)))
+                     value.ContentIdValue.StartsWith("encounter.pure-run.", StringComparison.Ordinal) &&
+                     value.ResourceTypeIdValue == "encounter" &&
+                     !value.ContentIdValue.EndsWith(".n4", StringComparison.Ordinal)))
         {
             var resource = ResourceLoader.Load<EncounterDefinitionResource>(entry.ResourceLocator)!;
             var id = new ContentId(entry.ContentIdValue);
@@ -339,6 +352,11 @@ public partial class GodotPlayableRunMain : Control
         if(_settlementCommitted)return;
         _settlementCommitted=true;_playbackTimer?.Stop();
         AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,$"Submitting {EncounterLabel(battleResult.EncounterContentId)} BattleResult","EncounterNavigationEvent"));
+        if(battleResult.EncounterContentId.Value=="encounter.pure-run.n4")
+        {
+            RunSessionResult layerFour=_run!.ApplyMutation(state=>new RunMutationResult(true,null,new PureRunState(state.RunId,state.Seed,state.Revision+1,PureRunPhase.ReadyForLayerFive,state.EncounterIndex,state.EncounterContentId,state.Party,state.BackpackConsumables,state.BackpackEquipment,state.PendingProgression,state.AppliedTransactionKeys.Append("node:layer_04_battle:resolve").Distinct(StringComparer.Ordinal).ToArray(),state.Gold,state.BattlesCompleted+1,state.EnemiesDefeated+battleResult.EnemiesDefeated,state.AcquiredItems,null,state.MapState,state.NodeTransaction is null?null:state.NodeTransaction with{Committed=true})));
+            if(!layerFour.Succeeded){_settlementCommitted=false;SetStatus(layerFour.ErrorCode);return;}ShowReadyForLayerFive(layerFour.Snapshot!.ActiveRun!,PureRunNodeKind.Battle);return;
+        }
         RunSessionResult settled=_run!.ApplyBattleResult(battleResult);if(!settled.Succeeded){_settlementCommitted=false;SetStatus(settled.ErrorCode);return;}ShowSettlement(settled.Snapshot!);
     }
 
@@ -377,6 +395,7 @@ public partial class GodotPlayableRunMain : Control
         _battle = null;
         if (snapshot.TerminalSummary is PureRunSummary summary) { ShowSummary(summary); return; }
         PureRunState run = snapshot.ActiveRun!;
+        if (run.Phase == PureRunPhase.AwaitingLayerFourChoice) { ShowLayerFourChoice(run); return; }
         string completed=_currentEncounterId is ContentId completedId?EncounterLabel(completedId):$"Battle {run.BattlesCompleted}";
         string next=EncounterLabel(run.EncounterContentId);
         Control root = NewPage("BATTLE SETTLEMENT", $"{completed} completed → Next: {next}");
@@ -387,6 +406,50 @@ public partial class GodotPlayableRunMain : Control
         bool continueRequested=false;
         Button nextButton = Button($"Continue to {next}",()=>{if(continueRequested)return;continueRequested=true;BeginReadyEncounter();}); nextButton.Position = new Vector2(650, 610); nextButton.Size = new Vector2(300, 70); root.AddChild(nextButton);
         nextButton.Disabled=pending is not null;
+    }
+
+    private void ShowLayerFourChoice(PureRunState run)
+    {
+        Control root=NewPage("LAYER 4 ROUTE","Choose exactly one route; completion ends the Phase 7C slice at ReadyForLayer5");
+        var menu=new VBoxContainer{Position=new Vector2(500,220),Size=new Vector2(600,520)};root.AddChild(menu);
+        menu.AddChild(Button("N4 Battle — split flank",()=>BeginLayerFourBattle(run)));
+        menu.AddChild(Button("Rest — restore 30% HP/MP",()=>ResolveSimpleLayerFour(run,PureRunNodeKind.Rest)));
+        menu.AddChild(Button("Store — deterministic 3 offers",()=>ResolveSimpleLayerFour(run,PureRunNodeKind.Store)));
+        menu.AddChild(Button("Mystery — deterministic assigned event",()=>ResolveSimpleLayerFour(run,PureRunNodeKind.Mystery)));
+        root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run)),new Vector2(650,760),new Vector2(300,55)));
+    }
+
+    private void BeginLayerFourBattle(PureRunState run)
+    {
+        var encounterId=new ContentId("encounter.pure-run.n4");
+        RunSessionResult result=_run!.ApplyMutation(state=>
+        {
+            long revision=state.Revision+1;
+            var checkpoint=new RunEncounterCheckpoint(encounterId,3,revision,state.Party,state.BackpackConsumables,state.BackpackEquipment);
+            return new RunMutationResult(true,null,new PureRunState(state.RunId,state.Seed,revision,PureRunPhase.PendingBattle,2,encounterId,state.Party,state.BackpackConsumables,state.BackpackEquipment,state.PendingProgression,state.AppliedTransactionKeys,state.Gold,state.BattlesCompleted,state.EnemiesDefeated,state.AcquiredItems,checkpoint,state.MapState,new RunNodeTransaction("node:layer_04_battle:resolve","layer_04_battle",PureRunNodeKind.Battle)));
+        });
+        if(!result.Succeeded||result.Snapshot?.ActiveRun?.Checkpoint is null){SetStatus(result.ErrorCode);return;}
+        PureRunState pending=result.Snapshot.ActiveRun;StartBattle(new EncounterRequest(pending.RunId,pending.Checkpoint.Revision,encounterId,pending.Checkpoint.Party));
+    }
+
+    private void ResolveSimpleLayerFour(PureRunState run,PureRunNodeKind kind)
+    {
+        string suffix=kind switch{PureRunNodeKind.Rest=>"rest",PureRunNodeKind.Store=>"store",PureRunNodeKind.Mystery=>"event",_=>"battle"};
+        var mapDefinition=new PureRunMapDefinition(new ContentId("run-map.pure-run.layer4-v1"),2,new[]{
+            new PureRunMapNodeDefinition("layer_04_battle",4,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.n4")),
+            new PureRunMapNodeDefinition("layer_04_rest",4,PureRunNodeKind.Rest,new ContentId("rest.pure-run.standard-v1")),
+            new PureRunMapNodeDefinition("layer_04_store",4,PureRunNodeKind.Store,new ContentId("store.pure-run.standard-v1")),
+            new PureRunMapNodeDefinition("layer_04_event",4,PureRunNodeKind.Mystery,new ContentId("event.pure-run.cursed-chest"))});
+        var mapService=new PureRunMapService(mapDefinition);PureRunMapResult begun=mapService.BeginNode(mapService.UnlockLayerFour(run.Seed),$"layer_04_{suffix}");PureRunMapResult committed=mapService.CommitNode(begun.State,begun.Transaction!,run.AppliedTransactionKeys);
+        RunSessionResult result=_run!.ApplyMutation(state=>new RunMutationResult(true,null,new PureRunState(state.RunId,state.Seed,state.Revision+1,PureRunPhase.ReadyForLayerFive,state.EncounterIndex,state.EncounterContentId,state.Party,state.BackpackConsumables,state.BackpackEquipment,state.PendingProgression,state.AppliedTransactionKeys.Append(begun.Transaction!.TransactionKey).ToArray(),state.Gold,state.BattlesCompleted,state.EnemiesDefeated,state.AcquiredItems,null,committed.State,begun.Transaction with{Committed=true})));
+        if(!result.Succeeded){SetStatus(result.ErrorCode);return;}ShowReadyForLayerFive(result.Snapshot!.ActiveRun!,kind);
+    }
+
+    private void ShowReadyForLayerFive(PureRunState run,PureRunNodeKind kind)
+    {
+        Control root=NewPage("READY FOR LAYER 5",$"Layer 4 {kind} resolved once. Phase 7D will continue with Layer 5.");
+        LabelAt(root,$"Run {run.RunId}\nRevision {run.Revision}\nTransactions: {string.Join(", ",run.AppliedTransactionKeys)}",new Vector2(430,300),24);
+        root.AddChild(PlaceControl(Button("Return Home",ShowHome),new Vector2(650,650),new Vector2(300,65)));
     }
 
     private void ShowInventory(PureRunState run)

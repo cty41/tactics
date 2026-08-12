@@ -14,6 +14,7 @@ public partial class PureRunDefinitionResource : Resource
     [Export] public string[] CharacterIds { get; set; } = Array.Empty<string>();
     [Export] public string[] UnitContentIds { get; set; } = Array.Empty<string>();
     [Export] public string[] StartingSkillContentIds { get; set; } = Array.Empty<string>();
+    [Export] public string LayerFourMapContentId { get; set; } = string.Empty;
 
     public PureRunDefinition ToCoreDefinition()
     {
@@ -26,6 +27,7 @@ public partial class PureRunDefinitionResource : Resource
             new(5, 6, 5, 5, 5, 5)
         };
         return new PureRunDefinition(new ContentId(ContentIdValue), EncounterContentIds.Select(value => new ContentId(value)),
-            Enumerable.Range(0, 3).Select(index => new PureRunPartyTemplate(CharacterIds[index], new ContentId(UnitContentIds[index]), new ContentId(StartingSkillContentIds[index]), attributes[index])));
+            Enumerable.Range(0, 3).Select(index => new PureRunPartyTemplate(CharacterIds[index], new ContentId(UnitContentIds[index]), new ContentId(StartingSkillContentIds[index]), attributes[index])),
+            string.IsNullOrWhiteSpace(LayerFourMapContentId) ? null : new ContentId(LayerFourMapContentId));
     }
 }

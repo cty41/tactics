@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="PureRunLayerFourResource" format=3 uid="uid://brte0yu14qgcq"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PureRunLayerFourResource.cs" id="1_l5r7k"]
+
+[resource]
+script = ExtResource("1_l5r7k")
+ContentIdValue = "event.pure-run.fallen-altar"
+KindValue = "event"
+PayloadJson = "{
+      \"contentId\": \"event.pure-run.fallen-altar\",
+      \"sourceId\": \"fallen_altar_001\",
+      \"title\": \"堕落祭坛\",
+      \"description\": \"一座被黑暗侵蚀的祭坛矗立在森林深处，残留的神圣气息仍在抵抗。\",
+      \"options\": [
+        {
+          \"id\": \"purify_prayer\",
+          \"text\": \"尝试净化（魅力检定）\",
+          \"attribute\": \"Charisma\",
+          \"baseSuccessRate\": 50,
+          \"success\": {
+            \"type\": \"Buff\",
+            \"target\": \"Self\",
+            \"amount\": 3,
+            \"itemId\": \"Assets/Tactics/ScriptableObjects/Buffs/EventDamageReduction.asset\",
+            \"description\": \"神圣力量回应了检定者：下一场战斗受到伤害降低 20%，持续 3 回合。\"
+          },
+          \"failure\": {
+            \"type\": \"Debuff\",
+            \"target\": \"Self\",
+            \"amount\": 3,
+            \"itemId\": \"Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset\",
+            \"description\": \"黑暗力量反噬检定者：下一场战斗受到伤害提高 30%，持续 3 回合。\"
+          }
+        },
+        {
+          \"id\": \"search_altar\",
+          \"text\": \"搜寻残留物（智力检定）\",
+          \"attribute\": \"Intelligence\",
+          \"baseSuccessRate\": 65,
+          \"success\": {
+            \"type\": \"Item\",
+            \"target\": \"All\",
+            \"amount\": 1,
+            \"itemId\": \"cleansing_potion\",
+            \"description\": \"你辨认出一瓶未被污染的净化药水。\"
+          },
+          \"failure\": {
+            \"type\": \"Damage\",
+            \"target\": \"Self\",
+            \"amount\": 20,
+            \"description\": \"祭坛释放出残存的闪电，检定者受到 20 点伤害。\"
+          }
+        },
+        {
+          \"id\": \"detour\",
+          \"text\": \"绕道而行\",
+          \"attribute\": \"None\",
+          \"baseSuccessRate\": 100,
+          \"success\": {
+            \"type\": \"Nothing\",
+            \"target\": \"All\",
+            \"amount\": 0,
+            \"description\": \"你没有惊动祭坛中的黑暗。\"
+          },
+          \"failure\": null
+        }
+      ],
+      \"sourcePath\": \"Assets/Tactics/GameData/Events/DarkForest/fallen_altar_001.json\",
+      \"sourceSha256\": \"sha256:16a43909987bba3705c5fe9d8bcfd138a248bf4ed57330cc52e9a70fb183f7fe\"
+    }"

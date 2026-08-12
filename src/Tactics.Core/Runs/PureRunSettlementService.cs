@@ -60,6 +60,14 @@ public sealed class PureRunSettlementService
         int defeatedEnemies = checked(state.EnemiesDefeated + result.EnemiesDefeated);
         if (state.EncounterIndex == definition.Encounters.Count - 1)
         {
+            if (definition.LayerFourMapContentId is not null)
+            {
+                var awaitingMap = new PureRunState(
+                    state.RunId, state.Seed, state.Revision + 1, PureRunPhase.AwaitingLayerFourChoice,
+                    state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment,
+                    progression, transactions, nextGold, battles, defeatedEnemies, acquired);
+                return new PureRunSettlementResult(true, null, awaitingMap, null, false);
+            }
             var terminalState = new PureRunState(
                 state.RunId, state.Seed, state.Revision + 1, PureRunPhase.SliceCompleted,
                 state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment,

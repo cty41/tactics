@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PureRunLayerFourResource" format=3 uid="uid://bi3pdv8u6aqbm"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PureRunLayerFourResource.cs" id="1_ppqex"]
+
+[resource]
+script = ExtResource("1_ppqex")
+ContentIdValue = "rest.pure-run.standard-v1"
+KindValue = "rest"
+PayloadJson = "{
+    \"contentId\": \"rest.pure-run.standard-v1\",
+    \"healPercent\": 30,
+    \"manaPercent\": 30
+  }"

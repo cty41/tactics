@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-layer4-map-nodes-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "canonicalCatalogEntryCount": 108,
+  "generatedResourceCount": 7,
+  "saveSchemaVersion": 3,
+  "completionPhase": "ReadyForLayerFive",
+  "visualAcceptance": "not_applicable_functional_placeholder_ui",
+  "manualGameplayAcceptance": "pending_combined_phase7b_phase7c"
+}

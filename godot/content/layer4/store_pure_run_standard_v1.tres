@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PureRunLayerFourResource" format=3 uid="uid://db6bnj8qy271a"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PureRunLayerFourResource.cs" id="1_hn83p"]
+
+[resource]
+script = ExtResource("1_hn83p")
+ContentIdValue = "store.pure-run.standard-v1"
+KindValue = "store"
+PayloadJson = "{
+    \"contentId\": \"store.pure-run.standard-v1\",
+    \"stockSize\": 3,
+    \"consumableGuarantee\": 1
+  }"

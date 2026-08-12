@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="PureRunLayerFourResource" format=3 uid="uid://b0sk1vtev3op"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PureRunLayerFourResource.cs" id="1_2f56m"]
+
+[resource]
+script = ExtResource("1_2f56m")
+ContentIdValue = "run-map.pure-run.layer4-v1"
+KindValue = "run-map"
+PayloadJson = "{
+    \"contentId\": \"run-map.pure-run.layer4-v1\",
+    \"layoutVersion\": 2,
+    \"nodes\": [
+      \"start\",
+      \"layer_01_battle\",
+      \"layer_02_battle\",
+      \"layer_03_battle\",
+      \"layer_04_battle\",
+      \"layer_04_rest\",
+      \"layer_04_store\",
+      \"layer_04_event\"
+    ],
+    \"layer4\": [
+      \"layer_04_battle\",
+      \"layer_04_rest\",
+      \"layer_04_store\",
+      \"layer_04_event\"
+    ]
+  }"
