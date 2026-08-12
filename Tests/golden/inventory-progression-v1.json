@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-inventory-progression-v1",
+  "roles": ["Mage", "Necromancer", "Amazon"],
+  "branchesPerRole": 6,
+  "levels": [1, 2],
+  "maximumSkillLevel": 2,
+  "progression": {
+    "target": "lowest-level-living-active-party-stable-order",
+    "attributeBeforeSkill": true,
+    "skillRequiredWhenCandidatesExist": true
+  },
+  "inventory": {
+    "capacity": 20,
+    "equipmentPolicy": "unique-slot-replace",
+    "carriedConsumableSlotsPerCharacter": 1,
+    "deathUnequips": true
+  },
+  "saveMigration": {"fromSchema": 1, "toSchema": 2, "automatic": true, "unknownFutureVersionRejected": true},
+  "canonicalCatalogTarget": 101
+}

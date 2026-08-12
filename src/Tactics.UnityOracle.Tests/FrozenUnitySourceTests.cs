@@ -69,6 +69,9 @@ public sealed class FrozenUnitySourceTests
             , ["Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs"] = "f8e3eb4c9136f4935585f86e4d2010738ff9e207"
             , ["Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs"] = "1d6e4997dfb8801329003f545e823ea5e3f01a49"
             , ["Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs"] = "4f0feeb252d95f3d213fd96ede48a694b2cba9ed"
+            , ["Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs"] = "bbf411fa404993a9f5603495c47630c05f23eb60"
+            , ["Assets/Tactics/Scripts/Common/Roster/CharacterLoadoutService.cs"] = "274afc42e85a6b8543cf58ef3d73fe042f126347"
+            , ["Assets/Tactics/Scripts/UI/LevelUpPanelController.cs"] = "d95f18413171d28e50d914510352b4a1829af05a"
         };
 
     [Test]
@@ -214,6 +217,36 @@ public sealed class FrozenUnitySourceTests
         Assert.That(root.GetProperty("encounters").EnumerateArray().Select(value => value.GetString()),
             Is.EqualTo(new[] { "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3" }));
         Assert.That(root.GetProperty("save").GetProperty("unityPlayerPrefsImport").GetBoolean(), Is.False);
+    }
+
+    [Test]
+    public void InventoryProgressionFrozenContracts_MatchGolden()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string catalog = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs");
+        string loadout = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Roster/CharacterLoadoutService.cs");
+        string levelUp = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/UI/LevelUpPanelController.cs");
+        using JsonDocument golden = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Tests", "golden", "inventory-progression-v1.json")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(catalog, Does.Contain("public int MaxSkillLevel => Skill.MaxSkillLevel"));
+            Assert.That(catalog, Does.Contain("Fireball_Lv2_Ability.asset"));
+            Assert.That(catalog, Does.Contain("mage.summon_fire_demon"));
+            Assert.That(catalog, Does.Contain("necromancer.skeleton_mage"));
+            Assert.That(catalog, Does.Contain("amazon.multi_stab"));
+            Assert.That(loadout, Does.Contain("TryEquipEquipment"));
+            Assert.That(loadout, Does.Contain("TryCarryConsumable"));
+            Assert.That(levelUp, Does.Contain("AttributePointSystem.ApplyAttributePoint"));
+            Assert.That(levelUp, Does.Contain("RefreshSkillOptionsFromProvider"));
+            Assert.That(levelUp, Does.Contain("SkillSystem.UpgradeSkill"));
+        });
+        Assert.That(golden.RootElement.GetProperty("branchesPerRole").GetInt32(), Is.EqualTo(6));
+        Assert.That(golden.RootElement.GetProperty("maximumSkillLevel").GetInt32(), Is.EqualTo(2));
     }
 
     [Test]

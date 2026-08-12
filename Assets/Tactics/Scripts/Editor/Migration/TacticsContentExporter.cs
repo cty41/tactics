@@ -40,6 +40,9 @@ namespace Tactics.Editor.Migration
         private const string PureRunUiInputSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-ui-input-v1.json";
 
+        private const string PureRunInventoryProgressionSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-inventory-progression-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -130,6 +133,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPureRunUiInputBatchFromCommandLine()
         {
             ExportPureRunUiInputBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run Inventory and Progression V1")]
+        public static void ExportPureRunInventoryProgressionBatch()
+        {
+            string outputPath = Export(PureRunInventoryProgressionSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run Inventory and Progression V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunInventoryProgressionBatchFromCommandLine()
+        {
+            ExportPureRunInventoryProgressionBatch();
         }
 
         public static string Export(string relativeSpecPath)
