@@ -19,6 +19,8 @@ public sealed class RunSaveDocumentV3Tests
         Assert.That(decoded.Succeeded, Is.True);
         Assert.That(decoded.Snapshot!.ActiveRun!.MapState!.PendingNodeId, Is.EqualTo("layer_04_event"));
         Assert.That(decoded.Snapshot.ActiveRun.NodeTransaction!.TransactionKey, Is.EqualTo("node:layer_04_event:resolve"));
+        Assert.That(decoded.Snapshot.ActiveRun.MapState.NodeLifecycle, Is.EqualTo(RunNodeLifecycle.Pending));
+        Assert.That(decoded.Snapshot.ActiveRun.MapState.StoreOffers, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -38,7 +40,9 @@ public sealed class RunSaveDocumentV3Tests
             new ContentId($"unit.{id}"), 1, attributes, 20, 20, 10, 10, false, [new ContentId($"skill.{id}")])).ToArray();
         var map = new PureRunMapState(PureRunMapPhase.ResolvingNode, "layer_03_battle", ["layer_04_event"],
             ["start", "layer_03_battle"], new Dictionary<string, string> { ["layer_04_event"] = "lost_villager_001" },
-            "layer_04_event", "node:layer_04_event:resolve");
+            "layer_04_event", "node:layer_04_event:resolve", "layer_04_event", RunNodeLifecycle.Pending,
+            [new RunStoreOfferState(new ContentId("item.consumable.life-potion"), 3, true,
+                new Tactics.Core.Items.ItemInstanceId("store-1"))]);
         var tx = new RunNodeTransaction("node:layer_04_event:resolve", "layer_04_event", PureRunNodeKind.Mystery);
         var run = new PureRunState("run", 9, 4, PureRunPhase.ResolvingLayerFourNode, 2,
             new ContentId("encounter.pure-run.n3"), party, mapState: map, nodeTransaction: tx);

@@ -32,7 +32,10 @@ public sealed class PureRunMapService
         {
             Phase = PureRunMapPhase.ResolvingNode,
             PendingNodeId = node.NodeId,
-            PendingTransactionKey = key
+            PendingTransactionKey = key,
+            SelectedNodeId = node.NodeId,
+            ReachableNodeIds = new[] { node.NodeId },
+            NodeLifecycle = RunNodeLifecycle.Selected
         }, transaction);
     }
 
@@ -52,7 +55,8 @@ public sealed class PureRunMapService
             ReachableNodeIds = Array.Empty<string>(),
             VisitedNodeIds = state.VisitedNodeIds.Append(transaction.NodeId).Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray(),
             PendingNodeId = null,
-            PendingTransactionKey = null
+            PendingTransactionKey = null,
+            NodeLifecycle = RunNodeLifecycle.Committed
         }, transaction with { Committed = true });
     }
 

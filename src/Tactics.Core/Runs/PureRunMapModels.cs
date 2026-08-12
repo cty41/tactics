@@ -1,9 +1,11 @@
 using Tactics.Core.Content;
+using Tactics.Core.Items;
 
 namespace Tactics.Core.Runs;
 
 public enum PureRunNodeKind { Battle, Rest, Store, Mystery }
 public enum PureRunMapPhase { Locked, ChoosingLayerFour, ResolvingNode, ReadyForLayerFive }
+public enum RunNodeLifecycle { Available, Selected, Pending, Resolved, Committed }
 
 public sealed record PureRunMapNodeDefinition(string NodeId, int Layer, PureRunNodeKind Kind, ContentId ContentId);
 
@@ -32,7 +34,33 @@ public sealed record PureRunMapState(
     IReadOnlyList<string> VisitedNodeIds,
     IReadOnlyDictionary<string, string> MysteryEventAssignments,
     string? PendingNodeId = null,
-    string? PendingTransactionKey = null);
+    string? PendingTransactionKey = null,
+    string? SelectedNodeId = null,
+    RunNodeLifecycle NodeLifecycle = RunNodeLifecycle.Available,
+    IReadOnlyList<RunStoreOfferState>? StoreOffers = null,
+    RunMysteryResolutionState? MysteryResolution = null,
+    IReadOnlyList<RunPersistentStatusState>? PendingStatuses = null);
+
+public sealed record RunStoreOfferState(
+    ContentId ContentId,
+    int Price,
+    bool IsConsumable,
+    ItemInstanceId InstanceId,
+    bool Purchased = false);
+
+public sealed record RunMysteryResolutionState(
+    string EventId,
+    string OptionId,
+    string CharacterId,
+    int SuccessRate,
+    int Roll,
+    bool Succeeded,
+    string Effect,
+    int Amount,
+    ContentId? EffectContentId = null,
+    bool Confirmed = false);
+
+public sealed record RunPersistentStatusState(string CharacterId, ContentId StatusId, int Duration);
 
 public sealed record RunNodeTransaction(
     string TransactionKey,

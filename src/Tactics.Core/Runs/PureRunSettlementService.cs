@@ -87,6 +87,59 @@ public sealed class PureRunSettlementService
     public PureRunSummary Abandon(PureRunState state) =>
         CreateSummary(state, PureRunOutcome.Abandoned, state.Party, state.AppliedTransactionKeys);
 
+    public PureRunSummary DefeatOutsideBattle(PureRunState state) =>
+        CreateSummary(state, PureRunOutcome.Defeated, state.Party, state.AppliedTransactionKeys);
+
+    public PureRunSettlementResult ApplyLayerFour(PureRunState state, PureRunBattleResult result,
+        IReadOnlyList<ContentId> consumableDropPool)
+    {
+        if (state.NodeTransaction is not { Kind: PureRunNodeKind.Battle } transaction ||
+            state.MapState?.SelectedNodeId != transaction.NodeId)
+            return new(false, "node.transaction_invalid", state, null, false);
+        string battleKey = $"battle:{result.EncounterContentId.Value}:settlement";
+        if (state.AppliedTransactionKeys.Contains(transaction.TransactionKey, StringComparer.Ordinal))
+            return new(true, null, state, null, true);
+        string? rejection = Validate(state, result);
+        if (rejection is not null) return new(false, rejection, state, null, false);
+        RunCharacterState[] party = MergeParty(state, result, result.PlayerVictory);
+        string[] transactions = state.AppliedTransactionKeys.Append(battleKey).Distinct(StringComparer.Ordinal)
+            .OrderBy(value => value, StringComparer.Ordinal).ToArray();
+        if (!result.PlayerVictory)
+        {
+            var defeatedState = new PureRunState(state.RunId, state.Seed, state.Revision + 1,
+                PureRunPhase.Defeated, state.EncounterIndex, state.EncounterContentId, party,
+                state.BackpackConsumables, state.BackpackEquipment, state.PendingProgression, transactions,
+                state.Gold, state.BattlesCompleted, state.EnemiesDefeated, state.AcquiredItems,
+                mapState: state.MapState, nodeTransaction: state.NodeTransaction);
+            return new(true, null, null, CreateSummary(defeatedState, PureRunOutcome.Defeated, party, transactions), false);
+        }
+        int gold = Math.Min(GoldCap, checked(state.Gold + CalculateGold(result.TotalRounds)));
+        ContentId? drop = RollDrop(state.Seed, result.EncounterContentId, consumableDropPool);
+        BattleConsumableState[] backpack = state.BackpackConsumables.ToArray();
+        IReadOnlyList<ContentId> acquired = state.AcquiredItems;
+        if (drop is ContentId item)
+        {
+            backpack = backpack.Append(new BattleConsumableState(new ItemInstanceId($"drop-4-{item.Value}"), item, 1, 1)).ToArray();
+            acquired = acquired.Append(item).OrderBy(value => value.Value, StringComparer.Ordinal).ToArray();
+        }
+        PureRunMapState map = state.MapState! with
+        {
+            Phase = PureRunMapPhase.ReadyForLayerFive, CurrentNodeId = transaction.NodeId,
+            ReachableNodeIds = Array.Empty<string>(),
+            VisitedNodeIds = state.MapState!.VisitedNodeIds.Append(transaction.NodeId).Distinct(StringComparer.Ordinal)
+                .OrderBy(value => value, StringComparer.Ordinal).ToArray(),
+            PendingNodeId = null, PendingTransactionKey = null, NodeLifecycle = RunNodeLifecycle.Committed
+        };
+        transactions = transactions.Append(transaction.TransactionKey).Distinct(StringComparer.Ordinal)
+            .OrderBy(value => value, StringComparer.Ordinal).ToArray();
+        var completed = new PureRunState(state.RunId, state.Seed, state.Revision + 1,
+            PureRunPhase.ReadyForLayerFive, state.EncounterIndex, state.EncounterContentId, party, backpack,
+            state.BackpackEquipment, state.PendingProgression, transactions, gold, state.BattlesCompleted + 1,
+            checked(state.EnemiesDefeated + result.EnemiesDefeated), acquired, mapState: map,
+            nodeTransaction: transaction with { Committed = true });
+        return new(true, null, completed, null, false);
+    }
+
     private static string? Validate(PureRunState state, PureRunBattleResult result)
     {
         if (state.Phase != PureRunPhase.PendingBattle || state.Checkpoint is null)

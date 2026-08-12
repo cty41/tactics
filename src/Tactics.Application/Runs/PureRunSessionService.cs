@@ -90,6 +90,8 @@ public sealed class PureRunSessionService
             PureRunPhase.Ready => new RunSessionResult(true, null, loaded.Snapshot, null, Diagnostics: diagnostics),
             PureRunPhase.PendingBattle when run.Checkpoint is not null =>
                 new RunSessionResult(true, null, loaded.Snapshot, CreateRequest(run), Diagnostics: diagnostics),
+            PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.ResolvingLayerFourNode or PureRunPhase.ReadyForLayerFive =>
+                new RunSessionResult(true, null, loaded.Snapshot, null, Diagnostics: diagnostics),
             _ => Fail("run.not_resumable", loaded.Snapshot)
         };
     }
@@ -122,6 +124,19 @@ public sealed class PureRunSessionService
         return saved with { WasDuplicate = false, Diagnostics = diagnostics };
     }
 
+    public RunSessionResult ApplyLayerFourBattleResult(PureRunBattleResult battleResult)
+    {
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
+            return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
+        PureRunSettlementResult settlement = _settlement.ApplyLayerFour(run, battleResult, _dropPool);
+        if (!settlement.Succeeded) return Fail(settlement.RejectionCode, loaded.Snapshot);
+        if (settlement.WasDuplicate) return new(true, null, loaded.Snapshot, null, true, diagnostics);
+        long revision = settlement.ActiveRun?.Revision ?? run.Revision + 1;
+        return Save(new PureRunSaveSnapshot(revision, settlement.ActiveRun, settlement.TerminalSummary), run.Revision)
+            with { Diagnostics = diagnostics };
+    }
+
     public RunSessionResult AbandonRun()
     {
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
@@ -148,6 +163,20 @@ public sealed class PureRunSessionService
         RunMutationResult result = mutation(run);
         if (!result.Succeeded) return Fail(result.RejectionCode, loaded.Snapshot);
         return Save(new PureRunSaveSnapshot(result.State.Revision, result.State, loaded.Snapshot.TerminalSummary), run.Revision) with { Diagnostics = diagnostics };
+    }
+
+    public RunSessionResult ApplyLayerFourMutation(Func<PureRunState, RunMutationResult> mutation)
+    {
+        ArgumentNullException.ThrowIfNull(mutation);
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
+            return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
+        RunMutationResult result = mutation(run);
+        if (!result.Succeeded) return Fail(result.RejectionCode, loaded.Snapshot);
+        PureRunSaveSnapshot snapshot = result.State.Phase == PureRunPhase.Defeated
+            ? new PureRunSaveSnapshot(result.State.Revision, null, _settlement.DefeatOutsideBattle(result.State))
+            : new PureRunSaveSnapshot(result.State.Revision, result.State, loaded.Snapshot.TerminalSummary);
+        return Save(snapshot, run.Revision) with { Diagnostics = diagnostics };
     }
 
     private RunSessionResult Save(PureRunSaveSnapshot snapshot, long expectedRevision)

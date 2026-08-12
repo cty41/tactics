@@ -32,7 +32,10 @@ internal static class RunSaveNormalizer
         ReachableNodeIds = state.ReachableNodeIds.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
         VisitedNodeIds = state.VisitedNodeIds.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
         MysteryEventAssignments = state.MysteryEventAssignments.OrderBy(value => value.Key, StringComparer.Ordinal)
-            .ToDictionary(value => value.Key, value => value.Value, StringComparer.Ordinal)
+            .ToDictionary(value => value.Key, value => value.Value, StringComparer.Ordinal),
+        StoreOffers = state.StoreOffers?.OrderBy(value => value.InstanceId.Value, StringComparer.Ordinal).ToArray(),
+        PendingStatuses = state.PendingStatuses?.OrderBy(value => value.CharacterId, StringComparer.Ordinal)
+            .ThenBy(value => value.StatusId.Value, StringComparer.Ordinal).ToArray()
     };
 
     private static PureRunSummary Normalize(PureRunSummary summary) => summary with
