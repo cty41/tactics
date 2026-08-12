@@ -1,6 +1,7 @@
 using Godot;
 using Tactics.Application.Battle;
 using Tactics.Application.Runs;
+using Tactics.Application.Presentation;
 using Tactics.Core.AI;
 using Tactics.Core.Battle;
 using Tactics.Core.Board;
@@ -48,6 +49,8 @@ public partial class GodotPlayableRunMain : Control
     private GridPoint? _hoveredCell;
     private ContentId? _currentEncounterId;
     private bool _settlementCommitted;
+    private GodotBattlePresentationPlayer? _presentationPlayer;
+    private StandardUnitPresentationResource? _presentationProfile;
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
         _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3;
@@ -80,6 +83,7 @@ public partial class GodotPlayableRunMain : Control
             ?? throw new InvalidOperationException("Canonical Catalog is missing.");
         _balance = (ResourceLoader.Load<PlayableLv1BalanceProfileResource>("res://content/ui/PlayableLv1BalanceProfile.tres")
             ?? throw new InvalidOperationException("Playable Lv1 balance profile is missing.")).ToCoreProfile();
+        _presentationProfile = ResourceLoader.Load<StandardUnitPresentationResource>("res://content/presentation/StandardUnitPresentationV1.tres");
         PureRunDefinitionResource? runResource = null;
         foreach (GodotResourceEntry entry in catalog.Entries)
         {
@@ -218,6 +222,9 @@ public partial class GodotPlayableRunMain : Control
         _board.CellHovered += HoverCell;
         _board.HoverCleared += ClearHover;
         root.AddChild(_board);
+        _presentationPlayer = new GodotBattlePresentationPlayer();
+        _presentationPlayer.Configure(_presentationProfile ?? new StandardUnitPresentationResource());
+        _board.AddChild(_presentationPlayer);
         _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
         _turnOrder=LabelAt(root,string.Empty,new Vector2(800,88),18);_turnOrder.Size=new Vector2(720,32);
         _hoverInfo=LabelAt(root,"Hover a cell",new Vector2(800,780),16);_hoverInfo.Size=new Vector2(720,80);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
@@ -237,19 +244,18 @@ public partial class GodotPlayableRunMain : Control
     {
         if (_battle is null || _board is null || _skillPanel is null) return;
         BattleUiSnapshot snapshot = presented??_battle.CaptureSnapshot();_visibleSnapshot=snapshot;
-        foreach (GodotUnitActor actor in _actors.Values)
-            if (GodotObject.IsInstanceValid(actor)) actor.QueueFree();
-        _actors.Clear();
-        foreach (Control meter in _unitMeters.Values)
-            if (GodotObject.IsInstanceValid(meter)) meter.QueueFree();
-        _unitMeters.Clear();
-        foreach (BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive||snapshot.Corpses.Contains(unit.Cell)))
+        BattleUiUnitSnapshot[] visible=snapshot.Units.Where(unit=>unit.IsAlive||snapshot.Corpses.Contains(unit.Cell)).ToArray();
+        var visibleIds=visible.Select(unit=>unit.UnitId).ToHashSet();
+        foreach(UnitInstanceId removed in _actors.Keys.Where(id=>!visibleIds.Contains(id)).ToArray())
+        {if(GodotObject.IsInstanceValid(_actors[removed]))_actors[removed].QueueFree();_actors.Remove(removed);if(_unitMeters.Remove(removed,out Control? meter)&&GodotObject.IsInstanceValid(meter))meter.QueueFree();}
+        foreach (BattleUiUnitSnapshot unit in visible)
         {
-            GodotUnitActor actor = GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);
+            if(!_actors.TryGetValue(unit.UnitId,out GodotUnitActor? actor)||!GodotObject.IsInstanceValid(actor))
+            {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;_board.AddChild(actor);_actors[unit.UnitId]=actor;}
             actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
-            actor.Scale = Vector2.One * .34f; actor.SetDeathVisual(!unit.IsAlive);
+            actor.SetDeathVisual(!unit.IsAlive);
             actor.ZIndex = 100 + (unit.Cell.X + unit.Cell.Y) * 12 + unit.Cell.X;
-            _board.AddChild(actor); _actors[unit.UnitId] = actor;
+            if(_unitMeters.Remove(unit.UnitId,out Control? oldMeter)&&GodotObject.IsInstanceValid(oldMeter))oldMeter.QueueFree();
             Control meter=CreateUnitMeters(unit);_board.AddChild(meter);_unitMeters[unit.UnitId]=meter;
         }
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
@@ -349,12 +355,13 @@ public partial class GodotPlayableRunMain : Control
         BattleUiIntentResult result = _battle.Submit(intent);
         AddEvents(result.Events);
         if(!result.Succeeded&&result.Events.Count==0&&result.FailureCode is not null)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,result.FailureCode,"CommandRejectedEvent"));
-        if(_battle.HasPendingAutomaticFrames){PlaybackStep(true);_playbackTimer!.Start();return;}
+        if(_battle.HasPendingAutomaticFrames){RefreshBattle(result.Snapshot);if(result.Presentation is BattlePresentationFrame pendingPresentation)_presentationPlayer?.Play(pendingPresentation,_actors);PlaybackStep(true);_playbackTimer!.Start();return;}
         if (result.BattleResult is PureRunBattleResult battleResult)
         {
             CompleteBattle(battleResult);return;
         }
         RefreshBattle();
+        if(result.Presentation is BattlePresentationFrame presentation)_presentationPlayer?.Play(presentation,_actors);
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
 
@@ -393,11 +400,11 @@ public partial class GodotPlayableRunMain : Control
     {
         if(_battle is null||(_playbackPaused&&!forced))return;
         BattleUiFrame? frame=_battle.DequeueAutomaticFrame();
-        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);return;}
+        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);_presentationPlayer?.Play(frame.Presentation,_actors);return;}
         _playbackTimer?.Stop();RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
     }
     private void TogglePause(){_playbackPaused=!_playbackPaused;AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));RefreshLog();}
-    private void ToggleSpeed(){if(_playbackTimer is null)return;_playbackTimer.WaitTime=_playbackTimer.WaitTime>.3?.225:.45;AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"Playback {(_playbackTimer.WaitTime<.3?"2x":"1x")}","Playback"));RefreshLog();}
+    private void ToggleSpeed(){if(_playbackTimer is null)return;_playbackTimer.WaitTime=_playbackTimer.WaitTime>.3?.225:.45;_presentationPlayer?.SetSpeed(_playbackTimer.WaitTime<.3?2f:1f);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"Playback {(_playbackTimer.WaitTime<.3?"2x":"1x")}","Playback"));RefreshLog();}
 
     private void AddEvents(IEnumerable<BattleEvent> events){foreach(BattleEvent item in events)AddLog(FormatEvent(item));}
     private void AddLog(BattleUiLogEntry entry){if(_logs.Count>=100)_logs.RemoveAt(0);_logs.Add(entry);}

@@ -8,7 +8,7 @@ public partial class IsometricPresentationAssetBuilder : SceneTree
 {
     public override void _Initialize()
     {
-        try { IsometricPresentationAssetFactory.BuildBoard(); Quit(); }
+        try { IsometricPresentationAssetFactory.BuildUnitPresentation(); Quit(); }
         catch (Exception error) { GD.PushError(error.ToString()); Quit(1); }
     }
 }

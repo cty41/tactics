@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="StandardUnitPresentationResource" format=3 uid="uid://2ocjy8yyn8cy"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StandardUnitPresentationResource.cs" id="1_nk7wj"]
+
+[resource]
+script = ExtResource("1_nk7wj")

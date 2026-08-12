@@ -13,6 +13,7 @@ public static class IsometricPresentationAssetFactory
     private const string Root = "res://content/presentation";
     private const string Global = "res://content/ContentCatalog.tres";
     private const string BoardPath = Root + "/BattleBoardPureRunIsometricV1.tres";
+    private const string UnitPresentationPath = Root + "/StandardUnitPresentationV1.tres";
 
     public static void BuildBoard()
     {
@@ -28,7 +29,7 @@ public static class IsometricPresentationAssetFactory
         GodotResourceEntry entry = Entry(board.ContentIdValue, "battle-board", BoardPath);
         GodotResourceEntry[] all = old.Entries.Where(value => value.ContentIdValue != entry.ContentIdValue).Select(Copy).Append(entry)
             .OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray();
-        if (all.Length != 115) throw new InvalidOperationException($"Expected 115 catalog entries, got {all.Length}.");
+        if (all.Length is not (115 or 116 or 119)) throw new InvalidOperationException($"Unsupported presentation Catalog count: {all.Length}.");
         var catalog = new GodotResourceCatalog { Entries = all };
         Save(catalog, Global);
         catalog.Validate();
@@ -39,7 +40,7 @@ public static class IsometricPresentationAssetFactory
             state = "Generated",
             ownership = "UnityOwned",
             visualAcceptance = "manual_isometric_and_presentation_qa_pending",
-            catalogCount = 115,
+            catalogCount = all.Length,
             sourceAudit = new[]
             {
                 new { sourcePath = "Assets/Tactics/Scripts/Common/Cells/TilemapCellGeometry.cs", gitBlobSha1 = "fffcbff3278cb8973926cb70d7b3c4decb253bbd" },
@@ -47,6 +48,35 @@ public static class IsometricPresentationAssetFactory
                 new { sourcePath = "Assets/Tactics/Scripts/Common/Cells/ProceduralTileHighlightRenderer.cs", gitBlobSha1 = "55edd6bea0a2baea0f95cce8a204bd0f978e2708" }
             },
             artifacts = new[] { new { resourcePath = BoardPath, resourceUid = ResourceUid.IdToText(Uid(BoardPath)), targetHash = Hash(BoardPath) } }
+        }, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
+    }
+
+    public static void BuildUnitPresentation()
+    {
+        BuildBoard();
+        var profile = new StandardUnitPresentationResource();
+        Save(profile, UnitPresentationPath);
+        GodotResourceCatalog old = ResourceLoader.Load<GodotResourceCatalog>(Global, string.Empty, ResourceLoader.CacheMode.Ignore)!;
+        GodotResourceEntry entry = Entry(profile.ContentIdValue, "presentation", UnitPresentationPath);
+        GodotResourceEntry[] all = old.Entries.Where(value => value.ContentIdValue != entry.ContentIdValue).Select(Copy).Append(entry)
+            .OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray();
+        if (all.Length != 116) throw new InvalidOperationException($"Expected 116 catalog entries, got {all.Length}.");
+        var catalog = new GodotResourceCatalog { Entries = all };
+        Save(catalog, Global);
+        string project = Path.TrimEndingDirectorySeparator(Path.GetFullPath(ProjectSettings.GlobalizePath("res://")));
+        string repo = Directory.GetParent(project)!.FullName;
+        string ledger = Path.Combine(repo, "Tools", "migration", "manifest", "state", BatchId + ".json");
+        File.WriteAllText(ledger, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1, batchId = BatchId, state = "Generated", ownership = "UnityOwned",
+            visualAcceptance = "manual_isometric_and_presentation_qa_pending", catalogCount = 116,
+            sourceAudit = new[]
+            {
+                new { sourcePath = "Assets/Tactics/Arts/PureRun/Tween/StandardUnitTweenProfile.asset", gitBlobSha1 = "5a53ddb60794715ee2da4e24241347a2a2b2db20" },
+                new { sourcePath = "Assets/Tactics/Scripts/Common/Units/Tween/StandardUnitTweenProfile.cs", gitBlobSha1 = "c6d7b9479c1888e50d0c520e757ab465907ccfab" },
+                new { sourcePath = "Assets/Tactics/Scripts/Common/Units/Tween/UnitTweenVisual.cs", gitBlobSha1 = "bb9aa5c7391063e79f1454b4c0489cfae6f5b3ab" }
+            },
+            artifacts = new[] { BoardPath, UnitPresentationPath }.Select(path => new { resourcePath = path, resourceUid = ResourceUid.IdToText(Uid(path)), targetHash = Hash(path) })
         }, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
     }
 

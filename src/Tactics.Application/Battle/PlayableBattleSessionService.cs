@@ -1,4 +1,5 @@
 using Tactics.Application.Runs;
+using Tactics.Application.Presentation;
 using Tactics.Core.AI;
 using Tactics.Core.Battle;
 using Tactics.Core.Board;
@@ -52,7 +53,7 @@ public sealed record BattleUiImpactPreview(
     IReadOnlyList<UnitInstanceId> ImpactUnitIds);
 public enum BattleUiLogCategory { Gameplay, Ai, Rejected }
 public sealed record BattleUiLogEntry(BattleUiLogCategory Category,string Message,string EventType);
-public sealed record BattleUiFrame(string Stage,BattleUiSnapshot Snapshot,AiDecisionEvent? Decision,IReadOnlyList<BattleEvent> Events);
+public sealed record BattleUiFrame(string Stage,BattleUiSnapshot Snapshot,AiDecisionEvent? Decision,IReadOnlyList<BattleEvent> Events,BattlePresentationFrame Presentation);
 
 public sealed record BattleUiSnapshot(
     PlayableBattlePhase Phase,
@@ -88,7 +89,8 @@ public sealed record BattleUiIntentResult(
     string? FailureCode,
     BattleUiSnapshot Snapshot,
     IReadOnlyList<BattleEvent> Events,
-    PureRunBattleResult? BattleResult = null);
+    PureRunBattleResult? BattleResult = null,
+    BattlePresentationFrame? Presentation = null);
 
 /// <summary>
 /// Coordinates player UI intents and deterministic enemy turns without duplicating battle rules.
@@ -108,6 +110,7 @@ public sealed class PlayableBattleSessionService
     private ContentId? _selectedSkillId;
     private string? _failureCode;
     private PureRunBattleResult? _battleResult;
+    private BattleUiSnapshot? _lastPresentedSnapshot;
     private static readonly ContentId SkeletonUnitId = new("unit.pure-run.skeleton-warrior");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
 
@@ -123,6 +126,7 @@ public sealed class PlayableBattleSessionService
         _decisions = decisions ?? new AiDecisionService(_transitions);
         _aiTurns = aiTurns ?? new AiTurnService(_transitions);
         _initialEnemyCount = State.Units.Values.Count(unit => unit.Unit.PlayerNumber != context.PlayerNumber);
+        _lastPresentedSnapshot = CaptureSnapshot(State, false);
         AdvanceAutomaticTurns();
     }
 
@@ -132,7 +136,11 @@ public sealed class PlayableBattleSessionService
     public BattleUiFrame? DequeueAutomaticFrame()
     {
         if(!_automaticFrames.TryDequeue(out var frame))return null;
-        return new BattleUiFrame(frame.Stage,CaptureSnapshot(frame.State,false),frame.Decision,frame.Events);
+        BattleUiSnapshot after=CaptureSnapshot(frame.State,false);
+        BattleUiSnapshot before=_lastPresentedSnapshot??CaptureSnapshot(State,false);
+        BattlePresentationFrame presentation=BattlePresentationFrameCompiler.Compile(frame.Stage,before,after,frame.Events,_context.SkillCatalog);
+        _lastPresentedSnapshot=after;
+        return new BattleUiFrame(frame.Stage,after,frame.Decision,frame.Events,presentation);
     }
 
     public BattleUiIntentResult Submit(BattleUiIntent intent)
@@ -259,6 +267,7 @@ public sealed class PlayableBattleSessionService
 
     private BattleUiIntentResult ApplyCommand(BattleCommand command)
     {
+        BattleUiSnapshot before = CaptureSnapshot();
         BattleTransition transition = _transitions.Apply(State, command);
         if (!transition.Succeeded)
             return Result(false, (transition.Events.LastOrDefault() as CommandRejectedEvent)?.Reason ?? "battle.command_rejected", transition.Events);
@@ -269,7 +278,9 @@ public sealed class PlayableBattleSessionService
         EvaluateTerminal();
         if (_battleResult is null)
             AdvanceAutomaticTurns();
-        return Result(true, null, transition.Events);
+        BattleUiSnapshot after = CaptureSnapshot();
+        _lastPresentedSnapshot=after;
+        return Result(true, null, transition.Events, BattlePresentationFrameCompiler.Compile("Player",before,after,transition.Events,_context.SkillCatalog));
     }
 
     private void AdvanceAutomaticTurns()
@@ -409,8 +420,8 @@ public sealed class PlayableBattleSessionService
             return new[] { _context.SkillCatalog[MeleeAttackId] };
         return Array.Empty<SkillDefinition>();
     }
-    private BattleUiIntentResult Result(bool succeeded, string? failureCode, IReadOnlyList<BattleEvent> events) =>
-        new(succeeded, failureCode, CaptureSnapshot(), events,HasPendingAutomaticFrames?null:_battleResult);
+    private BattleUiIntentResult Result(bool succeeded, string? failureCode, IReadOnlyList<BattleEvent> events, BattlePresentationFrame? presentation=null) =>
+        new(succeeded, failureCode, CaptureSnapshot(), events,HasPendingAutomaticFrames?null:_battleResult,presentation);
 
     private static BattleUiUnitSnapshot ToSnapshot(BattleUnitState unit) => new(
         unit.Unit.InstanceId, unit.Unit.DefinitionId, unit.Unit.Position, unit.Unit.PlayerNumber,
