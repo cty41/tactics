@@ -14,11 +14,17 @@ public static class IsometricPresentationAssetFactory
     private const string Global = "res://content/ContentCatalog.tres";
     private const string BoardPath = Root + "/BattleBoardPureRunIsometricV1.tres";
     private const string UnitPresentationPath = Root + "/StandardUnitPresentationV1.tres";
+    private const string StatusPresentationPath = Root + "/StandardStatusPresentationV1.tres";
+    private const string CameraPresentationPath = Root + "/BattleFocusCameraPresentationV1.tres";
     private static readonly (string Id,string Path,string Branch,string Kind,Color Primary,Color Secondary,int Ghosts)[] SkillProfiles=
     [
         ("presentation.skill.mage.fireball",Root+"/FireballPresentation.tres","mage.fireball","fireball",new Color(1f,.28f,.04f),new Color(1f,.72f,.1f),0),
         ("presentation.skill.necromancer.bone-spear",Root+"/BoneSpearPresentation.tres","necromancer.bone-spear","bone-spear",new Color(.88f,.9f,.72f),new Color(.55f,.35f,.75f),2),
-        ("presentation.skill.amazon.thrust",Root+"/ThrustPresentation.tres","amazon.thrust","thrust",new Color(1f,.88f,.3f),new Color(1f,.55f,.12f),0)
+        ("presentation.skill.amazon.thrust",Root+"/ThrustPresentation.tres","amazon.thrust","thrust",new Color(1f,.88f,.3f),new Color(1f,.55f,.12f),0),
+        ("presentation.skill.mage.ice-bolt",Root+"/IceBoltPresentation.tres","mage.ice-bolt","ice-bolt",new Color(.62f,.94f,1f),new Color(.2f,.65f,1f),0),
+        ("presentation.skill.mage.lightning",Root+"/LightningPresentation.tres","mage.lightning","lightning",new Color(.92f,.95f,1f),new Color(.38f,.65f,1f),0),
+        ("presentation.skill.amazon.poison-spear",Root+"/PoisonSpearPresentation.tres","amazon.poison-spear","poison-spear",new Color(.65f,1f,.28f),new Color(.2f,.55f,.12f),0),
+        ("presentation.skill.necromancer.amplify-damage",Root+"/AmplifyDamagePresentation.tres","necromancer.amplify-damage","amplify-damage",new Color(.52f,.16f,.72f),new Color(.9f,.32f,.88f),0)
     ];
 
     public static void BuildBoard()
@@ -32,10 +38,11 @@ public static class IsometricPresentationAssetFactory
         Save(board, BoardPath);
         GodotResourceCatalog old = ResourceLoader.Load<GodotResourceCatalog>(Global, string.Empty, ResourceLoader.CacheMode.Ignore)
             ?? throw new InvalidOperationException("Canonical Catalog is missing.");
+        RegisterCatalogUids(old);
         GodotResourceEntry entry = Entry(board.ContentIdValue, "battle-board", BoardPath);
         GodotResourceEntry[] all = old.Entries.Where(value => value.ContentIdValue != entry.ContentIdValue).Select(Copy).Append(entry)
             .OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray();
-        if (all.Length is not (115 or 116 or 119)) throw new InvalidOperationException($"Unsupported presentation Catalog count: {all.Length}.");
+        if (all.Length is not (115 or 116 or 119 or 123 or 124 or 125)) throw new InvalidOperationException($"Unsupported presentation Catalog count: {all.Length}.");
         var catalog = new GodotResourceCatalog { Entries = all };
         Save(catalog, Global);
         catalog.Validate();
@@ -66,7 +73,7 @@ public static class IsometricPresentationAssetFactory
         GodotResourceEntry entry = Entry(profile.ContentIdValue, "presentation", UnitPresentationPath);
         GodotResourceEntry[] all = old.Entries.Where(value => value.ContentIdValue != entry.ContentIdValue).Select(Copy).Append(entry)
             .OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray();
-        if (all.Length is not (116 or 119)) throw new InvalidOperationException($"Unsupported unit presentation Catalog count: {all.Length}.");
+        if (all.Length is not (116 or 119 or 123 or 124 or 125)) throw new InvalidOperationException($"Unsupported unit presentation Catalog count: {all.Length}.");
         var catalog = new GodotResourceCatalog { Entries = all };
         Save(catalog, Global);
         string project = Path.TrimEndingDirectorySeparator(Path.GetFullPath(ProjectSettings.GlobalizePath("res://")));
@@ -96,19 +103,51 @@ public static class IsometricPresentationAssetFactory
             Save(profile,value.Path);entries.Add(Entry(value.Id,"presentation",value.Path));
         }
         GodotResourceCatalog old=ResourceLoader.Load<GodotResourceCatalog>(Global,string.Empty,ResourceLoader.CacheMode.Ignore)!;
-        var ids=entries.Select(value=>value.ContentIdValue).ToHashSet(StringComparer.Ordinal);
+        var ids=entries.Select(value=>value.ContentIdValue).Append("presentation.status.standard-v1").Append("presentation.camera.battle-focus-v1").ToHashSet(StringComparer.Ordinal);
         GodotResourceEntry[] all=old.Entries.Where(value=>!ids.Contains(value.ContentIdValue)).Select(Copy).Concat(entries).OrderBy(value=>value.ContentIdValue,StringComparer.Ordinal).ToArray();
-        if(all.Length!=119)throw new InvalidOperationException($"Expected 119 catalog entries, got {all.Length}.");
+        if(all.Length!=123)throw new InvalidOperationException($"Expected 123 catalog entries, got {all.Length}.");
         Save(new GodotResourceCatalog{Entries=all},Global);
         string project=Path.TrimEndingDirectorySeparator(Path.GetFullPath(ProjectSettings.GlobalizePath("res://"))),repo=Directory.GetParent(project)!.FullName;
         string ledger=Path.Combine(repo,"Tools","migration","manifest","state",BatchId+".json");
         string[] artifacts=[BoardPath,UnitPresentationPath,..SkillProfiles.Select(value=>value.Path)];
-        File.WriteAllText(ledger,JsonSerializer.Serialize(new{schemaVersion=1,batchId=BatchId,state="Generated",ownership="UnityOwned",visualAcceptance="manual_isometric_and_presentation_qa_pending",catalogCount=119,
+        File.WriteAllText(ledger,JsonSerializer.Serialize(new{schemaVersion=1,batchId=BatchId,state="Generated",ownership="UnityOwned",visualAcceptance="manual_isometric_and_presentation_qa_pending",catalogCount=123,
             sourceAudit=new[]{
                 new{sourcePath="Assets/Tactics/Arts/PureRun/Presentation/Fireball_Presentation.asset",gitBlobSha1="001b290bb3dac7ba61c7cad45f5e5fccd4bb7e38"},new{sourcePath="Assets/Tactics/Arts/PureRun/Presentation/Fireball_Lv2_Presentation.asset",gitBlobSha1="f8f0f37fcd10ec44265aafc571c34c6e2d1fc16c"},
                 new{sourcePath="Assets/Tactics/Arts/PureRun/Presentation/BoneSpear_Presentation.asset",gitBlobSha1="d755ab34dec8d2535e6a4ed5ee862a4fa9f8360c"},new{sourcePath="Assets/Tactics/Arts/PureRun/Presentation/BoneSpear_Lv2_Presentation.asset",gitBlobSha1="95b09910a8248929b3019ebefc91095925c9ce8f"},
                 new{sourcePath="Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/FireballSkillVfxRecipe.asset",gitBlobSha1="b097ec1e78fb3d2b8cffd281aa10d122fa5198e5"},new{sourcePath="Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/BoneSpearSkillVfxRecipe.asset",gitBlobSha1="3297e35fadfd273113e9bf263dce7aef7e32b829"},new{sourcePath="Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/ThrustSkillVfxRecipe.asset",gitBlobSha1="e31ece07465740b34a688a2f6a40a68ce8e35d77"}},
             payloadBoundary="programmatic-only-no-piloto-prefab-texture-material-shader-audio",artifacts=artifacts.Select(path=>new{resourcePath=path,resourceUid=ResourceUid.IdToText(Uid(path)),targetHash=Hash(path)})},new JsonSerializerOptions{WriteIndented=true})+"\n",new UTF8Encoding(false));
+    }
+
+    public static void BuildStatusPresentation()
+    {
+        BuildSkillPresentations();
+        var profile=new StatusPresentationResource();Save(profile,StatusPresentationPath);
+        AppendPresentationEntry(profile.ContentIdValue,StatusPresentationPath,124);
+        RewriteLedger(124,[BoardPath,UnitPresentationPath,..SkillProfiles.Select(value=>value.Path),StatusPresentationPath]);
+    }
+
+    public static void BuildCameraPresentation()
+    {
+        BuildStatusPresentation();var profile=new BattleCameraPresentationResource();Save(profile,CameraPresentationPath);
+        AppendPresentationEntry(profile.ContentIdValue,CameraPresentationPath,125);
+        RewriteLedger(125,[BoardPath,UnitPresentationPath,..SkillProfiles.Select(value=>value.Path),StatusPresentationPath,CameraPresentationPath]);
+    }
+
+    private static void AppendPresentationEntry(string id,string path,int expected)
+    {
+        GodotResourceCatalog old=ResourceLoader.Load<GodotResourceCatalog>(Global,string.Empty,ResourceLoader.CacheMode.Ignore)!;
+        GodotResourceEntry entry=Entry(id,"presentation",path);
+        GodotResourceEntry[] all=old.Entries.Where(value=>value.ContentIdValue!=id&&(expected!=124||value.ContentIdValue!="presentation.camera.battle-focus-v1")).Select(Copy).Append(entry).OrderBy(value=>value.ContentIdValue,StringComparer.Ordinal).ToArray();
+        if(all.Length!=expected)throw new InvalidOperationException($"Expected {expected} catalog entries, got {all.Length}.");
+        Save(new GodotResourceCatalog{Entries=all},Global);
+    }
+
+    private static void RewriteLedger(int count,string[] artifacts)
+    {
+        string project=Path.TrimEndingDirectorySeparator(Path.GetFullPath(ProjectSettings.GlobalizePath("res://"))),repo=Directory.GetParent(project)!.FullName;
+        string ledger=Path.Combine(repo,"Tools","migration","manifest","state",BatchId+".json");
+        File.WriteAllText(ledger,JsonSerializer.Serialize(new{schemaVersion=1,batchId=BatchId,state="Generated",ownership="UnityOwned",visualAcceptance="manual_isometric_and_presentation_qa_pending",catalogCount=count,
+            sourceAudit=new[]{new{sourcePath="Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",gitBlobSha1="audit-current-final-tag"},new{sourcePath="Assets/Tactics/Scripts/Common/Battle/BattleBoardCameraFitter.cs",gitBlobSha1="910847d0088086a8c9b5ff1addf4df2649484935"}},payloadBoundary="programmatic-only-no-piloto-prefab-texture-material-shader-audio",artifacts=artifacts.Select(path=>new{resourcePath=path,resourceUid=ResourceUid.IdToText(Uid(path)),targetHash=Hash(path)})},new JsonSerializerOptions{WriteIndented=true})+"\n",new UTF8Encoding(false));
     }
 
     private static GodotResourceEntry Entry(string id, string type, string path) => new()
@@ -135,6 +174,14 @@ public static class IsometricPresentationAssetFactory
             string resourcePath = artifact.GetProperty("resourcePath").GetString()!;
             long uid = ResourceUid.TextToId(artifact.GetProperty("resourceUid").GetString()!);
             if (!ResourceUid.HasId(uid)) ResourceUid.AddId(uid, resourcePath);
+        }
+    }
+    private static void RegisterCatalogUids(GodotResourceCatalog catalog)
+    {
+        foreach(GodotResourceEntry entry in catalog.Entries.Where(value=>value.ResourceTypeIdValue is "presentation" or "battle-board"))
+        {
+            long uid=ResourceUid.TextToId(entry.ResourceUidValue);
+            if(uid!=ResourceUid.InvalidId&&!ResourceUid.HasId(uid))ResourceUid.AddId(uid,entry.DiagnosticPathValue);
         }
     }
 }

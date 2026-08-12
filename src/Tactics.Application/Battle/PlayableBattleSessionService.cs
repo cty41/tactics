@@ -6,6 +6,7 @@ using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Runs;
 using Tactics.Core.Skills;
+using Tactics.Core.Statuses;
 using Tactics.Core.Units;
 
 namespace Tactics.Application.Battle;
@@ -21,6 +22,8 @@ public sealed record ConfirmCellIntent(GridPoint Cell) : BattleUiIntent;
 public sealed record CancelTargetingIntent : BattleUiIntent;
 public sealed record EndTurnIntent : BattleUiIntent;
 
+public sealed record BattleUiStatusSnapshot(ContentId StatusId, StatusEffectKind EffectKind,
+    StatusPolarity Polarity, int RemainingTurns, int StackCount);
 public sealed record BattleUiUnitSnapshot(
     UnitInstanceId UnitId,
     ContentId DefinitionId,
@@ -33,7 +36,8 @@ public sealed record BattleUiUnitSnapshot(
     int MaxMana,
     bool HasMovedThisTurn,
     IReadOnlyList<ContentId> StatusIds,
-    IReadOnlyDictionary<ContentId, int> SuccessfulSkillUses);
+    IReadOnlyDictionary<ContentId, int> SuccessfulSkillUses,
+    IReadOnlyList<BattleUiStatusSnapshot>? Statuses = null);
 
 public sealed record BattleUiTarget(ContentId SkillId, GridPoint Cell, UnitInstanceId? UnitId);
 public sealed record BattleUiSkillPreview(
@@ -428,5 +432,8 @@ public sealed class PlayableBattleSessionService
         unit.IsAlive, unit.CurrentHealth, unit.MaxHealth, unit.CurrentMana, unit.MaxMana,
         unit.HasMovedThisTurn,
         unit.Statuses.Keys.OrderBy(id => id.Value, StringComparer.Ordinal).ToArray(),
-        unit.SuccessfulSkillUses);
+        unit.SuccessfulSkillUses,
+        unit.Statuses.Values.OrderBy(status => status.ContentId.Value, StringComparer.Ordinal)
+            .Select(status => new BattleUiStatusSnapshot(status.ContentId, status.EffectKind, status.Polarity,
+                status.RemainingTurns, status.StackCount)).ToArray());
 }

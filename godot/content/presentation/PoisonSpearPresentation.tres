@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillPresentationResource" format=3 uid="uid://0gdrlk0ych1r"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillPresentationResource.cs" id="1_nq6yl"]
+
+[resource]
+script = ExtResource("1_nq6yl")
+ContentIdValue = "presentation.skill.amazon.poison-spear"
+SkillBranch = "amazon.poison-spear"
+ProgrammaticKind = "poison-spear"
+PrimaryColor = Color(0.65, 1, 0.28, 1)
+SecondaryColor = Color(0.2, 0.55, 0.12, 1)

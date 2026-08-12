@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="BattleCameraPresentationResource" format=3 uid="uid://fp0034xgbtpu"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/BattleCameraPresentationResource.cs" id="1_lursc"]
+
+[resource]
+script = ExtResource("1_lursc")

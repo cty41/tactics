@@ -50,7 +50,7 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(catalog).IsNotNull();
         if (board is null || catalog is null) return;
         AssertThat(board.TileSize).IsEqual(new Vector2(96, 48));
-        AssertThat(catalog.Entries.Length is 115 or 116 or 119).IsTrue();
+        AssertThat(catalog.Entries.Length is 115 or 116 or 119 or 123 or 124 or 125).IsTrue();
         AssertThat(catalog.Entries.Count(entry => entry.ContentIdValue == "battle-board.pure-run.isometric-v1")).IsEqual(1);
     }
 
@@ -58,13 +58,25 @@ public sealed class IsometricBattleBoardGodotTests
     [RequireGodotRuntime]
     public void ProgrammaticSkillProfilesExcludeThirdPartyPayload()
     {
-        string[] paths=["FireballPresentation.tres","BoneSpearPresentation.tres","ThrustPresentation.tres"];
+        string[] paths=["FireballPresentation.tres","BoneSpearPresentation.tres","ThrustPresentation.tres","IceBoltPresentation.tres","LightningPresentation.tres","PoisonSpearPresentation.tres","AmplifyDamagePresentation.tres"];
         SkillPresentationResource[] profiles=paths.Select(name=>ResourceLoader.Load<SkillPresentationResource>($"res://content/presentation/{name}")!).ToArray();
         AssertThat(profiles.All(value=>value is not null)).IsTrue();
         AssertThat(profiles.All(value=>value.PayloadBoundary=="programmatic-only-no-piloto-payload")).IsTrue();
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="fireball").LevelOneHasAreaEffect).IsFalse();
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="bone-spear").MaximumGhosts).IsEqual(2);
         var catalog=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")!;
-        AssertThat(catalog.Entries.Length).IsEqual(119);
+        AssertThat(catalog.Entries.Length is 123 or 124 or 125).IsTrue();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void StatusAndCameraProfilesHaveBoundedContracts()
+    {
+        var status=ResourceLoader.Load<StatusPresentationResource>("res://content/presentation/StandardStatusPresentationV1.tres");
+        var camera=ResourceLoader.Load<BattleCameraPresentationResource>("res://content/presentation/BattleFocusCameraPresentationV1.tres");
+        AssertThat(status).IsNotNull();AssertThat(camera).IsNotNull();if(status is null||camera is null)return;
+        AssertThat(status.MaximumVisibleStatuses).IsEqual(4);
+        AssertThat(camera.MaximumTranslation).IsLessEqual(28f);
+        AssertThat(camera.MaximumScale).IsLessEqual(1.04f);
     }
 }

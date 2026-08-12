@@ -1,5 +1,6 @@
 using Godot;
 using Tactics.Application.Units;
+using Tactics.Application.Battle;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
@@ -22,6 +23,7 @@ public partial class GodotUnitActor : Node2D
 {
     [Export] public Sprite2D? Shadow { get; set; }
     [Export] public Sprite2D? Body { get; set; }
+    public GodotUnitStatusOverlay? StatusOverlay { get; private set; }
 
     private UnitDefinitionResource? _definition;
 
@@ -71,6 +73,12 @@ public partial class GodotUnitActor : Node2D
     {
         IsBodyTintEnabled = enabled;
         ApplyTint();
+    }
+
+    public void SetStatuses(IReadOnlyList<BattleUiStatusSnapshot>? statuses,int maximumVisible=4)
+    {
+        if(StatusOverlay is null){StatusOverlay=new GodotUnitStatusOverlay{ZIndex=50};AddChild(StatusOverlay);}
+        StatusOverlay.MaximumVisible=maximumVisible;StatusOverlay.Apply(statuses);
     }
 
     private void ApplyVisual()

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillPresentationResource" format=3 uid="uid://dy33mrv243vil"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillPresentationResource.cs" id="1_n8klj"]
+
+[resource]
+script = ExtResource("1_n8klj")
+ContentIdValue = "presentation.skill.necromancer.amplify-damage"
+SkillBranch = "necromancer.amplify-damage"
+ProgrammaticKind = "amplify-damage"
+PrimaryColor = Color(0.52, 0.16, 0.72, 1)
+SecondaryColor = Color(0.9, 0.32, 0.88, 1)

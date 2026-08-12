@@ -47,6 +47,18 @@ public sealed class BattlePresentationFrameCompilerTests
         Assert.That(cue.AffectedUnitIds,Does.Not.Contain(secondary));
     }
 
+    [Test]
+    public void StatusAndSpearEffectsComeOnlyFromCommittedEvents()
+    {
+        UnitInstanceId actor=new("amazon"),target=new("enemy");ContentId skillId=new("skill.amazon.poison-spear.lv1"),poison=new("buff.poison");
+        BattleUiSnapshot snapshot=Snapshot(actor,target,new GridPoint(1,1),new GridPoint(4,1),true);
+        SkillDefinition skill=new(skillId,"poison",SkillRole.Amazon,SkillKind.Active,1,5,1,5,SkillExecutionKind.PoisonSpear,9,SkillDamageKind.Physical);
+        GridPoint drop=new(5,1);BattleEvent[] events=[new SkillUsedEvent(actor,target,skillId),new StatusAppliedEvent(actor,target,poison,2),new SpearDroppedEvent(actor,drop)];
+        BattlePresentationCue cue=BattlePresentationFrameCompiler.Compile("poison",snapshot,snapshot,events,new Dictionary<ContentId,SkillDefinition>{{skillId,skill}}).Cues.Single();
+        Assert.That(cue.Effects!.Any(value=>value.Kind==BattlePresentationEffectKind.StatusApplied&&value.ContentId==poison),Is.True);
+        Assert.That(cue.Effects!.Single(value=>value.Kind==BattlePresentationEffectKind.SpearDropped).Cell,Is.EqualTo(drop));
+    }
+
     private static BattleUiSnapshot Snapshot(UnitInstanceId actor,UnitInstanceId target,GridPoint actorCell,GridPoint targetCell,bool targetAlive)
     {
         BattleUiUnitSnapshot Unit(UnitInstanceId id,GridPoint cell,bool alive)=>new(id,new ContentId("unit.test"),cell,id==actor?0:1,alive,alive?10:0,10,5,5,false,[],new Dictionary<ContentId,int>());

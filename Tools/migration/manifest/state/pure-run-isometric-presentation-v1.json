@@ -4,35 +4,15 @@
   "state": "Generated",
   "ownership": "UnityOwned",
   "visualAcceptance": "manual_isometric_and_presentation_qa_pending",
-  "catalogCount": 119,
+  "catalogCount": 125,
   "sourceAudit": [
     {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/Fireball_Presentation.asset",
-      "gitBlobSha1": "001b290bb3dac7ba61c7cad45f5e5fccd4bb7e38"
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",
+      "gitBlobSha1": "audit-current-final-tag"
     },
     {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/Fireball_Lv2_Presentation.asset",
-      "gitBlobSha1": "f8f0f37fcd10ec44265aafc571c34c6e2d1fc16c"
-    },
-    {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/BoneSpear_Presentation.asset",
-      "gitBlobSha1": "d755ab34dec8d2535e6a4ed5ee862a4fa9f8360c"
-    },
-    {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/BoneSpear_Lv2_Presentation.asset",
-      "gitBlobSha1": "95b09910a8248929b3019ebefc91095925c9ce8f"
-    },
-    {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/FireballSkillVfxRecipe.asset",
-      "gitBlobSha1": "b097ec1e78fb3d2b8cffd281aa10d122fa5198e5"
-    },
-    {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/BoneSpearSkillVfxRecipe.asset",
-      "gitBlobSha1": "3297e35fadfd273113e9bf263dce7aef7e32b829"
-    },
-    {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/ThrustSkillVfxRecipe.asset",
-      "gitBlobSha1": "e31ece07465740b34a688a2f6a40a68ce8e35d77"
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/BattleBoardCameraFitter.cs",
+      "gitBlobSha1": "910847d0088086a8c9b5ff1addf4df2649484935"
     }
   ],
   "payloadBoundary": "programmatic-only-no-piloto-prefab-texture-material-shader-audio",
@@ -61,6 +41,36 @@
       "resourcePath": "res://content/presentation/ThrustPresentation.tres",
       "resourceUid": "uid://bk11eqwwlgi5d",
       "targetHash": "sha256:4e92e03248b353c20382b968c828ab0065b4c2b50f1947a75fcf4a61a5193494"
+    },
+    {
+      "resourcePath": "res://content/presentation/IceBoltPresentation.tres",
+      "resourceUid": "uid://etwsfqwyas73",
+      "targetHash": "sha256:2e93aeb7ded955082f4c13effd940f8a8060d4bb7e8ee62c9c837256734a70ae"
+    },
+    {
+      "resourcePath": "res://content/presentation/LightningPresentation.tres",
+      "resourceUid": "uid://b7b8hurilrj6l",
+      "targetHash": "sha256:5b4dbbdf84acdf9c6b8900a03391709fecc3fd0a3a93acfdd55c571b00d7acc0"
+    },
+    {
+      "resourcePath": "res://content/presentation/PoisonSpearPresentation.tres",
+      "resourceUid": "uid://0gdrlk0ych1r",
+      "targetHash": "sha256:eda932817b0cdcbf364a5a30dadfb8e12e80bafd07ba1da42b1b066a3af2dc52"
+    },
+    {
+      "resourcePath": "res://content/presentation/AmplifyDamagePresentation.tres",
+      "resourceUid": "uid://dy33mrv243vil",
+      "targetHash": "sha256:84bdad2bda93ddbe945f6e29d94ab530ff969f110fbddfe8fe3aaf0380ed581b"
+    },
+    {
+      "resourcePath": "res://content/presentation/StandardStatusPresentationV1.tres",
+      "resourceUid": "uid://u7ig8dq5qjc4",
+      "targetHash": "sha256:f8e7372aa65a352637cdd1ff2ac1a256e9aad104f106c28bca0ef6eab60a6981"
+    },
+    {
+      "resourcePath": "res://content/presentation/BattleFocusCameraPresentationV1.tres",
+      "resourceUid": "uid://fp0034xgbtpu",
+      "targetHash": "sha256:f2b3b92085f157512132b8fbf5aa4c5bb0777ed5a7f8cc81992fdb3c294d0774"
     }
   ]
 }

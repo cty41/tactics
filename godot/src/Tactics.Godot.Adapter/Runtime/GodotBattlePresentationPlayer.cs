@@ -1,5 +1,6 @@
 using Godot;
 using Tactics.Application.Presentation;
+using Tactics.Core.Board;
 using Tactics.Core.Units;
 
 namespace Tactics.Godot.Adapter.Runtime;
@@ -88,9 +89,18 @@ public partial class GodotBattlePresentationPlayer : Node
         string branch=cue.SkillId!.Value.Value;
         SkillPresentationResource? profile=branch.Contains("fireball",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.fireball"):
             branch.Contains("bone-spear",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("necromancer.bone-spear"):
+            branch.Contains("ice-bolt",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.ice-bolt"):
+            branch.Contains("lightning",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.lightning"):
+            branch.Contains("poison-spear",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("amazon.poison-spear"):
+            branch.Contains("amplify-damage",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("necromancer.amplify-damage"):
             branch.Contains("thrust",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("amazon.thrust"):null;
         if(profile is null)return;
-        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,Start=IsometricBattleBoardLayout.GridToScreen(cue.Origin),End=IsometricBattleBoardLayout.GridToScreen(cue.Destination),Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900};
+        GridPoint end=cue.Effects?.FirstOrDefault(effect=>effect.Kind==BattlePresentationEffectKind.SpearDropped)?.Cell??cue.Destination;
+        Vector2[] impacts=(cue.Effects??Array.Empty<BattlePresentationEffect>()).Where(effect=>effect.TargetId is not null)
+            .Select(effect=>cue.AffectedUnitIds.Contains(effect.TargetId!.Value)?effect.TargetId:null).Where(id=>id is not null)
+            .Select(id=>cue.TargetId==id?cue.Destination:cue.Destination).Distinct().Select(IsometricBattleBoardLayout.GridToScreen).ToArray();
+        if(impacts.Length==0)impacts=cue.AffectedUnitIds.Count>0?[IsometricBattleBoardLayout.GridToScreen(cue.Destination)]:[];
+        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,Start=IsometricBattleBoardLayout.GridToScreen(cue.Origin),End=IsometricBattleBoardLayout.GridToScreen(end),Impacts=impacts,Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900};
         GetParent().AddChild(fx);
         Tween tween=CreateTween().SetSpeedScale(_speed);_activeTweens.Add(tween);
         tween.TweenProperty(fx,"Progress",1f,profile.TravelDuration).SetTrans(Tween.TransitionType.Quad);

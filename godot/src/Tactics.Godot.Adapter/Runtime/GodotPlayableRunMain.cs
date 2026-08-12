@@ -50,6 +50,7 @@ public partial class GodotPlayableRunMain : Control
     private ContentId? _currentEncounterId;
     private bool _settlementCommitted;
     private GodotBattlePresentationPlayer? _presentationPlayer;
+    private GodotBattleCameraFeedback? _cameraFeedback;
     private StandardUnitPresentationResource? _presentationProfile;
     private readonly List<SkillPresentationResource> _skillPresentationProfiles=new();
 
@@ -228,12 +229,14 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer.Configure(_presentationProfile ?? new StandardUnitPresentationResource());
         _presentationPlayer.ConfigureSkills(_skillPresentationProfiles);
         _board.AddChild(_presentationPlayer);
+        _cameraFeedback=new GodotBattleCameraFeedback();root.AddChild(_cameraFeedback);_cameraFeedback.Configure(_board);
         _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
         _turnOrder=LabelAt(root,string.Empty,new Vector2(800,88),18);_turnOrder.Size=new Vector2(720,32);
         _hoverInfo=LabelAt(root,"Hover a cell",new Vector2(800,780),16);_hoverInfo.Size=new Vector2(720,80);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
         var logPanel=new VBoxContainer{Position=new Vector2(1145,125),Size=new Vector2(390,650)};root.AddChild(logPanel);
         var controls=new HBoxContainer();logPanel.AddChild(controls);
         controls.AddChild(SmallButton("Pause/Resume",TogglePause));controls.AddChild(SmallButton("Step",()=>PlaybackStep(true)));controls.AddChild(SmallButton("1x/2x",ToggleSpeed));
+        controls.AddChild(SmallButton("Camera On/Off",()=>_cameraFeedback?.SetEnabled(!(_cameraFeedback?.MotionEnabled??false))));
         var filters=new OptionButton();foreach(string name in new[]{"All","Gameplay","AI","Rejected"})filters.AddItem(name);filters.ItemSelected+=index=>{_logFilter=(int)index;RefreshLog();};logPanel.AddChild(filters);
         logPanel.AddChild(Button("Clear Log",()=>{_logs.Clear();RefreshLog();}));
         var scroll=new ScrollContainer{CustomMinimumSize=new Vector2(390,500)};logPanel.AddChild(scroll);
@@ -257,6 +260,7 @@ public partial class GodotPlayableRunMain : Control
             {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;_board.AddChild(actor);_actors[unit.UnitId]=actor;}
             actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
+            actor.SetStatuses(unit.Statuses);
             actor.ZIndex = 100 + (unit.Cell.X + unit.Cell.Y) * 12 + unit.Cell.X;
             if(_unitMeters.Remove(unit.UnitId,out Control? oldMeter)&&GodotObject.IsInstanceValid(oldMeter))oldMeter.QueueFree();
             Control meter=CreateUnitMeters(unit);_board.AddChild(meter);_unitMeters[unit.UnitId]=meter;
@@ -358,13 +362,13 @@ public partial class GodotPlayableRunMain : Control
         BattleUiIntentResult result = _battle.Submit(intent);
         AddEvents(result.Events);
         if(!result.Succeeded&&result.Events.Count==0&&result.FailureCode is not null)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,result.FailureCode,"CommandRejectedEvent"));
-        if(_battle.HasPendingAutomaticFrames){RefreshBattle(result.Snapshot);if(result.Presentation is BattlePresentationFrame pendingPresentation)_presentationPlayer?.Play(pendingPresentation,_actors);PlaybackStep(true);_playbackTimer!.Start();return;}
+        if(_battle.HasPendingAutomaticFrames){RefreshBattle(result.Snapshot);if(result.Presentation is BattlePresentationFrame pendingPresentation){_presentationPlayer?.Play(pendingPresentation,_actors);_cameraFeedback?.Play(pendingPresentation);}PlaybackStep(true);_playbackTimer!.Start();return;}
         if (result.BattleResult is PureRunBattleResult battleResult)
         {
             CompleteBattle(battleResult);return;
         }
         RefreshBattle();
-        if(result.Presentation is BattlePresentationFrame presentation)_presentationPlayer?.Play(presentation,_actors);
+        if(result.Presentation is BattlePresentationFrame presentation){_presentationPlayer?.Play(presentation,_actors);_cameraFeedback?.Play(presentation);}
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
 
@@ -403,7 +407,7 @@ public partial class GodotPlayableRunMain : Control
     {
         if(_battle is null||(_playbackPaused&&!forced))return;
         BattleUiFrame? frame=_battle.DequeueAutomaticFrame();
-        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);_presentationPlayer?.Play(frame.Presentation,_actors);return;}
+        if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);RefreshBattle(frame.Snapshot);_presentationPlayer?.Play(frame.Presentation,_actors);_cameraFeedback?.Play(frame.Presentation);return;}
         _playbackTimer?.Stop();RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
     }
     private void TogglePause(){_playbackPaused=!_playbackPaused;AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));RefreshLog();}
@@ -671,7 +675,7 @@ public partial class GodotPlayableRunMain : Control
         _unitMeters.Clear();
         _visibleSnapshot=null;
         _hoveredCell=null;
-        _board=null;
+        _cameraFeedback?.Reset();_cameraFeedback=null;_board=null;
         _skillPanel=null;
         _turnOrder=null;
         _hoverInfo=null;

@@ -9,8 +9,11 @@ namespace Tactics.Application.Presentation;
 
 public enum PresentationCueKind { Move, Melee, Ranged, Cast, Hit, Defeat, CorpseRemoved }
 public enum PresentationMarkerKind { Begin, Release, Impact, Recover, Complete }
+public enum BattlePresentationEffectKind { StatusApplied, StatusTicked, StatusDurationChanged, StatusStackChanged, StatusExpired, StatusCleansed, SpearDropped, SpearRecovered }
 
 public sealed record BattlePresentationMarker(PresentationMarkerKind Kind, int Order);
+public sealed record BattlePresentationEffect(BattlePresentationEffectKind Kind, UnitInstanceId ActorId,
+    UnitInstanceId? TargetId, ContentId? ContentId, GridPoint? Cell, int Amount);
 public sealed record BattlePresentationCue(
     PresentationCueKind Kind,
     UnitInstanceId ActorId,
@@ -20,7 +23,8 @@ public sealed record BattlePresentationCue(
     GridPoint Destination,
     IReadOnlyList<GridPoint> Path,
     IReadOnlyList<UnitInstanceId> AffectedUnitIds,
-    IReadOnlyList<BattlePresentationMarker> Markers);
+    IReadOnlyList<BattlePresentationMarker> Markers,
+    IReadOnlyList<BattlePresentationEffect>? Effects = null);
 
 public sealed record BattlePresentationFrame(
     string Stage,
@@ -82,6 +86,13 @@ public static class BattlePresentationFrameCompiler
             IReadOnlyList<UnitInstanceId> affected = affectedBySkill.GetValueOrDefault((cue.ActorId, skillId), cue.AffectedUnitIds);
             cues[index] = cue with { Path = Ray(cue.Origin, cue.Destination), AffectedUnitIds = affected };
         }
+        BattlePresentationEffect[] effects = events.SelectMany(Effect).ToArray();
+        for (int index = 0; index < cues.Count; index++)
+        {
+            BattlePresentationCue cue = cues[index];
+            if (cue.SkillId is null) continue;
+            cues[index] = cue with { Effects = effects };
+        }
         return new BattlePresentationFrame(stage, before, after, cues);
     }
 
@@ -108,4 +119,17 @@ public static class BattlePresentationFrameCompiler
         return Enumerable.Range(1,steps).Select(index=>new GridPoint(origin.X+sx*index,origin.Y+sy*index)).ToArray();
     }
     private static int GreatestCommonDivisor(int left,int right){while(right!=0)(left,right)=(right,left%right);return left;}
+
+    private static IEnumerable<BattlePresentationEffect> Effect(BattleEvent value) => value switch
+    {
+        StatusAppliedEvent status => [new(BattlePresentationEffectKind.StatusApplied, status.SourceId, status.TargetId, status.StatusId, null, status.RemainingTurns)],
+        StatusTickedEvent status => [new(BattlePresentationEffectKind.StatusTicked, status.SourceId, status.TargetId, status.StatusId, null, status.Amount)],
+        StatusDurationChangedEvent status => [new(BattlePresentationEffectKind.StatusDurationChanged, status.TargetId, status.TargetId, status.StatusId, null, status.RemainingTurns)],
+        StatusStackChangedEvent status => [new(BattlePresentationEffectKind.StatusStackChanged, status.TargetId, status.TargetId, status.StatusId, null, status.StackCount)],
+        StatusExpiredEvent status => [new(BattlePresentationEffectKind.StatusExpired, status.TargetId, status.TargetId, status.StatusId, null, 0)],
+        StatusesCleansedEvent status => status.RemovedStatusIds.Select(id => new BattlePresentationEffect(BattlePresentationEffectKind.StatusCleansed, status.SourceId, status.TargetId, id, null, 0)),
+        SpearDroppedEvent spear => [new(BattlePresentationEffectKind.SpearDropped, spear.OwnerId, spear.OwnerId, null, spear.Cell, 0)],
+        SpearRecoveredEvent spear => [new(BattlePresentationEffectKind.SpearRecovered, spear.OwnerId, spear.OwnerId, null, spear.Cell, 0)],
+        _ => []
+    };
 }
