@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 9,
+  "schemaVersion": 10,
   "unityOracle": {
     "tag": "unity-final-2026-08-08",
     "commit": "168d1934",
@@ -49,7 +49,10 @@
     "Assets/Tactics/Scripts/Roguelike/RoguelikeBattleReturnHandler.cs": "20da7982e99da5a81f34d6efa3d9613e749c43fc",
     "Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs": "f8e3eb4c9136f4935585f86e4d2010738ff9e207",
     "Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs": "1d6e4997dfb8801329003f545e823ea5e3f01a49",
-    "Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs": "4f0feeb252d95f3d213fd96ede48a694b2cba9ed"
+    "Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs": "4f0feeb252d95f3d213fd96ede48a694b2cba9ed",
+    "Assets/Tactics/Scripts/RoguelikeMap/Interaction/RestSiteNodeHandler.cs": "b5d23a1be9c86d6233cba11c073475dd61497b44",
+    "Assets/Tactics/Scripts/RoguelikeMap/Interaction/StoreNodeHandler.cs": "936f086d2bef5c6b815b928a679d5815e0a16a3f",
+    "Assets/Tactics/Scripts/RoguelikeMap/Events/AttributeCheckSystem.cs": "d76c1c4ac4f1ce39e22cb1d0c82184a289a00341"
   },
   "frozenDataBlobs": {
     "Assets/Tactics/GameData/Consumables.json": "626f45f2fabe2e957d6eeb327a57e4b695935ef8",
@@ -96,6 +99,27 @@
     "Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png": "db69d966319f918e950c9999dc8f48aedc2c53b0"
   },
   "contracts": [
+    {
+      "id": "run.pure-run-layer4-map-nodes-v1",
+      "sourceFile": "Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs",
+      "sourceRuntimeFiles": [
+        "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs",
+        "Assets/Tactics/Scripts/RoguelikeMap/RoguelikeNodeTransactionService.cs",
+        "Assets/Tactics/Scripts/RoguelikeMap/Interaction/RestSiteNodeHandler.cs",
+        "Assets/Tactics/Scripts/RoguelikeMap/Interaction/StoreNodeHandler.cs",
+        "Assets/Tactics/Scripts/RoguelikeMap/Events/AttributeCheckSystem.cs"
+      ],
+      "sourceDataFiles": [
+        "Assets/Tactics/GameData/Events/DarkForest/lost_villager_001.json",
+        "Assets/Tactics/GameData/Events/DarkForest/fallen_altar_001.json",
+        "Assets/Tactics/GameData/Events/DarkForest/cursed_chest_001.json"
+      ],
+      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleTests": ["LinkedSources_MatchUnityFinalGitBlobs", "LayerFourMapNodesFrozenContracts_MatchGolden"],
+      "goldenVector": "layer4-map-nodes-v1.json",
+      "exportReceipt": "Tools/migration/manifest/receipts/pure-run-layer4-map-nodes-v1-export.json",
+      "status": "unity_final_asset_export_and_linked_source_oracle"
+    },
     {
       "id": "run.pure-run-persistence-v1",
       "sourceFile": "Assets/Tactics/Scripts/Roguelike/PureRunSessionStore.cs",

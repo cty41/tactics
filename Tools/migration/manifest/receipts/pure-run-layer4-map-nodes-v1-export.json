@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-layer4-map-nodes-v1",
+  "state": "Exported",
+  "ownership": "UnityOwned",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exportHash": "sha256:843345e9f2b265fdb227336064ac7517f383983492f16a1c0ff625f4bac01c79",
+  "independentRuns": 2,
+  "byteIdentical": true
+}

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-layer4-map-nodes-v1",
+  "state": "Exported",
+  "ownership": "UnityOwned",
+  "manualLayer4MapAcceptance": "pending",
+  "scope": ["N4", "Rest", "Store", "Mystery", "Layer4Map"]
+}

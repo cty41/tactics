@@ -38,6 +38,9 @@ public sealed class FrozenUnitySourceTests
             ["Assets/Tactics/Scripts/Common/pathfinding/dataStructures/PriorityQueueItem.cs"] = "3dad83ed21a81c50dc457f933e0952a167dc941b",
             ["Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs"] = "a060663b709f316d02cf9d0f2581d3b1d7132114",
             ["Assets/Tactics/Scripts/Common/Battle/Runtime/IBattleRuntimeScope.cs"] = "c3dfdc5f556ffbc56ab60e18fc0ef5521b0c83a6",
+            ["Assets/Tactics/Scripts/RoguelikeMap/Interaction/RestSiteNodeHandler.cs"] = "b5d23a1be9c86d6233cba11c073475dd61497b44",
+            ["Assets/Tactics/Scripts/RoguelikeMap/Interaction/StoreNodeHandler.cs"] = "936f086d2bef5c6b815b928a679d5815e0a16a3f",
+            ["Assets/Tactics/Scripts/RoguelikeMap/Events/AttributeCheckSystem.cs"] = "d76c1c4ac4f1ce39e22cb1d0c82184a289a00341",
             ["Assets/Tactics/Scripts/Common/Battle/Runtime/BattleRuntimeScope.cs"] = "544f8ba928da4d831589e4fc7d5208623b17861f",
             ["Assets/Tactics/Scripts/Common/Skills/Graph/PresentationExecutionPlan.cs"] = "6ef526ac91cdc0a1efb06066be7b3591289d41e1",
             ["Assets/Tactics/Scripts/Common/Battle/AmazonBattleState.cs"] = "edc31ec7cddede0fb2b4a6676fa3dfdad0851966",
@@ -247,6 +250,44 @@ public sealed class FrozenUnitySourceTests
         });
         Assert.That(golden.RootElement.GetProperty("branchesPerRole").GetInt32(), Is.EqualTo(6));
         Assert.That(golden.RootElement.GetProperty("maximumSkillLevel").GetInt32(), Is.EqualTo(2));
+    }
+
+    [Test]
+    public void LayerFourMapNodesFrozenContracts_MatchGolden()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string mapGenerator = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs");
+        string encounter = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs");
+        string transactions = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/RoguelikeMap/RoguelikeNodeTransactionService.cs");
+        string rest = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/RoguelikeMap/Interaction/RestSiteNodeHandler.cs");
+        string store = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/RoguelikeMap/Interaction/StoreNodeHandler.cs");
+        string attributeChecks = ReadFrozenSource(repositoryRoot,
+            "Assets/Tactics/Scripts/RoguelikeMap/Events/AttributeCheckSystem.cs");
+        using JsonDocument golden = JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(repositoryRoot, "Tests", "golden", "layer4-map-nodes-v1.json")));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(mapGenerator, Does.Contain("public const int PureRunLayerCount = 7"));
+            Assert.That(mapGenerator, Does.Contain("CreateCompetitionLayer(config, 4"));
+            Assert.That(encounter, Does.Contain("split_flank"));
+            Assert.That(transactions, Does.Contain("TryApplyOnce"));
+            Assert.That(rest, Does.Contain("0.3f"));
+            Assert.That(store, Does.Contain("ShopManager"));
+            Assert.That(attributeChecks, Does.Contain("if (rate < 5) return 5"));
+            Assert.That(attributeChecks, Does.Contain("if (rate > 95) return 95"));
+        });
+
+        JsonElement root = golden.RootElement;
+        Assert.That(root.GetProperty("map").GetProperty("layer4Choices").GetArrayLength(), Is.EqualTo(4));
+        Assert.That(root.GetProperty("encounter").GetProperty("monsters").GetArrayLength(), Is.EqualTo(4));
+        Assert.That(root.GetProperty("events").GetProperty("count").GetInt32(), Is.EqualTo(3));
+        Assert.That(root.GetProperty("canonicalCatalogTarget").GetInt32(), Is.EqualTo(108));
     }
 
     [Test]

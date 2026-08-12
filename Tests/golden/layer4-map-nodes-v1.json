@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-layer4-map-nodes-v1",
+  "map": {
+    "contentId": "run-map.pure-run.layer4-v1",
+    "layoutVersion": 2,
+    "layer4Choices": ["battle", "rest", "store", "mystery"]
+  },
+  "encounter": {
+    "contentId": "encounter.pure-run.n4",
+    "layout": "battle-layout.pure-run.split-flank",
+    "monsters": ["ranged", "ranged", "aoe", "charger"]
+  },
+  "rest": {"healPercent": 30, "manaPercent": 30},
+  "events": {
+    "count": 3,
+    "attributeSuccessFormula": "clamp(base + (attribute - 5) * 5, 5, 95)"
+  },
+  "excluded": ["N5", "N6", "E1", "E2", "Special", "Treasure", "Lv3"],
+  "canonicalCatalogTarget": 108
+}

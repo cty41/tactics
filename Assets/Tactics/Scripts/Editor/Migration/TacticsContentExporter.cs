@@ -43,6 +43,9 @@ namespace Tactics.Editor.Migration
         private const string PureRunInventoryProgressionSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-inventory-progression-v1.json";
 
+        private const string PureRunLayer4MapNodesSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-layer4-map-nodes-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -145,6 +148,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPureRunInventoryProgressionBatchFromCommandLine()
         {
             ExportPureRunInventoryProgressionBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run Layer 4 Map and Nodes V1")]
+        public static void ExportPureRunLayer4MapNodesBatch()
+        {
+            string outputPath = Export(PureRunLayer4MapNodesSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run Layer 4 Map and Nodes V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunLayer4MapNodesBatchFromCommandLine()
+        {
+            ExportPureRunLayer4MapNodesBatch();
         }
 
         public static string Export(string relativeSpecPath)
