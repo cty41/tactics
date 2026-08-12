@@ -24,7 +24,7 @@ public class BuffItemBatchGodotTests
 
         BuffItemBatchValidation validation = BuffItemBatchValidator.Validate(batchCatalog, globalCatalog);
         AssertThat(validation.BatchCatalogEntryCount).IsEqual(29);
-        AssertThat(validation.GlobalCatalogEntryCount).IsEqual(108);
+        AssertThat(validation.GlobalCatalogEntryCount).IsEqual(114);
         AssertThat(validation.StatusCount).IsEqual(14);
         AssertThat(validation.ConsumableCount).IsEqual(3);
         AssertThat(validation.EquipmentCount).IsEqual(12);
@@ -101,8 +101,8 @@ public class BuffItemBatchGodotTests
             return;
 
         catalog.Validate();
-        AssertThat(catalog.Entries.Length).IsEqual(108);
-        AssertThat(catalog.Entries.Select(entry => entry.ContentIdValue).Distinct().Count()).IsEqual(108);
+        AssertThat(catalog.Entries.Length).IsEqual(114);
+        AssertThat(catalog.Entries.Select(entry => entry.ContentIdValue).Distinct().Count()).IsEqual(114);
         AssertThat(catalog.Entries.All(entry => ResourceUid.HasId(
             ResourceUid.TextToId(entry.ResourceUidValue)))).IsTrue();
     }

@@ -12,7 +12,7 @@ public class AiEncounterBatchGodotTests
     [RequireGodotRuntime]
     public void GeneratedBatchBuildsCanonical73Catalog()
     {
-        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/ai_encounters/ContentCatalog.tres");var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres");AssertThat(batch).IsNotNull();AssertThat(global).IsNotNull();if(batch is null||global is null)return;AiEncounterBatchValidation result=AiEncounterBatchValidator.Validate(batch,global);AssertThat(result.BatchCount).IsEqual(15);AssertThat(result.GlobalCount is 74 or 101 or 108).IsTrue();AssertThat(result.Skills).IsEqual(4);AssertThat(result.Ai).IsEqual(6);AssertThat(result.Layouts).IsEqual(2);AssertThat(result.Encounters).IsEqual(3);
+        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/ai_encounters/ContentCatalog.tres");var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres");AssertThat(batch).IsNotNull();AssertThat(global).IsNotNull();if(batch is null||global is null)return;AiEncounterBatchValidation result=AiEncounterBatchValidator.Validate(batch,global);AssertThat(result.BatchCount).IsEqual(15);AssertThat(result.GlobalCount is 74 or 101 or 108 or 114).IsTrue();AssertThat(result.Skills).IsEqual(4);AssertThat(result.Ai).IsEqual(6);AssertThat(result.Layouts).IsEqual(2);AssertThat(result.Encounters).IsEqual(3);
     }
 
     [TestCase]

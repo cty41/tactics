@@ -90,7 +90,8 @@ public sealed class PureRunSessionService
             PureRunPhase.Ready => new RunSessionResult(true, null, loaded.Snapshot, null, Diagnostics: diagnostics),
             PureRunPhase.PendingBattle when run.Checkpoint is not null =>
                 new RunSessionResult(true, null, loaded.Snapshot, CreateRequest(run), Diagnostics: diagnostics),
-            PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.ResolvingLayerFourNode or PureRunPhase.ReadyForLayerFive =>
+            PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.ResolvingLayerFourNode or PureRunPhase.ReadyForLayerFive or
+            PureRunPhase.ReadyForLayerSix or PureRunPhase.AwaitingLayerSixChoice or PureRunPhase.ResolvingLayerSixNode or PureRunPhase.ReadyForBoss =>
                 new RunSessionResult(true, null, loaded.Snapshot, null, Diagnostics: diagnostics),
             _ => Fail("run.not_resumable", loaded.Snapshot)
         };
@@ -177,6 +178,21 @@ public sealed class PureRunSessionService
             ? new PureRunSaveSnapshot(result.State.Revision, null, _settlement.DefeatOutsideBattle(result.State))
             : new PureRunSaveSnapshot(result.State.Revision, result.State, loaded.Snapshot.TerminalSummary);
         return Save(snapshot, run.Revision) with { Diagnostics = diagnostics };
+    }
+
+    public RunSessionResult ApplyFullRunTransition(Func<PureRunState, FullRunTransitionResult> transition)
+    {
+        ArgumentNullException.ThrowIfNull(transition);
+        RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
+            return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
+        FullRunTransitionResult result = transition(run);
+        if (!result.Succeeded) return Fail(result.RejectionCode, loaded.Snapshot);
+        PureRunSaveSnapshot snapshot = result.TerminalSummary is null
+            ? new PureRunSaveSnapshot(result.State.Revision, result.State, loaded.Snapshot.TerminalSummary)
+            : new PureRunSaveSnapshot(result.State.Revision, null, result.TerminalSummary);
+        RunSessionResult saved = Save(snapshot, run.Revision);
+        return saved with { EncounterRequest = result.EncounterRequest, WasDuplicate = result.WasDuplicate, Diagnostics = diagnostics };
     }
 
     private RunSessionResult Save(PureRunSaveSnapshot snapshot, long expectedRevision)

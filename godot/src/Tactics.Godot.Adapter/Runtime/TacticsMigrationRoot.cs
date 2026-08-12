@@ -61,7 +61,7 @@ public partial class TacticsMigrationRoot : Node
             AddChild(playable);
             if (!playable.IsReadyForInput)
                 throw new InvalidOperationException("Playable Run UI failed its startup contract.");
-            GD.Print("Playable Run UI validation OK: canvas=1600x900, catalog=108, home=ready");
+            GD.Print("Playable Run UI validation OK: canvas=1600x900, catalog=114, home=ready");
             GetTree().Quit();
             return;
         }

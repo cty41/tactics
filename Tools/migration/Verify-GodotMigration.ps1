@@ -452,6 +452,23 @@ try {
         }
     }
 
+    $fullRunExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-full-seven-layer-v1.unity.json'
+    if (Test-Path -LiteralPath $fullRunExport -PathType Leaf) {
+        Invoke-Checked 'Compile Pure Run full seven-layer typed draft' {
+            python -m Tools.migration.full_run_converter --export $fullRunExport --specification (Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-full-seven-layer-v1.json') --output (Join-Path $repoRoot 'Tools\migration\out\pure-run-full-seven-layer-v1.draft.json')
+        }
+        Invoke-Checked 'Generate Pure Run full seven-layer resources first pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/FullRunAssetBuilder.cs'
+        }
+        $fullRunCatalogHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash
+        Invoke-Checked 'Generate Pure Run full seven-layer resources second pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/FullRunAssetBuilder.cs'
+        }
+        if ($fullRunCatalogHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash) {
+            throw 'Pure Run full seven-layer Catalog generation is not byte-idempotent.'
+        }
+    }
+
     $uiExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.unity.json'
     $uiDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.draft.json'
     if (Test-Path -LiteralPath $uiExport -PathType Leaf) {

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-12T15:35:49+08:00"
+timestamp: "2026-08-12T16:33:29+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:b6a63fa5f696cf746417b04c477b31c630f9acb013a8a126dd033c5b7914f905
+source_fingerprint: sha256:5a6dba49656607fd8b36121e8ea4cb0df03f29ee67d50af10cf18ed74eb69925
 ---
 
 # Current state
@@ -73,6 +73,8 @@ Phase 7B 已完成自动实现 checkpoint，等待 Inventory/成长人工闸门�
 
 Phase 7C 自动实现 checkpoint 已完成，等待与 Phase 7B 合并人工闸门。Unity 七层图合同只授权到 Layer 4：N1→N3 胜利且成长消费后进入 battle/rest/store/mystery 四选一，选择后锁定其余路线；节点以可恢复的 Selected/Pending/Resolved/Committed 生命周期执行，完成后停在 `ReadyForLayerFive`，N5/N6/Elite/Boss 与 Lv3 后移。N4 使用标准 BattleResult 校验、队伍同步、恢复、奖励、掉落和失败摘要；Rest 原子恢复存活角色 30% HP/MP；Store 保存固定 3 件库存、稳定实例与购买状态；Mystery 保存角色、成功率、roll、结果及待带入下一战的状态。Save V3 可读 V1/V2 并保存全部 Layer 4 事务；Godot 页面只提交 Application intent。ResourceSaver 生成 7 个 Resource，canonical Catalog 保持 108 项；batch 为 `Generated/UnityOwned + manual_inventory_progression_and_layer4_qa_pending`。
 
+Phase 7D 自动实现 checkpoint 已完成，等待与 Phase 7B/7C 合并人工闸门。冻结合同覆盖 N5/N6/E1/E2/Special、Elite/Special 倍率与七层终局；正式 Run 从 Layer 4 继续进入稳定选择的 Layer 5 Elite、Layer 6 battle/rest/store/mystery 四选一和 Layer 7 Special Boss。所有战斗继续复用统一 BattleResult 校验、恢复、奖励、掉落与幂等事务；Elite 使用 1.3 HP/1.15 output，Special 使用 1.8 HP/1.25 output，Boss 胜利产生 `BossVictory` 而不追加 Lv3 成长。Save V4 可读 V1–V3 并保存晚期 checkpoint、节点状态和 Boss summary。ResourceSaver 新增 5 个 Encounter 和 `special-open` Layout，canonical Catalog 为 114；N5/N6 只冻结与生成诊断内容，不进入正式地图。batch 保持 `Generated/UnityOwned + manual_inventory_progression_full_run_qa_pending`。
+
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 
 Pure Run schema 仍为 v1，但 `UnitAttributes` 现在由显式 JSON converter 稳定读写六项字段。已存在的固定三人全零属性存档在身份匹配时从 Run Definition 修复，并在下一次合法事务写回；部分损坏或身份不匹配拒绝。胜利结算对本场阵亡角色也应用 `Constitution×2` HP 与 `Charisma` MP 恢复，恢复后可进入下一场，死亡卸装仍保留；失败不复活。Battle/Settlement 明示 N1/N2/N3，只有结算 Continue 可开始下一场，并以一次性提交与导航日志阻止旧 Timer、重复 BattleResult 或双击创建重复战斗。
@@ -89,6 +91,6 @@ Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-tra
 
 1. Phase 4 Unit 与 Phase 5A Buff/Item 均已完成并删除各自 active plan；结果由代码、设计、manifest、测试、OKF 与 Git 历史保存。
 2. 项目 MCP Profile 已按 Phase 7A 切换为 `ui-input`，统一入口校验 27 个阶段白名单工具。
-3. Phase 6B 已关闭；Phase 6A 自动 parity 已按完整图合同重验，Phase 7A active plan 等待收口 UI/Input 人工复验。完整 Presentation/VFX/Audio 仍属于 Phase 8。
+3. Phase 6B 已关闭；Phase 6A 自动 parity 已按完整图合同重验。Phase 7B–7D 的自动实现和统一门禁已完成，下一闸门是 Inventory/成长、Layer 4、Elite、Layer 6 与 Boss 的合并人工复验。完整 Presentation/VFX/Audio 仍属于 Phase 8。
 
 Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行，Godot Windows Release/PCK Smoke 延后到发布阶段。
