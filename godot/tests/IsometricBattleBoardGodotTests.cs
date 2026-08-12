@@ -85,6 +85,19 @@ public sealed class IsometricBattleBoardGodotTests
     }
 
     [TestCase]
+    public void ProgrammaticFxIsHiddenUntilItsReleaseCallback()
+    {
+        string source=File.ReadAllText(Path.Combine("src","Tactics.Godot.Adapter","Runtime",
+            "GodotBattlePresentationPlayer.cs"));
+        int hidden=source.IndexOf("Visible=false",StringComparison.Ordinal);
+        int release=source.IndexOf("fx.Visible=true",StringComparison.Ordinal);
+        int travel=source.IndexOf("\"Progress\",1f",StringComparison.Ordinal);
+        AssertThat(hidden).IsGreaterEqual(0);
+        AssertThat(release).IsGreater(hidden);
+        AssertThat(travel).IsGreater(release);
+    }
+
+    [TestCase]
     public void BaseTilesAlternateWarmAndCoolProjectPalette()
     {
         Color first = GodotIsometricBattleBoard.BaseTileColor(new GridPoint(0, 0), false);

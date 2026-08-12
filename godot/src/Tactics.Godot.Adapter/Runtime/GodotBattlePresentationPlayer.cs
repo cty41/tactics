@@ -137,9 +137,10 @@ public partial class GodotBattlePresentationPlayer : Node
             .Select(effect=>cue.AffectedUnitIds.Contains(effect.TargetId!.Value)?effect.TargetId:null).Where(id=>id is not null)
             .Select(id=>cue.TargetId==id?cue.Destination:cue.Destination).Distinct().Select(IsometricBattleBoardLayout.GridToScreen).ToArray();
         if(impacts.Length==0)impacts=cue.AffectedUnitIds.Count>0?[IsometricBattleBoardLayout.GridToScreen(cue.Destination)]:[];
-        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,Start=IsometricBattleBoardLayout.GridToScreen(cue.Origin),End=IsometricBattleBoardLayout.GridToScreen(end),Impacts=impacts,Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900};
+        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,Start=IsometricBattleBoardLayout.GridToScreen(cue.Origin),End=IsometricBattleBoardLayout.GridToScreen(end),Impacts=impacts,Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900,Visible=false};
         _transientNodes.Add(fx);
         GetParent().AddChild(fx);
+        tween.TweenCallback(Callable.From(()=>{if(GodotObject.IsInstanceValid(fx))fx.Visible=true;}));
         tween.TweenProperty(fx,"Progress",1f,profile.TravelDuration).SetTrans(Tween.TransitionType.Quad);
         tween.TweenInterval(profile.ImpactDuration);
         tween.TweenCallback(Callable.From(() => { _transientNodes.Remove(fx); if (GodotObject.IsInstanceValid(fx)) fx.QueueFree(); }));

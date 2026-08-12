@@ -34,7 +34,9 @@ public sealed class RunInventoryProgressionTests
         UnitAttributes attributes = state.Party[0].Attributes;
         var raised = new UnitAttributes(attributes.Strength, attributes.Agility, attributes.Constitution,
             attributes.Intelligence + 1, attributes.Charisma, attributes.Luck);
-        RunMutationResult result = new RunInventoryProgressionService().CompleteProgression(state, state.Revision,
+        var service = new RunInventoryProgressionService();
+        RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
+        RunMutationResult result = service.CompleteProgression(allocated.State, allocated.State.Revision,
             "progression:n1", raised, levelTwo.ContentId, new Dictionary<ContentId, SkillDefinition> { [levelTwo.ContentId] = levelTwo });
         Assert.Multiple(() =>
         {
@@ -101,8 +103,10 @@ public sealed class RunInventoryProgressionTests
         SkillDefinition candidate = service.GrowthCandidates(mage, skills).Single();
         Assert.That(service.CanUnlockWithAttributePoints(mage, candidate, 1), Is.True);
         UnitAttributes a = mage.Attributes;
-        RunMutationResult result = service.CompleteProgression(state, state.Revision, "progression:n1",
-            new UnitAttributes(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck), candidate.ContentId, skills);
+        UnitAttributes raised = new(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck);
+        RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
+        RunMutationResult result = service.CompleteProgression(allocated.State, allocated.State.Revision, "progression:n1",
+            raised, candidate.ContentId, skills);
         Assert.Multiple(() => { Assert.That(result.Succeeded, Is.True); Assert.That(result.State.PendingProgression, Is.Empty); });
     }
 
@@ -111,8 +115,11 @@ public sealed class RunInventoryProgressionTests
     {
         PureRunState state = State(withProgression: true, frozenCharacterIds: true);
         RunCharacterState mage = state.Party[0]; UnitAttributes a = mage.Attributes;
-        RunMutationResult result = new RunInventoryProgressionService().CompleteProgression(state, state.Revision,
-            "progression:n1", new UnitAttributes(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck), null,
+        var service = new RunInventoryProgressionService();
+        UnitAttributes raised = new(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck);
+        RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
+        RunMutationResult result = service.CompleteProgression(allocated.State, allocated.State.Revision,
+            "progression:n1", raised, null,
             new Dictionary<ContentId, SkillDefinition>());
         Assert.Multiple(() => { Assert.That(result.Succeeded, Is.True); Assert.That(result.State.Party[0].Level, Is.EqualTo(2)); });
     }
@@ -137,13 +144,28 @@ public sealed class RunInventoryProgressionTests
         };
         var service = new RunInventoryProgressionService();
 
-        RunMutationResult skipped = service.CompleteProgression(state, state.Revision,
+        RunMutationResult allocated = service.AllocateProgressionAttributes(state, state.Revision, "progression:n1", raised);
+        RunMutationResult skipped = service.CompleteProgression(allocated.State, allocated.State.Revision,
             "progression:n1", raised, null, skills);
-        RunMutationResult crossRole = service.CompleteProgression(state, state.Revision,
+        RunMutationResult crossRole = service.CompleteProgression(allocated.State, allocated.State.Revision,
             "progression:n1", raised, amazonSkill.ContentId, skills);
 
         Assert.That(skipped.RejectionCode, Is.EqualTo("progression.skill_required"));
         Assert.That(crossRole.RejectionCode, Is.EqualTo("progression.invalid_skill"));
+    }
+
+    [Test]
+    public void ProgressionCannotBypassPersistedAttributeAllocation()
+    {
+        PureRunState state = State(withProgression: true, frozenCharacterIds: true);
+        UnitAttributes a = state.Party[0].Attributes;
+        UnitAttributes raised = new(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck);
+
+        RunMutationResult result = new RunInventoryProgressionService().CompleteProgression(
+            state, state.Revision, "progression:n1", raised, null, new Dictionary<ContentId, SkillDefinition>());
+
+        Assert.That(result.RejectionCode, Is.EqualTo("progression.attributes_not_allocated"));
+        Assert.That(result.State, Is.SameAs(state));
     }
 
     private static PureRunState State(bool withProgression = false, bool frozenCharacterIds = false)

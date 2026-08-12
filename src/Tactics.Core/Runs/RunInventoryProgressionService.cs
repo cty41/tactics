@@ -96,7 +96,9 @@ public sealed class RunInventoryProgressionService
         PendingProgression? pending = state.PendingProgression.FirstOrDefault(value => value.TransactionKey == transactionKey);
         if (pending is null) return Reject(state, "progression.not_found");
         RunCharacterState character = state.Party.Single(value => value.CharacterId == pending.CharacterId);
-        if (pending.ProposedAttributes is UnitAttributes proposed && proposed != attributes)
+        if (pending.ProposedAttributes is not UnitAttributes proposed)
+            return Reject(state, "progression.attributes_not_allocated");
+        if (proposed != attributes)
             return Reject(state, "progression.attributes_not_allocated");
         int spent = AttributeTotal(attributes) - AttributeTotal(character.Attributes);
         if (spent != pending.AttributePoints || AnyAttributeLower(attributes, character.Attributes)) return Reject(state, "progression.invalid_attributes");
