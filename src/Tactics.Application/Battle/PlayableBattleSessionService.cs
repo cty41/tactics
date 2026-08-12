@@ -70,7 +70,8 @@ public sealed record BattleUiSnapshot(
     IReadOnlyList<BattleEvent> RecentEvents,
     IReadOnlyList<UnitInstanceId> TurnOrder,
     int ActiveTurnIndex,
-    string? FailureCode);
+    string? FailureCode,
+    IReadOnlyCollection<GridPoint>? BlockedCells = null);
 
 public sealed record PlayableBattleSessionContext(
     BattleState InitialState,
@@ -79,7 +80,8 @@ public sealed record PlayableBattleSessionContext(
     IReadOnlyDictionary<UnitInstanceId, AiDefinition> AiByUnit,
     IReadOnlyDictionary<ContentId, SkillDefinition> SkillCatalog,
     EncounterRequest? EncounterRequest = null,
-    IReadOnlyDictionary<UnitInstanceId, string>? CharacterIds = null);
+    IReadOnlyDictionary<UnitInstanceId, string>? CharacterIds = null,
+    IReadOnlyCollection<GridPoint>? BlockedCells = null);
 
 public sealed record BattleUiIntentResult(
     bool Succeeded,
@@ -175,7 +177,8 @@ public sealed class PlayableBattleSessionService
             DeterminePhase(view), view.Round, view.ActiveUnitId, interactive?_targetingMode:BattleTargetingMode.None, interactive?_selectedSkillId:null,
             view.Units.Values.OrderBy(unit => unit.Unit.SpawnOrdinal).Select(ToSnapshot).ToArray(),
             skills, moves, targets, skillPreview, view.Corpses.ToArray(), view.DroppedSpears,
-            _recentEvents.TakeLast(100).ToArray(),view.TurnOrder.ToArray(),view.ActiveIndex, _failureCode);
+            _recentEvents.TakeLast(100).ToArray(),view.TurnOrder.ToArray(),view.ActiveIndex, _failureCode,
+            _context.BlockedCells ?? Array.Empty<GridPoint>());
     }
 
     public IReadOnlyList<GridPoint> PreviewMovePath(GridPoint destination)

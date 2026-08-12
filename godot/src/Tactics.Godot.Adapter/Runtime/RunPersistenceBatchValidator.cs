@@ -9,7 +9,7 @@ public static class RunPersistenceBatchValidator
     public static RunPersistenceBatchValidation Validate(GodotResourceCatalog batch, GodotResourceCatalog global, PackedScene fixtureScene)
     {
         batch.Validate(); global.Validate();
-        if (batch.Entries.Length != 1 || global.Entries.Length is not (74 or 101 or 108 or 114)) throw new InvalidOperationException("Pure Run catalog count is invalid.");
+        if (batch.Entries.Length != 1 || global.Entries.Length is not (74 or 101 or 108 or 114 or 115 or 116 or 119)) throw new InvalidOperationException("Pure Run catalog count is invalid.");
         if (!batch.TryGet("run.pure-run.three-encounter-v1", out Resource? resource) || resource is not PureRunDefinitionResource definition)
             throw new InvalidOperationException("Pure Run definition is missing.");
         definition.ToCoreDefinition();

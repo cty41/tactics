@@ -19,8 +19,6 @@ public partial class GodotPlayableRunMain : Control
 {
     public const int CanvasWidth = 1600;
     public const int CanvasHeight = 900;
-    private const float CellSize = 68f;
-    private static readonly Vector2 BoardOrigin = new(90, 115);
     private readonly Dictionary<ContentId, UnitDefinition> _units = new();
     private readonly Dictionary<ContentId, UnitDefinitionResource> _unitResources = new();
     private readonly Dictionary<ContentId, SkillDefinition> _skills = new();
@@ -33,14 +31,13 @@ public partial class GodotPlayableRunMain : Control
     private PlayableBattleBalanceProfile? _balance;
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
     private readonly Dictionary<UnitInstanceId, Control> _unitMeters = new();
-    private readonly Dictionary<GridPoint, Button> _cells = new();
     private readonly List<BattleUiLogEntry> _logs = new();
     private PureRunSessionService? _run;
     private PlayableBattleSessionService? _battle;
     private Control? _page;
     private Label? _status;
     private VBoxContainer? _skillPanel;
-    private Control? _board;
+    private GodotIsometricBattleBoard? _board;
     private RichTextLabel? _eventLog;
     private Label? _hoverInfo;
     private Label? _turnOrder;
@@ -215,14 +212,12 @@ public partial class GodotPlayableRunMain : Control
     {
         ContentId encounterId=_currentEncounterId??throw new InvalidOperationException("Battle encounter identity is missing.");
         Control root = NewPage($"PURE RUN BATTLE — {EncounterLabel(encounterId)}", $"{encounterId.Value}   |   Left click: select/confirm   Right click or Esc: cancel   Enter: end turn");
-        _cells.Clear();_logs.Clear();_playbackPaused=false;
-        _board = new Control { Position = BoardOrigin, Size = new Vector2(CellSize * 10, CellSize * 10) }; root.AddChild(_board);
-        for (int y = 0; y < 10; y++) for (int x = 0; x < 10; x++)
-        {
-            GridPoint cell = new(x, y);
-            var button = new Button { Position = new Vector2(x * CellSize, y * CellSize), Size = new Vector2(CellSize, CellSize), Text = $"{x},{y}", Modulate = new Color(0.75f, 0.82f, 0.86f, 0.75f) };
-            button.AddThemeFontSizeOverride("font_size", 12); button.Pressed += () => ApplyIntent(new ConfirmCellIntent(cell));button.MouseEntered+=()=>HoverCell(cell);button.MouseExited+=ClearHover; _board.AddChild(button);_cells[cell]=button;
-        }
+        _logs.Clear();_playbackPaused=false;
+        _board = new GodotIsometricBattleBoard { Position = Vector2.Zero, Size = new Vector2(1100, 900) };
+        _board.CellPressed += OnBoardCellPressed;
+        _board.CellHovered += HoverCell;
+        _board.HoverCleared += ClearHover;
+        root.AddChild(_board);
         _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
         _turnOrder=LabelAt(root,string.Empty,new Vector2(800,88),18);_turnOrder.Size=new Vector2(720,32);
         _hoverInfo=LabelAt(root,"Hover a cell",new Vector2(800,780),16);_hoverInfo.Size=new Vector2(720,80);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
@@ -251,8 +246,10 @@ public partial class GodotPlayableRunMain : Control
         foreach (BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive||snapshot.Corpses.Contains(unit.Cell)))
         {
             GodotUnitActor actor = GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);
-            actor.Position = new Vector2((unit.Cell.X + .5f) * CellSize, (unit.Cell.Y + .72f) * CellSize);
-            actor.Scale = Vector2.One * .34f; actor.SetDeathVisual(!unit.IsAlive); _board.AddChild(actor); _actors[unit.UnitId] = actor;
+            actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
+            actor.Scale = Vector2.One * .34f; actor.SetDeathVisual(!unit.IsAlive);
+            actor.ZIndex = 100 + (unit.Cell.X + unit.Cell.Y) * 12 + unit.Cell.X;
+            _board.AddChild(actor); _actors[unit.UnitId] = actor;
             Control meter=CreateUnitMeters(unit);_board.AddChild(meter);_unitMeters[unit.UnitId]=meter;
         }
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
@@ -278,7 +275,8 @@ public partial class GodotPlayableRunMain : Control
 
     private static Control CreateUnitMeters(BattleUiUnitSnapshot unit)
     {
-        var root=new Control{Position=new Vector2((unit.Cell.X+.5f)*CellSize-42,(unit.Cell.Y+.14f)*CellSize),Size=new Vector2(84,34),ZIndex=20,MouseFilter=MouseFilterEnum.Ignore};
+        Vector2 foot=IsometricBattleBoardLayout.GridToScreen(unit.Cell);
+        var root=new Control{Position=foot+new Vector2(-42,-76),Size=new Vector2(84,34),ZIndex=400+(unit.Cell.X+unit.Cell.Y)*12+unit.Cell.X,MouseFilter=MouseFilterEnum.Ignore};
         var hp=new ProgressBar{Position=Vector2.Zero,Size=new Vector2(84,15),MinValue=0,MaxValue=unit.MaxHealth,Value=unit.CurrentHealth,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};hp.Modulate=new Color(.35f,1f,.4f);root.AddChild(hp);
         var hpText=Label($"HP {unit.CurrentHealth}/{unit.MaxHealth}",11);hpText.Position=new Vector2(3,-2);hpText.MouseFilter=MouseFilterEnum.Ignore;root.AddChild(hpText);
         var mp=new ProgressBar{Position=new Vector2(0,17),Size=new Vector2(84,15),MinValue=0,MaxValue=Math.Max(1,unit.MaxMana),Value=unit.CurrentMana,ShowPercentage=false,MouseFilter=MouseFilterEnum.Ignore};mp.Modulate=new Color(.35f,.65f,1f);root.AddChild(mp);
@@ -289,7 +287,7 @@ public partial class GodotPlayableRunMain : Control
     private void ApplyHighlights(BattleUiSnapshot snapshot)
     {
         var colors=new Dictionary<GridPoint,Color>();
-        foreach(GridPoint cell in _cells.Keys)colors[cell]=new Color(.75f,.82f,.86f,.75f);
+        for(int y=0;y<IsometricBattleBoardLayout.GridSize;y++)for(int x=0;x<IsometricBattleBoardLayout.GridSize;x++)colors[new GridPoint(x,y)]=new Color(.32f,.42f,.47f,.18f);
         foreach(BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive))
             colors[unit.Cell]=unit.UnitId==snapshot.ActiveUnitId?new Color(.95f,.66f,.24f,.75f):unit.PlayerNumber==0?new Color(.34f,.52f,.62f,.6f):colors[unit.Cell];
         foreach(BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive&&unit.HasMovedThisTurn&&unit.UnitId!=snapshot.ActiveUnitId))colors[unit.Cell]=new Color(.36f,.42f,.48f,.55f);
@@ -318,8 +316,10 @@ public partial class GodotPlayableRunMain : Control
             }
             colors[hovered]=colors[hovered].Lightened(.22f);
         }
-        foreach((GridPoint cell,Button button) in _cells)button.Modulate=colors[cell];
+        _board?.SetVisuals(colors,snapshot.BlockedCells??Array.Empty<GridPoint>());
     }
+
+    private void OnBoardCellPressed(GridPoint cell)=>ApplyIntent(new ConfirmCellIntent(cell));
 
     private void HoverCell(GridPoint cell)
     {

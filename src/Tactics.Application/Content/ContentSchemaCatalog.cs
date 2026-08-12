@@ -35,6 +35,7 @@ public sealed class ContentSchemaCatalog
     {
         new ContentSchemaDefinition("ai-profile", 1, 1),
         new ContentSchemaDefinition("ai", 1, 1),
+        new ContentSchemaDefinition("battle-board", 1, 1),
         new ContentSchemaDefinition("battle-layout", 1, 1),
         new ContentSchemaDefinition("buff", 1, 1),
         new ContentSchemaDefinition("encounter", 1, 1),

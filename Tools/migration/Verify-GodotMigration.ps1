@@ -469,6 +469,19 @@ try {
         }
     }
 
+    Invoke-Checked 'Generate isometric battle board resource first pass' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/IsometricPresentationAssetBuilder.cs'
+    }
+    $isometricCatalogHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash
+    $isometricBoardHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\presentation\BattleBoardPureRunIsometricV1.tres') -Algorithm SHA256).Hash
+    Invoke-Checked 'Generate isometric battle board resource second pass' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/IsometricPresentationAssetBuilder.cs'
+    }
+    if ($isometricCatalogHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash -or
+        $isometricBoardHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\presentation\BattleBoardPureRunIsometricV1.tres') -Algorithm SHA256).Hash) {
+        throw 'Isometric battle board generation is not byte-idempotent.'
+    }
+
     $uiExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.unity.json'
     $uiDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.draft.json'
     if (Test-Path -LiteralPath $uiExport -PathType Leaf) {

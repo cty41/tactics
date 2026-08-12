@@ -87,7 +87,7 @@ public sealed class PlayableBattleSessionFactory
         var battle = new BattleState(new BoardSnapshot(cells), states, order,
             randomState: unchecked((ulong)request.CheckpointRevision));
         return new PlayableBattleSessionService(new PlayableBattleSessionContext(
-            battle, 0, skillsByUnit, aiByUnit, playableSkills, request, characterIds));
+            battle, 0, skillsByUnit, aiByUnit, playableSkills, request, characterIds, layout.BlockedCells));
     }
 
     private static BattleUnitState CreatePartyState(

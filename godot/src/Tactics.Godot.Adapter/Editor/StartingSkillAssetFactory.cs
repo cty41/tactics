@@ -55,8 +55,8 @@ public static class StartingSkillAssetFactory
             .ToDictionary(item => item.ContentIdValue, Copy, StringComparer.Ordinal);
         foreach (GodotResourceEntry entry in batch.Entries.Where(item => item.ContentIdValue != "skill.poison-spear.lv1")) entries.Add(entry.ContentIdValue, Copy(entry));
         var global = new GodotResourceCatalog { Entries = entries.Values.OrderBy(item => item.ContentIdValue, StringComparer.Ordinal).ToArray() };
-        if (global.Entries.Length is not 58 and not 74 and not 101)
-            throw new InvalidOperationException($"Canonical Catalog must contain the Phase 5B 58-entry baseline or current 74-entry aggregate, got {global.Entries.Length}.");
+        if (global.Entries.Length is not (58 or 74 or 101 or 108 or 114 or 115 or 116 or 119))
+            throw new InvalidOperationException($"Canonical Catalog count is invalid: {global.Entries.Length}.");
         Save(global, GlobalCatalogPath);
         global.Validate();
 

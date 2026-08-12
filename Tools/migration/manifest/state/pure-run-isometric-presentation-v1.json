@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-isometric-presentation-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "visualAcceptance": "manual_isometric_and_presentation_qa_pending",
+  "catalogCount": 115,
+  "sourceAudit": [
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Cells/TilemapCellGeometry.cs",
+      "gitBlobSha1": "fffcbff3278cb8973926cb70d7b3c4decb253bbd"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/BattleBoardCameraFitter.cs",
+      "gitBlobSha1": "910847d0088086a8c9b5ff1addf4df2649484935"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Cells/ProceduralTileHighlightRenderer.cs",
+      "gitBlobSha1": "55edd6bea0a2baea0f95cce8a204bd0f978e2708"
+    }
+  ],
+  "artifacts": [
+    {
+      "resourcePath": "res://content/presentation/BattleBoardPureRunIsometricV1.tres",
+      "resourceUid": "uid://da68ywjslhm5i",
+      "targetHash": "sha256:298ccf33f315de9c051d12a6d2f148322d8e823b3feb87b080c017ab17017943"
+    }
+  ]
+}

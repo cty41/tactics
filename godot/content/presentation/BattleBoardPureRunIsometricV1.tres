@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="IsometricBattleBoardResource" format=3 uid="uid://da68ywjslhm5i"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/IsometricBattleBoardResource.cs" id="1_cnyne"]
+
+[resource]
+script = ExtResource("1_cnyne")

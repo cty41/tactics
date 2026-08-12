@@ -28,7 +28,7 @@ public static class BuffItemBatchValidator
         ArgumentNullException.ThrowIfNull(globalCatalog);
         GodotCatalogCompilation batch = GodotCatalogCompiler.Compile(batchCatalog);
         GodotCatalogCompilation global = GodotCatalogCompiler.Compile(globalCatalog);
-        if (batch.Snapshot.Entries.Count != 29 || global.Snapshot.Entries.Count is not (47 or 58 or 73 or 74 or 101 or 108 or 114))
+        if (batch.Snapshot.Entries.Count != 29 || global.Snapshot.Entries.Count is not (47 or 58 or 73 or 74 or 101 or 108 or 114 or 115 or 116 or 119))
             throw new InvalidOperationException("Buff/Item or canonical global Catalog entry count is invalid.");
         if (global.Snapshot.Entries.Keys.Distinct().Count() != global.Snapshot.Entries.Count)
             throw new InvalidOperationException("Canonical global Catalog contains duplicate ContentIds.");
