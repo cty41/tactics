@@ -49,6 +49,7 @@ public sealed record PureRunDefinition
 }
 
 public sealed record RunEquipmentState(ItemInstanceId InstanceId, ContentId DefinitionId, EquipmentSlot Slot);
+public sealed record RunLearnedSkillState(string BranchId, int Level, ContentId DefinitionId);
 
 public sealed record RunCharacterState
 {
@@ -64,7 +65,8 @@ public sealed record RunCharacterState
         bool isDead,
         IReadOnlyList<ContentId> learnedSkills,
         IReadOnlyList<RunEquipmentState>? equipment = null,
-        IReadOnlyList<BattleConsumableState>? carriedConsumables = null)
+        IReadOnlyList<BattleConsumableState>? carriedConsumables = null,
+        IReadOnlyList<RunLearnedSkillState>? learnedSkillStates = null)
     {
         if (string.IsNullOrWhiteSpace(characterId))
             throw new ArgumentException("Character ID cannot be empty.", nameof(characterId));
@@ -85,6 +87,10 @@ public sealed record RunCharacterState
         IsDead = isDead;
         LearnedSkills = learnedSkills?.Distinct().OrderBy(value => value.Value, StringComparer.Ordinal).ToArray()
             ?? throw new ArgumentNullException(nameof(learnedSkills));
+        LearnedSkillStates = (learnedSkillStates ?? LearnedSkills.Select(ToLegacySkillState))
+            .GroupBy(value => value.BranchId, StringComparer.Ordinal)
+            .Select(group => group.OrderByDescending(value => value.Level).First())
+            .OrderBy(value => value.BranchId, StringComparer.Ordinal).ToArray();
         Equipment = equipment?.OrderBy(value => value.Slot).ToArray() ?? Array.Empty<RunEquipmentState>();
         CarriedConsumables = carriedConsumables?.OrderBy(value => value.InstanceId.Value, StringComparer.Ordinal).ToArray()
             ?? Array.Empty<BattleConsumableState>();
@@ -100,11 +106,28 @@ public sealed record RunCharacterState
     public int MaxMana { get; }
     public bool IsDead { get; }
     public IReadOnlyList<ContentId> LearnedSkills { get; }
+    public IReadOnlyList<RunLearnedSkillState> LearnedSkillStates { get; }
     public IReadOnlyList<RunEquipmentState> Equipment { get; }
     public IReadOnlyList<BattleConsumableState> CarriedConsumables { get; }
+
+    private static RunLearnedSkillState ToLegacySkillState(ContentId id)
+    {
+        string value = id.Value;
+        int marker = value.LastIndexOf(".lv", StringComparison.Ordinal);
+        int level = marker >= 0 && int.TryParse(value[(marker + 3)..], out int parsed) ? parsed : 1;
+        string branch = marker >= 0 ? value["skill.".Length..marker] : value.StartsWith("skill.", StringComparison.Ordinal) ? value["skill.".Length..] : value;
+        return new RunLearnedSkillState(branch, level, id);
+    }
 }
 
-public sealed record PendingProgression(string TransactionKey, string EncounterId, string CharacterId);
+public sealed record PendingProgression(
+    string TransactionKey,
+    string EncounterId,
+    string CharacterId,
+    int AttributePoints = 1,
+    UnitAttributes? ProposedAttributes = null,
+    ContentId? SelectedSkillContentId = null,
+    bool LevelApplied = false);
 
 public sealed record PureRunSummary(
     string RunId,
