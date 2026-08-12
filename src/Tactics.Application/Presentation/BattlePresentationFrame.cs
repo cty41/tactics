@@ -72,6 +72,16 @@ public static class BattlePresentationFrameCompiler
                     break;
             }
         }
+        var affectedBySkill = events.OfType<DamageAppliedEvent>()
+            .GroupBy(value => (value.SourceId, value.SkillId))
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<UnitInstanceId>)group.Select(value => value.TargetId).Distinct().ToArray());
+        for (int index = 0; index < cues.Count; index++)
+        {
+            BattlePresentationCue cue = cues[index];
+            if (cue.SkillId is not ContentId skillId || cue.Kind is not (PresentationCueKind.Melee or PresentationCueKind.Ranged or PresentationCueKind.Cast)) continue;
+            IReadOnlyList<UnitInstanceId> affected = affectedBySkill.GetValueOrDefault((cue.ActorId, skillId), cue.AffectedUnitIds);
+            cues[index] = cue with { Path = Ray(cue.Origin, cue.Destination), AffectedUnitIds = affected };
+        }
         return new BattlePresentationFrame(stage, before, after, cues);
     }
 
@@ -89,4 +99,13 @@ public static class BattlePresentationFrameCompiler
 
     private static BattleUiUnitSnapshot Find(BattleUiSnapshot before, BattleUiSnapshot after, UnitInstanceId id) =>
         before.Units.Concat(after.Units).First(value => value.UnitId == id);
+
+    private static IReadOnlyList<GridPoint> Ray(GridPoint origin, GridPoint target)
+    {
+        int dx=target.X-origin.X,dy=target.Y-origin.Y,steps=GreatestCommonDivisor(Math.Abs(dx),Math.Abs(dy));
+        if(steps==0)return [];
+        int sx=dx/steps,sy=dy/steps;
+        return Enumerable.Range(1,steps).Select(index=>new GridPoint(origin.X+sx*index,origin.Y+sy*index)).ToArray();
+    }
+    private static int GreatestCommonDivisor(int left,int right){while(right!=0)(left,right)=(right,left%right);return left;}
 }

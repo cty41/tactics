@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillPresentationResource" format=3 uid="uid://bk11eqwwlgi5d"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillPresentationResource.cs" id="1_i0sa1"]
+
+[resource]
+script = ExtResource("1_i0sa1")
+ContentIdValue = "presentation.skill.amazon.thrust"
+SkillBranch = "amazon.thrust"
+ProgrammaticKind = "thrust"
+PrimaryColor = Color(1, 0.88, 0.3, 1)
+SecondaryColor = Color(1, 0.55, 0.12, 1)

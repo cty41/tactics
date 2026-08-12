@@ -10,9 +10,15 @@ public partial class GodotBattlePresentationPlayer : Node
     private readonly List<Tween> _activeTweens = new();
     private StandardUnitPresentationResource _profile = new();
     private float _speed = 1f;
+    private readonly Dictionary<string, SkillPresentationResource> _skillProfiles = new(StringComparer.Ordinal);
     public bool IsPlaying => _activeTweens.Any(GodotObject.IsInstanceValid);
 
     public void Configure(StandardUnitPresentationResource profile) => _profile = profile ?? throw new ArgumentNullException(nameof(profile));
+    public void ConfigureSkills(IEnumerable<SkillPresentationResource> profiles)
+    {
+        _skillProfiles.Clear();
+        foreach(SkillPresentationResource profile in profiles)_skillProfiles[profile.SkillBranch]=profile;
+    }
     public void SetSpeed(float speed) => _speed = speed is >= 1f and <= 2f ? speed : throw new ArgumentOutOfRangeException(nameof(speed));
 
     public void Play(BattlePresentationFrame frame, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
@@ -73,7 +79,24 @@ public partial class GodotBattlePresentationPlayer : Node
                 tween.TweenCallback(Callable.From(() => { if (GodotObject.IsInstanceValid(actor)) actor.QueueFree(); }));
                 break;
         }
+        if(cue.SkillId is not null)PlaySkillFx(cue);
         tween.Finished += () => _activeTweens.Remove(tween);
+    }
+
+    private void PlaySkillFx(BattlePresentationCue cue)
+    {
+        string branch=cue.SkillId!.Value.Value;
+        SkillPresentationResource? profile=branch.Contains("fireball",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.fireball"):
+            branch.Contains("bone-spear",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("necromancer.bone-spear"):
+            branch.Contains("thrust",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("amazon.thrust"):null;
+        if(profile is null)return;
+        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,Start=IsometricBattleBoardLayout.GridToScreen(cue.Origin),End=IsometricBattleBoardLayout.GridToScreen(cue.Destination),Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900};
+        GetParent().AddChild(fx);
+        Tween tween=CreateTween().SetSpeedScale(_speed);_activeTweens.Add(tween);
+        tween.TweenProperty(fx,"Progress",1f,profile.TravelDuration).SetTrans(Tween.TransitionType.Quad);
+        tween.TweenInterval(profile.ImpactDuration);
+        tween.TweenCallback(Callable.From(fx.QueueFree));
+        tween.Finished+=()=>_activeTweens.Remove(tween);
     }
 
     private static void PlayLunge(Tween tween, GodotUnitActor actor, BattlePresentationCue cue,

@@ -51,6 +51,7 @@ public partial class GodotPlayableRunMain : Control
     private bool _settlementCommitted;
     private GodotBattlePresentationPlayer? _presentationPlayer;
     private StandardUnitPresentationResource? _presentationProfile;
+    private readonly List<SkillPresentationResource> _skillPresentationProfiles=new();
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
         _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3;
@@ -112,6 +113,7 @@ public partial class GodotPlayableRunMain : Control
                         encounter.OutputMultiplier, encounter.MinimumStartingMana,
                         Enum.Parse<EncounterClass>(encounter.EncounterClassValue)); break;
                 case PureRunDefinitionResource run: runResource = run; break;
+                case SkillPresentationResource presentation: _skillPresentationProfiles.Add(presentation); break;
                 case EquipmentDefinitionResource equipment: _equipment[id] = equipment.ToCoreDefinition(); break;
                 case ConsumableDefinitionResource consumable: _consumables[id] = consumable.ToCoreDefinition(); break;
                 case PureRunLayerFourResource layerFour when layerFour.KindValue == "encounter":
@@ -224,6 +226,7 @@ public partial class GodotPlayableRunMain : Control
         root.AddChild(_board);
         _presentationPlayer = new GodotBattlePresentationPlayer();
         _presentationPlayer.Configure(_presentationProfile ?? new StandardUnitPresentationResource());
+        _presentationPlayer.ConfigureSkills(_skillPresentationProfiles);
         _board.AddChild(_presentationPlayer);
         _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
         _turnOrder=LabelAt(root,string.Empty,new Vector2(800,88),18);_turnOrder.Size=new Vector2(720,32);

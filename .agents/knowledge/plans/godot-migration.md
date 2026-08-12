@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-12T17:14:31+08:00"
+timestamp: "2026-08-12T17:23:25+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:94af899b139941cbb907e9210080ed1149fcac7c94fe8a375d9de98139e026ba
+source_fingerprint: sha256:467a38858c18c7b9c08754bc9e309324a7f01c7cbbb495bc8cf05d4fbbd168f6
 ---
 
 # Current state
@@ -78,6 +78,8 @@ Phase 7D 自动实现 checkpoint 已完成，等待与 Phase 7B/7C 合并人工�
 Phase 7E 已把 Main 的方形调试按钮网格替换为原生 1600×900 等距战场：10×10 棋盘使用 `96×48` 菱形，格心由 `(550,169)+((x-y)×48,(x+y)×24)` 投影，点击通过菱形包含测试并以距离、Y、X 稳定消歧。blocked cells 与 Move/Range/Legal/Path/AOE/Corpse/Spear/Hover 仍完全消费 Application Snapshot，不复制寻路或技能判定；单位、尸体、掉矛与 HP/MP 以格心为脚底锚点并按 `x+y`、X、稳定实例 ID 排序。ResourceSaver 新增 `battle-board.pure-run.isometric-v1`，canonical Catalog 为 115；100 个格点 round-trip、边界选择、两次生成、Compatibility/Forward+ 和统一门禁均通过，状态保持 `Generated/UnityOwned + manual_isometric_and_presentation_qa_pending`。
 
 Phase 8A 已建立 gameplay 与 timing 隔离的通用单位表现通道：Application 从 transition 前后 Snapshot 与已提交 `BattleEvent` 编译只读 cue/frame，顺序覆盖 Move、Melee/Ranged/Cast、Hit、Defeat 与 Corpse removal，且 marker 固定为 begin/release/impact/recover/complete。Godot 使用稳定 actor 实例和受生命周期管理的 Tween 队列播放路径分段、前冲/后坐、施法缩放、受击闪色和死亡切图；Shadow 与 HP/MP 不继承 Body 的局部表现。表现失败只允许清理并对齐最终 Snapshot，Pause/Step/1×/2× 不改变事件或战斗状态。`presentation.unit.standard-v1` 绑定项目自有 `StandardUnitTweenProfile` 的冻结 blob，canonical Catalog 为 116；统一门禁通过，仍等待合并人工表现验收。
+
+Phase 8B 已为 Fireball、Bone Spear 与 Thrust 建立首批 programmatic-only 技能表现：三个 Skill Presentation Resource 只保存颜色、travel/impact timing、ghost 数及明确的 `no-piloto-payload` 边界。运行时坐标、射线和受影响单位全部来自 Application cue 与真实 Damage event；Fireball Lv1 明确无 AOE，Bone Spear 不自行推导穿透，Thrust 不改变 gameplay cell。Godot 临时 Node2D 只绘制火核/尾迹/Impact 环、矛形/短尾迹和轴向枪芒/命中交叉光，页面离开或 reload 时由队列统一清理。canonical Catalog 为 119；冻结 graph/recipe blob、两次 ResourceSaver、Compatibility/Forward+ 与统一门禁均通过，状态保持 `Generated/UnityOwned + manual_isometric_and_presentation_qa_pending`。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

@@ -32,6 +32,21 @@ public sealed class BattlePresentationFrameCompilerTests
         Assert.That(before.Units.Single(value=>value.UnitId==actor).Cell,Is.EqualTo(new GridPoint(1,1)));
     }
 
+    [Test]
+    public void FireballPathAndAffectedUnitsComeOnlyFromCommittedEvents()
+    {
+        UnitInstanceId actor=new("mage"),primary=new("enemy.primary"),secondary=new("enemy.secondary");ContentId skillId=new("skill.mage.fireball.lv1");
+        BattleUiSnapshot before=Snapshot(actor,primary,new GridPoint(1,1),new GridPoint(4,1),true);
+        BattleUiSnapshot after=before with{RecentEvents=[]};
+        SkillDefinition skill=new(skillId,"mage.fireball",SkillRole.Mage,SkillKind.Active,1,5,1,5,SkillExecutionKind.Fireball,6,SkillDamageKind.Magical);
+        BattleEvent[] events=[new SkillUsedEvent(actor,primary,skillId),new DamageAppliedEvent(actor,primary,skillId,6,4)];
+        BattlePresentationFrame frame=BattlePresentationFrameCompiler.Compile("fireball",before,after,events,new Dictionary<ContentId,SkillDefinition>{{skillId,skill}});
+        BattlePresentationCue cue=frame.Cues.Single(value=>value.Kind==PresentationCueKind.Cast);
+        Assert.That(cue.Path,Is.EqualTo(new[]{new GridPoint(2,1),new GridPoint(3,1),new GridPoint(4,1)}));
+        Assert.That(cue.AffectedUnitIds,Is.EqualTo(new[]{primary}));
+        Assert.That(cue.AffectedUnitIds,Does.Not.Contain(secondary));
+    }
+
     private static BattleUiSnapshot Snapshot(UnitInstanceId actor,UnitInstanceId target,GridPoint actorCell,GridPoint targetCell,bool targetAlive)
     {
         BattleUiUnitSnapshot Unit(UnitInstanceId id,GridPoint cell,bool alive)=>new(id,new ContentId("unit.test"),cell,id==actor?0:1,alive,alive?10:0,10,5,5,false,[],new Dictionary<ContentId,int>());

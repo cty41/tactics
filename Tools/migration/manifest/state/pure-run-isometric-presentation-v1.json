@@ -4,21 +4,38 @@
   "state": "Generated",
   "ownership": "UnityOwned",
   "visualAcceptance": "manual_isometric_and_presentation_qa_pending",
-  "catalogCount": 116,
+  "catalogCount": 119,
   "sourceAudit": [
     {
-      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/StandardUnitTweenProfile.asset",
-      "gitBlobSha1": "5a53ddb60794715ee2da4e24241347a2a2b2db20"
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/Fireball_Presentation.asset",
+      "gitBlobSha1": "001b290bb3dac7ba61c7cad45f5e5fccd4bb7e38"
     },
     {
-      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Tween/StandardUnitTweenProfile.cs",
-      "gitBlobSha1": "c6d7b9479c1888e50d0c520e757ab465907ccfab"
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/Fireball_Lv2_Presentation.asset",
+      "gitBlobSha1": "f8f0f37fcd10ec44265aafc571c34c6e2d1fc16c"
     },
     {
-      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Tween/UnitTweenVisual.cs",
-      "gitBlobSha1": "bb9aa5c7391063e79f1454b4c0489cfae6f5b3ab"
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/BoneSpear_Presentation.asset",
+      "gitBlobSha1": "d755ab34dec8d2535e6a4ed5ee862a4fa9f8360c"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/BoneSpear_Lv2_Presentation.asset",
+      "gitBlobSha1": "95b09910a8248929b3019ebefc91095925c9ce8f"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/FireballSkillVfxRecipe.asset",
+      "gitBlobSha1": "b097ec1e78fb3d2b8cffd281aa10d122fa5198e5"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/BoneSpearSkillVfxRecipe.asset",
+      "gitBlobSha1": "3297e35fadfd273113e9bf263dce7aef7e32b829"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/SkillVfx/Recipes/ThrustSkillVfxRecipe.asset",
+      "gitBlobSha1": "e31ece07465740b34a688a2f6a40a68ce8e35d77"
     }
   ],
+  "payloadBoundary": "programmatic-only-no-piloto-prefab-texture-material-shader-audio",
   "artifacts": [
     {
       "resourcePath": "res://content/presentation/BattleBoardPureRunIsometricV1.tres",
@@ -29,6 +46,21 @@
       "resourcePath": "res://content/presentation/StandardUnitPresentationV1.tres",
       "resourceUid": "uid://2ocjy8yyn8cy",
       "targetHash": "sha256:0ca6f16fcb9c970d06abd3d59f41f0dcb0336a53d16a696285f98e9f909c8b08"
+    },
+    {
+      "resourcePath": "res://content/presentation/FireballPresentation.tres",
+      "resourceUid": "uid://cngsjku8g8q63",
+      "targetHash": "sha256:2c6ae52d9ad744743364bdbde35eb5742d8850c502aaea337671cccfd0beac0c"
+    },
+    {
+      "resourcePath": "res://content/presentation/BoneSpearPresentation.tres",
+      "resourceUid": "uid://cltg33pgydy7s",
+      "targetHash": "sha256:39d97a23b0e5d6f067d18888247dd33382b8b1e08955ecd38c991ac47da9a423"
+    },
+    {
+      "resourcePath": "res://content/presentation/ThrustPresentation.tres",
+      "resourceUid": "uid://bk11eqwwlgi5d",
+      "targetHash": "sha256:4e92e03248b353c20382b968c828ab0065b4c2b50f1947a75fcf4a61a5193494"
     }
   ]
 }

@@ -475,12 +475,14 @@ try {
     $isometricCatalogHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash
     $isometricBoardHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\presentation\BattleBoardPureRunIsometricV1.tres') -Algorithm SHA256).Hash
     $unitPresentationHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\presentation\StandardUnitPresentationV1.tres') -Algorithm SHA256).Hash
+    $skillPresentationHashes = @('FireballPresentation.tres','BoneSpearPresentation.tres','ThrustPresentation.tres') | ForEach-Object { (Get-FileHash -LiteralPath (Join-Path $projectRoot "content\presentation\$_") -Algorithm SHA256).Hash }
     Invoke-Checked 'Generate isometric battle board resource second pass' {
         & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/IsometricPresentationAssetBuilder.cs'
     }
     if ($isometricCatalogHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash -or
         $isometricBoardHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\presentation\BattleBoardPureRunIsometricV1.tres') -Algorithm SHA256).Hash -or
-        $unitPresentationHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\presentation\StandardUnitPresentationV1.tres') -Algorithm SHA256).Hash) {
+        $unitPresentationHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\presentation\StandardUnitPresentationV1.tres') -Algorithm SHA256).Hash -or
+        (Compare-Object $skillPresentationHashes (@('FireballPresentation.tres','BoneSpearPresentation.tres','ThrustPresentation.tres') | ForEach-Object { (Get-FileHash -LiteralPath (Join-Path $projectRoot "content\presentation\$_") -Algorithm SHA256).Hash }))) {
         throw 'Isometric presentation generation is not byte-idempotent.'
     }
 

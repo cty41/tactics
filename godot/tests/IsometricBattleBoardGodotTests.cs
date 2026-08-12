@@ -53,4 +53,18 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(catalog.Entries.Length is 115 or 116 or 119).IsTrue();
         AssertThat(catalog.Entries.Count(entry => entry.ContentIdValue == "battle-board.pure-run.isometric-v1")).IsEqual(1);
     }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void ProgrammaticSkillProfilesExcludeThirdPartyPayload()
+    {
+        string[] paths=["FireballPresentation.tres","BoneSpearPresentation.tres","ThrustPresentation.tres"];
+        SkillPresentationResource[] profiles=paths.Select(name=>ResourceLoader.Load<SkillPresentationResource>($"res://content/presentation/{name}")!).ToArray();
+        AssertThat(profiles.All(value=>value is not null)).IsTrue();
+        AssertThat(profiles.All(value=>value.PayloadBoundary=="programmatic-only-no-piloto-payload")).IsTrue();
+        AssertThat(profiles.Single(value=>value.ProgrammaticKind=="fireball").LevelOneHasAreaEffect).IsFalse();
+        AssertThat(profiles.Single(value=>value.ProgrammaticKind=="bone-spear").MaximumGhosts).IsEqual(2);
+        var catalog=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")!;
+        AssertThat(catalog.Entries.Length).IsEqual(119);
+    }
 }
