@@ -18,6 +18,7 @@ class InventoryProgressionConverterTests(unittest.TestCase):
         draft = compile_inventory_progression_draft(self.export, self.spec)
         self.assertEqual(18, len(draft["branches"]))
         self.assertEqual(36, len(draft["definitions"]))
+        self.assertEqual(34, sum(value.get("graphObjectCount", 0) > 0 for value in draft["definitions"]))
         self.assertEqual(2, max(value["level"] for value in draft["definitions"]))
         self.assertFalse(draft["payloadBoundary"]["unityUiPayloadCopied"])
 
@@ -30,6 +31,12 @@ class InventoryProgressionConverterTests(unittest.TestCase):
     def test_rejects_source_drift(self):
         changed = copy.deepcopy(self.export)
         changed["assets"][0]["gitBlobSha1"] = "0" * 40
+        with self.assertRaises(ValueError):
+            compile_inventory_progression_draft(changed, self.spec)
+
+    def test_rejects_missing_graph_root(self):
+        changed = copy.deepcopy(self.export)
+        changed["assets"] = [value for value in changed["assets"] if value["sourceKey"] != "graph.mage.teleport.lv2"]
         with self.assertRaises(ValueError):
             compile_inventory_progression_draft(changed, self.spec)
 

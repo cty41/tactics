@@ -48,6 +48,9 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
     if export["batchId"] != BATCH_ID:
         raise ValueError("inventory/progression batch identity drift")
     assets = {value["sourceKey"]: value for value in export["assets"]}
+    graph_assets = {key[6:]: value for key, value in assets.items() if key.startswith("graph.")}
+    if len(graph_assets) != 34:
+        raise ValueError(f"inventory/progression export must contain 34 graph roots, got {len(graph_assets)}")
     definitions: list[dict[str, Any]] = []
     for role, branch_names in BRANCHES.items():
         for branch in branch_names:
@@ -62,6 +65,10 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
                 if asset is None:
                     raise ValueError(f"missing skill root {content_id}")
                 props = _props(asset)
+                graph = graph_assets.get(content_id[6:])
+                graph_reference = props.get("_skillGraph", {}).get("reference")
+                if graph is None or not graph_reference or graph_reference.get("sourcePath") != graph["sourcePath"] or graph_reference.get("dependencyHash") != graph["dependencyHash"]:
+                    raise ValueError(f"{content_id} graph root differs from its AbilityConfig reference")
                 minimum = 7 if branch_id in PREREQUISITES else 5
                 required = ATTRIBUTE.get(branch_id, ATTRIBUTE.get(role))
                 definitions.append({
@@ -71,7 +78,8 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
                     "isBasicAbility": str(_value(props, "_isBasicAbility", "false")).lower() == "true", "maxUsesPerTurn": int(_value(props, "_maxUsesPerTurn", 0)),
                     "displayName": str(_value(props, "_displayName", content_id)), "description": str(_value(props, "_description", "")),
                     "sourcePath": asset["sourcePath"], "sourceGuid": asset["sourceGuid"], "sourceLocalFileId": int(asset["sourceLocalFileId"]),
-                    "dependencyHash": asset["dependencyHash"], "growthVisible": True,
+                    "dependencyHash": asset["dependencyHash"], "graphPath": graph["sourcePath"], "graphDependencyHash": graph["dependencyHash"],
+                    "graphObjectCount": len(graph["objects"]), "growthVisible": True,
                 })
     if len(definitions) != 36 or len({value["contentId"] for value in definitions}) != 36:
         raise ValueError("inventory/progression draft must contain 36 unique player skill levels")
