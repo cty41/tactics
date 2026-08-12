@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-full-seven-layer-v1",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+  "bindings": [
+    {"sourceKey":"map.generator","blob":"4f0feeb252d95f3d213fd96ede48a694b2cba9ed"},
+    {"sourceKey":"encounter.catalog","blob":"850f23e53869c04c8ff28adbd85c1d4f12da9bae"},
+    {"sourceKey":"battle.rewards","blob":"f8e3eb4c9136f4935585f86e4d2010738ff9e207"},
+    {"sourceKey":"battle.settlement","blob":"1d6e4997dfb8801329003f545e823ea5e3f01a49"},
+    {"sourceKey":"run.session","blob":"597614e4e4c201c99c1a79ef75fce3cd6c40e4e6"},
+    {"sourceKey":"run.summary","blob":"7d532c2d7297f39335024e442bbe932bc23c8f76"},
+    {"sourceKey":"node.transaction","blob":"4435413dfe4b56b787a870f7c43786cce6777774"}
+  ]
+}

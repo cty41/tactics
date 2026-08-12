@@ -46,6 +46,9 @@ namespace Tactics.Editor.Migration
         private const string PureRunLayer4MapNodesSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-layer4-map-nodes-v1.json";
 
+        private const string PureRunFullSevenLayerSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-full-seven-layer-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -160,6 +163,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPureRunLayer4MapNodesBatchFromCommandLine()
         {
             ExportPureRunLayer4MapNodesBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run Full Seven Layer V1")]
+        public static void ExportPureRunFullSevenLayerBatch()
+        {
+            string outputPath = Export(PureRunFullSevenLayerSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run Full Seven Layer V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunFullSevenLayerBatchFromCommandLine()
+        {
+            ExportPureRunFullSevenLayerBatch();
         }
 
         public static string Export(string relativeSpecPath)

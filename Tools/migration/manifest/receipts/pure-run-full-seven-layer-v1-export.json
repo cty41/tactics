@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-full-seven-layer-v1",
+  "state": "Exported",
+  "ownership": "UnityOwned",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+  "unityVersion": "6000.3.11f1",
+  "exportHash": "sha256:1a6b3c0015e7316aa821bb0ba634a37eaadcbdfd3d47f2a7fdc14bcefa87aed",
+  "independentRuns": 2,
+  "byteIdentical": true
+}
