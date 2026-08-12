@@ -417,7 +417,8 @@ public partial class GodotPlayableRunMain : Control
         Control root=NewPage("PROGRESSION",$"{character.CharacterId}: allocate 1 point, then learn/upgrade one skill");
         var menu=new VBoxContainer{Position=new Vector2(430,160),Size=new Vector2(740,650)};root.AddChild(menu);
         menu.AddChild(Label($"Current Lv{character.Level} | INT {character.Attributes.Intelligence} AGI {character.Attributes.Agility} CHA {character.Attributes.Charisma} LUCK {character.Attributes.Luck}",22));
-        SkillDefinition[] candidates=GrowthCandidates(character).Where(skill=>AttributeValue(character.Attributes,skill.RequiredAttribute)+(string.IsNullOrEmpty(skill.RequiredAttribute)?0:1)>=skill.MinimumAttribute).ToArray();
+        var progressionService=new RunInventoryProgressionService();
+        SkillDefinition[] candidates=progressionService.GrowthCandidates(character,_skills).Where(skill=>progressionService.CanUnlockWithAttributePoints(character,skill,pending.AttributePoints)).ToArray();
         foreach(SkillDefinition skill in candidates)
         {
             menu.AddChild(Button($"+1 {skill.RequiredAttribute} → {skill.BranchId} Lv{skill.Level} (requires {skill.MinimumAttribute})",()=>
@@ -426,12 +427,15 @@ public partial class GodotPlayableRunMain : Control
                 CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,raised,skill.ContentId,_skills));
             }));
         }
-        if(candidates.Length==0)menu.AddChild(Label("No skill candidate can be unlocked with this progression point.",18));
+        if(candidates.Length==0)
+        {
+            menu.AddChild(Label("No skill candidate can be unlocked with this progression point. Attribute-only confirmation is allowed.",18));
+            menu.AddChild(Button("+1 primary attribute and confirm",()=>CommitMutation(state=>progressionService.CompleteProgression(state,state.Revision,pending.TransactionKey,Raise(character.Attributes,PrimaryAttribute(character.UnitContentId)),null,_skills))));
+        }
         root.AddChild(PlaceControl(Button("Back",()=>ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null))),new Vector2(650,820),new Vector2(300,55)));
     }
 
-    private IEnumerable<SkillDefinition> GrowthCandidates(RunCharacterState character)=>_skills.Values.Where(skill=>skill.GrowthVisible&&!skill.Hidden&&skill.Role.ToString().Equals(character.CharacterId,StringComparison.OrdinalIgnoreCase)).Where(skill=>skill.Level==(character.LearnedSkillStates.FirstOrDefault(value=>value.BranchId==skill.BranchId)?.Level??0)+1).OrderBy(skill=>skill.BranchId,StringComparer.Ordinal);
-    private static int AttributeValue(UnitAttributes value,string name)=>name switch{"Strength"=>value.Strength,"Agility"=>value.Agility,"Constitution"=>value.Constitution,"Intelligence"=>value.Intelligence,"Charisma"=>value.Charisma,"Luck"=>value.Luck,_=>int.MaxValue};
+    private static string PrimaryAttribute(ContentId unitId)=>unitId.Value switch{"unit.pure-run.mage"=>"Intelligence","unit.pure-run.necromancer"=>"Charisma","unit.pure-run.amazon"=>"Agility",_=>throw new InvalidOperationException($"Unknown progression unit '{unitId.Value}'.")};
     private static UnitAttributes Raise(UnitAttributes a,string name)=>name switch{"Strength"=>new(a.Strength+1,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Agility"=>new(a.Strength,a.Agility+1,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Constitution"=>new(a.Strength,a.Agility,a.Constitution+1,a.Intelligence,a.Charisma,a.Luck),"Intelligence"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence+1,a.Charisma,a.Luck),"Charisma"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma+1,a.Luck),"Luck"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck+1),_=>a};
     private void CommitMutation(Func<PureRunState,RunMutationResult> mutation){RunSessionResult result=_run!.ApplyMutation(mutation);if(!result.Succeeded){SetStatus(result.ErrorCode);return;}ShowSettlement(result.Snapshot!);}
     private static Control PlaceControl(Control control,Vector2 position,Vector2 size){control.Position=position;control.Size=size;return control;}

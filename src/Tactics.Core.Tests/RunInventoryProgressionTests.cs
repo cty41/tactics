@@ -54,20 +54,51 @@ public sealed class RunInventoryProgressionTests
         Assert.That(result.State, Is.SameAs(state));
     }
 
-    private static PureRunState State(bool withProgression = false)
+    [Test]
+    public void FrozenPureRunCharacterIdsResolveGrowthCandidatesAndCompleteProgression()
+    {
+        PureRunState state = State(withProgression: true, frozenCharacterIds: true);
+        SkillDefinition fireball = new(new ContentId("skill.mage.fireball.lv2"), "fireball", SkillRole.Mage,
+            SkillKind.Active, 2, 7, 1, 4, SkillExecutionKind.Fireball, 4, SkillDamageKind.Magical,
+            branchId: "mage.fireball", prerequisiteContentId: new ContentId("skill.mage.fireball.lv1"),
+            requiredAttribute: "Intelligence", minimumAttribute: 6);
+        var skills = new Dictionary<ContentId, SkillDefinition> { [fireball.ContentId] = fireball };
+        var service = new RunInventoryProgressionService();
+        RunCharacterState mage = state.Party[0];
+        SkillDefinition candidate = service.GrowthCandidates(mage, skills).Single();
+        Assert.That(service.CanUnlockWithAttributePoints(mage, candidate, 1), Is.True);
+        UnitAttributes a = mage.Attributes;
+        RunMutationResult result = service.CompleteProgression(state, state.Revision, "progression:n1",
+            new UnitAttributes(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck), candidate.ContentId, skills);
+        Assert.Multiple(() => { Assert.That(result.Succeeded, Is.True); Assert.That(result.State.PendingProgression, Is.Empty); });
+    }
+
+    [Test]
+    public void NoSkillCandidateAllowsAttributeOnlyProgression()
+    {
+        PureRunState state = State(withProgression: true, frozenCharacterIds: true);
+        RunCharacterState mage = state.Party[0]; UnitAttributes a = mage.Attributes;
+        RunMutationResult result = new RunInventoryProgressionService().CompleteProgression(state, state.Revision,
+            "progression:n1", new UnitAttributes(a.Strength, a.Agility, a.Constitution, a.Intelligence + 1, a.Charisma, a.Luck), null,
+            new Dictionary<ContentId, SkillDefinition>());
+        Assert.Multiple(() => { Assert.That(result.Succeeded, Is.True); Assert.That(result.State.Party[0].Level, Is.EqualTo(2)); });
+    }
+
+    private static PureRunState State(bool withProgression = false, bool frozenCharacterIds = false)
     {
         var attributes = new UnitAttributes(3, 3, 3, 5, 4, 2);
         var carried = new BattleConsumableState(new ItemInstanceId("potion-1"), new ContentId("item.consumable.life-potion"), 1, 1);
         RunCharacterState Character(string id, string unit, string skill) => new(id, new ContentId(unit), 1, attributes, 20, 20, 12, 12, false,
             new[] { new ContentId(skill) }, carriedConsumables: id == "mage" ? new[] { carried } : null);
+        string mageId=frozenCharacterIds?"pure_run_mage":"mage";
         RunCharacterState[] party =
         {
-            Character("mage", "unit.pure-run.mage", "skill.mage.fireball.lv1"),
+            Character(mageId, "unit.pure-run.mage", "skill.mage.fireball.lv1"),
             Character("necromancer", "unit.pure-run.necromancer", "skill.necromancer.summon-skeleton.lv1"),
             Character("amazon", "unit.pure-run.amazon", "skill.amazon.thrust.lv1")
         };
         var backpack = new[] { new BattleConsumableState(new ItemInstanceId("potion-2"), new ContentId("item.consumable.mana-potion"), 1, 1) };
-        PendingProgression[] pending = withProgression ? new[] { new PendingProgression("progression:n1", "n1", "mage") } : Array.Empty<PendingProgression>();
+        PendingProgression[] pending = withProgression ? new[] { new PendingProgression("progression:n1", "n1", mageId) } : Array.Empty<PendingProgression>();
         return new PureRunState("run-1", 7, 3, PureRunPhase.Ready, 1, new ContentId("encounter.pure-run.n2"), party,
             backpackConsumables: backpack, pendingProgression: pending);
     }

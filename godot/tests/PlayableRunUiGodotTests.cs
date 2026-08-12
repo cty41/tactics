@@ -1,6 +1,8 @@
 using GdUnit4;
 using Godot;
 using System.Reflection;
+using Tactics.Core.Content;
+using Tactics.Core.Runs;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
 using static GdUnit4.Assertions;
@@ -29,12 +31,43 @@ public class PlayableRunUiGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
-    public void HomeLoadsCanonical74CatalogWithoutWritingSave()
+    public void HomeLoadsCanonical101CatalogWithoutWritingSave()
     {
         var ui = new GodotPlayableRunMain();
         ui._Ready();
         AssertThat(ui.IsReadyForInput).IsTrue();
         ui.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void FrozenMageProgressionRendersRealSkillCandidatesInsteadOfBlocking()
+    {
+        var ui = new GodotPlayableRunMain(); ui._Ready();
+        var attributes = new UnitAttributes(5, 5, 5, 6, 5, 5);
+        var mage = new RunCharacterState("pure_run_mage", new ContentId("unit.pure-run.mage"), 1, attributes,
+            20, 20, 12, 12, false, new[] { new ContentId("skill.mage.fireball.lv1") },
+            learnedSkillStates: new[] { new RunLearnedSkillState("mage.fireball", 1, new ContentId("skill.mage.fireball.lv1")) });
+        var necromancer = new RunCharacterState("pure_run_necromancer", new ContentId("unit.pure-run.necromancer"), 1, attributes, 20, 20, 12, 12, false, Array.Empty<ContentId>());
+        var amazon = new RunCharacterState("pure_run_amazon", new ContentId("unit.pure-run.amazon"), 1, attributes, 20, 20, 12, 12, false, Array.Empty<ContentId>());
+        var pending = new PendingProgression("battle:n1:progression", "n1", mage.CharacterId);
+        var run = new PureRunState("run-test", 7, 2, PureRunPhase.Ready, 1, new ContentId("encounter.pure-run.n2"),
+            new[] { mage, necromancer, amazon }, pendingProgression: new[] { pending });
+        MethodInfo? show = typeof(GodotPlayableRunMain).GetMethod("ShowProgression", BindingFlags.Instance | BindingFlags.NonPublic);
+        show?.Invoke(ui, new object[] { run, pending });
+        string[] buttonTexts = Descendants<Button>(ui).Select(button => button.Text).ToArray();
+        AssertThat(buttonTexts.Any(text => text.Contains("mage.fireball Lv2", StringComparison.Ordinal))).IsTrue();
+        AssertThat(Descendants<Label>(ui).Any(label => label.Text.Contains("No skill candidate", StringComparison.Ordinal))).IsFalse();
+        ui.Free();
+    }
+
+    private static IEnumerable<T> Descendants<T>(Node node) where T : Node
+    {
+        foreach (Node child in node.GetChildren())
+        {
+            if (child is T match) yield return match;
+            foreach (T nested in Descendants<T>(child)) yield return nested;
+        }
     }
 
     [TestCase]

@@ -10,6 +10,18 @@ public sealed record RunMutationResult(bool Succeeded, string? RejectionCode, Pu
 /// <summary>Applies revision-checked Inventory and progression transactions without UI-owned mutation.</summary>
 public sealed class RunInventoryProgressionService
 {
+    public IReadOnlyList<SkillDefinition> GrowthCandidates(RunCharacterState character,
+        IReadOnlyDictionary<ContentId, SkillDefinition> skills)
+    {
+        SkillRole role = CharacterRole(character);
+        return skills.Values.Where(skill => skill.GrowthVisible && !skill.Hidden && skill.Role == role)
+            .Where(skill => skill.Level == (character.LearnedSkillStates.FirstOrDefault(value => value.BranchId == skill.BranchId)?.Level ?? 0) + 1)
+            .OrderBy(skill => skill.BranchId, StringComparer.Ordinal).ThenBy(skill => skill.Level).ToArray();
+    }
+
+    public bool CanUnlockWithAttributePoints(RunCharacterState character, SkillDefinition skill, int points) =>
+        points >= 0 && AttributeValue(character.Attributes, skill.RequiredAttribute) + points >= skill.MinimumAttribute;
+
     public RunMutationResult Equip(PureRunState state, long revision, string characterId, ItemInstanceId instanceId,
         IReadOnlyDictionary<ContentId, EquipmentDefinition> definitions, float baseSpeed)
     {
@@ -89,6 +101,13 @@ public sealed class RunInventoryProgressionService
         "Strength" => value.Strength, "Agility" => value.Agility, "Constitution" => value.Constitution,
         "Intelligence" => value.Intelligence, "Charisma" => value.Charisma, "Luck" => value.Luck,
         "" => int.MaxValue, _ => int.MinValue
+    };
+    private static SkillRole CharacterRole(RunCharacterState character) => character.UnitContentId.Value switch
+    {
+        "unit.pure-run.mage" => SkillRole.Mage,
+        "unit.pure-run.necromancer" => SkillRole.Necromancer,
+        "unit.pure-run.amazon" => SkillRole.Amazon,
+        _ => throw new InvalidOperationException($"Unknown progression character '{character.CharacterId}' ({character.UnitContentId.Value}).")
     };
     private static bool AnyAttributeLower(UnitAttributes value, UnitAttributes prior) => value.Strength < prior.Strength || value.Agility < prior.Agility || value.Constitution < prior.Constitution || value.Intelligence < prior.Intelligence || value.Charisma < prior.Charisma || value.Luck < prior.Luck;
     private static RunCharacterState[] Replace(IReadOnlyList<RunCharacterState> party, RunCharacterState updated) => party.Select(value => value.CharacterId == updated.CharacterId ? updated : value).ToArray();
