@@ -24,7 +24,16 @@ internal static class RunSaveNormalizer
         state.PendingProgression.OrderBy(value => value.TransactionKey, StringComparer.Ordinal).ToArray(),
         state.AppliedTransactionKeys.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
         state.Gold, state.BattlesCompleted, state.EnemiesDefeated,
-        state.AcquiredItems.OrderBy(value => value.Value, StringComparer.Ordinal).ToArray(), state.Checkpoint);
+        state.AcquiredItems.OrderBy(value => value.Value, StringComparer.Ordinal).ToArray(), state.Checkpoint,
+        Normalize(state.MapState), state.NodeTransaction);
+
+    private static PureRunMapState? Normalize(PureRunMapState? state) => state is null ? null : state with
+    {
+        ReachableNodeIds = state.ReachableNodeIds.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
+        VisitedNodeIds = state.VisitedNodeIds.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
+        MysteryEventAssignments = state.MysteryEventAssignments.OrderBy(value => value.Key, StringComparer.Ordinal)
+            .ToDictionary(value => value.Key, value => value.Value, StringComparer.Ordinal)
+    };
 
     private static PureRunSummary Normalize(PureRunSummary summary) => summary with
     {

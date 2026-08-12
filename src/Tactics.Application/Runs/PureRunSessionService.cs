@@ -74,7 +74,8 @@ public sealed class PureRunSessionService
             run.RunId, run.Seed, run.Revision + 1, PureRunPhase.PendingBattle,
             run.EncounterIndex, run.EncounterContentId, run.Party, run.BackpackConsumables,
             run.BackpackEquipment, run.PendingProgression, run.AppliedTransactionKeys,
-            run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint);
+            run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint,
+            run.MapState, run.NodeTransaction);
         RunSessionResult saved = Save(new PureRunSaveSnapshot(pending.Revision, pending, loaded.Snapshot.TerminalSummary), run.Revision);
         return saved.Succeeded ? saved with { EncounterRequest = CreateRequest(pending), Diagnostics = diagnostics } : saved;
     }
@@ -190,7 +191,8 @@ public sealed class PureRunSessionService
             if (!repaired) return loaded;
             var repairedRun = new PureRunState(run.RunId, run.Seed, run.Revision, run.Phase, run.EncounterIndex,
                 run.EncounterContentId, party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
-                run.AppliedTransactionKeys, run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint);
+                run.AppliedTransactionKeys, run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint,
+                run.MapState, run.NodeTransaction);
             diagnostics = new[] { "save.attributes_repaired_from_run_definition" };
             return loaded with { Snapshot = loaded.Snapshot with { ActiveRun = repairedRun } };
         }

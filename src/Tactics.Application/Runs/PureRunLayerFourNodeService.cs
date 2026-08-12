@@ -72,7 +72,7 @@ public sealed class PureRunLayerFourNodeService
         var updated = new PureRunState(run.RunId, run.Seed, run.Revision + 1, run.Phase, run.EncounterIndex,
             run.EncounterContentId, party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
             run.AppliedTransactionKeys.Append(transaction.TransactionKey).ToArray(), run.Gold, run.BattlesCompleted,
-            run.EnemiesDefeated, run.AcquiredItems, run.Checkpoint);
+            run.EnemiesDefeated, run.AcquiredItems, run.Checkpoint, run.MapState, run.NodeTransaction);
         return new LayerFourNodeResolution(true, null, updated);
     }
 

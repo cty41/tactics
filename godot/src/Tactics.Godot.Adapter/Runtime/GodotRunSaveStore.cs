@@ -88,7 +88,7 @@ public sealed class GodotRunSaveStore : IRunSaveStore
                 return new RunStoreResult(false, "save.stale_revision", current.Snapshot);
             if (snapshot.Revision <= expectedRevision)
                 return new RunStoreResult(false, "save.non_increasing_revision", current.Snapshot);
-            string encoded = RunSaveDocumentV2.Encode(snapshot);
+            string encoded = RunSaveDocumentV3.Encode(snapshot);
             try
             {
                 _files.WriteAllText(Temp, encoded);
@@ -142,7 +142,7 @@ public sealed class GodotRunSaveStore : IRunSaveStore
         if (!_files.Exists(path)) return false;
         try
         {
-            RunSaveDecodeResultV2 decoded = RunSaveDocumentV2.Decode(_files.ReadAllText(path));
+            RunSaveDecodeResultV3 decoded = RunSaveDocumentV3.Decode(_files.ReadAllText(path));
             snapshot = decoded.Snapshot;
             return decoded.Succeeded && snapshot is not null;
         }

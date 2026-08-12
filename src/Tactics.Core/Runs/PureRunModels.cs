@@ -9,6 +9,9 @@ public enum PureRunPhase
     Ready,
     PendingBattle,
     SliceCompleted,
+    AwaitingLayerFourChoice,
+    ResolvingLayerFourNode,
+    ReadyForLayerFive,
     Defeated,
     Abandoned
 }
@@ -166,7 +169,9 @@ public sealed record PureRunState
         int battlesCompleted = 0,
         int enemiesDefeated = 0,
         IReadOnlyList<ContentId>? acquiredItems = null,
-        RunEncounterCheckpoint? checkpoint = null)
+        RunEncounterCheckpoint? checkpoint = null,
+        PureRunMapState? mapState = null,
+        RunNodeTransaction? nodeTransaction = null)
     {
         if (string.IsNullOrWhiteSpace(runId))
             throw new ArgumentException("Run ID cannot be empty.", nameof(runId));
@@ -193,6 +198,8 @@ public sealed record PureRunState
         EnemiesDefeated = enemiesDefeated;
         AcquiredItems = acquiredItems?.OrderBy(value => value.Value, StringComparer.Ordinal).ToArray() ?? Array.Empty<ContentId>();
         Checkpoint = checkpoint;
+        MapState = mapState;
+        NodeTransaction = nodeTransaction;
     }
 
     public string RunId { get; }
@@ -211,6 +218,8 @@ public sealed record PureRunState
     public int EnemiesDefeated { get; }
     public IReadOnlyList<ContentId> AcquiredItems { get; }
     public RunEncounterCheckpoint? Checkpoint { get; }
+    public PureRunMapState? MapState { get; }
+    public RunNodeTransaction? NodeTransaction { get; }
 }
 
 public sealed record BattlePartyResult(
