@@ -21,6 +21,12 @@ class InventoryProgressionConverterTests(unittest.TestCase):
         self.assertEqual(34, sum(value.get("graphObjectCount", 0) > 0 for value in draft["definitions"]))
         self.assertEqual(2, max(value["level"] for value in draft["definitions"]))
         self.assertFalse(draft["payloadBoundary"]["unityUiPayloadCopied"])
+        definitions = {value["contentId"]: value for value in draft["definitions"]}
+        self.assertEqual(1, definitions["skill.mage.fireball.lv2"]["areaRadius"])
+        self.assertEqual(4, definitions["skill.amazon.multi-stab.lv2"]["orderedTargetCount"])
+        self.assertTrue(definitions["skill.mage.teleport.lv2"]["ignoreLineOfSight"])
+        self.assertEqual("SkeletonMage", definitions["skill.necromancer.skeleton-mage.lv2"]["summonCategory"])
+        self.assertEqual(6, definitions["skill.amazon.recover-spear.lv2"]["secondaryDamage"])
 
     def test_rejects_missing_level(self):
         changed = copy.deepcopy(self.export)

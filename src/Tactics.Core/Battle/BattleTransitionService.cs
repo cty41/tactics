@@ -98,9 +98,29 @@ public sealed class BattleTransitionService
                 manaCost: command.Definition.ManaCost,
                 dropSearchRadius: 3)));
         if (transition.Events.OfType<CommandRejectedEvent>().Any()) return transition;
-        BattleUnitState usedActor = transition.State.Units[actor.Unit.InstanceId]
+        BattleState finalState = transition.State;
+        var finalEvents = transition.Events.ToList();
+        if (command.Definition.Level >= 2 && command.Definition.StatusContentId is ContentId poisonId &&
+            finalState.TryGetUnit(targetId, out BattleUnitState? primary) && primary is not null)
+        {
+            var poison = new StatusDefinition(poisonId, "Poison", command.Definition.StatusDuration, true,
+                StatusPolarity.Harmful, StatusEffectKind.Poison, StatusTriggerTiming.TurnStart,
+                StatusRefreshStrategy.AddDuration, damagePerTurn: 2);
+            foreach (BattleUnitState adjacent in finalState.Units.Values
+                         .Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber &&
+                             Manhattan(unit.Unit.Position, primary.Unit.Position) <= Math.Max(1, command.Definition.AreaRadius))
+                         .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray())
+            {
+                BattleUnitState current = finalState.Units[adjacent.Unit.InstanceId];
+                StatusApplicationResult application = _statusRuntime.Apply(current, poison, actor.Unit.InstanceId, command.Definition.StatusDuration);
+                finalState = finalState.WithUnit(application.Unit);
+                if (adjacent.Unit.InstanceId != targetId)
+                    finalEvents.Add(new StatusAppliedEvent(actor.Unit.InstanceId, adjacent.Unit.InstanceId, poisonId, application.AppliedStatus.RemainingTurns));
+            }
+        }
+        BattleUnitState usedActor = finalState.Units[actor.Unit.InstanceId]
             .WithSuccessfulSkillUse(command.Definition.ContentId);
-        return new BattleTransition(transition.State.WithUnit(usedActor), transition.Events);
+        return new BattleTransition(finalState.WithUnit(usedActor), finalEvents);
     }
 
     private BattleTransition ApplyMove(BattleState state, BattleUnitState actor, MoveUnitCommand command)

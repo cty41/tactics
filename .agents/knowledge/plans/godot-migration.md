@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-12T10:21:29+08:00"
+timestamp: "2026-08-12T11:24:32+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:e7161d2c0db30cb7bcb6127b8d676e07942596d8213e5062d7f4960a1000ab21
+source_fingerprint: sha256:7b5b7ff774ef28b9006bf66380fbd38893c4e184b5d686d170d6e87365b1c0d1
 ---
 
 # Current state
@@ -68,6 +68,8 @@ Phase 7A 已生成并人工验收原生 1600×900 可玩 Main：普通可产尸�
 Phase 7A 第二轮收口将 Unity 的基础技能回合限制显式迁入 `SkillDefinition/BattleUnitState`：每项基础攻击每回合只成功一次，非基础技能仅在冻结 `MaxUsesPerTurn>0` 时计数，失败不消耗并在该单位下次回合清零。Godot 可玩切片通过非 Catalog 的 `godot-playable-lv1-balance-v1` Resource 覆盖 Lv1 Mana/伤害和玩家/召唤物基础攻击，冻结 Phase 5 资源值保持不变；结束自身回合按 Intelligence 恢复 MP。召唤骷髅动态获得近战基础攻击，尸体消费后死亡 Sprite、标记和数值条一起移除；AI BasicAttack 接入冻结 `TargetHealth` score，日志保留目标类型、ID 与分项评分。所有可见单位显示即时 HP/MP 调试条。
 
 Phase 7A 的技能目标预览分离 `RangeCells`、canonical `LegalTargets` 与只读 `ImpactPreview`：选择技能时即使当前无合法敌人也显示弱色几何射程，可执行目标使用强色；悬停后由同一次 `BattleTransitionService` 探测提供首个命中、受影响单位与拒绝原因。Fireball Lv1 保持单目标首个命中且无 AOE，Thrust 保持轴向，Summon/Pickup 只暴露尸体或掉矛特殊目标；Godot 不复制伤害、LOS 或目标结算规则。用户已完成复验。
+
+Phase 7B 已开始迁移 18 条玩家职业分支的 Lv1/Lv2 合同。通用 `SkillDefinition` 现在显式保存 branch、前置、成长可见性及规范化执行参数；Skill Runtime 已支持 Lv2 十字范围、分类召唤上限、尸体召唤、Teleport/Decoy 位移、Multi Stab 有序段数、Recover Spear 邻近电击、Ice Armor、Bone Shield 伤害吸收及 Combat Techniques 等级。冻结 Unity Skill Resource 仍保持来源值，Godot playable balance 仅覆盖既有 Lv1 切片；Inventory、成长事务、V2 存档和 101 项 Catalog 仍属于后续 checkpoint。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

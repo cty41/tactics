@@ -32,6 +32,37 @@ ATTRIBUTE = {
     "amazon.combat-techniques": "Luck", "amazon.multi-stab": "Agility", "amazon.recover-spear": "Agility", "amazon.decoy": "Luck",
 }
 
+EXECUTION = {
+    "mage.fireball": ("Fireball", "Magical", 2), "mage.ice-bolt": ("IceBolt", "Magical", 8),
+    "mage.lightning": ("Lightning", "Magical", 9), "mage.summon-fire-demon": ("SummonFireDemon", "None", 0),
+    "mage.ice-armor": ("IceArmor", "None", 0), "mage.teleport": ("Teleport", "None", 0),
+    "necromancer.summon-skeleton": ("SummonSkeleton", "None", 0), "necromancer.amplify-damage": ("AmplifyDamage", "None", 0),
+    "necromancer.bone-spear": ("BoneSpear", "Magical", 7), "necromancer.skeleton-mage": ("SummonSkeletonMage", "None", 0),
+    "necromancer.fear-curse": ("FearCurse", "None", 0), "necromancer.bone-shield": ("BoneShield", "None", 0),
+    "amazon.thrust": ("Thrust", "Physical", 6), "amazon.poison-spear": ("PoisonSpear", "Physical", 8),
+    "amazon.multi-stab": ("MultiStab", "Physical", 4), "amazon.recover-spear": ("RecoverSpear", "None", 0),
+    "amazon.decoy": ("Decoy", "None", 0),
+}
+
+def _execution_contract(branch_id: str, level: int) -> dict[str, Any]:
+    execution, damage_kind, damage = EXECUTION[branch_id]
+    if branch_id == "mage.fireball" and level == 2: damage = 4
+    if branch_id == "amazon.poison-spear" and level == 2: damage = 10
+    result: dict[str, Any] = {"executionKind": execution, "damageKind": damage_kind, "damage": damage}
+    if branch_id in ("mage.fireball", "necromancer.amplify-damage", "necromancer.fear-curse", "amazon.poison-spear") and level == 2: result["areaRadius"] = 1
+    if branch_id == "amazon.multi-stab": result["orderedTargetCount"] = 4 if level == 2 else 3
+    if branch_id in ("necromancer.summon-skeleton", "necromancer.skeleton-mage"):
+        result.update({"requiresCorpse": True, "summonLimit": min(2, level), "summonCategory": "Skeleton" if branch_id.endswith("summon-skeleton") else "SkeletonMage"})
+    if branch_id == "mage.summon-fire-demon": result.update({"summonCount": level, "summonLimit": level, "summonCategory": "FireDemon"})
+    if branch_id == "mage.teleport" and level == 2: result["ignoreLineOfSight"] = True
+    if branch_id == "mage.ice-armor": result.update({"statusContentId": "buff.ice-armor", "statusDuration": 2})
+    if branch_id == "necromancer.amplify-damage": result.update({"statusContentId": "buff.curse-damage-amplifier", "statusDuration": 5})
+    if branch_id == "necromancer.fear-curse": result.update({"statusContentId": "buff.fear", "statusDuration": 1})
+    if branch_id == "necromancer.bone-shield": result.update({"shieldMultiplier": 2, "shieldAbsorbsAllDamage": level == 2, "statusDuration": 99})
+    if branch_id == "amazon.recover-spear" and level == 2: result["secondaryDamage"] = 6
+    if branch_id == "amazon.decoy" and level == 2: result["cleanseHarmful"] = True
+    return result
+
 def _props(asset: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
     objects = [value for value in asset["objects"] if value["objectType"] == CONFIG_TYPE]
     if len(objects) != 1:
@@ -71,7 +102,7 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
                     raise ValueError(f"{content_id} graph root differs from its AbilityConfig reference")
                 minimum = 7 if branch_id in PREREQUISITES else 5
                 required = ATTRIBUTE.get(branch_id, ATTRIBUTE.get(role))
-                definitions.append({
+                definition = {
                     "contentId": content_id, "branchId": branch_id, "role": role.title(), "level": level, "kind": "Active",
                     "requiredAttribute": required, "minimumAttribute": minimum, "prerequisiteBranchId": PREREQUISITES.get(branch_id, ""),
                     "manaCost": int(_value(props, "_manaCost", 0)), "targetRange": int(_value(props, "_targetRange", 0)),
@@ -80,7 +111,9 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
                     "sourcePath": asset["sourcePath"], "sourceGuid": asset["sourceGuid"], "sourceLocalFileId": int(asset["sourceLocalFileId"]),
                     "dependencyHash": asset["dependencyHash"], "graphPath": graph["sourcePath"], "graphDependencyHash": graph["dependencyHash"],
                     "graphObjectCount": len(graph["objects"]), "growthVisible": True,
-                })
+                }
+                definition.update(_execution_contract(branch_id, level))
+                definitions.append(definition)
     if len(definitions) != 36 or len({value["contentId"] for value in definitions}) != 36:
         raise ValueError("inventory/progression draft must contain 36 unique player skill levels")
     audit = {key: {"sourcePath": assets[key]["sourcePath"], "sourceFileSha256": assets[key]["sourceFileSha256"]} for key in ("contract.ability-catalog", "contract.loadout", "contract.level-up")}

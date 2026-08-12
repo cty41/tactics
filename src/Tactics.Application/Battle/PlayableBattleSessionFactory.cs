@@ -18,7 +18,6 @@ public sealed class PlayableBattleSessionFactory
     private static readonly ContentId MagicAttackId = new("skill.basic.magic");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
     private static readonly ContentId PickupSpearId = new("skill.amazon.pickup-spear.lv1");
-    private static readonly ContentId CombatTechniquesId = new("skill.amazon.combat-techniques.lv1");
     private readonly EncounterResolver _encounters = new();
 
     public PlayableBattleSessionService Create(
@@ -107,6 +106,10 @@ public sealed class PlayableBattleSessionFactory
             physicalAttack: physical, magicalAttack: magical,
             canProduceCorpse: definition.CanProduceCorpse,
             manaRecoveryPerTurn: character.Attributes.Intelligence);
-        return character.LearnedSkills.Contains(CombatTechniquesId)?state.WithCombatTechniquesLevelOne(true):state;
+        int combatTechniquesLevel = character.LearnedSkills
+            .Where(id => id.Value.StartsWith("skill.amazon.combat-techniques.lv", StringComparison.Ordinal))
+            .Select(id => id.Value.EndsWith("lv2", StringComparison.Ordinal) ? 2 : 1)
+            .DefaultIfEmpty(0).Max();
+        return combatTechniquesLevel > 0 ? state.WithCombatTechniquesLevel(combatTechniquesLevel) : state;
     }
 }

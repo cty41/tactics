@@ -66,6 +66,9 @@ public sealed record DamageAppliedEvent(
     int Amount,
     int RemainingHealth) : BattleEvent;
 
+public sealed record DamageShieldAppliedEvent(UnitInstanceId UnitId, ContentId SkillId, int Points, bool AbsorbsAllDamage) : BattleEvent;
+public sealed record DamageShieldAbsorbedEvent(UnitInstanceId UnitId, ContentId SkillId, int Amount, int RemainingPoints) : BattleEvent;
+
 /// <summary>
 /// Reports a status application or duration refresh.
 /// </summary>

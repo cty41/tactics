@@ -23,7 +23,8 @@ public sealed class PlayableBattleBalanceProfile
         return new SkillDefinition(source.ContentId, source.SourceId, source.Role, source.Kind, source.Level,
             value.Mana, source.MinRange, source.MaxRange, source.ExecutionKind, value.Damage,
             source.DamageKind, source.StatusContentId, source.StatusDuration, source.Hidden,
-            source.ExternalDependency, source.IsBasicAbility, source.MaxUsesPerTurn);
+            source.ExternalDependency, source.IsBasicAbility, source.MaxUsesPerTurn, source.BranchId,
+            source.PrerequisiteContentId, source.GrowthVisible, source.ExecutionProfile);
     }
 
     public (int Physical, int Magical) Attacks(ContentId unitId) =>

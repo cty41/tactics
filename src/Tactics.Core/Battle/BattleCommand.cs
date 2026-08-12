@@ -39,7 +39,11 @@ public sealed record UseSkillCommand(
     UnitInstanceId ActorId,
     UnitInstanceId? TargetId,
     GridPoint TargetCell,
-    SkillDefinition Definition) : BattleCommand(ActorId);
+    SkillDefinition Definition) : BattleCommand(ActorId)
+{
+    /// <summary>Ordered targets for skills such as Multi Stab. Empty for ordinary skills.</summary>
+    public IReadOnlyList<UnitInstanceId> OrderedTargetIds { get; init; } = Array.Empty<UnitInstanceId>();
+}
 
 /// <summary>
 /// Requests use of one carried consumable against a validated battle target.

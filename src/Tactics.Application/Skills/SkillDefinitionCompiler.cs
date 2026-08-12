@@ -25,6 +25,21 @@ public sealed record SkillDefinitionDraft
     public bool ExternalDependency { get; init; }
     public bool IsBasicAbility { get; init; }
     public int MaxUsesPerTurn { get; init; }
+    public string BranchId { get; init; } = string.Empty;
+    public string PrerequisiteContentId { get; init; } = string.Empty;
+    public bool GrowthVisible { get; init; } = true;
+    public int AreaRadius { get; init; }
+    public int OrderedTargetCount { get; init; }
+    public string SummonDefinitionId { get; init; } = string.Empty;
+    public int SummonCount { get; init; }
+    public int SummonLimit { get; init; }
+    public string SummonCategory { get; init; } = string.Empty;
+    public bool RequiresCorpse { get; init; }
+    public bool IgnoreLineOfSight { get; init; }
+    public int ShieldMultiplier { get; init; }
+    public bool ShieldAbsorbsAllDamage { get; init; }
+    public bool CleanseHarmful { get; init; }
+    public int SecondaryDamage { get; init; }
 }
 
 public sealed record SkillDefinitionCompileResult(
@@ -60,9 +75,13 @@ public sealed class SkillDefinitionCompiler
                 try { statusId = new ContentId(draft.StatusContentId); }
                 catch (ArgumentException) { diagnostics.Add(Error("skill.invalid_status_reference", $"Skill '{contentId}' has an invalid status reference.", contentId)); continue; }
             }
+            ContentId? prerequisiteId = ParseOptionalId(draft.PrerequisiteContentId, "skill.invalid_prerequisite", contentId, diagnostics);
+            ContentId? summonId = ParseOptionalId(draft.SummonDefinitionId, "skill.invalid_summon_reference", contentId, diagnostics);
+            if (diagnostics.Any(item => item.ContentId == contentId && item.Severity == ContentDiagnosticSeverity.Error)) continue;
             try
             {
-                var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn);
+                var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage);
+                var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn, draft.BranchId, prerequisiteId, draft.GrowthVisible, profile);
                 definitions.Add(contentId, definition);
                 contentDrafts.Add(new ContentDraft(contentId, "skill", 1, statusId is null ? null : new[] { statusId.Value }, new Dictionary<string, string>(StringComparer.Ordinal)
                 {
@@ -86,5 +105,11 @@ public sealed class SkillDefinitionCompiler
     }
 
     private static bool TryEnum<T>(string value, out T parsed) where T : struct, Enum => Enum.TryParse(value, false, out parsed) && Enum.IsDefined(parsed);
+    private static ContentId? ParseOptionalId(string value, string code, ContentId owner, List<ContentDiagnostic> diagnostics)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        try { return new ContentId(value); }
+        catch (ArgumentException) { diagnostics.Add(Error(code, $"Skill '{owner}' has invalid reference '{value}'.", owner)); return null; }
+    }
     private static ContentDiagnostic Error(string code, string message, ContentId? contentId = null) => new(code, ContentDiagnosticSeverity.Error, message, contentId);
 }

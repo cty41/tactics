@@ -256,14 +256,17 @@ public sealed class BattleState
     public BattleState WithoutCorpse(GridPoint cell) =>
         new(Board, _units.Values, _turnOrder, Round, ActiveIndex, RandomState, _droppedSpears, _corpses.Where(value => value != cell).ToArray());
 
-    public BattleState WithSummon(BattleUnitState summon, int maximumPerOwner = 1)
+    public BattleState WithSummon(BattleUnitState summon, int maximumPerOwner = 1, string summonCategory = "")
     {
         if (summon.SummonOwnerId is not UnitInstanceId ownerId || !_units.ContainsKey(ownerId))
             throw new ArgumentException("Summon must reference an owner in the battle.", nameof(summon));
         if (_units.ContainsKey(summon.Unit.InstanceId)) throw new ArgumentException("Summon ID already exists.", nameof(summon));
         var units = new Dictionary<UnitInstanceId, BattleUnitState>(_units);
         var order = _turnOrder.ToList();
-        BattleUnitState[] existing = units.Values.Where(unit => unit.SummonOwnerId == ownerId).OrderBy(unit => unit.Unit.SpawnOrdinal).ToArray();
+        string category = string.IsNullOrWhiteSpace(summonCategory) ? summon.SummonCategory : summonCategory;
+        BattleUnitState[] existing = units.Values
+            .Where(unit => unit.SummonOwnerId == ownerId && (string.IsNullOrEmpty(category) || unit.SummonCategory == category))
+            .OrderBy(unit => unit.Unit.SpawnOrdinal).ToArray();
         while (existing.Length >= maximumPerOwner)
         {
             BattleUnitState removed = existing[0];

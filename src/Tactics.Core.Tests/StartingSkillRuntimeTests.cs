@@ -178,6 +178,105 @@ public sealed class StartingSkillRuntimeTests
         });
     }
 
+    [Test]
+    public void LevelTwoSummonsUseIndependentCategoriesAndConsumeCorpseWhenRequired()
+    {
+        GridPoint skeletonCell = new(2, 1);
+        GridPoint mageCell = new(3, 1);
+        BattleState state = State(new GridPoint(1, 1), Array.Empty<(string, GridPoint)>()).WithCorpse(skeletonCell).WithCorpse(mageCell);
+        SkillDefinition skeleton = new(new ContentId("skill.necromancer.summon-skeleton.lv2"), "skeleton", SkillRole.Necromancer,
+            SkillKind.Active, 2, 3, 0, 9, SkillExecutionKind.SummonSkeleton, 0, SkillDamageKind.None,
+            executionProfile: new SkillExecutionProfile(SummonLimit: 2, SummonCategory: "Skeleton", RequiresCorpse: true));
+        SkillDefinition mage = new(new ContentId("skill.necromancer.skeleton-mage.lv2"), "mage", SkillRole.Necromancer,
+            SkillKind.Active, 2, 7, 0, 9, SkillExecutionKind.SummonSkeletonMage, 0, SkillDamageKind.None,
+            executionProfile: new SkillExecutionProfile(SummonLimit: 2, SummonCategory: "SkeletonMage", RequiresCorpse: true));
+
+        BattleTransition first = new BattleTransitionService().Apply(state, new UseSkillCommand(state.ActiveUnitId, null, skeletonCell, skeleton));
+        BattleTransition second = new BattleTransitionService().Apply(first.State, new UseSkillCommand(state.ActiveUnitId, null, mageCell, mage));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(second.Succeeded, Is.True);
+            Assert.That(second.State.Corpses, Is.Empty);
+            Assert.That(second.State.Units.Values.Count(unit => unit.SummonCategory == "Skeleton"), Is.EqualTo(1));
+            Assert.That(second.State.Units.Values.Count(unit => unit.SummonCategory == "SkeletonMage"), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void MultiStabRequiresAndResolvesOrderedTargetsAtomically()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.one", new GridPoint(2, 1)), ("enemy.two", new GridPoint(2, 2)), ("enemy.three", new GridPoint(1, 2))
+        });
+        SkillDefinition skill = new(new ContentId("skill.amazon.multi-stab.lv1"), "multi", SkillRole.Amazon,
+            SkillKind.Active, 1, 8, 1, 4, SkillExecutionKind.MultiStab, 4, SkillDamageKind.Physical,
+            executionProfile: new SkillExecutionProfile(OrderedTargetCount: 3));
+        UnitInstanceId[] targets = { new("enemy.one"), new("enemy.two"), new("enemy.three") };
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, targets[0], new GridPoint(2, 1), skill) { OrderedTargetIds = targets });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.Events.OfType<DamageAppliedEvent>().Count(), Is.EqualTo(3));
+            Assert.That(targets.All(id => result.State.Units[id].CurrentHealth == 16), Is.True);
+            Assert.That(result.State.Units[state.ActiveUnitId].CurrentMana, Is.EqualTo(12));
+        });
+    }
+
+    [Test]
+    public void TeleportAndDecoyRelocateThroughTheSharedBattleState()
+    {
+        BattleState state = State(new GridPoint(1, 1), Array.Empty<(string, GridPoint)>());
+        SkillDefinition teleport = new(new ContentId("skill.mage.teleport.lv1"), "teleport", SkillRole.Mage,
+            SkillKind.Active, 1, 8, 1, 4, SkillExecutionKind.Teleport, 0, SkillDamageKind.None);
+        BattleTransition moved = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, null, new GridPoint(4, 1), teleport));
+        Assert.Multiple(() =>
+        {
+            Assert.That(moved.Succeeded, Is.True);
+            Assert.That(moved.State.Units[state.ActiveUnitId].Unit.Position, Is.EqualTo(new GridPoint(4, 1)));
+            Assert.That(moved.Events.OfType<UnitMovedEvent>(), Has.Exactly(1).Items);
+        });
+    }
+
+    [Test]
+    public void BoneShieldLevelTwoAbsorbsMagicBeforeHealth()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target", new GridPoint(2, 1)) });
+        SkillDefinition shield = new(new ContentId("skill.necromancer.bone-shield.lv2"), "shield", SkillRole.Necromancer,
+            SkillKind.Active, 2, 8, 0, 0, SkillExecutionKind.BoneShield, 0, SkillDamageKind.None,
+            executionProfile: new SkillExecutionProfile(ShieldMultiplier: 2, ShieldAbsorbsAllDamage: true));
+        BattleTransition applied = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, state.ActiveUnitId, new GridPoint(1, 1), shield));
+        Assert.Multiple(() =>
+        {
+            Assert.That(applied.Succeeded, Is.True);
+            Assert.That(applied.State.Units[state.ActiveUnitId].DamageShield?.RemainingPoints, Is.EqualTo(12));
+            Assert.That(applied.Events.OfType<DamageShieldAppliedEvent>().Single().AbsorbsAllDamage, Is.True);
+        });
+    }
+
+    [Test]
+    public void RecoverSpearLevelTwoDamagesAdjacentEnemiesAfterRecovery()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target", new GridPoint(2, 1)) })
+            .WithDroppedSpear(new UnitInstanceId("party.caster.0"), new GridPoint(4, 1));
+        SkillDefinition recover = new(new ContentId("skill.amazon.recover-spear.lv2"), "recover", SkillRole.Amazon,
+            SkillKind.Active, 2, 4, 0, 5, SkillExecutionKind.RecoverSpear, 0, SkillDamageKind.None,
+            executionProfile: new SkillExecutionProfile(SecondaryDamage: 6));
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, null, new GridPoint(4, 1), recover));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.State.DroppedSpears, Is.Empty);
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.target")].CurrentHealth, Is.EqualTo(14));
+        });
+    }
+
     private static SkillDefinition Skill(string id, SkillExecutionKind execution, int mana, int range, int damage, string? status = null, int duration = 0) =>
         new(new ContentId(id), id, SkillRole.Any, execution == SkillExecutionKind.PickupSpear ? SkillKind.Utility : SkillKind.Active, 1, mana, execution == SkillExecutionKind.SummonSkeleton ? 0 : execution == SkillExecutionKind.PickupSpear ? 0 : 1, range, execution, damage, damage == 0 ? SkillDamageKind.None : SkillDamageKind.Physical, status is null ? null : new ContentId(status), duration);
 
