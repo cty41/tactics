@@ -214,8 +214,12 @@ public partial class GodotPlayableRunMain : Control
     {
         if (_battle is null || _board is null || _skillPanel is null) return;
         BattleUiSnapshot snapshot = presented??_battle.CaptureSnapshot();_visibleSnapshot=snapshot;
-        foreach (GodotUnitActor actor in _actors.Values) actor.QueueFree(); _actors.Clear();
-        foreach (Control meter in _unitMeters.Values) meter.QueueFree(); _unitMeters.Clear();
+        foreach (GodotUnitActor actor in _actors.Values)
+            if (GodotObject.IsInstanceValid(actor)) actor.QueueFree();
+        _actors.Clear();
+        foreach (Control meter in _unitMeters.Values)
+            if (GodotObject.IsInstanceValid(meter)) meter.QueueFree();
+        _unitMeters.Clear();
         foreach (BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive||snapshot.Corpses.Contains(unit.Cell)))
         {
             GodotUnitActor actor = GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);
@@ -234,7 +238,7 @@ public partial class GodotPlayableRunMain : Control
             BattleUiUnitSnapshot activeUnit=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
             int uses=activeUnit.SuccessfulSkillUses.TryGetValue(skill.ContentId,out int count)?count:0;
             string? usageFailure=skill.IsBasicAbility&&uses>=1?"basic_ability_already_used":!skill.IsBasicAbility&&skill.MaxUsesPerTurn>0&&uses>=skill.MaxUsesPerTurn?"ability_use_limit_reached":null;
-            Button skillButton=Button($"{skill.ContentId.Value}  MP {skill.ManaCost}{(usageFailure is null?string.Empty:"  [USED]")}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??string.Empty;_skillPanel.AddChild(skillButton);
+            Button skillButton=Button($"{skill.ContentId.Value}  MP {skill.ManaCost}{(usageFailure is null?string.Empty:"  [USED]")}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??SkillTooltip(skill);_skillPanel.AddChild(skillButton);
         }
         foreach(SkillDefinition passive in snapshot.ActiveSkills.Where(skill=>skill.IsPassive))_skillPanel.AddChild(Label($"Passive: {passive.ContentId.Value}",16));
         Button endTurn=Button("End Turn (Enter)", () => ApplyIntent(new EndTurnIntent()));endTurn.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(endTurn);
@@ -265,14 +269,25 @@ public partial class GodotPlayableRunMain : Control
         foreach(GridPoint spear in snapshot.DroppedSpears.Values)colors[spear]=new Color(1f,.55f,.15f,.85f);
         if(snapshot.TargetingMode==BattleTargetingMode.Move)foreach(GridPoint cell in snapshot.LegalMoveCells)colors[cell]=new Color(.2f,.8f,1f,.75f);
         if(snapshot.TargetingMode==BattleTargetingMode.Skill&&snapshot.SelectedSkillId is ContentId skillId)
+        {
+            if(snapshot.SkillPreview is BattleUiSkillPreview skillPreview)
+                foreach(GridPoint cell in skillPreview.RangeCells)colors[cell]=new Color(.58f,.22f,.2f,.48f);
             foreach(BattleUiTarget target in snapshot.LegalTargets.Where(target=>target.SkillId==skillId))
                 colors[target.Cell]=_skills[skillId].ExecutionKind==SkillExecutionKind.PickupSpear?new Color(.25f,.9f,.35f,.82f):new Color(1f,.3f,.2f,.78f);
+        }
         if(_hoveredCell is GridPoint hovered)
         {
             if(snapshot.TargetingMode==BattleTargetingMode.Move&&snapshot.LegalMoveCells.Contains(hovered))
             {IReadOnlyList<GridPoint> path=_battle?.PreviewMovePath(hovered)??Array.Empty<GridPoint>();foreach(GridPoint cell in path)colors[cell]=new Color(1f,.85f,.2f,.85f);colors[hovered]=new Color(1f,.5f,0,.9f);}
-            if(snapshot.TargetingMode==BattleTargetingMode.Skill&&snapshot.SelectedSkillId is ContentId selected&&_skills[selected].ExecutionKind==SkillExecutionKind.AreaBlast)
-                foreach(GridPoint cell in _cells.Keys.Where(cell=>Math.Abs(cell.X-hovered.X)+Math.Abs(cell.Y-hovered.Y)<=2))colors[cell]=new Color(1f,.5f,0,.72f);
+            if(snapshot.TargetingMode==BattleTargetingMode.Skill&&_battle?.PreviewSkillTarget(hovered) is BattleUiImpactPreview impact)
+            {
+                if(impact.IsLegal)
+                {
+                    foreach(GridPoint cell in impact.PathCells)colors[cell]=new Color(1f,.85f,.2f,.85f);
+                    foreach(GridPoint cell in impact.ImpactCells)colors[cell]=new Color(1f,.5f,0,.72f);
+                    if(impact.PrimaryImpactCell is GridPoint primary)colors[primary]=new Color(1f,.5f,0,.9f);
+                }
+            }
             colors[hovered]=colors[hovered].Lightened(.22f);
         }
         foreach((GridPoint cell,Button button) in _cells)button.Modulate=colors[cell];
@@ -286,7 +301,16 @@ public partial class GodotPlayableRunMain : Control
         if(snapshot.Corpses.Contains(cell))detail+=" | Corpse";
         if(snapshot.TargetingMode==BattleTargetingMode.Move)detail+=snapshot.LegalMoveCells.Contains(cell)?$" | Legal move, path {_battle?.PreviewMovePath(cell).Count??0}":" | Illegal move";
         if(snapshot.TargetingMode==BattleTargetingMode.Skill&&snapshot.SelectedSkillId is ContentId skillId)
-        {bool legal=snapshot.LegalTargets.Any(target=>target.SkillId==skillId&&target.Cell==cell);detail+=legal?" | Legal target":" | Illegal target";if(legal&&_skills[skillId].ExecutionKind==SkillExecutionKind.AreaBlast)detail+=$" | AOE targets {snapshot.Units.Count(value=>value.IsAlive&&value.PlayerNumber!=0&&Math.Abs(value.Cell.X-cell.X)+Math.Abs(value.Cell.Y-cell.Y)<=2)}";}
+        {
+            BattleUiImpactPreview? preview=_battle?.PreviewSkillTarget(cell);
+            if(preview is not null)
+            {
+                detail+=preview.IsInRange?" | In range":" | Out of range";
+                detail+=preview.IsLegal?" | Legal target":$" | Blocked: {preview.FailureCode??"invalid_target"}";
+                if(preview.PrimaryImpactUnitId is UnitInstanceId primary)detail+=$" | First hit: {primary.Value}";
+                if(preview.ImpactUnitIds.Count>1||_skills[skillId].ExecutionKind==SkillExecutionKind.AreaBlast)detail+=$" | AOE targets {preview.ImpactUnitIds.Count}";
+            }
+        }
         if(_hoverInfo is not null)_hoverInfo.Text=detail;ApplyHighlights(snapshot);
     }
     private void ClearHover(){_hoveredCell=null;if(_hoverInfo is not null)_hoverInfo.Text="Hover a cell";if(_visibleSnapshot is not null)ApplyHighlights(_visibleSnapshot);}
@@ -372,7 +396,19 @@ public partial class GodotPlayableRunMain : Control
 
     private Control NewPage(string title, string subtitle)
     {
-        _page?.QueueFree(); _actors.Clear();
+        // The old page owns every actor and meter. Queueing the page frees those
+        // children, so page navigation must forget their managed references rather
+        // than attempting to QueueFree the disposed children during the next refresh.
+        _page?.QueueFree();
+        _actors.Clear();
+        _unitMeters.Clear();
+        _visibleSnapshot=null;
+        _hoveredCell=null;
+        _board=null;
+        _skillPanel=null;
+        _turnOrder=null;
+        _hoverInfo=null;
+        _eventLog=null;
         var root = new Control(); root.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); AddChild(root); _page = root;
         var background = new ColorRect { Color = new Color("657784") }; background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);
         LabelAt(root, title, new Vector2(70, 35), 40); LabelAt(root, subtitle, new Vector2(70, 82), 20); return root;
@@ -389,5 +425,8 @@ public partial class GodotPlayableRunMain : Control
     private static Label Label(string text, int size) { var label = new Label { Text = text }; label.AddThemeFontSizeOverride("font_size", size); return label; }
     private static Label LabelAt(Control parent, string text, Vector2 position, int size) { Label label = Label(text, size); label.Position = position; parent.AddChild(label); return label; }
     private void SetStatus(string? text) { if (_status is not null) _status.Text = text ?? string.Empty; }
+    private static string SkillTooltip(SkillDefinition skill)=>skill.ExecutionKind==SkillExecutionKind.Fireball
+        ? "Lv1: single target; hits the first enemy on the selected ray. Splash begins at Lv2."
+        : $"Range {skill.MinRange}-{skill.MaxRange}; damage {skill.Damage}.";
     private static string EncounterLabel(ContentId id)=>id.Value.EndsWith(".n1",StringComparison.Ordinal)?"N1":id.Value.EndsWith(".n2",StringComparison.Ordinal)?"N2":id.Value.EndsWith(".n3",StringComparison.Ordinal)?"N3":id.Value;
 }

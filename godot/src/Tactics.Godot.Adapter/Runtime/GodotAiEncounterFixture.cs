@@ -162,24 +162,27 @@ public partial class GodotAiEncounterFixture : Control
     private void LoadDefinitions()
     {
         GodotResourceCatalog global = ResourceLoader.Load<GodotResourceCatalog>(GlobalCatalogPath) ?? throw new InvalidOperationException("Global Catalog is missing.");
+        global.Validate();
         _paths = global.Entries.ToDictionary(entry => entry.ContentIdValue, entry => entry.ResourceLocator, StringComparer.Ordinal);
         foreach (GodotResourceEntry entry in global.Entries.Where(value => value.ResourceTypeIdValue == "skill"))
         {
-            Resource resource = ResourceLoader.Load(entry.ResourceLocator) ?? throw new InvalidOperationException($"Missing skill: {entry.ContentIdValue}");
+            Resource resource = ResourceLoader.Load(entry.DiagnosticPathValue, string.Empty, ResourceLoader.CacheMode.Ignore)
+                ?? throw new InvalidOperationException($"Missing skill: {entry.ContentIdValue} at {entry.DiagnosticPathValue}");
             if (resource is SkillDefinitionResource skill) _skills.Add(new ContentId(entry.ContentIdValue), skill.ToCoreDefinition());
             else if (resource is PoisonSpearSkillResource poison) _skills.Add(new ContentId(entry.ContentIdValue), new SkillDefinition(new ContentId(poison.ContentIdValue), "amazon.poison_spear", SkillRole.Amazon, SkillKind.Active, 1, poison.ManaCost, 1, poison.Range, SkillExecutionKind.PoisonSpear, poison.Damage, SkillDamageKind.Physical, new ContentId("buff.poison"), poison.PoisonTurns, externalDependency: true));
         }
         foreach (GodotResourceEntry entry in global.Entries.Where(value => value.ResourceTypeIdValue == "ai"))
-            _ai.Add(new ContentId(entry.ContentIdValue), (ResourceLoader.Load<AiDefinitionResource>(entry.ResourceLocator) ?? throw new InvalidOperationException($"Missing AI: {entry.ContentIdValue}")).ToCoreDefinition());
+            _ai.Add(new ContentId(entry.ContentIdValue), (ResourceLoader.Load<AiDefinitionResource>(entry.DiagnosticPathValue, string.Empty, ResourceLoader.CacheMode.Ignore)
+                ?? throw new InvalidOperationException($"Missing AI: {entry.ContentIdValue} at {entry.DiagnosticPathValue}")).ToCoreDefinition());
         _ = ResourceLoader.Load<GodotResourceCatalog>(BatchCatalogPath) ?? throw new InvalidOperationException("AI/Encounter Catalog is missing.");
     }
 
     private BattleLayoutDefinition LoadLayout(string id) =>
-        (ResourceLoader.Load<BattleLayoutResource>(_paths[id]) ?? throw new InvalidOperationException($"Missing layout: {id}")).ToCoreDefinition();
+        (ResourceLoader.Load<BattleLayoutResource>(_paths[id], string.Empty, ResourceLoader.CacheMode.Ignore) ?? throw new InvalidOperationException($"Missing layout: {id}")).ToCoreDefinition();
 
     private (string[] Units, string[] Ai) LoadEncounter(string id)
     {
-        EncounterDefinitionResource resource = ResourceLoader.Load<EncounterDefinitionResource>(_paths[id]) ?? throw new InvalidOperationException($"Missing encounter: {id}");
+        EncounterDefinitionResource resource = ResourceLoader.Load<EncounterDefinitionResource>(_paths[id], string.Empty, ResourceLoader.CacheMode.Ignore) ?? throw new InvalidOperationException($"Missing encounter: {id}");
         return (resource.MonsterUnitContentIds, resource.MonsterAiContentIds);
     }
 

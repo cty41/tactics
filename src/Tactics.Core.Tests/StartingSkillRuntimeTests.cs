@@ -26,6 +26,43 @@ public sealed class StartingSkillRuntimeTests
     }
 
     [Test]
+    public void FireballAcceptsDiagonalRayAndHitsTheFirstCollinearEnemyOnly()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.near.0", new GridPoint(2, 2)),
+            ("enemy.far.0", new GridPoint(3, 3)),
+            ("enemy.adjacent.0", new GridPoint(3, 2))
+        });
+        SkillDefinition skill = Skill("skill.mage.fireball.lv1", SkillExecutionKind.Fireball, 7, 4, 2, "buff.ignite", 2);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.far.0"), new GridPoint(3, 3), skill));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.near.0")].CurrentHealth, Is.EqualTo(18));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.far.0")].CurrentHealth, Is.EqualTo(20));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.adjacent.0")].CurrentHealth, Is.EqualTo(20), "Fireball Lv1 must not splash.");
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.near.0")].Statuses.ContainsKey(new ContentId("buff.ignite")), Is.True);
+        });
+    }
+
+    [Test]
+    public void FireballRejectsAnEnemyThatIsNotOnTheSelectedRay()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target.0", new GridPoint(3, 2)) });
+        SkillDefinition skill = Skill("skill.mage.fireball.lv1", SkillExecutionKind.Fireball, 7, 4, 2, "buff.ignite", 2);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.target.0"), new GridPoint(3, 3), skill));
+
+        Assert.That(result.Succeeded, Is.False);
+        Assert.That(result.State.Units[new UnitInstanceId("enemy.target.0")].CurrentHealth, Is.EqualTo(20));
+    }
+
+    [Test]
     public void AmplifyDamageRaisesFollowingDamageByThirtyPercent()
     {
         BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target.0", new GridPoint(2, 1)) });

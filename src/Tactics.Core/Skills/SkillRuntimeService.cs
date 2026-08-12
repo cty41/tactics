@@ -138,7 +138,7 @@ public sealed class SkillRuntimeService
         if (skill.ExecutionKind == SkillExecutionKind.AreaBlast)
         {
             BattleUnitState[] area = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
-                .Where(unit => Math.Abs(unit.Unit.Position.X-command.TargetCell.X)+Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y) <= 2)
+                .Where(unit => Math.Abs(unit.Unit.Position.X-command.TargetCell.X)+Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y) <= skill.AreaRadius)
                 .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray();
             foreach (BattleUnitState unit in area) yield return unit;
             yield break;
@@ -147,17 +147,34 @@ public sealed class SkillRuntimeService
         {
             int dx = command.TargetCell.X - actor.Unit.Position.X;
             int dy = command.TargetCell.Y - actor.Unit.Position.Y;
-            if (dx != 0 && dy != 0) yield break;
-            int sx = Math.Sign(dx); int sy = Math.Sign(dy);
+            if (skill.ExecutionKind == SkillExecutionKind.Thrust && dx != 0 && dy != 0) yield break;
+            if (skill.ExecutionKind != SkillExecutionKind.Thrust &&
+                (command.TargetId is not UnitInstanceId selectedId ||
+                 !state.TryGetUnit(selectedId, out BattleUnitState? selectedUnit) ||
+                 selectedUnit is null || !selectedUnit.IsAlive ||
+                 selectedUnit.Unit.PlayerNumber == actor.Unit.PlayerNumber ||
+                 selectedUnit.Unit.Position != command.TargetCell))
+                yield break;
+            int selectedDistance = Math.Abs(dx) + Math.Abs(dy);
             IEnumerable<BattleUnitState> ray = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
-                .Where(unit => (sx == 0 ? unit.Unit.Position.X == actor.Unit.Position.X : unit.Unit.Position.Y == actor.Unit.Position.Y))
-                .Where(unit => Math.Sign(unit.Unit.Position.X - actor.Unit.Position.X) == sx && Math.Sign(unit.Unit.Position.Y - actor.Unit.Position.Y) == sy)
-                .Where(unit => Math.Abs(unit.Unit.Position.X - actor.Unit.Position.X) + Math.Abs(unit.Unit.Position.Y - actor.Unit.Position.Y) <= skill.MaxRange)
+                .Where(unit => IsOnSelectedRay(actor.Unit.Position, command.TargetCell, unit.Unit.Position))
+                .Where(unit => Math.Abs(unit.Unit.Position.X - actor.Unit.Position.X) + Math.Abs(unit.Unit.Position.Y - actor.Unit.Position.Y) <= selectedDistance)
                 .OrderBy(unit => Math.Abs(unit.Unit.Position.X - actor.Unit.Position.X) + Math.Abs(unit.Unit.Position.Y - actor.Unit.Position.Y));
             foreach (BattleUnitState unit in skill.ExecutionKind == SkillExecutionKind.Thrust ? ray : ray.Take(1)) yield return unit;
             yield break;
         }
         if (command.TargetId is UnitInstanceId id && state.TryGetUnit(id, out BattleUnitState? target) && target is not null && target.Unit.Position == command.TargetCell) yield return target;
+    }
+
+    private static bool IsOnSelectedRay(GridPoint origin, GridPoint selected, GridPoint candidate)
+    {
+        int selectedX = selected.X - origin.X;
+        int selectedY = selected.Y - origin.Y;
+        int candidateX = candidate.X - origin.X;
+        int candidateY = candidate.Y - origin.Y;
+        int cross = candidateX * selectedY - candidateY * selectedX;
+        int dot = candidateX * selectedX + candidateY * selectedY;
+        return cross == 0 && dot > 0;
     }
 
     private static StatusDefinition StatusFor(SkillDefinition skill, ContentId statusId) => skill.ExecutionKind switch

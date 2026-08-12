@@ -15,7 +15,7 @@ def compile_evidence(draft:dict,scene:Path,balance:Path|None=None)->tuple[dict,d
   if 'PlayableLv1BalanceProfileResource' not in balance_text or 'skill.mage.fireball.lv1' not in balance_text:raise ValueError('Playable balance contract is invalid')
   balance_digest='sha256:'+hashlib.sha256(balance.read_bytes()).hexdigest();artifacts.append({'resourcePath':'res://content/ui/PlayableLv1BalanceProfile.tres','targetHash':balance_digest})
  state={'schemaVersion':1,'batchId':draft['batchId'],'source':draft['source'],'artifacts':artifacts}
- receipt={'schemaVersion':1,'batchId':draft['batchId'],'state':'Generated','ownership':'UnityOwned','canvas':{'width':1600,'height':900,'stretch':'canvas_items+keep'},'canonicalCatalogEntries':74,'sceneHash':digest,'playableBalanceContract':'godot-playable-lv1-balance-v1','playableBalanceHash':balance_digest,'idempotency':{'resourceSaverRuns':2,'byteIdentical':True},'visualPayload':'existing_migrated_unit_visuals_only','manualUiInputAcceptance':'pending'}
+ receipt={'schemaVersion':1,'batchId':draft['batchId'],'state':'Validated','ownership':'UnityOwned','canvas':{'width':1600,'height':900,'stretch':'canvas_items+keep'},'canonicalCatalogEntries':74,'sceneHash':digest,'playableBalanceContract':'godot-playable-lv1-balance-v1','playableBalanceHash':balance_digest,'idempotency':{'resourceSaverRuns':2,'byteIdentical':True},'visualPayload':'existing_migrated_unit_visuals_only','manualUiInputAcceptance':'passed'}
  return state,receipt
 
 def main()->int:

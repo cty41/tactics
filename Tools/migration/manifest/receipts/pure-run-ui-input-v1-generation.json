@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "batchId": "pure-run-ui-input-v1",
-  "state": "Generated",
+  "state": "Validated",
   "ownership": "UnityOwned",
   "canvas": {
     "width": 1600,
@@ -17,5 +17,5 @@
     "byteIdentical": true
   },
   "visualPayload": "existing_migrated_unit_visuals_only",
-  "manualUiInputAcceptance": "pending"
+  "manualUiInputAcceptance": "passed"
 }

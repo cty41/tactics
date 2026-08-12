@@ -1,5 +1,7 @@
 using GdUnit4;
 using Godot;
+using System.Reflection;
+using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
 using static GdUnit4.Assertions;
 
@@ -32,6 +34,28 @@ public class PlayableRunUiGodotTests
         var ui = new GodotPlayableRunMain();
         ui._Ready();
         AssertThat(ui.IsReadyForInput).IsTrue();
+        ui.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void ReplacingAPageDoesNotRetainDisposedUnitMeters()
+    {
+        var ui = new GodotPlayableRunMain();
+        ui._Ready();
+        FieldInfo? metersField = typeof(GodotPlayableRunMain).GetField("_unitMeters", BindingFlags.Instance | BindingFlags.NonPublic);
+        MethodInfo? newPage = typeof(GodotPlayableRunMain).GetMethod("NewPage", BindingFlags.Instance | BindingFlags.NonPublic);
+        var meters = (Dictionary<UnitInstanceId, Control>?)metersField?.GetValue(ui);
+        var disposedMeter = new Control();
+        ui.AddChild(disposedMeter);
+        meters?.Add(new UnitInstanceId("test.disposed-meter"), disposedMeter);
+        disposedMeter.Free();
+
+        newPage?.Invoke(ui, new object[] { "PAGE REPLACEMENT TEST", "Disposed references must be forgotten" });
+
+        AssertThat(meters).IsNotNull();
+        AssertThat(meters?.Count ?? -1).IsEqual(0);
+
         ui.Free();
     }
 }

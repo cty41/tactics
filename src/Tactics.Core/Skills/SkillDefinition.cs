@@ -89,6 +89,7 @@ public sealed record SkillDefinition
     public bool IsBasicAbility { get; }
     public int MaxUsesPerTurn { get; }
     public bool IsPassive => Kind == SkillKind.Passive;
+    public int AreaRadius => ExecutionKind == SkillExecutionKind.AreaBlast ? 2 : 0;
     public bool UsesLineTargeting => ExecutionKind is SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.Thrust;
     public bool RequiresLineOfSight => ExecutionKind is SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.ChargeStrike;
 }

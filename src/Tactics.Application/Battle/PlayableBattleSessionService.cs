@@ -35,6 +35,21 @@ public sealed record BattleUiUnitSnapshot(
     IReadOnlyDictionary<ContentId, int> SuccessfulSkillUses);
 
 public sealed record BattleUiTarget(ContentId SkillId, GridPoint Cell, UnitInstanceId? UnitId);
+public sealed record BattleUiSkillPreview(
+    ContentId SkillId,
+    IReadOnlyList<GridPoint> RangeCells,
+    IReadOnlyList<BattleUiTarget> LegalTargets);
+public sealed record BattleUiImpactPreview(
+    ContentId SkillId,
+    GridPoint Cell,
+    bool IsInRange,
+    bool IsLegal,
+    string? FailureCode,
+    IReadOnlyList<GridPoint> PathCells,
+    GridPoint? PrimaryImpactCell,
+    UnitInstanceId? PrimaryImpactUnitId,
+    IReadOnlyList<GridPoint> ImpactCells,
+    IReadOnlyList<UnitInstanceId> ImpactUnitIds);
 public enum BattleUiLogCategory { Gameplay, Ai, Rejected }
 public sealed record BattleUiLogEntry(BattleUiLogCategory Category,string Message,string EventType);
 public sealed record BattleUiFrame(string Stage,BattleUiSnapshot Snapshot,AiDecisionEvent? Decision,IReadOnlyList<BattleEvent> Events);
@@ -49,6 +64,7 @@ public sealed record BattleUiSnapshot(
     IReadOnlyList<SkillDefinition> ActiveSkills,
     IReadOnlyList<GridPoint> LegalMoveCells,
     IReadOnlyList<BattleUiTarget> LegalTargets,
+    BattleUiSkillPreview? SkillPreview,
     IReadOnlyCollection<GridPoint> Corpses,
     IReadOnlyDictionary<UnitInstanceId, GridPoint> DroppedSpears,
     IReadOnlyList<BattleEvent> RecentEvents,
@@ -151,11 +167,14 @@ public sealed class PlayableBattleSessionService
         GridPoint[] moves = interactive&&active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && !active.HasMovedThisTurn
             ? view.Board.Cells.Keys.Where(cell => _transitions.Apply(view, new MoveUnitCommand(active.Unit.InstanceId, cell)).Succeeded).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
             : Array.Empty<GridPoint>();
-        BattleUiTarget[] targets = interactive?skills.SelectMany(skill => LegalTargets(active, skill)).ToArray():Array.Empty<BattleUiTarget>();
+        BattleUiTarget[] targets = interactive?skills.SelectMany(skill => LegalTargets(view, active, skill)).ToArray():Array.Empty<BattleUiTarget>();
+        BattleUiSkillPreview? skillPreview = interactive && _targetingMode == BattleTargetingMode.Skill && _selectedSkillId is ContentId selectedSkillId
+            ? CreateSkillPreview(view, active, _context.SkillCatalog[selectedSkillId], targets)
+            : null;
         return new BattleUiSnapshot(
             DeterminePhase(view), view.Round, view.ActiveUnitId, interactive?_targetingMode:BattleTargetingMode.None, interactive?_selectedSkillId:null,
             view.Units.Values.OrderBy(unit => unit.Unit.SpawnOrdinal).Select(ToSnapshot).ToArray(),
-            skills, moves, targets, view.Corpses.ToArray(), view.DroppedSpears,
+            skills, moves, targets, skillPreview, view.Corpses.ToArray(), view.DroppedSpears,
             _recentEvents.TakeLast(100).ToArray(),view.TurnOrder.ToArray(),view.ActiveIndex, _failureCode);
     }
 
@@ -163,6 +182,36 @@ public sealed class PlayableBattleSessionService
     {
         BattleTransition probe=_transitions.Apply(State,new MoveUnitCommand(State.ActiveUnitId,destination));
         return probe.Succeeded?probe.Events.OfType<UnitMovedEvent>().Single().Path:Array.Empty<GridPoint>();
+    }
+
+    public BattleUiImpactPreview? PreviewSkillTarget(GridPoint cell)
+    {
+        if (_targetingMode != BattleTargetingMode.Skill || _selectedSkillId is not ContentId skillId)
+            return null;
+        BattleUnitState actor = State.Units[State.ActiveUnitId];
+        SkillDefinition skill = _context.SkillCatalog[skillId];
+        BattleUiSkillPreview preview = CreateSkillPreview(State, actor, skill, LegalTargets(State, actor, skill).ToArray());
+        bool inRange = preview.RangeCells.Contains(cell);
+        UnitInstanceId? targetId = State.Units.Values.FirstOrDefault(unit => unit.IsAlive && unit.Unit.Position == cell)?.Unit.InstanceId;
+        BattleTransition probe = _transitions.Apply(State, new UseSkillCommand(actor.Unit.InstanceId, targetId, cell, skill));
+        CommandRejectedEvent? rejection = probe.Events.OfType<CommandRejectedEvent>().LastOrDefault();
+        bool legal = rejection is null;
+        UnitInstanceId[] impactedIds = probe.Events
+            .SelectMany(EventTargets)
+            .Where(id => id != actor.Unit.InstanceId)
+            .Distinct()
+            .ToArray();
+        GridPoint[] impactedCells = skill.AreaRadius > 0
+            ? State.Board.Cells.Keys.Where(candidate => Math.Abs(candidate.X - cell.X) + Math.Abs(candidate.Y - cell.Y) <= skill.AreaRadius).ToArray()
+            : impactedIds.Where(State.Units.ContainsKey).Select(id => State.Units[id].Unit.Position).Distinct().ToArray();
+        UnitInstanceId? primaryId = probe.Events.OfType<SkillUsedEvent>().Select(evt => (UnitInstanceId?)evt.TargetId).FirstOrDefault();
+        GridPoint? primaryCell = primaryId is UnitInstanceId primary && State.TryGetUnit(primary, out BattleUnitState? primaryUnit) && primaryUnit is not null
+            ? primaryUnit.Unit.Position
+            : null;
+        GridPoint[] path = skill.UsesLineTargeting || skill.ExecutionKind == SkillExecutionKind.PoisonSpear
+            ? RayCells(actor.Unit.Position, cell).ToArray()
+            : Array.Empty<GridPoint>();
+        return new BattleUiImpactPreview(skillId, cell, inRange, legal, rejection?.Reason, path, primaryCell, primaryId, impactedCells, impactedIds);
     }
 
     private BattleUiIntentResult SelectUnit(SelectUnitIntent intent) =>
@@ -259,17 +308,63 @@ public sealed class PlayableBattleSessionService
         }
     }
 
-    private IEnumerable<BattleUiTarget> LegalTargets(BattleUnitState active, SkillDefinition skill)
+    private IEnumerable<BattleUiTarget> LegalTargets(BattleState view, BattleUnitState active, SkillDefinition skill)
     {
         if (!active.IsAlive || active.Unit.PlayerNumber != _context.PlayerNumber)
             yield break;
-        foreach (GridPoint cell in State.Board.Cells.Keys.OrderBy(cell => cell.X).ThenBy(cell => cell.Y))
+        foreach (GridPoint cell in view.Board.Cells.Keys.OrderBy(cell => cell.X).ThenBy(cell => cell.Y))
         {
-            UnitInstanceId? targetId = State.Units.Values.FirstOrDefault(unit => unit.IsAlive && unit.Unit.Position == cell)?.Unit.InstanceId;
-            if (_transitions.Apply(State, new UseSkillCommand(active.Unit.InstanceId, targetId, cell, skill)).Succeeded)
+            UnitInstanceId? targetId = view.Units.Values.FirstOrDefault(unit => unit.IsAlive && unit.Unit.Position == cell)?.Unit.InstanceId;
+            if (_transitions.Apply(view, new UseSkillCommand(active.Unit.InstanceId, targetId, cell, skill)).Succeeded)
                 yield return new BattleUiTarget(skill.ContentId, cell, targetId);
         }
     }
+
+    private static BattleUiSkillPreview CreateSkillPreview(BattleState view, BattleUnitState actor, SkillDefinition skill, IEnumerable<BattleUiTarget> allTargets)
+    {
+        BattleUiTarget[] legal = allTargets.Where(target => target.SkillId == skill.ContentId).ToArray();
+        GridPoint[] range = skill.ExecutionKind switch
+        {
+            SkillExecutionKind.SummonSkeleton => view.Corpses.OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray(),
+            SkillExecutionKind.PickupSpear => view.TryGetDroppedSpear(actor.Unit.InstanceId, out GridPoint spear) ? new[] { spear } : Array.Empty<GridPoint>(),
+            SkillExecutionKind.Thrust => view.Board.Cells.Keys.Where(cell => IsWithinRange(actor.Unit.Position, cell, skill) &&
+                (cell.X == actor.Unit.Position.X || cell.Y == actor.Unit.Position.Y)).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray(),
+            _ => view.Board.Cells.Keys.Where(cell => IsWithinRange(actor.Unit.Position, cell, skill)).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
+        };
+        return new BattleUiSkillPreview(skill.ContentId, range, legal);
+    }
+
+    private static bool IsWithinRange(GridPoint origin, GridPoint cell, SkillDefinition skill)
+    {
+        int distance = Math.Abs(origin.X - cell.X) + Math.Abs(origin.Y - cell.Y);
+        return distance >= skill.MinRange && distance <= skill.MaxRange;
+    }
+
+    private static IEnumerable<GridPoint> RayCells(GridPoint origin, GridPoint target)
+    {
+        int dx = target.X - origin.X;
+        int dy = target.Y - origin.Y;
+        int steps = GreatestCommonDivisor(Math.Abs(dx), Math.Abs(dy));
+        if (steps == 0) yield break;
+        int stepX = dx / steps;
+        int stepY = dy / steps;
+        for (int index = 1; index <= steps; index++)
+            yield return new GridPoint(origin.X + stepX * index, origin.Y + stepY * index);
+    }
+
+    private static int GreatestCommonDivisor(int left, int right)
+    {
+        while (right != 0) (left, right) = (right, left % right);
+        return left;
+    }
+
+    private static IEnumerable<UnitInstanceId> EventTargets(BattleEvent evt) => evt switch
+    {
+        DamageAppliedEvent damage => new[] { damage.TargetId },
+        StatusAppliedEvent status => new[] { status.TargetId },
+        UnitSummonedEvent summon => new[] { summon.SummonId },
+        _ => Array.Empty<UnitInstanceId>()
+    };
 
     private void EvaluateTerminal()
     {

@@ -35,6 +35,19 @@ public class AiEncounterBatchGodotTests
         fixture.Free();
     }
 
+    [TestCase]
+    [RequireGodotRuntime]
+    public void FixtureLoadsEverySkillAndAiAcrossRepeatedInitialization()
+    {
+        for (int iteration = 0; iteration < 3; iteration++)
+        {
+            var fixture = new GodotAiEncounterFixture();
+            fixture._Ready();
+            AssertThat(fixture.ExecuteSingleTurn().CandidateCount).IsGreater(0);
+            fixture.Free();
+        }
+    }
+
     [TestCase(0, 3)]
     [TestCase(1, 3)]
     [TestCase(2, 4)]
