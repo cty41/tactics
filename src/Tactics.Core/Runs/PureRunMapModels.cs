@@ -4,7 +4,7 @@ using Tactics.Core.Items;
 namespace Tactics.Core.Runs;
 
 public enum PureRunNodeKind { Battle, Rest, Store, Mystery }
-public enum PureRunMapPhase { Locked, ChoosingLayerFour, ResolvingNode, ReadyForLayerFive }
+public enum PureRunMapPhase { Locked, ChoosingLayerFour, ResolvingNode, ReadyForLayerFive, ReadyForLayerSix, ChoosingLayerSix, ReadyForBoss, Completed }
 public enum RunNodeLifecycle { Available, Selected, Pending, Resolved, Committed }
 
 public sealed record PureRunMapNodeDefinition(string NodeId, int Layer, PureRunNodeKind Kind, ContentId ContentId);

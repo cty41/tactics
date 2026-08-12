@@ -63,7 +63,12 @@ public sealed class PlayableBattleSessionFactory
         {
             (EncounterMonsterDefinition monster, GridPoint cell) = resolved.Enemies[index];
             var instanceId = new UnitInstanceId($"enemy-{index:D2}");
-            states.Add(units[monster.UnitId].CreateBattleState(instanceId, cell, 1, request.Party.Count + index));
+            BattleUnitState enemy = units[monster.UnitId].CreateBattleState(instanceId, cell, 1, request.Party.Count + index);
+            int scaledHealth = (int)Math.Ceiling(enemy.MaxHealth * encounter.HealthMultiplier);
+            enemy = enemy.WithHealthAndMana(scaledHealth, scaledHealth,
+                enemy.MaxMana, Math.Min(enemy.MaxMana, Math.Max(enemy.CurrentMana, encounter.MinimumStartingMana)))
+                .WithDamageOutputMultiplier(encounter.OutputMultiplier);
+            states.Add(enemy);
             skillsByUnit.Add(instanceId, monster.SkillIds.Select(id => playableSkills[id]).ToArray());
             aiByUnit.Add(instanceId, aiDefinitions[monster.AiId]);
         }

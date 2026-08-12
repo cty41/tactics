@@ -266,6 +266,30 @@ public sealed class BattleUnitState
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
             canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield);
 
+    public BattleUnitState WithHealthAndMana(int maxHealth, int currentHealth, int maxMana, int currentMana) => new(
+        Unit, maxHealth, currentHealth, HasMovedThisTurn, maxMana: maxMana, currentMana: currentMana,
+        statuses: _statuses, baseSpeed: BaseSpeed, consumables: _consumables,
+        lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+        physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
+        canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
+        manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
+        combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield);
+
+    public BattleUnitState WithDamageOutputMultiplier(float multiplier)
+    {
+        if (!float.IsFinite(multiplier) || multiplier <= 0f) throw new ArgumentOutOfRangeException(nameof(multiplier));
+        return new BattleUnitState(Unit, MaxHealth, CurrentHealth, HasMovedThisTurn, maxMana: MaxMana,
+            currentMana: CurrentMana, statuses: _statuses, baseSpeed: BaseSpeed, consumables: _consumables,
+            lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
+            physicalAttack: (int)Math.Ceiling(PhysicalAttack * multiplier),
+            magicalAttack: (int)Math.Ceiling(MagicalAttack * multiplier), summonOwnerId: SummonOwnerId,
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
+            canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
+            manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
+            combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield);
+    }
+
     /// <summary>
     /// Returns a copy with the given status duration.
     /// </summary>

@@ -1,3 +1,5 @@
+using Tactics.Core.Content;
+
 namespace Tactics.Core.Runs;
 
 public sealed class PureRunMapService
@@ -19,13 +21,48 @@ public sealed class PureRunMapService
             new Dictionary<string, string>(StringComparer.Ordinal) { ["layer_04_event"] = eventId });
     }
 
+    public PureRunMapState AdvanceToLayerFive(PureRunMapState state) => state with
+    {
+        Phase = PureRunMapPhase.ReadyForLayerFive,
+        CurrentNodeId = state.CurrentNodeId,
+        ReachableNodeIds = new[] { "layer_05_battle" },
+        SelectedNodeId = null,
+        NodeLifecycle = RunNodeLifecycle.Available,
+        StoreOffers = null,
+        MysteryResolution = null
+    };
+
+    public PureRunMapState UnlockLayerSix(PureRunMapState state, int runSeed)
+    {
+        string[] nodes = ["layer_06_battle", "layer_06_event", "layer_06_rest", "layer_06_store"];
+        string prior = state.MysteryEventAssignments.GetValueOrDefault("layer_04_event") ?? string.Empty;
+        string assigned = EventPool.Select((value, index) => (value, order: DeriveSeed(runSeed, "pure-run-event-pool", index)))
+            .OrderBy(value => value.order).ThenBy(value => value.value, StringComparer.Ordinal)
+            .Select(value => value.value).First(value => value != prior);
+        var assignments = state.MysteryEventAssignments.ToDictionary(value => value.Key, value => value.Value, StringComparer.Ordinal);
+        assignments["layer_06_event"] = assigned;
+        return state with { Phase = PureRunMapPhase.ChoosingLayerSix, CurrentNodeId = "layer_05_battle",
+            ReachableNodeIds = nodes, MysteryEventAssignments = assignments, PendingNodeId = null,
+            PendingTransactionKey = null, SelectedNodeId = null, NodeLifecycle = RunNodeLifecycle.Available,
+            StoreOffers = null, MysteryResolution = null };
+    }
+
+    public ContentId SelectLateEncounter(int seed, string nodeId, bool boss = false)
+    {
+        if (boss) return new ContentId("encounter.pure-run.special");
+        string[] pool = ["e1", "e2"];
+        uint index = unchecked((uint)DeriveSeed(seed, $"pure-run-encounter:{nodeId}"));
+        return new ContentId($"encounter.pure-run.{pool[index % pool.Length]}");
+    }
+
     public PureRunMapResult BeginNode(PureRunMapState state, string nodeId)
     {
         ArgumentNullException.ThrowIfNull(state);
-        if (state.Phase != PureRunMapPhase.ChoosingLayerFour) return Fail("map.not_choosing", state);
+        if (state.Phase is not (PureRunMapPhase.ChoosingLayerFour or PureRunMapPhase.ChoosingLayerSix)) return Fail("map.not_choosing", state);
         if (!state.ReachableNodeIds.Contains(nodeId, StringComparer.Ordinal)) return Fail("map.node_not_reachable", state);
         PureRunMapNodeDefinition? node = _definition.Nodes.FirstOrDefault(candidate => candidate.NodeId == nodeId);
-        if (node is null || node.Layer != 4) return Fail("map.node_unknown", state);
+        int layer = state.Phase == PureRunMapPhase.ChoosingLayerSix ? 6 : 4;
+        if (node is null || node.Layer != layer) return Fail("map.node_unknown", state);
         string key = $"node:{node.NodeId}:resolve";
         var transaction = new RunNodeTransaction(key, node.NodeId, node.Kind);
         return new PureRunMapResult(true, null, state with
@@ -48,9 +85,11 @@ public sealed class PureRunMapService
         if (state.Phase != PureRunMapPhase.ResolvingNode || state.PendingNodeId != transaction.NodeId ||
             state.PendingTransactionKey != transaction.TransactionKey)
             return Fail("map.transaction_mismatch", state);
+        int layer = _definition.Nodes.Single(node => node.NodeId == transaction.NodeId).Layer;
+        PureRunMapPhase completedPhase = layer == 6 ? PureRunMapPhase.ReadyForBoss : PureRunMapPhase.ReadyForLayerFive;
         return new PureRunMapResult(true, null, state with
         {
-            Phase = PureRunMapPhase.ReadyForLayerFive,
+            Phase = completedPhase,
             CurrentNodeId = transaction.NodeId,
             ReachableNodeIds = Array.Empty<string>(),
             VisitedNodeIds = state.VisitedNodeIds.Append(transaction.NodeId).Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray(),

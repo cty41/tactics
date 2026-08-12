@@ -19,12 +19,16 @@ public sealed class PureRunLayerFourNodeService
 
     public LayerFourNodeResolution SelectNode(PureRunState run, PureRunMapDefinition map, string nodeId)
     {
-        if (run.Phase != PureRunPhase.AwaitingLayerFourChoice || run.PendingProgression.Count != 0)
-            return Fail("layer4.choice_unavailable", run);
-        PureRunMapState current = run.MapState ?? new PureRunMapService(map).UnlockLayerFour(run.Seed);
+        if (run.Phase is not (PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.AwaitingLayerSixChoice) || run.PendingProgression.Count != 0)
+            return Fail("map.choice_unavailable", run);
+        PureRunMapService mapService = new(map);
+        PureRunMapState current = run.MapState ?? mapService.UnlockLayerFour(run.Seed);
+        if (run.Phase == PureRunPhase.AwaitingLayerSixChoice && current.Phase != PureRunMapPhase.ChoosingLayerSix)
+            current = mapService.UnlockLayerSix(current, run.Seed);
         PureRunMapResult begun = new PureRunMapService(map).BeginNode(current, nodeId);
         if (!begun.Succeeded) return Fail(begun.RejectionCode!, run);
-        PureRunState updated = Copy(run, phase: PureRunPhase.ResolvingLayerFourNode,
+        PureRunState updated = Copy(run, phase: run.Phase == PureRunPhase.AwaitingLayerSixChoice
+                ? PureRunPhase.ResolvingLayerSixNode : PureRunPhase.ResolvingLayerFourNode,
             map: begun.State, transaction: begun.Transaction, checkpoint: null);
         return new(true, null, updated);
     }
@@ -63,7 +67,7 @@ public sealed class PureRunLayerFourNodeService
         if (offers.Count != 3) return Fail("store.offer_pool_too_small", run);
         RunStoreOfferState[] stable = offers.OrderBy(value => value.ContentId.Value, StringComparer.Ordinal)
             .Select((value, index) => new RunStoreOfferState(value.ContentId, value.Price, value.IsConsumable,
-                new ItemInstanceId($"store-l4-{index}-{value.ContentId.Value}"))).ToArray();
+                new ItemInstanceId($"store-{run.NodeTransaction!.NodeId}-{index}-{value.ContentId.Value}"))).ToArray();
         PureRunMapState map = run.MapState! with { StoreOffers = stable, NodeLifecycle = RunNodeLifecycle.Pending };
         PureRunState updated = Copy(run, map: map);
         return new(true, null, updated, stable);
@@ -148,7 +152,7 @@ public sealed class PureRunLayerFourNodeService
             case "Item":
                 if (outcome.EffectContentId is not ContentId itemId || !consumables.TryGetValue(itemId, out ConsumableDefinition? item))
                     return Fail("event.item_unknown", run);
-                string itemInstance = $"event-l4-{outcome.EventId}-{outcome.OptionId}";
+                string itemInstance = $"event-{run.NodeTransaction!.NodeId}-{outcome.EventId}-{outcome.OptionId}";
                 if (backpack.All(value => value.InstanceId.Value != itemInstance))
                     backpack = backpack.Append(new BattleConsumableState(new ItemInstanceId(itemInstance), itemId,
                         item.MaxCharges, item.MaxCharges)).ToArray();
@@ -176,7 +180,8 @@ public sealed class PureRunLayerFourNodeService
     {
         if (!Validate(run, PureRunNodeKind.Battle, out LayerFourNodeResolution? failure)) return failure!;
         long revision = run.Revision + 1;
-        var checkpoint = new RunEncounterCheckpoint(encounterId, 3, revision, run.Party.ToArray(),
+        int encounterIndex = run.Phase == PureRunPhase.ResolvingLayerSixNode ? 5 : 3;
+        var checkpoint = new RunEncounterCheckpoint(encounterId, encounterIndex, revision, run.Party.ToArray(),
             run.BackpackConsumables.ToArray(), run.BackpackEquipment.ToArray());
         PureRunState pending = Copy(run, phase: PureRunPhase.PendingBattle, encounterId: encounterId,
             checkpoint: checkpoint, map: run.MapState! with { NodeLifecycle = RunNodeLifecycle.Pending });
@@ -196,9 +201,10 @@ public sealed class PureRunLayerFourNodeService
     private static LayerFourNodeResolution Commit(PureRunState run, IReadOnlyList<RunCharacterState>? party = null)
     {
         RunNodeTransaction transaction = run.NodeTransaction!;
+        bool layerSix = run.NodeTransaction?.NodeId.StartsWith("layer_06_", StringComparison.Ordinal) == true;
         PureRunMapState map = run.MapState! with
         {
-            Phase = PureRunMapPhase.ReadyForLayerFive,
+            Phase = layerSix ? PureRunMapPhase.ReadyForBoss : PureRunMapPhase.ReadyForLayerFive,
             CurrentNodeId = transaction.NodeId,
             ReachableNodeIds = Array.Empty<string>(),
             VisitedNodeIds = run.MapState.VisitedNodeIds.Append(transaction.NodeId).Distinct(StringComparer.Ordinal)
@@ -207,7 +213,7 @@ public sealed class PureRunLayerFourNodeService
             PendingTransactionKey = null,
             NodeLifecycle = RunNodeLifecycle.Committed
         };
-        PureRunState updated = Copy(run, phase: PureRunPhase.ReadyForLayerFive, party: party,
+        PureRunState updated = Copy(run, phase: layerSix ? PureRunPhase.ReadyForBoss : PureRunPhase.ReadyForLayerFive, party: party,
             appliedKey: transaction.TransactionKey, checkpoint: null, map: map,
             transaction: transaction with { Committed = true });
         return new(true, null, updated);

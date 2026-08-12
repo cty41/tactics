@@ -114,7 +114,8 @@ public sealed class PureRunSettlementService
             return new(true, null, null, CreateSummary(defeatedState, PureRunOutcome.Defeated, party, transactions), false);
         }
         int gold = Math.Min(GoldCap, checked(state.Gold + CalculateGold(result.TotalRounds)));
-        ContentId? drop = RollDrop(state.Seed, result.EncounterContentId, consumableDropPool);
+        bool elite = state.EncounterIndex is 4 or 5;
+        ContentId? drop = RollDrop(state.Seed, result.EncounterContentId, consumableDropPool, elite ? 0.30 : 0.25);
         BattleConsumableState[] backpack = state.BackpackConsumables.ToArray();
         IReadOnlyList<ContentId> acquired = state.AcquiredItems;
         if (drop is ContentId item)
@@ -122,9 +123,10 @@ public sealed class PureRunSettlementService
             backpack = backpack.Append(new BattleConsumableState(new ItemInstanceId($"drop-4-{item.Value}"), item, 1, 1)).ToArray();
             acquired = acquired.Append(item).OrderBy(value => value.Value, StringComparer.Ordinal).ToArray();
         }
+        bool layerSix = transaction.NodeId.StartsWith("layer_06_", StringComparison.Ordinal);
         PureRunMapState map = state.MapState! with
         {
-            Phase = PureRunMapPhase.ReadyForLayerFive, CurrentNodeId = transaction.NodeId,
+            Phase = layerSix ? PureRunMapPhase.ReadyForBoss : PureRunMapPhase.ReadyForLayerFive, CurrentNodeId = transaction.NodeId,
             ReachableNodeIds = Array.Empty<string>(),
             VisitedNodeIds = state.MapState!.VisitedNodeIds.Append(transaction.NodeId).Distinct(StringComparer.Ordinal)
                 .OrderBy(value => value, StringComparer.Ordinal).ToArray(),
@@ -133,11 +135,58 @@ public sealed class PureRunSettlementService
         transactions = transactions.Append(transaction.TransactionKey).Distinct(StringComparer.Ordinal)
             .OrderBy(value => value, StringComparer.Ordinal).ToArray();
         var completed = new PureRunState(state.RunId, state.Seed, state.Revision + 1,
-            PureRunPhase.ReadyForLayerFive, state.EncounterIndex, state.EncounterContentId, party, backpack,
+            layerSix ? PureRunPhase.ReadyForBoss : PureRunPhase.ReadyForLayerFive, state.EncounterIndex, state.EncounterContentId, party, backpack,
             state.BackpackEquipment, state.PendingProgression, transactions, gold, state.BattlesCompleted + 1,
             checked(state.EnemiesDefeated + result.EnemiesDefeated), acquired, mapState: map,
             nodeTransaction: transaction with { Committed = true });
         return new(true, null, completed, null, false);
+    }
+
+    public PureRunSettlementResult ApplyFixedLateBattle(PureRunState state, PureRunBattleResult result,
+        IReadOnlyList<ContentId> consumableDropPool, PureRunPhase victoryPhase, bool boss)
+    {
+        string battleKey = $"battle:{result.EncounterContentId.Value}:settlement";
+        if (state.AppliedTransactionKeys.Contains(battleKey, StringComparer.Ordinal))
+            return new(true, null, state, null, true);
+        string? rejection = Validate(state, result);
+        if (rejection is not null) return new(false, rejection, state, null, false);
+        RunCharacterState[] party = MergeParty(state, result, result.PlayerVictory);
+        string[] transactions = state.AppliedTransactionKeys.Append(battleKey).Distinct(StringComparer.Ordinal)
+            .OrderBy(value => value, StringComparer.Ordinal).ToArray();
+        if (!result.PlayerVictory)
+            return new(true, null, null, CreateSummary(state, PureRunOutcome.Defeated, party, transactions), false);
+
+        int gold = Math.Min(GoldCap, checked(state.Gold + CalculateGold(result.TotalRounds)));
+        ContentId? drop = RollDrop(state.Seed, result.EncounterContentId, consumableDropPool, boss ? 0.25 : 0.30);
+        BattleConsumableState[] backpack = state.BackpackConsumables.ToArray();
+        IReadOnlyList<ContentId> acquired = state.AcquiredItems;
+        if (drop is ContentId item)
+        {
+            backpack = backpack.Append(new BattleConsumableState(
+                new ItemInstanceId($"drop-{state.EncounterIndex + 1}-{item.Value}"), item, 1, 1)).ToArray();
+            acquired = acquired.Append(item).OrderBy(value => value.Value, StringComparer.Ordinal).ToArray();
+        }
+        int battles = state.BattlesCompleted + 1;
+        int defeated = checked(state.EnemiesDefeated + result.EnemiesDefeated);
+        if (boss)
+        {
+            var won = new PureRunState(state.RunId, state.Seed, state.Revision + 1, PureRunPhase.SliceCompleted,
+                state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment,
+                state.PendingProgression, transactions, gold, battles, defeated, acquired, mapState: state.MapState);
+            PureRunSummary summary = CreateSummary(won, PureRunOutcome.BossVictory, party, transactions) with
+            { BossDefeated = true, TerminalEncounterId = result.EncounterContentId };
+            return new(true, null, null, summary, false);
+        }
+        string target = party.Where(value => !value.IsDead).OrderBy(value => value.Level)
+            .ThenBy(value => Array.FindIndex(party, candidate => candidate.CharacterId == value.CharacterId))
+            .Select(value => value.CharacterId).FirstOrDefault() ?? string.Empty;
+        PendingProgression[] progression = string.IsNullOrEmpty(target) ? state.PendingProgression.ToArray() :
+            state.PendingProgression.Append(new PendingProgression($"progression:{result.EncounterContentId.Value}",
+                result.EncounterContentId.Value, target)).ToArray();
+        var next = new PureRunState(state.RunId, state.Seed, state.Revision + 1, victoryPhase,
+            state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment, progression,
+            transactions, gold, battles, defeated, acquired, mapState: state.MapState);
+        return new(true, null, next, null, false);
     }
 
     private static string? Validate(PureRunState state, PureRunBattleResult result)
@@ -194,13 +243,13 @@ public sealed class PureRunSettlementService
         _ => 0
     });
 
-    private static ContentId? RollDrop(int runSeed, ContentId encounter, IReadOnlyList<ContentId> pool)
+    private static ContentId? RollDrop(int runSeed, ContentId encounter, IReadOnlyList<ContentId> pool, double probability = 0.25)
     {
         if (pool.Count == 0)
             return null;
         int chanceSeed = DeriveSeed(runSeed, $"battle-drop:{encounter.Value}");
         var chance = new Random(chanceSeed);
-        if (chance.NextDouble() >= 0.25)
+        if (chance.NextDouble() >= probability)
             return null;
         int itemSeed = DeriveSeed(runSeed, $"battle-drop-item:{encounter.Value}");
         return pool.OrderBy(value => value.Value, StringComparer.Ordinal).ElementAt(new Random(itemSeed).Next(pool.Count));

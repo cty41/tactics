@@ -5,7 +5,11 @@ namespace Tactics.Core.Encounters;
 
 public sealed record BattleLayoutDefinition(ContentId ContentId, IReadOnlyList<GridPoint> PartySpawns, IReadOnlyList<GridPoint> EnemySpawns, IReadOnlyList<GridPoint> BlockedCells);
 public sealed record EncounterMonsterDefinition(ContentId UnitId, ContentId AiId, IReadOnlyList<ContentId> SkillIds);
-public sealed record EncounterDefinition(ContentId ContentId, ContentId LayoutId, IReadOnlyList<EncounterMonsterDefinition> Monsters);
+public enum EncounterClass { Normal, Elite, Boss }
+public sealed record EncounterDefinition(ContentId ContentId, ContentId LayoutId,
+    IReadOnlyList<EncounterMonsterDefinition> Monsters, float HealthMultiplier = 1f,
+    float OutputMultiplier = 1f, int MinimumStartingMana = 0,
+    EncounterClass Class = EncounterClass.Normal);
 public sealed record ResolvedEncounter(EncounterDefinition Encounter, BattleLayoutDefinition Layout, IReadOnlyList<(EncounterMonsterDefinition Monster, GridPoint Cell)> Enemies);
 
 public sealed class EncounterResolver

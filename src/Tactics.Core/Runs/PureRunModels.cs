@@ -12,6 +12,10 @@ public enum PureRunPhase
     AwaitingLayerFourChoice,
     ResolvingLayerFourNode,
     ReadyForLayerFive,
+    ReadyForLayerSix,
+    AwaitingLayerSixChoice,
+    ResolvingLayerSixNode,
+    ReadyForBoss,
     Defeated,
     Abandoned
 }
@@ -19,6 +23,7 @@ public enum PureRunPhase
 public enum PureRunOutcome
 {
     SliceCompleted,
+    BossVictory,
     Defeated,
     Abandoned
 }
@@ -144,7 +149,11 @@ public sealed record PureRunSummary(
     int TotalGoldEarned,
     IReadOnlyList<ContentId> AcquiredItems,
     IReadOnlyList<string> DeadCharacters,
-    IReadOnlyList<string> AppliedTransactionKeys);
+    IReadOnlyList<string> AppliedTransactionKeys,
+    int NodesVisited = 0,
+    int EventsCompleted = 0,
+    bool BossDefeated = false,
+    ContentId? TerminalEncounterId = null);
 
 public sealed record RunEncounterCheckpoint(
     ContentId EncounterContentId,
@@ -178,7 +187,7 @@ public sealed record PureRunState
     {
         if (string.IsNullOrWhiteSpace(runId))
             throw new ArgumentException("Run ID cannot be empty.", nameof(runId));
-        if (revision < 1 || encounterIndex is < 0 or > 2 || gold is < 0 or > 50)
+        if (revision < 1 || encounterIndex is < 0 or > 6 || gold is < 0 or > 50)
             throw new ArgumentOutOfRangeException(nameof(revision));
         RunId = runId.Trim();
         Seed = seed;
