@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-13T01:54:44+08:00"
+timestamp: "2026-08-13T07:38:05+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:2466aeefd2b00562a4d45cb2defdbecdc13f1490dfda79085459112721cd29c0
+source_fingerprint: sha256:ef0fb2576b8647e70f388ef0adebe922fcbc48bb64de02d9109bf23ca9a04cac
 ---
 
 # Current state
@@ -86,6 +86,8 @@ Phase 8C–8D 自动实现已完成：Ice Bolt、Lightning、Poison Spear 与 Am
 Phase 8 等距表现定向修复将屏幕投影垂直镜像而不改变任何 Core GridPoint、Encounter 出生格或存档：玩家逻辑出生格现在显示在左下、敌方显示在右上，初始朝向分别采用 Unity 合同的 East/West，移动分段、targeting hover 与攻击目标朝向复用等价 `FacingResolver`。单位表现由固定时间出队改为单 Frame 串行 Tween：先显示 Before snapshot，再依次完成 Move、Attack/Cast、Hit、Defeat，最后对齐 After snapshot并由完成事件驱动下一 AI frame；玩家动作的表现 After 在自动 AI 推进前捕获，防止未来伤害或死亡泄漏进当前帧。Pause/Step/0.5×/1×/2×/4×直接控制当前队列，避免 Refresh 提前覆盖移动 Actor 造成瞬移或自动播放停顿。移动棋盘把未消费尸体作为阻挡，召唤消费后才释放格子。完整统一门禁通过后仍并入 Phase 7B–8D 合并人工验收。
 
 Phase 7B–8D 合并验收前的第二轮定向修复把成长技能阶段收紧为 Unity 合同的确定性三选一：候选在属性事务持久化后由 Run seed、角色和 offer ordinal 稳定生成，已学等级不再重复出现，升级项明确显示旧/新等级。动态 Skeleton Warrior 显式绑定现有 Melee Attack；经用户授权，Godot playable slice 为 Unity 冻结 Prefab 中无 AbilityConfig 的 Fire Demon 显式绑定现有 Magic Attack，此差异只存在于 Application 会话装配，不改写冻结 Unit DTO。等距移动每段改为线性恒速，召唤施法朝向消费已提交的 `UnitSummonedEvent.Cell`，诊断 HP/MP 显示改为主题无关的精确 60×18 自绘 Overlay 并持续跟随 Actor。Catalog 仍为124，Save V4、玩法数值和事件顺序不变；播放期间输入锁的人验后移。
+
+Phase 8E 自动实现新增七层 Rogue Map 与持久 Run Shell，等待与 Phase 7B–8D 合并人工验收。Application 通过只读 projector 将 Save V4 的 Run/Map/Node transaction 投影成固定 14 节点、19 连接和 Locked/Available/Current/Selected/Pending/Completed 状态，不复制或修改 Run 状态机。Godot Main 的 New/Continue、N1–N3 Settlement、Layer 4/6、Elite、Boss、Inventory 与 Progression 统一经地图导航；地图只向既有 Session/LayerFour/FullRun service 发送 intent，选择分支后锁定兄弟节点，PendingBattle 与节点处理中按权威状态恢复。程序化 Control 提供节点连接、状态色、Hover、拖动/滚轮和首次当前节点居中，不复制 Unity UXML/USS、背景或图标 payload。Boss 结算优先按 Special 身份进入 `CompleteBoss`，不再被残留的 Layer 6 committed transaction 误路由。Catalog 保持124，状态为 `Generated/UnityOwned + manual_run_map_ui_qa_pending`。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

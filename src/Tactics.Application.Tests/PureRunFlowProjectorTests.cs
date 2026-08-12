@@ -75,6 +75,19 @@ public sealed class PureRunFlowProjectorTests
     }
 
     [Test]
+    public void LayerSixRoutesBecomeAvailableOnlyAfterEliteProgressionIsConsumed()
+    {
+        PureRunFlowSnapshot snapshot = _projector.Project(
+            Run(PureRunPhase.ReadyForLayerSix, battles: 4), Definition(), Map());
+
+        Assert.That(snapshot.Map!.Nodes.Where(value => value.State == PureRunMapNodeState.Available)
+            .Select(value => value.NodeId), Is.EquivalentTo(new[]
+        {
+            "layer_06_battle", "layer_06_event", "layer_06_rest", "layer_06_store"
+        }));
+    }
+
+    [Test]
     public void PendingBattleProjectsBattleAndStableResumeAction()
     {
         PureRunFlowSnapshot snapshot = _projector.Project(Run(PureRunPhase.PendingBattle), Definition(), Map());
@@ -96,6 +109,30 @@ public sealed class PureRunFlowProjectorTests
             Assert.That(snapshot.Page, Is.EqualTo(PureRunFlowPage.Summary));
             Assert.That(snapshot.Map, Is.Null);
             Assert.That(snapshot.Actions, Is.EqualTo(new[] { PureRunFlowAction.ReturnHome }));
+        });
+    }
+
+    [TestCase(PureRunNodeKind.Battle)]
+    [TestCase(PureRunNodeKind.Rest)]
+    [TestCase(PureRunNodeKind.Store)]
+    [TestCase(PureRunNodeKind.Mystery)]
+    public void BossIdentityWinsOverCommittedLayerSixTransaction(PureRunNodeKind priorKind)
+    {
+        PureRunState state = Run(PureRunPhase.ReadyForBoss, battles: 6,
+            transaction: new RunNodeTransaction("node:layer_06:resolve", $"layer_06_{priorKind.ToString().ToLowerInvariant()}", priorKind, true));
+        PureRunFullRunService service = new();
+        FullRunTransitionResult begun = service.BeginBoss(state, Map());
+        PureRunBattleResult battle = new(begun.State.RunId, begun.State.Checkpoint!.Revision,
+            new ContentId("encounter.pure-run.special"), true, 3, 1,
+            begun.State.Party.Select(value => new BattlePartyResult(value.CharacterId, value.CurrentHealth,
+                value.CurrentMana, value.IsDead, value.CarriedConsumables)).ToArray());
+        FullRunTransitionResult completed = service.CompleteBoss(begun.State, battle);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(completed.Succeeded, Is.True);
+            Assert.That(completed.TerminalSummary?.Outcome, Is.EqualTo(PureRunOutcome.BossVictory));
+            Assert.That(completed.TerminalSummary?.BossDefeated, Is.True);
         });
     }
 

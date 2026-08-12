@@ -62,9 +62,13 @@ public partial class GodotPlayableRunMain : Control
     private bool _presentationInputLocked;
     private StandardUnitPresentationResource? _presentationProfile;
     private readonly List<SkillPresentationResource> _skillPresentationProfiles=new();
+    private readonly PureRunFlowProjector _flowProjector = new();
+    private GodotRogueMapView? _mapView;
+    private Label? _mapDetail;
+    private int _catalogCount;
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
-        _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3;
+        _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 124;
 
     public override void _Ready()
     {
@@ -96,6 +100,7 @@ public partial class GodotPlayableRunMain : Control
     {
         GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")
             ?? throw new InvalidOperationException("Canonical Catalog is missing.");
+        _catalogCount = catalog.Entries.Length;
         _balance = (ResourceLoader.Load<PlayableLv1BalanceProfileResource>("res://content/ui/PlayableLv1BalanceProfile.tres")
             ?? throw new InvalidOperationException("Playable Lv1 balance profile is missing.")).ToCoreProfile();
         _presentationProfile = ResourceLoader.Load<StandardUnitPresentationResource>("res://content/presentation/StandardUnitPresentationV1.tres");
@@ -170,7 +175,7 @@ public partial class GodotPlayableRunMain : Control
     {
         _logs.Clear();_visibleSnapshot=null;
         _battle = null;
-        Control root = NewPage("PURE RUN", "Three-encounter Godot vertical slice");
+        Control root = NewPage("PURE RUN", "Seven-layer deterministic run");
         VBoxContainer menu = new() { Position = new Vector2(620, 310), Size = new Vector2(360, 320) };
         root.AddChild(menu);
         Button newRun = Button("New Run", () => StartNewRun()); menu.AddChild(newRun);
@@ -197,7 +202,7 @@ public partial class GodotPlayableRunMain : Control
     {
         RunSessionResult started = _run!.StartNewRun(7);
         if (!started.Succeeded) { SetStatus(started.ErrorCode); return; }
-        BeginReadyEncounter();
+        ShowRunMap(started.Snapshot!.ActiveRun!);
     }
 
     private void ContinueRun()
@@ -205,8 +210,7 @@ public partial class GodotPlayableRunMain : Control
         RunSessionResult resumed = _run!.ResumeRun();
         if (!resumed.Succeeded) { SetStatus(resumed.ErrorCode); return; }
         if (resumed.EncounterRequest is EncounterRequest request) StartBattle(request);
-        else if (resumed.Snapshot?.ActiveRun is PureRunState run && run.Phase != PureRunPhase.Ready) RouteMap(run);
-        else BeginReadyEncounter();
+        else if (resumed.Snapshot?.ActiveRun is PureRunState run) RouteMap(run);
     }
 
     private void BeginReadyEncounter()
@@ -425,19 +429,19 @@ public partial class GodotPlayableRunMain : Control
             RunSessionResult layerFour=_run!.ApplyLayerFourBattleResult(battleResult);
             if(!layerFour.Succeeded){_settlementCommitted=false;SetStatus(layerFour.ErrorCode);return;}
             if(layerFour.Snapshot?.TerminalSummary is PureRunSummary summary)ShowSummary(summary);
-            else ShowReadyForLayerFive(layerFour.Snapshot!.ActiveRun!);return;
+            else ShowRunMap(layerFour.Snapshot!.ActiveRun!);return;
         }
         if(battleResult.EncounterContentId.Value is "encounter.pure-run.e1" or "encounter.pure-run.e2" or "encounter.pure-run.special")
         {
             PureRunState? active=new GodotRunSaveStore().Load().Snapshot?.ActiveRun;
-            if(active?.NodeTransaction?.NodeId.StartsWith("layer_06_",StringComparison.Ordinal)==true)
+            bool boss=battleResult.EncounterContentId.Value.EndsWith(".special",StringComparison.Ordinal);
+            if(!boss&&active?.NodeTransaction?.NodeId.StartsWith("layer_06_",StringComparison.Ordinal)==true)
             {
                 RunSessionResult layerSix=_run!.ApplyLayerFourBattleResult(battleResult);
                 if(!layerSix.Succeeded){_settlementCommitted=false;SetStatus(layerSix.ErrorCode);return;}
                 RouteMap(layerSix.Snapshot!.ActiveRun!);return;
             }
             PureRunFullRunService full=new(_consumables.Keys);
-            bool boss=battleResult.EncounterContentId.Value.EndsWith(".special",StringComparison.Ordinal);
             RunSessionResult late=_run!.ApplyFullRunTransition(state=>boss?full.CompleteBoss(state,battleResult):full.CompleteLayerFive(state,battleResult));
             if(!late.Succeeded){_settlementCommitted=false;SetStatus(late.ErrorCode);return;}
             if(late.Snapshot?.TerminalSummary is PureRunSummary terminal)ShowSummary(terminal);else ShowSettlement(late.Snapshot!);return;
@@ -504,20 +508,89 @@ public partial class GodotPlayableRunMain : Control
         _battle = null;
         if (snapshot.TerminalSummary is PureRunSummary summary) { ShowSummary(summary); return; }
         PureRunState run = snapshot.ActiveRun!;
-        if (run.Phase is PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.ResolvingLayerFourNode or PureRunPhase.ReadyForLayerFive or
-            PureRunPhase.AwaitingLayerSixChoice or PureRunPhase.ResolvingLayerSixNode or PureRunPhase.ReadyForBoss)
+        if ((run.Phase is PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.ResolvingLayerFourNode or PureRunPhase.ReadyForLayerFive or
+            PureRunPhase.AwaitingLayerSixChoice or PureRunPhase.ResolvingLayerSixNode or PureRunPhase.ReadyForBoss) &&
+            run.PendingProgression.Count == 0)
         { RouteMap(run); return; }
         if(run.Phase==PureRunPhase.ReadyForLayerSix&&run.PendingProgression.Count==0){RouteMap(run);return;}
         string completed=_currentEncounterId is ContentId completedId?EncounterLabel(completedId):$"Battle {run.BattlesCompleted}";
-        string next=EncounterLabel(run.EncounterContentId);
+        string next=run.Phase switch
+        {
+            PureRunPhase.AwaitingLayerFourChoice => "Layer 4 Map",
+            PureRunPhase.ReadyForLayerSix => "Layer 6 Map",
+            _ => EncounterLabel(run.EncounterContentId)
+        };
         Control root = NewPage("BATTLE SETTLEMENT", $"{completed} completed → Next: {next}");
+        AddRunShell(root, run, "Settlement");
         LabelAt(root, $"Gold: {run.Gold}\nItems: {string.Join(", ", run.AcquiredItems.Select(id => id.Value))}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
         root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run)),new Vector2(480,520),new Vector2(260,60)));
         PendingProgression? pending=run.PendingProgression.FirstOrDefault();
         if(pending is not null)root.AddChild(PlaceControl(Button("Complete Progression",()=>ShowProgression(run,pending)),new Vector2(780,520),new Vector2(320,60)));
         bool continueRequested=false;
-        Button nextButton = Button($"Continue to {next}",()=>{if(continueRequested)return;continueRequested=true;BeginReadyEncounter();}); nextButton.Position = new Vector2(650, 610); nextButton.Size = new Vector2(300, 70); root.AddChild(nextButton);
+        Button nextButton = Button($"Return to map — {next}",()=>{if(continueRequested)return;continueRequested=true;ShowRunMap(run);}); nextButton.Position = new Vector2(650, 610); nextButton.Size = new Vector2(300, 70); root.AddChild(nextButton);
         nextButton.Disabled=pending is not null;
+    }
+
+    private void ShowRunMap(PureRunState run)
+    {
+        Control root = NewPage("PURE RUN MAP", "Choose an available node. Drag or use the wheel to inspect the route.");
+        PureRunFlowSnapshot flow = _flowProjector.Project(run, _runDefinition!, LayerFourMap());
+        AddRunShell(root, run, "Map");
+        _mapView = new GodotRogueMapView { Position = new Vector2(60, 135), Size = new Vector2(1040, 700) };
+        _mapView.NodePressed += nodeId => ActivateMapNode(run, nodeId);
+        _mapView.NodeHovered += node =>
+        {
+            if (_mapDetail is null) return;
+            _mapDetail.Text = node is null
+                ? "Hover a node to inspect it."
+                : $"{node.Title}  |  {node.State}\n{node.ContentId?.Value ?? node.NodeId}\n{node.UnavailableReason ?? "Ready"}";
+        };
+        root.AddChild(_mapView);
+        _mapView.SetSnapshot(flow.Map!, true);
+        _mapDetail = LabelAt(root, "Hover a node to inspect it.", new Vector2(1140, 220), 19);
+        _mapDetail.Size = new Vector2(390, 180); _mapDetail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        if (run.PendingProgression.FirstOrDefault() is PendingProgression pending)
+        {
+            LabelAt(root, "Progression must be completed before the next node.", new Vector2(1140, 430), 18);
+            root.AddChild(PlaceControl(Button("Complete Progression", () => ShowProgression(run, pending)),
+                new Vector2(1140, 475), new Vector2(360, 58)));
+        }
+        root.AddChild(PlaceControl(Button("Inventory", () => ShowInventory(run)), new Vector2(1140, 560), new Vector2(360, 58)));
+        root.AddChild(PlaceControl(Button("Abandon Run", AbandonRun), new Vector2(1140, 720), new Vector2(360, 52)));
+        _status = LabelAt(root, string.Empty, new Vector2(1140, 790), 16);
+    }
+
+    private void ActivateMapNode(PureRunState run, string nodeId)
+    {
+        PureRunMapNodeSnapshot node = _flowProjector.ProjectMap(run, _runDefinition!, LayerFourMap()).Nodes
+            .Single(value => value.NodeId == nodeId);
+        if (node.State is not (PureRunMapNodeState.Available or PureRunMapNodeState.Current))
+        { SetStatus(node.UnavailableReason ?? "map.node_locked"); return; }
+        if (nodeId is "layer_01_battle" or "layer_02_battle" or "layer_03_battle")
+        { BeginReadyEncounter(); return; }
+        if (nodeId.StartsWith("layer_04_", StringComparison.Ordinal))
+        { SelectLayerFourNode(nodeId); return; }
+        if (nodeId == "layer_05_battle") { BeginLayerFive(); return; }
+        if (nodeId.StartsWith("layer_06_", StringComparison.Ordinal))
+        {
+            if (run.Phase == PureRunPhase.ReadyForLayerSix)
+            {
+                RunSessionResult unlocked = _run!.ApplyFullRunTransition(state =>
+                    new PureRunFullRunService(_consumables.Keys).UnlockLayerSix(state, LayerFourMap()));
+                if (!unlocked.Succeeded) { SetStatus(unlocked.ErrorCode); return; }
+            }
+            SelectLayerSixNode(nodeId); return;
+        }
+        if (nodeId == "layer_07_battle") BeginBoss();
+    }
+
+    private void AddRunShell(Control root, PureRunState run, string page)
+    {
+        var panel = new ColorRect { Color = new Color("1c2a33e6"), Position = new Vector2(1115, 125), Size = new Vector2(420, 82) };
+        root.AddChild(panel);
+        LabelAt(root, $"{page}  |  Gold {run.Gold}  |  Bag {run.BackpackConsumables.Count + run.BackpackEquipment.Count}\n" +
+            string.Join("   ", run.Party.Select(value => $"{value.CharacterId} L{value.Level} HP {value.CurrentHealth}/{value.MaxHealth} MP {value.CurrentMana}/{value.MaxMana}")),
+            new Vector2(1130, 138), 15).Size = new Vector2(390, 62);
     }
 
     private void ShowLayerFourChoice(PureRunState run)
@@ -567,18 +640,14 @@ public partial class GodotPlayableRunMain : Control
 
     private void RouteMap(PureRunState run)
     {
-        if(run.Phase is PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.ResolvingLayerFourNode){RouteLayerFour(run);return;}
-        if(run.Phase==PureRunPhase.ReadyForLayerFive){ShowReadyForLayerFive(run);return;}
-        if(run.Phase==PureRunPhase.ReadyForLayerSix)
-        {
-            if(run.PendingProgression.Count>0){ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null));return;}
-            RunSessionResult unlocked=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).UnlockLayerSix(state,LayerFourMap()));
-            if(!unlocked.Succeeded){SetStatus(unlocked.ErrorCode);return;}ShowLayerSixChoice(unlocked.Snapshot!.ActiveRun!);return;
-        }
-        if(run.Phase==PureRunPhase.AwaitingLayerSixChoice){ShowLayerSixChoice(run);return;}
+        if(run.Phase==PureRunPhase.ResolvingLayerFourNode){RouteLayerFour(run);return;}
         if(run.Phase==PureRunPhase.ResolvingLayerSixNode){RouteLayerSixNode(run);return;}
-        if(run.Phase==PureRunPhase.ReadyForBoss){ShowReadyForBoss(run);return;}
-        RouteLayerFour(run);
+        if(run.Phase==PureRunPhase.PendingBattle&&run.Checkpoint is not null)
+        {
+            StartBattle(new EncounterRequest(run.RunId,run.Checkpoint.Revision,run.Checkpoint.EncounterContentId,run.Checkpoint.Party));
+            return;
+        }
+        ShowRunMap(run);
     }
 
     private void BeginLayerFourBattle()
@@ -595,7 +664,8 @@ public partial class GodotPlayableRunMain : Control
 
     private void ShowRest(PureRunState run)
     {
-        Control root=NewPage("LAYER 4 — REST","Preview: living party members recover ceil(30% max HP/MP); dead characters remain dead.");
+        Control root=NewPage($"{LayerLabel(run)} — REST","Preview: living party members recover ceil(30% max HP/MP); dead characters remain dead.");
+        AddRunShell(root,run,"Rest");
         LabelAt(root,string.Join('\n',run.Party.Select(c=>$"{c.CharacterId}: HP {c.CurrentHealth} → {(c.IsDead?c.CurrentHealth:Math.Min(c.MaxHealth,c.CurrentHealth+(int)Math.Ceiling(c.MaxHealth*.3)))} / {c.MaxHealth}, MP {c.CurrentMana} → {(c.IsDead?c.CurrentMana:Math.Min(c.MaxMana,c.CurrentMana+(int)Math.Ceiling(c.MaxMana*.3)))} / {c.MaxMana}")),new Vector2(360,250),26);
         root.AddChild(PlaceControl(Button("Confirm Rest",()=>CommitLayerFour(state=>new PureRunLayerFourNodeService().ConfirmRest(state))),new Vector2(650,650),new Vector2(300,65)));
     }
@@ -609,7 +679,8 @@ public partial class GodotPlayableRunMain : Control
             RunSessionResult opened=_run!.ApplyMutation(state=>{LayerFourNodeResolution r=new PureRunLayerFourNodeService().OpenStore(state,gear,items);return new RunMutationResult(r.Succeeded,r.RejectionCode,r.State);});
             if(!opened.Succeeded){SetStatus(opened.ErrorCode);return;}run=opened.Snapshot!.ActiveRun!;
         }
-        Control root=NewPage("LAYER 4 — STORE",$"Gold {run.Gold}. Stock is persisted and will not reroll after Reload.");
+        Control root=NewPage($"{LayerLabel(run)} — STORE",$"Gold {run.Gold}. Stock is persisted and will not reroll after Reload.");
+        AddRunShell(root,run,"Store");
         var menu=new VBoxContainer{Position=new Vector2(430,210),Size=new Vector2(740,520)};root.AddChild(menu);
         foreach(RunStoreOfferState offer in run.MapState!.StoreOffers!)
         {Button buy=Button($"{offer.ContentId.Value} — {offer.Price} gold{(offer.Purchased?" [SOLD]":"")}",()=>PurchaseStore(offer.InstanceId));buy.Disabled=offer.Purchased;menu.AddChild(buy);}
@@ -626,7 +697,8 @@ public partial class GodotPlayableRunMain : Control
     {
         string sourceId=run.MapState!.MysteryEventAssignments[run.NodeTransaction!.NodeId];
         using JsonDocument document=JsonDocument.Parse(_layerFourEventPayloads[sourceId]);JsonElement rootElement=document.RootElement;
-        Control root=NewPage($"LAYER 4 — {rootElement.GetProperty("title").GetString()}",rootElement.GetProperty("description").GetString()!);
+        Control root=NewPage($"{LayerLabel(run)} — {rootElement.GetProperty("title").GetString()}",rootElement.GetProperty("description").GetString()!);
+        AddRunShell(root,run,"Mystery");
         var menu=new VBoxContainer{Position=new Vector2(330,180),Size=new Vector2(940,620)};root.AddChild(menu);
         if(run.MapState.MysteryResolution is RunMysteryResolutionState resolved)
         {
@@ -671,6 +743,7 @@ public partial class GodotPlayableRunMain : Control
     private void ShowInventory(PureRunState run)
     {
         Control root=NewPage("INVENTORY","Functional placeholder — equipment, carried consumable, attributes and skill levels");
+        AddRunShell(root,run,"Inventory");
         var columns=new HBoxContainer{Position=new Vector2(90,150),Size=new Vector2(1420,610)};root.AddChild(columns);
         foreach(RunCharacterState character in run.Party)
         {
@@ -687,13 +760,14 @@ public partial class GodotPlayableRunMain : Control
                 panel.AddChild(Button($"Carry {item.DefinitionId.Value}",()=>CommitMutation(state=>new RunInventoryProgressionService().Carry(state,state.Revision,character.CharacterId,item.InstanceId))));
             if(character.CarriedConsumables.Count>0)panel.AddChild(Button("Unload Consumable",()=>CommitMutation(state=>new RunInventoryProgressionService().Unload(state,state.Revision,character.CharacterId))));
         }
-        root.AddChild(PlaceControl(Button("Back",()=>ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null))),new Vector2(650,800),new Vector2(300,55)));
+        root.AddChild(PlaceControl(Button("Back to Map",()=>ShowRunMap(run)),new Vector2(650,800),new Vector2(300,55)));
     }
 
     private void ShowProgression(PureRunState run, PendingProgression pending)
     {
         RunCharacterState character=run.Party.Single(value=>value.CharacterId==pending.CharacterId);
         Control root=NewPage("PROGRESSION",$"{character.CharacterId}: attribute allocation → skill selection");
+        AddRunShell(root,run,"Progression");
         var menu=new VBoxContainer{Position=new Vector2(430,160),Size=new Vector2(740,650)};root.AddChild(menu);
         var progressionService=new RunInventoryProgressionService();
         if (pending.ProposedAttributes is not UnitAttributes proposed)
@@ -722,7 +796,7 @@ public partial class GodotPlayableRunMain : Control
                 menu.AddChild(Button("Confirm Attribute",()=>CommitMutation(state=>progressionService.CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,null,_skills,_runDefinition!))));
             }
         }
-        root.AddChild(PlaceControl(Button("Back",()=>ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null))),new Vector2(650,820),new Vector2(300,55)));
+        root.AddChild(PlaceControl(Button("Back to Map",()=>ShowRunMap(run)),new Vector2(650,820),new Vector2(300,55)));
     }
 
     private static string GrowthChoiceLabel(RunCharacterState character,SkillDefinition skill)
@@ -783,6 +857,8 @@ public partial class GodotPlayableRunMain : Control
         _speedButton=null;
         _hoverInfo=null;
         _eventLog=null;
+        _mapView=null;
+        _mapDetail=null;
         var root = new Control(); root.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); AddChild(root); _page = root;
         Control background = battleBackdrop ? new GodotBattleBackdrop() : new ColorRect { Color = new Color("657784") };
         background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);
@@ -817,4 +893,5 @@ public partial class GodotPlayableRunMain : Control
         ? "Lv1: single target; hits the first enemy on the selected ray. Splash begins at Lv2."
         : $"Range {skill.MinRange}-{skill.MaxRange}; damage {skill.Damage}.";
     private static string EncounterLabel(ContentId id)=>id.Value.EndsWith(".n1",StringComparison.Ordinal)?"N1":id.Value.EndsWith(".n2",StringComparison.Ordinal)?"N2":id.Value.EndsWith(".n3",StringComparison.Ordinal)?"N3":id.Value;
+    private static string LayerLabel(PureRunState run)=>run.NodeTransaction?.NodeId.StartsWith("layer_06_",StringComparison.Ordinal)==true?"LAYER 6":"LAYER 4";
 }

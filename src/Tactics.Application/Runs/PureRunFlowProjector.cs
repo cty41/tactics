@@ -166,7 +166,8 @@ public sealed class PureRunFlowProjector
             {
                 if (run.BattlesCompleted >= layer) return PureRunMapNodeState.Completed;
                 if (run.EncounterIndex == layer - 1 && run.Phase == PureRunPhase.PendingBattle) return PureRunMapNodeState.Pending;
-                if (run.EncounterIndex == layer - 1 && run.Phase == PureRunPhase.Ready) return PureRunMapNodeState.Current;
+                if (run.EncounterIndex == layer - 1 && run.Phase == PureRunPhase.Ready && run.PendingProgression.Count == 0)
+                    return PureRunMapNodeState.Current;
                 return PureRunMapNodeState.Locked;
             }
         }
@@ -177,7 +178,10 @@ public sealed class PureRunFlowProjector
             if (map?.SelectedNodeId == nodeId)
                 return map.NodeLifecycle is RunNodeLifecycle.Pending or RunNodeLifecycle.Resolved
                     ? PureRunMapNodeState.Pending : PureRunMapNodeState.Selected;
-            if (map?.ReachableNodeIds.Contains(nodeId, StringComparer.Ordinal) == true)
+            if (map?.ReachableNodeIds.Contains(nodeId, StringComparer.Ordinal) == true && run.PendingProgression.Count == 0)
+                return PureRunMapNodeState.Available;
+            if (nodeId.StartsWith("layer_06_", StringComparison.Ordinal) && run.Phase == PureRunPhase.ReadyForLayerSix &&
+                run.PendingProgression.Count == 0)
                 return PureRunMapNodeState.Available;
             return PureRunMapNodeState.Locked;
         }
@@ -186,13 +190,15 @@ public sealed class PureRunFlowProjector
             if (run.Phase is PureRunPhase.ReadyForLayerSix or PureRunPhase.AwaitingLayerSixChoice or
                 PureRunPhase.ResolvingLayerSixNode or PureRunPhase.ReadyForBoss) return PureRunMapNodeState.Completed;
             if (run.EncounterIndex == 4 && run.Phase == PureRunPhase.PendingBattle) return PureRunMapNodeState.Pending;
-            if (run.Phase == PureRunPhase.ReadyForLayerFive) return PureRunMapNodeState.Current;
+            if (run.Phase == PureRunPhase.ReadyForLayerFive && run.PendingProgression.Count == 0)
+                return PureRunMapNodeState.Current;
             return PureRunMapNodeState.Locked;
         }
         if (nodeId == "layer_07_battle")
         {
             if (run.EncounterIndex == 6 && run.Phase == PureRunPhase.PendingBattle) return PureRunMapNodeState.Pending;
-            return run.Phase == PureRunPhase.ReadyForBoss ? PureRunMapNodeState.Current : PureRunMapNodeState.Locked;
+            return run.Phase == PureRunPhase.ReadyForBoss && run.PendingProgression.Count == 0
+                ? PureRunMapNodeState.Current : PureRunMapNodeState.Locked;
         }
         return PureRunMapNodeState.Locked;
     }

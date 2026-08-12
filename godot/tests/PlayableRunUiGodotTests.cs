@@ -5,6 +5,7 @@ using Tactics.Core.Content;
 using Tactics.Core.Runs;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
+using Tactics.Application.Runs;
 using static GdUnit4.Assertions;
 
 namespace Tactics.Godot.Tests;
@@ -34,6 +35,31 @@ public class PlayableRunUiGodotTests
     {
         AssertThat(GodotPlayableRunMain.UnitMeterSize).IsEqual(new Vector2(60, 18));
         AssertThat(GodotPlayableRunMain.UnitMeterBarHeight).IsEqual(7);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void RogueMapPlacesStartBelowBossAndKeepsLockedNodesReadOnly()
+    {
+        var nodes = new[]
+        {
+            new PureRunMapNodeSnapshot("start", 0, PureRunNodeKind.Battle, "Start", null, 0,
+                PureRunMapNodeState.Completed),
+            new PureRunMapNodeSnapshot("layer_01_battle", 1, PureRunNodeKind.Battle, "N1", null, 0,
+                PureRunMapNodeState.Current),
+            new PureRunMapNodeSnapshot("layer_07_battle", 7, PureRunNodeKind.Battle, "Boss", null, 0,
+                PureRunMapNodeState.Locked, "map.node_locked")
+        };
+        var view = new GodotRogueMapView { Size = GodotRogueMapView.PreferredSize };
+        view.SetSnapshot(new PureRunMapSnapshot(nodes,
+            [new PureRunMapConnectionSnapshot("start", "layer_01_battle", true, true)],
+            "layer_01_battle"), true);
+
+        AssertThat(view.NodeCenter("start").Y).IsGreater(view.NodeCenter("layer_07_battle").Y);
+        AssertThat(view.Snapshot!.FocusNodeId).IsEqual("layer_01_battle");
+        AssertThat(view.Snapshot.Nodes.Single(value => value.NodeId == "layer_07_battle").UnavailableReason)
+            .IsEqual("map.node_locked");
+        view.Free();
     }
 
     [TestCase]
@@ -78,6 +104,32 @@ public class PlayableRunUiGodotTests
         string[] buttonTexts = Descendants<Button>(ui).Select(button => button.Text).ToArray();
         AssertThat(buttonTexts.Count(text => text.StartsWith("+1 ", StringComparison.Ordinal))).IsEqual(6);
         AssertThat(buttonTexts.Any(text => text.Contains("mage.fireball", StringComparison.Ordinal))).IsFalse();
+        ui.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void RunMapPageConsumesTheApplicationSnapshotWithoutStartingBattle()
+    {
+        var ui = new GodotPlayableRunMain(); ui._Ready();
+        UnitAttributes attributes = new(5, 5, 5, 6, 5, 5);
+        RunCharacterState Character(string id, string unit, string skill) => new(id, new ContentId(unit), 1,
+            attributes, 20, 20, 10, 10, false, [new ContentId(skill)]);
+        var run = new PureRunState("run-map-test", 7, 1, PureRunPhase.Ready, 0,
+            new ContentId("encounter.pure-run.n1"),
+        [
+            Character("pure_run_mage", "unit.pure-run.mage", "skill.mage.fireball.lv1"),
+            Character("pure_run_necromancer", "unit.pure-run.necromancer", "skill.necromancer.summon-skeleton.lv1"),
+            Character("pure_run_amazon", "unit.pure-run.amazon", "skill.amazon.thrust.lv1")
+        ]);
+
+        typeof(GodotPlayableRunMain).GetMethod("ShowRunMap", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?.Invoke(ui, new object[] { run });
+        GodotRogueMapView? map = Descendants<GodotRogueMapView>(ui).SingleOrDefault();
+
+        AssertThat(map).IsNotNull();
+        AssertThat(map!.Snapshot!.Nodes.Count).IsEqual(14);
+        AssertThat(map.Snapshot.FocusNodeId).IsEqual("layer_01_battle");
         ui.Free();
     }
 

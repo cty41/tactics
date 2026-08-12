@@ -45,6 +45,8 @@ Godot Phase 6B 只迁移 N1→N2→N3 三战垂直切片，不宣称完整七层
 
 Godot Run 层不结算战斗命令，只发出带 Run/revision/Encounter 的请求并消费验证后的 `BattleResult`。胜利奖励、恢复、死亡卸装、击杀和掉落由冻结规则重新计算，稳定 transaction key 防止重复结算；N1/N2 推进，N3 产生明确的 `SliceCompleted` 而非 Boss Victory。失败、放弃与完成摘要在 active run 清除后保留到显式消费；成长只记录最低等级存活角色的 pending identity，尚不应用等级、属性或技能。
 
+Godot 后续垂直切片已扩展到完整七层 Run，并在 Phase 8E 加入只读 Rogue Map UI 投影。固定图由 Start、N1–N3、Layer 4 四路线、Layer 5 Elite、Layer 6 四路线和 Special Boss 共 14 个节点及 19 条只前进连接组成；节点可视状态完全来自 Save V4 的 Run phase、MapState 和 NodeTransaction。Main 的地图点击只调用既有 Application intent，结算、成长、Inventory 和节点功能页返回同一流程 Shell；选择四选一路线后兄弟节点锁定，PendingBattle、Store/Mystery 处理中和 Boss terminal 都按存档恢复。Godot 使用程序化 Control 等价实现连线、状态色、Hover、拖动与首次当前节点居中，不复制 Unity UXML/USS 或视觉 payload。
+
 Home 磁盘场景已精简为 `AudioListener`、`Bootstrap`、`EventSystem`、`Main Camera` 四个无子节点静态 root，不包含 Grid、Tilemap、UnitManager 或战斗单位；Home UI 仍由生产 `GameAssetManager`、`HomeFlowCoordinator` 和 `UIManager` 在运行时创建。Editor 结构测试始终通过 `OpenPreviewScene` 验证磁盘资产的精确 roots、组件白名单和禁用玩法组件。独立 PlayMode source spec 经 compiler 生成 plan，以虚拟 Mouse 通过生产 `PlayerInput` 点击 `OptionsButton`，断言 `OptionsRoot` 存在且可见，并覆盖测试设备释放；该 smoke 与较长旅程夹具隔离。
 
 Home smoke 同时守护中文 runtime FontAsset 的动态 atlas、隐藏/重开、直接打开另一个 UI 时的可修复资源标志、静态引用丢失后的 owner 恢复、无 provenance owner 隔离，以及完整或部分共享 FontAsset/Material/atlas 时的引用感知清理；未使用 atlas 容量尾槽不会被当作自有资源销毁。修改 Home UI 字体或 UIManager 生命周期时，先运行 `PlayerInputGameplayPlanTests`，再运行完整 `HomeSceneInputSmokeTests`；这些自动测试模拟资源边界，不宣称单个 UnityTest 真正跨越 Play Mode 退出边界。
