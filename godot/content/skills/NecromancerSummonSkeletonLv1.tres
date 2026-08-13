@@ -15,6 +15,7 @@ ManaCost = 3
 MaxRange = 999
 ExecutionKindValue = "SummonSkeleton"
 DamageKindValue = "None"
+BranchId = "necromancer.summon-skeleton"
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Graph_Ability.asset"
 SourceGuid = "89577d5847f7a9547999276600365986"
 SourceLocalFileId = 11400000

@@ -122,6 +122,8 @@
       "visual": {
         "downRightTexture": "res://assets/units/doge_hunter.png",
         "upLeftTexture": "res://assets/units/doge_hunter_ul.png",
+        "unarmedDownRightTexture": "res://assets/units/doge_hunter_idle_unarmed_dr.png",
+        "unarmedUpLeftTexture": "res://assets/units/doge_hunter_idle_unarmed_ul.png",
         "deathTexture": "res://assets/units/doge_hunter_death.png",
         "shadowTexture": "res://assets/units/pure_run_unit_shadow_1x1_v01.png",
         "shadowOffset": [0, -0.03],
@@ -378,6 +380,8 @@
   "textureAssets": [
     { "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter.png", "targetPath": "res://assets/units/doge_hunter.png", "gitBlobSha1": "5e501e2d9b3ddc1ce6fbe0d16f7ed51c6fd361c3", "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07", "width": 256, "height": 256, "kind": "direction" },
     { "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_ul.png", "targetPath": "res://assets/units/doge_hunter_ul.png", "gitBlobSha1": "8b9b6d05d10aff56e70826237e1690f85bd69747", "sha256": "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24", "width": 256, "height": 256, "kind": "direction" },
+    { "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_dr.png", "targetPath": "res://assets/units/doge_hunter_idle_unarmed_dr.png", "gitBlobSha1": "d19a7118697bcc09b65d72c3e9415fd0fe1d2713", "sha256": "4f9388311ad640336a5f9cb0eac90831849f885d2ccae01195b06bcc0fba56ab", "width": 256, "height": 256, "kind": "direction" },
+    { "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_ul.png", "targetPath": "res://assets/units/doge_hunter_idle_unarmed_ul.png", "gitBlobSha1": "f9d2e76db7b7e8bfa3af66fbdb3beb320361c14b", "sha256": "08bf56069d3fd4365995b5a8a4f388ba15b8c18c4018bd5c2f2ad97fecdb41a2", "width": 256, "height": 256, "kind": "direction" },
     { "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_death.png", "targetPath": "res://assets/units/doge_hunter_death.png", "gitBlobSha1": "12edbff78f75afa3b0d67a779e79892bbbb0a788", "sha256": "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19", "width": 256, "height": 256, "kind": "death" },
     { "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_mage.png", "targetPath": "res://assets/units/doge_mage.png", "gitBlobSha1": "3be624dc054da7cc04bdccd3ef14c2d278b0ffc8", "sha256": "84fbefaa2423948cb2a716aa9848a75a12745a4bfdc4a9ad446b95fe17bccee5", "width": 256, "height": 256, "kind": "direction" },
     { "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_mage_ul.png", "targetPath": "res://assets/units/doge_mage_ul.png", "gitBlobSha1": "5fca4882295f46f5d8958824e74bb701cd75818b", "sha256": "40547194e76662324b687df271b34edb767a5d6c57d1539d39ff4d32db39bad8", "width": 256, "height": 256, "kind": "direction" },

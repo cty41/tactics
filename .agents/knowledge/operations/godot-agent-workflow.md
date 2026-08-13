@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-12T17:23:26+08:00"
+timestamp: "2026-08-13T14:26:10+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:44ef7f3d400e229be4a3be2c8f604ff8ae2e25043b415424b0647bdcf643e838
+source_fingerprint: sha256:6e24facda6f01fad788e9f3e809d81f64a6229bedba0dc23fba09c736f420e29
 ---
 
 # Current state
@@ -46,7 +46,7 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 19 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter、Run/Persistence 与 Inventory/Progression 各自维护批次证据；Phase 7B 在两轮 ResourceSaver 后验证 27 个新增技能与 canonical 101 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉、Skill Gameplay、AI/Encounter Gameplay 与 Inventory/Progression 验收仍单独记录。
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 21 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter、Run/Persistence 与 Inventory/Progression 各自维护批次证据；Phase 7B 在两轮 ResourceSaver 后验证 27 个新增技能与 canonical 101 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉、Skill Gameplay、AI/Encounter Gameplay 与 Inventory/Progression 验收仍单独记录。
 
 Phase 7E 的等距棋盘由 `IsometricBattleBoardLayout` 提供唯一投影/逆投影合同，`GodotIsometricBattleBoard` 只绘制 Application Snapshot 并发送已有 cell intent。Phase 8A 的 `BattlePresentationFrameCompiler` 只消费 transition 前后 Snapshot 与已提交事件，Godot Tween 队列只消费 cue，不参与 RNG、伤害或 BattleResult。Phase 8B 的 Fireball/Bone Spear/Thrust 临时 FX 只消费 cue 路径和真实 affected-unit 集合，并严格排除 Piloto Prefab、纹理、材质、Shader 与 Audio。统一入口连续两次运行 `IsometricPresentationAssetBuilder`，比较 canonical Catalog、Board、Standard Unit 与三个技能 Resource SHA-256；新增路径固定 ledger UID。当前 canonical Catalog 精确为 119。
 

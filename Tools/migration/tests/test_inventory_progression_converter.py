@@ -28,6 +28,17 @@ class InventoryProgressionConverterTests(unittest.TestCase):
         self.assertEqual("SkeletonMage", definitions["skill.necromancer.skeleton-mage.lv2"]["summonCategory"])
         self.assertEqual(6, definitions["skill.amazon.recover-spear.lv2"]["secondaryDamage"])
 
+    def test_combat_techniques_preserves_formal_ui_metadata(self):
+        definitions = {
+            value["contentId"]: value
+            for value in compile_inventory_progression_draft(self.export, self.spec)["definitions"]
+        }
+        for level in (1, 2):
+            definition = definitions[f"skill.amazon.combat-techniques.lv{level}"]
+            self.assertEqual("amazon.combat-techniques", definition["branchId"])
+            self.assertEqual("战斗技巧", definition["displayName"])
+            self.assertTrue(definition["description"].strip())
+
     def test_rejects_missing_level(self):
         changed = copy.deepcopy(self.export)
         changed["assets"] = [value for value in changed["assets"] if value["sourceKey"] != "skill.mage.teleport.lv2"]

@@ -30,6 +30,10 @@ CONTRACT: dict[str, dict[str, Any]] = {
 for _content_id, _contract in CONTRACT.items():
     _contract["isBasicAbility"] = _content_id in {"skill.basic.magic", "skill.basic.melee"}
     _contract["maxUsesPerTurn"] = 0
+    if _content_id == "skill.poison-spear.lv1":
+        _contract["branchId"] = "amazon.poison-spear"
+    else:
+        _contract["branchId"] = _content_id.removeprefix("skill.").removesuffix(".lv1")
 
 
 def _properties(asset: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
@@ -80,7 +84,15 @@ def compile_starting_skill_draft(export: Mapping[str, Any], specification: Mappi
     for content_id, contract in sorted(CONTRACT.items()):
         normalize_content_id(content_id)
         if content_id == "skill.amazon.combat-techniques.lv1":
-            definitions.append({"contentId": content_id, **contract, "level": 1, "externalDependency": False, "sourceAudit": {"sourcePath": "Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs", "payloadCopied": False}})
+            definitions.append({
+                "contentId": content_id,
+                **contract,
+                "level": 1,
+                "displayName": "战斗技巧",
+                "description": "通过战斗技巧闪避攻击并强化伤害。",
+                "externalDependency": False,
+                "sourceAudit": {"sourcePath": "Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs", "payloadCopied": False},
+            })
             continue
         asset = configs.get(content_id)
         if asset is None:

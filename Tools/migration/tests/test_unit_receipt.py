@@ -31,7 +31,7 @@ class RealUnitReceiptTests(unittest.TestCase):
         )
         self.assertEqual("UnityOwned", receipt["ownership"])
         self.assertEqual("Exported", receipt["nextState"])
-        self.assertEqual(37, receipt["batchShape"]["selectedRoots"])
+        self.assertEqual(39, receipt["batchShape"]["selectedRoots"])
         self.assertTrue(receipt["idempotency"]["byteIdentical"])
         self.assertFalse(receipt["dependencyAudit"]["materialAndShaderPayloadCopied"])
 

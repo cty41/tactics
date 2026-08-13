@@ -51,11 +51,12 @@ internal sealed class StartingSkillSourceAudit { public bool PresentationPayload
 internal sealed class StartingSkillDraftDefinition
 {
     public string ContentId { get; init; } = string.Empty; public string SourceId { get; init; } = string.Empty; public string DisplayName { get; init; } = string.Empty; public string Description { get; init; } = string.Empty;
+    public string BranchId { get; init; } = string.Empty;
     public string Role { get; init; } = string.Empty; public string Kind { get; init; } = string.Empty; public int Level { get; init; } public int ManaCost { get; init; } public int MinRange { get; init; } public int MaxRange { get; init; }
     public string ExecutionKind { get; init; } = string.Empty; public int Damage { get; init; } public string DamageKind { get; init; } = string.Empty; public string StatusContentId { get; init; } = string.Empty; public int StatusDuration { get; init; }
     public bool Hidden { get; init; } public bool ExternalDependency { get; init; } public string SourcePath { get; init; } = string.Empty; public string SourceGuid { get; init; } = string.Empty; public long SourceLocalFileId { get; init; }
     public bool IsBasicAbility { get; init; } public int MaxUsesPerTurn { get; init; }
     public string GraphPath { get; init; } = string.Empty; public string GraphDependencyHash { get; init; } = string.Empty; public StartingSkillSourceAudit SourceAudit { get; init; } = new();
-    public SkillDefinitionDraft ToApplicationDraft() => new() { ContentId = ContentId, SourceId = SourceId, Role = Role, Kind = Kind, Level = Level, ManaCost = ManaCost, MinRange = MinRange, MaxRange = MaxRange, ExecutionKind = ExecutionKind, Damage = Damage, DamageKind = DamageKind, StatusContentId = StatusContentId, StatusDuration = StatusDuration, Hidden = Hidden, ExternalDependency = ExternalDependency, IsBasicAbility = IsBasicAbility, MaxUsesPerTurn = MaxUsesPerTurn };
+    public SkillDefinitionDraft ToApplicationDraft() => new() { ContentId = ContentId, SourceId = SourceId, Role = Role, Kind = Kind, Level = Level, ManaCost = ManaCost, MinRange = MinRange, MaxRange = MaxRange, ExecutionKind = ExecutionKind, Damage = Damage, DamageKind = DamageKind, StatusContentId = StatusContentId, StatusDuration = StatusDuration, Hidden = Hidden, ExternalDependency = ExternalDependency, IsBasicAbility = IsBasicAbility, MaxUsesPerTurn = MaxUsesPerTurn, BranchId = BranchId };
 }
 #endif

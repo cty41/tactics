@@ -20,8 +20,8 @@ class RealUnitTextureMigrationTests(unittest.TestCase):
     def test_compiles_exact_project_owned_png_allowlist(self):
         source, artifacts = compile_unit_texture_artifacts(ROOT, self.draft)
         self.assertEqual("unity-final-2026-08-08", source.source_tag)
-        self.assertEqual(19, len(artifacts))
-        self.assertEqual(19, len({artifact.relative_path for artifact in artifacts}))
+        self.assertEqual(21, len(artifacts))
+        self.assertEqual(21, len({artifact.relative_path for artifact in artifacts}))
         self.assertTrue(
             all(artifact.relative_path.startswith("godot/assets/units/") for artifact in artifacts)
         )

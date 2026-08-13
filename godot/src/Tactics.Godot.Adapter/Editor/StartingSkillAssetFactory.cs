@@ -55,7 +55,7 @@ public static class StartingSkillAssetFactory
             .ToDictionary(item => item.ContentIdValue, Copy, StringComparer.Ordinal);
         foreach (GodotResourceEntry entry in batch.Entries.Where(item => item.ContentIdValue != "skill.poison-spear.lv1")) entries.Add(entry.ContentIdValue, Copy(entry));
         var global = new GodotResourceCatalog { Entries = entries.Values.OrderBy(item => item.ContentIdValue, StringComparer.Ordinal).ToArray() };
-        if (global.Entries.Length is not (58 or 74 or 101 or 108 or 114 or 115 or 116 or 119))
+        if (global.Entries.Length is not (58 or 74 or 101 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125))
             throw new InvalidOperationException($"Canonical Catalog count is invalid: {global.Entries.Length}.");
         Save(global, GlobalCatalogPath);
         global.Validate();
@@ -83,6 +83,7 @@ public static class StartingSkillAssetFactory
         resource.ExecutionKindValue = item.ExecutionKind; resource.Damage = item.Damage; resource.DamageKindValue = item.DamageKind; resource.StatusContentIdValue = item.StatusContentId; resource.StatusDuration = item.StatusDuration;
         resource.Hidden = item.Hidden; resource.ExternalDependency = item.ExternalDependency; resource.SourcePath = item.SourcePath; resource.SourceGuid = item.SourceGuid; resource.SourceLocalFileId = item.SourceLocalFileId;
         resource.IsBasicAbility = item.IsBasicAbility; resource.MaxUsesPerTurn = item.MaxUsesPerTurn;
+        resource.BranchId = item.BranchId;
         resource.GraphPath = item.GraphPath; resource.GraphDependencyHash = item.GraphDependencyHash; resource.PresentationPayloadCopied = item.SourceAudit.PresentationPayloadCopied; resource.ThirdPartyPayloadCopied = item.SourceAudit.ThirdPartyPayloadCopied;
     }
 
@@ -132,7 +133,8 @@ public static class StartingSkillAssetFactory
         resource.MinRange == item.MinRange && resource.MaxRange == item.MaxRange && resource.ExecutionKindValue == item.ExecutionKind &&
         resource.Damage == item.Damage && resource.DamageKindValue == item.DamageKind &&
         resource.StatusContentIdValue == item.StatusContentId && resource.StatusDuration == item.StatusDuration &&
-        resource.Hidden == item.Hidden && resource.IsBasicAbility == item.IsBasicAbility && resource.MaxUsesPerTurn == item.MaxUsesPerTurn;
+        resource.Hidden == item.Hidden && resource.IsBasicAbility == item.IsBasicAbility && resource.MaxUsesPerTurn == item.MaxUsesPerTurn &&
+        resource.BranchId == item.BranchId && resource.DisplayName == item.DisplayName && resource.Description == item.Description;
 
     private static void WriteLedger(string ledgerPath, IEnumerable<string> targets, StartingSkillMigrationDraft draft)
     {

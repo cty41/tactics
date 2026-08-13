@@ -17,6 +17,7 @@ MaxRange = 2
 ExecutionKindValue = "Thrust"
 Damage = 2
 DamageKindValue = "Physical"
+BranchId = "amazon.thrust"
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Graph_Ability.asset"
 SourceGuid = "5e7046ba8bb24ea498bcdca6e574e22f"
 SourceLocalFileId = 11400000

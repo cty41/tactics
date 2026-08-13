@@ -34,6 +34,8 @@ public sealed record UnitDefinitionDraft
     public string ActorContentId { get; init; } = string.Empty;
     public string DownRightTexture { get; init; } = string.Empty;
     public string UpLeftTexture { get; init; } = string.Empty;
+    public string? UnarmedDownRightTexture { get; init; }
+    public string? UnarmedUpLeftTexture { get; init; }
     public string? DeathTexture { get; init; }
     public string ShadowTexture { get; init; } = string.Empty;
     public float DownRightPivotX { get; init; } = 0.5f;
@@ -87,6 +89,8 @@ public readonly record struct UnitSpritePivot(float X, float Y);
 public sealed record UnitVisualDefinition(
     string DownRightTexture,
     string UpLeftTexture,
+    string? UnarmedDownRightTexture,
+    string? UnarmedUpLeftTexture,
     string? DeathTexture,
     string ShadowTexture,
     UnitSpritePivot DownRightPivot,

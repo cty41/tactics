@@ -75,7 +75,7 @@ class OracleMatrixTests(unittest.TestCase):
     def test_frozen_unit_asset_blob_ids_match_without_parsing_unity_yaml(self) -> None:
         commit = self.matrix["unityOracle"]["commit"]
         frozen_assets = self.matrix["frozenAssetBlobs"]
-        self.assertEqual(len(frozen_assets), 38)
+        self.assertEqual(len(frozen_assets), 40)
         for path, expected_blob_id in frozen_assets.items():
             with self.subTest(path=path):
                 self.assertTrue((self.root / path).is_file(), path)

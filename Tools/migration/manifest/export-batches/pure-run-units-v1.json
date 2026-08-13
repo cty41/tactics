@@ -21,6 +21,8 @@
 
     { "sourceKey": "unit.pure-run.amazon/texture-dr", "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter.png", "gitBlobSha1": "5e501e2d9b3ddc1ce6fbe0d16f7ed51c6fd361c3", "targetContentIds": ["unit.pure-run.amazon"] },
     { "sourceKey": "unit.pure-run.amazon/texture-ul", "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_ul.png", "gitBlobSha1": "8b9b6d05d10aff56e70826237e1690f85bd69747", "targetContentIds": ["unit.pure-run.amazon"] },
+    { "sourceKey": "unit.pure-run.amazon/texture-unarmed-dr", "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_dr.png", "gitBlobSha1": "d19a7118697bcc09b65d72c3e9415fd0fe1d2713", "targetContentIds": ["unit.pure-run.amazon"] },
+    { "sourceKey": "unit.pure-run.amazon/texture-unarmed-ul", "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_ul.png", "gitBlobSha1": "f9d2e76db7b7e8bfa3af66fbdb3beb320361c14b", "targetContentIds": ["unit.pure-run.amazon"] },
     { "sourceKey": "unit.pure-run.amazon/texture-death", "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_death.png", "gitBlobSha1": "12edbff78f75afa3b0d67a779e79892bbbb0a788", "targetContentIds": ["unit.pure-run.amazon"] },
     { "sourceKey": "unit.pure-run.mage/texture-dr", "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_mage.png", "gitBlobSha1": "3be624dc054da7cc04bdccd3ef14c2d278b0ffc8", "targetContentIds": ["unit.pure-run.mage"] },
     { "sourceKey": "unit.pure-run.mage/texture-ul", "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_mage_ul.png", "gitBlobSha1": "5fca4882295f46f5d8958824e74bb701cd75818b", "targetContentIds": ["unit.pure-run.mage"] },

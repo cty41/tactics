@@ -39,6 +39,8 @@ public partial class UnitDefinitionResource : Resource
     [Export] public PackedScene? ActorScene { get; set; }
     [Export] public Texture2D? DownRightTexture { get; set; }
     [Export] public Texture2D? UpLeftTexture { get; set; }
+    [Export] public Texture2D? UnarmedDownRightTexture { get; set; }
+    [Export] public Texture2D? UnarmedUpLeftTexture { get; set; }
     [Export] public Texture2D? DeathTexture { get; set; }
     [Export] public Texture2D? ShadowTexture { get; set; }
     [Export] public Vector2 DownRightBodyOffset { get; set; }
@@ -93,6 +95,9 @@ public partial class UnitDefinitionResource : Resource
             throw new InvalidOperationException($"Unit '{ContentIdValue}' has no canonical actor scene.");
         if (DownRightTexture is null || UpLeftTexture is null || ShadowTexture is null)
             throw new InvalidOperationException($"Unit '{ContentIdValue}' is missing a required texture.");
+        if ((UnarmedDownRightTexture is null) != (UnarmedUpLeftTexture is null) ||
+            (ContentIdValue == "unit.pure-run.amazon") != (UnarmedDownRightTexture is not null))
+            throw new InvalidOperationException($"Unit '{ContentIdValue}' has an invalid unarmed texture contract.");
         if (CanProduceCorpse != (DeathTexture is not null))
             throw new InvalidOperationException($"Unit '{ContentIdValue}' corpse and death texture contracts disagree.");
         float[] geometry =

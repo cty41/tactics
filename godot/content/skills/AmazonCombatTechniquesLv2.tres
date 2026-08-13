@@ -6,6 +6,8 @@
 script = ExtResource("1_yo5hq")
 ContentIdValue = "skill.amazon.combat-techniques.lv2"
 SourceId = "skill.amazon.combat-techniques.lv2"
+DisplayName = "战斗技巧"
+Description = "通过战斗技巧闪避攻击并强化伤害。"
 RoleValue = "Amazon"
 KindValue = "Passive"
 Level = 2

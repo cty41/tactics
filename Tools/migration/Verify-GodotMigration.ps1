@@ -430,11 +430,24 @@ try {
         Invoke-Checked 'Generate Pure Run inventory/progression resources first pass' {
             & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/InventoryProgressionAssetBuilder.cs'
         }
+        $inventoryProgressionTargets = @(
+            Get-ChildItem -LiteralPath (Join-Path $projectRoot 'content\skills') -Filter '*.tres' |
+                Where-Object { $_.Name -eq 'InventoryProgressionCatalog.tres' -or $_.Name -notin @(
+                    'ContentCatalog.tres','BasicMagic.tres','BasicMelee.tres','MageFireballLv1.tres','MageIceBoltLv1.tres','MageLightningLv1.tres',
+                    'NecromancerSummonSkeletonLv1.tres','NecromancerAmplifyDamageLv1.tres','NecromancerBoneSpearLv1.tres','AmazonThrustLv1.tres','AmazonCombatTechniquesLv1.tres','AmazonPickupSpearLv1.tres') }
+        )
+        $firstInventoryProgressionHashes = @{}
+        foreach ($target in $inventoryProgressionTargets) { $firstInventoryProgressionHashes[$target.FullName] = (Get-FileHash -LiteralPath $target.FullName -Algorithm SHA256).Hash }
         Invoke-Checked 'Generate Pure Run inventory/progression resources second pass' {
             & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/InventoryProgressionAssetBuilder.cs'
         }
+        foreach ($target in $inventoryProgressionTargets) {
+            if ($firstInventoryProgressionHashes[$target.FullName] -ne (Get-FileHash -LiteralPath $target.FullName -Algorithm SHA256).Hash) {
+                throw "Pure Run inventory/progression generation is not byte-idempotent: $($target.FullName)"
+            }
+        }
         Invoke-Checked 'Refresh Pure Run inventory/progression generation evidence' {
-            python -m Tools.migration.inventory_progression_generation_receipt --draft $inventoryProgressionDraft --output $inventoryProgressionGenerationReceipt
+            python -m Tools.migration.inventory_progression_generation_receipt --draft $inventoryProgressionDraft --output $inventoryProgressionGenerationReceipt --idempotent
         }
     }
     else { Write-Host '== Skip real Pure Run persistence draft: disposable Unity DTO is not present ==' }

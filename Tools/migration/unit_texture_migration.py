@@ -29,8 +29,8 @@ def compile_unit_texture_artifacts(
 
     root = root.resolve()
     textures = draft.get("textureAssets")
-    if not isinstance(textures, list) or len(textures) != 19:
-        raise ValueError("Pure Run Unit texture migration requires exactly 19 PNGs")
+    if not isinstance(textures, list) or len(textures) != 21:
+        raise ValueError("Pure Run Unit texture migration requires exactly 21 PNGs")
     source = draft.get("source", {})
     binding = MigrationSourceBinding(
         source_tag=str(source["sourceTag"]),
@@ -48,7 +48,7 @@ def compile_unit_texture_artifacts(
             raise ValueError(f"Unit texture source is outside the project-owned allowlist: {source_path}")
         if not target_path.startswith(_TARGET_PREFIX):
             raise ValueError(f"Unit texture target is outside the canonical Godot folder: {target_path}")
-        source_name = source_path.removeprefix(_SOURCE_PREFIX)
+        source_name = Path(source_path.removeprefix(_SOURCE_PREFIX)).name
         target_name = target_path.removeprefix(_TARGET_PREFIX)
         if source_name != target_name or not _SAFE_NAME.fullmatch(source_name):
             raise ValueError(f"Unit texture filename mapping is not canonical: {source_path}")

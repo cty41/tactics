@@ -35,8 +35,8 @@ def compile_unit_export_receipt(
         raise ValueError("Unit typed draft is not bound to this export")
     if draft.get("batchId") != base["batchId"]:
         raise ValueError("Unit typed draft and export batch IDs disagree")
-    if len(draft.get("units", [])) != 12 or len(draft.get("textureAssets", [])) != 19:
-        raise ValueError("Unit typed draft does not contain the complete 12/19 batch")
+    if len(draft.get("units", [])) != 12 or len(draft.get("textureAssets", [])) != 21:
+        raise ValueError("Unit typed draft does not contain the complete 12/21 batch")
 
     audit = draft["dependencyAudit"]
     base["outputSha256"] = output_sha256
@@ -48,9 +48,9 @@ def compile_unit_export_receipt(
     base["batchShape"] = {
         "unitDefinitions": 12,
         "prefabAuditRoots": 12,
-        "texturePayloads": 19,
+        "texturePayloads": 21,
         "materialAuditRoots": 6,
-        "selectedRoots": 37,
+        "selectedRoots": 39,
     }
     base["dependencyAudit"] = {
         "policy": audit["policy"],

@@ -24,9 +24,11 @@ class RealUnitConverterTests(unittest.TestCase):
     def test_real_export_compiles_complete_unit_contract(self):
         draft = compile_unit_draft(self.export, self.specification, self.golden)
         self.assertEqual(12, len(draft["units"]))
-        self.assertEqual(19, len(draft["textureAssets"]))
+        self.assertEqual(21, len(draft["textureAssets"]))
+        amazon = next(item for item in draft["units"] if item["contentId"] == "unit.pure-run.amazon")
+        self.assertTrue(amazon["visual"]["unarmedDownRightTexture"].endswith("unarmed_dr.png"))
         self.assertEqual("packed-scene.unit-actor", draft["actorContentId"])
-        self.assertEqual(37, draft["dependencyAudit"]["selectedPayloadCount"])
+        self.assertEqual(39, draft["dependencyAudit"]["selectedPayloadCount"])
         self.assertIn(
             "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/Materials/HeliSprite.mat",
             draft["dependencyAudit"]["forbiddenPayloadDependencies"],

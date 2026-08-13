@@ -180,6 +180,8 @@ internal sealed class UnitDraftRecord
             ActorContentId = actorContentId,
             DownRightTexture = Visual.DownRightTexture,
             UpLeftTexture = Visual.UpLeftTexture,
+            UnarmedDownRightTexture = Visual.UnarmedDownRightTexture,
+            UnarmedUpLeftTexture = Visual.UnarmedUpLeftTexture,
             DeathTexture = Visual.DeathTexture,
             ShadowTexture = Visual.ShadowTexture,
             DownRightPivotX = spriteContract.Living.Pivot[0],
@@ -238,6 +240,8 @@ internal sealed class UnitDraftVisual
 {
     public string DownRightTexture { get; init; } = string.Empty;
     public string UpLeftTexture { get; init; } = string.Empty;
+    public string? UnarmedDownRightTexture { get; init; }
+    public string? UnarmedUpLeftTexture { get; init; }
     public string? DeathTexture { get; init; }
     public string ShadowTexture { get; init; } = string.Empty;
     public float[] ShadowOffset { get; init; } = Array.Empty<float>();

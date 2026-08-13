@@ -6,7 +6,7 @@
   "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
   "unityVersion": "6000.3.11f1",
   "exporterVersion": "unity-assetdatabase-v1",
-  "exportHash": "sha256:27654bc63e4e902be8b51fd883f505ffe84b1268fe8d8a31e37946a0b869c0b1",
+  "exportHash": "sha256:d7d25a38e6be69ace05efafb95a987d2e7809bf063e3013ec0b6263d17241aee",
   "assets": [
     {
       "sourceKey": "packed-scene.unit-actor/texture-shadow",
@@ -69,6 +69,32 @@
       "dependencyHash": "5921489b257c48e98a65c0a0534566bb",
       "serializedObjectCount": 2,
       "serializedPropertyCount": 494,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/texture-unarmed-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_dr.png",
+      "gitBlobSha1": "d19a7118697bcc09b65d72c3e9415fd0fe1d2713",
+      "sourceGuid": "d8cffe695e166d848b349c486779e028",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "e9e623730f0384f8622a8bb198cf2dbc",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 546,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/texture-unarmed-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_ul.png",
+      "gitBlobSha1": "f9d2e76db7b7e8bfa3af66fbdb3beb320361c14b",
+      "sourceGuid": "c1146b3b8537dfd4b9d3132d7b1f9c86",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "e0c7a59c78e3a773c728aecafe9ecefd",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 546,
       "targetContentIds": [
         "unit.pure-run.amazon"
       ]
@@ -508,14 +534,14 @@
   "warnings": [],
   "ownership": "UnityOwned",
   "nextState": "Exported",
-  "outputSha256": "953188bc27e8e76a13fa542111fdba281200564293a66658228f3f2e0c0c4ce0",
-  "typedDraftHash": "sha256:ce769313d09b421006a733b93c2f310c177d05ebaf625435da2ece19ab087627",
+  "outputSha256": "b606c3b68db0d0d2b0e1e5cad1c511e37383ccfe18b69a2f96fc5ed19da4d861",
+  "typedDraftHash": "sha256:77224fe7d1f675b828d52b0fe8a75b13799baac6b4622546865da9447821fb75",
   "batchShape": {
     "unitDefinitions": 12,
     "prefabAuditRoots": 12,
-    "texturePayloads": 19,
+    "texturePayloads": 21,
     "materialAuditRoots": 6,
-    "selectedRoots": 37
+    "selectedRoots": 39
   },
   "dependencyAudit": {
     "policy": "audit_only_not_selected_or_copied",
@@ -537,7 +563,7 @@
     "warmupRuns": 1,
     "measuredIndependentRuns": 2,
     "byteIdentical": true,
-    "measuredOutputSha256": "953188bc27e8e76a13fa542111fdba281200564293a66658228f3f2e0c0c4ce0",
+    "measuredOutputSha256": "b606c3b68db0d0d2b0e1e5cad1c511e37383ccfe18b69a2f96fc5ed19da4d861",
     "coldStartObservation": "compile/import warm-up excluded before measured runs"
   }
 }

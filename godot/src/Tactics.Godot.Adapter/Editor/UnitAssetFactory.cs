@@ -241,6 +241,8 @@ public static class UnitAssetFactory
         resource.ActorScene = actorScene;
         resource.DownRightTexture = LoadTexture(compiledDraft.DownRightTexture);
         resource.UpLeftTexture = LoadTexture(compiledDraft.UpLeftTexture);
+        resource.UnarmedDownRightTexture = compiledDraft.UnarmedDownRightTexture is null ? null : LoadTexture(compiledDraft.UnarmedDownRightTexture);
+        resource.UnarmedUpLeftTexture = compiledDraft.UnarmedUpLeftTexture is null ? null : LoadTexture(compiledDraft.UnarmedUpLeftTexture);
         resource.DeathTexture = compiledDraft.DeathTexture is null
             ? null
             : LoadTexture(compiledDraft.DeathTexture);

@@ -69,12 +69,12 @@ def compile_unit_generation_receipt(
     for key in ("sourceTag", "sourceCommit", "exporterVersion", "exportHash"):
         if source[key] != export_receipt[key]:
             raise ValueError(f"Unit generation source differs from export receipt: {key}")
-    if len(draft["units"]) != 12 or len(draft["textureAssets"]) != 19:
-        raise ValueError("Unit typed draft does not contain the complete 12/19 batch")
+    if len(draft["units"]) != 12 or len(draft["textureAssets"]) != 21:
+        raise ValueError("Unit typed draft does not contain the complete 12/21 batch")
     if len(generation_ledger["artifacts"]) != 16:
         raise ValueError("Unit generation ledger must contain exactly 16 artifacts")
-    if len(texture_ledger["artifacts"]) != 19:
-        raise ValueError("Unit texture ledger must contain exactly 19 artifacts")
+    if len(texture_ledger["artifacts"]) != 21:
+        raise ValueError("Unit texture ledger must contain exactly 21 artifacts")
     if (
         gallery_capture_size != _EXPECTED_CAPTURE_SIZE
         or spawn_capture_size != _EXPECTED_CAPTURE_SIZE

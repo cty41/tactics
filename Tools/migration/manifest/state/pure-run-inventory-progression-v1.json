@@ -6,7 +6,7 @@
   "artifacts": [
     {
       "resourcePath": "godot/content/skills/AmazonCombatTechniquesLv2.tres",
-      "targetHash": "sha256:b2a977b5b93c89caa0d72cc541a5d40b479d4f41a48ed5a9c24dca09ec23366b"
+      "targetHash": "sha256:9fc3e5481028317979e96606c0e0badb2195b17c4acceda489c427df5125f797"
     },
     {
       "resourcePath": "godot/content/skills/AmazonDecoyLv1.tres",

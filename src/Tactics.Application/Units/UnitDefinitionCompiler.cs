@@ -105,6 +105,8 @@ public sealed class UnitDefinitionCompiler
                 var visual = new UnitVisualDefinition(
                     draft.DownRightTexture,
                     draft.UpLeftTexture,
+                    draft.UnarmedDownRightTexture,
+                    draft.UnarmedUpLeftTexture,
                     draft.DeathTexture,
                     draft.ShadowTexture,
                     new UnitSpritePivot(draft.DownRightPivotX, draft.DownRightPivotY),
@@ -208,6 +210,12 @@ public sealed class UnitDefinitionCompiler
             !IsTexturePath(draft.ShadowTexture))
         {
             diagnostics.Add(Error("unit.missing_texture", "Directional and shadow texture references are required.", contentId));
+        }
+        if ((draft.UnarmedDownRightTexture is null) != (draft.UnarmedUpLeftTexture is null) ||
+            draft.UnarmedDownRightTexture is not null &&
+            (!IsTexturePath(draft.UnarmedDownRightTexture) || !IsTexturePath(draft.UnarmedUpLeftTexture)))
+        {
+            diagnostics.Add(Error("unit.invalid_unarmed_texture", "Unarmed directional textures must be configured as one valid pair.", contentId));
         }
         if (draft.CanProduceCorpse != IsTexturePath(draft.DeathTexture))
         {

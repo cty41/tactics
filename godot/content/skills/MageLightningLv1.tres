@@ -17,6 +17,7 @@ MaxRange = 4
 ExecutionKindValue = "Lightning"
 Damage = 9
 DamageKindValue = "Magical"
+BranchId = "mage.lightning"
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Graph_Ability.asset"
 SourceGuid = "3a161586d911e124b9a695ae36ad434a"
 SourceLocalFileId = 11400000

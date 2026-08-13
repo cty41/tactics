@@ -4,8 +4,10 @@
 [ext_resource type="Texture2D" path="res://assets/units/doge_hunter_death.png" id="2_ylcg6"]
 [ext_resource type="Texture2D" path="res://assets/units/doge_hunter.png" id="3_3552w"]
 [ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="4_nm7tx"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_idle_unarmed_dr.png" id="5_3552w"]
 [ext_resource type="Texture2D" path="res://assets/units/doge_hunter_ul.png" id="5_j41ys"]
 [ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="6_j0oda"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_idle_unarmed_ul.png" id="6_nm7tx"]
 
 [resource]
 script = ExtResource("6_j0oda")
@@ -35,6 +37,8 @@ ActorContentIdValue = "packed-scene.unit-actor"
 ActorScene = ExtResource("1_8i2yb")
 DownRightTexture = ExtResource("3_3552w")
 UpLeftTexture = ExtResource("5_j41ys")
+UnarmedDownRightTexture = ExtResource("5_3552w")
+UnarmedUpLeftTexture = ExtResource("6_nm7tx")
 DeathTexture = ExtResource("2_ylcg6")
 ShadowTexture = ExtResource("4_nm7tx")
 DownRightBodyOffset = Vector2(0, -108)

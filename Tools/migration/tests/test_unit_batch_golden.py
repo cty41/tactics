@@ -61,11 +61,11 @@ class UnitBatchGoldenTests(unittest.TestCase):
             self.assertEqual(case["moveRange"], min(4, max(1, math.ceil(case["speed"] * 0.5))))
             self.assertEqual(case["initiative"], case["speed"] * 2)
 
-    def test_visual_scope_is_project_owned_and_exactly_nineteen_pngs(self) -> None:
+    def test_visual_scope_is_project_owned_and_exactly_twenty_one_pngs(self) -> None:
         textures = self.golden["textureAssets"]
-        self.assertEqual(len(textures), 19)
-        self.assertEqual(len({asset["sourcePath"] for asset in textures}), 19)
-        self.assertEqual(len({asset["targetPath"] for asset in textures}), 19)
+        self.assertEqual(len(textures), 21)
+        self.assertEqual(len({asset["sourcePath"] for asset in textures}), 21)
+        self.assertEqual(len({asset["targetPath"] for asset in textures}), 21)
         self.assertTrue(all("/PureRun/Textures/" in asset["sourcePath"] for asset in textures))
         self.assertTrue(all(asset["targetPath"].startswith("res://assets/units/") for asset in textures))
         self.assertTrue(all("ThirdParty" not in asset["sourcePath"] for asset in textures))

@@ -55,8 +55,8 @@ def compile_unit_draft(
     prefab_assets = [item for key, item in assets.items() if key.endswith("/prefab")]
     texture_assets = [item for key, item in assets.items() if "/texture-" in key]
     material_assets = [item for key, item in assets.items() if key.endswith("/material-audit")]
-    if (len(prefab_assets), len(texture_assets), len(material_assets)) != (12, 19, 6):
-        raise ValueError("Unit export must contain 12 prefabs, 19 textures, and 6 material audits")
+    if (len(prefab_assets), len(texture_assets), len(material_assets)) != (12, 21, 6):
+        raise ValueError("Unit export must contain 12 prefabs, 21 textures, and 6 material audits")
 
     golden_units = golden.get("units")
     if not isinstance(golden_units, list) or len(golden_units) != 12:

@@ -90,7 +90,7 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
                 content_id = "skill.poison-spear.lv1" if branch_id == "amazon.poison-spear" and level == 1 else f"skill.{branch_id}.lv{level}"
                 normalize_content_id(content_id)
                 if branch_id == "amazon.combat-techniques":
-                    definitions.append({"contentId": content_id, "branchId": branch_id, "role": "Amazon", "level": level, "kind": "Passive", "requiredAttribute": "Luck", "minimumAttribute": 5, "prerequisiteBranchId": "", "sourceKind": "linked-source", "growthVisible": True})
+                    definitions.append({"contentId": content_id, "branchId": branch_id, "role": "Amazon", "level": level, "kind": "Passive", "requiredAttribute": "Luck", "minimumAttribute": 5, "prerequisiteBranchId": "", "sourceKind": "linked-source", "growthVisible": True, "displayName": "战斗技巧", "description": "通过战斗技巧闪避攻击并强化伤害。", "manaCost": 0, "targetRange": 0})
                     continue
                 asset = assets.get(content_id)
                 if asset is None:

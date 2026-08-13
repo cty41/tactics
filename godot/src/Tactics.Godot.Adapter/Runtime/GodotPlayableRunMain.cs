@@ -25,6 +25,7 @@ public partial class GodotPlayableRunMain : Control
     private readonly Dictionary<ContentId, UnitDefinition> _units = new();
     private readonly Dictionary<ContentId, UnitDefinitionResource> _unitResources = new();
     private readonly Dictionary<ContentId, SkillDefinition> _skills = new();
+    private readonly Dictionary<ContentId, SkillUiMetadata> _skillUi = new();
     private readonly Dictionary<ContentId, AiDefinition> _ai = new();
     private readonly Dictionary<ContentId, BattleLayoutDefinition> _layouts = new();
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = new();
@@ -40,12 +41,15 @@ public partial class GodotPlayableRunMain : Control
     private PlayableBattleSessionService? _battle;
     private Control? _page;
     private Label? _status;
-    private VBoxContainer? _skillPanel;
+    private Container? _skillPanel;
     private GodotIsometricBattleBoard? _board;
     private RichTextLabel? _eventLog;
+    private GodotBattleCheatConsole? _cheatConsole;
     private Label? _hoverInfo;
     private Label? _turnOrder;
     private Button? _speedButton;
+    private Button? _stepButton;
+    private Button? _endTurnButton;
     private bool _playbackPaused;
     private float _playbackSpeed = 1f;
     private int _logFilter;
@@ -88,6 +92,13 @@ public partial class GodotPlayableRunMain : Control
     public override void _UnhandledInput(InputEvent inputEvent)
     {
         if (_battle is null) return;
+        if (inputEvent.IsActionPressed("toggle_console"))
+        {
+            if (_cheatConsole is not null) _cheatConsole.Visible = !_cheatConsole.Visible;
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (_cheatConsole?.Visible == true) return;
         if (inputEvent is InputEventKey { Pressed: true, Echo: false } key)
         {
             if (key.Keycode == Key.Escape) ApplyIntent(new CancelTargetingIntent());
@@ -116,9 +127,9 @@ public partial class GodotPlayableRunMain : Control
                 case UnitDefinitionResource unit:
                     _unitResources[id] = unit; _units[id] = unit.ToCoreDefinition(); break;
                 case SkillDefinitionResource skill:
-                    _skills[id] = skill.ToCoreDefinition(); break;
+                    _skills[id] = skill.ToCoreDefinition(); _skillUi[id] = SkillUiMetadata.From(skill); break;
                 case PoisonSpearSkillResource poison:
-                    _skills[id] = poison.ToCoreDefinition(); break;
+                    _skills[id] = poison.ToCoreDefinition(); _skillUi[id] = SkillUiMetadata.From(poison); break;
                 case AiDefinitionResource ai: _ai[id] = ai.ToCoreDefinition(); break;
                 case BattleLayoutResource layout: _layouts[id] = layout.ToCoreDefinition(); break;
                 case EncounterDefinitionResource encounter:
@@ -235,7 +246,8 @@ public partial class GodotPlayableRunMain : Control
         foreach (ContentId skill in template.EffectiveStartingSkillChoices)
         {
             ContentId captured = skill;
-            choices.AddChild(Button(captured.Value, () =>
+            SkillUiMetadata metadata = _skillUi[captured];
+            choices.AddChild(Button($"{metadata.DisplayName} Lv{metadata.Level}\n{metadata.Description}\nMP {metadata.ManaCost}  Range {RangeLabel(metadata)}", () =>
             {
                 RunSessionResult result = _run!.ChooseStartingSkill(template.CharacterId, captured);
                 if (!result.Succeeded) { SetStatus(result.ErrorCode); return; }
@@ -276,8 +288,8 @@ public partial class GodotPlayableRunMain : Control
         ContentId encounterId=_currentEncounterId??throw new InvalidOperationException("Battle encounter identity is missing.");
         Control root = NewPage($"PURE RUN BATTLE — {EncounterLabel(encounterId)}", $"{encounterId.Value}   |   Left click: select/confirm   Right click or Esc: cancel   Enter: end turn", true);
         _logs.Clear();_playbackPaused=false;_playbackSpeed=1f;
-        _board = new GodotIsometricBattleBoard { Position = Vector2.Zero, Size = new Vector2(1100, 900) };
-        _board.CellPressed += OnBoardCellPressed;
+        _board = new GodotIsometricBattleBoard { Position = Vector2.Zero, Size = new Vector2(1200, 900) };
+        _board.PointerPressed += OnBoardPointerPressed;
         _board.CellHovered += HoverCell;
         _board.HoverCleared += ClearHover;
         _board.PointerMoved += UpdateHoveredMeter;
@@ -289,16 +301,17 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer.SetSpeed(_playbackSpeed);
         _presentationPlayer.FrameFinished+=OnPresentationFrameFinished;
         _board.AddChild(_presentationPlayer);
-        _skillPanel = new VBoxContainer { Position = new Vector2(800, 125), Size = new Vector2(330, 650) }; root.AddChild(_skillPanel);
-        _turnOrder=LabelAt(root,string.Empty,new Vector2(800,88),18);_turnOrder.Size=new Vector2(720,32);
-        _hoverInfo=LabelAt(root,"Hover a cell",new Vector2(800,780),16);_hoverInfo.Size=new Vector2(720,80);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
-        var logPanel=new VBoxContainer{Position=new Vector2(1145,125),Size=new Vector2(390,650)};root.AddChild(logPanel);
-        var controls=new HBoxContainer();logPanel.AddChild(controls);
-        controls.AddChild(SmallButton("Pause/Resume",TogglePause));controls.AddChild(SmallButton("Step",()=>PlaybackStep(true)));_speedButton=SmallButton("Speed 1x",ToggleSpeed);controls.AddChild(_speedButton);
-        var filters=new OptionButton();foreach(string name in new[]{"All","Gameplay","AI","Rejected"})filters.AddItem(name);filters.ItemSelected+=index=>{_logFilter=(int)index;RefreshLog();};logPanel.AddChild(filters);
-        logPanel.AddChild(Button("Clear Log",()=>{_logs.Clear();RefreshLog();}));
-        var scroll=new ScrollContainer{CustomMinimumSize=new Vector2(390,500)};logPanel.AddChild(scroll);
-        _eventLog=new RichTextLabel{FitContent=false,CustomMinimumSize=new Vector2(370,500),ScrollActive=true};_eventLog.AddThemeFontSizeOverride("normal_font_size",15);scroll.AddChild(_eventLog);
+        var actionScroll = new ScrollContainer { Position = new Vector2(30, 765), Size = new Vector2(1120, 110) };
+        root.AddChild(actionScroll);
+        _skillPanel = new HBoxContainer { CustomMinimumSize = new Vector2(1120, 90) };
+        actionScroll.AddChild(_skillPanel);
+        _turnOrder=LabelAt(root,string.Empty,new Vector2(470,32),18);_turnOrder.Size=new Vector2(660,50);_turnOrder.HorizontalAlignment=HorizontalAlignment.Center;
+        _hoverInfo=LabelAt(root,"Hover a unit or cell",new Vector2(30,115),16);_hoverInfo.Size=new Vector2(430,110);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
+        var controls=new HBoxContainer{Position=new Vector2(1160,32),Size=new Vector2(410,55)};root.AddChild(controls);
+        controls.AddChild(SmallButton("Pause/Resume",TogglePause));_stepButton=SmallButton("Step",()=>{if(_playbackPaused)PlaybackStep(true);});_stepButton.Disabled=true;controls.AddChild(_stepButton);_speedButton=SmallButton("Speed 1x",ToggleSpeed);controls.AddChild(_speedButton);
+        _cheatConsole=new GodotBattleCheatConsole();_cheatConsole.ClearRequested+=()=>{_logs.Clear();RefreshLog();};root.AddChild(_cheatConsole);
+        _endTurnButton=Button("End Turn (Enter)",()=>ApplyIntent(new EndTurnIntent()));root.AddChild(PlaceControl(_endTurnButton,new Vector2(1330,805),new Vector2(230,65)));
+        _eventLog=null;
         _status = _hoverInfo;
         RefreshBattle();
         if(_battle!.HasPendingAutomaticFrames)PlaybackStep(false);
@@ -318,6 +331,7 @@ public partial class GodotPlayableRunMain : Control
             {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));_board.AddChild(actor);_actors[unit.UnitId]=actor;}
             if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
+            actor.SetSpearHeld(unit.DefinitionId.Value != "unit.pure-run.amazon" || !snapshot.DroppedSpears.ContainsKey(unit.UnitId));
             actor.SetStatuses(unit.Statuses);
             actor.ZIndex = 100 + (18-unit.Cell.X-unit.Cell.Y) * 12 + unit.Cell.X;
             if(!_unitMeters.TryGetValue(unit.UnitId,out Control? meter)||meter is not GodotCompactUnitMeter compact||!GodotObject.IsInstanceValid(meter))
@@ -329,11 +343,11 @@ public partial class GodotPlayableRunMain : Control
             compact.Bind(actor,unit.CurrentHealth,unit.MaxHealth,unit.CurrentMana,unit.MaxMana);
         }
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
-        _skillPanel.AddChild(Label($"Round {snapshot.Round} | Active {snapshot.ActiveUnitId.Value}\nMode {snapshot.TargetingMode} | {snapshot.Phase}", 25));
+        BattleUiUnitSnapshot activeSnapshot=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
+        if(_hoverInfo is not null)_hoverInfo.Text=$"{EncounterLabel(_currentEncounterId!.Value)} | {activeSnapshot.UnitId.Value}\nHP {activeSnapshot.CurrentHealth}/{activeSnapshot.MaxHealth}  MP {activeSnapshot.CurrentMana}/{activeSnapshot.MaxMana}\nStatus: {string.Join(", ",activeSnapshot.StatusIds.Select(id=>id.Value))}";
         bool aiPlayback=_battle.HasPendingAutomaticFrames||_presentationInputLocked;
         Button moveButton=Button("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(moveButton);
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
-        _skillPanel.AddChild(Label($"Spear: {(spearDropped?"Dropped":"Held")}",18));
         foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
         {
             BattleUiUnitSnapshot activeUnit=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
@@ -342,11 +356,15 @@ public partial class GodotPlayableRunMain : Control
             Button skillButton=Button($"{skill.ContentId.Value}  MP {skill.ManaCost}{(usageFailure is null?string.Empty:"  [USED]")}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??SkillTooltip(skill);_skillPanel.AddChild(skillButton);
         }
         foreach(SkillDefinition passive in snapshot.ActiveSkills.Where(skill=>skill.IsPassive))_skillPanel.AddChild(Label($"Passive: {passive.ContentId.Value}",16));
-        Button endTurn=Button("End Turn (Enter)", () => ApplyIntent(new EndTurnIntent()));endTurn.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(endTurn);
-        _skillPanel.AddChild(Button("Abandon Run", AbandonRun));
+        if(_endTurnButton is not null)_endTurnButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;
+        _skillPanel.AddChild(SmallButton("Abandon", () =>
+        {
+            if (ShouldBlockBattleIntent(_cheatConsole?.Visible == true, _presentationInputLocked)) return;
+            AbandonRun();
+        }));
         ApplyHighlights(snapshot);
         _board.FollowActiveActor(_actors.GetValueOrDefault(snapshot.ActiveUnitId));
-        if(_turnOrder is not null)_turnOrder.Text="Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
+        if(_turnOrder is not null)_turnOrder.Text=$"Round {snapshot.Round} | Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
         RefreshLog();
     }
 
@@ -387,6 +405,17 @@ public partial class GodotPlayableRunMain : Control
 
     private void OnBoardCellPressed(GridPoint cell)=>ApplyIntent(new ConfirmCellIntent(cell));
 
+    private void OnBoardPointerPressed(Vector2 pointer)
+    {
+        UnitInstanceId? unitId = GodotUnitPointerResolver.Resolve(_actors, pointer);
+        if (unitId is UnitInstanceId resolved && _visibleSnapshot?.Units.FirstOrDefault(unit => unit.UnitId == resolved) is BattleUiUnitSnapshot unit)
+        {
+            OnBoardCellPressed(unit.Cell);
+            return;
+        }
+        if (IsometricBattleBoardLayout.TryScreenToGrid(pointer, out GridPoint cell)) OnBoardCellPressed(cell);
+    }
+
     private void HoverCell(GridPoint cell)
     {
         RestoreTargetingFacing();
@@ -413,10 +442,9 @@ public partial class GodotPlayableRunMain : Control
 
     private void UpdateHoveredMeter(Vector2 pointer)
     {
-        UnitInstanceId? hovered = _actors
-            .Where(pair => GodotObject.IsInstanceValid(pair.Value) && pair.Value.VisualBoundsInParent().HasPoint(pointer))
-            .OrderByDescending(pair => pair.Value.ZIndex)
-            .Select(pair => (UnitInstanceId?)pair.Key).FirstOrDefault();
+        UnitInstanceId? hovered = GodotUnitPointerResolver.Resolve(_actors, pointer);
+        if (hovered is UnitInstanceId unitId && _visibleSnapshot?.Units.FirstOrDefault(unit => unit.UnitId == unitId) is BattleUiUnitSnapshot unit)
+            HoverCell(unit.Cell);
         foreach ((UnitInstanceId id, Control meter) in _unitMeters)
             if (GodotObject.IsInstanceValid(meter)) meter.Visible = hovered is UnitInstanceId value && value == id;
     }
@@ -452,9 +480,10 @@ public partial class GodotPlayableRunMain : Control
     private void ApplyIntent(BattleUiIntent intent)
     {
         if (_battle is null) return;
-        if(_presentationInputLocked)
+        if (ShouldBlockBattleIntent(_cheatConsole?.Visible == true, _presentationInputLocked))
         {
-            AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,"presentation_in_progress","CommandRejectedEvent"));
+            string reason = _cheatConsole?.Visible == true ? "cheat_console_open" : "presentation_in_progress";
+            AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,reason,"CommandRejectedEvent"));
             RefreshLog();
             return;
         }
@@ -476,6 +505,9 @@ public partial class GodotPlayableRunMain : Control
         RefreshBattle();
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
+
+    internal static bool ShouldBlockBattleIntent(bool cheatConsoleVisible, bool presentationInputLocked) =>
+        cheatConsoleVisible || presentationInputLocked;
 
     private void CompleteBattle(PureRunBattleResult battleResult)
     {
@@ -514,7 +546,7 @@ public partial class GodotPlayableRunMain : Control
         if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);BeginPresentation(frame.Presentation,true,forced&&_playbackPaused);return;}
         RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
     }
-    private void TogglePause(){_playbackPaused=!_playbackPaused;_presentationPlayer?.SetPaused(_playbackPaused);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));if(!_playbackPaused&&_battle?.HasPendingAutomaticFrames==true&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);RefreshLog();}
+    private void TogglePause(){_playbackPaused=!_playbackPaused;if(_stepButton is not null)_stepButton.Disabled=!_playbackPaused;_presentationPlayer?.SetPaused(_playbackPaused);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));if(!_playbackPaused&&_battle?.HasPendingAutomaticFrames==true&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);RefreshLog();}
     private void ToggleSpeed()
     {
         _playbackSpeed = _playbackSpeed switch { 1f => 2f, 2f => 4f, 4f => .5f, _ => 1f };
@@ -559,7 +591,13 @@ public partial class GodotPlayableRunMain : Control
         CommandRejectedEvent e=>new(BattleUiLogCategory.Rejected,$"{e.ActorId.Value}: {e.Reason}",nameof(CommandRejectedEvent)),
         _=>new(BattleUiLogCategory.Gameplay,item.ToString()??item.GetType().Name,item.GetType().Name)
     };
-    private void RefreshLog(){if(_eventLog is null)return;IEnumerable<BattleUiLogEntry> shown=_logs;if(_logFilter>0)shown=shown.Where(item=>(int)item.Category==_logFilter-1);_eventLog.Text=string.Join('\n',shown.Select(item=>$"[{item.EventType}] {item.Message}"));_eventLog.ScrollToLine(Math.Max(0,_eventLog.GetLineCount()-1));}
+    private void RefreshLog()
+    {
+        _cheatConsole?.SetEntries(_logs);
+        if(_eventLog is null)return;
+        IEnumerable<BattleUiLogEntry> shown=_logs;if(_logFilter>0)shown=shown.Where(item=>(int)item.Category==_logFilter-1);
+        _eventLog.Text=string.Join('\n',shown.Select(item=>$"[{item.EventType}] {item.Message}"));_eventLog.ScrollToLine(Math.Max(0,_eventLog.GetLineCount()-1));
+    }
 
     private void ShowSettlement(PureRunSaveSnapshot snapshot)
     {
@@ -944,12 +982,12 @@ public partial class GodotPlayableRunMain : Control
             menu.AddChild(Label($"Step 2/2 — choose a skill\nSTR {proposed.Strength}  AGI {proposed.Agility}  CON {proposed.Constitution}\nINT {proposed.Intelligence}  CHA {proposed.Charisma}  LUCK {proposed.Luck}",22));
             menu.AddChild(Label("Current skills:\n" + string.Join('\n', character.LearnedSkillStates.Select(value =>
             {
-                SkillDefinition known = _skills[value.DefinitionId];
-                return $"{value.BranchId} Lv{value.Level} — {(known.IsPassive ? "Passive" : "Active")}";
+                SkillUiMetadata known = _skillUi[value.DefinitionId];
+                return $"{known.DisplayName} Lv{value.Level} — {(known.IsPassive ? "Passive" : "Active")} — MP {known.ManaCost}\n{known.Description}";
             })), 17));
             SkillDefinition[] candidates=progressionService.GrowthOffer(run,preview,_skills,_runDefinition!).ToArray();
             foreach(SkillDefinition skill in candidates)
-                menu.AddChild(Button(GrowthChoiceLabel(preview,skill),()=>
+                menu.AddChild(Button(GrowthChoiceLabel(preview,skill,_skillUi[skill.ContentId]),()=>
                     CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,skill.ContentId,_skills,_runDefinition!))));
             if(candidates.Length==0)
             {
@@ -960,16 +998,20 @@ public partial class GodotPlayableRunMain : Control
         root.AddChild(PlaceControl(Button("Back to Map",()=>ShowRunMap(run)),new Vector2(650,820),new Vector2(300,55)));
     }
 
-    private static string GrowthChoiceLabel(RunCharacterState character,SkillDefinition skill)
+    private static string GrowthChoiceLabel(RunCharacterState character,SkillDefinition skill,SkillUiMetadata metadata)
     {
         RunLearnedSkillState? learned=character.LearnedSkillStates.FirstOrDefault(value=>value.BranchId==skill.BranchId);
-        string raw=skill.BranchId.Split('.').Last();
-        string name=string.Join(' ',raw.Split('-').Select(value=>char.ToUpperInvariant(value[0])+value[1..]));
-        string requirement=string.IsNullOrEmpty(skill.RequiredAttribute)?string.Empty:$" (requires {skill.RequiredAttribute} {skill.MinimumAttribute})";
-        return learned is null
-            ? $"Learn {name} Lv{skill.Level}{requirement}"
-            : $"Upgrade {name} Lv{learned.Level} → Lv{skill.Level}{requirement}";
+        string title = learned is null
+            ? $"Learn {metadata.DisplayName} Lv{skill.Level}"
+            : $"Upgrade {metadata.DisplayName} Lv{learned.Level} → Lv{skill.Level}";
+        string requirement=string.IsNullOrEmpty(metadata.RequiredAttribute)?"None":$"{metadata.RequiredAttribute} {metadata.MinimumAttribute}";
+        string prerequisite=string.IsNullOrEmpty(metadata.PrerequisiteBranchId)?"None":metadata.PrerequisiteBranchId;
+        return $"{title}\n{metadata.Description}\n{(metadata.IsPassive ? "Passive" : "Active")}  MP {metadata.ManaCost}  Range {RangeLabel(metadata)}\nRequires: {requirement}  Prerequisite: {prerequisite}";
     }
+
+    private static string RangeLabel(SkillUiMetadata metadata) => metadata.MinRange == metadata.MaxRange
+        ? metadata.MaxRange.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        : $"{metadata.MinRange}-{metadata.MaxRange}";
 
     internal static string SettlementDropLabel(PureRunState run)
     {
@@ -1032,7 +1074,12 @@ public partial class GodotPlayableRunMain : Control
         var root = new Control(); root.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); AddChild(root); _page = root;
         Control background = battleBackdrop ? new GodotBattleBackdrop() : new ColorRect { Color = new Color("657784") };
         background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);
-        LabelAt(root, title, new Vector2(70, 35), 40); LabelAt(root, subtitle, new Vector2(70, 82), 20); return root;
+        if (!battleBackdrop)
+        {
+            LabelAt(root, title, new Vector2(70, 35), 40);
+            LabelAt(root, subtitle, new Vector2(70, 82), 20);
+        }
+        return root;
     }
 
     private void DisposePresentationPlayer()

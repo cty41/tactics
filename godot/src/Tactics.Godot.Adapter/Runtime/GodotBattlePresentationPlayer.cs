@@ -98,13 +98,13 @@ public partial class GodotBattlePresentationPlayer : Node
             case PresentationCueKind.Melee:
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayRelease(tween, actor, cue, _profile.MeleeWindupDuration, _profile.MeleeLungeDuration, _profile.MeleeImpactHold, 18f);
-                if(cue.SkillId is not null)PlaySkillFx(tween,cue);
+                if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) PlayRecover(tween,actor,cue,_profile.MeleeRecoverDuration);
                 break;
             case PresentationCueKind.Ranged:
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayRelease(tween, actor, cue, _profile.RangedAimDuration, _profile.RangedReleaseDuration, 0f, -8f);
-                if(cue.SkillId is not null)PlaySkillFx(tween,cue);
+                if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) PlayRecover(tween,actor,cue,_profile.RangedRecoverDuration);
                 break;
             case PresentationCueKind.Cast:
@@ -112,7 +112,7 @@ public partial class GodotBattlePresentationPlayer : Node
                 Vector2 baseScale = actor.Scale;
                 tween.TweenProperty(actor, "scale", baseScale * 1.12f, _profile.CastChargeDuration).SetTrans(Tween.TransitionType.Sine);
                 tween.TweenInterval(_profile.CastReleaseHold);
-                if(cue.SkillId is not null)PlaySkillFx(tween,cue);
+                if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) tween.TweenProperty(actor, "scale", baseScale, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
                 break;
             case PresentationCueKind.Hit:
@@ -145,7 +145,10 @@ public partial class GodotBattlePresentationPlayer : Node
                 ? _profile.MeleeRecoverDuration : _profile.RangedRecoverDuration);
     }
 
-    private void PlaySkillFx(Tween tween, BattlePresentationCue cue)
+    public static Vector2 VerticalLightningStart(Vector2 targetHead, float visibleBoardTop) =>
+        new(targetHead.X, visibleBoardTop - 32f);
+
+    private void PlaySkillFx(Tween tween, BattlePresentationCue cue, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
     {
         string branch=cue.SkillId!.Value.Value;
         SkillPresentationResource? profile=branch.Contains("fireball",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.fireball"):
@@ -161,7 +164,14 @@ public partial class GodotBattlePresentationPlayer : Node
             .Select(effect=>cue.AffectedUnitIds.Contains(effect.TargetId!.Value)?effect.TargetId:null).Where(id=>id is not null)
             .Select(id=>cue.TargetId==id?cue.Destination:cue.Destination).Distinct().Select(IsometricBattleBoardLayout.GridToScreen).ToArray();
         if(impacts.Length==0)impacts=cue.AffectedUnitIds.Count>0?[IsometricBattleBoardLayout.GridToScreen(cue.Destination)]:[];
-        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,Start=IsometricBattleBoardLayout.GridToScreen(cue.Origin),End=IsometricBattleBoardLayout.GridToScreen(end),Impacts=impacts,Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900,Visible=false};
+        Vector2 effectEnd = IsometricBattleBoardLayout.GridToScreen(end);
+        if (profile.ProgrammaticKind == "lightning" && cue.TargetId is UnitInstanceId targetId &&
+            actors.TryGetValue(targetId, out GodotUnitActor? targetActor) && GodotObject.IsInstanceValid(targetActor))
+            effectEnd = targetActor.HeadAnchorInParent();
+        Vector2 effectStart = profile.ProgrammaticKind == "lightning"
+            ? VerticalLightningStart(effectEnd, IsometricBattleBoardLayout.TopCenter.Y)
+            : IsometricBattleBoardLayout.GridToScreen(cue.Origin);
+        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,Start=effectStart,End=effectEnd,Impacts=impacts,Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900,Visible=false};
         _transientNodes.Add(fx);
         GetParent().AddChild(fx);
         tween.TweenCallback(Callable.From(()=>{if(GodotObject.IsInstanceValid(fx))fx.Visible=true;}));

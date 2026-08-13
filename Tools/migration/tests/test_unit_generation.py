@@ -66,7 +66,7 @@ class UnitGenerationTests(unittest.TestCase):
 
     def test_texture_ledger_is_exactly_the_approved_project_owned_payload(self):
         artifacts = self.texture_ledger["artifacts"]
-        self.assertEqual(19, len(artifacts))
+        self.assertEqual(21, len(artifacts))
         for artifact in artifacts:
             target = ROOT / artifact["relativePath"]
             self.assertTrue(target.is_file(), artifact["relativePath"])
@@ -79,7 +79,7 @@ class UnitGenerationTests(unittest.TestCase):
         self.assertEqual(sha256(TEXTURE_LEDGER_PATH), self.receipt["textureLedgerHash"])
         self.assertEqual(13, self.receipt["contentEntryCount"])
         self.assertEqual(12, self.receipt["unitDefinitionCount"])
-        self.assertEqual(19, self.receipt["texturePayloadCount"])
+        self.assertEqual(21, self.receipt["texturePayloadCount"])
         self.assertFalse(self.receipt["dependencyBoundary"]["materialAndShaderPayloadCopied"])
         self.assertTrue(self.receipt["dependencyBoundary"]["projectOwnedShaderAlgorithmPorted"])
         self.assertFalse(self.receipt["dependencyBoundary"]["thirdPartyPayloadCopied"])

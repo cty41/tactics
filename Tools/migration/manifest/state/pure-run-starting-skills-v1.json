@@ -12,27 +12,27 @@
     {
       "resourcePath": "res://content/skills/AmazonCombatTechniquesLv1.tres",
       "resourceUid": "uid://by7ora41sorsi",
-      "targetHash": "sha256:e0b5eb359ce776316ca00855849973ce1ae2d421a9718696cd92e1550062553b"
+      "targetHash": "sha256:d2172ce68156231fdf09a9d8d94d618a38c9902df371632a498b2e51cd9f5553"
     },
     {
       "resourcePath": "res://content/skills/AmazonPickupSpearLv1.tres",
       "resourceUid": "uid://d4nhj5nyd6sk7",
-      "targetHash": "sha256:a57f14afda74a9d510f86b06bc03c88c4fd1fb69b4421657edd52a0bd3d124ac"
+      "targetHash": "sha256:b51659c43289c31c8342b0b46541f6f2f03f4ef43b035d14728d28b526282ade"
     },
     {
       "resourcePath": "res://content/skills/AmazonThrustLv1.tres",
       "resourceUid": "uid://rntj7qgaym5p",
-      "targetHash": "sha256:2c285bc9b77b72572ff311b2250557ab1857cc716289a0083510796eca7f9274"
+      "targetHash": "sha256:c51e7163e4f0c5eb95b2d5c9c462600e85b2cdea686f248247ba449e94d55448"
     },
     {
       "resourcePath": "res://content/skills/BasicMagic.tres",
       "resourceUid": "uid://bra6jwtsiowk7",
-      "targetHash": "sha256:9d060ece6b32d42a46ca922d5e896e620bb56011928cfb96d6ca848399dac47d"
+      "targetHash": "sha256:ddd35ca694b3d552642d28d17f3f6c42bd156935eda5b288eb72df07ec22a432"
     },
     {
       "resourcePath": "res://content/skills/BasicMelee.tres",
       "resourceUid": "uid://cjytprsb6ycgm",
-      "targetHash": "sha256:11f5dd589fd39c2ac7bb96e6c265fc75f6feb1920041e27e3afe928742f67045"
+      "targetHash": "sha256:9eda6e5801a953edad69e22ca3240bbae4c03757fb0c7bb3bb2a58aeffabd2b3"
     },
     {
       "resourcePath": "res://content/skills/ContentCatalog.tres",
@@ -42,32 +42,32 @@
     {
       "resourcePath": "res://content/skills/MageFireballLv1.tres",
       "resourceUid": "uid://u6t4ogddty4j",
-      "targetHash": "sha256:d8d06b374909eaa9363a03fc692b4055f40ef6ca24f083ca9ceef86e862ada30"
+      "targetHash": "sha256:03b68a0ee19d05d1b2c2685afdca2dac96efc0b52e5cd275ee696c7694b840b7"
     },
     {
       "resourcePath": "res://content/skills/MageIceBoltLv1.tres",
       "resourceUid": "uid://to8x8dbr6p04",
-      "targetHash": "sha256:7c187d2dff4189dc9596664c61757cee0187d5ab3a1c266a526b5fedd434ca2d"
+      "targetHash": "sha256:664020691ecab64824431e2da9040ac01cc8bd0bdb3b2ef4d287858c9e57f0b2"
     },
     {
       "resourcePath": "res://content/skills/MageLightningLv1.tres",
       "resourceUid": "uid://8ypqfoeepiq5",
-      "targetHash": "sha256:b8990803f0d07612033e8425330166ea217187a6f3588c31c7d9909d983e4966"
+      "targetHash": "sha256:49456651dd4a742b761d89a40f48359a6ad603763c6904c090eec04988774700"
     },
     {
       "resourcePath": "res://content/skills/NecromancerAmplifyDamageLv1.tres",
       "resourceUid": "uid://c5y67uuebcl2w",
-      "targetHash": "sha256:3d03e0d4cefb3091eff0ef8136461738f57bd6b838cf3cd3b29e8684587a24b6"
+      "targetHash": "sha256:fcee17a034e029fe17c0e5be96e99116eac268a9b9692973ba41fe869a537649"
     },
     {
       "resourcePath": "res://content/skills/NecromancerBoneSpearLv1.tres",
       "resourceUid": "uid://bodkqw7srjkd2",
-      "targetHash": "sha256:725fdda2382adb8817df5716d502a671b6c8c4fcb6acd48e1c5633b22774a31b"
+      "targetHash": "sha256:30c862b830cba67490f3d892ee7ea44ef94e25e7d39888ea095bc66947ba1c0e"
     },
     {
       "resourcePath": "res://content/skills/NecromancerSummonSkeletonLv1.tres",
       "resourceUid": "uid://c0tjm5iteo1dv",
-      "targetHash": "sha256:2b44eaadd4c7172b6a1d1c172a925eefa2d4d1606f78e6ddecc1b57afeb116b0"
+      "targetHash": "sha256:72fa4c18cb9a1b7d6e45dfaffde5b4a4c6916d573b1a7720b9128577343ea94c"
     },
     {
       "resourcePath": "res://content/skills/SkillFixture.tscn",

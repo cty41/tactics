@@ -14,6 +14,7 @@ public partial class GodotIsometricBattleBoard : Control
     private Vector2? _lastActivePosition;
 
     public event Action<GridPoint>? CellPressed;
+    public event Action<Vector2>? PointerPressed;
     public event Action<GridPoint>? CellHovered;
     public event Action? HoverCleared;
     public event Action<Vector2>? PointerMoved;
@@ -67,10 +68,10 @@ public partial class GodotIsometricBattleBoard : Control
                 UpdateHover(motion.Position);
                 PointerMoved?.Invoke(motion.Position);
                 break;
-            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } button
-                when IsometricBattleBoardLayout.TryScreenToGrid(button.Position, out GridPoint cell):
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } button:
                 AcceptEvent();
-                CellPressed?.Invoke(cell);
+                if (PointerPressed is not null) PointerPressed.Invoke(button.Position);
+                else if (IsometricBattleBoardLayout.TryScreenToGrid(button.Position, out GridPoint cell)) CellPressed?.Invoke(cell);
                 break;
         }
     }

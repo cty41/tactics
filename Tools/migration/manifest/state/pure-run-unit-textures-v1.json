@@ -29,6 +29,20 @@
       "targetHash": "sha256:f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19"
     },
     {
+      "contentId": "texture.unit.doge-hunter-idle-unarmed-dr",
+      "relativePath": "godot/assets/units/doge_hunter_idle_unarmed_dr.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:6e4cb98a1c4829563dc36786f4dcbf2d3cb87ac42888dc6726236e10d62312b6",
+      "targetHash": "sha256:4f9388311ad640336a5f9cb0eac90831849f885d2ccae01195b06bcc0fba56ab"
+    },
+    {
+      "contentId": "texture.unit.doge-hunter-idle-unarmed-ul",
+      "relativePath": "godot/assets/units/doge_hunter_idle_unarmed_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:3ee14849d0b1174ace74c6223fb614457727d09290332a7a517c16e7ca29ba58",
+      "targetHash": "sha256:08bf56069d3fd4365995b5a8a4f388ba15b8c18c4018bd5c2f2ad97fecdb41a2"
+    },
+    {
       "contentId": "texture.unit.doge-hunter-ul",
       "relativePath": "godot/assets/units/doge_hunter_ul.png",
       "resourceUid": null,
@@ -137,7 +151,7 @@
   "batchId": "pure-run-unit-textures-v1",
   "schemaVersion": 1,
   "source": {
-    "exportHash": "sha256:27654bc63e4e902be8b51fd883f505ffe84b1268fe8d8a31e37946a0b869c0b1",
+    "exportHash": "sha256:d7d25a38e6be69ace05efafb95a987d2e7809bf063e3013ec0b6263d17241aee",
     "exporterVersion": "unity-assetdatabase-v1",
     "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
     "sourceTag": "unity-final-2026-08-08"

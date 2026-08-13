@@ -6,8 +6,11 @@
 script = ExtResource("1_lq8ct")
 ContentIdValue = "skill.amazon.combat-techniques.lv1"
 SourceId = "amazon.combat_techniques"
+DisplayName = "战斗技巧"
+Description = "通过战斗技巧闪避攻击并强化伤害。"
 RoleValue = "Amazon"
 KindValue = "Passive"
 Level = 1
 ExecutionKindValue = "CombatTechniques"
 DamageKindValue = "None"
+BranchId = "amazon.combat-techniques"

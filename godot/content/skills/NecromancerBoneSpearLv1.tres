@@ -17,6 +17,7 @@ MaxRange = 4
 ExecutionKindValue = "BoneSpear"
 Damage = 7
 DamageKindValue = "Magical"
+BranchId = "necromancer.bone-spear"
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset"
 SourceGuid = "54177d88beba96242b3e52fcbda386c0"
 SourceLocalFileId = 11400000

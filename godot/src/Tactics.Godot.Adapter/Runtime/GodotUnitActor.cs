@@ -31,6 +31,7 @@ public partial class GodotUnitActor : Node2D
     public bool IsShowingDeath { get; private set; }
     public GodotUnitFacing PresentationFacing => Facing;
     public bool IsBodyTintEnabled { get; private set; } = true;
+    public bool IsSpearHeld { get; private set; } = true;
     public bool UsesGoatBodyMaskTint =>
         _definition?.BodyTintModeValue == UnitBodyTintModes.GoatBodyMaskV1;
 
@@ -67,6 +68,12 @@ public partial class GodotUnitActor : Node2D
         ApplyVisual();
     }
 
+    public void SetSpearHeld(bool held)
+    {
+        IsSpearHeld = held;
+        ApplyVisual();
+    }
+
     /// <summary>
     /// Toggles presentation-only tinting for visual comparison without changing gameplay state.
     /// </summary>
@@ -99,17 +106,42 @@ public partial class GodotUnitActor : Node2D
         return new Rect2(left, top, right - left, bottom - top);
     }
 
+    public Vector2 HeadAnchorInParent()
+    {
+        Rect2 bounds = VisualBoundsInParent();
+        return new Vector2(bounds.GetCenter().X, bounds.Position.Y + Math.Min(8f, bounds.Size.Y * .12f));
+    }
+
+    public bool ContainsOpaquePoint(Vector2 parentPoint, float alphaThreshold = 0.1f)
+    {
+        if (Body?.Texture is null || !Visible || !Body.Visible) return false;
+        Vector2 actorLocal = Transform.AffineInverse() * parentPoint;
+        Vector2 bodyLocal = Body.Transform.AffineInverse() * actorLocal;
+        Rect2 rect = Body.GetRect();
+        if (!rect.HasPoint(bodyLocal) || rect.Size.X <= 0f || rect.Size.Y <= 0f) return false;
+        float u = Mathf.Clamp((bodyLocal.X - rect.Position.X) / rect.Size.X, 0f, .999999f);
+        float v = Mathf.Clamp((bodyLocal.Y - rect.Position.Y) / rect.Size.Y, 0f, .999999f);
+        if (Body.FlipH) u = 1f - u;
+        if (Body.FlipV) v = 1f - v;
+        Image image = Body.Texture.GetImage();
+        if (image.IsEmpty()) return false;
+        int x = Math.Clamp((int)(u * image.GetWidth()), 0, image.GetWidth() - 1);
+        int y = Math.Clamp((int)(v * image.GetHeight()), 0, image.GetHeight() - 1);
+        return image.GetPixel(x, y).A >= alphaThreshold;
+    }
+
     private void ApplyVisual()
     {
         if (_definition is null)
             return;
         EnsureNodes();
         bool usesUpLeft = Facing is GodotUnitFacing.North or GodotUnitFacing.East;
+        Texture2D living = usesUpLeft
+            ? !IsSpearHeld && _definition.UnarmedUpLeftTexture is not null ? _definition.UnarmedUpLeftTexture : _definition.UpLeftTexture!
+            : !IsSpearHeld && _definition.UnarmedDownRightTexture is not null ? _definition.UnarmedDownRightTexture : _definition.DownRightTexture!;
         Body!.Texture = IsShowingDeath
             ? _definition.DeathTexture
-            : usesUpLeft
-                ? _definition.UpLeftTexture
-                : _definition.DownRightTexture;
+            : living;
         Body.FlipH = !IsShowingDeath &&
             (Facing == GodotUnitFacing.East || Facing == GodotUnitFacing.West);
         Vector2 offset = IsShowingDeath

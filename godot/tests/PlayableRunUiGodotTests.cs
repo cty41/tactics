@@ -25,11 +25,37 @@ public class PlayableRunUiGodotTests
         AssertThat(ProjectSettings.GetSetting("display/window/size/viewport_height").AsInt32()).IsEqual(900);
         AssertThat(ProjectSettings.GetSetting("display/window/stretch/mode").AsString()).IsEqual("canvas_items");
         AssertThat(ProjectSettings.GetSetting("display/window/stretch/aspect").AsString()).IsEqual("keep");
+        // The battle shell intentionally keeps a fixed 1600x900 logical canvas.
+        // Non-16:9 windows are letterboxed by Godot instead of dynamically
+        // reflowing gameplay controls, which prevents stretching and cropping.
+        AssertThat(ProjectSettings.GetSetting("display/window/size/window_width_override").AsInt32()).IsEqual(1600);
+        AssertThat(ProjectSettings.GetSetting("display/window/size/window_height_override").AsInt32()).IsEqual(900);
+        AssertThat(InputMap.HasAction("toggle_console")).IsTrue();
         PackedScene? scene = ResourceLoader.Load<PackedScene>("res://scenes/Main.tscn");
         AssertThat(scene).IsNotNull();
         Node? root = scene?.Instantiate();
         AssertThat(root).IsInstanceOf<TacticsMigrationRoot>();
         root?.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void CheatConsoleStartsHiddenAndOccupiesTopQuarter()
+    {
+        var console = new GodotBattleCheatConsole();
+        console._Ready();
+        AssertThat(console.Visible).IsFalse();
+        AssertThat(console.Size.Y).IsEqual(225f);
+        AssertThat(console.MouseFilter).IsEqual(Control.MouseFilterEnum.Stop);
+        console.Free();
+    }
+
+    [TestCase]
+    public void CheatConsoleBlocksEveryGameplayIntentWithoutPausingPlayback()
+    {
+        AssertThat(GodotPlayableRunMain.ShouldBlockBattleIntent(true, false)).IsTrue();
+        AssertThat(GodotPlayableRunMain.ShouldBlockBattleIntent(false, true)).IsTrue();
+        AssertThat(GodotPlayableRunMain.ShouldBlockBattleIntent(false, false)).IsFalse();
     }
 
     [TestCase]
@@ -205,9 +231,89 @@ public class PlayableRunUiGodotTests
             new[] { mage }.Concat(others).ToArray(), pendingProgression: new[] { pending });
         typeof(GodotPlayableRunMain).GetMethod("ShowProgression", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(ui, new object[] { run, pending });
         string[] buttonTexts = Descendants<Button>(ui).Select(button => button.Text).ToArray();
-        AssertThat(buttonTexts.Count(text => text.StartsWith("Learn ", StringComparison.Ordinal) || text.StartsWith("Upgrade ", StringComparison.Ordinal))).IsLessEqual(3);
-        AssertThat(buttonTexts.Any(text => text.Contains("Upgrade Fireball Lv1 → Lv2", StringComparison.Ordinal))).IsTrue();
+        string[] growthCards = buttonTexts.Where(text => text.StartsWith("Learn ", StringComparison.Ordinal) || text.StartsWith("Upgrade ", StringComparison.Ordinal)).ToArray();
+        AssertThat(growthCards.Length).IsEqual(3);
+        AssertThat(growthCards.Any(text => text.Contains("Upgrade 火球术 Lv1 → Lv2", StringComparison.Ordinal))).IsTrue();
+        AssertThat(growthCards.Any(text => text.Contains("Learn Lv1 Lv1", StringComparison.Ordinal))).IsFalse();
+        AssertThat(growthCards.Distinct(StringComparer.Ordinal).Count()).IsEqual(3);
+        string labels = string.Join('\n', Descendants<Label>(ui).Select(label => label.Text));
+        AssertThat(labels).Contains("Current skills:");
+        AssertThat(labels).Contains("火球术");
+        AssertThat(labels).Contains("MP 7");
+        AssertThat(labels).Contains("施加2层点燃");
         ui.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void StartingSkillResourcesExposeCanonicalBranchAndUiMetadata()
+    {
+        SkillDefinitionResource fireball = ResourceLoader.Load<SkillDefinitionResource>("res://content/skills/MageFireballLv1.tres")!;
+        SkillUiMetadata metadata = SkillUiMetadata.From(fireball);
+
+        AssertThat(fireball.BranchId).IsEqual("mage.fireball");
+        AssertThat(metadata.DisplayName).IsEqual("火球术");
+        AssertThat(metadata.Level).IsEqual(1);
+        AssertThat(metadata.Description).Contains("点燃");
+        AssertThat(metadata.ManaCost).IsEqual(7);
+        PoisonSpearSkillResource poison = ResourceLoader.Load<PoisonSpearSkillResource>("res://content/poison_spear/PoisonSpearSkillLv1.tres")!;
+        SkillUiMetadata poisonMetadata = SkillUiMetadata.From(poison);
+        AssertThat(poisonMetadata.RequiredAttribute).IsEqual("Agility");
+        AssertThat(poisonMetadata.MinimumAttribute).IsEqual(5);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void PointerResolverUsesOpaquePixelsAndCanonicalDrawOrder()
+    {
+        static GodotUnitActor Actor(Color topLeft, Color topRight, int z)
+        {
+            Image image = Image.CreateEmpty(2, 1, false, Image.Format.Rgba8);
+            image.SetPixel(0, 0, topLeft);
+            image.SetPixel(1, 0, topRight);
+            return new GodotUnitActor
+            {
+                Body = new Sprite2D { Texture = ImageTexture.CreateFromImage(image), Centered = false },
+                Shadow = new Sprite2D(),
+                ZIndex = z
+            };
+        }
+
+        var rearId = new UnitInstanceId("rear");
+        var frontId = new UnitInstanceId("front");
+        GodotUnitActor rear = Actor(Colors.White, Colors.White, 10);
+        GodotUnitActor front = Actor(new Color(1, 1, 1, 0), Colors.White, 20);
+        var actors = new Dictionary<UnitInstanceId, GodotUnitActor> { [rearId] = rear, [frontId] = front };
+
+        AssertThat(GodotUnitPointerResolver.Resolve(actors, new Vector2(.25f, .5f))).IsEqual(rearId);
+        AssertThat(GodotUnitPointerResolver.Resolve(actors, new Vector2(1.25f, .5f))).IsEqual(frontId);
+        rear.Free(); front.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void AmazonActorSwitchesHeldAndUnarmedTexturesWithoutChangingFacing()
+    {
+        UnitDefinitionResource definition = ResourceLoader.Load<UnitDefinitionResource>("res://content/units/PureRunAmazon.tres")!;
+        GodotUnitActor actor = GodotUnitFactory.InstantiateActor(definition);
+        actor.SetFacing(GodotUnitFacing.East);
+        actor.SetSpearHeld(false);
+        AssertThat(actor.IsSpearHeld).IsFalse();
+        AssertThat(actor.Body!.Texture!.ResourcePath).Contains("doge_hunter_idle_unarmed_ul.png");
+        AssertThat(actor.PresentationFacing).IsEqual(GodotUnitFacing.East);
+        actor.SetSpearHeld(true);
+        AssertThat(actor.Body.Texture!.ResourcePath).Contains("doge_hunter_ul.png");
+        actor.Free();
+    }
+
+    [TestCase]
+    public void LightningStartsAboveBoardAndEndsAtTargetHead()
+    {
+        Vector2 head = new(720, 340);
+        Vector2 start = GodotBattlePresentationPlayer.VerticalLightningStart(head, 110);
+        AssertThat(start.X).IsEqual(head.X);
+        AssertThat(start.Y).IsEqual(78f);
+        AssertThat(start).IsNotEqual(new Vector2(400, 500));
     }
 
     [TestCase]

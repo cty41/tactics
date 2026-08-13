@@ -19,6 +19,7 @@ Damage = 2
 DamageKindValue = "Magical"
 StatusContentIdValue = "buff.ignite"
 StatusDuration = 2
+BranchId = "mage.fireball"
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset"
 SourceGuid = "5025aef9a8bb0564cb2559dba1f41278"
 SourceLocalFileId = 11400000
