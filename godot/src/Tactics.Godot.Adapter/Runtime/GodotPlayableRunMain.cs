@@ -677,7 +677,6 @@ public partial class GodotPlayableRunMain : Control
         LabelAt(root, $"Gold: {run.Gold}\nItems: {itemResult}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
         root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run, InventoryReturnTarget.Settlement)),new Vector2(480,520),new Vector2(260,60)));
         PendingProgression? pending=run.PendingProgression.FirstOrDefault();
-        if(pending is not null)root.AddChild(PlaceControl(Button("Complete Progression",()=>ShowProgression(run,pending)),new Vector2(780,520),new Vector2(320,60)));
         bool continueRequested=false;
         Button nextButton = Button(pending is null ? $"Continue — {next}" : "Continue — Progression",()=>
         {

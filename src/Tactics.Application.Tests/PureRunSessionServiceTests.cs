@@ -324,6 +324,149 @@ public sealed class PureRunSessionServiceTests
         });
     }
 
+    [Test]
+    public void ResumeRun_AcceptsExplicitStartingSkillAfterThatBranchWasUpgraded()
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        PureRunPartyTemplate template = definition.Party[1];
+        var startingSkill = new ContentId("skill.necromancer.bone-spear.lv1");
+        var upgradedSkill = new ContentId("skill.necromancer.bone-spear.lv2");
+        RunCharacterState necromancer = new(template.CharacterId, template.UnitContentId, 2,
+            template.Attributes, 20, 20, 5, 15, false, [upgradedSkill],
+            learnedSkillStates: [new RunLearnedSkillState("necromancer.bone-spear", 2, upgradedSkill)],
+            startingSkillContentId: startingSkill);
+        RunCharacterState[] party =
+        [
+            new RunCharacterState(definition.Party[0].CharacterId, definition.Party[0].UnitContentId, 1,
+                definition.Party[0].Attributes, 20, 20, 5, 15, false,
+                [definition.Party[0].StartingSkillContentId],
+                startingSkillContentId: definition.Party[0].StartingSkillContentId),
+            necromancer,
+            new RunCharacterState(definition.Party[2].CharacterId, definition.Party[2].UnitContentId, 1,
+                definition.Party[2].Attributes, 20, 20, 5, 15, false,
+                [definition.Party[2].StartingSkillContentId],
+                startingSkillContentId: definition.Party[2].StartingSkillContentId)
+        ];
+        store.Snapshot = new PureRunSaveSnapshot(1, new PureRunState("upgraded-starting-skill", 9, 1,
+            PureRunPhase.Ready, 2, definition.Encounters[2], party), null);
+
+        RunSessionResult result = new PureRunSessionService(definition, store).ResumeRun();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.Snapshot!.ActiveRun!.Party[1].StartingSkillContentId,
+                Is.EqualTo(startingSkill));
+            Assert.That(result.Snapshot.ActiveRun.Party[1].LearnedSkillStates.Single().Level,
+                Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void ResumeRun_RepairsMissingStartingSkillFromAnUpgradedBranch()
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        PureRunPartyTemplate template = definition.Party[1];
+        var upgradedSkill = new ContentId("skill.necromancer.bone-spear.lv2");
+        RunCharacterState necromancer = new(template.CharacterId, template.UnitContentId, 2,
+            template.Attributes, 20, 20, 5, 15, false, [upgradedSkill],
+            learnedSkillStates: [new RunLearnedSkillState("necromancer.bone-spear", 2, upgradedSkill)]);
+        RunCharacterState[] party = definition.Party.Select(item => item.CharacterId == template.CharacterId
+            ? necromancer
+            : new RunCharacterState(item.CharacterId, item.UnitContentId, 1, item.Attributes,
+                20, 20, 5, 15, false, [item.StartingSkillContentId],
+                startingSkillContentId: item.StartingSkillContentId)).ToArray();
+        store.Snapshot = new PureRunSaveSnapshot(1, new PureRunState("legacy-upgraded-starting", 9, 1,
+            PureRunPhase.Ready, 2, definition.Encounters[2], party), null);
+
+        RunSessionResult result = new PureRunSessionService(definition, store).ResumeRun();
+
+        Assert.That(result.Succeeded, Is.True);
+        Assert.That(result.Snapshot!.ActiveRun!.Party[1].StartingSkillContentId,
+            Is.EqualTo(new ContentId("skill.necromancer.bone-spear.lv1")));
+    }
+
+    [Test]
+    public void ResumeRun_RejectsLearnedSkillWhoseBranchLevelAndDefinitionDisagree()
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        PureRunPartyTemplate template = definition.Party[1];
+        var startingSkill = new ContentId("skill.necromancer.bone-spear.lv1");
+        var unrelatedDefinition = new ContentId("skill.mage.fireball.lv2");
+        RunCharacterState necromancer = new(template.CharacterId, template.UnitContentId, 2,
+            template.Attributes, 20, 20, 5, 15, false, [unrelatedDefinition],
+            learnedSkillStates: [new RunLearnedSkillState("necromancer.bone-spear", 99, unrelatedDefinition)],
+            startingSkillContentId: startingSkill);
+        RunCharacterState[] party = definition.Party.Select(item => item.CharacterId == template.CharacterId
+            ? necromancer
+            : new RunCharacterState(item.CharacterId, item.UnitContentId, 1, item.Attributes,
+                20, 20, 5, 15, false, [item.StartingSkillContentId],
+                startingSkillContentId: item.StartingSkillContentId)).ToArray();
+        store.Snapshot = new PureRunSaveSnapshot(1, new PureRunState("invalid-learned-identity", 9, 1,
+            PureRunPhase.Ready, 2, definition.Encounters[2], party), null);
+
+        RunSessionResult result = new PureRunSessionService(definition, store).ResumeRun();
+
+        Assert.That(result.Succeeded, Is.False);
+        Assert.That(result.ErrorCode, Is.EqualTo("save.starting_skill_invalid"));
+    }
+
+    [Test]
+    public void ResumeRun_RejectsLearnedSkillWithoutCanonicalLevelSuffix()
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        PureRunPartyTemplate template = definition.Party[1];
+        var startingSkill = new ContentId("skill.necromancer.bone-spear.lv1");
+        var malformedDefinition = new ContentId("skill.necromancer.bone-spear");
+        RunCharacterState necromancer = new(template.CharacterId, template.UnitContentId, 1,
+            template.Attributes, 20, 20, 5, 15, false, [malformedDefinition],
+            learnedSkillStates: [new RunLearnedSkillState("necromancer.bone-spear", 1, malformedDefinition)],
+            startingSkillContentId: startingSkill);
+        RunCharacterState[] party = definition.Party.Select(item => item.CharacterId == template.CharacterId
+            ? necromancer
+            : new RunCharacterState(item.CharacterId, item.UnitContentId, 1, item.Attributes,
+                20, 20, 5, 15, false, [item.StartingSkillContentId],
+                startingSkillContentId: item.StartingSkillContentId)).ToArray();
+        store.Snapshot = new PureRunSaveSnapshot(1, new PureRunState("malformed-learned-id", 9, 1,
+            PureRunPhase.Ready, 2, definition.Encounters[2], party), null);
+
+        RunSessionResult result = new PureRunSessionService(definition, store).ResumeRun();
+
+        Assert.That(result.Succeeded, Is.False);
+        Assert.That(result.ErrorCode, Is.EqualTo("save.starting_skill_invalid"));
+    }
+
+    [TestCase("necromancer.bone-spear.lv2")]
+    [TestCase("skill.necromancer.bone-spear.lv02")]
+    public void ResumeRun_RejectsNonCanonicalLearnedSkillId(string invalidDefinitionId)
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        PureRunPartyTemplate template = definition.Party[1];
+        var startingSkill = new ContentId("skill.necromancer.bone-spear.lv1");
+        var invalidDefinition = new ContentId(invalidDefinitionId);
+        RunCharacterState necromancer = new(template.CharacterId, template.UnitContentId, 2,
+            template.Attributes, 20, 20, 5, 15, false, [invalidDefinition],
+            learnedSkillStates: [new RunLearnedSkillState("necromancer.bone-spear", 2, invalidDefinition)],
+            startingSkillContentId: startingSkill);
+        RunCharacterState[] party = definition.Party.Select(item => item.CharacterId == template.CharacterId
+            ? necromancer
+            : new RunCharacterState(item.CharacterId, item.UnitContentId, 1, item.Attributes,
+                20, 20, 5, 15, false, [item.StartingSkillContentId],
+                startingSkillContentId: item.StartingSkillContentId)).ToArray();
+        store.Snapshot = new PureRunSaveSnapshot(1, new PureRunState("noncanonical-learned-id", 9, 1,
+            PureRunPhase.Ready, 2, definition.Encounters[2], party), null);
+
+        RunSessionResult result = new PureRunSessionService(definition, store).ResumeRun();
+
+        Assert.That(result.Succeeded, Is.False);
+        Assert.That(result.ErrorCode, Is.EqualTo("save.starting_skill_invalid"));
+    }
+
     private static PureRunBattleResult Victory(PureRunState run) => new(
         run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, true, 3, 3,
         run.Party.Select(member => new BattlePartyResult(

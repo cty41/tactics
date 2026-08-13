@@ -4,19 +4,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
-### MQA-GODOT-PAUSE-MENU — Esc pause and safe exit flow
-
-- Status: `pending`
-- Source: Phase 8E pause overlay hierarchy and menu scope fix
-- Reopen reason: The reported overlay rendered below actors and exposed a noncanonical Save and Quit action; the fix raises the overlay and removes that action.
-- Action: During a battle press Esc, exercise Continue, Options/Back and Main Menu, then open Esc again while targeting and while CheatConsole is visible.
-- Expected: The dark overlay and menu cover all actors/HUD; only Continue, Options and Main Menu appear; targeting/Console take Esc precedence; Quit remains only on Home.
-- Observe: Pause overlay, battle HUD, Home menu, playback state, and CheatConsole.
-- Preserve on failure: Screenshot and exact Esc/menu action sequence; keep the Run and Output open.
-- Save boundary: Main Menu preserves the Active Run and Continue restarts from the committed pre-battle checkpoint.
-- Automated evidence: Z-order, menu actions, input blocking, pause ownership and absence of Save and Quit are asserted; visual stacking and interaction feel remain manual.
-- User verdict: Failed before this fix: actors appeared above the menu and Save and Quit should not exist there.
-
 ### MQA-GODOT-DAMAGE-NUMBERS — Floating combat feedback
 
 - Status: `pending`
@@ -28,7 +15,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Preserve on failure: Screenshot/video plus event log and speed/pause state.
 - Save boundary: Ordinary battle state changes apply; use a disposable Run if exact replay matters.
 - Automated evidence: Event-to-number identity, explicit Poison tick marker, multi-hit sequence, pause/speed propagation, and cleanup are asserted; readability and timing remain manual.
-- User verdict: none.
+- User verdict: Partial pass: normal and Poison tick numbers were observed; critical has not yet appeared during manual play.
 
 ### MQA-GODOT-PROGRESSION-ATOMIC — Non-skippable atomic growth
 
@@ -54,31 +41,18 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Atomic commands, instance uniqueness, projection, V5 round trip, and isolated Store journey are asserted; usability remains manual.
 - User verdict: User previously stated Inventory had not been tested.
 
-### MQA-GODOT-HUD-SKILL-PRESENTATION — HUD and committed skill visuals
-
-- Status: `pending`
-- Source: Phase 8E compact action bar and committed-presentation highlight fix
-- Reopen reason: Action buttons now use display names and compact second-line costs; active-tile highlighting is suppressed during committed action playback.
-- Action: Check the compact action bar, vertical Lightning, overlapping alpha-aware selection, Poison Spear held/unarmed/drop/Pickup or Recover, HUD controls, and Backquote CheatConsole.
-- Expected: Basic attacks have no MP line; skill IDs have no `skill.` prefix; positive MP cost is on line two; during action animation the acting unit has no selected tile. Remaining skill/HUD visuals follow their committed state.
-- Observe: Action buttons, actor feet/tile, battle actors, HUD, hover detail, CheatConsole, and Output.
-- Preserve on failure: Screenshot/video, selected actor ID/tile, button text, skill event log, and current encounter.
-- Save boundary: Skills mutate the battle; use a replayable encounter checkpoint.
-- Automated evidence: Label formatting, action-state marker suppression, event-derived targets, alpha hit ordering, spear lifecycle, console guards, and renderer smoke are asserted; sizing and visual parity remain manual.
-- User verdict: Poison Spear visual sub-check was reported OK before this action-bar change; the combined HUD item remains pending.
-
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
 - Status: `pending`
 - Source: Phase 8E N3 authoritative resume fix
-- Reopen reason: User reported that the third battle node could return `run.not_ready` after two victories.
+- Reopen reason: User reported that the third battle node first returned `run.not_ready`, then `save.starting_skill_invalid` after an actual starting skill had been upgraded to Lv2.
 - Action: Complete N1 and its growth, complete N2 and its growth, then click N3; later continue through BossVictory and alternate Layer 4/6 routes in disposable Runs.
 - Expected: N3 opens immediately when Ready; a PendingBattle resumes the same checkpoint and incomplete growth routes back to Progression instead of leaving a dead map node. Later route transactions resolve once and terminal summary appears once.
 - Observe: Map node status/detail, N3 battle title, Progression, Settlement, Home Continue, and Summary.
 - Preserve on failure: Run seed, node state/reason, save and backup copies, screenshot, and Output.
 - Save boundary: Use separate disposable Runs for mutually exclusive routes; never reuse a valuable save as a fixture.
 - Automated evidence: Two victories plus two completed growth transactions now assert Ready/index 2/N3 request; pending/resume and full deterministic journeys are also covered. End-to-end UX remains manual.
-- User verdict: Failed before this fix: N3 could not be entered after the first two battles.
+- User verdict: Failed before this fix: N3 rejected the live V5 save because Bone Spear Lv1 had legitimately advanced to Lv2.
 
 ### MQA-GODOT-RELOAD-OUTPUT — Reload and diagnostics cleanup
 
@@ -93,6 +67,32 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - User verdict: none after latest lifecycle-affecting changes.
 
 ## Passed
+
+### MQA-GODOT-HUD-SKILL-PRESENTATION — HUD and committed skill visuals
+
+- Status: `passed`
+- Source: Phase 8E compact action bar and committed-presentation highlight fix
+- Reopen reason: Action buttons now use display names and compact second-line costs; active-tile highlighting is suppressed during committed action playback.
+- Action: Check the compact action bar, vertical Lightning, overlapping alpha-aware selection, Poison Spear held/unarmed/drop/Pickup or Recover, HUD controls, and Backquote CheatConsole.
+- Expected: Basic attacks have no MP line; skill IDs have no `skill.` prefix; positive MP cost is on line two; during action animation the acting unit has no selected tile. Remaining skill/HUD visuals follow their committed state.
+- Observe: Action buttons, actor feet/tile, battle actors, HUD, hover detail, CheatConsole, and Output.
+- Preserve on failure: Screenshot/video, selected actor ID/tile, button text, skill event log, and current encounter.
+- Save boundary: Skills mutate the battle; use a replayable encounter checkpoint.
+- Automated evidence: Label formatting, action-state marker suppression, event-derived targets, alpha hit ordering, spear lifecycle, console guards, and renderer smoke are asserted; sizing and visual parity remain manual.
+- User verdict: Passed in the latest user report.
+
+### MQA-GODOT-PAUSE-MENU — Esc pause and safe exit flow
+
+- Status: `passed`
+- Source: Phase 8E pause overlay hierarchy and menu scope fix
+- Reopen reason: The reported overlay rendered below actors and exposed a noncanonical Save and Quit action; the fix raises the overlay and removes that action.
+- Action: During a battle press Esc, exercise Continue, Options/Back and Main Menu, then open Esc again while targeting and while CheatConsole is visible.
+- Expected: The dark overlay and menu cover all actors/HUD; only Continue, Options and Main Menu appear; targeting/Console take Esc precedence; Quit remains only on Home.
+- Observe: Pause overlay, battle HUD, Home menu, playback state, and CheatConsole.
+- Preserve on failure: Screenshot and exact Esc/menu action sequence; keep the Run and Output open.
+- Save boundary: Main Menu preserves the Active Run and Continue restarts from the committed pre-battle checkpoint.
+- Automated evidence: Z-order, menu actions, input blocking, pause ownership and absence of Save and Quit are asserted; visual stacking and interaction feel remain manual.
+- User verdict: Passed in the latest user report.
 
 ### MQA-GODOT-BOARD-FIT — Isometric board framing and input
 
@@ -149,10 +149,8 @@ No current items.
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-HUD-SKILL-PRESENTATION`
-2. `MQA-GODOT-PAUSE-MENU`
-3. `MQA-GODOT-FULL-RUN`
-4. `MQA-GODOT-DAMAGE-NUMBERS`
-5. `MQA-GODOT-PROGRESSION-ATOMIC`
-6. `MQA-GODOT-INVENTORY`
-7. `MQA-GODOT-RELOAD-OUTPUT`
+1. `MQA-GODOT-FULL-RUN`
+2. `MQA-GODOT-DAMAGE-NUMBERS`
+3. `MQA-GODOT-PROGRESSION-ATOMIC`
+4. `MQA-GODOT-INVENTORY`
+5. `MQA-GODOT-RELOAD-OUTPUT`

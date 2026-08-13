@@ -349,12 +349,12 @@ public sealed class PureRunSessionService
         ContentId? selectedStartingSkill = character.StartingSkillContentId;
         if (selectedStartingSkill is ContentId explicitSelection &&
             (!template.EffectiveStartingSkillChoices.Contains(explicitSelection) ||
-             !character.LearnedSkillStates.Any(skill => skill.DefinitionId == explicitSelection)))
+             !character.LearnedSkillStates.Any(skill => IsLearnedStartingBranch(skill, explicitSelection))))
             throw new InvalidDataException("save.starting_skill_invalid");
         if (selectedStartingSkill is null)
         {
             ContentId[] matches = template.EffectiveStartingSkillChoices
-                .Where(choice => character.LearnedSkillStates.Any(skill => skill.DefinitionId == choice))
+                .Where(choice => character.LearnedSkillStates.Any(skill => IsLearnedStartingBranch(skill, choice)))
                 .ToArray();
             if (matches.Length > 1)
                 throw new InvalidDataException("save.starting_skill_ambiguous");
@@ -378,5 +378,44 @@ public sealed class PureRunSessionService
             character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
             character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates,
             selectedStartingSkill);
+    }
+
+    private static bool IsLearnedStartingBranch(RunLearnedSkillState learned, ContentId startingSkill)
+    {
+        if (!TrySkillIdentity(learned.DefinitionId, out string branchId, out int level) ||
+            !TrySkillIdentity(startingSkill, out string startingBranchId, out _)) return false;
+        return string.Equals(learned.BranchId, branchId, StringComparison.Ordinal) &&
+               learned.Level == level &&
+               string.Equals(branchId, startingBranchId, StringComparison.Ordinal);
+    }
+
+    private static bool TrySkillIdentity(ContentId contentId, out string branchId, out int level)
+    {
+        string value = contentId.Value;
+        if (value == "skill.poison-spear.lv1")
+        {
+            branchId = "amazon.poison-spear";
+            level = 1;
+            return true;
+        }
+        if (!value.StartsWith("skill.", StringComparison.Ordinal))
+        {
+            branchId = string.Empty;
+            level = 0;
+            return false;
+        }
+        int marker = value.LastIndexOf(".lv", StringComparison.Ordinal);
+        int prefixLength = "skill.".Length;
+        string levelText = marker >= prefixLength ? value[(marker + 3)..] : string.Empty;
+        if (marker >= prefixLength && int.TryParse(levelText, out level) && level > 0 &&
+            string.Equals(levelText, level.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                StringComparison.Ordinal))
+        {
+            branchId = value[prefixLength..marker];
+            return branchId.Length > 0;
+        }
+        branchId = string.Empty;
+        level = 0;
+        return false;
     }
 }
