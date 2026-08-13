@@ -1,9 +1,12 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-13
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:26f3c3c42c237d1ed67e94d6944610a5a80bdbc387180897932e3fe293032904`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:3e0efd0b592fe7c6623765468f86f3f6a78033fbdf8acdb05872812bf273ef5b`。
-* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:6e24facda6f01fad788e9f3e809d81f64a6229bedba0dc23fba09c736f420e29`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:c670c9c10968ac3ee341b9724dabcfc61ff23ada1fd09478d78e8c208632772d`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:eedb3c3e95b1a5b60f58bf024f59080d5ecfb773a50ad14899e5f006b3c580fe`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:378b4e9cc5b073da15af43ed9ba1f51d5d111a7c35380130a3766155f81e5432`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:2ca528fcefebce83a5ff42591f0afe56516a860f8307390fa33f51f9367ec605`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:7112570ae1a9e8711d35cf842f79a009fa283618d643e9b279fd5db0877450fb`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:f71e9bb43c8fa86891d80a05fa2b2507ede67c62bca779535b724e0bf2507338`。
 * **Fix**: New Run Amazon Poison Spear 三选一改用 canonical `skill.poison-spear.lv1`；Save V5 确定性修复已写入 Active Party、PendingBattle checkpoint、Pending Setup/Progression 的旧错误别名，Run Definition 的全部起始候选进入 Catalog 引用与启动校验，现有 PendingBattle 存档无需删除。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:4f9f82936ce9c67f56a50c9421668551e4e38d2f0cd294273425c3b7847609b0`。
 

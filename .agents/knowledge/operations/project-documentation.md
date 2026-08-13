@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-13T15:57:29+08:00"
+timestamp: "2026-08-13T16:27:39+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -12,8 +12,9 @@ repo_paths:
   - .agents/plans
   - .agents/skills/project-doc-organization/SKILL.md
   - .agents/skills/plan-mode-plan-writer/SKILL.md
+  - .agents/skills/manual-qa-handoff/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:26f3c3c42c237d1ed67e94d6944610a5a80bdbc387180897932e3fe293032904
+source_fingerprint: sha256:eedb3c3e95b1a5b60f58bf024f59080d5ecfb773a50ad14899e5f006b3c580fe
 ---
 
 # Current State
@@ -23,6 +24,8 @@ source_fingerprint: sha256:26f3c3c42c237d1ed67e94d6944610a5a80bdbc387180897932e3
 `.agents/plans/` 只保存仍需执行且 decision-complete 的计划。实现完成并验证后，长期规则回写 docs，未实施项进入已知缺口或经批准的新计划，completed plan 随后删除并由 Git 保留历史。
 
 `.agents/knowledge/` 负责跨系统摘要、关系和导航，不复制完整设计或已完成计划。代码、Unity 资产和测试仍是当前行为的最终事实源。
+
+跨 Unity/Godot 的当前人工验收状态由 `.agents/docs/manual-acceptance.md` 以稳定 ID 维护。实现通过 code review 与自动门禁后，`manual-qa-handoff` 只重开受本轮行为、UI、表现、流程或 Editor 生命周期影响的项目，并输出本轮重点、累计待验收、自动覆盖边界和最短操作旅程；自动证据不能把人工项晋升为 passed，只有用户明确反馈可以更新人工结论。
 
 迁移阶段的验证边界以 `.agents/docs/2026-08-07-godot-tactics-migration-design.md` 为准；其中明确 Unity Windows Standalone 不属于迁移门禁，避免在 OKF 摘要中复制整份迁移设计。
 

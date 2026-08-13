@@ -18,6 +18,7 @@ Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
 | `.cs` 修改后必须编译 | 调用 `refresh_unity` |
 | 写 C# 代码前必须验证 | 遵循 `rules/unity-code-generation.md` 工作流 |
 | git commit 前必须检查 | 加载 `unity-git-commit` skill |
+| 人工验收交接 | review 与自动门禁完成且仍存在人工验收边界时，用 `manual-qa-handoff` 更新账本并输出累计 TODO |
 | 跨系统知识查询/沉淀 | 先读 `.agents/knowledge/index.md`，并遵循 `knowledge-maintenance` skill |
 | 代码/文档变更后同步 OKF | 运行 `python Tools/okf/catalog_impact.py report --worktree`，更新并同步受影响 scope |
 

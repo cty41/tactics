@@ -1,0 +1,7 @@
+interface:
+  display_name: "Manual QA Handoff"
+  short_description: "Maintain and present cumulative manual QA tasks"
+  default_prompt: "Use $manual-qa-handoff to update and present the current manual acceptance checklist."
+
+policy:
+  allow_implicit_invocation: true

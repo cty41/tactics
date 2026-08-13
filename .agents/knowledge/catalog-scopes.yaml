@@ -44,6 +44,9 @@ scopes:
       - .agents/skills/project-doc-organization
       - .agents/skills/plan-mode-plan-writer
       - .agents/skills/make-dev-plan
+      - .agents/skills/manual-qa-handoff
+      - Tools/agent-policy/validate_manual_qa_handoff.py
+      - Tools/agent-policy/test_manual_qa_handoff.py
 
   pure-run-artwork:
     concept: operations/pure-run-artwork.md

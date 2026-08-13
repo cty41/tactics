@@ -143,10 +143,15 @@ try {
         'godot-editor-tooling',
         'godot-editor-lifecycle',
         'godot-testing-diagnostics',
-        'godot-ai-workflow')) {
+        'godot-ai-workflow',
+        'manual-qa-handoff')) {
         Invoke-Checked "Validate Codex/OpenCode skill: $skill" {
             powershell -NoProfile -ExecutionPolicy Bypass -File '.agents/scripts/validate-skills.ps1' -SkillsRoot ".agents/skills/$skill"
         }
+    }
+
+    Invoke-Checked 'Validate manual QA handoff policy' {
+        python Tools/agent-policy/validate_manual_qa_handoff.py
     }
 
     Invoke-Checked 'Restore isolated GdUnit4Net test host dependencies' {
