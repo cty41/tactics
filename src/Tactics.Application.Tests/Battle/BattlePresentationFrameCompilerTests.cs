@@ -108,6 +108,26 @@ public sealed class BattlePresentationFrameCompilerTests
     }
 
     [Test]
+    public void PoisonTickCreatesAnExplicitTargetMarkerAndDamageNumber()
+    {
+        UnitInstanceId source = new("amazon"), target = new("enemy");
+        ContentId poison = new("buff.poison");
+        BattleUiSnapshot snapshot = Snapshot(source, target, new GridPoint(1, 1), new GridPoint(3, 1), true);
+
+        BattlePresentationFrame frame = BattlePresentationFrameCompiler.Compile("turn-start", snapshot, snapshot,
+            [new StatusTickedEvent(source, target, poison, 2, 8)],
+            new Dictionary<ContentId, SkillDefinition>());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(frame.Cues.Single().Kind, Is.EqualTo(PresentationCueKind.StatusTick));
+            Assert.That(frame.Cues.Single().ActorId, Is.EqualTo(target));
+            Assert.That(frame.Numbers.Single().Text, Is.EqualTo("-2"));
+            Assert.That(frame.Numbers.Single().Marker, Is.EqualTo(PresentationMarkerKind.Impact));
+        });
+    }
+
+    [Test]
     public void MultiHitRollsAreCorrelatedInEventOrderWithoutDuplicateKeyFailure()
     {
         UnitInstanceId actor=new("amazon"),target=new("enemy");

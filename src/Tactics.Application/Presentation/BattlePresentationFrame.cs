@@ -7,7 +7,7 @@ using Tactics.Core.Units;
 
 namespace Tactics.Application.Presentation;
 
-public enum PresentationCueKind { Move, Melee, Ranged, Cast, Hit, Defeat, CorpseRemoved }
+public enum PresentationCueKind { Move, Melee, Ranged, Cast, Hit, StatusTick, Defeat, CorpseRemoved }
 public enum PresentationMarkerKind { Begin, Release, Impact, Recover, Complete }
 public enum BattlePresentationEffectKind { StatusApplied, StatusTicked, StatusDurationChanged, StatusStackChanged, StatusExpired, StatusCleansed, SpearDropped, SpearRecovered }
 public enum BattlePresentationNumberKind { Normal, Critical, Heal, Mana, Miss }
@@ -71,6 +71,11 @@ public static class BattlePresentationFrameCompiler
                     BattleUiUnitSnapshot damaged = Find(before, after, damage.TargetId);
                     cues.Add(Cue(PresentationCueKind.Hit, damage.TargetId, damage.TargetId, damage.SkillId,
                         damaged.Cell, damaged.Cell, [], [damage.TargetId], damage.SourceId));
+                    break;
+                case StatusTickedEvent tick when tick.Amount > 0:
+                    BattleUiUnitSnapshot ticking = Find(before, after, tick.TargetId);
+                    cues.Add(Cue(PresentationCueKind.StatusTick, tick.TargetId, tick.TargetId, null,
+                        ticking.Cell, ticking.Cell, [], [tick.TargetId], tick.SourceId));
                     break;
                 case UnitDefeatedEvent defeated:
                     BattleUiUnitSnapshot unit = Find(before, after, defeated.UnitId);

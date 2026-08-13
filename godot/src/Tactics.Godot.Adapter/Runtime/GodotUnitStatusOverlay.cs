@@ -9,6 +9,7 @@ public partial class GodotUnitStatusOverlay : Node2D
 {
     private IReadOnlyList<BattleUiStatusSnapshot> _statuses=Array.Empty<BattleUiStatusSnapshot>();
     public int MaximumVisible { get; set; }=4;
+    public int StatusCount => _statuses.Count;
     public void Apply(IReadOnlyList<BattleUiStatusSnapshot>? statuses){_statuses=statuses??Array.Empty<BattleUiStatusSnapshot>();QueueRedraw();}
     public override void _Draw()
     {

@@ -75,6 +75,7 @@ public partial class GodotPlayableRunMain : Control
     private string? _inventorySelectedInstanceId;
     private readonly Dictionary<string, UnitAttributes> _progressionDrafts = new(StringComparer.Ordinal);
     private GodotDamageNumberLayer? _damageNumbers;
+    private GodotDroppedSpearLayer? _droppedSpears;
     private Control? _pauseMenu;
     private bool _pauseMenuPausedPlayback;
     private bool _pauseMenuControlsBattlePlayback;
@@ -331,6 +332,8 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer.NumberRequested += _damageNumbers.Spawn;
         _board.AddChild(_presentationPlayer);
         _board.AddChild(_damageNumbers);
+        _droppedSpears = new GodotDroppedSpearLayer { ZIndex = 88 };
+        _board.AddChild(_droppedSpears);
         var actionScroll = new ScrollContainer { Position = new Vector2(30, 765), Size = new Vector2(1120, 110) };
         root.AddChild(actionScroll);
         _skillPanel = new HBoxContainer { CustomMinimumSize = new Vector2(1120, 90) };
@@ -363,7 +366,7 @@ public partial class GodotPlayableRunMain : Control
             if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
             actor.SetSpearHeld(unit.DefinitionId.Value != "unit.pure-run.amazon" || !snapshot.DroppedSpears.ContainsKey(unit.UnitId));
-            actor.SetStatuses(unit.Statuses);
+            actor.SetStatuses(unit.IsAlive ? unit.Statuses : Array.Empty<BattleUiStatusSnapshot>());
             actor.ZIndex = 100 + (18-unit.Cell.X-unit.Cell.Y) * 12 + unit.Cell.X;
             if(!_unitMeters.TryGetValue(unit.UnitId,out Control? meter)||meter is not GodotCompactUnitMeter compact||!GodotObject.IsInstanceValid(meter))
             {
@@ -373,6 +376,7 @@ public partial class GodotPlayableRunMain : Control
             compact.ZIndex=400+(18-unit.Cell.X-unit.Cell.Y)*12+unit.Cell.X;
             compact.Bind(actor,unit.CurrentHealth,unit.MaxHealth,unit.CurrentMana,unit.MaxMana);
         }
+        _droppedSpears?.Sync(snapshot.DroppedSpears);
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
         BattleUiUnitSnapshot activeSnapshot=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
         if(_hoverInfo is not null)_hoverInfo.Text=$"{EncounterLabel(_currentEncounterId!.Value)} | {activeSnapshot.UnitId.Value}\nHP {activeSnapshot.CurrentHealth}/{activeSnapshot.MaxHealth}  MP {activeSnapshot.CurrentMana}/{activeSnapshot.MaxMana}\nStatus: {string.Join(", ",activeSnapshot.StatusIds.Select(id=>id.Value))}";
@@ -1005,7 +1009,8 @@ public partial class GodotPlayableRunMain : Control
         {
             RunCharacterState preview = new(character.CharacterId, character.UnitContentId, character.Level, proposed,
                 character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
-                character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
+                character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates,
+                character.StartingSkillContentId);
             menu.AddChild(Label($"Step 2/2 — choose a skill\nSTR {proposed.Strength}  AGI {proposed.Agility}  CON {proposed.Constitution}\nINT {proposed.Intelligence}  CHA {proposed.Charisma}  LUCK {proposed.Luck}",22));
             menu.AddChild(Label("Current skills:\n" + string.Join('\n', character.LearnedSkillStates.Select(value =>
             {
