@@ -190,6 +190,20 @@ public class PlayableRunUiGodotTests
         ui.Free();
     }
 
+    [TestCase]
+    public void SettlementReportsOnlyTheLatestBattleDrop()
+    {
+        UnitAttributes attributes = new(5, 5, 5, 5, 5, 5);
+        RunCharacterState Character(string id) => new(id, new ContentId($"unit.{id}"), 1, attributes,
+            20, 20, 5, 10, false, Array.Empty<ContentId>());
+        var prior = new BattleConsumableState(new ItemInstanceId("drop-1-item.consumable.life-potion"),
+            new ContentId("item.consumable.life-potion"), 1, 1);
+        var run = new PureRunState("run", 7, 2, PureRunPhase.Ready, 1, new ContentId("encounter.pure-run.n2"),
+            [Character("a"), Character("b"), Character("c")], backpackConsumables: [prior], battlesCompleted: 2);
+
+        AssertThat(GodotPlayableRunMain.SettlementDropLabel(run)).IsEqual("No item drop");
+    }
+
     private static IEnumerable<T> Descendants<T>(Node node) where T : Node
     {
         foreach (Node child in node.GetChildren())

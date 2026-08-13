@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-13T07:38:05+08:00"
+timestamp: "2026-08-13T10:55:48+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:ef0fb2576b8647e70f388ef0adebe922fcbc48bb64de02d9109bf23ca9a04cac
+source_fingerprint: sha256:ff33bde1a0858671768e852a9c9ebde0a135bcbdc115e3a379dfb7edf0489fca
 ---
 
 # Current state
@@ -87,7 +87,9 @@ Phase 8 等距表现定向修复将屏幕投影垂直镜像而不改变任何 Co
 
 Phase 7B–8D 合并验收前的第二轮定向修复把成长技能阶段收紧为 Unity 合同的确定性三选一：候选在属性事务持久化后由 Run seed、角色和 offer ordinal 稳定生成，已学等级不再重复出现，升级项明确显示旧/新等级。动态 Skeleton Warrior 显式绑定现有 Melee Attack；经用户授权，Godot playable slice 为 Unity 冻结 Prefab 中无 AbilityConfig 的 Fire Demon 显式绑定现有 Magic Attack，此差异只存在于 Application 会话装配，不改写冻结 Unit DTO。等距移动每段改为线性恒速，召唤施法朝向消费已提交的 `UnitSummonedEvent.Cell`，诊断 HP/MP 显示改为主题无关的精确 60×18 自绘 Overlay 并持续跟随 Actor。Catalog 仍为124，Save V4、玩法数值和事件顺序不变；播放期间输入锁的人验后移。
 
-Phase 8E 自动实现新增七层 Rogue Map 与持久 Run Shell，等待与 Phase 7B–8D 合并人工验收。Application 通过只读 projector 将 Save V4 的 Run/Map/Node transaction 投影成固定 14 节点、19 连接和 Locked/Available/Current/Selected/Pending/Completed 状态，不复制或修改 Run 状态机。Godot Main 的 New/Continue、N1–N3 Settlement、Layer 4/6、Elite、Boss、Inventory 与 Progression 统一经地图导航；地图只向既有 Session/LayerFour/FullRun service 发送 intent，选择分支后锁定兄弟节点，PendingBattle 与节点处理中按权威状态恢复。程序化 Control 提供节点连接、状态色、Hover、拖动/滚轮和首次当前节点居中，不复制 Unity UXML/USS、背景或图标 payload。Boss 结算优先按 Special 身份进入 `CompleteBoss`，不再被残留的 Layer 6 committed transaction 误路由。Catalog 保持124，状态为 `Generated/UnityOwned + manual_run_map_ui_qa_pending`。
+Phase 8E 自动实现新增七层 Rogue Map 与持久 Run Shell，等待与 Phase 7B–8D 合并人工验收。Application 通过只读 projector 将 Save V5 的 Run/Map/Node transaction 投影成固定 14 节点、始终可见的 19 条连接和 Locked/Available/Current/Selected/Pending/Completed 状态，不复制或修改 Run 状态机。Godot Main 的 Continue、Settlement、Progression、PendingBattle、节点流程与 Inventory 返回统一经权威状态路由；Pending 节点可从原 checkpoint 重开同一战斗。New Run 先持久化三名角色各自严格三选一的 Starting Lv1 setup，三人完成前保留旧 Active Run，V1–V4 可确定性读取升级。Progression 技能阶段同时显示更新后六项属性、当前技能等级及主动/被动类型。程序化 Control 提供节点连接、状态色、Hover、拖动/滚轮和首次当前节点居中，不复制 Unity UXML/USS、背景或图标 payload。Catalog 保持124，状态为 `Generated/UnityOwned + manual_inventory_run_flow_and_presentation_qa_pending`。
+
+Phase 7B–8E 收口修复已完成自动门禁：Inventory 使用单一角色/背包/详情三栏页面，支持装备替换/卸下与消耗品携带替换/卸下，成功事务留在页面且 Reload 保持实例唯一；正式战斗仍只按冻结概率掉落 Consumable，Equipment 来自 Store/Mystery，无掉落结算明确显示 `No item drop`。表现 cue 的 ActorId 现始终是实际动画主体，Damage Hit 绑定受击者并保留 Instigator，攻击在 Release/FX 后先触发 Hit/Defeat 再恢复；当前单位脚底标记随 Actor Tween 连续移动。HP/MP 双条默认隐藏，只在 Actor 可视 AABB hover 时显示并按 Sprite 宽度限制在38–48px。Equip/Unequip 均重算派生 HP/MP 上限。统一门禁通过 Core 87、Application 76、Unity Oracle 15、GdUnit 51、Python 135、Compatibility/Forward+、Catalog 124、UID、receipt 与 OKF；仍等待合并人工验收后晋升 ownership。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 
@@ -104,7 +106,7 @@ Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-tra
 ## Next gates
 
 1. Phase 4 Unit 与 Phase 5A Buff/Item 均已完成并删除各自 active plan；结果由代码、设计、manifest、测试、OKF 与 Git 历史保存。
-2. 项目 MCP Profile 已按 Phase 7A 切换为 `ui-input`，统一入口校验 27 个阶段白名单工具。
-3. Phase 6B 已关闭；Phase 6A 自动 parity 已按完整图合同重验。Phase 7B–7D 的自动实现和统一门禁已完成，下一闸门是 Inventory/成长、Layer 4、Elite、Layer 6 与 Boss 的合并人工复验。完整 Presentation/VFX/Audio 仍属于 Phase 8。
+2. 项目 MCP Profile 当前为 `presentation`；统一入口在每次完整门禁中验证项目级白名单配置。
+3. Phase 6B 已关闭；Phase 6A 自动 parity 已按完整图合同重验。Phase 7B–8E 自动实现与统一门禁已完成，下一闸门是 New Run、Run recovery、Inventory/成长、七层地图和等距表现的合并人工复验。Audio 与第三方正式 Presentation payload 仍未迁移。
 
 Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行，Godot Windows Release/PCK Smoke 延后到发布阶段。

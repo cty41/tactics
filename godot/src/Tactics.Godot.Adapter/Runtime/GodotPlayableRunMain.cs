@@ -581,7 +581,7 @@ public partial class GodotPlayableRunMain : Control
         };
         Control root = NewPage("BATTLE SETTLEMENT", $"{completed} completed → Next: {next}");
         AddRunShell(root, run, "Settlement");
-        string itemResult = run.AcquiredItems.Count == 0 ? "No item drop" : string.Join(", ", run.AcquiredItems.Select(id => id.Value));
+        string itemResult = SettlementDropLabel(run);
         LabelAt(root, $"Gold: {run.Gold}\nItems: {itemResult}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
         root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run, InventoryReturnTarget.Settlement)),new Vector2(480,520),new Vector2(260,60)));
         PendingProgression? pending=run.PendingProgression.FirstOrDefault();
@@ -970,6 +970,15 @@ public partial class GodotPlayableRunMain : Control
         return learned is null
             ? $"Learn {name} Lv{skill.Level}{requirement}"
             : $"Upgrade {name} Lv{learned.Level} → Lv{skill.Level}{requirement}";
+    }
+
+    internal static string SettlementDropLabel(PureRunState run)
+    {
+        string prefix = $"drop-{run.BattlesCompleted}-";
+        ContentId[] drops = run.BackpackConsumables
+            .Where(value => value.InstanceId.Value.StartsWith(prefix, StringComparison.Ordinal))
+            .Select(value => value.DefinitionId).ToArray();
+        return drops.Length == 0 ? "No item drop" : string.Join(", ", drops.Select(value => value.Value));
     }
 
     private void AllocateProgressionAttribute(string transactionKey, UnitAttributes attributes)

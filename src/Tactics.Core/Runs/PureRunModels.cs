@@ -224,6 +224,12 @@ public sealed record PureRunState
             ?? Array.Empty<BattleConsumableState>();
         BackpackEquipment = backpackEquipment?.OrderBy(value => value.InstanceId.Value, StringComparer.Ordinal).ToArray()
             ?? Array.Empty<RunEquipmentState>();
+        string[] instanceIds = BackpackConsumables.Select(value => value.InstanceId.Value)
+            .Concat(BackpackEquipment.Select(value => value.InstanceId.Value))
+            .Concat(Party.SelectMany(value => value.CarriedConsumables).Select(value => value.InstanceId.Value))
+            .Concat(Party.SelectMany(value => value.Equipment).Select(value => value.InstanceId.Value)).ToArray();
+        if (instanceIds.Distinct(StringComparer.Ordinal).Count() != instanceIds.Length)
+            throw new ArgumentException("Run item instance identities must be globally unique.");
         PendingProgression = pendingProgression?.ToArray() ?? Array.Empty<PendingProgression>();
         AppliedTransactionKeys = appliedTransactionKeys?.Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray()
             ?? Array.Empty<string>();

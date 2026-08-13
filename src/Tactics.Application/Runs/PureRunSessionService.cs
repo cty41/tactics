@@ -56,6 +56,7 @@ public sealed class PureRunSessionService
         RunStoreResult loaded = _store.Load();
         if (!loaded.Succeeded)
             return Fail(loaded.ErrorCode);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         long expected = loaded.Snapshot?.Revision ?? 0;
         string runId = $"run-{unchecked((uint)PureRunSettlementService.DeriveSeed(seed, "run-id")):x8}";
         RunCharacterState[] party = _definition.Party.Select(template => CreateCharacter(template)).ToArray();
@@ -68,6 +69,7 @@ public sealed class PureRunSessionService
     {
         RunStoreResult loaded = _store.Load();
         if (!loaded.Succeeded) return Fail(loaded.ErrorCode, loaded.Snapshot);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         long expected = loaded.Snapshot?.Revision ?? 0;
         long revision = expected + 1;
         PureRunState? preserved = loaded.Snapshot?.ActiveRun is null
@@ -132,6 +134,7 @@ public sealed class PureRunSessionService
     public RunSessionResult BeginEncounter()
     {
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run");
         if (run.Phase != PureRunPhase.Ready)
@@ -152,6 +155,7 @@ public sealed class PureRunSessionService
     public RunSessionResult ResumeRun()
     {
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
         return run.Phase switch
@@ -169,6 +173,7 @@ public sealed class PureRunSessionService
     public RunSessionResult ApplyBattleResult(PureRunBattleResult battleResult)
     {
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot is null)
             return Fail(loaded.ErrorCode ?? "run.no_save", loaded.Snapshot);
         if (loaded.Snapshot.ActiveRun is not PureRunState run)
@@ -197,6 +202,7 @@ public sealed class PureRunSessionService
     public RunSessionResult ApplyLayerFourBattleResult(PureRunBattleResult battleResult)
     {
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
         PureRunSettlementResult settlement = _settlement.ApplyLayerFour(run, battleResult, _dropPool);
@@ -210,6 +216,7 @@ public sealed class PureRunSessionService
     public RunSessionResult AbandonRun()
     {
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
         return Save(new PureRunSaveSnapshot(run.Revision + 1, null, _settlement.Abandon(run)), run.Revision) with { Diagnostics = diagnostics };
@@ -218,6 +225,7 @@ public sealed class PureRunSessionService
     public RunSessionResult ConsumeCompletedSummary()
     {
         RunStoreResult loaded = _store.Load();
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot is null)
             return Fail(loaded.ErrorCode ?? "run.no_save");
         long revision = loaded.Snapshot.Revision;
@@ -228,6 +236,7 @@ public sealed class PureRunSessionService
     {
         ArgumentNullException.ThrowIfNull(mutation);
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
         RunMutationResult result = mutation(run);
@@ -239,6 +248,7 @@ public sealed class PureRunSessionService
     {
         ArgumentNullException.ThrowIfNull(mutation);
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
         RunMutationResult result = mutation(run);
@@ -253,6 +263,7 @@ public sealed class PureRunSessionService
     {
         ArgumentNullException.ThrowIfNull(transition);
         RunStoreResult loaded = LoadWithAttributeRepair(out string[] diagnostics);
+        if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         if (!loaded.Succeeded || loaded.Snapshot?.ActiveRun is not PureRunState run)
             return Fail(loaded.ErrorCode ?? "run.no_active_run", loaded.Snapshot);
         FullRunTransitionResult result = transition(run);
@@ -295,6 +306,9 @@ public sealed class PureRunSessionService
 
     private static RunSessionResult Fail(string? code, PureRunSaveSnapshot? snapshot = null) =>
         new(false, code ?? "run.store_failure", snapshot, null);
+
+    private static bool HasPendingSetup(RunStoreResult loaded) =>
+        loaded.Succeeded && loaded.Snapshot?.PendingRunSetup is not null;
 
     private RunStoreResult LoadWithAttributeRepair(out string[] diagnostics)
     {

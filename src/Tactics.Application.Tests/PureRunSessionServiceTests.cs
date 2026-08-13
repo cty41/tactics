@@ -64,6 +64,32 @@ public sealed class PureRunSessionServiceTests
             Assert.That(canceled.Snapshot.ActiveRun!.RunId, Is.EqualTo(oldRunId));
         });
     }
+
+    [Test]
+    public void PendingNewRunSetupRejectsStaleRunMutationAndPreservesSetup()
+    {
+        var store = new MemoryRunStore();
+        var service = new PureRunSessionService(DefinitionWithChoices(), store);
+        service.StartNewRun(5);
+        service.BeginNewRunSetup(11);
+
+        RunSessionResult encounter = service.BeginEncounter();
+        RunSessionResult legacyStart = service.StartNewRun(99);
+        RunSessionResult restartSetup = service.BeginNewRunSetup(99);
+        RunSessionResult mutation = service.ApplyMutation(state =>
+            new RunMutationResult(true, null, new PureRunState(state.RunId, state.Seed, state.Revision + 1,
+                state.Phase, state.EncounterIndex, state.EncounterContentId, state.Party)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(encounter.ErrorCode, Is.EqualTo("run_setup.pending"));
+            Assert.That(legacyStart.ErrorCode, Is.EqualTo("run_setup.pending"));
+            Assert.That(restartSetup.ErrorCode, Is.EqualTo("run_setup.pending"));
+            Assert.That(mutation.ErrorCode, Is.EqualTo("run_setup.pending"));
+            Assert.That(store.Snapshot!.PendingRunSetup, Is.Not.Null);
+            Assert.That(store.Snapshot.PendingRunSetup!.CurrentCharacterId, Is.EqualTo("mage"));
+        });
+    }
     [Test]
     public void BeginEncounter_PersistsCheckpointBeforeReturningRequest()
     {

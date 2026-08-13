@@ -120,7 +120,8 @@ public sealed class PureRunSettlementService
         IReadOnlyList<ContentId> acquired = state.AcquiredItems;
         if (drop is ContentId item)
         {
-            backpack = backpack.Append(new BattleConsumableState(new ItemInstanceId($"drop-4-{item.Value}"), item, 1, 1)).ToArray();
+            backpack = backpack.Append(new BattleConsumableState(
+                new ItemInstanceId($"drop-{state.BattlesCompleted + 1}-{item.Value}"), item, 1, 1)).ToArray();
             acquired = acquired.Append(item).OrderBy(value => value.Value, StringComparer.Ordinal).ToArray();
         }
         bool layerSix = transaction.NodeId.StartsWith("layer_06_", StringComparison.Ordinal);

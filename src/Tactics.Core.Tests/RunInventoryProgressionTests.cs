@@ -71,6 +71,21 @@ public sealed class RunInventoryProgressionTests
     }
 
     [Test]
+    public void RunStateRejectsDuplicateInstanceIdentityAcrossBackpackAndLoadout()
+    {
+        PureRunState state = State();
+        RunCharacterState mage = state.Party[0];
+        BattleConsumableState duplicate = state.BackpackConsumables[0];
+        mage = new RunCharacterState(mage.CharacterId, mage.UnitContentId, mage.Level, mage.Attributes,
+            mage.CurrentHealth, mage.MaxHealth, mage.CurrentMana, mage.MaxMana, mage.IsDead, mage.LearnedSkills,
+            mage.Equipment, [duplicate], mage.LearnedSkillStates);
+
+        Assert.Throws<ArgumentException>(() => new PureRunState(state.RunId, state.Seed, state.Revision,
+            state.Phase, state.EncounterIndex, state.EncounterContentId, [mage, .. state.Party.Skip(1)],
+            state.BackpackConsumables, state.BackpackEquipment));
+    }
+
+    [Test]
     public void CarryReplacesTheSingleSlotAndPreservesInstanceOwnership()
     {
         PureRunState state = State();
