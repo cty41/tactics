@@ -53,10 +53,16 @@ public partial class GodotRogueMapView : Control
         if (_snapshot is null) return;
         foreach (PureRunMapConnectionSnapshot connection in _snapshot.Connections)
         {
-            if (!connection.Revealed) continue;
-            Color color = connection.Traversed ? new Color("d8c58a") : new Color("526772");
-            DrawLine(NodeCenter(connection.FromNodeId), NodeCenter(connection.ToNodeId), color,
-                connection.Traversed ? 4f : 2f, true);
+            PureRunMapNodeSnapshot from = _snapshot.Nodes.Single(value => value.NodeId == connection.FromNodeId);
+            PureRunMapNodeSnapshot to = _snapshot.Nodes.Single(value => value.NodeId == connection.ToNodeId);
+            bool available = from.State is PureRunMapNodeState.Available or PureRunMapNodeState.Current or PureRunMapNodeState.Completed &&
+                to.State is PureRunMapNodeState.Available or PureRunMapNodeState.Current or PureRunMapNodeState.Pending or PureRunMapNodeState.Completed;
+            Color color = connection.Traversed ? new Color("d8c58a") : available ? new Color("7895a1") : new Color("40515a");
+            Vector2 start = NodeCenter(connection.FromNodeId);
+            Vector2 end = NodeCenter(connection.ToNodeId);
+            Vector2 direction = start.DirectionTo(end);
+            DrawLine(start + direction * NodeRadius, end - direction * NodeRadius, color,
+                connection.Traversed ? 4f : available ? 2.5f : 1.25f, true);
         }
         foreach (PureRunMapNodeSnapshot node in _snapshot.Nodes)
             DrawNode(node);
@@ -78,7 +84,7 @@ public partial class GodotRogueMapView : Control
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } released:
                 _dragging = false;
                 if (!_moved && FindNode(released.Position) is PureRunMapNodeSnapshot node &&
-                    node.State is PureRunMapNodeState.Available or PureRunMapNodeState.Current)
+                    node.State is PureRunMapNodeState.Available or PureRunMapNodeState.Current or PureRunMapNodeState.Pending)
                     NodePressed?.Invoke(node.NodeId);
                 AcceptEvent();
                 break;

@@ -21,6 +21,7 @@ public sealed class PureRunFlowProjectorTests
             Assert.That(snapshot.Page, Is.EqualTo(PureRunFlowPage.Map));
             Assert.That(snapshot.Map!.Nodes, Has.Count.EqualTo(14));
             Assert.That(snapshot.Map.Connections, Has.Count.EqualTo(19));
+            Assert.That(snapshot.Map.Connections, Has.All.Property(nameof(PureRunMapConnectionSnapshot.Revealed)).True);
             Assert.That(Node(snapshot, "layer_01_battle").State, Is.EqualTo(PureRunMapNodeState.Current));
             Assert.That(snapshot.Map.FocusNodeId, Is.EqualTo("layer_01_battle"));
         });

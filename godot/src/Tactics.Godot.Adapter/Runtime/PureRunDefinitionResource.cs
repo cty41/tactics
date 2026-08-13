@@ -14,6 +14,7 @@ public partial class PureRunDefinitionResource : Resource
     [Export] public string[] CharacterIds { get; set; } = Array.Empty<string>();
     [Export] public string[] UnitContentIds { get; set; } = Array.Empty<string>();
     [Export] public string[] StartingSkillContentIds { get; set; } = Array.Empty<string>();
+    [Export] public string[] StartingSkillChoiceContentIds { get; set; } = Array.Empty<string>();
     [Export] public string LayerFourMapContentId { get; set; } = string.Empty;
 
     public PureRunDefinition ToCoreDefinition()
@@ -26,8 +27,19 @@ public partial class PureRunDefinitionResource : Resource
             new(5, 5, 5, 5, 6, 5),
             new(5, 6, 5, 5, 5, 5)
         };
+        string[] choiceValues = StartingSkillChoiceContentIds.Length == 9
+            ? StartingSkillChoiceContentIds
+            : DefaultStartingChoices();
         return new PureRunDefinition(new ContentId(ContentIdValue), EncounterContentIds.Select(value => new ContentId(value)),
-            Enumerable.Range(0, 3).Select(index => new PureRunPartyTemplate(CharacterIds[index], new ContentId(UnitContentIds[index]), new ContentId(StartingSkillContentIds[index]), attributes[index])),
+            Enumerable.Range(0, 3).Select(index => new PureRunPartyTemplate(CharacterIds[index], new ContentId(UnitContentIds[index]), new ContentId(StartingSkillContentIds[index]), attributes[index], 1,
+                choiceValues.Skip(index * 3).Take(3).Select(value => new ContentId(value)).ToArray())),
             string.IsNullOrWhiteSpace(LayerFourMapContentId) ? null : new ContentId(LayerFourMapContentId));
     }
+
+    private static string[] DefaultStartingChoices() =>
+    [
+        "skill.mage.fireball.lv1", "skill.mage.ice-bolt.lv1", "skill.mage.lightning.lv1",
+        "skill.necromancer.summon-skeleton.lv1", "skill.necromancer.amplify-damage.lv1", "skill.necromancer.bone-spear.lv1",
+        "skill.amazon.thrust.lv1", "skill.amazon.poison-spear.lv1", "skill.amazon.combat-techniques.lv1"
+    ];
 }

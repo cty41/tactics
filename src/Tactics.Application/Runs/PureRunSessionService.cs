@@ -4,7 +4,11 @@ using Tactics.Core.Units;
 
 namespace Tactics.Application.Runs;
 
-public sealed record PureRunSaveSnapshot(long Revision, PureRunState? ActiveRun, PureRunSummary? TerminalSummary);
+public sealed record PureRunSaveSnapshot(
+    long Revision,
+    PureRunState? ActiveRun,
+    PureRunSummary? TerminalSummary,
+    PendingRunSetup? PendingRunSetup = null);
 
 public sealed record RunStoreResult(bool Succeeded, string? ErrorCode, PureRunSaveSnapshot? Snapshot);
 
@@ -58,6 +62,71 @@ public sealed class PureRunSessionService
         var run = new PureRunState(runId, seed, expected + 1, PureRunPhase.Ready, 0,
             _definition.Encounters[0], party);
         return Save(new PureRunSaveSnapshot(run.Revision, run, null), expected);
+    }
+
+    public RunSessionResult BeginNewRunSetup(int seed)
+    {
+        RunStoreResult loaded = _store.Load();
+        if (!loaded.Succeeded) return Fail(loaded.ErrorCode, loaded.Snapshot);
+        long expected = loaded.Snapshot?.Revision ?? 0;
+        long revision = expected + 1;
+        PureRunState? preserved = loaded.Snapshot?.ActiveRun is null
+            ? null
+            : CopyRevision(loaded.Snapshot.ActiveRun, revision);
+        var setup = new PendingRunSetup(seed, 0, Array.Empty<PendingRunStartingSkillChoice>())
+        {
+            CurrentCharacterId = _definition.Party[0].CharacterId
+        };
+        return Save(new PureRunSaveSnapshot(revision, preserved, loaded.Snapshot?.TerminalSummary, setup), expected);
+    }
+
+    public RunSessionResult ChooseStartingSkill(string characterId, ContentId skillContentId)
+    {
+        RunStoreResult loaded = _store.Load();
+        if (!loaded.Succeeded || loaded.Snapshot?.PendingRunSetup is not PendingRunSetup setup)
+            return Fail(loaded.ErrorCode ?? "run_setup.not_pending", loaded.Snapshot);
+        if (setup.CurrentCharacterIndex >= _definition.Party.Count)
+            return Fail("run_setup.complete", loaded.Snapshot);
+        PureRunPartyTemplate template = _definition.Party[setup.CurrentCharacterIndex];
+        if (!string.Equals(template.CharacterId, characterId, StringComparison.Ordinal))
+            return Fail("run_setup.character_out_of_order", loaded.Snapshot);
+        if (!template.EffectiveStartingSkillChoices.Contains(skillContentId))
+            return Fail("run_setup.skill_not_offered", loaded.Snapshot);
+
+        PendingRunStartingSkillChoice[] choices = setup.Choices
+            .Append(new PendingRunStartingSkillChoice(characterId, skillContentId)).ToArray();
+        long revision = loaded.Snapshot.Revision + 1;
+        if (choices.Length == _definition.Party.Count)
+        {
+            string runId = $"run-{unchecked((uint)PureRunSettlementService.DeriveSeed(setup.Seed, "run-id")):x8}";
+            RunCharacterState[] party = _definition.Party.Select((value, index) =>
+                CreateCharacter(value, choices[index].SkillContentId)).ToArray();
+            var run = new PureRunState(runId, setup.Seed, revision, PureRunPhase.Ready, 0,
+                _definition.Encounters[0], party);
+            return Save(new PureRunSaveSnapshot(revision, run, null), loaded.Snapshot.Revision);
+        }
+
+        PureRunState? preserved = loaded.Snapshot.ActiveRun is null
+            ? null
+            : CopyRevision(loaded.Snapshot.ActiveRun, revision);
+        var pending = new PendingRunSetup(setup.Seed, choices.Length, choices)
+        {
+            CurrentCharacterId = _definition.Party[choices.Length].CharacterId
+        };
+        return Save(new PureRunSaveSnapshot(revision, preserved, loaded.Snapshot.TerminalSummary, pending),
+            loaded.Snapshot.Revision);
+    }
+
+    public RunSessionResult CancelNewRunSetup()
+    {
+        RunStoreResult loaded = _store.Load();
+        if (!loaded.Succeeded || loaded.Snapshot?.PendingRunSetup is null)
+            return Fail(loaded.ErrorCode ?? "run_setup.not_pending", loaded.Snapshot);
+        long revision = loaded.Snapshot.Revision + 1;
+        PureRunState? restored = loaded.Snapshot.ActiveRun is null
+            ? null
+            : CopyRevision(loaded.Snapshot.ActiveRun, revision);
+        return Save(new PureRunSaveSnapshot(revision, restored, loaded.Snapshot.TerminalSummary), loaded.Snapshot.Revision);
     }
 
     public RunSessionResult BeginEncounter()
@@ -206,14 +275,23 @@ public sealed class PureRunSessionService
     private static EncounterRequest CreateRequest(PureRunState run) => new(
         run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, run.Checkpoint.Party);
 
-    private static RunCharacterState CreateCharacter(PureRunPartyTemplate template)
+    private static RunCharacterState CreateCharacter(PureRunPartyTemplate template) =>
+        CreateCharacter(template, template.StartingSkillContentId);
+
+    private static RunCharacterState CreateCharacter(PureRunPartyTemplate template, ContentId startingSkill)
     {
         UnitDerivedStats stats = UnitDerivedStatRules.Calculate(template.Attributes, speed: 3f);
         return new RunCharacterState(
             template.CharacterId, template.UnitContentId, template.Level, template.Attributes,
             stats.MaxHealth, stats.MaxHealth, stats.StartingMana, stats.MaxMana, false,
-            new[] { template.StartingSkillContentId });
+            new[] { startingSkill });
     }
+
+    private static PureRunState CopyRevision(PureRunState run, long revision) => new(
+        run.RunId, run.Seed, revision, run.Phase, run.EncounterIndex, run.EncounterContentId,
+        run.Party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
+        run.AppliedTransactionKeys, run.Gold, run.BattlesCompleted, run.EnemiesDefeated,
+        run.AcquiredItems, run.Checkpoint, run.MapState, run.NodeTransaction);
 
     private static RunSessionResult Fail(string? code, PureRunSaveSnapshot? snapshot = null) =>
         new(false, code ?? "run.store_failure", snapshot, null);

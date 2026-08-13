@@ -9,6 +9,62 @@ namespace Tactics.Application.Tests;
 public sealed class PureRunSessionServiceTests
 {
     [Test]
+    public void NewRunSetup_RequiresThreeCanonicalChoicesBeforeReplacingActiveRun()
+    {
+        var store = new MemoryRunStore();
+        PureRunDefinition definition = DefinitionWithChoices();
+        var service = new PureRunSessionService(definition, store);
+        Assert.That(service.StartNewRun(3).Succeeded, Is.True);
+        string oldRunId = store.Snapshot!.ActiveRun!.RunId;
+
+        RunSessionResult begun = service.BeginNewRunSetup(9);
+        Assert.Multiple(() =>
+        {
+            Assert.That(begun.Succeeded, Is.True);
+            Assert.That(begun.Snapshot!.ActiveRun!.RunId, Is.EqualTo(oldRunId));
+            Assert.That(begun.Snapshot.PendingRunSetup!.CurrentCharacterId, Is.EqualTo("mage"));
+        });
+
+        Assert.That(service.ChooseStartingSkill("mage", new ContentId("skill.mage.fireball.lv1")).Succeeded, Is.True);
+        Assert.That(service.ChooseStartingSkill("necromancer", new ContentId("skill.necromancer.bone-spear.lv1")).Succeeded, Is.True);
+        RunSessionResult completed = service.ChooseStartingSkill("amazon", new ContentId("skill.amazon.poison-spear.lv1"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(completed.Succeeded, Is.True);
+            Assert.That(completed.Snapshot!.PendingRunSetup, Is.Null);
+            Assert.That(completed.Snapshot.ActiveRun!.RunId, Is.Not.EqualTo(oldRunId));
+            Assert.That(completed.Snapshot.ActiveRun.Party.SelectMany(value => value.LearnedSkills),
+                Is.EquivalentTo(new[]
+                {
+                    new ContentId("skill.mage.fireball.lv1"),
+                    new ContentId("skill.necromancer.bone-spear.lv1"),
+                    new ContentId("skill.amazon.poison-spear.lv1")
+                }));
+        });
+    }
+
+    [Test]
+    public void NewRunSetup_RejectsCrossClassChoiceAndCancelPreservesOldRun()
+    {
+        var store = new MemoryRunStore();
+        var service = new PureRunSessionService(DefinitionWithChoices(), store);
+        service.StartNewRun(4);
+        string oldRunId = store.Snapshot!.ActiveRun!.RunId;
+        service.BeginNewRunSetup(10);
+
+        RunSessionResult rejected = service.ChooseStartingSkill("mage", new ContentId("skill.amazon.thrust.lv1"));
+        RunSessionResult canceled = service.CancelNewRunSetup();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(rejected.ErrorCode, Is.EqualTo("run_setup.skill_not_offered"));
+            Assert.That(canceled.Succeeded, Is.True);
+            Assert.That(canceled.Snapshot!.PendingRunSetup, Is.Null);
+            Assert.That(canceled.Snapshot.ActiveRun!.RunId, Is.EqualTo(oldRunId));
+        });
+    }
+    [Test]
     public void BeginEncounter_PersistsCheckpointBeforeReturningRequest()
     {
         var store = new MemoryRunStore();
@@ -157,6 +213,19 @@ public sealed class PureRunSessionServiceTests
             new PureRunPartyTemplate("mage", new ContentId("unit.pure-run.mage"), new ContentId("skill.mage.fireball.lv1"), new UnitAttributes(5,5,5,6,5,5)),
             new PureRunPartyTemplate("necro", new ContentId("unit.pure-run.necromancer"), new ContentId("skill.necromancer.summon-skeleton.lv1"), new UnitAttributes(5,5,5,5,6,5)),
             new PureRunPartyTemplate("amazon", new ContentId("unit.pure-run.amazon"), new ContentId("skill.amazon.thrust.lv1"), new UnitAttributes(5,6,5,5,5,5))
+        });
+
+    private static PureRunDefinition DefinitionWithChoices() => new(
+        new ContentId("run.pure-run.three-encounter-v1"),
+        new[] { "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3" }.Select(value => new ContentId(value)),
+        new[]
+        {
+            new PureRunPartyTemplate("mage", new ContentId("unit.pure-run.mage"), new ContentId("skill.mage.fireball.lv1"), new UnitAttributes(5,5,5,6,5,5), 1,
+                [new ContentId("skill.mage.fireball.lv1"), new ContentId("skill.mage.ice-bolt.lv1"), new ContentId("skill.mage.lightning.lv1")]),
+            new PureRunPartyTemplate("necromancer", new ContentId("unit.pure-run.necromancer"), new ContentId("skill.necromancer.summon-skeleton.lv1"), new UnitAttributes(5,5,5,5,6,5), 1,
+                [new ContentId("skill.necromancer.summon-skeleton.lv1"), new ContentId("skill.necromancer.amplify-damage.lv1"), new ContentId("skill.necromancer.bone-spear.lv1")]),
+            new PureRunPartyTemplate("amazon", new ContentId("unit.pure-run.amazon"), new ContentId("skill.amazon.thrust.lv1"), new UnitAttributes(5,6,5,5,5,5), 1,
+                [new ContentId("skill.amazon.thrust.lv1"), new ContentId("skill.amazon.poison-spear.lv1"), new ContentId("skill.amazon.combat-techniques.lv1")])
         });
 
     private sealed class MemoryRunStore : IRunSaveStore

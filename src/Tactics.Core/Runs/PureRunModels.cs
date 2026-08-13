@@ -33,7 +33,22 @@ public sealed record PureRunPartyTemplate(
     ContentId UnitContentId,
     ContentId StartingSkillContentId,
     UnitAttributes Attributes,
-    int Level = 1);
+    int Level = 1,
+    IReadOnlyList<ContentId>? StartingSkillChoices = null)
+{
+    public IReadOnlyList<ContentId> EffectiveStartingSkillChoices =>
+        StartingSkillChoices is { Count: > 0 } ? StartingSkillChoices : [StartingSkillContentId];
+}
+
+public sealed record PendingRunStartingSkillChoice(string CharacterId, ContentId SkillContentId);
+
+public sealed record PendingRunSetup(
+    int Seed,
+    int CurrentCharacterIndex,
+    IReadOnlyList<PendingRunStartingSkillChoice> Choices)
+{
+    public string? CurrentCharacterId { get; init; }
+}
 
 public sealed record PureRunDefinition
 {
@@ -51,6 +66,13 @@ public sealed record PureRunDefinition
             throw new ArgumentException("The Phase 6B slice requires exactly three unique encounters.", nameof(encounters));
         if (Party.Count != 3 || Party.Select(item => item.CharacterId).Distinct(StringComparer.Ordinal).Count() != 3)
             throw new ArgumentException("The Phase 6B slice requires exactly three unique party characters.", nameof(party));
+        foreach (PureRunPartyTemplate template in Party)
+        {
+            IReadOnlyList<ContentId> choices = template.EffectiveStartingSkillChoices;
+            if (choices.Count is not (1 or 3) || choices.Distinct().Count() != choices.Count ||
+                !choices.Contains(template.StartingSkillContentId))
+                throw new ArgumentException("Starting skill choices must contain the default and have one or three unique entries.", nameof(party));
+        }
     }
 
     public ContentId ContentId { get; }

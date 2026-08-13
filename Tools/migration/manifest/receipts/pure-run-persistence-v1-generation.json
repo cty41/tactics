@@ -3,7 +3,7 @@
   "canonicalCatalogEntryCount": 74,
   "draftSha256": "sha256:4239bb61beec417a30136dcba8543ec4c1c7fc43d728b551ce665426d1f4101f",
   "exportReceiptSha256": "sha256:a89d91c314e3acc0e4b5f423abaaa53723e34fc9f26173d0c1399c72d0806833",
-  "ledgerSha256": "sha256:3122fb9ee99e7253966bacc8c3f2ba842ca9a64e52bc005aa20fec195c6db953",
+  "ledgerSha256": "sha256:b78b64692e3848801b5ccc715e80502384ee4bba8bb176660b4376b0042ae673",
   "manualGameplayAcceptance": "not_required_automated_observability",
   "ownership": "UnityOwned",
   "recoveryPolicy": "validated-temp-backup-quarantine",

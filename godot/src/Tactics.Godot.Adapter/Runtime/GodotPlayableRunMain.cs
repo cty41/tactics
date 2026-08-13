@@ -180,10 +180,16 @@ public partial class GodotPlayableRunMain : Control
         root.AddChild(menu);
         Button newRun = Button("New Run", () => StartNewRun()); menu.AddChild(newRun);
         RunStoreResult loaded = new GodotRunSaveStore().Load();
-        Button continueRun = Button("Continue", ContinueRun); continueRun.Disabled = !loaded.Succeeded || loaded.Snapshot?.ActiveRun is null; menu.AddChild(continueRun);
+        Button continueRun = Button(loaded.Snapshot?.PendingRunSetup is null ? "Continue" : "Resume New Run Setup", ContinueRun);
+        continueRun.Disabled = !loaded.Succeeded || loaded.Snapshot is null ||
+            (loaded.Snapshot.ActiveRun is null && loaded.Snapshot.PendingRunSetup is null && loaded.Snapshot.TerminalSummary is null);
+        menu.AddChild(continueRun);
         if (loaded.Snapshot?.ActiveRun is not null) menu.AddChild(Button("Inventory", () => ShowInventory(loaded.Snapshot.ActiveRun)));
         menu.AddChild(Button("Quit", () => GetTree().Quit()));
-        _status = LabelAt(root, loaded.Snapshot?.ActiveRun is null ? "No active run" : $"Active run: {loaded.Snapshot.ActiveRun.EncounterContentId.Value}", new Vector2(620, 560), 22);
+        string status = loaded.Snapshot?.PendingRunSetup is PendingRunSetup setup
+            ? $"New Run setup: {setup.CurrentCharacterId}"
+            : loaded.Snapshot?.ActiveRun is null ? "No active run" : $"Active run: {loaded.Snapshot.ActiveRun.EncounterContentId.Value}";
+        _status = LabelAt(root, status, new Vector2(620, 560), 22);
     }
 
     private void StartNewRun()
@@ -200,17 +206,50 @@ public partial class GodotPlayableRunMain : Control
 
     private void StartNewRunConfirmed()
     {
-        RunSessionResult started = _run!.StartNewRun(7);
+        RunSessionResult started = _run!.BeginNewRunSetup(7);
         if (!started.Succeeded) { SetStatus(started.ErrorCode); return; }
-        ShowRunMap(started.Snapshot!.ActiveRun!);
+        ShowNewRunSetup(started.Snapshot!);
     }
 
     private void ContinueRun()
     {
+        RunStoreResult loaded = new GodotRunSaveStore().Load();
+        if (loaded.Succeeded && loaded.Snapshot?.PendingRunSetup is not null)
+        {
+            ShowNewRunSetup(loaded.Snapshot);
+            return;
+        }
         RunSessionResult resumed = _run!.ResumeRun();
         if (!resumed.Succeeded) { SetStatus(resumed.ErrorCode); return; }
         if (resumed.EncounterRequest is EncounterRequest request) StartBattle(request);
-        else if (resumed.Snapshot?.ActiveRun is PureRunState run) RouteMap(run);
+        else if (resumed.Snapshot is not null) RouteRunState(resumed.Snapshot);
+    }
+
+    private void ShowNewRunSetup(PureRunSaveSnapshot snapshot)
+    {
+        PendingRunSetup setup = snapshot.PendingRunSetup ?? throw new InvalidOperationException("Pending setup is missing.");
+        PureRunPartyTemplate template = _runDefinition!.Party[setup.CurrentCharacterIndex];
+        Control root = NewPage("NEW RUN — STARTING SKILL", $"Choose 1 of 3 for {template.CharacterId} ({setup.CurrentCharacterIndex + 1}/3)");
+        var choices = new VBoxContainer { Position = new Vector2(470, 230), Size = new Vector2(660, 430) };
+        root.AddChild(choices);
+        foreach (ContentId skill in template.EffectiveStartingSkillChoices)
+        {
+            ContentId captured = skill;
+            choices.AddChild(Button(captured.Value, () =>
+            {
+                RunSessionResult result = _run!.ChooseStartingSkill(template.CharacterId, captured);
+                if (!result.Succeeded) { SetStatus(result.ErrorCode); return; }
+                if (result.Snapshot!.PendingRunSetup is not null) ShowNewRunSetup(result.Snapshot);
+                else RouteRunState(result.Snapshot);
+            }));
+        }
+        root.AddChild(PlaceControl(Button("Cancel", () =>
+        {
+            RunSessionResult canceled = _run!.CancelNewRunSetup();
+            if (!canceled.Succeeded) { SetStatus(canceled.ErrorCode); return; }
+            ShowHome();
+        }), new Vector2(650, 720), new Vector2(300, 60)));
+        _status = LabelAt(root, "The previous active run is preserved until all three choices are confirmed.", new Vector2(470, 680), 18);
     }
 
     private void BeginReadyEncounter()
@@ -527,8 +566,11 @@ public partial class GodotPlayableRunMain : Control
         PendingProgression? pending=run.PendingProgression.FirstOrDefault();
         if(pending is not null)root.AddChild(PlaceControl(Button("Complete Progression",()=>ShowProgression(run,pending)),new Vector2(780,520),new Vector2(320,60)));
         bool continueRequested=false;
-        Button nextButton = Button($"Return to map — {next}",()=>{if(continueRequested)return;continueRequested=true;ShowRunMap(run);}); nextButton.Position = new Vector2(650, 610); nextButton.Size = new Vector2(300, 70); root.AddChild(nextButton);
-        nextButton.Disabled=pending is not null;
+        Button nextButton = Button(pending is null ? $"Continue — {next}" : "Continue — Progression",()=>
+        {
+            if(continueRequested)return;continueRequested=true;
+            if (pending is not null) ShowProgression(run, pending); else RouteRunState(snapshot);
+        }); nextButton.Position = new Vector2(650, 610); nextButton.Size = new Vector2(300, 70); root.AddChild(nextButton);
     }
 
     private void ShowRunMap(PureRunState run)
@@ -564,6 +606,11 @@ public partial class GodotPlayableRunMain : Control
     {
         PureRunMapNodeSnapshot node = _flowProjector.ProjectMap(run, _runDefinition!, LayerFourMap()).Nodes
             .Single(value => value.NodeId == nodeId);
+        if (node.State == PureRunMapNodeState.Pending)
+        {
+            RouteRunState(new PureRunSaveSnapshot(run.Revision, run, null));
+            return;
+        }
         if (node.State is not (PureRunMapNodeState.Available or PureRunMapNodeState.Current))
         { SetStatus(node.UnavailableReason ?? "map.node_locked"); return; }
         if (nodeId is "layer_01_battle" or "layer_02_battle" or "layer_03_battle")
@@ -640,11 +687,24 @@ public partial class GodotPlayableRunMain : Control
 
     private void RouteMap(PureRunState run)
     {
+        RouteRunState(new PureRunSaveSnapshot(run.Revision, run, null));
+    }
+
+    private void RouteRunState(PureRunSaveSnapshot snapshot)
+    {
+        if (snapshot.TerminalSummary is PureRunSummary summary) { ShowSummary(summary); return; }
+        if (snapshot.PendingRunSetup is not null) { ShowNewRunSetup(snapshot); return; }
+        PureRunState run = snapshot.ActiveRun ?? throw new InvalidOperationException("Active run is missing.");
         if(run.Phase==PureRunPhase.ResolvingLayerFourNode){RouteLayerFour(run);return;}
         if(run.Phase==PureRunPhase.ResolvingLayerSixNode){RouteLayerSixNode(run);return;}
         if(run.Phase==PureRunPhase.PendingBattle&&run.Checkpoint is not null)
         {
             StartBattle(new EncounterRequest(run.RunId,run.Checkpoint.Revision,run.Checkpoint.EncounterContentId,run.Checkpoint.Party));
+            return;
+        }
+        if (run.PendingProgression.FirstOrDefault() is PendingProgression pending)
+        {
+            ShowProgression(run, pending);
             return;
         }
         ShowRunMap(run);

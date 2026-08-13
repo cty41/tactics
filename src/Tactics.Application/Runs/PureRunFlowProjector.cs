@@ -12,6 +12,8 @@ public enum PureRunFlowPage
     Rest,
     Store,
     Mystery,
+    NewRunSetup,
+    Inventory,
     Summary
 }
 
@@ -23,6 +25,7 @@ public enum PureRunFlowAction
     BeginAvailableNode,
     ResumeBattle,
     ResolveNode,
+    ChooseStartingSkill,
     ReturnHome
 }
 
@@ -129,7 +132,7 @@ public sealed class PureRunFlowProjector
             bool traversed = from == PureRunMapNodeState.Completed &&
                 to is PureRunMapNodeState.Completed or PureRunMapNodeState.Current or PureRunMapNodeState.Selected or PureRunMapNodeState.Pending;
             bool revealed = traversed || from != PureRunMapNodeState.Locked || to != PureRunMapNodeState.Locked;
-            return new PureRunMapConnectionSnapshot(edge.From, edge.To, revealed, traversed);
+        return new PureRunMapConnectionSnapshot(edge.From, edge.To, true, traversed);
         }).ToArray();
         string focus = nodes.FirstOrDefault(value => value.State is PureRunMapNodeState.Pending or PureRunMapNodeState.Selected)?.NodeId
             ?? nodes.FirstOrDefault(value => value.State == PureRunMapNodeState.Current)?.NodeId

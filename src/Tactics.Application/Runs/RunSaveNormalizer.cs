@@ -11,10 +11,16 @@ internal static class RunSaveNormalizer
         PureRunState? active = snapshot.ActiveRun;
         if (active is not null && active.Revision != snapshot.Revision)
             throw new ArgumentException("Active run revision must equal envelope revision.", nameof(snapshot));
+        PendingRunSetup? setup = snapshot.PendingRunSetup;
+        if (setup is not null && (setup.CurrentCharacterIndex < 0 || setup.CurrentCharacterIndex > 2 ||
+            setup.Choices.Count != setup.CurrentCharacterIndex))
+            throw new ArgumentException("Pending run setup progress is invalid.", nameof(snapshot));
         return snapshot with
         {
             ActiveRun = active is null ? null : Normalize(active),
-            TerminalSummary = snapshot.TerminalSummary is null ? null : Normalize(snapshot.TerminalSummary)
+            TerminalSummary = snapshot.TerminalSummary is null ? null : Normalize(snapshot.TerminalSummary),
+            // Setup choices are an ordered transaction log (Mage, Necromancer, Amazon), not a set.
+            PendingRunSetup = setup is null ? null : setup with { Choices = setup.Choices.ToArray() }
         };
     }
 
