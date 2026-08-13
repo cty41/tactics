@@ -82,6 +82,23 @@ public partial class GodotUnitActor : Node2D
         StatusOverlay.MaximumVisible=maximumVisible;StatusOverlay.Apply(statuses);
     }
 
+    public Rect2 VisualBoundsInParent()
+    {
+        if (Body?.Texture is null) return new Rect2(Position - new Vector2(20, 40), new Vector2(40, 60));
+        Rect2 local = Body.GetRect();
+        Transform2D transform = Transform * Body.Transform;
+        Vector2[] corners =
+        [
+            transform * local.Position,
+            transform * new Vector2(local.End.X, local.Position.Y),
+            transform * local.End,
+            transform * new Vector2(local.Position.X, local.End.Y)
+        ];
+        float left = corners.Min(value => value.X), top = corners.Min(value => value.Y);
+        float right = corners.Max(value => value.X), bottom = corners.Max(value => value.Y);
+        return new Rect2(left, top, right - left, bottom - top);
+    }
+
     private void ApplyVisual()
     {
         if (_definition is null)

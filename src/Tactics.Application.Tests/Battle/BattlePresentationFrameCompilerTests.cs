@@ -28,6 +28,8 @@ public sealed class BattlePresentationFrameCompilerTests
         BattlePresentationFrame frame=BattlePresentationFrameCompiler.Compile("test",before,after,events,new Dictionary<ContentId,SkillDefinition>{{skillId,skill}});
         Assert.That(frame.Cues.Select(cue=>cue.Kind),Is.EqualTo(new[]{PresentationCueKind.Move,PresentationCueKind.Melee,PresentationCueKind.Hit,PresentationCueKind.Defeat}));
         Assert.That(frame.Cues[0].Path,Is.EqualTo(new[]{new GridPoint(2,1)}));
+        Assert.That(frame.Cues[2].ActorId,Is.EqualTo(target));
+        Assert.That(frame.Cues[2].InstigatorId,Is.EqualTo(actor));
         Assert.That(frame.Cues.All(cue=>cue.Markers.Count==5),Is.True);
         Assert.That(before.Units.Single(value=>value.UnitId==actor).Cell,Is.EqualTo(new GridPoint(1,1)));
     }

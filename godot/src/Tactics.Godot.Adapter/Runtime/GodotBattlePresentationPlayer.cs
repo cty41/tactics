@@ -36,7 +36,18 @@ public partial class GodotBattlePresentationPlayer : Node
         ArgumentNullException.ThrowIfNull(frame);
         Clear();
         Tween sequence=CreateTween().SetSpeedScale(_speed);_activeTweens.Add(sequence);
-        foreach (BattlePresentationCue cue in frame.Cues) PlayCue(sequence,cue,actors);
+        for (int index = 0; index < frame.Cues.Count; index++)
+        {
+            BattlePresentationCue cue = frame.Cues[index];
+            if (cue.Kind is PresentationCueKind.Melee or PresentationCueKind.Ranged or PresentationCueKind.Cast)
+            {
+                PlayCue(sequence, cue, actors, recoverAction: false);
+                while (index + 1 < frame.Cues.Count && frame.Cues[index + 1].Kind == PresentationCueKind.Hit)
+                    PlayCue(sequence, frame.Cues[++index], actors);
+                RecoverAction(sequence, cue, actors);
+            }
+            else PlayCue(sequence, cue, actors);
+        }
         // Decision and EndTurn frames intentionally contain no visual cue. A
         // no-op callback keeps the Tween valid so Finished still advances the
         // authoritative automatic-frame queue.
@@ -65,7 +76,8 @@ public partial class GodotBattlePresentationPlayer : Node
 
     public override void _ExitTree() => Clear();
 
-    private void PlayCue(Tween tween,BattlePresentationCue cue, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
+    private void PlayCue(Tween tween,BattlePresentationCue cue, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors,
+        bool recoverAction = true)
     {
         if (!actors.TryGetValue(cue.ActorId, out GodotUnitActor? actor) || !GodotObject.IsInstanceValid(actor)) return;
         switch (cue.Kind)
@@ -87,13 +99,13 @@ public partial class GodotBattlePresentationPlayer : Node
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayRelease(tween, actor, cue, _profile.MeleeWindupDuration, _profile.MeleeLungeDuration, _profile.MeleeImpactHold, 18f);
                 if(cue.SkillId is not null)PlaySkillFx(tween,cue);
-                PlayRecover(tween,actor,cue,_profile.MeleeRecoverDuration);
+                if (recoverAction) PlayRecover(tween,actor,cue,_profile.MeleeRecoverDuration);
                 break;
             case PresentationCueKind.Ranged:
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayRelease(tween, actor, cue, _profile.RangedAimDuration, _profile.RangedReleaseDuration, 0f, -8f);
                 if(cue.SkillId is not null)PlaySkillFx(tween,cue);
-                PlayRecover(tween,actor,cue,_profile.RangedRecoverDuration);
+                if (recoverAction) PlayRecover(tween,actor,cue,_profile.RangedRecoverDuration);
                 break;
             case PresentationCueKind.Cast:
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
@@ -101,7 +113,7 @@ public partial class GodotBattlePresentationPlayer : Node
                 tween.TweenProperty(actor, "scale", baseScale * 1.12f, _profile.CastChargeDuration).SetTrans(Tween.TransitionType.Sine);
                 tween.TweenInterval(_profile.CastReleaseHold);
                 if(cue.SkillId is not null)PlaySkillFx(tween,cue);
-                tween.TweenProperty(actor, "scale", baseScale, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
+                if (recoverAction) tween.TweenProperty(actor, "scale", baseScale, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
                 break;
             case PresentationCueKind.Hit:
                 if (actor.Body is not null)
@@ -120,6 +132,17 @@ public partial class GodotBattlePresentationPlayer : Node
                 tween.TweenCallback(Callable.From(() => { if (GodotObject.IsInstanceValid(actor)) actor.QueueFree(); }));
                 break;
         }
+    }
+
+    private void RecoverAction(Tween tween, BattlePresentationCue cue,
+        IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
+    {
+        if (!actors.TryGetValue(cue.ActorId, out GodotUnitActor? actor) || !GodotObject.IsInstanceValid(actor)) return;
+        if (cue.Kind == PresentationCueKind.Cast)
+            tween.TweenProperty(actor, "scale", actor.Scale, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
+        else
+            PlayRecover(tween, actor, cue, cue.Kind == PresentationCueKind.Melee
+                ? _profile.MeleeRecoverDuration : _profile.RangedRecoverDuration);
     }
 
     private void PlaySkillFx(Tween tween, BattlePresentationCue cue)

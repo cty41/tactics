@@ -20,7 +20,7 @@ public partial class GodotPlayableRunMain : Control
 {
     public const int CanvasWidth = 1600;
     public const int CanvasHeight = 900;
-    public static readonly Vector2 UnitMeterSize = new(60, 18);
+    public static readonly Vector2 UnitMeterSize = new(44, 18);
     public const int UnitMeterBarHeight = 7;
     private readonly Dictionary<ContentId, UnitDefinition> _units = new();
     private readonly Dictionary<ContentId, UnitDefinitionResource> _unitResources = new();
@@ -78,11 +78,7 @@ public partial class GodotPlayableRunMain : Control
     }
 
     public override void _ExitTree()=>DisposePresentationPlayer();
-    public override void _Process(double delta)
-    {
-        foreach((UnitInstanceId id,Control meter) in _unitMeters)
-            if(_actors.TryGetValue(id,out GodotUnitActor? actor)&&GodotObject.IsInstanceValid(actor)&&GodotObject.IsInstanceValid(meter))meter.Position=actor.Position+new Vector2(-30,-62);
-    }
+    public override void _Process(double delta) { }
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
@@ -280,6 +276,8 @@ public partial class GodotPlayableRunMain : Control
         _board.CellPressed += OnBoardCellPressed;
         _board.CellHovered += HoverCell;
         _board.HoverCleared += ClearHover;
+        _board.PointerMoved += UpdateHoveredMeter;
+        _board.PointerExited += HideUnitMeters;
         root.AddChild(_board);
         _presentationPlayer = new GodotBattlePresentationPlayer();
         _presentationPlayer.Configure(_presentationProfile ?? new StandardUnitPresentationResource());
@@ -343,6 +341,7 @@ public partial class GodotPlayableRunMain : Control
         Button endTurn=Button("End Turn (Enter)", () => ApplyIntent(new EndTurnIntent()));endTurn.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(endTurn);
         _skillPanel.AddChild(Button("Abandon Run", AbandonRun));
         ApplyHighlights(snapshot);
+        _board.FollowActiveActor(_actors.GetValueOrDefault(snapshot.ActiveUnitId));
         if(_turnOrder is not null)_turnOrder.Text="Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
         RefreshLog();
     }
@@ -352,7 +351,7 @@ public partial class GodotPlayableRunMain : Control
         var colors=new Dictionary<GridPoint,Color>();
         for(int y=0;y<IsometricBattleBoardLayout.GridSize;y++)for(int x=0;x<IsometricBattleBoardLayout.GridSize;x++)colors[new GridPoint(x,y)]=new Color(.32f,.42f,.47f,.18f);
         foreach(BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive))
-            colors[unit.Cell]=unit.UnitId==snapshot.ActiveUnitId?new Color(.95f,.66f,.24f,.75f):unit.PlayerNumber==0?new Color(.34f,.52f,.62f,.6f):colors[unit.Cell];
+            colors[unit.Cell]=unit.UnitId==snapshot.ActiveUnitId?colors[unit.Cell]:unit.PlayerNumber==0?new Color(.34f,.52f,.62f,.6f):colors[unit.Cell];
         foreach(BattleUiUnitSnapshot unit in snapshot.Units.Where(unit=>unit.IsAlive&&unit.HasMovedThisTurn&&unit.UnitId!=snapshot.ActiveUnitId))colors[unit.Cell]=new Color(.36f,.42f,.48f,.55f);
         foreach(GridPoint corpse in snapshot.Corpses)colors[corpse]=new Color(.38f,.18f,.48f,.8f);
         foreach(GridPoint spear in snapshot.DroppedSpears.Values)colors[spear]=new Color(1f,.55f,.15f,.85f);
@@ -407,6 +406,22 @@ public partial class GodotPlayableRunMain : Control
         if(_hoverInfo is not null)_hoverInfo.Text=detail;ApplyHighlights(snapshot);
     }
     private void ClearHover(){RestoreTargetingFacing();_hoveredCell=null;if(_hoverInfo is not null)_hoverInfo.Text="Hover a cell";if(_visibleSnapshot is not null)ApplyHighlights(_visibleSnapshot);}
+
+    private void UpdateHoveredMeter(Vector2 pointer)
+    {
+        UnitInstanceId? hovered = _actors
+            .Where(pair => GodotObject.IsInstanceValid(pair.Value) && pair.Value.VisualBoundsInParent().HasPoint(pointer))
+            .OrderByDescending(pair => pair.Value.ZIndex)
+            .Select(pair => (UnitInstanceId?)pair.Key).FirstOrDefault();
+        foreach ((UnitInstanceId id, Control meter) in _unitMeters)
+            if (GodotObject.IsInstanceValid(meter)) meter.Visible = hovered is UnitInstanceId value && value == id;
+    }
+
+    private void HideUnitMeters()
+    {
+        foreach (Control meter in _unitMeters.Values)
+            if (GodotObject.IsInstanceValid(meter)) meter.Visible = false;
+    }
 
     private void PreviewTargetingFacing(BattleUiSnapshot snapshot, GridPoint cell)
     {
@@ -846,6 +861,11 @@ public partial class GodotPlayableRunMain : Control
                 character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
                 character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
             menu.AddChild(Label($"Step 2/2 — choose a skill\nSTR {proposed.Strength}  AGI {proposed.Agility}  CON {proposed.Constitution}\nINT {proposed.Intelligence}  CHA {proposed.Charisma}  LUCK {proposed.Luck}",22));
+            menu.AddChild(Label("Current skills:\n" + string.Join('\n', character.LearnedSkillStates.Select(value =>
+            {
+                SkillDefinition known = _skills[value.DefinitionId];
+                return $"{value.BranchId} Lv{value.Level} — {(known.IsPassive ? "Passive" : "Active")}";
+            })), 17));
             SkillDefinition[] candidates=progressionService.GrowthOffer(run,preview,_skills,_runDefinition!).ToArray();
             foreach(SkillDefinition skill in candidates)
                 menu.AddChild(Button(GrowthChoiceLabel(preview,skill),()=>

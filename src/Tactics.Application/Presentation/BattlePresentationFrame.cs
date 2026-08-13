@@ -24,7 +24,8 @@ public sealed record BattlePresentationCue(
     IReadOnlyList<GridPoint> Path,
     IReadOnlyList<UnitInstanceId> AffectedUnitIds,
     IReadOnlyList<BattlePresentationMarker> Markers,
-    IReadOnlyList<BattlePresentationEffect>? Effects = null);
+    IReadOnlyList<BattlePresentationEffect>? Effects = null,
+    UnitInstanceId? InstigatorId = null);
 
 public sealed record BattlePresentationFrame(
     string Stage,
@@ -63,9 +64,9 @@ public static class BattlePresentationFrameCompiler
                     cues.Add(Cue(actionKind, used.ActorId, used.TargetId, used.SkillId, actor.Cell, destination, [], [used.TargetId]));
                     break;
                 case DamageAppliedEvent damage:
-                    BattleUiUnitSnapshot source = Find(before, after, damage.SourceId);
                     BattleUiUnitSnapshot damaged = Find(before, after, damage.TargetId);
-                    cues.Add(Cue(PresentationCueKind.Hit, damage.SourceId, damage.TargetId, damage.SkillId, source.Cell, damaged.Cell, [], [damage.TargetId]));
+                    cues.Add(Cue(PresentationCueKind.Hit, damage.TargetId, damage.TargetId, damage.SkillId,
+                        damaged.Cell, damaged.Cell, [], [damage.TargetId], damage.SourceId));
                     break;
                 case UnitDefeatedEvent defeated:
                     BattleUiUnitSnapshot unit = Find(before, after, defeated.UnitId);
@@ -117,8 +118,8 @@ public static class BattlePresentationFrameCompiler
 
     private static BattlePresentationCue Cue(PresentationCueKind kind, UnitInstanceId actor, UnitInstanceId? target,
         ContentId? skill, GridPoint origin, GridPoint destination, IReadOnlyList<GridPoint> path,
-        IReadOnlyList<UnitInstanceId> affected) => new(kind, actor, target, skill, origin, destination, path, affected,
-        [new(PresentationMarkerKind.Begin, 0), new(PresentationMarkerKind.Release, 1), new(PresentationMarkerKind.Impact, 2), new(PresentationMarkerKind.Recover, 3), new(PresentationMarkerKind.Complete, 4)]);
+        IReadOnlyList<UnitInstanceId> affected, UnitInstanceId? instigator = null) => new(kind, actor, target, skill, origin, destination, path, affected,
+        [new(PresentationMarkerKind.Begin, 0), new(PresentationMarkerKind.Release, 1), new(PresentationMarkerKind.Impact, 2), new(PresentationMarkerKind.Recover, 3), new(PresentationMarkerKind.Complete, 4)], InstigatorId: instigator);
 
     private static BattleUiUnitSnapshot Find(BattleUiSnapshot before, BattleUiSnapshot after, UnitInstanceId id) =>
         before.Units.Concat(after.Units).First(value => value.UnitId == id);

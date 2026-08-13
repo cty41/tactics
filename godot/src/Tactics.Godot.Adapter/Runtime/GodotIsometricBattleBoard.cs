@@ -10,10 +10,15 @@ public partial class GodotIsometricBattleBoard : Control
     private readonly Dictionary<GridPoint, Color> _colors = new();
     private readonly HashSet<GridPoint> _blocked = new();
     private GridPoint? _hovered;
+    private GodotUnitActor? _activeActor;
+    private Vector2? _lastActivePosition;
 
     public event Action<GridPoint>? CellPressed;
     public event Action<GridPoint>? CellHovered;
     public event Action? HoverCleared;
+    public event Action<Vector2>? PointerMoved;
+    public event Action? PointerExited;
+    public Vector2? ActiveMarkerPosition => _lastActivePosition;
 
     public static Color BaseTileColor(GridPoint cell, bool blocked)
     {
@@ -38,12 +43,29 @@ public partial class GodotIsometricBattleBoard : Control
         QueueRedraw();
     }
 
+    public void FollowActiveActor(GodotUnitActor? actor)
+    {
+        _activeActor = actor;
+        _lastActivePosition = actor is null ? null : actor.Position;
+        SetProcess(actor is not null);
+        QueueRedraw();
+    }
+
+    public override void _Process(double delta)
+    {
+        Vector2? next = _activeActor is not null && GodotObject.IsInstanceValid(_activeActor) ? _activeActor.Position : null;
+        if (next == _lastActivePosition) return;
+        _lastActivePosition = next;
+        QueueRedraw();
+    }
+
     public override void _GuiInput(InputEvent inputEvent)
     {
         switch (inputEvent)
         {
             case InputEventMouseMotion motion:
                 UpdateHover(motion.Position);
+                PointerMoved?.Invoke(motion.Position);
                 break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } button
                 when IsometricBattleBoardLayout.TryScreenToGrid(button.Position, out GridPoint cell):
@@ -59,6 +81,7 @@ public partial class GodotIsometricBattleBoard : Control
         {
             _hovered = null;
             HoverCleared?.Invoke();
+            PointerExited?.Invoke();
         }
     }
 
@@ -75,6 +98,13 @@ public partial class GodotIsometricBattleBoard : Control
             Vector2[] diamond = IsometricBattleBoardLayout.Diamond(cell);
             DrawColoredPolygon(diamond, fill);
             DrawPolyline([..diamond, diamond[0]], new Color(0.10f, 0.17f, 0.20f, 0.95f), 1.4f, true);
+        }
+        if (_lastActivePosition is Vector2 center)
+        {
+            Vector2[] marker = [center + new Vector2(0, -24), center + new Vector2(48, 0),
+                center + new Vector2(0, 24), center + new Vector2(-48, 0)];
+            DrawColoredPolygon(marker, new Color(.95f, .66f, .24f, .55f));
+            DrawPolyline([..marker, marker[0]], new Color(1f, .82f, .38f, .9f), 2f, true);
         }
     }
 

@@ -33,7 +33,7 @@ public class PlayableRunUiGodotTests
     [TestCase]
     public void BattleDiagnosticMetersUseCompactBounds()
     {
-        AssertThat(GodotPlayableRunMain.UnitMeterSize).IsEqual(new Vector2(60, 18));
+        AssertThat(GodotPlayableRunMain.UnitMeterSize).IsEqual(new Vector2(44, 18));
         AssertThat(GodotPlayableRunMain.UnitMeterBarHeight).IsEqual(7);
     }
 
@@ -64,13 +64,15 @@ public class PlayableRunUiGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
-    public void CompactMeterKeepsExactBoundsWithoutThemeExpansion()
+    public void CompactMeterUsesActorWidthRangeWithoutThemeExpansion()
     {
         var actor = new GodotUnitActor { Position = new Vector2(200, 300) };
         var meter = new GodotCompactUnitMeter();
         meter.Bind(actor, 10, 20, 4, 8);
 
-        AssertThat(meter.Size).IsEqual(GodotPlayableRunMain.UnitMeterSize);
+        AssertThat(meter.Size.X).IsBetween(38f, 48f);
+        AssertThat(meter.Size.Y).IsEqual(GodotPlayableRunMain.UnitMeterSize.Y);
+        AssertThat(meter.Visible).IsFalse();
         AssertThat(meter.GetChildCount()).IsEqual(0);
         meter.Free(); actor.Free();
     }
