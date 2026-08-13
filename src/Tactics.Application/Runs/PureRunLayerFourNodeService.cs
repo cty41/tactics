@@ -233,6 +233,7 @@ public sealed class PureRunLayerFourNodeService
     private static int Percent(int value, int percent) => (int)Math.Ceiling(value * percent / 100d);
     private static RunCharacterState CopyVitals(RunCharacterState value, int hp, int mp) => new(value.CharacterId,
         value.UnitContentId, value.Level, value.Attributes, hp, value.MaxHealth, mp, value.MaxMana, hp == 0,
-        value.LearnedSkills, value.Equipment, value.CarriedConsumables, value.LearnedSkillStates);
+        value.LearnedSkills, value.Equipment, value.CarriedConsumables, value.LearnedSkillStates,
+        value.StartingSkillContentId);
     private static LayerFourNodeResolution Fail(string code, PureRunState run) => new(false, code, run);
 }

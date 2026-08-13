@@ -67,7 +67,8 @@ internal static class RunSaveNormalizer
         character.LearnedSkillStates.Select(value => value with
         {
             DefinitionId = CanonicalSkillId(value.DefinitionId)
-        }).ToArray());
+        }).ToArray(),
+        character.StartingSkillContentId is ContentId starting ? CanonicalSkillId(starting) : null);
 
     private static ContentId CanonicalSkillId(ContentId id) =>
         id.Value == "skill.amazon.poison-spear.lv1"

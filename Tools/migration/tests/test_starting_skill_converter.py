@@ -46,6 +46,8 @@ class StartingSkillConverterTests(unittest.TestCase):
                 self.assertEqual(branch_id, definition["branchId"])
                 self.assertTrue(definition["displayName"].strip())
                 self.assertTrue(definition["description"].strip())
+        self.assertEqual("Intelligence", definitions["skill.mage.fireball.lv1"]["requiredAttribute"])
+        self.assertEqual("Charisma", definitions["skill.necromancer.bone-spear.lv1"]["requiredAttribute"])
         self.assertEqual("战斗技巧", definitions["skill.amazon.combat-techniques.lv1"]["displayName"])
 
     def test_rejects_mana_drift(self):

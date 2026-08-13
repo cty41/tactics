@@ -17,6 +17,7 @@ ExecutionKindValue = "MagicAttack"
 DamageKindValue = "Magical"
 IsBasicAbility = true
 BranchId = "basic.magic"
+GrowthVisible = false
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MagicAttack_Graph_Ability.asset"
 SourceGuid = "68cefc53956fac64ca301b9d50d2f00d"
 SourceLocalFileId = 11400000

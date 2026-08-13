@@ -72,7 +72,7 @@ public sealed class FrozenUnitySourceTests
             , ["Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs"] = "f8e3eb4c9136f4935585f86e4d2010738ff9e207"
             , ["Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs"] = "1d6e4997dfb8801329003f545e823ea5e3f01a49"
             , ["Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs"] = "4f0feeb252d95f3d213fd96ede48a694b2cba9ed"
-            , ["Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs"] = "bbf411fa404993a9f5603495c47630c05f23eb60"
+            , ["Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs"] = "b26a8a7b841f33e8315514c603dcd13fe38bbbfd"
             , ["Assets/Tactics/Scripts/Common/Roster/CharacterLoadoutService.cs"] = "274afc42e85a6b8543cf58ef3d73fe042f126347"
             , ["Assets/Tactics/Scripts/UI/LevelUpPanelController.cs"] = "d95f18413171d28e50d914510352b4a1829af05a"
         };

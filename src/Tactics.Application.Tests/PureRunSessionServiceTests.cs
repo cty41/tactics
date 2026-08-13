@@ -45,6 +45,8 @@ public sealed class PureRunSessionServiceTests
                 value.CharacterId == "amazon");
             Assert.That(amazon.LearnedSkillStates.Single().BranchId,
                 Is.EqualTo("amazon.poison-spear"));
+            Assert.That(amazon.StartingSkillContentId,
+                Is.EqualTo(new ContentId("skill.poison-spear.lv1")));
         });
     }
 
@@ -226,6 +228,59 @@ public sealed class PureRunSessionServiceTests
             Assert.That(resumed.Snapshot!.ActiveRun!.Party[0].Attributes.Strength,Is.EqualTo(5));
             Assert.That(begun.Succeeded,Is.True);
             Assert.That(store.Snapshot!.ActiveRun!.Party.All(member=>member.Attributes.Strength>0),Is.True);
+        });
+    }
+
+    [Test]
+    public void ResumeRun_RejectsAmbiguousLegacyStartingSkillInsteadOfUsingTemplateDefault()
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        PureRunPartyTemplate template = definition.Party[0];
+        RunCharacterState mage = new(template.CharacterId, template.UnitContentId, 2, template.Attributes,
+            20, 20, 5, 15, false,
+            [new ContentId("skill.mage.ice-bolt.lv1"), new ContentId("skill.mage.fireball.lv1")]);
+        RunCharacterState[] party = [mage, .. definition.Party.Skip(1).Select(item => new RunCharacterState(
+            item.CharacterId, item.UnitContentId, 1, item.Attributes, 20, 20, 5, 15, false,
+            [item.StartingSkillContentId], startingSkillContentId: item.StartingSkillContentId))];
+        PureRunSaveSnapshot original = new(1, new PureRunState("legacy-ambiguous", 9, 1,
+            PureRunPhase.Ready, 0, definition.Encounters[0], party), null);
+        store.Snapshot = original;
+
+        RunSessionResult result = new PureRunSessionService(definition, store).ResumeRun();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("save.starting_skill_ambiguous"));
+            Assert.That(store.Snapshot, Is.SameAs(original));
+        });
+    }
+
+    [TestCase("skill.poison-spear.lv1")]
+    [TestCase("skill.mage.lightning.lv1")]
+    public void ResumeRun_RejectsExplicitStartingSkillThatIsCrossRoleOrNotLearned(string invalidStartingSkill)
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        PureRunPartyTemplate template = definition.Party[0];
+        RunCharacterState mage = new(template.CharacterId, template.UnitContentId, 1, template.Attributes,
+            20, 20, 5, 15, false, [new ContentId("skill.mage.fireball.lv1")],
+            startingSkillContentId: new ContentId(invalidStartingSkill));
+        RunCharacterState[] party = [mage, .. definition.Party.Skip(1).Select(item => new RunCharacterState(
+            item.CharacterId, item.UnitContentId, 1, item.Attributes, 20, 20, 5, 15, false,
+            [item.StartingSkillContentId], startingSkillContentId: item.StartingSkillContentId))];
+        PureRunSaveSnapshot original = new(1, new PureRunState("invalid-starting-skill", 9, 1,
+            PureRunPhase.Ready, 0, definition.Encounters[0], party), null);
+        store.Snapshot = original;
+
+        RunSessionResult result = new PureRunSessionService(definition, store).ResumeRun();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("save.starting_skill_invalid"));
+            Assert.That(store.Snapshot, Is.SameAs(original));
         });
     }
 

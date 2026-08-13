@@ -34,6 +34,16 @@ for _content_id, _contract in CONTRACT.items():
         _contract["branchId"] = "amazon.poison-spear"
     else:
         _contract["branchId"] = _content_id.removeprefix("skill.").removesuffix(".lv1")
+    if _contract["role"] == "Mage":
+        _contract.update(requiredAttribute="Intelligence", minimumAttribute=5, growthVisible=True)
+    elif _contract["role"] == "Necromancer":
+        _contract.update(requiredAttribute="Charisma", minimumAttribute=5, growthVisible=True)
+    elif _content_id in {"skill.amazon.thrust.lv1", "skill.poison-spear.lv1"}:
+        _contract.update(requiredAttribute="Agility", minimumAttribute=5, growthVisible=True)
+    elif _content_id == "skill.amazon.combat-techniques.lv1":
+        _contract.update(requiredAttribute="Luck", minimumAttribute=5, growthVisible=True)
+    else:
+        _contract.update(requiredAttribute="", minimumAttribute=0, growthVisible=False)
 
 
 def _properties(asset: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:

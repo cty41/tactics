@@ -358,7 +358,7 @@ namespace Tactics.Common.Battle
                     (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Lv2_Graph_Ability.asset"),
                     (3, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Lv3_Graph_Ability.asset")));
             Add(definitions, "necromancer.bone_spear", "骨矛", "发射可贯穿目标的骨矛。", RoleType.Necromancer,
-                SkillType.Active, AttributeType.Intelligence, 5, null, 3,
+                SkillType.Active, AttributeType.Charisma, 5, null, 3,
                 Paths(
                     (1, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset"),
                     (2, "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Lv2_Graph_Ability.asset"),

@@ -16,6 +16,7 @@ ExecutionKindValue = "PickupSpear"
 DamageKindValue = "None"
 Hidden = true
 BranchId = "amazon.pickup-spear"
+GrowthVisible = false
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PickupSpear_Graph_Ability.asset"
 SourceGuid = "0d8b452d7843bde4682b9da39733dc06"
 SourceLocalFileId = 11400000

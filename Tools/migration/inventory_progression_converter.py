@@ -27,7 +27,7 @@ PREREQUISITES = {
 
 ATTRIBUTE = {
     "mage": "Intelligence", "necromancer.summon-skeleton": "Charisma", "necromancer.amplify-damage": "Charisma",
-    "necromancer.bone-spear": "Intelligence", "necromancer.skeleton-mage": "Charisma", "necromancer.fear-curse": "Charisma",
+    "necromancer.bone-spear": "Charisma", "necromancer.skeleton-mage": "Charisma", "necromancer.fear-curse": "Charisma",
     "necromancer.bone-shield": "Charisma", "amazon.thrust": "Agility", "amazon.poison-spear": "Agility",
     "amazon.combat-techniques": "Luck", "amazon.multi-stab": "Agility", "amazon.recover-spear": "Agility", "amazon.decoy": "Luck",
 }

@@ -295,7 +295,7 @@ public sealed class PureRunSessionService
         return new RunCharacterState(
             template.CharacterId, template.UnitContentId, template.Level, template.Attributes,
             stats.MaxHealth, stats.MaxHealth, stats.StartingMana, stats.MaxMana, false,
-            new[] { startingSkill });
+            new[] { startingSkill }, startingSkillContentId: startingSkill);
     }
 
     private static PureRunState CopyRevision(PureRunState run, long revision) => new(
@@ -343,14 +343,40 @@ public sealed class PureRunSessionService
     {
         int[] values = { character.Attributes.Strength, character.Attributes.Agility, character.Attributes.Constitution,
             character.Attributes.Intelligence, character.Attributes.Charisma, character.Attributes.Luck };
-        if (values.All(value => value != 0)) return character;
-        if (values.Any(value => value != 0)) throw new InvalidDataException("save.partial_attributes_invalid");
         PureRunPartyTemplate? template = _definition.Party.FirstOrDefault(item =>
             item.CharacterId == character.CharacterId && item.UnitContentId == character.UnitContentId);
         if (template is null) throw new InvalidDataException("save.zero_attributes_identity_mismatch");
+        ContentId? selectedStartingSkill = character.StartingSkillContentId;
+        if (selectedStartingSkill is ContentId explicitSelection &&
+            (!template.EffectiveStartingSkillChoices.Contains(explicitSelection) ||
+             !character.LearnedSkillStates.Any(skill => skill.DefinitionId == explicitSelection)))
+            throw new InvalidDataException("save.starting_skill_invalid");
+        if (selectedStartingSkill is null)
+        {
+            ContentId[] matches = template.EffectiveStartingSkillChoices
+                .Where(choice => character.LearnedSkillStates.Any(skill => skill.DefinitionId == choice))
+                .ToArray();
+            if (matches.Length > 1)
+                throw new InvalidDataException("save.starting_skill_ambiguous");
+            if (matches.Length == 1)
+            {
+                selectedStartingSkill = matches[0];
+                repaired = true;
+            }
+        }
+        if (values.All(value => value != 0))
+        {
+            if (selectedStartingSkill == character.StartingSkillContentId) return character;
+            return new RunCharacterState(character.CharacterId, character.UnitContentId, character.Level,
+                character.Attributes, character.CurrentHealth, character.MaxHealth, character.CurrentMana,
+                character.MaxMana, character.IsDead, character.LearnedSkills, character.Equipment,
+                character.CarriedConsumables, character.LearnedSkillStates, selectedStartingSkill);
+        }
+        if (values.Any(value => value != 0)) throw new InvalidDataException("save.partial_attributes_invalid");
         repaired = true;
         return new RunCharacterState(character.CharacterId, character.UnitContentId, character.Level, template.Attributes,
             character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
-            character.LearnedSkills, character.Equipment, character.CarriedConsumables);
+            character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates,
+            selectedStartingSkill);
     }
 }

@@ -99,7 +99,8 @@ public sealed record RunCharacterState
         IReadOnlyList<ContentId> learnedSkills,
         IReadOnlyList<RunEquipmentState>? equipment = null,
         IReadOnlyList<BattleConsumableState>? carriedConsumables = null,
-        IReadOnlyList<RunLearnedSkillState>? learnedSkillStates = null)
+        IReadOnlyList<RunLearnedSkillState>? learnedSkillStates = null,
+        ContentId? startingSkillContentId = null)
     {
         if (string.IsNullOrWhiteSpace(characterId))
             throw new ArgumentException("Character ID cannot be empty.", nameof(characterId));
@@ -127,6 +128,7 @@ public sealed record RunCharacterState
         Equipment = equipment?.OrderBy(value => value.Slot).ToArray() ?? Array.Empty<RunEquipmentState>();
         CarriedConsumables = carriedConsumables?.OrderBy(value => value.InstanceId.Value, StringComparer.Ordinal).ToArray()
             ?? Array.Empty<BattleConsumableState>();
+        StartingSkillContentId = startingSkillContentId;
     }
 
     public string CharacterId { get; }
@@ -142,6 +144,7 @@ public sealed record RunCharacterState
     public IReadOnlyList<RunLearnedSkillState> LearnedSkillStates { get; }
     public IReadOnlyList<RunEquipmentState> Equipment { get; }
     public IReadOnlyList<BattleConsumableState> CarriedConsumables { get; }
+    public ContentId? StartingSkillContentId { get; }
 
     private static RunLearnedSkillState ToLegacySkillState(ContentId id)
     {

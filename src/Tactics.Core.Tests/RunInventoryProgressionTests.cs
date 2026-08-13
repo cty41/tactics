@@ -326,6 +326,49 @@ public sealed class RunInventoryProgressionTests
         Assert.That(suppressedByLearnedAdvanced, Is.EqualTo(suppressedByConsumedMarker));
     }
 
+    [Test]
+    public void GrowthOfferUsesTheCharactersSelectedStartingBranchInsteadOfTheTemplateDefault()
+    {
+        PureRunState state = State(withProgression: true, frozenCharacterIds: true);
+        RunCharacterState original = state.Party[0];
+        ContentId iceBoltId = new("skill.mage.ice-bolt.lv1");
+        var mage = new RunCharacterState(original.CharacterId, original.UnitContentId, original.Level,
+            new UnitAttributes(5, 5, 5, 7, 5, 5), original.CurrentHealth, original.MaxHealth,
+            original.CurrentMana, original.MaxMana, original.IsDead, [iceBoltId], original.Equipment,
+            original.CarriedConsumables,
+            [new RunLearnedSkillState("mage.ice-bolt", 1, iceBoltId)], iceBoltId);
+        PureRunState selectedState = new(state.RunId, state.Seed, state.Revision, state.Phase,
+            state.EncounterIndex, state.EncounterContentId,
+            state.Party.Select(value => value.CharacterId == mage.CharacterId ? mage : value).ToArray(),
+            state.BackpackConsumables, state.BackpackEquipment, state.PendingProgression,
+            state.AppliedTransactionKeys, state.Gold, state.BattlesCompleted, state.EnemiesDefeated,
+            state.AcquiredItems, state.Checkpoint, state.MapState, state.NodeTransaction);
+        SkillDefinition Skill(string id, string branch, int level, string prerequisite = "") => new(
+            new ContentId(id), branch, SkillRole.Mage, SkillKind.Active, level, 1, 1, 4,
+            SkillExecutionKind.Fireball, 1, SkillDamageKind.Magical, branchId: branch,
+            prerequisiteBranchId: prerequisite, requiredAttribute: "Intelligence",
+            minimumAttribute: prerequisite.Length == 0 ? 5 : 7);
+        SkillDefinition iceArmor = Skill("skill.mage.ice-armor.lv1", "mage.ice-armor", 1, "mage.ice-bolt");
+        SkillDefinition[] skillValues =
+        [
+            Skill("skill.mage.fireball.lv1", "mage.fireball", 1),
+            Skill("skill.mage.ice-bolt.lv1", "mage.ice-bolt", 1),
+            Skill("skill.mage.ice-bolt.lv2", "mage.ice-bolt", 2),
+            Skill("skill.mage.lightning.lv1", "mage.lightning", 1),
+            iceArmor
+        ];
+
+        SkillDefinition[] offer = new RunInventoryProgressionService().GrowthOffer(selectedState, mage,
+            skillValues.ToDictionary(value => value.ContentId), Definition(selectedState)).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(mage.StartingSkillContentId, Is.EqualTo(iceBoltId));
+            Assert.That(offer, Has.Length.EqualTo(3));
+            Assert.That(offer[0].ContentId, Is.EqualTo(iceArmor.ContentId));
+        });
+    }
+
     private static PureRunState State(bool withProgression = false, bool frozenCharacterIds = false)
     {
         var attributes = new UnitAttributes(3, 3, 3, 5, 4, 2);

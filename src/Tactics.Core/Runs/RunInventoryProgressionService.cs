@@ -29,7 +29,7 @@ public sealed class RunInventoryProgressionService
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(definition);
-        ContentId startingSkillContentId = definition.Party.Single(value => value.CharacterId == character.CharacterId).StartingSkillContentId;
+        ContentId startingSkillContentId = SelectedStartingSkill(character, definition);
         SkillDefinition[] legal = GrowthCandidates(character, skills)
             .Where(skill => CanUnlockWithAttributePoints(character, skill, 0))
             .ToArray();
@@ -77,7 +77,8 @@ public sealed class RunInventoryProgressionService
             return Array.Empty<SkillDefinition>();
         RunCharacterState preview = new(character.CharacterId, character.UnitContentId, character.Level, attributes,
             character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
-            character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
+            character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates,
+            character.StartingSkillContentId);
         return GrowthOffer(state, preview, skills, definition);
     }
 
@@ -172,7 +173,8 @@ public sealed class RunInventoryProgressionService
         if (spent != pending.AttributePoints || AnyAttributeLower(attributes, character.Attributes)) return Reject(state, "progression.invalid_attributes");
         RunCharacterState preview = new(character.CharacterId, character.UnitContentId, character.Level, attributes,
             character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
-            character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
+            character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates,
+            character.StartingSkillContentId);
         IReadOnlyList<SkillDefinition> candidates = GrowthOffer(state, preview, skills, definition);
         if (skillId is null && candidates.Count > 0) return Reject(state, "progression.skill_required");
         if (skillId is ContentId candidateId && candidates.All(skill => skill.ContentId != candidateId))
@@ -188,8 +190,9 @@ public sealed class RunInventoryProgressionService
         }
         RunCharacterState updated = new(character.CharacterId, character.UnitContentId, character.Level + 1, attributes,
             character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
-            learned.Select(value => value.DefinitionId).ToArray(), character.Equipment, character.CarriedConsumables, learned);
-        ContentId startingSkillContentId = definition.Party.Single(value => value.CharacterId == character.CharacterId).StartingSkillContentId;
+            learned.Select(value => value.DefinitionId).ToArray(), character.Equipment, character.CarriedConsumables, learned,
+            character.StartingSkillContentId);
+        ContentId startingSkillContentId = SelectedStartingSkill(character, definition);
         string? guaranteeTransaction = skillId is ContentId chosen && skills.TryGetValue(chosen, out SkillDefinition? chosenDefinition) &&
             IsStartingAdvanced(chosenDefinition, skills, startingSkillContentId)
             ? GuaranteeTransaction(character.CharacterId) : null;
@@ -218,6 +221,10 @@ public sealed class RunInventoryProgressionService
 
     private static string GuaranteeTransaction(string characterId) => $"growth-guarantee:{characterId}";
 
+    private static ContentId SelectedStartingSkill(RunCharacterState character, PureRunDefinition definition) =>
+        character.StartingSkillContentId ?? definition.Party.Single(value =>
+            value.CharacterId == character.CharacterId).StartingSkillContentId;
+
     private static int AttributeTotal(UnitAttributes value) => value.Strength + value.Agility + value.Constitution + value.Intelligence + value.Charisma + value.Luck;
     private static void Shuffle<T>(IList<T> values, Random random)
     {
@@ -243,7 +250,7 @@ public sealed class RunInventoryProgressionService
     private static bool AnyAttributeLower(UnitAttributes value, UnitAttributes prior) => value.Strength < prior.Strength || value.Agility < prior.Agility || value.Constitution < prior.Constitution || value.Intelligence < prior.Intelligence || value.Charisma < prior.Charisma || value.Luck < prior.Luck;
     private static RunCharacterState[] Replace(IReadOnlyList<RunCharacterState> party, RunCharacterState updated) => party.Select(value => value.CharacterId == updated.CharacterId ? updated : value).ToArray();
     private static RunCharacterState Copy(RunCharacterState value, IReadOnlyList<RunEquipmentState>? equipment = null, IReadOnlyList<BattleConsumableState>? carried = null, int? maxHealth = null, int? maxMana = null) =>
-        new(value.CharacterId, value.UnitContentId, value.Level, value.Attributes, Math.Min(value.CurrentHealth, maxHealth ?? value.MaxHealth), maxHealth ?? value.MaxHealth, Math.Min(value.CurrentMana, maxMana ?? value.MaxMana), maxMana ?? value.MaxMana, value.IsDead, value.LearnedSkills, equipment ?? value.Equipment, carried ?? value.CarriedConsumables, value.LearnedSkillStates);
+        new(value.CharacterId, value.UnitContentId, value.Level, value.Attributes, Math.Min(value.CurrentHealth, maxHealth ?? value.MaxHealth), maxHealth ?? value.MaxHealth, Math.Min(value.CurrentMana, maxMana ?? value.MaxMana), maxMana ?? value.MaxMana, value.IsDead, value.LearnedSkills, equipment ?? value.Equipment, carried ?? value.CarriedConsumables, value.LearnedSkillStates, value.StartingSkillContentId);
     private static PureRunState Copy(PureRunState value, IReadOnlyList<RunCharacterState>? party = null, IReadOnlyList<BattleConsumableState>? backpackConsumables = null, IReadOnlyList<RunEquipmentState>? backpackEquipment = null, IReadOnlyList<PendingProgression>? pending = null, string? transaction = null, IReadOnlyList<string>? transactions = null) =>
         new(value.RunId, value.Seed, value.Revision + 1, value.Phase, value.EncounterIndex, value.EncounterContentId, party ?? value.Party,
             backpackConsumables ?? value.BackpackConsumables, backpackEquipment ?? value.BackpackEquipment, pending ?? value.PendingProgression,

@@ -25,6 +25,7 @@ class InventoryProgressionConverterTests(unittest.TestCase):
         self.assertEqual(1, definitions["skill.mage.fireball.lv2"]["areaRadius"])
         self.assertEqual(4, definitions["skill.amazon.multi-stab.lv2"]["orderedTargetCount"])
         self.assertTrue(definitions["skill.mage.teleport.lv2"]["ignoreLineOfSight"])
+        self.assertEqual(definitions["skill.necromancer.bone-spear.lv2"]["requiredAttribute"], "Charisma")
         self.assertEqual("SkeletonMage", definitions["skill.necromancer.skeleton-mage.lv2"]["summonCategory"])
         self.assertEqual(6, definitions["skill.amazon.recover-spear.lv2"]["secondaryDamage"])
 

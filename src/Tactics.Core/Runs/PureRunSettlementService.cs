@@ -232,7 +232,8 @@ public sealed class PureRunSettlementService
                 prior.CharacterId, prior.UnitContentId, prior.Level, prior.Attributes,
                 health, prior.MaxHealth, mana, prior.MaxMana, dead, prior.LearnedSkills,
                 wasDead ? Array.Empty<RunEquipmentState>() : prior.Equipment,
-                wasDead ? Array.Empty<BattleConsumableState>() : current.CarriedConsumables);
+                wasDead ? Array.Empty<BattleConsumableState>() : current.CarriedConsumables,
+                prior.LearnedSkillStates, prior.StartingSkillContentId);
         }).ToArray();
     }
 

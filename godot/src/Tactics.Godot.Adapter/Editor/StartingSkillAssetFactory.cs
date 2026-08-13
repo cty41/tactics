@@ -84,6 +84,9 @@ public static class StartingSkillAssetFactory
         resource.Hidden = item.Hidden; resource.ExternalDependency = item.ExternalDependency; resource.SourcePath = item.SourcePath; resource.SourceGuid = item.SourceGuid; resource.SourceLocalFileId = item.SourceLocalFileId;
         resource.IsBasicAbility = item.IsBasicAbility; resource.MaxUsesPerTurn = item.MaxUsesPerTurn;
         resource.BranchId = item.BranchId;
+        resource.RequiredAttribute = item.RequiredAttribute;
+        resource.MinimumAttribute = item.MinimumAttribute;
+        resource.GrowthVisible = item.GrowthVisible;
         resource.GraphPath = item.GraphPath; resource.GraphDependencyHash = item.GraphDependencyHash; resource.PresentationPayloadCopied = item.SourceAudit.PresentationPayloadCopied; resource.ThirdPartyPayloadCopied = item.SourceAudit.ThirdPartyPayloadCopied;
     }
 
@@ -134,7 +137,9 @@ public static class StartingSkillAssetFactory
         resource.Damage == item.Damage && resource.DamageKindValue == item.DamageKind &&
         resource.StatusContentIdValue == item.StatusContentId && resource.StatusDuration == item.StatusDuration &&
         resource.Hidden == item.Hidden && resource.IsBasicAbility == item.IsBasicAbility && resource.MaxUsesPerTurn == item.MaxUsesPerTurn &&
-        resource.BranchId == item.BranchId && resource.DisplayName == item.DisplayName && resource.Description == item.Description;
+        resource.BranchId == item.BranchId && resource.RequiredAttribute == item.RequiredAttribute &&
+        resource.MinimumAttribute == item.MinimumAttribute && resource.GrowthVisible == item.GrowthVisible &&
+        resource.DisplayName == item.DisplayName && resource.Description == item.Description;
 
     private static void WriteLedger(string ledgerPath, IEnumerable<string> targets, StartingSkillMigrationDraft draft)
     {

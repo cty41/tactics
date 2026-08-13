@@ -28,6 +28,9 @@ public sealed record SkillDefinitionDraft
     public string BranchId { get; init; } = string.Empty;
     public string PrerequisiteContentId { get; init; } = string.Empty;
     public bool GrowthVisible { get; init; } = true;
+    public string RequiredAttribute { get; init; } = string.Empty;
+    public int MinimumAttribute { get; init; }
+    public string PrerequisiteBranchId { get; init; } = string.Empty;
     public int AreaRadius { get; init; }
     public int OrderedTargetCount { get; init; }
     public string SummonDefinitionId { get; init; } = string.Empty;
@@ -81,7 +84,7 @@ public sealed class SkillDefinitionCompiler
             try
             {
                 var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage);
-                var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn, draft.BranchId, prerequisiteId, draft.GrowthVisible, profile);
+                var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn, draft.BranchId, prerequisiteId, draft.GrowthVisible, profile, draft.RequiredAttribute, draft.MinimumAttribute, draft.PrerequisiteBranchId);
                 definitions.Add(contentId, definition);
                 contentDrafts.Add(new ContentDraft(contentId, "skill", 1, statusId is null ? null : new[] { statusId.Value }, new Dictionary<string, string>(StringComparer.Ordinal)
                 {

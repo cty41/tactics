@@ -18,6 +18,7 @@ Damage = 2
 DamageKindValue = "Physical"
 IsBasicAbility = true
 BranchId = "basic.melee"
+GrowthVisible = false
 SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MeleeAttack_Graph_Ability.asset"
 SourceGuid = "8d4aca5505ce3aa488ce92abfcd0e1ed"
 SourceLocalFileId = 11400000
