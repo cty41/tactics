@@ -150,6 +150,46 @@ public sealed class PureRunSessionServiceTests
     }
 
     [Test]
+    public void TwoVictoriesAndCompletedProgression_UnlockN3AndBeginItsBattle()
+    {
+        var store = new MemoryRunStore();
+        PureRunDefinition definition = Definition();
+        var service = new PureRunSessionService(definition, store);
+        var progression = new RunInventoryProgressionService();
+        service.StartNewRun(31);
+
+        for (int index = 0; index < 2; index++)
+        {
+            Assert.That(service.BeginEncounter().Succeeded, Is.True);
+            RunSessionResult settled = service.ApplyBattleResult(Victory(store.Snapshot!.ActiveRun!));
+            Assert.That(settled.Succeeded, Is.True);
+            PendingProgression pending = settled.Snapshot!.ActiveRun!.PendingProgression.Single();
+            RunCharacterState character = settled.Snapshot.ActiveRun.Party.Single(value =>
+                value.CharacterId == pending.CharacterId);
+            UnitAttributes raised = new(character.Attributes.Strength + 1, character.Attributes.Agility,
+                character.Attributes.Constitution, character.Attributes.Intelligence,
+                character.Attributes.Charisma, character.Attributes.Luck);
+            RunSessionResult completed = service.ApplyMutation(state => progression.CompleteProgression(
+                state, state.Revision, pending.TransactionKey, raised, null,
+                new Dictionary<ContentId, Tactics.Core.Skills.SkillDefinition>(), definition));
+            Assert.That(completed.Succeeded, Is.True);
+        }
+
+        PureRunState ready = store.Snapshot!.ActiveRun!;
+        RunSessionResult n3 = service.BeginEncounter();
+        Assert.Multiple(() =>
+        {
+            Assert.That(ready.Phase, Is.EqualTo(PureRunPhase.Ready));
+            Assert.That(ready.EncounterIndex, Is.EqualTo(2));
+            Assert.That(ready.EncounterContentId, Is.EqualTo(new ContentId("encounter.pure-run.n3")));
+            Assert.That(ready.PendingProgression, Is.Empty);
+            Assert.That(n3.Succeeded, Is.True);
+            Assert.That(n3.EncounterRequest!.EncounterContentId,
+                Is.EqualTo(new ContentId("encounter.pure-run.n3")));
+        });
+    }
+
+    [Test]
     public void StoreRejectsStaleRevision()
     {
         var store = new MemoryRunStore();

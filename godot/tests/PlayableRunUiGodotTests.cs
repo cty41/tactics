@@ -68,6 +68,49 @@ public class PlayableRunUiGodotTests
     }
 
     [TestCase]
+    public void BattleActionLabelsUseDisplayNamesAndOnlyShowPositiveManaOnSecondLine()
+    {
+        AssertThat(GodotPlayableRunMain.FormatBattleActionLabel("Magic Attack", 0, false))
+            .IsEqual("Magic Attack");
+        AssertThat(GodotPlayableRunMain.FormatBattleActionLabel("Fireball", 5, false))
+            .IsEqual("Fireball\nMP 5");
+        AssertThat(GodotPlayableRunMain.FormatBattleActionLabel("Fireball", 5, true))
+            .IsEqual("Fireball\nMP 5 · Used");
+    }
+
+    [TestCase]
+    public void ActiveTileMarkerIsHiddenWhileCommittedActionPresentationRuns()
+    {
+        AssertThat(GodotPlayableRunMain.ShouldShowActiveMarker(false, false)).IsTrue();
+        AssertThat(GodotPlayableRunMain.ShouldShowActiveMarker(true, false)).IsFalse();
+        AssertThat(GodotPlayableRunMain.ShouldShowActiveMarker(false, true)).IsFalse();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void PauseMenuRendersAboveActorsAndDoesNotOfferSaveAndQuit()
+    {
+        var ui = new GodotPlayableRunMain();
+        ui._Ready();
+        var root = new Control();
+        ui.AddChild(root);
+        typeof(GodotPlayableRunMain).GetMethod("BuildPauseMenu",
+                BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(ui, new object[] { root, true });
+        string[] buttons = Descendants<Button>(root).Select(button => button.Text).ToArray();
+        ColorRect? overlay = Descendants<ColorRect>(root)
+            .FirstOrDefault(control => !control.Visible && control.MouseFilter == Control.MouseFilterEnum.Stop);
+
+        AssertThat(buttons).Contains("CONTINUE");
+        AssertThat(buttons).Contains("OPTIONS");
+        AssertThat(buttons).Contains("MAIN MENU");
+        AssertThat(buttons).NotContains("SAVE AND QUIT");
+        AssertThat(overlay).IsNotNull();
+        AssertThat(overlay!.ZIndex).IsGreater(1000);
+        ui.Free();
+    }
+
+    [TestCase]
     [RequireGodotRuntime]
     public void RunDefinitionUsesCanonicalPoisonSpearStartingChoice()
     {

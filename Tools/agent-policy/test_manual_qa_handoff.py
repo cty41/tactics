@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 import tempfile
 import unittest
@@ -44,9 +45,12 @@ class ManualQaHandoffPolicyTests(unittest.TestCase):
             root = Path(directory)
             self.copy_contract(root)
             ledger = root / LEDGER
-            ledger.write_text(ledger.read_text(encoding="utf-8").replace(
-                "### MQA-GODOT-BOARD-FIT — Isometric board framing and input\n\n- Status: `pending`",
-                "### MQA-GODOT-BOARD-FIT — Isometric board framing and input\n\n- Status: `passed`"), encoding="utf-8")
+            mutated, replacements = re.subn(
+                r"(?ms)(## Pending\b.*?^### MQA-[^\n]+\n\n- Status: `)pending(`)",
+                r"\1passed\2",
+                ledger.read_text(encoding="utf-8"), count=1)
+            self.assertEqual(replacements, 1)
+            ledger.write_text(mutated, encoding="utf-8")
             self.assertTrue(any("section" in error for error in validate_manual_qa_handoff(root)))
 
     def test_required_fields_must_be_nonempty(self) -> None:

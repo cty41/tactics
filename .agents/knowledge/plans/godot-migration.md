@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-13T18:18:12+08:00"
+timestamp: "2026-08-13T19:38:09+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:f93d7f1ad99e588f231a06312d9d5c42aa6248bf79bff0fe53baa192f60d0465
+source_fingerprint: sha256:7cd01e134d0ff6494fa8dab54890474a485953045a88b07092aeabf1533d2ec1
 ---
 
 # Current state
@@ -95,7 +95,7 @@ Phase 8E New Run 三选一只允许使用 canonical `skill.poison-spear.lv1`；�
 
 Phase 7B–8E 成长、HUD 与目标表现收口修复已完成自动门禁，等待合并人工验收。成长页严格渲染 Core 的三选一 Learn/Upgrade offer，并用 Adapter-only metadata 显示规范名称、说明、MP、射程、属性门槛、前置和当前已学技能；基础 Lv1 Resource 现在显式保存 BranchId，Poison Spear 仍映射到 `amazon.poison-spear`。单位 hover/click 共用按 Body 当前纹理 alpha 与实际绘制顺序解析的指针命中，透明区域不再抢占后方单位。Amazon 投矛后根据 committed DroppedSpears 切换项目自有未持矛 DR/UL 图，拾回后恢复；Unit 迁移证据因此扩展为 21 张项目自有 PNG 和 40 个冻结 asset blob。Lightning 以目标头部锚点为终点、从棋盘可视上边缘外垂直劈下。Battle HUD 将 Round/Turn、单位信息、横向动作栏、End Turn 和 Pause/Step/0.5×/1×/2×/4×放回战场边缘，常驻日志迁入 Backquote 开关的 CheatConsole；Catalog 保持124，状态为 `Generated/UnityOwned + manual_inventory_run_flow_growth_hud_and_presentation_qa_pending`。
 
-Phase 8E 的相机、菜单、动态数值与成长事务收口已完成自动门禁，继续等待合并人工验收。Godot 从完整 100 格 Tile AABB 与顶部/底部 HUD 安全边距计算统一 fitted transform，棋盘、Actor、Highlight、技能 FX、悬浮数值和指针逆变换不再为历史右侧诊断栏留空。战斗和地图移除 Abandon，Esc 在 targeting/Console 优先级之后打开 Continue/Options/Main Menu/Save and Quit；退出只保留最后已提交 Run 与战前 checkpoint。Damage/Critical/Heal/Mana/Miss 数字只由 committed events 编译，按 Hit 序号播放并同步 Pause 与 0.5×/1×/2×/4×。成长候选复刻 starting-branch advanced guarantee、Upgrade 优先与冻结 RNG 槽位；属性/技能为内存草稿，最终确认才单次保存，历史 V5 瞬态草稿在恢复时丢弃。Catalog 保持124，状态为 `Generated/UnityOwned + manual_camera_menu_damage_growth_qa_pending`。
+Phase 8E 的相机、菜单、动态数值与成长事务收口已完成自动门禁，继续等待合并人工验收。Godot 从完整 100 格 Tile AABB 与顶部/底部 HUD 安全边距计算统一 fitted transform，棋盘、Actor、Highlight、技能 FX、悬浮数值和指针逆变换不再为历史右侧诊断栏留空。战斗和地图移除 Abandon，Esc 在 targeting/Console 优先级之后打开位于最高表现层的 Continue/Options/Main Menu；退出应用只保留在 Home。动作栏使用技能显示名，零消耗基础攻击不显示 MP，技能消耗独占第二行；committed action 播放期间隐藏当前单位脚底选中标记。Damage/Critical/Heal/Mana/Miss 数字只由 committed events 编译，按 Hit 序号播放并同步 Pause 与 0.5×/1×/2×/4×。成长候选复刻 starting-branch advanced guarantee、Upgrade 优先与冻结 RNG 槽位；属性/技能为内存草稿，最终确认才单次保存，历史 V5 瞬态草稿在恢复时丢弃。N1→成长→N2→成长→N3 由 Application 回归固定，地图节点进入前先恢复权威 Run，以 PendingBattle/Progression/Ready 状态路由。Catalog 保持124，状态为 `Generated/UnityOwned + manual_camera_menu_damage_growth_qa_pending`。
 
 Phase 8E 的职业成长、毒伤与 Action Pose 定向修复已完成自动门禁。Mage 的成长门槛统一为 Intelligence，Necromancer 统一为 Charisma；Bone Spear 的旧 Intelligence 例外已按 Unity 源合同纠正。Run 角色显式保存玩家 New Run 实际选择的起始技能，使 advanced guarantee 不再回退到模板默认；旧 V5 仅在唯一可证明时补齐，歧义或不一致身份明确拒绝而不写档。Poison tick 生成独立 Impact cue 与真实 `-N` 动态数值，落地长矛由 committed `DroppedSpears` 快照绘制持久程序式标记。14 张已批准的 Mage/Necromancer/Amazon Cast、Hit、Melee/Thrown 项目自有 PNG 经过 hash-bound converter 和 ResourceSaver 引用迁入；敌人和召唤物缺少 Action Pose 时继续使用程序式 fallback。死亡单位状态层立即清空。Catalog 保持124，状态仍为 `Generated/UnityOwned + manual_growth_poison_spear_and_action_pose_qa_pending`。
 

@@ -20,6 +20,7 @@ public partial class GodotPlayableRunMain : Control
 {
     public const int CanvasWidth = 1600;
     public const int CanvasHeight = 900;
+    public const int PauseOverlayZIndex = 4000;
     public static readonly Vector2 UnitMeterSize = new(44, 18);
     public const int UnitMeterBarHeight = 7;
     private readonly Dictionary<ContentId, UnitDefinition> _units = new();
@@ -292,6 +293,23 @@ public partial class GodotPlayableRunMain : Control
     private void BeginReadyEncounter()
     {
         AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,"Settlement Continue requested the next encounter","EncounterNavigationEvent"));
+        RunSessionResult resumed = _run!.ResumeRun();
+        if (!resumed.Succeeded)
+        {
+            SetStatus(resumed.ErrorCode);
+            return;
+        }
+        if (resumed.EncounterRequest is EncounterRequest pendingRequest)
+        {
+            StartBattle(pendingRequest);
+            return;
+        }
+        if (resumed.Snapshot?.ActiveRun is not { Phase: PureRunPhase.Ready } ||
+            resumed.Snapshot.ActiveRun.PendingProgression.Count > 0)
+        {
+            RouteRunState(resumed.Snapshot!);
+            return;
+        }
         RunSessionResult begun = _run!.BeginEncounter();
         if (!begun.Succeeded || begun.EncounterRequest is null) { SetStatus(begun.ErrorCode); return; }
         StartBattle(begun.EncounterRequest);
@@ -381,19 +399,25 @@ public partial class GodotPlayableRunMain : Control
         BattleUiUnitSnapshot activeSnapshot=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
         if(_hoverInfo is not null)_hoverInfo.Text=$"{EncounterLabel(_currentEncounterId!.Value)} | {activeSnapshot.UnitId.Value}\nHP {activeSnapshot.CurrentHealth}/{activeSnapshot.MaxHealth}  MP {activeSnapshot.CurrentMana}/{activeSnapshot.MaxMana}\nStatus: {string.Join(", ",activeSnapshot.StatusIds.Select(id=>id.Value))}";
         bool aiPlayback=_battle.HasPendingAutomaticFrames||_presentationInputLocked;
-        Button moveButton=Button("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(moveButton);
+        Button moveButton=ActionButton("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(moveButton);
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
         foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
         {
             BattleUiUnitSnapshot activeUnit=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
             int uses=activeUnit.SuccessfulSkillUses.TryGetValue(skill.ContentId,out int count)?count:0;
             string? usageFailure=skill.IsBasicAbility&&uses>=1?"basic_ability_already_used":!skill.IsBasicAbility&&skill.MaxUsesPerTurn>0&&uses>=skill.MaxUsesPerTurn?"ability_use_limit_reached":null;
-            Button skillButton=Button($"{skill.ContentId.Value}  MP {skill.ManaCost}{(usageFailure is null?string.Empty:"  [USED]")}", () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??SkillTooltip(skill);_skillPanel.AddChild(skillButton);
+            string displayName = _skillUi.TryGetValue(skill.ContentId, out SkillUiMetadata? metadata)
+                ? metadata.DisplayName
+                : skill.ContentId.Value.Split('.').Reverse().Skip(skill.Level > 0 ? 1 : 0).FirstOrDefault() ?? skill.ContentId.Value;
+            Button skillButton=ActionButton(FormatBattleActionLabel(displayName, skill.ManaCost, usageFailure is not null), () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??SkillTooltip(skill);_skillPanel.AddChild(skillButton);
         }
         foreach(SkillDefinition passive in snapshot.ActiveSkills.Where(skill=>skill.IsPassive))_skillPanel.AddChild(Label($"Passive: {passive.ContentId.Value}",16));
         if(_endTurnButton is not null)_endTurnButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;
         ApplyHighlights(snapshot);
-        _board.FollowActiveActor(_actors.GetValueOrDefault(snapshot.ActiveUnitId));
+        bool presentationPlaying = _presentationPlayer?.IsPlaying ?? false;
+        _board.FollowActiveActor(ShouldShowActiveMarker(_presentationInputLocked, presentationPlaying)
+            ? _actors.GetValueOrDefault(snapshot.ActiveUnitId)
+            : null);
         if(_turnOrder is not null)_turnOrder.Text=$"Round {snapshot.Round} | Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
         RefreshLog();
     }
@@ -1087,16 +1111,15 @@ public partial class GodotPlayableRunMain : Control
 
     private void BuildPauseMenu(Control root, bool controlsBattlePlayback = true)
     {
-        var overlay = new ColorRect { Color = new Color(0,0,0,.62f), Visible = false, MouseFilter = MouseFilterEnum.Stop };
+        var overlay = new ColorRect { Color = new Color(0,0,0,.72f), Visible = false, MouseFilter = MouseFilterEnum.Stop, ZIndex = PauseOverlayZIndex };
         overlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         root.AddChild(overlay); _pauseMenu = overlay; _pauseMenuControlsBattlePlayback = controlsBattlePlayback;
-        var menu = new VBoxContainer { Position = new Vector2(620,190), Size = new Vector2(360,500) };
+        var menu = new VBoxContainer { Position = new Vector2(620,220), Size = new Vector2(360,360) };
         overlay.AddChild(menu);
         menu.AddChild(Label("PAUSED\nGame is paused",30));
         menu.AddChild(Button("CONTINUE",ClosePauseMenu));
         menu.AddChild(Button("OPTIONS",()=>ShowPauseOptions(menu)));
         menu.AddChild(Button("MAIN MENU",()=>{ClosePauseMenu();ShowHome();}));
-        menu.AddChild(Button("SAVE AND QUIT",()=>GetTree().Quit()));
     }
 
     private void ShowPauseOptions(VBoxContainer menu)
@@ -1178,6 +1201,21 @@ public partial class GodotPlayableRunMain : Control
     {
         var button = new Button { Text = text, CustomMinimumSize = new Vector2(118, 44) }; button.AddThemeFontSizeOverride("font_size", 15); button.Pressed += action; return button;
     }
+    private static Button ActionButton(string text, Action action)
+    {
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(168, 54) };
+        button.AddThemeFontSizeOverride("font_size", 15);
+        button.Pressed += action;
+        return button;
+    }
+    internal static string FormatBattleActionLabel(string displayName, int manaCost, bool used)
+    {
+        string detail = manaCost > 0 ? $"MP {manaCost}" : string.Empty;
+        if (used) detail = string.IsNullOrEmpty(detail) ? "Used" : $"{detail} · Used";
+        return string.IsNullOrEmpty(detail) ? displayName : $"{displayName}\n{detail}";
+    }
+    internal static bool ShouldShowActiveMarker(bool presentationInputLocked, bool presentationPlaying) =>
+        !presentationInputLocked && !presentationPlaying;
     private static Label Label(string text, int size) { var label = new Label { Text = text }; label.AddThemeFontSizeOverride("font_size", size); return label; }
     private static Label LabelAt(Control parent, string text, Vector2 position, int size) { Label label = Label(text, size); label.Position = position; parent.AddChild(label); return label; }
     private void SetStatus(string? text) { if (_status is not null) _status.Text = text ?? string.Empty; }
