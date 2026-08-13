@@ -359,7 +359,7 @@ public partial class GodotPlayableRunMain : Control
         foreach (BattleUiUnitSnapshot unit in visible)
         {
             if(!_actors.TryGetValue(unit.UnitId,out GodotUnitActor? actor)||!GodotObject.IsInstanceValid(actor))
-            {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));_board.AddChild(actor);_actors[unit.UnitId]=actor;}
+            {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));actor.ConfigurePresentation(_presentationProfile??new StandardUnitPresentationResource());_board.AddChild(actor);_actors[unit.UnitId]=actor;}
             if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
             actor.SetSpearHeld(unit.DefinitionId.Value != "unit.pure-run.amazon" || !snapshot.DroppedSpears.ContainsKey(unit.UnitId));

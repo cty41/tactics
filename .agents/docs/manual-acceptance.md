@@ -88,6 +88,19 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Event-derived targets, alpha hit ordering, spear state projection, console guards, and renderer smoke are asserted; visual parity remains manual.
 - User verdict: none after latest fixes.
 
+### MQA-GODOT-UNIT-MOTION-CONTACT — Unit motion, hit, defeat, and ground contact
+
+- Status: `pending`
+- Source: Phase 8 presentation parity fix after user screenshot feedback
+- Reopen reason: Standard Unit presentation now adds Unity-equivalent move sway, hit recoil, lethal collapse, corpse landing, and a tighter shadow contact offset.
+- Action: In one battle, move at least two cells, receive a nonlethal hit, defeat one unit, pause midway, then resume at 0.5× and 4×.
+- Expected: The Body sways and lifts while the root moves continuously; nonlethal hit recoils/rotates/squashes and recovers; lethal hit compresses before the death Sprite lands; Shadow and overlays do not inherit Body deformation; feet visually contact the shadow without a large gap.
+- Observe: Unit Body, feet, Shadow, status layer and HP/MP anchor during Move, Hit and Defeat.
+- Preserve on failure: Short video or sequential screenshots, actor/unit, speed, cue type, and Godot Output.
+- Save boundary: Uses the current battle checkpoint; presentation speed and pause do not alter gameplay state.
+- Automated evidence: Frozen profile values, Body-only transform paths, interrupt cleanup, serial cue order, GdUnit, Compatibility and Forward+ are asserted; motion feel and contact spacing remain manual. Hit Action Pose textures are not claimed migrated and use the programmatic fallback.
+- User verdict: User reported missing sway, death flattening, hit Sprite behavior, and excessive foot-shadow spacing before this fix.
+
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
 - Status: `pending`
@@ -139,5 +152,6 @@ No current items.
 5. `MQA-GODOT-PROGRESSION-ATOMIC`
 6. `MQA-GODOT-INVENTORY`
 7. `MQA-GODOT-HUD-SKILL-PRESENTATION`
-8. `MQA-GODOT-FULL-RUN`
-9. `MQA-GODOT-RELOAD-OUTPUT`
+8. `MQA-GODOT-UNIT-MOTION-CONTACT`
+9. `MQA-GODOT-FULL-RUN`
+10. `MQA-GODOT-RELOAD-OUTPUT`

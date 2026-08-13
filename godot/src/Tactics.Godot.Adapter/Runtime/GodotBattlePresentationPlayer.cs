@@ -10,6 +10,8 @@ public partial class GodotBattlePresentationPlayer : Node
 {
     private readonly List<Tween> _activeTweens = new();
     private readonly List<Node> _transientNodes = new();
+    private readonly HashSet<GodotUnitActor> _animatedActors = new();
+    private readonly Dictionary<GodotUnitActor, Vector2> _rootBaselines = new();
     private StandardUnitPresentationResource _profile = new();
     private float _speed = 1f;
     private readonly Dictionary<string, SkillPresentationResource> _skillProfiles = new(StringComparer.Ordinal);
@@ -68,6 +70,10 @@ public partial class GodotBattlePresentationPlayer : Node
         sequence.Finished += () =>
         {
             _activeTweens.Remove(sequence);
+            foreach (GodotUnitActor actor in _animatedActors.Where(GodotObject.IsInstanceValid))
+                actor.RestoreTransientBodyPose();
+            _animatedActors.Clear();
+            _rootBaselines.Clear();
             FrameFinished?.Invoke();
         };
     }
@@ -91,6 +97,12 @@ public partial class GodotBattlePresentationPlayer : Node
         foreach (Tween tween in _activeTweens)
             if (GodotObject.IsInstanceValid(tween)) tween.Kill();
         _activeTweens.Clear();
+        foreach (GodotUnitActor actor in _animatedActors.Where(GodotObject.IsInstanceValid))
+            actor.RestoreTransientBodyPose();
+        foreach ((GodotUnitActor actor, Vector2 baseline) in _rootBaselines)
+            if (GodotObject.IsInstanceValid(actor)) actor.Position = baseline;
+        _animatedActors.Clear();
+        _rootBaselines.Clear();
         foreach(Node node in _transientNodes)
             if(GodotObject.IsInstanceValid(node))node.QueueFree();
         _transientNodes.Clear();
@@ -105,50 +117,53 @@ public partial class GodotBattlePresentationPlayer : Node
         switch (cue.Kind)
         {
             case PresentationCueKind.Move:
+                TrackActor(actor);
                 actor.Position = IsometricBattleBoardLayout.GridToScreen(cue.Origin);
+                actor.RestoreTransientBodyPose();
+                _animatedActors.Add(actor);
                 GridPoint stepOrigin=cue.Origin;
                 foreach (var cell in cue.Path)
                 {
                     GridPoint from=stepOrigin,to=cell;
                     tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(from,to,actor.PresentationFacing))));
-                    tween.TweenProperty(actor, "position", IsometricBattleBoardLayout.GridToScreen(cell), _profile.MoveSegmentDuration)
-                        .SetTrans(Tween.TransitionType.Linear).SetEase(Tween.EaseType.InOut);
+                    PlayMoveSegment(tween, actor, IsometricBattleBoardLayout.GridToScreen(from),
+                        IsometricBattleBoardLayout.GridToScreen(to));
                     stepOrigin=cell;
                 }
-                tween.TweenInterval(_profile.MoveSettleDuration);
+                PlayBodySettle(tween, actor);
                 break;
             case PresentationCueKind.Melee:
+                TrackActor(actor);
+                _animatedActors.Add(actor);
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayRelease(tween, actor, cue, _profile.MeleeWindupDuration, _profile.MeleeLungeDuration, _profile.MeleeImpactHold, 18f);
                 if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) PlayRecover(tween,actor,cue,_profile.MeleeRecoverDuration);
                 break;
             case PresentationCueKind.Ranged:
+                TrackActor(actor);
+                _animatedActors.Add(actor);
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 PlayRelease(tween, actor, cue, _profile.RangedAimDuration, _profile.RangedReleaseDuration, 0f, -8f);
                 if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) PlayRecover(tween,actor,cue,_profile.RangedRecoverDuration);
                 break;
             case PresentationCueKind.Cast:
+                TrackActor(actor);
+                actor.RestoreTransientBodyPose();
+                _animatedActors.Add(actor);
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
-                Vector2 baseScale = actor.Scale;
-                tween.TweenProperty(actor, "scale", baseScale * 1.12f, _profile.CastChargeDuration).SetTrans(Tween.TransitionType.Sine);
+                if (actor.Body is null) break;
+                tween.TweenProperty(actor.Body, "scale", Vector2.One * 1.12f, _profile.CastChargeDuration).SetTrans(Tween.TransitionType.Sine);
                 tween.TweenInterval(_profile.CastReleaseHold);
                 if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
-                if (recoverAction) tween.TweenProperty(actor, "scale", baseScale, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
+                if (recoverAction) tween.TweenProperty(actor.Body, "scale", Vector2.One, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
                 break;
             case PresentationCueKind.Hit:
-                if (actor.Body is not null)
-                {
-                    Color baseColor = actor.Body.Modulate;
-                    tween.TweenProperty(actor.Body, "modulate", new Color(1f, 0.4f, 0.4f, baseColor.A), _profile.HitRecoilDuration);
-                    tween.TweenProperty(actor.Body, "modulate", baseColor, _profile.HitRecoverDuration);
-                }
+                PlayHitReaction(tween, actor, cue, actors);
                 break;
             case PresentationCueKind.Defeat:
-                tween.TweenInterval(_profile.HitRecoilDuration);
-                tween.TweenCallback(Callable.From(() => { if (GodotObject.IsInstanceValid(actor)) actor.SetDeathVisual(true); }));
-                tween.TweenInterval(_profile.CorpseDropDuration);
+                PlayCorpseLanding(tween, actor);
                 break;
             case PresentationCueKind.CorpseRemoved:
                 tween.TweenCallback(Callable.From(() => { if (GodotObject.IsInstanceValid(actor)) actor.QueueFree(); }));
@@ -156,12 +171,119 @@ public partial class GodotBattlePresentationPlayer : Node
         }
     }
 
+    private void TrackActor(GodotUnitActor actor)
+    {
+        _animatedActors.Add(actor);
+        _rootBaselines.TryAdd(actor, actor.Position);
+    }
+
+    private void PlayMoveSegment(Tween tween, GodotUnitActor actor, Vector2 origin, Vector2 destination)
+    {
+        if (actor.Body is null) return;
+        Vector2 direction = origin.DirectionTo(destination);
+        Vector2 perpendicular = new(-direction.Y, direction.X);
+        float half = _profile.MoveCycleDuration * .5f;
+        float tilt = Mathf.DegToRad(direction.X >= 0f ? -_profile.MoveTiltDegrees : _profile.MoveTiltDegrees);
+        Vector2 midpoint = origin.Lerp(destination, .5f);
+
+        tween.TweenProperty(actor, "position", midpoint, half).SetTrans(Tween.TransitionType.Linear);
+        tween.Parallel().TweenProperty(actor.Body, "position",
+            perpendicular * _profile.MoveSwayPixels + Vector2.Up * _profile.MoveLiftPixels, half)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "rotation", tilt, half)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "scale", new Vector2(.98f, 1.02f), half)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+
+        tween.TweenProperty(actor, "position", destination, half).SetTrans(Tween.TransitionType.Linear);
+        tween.Parallel().TweenProperty(actor.Body, "position", -perpendicular * _profile.MoveSwayPixels, half)
+            .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+        tween.Parallel().TweenProperty(actor.Body, "rotation", -tilt * .65f, half)
+            .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+        tween.Parallel().TweenProperty(actor.Body, "scale", Vector2.One, half)
+            .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+    }
+
+    private void PlayBodySettle(Tween tween, GodotUnitActor actor)
+    {
+        if (actor.Body is null) return;
+        tween.TweenProperty(actor.Body, "position", Vector2.Zero, _profile.MoveSettleDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "rotation", 0f, _profile.MoveSettleDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "scale", Vector2.One, _profile.MoveSettleDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+    }
+
+    private void PlayHitReaction(Tween tween, GodotUnitActor actor, BattlePresentationCue cue,
+        IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
+    {
+        if (actor.Body is null) return;
+        actor.RestoreTransientBodyPose();
+        _animatedActors.Add(actor);
+        Vector2 incoming = Vector2.Right;
+        if (cue.InstigatorId is UnitInstanceId sourceId && actors.TryGetValue(sourceId, out GodotUnitActor? source) &&
+            GodotObject.IsInstanceValid(source))
+            incoming = source.Position.DirectionTo(actor.Position);
+        Vector2 recoil = incoming * _profile.HitRecoilPixels;
+        float sign = incoming.X >= 0f ? -1f : 1f;
+        float rotation = Mathf.DegToRad(sign * _profile.HitRotationDegrees);
+        Color baseColor = actor.Body.Modulate;
+
+        tween.TweenProperty(actor.Body, "position", recoil, _profile.HitRecoilDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "rotation", rotation, _profile.HitRecoilDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "scale", new Vector2(1.06f, .92f), _profile.HitRecoilDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "modulate", new Color(1f, .4f, .4f, baseColor.A),
+            _profile.HitRecoilDuration);
+        tween.TweenProperty(actor.Body, "rotation", -rotation * .45f, _profile.HitShakeDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.InOut);
+        tween.TweenProperty(actor.Body, "position", Vector2.Zero, _profile.HitRecoverDuration)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "rotation", 0f, _profile.HitRecoverDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "scale", Vector2.One, _profile.HitRecoverDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.Parallel().TweenProperty(actor.Body, "modulate", baseColor, _profile.HitRecoverDuration);
+    }
+
+    private void PlayCorpseLanding(Tween tween, GodotUnitActor actor)
+    {
+        if (actor.Body is null) return;
+        _animatedActors.Add(actor);
+        tween.TweenProperty(actor.Body, "scale", _profile.LethalCollapseScale, _profile.LethalCollapseDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+        tween.Parallel().TweenProperty(actor.Body, "rotation", 0f, _profile.LethalCollapseDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+        tween.TweenCallback(Callable.From(() =>
+        {
+            if (!GodotObject.IsInstanceValid(actor) || actor.Body is null) return;
+            actor.SetDeathVisual(true);
+            actor.Body.Position = Vector2.Up * _profile.CorpseStartHeightPixels;
+            actor.Body.Scale = Vector2.One * .85f;
+            actor.Body.Rotation = 0f;
+        }));
+        tween.TweenProperty(actor.Body, "position", Vector2.Zero, _profile.CorpseDropDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+        tween.Parallel().TweenProperty(actor.Body, "scale", Vector2.One, _profile.CorpseDropDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+        tween.TweenProperty(actor.Body, "scale", new Vector2(1.08f, .88f), _profile.CorpseImpactDuration)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        tween.TweenProperty(actor.Body, "scale", Vector2.One, _profile.CorpseSettleDuration)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+    }
+
     private void RecoverAction(Tween tween, BattlePresentationCue cue,
         IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
     {
         if (!actors.TryGetValue(cue.ActorId, out GodotUnitActor? actor) || !GodotObject.IsInstanceValid(actor)) return;
         if (cue.Kind == PresentationCueKind.Cast)
-            tween.TweenProperty(actor, "scale", actor.Scale, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
+        {
+            if (actor.Body is not null)
+                tween.TweenProperty(actor.Body, "scale", Vector2.One, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
+        }
         else
             PlayRecover(tween, actor, cue, cue.Kind == PresentationCueKind.Melee
                 ? _profile.MeleeRecoverDuration : _profile.RangedRecoverDuration);

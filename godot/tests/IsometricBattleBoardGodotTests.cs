@@ -104,6 +104,35 @@ public sealed class IsometricBattleBoardGodotTests
     }
 
     [TestCase]
+    [RequireGodotRuntime]
+    public void StandardUnitProfileCarriesFrozenUnityMotionAndContactContract()
+    {
+        var profile = new StandardUnitPresentationResource();
+        AssertThat(profile.MoveCycleDuration).IsEqualApprox(.22f, .0001f);
+        AssertThat(profile.MoveTiltDegrees).IsEqualApprox(5f, .0001f);
+        AssertThat(profile.MoveLiftPixels).IsEqualApprox(3f, .0001f);
+        AssertThat(profile.MoveSwayPixels).IsEqualApprox(3f, .0001f);
+        AssertThat(profile.HitShakeDuration).IsEqualApprox(.07f, .0001f);
+        AssertThat(profile.HitRecoilPixels).IsEqualApprox(10f, .0001f);
+        AssertThat(profile.LethalCollapseScale).IsEqual(new Vector2(1.02f, .58f));
+        AssertThat(profile.CorpseStartHeightPixels).IsEqualApprox(8f, .0001f);
+        AssertThat(profile.ShadowContactOffsetY).IsLess(0f);
+    }
+
+    [TestCase]
+    public void PresentationPlayerIncludesMoveSwayHitRecoilAndCorpseLanding()
+    {
+        string source = File.ReadAllText(Path.Combine("src", "Tactics.Godot.Adapter", "Runtime",
+            "GodotBattlePresentationPlayer.cs"));
+        AssertThat(source.Contains("PlayMoveSegment", StringComparison.Ordinal)).IsTrue();
+        AssertThat(source.Contains("PlayHitReaction", StringComparison.Ordinal)).IsTrue();
+        AssertThat(source.Contains("PlayCorpseLanding", StringComparison.Ordinal)).IsTrue();
+        AssertThat(source.Contains("LethalCollapseScale", StringComparison.Ordinal)).IsTrue();
+        AssertThat(source.Contains("actor.Body, \"scale\"", StringComparison.Ordinal)).IsTrue();
+        AssertThat(source.Contains("_rootBaselines", StringComparison.Ordinal)).IsTrue();
+    }
+
+    [TestCase]
     public void PlaybackSpeedSupportsUnityCycleValues()
     {
         AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(.5f)).IsTrue();

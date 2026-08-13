@@ -54,6 +54,26 @@ public partial class GodotUnitActor : Node2D
         ApplyVisual();
     }
 
+    /// <summary>Applies presentation-only contact tuning without changing the generated Unit definition.</summary>
+    public void ConfigurePresentation(StandardUnitPresentationResource profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        if (_definition is null)
+            throw new InvalidOperationException("Unit actor must be configured before presentation tuning.");
+        EnsureNodes();
+        Shadow!.Position = _definition.ShadowOffset + new Vector2(0f, profile.ShadowContactOffsetY);
+    }
+
+    public void RestoreTransientBodyPose()
+    {
+        if (_definition is null) return;
+        if (Body is null) return;
+        Body.Position = Vector2.Zero;
+        Body.Rotation = 0f;
+        Body.Scale = Vector2.One;
+        ApplyTint();
+    }
+
     public void SetFacing(GodotUnitFacing facing)
     {
         if (!Enum.IsDefined(facing))
