@@ -66,6 +66,11 @@ public partial class GodotPlayableRunMain : Control
     private GodotRogueMapView? _mapView;
     private Label? _mapDetail;
     private int _catalogCount;
+    private string? _inventoryCharacterId;
+    private bool _inventoryEquipmentTab = true;
+    private string? _inventorySelectedInstanceId;
+
+    private enum InventoryReturnTarget { Home, Settlement, RunRoute }
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
         _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 124;
@@ -180,7 +185,7 @@ public partial class GodotPlayableRunMain : Control
         continueRun.Disabled = !loaded.Succeeded || loaded.Snapshot is null ||
             (loaded.Snapshot.ActiveRun is null && loaded.Snapshot.PendingRunSetup is null && loaded.Snapshot.TerminalSummary is null);
         menu.AddChild(continueRun);
-        if (loaded.Snapshot?.ActiveRun is not null) menu.AddChild(Button("Inventory", () => ShowInventory(loaded.Snapshot.ActiveRun)));
+        if (loaded.Snapshot?.ActiveRun is not null) menu.AddChild(Button("Inventory", () => ShowInventory(loaded.Snapshot.ActiveRun, InventoryReturnTarget.Home)));
         menu.AddChild(Button("Quit", () => GetTree().Quit()));
         string status = loaded.Snapshot?.PendingRunSetup is PendingRunSetup setup
             ? $"New Run setup: {setup.CurrentCharacterId}"
@@ -576,8 +581,9 @@ public partial class GodotPlayableRunMain : Control
         };
         Control root = NewPage("BATTLE SETTLEMENT", $"{completed} completed → Next: {next}");
         AddRunShell(root, run, "Settlement");
-        LabelAt(root, $"Gold: {run.Gold}\nItems: {string.Join(", ", run.AcquiredItems.Select(id => id.Value))}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
-        root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run)),new Vector2(480,520),new Vector2(260,60)));
+        string itemResult = run.AcquiredItems.Count == 0 ? "No item drop" : string.Join(", ", run.AcquiredItems.Select(id => id.Value));
+        LabelAt(root, $"Gold: {run.Gold}\nItems: {itemResult}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
+        root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run, InventoryReturnTarget.Settlement)),new Vector2(480,520),new Vector2(260,60)));
         PendingProgression? pending=run.PendingProgression.FirstOrDefault();
         if(pending is not null)root.AddChild(PlaceControl(Button("Complete Progression",()=>ShowProgression(run,pending)),new Vector2(780,520),new Vector2(320,60)));
         bool continueRequested=false;
@@ -815,27 +821,103 @@ public partial class GodotPlayableRunMain : Control
     private void ShowReadyForBoss(PureRunState run){Control root=NewPage("READY FOR LAYER 7","Layer 6 committed. The Special Boss is the terminal encounter.");root.AddChild(PlaceControl(Button("Begin Special Boss",BeginBoss),new Vector2(650,560),new Vector2(300,70)));}
     private void BeginBoss(){RunSessionResult result=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).BeginBoss(state,LayerFourMap()));if(!result.Succeeded||result.EncounterRequest is null){SetStatus(result.ErrorCode);return;}StartBattle(result.EncounterRequest);}
 
-    private void ShowInventory(PureRunState run)
+    private void ShowInventory(PureRunState run) => ShowInventory(run, InventoryReturnTarget.RunRoute);
+
+    private void ShowInventory(PureRunState run, InventoryReturnTarget returnTarget)
     {
-        Control root=NewPage("INVENTORY","Functional placeholder — equipment, carried consumable, attributes and skill levels");
+        if (_inventoryCharacterId is null || run.Party.All(value => value.CharacterId != _inventoryCharacterId))
+            _inventoryCharacterId = run.Party[0].CharacterId;
+        RunCharacterState selectedCharacter = run.Party.Single(value => value.CharacterId == _inventoryCharacterId);
+        Control root=NewPage("INVENTORY","Backpack, equipment loadout, carried consumable and derived character state");
         AddRunShell(root,run,"Inventory");
-        var columns=new HBoxContainer{Position=new Vector2(90,150),Size=new Vector2(1420,610)};root.AddChild(columns);
+        var columns=new HBoxContainer{Position=new Vector2(65,150),Size=new Vector2(1470,610)};root.AddChild(columns);
+        var characters=new VBoxContainer{CustomMinimumSize=new Vector2(390,580)};columns.AddChild(characters);
         foreach(RunCharacterState character in run.Party)
         {
-            var panel=new VBoxContainer{CustomMinimumSize=new Vector2(440,580)};columns.AddChild(panel);
-            panel.AddChild(Label($"{character.CharacterId}  Lv{character.Level}\nHP {character.CurrentHealth}/{character.MaxHealth}  MP {character.CurrentMana}/{character.MaxMana}\nSTR {character.Attributes.Strength} AGI {character.Attributes.Agility} CON {character.Attributes.Constitution}\nINT {character.Attributes.Intelligence} CHA {character.Attributes.Charisma} LUCK {character.Attributes.Luck}",20));
-            panel.AddChild(Label("Skills:\n"+string.Join('\n',character.LearnedSkillStates.Select(value=>$"{value.BranchId} Lv{value.Level}")),17));
-            panel.AddChild(Label("Equipment:\n"+string.Join('\n',character.Equipment.Select(value=>$"{value.Slot}: {value.DefinitionId.Value}")),17));
-            panel.AddChild(Label("Carried: "+(character.CarriedConsumables.FirstOrDefault()?.DefinitionId.Value??"none"),17));
-            foreach(RunEquipmentState equipped in character.Equipment)
-                panel.AddChild(Button($"Unequip {equipped.Slot}",()=>CommitMutation(state=>new RunInventoryProgressionService().Unequip(state,state.Revision,character.CharacterId,equipped.Slot))));
-            foreach(RunEquipmentState item in run.BackpackEquipment)
-                panel.AddChild(Button($"Equip {_equipment.GetValueOrDefault(item.DefinitionId)?.DisplayName ?? item.DefinitionId.Value}",()=>CommitMutation(state=>new RunInventoryProgressionService().Equip(state,state.Revision,character.CharacterId,item.InstanceId,_equipment,_units[character.UnitContentId].Speed))));
-            foreach(BattleConsumableState item in run.BackpackConsumables)
-                panel.AddChild(Button($"Carry {item.DefinitionId.Value}",()=>CommitMutation(state=>new RunInventoryProgressionService().Carry(state,state.Revision,character.CharacterId,item.InstanceId))));
-            if(character.CarriedConsumables.Count>0)panel.AddChild(Button("Unload Consumable",()=>CommitMutation(state=>new RunInventoryProgressionService().Unload(state,state.Revision,character.CharacterId))));
+            RunCharacterState captured = character;
+            characters.AddChild(Button($"{(captured.CharacterId == selectedCharacter.CharacterId ? "▶ " : string.Empty)}{captured.CharacterId}  Lv{captured.Level}", () =>
+            {
+                _inventoryCharacterId = captured.CharacterId; _inventorySelectedInstanceId = null;
+                ShowInventory(run, returnTarget);
+            }));
         }
-        root.AddChild(PlaceControl(Button("Back to Map",()=>ShowRunMap(run)),new Vector2(650,800),new Vector2(300,55)));
+        characters.AddChild(Label($"\nHP {selectedCharacter.CurrentHealth}/{selectedCharacter.MaxHealth}  MP {selectedCharacter.CurrentMana}/{selectedCharacter.MaxMana}\n"+
+            $"STR {selectedCharacter.Attributes.Strength} AGI {selectedCharacter.Attributes.Agility} CON {selectedCharacter.Attributes.Constitution}\n"+
+            $"INT {selectedCharacter.Attributes.Intelligence} CHA {selectedCharacter.Attributes.Charisma} LUCK {selectedCharacter.Attributes.Luck}\n\nSkills:\n"+
+            string.Join('\n',selectedCharacter.LearnedSkillStates.Select(value=>$"{value.BranchId} Lv{value.Level}")),18));
+
+        var backpack=new VBoxContainer{CustomMinimumSize=new Vector2(500,580)};columns.AddChild(backpack);
+        var tabs=new HBoxContainer();backpack.AddChild(tabs);
+        tabs.AddChild(Button(_inventoryEquipmentTab?"[ Equipment ]":"Equipment",()=>{_inventoryEquipmentTab=true;_inventorySelectedInstanceId=null;ShowInventory(run,returnTarget);}));
+        tabs.AddChild(Button(!_inventoryEquipmentTab?"[ Consumables ]":"Consumables",()=>{_inventoryEquipmentTab=false;_inventorySelectedInstanceId=null;ShowInventory(run,returnTarget);}));
+        if (_inventoryEquipmentTab)
+        {
+            if (run.BackpackEquipment.Count == 0) backpack.AddChild(Label("Equipment backpack is empty.\nEquipment is obtained from Store or Mystery routes.",18));
+            foreach (RunEquipmentState item in run.BackpackEquipment)
+            {
+                RunEquipmentState captured=item;
+                backpack.AddChild(Button($"{captured.InstanceId.Value}  |  {_equipment[captured.DefinitionId].DisplayName}",()=>
+                { _inventorySelectedInstanceId=captured.InstanceId.Value; ShowInventory(run,returnTarget); }));
+            }
+        }
+        else
+        {
+            if (run.BackpackConsumables.Count == 0) backpack.AddChild(Label("Consumable backpack is empty.\nNormal battles use the frozen deterministic drop chance.",18));
+            foreach (BattleConsumableState item in run.BackpackConsumables)
+            {
+                BattleConsumableState captured=item;
+                backpack.AddChild(Button($"{captured.InstanceId.Value}  |  {_consumables[captured.DefinitionId].DisplayName}  {captured.RemainingCharges}/{captured.MaxCharges}",()=>
+                { _inventorySelectedInstanceId=captured.InstanceId.Value; ShowInventory(run,returnTarget); }));
+            }
+        }
+
+        var detail=new VBoxContainer{CustomMinimumSize=new Vector2(520,580)};columns.AddChild(detail);
+        detail.AddChild(Label($"Loadout — {selectedCharacter.CharacterId}",22));
+        foreach(EquipmentSlot slot in Enum.GetValues<EquipmentSlot>())
+        {
+            RunEquipmentState? equipped=selectedCharacter.Equipment.FirstOrDefault(value=>value.Slot==slot);
+            detail.AddChild(Label($"{slot}: {(equipped is null?"empty":_equipment[equipped.DefinitionId].DisplayName)}",17));
+            if(equipped is not null)
+            {
+                EquipmentSlot capturedSlot=slot;
+                detail.AddChild(Button($"Unequip {slot}",()=>CommitInventoryMutation(state=>new RunInventoryProgressionService().Unequip(state,state.Revision,selectedCharacter.CharacterId,capturedSlot,_equipment,_units[selectedCharacter.UnitContentId].Speed),returnTarget)));
+            }
+        }
+        detail.AddChild(Label($"Carried: {(selectedCharacter.CarriedConsumables.FirstOrDefault() is BattleConsumableState carried?_consumables[carried.DefinitionId].DisplayName:"empty")}",17));
+        if(selectedCharacter.CarriedConsumables.Count>0)
+            detail.AddChild(Button("Unload carried consumable",()=>CommitInventoryMutation(state=>new RunInventoryProgressionService().Unload(state,state.Revision,selectedCharacter.CharacterId),returnTarget)));
+
+        RunEquipmentState? selectedEquipment=run.BackpackEquipment.FirstOrDefault(value=>value.InstanceId.Value==_inventorySelectedInstanceId);
+        BattleConsumableState? selectedConsumable=run.BackpackConsumables.FirstOrDefault(value=>value.InstanceId.Value==_inventorySelectedInstanceId);
+        if(selectedEquipment is not null)
+        {
+            EquipmentDefinition definition=_equipment[selectedEquipment.DefinitionId];
+            detail.AddChild(Label($"\n{definition.DisplayName}\n{definition.Slot} | {definition.Rarity} | Price {definition.Price}\nSource: Store / Mystery\nBonuses: STR {definition.AttributeBonuses.Strength} AGI {definition.AttributeBonuses.Agility} CON {definition.AttributeBonuses.Constitution} INT {definition.AttributeBonuses.Intelligence} CHA {definition.AttributeBonuses.Charisma} LUCK {definition.AttributeBonuses.Luck}",17));
+            detail.AddChild(Button(selectedCharacter.Equipment.Any(value=>value.Slot==definition.Slot)?"Replace equipped item":"Equip",()=>CommitInventoryMutation(state=>new RunInventoryProgressionService().Equip(state,state.Revision,selectedCharacter.CharacterId,selectedEquipment.InstanceId,_equipment,_units[selectedCharacter.UnitContentId].Speed),returnTarget)));
+        }
+        else if(selectedConsumable is not null)
+        {
+            ConsumableDefinition definition=_consumables[selectedConsumable.DefinitionId];
+            detail.AddChild(Label($"\n{definition.DisplayName}\nPrice {definition.Price}\n{definition.Description}\nSource: deterministic Battle drop / Store / Mystery",17));
+            detail.AddChild(Button(selectedCharacter.CarriedConsumables.Count>0?"Replace carried consumable":"Carry",()=>CommitInventoryMutation(state=>new RunInventoryProgressionService().Carry(state,state.Revision,selectedCharacter.CharacterId,selectedConsumable.InstanceId),returnTarget)));
+        }
+        root.AddChild(PlaceControl(Button("Back",()=>ReturnFromInventory(run,returnTarget)),new Vector2(650,815),new Vector2(300,55)));
+    }
+
+    private void CommitInventoryMutation(Func<PureRunState,RunMutationResult> mutation, InventoryReturnTarget returnTarget)
+    {
+        RunSessionResult result=_run!.ApplyMutation(mutation);
+        if(!result.Succeeded||result.Snapshot?.ActiveRun is not PureRunState run){SetStatus(result.ErrorCode);return;}
+        _inventorySelectedInstanceId=null;
+        ShowInventory(run,returnTarget);
+    }
+
+    private void ReturnFromInventory(PureRunState run, InventoryReturnTarget returnTarget)
+    {
+        _inventorySelectedInstanceId=null;
+        if(returnTarget==InventoryReturnTarget.Home){ShowHome();return;}
+        if(returnTarget==InventoryReturnTarget.Settlement){ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null));return;}
+        RouteRunState(new PureRunSaveSnapshot(run.Revision,run,null));
     }
 
     private void ShowProgression(PureRunState run, PendingProgression pending)

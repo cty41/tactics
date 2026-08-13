@@ -2,6 +2,7 @@ using GdUnit4;
 using Godot;
 using System.Reflection;
 using Tactics.Core.Content;
+using Tactics.Core.Items;
 using Tactics.Core.Runs;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
@@ -157,6 +158,35 @@ public class PlayableRunUiGodotTests
         string[] buttonTexts = Descendants<Button>(ui).Select(button => button.Text).ToArray();
         AssertThat(buttonTexts.Count(text => text.StartsWith("Learn ", StringComparison.Ordinal) || text.StartsWith("Upgrade ", StringComparison.Ordinal))).IsLessEqual(3);
         AssertThat(buttonTexts.Any(text => text.Contains("Upgrade Fireball Lv1 → Lv2", StringComparison.Ordinal))).IsTrue();
+        ui.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void InventoryRendersSingleBackpackAndActionableLoadoutColumns()
+    {
+        var ui = new GodotPlayableRunMain(); ui._Ready();
+        UnitAttributes attributes = new(5, 5, 5, 6, 5, 5);
+        RunCharacterState Character(string id, string unit) => new(id, new ContentId(unit), 1, attributes,
+            20, 20, 5, 15, false, Array.Empty<ContentId>());
+        var equipment = new RunEquipmentState(new ItemInstanceId("qa-sword"),
+            new ContentId("item.equipment.sword-01"), EquipmentSlot.Weapon);
+        var run = new PureRunState("run-inventory", 7, 1, PureRunPhase.Ready, 0,
+            new ContentId("encounter.pure-run.n1"),
+        [
+            Character("pure_run_mage", "unit.pure-run.mage"),
+            Character("pure_run_necromancer", "unit.pure-run.necromancer"),
+            Character("pure_run_amazon", "unit.pure-run.amazon")
+        ], backpackEquipment: [equipment]);
+
+        typeof(GodotPlayableRunMain).GetMethod("ShowInventory", BindingFlags.Instance | BindingFlags.NonPublic,
+            null, [typeof(PureRunState)], null)?.Invoke(ui, [run]);
+        string[] buttons = Descendants<Button>(ui).Select(value => value.Text).ToArray();
+
+        AssertThat(buttons.Count(value => value.Contains("qa-sword", StringComparison.Ordinal))).IsEqual(1);
+        AssertThat(buttons).Contains("[ Equipment ]");
+        AssertThat(buttons).Contains("Consumables");
+        AssertThat(buttons).Contains("Back");
         ui.Free();
     }
 

@@ -82,13 +82,23 @@ public sealed class RunInventoryProgressionService
         return Success(Copy(state, party: Replace(state.Party, updated), backpackEquipment: backpack));
     }
 
-    public RunMutationResult Unequip(PureRunState state, long revision, string characterId, EquipmentSlot slot)
+    public RunMutationResult Unequip(PureRunState state, long revision, string characterId, EquipmentSlot slot,
+        IReadOnlyDictionary<ContentId, EquipmentDefinition>? definitions = null, float baseSpeed = 3f)
     {
         if (state.Revision != revision) return Reject(state, "run.revision_mismatch");
         RunCharacterState? character = state.Party.FirstOrDefault(value => value.CharacterId == characterId);
         RunEquipmentState? item = character?.Equipment.FirstOrDefault(value => value.Slot == slot);
         if (character is null || item is null) return Reject(state, "inventory.slot_empty");
-        RunCharacterState updated = Copy(character, equipment: character.Equipment.Where(value => value.Slot != slot).ToArray());
+        RunEquipmentState[] remaining = character.Equipment.Where(value => value.Slot != slot).ToArray();
+        RunCharacterState updated;
+        if (definitions is not null)
+        {
+            EquipmentStatProjection projection = EquipmentStatProjector.Project(character.Attributes, baseSpeed,
+                remaining.Select(value => definitions[value.DefinitionId]));
+            updated = Copy(character, equipment: remaining, maxHealth: projection.DerivedStats.MaxHealth,
+                maxMana: projection.DerivedStats.MaxMana);
+        }
+        else updated = Copy(character, equipment: remaining);
         return Success(Copy(state, party: Replace(state.Party, updated), backpackEquipment: state.BackpackEquipment.Append(item).ToArray()));
     }
 

@@ -10,6 +10,67 @@ namespace Tactics.Core.Tests;
 public sealed class RunInventoryProgressionTests
 {
     [Test]
+    public void EquipReplacesOccupiedSlotAndKeepsEachInstanceInExactlyOnePlace()
+    {
+        PureRunState state = State();
+        RunCharacterState mage = state.Party[0];
+        var oldItem = new RunEquipmentState(new ItemInstanceId("sword-old"), new ContentId("item.equipment.sword-01"), EquipmentSlot.Weapon);
+        var newItem = new RunEquipmentState(new ItemInstanceId("staff-new"), new ContentId("item.equipment.staff-01"), EquipmentSlot.Weapon);
+        mage = new RunCharacterState(mage.CharacterId, mage.UnitContentId, mage.Level, mage.Attributes,
+            mage.CurrentHealth, mage.MaxHealth, mage.CurrentMana, mage.MaxMana, mage.IsDead, mage.LearnedSkills,
+            [oldItem], mage.CarriedConsumables, mage.LearnedSkillStates);
+        state = new PureRunState(state.RunId, state.Seed, state.Revision, state.Phase, state.EncounterIndex,
+            state.EncounterContentId, [mage, .. state.Party.Skip(1)], state.BackpackConsumables, [newItem]);
+        UnitAttributes zero = new(0, 0, 0, 0, 0, 0);
+        var definitions = new Dictionary<ContentId, EquipmentDefinition>
+        {
+            [oldItem.DefinitionId] = new(oldItem.DefinitionId, "old", "Old Sword", EquipmentSlot.Weapon, ItemRarity.Common, 1, zero),
+            [newItem.DefinitionId] = new(newItem.DefinitionId, "new", "New Staff", EquipmentSlot.Weapon, ItemRarity.Common, 1, zero)
+        };
+
+        RunMutationResult result = new RunInventoryProgressionService().Equip(state, state.Revision,
+            mage.CharacterId, newItem.InstanceId, definitions, 3f);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.State.Party[0].Equipment.Single().InstanceId, Is.EqualTo(newItem.InstanceId));
+            Assert.That(result.State.BackpackEquipment.Single().InstanceId, Is.EqualTo(oldItem.InstanceId));
+            Assert.That(result.State.Party.SelectMany(value => value.Equipment).Concat(result.State.BackpackEquipment)
+                .Select(value => value.InstanceId).Distinct().Count(), Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void UnequipReprojectsDerivedHealthAndManaFromRemainingLoadout()
+    {
+        PureRunState state = State();
+        RunCharacterState mage = state.Party[0];
+        var item = new RunEquipmentState(new ItemInstanceId("armor"), new ContentId("item.equipment.armor"), EquipmentSlot.Armor);
+        UnitAttributes bonus = new(0, 0, 3, 0, 2, 0);
+        var definition = new EquipmentDefinition(item.DefinitionId, "armor", "Armor", EquipmentSlot.Armor,
+            ItemRarity.Common, 1, bonus);
+        mage = new RunCharacterState(mage.CharacterId, mage.UnitContentId, mage.Level, mage.Attributes,
+            mage.CurrentHealth, mage.MaxHealth + 6, mage.CurrentMana, mage.MaxMana + 2, mage.IsDead,
+            mage.LearnedSkills, [item], mage.CarriedConsumables, mage.LearnedSkillStates);
+        state = new PureRunState(state.RunId, state.Seed, state.Revision, state.Phase, state.EncounterIndex,
+            state.EncounterContentId, [mage, .. state.Party.Skip(1)], state.BackpackConsumables, []);
+
+        RunMutationResult result = new RunInventoryProgressionService().Unequip(state, state.Revision,
+            mage.CharacterId, EquipmentSlot.Armor, new Dictionary<ContentId, EquipmentDefinition>
+            { [item.DefinitionId] = definition }, 3f);
+        UnitDerivedStats expected = UnitDerivedStatRules.Calculate(mage.Attributes, 3f);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.State.Party[0].MaxHealth, Is.EqualTo(expected.MaxHealth));
+            Assert.That(result.State.Party[0].MaxMana, Is.EqualTo(expected.MaxMana));
+            Assert.That(result.State.BackpackEquipment.Single().InstanceId, Is.EqualTo(item.InstanceId));
+        });
+    }
+
+    [Test]
     public void CarryReplacesTheSingleSlotAndPreservesInstanceOwnership()
     {
         PureRunState state = State();
