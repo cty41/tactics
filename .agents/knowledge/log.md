@@ -1,7 +1,8 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-13
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:ff33bde1a0858671768e852a9c9ebde0a135bcbdc115e3a379dfb7edf0489fca`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:f969dc5e0edc175699111c07aa2f6c8fd4a5cc0940269dc957f9de7708b90653`。
+* **Fix**: New Run Amazon Poison Spear 三选一改用 canonical `skill.poison-spear.lv1`；Save V5 确定性修复已写入 Active Party、PendingBattle checkpoint、Pending Setup/Progression 的旧错误别名，Run Definition 的全部起始候选进入 Catalog 引用与启动校验，现有 PendingBattle 存档无需删除。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:4f9f82936ce9c67f56a50c9421668551e4e38d2f0cd294273425c3b7847609b0`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:1c9d0c01b7a77c37fee04f0865f3e0ad4342d3bb0141fd2186654e71b141295f`。
 

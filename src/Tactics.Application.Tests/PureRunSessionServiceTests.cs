@@ -27,7 +27,7 @@ public sealed class PureRunSessionServiceTests
 
         Assert.That(service.ChooseStartingSkill("mage", new ContentId("skill.mage.fireball.lv1")).Succeeded, Is.True);
         Assert.That(service.ChooseStartingSkill("necromancer", new ContentId("skill.necromancer.bone-spear.lv1")).Succeeded, Is.True);
-        RunSessionResult completed = service.ChooseStartingSkill("amazon", new ContentId("skill.amazon.poison-spear.lv1"));
+        RunSessionResult completed = service.ChooseStartingSkill("amazon", new ContentId("skill.poison-spear.lv1"));
 
         Assert.Multiple(() =>
         {
@@ -39,8 +39,12 @@ public sealed class PureRunSessionServiceTests
                 {
                     new ContentId("skill.mage.fireball.lv1"),
                     new ContentId("skill.necromancer.bone-spear.lv1"),
-                    new ContentId("skill.amazon.poison-spear.lv1")
+                    new ContentId("skill.poison-spear.lv1")
                 }));
+            RunCharacterState amazon = completed.Snapshot.ActiveRun.Party.Single(value =>
+                value.CharacterId == "amazon");
+            Assert.That(amazon.LearnedSkillStates.Single().BranchId,
+                Is.EqualTo("amazon.poison-spear"));
         });
     }
 
@@ -251,7 +255,7 @@ public sealed class PureRunSessionServiceTests
             new PureRunPartyTemplate("necromancer", new ContentId("unit.pure-run.necromancer"), new ContentId("skill.necromancer.summon-skeleton.lv1"), new UnitAttributes(5,5,5,5,6,5), 1,
                 [new ContentId("skill.necromancer.summon-skeleton.lv1"), new ContentId("skill.necromancer.amplify-damage.lv1"), new ContentId("skill.necromancer.bone-spear.lv1")]),
             new PureRunPartyTemplate("amazon", new ContentId("unit.pure-run.amazon"), new ContentId("skill.amazon.thrust.lv1"), new UnitAttributes(5,6,5,5,5,5), 1,
-                [new ContentId("skill.amazon.thrust.lv1"), new ContentId("skill.amazon.poison-spear.lv1"), new ContentId("skill.amazon.combat-techniques.lv1")])
+                [new ContentId("skill.amazon.thrust.lv1"), new ContentId("skill.poison-spear.lv1"), new ContentId("skill.amazon.combat-techniques.lv1")])
         });
 
     private sealed class MemoryRunStore : IRunSaveStore

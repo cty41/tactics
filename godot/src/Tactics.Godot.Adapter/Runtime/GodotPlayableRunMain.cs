@@ -118,9 +118,7 @@ public partial class GodotPlayableRunMain : Control
                 case SkillDefinitionResource skill:
                     _skills[id] = skill.ToCoreDefinition(); break;
                 case PoisonSpearSkillResource poison:
-                    _skills[id] = new SkillDefinition(id, "amazon.poison_spear", SkillRole.Amazon, SkillKind.Active, 1,
-                        poison.ManaCost, 1, poison.Range, SkillExecutionKind.PoisonSpear, poison.Damage,
-                        SkillDamageKind.Physical, new ContentId("buff.poison"), poison.PoisonTurns, externalDependency: true); break;
+                    _skills[id] = poison.ToCoreDefinition(); break;
                 case AiDefinitionResource ai: _ai[id] = ai.ToCoreDefinition(); break;
                 case BattleLayoutResource layout: _layouts[id] = layout.ToCoreDefinition(); break;
                 case EncounterDefinitionResource encounter:
@@ -169,6 +167,7 @@ public partial class GodotPlayableRunMain : Control
                 Enum.Parse<EncounterClass>(resource.EncounterClassValue));
         }
         _runDefinition=(runResource ?? throw new InvalidOperationException("Run definition is missing.")).ToCoreDefinition();
+        PureRunContentValidator.ValidateSkillReferences(_runDefinition, _skills.Keys);
         _run = new PureRunSessionService(_runDefinition, new GodotRunSaveStore());
     }
 

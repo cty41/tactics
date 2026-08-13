@@ -146,6 +146,8 @@ public sealed record RunCharacterState
     private static RunLearnedSkillState ToLegacySkillState(ContentId id)
     {
         string value = id.Value;
+        if (value == "skill.poison-spear.lv1")
+            return new RunLearnedSkillState("amazon.poison-spear", 1, id);
         int marker = value.LastIndexOf(".lv", StringComparison.Ordinal);
         int level = marker >= 0 && int.TryParse(value[(marker + 3)..], out int parsed) ? parsed : 1;
         string branch = marker >= 0 ? value["skill.".Length..marker] : value.StartsWith("skill.", StringComparison.Ordinal) ? value["skill.".Length..] : value;

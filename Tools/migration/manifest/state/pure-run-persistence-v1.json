@@ -25,12 +25,12 @@
     {
       "resourcePath": "res://content/runs/ContentCatalog.tres",
       "resourceUid": "uid://dbr7tp88sdkcq",
-      "targetHash": "sha256:d4a93179b5982b8c9aa10ab27d956cc2c193bf6de005e9a87e803f7d71c589e5"
+      "targetHash": "sha256:1a9b9b242f0aec2c93c8ee1c182cb18c30413de89b65a31094a1854ebf256aec"
     },
     {
       "resourcePath": "res://content/runs/PureRunThreeEncounterV1.tres",
       "resourceUid": "uid://dy2d31awtdhgm",
-      "targetHash": "sha256:66a616cf6761faa9441d0f078c7d3b85d1305194aa085fe6a19bfddf4743beda"
+      "targetHash": "sha256:64fcb37334ce78d61ebd4526cef629123866e0b3b5d048d80d8b9d07032d9845"
     },
     {
       "resourcePath": "res://content/runs/RunPersistenceFixture.tscn",

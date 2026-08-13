@@ -1,5 +1,6 @@
 using Godot;
 using Tactics.Core.Content;
+using Tactics.Core.Skills;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
@@ -25,4 +26,13 @@ public partial class PoisonSpearSkillResource : Resource
     [Export] public PoisonSpearPresentationResource? Presentation { get; set; }
 
     public ContentId ContentId => new(ContentIdValue);
+
+    /// <summary>Converts the externally owned Poison Spear asset into its canonical Amazon growth branch.</summary>
+    public SkillDefinition ToCoreDefinition() => CreateCoreDefinition(ContentId, ManaCost, Range, Damage, PoisonTurns);
+
+    internal static SkillDefinition CreateCoreDefinition(ContentId contentId, int manaCost, int range, int damage,
+        int poisonTurns) => new(contentId, "amazon_poison_spear", SkillRole.Amazon, SkillKind.Active, 1,
+        manaCost, 1, range, SkillExecutionKind.PoisonSpear, damage, SkillDamageKind.Physical,
+        new ContentId("buff.poison"), poisonTurns, externalDependency: true,
+        branchId: "amazon.poison-spear");
 }

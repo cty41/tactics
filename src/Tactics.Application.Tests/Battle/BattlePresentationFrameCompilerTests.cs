@@ -52,7 +52,7 @@ public sealed class BattlePresentationFrameCompilerTests
     [Test]
     public void StatusAndSpearEffectsComeOnlyFromCommittedEvents()
     {
-        UnitInstanceId actor=new("amazon"),target=new("enemy");ContentId skillId=new("skill.amazon.poison-spear.lv1"),poison=new("buff.poison");
+        UnitInstanceId actor=new("amazon"),target=new("enemy");ContentId skillId=new("skill.poison-spear.lv1"),poison=new("buff.poison");
         BattleUiSnapshot snapshot=Snapshot(actor,target,new GridPoint(1,1),new GridPoint(4,1),true);
         SkillDefinition skill=new(skillId,"poison",SkillRole.Amazon,SkillKind.Active,1,5,1,5,SkillExecutionKind.PoisonSpear,9,SkillDamageKind.Physical);
         GridPoint drop=new(5,1);BattleEvent[] events=[new SkillUsedEvent(actor,target,skillId),new StatusAppliedEvent(actor,target,poison,2),new SpearDroppedEvent(actor,drop)];

@@ -169,7 +169,7 @@ public partial class GodotAiEncounterFixture : Control
             Resource resource = ResourceLoader.Load(entry.DiagnosticPathValue, string.Empty, ResourceLoader.CacheMode.Ignore)
                 ?? throw new InvalidOperationException($"Missing skill: {entry.ContentIdValue} at {entry.DiagnosticPathValue}");
             if (resource is SkillDefinitionResource skill) _skills.Add(new ContentId(entry.ContentIdValue), skill.ToCoreDefinition());
-            else if (resource is PoisonSpearSkillResource poison) _skills.Add(new ContentId(entry.ContentIdValue), new SkillDefinition(new ContentId(poison.ContentIdValue), "amazon.poison_spear", SkillRole.Amazon, SkillKind.Active, 1, poison.ManaCost, 1, poison.Range, SkillExecutionKind.PoisonSpear, poison.Damage, SkillDamageKind.Physical, new ContentId("buff.poison"), poison.PoisonTurns, externalDependency: true));
+            else if (resource is PoisonSpearSkillResource poison) _skills.Add(new ContentId(entry.ContentIdValue), poison.ToCoreDefinition());
         }
         foreach (GodotResourceEntry entry in global.Entries.Where(value => value.ResourceTypeIdValue == "ai"))
             _ai.Add(new ContentId(entry.ContentIdValue), (ResourceLoader.Load<AiDefinitionResource>(entry.DiagnosticPathValue, string.Empty, ResourceLoader.CacheMode.Ignore)

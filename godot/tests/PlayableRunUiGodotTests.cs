@@ -4,6 +4,7 @@ using System.Reflection;
 using Tactics.Core.Content;
 using Tactics.Core.Items;
 using Tactics.Core.Runs;
+using Tactics.Core.Skills;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
 using Tactics.Application.Runs;
@@ -36,6 +37,54 @@ public class PlayableRunUiGodotTests
     {
         AssertThat(GodotPlayableRunMain.UnitMeterSize).IsEqual(new Vector2(44, 18));
         AssertThat(GodotPlayableRunMain.UnitMeterBarHeight).IsEqual(7);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void RunDefinitionUsesCanonicalPoisonSpearStartingChoice()
+    {
+        var resource = new PureRunDefinitionResource
+        {
+            ContentIdValue = "run.pure-run.three-encounter-v1",
+            EncounterContentIds = ["encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3"],
+            CharacterIds = ["pure_run_mage", "pure_run_necromancer", "pure_run_amazon"],
+            UnitContentIds = ["unit.pure-run.mage", "unit.pure-run.necromancer", "unit.pure-run.amazon"],
+            StartingSkillContentIds = ["skill.mage.fireball.lv1", "skill.necromancer.summon-skeleton.lv1", "skill.amazon.thrust.lv1"]
+        };
+        PureRunDefinition definition = resource.ToCoreDefinition();
+        PureRunPartyTemplate amazon = definition.Party.Single(value =>
+            value.CharacterId == "pure_run_amazon");
+
+        AssertThat(amazon.EffectiveStartingSkillChoices)
+            .Contains(new ContentId("skill.poison-spear.lv1"));
+        AssertThat(amazon.EffectiveStartingSkillChoices)
+            .NotContains(new ContentId("skill.amazon.poison-spear.lv1"));
+    }
+
+    [TestCase]
+    public void CanonicalPoisonSpearResourceAdvancesThroughTheAmazonBranch()
+    {
+        SkillDefinition first = PoisonSpearSkillResource.CreateCoreDefinition(
+            new ContentId("skill.poison-spear.lv1"), 5, 5, 9, 2);
+        var second = new SkillDefinition(new ContentId("skill.amazon.poison-spear.lv2"),
+            "amazon_poison_spear_lv2", SkillRole.Amazon, SkillKind.Active, 2, 6, 1, 6,
+            SkillExecutionKind.PoisonSpear, 12, SkillDamageKind.Physical,
+            new ContentId("buff.poison"), 3, branchId: "amazon.poison-spear");
+        var amazon = new RunCharacterState("pure_run_amazon", new ContentId("unit.pure-run.amazon"), 1,
+            new UnitAttributes(5, 5, 5, 5, 5, 5), 20, 20, 10, 10, false,
+            [first.ContentId], learnedSkillStates: [new RunLearnedSkillState(first.BranchId, 1, first.ContentId)]);
+        var skills = new Dictionary<ContentId, SkillDefinition>
+        {
+            [first.ContentId] = first,
+            [second.ContentId] = second
+        };
+
+        IReadOnlyList<SkillDefinition> candidates = new RunInventoryProgressionService()
+            .GrowthCandidates(amazon, skills);
+
+        AssertThat(first.BranchId).IsEqual("amazon.poison-spear");
+        AssertThat(candidates.Select(value => value.ContentId).ToArray()).Contains(second.ContentId);
+        AssertThat(candidates.Select(value => value.ContentId).ToArray()).NotContains(first.ContentId);
     }
 
     [TestCase]

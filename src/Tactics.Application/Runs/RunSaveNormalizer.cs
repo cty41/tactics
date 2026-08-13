@@ -1,3 +1,4 @@
+using Tactics.Core.Content;
 using Tactics.Core.Runs;
 
 namespace Tactics.Application.Runs;
@@ -20,18 +21,56 @@ internal static class RunSaveNormalizer
             ActiveRun = active is null ? null : Normalize(active),
             TerminalSummary = snapshot.TerminalSummary is null ? null : Normalize(snapshot.TerminalSummary),
             // Setup choices are an ordered transaction log (Mage, Necromancer, Amazon), not a set.
-            PendingRunSetup = setup is null ? null : setup with { Choices = setup.Choices.ToArray() }
+            PendingRunSetup = setup is null ? null : setup with
+            {
+                Choices = setup.Choices.Select(value => value with
+                {
+                    SkillContentId = CanonicalSkillId(value.SkillContentId)
+                }).ToArray()
+            }
         };
     }
 
     private static PureRunState Normalize(PureRunState state) => new(
         state.RunId, state.Seed, state.Revision, state.Phase, state.EncounterIndex,
-        state.EncounterContentId, state.Party, state.BackpackConsumables, state.BackpackEquipment,
-        state.PendingProgression.OrderBy(value => value.TransactionKey, StringComparer.Ordinal).ToArray(),
+        state.EncounterContentId, state.Party.Select(Normalize).ToArray(), state.BackpackConsumables, state.BackpackEquipment,
+        state.PendingProgression.OrderBy(value => value.TransactionKey, StringComparer.Ordinal).Select(value => value with
+        {
+            SelectedSkillContentId = value.SelectedSkillContentId is ContentId skillId
+                ? CanonicalSkillId(skillId)
+                : null
+        }).ToArray(),
         state.AppliedTransactionKeys.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
         state.Gold, state.BattlesCompleted, state.EnemiesDefeated,
-        state.AcquiredItems.OrderBy(value => value.Value, StringComparer.Ordinal).ToArray(), state.Checkpoint,
+        state.AcquiredItems.OrderBy(value => value.Value, StringComparer.Ordinal).ToArray(),
+        state.Checkpoint is null ? null : state.Checkpoint with
+        {
+            Party = state.Checkpoint.Party.Select(Normalize).ToArray()
+        },
         Normalize(state.MapState), state.NodeTransaction);
+
+    private static RunCharacterState Normalize(RunCharacterState character) => new(
+        character.CharacterId,
+        character.UnitContentId,
+        character.Level,
+        character.Attributes,
+        character.CurrentHealth,
+        character.MaxHealth,
+        character.CurrentMana,
+        character.MaxMana,
+        character.IsDead,
+        character.LearnedSkills.Select(CanonicalSkillId).ToArray(),
+        character.Equipment,
+        character.CarriedConsumables,
+        character.LearnedSkillStates.Select(value => value with
+        {
+            DefinitionId = CanonicalSkillId(value.DefinitionId)
+        }).ToArray());
+
+    private static ContentId CanonicalSkillId(ContentId id) =>
+        id.Value == "skill.amazon.poison-spear.lv1"
+            ? new ContentId("skill.poison-spear.lv1")
+            : id;
 
     private static PureRunMapState? Normalize(PureRunMapState? state) => state is null ? null : state with
     {

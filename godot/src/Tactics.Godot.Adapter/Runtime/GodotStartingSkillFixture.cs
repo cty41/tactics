@@ -84,7 +84,7 @@ public partial class GodotStartingSkillFixture : Control
             if (resource is SkillDefinitionResource skill) return new FixtureSkill(skill.ToCoreDefinition(), skill.DisplayName, skill.Description);
             if (resource is PoisonSpearSkillResource poison && entry.ContentIdValue == "skill.poison-spear.lv1")
             {
-                return new FixtureSkill(new SkillDefinition(new ContentId(poison.ContentIdValue), "amazon.poison_spear", SkillRole.Amazon, SkillKind.Active, 1, poison.ManaCost, 1, poison.Range, SkillExecutionKind.PoisonSpear, poison.Damage, SkillDamageKind.Physical, new ContentId("buff.poison"), poison.PoisonTurns, externalDependency: true), poison.DisplayName, poison.Description);
+                return new FixtureSkill(poison.ToCoreDefinition(), poison.DisplayName, poison.Description);
             }
             throw new InvalidOperationException($"Skill Resource has the wrong type: {entry.ContentIdValue}");
         }).ToArray();

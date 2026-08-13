@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-13T10:55:48+08:00"
+timestamp: "2026-08-13T11:43:43+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:ff33bde1a0858671768e852a9c9ebde0a135bcbdc115e3a379dfb7edf0489fca
+source_fingerprint: sha256:f969dc5e0edc175699111c07aa2f6c8fd4a5cc0940269dc957f9de7708b90653
 ---
 
 # Current state
@@ -90,6 +90,8 @@ Phase 7B–8D 合并验收前的第二轮定向修复把成长技能阶段收紧
 Phase 8E 自动实现新增七层 Rogue Map 与持久 Run Shell，等待与 Phase 7B–8D 合并人工验收。Application 通过只读 projector 将 Save V5 的 Run/Map/Node transaction 投影成固定 14 节点、始终可见的 19 条连接和 Locked/Available/Current/Selected/Pending/Completed 状态，不复制或修改 Run 状态机。Godot Main 的 Continue、Settlement、Progression、PendingBattle、节点流程与 Inventory 返回统一经权威状态路由；Pending 节点可从原 checkpoint 重开同一战斗。New Run 先持久化三名角色各自严格三选一的 Starting Lv1 setup，三人完成前保留旧 Active Run，V1–V4 可确定性读取升级。Progression 技能阶段同时显示更新后六项属性、当前技能等级及主动/被动类型。程序化 Control 提供节点连接、状态色、Hover、拖动/滚轮和首次当前节点居中，不复制 Unity UXML/USS、背景或图标 payload。Catalog 保持124，状态为 `Generated/UnityOwned + manual_inventory_run_flow_and_presentation_qa_pending`。
 
 Phase 7B–8E 收口修复已完成自动门禁：Inventory 使用单一角色/背包/详情三栏页面，支持装备替换/卸下与消耗品携带替换/卸下，成功事务留在页面且 Reload 保持实例唯一；正式战斗仍只按冻结概率掉落 Consumable，Equipment 来自 Store/Mystery，无掉落结算明确显示 `No item drop`。表现 cue 的 ActorId 现始终是实际动画主体，Damage Hit 绑定受击者并保留 Instigator，攻击在 Release/FX 后先触发 Hit/Defeat 再恢复；当前单位脚底标记随 Actor Tween 连续移动。HP/MP 双条默认隐藏，只在 Actor 可视 AABB hover 时显示并按 Sprite 宽度限制在38–48px。Equip/Unequip 均重算派生 HP/MP 上限。统一门禁通过 Core 87、Application 76、Unity Oracle 15、GdUnit 51、Python 135、Compatibility/Forward+、Catalog 124、UID、receipt 与 OKF；仍等待合并人工验收后晋升 ownership。
+
+Phase 8E New Run 三选一只允许使用 canonical `skill.poison-spear.lv1`；早期实现曾错误写入不存在的 `skill.amazon.poison-spear.lv1`，使 Run 已提交 `PendingBattle` 后在会话组装处缺少技能并表现为二次点击 `run.not_ready`。Save V5 读取规范化现在同时修复 Active Party、PendingBattle checkpoint、Pending Setup 与 Pending Progression 中的该唯一历史别名，后续合法事务会写回 canonical ID；无需删除用户存档。由于该 Lv1 canonical ID 是唯一不含职业前缀的玩家分支，legacy skill-state 投影显式映射回 `amazon.poison-spear`，保持 Lv2/Recover 前置可达。Run Resource 的全部 Starting choices 进入 Catalog 引用审计，启动时由 Application 交叉校验 Run Definition 的技能引用，ResourceSaver 在当前 124 项 Catalog 上保持可重跑。统一门禁通过 Core 88、Application 79、Unity Oracle 15、GdUnit 53、Python 135、Compatibility/Forward+ 与双次 Run Resource 生成。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

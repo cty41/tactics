@@ -10,7 +10,7 @@ ResourceTypeIdValue = "run"
 ResourceUidValue = "uid://dy2d31awtdhgm"
 DiagnosticPathValue = "res://content/runs/PureRunThreeEncounterV1.tres"
 SchemaVersion = 1
-ReferenceContentIds = PackedStringArray("encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3", "skill.amazon.thrust.lv1", "skill.mage.fireball.lv1", "skill.necromancer.summon-skeleton.lv1", "unit.pure-run.amazon", "unit.pure-run.mage", "unit.pure-run.necromancer")
+ReferenceContentIds = PackedStringArray("encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3", "skill.amazon.combat-techniques.lv1", "skill.amazon.thrust.lv1", "skill.mage.fireball.lv1", "skill.mage.ice-bolt.lv1", "skill.mage.lightning.lv1", "skill.necromancer.amplify-damage.lv1", "skill.necromancer.bone-spear.lv1", "skill.necromancer.summon-skeleton.lv1", "skill.poison-spear.lv1", "unit.pure-run.amazon", "unit.pure-run.mage", "unit.pure-run.necromancer")
 
 [resource]
 script = ExtResource("2_o8voj")

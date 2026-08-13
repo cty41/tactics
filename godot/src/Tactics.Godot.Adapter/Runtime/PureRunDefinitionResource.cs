@@ -40,6 +40,6 @@ public partial class PureRunDefinitionResource : Resource
     [
         "skill.mage.fireball.lv1", "skill.mage.ice-bolt.lv1", "skill.mage.lightning.lv1",
         "skill.necromancer.summon-skeleton.lv1", "skill.necromancer.amplify-damage.lv1", "skill.necromancer.bone-spear.lv1",
-        "skill.amazon.thrust.lv1", "skill.amazon.poison-spear.lv1", "skill.amazon.combat-techniques.lv1"
+        "skill.amazon.thrust.lv1", "skill.poison-spear.lv1", "skill.amazon.combat-techniques.lv1"
     ];
 }
