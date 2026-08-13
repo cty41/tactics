@@ -1,11 +1,11 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-13
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:26f3c3c42c237d1ed67e94d6944610a5a80bdbc387180897932e3fe293032904`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:3e0efd0b592fe7c6623765468f86f3f6a78033fbdf8acdb05872812bf273ef5b`。
 * **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:6e24facda6f01fad788e9f3e809d81f64a6229bedba0dc23fba09c736f420e29`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:ba29cf5438f66e58ee0a3f53bc71581ca29ab8f74a649fbe4fdcd51f0b77446e`。
 * **Fix**: New Run Amazon Poison Spear 三选一改用 canonical `skill.poison-spear.lv1`；Save V5 确定性修复已写入 Active Party、PendingBattle checkpoint、Pending Setup/Progression 的旧错误别名，Run Definition 的全部起始候选进入 Catalog 引用与启动校验，现有 PendingBattle 存档无需删除。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:4f9f82936ce9c67f56a50c9421668551e4e38d2f0cd294273425c3b7847609b0`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:1c9d0c01b7a77c37fee04f0865f3e0ad4342d3bb0141fd2186654e71b141295f`。
 
 ## 2026-08-12
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:bf6119f12fad378f299a499c77603757a886a89550ff08e1cea846841213ddb3`。
@@ -304,3 +304,4 @@
 * **Review**: 在已确认体量候选上仅做整数像素平移，生成 Hunter `v04`、Mage `v04`、Necromancer `v05`、Goat `v03` 与 `death_state_volume_review_v02.png`；仍待人工批准，未替换 Runtime 纹理、未提交。
 * **Review Fix**: 旧 `death_state_volume_review_v02.png` 的单 Tile 合成将尸体错误放在 Tile 中心上方 `25px`；新增多 Tile `v03`，同时展示精确 Alpha AABB 居中与仅诊断用 `+8px` 屏幕 Y 对照，候选与 Runtime 均未改变。
 * **Fix**: 移除鼠标世界坐标进入 `WorldToCell` 前重复施加的半格 Anchor 补偿，修复等距战场光标与高亮 Tile 固定 `(0.5, 0.5)` 偏移；新增格内多点坐标回归。
+* **Update (2026-08-13)**: Godot migration 记录 Phase 8E 完整棋盘取景、Esc 非破坏性暂停菜单、committed-event Damage Number 与原子成长事务；Catalog 124 不变，人工相机/菜单/动态数值/成长验收继续 pending。

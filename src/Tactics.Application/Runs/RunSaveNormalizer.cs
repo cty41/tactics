@@ -36,9 +36,11 @@ internal static class RunSaveNormalizer
         state.EncounterContentId, state.Party.Select(Normalize).ToArray(), state.BackpackConsumables, state.BackpackEquipment,
         state.PendingProgression.OrderBy(value => value.TransactionKey, StringComparer.Ordinal).Select(value => value with
         {
-            SelectedSkillContentId = value.SelectedSkillContentId is ContentId skillId
-                ? CanonicalSkillId(skillId)
-                : null
+            // V5 once persisted the in-progress UI draft. Unity only commits
+            // growth after a skill is confirmed, so recovery retains the
+            // entitlement but intentionally discards both transient choices.
+            ProposedAttributes = null,
+            SelectedSkillContentId = null
         }).ToArray(),
         state.AppliedTransactionKeys.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
         state.Gold, state.BattlesCompleted, state.EnemiesDefeated,

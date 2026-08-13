@@ -55,6 +55,7 @@ public class PlayableRunUiGodotTests
     {
         AssertThat(GodotPlayableRunMain.ShouldBlockBattleIntent(true, false)).IsTrue();
         AssertThat(GodotPlayableRunMain.ShouldBlockBattleIntent(false, true)).IsTrue();
+        AssertThat(GodotPlayableRunMain.ShouldBlockBattleIntent(false, false, true)).IsTrue();
         AssertThat(GodotPlayableRunMain.ShouldBlockBattleIntent(false, false)).IsFalse();
     }
 
@@ -182,6 +183,7 @@ public class PlayableRunUiGodotTests
         string[] buttonTexts = Descendants<Button>(ui).Select(button => button.Text).ToArray();
         AssertThat(buttonTexts.Count(text => text.StartsWith("+1 ", StringComparison.Ordinal))).IsEqual(6);
         AssertThat(buttonTexts.Any(text => text.Contains("mage.fireball", StringComparison.Ordinal))).IsFalse();
+        AssertThat(buttonTexts.Any(text => text == "Back to Map")).IsFalse();
         ui.Free();
     }
 
@@ -226,9 +228,13 @@ public class PlayableRunUiGodotTests
             new RunCharacterState("pure_run_necromancer", new ContentId("unit.pure-run.necromancer"), 1, attributes, 20, 20, 12, 12, false, Array.Empty<ContentId>()),
             new RunCharacterState("pure_run_amazon", new ContentId("unit.pure-run.amazon"), 1, attributes, 20, 20, 12, 12, false, Array.Empty<ContentId>())
         };
-        var pending = new PendingProgression("battle:n1:progression", "n1", mage.CharacterId, ProposedAttributes: proposed);
+        var pending = new PendingProgression("battle:n1:progression", "n1", mage.CharacterId);
         var run = new PureRunState("run-test", 7, 2, PureRunPhase.Ready, 1, new ContentId("encounter.pure-run.n2"),
             new[] { mage }.Concat(others).ToArray(), pendingProgression: new[] { pending });
+        FieldInfo draftsField = typeof(GodotPlayableRunMain).GetField("_progressionDrafts",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var drafts = (Dictionary<string, UnitAttributes>)draftsField.GetValue(ui)!;
+        drafts[pending.TransactionKey] = proposed;
         typeof(GodotPlayableRunMain).GetMethod("ShowProgression", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(ui, new object[] { run, pending });
         string[] buttonTexts = Descendants<Button>(ui).Select(button => button.Text).ToArray();
         string[] growthCards = buttonTexts.Where(text => text.StartsWith("Learn ", StringComparison.Ordinal) || text.StartsWith("Upgrade ", StringComparison.Ordinal)).ToArray();
@@ -241,6 +247,7 @@ public class PlayableRunUiGodotTests
         AssertThat(labels).Contains("火球术");
         AssertThat(labels).Contains("MP 7");
         AssertThat(labels).Contains("施加2层点燃");
+        AssertThat(buttonTexts.Any(text => text == "Back to Map")).IsFalse();
         ui.Free();
     }
 

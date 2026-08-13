@@ -15,6 +15,7 @@ public partial class GodotBattlePresentationPlayer : Node
     private readonly Dictionary<string, SkillPresentationResource> _skillProfiles = new(StringComparer.Ordinal);
     public bool IsPlaying => _activeTweens.Any(GodotObject.IsInstanceValid);
     public event Action? FrameFinished;
+    public event Action<BattlePresentationNumber>? NumberRequested;
 
     public void Configure(StandardUnitPresentationResource profile) => _profile = profile ?? throw new ArgumentNullException(nameof(profile));
     public void ConfigureSkills(IEnumerable<SkillPresentationResource> profiles)
@@ -36,6 +37,7 @@ public partial class GodotBattlePresentationPlayer : Node
         ArgumentNullException.ThrowIfNull(frame);
         Clear();
         Tween sequence=CreateTween().SetSpeedScale(_speed);_activeTweens.Add(sequence);
+        var pendingNumbers = new List<BattlePresentationNumber>(frame.Numbers.OrderBy(value => value.Sequence));
         for (int index = 0; index < frame.Cues.Count; index++)
         {
             BattlePresentationCue cue = frame.Cues[index];
@@ -43,11 +45,22 @@ public partial class GodotBattlePresentationPlayer : Node
             {
                 PlayCue(sequence, cue, actors, recoverAction: false);
                 while (index + 1 < frame.Cues.Count && frame.Cues[index + 1].Kind == PresentationCueKind.Hit)
-                    PlayCue(sequence, frame.Cues[++index], actors);
+                {
+                    BattlePresentationCue hit = frame.Cues[++index];
+                    PlayCue(sequence, hit, actors);
+                    QueueNextNumber(sequence, pendingNumbers, hit.ActorId);
+                }
                 RecoverAction(sequence, cue, actors);
             }
-            else PlayCue(sequence, cue, actors);
+            else
+            {
+                PlayCue(sequence, cue, actors);
+                if (cue.Kind == PresentationCueKind.Hit)
+                    QueueNextNumber(sequence, pendingNumbers, cue.ActorId);
+            }
         }
+        foreach (BattlePresentationNumber number in pendingNumbers)
+            sequence.TweenCallback(Callable.From(() => NumberRequested?.Invoke(number)));
         // Decision and EndTurn frames intentionally contain no visual cue. A
         // no-op callback keeps the Tween valid so Finished still advances the
         // authoritative automatic-frame queue.
@@ -57,6 +70,15 @@ public partial class GodotBattlePresentationPlayer : Node
             _activeTweens.Remove(sequence);
             FrameFinished?.Invoke();
         };
+    }
+
+    private void QueueNextNumber(Tween sequence, List<BattlePresentationNumber> pending, UnitInstanceId targetId)
+    {
+        int index = pending.FindIndex(value => value.TargetId == targetId);
+        if (index < 0) return;
+        BattlePresentationNumber number = pending[index];
+        pending.RemoveAt(index);
+        sequence.TweenCallback(Callable.From(() => NumberRequested?.Invoke(number)));
     }
 
     public static double EstimateMoveDuration(int segmentCount, double segmentDuration, double settleDuration) =>

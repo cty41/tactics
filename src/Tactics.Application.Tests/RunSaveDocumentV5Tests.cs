@@ -71,8 +71,8 @@ public sealed class RunSaveDocumentV5Tests
                 Is.EqualTo("amazon.poison-spear"));
             Assert.That(checkpointAmazon.LearnedSkills.Single(),
                 Is.EqualTo(new ContentId("skill.poison-spear.lv1")));
-            Assert.That(decoded.Snapshot.ActiveRun.PendingProgression.Single().SelectedSkillContentId,
-                Is.EqualTo(new ContentId("skill.poison-spear.lv1")));
+            Assert.That(decoded.Snapshot.ActiveRun.PendingProgression.Single().SelectedSkillContentId, Is.Null);
+            Assert.That(decoded.Snapshot.ActiveRun.PendingProgression.Single().ProposedAttributes, Is.Null);
             Assert.That(resumed.Succeeded, Is.True);
             Assert.That(resumed.EncounterRequest!.Party.Single(value => value.CharacterId == "pure_run_amazon")
                 .LearnedSkills.Single(), Is.EqualTo(new ContentId("skill.poison-spear.lv1")));

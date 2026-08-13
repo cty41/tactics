@@ -73,6 +73,11 @@ public partial class GodotPlayableRunMain : Control
     private string? _inventoryCharacterId;
     private bool _inventoryEquipmentTab = true;
     private string? _inventorySelectedInstanceId;
+    private readonly Dictionary<string, UnitAttributes> _progressionDrafts = new(StringComparer.Ordinal);
+    private GodotDamageNumberLayer? _damageNumbers;
+    private Control? _pauseMenu;
+    private bool _pauseMenuPausedPlayback;
+    private bool _pauseMenuControlsBattlePlayback;
 
     private enum InventoryReturnTarget { Home, Settlement, RunRoute }
 
@@ -91,17 +96,36 @@ public partial class GodotPlayableRunMain : Control
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
-        if (_battle is null) return;
-        if (inputEvent.IsActionPressed("toggle_console"))
+        if (_battle is not null && inputEvent.IsActionPressed("toggle_console"))
         {
             if (_cheatConsole is not null) _cheatConsole.Visible = !_cheatConsole.Visible;
             GetViewport().SetInputAsHandled();
             return;
         }
-        if (_cheatConsole?.Visible == true) return;
+        if (_cheatConsole?.Visible == true)
+        {
+            if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
+            { _cheatConsole.Visible = false; GetViewport().SetInputAsHandled(); }
+            return;
+        }
+        if (_pauseMenu?.Visible == true)
+        {
+            if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }) ClosePauseMenu();
+            return;
+        }
+        if (_battle is null)
+        {
+            if (inputEvent is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && _pauseMenu is not null)
+            { OpenPauseMenu(); GetViewport().SetInputAsHandled(); }
+            return;
+        }
         if (inputEvent is InputEventKey { Pressed: true, Echo: false } key)
         {
-            if (key.Keycode == Key.Escape) ApplyIntent(new CancelTargetingIntent());
+            if (key.Keycode == Key.Escape)
+            {
+                if (_visibleSnapshot?.TargetingMode != BattleTargetingMode.None) ApplyIntent(new CancelTargetingIntent());
+                else OpenPauseMenu();
+            }
             else if (key.Keycode is Key.Enter or Key.KpEnter) ApplyIntent(new EndTurnIntent());
         }
         else if (inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right })
@@ -288,7 +312,9 @@ public partial class GodotPlayableRunMain : Control
         ContentId encounterId=_currentEncounterId??throw new InvalidOperationException("Battle encounter identity is missing.");
         Control root = NewPage($"PURE RUN BATTLE — {EncounterLabel(encounterId)}", $"{encounterId.Value}   |   Left click: select/confirm   Right click or Esc: cancel   Enter: end turn", true);
         _logs.Clear();_playbackPaused=false;_playbackSpeed=1f;
-        _board = new GodotIsometricBattleBoard { Position = Vector2.Zero, Size = new Vector2(1200, 900) };
+        Transform2D boardFit = GodotBattleBoardFitter.Fit(GodotBattleBoardFitter.BoardBounds(), new Rect2(30, 90, 1540, 650));
+        float boardScale = boardFit.X.Length();
+        _board = new GodotIsometricBattleBoard { Position = boardFit.Origin, Scale = Vector2.One * boardScale, Size = new Vector2(1200, 650) };
         _board.PointerPressed += OnBoardPointerPressed;
         _board.CellHovered += HoverCell;
         _board.HoverCleared += ClearHover;
@@ -300,7 +326,11 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer.ConfigureSkills(_skillPresentationProfiles);
         _presentationPlayer.SetSpeed(_playbackSpeed);
         _presentationPlayer.FrameFinished+=OnPresentationFrameFinished;
+        _damageNumbers = new GodotDamageNumberLayer();
+        _damageNumbers.Configure(_actors);
+        _presentationPlayer.NumberRequested += _damageNumbers.Spawn;
         _board.AddChild(_presentationPlayer);
+        _board.AddChild(_damageNumbers);
         var actionScroll = new ScrollContainer { Position = new Vector2(30, 765), Size = new Vector2(1120, 110) };
         root.AddChild(actionScroll);
         _skillPanel = new HBoxContainer { CustomMinimumSize = new Vector2(1120, 90) };
@@ -311,6 +341,7 @@ public partial class GodotPlayableRunMain : Control
         controls.AddChild(SmallButton("Pause/Resume",TogglePause));_stepButton=SmallButton("Step",()=>{if(_playbackPaused)PlaybackStep(true);});_stepButton.Disabled=true;controls.AddChild(_stepButton);_speedButton=SmallButton("Speed 1x",ToggleSpeed);controls.AddChild(_speedButton);
         _cheatConsole=new GodotBattleCheatConsole();_cheatConsole.ClearRequested+=()=>{_logs.Clear();RefreshLog();};root.AddChild(_cheatConsole);
         _endTurnButton=Button("End Turn (Enter)",()=>ApplyIntent(new EndTurnIntent()));root.AddChild(PlaceControl(_endTurnButton,new Vector2(1330,805),new Vector2(230,65)));
+        BuildPauseMenu(root);
         _eventLog=null;
         _status = _hoverInfo;
         RefreshBattle();
@@ -357,11 +388,6 @@ public partial class GodotPlayableRunMain : Control
         }
         foreach(SkillDefinition passive in snapshot.ActiveSkills.Where(skill=>skill.IsPassive))_skillPanel.AddChild(Label($"Passive: {passive.ContentId.Value}",16));
         if(_endTurnButton is not null)_endTurnButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;
-        _skillPanel.AddChild(SmallButton("Abandon", () =>
-        {
-            if (ShouldBlockBattleIntent(_cheatConsole?.Visible == true, _presentationInputLocked)) return;
-            AbandonRun();
-        }));
         ApplyHighlights(snapshot);
         _board.FollowActiveActor(_actors.GetValueOrDefault(snapshot.ActiveUnitId));
         if(_turnOrder is not null)_turnOrder.Text=$"Round {snapshot.Round} | Turn: "+string.Join(" → ",snapshot.TurnOrder.Select((id,index)=>$"{(index==snapshot.ActiveTurnIndex?"▶":"")}{id.Value}{(snapshot.Units.First(unit=>unit.UnitId==id).IsAlive?string.Empty:"✝")}"));
@@ -480,7 +506,7 @@ public partial class GodotPlayableRunMain : Control
     private void ApplyIntent(BattleUiIntent intent)
     {
         if (_battle is null) return;
-        if (ShouldBlockBattleIntent(_cheatConsole?.Visible == true, _presentationInputLocked))
+        if (ShouldBlockBattleIntent(_cheatConsole?.Visible == true, _presentationInputLocked, _pauseMenu?.Visible == true))
         {
             string reason = _cheatConsole?.Visible == true ? "cheat_console_open" : "presentation_in_progress";
             AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,reason,"CommandRejectedEvent"));
@@ -506,8 +532,8 @@ public partial class GodotPlayableRunMain : Control
         if (!result.Succeeded) SetStatus(result.FailureCode);
     }
 
-    internal static bool ShouldBlockBattleIntent(bool cheatConsoleVisible, bool presentationInputLocked) =>
-        cheatConsoleVisible || presentationInputLocked;
+    internal static bool ShouldBlockBattleIntent(bool cheatConsoleVisible, bool presentationInputLocked,
+        bool pauseMenuVisible = false) => cheatConsoleVisible || presentationInputLocked || pauseMenuVisible;
 
     private void CompleteBattle(PureRunBattleResult battleResult)
     {
@@ -546,11 +572,12 @@ public partial class GodotPlayableRunMain : Control
         if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);BeginPresentation(frame.Presentation,true,forced&&_playbackPaused);return;}
         RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
     }
-    private void TogglePause(){_playbackPaused=!_playbackPaused;if(_stepButton is not null)_stepButton.Disabled=!_playbackPaused;_presentationPlayer?.SetPaused(_playbackPaused);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));if(!_playbackPaused&&_battle?.HasPendingAutomaticFrames==true&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);RefreshLog();}
+    private void TogglePause(){_playbackPaused=!_playbackPaused;if(_stepButton is not null)_stepButton.Disabled=!_playbackPaused;_presentationPlayer?.SetPaused(_playbackPaused);_damageNumbers?.SetPaused(_playbackPaused);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));if(!_playbackPaused&&_battle?.HasPendingAutomaticFrames==true&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);RefreshLog();}
     private void ToggleSpeed()
     {
         _playbackSpeed = _playbackSpeed switch { 1f => 2f, 2f => 4f, 4f => .5f, _ => 1f };
         _presentationPlayer?.SetSpeed(_playbackSpeed);
+        _damageNumbers?.SetSpeed(_playbackSpeed);
         if (_speedButton is not null) _speedButton.Text = $"Speed {_playbackSpeed:0.#}x";
         AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"Playback {_playbackSpeed:0.#}x","Playback"));
         RefreshLog();
@@ -656,8 +683,8 @@ public partial class GodotPlayableRunMain : Control
                 new Vector2(1140, 475), new Vector2(360, 58)));
         }
         root.AddChild(PlaceControl(Button("Inventory", () => ShowInventory(run)), new Vector2(1140, 560), new Vector2(360, 58)));
-        root.AddChild(PlaceControl(Button("Abandon Run", AbandonRun), new Vector2(1140, 720), new Vector2(360, 52)));
         _status = LabelAt(root, string.Empty, new Vector2(1140, 790), 16);
+        BuildPauseMenu(root, false);
     }
 
     private void ActivateMapNode(PureRunState run, string nodeId)
@@ -964,13 +991,13 @@ public partial class GodotPlayableRunMain : Control
         AddRunShell(root,run,"Progression");
         var menu=new VBoxContainer{Position=new Vector2(430,160),Size=new Vector2(740,650)};root.AddChild(menu);
         var progressionService=new RunInventoryProgressionService();
-        if (pending.ProposedAttributes is not UnitAttributes proposed)
+        if (!_progressionDrafts.TryGetValue(pending.TransactionKey, out UnitAttributes proposed))
         {
             menu.AddChild(Label($"Step 1/2 — choose one attribute\nSTR {character.Attributes.Strength}  AGI {character.Attributes.Agility}  CON {character.Attributes.Constitution}\nINT {character.Attributes.Intelligence}  CHA {character.Attributes.Charisma}  LUCK {character.Attributes.Luck}",22));
             foreach (string attribute in new[] { "Strength", "Agility", "Constitution", "Intelligence", "Charisma", "Luck" })
             {
                 string selectedAttribute = attribute;
-                menu.AddChild(Button($"+1 {selectedAttribute}", () => AllocateProgressionAttribute(pending.TransactionKey,
+                menu.AddChild(Button($"+1 {selectedAttribute}", () => PreviewProgressionAttribute(run, pending,
                     Raise(character.Attributes, selectedAttribute))));
             }
         }
@@ -985,17 +1012,16 @@ public partial class GodotPlayableRunMain : Control
                 SkillUiMetadata known = _skillUi[value.DefinitionId];
                 return $"{known.DisplayName} Lv{value.Level} — {(known.IsPassive ? "Passive" : "Active")} — MP {known.ManaCost}\n{known.Description}";
             })), 17));
-            SkillDefinition[] candidates=progressionService.GrowthOffer(run,preview,_skills,_runDefinition!).ToArray();
+            SkillDefinition[] candidates=progressionService.PreviewGrowthOffer(run,pending.TransactionKey,proposed,_skills,_runDefinition!).ToArray();
             foreach(SkillDefinition skill in candidates)
                 menu.AddChild(Button(GrowthChoiceLabel(preview,skill,_skillUi[skill.ContentId]),()=>
-                    CommitMutation(state=>new RunInventoryProgressionService().CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,skill.ContentId,_skills,_runDefinition!))));
+                    CompleteProgression(pending.TransactionKey,proposed,skill.ContentId)));
             if(candidates.Length==0)
             {
                 menu.AddChild(Label("No skill candidate is legal after this allocation. Attribute-only confirmation is allowed.",18));
-                menu.AddChild(Button("Confirm Attribute",()=>CommitMutation(state=>progressionService.CompleteProgression(state,state.Revision,pending.TransactionKey,proposed,null,_skills,_runDefinition!))));
+                menu.AddChild(Button("Confirm Attribute",()=>CompleteProgression(pending.TransactionKey,proposed,null)));
             }
         }
-        root.AddChild(PlaceControl(Button("Back to Map",()=>ShowRunMap(run)),new Vector2(650,820),new Vector2(300,55)));
     }
 
     private static string GrowthChoiceLabel(RunCharacterState character,SkillDefinition skill,SkillUiMetadata metadata)
@@ -1022,17 +1048,19 @@ public partial class GodotPlayableRunMain : Control
         return drops.Length == 0 ? "No item drop" : string.Join(", ", drops.Select(value => value.Value));
     }
 
-    private void AllocateProgressionAttribute(string transactionKey, UnitAttributes attributes)
+    private void PreviewProgressionAttribute(PureRunState run, PendingProgression pending, UnitAttributes attributes)
+    {
+        _progressionDrafts[pending.TransactionKey] = attributes;
+        ShowProgression(run, pending);
+    }
+
+    private void CompleteProgression(string transactionKey, UnitAttributes attributes, ContentId? skillId)
     {
         RunSessionResult result = _run!.ApplyMutation(state => new RunInventoryProgressionService()
-            .AllocateProgressionAttributes(state, state.Revision, transactionKey, attributes));
-        if (!result.Succeeded || result.Snapshot?.ActiveRun is not PureRunState run)
-        {
-            SetStatus(result.ErrorCode);
-            return;
-        }
-        PendingProgression pending = run.PendingProgression.Single(value => value.TransactionKey == transactionKey);
-        ShowProgression(run, pending);
+            .CompleteProgression(state,state.Revision,transactionKey,attributes,skillId,_skills,_runDefinition!));
+        if(!result.Succeeded){SetStatus(result.ErrorCode);return;}
+        _progressionDrafts.Remove(transactionKey);
+        ShowSettlement(result.Snapshot!);
     }
 
     private static UnitAttributes Raise(UnitAttributes a,string name)=>name switch{"Strength"=>new(a.Strength+1,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Agility"=>new(a.Strength,a.Agility+1,a.Constitution,a.Intelligence,a.Charisma,a.Luck),"Constitution"=>new(a.Strength,a.Agility,a.Constitution+1,a.Intelligence,a.Charisma,a.Luck),"Intelligence"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence+1,a.Charisma,a.Luck),"Charisma"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma+1,a.Luck),"Luck"=>new(a.Strength,a.Agility,a.Constitution,a.Intelligence,a.Charisma,a.Luck+1),_=>a};
@@ -1050,6 +1078,45 @@ public partial class GodotPlayableRunMain : Control
     {
         RunSessionResult result = _run!.AbandonRun();
         if (result.Snapshot?.TerminalSummary is PureRunSummary summary) ShowSummary(summary); else SetStatus(result.ErrorCode);
+    }
+
+    private void BuildPauseMenu(Control root, bool controlsBattlePlayback = true)
+    {
+        var overlay = new ColorRect { Color = new Color(0,0,0,.62f), Visible = false, MouseFilter = MouseFilterEnum.Stop };
+        overlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        root.AddChild(overlay); _pauseMenu = overlay; _pauseMenuControlsBattlePlayback = controlsBattlePlayback;
+        var menu = new VBoxContainer { Position = new Vector2(620,190), Size = new Vector2(360,500) };
+        overlay.AddChild(menu);
+        menu.AddChild(Label("PAUSED\nGame is paused",30));
+        menu.AddChild(Button("CONTINUE",ClosePauseMenu));
+        menu.AddChild(Button("OPTIONS",()=>ShowPauseOptions(menu)));
+        menu.AddChild(Button("MAIN MENU",()=>{ClosePauseMenu();ShowHome();}));
+        menu.AddChild(Button("SAVE AND QUIT",()=>GetTree().Quit()));
+    }
+
+    private void ShowPauseOptions(VBoxContainer menu)
+    {
+        bool ownsPlaybackPause = _pauseMenuPausedPlayback;
+        foreach(Node child in menu.GetChildren())child.QueueFree();
+        menu.AddChild(Label("OPTIONS\nPresentation speed is controlled from the battle HUD.",24));
+        bool controlsBattlePlayback = _pauseMenuControlsBattlePlayback;
+        menu.AddChild(Button("BACK",()=>{_pauseMenu?.QueueFree();_pauseMenu=null;BuildPauseMenu(_page!, controlsBattlePlayback);OpenPauseMenu(false);_pauseMenuPausedPlayback=ownsPlaybackPause;}));
+    }
+
+    private void OpenPauseMenu(bool pausePlayback=true)
+    {
+        if(_pauseMenu is null)return;
+        _pauseMenu.Visible=true;
+        _pauseMenuPausedPlayback=pausePlayback&&_pauseMenuControlsBattlePlayback&&!_playbackPaused;
+        if(_pauseMenuPausedPlayback)TogglePause();
+    }
+
+    private void ClosePauseMenu()
+    {
+        if(_pauseMenu is null)return;
+        _pauseMenu.Visible=false;
+        if(_pauseMenuPausedPlayback&&_playbackPaused)TogglePause();
+        _pauseMenuPausedPlayback=false;
     }
 
     private Control NewPage(string title, string subtitle, bool battleBackdrop = false)
@@ -1071,6 +1138,9 @@ public partial class GodotPlayableRunMain : Control
         _eventLog=null;
         _mapView=null;
         _mapDetail=null;
+        _pauseMenu=null;
+        _pauseMenuControlsBattlePlayback=false;
+        _damageNumbers=null;
         var root = new Control(); root.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); AddChild(root); _page = root;
         Control background = battleBackdrop ? new GodotBattleBackdrop() : new ColorRect { Color = new Color("657784") };
         background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);

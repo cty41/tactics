@@ -32,6 +32,35 @@ public sealed class IsometricBattleBoardGodotTests
     }
 
     [TestCase]
+    public void BoardFitterCentersCompleteDiamondBoundsInFullGameplaySafeArea()
+    {
+        Rect2 bounds = GodotBattleBoardFitter.BoardBounds();
+        Rect2 safe = new(30, 90, 1540, 650);
+        Transform2D fit = GodotBattleBoardFitter.Fit(bounds, safe);
+        Rect2 fitted = GodotBattleBoardFitter.TransformBounds(bounds, fit);
+
+        AssertThat(fitted.GetCenter().DistanceTo(safe.GetCenter())).IsLess(0.01f);
+        AssertThat(fitted.Position.X).IsGreaterEqual(safe.Position.X - .01f);
+        AssertThat(fitted.End.X).IsLessEqual(safe.End.X + .01f);
+        AssertThat(fitted.Position.Y).IsGreaterEqual(safe.Position.Y - .01f);
+        AssertThat(fitted.End.Y).IsLessEqual(safe.End.Y + .01f);
+    }
+
+    [TestCase]
+    public void BoardFitterInversePreservesAllGridCenters()
+    {
+        Transform2D fit = GodotBattleBoardFitter.Fit(GodotBattleBoardFitter.BoardBounds(),
+            new Rect2(30, 90, 1540, 650));
+        Transform2D inverse = fit.AffineInverse();
+        for (int y = 0; y < 10; y++)
+        for (int x = 0; x < 10; x++)
+        {
+            Vector2 local = IsometricBattleBoardLayout.GridToScreen(new GridPoint(x, y));
+            AssertThat(inverse * (fit * local)).IsEqualApprox(local, Vector2.One * .001f);
+        }
+    }
+
+    [TestCase]
     public void OutsideAndSharedEdgePickingIsDeterministic()
     {
         AssertThat(IsometricBattleBoardLayout.TryScreenToGrid(new Vector2(20, 20), out _)).IsFalse();

@@ -83,6 +83,55 @@ public sealed class BattlePresentationFrameCompilerTests
         Assert.That(cue.Destination,Is.EqualTo(summonedCell));
     }
 
+    [Test]
+    public void CompilesFloatingNumbersOnlyFromCommittedCombatFacts()
+    {
+        UnitInstanceId actor=new("mage"),target=new("enemy");
+        ContentId skillId=new("skill.mage.lightning.lv1"),itemId=new("item.consumable.mana-potion");
+        BattleUiSnapshot snapshot=Snapshot(actor,target,new GridPoint(1,1),new GridPoint(3,1),true);
+        SkillDefinition skill=new(skillId,"lightning",SkillRole.Mage,SkillKind.Active,1,5,1,5,
+            SkillExecutionKind.Lightning,10,SkillDamageKind.Magical);
+        BattleEvent[] events=
+        [
+            new CombatRollResolvedEvent(actor,target,skillId,99,0,"critical",1),
+            new DamageAppliedEvent(actor,target,skillId,10,0),
+            new ManaRestoredEvent(actor,actor,itemId,4,9)
+        ];
+
+        BattlePresentationFrame frame=BattlePresentationFrameCompiler.Compile("numbers",snapshot,snapshot,events,
+            new Dictionary<ContentId,SkillDefinition>{{skillId,skill}});
+
+        Assert.That(frame.Numbers.Select(value=>value.Kind),Is.EqualTo(new[]
+            { BattlePresentationNumberKind.Critical, BattlePresentationNumberKind.Mana }));
+        Assert.That(frame.Numbers.Select(value=>value.Text),Is.EqualTo(new[]{"-10","+4 MP"}));
+        Assert.That(frame.Numbers.All(value=>value.Marker==PresentationMarkerKind.Impact),Is.True);
+    }
+
+    [Test]
+    public void MultiHitRollsAreCorrelatedInEventOrderWithoutDuplicateKeyFailure()
+    {
+        UnitInstanceId actor=new("amazon"),target=new("enemy");
+        ContentId skillId=new("skill.amazon.multi-stab.lv1");
+        BattleUiSnapshot snapshot=Snapshot(actor,target,new GridPoint(1,1),new GridPoint(2,1),true);
+        SkillDefinition skill=new(skillId,"multi-stab",SkillRole.Amazon,SkillKind.Active,1,3,1,2,
+            SkillExecutionKind.MultiStab,4,SkillDamageKind.Physical);
+        BattleEvent[] events=
+        [
+            new CombatRollResolvedEvent(actor,target,skillId,99,0,"critical",1),
+            new DamageAppliedEvent(actor,target,skillId,4,6),
+            new CombatRollResolvedEvent(actor,target,skillId,30,0,"hit",2),
+            new DamageAppliedEvent(actor,target,skillId,4,2)
+        ];
+
+        BattlePresentationFrame frame=BattlePresentationFrameCompiler.Compile("multi-hit",snapshot,snapshot,events,
+            new Dictionary<ContentId,SkillDefinition>{{skillId,skill}});
+
+        Assert.That(frame.Numbers.Select(value=>value.Kind),Is.EqualTo(new[]
+            { BattlePresentationNumberKind.Critical, BattlePresentationNumberKind.Normal }));
+        Assert.That(frame.Numbers.Select(value=>value.Sequence),Is.EqualTo(new[]{0,1}));
+        Assert.That(frame.Numbers.Select(value=>value.Text),Is.EqualTo(new[]{"-4","-4"}));
+    }
+
     private static BattleUiSnapshot Snapshot(UnitInstanceId actor,UnitInstanceId target,GridPoint actorCell,GridPoint targetCell,bool targetAlive)
     {
         BattleUiUnitSnapshot Unit(UnitInstanceId id,GridPoint cell,bool alive)=>new(id,new ContentId("unit.test"),cell,id==actor?0:1,alive,alive?10:0,10,5,5,false,[],new Dictionary<ContentId,int>());

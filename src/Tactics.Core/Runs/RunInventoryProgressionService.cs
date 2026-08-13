@@ -66,6 +66,21 @@ public sealed class RunInventoryProgressionService
     public bool CanUnlockWithAttributePoints(RunCharacterState character, SkillDefinition skill, int points) =>
         points >= 0 && AttributeValue(character.Attributes, skill.RequiredAttribute) + points >= skill.MinimumAttribute;
 
+    public IReadOnlyList<SkillDefinition> PreviewGrowthOffer(PureRunState state, string transactionKey,
+        UnitAttributes attributes, IReadOnlyDictionary<ContentId, SkillDefinition> skills,
+        PureRunDefinition definition)
+    {
+        PendingProgression pending = state.PendingProgression.Single(value => value.TransactionKey == transactionKey);
+        RunCharacterState character = state.Party.Single(value => value.CharacterId == pending.CharacterId);
+        int spent = AttributeTotal(attributes) - AttributeTotal(character.Attributes);
+        if (spent != pending.AttributePoints || AnyAttributeLower(attributes, character.Attributes))
+            return Array.Empty<SkillDefinition>();
+        RunCharacterState preview = new(character.CharacterId, character.UnitContentId, character.Level, attributes,
+            character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
+            character.LearnedSkills, character.Equipment, character.CarriedConsumables, character.LearnedSkillStates);
+        return GrowthOffer(state, preview, skills, definition);
+    }
+
     public RunMutationResult Equip(PureRunState state, long revision, string characterId, ItemInstanceId instanceId,
         IReadOnlyDictionary<ContentId, EquipmentDefinition> definitions, float baseSpeed)
     {
@@ -151,9 +166,7 @@ public sealed class RunInventoryProgressionService
         PendingProgression? pending = state.PendingProgression.FirstOrDefault(value => value.TransactionKey == transactionKey);
         if (pending is null) return Reject(state, "progression.not_found");
         RunCharacterState character = state.Party.Single(value => value.CharacterId == pending.CharacterId);
-        if (pending.ProposedAttributes is not UnitAttributes proposed)
-            return Reject(state, "progression.attributes_not_allocated");
-        if (proposed != attributes)
+        if (pending.ProposedAttributes is UnitAttributes proposed && proposed != attributes)
             return Reject(state, "progression.attributes_not_allocated");
         int spent = AttributeTotal(attributes) - AttributeTotal(character.Attributes);
         if (spent != pending.AttributePoints || AnyAttributeLower(attributes, character.Attributes)) return Reject(state, "progression.invalid_attributes");
@@ -177,7 +190,8 @@ public sealed class RunInventoryProgressionService
             character.CurrentHealth, character.MaxHealth, character.CurrentMana, character.MaxMana, character.IsDead,
             learned.Select(value => value.DefinitionId).ToArray(), character.Equipment, character.CarriedConsumables, learned);
         ContentId startingSkillContentId = definition.Party.Single(value => value.CharacterId == character.CharacterId).StartingSkillContentId;
-        string? guaranteeTransaction = candidates.Any(value => IsStartingAdvanced(value, skills, startingSkillContentId))
+        string? guaranteeTransaction = skillId is ContentId chosen && skills.TryGetValue(chosen, out SkillDefinition? chosenDefinition) &&
+            IsStartingAdvanced(chosenDefinition, skills, startingSkillContentId)
             ? GuaranteeTransaction(character.CharacterId) : null;
         string[] transactions = state.AppliedTransactionKeys.Append(transactionKey)
             .Concat(guaranteeTransaction is null ? [] : new[] { guaranteeTransaction }).Distinct(StringComparer.Ordinal).ToArray();
@@ -190,6 +204,8 @@ public sealed class RunInventoryProgressionService
         ContentId startingSkillContentId)
     {
         if (state.AppliedTransactionKeys.Contains(GuaranteeTransaction(character.CharacterId), StringComparer.Ordinal) ||
+            character.LearnedSkillStates.Any(value => skills.TryGetValue(value.DefinitionId, out SkillDefinition? learned) &&
+                !string.IsNullOrEmpty(learned.PrerequisiteBranchId)) ||
             !skills.TryGetValue(startingSkillContentId, out SkillDefinition? startingDefinition)) return null;
         return legal.FirstOrDefault(value => value.Level == 1 &&
             value.PrerequisiteBranchId == startingDefinition.BranchId);

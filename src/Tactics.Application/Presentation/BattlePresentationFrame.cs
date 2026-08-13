@@ -10,10 +10,13 @@ namespace Tactics.Application.Presentation;
 public enum PresentationCueKind { Move, Melee, Ranged, Cast, Hit, Defeat, CorpseRemoved }
 public enum PresentationMarkerKind { Begin, Release, Impact, Recover, Complete }
 public enum BattlePresentationEffectKind { StatusApplied, StatusTicked, StatusDurationChanged, StatusStackChanged, StatusExpired, StatusCleansed, SpearDropped, SpearRecovered }
+public enum BattlePresentationNumberKind { Normal, Critical, Heal, Mana, Miss }
 
 public sealed record BattlePresentationMarker(PresentationMarkerKind Kind, int Order);
 public sealed record BattlePresentationEffect(BattlePresentationEffectKind Kind, UnitInstanceId ActorId,
     UnitInstanceId? TargetId, ContentId? ContentId, GridPoint? Cell, int Amount);
+public sealed record BattlePresentationNumber(BattlePresentationNumberKind Kind, UnitInstanceId TargetId,
+    string Text, PresentationMarkerKind Marker, int Sequence);
 public sealed record BattlePresentationCue(
     PresentationCueKind Kind,
     UnitInstanceId ActorId,
@@ -31,7 +34,8 @@ public sealed record BattlePresentationFrame(
     string Stage,
     BattleUiSnapshot Before,
     BattleUiSnapshot After,
-    IReadOnlyList<BattlePresentationCue> Cues);
+    IReadOnlyList<BattlePresentationCue> Cues,
+    IReadOnlyList<BattlePresentationNumber> Numbers);
 
 /// <summary>Compiles immutable gameplay events into deterministic presentation instructions.</summary>
 public static class BattlePresentationFrameCompiler
@@ -96,7 +100,7 @@ public static class BattlePresentationFrameCompiler
             if (cue.SkillId is null) continue;
             cues[index] = cue with { Effects = effects };
         }
-        return new BattlePresentationFrame(stage, before, after, cues);
+        return new BattlePresentationFrame(stage, before, after, cues, CompileNumbers(events));
     }
 
     private static PresentationCueKind ResolveAction(SkillDefinition skill) => skill.ExecutionKind switch
@@ -145,4 +149,47 @@ public static class BattlePresentationFrameCompiler
         SpearRecoveredEvent spear => [new(BattlePresentationEffectKind.SpearRecovered, spear.OwnerId, spear.OwnerId, null, spear.Cell, 0)],
         _ => []
     };
+
+    private static IReadOnlyList<BattlePresentationNumber> CompileNumbers(IReadOnlyList<BattleEvent> events)
+    {
+        var result = new List<BattlePresentationNumber>();
+        Dictionary<(UnitInstanceId SourceId, UnitInstanceId TargetId, ContentId SkillId), Queue<CombatRollResolvedEvent>> rolls =
+            events.OfType<CombatRollResolvedEvent>()
+                .GroupBy(value => (value.SourceId, value.TargetId, value.SkillId))
+                .ToDictionary(group => group.Key, group => new Queue<CombatRollResolvedEvent>(group));
+        foreach (BattleEvent value in events)
+        {
+            switch (value)
+            {
+                case DamageAppliedEvent damage when damage.Amount > 0:
+                    CombatRollResolvedEvent? resolved = TakeRoll(rolls, damage);
+                    BattlePresentationNumberKind kind = resolved?.Outcome == "critical"
+                        ? BattlePresentationNumberKind.Critical : BattlePresentationNumberKind.Normal;
+                    result.Add(new(kind, damage.TargetId, $"-{damage.Amount}", PresentationMarkerKind.Impact, result.Count));
+                    break;
+                case DamageAppliedEvent damage:
+                    CombatRollResolvedEvent? roll = TakeRoll(rolls, damage);
+                    if (roll?.Outcome == "dodge")
+                        result.Add(new(BattlePresentationNumberKind.Miss, damage.TargetId, "Miss", PresentationMarkerKind.Impact, result.Count));
+                    break;
+                case StatusTickedEvent status when status.Amount > 0:
+                    result.Add(new(BattlePresentationNumberKind.Normal, status.TargetId, $"-{status.Amount}", PresentationMarkerKind.Impact, result.Count));
+                    break;
+                case HealthRestoredEvent health when health.Amount > 0:
+                    result.Add(new(BattlePresentationNumberKind.Heal, health.TargetId, $"+{health.Amount}", PresentationMarkerKind.Impact, result.Count));
+                    break;
+                case ManaRestoredEvent mana when mana.Amount > 0:
+                    result.Add(new(BattlePresentationNumberKind.Mana, mana.TargetId, $"+{mana.Amount} MP", PresentationMarkerKind.Impact, result.Count));
+                    break;
+            }
+        }
+        return result;
+    }
+
+    private static CombatRollResolvedEvent? TakeRoll(
+        IReadOnlyDictionary<(UnitInstanceId SourceId, UnitInstanceId TargetId, ContentId SkillId), Queue<CombatRollResolvedEvent>> rolls,
+        DamageAppliedEvent damage) =>
+        rolls.TryGetValue((damage.SourceId, damage.TargetId, damage.SkillId), out Queue<CombatRollResolvedEvent>? queue) && queue.Count > 0
+            ? queue.Dequeue()
+            : null;
 }

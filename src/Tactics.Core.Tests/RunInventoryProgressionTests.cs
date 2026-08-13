@@ -124,36 +124,24 @@ public sealed class RunInventoryProgressionTests
     }
 
     [Test]
-    public void AttributeAllocationIsPersistedBeforeSkillSelection()
+    public void AttributePreviewDoesNotMutateOrAdvanceRunRevision()
     {
         PureRunState state = State(withProgression: true);
         RunCharacterState mage = state.Party[0];
         UnitAttributes proposed = new(mage.Attributes.Strength + 1, mage.Attributes.Agility,
             mage.Attributes.Constitution, mage.Attributes.Intelligence, mage.Attributes.Charisma, mage.Attributes.Luck);
 
-        RunMutationResult result = new RunInventoryProgressionService().AllocateProgressionAttributes(
-            state, state.Revision, "progression:n1", proposed);
+        var service = new RunInventoryProgressionService();
+        IReadOnlyList<SkillDefinition> offer = service.PreviewGrowthOffer(state, "progression:n1", proposed,
+            new Dictionary<ContentId, SkillDefinition>(), Definition(state));
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.Succeeded, Is.True);
-            Assert.That(result.State.Party[0].Attributes, Is.EqualTo(mage.Attributes), "Allocation is a draft until skill confirmation.");
-            Assert.That(result.State.PendingProgression.Single().ProposedAttributes, Is.EqualTo(proposed));
-            Assert.That(result.State.PendingProgression.Single().SelectedSkillContentId, Is.Null);
+            Assert.That(offer, Is.Empty);
+            Assert.That(state.Party[0].Attributes, Is.EqualTo(mage.Attributes));
+            Assert.That(state.PendingProgression.Single().ProposedAttributes, Is.Null);
+            Assert.That(state.Revision, Is.EqualTo(State(withProgression: true).Revision));
         });
-
-        var service = new RunInventoryProgressionService();
-        RunMutationResult duplicate = service.AllocateProgressionAttributes(
-            result.State, result.State.Revision, "progression:n1", proposed);
-        Assert.That(duplicate.Succeeded, Is.True);
-        Assert.That(duplicate.State, Is.SameAs(result.State));
-
-        UnitAttributes changed = new(proposed.Strength - 1, proposed.Agility, proposed.Constitution,
-            proposed.Intelligence, proposed.Charisma, proposed.Luck + 1);
-        RunMutationResult changedAllocation = service.AllocateProgressionAttributes(
-            result.State, result.State.Revision, "progression:n1", changed);
-        Assert.That(changedAllocation.Succeeded, Is.False);
-        Assert.That(changedAllocation.RejectionCode, Is.EqualTo("progression.attributes_already_allocated"));
     }
 
     [Test]
@@ -231,7 +219,7 @@ public sealed class RunInventoryProgressionTests
     }
 
     [Test]
-    public void ProgressionCannotBypassPersistedAttributeAllocation()
+    public void ProgressionAtomicallyAcceptsFinalAttributesWithoutPersistedDraft()
     {
         PureRunState state = State(withProgression: true, frozenCharacterIds: true);
         UnitAttributes a = state.Party[0].Attributes;
@@ -240,8 +228,9 @@ public sealed class RunInventoryProgressionTests
         RunMutationResult result = new RunInventoryProgressionService().CompleteProgression(
             state, state.Revision, "progression:n1", raised, null, new Dictionary<ContentId, SkillDefinition>(), Definition(state));
 
-        Assert.That(result.RejectionCode, Is.EqualTo("progression.attributes_not_allocated"));
-        Assert.That(result.State, Is.SameAs(state));
+        Assert.That(result.Succeeded, Is.True);
+        Assert.That(result.State.Party[0].Attributes, Is.EqualTo(raised));
+        Assert.That(result.State.PendingProgression, Is.Empty);
     }
 
     [Test]
@@ -313,9 +302,28 @@ public sealed class RunInventoryProgressionTests
         UnitAttributes raised=new(a.Strength,a.Agility,a.Constitution,a.Intelligence+1,a.Charisma,a.Luck);
         RunMutationResult allocated=service.AllocateProgressionAttributes(state,state.Revision,"progression:n1",raised);
         RunMutationResult completed=service.CompleteProgression(allocated.State,allocated.State.Revision,"progression:n1",raised,
-            fireballTwo.ContentId,skills,definition);
+            advanced.ContentId,skills,definition);
         Assert.That(completed.Succeeded,Is.True);
         Assert.That(completed.State.AppliedTransactionKeys,Does.Contain("growth-guarantee:pure_run_mage"));
+
+        RunLearnedSkillState[] learnedWithAdvanced = mage.LearnedSkillStates
+            .Append(new RunLearnedSkillState(lockedAdvanced.BranchId, 1, lockedAdvanced.ContentId)).ToArray();
+        var mageWithAdvanced = new RunCharacterState(mage.CharacterId, mage.UnitContentId, mage.Level,
+            mage.Attributes, mage.CurrentHealth, mage.MaxHealth, mage.CurrentMana, mage.MaxMana, mage.IsDead,
+            learnedWithAdvanced.Select(value => value.DefinitionId).ToArray(), mage.Equipment,
+            mage.CarriedConsumables, learnedWithAdvanced);
+        PureRunState StateWith(IReadOnlyList<string> transactions) => new(state.RunId, state.Seed, state.Revision,
+            state.Phase, state.EncounterIndex, state.EncounterContentId,
+            state.Party.Select(value => value.CharacterId == mage.CharacterId ? mageWithAdvanced : value).ToArray(),
+            state.BackpackConsumables, state.BackpackEquipment, state.PendingProgression, transactions,
+            state.Gold, state.BattlesCompleted, state.EnemiesDefeated, state.AcquiredItems, state.Checkpoint,
+            state.MapState, state.NodeTransaction);
+        ContentId[] suppressedByLearnedAdvanced = service.GrowthOffer(StateWith([]), mageWithAdvanced, skills, definition)
+            .Select(value => value.ContentId).ToArray();
+        ContentId[] suppressedByConsumedMarker = service.GrowthOffer(
+                StateWith(["growth-guarantee:pure_run_mage"]), mageWithAdvanced, skills, definition)
+            .Select(value => value.ContentId).ToArray();
+        Assert.That(suppressedByLearnedAdvanced, Is.EqualTo(suppressedByConsumedMarker));
     }
 
     private static PureRunState State(bool withProgression = false, bool frozenCharacterIds = false)

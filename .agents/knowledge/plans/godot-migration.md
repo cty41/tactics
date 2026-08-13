@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-13T14:26:09+08:00"
+timestamp: "2026-08-13T15:57:28+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:ba29cf5438f66e58ee0a3f53bc71581ca29ab8f74a649fbe4fdcd51f0b77446e
+source_fingerprint: sha256:3e0efd0b592fe7c6623765468f86f3f6a78033fbdf8acdb05872812bf273ef5b
 ---
 
 # Current state
@@ -94,6 +94,8 @@ Phase 7B–8E 收口修复已完成自动门禁：Inventory 使用单一角色/�
 Phase 8E New Run 三选一只允许使用 canonical `skill.poison-spear.lv1`；早期实现曾错误写入不存在的 `skill.amazon.poison-spear.lv1`，使 Run 已提交 `PendingBattle` 后在会话组装处缺少技能并表现为二次点击 `run.not_ready`。Save V5 读取规范化现在同时修复 Active Party、PendingBattle checkpoint、Pending Setup 与 Pending Progression 中的该唯一历史别名，后续合法事务会写回 canonical ID；无需删除用户存档。由于该 Lv1 canonical ID 是唯一不含职业前缀的玩家分支，legacy skill-state 投影显式映射回 `amazon.poison-spear`，保持 Lv2/Recover 前置可达。Run Resource 的全部 Starting choices 进入 Catalog 引用审计，启动时由 Application 交叉校验 Run Definition 的技能引用，ResourceSaver 在当前 124 项 Catalog 上保持可重跑。统一门禁通过 Core 88、Application 79、Unity Oracle 15、GdUnit 53、Python 135、Compatibility/Forward+ 与双次 Run Resource 生成。
 
 Phase 7B–8E 成长、HUD 与目标表现收口修复已完成自动门禁，等待合并人工验收。成长页严格渲染 Core 的三选一 Learn/Upgrade offer，并用 Adapter-only metadata 显示规范名称、说明、MP、射程、属性门槛、前置和当前已学技能；基础 Lv1 Resource 现在显式保存 BranchId，Poison Spear 仍映射到 `amazon.poison-spear`。单位 hover/click 共用按 Body 当前纹理 alpha 与实际绘制顺序解析的指针命中，透明区域不再抢占后方单位。Amazon 投矛后根据 committed DroppedSpears 切换项目自有未持矛 DR/UL 图，拾回后恢复；Unit 迁移证据因此扩展为 21 张项目自有 PNG 和 40 个冻结 asset blob。Lightning 以目标头部锚点为终点、从棋盘可视上边缘外垂直劈下。Battle HUD 将 Round/Turn、单位信息、横向动作栏、End Turn 和 Pause/Step/0.5×/1×/2×/4×放回战场边缘，常驻日志迁入 Backquote 开关的 CheatConsole；Catalog 保持124，状态为 `Generated/UnityOwned + manual_inventory_run_flow_growth_hud_and_presentation_qa_pending`。
+
+Phase 8E 的相机、菜单、动态数值与成长事务收口已完成自动门禁，继续等待合并人工验收。Godot 从完整 100 格 Tile AABB 与顶部/底部 HUD 安全边距计算统一 fitted transform，棋盘、Actor、Highlight、技能 FX、悬浮数值和指针逆变换不再为历史右侧诊断栏留空。战斗和地图移除 Abandon，Esc 在 targeting/Console 优先级之后打开 Continue/Options/Main Menu/Save and Quit；退出只保留最后已提交 Run 与战前 checkpoint。Damage/Critical/Heal/Mana/Miss 数字只由 committed events 编译，按 Hit 序号播放并同步 Pause 与 0.5×/1×/2×/4×。成长候选复刻 starting-branch advanced guarantee、Upgrade 优先与冻结 RNG 槽位；属性/技能为内存草稿，最终确认才单次保存，历史 V5 瞬态草稿在恢复时丢弃。Catalog 保持124，状态为 `Generated/UnityOwned + manual_camera_menu_damage_growth_qa_pending`。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

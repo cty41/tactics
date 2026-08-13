@@ -261,7 +261,9 @@ Phase 5A `pure-run-buffs-items-v1` 继续复用同一源管线：14 个 Buff 由
 
 Phase 7B–8D 合并人验前的战斗表现必须保持严格时间边界：玩家 Transition 的表现 `After` snapshot 在任何 AI 自动推进前捕获；AI Decision、Move、Attack/Cast、Hit、Defeat 与 EndTurn 由 Tween 完成事件串行驱动，不使用固定 Timer 猜测动作完成。Pause、Step 和 `0.5x/1x/2x/4x` 只改变表现节奏。尸体与掉矛都属于 movement board 占格，玩家与 AI 共享同一 Core 校验。目标选择阶段只读预览 Unity FacingResolver 的结果，取消后恢复权威朝向。
 
-Pure Run 棋盘外观复用项目自有 warm/cool gray tile 调色和 `BattleBackdrop` 算法的 Godot CanvasItem 等价实现；不复制第三方视觉载荷。Unity 当前未提供全棋盘 focus/shake 合同，因此 Godot 不保留 `presentation.camera.battle-focus-v1`，单位局部受击反馈仍由 StandardUnitTweenProfile 管理。状态与七项程序化技能表现保留后，canonical Catalog 为 124 项。成长 UI 与运行事务采用可恢复的 `AttributeAllocation → SkillSelection` 两阶段：六项属性独立可选，分配草稿持久化后再按新属性刷新技能候选，最终确认才原子升级角色。
+Pure Run 棋盘外观复用项目自有 warm/cool gray tile 调色和 `BattleBackdrop` 算法的 Godot CanvasItem 等价实现；不复制第三方视觉载荷。Unity 当前未提供全棋盘 focus/shake 合同，因此 Godot 不保留 `presentation.camera.battle-focus-v1`，单位局部受击反馈仍由 StandardUnitTweenProfile 管理。状态与七项程序化技能表现保留后，canonical Catalog 为 124 项。成长 UI 采用 `AttributeAllocation → SkillSelection` 两阶段，但两阶段的属性和技能选择都只是内存草稿；只有最终技能确认才以单次 revision-checked 事务提交属性、技能、guarantee 消费和节点解锁。历史 V5 中曾持久化的 `ProposedAttributes`/`SelectedSkillContentId` 在恢复时丢弃，保留原始 `PendingProgression` 资格并从属性步骤重开。
+
+Phase 8E 的战斗取景从完整 100 格菱形 AABB 与 HUD 安全区计算统一 scale/translation，棋盘、Actor、Highlight、FX、悬浮数值和点击逆变换共享同一表现根。Esc 在 targeting/Console 之后打开非破坏性暂停菜单；Main Menu 与 Save and Quit 保留战前 checkpoint，不产生 Abandoned。动态 Damage Number 只消费 committed damage/roll/heal/mana/status tick 事件，并随表现队列共同暂停、倍速和清理；多段同目标伤害以事件序号逐 Hit 展示，不参与任何结算。
 
 每批次必须通过：
 
