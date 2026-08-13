@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-08T12:09:04+08:00"
+timestamp: "2026-08-13T18:18:01+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -93,7 +93,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/Probe10x10BattleSmokeTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:ac5b4478d4d1661f2f895fc0a2f4f5730ef16956403799548a289fb814033cd6
+source_fingerprint: sha256:e8d035a208848503a7370f4e7f9b1f53c4041b42efd6722797190303173a0cc5
 ---
 
 # Current State
@@ -137,6 +137,8 @@ Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态�
 亚马逊由 `AmazonBattleState` 维护每名角色唯一长矛、移动增伤和诱饵生命周期。突刺按等级延长直线并在 Lv3 消耗本回合实际移动格数形成无上限增伤；连续刺击按有序选择逐段独立暴击；毒矛命中后按等级扩散中毒并在半径 3 内确定性落矛，找不到合法落点时整次释放失败且不扣资源。毒矛 Release 的表现顺序固定为切换 `Unarmed`、清除投掷姿态、再启动技能图；Presentation Graph 与兼容 Tween 路径共用同一 Release 准备回调，成功、失败或取消后按 `IsSpearHeld` 对账。实体落矛与缓存重建保持空手，远程召回、相邻免费拾取和战斗清理恢复持矛；该视觉投影不改变近战/持矛技能的既有禁用规则。落地长矛占格但不阻挡视线、不可受击；移动选择、回收、诱饵和战斗技巧规则保持不变。
 
 `BattleSettlementCoordinator`/`BattleSettlementFlow` 负责战后成长和返回 Run。Pure Run 升级候选从合法新技能 Lv1 与已学技能的下一个已发布等级组成确定性混合池；新技能受槽位限制，已学技能升级不占新槽。升级流程必须等待玩家同时选定属性与技能并显式确认，不再通过帧数超时自动推进；确认后先提交保底消费与成长状态，再统一保存。`TBattleLog` 收集结构化回合、技能、伤害、治疗和 Buff 信息。当前反馈已有伤害数字、Buff 图标与屏幕战斗日志。
+
+Godot 表现层将持续伤害与直接伤害统一投影为 committed-event 动态数值：`StatusTickedEvent` 使用目标单位的独立 Impact cue 显示实际 HP 减量，治疗、回蓝、暴击和 Miss 继续由各自事件事实决定颜色和文本，不重新计算战斗结果。玩家三职业已批准的 Cast/Melee/Thrown/Hit Sprite 仅在对应表现窗口替换 Body；方向、Shadow、状态层和玩法坐标保持独立，缺失 Pose 的敌人与召唤物安全回退到 idle 加程序式 Tween。死亡后状态图标清空，落地长矛由 `DroppedSpears` 状态持续显示，Pickup/Recover 后删除。
 
 BattleSettlement UI 在每次显示时重新解析当前 UIDocument 元素并重新注册继续/跳过动画回调，隐藏时释放旧树引用，避免跨战斗复用缓存实例时更新已经脱离面板的结算元素。
 

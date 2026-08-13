@@ -246,6 +246,7 @@ public static class UnitAssetFactory
         resource.DeathTexture = compiledDraft.DeathTexture is null
             ? null
             : LoadTexture(compiledDraft.DeathTexture);
+        ApplyPlayerActionPoses(resource);
         resource.ShadowTexture = LoadTexture(compiledDraft.ShadowTexture);
         resource.DownRightBodyOffset = SpriteOffset(
             resource.DownRightTexture,
@@ -298,6 +299,34 @@ public static class UnitAssetFactory
         string.Empty,
         ResourceLoader.CacheMode.Ignore)
         ?? throw new InvalidOperationException($"Cannot load migrated Unit texture '{path}'.");
+
+    private static void ApplyPlayerActionPoses(UnitDefinitionResource resource)
+    {
+        string? prefix = resource.ContentIdValue switch
+        {
+            "unit.pure-run.mage" => "doge_mage",
+            "unit.pure-run.necromancer" => "doge_necromancer",
+            "unit.pure-run.amazon" => "doge_hunter",
+            _ => null
+        };
+        resource.MeleeDownRightTexture = resource.MeleeUpLeftTexture = null;
+        resource.RangedDownRightTexture = resource.RangedUpLeftTexture = null;
+        resource.CastDownRightTexture = resource.CastUpLeftTexture = null;
+        resource.HitDownRightTexture = resource.HitUpLeftTexture = null;
+        if (prefix is null) return;
+        Texture2D Pose(string suffix) => LoadTexture($"res://assets/units/actions/{prefix}_{suffix}.png");
+        resource.CastDownRightTexture = Pose("cast_dr");
+        resource.CastUpLeftTexture = Pose("cast_ul");
+        resource.HitDownRightTexture = Pose("hit_dr");
+        resource.HitUpLeftTexture = Pose("hit_ul");
+        if (resource.ContentIdValue == "unit.pure-run.amazon")
+        {
+            resource.MeleeDownRightTexture = Pose("melee_attack_dr");
+            resource.MeleeUpLeftTexture = Pose("melee_attack_ul");
+            resource.RangedDownRightTexture = resource.MeleeDownRightTexture;
+            resource.RangedUpLeftTexture = resource.MeleeUpLeftTexture;
+        }
+    }
 
     private static Vector2 SpriteOffset(Texture2D texture, float pivotX, float pivotY) => new(
         texture.GetWidth() * (0.5f - pivotX),

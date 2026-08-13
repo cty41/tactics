@@ -19,7 +19,7 @@
     {
       "resourcePath": "res://content/units/PureRunAmazon.tres",
       "resourceUid": "uid://b4c2fbja1m4p1",
-      "targetHash": "sha256:41f5c7bf12ceedb729bf5461ba959bffb82edc21b3f8f72965e790873a2c2a11",
+      "targetHash": "sha256:cf3669bb2a5fd37438db70ee7ff0a9375078336a144b9dba50664f1d779a5fa2",
       "semanticHash": "sha256:65b942c64058da46b6ae25a1fb3c8628373d209740d898aed35ffe48028ec114"
     },
     {
@@ -67,13 +67,13 @@
     {
       "resourcePath": "res://content/units/PureRunMage.tres",
       "resourceUid": "uid://bqysyhov6sk7s",
-      "targetHash": "sha256:541fb709e9fe19280e22fcbbaf9bbdcbb68ecb64d4834fceb5a25806e99af080",
+      "targetHash": "sha256:f40b40a2e645273ee67f534da1c4969619324c3f9799179f96f72b3b1f502d32",
       "semanticHash": "sha256:f01d58193a96a09a59d3ce766def9c1f06cb77018667daded51b066e6b080ead"
     },
     {
       "resourcePath": "res://content/units/PureRunNecromancer.tres",
       "resourceUid": "uid://chihlradw121e",
-      "targetHash": "sha256:a5730dafc9c70795c4670b5e1986fff375e2dd6db111ef8e2ca3a05d866fb02f",
+      "targetHash": "sha256:ff9aa16d4c9f964e2c5eab4cb8bbd2ab28ff802c9b6c5a1e7894ad4a0f22c37e",
       "semanticHash": "sha256:5bae56690d694780a300b3b158755016cfcd63ff16e56d3633b2665c853c79c8"
     },
     {

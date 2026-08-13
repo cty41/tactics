@@ -28,6 +28,8 @@ $unitGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\
 $unitGalleryCapture = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1-gallery.png'
 $unitSpawnCapture = Join-Path $repoRoot 'Tools\migration\out\pure-run-units-v1-spawn.png'
 $unitGoatTintShader = Join-Path $projectRoot 'src\Tactics.Godot.Adapter\Runtime\Shaders\GoatBodyTint.gdshader'
+$actionPoseManifest = Join-Path $repoRoot 'Tools\migration\manifest\action-poses\pure-run-player-action-poses-v1.json'
+$actionPoseReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-player-action-poses-v1-generation.json'
 $buffItemExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-buffs-items-v1.unity.json'
 $buffItemDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-buffs-items-v1.draft.json'
 $buffItemGolden = Join-Path $repoRoot 'Tests\golden\buff-item-batch-v1.json'
@@ -213,6 +215,22 @@ try {
     }
 
     if (Test-Path -LiteralPath $unitExport -PathType Leaf) {
+        Invoke-Checked 'Generate approved Pure Run player action poses' {
+            python Tools/migration/action_pose_converter.py --root $repoRoot --manifest $actionPoseManifest --receipt $actionPoseReceipt
+        }
+        $firstActionPoseHashes = @{}
+        foreach ($artifact in (Get-Content -LiteralPath $actionPoseReceipt -Raw | ConvertFrom-Json).artifacts) {
+            $target = Join-Path $projectRoot $artifact.resourcePath.Substring('res://'.Length)
+            $firstActionPoseHashes[$target] = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+        }
+        Invoke-Checked 'Repeat Pure Run player action pose generation for idempotency' {
+            python Tools/migration/action_pose_converter.py --root $repoRoot --manifest $actionPoseManifest --receipt $actionPoseReceipt | Out-Null
+        }
+        foreach ($target in $firstActionPoseHashes.Keys) {
+            if ($firstActionPoseHashes[$target] -ne (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash) {
+                throw "Pure Run action pose generation is not byte-idempotent: $target"
+            }
+        }
         Invoke-Checked 'Compile real Pure Run Unit typed migration draft' {
             python -m Tools.migration.unit_converter `
                 --export $unitExport `

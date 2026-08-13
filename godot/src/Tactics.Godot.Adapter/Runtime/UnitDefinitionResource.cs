@@ -42,6 +42,14 @@ public partial class UnitDefinitionResource : Resource
     [Export] public Texture2D? UnarmedDownRightTexture { get; set; }
     [Export] public Texture2D? UnarmedUpLeftTexture { get; set; }
     [Export] public Texture2D? DeathTexture { get; set; }
+    [Export] public Texture2D? MeleeDownRightTexture { get; set; }
+    [Export] public Texture2D? MeleeUpLeftTexture { get; set; }
+    [Export] public Texture2D? RangedDownRightTexture { get; set; }
+    [Export] public Texture2D? RangedUpLeftTexture { get; set; }
+    [Export] public Texture2D? CastDownRightTexture { get; set; }
+    [Export] public Texture2D? CastUpLeftTexture { get; set; }
+    [Export] public Texture2D? HitDownRightTexture { get; set; }
+    [Export] public Texture2D? HitUpLeftTexture { get; set; }
     [Export] public Texture2D? ShadowTexture { get; set; }
     [Export] public Vector2 DownRightBodyOffset { get; set; }
     [Export] public Vector2 UpLeftBodyOffset { get; set; }
@@ -98,6 +106,10 @@ public partial class UnitDefinitionResource : Resource
         if ((UnarmedDownRightTexture is null) != (UnarmedUpLeftTexture is null) ||
             (ContentIdValue == "unit.pure-run.amazon") != (UnarmedDownRightTexture is not null))
             throw new InvalidOperationException($"Unit '{ContentIdValue}' has an invalid unarmed texture contract.");
+        ValidatePosePair(MeleeDownRightTexture, MeleeUpLeftTexture, "melee");
+        ValidatePosePair(RangedDownRightTexture, RangedUpLeftTexture, "ranged");
+        ValidatePosePair(CastDownRightTexture, CastUpLeftTexture, "cast");
+        ValidatePosePair(HitDownRightTexture, HitUpLeftTexture, "hit");
         if (CanProduceCorpse != (DeathTexture is not null))
             throw new InvalidOperationException($"Unit '{ContentIdValue}' corpse and death texture contracts disagree.");
         float[] geometry =
@@ -146,5 +158,11 @@ public partial class UnitDefinitionResource : Resource
         {
             throw new InvalidOperationException($"Unit '{ContentIdValue}' has invalid deferred dependencies.");
         }
+    }
+
+    private void ValidatePosePair(Texture2D? downRight, Texture2D? upLeft, string family)
+    {
+        if ((downRight is null) != (upLeft is null))
+            throw new InvalidOperationException($"Unit '{ContentIdValue}' has an incomplete {family} action pose pair.");
     }
 }

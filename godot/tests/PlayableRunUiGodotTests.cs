@@ -2,6 +2,7 @@ using GdUnit4;
 using Godot;
 using System.Reflection;
 using Tactics.Core.Content;
+using Tactics.Core.Board;
 using Tactics.Core.Items;
 using Tactics.Core.Runs;
 using Tactics.Core.Skills;
@@ -314,6 +315,39 @@ public class PlayableRunUiGodotTests
     }
 
     [TestCase]
+    [RequireGodotRuntime]
+    public void PlayerActionPosesUseFacingPairsAndMissingProfilesFallBackToIdle()
+    {
+        UnitDefinitionResource mage = ResourceLoader.Load<UnitDefinitionResource>("res://content/units/PureRunMage.tres")!;
+        UnitDefinitionResource amazon = ResourceLoader.Load<UnitDefinitionResource>("res://content/units/PureRunAmazon.tres")!;
+        UnitDefinitionResource skeleton = ResourceLoader.Load<UnitDefinitionResource>("res://content/units/PureRunSkeletonWarrior.tres")!;
+        GodotUnitActor mageActor = GodotUnitFactory.InstantiateActor(mage);
+        GodotUnitActor amazonActor = GodotUnitFactory.InstantiateActor(amazon);
+        GodotUnitActor skeletonActor = GodotUnitFactory.InstantiateActor(skeleton);
+
+        mageActor.SetFacing(GodotUnitFacing.East);
+        mageActor.SetActionPose(GodotUnitActionPose.Cast);
+        AssertThat(mageActor.Body!.Texture!.ResourcePath).Contains("doge_mage_cast_ul.png");
+        AssertThat(mageActor.Body.FlipH).IsTrue();
+        mageActor.SetActionPose(GodotUnitActionPose.Hit);
+        AssertThat(mageActor.Body.Texture!.ResourcePath).Contains("doge_mage_hit_ul.png");
+
+        amazonActor.SetFacing(GodotUnitFacing.South);
+        amazonActor.SetActionPose(GodotUnitActionPose.Ranged);
+        AssertThat(amazonActor.Body!.Texture!.ResourcePath).Contains("doge_hunter_melee_attack_dr.png");
+        amazonActor.SetActionPose(null);
+        AssertThat(amazonActor.Body.Texture).IsEqual(amazon.DownRightTexture);
+        amazonActor.SetSpearHeld(false);
+        amazonActor.SetActionPose(GodotUnitActionPose.Melee);
+        AssertThat(amazonActor.Body.Texture).IsEqual(amazon.UnarmedDownRightTexture);
+        AssertThat(amazonActor.IsSpearHeld).IsFalse();
+
+        skeletonActor.SetActionPose(GodotUnitActionPose.Hit);
+        AssertThat(skeletonActor.Body!.Texture).IsEqual(skeleton.DownRightTexture);
+        mageActor.Free(); amazonActor.Free(); skeletonActor.Free();
+    }
+
+    [TestCase]
     public void LightningStartsAboveBoardAndEndsAtTargetHead()
     {
         Vector2 head = new(720, 340);
@@ -321,6 +355,23 @@ public class PlayableRunUiGodotTests
         AssertThat(start.X).IsEqual(head.X);
         AssertThat(start.Y).IsEqual(78f);
         AssertThat(start).IsNotEqual(new Vector2(400, 500));
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void DroppedSpearLayerPersistsCommittedCellsAndClearsAfterRecovery()
+    {
+        var layer = new GodotDroppedSpearLayer();
+        UnitInstanceId owner = new("party.amazon.0");
+        GridPoint cell = new(4, 3);
+
+        layer.Sync(new Dictionary<UnitInstanceId, GridPoint> { [owner] = cell });
+        AssertThat(layer.MarkerCount).IsEqual(1);
+        AssertThat(layer.MarkerPositions[owner]).IsEqual(IsometricBattleBoardLayout.GridToScreen(cell));
+
+        layer.Sync(new Dictionary<UnitInstanceId, GridPoint>());
+        AssertThat(layer.MarkerCount).IsEqual(0);
+        layer.Free();
     }
 
     [TestCase]

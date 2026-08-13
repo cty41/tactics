@@ -15,6 +15,8 @@ public enum GodotUnitFacing
     West
 }
 
+public enum GodotUnitActionPose { Melee, Ranged, Cast, Hit }
+
 /// <summary>
 /// Shared presentation-only actor for generated Unit definitions.
 /// </summary>
@@ -26,6 +28,7 @@ public partial class GodotUnitActor : Node2D
     public GodotUnitStatusOverlay? StatusOverlay { get; private set; }
 
     private UnitDefinitionResource? _definition;
+    private GodotUnitActionPose? _actionPose;
 
     public GodotUnitFacing Facing { get; private set; } = GodotUnitFacing.South;
     public bool IsShowingDeath { get; private set; }
@@ -74,6 +77,12 @@ public partial class GodotUnitActor : Node2D
         ApplyTint();
     }
 
+    public void SetActionPose(GodotUnitActionPose? pose)
+    {
+        _actionPose = pose;
+        ApplyVisual();
+    }
+
     public void SetFacing(GodotUnitFacing facing)
     {
         if (!Enum.IsDefined(facing))
@@ -85,6 +94,9 @@ public partial class GodotUnitActor : Node2D
     public void SetDeathVisual(bool enabled)
     {
         IsShowingDeath = enabled && _definition?.DeathTexture is not null;
+        if (enabled) _actionPose = null;
+        if (enabled && StatusOverlay is not null)
+            StatusOverlay.Apply(Array.Empty<BattleUiStatusSnapshot>());
         ApplyVisual();
     }
 
@@ -159,9 +171,8 @@ public partial class GodotUnitActor : Node2D
         Texture2D living = usesUpLeft
             ? !IsSpearHeld && _definition.UnarmedUpLeftTexture is not null ? _definition.UnarmedUpLeftTexture : _definition.UpLeftTexture!
             : !IsSpearHeld && _definition.UnarmedDownRightTexture is not null ? _definition.UnarmedDownRightTexture : _definition.DownRightTexture!;
-        Body!.Texture = IsShowingDeath
-            ? _definition.DeathTexture
-            : living;
+        Texture2D? action = IsShowingDeath ? null : ResolveActionTexture(usesUpLeft);
+        Body!.Texture = IsShowingDeath ? _definition.DeathTexture : action ?? living;
         Body.FlipH = !IsShowingDeath &&
             (Facing == GodotUnitFacing.East || Facing == GodotUnitFacing.West);
         Vector2 offset = IsShowingDeath
@@ -172,6 +183,15 @@ public partial class GodotUnitActor : Node2D
         Body.Offset = Body.FlipH ? new Vector2(-offset.X, offset.Y) : offset;
         Shadow!.FlipH = false;
     }
+
+    private Texture2D? ResolveActionTexture(bool usesUpLeft) => _actionPose switch
+    {
+        GodotUnitActionPose.Melee when IsSpearHeld => usesUpLeft ? _definition?.MeleeUpLeftTexture : _definition?.MeleeDownRightTexture,
+        GodotUnitActionPose.Ranged when IsSpearHeld => usesUpLeft ? _definition?.RangedUpLeftTexture : _definition?.RangedDownRightTexture,
+        GodotUnitActionPose.Cast => usesUpLeft ? _definition?.CastUpLeftTexture : _definition?.CastDownRightTexture,
+        GodotUnitActionPose.Hit => usesUpLeft ? _definition?.HitUpLeftTexture : _definition?.HitDownRightTexture,
+        _ => null
+    };
 
     private void ApplyTint()
     {

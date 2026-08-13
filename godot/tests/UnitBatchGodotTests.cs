@@ -1,8 +1,11 @@
 using System.Text.Json;
 using GdUnit4;
 using Godot;
+using Tactics.Application.Battle;
 using Tactics.Application.Units;
 using Tactics.Core.Board;
+using Tactics.Core.Content;
+using Tactics.Core.Statuses;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
 using static GdUnit4.Assertions;
@@ -93,6 +96,10 @@ public class UnitBatchGodotTests
         mageActor.SetDeathVisual(true);
         bool deathUsesUnmirroredDeathTexture = mageActor.Body.Texture == mage.DeathTexture &&
             !mageActor.Body.FlipH && mageActor.Body.Offset.IsEqualApprox(mage.DeathBodyOffset);
+        mageActor.SetStatuses([new BattleUiStatusSnapshot(new ContentId("buff.poison"),
+            StatusEffectKind.Poison, StatusPolarity.Harmful, 2, 1)]);
+        mageActor.SetDeathVisual(true);
+        bool deathClearsStatusPresentation = mageActor.StatusOverlay!.StatusCount == 0;
         bool spriteGeometryMatchesFrozenUnityContract =
             mage.DownRightBodyOffset.IsEqualApprox(new Vector2(0f, -108f)) &&
             mage.UpLeftBodyOffset.IsEqualApprox(new Vector2(0f, -108f)) &&
@@ -113,6 +120,7 @@ public class UnitBatchGodotTests
         AssertThat(eastUsesMirroredUl).IsTrue();
         AssertThat(westUsesMirroredDrBodyOnly).IsTrue();
         AssertThat(deathUsesUnmirroredDeathTexture).IsTrue();
+        AssertThat(deathClearsStatusPresentation).IsTrue();
         AssertThat(spriteGeometryMatchesFrozenUnityContract).IsTrue();
         AssertThat(summonUsesSafeLivingFallback).IsTrue();
     }

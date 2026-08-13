@@ -2,10 +2,14 @@
 
 [ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_4xgwx"]
 [ext_resource type="Texture2D" path="res://assets/units/doge_necromancer_death.png" id="2_lit5g"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_cast_dr.png" id="2_mln8f"]
 [ext_resource type="Texture2D" path="res://assets/units/doge_necromancer.png" id="3_fxtvd"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_cast_ul.png" id="3_tvm4o"]
 [ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="4_qolfw"]
 [ext_resource type="Texture2D" path="res://assets/units/doge_necromancer_ul.png" id="5_mln8f"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_hit_dr.png" id="6_kg3ga"]
 [ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="6_tvm4o"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_hit_ul.png" id="7_onpp1"]
 
 [resource]
 script = ExtResource("6_tvm4o")
@@ -36,6 +40,10 @@ ActorScene = ExtResource("1_4xgwx")
 DownRightTexture = ExtResource("3_fxtvd")
 UpLeftTexture = ExtResource("5_mln8f")
 DeathTexture = ExtResource("2_lit5g")
+CastDownRightTexture = ExtResource("2_mln8f")
+CastUpLeftTexture = ExtResource("3_tvm4o")
+HitDownRightTexture = ExtResource("6_kg3ga")
+HitUpLeftTexture = ExtResource("7_onpp1")
 ShadowTexture = ExtResource("4_qolfw")
 DownRightBodyOffset = Vector2(0, -108)
 UpLeftBodyOffset = Vector2(0, -108)

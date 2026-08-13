@@ -32,20 +32,22 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 - Status: `pending`
 - Source: Phase 8E camera/menu/damage/growth transaction
-- Action: Produce normal damage, critical, Miss, healing, and MP recovery while trying Pause and all speed values.
-- Expected: Numbers appear above the affected unit at the committed impact, use the correct color/text, pause with presentation, and leave no residue.
+- Reopen reason: Poison tick now has an explicit committed Impact cue instead of falling through at frame completion.
+- Action: Produce normal damage, a Poison turn-start tick, critical, Miss, healing, and MP recovery while trying Pause and all speed values.
+- Expected: Direct and Poison damage show white `-N`, healing green `+N`, MP blue `+N MP`, critical gold and Miss gray; each appears above the affected unit at its committed impact, pauses with presentation, and leaves no residue.
 - Observe: Unit head anchor, animation timing, HUD speed, and Godot Output.
 - Preserve on failure: Screenshot/video plus event log and speed/pause state.
 - Save boundary: Ordinary battle state changes apply; use a disposable Run if exact replay matters.
-- Automated evidence: Event-to-number identity, multi-hit sequence, pause/speed propagation, and cleanup are asserted; readability and timing remain manual.
+- Automated evidence: Event-to-number identity, explicit Poison tick marker, multi-hit sequence, pause/speed propagation, and cleanup are asserted; readability and timing remain manual.
 - User verdict: none.
 
 ### MQA-GODOT-PROGRESSION — Growth priority and three-card UI
 
 - Status: `pending`
-- Source: Phase 7B–8E progression parity fixes
+- Source: Phase 7B–8E selected-starting-branch and class-attribute fixes
+- Reopen reason: Growth guarantee now follows the player's actual New Run starting skill; Mage uses Intelligence and Necromancer uses Charisma, including Bone Spear.
 - Action: Complete a victory progression, allocate one of six attributes, and inspect the three skill cards and current-skill section.
-- Expected: Exactly three unique Learn/Upgrade candidates appear; current skills show names, levels, descriptions, type and MP; starting advanced and legal Lv2 priority match Unity.
+- Expected: Exactly three unique Learn/Upgrade candidates appear; current skills show names, levels, descriptions, type and MP; the advanced guarantee follows the chosen starting branch. Mage requirements are Intelligence and Necromancer requirements are Charisma.
 - Observe: Attribute page and Skill Selection page.
 - Preserve on failure: Screenshot, character, starting skill, attributes, Run seed, and all three cards.
 - Save boundary: Attribute and skill choices remain drafts until final confirmation.
@@ -80,26 +82,27 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 - Status: `pending`
 - Source: Phase 8C–8E presentation and HUD fixes
-- Action: Check vertical Lightning, overlapping alpha-aware selection, Poison Spear held/unarmed/recovery, HUD controls, and Backquote CheatConsole.
-- Expected: Lightning strikes from above; click/hover select the visible intended actor; Amazon changes spear sprite from committed state; Console does not steal or leak intents.
+- Reopen reason: Dropped Spear now has a persistent programmatic board marker and poison feedback has a dedicated marker.
+- Action: Check vertical Lightning, overlapping alpha-aware selection, Poison Spear held/unarmed/drop/Pickup or Recover, HUD controls, and Backquote CheatConsole.
+- Expected: Lightning strikes from above; click/hover select the visible intended actor; Amazon changes spear sprite from committed state; the dropped tile shows a spear until recovery; Console does not steal or leak intents.
 - Observe: Battle actors, HUD, hover meter/detail, CheatConsole, and Output.
 - Preserve on failure: Screenshot/video, selected actor ID/tile, skill event log, and current encounter.
 - Save boundary: Skills mutate the battle; use a replayable encounter checkpoint.
-- Automated evidence: Event-derived targets, alpha hit ordering, spear state projection, console guards, and renderer smoke are asserted; visual parity remains manual.
+- Automated evidence: Event-derived targets, alpha hit ordering, spear state projection/marker lifecycle, console guards, and renderer smoke are asserted; visual parity remains manual.
 - User verdict: none after latest fixes.
 
 ### MQA-GODOT-UNIT-MOTION-CONTACT — Unit motion, hit, defeat, and ground contact
 
 - Status: `pending`
 - Source: Phase 8 presentation parity fix after user screenshot feedback
-- Reopen reason: Standard Unit presentation now adds Unity-equivalent move sway, hit recoil, lethal collapse, corpse landing, and a tighter shadow contact offset.
-- Action: In one battle, move at least two cells, receive a nonlethal hit, defeat one unit, pause midway, then resume at 0.5× and 4×.
-- Expected: The Body sways and lifts while the root moves continuously; nonlethal hit recoils/rotates/squashes and recovers; lethal hit compresses before the death Sprite lands; Shadow and overlays do not inherit Body deformation; feet visually contact the shadow without a large gap.
+- Reopen reason: Fourteen approved Mage/Necromancer/Amazon Cast/Hit/Melee/Thrown textures are now migrated and combined with the existing programmatic motion.
+- Action: In one battle, move at least two cells; cast with Mage and Necromancer; use Amazon Thrust and Poison Spear; receive a nonlethal hit; defeat one unit; pause midway, then resume at 0.5× and 4×.
+- Expected: Player Body switches to the correct directional action pose during the authored window and returns to idle at Release/Recovery; enemies/summons safely use programmatic fallback. Move sway, hit recoil, lethal collapse and corpse landing remain serial; Shadow and overlays do not inherit Body deformation; dead units show no status icons.
 - Observe: Unit Body, feet, Shadow, status layer and HP/MP anchor during Move, Hit and Defeat.
 - Preserve on failure: Short video or sequential screenshots, actor/unit, speed, cue type, and Godot Output.
 - Save boundary: Uses the current battle checkpoint; presentation speed and pause do not alter gameplay state.
-- Automated evidence: Frozen profile values, Body-only transform paths, interrupt cleanup, serial cue order, GdUnit, Compatibility and Forward+ are asserted; motion feel and contact spacing remain manual. Hit Action Pose textures are not claimed migrated and use the programmatic fallback.
-- User verdict: User reported missing sway, death flattening, hit Sprite behavior, and excessive foot-shadow spacing before this fix.
+- Automated evidence: Hash-bound 14-texture converter, ResourceSaver references, directional pose/fallback tests, Body-only transforms, interrupt cleanup, serial cue order, death status cleanup, GdUnit, Compatibility and Forward+ are asserted; motion feel and contact spacing remain manual.
+- User verdict: User reported missing authored hit/action poses and status icons persisting on death before this fix.
 
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
