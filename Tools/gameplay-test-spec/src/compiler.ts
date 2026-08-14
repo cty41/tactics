@@ -1,9 +1,11 @@
-import type { Adapter, ExecutableScenarioPlan, ProbeRequestSchema, ScenarioAssertion, ScenarioDraft, ScenarioSpec, ScenarioStep } from "./schema.js";
-import { ExecutableScenarioPlanSchema, ScenarioDraftSchema, type ExpectationDiagnostic } from "./schema.js";
+import type { Adapter, ExecutableScenarioPlan, ProbeRequestSchema, RuntimeTarget, ScenarioAssertion, ScenarioDraft, ScenarioSpec, ScenarioStep } from "./schema.js";
+import { ExecutableScenarioPlanSchema, GodotExecutableScenarioPlanSchema, ScenarioDraftSchema, type ExpectationDiagnostic } from "./schema.js";
 import { validateScenarioSpec, validateScenarioDraft } from "./validator.js";
+import { requiredCapabilities, validateRuntimeCapabilities } from "./capabilities.js";
 
 // Kind -> adapter 映射表，用于 mixed-adapter 场景的正确路由
 const setupKindToAdapter: Record<string, Adapter> = {
+  loadValidatedCheckpoint: "Map",
   createSkillTestWorld: "Skill",
   createSkillGraph: "Skill",
   createCell: "Skill",
@@ -29,6 +31,10 @@ const setupKindToAdapter: Record<string, Adapter> = {
 };
 
 const actionKindToAdapter: Record<string, Adapter> = {
+  endTurnOnlyUntilTerminal: "Battle",
+  restartGodotMain: "UI",
+  setPresentationPaused: "UI",
+  setPresentationSpeed: "UI",
   bindBattleController: "Battle",
   executeSkillGraph: "Skill",
   executeAbilityOnTarget: "Skill",
@@ -116,6 +122,15 @@ const actionKindToAdapter: Record<string, Adapter> = {
 };
 
 const assertionKindToAdapter: Record<string, Adapter> = {
+  inventoryProjectionEnteredBattle: "Battle",
+  terminalSummaryOutcomeEquals: "Map",
+  activeRunExistsEquals: "Map",
+  presentationNumberEquals: "UI",
+  presentationNodeCountEquals: "UI",
+  productionSaveUnchanged: "Map",
+  checkpointRevisionEquals: "Map",
+  runtimeStateHashEquals: "UI",
+  runtimeHasNoErrors: "UI",
   // Skill 独占断言
   executionStateEquals: "Skill",
   validationErrorCodeIncludes: "Skill",
@@ -237,7 +252,11 @@ export interface CompileResult {
   valid: boolean;
 }
 
-export function compileScenarioSpec(input: unknown): CompileResult {
+export interface CompileOptions {
+  runtime?: RuntimeTarget;
+}
+
+export function compileScenarioSpec(input: unknown, options: CompileOptions = {}): CompileResult {
   const validation = validateScenarioSpec(input);
   if (!validation.valid || !validation.spec) {
     return {
@@ -247,10 +266,10 @@ export function compileScenarioSpec(input: unknown): CompileResult {
   }
 
   const spec = validation.spec;
-  return compileSpecToPlan(spec, validation.diagnostics);
+  return compileSpecToPlan(spec, validation.diagnostics, options);
 }
 
-export function compileScenarioDraft(draft: unknown): CompileResult {
+export function compileScenarioDraft(draft: unknown, options: CompileOptions = {}): CompileResult {
   const validation = validateScenarioDraft(draft);
   if (!validation.valid || !validation.spec) {
     return {
@@ -260,12 +279,54 @@ export function compileScenarioDraft(draft: unknown): CompileResult {
   }
 
   const spec = validation.spec;
-  return compileSpecToPlan(spec, validation.diagnostics);
+  return compileSpecToPlan(spec, validation.diagnostics, options);
 }
 
-function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnostic[]): CompileResult {
+function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnostic[], options: CompileOptions): CompileResult {
   const fallbackAdapter = spec.requiredAdapters[0];
   const probeRequests = deriveProbeRequests(spec, fallbackAdapter);
+  const runtime = options.runtime ?? "Unity";
+
+  const runtimeDiagnostics: ExpectationDiagnostic[] = validateRuntimeCapabilities(runtime, spec.setup, spec.actions, spec.assertions);
+  if (runtime === "Godot") {
+    const adapterDiagnostics = [
+      ...validateGodotAdapters(spec.setup, setupKindToAdapter, spec.requiredAdapters),
+      ...validateGodotAdapters(spec.actions, actionKindToAdapter, spec.requiredAdapters),
+      ...validateGodotAdapters(spec.assertions, assertionKindToAdapter, spec.requiredAdapters)
+    ];
+    runtimeDiagnostics.push(...adapterDiagnostics);
+  }
+  if (runtimeDiagnostics.length > 0) return { valid: false, diagnostics: [...diagnostics, ...runtimeDiagnostics] };
+
+  if (runtime === "Godot") {
+    const checkpointStep = spec.setup.find(value => value.kind === "loadValidatedCheckpoint");
+    const checkpoint = checkpointStep ? {
+      id: String(checkpointStep.parameters.id),
+      source: "validated_checkpoint" as const,
+      semanticHash: String(checkpointStep.parameters.semanticHash),
+      path: String(checkpointStep.parameters.path)
+    } : undefined;
+    const plan = {
+      schemaVersion: 2 as const,
+      runtime: "Godot" as const,
+      scenarioName: `${spec.feature}.${spec.scenario}`,
+      requiredAdapters: spec.requiredAdapters,
+      requiredCapabilities: requiredCapabilities(spec.setup, spec.actions, spec.assertions),
+      setupActions: spec.setup.map(step => ({ ...step, adapter: resolveAdapter(step, setupKindToAdapter, fallbackAdapter) })),
+      runtimeActions: spec.actions.map(step => ({ ...step, adapter: resolveAdapter(step, actionKindToAdapter, fallbackAdapter) })),
+      assertionPlans: spec.assertions.map(assertion => ({ ...assertion, adapter: resolveAdapter(assertion, assertionKindToAdapter, fallbackAdapter) })),
+      timeoutMs: spec.timeoutMs,
+      probeRequests,
+      checkpoint,
+      saveIsolation: { root: "user://qa-runner", protectProductionSave: true as const },
+      watchdog: { stepTimeoutMs: 30000, battleRoundLimit: 80, scenarioTimeoutMs: 300000, noProgressLimit: 2 }
+    };
+    const parsed = GodotExecutableScenarioPlanSchema.safeParse(plan);
+    if (!parsed.success) return { valid: false, diagnostics: parsed.error.issues.map(issue => ({
+      code: "PlanSchemaValidationFailed", severity: "error", message: issue.message, path: issue.path.join(".")
+    })) };
+    return { plan: parsed.data, diagnostics, valid: true };
+  }
 
   const plan: ExecutableScenarioPlan = {
     schemaVersion: 1,
@@ -296,6 +357,27 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
     diagnostics,
     valid: true
   };
+}
+
+function validateGodotAdapters(
+  items: Array<ScenarioStep | ScenarioAssertion>,
+  kindMap: Record<string, Adapter>,
+  requiredAdapters: Adapter[]
+): ExpectationDiagnostic[] {
+  const result: ExpectationDiagnostic[] = [];
+  for (const item of items) {
+    const canonical = kindMap[item.kind];
+    if (!canonical) continue;
+    if (item.adapter && item.adapter !== canonical) result.push({
+      code: "RuntimeAdapterMismatch", severity: "error",
+      message: `${item.kind} must use the ${canonical} adapter for the Godot runtime.`, path: item.id ?? item.kind
+    });
+    if (!requiredAdapters.includes(canonical)) result.push({
+      code: "MissingRequiredRuntimeAdapter", severity: "error",
+      message: `${item.kind} requires ${canonical} in requiredAdapters.`, path: item.id ?? item.kind
+    });
+  }
+  return result;
 }
 
 function deriveProbeRequests(spec: ScenarioSpec, fallback: Adapter): ExecutableScenarioPlan["probeRequests"] {

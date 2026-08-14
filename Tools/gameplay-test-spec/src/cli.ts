@@ -60,10 +60,12 @@ program
   .description("Compile ScenarioSpec to ExecutableScenarioPlan")
   .requiredOption("-s, --spec <path>", "input *.gameplay-test.md path")
   .requiredOption("-o, --out <path>", "output *.plan.json path")
+  .option("--runtime <runtime>", "runtime target: unity or godot", "unity")
   .action(async options => {
     const markdown = await readFile(options.spec, "utf8");
     const doc = parseGameplayTestDocument(markdown);
-    const result = compileScenarioSpec(doc.frontmatter);
+    const runtime = parseRuntime(options.runtime);
+    const result = compileScenarioSpec(doc.frontmatter, { runtime });
     if (!result.valid || !result.plan) {
       printJson(result);
       process.exitCode = 1;
@@ -79,10 +81,11 @@ program
   .description("Compile ScenarioDraft JSON to ExecutableScenarioPlan")
   .requiredOption("-d, --draft <path>", "input *.json draft path")
   .requiredOption("-o, --out <path>", "output *.plan.json path")
+  .option("--runtime <runtime>", "runtime target: unity or godot", "unity")
   .action(async options => {
     const content = await readFile(options.draft, "utf8");
     const draft = JSON.parse(content);
-    const result = compileScenarioDraft(draft);
+    const result = compileScenarioDraft(draft, { runtime: parseRuntime(options.runtime) });
     if (!result.valid || !result.plan) {
       printJson(result);
       process.exitCode = 1;
@@ -156,9 +159,11 @@ program
   .option("--filter-tag <tag>", "filter by tag")
   .option("--filter-feature <feature>", "filter by feature")
   .option("--filter-scenario <scenario>", "filter by scenario name")
+  .option("--runtime <runtime>", "runtime target: unity or godot", "unity")
   .action(async options => {
     const inputDir = options.dir;
     const outDir = options.out || inputDir;
+    const runtime = parseRuntime(options.runtime);
     const files = await findGameplayTestFiles(inputDir);
     
     const summary = {
@@ -194,7 +199,7 @@ program
           continue;
         }
 
-        const result = compileScenarioSpec(spec);
+        const result = compileScenarioSpec(spec, { runtime });
         if (result.valid && result.plan) {
           const outPath = join(outDir, basename(file, ".gameplay-test.md") + ".plan.json");
           await writeFile(outPath, `${JSON.stringify(result.plan, null, 2)}\n`, "utf8");
@@ -318,4 +323,11 @@ program.parseAsync().catch(error => {
 
 function printJson(value: unknown): void {
   console.log(JSON.stringify(value, null, 2));
+}
+
+function parseRuntime(value: string): "Unity" | "Godot" {
+  const normalized = value.toLowerCase();
+  if (normalized === "unity") return "Unity";
+  if (normalized === "godot") return "Godot";
+  throw new Error(`Unknown runtime '${value}'. Expected unity or godot.`);
 }

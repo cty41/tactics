@@ -1,6 +1,21 @@
 import { z } from "zod";
 
 export const AdapterSchema = z.enum(["Battle", "Skill", "Map", "UI", "PlayerInput"]);
+export const RuntimeTargetSchema = z.enum(["Unity", "Godot"]);
+
+export const WatchdogSchema = z.object({
+  stepTimeoutMs: z.number().int().positive().default(30000),
+  battleRoundLimit: z.number().int().positive().default(80),
+  scenarioTimeoutMs: z.number().int().positive().default(300000),
+  noProgressLimit: z.number().int().positive().default(2)
+});
+
+export const CheckpointSchema = z.object({
+  id: z.string().min(1),
+  source: z.literal("validated_checkpoint"),
+  semanticHash: z.string().regex(/^[a-f0-9]{64}$/),
+  path: z.string().min(1)
+});
 
 const JsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
   z.union([
@@ -96,12 +111,89 @@ export const ExecutableScenarioPlanSchema = z.object({
   probeRequests: z.array(ProbeRequestSchema).default([])
 });
 
+const godotPlanAdapterByKind: Record<string, z.infer<typeof AdapterSchema>> = {
+  loadValidatedCheckpoint: "Map",
+  initializePlayerInput: "PlayerInput",
+  movePointerToTarget: "PlayerInput",
+  clickPointerTarget: "PlayerInput",
+  rightClickPointerTarget: "PlayerInput",
+  pressInputKey: "PlayerInput",
+  waitForPlayerObservable: "PlayerInput",
+  waitForFrames: "PlayerInput",
+  playBattleThroughInput: "PlayerInput",
+  endTurnOnlyUntilTerminal: "Battle",
+  restartGodotMain: "UI",
+  setPresentationPaused: "UI",
+  setPresentationSpeed: "UI",
+  inventoryProjectionEnteredBattle: "Battle",
+  terminalSummaryOutcomeEquals: "Map",
+  activeRunExistsEquals: "Map",
+  presentationNumberEquals: "UI",
+  presentationNodeCountEquals: "UI",
+  productionSaveUnchanged: "Map",
+  checkpointRevisionEquals: "Map",
+  runtimeStateHashEquals: "UI",
+  runtimeHasNoErrors: "UI"
+};
+
+export const GodotExecutableScenarioPlanSchema = z.object({
+  schemaVersion: z.literal(2),
+  runtime: z.literal("Godot"),
+  scenarioName: z.string().min(1),
+  requiredAdapters: z.array(AdapterSchema).min(1),
+  requiredCapabilities: z.array(z.string().min(1)),
+  setupActions: z.array(ExecutableActionSchema),
+  runtimeActions: z.array(ExecutableActionSchema),
+  assertionPlans: z.array(ExecutableAssertionSchema),
+  timeoutMs: z.number().int().positive(),
+  probeRequests: z.array(ProbeRequestSchema).default([]),
+  checkpoint: CheckpointSchema.optional(),
+  saveIsolation: z.object({ root: z.string().min(1), protectProductionSave: z.literal(true) }),
+  watchdog: WatchdogSchema
+}).superRefine((plan, context) => {
+  const phases = [
+    ["setup", plan.setupActions] as const,
+    ["action", plan.runtimeActions] as const,
+    ["assertion", plan.assertionPlans] as const
+  ];
+  const expectedCapabilities: string[] = [];
+  for (const [phase, items] of phases) for (const item of items) {
+    const expectedAdapter = godotPlanAdapterByKind[item.kind];
+    if (!expectedAdapter) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: `Unsupported Godot ${phase} '${item.kind}'.` });
+      continue;
+    }
+    if (item.adapter !== expectedAdapter) context.addIssue({ code: z.ZodIssueCode.custom, message: `${item.kind} must use ${expectedAdapter}.` });
+    if (!plan.requiredAdapters.includes(expectedAdapter)) context.addIssue({ code: z.ZodIssueCode.custom, message: `${item.kind} requires ${expectedAdapter}.` });
+    expectedCapabilities.push(`${phase}:${item.kind}`);
+  }
+  const actual = [...new Set(plan.requiredCapabilities)].sort();
+  const expected = [...new Set(expectedCapabilities)].sort();
+  if (actual.length !== expected.length || actual.some((value, index) => value !== expected[index])) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "requiredCapabilities must exactly match the compiled Godot steps." });
+  }
+  if (plan.probeRequests.length !== plan.assertionPlans.length) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "probeRequests must correspond one-to-one with assertionPlans." });
+  } else {
+    plan.probeRequests.forEach((probe, index) => {
+      const assertion = plan.assertionPlans[index];
+      if (probe.kind !== assertion.kind || probe.adapter !== assertion.adapter || probe.target !== assertion.target ||
+          JSON.stringify(probe.parameters) !== JSON.stringify(assertion.parameters)) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: `probeRequests[${index}] does not match its assertion plan.` });
+      }
+    });
+  }
+});
+
 export type Adapter = z.infer<typeof AdapterSchema>;
+export type RuntimeTarget = z.infer<typeof RuntimeTargetSchema>;
 export type ScenarioStep = z.infer<typeof ScenarioStepSchema>;
 export type ScenarioAssertion = z.infer<typeof ScenarioAssertionSchema>;
 export type ScenarioSpec = z.infer<typeof ScenarioSpecSchema>;
 export type ScenarioDraft = z.infer<typeof ScenarioDraftSchema>;
-export type ExecutableScenarioPlan = z.infer<typeof ExecutableScenarioPlanSchema>;
+export type UnityExecutableScenarioPlan = z.infer<typeof ExecutableScenarioPlanSchema>;
+export type GodotExecutableScenarioPlan = z.infer<typeof GodotExecutableScenarioPlanSchema>;
+export type ExecutableScenarioPlan = UnityExecutableScenarioPlan | GodotExecutableScenarioPlan;
 
 export type DiagnosticSeverity = "error" | "warning";
 

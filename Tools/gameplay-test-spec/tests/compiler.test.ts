@@ -4,7 +4,7 @@ import test from "node:test";
 import { compileScenarioSpec } from "../src/compiler.js";
 import { parseGameplayTestDocument } from "../src/frontmatter.js";
 import { generateScenarioSpec } from "../src/generator.js";
-import type { ScenarioSpec } from "../src/schema.js";
+import { GodotExecutableScenarioPlanSchema, type ScenarioSpec } from "../src/schema.js";
 import { validateScenarioSpec } from "../src/validator.js";
 
 const fixturesDirUrl = new URL("../../../../Tests/gameplay-specs/", import.meta.url);
@@ -395,6 +395,75 @@ test("routes semantic player input actions to PlayerInput", () => {
   assert.ok(compiled.plan.setupActions.every(action => action.adapter === "PlayerInput"));
   assert.ok(compiled.plan.runtimeActions.every(action => action.adapter === "PlayerInput"));
   assert.ok(compiled.plan.assertionPlans.every(assertion => assertion.adapter === "UI"));
+});
+
+test("keeps legacy Unity plans unchanged and emits capability-bound Godot v2 plans", () => {
+  const spec: ScenarioSpec = {
+    feature: "GodotQA",
+    scenario: "DefeatFlow",
+    tags: ["godot-qa"],
+    requiredAdapters: ["Map", "Battle", "UI"],
+    timeoutMs: 10000,
+    setup: [{ kind: "loadValidatedCheckpoint", parameters: {
+      id: "defeat-no-summon", path: "Tests/checkpoints/defeat.json", semanticHash: "a".repeat(64)
+    } }],
+    actions: [{ kind: "endTurnOnlyUntilTerminal", parameters: {} }],
+    assertions: [{ kind: "terminalSummaryOutcomeEquals", expected: "Defeated", parameters: {} }]
+  };
+
+  const unity = compileScenarioSpec(spec);
+  const godot = compileScenarioSpec(spec, { runtime: "Godot" });
+  assert.equal(unity.valid, false);
+  assert.ok(unity.diagnostics.some(value => value.code === "UnsupportedRuntimeCapability"));
+  assert.equal(godot.valid, true, godot.diagnostics.map(value => value.message).join("\n"));
+  assert.equal(godot.plan?.schemaVersion, 2);
+  if (godot.plan?.schemaVersion === 2) {
+    assert.equal(godot.plan.runtime, "Godot");
+    assert.equal(godot.plan.checkpoint?.source, "validated_checkpoint");
+    assert.equal(godot.plan.saveIsolation.protectProductionSave, true);
+    assert.ok(godot.plan.requiredCapabilities.includes("action:endTurnOnlyUntilTerminal"));
+  }
+});
+
+test("rejects capabilities not implemented by the Godot runtime", () => {
+  const compiled = compileScenarioSpec({
+    feature: "GodotQA", scenario: "RejectShortcut", tags: [], requiredAdapters: ["Map"], timeoutMs: 10000,
+    setup: [], actions: [{ kind: "enterNode", parameters: { nodeId: "n1" } }],
+    assertions: [{ kind: "mapIsActive", expected: true, parameters: {} }]
+  }, { runtime: "Godot" });
+  assert.equal(compiled.valid, false);
+  assert.ok(compiled.diagnostics.some(value => value.code === "UnsupportedRuntimeCapability"));
+});
+
+test("rejects malformed Godot action parameters, assertion values, and adapter declarations", () => {
+  const base = {
+    feature: "GodotQA", scenario: "StrictContract", tags: [], requiredAdapters: ["UI"], timeoutMs: 10000,
+    setup: [], actions: [{ kind: "setPresentationSpeed", parameters: { speed: "fast" } }],
+    assertions: [{ kind: "presentationNodeCountEquals", expected: "zero", parameters: {} }]
+  };
+  const malformed = compileScenarioSpec(base, { runtime: "Godot" });
+  assert.equal(malformed.valid, false);
+  assert.ok(malformed.diagnostics.some(value => value.code === "InvalidPresentationSpeed"));
+  assert.ok(malformed.diagnostics.some(value => value.code === "InvalidAssertionExpectedType"));
+
+  const mismatched = compileScenarioSpec({ ...base,
+    actions: [{ kind: "setPresentationPaused", adapter: "Skill", parameters: { paused: true } }],
+    assertions: [{ kind: "runtimeHasNoErrors", expected: true, parameters: {} }]
+  }, { runtime: "Godot" });
+  assert.equal(mismatched.valid, false);
+  assert.ok(mismatched.diagnostics.some(value => value.code === "RuntimeAdapterMismatch"));
+});
+
+test("rejects a directly tampered Godot v2 probe contract", () => {
+  const compiled = compileScenarioSpec({
+    feature: "GodotQA", scenario: "ProbeIntegrity", tags: [], requiredAdapters: ["UI"], timeoutMs: 10000,
+    setup: [], actions: [{ kind: "setPresentationPaused", parameters: { paused: true } }],
+    assertions: [{ kind: "runtimeHasNoErrors", expected: true, parameters: {} }]
+  }, { runtime: "Godot" });
+  assert.equal(compiled.valid, true);
+  const tampered = structuredClone(compiled.plan!);
+  tampered.probeRequests[0] = { adapter: "Skill", kind: "executeSkillGraph", parameters: {} };
+  assert.equal(GodotExecutableScenarioPlanSchema.safeParse(tampered).success, false);
 });
 
 test("rejects every strict PlayerInput setup and runtime shortcut boundary", () => {

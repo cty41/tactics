@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ScenarioSpecSchema, ScenarioDraftSchema, type ExpectationDiagnostic, type ScenarioAssertion, type ScenarioSpec, type ScenarioStep, type ScenarioDraft } from "./schema.js";
 
 const supportedSetupKinds = new Set([
+  "loadValidatedCheckpoint",
   "createSkillTestWorld",
   "createSkillGraph",
   "createCell",
@@ -27,6 +28,10 @@ const supportedSetupKinds = new Set([
 ]);
 
 const supportedActionKinds = new Set([
+  "endTurnOnlyUntilTerminal",
+  "restartGodotMain",
+  "setPresentationPaused",
+  "setPresentationSpeed",
   "bindBattleController",
   "executeSkillGraph",
   "executeAbilityOnTarget",
@@ -150,6 +155,15 @@ const supportedGraphKinds = new Set([
 ]);
 
 const supportedAssertionKinds = new Set([
+  "inventoryProjectionEnteredBattle",
+  "terminalSummaryOutcomeEquals",
+  "activeRunExistsEquals",
+  "presentationNumberEquals",
+  "presentationNodeCountEquals",
+  "productionSaveUnchanged",
+  "checkpointRevisionEquals",
+  "runtimeStateHashEquals",
+  "runtimeHasNoErrors",
   "executionStateEquals",
   "validationErrorCodeIncludes",
   "unitHealthEquals",
@@ -398,6 +412,12 @@ function validateStepKind(
 
 function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[]): void {
   switch (step.kind) {
+    case "loadValidatedCheckpoint":
+      for (const key of ["id", "path", "semanticHash"] as const) requireStepStringParameter(step, key, diagnostics);
+      if (typeof step.parameters.semanticHash === "string" && !/^[a-f0-9]{64}$/.test(step.parameters.semanticHash)) diagnostics.push({
+        code: "InvalidCheckpointHash", severity: "error", message: "loadValidatedCheckpoint semanticHash must be lowercase SHA-256.", path: step.id ?? step.kind
+      });
+      break;
     case "createSkillTestWorld":
       resetAliasState(state);
       break;
@@ -513,6 +533,24 @@ function validateSetupStep(step: ScenarioStep, state: AliasState, diagnostics: E
 
 function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: ExpectationDiagnostic[], hasBindBattleController?: boolean): void {
   switch (step.kind) {
+    case "endTurnOnlyUntilTerminal":
+      if (step.parameters.maximumRounds !== undefined &&
+          (!Number.isInteger(step.parameters.maximumRounds) || Number(step.parameters.maximumRounds) < 1 || Number(step.parameters.maximumRounds) > 80)) {
+        diagnostics.push({ code: "InvalidMaximumRounds", severity: "error", message: "endTurnOnlyUntilTerminal maximumRounds must be an integer from 1 to 80.", path: step.id ?? step.kind });
+      }
+      break;
+    case "restartGodotMain":
+      break;
+    case "setPresentationPaused":
+      if (typeof step.parameters.paused !== "boolean") diagnostics.push({
+        code: "InvalidPresentationPaused", severity: "error", message: "setPresentationPaused requires a boolean paused parameter.", path: step.id ?? step.kind
+      });
+      break;
+    case "setPresentationSpeed":
+      if (typeof step.parameters.speed !== "number" || ![0.5, 1, 2, 4].includes(step.parameters.speed)) diagnostics.push({
+        code: "InvalidPresentationSpeed", severity: "error", message: "setPresentationSpeed requires speed 0.5, 1, 2, or 4.", path: step.id ?? step.kind
+      });
+      break;
     case "executeSkillGraph":
       validateExecuteSkillGraph(step, state, diagnostics);
       break;
@@ -700,6 +738,23 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
   const isBattleContext = hasBindBattleController || (requiredAdapters?.includes("Battle") && !requiredAdapters?.includes("Skill"));
 
   switch (assertion.kind) {
+    case "terminalSummaryOutcomeEquals":
+    case "presentationNumberEquals":
+    case "runtimeStateHashEquals":
+      requireStringExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "presentationNodeCountEquals":
+    case "checkpointRevisionEquals":
+      requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
+      break;
+    case "inventoryProjectionEnteredBattle":
+    case "activeRunExistsEquals":
+    case "productionSaveUnchanged":
+    case "runtimeHasNoErrors":
+      if (typeof assertion.expected !== "boolean") diagnostics.push({
+        code: "InvalidAssertionExpectedType", severity: "error", message: `${assertion.kind} requires a boolean expected value.`, path: assertion.id ?? assertion.kind
+      });
+      break;
     case "executionStateEquals":
     case "validationErrorCodeIncludes":
     case "lastErrorContains":
