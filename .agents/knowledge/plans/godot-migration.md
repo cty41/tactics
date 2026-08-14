@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-14T14:36:56+08:00"
+timestamp: "2026-08-14T17:12:23+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:d91743892d3ab1ec2a387007ac78c22652a9db52df3c1aa13871fa46470c8c2d
+source_fingerprint: sha256:e68d759574b2c6e342b36d60bfb2ce9394a8b606adc5437ba621af6f737bceeb
 ---
 
 # Current state
@@ -106,6 +106,8 @@ GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到
 Phase 7B–8E 的召唤物控制、失败终局和 Inventory parity 收口已完成自动实现。Unity 冻结的 Basic Melee/Fire Demon Brain 现在生成两个内部 AI Resource；Skeleton Warrior Lv1/Lv2、Skeleton Mage Lv1/Lv2 分别使用独立近战与零耗 Fireball 内部技能，Fire Demon 继续使用已冻结专属攻击。友方召唤物保留玩家阵营身份，但自身回合按 Unit ContentId 解析 AI controller 自动行动；Decoy 无攻击并自动跳过普通行动。只有玩家阵营角色与召唤物全部死亡才生成一次 Defeated Result，Elite、Layer 4/6 与 Boss 继续复用同一结算和 Terminal Summary。Inventory 由 Application projector 统一提供基础、装备 bonus、总属性、派生值、槽位和实例详情，Godot 只从 Rogue Map 暴露单一入口，Home/Settlement 快捷入口已移除。ResourceSaver 新增 2 个 AI 与 4 个内部 Skill Resource，canonical Catalog 为131；状态保持 `Generated/UnityOwned + manual_summon_ai_defeat_inventory_qa_pending`。
 
 Phase 7B–8E 的行动、速度、LOS 与 Mystery 定向收口保持 Catalog 131 和 Save V5 schema 不变。Move 按钮现在消费 Application 的统一 availability，成功移动后在该单位下回合前禁用；回合 MP 仍按 Unity 合同由 Intelligence 恢复，Max MP 仍由 Charisma×3 计算。Godot playable-only 敌方速度通过非 Catalog 的 `godot-playable-enemy-speed-v1` Resource 覆盖六类敌人，保留冻结 Unity Unit Resource 数值并避免常规遭遇所有敌人整体抢先。LOS 返回首个阻挡格、阻挡类型与单位身份，存活单位和 supercover 地形阻挡，尸体与落矛不阻挡，Bone Spear 继续保留首敌截获语义；Preview、AI 与 Transition 共用同一查询。Mystery 在节点打开时按 Run seed 从存活正式队员中确定一次 adjudicator 并写入 MapState，固定选项只声明检定属性，Reload 不换人、不重掷。
+
+最终 Boss 现场诊断确认主档仍停在 `PendingBattle / encounter.pure-run.special`，而非已经提交但未显示的 BossVictory。Application 现在缓存权威终局 BattleResult，并通过只读 diagnostics 暴露存活实体、控制权、自动帧数量和终局 marker；Godot Main 只在 committed 表现队列排空后提交一次结算。表现播放器为普通、空 cue 与异常恢复 frame 统一发出一次 completion；Tween 已停止但完成回调丢失时，Main 清理临时状态、对齐 After snapshot 并继续终局，不使用固定时间跳过正常动画。Save V5、Catalog 131、Boss 配方、战斗数值和 AI 不变；人工 Full Run 终局闸门保持 pending。
 
 Pure Run schema 仍为 v1，但 `UnitAttributes` 现在由显式 JSON converter 稳定读写六项字段。已存在的固定三人全零属性存档在身份匹配时从 Run Definition 修复，并在下一次合法事务写回；部分损坏或身份不匹配拒绝。胜利结算对本场阵亡角色也应用 `Constitution×2` HP 与 `Charisma` MP 恢复，恢复后可进入下一场，死亡卸装仍保留；失败不复活。Battle/Settlement 明示 N1/N2/N3，只有结算 Continue 可开始下一场，并以一次性提交与导航日志阻止旧 Timer、重复 BattleResult 或双击创建重复战斗。
 

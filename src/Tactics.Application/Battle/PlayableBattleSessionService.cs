@@ -65,6 +65,14 @@ public enum BattleUiLogCategory { Gameplay, Ai, Rejected }
 public sealed record BattleUiLogEntry(BattleUiLogCategory Category,string Message,string EventType);
 public sealed record BattleUiFrame(string Stage,BattleUiSnapshot Snapshot,AiDecisionEvent? Decision,IReadOnlyList<BattleEvent> Events,BattlePresentationFrame Presentation);
 
+public sealed record BattleTerminalUnitDiagnostics(UnitInstanceId UnitId, ContentId DefinitionId, GridPoint Cell,
+    int PlayerNumber, int CurrentHealth, string ControlKind);
+public sealed record BattleTerminalDiagnostics(ContentId? EncounterContentId, int Round, UnitInstanceId ActiveUnitId,
+    IReadOnlyList<BattleTerminalUnitDiagnostics> LivingPlayerUnits,
+    IReadOnlyList<BattleTerminalUnitDiagnostics> LivingEnemyUnits,
+    bool TerminalResultGenerated, int PendingAutomaticFrameCount, string? NextAutomaticStage,
+    string LastTerminalMarker);
+
 public sealed record BattleUiSnapshot(
     PlayableBattlePhase Phase,
     int Round,
@@ -84,7 +92,8 @@ public sealed record BattleUiSnapshot(
     string? FailureCode,
     IReadOnlyCollection<GridPoint>? BlockedCells = null,
     IReadOnlyList<BattleUiSkillAvailability>? SkillAvailability = null,
-    BattleUiMoveAvailability MoveAvailability = null!);
+    BattleUiMoveAvailability MoveAvailability = null!,
+    bool TerminalPending = false);
 
 public sealed record PlayableBattleSessionContext(
     BattleState InitialState,
@@ -129,6 +138,7 @@ public sealed class PlayableBattleSessionService
     private string? _failureCode;
     private PureRunBattleResult? _battleResult;
     private BattleUiSnapshot? _lastPresentedSnapshot;
+    private string _lastTerminalMarker = "initialized";
     private static readonly ContentId SkeletonUnitId = new("unit.pure-run.skeleton-warrior");
     private static readonly ContentId FireDemonUnitId = new("unit.pure-run.fire-demon");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
@@ -154,6 +164,18 @@ public sealed class PlayableBattleSessionService
     public BattleState State { get; private set; }
     public PureRunBattleResult? BattleResult => _battleResult;
     public bool HasPendingAutomaticFrames => _automaticFrames.Count>0;
+    public BattleTerminalDiagnostics TerminalDiagnostics => new(
+        _context.EncounterRequest?.EncounterContentId,
+        State.Round,
+        State.ActiveUnitId,
+        State.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber == _context.PlayerNumber)
+            .OrderBy(unit => unit.Unit.SpawnOrdinal).Select(ToTerminalDiagnostics).ToArray(),
+        State.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != _context.PlayerNumber)
+            .OrderBy(unit => unit.Unit.SpawnOrdinal).Select(ToTerminalDiagnostics).ToArray(),
+        _battleResult is not null,
+        _automaticFrames.Count,
+        _automaticFrames.TryPeek(out var next) ? next.Stage : null,
+        _lastTerminalMarker);
     public BattleUiFrame? DequeueAutomaticFrame()
     {
         if(!_automaticFrames.TryDequeue(out var frame))return null;
@@ -211,7 +233,8 @@ public sealed class PlayableBattleSessionService
             _recentEvents.TakeLast(100).ToArray(),view.TurnOrder.ToArray(),view.ActiveIndex, _failureCode,
             _context.BlockedCells ?? Array.Empty<GridPoint>(),
             skills.Select(skill => Availability(view, active, skill)).ToArray(),
-            MoveAvailability(view, active));
+            MoveAvailability(view, active),
+            _battleResult is not null);
     }
 
     public IReadOnlyList<GridPoint> PreviewMovePath(GridPoint destination)
@@ -468,9 +491,15 @@ public sealed class PlayableBattleSessionService
         bool playerAlive = State.Units.Values.Any(unit => unit.IsAlive && unit.Unit.PlayerNumber == _context.PlayerNumber);
         bool enemyAlive = State.Units.Values.Any(unit => unit.IsAlive && unit.Unit.PlayerNumber != _context.PlayerNumber);
         if (playerAlive && enemyAlive)
+        {
+            _lastTerminalMarker = "combat_continues";
             return;
+        }
         if (_context.EncounterRequest is not EncounterRequest request)
+        {
+            _lastTerminalMarker = "terminal_without_encounter";
             return;
+        }
         var characterIds = _context.CharacterIds ?? new Dictionary<UnitInstanceId, string>();
         BattlePartyResult[] party = State.Units.Values
             .Where(unit => unit.Unit.PlayerNumber == _context.PlayerNumber && characterIds.ContainsKey(unit.Unit.InstanceId))
@@ -482,6 +511,7 @@ public sealed class PlayableBattleSessionService
         int defeated = _initialEnemyCount - State.Units.Values.Count(unit => unit.IsAlive && unit.Unit.PlayerNumber != _context.PlayerNumber);
         _battleResult = new PureRunBattleResult(request.RunId, request.CheckpointRevision, request.EncounterContentId,
             playerAlive && !enemyAlive, State.Round, defeated, party);
+        _lastTerminalMarker = playerAlive ? "victory_result_generated" : "defeat_result_generated";
     }
 
     private PlayableBattlePhase DeterminePhase()=>DeterminePhase(State);
@@ -544,4 +574,15 @@ public sealed class PlayableBattleSessionService
         unit.Statuses.Values.OrderBy(status => status.ContentId.Value, StringComparer.Ordinal)
             .Select(status => new BattleUiStatusSnapshot(status.ContentId, status.EffectKind, status.Polarity,
                 status.RemainingTurns, status.StackCount)).ToArray());
+
+    private BattleTerminalUnitDiagnostics ToTerminalDiagnostics(BattleUnitState unit)
+    {
+        string control = unit.Unit.PlayerNumber != _context.PlayerNumber
+            ? (_context.AiByUnit.ContainsKey(unit.Unit.InstanceId) ? "enemy_ai" : "enemy_missing_ai")
+            : ControllerFor(unit) is not null ? "friendly_ai"
+            : IsNonActingSummon(unit) ? "non_acting_summon"
+            : "player";
+        return new BattleTerminalUnitDiagnostics(unit.Unit.InstanceId, unit.Unit.DefinitionId, unit.Unit.Position,
+            unit.Unit.PlayerNumber, unit.CurrentHealth, control);
+    }
 }

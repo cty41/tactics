@@ -62,7 +62,6 @@ public partial class GodotPlayableRunMain : Control
     private bool _settlementCommitted;
     private GodotBattlePresentationPlayer? _presentationPlayer;
     private BattleUiSnapshot? _presentationAfter;
-    private PureRunBattleResult? _battleResultAfterPresentation;
     private bool _continueAutomaticAfterPresentation;
     private bool _pauseAfterCurrentFrame;
     private bool _presentationInputLocked;
@@ -83,6 +82,7 @@ public partial class GodotPlayableRunMain : Control
     private bool _pauseMenuControlsBattlePlayback;
 
     private enum InventoryReturnTarget { RunRoute }
+    internal enum PresentationDrainAction { DequeueFrame, CompleteBattle, Pause, Refresh }
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
         _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 131;
@@ -95,7 +95,25 @@ public partial class GodotPlayableRunMain : Control
     }
 
     public override void _ExitTree()=>DisposePresentationPlayer();
-    public override void _Process(double delta) { }
+    public override void _Process(double delta)
+    {
+        if (_presentationPlayer is null) return;
+        if (ShouldRecoverPresentationFrame(_presentationInputLocked, _presentationPlayer.IsPlaying, _playbackPaused))
+            _presentationPlayer.TryRecoverStalledFrame("presentation_tween_stopped_without_completion");
+    }
+
+    internal static bool ShouldRecoverPresentationFrame(bool inputLocked, bool presentationPlaying, bool paused) =>
+        inputLocked && !presentationPlaying && !paused;
+
+    internal static PresentationDrainAction ResolvePresentationDrainAction(bool hasPendingFrames,
+        bool hasTerminalResult, bool paused, bool pauseAfterCurrentFrame)
+    {
+        if (hasPendingFrames) return paused || pauseAfterCurrentFrame
+            ? PresentationDrainAction.Pause
+            : PresentationDrainAction.DequeueFrame;
+        if (hasTerminalResult) return PresentationDrainAction.CompleteBattle;
+        return paused || pauseAfterCurrentFrame ? PresentationDrainAction.Pause : PresentationDrainAction.Refresh;
+    }
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
@@ -346,7 +364,7 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer.Configure(_presentationProfile ?? new StandardUnitPresentationResource());
         _presentationPlayer.ConfigureSkills(_skillPresentationProfiles);
         _presentationPlayer.SetSpeed(_playbackSpeed);
-        _presentationPlayer.FrameFinished+=OnPresentationFrameFinished;
+        _presentationPlayer.FrameCompleted+=OnPresentationFrameCompleted;
         _damageNumbers = new GodotDamageNumberLayer();
         _damageNumbers.Configure(_actors);
         _presentationPlayer.NumberRequested += _damageNumbers.Spawn;
@@ -556,7 +574,6 @@ public partial class GodotPlayableRunMain : Control
             // A terminal player action still owns its release, hit and defeat
             // presentation. Settlement starts only after that committed frame
             // reaches After; otherwise the page change hides the final action.
-            _battleResultAfterPresentation=result.BattleResult;
             BeginPresentation(presentation,false);
             return;
         }
@@ -603,7 +620,7 @@ public partial class GodotPlayableRunMain : Control
         if(_battle is null||(_playbackPaused&&!forced)||(_presentationPlayer?.IsPlaying??false))return;
         BattleUiFrame? frame=_battle.DequeueAutomaticFrame();
         if(frame is not null){if(frame.Decision is { } decision)AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,$"{decision.ActorId.Value} selected {decision.Intent}{(decision.SkillId is null?string.Empty:" + "+decision.SkillId.Value)} to {decision.Destination}; target {decision.TargetId?.Value??"none"} ({decision.TargetDefinitionId?.Value??"none"}); score {decision.Score:0.##} [distance {decision.DistanceScore:0.##}, damage {decision.DamageScore:0.##}, target {decision.TargetScore:0.##}, status {decision.StatusScore:0.##}]; candidates {decision.CandidateCount}",nameof(AiDecisionEvent)));AddEvents(frame.Events);BeginPresentation(frame.Presentation,true,forced&&_playbackPaused);return;}
-        RefreshBattle();if(_battle.BattleResult is { } result)CompleteBattle(result);
+        RefreshBattle();TryCompleteBattleAfterDrain("automatic_queue_drained");
     }
     private void TogglePause(){_playbackPaused=!_playbackPaused;if(_stepButton is not null)_stepButton.Disabled=!_playbackPaused;_presentationPlayer?.SetPaused(_playbackPaused);_damageNumbers?.SetPaused(_playbackPaused);AddLog(new BattleUiLogEntry(BattleUiLogCategory.Ai,_playbackPaused?"AI playback paused":"AI playback resumed","Playback"));if(!_playbackPaused&&_battle?.HasPendingAutomaticFrames==true&&!(_presentationPlayer?.IsPlaying??false))PlaybackStep(false);RefreshLog();}
     private void ToggleSpeed()
@@ -623,15 +640,55 @@ public partial class GodotPlayableRunMain : Control
         RefreshBattle(frame.Before);_presentationPlayer?.Play(frame,_actors);
         if(_playbackPaused&&!pauseAfter)_presentationPlayer?.SetPaused(true);
     }
-    private void OnPresentationFrameFinished()
+    private void OnPresentationFrameCompleted(PresentationFrameCompletion completion)
     {
+        if (completion.Recovered)
+            AddLog(new BattleUiLogEntry(BattleUiLogCategory.Rejected,
+                $"Recovered presentation frame {completion.Stage}: {completion.Reason}","PresentationRecoveryEvent"));
         _presentationInputLocked=false;
         BattleUiSnapshot? after=_presentationAfter;_presentationAfter=null;if(after is not null)RefreshBattle(after);
-        PureRunBattleResult? deferredResult=_battleResultAfterPresentation;_battleResultAfterPresentation=null;
         bool shouldContinue=_continueAutomaticAfterPresentation;_continueAutomaticAfterPresentation=false;
-        if(deferredResult is not null){CompleteBattle(deferredResult);return;}
-        if(_pauseAfterCurrentFrame){_pauseAfterCurrentFrame=false;_playbackPaused=true;RefreshLog();return;}
-        if(shouldContinue&&!_playbackPaused)PlaybackStep(false);
+        bool pauseAfter=_pauseAfterCurrentFrame;_pauseAfterCurrentFrame=false;
+        PresentationDrainAction action=ResolvePresentationDrainAction(
+            shouldContinue&&_battle?.HasPendingAutomaticFrames==true,
+            _battle?.BattleResult is not null,
+            _playbackPaused,
+            pauseAfter);
+        switch(action)
+        {
+            case PresentationDrainAction.DequeueFrame:
+                PlaybackStep(false);
+                break;
+            case PresentationDrainAction.CompleteBattle:
+                TryCompleteBattleAfterDrain(completion.Recovered?"presentation_recovered":"presentation_completed");
+                break;
+            case PresentationDrainAction.Pause:
+                _playbackPaused=true;
+                RefreshLog();
+                break;
+            default:
+                RefreshBattle();
+                break;
+        }
+    }
+
+    private void TryCompleteBattleAfterDrain(string marker)
+    {
+        if(_battle?.BattleResult is not PureRunBattleResult result)return;
+        LogTerminalDiagnostics(marker);
+        CompleteBattle(result);
+    }
+
+    private void LogTerminalDiagnostics(string marker)
+    {
+        if(_battle is null)return;
+        BattleTerminalDiagnostics diagnostics=_battle.TerminalDiagnostics;
+        string players=string.Join(",",diagnostics.LivingPlayerUnits.Select(value=>$"{value.UnitId.Value}:{value.CurrentHealth}:{value.ControlKind}"));
+        string enemies=string.Join(",",diagnostics.LivingEnemyUnits.Select(value=>$"{value.UnitId.Value}:{value.CurrentHealth}:{value.ControlKind}"));
+        AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,
+            $"Terminal {marker}; result={diagnostics.TerminalResultGenerated}; queued={diagnostics.PendingAutomaticFrameCount}; next={diagnostics.NextAutomaticStage??"none"}; players=[{players}]; enemies=[{enemies}]",
+            "BattleTerminalDiagnostics"));
+        RefreshLog();
     }
 
     private void AddEvents(IEnumerable<BattleEvent> events){foreach(BattleEvent item in events)AddLog(FormatEvent(item));}
@@ -1217,11 +1274,10 @@ public partial class GodotPlayableRunMain : Control
     private void DisposePresentationPlayer()
     {
         if(_presentationPlayer is null)return;
-        _presentationPlayer.FrameFinished-=OnPresentationFrameFinished;
+        _presentationPlayer.FrameCompleted-=OnPresentationFrameCompleted;
         _presentationPlayer.Clear();
         _presentationPlayer=null;
         _presentationAfter=null;
-        _battleResultAfterPresentation=null;
         _continueAutomaticAfterPresentation=false;
         _pauseAfterCurrentFrame=false;
         _presentationInputLocked=false;

@@ -43,16 +43,16 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
-- Status: `failed`
-- Source: Phase 8E N3 authoritative resume fix
-- Reopen reason: Earlier N3 entry failures were repaired, but the latest full Run now stalls inside the final Boss battle instead of completing the terminal flow.
-- Action: Preserve the current final Boss battle without further navigation until its committed battle/result state is diagnosed.
-- Expected: Boss defeat should submit one terminal BattleResult, show BossVictory Summary once, and allow Return Home.
-- Observe: Current Boss battle, playback queue, Turn Order, CheatConsole, Summary routing and Godot Output.
-- Preserve on failure: Keep the scene open; copy save and backup, and record Run seed/revision, current actor, living units, playback state and full Output.
-- Save boundary: Current production Run is diagnostic evidence; do not abandon, overwrite or consume its terminal state.
-- Automated evidence: Existing automated full journeys assert the intended terminal route, but the preserved live Boss state proves an uncovered runtime/lifecycle case.
-- User verdict: Failed: after defeating the final Boss, the game remains stuck in the battle.
+- Status: `pending`
+- Source: Phase 8E final Boss terminal presentation recovery
+- Reopen reason: The failed live Boss path now caches its terminal result, drains every committed presentation frame explicitly, and snap-recovers a stalled frame before one-shot settlement.
+- Action: Continue the preserved Boss checkpoint, defeat the last enemy, let the final Hit/Defeat presentation finish, then return Home from the BossVictory Summary.
+- Expected: BossVictory Summary appears exactly once after presentation completes; the battle neither stalls nor respawns, and Return Home clears the completed Run.
+- Observe: Final Hit/Defeat animation, playback controls, CheatConsole terminal markers, Summary routing, Home Continue state, and Godot Output.
+- Preserve on failure: Keep the page open; copy save and backup, and record Run revision, living units, terminal-pending state, queued/current frame, pause/step state, settlement marker, and full Output.
+- Save boundary: Replaying the production checkpoint will complete and consume the active Run on success; copy the save first if the Boss state must remain reproducible.
+- Automated evidence: Terminal caching, input lock, zero-cue completion, ordered frame draining, recovered snap completion, one-shot settlement, BossVictory routing, and Compatibility/Forward+ paths pass the unified verifier.
+- User verdict: Previously failed because the final Boss battle stalled; reopened after the targeted repair and awaits user replay.
 
 ### MQA-GODOT-RELOAD-OUTPUT — Reload and diagnostics cleanup
 

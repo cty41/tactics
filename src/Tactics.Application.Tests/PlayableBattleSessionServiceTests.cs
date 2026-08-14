@@ -333,6 +333,47 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void AutomaticFinalKill_CachesTerminalResultUntilEveryCommittedFrameIsDequeued()
+    {
+        UnitInstanceId heroId = new("party-mage");
+        UnitInstanceId enemyId = new("enemy-boss");
+        BattleUnitState hero = Unit(heroId, "unit.pure-run.mage", new GridPoint(1, 1), 0, 1, 20, 1);
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-elite-poison-caster", new GridPoint(2, 1), 1, 0, 20, 20);
+        SkillDefinition attack = Skill("skill.basic.melee", 2);
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([hero, enemy], [enemyId, heroId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>> { [heroId] = Array.Empty<SkillDefinition>() },
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.boss", attack.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [attack.ContentId] = attack },
+            new EncounterRequest("run-boss", 148, new ContentId("encounter.pure-run.special"),
+                Array.Empty<RunCharacterState>()),
+            new Dictionary<UnitInstanceId, string> { [heroId] = "pure_run_mage" }));
+
+        PureRunBattleResult? terminal = service.BattleResult;
+        BattleTerminalDiagnostics diagnostics = service.TerminalDiagnostics;
+        BattleUiIntentResult rejected = service.Submit(new EndTurnIntent());
+        var stages = new List<string>();
+        while (service.DequeueAutomaticFrame() is { } frame) stages.Add(frame.Stage);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(terminal, Is.Not.Null);
+            Assert.That(terminal!.PlayerVictory, Is.False);
+            Assert.That(diagnostics.TerminalResultGenerated, Is.True);
+            Assert.That(diagnostics.PendingAutomaticFrameCount, Is.GreaterThan(0));
+            Assert.That(diagnostics.NextAutomaticStage, Is.EqualTo("Decision"));
+            Assert.That(diagnostics.LivingPlayerUnits, Is.Empty);
+            Assert.That(diagnostics.LivingEnemyUnits.Select(value => value.UnitId), Does.Contain(enemyId));
+            Assert.That(service.CaptureSnapshot().TerminalPending, Is.True);
+            Assert.That(rejected.Succeeded, Is.False);
+            Assert.That(rejected.FailureCode, Is.EqualTo("battle.already_finished"));
+            Assert.That(stages, Does.Contain("Decision").And.Contain("Skill"));
+            Assert.That(service.BattleResult, Is.SameAs(terminal));
+            Assert.That(service.TerminalDiagnostics.PendingAutomaticFrameCount, Is.Zero);
+        });
+    }
+
+    [Test]
     public void FriendlyDecoy_AutomaticallySkipsWithoutBecomingPlayerInput()
     {
         UnitInstanceId ownerId = new("party-amazon");

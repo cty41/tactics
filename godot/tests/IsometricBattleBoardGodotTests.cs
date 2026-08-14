@@ -2,6 +2,7 @@ using GdUnit4;
 using Godot;
 using Tactics.Core.Board;
 using Tactics.Godot.Adapter.Runtime;
+using Tactics.Application.Presentation;
 using static GdUnit4.Assertions;
 
 namespace Tactics.Godot.Tests;
@@ -140,6 +141,51 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(2f)).IsTrue();
         AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(4f)).IsTrue();
         AssertThat(GodotBattlePresentationPlayer.IsSupportedSpeed(.75f)).IsFalse();
+    }
+
+    [TestCase]
+    public void PresentationRecoveryOnlyRunsForAnUnlockedStalledFrame()
+    {
+        AssertThat(GodotPlayableRunMain.ShouldRecoverPresentationFrame(true, false, false)).IsTrue();
+        AssertThat(GodotPlayableRunMain.ShouldRecoverPresentationFrame(false, false, false)).IsFalse();
+        AssertThat(GodotPlayableRunMain.ShouldRecoverPresentationFrame(true, true, false)).IsFalse();
+        AssertThat(GodotPlayableRunMain.ShouldRecoverPresentationFrame(true, false, true)).IsFalse();
+    }
+
+    [TestCase]
+    public void TerminalSettlementWinsAfterTheCommittedPresentationQueueDrains()
+    {
+        AssertThat((int)GodotPlayableRunMain.ResolvePresentationDrainAction(true, true, false, false))
+            .IsEqual((int)GodotPlayableRunMain.PresentationDrainAction.DequeueFrame);
+        AssertThat((int)GodotPlayableRunMain.ResolvePresentationDrainAction(false, true, false, false))
+            .IsEqual((int)GodotPlayableRunMain.PresentationDrainAction.CompleteBattle);
+        AssertThat((int)GodotPlayableRunMain.ResolvePresentationDrainAction(false, false, false, false))
+            .IsEqual((int)GodotPlayableRunMain.PresentationDrainAction.Refresh);
+        AssertThat((int)GodotPlayableRunMain.ResolvePresentationDrainAction(false, true, true, false))
+            .IsEqual((int)GodotPlayableRunMain.PresentationDrainAction.CompleteBattle);
+        AssertThat((int)GodotPlayableRunMain.ResolvePresentationDrainAction(true, true, true, false))
+            .IsEqual((int)GodotPlayableRunMain.PresentationDrainAction.Pause);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task EmptyPresentationFrameCompletesExactlyOnce()
+    {
+        var player = new GodotBattlePresentationPlayer();
+        ((SceneTree)Engine.GetMainLoop()).Root.AddChild(player);
+        var completions = new List<PresentationFrameCompletion>();
+        player.FrameCompleted += completions.Add;
+
+        player.Play(new BattlePresentationFrame("Decision", null!, null!, [], []),
+            new Dictionary<Tactics.Core.Units.UnitInstanceId, GodotUnitActor>());
+        await player.ToSignal(player.GetTree(), SceneTree.SignalName.ProcessFrame);
+        await player.ToSignal(player.GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        AssertThat(completions.Count).IsEqual(1);
+        AssertThat(completions[0].Stage).IsEqual("Decision");
+        AssertThat(completions[0].Recovered).IsFalse();
+        AssertThat(player.HasPendingFrame).IsFalse();
+        player.QueueFree();
     }
 
     [TestCase]

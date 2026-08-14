@@ -5,6 +5,8 @@ using Tactics.Core.Units;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
+public sealed record PresentationFrameCompletion(string Stage, bool Recovered, string? Reason);
+
 /// <summary>Consumes read-only cues and owns every transient Tween created for a battle page.</summary>
 public partial class GodotBattlePresentationPlayer : Node
 {
@@ -15,8 +17,11 @@ public partial class GodotBattlePresentationPlayer : Node
     private StandardUnitPresentationResource _profile = new();
     private float _speed = 1f;
     private readonly Dictionary<string, SkillPresentationResource> _skillProfiles = new(StringComparer.Ordinal);
-    public bool IsPlaying => _activeTweens.Any(GodotObject.IsInstanceValid);
-    public event Action? FrameFinished;
+    private string? _pendingStage;
+    private bool _completionRaised;
+    public bool HasPendingFrame => _pendingStage is not null;
+    public bool IsPlaying => _activeTweens.Any(tween => GodotObject.IsInstanceValid(tween) && tween.IsRunning());
+    public event Action<PresentationFrameCompletion>? FrameCompleted;
     public event Action<BattlePresentationNumber>? NumberRequested;
 
     public void Configure(StandardUnitPresentationResource profile) => _profile = profile ?? throw new ArgumentNullException(nameof(profile));
@@ -38,6 +43,8 @@ public partial class GodotBattlePresentationPlayer : Node
     {
         ArgumentNullException.ThrowIfNull(frame);
         Clear();
+        _pendingStage = frame.Stage;
+        _completionRaised = false;
         Tween sequence=CreateTween().SetSpeedScale(_speed);_activeTweens.Add(sequence);
         var pendingNumbers = new List<BattlePresentationNumber>(frame.Numbers.OrderBy(value => value.Sequence));
         for (int index = 0; index < frame.Cues.Count; index++)
@@ -77,8 +84,28 @@ public partial class GodotBattlePresentationPlayer : Node
             }
             _animatedActors.Clear();
             _rootBaselines.Clear();
-            FrameFinished?.Invoke();
+            CompleteFrame(false, null);
         };
+    }
+
+    public bool TryRecoverStalledFrame(string reason)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        if (!HasPendingFrame || IsPlaying || _completionRaised) return false;
+        string stage = _pendingStage!;
+        Clear();
+        _pendingStage = stage;
+        CompleteFrame(true, reason);
+        return true;
+    }
+
+    private void CompleteFrame(bool recovered, string? reason)
+    {
+        if (_completionRaised || _pendingStage is null) return;
+        _completionRaised = true;
+        string stage = _pendingStage;
+        _pendingStage = null;
+        FrameCompleted?.Invoke(new PresentationFrameCompletion(stage, recovered, reason));
     }
 
     private void QueueNextNumber(Tween sequence, List<BattlePresentationNumber> pending, UnitInstanceId targetId)
@@ -112,6 +139,8 @@ public partial class GodotBattlePresentationPlayer : Node
         foreach(Node node in _transientNodes)
             if(GodotObject.IsInstanceValid(node))node.QueueFree();
         _transientNodes.Clear();
+        _pendingStage = null;
+        _completionRaised = false;
     }
 
     public override void _ExitTree() => Clear();

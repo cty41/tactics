@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-14T16:31:56+08:00"
+timestamp: "2026-08-14T17:12:24+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - .agents/skills/plan-mode-plan-writer/SKILL.md
   - .agents/skills/manual-qa-handoff/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:ff672ac3aafe97c449cc6e93f36db0791f34be1a60c3b7636eeded69ce0a24f8
+source_fingerprint: sha256:dbcd270f2dc89f84b6f3ae4d66e534ddc34d819d7d36d4d61219ffd382480348
 ---
 
 # Current State
@@ -30,6 +30,8 @@ source_fingerprint: sha256:ff672ac3aafe97c449cc6e93f36db0791f34be1a60c3b7636eede
 迁移阶段的验证边界以 `.agents/docs/2026-08-07-godot-tactics-migration-design.md` 为准；其中明确 Unity Windows Standalone 不属于迁移门禁，避免在 OKF 摘要中复制整份迁移设计。
 
 当前 Godot 总迁移任务保存在 `.agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md`；Phase 0–3 checkpoint 为 `2ef51954`，Phase 4 自动实施与 Editor lifecycle checkpoint 为 `2b341cb3`。当前只保留 `.agents/plans/2026-08-10-godot-phase4-unit-batch-migration.md` 作为 Godot active plan，等待 Unit Gallery/Spawn/Reload 人工视觉验收。Phase 5A Buff/Item 已完成源合同、运行时、ResourceSaver 与 canonical Catalog 自动门禁，其完成计划已删除并由 Git 历史保留；该自动门禁不替代 Phase 4 人工闸门。
+
+最终 Boss 终局现场修复由 `.agents/plans/2026-08-14-godot-final-boss-terminal-presentation-recovery.md` 跟踪；实现、review、统一门禁和人工复验完成后，将长期结论保留在 Godot 迁移设计与人工验收账本，并删除该 active plan。
 
 # Relationships
 
