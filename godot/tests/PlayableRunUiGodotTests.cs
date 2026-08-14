@@ -10,6 +10,7 @@ using Tactics.Core.Skills;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
 using Tactics.Application.Battle;
+using Tactics.Application.Presentation;
 using Tactics.Application.Runs;
 using static GdUnit4.Assertions;
 
@@ -259,6 +260,30 @@ public class PlayableRunUiGodotTests
         AssertThat(meter.Visible).IsFalse();
         AssertThat(meter.GetChildCount()).IsEqual(0);
         meter.Free(); actor.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void HealNumberUsesCommittedGreenPresentationAndHonorsPlaybackControls()
+    {
+        UnitInstanceId target = new("party-mage");
+        var actor = new GodotUnitActor { Position = new Vector2(200, 300) };
+        var layer = new GodotDamageNumberLayer();
+        layer.Configure(new Dictionary<UnitInstanceId, GodotUnitActor> { [target] = actor });
+        layer.SetSpeed(4f);
+        layer.SetPaused(true);
+        layer.Spawn(new BattlePresentationNumber(BattlePresentationNumberKind.Heal, target, "+3",
+            PresentationMarkerKind.Impact, 0));
+
+        Label label = layer.ActiveLabels.Single();
+        AssertThat(label.Text).IsEqual("+3");
+        AssertThat(label.Modulate.R).IsEqualApprox(.31f, .001f);
+        AssertThat(label.Modulate.G).IsEqualApprox(1f, .001f);
+        AssertThat(layer.PlaybackSpeed).IsEqual(4f);
+        AssertThat(layer.IsPaused).IsTrue();
+        layer.Clear();
+        AssertThat(layer.ActiveCount).IsEqual(0);
+        layer.Free(); actor.Free();
     }
 
     [TestCase]

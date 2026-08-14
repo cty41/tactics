@@ -31,7 +31,8 @@ public sealed class PlayableBattleSessionFactory
         IReadOnlyDictionary<ContentId, SkillDefinition> skills,
         IReadOnlyDictionary<ContentId, AiDefinition> aiDefinitions,
         PlayableBattleBalanceProfile? balance = null,
-        PlayableEnemySpeedProfile? enemySpeed = null)
+        PlayableEnemySpeedProfile? enemySpeed = null,
+        IReadOnlyDictionary<ContentId, EquipmentDefinition>? equipment = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.EncounterContentId != encounter.ContentId)
@@ -51,7 +52,8 @@ public sealed class PlayableBattleSessionFactory
             RunCharacterState character = request.Party[index];
             UnitDefinition definition = units[character.UnitContentId];
             var instanceId = new UnitInstanceId($"party-{character.CharacterId}");
-            BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[index], index, balance);
+            BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[index], index,
+                balance, equipment);
             states.Add(state);
             characterIds.Add(instanceId, character.CharacterId);
             ContentId basicId = definition.RoleId.Contains("amazon", StringComparison.OrdinalIgnoreCase)
@@ -124,11 +126,17 @@ public sealed class PlayableBattleSessionFactory
         UnitInstanceId instanceId,
         GridPoint cell,
         int spawnOrdinal,
-        PlayableBattleBalanceProfile? balance)
+        PlayableBattleBalanceProfile? balance,
+        IReadOnlyDictionary<ContentId, EquipmentDefinition>? equipment)
     {
+        EquipmentDefinition[] loadout = character.Equipment.Select(item =>
+            equipment?.GetValueOrDefault(item.DefinitionId) ??
+            throw new ArgumentException($"Equipment definition '{item.DefinitionId}' is unavailable.", nameof(equipment)))
+            .ToArray();
+        EquipmentStatProjection projection = EquipmentStatProjector.Project(character.Attributes, definition.Speed, loadout);
         var facts = new UnitState(
-            instanceId, definition.ContentId, cell, definition.DerivedStats.MoveRange,
-            definition.DerivedStats.Initiative, 0, spawnOrdinal, !character.IsDead);
+            instanceId, definition.ContentId, cell, projection.DerivedStats.MoveRange,
+            projection.DerivedStats.Initiative, 0, spawnOrdinal, !character.IsDead);
         IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> consumables = character.CarriedConsumables
             .ToDictionary(item => item.InstanceId);
         (int physical, int magical) = balance?.Attacks(definition.ContentId) ?? (2, 2);
@@ -138,7 +146,7 @@ public sealed class PlayableBattleSessionFactory
             baseSpeed: definition.Speed, consumables: consumables,
             physicalAttack: physical, magicalAttack: magical,
             canProduceCorpse: definition.CanProduceCorpse,
-            manaRecoveryPerTurn: character.Attributes.Intelligence);
+            manaRecoveryPerTurn: projection.Attributes.Intelligence);
         int combatTechniquesLevel = character.LearnedSkills
             .Where(id => id.Value.StartsWith("skill.amazon.combat-techniques.lv", StringComparison.Ordinal))
             .Select(id => id.Value.EndsWith("lv2", StringComparison.Ordinal) ? 2 : 1)

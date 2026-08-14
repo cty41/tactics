@@ -33,4 +33,10 @@ public sealed record GodotPlayableRunProbe(
     string? StatusText);
 
 public sealed record GodotBattleUnitProjection(UnitInstanceId UnitId, int MaxHealth, int MaxMana,
-    float BaseSpeed, int PhysicalAttack, int MagicalAttack);
+    float BaseSpeed, int PhysicalAttack, int MagicalAttack, int MoveRange, float Initiative,
+    int ManaRecoveryPerTurn);
+
+public sealed record GodotInventoryBattleProjectionEvidence(string CharacterId, int EquipmentCount,
+    int BaseMaxHealth, int ProjectedMaxHealth, int BattleMaxHealth, int BaseMaxMana, int ProjectedMaxMana,
+    int BattleMaxMana, int ProjectedMoveRange, int BattleMoveRange, float ProjectedInitiative,
+    float BattleInitiative, int ProjectedManaRecovery, int BattleManaRecovery, bool Matches);

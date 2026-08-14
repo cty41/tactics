@@ -32,6 +32,7 @@ const setupKindToAdapter: Record<string, Adapter> = {
 
 const actionKindToAdapter: Record<string, Adapter> = {
   endTurnOnlyUntilTerminal: "Battle",
+  endTurnUntilPresentationNumber: "Battle",
   restartGodotMain: "UI",
   setPresentationPaused: "UI",
   setPresentationSpeed: "UI",

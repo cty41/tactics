@@ -122,6 +122,7 @@ const godotPlanAdapterByKind: Record<string, z.infer<typeof AdapterSchema>> = {
   waitForFrames: "PlayerInput",
   playBattleThroughInput: "PlayerInput",
   endTurnOnlyUntilTerminal: "Battle",
+  endTurnUntilPresentationNumber: "Battle",
   restartGodotMain: "UI",
   setPresentationPaused: "UI",
   setPresentationSpeed: "UI",

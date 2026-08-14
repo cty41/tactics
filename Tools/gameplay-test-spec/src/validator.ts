@@ -29,6 +29,7 @@ const supportedSetupKinds = new Set([
 
 const supportedActionKinds = new Set([
   "endTurnOnlyUntilTerminal",
+  "endTurnUntilPresentationNumber",
   "restartGodotMain",
   "setPresentationPaused",
   "setPresentationSpeed",
@@ -660,6 +661,14 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
           path: step.id ?? step.kind
         });
       }
+      break;
+    case "endTurnUntilPresentationNumber":
+      if (typeof step.parameters.kind !== "string" || !["Normal", "Critical", "Heal", "Mana", "Miss"].includes(step.parameters.kind)) diagnostics.push({
+        code: "InvalidPresentationNumberKind", severity: "error", message: "endTurnUntilPresentationNumber requires a supported kind.", path: step.id ?? step.kind
+      });
+      if (typeof step.parameters.maximumActions !== "number" || !Number.isInteger(step.parameters.maximumActions) || step.parameters.maximumActions < 1 || step.parameters.maximumActions > 100) diagnostics.push({
+        code: "InvalidMaximumActions", severity: "error", message: "endTurnUntilPresentationNumber maximumActions must be an integer from 1 to 100.", path: step.id ?? step.kind
+      });
       break;
     default:
       break;

@@ -21,6 +21,7 @@ const godotActionKinds = new Set([
   "waitForFrames",
   "playBattleThroughInput",
   "endTurnOnlyUntilTerminal",
+  "endTurnUntilPresentationNumber",
   "restartGodotMain",
   "setPresentationPaused",
   "setPresentationSpeed"
@@ -62,7 +63,7 @@ export function validateRuntimeCapabilities(
       });
     };
     rejectGodotOnly(setup, new Set(["loadValidatedCheckpoint"]), "setup");
-    rejectGodotOnly(actions, new Set(["endTurnOnlyUntilTerminal", "restartGodotMain", "setPresentationPaused", "setPresentationSpeed"]), "action");
+    rejectGodotOnly(actions, new Set(["endTurnOnlyUntilTerminal", "endTurnUntilPresentationNumber", "restartGodotMain", "setPresentationPaused", "setPresentationSpeed"]), "action");
     rejectGodotOnly(assertions, godotAssertionKinds, "assertion");
     return diagnostics;
   }

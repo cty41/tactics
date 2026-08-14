@@ -95,6 +95,7 @@ public sealed class BattlePresentationFrameCompilerTests
         [
             new CombatRollResolvedEvent(actor,target,skillId,99,0,"critical",1),
             new DamageAppliedEvent(actor,target,skillId,10,0),
+            new HealthRestoredEvent(actor,actor,new ContentId("item.consumable.life-potion"),3,8),
             new ManaRestoredEvent(actor,actor,itemId,4,9)
         ];
 
@@ -102,8 +103,8 @@ public sealed class BattlePresentationFrameCompilerTests
             new Dictionary<ContentId,SkillDefinition>{{skillId,skill}});
 
         Assert.That(frame.Numbers.Select(value=>value.Kind),Is.EqualTo(new[]
-            { BattlePresentationNumberKind.Critical, BattlePresentationNumberKind.Mana }));
-        Assert.That(frame.Numbers.Select(value=>value.Text),Is.EqualTo(new[]{"-10","+4 MP"}));
+            { BattlePresentationNumberKind.Critical, BattlePresentationNumberKind.Heal, BattlePresentationNumberKind.Mana }));
+        Assert.That(frame.Numbers.Select(value=>value.Text),Is.EqualTo(new[]{"-10","+3","+4 MP"}));
         Assert.That(frame.Numbers.All(value=>value.Marker==PresentationMarkerKind.Impact),Is.True);
     }
 

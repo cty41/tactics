@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 2,
+  "runtime": "Godot",
+  "scenarioName": "GodotPendingAcceptance.InventoryBattleProjection",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "Battle",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:waitForPlayerObservable",
+    "assertion:activeRunExistsEquals",
+    "assertion:inventoryProjectionEnteredBattle",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "inventory-store-ready-v1",
+        "path": "validated://inventory-store-ready-v1",
+        "semanticHash": "70ff70d78706879dfe6168d4b3d8663eaeea084f5d8a5fcf2fa963661bf438a0"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Inventory",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "qa-armor",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Equip",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Back",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_01_battle",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "battleReady",
+        "maximumFrames": 300
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "inventoryProjectionEnteredBattle",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "activeRunExistsEquals",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "inventoryProjectionEnteredBattle",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "activeRunExistsEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "inventory-store-ready-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "70ff70d78706879dfe6168d4b3d8663eaeea084f5d8a5fcf2fa963661bf438a0",
+    "path": "validated://inventory-store-ready-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

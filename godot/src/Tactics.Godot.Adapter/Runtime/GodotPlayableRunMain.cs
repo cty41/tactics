@@ -80,6 +80,7 @@ public partial class GodotPlayableRunMain : Control
     private string? _inventorySelectedInstanceId;
     private readonly Dictionary<string, UnitAttributes> _progressionDrafts = new(StringComparer.Ordinal);
     private GodotDamageNumberLayer? _damageNumbers;
+    private readonly List<BattlePresentationNumber> _presentationNumberHistory = new();
     private GodotDroppedSpearLayer? _droppedSpears;
     private Control? _pauseMenu;
     private bool _pauseMenuPausedPlayback;
@@ -124,20 +125,60 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer?.IsPlaying == true,
         _battle?.HasPendingAutomaticFrames == true,
         _damageNumbers?.ActiveCount ?? 0,
-        _damageNumbers?.History.ToArray() ?? Array.Empty<BattlePresentationNumber>(),
+        _presentationNumberHistory.ToArray(),
         _playbackPaused,
         _playbackSpeed,
         _pauseMenu?.Visible == true,
         _cheatConsole?.Visible == true,
         _logs.Count(value => value.Category == BattleUiLogCategory.Rejected) + (_settlement.Current?.Stage == BattleSettlementStage.Rejected ? 1 : 0),
         _quitRequested,
-        _status?.Text);
+        _status is not null && GodotObject.IsInstanceValid(_status) ? _status.Text : null);
 
     public IReadOnlyList<GodotBattleUnitProjection> CaptureBattleUnitProjections() => _battle is null
         ? Array.Empty<GodotBattleUnitProjection>()
         : _battle.State.Units.Values.Where(unit => unit.Unit.PlayerNumber == 0)
             .Select(unit => new GodotBattleUnitProjection(unit.Unit.InstanceId, unit.MaxHealth, unit.MaxMana,
-                unit.BaseSpeed, unit.PhysicalAttack, unit.MagicalAttack)).ToArray();
+                unit.BaseSpeed, unit.PhysicalAttack, unit.MagicalAttack, unit.Unit.MoveRange, unit.Unit.Initiative,
+                unit.ManaRecoveryPerTurn)).ToArray();
+
+    public bool ValidateInventoryProjectionEnteredBattle()
+    {
+        IReadOnlyList<GodotInventoryBattleProjectionEvidence> evidence = CaptureInventoryBattleProjectionEvidence();
+        return evidence.Count > 0 && evidence.All(value => value.Matches) && evidence.Any(value =>
+            value.EquipmentCount > 0 && (value.ProjectedMaxHealth != value.BaseMaxHealth ||
+                                         value.ProjectedMaxMana != value.BaseMaxMana));
+    }
+
+    public IReadOnlyList<GodotInventoryBattleProjectionEvidence> CaptureInventoryBattleProjectionEvidence()
+    {
+        PureRunState? run = SaveStore.Load().Snapshot?.ActiveRun;
+        if (run is null || _battle is null) return Array.Empty<GodotInventoryBattleProjectionEvidence>();
+        var evidence = new List<GodotInventoryBattleProjectionEvidence>();
+        Dictionary<string, GodotBattleUnitProjection> actual = CaptureBattleUnitProjections()
+            .ToDictionary(value => value.UnitId.Value, StringComparer.Ordinal);
+        foreach (RunCharacterState character in run.Party)
+        {
+            UnitDefinition unit = _units[character.UnitContentId];
+            EquipmentStatProjection projection = EquipmentStatProjector.Project(character.Attributes, unit.Speed,
+                character.Equipment.Select(item => _equipment[item.DefinitionId]));
+            UnitDerivedStats baseline = UnitDerivedStatRules.Calculate(character.Attributes, unit.Speed);
+            (int physical, int magical) = _balance?.Attacks(character.UnitContentId) ?? (2, 2);
+            bool found = actual.TryGetValue("party-" + character.CharacterId, out GodotBattleUnitProjection? battle);
+            bool matches = found && battle!.MaxHealth == projection.DerivedStats.MaxHealth &&
+                battle.MaxMana == projection.DerivedStats.MaxMana &&
+                battle.MoveRange == projection.DerivedStats.MoveRange &&
+                Math.Abs(battle.Initiative - projection.DerivedStats.Initiative) <= .001f &&
+                battle.ManaRecoveryPerTurn == projection.Attributes.Intelligence &&
+                battle.PhysicalAttack == physical && battle.MagicalAttack == magical;
+            evidence.Add(new GodotInventoryBattleProjectionEvidence(character.CharacterId, character.Equipment.Count,
+                baseline.MaxHealth, projection.DerivedStats.MaxHealth, battle?.MaxHealth ?? -1,
+                baseline.MaxMana, projection.DerivedStats.MaxMana, battle?.MaxMana ?? -1,
+                projection.DerivedStats.MoveRange, battle?.MoveRange ?? -1,
+                projection.DerivedStats.Initiative, battle?.Initiative ?? -1,
+                projection.Attributes.Intelligence, battle?.ManaRecoveryPerTurn ?? -1, matches));
+        }
+        return evidence;
+    }
 
     public bool TryResolveTestBattlePointerTarget(string targetKind, string locator,
         out Control? surface, out Vector2 globalPoint)
@@ -421,9 +462,11 @@ public partial class GodotPlayableRunMain : Control
         _terminalSettlementResult=null;
         _settlementRetryCount=0;
         _settlementNavigationRetryCount=0;
+        _presentationNumberHistory.Clear();
         _currentEncounterId=request.EncounterContentId;
         EncounterDefinition encounter = _encounters[request.EncounterContentId];
-        _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units, _skills, _ai, _balance, _enemySpeed);
+        _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units,
+            _skills, _ai, _balance, _enemySpeed, _equipment);
         BuildBattlePage();
         AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,$"Entered {EncounterLabel(request.EncounterContentId)} ({request.EncounterContentId.Value})","EncounterNavigationEvent"));
         RefreshLog();
@@ -450,7 +493,7 @@ public partial class GodotPlayableRunMain : Control
         _presentationPlayer.FrameCompleted+=OnPresentationFrameCompleted;
         _damageNumbers = new GodotDamageNumberLayer();
         _damageNumbers.Configure(_actors);
-        _presentationPlayer.NumberRequested += _damageNumbers.Spawn;
+        _presentationPlayer.NumberRequested += SpawnPresentationNumber;
         _board.AddChild(_presentationPlayer);
         _board.AddChild(_damageNumbers);
         _droppedSpears = new GodotDroppedSpearLayer { ZIndex = 88 };
@@ -471,6 +514,12 @@ public partial class GodotPlayableRunMain : Control
         _status = _hoverInfo;
         RefreshBattle();
         if(_battle!.HasPendingAutomaticFrames)PlaybackStep(false);
+    }
+
+    private void SpawnPresentationNumber(BattlePresentationNumber number)
+    {
+        _presentationNumberHistory.Add(number);
+        _damageNumbers?.Spawn(number);
     }
 
     private void RefreshBattle(BattleUiSnapshot? presented=null)
@@ -1472,6 +1521,7 @@ public partial class GodotPlayableRunMain : Control
     {
         if(_presentationPlayer is null)return;
         _presentationPlayer.FrameCompleted-=OnPresentationFrameCompleted;
+        _presentationPlayer.NumberRequested-=SpawnPresentationNumber;
         _presentationPlayer.Clear();
         _presentationPlayer=null;
         _presentationAfter=null;
@@ -1505,7 +1555,10 @@ public partial class GodotPlayableRunMain : Control
         !presentationInputLocked && !presentationPlaying;
     private static Label Label(string text, int size) { var label = new Label { Text = text }; label.AddThemeFontSizeOverride("font_size", size); return label; }
     private static Label LabelAt(Control parent, string text, Vector2 position, int size) { Label label = Label(text, size); label.Position = position; parent.AddChild(label); return label; }
-    private void SetStatus(string? text) { if (_status is not null) _status.Text = text ?? string.Empty; }
+    private void SetStatus(string? text)
+    {
+        if (_status is not null && GodotObject.IsInstanceValid(_status)) _status.Text = text ?? string.Empty;
+    }
     private static string SkillTooltip(SkillDefinition skill)=>skill.ExecutionKind==SkillExecutionKind.Fireball
         ? "Lv1: single target; hits the first enemy on the selected ray. Splash begins at Lv2."
         : $"Range {skill.MinRange}-{skill.MaxRange}; damage {skill.Damage}.";

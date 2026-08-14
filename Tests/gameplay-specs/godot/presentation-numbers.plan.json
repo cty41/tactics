@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "runtime": "Godot",
+  "scenarioName": "GodotPendingAcceptance.PresentationNumbers",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "Battle",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:endTurnUntilPresentationNumber",
+    "action:setPresentationPaused",
+    "assertion:presentationNumberEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "numbers-mana-v1",
+        "path": "validated://numbers-mana-v1",
+        "semanticHash": "b1ab312c5e80aa63fc5ebddcceb21458784da6c9f46f10c29b2d7b32794e61f6"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "endTurnUntilPresentationNumber",
+      "parameters": {
+        "kind": "Mana",
+        "maximumActions": 8
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "setPresentationPaused",
+      "parameters": {
+        "paused": true
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "setPresentationPaused",
+      "parameters": {
+        "paused": false
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "UI",
+      "kind": "presentationNumberEquals",
+      "expected": "Mana",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "UI",
+      "kind": "presentationNumberEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "numbers-mana-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "b1ab312c5e80aa63fc5ebddcceb21458784da6c9f46f10c29b2d7b32794e61f6",
+    "path": "validated://numbers-mana-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

@@ -96,14 +96,17 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
 public sealed class GodotGameplayRuntimeRunner
 {
     public async Task<GodotGameplayScenarioResult> ExecuteAsync(GodotGameplayScenarioPlan plan,
-        ValidatedGodotRunCheckpoint? checkpoint = null, CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(plan);
         plan.ValidateContract();
-        if (plan.Checkpoint is null != (checkpoint is null) || plan.Checkpoint is not null &&
+        ValidatedGodotRunCheckpoint? checkpoint = plan.Checkpoint is null
+            ? null
+            : GodotGameplayCheckpointCatalog.Create(plan.Checkpoint.Id);
+        if (plan.Checkpoint is not null &&
             (plan.Checkpoint.Id != checkpoint!.Id || plan.Checkpoint.Path != checkpoint.Path ||
              !checkpoint.Verify() || !string.Equals(plan.Checkpoint.SemanticHash, checkpoint.SemanticHash, StringComparison.Ordinal)))
-            throw new InvalidDataException("The validated checkpoint does not match the compiled plan.");
+            throw new InvalidDataException("The catalog checkpoint does not match the compiled plan.");
         var trace = new List<GodotGameplayTraceEntry>();
         string before = ProductionSaveEvidence();
         string attemptId = Guid.NewGuid().ToString("N");
@@ -193,13 +196,15 @@ public sealed class GodotGameplayRuntimeRunner
                 case "setPresentationPaused": await context.SetPausedAsync(step.Parameters["paused"].GetBoolean(), timeout.Token); break;
                 case "setPresentationSpeed": await context.SetSpeedAsync((float)step.Parameters["speed"].GetDouble(), timeout.Token); break;
                 case "endTurnOnlyUntilTerminal": await new EndTurnOnlyDecisionSource().ExecuteAsync(context, timeout.Token); break;
+                case "endTurnUntilPresentationNumber": await context.EndTurnUntilPresentationNumberAsync(
+                    RequiredString(step.Parameters, "kind"), RequiredInt(step.Parameters, "maximumActions", 100), timeout.Token); break;
                 default: throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Contract, "unsupported_action:" + step.Kind);
             }
             trace.Add(new GodotGameplayTraceEntry(ordinal, phase, step.Kind, true, context.StateHash(), (long)(Time.GetTicksMsec() - started), null));
         }
         catch (OperationCanceledException) when (!scenarioToken.IsCancellationRequested)
         {
-            string diagnostic = "step.timeout:" + step.Kind;
+            string diagnostic = $"step.timeout:{ordinal}:{step.Kind}";
             trace.Add(new GodotGameplayTraceEntry(ordinal, phase, step.Kind, false, context.StateHash(), (long)(Time.GetTicksMsec() - started), diagnostic));
             throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Timeout, diagnostic);
         }
@@ -231,8 +236,13 @@ public sealed class GodotGameplayRuntimeRunner
         };
         if (!passed)
         {
-            trace.Add(new GodotGameplayTraceEntry(ordinal, "assertion", assertion.Kind, false, context.StateHash(), 0, "assertion_failed"));
-            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Assertion, "assertion_failed:" + assertion.Kind);
+            string diagnostic = assertion.Kind == "inventoryProjectionEnteredBattle"
+                ? "assertion_failed:" + string.Join(";", context.Main.CaptureInventoryBattleProjectionEvidence().Select(value =>
+                    $"{value.CharacterId}:equipment={value.EquipmentCount},hp={value.BaseMaxHealth}->{value.ProjectedMaxHealth}/{value.BattleMaxHealth},mp={value.BaseMaxMana}->{value.ProjectedMaxMana}/{value.BattleMaxMana},match={value.Matches}"))
+                : "assertion_failed";
+            trace.Add(new GodotGameplayTraceEntry(ordinal, "assertion", assertion.Kind, false, context.StateHash(), 0, diagnostic));
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Assertion,
+                assertion.Kind == "inventoryProjectionEnteredBattle" ? diagnostic : "assertion_failed:" + assertion.Kind);
         }
         trace.Add(new GodotGameplayTraceEntry(ordinal, "assertion", assertion.Kind, true, context.StateHash(), 0, null));
         return Task.CompletedTask;
@@ -278,8 +288,10 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     {
         Control expected;
         Vector2 logicalPoint;
-        Button? button = Descendants<Button>(Main).FirstOrDefault(value => value.Visible && !value.Disabled &&
-            (value.Text.Contains(text, StringComparison.OrdinalIgnoreCase) || string.Equals(value.Name, text, StringComparison.Ordinal)));
+        Button[] candidates = Descendants<Button>(Main).Where(value => value.Visible && !value.Disabled).ToArray();
+        Button? button = candidates.FirstOrDefault(value => string.Equals(value.Name, text, StringComparison.Ordinal)) ??
+            candidates.FirstOrDefault(value => string.Equals(value.Text, text, StringComparison.OrdinalIgnoreCase)) ??
+            candidates.FirstOrDefault(value => value.Text.Contains(text, StringComparison.OrdinalIgnoreCase));
         GodotRogueMapView? map = null;
         string? mapNodeId = null;
         if (button is not null) { expected = button; logicalPoint = button.GetGlobalRect().GetCenter(); }
@@ -426,8 +438,15 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     public async Task RestartMainAsync(CancellationToken token)
     {
         SceneTree tree = Main.GetTree();
-        Root.QueueFree();
-        await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        TacticsMigrationRoot previousRoot = Root;
+        previousRoot.QueueFree();
+        for (int frame = 0; frame < 120 && GodotObject.IsInstanceValid(previousRoot); frame++)
+        {
+            token.ThrowIfCancellationRequested();
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        }
+        if (GodotObject.IsInstanceValid(previousRoot))
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Cleanup, "previous_main_cleanup_failed");
         PackedScene scene = ResourceLoader.Load<PackedScene>("res://scenes/Main.tscn")!;
         Root = scene.Instantiate<TacticsMigrationRoot>();
         Root.ConfigureTestContext(new GodotPlayableRunTestContext(SaveStore, 7,
@@ -435,6 +454,10 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         tree.Root.AddChild(Root);
         await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         Main = Root.PlayableRun ?? throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action, "main_restart_failed");
+        RunStoreResult loaded = SaveStore.Load();
+        if (loaded.Succeeded && loaded.Snapshot is { } snapshot &&
+            (snapshot.ActiveRun is not null || snapshot.TerminalSummary is not null || snapshot.PendingRunSetup is not null))
+            await ClickButtonAsync("Continue", token);
         token.ThrowIfCancellationRequested();
     }
 
@@ -511,6 +534,30 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             await WaitForAutomaticProgressAsync(token);
     }
 
+    public async Task EndTurnUntilPresentationNumberAsync(string kind, int maximumActions, CancellationToken token)
+    {
+        for (int action = 0; action < maximumActions;)
+        {
+            if (Main.CaptureTestProbe().PresentationNumbers.Any(number =>
+                    string.Equals(number.Kind.ToString(), kind, StringComparison.OrdinalIgnoreCase)))
+                return;
+            if (IsTerminal)
+                throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
+                    "presentation_number_not_observed:" + kind);
+            if (!CanSubmitPlayerInput)
+            {
+                await WaitForAutomaticProgressAsync(token);
+                continue;
+            }
+            await PressKeyAsync(Key.Enter, token);
+            action++;
+        }
+        if (!Main.CaptureTestProbe().PresentationNumbers.Any(number =>
+                string.Equals(number.Kind.ToString(), kind, StringComparison.OrdinalIgnoreCase)))
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
+                "presentation_number_action_limit:" + kind);
+    }
+
     private async Task WaitForStateDifferentAsync(string before, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
@@ -579,14 +626,7 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     public bool ProductionSaveIsUnchanged() => ProductionSaveEvidence == CaptureProductionSaveEvidence();
 
     public bool InventoryProjectionEnteredBattle()
-    {
-        GodotPlayableRunProbe probe = Main.CaptureTestProbe();
-        if (probe.SaveSnapshot?.ActiveRun is not { } run || probe.BattleSnapshot is null) return false;
-        Dictionary<string, GodotBattleUnitProjection> projections = Main.CaptureBattleUnitProjections()
-            .ToDictionary(value => value.UnitId.Value, StringComparer.Ordinal);
-        return run.Party.All(character => projections.TryGetValue("party-" + character.CharacterId, out GodotBattleUnitProjection? value) &&
-            value.MaxHealth == character.MaxHealth && value.MaxMana == character.MaxMana);
-    }
+        => Main.ValidateInventoryProjectionEnteredBattle();
 
     public async Task ValidateCheckpointAsync(CancellationToken token)
     {

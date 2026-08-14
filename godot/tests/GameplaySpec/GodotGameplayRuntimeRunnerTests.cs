@@ -13,6 +13,51 @@ public class GodotGameplayRuntimeRunnerTests
 {
     [TestCase]
     [RequireGodotRuntime]
+    public void ValidatedCheckpointCatalogProducesStableCanonicalV5Hashes()
+    {
+        var expected = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["inventory-store-ready-v1"] = "70ff70d78706879dfe6168d4b3d8663eaeea084f5d8a5fcf2fa963661bf438a0",
+            ["defeat-no-summon-v1"] = "855ba3ba5fc8cbeb5fe05073e94b6b20b84d32f8d917be505bd4569f41777a8a",
+            ["numbers-mana-v1"] = "b1ab312c5e80aa63fc5ebddcceb21458784da6c9f46f10c29b2d7b32794e61f6",
+            ["numbers-miss-v1"] = "ea583c2f9e509adfa426ad34dab653bda44496fc3426037d159c91a94bb7854a",
+            ["reload-pending-battle-v1"] = "a7ef2a784163a5c8a58b5cbfeb4d90a7ab088b2e3055777260b7e72f196fc3b3"
+        };
+        foreach ((string id, string hash) in expected)
+        {
+            ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create(id);
+            AssertThat(checkpoint.Verify()).IsTrue();
+            AssertThat(checkpoint.SemanticHash).IsEqual(hash);
+        }
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task InventorySpecEquipsThroughMainAndProjectsIntoBattle() =>
+        await AssertCompiledScenario("inventory-battle-projection", "inventory-store-ready-v1");
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task DefeatedSpecReachesOneTerminalSummary() =>
+        await AssertCompiledScenario("defeated-terminal", "defeat-no-summon-v1");
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task PresentationNumberSpecObservesManaFact() =>
+        await AssertCompiledScenario("presentation-numbers", "numbers-mana-v1");
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task PresentationMissSpecObservesCommittedDodgeFact() =>
+        await AssertCompiledScenario("presentation-miss", "numbers-miss-v1");
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task ReloadSpecRestoresPendingBattleAndCleansOldMain() =>
+        await AssertCompiledScenario("reload-cleanup", "reload-pending-battle-v1");
+
+    [TestCase]
+    [RequireGodotRuntime]
     public async Task MainSceneReceivesIsolatedStoreAndProductionQuitInput()
     {
         var assertion = new GodotGameplayPlanAssertion("runtimeHasNoErrors", "UI", null, Json(true), []);
@@ -25,6 +70,10 @@ public class GodotGameplayRuntimeRunnerTests
             new GodotGameplayWatchdog(30000, 80, 300000, 4), null);
 
         GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
 
         AssertThat(result.ErrorCode).IsNull();
         AssertThat(result.Succeeded).IsTrue();
@@ -72,37 +121,55 @@ public class GodotGameplayRuntimeRunnerTests
     [TestCase]
     public async Task CheckpointMismatchIsRejectedBeforeSceneExecution()
     {
-        ValidatedGodotRunCheckpoint actual = ValidatedGodotRunCheckpoint.Create("checkpoint-a", "validated://checkpoint-a",
-            new PureRunSaveSnapshot(0, null, null));
+        ValidatedGodotRunCheckpoint actual = GodotGameplayCheckpointCatalog.Create("reload-pending-battle-v1");
         GodotGameplayScenarioPlan plan = CheckpointPlan(actual) with
         {
-            Checkpoint = new GodotGameplayCheckpoint("checkpoint-a", "validated_checkpoint", new string('0', 64), "fixture")
+            Checkpoint = new GodotGameplayCheckpoint(actual.Id, "validated_checkpoint", new string('0', 64), actual.Path)
         };
         try
         {
-            await new GodotGameplayRuntimeRunner().ExecuteAsync(plan, actual);
+            await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
             AssertThat(false).IsTrue();
         }
         catch (InvalidDataException exception)
         {
-            AssertThat(exception.Message).Contains("does not match");
+            AssertThat(exception.Message).Contains("checkpoint metadata");
         }
+    }
+
+    [TestCase]
+    public void PlanContractRejectsCheckpointSetupMetadataTampering()
+    {
+        ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create("reload-pending-battle-v1");
+        GodotGameplayScenarioPlan canonical = CheckpointPlan(checkpoint);
+        canonical.ValidateContract();
+        GodotGameplayPlanStep tampered = canonical.SetupActions.Single(step => step.Kind == "loadValidatedCheckpoint") with
+        {
+            Parameters = Parameters(("id", "defeat-no-summon-v1"), ("path", checkpoint.Path),
+                ("semanticHash", checkpoint.SemanticHash))
+        };
+
+        AssertThrown(() => (canonical with { SetupActions = [tampered] }).ValidateContract())
+            .IsInstanceOf<InvalidDataException>();
     }
 
     [TestCase]
     [RequireGodotRuntime]
     public async Task ValidatedCheckpointRunsInIsolationAndCleansTheScene()
     {
-        ValidatedGodotRunCheckpoint checkpoint = ValidatedGodotRunCheckpoint.Create("empty-v5", "validated://empty-v5",
-            new PureRunSaveSnapshot(0, null, null));
+        ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create("reload-pending-battle-v1");
 
         GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(
-            CheckpointPlan(checkpoint), checkpoint);
+            CheckpointPlan(checkpoint));
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
 
         AssertThat(result.Succeeded).IsTrue();
         AssertThat(result.ProductionSaveUnchanged).IsTrue();
         AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
-        AssertThat(result.Trace.Count).IsEqual(3);
+        AssertThat(result.Trace.Count).IsEqual(2);
     }
 
     [TestCase]
@@ -161,7 +228,7 @@ public class GodotGameplayRuntimeRunnerTests
     [RequireGodotRuntime]
     public async Task PauseSpeedAndRightClickUseTheirRequestedProductionSemantics()
     {
-        ValidatedGodotRunCheckpoint checkpoint = BattleCheckpoint("battle-controls");
+        ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create("reload-pending-battle-v1");
         var pause = new GodotGameplayPlanStep("setPresentationPaused", "UI", null,
             Parameters(("paused", true)));
         var speed = new GodotGameplayPlanStep("setPresentationSpeed", "UI", null,
@@ -171,13 +238,16 @@ public class GodotGameplayRuntimeRunnerTests
         var resume = new GodotGameplayPlanStep("setPresentationPaused", "UI", null,
             Parameters(("paused", false)));
         GodotGameplayScenarioPlan plan = Plan("Runner.BattleControls",
-            [new GodotGameplayPlanStep("loadValidatedCheckpoint", "Map", null, [])],
+            [LoadCheckpointStep(checkpoint)],
             [pause, speed, rightClick, resume], [BoolAssertion("productionSaveUnchanged", "Map", true)]) with
         {
             Checkpoint = new GodotGameplayCheckpoint(checkpoint.Id, "validated_checkpoint", checkpoint.SemanticHash, checkpoint.Path)
         };
 
-        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan, checkpoint);
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            Console.WriteLine($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine, result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
 
         AssertThat(result.ErrorCode).IsNull();
         AssertThat(result.Succeeded).IsTrue();
@@ -189,16 +259,16 @@ public class GodotGameplayRuntimeRunnerTests
     [RequireGodotRuntime]
     public async Task PlayBattleThroughInputHonorsMaximumActionsAndUsesBattleUi()
     {
-        ValidatedGodotRunCheckpoint checkpoint = BattleCheckpoint("battle-action-limit");
+        ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create("reload-pending-battle-v1");
         var play = new GodotGameplayPlanStep("playBattleThroughInput", "PlayerInput", null,
             Parameters(("maximumActions", 1)));
         GodotGameplayScenarioPlan plan = Plan("Runner.BattleActionLimit",
-            [new GodotGameplayPlanStep("loadValidatedCheckpoint", "Map", null, [])], [play], []) with
+            [LoadCheckpointStep(checkpoint)], [play], []) with
         {
             Checkpoint = new GodotGameplayCheckpoint(checkpoint.Id, "validated_checkpoint", checkpoint.SemanticHash, checkpoint.Path)
         };
 
-        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan, checkpoint);
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
 
         AssertThat(result.Succeeded).IsFalse();
         AssertThat(result.ErrorCode).IsEqual("battle_action_limit");
@@ -225,7 +295,7 @@ public class GodotGameplayRuntimeRunnerTests
         GodotGameplayScenarioResult step = await new GodotGameplayRuntimeRunner().ExecuteAsync(stepPlan);
         GodotGameplayScenarioResult scenario = await new GodotGameplayRuntimeRunner().ExecuteAsync(scenarioPlan);
 
-        AssertThat(step.ErrorCode).IsEqual("step.timeout:waitForPlayerObservable");
+        AssertThat(step.ErrorCode).IsEqual("step.timeout:1:waitForPlayerObservable");
         AssertThat(step.Trace.Single().Succeeded).IsFalse();
         AssertThat(scenario.ErrorCode).IsEqual("scenario.timeout");
         AssertThat(scenario.Trace.Single().Succeeded).IsFalse();
@@ -239,30 +309,37 @@ public class GodotGameplayRuntimeRunnerTests
         return Plan(name, [setup], [quit], [BoolAssertion("runtimeHasNoErrors", "UI", true)]);
     }
 
+    private static async Task AssertCompiledScenario(string planName, string checkpointId)
+    {
+        string path = Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", "Tests",
+            "gameplay-specs", "godot", planName + ".plan.json"));
+        GodotGameplayScenarioPlan plan = GodotGameplayScenarioPlan.Parse(File.ReadAllText(path));
+        ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create(checkpointId);
+
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+
+        AssertThat(result.ErrorCode).IsNull();
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
     private static GodotGameplayScenarioPlan CheckpointPlan(ValidatedGodotRunCheckpoint checkpoint)
     {
-        var load = new GodotGameplayPlanStep("loadValidatedCheckpoint", "Map", null, []);
-        var quit = new GodotGameplayPlanStep("clickPointerTarget", "PlayerInput", "Quit",
-            Parameters(("targetKind", "UiElement")));
-        return Plan("Runner.Checkpoint", [load], [quit], [BoolAssertion("productionSaveUnchanged", "Map", true)]) with
+        GodotGameplayPlanStep load = LoadCheckpointStep(checkpoint);
+        return Plan("Runner.Checkpoint", [load], [], [BoolAssertion("productionSaveUnchanged", "Map", true)]) with
         {
             Checkpoint = new GodotGameplayCheckpoint(checkpoint.Id, "validated_checkpoint", checkpoint.SemanticHash, checkpoint.Path)
         };
     }
 
-    private static ValidatedGodotRunCheckpoint BattleCheckpoint(string id)
-    {
-        PureRunDefinitionResource resource = ResourceLoader.Load<PureRunDefinitionResource>(
-            "res://content/runs/PureRunThreeEncounterV1.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!;
-        PureRunDefinition definition = resource.ToCoreDefinition();
-        var store = new MemoryRunStore();
-        var service = new PureRunSessionService(definition, store);
-        AssertThat(service.BeginNewRunSetup(7).Succeeded).IsTrue();
-        foreach (PureRunPartyTemplate member in definition.Party)
-            AssertThat(service.ChooseStartingSkill(member.CharacterId, member.StartingSkillContentId).Succeeded).IsTrue();
-        AssertThat(service.BeginEncounter().Succeeded).IsTrue();
-        return ValidatedGodotRunCheckpoint.Create(id, "validated://" + id, store.Snapshot!);
-    }
+    private static GodotGameplayPlanStep LoadCheckpointStep(ValidatedGodotRunCheckpoint checkpoint) =>
+        new("loadValidatedCheckpoint", "Map", null,
+            Parameters(("id", checkpoint.Id), ("path", checkpoint.Path), ("semanticHash", checkpoint.SemanticHash)));
 
     private static GodotGameplayScenarioPlan Plan(string name, GodotGameplayPlanStep[] setup,
         GodotGameplayPlanStep[] actions, GodotGameplayPlanAssertion[] assertions)
@@ -286,17 +363,5 @@ public class GodotGameplayRuntimeRunnerTests
         values.ToDictionary(value => value.Key, value => JsonSerializer.SerializeToElement(value.Value), StringComparer.Ordinal);
 
     private static JsonElement Json(bool value) => JsonDocument.Parse(value ? "true" : "false").RootElement.Clone();
-
-    private sealed class MemoryRunStore : IRunSaveStore
-    {
-        public PureRunSaveSnapshot? Snapshot { get; private set; } = new(0, null, null);
-        public RunStoreResult Load() => new(true, null, Snapshot);
-        public RunStoreResult Save(PureRunSaveSnapshot snapshot, long expectedRevision)
-        {
-            if (Snapshot?.Revision != expectedRevision) return new RunStoreResult(false, "save.stale_revision", Snapshot);
-            Snapshot = snapshot;
-            return new RunStoreResult(true, null, Snapshot);
-        }
-    }
 
 }

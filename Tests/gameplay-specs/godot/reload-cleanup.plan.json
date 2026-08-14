@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 2,
+  "runtime": "Godot",
+  "scenarioName": "GodotPendingAcceptance.ReloadCleanup",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:restartGodotMain",
+    "action:waitForPlayerObservable",
+    "assertion:checkpointRevisionEquals",
+    "assertion:presentationNodeCountEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "reload-pending-battle-v1",
+        "path": "validated://reload-pending-battle-v1",
+        "semanticHash": "a7ef2a784163a5c8a58b5cbfeb4d90a7ab088b2e3055777260b7e72f196fc3b3"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "UI",
+      "kind": "restartGodotMain",
+      "parameters": {}
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "battleReady",
+        "maximumFrames": 300
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "checkpointRevisionEquals",
+      "expected": 6,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "presentationNodeCountEquals",
+      "expected": 0,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "checkpointRevisionEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "presentationNodeCountEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "reload-pending-battle-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "a7ef2a784163a5c8a58b5cbfeb4d90a7ab088b2e3055777260b7e72f196fc3b3",
+    "path": "validated://reload-pending-battle-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

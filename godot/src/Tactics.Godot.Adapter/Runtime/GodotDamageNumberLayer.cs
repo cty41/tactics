@@ -17,6 +17,9 @@ public partial class GodotDamageNumberLayer : Node2D
     private readonly List<BattlePresentationNumber> _history = new();
     public int ActiveCount => _active.Count;
     public IReadOnlyList<BattlePresentationNumber> History => _history;
+    public IReadOnlyList<Label> ActiveLabels => _active.ToArray();
+    public float PlaybackSpeed => _speed;
+    public bool IsPaused => _paused;
 
     public void Configure(IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors) => _actors = actors;
 

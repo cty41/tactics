@@ -36,6 +36,14 @@ public sealed record GodotGameplayScenarioPlan(
         int loadCheckpointCount = SetupActions.Count(step => step.Kind == "loadValidatedCheckpoint");
         if (Checkpoint is null && loadCheckpointCount != 0 || Checkpoint is not null && loadCheckpointCount != 1)
             throw new InvalidDataException("Checkpoint metadata and loadValidatedCheckpoint must occur together exactly once.");
+        if (Checkpoint is not null)
+        {
+            GodotGameplayPlanStep load = SetupActions.Single(step => step.Kind == "loadValidatedCheckpoint");
+            if (!MatchesCheckpointParameter(load, "id", Checkpoint.Id) ||
+                !MatchesCheckpointParameter(load, "path", Checkpoint.Path) ||
+                !MatchesCheckpointParameter(load, "semanticHash", Checkpoint.SemanticHash))
+                throw new InvalidDataException("loadValidatedCheckpoint parameters do not match checkpoint metadata.");
+        }
         if (Watchdog.StepTimeoutMs <= 0 || Watchdog.BattleRoundLimit is <= 0 or > 80 ||
             Watchdog.ScenarioTimeoutMs <= 0 || Watchdog.NoProgressLimit <= 0)
             throw new InvalidDataException("Watchdog limits are invalid.");
@@ -56,6 +64,10 @@ public sealed record GodotGameplayScenarioPlan(
                 JsonSerializer.Serialize(probe.Parameters) != JsonSerializer.Serialize(AssertionPlans[index].Parameters)).Any())
             throw new InvalidDataException("Probe requests do not correspond to assertions.");
     }
+
+    private static bool MatchesCheckpointParameter(GodotGameplayPlanStep step, string key, string expected) =>
+        step.Parameters.TryGetValue(key, out JsonElement value) && value.ValueKind == JsonValueKind.String &&
+        string.Equals(value.GetString(), expected, StringComparison.Ordinal);
 
     private void ValidateSteps(string phase, IEnumerable<GodotGameplayPlanStep> steps, List<string> capabilities,
         HashSet<string> adapters)
@@ -103,6 +115,13 @@ public sealed record GodotGameplayScenarioPlan(
             case "playBattleThroughInput" when step.Parameters.TryGetValue("maximumActions", out JsonElement maximum) &&
                 (maximum.ValueKind != JsonValueKind.Number || maximum.GetInt32() is < 1 or > 100):
                 throw new InvalidDataException("playBattleThroughInput maximumActions is invalid.");
+            case "endTurnUntilPresentationNumber":
+                if (!HasString("kind") || step.Parameters["kind"].GetString() is not
+                    ("Normal" or "Critical" or "Heal" or "Mana" or "Miss") ||
+                    !step.Parameters.TryGetValue("maximumActions", out JsonElement numberActions) ||
+                    numberActions.ValueKind != JsonValueKind.Number || numberActions.GetInt32() is < 1 or > 100)
+                    throw new InvalidDataException("endTurnUntilPresentationNumber parameters are invalid.");
+                break;
             case "setPresentationPaused" when !step.Parameters.TryGetValue("paused", out JsonElement paused) ||
                 paused.ValueKind is not (JsonValueKind.True or JsonValueKind.False):
                 throw new InvalidDataException("setPresentationPaused requires paused.");
@@ -143,6 +162,7 @@ internal static class GodotGameplayCapabilities
         ["action:rightClickPointerTarget"] = "PlayerInput", ["action:pressInputKey"] = "PlayerInput",
         ["action:waitForPlayerObservable"] = "PlayerInput", ["action:waitForFrames"] = "PlayerInput",
         ["action:playBattleThroughInput"] = "PlayerInput", ["action:endTurnOnlyUntilTerminal"] = "Battle",
+        ["action:endTurnUntilPresentationNumber"] = "Battle",
         ["action:restartGodotMain"] = "UI", ["action:setPresentationPaused"] = "UI", ["action:setPresentationSpeed"] = "UI",
         ["assertion:inventoryProjectionEnteredBattle"] = "Battle", ["assertion:terminalSummaryOutcomeEquals"] = "Map",
         ["assertion:activeRunExistsEquals"] = "Map", ["assertion:presentationNumberEquals"] = "UI",

@@ -310,6 +310,57 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void DeadHeroesWithLivingSummon_ContinueThroughItsAiTurnUntilTheLastFactionEntityFalls()
+    {
+        UnitInstanceId ownerId = new("party-necromancer");
+        UnitInstanceId summonId = new("summon-skeleton");
+        UnitInstanceId enemyId = new("enemy-goat");
+        SkillDefinition summonAttack = Skill("skill.summon.skeleton-attack.lv1", 2);
+        SkillDefinition enemyAttack = Skill("skill.enemy.finisher", 20);
+        BattleUnitState owner = Unit(ownerId, "unit.pure-run.necromancer", new GridPoint(0, 0), 0, 0, 20, 0);
+        BattleUnitState summon = new(new UnitState(summonId, new ContentId("unit.pure-run.skeleton-warrior"),
+            new GridPoint(1, 1), 3, 20, 0, 1), 4, 4, physicalAttack: 2, summonOwnerId: ownerId,
+            canReceiveStandardHealing: false, canProduceCorpse: false, summonCategory: "Skeleton");
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(2, 1), 1, 2, 2, 2);
+        AiDefinition summonAi = BasicAi("ai.summon.basic-melee", summonAttack.ContentId);
+        var skills = new Dictionary<ContentId, SkillDefinition>
+        {
+            [summonAttack.ContentId] = summonAttack,
+            [enemyAttack.ContentId] = enemyAttack
+        };
+        var controllers = new Dictionary<ContentId, SummonControllerDefinition>
+        {
+            [new ContentId("unit.pure-run.skeleton-warrior")] = new(summonAi,
+                new Dictionary<int, SkillDefinition> { [1] = summonAttack }, SkillExecutionKind.SummonSkeleton)
+        };
+        PlayableBattleSessionContext Context(BattleUnitState currentSummon, BattleUnitState currentEnemy) => new(
+            State([owner, currentSummon, currentEnemy], [summonId, enemyId, ownerId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>(),
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", enemyAttack.ContentId) },
+            skills,
+            new EncounterRequest("run-summon-terminal", 2, new ContentId("encounter.pure-run.n1"),
+                Array.Empty<RunCharacterState>()),
+            new Dictionary<UnitInstanceId, string> { [ownerId] = "pure_run_necromancer" },
+            SummonControllers: controllers);
+
+        var service = new PlayableBattleSessionService(Context(summon, enemy));
+        var defeated = new PlayableBattleSessionService(Context(summon.WithHealth(0), enemy.WithHealth(2)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.CaptureSnapshot().RecentEvents.OfType<SkillUsedEvent>()
+                .Any(value => value.ActorId == summonId), Is.True,
+                "The living summon must receive its automatic turn before defeat is evaluated.");
+            Assert.That(service.BattleResult, Is.Not.Null);
+            Assert.That(service.BattleResult!.PlayerVictory, Is.True,
+                "A living summon can win after every persistent party character is dead.");
+            Assert.That(defeated.BattleResult, Is.Not.Null);
+            Assert.That(defeated.BattleResult!.PlayerVictory, Is.False);
+            Assert.That(defeated.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.Defeat));
+        });
+    }
+
+    [Test]
     public void AllPlayerFactionUnitsDefeated_ProducesOneDefeatResult()
     {
         UnitInstanceId heroId = new("party-mage");
