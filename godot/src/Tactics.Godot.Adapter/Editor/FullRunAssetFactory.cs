@@ -48,7 +48,7 @@ public static class FullRunAssetFactory
         var ids=entries.Select(value=>value.ContentIdValue).ToHashSet(StringComparer.Ordinal);
         GodotResourceEntry[] all=old.Entries.Where(value=>!ids.Contains(value.ContentIdValue)).Select(Copy).Concat(entries)
             .OrderBy(value=>value.ContentIdValue,StringComparer.Ordinal).ToArray();
-        if(all.Length is not (114 or 115 or 116 or 119))throw new InvalidOperationException($"Expected a supported full-run aggregate, got {all.Length} entries.");
+        if(all.Length is not (114 or 115 or 116 or 119 or 121 or 131))throw new InvalidOperationException($"Expected a supported full-run aggregate, got {all.Length} entries.");
         var catalog=new GodotResourceCatalog{Entries=all};Save(catalog,Global);catalog.Validate();
         File.WriteAllText(ledger,JsonSerializer.Serialize(new{schemaVersion=1,batchId=BatchId,state="Generated",ownership="UnityOwned",
             visualAcceptance="not_applicable_functional_ui_only",manualGameplayAcceptance="pending",catalogCount=all.Length,

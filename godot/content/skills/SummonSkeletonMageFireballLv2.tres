@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://i34kqrm2hwgx"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_a7n3x"]
+
+[resource]
+script = ExtResource("1_a7n3x")
+ContentIdValue = "skill.summon.skeleton-mage-fireball.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMageFireball_Lv2_Ability.asset"
+DisplayName = "火球术 Lv2"
+Description = "零消耗施放火球术 Lv2。"
+RoleValue = "Any"
+KindValue = "Basic"
+Level = 2
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Fireball"
+Damage = 4
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.ignite"
+StatusDuration = 3
+IsBasicAbility = true
+BranchId = "summon.skeleton-mage-fireball"
+GrowthVisible = false
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMageFireball_Lv2_Ability.asset"
+SourceGuid = "43a0e07574edc82468230d715048edc4"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv2_Graph.asset"
+GraphDependencyHash = "1b900f15dee3bcfa43128ef0553a5e63"

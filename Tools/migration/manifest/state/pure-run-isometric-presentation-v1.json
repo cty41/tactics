@@ -4,7 +4,7 @@
   "state": "Generated",
   "ownership": "UnityOwned",
   "visualAcceptance": "manual_isometric_and_presentation_qa_pending",
-  "catalogCount": 125,
+  "catalogCount": 131,
   "sourceAudit": [
     {
       "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",

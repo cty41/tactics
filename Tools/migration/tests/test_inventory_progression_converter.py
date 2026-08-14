@@ -35,6 +35,29 @@ class InventoryProgressionConverterTests(unittest.TestCase):
             fire_demon["maxRange"], fire_demon["damage"], fire_demon["statusDuration"]))
         self.assertEqual("buff.ignite", fire_demon["statusContentId"])
         self.assertFalse(fire_demon["canCrit"])
+        self.assertEqual(
+            {
+                "skill.summon.fire-demon-attack",
+                "skill.summon.skeleton-attack.lv1",
+                "skill.summon.skeleton-attack.lv2",
+                "skill.summon.skeleton-mage-fireball.lv1",
+                "skill.summon.skeleton-mage-fireball.lv2",
+            },
+            set(dependencies),
+        )
+        skeleton1 = dependencies["skill.summon.skeleton-attack.lv1"]
+        skeleton2 = dependencies["skill.summon.skeleton-attack.lv2"]
+        self.assertEqual(2, skeleton2["level"])
+        self.assertEqual(("MeleeAttack", 0, 1, 2),
+            (skeleton1["executionKind"], skeleton1["manaCost"], skeleton1["maxRange"], skeleton1["damage"]))
+        self.assertEqual(3, skeleton2["damage"])
+        mage1 = dependencies["skill.summon.skeleton-mage-fireball.lv1"]
+        mage2 = dependencies["skill.summon.skeleton-mage-fireball.lv2"]
+        self.assertEqual(2, mage2["level"])
+        self.assertEqual(("Fireball", 0, 4, 2, "buff.ignite"),
+            (mage1["executionKind"], mage1["manaCost"], mage1["maxRange"], mage1["damage"], mage1["statusContentId"]))
+        self.assertEqual(4, mage2["damage"])
+        self.assertTrue(all(not value["growthVisible"] for value in dependencies.values()))
 
     def test_combat_techniques_preserves_formal_ui_metadata(self):
         definitions = {

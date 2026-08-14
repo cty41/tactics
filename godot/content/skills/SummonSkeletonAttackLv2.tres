@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://c0x82lfcmixqd"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_i7p52"]
+
+[resource]
+script = ExtResource("1_i7p52")
+ContentIdValue = "skill.summon.skeleton-attack.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonAttack_Lv2_Ability.asset"
+DisplayName = "SkeletonAttack_Lv2_Graph"
+Description = "对相邻敌人造成3点物理伤害。"
+RoleValue = "Any"
+KindValue = "Basic"
+Level = 2
+MinRange = 1
+MaxRange = 1
+ExecutionKindValue = "MeleeAttack"
+Damage = 3
+DamageKindValue = "Physical"
+IsBasicAbility = true
+BranchId = "summon.skeleton-attack"
+GrowthVisible = false
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonAttack_Lv2_Ability.asset"
+SourceGuid = "4532eb3d4b73c064f8e8ffabc76b837d"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/SkeletonAttack_Lv2_Graph.asset"
+GraphDependencyHash = "b2f6f5a05c3ffb164d4936f7bd614ef2"

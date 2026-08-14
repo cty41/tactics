@@ -248,6 +248,58 @@ DiagnosticPathValue = "res://content/skills/SummonFireDemonAttack.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("buff.ignite")
 
+[sub_resource type="Resource" id="Resource_a7px7"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.summon.skeleton-attack.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cjsm5ccnk3qaf"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonAttackLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_tb66p"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.summon.skeleton-attack.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c0x82lfcmixqd"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonAttackLv2.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_rhfsm"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.summon.skeleton-mage-fireball.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://b0nfars26su60"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonMageFireballLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_3pr02"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.summon.skeleton-mage-fireball.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://i34kqrm2hwgx"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonMageFireballLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_xmvli"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "ai.summon.basic-melee"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://bka82ygiekdfu"
+DiagnosticPathValue = "res://content/skills/SummonBasicMeleeAi.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.summon.skeleton-attack.lv1", "skill.summon.skeleton-attack.lv2")
+
+[sub_resource type="Resource" id="Resource_cqd2t"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "ai.summon.fire-demon"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://cuaxx382yb4hq"
+DiagnosticPathValue = "res://content/skills/SummonFireDemonAi.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.summon.fire-demon-attack", "skill.summon.skeleton-mage-fireball.lv1", "skill.summon.skeleton-mage-fireball.lv2")
+
 [resource]
 script = ExtResource("2_jgl7m")
-Entries = [SubResource("Resource_ap8ty"), SubResource("Resource_vsjby"), SubResource("Resource_467fq"), SubResource("Resource_3t5tf"), SubResource("Resource_ker1y"), SubResource("Resource_e1laa"), SubResource("Resource_y2744"), SubResource("Resource_resnx"), SubResource("Resource_o7sv5"), SubResource("Resource_3ypvd"), SubResource("Resource_lbg25"), SubResource("Resource_u3631"), SubResource("Resource_3xps4"), SubResource("Resource_nx7bm"), SubResource("Resource_mj7oa"), SubResource("Resource_bmtuw"), SubResource("Resource_qj28j"), SubResource("Resource_6wyol"), SubResource("Resource_nvq6r"), SubResource("Resource_tptq7"), SubResource("Resource_jmm3e"), SubResource("Resource_oa1wn"), SubResource("Resource_jun38"), SubResource("Resource_3466w"), SubResource("Resource_qg50d"), SubResource("Resource_kju66"), SubResource("Resource_t3h62"), SubResource("Resource_p1fja")]
+Entries = [SubResource("Resource_ap8ty"), SubResource("Resource_vsjby"), SubResource("Resource_467fq"), SubResource("Resource_3t5tf"), SubResource("Resource_ker1y"), SubResource("Resource_e1laa"), SubResource("Resource_y2744"), SubResource("Resource_resnx"), SubResource("Resource_o7sv5"), SubResource("Resource_3ypvd"), SubResource("Resource_lbg25"), SubResource("Resource_u3631"), SubResource("Resource_3xps4"), SubResource("Resource_nx7bm"), SubResource("Resource_mj7oa"), SubResource("Resource_bmtuw"), SubResource("Resource_qj28j"), SubResource("Resource_6wyol"), SubResource("Resource_nvq6r"), SubResource("Resource_tptq7"), SubResource("Resource_jmm3e"), SubResource("Resource_oa1wn"), SubResource("Resource_jun38"), SubResource("Resource_3466w"), SubResource("Resource_qg50d"), SubResource("Resource_kju66"), SubResource("Resource_t3h62"), SubResource("Resource_p1fja"), SubResource("Resource_a7px7"), SubResource("Resource_tb66p"), SubResource("Resource_rhfsm"), SubResource("Resource_3pr02"), SubResource("Resource_xmvli"), SubResource("Resource_cqd2t")]

@@ -130,28 +130,39 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
             "sourceLocalFileId": int(value["sourceLocalFileId"]),
             "dependencyHash": value["dependencyHash"],
         }
-        if key == "dependency.fire-demon-attack":
+        if key.startswith("dependency."):
             props = _props(value)
             graph_reference = props.get("_skillGraph", {}).get("reference")
             if not graph_reference:
-                raise ValueError("Fire Demon attack must reference its frozen SkillGraph")
+                raise ValueError(f"{key} must reference its frozen SkillGraph")
+            contracts = {
+                "dependency.fire-demon-attack": ("FireDemonAttack", "Magical", 4, "buff.ignite", 1, False),
+                "dependency.skeleton-attack.lv1": ("MeleeAttack", "Physical", 2, "", 0, True),
+                "dependency.skeleton-attack.lv2": ("MeleeAttack", "Physical", 3, "", 0, True),
+                "dependency.skeleton-mage-fireball.lv1": ("Fireball", "Magical", 2, "buff.ignite", 2, True),
+                "dependency.skeleton-mage-fireball.lv2": ("Fireball", "Magical", 4, "buff.ignite", 3, True),
+            }
+            if key not in contracts:
+                raise ValueError(f"Unknown internal skill dependency {key}")
+            execution, damage_kind, damage, status_id, status_duration, can_crit = contracts[key]
+            dependency_level = 2 if key.endswith(".lv2") else 1
             dependency.update({
-                "displayName": str(_value(props, "_displayName", "火魔攻击")),
+                "displayName": str(_value(props, "_displayName", dependency["contentId"])),
                 "description": str(_value(props, "_description", "")),
-                "executionKind": "FireDemonAttack",
+                "executionKind": execution,
                 "role": "Any",
                 "kind": "Basic",
-                "level": 1,
+                "level": dependency_level,
                 "manaCost": int(_value(props, "_manaCost", 0)),
                 "minRange": 1,
                 "maxRange": int(_value(props, "_targetRange", 0)),
-                "damage": 4,
-                "damageKind": "Magical",
-                "statusContentId": "buff.ignite",
-                "statusDuration": 1,
+                "damage": damage,
+                "damageKind": damage_kind,
+                "statusContentId": status_id,
+                "statusDuration": status_duration,
                 "isBasicAbility": str(_value(props, "_isBasicAbility", "false")).lower() == "true",
                 "maxUsesPerTurn": int(_value(props, "_maxUsesPerTurn", 0)),
-                "canCrit": False,
+                "canCrit": can_crit,
                 "growthVisible": False,
                 "graphPath": graph_reference["sourcePath"],
                 "graphDependencyHash": graph_reference["dependencyHash"],

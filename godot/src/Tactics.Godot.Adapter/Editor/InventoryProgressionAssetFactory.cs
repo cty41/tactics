@@ -31,22 +31,31 @@ public static class InventoryProgressionAssetFactory
             Populate(resource, item); resource.ToCoreDefinition(); Save(resource, path);
             generated.Add(Entry(item.ContentId, path, References(item)));
         }
-        Dependency fireDemon = draft.InternalSkillDependencies.Single(value => value.ContentId == "skill.summon.fire-demon-attack");
-        const string fireDemonPath = Root + "/SummonFireDemonAttack.tres";
-        var fireDemonResource = File.Exists(ProjectSettings.GlobalizePath(fireDemonPath))
-            ? ResourceLoader.Load<SkillDefinitionResource>(fireDemonPath, string.Empty, ResourceLoader.CacheMode.Ignore) ?? new SkillDefinitionResource()
-            : new SkillDefinitionResource();
-        Populate(fireDemonResource, fireDemon);
-        fireDemonResource.ToCoreDefinition();
-        Save(fireDemonResource, fireDemonPath);
-        generated.Add(Entry(fireDemon.ContentId, fireDemonPath, new[] { fireDemon.StatusContentId }));
-        if (generated.Count != 28) throw new InvalidOperationException($"Expected 28 new and internal skill resources, got {generated.Count}.");
+        foreach (Dependency dependency in draft.InternalSkillDependencies.OrderBy(value => value.ContentId, StringComparer.Ordinal))
+        {
+            string path = ResourcePath(dependency.ContentId);
+            var resource = File.Exists(ProjectSettings.GlobalizePath(path))
+                ? ResourceLoader.Load<SkillDefinitionResource>(path, string.Empty, ResourceLoader.CacheMode.Ignore) ?? new SkillDefinitionResource()
+                : new SkillDefinitionResource();
+            Populate(resource, dependency);
+            resource.ToCoreDefinition();
+            Save(resource, path);
+            generated.Add(Entry(dependency.ContentId, path,
+                string.IsNullOrEmpty(dependency.StatusContentId) ? Array.Empty<string>() : new[] { dependency.StatusContentId }));
+        }
+        generated.Add(BuildSummonAi("ai.summon.basic-melee", Root + "/SummonBasicMeleeAi.tres",
+            "res://content/ai_encounters/AiPureRunCharger.tres",
+            new[] { "skill.summon.skeleton-attack.lv1", "skill.summon.skeleton-attack.lv2" }, 1, 1, 0));
+        generated.Add(BuildSummonAi("ai.summon.fire-demon", Root + "/SummonFireDemonAi.tres",
+            "res://content/ai_encounters/AiPureRunRanged.tres",
+            new[] { "skill.summon.fire-demon-attack", "skill.summon.skeleton-mage-fireball.lv1", "skill.summon.skeleton-mage-fireball.lv2" }, 2, 3, 100));
+        if (generated.Count != 34) throw new InvalidOperationException($"Expected 32 skill and 2 summon AI resources, got {generated.Count}.");
         Save(new GodotResourceCatalog { Entries = generated.ToArray() }, BatchCatalogPath);
         GodotResourceCatalog current = ResourceLoader.Load<GodotResourceCatalog>(GlobalCatalogPath, string.Empty, ResourceLoader.CacheMode.Ignore)!;
         var entries = current.Entries.ToDictionary(value => value.ContentIdValue, Copy, StringComparer.Ordinal);
         foreach (GodotResourceEntry entry in generated) entries[entry.ContentIdValue] = Copy(entry);
         var global = new GodotResourceCatalog { Entries = entries.Values.OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray() };
-        if (global.Entries.Length is not (101 or 102 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125))
+        if (global.Entries.Length is not (101 or 102 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125 or 131))
             throw new InvalidOperationException($"Canonical Catalog count is invalid: {global.Entries.Length}.");
         Save(global, GlobalCatalogPath); global.Validate();
     }
@@ -74,11 +83,37 @@ public static class InventoryProgressionAssetFactory
         r.RoleValue=d.Role;r.KindValue=d.Kind;r.Level=d.Level;r.ManaCost=d.ManaCost;r.MinRange=d.MinRange;r.MaxRange=d.MaxRange;
         r.ExecutionKindValue=d.ExecutionKind;r.Damage=d.Damage;r.DamageKindValue=d.DamageKind;r.StatusContentIdValue=d.StatusContentId;
         r.StatusDuration=d.StatusDuration;r.IsBasicAbility=d.IsBasicAbility;r.MaxUsesPerTurn=d.MaxUsesPerTurn;r.CanCrit=d.CanCrit;
-        r.BranchId="summon.fire-demon-attack";r.GrowthVisible=d.GrowthVisible;r.SourcePath=d.SourcePath;r.SourceGuid=d.SourceGuid;
+        r.BranchId=d.ContentId["skill.".Length..].Replace(".lv1",string.Empty,StringComparison.Ordinal).Replace(".lv2",string.Empty,StringComparison.Ordinal);
+        r.GrowthVisible=d.GrowthVisible;r.SourcePath=d.SourcePath;r.SourceGuid=d.SourceGuid;
         r.SourceLocalFileId=d.SourceLocalFileId;r.GraphPath=d.GraphPath;r.GraphDependencyHash=d.GraphDependencyHash;
     }
     private static string PrerequisiteId(Definition d) => d.Level <= 1 ? string.Empty : d.BranchId == "amazon.poison-spear" ? "skill.poison-spear.lv1" : $"skill.{d.BranchId}.lv{d.Level-1}";
     private static string[] References(Definition d) => new[] { d.StatusContentId, PrerequisiteId(d) }.Where(value=>!string.IsNullOrEmpty(value)).ToArray();
+    private static GodotResourceEntry BuildSummonAi(string id, string path, string templatePath, string[] skills,
+        int preferredMinimumRange, int preferredMaximumRange, float repositionBonus)
+    {
+        AiDefinitionResource template = ResourceLoader.Load<AiDefinitionResource>(templatePath, string.Empty,
+            ResourceLoader.CacheMode.Ignore) ?? throw new InvalidOperationException($"Missing summon AI template '{templatePath}'.");
+        var resource = new AiDefinitionResource
+        {
+            SchemaVersion = 1, ContentIdValue = id, ArchetypeValue = template.ArchetypeValue,
+            SkillContentIds = skills, PatternSkillContentIds = Array.Empty<string>(),
+            DistanceWeight = template.DistanceWeight, DamageWeight = template.DamageWeight,
+            TargetCountWeight = template.TargetCountWeight, HarmfulStatusWeight = template.HarmfulStatusWeight,
+            BrainPath = id == "ai.summon.basic-melee" ? "Assets/Tactics/AI/BasicMeleeBrain.asset" : "Assets/Tactics/AI/FireDemonBrain.asset",
+            BrainGuid = id == "ai.summon.basic-melee" ? "23ef0577d8112fb47b11885d94eb15b0" : "8f34d51f3c53ce642a758723d65c7416",
+            BrainLocalFileId = 11400000,
+            ProfilePath = template.ProfilePath, ProfileGuid = template.ProfileGuid,
+            DecisionGraphPath = template.DecisionGraphPath, DecisionGraphHash = template.DecisionGraphHash,
+            DecisionGraphJson = template.DecisionGraphJson,
+            MaximumEngageCandidatesPerTarget = template.MaximumEngageCandidatesPerTarget,
+            PreferredMinimumRange = preferredMinimumRange, PreferredMaximumRange = preferredMaximumRange,
+            PreferredRangeRepositionBonus = repositionBonus
+        };
+        resource.ToCoreDefinition();
+        Save(resource, path);
+        return new GodotResourceEntry { ContentIdValue=id, ResourceTypeIdValue="ai", ResourceUidValue=ResourceUid.IdToText(Uid(path)), DiagnosticPathValue=path, SchemaVersion=1, ReferenceContentIds=skills };
+    }
     private static GodotResourceEntry Entry(string id,string path,string[] refs)=>new(){ContentIdValue=id,ResourceTypeIdValue="skill",ResourceUidValue=ResourceUid.IdToText(Uid(path)),DiagnosticPathValue=path,SchemaVersion=1,ReferenceContentIds=refs};
     private static GodotResourceEntry Copy(GodotResourceEntry v)=>new(){ContentIdValue=v.ContentIdValue,ResourceTypeIdValue=v.ResourceTypeIdValue,ResourceUidValue=v.ResourceUidValue,DiagnosticPathValue=v.DiagnosticPathValue,SchemaVersion=v.SchemaVersion,ReferenceContentIds=v.ReferenceContentIds.ToArray()};
     private static long Uid(string path)

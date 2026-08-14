@@ -41,7 +41,7 @@ public static class IsometricPresentationAssetFactory
         GodotResourceEntry entry = Entry(board.ContentIdValue, "battle-board", BoardPath);
         GodotResourceEntry[] all = old.Entries.Where(value => value.ContentIdValue != entry.ContentIdValue).Select(Copy).Append(entry)
             .OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray();
-        if (all.Length is not (115 or 116 or 117 or 119 or 123 or 124 or 125)) throw new InvalidOperationException($"Unsupported presentation Catalog count: {all.Length}.");
+        if (all.Length is not (115 or 116 or 117 or 119 or 122 or 123 or 124 or 125 or 131)) throw new InvalidOperationException($"Unsupported presentation Catalog count: {all.Length}.");
         var catalog = new GodotResourceCatalog { Entries = all };
         Save(catalog, Global);
         catalog.Validate();
@@ -76,7 +76,7 @@ public static class IsometricPresentationAssetFactory
         GodotResourceEntry entry = Entry(profile.ContentIdValue, "presentation", UnitPresentationPath);
         GodotResourceEntry[] all = old.Entries.Where(value => value.ContentIdValue != entry.ContentIdValue).Select(Copy).Append(entry)
             .OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray();
-        if (all.Length is not (116 or 117 or 119 or 123 or 124 or 125)) throw new InvalidOperationException($"Unsupported unit presentation Catalog count: {all.Length}.");
+        if (all.Length is not (116 or 117 or 119 or 123 or 124 or 125 or 131)) throw new InvalidOperationException($"Unsupported unit presentation Catalog count: {all.Length}.");
         var catalog = new GodotResourceCatalog { Entries = all };
         Save(catalog, Global);
         string project = Path.TrimEndingDirectorySeparator(Path.GetFullPath(ProjectSettings.GlobalizePath("res://")));
@@ -108,7 +108,9 @@ public static class IsometricPresentationAssetFactory
         GodotResourceCatalog old=ResourceLoader.Load<GodotResourceCatalog>(Global,string.Empty,ResourceLoader.CacheMode.Ignore)!;
         var ids=entries.Select(value=>value.ContentIdValue).Append("presentation.status.standard-v1").Append("presentation.camera.battle-focus-v1").ToHashSet(StringComparer.Ordinal);
         GodotResourceEntry[] all=old.Entries.Where(value=>!ids.Contains(value.ContentIdValue)).Select(Copy).Concat(entries).OrderBy(value=>value.ContentIdValue,StringComparer.Ordinal).ToArray();
-        int skillCatalogCount = old.Entries.Any(value => value.ContentIdValue == "skill.summon.fire-demon-attack") ? 124 : 123;
+        int skillCatalogCount = old.Entries.Any(value => value.ContentIdValue == "ai.summon.basic-melee")
+            ? 130
+            : old.Entries.Any(value => value.ContentIdValue == "skill.summon.fire-demon-attack") ? 124 : 123;
         if(all.Length!=skillCatalogCount)throw new InvalidOperationException($"Expected {skillCatalogCount} catalog entries, got {all.Length}.");
         Save(new GodotResourceCatalog{Entries=all},Global);
         string project=Path.TrimEndingDirectorySeparator(Path.GetFullPath(ProjectSettings.GlobalizePath("res://"))),repo=Directory.GetParent(project)!.FullName;
@@ -126,7 +128,9 @@ public static class IsometricPresentationAssetFactory
     {
         BuildSkillPresentations();
         GodotResourceCatalog current=ResourceLoader.Load<GodotResourceCatalog>(Global,string.Empty,ResourceLoader.CacheMode.Ignore)!;
-        int finalCatalogCount=current.Entries.Any(value=>value.ContentIdValue=="skill.summon.fire-demon-attack")?125:124;
+        int finalCatalogCount=current.Entries.Any(value=>value.ContentIdValue=="ai.summon.basic-melee")
+            ? 131
+            : current.Entries.Any(value=>value.ContentIdValue=="skill.summon.fire-demon-attack")?125:124;
         string staleCameraPath = Root + "/BattleFocusCameraPresentationV1.tres";
         string staleCameraAbsolute = ProjectSettings.GlobalizePath(staleCameraPath);
         if (File.Exists(staleCameraAbsolute)) File.Delete(staleCameraAbsolute);
@@ -139,7 +143,7 @@ public static class IsometricPresentationAssetFactory
     {
         GodotResourceCatalog old=ResourceLoader.Load<GodotResourceCatalog>(Global,string.Empty,ResourceLoader.CacheMode.Ignore)!;
         GodotResourceEntry entry=Entry(id,"presentation",path);
-        GodotResourceEntry[] all=old.Entries.Where(value=>value.ContentIdValue!=id&&(expected is not (124 or 125)||value.ContentIdValue!="presentation.camera.battle-focus-v1")).Select(Copy).Append(entry).OrderBy(value=>value.ContentIdValue,StringComparer.Ordinal).ToArray();
+        GodotResourceEntry[] all=old.Entries.Where(value=>value.ContentIdValue!=id&&(expected is not (124 or 125 or 130 or 131)||value.ContentIdValue!="presentation.camera.battle-focus-v1")).Select(Copy).Append(entry).OrderBy(value=>value.ContentIdValue,StringComparer.Ordinal).ToArray();
         if(all.Length!=expected)throw new InvalidOperationException($"Expected {expected} catalog entries, got {all.Length}.");
         Save(new GodotResourceCatalog{Entries=all},Global);
     }
@@ -180,7 +184,7 @@ public static class IsometricPresentationAssetFactory
     }
     private static void RegisterCatalogUids(GodotResourceCatalog catalog)
     {
-        foreach(GodotResourceEntry entry in catalog.Entries.Where(value=>value.ResourceTypeIdValue is "presentation" or "battle-board"))
+        foreach(GodotResourceEntry entry in catalog.Entries)
         {
             long uid=ResourceUid.TextToId(entry.ResourceUidValue);
             if(uid!=ResourceUid.InvalidId&&!ResourceUid.HasId(uid))ResourceUid.AddId(uid,entry.DiagnosticPathValue);

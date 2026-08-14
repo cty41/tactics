@@ -42,7 +42,7 @@
     },
     {
       "resourcePath": "godot/content/skills/InventoryProgressionCatalog.tres",
-      "targetHash": "sha256:f11caf272f7b9a1cfab3901b42aefadfe90350f87168d9f9d1f2693821f0781d"
+      "targetHash": "sha256:961fd74883762a8340a2842377420d3a2535dab6d642cc59182cbd2cea348a1b"
     },
     {
       "resourcePath": "godot/content/skills/MageFireballLv2.tres",
@@ -117,8 +117,32 @@
       "targetHash": "sha256:4539d50630f9c30c22648323530e5f86d0aab9cdbdf2d514f61f120dbf03a127"
     },
     {
+      "resourcePath": "godot/content/skills/SummonBasicMeleeAi.tres",
+      "targetHash": "sha256:d61f32475c03b6631548fc61e346e4ca0613b104b3c4fe4841e6335e10dbc526"
+    },
+    {
+      "resourcePath": "godot/content/skills/SummonFireDemonAi.tres",
+      "targetHash": "sha256:b3843bb651a3d068a1aae5e98e843fd93480f1da89b58a3c0ff6806e5a4799e7"
+    },
+    {
       "resourcePath": "godot/content/skills/SummonFireDemonAttack.tres",
       "targetHash": "sha256:456ae6770663324a5781a52372b10df95ae6e227915491c5897d8ca9a97b923c"
+    },
+    {
+      "resourcePath": "godot/content/skills/SummonSkeletonAttackLv1.tres",
+      "targetHash": "sha256:d24f0166b3057cd5fb7216b52d6fbabcf3c3f47dbc3f6fd3b06a4f348e8945b0"
+    },
+    {
+      "resourcePath": "godot/content/skills/SummonSkeletonAttackLv2.tres",
+      "targetHash": "sha256:fb93687c71b6eca487ce678e62846ce447d4f57d6240fd45279bc3e1dd3a0d98"
+    },
+    {
+      "resourcePath": "godot/content/skills/SummonSkeletonMageFireballLv1.tres",
+      "targetHash": "sha256:2bab7287afce964afc28ce5b5eb8488a5d393b3545e2f45641a1f7453fac8b39"
+    },
+    {
+      "resourcePath": "godot/content/skills/SummonSkeletonMageFireballLv2.tres",
+      "targetHash": "sha256:1cee6866dd7be0a815e747b17662bc2d5a0d1fef7896eb3712fc7633ffae4c33"
     }
   ]
 }
