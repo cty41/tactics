@@ -31,3 +31,15 @@ public sealed class PlayableBattleBalanceProfile
     public (int Physical, int Magical) Attacks(ContentId unitId) =>
         _units.TryGetValue(unitId, out (int Physical, int Magical) value) ? value : (2, 2);
 }
+
+/// <summary>Godot playable-slice speed overrides that preserve frozen Unity unit definitions.</summary>
+public sealed class PlayableEnemySpeedProfile
+{
+    private readonly IReadOnlyDictionary<ContentId, float> _speeds;
+
+    public PlayableEnemySpeedProfile(IReadOnlyDictionary<ContentId, float> speeds) =>
+        _speeds = speeds ?? throw new ArgumentNullException(nameof(speeds));
+
+    public float Speed(ContentId unitId, float frozenSpeed) =>
+        _speeds.TryGetValue(unitId, out float speed) ? speed : frozenSpeed;
+}

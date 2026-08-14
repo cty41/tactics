@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-13T18:18:05+08:00"
+timestamp: "2026-08-14T14:36:57+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:22f275045eb69b79714e9c87417f86b93abdd3ef74b2214018d6ea47e3f6fb29
+source_fingerprint: sha256:9986cf45aac57139da0bf80735212acf34ba822654eb682c5e25f3ef0a605394
 ---
 
 # Current state
@@ -43,6 +43,7 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 - AI/Encounter disposable DTO 存在时，统一入口会编译共享 BasicMeleeGraph 的 13 节点/12 边、六类 AI、四项敌方技能、两个 Layout 与 N1–N3 Encounter，连续两次通过 ResourceSaver 比较 17 个批次 artifact，并在 Compatibility/Forward+ 验证 15 项分批 Catalog 与 73 项 canonical Catalog。AI 必须共同生成 Engage、当前格攻击和移动后技能候选；不可退化为“无攻击才移动”。
 - Pure Run persistence disposable DTO 存在时，统一入口会重编三战 typed draft，通过 ResourceSaver 连续两次比较 Run Resource、分批 Catalog、自动诊断 Fixture 与 ledger，并在 Editor UID scan 后用 Compatibility/Forward+ 验证 1/74 Catalog、canonical JSON、revision、temp/backup/quarantine 恢复与终局摘要。该批没有视觉载荷，自动可观测性门禁通过后直接保持 `Validated/UnityOwned`。
 - Phase 7A UI/Input DTO 存在时，统一入口会重编 audit-only draft，通过 `PlayableRunSceneBuilder` 校验或生成 canonical `Main.tscn`，显式保留 Main UID 并比较两轮 SHA-256；随后刷新 `Generated/UnityOwned` evidence，并在 Compatibility/Forward+ 启动 Home/74 Catalog smoke。UI/Input 的鼠标、键盘、resize、完整三战导航与 Reload 仍保留人工闸门。
+- Phase 7A UI/Input evidence 同时绑定 Adapter-owned 的 `godot-playable-enemy-speed-v1` Resource；统一入口连续两次运行 `PlayableRunSceneBuilder`，比较 Main Scene 与敌方速度 Resource 的 SHA-256，并由 Python receipt 校验 contract/hash。该配置不进入 gameplay Catalog，也不改写冻结 Unity Unit Resource。
 
 ## Validation
 

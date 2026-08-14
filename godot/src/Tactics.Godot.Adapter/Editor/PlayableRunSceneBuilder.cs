@@ -10,12 +10,14 @@ public partial class PlayableRunSceneBuilder : SceneTree
     private const string MainScenePath = "res://scenes/Main.tscn";
     private const string MainSceneUid = "uid://c0mlqoh7vensn";
     private const string BalancePath = "res://content/ui/PlayableLv1BalanceProfile.tres";
+    private const string EnemySpeedPath = "res://content/ui/PlayableEnemySpeedProfile.tres";
 
     public override void _Initialize()
     {
         try
         {
             SaveBalanceProfile();
+            SaveEnemySpeedProfile();
             if (ResourceLoader.Load<PackedScene>(MainScenePath, string.Empty, ResourceLoader.CacheMode.Ignore) is PackedScene existing)
             {
                 RequireUid();
@@ -60,6 +62,22 @@ public partial class PlayableRunSceneBuilder : SceneTree
         profile.ToCoreProfile();
         Error save = ResourceSaver.Save(profile, BalancePath);
         if (save != Error.Ok) throw new InvalidOperationException($"Cannot save playable balance profile: {save}.");
+    }
+
+    private static void SaveEnemySpeedProfile()
+    {
+        var profile = new PlayableEnemySpeedProfileResource
+        {
+            UnitContentIds =
+            [
+                "unit.pure-run.goat-ranged", "unit.pure-run.goat-charger", "unit.pure-run.goat-support",
+                "unit.pure-run.goat-aoe", "unit.pure-run.goat-elite-charger", "unit.pure-run.goat-elite-poison-caster"
+            ],
+            Speeds = [6f, 6f, 5f, 5f, 7f, 6f]
+        };
+        profile.ToCoreProfile();
+        Error save = ResourceSaver.Save(profile, EnemySpeedPath);
+        if (save != Error.Ok) throw new InvalidOperationException($"Cannot save enemy speed profile: {save}.");
     }
 
     private static void RequireUid()

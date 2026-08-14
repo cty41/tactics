@@ -6,6 +6,7 @@ namespace Tactics.Core.Runs;
 public enum PureRunNodeKind { Battle, Rest, Store, Mystery }
 public enum PureRunMapPhase { Locked, ChoosingLayerFour, ResolvingNode, ReadyForLayerFive, ReadyForLayerSix, ChoosingLayerSix, ReadyForBoss, Completed }
 public enum RunNodeLifecycle { Available, Selected, Pending, Resolved, Committed }
+public enum RunEventAttribute { None, Strength, Agility, Constitution, Intelligence, Charisma, Luck }
 
 public sealed record PureRunMapNodeDefinition(string NodeId, int Layer, PureRunNodeKind Kind, ContentId ContentId);
 
@@ -39,7 +40,8 @@ public sealed record PureRunMapState(
     RunNodeLifecycle NodeLifecycle = RunNodeLifecycle.Available,
     IReadOnlyList<RunStoreOfferState>? StoreOffers = null,
     RunMysteryResolutionState? MysteryResolution = null,
-    IReadOnlyList<RunPersistentStatusState>? PendingStatuses = null);
+    IReadOnlyList<RunPersistentStatusState>? PendingStatuses = null,
+    IReadOnlyDictionary<string, string>? MysteryAdjudicatorAssignments = null);
 
 public sealed record RunStoreOfferState(
     ContentId ContentId,

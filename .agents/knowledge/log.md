@@ -1,8 +1,9 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-14
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:578d288444fc358e716ab035e5c4344a682d84c3b1bfefa36dbd424d67e6f2e3`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:423e16f28c567003516597e24ce4289bd1f4e9d8e7a105f59910202a04d60a0c`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:f85df7eb77834a9fb284b6023671abbde21b50d6734a649ca32f651343545ace`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:9986cf45aac57139da0bf80735212acf34ba822654eb682c5e25f3ef0a605394`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:d91743892d3ab1ec2a387007ac78c22652a9db52df3c1aa13871fa46470c8c2d`。
 
 ## 2026-08-13
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:6ec4644b008c533775005d062927ebb905dcad0cc51a6d82744ec39dc58f027a`。

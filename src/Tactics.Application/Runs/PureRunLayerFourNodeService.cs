@@ -108,8 +108,34 @@ public sealed class PureRunLayerFourNodeService
     public LayerFourNodeResolution LeaveStore(PureRunState run) =>
         Validate(run, PureRunNodeKind.Store, out LayerFourNodeResolution? failure) ? Commit(run) : failure!;
 
+    public LayerFourNodeResolution AssignMysteryAdjudicator(PureRunState run, string eventId)
+    {
+        if (!Validate(run, PureRunNodeKind.Mystery, out LayerFourNodeResolution? failure)) return failure!;
+        string nodeId = run.NodeTransaction!.NodeId;
+        if (!run.MapState!.MysteryEventAssignments.TryGetValue(nodeId, out string? assigned) ||
+            !string.Equals(assigned, eventId, StringComparison.Ordinal)) return Fail("event.assignment_mismatch", run);
+        if (run.MapState.MysteryAdjudicatorAssignments?.TryGetValue(nodeId, out string? existing) == true)
+        {
+            if (run.Party.All(character => character.CharacterId != existing || character.IsDead))
+                return Fail("event.adjudicator_invalid", run);
+            return new LayerFourNodeResolution(true, null, run);
+        }
+        RunCharacterState[] candidates = run.Party.Where(character => !character.IsDead).ToArray();
+        if (candidates.Length == 0) return Fail("event.adjudicator_unavailable", run);
+        uint index = unchecked((uint)PureRunMapService.DeriveSeed(run.Seed,
+            $"event-adjudicator:{nodeId}:{eventId}")) % (uint)candidates.Length;
+        var adjudicators = run.MapState.MysteryAdjudicatorAssignments?.ToDictionary(
+            value => value.Key, value => value.Value, StringComparer.Ordinal)
+            ?? new Dictionary<string, string>(StringComparer.Ordinal);
+        adjudicators[nodeId] = candidates[index].CharacterId;
+        return new LayerFourNodeResolution(true, null, Copy(run, map: run.MapState with
+        {
+            MysteryAdjudicatorAssignments = adjudicators
+        }));
+    }
+
     public LayerFourNodeResolution ResolveMystery(PureRunState run, string eventId, string optionId,
-        string characterId, int baseSuccessRate, int attributeValue, string successEffect, int successAmount,
+        RunEventAttribute attribute, int baseSuccessRate, string successEffect, int successAmount,
         ContentId? successContentId, string failureEffect, int failureAmount, ContentId? failureContentId)
     {
         if (!Validate(run, PureRunNodeKind.Mystery, out LayerFourNodeResolution? failure)) return failure!;
@@ -117,12 +143,17 @@ public sealed class PureRunLayerFourNodeService
             return new(true, null, run, EventOutcome: persisted);
         if (!run.MapState.MysteryEventAssignments.TryGetValue(run.NodeTransaction!.NodeId, out string? assigned) ||
             !string.Equals(assigned, eventId, StringComparison.Ordinal)) return Fail("event.assignment_mismatch", run);
-        if (run.Party.All(value => value.CharacterId != characterId || value.IsDead)) return Fail("event.character_unknown", run);
-        int rate = Math.Clamp(baseSuccessRate + (attributeValue - 5) * 5, 5, 95);
-        int roll = new Random(PureRunMapService.DeriveSeed(run.Seed,
+        string nodeId = run.NodeTransaction.NodeId;
+        if (run.MapState.MysteryAdjudicatorAssignments?.TryGetValue(nodeId, out string? characterId) != true)
+            return Fail("event.adjudicator_missing", run);
+        RunCharacterState? adjudicator = run.Party.SingleOrDefault(value => value.CharacterId == characterId && !value.IsDead);
+        if (adjudicator is null) return Fail("event.adjudicator_invalid", run);
+        int attributeValue = AttributeValue(adjudicator.Attributes, attribute);
+        int rate = attribute == RunEventAttribute.None ? 100 : Math.Clamp(baseSuccessRate + (attributeValue - 5) * 5, 5, 95);
+        int roll = attribute == RunEventAttribute.None ? 0 : new Random(PureRunMapService.DeriveSeed(run.Seed,
             $"event-check:{run.NodeTransaction.NodeId}:{optionId}:{characterId}")).Next(0, 100);
-        bool succeeded = roll < rate;
-        var outcome = new RunMysteryResolutionState(eventId, optionId, characterId, rate, roll, succeeded,
+        bool succeeded = attribute == RunEventAttribute.None || roll < rate;
+        var outcome = new RunMysteryResolutionState(eventId, optionId, characterId!, rate, roll, succeeded,
             succeeded ? successEffect : failureEffect, succeeded ? successAmount : failureAmount,
             succeeded ? successContentId : failureContentId);
         PureRunState updated = Copy(run, map: run.MapState with
@@ -132,6 +163,18 @@ public sealed class PureRunLayerFourNodeService
         });
         return new(true, null, updated, EventOutcome: outcome);
     }
+
+    private static int AttributeValue(UnitAttributes attributes, RunEventAttribute attribute) => attribute switch
+    {
+        RunEventAttribute.None => 5,
+        RunEventAttribute.Strength => attributes.Strength,
+        RunEventAttribute.Agility => attributes.Agility,
+        RunEventAttribute.Constitution => attributes.Constitution,
+        RunEventAttribute.Intelligence => attributes.Intelligence,
+        RunEventAttribute.Charisma => attributes.Charisma,
+        RunEventAttribute.Luck => attributes.Luck,
+        _ => throw new ArgumentOutOfRangeException(nameof(attribute))
+    };
 
     public LayerFourNodeResolution ConfirmMystery(PureRunState run,
         IReadOnlyDictionary<ContentId, ConsumableDefinition> consumables)

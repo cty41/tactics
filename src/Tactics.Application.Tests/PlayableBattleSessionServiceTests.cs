@@ -6,6 +6,7 @@ using Tactics.Core.Battle;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Runs;
+using Tactics.Core.Pathfinding;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
 
@@ -13,6 +14,31 @@ namespace Tactics.Application.Tests;
 
 public sealed class PlayableBattleSessionServiceTests
 {
+    [Test]
+    public void PlayableEnemySpeedProfile_PreservesPlayerSpeedAndOverridesEnemyArchetypes()
+    {
+        var profile = new PlayableEnemySpeedProfile(new Dictionary<ContentId, float>
+        {
+            [new ContentId("unit.pure-run.goat-ranged")] = 6f,
+            [new ContentId("unit.pure-run.goat-charger")] = 6f,
+            [new ContentId("unit.pure-run.goat-support")] = 5f,
+            [new ContentId("unit.pure-run.goat-aoe")] = 5f,
+            [new ContentId("unit.pure-run.goat-elite-charger")] = 7f,
+            [new ContentId("unit.pure-run.goat-elite-poison-caster")] = 6f
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Speed(new ContentId("unit.pure-run.mage"), 5f), Is.EqualTo(5f));
+            Assert.That(profile.Speed(new ContentId("unit.pure-run.goat-ranged"), 12f), Is.EqualTo(6f));
+            Assert.That(profile.Speed(new ContentId("unit.pure-run.goat-charger"), 8f), Is.EqualTo(6f));
+            Assert.That(profile.Speed(new ContentId("unit.pure-run.goat-support"), 8f), Is.EqualTo(5f));
+            Assert.That(profile.Speed(new ContentId("unit.pure-run.goat-aoe"), 6f), Is.EqualTo(5f));
+            Assert.That(profile.Speed(new ContentId("unit.pure-run.goat-elite-charger"), 8f), Is.EqualTo(7f));
+            Assert.That(profile.Speed(new ContentId("unit.pure-run.goat-elite-poison-caster"), 6f), Is.EqualTo(6f));
+        });
+    }
+
     [Test]
     public void PlayableBalanceProfile_PreservesNonCriticalSkillContract()
     {
@@ -102,6 +128,27 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void SuccessfulMove_DisablesMoveTargetingUntilTheUnitsNextTurn()
+    {
+        PlayableBattleSessionService service = CreateService(out _, out _);
+        GridPoint destination = service.CaptureSnapshot().LegalMoveCells.First();
+
+        Assert.That(service.Submit(new BeginMoveIntent()).Succeeded, Is.True);
+        Assert.That(service.Submit(new ConfirmCellIntent(destination)).Succeeded, Is.True);
+        BattleUiSnapshot moved = service.CaptureSnapshot();
+        BattleUiIntentResult repeated = service.Submit(new BeginMoveIntent());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(moved.MoveAvailability.IsAvailable, Is.False);
+            Assert.That(moved.MoveAvailability.FailureCode, Is.EqualTo("move_already_used"));
+            Assert.That(repeated.Succeeded, Is.False);
+            Assert.That(repeated.FailureCode, Is.EqualTo("move_already_used"));
+            Assert.That(repeated.Snapshot.TargetingMode, Is.EqualTo(BattleTargetingMode.None));
+        });
+    }
+
+    [Test]
     public void SkillIntent_UsesCanonicalTransitionAndCreatesSingleRunResult()
     {
         PlayableBattleSessionService service = CreateService(out SkillDefinition playerSkill, out UnitInstanceId enemyId);
@@ -165,6 +212,27 @@ public sealed class PlayableBattleSessionServiceTests
             Assert.That(preview, Is.Not.Null);
             Assert.That(preview!.RangeCells, Is.Not.Empty);
             Assert.That(preview.LegalTargets, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void SkillPreview_ReportsTheLivingUnitThatBlocksLineOfSight()
+    {
+        PlayableBattleSessionService service = CreateService(out SkillDefinition skill, out UnitInstanceId enemyId,
+            enemyCell: new GridPoint(3, 1), livingBlockerCell: new GridPoint(2, 1));
+        GridPoint target = service.State.Units[enemyId].Unit.Position;
+
+        BattleUiIntentResult selection = service.Submit(new SelectSkillIntent(skill.ContentId));
+        Assert.That(selection.Succeeded, Is.True, selection.FailureCode);
+        BattleUiImpactPreview preview = service.PreviewSkillTarget(target)!;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(preview.IsLegal, Is.False);
+            Assert.That(preview.FailureCode, Is.EqualTo("line_of_sight_blocked"));
+            Assert.That(preview.LineOfSight!.BlockingCell, Is.EqualTo(new GridPoint(2, 1)));
+            Assert.That(preview.LineOfSight.BlockingKind, Is.EqualTo(LineOfSightBlockingKind.LivingUnit));
+            Assert.That(preview.LineOfSight.BlockingUnitId!.Value.Value, Is.EqualTo("party-blocker"));
         });
     }
 
@@ -330,7 +398,8 @@ public sealed class PlayableBattleSessionServiceTests
         SkillExecutionKind executionKind = SkillExecutionKind.Fireball,
         int playerMana = 10,
         int skillMana = 0,
-        GridPoint? droppedSpear = null)
+        GridPoint? droppedSpear = null,
+        GridPoint? livingBlockerCell = null)
     {
         var playerId = new UnitInstanceId("party-mage");
         enemyId = new UnitInstanceId("enemy-goat");
@@ -351,8 +420,14 @@ public sealed class PlayableBattleSessionServiceTests
             order.Add(leaderId);
         }
         units.Add(player);
-        units.Add(enemy);
         order.Add(playerId);
+        if (livingBlockerCell is GridPoint blockerCell)
+        {
+            var blockerId = new UnitInstanceId("party-blocker");
+            units.Add(Unit(blockerId, "unit.pure-run.amazon", blockerCell, 0, 2, 20, 20));
+            order.Add(blockerId);
+        }
+        units.Add(enemy);
         order.Add(enemyId);
         var state = new BattleState(new BoardSnapshot(cells), units, order, randomState: 7,
             droppedSpears: droppedSpear is GridPoint spear

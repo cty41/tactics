@@ -59,18 +59,61 @@ public sealed class PureRunLayerFourNodeServiceTests
     {
         PureRunState run = Select(CreateRun(allAtOneHealth: true), "layer_04_event").State;
         string eventId = run.MapState!.MysteryEventAssignments["layer_04_event"];
-        LayerFourNodeResolution resolved = _service.ResolveMystery(run, eventId, "risk", "mage", 0, 5,
+        LayerFourNodeResolution assigned = _service.AssignMysteryAdjudicator(run, eventId);
+        string adjudicator = assigned.State.MapState!.MysteryAdjudicatorAssignments!["layer_04_event"];
+        LayerFourNodeResolution resolved = _service.ResolveMystery(assigned.State, eventId, "risk", RunEventAttribute.Intelligence, 0,
             "Nothing", 0, null, "Damage", 99, null);
-        LayerFourNodeResolution replay = _service.ResolveMystery(resolved.State, eventId, "other", "amazon", 100, 99,
+        LayerFourNodeResolution replay = _service.ResolveMystery(resolved.State, eventId, "other", RunEventAttribute.Charisma, 100,
             "Gold", 50, null, "Nothing", 0, null);
         Assert.That(replay.EventOutcome, Is.EqualTo(resolved.EventOutcome));
         LayerFourNodeResolution confirmed = _service.ConfirmMystery(resolved.State,
             new Dictionary<ContentId, ConsumableDefinition>());
         Assert.Multiple(() =>
         {
-            Assert.That(confirmed.State.Party.Single(value => value.CharacterId == "mage").IsDead, Is.True);
+            Assert.That(confirmed.State.Party.Single(value => value.CharacterId == adjudicator).IsDead, Is.True);
             Assert.That(confirmed.State.Phase, Is.EqualTo(PureRunPhase.ReadyForLayerFive));
             Assert.That(confirmed.State.MapState!.MysteryResolution!.Confirmed, Is.True);
+        });
+    }
+
+    [Test]
+    public void MysteryAdjudicator_IsChosenOnceFromLivingPartyAndReusedAcrossOptions()
+    {
+        PureRunState run = Select(CreateRun(), "layer_04_event").State;
+        string eventId = run.MapState!.MysteryEventAssignments["layer_04_event"];
+
+        LayerFourNodeResolution first = _service.AssignMysteryAdjudicator(run, eventId);
+        LayerFourNodeResolution replay = _service.AssignMysteryAdjudicator(first.State, eventId);
+        string selected = first.State.MapState!.MysteryAdjudicatorAssignments!["layer_04_event"];
+        RunSaveDecodeResultV5 restored = RunSaveDocumentV5.Decode(RunSaveDocumentV5.Encode(
+            new PureRunSaveSnapshot(first.State.Revision, first.State, null)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.Succeeded, Is.True);
+            Assert.That(replay.State.MapState!.MysteryAdjudicatorAssignments!["layer_04_event"], Is.EqualTo(selected));
+            Assert.That(first.State.Party.Single(value => value.CharacterId == selected).IsDead, Is.False);
+            Assert.That(restored.Succeeded, Is.True);
+            Assert.That(restored.Snapshot!.ActiveRun!.MapState!.MysteryAdjudicatorAssignments!["layer_04_event"],
+                Is.EqualTo(selected));
+        });
+    }
+
+    [Test]
+    public void MysteryOptionWithoutAttribute_SucceedsAutomatically()
+    {
+        PureRunState run = Select(CreateRun(), "layer_04_event").State;
+        string eventId = run.MapState!.MysteryEventAssignments["layer_04_event"];
+        run = _service.AssignMysteryAdjudicator(run, eventId).State;
+
+        LayerFourNodeResolution result = _service.ResolveMystery(run, eventId, "leave", RunEventAttribute.None, 0,
+            "Nothing", 0, null, "Damage", 99, null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.EventOutcome!.Succeeded, Is.True);
+            Assert.That(result.EventOutcome.SuccessRate, Is.EqualTo(100));
+            Assert.That(result.EventOutcome.Roll, Is.EqualTo(0));
         });
     }
 
@@ -85,7 +128,8 @@ public sealed class PureRunLayerFourNodeServiceTests
             initial.EncounterIndex, initial.EncounterContentId, party, gold: initial.Gold);
         PureRunState run = Select(wounded, "layer_04_event").State;
         string eventId = run.MapState!.MysteryEventAssignments["layer_04_event"];
-        LayerFourNodeResolution resolved = _service.ResolveMystery(run, eventId, "risk", "mage", 0, 5,
+        run = _service.AssignMysteryAdjudicator(run, eventId).State;
+        LayerFourNodeResolution resolved = _service.ResolveMystery(run, eventId, "risk", RunEventAttribute.Intelligence, 0,
             "Nothing", 0, null, "Damage", 99, null);
         Assert.That(_service.ConfirmMystery(resolved.State,
             new Dictionary<ContentId, ConsumableDefinition>()).State.Phase, Is.EqualTo(PureRunPhase.Defeated));

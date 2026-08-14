@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Tactics.Core.Board;
+using Tactics.Core.Battle;
 using Tactics.Core.Combat;
 using Tactics.Core.Content;
 using Tactics.Core.Pathfinding;
@@ -11,6 +12,22 @@ namespace Tactics.Core.Tests;
 
 public sealed class BoardAndRulesTests
 {
+    [Test]
+    public void WithBaseSpeed_RecomputesInitiativeAndMovementFromTheOverride()
+    {
+        var facts = new UnitState(new UnitInstanceId("unit-speed"), new ContentId("unit.speed"),
+            new GridPoint(1, 1), 2, 10f, 1, 0);
+        var unit = new BattleUnitState(facts, 20, 20, baseSpeed: 5f);
+
+        BattleUnitState adjusted = unit.WithBaseSpeed(6f);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(adjusted.BaseSpeed, Is.EqualTo(6f));
+            Assert.That(adjusted.Unit.Initiative, Is.EqualTo(12f));
+            Assert.That(adjusted.Unit.MoveRange, Is.EqualTo(3));
+        });
+    }
     [TestCase("Skill.Poison-Spear.Lv1")]
     [TestCase("skill_poison_spear")]
     [TestCase("skill..poison")]
@@ -87,6 +104,33 @@ public sealed class BoardAndRulesTests
         {
             Assert.That(new SupercoverLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2), occupied), Is.False);
             Assert.That(new SupercoverLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2)), Is.True);
+        });
+    }
+
+    [Test]
+    public void SupercoverLos_TraceReportsTheBlockingCellAndKind()
+    {
+        var cells = Enumerable.Range(0, BoardSpec.Width)
+            .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
+                .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var board = new BoardSnapshot(cells);
+        var blockerId = new UnitInstanceId("living-blocker");
+        var blockers = new Dictionary<GridPoint, LineOfSightBlocker>
+        {
+            [new GridPoint(1, 0)] = new(LineOfSightBlockingKind.LivingUnit, blockerId)
+        };
+
+        LineOfSightResult result = new SupercoverLineOfSight().Trace(
+            board, new GridPoint(0, 0), new GridPoint(2, 0), blockers);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsClear, Is.False);
+            Assert.That(result.BlockingCell, Is.EqualTo(new GridPoint(1, 0)));
+            Assert.That(result.BlockingKind, Is.EqualTo(LineOfSightBlockingKind.LivingUnit));
+            Assert.That(result.BlockingUnitId, Is.EqualTo(blockerId));
+            Assert.That(result.RayCells, Is.EqualTo(new[] { new GridPoint(1, 0), new GridPoint(2, 0) }));
         });
     }
 

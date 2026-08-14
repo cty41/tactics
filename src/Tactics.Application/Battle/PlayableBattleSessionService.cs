@@ -5,6 +5,7 @@ using Tactics.Core.Battle;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Runs;
+using Tactics.Core.Pathfinding;
 using Tactics.Core.Skills;
 using Tactics.Core.Statuses;
 using Tactics.Core.Units;
@@ -45,6 +46,9 @@ public sealed record BattleUiSkillPreview(
     IReadOnlyList<GridPoint> RangeCells,
     IReadOnlyList<BattleUiTarget> LegalTargets);
 public sealed record BattleUiSkillAvailability(ContentId SkillId, bool IsAvailable, string? FailureCode);
+public sealed record BattleUiMoveAvailability(bool IsAvailable, string? FailureCode);
+public sealed record BattleUiLineOfSightSnapshot(IReadOnlyList<GridPoint> RayCells, GridPoint? BlockingCell,
+    LineOfSightBlockingKind? BlockingKind, UnitInstanceId? BlockingUnitId);
 public sealed record BattleUiImpactPreview(
     ContentId SkillId,
     GridPoint Cell,
@@ -55,7 +59,8 @@ public sealed record BattleUiImpactPreview(
     GridPoint? PrimaryImpactCell,
     UnitInstanceId? PrimaryImpactUnitId,
     IReadOnlyList<GridPoint> ImpactCells,
-    IReadOnlyList<UnitInstanceId> ImpactUnitIds);
+    IReadOnlyList<UnitInstanceId> ImpactUnitIds,
+    BattleUiLineOfSightSnapshot? LineOfSight = null);
 public enum BattleUiLogCategory { Gameplay, Ai, Rejected }
 public sealed record BattleUiLogEntry(BattleUiLogCategory Category,string Message,string EventType);
 public sealed record BattleUiFrame(string Stage,BattleUiSnapshot Snapshot,AiDecisionEvent? Decision,IReadOnlyList<BattleEvent> Events,BattlePresentationFrame Presentation);
@@ -78,7 +83,8 @@ public sealed record BattleUiSnapshot(
     int ActiveTurnIndex,
     string? FailureCode,
     IReadOnlyCollection<GridPoint>? BlockedCells = null,
-    IReadOnlyList<BattleUiSkillAvailability>? SkillAvailability = null);
+    IReadOnlyList<BattleUiSkillAvailability>? SkillAvailability = null,
+    BattleUiMoveAvailability MoveAvailability = null!);
 
 public sealed record PlayableBattleSessionContext(
     BattleState InitialState,
@@ -204,7 +210,8 @@ public sealed class PlayableBattleSessionService
             skills, moves, targets, skillPreview, view.Corpses.ToArray(), view.DroppedSpears,
             _recentEvents.TakeLast(100).ToArray(),view.TurnOrder.ToArray(),view.ActiveIndex, _failureCode,
             _context.BlockedCells ?? Array.Empty<GridPoint>(),
-            skills.Select(skill => Availability(view, active, skill)).ToArray());
+            skills.Select(skill => Availability(view, active, skill)).ToArray(),
+            MoveAvailability(view, active));
     }
 
     public IReadOnlyList<GridPoint> PreviewMovePath(GridPoint destination)
@@ -237,10 +244,16 @@ public sealed class PlayableBattleSessionService
         GridPoint? primaryCell = primaryId is UnitInstanceId primary && State.TryGetUnit(primary, out BattleUnitState? primaryUnit) && primaryUnit is not null
             ? primaryUnit.Unit.Position
             : null;
+        LineOfSightResult? lineOfSight = skill.RequiresLineOfSight
+            ? new SupercoverLineOfSight().Trace(State.Board, actor.Unit.Position, cell,
+                SkillRuntimeService.LivingBlockers(State, actor.Unit.InstanceId, cell, skill.ExecutionKind))
+            : null;
         GridPoint[] path = skill.UsesLineTargeting || skill.ExecutionKind == SkillExecutionKind.PoisonSpear
             ? RayCells(actor.Unit.Position, cell).ToArray()
             : Array.Empty<GridPoint>();
-        return new BattleUiImpactPreview(skillId, cell, inRange, legal, rejection?.Reason, path, primaryCell, primaryId, impactedCells, impactedIds);
+        BattleUiLineOfSightSnapshot? losSnapshot = lineOfSight is null ? null : new BattleUiLineOfSightSnapshot(
+            lineOfSight.RayCells, lineOfSight.BlockingCell, lineOfSight.BlockingKind, lineOfSight.BlockingUnitId);
+        return new BattleUiImpactPreview(skillId, cell, inRange, legal, rejection?.Reason, path, primaryCell, primaryId, impactedCells, impactedIds, losSnapshot);
     }
 
     private BattleUiIntentResult SelectUnit(SelectUnitIntent intent) =>
@@ -250,9 +263,27 @@ public sealed class PlayableBattleSessionService
 
     private BattleUiIntentResult SetMoveMode()
     {
+        BattleUiMoveAvailability availability = MoveAvailability(State, State.Units[State.ActiveUnitId]);
+        if (!availability.IsAvailable)
+            return Result(false, availability.FailureCode, Array.Empty<BattleEvent>());
         _targetingMode = BattleTargetingMode.Move;
         _selectedSkillId = null;
         return Result(true, null, Array.Empty<BattleEvent>());
+    }
+
+    private BattleUiMoveAvailability MoveAvailability(BattleState view, BattleUnitState actor)
+    {
+        string? failure = null;
+        if (!actor.IsAlive || actor.Unit.PlayerNumber != _context.PlayerNumber || ControllerFor(actor) is not null || IsNonActingSummon(actor))
+            failure = "move_not_player_controlled";
+        else if (DeterminePhase(view) != PlayableBattlePhase.PlayerTurn)
+            failure = "move_not_current_turn";
+        else if (actor.HasMovedThisTurn)
+            failure = "move_already_used";
+        else if (!view.Board.Cells.Keys.Any(cell => cell != actor.Unit.Position &&
+                     _transitions.Apply(view, new MoveUnitCommand(actor.Unit.InstanceId, cell)).Succeeded))
+            failure = "move_no_legal_destination";
+        return new BattleUiMoveAvailability(failure is null, failure);
     }
 
     private BattleUiIntentResult SetSkillMode(SelectSkillIntent intent)

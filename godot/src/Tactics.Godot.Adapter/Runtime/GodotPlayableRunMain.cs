@@ -34,6 +34,7 @@ public partial class GodotPlayableRunMain : Control
     private readonly Dictionary<ContentId, ConsumableDefinition> _consumables = new();
     private readonly Dictionary<string, string> _layerFourEventPayloads = new(StringComparer.Ordinal);
     private PlayableBattleBalanceProfile? _balance;
+    private PlayableEnemySpeedProfile? _enemySpeed;
     private PureRunDefinition? _runDefinition;
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
     private readonly Dictionary<UnitInstanceId, Control> _unitMeters = new();
@@ -141,6 +142,8 @@ public partial class GodotPlayableRunMain : Control
         _catalogCount = catalog.Entries.Length;
         _balance = (ResourceLoader.Load<PlayableLv1BalanceProfileResource>("res://content/ui/PlayableLv1BalanceProfile.tres")
             ?? throw new InvalidOperationException("Playable Lv1 balance profile is missing.")).ToCoreProfile();
+        _enemySpeed = (ResourceLoader.Load<PlayableEnemySpeedProfileResource>("res://content/ui/PlayableEnemySpeedProfile.tres")
+            ?? throw new InvalidOperationException("Playable enemy speed profile is missing.")).ToCoreProfile();
         _presentationProfile = ResourceLoader.Load<StandardUnitPresentationResource>("res://content/presentation/StandardUnitPresentationV1.tres");
         PureRunDefinitionResource? runResource = null;
         foreach (GodotResourceEntry entry in catalog.Entries)
@@ -319,7 +322,7 @@ public partial class GodotPlayableRunMain : Control
         _settlementCommitted=false;
         _currentEncounterId=request.EncounterContentId;
         EncounterDefinition encounter = _encounters[request.EncounterContentId];
-        _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units, _skills, _ai, _balance);
+        _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units, _skills, _ai, _balance, _enemySpeed);
         BuildBattlePage();
         AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,$"Entered {EncounterLabel(request.EncounterContentId)} ({request.EncounterContentId.Value})","EncounterNavigationEvent"));
         RefreshLog();
@@ -398,7 +401,8 @@ public partial class GodotPlayableRunMain : Control
         BattleUiUnitSnapshot activeSnapshot=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
         if(_hoverInfo is not null)_hoverInfo.Text=$"{EncounterLabel(_currentEncounterId!.Value)} | {activeSnapshot.UnitId.Value}\nHP {activeSnapshot.CurrentHealth}/{activeSnapshot.MaxHealth}  MP {activeSnapshot.CurrentMana}/{activeSnapshot.MaxMana}\nStatus: {string.Join(", ",activeSnapshot.StatusIds.Select(id=>id.Value))}";
         bool aiPlayback=_battle.HasPendingAutomaticFrames||_presentationInputLocked;
-        Button moveButton=ActionButton("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;_skillPanel.AddChild(moveButton);
+        BattleUiMoveAvailability moveAvailability=snapshot.MoveAvailability??new BattleUiMoveAvailability(true,null);
+        Button moveButton=ActionButton("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||!moveAvailability.IsAvailable;moveButton.TooltipText=moveAvailability.FailureCode??"Move to a legal tile";_skillPanel.AddChild(moveButton);
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
         foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
         {
@@ -484,6 +488,8 @@ public partial class GodotPlayableRunMain : Control
             {
                 detail+=preview.IsInRange?" | In range":" | Out of range";
                 detail+=preview.IsLegal?" | Legal target":$" | Blocked: {preview.FailureCode??"invalid_target"}";
+                if(preview.LineOfSight is { BlockingCell: GridPoint blocked, BlockingKind: { } kind })
+                    detail+=$" | LOS {kind} at ({blocked.X},{blocked.Y})"+(preview.LineOfSight.BlockingUnitId is UnitInstanceId blockingUnit?$" [{blockingUnit.Value}]":string.Empty);
                 if(preview.PrimaryImpactUnitId is UnitInstanceId primary)detail+=$" | First hit: {primary.Value}";
                 if(preview.ImpactUnitIds.Count>1||_skills[skillId].ExecutionKind==SkillExecutionKind.AreaBlast)detail+=$" | AOE targets {preview.ImpactUnitIds.Count}";
             }
@@ -865,10 +871,18 @@ public partial class GodotPlayableRunMain : Control
     private void ShowMystery(PureRunState run)
     {
         string sourceId=run.MapState!.MysteryEventAssignments[run.NodeTransaction!.NodeId];
+        if(run.MapState.MysteryAdjudicatorAssignments?.ContainsKey(run.NodeTransaction.NodeId)!=true)
+        {
+            RunSessionResult assignment=_run!.ApplyMutation(state=>{LayerFourNodeResolution r=new PureRunLayerFourNodeService().AssignMysteryAdjudicator(state,sourceId);return new RunMutationResult(r.Succeeded,r.RejectionCode,r.State);});
+            if(!assignment.Succeeded){SetStatus(assignment.ErrorCode);return;}ShowMystery(assignment.Snapshot!.ActiveRun!);return;
+        }
+        string adjudicatorId=run.MapState.MysteryAdjudicatorAssignments[run.NodeTransaction.NodeId];
+        RunCharacterState adjudicator=run.Party.Single(character=>character.CharacterId==adjudicatorId&&!character.IsDead);
         using JsonDocument document=JsonDocument.Parse(_layerFourEventPayloads[sourceId]);JsonElement rootElement=document.RootElement;
         Control root=NewPage($"{LayerLabel(run)} — {rootElement.GetProperty("title").GetString()}",rootElement.GetProperty("description").GetString()!);
         AddRunShell(root,run,"Mystery");
         var menu=new VBoxContainer{Position=new Vector2(330,180),Size=new Vector2(940,620)};root.AddChild(menu);
+        menu.AddChild(Label($"Adjudicator: {adjudicator.CharacterId}",22));
         if(run.MapState.MysteryResolution is RunMysteryResolutionState resolved)
         {
             menu.AddChild(Label($"{resolved.OptionId}: {(resolved.Succeeded?"Success":"Failure")} — roll {resolved.Roll}, chance {resolved.SuccessRate}%\nEffect: {resolved.Effect} {resolved.Amount}",24));
@@ -877,17 +891,19 @@ public partial class GodotPlayableRunMain : Control
         foreach(JsonElement option in rootElement.GetProperty("options").EnumerateArray())
         {
             string optionId=option.GetProperty("id").GetString()!;string attribute=option.GetProperty("attribute").GetString()!;
-            foreach(RunCharacterState character in run.Party.Where(c=>!c.IsDead))
-            {int value=AttributeValue(character.Attributes,attribute);int rate=Math.Clamp(option.GetProperty("baseSuccessRate").GetInt32()+(value-5)*5,5,95);menu.AddChild(Button($"{option.GetProperty("text").GetString()} — {character.CharacterId}: {rate}%",()=>ResolveMystery(sourceId,optionId,character.CharacterId)));}
+            int value=AttributeValue(adjudicator.Attributes,attribute);int rate=attribute=="None"?100:Math.Clamp(option.GetProperty("baseSuccessRate").GetInt32()+(value-5)*5,5,95);
+            menu.AddChild(Button($"{option.GetProperty("text").GetString()} — {attribute} {value}: {rate}%",()=>ResolveMystery(sourceId,optionId)));
         }
     }
 
-    private void ResolveMystery(string sourceId,string optionId,string characterId)
+    private void ResolveMystery(string sourceId,string optionId)
     {
-        using JsonDocument document=JsonDocument.Parse(_layerFourEventPayloads[sourceId]);JsonElement option=document.RootElement.GetProperty("options").EnumerateArray().Single(v=>v.GetProperty("id").GetString()==optionId);RunStoreResult loaded=new GodotRunSaveStore().Load();RunCharacterState character=loaded.Snapshot!.ActiveRun!.Party.Single(v=>v.CharacterId==characterId);JsonElement success=option.GetProperty("success");JsonElement failure=option.TryGetProperty("failure",out JsonElement f)&&f.ValueKind!=JsonValueKind.Null?f:success;
-        RunSessionResult result=_run!.ApplyMutation(state=>{LayerFourNodeResolution r=new PureRunLayerFourNodeService().ResolveMystery(state,sourceId,optionId,characterId,option.GetProperty("baseSuccessRate").GetInt32(),AttributeValue(character.Attributes,option.GetProperty("attribute").GetString()!),success.GetProperty("type").GetString()!,success.GetProperty("amount").GetInt32(),EffectContentId(success),failure.GetProperty("type").GetString()!,failure.GetProperty("amount").GetInt32(),EffectContentId(failure));return new RunMutationResult(r.Succeeded,r.RejectionCode,r.State);});
+        using JsonDocument document=JsonDocument.Parse(_layerFourEventPayloads[sourceId]);JsonElement option=document.RootElement.GetProperty("options").EnumerateArray().Single(v=>v.GetProperty("id").GetString()==optionId);JsonElement success=option.GetProperty("success");JsonElement failure=option.TryGetProperty("failure",out JsonElement f)&&f.ValueKind!=JsonValueKind.Null?f:success;
+        RunSessionResult result=_run!.ApplyMutation(state=>{LayerFourNodeResolution r=new PureRunLayerFourNodeService().ResolveMystery(state,sourceId,optionId,EventAttribute(option.GetProperty("attribute").GetString()!),option.GetProperty("baseSuccessRate").GetInt32(),success.GetProperty("type").GetString()!,success.GetProperty("amount").GetInt32(),EffectContentId(success),failure.GetProperty("type").GetString()!,failure.GetProperty("amount").GetInt32(),EffectContentId(failure));return new RunMutationResult(r.Succeeded,r.RejectionCode,r.State);});
         if(!result.Succeeded){SetStatus(result.ErrorCode);return;}ShowMystery(result.Snapshot!.ActiveRun!);
     }
+
+    private static RunEventAttribute EventAttribute(string value)=>value switch{"None"=>RunEventAttribute.None,"Strength"=>RunEventAttribute.Strength,"Dexterity" or "Agility"=>RunEventAttribute.Agility,"Constitution"=>RunEventAttribute.Constitution,"Intelligence"=>RunEventAttribute.Intelligence,"Charisma"=>RunEventAttribute.Charisma,"Luck"=>RunEventAttribute.Luck,_=>throw new InvalidOperationException($"Unknown event attribute: {value}.")};
 
     private static ContentId? EffectContentId(JsonElement effect){if(!effect.TryGetProperty("itemId",out JsonElement item))return null;string value=item.GetString()!;return value switch{"cleansing_potion"=>new ContentId("item.consumable.cleansing-potion"),"Assets/Tactics/ScriptableObjects/Buffs/EventDamageReduction.asset"=>new ContentId("buff.event-damage-reduction"),"Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset"=>new ContentId("buff.event-damage-taken-up"),_=>new ContentId(value)};}
     private static int AttributeValue(UnitAttributes a,string name)=>name switch{"Strength"=>a.Strength,"Agility"=>a.Agility,"Constitution"=>a.Constitution,"Intelligence"=>a.Intelligence,"Charisma"=>a.Charisma,"Luck"=>a.Luck,"None"=>5,_=>5};
@@ -1020,12 +1036,13 @@ public partial class GodotPlayableRunMain : Control
         {
             BbcodeEnabled = true,
             FitContent = true,
-            CustomMinimumSize = new Vector2(380, 185),
+            CustomMinimumSize = new Vector2(380, 215),
             Text = $"\nHP {character.CurrentHealth}/{value.DerivedStats.MaxHealth}  MP {character.CurrentMana}/{value.DerivedStats.MaxMana}\n" +
                 Line("STR", value.Base.Strength, value.Bonus.Strength, value.Total.Strength) + "  " + Line("AGI", value.Base.Agility, value.Bonus.Agility, value.Total.Agility) + "\n" +
                 Line("CON", value.Base.Constitution, value.Bonus.Constitution, value.Total.Constitution) + "  " + Line("INT", value.Base.Intelligence, value.Bonus.Intelligence, value.Total.Intelligence) + "\n" +
                 Line("CHA", value.Base.Charisma, value.Bonus.Charisma, value.Total.Charisma) + "  " + Line("LUCK", value.Base.Luck, value.Bonus.Luck, value.Total.Luck) + "\n" +
-                $"Move {value.DerivedStats.MoveRange}  Initiative {value.DerivedStats.Initiative}"
+                $"Move {value.DerivedStats.MoveRange}  Initiative {value.DerivedStats.Initiative}\n" +
+                $"Turn MP +{value.Total.Intelligence} (INT)  Max MP {value.DerivedStats.MaxMana} (CHA × 3)"
         };
     }
 

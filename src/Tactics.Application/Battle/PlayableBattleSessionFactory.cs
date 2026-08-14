@@ -30,7 +30,8 @@ public sealed class PlayableBattleSessionFactory
         IReadOnlyDictionary<ContentId, UnitDefinition> units,
         IReadOnlyDictionary<ContentId, SkillDefinition> skills,
         IReadOnlyDictionary<ContentId, AiDefinition> aiDefinitions,
-        PlayableBattleBalanceProfile? balance = null)
+        PlayableBattleBalanceProfile? balance = null,
+        PlayableEnemySpeedProfile? enemySpeed = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.EncounterContentId != encounter.ContentId)
@@ -66,7 +67,10 @@ public sealed class PlayableBattleSessionFactory
         {
             (EncounterMonsterDefinition monster, GridPoint cell) = resolved.Enemies[index];
             var instanceId = new UnitInstanceId($"enemy-{index:D2}");
-            BattleUnitState enemy = units[monster.UnitId].CreateBattleState(instanceId, cell, 1, request.Party.Count + index);
+            UnitDefinition enemyDefinition = units[monster.UnitId];
+            BattleUnitState enemy = enemyDefinition.CreateBattleState(instanceId, cell, 1, request.Party.Count + index);
+            if (enemySpeed is not null)
+                enemy = enemy.WithBaseSpeed(enemySpeed.Speed(monster.UnitId, enemyDefinition.Speed));
             int scaledHealth = (int)Math.Ceiling(enemy.MaxHealth * encounter.HealthMultiplier);
             enemy = enemy.WithHealthAndMana(scaledHealth, scaledHealth,
                 enemy.MaxMana, Math.Min(enemy.MaxMana, Math.Max(enemy.CurrentMana, encounter.MinimumStartingMana)))

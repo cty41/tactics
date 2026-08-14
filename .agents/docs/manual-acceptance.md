@@ -8,13 +8,38 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 - Status: `pending`
 - Source: Phase 7B–8E battle availability and LOS parity repair
-- Action: Exhaust Mana, kill a party member, then test a ranged skill with a living unit between caster and target; repeat after moving the blocker and with a corpse or dropped spear in between.
-- Expected: Insufficient-Mana/used/precondition skills are disabled with a reason and cannot enter targeting; defeated units are skipped; living units block Fireball and other ordinary ranged LOS, while corpses/dropped spears do not. Bone Spear retains Unity first-enemy interception.
+- Reopen reason: Move now uses the same authoritative availability boundary, and LOS hover exposes the first structured blocker instead of only a generic rejection.
+- Action: Move once, exhaust Mana, kill a party member, then test a ranged skill with a living unit between caster and target; repeat after moving the blocker and with a corpse or dropped spear in between.
+- Expected: Move and unavailable skills are disabled with a reason and cannot enter targeting; defeated units are skipped; living units block Fireball and other ordinary ranged LOS, while corpses/dropped spears do not. Bone Spear retains Unity first-enemy interception.
 - Observe: Action buttons/tooltips, Turn Order/current actor, target highlights/Hover reason, CheatConsole, and Output.
 - Preserve on failure: Short video, actor/target/blocker cells, skill ID, Turn Order, event log, and Output.
 - Save boundary: Battle mutations apply; use a disposable or checkpointed encounter.
 - Automated evidence: Availability snapshot/intent rejection, consecutive dead-unit wrap, supercover corner blockers, Preview/AI/Transition shared probes, Poison Spear and Bone Spear exceptions are asserted; interaction clarity remains manual.
 - User verdict: Partial pass: skill availability and defeated-turn skipping are OK; living-unit LOS blocking has not yet been manually tested.
+
+### MQA-GODOT-TURN-PACING — Playable enemy initiative pacing
+
+- Status: `pending`
+- Source: Phase 7B–8E playable enemy speed profile
+- Action: Start a normal encounter and observe the first two rounds with the initial party and its normal enemy roster.
+- Expected: Enemy archetypes retain their relative differences, but the entire enemy team no longer consistently acts before all three player characters; no Unit Resource or derived player stat is visually changed.
+- Observe: Turn Order strip, active actor sequence, and CheatConsole turn log.
+- Preserve on failure: Encounter ID, Turn Order screenshot, actor sequence, Unit IDs, and Output.
+- Save boundary: Ordinary battle progression; use a checkpointed encounter if exact replay matters.
+- Automated evidence: The Adapter-owned speed profile, unit-state recomputation, player preservation, two-pass ResourceSaver hash and renderer smoke are asserted; pacing feel remains manual.
+- User verdict: none.
+
+### MQA-GODOT-MYSTERY-ADJUDICATION — Fixed-option deterministic event adjudicator
+
+- Status: `pending`
+- Source: Phase 7B–8E Mystery adjudicator redesign
+- Action: Enter a Mystery node, note the assigned party member and all fixed options, return Home or Reload before choosing, then Continue and resolve one option.
+- Expected: One living formal party member is selected deterministically for the event; the event exposes only its authored options, each using that option's declared attribute. Reload preserves the same member, options, rate and eventual roll/result.
+- Observe: Mystery page adjudicator label, option cards/rates, result page, save Continue, and Output.
+- Preserve on failure: Run seed, node/event ID, assigned character, all option texts/rates, save copy, and Output.
+- Save boundary: Assignment is persisted when the event opens; resolving an option mutates the Run, so copy the save before testing alternate outcomes.
+- Automated evidence: Living-party selection, one-time persistence, option-owned attributes, None auto-success, Save V5 round-trip and deterministic roll are asserted; UI clarity remains manual.
+- User verdict: none.
 
 ### MQA-GODOT-DAMAGE-NUMBERS — Floating combat feedback
 
