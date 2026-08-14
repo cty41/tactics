@@ -74,6 +74,23 @@ public sealed class BoardAndRulesTests
     }
 
     [Test]
+    public void SupercoverLos_TreatsEitherLivingCornerOccupantAsBlocking()
+    {
+        var cells = Enumerable.Range(0, BoardSpec.Width)
+            .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
+                .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var board = new BoardSnapshot(cells);
+        var occupied = new HashSet<GridPoint> { new(1, 0) };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(new SupercoverLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2), occupied), Is.False);
+            Assert.That(new SupercoverLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2)), Is.True);
+        });
+    }
+
+    [Test]
     public void MovementActionState_AllowsOneMoveWithoutRemainingPointAccounting()
     {
         var movement = new MovementActionState(moveRange: 3);

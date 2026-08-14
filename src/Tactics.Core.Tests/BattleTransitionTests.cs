@@ -35,6 +35,72 @@ public sealed class BattleTransitionTests
     }
 
     [Test]
+    public void LivingIntermediateUnit_BlocksSkillLosButDefeatedUnitDoesNot()
+    {
+        BattleState baseline = CreateBattleState();
+        var blockerId = new UnitInstanceId("party.blocker.0");
+        var blocker = new BattleUnitState(new UnitState(blockerId, new ContentId("unit.blocker"), new GridPoint(2, 1), 3, 9, 0, 2), 20, 20);
+        BattleState blocked = new(baseline.Board, baseline.Units.Values.Append(blocker),
+            new[] { baseline.ActiveUnitId, blockerId, new UnitInstanceId("enemy.target.0") }, randomState: baseline.RandomState);
+        BattleUnitState target = blocked.Units[new UnitInstanceId("enemy.target.0")];
+        var skill = new SkillDefinition(new ContentId("skill.mage.fireball.lv1"), "unity.fireball", SkillRole.Mage,
+            SkillKind.Active, 1, 5, 1, 4, SkillExecutionKind.Fireball, 6, SkillDamageKind.Magical);
+        var command = new UseSkillCommand(blocked.ActiveUnitId, target.Unit.InstanceId, target.Unit.Position, skill);
+
+        BattleTransition rejected = new BattleTransitionService().Apply(blocked, command);
+        BattleState defeatedBlocker = blocked.WithUnit(blocker.WithHealth(0));
+        BattleTransition accepted = new BattleTransitionService().Apply(defeatedBlocker, command);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(rejected.Succeeded, Is.False);
+            Assert.That(rejected.Events.Single(), Is.EqualTo(new CommandRejectedEvent(blocked.ActiveUnitId, "line_of_sight_blocked")));
+            Assert.That(rejected.State, Is.SameAs(blocked));
+            Assert.That(accepted.Succeeded, Is.True);
+        });
+    }
+
+    [Test]
+    public void CorpseAndDroppedSpear_DoNotBlockSkillLos()
+    {
+        BattleState baseline = CreateBattleState();
+        UnitInstanceId targetId = new("enemy.target.0");
+        BattleState state = new(baseline.Board, baseline.Units.Values, baseline.TurnOrder,
+            randomState: baseline.RandomState,
+            droppedSpears: new Dictionary<UnitInstanceId, GridPoint> { [targetId] = new(3, 1) },
+            corpses: new HashSet<GridPoint> { new(2, 1) });
+        BattleUnitState target = state.Units[targetId];
+        var skill = new SkillDefinition(new ContentId("skill.mage.fireball.lv1"), "unity.fireball", SkillRole.Mage,
+            SkillKind.Active, 1, 5, 1, 4, SkillExecutionKind.Fireball, 6, SkillDamageKind.Magical);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, targetId, target.Unit.Position, skill));
+
+        Assert.That(result.Succeeded, Is.True);
+    }
+
+    [Test]
+    public void PoisonSpear_UsesLivingUnitLosBlockers()
+    {
+        BattleState baseline = CreateBattleState();
+        var blockerId = new UnitInstanceId("party.blocker.0");
+        var blocker = new BattleUnitState(new UnitState(blockerId, new ContentId("unit.blocker"), new GridPoint(2, 1), 3, 9, 0, 2), 20, 20);
+        UnitInstanceId targetId = new("enemy.target.0");
+        BattleState state = new(baseline.Board, baseline.Units.Values.Append(blocker),
+            new[] { baseline.ActiveUnitId, blockerId, targetId }, randomState: baseline.RandomState);
+        var definition = new PoisonSpearDefinition(new ContentId("skill.poison-spear.lv1"), 5, 8, 3);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UsePoisonSpearCommand(state.ActiveUnitId, targetId, definition));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Events.Single(), Is.EqualTo(new CommandRejectedEvent(state.ActiveUnitId, "line_of_sight_blocked")));
+        });
+    }
+
+    [Test]
     public void CommandSequence_ProducesImmutableStateAndOrderedGameplayEvents()
     {
         BattleState initial = CreateBattleState();

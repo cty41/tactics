@@ -176,7 +176,11 @@ public sealed class BattleTransitionService
             state.Board,
             actor.Unit,
             target.Unit,
-            command.Definition);
+            command.Definition,
+            state.Units.Values
+                .Where(unit => unit.IsAlive && unit.Unit.InstanceId != actor.Unit.InstanceId && unit.Unit.InstanceId != target.Unit.InstanceId)
+                .Select(unit => unit.Unit.Position)
+                .ToHashSet());
         if (!action.Succeeded)
             return Rejected(state, command.ActorId, action.FailureReason);
 

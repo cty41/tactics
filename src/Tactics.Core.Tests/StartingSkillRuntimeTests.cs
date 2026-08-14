@@ -10,11 +10,11 @@ namespace Tactics.Core.Tests;
 public sealed class StartingSkillRuntimeTests
 {
     [Test]
-    public void FireballHitsFirstEnemyAndAppliesBurning()
+    public void FireballHitsSelectedUnblockedEnemyAndAppliesBurning()
     {
         BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.near.0", new GridPoint(3, 1)), ("enemy.far.0", new GridPoint(4, 1)) });
         SkillDefinition skill = Skill("skill.mage.fireball.lv1", SkillExecutionKind.Fireball, 7, 4, 2, "buff.ignite", 2);
-        BattleTransition result = new BattleTransitionService().Apply(state, new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.far.0"), new GridPoint(4, 1), skill));
+        BattleTransition result = new BattleTransitionService().Apply(state, new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.near.0"), new GridPoint(3, 1), skill));
         Assert.Multiple(() =>
         {
             Assert.That(result.Succeeded, Is.True);
@@ -26,7 +26,7 @@ public sealed class StartingSkillRuntimeTests
     }
 
     [Test]
-    public void FireballAcceptsDiagonalRayAndHitsTheFirstCollinearEnemyOnly()
+    public void FireballAcceptsDiagonalRayAndHitsSelectedUnblockedEnemyOnly()
     {
         BattleState state = State(new GridPoint(1, 1), new[]
         {
@@ -37,7 +37,7 @@ public sealed class StartingSkillRuntimeTests
         SkillDefinition skill = Skill("skill.mage.fireball.lv1", SkillExecutionKind.Fireball, 7, 4, 2, "buff.ignite", 2);
 
         BattleTransition result = new BattleTransitionService().Apply(state,
-            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.far.0"), new GridPoint(3, 3), skill));
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.near.0"), new GridPoint(2, 2), skill));
 
         Assert.Multiple(() =>
         {
@@ -60,6 +60,27 @@ public sealed class StartingSkillRuntimeTests
 
         Assert.That(result.Succeeded, Is.False);
         Assert.That(result.State.Units[new UnitInstanceId("enemy.target.0")].CurrentHealth, Is.EqualTo(20));
+    }
+
+    [Test]
+    public void BoneSpearPreservesUnityFirstEnemyInterceptionAlongItsLine()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.near.0", new GridPoint(2, 1)),
+            ("enemy.far.0", new GridPoint(4, 1))
+        });
+        SkillDefinition skill = Skill("skill.necromancer.bone-spear.lv1", SkillExecutionKind.BoneSpear, 5, 4, 7);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.far.0"), new GridPoint(4, 1), skill));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.near.0")].CurrentHealth, Is.EqualTo(13));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.far.0")].CurrentHealth, Is.EqualTo(20));
+        });
     }
 
     [Test]

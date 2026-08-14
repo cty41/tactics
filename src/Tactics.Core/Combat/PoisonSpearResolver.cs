@@ -58,7 +58,8 @@ public sealed class PoisonSpearResolver
         BoardSnapshot board,
         UnitState caster,
         UnitState target,
-        PoisonSpearDefinition definition)
+        PoisonSpearDefinition definition,
+        IReadOnlySet<GridPoint>? dynamicBlockers = null)
     {
         ArgumentNullException.ThrowIfNull(board);
 
@@ -69,8 +70,8 @@ public sealed class PoisonSpearResolver
                       Math.Abs(caster.Position.Y - target.Position.Y);
         if (distance > definition.Range)
             return ActionResult.Failed("out_of_range");
-        if (!_lineOfSight.HasLineOfSight(board, caster.Position, target.Position))
-            return ActionResult.Failed("blocked_line_of_sight");
+        if (!_lineOfSight.HasLineOfSight(board, caster.Position, target.Position, dynamicBlockers))
+            return ActionResult.Failed("line_of_sight_blocked");
 
         return new ActionResult(true, definition.Damage, definition.PoisonTurns);
     }

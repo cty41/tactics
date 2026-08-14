@@ -4,7 +4,7 @@ namespace Tactics.Core.Pathfinding;
 
 public interface ILineOfSightService
 {
-    bool HasLineOfSight(BoardSnapshot board, GridPoint origin, GridPoint target);
+    bool HasLineOfSight(BoardSnapshot board, GridPoint origin, GridPoint target, IReadOnlySet<GridPoint>? dynamicBlockers = null);
 }
 
 /// <summary>
@@ -12,7 +12,7 @@ public interface ILineOfSightService
 /// </summary>
 public sealed class SupercoverLineOfSight : ILineOfSightService
 {
-    public bool HasLineOfSight(BoardSnapshot board, GridPoint origin, GridPoint target)
+    public bool HasLineOfSight(BoardSnapshot board, GridPoint origin, GridPoint target, IReadOnlySet<GridPoint>? dynamicBlockers = null)
     {
         ArgumentNullException.ThrowIfNull(board);
 
@@ -38,8 +38,8 @@ public sealed class SupercoverLineOfSight : ILineOfSightService
             long vertical = (1L + 2L * iy) * nx;
             if (horizontal == vertical)
             {
-                if (IsBlockingIntermediate(board, new GridPoint(x + signX, y), target) ||
-                    IsBlockingIntermediate(board, new GridPoint(x, y + signY), target))
+                if (IsBlockingIntermediate(board, new GridPoint(x + signX, y), target, dynamicBlockers) ||
+                    IsBlockingIntermediate(board, new GridPoint(x, y + signY), target, dynamicBlockers))
                     return false;
 
                 x += signX;
@@ -62,18 +62,18 @@ public sealed class SupercoverLineOfSight : ILineOfSightService
                 break;
 
             GridPoint current = new(x, y);
-            if (IsBlockingIntermediate(board, current, target))
+            if (IsBlockingIntermediate(board, current, target, dynamicBlockers))
                 return false;
         }
 
         return true;
     }
 
-    private static bool IsBlockingIntermediate(BoardSnapshot board, GridPoint point, GridPoint target)
+    private static bool IsBlockingIntermediate(BoardSnapshot board, GridPoint point, GridPoint target, IReadOnlySet<GridPoint>? dynamicBlockers)
     {
         if (point == target)
             return false;
 
-        return board.GetCell(point).IsLineBlocked;
+        return board.GetCell(point).IsLineBlocked || dynamicBlockers?.Contains(point) == true;
     }
 }

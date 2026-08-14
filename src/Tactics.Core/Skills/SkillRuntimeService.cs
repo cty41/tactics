@@ -39,6 +39,10 @@ public sealed class SkillRuntimeService
         if (skill.ExecutionKind == SkillExecutionKind.RecoverSpear) return ApplyRecoverSpear(state, actor, command);
         if (skill.ExecutionKind is SkillExecutionKind.IceArmor or SkillExecutionKind.BoneShield) return ApplySelfDefense(state, actor, command);
         if (skill.ExecutionKind == SkillExecutionKind.MultiStab) return ApplyMultiStab(state, actor, command);
+        if (skill.RequiresLineOfSight && state.Board.Contains(command.TargetCell) &&
+            !_lineOfSight.HasLineOfSight(state.Board, actor.Unit.Position, command.TargetCell,
+                LivingBlockers(state, actor.Unit.InstanceId, command.TargetCell, skill.ExecutionKind)))
+            return Reject(state, actor, "line_of_sight_blocked");
 
         BattleUnitState[] targets = ResolveTargets(state, actor, command).ToArray();
         if (targets.Length == 0) return Reject(state, actor, "no_valid_target");
@@ -196,7 +200,8 @@ public sealed class SkillRuntimeService
         int distance = Manhattan(actor.Unit.Position, destination);
         if (!state.Board.Contains(destination) || distance < skill.MinRange || distance > skill.MaxRange) return Reject(state, actor, "destination_out_of_range");
         if (state.Units.Values.Any(unit => unit.IsAlive && unit.Unit.Position == destination)) return Reject(state, actor, "destination_occupied");
-        if (skill.RequiresLineOfSight && !_lineOfSight.HasLineOfSight(state.Board, actor.Unit.Position, destination)) return Reject(state, actor, "line_of_sight_blocked");
+        if (skill.RequiresLineOfSight && !_lineOfSight.HasLineOfSight(state.Board, actor.Unit.Position, destination,
+                LivingBlockers(state, actor.Unit.InstanceId, destination, skill.ExecutionKind))) return Reject(state, actor, "line_of_sight_blocked");
         GridPoint origin = actor.Unit.Position;
         BattleUnitState moved = actor.WithPosition(destination, actor.HasMovedThisTurn).WithMana(actor.CurrentMana - skill.ManaCost).WithSuccessfulSkillUse(skill.ContentId);
         BattleState next = state.WithUnit(moved);
@@ -268,7 +273,8 @@ public sealed class SkillRuntimeService
         SkillDefinition skill = command.Definition;
         int distance = Math.Abs(actor.Unit.Position.X - command.TargetCell.X) + Math.Abs(actor.Unit.Position.Y - command.TargetCell.Y);
         if (!state.Board.Contains(command.TargetCell) || distance < skill.MinRange || distance > skill.MaxRange) yield break;
-        if (skill.RequiresLineOfSight && !_lineOfSight.HasLineOfSight(state.Board, actor.Unit.Position, command.TargetCell)) yield break;
+        if (skill.RequiresLineOfSight && !_lineOfSight.HasLineOfSight(state.Board, actor.Unit.Position, command.TargetCell,
+                LivingBlockers(state, actor.Unit.InstanceId, command.TargetCell, skill.ExecutionKind))) yield break;
         if (skill.AreaRadius > 0 && skill.ExecutionKind is SkillExecutionKind.AreaBlast or SkillExecutionKind.Fireball or SkillExecutionKind.AmplifyDamage or SkillExecutionKind.FearCurse or SkillExecutionKind.PoisonSpear)
         {
             BattleUnitState[] area = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
@@ -318,6 +324,14 @@ public sealed class SkillRuntimeService
         int dot = candidateX * selectedX + candidateY * selectedY;
         return cross == 0 && dot > 0;
     }
+
+    private static IReadOnlySet<GridPoint> LivingBlockers(BattleState state, UnitInstanceId actorId, GridPoint targetCell, SkillExecutionKind executionKind) =>
+        executionKind == SkillExecutionKind.BoneSpear
+            ? new HashSet<GridPoint>()
+            : state.Units.Values
+            .Where(unit => unit.IsAlive && unit.Unit.InstanceId != actorId && unit.Unit.Position != targetCell)
+            .Select(unit => unit.Unit.Position)
+            .ToHashSet();
 
     private static StatusDefinition StatusFor(SkillDefinition skill, ContentId statusId) => skill.ExecutionKind switch
     {

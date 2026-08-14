@@ -141,7 +141,7 @@ public sealed record SkillDefinition
     public int AreaRadius => ExecutionProfile.AreaRadius > 0 ? ExecutionProfile.AreaRadius : ExecutionKind == SkillExecutionKind.AreaBlast ? 2 : 0;
     public bool UsesLineTargeting => ExecutionKind is SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.Thrust;
     public bool RequiresLineOfSight => !ExecutionProfile.IgnoreLineOfSight &&
-        ExecutionKind is (SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.ChargeStrike or SkillExecutionKind.FireDemonAttack);
+        ExecutionKind is (SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.ChargeStrike or SkillExecutionKind.FireDemonAttack);
 }
 
 public sealed class SkillCatalogDefinition
