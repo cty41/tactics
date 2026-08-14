@@ -67,8 +67,10 @@ class ManualQaHandoffPolicyTests(unittest.TestCase):
             root = Path(directory)
             self.copy_contract(root)
             ledger = root / LEDGER
-            ledger.write_text(ledger.read_text(encoding="utf-8").replace(
-                "2. `MQA-GODOT-PAUSE-MENU`", "1. `MQA-GODOT-PAUSE-MENU`"), encoding="utf-8")
+            text = ledger.read_text(encoding="utf-8")
+            text, replacements = re.subn(r"^2\. (`MQA-[^`]+`)$", r"1. \1", text, count=1, flags=re.MULTILINE)
+            self.assertEqual(1, replacements, "fixture must expose a second emitted QA item")
+            ledger.write_text(text, encoding="utf-8")
             self.assertTrue(any("contiguous" in error for error in validate_manual_qa_handoff(root)))
 
     def test_implicit_invocation_must_be_real_yaml_value(self) -> None:

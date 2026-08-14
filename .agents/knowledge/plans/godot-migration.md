@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-13T19:38:09+08:00"
+timestamp: "2026-08-14T11:05:04+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:7cd01e134d0ff6494fa8dab54890474a485953045a88b07092aeabf1533d2ec1
+source_fingerprint: sha256:b473576f5f307a980d0723e64b4b506c0e4f0ed02edac799602d4d2ef624c32f
 ---
 
 # Current state
@@ -98,6 +98,8 @@ Phase 7B–8E 成长、HUD 与目标表现收口修复已完成自动门禁，�
 Phase 8E 的相机、菜单、动态数值与成长事务收口已完成自动门禁，继续等待合并人工验收。Godot 从完整 100 格 Tile AABB 与顶部/底部 HUD 安全边距计算统一 fitted transform，棋盘、Actor、Highlight、技能 FX、悬浮数值和指针逆变换不再为历史右侧诊断栏留空。战斗和地图移除 Abandon，Esc 在 targeting/Console 优先级之后打开位于最高表现层的 Continue/Options/Main Menu；退出应用只保留在 Home。动作栏使用技能显示名，零消耗基础攻击不显示 MP，技能消耗独占第二行；committed action 播放期间隐藏当前单位脚底选中标记。Damage/Critical/Heal/Mana/Miss 数字只由 committed events 编译，按 Hit 序号播放并同步 Pause 与 0.5×/1×/2×/4×。成长候选复刻 starting-branch advanced guarantee、Upgrade 优先与冻结 RNG 槽位；属性/技能为内存草稿，最终确认才单次保存，历史 V5 瞬态草稿在恢复时丢弃。N1→成长→N2→成长→N3 由 Application 回归固定，地图节点进入前先恢复权威 Run，以 PendingBattle/Progression/Ready 状态路由。Catalog 保持124，状态为 `Generated/UnityOwned + manual_camera_menu_damage_growth_qa_pending`。
 
 Phase 8E 的职业成长、毒伤与 Action Pose 定向修复已完成自动门禁。Mage 的成长门槛统一为 Intelligence，Necromancer 统一为 Charisma；Bone Spear 的旧 Intelligence 例外已按 Unity 源合同纠正。Run 角色显式保存玩家 New Run 实际选择的起始技能，使 advanced guarantee 不再回退到模板默认；旧 V5 仅在唯一可证明时补齐，歧义或不一致身份明确拒绝而不写档。Poison tick 生成独立 Impact cue 与真实 `-N` 动态数值，落地长矛由 committed `DroppedSpears` 快照绘制持久程序式标记。14 张已批准的 Mage/Necromancer/Amazon Cast、Hit、Melee/Thrown 项目自有 PNG 经过 hash-bound converter 和 ResourceSaver 引用迁入；敌人和召唤物缺少 Action Pose 时继续使用程序式 fallback。死亡单位状态层立即清空。Catalog 保持124，状态仍为 `Generated/UnityOwned + manual_growth_poison_spear_and_action_pose_qa_pending`。
+
+Phase 7B–8E 的 L4、召唤物攻击、回合和 LOS 定向收口已完成自动实现。N3 后的权威不变量现在是 `AwaitingLayerFourChoice => MapState.Phase == ChoosingLayerFour`；合法旧 V5 的 `BattlesCompleted=3 + MapState=null` 只在内存确定性补建，下一次合法事务才写回，当前用户主档和 backup 未被测试修改。Unity 冻结 `FireDemonAttack_Ability` 现生成独立 `skill.summon.fire-demon-attack`：1–3 格、0 MP、4 点火焰魔法伤害、1 层 Ignite、每回合一次且不可暴击，替代早期复用 Basic Magic 的临时差异。Application Snapshot 统一给出 Mana、次数、长矛和尸体 availability；死亡单位保留在 Turn Order 审计中但 `AdvanceTurn` 只准备下一名存活单位。Supercover LOS 同时消费地形和中间存活单位占格，caster/目标自身排除，尸体和落矛不遮挡；Bone Spear 依据 Unity executor 保留沿线首敌拦截语义。ResourceSaver 新增 1 个内部技能 Resource，canonical Catalog 为125；状态保持 `Generated/UnityOwned + manual_layer4_fire_demon_turn_los_qa_pending`。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
 

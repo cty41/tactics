@@ -4,6 +4,43 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
+### MQA-GODOT-L4-RECOVERY — Layer 4 legacy-save recovery
+
+- Status: `pending`
+- Source: Phase 7B–8E L4 map invariant repair
+- Reopen reason: The live V5 save reached `AwaitingLayerFourChoice` with three completed battles but no MapState, leaving all Layer 4 routes locked.
+- Action: Continue the preserved current Run, choose one of the four Layer 4 nodes, return Home, and Continue again.
+- Expected: All four routes are initially available; the chosen route remains stable after Continue/Reload and the other three lock only after the choice commits.
+- Observe: Rogue Map node colors/actions, selected route page, Home Continue, and Godot Output.
+- Preserve on failure: Copy the main save and backup, Run seed/revision, screenshot of the map, selected node, and Output.
+- Save boundary: This uses and then legitimately writes the current Run on the first route transaction; make a copy first if the exact pre-repair state must be retained.
+- Automated evidence: Legacy V5 in-memory repair, new-flow invariant, deterministic seed projection, invalid-state rejection, and non-writing Resume are asserted; route UX remains manual.
+- User verdict: Failed before this fix: all Layer 4 nodes were unavailable.
+
+### MQA-GODOT-FIRE-DEMON-COMBAT — Dedicated Fire Demon attack
+
+- Status: `pending`
+- Source: Phase 7B–8E frozen Fire Demon attack migration
+- Action: Summon a Fire Demon, attack an enemy at 1–3 cells, attempt a second attack in the same turn, then end its turn and attack again.
+- Expected: The dedicated attack deals 4 magical damage, applies Ignite, costs 0 MP, never crits, is disabled after one success, and returns next turn.
+- Observe: Fire Demon action button/tooltip, target HP, Ignite status, combat numbers, CheatConsole, and Output.
+- Preserve on failure: Screenshot/video, cells, target HP before/after, event log, and current turn.
+- Save boundary: Ordinary battle mutation; use a replayable encounter checkpoint.
+- Automated evidence: Frozen converter contract, Resource/Catalog identity, damage/status/roll semantics, per-turn limit, and summon binding are asserted; presentation and interaction remain manual.
+- User verdict: Failed before this fix: the reused Magic Attack returned `no_valid_target`.
+
+### MQA-GODOT-AVAILABILITY-TURNS-LOS — Skill availability, defeated turns, and LOS
+
+- Status: `pending`
+- Source: Phase 7B–8E battle availability and LOS parity repair
+- Action: Exhaust Mana, kill a party member, then test a ranged skill with a living unit between caster and target; repeat after moving the blocker and with a corpse or dropped spear in between.
+- Expected: Insufficient-Mana/used/precondition skills are disabled with a reason and cannot enter targeting; defeated units are skipped; living units block Fireball and other ordinary ranged LOS, while corpses/dropped spears do not. Bone Spear retains Unity first-enemy interception.
+- Observe: Action buttons/tooltips, Turn Order/current actor, target highlights/Hover reason, CheatConsole, and Output.
+- Preserve on failure: Short video, actor/target/blocker cells, skill ID, Turn Order, event log, and Output.
+- Save boundary: Battle mutations apply; use a disposable or checkpointed encounter.
+- Automated evidence: Availability snapshot/intent rejection, consecutive dead-unit wrap, supercover corner blockers, Preview/AI/Transition shared probes, Poison Spear and Bone Spear exceptions are asserted; interaction clarity remains manual.
+- User verdict: Failed before this fix: low-Mana skills remained selectable, a dead Amazon briefly received a turn, and unit blockers were ignored.
+
 ### MQA-GODOT-DAMAGE-NUMBERS — Floating combat feedback
 
 - Status: `pending`
@@ -149,8 +186,11 @@ No current items.
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-FULL-RUN`
-2. `MQA-GODOT-DAMAGE-NUMBERS`
-3. `MQA-GODOT-PROGRESSION-ATOMIC`
-4. `MQA-GODOT-INVENTORY`
-5. `MQA-GODOT-RELOAD-OUTPUT`
+1. `MQA-GODOT-L4-RECOVERY`
+2. `MQA-GODOT-FIRE-DEMON-COMBAT`
+3. `MQA-GODOT-AVAILABILITY-TURNS-LOS`
+4. `MQA-GODOT-DAMAGE-NUMBERS`
+5. `MQA-GODOT-PROGRESSION-ATOMIC`
+6. `MQA-GODOT-INVENTORY`
+7. `MQA-GODOT-FULL-RUN`
+8. `MQA-GODOT-RELOAD-OUTPUT`
