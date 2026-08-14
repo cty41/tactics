@@ -9,6 +9,7 @@ using Tactics.Core.Runs;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
+using Tactics.Application.Battle;
 using Tactics.Application.Runs;
 using static GdUnit4.Assertions;
 
@@ -49,7 +50,68 @@ public class PlayableRunUiGodotTests
         AssertThat(console.Visible).IsFalse();
         AssertThat(console.Size.Y).IsEqual(225f);
         AssertThat(console.MouseFilter).IsEqual(Control.MouseFilterEnum.Stop);
+        AssertThat(Descendants<RichTextLabel>(console).Single().SelectionEnabled).IsTrue();
         console.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void CheatConsoleCopiesVisibleFilterOrAllRetainedEntries()
+    {
+        var clipboard = new MemoryClipboard();
+        var console = new GodotBattleCheatConsole(clipboard);
+        console._Ready();
+        console.SetEntries([
+            new BattleUiLogEntry(BattleUiLogCategory.Gameplay, "damage", "DamageAppliedEvent"),
+            new BattleUiLogEntry(BattleUiLogCategory.Ai, "decision", "AiDecisionEvent"),
+            new BattleUiLogEntry(BattleUiLogCategory.Rejected, "blocked", "CommandRejectedEvent")
+        ]);
+        OptionButton filter = Descendants<OptionButton>(console).Single();
+        filter.Select(1);
+        filter.EmitSignal(OptionButton.SignalName.ItemSelected, 1);
+        Descendants<Button>(console).Single(value => value.Text == "Copy Visible").EmitSignal(Button.SignalName.Pressed);
+        AssertThat(clipboard.Text).Contains("damage");
+        AssertThat(clipboard.Text).NotContains("decision");
+
+        Descendants<Button>(console).Single(value => value.Text == "Copy All").EmitSignal(Button.SignalName.Pressed);
+        AssertThat(clipboard.Text).Contains("damage");
+        AssertThat(clipboard.Text).Contains("decision");
+        AssertThat(clipboard.Text).Contains("blocked");
+        console.Free();
+    }
+
+    [TestCase]
+    public void SettlementCoordinatorRejectsEveryDuplicateAfterTheFirstAttempt()
+    {
+        var coordinator = new GodotBattleSettlementCoordinator();
+        var result = new PureRunBattleResult("run", 148, new ContentId("encounter.pure-run.special"),
+            true, 11, 1, Array.Empty<BattlePartyResult>());
+        AssertThat(coordinator.TryBegin(result, "terminal", out BattleSettlementDiagnostic first)).IsTrue();
+        AssertThat((int)first.Stage).IsEqual((int)BattleSettlementStage.Submitting);
+        AssertThat(coordinator.TryBegin(result, "duplicate", out BattleSettlementDiagnostic duplicate)).IsFalse();
+        AssertThat(duplicate.Marker).StartsWith("duplicate:");
+
+        AssertThat((int)coordinator.Reject("save.non_increasing_revision").Stage).IsEqual((int)BattleSettlementStage.Rejected);
+        AssertThat(coordinator.TryBegin(result, "retry", out _)).IsFalse();
+        coordinator.Reset();
+        AssertThat(coordinator.TryBegin(result, "new_battle", out BattleSettlementDiagnostic retry)).IsTrue();
+        AssertThat(retry.AttemptId).IsEqual(2L);
+        AssertThat((int)coordinator.MarkSaved(149).Stage).IsEqual((int)BattleSettlementStage.Saved);
+        AssertThat((int)coordinator.MarkNavigationCompleted().Stage).IsEqual((int)BattleSettlementStage.NavigationCompleted);
+        AssertThat(coordinator.TryBegin(result, "late_callback", out _)).IsFalse();
+    }
+
+    [TestCase]
+    public void FailedSaveResultWithTerminalSnapshotIsTreatedAsCommitted()
+    {
+        var summary = new PureRunSummary("run", 7, PureRunOutcome.BossVictory, 5, 10, 20,
+            Array.Empty<ContentId>(), Array.Empty<string>(), Array.Empty<string>());
+        var snapshot = new PureRunSaveSnapshot(149, null, summary);
+        var failedReadback = new RunSessionResult(false, "save.write_failed", snapshot, null);
+        var ordinaryFailure = new RunSessionResult(false, "save.write_failed", new PureRunSaveSnapshot(148, null, null), null);
+
+        AssertThat(GodotPlayableRunMain.HasCommittedTerminalSnapshot(failedReadback)).IsTrue();
+        AssertThat(GodotPlayableRunMain.HasCommittedTerminalSnapshot(ordinaryFailure)).IsFalse();
     }
 
     [TestCase]
@@ -523,6 +585,12 @@ public class PlayableRunUiGodotTests
             if (child is T match) yield return match;
             foreach (T nested in Descendants<T>(child)) yield return nested;
         }
+    }
+
+    private sealed class MemoryClipboard : ITextClipboard
+    {
+        public string Text { get; private set; } = string.Empty;
+        public void SetText(string text) => Text = text;
     }
 
     [TestCase]

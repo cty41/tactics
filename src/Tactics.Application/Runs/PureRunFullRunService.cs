@@ -70,7 +70,18 @@ public sealed class PureRunFullRunService
     {
         if (!result.Succeeded) return Fail(result.RejectionCode ?? "full_run.settlement_failed", prior);
         if (result.WasDuplicate) return new(true, null, prior, WasDuplicate: true);
-        return new(true, null, result.ActiveRun ?? prior, TerminalSummary: result.TerminalSummary);
+        if (result.TerminalSummary is PureRunSummary terminal)
+        {
+            // Terminal settlement has no ActiveRun, but the save envelope still
+            // requires a strictly increasing revision. Preserve that committed
+            // revision in the transition result instead of falling back to the
+            // pre-settlement state and producing save.non_increasing_revision.
+            PureRunPhase phase = terminal.Outcome == PureRunOutcome.BossVictory
+                ? PureRunPhase.SliceCompleted
+                : PureRunPhase.Defeated;
+            return new(true, null, Copy(prior, phase), TerminalSummary: terminal);
+        }
+        return new(true, null, result.ActiveRun ?? prior);
     }
 
     private static FullRunTransitionResult Success(PureRunState state) => new(true, null, state);

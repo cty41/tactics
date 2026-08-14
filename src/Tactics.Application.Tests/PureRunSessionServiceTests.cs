@@ -491,6 +491,42 @@ public sealed class PureRunSessionServiceTests
         });
     }
 
+    [Test]
+    public void ApplyFullRunTransition_PersistsBossTerminalAtANewRevisionExactlyOnce()
+    {
+        PureRunDefinition definition = DefinitionWithChoices();
+        var store = new MemoryRunStore();
+        RunCharacterState[] party = definition.Party.Select(template => new RunCharacterState(
+            template.CharacterId, template.UnitContentId, 2, template.Attributes, 20, 20, 10, 15, false,
+            [template.StartingSkillContentId], startingSkillContentId: template.StartingSkillContentId)).ToArray();
+        var encounter = new ContentId("encounter.pure-run.special");
+        var checkpoint = new RunEncounterCheckpoint(encounter, 6, 148, party, [], []);
+        var pending = new PureRunState("boss-run", 7, 148, PureRunPhase.PendingBattle, 6, encounter,
+            party, checkpoint: checkpoint, battlesCompleted: 4);
+        store.Snapshot = new PureRunSaveSnapshot(148, pending, null);
+        var battle = new PureRunBattleResult(pending.RunId, checkpoint.Revision, encounter, true, 11, 1,
+            party.Select(member => new BattlePartyResult(member.CharacterId, member.CurrentHealth,
+                member.CurrentMana, member.IsDead, member.CarriedConsumables)).ToArray());
+        var session = new PureRunSessionService(definition, store);
+
+        RunSessionResult completed = session.ApplyFullRunTransition(state =>
+            new PureRunFullRunService().CompleteBoss(state, battle));
+        long persistedRevision = store.Snapshot!.Revision;
+        RunSessionResult duplicate = session.ApplyFullRunTransition(state =>
+            new PureRunFullRunService().CompleteBoss(state, battle));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(completed.Succeeded, Is.True);
+            Assert.That(completed.Snapshot!.Revision, Is.EqualTo(149));
+            Assert.That(completed.Snapshot.ActiveRun, Is.Null);
+            Assert.That(completed.Snapshot.TerminalSummary!.Outcome, Is.EqualTo(PureRunOutcome.BossVictory));
+            Assert.That(store.Snapshot.Revision, Is.EqualTo(persistedRevision));
+            Assert.That(duplicate.Succeeded, Is.False);
+            Assert.That(duplicate.ErrorCode, Is.EqualTo("run.no_active_run"));
+        });
+    }
+
     private static PureRunBattleResult Victory(PureRunState run) => new(
         run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, true, 3, 3,
         run.Party.Select(member => new BattlePartyResult(

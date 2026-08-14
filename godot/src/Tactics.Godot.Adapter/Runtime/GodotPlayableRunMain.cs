@@ -59,7 +59,11 @@ public partial class GodotPlayableRunMain : Control
     private GridPoint? _hoveredCell;
     private (UnitInstanceId UnitId, GodotUnitFacing Facing)? _targetingFacingPreview;
     private ContentId? _currentEncounterId;
-    private bool _settlementCommitted;
+    private readonly GodotBattleSettlementCoordinator _settlement = new();
+    private Label? _settlementStatus;
+    private PureRunBattleResult? _terminalSettlementResult;
+    private int _settlementRetryCount;
+    private int _settlementNavigationRetryCount;
     private GodotBattlePresentationPlayer? _presentationPlayer;
     private BattleUiSnapshot? _presentationAfter;
     private bool _continueAutomaticAfterPresentation;
@@ -337,7 +341,10 @@ public partial class GodotPlayableRunMain : Control
 
     private void StartBattle(EncounterRequest request)
     {
-        _settlementCommitted=false;
+        _settlement.Reset();
+        _terminalSettlementResult=null;
+        _settlementRetryCount=0;
+        _settlementNavigationRetryCount=0;
         _currentEncounterId=request.EncounterContentId;
         EncounterDefinition encounter = _encounters[request.EncounterContentId];
         _battle = new PlayableBattleSessionFactory().Create(request, encounter, _layouts[encounter.LayoutId], _units, _skills, _ai, _balance, _enemySpeed);
@@ -378,6 +385,7 @@ public partial class GodotPlayableRunMain : Control
         actionScroll.AddChild(_skillPanel);
         _turnOrder=LabelAt(root,string.Empty,new Vector2(470,32),18);_turnOrder.Size=new Vector2(660,50);_turnOrder.HorizontalAlignment=HorizontalAlignment.Center;
         _hoverInfo=LabelAt(root,"Hover a unit or cell",new Vector2(30,115),16);_hoverInfo.Size=new Vector2(430,110);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
+        _settlementStatus=LabelAt(root,string.Empty,new Vector2(470,82),16);_settlementStatus.Size=new Vector2(660,48);_settlementStatus.HorizontalAlignment=HorizontalAlignment.Center;
         var controls=new HBoxContainer{Position=new Vector2(1160,32),Size=new Vector2(410,55)};root.AddChild(controls);
         controls.AddChild(SmallButton("Pause/Resume",TogglePause));_stepButton=SmallButton("Step",()=>{if(_playbackPaused)PlaybackStep(true);});_stepButton.Disabled=true;controls.AddChild(_stepButton);_speedButton=SmallButton("Speed 1x",ToggleSpeed);controls.AddChild(_speedButton);
         _cheatConsole=new GodotBattleCheatConsole();_cheatConsole.ClearRequested+=()=>{_logs.Clear();RefreshLog();};root.AddChild(_cheatConsole);
@@ -584,35 +592,145 @@ public partial class GodotPlayableRunMain : Control
 
     internal static bool ShouldBlockBattleIntent(bool cheatConsoleVisible, bool presentationInputLocked,
         bool pauseMenuVisible = false) => cheatConsoleVisible || presentationInputLocked || pauseMenuVisible;
+    internal static bool HasCommittedTerminalSnapshot(RunSessionResult result) =>
+        result.Snapshot?.TerminalSummary is not null;
 
-    private void CompleteBattle(PureRunBattleResult battleResult)
+    private BattleSettlementDiagnostic CompleteBattle(PureRunBattleResult battleResult)
     {
-        if(_settlementCommitted)return;
-        _settlementCommitted=true;
-        AddLog(new BattleUiLogEntry(BattleUiLogCategory.Gameplay,$"Submitting {EncounterLabel(battleResult.EncounterContentId)} BattleResult","EncounterNavigationEvent"));
-        if(battleResult.EncounterContentId.Value=="encounter.pure-run.n4")
+        _terminalSettlementResult=battleResult;
+        if(!_settlement.TryBegin(battleResult,"terminal_queue_drained",out BattleSettlementDiagnostic begun))
         {
-            RunSessionResult layerFour=_run!.ApplyLayerFourBattleResult(battleResult);
-            if(!layerFour.Succeeded){_settlementCommitted=false;SetStatus(layerFour.ErrorCode);return;}
-            if(layerFour.Snapshot?.TerminalSummary is PureRunSummary summary)ShowSummary(summary);
-            else ShowRunMap(layerFour.Snapshot!.ActiveRun!);return;
+            LogSettlement(begun, BattleUiLogCategory.Rejected);
+            return begun;
         }
-        if(battleResult.EncounterContentId.Value is "encounter.pure-run.e1" or "encounter.pure-run.e2" or "encounter.pure-run.special")
+        LogSettlement(begun, BattleUiLogCategory.Gameplay);
+        try
         {
-            PureRunState? active=new GodotRunSaveStore().Load().Snapshot?.ActiveRun;
-            bool boss=battleResult.EncounterContentId.Value.EndsWith(".special",StringComparison.Ordinal);
-            if(!boss&&active?.NodeTransaction?.NodeId.StartsWith("layer_06_",StringComparison.Ordinal)==true)
+            if(battleResult.EncounterContentId.Value=="encounter.pure-run.n4")
             {
-                RunSessionResult layerSix=_run!.ApplyLayerFourBattleResult(battleResult);
-                if(!layerSix.Succeeded){_settlementCommitted=false;SetStatus(layerSix.ErrorCode);return;}
-                RouteMap(layerSix.Snapshot!.ActiveRun!);return;
+                RunSessionResult layerFour=_run!.ApplyLayerFourBattleResult(battleResult);
+                if(!layerFour.Succeeded)return HandleSettlementFailure(layerFour);
+                return CompleteSettlementNavigation(layerFour, () =>
+                {
+                    if(layerFour.Snapshot?.TerminalSummary is PureRunSummary summary)ShowSummary(summary);
+                    else ShowRunMap(layerFour.Snapshot!.ActiveRun!);
+                });
             }
-            PureRunFullRunService full=new(_consumables.Keys);
-            RunSessionResult late=_run!.ApplyFullRunTransition(state=>boss?full.CompleteBoss(state,battleResult):full.CompleteLayerFive(state,battleResult));
-            if(!late.Succeeded){_settlementCommitted=false;SetStatus(late.ErrorCode);return;}
-            if(late.Snapshot?.TerminalSummary is PureRunSummary terminal)ShowSummary(terminal);else ShowSettlement(late.Snapshot!);return;
+            if(battleResult.EncounterContentId.Value is "encounter.pure-run.e1" or "encounter.pure-run.e2" or "encounter.pure-run.special")
+            {
+                PureRunState? active=new GodotRunSaveStore().Load().Snapshot?.ActiveRun;
+                bool boss=battleResult.EncounterContentId.Value.EndsWith(".special",StringComparison.Ordinal);
+                if(!boss&&active?.NodeTransaction?.NodeId.StartsWith("layer_06_",StringComparison.Ordinal)==true)
+                {
+                    RunSessionResult layerSix=_run!.ApplyLayerFourBattleResult(battleResult);
+                    if(!layerSix.Succeeded)return HandleSettlementFailure(layerSix);
+                    return CompleteSettlementNavigation(layerSix, () => RouteMap(layerSix.Snapshot!.ActiveRun!));
+                }
+                PureRunFullRunService full=new(_consumables.Keys);
+                RunSessionResult late=_run!.ApplyFullRunTransition(state=>boss?full.CompleteBoss(state,battleResult):full.CompleteLayerFive(state,battleResult));
+                if(!late.Succeeded)return HandleSettlementFailure(late);
+                return CompleteSettlementNavigation(late, () =>
+                {
+                    if(late.Snapshot?.TerminalSummary is PureRunSummary terminal)ShowSummary(terminal);
+                    else ShowSettlement(late.Snapshot!);
+                });
+            }
+            RunSessionResult settled=_run!.ApplyBattleResult(battleResult);
+            if(!settled.Succeeded)return HandleSettlementFailure(settled);
+            return CompleteSettlementNavigation(settled, () => ShowSettlement(settled.Snapshot!));
         }
-        RunSessionResult settled=_run!.ApplyBattleResult(battleResult);if(!settled.Succeeded){_settlementCommitted=false;SetStatus(settled.ErrorCode);return;}ShowSettlement(settled.Snapshot!);
+        catch(Exception exception)
+        {
+            string code=$"settlement.exception.{exception.GetType().Name}";
+            GD.PushError($"Boss settlement failed: {code}: {exception.Message}");
+            if(_settlement.Current?.Stage==BattleSettlementStage.Saved)
+            {
+                BattleSettlementDiagnostic failedNavigation=_settlement.MarkNavigationFailure(code);
+                LogSettlement(failedNavigation,BattleUiLogCategory.Rejected);
+                RecoverSavedSettlementNavigation();
+                return failedNavigation;
+            }
+            return RejectSettlement(code);
+        }
+    }
+
+    private BattleSettlementDiagnostic CompleteSettlementNavigation(RunSessionResult result,Action navigate)
+    {
+        long revision=result.Snapshot?.Revision??throw new InvalidOperationException("Saved settlement snapshot is missing.");
+        BattleSettlementDiagnostic saved=_settlement.MarkSaved(revision);LogSettlement(saved,BattleUiLogCategory.Gameplay);
+        navigate();
+        BattleSettlementDiagnostic completed=_settlement.MarkNavigationCompleted();LogSettlement(completed,BattleUiLogCategory.Gameplay);
+        return completed;
+    }
+
+    private BattleSettlementDiagnostic RejectSettlement(string? errorCode)
+    {
+        string code=errorCode??"settlement.rejected";
+        BattleSettlementDiagnostic rejected=_settlement.Reject(code);
+        LogSettlement(rejected,BattleUiLogCategory.Rejected);
+        GD.PushError($"Battle settlement rejected: {code}");
+        if(code=="save.write_failed"&&_settlementRetryCount==0)
+        {
+            _settlementRetryCount++;
+            Callable.From(RetryRejectedSettlement).CallDeferred();
+        }
+        return rejected;
+    }
+
+    private BattleSettlementDiagnostic HandleSettlementFailure(RunSessionResult result)
+    {
+        if(HasCommittedTerminalSnapshot(result))
+        {
+            PureRunSaveSnapshot snapshot=result.Snapshot!;
+            BattleSettlementDiagnostic saved=_settlement.MarkSaved(snapshot.Revision);
+            LogSettlement(saved,BattleUiLogCategory.Gameplay);
+            RecoverSavedSettlementNavigation(snapshot);
+            return _settlement.Current!;
+        }
+        return RejectSettlement(result.ErrorCode);
+    }
+
+    private void RetryRejectedSettlement()
+    {
+        if(_terminalSettlementResult is null||_settlement.Current?.Stage!=BattleSettlementStage.Rejected)return;
+        _settlement.Reset();
+        CompleteBattle(_terminalSettlementResult);
+    }
+
+    private void RecoverSavedSettlementNavigation() => RecoverSavedSettlementNavigation(null);
+
+    private void RecoverSavedSettlementNavigation(PureRunSaveSnapshot? knownSnapshot)
+    {
+        try
+        {
+            PureRunSaveSnapshot? snapshot=knownSnapshot;
+            if(snapshot?.TerminalSummary is null)
+            {
+                RunStoreResult loaded=new GodotRunSaveStore().Load();
+                if(loaded.Succeeded)snapshot=loaded.Snapshot;
+            }
+            if(snapshot?.TerminalSummary is null)throw new InvalidOperationException("Saved terminal summary is unavailable.");
+            RouteRunState(snapshot);
+            BattleSettlementDiagnostic completed=_settlement.MarkNavigationCompleted();
+            LogSettlement(completed,BattleUiLogCategory.Gameplay);
+        }
+        catch(Exception exception)
+        {
+            string code=$"settlement.navigation.{exception.GetType().Name}";
+            BattleSettlementDiagnostic failed=_settlement.MarkNavigationFailure(code);
+            LogSettlement(failed,BattleUiLogCategory.Rejected);
+            GD.PushError($"Settlement navigation recovery failed: {code}: {exception.Message}");
+            if(_settlementNavigationRetryCount++==0)Callable.From(RecoverSavedSettlementNavigation).CallDeferred();
+        }
+    }
+
+    private void LogSettlement(BattleSettlementDiagnostic diagnostic,BattleUiLogCategory category)
+    {
+        string message=$"Settlement #{diagnostic.AttemptId} {diagnostic.Stage}; encounter={diagnostic.EncounterContentId.Value}; checkpoint={diagnostic.CheckpointRevision}; saved={diagnostic.SavedRevision?.ToString()??"none"}; marker={diagnostic.Marker}; error={diagnostic.ErrorCode??"none"}";
+        AddLog(new BattleUiLogEntry(category,message,"BattleSettlementDiagnostic"));
+        if(_settlementStatus is not null)_settlementStatus.Text=diagnostic.ErrorCode is null?message:$"SETTLEMENT ERROR: {diagnostic.ErrorCode}";
+        RefreshLog();
+        GD.Print(message);
     }
 
     private void PlaybackStep(bool forced)
@@ -1254,6 +1372,8 @@ public partial class GodotPlayableRunMain : Control
         _turnOrder=null;
         _speedButton=null;
         _hoverInfo=null;
+        _settlementStatus=null;
+        _cheatConsole=null;
         _eventLog=null;
         _mapView=null;
         _mapDetail=null;

@@ -44,15 +44,27 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
 - Status: `pending`
-- Source: Phase 8E final Boss terminal presentation recovery
-- Reopen reason: The failed live Boss path now caches its terminal result, drains every committed presentation frame explicitly, and snap-recovers a stalled frame before one-shot settlement.
-- Action: Continue the preserved Boss checkpoint, defeat the last enemy, let the final Hit/Defeat presentation finish, then return Home from the BossVictory Summary.
-- Expected: BossVictory Summary appears exactly once after presentation completes; the battle neither stalls nor respawns, and Return Home clears the completed Run.
-- Observe: Final Hit/Defeat animation, playback controls, CheatConsole terminal markers, Summary routing, Home Continue state, and Godot Output.
-- Preserve on failure: Keep the page open; copy save and backup, and record Run revision, living units, terminal-pending state, queued/current frame, pause/step state, settlement marker, and full Output.
-- Save boundary: Replaying the production checkpoint will complete and consume the active Run on success; copy the save first if the Boss state must remain reproducible.
-- Automated evidence: Terminal caching, input lock, zero-cue completion, ordered frame draining, recovered snap completion, one-shot settlement, BossVictory routing, and Compatibility/Forward+ paths pass the unified verifier.
-- User verdict: Previously failed because the final Boss battle stalled; reopened after the targeted repair and awaits user replay.
+- Source: Phase 8E Boss settlement transaction revision fix
+- Reopen reason: The second live replay proved terminal detection and presentation drain completed; the actual failure was `save.non_increasing_revision` after terminal transition reused revision 148. The transition and settlement coordinator are now fixed and reviewed.
+- Action: Continue the preserved Boss checkpoint, defeat the final enemy, inspect the terminal settlement lines, then use Return Home.
+- Expected: The final animation completes, settlement advances from Submitting to Saved and NavigationCompleted, BossVictory Summary appears once, and Return Home ends the Run.
+- Observe: Battle page, CheatConsole `BattleSettlementDiagnostic`, BossVictory Summary, Home Continue state, and Godot Output.
+- Preserve on failure: Keep the page open; copy all CheatConsole logs, retain the production save and backup, and record the last settlement stage/error.
+- Save boundary: This replay will replace the revision 148 PendingBattle save with the committed terminal Summary on success; preserve a copy first if the checkpoint is needed again.
+- Automated evidence: Terminal revision now increases to 149 through ApplyFullRunTransition and a controlled store; ActiveRun becomes null, Summary is one-shot, failed readback recovery and duplicate callbacks are guarded. Live navigation remains manual.
+- User verdict: Prior replay failed; repaired behavior awaits a new explicit verdict.
+
+### MQA-GODOT-CHEAT-CONSOLE-COPY — Read-only battle log copying
+
+- Status: `pending`
+- Source: Phase 8E Boss settlement diagnostics and CheatConsole copy
+- Action: Open CheatConsole, drag-select several lines and copy with Ctrl+C and the right-click menu; then test Copy Visible under a filter and Copy All.
+- Expected: Selected text copies normally; Copy Visible contains only rendered filtered lines, Copy All contains all retained lines, and no console interaction triggers battle commands.
+- Observe: CheatConsole selection/context menu/status text and an external text editor used only for paste verification.
+- Preserve on failure: Screenshot, selected filter, copied text, and any Godot Output error.
+- Save boundary: Console copying does not mutate the Run or save.
+- Automated evidence: Selection mode, filtered/all rendering, injected clipboard behavior and gameplay input blocking are asserted; native mouse/context-menu feel remains manual.
+- User verdict: none.
 
 ### MQA-GODOT-RELOAD-OUTPUT — Reload and diagnostics cleanup
 
@@ -246,3 +258,4 @@ No current items.
 6. `MQA-GODOT-DAMAGE-NUMBERS`
 7. `MQA-GODOT-PROGRESSION-ATOMIC`
 8. `MQA-GODOT-RELOAD-OUTPUT`
+9. `MQA-GODOT-CHEAT-CONSOLE-COPY`

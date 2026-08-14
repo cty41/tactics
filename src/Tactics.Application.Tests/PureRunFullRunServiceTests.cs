@@ -48,6 +48,7 @@ public sealed class PureRunFullRunServiceTests
             Assert.That(completed.TerminalSummary.TerminalEncounterId!.Value.Value,
                 Is.EqualTo("encounter.pure-run.special"));
             Assert.That(completed.TerminalSummary.BattlesCompleted, Is.EqualTo(5));
+            Assert.That(completed.State.Revision, Is.EqualTo(pending.State.Revision + 1));
         });
     }
 
