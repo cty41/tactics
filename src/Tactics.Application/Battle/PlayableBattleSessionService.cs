@@ -44,6 +44,7 @@ public sealed record BattleUiSkillPreview(
     ContentId SkillId,
     IReadOnlyList<GridPoint> RangeCells,
     IReadOnlyList<BattleUiTarget> LegalTargets);
+public sealed record BattleUiSkillAvailability(ContentId SkillId, bool IsAvailable, string? FailureCode);
 public sealed record BattleUiImpactPreview(
     ContentId SkillId,
     GridPoint Cell,
@@ -76,7 +77,8 @@ public sealed record BattleUiSnapshot(
     IReadOnlyList<UnitInstanceId> TurnOrder,
     int ActiveTurnIndex,
     string? FailureCode,
-    IReadOnlyCollection<GridPoint>? BlockedCells = null);
+    IReadOnlyCollection<GridPoint>? BlockedCells = null,
+    IReadOnlyList<BattleUiSkillAvailability>? SkillAvailability = null);
 
 public sealed record PlayableBattleSessionContext(
     BattleState InitialState,
@@ -193,7 +195,8 @@ public sealed class PlayableBattleSessionService
             view.Units.Values.OrderBy(unit => unit.Unit.SpawnOrdinal).Select(ToSnapshot).ToArray(),
             skills, moves, targets, skillPreview, view.Corpses.ToArray(), view.DroppedSpears,
             _recentEvents.TakeLast(100).ToArray(),view.TurnOrder.ToArray(),view.ActiveIndex, _failureCode,
-            _context.BlockedCells ?? Array.Empty<GridPoint>());
+            _context.BlockedCells ?? Array.Empty<GridPoint>(),
+            skills.Select(skill => Availability(view, active, skill)).ToArray());
     }
 
     public IReadOnlyList<GridPoint> PreviewMovePath(GridPoint destination)
@@ -246,8 +249,13 @@ public sealed class PlayableBattleSessionService
 
     private BattleUiIntentResult SetSkillMode(SelectSkillIntent intent)
     {
-        if (SkillsFor(State.Units[State.ActiveUnitId]).All(skill => skill.ContentId != intent.SkillId))
+        BattleUnitState actor = State.Units[State.ActiveUnitId];
+        SkillDefinition? skill = SkillsFor(actor).SingleOrDefault(skill => skill.ContentId == intent.SkillId);
+        if (skill is null)
             return Result(false, "battle.skill_not_available", Array.Empty<BattleEvent>());
+        BattleUiSkillAvailability availability = Availability(State, actor, skill);
+        if (!availability.IsAvailable)
+            return Result(false, availability.FailureCode, Array.Empty<BattleEvent>());
         _targetingMode = BattleTargetingMode.Skill;
         _selectedSkillId = intent.SkillId;
         return Result(true, null, Array.Empty<BattleEvent>());
@@ -340,6 +348,23 @@ public sealed class PlayableBattleSessionService
             if (_transitions.Apply(view, new UseSkillCommand(active.Unit.InstanceId, targetId, cell, skill)).Succeeded)
                 yield return new BattleUiTarget(skill.ContentId, cell, targetId);
         }
+    }
+
+    private static BattleUiSkillAvailability Availability(BattleState view, BattleUnitState actor, SkillDefinition skill)
+    {
+        string? failure = SkillRuntimeService.AvailabilityFailure(actor, skill);
+        if (failure is null && skill.ExecutionKind == SkillExecutionKind.PoisonSpear && view.DroppedSpears.ContainsKey(actor.Unit.InstanceId))
+            failure = "spear_not_held";
+        if (failure is null && skill.ExecutionKind == SkillExecutionKind.PickupSpear)
+        {
+            if (!view.DroppedSpears.TryGetValue(actor.Unit.InstanceId, out GridPoint spear))
+                failure = "spear_not_dropped";
+            else if (Math.Max(Math.Abs(actor.Unit.Position.X - spear.X), Math.Abs(actor.Unit.Position.Y - spear.Y)) != 1)
+                failure = "spear_not_adjacent";
+        }
+        if (failure is null && (skill.ExecutionKind is SkillExecutionKind.SummonSkeleton or SkillExecutionKind.SummonSkeletonMage || skill.ExecutionProfile.RequiresCorpse) && view.Corpses.Count == 0)
+            failure = "corpse_not_found";
+        return new BattleUiSkillAvailability(skill.ContentId, failure is null, failure);
     }
 
     private static BattleUiSkillPreview CreateSkillPreview(BattleState view, BattleUnitState actor, SkillDefinition skill, IEnumerable<BattleUiTarget> allTargets)

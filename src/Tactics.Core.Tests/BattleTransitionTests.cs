@@ -191,6 +191,30 @@ public sealed class BattleTransitionTests
     }
 
     [Test]
+    public void AdvanceTurn_SkipsConsecutiveDefeatedUnitsAndIncrementsRoundOnce()
+    {
+        BattleState baseline = CreateBattleState(activeIndex: 1);
+        BattleUnitState caster = baseline.Units[new UnitInstanceId("party.caster.0")];
+        BattleUnitState target = baseline.Units[new UnitInstanceId("enemy.target.0")];
+        var secondDeadId = new UnitInstanceId("enemy.dead.1");
+        var secondDead = new BattleUnitState(new UnitState(secondDeadId, new ContentId("unit.dead"), new GridPoint(5, 1), 3, 7, 1, 2), 20, 0);
+        BattleState state = new(baseline.Board,
+            new[] { caster, target.WithHealth(0), secondDead },
+            new[] { caster.Unit.InstanceId, target.Unit.InstanceId, secondDeadId },
+            round: 3, activeIndex: 1, randomState: baseline.RandomState);
+
+        BattleState advanced = state.AdvanceTurn();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(advanced.ActiveUnitId, Is.EqualTo(caster.Unit.InstanceId));
+            Assert.That(advanced.Round, Is.EqualTo(4));
+            Assert.That(advanced.TurnOrder, Does.Contain(target.Unit.InstanceId));
+            Assert.That(advanced.TurnOrder, Does.Contain(secondDeadId));
+        });
+    }
+
+    [Test]
     public void PoisonSpear_RejectsWithoutManaAndLeavesStateUnchanged()
     {
         BattleState initial = CreateBattleState(casterMana: 5);

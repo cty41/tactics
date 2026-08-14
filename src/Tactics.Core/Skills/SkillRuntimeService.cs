@@ -338,4 +338,12 @@ public sealed class SkillRuntimeService
             return "ability_use_limit_reached";
         return null;
     }
+
+    /// <summary>Returns the stable reason why a skill cannot currently be selected before targeting.</summary>
+    public static string? AvailabilityFailure(BattleUnitState actor, SkillDefinition skill)
+    {
+        string? usageFailure = UsageFailure(actor, skill);
+        if (usageFailure is not null) return usageFailure;
+        return actor.CurrentMana < skill.ManaCost ? "insufficient_mana" : null;
+    }
 }

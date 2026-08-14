@@ -194,15 +194,22 @@ public sealed class BattleState
     /// <returns>The advanced battle snapshot.</returns>
     public BattleState AdvanceTurn()
     {
-        int nextIndex = ActiveIndex + 1;
+        int nextIndex = ActiveIndex;
         int nextRound = Round;
-        if (nextIndex >= _turnOrder.Count)
+        bool foundLivingUnit = false;
+        for (int offset = 1; offset <= _turnOrder.Count; offset++)
         {
-            nextIndex = 0;
-            nextRound++;
+            int candidate = (ActiveIndex + offset) % _turnOrder.Count;
+            if (!_units[_turnOrder[candidate]].IsAlive) continue;
+            nextIndex = candidate;
+            nextRound = Round + (ActiveIndex + offset >= _turnOrder.Count ? 1 : 0);
+            foundLivingUnit = true;
+            break;
         }
 
         var units = new Dictionary<UnitInstanceId, BattleUnitState>(_units);
+        if (!foundLivingUnit)
+            return new BattleState(Board, units.Values, _turnOrder, nextRound, nextIndex, RandomState, _droppedSpears, _corpses);
         UnitInstanceId incomingUnitId = _turnOrder[nextIndex];
         units[incomingUnitId] = units[incomingUnitId].PrepareForTurn();
         return new BattleState(Board, units.Values, _turnOrder, nextRound, nextIndex, RandomState, _droppedSpears, _corpses);

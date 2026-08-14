@@ -44,6 +44,45 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void InsufficientMana_DisablesSkillAndRejectsTargetingWithoutMutation()
+    {
+        PlayableBattleSessionService service = CreateService(out SkillDefinition skill, out _, playerMana: 2, skillMana: 3);
+        BattleState before = service.State;
+
+        BattleUiSnapshot snapshot = service.CaptureSnapshot();
+        BattleUiIntentResult result = service.Submit(new SelectSkillIntent(skill.ContentId));
+
+        Assert.Multiple(() =>
+        {
+            BattleUiSkillAvailability availability = snapshot.SkillAvailability!.Single(value => value.SkillId == skill.ContentId);
+            Assert.That(availability.IsAvailable, Is.False);
+            Assert.That(availability.FailureCode, Is.EqualTo("insufficient_mana"));
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.FailureCode, Is.EqualTo("insufficient_mana"));
+            Assert.That(result.Snapshot.TargetingMode, Is.EqualTo(BattleTargetingMode.None));
+            Assert.That(service.State, Is.SameAs(before));
+        });
+    }
+
+    [Test]
+    public void DistantDroppedSpear_DisablesPickupBeforeTargeting()
+    {
+        PlayableBattleSessionService service = CreateService(out SkillDefinition skill, out _,
+            executionKind: SkillExecutionKind.PickupSpear, droppedSpear: new GridPoint(4, 4));
+
+        BattleUiSnapshot snapshot = service.CaptureSnapshot();
+        BattleUiIntentResult result = service.Submit(new SelectSkillIntent(skill.ContentId));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(snapshot.SkillAvailability!.Single().FailureCode, Is.EqualTo("spear_not_adjacent"));
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.FailureCode, Is.EqualTo("spear_not_adjacent"));
+            Assert.That(result.Snapshot.TargetingMode, Is.EqualTo(BattleTargetingMode.None));
+        });
+    }
+
+    [Test]
     public void TargetingCancelAndIllegalCell_DoNotMutateBattleState()
     {
         PlayableBattleSessionService service = CreateService(out _, out _);
@@ -204,18 +243,21 @@ public sealed class PlayableBattleSessionServiceTests
         out UnitInstanceId enemyId,
         bool defeatedLeader = false,
         GridPoint? enemyCell = null,
-        SkillExecutionKind executionKind = SkillExecutionKind.Fireball)
+        SkillExecutionKind executionKind = SkillExecutionKind.Fireball,
+        int playerMana = 10,
+        int skillMana = 0,
+        GridPoint? droppedSpear = null)
     {
         var playerId = new UnitInstanceId("party-mage");
         enemyId = new UnitInstanceId("enemy-goat");
         var leaderId = new UnitInstanceId("party-leader");
-        playerSkill = Skill("skill.mage.fireball.lv1", 50, executionKind);
+        playerSkill = Skill("skill.mage.fireball.lv1", 50, executionKind, skillMana);
         SkillDefinition enemySkill = Skill("skill.basic.melee", 1);
         var cells = new Dictionary<GridPoint, CellState>();
         for (int x = 0; x < 10; x++)
         for (int y = 0; y < 10; y++)
             cells[new GridPoint(x, y)] = new CellState();
-        var player = Unit(playerId, "unit.pure-run.mage", new GridPoint(1, 1), 0, 0, 20, 20);
+        var player = Unit(playerId, "unit.pure-run.mage", new GridPoint(1, 1), 0, 0, 20, 20, playerMana);
         var enemy = Unit(enemyId, "unit.pure-run.goat-charger", enemyCell ?? new GridPoint(2, 1), 1, 1, 20, 20);
         var units = new List<BattleUnitState>();
         var order = new List<UnitInstanceId>();
@@ -228,7 +270,10 @@ public sealed class PlayableBattleSessionServiceTests
         units.Add(enemy);
         order.Add(playerId);
         order.Add(enemyId);
-        var state = new BattleState(new BoardSnapshot(cells), units, order, randomState: 7);
+        var state = new BattleState(new BoardSnapshot(cells), units, order, randomState: 7,
+            droppedSpears: droppedSpear is GridPoint spear
+                ? new Dictionary<UnitInstanceId, GridPoint> { [playerId] = spear }
+                : null);
         var ai = new AiDefinition(
             new ContentId("ai.pure-run.charger"), AiArchetype.Charger,
             new AiProfileDefinition(1, 1, 0, 0), new[] { enemySkill.ContentId }, Array.Empty<ContentId>());
@@ -243,13 +288,13 @@ public sealed class PlayableBattleSessionServiceTests
         return new PlayableBattleSessionService(context);
     }
 
-    private static SkillDefinition Skill(string id, int damage, SkillExecutionKind? executionKind = null) => new(
-        new ContentId(id), id, SkillRole.Any, SkillKind.Active, 1, 0, 1, 4,
+    private static SkillDefinition Skill(string id, int damage, SkillExecutionKind? executionKind = null, int manaCost = 0) => new(
+        new ContentId(id), id, SkillRole.Any, SkillKind.Active, 1, manaCost, 1, 4,
         executionKind ?? (id.Contains("fireball", StringComparison.Ordinal) ? SkillExecutionKind.Fireball : SkillExecutionKind.MeleeAttack),
         damage, SkillDamageKind.Magical);
 
     private static BattleUnitState Unit(
-        UnitInstanceId id, string definitionId, GridPoint cell, int player, int ordinal, int maxHealth, int health) =>
+        UnitInstanceId id, string definitionId, GridPoint cell, int player, int ordinal, int maxHealth, int health, int currentMana = 10) =>
         new(new UnitState(id, new ContentId(definitionId), cell, 3, 10 - ordinal, player, ordinal),
-            maxHealth, health, maxMana: 10, currentMana: 10, physicalAttack: 1, magicalAttack: 1);
+            maxHealth, health, maxMana: 10, currentMana: currentMana, physicalAttack: 1, magicalAttack: 1);
 }

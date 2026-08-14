@@ -403,9 +403,9 @@ public partial class GodotPlayableRunMain : Control
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
         foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
         {
-            BattleUiUnitSnapshot activeUnit=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
-            int uses=activeUnit.SuccessfulSkillUses.TryGetValue(skill.ContentId,out int count)?count:0;
-            string? usageFailure=skill.IsBasicAbility&&uses>=1?"basic_ability_already_used":!skill.IsBasicAbility&&skill.MaxUsesPerTurn>0&&uses>=skill.MaxUsesPerTurn?"ability_use_limit_reached":null;
+            BattleUiSkillAvailability availability = snapshot.SkillAvailability?.Single(value => value.SkillId == skill.ContentId)
+                ?? new BattleUiSkillAvailability(skill.ContentId, true, null);
+            string? usageFailure=availability.FailureCode;
             string displayName = _skillUi.TryGetValue(skill.ContentId, out SkillUiMetadata? metadata)
                 ? metadata.DisplayName
                 : skill.ContentId.Value.Split('.').Reverse().Skip(skill.Level > 0 ? 1 : 0).FirstOrDefault() ?? skill.ContentId.Value;
