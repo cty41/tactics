@@ -119,6 +119,7 @@ public sealed class PlayableBattleSessionService
     private static readonly ContentId FireDemonUnitId = new("unit.pure-run.fire-demon");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
     private static readonly ContentId MagicAttackId = new("skill.basic.magic");
+    private static readonly ContentId FireDemonAttackId = new("skill.summon.fire-demon-attack");
 
     public PlayableBattleSessionService(
         PlayableBattleSessionContext context,
@@ -431,9 +432,7 @@ public sealed class PlayableBattleSessionService
     public static ContentId? DynamicSummonBasicSkill(ContentId unitDefinitionId)
     {
         if (unitDefinitionId == SkeletonUnitId) return MeleeAttackId;
-        // Intentional Godot playable-slice divergence: the frozen Unity Fire Demon prefab has
-        // no AbilityConfig, but the migrated summon must be player-operable like Skeleton Warrior.
-        if (unitDefinitionId == FireDemonUnitId) return MagicAttackId;
+        if (unitDefinitionId == FireDemonUnitId) return FireDemonAttackId;
         return null;
     }
     private BattleUiIntentResult Result(bool succeeded, string? failureCode, IReadOnlyList<BattleEvent> events, BattlePresentationFrame? presentation=null) =>

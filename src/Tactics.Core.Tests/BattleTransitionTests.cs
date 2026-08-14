@@ -4,12 +4,36 @@ using Tactics.Core.Board;
 using Tactics.Core.Combat;
 using Tactics.Core.Content;
 using Tactics.Core.Randomness;
+using Tactics.Core.Skills;
 using Tactics.Core.Units;
 
 namespace Tactics.Core.Tests;
 
 public sealed class BattleTransitionTests
 {
+    [Test]
+    public void FireDemonAttack_DealsFrozenDamageAppliesIgniteAndCannotCrit()
+    {
+        BattleState state = CreateBattleState().WithRandomState(6UL);
+        BattleUnitState target = state.Units[new UnitInstanceId("enemy.target.0")];
+        var skill = new SkillDefinition(new ContentId("skill.summon.fire-demon-attack"), "unity.fire-demon",
+            SkillRole.Any, SkillKind.Basic, 1, 0, 1, 3, SkillExecutionKind.FireDemonAttack, 4,
+            SkillDamageKind.Magical, new ContentId("buff.ignite"), 1, isBasicAbility: true, canCrit: false);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, target.Unit.InstanceId, target.Unit.Position, skill));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.Events.OfType<DamageAppliedEvent>().Single().Amount, Is.EqualTo(4));
+            Assert.That(result.Events.OfType<CombatRollResolvedEvent>().Single().Outcome, Is.Not.EqualTo("critical"));
+            Assert.That(result.Events.OfType<CombatRollResolvedEvent>().Single().Roll, Is.EqualTo(92));
+            Assert.That(result.Events.OfType<StatusAppliedEvent>().Single().StatusId,
+                Is.EqualTo(new ContentId("buff.ignite")));
+        });
+    }
+
     [Test]
     public void CommandSequence_ProducesImmutableStateAndOrderedGameplayEvents()
     {

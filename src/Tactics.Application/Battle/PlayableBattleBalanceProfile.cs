@@ -25,7 +25,7 @@ public sealed class PlayableBattleBalanceProfile
             source.DamageKind, source.StatusContentId, source.StatusDuration, source.Hidden,
             source.ExternalDependency, source.IsBasicAbility, source.MaxUsesPerTurn, source.BranchId,
             source.PrerequisiteContentId, source.GrowthVisible, source.ExecutionProfile,
-            source.RequiredAttribute, source.MinimumAttribute, source.PrerequisiteBranchId);
+            source.RequiredAttribute, source.MinimumAttribute, source.PrerequisiteBranchId, source.CanCrit);
     }
 
     public (int Physical, int Magical) Attacks(ContentId unitId) =>

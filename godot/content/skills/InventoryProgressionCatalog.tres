@@ -239,6 +239,15 @@ DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv2.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("skill.necromancer.summon-skeleton.lv1")
 
+[sub_resource type="Resource" id="Resource_p1fja"]
+script = ExtResource("1_bpiob")
+ContentIdValue = "skill.summon.fire-demon-attack"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://m3rmkdk32luy"
+DiagnosticPathValue = "res://content/skills/SummonFireDemonAttack.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
 [resource]
 script = ExtResource("2_jgl7m")
-Entries = [SubResource("Resource_ap8ty"), SubResource("Resource_vsjby"), SubResource("Resource_467fq"), SubResource("Resource_3t5tf"), SubResource("Resource_ker1y"), SubResource("Resource_e1laa"), SubResource("Resource_y2744"), SubResource("Resource_resnx"), SubResource("Resource_o7sv5"), SubResource("Resource_3ypvd"), SubResource("Resource_lbg25"), SubResource("Resource_u3631"), SubResource("Resource_3xps4"), SubResource("Resource_nx7bm"), SubResource("Resource_mj7oa"), SubResource("Resource_bmtuw"), SubResource("Resource_qj28j"), SubResource("Resource_6wyol"), SubResource("Resource_nvq6r"), SubResource("Resource_tptq7"), SubResource("Resource_jmm3e"), SubResource("Resource_oa1wn"), SubResource("Resource_jun38"), SubResource("Resource_3466w"), SubResource("Resource_qg50d"), SubResource("Resource_kju66"), SubResource("Resource_t3h62")]
+Entries = [SubResource("Resource_ap8ty"), SubResource("Resource_vsjby"), SubResource("Resource_467fq"), SubResource("Resource_3t5tf"), SubResource("Resource_ker1y"), SubResource("Resource_e1laa"), SubResource("Resource_y2744"), SubResource("Resource_resnx"), SubResource("Resource_o7sv5"), SubResource("Resource_3ypvd"), SubResource("Resource_lbg25"), SubResource("Resource_u3631"), SubResource("Resource_3xps4"), SubResource("Resource_nx7bm"), SubResource("Resource_mj7oa"), SubResource("Resource_bmtuw"), SubResource("Resource_qj28j"), SubResource("Resource_6wyol"), SubResource("Resource_nvq6r"), SubResource("Resource_tptq7"), SubResource("Resource_jmm3e"), SubResource("Resource_oa1wn"), SubResource("Resource_jun38"), SubResource("Resource_3466w"), SubResource("Resource_qg50d"), SubResource("Resource_kju66"), SubResource("Resource_t3h62"), SubResource("Resource_p1fja")]

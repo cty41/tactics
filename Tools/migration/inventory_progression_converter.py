@@ -79,6 +79,7 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
     if export["batchId"] != BATCH_ID:
         raise ValueError("inventory/progression batch identity drift")
     assets = {value["sourceKey"]: value for value in export["assets"]}
+    specification_assets = {value["sourceKey"]: value for value in specification["assets"]}
     graph_assets = {key[6:]: value for key, value in assets.items() if key.startswith("graph.")}
     if len(graph_assets) != 34:
         raise ValueError(f"inventory/progression export must contain 34 graph roots, got {len(graph_assets)}")
@@ -117,7 +118,45 @@ def compile_inventory_progression_draft(export: Mapping[str, Any], specification
     if len(definitions) != 36 or len({value["contentId"] for value in definitions}) != 36:
         raise ValueError("inventory/progression draft must contain 36 unique player skill levels")
     audit = {key: {"sourcePath": assets[key]["sourcePath"], "sourceFileSha256": assets[key]["sourceFileSha256"]} for key in ("contract.ability-catalog", "contract.loadout", "contract.level-up")}
-    dependencies = [{"sourceKey": key, "sourcePath": value["sourcePath"], "dependencyHash": value["dependencyHash"]} for key, value in sorted(assets.items()) if key.startswith("dependency.")]
+    dependencies: list[dict[str, Any]] = []
+    for key, value in sorted(assets.items()):
+        if not key.startswith("dependency."):
+            continue
+        dependency: dict[str, Any] = {
+            "sourceKey": key,
+            "contentId": specification_assets[key]["targetContentIds"][0],
+            "sourcePath": value["sourcePath"],
+            "sourceGuid": value["sourceGuid"],
+            "sourceLocalFileId": int(value["sourceLocalFileId"]),
+            "dependencyHash": value["dependencyHash"],
+        }
+        if key == "dependency.fire-demon-attack":
+            props = _props(value)
+            graph_reference = props.get("_skillGraph", {}).get("reference")
+            if not graph_reference:
+                raise ValueError("Fire Demon attack must reference its frozen SkillGraph")
+            dependency.update({
+                "displayName": str(_value(props, "_displayName", "火魔攻击")),
+                "description": str(_value(props, "_description", "")),
+                "executionKind": "FireDemonAttack",
+                "role": "Any",
+                "kind": "Basic",
+                "level": 1,
+                "manaCost": int(_value(props, "_manaCost", 0)),
+                "minRange": 1,
+                "maxRange": int(_value(props, "_targetRange", 0)),
+                "damage": 4,
+                "damageKind": "Magical",
+                "statusContentId": "buff.ignite",
+                "statusDuration": 1,
+                "isBasicAbility": str(_value(props, "_isBasicAbility", "false")).lower() == "true",
+                "maxUsesPerTurn": int(_value(props, "_maxUsesPerTurn", 0)),
+                "canCrit": False,
+                "growthVisible": False,
+                "graphPath": graph_reference["sourcePath"],
+                "graphDependencyHash": graph_reference["dependencyHash"],
+            })
+        dependencies.append(dependency)
     return {
         "schemaVersion": 1, "batchId": BATCH_ID, "classification": "disposable_typed_inventory_progression_migration_draft",
         "source": {"sourceTag": export["sourceTag"], "sourceCommit": export["sourceCommit"], "unityVersion": export["unityVersion"], "exporterVersion": export["exporterVersion"], "exportHash": export_semantic_hash(export)},

@@ -28,6 +28,13 @@ class InventoryProgressionConverterTests(unittest.TestCase):
         self.assertEqual(definitions["skill.necromancer.bone-spear.lv2"]["requiredAttribute"], "Charisma")
         self.assertEqual("SkeletonMage", definitions["skill.necromancer.skeleton-mage.lv2"]["summonCategory"])
         self.assertEqual(6, definitions["skill.amazon.recover-spear.lv2"]["secondaryDamage"])
+        dependencies = {value["contentId"]: value for value in draft["internalSkillDependencies"]}
+        fire_demon = dependencies["skill.summon.fire-demon-attack"]
+        self.assertEqual("FireDemonAttack", fire_demon["executionKind"])
+        self.assertEqual((0, 1, 3, 4, 1), (fire_demon["manaCost"], fire_demon["minRange"],
+            fire_demon["maxRange"], fire_demon["damage"], fire_demon["statusDuration"]))
+        self.assertEqual("buff.ignite", fire_demon["statusContentId"])
+        self.assertFalse(fire_demon["canCrit"])
 
     def test_combat_techniques_preserves_formal_ui_metadata(self):
         definitions = {

@@ -14,6 +14,23 @@ namespace Tactics.Application.Tests;
 public sealed class PlayableBattleSessionServiceTests
 {
     [Test]
+    public void PlayableBalanceProfile_PreservesNonCriticalSkillContract()
+    {
+        var id = new ContentId("skill.summon.fire-demon-attack");
+        var source = new SkillDefinition(id, "unity.fire-demon", SkillRole.Any, SkillKind.Basic, 1, 0, 1, 3,
+            SkillExecutionKind.FireDemonAttack, 4, SkillDamageKind.Magical, new ContentId("buff.ignite"), 1,
+            isBasicAbility: true, canCrit: false);
+        var profile = new PlayableBattleBalanceProfile(
+            new Dictionary<ContentId, (int Mana, int Damage)> { [id] = (0, 5) },
+            new Dictionary<ContentId, (int Physical, int Magical)>());
+
+        SkillDefinition result = profile.Apply(source);
+
+        Assert.That(result.CanCrit, Is.False);
+        Assert.That(result.Damage, Is.EqualTo(5));
+    }
+
+    [Test]
     public void DynamicSummonsReceiveTheirExplicitBasicAttackBindings()
     {
         Assert.Multiple(() =>
@@ -21,7 +38,7 @@ public sealed class PlayableBattleSessionServiceTests
             Assert.That(PlayableBattleSessionService.DynamicSummonBasicSkill(new ContentId("unit.pure-run.skeleton-warrior")),
                 Is.EqualTo(new ContentId("skill.basic.melee")));
             Assert.That(PlayableBattleSessionService.DynamicSummonBasicSkill(new ContentId("unit.pure-run.fire-demon")),
-                Is.EqualTo(new ContentId("skill.basic.magic")));
+                Is.EqualTo(new ContentId("skill.summon.fire-demon-attack")));
             Assert.That(PlayableBattleSessionService.DynamicSummonBasicSkill(new ContentId("unit.pure-run.decoy")), Is.Null);
         });
     }

@@ -935,13 +935,22 @@ ReferenceContentIds = PackedStringArray("buff.poison", "presentation.poison-spea
 
 [sub_resource type="Resource" id="Resource_v0l5m"]
 script = ExtResource("1_alrkk")
+ContentIdValue = "skill.summon.fire-demon-attack"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://m3rmkdk32luy"
+DiagnosticPathValue = "res://content/skills/SummonFireDemonAttack.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_y58j4"]
+script = ExtResource("1_alrkk")
 ContentIdValue = "store.pure-run.standard-v1"
 ResourceTypeIdValue = "store"
 ResourceUidValue = "uid://db6bnj8qy271a"
 DiagnosticPathValue = "res://content/layer4/store_pure_run_standard_v1.tres"
 SchemaVersion = 1
 
-[sub_resource type="Resource" id="Resource_y58j4"]
+[sub_resource type="Resource" id="Resource_ncb4d"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.amazon"
 ResourceTypeIdValue = "unit"
@@ -950,7 +959,7 @@ DiagnosticPathValue = "res://content/units/PureRunAmazon.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_ncb4d"]
+[sub_resource type="Resource" id="Resource_tpyfj"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.fire-demon"
 ResourceTypeIdValue = "unit"
@@ -959,7 +968,7 @@ DiagnosticPathValue = "res://content/units/PureRunFireDemon.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_tpyfj"]
+[sub_resource type="Resource" id="Resource_k5nee"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-aoe"
 ResourceTypeIdValue = "unit"
@@ -968,7 +977,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatAoe.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_k5nee"]
+[sub_resource type="Resource" id="Resource_tq1nk"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-charger"
 ResourceTypeIdValue = "unit"
@@ -977,7 +986,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatCharger.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_tq1nk"]
+[sub_resource type="Resource" id="Resource_qjvrt"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-elite-charger"
 ResourceTypeIdValue = "unit"
@@ -986,7 +995,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatEliteCharger.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_qjvrt"]
+[sub_resource type="Resource" id="Resource_g1bw4"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-elite-poison-caster"
 ResourceTypeIdValue = "unit"
@@ -995,7 +1004,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatElitePoisonCaster.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_g1bw4"]
+[sub_resource type="Resource" id="Resource_2uy8m"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-ranged"
 ResourceTypeIdValue = "unit"
@@ -1004,7 +1013,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatRanged.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_2uy8m"]
+[sub_resource type="Resource" id="Resource_afx2w"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.goat-support"
 ResourceTypeIdValue = "unit"
@@ -1013,7 +1022,7 @@ DiagnosticPathValue = "res://content/units/PureRunGoatSupport.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_afx2w"]
+[sub_resource type="Resource" id="Resource_bxxdy"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.mage"
 ResourceTypeIdValue = "unit"
@@ -1022,7 +1031,7 @@ DiagnosticPathValue = "res://content/units/PureRunMage.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_bxxdy"]
+[sub_resource type="Resource" id="Resource_t1a4e"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.necromancer"
 ResourceTypeIdValue = "unit"
@@ -1031,7 +1040,7 @@ DiagnosticPathValue = "res://content/units/PureRunNecromancer.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_t1a4e"]
+[sub_resource type="Resource" id="Resource_ve222"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.skeleton-mage"
 ResourceTypeIdValue = "unit"
@@ -1040,7 +1049,7 @@ DiagnosticPathValue = "res://content/units/PureRunSkeletonMage.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_ve222"]
+[sub_resource type="Resource" id="Resource_4cqui"]
 script = ExtResource("1_alrkk")
 ContentIdValue = "unit.pure-run.skeleton-warrior"
 ResourceTypeIdValue = "unit"
@@ -1051,4 +1060,4 @@ ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
 [resource]
 script = ExtResource("2_7ktjk")
-Entries = [SubResource("Resource_alrkk"), SubResource("Resource_7ktjk"), SubResource("Resource_3v4uf"), SubResource("Resource_25yxx"), SubResource("Resource_qn5wl"), SubResource("Resource_3mgu5"), SubResource("Resource_dhim2"), SubResource("Resource_s116p"), SubResource("Resource_k3en5"), SubResource("Resource_pscyn"), SubResource("Resource_0757x"), SubResource("Resource_cua4i"), SubResource("Resource_m71co"), SubResource("Resource_ovk60"), SubResource("Resource_dxrgf"), SubResource("Resource_t8emu"), SubResource("Resource_j3y4e"), SubResource("Resource_1s0ay"), SubResource("Resource_nch75"), SubResource("Resource_m3t66"), SubResource("Resource_cf3oj"), SubResource("Resource_1giqk"), SubResource("Resource_q3ul1"), SubResource("Resource_hf8yp"), SubResource("Resource_borai"), SubResource("Resource_daerc"), SubResource("Resource_ok1ri"), SubResource("Resource_kront"), SubResource("Resource_8nj7b"), SubResource("Resource_odikj"), SubResource("Resource_du0xd"), SubResource("Resource_437oe"), SubResource("Resource_nyocb"), SubResource("Resource_k3oyh"), SubResource("Resource_pi5ta"), SubResource("Resource_ybh32"), SubResource("Resource_8xuaj"), SubResource("Resource_7d2bs"), SubResource("Resource_w4vik"), SubResource("Resource_7vuwv"), SubResource("Resource_q7413"), SubResource("Resource_b2bq6"), SubResource("Resource_alep5"), SubResource("Resource_ojvqo"), SubResource("Resource_0wa12"), SubResource("Resource_i4u7p"), SubResource("Resource_rixq5"), SubResource("Resource_cagl8"), SubResource("Resource_rm7yc"), SubResource("Resource_5mawl"), SubResource("Resource_41wyn"), SubResource("Resource_d1oog"), SubResource("Resource_sf0mq"), SubResource("Resource_6km46"), SubResource("Resource_pas1r"), SubResource("Resource_yynvf"), SubResource("Resource_n8clc"), SubResource("Resource_qc0md"), SubResource("Resource_l13f6"), SubResource("Resource_8375g"), SubResource("Resource_g7no3"), SubResource("Resource_077i6"), SubResource("Resource_2csts"), SubResource("Resource_2tp6u"), SubResource("Resource_c85fw"), SubResource("Resource_b68gd"), SubResource("Resource_wjjoy"), SubResource("Resource_ig77e"), SubResource("Resource_fjqwg"), SubResource("Resource_grcmf"), SubResource("Resource_aew24"), SubResource("Resource_fxmlp"), SubResource("Resource_miheu"), SubResource("Resource_liesm"), SubResource("Resource_mtdxj"), SubResource("Resource_shcu7"), SubResource("Resource_newau"), SubResource("Resource_y5qpm"), SubResource("Resource_evipo"), SubResource("Resource_6njj4"), SubResource("Resource_h1e1i"), SubResource("Resource_n4ypq"), SubResource("Resource_6o6o1"), SubResource("Resource_3dm0r"), SubResource("Resource_i6utu"), SubResource("Resource_wsm4t"), SubResource("Resource_qn008"), SubResource("Resource_7uva8"), SubResource("Resource_q8emw"), SubResource("Resource_yngoi"), SubResource("Resource_aw3dj"), SubResource("Resource_ret13"), SubResource("Resource_vtad5"), SubResource("Resource_t31ic"), SubResource("Resource_olrba"), SubResource("Resource_e8gv8"), SubResource("Resource_uchwv"), SubResource("Resource_30qsl"), SubResource("Resource_nd8qa"), SubResource("Resource_wen2n"), SubResource("Resource_ci8k3"), SubResource("Resource_dsg0c"), SubResource("Resource_uymrn"), SubResource("Resource_iahgw"), SubResource("Resource_4wgjn"), SubResource("Resource_yei7q"), SubResource("Resource_nd0b1"), SubResource("Resource_d76e3"), SubResource("Resource_bf8p4"), SubResource("Resource_707w6"), SubResource("Resource_j5atr"), SubResource("Resource_v0l5m"), SubResource("Resource_y58j4"), SubResource("Resource_ncb4d"), SubResource("Resource_tpyfj"), SubResource("Resource_k5nee"), SubResource("Resource_tq1nk"), SubResource("Resource_qjvrt"), SubResource("Resource_g1bw4"), SubResource("Resource_2uy8m"), SubResource("Resource_afx2w"), SubResource("Resource_bxxdy"), SubResource("Resource_t1a4e"), SubResource("Resource_ve222")]
+Entries = [SubResource("Resource_alrkk"), SubResource("Resource_7ktjk"), SubResource("Resource_3v4uf"), SubResource("Resource_25yxx"), SubResource("Resource_qn5wl"), SubResource("Resource_3mgu5"), SubResource("Resource_dhim2"), SubResource("Resource_s116p"), SubResource("Resource_k3en5"), SubResource("Resource_pscyn"), SubResource("Resource_0757x"), SubResource("Resource_cua4i"), SubResource("Resource_m71co"), SubResource("Resource_ovk60"), SubResource("Resource_dxrgf"), SubResource("Resource_t8emu"), SubResource("Resource_j3y4e"), SubResource("Resource_1s0ay"), SubResource("Resource_nch75"), SubResource("Resource_m3t66"), SubResource("Resource_cf3oj"), SubResource("Resource_1giqk"), SubResource("Resource_q3ul1"), SubResource("Resource_hf8yp"), SubResource("Resource_borai"), SubResource("Resource_daerc"), SubResource("Resource_ok1ri"), SubResource("Resource_kront"), SubResource("Resource_8nj7b"), SubResource("Resource_odikj"), SubResource("Resource_du0xd"), SubResource("Resource_437oe"), SubResource("Resource_nyocb"), SubResource("Resource_k3oyh"), SubResource("Resource_pi5ta"), SubResource("Resource_ybh32"), SubResource("Resource_8xuaj"), SubResource("Resource_7d2bs"), SubResource("Resource_w4vik"), SubResource("Resource_7vuwv"), SubResource("Resource_q7413"), SubResource("Resource_b2bq6"), SubResource("Resource_alep5"), SubResource("Resource_ojvqo"), SubResource("Resource_0wa12"), SubResource("Resource_i4u7p"), SubResource("Resource_rixq5"), SubResource("Resource_cagl8"), SubResource("Resource_rm7yc"), SubResource("Resource_5mawl"), SubResource("Resource_41wyn"), SubResource("Resource_d1oog"), SubResource("Resource_sf0mq"), SubResource("Resource_6km46"), SubResource("Resource_pas1r"), SubResource("Resource_yynvf"), SubResource("Resource_n8clc"), SubResource("Resource_qc0md"), SubResource("Resource_l13f6"), SubResource("Resource_8375g"), SubResource("Resource_g7no3"), SubResource("Resource_077i6"), SubResource("Resource_2csts"), SubResource("Resource_2tp6u"), SubResource("Resource_c85fw"), SubResource("Resource_b68gd"), SubResource("Resource_wjjoy"), SubResource("Resource_ig77e"), SubResource("Resource_fjqwg"), SubResource("Resource_grcmf"), SubResource("Resource_aew24"), SubResource("Resource_fxmlp"), SubResource("Resource_miheu"), SubResource("Resource_liesm"), SubResource("Resource_mtdxj"), SubResource("Resource_shcu7"), SubResource("Resource_newau"), SubResource("Resource_y5qpm"), SubResource("Resource_evipo"), SubResource("Resource_6njj4"), SubResource("Resource_h1e1i"), SubResource("Resource_n4ypq"), SubResource("Resource_6o6o1"), SubResource("Resource_3dm0r"), SubResource("Resource_i6utu"), SubResource("Resource_wsm4t"), SubResource("Resource_qn008"), SubResource("Resource_7uva8"), SubResource("Resource_q8emw"), SubResource("Resource_yngoi"), SubResource("Resource_aw3dj"), SubResource("Resource_ret13"), SubResource("Resource_vtad5"), SubResource("Resource_t31ic"), SubResource("Resource_olrba"), SubResource("Resource_e8gv8"), SubResource("Resource_uchwv"), SubResource("Resource_30qsl"), SubResource("Resource_nd8qa"), SubResource("Resource_wen2n"), SubResource("Resource_ci8k3"), SubResource("Resource_dsg0c"), SubResource("Resource_uymrn"), SubResource("Resource_iahgw"), SubResource("Resource_4wgjn"), SubResource("Resource_yei7q"), SubResource("Resource_nd0b1"), SubResource("Resource_d76e3"), SubResource("Resource_bf8p4"), SubResource("Resource_707w6"), SubResource("Resource_j5atr"), SubResource("Resource_v0l5m"), SubResource("Resource_y58j4"), SubResource("Resource_ncb4d"), SubResource("Resource_tpyfj"), SubResource("Resource_k5nee"), SubResource("Resource_tq1nk"), SubResource("Resource_qjvrt"), SubResource("Resource_g1bw4"), SubResource("Resource_2uy8m"), SubResource("Resource_afx2w"), SubResource("Resource_bxxdy"), SubResource("Resource_t1a4e"), SubResource("Resource_ve222"), SubResource("Resource_4cqui")]

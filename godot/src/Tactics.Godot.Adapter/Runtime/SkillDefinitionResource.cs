@@ -27,6 +27,7 @@ public partial class SkillDefinitionResource : Resource
     [Export] public bool ExternalDependency { get; set; }
     [Export] public bool IsBasicAbility { get; set; }
     [Export] public int MaxUsesPerTurn { get; set; }
+    [Export] public bool CanCrit { get; set; } = true;
     [Export] public string BranchId { get; set; } = string.Empty;
     [Export] public string PrerequisiteContentIdValue { get; set; } = string.Empty;
     [Export] public string PrerequisiteBranchId { get; set; } = string.Empty;
@@ -62,7 +63,7 @@ public partial class SkillDefinitionResource : Resource
         var profile = new SkillExecutionProfile(AreaRadius, OrderedTargetCount, null, SummonCount, SummonLimit,
             SummonCategory, RequiresCorpse, IgnoreLineOfSight, ShieldMultiplier, ShieldAbsorbsAllDamage,
             CleanseHarmful, SecondaryDamage);
-        return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency, IsBasicAbility, MaxUsesPerTurn, BranchId, string.IsNullOrEmpty(PrerequisiteContentIdValue) ? null : new ContentId(PrerequisiteContentIdValue), GrowthVisible, profile, RequiredAttribute, MinimumAttribute, PrerequisiteBranchId);
+        return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency, IsBasicAbility, MaxUsesPerTurn, BranchId, string.IsNullOrEmpty(PrerequisiteContentIdValue) ? null : new ContentId(PrerequisiteContentIdValue), GrowthVisible, profile, RequiredAttribute, MinimumAttribute, PrerequisiteBranchId, CanCrit);
     }
 
     private static T Parse<T>(string value) where T : struct, Enum =>

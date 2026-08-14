@@ -42,7 +42,7 @@
     },
     {
       "resourcePath": "godot/content/skills/InventoryProgressionCatalog.tres",
-      "targetHash": "sha256:a953dc9c26a5eb2e869944c209c7e4e70ceef89123c9382313843b41dfe22e05"
+      "targetHash": "sha256:f11caf272f7b9a1cfab3901b42aefadfe90350f87168d9f9d1f2693821f0781d"
     },
     {
       "resourcePath": "godot/content/skills/MageFireballLv2.tres",
@@ -115,6 +115,10 @@
     {
       "resourcePath": "godot/content/skills/NecromancerSummonSkeletonLv2.tres",
       "targetHash": "sha256:4539d50630f9c30c22648323530e5f86d0aab9cdbdf2d514f61f120dbf03a127"
+    },
+    {
+      "resourcePath": "godot/content/skills/SummonFireDemonAttack.tres",
+      "targetHash": "sha256:456ae6770663324a5781a52372b10df95ae6e227915491c5897d8ca9a97b923c"
     }
   ]
 }

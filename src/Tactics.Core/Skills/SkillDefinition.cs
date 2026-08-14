@@ -32,7 +32,8 @@ public enum SkillExecutionKind
     BoneShield,
     MultiStab,
     RecoverSpear,
-    Decoy
+    Decoy,
+    FireDemonAttack
 }
 
 /// <summary>Optional normalized parameters used by the complete Pure Run Lv1/Lv2 skill set.</summary>
@@ -77,7 +78,8 @@ public sealed record SkillDefinition
         SkillExecutionProfile? executionProfile = null,
         string requiredAttribute = "",
         int minimumAttribute = 0,
-        string prerequisiteBranchId = "")
+        string prerequisiteBranchId = "",
+        bool canCrit = true)
     {
         if (string.IsNullOrWhiteSpace(sourceId)) throw new ArgumentException("SourceId cannot be empty.", nameof(sourceId));
         if (!Enum.IsDefined(role) || !Enum.IsDefined(kind) || !Enum.IsDefined(executionKind) || !Enum.IsDefined(damageKind)) throw new ArgumentOutOfRangeException(nameof(executionKind));
@@ -107,6 +109,7 @@ public sealed record SkillDefinition
         RequiredAttribute = requiredAttribute.Trim();
         MinimumAttribute = minimumAttribute;
         PrerequisiteBranchId = prerequisiteBranchId.Trim();
+        CanCrit = canCrit;
     }
 
     public ContentId ContentId { get; }
@@ -133,11 +136,12 @@ public sealed record SkillDefinition
     public string RequiredAttribute { get; }
     public int MinimumAttribute { get; }
     public string PrerequisiteBranchId { get; }
+    public bool CanCrit { get; }
     public bool IsPassive => Kind == SkillKind.Passive;
     public int AreaRadius => ExecutionProfile.AreaRadius > 0 ? ExecutionProfile.AreaRadius : ExecutionKind == SkillExecutionKind.AreaBlast ? 2 : 0;
     public bool UsesLineTargeting => ExecutionKind is SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.BoneSpear or SkillExecutionKind.Thrust;
     public bool RequiresLineOfSight => !ExecutionProfile.IgnoreLineOfSight &&
-        ExecutionKind is (SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.ChargeStrike);
+        ExecutionKind is (SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.ChargeStrike or SkillExecutionKind.FireDemonAttack);
 }
 
 public sealed class SkillCatalogDefinition

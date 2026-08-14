@@ -61,7 +61,7 @@ public sealed class SkillRuntimeService
                 var random = new DeterministicRandom(next.RandomState);
                 int roll = random.NextInt(100);
                 dodged = target.HasCombatTechniquesLevelOne && roll < 30;
-                critical = !dodged && (_statuses.EvaluateBeforeAttack(target).ForceCritical || roll >= 90);
+                critical = skill.CanCrit && !dodged && (_statuses.EvaluateBeforeAttack(target).ForceCritical || roll >= 90);
                 events.Add(new CombatRollResolvedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, roll, target.HasCombatTechniquesLevelOne ? 30 : 0, dodged ? "dodge" : critical ? "critical" : "hit", random.State));
                 next = next.WithRandomState(random.State);
             }
@@ -321,7 +321,7 @@ public sealed class SkillRuntimeService
 
     private static StatusDefinition StatusFor(SkillDefinition skill, ContentId statusId) => skill.ExecutionKind switch
     {
-        SkillExecutionKind.Fireball => new StatusDefinition(statusId, "Ignite", 2, true, StatusPolarity.Harmful, StatusEffectKind.Burning, StatusTriggerTiming.TurnStart, StatusRefreshStrategy.AddStacks, damagePerTurn: 1, elementKind: StatusElementKind.Fire),
+        SkillExecutionKind.Fireball or SkillExecutionKind.FireDemonAttack => new StatusDefinition(statusId, "Ignite", 2, true, StatusPolarity.Harmful, StatusEffectKind.Burning, StatusTriggerTiming.TurnStart, StatusRefreshStrategy.AddStacks, damagePerTurn: 1, elementKind: StatusElementKind.Fire),
         SkillExecutionKind.IceBolt => new StatusDefinition(statusId, "Slow", 1, true, StatusPolarity.Harmful, StatusEffectKind.Slow, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, speedModifier: -2f, elementKind: StatusElementKind.Ice),
         SkillExecutionKind.AmplifyDamage => new StatusDefinition(statusId, "CurseDamageAmplifier", 5, true, StatusPolarity.Harmful, StatusEffectKind.CurseDamageAmplifier, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "damage-taken"),
         SkillExecutionKind.FearCurse => new StatusDefinition(statusId, "Fear", Math.Max(1, skill.StatusDuration), true, StatusPolarity.Harmful, StatusEffectKind.Fear, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "fear"),

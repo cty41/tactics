@@ -84,7 +84,7 @@ public partial class GodotPlayableRunMain : Control
     private enum InventoryReturnTarget { Home, Settlement, RunRoute }
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
-        _skills.Count >= 16 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 124;
+        _skills.Count >= 17 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 125;
 
     public override void _Ready()
     {
