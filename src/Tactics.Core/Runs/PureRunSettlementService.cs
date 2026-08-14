@@ -12,7 +12,8 @@ public sealed class PureRunSettlementService
         PureRunDefinition definition,
         PureRunState state,
         PureRunBattleResult result,
-        IReadOnlyList<ContentId> consumableDropPool)
+        IReadOnlyList<ContentId> consumableDropPool,
+        PureRunMapDefinition? mapDefinition = null)
     {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentNullException.ThrowIfNull(state);
@@ -62,10 +63,14 @@ public sealed class PureRunSettlementService
         {
             if (definition.LayerFourMapContentId is not null)
             {
+                if (mapDefinition is null || mapDefinition.ContentId != definition.LayerFourMapContentId.Value)
+                    return new PureRunSettlementResult(false, "run.layer_four_map_invalid", state, null, false);
+                PureRunMapState mapState = new PureRunMapService(mapDefinition).UnlockLayerFour(state.Seed);
                 var awaitingMap = new PureRunState(
                     state.RunId, state.Seed, state.Revision + 1, PureRunPhase.AwaitingLayerFourChoice,
                     state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment,
-                    progression, transactions, nextGold, battles, defeatedEnemies, acquired);
+                    progression, transactions, nextGold, battles, defeatedEnemies, acquired,
+                    mapState: mapState);
                 return new PureRunSettlementResult(true, null, awaitingMap, null, false);
             }
             var terminalState = new PureRunState(

@@ -38,17 +38,22 @@ public sealed class PureRunSessionService
     private readonly IRunSaveStore _store;
     private readonly PureRunSettlementService _settlement;
     private readonly IReadOnlyList<ContentId> _dropPool;
+    private readonly PureRunMapDefinition? _mapDefinition;
 
     public PureRunSessionService(
         PureRunDefinition definition,
         IRunSaveStore store,
         IEnumerable<ContentId>? dropPool = null,
-        PureRunSettlementService? settlement = null)
+        PureRunSettlementService? settlement = null,
+        PureRunMapDefinition? mapDefinition = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _settlement = settlement ?? new PureRunSettlementService();
         _dropPool = dropPool?.OrderBy(value => value.Value, StringComparer.Ordinal).ToArray() ?? Array.Empty<ContentId>();
+        if (mapDefinition is not null && definition.LayerFourMapContentId != mapDefinition.ContentId)
+            throw new ArgumentException("Layer Four map does not match the Run Definition.", nameof(mapDefinition));
+        _mapDefinition = mapDefinition;
     }
 
     public RunSessionResult StartNewRun(int seed)
@@ -188,7 +193,7 @@ public sealed class PureRunSessionService
             }
             return Fail("run.no_active_run", loaded.Snapshot);
         }
-        PureRunSettlementResult settlement = _settlement.Apply(_definition, run, battleResult, _dropPool);
+        PureRunSettlementResult settlement = _settlement.Apply(_definition, run, battleResult, _dropPool, _mapDefinition);
         if (!settlement.Succeeded)
             return Fail(settlement.RejectionCode, loaded.Snapshot);
         if (settlement.WasDuplicate)
@@ -325,12 +330,26 @@ public sealed class PureRunSessionService
                 RunCharacterState[] checkpointParty = checkpoint.Party.Select(character => RepairCharacter(character, ref repaired)).ToArray();
                 checkpoint = checkpoint with { Party = checkpointParty };
             }
+            PureRunMapState? mapState = run.MapState;
+            bool repairedLayerFourMap = false;
+            if (run.Phase == PureRunPhase.AwaitingLayerFourChoice && mapState is null)
+            {
+                if (run.BattlesCompleted != _definition.Encounters.Count || _mapDefinition is null ||
+                    _definition.LayerFourMapContentId != _mapDefinition.ContentId)
+                    throw new InvalidDataException("save.layer_four_map_invalid");
+                mapState = new PureRunMapService(_mapDefinition).UnlockLayerFour(run.Seed);
+                repaired = true;
+                repairedLayerFourMap = true;
+            }
             if (!repaired) return loaded;
             var repairedRun = new PureRunState(run.RunId, run.Seed, run.Revision, run.Phase, run.EncounterIndex,
                 run.EncounterContentId, party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
                 run.AppliedTransactionKeys, run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint,
-                run.MapState, run.NodeTransaction);
-            diagnostics = new[] { "save.attributes_repaired_from_run_definition" };
+                mapState, run.NodeTransaction);
+            diagnostics = new[]
+            {
+                repairedLayerFourMap ? "save.layer_four_map_repaired" : "save.attributes_repaired_from_run_definition"
+            };
             return loaded with { Snapshot = loaded.Snapshot with { ActiveRun = repairedRun } };
         }
         catch (InvalidDataException error)

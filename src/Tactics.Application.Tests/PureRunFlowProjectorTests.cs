@@ -42,6 +42,20 @@ public sealed class PureRunFlowProjectorTests
     }
 
     [Test]
+    public void LegacyLayerFourChoiceWithoutMapStateStillRevealsFourRoutes()
+    {
+        PureRunState run = Run(PureRunPhase.AwaitingLayerFourChoice, battles: 3);
+
+        PureRunFlowSnapshot snapshot = _projector.Project(run, Definition(), Map());
+
+        Assert.That(snapshot.Map!.Nodes.Where(value => value.State == PureRunMapNodeState.Available)
+            .Select(value => value.NodeId), Is.EquivalentTo(new[]
+        {
+            "layer_04_battle", "layer_04_event", "layer_04_rest", "layer_04_store"
+        }));
+    }
+
+    [Test]
     public void SelectedRouteLocksSiblingsAndRestoresNodePage()
     {
         PureRunMapDefinition map = Map();

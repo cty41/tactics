@@ -205,7 +205,7 @@ public partial class GodotPlayableRunMain : Control
         }
         _runDefinition=(runResource ?? throw new InvalidOperationException("Run definition is missing.")).ToCoreDefinition();
         PureRunContentValidator.ValidateSkillReferences(_runDefinition, _skills.Keys);
-        _run = new PureRunSessionService(_runDefinition, new GodotRunSaveStore());
+        _run = new PureRunSessionService(_runDefinition, new GodotRunSaveStore(), mapDefinition: LayerFourMap());
     }
 
     private void ShowHome()

@@ -183,6 +183,10 @@ public sealed class PureRunFlowProjector
                     ? PureRunMapNodeState.Pending : PureRunMapNodeState.Selected;
             if (map?.ReachableNodeIds.Contains(nodeId, StringComparer.Ordinal) == true && run.PendingProgression.Count == 0)
                 return PureRunMapNodeState.Available;
+            if (nodeId.StartsWith("layer_04_", StringComparison.Ordinal) && map is null &&
+                run.Phase == PureRunPhase.AwaitingLayerFourChoice && run.BattlesCompleted == 3 &&
+                run.PendingProgression.Count == 0)
+                return PureRunMapNodeState.Available;
             if (nodeId.StartsWith("layer_06_", StringComparison.Ordinal) && run.Phase == PureRunPhase.ReadyForLayerSix &&
                 run.PendingProgression.Count == 0)
                 return PureRunMapNodeState.Available;

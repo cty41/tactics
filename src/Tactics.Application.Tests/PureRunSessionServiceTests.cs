@@ -467,6 +467,30 @@ public sealed class PureRunSessionServiceTests
         Assert.That(result.ErrorCode, Is.EqualTo("save.starting_skill_invalid"));
     }
 
+    [Test]
+    public void ResumeRun_RepairsLegacyLayerFourStateWithoutChangingStoredSnapshot()
+    {
+        PureRunDefinition definition = DefinitionWithMap();
+        PureRunMapDefinition map = LayerFourMap();
+        var store = new MemoryRunStore();
+        PureRunState legacy = new("legacy-layer-four", 7, 12, PureRunPhase.AwaitingLayerFourChoice,
+            2, definition.Encounters[2], definition.Party.Select(template => new RunCharacterState(
+                template.CharacterId, template.UnitContentId, 1, template.Attributes, 20, 20, 10, 15, false,
+                [template.StartingSkillContentId], startingSkillContentId: template.StartingSkillContentId)).ToArray(),
+            battlesCompleted: 3);
+        store.Snapshot = new PureRunSaveSnapshot(12, legacy, null);
+
+        RunSessionResult resumed = new PureRunSessionService(definition, store, mapDefinition: map).ResumeRun();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(resumed.Succeeded, Is.True);
+            Assert.That(resumed.Snapshot!.ActiveRun!.MapState!.Phase, Is.EqualTo(PureRunMapPhase.ChoosingLayerFour));
+            Assert.That(resumed.Snapshot.ActiveRun.MapState.ReachableNodeIds, Has.Count.EqualTo(4));
+            Assert.That(store.Snapshot!.ActiveRun!.MapState, Is.Null);
+        });
+    }
+
     private static PureRunBattleResult Victory(PureRunState run) => new(
         run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, true, 3, 3,
         run.Party.Select(member => new BattlePartyResult(
@@ -495,6 +519,20 @@ public sealed class PureRunSessionServiceTests
             new PureRunPartyTemplate("amazon", new ContentId("unit.pure-run.amazon"), new ContentId("skill.amazon.thrust.lv1"), new UnitAttributes(5,6,5,5,5,5), 1,
                 [new ContentId("skill.amazon.thrust.lv1"), new ContentId("skill.poison-spear.lv1"), new ContentId("skill.amazon.combat-techniques.lv1")])
         });
+
+    private static PureRunDefinition DefinitionWithMap() => new(
+        new ContentId("run.pure-run.three-encounter-v1"),
+        new[] { "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3" }.Select(value => new ContentId(value)),
+        Definition().Party,
+        new ContentId("run-map.pure-run.layer4-v1"));
+
+    private static PureRunMapDefinition LayerFourMap() => new(new ContentId("run-map.pure-run.layer4-v1"), 2,
+    [
+        new PureRunMapNodeDefinition("layer_04_battle", 4, PureRunNodeKind.Battle, new ContentId("encounter.pure-run.n4")),
+        new PureRunMapNodeDefinition("layer_04_rest", 4, PureRunNodeKind.Rest, new ContentId("rest.standard")),
+        new PureRunMapNodeDefinition("layer_04_store", 4, PureRunNodeKind.Store, new ContentId("store.standard")),
+        new PureRunMapNodeDefinition("layer_04_event", 4, PureRunNodeKind.Mystery, new ContentId("event.mystery"))
+    ]);
 
     private sealed class MemoryRunStore : IRunSaveStore
     {
