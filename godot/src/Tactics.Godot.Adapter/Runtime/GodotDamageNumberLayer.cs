@@ -14,12 +14,15 @@ public partial class GodotDamageNumberLayer : Node2D
         new Dictionary<UnitInstanceId, GodotUnitActor>();
     private float _speed = 1f;
     private bool _paused;
+    private readonly List<BattlePresentationNumber> _history = new();
     public int ActiveCount => _active.Count;
+    public IReadOnlyList<BattlePresentationNumber> History => _history;
 
     public void Configure(IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors) => _actors = actors;
 
     public void Spawn(BattlePresentationNumber number)
     {
+        _history.Add(number);
         if (!_actors.TryGetValue(number.TargetId, out GodotUnitActor? actor) || !GodotObject.IsInstanceValid(actor)) return;
         Label label = _pool.Count > 0 ? _pool.Dequeue() : CreateLabel();
         if (label.GetParent() is null) AddChild(label);

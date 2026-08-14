@@ -9,6 +9,16 @@ namespace Tactics.Godot.Adapter.Runtime;
 /// </summary>
 public partial class TacticsMigrationRoot : Node
 {
+    private GodotPlayableRunTestContext? _testContext;
+    public GodotPlayableRunMain? PlayableRun { get; private set; }
+
+    public void ConfigureTestContext(GodotPlayableRunTestContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (IsInsideTree()) throw new InvalidOperationException("Test context must be configured before Main.tscn enters the tree.");
+        _testContext = context;
+    }
+
     public override void _Ready()
     {
         string[] commandLine = OS.GetCmdlineArgs()
@@ -82,7 +92,9 @@ public partial class TacticsMigrationRoot : Node
             GetTree().Quit();
             return;
         }
-        AddChild(new GodotPlayableRunMain());
+        PlayableRun = new GodotPlayableRunMain();
+        if (_testContext is not null) PlayableRun.ConfigureTestContext(_testContext);
+        AddChild(PlayableRun);
         GD.Print("Tactics Godot playable run UI ready");
     }
 

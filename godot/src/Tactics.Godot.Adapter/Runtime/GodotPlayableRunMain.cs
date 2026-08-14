@@ -84,6 +84,11 @@ public partial class GodotPlayableRunMain : Control
     private Control? _pauseMenu;
     private bool _pauseMenuPausedPlayback;
     private bool _pauseMenuControlsBattlePlayback;
+    private GodotPlayableRunTestContext? _testContext;
+    private IRunSaveStore? _saveStore;
+    private bool _readyEntered;
+    private bool _quitRequested;
+    private string _currentPageTitle = string.Empty;
 
     private enum InventoryReturnTarget { RunRoute }
     internal enum PresentationDrainAction { DequeueFrame, CompleteBattle, Pause, Refresh }
@@ -93,9 +98,80 @@ public partial class GodotPlayableRunMain : Control
 
     public override void _Ready()
     {
+        _readyEntered = true;
+        _saveStore = _testContext?.SaveStore ?? new GodotRunSaveStore();
+        _playbackSpeed = _testContext?.InitialPlaybackSpeed ?? 1f;
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         LoadCatalogs();
         ShowHome();
+    }
+
+    public void ConfigureTestContext(GodotPlayableRunTestContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (_readyEntered || IsInsideTree()) throw new InvalidOperationException("Test context must be configured before the Main scene enters the tree.");
+        if (!GodotBattlePresentationPlayer.IsSupportedSpeed(context.InitialPlaybackSpeed))
+            throw new ArgumentOutOfRangeException(nameof(context), "Unsupported initial playback speed.");
+        _testContext = context;
+    }
+
+    public GodotPlayableRunProbe CaptureTestProbe() => new(
+        _currentPageTitle,
+        SaveStore.Load().Snapshot,
+        _battle?.CaptureSnapshot(),
+        _battle is not null,
+        _presentationInputLocked,
+        _presentationPlayer?.IsPlaying == true,
+        _battle?.HasPendingAutomaticFrames == true,
+        _damageNumbers?.ActiveCount ?? 0,
+        _damageNumbers?.History.ToArray() ?? Array.Empty<BattlePresentationNumber>(),
+        _playbackPaused,
+        _playbackSpeed,
+        _pauseMenu?.Visible == true,
+        _cheatConsole?.Visible == true,
+        _logs.Count(value => value.Category == BattleUiLogCategory.Rejected) + (_settlement.Current?.Stage == BattleSettlementStage.Rejected ? 1 : 0),
+        _quitRequested,
+        _status?.Text);
+
+    public IReadOnlyList<GodotBattleUnitProjection> CaptureBattleUnitProjections() => _battle is null
+        ? Array.Empty<GodotBattleUnitProjection>()
+        : _battle.State.Units.Values.Where(unit => unit.Unit.PlayerNumber == 0)
+            .Select(unit => new GodotBattleUnitProjection(unit.Unit.InstanceId, unit.MaxHealth, unit.MaxMana,
+                unit.BaseSpeed, unit.PhysicalAttack, unit.MagicalAttack)).ToArray();
+
+    public bool TryResolveTestBattlePointerTarget(string targetKind, string locator,
+        out Control? surface, out Vector2 globalPoint)
+    {
+        surface = _board;
+        globalPoint = Vector2.Zero;
+        if (_board is null || _visibleSnapshot is null) return false;
+        if (string.Equals(targetKind, "BattleCell", StringComparison.Ordinal))
+        {
+            string[] parts = locator.Split(',', StringSplitOptions.TrimEntries);
+            if (parts.Length != 2 || !int.TryParse(parts[0], out int x) || !int.TryParse(parts[1], out int y) ||
+                x is < 0 or >= IsometricBattleBoardLayout.GridSize || y is < 0 or >= IsometricBattleBoardLayout.GridSize)
+                return false;
+            globalPoint = _board.GetGlobalTransform() * IsometricBattleBoardLayout.GridToScreen(new GridPoint(x, y));
+            return true;
+        }
+        if (!string.Equals(targetKind, "BattleUnit", StringComparison.Ordinal)) return false;
+        UnitInstanceId? unitId = string.Equals(locator, "CurrentPlayer", StringComparison.OrdinalIgnoreCase)
+            ? _visibleSnapshot.ActiveUnitId
+            : _visibleSnapshot.Units.FirstOrDefault(unit =>
+                string.Equals(unit.UnitId.Value, locator, StringComparison.Ordinal) ||
+                string.Equals(unit.DefinitionId.Value, locator, StringComparison.Ordinal))?.UnitId;
+        if (unitId is null || !_actors.TryGetValue(unitId.Value, out GodotUnitActor? actor) ||
+            !GodotObject.IsInstanceValid(actor)) return false;
+        globalPoint = _board.GetGlobalTransform() * actor.Position;
+        return true;
+    }
+
+    private IRunSaveStore SaveStore => _saveStore ?? throw new InvalidOperationException("Run save store is not initialized.");
+
+    private void RequestQuit()
+    {
+        _quitRequested = true;
+        if (_testContext?.InterceptQuit != true) GetTree().Quit();
     }
 
     public override void _ExitTree()=>DisposePresentationPlayer();
@@ -230,7 +306,7 @@ public partial class GodotPlayableRunMain : Control
         }
         _runDefinition=(runResource ?? throw new InvalidOperationException("Run definition is missing.")).ToCoreDefinition();
         PureRunContentValidator.ValidateSkillReferences(_runDefinition, _skills.Keys);
-        _run = new PureRunSessionService(_runDefinition, new GodotRunSaveStore(), mapDefinition: LayerFourMap());
+        _run = new PureRunSessionService(_runDefinition, SaveStore, mapDefinition: LayerFourMap());
     }
 
     private void ShowHome()
@@ -241,12 +317,12 @@ public partial class GodotPlayableRunMain : Control
         VBoxContainer menu = new() { Position = new Vector2(620, 310), Size = new Vector2(360, 320) };
         root.AddChild(menu);
         Button newRun = Button("New Run", () => StartNewRun()); menu.AddChild(newRun);
-        RunStoreResult loaded = new GodotRunSaveStore().Load();
+        RunStoreResult loaded = SaveStore.Load();
         Button continueRun = Button(loaded.Snapshot?.PendingRunSetup is null ? "Continue" : "Resume New Run Setup", ContinueRun);
         continueRun.Disabled = !loaded.Succeeded || loaded.Snapshot is null ||
             (loaded.Snapshot.ActiveRun is null && loaded.Snapshot.PendingRunSetup is null && loaded.Snapshot.TerminalSummary is null);
         menu.AddChild(continueRun);
-        menu.AddChild(Button("Quit", () => GetTree().Quit()));
+        menu.AddChild(Button("Quit", RequestQuit));
         string status = loaded.Snapshot?.PendingRunSetup is PendingRunSetup setup
             ? $"New Run setup: {setup.CurrentCharacterId}"
             : loaded.Snapshot?.ActiveRun is null ? "No active run" : $"Active run: {loaded.Snapshot.ActiveRun.EncounterContentId.Value}";
@@ -255,7 +331,7 @@ public partial class GodotPlayableRunMain : Control
 
     private void StartNewRun()
     {
-        RunStoreResult loaded = new GodotRunSaveStore().Load();
+        RunStoreResult loaded = SaveStore.Load();
         if (loaded.Snapshot?.ActiveRun is not null)
         {
             var confirm = new ConfirmationDialog { DialogText = "Overwrite the active Pure Run?", Title = "New Run" };
@@ -267,14 +343,14 @@ public partial class GodotPlayableRunMain : Control
 
     private void StartNewRunConfirmed()
     {
-        RunSessionResult started = _run!.BeginNewRunSetup(7);
+        RunSessionResult started = _run!.BeginNewRunSetup(_testContext?.FixedSeed ?? 7);
         if (!started.Succeeded) { SetStatus(started.ErrorCode); return; }
         ShowNewRunSetup(started.Snapshot!);
     }
 
     private void ContinueRun()
     {
-        RunStoreResult loaded = new GodotRunSaveStore().Load();
+        RunStoreResult loaded = SaveStore.Load();
         if (loaded.Succeeded && loaded.Snapshot?.PendingRunSetup is not null)
         {
             ShowNewRunSetup(loaded.Snapshot);
@@ -357,7 +433,7 @@ public partial class GodotPlayableRunMain : Control
     {
         ContentId encounterId=_currentEncounterId??throw new InvalidOperationException("Battle encounter identity is missing.");
         Control root = NewPage($"PURE RUN BATTLE — {EncounterLabel(encounterId)}", $"{encounterId.Value}   |   Left click: select/confirm   Right click or Esc: cancel   Enter: end turn", true);
-        _logs.Clear();_playbackPaused=false;_playbackSpeed=1f;
+        _logs.Clear();_playbackPaused=false;_playbackSpeed=_testContext?.InitialPlaybackSpeed ?? 1f;
         Transform2D boardFit = GodotBattleBoardFitter.Fit(GodotBattleBoardFitter.BoardBounds(), new Rect2(30, 90, 1540, 650));
         float boardScale = boardFit.X.Length();
         _board = new GodotIsometricBattleBoard { Position = boardFit.Origin, Scale = Vector2.One * boardScale, Size = new Vector2(1200, 650) };
@@ -387,7 +463,7 @@ public partial class GodotPlayableRunMain : Control
         _hoverInfo=LabelAt(root,"Hover a unit or cell",new Vector2(30,115),16);_hoverInfo.Size=new Vector2(430,110);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
         _settlementStatus=LabelAt(root,string.Empty,new Vector2(470,82),16);_settlementStatus.Size=new Vector2(660,48);_settlementStatus.HorizontalAlignment=HorizontalAlignment.Center;
         var controls=new HBoxContainer{Position=new Vector2(1160,32),Size=new Vector2(410,55)};root.AddChild(controls);
-        controls.AddChild(SmallButton("Pause/Resume",TogglePause));_stepButton=SmallButton("Step",()=>{if(_playbackPaused)PlaybackStep(true);});_stepButton.Disabled=true;controls.AddChild(_stepButton);_speedButton=SmallButton("Speed 1x",ToggleSpeed);controls.AddChild(_speedButton);
+        controls.AddChild(SmallButton("Pause/Resume",TogglePause));_stepButton=SmallButton("Step",()=>{if(_playbackPaused)PlaybackStep(true);});_stepButton.Disabled=true;controls.AddChild(_stepButton);_speedButton=SmallButton($"Speed {_playbackSpeed:0.#}x",ToggleSpeed);controls.AddChild(_speedButton);
         _cheatConsole=new GodotBattleCheatConsole();_cheatConsole.ClearRequested+=()=>{_logs.Clear();RefreshLog();};root.AddChild(_cheatConsole);
         _endTurnButton=Button("End Turn (Enter)",()=>ApplyIntent(new EndTurnIntent()));root.AddChild(PlaceControl(_endTurnButton,new Vector2(1330,805),new Vector2(230,65)));
         BuildPauseMenu(root);
@@ -428,7 +504,7 @@ public partial class GodotPlayableRunMain : Control
         if(_hoverInfo is not null)_hoverInfo.Text=$"{EncounterLabel(_currentEncounterId!.Value)} | {activeSnapshot.UnitId.Value}\nHP {activeSnapshot.CurrentHealth}/{activeSnapshot.MaxHealth}  MP {activeSnapshot.CurrentMana}/{activeSnapshot.MaxMana}\nStatus: {string.Join(", ",activeSnapshot.StatusIds.Select(id=>id.Value))}";
         bool aiPlayback=_battle.HasPendingAutomaticFrames||_presentationInputLocked;
         BattleUiMoveAvailability moveAvailability=snapshot.MoveAvailability??new BattleUiMoveAvailability(true,null);
-        Button moveButton=ActionButton("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Disabled=aiPlayback||!moveAvailability.IsAvailable;moveButton.TooltipText=moveAvailability.FailureCode??"Move to a legal tile";_skillPanel.AddChild(moveButton);
+        Button moveButton=ActionButton("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Name="MoveAction";moveButton.Disabled=aiPlayback||!moveAvailability.IsAvailable;moveButton.TooltipText=moveAvailability.FailureCode??"Move to a legal tile";_skillPanel.AddChild(moveButton);
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
         foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
         {
@@ -438,7 +514,7 @@ public partial class GodotPlayableRunMain : Control
             string displayName = _skillUi.TryGetValue(skill.ContentId, out SkillUiMetadata? metadata)
                 ? metadata.DisplayName
                 : skill.ContentId.Value.Split('.').Reverse().Skip(skill.Level > 0 ? 1 : 0).FirstOrDefault() ?? skill.ContentId.Value;
-            Button skillButton=ActionButton(FormatBattleActionLabel(displayName, skill.ManaCost, usageFailure is not null), () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??SkillTooltip(skill);_skillPanel.AddChild(skillButton);
+            Button skillButton=ActionButton(FormatBattleActionLabel(displayName, skill.ManaCost, usageFailure is not null), () => ApplyIntent(new SelectSkillIntent(skill.ContentId)));skillButton.Name="SkillAction_"+skill.ContentId.Value.Replace('.','_');skillButton.Disabled=aiPlayback||usageFailure is not null;skillButton.TooltipText=usageFailure??SkillTooltip(skill);_skillPanel.AddChild(skillButton);
         }
         foreach(SkillDefinition passive in snapshot.ActiveSkills.Where(skill=>skill.IsPassive))_skillPanel.AddChild(Label($"Passive: {passive.ContentId.Value}",16));
         if(_endTurnButton is not null)_endTurnButton.Disabled=aiPlayback||snapshot.Phase!=PlayableBattlePhase.PlayerTurn;
@@ -618,7 +694,7 @@ public partial class GodotPlayableRunMain : Control
             }
             if(battleResult.EncounterContentId.Value is "encounter.pure-run.e1" or "encounter.pure-run.e2" or "encounter.pure-run.special")
             {
-                PureRunState? active=new GodotRunSaveStore().Load().Snapshot?.ActiveRun;
+                PureRunState? active=SaveStore.Load().Snapshot?.ActiveRun;
                 bool boss=battleResult.EncounterContentId.Value.EndsWith(".special",StringComparison.Ordinal);
                 if(!boss&&active?.NodeTransaction?.NodeId.StartsWith("layer_06_",StringComparison.Ordinal)==true)
                 {
@@ -706,7 +782,7 @@ public partial class GodotPlayableRunMain : Control
             PureRunSaveSnapshot? snapshot=knownSnapshot;
             if(snapshot?.TerminalSummary is null)
             {
-                RunStoreResult loaded=new GodotRunSaveStore().Load();
+                RunStoreResult loaded=SaveStore.Load();
                 if(loaded.Succeeded)snapshot=loaded.Snapshot;
             }
             if(snapshot?.TerminalSummary is null)throw new InvalidOperationException("Saved terminal summary is unavailable.");
@@ -1358,6 +1434,7 @@ public partial class GodotPlayableRunMain : Control
 
     private Control NewPage(string title, string subtitle, bool battleBackdrop = false)
     {
+        _currentPageTitle = title;
         // The old page owns every actor and meter. Queueing the page frees those
         // children, so page navigation must forget their managed references rather
         // than attempting to QueueFree the disposed children during the next refresh.

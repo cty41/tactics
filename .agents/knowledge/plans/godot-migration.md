@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-14T21:24:33+08:00"
+timestamp: "2026-08-15T01:51:16+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:4a940677bf2d548551d92b81bf4b377bc7655889e14a538b401e0823b6ff19d7
+source_fingerprint: sha256:b07b820fd48dcff5bcd31795fdbcc0d22e620515e2959a4ba87a728e6d98e785
 ---
 
 # Current state
@@ -116,6 +116,8 @@ Pure Run schema 仍为 v1，但 `UnitAttributes` 现在由显式 JSON converter 
 Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-transition-v3` 与 Golden schema v7。`BattleStatusState` 捕获 polarity/effect/trigger/refresh、stack、速度与减伤/反击参数；`BattleUnitState` 捕获基础速度、携带 Consumable 和每轮成功使用记录。Poison/Burning 按 ContentId 顺序 tick，非 Burning 回合末递减、Burning 按 stack 消耗，Frozen/Stun 只阻止非 EndTurn，Slow 从基础速度重算 MoveRange/Initiative，同 curse category 后应用替换。Consumable 只允许存活的自身或曼哈顿距离 1 友军，合法零恢复仍消耗 charge，非法目标不消耗，净化只移除 Harmful，每单位每轮只成功使用一次。Equipment 唯一 slot 后投影六项属性并复用 `unity-unit-derived-v1`。Mark、伤害倍率、Counter、Ice Armor retaliation 与 Fear 仅输出强类型 policy，不越界接入 Skill/AI。
 
 ## Verification model
+
+Gameplay Spec 的 Godot v2 Runner 已建立正式 `Main.tscn` 真 Play 后端：测试上下文只能在节点入 Tree 前注入隔离 Save Store、固定 seed、checkpoint 身份、Quit 拦截与初始播放速度；正常启动路径不读取静态测试状态。Runner 对 plan capabilities/adapters/probes、validated checkpoint canonical hash、生产存档未变、输入因果、watchdog 和 Scene cleanup 采用 fail-closed 验证。首个 TypeScript 编译 smoke 已证明同一 Markdown Spec 可生成并由 C# Runner 解析执行；Inventory、Defeat、动态数值和 Reload 的完整场景在后续 checkpoint 接入统一迁移门禁。
 
 `Tools/migration/Verify-GodotMigration.ps1` 串行执行 locked restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、隔离的 GdUnit test host、Release build、Godot runtime/editor headless 与 OKF。GdUnit 3.1.1 的 Runtime Runner 要求 C# runner 位于 `project.godot` 主程序集，因此 test host 使用相同程序集名，但测试源码、`obj`、lock 和包与生产 csproj 分离；Release 明确排除。
 
