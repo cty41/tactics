@@ -81,10 +81,10 @@ public partial class GodotPlayableRunMain : Control
     private bool _pauseMenuPausedPlayback;
     private bool _pauseMenuControlsBattlePlayback;
 
-    private enum InventoryReturnTarget { Home, Settlement, RunRoute }
+    private enum InventoryReturnTarget { RunRoute }
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
-        _skills.Count >= 17 && _ai.Count == 6 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 125;
+        _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 131;
 
     public override void _Ready()
     {
@@ -221,7 +221,6 @@ public partial class GodotPlayableRunMain : Control
         continueRun.Disabled = !loaded.Succeeded || loaded.Snapshot is null ||
             (loaded.Snapshot.ActiveRun is null && loaded.Snapshot.PendingRunSetup is null && loaded.Snapshot.TerminalSummary is null);
         menu.AddChild(continueRun);
-        if (loaded.Snapshot?.ActiveRun is not null) menu.AddChild(Button("Inventory", () => ShowInventory(loaded.Snapshot.ActiveRun, InventoryReturnTarget.Home)));
         menu.AddChild(Button("Quit", () => GetTree().Quit()));
         string status = loaded.Snapshot?.PendingRunSetup is PendingRunSetup setup
             ? $"New Run setup: {setup.CurrentCharacterId}"
@@ -675,7 +674,6 @@ public partial class GodotPlayableRunMain : Control
         AddRunShell(root, run, "Settlement");
         string itemResult = SettlementDropLabel(run);
         LabelAt(root, $"Gold: {run.Gold}\nItems: {itemResult}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
-        root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run, InventoryReturnTarget.Settlement)),new Vector2(480,520),new Vector2(260,60)));
         PendingProgression? pending=run.PendingProgression.FirstOrDefault();
         bool continueRequested=false;
         Button nextButton = Button(pending is null ? $"Continue — {next}" : "Continue — Progression",()=>
@@ -760,7 +758,6 @@ public partial class GodotPlayableRunMain : Control
         menu.AddChild(Button("Rest — restore 30% HP/MP",()=>SelectLayerFourNode("layer_04_rest")));
         menu.AddChild(Button("Store — deterministic 3 offers",()=>SelectLayerFourNode("layer_04_store")));
         menu.AddChild(Button("Mystery — deterministic assigned event",()=>SelectLayerFourNode("layer_04_event")));
-        root.AddChild(PlaceControl(Button("Inventory",()=>ShowInventory(run)),new Vector2(650,760),new Vector2(300,55)));
     }
 
     private static PureRunMapDefinition LayerFourMap() => new(new ContentId("run-map.pure-run.layer4-v1"),2,new[]{
@@ -918,7 +915,11 @@ public partial class GodotPlayableRunMain : Control
     {
         if (_inventoryCharacterId is null || run.Party.All(value => value.CharacterId != _inventoryCharacterId))
             _inventoryCharacterId = run.Party[0].CharacterId;
-        RunCharacterState selectedCharacter = run.Party.Single(value => value.CharacterId == _inventoryCharacterId);
+        ItemInstanceId? selectedItemId = string.IsNullOrEmpty(_inventorySelectedInstanceId) ? null : new ItemInstanceId(_inventorySelectedInstanceId);
+        InventoryUiSnapshot inventory = new InventoryUiProjector().Project(run, _inventoryCharacterId, selectedItemId,
+            _equipment, _consumables, _units.ToDictionary(value => value.Key, value => value.Value.Speed));
+        RunCharacterState selectedCharacter = inventory.SelectedCharacter.Character;
+        InventoryAttributeProjection attributes = inventory.SelectedCharacter.Attributes;
         Control root=NewPage("INVENTORY","Backpack, equipment loadout, carried consumable and derived character state");
         AddRunShell(root,run,"Inventory");
         var columns=new HBoxContainer{Position=new Vector2(65,150),Size=new Vector2(1470,610)};root.AddChild(columns);
@@ -932,10 +933,9 @@ public partial class GodotPlayableRunMain : Control
                 ShowInventory(run, returnTarget);
             }));
         }
-        characters.AddChild(Label($"\nHP {selectedCharacter.CurrentHealth}/{selectedCharacter.MaxHealth}  MP {selectedCharacter.CurrentMana}/{selectedCharacter.MaxMana}\n"+
-            $"STR {selectedCharacter.Attributes.Strength} AGI {selectedCharacter.Attributes.Agility} CON {selectedCharacter.Attributes.Constitution}\n"+
-            $"INT {selectedCharacter.Attributes.Intelligence} CHA {selectedCharacter.Attributes.Charisma} LUCK {selectedCharacter.Attributes.Luck}\n\nSkills:\n"+
-            string.Join('\n',selectedCharacter.LearnedSkillStates.Select(value=>$"{value.BranchId} Lv{value.Level}")),18));
+        characters.AddChild(AttributeProjectionLabel(selectedCharacter, attributes));
+        characters.AddChild(Label("Skills:\n" + string.Join('\n', selectedCharacter.LearnedSkillStates
+            .Select(value => $"{value.BranchId} Lv{value.Level}")), 18));
 
         var backpack=new VBoxContainer{CustomMinimumSize=new Vector2(500,580)};columns.AddChild(backpack);
         var tabs=new HBoxContainer();backpack.AddChild(tabs);
@@ -1006,9 +1006,27 @@ public partial class GodotPlayableRunMain : Control
     private void ReturnFromInventory(PureRunState run, InventoryReturnTarget returnTarget)
     {
         _inventorySelectedInstanceId=null;
-        if(returnTarget==InventoryReturnTarget.Home){ShowHome();return;}
-        if(returnTarget==InventoryReturnTarget.Settlement){ShowSettlement(new PureRunSaveSnapshot(run.Revision,run,null));return;}
         RouteRunState(new PureRunSaveSnapshot(run.Revision,run,null));
+    }
+
+    private static RichTextLabel AttributeProjectionLabel(RunCharacterState character, InventoryAttributeProjection value)
+    {
+        string Line(string name, int basis, int bonus, int total)
+        {
+            string color = bonus > 0 ? "6fd08c" : bonus < 0 ? "ff6b6b" : "d8e0e6";
+            return $"{name} {basis} → [color=#{color}]{total} ({(bonus >= 0 ? "+" : string.Empty)}{bonus})[/color]";
+        }
+        return new RichTextLabel
+        {
+            BbcodeEnabled = true,
+            FitContent = true,
+            CustomMinimumSize = new Vector2(380, 185),
+            Text = $"\nHP {character.CurrentHealth}/{value.DerivedStats.MaxHealth}  MP {character.CurrentMana}/{value.DerivedStats.MaxMana}\n" +
+                Line("STR", value.Base.Strength, value.Bonus.Strength, value.Total.Strength) + "  " + Line("AGI", value.Base.Agility, value.Bonus.Agility, value.Total.Agility) + "\n" +
+                Line("CON", value.Base.Constitution, value.Bonus.Constitution, value.Total.Constitution) + "  " + Line("INT", value.Base.Intelligence, value.Bonus.Intelligence, value.Total.Intelligence) + "\n" +
+                Line("CHA", value.Base.Charisma, value.Bonus.Charisma, value.Total.Charisma) + "  " + Line("LUCK", value.Base.Luck, value.Bonus.Luck, value.Total.Luck) + "\n" +
+                $"Move {value.DerivedStats.MoveRange}  Initiative {value.DerivedStats.Initiative}"
+        };
     }
 
     private void ShowProgression(PureRunState run, PendingProgression pending)

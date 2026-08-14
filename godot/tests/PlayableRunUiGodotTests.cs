@@ -2,6 +2,7 @@ using GdUnit4;
 using Godot;
 using System.Reflection;
 using Tactics.Core.Content;
+using Tactics.Core.AI;
 using Tactics.Core.Board;
 using Tactics.Core.Items;
 using Tactics.Core.Runs;
@@ -444,6 +445,61 @@ public class PlayableRunUiGodotTests
         AssertThat(buttons).Contains("Consumables");
         AssertThat(buttons).Contains("Back");
         ui.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void InventoryEntryExistsOnlyOnRogueMap()
+    {
+        var ui = new GodotPlayableRunMain();
+        ui._Ready();
+        string[] homeButtons = Descendants<Button>(ui).Select(value => value.Text).ToArray();
+        AssertThat(homeButtons).NotContains("Inventory");
+
+        MethodInfo routeMap = typeof(GodotPlayableRunMain).GetMethod("ShowRunMap", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        routeMap.Invoke(ui, [InventoryRun()]);
+        string[] mapButtons = Descendants<Button>(ui).Select(value => value.Text).ToArray();
+        AssertThat(mapButtons.Count(value => value == "Inventory")).IsEqual(1);
+        ui.Free();
+    }
+
+    private static PureRunState InventoryRun()
+    {
+        RunCharacterState Character(string id, string unit) => new(id, new ContentId(unit), 1,
+            new UnitAttributes(5, 5, 5, 5, 5, 5), 20, 20, 5, 10, false, Array.Empty<ContentId>());
+        return new PureRunState("run-inventory-map", 7, 1, PureRunPhase.Ready, 0,
+            new ContentId("encounter.pure-run.n1"),
+            [Character("pure_run_mage", "unit.pure-run.mage"), Character("pure_run_necromancer", "unit.pure-run.necromancer"), Character("pure_run_amazon", "unit.pure-run.amazon")]);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void SummonAiResourcesBindInternalSkillsAndStayOutOfGrowthUi()
+    {
+        GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>(
+            "res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!;
+        Dictionary<string, GodotResourceEntry> entries = catalog.Entries.ToDictionary(value => value.ContentIdValue);
+
+        AssertThat(entries.Count).IsEqual(131);
+        foreach (string id in new[]
+        {
+            "skill.summon.skeleton-attack.lv1", "skill.summon.skeleton-attack.lv2",
+            "skill.summon.skeleton-mage-fireball.lv1", "skill.summon.skeleton-mage-fireball.lv2"
+        })
+        {
+            SkillDefinitionResource skill = ResourceLoader.Load<SkillDefinitionResource>(entries[id].DiagnosticPathValue,
+                string.Empty, ResourceLoader.CacheMode.Ignore)!;
+            AssertThat(skill.GrowthVisible).IsFalse();
+            AssertThat(skill.IsBasicAbility).IsTrue();
+        }
+
+        AiDefinition skeleton = ResourceLoader.Load<AiDefinitionResource>(entries["ai.summon.basic-melee"].DiagnosticPathValue,
+            string.Empty, ResourceLoader.CacheMode.Ignore)!.ToCoreDefinition();
+        AiDefinition caster = ResourceLoader.Load<AiDefinitionResource>(entries["ai.summon.fire-demon"].DiagnosticPathValue,
+            string.Empty, ResourceLoader.CacheMode.Ignore)!.ToCoreDefinition();
+        AssertThat(skeleton.SkillIds).Contains(new ContentId("skill.summon.skeleton-attack.lv1"));
+        AssertThat(caster.PreferredMinimumRange).IsEqual(2);
+        AssertThat(caster.PreferredMaximumRange).IsEqual(3);
     }
 
     [TestCase]

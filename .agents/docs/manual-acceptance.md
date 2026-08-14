@@ -4,31 +4,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
-### MQA-GODOT-L4-RECOVERY — Layer 4 legacy-save recovery
-
-- Status: `pending`
-- Source: Phase 7B–8E L4 map invariant repair
-- Reopen reason: The live V5 save reached `AwaitingLayerFourChoice` with three completed battles but no MapState, leaving all Layer 4 routes locked.
-- Action: Continue the preserved current Run, choose one of the four Layer 4 nodes, return Home, and Continue again.
-- Expected: All four routes are initially available; the chosen route remains stable after Continue/Reload and the other three lock only after the choice commits.
-- Observe: Rogue Map node colors/actions, selected route page, Home Continue, and Godot Output.
-- Preserve on failure: Copy the main save and backup, Run seed/revision, screenshot of the map, selected node, and Output.
-- Save boundary: This uses and then legitimately writes the current Run on the first route transaction; make a copy first if the exact pre-repair state must be retained.
-- Automated evidence: Legacy V5 in-memory repair, new-flow invariant, deterministic seed projection, invalid-state rejection, and non-writing Resume are asserted; route UX remains manual.
-- User verdict: Failed before this fix: all Layer 4 nodes were unavailable.
-
-### MQA-GODOT-FIRE-DEMON-COMBAT — Dedicated Fire Demon attack
-
-- Status: `pending`
-- Source: Phase 7B–8E frozen Fire Demon attack migration
-- Action: Summon a Fire Demon, attack an enemy at 1–3 cells, attempt a second attack in the same turn, then end its turn and attack again.
-- Expected: The dedicated attack deals 4 magical damage, applies Ignite, costs 0 MP, never crits, is disabled after one success, and returns next turn.
-- Observe: Fire Demon action button/tooltip, target HP, Ignite status, combat numbers, CheatConsole, and Output.
-- Preserve on failure: Screenshot/video, cells, target HP before/after, event log, and current turn.
-- Save boundary: Ordinary battle mutation; use a replayable encounter checkpoint.
-- Automated evidence: Frozen converter contract, Resource/Catalog identity, damage/status/roll semantics, per-turn limit, and summon binding are asserted; presentation and interaction remain manual.
-- User verdict: Failed before this fix: the reused Magic Attack returned `no_valid_target`.
-
 ### MQA-GODOT-AVAILABILITY-TURNS-LOS — Skill availability, defeated turns, and LOS
 
 - Status: `pending`
@@ -39,7 +14,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Preserve on failure: Short video, actor/target/blocker cells, skill ID, Turn Order, event log, and Output.
 - Save boundary: Battle mutations apply; use a disposable or checkpointed encounter.
 - Automated evidence: Availability snapshot/intent rejection, consecutive dead-unit wrap, supercover corner blockers, Preview/AI/Transition shared probes, Poison Spear and Bone Spear exceptions are asserted; interaction clarity remains manual.
-- User verdict: Failed before this fix: low-Mana skills remained selectable, a dead Amazon briefly received a turn, and unit blockers were ignored.
+- User verdict: Partial pass: skill availability and defeated-turn skipping are OK; living-unit LOS blocking has not yet been manually tested.
 
 ### MQA-GODOT-DAMAGE-NUMBERS — Floating combat feedback
 
@@ -66,18 +41,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Revision, V5 normalization, one-shot transaction, and unlock semantics are asserted; navigation behavior remains manual.
 - User verdict: none.
 
-### MQA-GODOT-INVENTORY — Backpack and loadout workflow
-
-- Status: `pending`
-- Source: Phase 7B Inventory; never manually completed
-- Action: Obtain Equipment and Consumable through Store/Mystery, then Equip, Replace, Unequip, Carry, Replace Carried, Unload, and Reload.
-- Expected: Details and derived stats refresh immediately; each instance exists in exactly one location and survives Reload.
-- Observe: Inventory character list, backpack tabs, item details, slots, carried item, and derived stats.
-- Preserve on failure: Screenshot, item instance ID/name, route, save copy, and Output.
-- Save boundary: Use a dedicated Run because purchases and loadout operations persist.
-- Automated evidence: Atomic commands, instance uniqueness, projection, V5 round trip, and isolated Store journey are asserted; usability remains manual.
-- User verdict: User previously stated Inventory had not been tested.
-
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
 - Status: `pending`
@@ -103,7 +66,71 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Headless reload and cleanup paths are asserted; canonical Editor reload behavior remains manual.
 - User verdict: none after latest lifecycle-affecting changes.
 
+### MQA-GODOT-DEFEAT-FLOW — Party defeat terminal flow
+
+- Status: `pending`
+- Source: Phase 7B–8E summon AI and defeat-flow repair
+- Reopen reason: The prior Elite run stalled after the visible party died; friendly summon ownership and terminal submission now share the automatic controller path.
+- Action: Let all persistent party characters reach zero HP, with and without a surviving summon.
+- Expected: A true party defeat resolves once, shows the Defeated summary, and returns safely to Home; a surviving AI-owned summon must not leave an unplayable human turn.
+- Observe: Battle phase, Turn Order, presentation queue, terminal summary, Home, CheatConsole, and Godot Output.
+- Preserve on failure: Keep the battle open; record surviving units including summons, current actor, playback pause state, event log, Run seed/revision, and Output.
+- Save boundary: The current Elite checkpoint is valuable diagnostic evidence; do not overwrite or abandon it before copying the save.
+- Automated evidence: Friendly summon survival, all-player-faction defeat, one-shot BattleResult, late Elite/Boss defeat settlement, presentation drain and Summary routing are asserted; visual timing and Return Home interaction remain manual.
+- User verdict: Failed before this repair: after the whole visible party died in the first Elite battle, the battle remained stuck instead of showing defeat and returning Home.
+
+### MQA-GODOT-SUMMON-CONTROL — Unity summon AI ownership parity
+
+- Status: `pending`
+- Source: Phase 7B–8E frozen summon AI and controller repair
+- Reopen reason: Skeleton Warrior, Skeleton Mage and Fire Demon now resolve internal AI/loadout by Unit ContentId; Decoy is explicitly non-acting.
+- Action: Summon Skeleton Warrior, Skeleton Mage, and Fire Demon, then advance to each summon turn.
+- Expected: Unity-authored summons carrying an AiBrain execute automatically even though they share the human PlayerNumber; Decoy remains a non-attacking special unit.
+- Observe: Turn Order, action buttons/input lock, AI decision log in CheatConsole, and unit actions.
+- Preserve on failure: Summon kind/level, current actor, available actions, AI log, and Output.
+- Save boundary: Ordinary battle mutation; use a replayable checkpoint.
+- Automated evidence: Frozen internal AI/skill resources, Lv1/Lv2 loadout selection, friendly automatic turns, input rejection, Decoy skip and deterministic events are asserted in Application/GdUnit and both renderers.
+- User verdict: Parity gap was confirmed before this repair; current behavior awaits manual replay.
+
+### MQA-GODOT-INVENTORY — Backpack and loadout workflow
+
+- Status: `pending`
+- Source: Phase 7B–8E Inventory projector and navigation parity repair
+- Reopen reason: Inventory now consumes Application-owned base/bonus/total/derived projections and is reachable only from Rogue Map.
+- Action: From the Rogue Map, inspect purchased Equipment details, equip it, compare base/total attributes and derived combat values, then Reload.
+- Expected: Item bonuses and the equipped slot are visible; character totals change immediately and persist. Inventory is entered from the Run/Map flow, not Home.
+- Observe: Inventory item detail, equipment slots, character stats/derived stats, Rogue Map entry, Home menu, and Output.
+- Preserve on failure: Screenshot, item definition/instance ID, character before/after values, source route, save copy, and Output.
+- Save boundary: Purchases and loadout operations persist; keep a copy of the Store save.
+- Automated evidence: Base/bonus/total and derived projection, item details, Equip/Replace/Unequip identity, persistence, and the unique Map entry are asserted; readability and interaction remain manual.
+- User verdict: Failed before this repair: purchase worked, but equipment properties/equipped gains were not adequately inspectable and Home exposed a noncanonical Inventory button.
+
 ## Passed
+
+### MQA-GODOT-L4-RECOVERY — Layer 4 legacy-save recovery
+
+- Status: `passed`
+- Source: Phase 7B–8E L4 map invariant repair
+- Reopen reason: The live V5 save reached `AwaitingLayerFourChoice` with three completed battles but no MapState, leaving all Layer 4 routes locked.
+- Action: Continue the preserved current Run and enter Layer 4.
+- Expected: Layer 4 routes are reachable and the selected route advances to the first Elite battle.
+- Observe: Rogue Map, selected route, Continue, and Godot Output.
+- Preserve on failure: Save/backup, Run seed/revision, map screenshot, and Output.
+- Save boundary: Uses the current persistent Run.
+- Automated evidence: Legacy V5 repair, deterministic projection and invariant checks remain covered.
+- User verdict: Passed; the Run has advanced to the first Elite encounter.
+
+### MQA-GODOT-FIRE-DEMON-COMBAT — Dedicated Fire Demon attack
+
+- Status: `passed`
+- Source: Phase 7B–8E frozen Fire Demon attack migration
+- Action: Summon a Fire Demon and use its dedicated attack.
+- Expected: The attack targets correctly and follows its frozen damage, Ignite, range and per-turn contract.
+- Observe: Fire Demon action, target HP/status, CheatConsole, and Output.
+- Preserve on failure: Cells, HP before/after, log and current turn.
+- Save boundary: Ordinary battle mutation.
+- Automated evidence: Frozen contract, Resource identity, damage/status/no-crit and use limit remain covered.
+- User verdict: Passed in the latest report.
 
 ### MQA-GODOT-HUD-SKILL-PRESENTATION — HUD and committed skill visuals
 
@@ -186,11 +213,11 @@ No current items.
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-L4-RECOVERY`
-2. `MQA-GODOT-FIRE-DEMON-COMBAT`
-3. `MQA-GODOT-AVAILABILITY-TURNS-LOS`
-4. `MQA-GODOT-DAMAGE-NUMBERS`
-5. `MQA-GODOT-PROGRESSION-ATOMIC`
-6. `MQA-GODOT-INVENTORY`
-7. `MQA-GODOT-FULL-RUN`
+1. `MQA-GODOT-SUMMON-CONTROL`
+2. `MQA-GODOT-DEFEAT-FLOW`
+3. `MQA-GODOT-INVENTORY`
+4. `MQA-GODOT-AVAILABILITY-TURNS-LOS`
+5. `MQA-GODOT-FULL-RUN`
+6. `MQA-GODOT-DAMAGE-NUMBERS`
+7. `MQA-GODOT-PROGRESSION-ATOMIC`
 8. `MQA-GODOT-RELOAD-OUTPUT`

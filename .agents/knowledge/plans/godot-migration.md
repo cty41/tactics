@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-14T11:05:04+08:00"
+timestamp: "2026-08-14T12:06:18+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:b473576f5f307a980d0723e64b4b506c0e4f0ed02edac799602d4d2ef624c32f
+source_fingerprint: sha256:423e16f28c567003516597e24ce4289bd1f4e9d8e7a105f59910202a04d60a0c
 ---
 
 # Current state
@@ -102,6 +102,8 @@ Phase 8E 的职业成长、毒伤与 Action Pose 定向修复已完成自动门�
 Phase 7B–8E 的 L4、召唤物攻击、回合和 LOS 定向收口已完成自动实现。N3 后的权威不变量现在是 `AwaitingLayerFourChoice => MapState.Phase == ChoosingLayerFour`；合法旧 V5 的 `BattlesCompleted=3 + MapState=null` 只在内存确定性补建，下一次合法事务才写回，当前用户主档和 backup 未被测试修改。Unity 冻结 `FireDemonAttack_Ability` 现生成独立 `skill.summon.fire-demon-attack`：1–3 格、0 MP、4 点火焰魔法伤害、1 层 Ignite、每回合一次且不可暴击，替代早期复用 Basic Magic 的临时差异。Application Snapshot 统一给出 Mana、次数、长矛和尸体 availability；死亡单位保留在 Turn Order 审计中但 `AdvanceTurn` 只准备下一名存活单位。Supercover LOS 同时消费地形和中间存活单位占格，caster/目标自身排除，尸体和落矛不遮挡；Bone Spear 依据 Unity executor 保留沿线首敌拦截语义。ResourceSaver 新增 1 个内部技能 Resource，canonical Catalog 为125；状态保持 `Generated/UnityOwned + manual_layer4_fire_demon_turn_los_qa_pending`。
 
 GdUnit AI Fixture 曾在 Runtime Runner 中通过 UID locator 随机加载不到不同技能并以 `-1073741795` 退出；Catalog UID/path 校验本身正常。Fixture 现在先验证 Catalog，再使用已验证的 `DiagnosticPathValue + CacheMode.Ignore` 加载 Skill/AI/Layout/Encounter，缺失或 UID 漂移仍立即失败。隔离 GdUnit 连续两轮 30/30、随后统一迁移门禁全绿。
+
+Phase 7B–8E 的召唤物控制、失败终局和 Inventory parity 收口已完成自动实现。Unity 冻结的 Basic Melee/Fire Demon Brain 现在生成两个内部 AI Resource；Skeleton Warrior Lv1/Lv2、Skeleton Mage Lv1/Lv2 分别使用独立近战与零耗 Fireball 内部技能，Fire Demon 继续使用已冻结专属攻击。友方召唤物保留玩家阵营身份，但自身回合按 Unit ContentId 解析 AI controller 自动行动；Decoy 无攻击并自动跳过普通行动。只有玩家阵营角色与召唤物全部死亡才生成一次 Defeated Result，Elite、Layer 4/6 与 Boss 继续复用同一结算和 Terminal Summary。Inventory 由 Application projector 统一提供基础、装备 bonus、总属性、派生值、槽位和实例详情，Godot 只从 Rogue Map 暴露单一入口，Home/Settlement 快捷入口已移除。ResourceSaver 新增 2 个 AI 与 4 个内部 Skill Resource，canonical Catalog 为131；状态保持 `Generated/UnityOwned + manual_summon_ai_defeat_inventory_qa_pending`。
 
 Pure Run schema 仍为 v1，但 `UnitAttributes` 现在由显式 JSON converter 稳定读写六项字段。已存在的固定三人全零属性存档在身份匹配时从 Run Definition 修复，并在下一次合法事务写回；部分损坏或身份不匹配拒绝。胜利结算对本场阵亡角色也应用 `Constitution×2` HP 与 `Charisma` MP 恢复，恢复后可进入下一场，死亡卸装仍保留；失败不复活。Battle/Settlement 明示 N1/N2/N3，只有结算 Continue 可开始下一场，并以一次性提交与导航日志阻止旧 Timer、重复 BattleResult 或双击创建重复战斗。
 
