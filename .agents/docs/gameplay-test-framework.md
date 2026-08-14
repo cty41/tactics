@@ -2,7 +2,7 @@
 
 ## 文档定位
 
-Gameplay Test Framework 让 Agent 用受控 Markdown 场景描述生成稳定的 Unity 运行计划，并在 PlayMode 中验证真实战斗、技能、地图和 UI 行为。
+Gameplay Test Framework 让 Agent 用受控 Markdown 场景描述生成稳定的 Unity 或 Godot 运行计划，并通过生产场景验证真实战斗、技能、地图、UI 与输入行为。
 
 ## 数据流
 
@@ -10,13 +10,14 @@ Gameplay Test Framework 让 Agent 用受控 Markdown 场景描述生成稳定的
 *.gameplay-test.md / ScenarioSpec
         ↓ TypeScript 校验与编译
 *.plan.json
-        ↓ Unity GameplayRuntimeRunner
-场景构建 → 动作执行 → 断言 → 报告
+        ├─ Unity v1 → GameplayRuntimeRunner / PlayMode
+        └─ Godot v2 → GodotGameplayRuntimeRunner / Main.tscn
+场景构建 → 生产输入 → 状态等待 → 断言 → 结构化报告
 ```
 
 - Markdown/ScenarioSpec 是主要源文件，应进入版本控制。
 - `.plan.json` 是编译产物，不应手工维护。
-- Unity Runner 可引用真实技能、单位和配置资产，避免只验证测试替身。
+- Unity Runner 可引用真实技能、单位和配置资产；Godot Runner 加载正式 `Main.tscn` 并使用 validated checkpoint 与隔离存档，避免只验证测试替身。
 
 ## 当前适配器
 
@@ -40,9 +41,21 @@ node Tools/gameplay-test-spec/dist/src/cli.js validate-spec -s <scenario.gamepla
 node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay-test.md> -o <scenario.plan.json>
 node Tools/gameplay-test-spec/dist/src/cli.js batch-validate -d <spec-directory>
 node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> -o <output-directory>
+node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d Tests/gameplay-specs/godot -o artifacts/gameplay-specs/godot --runtime godot
 ```
 
-修改 TypeScript 源码后应先按工具目录的 package scripts 构建，再执行 CLI。Unity 侧通过 PlayMode 测试或项目既有测试入口运行生成计划。
+修改 TypeScript 源码后应先按工具目录的 package scripts 构建，再执行 CLI。未指定 runtime 时保持 Unity v1 输出；`--runtime godot` 生成 Godot v2 plan。
+
+## Godot Runtime Runner
+
+- `GodotPlayableRunTestContext` 必须在正式 Main 节点进入 SceneTree 前注入；只允许隔离 `IRunSaveStore`、固定 seed、validated checkpoint、Quit 拦截和初始播放速度。
+- 玩家鼠标和键盘动作通过 `Viewport.PushInput` 进入正式 GUI/Input/UnhandledInput 链；每一步等待权威页面、targeting、BattleState 或表现状态变化。
+- validated checkpoint 由受控 catalog 构造，plan metadata、唯一 `loadValidatedCheckpoint` setup、canonical V5 hash 与加载结果必须一致，任一不一致 fail-closed。
+- watchdog 区分 step timeout、scenario timeout、battle action/round limit 和 no-progress；失败 trace 仍必须记录并清理场景。
+- 每个场景使用 `user://qa-runner/<scenario>/<attempt>/`，执行前后记录生产 save 与 `.bak` 的长度、时间戳和 SHA-256。
+- 批量报告为 `godot-gameplay-spec-result-v1.json`，包含步骤 trace、checkpoint、生产存档证据和剩余临时节点；统一门禁要求五个首批场景全部通过。
+
+首批 Godot 场景覆盖 Inventory 投影进入 BattleState、有/无召唤物的 Defeated 终局、Mana/Miss 动态数字，以及 Main 重启、Continue 和表现清理。真实 Godot Editor C# Assembly Reload、文案可读性和动画观感仍是人工边界。
 
 ## 编写原则
 

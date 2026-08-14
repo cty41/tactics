@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-14T19:48:04+08:00"
+timestamp: "2026-08-15T03:20:29+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:88d3c1e617fbf30301fc1b8fa35fb88305045edd8c4febb532fcb4a8cf808f88
+source_fingerprint: sha256:7d5bba7931b03af12bf095501b425e36e8af3314420b98801dde8141d84b9305
 ---
 
 # Current state
@@ -49,7 +49,7 @@ Windows 内部测试包由 `Tools/migration/Build-GodotWindows.ps1` 提供只读
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 21 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter、Run/Persistence 与 Inventory/Progression 各自维护批次证据；Phase 7B 在两轮 ResourceSaver 后验证 27 个新增技能与 canonical 101 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。人工 Editor Reload、Undo/Redo、Unit 视觉、Skill Gameplay、AI/Encounter Gameplay 与 Inventory/Progression 验收仍单独记录。
+统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Gameplay Spec 编译与 Main.tscn 批量报告、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。Godot Gameplay Spec 报告必须由本轮 GdUnit 新生成，并精确包含五个预期 scenario/checkpoint 身份、生产 save 前后证据和零临时节点，旧 artifact 或重复易通过场景不能满足门禁。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 21 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter、Run/Persistence 与 Inventory/Progression 各自维护批次证据；Phase 7B 在两轮 ResourceSaver 后验证 27 个新增技能与 canonical 101 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。真实 Editor Assembly Reload 和表现可读性仍单独记录。
 
 日常 Windows artifact 使用较窄的 CI 门禁，不替代统一迁移验证：同一 .NET 9.0 feature band 且不低于 manifest 基线、单节点 Debug build、Core/Application NUnit、headless Editor scan、生产 Release 测试依赖排除、Playable UI/Catalog Compatibility smoke、Windows export 与构建前后 tracked worktree 一致性。完整迁移生成、GdUnit、Forward+、截图、receipt 和 OKF 收口仍由统一入口负责。
 

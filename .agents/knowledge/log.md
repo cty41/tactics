@@ -1,8 +1,10 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-15
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:b07b820fd48dcff5bcd31795fdbcc0d22e620515e2959a4ba87a728e6d98e785`。
-* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:1d194de12a2c1c9d945ecfbe5a54ae4df89d84d91c403ac88451c2d9debd96b3`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:c179840c6d8b3353ebfd2c987a452d1c465f763fe8004600765fbf4a04ac2c3a`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:6c1099fcb040409350ad90b90231231af17fbe381c105cbb5caf08f300b33510`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:7d5bba7931b03af12bf095501b425e36e8af3314420b98801dde8141d84b9305`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:faec6a47e58259823953d2408c2226812699fb7cd5beacd130d2b15bfd4beb78`。
 
 ## 2026-08-14
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:4a940677bf2d548551d92b81bf4b377bc7655889e14a538b401e0823b6ff19d7`。
@@ -295,6 +297,7 @@
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:c4c7f7adc1fa8276fd7db81be3db016ba55f2f540895be24963a0ae46a508529`。
 
 ## 2026-07-14
+* **Update (2026-08-15)**: Gameplay Test Framework 新增 Godot v2 Main.tscn Runner、受控 checkpoint、生产输入、隔离 Save、watchdog 与五场景结构化报告；统一迁移门禁拒绝旧报告和重复 scenario 身份，人工边界缩减为可读性、动画观感和真实 Editor Assembly Reload。
 * **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:5440f1243da2099b84fb0adceb31384a23f2972b2828a31b623b58ab897e7bc3`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c5bb833c80c14524000a378200da1320e749d264ae36b4f1855ed2f7d7473a49`。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:fa9001e6f81de2611327d6d630cc6221d897541d1d6d9958b5dc344a9945351b`。

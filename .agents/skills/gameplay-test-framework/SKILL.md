@@ -1,6 +1,6 @@
 ---
 name: gameplay-test-framework
-description: "Use when generating, validating, compiling, or running gameplay automation tests from natural language, design docs, or batch templates — guides agents through Tools/gameplay-test-spec and Unity PlayMode execution"
+description: "Use when generating, validating, compiling, or running gameplay automation tests from natural language, design docs, or batch templates — guides agents through Tools/gameplay-test-spec and Unity or Godot runtime execution"
 ---
 
 # Gameplay Test Framework
@@ -15,7 +15,7 @@ description: "Use when generating, validating, compiling, or running gameplay au
 | 校验 | `validate-spec -s <spec>` |
 | 编译 | `compile-spec -s <spec> -o <plan>` |
 | 批处理 | `batch-validate -d <dir>` / `batch-compile -d <dir> -o <dir>` |
-| 执行 | Unity `GameplayRuntimeRunner` / PlayMode 测试 |
+| 执行 | Unity `GameplayRuntimeRunner` / Godot `GodotGameplayRuntimeRunner` |
 
 ## When to use
 
@@ -47,6 +47,7 @@ description: "Use when generating, validating, compiling, or running gameplay au
 npm --prefix Tools/gameplay-test-spec test
 node Tools/gameplay-test-spec/dist/src/cli.js validate-spec -s <scenario.gameplay-test.md>
 node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay-test.md> -o <scenario.plan.json>
+node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay-test.md> -o <scenario.plan.json> --runtime godot
 ```
 
 批处理：
@@ -54,6 +55,7 @@ node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay
 ```powershell
 node Tools/gameplay-test-spec/dist/src/cli.js batch-validate -d <spec-directory>
 node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> -o <output-directory>
+node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> -o <output-directory> --runtime godot
 ```
 
 修改 TypeScript 后先按 package scripts 构建。校验失败必须修复 Spec 或 schema，不跳过 validator 直接改生成计划。
@@ -64,6 +66,13 @@ node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> 
 - 使用实际需要的 adapter，并确认其能解析所有 setup/action/assertion。
 - 资产行为测试应引用真实资产；记录失败步骤、诊断码和可观察状态。
 - 若改动 `.cs`，遵守 Unity 自动编译与测试规则。
+
+### 5. Godot 执行
+
+- Godot v2 plan 必须声明 `runtime: Godot`、能力、adapter、隔离存档、watchdog 和可选 validated checkpoint。
+- Runner 加载正式 `Main.tscn`，玩家动作通过 `Viewport.PushInput` 进入生产输入链，不直接调用业务服务证明输入成功。
+- 每个场景只写 `user://qa-runner/<scenario>/<attempt>/`；执行前后必须证明生产主档和 backup 未变化。
+- 批量结果写入 `artifacts/gameplay-specs/godot/godot-gameplay-spec-result-v1.json`，并由统一迁移门禁校验。
 
 ## Agent-first SkillGraph 辅助命令
 

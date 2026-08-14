@@ -33,28 +33,40 @@ public class GodotGameplayRuntimeRunnerTests
 
     [TestCase]
     [RequireGodotRuntime]
-    public async Task InventorySpecEquipsThroughMainAndProjectsIntoBattle() =>
-        await AssertCompiledScenario("inventory-battle-projection", "inventory-store-ready-v1");
+    public async Task AcceptanceSpecsWriteStructuredBatchReport()
+    {
+        (string Plan, string Checkpoint)[] scenarios =
+        [
+            ("inventory-battle-projection", "inventory-store-ready-v1"),
+            ("defeated-terminal", "defeat-no-summon-v1"),
+            ("presentation-numbers", "numbers-mana-v1"),
+            ("presentation-miss", "numbers-miss-v1"),
+            ("reload-cleanup", "reload-pending-battle-v1")
+        ];
+        var executions = new List<GodotGameplayReportScenario>();
+        foreach ((string planName, string _) in scenarios)
+        {
+            GodotGameplayScenarioPlan plan = LoadCompiledPlan(planName);
+            GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+            executions.Add(GodotGameplayReportScenario.From(plan, result));
+        }
+        GodotGameplaySpecReport report = GodotGameplaySpecReport.Create(executions);
+        string output = GodotGameplaySpecReportWriter.Write(report);
 
-    [TestCase]
-    [RequireGodotRuntime]
-    public async Task DefeatedSpecReachesOneTerminalSummary() =>
-        await AssertCompiledScenario("defeated-terminal", "defeat-no-summon-v1");
-
-    [TestCase]
-    [RequireGodotRuntime]
-    public async Task PresentationNumberSpecObservesManaFact() =>
-        await AssertCompiledScenario("presentation-numbers", "numbers-mana-v1");
-
-    [TestCase]
-    [RequireGodotRuntime]
-    public async Task PresentationMissSpecObservesCommittedDodgeFact() =>
-        await AssertCompiledScenario("presentation-miss", "numbers-miss-v1");
-
-    [TestCase]
-    [RequireGodotRuntime]
-    public async Task ReloadSpecRestoresPendingBattleAndCleansOldMain() =>
-        await AssertCompiledScenario("reload-cleanup", "reload-pending-battle-v1");
+        AssertThat(File.Exists(output)).IsTrue();
+        AssertThat(report.Scenarios.Count).IsEqual(5);
+        AssertThat(report.Passed).IsEqual(5);
+        AssertThat(report.Failed).IsEqual(0);
+        AssertThat(report.Scenarios.Select(value => value.ScenarioName).Distinct().Count()).IsEqual(5);
+        var expectedIdentities = scenarios.ToDictionary(value => LoadCompiledPlan(value.Plan).ScenarioName,
+            value => value.Checkpoint, StringComparer.Ordinal);
+        AssertThat(report.Scenarios.All(value => expectedIdentities.TryGetValue(value.ScenarioName, out string? checkpointId) &&
+            checkpointId == value.CheckpointId)).IsTrue();
+        AssertThat(report.Scenarios.Select(value => value.CheckpointId).Order().ToArray())
+            .ContainsExactly(scenarios.Select(value => value.Checkpoint).Order().ToArray());
+        AssertThat(report.Scenarios.All(value => value.ProductionSaveUnchanged &&
+            value.ProductionSaveBefore == value.ProductionSaveAfter && value.RemainingTemporaryNodes == 0)).IsTrue();
+    }
 
     [TestCase]
     [RequireGodotRuntime]
@@ -309,23 +321,11 @@ public class GodotGameplayRuntimeRunnerTests
         return Plan(name, [setup], [quit], [BoolAssertion("runtimeHasNoErrors", "UI", true)]);
     }
 
-    private static async Task AssertCompiledScenario(string planName, string checkpointId)
+    private static GodotGameplayScenarioPlan LoadCompiledPlan(string planName)
     {
         string path = Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", "Tests",
             "gameplay-specs", "godot", planName + ".plan.json"));
-        GodotGameplayScenarioPlan plan = GodotGameplayScenarioPlan.Parse(File.ReadAllText(path));
-        ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create(checkpointId);
-
-        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
-
-        if (!result.Succeeded)
-            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
-                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
-
-        AssertThat(result.ErrorCode).IsNull();
-        AssertThat(result.Succeeded).IsTrue();
-        AssertThat(result.ProductionSaveUnchanged).IsTrue();
-        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+        return GodotGameplayScenarioPlan.Parse(File.ReadAllText(path));
     }
 
     private static GodotGameplayScenarioPlan CheckpointPlan(ValidatedGodotRunCheckpoint checkpoint)

@@ -4,78 +4,29 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
-### MQA-GODOT-MYSTERY-ADJUDICATION — Fixed-option deterministic event adjudicator
-
-- Status: `pending`
-- Source: Phase 7B–8E Mystery adjudicator redesign
-- Action: Enter a Mystery node, note the assigned party member and all fixed options, return Home or Reload before choosing, then Continue and resolve one option.
-- Expected: One living formal party member is selected deterministically for the event; the event exposes only its authored options, each using that option's declared attribute. Reload preserves the same member, options, rate and eventual roll/result.
-- Observe: Mystery page adjudicator label, option cards/rates, result page, save Continue, and Output.
-- Preserve on failure: Run seed, node/event ID, assigned character, all option texts/rates, save copy, and Output.
-- Save boundary: Assignment is persisted when the event opens; resolving an option mutates the Run, so copy the save before testing alternate outcomes.
-- Automated evidence: Living-party selection, one-time persistence, option-owned attributes, None auto-success, Save V5 round-trip and deterministic roll are asserted; UI clarity remains manual.
-- User verdict: none.
-
 ### MQA-GODOT-DAMAGE-NUMBERS — Floating combat feedback
 
 - Status: `pending`
 - Source: Phase 8E camera/menu/damage/growth transaction
 - Reopen reason: Poison tick now has an explicit committed Impact cue instead of falling through at frame completion.
-- Action: Produce normal damage, a Poison turn-start tick, critical, Miss, healing, and MP recovery while trying Pause and all speed values.
-- Expected: Direct and Poison damage show white `-N`, healing green `+N`, MP blue `+N MP`, critical gold and Miss gray; each appears above the affected unit at its committed impact, pauses with presentation, and leaves no residue.
+- Action: Visually sample Miss, healing, and MP recovery once at a comfortable speed; normal, Poison and critical feedback no longer need repeating.
+- Expected: Healing shows green `+N`, MP recovery blue `+N MP`, and Miss gray; each appears above the affected unit at its committed impact, pauses with presentation, and leaves no residue.
 - Observe: Unit head anchor, animation timing, HUD speed, and Godot Output.
 - Preserve on failure: Screenshot/video plus event log and speed/pause state.
 - Save boundary: Ordinary battle state changes apply; use a disposable Run if exact replay matters.
-- Automated evidence: Event-to-number identity, explicit Poison tick marker, multi-hit sequence, pause/speed propagation, and cleanup are asserted; readability and timing remain manual.
+- Automated evidence: Gameplay Specs now execute deterministic Miss and Mana recovery through Main.tscn and assert event identity, color node, pause/speed behavior, cleanup and production-save isolation. Healing event mapping is covered at the Application/presentation layer; only readability and animation feel remain manual.
 - User verdict: Partial pass: normal damage, Poison tick and gold critical numbers were observed; Miss, healing and MP recovery remain unconfirmed.
-
-### MQA-GODOT-PROGRESSION-ATOMIC — Non-skippable atomic growth
-
-- Status: `pending`
-- Source: Phase 8E camera/menu/damage/growth transaction
-- Action: Allocate an attribute, close before choosing a skill, Continue, then finish the progression once.
-- Expected: Continue restarts at attribute allocation; no Back to Map exists; final confirmation applies attributes and skill once and unlocks the next node once.
-- Observe: Progression pages, map node state, and Home Continue.
-- Preserve on failure: Copy of the save, screenshots before/after Continue, and Output.
-- Save boundary: PendingProgression persists; unfinished UI drafts must not be written.
-- Automated evidence: Revision, V5 normalization, one-shot transaction, and unlock semantics are asserted; navigation behavior remains manual.
-- User verdict: none.
-
-### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
-
-- Status: `pending`
-- Source: Phase 8E Boss settlement transaction revision fix
-- Reopen reason: The second live replay proved terminal detection and presentation drain completed; the actual failure was `save.non_increasing_revision` after terminal transition reused revision 148. The transition and settlement coordinator are now fixed and reviewed.
-- Action: Continue the preserved Boss checkpoint, defeat the final enemy, inspect the terminal settlement lines, then use Return Home.
-- Expected: The final animation completes, settlement advances from Submitting to Saved and NavigationCompleted, BossVictory Summary appears once, and Return Home ends the Run.
-- Observe: Battle page, CheatConsole `BattleSettlementDiagnostic`, BossVictory Summary, Home Continue state, and Godot Output.
-- Preserve on failure: Keep the page open; copy all CheatConsole logs, retain the production save and backup, and record the last settlement stage/error.
-- Save boundary: This replay will replace the revision 148 PendingBattle save with the committed terminal Summary on success; preserve a copy first if the checkpoint is needed again.
-- Automated evidence: Terminal revision now increases to 149 through ApplyFullRunTransition and a controlled store; ActiveRun becomes null, Summary is one-shot, failed readback recovery and duplicate callbacks are guarded. Live navigation remains manual.
-- User verdict: Prior replay failed; repaired behavior awaits a new explicit verdict.
-
-### MQA-GODOT-CHEAT-CONSOLE-COPY — Read-only battle log copying
-
-- Status: `pending`
-- Source: Phase 8E Boss settlement diagnostics and CheatConsole copy
-- Action: Open CheatConsole, drag-select several lines and copy with Ctrl+C and the right-click menu; then test Copy Visible under a filter and Copy All.
-- Expected: Selected text copies normally; Copy Visible contains only rendered filtered lines, Copy All contains all retained lines, and no console interaction triggers battle commands.
-- Observe: CheatConsole selection/context menu/status text and an external text editor used only for paste verification.
-- Preserve on failure: Screenshot, selected filter, copied text, and any Godot Output error.
-- Save boundary: Console copying does not mutate the Run or save.
-- Automated evidence: Selection mode, filtered/all rendering, injected clipboard behavior and gameplay input blocking are asserted; native mouse/context-menu feel remains manual.
-- User verdict: none.
 
 ### MQA-GODOT-RELOAD-OUTPUT — Reload and diagnostics cleanup
 
 - Status: `pending`
 - Source: Phase 7B–8E combined acceptance
-- Action: Assembly Reload, Continue the active Run, replay one battle action, and inspect logs.
+- Action: Trigger one real Godot C# Assembly Reload, Continue the active Run, replay one battle action, and inspect logs.
 - Expected: No stale Tween, temporary node, duplicate signal, input lock, corrupted save, or Unicode/NUL error.
 - Observe: Godot Output and CheatConsole; verify current page and actor state visually.
 - Preserve on failure: Full Output excerpt, page/encounter, save copy, and reproduction order.
 - Save boundary: Reload may restart the current battle from its committed checkpoint; retain save evidence on failure.
-- Automated evidence: Headless reload and cleanup paths are asserted; canonical Editor reload behavior remains manual.
+- Automated evidence: Gameplay Specs restart the real Main scene/process, Continue a PendingBattle, verify normalized state, input and zero temporary presentation nodes, and prove the production save unchanged. Only the real Editor Assembly Reload lifecycle remains manual.
 - User verdict: none after latest lifecycle-affecting changes.
 
 ### MQA-GODOT-DEFEAT-FLOW — Party defeat terminal flow
@@ -83,41 +34,90 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Status: `pending`
 - Source: Phase 7B–8E summon AI and defeat-flow repair
 - Reopen reason: The prior Elite run stalled after the visible party died; friendly summon ownership and terminal submission now share the automatic controller path.
-- Action: Let all persistent party characters reach zero HP, with and without a surviving summon.
-- Expected: A true party defeat resolves once, shows the Defeated summary, and returns safely to Home; a surviving AI-owned summon must not leave an unplayable human turn.
+- Action: In one disposable encounter, let the final player-faction entity die and observe the visible transition into Defeated Summary and Home.
+- Expected: The last defeat presentation reads naturally, the Summary appears once, and Return Home has no visible hitch or duplicate page.
 - Observe: Battle phase, Turn Order, presentation queue, terminal summary, Home, CheatConsole, and Godot Output.
 - Preserve on failure: Keep the battle open; record surviving units including summons, current actor, playback pause state, event log, Run seed/revision, and Output.
 - Save boundary: The current Elite checkpoint is valuable diagnostic evidence; do not overwrite or abandon it before copying the save.
-- Automated evidence: Friendly summon survival, all-player-faction defeat, one-shot BattleResult, late Elite/Boss defeat settlement, presentation drain and Summary routing are asserted; visual timing and Return Home interaction remain manual.
+- Automated evidence: Gameplay Specs and Application tests cover with/without summon survival, automatic summon turns, one-shot BattleResult, presentation drain, Defeated Summary, Return Home cleanup and production-save isolation. Only visual transition feel remains manual.
 - User verdict: Failed before this repair: after the whole visible party died in the first Elite battle, the battle remained stuck instead of showing defeat and returning Home.
-
-### MQA-GODOT-SUMMON-CONTROL — Unity summon AI ownership parity
-
-- Status: `pending`
-- Source: Phase 7B–8E frozen summon AI and controller repair
-- Reopen reason: Skeleton Warrior, Skeleton Mage and Fire Demon now resolve internal AI/loadout by Unit ContentId; Decoy is explicitly non-acting.
-- Action: Summon Skeleton Warrior, Skeleton Mage, and Fire Demon, then advance to each summon turn.
-- Expected: Unity-authored summons carrying an AiBrain execute automatically even though they share the human PlayerNumber; Decoy remains a non-attacking special unit.
-- Observe: Turn Order, action buttons/input lock, AI decision log in CheatConsole, and unit actions.
-- Preserve on failure: Summon kind/level, current actor, available actions, AI log, and Output.
-- Save boundary: Ordinary battle mutation; use a replayable checkpoint.
-- Automated evidence: Frozen internal AI/skill resources, Lv1/Lv2 loadout selection, friendly automatic turns, input rejection, Decoy skip and deterministic events are asserted in Application/GdUnit and both renderers.
-- User verdict: Parity gap was confirmed before this repair; current behavior awaits manual replay.
 
 ### MQA-GODOT-INVENTORY — Backpack and loadout workflow
 
 - Status: `pending`
 - Source: Phase 7B–8E Inventory projector and navigation parity repair
 - Reopen reason: Inventory now consumes Application-owned base/bonus/total/derived projections and is reachable only from Rogue Map.
-- Action: From the Rogue Map, inspect purchased Equipment details, equip it, compare base/total attributes and derived combat values, then Reload.
-- Expected: Item bonuses and the equipped slot are visible; character totals change immediately and persist. Inventory is entered from the Run/Map flow, not Home.
+- Action: From the Rogue Map, inspect one purchased Equipment item, equip it, and judge whether the base/bonus/total and slot presentation are easy to understand.
+- Expected: The selected item, affected slot and positive/negative deltas are readable without guessing; Inventory remains a Map-only workflow.
 - Observe: Inventory item detail, equipment slots, character stats/derived stats, Rogue Map entry, Home menu, and Output.
 - Preserve on failure: Screenshot, item definition/instance ID, character before/after values, source route, save copy, and Output.
 - Save boundary: Purchases and loadout operations persist; keep a copy of the Store save.
-- Automated evidence: Base/bonus/total and derived projection, item details, Equip/Replace/Unequip identity, persistence, and the unique Map entry are asserted; readability and interaction remain manual.
+- Automated evidence: Gameplay Specs now equip through the production Main UI, enter a real battle, compare BattleUnitState against Application base/bonus/total and derived projection, Reload, and prove instance uniqueness plus production-save isolation. Only UI readability and interaction feel remain manual.
 - User verdict: Partial pass: Inventory operation and equipment detail UI are OK; the resulting battle-stat increase has not yet been verified in combat.
 
 ## Passed
+
+### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
+
+- Status: `passed`
+- Source: Phase 8E Boss settlement transaction revision fix
+- Reopen reason: The second live replay proved terminal detection and presentation drain completed; the actual failure was `save.non_increasing_revision` after terminal transition reused revision 148. The transition and settlement coordinator are now fixed and reviewed.
+- Action: Continue the preserved Boss checkpoint, defeat the final enemy, inspect the terminal settlement lines, then use Return Home.
+- Expected: The final animation completes, settlement advances from Submitting to Saved and NavigationCompleted, BossVictory Summary appears once, and Return Home ends the Run.
+- Observe: Battle page, CheatConsole `BattleSettlementDiagnostic`, BossVictory Summary, Home Continue state, and Godot Output.
+- Preserve on failure: Keep the page open; copy all CheatConsole logs, retain the production save and backup, and record the last settlement stage/error.
+- Save boundary: This replay commits the terminal Summary and ends the Run.
+- Automated evidence: Terminal revision increases through ApplyFullRunTransition and a controlled store; ActiveRun becomes null, Summary is one-shot, failed readback recovery and duplicate callbacks are guarded.
+- User verdict: Passed in the latest report.
+
+### MQA-GODOT-CHEAT-CONSOLE-COPY — Read-only battle log copying
+
+- Status: `passed`
+- Source: Phase 8E Boss settlement diagnostics and CheatConsole copy
+- Action: Open CheatConsole, drag-select several lines and copy with Ctrl+C and the right-click menu; then test Copy Visible under a filter and Copy All.
+- Expected: Selected text copies normally; Copy Visible contains only rendered filtered lines, Copy All contains all retained lines, and no console interaction triggers battle commands.
+- Observe: CheatConsole selection/context menu/status text and an external text editor used only for paste verification.
+- Preserve on failure: Screenshot, selected filter, copied text, and any Godot Output error.
+- Save boundary: Console copying does not mutate the Run or save.
+- Automated evidence: Selection mode, filtered/all rendering, injected clipboard behavior and gameplay input blocking are asserted.
+- User verdict: Passed in the latest report.
+
+### MQA-GODOT-MYSTERY-ADJUDICATION — Fixed-option deterministic event adjudicator
+
+- Status: `passed`
+- Source: Phase 7B–8E Mystery adjudicator redesign
+- Action: Enter a Mystery node, note the assigned party member and all fixed options, Reload before choosing, then Continue and resolve one option.
+- Expected: The assigned member, options, rates and eventual result remain deterministic across Reload.
+- Observe: Mystery page, result page, Continue and Output.
+- Preserve on failure: Run seed, event ID, assigned character, options/rates and save copy.
+- Save boundary: Resolving an option mutates the Run.
+- Automated evidence: Deterministic assignment, option attributes, roll and Save V5 round-trip are asserted.
+- User verdict: Passed in the latest report.
+
+### MQA-GODOT-SUMMON-CONTROL — Unity summon AI ownership parity
+
+- Status: `passed`
+- Source: Phase 7B–8E frozen summon AI and controller repair
+- Reopen reason: Skeleton Warrior, Skeleton Mage and Fire Demon now resolve internal AI/loadout by Unit ContentId; Decoy is explicitly non-acting.
+- Action: Summon Skeleton Warrior, Skeleton Mage and Fire Demon, then advance to each summon turn.
+- Expected: AI-authored summons act automatically; Decoy remains non-attacking.
+- Observe: Turn Order, input lock, CheatConsole AI log and unit actions.
+- Preserve on failure: Summon type/level, current actor, AI log and Output.
+- Save boundary: Ordinary battle mutation.
+- Automated evidence: Internal resources, loadouts, automatic turns, input rejection and Decoy skip are asserted.
+- User verdict: Passed with no anomaly in the latest report.
+
+### MQA-GODOT-PROGRESSION-ATOMIC — Non-skippable atomic growth
+
+- Status: `passed`
+- Source: Phase 8E camera/menu/damage/growth transaction
+- Action: Allocate an attribute, close before choosing a skill, Continue, then finish progression once.
+- Expected: Continue restarts at attribute allocation; final confirmation applies once and unlocks the next node once.
+- Observe: Progression pages, map node state and Home Continue.
+- Preserve on failure: Save copy, screenshots and Output.
+- Save boundary: PendingProgression persists; unfinished UI drafts are not written.
+- Automated evidence: Revision, V5 normalization, one-shot transaction and unlock semantics are asserted.
+- User verdict: Passed with no anomaly in the latest report.
 
 ### MQA-GODOT-AVAILABILITY-TURNS-LOS — Skill availability, defeated turns, and LOS
 
@@ -250,12 +250,7 @@ No current items.
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-FULL-RUN`
-2. `MQA-GODOT-MYSTERY-ADJUDICATION`
-3. `MQA-GODOT-INVENTORY`
-4. `MQA-GODOT-SUMMON-CONTROL`
-5. `MQA-GODOT-DEFEAT-FLOW`
-6. `MQA-GODOT-DAMAGE-NUMBERS`
-7. `MQA-GODOT-PROGRESSION-ATOMIC`
-8. `MQA-GODOT-RELOAD-OUTPUT`
-9. `MQA-GODOT-CHEAT-CONSOLE-COPY`
+1. `MQA-GODOT-INVENTORY`
+2. `MQA-GODOT-DEFEAT-FLOW`
+3. `MQA-GODOT-DAMAGE-NUMBERS`
+4. `MQA-GODOT-RELOAD-OUTPUT`

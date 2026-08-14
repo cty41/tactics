@@ -156,6 +156,33 @@ try {
         python Tools/agent-policy/validate_manual_qa_handoff.py
     }
 
+    Invoke-Checked 'Run gameplay spec compiler tests' {
+        npm --prefix Tools/gameplay-test-spec test
+    }
+
+    $godotGameplaySpecSource = Join-Path $repoRoot 'Tests\gameplay-specs\godot'
+    $godotGameplaySpecOutput = Join-Path $repoRoot 'artifacts\gameplay-specs\godot'
+    $godotGameplayReport = Join-Path $godotGameplaySpecOutput 'godot-gameplay-spec-result-v1.json'
+    New-Item -ItemType Directory -Path $godotGameplaySpecOutput -Force | Out-Null
+    if (Test-Path -LiteralPath $godotGameplayReport -PathType Leaf) {
+        Remove-Item -LiteralPath $godotGameplayReport -Force
+    }
+    Invoke-Checked 'Batch compile Godot gameplay specs' {
+        node Tools/gameplay-test-spec/dist/src/cli.js batch-compile `
+            -d $godotGameplaySpecSource -o $godotGameplaySpecOutput --runtime godot
+    }
+    foreach ($spec in Get-ChildItem -LiteralPath $godotGameplaySpecSource -Filter '*.gameplay-test.md' -File) {
+        $name = $spec.Name.Substring(0, $spec.Name.Length - '.gameplay-test.md'.Length)
+        $generated = Join-Path $godotGameplaySpecOutput ($name + '.plan.json')
+        $tracked = Join-Path $godotGameplaySpecSource ($name + '.plan.json')
+        if (-not (Test-Path -LiteralPath $generated -PathType Leaf) -or
+            -not (Test-Path -LiteralPath $tracked -PathType Leaf) -or
+            (Get-FileHash -LiteralPath $generated -Algorithm SHA256).Hash -ne
+            (Get-FileHash -LiteralPath $tracked -Algorithm SHA256).Hash) {
+            throw "Godot gameplay plan is stale or missing: $name"
+        }
+    }
+
     Invoke-Checked 'Restore isolated GdUnit4Net test host dependencies' {
         dotnet restore $testHostProject --locked-mode
     }
@@ -166,6 +193,35 @@ try {
 
     Invoke-Checked 'Run isolated GdUnit4Net test host' {
         dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
+    }
+
+    if (-not (Test-Path -LiteralPath $godotGameplayReport -PathType Leaf)) {
+        throw 'Godot gameplay spec report was not generated.'
+    }
+    $godotGameplayResult = Get-Content -Raw -LiteralPath $godotGameplayReport | ConvertFrom-Json
+    $expectedGodotGameplayScenarios = @{
+        'GodotPendingAcceptance.InventoryBattleProjection' = 'inventory-store-ready-v1'
+        'GodotPendingAcceptance.DefeatedTerminal' = 'defeat-no-summon-v1'
+        'GodotPendingAcceptance.PresentationNumbers' = 'numbers-mana-v1'
+        'GodotPendingAcceptance.PresentationMiss' = 'numbers-miss-v1'
+        'GodotPendingAcceptance.ReloadCleanup' = 'reload-pending-battle-v1'
+    }
+    $actualScenarioNames = @($godotGameplayResult.scenarios | ForEach-Object { [string]$_.scenarioName })
+    $scenarioIdentityMismatch = $actualScenarioNames.Count -ne $expectedGodotGameplayScenarios.Count -or
+        @($actualScenarioNames | Select-Object -Unique).Count -ne $expectedGodotGameplayScenarios.Count -or
+        @($godotGameplayResult.scenarios | Where-Object {
+            -not $expectedGodotGameplayScenarios.ContainsKey([string]$_.scenarioName) -or
+            [string]$_.checkpointId -ne $expectedGodotGameplayScenarios[[string]$_.scenarioName]
+        }).Count -ne 0
+    if ($godotGameplayResult.schema -ne 'godot-gameplay-spec-result-v1' -or
+        $godotGameplayResult.runtime -ne 'Godot' -or $godotGameplayResult.total -ne 5 -or
+        $godotGameplayResult.passed -ne 5 -or $godotGameplayResult.failed -ne 0 -or
+        $scenarioIdentityMismatch -or
+        @($godotGameplayResult.scenarios | Where-Object {
+            -not $_.productionSaveUnchanged -or $_.productionSaveBefore -ne $_.productionSaveAfter -or
+            $_.remainingTemporaryNodes -ne 0
+        }).Count -ne 0) {
+        throw 'Godot gameplay spec report failed its isolation or result contract.'
     }
 
     Invoke-Checked 'Restore production Godot Debug assembly after GdUnit' {

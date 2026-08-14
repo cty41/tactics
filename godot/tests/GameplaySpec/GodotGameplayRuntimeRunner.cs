@@ -167,10 +167,11 @@ public sealed class GodotGameplayRuntimeRunner
             try { isolatedStore.Cleanup(); }
             catch (Exception cleanupError) { failure ??= GodotGameplayFailureKind.Cleanup; error ??= "isolation_cleanup:" + cleanupError.Message; }
         }
-        bool productionUnchanged = before == ProductionSaveEvidence();
+        string after = ProductionSaveEvidence();
+        bool productionUnchanged = before == after;
         if (!productionUnchanged && failure is null) { failure = GodotGameplayFailureKind.Cleanup; error = "production_save_changed"; }
         return new GodotGameplayScenarioResult(plan.ScenarioName, failure is null, failure, error, trace,
-            productionUnchanged, remainingTemporaryNodes);
+            productionUnchanged, remainingTemporaryNodes, before, after);
     }
 
     private static async Task ExecuteStepAsync(GodotGameplayRuntimeContext context, GodotGameplayPlanStep step,

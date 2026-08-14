@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-15T01:51:16+08:00"
+timestamp: "2026-08-15T03:20:31+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:b07b820fd48dcff5bcd31795fdbcc0d22e620515e2959a4ba87a728e6d98e785
+source_fingerprint: sha256:6c1099fcb040409350ad90b90231231af17fbe381c105cbb5caf08f300b33510
 ---
 
 # Current state
@@ -117,7 +117,7 @@ Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-tra
 
 ## Verification model
 
-Gameplay Spec 的 Godot v2 Runner 已建立正式 `Main.tscn` 真 Play 后端：测试上下文只能在节点入 Tree 前注入隔离 Save Store、固定 seed、checkpoint 身份、Quit 拦截与初始播放速度；正常启动路径不读取静态测试状态。Runner 对 plan capabilities/adapters/probes、validated checkpoint canonical hash、生产存档未变、输入因果、watchdog 和 Scene cleanup 采用 fail-closed 验证。首个 TypeScript 编译 smoke 已证明同一 Markdown Spec 可生成并由 C# Runner 解析执行；Inventory、Defeat、动态数值和 Reload 的完整场景在后续 checkpoint 接入统一迁移门禁。
+Gameplay Spec 的 Godot v2 Runner 已建立正式 `Main.tscn` 真 Play 后端：测试上下文只能在节点入 Tree 前注入隔离 Save Store、固定 seed、checkpoint 身份、Quit 拦截与初始播放速度；正常启动路径不读取静态测试状态。Runner 对 plan capabilities/adapters/probes、validated checkpoint catalog 与 canonical hash、生产存档未变、输入因果、watchdog 和 Scene cleanup 采用 fail-closed 验证。Inventory、Defeat、Mana/Miss 动态数值和 Reload 五个需求驱动场景已生成统一结构化报告并接入 `Verify-GodotMigration.ps1`；scene/process reload 已自动化，真实 Editor Assembly Reload 与表现可读性仍保留最小人工 smoke。
 
 `Tools/migration/Verify-GodotMigration.ps1` 串行执行 locked restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、隔离的 GdUnit test host、Release build、Godot runtime/editor headless 与 OKF。GdUnit 3.1.1 的 Runtime Runner 要求 C# runner 位于 `project.godot` 主程序集，因此 test host 使用相同程序集名，但测试源码、`obj`、lock 和包与生产 csproj 分离；Release 明确排除。
 
