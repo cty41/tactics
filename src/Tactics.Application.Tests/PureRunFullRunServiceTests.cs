@@ -51,6 +51,27 @@ public sealed class PureRunFullRunServiceTests
         });
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void LateBattleDefeatProducesDefeatedTerminalSummary(bool boss)
+    {
+        PureRunFullRunService service = new();
+        FullRunTransitionResult pending = boss
+            ? service.BeginBoss(Run(PureRunPhase.ReadyForBoss), Map())
+            : service.BeginLayerFive(Run(PureRunPhase.ReadyForLayerFive), Map());
+        FullRunTransitionResult completed = boss
+            ? service.CompleteBoss(pending.State, Result(pending.State, victory: false))
+            : service.CompleteLayerFive(pending.State, Result(pending.State, victory: false));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(completed.Succeeded, Is.True);
+            Assert.That(completed.TerminalSummary, Is.Not.Null);
+            Assert.That(completed.TerminalSummary!.Outcome, Is.EqualTo(PureRunOutcome.Defeated));
+            Assert.That(completed.TerminalSummary.BossDefeated, Is.False);
+        });
+    }
+
     [Test]
     public void EliteEncounterMultipliersAreExplicitData()
     {

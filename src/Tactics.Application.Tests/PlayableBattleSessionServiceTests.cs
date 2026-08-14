@@ -207,6 +207,90 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void FriendlySummonWithController_AutomaticallyActsBeforeReturningToHero()
+    {
+        UnitInstanceId ownerId = new("party-necromancer");
+        UnitInstanceId summonId = new("summon-skeleton");
+        UnitInstanceId enemyId = new("enemy-goat");
+        SkillDefinition attack = Skill("skill.summon.skeleton-attack.lv1", 2);
+        BattleUnitState owner = Unit(ownerId, "unit.pure-run.necromancer", new GridPoint(0, 0), 0, 0, 20, 20);
+        BattleUnitState summon = new(new UnitState(summonId, new ContentId("unit.pure-run.skeleton-warrior"),
+            new GridPoint(1, 1), 3, 20, 0, 1), 12, 12, physicalAttack: 2, summonOwnerId: ownerId,
+            canReceiveStandardHealing: false, canProduceCorpse: false, summonCategory: "Skeleton");
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(2, 1), 1, 2, 20, 20);
+        BattleState state = State([owner, summon, enemy], [summonId, ownerId, enemyId]);
+        AiDefinition ai = BasicAi("ai.summon.basic-melee", attack.ContentId);
+        var context = new PlayableBattleSessionContext(state, 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>> { [ownerId] = Array.Empty<SkillDefinition>() },
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", attack.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [attack.ContentId] = attack },
+            SummonControllers: new Dictionary<ContentId, SummonControllerDefinition>
+            {
+                [new ContentId("unit.pure-run.skeleton-warrior")] = new(ai,
+                    new Dictionary<int, SkillDefinition> { [1] = attack }, SkillExecutionKind.SummonSkeleton)
+            });
+
+        var service = new PlayableBattleSessionService(context);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.CaptureSnapshot().ActiveUnitId, Is.EqualTo(ownerId));
+            Assert.That(service.State.Units[enemyId].CurrentHealth, Is.EqualTo(18));
+            Assert.That(service.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.PlayerTurn));
+            Assert.That(service.CaptureSnapshot().RecentEvents.OfType<SkillUsedEvent>().Any(value => value.ActorId == summonId), Is.True);
+        });
+    }
+
+    [Test]
+    public void AllPlayerFactionUnitsDefeated_ProducesOneDefeatResult()
+    {
+        UnitInstanceId heroId = new("party-mage");
+        UnitInstanceId enemyId = new("enemy-goat");
+        BattleUnitState hero = Unit(heroId, "unit.pure-run.mage", new GridPoint(1, 1), 0, 0, 20, 0);
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(2, 1), 1, 1, 20, 20);
+        SkillDefinition attack = Skill("skill.basic.melee", 2);
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([hero, enemy], [heroId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>(),
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", attack.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [attack.ContentId] = attack },
+            new EncounterRequest("run-test", 2, new ContentId("encounter.pure-run.e1"), Array.Empty<RunCharacterState>())));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.BattleResult, Is.Not.Null);
+            Assert.That(service.BattleResult!.PlayerVictory, Is.False);
+            Assert.That(service.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.Defeat));
+        });
+    }
+
+    [Test]
+    public void FriendlyDecoy_AutomaticallySkipsWithoutBecomingPlayerInput()
+    {
+        UnitInstanceId ownerId = new("party-amazon");
+        UnitInstanceId decoyId = new("summon-decoy");
+        UnitInstanceId enemyId = new("enemy-goat");
+        BattleUnitState owner = Unit(ownerId, "unit.pure-run.amazon", new GridPoint(0, 0), 0, 0, 20, 20);
+        BattleUnitState decoy = new(new UnitState(decoyId, new ContentId("unit.pure-run.amazon-decoy"),
+            new GridPoint(1, 1), 3, 20, 0, 1), 10, 10, summonOwnerId: ownerId,
+            canReceiveStandardHealing: false, canProduceCorpse: false, summonCategory: "Decoy");
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(3, 1), 1, 2, 20, 20);
+        SkillDefinition attack = Skill("skill.basic.melee", 2);
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([owner, decoy, enemy], [decoyId, ownerId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>> { [ownerId] = Array.Empty<SkillDefinition>() },
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", attack.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [attack.ContentId] = attack }));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.CaptureSnapshot().ActiveUnitId, Is.EqualTo(ownerId));
+            Assert.That(service.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.PlayerTurn));
+            Assert.That(service.CaptureSnapshot().RecentEvents.OfType<TurnAdvancedEvent>(), Is.Not.Empty);
+        });
+    }
+
+    [Test]
     public void PlayerPresentationAfter_DoesNotContainFutureAiTurnResults()
     {
         PlayableBattleSessionService service = CreateService(out _, out UnitInstanceId enemyId);
@@ -292,6 +376,16 @@ public sealed class PlayableBattleSessionServiceTests
         new ContentId(id), id, SkillRole.Any, SkillKind.Active, 1, manaCost, 1, 4,
         executionKind ?? (id.Contains("fireball", StringComparison.Ordinal) ? SkillExecutionKind.Fireball : SkillExecutionKind.MeleeAttack),
         damage, SkillDamageKind.Magical);
+
+    private static AiDefinition BasicAi(string id, ContentId skillId) => new(new ContentId(id), AiArchetype.Charger,
+        new AiProfileDefinition(1, 2, 0, 0), [skillId], Array.Empty<ContentId>());
+
+    private static BattleState State(IEnumerable<BattleUnitState> units, IReadOnlyList<UnitInstanceId> order)
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 10; x++) for (int y = 0; y < 10; y++) cells[new GridPoint(x, y)] = new CellState();
+        return new BattleState(new BoardSnapshot(cells), units, order, randomState: 7);
+    }
 
     private static BattleUnitState Unit(
         UnitInstanceId id, string definitionId, GridPoint cell, int player, int ordinal, int maxHealth, int health, int currentMana = 10) =>

@@ -18,6 +18,9 @@ public sealed class PlayableBattleSessionFactory
     private static readonly ContentId MagicAttackId = new("skill.basic.magic");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
     private static readonly ContentId PickupSpearId = new("skill.amazon.pickup-spear.lv1");
+    private static readonly ContentId SkeletonUnitId = new("unit.pure-run.skeleton-warrior");
+    private static readonly ContentId SkeletonMageUnitId = new("unit.pure-run.skeleton-mage");
+    private static readonly ContentId FireDemonUnitId = new("unit.pure-run.fire-demon");
     private readonly EncounterResolver _encounters = new();
 
     public PlayableBattleSessionService Create(
@@ -86,9 +89,30 @@ public sealed class PlayableBattleSessionFactory
             .Select(entry => entry.UnitId).ToArray();
         var battle = new BattleState(new BoardSnapshot(cells), states, order,
             randomState: unchecked((ulong)request.CheckpointRevision));
+        var summonControllers = new Dictionary<ContentId, SummonControllerDefinition>
+        {
+            [SkeletonUnitId] = new(aiDefinitions[new ContentId("ai.summon.basic-melee")],
+                Levels(playableSkills, "skill.summon.skeleton-attack"), SkillExecutionKind.SummonSkeleton),
+            [SkeletonMageUnitId] = new(aiDefinitions[new ContentId("ai.summon.fire-demon")],
+                Levels(playableSkills, "skill.summon.skeleton-mage-fireball"), SkillExecutionKind.SummonSkeletonMage),
+            [FireDemonUnitId] = new(aiDefinitions[new ContentId("ai.summon.fire-demon")],
+                new Dictionary<int, SkillDefinition>
+                {
+                    [1] = playableSkills[new ContentId("skill.summon.fire-demon-attack")],
+                    [2] = playableSkills[new ContentId("skill.summon.fire-demon-attack")]
+                }, SkillExecutionKind.SummonFireDemon)
+        };
         return new PlayableBattleSessionService(new PlayableBattleSessionContext(
-            battle, 0, skillsByUnit, aiByUnit, playableSkills, request, characterIds, layout.BlockedCells));
+            battle, 0, skillsByUnit, aiByUnit, playableSkills, request, characterIds, layout.BlockedCells,
+            summonControllers));
     }
+
+    private static IReadOnlyDictionary<int, SkillDefinition> Levels(
+        IReadOnlyDictionary<ContentId, SkillDefinition> skills, string prefix) => new Dictionary<int, SkillDefinition>
+    {
+        [1] = skills[new ContentId(prefix + ".lv1")],
+        [2] = skills[new ContentId(prefix + ".lv2")]
+    };
 
     private static BattleUnitState CreatePartyState(
         UnitDefinition definition,

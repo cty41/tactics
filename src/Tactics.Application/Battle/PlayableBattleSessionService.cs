@@ -88,7 +88,13 @@ public sealed record PlayableBattleSessionContext(
     IReadOnlyDictionary<ContentId, SkillDefinition> SkillCatalog,
     EncounterRequest? EncounterRequest = null,
     IReadOnlyDictionary<UnitInstanceId, string>? CharacterIds = null,
-    IReadOnlyCollection<GridPoint>? BlockedCells = null);
+    IReadOnlyCollection<GridPoint>? BlockedCells = null,
+    IReadOnlyDictionary<ContentId, SummonControllerDefinition>? SummonControllers = null);
+
+public sealed record SummonControllerDefinition(
+    AiDefinition Ai,
+    IReadOnlyDictionary<int, SkillDefinition> SkillsByLevel,
+    SkillExecutionKind OwnerSummonKind);
 
 public sealed record BattleUiIntentResult(
     bool Succeeded,
@@ -163,7 +169,7 @@ public sealed class PlayableBattleSessionService
             AdvanceAutomaticTurns();
             return Result(true, null, Array.Empty<BattleEvent>());
         }
-        if (active.Unit.PlayerNumber != _context.PlayerNumber)
+        if (active.Unit.PlayerNumber != _context.PlayerNumber || ControllerFor(active) is not null || IsNonActingSummon(active))
             return Result(false, "battle.ai_turn_input_rejected", Array.Empty<BattleEvent>());
 
         return intent switch
@@ -183,7 +189,9 @@ public sealed class PlayableBattleSessionService
     {
         BattleUnitState active = view.Units[view.ActiveUnitId];
         IReadOnlyList<SkillDefinition> skills = SkillsFor(active);
-        GridPoint[] moves = interactive&&active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && !active.HasMovedThisTurn
+        bool playerControlled = active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber &&
+            ControllerFor(active) is null && !IsNonActingSummon(active);
+        GridPoint[] moves = interactive && playerControlled && !active.HasMovedThisTurn
             ? view.Board.Cells.Keys.Where(cell => _transitions.Apply(view, new MoveUnitCommand(active.Unit.InstanceId, cell)).Succeeded).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
             : Array.Empty<GridPoint>();
         BattleUiTarget[] targets = interactive?skills.SelectMany(skill => LegalTargets(view, active, skill)).ToArray():Array.Empty<BattleUiTarget>();
@@ -308,7 +316,8 @@ public sealed class PlayableBattleSessionService
             if (_battleResult is not null)
                 return;
             BattleUnitState active = State.Units[State.ActiveUnitId];
-            if (active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber)
+            SummonControllerDefinition? summonController = ControllerFor(active);
+            if (active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && summonController is null && !IsNonActingSummon(active))
                 return;
             if (++commandCount > MaximumAutomaticCommands)
             {
@@ -322,7 +331,17 @@ public sealed class PlayableBattleSessionService
                 Append(skip.Events);
                 continue;
             }
-            if (!_context.AiByUnit.TryGetValue(active.Unit.InstanceId, out AiDefinition? definition))
+            if (IsNonActingSummon(active))
+            {
+                BattleTransition skip = _transitions.Apply(State, new EndTurnCommand(active.Unit.InstanceId));
+                State = skip.State;
+                Append(skip.Events);
+                continue;
+            }
+            AiDefinition? definition = summonController is null
+                ? null
+                : summonController.Ai with { SkillIds = SkillsFor(active).Select(skill => skill.ContentId).ToArray() };
+            if (definition is null && !_context.AiByUnit.TryGetValue(active.Unit.InstanceId, out definition))
             {
                 _failureCode = "battle.ai_definition_missing";
                 return;
@@ -340,7 +359,7 @@ public sealed class PlayableBattleSessionService
 
     private IEnumerable<BattleUiTarget> LegalTargets(BattleState view, BattleUnitState active, SkillDefinition skill)
     {
-        if (!active.IsAlive || active.Unit.PlayerNumber != _context.PlayerNumber)
+        if (!active.IsAlive || active.Unit.PlayerNumber != _context.PlayerNumber || ControllerFor(active) is not null || IsNonActingSummon(active))
             yield break;
         foreach (GridPoint cell in view.Board.Cells.Keys.OrderBy(cell => cell.X).ThenBy(cell => cell.Y))
         {
@@ -442,17 +461,39 @@ public sealed class PlayableBattleSessionService
         bool enemyAlive=view.Units.Values.Any(unit=>unit.IsAlive&&unit.Unit.PlayerNumber!=_context.PlayerNumber);
         if(!playerAlive)return PlayableBattlePhase.Defeat;
         if(!enemyAlive)return PlayableBattlePhase.Victory;
-        return view.Units[view.ActiveUnitId].Unit.PlayerNumber == _context.PlayerNumber ? PlayableBattlePhase.PlayerTurn : PlayableBattlePhase.AiTurn;
+        BattleUnitState active = view.Units[view.ActiveUnitId];
+        return active.Unit.PlayerNumber == _context.PlayerNumber && ControllerFor(active) is null && !IsNonActingSummon(active)
+            ? PlayableBattlePhase.PlayerTurn
+            : PlayableBattlePhase.AiTurn;
     }
 
     private void Append(IEnumerable<BattleEvent> events) => _recentEvents.AddRange(events);
     private IReadOnlyList<SkillDefinition> SkillsFor(BattleUnitState unit)
     {
         if (_context.SkillsByUnit.TryGetValue(unit.Unit.InstanceId, out IReadOnlyList<SkillDefinition>? skills)) return skills;
+        if (ControllerFor(unit) is SummonControllerDefinition controller)
+        {
+            int level = 1;
+            if (unit.SummonOwnerId is UnitInstanceId ownerId && _context.SkillsByUnit.TryGetValue(ownerId, out IReadOnlyList<SkillDefinition>? ownerSkills))
+                level = ownerSkills.Where(skill => skill.ExecutionKind == controller.OwnerSummonKind).Select(skill => skill.Level).DefaultIfEmpty(1).Max();
+            if (!controller.SkillsByLevel.TryGetValue(level, out SkillDefinition? skill))
+                skill = controller.SkillsByLevel.OrderBy(item => item.Key).Last().Value;
+            return new[] { skill };
+        }
         ContentId? summonSkill = unit.SummonOwnerId is null ? null : DynamicSummonBasicSkill(unit.Unit.DefinitionId);
         if (summonSkill is ContentId id) return new[] { _context.SkillCatalog[id] };
         return Array.Empty<SkillDefinition>();
     }
+
+    private SummonControllerDefinition? ControllerFor(BattleUnitState unit) =>
+        unit.SummonOwnerId is not null && _context.SummonControllers is not null &&
+        _context.SummonControllers.TryGetValue(unit.Unit.DefinitionId, out SummonControllerDefinition? controller)
+            ? controller
+            : null;
+
+    private static bool IsNonActingSummon(BattleUnitState unit) =>
+        string.Equals(unit.SummonCategory, "Decoy", StringComparison.Ordinal) ||
+        unit.Unit.DefinitionId == new ContentId("unit.pure-run.amazon-decoy");
 
     public static ContentId? DynamicSummonBasicSkill(ContentId unitDefinitionId)
     {
