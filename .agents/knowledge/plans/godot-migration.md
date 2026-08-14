@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-14T17:12:23+08:00"
+timestamp: "2026-08-14T19:50:11+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:e68d759574b2c6e342b36d60bfb2ce9394a8b606adc5437ba621af6f737bceeb
+source_fingerprint: sha256:e8750d598f40adc7833844c99d2e636ed92b69a767d7c345e077516ba8ede981
 ---
 
 # Current state
@@ -125,4 +125,4 @@ Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-tra
 2. 项目 MCP Profile 当前为 `presentation`；统一入口在每次完整门禁中验证项目级白名单配置。
 3. Phase 6B 已关闭；Phase 6A 自动 parity 已按完整图合同重验。Phase 7B–8E 自动实现与统一门禁已完成，下一闸门是 New Run、Run recovery、Inventory/成长、七层地图和等距表现的合并人工复验。Audio 与第三方正式 Presentation payload 仍未迁移。
 
-Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行，Godot Windows Release/PCK Smoke 延后到发布阶段。
+Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行。Godot Windows Release/PCK 已建立 `Windows Desktop` 导出预设、只读 CI 构建入口和仅在最终 `main` 启用的 GitHub Actions artifact 流程；本地平衡门禁已通过，完整 EXE/PCK 导出与无 Godot 安装机器启动仍由首次线上 runner 和人工下载验收关闭。
