@@ -4,31 +4,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
-### MQA-GODOT-AVAILABILITY-TURNS-LOS — Skill availability, defeated turns, and LOS
-
-- Status: `pending`
-- Source: Phase 7B–8E battle availability and LOS parity repair
-- Reopen reason: Move now uses the same authoritative availability boundary, and LOS hover exposes the first structured blocker instead of only a generic rejection.
-- Action: Move once, exhaust Mana, kill a party member, then test a ranged skill with a living unit between caster and target; repeat after moving the blocker and with a corpse or dropped spear in between.
-- Expected: Move and unavailable skills are disabled with a reason and cannot enter targeting; defeated units are skipped; living units block Fireball and other ordinary ranged LOS, while corpses/dropped spears do not. Bone Spear retains Unity first-enemy interception.
-- Observe: Action buttons/tooltips, Turn Order/current actor, target highlights/Hover reason, CheatConsole, and Output.
-- Preserve on failure: Short video, actor/target/blocker cells, skill ID, Turn Order, event log, and Output.
-- Save boundary: Battle mutations apply; use a disposable or checkpointed encounter.
-- Automated evidence: Availability snapshot/intent rejection, consecutive dead-unit wrap, supercover corner blockers, Preview/AI/Transition shared probes, Poison Spear and Bone Spear exceptions are asserted; interaction clarity remains manual.
-- User verdict: Partial pass: skill availability and defeated-turn skipping are OK; living-unit LOS blocking has not yet been manually tested.
-
-### MQA-GODOT-TURN-PACING — Playable enemy initiative pacing
-
-- Status: `pending`
-- Source: Phase 7B–8E playable enemy speed profile
-- Action: Start a normal encounter and observe the first two rounds with the initial party and its normal enemy roster.
-- Expected: Enemy archetypes retain their relative differences, but the entire enemy team no longer consistently acts before all three player characters; no Unit Resource or derived player stat is visually changed.
-- Observe: Turn Order strip, active actor sequence, and CheatConsole turn log.
-- Preserve on failure: Encounter ID, Turn Order screenshot, actor sequence, Unit IDs, and Output.
-- Save boundary: Ordinary battle progression; use a checkpointed encounter if exact replay matters.
-- Automated evidence: The Adapter-owned speed profile, unit-state recomputation, player preservation, two-pass ResourceSaver hash and renderer smoke are asserted; pacing feel remains manual.
-- User verdict: none.
-
 ### MQA-GODOT-MYSTERY-ADJUDICATION — Fixed-option deterministic event adjudicator
 
 - Status: `pending`
@@ -52,7 +27,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Preserve on failure: Screenshot/video plus event log and speed/pause state.
 - Save boundary: Ordinary battle state changes apply; use a disposable Run if exact replay matters.
 - Automated evidence: Event-to-number identity, explicit Poison tick marker, multi-hit sequence, pause/speed propagation, and cleanup are asserted; readability and timing remain manual.
-- User verdict: Partial pass: normal and Poison tick numbers were observed; critical has not yet appeared during manual play.
+- User verdict: Partial pass: normal damage, Poison tick and gold critical numbers were observed; Miss, healing and MP recovery remain unconfirmed.
 
 ### MQA-GODOT-PROGRESSION-ATOMIC — Non-skippable atomic growth
 
@@ -68,16 +43,16 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
-- Status: `pending`
+- Status: `failed`
 - Source: Phase 8E N3 authoritative resume fix
-- Reopen reason: User reported that the third battle node first returned `run.not_ready`, then `save.starting_skill_invalid` after an actual starting skill had been upgraded to Lv2.
-- Action: Complete N1 and its growth, complete N2 and its growth, then click N3; later continue through BossVictory and alternate Layer 4/6 routes in disposable Runs.
-- Expected: N3 opens immediately when Ready; a PendingBattle resumes the same checkpoint and incomplete growth routes back to Progression instead of leaving a dead map node. Later route transactions resolve once and terminal summary appears once.
-- Observe: Map node status/detail, N3 battle title, Progression, Settlement, Home Continue, and Summary.
-- Preserve on failure: Run seed, node state/reason, save and backup copies, screenshot, and Output.
-- Save boundary: Use separate disposable Runs for mutually exclusive routes; never reuse a valuable save as a fixture.
-- Automated evidence: Two victories plus two completed growth transactions now assert Ready/index 2/N3 request; pending/resume and full deterministic journeys are also covered. End-to-end UX remains manual.
-- User verdict: Failed before this fix: N3 rejected the live V5 save because Bone Spear Lv1 had legitimately advanced to Lv2.
+- Reopen reason: Earlier N3 entry failures were repaired, but the latest full Run now stalls inside the final Boss battle instead of completing the terminal flow.
+- Action: Preserve the current final Boss battle without further navigation until its committed battle/result state is diagnosed.
+- Expected: Boss defeat should submit one terminal BattleResult, show BossVictory Summary once, and allow Return Home.
+- Observe: Current Boss battle, playback queue, Turn Order, CheatConsole, Summary routing and Godot Output.
+- Preserve on failure: Keep the scene open; copy save and backup, and record Run seed/revision, current actor, living units, playback state and full Output.
+- Save boundary: Current production Run is diagnostic evidence; do not abandon, overwrite or consume its terminal state.
+- Automated evidence: Existing automated full journeys assert the intended terminal route, but the preserved live Boss state proves an uncovered runtime/lifecycle case.
+- User verdict: Failed: after defeating the final Boss, the game remains stuck in the battle.
 
 ### MQA-GODOT-RELOAD-OUTPUT — Reload and diagnostics cleanup
 
@@ -128,9 +103,34 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Preserve on failure: Screenshot, item definition/instance ID, character before/after values, source route, save copy, and Output.
 - Save boundary: Purchases and loadout operations persist; keep a copy of the Store save.
 - Automated evidence: Base/bonus/total and derived projection, item details, Equip/Replace/Unequip identity, persistence, and the unique Map entry are asserted; readability and interaction remain manual.
-- User verdict: Failed before this repair: purchase worked, but equipment properties/equipped gains were not adequately inspectable and Home exposed a noncanonical Inventory button.
+- User verdict: Partial pass: Inventory operation and equipment detail UI are OK; the resulting battle-stat increase has not yet been verified in combat.
 
 ## Passed
+
+### MQA-GODOT-AVAILABILITY-TURNS-LOS — Skill availability, defeated turns, and LOS
+
+- Status: `passed`
+- Source: Phase 7B–8E battle availability and LOS parity repair
+- Reopen reason: Move now uses the same authoritative availability boundary, and LOS hover exposes the first structured blocker instead of only a generic rejection.
+- Action: Move once, exhaust Mana, kill a party member, then test a ranged skill with a living unit between caster and target; repeat after moving the blocker and with a corpse or dropped spear in between.
+- Expected: Move and unavailable skills are disabled with a reason and cannot enter targeting; defeated units are skipped; living units block ordinary ranged LOS while corpses/dropped spears do not.
+- Observe: Action buttons, Turn Order, target highlights, Hover reason and CheatConsole.
+- Preserve on failure: Actor/target/blocker cells, skill ID, event log and Output.
+- Save boundary: Ordinary battle mutation.
+- Automated evidence: Availability, dead-turn skipping, structured blockers and shared Preview/AI/Transition probes remain asserted.
+- User verdict: Passed in the latest report.
+
+### MQA-GODOT-TURN-PACING — Playable enemy initiative pacing
+
+- Status: `passed`
+- Source: Phase 7B–8E playable enemy speed profile
+- Action: Observe the first two rounds of a normal encounter.
+- Expected: Enemy archetypes retain relative differences without the entire enemy team consistently preceding all player characters.
+- Observe: Turn Order and CheatConsole.
+- Preserve on failure: Encounter ID, Turn Order and actor sequence.
+- Save boundary: Ordinary battle mutation.
+- Automated evidence: Speed profile generation, player preservation and derived-stat recomputation remain asserted.
+- User verdict: Passed in the latest report.
 
 ### MQA-GODOT-L4-RECOVERY — Layer 4 legacy-save recovery
 
@@ -238,13 +238,11 @@ No current items.
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-AVAILABILITY-TURNS-LOS`
-2. `MQA-GODOT-TURN-PACING`
-3. `MQA-GODOT-MYSTERY-ADJUDICATION`
+1. `MQA-GODOT-FULL-RUN`
+2. `MQA-GODOT-MYSTERY-ADJUDICATION`
+3. `MQA-GODOT-INVENTORY`
 4. `MQA-GODOT-SUMMON-CONTROL`
 5. `MQA-GODOT-DEFEAT-FLOW`
-6. `MQA-GODOT-INVENTORY`
-7. `MQA-GODOT-FULL-RUN`
-8. `MQA-GODOT-DAMAGE-NUMBERS`
-9. `MQA-GODOT-PROGRESSION-ATOMIC`
-10. `MQA-GODOT-RELOAD-OUTPUT`
+6. `MQA-GODOT-DAMAGE-NUMBERS`
+7. `MQA-GODOT-PROGRESSION-ATOMIC`
+8. `MQA-GODOT-RELOAD-OUTPUT`
