@@ -33,9 +33,17 @@ jobs:
     env:
       GODOT_VERSION: 4.7.1-stable
       BUILD_OUTPUT: Build/Godot/Windows
-      RC_SOURCE_ROOT: ${{ runner.temp }}/tactics-godot-rc-source
-      RC_DIAGNOSTICS: ${{ runner.temp }}/tactics-godot-rc-diagnostics
     steps:
+      - name: Initialize bounded RC paths
+        id: paths
+        shell: pwsh
+        run: |
+          $sourceRoot = Join-Path $env:RUNNER_TEMP 'tactics-godot-rc-source'
+          $diagnostics = Join-Path $env:RUNNER_TEMP 'tactics-godot-rc-diagnostics'
+          New-Item -ItemType Directory -Path $diagnostics -Force | Out-Null
+          "source=$sourceRoot" >> $env:GITHUB_OUTPUT
+          "diagnostics=$diagnostics" >> $env:GITHUB_OUTPUT
+
       - name: Check out repository without all LFS objects
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -143,31 +151,30 @@ jobs:
       - name: Create clean Godot-owned RC source
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path $env:RC_DIAGNOSTICS -Force | Out-Null
           ./Tools/migration/New-GodotOwnedRcSource.ps1 `
-            -DestinationRoot $env:RC_SOURCE_ROOT `
+            -DestinationRoot '${{ steps.paths.outputs.source }}' `
             -ManifestPath 'rc-source-manifest.json' `
             -InitializeGit
-          Copy-Item -LiteralPath (Join-Path $env:RC_SOURCE_ROOT 'rc-source-manifest.json') -Destination $env:RC_DIAGNOSTICS
+          Copy-Item -LiteralPath (Join-Path '${{ steps.paths.outputs.source }}' 'rc-source-manifest.json') -Destination '${{ steps.paths.outputs.diagnostics }}'
 
       - name: Verify Godot ownership boundary
         shell: pwsh
-        working-directory: ${{ env.RC_SOURCE_ROOT }}
+        working-directory: ${{ steps.paths.outputs.source }}
         run: |
           try {
             ./Tools/migration/Verify-GodotMigration.ps1 `
               -GodotOwned `
               -GodotExecutable '${{ steps.godot.outputs.executable }}' *>&1 |
-              Tee-Object -FilePath "$env:RC_DIAGNOSTICS\godot-owned-verifier.log"
+              Tee-Object -FilePath '${{ steps.paths.outputs.diagnostics }}\godot-owned-verifier.log'
           }
           catch {
-            $_ | Out-String | Set-Content -LiteralPath "$env:RC_DIAGNOSTICS\godot-owned-verifier-error.log"
+            $_ | Out-String | Set-Content -LiteralPath '${{ steps.paths.outputs.diagnostics }}\godot-owned-verifier-error.log'
             throw
           }
 
       - name: Export and audit Windows RC package
         shell: pwsh
-        working-directory: ${{ env.RC_SOURCE_ROOT }}
+        working-directory: ${{ steps.paths.outputs.source }}
         run: |
           try {
             ./Tools/migration/Build-GodotWindows.ps1 `
@@ -178,22 +185,22 @@ jobs:
               -WorkflowRunId '${{ github.run_id }}' `
               -WorkflowRef '${{ github.ref }}' `
               -GodotOwned *>&1 |
-              Tee-Object -FilePath "$env:RC_DIAGNOSTICS\windows-export.log"
+              Tee-Object -FilePath '${{ steps.paths.outputs.diagnostics }}\windows-export.log'
           }
           catch {
-            $_ | Out-String | Set-Content -LiteralPath "$env:RC_DIAGNOSTICS\windows-export-error.log"
+            $_ | Out-String | Set-Content -LiteralPath '${{ steps.paths.outputs.diagnostics }}\windows-export-error.log'
             throw
           }
 
       - name: Smoke exported executable
         shell: pwsh
-        working-directory: ${{ env.RC_SOURCE_ROOT }}
+        working-directory: ${{ steps.paths.outputs.source }}
         run: |
-          $exe = Join-Path $env:RC_SOURCE_ROOT "$env:BUILD_OUTPUT/Tactics.exe"
+          $exe = Join-Path '${{ steps.paths.outputs.source }}' "$env:BUILD_OUTPUT/Tactics.exe"
           foreach ($renderer in @('gl_compatibility', 'default')) {
             ./Tools/migration/Test-GodotWindowsLaunch.ps1 `
               -Executable $exe `
-              -DiagnosticsDirectory $env:RC_DIAGNOSTICS `
+              -DiagnosticsDirectory '${{ steps.paths.outputs.diagnostics }}' `
               -Renderer $renderer
           }
 
@@ -203,7 +210,7 @@ jobs:
         run: |
           $shortSha = '${{ github.sha }}'.Substring(0, 8)
           $artifactName = "tactics-godot-windows-$shortSha-${{ github.run_number }}"
-          $packageRoot = Join-Path $env:RC_SOURCE_ROOT $env:BUILD_OUTPUT
+          $packageRoot = Join-Path '${{ steps.paths.outputs.source }}' $env:BUILD_OUTPUT
           $size = (Get-ChildItem -LiteralPath $packageRoot -File -Recurse | Measure-Object Length -Sum).Sum
           $semanticHash = (Get-FileHash -LiteralPath (Join-Path $packageRoot 'rc-semantic-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
           "name=$artifactName" >> $env:GITHUB_OUTPUT
@@ -222,11 +229,11 @@ jobs:
           compression-level: 6
 
       - name: Upload bounded RC diagnostics
-        if: always()
+        if: always() && steps.paths.outputs.diagnostics != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tactics-godot-windows-rc-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
-          path: ${{ env.RC_DIAGNOSTICS }}/**
+          path: ${{ steps.paths.outputs.diagnostics }}/**
           if-no-files-found: warn
           retention-days: 14
           compression-level: 6

@@ -139,6 +139,8 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("if: always()", workflow)
         self.assertIn("retention-days: 14", workflow)
         self.assertNotIn("create-release", workflow.lower())
+        self.assertNotIn("${{ runner.temp }}", workflow)
+        self.assertIn("steps.paths.outputs.diagnostics != ''", workflow)
 
 
 if __name__ == "__main__":
