@@ -52,8 +52,8 @@
 
 - Master/Music/SFX/UI buses；独立版本化音量/mute 设置，不写 Run Save。
 - `AudioCueDefinition`、变体、并发、清理和 committed battle/page event 映射。
-- 用户提供允许 Godot 发布的素材包与许可证后，记录文件级来源/hash 并接入 Music/SFX/UI。
-- 素材未确认前不得宣称 Audio 完成，也不得进入 Unity 删除步骤。
+- 用户已决定本版本不接入 Audio payload；框架保留但运行时静默，素材、cue 绑定与听感验收整体 deferred。
+- 不得宣称 Audio 内容迁移完成，但缺少音频不再阻断本版本 Windows RC；未来接入时仍需文件级来源/hash 与许可证审计。
 
 ### 6. 解除 Unity 验证依赖
 
@@ -66,7 +66,7 @@
 ### 7. 人工与 Windows RC
 
 - 关闭正式 UI、Inventory、Defeated、Miss/Heal/MP 数字和真实 Editor Assembly Reload。
-- 新增 9 个玩家 Lv3、Treasure、Map/Event/Skill/Presentation/AI/Encounter/QA Workbench 与 Audio 人工验收。
+- 新增 9 个玩家 Lv3、Treasure、Map/Event/Skill/Presentation/AI/Encounter/QA Workbench 人工验收；Audio 本版本 deferred。
 - 使用 Godot 4.7.1 Mono templates 或 GitHub Actions，从无 Unity 根目录的干净 checkout 导出并启动 EXE/PCK。
 - Release 不得包含 Unity、GdUnit、TestPlatform 或迁移临时载荷。
 
@@ -92,14 +92,14 @@
 - Lv3、Treasure、Map V6、旧存档迁移和奖励幂等。
 - Map/Event/Skill/Presentation/AI Workbench 的 Undo/Redo、校验、保存回滚与 Reload。
 - Encounter Fixture 的拖拽吸附、占格、round-trip、正式 Main 启动，以及与正式 Encounter 共用 layout compiler。
-- Audio bus、pause、并发和清理不改变 gameplay。
+- Audio 框架 bus、pause、并发和清理自动证据保留；本版本不要求 payload 或听感验收。
 - ResourceSaver 两轮一致；Catalog、UID、receipt 精确匹配。
 - 无 Unity 根目录时 Debug/Release、Core/Application、Gameplay Specs、GdUnit、Compatibility/Forward+、Windows export 全绿。
 - 发布内容不存在 Unity 或未授权第三方 payload。
 
 ## Risks and Gates
 
-- 合法音频素材是外部人工阻断点。
+- Audio payload 已明确 deferred，不是本版本 RC 或 Unity 删除的阻断点；未来有声版本另开素材/许可证闸门。
 - Workbench、人工 QA、Windows RC 和 `GodotOwned` 未完成前不得删除 Unity。
 - 删除前仍需一次精确路径清单确认。
 - 实施完成后将长期结论并入权威 docs，更新 OKF，删除本 active plan，由 Git 保存历史。

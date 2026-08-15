@@ -306,6 +306,11 @@ scopes:
       - Tactics.Migration.runsettings
       - godot/project.godot
       - godot/Tactics.Godot.Adapter.csproj
+      - .github/workflows/godot-windows-build.yml
+      - Tools/migration/Build-GodotWindows.ps1
+      - Tools/migration/New-GodotOwnedRcSource.ps1
+      - Tools/migration/Test-GodotWindowsPackage.ps1
+      - Tools/migration/Test-GodotWindowsLaunch.ps1
       - Tools/migration/manifest/godot-tooling.json
       - Tools/migration/Verify-GodotMigration.ps1
       - Tools/migration/Sync-GodotAiCodexConfig.ps1

@@ -284,7 +284,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ### MQA-GODOT-AUDIO-ASSETS — Licensed audio payload and listening pass
 
-- Status: `blocked`
+- Status: `deferred`
 - Source: `0b2a3c81`, Godot audio framework checkpoint
 - Action: Provide or approve an audio pack whose license permits redistribution, then audition Music/SFX/UI cues through the Audio Workbench and one complete Run.
 - Expected: File-level provenance/hash is recorded; Master/Music/SFX/UI buses, volume/mute, concurrency and cleanup sound correct without changing gameplay timing.
@@ -292,7 +292,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Preserve on failure: Asset/license identity, cue/bus, reproduction step and Output.
 - Save boundary: Audio settings use their own versioned settings file and do not modify Run Save.
 - Automated evidence: Bus creation, independent settings, cue/profile validation, concurrency and cleanup framework are tested. No redistributable audio payload is currently registered, so content migration and listening acceptance cannot be claimed.
-- User verdict: blocked pending legally usable audio assets.
+- User verdict: Deferred by the user for this version; the Windows RC is intentionally silent and does not require an audio payload.
 
 ### MQA-GODOT-WINDOWS-RC — Windows export and clean launch
 
