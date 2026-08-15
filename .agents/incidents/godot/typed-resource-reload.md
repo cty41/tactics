@@ -32,3 +32,5 @@ Workbench loading now uses untyped `ResourceLoader.Load`, checks for null, and r
 ## Scope and invalidation
 
 This workaround is limited to editor initialization during reload. It does not prohibit typed Resources at stable runtime and must not erase schema/type diagnostics.
+
+If the failure persists across a stable editor restart and `GodotSharpEditor` is absent from the Editor dependency graph, route to [export-release-editor-dependency-graph-contamination](export-release-editor-dependency-graph-contamination.md) instead of treating it as a transient reload boundary.

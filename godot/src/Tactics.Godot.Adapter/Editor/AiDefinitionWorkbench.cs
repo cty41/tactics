@@ -8,6 +8,8 @@ namespace Tactics.Godot.Adapter.Editor;
 [Tool]
 public partial class AiDefinitionWorkbench : VBoxContainer
 {
+    private const string CatalogPath = "res://content/ContentCatalog.tres";
+    private const string CatalogScriptPath = "res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs";
     private EditorUndoRedoManager? _undoRedo;
     private readonly Dictionary<string, string> _paths = new(StringComparer.Ordinal);
     private OptionButton? _picker;
@@ -19,6 +21,7 @@ public partial class AiDefinitionWorkbench : VBoxContainer
     private Label? _status;
     private AiDefinitionResource? _resource;
     private string _path = string.Empty;
+    private int _catalogLoadAttempts;
 
     public void Configure(EditorUndoRedoManager undoRedo) => _undoRedo = undoRedo;
 
@@ -45,7 +48,13 @@ public partial class AiDefinitionWorkbench : VBoxContainer
         AddChild(_status);
         _graph = new GraphEdit { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         AddChild(_graph);
-        LoadCatalog();
+        CallDeferred(nameof(LoadCatalog));
+    }
+
+    public override void _ExitTree()
+    {
+        _catalogLoadAttempts = 0;
+        if (_picker is not null) _picker.ItemSelected -= LoadSelected;
     }
 
     public static void ValidateResource(AiDefinitionResource value)
@@ -63,10 +72,13 @@ public partial class AiDefinitionWorkbench : VBoxContainer
         return field;
     }
 
-    private void LoadCatalog()
+    public void LoadCatalog()
     {
-        GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)
-            ?? throw new InvalidOperationException("Canonical catalog is missing.");
+        EditorResourceLoadResult<GodotResourceCatalog> result = ReloadSafeEditorResourceLoader.Load<GodotResourceCatalog>(
+            CatalogPath, CatalogScriptPath, "Entries");
+        if (ReloadSafeEditorResourceLoader.RetryDeferred(this, MethodName.LoadCatalog, ref _catalogLoadAttempts, result, "AI workbench"))
+            return;
+        GodotResourceCatalog catalog = result.Resource!;
         foreach (GodotResourceEntry entry in catalog.Entries.Where(value => value.ResourceTypeIdValue == "ai"))
         {
             _paths[entry.ContentIdValue] = entry.DiagnosticPathValue;
@@ -122,7 +134,7 @@ public partial class AiDefinitionWorkbench : VBoxContainer
 
     private void RebuildGraph()
     {
-        foreach (Node child in _graph!.GetChildren())
+        foreach (GraphNode child in _graph!.GetChildren().OfType<GraphNode>())
         {
             _graph.RemoveChild(child);
             child.QueueFree();

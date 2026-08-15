@@ -1,5 +1,6 @@
 import json
 import pathlib
+import shutil
 import struct
 import subprocess
 import tempfile
@@ -8,11 +9,14 @@ import unittest
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
 TOOLS = REPO / "Tools" / "migration"
+POWERSHELL = shutil.which("pwsh") or shutil.which("powershell")
 
 
 def run_pwsh(script: pathlib.Path, *args: str, cwd: pathlib.Path | None = None):
+    if POWERSHELL is None:
+        raise RuntimeError("PowerShell executable was not found.")
     return subprocess.run(
-        ["pwsh", "-NoProfile", "-File", str(script), *args],
+        [POWERSHELL, "-NoProfile", "-File", str(script), *args],
         cwd=cwd or REPO,
         text=True,
         stdout=subprocess.PIPE,
@@ -35,7 +39,7 @@ class WindowsRcPipelineTests(unittest.TestCase):
                 "if($errors.Count){$errors|%{$_.Message};exit 1}"
             )
             result = subprocess.run(
-                ["pwsh", "-NoProfile", "-Command", command],
+                [POWERSHELL, "-NoProfile", "-Command", command],
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -85,8 +89,8 @@ class WindowsRcPipelineTests(unittest.TestCase):
             self.assertEqual("godot-owned-without-unity-v1", manifest["boundary"])
             self.assertEqual(2, manifest["fileCount"])
             self.assertEqual(
-                ["godot/Tactics.Godot.Adapter.sln", "godot/project.godot"],
-                [entry["path"] for entry in manifest["files"]],
+                sorted(["godot/Tactics.Godot.Adapter.sln", "godot/project.godot"], key=str.casefold),
+                sorted([entry["path"] for entry in manifest["files"]], key=str.casefold),
             )
             status = subprocess.run(
                 ["git", "status", "--porcelain"], cwd=destination, check=True,
@@ -187,6 +191,11 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("dotnet restore $adapterProject --locked-mode -r win-x64", build_script)
         self.assertIn("dotnet publish $adapterProject", build_script)
         self.assertIn("-c ExportRelease -r win-x64 --self-contained true -p:GodotTargetPlatform=windows", build_script)
+        self.assertIn("--artifacts-path $exportArtifactsDirectory", build_script)
+        self.assertIn("-p:GodotProjectDir=$exportGodotProjectDirectory", build_script)
+        self.assertIn("editorAssetsHashBeforeExport", build_script)
+        self.assertIn("editorAssetsHashAfterExport", build_script)
+        self.assertIn("ExportRelease publish changed the Godot Editor dependency graph", build_script)
         self.assertIn("$GodotExecutable --verbose --headless", build_script)
         self.assertIn("packages.windows.lock.json", adapter_project)
         debug_lock = json.loads((REPO / "godot" / "packages.lock.json").read_text(encoding="utf-8-sig"))
@@ -197,6 +206,8 @@ class WindowsRcPipelineTests(unittest.TestCase):
         verifier = (TOOLS / "Verify-GodotMigration.ps1").read_text(encoding="utf-8-sig")
         runsettings = (REPO / "Tactics.Migration.runsettings").read_text(encoding="utf-8-sig")
         self.assertIn("Invoke-IsolatedGdUnitSuite", verifier)
+        self.assertIn("Assert-GodotEditorDependencyGraph", verifier)
+        self.assertIn("GodotSharpEditor/4\\.7\\.1", verifier)
         self.assertIn("GodotRuntimeTestRunner ends with exit code", verifier)
         self.assertIn("$reportedAssertionFailure", verifier)
         self.assertIn("<TestSessionTimeout>120000</TestSessionTimeout>", runsettings)

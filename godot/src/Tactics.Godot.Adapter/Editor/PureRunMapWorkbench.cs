@@ -8,6 +8,7 @@ namespace Tactics.Godot.Adapter.Editor;
 public partial class PureRunMapWorkbench : VBoxContainer
 {
     public const string MapPath = "res://content/map/PureRunDefaultMap.tres";
+    private const string MapScriptPath = "res://src/Tactics.Godot.Adapter/Runtime/PureRunMapResource.cs";
     private EditorUndoRedoManager? _undoRedo;
     private PureRunMapResource? _map;
     private GraphEdit? _graph;
@@ -16,6 +17,7 @@ public partial class PureRunMapWorkbench : VBoxContainer
     private SpinBox? _lane;
     private Label? _status;
     private bool _initialized;
+    private int _mapLoadAttempts;
 
     public void Configure(EditorUndoRedoManager undoRedo) => _undoRedo = undoRedo;
 
@@ -63,6 +65,7 @@ public partial class PureRunMapWorkbench : VBoxContainer
     public override void _ExitTree()
     {
         _initialized = false;
+        _mapLoadAttempts = 0;
         if (_nodePicker is not null) _nodePicker.ItemSelected -= SelectNode;
     }
 
@@ -82,10 +85,14 @@ public partial class PureRunMapWorkbench : VBoxContainer
         }
     }
 
-    private void LoadMap()
+    public void LoadMap()
     {
-        _map = ResourceLoader.Load<PureRunMapResource>(MapPath, string.Empty, ResourceLoader.CacheMode.Ignore)
-            ?? throw new InvalidOperationException($"Authoritative map is missing: {MapPath}");
+        EditorResourceLoadResult<PureRunMapResource> result = ReloadSafeEditorResourceLoader.Load<PureRunMapResource>(
+            MapPath, MapScriptPath, "ContentIdValue", "NodeIds", "NodeLayers", "NodeKinds", "NodeContentIds",
+            "NodeTitles", "NodeLanes", "ConnectionFromNodeIds", "ConnectionToNodeIds");
+        if (ReloadSafeEditorResourceLoader.RetryDeferred(this, MethodName.LoadMap, ref _mapLoadAttempts, result, "Pure Run map workbench"))
+            return;
+        _map = result.Resource!;
         ValidateResource(_map);
         _nodePicker!.Clear();
         foreach (string id in _map.NodeIds) _nodePicker.AddItem(id);
@@ -164,7 +171,7 @@ public partial class PureRunMapWorkbench : VBoxContainer
     private void RebuildGraph()
     {
         if (_graph is null || _map is null) return;
-        foreach (Node child in _graph.GetChildren())
+        foreach (GraphNode child in _graph.GetChildren().OfType<GraphNode>())
         {
             _graph.RemoveChild(child);
             child.QueueFree();

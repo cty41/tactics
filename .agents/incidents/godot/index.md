@@ -9,6 +9,8 @@
 | [csharp-assembly-reload-field-type-mismatch](csharp-assembly-reload-field-type-mismatch.md) | `Unable to cast` + `RestoreGodotObjectData` after changing a live tool field type | verified |
 | [editor-dock-lifecycle](editor-dock-lifecycle.md) | Dock 瞬间关闭、插件进入后退出 | verified |
 | [typed-resource-reload](typed-resource-reload.md) | C# typed Resource 在 reload 后不可用 | verified |
+| [export-release-editor-dependency-graph-contamination](export-release-editor-dependency-graph-contamination.md) | `EditorPlugin`/`EditorUndoRedoManager` missing + typed Resource 退化为 `Godot.Resource` | verified |
+| [editor-resource-missing-tool](editor-resource-missing-tool.md) | `[GlobalClass]` Resource 在 EditorPlugin 中退化为 `Godot.Resource`，runtime/headless 正常 | verified |
 | [wrong-project-root](wrong-project-root.md) | Build 成功但看不到 tooling/内容 | verified |
 | [parallel-build-obj-contention](parallel-build-obj-contention.md) | Core/Godot 并行构建争抢 `obj`/DLL | verified |
 | [gdu4-conditional-package-release-contamination](gdu4-conditional-package-release-contamination.md) | Release `.deps.json` 含 GdUnit/TestPlatform | verified |

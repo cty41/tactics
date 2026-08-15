@@ -19,13 +19,13 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 ### MQA-GODOT-CONTENT-WORKBENCH — Unified authoring and fixture shell
 
 - Status: `pending`
-- Source: `6cf74ce0`, unified Godot Content Workbench checkpoint
+- Source: `6cf74ce0`, unified Godot Content Workbench checkpoint; 2026-08-16 reload-safe Resource loading repair
 - Action: Open Tactics Tooling and visit Map, Event, Treasure, Encounter Fixture, Skill/Presentation, AI, Audio and QA tabs; exercise one safe Undo/Redo or preview action in each editable surface and Reload the C# assembly once.
 - Expected: The single Main Screen tool opens without duplicate panels; canonical resources load, validation and previews respond, Undo/Redo remains stable, and reload restores a clean tool with no stale SubViewport or signal.
 - Observe: Tactics Tooling Main Screen, Inspector/GraphEdit/SubViewport, status labels and Godot Output.
 - Preserve on failure: Tab name, selected ContentId/resource path, exact action, screenshot, full Output and whether Assembly Reload occurred.
 - Save boundary: Use read-only validation/preview actions unless working on a disposable resource copy; do not overwrite canonical content during first acceptance.
-- Automated evidence: Headless plugin lifecycle, canonical catalog/reference validation, Map/Event/Treasure/Encounter/AI/Presentation tests, ResourceSaver rollback and Godot-owned no-Unity verification are green. Editor interaction, layout and reload feel remain manual.
+- Automated evidence: Headless plugin lifecycle, canonical catalog/reference validation, Map/Event/Treasure/Encounter/AI/Presentation tests, ResourceSaver rollback and Godot-owned no-Unity verification are green. Reload-safe editor probes wait for exact script/schema; Editor-loaded custom Resources carry the scoped `[Tool]` contract; GraphEdit cleanup preserves the engine connection layer; runtime fixture loads fail fast with path/type/script diagnostics. A fresh canonical Editor startup and Main scene MCP smoke had zero errors/warnings. Editor interaction, layout and a real assembly reload remain manual.
 - User verdict: none.
 
 ### MQA-GODOT-FORMAL-UI — Formal Pure Run visual shell
@@ -56,13 +56,13 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 ### MQA-GODOT-RELOAD-OUTPUT — Reload and diagnostics cleanup
 
 - Status: `pending`
-- Source: Phase 7B–8E combined acceptance
+- Source: Phase 7B–8E combined acceptance; 2026-08-16 ExportRelease dependency-graph isolation repair
 - Action: Trigger one real Godot C# Assembly Reload, Continue the active Run, replay one battle action, and inspect logs.
 - Expected: No stale Tween, temporary node, duplicate signal, input lock, corrupted save, or Unicode/NUL error.
 - Observe: Godot Output and CheatConsole; verify current page and actor state visually.
 - Preserve on failure: Full Output excerpt, page/encounter, save copy, and reproduction order.
 - Save boundary: Reload may restart the current battle from its committed checkpoint; retain save evidence on failure.
-- Automated evidence: Gameplay Specs restart the real Main scene/process, Continue a PendingBattle, verify normalized state, input and zero temporary presentation nodes, and prove the production save unchanged. Only the real Editor Assembly Reload lifecycle remains manual.
+- Automated evidence: Gameplay Specs restart the real Main scene/process, Continue a PendingBattle, verify normalized state, input and zero temporary presentation nodes, and prove the production save unchanged. ExportRelease now uses an isolated Godot project/artifacts root and preserves the Editor dependency graph hash; the verifier preflight, build, GdUnit suites and 15 Gameplay Spec journeys passed with `GodotSharpEditor/4.7.1` present. Two later full-verifier attempts were interrupted by unrelated native-host exits after those assertions passed, so they are not recorded as complete green runs. Only the real Editor Assembly Reload lifecycle remains manual.
 - User verdict: none after latest lifecycle-affecting changes.
 
 ### MQA-GODOT-DEFEAT-FLOW — Party defeat terminal flow
@@ -308,12 +308,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-OWNERSHIP-CONTENT`
-2. `MQA-GODOT-CONTENT-WORKBENCH`
-3. `MQA-GODOT-FORMAL-UI`
-4. `MQA-GODOT-INVENTORY`
-5. `MQA-GODOT-DEFEAT-FLOW`
-6. `MQA-GODOT-DAMAGE-NUMBERS`
-7. `MQA-GODOT-RELOAD-OUTPUT`
-8. `MQA-GODOT-AUDIO-ASSETS`
-9. `MQA-GODOT-WINDOWS-RC`
+1. `MQA-GODOT-CONTENT-WORKBENCH`
+2. `MQA-GODOT-RELOAD-OUTPUT`
+3. `MQA-GODOT-INVENTORY`

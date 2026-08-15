@@ -5,6 +5,7 @@ using Tactics.Core.Encounters;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
+[Tool]
 [GlobalClass]
 public partial class BattleLayoutResource : Resource
 {

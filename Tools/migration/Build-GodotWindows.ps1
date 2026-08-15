@@ -113,6 +113,9 @@ if (Test-Path -LiteralPath $outputPath) {
 New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
 $exportExecutable = Join-Path $outputPath 'Tactics.exe'
 $releaseVerificationDirectory = Join-Path $env:TEMP ("tactics-godot-ci-release-" + [Guid]::NewGuid().ToString('N'))
+$exportArtifactsDirectory = Join-Path $env:TEMP ("tactics-godot-ci-artifacts-" + [Guid]::NewGuid().ToString('N'))
+$exportGodotProjectDirectory = Join-Path $exportArtifactsDirectory 'godot-project'
+$editorAssetsPath = Join-Path $projectRoot '.godot\mono\temp\obj\project.assets.json'
 
 Push-Location $repoRoot
 try {
@@ -153,8 +156,22 @@ try {
     Invoke-Checked 'Build production Godot adapter Release' {
         dotnet build $adapterProject -c $Configuration --no-restore -m:1 --output $releaseVerificationDirectory
     }
+    if (-not (Test-Path -LiteralPath $editorAssetsPath -PathType Leaf)) {
+        throw "Godot Editor dependency graph is missing: $editorAssetsPath"
+    }
+    $editorAssetsText = Get-Content -LiteralPath $editorAssetsPath -Raw
+    if ($editorAssetsText -notmatch 'GodotSharpEditor/4\.7\.1') {
+        throw 'Godot Editor dependency graph does not contain GodotSharpEditor/4.7.1 before ExportRelease publish.'
+    }
+    $editorAssetsHashBeforeExport = (Get-FileHash -LiteralPath $editorAssetsPath -Algorithm SHA256).Hash
     Invoke-Checked 'Publish production Godot adapter for Windows ExportRelease' {
-        dotnet publish $adapterProject -c ExportRelease -r win-x64 --self-contained true -p:GodotTargetPlatform=windows -m:1 --output $releaseVerificationDirectory
+        dotnet publish $adapterProject -c ExportRelease -r win-x64 --self-contained true -p:GodotTargetPlatform=windows `
+            -p:GodotProjectDir=$exportGodotProjectDirectory --artifacts-path $exportArtifactsDirectory `
+            -m:1 --output $releaseVerificationDirectory
+    }
+    $editorAssetsHashAfterExport = (Get-FileHash -LiteralPath $editorAssetsPath -Algorithm SHA256).Hash
+    if ($editorAssetsHashAfterExport -ne $editorAssetsHashBeforeExport) {
+        throw 'ExportRelease publish changed the Godot Editor dependency graph despite isolated artifacts.'
     }
 
     $forbiddenReleaseFiles = @(
@@ -267,6 +284,9 @@ try {
 finally {
     if (Test-Path -LiteralPath $releaseVerificationDirectory -PathType Container) {
         [IO.Directory]::Delete($releaseVerificationDirectory, $true)
+    }
+    if (Test-Path -LiteralPath $exportArtifactsDirectory -PathType Container) {
+        [IO.Directory]::Delete($exportArtifactsDirectory, $true)
     }
     Pop-Location
 }

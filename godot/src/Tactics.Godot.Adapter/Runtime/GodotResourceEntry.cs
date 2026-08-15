@@ -2,6 +2,7 @@ using Godot;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
+[Tool]
 [GlobalClass]
 public partial class GodotResourceEntry : Resource
 {

@@ -7,12 +7,26 @@ namespace Tactics.Godot.Adapter.Editor;
 [Tool]
 public partial class EncounterFixtureWorkbench : VBoxContainer
 {
+    private const string CatalogPath = "res://content/ContentCatalog.tres";
+    private const string CatalogScriptPath = "res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs";
     private static readonly string[] ScenarioNames = ["N1", "N2", "N3", "Elite Charger", "Elite Poison Caster"];
     private GodotAiEncounterFixture? _fixture;
     private Label? _status;
+    private int _catalogLoadAttempts;
+    private bool _initialized;
 
-    public override void _Ready()
+    public override void _Ready() => CallDeferred(nameof(InitializeWorkbench));
+
+    public void InitializeWorkbench()
     {
+        if (_initialized || !IsInsideTree()) return;
+        EditorResourceLoadResult<GodotResourceCatalog> result = ReloadSafeEditorResourceLoader.Load<GodotResourceCatalog>(
+            CatalogPath, CatalogScriptPath, "Entries");
+        if (ReloadSafeEditorResourceLoader.RetryDeferred(this, MethodName.InitializeWorkbench,
+            ref _catalogLoadAttempts, result, "Encounter fixture workbench"))
+            return;
+        result.Resource!.Validate();
+        _initialized = true;
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
         var toolbar = new HBoxContainer();
@@ -50,6 +64,14 @@ public partial class EncounterFixtureWorkbench : VBoxContainer
         viewport.AddChild(_fixture);
         frame.AddChild(viewport);
         AddChild(frame);
+    }
+
+    public override void _ExitTree()
+    {
+        _initialized = false;
+        _catalogLoadAttempts = 0;
+        _fixture = null;
+        _status = null;
     }
 
     public static void ValidateCanonicalAssets()

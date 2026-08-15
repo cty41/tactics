@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-15T22:13:11+08:00"
+timestamp: "2026-08-16T01:17:35+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,7 +23,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:f98e896ec559e5173c34137f5c39593439aebc42bd713133ee250f7493e1e0b7
+source_fingerprint: sha256:a447a7d87f9d7409f62312a28f89388f076512328a23a92114ba2334949c444e
 ---
 
 # Current state
@@ -63,6 +63,10 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 Ownership 收口使用同一入口的 `-GodotOwned` 模式，并由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 Unity 根目录与 Unity Oracle 项目后调用。该模式不运行活动 Unity 导出/Oracle，但仍执行所有 Godot-owned 编译、测试、Gameplay Spec、Release、renderer、运行时与知识结构门禁；因此“路径仍在但代码没引用”不能冒充 ownership 证明。GdUnit test host 位于 `godot/tests/`，生成的 runner source 由验证器在构建前从受版本控制模板暂时注入、在 finally 清理，避免 production 项目根存在第二个 `.csproj` 或发布程序集携带测试包。每个 suite 使用独立 native host；CI 只对已观察到且没有断言失败计数的 Windows native access-violation/illegal-instruction 退出重试一次，真实测试失败立即终止，VSTest session timeout 固定为 120 秒以避免 crash 后等待默认长超时。
 
 Windows RC workflow 先在 staging 中执行 `Verify-GodotMigration.ps1 -GodotOwned`，随后再通过同一 .NET 9.0 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。生产 Core/Application/Godot 项目均启用 locked restore；Godot Adapter 分别固定 Debug/Editor 与 `ExportRelease` Windows 锁图，后者排除 editor-only 依赖并在 export 前以 `GodotTargetPlatform=windows` 执行同构 self-contained publish。Godot ExportRelease 不得因 hosted Windows 换行或依赖解析重写 tracked lock file。Windows export 除检查进程退出码外还必须扫描 Godot 输出中的行首 `ERROR:`；仅精确的 headless Dummy Renderer 退出期 RID allocation 清理诊断不视为包失败。2026-08-15 hosted run `31889338418` 已通过 ExportRelease、199 文件包审计、Compatibility/default renderer EXE 启动并上传 14 天 artifact；剩余外部交付闸门是下载后的 clean-machine 人工启动与玩法 smoke。
+
+ExportRelease publish 必须同时使用临时 `GodotProjectDir` 和 `--artifacts-path` 隔离中间产物；脚本在 publish 前后校验 canonical Editor `project.assets.json` 哈希不变，统一验证器也要求其中存在 `GodotSharpEditor/4.7.1`，防止 export 污染 Editor 依赖图并令 typed C# Resource 退化为基础 `Resource`。
+
+EditorPlugin 直接实例化的 C# custom Resource 必须同时具备 `[GlobalClass]` 与 `[Tool]`；前者注册类型，后者允许 Editor 执行。GraphEdit 重建只清理工具自身创建的 `GraphNode`，不得遍历删除全部子节点，否则会破坏引擎 connection layer。
 
 Phase 7E 的等距棋盘由 `IsometricBattleBoardLayout` 提供唯一投影/逆投影合同，`GodotIsometricBattleBoard` 只绘制 Application Snapshot 并发送已有 cell intent。Phase 8A 的 `BattlePresentationFrameCompiler` 只消费 transition 前后 Snapshot 与已提交事件，Godot Tween 队列只消费 cue，不参与 RNG、伤害或 BattleResult。Phase 8B 的 Fireball/Bone Spear/Thrust 临时 FX 只消费 cue 路径和真实 affected-unit 集合，并严格排除 Piloto Prefab、纹理、材质、Shader 与 Audio。统一入口连续两次运行 `IsometricPresentationAssetBuilder`，比较 canonical Catalog、Board、Standard Unit 与三个技能 Resource SHA-256；新增路径固定 ledger UID。当前 canonical Catalog 精确为 119。
 

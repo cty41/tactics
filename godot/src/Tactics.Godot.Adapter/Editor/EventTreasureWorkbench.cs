@@ -8,10 +8,13 @@ namespace Tactics.Godot.Adapter.Editor;
 [Tool]
 public partial class EventTreasureWorkbench : VBoxContainer
 {
+    private const string CatalogPath = "res://content/ContentCatalog.tres";
+    private const string CatalogScriptPath = "res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs";
     private readonly bool _treasureMode;
     private ItemList? _items;
     private Tree? _details;
     private readonly Dictionary<string, string> _paths = new(StringComparer.Ordinal);
+    private int _catalogLoadAttempts;
 
     public EventTreasureWorkbench() : this(false) { }
     public EventTreasureWorkbench(bool treasureMode) => _treasureMode = treasureMode;
@@ -31,13 +34,23 @@ public partial class EventTreasureWorkbench : VBoxContainer
         _details.SetColumnTitle(0, "Field"); _details.SetColumnTitle(1, "Value");
         split.AddChild(_details);
         AddChild(split);
-        LoadCatalog();
+        CallDeferred(nameof(LoadCatalog));
     }
 
-    private void LoadCatalog()
+    public override void _ExitTree()
     {
-        GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)
-            ?? throw new InvalidOperationException("Canonical catalog is missing.");
+        _catalogLoadAttempts = 0;
+        if (_items is not null) _items.ItemSelected -= Select;
+    }
+
+    public void LoadCatalog()
+    {
+        EditorResourceLoadResult<GodotResourceCatalog> result = ReloadSafeEditorResourceLoader.Load<GodotResourceCatalog>(
+            CatalogPath, CatalogScriptPath, "Entries");
+        string context = _treasureMode ? "Treasure workbench" : "Event workbench";
+        if (ReloadSafeEditorResourceLoader.RetryDeferred(this, MethodName.LoadCatalog, ref _catalogLoadAttempts, result, context))
+            return;
+        GodotResourceCatalog catalog = result.Resource!;
         string type = _treasureMode ? "treasure" : "event";
         foreach (GodotResourceEntry entry in catalog.Entries.Where(value => value.ResourceTypeIdValue == type))
         {

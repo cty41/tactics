@@ -4,6 +4,7 @@ using Tactics.Core.Content;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
+[Tool]
 [GlobalClass]
 public partial class AiDefinitionResource : Resource
 {

@@ -7,10 +7,13 @@ namespace Tactics.Godot.Adapter.Editor;
 [Tool]
 public partial class ContentCatalogWorkbench : VBoxContainer
 {
+    private const string CatalogPath = "res://content/ContentCatalog.tres";
+    private const string CatalogScriptPath = "res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs";
     private readonly string _resourceType;
     private readonly string _heading;
     private ItemList? _items;
     private RichTextLabel? _details;
+    private int _catalogLoadAttempts;
 
     public ContentCatalogWorkbench() : this(string.Empty, "Content") { }
     public ContentCatalogWorkbench(string resourceType, string heading)
@@ -31,13 +34,22 @@ public partial class ContentCatalogWorkbench : VBoxContainer
         _details = new RichTextLabel { BbcodeEnabled = true, SelectionEnabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         split.AddChild(_details);
         AddChild(split);
-        LoadCatalog();
+        CallDeferred(nameof(LoadCatalog));
     }
 
-    private void LoadCatalog()
+    public override void _ExitTree()
     {
-        GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)
-            ?? throw new InvalidOperationException("Canonical catalog is missing.");
+        _catalogLoadAttempts = 0;
+        if (_items is not null) _items.ItemSelected -= ShowDetails;
+    }
+
+    public void LoadCatalog()
+    {
+        EditorResourceLoadResult<GodotResourceCatalog> result = ReloadSafeEditorResourceLoader.Load<GodotResourceCatalog>(
+            CatalogPath, CatalogScriptPath, "Entries");
+        if (ReloadSafeEditorResourceLoader.RetryDeferred(this, MethodName.LoadCatalog, ref _catalogLoadAttempts, result, _heading))
+            return;
+        GodotResourceCatalog catalog = result.Resource!;
         catalog.Validate();
         foreach (GodotResourceEntry entry in catalog.Entries.Where(value => string.IsNullOrEmpty(_resourceType) || value.ResourceTypeIdValue == _resourceType))
         {

@@ -4,6 +4,7 @@ using Tactics.Core.Runs;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
+[Tool]
 [GlobalClass]
 public partial class PureRunTreasureResource : Resource
 {

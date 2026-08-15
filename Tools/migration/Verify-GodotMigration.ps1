@@ -112,6 +112,17 @@ function Invoke-Checked {
     }
 }
 
+function Assert-GodotEditorDependencyGraph {
+    $assetsPath = Join-Path $projectRoot '.godot\mono\temp\obj\project.assets.json'
+    if (-not (Test-Path -LiteralPath $assetsPath -PathType Leaf)) {
+        throw "Godot Editor dependency graph is missing after locked restore: $assetsPath"
+    }
+    $assetsText = Get-Content -LiteralPath $assetsPath -Raw
+    if ($assetsText -notmatch 'GodotSharpEditor/4\.7\.1') {
+        throw 'Godot Editor dependency graph is missing GodotSharpEditor/4.7.1. Restore the Debug/Editor lock graph before building.'
+    }
+}
+
 function Invoke-IsolatedGdUnitSuite {
     param(
         [Parameter(Mandatory = $true)]
@@ -171,6 +182,8 @@ try {
             dotnet restore $solution --locked-mode
         }
     }
+
+    Assert-GodotEditorDependencyGraph
 
     # Build/test steps are intentionally sequential. Separate processes have
     # previously contended for Tactics.Core/obj and produced intermittent locks.

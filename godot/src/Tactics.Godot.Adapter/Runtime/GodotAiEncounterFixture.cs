@@ -161,7 +161,7 @@ public partial class GodotAiEncounterFixture : Control
 
     private void LoadDefinitions()
     {
-        GodotResourceCatalog global = ResourceLoader.Load<GodotResourceCatalog>(GlobalCatalogPath) ?? throw new InvalidOperationException("Global Catalog is missing.");
+        GodotResourceCatalog global = RequiredResourceLoader.Load<GodotResourceCatalog>(GlobalCatalogPath, "Global Catalog load failed");
         global.Validate();
         _paths = global.Entries.ToDictionary(entry => entry.ContentIdValue, entry => entry.ResourceLocator, StringComparer.Ordinal);
         foreach (GodotResourceEntry entry in global.Entries.Where(value => value.ResourceTypeIdValue == "skill"))
@@ -174,7 +174,7 @@ public partial class GodotAiEncounterFixture : Control
         foreach (GodotResourceEntry entry in global.Entries.Where(value => value.ResourceTypeIdValue == "ai"))
             _ai.Add(new ContentId(entry.ContentIdValue), (ResourceLoader.Load<AiDefinitionResource>(entry.DiagnosticPathValue, string.Empty, ResourceLoader.CacheMode.Ignore)
                 ?? throw new InvalidOperationException($"Missing AI: {entry.ContentIdValue} at {entry.DiagnosticPathValue}")).ToCoreDefinition());
-        _ = ResourceLoader.Load<GodotResourceCatalog>(BatchCatalogPath) ?? throw new InvalidOperationException("AI/Encounter Catalog is missing.");
+        _ = RequiredResourceLoader.Load<GodotResourceCatalog>(BatchCatalogPath, "AI/Encounter Catalog load failed");
     }
 
     private BattleLayoutDefinition LoadLayout(string id) =>
