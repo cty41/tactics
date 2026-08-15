@@ -355,21 +355,50 @@ public partial class GodotPlayableRunMain : Control
     {
         _logs.Clear();_visibleSnapshot=null;
         _battle = null;
-        Control root = NewPage("PURE RUN", "Seven-layer deterministic run");
-        VBoxContainer menu = new() { Position = new Vector2(620, 310), Size = new Vector2(360, 320) };
-        root.AddChild(menu);
+        Control root = CreatePage("PURE RUN", "Seven-layer deterministic run", false, false);
+        PanelContainer panel = PanelAt(root, new Vector2(570, 165), new Vector2(460, 570));
+        VBoxContainer menu = new();
+        panel.AddChild(menu);
+        Label title = Label("TACTICS", 42); title.HorizontalAlignment = HorizontalAlignment.Center; menu.AddChild(title);
+        Label subtitle = Label("PURE RUN", 16); subtitle.HorizontalAlignment = HorizontalAlignment.Center;
+        subtitle.AddThemeColorOverride("font_color", GodotTacticsTheme.TextSecondary); menu.AddChild(subtitle);
+        menu.AddChild(new ColorRect { Color = GodotTacticsTheme.Accent, CustomMinimumSize = new Vector2(0, 2), MouseFilter = MouseFilterEnum.Ignore });
         Button newRun = Button("New Run", () => StartNewRun()); menu.AddChild(newRun);
         RunStoreResult loaded = SaveStore.Load();
         Button continueRun = Button(loaded.Snapshot?.PendingRunSetup is null ? "Continue" : "Resume New Run Setup", ContinueRun);
         continueRun.Disabled = !loaded.Succeeded || loaded.Snapshot is null ||
             (loaded.Snapshot.ActiveRun is null && loaded.Snapshot.PendingRunSetup is null && loaded.Snapshot.TerminalSummary is null);
         menu.AddChild(continueRun);
+        menu.AddChild(Button("Options", ShowHomeOptions));
         menu.AddChild(Button("Quit", RequestQuit));
         string status = loaded.Snapshot?.PendingRunSetup is PendingRunSetup setup
             ? $"New Run setup: {setup.CurrentCharacterId}"
             : loaded.Snapshot?.ActiveRun is null ? "No active run" : $"Active run: {loaded.Snapshot.ActiveRun.EncounterContentId.Value}";
-        _status = LabelAt(root, status, new Vector2(620, 560), 22);
+        _status = Label(status, 16); _status.HorizontalAlignment = HorizontalAlignment.Center;
+        _status.AddThemeColorOverride("font_color", GodotTacticsTheme.TextSecondary); menu.AddChild(_status);
     }
+
+    private void ShowHomeOptions()
+    {
+        Control root = NewPage("OPTIONS", "Display and presentation settings");
+        PanelContainer panel = PanelAt(root, new Vector2(500, 205), new Vector2(600, 500));
+        var menu = new VBoxContainer(); panel.AddChild(menu);
+        menu.AddChild(Label("DISPLAY", 24));
+        menu.AddChild(Label("Logical canvas  1600 × 900\nScaling  Canvas Items / Keep\nRenderer  Compatibility or Forward+", 18));
+        Button fullscreen = Button(FullscreenButtonText(), () =>
+        {
+            Window window = GetWindow();
+            window.Mode = window.Mode == Window.ModeEnum.Fullscreen ? Window.ModeEnum.Windowed : Window.ModeEnum.Fullscreen;
+            ShowHomeOptions();
+        });
+        menu.AddChild(fullscreen);
+        menu.AddChild(Label("Battle playback speed is controlled from the battle HUD.", 16));
+        menu.AddChild(Button("Back", ShowHome));
+    }
+
+    private string FullscreenButtonText() => GetWindow().Mode == Window.ModeEnum.Fullscreen
+        ? "Fullscreen: On"
+        : "Fullscreen: Off";
 
     private void StartNewRun()
     {
@@ -1449,9 +1478,12 @@ public partial class GodotPlayableRunMain : Control
         var overlay = new ColorRect { Color = new Color(0,0,0,.72f), Visible = false, MouseFilter = MouseFilterEnum.Stop, ZIndex = PauseOverlayZIndex };
         overlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         root.AddChild(overlay); _pauseMenu = overlay; _pauseMenuControlsBattlePlayback = controlsBattlePlayback;
-        var menu = new VBoxContainer { Position = new Vector2(620,220), Size = new Vector2(360,360) };
-        overlay.AddChild(menu);
-        menu.AddChild(Label("PAUSED\nGame is paused",30));
+        PanelContainer panel = PanelAt(overlay, new Vector2(570, 165), new Vector2(460, 520));
+        var menu = new VBoxContainer(); panel.AddChild(menu);
+        Label title = Label("PAUSED", 36); title.HorizontalAlignment = HorizontalAlignment.Center; menu.AddChild(title);
+        Label subtitle = Label("Game is paused", 16); subtitle.HorizontalAlignment = HorizontalAlignment.Center;
+        subtitle.AddThemeColorOverride("font_color", GodotTacticsTheme.TextSecondary); menu.AddChild(subtitle);
+        menu.AddChild(new ColorRect { Color = GodotTacticsTheme.Accent, CustomMinimumSize = new Vector2(0, 2), MouseFilter = MouseFilterEnum.Ignore });
         menu.AddChild(Button("CONTINUE",ClosePauseMenu));
         menu.AddChild(Button("OPTIONS",()=>ShowPauseOptions(menu)));
         menu.AddChild(Button("MAIN MENU",()=>{ClosePauseMenu();ShowHome();}));
@@ -1482,7 +1514,10 @@ public partial class GodotPlayableRunMain : Control
         _pauseMenuPausedPlayback=false;
     }
 
-    private Control NewPage(string title, string subtitle, bool battleBackdrop = false)
+    private Control NewPage(string title, string subtitle, bool battleBackdrop = false) =>
+        CreatePage(title, subtitle, battleBackdrop, true);
+
+    private Control CreatePage(string title, string subtitle, bool battleBackdrop, bool showHeader)
     {
         _currentPageTitle = title;
         // The old page owns every actor and meter. Queueing the page frees those
@@ -1510,12 +1545,22 @@ public partial class GodotPlayableRunMain : Control
         var root = new Control(); root.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); AddChild(root); _page = root;
         Control background = battleBackdrop ? new GodotBattleBackdrop() : new ColorRect { Color = GodotTacticsTheme.Background };
         background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);
-        if (!battleBackdrop)
+        if (!battleBackdrop && showHeader)
         {
-            LabelAt(root, title, new Vector2(70, 35), 40);
-            LabelAt(root, subtitle, new Vector2(70, 82), 20);
+            PanelContainer header = PanelAt(root, new Vector2(48, 24), new Vector2(1504, 104));
+            var labels = new VBoxContainer(); header.AddChild(labels);
+            labels.AddChild(Label(title, 34));
+            Label detail = Label(subtitle, 16); detail.AddThemeColorOverride("font_color", GodotTacticsTheme.TextSecondary); labels.AddChild(detail);
         }
         return root;
+    }
+
+    private static PanelContainer PanelAt(Control parent, Vector2 position, Vector2 size,
+        string variation = GodotTacticsTheme.Panel)
+    {
+        var panel = new PanelContainer { Position = position, Size = size, ThemeTypeVariation = variation };
+        parent.AddChild(panel);
+        return panel;
     }
 
     private void DisposePresentationPlayer()

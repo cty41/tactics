@@ -310,6 +310,10 @@ public class PlayableRunUiGodotTests
         var ui = new GodotPlayableRunMain();
         ui._Ready();
         AssertThat(ui.IsReadyForInput).IsTrue();
+        AssertThat(Descendants<PanelContainer>(ui).Any(panel =>
+            panel.ThemeTypeVariation == GodotTacticsTheme.Panel)).IsTrue();
+        AssertThat(Descendants<Button>(ui).Select(button => button.Text)).Contains("Options");
+        AssertThat(Descendants<Label>(ui).Select(label => label.Text)).Contains("TACTICS");
         ui.Free();
     }
 
