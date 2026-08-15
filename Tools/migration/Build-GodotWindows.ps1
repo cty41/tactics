@@ -180,9 +180,9 @@ try {
         }
     }
     $managedAssemblies = @(Get-ChildItem -LiteralPath $outputPath -Filter '*.dll' -File -Recurse)
-    if ($managedAssemblies.Count -eq 0) {
-        throw 'The exported Windows package contains no managed assemblies.'
-    }
+    # Godot 4.7 can package the managed assemblies inside the PCK instead of emitting loose DLLs.
+    # The exported executable smoke below the package audit proves that the embedded C# entrypoint loads.
+    $managedPayloadMode = if ($managedAssemblies.Count -gt 0) { 'LooseAssemblies' } else { 'PckEmbedded' }
     $forbiddenExportFiles = @(
         Get-ChildItem -LiteralPath $outputPath -File -Recurse |
             Where-Object { $_.Name -match '^(GdUnit|Microsoft\.TestPlatform|testhost)' }
@@ -207,6 +207,7 @@ try {
         godotVersion = $actualGodotVersion
         dotnetSdk = $actualDotnetSdk
         configuration = $Configuration
+        managedPayloadMode = $managedPayloadMode
         files = @($files | ForEach-Object {
             [ordered]@{
                 path = $_.FullName.Substring($outputPrefixLength).Replace('\', '/')
@@ -240,7 +241,8 @@ try {
     }
     & $packageValidator -PackageRoot $outputPath -SourceManifestPath $resolvedSourceManifest `
         -SourceCommit $resolvedSourceCommit -GodotVersion $actualGodotVersion -DotnetSdk $actualDotnetSdk `
-        -Configuration $Configuration -WorkflowRunId $WorkflowRunId -WorkflowRef $WorkflowRef
+        -Configuration $Configuration -WorkflowRunId $WorkflowRunId -WorkflowRef $WorkflowRef `
+        -ManagedPayloadMode $managedPayloadMode
     if ($LASTEXITCODE -ne 0) { throw "Windows package audit failed with exit code $LASTEXITCODE." }
     Write-Host "Windows export passed: $exportExecutable"
 }

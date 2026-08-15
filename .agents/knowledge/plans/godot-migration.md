@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-15T19:48:25+08:00"
+timestamp: "2026-08-15T19:58:42+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:9640db8a5731e4bf081852576807597b473f8344220c398a5426fceb7802ab75
+source_fingerprint: sha256:fa0a3ec81a0cb203b3c2a88d439a122da7d1131832cf6917312b4c3b155730a5
 ---
 
 # Current state
@@ -127,7 +127,7 @@ Ownership closure 的统一 Content Workbench 以现有 Godot Main Screen Plugin
 
 Audio ownership 框架使用独立于 Run Save 的 `tactics-audio-settings-v1`，运行时确定性建立 Master/Music/SFX/UI bus，并通过 `AudioCueDefinitionResource`/`AudioCueCatalogResource` 约束变体、并发和 committed event 映射；Workbench 可调整 bus 试听状态并清理预览播放器。当前仓库尚未登记可随 Godot 发布的音频 payload；用户已明确本版本不接入 Audio，因此 cue catalog 内容、battle/page 音频绑定与听感验收转为 deferred，静默 RC 合法且不再阻断 Windows 构建，但不得将框架完成表述为 Audio 内容迁移完成。
 
-Windows RC 在完整 checkout 中仅准备 pinned Godot 4.7.1 Mono/.NET 9.0.312 与 `godot/**` LFS，实际验证和导出根由 tracked clean HEAD 裁剪得到，物理排除 Unity、Unity Oracle、本地 MCP 与缓存。RC 包要求 x86_64 EXE/PCK、managed runtime、显式顶层边界、无测试/Unity/godot-ai/save payload，并携带 source/semantic/provenance manifest 与 `SHA256SUMS.txt`；导出 EXE 在隔离用户目录中执行 Compatibility/default renderer 有界 smoke。成功与失败诊断均使用 14 天 Actions artifact，不自动创建 GitHub Release；首次 hosted run、下载 hash 与无引擎机器启动尚待 push/Actions 外部闸门。
+Windows RC 在完整 checkout 中仅准备 pinned Godot 4.7.1 Mono/.NET 9.0.312 与 `godot/**` LFS，实际验证和导出根由 tracked clean HEAD 裁剪得到，物理排除 Unity、Unity Oracle、本地 MCP 与缓存。RC 包要求 x86_64 EXE/PCK、显式 `LooseAssemblies` 或 Godot 4.7 `PckEmbedded` managed runtime mode、显式顶层边界、无测试/Unity/godot-ai/save payload，并携带 source/semantic/provenance manifest 与 `SHA256SUMS.txt`；导出 EXE 在隔离用户目录中执行 Compatibility/default renderer 有界 smoke，以证明嵌入式 C# 入口可加载。成功与失败诊断均使用 14 天 Actions artifact，不自动创建 GitHub Release；首次 hosted run、下载 hash 与无引擎机器启动尚待 push/Actions 外部闸门。
 
 Godot 正式 UI 收口采用原生 `Theme`/`Control` 等价表达 Unity UI Toolkit 的项目视觉语言，不复制 UXML/USS。根 Theme 统一近黑背景、半透明面板、橙色强调边、白灰文本以及 Button 的 normal/hover/pressed/focus/disabled 状态，并通过语义 variation 区分主按钮、紧凑控制、战斗动作和卡片。Home 使用居中的 TACTICS/PURE RUN 主菜单面板并恢复 Options 入口；普通 Run 页面共享标题面板，Esc Pause 使用最高层中央菜单而不再把文字直接叠在战场单位上。Battle HUD 将单位详情、Round/Turn、播放控制、横向动作栏和 End Turn 放入五个固定安全区面板，面板不参与鼠标命中且绘制在棋盘 Actor 之上，生产输入节点与 Gameplay Spec 语义保持不变。Map 使用独立节点详情卡；Progression、Settlement 与 Summary 使用居中流程面板；Inventory 使用角色、背包和物品详情三栏卡片，成长候选使用统一战斗动作卡样式。所有装饰面板均忽略鼠标输入，页面仍只通过原有生产按钮和 intent 改变状态。UI Theme 不进入 gameplay Catalog，canonical Catalog 保持 131。
 

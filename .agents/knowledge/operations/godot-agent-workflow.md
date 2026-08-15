@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-15T19:40:03+08:00"
+timestamp: "2026-08-15T19:58:40+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,7 +23,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:caffbd94d91a82c93526211c1b8e7daf4a24df1c2aef277f8fd7aa1dec68b30e
+source_fingerprint: sha256:8f45a74acf5f273a89836b1aeaecd5bab65243bdfcc113916def23b071dcaa89
 ---
 
 # Current state
@@ -32,7 +32,7 @@ Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET
 
 Windows 内部 RC 由 `Tools/migration/Build-GodotWindows.ps1` 提供唯一只读构建入口，`godot/export_presets.cfg` 固定 `Windows Desktop` Release 预设。GitHub Actions 在相关 `main` push 或手动触发时只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
 
-RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed runtime、顶层 allowlist 及测试/Unity/godot-ai/save payload 禁令，并生成 source/semantic/provenance manifest 与 `SHA256SUMS.txt`。`Test-GodotWindowsLaunch.ps1` 在隔离 APPDATA/LOCALAPPDATA 下以 Compatibility 和默认 renderer 有界启动导出 EXE；成功包与筛选后的失败诊断分别作为保留 14 天的 Actions artifact，内部测试不自动创建 GitHub Release。当前版本明确不登记 Audio payload，静默运行是 RC 合法状态。
+RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed runtime packaging、顶层 allowlist 及测试/Unity/godot-ai/save payload 禁令，并生成 source/semantic/provenance manifest 与 `SHA256SUMS.txt`。Godot 4.7 Windows C# export 可将托管程序集封装进 PCK；manifest 必须记录 `LooseAssemblies` 或 `PckEmbedded`，后者由随后的真实 EXE 启动证明 C# 入口可加载，不能以缺少松散 DLL 误判失败。`Test-GodotWindowsLaunch.ps1` 在隔离 APPDATA/LOCALAPPDATA 下以 Compatibility 和默认 renderer 有界启动导出 EXE；成功包与筛选后的失败诊断分别作为保留 14 天的 Actions artifact，内部测试不自动创建 GitHub Release。当前版本明确不登记 Audio payload，静默运行是 RC 合法状态。
 
 ## Verified boundaries
 

@@ -116,6 +116,17 @@ class WindowsRcPipelineTests(unittest.TestCase):
             self.assertTrue((package / "rc-manifest.json").is_file())
             self.assertTrue((package / "SHA256SUMS.txt").is_file())
 
+            (package / "Tactics.dll").unlink()
+            embedded = run_pwsh(
+                TOOLS / "Test-GodotWindowsPackage.ps1",
+                "-PackageRoot", str(package),
+                "-SourceManifestPath", str(source_manifest),
+                "-ManagedPayloadMode", "PckEmbedded",
+            )
+            self.assertEqual(0, embedded.returncode, embedded.stdout)
+            semantic = json.loads((package / "rc-semantic-manifest.json").read_text(encoding="utf-8-sig"))
+            self.assertEqual("PckEmbedded", semantic["managedPayloadMode"])
+
             (package / "UnityEngine.CoreModule.dll").write_bytes(b"forbidden")
             rejected = run_pwsh(
                 TOOLS / "Test-GodotWindowsPackage.ps1",

@@ -9,7 +9,9 @@ param(
     [string]$DotnetSdk,
     [string]$Configuration = 'Release',
     [string]$WorkflowRunId = '',
-    [string]$WorkflowRef = ''
+    [string]$WorkflowRef = '',
+    [ValidateSet('Auto', 'LooseAssemblies', 'PckEmbedded')]
+    [string]$ManagedPayloadMode = 'Auto'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,7 +38,13 @@ try {
 } finally { $stream.Dispose() }
 
 $files = @(Get-ChildItem -LiteralPath $root -File -Recurse | Sort-Object FullName)
-if (-not ($files | Where-Object Extension -eq '.dll')) { throw 'RC package contains no managed assemblies.' }
+$looseManagedAssemblies = @($files | Where-Object Extension -eq '.dll')
+$resolvedManagedPayloadMode = if ($ManagedPayloadMode -eq 'Auto') {
+    if ($looseManagedAssemblies.Count -gt 0) { 'LooseAssemblies' } else { 'PckEmbedded' }
+} else { $ManagedPayloadMode }
+if ($resolvedManagedPayloadMode -eq 'LooseAssemblies' -and $looseManagedAssemblies.Count -eq 0) {
+    throw 'RC package declares loose managed assemblies but contains no DLLs.'
+}
 $forbidden = @($files | Where-Object {
     $_.Name -match '^(GdUnit|Microsoft\.TestPlatform|testhost)' -or
     $_.Name -match '\.meta$' -or
@@ -48,7 +56,7 @@ if ($forbidden.Count -gt 0) {
     throw "Forbidden RC payload detected: $($forbidden.FullName -join ', ')"
 }
 
-$allowedRootFiles = @('Tactics.exe', 'Tactics.pck')
+$allowedRootFiles = @('Tactics.exe', 'Tactics.pck', 'SHA256SUMS.txt')
 $unexpectedRootFiles = @(Get-ChildItem -LiteralPath $root -File | Where-Object {
     $_.Name -notin $allowedRootFiles -and $_.Extension -notin @('.dll', '.json')
 })
@@ -80,6 +88,7 @@ $semantic = [ordered]@{
     dotnetSdk = $DotnetSdk
     configuration = $Configuration
     architecture = 'windows-x86_64'
+    managedPayloadMode = $resolvedManagedPayloadMode
     audio = 'deferred_no_payload'
     files = $entries
 }
