@@ -179,6 +179,13 @@ class WindowsRcPipelineTests(unittest.TestCase):
             project_text = project.read_text(encoding="utf-8-sig")
             self.assertIn("<RestoreLockedMode>true</RestoreLockedMode>", project_text)
 
+        verifier = (TOOLS / "Verify-GodotMigration.ps1").read_text(encoding="utf-8-sig")
+        runsettings = (REPO / "Tactics.Migration.runsettings").read_text(encoding="utf-8-sig")
+        self.assertIn("Invoke-IsolatedGdUnitSuite", verifier)
+        self.assertIn("GodotRuntimeTestRunner ends with exit code", verifier)
+        self.assertIn("$reportedAssertionFailure", verifier)
+        self.assertIn("<TestSessionTimeout>120000</TestSessionTimeout>", runsettings)
+
 
 if __name__ == "__main__":
     unittest.main()

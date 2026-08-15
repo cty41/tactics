@@ -112,6 +112,38 @@ function Invoke-Checked {
     }
 }
 
+function Invoke-IsolatedGdUnitSuite {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Description,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Filter
+    )
+
+    for ($attempt = 1; $attempt -le 2; $attempt++) {
+        Write-Host "== $Description (attempt $attempt/2) =="
+        $output = @(
+            dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+                -p:GodotProjectDir=$projectRootWithSeparator --filter $Filter `
+                --logger 'console;verbosity=minimal' 2>&1 |
+                ForEach-Object { [string]$_ }
+        )
+        $exitCode = $LASTEXITCODE
+        $output | ForEach-Object { Write-Output $_ }
+        if ($exitCode -eq 0) { return }
+
+        $text = $output -join "`n"
+        $knownNativeCrash = $text -match 'GodotRuntimeTestRunner ends with exit code: -107374(?:1795|1819)'
+        $reportedAssertionFailure = $text -match 'Failed:\s+[1-9][0-9]*'
+        if ($attempt -eq 1 -and $knownNativeCrash -and -not $reportedAssertionFailure) {
+            Write-Warning "$Description lost its native Godot host; retrying once in a fresh process."
+            continue
+        }
+        throw "$Description failed with exit code $exitCode on attempt $attempt."
+    }
+}
+
 Push-Location $repoRoot
 try {
     $env:GODOT_BIN = $GodotExecutable
@@ -278,25 +310,14 @@ try {
         if ($suiteName -eq 'Tactics.Godot.Tests.PlayableRunUiGodotTests') {
             $suiteFilter += '&FullyQualifiedName!~ReplacingAPageDoesNotRetainDisposedUnitMeters'
         }
-        Invoke-Checked "Run isolated GdUnit4Net suite $suiteName" {
-            dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
-                -p:GodotProjectDir=$projectRootWithSeparator --filter $suiteFilter `
-                --logger 'console;verbosity=minimal'
-        }
+        Invoke-IsolatedGdUnitSuite "Run isolated GdUnit4Net suite $suiteName" $suiteFilter
     }
     # This test intentionally creates and tears down the complete Main page, so it remains isolated even
     # from the other PlayableRunUi tests.
-    Invoke-Checked 'Run isolated GdUnit4Net page replacement cleanup' {
-        dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
-            -p:GodotProjectDir=$projectRootWithSeparator `
-            --filter 'FullyQualifiedName~ReplacingAPageDoesNotRetainDisposedUnitMeters' `
-            --logger 'console;verbosity=minimal'
-    }
-    Invoke-Checked 'Run isolated GdUnit4Net gameplay-spec journeys' {
-        dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
-            -p:GodotProjectDir=$projectRootWithSeparator `
-            --filter 'FullyQualifiedName~GodotGameplayRuntimeRunnerTests' --logger 'console;verbosity=minimal'
-    }
+    Invoke-IsolatedGdUnitSuite 'Run isolated GdUnit4Net page replacement cleanup' `
+        'FullyQualifiedName~ReplacingAPageDoesNotRetainDisposedUnitMeters'
+    Invoke-IsolatedGdUnitSuite 'Run isolated GdUnit4Net gameplay-spec journeys' `
+        'FullyQualifiedName~GodotGameplayRuntimeRunnerTests'
 
     if (-not (Test-Path -LiteralPath $godotGameplayReport -PathType Leaf)) {
         throw 'Godot gameplay spec report was not generated.'

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-15T20:46:18+08:00"
+timestamp: "2026-08-15T21:09:54+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,7 +23,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:62d41a692c379a5e36eeb06c7254be6950aac9a14466b84d3f4d6b15a2f2577f
+source_fingerprint: sha256:a4624230a94897b80ca33e633d87e5b756ca12a5ee4308272cf2048b69138a8d
 ---
 
 # Current state
@@ -60,7 +60,7 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 
 统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Gameplay Spec 编译与 Main.tscn 批量报告、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。Godot Gameplay Spec 报告必须由本轮 GdUnit 新生成，并精确包含五个预期 scenario/checkpoint 身份、生产 save 前后证据和零临时节点，旧 artifact 或重复易通过场景不能满足门禁；地图节点输入必须先通过生产 `NodeHovered` 事件确认具体 NodeId，再注入点击，不能只以鼠标位于整个 Map Control 上冒充命中。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 21 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter、Run/Persistence 与 Inventory/Progression 各自维护批次证据；Phase 7B 在两轮 ResourceSaver 后验证 27 个新增技能与 canonical 101 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。真实 Editor Assembly Reload 和表现可读性仍单独记录。
 
-Ownership 收口使用同一入口的 `-GodotOwned` 模式，并由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 Unity 根目录与 Unity Oracle 项目后调用。该模式不运行活动 Unity 导出/Oracle，但仍执行所有 Godot-owned 编译、测试、Gameplay Spec、Release、renderer、运行时与知识结构门禁；因此“路径仍在但代码没引用”不能冒充 ownership 证明。GdUnit test host 位于 `godot/tests/`，生成的 runner source 由验证器在构建前从受版本控制模板暂时注入、在 finally 清理，避免 production 项目根存在第二个 `.csproj` 或发布程序集携带测试包。
+Ownership 收口使用同一入口的 `-GodotOwned` 模式，并由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 Unity 根目录与 Unity Oracle 项目后调用。该模式不运行活动 Unity 导出/Oracle，但仍执行所有 Godot-owned 编译、测试、Gameplay Spec、Release、renderer、运行时与知识结构门禁；因此“路径仍在但代码没引用”不能冒充 ownership 证明。GdUnit test host 位于 `godot/tests/`，生成的 runner source 由验证器在构建前从受版本控制模板暂时注入、在 finally 清理，避免 production 项目根存在第二个 `.csproj` 或发布程序集携带测试包。每个 suite 使用独立 native host；CI 只对已观察到且没有断言失败计数的 Windows native access-violation/illegal-instruction 退出重试一次，真实测试失败立即终止，VSTest session timeout 固定为 120 秒以避免 crash 后等待默认长超时。
 
 Windows RC workflow 先在 staging 中执行 `Verify-GodotMigration.ps1 -GodotOwned`，随后再通过同一 .NET 9.0 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。生产 Core/Application/Godot 项目均启用 locked restore，Godot ExportRelease 不得因 hosted Windows 换行或依赖解析重写 tracked lock file。Windows export 除检查进程退出码外还必须扫描 Godot 输出中的行首 `ERROR:`；Godot 返回 0 但托管导出失败不得进入包审计或启动 smoke。完整 Unity 导出/Oracle 不进入 RC 构建；首次真实 hosted runner export、artifact digest/download hash 和无 Godot/Unity 机器启动仍是外部交付闸门。
 

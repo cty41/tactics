@@ -2,6 +2,10 @@
 <RunSettings>
   <RunConfiguration>
     <MaxCpuCount>1</MaxCpuCount>
+    <TestSessionTimeout>120000</TestSessionTimeout>
     <TreatNoTestsAsError>true</TreatNoTestsAsError>
   </RunConfiguration>
+  <GdUnit4>
+    <GodotConnectTimeout>20000</GodotConnectTimeout>
+  </GdUnit4>
 </RunSettings>
