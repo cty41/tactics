@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-15T18:41:58+08:00"
+timestamp: "2026-08-15T19:17:22+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:4190ee5fb31f320178fc312aa86a5414b8ca8dcbff161d034d034abd733b644a
+source_fingerprint: sha256:1c0179b371cffd2e6c2e28514785af0c642a3fd47487721a96e631525684ae0a
 ---
 
 # Current state
@@ -131,7 +131,7 @@ Windows RC 在完整 checkout 中仅准备 pinned Godot 4.7.1 Mono/.NET 9.0.312 
 
 Godot 正式 UI 收口采用原生 `Theme`/`Control` 等价表达 Unity UI Toolkit 的项目视觉语言，不复制 UXML/USS。根 Theme 统一近黑背景、半透明面板、橙色强调边、白灰文本以及 Button 的 normal/hover/pressed/focus/disabled 状态，并通过语义 variation 区分主按钮、紧凑控制、战斗动作和卡片。Home 使用居中的 TACTICS/PURE RUN 主菜单面板并恢复 Options 入口；普通 Run 页面共享标题面板，Esc Pause 使用最高层中央菜单而不再把文字直接叠在战场单位上。Battle HUD 将单位详情、Round/Turn、播放控制、横向动作栏和 End Turn 放入五个固定安全区面板，面板不参与鼠标命中且绘制在棋盘 Actor 之上，生产输入节点与 Gameplay Spec 语义保持不变。Map 使用独立节点详情卡；Progression、Settlement 与 Summary 使用居中流程面板；Inventory 使用角色、背包和物品详情三栏卡片，成长候选使用统一战斗动作卡样式。所有装饰面板均忽略鼠标输入，页面仍只通过原有生产按钮和 intent 改变状态。UI Theme 不进入 gameplay Catalog，canonical Catalog 保持 131。
 
-`Tools/migration/Verify-GodotMigration.ps1` 串行执行 locked restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、隔离的 GdUnit test host、Release build、Godot runtime/editor headless 与 OKF。GdUnit 3.1.1 的 Runtime Runner 要求 C# runner 位于 `project.godot` 主程序集，因此 test host 使用相同程序集名，但测试源码、`obj`、lock 和包与生产 csproj 分离；Release 明确排除。
+`Tools/migration/Verify-GodotMigration.ps1` 串行执行 locked restore、单节点 build、Core/Application NUnit、Python、Skill/Incident lint、隔离的 GdUnit test host、Release build、Godot runtime/editor headless 与 OKF。GdUnit 3.1.1 的 Runtime Runner 要求 C# runner 位于 `project.godot` 主程序集，因此 test host 使用相同程序集名，但测试源码、`obj`、lock 和包与生产 csproj 分离；Release 明确排除。完整 Main 页 replacement cleanup 与 Gameplay Spec journeys 分别在新原生宿主中执行，避免前序 ResourceLoader/SceneTree 生命周期影响最终清理证据。
 
 Godot ownership 验证另提供 `Test-GodotOwnedWithoutUnity.ps1`：它从 tracked working tree 建立系统临时副本，明确排除 `Assets/`、`Packages/`、`ProjectSettings/` 与 `src/Tactics.UnityOracle.Tests`，并在副本中执行 `Verify-GodotMigration.ps1 -GodotOwned`。该模式仍运行 Core/Application、Godot test host、Gameplay Spec、Debug/Release、Compatibility/Forward+、运行时与 OKF 结构校验；仅跳过需要活动 Unity 源/AssetDatabase 的 Oracle 与生成批次，并允许 OKF 中作为历史来源保留的 Unity `repo_paths` 在这个刻意裁剪的副本中缺失。Godot v2 Gameplay Spec 保持运行，唯一跳过的是对已排除 Unity runtime plan 文件的 byte-level deep compare。测试开始和结束均清理精确验证过的系统临时目录，不读写生产 `user://` 存档，也不把项目级未跟踪 godot-ai 配置当作发布依赖。
 

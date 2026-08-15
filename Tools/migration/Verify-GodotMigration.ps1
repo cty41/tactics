@@ -261,7 +261,16 @@ try {
     Invoke-Checked 'Run isolated GdUnit4Net unit and adapter suites' {
         dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
             -p:GodotProjectDir=$projectRootWithSeparator `
-            --filter 'FullyQualifiedName!~GodotGameplayRuntimeRunnerTests' --logger 'console;verbosity=minimal'
+            --filter 'FullyQualifiedName!~GodotGameplayRuntimeRunnerTests&FullyQualifiedName!~ReplacingAPageDoesNotRetainDisposedUnitMeters' `
+            --logger 'console;verbosity=minimal'
+    }
+    # This test intentionally creates and tears down the complete Main page. Keep it in a fresh native
+    # host so prior ResourceLoader/SceneTree ownership cannot affect the cleanup assertion on CI.
+    Invoke-Checked 'Run isolated GdUnit4Net page replacement cleanup' {
+        dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+            -p:GodotProjectDir=$projectRootWithSeparator `
+            --filter 'FullyQualifiedName~ReplacingAPageDoesNotRetainDisposedUnitMeters' `
+            --logger 'console;verbosity=minimal'
     }
     Invoke-Checked 'Run isolated GdUnit4Net gameplay-spec journeys' {
         dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
