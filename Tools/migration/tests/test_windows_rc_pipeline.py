@@ -180,10 +180,18 @@ class WindowsRcPipelineTests(unittest.TestCase):
             self.assertIn("<RestoreLockedMode>true</RestoreLockedMode>", project_text)
             self.assertIn("<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>", project_text)
 
+        adapter_project = (REPO / "godot" / "Tactics.Godot.Adapter.csproj").read_text(
+            encoding="utf-8-sig"
+        )
         self.assertIn("dotnet restore $adapterProject --locked-mode -r win-x64", build_script)
         self.assertIn("dotnet publish $adapterProject", build_script)
-        self.assertIn("-c ExportRelease -r win-x64 --self-contained true --no-restore", build_script)
+        self.assertIn("-c ExportRelease -r win-x64 --self-contained true -p:GodotTargetPlatform=windows", build_script)
         self.assertIn("$GodotExecutable --verbose --headless", build_script)
+        self.assertIn("packages.windows.lock.json", adapter_project)
+        debug_lock = json.loads((REPO / "godot" / "packages.lock.json").read_text(encoding="utf-8-sig"))
+        export_lock = json.loads((REPO / "godot" / "packages.windows.lock.json").read_text(encoding="utf-8-sig"))
+        self.assertIn("GodotSharpEditor", debug_lock["dependencies"]["net9.0"])
+        self.assertNotIn("GodotSharpEditor", export_lock["dependencies"]["net9.0"])
 
         verifier = (TOOLS / "Verify-GodotMigration.ps1").read_text(encoding="utf-8-sig")
         runsettings = (REPO / "Tactics.Migration.runsettings").read_text(encoding="utf-8-sig")

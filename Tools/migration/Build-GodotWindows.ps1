@@ -154,7 +154,7 @@ try {
         dotnet build $adapterProject -c $Configuration --no-restore -m:1 --output $releaseVerificationDirectory
     }
     Invoke-Checked 'Publish production Godot adapter for Windows ExportRelease' {
-        dotnet publish $adapterProject -c ExportRelease -r win-x64 --self-contained true --no-restore -m:1 --output $releaseVerificationDirectory
+        dotnet publish $adapterProject -c ExportRelease -r win-x64 --self-contained true -p:GodotTargetPlatform=windows -m:1 --output $releaseVerificationDirectory
     }
 
     $forbiddenReleaseFiles = @(
