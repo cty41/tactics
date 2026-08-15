@@ -9,6 +9,7 @@ using Tactics.Core.Runs;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
+using Tactics.Godot.Adapter.Editor;
 using Tactics.Application.Battle;
 using Tactics.Application.Presentation;
 using Tactics.Application.Runs;
@@ -669,6 +670,8 @@ public class PlayableRunUiGodotTests
         if (map is null || treasure is null) return;
         PureRunMapDefinition definition = map.ToCoreDefinition();
         PureRunTreasureDefinition reward = treasure.ToCoreDefinition();
+        PureRunMapWorkbench.ValidateResource(map);
+        EncounterFixtureWorkbench.ValidateCanonicalAssets();
         AssertThat(definition.Nodes.Count).IsEqual(16);
         AssertThat(definition.Connections.Count).IsEqual(23);
         AssertThat(definition.Nodes.Count(value => value.Kind == PureRunNodeKind.Treasure)).IsEqual(2);
