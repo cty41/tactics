@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-map-treasure-v1",
+  "canonicalCatalogEntries": 142,
+  "mapNodes": 16,
+  "mapConnections": 23,
+  "treasureContracts": 1,
+  "idempotency": {
+    "resourceSaverRuns": 2,
+    "byteIdentical": true
+  },
+  "manualGameplayAcceptance": "pending_map_and_treasure_qa"
+}

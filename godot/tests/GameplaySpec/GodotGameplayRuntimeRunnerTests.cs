@@ -17,11 +17,11 @@ public class GodotGameplayRuntimeRunnerTests
     {
         var expected = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["inventory-store-ready-v1"] = "70ff70d78706879dfe6168d4b3d8663eaeea084f5d8a5fcf2fa963661bf438a0",
-            ["defeat-no-summon-v1"] = "855ba3ba5fc8cbeb5fe05073e94b6b20b84d32f8d917be505bd4569f41777a8a",
-            ["numbers-mana-v1"] = "b1ab312c5e80aa63fc5ebddcceb21458784da6c9f46f10c29b2d7b32794e61f6",
-            ["numbers-miss-v1"] = "ea583c2f9e509adfa426ad34dab653bda44496fc3426037d159c91a94bb7854a",
-            ["reload-pending-battle-v1"] = "a7ef2a784163a5c8a58b5cbfeb4d90a7ab088b2e3055777260b7e72f196fc3b3"
+            ["inventory-store-ready-v1"] = "de13b6914c27f36fad607257cda289771a15f0eed3648a1d7286ef79d39b0b6b",
+            ["defeat-no-summon-v1"] = "3da74c45e5d8d8033900cb7f9fb2483928acaca8ea97f6a8886f5249b270a833",
+            ["numbers-mana-v1"] = "42d6647ef5748a3aadc201852ec34a54e132f8ad92d5831456f6c4b8ac7cdcca",
+            ["numbers-miss-v1"] = "2d83197311dd0cc117c94da371cd7e5fe1aa82d60a7a8db8a2bd66ec87382687",
+            ["reload-pending-battle-v1"] = "c1920a71b7611a4aed2d70db290909e956d5f205d36f60dfb74ef671407365b7"
         };
         foreach ((string id, string hash) in expected)
         {

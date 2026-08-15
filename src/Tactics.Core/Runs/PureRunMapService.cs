@@ -16,9 +16,11 @@ public sealed class PureRunMapService
         string eventId = EventPool
             .Select((value, index) => (value, order: DeriveSeed(runSeed, "pure-run-event-pool", index)))
             .OrderBy(value => value.order).ThenBy(value => value.value, StringComparer.Ordinal).First().value;
+        var assignments = _definition.Nodes.Where(node => node.Layer == 4 && node.Kind == PureRunNodeKind.Mystery)
+            .ToDictionary(node => node.NodeId, _ => eventId, StringComparer.Ordinal);
         return new PureRunMapState(PureRunMapPhase.ChoosingLayerFour, "layer_03_battle", reachable,
             ["start", "layer_01_battle", "layer_02_battle", "layer_03_battle"],
-            new Dictionary<string, string>(StringComparer.Ordinal) { ["layer_04_event"] = eventId });
+            assignments, MapContentId: _definition.ContentId, MapLayoutVersion: _definition.LayoutVersion);
     }
 
     public PureRunMapState AdvanceToLayerFive(PureRunMapState state) => state with
@@ -29,22 +31,25 @@ public sealed class PureRunMapService
         SelectedNodeId = null,
         NodeLifecycle = RunNodeLifecycle.Available,
         StoreOffers = null,
-        MysteryResolution = null
+        MysteryResolution = null,
+        TreasureResolution = null
     };
 
     public PureRunMapState UnlockLayerSix(PureRunMapState state, int runSeed)
     {
-        string[] nodes = ["layer_06_battle", "layer_06_event", "layer_06_rest", "layer_06_store"];
-        string prior = state.MysteryEventAssignments.GetValueOrDefault("layer_04_event") ?? string.Empty;
+        string[] nodes = _definition.Nodes.Where(node => node.Layer == 6).Select(node => node.NodeId)
+            .OrderBy(value => value, StringComparer.Ordinal).ToArray();
+        string prior = state.MysteryEventAssignments.Values.FirstOrDefault() ?? string.Empty;
         string assigned = EventPool.Select((value, index) => (value, order: DeriveSeed(runSeed, "pure-run-event-pool", index)))
             .OrderBy(value => value.order).ThenBy(value => value.value, StringComparer.Ordinal)
             .Select(value => value.value).First(value => value != prior);
         var assignments = state.MysteryEventAssignments.ToDictionary(value => value.Key, value => value.Value, StringComparer.Ordinal);
-        assignments["layer_06_event"] = assigned;
+        foreach (PureRunMapNodeDefinition node in _definition.Nodes.Where(node => node.Layer == 6 && node.Kind == PureRunNodeKind.Mystery))
+            assignments[node.NodeId] = assigned;
         return state with { Phase = PureRunMapPhase.ChoosingLayerSix, CurrentNodeId = "layer_05_battle",
             ReachableNodeIds = nodes, MysteryEventAssignments = assignments, PendingNodeId = null,
             PendingTransactionKey = null, SelectedNodeId = null, NodeLifecycle = RunNodeLifecycle.Available,
-            StoreOffers = null, MysteryResolution = null };
+            StoreOffers = null, MysteryResolution = null, TreasureResolution = null };
     }
 
     public ContentId SelectLateEncounter(int seed, string nodeId, bool boss = false)

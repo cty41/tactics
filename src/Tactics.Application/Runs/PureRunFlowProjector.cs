@@ -12,6 +12,7 @@ public enum PureRunFlowPage
     Rest,
     Store,
     Mystery,
+    Treasure,
     NewRunSetup,
     Inventory,
     Summary
@@ -82,8 +83,6 @@ public sealed record PureRunFlowSnapshot(
 /// <summary>Projects committed Pure Run state into engine-neutral flow and seven-layer map UI facts.</summary>
 public sealed class PureRunFlowProjector
 {
-    private static readonly (string From, string To)[] Edges = BuildEdges();
-
     public PureRunFlowSnapshot Project(PureRunState run, PureRunDefinition definition,
         PureRunMapDefinition branchMap)
     {
@@ -96,7 +95,7 @@ public sealed class PureRunFlowProjector
         if (run.PendingProgression.Count > 0) actions.Add(PureRunFlowAction.CompleteProgression);
         if (page == PureRunFlowPage.Battle) actions.Add(PureRunFlowAction.ResumeBattle);
         if (page == PureRunFlowPage.Map && run.PendingProgression.Count == 0) actions.Add(PureRunFlowAction.BeginAvailableNode);
-        if (page is PureRunFlowPage.Rest or PureRunFlowPage.Store or PureRunFlowPage.Mystery)
+        if (page is PureRunFlowPage.Rest or PureRunFlowPage.Store or PureRunFlowPage.Mystery or PureRunFlowPage.Treasure)
             actions.Add(PureRunFlowAction.ResolveNode);
 
         return new PureRunFlowSnapshot(page, run.Revision, run.Gold,
@@ -125,14 +124,14 @@ public sealed class PureRunFlowProjector
             UnavailableReason = UnavailableReason(run, value.NodeId)
         }).ToArray();
         var states = nodes.ToDictionary(value => value.NodeId, value => value.State, StringComparer.Ordinal);
-        PureRunMapConnectionSnapshot[] connections = Edges.Select(edge =>
+        PureRunMapConnectionSnapshot[] connections = branchMap.Connections.Select(edge =>
         {
-            PureRunMapNodeState from = states[edge.From];
-            PureRunMapNodeState to = states[edge.To];
+            PureRunMapNodeState from = states[edge.FromNodeId];
+            PureRunMapNodeState to = states[edge.ToNodeId];
             bool traversed = from == PureRunMapNodeState.Completed &&
                 to is PureRunMapNodeState.Completed or PureRunMapNodeState.Current or PureRunMapNodeState.Selected or PureRunMapNodeState.Pending;
             bool revealed = traversed || from != PureRunMapNodeState.Locked || to != PureRunMapNodeState.Locked;
-        return new PureRunMapConnectionSnapshot(edge.From, edge.To, true, traversed);
+        return new PureRunMapConnectionSnapshot(edge.FromNodeId, edge.ToNodeId, true, traversed);
         }).ToArray();
         string focus = nodes.FirstOrDefault(value => value.State is PureRunMapNodeState.Pending or PureRunMapNodeState.Selected)?.NodeId
             ?? nodes.FirstOrDefault(value => value.State == PureRunMapNodeState.Current)?.NodeId
@@ -154,6 +153,7 @@ public sealed class PureRunFlowProjector
                 PureRunNodeKind.Rest => PureRunFlowPage.Rest,
                 PureRunNodeKind.Store => PureRunFlowPage.Store,
                 PureRunNodeKind.Mystery => PureRunFlowPage.Mystery,
+                PureRunNodeKind.Treasure => PureRunFlowPage.Treasure,
                 _ => PureRunFlowPage.Battle
             };
         return PureRunFlowPage.Map;
@@ -224,44 +224,14 @@ public sealed class PureRunFlowProjector
     private static IReadOnlyList<PureRunMapNodeSnapshot> StaticNodes(PureRunDefinition definition,
         PureRunMapDefinition map)
     {
-        var nodes = new List<PureRunMapNodeSnapshot>
-        {
-            Node("start", 0, PureRunNodeKind.Battle, "Start", null, 0),
-            Node("layer_01_battle", 1, PureRunNodeKind.Battle, "N1", definition.Encounters[0], 0),
-            Node("layer_02_battle", 2, PureRunNodeKind.Battle, "N2", definition.Encounters[1], 0),
-            Node("layer_03_battle", 3, PureRunNodeKind.Battle, "N3", definition.Encounters[2], 0)
-        };
-        float Lane(PureRunNodeKind kind) => kind switch
-        {
-            PureRunNodeKind.Battle => -1.5f,
-            PureRunNodeKind.Rest => -.5f,
-            PureRunNodeKind.Store => .5f,
-            _ => 1.5f
-        };
-        nodes.AddRange(map.Nodes.OrderBy(value => value.Layer).ThenBy(value => value.Kind)
+        return map.Nodes.OrderBy(value => value.Layer).ThenBy(value => value.Lane).ThenBy(value => value.NodeId)
             .Select(value => Node(value.NodeId, value.Layer, value.Kind,
-                value.Kind == PureRunNodeKind.Mystery ? "Mystery" : value.Kind.ToString(), value.ContentId, Lane(value.Kind))));
-        nodes.Add(Node("layer_05_battle", 5, PureRunNodeKind.Battle, "Elite", null, 0));
-        nodes.Add(Node("layer_07_battle", 7, PureRunNodeKind.Battle, "Special Boss", new ContentId("encounter.pure-run.special"), 0));
-        return nodes.OrderBy(value => value.Layer).ThenBy(value => value.Lane).ToArray();
+                string.IsNullOrWhiteSpace(value.Title) ? value.Kind.ToString() : value.Title,
+                value.ContentId, value.Lane)).ToArray();
     }
 
     private static PureRunMapNodeSnapshot Node(string id, int layer, PureRunNodeKind kind, string title,
         ContentId? contentId, float lane) => new(id, layer, kind, title, contentId, lane,
         PureRunMapNodeState.Locked);
 
-    private static (string From, string To)[] BuildEdges()
-    {
-        var edges = new List<(string, string)>
-        {
-            ("start", "layer_01_battle"), ("layer_01_battle", "layer_02_battle"),
-            ("layer_02_battle", "layer_03_battle")
-        };
-        string[] kinds = ["battle", "rest", "store", "event"];
-        edges.AddRange(kinds.Select(kind => ("layer_03_battle", $"layer_04_{kind}")));
-        edges.AddRange(kinds.Select(kind => ($"layer_04_{kind}", "layer_05_battle")));
-        edges.AddRange(kinds.Select(kind => ("layer_05_battle", $"layer_06_{kind}")));
-        edges.AddRange(kinds.Select(kind => ($"layer_06_{kind}", "layer_07_battle")));
-        return edges.ToArray();
-    }
 }

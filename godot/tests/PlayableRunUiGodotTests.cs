@@ -376,7 +376,7 @@ public class PlayableRunUiGodotTests
         GodotRogueMapView? map = Descendants<GodotRogueMapView>(ui).SingleOrDefault();
 
         AssertThat(map).IsNotNull();
-        AssertThat(map!.Snapshot!.Nodes.Count).IsEqual(14);
+        AssertThat(map!.Snapshot!.Nodes.Count).IsEqual(16);
         AssertThat(map.Snapshot.FocusNodeId).IsEqual("layer_01_battle");
         AssertFormalPanel(Descendants<PanelContainer>(ui).Single(panel => panel.Name == "MapDetailPanel"));
         ui.Free();
@@ -612,7 +612,7 @@ public class PlayableRunUiGodotTests
             "res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!;
         Dictionary<string, GodotResourceEntry> entries = catalog.Entries.ToDictionary(value => value.ContentIdValue);
 
-        AssertThat(entries.Count).IsEqual(141);
+        AssertThat(entries.Count).IsEqual(142);
         foreach (string id in new[]
         {
             "skill.summon.skeleton-attack.lv1", "skill.summon.skeleton-attack.lv2",
@@ -656,6 +656,26 @@ public class PlayableRunUiGodotTests
             "res://content/skills/NecromancerSummonSkeletonLv3.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!.ToCoreDefinition();
         AssertThat(fireball.ExecutionProfile.DetonateStatusContentId!.Value.Value).IsEqual("buff.ignite");
         AssertThat(skeleton.ExecutionProfile.SummonAttackContentId!.Value.Value).IsEqual("skill.summon.skeleton-attack.lv3");
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void AuthoritativeMapAndTreasureResourcesCompile()
+    {
+        var map = ResourceLoader.Load<PureRunMapResource>("res://content/map/PureRunDefaultMap.tres");
+        var treasure = ResourceLoader.Load<PureRunTreasureResource>("res://content/map/PureRunStandardTreasure.tres");
+        AssertThat(map).IsNotNull();
+        AssertThat(treasure).IsNotNull();
+        if (map is null || treasure is null) return;
+        PureRunMapDefinition definition = map.ToCoreDefinition();
+        PureRunTreasureDefinition reward = treasure.ToCoreDefinition();
+        AssertThat(definition.Nodes.Count).IsEqual(16);
+        AssertThat(definition.Connections.Count).IsEqual(23);
+        AssertThat(definition.Nodes.Count(value => value.Kind == PureRunNodeKind.Treasure)).IsEqual(2);
+        AssertThat(reward.GoldMinimum).IsEqual(2);
+        AssertThat(reward.GoldMaximum).IsEqual(5);
+        AssertThat(reward.Equipment.Count).IsEqual(1);
+        AssertThat(reward.Buffs.Count).IsEqual(1);
     }
 
     [TestCase]

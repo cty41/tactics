@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/.agents/docs/project-known-
 title: Project Known Gaps
 description: 已从当前实现确认但尚未获批为活跃开发计划的集中缺口目录。
 tags: [planning, backlog, gaps]
-timestamp: "2026-08-07T09:12:05+08:00"
+timestamp: "2026-08-15T15:06:10+08:00"
 status: active
 catalog_scope: project-known-gaps
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - Packages/packages-lock.json
   - Tools/unity-mcp/README.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:b644433ffd83779a27c50b1bf13cb3304aef10f0e43dd30200ab1ad9dfa565d3
+source_fingerprint: sha256:d01497f536769855d95d8cea60ae6c438d7b38a3cf3e88154034bb2c4a5fcb92
 ---
 
 # Current State

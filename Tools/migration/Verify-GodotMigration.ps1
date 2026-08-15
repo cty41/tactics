@@ -194,8 +194,15 @@ try {
         dotnet build $testHostProject -c Debug --no-restore --no-incremental -m:1
     }
 
-    Invoke-Checked 'Run isolated GdUnit4Net test host' {
-        dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
+    # Keep gameplay-spec Main journeys in a fresh Godot runtime. Running all suites in one native host
+    # can retain ResourceLoader/SceneTree objects long enough to crash Godot during final teardown.
+    Invoke-Checked 'Run isolated GdUnit4Net unit and adapter suites' {
+        dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+            --filter 'FullyQualifiedName!~GodotGameplayRuntimeRunnerTests' --logger 'console;verbosity=minimal'
+    }
+    Invoke-Checked 'Run isolated GdUnit4Net gameplay-spec journeys' {
+        dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+            --filter 'FullyQualifiedName~GodotGameplayRuntimeRunnerTests' --logger 'console;verbosity=minimal'
     }
 
     if (-not (Test-Path -LiteralPath $godotGameplayReport -PathType Leaf)) {
@@ -614,6 +621,27 @@ try {
                 --state (Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-ownership-closure-v1.json') `
                 --receipt (Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-ownership-closure-v1-generation.json')
         }
+    }
+
+    Invoke-Checked 'Generate authoritative Map and Treasure resources first pass' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/MapTreasureAssetBuilder.cs'
+    }
+    $mapTreasurePaths = @(
+        (Join-Path $projectRoot 'content\ContentCatalog.tres'),
+        (Join-Path $projectRoot 'content\map\PureRunDefaultMap.tres'),
+        (Join-Path $projectRoot 'content\map\PureRunStandardTreasure.tres')
+    )
+    $mapTreasureHashes = $mapTreasurePaths | ForEach-Object { (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash }
+    Invoke-Checked 'Generate authoritative Map and Treasure resources second pass' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/MapTreasureAssetBuilder.cs'
+    }
+    if (Compare-Object $mapTreasureHashes ($mapTreasurePaths | ForEach-Object { (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash })) {
+        throw 'Authoritative Map and Treasure generation is not byte-idempotent.'
+    }
+    Invoke-Checked 'Refresh authoritative Map and Treasure generation evidence' {
+        python -m Tools.migration.map_treasure_generation --project $projectRoot `
+            --state (Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-map-treasure-v1.json') `
+            --receipt (Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-map-treasure-v1-generation.json')
     }
 
     $uiExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.unity.json'

@@ -12,7 +12,16 @@ public partial class GodotResourceEntry : Resource
     [Export] public int SchemaVersion { get; set; }
     [Export] public string[] ReferenceContentIds { get; set; } = Array.Empty<string>();
 
-    public string ResourceLocator => string.IsNullOrWhiteSpace(ResourceUidValue)
-        ? DiagnosticPathValue
-        : ResourceUidValue;
+    public string ResourceLocator
+    {
+        get
+        {
+            // The path is part of the migration receipt and remains authoritative at runtime. A UID can
+            // temporarily resolve to stale cache data while several headless ResourceSaver batches run in
+            // one verifier pass, so it is retained for validation rather than used as the load locator.
+            return !string.IsNullOrWhiteSpace(DiagnosticPathValue)
+                ? DiagnosticPathValue
+                : ResourceUidValue;
+        }
+    }
 }

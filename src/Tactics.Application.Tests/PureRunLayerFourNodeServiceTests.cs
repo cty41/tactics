@@ -135,6 +135,44 @@ public sealed class PureRunLayerFourNodeServiceTests
             new Dictionary<ContentId, ConsumableDefinition>()).State.Phase, Is.EqualTo(PureRunPhase.Defeated));
     }
 
+    [Test]
+    public void TreasureResolutionIsStableAndConfirmationAppliesRewardsOnce()
+    {
+        PureRunState run = Select(CreateRun(), "layer_04_treasure").State;
+        var definition = new PureRunTreasureDefinition(new ContentId("treasure.pure-run.standard-v1"), 2, 5,
+            [new WeightedContentDefinition(new ContentId("item.equipment.staff-01"), 1)],
+            [new WeightedContentDefinition(new ContentId("item.consumable.life-potion"), 1)],
+            [new WeightedContentDefinition(new ContentId("buff.event-damage-reduction"), 1)]);
+        var equipment = new Dictionary<ContentId, EquipmentDefinition>
+        {
+            [new ContentId("item.equipment.staff-01")] = new(new ContentId("item.equipment.staff-01"), "source",
+                "Staff", EquipmentSlot.Weapon, ItemRarity.Common, 1, new UnitAttributes(0, 0, 0, 1, 0, 0))
+        };
+        var consumables = new Dictionary<ContentId, ConsumableDefinition>
+        {
+            [new ContentId("item.consumable.life-potion")] = new(new ContentId("item.consumable.life-potion"),
+                "source", "Potion", "", ItemRarity.Common, 1, 1, ConsumableEffectKind.RestoreHealth, 4, 1,
+                ConsumableTargetMode.Self)
+        };
+
+        LayerFourNodeResolution first = _service.ResolveTreasure(run, definition);
+        LayerFourNodeResolution replay = _service.ResolveTreasure(first.State, definition);
+        Assert.That(replay.TreasureOutcome, Is.EqualTo(first.TreasureOutcome));
+
+        LayerFourNodeResolution committed = _service.ConfirmTreasure(first.State, definition, equipment, consumables);
+        Assert.Multiple(() =>
+        {
+            Assert.That(committed.Succeeded, Is.True);
+            Assert.That(committed.State.Gold, Is.InRange(2, 5));
+            Assert.That(committed.State.BackpackEquipment, Has.Count.EqualTo(1));
+            Assert.That(committed.State.BackpackConsumables, Has.Count.EqualTo(1));
+            Assert.That(committed.State.MapState!.PendingStatuses, Has.Count.EqualTo(1));
+            Assert.That(committed.State.AppliedTransactionKeys, Does.Contain("node:layer_04_treasure:resolve"));
+        });
+        LayerFourNodeResolution duplicate = _service.ConfirmTreasure(committed.State, definition, equipment, consumables);
+        Assert.That(duplicate.WasDuplicate, Is.True);
+    }
+
     private LayerFourNodeResolution Select(PureRunState run, string nodeId) => _service.SelectNode(run, Map(), nodeId);
 
     private static PureRunMapDefinition Map() => new(new ContentId("run-map.pure-run.layer4-v1"), 2,
@@ -142,7 +180,8 @@ public sealed class PureRunLayerFourNodeServiceTests
         new("layer_04_battle", 4, PureRunNodeKind.Battle, new ContentId("encounter.pure-run.n4")),
         new("layer_04_rest", 4, PureRunNodeKind.Rest, new ContentId("rest.pure-run.standard-v1")),
         new("layer_04_store", 4, PureRunNodeKind.Store, new ContentId("store.pure-run.standard-v1")),
-        new("layer_04_event", 4, PureRunNodeKind.Mystery, new ContentId("event.pure-run.cursed-chest"))
+        new("layer_04_event", 4, PureRunNodeKind.Mystery, new ContentId("event.pure-run.cursed-chest")),
+        new("layer_04_treasure", 4, PureRunNodeKind.Treasure, new ContentId("treasure.pure-run.standard-v1"))
     ]);
 
     private static PureRunState CreateRun(int gold = 0, bool allAtOneHealth = false)

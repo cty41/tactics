@@ -57,7 +57,7 @@
 | `needs-decision` | 战后第三类奖励槽位与装备战斗掉落仍未形成规则；装备/消耗品统一背包、角色携带、药水战斗使用、药水掉落和商店购买已实现。 | 当前胜利后直接成长，药水掉落独立结算，不提供战后奖励选择。 | 决定是否改变“无战后选择”的核心节奏，以及装备是否进入战斗掉落。 | 战斗奖励/商店旧计划 |
 | `verified-gap` | 部分奖励提示仍为临时 UI，商店存在 fallback 路径。 | 首切片优先保证流程闭环。 | UI 交互规范和商店内容稳定。 | Map/Reward 旧计划 |
 | `needs-decision` | 难度池、装备掉落与当前固定层级遭遇如何组合尚未定义。 | 会影响 Run 节奏和配置结构。 | 确定长期遭遇生成模型。 | 战斗奖励旧计划 |
-| `deferred` | Pure Run 尚未生成 Treasure 节点，宝箱开启事务、奖励规则和地图出现规则也未收口。 | 当前 Mystery、战斗、休息和商店已覆盖首个真实路线闭环。 | 确定宝箱与 Mystery 的节奏差异及奖励预算。 | Pure Run 九切片收口 |
+| `resolved` | Pure Run 的 Layer 4/6 已各生成一个 Treasure 节点；2–5 Gold、weighted Equipment/Consumable/Buff、一次性确认、Save V6 与 Reload 不重掷均已收口。 | — | 若未来改变奖励预算，建立新版本 Treasure Definition，不修改 v1 语义。 | Godot ownership closure 2026-08-15 |
 | `idea` | 为事件检定结果增加类似桌面角色扮演投骰子的表现结算。 | 当前确定性检定与结果事务已完成，表现形式尚未确定。 | 确定骰面、加值展示、跳过规则和美术资源。 | Pure Run 事件设定 |
 | `idea` | 无道德值的选择后果框架。 | 尚无当前玩法需求验证。 | 出现至少一组需要跨节点追踪的选择后果。 | Morality Framework 旧计划 |
 

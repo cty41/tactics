@@ -45,6 +45,8 @@ public partial class GodotPlayableRunMain : Control
     private PlayableBattleBalanceProfile? _balance;
     private PlayableEnemySpeedProfile? _enemySpeed;
     private PureRunDefinition? _runDefinition;
+    private PureRunMapDefinition? _mapDefinition;
+    private PureRunTreasureDefinition? _treasureDefinition;
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
     private readonly Dictionary<UnitInstanceId, Control> _unitMeters = new();
     private readonly List<BattleUiLogEntry> _logs = new();
@@ -104,7 +106,8 @@ public partial class GodotPlayableRunMain : Control
     internal enum PresentationDrainAction { DequeueFrame, CompleteBattle, Pause, Refresh }
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
-        _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 141;
+        _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 &&
+        _mapDefinition is not null && _treasureDefinition is not null && _catalogCount == 142;
 
     public override void _Ready()
     {
@@ -323,6 +326,8 @@ public partial class GodotPlayableRunMain : Control
                 case SkillPresentationResource presentation: _skillPresentationProfiles.Add(presentation); break;
                 case EquipmentDefinitionResource equipment: _equipment[id] = equipment.ToCoreDefinition(); break;
                 case ConsumableDefinitionResource consumable: _consumables[id] = consumable.ToCoreDefinition(); break;
+                case PureRunMapResource map: _mapDefinition = map.ToCoreDefinition(); break;
+                case PureRunTreasureResource treasure: _treasureDefinition = treasure.ToCoreDefinition(); break;
                 case PureRunLayerFourResource layerFour when layerFour.KindValue == "encounter":
                     using (JsonDocument payload = JsonDocument.Parse(layerFour.PayloadJson))
                     {
@@ -356,8 +361,10 @@ public partial class GodotPlayableRunMain : Control
                 Enum.Parse<EncounterClass>(resource.EncounterClassValue));
         }
         _runDefinition=(runResource ?? throw new InvalidOperationException("Run definition is missing.")).ToCoreDefinition();
+        if (_mapDefinition is null) throw new InvalidOperationException("Authoritative run map is missing.");
+        if (_treasureDefinition is null) throw new InvalidOperationException("Treasure definition is missing.");
         PureRunContentValidator.ValidateSkillReferences(_runDefinition, _skills.Keys);
-        _run = new PureRunSessionService(_runDefinition, SaveStore, mapDefinition: LayerFourMap());
+        _run = new PureRunSessionService(_runDefinition, SaveStore, mapDefinition: _mapDefinition);
     }
 
     private void ShowHome()
@@ -1034,7 +1041,7 @@ public partial class GodotPlayableRunMain : Control
     private void ShowRunMap(PureRunState run)
     {
         Control root = NewPage("PURE RUN MAP", "Choose an available node. Drag or use the wheel to inspect the route.");
-        PureRunFlowSnapshot flow = _flowProjector.Project(run, _runDefinition!, LayerFourMap());
+        PureRunFlowSnapshot flow = _flowProjector.Project(run, _runDefinition!, MapDefinition);
         AddRunShell(root, run, "Map");
         PanelAt(root, new Vector2(1120, 175), new Vector2(430, 590), GodotTacticsTheme.Card).Name = "MapDetailPanel";
         _mapView = new GodotRogueMapView { Position = new Vector2(60, 135), Size = new Vector2(1040, 700) };
@@ -1063,7 +1070,7 @@ public partial class GodotPlayableRunMain : Control
 
     private void ActivateMapNode(PureRunState run, string nodeId)
     {
-        PureRunMapNodeSnapshot node = _flowProjector.ProjectMap(run, _runDefinition!, LayerFourMap()).Nodes
+        PureRunMapNodeSnapshot node = _flowProjector.ProjectMap(run, _runDefinition!, MapDefinition).Nodes
             .Single(value => value.NodeId == nodeId);
         if (node.State == PureRunMapNodeState.Pending)
         {
@@ -1082,7 +1089,7 @@ public partial class GodotPlayableRunMain : Control
             if (run.Phase == PureRunPhase.ReadyForLayerSix)
             {
                 RunSessionResult unlocked = _run!.ApplyFullRunTransition(state =>
-                    new PureRunFullRunService(_consumables.Keys).UnlockLayerSix(state, LayerFourMap()));
+                    new PureRunFullRunService(_consumables.Keys).UnlockLayerSix(state, MapDefinition));
                 if (!unlocked.Succeeded) { SetStatus(unlocked.ErrorCode); return; }
             }
             SelectLayerSixNode(nodeId); return;
@@ -1107,23 +1114,17 @@ public partial class GodotPlayableRunMain : Control
         menu.AddChild(Button("Rest — restore 30% HP/MP",()=>SelectLayerFourNode("layer_04_rest")));
         menu.AddChild(Button("Store — deterministic 3 offers",()=>SelectLayerFourNode("layer_04_store")));
         menu.AddChild(Button("Mystery — deterministic assigned event",()=>SelectLayerFourNode("layer_04_event")));
+        menu.AddChild(Button("Treasure — deterministic reward",()=>SelectLayerFourNode("layer_04_treasure")));
     }
 
-    private static PureRunMapDefinition LayerFourMap() => new(new ContentId("run-map.pure-run.layer4-v1"),2,new[]{
-        new PureRunMapNodeDefinition("layer_04_battle",4,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.n4")),
-        new PureRunMapNodeDefinition("layer_04_rest",4,PureRunNodeKind.Rest,new ContentId("rest.pure-run.standard-v1")),
-        new PureRunMapNodeDefinition("layer_04_store",4,PureRunNodeKind.Store,new ContentId("store.pure-run.standard-v1")),
-        new PureRunMapNodeDefinition("layer_04_event",4,PureRunNodeKind.Mystery,new ContentId("event.pure-run.cursed-chest")),
-        new PureRunMapNodeDefinition("layer_06_battle",6,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.e1")),
-        new PureRunMapNodeDefinition("layer_06_rest",6,PureRunNodeKind.Rest,new ContentId("rest.pure-run.standard-v1")),
-        new PureRunMapNodeDefinition("layer_06_store",6,PureRunNodeKind.Store,new ContentId("store.pure-run.standard-v1")),
-        new PureRunMapNodeDefinition("layer_06_event",6,PureRunNodeKind.Mystery,new ContentId("event.pure-run.cursed-chest"))});
+    private PureRunMapDefinition MapDefinition => _mapDefinition ??
+        throw new InvalidOperationException("Authoritative run map is not loaded.");
 
     private void SelectLayerFourNode(string nodeId)
     {
         RunSessionResult result=_run!.ApplyMutation(state=>
         {
-            LayerFourNodeResolution selected=new PureRunLayerFourNodeService().SelectNode(state,LayerFourMap(),nodeId);
+            LayerFourNodeResolution selected=new PureRunLayerFourNodeService().SelectNode(state,MapDefinition,nodeId);
             return new RunMutationResult(selected.Succeeded,selected.RejectionCode,selected.State);
         });
         if(!result.Succeeded){SetStatus(result.ErrorCode);return;}RouteLayerFour(result.Snapshot!.ActiveRun!);
@@ -1139,6 +1140,7 @@ public partial class GodotPlayableRunMain : Control
             case PureRunNodeKind.Rest: ShowRest(run); break;
             case PureRunNodeKind.Store: ShowStore(run); break;
             case PureRunNodeKind.Mystery: ShowMystery(run); break;
+            case PureRunNodeKind.Treasure: ShowTreasure(run); break;
             default: SetStatus("layer4.route_missing"); break;
         }
     }
@@ -1246,6 +1248,31 @@ public partial class GodotPlayableRunMain : Control
         if(!result.Succeeded){SetStatus(result.ErrorCode);return;}ShowMystery(result.Snapshot!.ActiveRun!);
     }
 
+    private void ShowTreasure(PureRunState run)
+    {
+        if (run.MapState?.TreasureResolution is null)
+        {
+            RunSessionResult resolved = _run!.ApplyMutation(state =>
+            {
+                LayerFourNodeResolution value = new PureRunLayerFourNodeService()
+                    .ResolveTreasure(state, _treasureDefinition!);
+                return new RunMutationResult(value.Succeeded, value.RejectionCode, value.State);
+            });
+            if (!resolved.Succeeded) { SetStatus(resolved.ErrorCode); return; }
+            run = resolved.Snapshot!.ActiveRun!;
+        }
+        RunTreasureResolutionState outcome = run.MapState!.TreasureResolution!;
+        Control root = NewPage($"{LayerLabel(run)} — TREASURE", "The committed reward is persisted and will not reroll after Reload.");
+        AddRunShell(root, run, "Treasure");
+        var menu = new VBoxContainer { Position = new Vector2(460, 220), Size = new Vector2(680, 480) };
+        root.AddChild(menu);
+        menu.AddChild(Label($"Gold: +{outcome.Gold}\nEquipment: {outcome.EquipmentContentId?.Value ?? "None"}\n" +
+            $"Consumable: {outcome.ConsumableContentId?.Value ?? "None"}\nBuff: {outcome.BuffContentId?.Value ?? "None"}\n" +
+            $"Buff target: {outcome.TargetCharacterId}", 24));
+        menu.AddChild(Button("Confirm Treasure", () => CommitLayerFour(state =>
+            new PureRunLayerFourNodeService().ConfirmTreasure(state, _treasureDefinition!, _equipment, _consumables))));
+    }
+
     private static RunEventAttribute EventAttribute(string value)=>value switch{"None"=>RunEventAttribute.None,"Strength"=>RunEventAttribute.Strength,"Dexterity" or "Agility"=>RunEventAttribute.Agility,"Constitution"=>RunEventAttribute.Constitution,"Intelligence"=>RunEventAttribute.Intelligence,"Charisma"=>RunEventAttribute.Charisma,"Luck"=>RunEventAttribute.Luck,_=>throw new InvalidOperationException($"Unknown event attribute: {value}.")};
 
     private static ContentId? EffectContentId(JsonElement effect){if(!effect.TryGetProperty("itemId",out JsonElement item))return null;string value=item.GetString()!;return value switch{"cleansing_potion"=>new ContentId("item.consumable.cleansing-potion"),"Assets/Tactics/ScriptableObjects/Buffs/EventDamageReduction.asset"=>new ContentId("buff.event-damage-reduction"),"Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset"=>new ContentId("buff.event-damage-taken-up"),_=>new ContentId(value)};}
@@ -1260,13 +1287,13 @@ public partial class GodotPlayableRunMain : Control
         root.AddChild(PlaceControl(Button("Begin Layer 5 Elite",BeginLayerFive),new Vector2(650,650),new Vector2(300,65)));
     }
 
-    private void BeginLayerFive(){RunSessionResult result=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).BeginLayerFive(state,LayerFourMap()));if(!result.Succeeded||result.EncounterRequest is null){SetStatus(result.ErrorCode);return;}StartBattle(result.EncounterRequest);}
-    private void ShowLayerSixChoice(PureRunState run){Control root=NewPage("LAYER 6 ROUTE","Choose one final route before the Special Boss.");var menu=new VBoxContainer{Position=new Vector2(500,220),Size=new Vector2(600,520)};root.AddChild(menu);menu.AddChild(Button("Elite Battle",()=>SelectLayerSixNode("layer_06_battle")));menu.AddChild(Button("Rest",()=>SelectLayerSixNode("layer_06_rest")));menu.AddChild(Button("Store",()=>SelectLayerSixNode("layer_06_store")));menu.AddChild(Button("Mystery",()=>SelectLayerSixNode("layer_06_event")));}
-    private void SelectLayerSixNode(string nodeId){RunSessionResult result=_run!.ApplyMutation(state=>{LayerFourNodeResolution selected=new PureRunLayerFourNodeService().SelectNode(state,LayerFourMap(),nodeId);return new RunMutationResult(selected.Succeeded,selected.RejectionCode,selected.State);});if(!result.Succeeded){SetStatus(result.ErrorCode);return;}RouteLayerSixNode(result.Snapshot!.ActiveRun!);}
-    private void RouteLayerSixNode(PureRunState run){switch(run.NodeTransaction?.Kind){case PureRunNodeKind.Battle:BeginLayerSixBattle();break;case PureRunNodeKind.Rest:ShowRest(run);break;case PureRunNodeKind.Store:ShowStore(run);break;case PureRunNodeKind.Mystery:ShowMystery(run);break;default:SetStatus("layer6.route_missing");break;}}
-    private void BeginLayerSixBattle(){RunSessionResult result=_run!.ApplyMutation(state=>{ContentId id=new PureRunMapService(LayerFourMap()).SelectLateEncounter(state.Seed,"layer_06_battle");LayerFourNodeResolution begun=new PureRunLayerFourNodeService().BeginN4(state,id);return new RunMutationResult(begun.Succeeded,begun.RejectionCode,begun.State);});if(!result.Succeeded||result.Snapshot?.ActiveRun?.Checkpoint is null){SetStatus(result.ErrorCode);return;}PureRunState pending=result.Snapshot.ActiveRun;StartBattle(new EncounterRequest(pending.RunId,pending.Checkpoint.Revision,pending.EncounterContentId,pending.Checkpoint.Party));}
+    private void BeginLayerFive(){RunSessionResult result=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).BeginLayerFive(state,MapDefinition));if(!result.Succeeded||result.EncounterRequest is null){SetStatus(result.ErrorCode);return;}StartBattle(result.EncounterRequest);}
+    private void ShowLayerSixChoice(PureRunState run){Control root=NewPage("LAYER 6 ROUTE","Choose one final route before the Special Boss.");var menu=new VBoxContainer{Position=new Vector2(500,220),Size=new Vector2(600,520)};root.AddChild(menu);menu.AddChild(Button("Elite Battle",()=>SelectLayerSixNode("layer_06_battle")));menu.AddChild(Button("Rest",()=>SelectLayerSixNode("layer_06_rest")));menu.AddChild(Button("Store",()=>SelectLayerSixNode("layer_06_store")));menu.AddChild(Button("Mystery",()=>SelectLayerSixNode("layer_06_event")));menu.AddChild(Button("Treasure",()=>SelectLayerSixNode("layer_06_treasure")));}
+    private void SelectLayerSixNode(string nodeId){RunSessionResult result=_run!.ApplyMutation(state=>{LayerFourNodeResolution selected=new PureRunLayerFourNodeService().SelectNode(state,MapDefinition,nodeId);return new RunMutationResult(selected.Succeeded,selected.RejectionCode,selected.State);});if(!result.Succeeded){SetStatus(result.ErrorCode);return;}RouteLayerSixNode(result.Snapshot!.ActiveRun!);}
+    private void RouteLayerSixNode(PureRunState run){switch(run.NodeTransaction?.Kind){case PureRunNodeKind.Battle:BeginLayerSixBattle();break;case PureRunNodeKind.Rest:ShowRest(run);break;case PureRunNodeKind.Store:ShowStore(run);break;case PureRunNodeKind.Mystery:ShowMystery(run);break;case PureRunNodeKind.Treasure:ShowTreasure(run);break;default:SetStatus("layer6.route_missing");break;}}
+    private void BeginLayerSixBattle(){RunSessionResult result=_run!.ApplyMutation(state=>{ContentId id=new PureRunMapService(MapDefinition).SelectLateEncounter(state.Seed,"layer_06_battle");LayerFourNodeResolution begun=new PureRunLayerFourNodeService().BeginN4(state,id);return new RunMutationResult(begun.Succeeded,begun.RejectionCode,begun.State);});if(!result.Succeeded||result.Snapshot?.ActiveRun?.Checkpoint is null){SetStatus(result.ErrorCode);return;}PureRunState pending=result.Snapshot.ActiveRun;StartBattle(new EncounterRequest(pending.RunId,pending.Checkpoint.Revision,pending.EncounterContentId,pending.Checkpoint.Party));}
     private void ShowReadyForBoss(PureRunState run){Control root=NewPage("READY FOR LAYER 7","Layer 6 committed. The Special Boss is the terminal encounter.");root.AddChild(PlaceControl(Button("Begin Special Boss",BeginBoss),new Vector2(650,560),new Vector2(300,70)));}
-    private void BeginBoss(){RunSessionResult result=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).BeginBoss(state,LayerFourMap()));if(!result.Succeeded||result.EncounterRequest is null){SetStatus(result.ErrorCode);return;}StartBattle(result.EncounterRequest);}
+    private void BeginBoss(){RunSessionResult result=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).BeginBoss(state,MapDefinition));if(!result.Succeeded||result.EncounterRequest is null){SetStatus(result.ErrorCode);return;}StartBattle(result.EncounterRequest);}
 
     private void ShowInventory(PureRunState run) => ShowInventory(run, InventoryReturnTarget.RunRoute);
 

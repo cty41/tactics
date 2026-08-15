@@ -34,14 +34,15 @@ def compile_evidence(draft: dict, project: Path) -> tuple[dict, dict]:
             "targetHash": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
         })
     catalog = project / "content" / "ContentCatalog.tres"
-    if catalog.read_text(encoding="utf-8").count("ContentIdValue =") != 141:
-        raise ValueError("canonical Catalog must contain 141 entries after Lv3 generation")
+    catalog_count = catalog.read_text(encoding="utf-8").count("ContentIdValue =")
+    if catalog_count not in (141, 142):
+        raise ValueError("canonical Catalog must contain 141 entries, or 142 after Treasure generation")
     state = {
         "schemaVersion": 1,
         "batchId": draft["batchId"],
         "state": "Generated",
         "ownership": "UnityOwned",
-        "catalogCount": 141,
+        "catalogCount": catalog_count,
         "source": draft["source"],
         "artifacts": artifacts,
         "payloadBoundary": draft["payloadBoundary"],
@@ -49,7 +50,7 @@ def compile_evidence(draft: dict, project: Path) -> tuple[dict, dict]:
     receipt = {
         "schemaVersion": 1,
         "batchId": draft["batchId"],
-        "canonicalCatalogEntries": 141,
+        "canonicalCatalogEntries": catalog_count,
         "generatedSkillResources": 10,
         "idempotency": {"resourceSaverRuns": 2, "byteIdentical": True},
         "visualAcceptance": "not_applicable_no_visual_payload",

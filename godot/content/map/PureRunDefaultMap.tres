@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PureRunMapResource" format=3 uid="uid://dmo1sgartbob1"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PureRunMapResource.cs" id="1_g2ah5"]
+
+[resource]
+script = ExtResource("1_g2ah5")
+ContentIdValue = "run-map.pure-run.layer4-v1"
+NodeIds = PackedStringArray("start", "layer_01_battle", "layer_02_battle", "layer_03_battle", "layer_04_battle", "layer_04_rest", "layer_04_store", "layer_04_event", "layer_04_treasure", "layer_05_battle", "layer_06_battle", "layer_06_rest", "layer_06_store", "layer_06_event", "layer_06_treasure", "layer_07_battle")
+NodeLayers = PackedInt32Array(0, 1, 2, 3, 4, 4, 4, 4, 4, 5, 6, 6, 6, 6, 6, 7)
+NodeKinds = PackedStringArray("Battle", "Battle", "Battle", "Battle", "Battle", "Rest", "Store", "Mystery", "Treasure", "Elite", "Battle", "Rest", "Store", "Mystery", "Treasure", "Boss")
+NodeContentIds = PackedStringArray("run.pure-run.three-encounter-v1", "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3", "encounter.pure-run.n4", "rest.pure-run.standard-v1", "store.pure-run.standard-v1", "event.pure-run.cursed-chest", "treasure.pure-run.standard-v1", "encounter.pure-run.e1", "encounter.pure-run.e1", "rest.pure-run.standard-v1", "store.pure-run.standard-v1", "event.pure-run.cursed-chest", "treasure.pure-run.standard-v1", "encounter.pure-run.special")
+NodeTitles = PackedStringArray("Start", "N1", "N2", "N3", "Battle", "Rest", "Store", "Mystery", "Treasure", "Elite", "Battle", "Rest", "Store", "Mystery", "Treasure", "Special Boss")
+NodeLanes = PackedFloat32Array(0, 0, 0, 0, -2, -1, 0, 1, 2, 0, -2, -1, 0, 1, 2, 0)
+ConnectionFromNodeIds = PackedStringArray("start", "layer_01_battle", "layer_02_battle", "layer_03_battle", "layer_04_battle", "layer_05_battle", "layer_06_battle", "layer_03_battle", "layer_04_rest", "layer_05_battle", "layer_06_rest", "layer_03_battle", "layer_04_store", "layer_05_battle", "layer_06_store", "layer_03_battle", "layer_04_event", "layer_05_battle", "layer_06_event", "layer_03_battle", "layer_04_treasure", "layer_05_battle", "layer_06_treasure")
+ConnectionToNodeIds = PackedStringArray("layer_01_battle", "layer_02_battle", "layer_03_battle", "layer_04_battle", "layer_05_battle", "layer_06_battle", "layer_07_battle", "layer_04_rest", "layer_05_battle", "layer_06_rest", "layer_07_battle", "layer_04_store", "layer_05_battle", "layer_06_store", "layer_07_battle", "layer_04_event", "layer_05_battle", "layer_06_event", "layer_07_battle", "layer_04_treasure", "layer_05_battle", "layer_06_treasure", "layer_07_battle")

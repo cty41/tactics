@@ -55,7 +55,7 @@ public static class OwnershipClosureAssetFactory
         {
             Entries = entries.Values.OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray()
         };
-        if (global.Entries.Length != 141)
+        if (global.Entries.Length is not (141 or 142))
             throw new InvalidOperationException($"Canonical Catalog count is invalid: {global.Entries.Length}.");
         Save(global, GlobalCatalogPath);
         global.Validate();

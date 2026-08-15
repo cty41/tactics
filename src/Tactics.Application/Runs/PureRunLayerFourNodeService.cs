@@ -10,7 +10,8 @@ public sealed record RunEventOutcome(string EventId, string OptionId, string Cha
     bool Succeeded, string Effect, int Amount, ContentId? EffectContentId = null);
 public sealed record LayerFourNodeResolution(bool Succeeded, string? RejectionCode, PureRunState State,
     IReadOnlyList<RunStoreOfferState>? StoreOffers = null, RunMysteryResolutionState? EventOutcome = null,
-    EncounterRequest? EncounterRequest = null, bool WasDuplicate = false);
+    EncounterRequest? EncounterRequest = null, bool WasDuplicate = false,
+    RunTreasureResolutionState? TreasureOutcome = null);
 
 /// <summary>Owns deterministic Layer 4 route effects; adapters submit intents and never assemble final run state.</summary>
 public sealed class PureRunLayerFourNodeService
@@ -107,6 +108,76 @@ public sealed class PureRunLayerFourNodeService
 
     public LayerFourNodeResolution LeaveStore(PureRunState run) =>
         Validate(run, PureRunNodeKind.Store, out LayerFourNodeResolution? failure) ? Commit(run) : failure!;
+
+    public LayerFourNodeResolution ResolveTreasure(PureRunState run, PureRunTreasureDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        if (!Validate(run, PureRunNodeKind.Treasure, out LayerFourNodeResolution? failure)) return failure!;
+        if (run.MapState!.TreasureResolution is RunTreasureResolutionState persisted)
+            return new(true, null, run, TreasureOutcome: persisted);
+        RunCharacterState? target = run.Party.FirstOrDefault(value => !value.IsDead);
+        if (target is null) return Fail("treasure.target_unavailable", run);
+        string scope = $"treasure:{run.NodeTransaction!.NodeId}";
+        var random = new Random(PureRunMapService.DeriveSeed(run.Seed, scope));
+        var outcome = new RunTreasureResolutionState(run.NodeTransaction.NodeId,
+            random.Next(definition.GoldMinimum, definition.GoldMaximum + 1),
+            SelectWeighted(definition.Equipment, random), SelectWeighted(definition.Consumables, random),
+            SelectWeighted(definition.Buffs, random), target.CharacterId);
+        PureRunMapState map = run.MapState with
+        {
+            TreasureResolution = outcome,
+            NodeLifecycle = RunNodeLifecycle.Resolved
+        };
+        return new(true, null, Copy(run, map: map), TreasureOutcome: outcome);
+    }
+
+    public LayerFourNodeResolution ConfirmTreasure(PureRunState run, PureRunTreasureDefinition definition,
+        IReadOnlyDictionary<ContentId, EquipmentDefinition> equipment,
+        IReadOnlyDictionary<ContentId, ConsumableDefinition> consumables)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        if (!Validate(run, PureRunNodeKind.Treasure, out LayerFourNodeResolution? failure)) return failure!;
+        RunTreasureResolutionState? outcome = run.MapState!.TreasureResolution;
+        if (outcome is null) return Fail("treasure.not_resolved", run);
+        if (outcome.Confirmed) return new(true, null, run, WasDuplicate: true, TreasureOutcome: outcome);
+        int itemCount = run.BackpackEquipment.Count + run.BackpackConsumables.Count;
+        int awardedItems = (outcome.EquipmentContentId.HasValue ? 1 : 0) + (outcome.ConsumableContentId.HasValue ? 1 : 0);
+        if (itemCount + awardedItems > BackpackCapacity) return Fail("inventory.capacity_reached", run);
+
+        RunEquipmentState[] gear = run.BackpackEquipment.ToArray();
+        BattleConsumableState[] items = run.BackpackConsumables.ToArray();
+        List<RunPersistentStatusState> statuses = run.MapState.PendingStatuses?.ToList() ?? new();
+        if (outcome.EquipmentContentId is ContentId equipmentId)
+        {
+            if (!equipment.TryGetValue(equipmentId, out EquipmentDefinition? item)) return Fail("treasure.equipment_unknown", run);
+            gear = gear.Append(new RunEquipmentState(
+                new ItemInstanceId($"treasure-{outcome.NodeId}-equipment-{equipmentId.Value}"), equipmentId, item.Slot)).ToArray();
+        }
+        if (outcome.ConsumableContentId is ContentId consumableId)
+        {
+            if (!consumables.TryGetValue(consumableId, out ConsumableDefinition? item)) return Fail("treasure.consumable_unknown", run);
+            items = items.Append(new BattleConsumableState(
+                new ItemInstanceId($"treasure-{outcome.NodeId}-consumable-{consumableId.Value}"), consumableId,
+                item.MaxCharges, item.MaxCharges)).ToArray();
+        }
+        if (outcome.BuffContentId is ContentId buffId &&
+            !statuses.Any(value => value.CharacterId == outcome.TargetCharacterId && value.StatusId == buffId))
+            statuses.Add(new RunPersistentStatusState(outcome.TargetCharacterId, buffId, 1));
+
+        PureRunMapState map = run.MapState with
+        {
+            TreasureResolution = outcome with { Confirmed = true },
+            PendingStatuses = statuses,
+            NodeLifecycle = RunNodeLifecycle.Resolved
+        };
+        ContentId[] acquired = run.AcquiredItems.Concat(new ContentId?[]
+            { outcome.EquipmentContentId, outcome.ConsumableContentId }.Where(value => value.HasValue)
+            .Select(value => value!.Value)).ToArray();
+        PureRunState awarded = Copy(run, equipment: gear, consumables: items,
+            gold: Math.Min(50, checked(run.Gold + outcome.Gold)), map: map, acquiredItems: acquired);
+        return Commit(awarded);
+    }
 
     public LayerFourNodeResolution AssignMysteryAdjudicator(PureRunState run, string eventId)
     {
@@ -266,14 +337,27 @@ public sealed class PureRunLayerFourNodeService
         ContentId? encounterId = null, IReadOnlyList<RunCharacterState>? party = null,
         IReadOnlyList<BattleConsumableState>? consumables = null, IReadOnlyList<RunEquipmentState>? equipment = null,
         int? gold = null, string? appliedKey = null, RunEncounterCheckpoint? checkpoint = null,
-        PureRunMapState? map = null, RunNodeTransaction? transaction = null) => new(run.RunId, run.Seed,
+        PureRunMapState? map = null, RunNodeTransaction? transaction = null,
+        IReadOnlyList<ContentId>? acquiredItems = null) => new(run.RunId, run.Seed,
         run.Revision + 1, phase ?? run.Phase, run.EncounterIndex, encounterId ?? run.EncounterContentId,
         party ?? run.Party, consumables ?? run.BackpackConsumables, equipment ?? run.BackpackEquipment,
         run.PendingProgression, appliedKey is null ? run.AppliedTransactionKeys : run.AppliedTransactionKeys.Append(appliedKey).ToArray(),
-        gold ?? run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint,
+        gold ?? run.Gold, run.BattlesCompleted, run.EnemiesDefeated, acquiredItems ?? run.AcquiredItems, checkpoint,
         map ?? run.MapState, transaction ?? run.NodeTransaction);
 
     private static int Percent(int value, int percent) => (int)Math.Ceiling(value * percent / 100d);
+    private static ContentId? SelectWeighted(IReadOnlyList<WeightedContentDefinition> pool, Random random)
+    {
+        if (pool.Count == 0) return null;
+        int total = pool.Sum(value => value.Weight);
+        int roll = random.Next(total);
+        foreach (WeightedContentDefinition value in pool.OrderBy(value => value.ContentId.Value, StringComparer.Ordinal))
+        {
+            if (roll < value.Weight) return value.ContentId;
+            roll -= value.Weight;
+        }
+        return pool[^1].ContentId;
+    }
     private static RunCharacterState CopyVitals(RunCharacterState value, int hp, int mp) => new(value.CharacterId,
         value.UnitContentId, value.Level, value.Attributes, hp, value.MaxHealth, mp, value.MaxMana, hp == 0,
         value.LearnedSkills, value.Equipment, value.CarriedConsumables, value.LearnedSkillStates,

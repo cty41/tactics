@@ -341,6 +341,22 @@ public sealed class PureRunSessionService
                 repaired = true;
                 repairedLayerFourMap = true;
             }
+            if (mapState is not null && _mapDefinition is not null)
+            {
+                if (mapState.MapContentId is ContentId persistedId && persistedId != _mapDefinition.ContentId)
+                    throw new InvalidDataException("save.map_identity_mismatch");
+                if (mapState.MapLayoutVersion != 0 && mapState.MapLayoutVersion > _mapDefinition.LayoutVersion)
+                    throw new InvalidDataException("save.map_version_unsupported");
+                if (mapState.MapContentId is null || mapState.MapLayoutVersion == 0)
+                {
+                    mapState = mapState with
+                    {
+                        MapContentId = _mapDefinition.ContentId,
+                        MapLayoutVersion = _mapDefinition.LayoutVersion
+                    };
+                    repaired = true;
+                }
+            }
             if (!repaired) return loaded;
             var repairedRun = new PureRunState(run.RunId, run.Seed, run.Revision, run.Phase, run.EncounterIndex,
                 run.EncounterContentId, party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
@@ -348,7 +364,8 @@ public sealed class PureRunSessionService
                 mapState, run.NodeTransaction);
             diagnostics = new[]
             {
-                repairedLayerFourMap ? "save.layer_four_map_repaired" : "save.attributes_repaired_from_run_definition"
+                repairedLayerFourMap ? "save.layer_four_map_repaired" :
+                    mapState != run.MapState ? "save.map_identity_repaired" : "save.attributes_repaired_from_run_definition"
             };
             return loaded with { Snapshot = loaded.Snapshot with { ActiveRun = repairedRun } };
         }

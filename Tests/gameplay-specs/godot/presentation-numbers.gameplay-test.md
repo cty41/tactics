@@ -6,7 +6,7 @@ requiredAdapters: [Map, PlayerInput, Battle, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: numbers-mana-v1, path: "validated://numbers-mana-v1", semanticHash: b1ab312c5e80aa63fc5ebddcceb21458784da6c9f46f10c29b2d7b32794e61f6 }
+    parameters: { id: numbers-mana-v1, path: "validated://numbers-mana-v1", semanticHash: 42d6647ef5748a3aadc201852ec34a54e132f8ad92d5831456f6c4b8ac7cdcca }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}

@@ -6,7 +6,7 @@ requiredAdapters: [Map, PlayerInput, Battle, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: inventory-store-ready-v1, path: "validated://inventory-store-ready-v1", semanticHash: 70ff70d78706879dfe6168d4b3d8663eaeea084f5d8a5fcf2fa963661bf438a0 }
+    parameters: { id: inventory-store-ready-v1, path: "validated://inventory-store-ready-v1", semanticHash: de13b6914c27f36fad607257cda289771a15f0eed3648a1d7286ef79d39b0b6b }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}

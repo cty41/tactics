@@ -43,6 +43,7 @@ public sealed class ContentSchemaCatalog
         new ContentSchemaDefinition("rest", 1, 1),
         new ContentSchemaDefinition("run-map", 1, 1),
         new ContentSchemaDefinition("store", 1, 1),
+        new ContentSchemaDefinition("treasure", 1, 1),
         new ContentSchemaDefinition("run", 1, 1),
         new ContentSchemaDefinition("item", 1, 1),
         new ContentSchemaDefinition("packed-scene", 1, 1),

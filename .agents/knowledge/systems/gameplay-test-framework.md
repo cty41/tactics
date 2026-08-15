@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity 或 Godot adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity, godot]
-timestamp: "2026-08-15T03:20:27+08:00"
+timestamp: "2026-08-15T15:06:01+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:faec6a47e58259823953d2408c2226812699fb7cd5beacd130d2b15bfd4beb78
+source_fingerprint: sha256:8f532234cd250dd17b551bc1f1ba2e1ba48bfebee55749a747a748b7f6a72c38
 ---
 
 # Current State

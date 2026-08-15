@@ -180,6 +180,8 @@ Pure .NET Core
 
 Locator Catalog 记录 `ContentId → ResourceType + uid://`，运行时不扫描内容目录。Core/存档使用 `ContentId` 表达业务内容、使用 `UnitInstanceId` 表达具体战斗实体；UID 只在 Godot 适配层使用。
 
+Ownership closure 后 Locator Catalog 同时保存 receipt 审计过的诊断路径。UID 用于生成身份、漂移和 ledger 校验；运行时使用诊断路径加载，避免连续 headless ResourceSaver 批次尚未完成 Editor UID cache 重扫时误解析到旧资源。Catalog 不做目录扫描，ContentId 仍是玩法与存档身份。
+
 正式 `.tres/.tscn` 直接进入主 PCK。Godot 原生 `ResourceLoader`、`PackedScene` 和场景作用域替代 Unity AssetBundle、BundleCache、依赖加载顺序和手工引用计数。第一阶段不机械模拟 AssetBundle，也不建设 DLC、Mod 或运行时下载包。
 
 `BattleRuntimeScope` 的取消、任务跟踪、排空和异常可见性是运行时 Adapter 的生命周期契约：每场战斗拥有独立作用域；场景切换、战斗结束或销毁时先取消并等待已跟踪异步任务排空，再释放资源；取消后的 continuation 不得访问已销毁节点；排空期间观察到的非取消异常必须显式暴露。Godot 实现可以更换具体 API，但不能丢失这条所有权边界。

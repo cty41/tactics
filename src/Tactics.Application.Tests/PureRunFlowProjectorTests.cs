@@ -176,8 +176,12 @@ public sealed class PureRunFlowProjectorTests
             new PureRunPartyTemplate("amazon", new ContentId("unit.pure-run.amazon"), new ContentId("skill.amazon.thrust.lv1"), new UnitAttributes(5,6,5,5,5,5))
         ]);
 
-    private static PureRunMapDefinition Map() => new(new ContentId("run-map.pure-run"), 2,
+    private static PureRunMapDefinition Map() => new(new ContentId("run-map.pure-run"), 3,
     [
+        new PureRunMapNodeDefinition("start",0,PureRunNodeKind.Battle,new ContentId("run.pure-run"), "Start"),
+        new PureRunMapNodeDefinition("layer_01_battle",1,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.n1"), "N1"),
+        new PureRunMapNodeDefinition("layer_02_battle",2,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.n2"), "N2"),
+        new PureRunMapNodeDefinition("layer_03_battle",3,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.n3"), "N3"),
         new PureRunMapNodeDefinition("layer_04_battle",4,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.n4")),
         new PureRunMapNodeDefinition("layer_04_rest",4,PureRunNodeKind.Rest,new ContentId("rest.standard")),
         new PureRunMapNodeDefinition("layer_04_store",4,PureRunNodeKind.Store,new ContentId("store.standard")),
@@ -185,6 +189,25 @@ public sealed class PureRunFlowProjectorTests
         new PureRunMapNodeDefinition("layer_06_battle",6,PureRunNodeKind.Battle,new ContentId("encounter.pure-run.e1")),
         new PureRunMapNodeDefinition("layer_06_rest",6,PureRunNodeKind.Rest,new ContentId("rest.standard")),
         new PureRunMapNodeDefinition("layer_06_store",6,PureRunNodeKind.Store,new ContentId("store.standard")),
-        new PureRunMapNodeDefinition("layer_06_event",6,PureRunNodeKind.Mystery,new ContentId("event.mystery"))
-    ]);
+        new PureRunMapNodeDefinition("layer_05_battle",5,PureRunNodeKind.Elite,new ContentId("encounter.pure-run.e1"), "Elite"),
+        new PureRunMapNodeDefinition("layer_06_event",6,PureRunNodeKind.Mystery,new ContentId("event.mystery")),
+        new PureRunMapNodeDefinition("layer_07_battle",7,PureRunNodeKind.Boss,new ContentId("encounter.pure-run.special"), "Boss")
+    ], Connections());
+
+    private static PureRunMapConnectionDefinition[] Connections()
+    {
+        var values = new List<PureRunMapConnectionDefinition>
+        {
+            new("start", "layer_01_battle"), new("layer_01_battle", "layer_02_battle"),
+            new("layer_02_battle", "layer_03_battle")
+        };
+        foreach (string kind in new[] { "battle", "rest", "store", "event" })
+        {
+            values.Add(new("layer_03_battle", $"layer_04_{kind}"));
+            values.Add(new($"layer_04_{kind}", "layer_05_battle"));
+            values.Add(new("layer_05_battle", $"layer_06_{kind}"));
+            values.Add(new($"layer_06_{kind}", "layer_07_battle"));
+        }
+        return values.ToArray();
+    }
 }
