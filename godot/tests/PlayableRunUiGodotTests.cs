@@ -682,6 +682,15 @@ public class PlayableRunUiGodotTests
     }
 
     [TestCase]
+    public void AudioFrameworkValidatesIndependentSettings()
+    {
+        GodotAudioSettingsV1 settings = GodotAudioSettingsStore.Validate(new GodotAudioSettingsV1(1f, 0.6f, 0.7f, 0.8f, false));
+        AssertThat(settings.Music).IsEqual(0.6f);
+        AssertThat(settings.Sfx).IsEqual(0.7f);
+        AssertThat(settings.Ui).IsEqual(0.8f);
+    }
+
+    [TestCase]
     public void SettlementReportsOnlyTheLatestBattleDrop()
     {
         UnitAttributes attributes = new(5, 5, 5, 5, 5, 5);

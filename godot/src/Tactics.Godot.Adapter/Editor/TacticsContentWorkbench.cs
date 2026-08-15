@@ -24,7 +24,7 @@ public partial class TacticsContentWorkbench : VBoxContainer
         AddTab(tabs, new EncounterFixtureWorkbench(), "Encounter Fixture");
         AddTab(tabs, CreatePresentation(), "Skill / Presentation");
         AddTab(tabs, CreateAi(), "AI");
-        AddTab(tabs, new ContentCatalogWorkbench("audio", "Audio Contracts"), "Audio");
+        AddTab(tabs, new AudioWorkbench(), "Audio");
         AddTab(tabs, new ContentCatalogWorkbench(string.Empty, "QA / Catalog Evidence"), "QA");
         AddChild(tabs);
     }

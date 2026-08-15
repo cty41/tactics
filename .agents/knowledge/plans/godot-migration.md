@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-15T15:21:31+08:00"
+timestamp: "2026-08-15T15:58:30+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:5ce329faef72b64d4bee44e9a5c0fd1e2c423d1d41220011e81f9af0f3c027e8
+source_fingerprint: sha256:48235e3f8fee47e2908ea2eff499d5748932beb2c97d5593b6e9b8611047310e
 ---
 
 # Current state
@@ -124,6 +124,8 @@ Godot ownership 收口的 `pure-run-ownership-closure-v1` 已完成 Lv3 gameplay
 Ownership closure 的 Map/Treasure checkpoint 已将冻结合同接入真实运行时。`PureRunMapDefinition` 现在保存任意节点、显式连接、标题和 lane；canonical `run-map.pure-run.layer4-v1` 以 layout version 3 表达 16 节点、23 条边以及 Layer 4/6 各一条 Treasure 路线。Treasure 使用 Run seed 与节点身份确定性结算 2–5 Gold，并可从 weighted Equipment、Consumable、Buff 池各选择一次，解析与确认使用稳定事务键且 Reload 不重掷。Save V6 显式保存 Map ContentId/layout version 与 Treasure resolution，V5 合法状态只在内存迁移，未知地图或未来版本 fail-fast。ResourceSaver 两轮生成权威 Map/Treasure Resource 后 canonical Catalog 为 142；Core 103、Application 114、Godot 82+15、Python 143、Compatibility/Forward+ 与统一 verifier 全绿。旧 Layer 4 exporter 仍保留冻结 map 证据，但在权威 Treasure batch 存在时不得覆盖 canonical map Catalog entry。
 
 Ownership closure 的统一 Content Workbench 以现有 Godot Main Screen Plugin 为单一入口，不再为每类内容创建互不关联的 Dock。Map 页加载 canonical Map Resource，提供节点标题/lane 的 Undo/Redo、确定性自动布局、GraphEdit 全拓扑、运行时编译验证和 UID 保留的 ResourceSaver 回滚保存；Event/Treasure 页显示实际选项、属性检定、成功/失败结果、weighted reward table 及 Map 节点反向关联。Encounter Fixture 在 SubViewport 内复用 N1/N2/N3/Elite 的 canonical Encounter/Layout/Unit/Skill/AI Resource，可按固定 seed 单步或执行整轮。Skill/Presentation 页继续保留已验证的 typed ChangeSet、revision、Undo/Redo 与正式 SubViewport player；AI 页将完整 Intent/Rule/Score/Curve 图可视化，并仅开放四项安全 profile weight 编辑。Audio 与 QA 标签已预留在同一导航中，其正式 cue/bus audition 与后台 Gameplay Spec 执行分别由后续 ownership checkpoint 接入；只读目录不得被误称为已完成 authoring surface。
+
+Audio ownership 框架使用独立于 Run Save 的 `tactics-audio-settings-v1`，运行时确定性建立 Master/Music/SFX/UI bus，并通过 `AudioCueDefinitionResource`/`AudioCueCatalogResource` 约束变体、并发和 committed event 映射；Workbench 可调整 bus 试听状态并清理预览播放器。当前仓库尚未登记可随 Godot 发布的音频 payload，因此 cue catalog 内容、实际 battle/page 绑定与听感验收仍由合法素材闸门阻断，不得将框架完成表述为 Audio 内容迁移完成。
 
 Godot 正式 UI 收口采用原生 `Theme`/`Control` 等价表达 Unity UI Toolkit 的项目视觉语言，不复制 UXML/USS。根 Theme 统一近黑背景、半透明面板、橙色强调边、白灰文本以及 Button 的 normal/hover/pressed/focus/disabled 状态，并通过语义 variation 区分主按钮、紧凑控制、战斗动作和卡片。Home 使用居中的 TACTICS/PURE RUN 主菜单面板并恢复 Options 入口；普通 Run 页面共享标题面板，Esc Pause 使用最高层中央菜单而不再把文字直接叠在战场单位上。Battle HUD 将单位详情、Round/Turn、播放控制、横向动作栏和 End Turn 放入五个固定安全区面板，面板不参与鼠标命中且绘制在棋盘 Actor 之上，生产输入节点与 Gameplay Spec 语义保持不变。Map 使用独立节点详情卡；Progression、Settlement 与 Summary 使用居中流程面板；Inventory 使用角色、背包和物品详情三栏卡片，成长候选使用统一战斗动作卡样式。所有装饰面板均忽略鼠标输入，页面仍只通过原有生产按钮和 intent 改变状态。UI Theme 不进入 gameplay Catalog，canonical Catalog 保持 131。
 
