@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-15T19:58:40+08:00"
+timestamp: "2026-08-15T20:09:59+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,14 +23,14 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:8f45a74acf5f273a89836b1aeaecd5bab65243bdfcc113916def23b071dcaa89
+source_fingerprint: sha256:d13b67f81694b701345d4df51ed803280db0847c61f284f161337af3bb309dee
 ---
 
 # Current state
 
 Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9.0.312。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容迁移、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
 
-Windows 内部 RC 由 `Tools/migration/Build-GodotWindows.ps1` 提供唯一只读构建入口，`godot/export_presets.cfg` 固定 `Windows Desktop` Release 预设。GitHub Actions 在相关 `main` push 或手动触发时只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
+Windows 内部 RC 由 `Tools/migration/Build-GodotWindows.ps1` 提供唯一只读构建入口，`godot/export_presets.cfg` 固定 `Windows Desktop` Release 预设。GitHub Actions 在相关 `main` push 或手动触发时只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 必须携带 tracked `godot/Tactics.Godot.Adapter.sln`，否则 Godot .NET export 会在退出码为 0 时逐文件报告缺少 solution。staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
 
 RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed runtime packaging、顶层 allowlist 及测试/Unity/godot-ai/save payload 禁令，并生成 source/semantic/provenance manifest 与 `SHA256SUMS.txt`。Godot 4.7 Windows C# export 可将托管程序集封装进 PCK；manifest 必须记录 `LooseAssemblies` 或 `PckEmbedded`，后者由随后的真实 EXE 启动证明 C# 入口可加载，不能以缺少松散 DLL 误判失败。`Test-GodotWindowsLaunch.ps1` 在隔离 APPDATA/LOCALAPPDATA 下以 Compatibility 和默认 renderer 有界启动导出 EXE；成功包与筛选后的失败诊断分别作为保留 14 天的 Actions artifact，内部测试不自动创建 GitHub Release。当前版本明确不登记 Audio payload，静默运行是 RC 合法状态。
 
@@ -62,7 +62,7 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 
 Ownership 收口使用同一入口的 `-GodotOwned` 模式，并由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 Unity 根目录与 Unity Oracle 项目后调用。该模式不运行活动 Unity 导出/Oracle，但仍执行所有 Godot-owned 编译、测试、Gameplay Spec、Release、renderer、运行时与知识结构门禁；因此“路径仍在但代码没引用”不能冒充 ownership 证明。GdUnit test host 位于 `godot/tests/`，生成的 runner source 由验证器在构建前从受版本控制模板暂时注入、在 finally 清理，避免 production 项目根存在第二个 `.csproj` 或发布程序集携带测试包。
 
-Windows RC workflow 先在 staging 中执行 `Verify-GodotMigration.ps1 -GodotOwned`，随后再通过同一 .NET 9.0 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。完整 Unity 导出/Oracle 不进入 RC 构建；首次真实 hosted runner export、artifact digest/download hash 和无 Godot/Unity 机器启动仍是外部交付闸门。
+Windows RC workflow 先在 staging 中执行 `Verify-GodotMigration.ps1 -GodotOwned`，随后再通过同一 .NET 9.0 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。Windows export 除检查进程退出码外还必须扫描 Godot 输出中的行首 `ERROR:`；Godot 返回 0 但托管导出失败不得进入包审计或启动 smoke。完整 Unity 导出/Oracle 不进入 RC 构建；首次真实 hosted runner export、artifact digest/download hash 和无 Godot/Unity 机器启动仍是外部交付闸门。
 
 Phase 7E 的等距棋盘由 `IsometricBattleBoardLayout` 提供唯一投影/逆投影合同，`GodotIsometricBattleBoard` 只绘制 Application Snapshot 并发送已有 cell intent。Phase 8A 的 `BattlePresentationFrameCompiler` 只消费 transition 前后 Snapshot 与已提交事件，Godot Tween 队列只消费 cue，不参与 RNG、伤害或 BattleResult。Phase 8B 的 Fireball/Bone Spear/Thrust 临时 FX 只消费 cue 路径和真实 affected-unit 集合，并严格排除 Piloto Prefab、纹理、材质、Shader 与 Audio。统一入口连续两次运行 `IsometricPresentationAssetBuilder`，比较 canonical Catalog、Board、Standard Unit 与三个技能 Resource SHA-256；新增路径固定 ledger UID。当前 canonical Catalog 精确为 119。
 

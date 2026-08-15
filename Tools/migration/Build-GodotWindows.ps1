@@ -27,6 +27,7 @@ $exportPreset = Join-Path $projectRoot 'export_presets.cfg'
 $solution = Join-Path $repoRoot 'Tactics.Migration.slnx'
 $runSettings = Join-Path $repoRoot 'Tactics.Migration.runsettings'
 $adapterProject = Join-Path $projectRoot 'Tactics.Godot.Adapter.csproj'
+$godotSolution = Join-Path $projectRoot 'Tactics.Godot.Adapter.sln'
 $toolingManifest = Join-Path $repoRoot 'Tools\migration\manifest\godot-tooling.json'
 $packageValidator = Join-Path $repoRoot 'Tools\migration\Test-GodotWindowsPackage.ps1'
 
@@ -53,6 +54,7 @@ foreach ($requiredFile in @(
     $solution,
     $runSettings,
     $adapterProject,
+    $godotSolution,
     $toolingManifest,
     $packageValidator)) {
     if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
@@ -170,8 +172,16 @@ try {
     Invoke-Checked 'Validate canonical catalog in Compatibility mode' {
         & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --validate-buffs-items --quit-after 6000
     }
-    Invoke-Checked 'Export Windows Desktop Release' {
-        & $GodotExecutable --headless --path $projectRoot --export-release 'Windows Desktop' $exportExecutable
+    Write-Host '== Export Windows Desktop Release =='
+    $exportOutput = @(& $GodotExecutable --headless --path $projectRoot --export-release 'Windows Desktop' $exportExecutable 2>&1)
+    $exportExitCode = $LASTEXITCODE
+    $exportOutput | ForEach-Object { Write-Output $_ }
+    if ($exportExitCode -ne 0) {
+        throw "Export Windows Desktop Release failed with exit code $exportExitCode."
+    }
+    $exportErrors = @($exportOutput | Where-Object { [string]$_ -match '^ERROR:' })
+    if ($exportErrors.Count -gt 0) {
+        throw "Godot reported export errors despite exit code 0: $($exportErrors -join ' | ')"
     }
 
     foreach ($requiredOutput in @($exportExecutable, [IO.Path]::ChangeExtension($exportExecutable, '.pck'))) {

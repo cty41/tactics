@@ -79,6 +79,10 @@ $isolatedProject = Join-Path $destination 'godot\project.godot'
 if (-not (Test-Path -LiteralPath $isolatedProject -PathType Leaf)) {
     throw "Canonical Godot project is missing from RC source: $isolatedProject"
 }
+$godotSolution = Join-Path $destination 'godot\Tactics.Godot.Adapter.sln'
+if (-not (Test-Path -LiteralPath $godotSolution -PathType Leaf)) {
+    throw "Canonical Godot solution is missing from RC source: $godotSolution"
+}
 $projectText = [IO.File]::ReadAllText($isolatedProject)
 $projectText = [Regex]::Replace($projectText,
     '(?m)^_mcp_game_helper="\*res://addons/godot_ai/runtime/game_helper\.gd"\r?\n', '')

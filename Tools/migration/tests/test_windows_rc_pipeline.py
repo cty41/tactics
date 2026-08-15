@@ -56,6 +56,10 @@ class WindowsRcPipelineTests(unittest.TestCase):
                 '"res://addons/tactics_tooling/plugin.cfg")\n',
                 encoding="utf-8",
             )
+            (source / "godot" / "Tactics.Godot.Adapter.sln").write_text(
+                "Microsoft Visual Studio Solution File, Format Version 12.00\n",
+                encoding="utf-8",
+            )
             (source / "Assets" / "Unity.asset").write_text("unity", encoding="utf-8")
             (source / "src" / "Tactics.UnityOracle.Tests" / "Oracle.cs").write_text(
                 "oracle", encoding="utf-8"
@@ -79,8 +83,11 @@ class WindowsRcPipelineTests(unittest.TestCase):
             self.assertNotIn("godot_ai", project)
             manifest = json.loads((destination / "rc-source-manifest.json").read_text(encoding="utf-8-sig"))
             self.assertEqual("godot-owned-without-unity-v1", manifest["boundary"])
-            self.assertEqual(1, manifest["fileCount"])
-            self.assertEqual("godot/project.godot", manifest["files"][0]["path"])
+            self.assertEqual(2, manifest["fileCount"])
+            self.assertEqual(
+                ["godot/Tactics.Godot.Adapter.sln", "godot/project.godot"],
+                [entry["path"] for entry in manifest["files"]],
+            )
             status = subprocess.run(
                 ["git", "status", "--porcelain"], cwd=destination, check=True,
                 text=True, stdout=subprocess.PIPE
@@ -154,6 +161,15 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertNotIn("create-release", workflow.lower())
         self.assertNotIn("${{ runner.temp }}", workflow)
         self.assertIn("steps.paths.outputs.diagnostics != ''", workflow)
+
+    def test_export_requires_the_godot_solution_and_rejects_logged_errors(self):
+        build_script = (TOOLS / "Build-GodotWindows.ps1").read_text(encoding="utf-8-sig")
+        staging_script = (TOOLS / "New-GodotOwnedRcSource.ps1").read_text(encoding="utf-8-sig")
+
+        self.assertIn("Tactics.Godot.Adapter.sln", build_script)
+        self.assertIn("Tactics.Godot.Adapter.sln", staging_script)
+        self.assertIn("-match '^ERROR:'", build_script)
+        self.assertIn("Godot reported export errors despite exit code 0", build_script)
 
 
 if __name__ == "__main__":
