@@ -153,8 +153,8 @@ try {
     Invoke-Checked 'Build production Godot adapter Release' {
         dotnet build $adapterProject -c $Configuration --no-restore -m:1 --output $releaseVerificationDirectory
     }
-    Invoke-Checked 'Publish production Godot adapter for Windows' {
-        dotnet publish $adapterProject -c $Configuration -r win-x64 --self-contained true --no-restore -m:1 --output $releaseVerificationDirectory
+    Invoke-Checked 'Publish production Godot adapter for Windows ExportRelease' {
+        dotnet publish $adapterProject -c ExportRelease -r win-x64 --self-contained true --no-restore -m:1 --output $releaseVerificationDirectory
     }
 
     $forbiddenReleaseFiles = @(
@@ -177,7 +177,7 @@ try {
         & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --validate-buffs-items --quit-after 6000
     }
     Write-Host '== Export Windows Desktop Release =='
-    $exportOutput = @(& $GodotExecutable --headless --path $projectRoot --export-release 'Windows Desktop' $exportExecutable 2>&1)
+    $exportOutput = @(& $GodotExecutable --verbose --headless --path $projectRoot --export-release 'Windows Desktop' $exportExecutable 2>&1)
     $exportExitCode = $LASTEXITCODE
     $exportOutput | ForEach-Object { Write-Output $_ }
     if ($exportExitCode -ne 0) {
