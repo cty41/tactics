@@ -51,6 +51,15 @@ jobs:
           lfs: false
           fetch-depth: 1
 
+      - name: Preserve canonical repository bytes
+        shell: pwsh
+        run: |
+          # windows-latest has system core.autocrlf=true. Set the checkout-local
+          # policy and rematerialize tracked files before LFS objects are pulled,
+          # otherwise canonical JSON plans acquire CRLF bytes.
+          git config --local core.autocrlf false
+          git reset --hard HEAD
+
       - name: Pull only Godot LFS objects
         shell: pwsh
         run: |
