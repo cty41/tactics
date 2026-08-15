@@ -21,6 +21,23 @@ public class PlayableRunUiGodotTests
 {
     [TestCase]
     [RequireGodotRuntime]
+    public void TacticsThemeDefinesProjectPaletteAndInteractiveStates()
+    {
+        using Theme theme = GodotTacticsTheme.Create();
+
+        AssertThat(theme.GetColor("font_color", "Label")).IsEqual(GodotTacticsTheme.TextPrimary);
+        AssertThat(theme.GetColor("font_disabled_color", GodotTacticsTheme.PrimaryButton))
+            .IsEqual(GodotTacticsTheme.DisabledText);
+        AssertThat(theme.GetStylebox("normal", GodotTacticsTheme.PrimaryButton) is StyleBoxFlat).IsTrue();
+        AssertThat(theme.GetStylebox("hover", GodotTacticsTheme.PrimaryButton) is StyleBoxFlat).IsTrue();
+        AssertThat(theme.GetStylebox("pressed", GodotTacticsTheme.PrimaryButton) is StyleBoxFlat).IsTrue();
+        AssertThat(theme.GetStylebox("disabled", GodotTacticsTheme.PrimaryButton) is StyleBoxFlat).IsTrue();
+        AssertThat(theme.GetStylebox("panel", GodotTacticsTheme.Panel) is StyleBoxFlat).IsTrue();
+        AssertThat(theme.GetStylebox("panel", GodotTacticsTheme.Card) is StyleBoxFlat).IsTrue();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
     public void MainSceneLoadsNativePlayableUiContract()
     {
         AssertThat(GodotPlayableRunMain.CanvasWidth).IsEqual(1600);

@@ -100,6 +100,7 @@ public partial class GodotPlayableRunMain : Control
     public override void _Ready()
     {
         _readyEntered = true;
+        Theme = GodotTacticsTheme.Create();
         _saveStore = _testContext?.SaveStore ?? new GodotRunSaveStore();
         _playbackSpeed = _testContext?.InitialPlaybackSpeed ?? 1f;
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -1507,7 +1508,7 @@ public partial class GodotPlayableRunMain : Control
         _pauseMenuControlsBattlePlayback=false;
         _damageNumbers=null;
         var root = new Control(); root.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); AddChild(root); _page = root;
-        Control background = battleBackdrop ? new GodotBattleBackdrop() : new ColorRect { Color = new Color("657784") };
+        Control background = battleBackdrop ? new GodotBattleBackdrop() : new ColorRect { Color = GodotTacticsTheme.Background };
         background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); root.AddChild(background);
         if (!battleBackdrop)
         {
@@ -1532,16 +1533,15 @@ public partial class GodotPlayableRunMain : Control
 
     private static Button Button(string text, Action action)
     {
-        var button = new Button { Text = text, CustomMinimumSize = new Vector2(300, 56) }; button.AddThemeFontSizeOverride("font_size", 21); button.Pressed += action; return button;
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(300, 56), ThemeTypeVariation = GodotTacticsTheme.PrimaryButton }; button.Pressed += action; return button;
     }
     private static Button SmallButton(string text, Action action)
     {
-        var button = new Button { Text = text, CustomMinimumSize = new Vector2(118, 44) }; button.AddThemeFontSizeOverride("font_size", 15); button.Pressed += action; return button;
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(118, 44), ThemeTypeVariation = GodotTacticsTheme.CompactButton }; button.Pressed += action; return button;
     }
     private static Button ActionButton(string text, Action action)
     {
-        var button = new Button { Text = text, CustomMinimumSize = new Vector2(168, 54) };
-        button.AddThemeFontSizeOverride("font_size", 15);
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(168, 54), ThemeTypeVariation = GodotTacticsTheme.ActionButton };
         button.Pressed += action;
         return button;
     }
