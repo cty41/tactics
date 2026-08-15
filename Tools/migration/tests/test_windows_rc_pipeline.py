@@ -135,6 +135,7 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertNotIn("releases: write", workflow)
         self.assertIn("New-GodotOwnedRcSource.ps1", workflow)
         self.assertIn("Test-GodotWindowsLaunch.ps1", workflow)
+        self.assertIn("Tools/okf/requirements.txt", workflow)
         self.assertIn("-GodotOwned", workflow)
         self.assertIn("if: always()", workflow)
         self.assertIn("retention-days: 14", workflow)
