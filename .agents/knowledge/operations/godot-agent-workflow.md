@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-15T20:09:59+08:00"
+timestamp: "2026-08-15T20:46:18+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,7 +23,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:d13b67f81694b701345d4df51ed803280db0847c61f284f161337af3bb309dee
+source_fingerprint: sha256:62d41a692c379a5e36eeb06c7254be6950aac9a14466b84d3f4d6b15a2f2577f
 ---
 
 # Current state
@@ -62,7 +62,7 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 
 Ownership 收口使用同一入口的 `-GodotOwned` 模式，并由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 Unity 根目录与 Unity Oracle 项目后调用。该模式不运行活动 Unity 导出/Oracle，但仍执行所有 Godot-owned 编译、测试、Gameplay Spec、Release、renderer、运行时与知识结构门禁；因此“路径仍在但代码没引用”不能冒充 ownership 证明。GdUnit test host 位于 `godot/tests/`，生成的 runner source 由验证器在构建前从受版本控制模板暂时注入、在 finally 清理，避免 production 项目根存在第二个 `.csproj` 或发布程序集携带测试包。
 
-Windows RC workflow 先在 staging 中执行 `Verify-GodotMigration.ps1 -GodotOwned`，随后再通过同一 .NET 9.0 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。Windows export 除检查进程退出码外还必须扫描 Godot 输出中的行首 `ERROR:`；Godot 返回 0 但托管导出失败不得进入包审计或启动 smoke。完整 Unity 导出/Oracle 不进入 RC 构建；首次真实 hosted runner export、artifact digest/download hash 和无 Godot/Unity 机器启动仍是外部交付闸门。
+Windows RC workflow 先在 staging 中执行 `Verify-GodotMigration.ps1 -GodotOwned`，随后再通过同一 .NET 9.0 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。生产 Core/Application/Godot 项目均启用 locked restore，Godot ExportRelease 不得因 hosted Windows 换行或依赖解析重写 tracked lock file。Windows export 除检查进程退出码外还必须扫描 Godot 输出中的行首 `ERROR:`；Godot 返回 0 但托管导出失败不得进入包审计或启动 smoke。完整 Unity 导出/Oracle 不进入 RC 构建；首次真实 hosted runner export、artifact digest/download hash 和无 Godot/Unity 机器启动仍是外部交付闸门。
 
 Phase 7E 的等距棋盘由 `IsometricBattleBoardLayout` 提供唯一投影/逆投影合同，`GodotIsometricBattleBoard` 只绘制 Application Snapshot 并发送已有 cell intent。Phase 8A 的 `BattlePresentationFrameCompiler` 只消费 transition 前后 Snapshot 与已提交事件，Godot Tween 队列只消费 cue，不参与 RNG、伤害或 BattleResult。Phase 8B 的 Fireball/Bone Spear/Thrust 临时 FX 只消费 cue 路径和真实 affected-unit 集合，并严格排除 Piloto Prefab、纹理、材质、Shader 与 Audio。统一入口连续两次运行 `IsometricPresentationAssetBuilder`，比较 canonical Catalog、Board、Standard Unit 与三个技能 Resource SHA-256；新增路径固定 ledger UID。当前 canonical Catalog 精确为 119。
 

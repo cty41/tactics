@@ -171,6 +171,14 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("-match '^ERROR:'", build_script)
         self.assertIn("Godot reported export errors despite exit code 0", build_script)
 
+        for project in (
+            REPO / "godot" / "Tactics.Godot.Adapter.csproj",
+            REPO / "src" / "Tactics.Core" / "Tactics.Core.csproj",
+            REPO / "src" / "Tactics.Application" / "Tactics.Application.csproj",
+        ):
+            project_text = project.read_text(encoding="utf-8-sig")
+            self.assertIn("<RestoreLockedMode>true</RestoreLockedMode>", project_text)
+
 
 if __name__ == "__main__":
     unittest.main()
