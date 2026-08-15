@@ -21,6 +21,15 @@ public partial class GodotPlayableRunMain : Control
     public const int CanvasWidth = 1600;
     public const int CanvasHeight = 900;
     public const int PauseOverlayZIndex = 4000;
+    internal static IReadOnlyDictionary<string, Rect2> BattleHudPanelRects { get; } =
+        new Dictionary<string, Rect2>(StringComparer.Ordinal)
+        {
+            ["BattleTurnPanel"] = new(new Vector2(455, 18), new Vector2(690, 108)),
+            ["BattleUnitPanel"] = new(new Vector2(18, 18), new Vector2(430, 190)),
+            ["BattlePlaybackPanel"] = new(new Vector2(1148, 18), new Vector2(434, 82)),
+            ["BattleActionPanel"] = new(new Vector2(18, 744), new Vector2(1170, 144)),
+            ["BattleEndTurnPanel"] = new(new Vector2(1305, 785), new Vector2(277, 103)),
+        };
     public static readonly Vector2 UnitMeterSize = new(44, 18);
     public const int UnitMeterBarHeight = 7;
     private readonly Dictionary<ContentId, UnitDefinition> _units = new();
@@ -528,17 +537,19 @@ public partial class GodotPlayableRunMain : Control
         _board.AddChild(_damageNumbers);
         _droppedSpears = new GodotDroppedSpearLayer { ZIndex = 88 };
         _board.AddChild(_droppedSpears);
-        var actionScroll = new ScrollContainer { Position = new Vector2(30, 765), Size = new Vector2(1120, 110) };
+        foreach ((string name, Rect2 rect) in BattleHudPanelRects)
+            HudPanelAt(root, name, rect.Position, rect.Size);
+        var actionScroll = new ScrollContainer { Position = new Vector2(30, 765), Size = new Vector2(1145, 110), ZIndex = 1201 };
         root.AddChild(actionScroll);
         _skillPanel = new HBoxContainer { CustomMinimumSize = new Vector2(1120, 90) };
         actionScroll.AddChild(_skillPanel);
-        _turnOrder=LabelAt(root,string.Empty,new Vector2(470,32),18);_turnOrder.Size=new Vector2(660,50);_turnOrder.HorizontalAlignment=HorizontalAlignment.Center;
-        _hoverInfo=LabelAt(root,"Hover a unit or cell",new Vector2(30,115),16);_hoverInfo.Size=new Vector2(430,110);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;
-        _settlementStatus=LabelAt(root,string.Empty,new Vector2(470,82),16);_settlementStatus.Size=new Vector2(660,48);_settlementStatus.HorizontalAlignment=HorizontalAlignment.Center;
-        var controls=new HBoxContainer{Position=new Vector2(1160,32),Size=new Vector2(410,55)};root.AddChild(controls);
+        _turnOrder=LabelAt(root,string.Empty,new Vector2(475,32),18);_turnOrder.Size=new Vector2(650,50);_turnOrder.HorizontalAlignment=HorizontalAlignment.Center;_turnOrder.ZIndex=1201;
+        _hoverInfo=LabelAt(root,"Hover a unit or cell",new Vector2(34,34),16);_hoverInfo.Size=new Vector2(398,158);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;_hoverInfo.ZIndex=1201;
+        _settlementStatus=LabelAt(root,string.Empty,new Vector2(475,82),16);_settlementStatus.Size=new Vector2(650,34);_settlementStatus.HorizontalAlignment=HorizontalAlignment.Center;_settlementStatus.ZIndex=1201;
+        var controls=new HBoxContainer{Position=new Vector2(1160,32),Size=new Vector2(410,55),ZIndex=1201};root.AddChild(controls);
         controls.AddChild(SmallButton("Pause/Resume",TogglePause));_stepButton=SmallButton("Step",()=>{if(_playbackPaused)PlaybackStep(true);});_stepButton.Disabled=true;controls.AddChild(_stepButton);_speedButton=SmallButton($"Speed {_playbackSpeed:0.#}x",ToggleSpeed);controls.AddChild(_speedButton);
         _cheatConsole=new GodotBattleCheatConsole();_cheatConsole.ClearRequested+=()=>{_logs.Clear();RefreshLog();};root.AddChild(_cheatConsole);
-        _endTurnButton=Button("End Turn (Enter)",()=>ApplyIntent(new EndTurnIntent()));root.AddChild(PlaceControl(_endTurnButton,new Vector2(1330,805),new Vector2(230,65)));
+        _endTurnButton=Button("End Turn\nEnter",()=>ApplyIntent(new EndTurnIntent()));_endTurnButton.ZIndex=1201;root.AddChild(PlaceControl(_endTurnButton,new Vector2(1325,801),new Vector2(242,72)));
         BuildPauseMenu(root);
         _eventLog=null;
         _status = _hoverInfo;
@@ -1560,6 +1571,15 @@ public partial class GodotPlayableRunMain : Control
     {
         var panel = new PanelContainer { Position = position, Size = size, ThemeTypeVariation = variation };
         parent.AddChild(panel);
+        return panel;
+    }
+
+    private static PanelContainer HudPanelAt(Control parent, string name, Vector2 position, Vector2 size)
+    {
+        PanelContainer panel = PanelAt(parent, position, size, GodotTacticsTheme.Card);
+        panel.Name = name;
+        panel.MouseFilter = MouseFilterEnum.Ignore;
+        panel.ZIndex = 1200;
         return panel;
     }
 

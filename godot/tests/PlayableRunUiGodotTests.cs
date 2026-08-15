@@ -160,6 +160,19 @@ public class PlayableRunUiGodotTests
     }
 
     [TestCase]
+    public void BattleHudPanelsStayInsideTheLogicalCanvas()
+    {
+        AssertThat(GodotPlayableRunMain.BattleHudPanelRects.Count).IsEqual(5);
+        foreach (Rect2 rect in GodotPlayableRunMain.BattleHudPanelRects.Values)
+        {
+            AssertThat(rect.Position.X).IsGreaterEqual(0);
+            AssertThat(rect.Position.Y).IsGreaterEqual(0);
+            AssertThat(rect.End.X).IsLessEqual(GodotPlayableRunMain.CanvasWidth);
+            AssertThat(rect.End.Y).IsLessEqual(GodotPlayableRunMain.CanvasHeight);
+        }
+    }
+
+    [TestCase]
     public void ActiveTileMarkerIsHiddenWhileCommittedActionPresentationRuns()
     {
         AssertThat(GodotPlayableRunMain.ShouldShowActiveMarker(false, false)).IsTrue();
