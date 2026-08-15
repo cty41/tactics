@@ -350,9 +350,8 @@ public class PlayableRunUiGodotTests
         AssertThat(buttonTexts.Count(text => text.StartsWith("+1 ", StringComparison.Ordinal))).IsEqual(6);
         AssertThat(buttonTexts.Any(text => text.Contains("mage.fireball", StringComparison.Ordinal))).IsFalse();
         AssertThat(buttonTexts.Any(text => text == "Back to Map")).IsFalse();
-        PanelContainer progressionPanel = Descendants<PanelContainer>(ui).Single(panel =>
-            panel.ThemeTypeVariation == GodotTacticsTheme.Panel && panel.Size == new Vector2(790, 690));
-        AssertThat((int)progressionPanel.MouseFilter).IsEqual((int)Control.MouseFilterEnum.Ignore);
+        PanelContainer progressionPanel = Descendants<PanelContainer>(ui).Single(panel => panel.Name == "ProgressionFlowPanel");
+        AssertFormalPanel(progressionPanel);
         ui.Free();
     }
 
@@ -379,6 +378,7 @@ public class PlayableRunUiGodotTests
         AssertThat(map).IsNotNull();
         AssertThat(map!.Snapshot!.Nodes.Count).IsEqual(14);
         AssertThat(map.Snapshot.FocusNodeId).IsEqual("layer_01_battle");
+        AssertFormalPanel(Descendants<PanelContainer>(ui).Single(panel => panel.Name == "MapDetailPanel"));
         ui.Free();
     }
 
@@ -573,6 +573,9 @@ public class PlayableRunUiGodotTests
             .ToArray();
         AssertThat(inventoryCards.Length).IsEqual(3);
         AssertThat(inventoryCards.All(panel => panel.MouseFilter == Control.MouseFilterEnum.Ignore)).IsTrue();
+        AssertThat(inventoryCards.Select(panel => panel.Name.ToString()).OrderBy(value => value).ToArray())
+            .ContainsExactly("InventoryBackpackPanel", "InventoryCharacterPanel", "InventoryDetailPanel");
+        foreach (PanelContainer panel in inventoryCards) AssertFormalPanel(panel);
         ui.Free();
     }
 
@@ -652,6 +655,15 @@ public class PlayableRunUiGodotTests
             if (child is T match) yield return match;
             foreach (T nested in Descendants<T>(child)) yield return nested;
         }
+    }
+
+    private static void AssertFormalPanel(PanelContainer panel)
+    {
+        AssertThat((int)panel.MouseFilter).IsEqual((int)Control.MouseFilterEnum.Ignore);
+        AssertThat(panel.Position.X).IsGreaterEqual(0);
+        AssertThat(panel.Position.Y).IsGreaterEqual(0);
+        AssertThat(panel.Position.X + panel.Size.X).IsLessEqual(1600);
+        AssertThat(panel.Position.Y + panel.Size.Y).IsLessEqual(900);
     }
 
     private sealed class MemoryClipboard : ITextClipboard
