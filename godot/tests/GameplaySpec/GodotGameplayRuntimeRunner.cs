@@ -55,20 +55,23 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
                 continue;
             }
             BattleUiSnapshot snapshot = context.Main.CaptureTestProbe().BattleSnapshot!;
-            actions++;
-            bool usedSkill = await TryUseFirstSkillAsync(context, snapshot, cancellationToken);
-            if (!usedSkill && snapshot.MoveAvailability.IsAvailable && snapshot.LegalMoveCells.Count > 0)
+            if (await TryUseFirstSkillAsync(context, snapshot, cancellationToken))
+            {
+                actions++;
+                await context.WaitUntilPlayerReadyOrTerminalAsync(cancellationToken);
+                continue;
+            }
+            if (snapshot.MoveAvailability.IsAvailable && snapshot.LegalMoveCells.Count > 0)
             {
                 await context.ClickPointerAsync("Move", Parameters(("targetKind", "UiElement")), cancellationToken);
                 GridPoint cell = snapshot.LegalMoveCells.OrderBy(value => value.Y).ThenBy(value => value.X).First();
                 await context.ClickPointerAsync($"{cell.X},{cell.Y}", Parameters(("targetKind", "BattleCell")), cancellationToken);
+                actions++;
                 await context.WaitUntilPlayerReadyOrTerminalAsync(cancellationToken);
-                if (!context.IsTerminal && !context.IsTerminalPending)
-                    await TryUseFirstSkillAsync(context, context.Main.CaptureTestProbe().BattleSnapshot!, cancellationToken);
+                continue;
             }
-            await context.WaitUntilPlayerReadyOrTerminalAsync(cancellationToken);
-            if (!context.IsTerminal && !context.IsTerminalPending && context.CanSubmitPlayerInput)
-                await context.PressKeyAsync(Key.Enter, cancellationToken);
+            await context.PressKeyAsync(Key.Enter, cancellationToken);
+            actions++;
         }
         if (!context.IsTerminal)
             throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress, "battle_action_limit");
@@ -359,17 +362,20 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             await ClickButtonAsync(target.StartsWith("map:", StringComparison.Ordinal) ? target : "map:" + target, token);
             return;
         }
-        await MovePointerAsync(target, parameters, token);
+        if (!Main.TryResolveTestBattlePointerTarget(targetKind, target, out Control? surface, out Vector2 logicalPoint) ||
+            surface is null)
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action,
+                "pointer_target_not_found:" + target);
+        (Viewport viewport, Vector2 point, bool localCoordinates) =
+            await ResolvePointerAsync(logicalPoint, surface, target, token);
         GodotIsometricBattleBoard board = Descendants<GodotIsometricBattleBoard>(Main).Single();
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         void Handler(Vector2 _) => completion.TrySetResult();
         board.PointerPressed += Handler;
         using CancellationTokenRegistration registration = token.Register(() => completion.TrySetCanceled(token));
-        Viewport viewport = Main.GetViewport();
-        Vector2 point = viewport.GetMousePosition();
-        viewport.PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = MouseButton.Left, Pressed = true }, false);
+        viewport.PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = MouseButton.Left, Pressed = true }, localCoordinates);
         await WaitFramesAsync(1, token);
-        viewport.PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = MouseButton.Left, Pressed = false }, false);
+        viewport.PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = MouseButton.Left, Pressed = false }, localCoordinates);
         await completion.Task;
         if (GodotObject.IsInstanceValid(board)) board.PointerPressed -= Handler;
     }
