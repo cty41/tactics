@@ -53,6 +53,14 @@ public class GodotGameplayRuntimeRunnerTests
         GodotGameplaySpecReport report = GodotGameplaySpecReport.Create(executions);
         string output = GodotGameplaySpecReportWriter.Write(report);
 
+        if (report.Failed > 0)
+        {
+            string diagnostics = string.Join(System.Environment.NewLine, report.Scenarios.Select(value =>
+                $"{value.ScenarioName}: passed={value.Succeeded}, error={value.ErrorCode ?? "none"}, " +
+                $"checkpoint={value.CheckpointId}, cleanup={value.RemainingTemporaryNodes}"));
+            throw new InvalidOperationException($"Gameplay acceptance batch failed:{System.Environment.NewLine}{diagnostics}");
+        }
+
         AssertThat(File.Exists(output)).IsTrue();
         AssertThat(report.Scenarios.Count).IsEqual(5);
         AssertThat(report.Passed).IsEqual(5);
