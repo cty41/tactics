@@ -58,7 +58,17 @@ jobs:
           # policy and rematerialize tracked files before LFS objects are pulled,
           # otherwise canonical JSON plans acquire CRLF bytes.
           git config --local core.autocrlf false
-          git reset --hard HEAD
+          $env:GIT_LFS_SKIP_SMUDGE = '1'
+          try {
+            git checkout-index --force --all
+          }
+          finally {
+            Remove-Item Env:GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
+          }
+          $planEol = git ls-files --eol -- Tests/gameplay-specs/godot/defeated-terminal.plan.json
+          if ($planEol -notmatch 'w/lf') {
+            throw "Canonical gameplay plan was not materialized with LF bytes: $planEol"
+          }
 
       - name: Pull only Godot LFS objects
         shell: pwsh
