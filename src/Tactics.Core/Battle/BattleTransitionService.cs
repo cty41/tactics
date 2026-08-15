@@ -108,7 +108,10 @@ public sealed class BattleTransitionService
                 StatusRefreshStrategy.AddDuration, damagePerTurn: 2);
             foreach (BattleUnitState adjacent in finalState.Units.Values
                          .Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber &&
-                             Manhattan(unit.Unit.Position, primary.Unit.Position) <= Math.Max(1, command.Definition.AreaRadius))
+                             (command.Definition.ExecutionProfile.AreaShape == "square"
+                                 ? Math.Max(Math.Abs(unit.Unit.Position.X - primary.Unit.Position.X),
+                                     Math.Abs(unit.Unit.Position.Y - primary.Unit.Position.Y)) <= Math.Max(1, command.Definition.AreaRadius)
+                                 : Manhattan(unit.Unit.Position, primary.Unit.Position) <= Math.Max(1, command.Definition.AreaRadius)))
                          .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray())
             {
                 BattleUnitState current = finalState.Units[adjacent.Unit.InstanceId];
@@ -144,7 +147,8 @@ public sealed class BattleTransitionService
             return Rejected(state, command.ActorId, "path_exceeds_move_range");
 
         GridPoint origin = actor.Unit.Position;
-        BattleUnitState moved = actor.WithPosition(command.Destination, hasMovedThisTurn: true);
+        BattleUnitState moved = actor.WithPosition(command.Destination, hasMovedThisTurn: true,
+            movementCellsThisTurn: checked(actor.MovementCellsThisTurn + path.Count));
         BattleState nextState = state.WithUnit(moved);
         return new BattleTransition(nextState, new BattleEvent[]
         {

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://cv4fij7nvxr51"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_84s5o"]
+
+[resource]
+script = ExtResource("1_84s5o")
+ContentIdValue = "skill.mage.fireball.lv3"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv3_Ability.asset"
+DisplayName = "火球术 Lv3"
+Description = "引爆主目标已有点燃后，结算二级火球效果。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 3
+ManaCost = 7
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Fireball"
+Damage = 4
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.ignite"
+StatusDuration = 3
+BranchId = "mage.fireball"
+PrerequisiteContentIdValue = "skill.mage.fireball.lv2"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 5
+AreaRadius = 1
+DetonateStatusContentIdValue = "buff.ignite"
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv3_Ability.asset"
+SourceGuid = "0f2d8552df8eaf74583adaaf8da332ca"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv3_Graph.asset"
+GraphDependencyHash = "464b9ed1baeaf1d90bec65b8bbdc9fef"

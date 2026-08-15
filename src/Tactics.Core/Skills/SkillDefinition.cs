@@ -49,7 +49,16 @@ public sealed record SkillExecutionProfile(
     int ShieldMultiplier = 0,
     bool ShieldAbsorbsAllDamage = false,
     bool CleanseHarmful = false,
-    int SecondaryDamage = 0);
+    int SecondaryDamage = 0,
+    string AreaShape = "",
+    int StatusChancePercent = 100,
+    ContentId? DetonateStatusContentId = null,
+    int BounceRange = 0,
+    int BounceCount = 0,
+    bool PierceAll = false,
+    bool AllowsEmptyTarget = false,
+    int MovementDamagePerCell = 0,
+    ContentId? SummonAttackContentId = null);
 
 /// <summary>Normalized engine-neutral execution contract for one migrated skill level.</summary>
 public sealed record SkillDefinition
@@ -106,6 +115,9 @@ public sealed record SkillDefinition
         PrerequisiteContentId = prerequisiteContentId;
         GrowthVisible = growthVisible;
         ExecutionProfile = executionProfile ?? new SkillExecutionProfile();
+        if (ExecutionProfile.StatusChancePercent is < 0 or > 100 || ExecutionProfile.BounceRange < 0 ||
+            ExecutionProfile.BounceCount < 0 || ExecutionProfile.MovementDamagePerCell < 0)
+            throw new ArgumentOutOfRangeException(nameof(executionProfile));
         RequiredAttribute = requiredAttribute.Trim();
         MinimumAttribute = minimumAttribute;
         PrerequisiteBranchId = prerequisiteBranchId.Trim();

@@ -45,10 +45,19 @@ public sealed class SkillRuntimeService
             return Reject(state, actor, "line_of_sight_blocked");
 
         BattleUnitState[] targets = ResolveTargets(state, actor, command).ToArray();
+        if (targets.Length == 0 && skill.ExecutionProfile.AllowsEmptyTarget)
+        {
+            BattleUnitState used = actor.WithMana(actor.CurrentMana - skill.ManaCost).WithSuccessfulSkillUse(skill.ContentId);
+            var emptyEvents = new List<BattleEvent> { new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId) };
+            if (skill.ManaCost > 0) emptyEvents.Add(new ManaSpentEvent(actor.Unit.InstanceId, skill.ContentId, skill.ManaCost, used.CurrentMana));
+            emptyEvents.Add(new SemanticCueEmittedEvent(actor.Unit.InstanceId, null, skill.ContentId, "resolution"));
+            return new BattleTransition(state.WithUnit(used), emptyEvents);
+        }
         if (targets.Length == 0) return Reject(state, actor, "no_valid_target");
         var events = new List<BattleEvent> { new SkillUsedEvent(actor.Unit.InstanceId, targets[0].Unit.InstanceId, skill.ContentId) };
         BattleState next = state;
         BattleUnitState updatedActor = actor.WithMana(actor.CurrentMana - skill.ManaCost).WithSuccessfulSkillUse(skill.ContentId);
+        if (skill.ExecutionProfile.MovementDamagePerCell > 0) updatedActor = updatedActor.ResetMovementCells();
         if (skill.ManaCost > 0) events.Add(new ManaSpentEvent(actor.Unit.InstanceId, skill.ContentId, skill.ManaCost, updatedActor.CurrentMana));
         next = next.WithUnit(updatedActor);
 
@@ -58,6 +67,20 @@ public sealed class SkillRuntimeService
             BattleUnitState target = next.Units[originalTarget.Unit.InstanceId];
             if (target.Unit.PlayerNumber == actor.Unit.PlayerNumber) return Reject(state, actor, "target_not_enemy");
             if (!target.IsAlive) return Reject(state, actor, "target_defeated");
+            if (originalTarget.Unit.InstanceId == primaryTargetId &&
+                skill.ExecutionProfile.DetonateStatusContentId is ContentId detonateId &&
+                target.Statuses.TryGetValue(detonateId, out BattleStatusState? detonated))
+            {
+                int detonationDamage = Math.Min(target.CurrentHealth, Math.Max(0, detonated.StackCount));
+                target = target.WithoutStatus(detonateId).WithHealth(target.CurrentHealth - detonationDamage);
+                events.Add(new StatusExpiredEvent(target.Unit.InstanceId, detonateId));
+                if (detonationDamage > 0)
+                    events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId,
+                        detonationDamage, target.CurrentHealth));
+                next = next.WithUnit(target);
+                next = BattleDefeatResolver.Apply(next, originalTarget, target, events);
+                if (!target.IsAlive) continue;
+            }
             bool dodged = false;
             bool critical = false;
             if (skill.Damage > 0 || skill.ExecutionKind is SkillExecutionKind.MagicAttack or SkillExecutionKind.MeleeAttack)
@@ -65,7 +88,8 @@ public sealed class SkillRuntimeService
                 var random = new DeterministicRandom(next.RandomState);
                 int roll = random.NextInt(100);
                 dodged = target.HasCombatTechniquesLevelOne && roll < 30;
-                critical = skill.CanCrit && !dodged && (_statuses.EvaluateBeforeAttack(target).ForceCritical || roll >= 90);
+                int criticalThreshold = actor.CombatTechniquesLevel >= 3 ? 70 : 90;
+                critical = skill.CanCrit && !dodged && (_statuses.EvaluateBeforeAttack(target).ForceCritical || roll >= criticalThreshold);
                 events.Add(new CombatRollResolvedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, roll, target.HasCombatTechniquesLevelOne ? 30 : 0, dodged ? "dodge" : critical ? "critical" : "hit", random.State));
                 next = next.WithRandomState(random.State);
             }
@@ -75,6 +99,7 @@ public sealed class SkillRuntimeService
                 SkillExecutionKind.MagicAttack => actor.MagicalAttack,
                 SkillExecutionKind.MeleeAttack => actor.PhysicalAttack,
                 SkillExecutionKind.Fireball when originalTarget.Unit.InstanceId != primaryTargetId => Math.Max(1, skill.Damage / 2),
+                SkillExecutionKind.Thrust => checked(skill.Damage + actor.MovementCellsThisTurn * skill.ExecutionProfile.MovementDamagePerCell),
                 _ => skill.Damage
             };
             if (critical) rawDamage = checked(rawDamage * 2);
@@ -89,19 +114,87 @@ public sealed class SkillRuntimeService
                 target = target.WithDamageShield(remaining > 0 ? shield with { RemainingPoints = remaining } : null);
                 events.Add(new DamageShieldAbsorbedEvent(target.Unit.InstanceId, skill.ContentId, absorbed, remaining));
             }
-            int health = Math.Max(0, target.CurrentHealth - damage);
+            int beforeHealth = target.CurrentHealth;
+            int health = Math.Max(0, beforeHealth - damage);
             target = target.WithHealth(health);
-            events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, originalTarget.CurrentHealth - health, health));
+            events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, beforeHealth - health, health));
 
-            if (target.IsAlive && skill.StatusContentId is ContentId statusId)
+            if (target.IsAlive && !dodged && skill.StatusContentId is ContentId statusId)
             {
-                StatusDefinition definition = StatusFor(skill, statusId);
-                StatusApplicationResult application = _statuses.Apply(target, definition, actor.Unit.InstanceId, skill.StatusDuration);
-                target = application.Unit;
-                events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, statusId, application.AppliedStatus.RemainingTurns));
+                bool applyStatus = true;
+                if (skill.ExecutionProfile.StatusChancePercent < 100)
+                {
+                    var random = new DeterministicRandom(next.RandomState);
+                    int roll = random.NextInt(100);
+                    applyStatus = roll < skill.ExecutionProfile.StatusChancePercent;
+                    events.Add(new StatusRollResolvedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId,
+                        statusId, roll, skill.ExecutionProfile.StatusChancePercent, applyStatus, random.State));
+                    next = next.WithRandomState(random.State);
+                }
+                if (applyStatus)
+                {
+                    StatusDefinition definition = StatusFor(skill, statusId);
+                    int duration = skill.ExecutionKind == SkillExecutionKind.IceBolt && originalTarget.Unit.InstanceId != primaryTargetId
+                        ? 1 : skill.StatusDuration;
+                    StatusApplicationResult application = _statuses.Apply(target, definition, actor.Unit.InstanceId, duration);
+                    target = application.Unit;
+                    events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, statusId, application.AppliedStatus.RemainingTurns));
+                }
             }
             next = next.WithUnit(target);
             next = BattleDefeatResolver.Apply(next, originalTarget, target, events);
+
+            if (originalTarget.Unit.InstanceId == primaryTargetId && target.IsAlive && !dodged &&
+                actor.Unit.DefinitionId == new ContentId("unit.pure-run.amazon") && actor.CombatTechniquesLevel >= 2 &&
+                skill.ExecutionKind == SkillExecutionKind.MeleeAttack)
+            {
+                var followUpRandom = new DeterministicRandom(next.RandomState);
+                int followUpRoll = followUpRandom.NextInt(100);
+                events.Add(new CombatRollResolvedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId,
+                    followUpRoll, 30, followUpRoll < 30 ? "combat-techniques-follow-up" : "combat-techniques-no-follow-up",
+                    followUpRandom.State));
+                next = next.WithRandomState(followUpRandom.State);
+                if (followUpRoll < 30)
+                {
+                    BattleUnitState current = next.Units[target.Unit.InstanceId];
+                    int followUpDamage = Math.Min(current.CurrentHealth, actor.PhysicalAttack);
+                    BattleUnitState followed = current.WithHealth(current.CurrentHealth - followUpDamage);
+                    events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, current.Unit.InstanceId, skill.ContentId,
+                        followUpDamage, followed.CurrentHealth));
+                    next = next.WithUnit(followed);
+                    next = BattleDefeatResolver.Apply(next, current, followed, events);
+                }
+            }
+        }
+        if (skill.ExecutionKind == SkillExecutionKind.IceBolt && skill.ExecutionProfile.BounceCount > 0 &&
+            next.TryGetUnit(primaryTargetId, out BattleUnitState? primary) && primary is not null)
+        {
+            foreach (BattleUnitState candidate in next.Units.Values
+                         .Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber && unit.Unit.InstanceId != primaryTargetId)
+                         .Where(unit => Manhattan(unit.Unit.Position, primary.Unit.Position) <= skill.ExecutionProfile.BounceRange)
+                         .OrderBy(unit => Manhattan(unit.Unit.Position, primary.Unit.Position))
+                         .ThenBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal)
+                         .Take(skill.ExecutionProfile.BounceCount).ToArray())
+            {
+                BattleUnitState bounce = next.Units[candidate.Unit.InstanceId];
+                var random = new DeterministicRandom(next.RandomState);
+                int roll = random.NextInt(100);
+                bool dodged = bounce.HasCombatTechniquesLevelOne && roll < 30;
+                events.Add(new CombatRollResolvedEvent(actor.Unit.InstanceId, bounce.Unit.InstanceId, skill.ContentId,
+                    roll, bounce.HasCombatTechniquesLevelOne ? 30 : 0, dodged ? "dodge" : "hit", random.State));
+                next = next.WithRandomState(random.State);
+                int damage = dodged ? 0 : Math.Min(bounce.CurrentHealth, Math.Max(1, skill.Damage / 2));
+                BattleUnitState damaged = bounce.WithHealth(bounce.CurrentHealth - damage);
+                events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, bounce.Unit.InstanceId, skill.ContentId, damage, damaged.CurrentHealth));
+                if (!dodged && damaged.IsAlive && skill.StatusContentId is ContentId slowId)
+                {
+                    StatusApplicationResult application = _statuses.Apply(damaged, StatusFor(skill, slowId), actor.Unit.InstanceId, 1);
+                    damaged = application.Unit;
+                    events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, damaged.Unit.InstanceId, slowId, 1));
+                }
+                next = next.WithUnit(damaged);
+                next = BattleDefeatResolver.Apply(next, bounce, damaged, events);
+            }
         }
         events.Add(new SemanticCueEmittedEvent(actor.Unit.InstanceId, targets[0].Unit.InstanceId, skill.ContentId, "resolution"));
         return new BattleTransition(next, events);
@@ -278,7 +371,9 @@ public sealed class SkillRuntimeService
         if (skill.AreaRadius > 0 && skill.ExecutionKind is SkillExecutionKind.AreaBlast or SkillExecutionKind.Fireball or SkillExecutionKind.AmplifyDamage or SkillExecutionKind.FearCurse or SkillExecutionKind.PoisonSpear)
         {
             BattleUnitState[] area = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
-                .Where(unit => Math.Abs(unit.Unit.Position.X-command.TargetCell.X)+Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y) <= skill.AreaRadius)
+                .Where(unit => skill.ExecutionProfile.AreaShape == "square"
+                    ? Math.Max(Math.Abs(unit.Unit.Position.X-command.TargetCell.X), Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y)) <= skill.AreaRadius
+                    : Math.Abs(unit.Unit.Position.X-command.TargetCell.X)+Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y) <= skill.AreaRadius)
                 .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray();
             if (skill.ExecutionKind == SkillExecutionKind.Fireball && command.TargetId is UnitInstanceId fireballTarget)
             {
@@ -308,7 +403,11 @@ public sealed class SkillRuntimeService
                 .Where(unit => IsOnSelectedRay(actor.Unit.Position, command.TargetCell, unit.Unit.Position))
                 .Where(unit => Math.Abs(unit.Unit.Position.X - actor.Unit.Position.X) + Math.Abs(unit.Unit.Position.Y - actor.Unit.Position.Y) <= selectedDistance)
                 .OrderBy(unit => Math.Abs(unit.Unit.Position.X - actor.Unit.Position.X) + Math.Abs(unit.Unit.Position.Y - actor.Unit.Position.Y));
-            foreach (BattleUnitState unit in skill.ExecutionKind == SkillExecutionKind.Thrust ? ray : ray.Take(1)) yield return unit;
+            IEnumerable<BattleUnitState> resolvedRay = skill.ExecutionKind == SkillExecutionKind.Thrust ||
+                skill.ExecutionKind == SkillExecutionKind.BoneSpear && skill.ExecutionProfile.PierceAll
+                    ? ray
+                    : ray.Take(1);
+            foreach (BattleUnitState unit in resolvedRay) yield return unit;
             yield break;
         }
         if (command.TargetId is UnitInstanceId id && state.TryGetUnit(id, out BattleUnitState? target) && target is not null && target.Unit.Position == command.TargetCell) yield return target;
@@ -337,6 +436,7 @@ public sealed class SkillRuntimeService
     {
         SkillExecutionKind.Fireball or SkillExecutionKind.FireDemonAttack => new StatusDefinition(statusId, "Ignite", 2, true, StatusPolarity.Harmful, StatusEffectKind.Burning, StatusTriggerTiming.TurnStart, StatusRefreshStrategy.AddStacks, damagePerTurn: 1, elementKind: StatusElementKind.Fire),
         SkillExecutionKind.IceBolt => new StatusDefinition(statusId, "Slow", 1, true, StatusPolarity.Harmful, StatusEffectKind.Slow, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, speedModifier: -2f, elementKind: StatusElementKind.Ice),
+        SkillExecutionKind.Lightning => new StatusDefinition(statusId, "Stun", 1, true, StatusPolarity.Harmful, StatusEffectKind.Stun, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, elementKind: StatusElementKind.Lightning),
         SkillExecutionKind.AmplifyDamage => new StatusDefinition(statusId, "CurseDamageAmplifier", 5, true, StatusPolarity.Harmful, StatusEffectKind.CurseDamageAmplifier, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "damage-taken"),
         SkillExecutionKind.FearCurse => new StatusDefinition(statusId, "Fear", Math.Max(1, skill.StatusDuration), true, StatusPolarity.Harmful, StatusEffectKind.Fear, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "fear"),
         _ => throw new InvalidOperationException($"Unsupported status contract for {skill.ExecutionKind}.")

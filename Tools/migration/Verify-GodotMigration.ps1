@@ -591,6 +591,31 @@ try {
         throw 'Isometric presentation generation is not byte-idempotent.'
     }
 
+    $ownershipDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ownership-closure-v1.draft.json'
+    if (Test-Path -LiteralPath $ownershipDraft -PathType Leaf) {
+        Invoke-Checked 'Generate ownership-closure Lv3 resources first pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/OwnershipClosureAssetBuilder.cs'
+        }
+        $ownershipPaths = @(
+            (Join-Path $projectRoot 'content\ContentCatalog.tres'),
+            (Join-Path $projectRoot 'content\skills\OwnershipClosureCatalog.tres')
+        ) + @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'content\skills') -Filter '*Lv3.tres' -File | Select-Object -ExpandProperty FullName)
+        $ownershipHashes = $ownershipPaths | ForEach-Object { (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash }
+        Invoke-Checked 'Generate ownership-closure Lv3 resources second pass' {
+            & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/OwnershipClosureAssetBuilder.cs'
+        }
+        $repeatedOwnershipHashes = $ownershipPaths | ForEach-Object { (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash }
+        if (Compare-Object $ownershipHashes $repeatedOwnershipHashes) {
+            throw 'Ownership-closure Lv3 generation is not byte-idempotent.'
+        }
+        Invoke-Checked 'Refresh ownership-closure Lv3 generation evidence' {
+            python -m Tools.migration.ownership_closure_generation `
+                --draft $ownershipDraft --project $projectRoot `
+                --state (Join-Path $repoRoot 'Tools\migration\manifest\state\pure-run-ownership-closure-v1.json') `
+                --receipt (Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-ownership-closure-v1-generation.json')
+        }
+    }
+
     $uiExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.unity.json'
     $uiDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ui-input-v1.draft.json'
     if (Test-Path -LiteralPath $uiExport -PathType Leaf) {

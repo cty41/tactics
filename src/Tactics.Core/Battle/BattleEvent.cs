@@ -150,6 +150,16 @@ public sealed record CombatRollResolvedEvent(
     string Outcome,
     ulong RandomState) : BattleEvent;
 
+public sealed record StatusRollResolvedEvent(
+    UnitInstanceId SourceId,
+    UnitInstanceId TargetId,
+    ContentId SkillId,
+    ContentId StatusId,
+    int Roll,
+    int Threshold,
+    bool Applied,
+    ulong RandomState) : BattleEvent;
+
 public sealed record SemanticCueEmittedEvent(
     UnitInstanceId SourceId,
     UnitInstanceId? TargetId,

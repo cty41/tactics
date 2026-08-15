@@ -182,7 +182,7 @@ public sealed class RunInventoryProgressionService
         RunLearnedSkillState[] learned = character.LearnedSkillStates.ToArray();
         if (skillId is ContentId selected)
         {
-            if (!skills.TryGetValue(selected, out SkillDefinition? selectedDefinition) || !selectedDefinition.GrowthVisible || selectedDefinition.Level > 2) return Reject(state, "progression.invalid_skill");
+            if (!skills.TryGetValue(selected, out SkillDefinition? selectedDefinition) || !selectedDefinition.GrowthVisible || selectedDefinition.Level > 3) return Reject(state, "progression.invalid_skill");
             if (AttributeValue(attributes, selectedDefinition.RequiredAttribute) < selectedDefinition.MinimumAttribute) return Reject(state, "progression.attribute_requirement_not_met");
             RunLearnedSkillState? prior = learned.FirstOrDefault(value => value.BranchId == selectedDefinition.BranchId);
             if (selectedDefinition.Level != (prior?.Level ?? 0) + 1) return Reject(state, "progression.invalid_skill_level");

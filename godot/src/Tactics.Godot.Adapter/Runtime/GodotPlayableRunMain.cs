@@ -104,7 +104,7 @@ public partial class GodotPlayableRunMain : Control
     internal enum PresentationDrainAction { DequeueFrame, CompleteBattle, Pause, Refresh }
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
-        _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 131;
+        _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 && _catalogCount == 141;
 
     public override void _Ready()
     {

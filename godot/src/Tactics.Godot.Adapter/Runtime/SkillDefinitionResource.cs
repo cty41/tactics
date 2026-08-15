@@ -45,6 +45,15 @@ public partial class SkillDefinitionResource : Resource
     [Export] public bool ShieldAbsorbsAllDamage { get; set; }
     [Export] public bool CleanseHarmful { get; set; }
     [Export] public int SecondaryDamage { get; set; }
+    [Export] public string AreaShape { get; set; } = string.Empty;
+    [Export] public int StatusChancePercent { get; set; } = 100;
+    [Export] public string DetonateStatusContentIdValue { get; set; } = string.Empty;
+    [Export] public int BounceRange { get; set; }
+    [Export] public int BounceCount { get; set; }
+    [Export] public bool PierceAll { get; set; }
+    [Export] public bool AllowsEmptyTarget { get; set; }
+    [Export] public int MovementDamagePerCell { get; set; }
+    [Export] public string SummonAttackContentIdValue { get; set; } = string.Empty;
     [Export] public string SourcePath { get; set; } = string.Empty;
     [Export] public string SourceGuid { get; set; } = string.Empty;
     [Export] public long SourceLocalFileId { get; set; }
@@ -62,7 +71,10 @@ public partial class SkillDefinitionResource : Resource
             throw new InvalidOperationException($"Skill '{ContentIdValue}' has incomplete source audit fields.");
         var profile = new SkillExecutionProfile(AreaRadius, OrderedTargetCount, null, SummonCount, SummonLimit,
             SummonCategory, RequiresCorpse, IgnoreLineOfSight, ShieldMultiplier, ShieldAbsorbsAllDamage,
-            CleanseHarmful, SecondaryDamage);
+            CleanseHarmful, SecondaryDamage, AreaShape, StatusChancePercent,
+            string.IsNullOrEmpty(DetonateStatusContentIdValue) ? null : new ContentId(DetonateStatusContentIdValue),
+            BounceRange, BounceCount, PierceAll, AllowsEmptyTarget, MovementDamagePerCell,
+            string.IsNullOrEmpty(SummonAttackContentIdValue) ? null : new ContentId(SummonAttackContentIdValue));
         return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency, IsBasicAbility, MaxUsesPerTurn, BranchId, string.IsNullOrEmpty(PrerequisiteContentIdValue) ? null : new ContentId(PrerequisiteContentIdValue), GrowthVisible, profile, RequiredAttribute, MinimumAttribute, PrerequisiteBranchId, CanCrit);
     }
 

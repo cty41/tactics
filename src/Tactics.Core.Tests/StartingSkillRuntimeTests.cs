@@ -326,6 +326,108 @@ public sealed class StartingSkillRuntimeTests
         });
     }
 
+    [Test]
+    public void FireballLevelThreeDetonatesExistingIgniteBeforeResolvingLevelTwoArea()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.primary", new GridPoint(3, 1)), ("enemy.splash", new GridPoint(3, 2))
+        });
+        UnitInstanceId primaryId = new("enemy.primary");
+        BattleUnitState primary = state.Units[primaryId].WithStatus(new BattleStatusState(
+            new ContentId("buff.ignite"), state.ActiveUnitId, 2, 1, stackCount: 3));
+        state = state.WithUnit(primary);
+        SkillDefinition skill = Lv3("skill.mage.fireball.lv3", SkillExecutionKind.Fireball, 4,
+            status: "buff.ignite", duration: 3,
+            profile: new SkillExecutionProfile(AreaRadius: 1, DetonateStatusContentId: new ContentId("buff.ignite")));
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, primaryId, new GridPoint(3, 1), skill));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.State.Units[primaryId].CurrentHealth, Is.EqualTo(13));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.splash")].CurrentHealth, Is.EqualTo(18));
+            Assert.That(result.Events.OfType<StatusExpiredEvent>().Single().StatusId, Is.EqualTo(new ContentId("buff.ignite")));
+        });
+    }
+
+    [Test]
+    public void IceBoltLevelThreeBouncesToStableNearestEnemy()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.primary", new GridPoint(3, 1)), ("enemy.b", new GridPoint(4, 2)), ("enemy.a", new GridPoint(2, 2))
+        });
+        SkillDefinition skill = Lv3("skill.mage.ice-bolt.lv3", SkillExecutionKind.IceBolt, 8,
+            status: "buff.slow", duration: 2, profile: new SkillExecutionProfile(BounceRange: 3, BounceCount: 1));
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.primary"), new GridPoint(3, 1), skill));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.primary")].CurrentHealth, Is.EqualTo(12));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.a")].CurrentHealth, Is.EqualTo(16));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.b")].CurrentHealth, Is.EqualTo(20));
+        });
+    }
+
+    [Test]
+    public void BoneSpearLevelThreePiercesAllEnemiesAndAcceptsEmptyEndpoint()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.near", new GridPoint(2, 1)), ("enemy.far", new GridPoint(4, 1))
+        });
+        SkillDefinition skill = Lv3("skill.necromancer.bone-spear.lv3", SkillExecutionKind.BoneSpear, 7,
+            profile: new SkillExecutionProfile(PierceAll: true, AllowsEmptyTarget: true));
+        BattleTransition hit = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.far"), new GridPoint(4, 1), skill));
+        BattleState emptyState = State(new GridPoint(1, 1), Array.Empty<(string, GridPoint)>());
+        BattleTransition empty = new BattleTransitionService().Apply(emptyState,
+            new UseSkillCommand(emptyState.ActiveUnitId, null, new GridPoint(4, 1), skill));
+        Assert.Multiple(() =>
+        {
+            Assert.That(hit.State.Units[new UnitInstanceId("enemy.near")].CurrentHealth, Is.EqualTo(13));
+            Assert.That(hit.State.Units[new UnitInstanceId("enemy.far")].CurrentHealth, Is.EqualTo(13));
+            Assert.That(empty.Succeeded, Is.True);
+        });
+    }
+
+    [Test]
+    public void ThrustLevelThreeConsumesAccumulatedMovementForDamage()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target", new GridPoint(4, 1)) });
+        BattleTransition moved = new BattleTransitionService().Apply(state, new MoveUnitCommand(state.ActiveUnitId, new GridPoint(3, 1)));
+        SkillDefinition skill = Lv3("skill.amazon.thrust.lv3", SkillExecutionKind.Thrust, 6,
+            profile: new SkillExecutionProfile(MovementDamagePerCell: 1));
+        BattleTransition result = new BattleTransitionService().Apply(moved.State,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.target"), new GridPoint(4, 1), skill));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Events.OfType<DamageAppliedEvent>().Single().Amount, Is.EqualTo(8));
+            Assert.That(result.State.Units[state.ActiveUnitId].MovementCellsThisTurn, Is.Zero);
+        });
+    }
+
+    [Test]
+    public void PoisonSpearLevelThreeUsesSquareArea()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.primary", new GridPoint(3, 3)), ("enemy.diagonal", new GridPoint(4, 4))
+        });
+        SkillDefinition skill = Lv3("skill.amazon.poison-spear.lv3", SkillExecutionKind.PoisonSpear, 10,
+            status: "buff.poison", duration: 3, profile: new SkillExecutionProfile(AreaRadius: 1, AreaShape: "square"));
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.primary"), new GridPoint(3, 3), skill));
+        Assert.That(result.State.Units[new UnitInstanceId("enemy.diagonal")].Statuses.ContainsKey(new ContentId("buff.poison")), Is.True);
+    }
+
+    private static SkillDefinition Lv3(string id, SkillExecutionKind execution, int damage, string? status = null,
+        int duration = 0, SkillExecutionProfile? profile = null) => new(new ContentId(id), id, SkillRole.Any,
+        SkillKind.Active, 3, 0, 1, 6, execution, damage, damage == 0 ? SkillDamageKind.None : SkillDamageKind.Magical,
+        status is null ? null : new ContentId(status), duration, executionProfile: profile, canCrit: false);
+
     private static SkillDefinition Skill(string id, SkillExecutionKind execution, int mana, int range, int damage, string? status = null, int duration = 0) =>
         new(new ContentId(id), id, SkillRole.Any, execution == SkillExecutionKind.PickupSpear ? SkillKind.Utility : SkillKind.Active, 1, mana, execution == SkillExecutionKind.SummonSkeleton ? 0 : execution == SkillExecutionKind.PickupSpear ? 0 : 1, range, execution, damage, damage == 0 ? SkillDamageKind.None : SkillDamageKind.Physical, status is null ? null : new ContentId(status), duration);
 

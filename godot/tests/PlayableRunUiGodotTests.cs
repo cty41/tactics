@@ -612,7 +612,7 @@ public class PlayableRunUiGodotTests
             "res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!;
         Dictionary<string, GodotResourceEntry> entries = catalog.Entries.ToDictionary(value => value.ContentIdValue);
 
-        AssertThat(entries.Count).IsEqual(131);
+        AssertThat(entries.Count).IsEqual(141);
         foreach (string id in new[]
         {
             "skill.summon.skeleton-attack.lv1", "skill.summon.skeleton-attack.lv2",
@@ -632,6 +632,30 @@ public class PlayableRunUiGodotTests
         AssertThat(skeleton.SkillIds).Contains(new ContentId("skill.summon.skeleton-attack.lv1"));
         AssertThat(caster.PreferredMinimumRange).IsEqual(2);
         AssertThat(caster.PreferredMaximumRange).IsEqual(3);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void OwnershipClosureCatalogContainsTenValidatedLevelThreeSkills()
+    {
+        GodotResourceCatalog batch = ResourceLoader.Load<GodotResourceCatalog>(
+            "res://content/skills/OwnershipClosureCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!;
+        AssertThat(batch.Entries.Length).IsEqual(10);
+        foreach (GodotResourceEntry entry in batch.Entries)
+        {
+            SkillDefinitionResource resource = ResourceLoader.Load<SkillDefinitionResource>(entry.DiagnosticPathValue,
+                string.Empty, ResourceLoader.CacheMode.Ignore)!;
+            SkillDefinition definition = resource.ToCoreDefinition();
+            AssertThat(definition.Level).IsEqual(3);
+            AssertThat(definition.ContentId.Value).IsEqual(entry.ContentIdValue);
+        }
+
+        SkillDefinition fireball = ResourceLoader.Load<SkillDefinitionResource>(
+            "res://content/skills/MageFireballLv3.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!.ToCoreDefinition();
+        SkillDefinition skeleton = ResourceLoader.Load<SkillDefinitionResource>(
+            "res://content/skills/NecromancerSummonSkeletonLv3.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!.ToCoreDefinition();
+        AssertThat(fireball.ExecutionProfile.DetonateStatusContentId!.Value.Value).IsEqual("buff.ignite");
+        AssertThat(skeleton.ExecutionProfile.SummonAttackContentId!.Value.Value).IsEqual("skill.summon.skeleton-attack.lv3");
     }
 
     [TestCase]

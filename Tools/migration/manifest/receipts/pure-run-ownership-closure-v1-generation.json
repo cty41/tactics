@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ownership-closure-v1",
+  "canonicalCatalogEntries": 141,
+  "generatedSkillResources": 10,
+  "idempotency": {
+    "resourceSaverRuns": 2,
+    "byteIdentical": true
+  },
+  "visualAcceptance": "not_applicable_no_visual_payload",
+  "manualGameplayAcceptance": "not_required_automated_semantics"
+}

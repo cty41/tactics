@@ -98,7 +98,7 @@ public sealed class PlayableBattleSessionFactory
         var summonControllers = new Dictionary<ContentId, SummonControllerDefinition>
         {
             [SkeletonUnitId] = new(aiDefinitions[new ContentId("ai.summon.basic-melee")],
-                Levels(playableSkills, "skill.summon.skeleton-attack"), SkillExecutionKind.SummonSkeleton),
+                Levels(playableSkills, "skill.summon.skeleton-attack", 3), SkillExecutionKind.SummonSkeleton),
             [SkeletonMageUnitId] = new(aiDefinitions[new ContentId("ai.summon.fire-demon")],
                 Levels(playableSkills, "skill.summon.skeleton-mage-fireball"), SkillExecutionKind.SummonSkeletonMage),
             [FireDemonUnitId] = new(aiDefinitions[new ContentId("ai.summon.fire-demon")],
@@ -114,11 +114,9 @@ public sealed class PlayableBattleSessionFactory
     }
 
     private static IReadOnlyDictionary<int, SkillDefinition> Levels(
-        IReadOnlyDictionary<ContentId, SkillDefinition> skills, string prefix) => new Dictionary<int, SkillDefinition>
-    {
-        [1] = skills[new ContentId(prefix + ".lv1")],
-        [2] = skills[new ContentId(prefix + ".lv2")]
-    };
+        IReadOnlyDictionary<ContentId, SkillDefinition> skills, string prefix, int maximumLevel = 2) =>
+        Enumerable.Range(1, maximumLevel).ToDictionary(level => level,
+            level => skills[new ContentId(prefix + $".lv{level}")]);
 
     private static BattleUnitState CreatePartyState(
         UnitDefinition definition,

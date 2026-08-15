@@ -1,0 +1,97 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://bdl65ipvacfsk"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_8mee4"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_ati3f"]
+
+[sub_resource type="Resource" id="Resource_x31yw"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.amazon.combat-techniques.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cieqwq207rk8d"
+DiagnosticPathValue = "res://content/skills/AmazonCombatTechniquesLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.combat-techniques.lv2")
+
+[sub_resource type="Resource" id="Resource_xrx7e"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.amazon.poison-spear.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c8fhbjhp3aqal"
+DiagnosticPathValue = "res://content/skills/AmazonPoisonSpearLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.poison", "skill.amazon.poison-spear.lv2")
+
+[sub_resource type="Resource" id="Resource_o3upq"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.amazon.thrust.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://br5l1ag2pqtxu"
+DiagnosticPathValue = "res://content/skills/AmazonThrustLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.thrust.lv2")
+
+[sub_resource type="Resource" id="Resource_3php0"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.mage.fireball.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cv4fij7nvxr51"
+DiagnosticPathValue = "res://content/skills/MageFireballLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite", "skill.mage.fireball.lv2")
+
+[sub_resource type="Resource" id="Resource_x8rjo"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.mage.ice-bolt.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://d2rehamwpvbju"
+DiagnosticPathValue = "res://content/skills/MageIceBoltLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.slow", "skill.mage.ice-bolt.lv2")
+
+[sub_resource type="Resource" id="Resource_fjmdg"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.mage.lightning.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://qsh0ebkoafbr"
+DiagnosticPathValue = "res://content/skills/MageLightningLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.stun", "skill.mage.lightning.lv2")
+
+[sub_resource type="Resource" id="Resource_61j46"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.necromancer.amplify-damage.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://6omsalww0x4u"
+DiagnosticPathValue = "res://content/skills/NecromancerAmplifyDamageLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.curse-damage-amplifier", "skill.necromancer.amplify-damage.lv2")
+
+[sub_resource type="Resource" id="Resource_ee1hm"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.necromancer.bone-spear.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://frj6udejf07b"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneSpearLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.bone-spear.lv2")
+
+[sub_resource type="Resource" id="Resource_k88bl"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://biu21muos0v5c"
+DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.summon-skeleton.lv2", "skill.summon.skeleton-attack.lv3")
+
+[sub_resource type="Resource" id="Resource_d8083"]
+script = ExtResource("1_8mee4")
+ContentIdValue = "skill.summon.skeleton-attack.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://ck8f4q0hlv6pt"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonAttackLv3.tres"
+SchemaVersion = 1
+
+[resource]
+script = ExtResource("2_ati3f")
+Entries = [SubResource("Resource_x31yw"), SubResource("Resource_xrx7e"), SubResource("Resource_o3upq"), SubResource("Resource_3php0"), SubResource("Resource_x8rjo"), SubResource("Resource_fjmdg"), SubResource("Resource_61j46"), SubResource("Resource_ee1hm"), SubResource("Resource_k88bl"), SubResource("Resource_d8083")]
