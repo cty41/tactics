@@ -4,6 +4,30 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
+### MQA-GODOT-OWNERSHIP-CONTENT — Lv3, Treasure and authoritative Map journey
+
+- Status: `pending`
+- Source: `82c073f5`, `78f032a3`, ownership closure content checkpoints
+- Action: In a disposable Run, obtain and use one player Lv3, resolve a Treasure node, Reload, and continue through the authoritative Map.
+- Expected: Lv2 upgrades to the implemented Lv3 contract; Treasure resolves once without rerolling or duplicate rewards; Map route, pending node and Save V6 identity survive Reload.
+- Observe: Progression cards/current skills, Battle HUD and CheatConsole, Treasure result, Rogue Map node state, Inventory and Godot Output.
+- Preserve on failure: Run seed/revision, selected skill/branch, Treasure node/result, save and backup copy, screenshot and Output excerpt.
+- Save boundary: This journey mutates progression, rewards and Save V6; use a disposable Run or preserve the current save first.
+- Automated evidence: Core/Application cover all nine player Lv3 contracts, Skeleton Warrior Lv3, deterministic Treasure rewards/idempotency, arbitrary Map topology and V5→V6 migration; Catalog 142, ResourceSaver idempotency, Gameplay Specs and both renderers are green. Gameplay feel and cross-page readability remain manual.
+- User verdict: none.
+
+### MQA-GODOT-CONTENT-WORKBENCH — Unified authoring and fixture shell
+
+- Status: `pending`
+- Source: `6cf74ce0`, unified Godot Content Workbench checkpoint
+- Action: Open Tactics Tooling and visit Map, Event, Treasure, Encounter Fixture, Skill/Presentation, AI, Audio and QA tabs; exercise one safe Undo/Redo or preview action in each editable surface and Reload the C# assembly once.
+- Expected: The single Main Screen tool opens without duplicate panels; canonical resources load, validation and previews respond, Undo/Redo remains stable, and reload restores a clean tool with no stale SubViewport or signal.
+- Observe: Tactics Tooling Main Screen, Inspector/GraphEdit/SubViewport, status labels and Godot Output.
+- Preserve on failure: Tab name, selected ContentId/resource path, exact action, screenshot, full Output and whether Assembly Reload occurred.
+- Save boundary: Use read-only validation/preview actions unless working on a disposable resource copy; do not overwrite canonical content during first acceptance.
+- Automated evidence: Headless plugin lifecycle, canonical catalog/reference validation, Map/Event/Treasure/Encounter/AI/Presentation tests, ResourceSaver rollback and Godot-owned no-Unity verification are green. Editor interaction, layout and reload feel remain manual.
+- User verdict: none.
+
 ### MQA-GODOT-FORMAL-UI — Formal Pure Run visual shell
 
 - Status: `pending`
@@ -258,6 +282,18 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Deferred or Blocked
 
+### MQA-GODOT-AUDIO-ASSETS — Licensed audio payload and listening pass
+
+- Status: `blocked`
+- Source: `0b2a3c81`, Godot audio framework checkpoint
+- Action: Provide or approve an audio pack whose license permits redistribution, then audition Music/SFX/UI cues through the Audio Workbench and one complete Run.
+- Expected: File-level provenance/hash is recorded; Master/Music/SFX/UI buses, volume/mute, concurrency and cleanup sound correct without changing gameplay timing.
+- Observe: Audio Workbench, bus meters/settings, battle/page transitions and Godot Output.
+- Preserve on failure: Asset/license identity, cue/bus, reproduction step and Output.
+- Save boundary: Audio settings use their own versioned settings file and do not modify Run Save.
+- Automated evidence: Bus creation, independent settings, cue/profile validation, concurrency and cleanup framework are tested. No redistributable audio payload is currently registered, so content migration and listening acceptance cannot be claimed.
+- User verdict: blocked pending legally usable audio assets.
+
 ### MQA-GODOT-WINDOWS-RC — Windows export and clean launch
 
 - Status: `blocked`
@@ -272,9 +308,12 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-FORMAL-UI`
-2. `MQA-GODOT-INVENTORY`
-3. `MQA-GODOT-DEFEAT-FLOW`
-4. `MQA-GODOT-DAMAGE-NUMBERS`
-5. `MQA-GODOT-RELOAD-OUTPUT`
-6. `MQA-GODOT-WINDOWS-RC`
+1. `MQA-GODOT-OWNERSHIP-CONTENT`
+2. `MQA-GODOT-CONTENT-WORKBENCH`
+3. `MQA-GODOT-FORMAL-UI`
+4. `MQA-GODOT-INVENTORY`
+5. `MQA-GODOT-DEFEAT-FLOW`
+6. `MQA-GODOT-DAMAGE-NUMBERS`
+7. `MQA-GODOT-RELOAD-OUTPUT`
+8. `MQA-GODOT-AUDIO-ASSETS`
+9. `MQA-GODOT-WINDOWS-RC`
