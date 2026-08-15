@@ -303,10 +303,12 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         {
             map = Descendants<GodotRogueMapView>(Main).Single();
             mapNodeId = text[4..];
-            expected = map; logicalPoint = map.GetGlobalTransform() * map.NodeCenter(text[4..]);
+            expected = map; logicalPoint = map.NodeCenter(mapNodeId);
         }
         else throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action, "pointer_target_not_available:" + text);
-        (Viewport viewport, Vector2 point, bool localCoordinates) = await ResolvePointerAsync(logicalPoint, expected, text, token);
+        (Viewport viewport, Vector2 point, bool localCoordinates) = map is null
+            ? await ResolvePointerAsync(logicalPoint, expected, text, token)
+            : await ResolveMapPointerAsync(map, mapNodeId!, token);
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Action buttonHandler = completion.SetResult;
         Action<string> mapHandler = nodeId => { if (nodeId == mapNodeId) completion.TrySetResult(); };
@@ -337,8 +339,7 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         {
             GodotRogueMapView map = Descendants<GodotRogueMapView>(Main).Single();
             string nodeId = target.StartsWith("map:", StringComparison.Ordinal) ? target[4..] : target;
-            Vector2 logical = map.GetGlobalTransform() * map.NodeCenter(nodeId);
-            await ResolvePointerAsync(logical, map, target, token);
+            await ResolveMapPointerAsync(map, nodeId, token);
             return;
         }
         if (Main.TryResolveTestBattlePointerTarget(targetKind, target, out Control? surface, out Vector2 battlePoint) && surface is not null)
@@ -400,6 +401,49 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         if (resolved is null) throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action,
             $"pointer_target_not_hovered:{identity}:viewport={viewport.GetVisibleRect()}");
         return (viewport, resolved.Value.Point, resolved.Value.Local);
+    }
+
+    private async Task<(Viewport Viewport, Vector2 Point, bool Local)> ResolveMapPointerAsync(
+        GodotRogueMapView map, string nodeId, CancellationToken token)
+    {
+        Viewport viewport = Main.GetViewport();
+        Vector2 localPoint = map.NodeCenter(nodeId);
+        (Vector2 Point, bool Local)[] candidates =
+        [
+            (map.GetGlobalTransformWithCanvas() * localPoint, false),
+            (map.GetGlobalTransform() * localPoint, true),
+            (map.GetGlobalTransform() * localPoint, false)
+        ];
+        string? hoveredNode = null;
+        void Hovered(PureRunMapNodeSnapshot? node) => hoveredNode = node?.NodeId;
+        map.NodeHovered += Hovered;
+        try
+        {
+            foreach ((Vector2 candidatePoint, bool local) in candidates)
+            {
+                hoveredNode = null;
+                viewport.PushInput(new InputEventMouseMotion
+                {
+                    Position = new Vector2(-100, -100),
+                    GlobalPosition = new Vector2(-100, -100)
+                }, local);
+                await WaitFramesAsync(1, token);
+                viewport.PushInput(new InputEventMouseMotion
+                {
+                    Position = candidatePoint,
+                    GlobalPosition = candidatePoint
+                }, local);
+                await WaitFramesAsync(1, token);
+                if (hoveredNode == nodeId && viewport.GuiGetHoveredControl() == map)
+                    return (viewport, candidatePoint, local);
+            }
+        }
+        finally
+        {
+            if (GodotObject.IsInstanceValid(map)) map.NodeHovered -= Hovered;
+        }
+        throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action,
+            $"map_node_not_hovered:{nodeId}:viewport={viewport.GetVisibleRect()}");
     }
 
     public async Task RightClickAsync(string target, Dictionary<string, JsonElement> parameters, CancellationToken token)

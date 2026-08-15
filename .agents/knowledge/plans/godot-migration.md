@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-15T19:40:04+08:00"
+timestamp: "2026-08-15T19:48:25+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:34236aa02dc05c406344ad081e1fd69fe4fc92e84a95ee5e490bafc5a6628a4e
+source_fingerprint: sha256:9640db8a5731e4bf081852576807597b473f8344220c398a5426fceb7802ab75
 ---
 
 # Current state
