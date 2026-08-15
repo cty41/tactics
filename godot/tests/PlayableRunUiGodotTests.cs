@@ -350,6 +350,9 @@ public class PlayableRunUiGodotTests
         AssertThat(buttonTexts.Count(text => text.StartsWith("+1 ", StringComparison.Ordinal))).IsEqual(6);
         AssertThat(buttonTexts.Any(text => text.Contains("mage.fireball", StringComparison.Ordinal))).IsFalse();
         AssertThat(buttonTexts.Any(text => text == "Back to Map")).IsFalse();
+        PanelContainer progressionPanel = Descendants<PanelContainer>(ui).Single(panel =>
+            panel.ThemeTypeVariation == GodotTacticsTheme.Panel && panel.Size == new Vector2(790, 690));
+        AssertThat((int)progressionPanel.MouseFilter).IsEqual((int)Control.MouseFilterEnum.Ignore);
         ui.Free();
     }
 
@@ -565,6 +568,11 @@ public class PlayableRunUiGodotTests
         AssertThat(buttons).Contains("[ Equipment ]");
         AssertThat(buttons).Contains("Consumables");
         AssertThat(buttons).Contains("Back");
+        PanelContainer[] inventoryCards = Descendants<PanelContainer>(ui)
+            .Where(panel => panel.ThemeTypeVariation == GodotTacticsTheme.Card && panel.Size.Y == 640)
+            .ToArray();
+        AssertThat(inventoryCards.Length).IsEqual(3);
+        AssertThat(inventoryCards.All(panel => panel.MouseFilter == Control.MouseFilterEnum.Ignore)).IsTrue();
         ui.Free();
     }
 

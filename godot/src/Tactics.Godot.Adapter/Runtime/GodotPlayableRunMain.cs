@@ -1019,6 +1019,7 @@ public partial class GodotPlayableRunMain : Control
         };
         Control root = NewPage("BATTLE SETTLEMENT", $"{completed} completed → Next: {next}");
         AddRunShell(root, run, "Settlement");
+        PanelAt(root, new Vector2(430, 210), new Vector2(740, 430));
         string itemResult = SettlementDropLabel(run);
         LabelAt(root, $"Gold: {run.Gold}\nItems: {itemResult}\nPending Progression: {run.PendingProgression.LastOrDefault()?.CharacterId ?? "none"}\nDead: {string.Join(", ", run.Party.Where(value => value.IsDead).Select(value => value.CharacterId))}", new Vector2(480, 260), 28);
         PendingProgression? pending=run.PendingProgression.FirstOrDefault();
@@ -1035,6 +1036,7 @@ public partial class GodotPlayableRunMain : Control
         Control root = NewPage("PURE RUN MAP", "Choose an available node. Drag or use the wheel to inspect the route.");
         PureRunFlowSnapshot flow = _flowProjector.Project(run, _runDefinition!, LayerFourMap());
         AddRunShell(root, run, "Map");
+        PanelAt(root, new Vector2(1120, 175), new Vector2(430, 590), GodotTacticsTheme.Card);
         _mapView = new GodotRogueMapView { Position = new Vector2(60, 135), Size = new Vector2(1040, 700) };
         _mapView.NodePressed += nodeId => ActivateMapNode(run, nodeId);
         _mapView.NodeHovered += node =>
@@ -1279,6 +1281,9 @@ public partial class GodotPlayableRunMain : Control
         InventoryAttributeProjection attributes = inventory.SelectedCharacter.Attributes;
         Control root=NewPage("INVENTORY","Backpack, equipment loadout, carried consumable and derived character state");
         AddRunShell(root,run,"Inventory");
+        PanelAt(root,new Vector2(50,140),new Vector2(390,640),GodotTacticsTheme.Card);
+        PanelAt(root,new Vector2(450,140),new Vector2(490,640),GodotTacticsTheme.Card);
+        PanelAt(root,new Vector2(950,140),new Vector2(600,640),GodotTacticsTheme.Card);
         var columns=new HBoxContainer{Position=new Vector2(65,150),Size=new Vector2(1470,610)};root.AddChild(columns);
         var characters=new VBoxContainer{CustomMinimumSize=new Vector2(390,580)};columns.AddChild(characters);
         foreach(RunCharacterState character in run.Party)
@@ -1392,6 +1397,7 @@ public partial class GodotPlayableRunMain : Control
         RunCharacterState character=run.Party.Single(value=>value.CharacterId==pending.CharacterId);
         Control root=NewPage("PROGRESSION",$"{character.CharacterId}: attribute allocation → skill selection");
         AddRunShell(root,run,"Progression");
+        PanelAt(root,new Vector2(405,140),new Vector2(790,690));
         var menu=new VBoxContainer{Position=new Vector2(430,160),Size=new Vector2(740,650)};root.AddChild(menu);
         var progressionService=new RunInventoryProgressionService();
         if (!_progressionDrafts.TryGetValue(pending.TransactionKey, out UnitAttributes proposed))
@@ -1418,8 +1424,13 @@ public partial class GodotPlayableRunMain : Control
             })), 17));
             SkillDefinition[] candidates=progressionService.PreviewGrowthOffer(run,pending.TransactionKey,proposed,_skills,_runDefinition!).ToArray();
             foreach(SkillDefinition skill in candidates)
-                menu.AddChild(Button(GrowthChoiceLabel(preview,skill,_skillUi[skill.ContentId]),()=>
-                    CompleteProgression(pending.TransactionKey,proposed,skill.ContentId)));
+            {
+                Button choice=Button(GrowthChoiceLabel(preview,skill,_skillUi[skill.ContentId]),()=>
+                    CompleteProgression(pending.TransactionKey,proposed,skill.ContentId));
+                choice.ThemeTypeVariation=GodotTacticsTheme.ActionButton;
+                choice.CustomMinimumSize=new Vector2(720,112);
+                menu.AddChild(choice);
+            }
             if(candidates.Length==0)
             {
                 menu.AddChild(Label("No skill candidate is legal after this allocation. Attribute-only confirmation is allowed.",18));
@@ -1474,6 +1485,7 @@ public partial class GodotPlayableRunMain : Control
     private void ShowSummary(PureRunSummary summary)
     {
         Control root = NewPage(summary.Outcome.ToString(), "Three-encounter slice complete");
+        PanelAt(root,new Vector2(450,205),new Vector2(700,470));
         LabelAt(root, $"Battles: {summary.BattlesCompleted}\nKills: {summary.EnemiesDefeated}\nGold: {summary.TotalGoldEarned}\nItems: {string.Join(", ", summary.AcquiredItems.Select(id => id.Value))}\nDead: {string.Join(", ", summary.DeadCharacters)}", new Vector2(520, 260), 30);
         Button home = Button("Return Home", () => { _run!.ConsumeCompletedSummary(); ShowHome(); }); home.Position = new Vector2(650, 620); home.Size = new Vector2(300, 70); root.AddChild(home);
     }
@@ -1569,7 +1581,13 @@ public partial class GodotPlayableRunMain : Control
     private static PanelContainer PanelAt(Control parent, Vector2 position, Vector2 size,
         string variation = GodotTacticsTheme.Panel)
     {
-        var panel = new PanelContainer { Position = position, Size = size, ThemeTypeVariation = variation };
+        var panel = new PanelContainer
+        {
+            Position = position,
+            Size = size,
+            ThemeTypeVariation = variation,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
         parent.AddChild(panel);
         return panel;
     }
