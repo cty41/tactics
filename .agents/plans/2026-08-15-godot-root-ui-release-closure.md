@@ -119,3 +119,10 @@ Generated/UnityOwned + manual_ui_and_release_qa_pending
 ```
 
 只保留必须由用户判断的 UI 可读性、动画观感、真实 Editor Assembly Reload 和首次 Windows RC/干净机体验。
+
+## 实施状态（2026-08-15）
+
+- Checkpoint 1–6 已完成 review、统一 verifier 与 scoped commit；最新证据提交为 `422b9caa`。
+- Theme、Run Shell、Battle HUD、Progression、Inventory、Settlement、Summary 和稳定 UI 语义探针均已落地，Catalog 保持 131。
+- 本机已验证 Godot 4.7.1 Mono Editor、Release 编译、export preset 与构建脚本，但缺少 `4.7.1.stable.mono` Windows export templates；EXE/PCK 和干净启动保留为外部 release gate。
+- 当前状态：`Generated/UnityOwned + manual_ui_and_release_qa_pending`。

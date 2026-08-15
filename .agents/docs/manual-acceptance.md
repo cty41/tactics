@@ -4,6 +4,18 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
+### MQA-GODOT-FORMAL-UI — Formal Pure Run visual shell
+
+- Status: `pending`
+- Source: `3c9a29bc` through `422b9caa`, Godot root UI closure
+- Action: Traverse Home, Options, Rogue Map, Progression, Inventory, Battle HUD, Settlement, Pause and Terminal Summary in one disposable Run and judge the shared hierarchy and readability.
+- Expected: Near-black background, translucent panels, orange focus/accent and white/gray text form one coherent UI; Map detail, growth cards and Inventory three-column layout remain readable; no decorative panel blocks a button or board input.
+- Observe: Main scene pages, focus/hover/pressed/disabled states, Battle HUD safe areas, Pause overlay and Godot Output.
+- Preserve on failure: Screenshot with page name and resolution, exact control/action that was obscured or blocked, current Run state and Output excerpt.
+- Save boundary: New Run, purchases and progression mutate the active save; use a disposable Run or preserve a copy before the journey.
+- Automated evidence: Theme states, semantic panels, Control bounds, mouse filters, production input nodes, five isolated Gameplay Specs, Compatibility/Forward+ and Catalog 131 are asserted. Visual balance, text density and interaction feel remain manual.
+- User verdict: none after the formal Theme and page-shell pass.
+
 ### MQA-GODOT-DAMAGE-NUMBERS — Floating combat feedback
 
 - Status: `pending`
@@ -246,11 +258,23 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Deferred or Blocked
 
-No current items.
+### MQA-GODOT-WINDOWS-RC — Windows export and clean launch
+
+- Status: `blocked`
+- Source: Godot root UI and release closure checkpoint 7
+- Action: Install the pinned Godot 4.7.1 Mono Windows export templates or run the existing GitHub Actions build, then download and launch the generated EXE/PCK outside the Editor.
+- Expected: The package contains production managed assemblies and no GdUnit/TestPlatform payload; Main opens, New Run works, and exit leaves no startup/resource errors.
+- Observe: GitHub Actions artifact/build manifest or local `Build/Godot/Windows`, launched game window, and process/console output.
+- Preserve on failure: Workflow run URL or local build log, build manifest, artifact file list/hashes and startup Output.
+- Save boundary: Use a clean user-data directory; do not point the RC at the current production save.
+- Automated evidence: Godot/.NET versions, pinned tool hashes, export preset, Release build whitelist and CI script are validated. This machine lacks `C:/Users/15507/AppData/Roaming/Godot/export_templates/4.7.1.stable.mono`, so no local EXE/PCK or clean launch can be claimed.
+- User verdict: blocked pending export templates or the first successful CI artifact.
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-INVENTORY`
-2. `MQA-GODOT-DEFEAT-FLOW`
-3. `MQA-GODOT-DAMAGE-NUMBERS`
-4. `MQA-GODOT-RELOAD-OUTPUT`
+1. `MQA-GODOT-FORMAL-UI`
+2. `MQA-GODOT-INVENTORY`
+3. `MQA-GODOT-DEFEAT-FLOW`
+4. `MQA-GODOT-DAMAGE-NUMBERS`
+5. `MQA-GODOT-RELOAD-OUTPUT`
+6. `MQA-GODOT-WINDOWS-RC`
