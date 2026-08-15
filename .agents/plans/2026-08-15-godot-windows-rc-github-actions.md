@@ -63,7 +63,7 @@ ci: harden Godot Windows RC source and toolchain
 
 扩展 `Build-GodotWindows.ps1`，保持它是 CI 与本地共用的唯一只读构建入口：
 
-1. `dotnet restore --locked-mode`。
+1. `dotnet restore --locked-mode`；Godot Adapter 额外按 `win-x64` RID 恢复锁定图，并在 Godot export 前完成一次同构 self-contained publish 预检。
 2. `dotnet build` 使用 `-m:1`，避免共享 obj/bin 竞争。
 3. 执行 Godot-owned Core/Application/GdUnit/Gameplay Spec、Release、Compatibility/Forward+ 和 OKF 门禁；Unity Oracle 和活动 AssetDatabase 导出不进入 RC 构建。
 4. headless Editor scan 后执行 `Windows Desktop` Release export。

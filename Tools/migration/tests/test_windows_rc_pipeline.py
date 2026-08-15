@@ -178,6 +178,11 @@ class WindowsRcPipelineTests(unittest.TestCase):
         ):
             project_text = project.read_text(encoding="utf-8-sig")
             self.assertIn("<RestoreLockedMode>true</RestoreLockedMode>", project_text)
+            self.assertIn("<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>", project_text)
+
+        self.assertIn("dotnet restore $adapterProject --locked-mode -r win-x64", build_script)
+        self.assertIn("dotnet publish $adapterProject", build_script)
+        self.assertIn("-r win-x64 --self-contained true --no-restore", build_script)
 
         verifier = (TOOLS / "Verify-GodotMigration.ps1").read_text(encoding="utf-8-sig")
         runsettings = (REPO / "Tactics.Migration.runsettings").read_text(encoding="utf-8-sig")

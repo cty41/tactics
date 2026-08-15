@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <AssemblyName>Tactics.Application</AssemblyName>
     <RootNamespace>Tactics.Application</RootNamespace>
     <Nullable>enable</Nullable>

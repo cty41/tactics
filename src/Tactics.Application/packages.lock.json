@@ -5,6 +5,7 @@
       "tactics.core": {
         "type": "Project"
       }
-    }
+    },
+    "net9.0/win-x64": {}
   }
 }

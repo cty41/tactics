@@ -122,7 +122,7 @@ try {
         Invoke-Checked 'Restore locked Godot-owned dependencies' {
             dotnet restore 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' --locked-mode
             if ($LASTEXITCODE -eq 0) { dotnet restore 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' --locked-mode }
-            if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode }
+            if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode -r win-x64 }
         }
         Invoke-Checked 'Build Godot-owned projects with one MSBuild node' {
             dotnet build 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' -c Debug --no-restore -m:1
@@ -133,6 +133,7 @@ try {
     else {
         Invoke-Checked 'Restore locked migration dependencies' {
             dotnet restore $solution --locked-mode
+            if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode -r win-x64 }
         }
         Invoke-Checked 'Build migration solution with one MSBuild node' {
             dotnet build $solution -c Debug --no-restore -m:1
@@ -151,6 +152,9 @@ try {
     New-Item -ItemType Directory -Path $releaseVerificationDirectory -Force | Out-Null
     Invoke-Checked 'Build production Godot adapter Release' {
         dotnet build $adapterProject -c $Configuration --no-restore -m:1 --output $releaseVerificationDirectory
+    }
+    Invoke-Checked 'Publish production Godot adapter for Windows' {
+        dotnet publish $adapterProject -c $Configuration -r win-x64 --self-contained true --no-restore -m:1 --output $releaseVerificationDirectory
     }
 
     $forbiddenReleaseFiles = @(
