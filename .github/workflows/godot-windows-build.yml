@@ -39,6 +39,7 @@ jobs:
         shell: pwsh
         run: |
           git config --global core.autocrlf false
+          git config --global core.eol lf
           $sourceRoot = Join-Path $env:RUNNER_TEMP 'tactics-godot-rc-source'
           $diagnostics = Join-Path $env:RUNNER_TEMP 'tactics-godot-rc-diagnostics'
           New-Item -ItemType Directory -Path $diagnostics -Force | Out-Null
@@ -58,6 +59,7 @@ jobs:
           # policy and rematerialize tracked files before LFS objects are pulled,
           # otherwise canonical JSON plans acquire CRLF bytes.
           git config --local core.autocrlf false
+          git config --local core.eol lf
           $env:GIT_LFS_SKIP_SMUDGE = '1'
           try {
             git checkout-index --force --all
