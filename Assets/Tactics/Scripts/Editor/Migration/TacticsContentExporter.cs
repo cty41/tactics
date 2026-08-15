@@ -49,6 +49,9 @@ namespace Tactics.Editor.Migration
         private const string PureRunFullSevenLayerSpecPath =
             "Tools/migration/manifest/export-batches/pure-run-full-seven-layer-v1.json";
 
+        private const string PureRunOwnershipClosureSpecPath =
+            "Tools/migration/manifest/export-batches/pure-run-ownership-closure-v1.json";
+
         private static readonly JsonSerializerSettings JsonSettings = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -175,6 +178,18 @@ namespace Tactics.Editor.Migration
         public static void ExportPureRunFullSevenLayerBatchFromCommandLine()
         {
             ExportPureRunFullSevenLayerBatch();
+        }
+
+        [MenuItem("Tactics/Migration/Export Pure Run Ownership Closure V1")]
+        public static void ExportPureRunOwnershipClosureBatch()
+        {
+            string outputPath = Export(PureRunOwnershipClosureSpecPath);
+            TLog.Info($"[Migration] Exported Pure Run Ownership Closure V1 DTO to '{outputPath}'.");
+        }
+
+        public static void ExportPureRunOwnershipClosureBatchFromCommandLine()
+        {
+            ExportPureRunOwnershipClosureBatch();
         }
 
         public static string Export(string relativeSpecPath)

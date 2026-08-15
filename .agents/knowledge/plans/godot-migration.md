@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-15T12:53:49+08:00"
+timestamp: "2026-08-15T13:58:37+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:880bfb1a6d2e63eab55801513cd04ff4d0fd7a8b4b93368f5d553d2cba42804a
+source_fingerprint: sha256:518b9534e6eaf584be228c12ce3f27fb106d1af95ddc51f6d7d963f74715af0a
 ---
 
 # Current state
@@ -118,6 +118,8 @@ Phase 5A Core/Application checkpoint 已实现 `status-runtime-v1`、`battle-tra
 ## Verification model
 
 Gameplay Spec 的 Godot v2 Runner 已建立正式 `Main.tscn` 真 Play 后端：测试上下文只能在节点入 Tree 前注入隔离 Save Store、固定 seed、checkpoint 身份、Quit 拦截与初始播放速度；正常启动路径不读取静态测试状态。Runner 对 plan capabilities/adapters/probes、validated checkpoint catalog 与 canonical hash、生产存档未变、输入因果、watchdog 和 Scene cleanup 采用 fail-closed 验证。Inventory、Defeat、Mana/Miss 动态数值和 Reload 五个需求驱动场景已生成统一结构化报告并接入 `Verify-GodotMigration.ps1`；scene/process reload 已自动化，真实 Editor Assembly Reload 与表现可读性仍保留最小人工 smoke。
+
+Godot ownership 收口已建立 `pure-run-ownership-closure-v1` 最终 Unity 冻结批次。最终 Tag 的真实内容边界为 9 个玩家 Lv3：8 个拥有 AbilityConfig/SkillGraph 的主动等级，以及由 `PureRunAbilityCatalog` 源码 blob 固定、无独立 AbilityConfig 的 Combat Techniques Lv3 被动；另有 Skeleton Warrior Lv3 内部攻击。converter 同时冻结 Treasure 的 2–5 Gold、各一次 weighted Buff/Equipment、一次性事务语义，以及 Map/Event/Battle Fixture 有效工具合同；Unity UI/Presentation、第三方与 Audio payload 均未复制。两次独立 Unity AssetDatabase 导出 byte-identical，批次保持 `Exported/UnityOwned`；Lv3/Treasure 玩法、权威 Map/Save V6、统一 Workbench、Audio 框架和 Godot-only verifier 仍是后续收口工作。
 
 Godot 正式 UI 收口采用原生 `Theme`/`Control` 等价表达 Unity UI Toolkit 的项目视觉语言，不复制 UXML/USS。根 Theme 统一近黑背景、半透明面板、橙色强调边、白灰文本以及 Button 的 normal/hover/pressed/focus/disabled 状态，并通过语义 variation 区分主按钮、紧凑控制、战斗动作和卡片。Home 使用居中的 TACTICS/PURE RUN 主菜单面板并恢复 Options 入口；普通 Run 页面共享标题面板，Esc Pause 使用最高层中央菜单而不再把文字直接叠在战场单位上。Battle HUD 将单位详情、Round/Turn、播放控制、横向动作栏和 End Turn 放入五个固定安全区面板，面板不参与鼠标命中且绘制在棋盘 Actor 之上，生产输入节点与 Gameplay Spec 语义保持不变。Map 使用独立节点详情卡；Progression、Settlement 与 Summary 使用居中流程面板；Inventory 使用角色、背包和物品详情三栏卡片，成长候选使用统一战斗动作卡样式。所有装饰面板均忽略鼠标输入，页面仍只通过原有生产按钮和 intent 改变状态。UI Theme 不进入 gameplay Catalog，canonical Catalog 保持 131。
 

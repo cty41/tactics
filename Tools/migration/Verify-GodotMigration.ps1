@@ -57,6 +57,9 @@ $inventoryProgressionExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-
 $inventoryProgressionDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-inventory-progression-v1.draft.json'
 $inventoryProgressionSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-inventory-progression-v1.json'
 $inventoryProgressionGenerationReceipt = Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-inventory-progression-v1-generation.json'
+$ownershipClosureExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-ownership-closure-v1.unity.json'
+$ownershipClosureDraft = Join-Path $repoRoot 'Tools\migration\out\pure-run-ownership-closure-v1.draft.json'
+$ownershipClosureSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\pure-run-ownership-closure-v1.json'
 $consumablesJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Consumables.json'
 $equipmentJson = Join-Path $repoRoot 'Assets\Tactics\GameData\Equipment.json'
 $systemTempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
@@ -530,6 +533,16 @@ try {
         }
     }
     else { Write-Host '== Skip real Pure Run persistence draft: disposable Unity DTO is not present ==' }
+
+    if (Test-Path -LiteralPath $ownershipClosureExport -PathType Leaf) {
+        Invoke-Checked 'Compile final Unity ownership-closure typed draft' {
+            python -m Tools.migration.ownership_closure_converter --export $ownershipClosureExport --specification $ownershipClosureSpecification --output $ownershipClosureDraft
+        }
+        Invoke-Checked 'Validate final Unity ownership-closure export evidence' {
+            python -m unittest Tools.migration.tests.test_ownership_closure_converter
+        }
+    }
+    else { Write-Host '== Skip final Unity ownership-closure draft: disposable Unity DTO is not present ==' }
 
     $layerFourExport = Join-Path $repoRoot 'Tools\migration\out\pure-run-layer4-map-nodes-v1.unity.json'
     if (Test-Path -LiteralPath $layerFourExport -PathType Leaf) {

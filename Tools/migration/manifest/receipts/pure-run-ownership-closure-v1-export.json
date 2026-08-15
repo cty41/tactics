@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ownership-closure-v1",
+  "classification": "real_unity_assetdatabase_export",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:ee3eccdd75da97ac594e78f6fa456a8f1038e85a1cedc852fa5440c855310af3",
+  "outputSha256": "c85183dcc1a74b0e90e86805c81384e4fad7b29e32de1066a9e38bce5708bfa9",
+  "typedDraftSha256": "b8c4d71e58d1b710150c0985656e78b8c3606d7fcb4c659c4b95dbc9e14ea899",
+  "assetRoots": 17,
+  "playerSkillLevelCount": 9,
+  "internalSkillDependencies": 1,
+  "treasureContractCount": 1,
+  "toolingContractCount": 7,
+  "idempotency": {
+    "measuredIndependentRuns": 2,
+    "byteIdentical": true
+  },
+  "payloadBoundary": {
+    "unityUiPayloadCopied": false,
+    "unityPresentationPayloadCopied": false,
+    "thirdPartyPayloadCopied": false,
+    "audioPayloadCopied": false
+  },
+  "ownership": "UnityOwned",
+  "nextState": "Exported"
+}

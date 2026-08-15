@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ownership-closure-v1",
+  "status": "Exported",
+  "ownership": "UnityOwned",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+  "playerSkillLevelCount": 9,
+  "internalSkillDependencyCount": 1,
+  "treasureContractCount": 1,
+  "toolingContractCount": 7,
+  "visualAcceptance": "not_applicable_contract_freeze_only",
+  "manualOwnershipClosureAcceptance": "pending"
+}
