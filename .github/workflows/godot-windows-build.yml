@@ -4,6 +4,18 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/godot-windows-build.yml'
+      - 'global.json'
+      - 'godot/**'
+      - 'src/Tactics.Core/**'
+      - 'src/Tactics.Application/**'
+      - 'Tests/gameplay-specs/godot/**'
+      - 'Tools/agent-policy/**'
+      - 'Tools/gameplay-test-spec/**'
+      - 'Tools/migration/**'
+      - 'Tools/okf/**'
+      - '.agents/knowledge/**'
   workflow_dispatch:
 
 permissions:
@@ -17,10 +29,12 @@ jobs:
   build-windows:
     name: Validate and export Windows
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       GODOT_VERSION: 4.7.1-stable
       BUILD_OUTPUT: Build/Godot/Windows
+      RC_SOURCE_ROOT: ${{ runner.temp }}/tactics-godot-rc-source
+      RC_DIAGNOSTICS: ${{ runner.temp }}/tactics-godot-rc-diagnostics
     steps:
       - name: Check out repository without all LFS objects
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -126,12 +140,62 @@ jobs:
           "executable=$($godot.FullName)" >> $env:GITHUB_OUTPUT
           "version=$actualVersion" >> $env:GITHUB_OUTPUT
 
-      - name: Validate and export Windows package
+      - name: Create clean Godot-owned RC source
         shell: pwsh
         run: |
-          ./Tools/migration/Build-GodotWindows.ps1 `
+          New-Item -ItemType Directory -Path $env:RC_DIAGNOSTICS -Force | Out-Null
+          ./Tools/migration/New-GodotOwnedRcSource.ps1 `
+            -DestinationRoot $env:RC_SOURCE_ROOT `
+            -ManifestPath 'rc-source-manifest.json' `
+            -InitializeGit
+          Copy-Item -LiteralPath (Join-Path $env:RC_SOURCE_ROOT 'rc-source-manifest.json') -Destination $env:RC_DIAGNOSTICS
+
+      - name: Verify Godot ownership boundary
+        shell: pwsh
+        working-directory: ${{ env.RC_SOURCE_ROOT }}
+        run: |
+          try {
+            ./Tools/migration/Verify-GodotMigration.ps1 `
+              -GodotOwned `
+              -GodotExecutable '${{ steps.godot.outputs.executable }}' *>&1 |
+              Tee-Object -FilePath "$env:RC_DIAGNOSTICS\godot-owned-verifier.log"
+          }
+          catch {
+            $_ | Out-String | Set-Content -LiteralPath "$env:RC_DIAGNOSTICS\godot-owned-verifier-error.log"
+            throw
+          }
+
+      - name: Export and audit Windows RC package
+        shell: pwsh
+        working-directory: ${{ env.RC_SOURCE_ROOT }}
+        run: |
+          try {
+            ./Tools/migration/Build-GodotWindows.ps1 `
             -GodotExecutable '${{ steps.godot.outputs.executable }}' `
-            -OutputDirectory $env:BUILD_OUTPUT
+              -OutputDirectory $env:BUILD_OUTPUT `
+              -SourceManifestPath 'rc-source-manifest.json' `
+              -SourceCommit '${{ github.sha }}' `
+              -WorkflowRunId '${{ github.run_id }}' `
+              -WorkflowRef '${{ github.ref }}' `
+              -GodotOwned *>&1 |
+              Tee-Object -FilePath "$env:RC_DIAGNOSTICS\windows-export.log"
+          }
+          catch {
+            $_ | Out-String | Set-Content -LiteralPath "$env:RC_DIAGNOSTICS\windows-export-error.log"
+            throw
+          }
+
+      - name: Smoke exported executable
+        shell: pwsh
+        working-directory: ${{ env.RC_SOURCE_ROOT }}
+        run: |
+          $exe = Join-Path $env:RC_SOURCE_ROOT "$env:BUILD_OUTPUT/Tactics.exe"
+          foreach ($renderer in @('gl_compatibility', 'default')) {
+            ./Tools/migration/Test-GodotWindowsLaunch.ps1 `
+              -Executable $exe `
+              -DiagnosticsDirectory $env:RC_DIAGNOSTICS `
+              -Renderer $renderer
+          }
 
       - name: Describe distributable package
         id: package
@@ -139,17 +203,31 @@ jobs:
         run: |
           $shortSha = '${{ github.sha }}'.Substring(0, 8)
           $artifactName = "tactics-godot-windows-$shortSha-${{ github.run_number }}"
-          $size = (Get-ChildItem -LiteralPath $env:BUILD_OUTPUT -File -Recurse | Measure-Object Length -Sum).Sum
+          $packageRoot = Join-Path $env:RC_SOURCE_ROOT $env:BUILD_OUTPUT
+          $size = (Get-ChildItem -LiteralPath $packageRoot -File -Recurse | Measure-Object Length -Sum).Sum
+          $semanticHash = (Get-FileHash -LiteralPath (Join-Path $packageRoot 'rc-semantic-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
           "name=$artifactName" >> $env:GITHUB_OUTPUT
           "size=$size" >> $env:GITHUB_OUTPUT
+          "root=$packageRoot" >> $env:GITHUB_OUTPUT
+          "semantic-hash=$semanticHash" >> $env:GITHUB_OUTPUT
 
       - name: Upload Windows test package
         id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.package.outputs.name }}
-          path: ${{ env.BUILD_OUTPUT }}/**
+          path: ${{ steps.package.outputs.root }}/**
           if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
+
+      - name: Upload bounded RC diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tactics-godot-windows-rc-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ${{ env.RC_DIAGNOSTICS }}/**
+          if-no-files-found: warn
           retention-days: 14
           compression-level: 6
 
@@ -166,6 +244,9 @@ jobs:
           - Artifact: ${{ steps.package.outputs.name }}
           - Uncompressed size: ${{ steps.package.outputs.size }} bytes
           - Artifact digest: ${{ steps.upload.outputs.artifact-digest }}
+          - Semantic manifest: ${{ steps.package.outputs.semantic-hash }}
+          - Startup smoke: Compatibility + default renderer passed
+          - Audio: deferred for this version (no payload)
           - Retention: 14 days
 
           [Download this artifact](${{ steps.upload.outputs.artifact-url }}). The downloader must be signed in and have read access to the repository.

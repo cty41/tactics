@@ -6,7 +6,17 @@ param(
     [string]$OutputDirectory = 'Build/Godot/Windows',
 
     [ValidateSet('Release')]
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+
+    [string]$SourceManifestPath = '',
+
+    [string]$SourceCommit = '',
+
+    [string]$WorkflowRunId = '',
+
+    [string]$WorkflowRef = '',
+
+    [switch]$GodotOwned
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,6 +28,7 @@ $solution = Join-Path $repoRoot 'Tactics.Migration.slnx'
 $runSettings = Join-Path $repoRoot 'Tactics.Migration.runsettings'
 $adapterProject = Join-Path $projectRoot 'Tactics.Godot.Adapter.csproj'
 $toolingManifest = Join-Path $repoRoot 'Tools\migration\manifest\godot-tooling.json'
+$packageValidator = Join-Path $repoRoot 'Tools\migration\Test-GodotWindowsPackage.ps1'
 
 function Invoke-Checked {
     param(
@@ -42,7 +53,8 @@ foreach ($requiredFile in @(
     $solution,
     $runSettings,
     $adapterProject,
-    $toolingManifest)) {
+    $toolingManifest,
+    $packageValidator)) {
     if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
         throw "Required build file not found: $requiredFile"
     }
@@ -70,6 +82,11 @@ $sameFeatureBand = $actualDotnetVersion.Major -eq $expectedDotnetVersion.Major -
 if ($LASTEXITCODE -ne 0 -or -not $sameFeatureBand -or $actualDotnetVersion -lt $expectedDotnetVersion) {
     throw "Expected .NET SDK '$expectedDotnetSdk' or a newer patch in the same feature band, found '$actualDotnetSdk'."
 }
+
+$resolvedSourceCommit = if ([string]::IsNullOrWhiteSpace($SourceCommit)) {
+    (git -C $repoRoot rev-parse HEAD).Trim()
+} else { $SourceCommit }
+if ([string]::IsNullOrWhiteSpace($resolvedSourceCommit)) { throw 'SourceCommit is required.' }
 
 $outputPath = if ([IO.Path]::IsPathRooted($OutputDirectory)) {
     [IO.Path]::GetFullPath($OutputDirectory)
@@ -99,11 +116,25 @@ Push-Location $repoRoot
 try {
     $env:GODOT_BIN = $GodotExecutable
 
-    Invoke-Checked 'Restore locked migration dependencies' {
-        dotnet restore $solution --locked-mode
+    if ($GodotOwned) {
+        Invoke-Checked 'Restore locked Godot-owned dependencies' {
+            dotnet restore 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' --locked-mode
+            if ($LASTEXITCODE -eq 0) { dotnet restore 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' --locked-mode }
+            if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode }
+        }
+        Invoke-Checked 'Build Godot-owned projects with one MSBuild node' {
+            dotnet build 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' -c Debug --no-restore -m:1
+            if ($LASTEXITCODE -eq 0) { dotnet build 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' -c Debug --no-restore -m:1 }
+            if ($LASTEXITCODE -eq 0) { dotnet build $adapterProject -c Debug --no-restore -m:1 }
+        }
     }
-    Invoke-Checked 'Build migration solution with one MSBuild node' {
-        dotnet build $solution -c Debug --no-restore -m:1
+    else {
+        Invoke-Checked 'Restore locked migration dependencies' {
+            dotnet restore $solution --locked-mode
+        }
+        Invoke-Checked 'Build migration solution with one MSBuild node' {
+            dotnet build $solution -c Debug --no-restore -m:1
+        }
     }
     Invoke-Checked 'Run Tactics.Core tests' {
         dotnet test 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
@@ -168,7 +199,7 @@ try {
         throw "The CI build changed tracked files.`nBefore:`n$($statusBefore -join "`n")`nAfter:`n$($statusAfter -join "`n")"
     }
 
-    $commit = (git -C $repoRoot rev-parse HEAD).Trim()
+    $commit = $resolvedSourceCommit
     $files = @(Get-ChildItem -LiteralPath $outputPath -File -Recurse | Sort-Object FullName)
     $outputPrefixLength = $outputPath.TrimEnd([IO.Path]::DirectorySeparatorChar).Length + 1
     $manifest = [ordered]@{
@@ -176,7 +207,6 @@ try {
         godotVersion = $actualGodotVersion
         dotnetSdk = $actualDotnetSdk
         configuration = $Configuration
-        generatedAtUtc = [DateTime]::UtcNow.ToString('o')
         files = @($files | ForEach-Object {
             [ordered]@{
                 path = $_.FullName.Substring($outputPrefixLength).Replace('\', '/')
@@ -186,6 +216,32 @@ try {
         })
     }
     $manifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $outputPath 'build-manifest.json') -Encoding utf8
+
+    $resolvedSourceManifest = if ([string]::IsNullOrWhiteSpace($SourceManifestPath)) {
+        $fallback = Join-Path $outputPath 'rc-source-manifest.json'
+        [ordered]@{
+            schemaVersion = 1
+            sourceCommit = $resolvedSourceCommit
+            boundary = 'current-tracked-worktree-v1'
+            fileCount = 0
+            files = @()
+        } | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $fallback -Encoding utf8
+        $fallback
+    } else {
+        $candidate = if ([IO.Path]::IsPathRooted($SourceManifestPath)) {
+            [IO.Path]::GetFullPath($SourceManifestPath)
+        } else { [IO.Path]::GetFullPath((Join-Path $repoRoot $SourceManifestPath)) }
+        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+            throw "Source manifest not found: $candidate"
+        }
+        $destination = Join-Path $outputPath 'rc-source-manifest.json'
+        Copy-Item -LiteralPath $candidate -Destination $destination -Force
+        $destination
+    }
+    & $packageValidator -PackageRoot $outputPath -SourceManifestPath $resolvedSourceManifest `
+        -SourceCommit $resolvedSourceCommit -GodotVersion $actualGodotVersion -DotnetSdk $actualDotnetSdk `
+        -Configuration $Configuration -WorkflowRunId $WorkflowRunId -WorkflowRef $WorkflowRef
+    if ($LASTEXITCODE -ne 0) { throw "Windows package audit failed with exit code $LASTEXITCODE." }
     Write-Host "Windows export passed: $exportExecutable"
 }
 finally {
