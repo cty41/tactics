@@ -91,6 +91,18 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Gameplay Specs now equip through the production Main UI, enter a real battle, compare BattleUnitState against Application base/bonus/total and derived projection, Reload, and prove instance uniqueness plus production-save isolation. Only UI readability and interaction feel remain manual.
 - User verdict: Partial pass: Inventory operation and equipment detail UI are OK; the resulting battle-stat increase has not yet been verified in combat.
 
+### MQA-GODOT-WINDOWS-RC — Windows export and clean launch
+
+- Status: `pending`
+- Source: `eba98f9b`, GitHub Actions run `31889338418`
+- Action: Download `tactics-godot-windows-eba98f9b-19` and launch its EXE/PCK on a Windows machine without the Godot or Unity Editor installed.
+- Expected: The package contains production managed assemblies and no GdUnit/TestPlatform payload; Main opens, New Run works, and exit leaves no startup/resource errors.
+- Observe: GitHub Actions artifact/build manifest or local `Build/Godot/Windows`, launched game window, and process/console output.
+- Preserve on failure: Workflow run URL or local build log, build manifest, artifact file list/hashes and startup Output.
+- Save boundary: Use a clean user-data directory; do not point the RC at the current production save.
+- Automated evidence: GitHub Actions run `31889338418` passed the Godot-owned verifier, Windows ExportRelease, 199-file package audit, Compatibility/default renderer EXE startup, and artifact upload. Artifact ID `9248204605`, archive digest `9eaf62b652eee81dbfb18e74f702c3c8a016903876fe9336fe815ffb506f1456`, semantic manifest SHA-256 `dff242be1586f85e99cd1fa2f84ebd734306d1286145aa3679b2dcf6373d39ca`.
+- User verdict: Pending one clean-machine download, launch, New Run, and exit smoke; automated CI must not mark this passed.
+
 ## Passed
 
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
@@ -293,18 +305,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Save boundary: Audio settings use their own versioned settings file and do not modify Run Save.
 - Automated evidence: Bus creation, independent settings, cue/profile validation, concurrency and cleanup framework are tested. No redistributable audio payload is currently registered, so content migration and listening acceptance cannot be claimed.
 - User verdict: Deferred by the user for this version; the Windows RC is intentionally silent and does not require an audio payload.
-
-### MQA-GODOT-WINDOWS-RC — Windows export and clean launch
-
-- Status: `blocked`
-- Source: Godot root UI and release closure checkpoint 7
-- Action: Install the pinned Godot 4.7.1 Mono Windows export templates or run the existing GitHub Actions build, then download and launch the generated EXE/PCK outside the Editor.
-- Expected: The package contains production managed assemblies and no GdUnit/TestPlatform payload; Main opens, New Run works, and exit leaves no startup/resource errors.
-- Observe: GitHub Actions artifact/build manifest or local `Build/Godot/Windows`, launched game window, and process/console output.
-- Preserve on failure: Workflow run URL or local build log, build manifest, artifact file list/hashes and startup Output.
-- Save boundary: Use a clean user-data directory; do not point the RC at the current production save.
-- Automated evidence: Godot/.NET versions, pinned tool hashes, export preset, Release build whitelist and CI script are validated. This machine lacks `C:/Users/15507/AppData/Roaming/Godot/export_templates/4.7.1.stable.mono`, so no local EXE/PCK or clean launch can be claimed.
-- User verdict: blocked pending export templates or the first successful CI artifact.
 
 ## Last Emitted Order
 

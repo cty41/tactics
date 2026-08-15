@@ -206,7 +206,7 @@ Hosted-run 后验证：
 
 `Generated/GodotOwned + hosted_windows_rc_pending`
 
-首次 hosted-run 与下载核验完成后：
+首次 hosted-run 已由 run `31889338418` 完成 ExportRelease、包审计、双 renderer 启动与 artifact 上传；状态进入：
 
 `Generated/GodotOwned + manual_windows_rc_acceptance_pending`
 
