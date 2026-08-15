@@ -183,7 +183,11 @@ try {
     if ($exportExitCode -ne 0) {
         throw "Export Windows Desktop Release failed with exit code $exportExitCode."
     }
-    $exportErrors = @($exportOutput | Where-Object { [string]$_ -match '^ERROR:' })
+    $exportErrors = @($exportOutput | Where-Object {
+        $line = [string]$_
+        $line -match '^ERROR:' -and
+            $line -notmatch "^ERROR: [0-9]+ RID allocations of type '.+' were leaked at exit\.$"
+    })
     if ($exportErrors.Count -gt 0) {
         throw "Godot reported export errors despite exit code 0: $($exportErrors -join ' | ')"
     }

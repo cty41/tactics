@@ -170,6 +170,7 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("Tactics.Godot.Adapter.sln", staging_script)
         self.assertIn("-match '^ERROR:'", build_script)
         self.assertIn("Godot reported export errors despite exit code 0", build_script)
+        self.assertIn("RID allocations of type", build_script)
 
         for project in (
             REPO / "godot" / "Tactics.Godot.Adapter.csproj",
