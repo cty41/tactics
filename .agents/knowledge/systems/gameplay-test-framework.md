@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity 或 Godot adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity, godot]
-timestamp: "2026-08-15T15:06:01+08:00"
+timestamp: "2026-08-15T17:37:15+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:8f532234cd250dd17b551bc1f1ba2e1ba48bfebee55749a747a748b7f6a72c38
+source_fingerprint: sha256:c5767934a3fcda4cde009900c9674d436145b264fc2e1410357aee4bd4baf70b
 ---
 
 # Current State
@@ -28,6 +28,8 @@ Agent 编写的 `.gameplay-test.md`/`ScenarioSpec` 经 TypeScript validator 和 
 Godot v2 Runtime Runner 通过预 Tree 注入的 `GodotPlayableRunTestContext` 加载正式 `Main.tscn`，每次场景只允许使用 `user://qa-runner/<scenario>/<attempt>/` 下的隔离 Save Store，并在前后校验生产主档与 backup 的长度、时间戳和 SHA-256。PlayerInput action 使用 `Viewport.PushInput` 经过正式 GUI/Input/UnhandledInput 链；Button/Map 点击必须观察真实 production signal，Enter 必须观察 Battle 权威状态变化，表现锁期间的输入 fail-closed。validated checkpoint 只能由受控 catalog 私有构造，并以 canonical V5 hash、plan path/identity、唯一 `loadValidatedCheckpoint` setup 和隔离存档读回值交叉校验。Runner 区分 step timeout、scenario timeout、no-progress、assertion 与 cleanup，并在失败 trace 后释放 Main、隔离目录及临时表现节点。`playBattleThroughInput` 复用 Unity 策略边界：每个玩家单位回合计一次 action，先尝试技能，无合法技能时移动并重试技能，最后经生产 EndTurn 输入推进；独立 `endTurnOnlyUntilTerminal` 仍用于明确只结束回合的失败场景。
 
 首批五个 Godot acceptance spec 已进入统一迁移门禁：Inventory 装备投影进入真实 BattleState、无召唤物 Defeated、Mana 动态数字、确定性 Miss 动态数字，以及 PendingBattle 的 Main 重启/Continue/清理。批量执行生成 `godot-gameplay-spec-result-v1.json`，门禁要求五场景通过、生产 save/backup 证据前后一致且临时节点为零。自动证据关闭规则、事务、scene/process reload 和清理边界；真实 Editor Assembly Reload、文字可读性与动画观感仍保留人工 smoke。
+
+Godot-owned 隔离门禁继续编译并执行全部 Godot v2 spec；`GODOT_OWNED_VERIFY=1` 只跳过对已被物理排除的 Unity runtime plan 的 byte-level deep compare，不跳过 schema、capability、checkpoint、生产输入、Main journey 或清理验证。默认 Unity 编译行为在完整仓库模式仍必须保持 byte-identical。
 
 `GameplayRuntimeRunner` 默认以 `GamePlaybackSpeed.Quadruple`（4×）执行计划；需要真实 1× 语义的调用方可通过显式 speed constructor opt out 到 `Normal`。Runner 只通过 `GameTimeService` 设置 requested speed，并在成功、timeout 或 adapter exception 后恢复进入时速度；它不调用 `ForceResume`，进入时已暂停会 fail-fast，因此 pause ownership 始终属于调用方。`plan.TimeoutMs` 与 cancellation grace 继续使用 realtime `Task.Delay`，不会被 4× 缩短。Runner 的返回也是 runtime scope 生命周期边界：成功、timeout 或异常退出前均先 cancel scope、await `WhenIdleAsync()` 排空所有 tracked task，再 dispose runtime context 和 scope，避免投射物/VFX 等异步 cleanup 泄漏到下一个 fixture 或场景。由于速度状态是进程级全局状态，Runner 调用不得重叠；新增或调整 consumer 时应避免并行执行，并仅在明确验证 1× 行为时使用 `Normal` opt-out。
 

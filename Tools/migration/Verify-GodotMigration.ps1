@@ -1,16 +1,22 @@
 [CmdletBinding()]
 param(
-    [string]$GodotExecutable = 'D:\Godot\Godot_v4.7.1-stable_mono_win64\Godot_v4.7.1-stable_mono_win64_console.exe'
+    [string]$GodotExecutable = 'D:\Godot\Godot_v4.7.1-stable_mono_win64\Godot_v4.7.1-stable_mono_win64_console.exe',
+    [switch]$GodotOwned
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $projectRoot = (Resolve-Path (Join-Path $repoRoot 'godot')).Path
+$projectRootWithSeparator = $projectRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar) +
+    [System.IO.Path]::DirectorySeparatorChar
 $projectFile = Join-Path $projectRoot 'project.godot'
 $adapterProject = Join-Path $projectRoot 'Tactics.Godot.Adapter.csproj'
-$testHostProject = Join-Path $projectRoot 'Tactics.Godot.TestHost.csproj'
+$testHostProject = Join-Path $projectRoot 'tests\Tactics.Godot.TestHost.csproj'
 $solution = Join-Path $repoRoot 'Tactics.Migration.slnx'
 $runSettings = Join-Path $repoRoot 'Tactics.Migration.runsettings'
+$gdUnitRunnerTemplate = Join-Path $projectRoot 'tests\GdUnit4TestRunnerScene.cs.txt'
+$gdUnitRunnerSource = Join-Path $projectRoot 'gdunit4_testadapter_v5\GdUnit4TestRunnerScene.cs'
+$createdGdUnitRunnerSource = $false
 $poisonExport = Join-Path $repoRoot 'Tools\migration\out\poison-spear-lv1.unity.json'
 $poisonDraft = Join-Path $repoRoot 'Tools\migration\out\poison-spear-lv1.draft.json'
 $poisonSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\poison-spear-lv1.json'
@@ -70,18 +76,27 @@ if (-not $releaseVerificationDirectory.StartsWith($requiredTempPrefix, [StringCo
     throw "Release verification directory escaped the system temp root: $releaseVerificationDirectory"
 }
 
-foreach ($requiredFile in @($GodotExecutable, $projectFile, $adapterProject, $testHostProject, $solution, $runSettings)) {
+foreach ($requiredFile in @($GodotExecutable, $projectFile, $adapterProject, $testHostProject,
+        $solution, $runSettings, $gdUnitRunnerTemplate)) {
     if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
         throw "Required migration file not found: $requiredFile"
     }
 }
 
-$trackedProjects = @(git -C $repoRoot ls-files -- 'project.godot' '*/project.godot')
-if ($LASTEXITCODE -ne 0) {
-    throw 'Unable to enumerate tracked Godot projects.'
+$hasGitMetadata = Test-Path -LiteralPath (Join-Path $repoRoot '.git')
+if ($hasGitMetadata) {
+    $trackedProjects = @(git -C $repoRoot ls-files -- 'project.godot' '*/project.godot')
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to enumerate tracked Godot projects.' }
+    if ($trackedProjects.Count -ne 1 -or $trackedProjects[0] -ne 'godot/project.godot') {
+        throw "Expected exactly one tracked Godot project at godot/project.godot; found: $($trackedProjects -join ', ')"
+    }
 }
-if ($trackedProjects.Count -ne 1 -or $trackedProjects[0] -ne 'godot/project.godot') {
-    throw "Expected exactly one tracked Godot project at godot/project.godot; found: $($trackedProjects -join ', ')"
+else {
+    $projectFiles = @(Get-ChildItem -LiteralPath $repoRoot -Filter 'project.godot' -File -Recurse |
+        Where-Object { $_.FullName -notmatch '[\\/]\.godot[\\/]' })
+    if (-not $GodotOwned -or $projectFiles.Count -ne 1 -or $projectFiles[0].FullName -ne $projectFile) {
+        throw "Godot-owned copy must contain exactly the canonical godot/project.godot."
+    }
 }
 
 function Invoke-Checked {
@@ -111,14 +126,39 @@ try {
         Write-Host '== Skip project-scoped godot-ai Codex configuration: local config is not present =='
     }
 
-    Invoke-Checked 'Restore locked migration dependencies' {
-        dotnet restore $solution --locked-mode
+    if ($GodotOwned) {
+        Invoke-Checked 'Restore locked Godot-owned dependencies' {
+            dotnet restore 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' --locked-mode
+            if ($LASTEXITCODE -eq 0) { dotnet restore 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' --locked-mode }
+            if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode }
+            if ($LASTEXITCODE -eq 0) { dotnet restore $testHostProject --locked-mode }
+        }
+    }
+    else {
+        Invoke-Checked 'Restore locked migration dependencies' {
+            dotnet restore $solution --locked-mode
+        }
     }
 
     # Build/test steps are intentionally sequential. Separate processes have
     # previously contended for Tactics.Core/obj and produced intermittent locks.
-    Invoke-Checked 'Build migration solution (single MSBuild node)' {
-        dotnet build $solution -c Debug --no-restore -m:1
+    if ($GodotOwned) {
+        Invoke-Checked 'Build Godot-owned projects without Unity Oracle sources' {
+            dotnet build 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' -c Debug --no-restore -m:1
+            if ($LASTEXITCODE -eq 0) { dotnet build 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' -c Debug --no-restore -m:1 }
+            if ($LASTEXITCODE -eq 0) { dotnet build $adapterProject -c Debug --no-restore -m:1 }
+        }
+    }
+    else {
+        Invoke-Checked 'Build migration solution (single MSBuild node)' {
+            dotnet build $solution -c Debug --no-restore -m:1
+        }
+    }
+
+    if ($GodotOwned) {
+        Invoke-Checked 'Prime fresh Godot resource UID cache' {
+            & $GodotExecutable --headless --editor --path $projectRoot --quit-after 120
+        }
     }
 
     Invoke-Checked 'Run Tactics.Core NUnit' {
@@ -129,8 +169,10 @@ try {
         dotnet test 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
     }
 
-    Invoke-Checked 'Run frozen Unity source Oracle NUnit' {
-        dotnet test 'src/Tactics.UnityOracle.Tests/Tactics.UnityOracle.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
+    if (-not $GodotOwned) {
+        Invoke-Checked 'Run frozen Unity source Oracle NUnit' {
+            dotnet test 'src/Tactics.UnityOracle.Tests/Tactics.UnityOracle.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
+        }
     }
 
     Invoke-Checked 'Run agent policy unittest' {
@@ -159,8 +201,18 @@ try {
         python Tools/agent-policy/validate_manual_qa_handoff.py
     }
 
+    if ($GodotOwned -and -not (Test-Path -LiteralPath 'Tools/gameplay-test-spec/node_modules/.bin/tsc.cmd')) {
+        Invoke-Checked 'Restore gameplay spec compiler dependencies' {
+            npm --prefix Tools/gameplay-test-spec ci --ignore-scripts
+        }
+    }
+
     Invoke-Checked 'Run gameplay spec compiler tests' {
-        npm --prefix Tools/gameplay-test-spec test
+        try {
+            if ($GodotOwned) { $env:GODOT_OWNED_VERIFY = '1' }
+            npm --prefix Tools/gameplay-test-spec test
+        }
+        finally { Remove-Item Env:GODOT_OWNED_VERIFY -ErrorAction SilentlyContinue }
     }
 
     $godotGameplaySpecSource = Join-Path $repoRoot 'Tests\gameplay-specs\godot'
@@ -187,21 +239,33 @@ try {
     }
 
     Invoke-Checked 'Restore isolated GdUnit4Net test host dependencies' {
-        dotnet restore $testHostProject --locked-mode
+        dotnet restore $testHostProject --locked-mode -p:GodotProjectDir=$projectRootWithSeparator
+    }
+
+    if (-not (Test-Path -LiteralPath $gdUnitRunnerSource -PathType Leaf)) {
+        $runnerDirectory = Split-Path -Parent $gdUnitRunnerSource
+        if (-not (Test-Path -LiteralPath $runnerDirectory -PathType Container)) {
+            New-Item -ItemType Directory -Path $runnerDirectory | Out-Null
+        }
+        Copy-Item -LiteralPath $gdUnitRunnerTemplate -Destination $gdUnitRunnerSource
+        $createdGdUnitRunnerSource = $true
     }
 
     Invoke-Checked 'Build isolated GdUnit4Net test host non-incrementally' {
-        dotnet build $testHostProject -c Debug --no-restore --no-incremental -m:1
+        dotnet build $testHostProject -c Debug --no-restore --no-incremental -m:1 `
+            -p:GodotProjectDir=$projectRootWithSeparator
     }
 
     # Keep gameplay-spec Main journeys in a fresh Godot runtime. Running all suites in one native host
     # can retain ResourceLoader/SceneTree objects long enough to crash Godot during final teardown.
     Invoke-Checked 'Run isolated GdUnit4Net unit and adapter suites' {
         dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+            -p:GodotProjectDir=$projectRootWithSeparator `
             --filter 'FullyQualifiedName!~GodotGameplayRuntimeRunnerTests' --logger 'console;verbosity=minimal'
     }
     Invoke-Checked 'Run isolated GdUnit4Net gameplay-spec journeys' {
         dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+            -p:GodotProjectDir=$projectRootWithSeparator `
             --filter 'FullyQualifiedName~GodotGameplayRuntimeRunnerTests' --logger 'console;verbosity=minimal'
     }
 
@@ -238,6 +302,7 @@ try {
         dotnet build $adapterProject -c Debug --no-restore --no-incremental -m:1
     }
 
+    if (-not $GodotOwned) {
     if (Test-Path -LiteralPath $poisonExport -PathType Leaf) {
         Invoke-Checked 'Compile real Poison Spear typed migration draft' {
             python -m Tools.migration.poison_spear_converter `
@@ -683,11 +748,12 @@ try {
                 --receipt (Join-Path $repoRoot 'Tools\migration\manifest\receipts\pure-run-ui-input-v1-generation.json')
         }
     }
+    }
 
     # A ResourceSaver script can register a newly created UID only in its current process.
     # The headless Editor filesystem scan persists the project UID cache before Runtime validation.
     Invoke-Checked 'Godot editor filesystem scan and plugin initialization' {
-        & $GodotExecutable --headless --editor --path $projectRoot --quit-after 6000
+        & $GodotExecutable --headless --editor --path $projectRoot --quit-after 120
     }
 
     Invoke-Checked 'Build Release without test sources or dev packages' {
@@ -792,6 +858,7 @@ try {
             -- --capture-unit-spawn
     }
 
+    if (-not $GodotOwned) {
     if (Test-Path -LiteralPath $poisonExport -PathType Leaf) {
         # Only write a "passed" generation receipt after UID scan, both renderer paths,
         # runtime semantics, Tween, and scope validation have actually succeeded.
@@ -873,26 +940,41 @@ try {
     Invoke-Checked 'Run migration Python unittest against refreshed generation evidence' {
         python -m unittest discover -s 'Tools/migration/tests' -p 'test_*.py'
     }
+    }
 
     Invoke-Checked 'Run OKF unittest' {
         python -m unittest discover -s (Join-Path $repoRoot 'Tools/okf') -p 'test_*.py'
     }
 
     Invoke-Checked 'Validate OKF bundle' {
-        python 'Tools/okf/validate_bundle.py'
+        if ($GodotOwned) {
+            python 'Tools/okf/validate_bundle.py' `
+                --allow-missing-repo-prefix Assets `
+                --allow-missing-repo-prefix Packages `
+                --allow-missing-repo-prefix ProjectSettings `
+                --allow-missing-repo-prefix src/Tactics.UnityOracle.Tests
+        }
+        else {
+            python 'Tools/okf/validate_bundle.py'
+        }
     }
 
-    Invoke-Checked 'Report OKF worktree impact' {
-        python 'Tools/okf/catalog_impact.py' report --worktree
-    }
+    if ($hasGitMetadata) {
+        Invoke-Checked 'Report OKF worktree impact' {
+            python 'Tools/okf/catalog_impact.py' report --worktree
+        }
 
-    Invoke-Checked 'Validate patch whitespace' {
-        git diff --check
+        Invoke-Checked 'Validate patch whitespace' {
+            git diff --check
+        }
     }
 
     Write-Host "Godot migration verification passed. Canonical project: $projectRoot"
 }
 finally {
+    if ($createdGdUnitRunnerSource -and (Test-Path -LiteralPath $gdUnitRunnerSource -PathType Leaf)) {
+        Remove-Item -LiteralPath $gdUnitRunnerSource -Force
+    }
     if (Test-Path -LiteralPath $releaseVerificationDirectory -PathType Container) {
         [System.IO.Directory]::Delete($releaseVerificationDirectory, $true)
     }

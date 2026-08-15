@@ -560,7 +560,9 @@ test("compiles structured AI turn result assertions from the authored source spe
   assert.deepEqual(normalizePlan(fixtureCompiled.plan), JSON.parse(generatedPlan));
 });
 
-test("deep-compares all strict PlayerInput sources with the runtime plans consumed by Unity", async () => {
+test("deep-compares all strict PlayerInput sources with the runtime plans consumed by Unity", {
+  skip: process.env.GODOT_OWNED_VERIFY === "1" ? "Unity runtime plans are outside the Godot-owned repository boundary." : false
+}, async () => {
   for (const [sourceName, runtimePlanName] of [
     ["battle/battle-player-input-smoke.gameplay-test.md", "compiled/battle-player-input-smoke.plan.json"],
     ["ui/inventory-reentry-player-input.gameplay-test.md", "compiled/inventory-reentry-player-input.plan.json"],

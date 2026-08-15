@@ -122,6 +122,7 @@ def _validate_concept(
     bundle_root: Path,
     repo_root: Path,
     profile_version: str,
+    allowed_missing_repo_prefixes: tuple[str, ...],
 ) -> list[str]:
     errors: list[str] = []
     rel = _relative(document.path, bundle_root)
@@ -150,7 +151,12 @@ def _validate_concept(
                 if not isinstance(raw_path, str) or not raw_path.strip():
                     errors.append(f"{rel}: repo_paths 只能包含非空字符串")
                     continue
-                if not (repo_root / raw_path).exists():
+                normalized_path = raw_path.replace("\\", "/").strip("/")
+                missing_is_allowed = any(
+                    normalized_path == prefix or normalized_path.startswith(f"{prefix}/")
+                    for prefix in allowed_missing_repo_prefixes
+                )
+                if not (repo_root / raw_path).exists() and not missing_is_allowed:
                     errors.append(f"{rel}: repo_path 不存在：{raw_path}")
         if profile_version == "0.1":
             revision = document.frontmatter.get("verified_revision")
@@ -234,7 +240,11 @@ def _validate_catalog_map(
     return errors
 
 
-def validate_bundle(bundle_root: Path, repo_root: Path) -> list[str]:
+def validate_bundle(
+    bundle_root: Path,
+    repo_root: Path,
+    allowed_missing_repo_prefixes: tuple[str, ...] = (),
+) -> list[str]:
     bundle_root = bundle_root.resolve()
     repo_root = repo_root.resolve()
     errors: list[str] = []
@@ -262,7 +272,15 @@ def validate_bundle(bundle_root: Path, repo_root: Path) -> list[str]:
     implementation_scopes: dict[str, Path] = {}
     for path, document in documents.items():
         if path.name not in RESERVED_NAMES:
-            errors.extend(_validate_concept(document, bundle_root, repo_root, profile_version))
+            errors.extend(
+                _validate_concept(
+                    document,
+                    bundle_root,
+                    repo_root,
+                    profile_version,
+                    allowed_missing_repo_prefixes,
+                )
+            )
             status = document.frontmatter.get("status")
             scope = document.frontmatter.get("catalog_scope")
             if status == "active" and isinstance(scope, str) and scope.strip():
@@ -340,9 +358,20 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="校验 Tactics OKF v0.1 bundle 与 Tactics Profile")
     parser.add_argument("--bundle", type=Path, default=Path(".agents/knowledge"))
     parser.add_argument("--repo-root", type=Path, default=Path.cwd())
+    parser.add_argument(
+        "--allow-missing-repo-prefix",
+        action="append",
+        default=[],
+        help="Allow missing repo_paths under an intentionally excluded repository prefix.",
+    )
     args = parser.parse_args()
 
-    errors = validate_bundle(args.bundle, args.repo_root)
+    allowed_prefixes = tuple(
+        prefix.replace("\\", "/").strip("/")
+        for prefix in args.allow_missing_repo_prefix
+        if prefix.strip("/\\")
+    )
+    errors = validate_bundle(args.bundle, args.repo_root, allowed_prefixes)
     if errors:
         print(f"OKF_CHECK_FAILED errors={len(errors)}")
         for error in errors:

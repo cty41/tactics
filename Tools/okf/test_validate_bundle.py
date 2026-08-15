@@ -116,6 +116,28 @@ class ValidateBundleTests(unittest.TestCase):
             errors = validate_bundle(bundle, repo_root)
             self.assertTrue(any("实现型概念未在 catalog-scopes.yaml 中登记" in error for error in errors))
 
+    def test_intentionally_excluded_repo_prefix_can_be_allowed(self) -> None:
+        temporary, repo_root, bundle = self.create_bundle()
+        with temporary:
+            concept = bundle / "systems" / "test.md"
+            concept.write_text(
+                concept.read_text(encoding="utf-8").replace("source.txt", "Assets/Tactics/source.txt"),
+                encoding="utf-8",
+            )
+            self.assertTrue(any("repo_path 不存在" in error for error in validate_bundle(bundle, repo_root)))
+            self.assertEqual([], validate_bundle(bundle, repo_root, ("Assets",)))
+
+    def test_allowed_repo_prefix_requires_a_path_boundary(self) -> None:
+        temporary, repo_root, bundle = self.create_bundle()
+        with temporary:
+            concept = bundle / "systems" / "test.md"
+            concept.write_text(
+                concept.read_text(encoding="utf-8").replace("source.txt", "AssetsLegacy/source.txt"),
+                encoding="utf-8",
+            )
+            errors = validate_bundle(bundle, repo_root, ("Assets",))
+            self.assertTrue(any("repo_path 不存在" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()
