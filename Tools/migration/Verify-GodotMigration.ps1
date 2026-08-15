@@ -256,16 +256,36 @@ try {
             -p:GodotProjectDir=$projectRootWithSeparator
     }
 
-    # Keep gameplay-spec Main journeys in a fresh Godot runtime. Running all suites in one native host
-    # can retain ResourceLoader/SceneTree objects long enough to crash Godot during final teardown.
-    Invoke-Checked 'Run isolated GdUnit4Net unit and adapter suites' {
-        dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
-            -p:GodotProjectDir=$projectRootWithSeparator `
-            --filter 'FullyQualifiedName!~GodotGameplayRuntimeRunnerTests&FullyQualifiedName!~ReplacingAPageDoesNotRetainDisposedUnitMeters' `
-            --logger 'console;verbosity=minimal'
+    # GdUnit4Net owns one native Godot runtime per dotnet test invocation. Discover the test suites from
+    # their version-controlled declarations and run each in a fresh host; a single long-lived Windows host can retain
+    # ResourceLoader/SceneTree state and fail a later, otherwise independent suite nondeterministically.
+    $suiteNames = @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'tests') -Filter '*.cs' -File -Recurse |
+        ForEach-Object {
+            $sourceText = Get-Content -Raw -LiteralPath $_.FullName
+            if ($sourceText -notmatch '\[TestSuite\]') { return }
+            $namespaceMatch = [Regex]::Match($sourceText, '(?m)^namespace\s+([^;{]+)[;{]')
+            $classMatch = [Regex]::Match($sourceText,
+                '(?ms)\[TestSuite\]\s*(?:\[[^\]]+\]\s*)*(?:public|internal)\s+(?:sealed\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*)')
+            if (-not $namespaceMatch.Success -or -not $classMatch.Success) {
+                throw "Unable to parse GdUnit4Net suite declaration: $($_.FullName)"
+            }
+            "$($namespaceMatch.Groups[1].Value).$($classMatch.Groups[1].Value)"
+        } | Where-Object { $_ -ne 'Tactics.Godot.Tests.GameplaySpec.GodotGameplayRuntimeRunnerTests' } |
+        Sort-Object -Unique)
+    if ($suiteNames.Count -eq 0) { throw 'No non-gameplay GdUnit4Net suites were discovered.' }
+    foreach ($suiteName in $suiteNames) {
+        $suiteFilter = "FullyQualifiedName~$suiteName"
+        if ($suiteName -eq 'Tactics.Godot.Tests.PlayableRunUiGodotTests') {
+            $suiteFilter += '&FullyQualifiedName!~ReplacingAPageDoesNotRetainDisposedUnitMeters'
+        }
+        Invoke-Checked "Run isolated GdUnit4Net suite $suiteName" {
+            dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+                -p:GodotProjectDir=$projectRootWithSeparator --filter $suiteFilter `
+                --logger 'console;verbosity=minimal'
+        }
     }
-    # This test intentionally creates and tears down the complete Main page. Keep it in a fresh native
-    # host so prior ResourceLoader/SceneTree ownership cannot affect the cleanup assertion on CI.
+    # This test intentionally creates and tears down the complete Main page, so it remains isolated even
+    # from the other PlayableRunUi tests.
     Invoke-Checked 'Run isolated GdUnit4Net page replacement cleanup' {
         dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
             -p:GodotProjectDir=$projectRootWithSeparator `

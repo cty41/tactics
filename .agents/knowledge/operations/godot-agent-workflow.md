@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-15T19:17:21+08:00"
+timestamp: "2026-08-15T19:40:03+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,7 +23,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:53d15d776b30ef5c4143eab31569b8d86cf46a8c8e7029172f9ea4ea61c65be4
+source_fingerprint: sha256:caffbd94d91a82c93526211c1b8e7daf4a24df1c2aef277f8fd7aa1dec68b30e
 ---
 
 # Current state
@@ -47,7 +47,7 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 - `godot-editor-lifecycle` 可在已授权 Godot 修改任务需要 session `0` 时自动挂起并恢复唯一 canonical Editor：只使用精确 PID 的正常窗口关闭与 pinned GUI executable，不强杀、不注入输入、不打开原本关闭的 Editor。
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
-- Catalog 的 UID 继续作为生成/审计身份验证；运行时加载使用 receipt 固定的 `DiagnosticPathValue`。连续 headless ResourceSaver 批次可能让 Godot UID cache 暂时指向旧路径，因此不得把该缓存当作运行时 locator 真相源。完整 GdUnit 使用串行原生 testhost；会创建并销毁完整 Main 页的 replacement cleanup 用例单独运行，Gameplay Spec journeys 也使用独立宿主，避免累积的 SceneTree/ResourceLoader 对象在最终 teardown 互相污染，同时不减少断言覆盖。
+- Catalog 的 UID 继续作为生成/审计身份验证；运行时加载使用 receipt 固定的 `DiagnosticPathValue`。连续 headless ResourceSaver 批次可能让 Godot UID cache 暂时指向旧路径，因此不得把该缓存当作运行时 locator 真相源。完整 GdUnit 从版本控制的 `[TestSuite]` 声明发现 suite，并让每个 suite 使用独立串行原生 testhost；完整 Main 页 replacement cleanup 进一步单独运行，Gameplay Spec journeys 也使用独立宿主，避免累积的 SceneTree/ResourceLoader 对象在最终 teardown 互相污染，同时不减少断言覆盖。
 - Ownership closure 的 Map/Treasure 生成器维护 layout v3 的 16 节点/23 边权威地图与确定性 Treasure Resource；连续两轮 ResourceSaver、ledger/receipt 和 Catalog 142 必须一致。旧 Layer 4 批次可以重建自身冻结证据，但检测到权威 Treasure batch 后不得替换 canonical run-map entry。
 - Buff/Item disposable DTO 存在时，统一入口会严格编译 14 Buff、3 Consumable、12 Equipment typed draft，重建 export receipt，再连续两次通过 ResourceSaver 生成 28 个定义 Resource 与 29 项分批 Catalog；Phase 6A 存在时 canonical Catalog 为 73 项。该链路不复制只审计的 Buff icon，并在两个 renderer 的 typed runtime 验证后才刷新 `Validated/UnityOwned` generation receipt。
 - Starting Skill disposable DTO 存在时，统一入口会编译 12 项 typed draft，通过 ResourceSaver 生成 11 个新 Skill Resource、12 项分批 Catalog 与原生 1600×900 Gameplay Fixture；`skill.poison-spear.lv1` 保持外部依赖。两轮生成比较 13 个批次独占 artifact；Phase 6A 存在时 canonical Catalog 组合为 73 个唯一 ContentId，并在 Compatibility/Forward+ 后保留已人工接受的 `Validated/UnityOwned` receipt。
