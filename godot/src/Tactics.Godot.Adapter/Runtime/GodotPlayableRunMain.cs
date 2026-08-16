@@ -289,18 +289,19 @@ public partial class GodotPlayableRunMain : Control
 
     private void LoadCatalogs()
     {
-        GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")
-            ?? throw new InvalidOperationException("Canonical Catalog is missing.");
+        GodotResourceCatalog catalog = RequiredResourceLoader.Load<GodotResourceCatalog>(
+            "res://content/ContentCatalog.tres", "Canonical Catalog load failed");
         _catalogCount = catalog.Entries.Length;
-        _balance = (ResourceLoader.Load<PlayableLv1BalanceProfileResource>("res://content/ui/PlayableLv1BalanceProfile.tres")
-            ?? throw new InvalidOperationException("Playable Lv1 balance profile is missing.")).ToCoreProfile();
-        _enemySpeed = (ResourceLoader.Load<PlayableEnemySpeedProfileResource>("res://content/ui/PlayableEnemySpeedProfile.tres")
-            ?? throw new InvalidOperationException("Playable enemy speed profile is missing.")).ToCoreProfile();
-        _presentationProfile = ResourceLoader.Load<StandardUnitPresentationResource>("res://content/presentation/StandardUnitPresentationV1.tres");
+        _balance = RequiredResourceLoader.Load<PlayableLv1BalanceProfileResource>(
+            "res://content/ui/PlayableLv1BalanceProfile.tres", "Playable Lv1 balance profile load failed").ToCoreProfile();
+        _enemySpeed = RequiredResourceLoader.Load<PlayableEnemySpeedProfileResource>(
+            "res://content/ui/PlayableEnemySpeedProfile.tres", "Playable enemy speed profile load failed").ToCoreProfile();
+        _presentationProfile = ResourceLoader.Load<StandardUnitPresentationResource>(
+            "res://content/presentation/StandardUnitPresentationV1.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
         PureRunDefinitionResource? runResource = null;
         foreach (GodotResourceEntry entry in catalog.Entries)
         {
-            Resource resource = ResourceLoader.Load(entry.ResourceLocator)
+            Resource resource = ResourceLoader.Load(entry.ResourceLocator, string.Empty, ResourceLoader.CacheMode.Ignore)
                 ?? throw new InvalidOperationException($"Missing canonical resource: {entry.ContentIdValue}");
             var id = new ContentId(entry.ContentIdValue);
             switch (resource)

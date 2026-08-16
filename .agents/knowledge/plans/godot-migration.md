@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T13:39:26+08:00"
+timestamp: "2026-08-16T14:12:51+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:a3104ac34efd9f76b805b986f04c06cef35367b8ea46b570e8e7a65c0a696caa
+source_fingerprint: sha256:ba4e7c33a7b3b881a5375279cbdb123fbe532eb30b5cc2805eea9d5ac6a1ca84
 ---
 
 # Current state
@@ -38,6 +38,8 @@ Phase 1A 已建立不可变 `BattleState/BattleUnitState`、typed `BattleCommand
 当前内容所有权由 `Tools/migration/manifest/ownership/godot-content-ownership-v1.json` 统一声明：canonical Catalog 精确 142 项，Core、Unit、Buff、Item、Skill、AI、Encounter、Run、Map、UIInput、Presentation、Tooling 和静默 AudioFramework 共 13 类均为 `GodotOwned`。旧 batch/state 继续保留其生成当时的 `UnityOwned` 事实，并由新 receipt 的 `supersedesGenerationState` 明确替代；这避免改写历史 receipt。Audio payload、第三方 Unity payload 与 PlayerPrefs import 仍明确排除，人工验收保持独立 pending。
 
 正式主线入口为 `Tactics.Godot.slnx` 与 `Tools/godot/Verify-GodotProject.ps1`。新 verifier 不暴露 ownership skip 参数，默认拒绝 `Assets/`、`Packages/`、`ProjectSettings/` 和 `UIElementsSchema/`；`Test-UnityRetirementManifest.ps1` 的系统临时副本预演与产品工作区真实删除均覆盖 Core 103、Application 114、FrozenOracle 15、Gameplay Specs、GdUnit、Debug/Release、Compatibility/Forward+ 和 OKF。`prepare_unity_retirement.py` 在四个 Unity 根均不存在后只校验并保留冻结 manifest，不得重写退役证据。
+
+`GodotPlayableRunMain` 的 canonical Catalog、平衡配置和敌方速度配置通过 `RequiredResourceLoader` 以 `CacheMode.Ignore` 加载，Catalog 条目也绕开跨宿主缓存；这防止干净 RC staging 或 Reload 后的独立 GdUnit 原生宿主把存在的 typed Resource 误判为缺失。
 
 Phase 1B 完整统一门禁已通过，覆盖 locked restore、单节点 solution build、Core/Application/Unity Oracle NUnit、Python、Skill/Incident、隔离 GdUnit、生产 Debug 恢复、Release 测试依赖排除、Poison Spear runtime/presentation、EditorPlugin headless 与 OKF。该结论关闭路径和初始先攻 tie-break 缺口。
 
