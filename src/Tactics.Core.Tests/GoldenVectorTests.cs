@@ -41,11 +41,12 @@ public sealed class GoldenVectorTests
 
         foreach (LineOfSightVector vector in golden.LineOfSightQueries)
         {
-            bool actual = new SupercoverLineOfSight().HasLineOfSight(
-                CreateBoard(lineOfSightBlockers: vector.LineOfSightBlockers),
-                Point(vector.Origin),
-                Point(vector.Target));
-            Assert.That(actual, Is.EqualTo(vector.ExpectedVisible), vector.Id);
+            Assert.Multiple(() =>
+            {
+                Assert.That(vector.CurrentProductContract, Is.False, vector.Id);
+                Assert.That(vector.SupersededBy,
+                    Is.EqualTo("contract-decisions.json#/contracts/2"), vector.Id);
+            });
         }
 
         foreach (MovementVector vector in golden.MovementCases)
@@ -179,7 +180,7 @@ public sealed class GoldenVectorTests
     }
 
     [Test]
-    public void ContractDecisions_DeclareVersionedTransitionAndDeterministicRngReplacement()
+    public void ContractDecisions_DeclareCurrentGodotReplacementContracts()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "Golden", "contract-decisions.json");
         using JsonDocument decisions = JsonDocument.Parse(File.ReadAllText(path));
@@ -188,6 +189,7 @@ public sealed class GoldenVectorTests
             .ToDictionary(item => item.GetProperty("id").GetString()!, StringComparer.Ordinal);
         JsonElement battle = contracts["battle.command-event-transition"];
         JsonElement random = contracts["random.splitmix64-v1"];
+        JsonElement lineOfSight = contracts["battle.line-of-sight-shadow-cone-v1"];
 
         Assert.Multiple(() =>
         {
@@ -196,6 +198,8 @@ public sealed class GoldenVectorTests
             Assert.That(battle.GetProperty("runtimeContractId").GetString(), Is.EqualTo(BattleTransitionService.ContractId));
             Assert.That(random.GetProperty("resolution").GetString(), Is.EqualTo("deterministic_replacement_contract"));
             Assert.That(random.GetProperty("runtimeContractId").GetString(), Is.EqualTo(DeterministicRandom.AlgorithmId));
+            Assert.That(lineOfSight.GetProperty("resolution").GetString(), Is.EqualTo("godot_mainline_replacement_contract"));
+            Assert.That(lineOfSight.GetProperty("runtimeContractId").GetString(), Is.EqualTo(ShadowConeLineOfSight.ContractId));
         });
     }
 
@@ -507,7 +511,7 @@ public sealed class GoldenVectorTests
     private sealed class SourceOracle { public string UnityCommit { get; init; } = string.Empty; }
     private sealed class BoardVector { public int Width { get; init; } public int Height { get; init; } }
     private sealed class PathVector { public string Id { get; init; } = string.Empty; public int[] Origin { get; init; } = []; public int[] Destination { get; init; } = []; public int[][] MovementBlockers { get; init; } = []; public string Algorithm { get; init; } = string.Empty; public int[][] ExpectedPath { get; init; } = []; }
-    private sealed class LineOfSightVector { public string Id { get; init; } = string.Empty; public int[] Origin { get; init; } = []; public int[] Target { get; init; } = []; public int[][] LineOfSightBlockers { get; init; } = []; public bool ExpectedVisible { get; init; } }
+    private sealed class LineOfSightVector { public string Id { get; init; } = string.Empty; public int[] Origin { get; init; } = []; public int[] Target { get; init; } = []; public int[][] LineOfSightBlockers { get; init; } = []; public bool ExpectedVisible { get; init; } public bool? CurrentProductContract { get; init; } public string SupersededBy { get; init; } = string.Empty; }
     private sealed class MovementVector { public string Id { get; init; } = string.Empty; public int MoveRange { get; init; } public MovementAttempt[] Attempts { get; init; } = []; public int PostResetPathLength { get; init; } public bool ExpectedPostResetAccepted { get; init; } }
     private sealed class MovementAttempt { public int PathLength { get; init; } public bool ExpectedAccepted { get; init; } }
     private sealed class InitiativeVector { public string Id { get; init; } = string.Empty; public InitiativeInput[] Entries { get; init; } = []; public string[] ExpectedOrder { get; init; } = []; }

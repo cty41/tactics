@@ -1,12 +1,13 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-16
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:687f5b1ac2d63bbd36a29f5c3c616efca707fe8bc3ec9f32b9e8822c3516500c`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:4cb2e91ce2de794c09790d1b56cf82f3c20684dd63db0db7144bf11904e8d3ae`。
+* **Battle LoS**: Godot 主线采用 `godot-los-shadow-cone-v1`：中心射线穿过阻挡格开放内部才遮挡，格边/格角相切放行；冻结 Unity supercover Golden 保留为历史证据并显式标记为已被替代，新增权威规则文档、Core/Application/GdUnit 回归和当前合同登记。
 * **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:316520e50b59878ad16d02ff1de4f812193427337f5d475fa1a7ea2c23e26fc1`。
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:a1c7360516727532c3cf1c737d1a29c3ca5df552b3c1504c0b4370589b720098`。
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:b82e269388c1bf9af3723d693fc9241069a2580522ceca43a9a4c03f75cb39a6`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:db7f682a90435a8dcc2ca626ea9f4be5abac0e3f8c248643b8de8292feda941f`。
 * **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:33ac5de47eec8a5ac544089f1e09c6af2826b4ba2469457947f5ef7db9bdafdb`。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:b4525a168bd50af198c3837ba4c0aa0e8b39efa2ea5998031ce68be666d90bbb`。
 * **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:066039a42258cda14492f76c54d5d3d689539a744f7fc754813abd98481cc9bf`。
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:1ea6ea7e9a16c80bfbdb74c3ff81e27a1566db1b31502b2cbfd00b29356456b6`。
 * **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:4747afc4d536add464e8518ec304be49ed98aff2f11ebbd7652591de32251ee9`。

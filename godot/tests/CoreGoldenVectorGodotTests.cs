@@ -96,6 +96,27 @@ public class CoreGoldenVectorGodotTests
             .IsEqual(BattleTransitionService.ContractId);
         AssertThat(contracts["random.splitmix64-v1"].GetProperty("runtimeContractId").GetString()!)
             .IsEqual(Tactics.Core.Randomness.DeterministicRandom.AlgorithmId);
+        AssertThat(contracts["battle.line-of-sight-shadow-cone-v1"].GetProperty("runtimeContractId").GetString()!)
+            .IsEqual(ShadowConeLineOfSight.ContractId);
+    }
+
+    [TestCase]
+    public void ShadowConeLineOfSightAllowsCornerTangencyAndBlocksOpenInterior()
+    {
+        var cells = Enumerable.Range(0, BoardSpec.Width)
+            .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
+                .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var board = new BoardSnapshot(cells);
+        var service = new ShadowConeLineOfSight();
+
+        bool tangentVisible = service.HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2),
+            new HashSet<GridPoint> { new(1, 0) });
+        bool interiorVisible = service.HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(4, 2),
+            new HashSet<GridPoint> { new(2, 1) });
+
+        AssertThat(tangentVisible).IsTrue();
+        AssertThat(interiorVisible).IsFalse();
     }
 
     [TestCase]

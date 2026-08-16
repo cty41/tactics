@@ -74,7 +74,7 @@ public sealed class BoardAndRulesTests
     }
 
     [Test]
-    public void SupercoverLos_RejectsDiagonalCornerCutting()
+    public void ShadowConeLos_AllowsDiagonalTerrainCornerTangency()
     {
         var cells = Enumerable.Range(0, BoardSpec.Width)
             .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
@@ -82,16 +82,16 @@ public sealed class BoardAndRulesTests
             .ToDictionary(pair => pair.Key, pair => pair.Value);
         cells[new GridPoint(1, 0)] = new CellState(blocksLineOfSight: true);
 
-        bool visible = new SupercoverLineOfSight().HasLineOfSight(
+        bool visible = new ShadowConeLineOfSight().HasLineOfSight(
             new BoardSnapshot(cells),
             new GridPoint(0, 0),
             new GridPoint(2, 2));
 
-        Assert.That(visible, Is.False);
+        Assert.That(visible, Is.True);
     }
 
     [Test]
-    public void SupercoverLos_TreatsEitherLivingCornerOccupantAsBlocking()
+    public void ShadowConeLos_AllowsDiagonalLivingUnitCornerTangency()
     {
         var cells = Enumerable.Range(0, BoardSpec.Width)
             .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
@@ -102,13 +102,13 @@ public sealed class BoardAndRulesTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(new SupercoverLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2), occupied), Is.False);
-            Assert.That(new SupercoverLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2)), Is.True);
+            Assert.That(new ShadowConeLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2), occupied), Is.True);
+            Assert.That(new ShadowConeLineOfSight().HasLineOfSight(board, new GridPoint(0, 0), new GridPoint(2, 2)), Is.True);
         });
     }
 
     [Test]
-    public void SupercoverLos_TraceReportsTheBlockingCellAndKind()
+    public void ShadowConeLos_TraceReportsTheBlockingCellAndKind()
     {
         var cells = Enumerable.Range(0, BoardSpec.Width)
             .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
@@ -121,7 +121,7 @@ public sealed class BoardAndRulesTests
             [new GridPoint(1, 0)] = new(LineOfSightBlockingKind.LivingUnit, blockerId)
         };
 
-        LineOfSightResult result = new SupercoverLineOfSight().Trace(
+        LineOfSightResult result = new ShadowConeLineOfSight().Trace(
             board, new GridPoint(0, 0), new GridPoint(2, 0), blockers);
 
         Assert.Multiple(() =>
@@ -130,7 +130,35 @@ public sealed class BoardAndRulesTests
             Assert.That(result.BlockingCell, Is.EqualTo(new GridPoint(1, 0)));
             Assert.That(result.BlockingKind, Is.EqualTo(LineOfSightBlockingKind.LivingUnit));
             Assert.That(result.BlockingUnitId, Is.EqualTo(blockerId));
-            Assert.That(result.RayCells, Is.EqualTo(new[] { new GridPoint(1, 0), new GridPoint(2, 0) }));
+            Assert.That(result.RayCells, Is.EqualTo(new[] { new GridPoint(1, 0) }));
+        });
+    }
+
+    [Test]
+    public void ShadowConeLos_BlocksTheNearestCellWhoseOpenInteriorCrossesANonAxialRay()
+    {
+        var cells = Enumerable.Range(0, BoardSpec.Width)
+            .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
+                .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var board = new BoardSnapshot(cells);
+        var nearId = new UnitInstanceId("near-blocker");
+        var farId = new UnitInstanceId("far-blocker");
+        var blockers = new Dictionary<GridPoint, LineOfSightBlocker>
+        {
+            [new GridPoint(2, 1)] = new(LineOfSightBlockingKind.LivingUnit, nearId),
+            [new GridPoint(4, 2)] = new(LineOfSightBlockingKind.LivingUnit, farId)
+        };
+
+        LineOfSightResult result = new ShadowConeLineOfSight().Trace(
+            board, new GridPoint(0, 0), new GridPoint(6, 3), blockers);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsClear, Is.False);
+            Assert.That(result.BlockingCell, Is.EqualTo(new GridPoint(2, 1)));
+            Assert.That(result.BlockingUnitId, Is.EqualTo(nearId));
+            Assert.That(result.RayCells, Does.Contain(new GridPoint(4, 2)));
         });
     }
 

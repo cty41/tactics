@@ -60,6 +60,21 @@ class ContractDecisionTests(unittest.TestCase):
         self.assertIn(f'AlgorithmId = "{contract["runtimeContractId"]}"', source)
         self.assertGreaterEqual(len(contract["invariants"]), 4)
 
+    def test_godot_line_of_sight_replacement_matches_runtime_contract(self) -> None:
+        contract = self.contracts["battle.line-of-sight-shadow-cone-v1"]
+        source = (
+            self.root / "src" / "Tactics.Core" / "Pathfinding" / "LineOfSight.cs"
+        ).read_text(encoding="utf-8-sig")
+        self.assertEqual(
+            contract["resolution"], "godot_mainline_replacement_contract"
+        )
+        self.assertIn(f'ContractId = "{contract["runtimeContractId"]}"', source)
+        self.assertEqual(
+            contract["supersedes"],
+            "10x10-core-vectors.json#/lineOfSightQueries/0",
+        )
+        self.assertGreaterEqual(len(contract["invariants"]), 5)
+
 
 if __name__ == "__main__":
     unittest.main()

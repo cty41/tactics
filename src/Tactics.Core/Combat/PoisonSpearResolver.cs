@@ -51,7 +51,7 @@ public sealed class PoisonSpearResolver
 
     public PoisonSpearResolver(ILineOfSightService? lineOfSight = null)
     {
-        _lineOfSight = lineOfSight ?? new SupercoverLineOfSight();
+        _lineOfSight = lineOfSight ?? new ShadowConeLineOfSight();
     }
 
     public ActionResult Resolve(

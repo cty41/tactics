@@ -237,6 +237,27 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void IceBolt_AllowsTheTargetWhenAnAllyOnlyTouchesTheDiagonalRayCorner()
+    {
+        PlayableBattleSessionService service = CreateService(out SkillDefinition skill, out UnitInstanceId enemyId,
+            enemyCell: new GridPoint(3, 3), livingBlockerCell: new GridPoint(2, 1),
+            executionKind: SkillExecutionKind.IceBolt);
+        GridPoint target = service.State.Units[enemyId].Unit.Position;
+
+        Assert.That(service.Submit(new SelectSkillIntent(skill.ContentId)).Succeeded, Is.True);
+        BattleUiImpactPreview preview = service.PreviewSkillTarget(target)!;
+        BattleUiIntentResult result = service.Submit(new ConfirmCellIntent(target));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(preview.IsLegal, Is.True, preview.FailureCode);
+            Assert.That(preview.LineOfSight!.BlockingCell, Is.Null);
+            Assert.That(result.Succeeded, Is.True, result.FailureCode);
+            Assert.That(service.State.Units[enemyId].IsAlive, Is.False);
+        });
+    }
+
+    [Test]
     public void ThrustPreview_OnlyIncludesAxialCells()
     {
         PlayableBattleSessionService service = CreateService(

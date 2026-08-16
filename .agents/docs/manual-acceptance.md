@@ -103,6 +103,19 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: GitHub Actions run `31889338418` passed the Godot-owned verifier, Windows ExportRelease, 199-file package audit, Compatibility/default renderer EXE startup, and artifact upload. Artifact ID `9248204605`, archive digest `9eaf62b652eee81dbfb18e74f702c3c8a016903876fe9336fe815ffb506f1456`, semantic manifest SHA-256 `dff242be1586f85e99cd1fa2f84ebd734306d1286145aa3679b2dcf6373d39ca`.
 - User verdict: Pending one clean-machine download, launch, New Run, and exit smoke; automated CI must not mark this passed.
 
+### MQA-GODOT-AVAILABILITY-TURNS-LOS — Skill availability, defeated turns, and LOS
+
+- Status: `pending`
+- Source: 2026-08-16 Godot shadow-cone LoS contract repair
+- Reopen reason: Current Godot LoS changed from diagonal supercover to open-interior shadow-cone geometry, so the previously accepted corner-blocking behavior is intentionally different.
+- Action: Recreate the battle arrangement from the reported screenshot, select the Mage's Ice Bolt, target the nearest upper-left enemy across the allied unit's corner, then compare with a second arrangement where a living unit clearly occupies the ray interior.
+- Expected: The corner-touching target is legal and Ice Bolt can be committed; the true interior blocker remains illegal and Hover identifies the nearest blocking cell/unit. Corpses and dropped spears remain non-blocking.
+- Observe: Target highlights, Hover rejection/detail, committed Ice Bolt action, CheatConsole and Godot Output.
+- Preserve on failure: Screenshot, actor/target/blocker cells, skill ID, Hover text, event log and full Output excerpt.
+- Save boundary: Ordinary battle mutation; use a disposable Run if the exact encounter state must be replayed.
+- Automated evidence: Core covers corner/edge tangency, non-axial interior crossing and nearest blocker; Application proves Ice Bolt preview and commit through a corner-touching ally; GdUnit covers the Godot contract boundary. Visual targeting and the reported isometric arrangement remain manual.
+- User verdict: none after the shadow-cone contract change.
+
 ## Passed
 
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
@@ -166,19 +179,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Save boundary: PendingProgression persists; unfinished UI drafts are not written.
 - Automated evidence: Revision, V5 normalization, one-shot transaction and unlock semantics are asserted.
 - User verdict: Passed with no anomaly in the latest report.
-
-### MQA-GODOT-AVAILABILITY-TURNS-LOS — Skill availability, defeated turns, and LOS
-
-- Status: `passed`
-- Source: Phase 7B–8E battle availability and LOS parity repair
-- Reopen reason: Move now uses the same authoritative availability boundary, and LOS hover exposes the first structured blocker instead of only a generic rejection.
-- Action: Move once, exhaust Mana, kill a party member, then test a ranged skill with a living unit between caster and target; repeat after moving the blocker and with a corpse or dropped spear in between.
-- Expected: Move and unavailable skills are disabled with a reason and cannot enter targeting; defeated units are skipped; living units block ordinary ranged LOS while corpses/dropped spears do not.
-- Observe: Action buttons, Turn Order, target highlights, Hover reason and CheatConsole.
-- Preserve on failure: Actor/target/blocker cells, skill ID, event log and Output.
-- Save boundary: Ordinary battle mutation.
-- Automated evidence: Availability, dead-turn skipping, structured blockers and shared Preview/AI/Transition probes remain asserted.
-- User verdict: Passed in the latest report.
 
 ### MQA-GODOT-TURN-PACING — Playable enemy initiative pacing
 
@@ -308,6 +308,4 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-CONTENT-WORKBENCH`
-2. `MQA-GODOT-RELOAD-OUTPUT`
-3. `MQA-GODOT-INVENTORY`
+1. `MQA-GODOT-AVAILABILITY-TURNS-LOS`

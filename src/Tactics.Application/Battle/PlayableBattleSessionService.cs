@@ -268,7 +268,7 @@ public sealed class PlayableBattleSessionService
             ? primaryUnit.Unit.Position
             : null;
         LineOfSightResult? lineOfSight = skill.RequiresLineOfSight
-            ? new SupercoverLineOfSight().Trace(State.Board, actor.Unit.Position, cell,
+            ? new ShadowConeLineOfSight().Trace(State.Board, actor.Unit.Position, cell,
                 SkillRuntimeService.LivingBlockers(State, actor.Unit.InstanceId, cell, skill.ExecutionKind))
             : null;
         GridPoint[] path = skill.UsesLineTargeting || skill.ExecutionKind == SkillExecutionKind.PoisonSpear

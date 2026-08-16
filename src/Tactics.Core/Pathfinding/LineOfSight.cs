@@ -4,23 +4,57 @@ using Tactics.Core.Units;
 
 namespace Tactics.Core.Pathfinding;
 
-public enum LineOfSightBlockingKind { Terrain, LivingUnit, OccupyingInteraction, CornerSupercover }
+/// <summary>Identifies the gameplay object that blocks a line-of-sight query.</summary>
+public enum LineOfSightBlockingKind { Terrain, LivingUnit, OccupyingInteraction }
+
+/// <summary>Describes one dynamic line-of-sight blocker.</summary>
+/// <param name="Kind">The gameplay category of the blocker.</param>
+/// <param name="UnitId">The blocking unit identity when <paramref name="Kind"/> is a living unit.</param>
 public sealed record LineOfSightBlocker(LineOfSightBlockingKind Kind, UnitInstanceId? UnitId = null);
+
+/// <summary>Contains the deterministic cells and first blocker observed by a line-of-sight query.</summary>
+/// <param name="IsClear">Whether the target is visible from the origin.</param>
+/// <param name="RayCells">Intermediate cells whose open interiors the center ray crosses, in traversal order.</param>
+/// <param name="BlockingCell">The nearest blocking cell, if any.</param>
+/// <param name="BlockingKind">The category of the nearest blocker, if any.</param>
+/// <param name="BlockingUnitId">The nearest blocking unit identity, if any.</param>
 public sealed record LineOfSightResult(bool IsClear, IReadOnlyList<GridPoint> RayCells,
     GridPoint? BlockingCell = null, LineOfSightBlockingKind? BlockingKind = null,
     UnitInstanceId? BlockingUnitId = null);
 
+/// <summary>Provides the engine-neutral battle line-of-sight contract.</summary>
 public interface ILineOfSightService
 {
+    /// <summary>Checks whether a target cell is visible.</summary>
+    /// <param name="board">The immutable battle board.</param>
+    /// <param name="origin">The observing cell.</param>
+    /// <param name="target">The target cell.</param>
+    /// <param name="dynamicBlockers">Optional occupied cells that cast sight shadows.</param>
+    /// <returns><see langword="true"/> when no blocker shadows the target.</returns>
     bool HasLineOfSight(BoardSnapshot board, GridPoint origin, GridPoint target,
         IReadOnlySet<GridPoint>? dynamicBlockers = null);
+
+    /// <summary>Traces the center ray and reports the nearest blocker.</summary>
+    /// <param name="board">The immutable battle board.</param>
+    /// <param name="origin">The observing cell.</param>
+    /// <param name="target">The target cell.</param>
+    /// <param name="dynamicBlockers">Optional occupied cells with structured blocker identities.</param>
+    /// <returns>The ordered ray cells and nearest blocking diagnostic.</returns>
     LineOfSightResult Trace(BoardSnapshot board, GridPoint origin, GridPoint target,
         IReadOnlyDictionary<GridPoint, LineOfSightBlocker>? dynamicBlockers = null);
 }
 
-/// <summary>Supercover LOS. When a ray crosses a grid corner, either occupied orthogonal cell blocks it.</summary>
-public sealed class SupercoverLineOfSight : ILineOfSightService
+/// <summary>Projects each blocking cell's open interior into a deterministic shadow cone.</summary>
+/// <remarks>
+/// The ray is measured between cell centers. Crossing a blocker's open interior blocks sight, while
+/// touching only an edge or corner remains clear. Rational comparisons keep this boundary stable.
+/// </remarks>
+public sealed class ShadowConeLineOfSight : ILineOfSightService
 {
+    /// <summary>The stable identifier for the current Godot battle sight contract.</summary>
+    public const string ContractId = "godot-los-shadow-cone-v1";
+
+    /// <inheritdoc />
     public bool HasLineOfSight(BoardSnapshot board, GridPoint origin, GridPoint target,
         IReadOnlySet<GridPoint>? dynamicBlockers = null)
     {
@@ -29,6 +63,7 @@ public sealed class SupercoverLineOfSight : ILineOfSightService
         return Trace(board, origin, target, mapped).IsClear;
     }
 
+    /// <inheritdoc />
     public LineOfSightResult Trace(BoardSnapshot board, GridPoint origin, GridPoint target,
         IReadOnlyDictionary<GridPoint, LineOfSightBlocker>? dynamicBlockers = null)
     {
@@ -38,44 +73,56 @@ public sealed class SupercoverLineOfSight : ILineOfSightService
         if (origin == target)
             return new LineOfSightResult(true, Array.Empty<GridPoint>());
 
-        var ray = new List<GridPoint>();
-        GridPoint? firstBlockingCell = null;
-        LineOfSightBlockingKind? firstBlockingKind = null;
-        UnitInstanceId? firstBlockingUnit = null;
-        int x = origin.X, y = origin.Y;
-        int dx = target.X - x, dy = target.Y - y;
-        int nx = Math.Abs(dx), ny = Math.Abs(dy);
-        int signX = Math.Sign(dx), signY = Math.Sign(dy);
-        int ix = 0, iy = 0;
+        var crossed = board.Cells.Keys
+            .Where(point => point != origin && point != target)
+            .Select(point => (Point: point, Entry: OpenInteriorEntry(origin, target, point)))
+            .Where(value => value.Entry is not null)
+            .OrderBy(value => value.Entry!.Value)
+            .ThenBy(value => value.Point.X)
+            .ThenBy(value => value.Point.Y)
+            .ToArray();
 
-        void Observe(GridPoint point, bool corner)
+        foreach ((GridPoint point, _) in crossed)
         {
-            if (!ray.Contains(point)) ray.Add(point);
-            if (firstBlockingCell is not null || point == target) return;
             LineOfSightBlocker? blocker = Blocker(board, point, dynamicBlockers);
-            if (blocker is null) return;
-            firstBlockingCell = point;
-            firstBlockingKind = corner ? LineOfSightBlockingKind.CornerSupercover : blocker.Kind;
-            firstBlockingUnit = blocker.UnitId;
+            if (blocker is not null)
+                return new LineOfSightResult(false, crossed.Select(value => value.Point).ToArray(),
+                    point, blocker.Kind, blocker.UnitId);
         }
 
-        while (ix < nx || iy < ny)
-        {
-            long horizontal = (1L + 2L * ix) * ny;
-            long vertical = (1L + 2L * iy) * nx;
-            if (horizontal == vertical)
-            {
-                Observe(new GridPoint(x + signX, y), true);
-                Observe(new GridPoint(x, y + signY), true);
-                x += signX; y += signY; ix++; iy++;
-            }
-            else if (horizontal < vertical) { x += signX; ix++; }
-            else { y += signY; iy++; }
-            Observe(new GridPoint(x, y), false);
-        }
+        return new LineOfSightResult(true, crossed.Select(value => value.Point).ToArray());
+    }
 
-        return new LineOfSightResult(firstBlockingCell is null, ray, firstBlockingCell,
-            firstBlockingKind, firstBlockingUnit);
+    private static Fraction? OpenInteriorEntry(GridPoint origin, GridPoint target, GridPoint cell)
+    {
+        // Coordinates are doubled so every cell edge is integral. The open interval deliberately
+        // rejects a ray that merely touches an edge or corner of the projected blocking square.
+        long originX = 2L * origin.X;
+        long originY = 2L * origin.Y;
+        long deltaX = 2L * (target.X - origin.X);
+        long deltaY = 2L * (target.Y - origin.Y);
+        Fraction lower = Fraction.Zero;
+        Fraction upper = Fraction.One;
+
+        if (!IntersectOpenAxis(originX, deltaX, 2L * cell.X - 1L, 2L * cell.X + 1L, ref lower, ref upper) ||
+            !IntersectOpenAxis(originY, deltaY, 2L * cell.Y - 1L, 2L * cell.Y + 1L, ref lower, ref upper))
+            return null;
+
+        return lower < upper ? lower : null;
+    }
+
+    private static bool IntersectOpenAxis(long origin, long delta, long minimum, long maximum,
+        ref Fraction lower, ref Fraction upper)
+    {
+        if (delta == 0)
+            return minimum < origin && origin < maximum;
+
+        Fraction first = Fraction.Create(minimum - origin, delta);
+        Fraction second = Fraction.Create(maximum - origin, delta);
+        if (second < first) (first, second) = (second, first);
+        if (lower < first) lower = first;
+        if (second < upper) upper = second;
+        return lower < upper;
     }
 
     private static LineOfSightBlocker? Blocker(BoardSnapshot board, GridPoint point,
@@ -84,5 +131,21 @@ public sealed class SupercoverLineOfSight : ILineOfSightService
         if (board.GetCell(point).IsLineBlocked)
             return new LineOfSightBlocker(LineOfSightBlockingKind.Terrain);
         return dynamicBlockers?.GetValueOrDefault(point);
+    }
+
+    private readonly record struct Fraction(long Numerator, long Denominator) : IComparable<Fraction>
+    {
+        public static Fraction Zero { get; } = new(0, 1);
+        public static Fraction One { get; } = new(1, 1);
+
+        public static Fraction Create(long numerator, long denominator) => denominator < 0
+            ? new Fraction(-numerator, -denominator)
+            : new Fraction(numerator, denominator);
+
+        public int CompareTo(Fraction other) => (Numerator * other.Denominator)
+            .CompareTo(other.Numerator * Denominator);
+
+        public static bool operator <(Fraction left, Fraction right) => left.CompareTo(right) < 0;
+        public static bool operator >(Fraction left, Fraction right) => left.CompareTo(right) > 0;
     }
 }

@@ -21,7 +21,7 @@ public sealed class SkillRuntimeService
 
     public SkillRuntimeService(ILineOfSightService? lineOfSight = null, StatusRuntimeService? statuses = null)
     {
-        _lineOfSight = lineOfSight ?? new SupercoverLineOfSight();
+        _lineOfSight = lineOfSight ?? new ShadowConeLineOfSight();
         _statuses = statuses ?? new StatusRuntimeService();
     }
 

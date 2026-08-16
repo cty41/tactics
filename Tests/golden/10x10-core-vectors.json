@@ -42,7 +42,9 @@
       "target": [2, 2],
       "lineOfSightBlockers": [[1, 0]],
       "expectedVisible": false,
-      "oracleStatus": "unity_test_bound"
+      "oracleStatus": "unity_test_bound",
+      "currentProductContract": false,
+      "supersededBy": "contract-decisions.json#/contracts/2"
     }
   ],
   "movementCases": [
