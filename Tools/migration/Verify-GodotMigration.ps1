@@ -220,6 +220,10 @@ try {
         dotnet test 'src/Tactics.FrozenOracle.Tests/Tactics.FrozenOracle.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
     }
 
+    Invoke-Checked 'Validate canonical Godot content ownership' {
+        python -m unittest Tools.migration.tests.test_godot_content_ownership
+    }
+
     Invoke-Checked 'Run agent policy unittest' {
         python -m unittest discover -s 'Tools/agent-policy' -p 'test_*.py'
     }

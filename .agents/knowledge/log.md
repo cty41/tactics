@@ -1,8 +1,9 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-16
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:49a6d014f23e589abaa6c74f02b9242fddd395ab83b6d0e3897dafd8167b614f`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:e8450f123f81fddd285e6ee3586ddfd606cdb6dced01ddc98cc72d0f65fbd6fd`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:fa70abbff99210cd7aae69a9c24ef5b9f903229f1ebfa244628a4741685dc4da`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:2bf46e914a766325c86752457780e43ab4a5b64039163da888a5851888ed9e9e`。
+* **Ownership**: `godot-content-ownership-v1` 将 142 项 canonical Catalog 和 13 个当前内容类别晋升为 `GodotOwned`；历史 batch/state 不改写，人工验收继续作为独立 pending 闸门。
 * **Frozen Oracle**: 用 `Tactics.FrozenOracle.Tests` 取代 live Unity linked source；47 份证据按显式 Oracle blob 或最终 Tag path 冻结，15 项语义测试在不读取 `Assets/` 的情况下通过。
 * **Retirement audit**: 冻结最终 Unity annotated tag object `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d` 与 peeled commit `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，完成 9,263 个跟踪文件、46,501,338 字节的退役分类，`unresolved=0`。
 * **Scope correction**: Barbarian、Hunter 及旧技能原型归档退役，不进入三职业 Pure Run；Audio payload 继续延后，Godot 人工验收不自动晋升。

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T10:11:15+08:00"
+timestamp: "2026-08-16T10:21:04+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:49a6d014f23e589abaa6c74f02b9242fddd395ab83b6d0e3897dafd8167b614f
+source_fingerprint: sha256:2bf46e914a766325c86752457780e43ab4a5b64039163da888a5851888ed9e9e
 ---
 
 # Current state
@@ -34,6 +34,8 @@ Phase 1A 已建立不可变 `BattleState/BattleUnitState`、typed `BattleCommand
 冻结 Unity 的 Dijkstra、Heap、`BattleInitiativeService`、RuntimeScope 和 Presentation compiler 已由 `Tactics.FrozenOracle.Tests` 编译仓库内不可变快照，不再 linked compile `Assets/Tactics/**`。FrozenOracle 共保存 47 份源码、JSON 与 Shader 证据；每项记录原路径、Git blob、SHA-256 和来源方式。部分后期 Oracle blob 并不等于最终 Tag 同路径 blob，因此 manifest 对这些条目以显式 Oracle blob binding 为权威，只对未单独绑定的 GameData 使用最终 Tag path。15 项语义测试继续覆盖 Core 路径、先攻、RuntimeScope、Presentation、Poison Spear、Buff/Item、Run、Map、成长和 Unit 合同。
 
 当前 `Verify-GodotMigration.ps1 -GodotOwned` 通过排除 Unity 根目录并跳过 live Oracle/部分迁移测试证明 Godot staging 可独立运行；它不是删除后的正式主线验证形态。最终必须由无跳过模式的 Godot verifier、FrozenOracle、Gameplay Specs、GdUnit、双 renderer、OKF 与 Windows package/startup 共同闭环。内容所有权与人工验收状态相互独立：完成权威切换后允许 `GodotOwned + manual_qa_pending`，自动化不得据此把人工项标记为通过。
+
+当前内容所有权由 `Tools/migration/manifest/ownership/godot-content-ownership-v1.json` 统一声明：canonical Catalog 精确 142 项，Core、Unit、Buff、Item、Skill、AI、Encounter、Run、Map、UIInput、Presentation、Tooling 和静默 AudioFramework 共 13 类均为 `GodotOwned`。旧 batch/state 继续保留其生成当时的 `UnityOwned` 事实，并由新 receipt 的 `supersedesGenerationState` 明确替代；这避免改写历史 receipt。Audio payload、第三方 Unity payload 与 PlayerPrefs import 仍明确排除，人工验收保持独立 pending。
 
 Phase 1B 完整统一门禁已通过，覆盖 locked restore、单节点 solution build、Core/Application/Unity Oracle NUnit、Python、Skill/Incident、隔离 GdUnit、生产 Debug 恢复、Release 测试依赖排除、Poison Spear runtime/presentation、EditorPlugin headless 与 OKF。该结论关闭路径和初始先攻 tie-break 缺口。
 
