@@ -31,10 +31,11 @@ scopes:
     paths:
       - AGENTS.md
       - .agents/ARCHITECTURE.md
-      - Assets/Tactics/Scripts/Common/UIManager.cs
-      - Assets/Tactics/Arts/Fonts
-      - Assets/Tactics/Arts/UI
-      - Assets/Tactics/UIToolkit/TextSettings.asset
+      - Tactics.Godot.slnx
+      - src/Tactics.Core
+      - src/Tactics.Application
+      - godot/Tactics.Godot.Adapter
+      - godot/project.godot
 
   project-documentation:
     concept: operations/project-documentation.md

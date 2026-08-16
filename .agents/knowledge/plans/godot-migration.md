@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T12:55:23+08:00"
+timestamp: "2026-08-16T13:39:26+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,12 +18,12 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:a79db34036260c20d5839f6286e84355f0305a57450383937ca3458983bd7a38
+source_fingerprint: sha256:a3104ac34efd9f76b805b986f04c06cef35367b8ea46b570e8e7a65c0a696caa
 ---
 
 # Current state
 
-Unity `w1` 与 `unity-final-2026-08-08` 是只读 Oracle；唯一 Godot 项目为 `godot/project.godot`。最终 Unity annotated tag object 为 `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d`，其 peeled commit 为 `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，新证据必须明确区分两者。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
+远程 `main` 是 Godot 产品与治理权威；唯一 Godot 项目为 `godot/project.godot`。Unity 历史由永久 `unity-final-2026-08-08`、至少保留至 2026-09-15 的 `archive/unity-main-2026-08-16` 与 Frozen Oracle 提供。最终 Unity annotated tag object 为 `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d`，其 peeled commit 为 `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，新证据必须明确区分两者。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
 
 Unity 完整退役清单以该 peeled commit 的 Git tree 为输入，覆盖 `Assets/`、`Packages/`、`ProjectSettings/` 和 `UIElementsSchema/` 共 9,263 个跟踪文件、46,501,338 字节。每项已分类为已迁移等价、Godot 设计替代、历史原型退役、第三方排除、Audio 延后或仅保留来源证据，当前 `unresolved=0`。Barbarian、Hunter 及其旧技能属于 `retired_legacy_prototype`，不进入三职业 Pure Run；文件级事实与规则分别保存在 `Tools/migration/manifest/retirement/unity-retirement-inventory-v1.json` 和 `unity-retirement-rules-v1.json`。
 
@@ -155,4 +155,4 @@ Godot ownership 验证另提供 `Test-GodotOwnedWithoutUnity.ps1`：它从 track
 2. 项目 MCP Profile 当前为 `presentation`；统一入口在每次完整门禁中验证项目级白名单配置。
 3. Phase 6B 已关闭；Phase 6A 自动 parity 已按完整图合同重验。Phase 7B–8E 自动实现与统一门禁已完成，下一闸门是 New Run、Run recovery、Inventory/成长、七层地图和等距表现的合并人工复验。Audio 与第三方正式 Presentation payload 仍未迁移。
 
-Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行。Godot Windows Release/PCK 已建立 `Windows Desktop` 导出预设、只读 CI 构建入口和仅在最终 `main` 启用的 GitHub Actions artifact 流程；本地平衡门禁已通过，完整 EXE/PCK 导出与无 Godot 安装机器启动仍由首次线上 runner 和人工下载验收关闭。
+Windows/Steam 仍是产品目标；Unity Windows Standalone 不执行。Godot Windows Release/PCK 已建立 `Windows Desktop` 导出预设、只读 CI 构建入口和在 `main` push 启用的 GitHub Actions artifact 流程；本地主线门禁和线上 artifact 构建分别记录，无 Godot 安装机器的人工下载启动仍是独立发布闸门。远程 `migration/godot` 只在新 `main` CI 与该人工 smoke 都通过后删除。

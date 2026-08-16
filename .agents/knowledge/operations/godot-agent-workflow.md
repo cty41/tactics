@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# mainline.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-16T12:55:23+08:00"
+timestamp: "2026-08-16T13:39:26+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -24,12 +24,12 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:829d5df190732ea0a7719a74589e24c26b7b96034512cb4b3c23855994579e0d
+source_fingerprint: sha256:e03b94568cfe86761d727fd4aad59559a0096d34e10c057fa71dd393e3c7b102
 ---
 
 # Current state
 
-Godot 主线使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
+远程 `main` 是 Godot 产品与治理权威，使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9。现有 `migration/godot` worktree 可在切换期间继续承载同一 tracked tree，但分支名不再定义权威，也不要求为切换移动本地 worktree。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
 
 Windows 内部 RC 由 `Tools/godot/Build-GodotWindows.ps1` 提供唯一只读构建入口，`godot/export_presets.cfg` 固定 `Windows Desktop` Release 预设。GitHub Actions 在相关 `main` push 或手动触发时只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 必须携带 tracked `godot/Tactics.Godot.Adapter.sln`，否则 Godot .NET export 会在退出码为 0 时逐文件报告缺少 solution。staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
 

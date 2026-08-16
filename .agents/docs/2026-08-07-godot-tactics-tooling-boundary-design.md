@@ -63,7 +63,7 @@ Tactics.Application / Tactics.Core
 
 场景树、Node、Resource、文件、运行、输入、截图和日志继续优先使用 `godot-ai` 原始接口。它们适合基础编辑和观察，但不自动提供 Tactics 的 revision、领域校验、跨资产 ChangeSet 或领域级事务。
 
-Codex 接入采用项目级 Attach 与分阶段白名单：被 Git 忽略的 `.codex/config.toml` 只在 `migration/godot` worktree 生效，启动块固定 `godot-ai==3.1.2`、Windows `pythonw.exe` 无窗口 bootstrap、8000/9500 端口。Profile 从只读观察逐步扩展到内容、UI/Input 和 Presentation authoring；脚本、任意文件系统、客户端自配置与 Autoload 管理始终禁用。配置策略和精确 Tool 集合由 `Tools/migration/manifest/godot-tooling.json` 与受测同步脚本维护，不复制到用户级长期配置。
+Codex 接入采用项目级 Attach 与分阶段白名单：被 Git 忽略的 `.codex/config.toml` 只在包含 canonical `godot/project.godot` 的当前项目 worktree 生效，不再绑定历史分支名；启动块固定 `godot-ai==3.1.2`、Windows `pythonw.exe` 无窗口 bootstrap、8000/9500 端口。Profile 从只读观察逐步扩展到内容、UI/Input 和 Presentation authoring；脚本、任意文件系统、客户端自配置与 Autoload 管理始终禁用。配置策略和精确 Tool 集合由 `Tools/migration/manifest/godot-tooling.json` 与受测同步脚本维护，不复制到用户级长期配置。
 
 MCP 能自动承担 Editor 状态、资源/场景读取、运行、日志、截图和已批准的重复编辑，但统一验证、台账晋升和语义 Diff 仍由确定性工具执行；Graph drag/Undo、Dock/SubViewport、Assembly Reload 后视觉状态和最终 VFX/UX 接受仍是人工门禁。
 

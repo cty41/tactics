@@ -14,6 +14,15 @@ Unity 工程中仍存在的 Barbarian、Hunter、Uppercut、Counter、Mark、Fre
 - 完整 tracked Unity inventory：`Tools/migration/manifest/retirement/unity-retirement-inventory-v1.json`
 - Inventory 覆盖 9263 个文件、46501338 bytes，`unresolved=0`
 
+## 主线切换与保留策略
+
+- 远程 `main` 从 peeled Unity commit `168d19345d7e0f7f22ce2516351eda9cef2e1cb1` fast-forward 到包含本审计的 Godot tracked tree；禁止 force push。
+- 永久保留现有 annotated tag `unity-final-2026-08-08`，不重打、不移动。
+- 在切换前创建远程临时分支 `archive/unity-main-2026-08-16`，精确指向旧 `main` 的 peeled commit。
+- 临时归档分支至少保留 30 天，最早于 2026-09-15 复核删除；删除不影响永久 Tag。
+- 新 `main` 的 Windows CI 与人工下载 artifact smoke 通过后，才删除远程 `migration/godot`；在人工 clean-machine 闸门关闭前保留该分支。
+- 本次切换不移动、删除或重绑本地 worktree。推送后失败采用 fix-forward；任何非 fast-forward 回滚需单独明确批准。
+
 旧迁移 receipt 中的 `sourceCommit=b881177a...` 实际记录的是 annotated tag object。历史 receipt 不改写；新的退役与 Frozen Oracle 证据必须分别记录 tag object 和 peeled commit。
 
 ## 功能与工具映射

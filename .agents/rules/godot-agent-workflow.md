@@ -3,8 +3,8 @@
 ## 项目与工作区
 
 - 唯一 Godot 项目是 `godot/project.godot`。不得为测试、插件或单个迁移批次再创建 `project.godot`。
-- 复用当前 `migration/godot` worktree；除非计划或用户明确要求，不创建、删除或切换 worktree。
-- `w1` 与 `unity-final-2026-08-08` 是只读 Oracle。迁移 worktree 中的 Unity 工程只允许作为 AssetDatabase 导出宿主，不继续演化玩法。
+- 远程 `main` 是 Godot 产品与治理权威；复用用户指定的现有 worktree，除非计划或用户明确要求，不创建、删除或切换 worktree。主线切换期间现有 `migration/godot` worktree 可以继续承载同一 tracked tree，但分支名不再定义产品权威。
+- `unity-final-2026-08-08` 与 Frozen Oracle 是只读历史证据。当前树不包含 Unity 工程；需要取证时从最终 Tag 或临时归档分支建立隔离的只读检出，不在 Godot 主线恢复 Unity 运行时。
 
 ## C# 分层与验证
 
@@ -29,10 +29,10 @@
 
 ## godot-ai 项目级 MCP
 
-- godot-ai 只允许由迁移 worktree 中被 Git 忽略的 `.codex/config.toml` 加载；用户级 `~/.codex/config.toml` 不得长期保留 godot-ai 表，也不得影响 `w1`、Unity MCP 或其他项目。
+- godot-ai 只允许由包含 canonical `godot/project.godot` 的当前项目 worktree 中、被 Git 忽略的 `.codex/config.toml` 加载；用户级 `~/.codex/config.toml` 不得长期保留 godot-ai 表，也不得影响历史 Unity 检出或其他项目。
 - 固定使用 `godot-ai==3.1.2` 的 Windows Attach 启动方式：绝对路径 `pythonw.exe`、无窗口 bootstrap、HTTP 8000、WebSocket 9500。配置以 `Tools/migration/manifest/godot-tooling.json` 为策略真相源。
 - 首次接入先在 canonical Godot Editor 中执行一次 Clients → Codex → Configure，再运行 `Tools/godot/Sync-GodotAiCodexConfig.ps1 -ImportFromUser -Profile phase3-observe`。后续用 `-Check` 验证，用 `-Profile <name>` 切换累积白名单。
-- 更换 godot-ai 版本、端口、启动方式或工具 Profile 后，必须重新生成/同步配置并重启根目录为迁移 worktree 的 Codex 任务。
+- 更换 godot-ai 版本、端口、启动方式或工具 Profile 后，必须重新生成/同步配置并重启根目录为该 canonical Godot worktree 的 Codex 任务。
 - 已授权 Godot 修改任务需要 session 为 `0` 时，必须使用 `godot-editor-lifecycle` 对唯一 canonical PID 做正常关闭，并且只在 Editor 原本打开时恢复；超时不强杀、不继续写入。
 - MCP 写操作前必须先调用 Session 与 Editor 状态接口，确认仅有一个会话、Godot 版本为 4.7.1，且项目指向当前 worktree 的 `godot/project.godot`；不满足时停止写入。
 - Profile 按 `phase3-observe → content-authoring → ui-input → presentation` 累积扩展。未进入对应迁移阶段，不得提前扩大工具面。

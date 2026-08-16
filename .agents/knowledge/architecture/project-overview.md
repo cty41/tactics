@@ -2,36 +2,35 @@
 type: Project Architecture
 resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
-description: Tactics 的项目真相源、Unity 运行时基础设施和主要游戏系统总入口。
-tags: [architecture, unity, agent-first]
-timestamp: "2026-08-16T12:55:23+08:00"
+description: Tactics 的 Godot 产品主线、纯 .NET 分层、运行时和主要游戏系统总入口。
+tags: [architecture, godot, agent-first]
+timestamp: "2026-08-16T13:39:26+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
   - AGENTS.md
   - .agents/ARCHITECTURE.md
-  - Assets/Tactics/Scripts/Common/UIManager.cs
-  - Assets/Tactics/Arts/Fonts/NotoSansSC.ttf
-  - Assets/Tactics/Arts/UI
-  - Assets/Tactics/UIToolkit/TextSettings.asset
+  - Tactics.Godot.slnx
+  - src/Tactics.Core
+  - src/Tactics.Application
+  - godot/Tactics.Godot.Adapter
+  - godot/project.godot
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:e34265c3ba985aea95d14c344ee12533af32bd13cb2ba269343f160484ab38f1
+source_fingerprint: sha256:490a845b9d608a18a8b4cc91bd9389a50eeb96a310b20d06be3086a683019b75
 ---
 
 # Summary
 
-Tactics 是 Agent 优先维护、正在从冻结 Unity 终版迁移到 Godot 的战棋项目。Unity `w1`/最终 Tag 是只读 Oracle；新运行时架构以纯 .NET Core/Application 和唯一 `godot/project.godot` 为目标。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、资产和测试证明；本 OKF bundle 只提供跨系统综合和导航。
+Tactics 是 Agent 优先维护的 Godot 4.7 C# 战棋项目。远程 `main` 是产品与治理权威，运行时由纯 .NET Core/Application、Godot Adapter 和唯一 `godot/project.godot` 组成。Unity 工程已退役，永久最终 Tag、临时归档分支和 Frozen Oracle 只提供历史证据。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、Resource 和测试证明；本 OKF bundle 只提供跨系统综合和导航。
 
 # Runtime Foundation
 
-- 项目采用 ScriptableObject 驱动配置，通过 `GameAssetManager` 管理运行时资产生命周期。
-- `UIManager` 统一加载和管理 UI，不允许直接使用 `Resources.Load`；运行时从只读的 `NotoSansSC.ttf` 创建共享的 Dynamic TextCore FontAsset（SDFAA、1024×1024、Multi Atlas、`DontSave`），并在每次 UIDocument 激活后从根节点统一继承。内存 `RuntimeDefaultFontOwner` 以确定性 marker 持有 source、FontAsset、Material 与已使用 atlas；owner 自身必须在修复前已带运行时 `DontSave` provenance，恢复时再匹配目标 source、Dynamic/Multi Atlas、Material→首 atlas 绑定和完整资源图，然后同步可修复的资源 `DontSave` 标志并执行严格校验，同名或无 provenance owner 对象不会被采用或修改。恢复和生命周期同步采用两阶段处理：先从全部可信 owner 中选定唯一保留图并冻结保留图及无 provenance 外部图的资源身份，再引用感知地清理失效或重复 owner；共享保留 FontAsset、Material 或已使用 atlas 的资源不会被销毁，销毁独立 FontAsset 前会先断开其资源引用，且只清理索引小于 `atlasTextureCount` 的已使用 atlas，未使用容量尾槽不属于销毁范围。Hide、Destroy、Subsystem Registration 与 Application quit 边界都会同步动态新增 atlas 的生命周期；字形 atlas 只存在于内存，不生成或修改项目内 FontAsset。
-- UI Cancel 会区分键盘 Esc 与鼠标右键；战斗目标选择期间取消输入由 Battle UI 消费，不会同时打开 Pause。
-- 通用日志使用 `TLog`，结构化战斗日志使用 `TBattleLog`。
-- 修改 C# 后必须触发 Unity 编译并检查 Console 错误。
-- Agent 默认在用户指定的 worktree 中完成审计和修复；新建、删除或切换 worktree 必须有活跃计划或用户明确授权。Unity worktree 的高成本导入和启动是该约束的一部分，具体规则见 `.agents/rules/agent-worktree.md`。
-- Unity → Godot 迁移的 Unity 源快照不执行 Windows Standalone Smoke；迁移门禁采用 Editor/PlayMode、OKF 和依赖审计，平台发布验收另行处理，具体规则见 `.agents/rules/godot-migration.md`。
-- Godot 迁移只使用 `godot/project.godot`；Core/Application 不引用引擎，未知 Godot 行为先研究与本地复现，详细路由见 [Godot Agent Workflow](../operations/godot-agent-workflow.md)。
+- `Tactics.Core` 与 `Tactics.Application` 是纯 .NET 9；Godot Node、Resource、Scene、文件系统和 UI 只进入 Adapter/Editor 层。
+- 最终内容由 Godot Resource/PackedScene 与轻量 Catalog 驱动；迁移 DTO、Unity GUID 和历史 receipt 不进入运行时。
+- 三职业 Pure Run 使用 Save V6、确定性 Battle/Run 状态、Catalog 142 与单一 `Main.tscn`。
+- `Tools/godot/Verify-GodotProject.ps1` 是本地主线统一门禁；Windows RC 使用只读 staging、包审计和双 renderer EXE smoke。
+- Agent 默认在用户指定的 worktree 中完成审计和修复；新建、删除或切换 worktree 必须有活跃计划或用户明确授权。
+- Godot 只使用 `godot/project.godot`；未知 Godot 行为先研究与本地复现，详细路由见 [Godot Agent Workflow](../operations/godot-agent-workflow.md)。
 - Agent 默认禁止 Computer Use、窗口激活和真实鼠标键盘等前台交互；实现、截图、视觉 QA、测试或连接恢复不构成例外授权。后台验证不足时停止为人工验证待办，完整规则由 [Godot Agent Workflow](../operations/godot-agent-workflow.md) 导航。
 
 # System Map
@@ -41,7 +40,6 @@ Tactics 是 Agent 优先维护、正在从冻结 Unity 终版迁移到 Godot 的
 - [Battle System](../systems/battle.md)承接棋盘、回合、单位、结算和战斗反馈。
 - [Roguelike Run](../systems/roguelike-run.md)组织地图、节点、冒险状态和 run 内成长。
 - [Godot Agent Workflow](../operations/godot-agent-workflow.md)定义 Agent 修改和验证项目的安全路径；[Archived Unity Agent Workflow](../operations/unity-agent-workflow.md)仅保留历史来源。
-- [Godot Agent Workflow](../operations/godot-agent-workflow.md)定义 Godot 迁移、研究证据、测试与 Incident 晋升路径。
 - [Project Documentation](../operations/project-documentation.md)定义设计、活跃计划、统一缺口和历史清理的生命周期。
 - [OKF Maintenance](../operations/okf-maintenance.md)将实现和文档变更反向映射到需要更新的知识 scope。
 

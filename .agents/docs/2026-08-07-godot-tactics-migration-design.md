@@ -35,9 +35,9 @@ Godot Runtime Adapter
 
 ## 仓库、分支与代码边界
 
-长期分支固定为 `migration/godot`，复用现有 worktree。Unity `w1` 与 `unity-final-2026-08-08` 已冻结为只读 Oracle；Godot 专属工程、Resource、场景和 Adapter 不反向合并到 Unity 主线。
+迁移开发阶段使用 `migration/godot`，完成 Unity 退役后由远程 `main` 接管 Godot 产品与治理权威。现有迁移 worktree 可在切换期间继续使用，不以移动本地工作区作为切换前提。Unity 历史由永久 annotated tag `unity-final-2026-08-08`、限期归档分支与 Frozen Oracle 保留；Godot 主线不恢复或继续演化 Unity 工程。
 
-冻结后不再需要 Unity 对共享 Core 的源码管理。Core 已移至 `src/Tactics.Core`，Application 位于 `src/Tactics.Application`；迁移 worktree 中的 Unity 工程只作为 AssetDatabase 导出宿主。早期未接入冻结运行时的临时 Unity Adapter 已移除，避免制造虚假的双引擎共用状态。
+冻结后不再需要 Unity 对共享 Core 的源码管理。Core 已移至 `src/Tactics.Core`，Application 位于 `src/Tactics.Application`；Unity 工程已从当前树删除，AssetDatabase 导出证据由最终 Tag、manifest、receipt 与 Frozen Oracle 固定。早期未接入冻结运行时的临时 Unity Adapter 已移除，避免制造虚假的双引擎共用状态。
 
 最终代码层次为：
 

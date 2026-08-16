@@ -1,67 +1,47 @@
-# Tactics 架构
+# Tactics Godot 架构
 
-## 项目结构
+## 产品主线
 
-```
-Assets/
-├── Tactics/
-│   ├── AssetPipeline/       # AssetBundle 构建与运行时加载
-│   ├── Runtime/            # 核心游戏运行时
-│   │   ├── UI/            # UI 系统
-│   │   └── ...           
-│   ├── Scripts/           # 游戏逻辑
-│   └── Scenes/            # Unity 场景
-└── StreamingAssets/      # 构建完成的 AssetBundle
-```
+远程 `main` 是 Godot 产品与治理权威。唯一项目为 `godot/project.godot`，入口 solution 为 `Tactics.Godot.slnx`。Unity 工程已从当前树退役；历史源码与资产只能从永久 annotated tag `unity-final-2026-08-08`、临时归档分支和 Frozen Oracle 证据恢复。
 
-## 资源管线
+## 代码分层
 
-完整工作流见 `skills/game-asset-pipeline/SKILL.md`。
-
-### 核心组件
-
-| 组件 | 用途 |
-|------|------|
-| `GameAssetManager` | 场景单例，负责资源加载 |
-| `AssetScopeManager` | 自动管理各场景的 Bundle 生命周期 |
-| `GameAssetBuildConfig` | 编辑器中的 Bundle 打包配置 |
-
-### 加载流程
-
-```
-构建: GameAssetBuildConfig → BuildPipeline → StreamingAssets
-加载:  GameAssetManager.InitializeAsync → LoadAsync → Release
+```text
+src/Tactics.Core
+    纯 .NET 9 玩法、确定性 RNG、战斗与 Run 状态
+            ↓
+src/Tactics.Application
+    用例、Content 编译、保存与运行时投影
+            ↓
+godot/Tactics.Godot.Adapter
+    Godot Node、Resource、Scene、UI、Input 与 Presentation
+            ↓
+godot/project.godot + godot/content + godot/scenes
 ```
 
-## 核心系统
+- Core/Application 不引用 Godot、Editor API、文件系统或迁移 DTO。
+- Godot Adapter 负责 Resource 到纯 Draft/Snapshot 的边界转换。
+- `ContentId` 是稳定业务身份；Godot UID 只负责项目内资源定位。
+- `.tres`/`.tscn` 只通过 ResourceSaver、Editor API 或受测生成器写入。
 
-### 游戏流程
+## 当前产品系统
 
-```
-GameMain → GameAssetManager.InitializeAsync → 加载首场景
-```
+- 三职业 Pure Run、七层地图、战斗、成长、Inventory、Treasure 与 Save V6。
+- Godot 原生 Theme/Control UI、等距棋盘、程序化 Presentation 和静默 Audio framework。
+- Tactics Content Workbench 负责 Map、Event、Treasure、Encounter、Skill、AI 与 Presentation 的统一编辑入口。
+- Frozen Oracle、Golden、NUnit、GdUnit、Gameplay Spec 与双 renderer smoke 共同提供回归证据。
 
-### UI 系统
+## 构建与验证
 
-- `UIManager` 通过 `GameAssetManager` 加载预制体
-- UI 预制体在 AssetBundle 中
-- UI 层级由 `UILayer` 管理
+- 本地主线门禁：`Tools/godot/Verify-GodotProject.ps1`。
+- Windows RC：`Tools/godot/Build-GodotWindows.ps1`。
+- `main` push 触发 `.github/workflows/godot-windows-build.yml`，生成短期 Windows artifact。
+- 自动门禁不替代真实 Editor Reload、视觉/UI/Input 和无引擎 clean-machine artifact 人工验收。
 
 ## 架构原则
 
-1. **数据驱动**：使用 ScriptableObject 做配置
-2. **职责分离**：UI 逻辑与游戏逻辑分离
-3. **异步优先**：Unity 6 中优先使用 Awaitable
-4. **禁止 Resources**：绝不使用 Resources.Load
-
-## 规则与指南
-
-以下规则按领域分类，按需读取。相关领域工作时，使用 Read 工具加载对应文件：
-
-| 规则文件 | 适用场景 | 说明 |
-|----------|----------|------|
-| `rules/unity-core.md` | 编写/修改 C# 脚本 | 命名规范、MonoBehaviour 生命周期、序列化 |
-| `rules/unity-asset-loading.md` | 加载资源 | GameAssetManager API、Load/Release 配对 |
-| `rules/unity-input.md` | 处理输入 | Unity Input System 使用规范 |
-| `rules/unity-logging.md` | 添加日志 | 通用日志用 TLog，战斗日志用 TBattleLog，禁止 Debug.Log |
-| `skills/game-asset-pipeline/SKILL.md` | 构建/加载资源 | AssetBundle 构建与加载完整指南 |
+1. 单一 Godot 项目和单一产品主线。
+2. 引擎无关的 Core/Application 与 Godot Adapter 明确隔离。
+3. 运行时只消费最终 Godot Resource/Scene，不消费迁移 DTO。
+4. 内容所有权、自动验证和人工验收分别记录，不互相冒充。
+5. 未知 Godot 行为先研究、复现并分级记录证据。
