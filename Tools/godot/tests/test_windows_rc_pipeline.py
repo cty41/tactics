@@ -31,6 +31,7 @@ class WindowsRcPipelineTests(unittest.TestCase):
             TOOLS / "Test-GodotWindowsPackage.ps1",
             TOOLS / "Test-GodotWindowsLaunch.ps1",
             TOOLS / "Build-GodotWindows.ps1",
+            REPO / "Tools" / "public-release" / "New-PublicRootCandidate.ps1",
         ]
         for script in scripts:
             command = (
@@ -96,6 +97,40 @@ class WindowsRcPipelineTests(unittest.TestCase):
                 text=True, stdout=subprocess.PIPE
             ).stdout
             self.assertEqual("", status)
+
+    def test_public_root_reconstruction_preserves_ignored_tracked_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = pathlib.Path(temp)
+            source = root / "source"
+            destination = root / "public-root"
+            validator = source / "Tools" / "public-release" / "validate_public_candidate.py"
+            validator.parent.mkdir(parents=True)
+            (source / ".gitignore").write_text("*.slnx\n", encoding="utf-8")
+            (source / "Tactics.Godot.slnx").write_text("<Solution />\n", encoding="utf-8")
+            validator.write_text("raise SystemExit(0)\n", encoding="utf-8")
+            subprocess.run(["git", "init", "-q"], cwd=source, check=True)
+            subprocess.run(["git", "config", "user.name", "test"], cwd=source, check=True)
+            subprocess.run(["git", "config", "user.email", "test@invalid"], cwd=source, check=True)
+            subprocess.run(["git", "add", ".gitignore", str(validator.relative_to(source))], cwd=source, check=True)
+            subprocess.run(["git", "add", "--force", "Tactics.Godot.slnx"], cwd=source, check=True)
+            subprocess.run(["git", "commit", "-qm", "fixture"], cwd=source, check=True)
+
+            result = run_pwsh(
+                REPO / "Tools" / "public-release" / "New-PublicRootCandidate.ps1",
+                "-SourceRoot", str(source),
+                "-DestinationRoot", str(destination),
+            )
+            self.assertEqual(0, result.returncode, result.stdout)
+            tracked = subprocess.run(
+                ["git", "ls-files"], cwd=destination, check=True,
+                text=True, stdout=subprocess.PIPE,
+            ).stdout.splitlines()
+            self.assertIn("Tactics.Godot.slnx", tracked)
+            self.assertEqual(3, len(tracked))
+            self.assertEqual("1", subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"], cwd=destination, check=True,
+                text=True, stdout=subprocess.PIPE,
+            ).stdout.strip())
 
     def test_package_audit_writes_manifests_and_rejects_unity_payload(self):
         with tempfile.TemporaryDirectory() as temp:

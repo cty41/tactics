@@ -46,7 +46,10 @@ try {
     git -C $destination init --initial-branch=$BranchName
     if ($LASTEXITCODE -ne 0) { throw 'Unable to initialize the public candidate repository.' }
     git -C $destination lfs install --local
-    git -C $destination add --all
+    # The source inventory is authoritative. Some deliberately tracked files
+    # (for example the root .slnx) also match broad convenience ignore rules,
+    # so reconstruction must not re-interpret .gitignore.
+    git -C $destination add --force --all
     git -C $destination -c user.name=cty41 -c user.email=opensource@users.noreply.github.com `
         commit -m $CommitMessage
     if ($LASTEXITCODE -ne 0) { throw 'Unable to create the public root commit.' }
@@ -55,6 +58,10 @@ try {
     $parentLine = (git -C $destination rev-list --parents -n 1 HEAD).Trim().Split(' ')
     if ($commitCount -ne '1' -or $parentLine.Count -ne 1) {
         throw "Public candidate history is not a single root commit: count=$commitCount parents=$($parentLine.Count - 1)"
+    }
+    $candidateTracked = @(git -C $destination ls-files)
+    if ($LASTEXITCODE -ne 0 -or $candidateTracked.Count -ne $tracked.Count) {
+        throw "Public candidate tracked-file inventory drifted: source=$($tracked.Count) candidate=$($candidateTracked.Count)"
     }
     python (Join-Path $destination 'Tools/public-release/validate_public_candidate.py') `
         --root $destination --candidate
