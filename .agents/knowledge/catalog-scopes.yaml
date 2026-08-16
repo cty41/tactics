@@ -34,7 +34,7 @@ scopes:
       - Tactics.Godot.slnx
       - src/Tactics.Core
       - src/Tactics.Application
-      - godot/Tactics.Godot.Adapter
+      - godot/src/Tactics.Godot.Adapter
       - godot/project.godot
 
   project-documentation:
