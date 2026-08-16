@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/unity-final-2026-08-08
 title: Archived Unity Agent Workflow
 description: Historical Unity authoring and validation workflow retained only as retirement provenance.
 tags: [operations, unity, archive, provenance]
-timestamp: "2026-08-16T10:29:23+08:00"
+timestamp: "2026-08-16T10:34:42+08:00"
 status: archived
 catalog_scope: unity-agent-workflow
 repo_paths:
@@ -12,7 +12,7 @@ repo_paths:
   - Tools/migration/manifest/retirement/unity-governance-retirement-v1.json
   - Tools/migration/manifest/retirement/unity-retirement-inventory-v1.json
 verified_revision: 168d1934
-source_fingerprint: sha256:b05071b91baa974ff9036dbcedb7a8559b8c44a730fec1e8fa6b76c05ee20b75
+source_fingerprint: sha256:68527fb70dd6f98195d35a8d5aff4d21fda711f5340fc6be02b2078e5118be53
 ---
 
 # Archived state

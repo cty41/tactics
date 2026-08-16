@@ -13,6 +13,7 @@ on:
       - 'Tests/gameplay-specs/godot/**'
       - 'Tools/agent-policy/**'
       - 'Tools/gameplay-test-spec/**'
+      - 'Tools/godot/**'
       - 'Tools/migration/**'
       - 'Tools/okf/**'
       - '.agents/knowledge/**'
@@ -179,7 +180,7 @@ jobs:
       - name: Create clean Godot-owned RC source
         shell: pwsh
         run: |
-          ./Tools/migration/New-GodotOwnedRcSource.ps1 `
+          ./Tools/godot/New-GodotOwnedRcSource.ps1 `
             -DestinationRoot '${{ steps.paths.outputs.source }}' `
             -ManifestPath 'rc-source-manifest.json' `
             -InitializeGit
@@ -190,8 +191,7 @@ jobs:
         working-directory: ${{ steps.paths.outputs.source }}
         run: |
           try {
-            ./Tools/migration/Verify-GodotMigration.ps1 `
-              -GodotOwned `
+            ./Tools/godot/Verify-GodotProject.ps1 `
               -GodotExecutable '${{ steps.godot.outputs.executable }}' *>&1 |
               Tee-Object -FilePath '${{ steps.paths.outputs.diagnostics }}\godot-owned-verifier.log'
           }
@@ -205,14 +205,13 @@ jobs:
         working-directory: ${{ steps.paths.outputs.source }}
         run: |
           try {
-            ./Tools/migration/Build-GodotWindows.ps1 `
+            ./Tools/godot/Build-GodotWindows.ps1 `
             -GodotExecutable '${{ steps.godot.outputs.executable }}' `
               -OutputDirectory $env:BUILD_OUTPUT `
               -SourceManifestPath 'rc-source-manifest.json' `
               -SourceCommit '${{ github.sha }}' `
               -WorkflowRunId '${{ github.run_id }}' `
-              -WorkflowRef '${{ github.ref }}' `
-              -GodotOwned *>&1 |
+              -WorkflowRef '${{ github.ref }}' *>&1 |
               Tee-Object -FilePath '${{ steps.paths.outputs.diagnostics }}\windows-export.log'
           }
           catch {
@@ -226,7 +225,7 @@ jobs:
         run: |
           $exe = Join-Path '${{ steps.paths.outputs.source }}' "$env:BUILD_OUTPUT/Tactics.exe"
           foreach ($renderer in @('gl_compatibility', 'default')) {
-            ./Tools/migration/Test-GodotWindowsLaunch.ps1 `
+            ./Tools/godot/Test-GodotWindowsLaunch.ps1 `
               -Executable $exe `
               -DiagnosticsDirectory '${{ steps.paths.outputs.diagnostics }}' `
               -Renderer $renderer

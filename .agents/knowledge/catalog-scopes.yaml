@@ -15,8 +15,8 @@ tracked_roots:
   - Tools/migration
   - Tools/agent-policy
   - global.json
-  - Tactics.Migration.slnx
-  - Tactics.Migration.runsettings
+  - Tactics.Godot.slnx
+  - Tactics.Godot.runsettings
   - Packages
   - ProjectSettings
   - Tools/okf
@@ -302,18 +302,18 @@ scopes:
       - .agents/skills/godot-ai-workflow
       - .agents/incidents/godot
       - global.json
-      - Tactics.Migration.slnx
-      - Tactics.Migration.runsettings
+      - Tactics.Godot.slnx
+      - Tactics.Godot.runsettings
       - godot/project.godot
       - godot/Tactics.Godot.Adapter.csproj
       - .github/workflows/godot-windows-build.yml
-      - Tools/migration/Build-GodotWindows.ps1
-      - Tools/migration/New-GodotOwnedRcSource.ps1
-      - Tools/migration/Test-GodotWindowsPackage.ps1
-      - Tools/migration/Test-GodotWindowsLaunch.ps1
+      - Tools/godot/Build-GodotWindows.ps1
+      - Tools/godot/New-GodotOwnedRcSource.ps1
+      - Tools/godot/Test-GodotWindowsPackage.ps1
+      - Tools/godot/Test-GodotWindowsLaunch.ps1
       - Tools/migration/manifest/godot-tooling.json
-      - Tools/migration/Verify-GodotMigration.ps1
-      - Tools/migration/Sync-GodotAiCodexConfig.ps1
+      - Tools/godot/Verify-GodotProject.ps1
+      - Tools/godot/Sync-GodotAiCodexConfig.ps1
       - Tools/migration/godot_ai_codex_config.py
       - Tools/migration/tests/test_godot_ai_codex_config.py
       - Tools/migration/tests/test_godot_editor_lifecycle.py

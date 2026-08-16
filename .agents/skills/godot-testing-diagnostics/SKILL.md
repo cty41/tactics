@@ -7,7 +7,7 @@ description: Use when building or testing Tactics Core, Application, Godot C#, G
 
 ## Quick Reference
 
-Run `Tools/migration/Verify-GodotMigration.ps1` from repository root. It is deliberately sequential because Core and Godot builds previously contended for shared `obj` outputs.
+Run `Tools/godot/Verify-GodotProject.ps1` from repository root. It is deliberately sequential because Core and Godot builds previously contended for shared `obj` outputs.
 
 ## When to use
 

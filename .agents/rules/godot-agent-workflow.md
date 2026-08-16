@@ -10,7 +10,7 @@
 
 - `Tactics.Core` 和 `Tactics.Application` 禁止引用 Unity、Godot、Editor API 或迁移 DTO。
 - Godot Node、Resource、UID 与 Editor 类型只能存在于 Godot Adapter/Editor 层。
-- 修改 Godot/Core/Application C# 后必须 Build，并运行相关 NUnit、GdUnit、headless 与迁移工具测试；最终使用 `Tools/migration/Verify-GodotMigration.ps1` 串行收口。
+- 修改 Godot/Core/Application C# 后必须 Build，并运行相关 NUnit、GdUnit、headless 与项目工具测试；最终使用 `Tools/godot/Verify-GodotProject.ps1` 串行收口。
 - 禁止并行执行共享 Core 输出的 Godot/Core 构建或测试；已验证会争抢 `obj` 文件。
 - GdUnit、godot-ai、EditorPlugin、测试和迁移 DTO 不得成为 Release 运行时依赖。
 
@@ -31,7 +31,7 @@
 
 - godot-ai 只允许由迁移 worktree 中被 Git 忽略的 `.codex/config.toml` 加载；用户级 `~/.codex/config.toml` 不得长期保留 godot-ai 表，也不得影响 `w1`、Unity MCP 或其他项目。
 - 固定使用 `godot-ai==3.1.2` 的 Windows Attach 启动方式：绝对路径 `pythonw.exe`、无窗口 bootstrap、HTTP 8000、WebSocket 9500。配置以 `Tools/migration/manifest/godot-tooling.json` 为策略真相源。
-- 首次接入先在 canonical Godot Editor 中执行一次 Clients → Codex → Configure，再运行 `Tools/migration/Sync-GodotAiCodexConfig.ps1 -ImportFromUser -Profile phase3-observe`。后续用 `-Check` 验证，用 `-Profile <name>` 切换累积白名单。
+- 首次接入先在 canonical Godot Editor 中执行一次 Clients → Codex → Configure，再运行 `Tools/godot/Sync-GodotAiCodexConfig.ps1 -ImportFromUser -Profile phase3-observe`。后续用 `-Check` 验证，用 `-Profile <name>` 切换累积白名单。
 - 更换 godot-ai 版本、端口、启动方式或工具 Profile 后，必须重新生成/同步配置并重启根目录为迁移 worktree 的 Codex 任务。
 - 已授权 Godot 修改任务需要 session 为 `0` 时，必须使用 `godot-editor-lifecycle` 对唯一 canonical PID 做正常关闭，并且只在 Editor 原本打开时恢复；超时不强杀、不继续写入。
 - MCP 写操作前必须先调用 Session 与 Editor 状态接口，确认仅有一个会话、Godot 版本为 4.7.1，且项目指向当前 worktree 的 `godot/project.godot`；不满足时停止写入。

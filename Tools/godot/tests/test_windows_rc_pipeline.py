@@ -8,7 +8,7 @@ import unittest
 
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
-TOOLS = REPO / "Tools" / "migration"
+TOOLS = REPO / "Tools" / "godot"
 POWERSHELL = shutil.which("pwsh") or shutil.which("powershell")
 
 
@@ -159,7 +159,7 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("Test-GodotWindowsLaunch.ps1", workflow)
         self.assertIn("Tools/okf/requirements.txt", workflow)
         self.assertIn("git config --global core.autocrlf false", workflow)
-        self.assertIn("-GodotOwned", workflow)
+        self.assertNotIn("-GodotOwned `", workflow)
         self.assertIn("if: always()", workflow)
         self.assertIn("retention-days: 14", workflow)
         self.assertNotIn("create-release", workflow.lower())
@@ -203,8 +203,8 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("GodotSharpEditor", debug_lock["dependencies"]["net9.0"])
         self.assertNotIn("GodotSharpEditor", export_lock["dependencies"]["net9.0"])
 
-        verifier = (TOOLS / "Verify-GodotMigration.ps1").read_text(encoding="utf-8-sig")
-        runsettings = (REPO / "Tactics.Migration.runsettings").read_text(encoding="utf-8-sig")
+        verifier = (TOOLS / "Verify-GodotProject.ps1").read_text(encoding="utf-8-sig")
+        runsettings = (REPO / "Tactics.Godot.runsettings").read_text(encoding="utf-8-sig")
         self.assertIn("Invoke-IsolatedGdUnitSuite", verifier)
         self.assertIn("Assert-GodotEditorDependencyGraph", verifier)
         self.assertIn("GodotSharpEditor/4\\.7\\.1", verifier)

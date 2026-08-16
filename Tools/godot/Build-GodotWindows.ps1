@@ -14,9 +14,7 @@ param(
 
     [string]$WorkflowRunId = '',
 
-    [string]$WorkflowRef = '',
-
-    [switch]$GodotOwned
+    [string]$WorkflowRef = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -24,12 +22,12 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $projectRoot = Join-Path $repoRoot 'godot'
 $projectFile = Join-Path $projectRoot 'project.godot'
 $exportPreset = Join-Path $projectRoot 'export_presets.cfg'
-$solution = Join-Path $repoRoot 'Tactics.Migration.slnx'
-$runSettings = Join-Path $repoRoot 'Tactics.Migration.runsettings'
+$solution = Join-Path $repoRoot 'Tactics.Godot.slnx'
+$runSettings = Join-Path $repoRoot 'Tactics.Godot.runsettings'
 $adapterProject = Join-Path $projectRoot 'Tactics.Godot.Adapter.csproj'
 $godotSolution = Join-Path $projectRoot 'Tactics.Godot.Adapter.sln'
 $toolingManifest = Join-Path $repoRoot 'Tools\migration\manifest\godot-tooling.json'
-$packageValidator = Join-Path $repoRoot 'Tools\migration\Test-GodotWindowsPackage.ps1'
+$packageValidator = Join-Path $repoRoot 'Tools\godot\Test-GodotWindowsPackage.ps1'
 
 function Invoke-Checked {
     param(
@@ -121,26 +119,12 @@ Push-Location $repoRoot
 try {
     $env:GODOT_BIN = $GodotExecutable
 
-    if ($GodotOwned) {
-        Invoke-Checked 'Restore locked Godot-owned dependencies' {
-            dotnet restore 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' --locked-mode
-            if ($LASTEXITCODE -eq 0) { dotnet restore 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' --locked-mode }
-            if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode -r win-x64 }
-        }
-        Invoke-Checked 'Build Godot-owned projects with one MSBuild node' {
-            dotnet build 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' -c Debug --no-restore -m:1
-            if ($LASTEXITCODE -eq 0) { dotnet build 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' -c Debug --no-restore -m:1 }
-            if ($LASTEXITCODE -eq 0) { dotnet build $adapterProject -c Debug --no-restore -m:1 }
-        }
+    Invoke-Checked 'Restore locked Godot dependencies' {
+        dotnet restore $solution --locked-mode
+        if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode -r win-x64 }
     }
-    else {
-        Invoke-Checked 'Restore locked migration dependencies' {
-            dotnet restore $solution --locked-mode
-            if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode -r win-x64 }
-        }
-        Invoke-Checked 'Build migration solution with one MSBuild node' {
-            dotnet build $solution -c Debug --no-restore -m:1
-        }
+    Invoke-Checked 'Build Godot projects with one MSBuild node' {
+        dotnet build $solution -c Debug --no-restore -m:1
     }
     Invoke-Checked 'Run Tactics.Core tests' {
         dotnet test 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'

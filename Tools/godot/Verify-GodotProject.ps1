@@ -13,7 +13,7 @@ $projectFile = Join-Path $projectRoot 'project.godot'
 $adapterProject = Join-Path $projectRoot 'Tactics.Godot.Adapter.csproj'
 $testHostProject = Join-Path $projectRoot 'tests\Tactics.Godot.TestHost.csproj'
 $solution = Join-Path $repoRoot 'Tactics.Godot.slnx'
-$runSettings = Join-Path $repoRoot 'Tactics.Migration.runsettings'
+$runSettings = Join-Path $repoRoot 'Tactics.Godot.runsettings'
 $gdUnitRunnerTemplate = Join-Path $projectRoot 'tests\GdUnit4TestRunnerScene.cs.txt'
 $gdUnitRunnerSource = Join-Path $projectRoot 'gdunit4_testadapter_v5\GdUnit4TestRunnerScene.cs'
 $createdGdUnitRunnerSource = $false
@@ -168,7 +168,7 @@ try {
     $codexProjectConfig = Join-Path $repoRoot '.codex\config.toml'
     if (Test-Path -LiteralPath $codexProjectConfig -PathType Leaf) {
         Invoke-Checked 'Validate project-scoped godot-ai Codex configuration' {
-            powershell -NoProfile -ExecutionPolicy Bypass -File 'Tools/migration/Sync-GodotAiCodexConfig.ps1' -Check
+            powershell -NoProfile -ExecutionPolicy Bypass -File 'Tools/godot/Sync-GodotAiCodexConfig.ps1' -Check
         }
     }
     else {

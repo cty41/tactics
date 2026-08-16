@@ -31,7 +31,7 @@ Use for every Godot migration task when the correct project boundary, specialist
 4. If the authorized work requires Editor session count `0`, route through `godot-editor-lifecycle`; restore only an Editor that workflow closed.
 5. If an API, lifecycle, version, plugin, or engine error is uncertain, follow `references/research-guide.md` before changing code.
 6. Implement without adding Unity/Godot references to Core/Application or dev-tool dependencies to release runtime.
-7. Run `Tools/migration/Verify-GodotMigration.ps1`; narrow diagnostics may run first, but the unified gate is authoritative.
+7. Run `Tools/godot/Verify-GodotProject.ps1`; narrow diagnostics may run first, but the unified gate is authoritative.
 8. Record a new engine pitfall as an Incident. Promote only verified conclusions to OKF and only repeated workflow changes to a Skill.
 
 ## Examples

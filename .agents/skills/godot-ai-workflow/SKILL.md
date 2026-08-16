@@ -11,7 +11,7 @@ description: Use when configuring or operating the canonical Godot project throu
 - Project: `godot/project.godot` only.
 - Config: local ignored `.codex/config.toml`; never leave godot-ai in the user-level Codex config.
 - Profiles: `phase3-observe`, `content-authoring`, `ui-input`, `presentation`; each is cumulative.
-- Sync: `Tools/migration/Sync-GodotAiCodexConfig.ps1` imports, validates and switches the exact allowlist.
+- Sync: `Tools/godot/Sync-GodotAiCodexConfig.ps1` imports, validates and switches the exact allowlist.
 - Custom Tactics tools remain deferred until the C# mutation kernel is stable.
 
 ## When to use
