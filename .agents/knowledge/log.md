@@ -1,11 +1,11 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-16
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:780861c483e81c60e78cbd2f6c646bf5b1229f41c8d3215cc2d934a43f070f3c`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:a021af3654bb62068eec55d0d450e37b36c0afe89a08f6024b4fbe3761f731c9`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:d80ee48a40140ac3487ed01189dd65dda66a1014d347dc4657d7e1399d04bf59`。
 * **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:68527fb70dd6f98195d35a8d5aff4d21fda711f5340fc6be02b2078e5118be53`。
-* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:c0a08550c652d30ce7664c190b4392f57f3055f160fa73acbd812d11ee97e3fb`。
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:bce691b186754f295a2052028cd20aff540bb8696c1d180d15856ebd8be4f384`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:43e4fee724fbf399b389acb5db37907fb1810b3075d79e552c824e93563a4748`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:eb7fccfeba1275ab8cf59bf10df12392a2a7f2cb62926fadc04c6799bc38f85b`。
 * **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:ef73463977333e87a99b1362e61db75553c1253932fe2ed1caf30383825b7269`。
 * **Governance**: 根 `AGENTS.md` 切换为 Godot-first；Unity Agent Workflow 归档，88 个 Unity-only rules/skills/tools/legacy specs 进入 blob 级退役索引等待最终删除确认。
 * **Godot mainline**: 新增 `Tactics.Godot.slnx` 与无 public ownership switch 的 `Tools/godot/Verify-GodotProject.ps1`；物理无 Unity 临时副本通过完整 Godot 门禁。

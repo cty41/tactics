@@ -59,7 +59,7 @@ Checkpoint：`chore: establish the Godot-owned project baseline`
 
 - 将 `AGENTS.md`、Godot skills、hooks 和配置改为 Godot-first。
 - 删除 Unity-only rules/skills/auto-compile hooks/MCP/TBSF GUID/AssetDatabase 工具。
-- 当前 Pure Run Gameplay Specs 保留；Unity-only 历史 specs 退出活动目录，并生成带 blob 的退役需求索引。
+- 当前 Pure Run Gameplay Specs 保留；Unity-only 历史 specs 生成带 blob 的退役需求索引。仍被平台中立编译器测试消费的文本 fixture 保留为测试资产，不作为当前产品内容。
 - 迁移设计/OKF 标记 archived，建立当前 Godot 项目权威页；Unity-only known gaps 归档。
 - Godot 人工验收账本保持 pending；完成计划的长期结论迁移后删除旧 active plans。
 
@@ -89,7 +89,7 @@ Checkpoint：`chore: prepare the archived Unity project retirement`
 - FrozenOracle 在没有 `Assets/` 时与旧 Oracle 断言一致。
 - Catalog 保持 142，Save V1–V6 round-trip 和迁移稳定。
 - 所有当前 batch/category 为 `GodotOwned`，历史 receipt 不变。
-- 正式 verifier 不使用 Unity 跳过分支或 allow-missing 掩盖引用。
+- 正式 verifier 不使用 Unity 运行时跳过分支；OKF 仅对 deletion manifest 已审计的历史来源前缀允许缺失，当前 Godot/FrozenOracle 路径仍必须存在。
 - 删除预演与真实删除后均通过 Debug/Release、NUnit、GdUnit、Gameplay Specs、两个 renderer、OKF 和 Windows package/startup smoke。
 - Release 不包含 Unity、GdUnit、TestPlatform、迁移 DTO 或未授权第三方 payload。
 - 自动测试不把任何人工验收项改为 passed。

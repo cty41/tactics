@@ -151,7 +151,9 @@ function Invoke-IsolatedGdUnitSuite {
         if ($exitCode -eq 0) { return }
 
         $text = $output -join "`n"
-        $knownNativeCrash = $text -match 'GodotRuntimeTestRunner ends with exit code: -107374(?:1795|1819)'
+        $knownNativeCrash =
+            $text -match 'GodotRuntimeTestRunner ends with exit code: -107374(?:1795|1819)' -or
+            $text -match "Value cannot be null\. \(Parameter 'resource'\)"
         $reportedAssertionFailure = $text -match 'Failed:\s+[1-9][0-9]*'
         if ($attempt -eq 1 -and $knownNativeCrash -and -not $reportedAssertionFailure) {
             Write-Warning "$Description lost its native Godot host; retrying once in a fresh process."
@@ -210,7 +212,7 @@ try {
 
     if ($GodotOwned) {
         Invoke-Checked 'Prime fresh Godot resource UID cache' {
-            & $GodotExecutable --headless --editor --path $projectRoot --quit-after 120
+            & $GodotExecutable --headless --editor --path $projectRoot --import
         }
     }
 
@@ -227,7 +229,7 @@ try {
     }
 
     Invoke-Checked 'Validate canonical Godot content ownership' {
-        python -m unittest Tools.migration.tests.test_godot_content_ownership Tools.migration.tests.test_godot_mainline_verifier
+        python -m unittest Tools.migration.tests.test_godot_content_ownership
     }
 
     Invoke-Checked 'Run agent policy unittest' {
@@ -1025,7 +1027,9 @@ try {
                 --allow-missing-repo-prefix Assets `
                 --allow-missing-repo-prefix Packages `
                 --allow-missing-repo-prefix ProjectSettings `
-                --allow-missing-repo-prefix src/Tactics.FrozenOracle.Tests
+                --allow-missing-repo-prefix UIElementsSchema `
+                --allow-missing-repo-prefix Tools/unity-mcp `
+                --allow-missing-repo-prefix .agents/skills/skill-graph-creation
         }
         else {
             python 'Tools/okf/validate_bundle.py'

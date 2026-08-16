@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# mainline.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-16T10:34:39+08:00"
+timestamp: "2026-08-16T11:18:55+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -24,7 +24,7 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:c0a08550c652d30ce7664c190b4392f57f3055f160fa73acbd812d11ee97e3fb
+source_fingerprint: sha256:d80ee48a40140ac3487ed01189dd65dda66a1014d347dc4657d7e1399d04bf59
 ---
 
 # Current state
@@ -61,7 +61,7 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 
 统一入口为 `Tools/godot/Verify-GodotProject.ps1` 与 `Tactics.Godot.slnx`：锁定 restore、单节点 build、Core/Application/FrozenOracle NUnit、Gameplay Spec 编译与 Main.tscn 报告、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless、双 renderer、ownership receipt 与 OKF。它不暴露 Unity ownership skip 参数，并默认拒绝 Unity 四个工程根目录。Godot Gameplay Spec 报告必须由本轮 GdUnit 新生成，并精确包含预期 scenario/checkpoint、生产 save 前后证据和零临时节点；真实 Editor Assembly Reload 和表现可读性仍单独记录为人工边界。
 
-删除前预演由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 `Assets/`、`Packages/`、`ProjectSettings/`、`UIElementsSchema/` 和旧 Unity Oracle 后调用正式主线 verifier。GdUnit test host 位于 `godot/tests/`，生成的 runner source由验证器从版本控制模板临时注入并在 finally 清理，避免 production 发布程序集携带测试包。每个 suite 使用独立 native host；仅对已观察到且没有断言失败计数的 Windows native crash 重试一次，真实测试失败立即终止。
+删除前预演由 `Test-UnityRetirementManifest.ps1` 在系统临时副本逐文件应用 `unity-deletion-manifest-v1` 后调用正式主线 verifier。首次干净项目扫描使用 Godot `--import` 等待 UID/import 完成；GdUnit test host 位于 `godot/tests/`，生成的 runner source由验证器从版本控制模板临时注入并在 finally 清理。每个 suite 使用独立 native host；仅对没有断言失败计数的已知 Windows native crash 或 ResourceLoader 空资源宿主故障重试一次，真实测试失败立即终止。OKF 只允许 deletion manifest 已审计的历史 Unity 来源前缀缺失，当前 Godot 和 FrozenOracle 路径必须存在。
 
 Windows RC staging 必须执行正式主线 verifier，随后通过同一 .NET 9 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。2026-08-15 hosted run `31889338418` 已通过 ExportRelease、199 文件包审计、Compatibility/default renderer EXE 启动并上传 14 天 artifact；剩余外部交付闸门是下载后的 clean-machine 人工启动与玩法 smoke。
 
