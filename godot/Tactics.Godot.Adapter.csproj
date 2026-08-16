@@ -13,6 +13,10 @@
     <NuGetLockFilePath Condition="'$(Configuration)' == 'ExportDebug' Or '$(Configuration)' == 'ExportRelease'">packages.windows.lock.json</NuGetLockFilePath>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'ExportRelease'">
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/**/*.cs;addons/**/*.cs" />
   </ItemGroup>

@@ -3,11 +3,11 @@
 ## 2026-08-17
 * **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:251ed1f61d4dfd47db9ab9c53d0d096bec0901bbf1b0dec943ff0476d5179300`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:f99b0c8ef26799f6c51a5d7b4773de1896a8b2588df3af29f34090f917bc9675`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:6a2eb946f49820749726f109b412d567b665a56e9ed2cbe0029b539faf8ff337`。
-* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:ffcd63fae46dd2b000a9cfe4092d608e800192c575e81d8126c7a285515b8f82`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:75e173b44957b86fe8bf9d38f142fb56f47c9ea59c464a04c9a122ea8675f7b5`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:817f9cf67a9764b768e0f392f46674570e9954246b7a556c621cce061143b77f`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:2e6bb1329e985a5ae161ee3a87e6867fb5f285f9b1fb3b505766ba9f53a1c988`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:7c50d4b5baee5917a57d76d449ba7b5755101c89004157203c2d8861d1f0f481`。
-* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:90df4c0407e8f9867c6ed0a94b12f5f4791288b24c04c82afaf797df63639e23`。
 * **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:b1b731b882f647d95e4028ebd12ed7eb6bf7d3916ed27ebebaa73b30a373e88e`。
 * **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:f5de85135f37a5235f3d62d8af9c4bdbc74f245e4d6138902311217def729fda`。
 

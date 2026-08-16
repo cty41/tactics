@@ -275,6 +275,9 @@ class WindowsRcPipelineTests(unittest.TestCase):
             project_text = project.read_text(encoding="utf-8-sig")
             self.assertIn("<RestoreLockedMode>true</RestoreLockedMode>", project_text)
             self.assertIn("<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>", project_text)
+            self.assertIn("<PropertyGroup Condition=\"'$(Configuration)' == 'ExportRelease'\">", project_text)
+            self.assertIn("<DebugType>None</DebugType>", project_text)
+            self.assertIn("<DebugSymbols>false</DebugSymbols>", project_text)
 
         adapter_project = (REPO / "godot" / "Tactics.Godot.Adapter.csproj").read_text(
             encoding="utf-8-sig"
