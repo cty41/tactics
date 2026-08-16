@@ -67,14 +67,14 @@ jobs:
             throw "Canonical gameplay plan was not materialized with LF bytes: $planEol"
           }
 
-      - name: Pull only Godot LFS objects
+      - name: Pull all approved public LFS objects
         shell: pwsh
         run: |
           git lfs install --local
-          git lfs pull --include="godot/**" --exclude=""
+          git lfs pull
           $pointerHeader = [Text.Encoding]::ASCII.GetBytes("version https://git-lfs.github.com/spec/v1")
           $remainingPointers = @()
-          foreach ($path in @(git lfs ls-files -n --include="godot/**")) {
+          foreach ($path in @(git lfs ls-files -n)) {
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
               $remainingPointers += $path
               continue
@@ -92,7 +92,7 @@ jobs:
             }
           }
           if ($remainingPointers.Count -gt 0) {
-            throw "Godot LFS objects were not materialized: $($remainingPointers -join ', ')"
+            throw "Public LFS objects were not materialized: $($remainingPointers -join ', ')"
           }
 
       - name: Install pinned .NET SDK
