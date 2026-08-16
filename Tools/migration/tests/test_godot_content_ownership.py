@@ -1,7 +1,10 @@
 import json
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
+
+from Tools.migration.godot_content_ownership import normalized_text_sha256
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -9,6 +12,15 @@ RECEIPT = ROOT / "Tools/migration/manifest/ownership/godot-content-ownership-v1.
 
 
 class GodotContentOwnershipTests(unittest.TestCase):
+    def test_catalog_hash_is_stable_across_checkout_line_endings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            lf = Path(directory) / "lf.tres"
+            crlf = Path(directory) / "crlf.tres"
+            lf.write_bytes(b'[gd_resource]\nvalue = "catalog"\n')
+            crlf.write_bytes(b'[gd_resource]\r\nvalue = "catalog"\r\n')
+
+            self.assertEqual(normalized_text_sha256(lf), normalized_text_sha256(crlf))
+
     def test_receipt_is_current_and_separates_manual_acceptance(self) -> None:
         subprocess.run(
             ["python", "Tools/migration/godot_content_ownership.py", "--check"],

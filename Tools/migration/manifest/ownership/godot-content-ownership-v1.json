@@ -3,7 +3,7 @@
   "receiptId": "godot-content-ownership-v1",
   "ownership": "GodotOwned",
   "catalogCount": 142,
-  "catalogSha256": "sha256:01b6f6823e70dd888d0f96b4937be1644fffa2b8fffd8381ed2d0ae164238933",
+  "catalogSha256": "sha256:54ecf35fe703c688987e9127e3cee2b722b6b39463bd6eaf4ec5c21389878425",
   "catalogSemanticSha256": "sha256:60badc5f448a983f14bb2c03ce64e31f8c4a53ad34516376016380325bf2566a",
   "resourceTypeCounts": {
     "ai": 8,

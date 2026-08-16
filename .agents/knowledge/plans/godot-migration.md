@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T14:12:51+08:00"
+timestamp: "2026-08-16T14:34:53+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:ba4e7c33a7b3b881a5375279cbdb123fbe532eb30b5cc2805eea9d5ac6a1ca84
+source_fingerprint: sha256:a1c7360516727532c3cf1c737d1a29c3ca5df552b3c1504c0b4370589b720098
 ---
 
 # Current state
@@ -40,6 +40,8 @@ Phase 1A 已建立不可变 `BattleState/BattleUnitState`、typed `BattleCommand
 正式主线入口为 `Tactics.Godot.slnx` 与 `Tools/godot/Verify-GodotProject.ps1`。新 verifier 不暴露 ownership skip 参数，默认拒绝 `Assets/`、`Packages/`、`ProjectSettings/` 和 `UIElementsSchema/`；`Test-UnityRetirementManifest.ps1` 的系统临时副本预演与产品工作区真实删除均覆盖 Core 103、Application 114、FrozenOracle 15、Gameplay Specs、GdUnit、Debug/Release、Compatibility/Forward+ 和 OKF。`prepare_unity_retirement.py` 在四个 Unity 根均不存在后只校验并保留冻结 manifest，不得重写退役证据。
 
 `GodotPlayableRunMain` 的 canonical Catalog、平衡配置和敌方速度配置通过 `RequiredResourceLoader` 以 `CacheMode.Ignore` 加载，Catalog 条目也绕开跨宿主缓存；这防止干净 RC staging 或 Reload 后的独立 GdUnit 原生宿主把存在的 typed Resource 误判为缺失。
+
+`godot-content-ownership-v1` 的 `catalogSha256` 对 UTF-8 Catalog 文本先统一换行为 LF 再计算，避免 Windows checkout 与 CI 的 EOL 策略让相同 Catalog 语义产生陈旧 receipt；语义身份仍由独立的 `catalogSemanticSha256` 固定。
 
 Phase 1B 完整统一门禁已通过，覆盖 locked restore、单节点 solution build、Core/Application/Unity Oracle NUnit、Python、Skill/Incident、隔离 GdUnit、生产 Debug 恢复、Release 测试依赖排除、Poison Spear runtime/presentation、EditorPlugin headless 与 OKF。该结论关闭路径和初始先攻 tie-break 缺口。
 

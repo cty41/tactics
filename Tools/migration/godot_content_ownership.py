@@ -16,8 +16,10 @@ CATALOG = ROOT / "godot/content/ContentCatalog.tres"
 OUTPUT = ROOT / "Tools/migration/manifest/ownership/godot-content-ownership-v1.json"
 
 
-def sha256(path: Path) -> str:
-    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+def normalized_text_sha256(path: Path) -> str:
+    """Hash tracked text independently of the checkout's line-ending policy."""
+    normalized = path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    return "sha256:" + hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
 def parse_catalog() -> list[dict[str, str]]:
@@ -70,7 +72,7 @@ def compile_receipt() -> dict[str, object]:
         "receiptId": "godot-content-ownership-v1",
         "ownership": "GodotOwned",
         "catalogCount": len(entries),
-        "catalogSha256": sha256(CATALOG),
+        "catalogSha256": normalized_text_sha256(CATALOG),
         "catalogSemanticSha256": "sha256:" + hashlib.sha256(identity_payload).hexdigest(),
         "resourceTypeCounts": dict(sorted(type_counts.items())),
         "categories": categories,
