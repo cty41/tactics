@@ -1,0 +1,16 @@
+Tactics
+Copyright 2026 cty41
+
+This product includes software developed by the Tactics contributors.
+
+Game assets identified in ASSET_LICENSE.md and
+Tools/public-release/asset-provenance.json are licensed separately under
+Creative Commons Attribution 4.0 International.
+
+Third-party software remains under its respective license. See
+THIRD_PARTY_NOTICES.md.
+
+The Frozen Oracle directory contains immutable snapshots of project-owned
+Tactics source used only to verify historical gameplay behavior. References to
+Unity APIs identify the retired engine contract; they do not include or license
+the Unity engine, SDK, packages, artwork, or editor.

@@ -40,6 +40,10 @@ try {
         (Get-Content -LiteralPath $stderr -Raw -ErrorAction SilentlyContinue))
     $fatalPatterns = '(?i)(missing assembly|cannot open.*\.pck|failed to load|uid.*not found|duplicate type|unhandled exception|disposed object)'
     if ($combined -match $fatalPatterns) { throw "Exported executable log contains a fatal signature ($Renderer)." }
+    $readyMarker = 'Tactics Godot playable run UI ready'
+    if ($combined -notmatch [Regex]::Escape($readyMarker)) {
+        throw "Exported executable did not emit the startup ready marker ($Renderer): $readyMarker"
+    }
     [pscustomobject]@{ Renderer = $Renderer; ExitCode = 0; UserDataRoot = $userRoot; Stdout = $stdout; Stderr = $stderr }
 }
 finally {

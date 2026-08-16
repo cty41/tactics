@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "defaultTextLicense": "Apache-2.0",
+  "assetManifest": "Tools/public-release/asset-provenance.json",
+  "requiredFiles": [
+    "LICENSE",
+    "NOTICE",
+    "ASSET_LICENSE.md",
+    "THIRD_PARTY_NOTICES.md",
+    "TRADEMARKS.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "Tools/public-release/dependency-inventory.json"
+  ],
+  "mediaExtensions": [
+    ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".ico",
+    ".wav", ".mp3", ".ogg", ".flac", ".ttf", ".otf", ".woff",
+    ".woff2", ".pdf", ".psd", ".blend", ".fbx", ".glb", ".zip",
+    ".7z", ".jar", ".aar", ".dll", ".exe"
+  ],
+  "excludedFromPublicRoot": [
+    ".agents/settings.local.json",
+    ".codex/**",
+    ".mimocode/**",
+    ".migration-staging/**",
+    "_frost_nova_spec.json",
+    "Tools/artworks/**",
+    "Tools/reverse-engineering/**",
+    "Tools/GPakTools/**",
+    "Tools/ToastNotify/**",
+    "Tools/sprite_preview/**",
+    "Tools/checkpoint-hash-temp/**",
+    "godot/addons/godot_ai/**",
+    "artifacts/**",
+    "Build/**",
+    "godot.godot/**"
+  ],
+  "forbiddenPublicPrefixes": [
+    "Assets/",
+    "Packages/",
+    "ProjectSettings/"
+  ],
+  "allowedLicenses": [
+    "Apache-2.0",
+    "CC-BY-4.0",
+    "MIT"
+  ]
+}

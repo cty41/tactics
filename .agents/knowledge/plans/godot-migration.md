@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T14:34:53+08:00"
+timestamp: "2026-08-17T01:26:51+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,12 +18,12 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:a1c7360516727532c3cf1c737d1a29c3ca5df552b3c1504c0b4370589b720098
+source_fingerprint: sha256:c5505e6e6ea0fcc3d0daa2ade786bead7c51cb28f5ef9cf6c1dcf1d388f587c8
 ---
 
 # Current state
 
-远程 `main` 是 Godot 产品与治理权威；唯一 Godot 项目为 `godot/project.godot`。Unity 历史由永久 `unity-final-2026-08-08`、至少保留至 2026-09-15 的 `archive/unity-main-2026-08-16` 与 Frozen Oracle 提供。最终 Unity annotated tag object 为 `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d`，其 peeled commit 为 `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，新证据必须明确区分两者。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
+远程 `main` 是 Godot 产品与治理权威；唯一 Godot 项目为 `godot/project.godot`。完整 Unity Git/LFS 历史已从公开候选中分离，并由本地 bundle/bare archive 与私有 `cty41/tactics-legacy-private` 冷恢复证据保存；未来公开单 root 不携带旧 Tag、分支或对象。Frozen Oracle、Golden 与迁移 receipt 作为项目自有的公开测试/历史证据继续存在，但不进入产品运行时。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
 
 Unity 完整退役清单以该 peeled commit 的 Git tree 为输入，覆盖 `Assets/`、`Packages/`、`ProjectSettings/` 和 `UIElementsSchema/` 共 9,263 个跟踪文件、46,501,338 字节。每项已分类为已迁移等价、Godot 设计替代、历史原型退役、第三方排除、Audio 延后或仅保留来源证据，当前 `unresolved=0`。Barbarian、Hunter 及其旧技能属于 `retired_legacy_prototype`，不进入三职业 Pure Run；文件级事实与规则分别保存在 `Tools/migration/manifest/retirement/unity-retirement-inventory-v1.json` 和 `unity-retirement-rules-v1.json`。
 

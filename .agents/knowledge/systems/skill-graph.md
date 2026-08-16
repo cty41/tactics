@@ -1,59 +1,19 @@
 ---
 type: Game System
-resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Common/Skills/Graph
+resource: https://github.com/cty41/tactics/tree/main/src/Tactics.Core/Skills
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
-tags: [gameplay, skills, skill-graph, unity]
+tags: [gameplay, skills, skill-graph, godot]
 timestamp: "2026-08-16T12:55:23+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
   - .agents/docs/skill-graph-system.md
-  - .agents/skills/skill-graph-creation/SKILL.md
-  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphAsset.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileVisualProfile.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileVisualCoordinator.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/ProjectileTweenBuilder.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxRecipe.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxCoordinator.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillVfxPrimitiveBuilder.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/BattlePresentationGraph.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/BattlePresentationGraphValidation.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/BattlePresentationCoordinator.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/TransientVfxPool.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/VisualCueProfile.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/VisualCueCoordinator.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphRunner.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillGraphSpec.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/SkillTargetingProtocol.cs
-  - Assets/Tactics/Scripts/Common/Skills/Graph/OrderedTargetSelectionState.cs
-  - Assets/Tactics/Scripts/Editor/SkillGraphEditor/SkillGraphSpecCompiler.cs
-  - Assets/Tactics/Scripts/Editor/SkillGraphEditor/SkillGraphAssetMenu.cs
-  - Assets/Tactics/Tests/Editor/SkillGraphAssetMenuEditorTests.cs
-  - Assets/Tactics/Scripts/Editor/PresentationWorkbench
-  - Assets/Tactics/Scripts/Editor/PresentationGraph
-  - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
-  - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs
-  - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
-  - Assets/Tactics/Battle/Abilities/SkillGraphs
-  - Assets/Tactics/Arts/PureRun/Presentation
-  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/ChargeStrike_Lv1_Ability.asset
-  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/AreaBlast_Lv1_Ability.asset
-  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/HeavyShot_Graph_Ability.asset
-  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset
-  - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset
-  - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
-  - Assets/Tactics/Tests/PlayMode/FacingBehaviorPlayModeTests.cs
-  - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs
-  - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
-  - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
-  - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
-  - Assets/Tactics/Tests/Editor/PureRunTweenAssetTests.cs
-  - Assets/Tactics/Tests/PlayMode/PureRunTweenPlayModeTests.cs
-  - Assets/Tactics/Tests/PlayMode/TransientVfxLifecyclePlayModeTests.cs
-  - Assets/Tactics/Tests/PlayMode/PilotoVfxPerformancePlayModeTests.cs
-  - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs
-  - Assets/Tactics/Tests/Editor/BattlePresentationGraphEditorTests.cs
+  - src/Tactics.Core/Skills
+  - src/Tactics.Application/Content
+  - godot/content/skills
+  - godot/src/Tactics.Godot.Adapter/Editor
+  - godot/src/Tactics.Godot.Adapter/Runtime
 verified_revision: c56d71ad4ebd
 source_fingerprint: sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3
 ---

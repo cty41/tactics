@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# mainline.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-16T15:50:16+08:00"
+timestamp: "2026-08-17T01:36:34+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -20,16 +20,15 @@ repo_paths:
   - Tools/godot/Test-GodotWindowsPackage.ps1
   - Tools/godot/Test-GodotWindowsLaunch.ps1
   - .github/workflows/godot-windows-build.yml
-  - Tools/godot/Sync-GodotAiCodexConfig.ps1
-  - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
+  - Tools/public-release
 verified_revision: d092a955
-source_fingerprint: sha256:316520e50b59878ad16d02ff1de4f812193427337f5d475fa1a7ea2c23e26fc1
+source_fingerprint: sha256:553ba954635ad8fd1ebae4ccf7aad5810d56a992c87d9d788c894cd1ff2f7d8c
 ---
 
 # Current state
 
-远程 `main` 是 Godot 产品与治理权威，使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9。现有 `migration/godot` worktree 可在切换期间继续承载同一 tracked tree，但分支名不再定义权威，也不要求为切换移动本地 worktree。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
+远程 `main` 是 Godot 产品与治理权威，使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9。现有 `migration/godot` worktree 可在切换期间继续承载同一 tracked tree，但分支名不再定义权威，也不要求为切换移动本地 worktree。公开 canonical 项目不启用或携带 godot-ai plugin/helper；Agent 入口为 `godot-workflow`，再按任务加载 C#、内容、编辑器工具或测试诊断 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
 
 Windows 内部构建由 `Tools/godot/Build-GodotWindows.ps1` 提供唯一只读入口，并复用 `godot/export_presets.cfg` 的单一 `Windows Desktop` preset。GitHub Actions 仅允许手动选择 `Debug`、`Release` 或 `Both`；默认 `Both`，公共 verifier 只运行一次，再串行使用 `ExportDebug + --export-debug` 和/或 `ExportRelease + --export-release` 导出，避免共享 MSBuild/Godot 输出竞态。工作流只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 必须携带 tracked `godot/Tactics.Godot.Adapter.sln`，否则 Godot .NET export 会在退出码为 0 时逐文件报告缺少 solution。staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与 debug/release 导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
 
@@ -42,9 +41,7 @@ Windows 内部构建由 `Tools/godot/Build-GodotWindows.ps1` 提供唯一只读�
 - `UnitInstanceId` 是战斗/重放实体身份，不能用单位定义 `ContentId` 替代；冻结 Unity 纯 C# Oracle 只存在于独立测试程序集。
 - GdUnit4Net 3.1.1 Runtime Runner 需要脚本位于 `project.godot` 指定的主程序集。`Tactics.Godot.TestHost.csproj` 使用同一程序集名，但拥有独立 `obj`、lock 和测试包；生产 `Tactics.Godot.Adapter.csproj` 不引用 GdUnit/TestPlatform。Core/Application NUnit 仍为独立测试程序集。
 - 构建和测试必须串行；并行 Core/Godot 进程已在本地造成共享 `obj` 争抢。
-- godot-ai 固定 v3.1.2，只做通用 Editor/MCP 操作，不是 Runtime、Core、Application 或资产真相源。
-- Codex godot-ai 采用项目级 Attach：本机忽略的 `.codex/config.toml` 优先于用户配置，用户级 godot-ai 表只允许作为 Godot Configure 的一次性输入。`Sync-GodotAiCodexConfig.ps1` 验证 `pythonw.exe` 无窗口 bootstrap、v3.1.2、8000/9500，并按 `phase3-observe → content-authoring → ui-input → presentation` 累积白名单生成配置。
-- `script_create/script_attach/script_patch`、`filesystem_manage`、`client_manage` 与 `autoload_manage` 始终禁用；写操作前必须用 Session/Editor 状态确认唯一 canonical 项目。
+- 历史开发曾使用项目隔离的 godot-ai v3.1.2；公开根已经移除 plugin/helper、本地配置和运行时依赖。相关 incident/plan 仅用于迁移考古，不能作为公开工程的启动前置。
 - `godot-editor-lifecycle` 可在已授权 Godot 修改任务需要 session `0` 时自动挂起并恢复唯一 canonical Editor：只使用精确 PID 的正常窗口关闭与 pinned GUI executable，不强杀、不注入输入、不打开原本关闭的 Editor。
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。

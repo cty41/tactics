@@ -233,6 +233,19 @@ jobs:
             }
           }
 
+      - name: Collect public release evidence
+        shell: pwsh
+        working-directory: ${{ steps.paths.outputs.source }}
+        run: |
+          $evidence = Join-Path '${{ steps.paths.outputs.diagnostics }}' 'public-release'
+          New-Item -ItemType Directory -Path $evidence -Force | Out-Null
+          python Tools/public-release/validate_public_candidate.py --root . --candidate |
+            Set-Content -LiteralPath (Join-Path $evidence 'public-candidate-report.json') -Encoding utf8
+          python Tools/public-release/generate_dependency_report.py --root . --check
+          Copy-Item -LiteralPath Tools/public-release/dependency-inventory.json -Destination $evidence
+          Copy-Item -LiteralPath Tools/public-release/asset-provenance.json -Destination $evidence
+          Copy-Item -LiteralPath LICENSE,NOTICE,ASSET_LICENSE.md,THIRD_PARTY_NOTICES.md,TRADEMARKS.md -Destination $evidence
+
       - name: Describe distributable packages
         id: packages
         shell: pwsh
@@ -309,5 +322,6 @@ jobs:
           - Release semantic manifest: ${{ steps.packages.outputs.release_semantic_hash }}
           - Release retention: 14 days
           - Startup smoke: selected packages passed Compatibility + default renderer
+          - Public source policy: candidate manifest, asset provenance, dependency inventory, and license evidence validated
           - Audio: deferred for this version (no payload)
           "@ >> $env:GITHUB_STEP_SUMMARY

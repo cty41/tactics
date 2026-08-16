@@ -14,10 +14,6 @@ config/name="Tactics Godot Migration"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "C#")
 
-[autoload]
-
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
-
 [display]
 
 window/size/viewport_width=1600
@@ -33,7 +29,7 @@ project/assembly_name="Tactics.Godot.Adapter"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/tactics_tooling/plugin.cfg")
+enabled=PackedStringArray("res://addons/tactics_tooling/plugin.cfg")
 
 [input]
 

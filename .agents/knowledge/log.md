@@ -1,5 +1,16 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-17
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:553ba954635ad8fd1ebae4ccf7aad5810d56a992c87d9d788c894cd1ff2f7d8c`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:7c50d4b5baee5917a57d76d449ba7b5755101c89004157203c2d8861d1f0f481`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:5bf94f785b90fa600243743b4b6d6715e7dfdb1fd6b0167fb268bd0444d6dc28`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:a079b57ed86202cb0a4c3b3d2c8a64ec9b7c6dad52a62008ccf37efc2e929a42`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:90df4c0407e8f9867c6ed0a94b12f5f4791288b24c04c82afaf797df63639e23`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:b1b731b882f647d95e4028ebd12ed7eb6bf7d3916ed27ebebaa73b30a373e88e`。
+* **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:f5de85135f37a5235f3d62d8af9c4bdbc74f245e4d6138902311217def729fda`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:c5505e6e6ea0fcc3d0daa2ade786bead7c51cb28f5ef9cf6c1dcf1d388f587c8`。
+
 ## 2026-08-16
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:0d574108e22d914617d5cb3a1a6904be1f71331d784a719c2ce3383ec94cb8a7`。
 * **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:ef73463977333e87a99b1362e61db75553c1253932fe2ed1caf30383825b7269`。

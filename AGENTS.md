@@ -12,7 +12,6 @@
 | 主线验证 | 使用 `Tools/godot/Verify-GodotProject.ps1`；它要求 Unity 根目录不存在 |
 | Godot 修改验证 | Core/Application/Godot `.cs` 使用主线或迁移期隔离门禁，不调用 Unity compile |
 | Editor 生命周期 | reload-sensitive 修改使用 `godot-editor-lifecycle` 正常关闭并恢复，不强杀进程 |
-| Godot MCP 隔离 | godot-ai 仅由当前 worktree 的项目级配置 Attach，写操作前验证唯一 session 和项目路径 |
 | 前台交互 | 未经明确授权不得抢占焦点或注入真实输入；自动 QA 使用后台测试链 |
 | 人工验收 | review 与自动门禁完成后，用 `manual-qa-handoff` 更新累计账本；自动测试不能代替人工通过 |
 | 知识维护 | 先读 `.agents/knowledge/index.md`，变更后运行 OKF impact、更新正文并 sync |
@@ -26,16 +25,15 @@
 - `.agents/rules/knowledge-maintenance.md`：OKF 查询、写回、替代和校验。
 - `.agents/rules/godot-migration.md`：退役完成前的历史迁移与来源审计边界。
 
-Unity-only rules、skills、MCP 和工具已列入 `Tools/migration/manifest/retirement/unity-governance-retirement-v1.json`，只等待最终删除确认；它们不得再指导新实现。
+Unity-only rules、skills、MCP 和工具的退役证据保存在 `Tools/migration/manifest/retirement/unity-governance-retirement-v1.json`；它们不得再指导新实现。公开根不包含 Unity 工程或本地 godot-ai 注入插件。
 
 ## 绝对禁止
 
 1. 直接手写或机械修改 Godot `.tres/.tscn`。
 2. 让 Core/Application 引用 Godot API、Node、Resource 或文件系统。
-3. 通过 `script_*`、`filesystem_manage`、`client_manage` 或 `autoload_manage` 绕过项目代码与资产管线。
-4. 将 godot-ai 写入用户级长期配置。
-5. 未经确认删除 Unity 根目录、历史 Tag、FrozenOracle、Golden、receipt 或许可证证据。
-6. 覆盖、暂存或清理不属于当前任务的 dirty worktree 文件。
+3. 通过编辑器脚本或文件系统旁路绕过项目代码、ResourceSaver 与资产管线。
+4. 未经确认删除 FrozenOracle、Golden、迁移 receipt 或许可证证据。
+5. 覆盖、暂存或清理不属于当前任务的 dirty worktree 文件。
 
 ## 必须执行
 

@@ -21,13 +21,8 @@
 # Generated Godot gameplay plans are byte-compared against Node output.
 Tests/gameplay-specs/godot/*.plan.json text eol=lf
 
-# Unity-generated metadata and imported vendor sources are preserved byte-for-byte.
-*.meta -whitespace
-"Assets/Piloto Studio/**" -whitespace
+# Frozen source snapshots are preserved byte-for-byte for migration archaeology.
 src/Tactics.FrozenOracle.Tests/FrozenSources/** -whitespace
-
-# Specific merge drivers
-Assets/TBSFramework/**/Excel/** merge=excel
 
 # lfs rules
 *.png filter=lfs diff=lfs merge=lfs -text
@@ -40,9 +35,7 @@ Assets/TBSFramework/**/Excel/** merge=excel
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.pdf filter=lfs diff=lfs merge=lfs -text
 *.aar filter=lfs diff=lfs merge=lfs -text
-*.unity filter=lfs diff=lfs merge=lfs -text
 *.bundle filter=lfs diff=lfs merge=lfs -text
-*.unitypackage filter=lfs diff=lfs merge=lfs -text
 *.ogg filter=lfs diff=lfs merge=lfs -text
 *.wav filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
@@ -76,15 +69,3 @@ Assets/TBSFramework/**/Excel/** merge=excel
 *.xlsx filter=lfs diff=lfs merge=lfs -text
 *.bytes filter=lfs diff=lfs merge=lfs -text
 *.mat filter=lfs diff=lfs merge=lfs -text
-*.prefab filter=lfs diff=lfs merge=lfs -text
-*.asset filter=lfs diff=lfs merge=lfs -text
-*.controller filter=lfs diff=lfs merge=lfs -text
-
-# Add special pre-compiled paths to LFS
-Packages/com.unity.burst@*/.Runtime/** filter=lfs diff=lfs merge=lfs -text
-
-# Fix DOTweenSettings auto save to LF
-Assets/Resources/DOTweenSettings.asset text eol=lf
-
-Assets/Plugins/FMOD/**/*.bundle text eol=lf
-Assets/Plugins/FMOD/**/Info.plist text eol=lf

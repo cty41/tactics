@@ -23,11 +23,8 @@
 !godot/*.packages.lock.json
 /godot/gdunit4_testadapter_v5/
 /godot/tests/gdunit4_testadapter_v5/
-/godot/addons/godot_ai/*
-!/godot/addons/godot_ai/README.md
+/godot/addons/godot_ai/
 *.DS_Store
-*.unityproj
-*.mayaSwatches
 *.patch
 
 /obj/
@@ -47,16 +44,7 @@
 *.pck
 *.log
 *.dmp
-/Library*/
-/Temp/
 /Build/
-/HotZip/
-/u8packer/
-/Assets/StreamingAssets/AB/Android*
-/Assets/StreamingAssets/AB/IOS*
-/Assets/StreamingAssets/AB/OSX*
-/Assets/StreamingAssets/AB/Windows*
-/Intermediate/
 /Release/
 /.vs
 /.vscode
@@ -93,25 +81,17 @@ CLAUDE.md
 *.code-workspace
 !</CodeWorkspaces/*.code-workspace>
 
-# Local build output (AssetPipeline: Output/AssetBundles, Output/Player)
+# Local build output
 /Output/
-# Legacy bundle root (transition)
-GameAssetBundles/
-
-# Tactics AssetPipeline copy target
-/Assets/StreamingAssets/Bundles/
 .clinerules
-.unity-agentic
-/Assets/Packages/
 .sisyphus
-Assets/Unity.VisualScripting.Generated
 
 
 .mimocode/plans
 .mimocode/.cron-lock
 Tests/gameplay-specs/compiled
 
-# Worktree-local Unity MCP endpoints. Templates and tooling remain tracked.
+# Worktree-local agent endpoints. Templates and tooling remain tracked.
 /.agents/mcp.json
 /.agents/mcp.local.json
 /.agents/mcp.json.*.tmp

@@ -4,6 +4,15 @@ Tactics 是一个使用 Godot 4.7 C# 开发的回合制战棋 Roguelike。当前
 
 > 项目状态：开发中原型。主要流程与自动化回归已经建立，但视觉、操作体验和正式发布仍需持续人工验收；当前构建不代表最终发行版本。
 
+## 开源许可
+
+- 源代码、文档与仓库工具按 [Apache License 2.0](LICENSE) 发布。
+- `godot/assets/` 以及来源清单明确列出的项目自有图像按 [CC BY 4.0](ASSET_LICENSE.md) 发布，署名为 `cty41`。
+- 项目名称、标识及发行品牌不因代码或资产许可而授予商标使用权，详见 [TRADEMARKS.md](TRADEMARKS.md)。
+- 第三方组件及其许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。逐文件资产来源与哈希记录在 `Tools/public-release/asset-provenance.json`。
+
+许可声明只覆盖仓库中明确纳入公开来源清单的内容，不覆盖私有历史归档中的 Unity 工程、候选美术、逆向分析材料或第三方参考载荷。
+
 ## 核心内容
 
 - 确定性的网格战斗、回合顺序、技能效果、状态与敌方 AI。
@@ -101,3 +110,5 @@ pwsh -NoProfile -File .\Tools\godot\Build-GodotWindows.ps1 `
 当前 `main` 的产品与运行权威是 Godot。旧 Unity 工程已经退役；永久 Tag `unity-final-2026-08-08`、Frozen Oracle、Golden 和迁移 receipt 只用于历史行为与来源审计，不参与当前运行时。
 
 在修改项目之前请阅读 [AGENTS.md](AGENTS.md)。其中定义了唯一 Godot 项目、C# 分层、Resource 写入、Editor 生命周期、验证和 dirty worktree 保护规则。
+
+欢迎提交 Issue 和 Pull Request。开发环境、验证要求、资产贡献条件和提交边界见 [CONTRIBUTING.md](CONTRIBUTING.md)；安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。

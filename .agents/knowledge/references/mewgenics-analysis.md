@@ -3,14 +3,14 @@ type: External Reference
 title: Mewgenics Analysis
 description: Mewgenics 配置组织、敌人 AI 模式和本地反编译证据的版本固定参考。
 tags: [reference, mewgenics, reverse-engineering, ai, combat]
-timestamp: "2026-07-14T22:30:05+08:00"
-status: active
+timestamp: "2026-08-17T01:26:52+08:00"
+status: archived
 catalog_scope: mewgenics-reference-analysis
 repo_paths:
   - .agents/docs/mewgenics-config-analysis.md
   - .agents/docs/mewgenics-runtime-reverse-engineering.md
   - Tools/reverse-engineering
-source_fingerprint: sha256:5440f1243da2099b84fb0adceb31384a23f2972b2828a31b623b58ab897e7bc3
+source_fingerprint: sha256:f5de85135f37a5235f3d62d8af9c4bdbc74f245e4d6138902311217def729fda
 ---
 
 # Summary
@@ -30,11 +30,13 @@ Mewgenics 的敌人决策同时存在基于权重重评估局势的 GenericBrain
 
 # Evidence Boundary
 
+本页作为设计研究历史公开保留。原始二进制、反编译导出、函数索引和 `Tools/reverse-engineering` 执行工具只存在于私有历史归档，不属于公开源代码或可复现构建输入；公开工程不得按下述旧路径重新执行逆向流程。
+
 函数地址与自动名称仅对 manifest 中 SHA-256 固定的 `Mewgenics.exe` 有效。Ghidra 推断类型、完整 C 伪代码以及未经交叉验证的时序不进入本知识概念。bonus turn 精确调度和 virtual ability unwrap 路径仍是未决问题。
 
 # Verification
 
-先运行 `Tools/reverse-engineering/scripts/verify-environment.ps1`，再按需运行只读 headless 导出。新版本二进制必须更新哈希并重新定位目标。结论详情见配置分析与运行时反编译分析文档。
+历史验证曾使用私有归档中的只读 headless 导出工具。公开仓库只保留经过人工综合的机制结论；新增外部研究必须重新完成合法来源审查，不得依赖已移除的脚本或数据 dump。
 
 # Citations
 

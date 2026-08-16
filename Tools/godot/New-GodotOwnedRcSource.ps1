@@ -19,17 +19,7 @@ if (Test-Path -LiteralPath $destination) {
     throw "RC destination already exists: $destination"
 }
 
-$excludedPrefixes = @(
-    'Assets/',
-    'Packages/',
-    'ProjectSettings/',
-    'src/Tactics.UnityOracle.Tests/',
-    '.codex/',
-    'godot/addons/godot_ai/',
-    'Build/',
-    'artifacts/',
-    'Tools/checkpoint-hash-temp/'
-)
+$excludedPrefixes = @('Build/', 'artifacts/', 'Tools/checkpoint-hash-temp/')
 
 $sourceCommit = (git -C $source rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($sourceCommit)) {
@@ -42,6 +32,10 @@ if ($LASTEXITCODE -ne 0 -or $trackedStatus.Count -ne 0) {
 $trackedFiles = @(git -C $source ls-files)
 if ($LASTEXITCODE -ne 0 -or $trackedFiles.Count -eq 0) {
     throw 'Unable to enumerate tracked source files.'
+}
+python (Join-Path $source 'Tools/public-release/validate_public_candidate.py') --root $source --candidate
+if ($LASTEXITCODE -ne 0) {
+    throw 'RC source failed the public candidate policy before staging.'
 }
 
 New-Item -ItemType Directory -Path $destination | Out-Null
@@ -83,14 +77,6 @@ $godotSolution = Join-Path $destination 'godot\Tactics.Godot.Adapter.sln'
 if (-not (Test-Path -LiteralPath $godotSolution -PathType Leaf)) {
     throw "Canonical Godot solution is missing from RC source: $godotSolution"
 }
-$projectText = [IO.File]::ReadAllText($isolatedProject)
-$projectText = [Regex]::Replace($projectText,
-    '(?m)^_mcp_game_helper="\*res://addons/godot_ai/runtime/game_helper\.gd"\r?\n', '')
-$projectText = $projectText.Replace(
-    'enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/tactics_tooling/plugin.cfg")',
-    'enabled=PackedStringArray("res://addons/tactics_tooling/plugin.cfg")')
-[IO.File]::WriteAllText($isolatedProject, $projectText, [Text.UTF8Encoding]::new($false))
-
 foreach ($entry in $copied) {
     $stagedFile = Join-Path $destination ([string]$entry.path)
     $entry.size = (Get-Item -LiteralPath $stagedFile).Length
@@ -111,7 +97,7 @@ if (-not (Test-Path -LiteralPath $manifestParent -PathType Container)) {
 $manifest = [ordered]@{
     schemaVersion = 1
     sourceCommit = $sourceCommit
-    boundary = 'godot-owned-without-unity-v1'
+    boundary = 'public-source-byte-identical-v1'
     excludedPrefixes = $excludedPrefixes
     fileCount = $copied.Count
     files = @($copied | Sort-Object path)
