@@ -1,6 +1,7 @@
 version: 1
 
 tracked_roots:
+  - README.md
   - AGENTS.md
   - .agents/ARCHITECTURE.md
   - .agents/docs
@@ -29,6 +30,7 @@ scopes:
   project-architecture:
     concept: architecture/project-overview.md
     paths:
+      - README.md
       - AGENTS.md
       - .agents/ARCHITECTURE.md
       - Tactics.Godot.slnx

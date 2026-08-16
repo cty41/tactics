@@ -20,7 +20,7 @@ source_fingerprint: sha256:ef73463977333e87a99b1362e61db75553c1253932fe2ed1caf30
 
 # Current State
 
-`catalog-scopes.yaml` 保存仓库路径到 `catalog_scope` 的多对多映射。Agent 修改代码、设计、计划、规则或工具后，使用 `catalog_impact.py report --worktree` 找出受影响概念，核对真实差异并更新知识正文，再使用 `sync --worktree --scope <scope> --write` 刷新来源指纹、时间和根日志。
+`catalog-scopes.yaml` 保存仓库路径到 `catalog_scope` 的多对多映射；根 `README.md` 作为项目入口归入 `project-architecture`。Agent 修改代码、设计、计划、规则或工具后，使用 `catalog_impact.py report --worktree` 找出受影响概念，核对真实差异并更新知识正文，再使用 `sync --worktree --scope <scope> --write` 刷新来源指纹、时间和根日志。
 
 同一路径可以合法影响多个 scope，例如根 `AGENTS.md` 同时影响项目架构、Unity Agent 工作流和 OKF 维护约束。同步范围应以“本任务实际造成的路径变化”为准：共享路径产生的直接 scope 必须一并核对，工作区中由其他文件产生的无关 scope 继续排除。
 

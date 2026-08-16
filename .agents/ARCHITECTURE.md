@@ -35,7 +35,7 @@ godot/project.godot + godot/content + godot/scenes
 
 - 本地主线门禁：`Tools/godot/Verify-GodotProject.ps1`。
 - Windows RC：`Tools/godot/Build-GodotWindows.ps1`。
-- `main` push 触发 `.github/workflows/godot-windows-build.yml`，生成短期 Windows artifact。
+- `.github/workflows/godot-windows-build.yml` 通过手动选择 Debug、Release 或 Both 生成短期 Windows artifact。
 - 自动门禁不替代真实 Editor Reload、视觉/UI/Input 和无引擎 clean-machine artifact 人工验收。
 
 ## 架构原则

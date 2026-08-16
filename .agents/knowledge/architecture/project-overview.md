@@ -4,10 +4,11 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的 Godot 产品主线、纯 .NET 分层、运行时和主要游戏系统总入口。
 tags: [architecture, godot, agent-first]
-timestamp: "2026-08-16T14:23:24+08:00"
+timestamp: "2026-08-16T19:13:41+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
+  - README.md
   - AGENTS.md
   - .agents/ARCHITECTURE.md
   - Tactics.Godot.slnx
@@ -16,12 +17,12 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter
   - godot/project.godot
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:b82e269388c1bf9af3723d693fc9241069a2580522ceca43a9a4c03f75cb39a6
+source_fingerprint: sha256:0d574108e22d914617d5cb3a1a6904be1f71331d784a719c2ce3383ec94cb8a7
 ---
 
 # Summary
 
-Tactics 是 Agent 优先维护的 Godot 4.7 C# 战棋项目。远程 `main` 是产品与治理权威，运行时由纯 .NET Core/Application、Godot Adapter 和唯一 `godot/project.godot` 组成。Unity 工程已退役，永久最终 Tag、临时归档分支和 Frozen Oracle 只提供历史证据。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、Resource 和测试证明；本 OKF bundle 只提供跨系统综合和导航。
+Tactics 是 Agent 优先维护的 Godot 4.7 C# 战棋项目。根 `README.md` 面向访问仓库的玩家与开发者介绍 Pure Run、环境、运行、验证和两档 Windows 构建入口；本页继续负责架构综合。远程 `main` 是产品与治理权威，运行时由纯 .NET Core/Application、Godot Adapter 和唯一 `godot/project.godot` 组成。Unity 工程已退役，永久最终 Tag、临时归档分支和 Frozen Oracle 只提供历史证据。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、Resource 和测试证明；本 OKF bundle 只提供跨系统综合和导航。
 
 # Runtime Foundation
 
