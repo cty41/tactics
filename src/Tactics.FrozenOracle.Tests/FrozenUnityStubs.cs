@@ -1,7 +1,7 @@
 namespace Tactics.Common.Cells
 {
     /// <summary>
-    /// Minimal compile-time surface required by the frozen pure C# pathfinding sources.
+    /// Minimal compile-time surface required by the repository-owned frozen pathfinding sources.
     /// </summary>
     public interface ICell
     {

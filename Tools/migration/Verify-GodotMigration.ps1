@@ -173,6 +173,7 @@ try {
         Invoke-Checked 'Restore locked Godot-owned dependencies' {
             dotnet restore 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' --locked-mode
             if ($LASTEXITCODE -eq 0) { dotnet restore 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' --locked-mode }
+            if ($LASTEXITCODE -eq 0) { dotnet restore 'src/Tactics.FrozenOracle.Tests/Tactics.FrozenOracle.Tests.csproj' --locked-mode }
             if ($LASTEXITCODE -eq 0) { dotnet restore $adapterProject --locked-mode }
             if ($LASTEXITCODE -eq 0) { dotnet restore $testHostProject --locked-mode }
         }
@@ -191,6 +192,7 @@ try {
         Invoke-Checked 'Build Godot-owned projects without Unity Oracle sources' {
             dotnet build 'src/Tactics.Core.Tests/Tactics.Core.Tests.csproj' -c Debug --no-restore -m:1
             if ($LASTEXITCODE -eq 0) { dotnet build 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' -c Debug --no-restore -m:1 }
+            if ($LASTEXITCODE -eq 0) { dotnet build 'src/Tactics.FrozenOracle.Tests/Tactics.FrozenOracle.Tests.csproj' -c Debug --no-restore -m:1 }
             if ($LASTEXITCODE -eq 0) { dotnet build $adapterProject -c Debug --no-restore -m:1 }
         }
     }
@@ -214,10 +216,8 @@ try {
         dotnet test 'src/Tactics.Application.Tests/Tactics.Application.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
     }
 
-    if (-not $GodotOwned) {
-        Invoke-Checked 'Run frozen Unity source Oracle NUnit' {
-            dotnet test 'src/Tactics.UnityOracle.Tests/Tactics.UnityOracle.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
-        }
+    Invoke-Checked 'Run repository-owned frozen source Oracle NUnit' {
+        dotnet test 'src/Tactics.FrozenOracle.Tests/Tactics.FrozenOracle.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
     }
 
     Invoke-Checked 'Run agent policy unittest' {
@@ -1015,7 +1015,7 @@ try {
                 --allow-missing-repo-prefix Assets `
                 --allow-missing-repo-prefix Packages `
                 --allow-missing-repo-prefix ProjectSettings `
-                --allow-missing-repo-prefix src/Tactics.UnityOracle.Tests
+                --allow-missing-repo-prefix src/Tactics.FrozenOracle.Tests
         }
         else {
             python 'Tools/okf/validate_bundle.py'

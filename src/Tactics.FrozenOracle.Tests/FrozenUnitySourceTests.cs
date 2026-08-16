@@ -14,7 +14,7 @@ using FrozenPresentation = Tactics.Common.Skills.Graph;
 using FrozenRuntimeScope = Tactics.Common.Battle.Runtime.BattleRuntimeScope;
 using FrozenUnitDerivedStatRules = Tactics.Common.Units.UnitDerivedStatRules;
 
-namespace Tactics.UnityOracle.Tests;
+namespace Tactics.FrozenOracle.Tests;
 
 /// <summary>
 /// Executes selected engine-neutral source files from the immutable Unity final snapshot.
@@ -86,7 +86,7 @@ public sealed class FrozenUnitySourceTests
         {
             foreach ((string path, string expectedBlobId) in ExpectedBlobIds)
             {
-                string actualBlobId = ComputeGitBlobId(Path.Combine(repositoryRoot, path));
+                string actualBlobId = ComputeGitBlobId(FrozenPath(repositoryRoot, path));
                 Assert.That(actualBlobId, Is.EqualTo(expectedBlobId), path);
             }
         });
@@ -147,9 +147,9 @@ public sealed class FrozenUnitySourceTests
         using JsonDocument golden = JsonDocument.Parse(File.ReadAllText(
             Path.Combine(repositoryRoot, "Tests", "golden", "buff-item-batch-v1.json")));
         using JsonDocument consumables = JsonDocument.Parse(File.ReadAllText(
-            Path.Combine(repositoryRoot, "Assets", "Tactics", "GameData", "Consumables.json")));
+            FrozenPath(repositoryRoot, "Assets/Tactics/GameData/Consumables.json")));
         using JsonDocument equipment = JsonDocument.Parse(File.ReadAllText(
-            Path.Combine(repositoryRoot, "Assets", "Tactics", "GameData", "Equipment.json")));
+            FrozenPath(repositoryRoot, "Assets/Tactics/GameData/Equipment.json")));
 
         Assert.Multiple(() =>
         {
@@ -623,8 +623,11 @@ public sealed class FrozenUnitySourceTests
         return Convert.ToHexString(SHA1.HashData(payload)).ToLowerInvariant();
     }
 
+    private static string FrozenPath(string repositoryRoot, string sourcePath) =>
+        Path.Combine(repositoryRoot, "src", "Tactics.FrozenOracle.Tests", "FrozenSources", sourcePath);
+
     private static string ReadFrozenSource(string repositoryRoot, string relativePath) =>
-        File.ReadAllText(Path.Combine(repositoryRoot, relativePath));
+        File.ReadAllText(FrozenPath(repositoryRoot, relativePath));
 
     private readonly record struct OraclePoint(int X, int Y);
 

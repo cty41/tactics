@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T10:05:06+08:00"
+timestamp: "2026-08-16T10:11:15+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -12,13 +12,13 @@ repo_paths:
   - src/Tactics.Application
   - src/Tactics.Core.Tests
   - src/Tactics.Application.Tests
-  - src/Tactics.UnityOracle.Tests
+  - src/Tactics.FrozenOracle.Tests
   - godot
   - Tests/golden
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:6337a4646f3ac54db891e655f91c57dd640892d1936d88b9ea7e19f39054b029
+source_fingerprint: sha256:49a6d014f23e589abaa6c74f02b9242fddd395ab83b6d0e3897dafd8167b614f
 ---
 
 # Current state
@@ -31,7 +31,7 @@ Core 已移至 `src/Tactics.Core`，不再由 Unity `Assets` 反向编译；未�
 
 Phase 1A 已建立不可变 `BattleState/BattleUnitState`、typed `BattleCommand/BattleEvent/BattleTransition` 与稳定 `SplitMix64 v1` RNG。Phase 1B 将 Golden 升级为 schema v4，区分单位定义 `ContentId` 与运行时 `UnitInstanceId`，允许同一定义的多个战斗实例；命令、事件、状态键和回合顺序均使用实例 ID。
 
-冻结 Unity 的 Dijkstra、Heap 与 `BattleInitiativeService` 当前仍通过独立 `Tactics.UnityOracle.Tests` linked compile `Assets/Tactics/**`；Phase 3 又把 Amazon 投矛、Ability Mana 和 Poison Buff 的冻结源码加入 blob 绑定。Oracle Matrix 共绑定 15 个最终 Tag blob；Core 路径、先攻及 Poison Spear 的 Lv1 damage、Mana、持矛/掉落、Buff duration/tick/AddDuration 均有真实 AssetDatabase export 与冻结源码交叉证据。该测试层不引用 UnityEngine，也不进入 Core/Application/Godot Release，但 live linked source 是删除 Unity 根目录前的明确阻断，必须转换为带原路径、Git blob 与 SHA-256 的仓库内 FrozenOracle 快照。
+冻结 Unity 的 Dijkstra、Heap、`BattleInitiativeService`、RuntimeScope 和 Presentation compiler 已由 `Tactics.FrozenOracle.Tests` 编译仓库内不可变快照，不再 linked compile `Assets/Tactics/**`。FrozenOracle 共保存 47 份源码、JSON 与 Shader 证据；每项记录原路径、Git blob、SHA-256 和来源方式。部分后期 Oracle blob 并不等于最终 Tag 同路径 blob，因此 manifest 对这些条目以显式 Oracle blob binding 为权威，只对未单独绑定的 GameData 使用最终 Tag path。15 项语义测试继续覆盖 Core 路径、先攻、RuntimeScope、Presentation、Poison Spear、Buff/Item、Run、Map、成长和 Unit 合同。
 
 当前 `Verify-GodotMigration.ps1 -GodotOwned` 通过排除 Unity 根目录并跳过 live Oracle/部分迁移测试证明 Godot staging 可独立运行；它不是删除后的正式主线验证形态。最终必须由无跳过模式的 Godot verifier、FrozenOracle、Gameplay Specs、GdUnit、双 renderer、OKF 与 Windows package/startup 共同闭环。内容所有权与人工验收状态相互独立：完成权威切换后允许 `GodotOwned + manual_qa_pending`，自动化不得据此把人工项标记为通过。
 

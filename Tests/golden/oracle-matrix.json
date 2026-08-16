@@ -6,8 +6,8 @@
     "policy": "read_only"
   },
   "linkedSourceOracle": {
-    "project": "src/Tactics.UnityOracle.Tests/Tactics.UnityOracle.Tests.csproj",
-    "testFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+    "project": "src/Tactics.FrozenOracle.Tests/Tactics.FrozenOracle.Tests.csproj",
+    "testFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
     "policy": "test_only_no_runtime_dependency"
   },
   "contractDecisionManifest": "Tests/golden/contract-decisions.json",
@@ -117,7 +117,7 @@
         "Assets/Tactics/GameData/Events/DarkForest/fallen_altar_001.json",
         "Assets/Tactics/GameData/Events/DarkForest/cursed_chest_001.json"
       ],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": ["LinkedSources_MatchUnityFinalGitBlobs", "LayerFourMapNodesFrozenContracts_MatchGolden"],
       "goldenVector": "layer4-map-nodes-v1.json",
       "exportReceipt": "Tools/migration/manifest/receipts/pure-run-layer4-map-nodes-v1-export.json",
@@ -139,7 +139,7 @@
         "Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs",
         "Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs"
       ],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "PureRunPersistenceFrozenContracts_MatchGolden"
@@ -231,7 +231,7 @@
         "BattleRuntimeScope_TimeoutBoundary_ContainsCancellationCallbackExceptions",
         "BattleRuntimeScope_CompletedFaultedTask_IsObservedAfterRemoval"
       ],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "RuntimeScope_CoreMatchesFrozenOwnershipAndFaultContract",
@@ -245,7 +245,7 @@
       "id": "presentation.fork-join",
       "sourceFile": "Assets/Tactics/Tests/Editor/PresentationExecutionPlanEditorTests.cs",
       "sourceTests": ["Compile_ForkCreatesParallelBranchesAndContinuesAfterJoinOnce"],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "PresentationCompiler_CoreMatchesFrozenForkJoinTree"
@@ -257,7 +257,7 @@
       "id": "path.dijkstra-deterministic-tie-break",
       "sourceFile": "Assets/Tactics/Scripts/Common/pathfinding/algorithms/DijkstraPathfinding.cs",
       "sourceTests": [],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "RuntimeDijkstra_UsesFrozenNeighbourAndHeapTieBreak"
@@ -269,7 +269,7 @@
       "id": "turn.initiative-tie-break",
       "sourceFile": "Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs",
       "sourceTests": [],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "RuntimeInitiative_UsesInitiativeThenPlayerThenUnitId"
@@ -281,7 +281,7 @@
       "id": "turn.current-round-dynamic-reorder",
       "sourceFile": "Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs",
       "sourceTests": [],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "RuntimeInitiative_ReordersOnlyRemainingPartitionAfterChange"
@@ -317,7 +317,7 @@
         "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",
         "Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs"
       ],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "PoisonSpearLv1_SourceContractMatchesExportedCoreSemantics"
@@ -347,7 +347,7 @@
         "Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs",
         "Assets/Tactics/Tests/Editor/EncounterConfigTests.cs"
       ],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "UnitDerivedStats_FrozenFormulaAndSourceSemanticsMatchGolden",
@@ -382,7 +382,7 @@
         "Assets/Tactics/GameData/Consumables.json",
         "Assets/Tactics/GameData/Equipment.json"
       ],
-      "oracleHarnessFile": "src/Tactics.UnityOracle.Tests/FrozenUnitySourceTests.cs",
+      "oracleHarnessFile": "src/Tactics.FrozenOracle.Tests/FrozenUnitySourceTests.cs",
       "oracleTests": [
         "LinkedSources_MatchUnityFinalGitBlobs",
         "BuffAndItemFrozenContracts_MatchGolden"

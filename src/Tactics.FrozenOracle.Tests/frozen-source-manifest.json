@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "tagName": "unity-final-2026-08-08",
+  "tagObject": "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+  "peeledCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "entryCount": 47,
+  "entries": [
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Shaders/GoatBodyTint.shader",
+      "frozenPath": "FrozenSources/Assets/Tactics/Arts/PureRun/Shaders/GoatBodyTint.shader",
+      "gitBlobSha1": "d4da8e21404ac1b5d134b0f1455f36839900e7c2",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "d5e499d78e19fabea8a0f64072fc3c02c0be9f8fad1ed24d2acc3215188178ca",
+      "byteCount": 2976
+    },
+    {
+      "sourcePath": "Assets/Tactics/GameData/Consumables.json",
+      "frozenPath": "FrozenSources/Assets/Tactics/GameData/Consumables.json",
+      "gitBlobSha1": "626f45f2fabe2e957d6eeb327a57e4b695935ef8",
+      "sourceKind": "final_tag_path",
+      "sha256": "e7de4400b2b507a9275fc03068b2dd2af07617a626a9176c3941cbad4c30bbb8",
+      "byteCount": 1300
+    },
+    {
+      "sourcePath": "Assets/Tactics/GameData/Equipment.json",
+      "frozenPath": "FrozenSources/Assets/Tactics/GameData/Equipment.json",
+      "gitBlobSha1": "fdc13a13402f4f15aaa6ef97bcd1d118fdf76802",
+      "sourceKind": "final_tag_path",
+      "sha256": "62717106568fd8a2d73f0e296dcf7794c84dece521d618926b5426554d19af87",
+      "byteCount": 3298
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/AmazonBattleState.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/AmazonBattleState.cs",
+      "gitBlobSha1": "edc31ec7cddede0fb2b4a6676fa3dfdad0851966",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "5507235297e5a82fb30a0a3d8f0f0f1a5afea769a2518b50195c798d330e541a",
+      "byteCount": 11048
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs",
+      "gitBlobSha1": "a060663b709f316d02cf9d0f2581d3b1d7132114",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "8e79b421c504df5f82e798cf185556fb3a723a16c92acc2241de55d66661e63b",
+      "byteCount": 4317
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/BattleRewardSystem.cs",
+      "gitBlobSha1": "f8e3eb4c9136f4935585f86e4d2010738ff9e207",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "b2eb8b62ea65a98b83ee1a4b8ceebef9e5ffc1a6f9c1bda905d64325a4e84bef",
+      "byteCount": 12565
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/BattleSettlementCoordinator.cs",
+      "gitBlobSha1": "1d6e4997dfb8801329003f545e823ea5e3f01a49",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "45d4436943687ee86779831bd8b77b2c5c2d880b77ec1903204ccd1c5935ec91",
+      "byteCount": 22785
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/EncounterConfig.cs",
+      "gitBlobSha1": "850f23e53869c04c8ff28adbd85c1d4f12da9bae",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "e830f1c9d991efae95f32f9315a7c302d1b94804f6d118cf3cdc2455d814578c",
+      "byteCount": 35938
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs",
+      "gitBlobSha1": "b26a8a7b841f33e8315514c603dcd13fe38bbbfd",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "791ba135d5c6c798d92fa3e98fd32a24f580603b35a701ef7daa51f73d94bdbb",
+      "byteCount": 24291
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/Runtime/BattleRuntimeScope.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/Runtime/BattleRuntimeScope.cs",
+      "gitBlobSha1": "544f8ba928da4d831589e4fc7d5208623b17861f",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "7c355d9ba28ebe92beb799c5863fe1e2a17b42df4ea2b85f7c4c1294ec467bd1",
+      "byteCount": 7438
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Battle/Runtime/IBattleRuntimeScope.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Battle/Runtime/IBattleRuntimeScope.cs",
+      "gitBlobSha1": "c3dfdc5f556ffbc56ab60e18fc0ef5521b0c83a6",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "b8c5040c92bfcc3dc231520a63ad412bb622779a31b9f848dc187cf27b10ba8b",
+      "byteCount": 1223
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Consumables/ConsumableDefinition.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Consumables/ConsumableDefinition.cs",
+      "gitBlobSha1": "e1f0c75872bf1df506216570bfb7c8618ef1cf93",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "17793b946d1e87be106aaa877786de9577e990734c799ca56c75e8fbdc3565eb",
+      "byteCount": 2751
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Equipment/EquipmentDefinition.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Equipment/EquipmentDefinition.cs",
+      "gitBlobSha1": "bfa8dbf215905a8c2c78a64fb3bb449297a05c6c",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "719486054f5642a81f667febfe6d79cef151183c560f7111b7c0276b2503a1da",
+      "byteCount": 541
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Equipment/EquipmentSlot.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Equipment/EquipmentSlot.cs",
+      "gitBlobSha1": "414b4f21b7e9110a3c16ca7f22bb9822561274fe",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "ba3dc0edd80326745b0ff64d9b49daeff4c5578a247e54330917e28751705404",
+      "byteCount": 170
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs",
+      "gitBlobSha1": "4f0feeb252d95f3d213fd96ede48a694b2cba9ed",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "d937ae83cecc3c00e7ad6d7e28fdec447b901b7b0e5dcb39e7e574268e55f7fb",
+      "byteCount": 24125
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs",
+      "gitBlobSha1": "4f0d131a1f809c920f01cf137087dc0dc63d312a",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "b26db6b5346c8301aac7e3eb062f0e7f3e8dd4033a7148c366b54e958bb40003",
+      "byteCount": 14227
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Roster/CharacterLoadoutService.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Roster/CharacterLoadoutService.cs",
+      "gitBlobSha1": "274afc42e85a6b8543cf58ef3d73fe042f126347",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "bd2b62d99f025ccdc280f4959da81ab31aaae6d424749bb3bf880618b4aff929",
+      "byteCount": 13628
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs",
+      "gitBlobSha1": "f4c7e392fbc1dc1abef0f10ded0f3002457215f4",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "b76150d380c5ac406e7f9f7cc99c11b8761faf2cbab241a38b9fdc91e8217ddb",
+      "byteCount": 998
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs",
+      "gitBlobSha1": "8a3a14a1392bb57562fb6ae286eb79508ce6fe75",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "9d98d65e26417e52b2d3a9fb353edfa6cbcba51e348589b59680d7918c0cb31e",
+      "byteCount": 30001
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Skills/Graph/Executors/AmazonSkillNodeExecutor.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Skills/Graph/Executors/AmazonSkillNodeExecutor.cs",
+      "gitBlobSha1": "78e29de56e49926a2f5542d5491deea2cc2bef71",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "e7669855d97179ab9cafacf03a28427e8a2e1e333a3413dcbb1ccfdd3a6d9e98",
+      "byteCount": 14596
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Skills/Graph/PresentationExecutionPlan.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Skills/Graph/PresentationExecutionPlan.cs",
+      "gitBlobSha1": "6ef526ac91cdc0a1efb06066be7b3591289d41e1",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "6e796635b48be47ec95ab08d77710aa1cc54d4324335e4bdc88a2a82bf812ff1",
+      "byteCount": 7979
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Buffs/Buff.cs",
+      "gitBlobSha1": "84d04546bda0ab8121439a2285fa5065be642cc2",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "2e49adb83986f93229e32763ee126b42b133a5db834a1bff0fb49965da6faac3",
+      "byteCount": 2516
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Buffs/BuffBehavior.cs",
+      "gitBlobSha1": "31a2739f51ab47c1a24e41240083db6dfbcb9053",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "81bad0a94b7e5ade6f2c36c21f87cfd731f7a94c8b18fe329ac9e2bd97c0d535",
+      "byteCount": 5145
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",
+      "gitBlobSha1": "bc93aee09577d3bd9e1dda94c062c5c006383d61",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "d071dcbcc00e0055e5623e1c688f390276d09f4224fd816b78a53c19ceedf939",
+      "byteCount": 11066
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffConfig.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Buffs/BuffConfig.cs",
+      "gitBlobSha1": "b263a63e34ba7084e8b90bf557b1f553957d413e",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "7f6317c3a1e01a2deb8ebb323772be37150e3abc93f643257047831986f9af1c",
+      "byteCount": 3119
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffEffectType.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Buffs/BuffEffectType.cs",
+      "gitBlobSha1": "3e16349893caa94593519085518ba333e367c540",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "8f14f6974ac1222b4b76c7929033b3b74790dbcf86fdbbcd1387d0f28049f043",
+      "byteCount": 259
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffRefreshStrategy.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Buffs/BuffRefreshStrategy.cs",
+      "gitBlobSha1": "d12f701a2bfb6589f0f3722d75dce82465c56d7f",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "cf61759960b78c63599e15aac816e53587b26e1d621036024d1de031c4aadb0a",
+      "byteCount": 278
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffTriggerTiming.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Buffs/BuffTriggerTiming.cs",
+      "gitBlobSha1": "92690c614870fe24b53d069685bffb71e9439358",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "080c2de26b12d2835305e87615030e457ba8c12d3b6eaff8bb0c4569a83e25a7",
+      "byteCount": 304
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs",
+      "gitBlobSha1": "9528f7c17f3a782b16c4ceaa9b6b97e25893acfb",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "3c430c133bdd3970f2f77d79e6678eaaab469dc0f75e035cc1df51ed6e05271a",
+      "byteCount": 6343
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Unit.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/Unit.cs",
+      "gitBlobSha1": "5a9776a61dd698b439dd19845a5979bce73d419a",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "cc22916736cd5c3fdf8c690b59734b05d22ba7a4f60901bb71b7ac3334d146eb",
+      "byteCount": 37885
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs",
+      "gitBlobSha1": "4da3c885cfd9df5ed4128f8ef446815e760a2b0a",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "5816f5c8d0a0e32377feaffa7714d5ab564e754859c411f50dac0c45f813fa76",
+      "byteCount": 625
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs",
+      "gitBlobSha1": "54a463c642c59d1550c0454a9388c3f68c7e89b1",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "3fb40bfc7a4e2d1e4a84ea62be13746de1276aac8d6e57f29ed1078865261aef",
+      "byteCount": 61799
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/pathfinding/algorithms/DijkstraPathfinding.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/algorithms/DijkstraPathfinding.cs",
+      "gitBlobSha1": "6c7230e9f7bdb6e87c686b037c07ee23b88c30bd",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "56845cfd0234b0ccff008f48da8924a41d4a5dbeeb93242a8e6db58e0057881d",
+      "byteCount": 3251
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/pathfinding/algorithms/PathfindingAlgorithm.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/algorithms/PathfindingAlgorithm.cs",
+      "gitBlobSha1": "4e3fde3f6e4909c2e03c85b8d15a77ccffe58ca9",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "9b48ed14c121d828120c158f4636352e8f2fa7b071070d7427277cf08cd362e1",
+      "byteCount": 4310
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/pathfinding/dataStructures/HeapPriorityQueue.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/dataStructures/HeapPriorityQueue.cs",
+      "gitBlobSha1": "84ac36a60f294f2cbdaa93105ae01c48b209c3f9",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "d78c02d513a5cc4f4883266db8c87a9f0b81517fd0d011aefb03472c6253e8f7",
+      "byteCount": 1716
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/pathfinding/dataStructures/IPriorityQueue.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/dataStructures/IPriorityQueue.cs",
+      "gitBlobSha1": "21ac3290a5ea3eae827285e7cee2a0417e37e0d1",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "2401c0654d20c1d94b72fe1cfecc714a403382de4ca8578db53e4ba83d999483",
+      "byteCount": 854
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/pathfinding/dataStructures/PriorityQueueItem.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/dataStructures/PriorityQueueItem.cs",
+      "gitBlobSha1": "3dad83ed21a81c50dc457f933e0952a167dc941b",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "eab328d1a203dc61527247d9ed48c1ce76a295941fbba2554955bf76e1743331",
+      "byteCount": 967
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Roguelike/PureRunSessionStore.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Roguelike/PureRunSessionStore.cs",
+      "gitBlobSha1": "597614e4e4c201c99c1a79ef75fce3cd6c40e4e6",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "de822651ce84c61eb6aefeaf3d899ba32223c59eecfc8c06df81502954b312f2",
+      "byteCount": 8321
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Roguelike/PureRunSummaryRecorder.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Roguelike/PureRunSummaryRecorder.cs",
+      "gitBlobSha1": "7d532c2d7297f39335024e442bbe932bc23c8f76",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "5524ceca799c43f2399781a4503c28713511fcab87319df79c9f9ca89ca8e732",
+      "byteCount": 2583
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Roguelike/RoguelikeBattleReturnHandler.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Roguelike/RoguelikeBattleReturnHandler.cs",
+      "gitBlobSha1": "20da7982e99da5a81f34d6efa3d9613e749c43fc",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "0019b3141b370dacbbdc020640fbc9d6ed359676312407056528e878e801be2f",
+      "byteCount": 16918
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Roguelike/RoguelikeMapRuntimeState.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/Roguelike/RoguelikeMapRuntimeState.cs",
+      "gitBlobSha1": "1aff7a4f228fe8c8827152302c86d17d79be8645",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "7544cfa46790c065dd33e8c258e493e3200a2bae7651520e448e9d4426c14dc0",
+      "byteCount": 7689
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/RoguelikeMap/Events/AttributeCheckSystem.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/RoguelikeMap/Events/AttributeCheckSystem.cs",
+      "gitBlobSha1": "d76c1c4ac4f1ce39e22cb1d0c82184a289a00341",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "62bfea175ae1402f444ae50437ef8ddad40fd047191b602261c66457b88f952b",
+      "byteCount": 9665
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/RoguelikeMap/Interaction/RestSiteNodeHandler.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/RoguelikeMap/Interaction/RestSiteNodeHandler.cs",
+      "gitBlobSha1": "b5d23a1be9c86d6233cba11c073475dd61497b44",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "f6941a8f7589d18b6788aa3d43909f87b54918c6908f98b6960b7a889af0f4ef",
+      "byteCount": 5181
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/RoguelikeMap/Interaction/StoreNodeHandler.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/RoguelikeMap/Interaction/StoreNodeHandler.cs",
+      "gitBlobSha1": "936f086d2bef5c6b815b928a679d5815e0a16a3f",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "9ad8f22520ea8bf4af1c6f184f2f670f214f15482680ac367f26da94ad14816c",
+      "byteCount": 8776
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/RoguelikeMap/RoguelikeNodeTransactionService.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/RoguelikeMap/RoguelikeNodeTransactionService.cs",
+      "gitBlobSha1": "4435413dfe4b56b787a870f7c43786cce6777774",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "f3858de8166205011fb162ae256fe2fb6a8c79e3a7421d8fe6dd111b4ae5e5a3",
+      "byteCount": 6778
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/RoguelikeMap/RunSummary.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/RoguelikeMap/RunSummary.cs",
+      "gitBlobSha1": "3086080b45a036108758905624b09598e9c1b512",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "a770ad6ae298daac5139b3a2aed0a4190d10182fc32beeeda7c9981dd22d152e",
+      "byteCount": 5907
+    },
+    {
+      "sourcePath": "Assets/Tactics/Scripts/UI/LevelUpPanelController.cs",
+      "frozenPath": "FrozenSources/Assets/Tactics/Scripts/UI/LevelUpPanelController.cs",
+      "gitBlobSha1": "d95f18413171d28e50d914510352b4a1829af05a",
+      "sourceKind": "oracle_blob_binding",
+      "sha256": "0fc6b0d24702bca532facd549c08e6c240a3ae6ed36ef8aaf1dfe5f179fd5f7d",
+      "byteCount": 25350
+    }
+  ]
+}

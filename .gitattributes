@@ -11,6 +11,7 @@
 # Unity-generated metadata and imported vendor sources are preserved byte-for-byte.
 *.meta -whitespace
 "Assets/Piloto Studio/**" -whitespace
+src/Tactics.FrozenOracle.Tests/FrozenSources/** -whitespace
 
 # Specific merge drivers
 Assets/TBSFramework/**/Excel/** merge=excel

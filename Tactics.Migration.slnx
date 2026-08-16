@@ -4,7 +4,7 @@
     <Project Path="src/Tactics.Core.Tests/Tactics.Core.Tests.csproj" />
     <Project Path="src/Tactics.Application/Tactics.Application.csproj" />
     <Project Path="src/Tactics.Application.Tests/Tactics.Application.Tests.csproj" />
-    <Project Path="src/Tactics.UnityOracle.Tests/Tactics.UnityOracle.Tests.csproj" />
+    <Project Path="src/Tactics.FrozenOracle.Tests/Tactics.FrozenOracle.Tests.csproj" />
   </Folder>
   <Folder Name="/godot/">
     <Project Path="godot/Tactics.Godot.Adapter.csproj" />

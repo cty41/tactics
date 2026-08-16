@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="FrozenUnitySourceTests.cs" />
+    <Compile Include="FrozenUnityStubs.cs" />
+    <Compile Include="FrozenPresentationStubs.cs" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Tactics.Core/Tactics.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/algorithms/DijkstraPathfinding.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/algorithms/PathfindingAlgorithm.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/dataStructures/HeapPriorityQueue.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/dataStructures/IPriorityQueue.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/pathfinding/dataStructures/PriorityQueueItem.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/Battle/BattleInitiativeService.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/Battle/Runtime/IBattleRuntimeScope.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/Battle/Runtime/BattleRuntimeScope.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/Skills/Graph/PresentationExecutionPlan.cs" />
+    <Compile Include="FrozenSources/Assets/Tactics/Scripts/Common/Units/UnitDerivedStatRules.cs" />
+  </ItemGroup>
+</Project>

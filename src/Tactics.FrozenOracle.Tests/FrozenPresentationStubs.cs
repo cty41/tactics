@@ -1,7 +1,7 @@
 namespace Tactics.Common.Skills.Graph;
 
 /// <summary>
-/// Minimal graph surface consumed by the frozen presentation compiler source.
+/// Minimal graph surface consumed by the repository-owned frozen presentation compiler source.
 /// </summary>
 public enum PresentationCueKind
 {

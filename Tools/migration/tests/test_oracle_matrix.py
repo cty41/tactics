@@ -203,7 +203,7 @@ class OracleMatrixTests(unittest.TestCase):
             encoding="utf-8-sig"
         )
         self.assertIn(oracle["project"], solution)
-        self.assertIn("Tactics.UnityOracle.Tests.csproj", verifier)
+        self.assertIn("Tactics.FrozenOracle.Tests.csproj", verifier)
 
 
 if __name__ == "__main__":

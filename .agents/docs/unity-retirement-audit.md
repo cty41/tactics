@@ -33,9 +33,9 @@ Unity 工程中仍存在的 Barbarian、Hunter、Uppercut、Counter、Mark、Fre
 
 ## 删除前仍需关闭
 
-1. `Tactics.UnityOracle.Tests` 仍 linked compile live `Assets/Tactics/**`。
+1. `Tactics.FrozenOracle.Tests` 已把 47 份源码、JSON 和 Shader 证据冻结到仓库内，记录原路径、Git blob 与 SHA-256；solution 和 verifier 不再编译 `Assets/Tactics/**`。
 2. 当前 batch/category/state 仍大量标记为 `UnityOwned`。
-3. 完整 verifier 仍包含 Unity Oracle；`-GodotOwned` 通过跳过迁移测试和 allow-missing 模式工作。
+3. 完整 verifier 仍有迁移双模式；`-GodotOwned` 仍通过跳过部分迁移测试和 allow-missing 模式工作。
 4. 根 `AGENTS.md`、Unity rules/skills/hooks/MCP 和迁移工具仍假定 Unity 工程存在。
 5. Godot 手工验收继续 pending，但按产品决定不阻断 Unity 源工程删除。
 
