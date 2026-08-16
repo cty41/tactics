@@ -19,12 +19,13 @@ try {
     if ($LASTEXITCODE -ne 0 -or $trackedFiles.Count -eq 0) { throw 'Unable to enumerate tracked repository files.' }
     $workingFiles = @(
         'Tools/migration/Test-GodotOwnedWithoutUnity.ps1',
+        'Tools/godot/Verify-GodotProject.ps1',
         'godot/tests/GdUnit4TestRunnerScene.cs.txt',
         'godot/tests/Tactics.Godot.TestHost.csproj'
     )
     $trackedFiles = @($trackedFiles + $workingFiles | Select-Object -Unique)
     foreach ($relativePath in $trackedFiles) {
-        if ($relativePath -match '^(Assets|Packages|ProjectSettings)/' -or
+        if ($relativePath -match '^(Assets|Packages|ProjectSettings|UIElementsSchema)/' -or
             $relativePath -match '^src/Tactics\.UnityOracle\.Tests/') { continue }
         $source = Join-Path $repoRoot $relativePath
         if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { continue }
@@ -36,7 +37,7 @@ try {
         Copy-Item -LiteralPath $source -Destination $destination
     }
 
-    foreach ($forbidden in @('Assets', 'Packages', 'ProjectSettings', 'src\Tactics.UnityOracle.Tests')) {
+    foreach ($forbidden in @('Assets', 'Packages', 'ProjectSettings', 'UIElementsSchema', 'src\Tactics.UnityOracle.Tests')) {
         if (Test-Path -LiteralPath (Join-Path $verificationRoot $forbidden)) {
             throw "Unity path leaked into Godot-owned verification copy: $forbidden"
         }
@@ -54,8 +55,8 @@ try {
     [System.IO.File]::WriteAllText($isolatedProject, $projectText,
         [System.Text.UTF8Encoding]::new($false))
 
-    & (Join-Path $verificationRoot 'Tools\migration\Verify-GodotMigration.ps1') `
-        -GodotOwned -GodotExecutable $GodotExecutable
+    & (Join-Path $verificationRoot 'Tools\godot\Verify-GodotProject.ps1') `
+        -GodotExecutable $GodotExecutable
     if ($LASTEXITCODE -ne 0) { throw "Godot-owned verification failed with exit code $LASTEXITCODE." }
 }
 finally {
