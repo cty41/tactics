@@ -68,8 +68,10 @@ class ManualQaHandoffPolicyTests(unittest.TestCase):
             self.copy_contract(root)
             ledger = root / LEDGER
             text = ledger.read_text(encoding="utf-8")
-            text, replacements = re.subn(r"^2\. (`MQA-[^`]+`)$", r"1. \1", text, count=1, flags=re.MULTILINE)
-            self.assertEqual(1, replacements, "fixture must expose a second emitted QA item")
+            item_ids = re.findall(r"^### (MQA-[^\s]+)\s+—", text, flags=re.MULTILINE)
+            self.assertGreaterEqual(len(item_ids), 2, "fixture must expose two QA items")
+            order_section = f"## Last Emitted Order\n\n1. `{item_ids[0]}`\n1. `{item_ids[1]}`\n"
+            text = re.sub(r"(?ms)^## Last Emitted Order\b.*\Z", order_section, text)
             ledger.write_text(text, encoding="utf-8")
             self.assertTrue(any("contiguous" in error for error in validate_manual_qa_handoff(root)))
 
