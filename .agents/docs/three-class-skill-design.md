@@ -22,7 +22,7 @@
 | 法师 | 闪电术 `lightning` | 智力 5 | 传送术 `teleport` | 智力 7、闪电术 |
 | 死灵法师 | 召唤骷髅 `summon_skeleton` | 魅力 5 | 骷髅法师 `skeleton_mage` | 魅力 7、召唤骷髅 |
 | 死灵法师 | 伤害加深诅咒 `amplify_damage` | 魅力 5 | 恐惧诅咒 `fear_curse` | 魅力 7、伤害加深诅咒 |
-| 死灵法师 | 骨矛 `bone_spear` | 智力 5 | 骨盾 `bone_shield` | 魅力 7、骨矛 |
+| 死灵法师 | 骨矛 `bone_spear` | 魅力 5 | 骨盾 `bone_shield` | 魅力 7、骨矛 |
 | 亚马逊 | 突刺 `thrust` | 敏捷 5 | 连续突刺 `multi_stab` | 敏捷 7、突刺 |
 | 亚马逊 | 毒矛 `poison_spear` | 敏捷 5 | 召唤长矛 `recover_spear` | 敏捷 7、毒矛 |
 | 亚马逊 | 战斗技巧 `combat_techniques`（被动） | 幸运 5 | 诱饵 `decoy` | 幸运 7、战斗技巧 |

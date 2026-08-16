@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T01:17:37+08:00"
+timestamp: "2026-08-16T10:05:06+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,18 +18,22 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:69cdd6adedc1b4fb913dd6ff6b75978aaa48daf2cdedc32f44fcfcba3f7cc60c
+source_fingerprint: sha256:6337a4646f3ac54db891e655f91c57dd640892d1936d88b9ea7e19f39054b029
 ---
 
 # Current state
 
-Unity `w1` 与 `unity-final-2026-08-08` 是只读 Oracle；唯一 Godot 项目为 `godot/project.godot`。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
+Unity `w1` 与 `unity-final-2026-08-08` 是只读 Oracle；唯一 Godot 项目为 `godot/project.godot`。最终 Unity annotated tag object 为 `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d`，其 peeled commit 为 `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，新证据必须明确区分两者。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
+
+Unity 完整退役清单以该 peeled commit 的 Git tree 为输入，覆盖 `Assets/`、`Packages/`、`ProjectSettings/` 和 `UIElementsSchema/` 共 9,263 个跟踪文件、46,501,338 字节。每项已分类为已迁移等价、Godot 设计替代、历史原型退役、第三方排除、Audio 延后或仅保留来源证据，当前 `unresolved=0`。Barbarian、Hunter 及其旧技能属于 `retired_legacy_prototype`，不进入三职业 Pure Run；文件级事实与规则分别保存在 `Tools/migration/manifest/retirement/unity-retirement-inventory-v1.json` 和 `unity-retirement-rules-v1.json`。
 
 Core 已移至 `src/Tactics.Core`，不再由 Unity `Assets` 反向编译；未接入冻结运行时的临时 Unity Adapter 已移除。`src/Tactics.Application` 已建立纯 .NET `ContentDraft → ContentCompiler/Diagnostics → ContentSnapshot` 边界。Godot Catalog 记录严格小写 ContentId、ResourceType、UID、诊断路径和 SchemaVersion；Godot Resource 只保留在 Adapter registry，不进入 Snapshot。
 
 Phase 1A 已建立不可变 `BattleState/BattleUnitState`、typed `BattleCommand/BattleEvent/BattleTransition` 与稳定 `SplitMix64 v1` RNG。Phase 1B 将 Golden 升级为 schema v4，区分单位定义 `ContentId` 与运行时 `UnitInstanceId`，允许同一定义的多个战斗实例；命令、事件、状态键和回合顺序均使用实例 ID。
 
-冻结 Unity 的 Dijkstra、Heap 与 `BattleInitiativeService` 通过独立 `Tactics.UnityOracle.Tests` 作为 linked source 原样编译；Phase 3 又把 Amazon 投矛、Ability Mana 和 Poison Buff 的冻结源码加入 blob 绑定。当前 Oracle Matrix 共绑定 15 个最终 Tag blob；Core 路径、先攻及 Poison Spear 的 Lv1 damage、Mana、持矛/掉落、Buff duration/tick/AddDuration 均有真实 AssetDatabase export 与冻结源码交叉证据。该测试层不引用 UnityEngine，也不进入 Core/Application/Godot Release。
+冻结 Unity 的 Dijkstra、Heap 与 `BattleInitiativeService` 当前仍通过独立 `Tactics.UnityOracle.Tests` linked compile `Assets/Tactics/**`；Phase 3 又把 Amazon 投矛、Ability Mana 和 Poison Buff 的冻结源码加入 blob 绑定。Oracle Matrix 共绑定 15 个最终 Tag blob；Core 路径、先攻及 Poison Spear 的 Lv1 damage、Mana、持矛/掉落、Buff duration/tick/AddDuration 均有真实 AssetDatabase export 与冻结源码交叉证据。该测试层不引用 UnityEngine，也不进入 Core/Application/Godot Release，但 live linked source 是删除 Unity 根目录前的明确阻断，必须转换为带原路径、Git blob 与 SHA-256 的仓库内 FrozenOracle 快照。
+
+当前 `Verify-GodotMigration.ps1 -GodotOwned` 通过排除 Unity 根目录并跳过 live Oracle/部分迁移测试证明 Godot staging 可独立运行；它不是删除后的正式主线验证形态。最终必须由无跳过模式的 Godot verifier、FrozenOracle、Gameplay Specs、GdUnit、双 renderer、OKF 与 Windows package/startup 共同闭环。内容所有权与人工验收状态相互独立：完成权威切换后允许 `GodotOwned + manual_qa_pending`，自动化不得据此把人工项标记为通过。
 
 Phase 1B 完整统一门禁已通过，覆盖 locked restore、单节点 solution build、Core/Application/Unity Oracle NUnit、Python、Skill/Incident、隔离 GdUnit、生产 Debug 恢复、Release 测试依赖排除、Poison Spear runtime/presentation、EditorPlugin headless 与 OKF。该结论关闭路径和初始先攻 tie-break 缺口。
 

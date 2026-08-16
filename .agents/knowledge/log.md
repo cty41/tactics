@@ -1,8 +1,12 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-16
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:b4c39abda3a9a2995d70eccfe19698a6dc67142e3e255f2824ed7757f3fa5872`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:69cdd6adedc1b4fb913dd6ff6b75978aaa48daf2cdedc32f44fcfcba3f7cc60c`。
+* **Retirement audit**: 冻结最终 Unity annotated tag object `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d` 与 peeled commit `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，完成 9,263 个跟踪文件、46,501,338 字节的退役分类，`unresolved=0`。
+* **Scope correction**: Barbarian、Hunter 及旧技能原型归档退役，不进入三职业 Pure Run；Audio payload 继续延后，Godot 人工验收不自动晋升。
+* **Rule correction**: Bone Spear Lv1 的成长门槛归属 Necromancer 主属性 Charisma 5。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:15c3bf39fbcc92acde062699809dd583cf88ca8018243ead44568375111cd668`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:6337a4646f3ac54db891e655f91c57dd640892d1936d88b9ea7e19f39054b029`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:e7be49f114d8b1155fada4129c60777270722c20d8610e59cb8a81c6cf773270`。
 * **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:a447a7d87f9d7409f62312a28f89388f076512328a23a92114ba2334949c444e`。
 
 ## 2026-08-15

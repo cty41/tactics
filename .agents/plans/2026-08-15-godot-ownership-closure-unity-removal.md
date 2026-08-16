@@ -1,105 +1,103 @@
-# Godot Ownership 收口与 Unity 工程删除
+# Godot 主线查漏补缺与 Unity 工程完整退役
 
 ## Summary
 
-当前不能立即删除 Unity 工程。先完成 Lv3、Treasure、权威 Map、统一 Content Workbench、Audio 框架、Godot-only 验证和剩余人工/Windows RC；全部通过后才在 `migration/godot` 原地删除 Unity 根目录。
+当前三职业 Pure Run 的自动化迁移主体已经完成：Catalog 142、Lv1–Lv3、完整 Run、Treasure/Map/Save V6、Godot Workbench、正式 UI、Gameplay Spec Runner、Godot-only 验证和 Windows RC Actions 均已有实现证据。
 
-当前 Godot Run 拓扑是首个正式默认地图，不为了 Unity parity 扩展层数；Map Workbench 仍支持未来任意层数。第三方 Piloto 等载荷不迁移，只保留来源/hash 审计。
+Unity 工程删除前仍需关闭三类阻断：完整可达性与历史内容分类、live Unity Oracle/工具依赖、仍标记为 `UnityOwned` 的内容和治理状态。Godot 人工验收不阻断 Unity 源工程删除，但继续作为发布质量闸门保留。
+
+本计划采用完整退役：Barbarian、Hunter 及旧技能原型归档退役，不迁入当前 Pure Run；Audio payload、Unity PlayerPrefs 导入和未授权第三方视觉不进入本版本。真正删除前必须展示精确 manifest 和成功的物理无 Unity 预演，并再次取得用户确认。
 
 ## Current State
 
-- 基线：`migration/godot`，计划创建时 HEAD `41fe3193`，canonical Catalog 131。
-- 已实现：Core/Application、三职业 Lv1/Lv2、Inventory/成长、完整当前 Run、Elite/Boss、Save V5、等距战斗、程序化表现、正式 Godot UI shell、Gameplay Spec Godot Runner。
-- 未完成：9 个实际存在的玩家主分支 Lv3（含无独立 AbilityConfig 的 Combat Techniques Lv3 被动）、Skeleton Warrior Lv3 内部攻击、Treasure、正式 Audio、通用内容工作台、Godot-only Oracle/verifier、剩余人工 QA 与 Windows RC。高级分支不得虚构 Lv3。
-- Unity Oracle 仍链接 `Assets/Tactics` 下的源码；统一 verifier 仍读取 Unity GameData 和源图片。
-- 当前用户脏文件、缓存和 artifact 不属于本计划，不得覆盖或暂存。
+- 基线分支 `migration/godot`；远程 annotated tag `unity-final-2026-08-08` 的 tag object 为 `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d`，实际指向 commit `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`。
+- canonical Catalog 为 142；Godot-only staging 和 hosted Windows RC 已通过。
+- `src/Tactics.UnityOracle.Tests` 仍 linked compile `Assets/Tactics/**`；`Tactics.Migration.slnx` 和完整 verifier 仍包含它。
+- `Tools/migration/manifest/asset-categories.json`、batch/state 仍大量写成 `UnityOwned`。
+- `-GodotOwned` 当前通过排除 Unity 根目录和跳过 Oracle/迁移测试证明可运行，但不是最终主线验证形态。
+- Unity 中额外存在 Barbarian、Hunter、Uppercut、Counter、Mark、Freeze、Frost Nova、Heal 等非当前 Pure Run 内容，统一归类 `retired_legacy_prototype`。
+- 当前工作树存在用户/既有修改和缓存；不得覆盖、暂存或清理这些路径。
 
 ## Implementation
 
-### 1. 冻结最后一批 Unity 合同
+### 1. 冻结最终 Unity 退役清单
 
-- 通过 Unity AssetDatabase 两次导出 8 个 AbilityConfig Lv3、源码冻结的 Combat Techniques Lv3 被动、Skeleton Warrior Lv3 攻击、Treasure、Map/Event/Skill/Presentation/AI/BattleTest 有效合同。
-- 固定 GUID、LocalFileId、dependency hash、源码 SHA 和项目自有 UI 来源。
-- Party/Enemy/Corpse 测试槽位与格子吸附规则进入 typed DTO；Piloto 只审计不复制。
-- converter 拒绝未知节点、虚构高级分支 Lv3、非法引用、重复 ID 和第三方 payload。
+- 建立 `unity-retirement-inventory-v1`，覆盖最终 Build Scene 依赖、代码注册表、UI/Input、Map/Event/Treasure、Editor 工具、BattleTest、测试规范和许可证边界。
+- 每项分类为 `migrated_equivalent`、`replaced_by_godot_design`、`retired_legacy_prototype`、`excluded_third_party`、`deferred_audio_payload`、`provenance_only` 或 `unresolved`。
+- 两次独立导出必须 byte-identical；只有 `unresolved=0` 才可继续。
+- 修正文档漂移，包括 Bone Spear 的 Charisma 门槛、Catalog 142、Save V6 与 Windows RC 状态。
 
-### 2. 完成 Lv3 与 Treasure
+Checkpoint：`docs: freeze final Unity retirement inventory`
 
-- 迁移 Unity 实际存在的 9 个玩家主分支 Lv3（8 个主动资源和 1 个 Combat Techniques 被动等级），以及 Skeleton Warrior Lv3 内部攻击。
-- 成长支持合法 Lv2→Lv3；高级分支仍按 Unity 实际最大等级，不虚构 Lv3。
-- Treasure 支持 Gold、Equipment、Consumable、Buff，首次判定确定性保存，Reload 不重掷，重复确认不重复奖励。
-- Preview、AI、事件、描述、程序化表现、Inventory 与 Save 使用现有统一 Runtime。
+### 2. 解除 live Unity Oracle 依赖
 
-### 3. Map Resource 成为正式 Run 权威
+- 以仓库内规范化源码快照建立 `src/Tactics.FrozenOracle.Tests`；每份快照记录 Tag、Git blob、原路径和 SHA-256。
+- 测试不再读取 `Assets/`，但保持原 Oracle 断言和冻结语义。
+- solution、lock file 和 verifier 改为运行 FrozenOracle。
 
-- 完整 `PureRunMapResource` 支持任意层数、稳定 Node ID、显式连接和 Battle/Elite/Boss/Rest/Store/Mystery/Treasure。
-- 当前 Godot 可玩拓扑生成为默认正式 Map；Main、Run 和 Flow Projector 只消费编译后的 Map Definition。
-- 删除硬编码 `LayerFourMap()`、静态 edge 和字符串 Layer 推断旁路。
-- Save V6 保存 map identity/revision、访问状态、pending node/treasure transaction；V1-V5 确定性迁移，失败保留原档与 backup。
+Checkpoint：`test: detach frozen gameplay oracles from Unity sources`
 
-### 4. 统一 Godot Content Workbench
+### 3. 切换 Godot 内容所有权
 
-- Map：节点/连接/Inspector、Undo/Redo、自动布局、Validate、保存回滚和 seed 预览。
-- Event/Treasure：选项、检定、结果、奖励表和 Map 关联跳转。
-- Encounter/Battle Fixture：在 canonical 等距棋盘拖放 Party、Enemy、Summon、Corpse、Blocked Cell；编辑 Unit、等级、HP/MP、状态、技能和 AI；保存正式 Encounter/Layout 或 `ValidatedGodotRunCheckpoint`；一键由 Main/Gameplay Spec 启动。
-- Skill/Presentation：将 Poison Spear 样板泛化为全部技能，使用 typed ChangeSet、Revision、Undo/Redo 和正式 SubViewport 播放器。
-- AI：图、Intent、Rule、Score、Curve 与候选评分可视化；只允许已知安全参数编辑。
-- Audio：cue/profile、bus、并发、资源引用和 Editor 试听。
-- QA：选择 Gameplay Spec/checkpoint/renderer，后台运行并展示 trace、失败诊断、截图和清理结果。
-- 所有保存通过 ResourceSaver/受测 compiler；不得手写 `.tres/.tscn`。
+- 建立 `godot-content-ownership-v1` receipt；当前 category/batch/state 晋升 `GodotOwned`，历史 export receipt 保持原始 `UnityOwned`。
+- Godot Resource、Catalog、ContentId、Save V6 和 Workbench 成为唯一编辑/生成权威。
+- Unity GUID/LocalFileId/SourcePath 只保留为 provenance；删除 disposable DTO、旧 exporter/converter、临时 GUID 映射和会覆盖 canonical Resource 的生成入口。
+- 人工验收状态与所有权分离，允许 `GodotOwned + manual_qa_pending`，不得伪装为人工通过。
 
-### 5. Audio 框架与合法素材
+Checkpoint：`feat: promote canonical content to Godot ownership`
 
-- Master/Music/SFX/UI buses；独立版本化音量/mute 设置，不写 Run Save。
-- `AudioCueDefinition`、变体、并发、清理和 committed battle/page event 映射。
-- 用户已决定本版本不接入 Audio payload；框架保留但运行时静默，素材、cue 绑定与听感验收整体 deferred。
-- 不得宣称 Audio 内容迁移完成，但缺少音频不再阻断本版本 Windows RC；未来接入时仍需文件级来源/hash 与许可证审计。
+### 4. 建立正式 Godot 主线验证链
 
-### 6. 解除 Unity 验证依赖
+- 建立 `Tactics.Godot.slnx` 和 `Tools/godot/Verify-GodotProject.ps1`，迁移稳定 Windows build/RC/config 脚本。
+- 移除 `-GodotOwned` 双模式；正式 verifier 默认要求 Unity 根目录不存在。
+- Core/Application/FrozenOracle/NUnit/GdUnit/Gameplay Specs/Python/OKF/Compatibility/Forward+/Windows package 进入同一串行门禁。
+- 禁止编译引用 UnityEngine/UnityEditor、live Unity 路径访问和 Release 中的迁移/TestHost 载荷；provenance 字段中的历史路径例外。
 
-- 用冻结 Golden/DTO 替换 Unity Oracle 对 Unity C# 文件的链接。
-- verifier 不再读取 Unity GameData、图片或 AssetDatabase 输出；Unity 路径只可作为 provenance 字符串。
-- Core/Application/Godot/测试/生成器不得依赖 UnityEngine 或活动 Unity 路径。
-- 各内容类别完成自动、人工和来源审计后晋升 `GodotOwned`。
-- 在排除 Unity 根目录的临时副本运行完整 Godot-only verifier。
+Checkpoint：`chore: establish the Godot-owned project baseline`
 
-### 7. 人工与 Windows RC
+### 5. 退役 Unity 治理、工具与历史计划
 
-- 关闭正式 UI、Inventory、Defeated、Miss/Heal/MP 数字和真实 Editor Assembly Reload。
-- 新增 9 个玩家 Lv3、Treasure、Map/Event/Skill/Presentation/AI/Encounter/QA Workbench 人工验收；Audio 本版本 deferred。
-- 使用 Godot 4.7.1 Mono templates 或 GitHub Actions，从无 Unity 根目录的干净 checkout 导出并启动 EXE/PCK。
-- Release 不得包含 Unity、GdUnit、TestPlatform 或迁移临时载荷。
+- 将 `AGENTS.md`、Godot skills、hooks 和配置改为 Godot-first。
+- 删除 Unity-only rules/skills/auto-compile hooks/MCP/TBSF GUID/AssetDatabase 工具。
+- 当前 Pure Run Gameplay Specs 保留；Unity-only 历史 specs 退出活动目录，并生成带 blob 的退役需求索引。
+- 迁移设计/OKF 标记 archived，建立当前 Godot 项目权威页；Unity-only known gaps 归档。
+- Godot 人工验收账本保持 pending；完成计划的长期结论迁移后删除旧 active plans。
 
-### 8. 最终删除 Unity
+Checkpoint：`docs: switch project governance to the Godot mainline`
 
-- 删除前生成精确 deletion manifest 并停在最终人工确认点。
-- 计划删除 `Assets/`、`Packages/`、`ProjectSettings/`、Unity 专用工程/启动配置和 Unity-only 工具测试。
-- 保留 Core、Application、Godot、Workbench、Gameplay Spec、冻结 Golden/DTO/receipt、文档、OKF、许可证记录与 Git 历史。
-- 删除后重新执行 Godot-only verifier、Windows RC、依赖扫描和 scoped code review；不 push、不建 PR、不改写历史。
+### 6. 删除 manifest 与物理预演
 
-## Public Interfaces
+- 生成受版本控制的精确 deletion manifest，覆盖 Unity 工程、旧 Oracle、Unity-only 治理/工具和已归档测试。
+- 删除前要求 tracked worktree 无未归属修改，并确认远程 Unity Tag 不漂移。
+- 在系统临时副本应用 manifest，运行正式 Godot verifier、Catalog/Save/Workbench 和 Windows RC smoke。
+- 扫描副本确认无活动 Unity 工程、`.meta`、`.unity`、Unity package 或 live source dependency。
 
-- `PureRunMapDefinition/Resource`、compiler、validator。
-- `PureRunNodeKind.Treasure` 与 Save V6。
-- Lv3 Skill Runtime。
-- 通用 Workbench document/change-set/save 接口。
-- `EncounterFixtureDocument`、fixture compiler、checkpoint exporter。
-- `AudioCueDefinition` 与独立 Audio Settings。
-- Core/Application 不引用 Godot；Godot 不引用 Unity。
+Checkpoint：`chore: prepare the archived Unity project retirement`
+
+完成后暂停，展示精确路径、文件数、字节数和预演证据，等待最终 destructive confirmation。
+
+### 7. 删除与关闭
+
+- 确认后严格按 manifest 删除，不扩大范围，不改写历史，不删除远程 Tag/归档分支。
+- 保留 FrozenOracle、Golden、receipt、许可证、退役索引和 Git 历史。
+- 提交 `chore: retire the archived Unity project`。
+- 删除后运行完整 Godot/Windows 门禁，更新 OKF，删除完成计划；Windows Actions 仅在另行 push 授权后运行。
 
 ## Test Plan
 
-- Lv3、Treasure、Map V6、旧存档迁移和奖励幂等。
-- Map/Event/Skill/Presentation/AI Workbench 的 Undo/Redo、校验、保存回滚与 Reload。
-- Encounter Fixture 的拖拽吸附、占格、round-trip、正式 Main 启动，以及与正式 Encounter 共用 layout compiler。
-- Audio 框架 bus、pause、并发和清理自动证据保留；本版本不要求 payload 或听感验收。
-- ResourceSaver 两轮一致；Catalog、UID、receipt 精确匹配。
-- 无 Unity 根目录时 Debug/Release、Core/Application、Gameplay Specs、GdUnit、Compatibility/Forward+、Windows export 全绿。
-- 发布内容不存在 Unity 或未授权第三方 payload。
+- 退役清单两次导出一致且 `unresolved=0`。
+- FrozenOracle 在没有 `Assets/` 时与旧 Oracle 断言一致。
+- Catalog 保持 142，Save V1–V6 round-trip 和迁移稳定。
+- 所有当前 batch/category 为 `GodotOwned`，历史 receipt 不变。
+- 正式 verifier 不使用 Unity 跳过分支或 allow-missing 掩盖引用。
+- 删除预演与真实删除后均通过 Debug/Release、NUnit、GdUnit、Gameplay Specs、两个 renderer、OKF 和 Windows package/startup smoke。
+- Release 不包含 Unity、GdUnit、TestPlatform、迁移 DTO 或未授权第三方 payload。
+- 自动测试不把任何人工验收项改为 passed。
 
-## Risks and Gates
+## Assumptions and Handoff
 
-- Audio payload 已明确 deferred，不是本版本 RC 或 Unity 删除的阻断点；未来有声版本另开素材/许可证闸门。
-- Workbench、人工 QA、Windows RC 和 `GodotOwned` 未完成前不得删除 Unity。
-- 删除前仍需一次精确路径清单确认。
-- 实施完成后将长期结论并入权威 docs，更新 OKF，删除本 active plan，由 Git 保存历史。
+- 当前产品范围是三职业 Pure Run，不复刻 Unity 历史原型。
+- Audio payload、Unity PlayerPrefs 和第三方视觉不进入本版本。
+- `GodotOwned` 表示编辑/生成/运行权威切换，不表示人工体验验收完成。
+- 不 push、不建 PR、不切换 worktree、不改写历史；真正删除前再次确认。
+- 完成实现后将长期结论并入 `.agents/docs/`，更新 OKF scope，删除本计划，由 Git 历史保留。

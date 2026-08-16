@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/Assets/Tactics/Scripts/Comm
 title: Battle System
 description: 棋盘战斗、属性、Buff、技能、结算和结构化战斗反馈的运行时主链。
 tags: [gameplay, battle, turn-based, unity]
-timestamp: "2026-08-13T18:18:01+08:00"
+timestamp: "2026-08-16T10:05:10+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -93,7 +93,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/Probe10x10BattleSmokeTests.cs
   - Assets/Tactics/Arts/PureRun/Tween
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:e8d035a208848503a7370f4e7f9b1f53c4041b42efd6722797190303173a0cc5
+source_fingerprint: sha256:15c3bf39fbcc92acde062699809dd583cf88ca8018243ead44568375111cd668
 ---
 
 # Current State
@@ -133,6 +133,8 @@ Tween 的长期责任限定为简单且可复用的视觉运动：角色姿态�
 火魔是独立可治疗召唤物：生命 12、Speed 4、移动 2，使用 1–3 格火焰攻击并施加点燃；Lv2 召唤可在半径 3 内部分成功生成，重施法原子替换旧火魔。每只火魔在完成第 5 次自身行动后退场，跳过行动同样计数，战斗结束统一清理。骷髅法师同样以 Speed 4 派生移动 2，不再通过 executor 保留旧的移动 3 覆盖。
 
 死灵法师召唤严格选择并消耗一具尸体，骷髅战士与骷髅法师分别维护等级上限并最早替换；释放前找不到合法生成格时不消耗尸体、法力或旧召唤物。复活类召唤物不会产生新尸体，可被普通治疗选中但恢复结算为 0。伤害加深按等级扩展单体、十字和九宫格，骨矛支持首敌命中与直线穿透，骨盾重施法重置次数且 Lv2 可吸收全部战斗伤害。恐惧在目标下次行动开始时强制移动到离施法者最远的稳定可达格并消耗移动，随后仍可攻击或施法；重复施加刷新而不叠加。
+
+三职业成长属性门槛按职业主属性归属：法师使用 Intelligence，死灵法师使用 Charisma，亚马逊按分支使用 Agility 或 Luck；Bone Spear Lv1 的门槛是 Charisma 5，不能沿用旧文档中的 Intelligence 例外。
 
 亚马逊由 `AmazonBattleState` 维护每名角色唯一长矛、移动增伤和诱饵生命周期。突刺按等级延长直线并在 Lv3 消耗本回合实际移动格数形成无上限增伤；连续刺击按有序选择逐段独立暴击；毒矛命中后按等级扩散中毒并在半径 3 内确定性落矛，找不到合法落点时整次释放失败且不扣资源。毒矛 Release 的表现顺序固定为切换 `Unarmed`、清除投掷姿态、再启动技能图；Presentation Graph 与兼容 Tween 路径共用同一 Release 准备回调，成功、失败或取消后按 `IsSpearHeld` 对账。实体落矛与缓存重建保持空手，远程召回、相邻免费拾取和战斗清理恢复持矛；该视觉投影不改变近战/持矛技能的既有禁用规则。落地长矛占格但不阻挡视线、不可受击；移动选择、回收、诱饵和战斗技巧规则保持不变。
 
