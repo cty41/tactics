@@ -73,7 +73,7 @@ $isolatedProject = Join-Path $destination 'godot\project.godot'
 if (-not (Test-Path -LiteralPath $isolatedProject -PathType Leaf)) {
     throw "Canonical Godot project is missing from RC source: $isolatedProject"
 }
-$godotSolution = Join-Path $destination 'godot\Tactics.Godot.Adapter.sln'
+$godotSolution = Join-Path $destination 'Tactics.Godot.slnx'
 if (-not (Test-Path -LiteralPath $godotSolution -PathType Leaf)) {
     throw "Canonical Godot solution is missing from RC source: $godotSolution"
 }

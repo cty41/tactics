@@ -46,27 +46,23 @@ class WindowsRcPipelineTests(unittest.TestCase):
             )
             self.assertEqual(0, result.returncode, f"{script}: {result.stdout}")
 
-    def test_owned_source_staging_excludes_unity_and_records_hashes(self):
+    def test_public_source_staging_records_byte_identical_hashes(self):
         with tempfile.TemporaryDirectory() as temp:
             root = pathlib.Path(temp)
             source = root / "source"
             destination = root / "stage"
             (source / "godot").mkdir(parents=True)
-            (source / "Assets").mkdir()
-            (source / "src" / "Tactics.UnityOracle.Tests").mkdir(parents=True)
+            (source / "Tools" / "public-release").mkdir(parents=True)
             (source / "godot" / "project.godot").write_text(
-                '_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"\n'
-                'enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", '
-                '"res://addons/tactics_tooling/plugin.cfg")\n',
+                'enabled=PackedStringArray("res://addons/tactics_tooling/plugin.cfg")\n',
                 encoding="utf-8",
             )
-            (source / "godot" / "Tactics.Godot.Adapter.sln").write_text(
-                "Microsoft Visual Studio Solution File, Format Version 12.00\n",
+            (source / "Tactics.Godot.slnx").write_text(
+                '<Solution><Project Path="godot/Tactics.Godot.Adapter.csproj" /></Solution>\n',
                 encoding="utf-8",
             )
-            (source / "Assets" / "Unity.asset").write_text("unity", encoding="utf-8")
-            (source / "src" / "Tactics.UnityOracle.Tests" / "Oracle.cs").write_text(
-                "oracle", encoding="utf-8"
+            (source / "Tools" / "public-release" / "validate_public_candidate.py").write_text(
+                "raise SystemExit(0)\n", encoding="utf-8"
             )
             subprocess.run(["git", "init", "-q"], cwd=source, check=True)
             subprocess.run(["git", "config", "user.name", "test"], cwd=source, check=True)
@@ -81,17 +77,20 @@ class WindowsRcPipelineTests(unittest.TestCase):
                 "-InitializeGit",
             )
             self.assertEqual(0, result.returncode, result.stdout)
-            self.assertFalse((destination / "Assets").exists())
-            self.assertFalse((destination / "src" / "Tactics.UnityOracle.Tests").exists())
             project = (destination / "godot" / "project.godot").read_text(encoding="utf-8")
             self.assertNotIn("godot_ai", project)
             manifest = json.loads((destination / "rc-source-manifest.json").read_text(encoding="utf-8-sig"))
-            self.assertEqual("godot-owned-without-unity-v1", manifest["boundary"])
-            self.assertEqual(2, manifest["fileCount"])
+            self.assertEqual("public-source-byte-identical-v1", manifest["boundary"])
+            self.assertEqual(3, manifest["fileCount"])
             self.assertEqual(
-                sorted(["godot/Tactics.Godot.Adapter.sln", "godot/project.godot"], key=str.casefold),
+                sorted([
+                    "Tactics.Godot.slnx",
+                    "godot/project.godot",
+                    "Tools/public-release/validate_public_candidate.py",
+                ], key=str.casefold),
                 sorted([entry["path"] for entry in manifest["files"]], key=str.casefold),
             )
+            self.assertTrue(all(entry["sourceSha256"] == entry["stagedSha256"] for entry in manifest["files"]))
             status = subprocess.run(
                 ["git", "status", "--porcelain"], cwd=destination, check=True,
                 text=True, stdout=subprocess.PIPE
@@ -218,12 +217,14 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertNotIn("${{ runner.temp }}", workflow)
         self.assertIn("steps.paths.outputs.diagnostics != ''", workflow)
 
-    def test_export_requires_the_godot_solution_and_rejects_logged_errors(self):
+    def test_export_requires_the_tracked_solution_and_rejects_logged_errors(self):
         build_script = (TOOLS / "Build-GodotWindows.ps1").read_text(encoding="utf-8-sig")
         staging_script = (TOOLS / "New-GodotOwnedRcSource.ps1").read_text(encoding="utf-8-sig")
 
-        self.assertIn("Tactics.Godot.Adapter.sln", build_script)
-        self.assertIn("Tactics.Godot.Adapter.sln", staging_script)
+        self.assertIn("Tactics.Godot.slnx", build_script)
+        self.assertIn("Tactics.Godot.slnx", staging_script)
+        self.assertNotIn("Tactics.Godot.Adapter.sln", build_script)
+        self.assertNotIn("Tactics.Godot.Adapter.sln", staging_script)
         self.assertIn("-match '^ERROR:'", build_script)
         self.assertIn("export errors despite exit code 0", build_script)
         self.assertIn("RID allocations of type", build_script)

@@ -25,7 +25,6 @@ $exportPreset = Join-Path $projectRoot 'export_presets.cfg'
 $solution = Join-Path $repoRoot 'Tactics.Godot.slnx'
 $runSettings = Join-Path $repoRoot 'Tactics.Godot.runsettings'
 $adapterProject = Join-Path $projectRoot 'Tactics.Godot.Adapter.csproj'
-$godotSolution = Join-Path $projectRoot 'Tactics.Godot.Adapter.sln'
 $toolingManifest = Join-Path $repoRoot 'Tools\migration\manifest\godot-tooling.json'
 $packageValidator = Join-Path $repoRoot 'Tools\godot\Test-GodotWindowsPackage.ps1'
 
@@ -52,7 +51,6 @@ foreach ($requiredFile in @(
     $solution,
     $runSettings,
     $adapterProject,
-    $godotSolution,
     $toolingManifest,
     $packageValidator)) {
     if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
