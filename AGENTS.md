@@ -1,79 +1,55 @@
-# Tactics 项目 - Agent 指南
+# Tactics Godot 项目 - Agent 指南
 
-Agent 优先的 Unity 项目，由 Agent 在人工监督下维护代码库。
+本仓库的当前产品主线是 Godot 4.7 C# 三职业 Pure Run。Unity 工程只保留到最终退役确认，不能再作为编辑、生成或运行权威；历史行为由 FrozenOracle、Golden、receipt 和最终 Unity Tag 提供证据。
 
 ## Quick Reference
 
 | 规则 | 说明 |
-|------|------|
-| 禁止 `Resources.Load` | 必须用 `GameAssetManager`（详见 `rules/unity-asset-loading.md`） |
-| 禁止 `Debug.Log` | 用 `TLog`/`TBattleLog`（详见 `rules/unity-logging.md`） |
-| 禁止直接读写 Unity YAML | 必须通过 MCP 工具（详见 `unity-mcp-core` skill） |
-| 禁止抢占前台焦点 | 默认不使用 Computer Use、窗口激活或真实输入（详见 `.agents/rules/foreground-interaction.md`） |
-| Worktree 默认复用 | 除非计划或用户明确要求，禁止自动创建/删除/切换 worktree（详见 `.agents/rules/agent-worktree.md`） |
-| Godot 迁移验证边界 | 迁移阶段不执行 Unity Windows Standalone，使用 Editor/PlayMode/OKF 证据（详见 `.agents/rules/godot-migration.md`） |
-| Godot 项目唯一且研究先行 | 只使用 `godot/project.godot`；未知引擎行为先研究、复现和分级取证（详见 `.agents/rules/godot-agent-workflow.md`） |
-| Godot MCP 项目隔离 | godot-ai 只允许由迁移 worktree 的本地 `.codex/config.toml` Attach，并按阶段白名单启用工具（详见 `.agents/rules/godot-agent-workflow.md`） |
-| Godot Editor 自动生命周期 | 已授权 Godot 修改任务需要 session=0 时使用 `godot-editor-lifecycle` 正常关闭并恢复；不强杀、不打开原本关闭的 Editor |
-| `.cs` 修改后必须编译 | 调用 `refresh_unity` |
-| 写 C# 代码前必须验证 | 遵循 `rules/unity-code-generation.md` 工作流 |
-| git commit 前必须检查 | 加载 `unity-git-commit` skill |
-| 人工验收交接 | review 与自动门禁完成且仍存在人工验收边界时，用 `manual-qa-handoff` 更新账本并输出累计 TODO |
-| 跨系统知识查询/沉淀 | 先读 `.agents/knowledge/index.md`，并遵循 `knowledge-maintenance` skill |
-| 代码/文档变更后同步 OKF | 运行 `python Tools/okf/catalog_impact.py report --worktree`，更新并同步受影响 scope |
+|---|---|
+| 唯一 Godot 项目 | 只使用 `godot/project.godot`，不得创建第二个项目或切换 worktree |
+| C# 分层 | Core/Application 不引用 Godot；Adapter 承载 Node、Resource、文件系统与 UI |
+| 资源写入 | `.tres/.tscn` 只能通过 ResourceSaver、Editor API 或受测转换器生成 |
+| 主线验证 | 使用 `Tools/godot/Verify-GodotProject.ps1`；它要求 Unity 根目录不存在 |
+| Godot 修改验证 | Core/Application/Godot `.cs` 使用主线或迁移期隔离门禁，不调用 Unity compile |
+| Editor 生命周期 | reload-sensitive 修改使用 `godot-editor-lifecycle` 正常关闭并恢复，不强杀进程 |
+| Godot MCP 隔离 | godot-ai 仅由当前 worktree 的项目级配置 Attach，写操作前验证唯一 session 和项目路径 |
+| 前台交互 | 未经明确授权不得抢占焦点或注入真实输入；自动 QA 使用后台测试链 |
+| 人工验收 | review 与自动门禁完成后，用 `manual-qa-handoff` 更新累计账本；自动测试不能代替人工通过 |
+| 知识维护 | 先读 `.agents/knowledge/index.md`，变更后运行 OKF impact、更新正文并 sync |
 
-## 规则文件索引
+## 当前规则索引
 
-详细规则按领域分类，按需读取：
+- `.agents/rules/godot-agent-workflow.md`：Godot 项目、C#、Resource、EditorPlugin 和测试边界。
+- `.agents/rules/foreground-interaction.md`：窗口、真实输入和人工验证边界。
+- `.agents/rules/agent-worktree.md`：复用当前 worktree，不自动创建、删除或切换。
+- `.agents/rules/code-documentation.md`：代码注释与系统规则说明。
+- `.agents/rules/knowledge-maintenance.md`：OKF 查询、写回、替代和校验。
+- `.agents/rules/godot-migration.md`：退役完成前的历史迁移与来源审计边界。
 
-| 规则 | 适用场景 |
-|------|----------|
-| `.agents/rules/unity-core.md` | C# 命名规范、MonoBehaviour 生命周期、序列化 |
-| `.agents/rules/unity-asset-loading.md` | GameAssetManager 强制约束、Load/Release 配对 |
-| `.agents/rules/unity-input.md` | Unity Input System |
-| `.agents/rules/unity-logging.md` | 日志规范（禁止 Debug.Log，使用 TLog/TBattleLog） |
-| `.agents/rules/unity-code-generation.md` | C# 代码生成强制工作流、防编译错误 |
-| `.agents/rules/code-documentation.md` | 代码注释规范（XML doc + // 块注释，英文，系统规则必须注释） |
-| `.agents/rules/foreground-interaction.md` | Computer Use、窗口激活、真实输入与人工验证边界 |
-| `.agents/rules/agent-worktree.md` | worktree 创建、复用、切换与 Unity 项目启动约束 |
-| `.agents/rules/godot-migration.md` | Unity → Godot 迁移期间的验证边界与 Windows Standalone 约束 |
-| `.agents/rules/godot-agent-workflow.md` | Godot 项目、C# 分层、资产生成、EditorPlugin、测试与知识晋升约束 |
-| `.agents/rules/knowledge-maintenance.md` | OKF 知识查询、写回、替代和校验规范 |
+Unity-only rules、skills、MCP 和工具已列入 `Tools/migration/manifest/retirement/unity-governance-retirement-v1.json`，只等待最终删除确认；它们不得再指导新实现。
 
-## 核心原则
+## 绝对禁止
 
-### 绝对禁止（红线）
+1. 直接手写或机械修改 Godot `.tres/.tscn`。
+2. 让 Core/Application 引用 Godot API、Node、Resource 或文件系统。
+3. 通过 `script_*`、`filesystem_manage`、`client_manage` 或 `autoload_manage` 绕过项目代码与资产管线。
+4. 将 godot-ai 写入用户级长期配置。
+5. 未经确认删除 Unity 根目录、历史 Tag、FrozenOracle、Golden、receipt 或许可证证据。
+6. 覆盖、暂存或清理不属于当前任务的 dirty worktree 文件。
 
-1. **严禁** `Resources.Load` — 必须用 `GameAssetManager`，所有文件类型都是 Unity 资产
-2. **严禁** `Debug.Log` — 通用日志用 `TLog`，战斗日志用 `TBattleLog`
-3. **严禁** 直接读写 Unity YAML 文件 — 必须通过 MCP 工具
-4. **严禁** 未经当前任务明确请求和动作时确认的前台 UI 自动化 — 不得调用 Computer Use、`activate_window`、真实鼠标键盘或快捷键抢占用户焦点；普通实现、QA、截图和测试授权不构成例外。后台无法完成时按 `.agents/rules/foreground-interaction.md` 标记 `manual_visual_qa_pending`
-5. **严禁** 随意创建第二个 Godot 项目、迁移 worktree，或手写/机械修改 `.tres`、`.tscn` — 必须复用 `godot/project.godot` 并通过 ResourceSaver、Editor API 或受测转换器生成资产
-6. **严禁** 把 godot-ai 写入用户级长期配置，或通过 `script_*`、`filesystem_manage`、`client_manage`、`autoload_manage` 绕过项目代码、配置与资产管线
+## 必须执行
 
-### 必须执行
-
-7. **必须** `refresh_unity` — 修改 Unity 工程内 `.cs` 后显式编译；Godot/Core/Application `.cs` 使用统一迁移验证脚本
-8. **必须** 加载 `unity-git-commit` — git commit 前执行提交前检查（`.meta` 配对、GUID 校验）
-9. **必须** 用户确认 — Unity Editor 内手动验证的功能，禁止自动提交
-10. **必须** OKF 影响检测 — 修改 `catalog-scopes.yaml` 监控范围内的代码、文档、规则或工具后，先运行 `report --worktree`；核对并更新本任务影响的概念正文，再运行 `sync --worktree --scope <scope> --write`
-11. **必须** Godot 未知问题研究 — 版本、API、生命周期、插件或引擎错误不得凭 LLM 记忆定论；按 `godot-workflow` Research Guide 调查并本地验证
-12. **必须** godot-ai 写操作预检 — 先用 Session 与 Editor 状态确认只有一个会话，且项目解析到当前迁移 worktree 的 `godot/project.godot`
-
-### 最佳实践
-
-13. Inspector 适当时优先使用 Odin API
-14. 标识符遵循 .NET 命名规范（PascalCase、camelCase 等）
-15. `execute_code` 仅当用户明确要求时使用
+1. 未知 Godot API、生命周期、插件或引擎错误按 `godot-workflow` Research Guide 调查并本地验证。
+2. Godot C#、ResourceSaver、生成器或 reload-sensitive 修改前后遵循 Editor 生命周期规则。
+3. 提交前检查精确 staged scope、`git diff --cached --check`、相关测试和 OKF。
+4. 修改 `catalog-scopes.yaml` 监控范围后运行：
+   - `python Tools/okf/catalog_impact.py report --worktree`
+   - 更新受影响权威概念正文
+   - `python Tools/okf/catalog_impact.py sync --worktree --scope <scope> --write`
+5. 内容 ownership 与人工验收分开记录：允许 `GodotOwned + manual_qa_pending`，不得把自动门禁写成人工通过。
 
 ## Agent 约束
 
-- **语言**：Plan、code 和 debug 输出必须使用中文
-- **标识符**：遵循 .NET 命名规范（PascalCase、camelCase 等）
-
-## Agent 限制
-
-**如果它不在代码库中，对 Agent 来说就不存在。**
-将权威文档保存在 `.agents/` 下。
-
-跨系统架构、当前设计和历史决策先从 `.agents/knowledge/index.md` 渐进读取。OKF 页面是导航与当前状态综合层；涉及实际实现时，必须继续核对其 `repo_paths` 指向的代码、Unity 资产和测试。
+- Plan、code 和 debug 输出使用中文；代码标识符遵循 .NET 命名规范。
+- 如果事实不在仓库、最终 Tag 或已验证的外部权威中，对 Agent 来说就不存在。
+- OKF 是导航与当前状态综合层；实际实现必须继续核对其 `repo_paths` 指向的代码、Resource 和测试。

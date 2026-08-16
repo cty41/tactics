@@ -36,7 +36,7 @@ source_fingerprint: sha256:43e4fee724fbf399b389acb5db37907fb1810b3075d79e552c824
 # Relationships
 
 - [OKF Maintenance](okf-maintenance.md)负责从路径变更反向同步知识 scope。
-- [Unity Agent Workflow](unity-agent-workflow.md)定义代码、资产和验证的安全边界。
+- [Godot Agent Workflow](godot-agent-workflow.md)定义当前代码、Resource 和验证安全边界；[Archived Unity Agent Workflow](unity-agent-workflow.md)仅用于历史追溯。
 - [Project Known Gaps](../plans/project-known-gaps.md)集中保存尚未激活的真实缺口。
 - [Godot Agent Workflow](godot-agent-workflow.md)导航 Research Guide、Incidents 与 verified 结论。
 

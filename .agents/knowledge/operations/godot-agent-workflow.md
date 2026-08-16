@@ -2,9 +2,9 @@
 type: Game System
 resource: https://github.com/cty41/tactics
 title: Godot agent workflow
-description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# migration.
+description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# mainline.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-16T01:17:35+08:00"
+timestamp: "2026-08-16T10:29:15+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -13,7 +13,8 @@ repo_paths:
   - .agents/skills/godot-workflow
   - .agents/skills/godot-editor-lifecycle
   - .agents/incidents/godot
-  - Tools/migration/Verify-GodotMigration.ps1
+  - Tactics.Godot.slnx
+  - Tools/godot/Verify-GodotProject.ps1
   - Tools/migration/Build-GodotWindows.ps1
   - Tools/migration/New-GodotOwnedRcSource.ps1
   - Tools/migration/Test-GodotWindowsPackage.ps1
@@ -23,12 +24,12 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:a447a7d87f9d7409f62312a28f89388f076512328a23a92114ba2334949c444e
+source_fingerprint: sha256:f6df8ae741bfb49e65a7baa60c4e3e2a461396f0e51c6b3161eec1285239d804
 ---
 
 # Current state
 
-Godot 迁移使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9.0.312。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容迁移、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
+Godot 主线使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
 
 Windows 内部 RC 由 `Tools/migration/Build-GodotWindows.ps1` 提供唯一只读构建入口，`godot/export_presets.cfg` 固定 `Windows Desktop` Release 预设。GitHub Actions 在相关 `main` push 或手动触发时只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 必须携带 tracked `godot/Tactics.Godot.Adapter.sln`，否则 Godot .NET export 会在退出码为 0 时逐文件报告缺少 solution。staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
 
@@ -58,11 +59,11 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 
 ## Validation
 
-统一入口为 `Tools/migration/Verify-GodotMigration.ps1`：锁定 restore、单节点 build、Core/Application NUnit、Gameplay Spec 编译与 Main.tscn 批量报告、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless 与 OKF。Godot Gameplay Spec 报告必须由本轮 GdUnit 新生成，并精确包含五个预期 scenario/checkpoint 身份、生产 save 前后证据和零临时节点，旧 artifact 或重复易通过场景不能满足门禁；地图节点输入必须先通过生产 `NodeHovered` 事件确认具体 NodeId，再注入点击，不能只以鼠标位于整个 Map Control 上冒充命中。真实 Unit DTO 存在时，入口还会重编 typed Draft、两轮校验 21 个项目自有 PNG、先执行 Editor import scan、再两轮 ResourceSaver 生成 16 个资产并刷新 receipt；随后验证 Unit Catalog/Factory/Fixture 的 Compatibility 与 Forward+ 路径，并用已导入纹理生成程序化 Gallery 和 10×10 Spawn 截图。Buff/Item、Starting Skill、AI/Encounter、Run/Persistence 与 Inventory/Progression 各自维护批次证据；Phase 7B 在两轮 ResourceSaver 后验证 27 个新增技能与 canonical 101 项 Catalog/runtime。共享 canonical Catalog 不由任一批次 ledger 伪装成独占目标。真实 Editor Assembly Reload 和表现可读性仍单独记录。
+统一入口为 `Tools/godot/Verify-GodotProject.ps1` 与 `Tactics.Godot.slnx`：锁定 restore、单节点 build、Core/Application/FrozenOracle NUnit、Gameplay Spec 编译与 Main.tscn 报告、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless、双 renderer、ownership receipt 与 OKF。它不暴露 Unity ownership skip 参数，并默认拒绝 Unity 四个工程根目录。Godot Gameplay Spec 报告必须由本轮 GdUnit 新生成，并精确包含预期 scenario/checkpoint、生产 save 前后证据和零临时节点；真实 Editor Assembly Reload 和表现可读性仍单独记录为人工边界。
 
-Ownership 收口使用同一入口的 `-GodotOwned` 模式，并由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 Unity 根目录与 Unity Oracle 项目后调用。该模式不运行活动 Unity 导出/Oracle，但仍执行所有 Godot-owned 编译、测试、Gameplay Spec、Release、renderer、运行时与知识结构门禁；因此“路径仍在但代码没引用”不能冒充 ownership 证明。GdUnit test host 位于 `godot/tests/`，生成的 runner source 由验证器在构建前从受版本控制模板暂时注入、在 finally 清理，避免 production 项目根存在第二个 `.csproj` 或发布程序集携带测试包。每个 suite 使用独立 native host；CI 只对已观察到且没有断言失败计数的 Windows native access-violation/illegal-instruction 退出重试一次，真实测试失败立即终止，VSTest session timeout 固定为 120 秒以避免 crash 后等待默认长超时。
+删除前预演由 `Test-GodotOwnedWithoutUnity.ps1` 在系统临时副本中物理排除 `Assets/`、`Packages/`、`ProjectSettings/`、`UIElementsSchema/` 和旧 Unity Oracle 后调用正式主线 verifier。GdUnit test host 位于 `godot/tests/`，生成的 runner source由验证器从版本控制模板临时注入并在 finally 清理，避免 production 发布程序集携带测试包。每个 suite 使用独立 native host；仅对已观察到且没有断言失败计数的 Windows native crash 重试一次，真实测试失败立即终止。
 
-Windows RC workflow 先在 staging 中执行 `Verify-GodotMigration.ps1 -GodotOwned`，随后再通过同一 .NET 9.0 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。生产 Core/Application/Godot 项目均启用 locked restore；Godot Adapter 分别固定 Debug/Editor 与 `ExportRelease` Windows 锁图，后者排除 editor-only 依赖并在 export 前以 `GodotTargetPlatform=windows` 执行同构 self-contained publish。Godot ExportRelease 不得因 hosted Windows 换行或依赖解析重写 tracked lock file。Windows export 除检查进程退出码外还必须扫描 Godot 输出中的行首 `ERROR:`；仅精确的 headless Dummy Renderer 退出期 RID allocation 清理诊断不视为包失败。2026-08-15 hosted run `31889338418` 已通过 ExportRelease、199 文件包审计、Compatibility/default renderer EXE 启动并上传 14 天 artifact；剩余外部交付闸门是下载后的 clean-machine 人工启动与玩法 smoke。
+Windows RC staging 必须执行正式主线 verifier，随后通过同一 .NET 9 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。2026-08-15 hosted run `31889338418` 已通过 ExportRelease、199 文件包审计、Compatibility/default renderer EXE 启动并上传 14 天 artifact；剩余外部交付闸门是下载后的 clean-machine 人工启动与玩法 smoke。
 
 ExportRelease publish 必须同时使用临时 `GodotProjectDir` 和 `--artifacts-path` 隔离中间产物；脚本在 publish 前后校验 canonical Editor `project.assets.json` 哈希不变，统一验证器也要求其中存在 `GodotSharpEditor/4.7.1`，防止 export 污染 Editor 依赖图并令 typed C# Resource 退化为基础 `Resource`。
 

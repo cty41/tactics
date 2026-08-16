@@ -1,0 +1,623 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "unity-governance-retirement-v1",
+  "entryCount": 88,
+  "entries": [
+    {
+      "path": ".agents/rules/unity-asset-loading.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "81a6b7d41d5fbde9c5d05d06bfc5c1fe638f1f1f",
+      "sha256": "30620ec9368283f13cd6ead68a43e587849d81b1d6f3736e5a626b575721e1ec",
+      "byteCount": 1434
+    },
+    {
+      "path": ".agents/rules/unity-code-generation.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "85afd11e2619805e7c74c3f1ac75ece529bd53c5",
+      "sha256": "8289a21ed7d2ea7d9daf25c76efd76457f4efd5f77c9345ed94bfcb8be646c84",
+      "byteCount": 9375
+    },
+    {
+      "path": ".agents/rules/unity-core.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "71502f57dd83c9481fe93e79540e305dcb0acad4",
+      "sha256": "a2ec7e1d152505bb82906e70415ef8b188ab3b4289d0c361eb9ca0fabf38e281",
+      "byteCount": 7572
+    },
+    {
+      "path": ".agents/rules/unity-input.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "be4a19c536c9a688118b3869acaad2077c319e52",
+      "sha256": "ab1bf0ef2c80e96decb7646aa5d1599e7fda570bf2e1babab22423f6a3ae9aa0",
+      "byteCount": 4294
+    },
+    {
+      "path": ".agents/rules/unity-logging.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "c3c83896849c689c22dd4541101cf5cc45f81de4",
+      "sha256": "cab673abcf9dcde4b131dd985e7a6087b9ba32f08df8b16973bbbdcf3e82e591",
+      "byteCount": 1406
+    },
+    {
+      "path": ".agents/skills/game-asset-pipeline/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "c87802b62e80d911bad31cededb41015a2cd232a",
+      "sha256": "f40bff6f44da0bf7071ca65ad7091130254f57e108a976d50d521cbf1d4e08de",
+      "byteCount": 10011
+    },
+    {
+      "path": ".agents/skills/skill-graph-creation/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "f81afe48f5b133fdbd09cb0653441fab65769eca",
+      "sha256": "dcfad74016053d40bef3442a7fca51049a79b36e5f8adb276ff14ca41aab62f6",
+      "byteCount": 4089
+    },
+    {
+      "path": ".agents/skills/ui-development/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "2ce185940edb3bfe4f3064bc6959adeb39e73961",
+      "sha256": "7955198901ffad894f1603a7af63818c459f4beed38c739c0c3ecf1ba46d433e",
+      "byteCount": 4004
+    },
+    {
+      "path": ".agents/skills/unity-agentic-tools/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "2a6a92cf19d92da743700974ab204ac7faebd9fc",
+      "sha256": "1e056722659be9d0db84e1a363818847a08c2deb6eb47a7d6501ad82cdc2e227",
+      "byteCount": 7265
+    },
+    {
+      "path": ".agents/skills/unity-agentic-tools/reference/commands-delete.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "cbe767a805255b825f5e59f18b2086bb9868fc66",
+      "sha256": "cb021c109f1aca0b819444883a888b9ae1774ff02777da2716f5ede0578adb33",
+      "byteCount": 2100
+    },
+    {
+      "path": ".agents/skills/unity-agentic-tools/reference/commands-read.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "3aa34077efda4155e2004a3c6ff8e439779da53d",
+      "sha256": "0a92a14feb23e64a4890a6f47dab2de85fe27cbc50e79d2152a43f6f3bb1740f",
+      "byteCount": 3647
+    },
+    {
+      "path": ".agents/skills/unity-agentic-tools/reference/commands-update.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "4cd70fb53dfcbd9afae13b308312729a726df70d",
+      "sha256": "d2af452b7fc6d1e93d7a8a0bf2865caa1dcd78d5f729d6c3fece87cc6a57e988",
+      "byteCount": 2024
+    },
+    {
+      "path": ".agents/skills/unity-agentic-tools/reference/commands-utilities.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "1a3d41be0909c85e0d44390e14664c8ced95c7cd",
+      "sha256": "7a267c8961972585b28577dd7f539811ed67d0c3fa8f9baaf37c6f246ba65d7e",
+      "byteCount": 2377
+    },
+    {
+      "path": ".agents/skills/unity-agentic-tools/reference/workflows.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "7710923265ba8735b26937ff8d05f6ad1492e574",
+      "sha256": "0ba4106fc4340660e3e09014515a5e6b5f97bf06ef8c21cb281c7e037ea55c18",
+      "byteCount": 6682
+    },
+    {
+      "path": ".agents/skills/unity-agentic-tools/scripts/check-setup.mjs",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "61116b06b4b7d18900832014718a9333a310d62f",
+      "sha256": "8644e1bd0f5d5625257e3cc3241f8e55a3a98d304730cf923c34d10a54fe5452",
+      "byteCount": 1504
+    },
+    {
+      "path": ".agents/skills/unity-asset-workflow/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "2d92e3971d7672d8dec65f5fad9120e6fabdb273",
+      "sha256": "e36a0f50397f6c8699b5da40ac1e9e6ccc05b713c9548e8f5645606b87266bed",
+      "byteCount": 4906
+    },
+    {
+      "path": ".agents/skills/unity-auto-compile-guard/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "25a2bef6028c1459846a7083ebc239ac082c5c5b",
+      "sha256": "b7b8f0214ba070424dfea95b28bdeca9ab36a933ae944cf1127944ee3e049bb5",
+      "byteCount": 2325
+    },
+    {
+      "path": ".agents/skills/unity-git-commit/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "1983afb7cae93df4fce8c3acce9e7bbbe27c2ddf",
+      "sha256": "8fc619bd57ddc3a0b9fa0103c7b2a6df81dbdc81aa0432de38af4f3e122d760d",
+      "byteCount": 4178
+    },
+    {
+      "path": ".agents/skills/unity-mcp-advanced/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "89e6cbbfae1c75522ccaa5995607b93bb25d64bf",
+      "sha256": "901154794884b649866104c416bcae6a0df541c7ef6a878666d53c341e738bbf",
+      "byteCount": 7852
+    },
+    {
+      "path": ".agents/skills/unity-mcp-assets/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "c8ca9fa500d28a220f95f2c3a93735ffaa204d04",
+      "sha256": "84958cbecf9ae83660cbb365d35af7c9568443be81f1ce2221e020d99534010d",
+      "byteCount": 4991
+    },
+    {
+      "path": ".agents/skills/unity-mcp-core/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "528f575c7aaffc042ceafef655211010fb97f197",
+      "sha256": "789a6dbf8ad52e0dde187b198d164416903f2d31b2ec0c30f1627fdbdc566a9a",
+      "byteCount": 8298
+    },
+    {
+      "path": ".agents/skills/unity-mcp-gameobjects/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "ba514dc7b34fbf154f457ab28e43b94bc57ce095",
+      "sha256": "e31c8539e2d4311342a66cacbc2b0f9c333f946166ad4e37fcc9fc98f0e53139",
+      "byteCount": 8771
+    },
+    {
+      "path": ".agents/skills/unity-mcp-scene/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "9a4454836a62c80179e4c830f754f6f00820061b",
+      "sha256": "ed4614168a05a1c3e713e40a8e90ea119c8f9b369c9bac84c945fa447eb7e224",
+      "byteCount": 11932
+    },
+    {
+      "path": ".agents/skills/unity-menu-organizer/SKILL.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "fb0199e345c4a7c7d5cf517a0cd861a9b34e8bde",
+      "sha256": "938041cfc434d83dc75c0e770e5037a0cd5089be3f6f2c7070529f6e22bb10b4",
+      "byteCount": 6367
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-charge-blocked-retreat.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "8c198933c861c4f7845cf8e93c511f6729d55555",
+      "sha256": "03ddd25317b532ff80703a7366c8021a65bcc757d4ef7fef608ecca277dbb2b5",
+      "byteCount": 2163
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-charge-blocked-retreat.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "304d17960f84291dcd7e545a07a4e6b15bafc888",
+      "sha256": "ae2db8d17be878a427b68f86d62345d13ab81b36ec4ab249334d0edd8136ea0c",
+      "byteCount": 4297
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-charge-strike.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "d7e43d5988d514309173cb2e611a1f548544ce97",
+      "sha256": "9825ebc4935a4852c501521bec5d204c5c053920384f7c43e492795fa74bc292",
+      "byteCount": 1792
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-charge-strike.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "b2b22c8fa0906c27cb7e38374e0a2ce9b15b42ce",
+      "sha256": "349764e58874119cc1fab0a46c7bfed2df36071e8cbde0591ecb08dbec62ea76",
+      "byteCount": 3342
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-counter-multi-stage.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "a7064724f1a759d26e84d32e3a1b886b534d0fde",
+      "sha256": "664c7e0bcbd2f72e1dee3b677fc17885fe72972c7b48ee2083a5e486f2fd14dd",
+      "byteCount": 1992
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-counter-multi-stage.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "e900dc0c6baedf7729713b752812307243ff4ae3",
+      "sha256": "6324db1ca9be6d364728529bd9ba49cf32885306f651d4077bcec426ad853bb2",
+      "byteCount": 3362
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-counter.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "0d52217b0ab8a39654356d2c0a3352bc2db0a6e4",
+      "sha256": "6dc95fd7a5f27089d44d3a4a97f589ff5abeccf35961e585f212bba56b2d6632",
+      "byteCount": 2142
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-counter.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "db456ae448aa1f35dec05f0616fdb86a15df8ffa",
+      "sha256": "054a85f6927c6b70c422d08a6949959b943dfcaa0ae99c9254c5b95bf9d83698",
+      "byteCount": 3974
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-melee-attack.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "faf82460a6dfae64cf3eb3507a177bec1bc2651f",
+      "sha256": "e39bed44593b894aa941da6c653e197f30974ba05ef1b13f61a37151efc8b712",
+      "byteCount": 1156
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-melee-attack.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-uppercut.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "faf82460a6dfae64cf3eb3507a177bec1bc2651f",
+      "sha256": "e39bed44593b894aa941da6c653e197f30974ba05ef1b13f61a37151efc8b712",
+      "byteCount": 1156
+    },
+    {
+      "path": "Tests/gameplay-specs/barbarian-uppercut.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/Assets/Encounter/TestEncounter.asset",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byteCount": 0
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byteCount": 0
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/disable-test-mode-fallback.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "a37e7c23cd32b02cc9ebdfdddf4f718de3398059",
+      "sha256": "b6f3dfb8a9ec25226b5bd550fc6ec0dad49b5e00a9e1e80b9f0ffb2dfc84d462",
+      "byteCount": 973
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/disable-test-mode-fallback.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "4c2b59ef29f6fc4df0cf6ee8ef8823f34fb16049",
+      "sha256": "070727220ff6dbc761c08c9d25b5ac0def72c522a589a5c4cdc0edd16192cfff",
+      "byteCount": 1575
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/load-corpse-config.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "76396ce7c7e3701b2f8b9456e0c29e8fb6b3c656",
+      "sha256": "80b616b849c0a8b46159994e969de390add5c5040be3b9bb87560540de43edd2",
+      "byteCount": 1018
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/load-corpse-config.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "064da1019af5a97db6eb4e66f0b17ce56dd63f24",
+      "sha256": "37d676276f82b6546feea0649f873d7938b45e4f9f9351ad6f34044807251e52",
+      "byteCount": 1475
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/load-encounter-config.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "d539bab92d88eb3bf86d7677918ac5cb2f4c713a",
+      "sha256": "6bb29cd187b53c278dfcd37220dca8a3b00ffbd38b8fd5f52fd41726bf82867d",
+      "byteCount": 894
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/load-encounter-config.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "e9ae855b565e7b7ce0493c006236d8340202e72f",
+      "sha256": "5cc2a278851a90819ab110cb0bb37f72071b86d5c87450381ac20377d2e0c3a4",
+      "byteCount": 1485
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/load-party-config.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "88d84fedc3fa5d2b4e093c30e9b5d0fcda904285",
+      "sha256": "f30260d1c42e976458ccf8118e15e34c82b23ba33c59e3fc17b8aee469b936fb",
+      "byteCount": 852
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/load-party-config.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "a02edbe7f7d9abdda1d46a338cfe42f5fe360667",
+      "sha256": "7109d8d9e038a43d5cd5047a4e82aca7daaa4956611f62536d8a52abfc7502ec",
+      "byteCount": 1461
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/missing-encounter-config-fails.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "fa38f795ebd4707a98b5c598495ad9cdb36bd3ff",
+      "sha256": "74568f74957f28ad88807652fd197b76f0618ecef17029006ccbd445b3e6e85f",
+      "byteCount": 686
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/missing-party-config-fails.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "dd57a936f7e4f194df4876990bc9e2c3c4c5521d",
+      "sha256": "6beac1bc859d2265c1b68d3a406058a0b98e148ee62e5b546cb564c7d755dc6c",
+      "byteCount": 712
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/missing-party-config-fails.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "081424fbce87228fdca12d8acfd998fe42d6b639",
+      "sha256": "6ef5dbd1906dd4f3216f14fbd22c94045313477cb2cf3ef78faa59a4dcb70007",
+      "byteCount": 1142
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/missing-spawn-point-id-fails.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "aaccbc19c05a50cd0431a470860dee28f901bb7c",
+      "sha256": "cfc0a41f265b275a409ca492dc37b2a1cd06caf8840f8758893422c4e8990895",
+      "byteCount": 803
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/missing-spawn-point-id-fails.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "6dd626bcad50da066df6bc6bbe6c916596ff9e25",
+      "sha256": "0d5bd8bb5ec9a773933b316d34178019df41c96ed96e36c4da6e25764e41d0b8",
+      "byteCount": 1313
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/player-spawn-points-apply.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "f08bc5d59b24a0e305a7d40d413c5d8534891a86",
+      "sha256": "3c1f0f071160a05012613f9d4cbfe59fab0ec192beebf643b6e1ef0294b1b467",
+      "byteCount": 1009
+    },
+    {
+      "path": "Tests/gameplay-specs/battle-test-config/player-spawn-points-apply.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "6328162bfaa4d81f6786748c54dba40e06e6a6b9",
+      "sha256": "2e1160491d46cfffd06d52947a9aaee1cae1c6e038d9c5b5a831afef40ceea93",
+      "byteCount": 1801
+    },
+    {
+      "path": "Tests/gameplay-specs/charge-heal.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "1662eb773b147d69bad80f5e73d606feba320348",
+      "sha256": "d1c21209d6fd9d4bfc8b8e72d6c95be88c67f1507d4e87104b323d6d60a99ddd",
+      "byteCount": 939
+    },
+    {
+      "path": "Tests/gameplay-specs/charge-heal.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "453e1821cfbeb0afcb9eec7ceed5e42ddeca9f71",
+      "sha256": "d87632add645195c8f3a0d88269fcf890f46d963d473062d6d018221df95736d",
+      "byteCount": 1678
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/barbarian-charge-blocked-retreat.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "32fac333643900389e6056969d49f6352dfe851c",
+      "sha256": "776f1d8545447420a23c78d857cbf7ee8fe3b556a60e09875db6f9df5c0601f4",
+      "byteCount": 4169
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/barbarian-charge-strike.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "b2b22c8fa0906c27cb7e38374e0a2ce9b15b42ce",
+      "sha256": "349764e58874119cc1fab0a46c7bfed2df36071e8cbde0591ecb08dbec62ea76",
+      "byteCount": 3342
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/barbarian-counter-multi-stage.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "e900dc0c6baedf7729713b752812307243ff4ae3",
+      "sha256": "6324db1ca9be6d364728529bd9ba49cf32885306f651d4077bcec426ad853bb2",
+      "byteCount": 3362
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/barbarian-counter.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "db456ae448aa1f35dec05f0616fdb86a15df8ffa",
+      "sha256": "054a85f6927c6b70c422d08a6949959b943dfcaa0ae99c9254c5b95bf9d83698",
+      "byteCount": 3974
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/barbarian-melee-attack.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/barbarian-uppercut.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/charge-heal.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "453e1821cfbeb0afcb9eec7ceed5e42ddeca9f71",
+      "sha256": "d87632add645195c8f3a0d88269fcf890f46d963d473062d6d018221df95736d",
+      "byteCount": 1678
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/hunter-heavy-shot.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/hunter-mark-buff-unique.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "6fff7572acd67f797705d090140ea358b7e52546",
+      "sha256": "4cd1b700fcd2dbcdaf4d56adfaa4b2967663bae080c97e304a91aad08f0871e3",
+      "byteCount": 3664
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/hunter-mark.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "274ed31ed22691d49240287af1d9f7e68b225f27",
+      "sha256": "03e17c2420b126493808956b9001bcdf29dd022b794e51af608400b567736625",
+      "byteCount": 3669
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/hunter-ranged-attack.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/compiled/melee-heal.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "61b393ed55ddff2b303e15f40625163df00228c5",
+      "sha256": "778bf2b79f40b7897cecfab45fbfda06fd9e006dff056499f30d859a1dc0ea60",
+      "byteCount": 2345
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-heavy-shot.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "faf82460a6dfae64cf3eb3507a177bec1bc2651f",
+      "sha256": "e39bed44593b894aa941da6c653e197f30974ba05ef1b13f61a37151efc8b712",
+      "byteCount": 1156
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-heavy-shot.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-mark-buff-unique.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "79a1df5177153f31736f8820244937e8ff88f076",
+      "sha256": "ae2e2a1ff21e2016f9d660f003d2361f05287f2849d8fa85d163b42ab036edc5",
+      "byteCount": 2068
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-mark-buff-unique.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "6fff7572acd67f797705d090140ea358b7e52546",
+      "sha256": "4cd1b700fcd2dbcdaf4d56adfaa4b2967663bae080c97e304a91aad08f0871e3",
+      "byteCount": 3664
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-mark.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "2eb56e6d1084861b3c1ba158bbec0e07e2e54ae7",
+      "sha256": "69aa81397846125bf2a4ef5c9afe3f731bbc489557ec21f81914c3c8866458b8",
+      "byteCount": 2032
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-mark.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "274ed31ed22691d49240287af1d9f7e68b225f27",
+      "sha256": "03e17c2420b126493808956b9001bcdf29dd022b794e51af608400b567736625",
+      "byteCount": 3669
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-ranged-attack.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "faf82460a6dfae64cf3eb3507a177bec1bc2651f",
+      "sha256": "e39bed44593b894aa941da6c653e197f30974ba05ef1b13f61a37151efc8b712",
+      "byteCount": 1156
+    },
+    {
+      "path": "Tests/gameplay-specs/hunter-ranged-attack.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "9a20b0e1bd20a119539b0b830de93d44ca18e72e",
+      "sha256": "b2109277369dcd36ecdee76e7bb8ebb5d6d62342df126c9aae77c65784b0bb93",
+      "byteCount": 2017
+    },
+    {
+      "path": "Tests/gameplay-specs/map/shop-bow-hunter-agility.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "ffee1e717bd5501d1500594b736d068e7db06eaf",
+      "sha256": "3b9db8f61bb80c7ed6de85710d1f8dccbbd9b9252589d1dd32db6e6ec9eb83c1",
+      "byteCount": 1034
+    },
+    {
+      "path": "Tests/gameplay-specs/melee-heal.gameplay-test.md",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "d586b2a7a5ecaba475fb5a07f77b89b2a8ea686c",
+      "sha256": "e592e64218ab21885245f9fca44249be546ed2c69b67d1320041928c3cf038a8",
+      "byteCount": 1358
+    },
+    {
+      "path": "Tests/gameplay-specs/melee-heal.plan.json",
+      "retirementReason": "retired_legacy_gameplay_spec",
+      "gitBlobSha1": "61b393ed55ddff2b303e15f40625163df00228c5",
+      "sha256": "778bf2b79f40b7897cecfab45fbfda06fd9e006dff056499f30d859a1dc0ea60",
+      "byteCount": 2345
+    },
+    {
+      "path": "Tools/apply_tbsf_guid_map.py",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "73a54c5d7e5eb81e8bbb7215f3e6606ab16f925a",
+      "sha256": "53054606da1254922630f086b9db61dcb0b5b5e7ef0404327a1a7162c1bbacfe",
+      "byteCount": 1844
+    },
+    {
+      "path": "Tools/regenerate_tbsf_fork_meta.py",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "26805e89797046144ca556d47344f4886c71ca57",
+      "sha256": "d4b2970f2db945eb521d5547db7b020b31b6b28523787039bd14ba15c2eff7cf",
+      "byteCount": 3241
+    },
+    {
+      "path": "Tools/tbsf_guid_map.txt",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "3dfe90b153f21a85b923dedd9eac3c0307b2444d",
+      "sha256": "3d78a5f2a713931f2af01d94b1212215d62166c6253da414407f8cb3afffbd77",
+      "byteCount": 10824
+    },
+    {
+      "path": "Tools/unity-mcp/Initialize-ProjectMcpConfig.ps1",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "90913b80ebc1dd3c271d8eb144a5ef49da0fc7cc",
+      "sha256": "f834d09d509dab24579b534ceeb21a00ea1290f16f41e9feec11cc6fc17dfcc2",
+      "byteCount": 866
+    },
+    {
+      "path": "Tools/unity-mcp/Manage-UnityTestGate.ps1",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "3003742c6c474c1c7b53229897095733244f5588",
+      "sha256": "a113676be7978c1eec3d8adab7897aa2935ffc891ad106bab9f50591db337177",
+      "byteCount": 40241
+    },
+    {
+      "path": "Tools/unity-mcp/ProjectMcpConfig.lock-anchor",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "a1ee72e78ad5c23e35dff731d85ae2e4dfde2b89",
+      "sha256": "cc4a723490576eb5725d9159ce829662f478ec218746e1b260cd495a3cc93d03",
+      "byteCount": 76
+    },
+    {
+      "path": "Tools/unity-mcp/README.md",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "81ba1e2cdbd67e118171c3f7bcfed7336fb154df",
+      "sha256": "4ddeac7955b01dff76acb82635f0b57df7282da5d5b3f43fca505743be5709a9",
+      "byteCount": 8178
+    },
+    {
+      "path": "Tools/unity-mcp/Sync-ProjectMcpConfig.ps1",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "c3c2f4bb301a6a23e127f96f7e35356d7415c78c",
+      "sha256": "9312d33667fa40672480984dea13b854c2cd41a4688ed1eb078debfb6aaf0b3a",
+      "byteCount": 56264
+    },
+    {
+      "path": "Tools/unity-mcp/test_manage_unity_test_gate.py",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "36a17ccf939ff771cabb77837d6570e844771723",
+      "sha256": "863e619fabebbce7a3be7c7f242c6970012fe3baa33386c405ff2136791e8b36",
+      "byteCount": 24699
+    },
+    {
+      "path": "Tools/unity-mcp/test_sync_project_mcp_config.py",
+      "retirementReason": "unity_only_governance_or_tooling",
+      "gitBlobSha1": "a0c1a3fb7b01ae7146be0d9fab2aa16acb0a11f5",
+      "sha256": "250b13bae2318b4695fdd862905e83ae955f0d35ee0795c38f5de7150730bb92",
+      "byteCount": 42646
+    }
+  ]
+}

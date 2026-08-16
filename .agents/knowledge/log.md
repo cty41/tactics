@@ -1,8 +1,13 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-16
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:bce691b186754f295a2052028cd20aff540bb8696c1d180d15856ebd8be4f384`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:b05071b91baa974ff9036dbcedb7a8559b8c44a730fec1e8fa6b76c05ee20b75`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:43e4fee724fbf399b389acb5db37907fb1810b3075d79e552c824e93563a4748`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:af2d5c8204ff541df317e9014e4f338bbf8e495cb8473a93824883daac69df75`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:eb7fccfeba1275ab8cf59bf10df12392a2a7f2cb62926fadc04c6799bc38f85b`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:f6df8ae741bfb49e65a7baa60c4e3e2a461396f0e51c6b3161eec1285239d804`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:ef73463977333e87a99b1362e61db75553c1253932fe2ed1caf30383825b7269`。
+* **Governance**: 根 `AGENTS.md` 切换为 Godot-first；Unity Agent Workflow 归档，88 个 Unity-only rules/skills/tools/legacy specs 进入 blob 级退役索引等待最终删除确认。
 * **Godot mainline**: 新增 `Tactics.Godot.slnx` 与无 public ownership switch 的 `Tools/godot/Verify-GodotProject.ps1`；物理无 Unity 临时副本通过完整 Godot 门禁。
 * **Ownership**: `godot-content-ownership-v1` 将 142 项 canonical Catalog 和 13 个当前内容类别晋升为 `GodotOwned`；历史 batch/state 不改写，人工验收继续作为独立 pending 闸门。
 * **Frozen Oracle**: 用 `Tactics.FrozenOracle.Tests` 取代 live Unity linked source；47 份证据按显式 Oracle blob 或最终 Tag path 冻结，15 项语义测试在不读取 `Assets/` 的情况下通过。
@@ -10,7 +15,6 @@
 * **Scope correction**: Barbarian、Hunter 及旧技能原型归档退役，不进入三职业 Pure Run；Audio payload 继续延后，Godot 人工验收不自动晋升。
 * **Rule correction**: Bone Spear Lv1 的成长门槛归属 Necromancer 主属性 Charisma 5。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:15c3bf39fbcc92acde062699809dd583cf88ca8018243ead44568375111cd668`。
-* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:a447a7d87f9d7409f62312a28f89388f076512328a23a92114ba2334949c444e`。
 
 ## 2026-08-15
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:238ab2aa4b314318194c3612d32f4b43d3a6a014fb9777b9e5038658b6ade4d2`。
