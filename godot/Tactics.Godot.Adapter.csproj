@@ -10,7 +10,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <RestoreLockedMode>true</RestoreLockedMode>
-    <NuGetLockFilePath Condition="'$(Configuration)' == 'ExportRelease'">packages.windows.lock.json</NuGetLockFilePath>
+    <NuGetLockFilePath Condition="'$(Configuration)' == 'ExportDebug' Or '$(Configuration)' == 'ExportRelease'">packages.windows.lock.json</NuGetLockFilePath>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>

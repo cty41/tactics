@@ -294,6 +294,7 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("'--export-debug'", build_script)
         self.assertIn("'--export-release'", build_script)
         self.assertIn("packages.windows.lock.json", adapter_project)
+        self.assertIn("'$(Configuration)' == 'ExportDebug' Or '$(Configuration)' == 'ExportRelease'", adapter_project)
         debug_lock = json.loads((REPO / "godot" / "packages.lock.json").read_text(encoding="utf-8-sig"))
         export_lock = json.loads((REPO / "godot" / "packages.windows.lock.json").read_text(encoding="utf-8-sig"))
         self.assertIn("GodotSharpEditor", debug_lock["dependencies"]["net9.0"])

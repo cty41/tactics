@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# mainline.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-17T01:58:06+08:00"
+timestamp: "2026-08-17T02:11:35+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,7 +23,7 @@ repo_paths:
   - Tools/migration/manifest/godot-tooling.json
   - Tools/public-release
 verified_revision: d092a955
-source_fingerprint: sha256:db27cde0278e1930dc3906a0deed194e1a11a8af43ae7ce18f72a9f0c070d928
+source_fingerprint: sha256:ffcd63fae46dd2b000a9cfe4092d608e800192c575e81d8126c7a285515b8f82
 ---
 
 # Current state
