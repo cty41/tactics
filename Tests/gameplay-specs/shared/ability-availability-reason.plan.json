@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "SharedBattlePrimitives.AbilityAvailabilityReason",
+  "requiredAdapters": [
+    "Skill",
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "fireballGraph",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 4
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "caster",
+        "playerNumber": 0,
+        "cellAlias": "casterCell",
+        "maxMana": 10,
+        "mana": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillAbilityConfig",
+      "parameters": {
+        "alias": "fireballConfig",
+        "graphAlias": "fireballGraph",
+        "displayName": "Fireball II",
+        "manaCost": 5,
+        "targetRange": 3
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillAbility",
+      "parameters": {
+        "alias": "fireballAbility",
+        "configAlias": "fireballConfig",
+        "ownerAlias": "caster"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "setUnitState",
+      "parameters": {
+        "unitAlias": "caster",
+        "skillId": "mage.fireball",
+        "skillLevel": 2
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "abilityAvailabilityEquals",
+      "target": "fireballAbility",
+      "expected": "DisabledClickable",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "abilityAvailabilityReasonEquals",
+      "target": "fireballAbility",
+      "expected": "需要 5 点魔法",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "actualSkillLevelEquals",
+      "target": "caster",
+      "expected": 2,
+      "parameters": {
+        "skillId": "mage.fireball"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitAbilityListEquals",
+      "target": "caster",
+      "expected": [
+        "Move",
+        "Fireball II"
+      ],
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "abilityAvailabilityEquals",
+      "target": "fireballAbility",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "abilityAvailabilityReasonEquals",
+      "target": "fireballAbility",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "actualSkillLevelEquals",
+      "target": "caster",
+      "parameters": {
+        "skillId": "mage.fireball"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitAbilityListEquals",
+      "target": "caster",
+      "parameters": {}
+    }
+  ]
+}

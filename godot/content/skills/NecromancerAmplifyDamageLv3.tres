@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://6omsalww0x4u"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_bh3y3"]
+
+[resource]
+script = ExtResource("1_bh3y3")
+ContentIdValue = "skill.necromancer.amplify-damage.lv3"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Lv3_Graph_Ability.asset"
+DisplayName = "伤害加深诅咒 Lv3"
+Description = "令3x3范围内敌人受到的所有伤害提高30%。"
+RoleValue = "Necromancer"
+KindValue = "Active"
+Level = 3
+ManaCost = 3
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "AmplifyDamage"
+DamageKindValue = "None"
+StatusContentIdValue = "buff.curse-damage-amplifier"
+StatusDuration = 5
+BranchId = "necromancer.amplify-damage"
+PrerequisiteContentIdValue = "skill.necromancer.amplify-damage.lv2"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 5
+AreaRadius = 1
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Lv3_Graph_Ability.asset"
+SourceGuid = "94deba173e7104348a2be5d23a5fc838"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Curse_Lv3_Graph.asset"
+GraphDependencyHash = "41ec1880c800037ab0f60c2097a6d518"

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://d0xnjt2wife8r"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_y8cr8"]
+
+[resource]
+script = ExtResource("1_y8cr8")
+ContentIdValue = "buff.ice-armor.lv2"
+SourceId = "IceArmor_Lv2"
+DefaultDuration = 2
+PolarityValue = "Beneficial"
+EffectKindValue = "DamageReduction"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+DamageReductionPercent = 0.25
+MeleeRetaliationStatusIdValue = "buff.slow"
+MeleeRetaliationDuration = 2
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/IceArmor_Lv2.asset"
+SourceGuid = "b7d5e9d727e69484696dd481f4abc80a"
+SourceLocalFileId = 11400000

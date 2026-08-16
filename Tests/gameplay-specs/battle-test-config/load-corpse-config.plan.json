@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "BattleTestConfig.LoadCorpseConfig_SetsEncounterSource",
+  "requiredAdapters": [
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "loadTestEncounterConfig",
+      "parameters": {
+        "configPath": "Assets/Tactics/ScriptableObjects/BattleTest/CorpseTestEncounter.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Skill",
+      "kind": "setBattleTestMode",
+      "parameters": {
+        "enabled": true
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "expected": "Completed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "expected": "loadTestEncounterConfig",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "expected": "setBattleTestMode",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "parameters": {}
+    }
+  ]
+}

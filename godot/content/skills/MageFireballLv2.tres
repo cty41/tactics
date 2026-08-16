@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://bqswj2otavis4"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_kvd4a"]
+
+[resource]
+script = ExtResource("1_kvd4a")
+ContentIdValue = "skill.mage.fireball.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset"
+DisplayName = "火球术 Lv2"
+Description = "主目标伤害提高，并对正交相邻敌人造成溅射与3层点燃。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 2
+ManaCost = 7
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Fireball"
+Damage = 4
+DamageKindValue = "Magical"
+BranchId = "mage.fireball"
+PrerequisiteContentIdValue = "skill.mage.fireball.lv1"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 5
+AreaRadius = 1
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv2_Ability.asset"
+SourceGuid = "324bc789a76b98840a44cc0dfbad7d96"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv2_Graph.asset"
+GraphDependencyHash = "1b900f15dee3bcfa43128ef0553a5e63"

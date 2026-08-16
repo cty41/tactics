@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "contentId": "run.pure-run.three-encounter-v1",
+  "encounters": ["encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3"],
+  "party": [
+    {"characterId": "pure_run_mage", "unitContentId": "unit.pure-run.mage", "startingSkillContentId": "skill.mage.fireball.lv1"},
+    {"characterId": "pure_run_necromancer", "unitContentId": "unit.pure-run.necromancer", "startingSkillContentId": "skill.necromancer.summon-skeleton.lv1"},
+    {"characterId": "pure_run_amazon", "unitContentId": "unit.pure-run.amazon", "startingSkillContentId": "skill.amazon.thrust.lv1"}
+  ],
+  "settlement": {
+    "baseGold": 3,
+    "roundBonus": [[3, 5], [5, 3], [10, 1]],
+    "goldCap": 50,
+    "minorDropChance": 0.25,
+    "hpRecoveryPerConstitution": 2,
+    "mpRecoveryPerCharisma": 1
+  },
+  "save": {
+    "formatId": "tactics-pure-run-save",
+    "schemaVersion": 1,
+    "unitySemanticSchemaVersion": 5,
+    "battleResumePolicy": "restart_from_pre_battle_checkpoint",
+    "unityPlayerPrefsImport": false
+  }
+}

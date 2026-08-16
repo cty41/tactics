@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Tactics.Godot.TestHost'">
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory).godot\mono\test-host\obj\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(MSBuildThisFileDirectory).godot\mono\test-host\obj\</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>

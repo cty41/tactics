@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "BattleTestConfig.MissingPartyConfig_FailsClearly",
+  "requiredAdapters": [
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "loadTestPartyConfig",
+      "parameters": {
+        "configPath": ""
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Skill",
+      "kind": "setBattleTestMode",
+      "parameters": {
+        "enabled": true
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "expected": "Failed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "expected": "loadTestPartyConfig",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "parameters": {}
+    }
+  ]
+}

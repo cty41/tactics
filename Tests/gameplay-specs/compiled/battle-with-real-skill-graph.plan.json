@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.BattleWithRealSkillGraph",
+  "requiredAdapters": [
+    "Battle",
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "useRealAssets",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "loadSkillGraphAsset",
+      "parameters": {
+        "alias": "meleeAttackGraph",
+        "assetPath": "Assets/Tactics/Battle/Abilities/SkillGraphs/MeleeAttack_Graph.asset"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "meleeAttackGraph",
+        "casterAlias": "p1_0",
+        "targetAlias": "p2_0"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "unitHealthEquals",
+      "target": "p2_0",
+      "expected": 19,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 20000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "unitHealthEquals",
+      "target": "p2_0",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "parameters": {}
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ownership-closure-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "catalogCount": 141,
+  "source": {
+    "exportHash": "sha256:ee3eccdd75da97ac594e78f6fa456a8f1038e85a1cedc852fa5440c855310af3",
+    "exporterVersion": "unity-assetdatabase-v1",
+    "sourceCommit": "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+    "sourceTag": "unity-final-2026-08-08",
+    "unityVersion": "6000.3.11f1"
+  },
+  "artifacts": [
+    {
+      "contentId": "skill.amazon.combat-techniques.lv3",
+      "resourcePath": "res://content/skills/AmazonCombatTechniquesLv3.tres",
+      "resourceUid": "uid://cieqwq207rk8d",
+      "targetHash": "sha256:d6aa742f45d962e17f4be358d7369f748e41f9b024e161492b5391a3b1a6d557"
+    },
+    {
+      "contentId": "skill.amazon.poison-spear.lv3",
+      "resourcePath": "res://content/skills/AmazonPoisonSpearLv3.tres",
+      "resourceUid": "uid://c8fhbjhp3aqal",
+      "targetHash": "sha256:3fefaead893b8653034174658ab73b5c17e6c8f88ba4a3591091346ad8e54d32"
+    },
+    {
+      "contentId": "skill.amazon.thrust.lv3",
+      "resourcePath": "res://content/skills/AmazonThrustLv3.tres",
+      "resourceUid": "uid://br5l1ag2pqtxu",
+      "targetHash": "sha256:31b1134d879f0d384e61c111f8e5245edc5a27b5ef9786debf2f21ce2d4a5a00"
+    },
+    {
+      "contentId": "skill.mage.fireball.lv3",
+      "resourcePath": "res://content/skills/MageFireballLv3.tres",
+      "resourceUid": "uid://cv4fij7nvxr51",
+      "targetHash": "sha256:2155fadae161b604c6aeefcb63f7fbc0d4d69c6cdef928c799376f41826273c2"
+    },
+    {
+      "contentId": "skill.mage.ice-bolt.lv3",
+      "resourcePath": "res://content/skills/MageIceBoltLv3.tres",
+      "resourceUid": "uid://d2rehamwpvbju",
+      "targetHash": "sha256:97774a33454e6fed20cd6adef5945e43f1cda055cd4bca438ac490cbad118961"
+    },
+    {
+      "contentId": "skill.mage.lightning.lv3",
+      "resourcePath": "res://content/skills/MageLightningLv3.tres",
+      "resourceUid": "uid://qsh0ebkoafbr",
+      "targetHash": "sha256:39f70841b0c8cd546bd1a784c947b42e252e1bba80637f1c03335aedd2987668"
+    },
+    {
+      "contentId": "skill.necromancer.amplify-damage.lv3",
+      "resourcePath": "res://content/skills/NecromancerAmplifyDamageLv3.tres",
+      "resourceUid": "uid://6omsalww0x4u",
+      "targetHash": "sha256:842e334ea909cb3f2fb4b1bdaf361d678d1aff51c5a04f279693918418468e53"
+    },
+    {
+      "contentId": "skill.necromancer.bone-spear.lv3",
+      "resourcePath": "res://content/skills/NecromancerBoneSpearLv3.tres",
+      "resourceUid": "uid://frj6udejf07b",
+      "targetHash": "sha256:b1edeb1aafaee4184da00915889cc0ab0815c1450a1a2179816bf2b5658c406a"
+    },
+    {
+      "contentId": "skill.necromancer.summon-skeleton.lv3",
+      "resourcePath": "res://content/skills/NecromancerSummonSkeletonLv3.tres",
+      "resourceUid": "uid://biu21muos0v5c",
+      "targetHash": "sha256:afd00f9c98d080f03a58c39852596c37906b043abdbbd7028f5839731524e5d4"
+    },
+    {
+      "contentId": "skill.summon.skeleton-attack.lv3",
+      "resourcePath": "res://content/skills/SummonSkeletonAttackLv3.tres",
+      "resourceUid": "uid://ck8f4q0hlv6pt",
+      "targetHash": "sha256:3defc1d9d862d0b7d30747a2110f8ca757a0cf2f5d6410bdf707278bc7bb4598"
+    }
+  ],
+  "payloadBoundary": {
+    "audioPayloadCopied": false,
+    "thirdPartyPayloadCopied": false,
+    "unityPresentationPayloadCopied": false,
+    "unityUiPayloadCopied": false
+  }
+}

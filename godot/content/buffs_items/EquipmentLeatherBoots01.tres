@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://df2jtiktwna0g"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_a7slr"]
+
+[resource]
+script = ExtResource("1_a7slr")
+ContentIdValue = "item.equipment.leather-boots-01"
+SourceId = "leather_boots_01"
+DisplayName = "皮靴"
+SlotValue = "Boots"
+RarityValue = "Common"
+Price = 7
+AgilityBonus = 3

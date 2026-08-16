@@ -1,0 +1,360 @@
+# Tactics Knowledge Update Log
+
+## 2026-08-17
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:251ed1f61d4dfd47db9ab9c53d0d096bec0901bbf1b0dec943ff0476d5179300`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:f99b0c8ef26799f6c51a5d7b4773de1896a8b2588df3af29f34090f917bc9675`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:75e173b44957b86fe8bf9d38f142fb56f47c9ea59c464a04c9a122ea8675f7b5`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:817f9cf67a9764b768e0f392f46674570e9954246b7a556c621cce061143b77f`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:2e6bb1329e985a5ae161ee3a87e6867fb5f285f9b1fb3b505766ba9f53a1c988`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:7c50d4b5baee5917a57d76d449ba7b5755101c89004157203c2d8861d1f0f481`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:b1b731b882f647d95e4028ebd12ed7eb6bf7d3916ed27ebebaa73b30a373e88e`。
+* **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:f5de85135f37a5235f3d62d8af9c4bdbc74f245e4d6138902311217def729fda`。
+
+## 2026-08-16
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:0d574108e22d914617d5cb3a1a6904be1f71331d784a719c2ce3383ec94cb8a7`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:ef73463977333e87a99b1362e61db75553c1253932fe2ed1caf30383825b7269`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:687f5b1ac2d63bbd36a29f5c3c616efca707fe8bc3ec9f32b9e8822c3516500c`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:4cb2e91ce2de794c09790d1b56cf82f3c20684dd63db0db7144bf11904e8d3ae`。
+* **Battle LoS**: Godot 主线采用 `godot-los-shadow-cone-v1`：中心射线穿过阻挡格开放内部才遮挡，格边/格角相切放行；冻结 Unity supercover Golden 保留为历史证据并显式标记为已被替代，新增权威规则文档、Core/Application/GdUnit 回归和当前合同登记。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:316520e50b59878ad16d02ff1de4f812193427337f5d475fa1a7ea2c23e26fc1`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:a1c7360516727532c3cf1c737d1a29c3ca5df552b3c1504c0b4370589b720098`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:33ac5de47eec8a5ac544089f1e09c6af2826b4ba2469457947f5ef7db9bdafdb`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:066039a42258cda14492f76c54d5d3d689539a744f7fc754813abd98481cc9bf`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:1ea6ea7e9a16c80bfbdb74c3ff81e27a1566db1b31502b2cbfd00b29356456b6`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:4747afc4d536add464e8518ec304be49ed98aff2f11ebbd7652591de32251ee9`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:30bd8dce59da02b854eb8b8d620d6b02301d31d3cd21be636f20b56e7b3f2c27`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:0876ab4b0368e4edf53d80bb4163e46cbe5dcbbe162c1a334e7b16a2f104077e`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3`。
+* **Unity retirement**: 用户确认后按 `unity-deletion-manifest-v1` 删除 9307 个 tracked 文件、46909708 bytes，并清理 1659 个 Git-ignored Unity 生成文件；四个 Unity 工程根已不存在，真实删除后的完整 Godot verifier 通过，源码由 `unity-final-2026-08-08` 与 Git 历史保留。
+* **Governance**: 根 `AGENTS.md` 切换为 Godot-first；Unity Agent Workflow 归档，88 个 Unity-only rules/skills/tools/legacy specs 进入 blob 级退役索引等待最终删除确认。
+* **Godot mainline**: 新增 `Tactics.Godot.slnx` 与无 public ownership switch 的 `Tools/godot/Verify-GodotProject.ps1`；物理无 Unity 临时副本通过完整 Godot 门禁。
+* **Ownership**: `godot-content-ownership-v1` 将 142 项 canonical Catalog 和 13 个当前内容类别晋升为 `GodotOwned`；历史 batch/state 不改写，人工验收继续作为独立 pending 闸门。
+* **Frozen Oracle**: 用 `Tactics.FrozenOracle.Tests` 取代 live Unity linked source；47 份证据按显式 Oracle blob 或最终 Tag path 冻结，15 项语义测试在不读取 `Assets/` 的情况下通过。
+* **Retirement audit**: 冻结最终 Unity annotated tag object `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d` 与 peeled commit `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，完成 9,263 个跟踪文件、46,501,338 字节的退役分类，`unresolved=0`。
+* **Scope correction**: Barbarian、Hunter 及旧技能原型归档退役，不进入三职业 Pure Run；Audio payload 继续延后，Godot 人工验收不自动晋升。
+* **Rule correction**: Bone Spear Lv1 的成长门槛归属 Necromancer 主属性 Charisma 5。
+
+## 2026-08-15
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:238ab2aa4b314318194c3612d32f4b43d3a6a014fb9777b9e5038658b6ade4d2`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:16ffcad68b279a61dd165abfb848259249bdbb3d0732bc352a5bddb04cac8438`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:f98e896ec559e5173c34137f5c39593439aebc42bd713133ee250f7493e1e0b7`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:65b9ca033bd83967406e619f64499c9de8ac767ac9e5c7bd38e3cb09a27b6a3e`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:c5767934a3fcda4cde009900c9674d436145b264fc2e1410357aee4bd4baf70b`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:d01497f536769855d95d8cea60ae6c438d7b38a3cf3e88154034bb2c4a5fcb92`。
+
+## 2026-08-14
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:4a940677bf2d548551d92b81bf4b377bc7655889e14a538b401e0823b6ff19d7`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:88d3c1e617fbf30301fc1b8fa35fb88305045edd8c4febb532fcb4a8cf808f88`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:dbcd270f2dc89f84b6f3ae4d66e534ddc34d819d7d36d4d61219ffd382480348`。
+
+## 2026-08-13
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:6ec4644b008c533775005d062927ebb905dcad0cc51a6d82744ec39dc58f027a`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:7cd01e134d0ff6494fa8dab54890474a485953045a88b07092aeabf1533d2ec1`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:22f275045eb69b79714e9c87417f86b93abdd3ef74b2214018d6ea47e3f6fb29`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:e8d035a208848503a7370f4e7f9b1f53c4041b42efd6722797190303173a0cc5`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:c670c9c10968ac3ee341b9724dabcfc61ff23ada1fd09478d78e8c208632772d`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:378b4e9cc5b073da15af43ed9ba1f51d5d111a7c35380130a3766155f81e5432`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:2ca528fcefebce83a5ff42591f0afe56516a860f8307390fa33f51f9367ec605`。
+* **Fix**: New Run Amazon Poison Spear 三选一改用 canonical `skill.poison-spear.lv1`；Save V5 确定性修复已写入 Active Party、PendingBattle checkpoint、Pending Setup/Progression 的旧错误别名，Run Definition 的全部起始候选进入 Catalog 引用与启动校验，现有 PendingBattle 存档无需删除。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:4f9f82936ce9c67f56a50c9421668551e4e38d2f0cd294273425c3b7847609b0`。
+
+## 2026-08-12
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:bf6119f12fad378f299a499c77603757a886a89550ff08e1cea846841213ddb3`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:15f68888f6fdbc75cff51629f8c8ebac91d93794ee7734bb845f710f135f62d3`。
+* **Update**: Phase 7B–8D 合并人验前收口恢复 Unity 时间线、尸体占格、targeting Facing、属性后技能两阶段成长、warm/cool tile 与 BattleBackdrop parity；移除无 Unity 合同的全棋盘镜头震动，canonical Catalog 调整为 124。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:44ef7f3d400e229be4a3be2c8f604ff8ae2e25043b415424b0647bdcf643e838`。
+
+## 2026-08-11
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:0e5759016326cf0bc02150e5960d09220342afd51daec7532b4b1af0281a5b65`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:58534a52343be695a6e9fbc621347dd7a856dfee6d9f77af08da6f3e1548c9bf`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:e0a00a384d4bd8c3767efea89bea891d2fc329656b4418bfa518ce80b26b00e8`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:4f9f82936ce9c67f56a50c9421668551e4e38d2f0cd294273425c3b7847609b0`。
+* **Validation**: 用户在 canonical Godot Editor 完成 Phase 4 Unit Gallery/Spawn/Reload 人工验收；四向、死亡/Reset、Goat tint、比例/Shadow、原生1600×900 resize 与网格外框均通过。`pure-run-units-v1` 晋升为 `Validated/UnityOwned + passed_for_migrated_project_owned_unit_visuals`，完成子计划按文档生命周期删除。
+* **Fix**: Phase 4 Unit 预览切换为原生 1600×900 逻辑/窗口画布；Gallery 以 1.25 倍迁移保持既有屏幕观感。Spawn 固定出生格从0/9边缘收至1/8，并同时验证8px网格外框与24px viewport Body/Shadow AABB安全区；角色可跨内部格线但不得跨网格外框。运行场景、程序化截图、ResourceSaver semantic、receipt 和 GdUnit 共用布局合同，batch 仍等待用户最终视觉与 Reload 复验。
+
+## 2026-08-10
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:3865baa09721e42b26b6fb001e1c97bf8033d2e43cd29e8f115dc1a1929c06c4`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:bc22d2ca557cdf6f0cf872de8e013afa62348c6a16afe19eb0a6dc72499a7fb0`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:373388547b69513949378063417dd401298121712e5d369a925775a1c13645fb`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:7452844dcb6ecae999e919ceb2a983efcd29a49bcb03fcb323caf692aedce8c5`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:08841dca2fc848b1046fdd8f0357eead75a492e9c5cb16d3b27d682cf7b1fa84`。
+* **Creation**: 新增项目级 `godot-editor-lifecycle` Skill：已授权 canonical Godot 修改任务需要 session `0` 时，可用精确 PID 的正常窗口关闭自动挂起并恢复原 Editor；原本关闭则不新开，关闭超时不强杀，恢复后重新核对 MCP path/version/plugin/readiness 和日志。未扩大 godot-ai Profile 或修改 pinned source。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:4454e303703cc67fc8be63dbb5822dc74fa5c4d130a778c95878f036b9bd66bd`。
+* **Fix**: Phase 4 二次人验截图确认 Gallery 整批上移并非 Sprite pivot 再次错误，而是旧 `Y=105/335/565` 贴图中心布局在 Actor 已改为脚底/尸体落点后仍被复用；新增 `ground-baseline-v1`，三行根节点改为 `Y=155/385/615`、标签净下移 10，并让运行 Gallery、程序化截图、ResourceSaver semantic 与 GdUnit 共用同一布局常量。batch 继续等待人工确认。
+* **Fix**: Phase 4 首轮人验确认死亡显示偏上与 Fixture 阴影不可辨：AssetDatabase DTO 证明 living/death pivot 分别为 `(0.5,0.078125)`/`(0.5,0.5)`，12 Prefab Shadow 均为 64 PPU、`localY=-0.03`、scale `0.8`、alpha `0.9`。新增 `unity-unit-sprite-geometry-v1` 并换算为 Godot living/death offset `(0,-108)/(0,0)`、Shadow offset `(0,3.84)`、scale `1.6`、alpha `0.9`，Gallery/Fixture 改为可辨阴影的中性灰蓝底；batch 仍待二次人工确认。
+* **Update**: Phase 4 Unit Gallery 视觉一致性修复完成：冻结精确四向矩阵，Reset 恢复全 South/存活/tint 开启，将项目自有 GoatBodyTint 算法等价移植到 Godot shader，并把 F6 override 设为 1600×900 等比；修复程序化截图共享 Image 连续缩小问题，完整门禁为 Core 35、Application 18、Unity Oracle 11、Python 84、GdUnit 11。batch 仍等待用户 Gallery/Spawn/Reload 人验。
+* **Update**: Phase 4 Unit 自动实施完成：12 个 Unit、19 个项目自有 PNG、13 项 Catalog、共享 Actor、Gallery/可视 10×10 SpawnFixture 与双 renderer 门禁通过；batch 保持 `Generated/UnityOwned`，人工视觉与 Reload 仍 pending。
+
+## 2026-08-09
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:72a75ed078f89a8893d0440fe04c5b3ea9f2c12aee838cd26da5cbbff311281f`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:859fc54bb74c6c4f0789901d0eab5af818720f34b6b4bb8bd0d75d4a5d179846`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:de15f3e15f4154beee89dad04ef3a464a7a1e495bc9cbe1dd52da14cb398774f`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:4f1a779daf7de034106a25a2beadac13a46493f3b55e67b31d85df68354d1b8d`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:17d5e30f02792662a57e595639c435dd84a26ef97ad7ca483664420db0c372b7`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:5f7c2ab7738b81af63cb515f85c72654113acdf96eb1020fd1a24f76c1b7a217`。
+
+## 2026-08-08
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:03c514ae199440d587af87c81eab358535d0e33f021d562d72648f714ce8dfa0`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:ddb40b32ab32ba25e7e91fad4b90cff8629bb006e0d5f5d0bfe7890271622756`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d774457918649e9b91b15693998531622bddcb0045bb2333533a983c6fa55aa3`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:12ef168aa8859e70e0ef312aa06474b7e1adbadcffbf07ddedc158e7f95f0159`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:c0996caf765b41380c2373a1fffabbe5224d60b72389915774836050bfc8f1ce`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:ac5b4478d4d1661f2f895fc0a2f4f5730ef16956403799548a289fb814033cd6`。
+
+## 2026-08-07
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5c2a7beea0ac94e6033e4f9803f335049d60c2f6b4f90cb3a6077355abfad65a`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:f7343cca8b6a1be119b37eca91a352a1f031df5581b99ccdf61a79d202511686`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:b8fe65377040410d8e8b35ba2efad7359aa931b1e468196e6fd10d4763987abe`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:bb48d556cc8faccf19f828eab9d60b1959e062371855dc45cc8178f789681a0a`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:c76f0f290332940dcf149ad3533d9e7127351ae31f7c47e1f2e799822dff2fd4`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:604eba8fa0540790fae8f493c93a84be7712b88c82ce958ab517d0336e0b74b3`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:c2b2296bdaedd44ac3bc4841178b03f7b7d52427768d7872c822e8f78d471ea2`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:b644433ffd83779a27c50b1bf13cb3304aef10f0e43dd30200ab1ad9dfa565d3`。
+
+## 2026-08-06
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:ed519ce2b3494970093bd02145046d881d10881160a5e25acacbb85b755c619d`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:1b01a568b2d0c93827bc85892505ea98c6e1e8749b1fa2974986541cd0bdd754`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:47708ede8b3648fe382d14ae4bd22a91470299607a8d307e8f70e3d31f3a7721`。
+* **Update**: Unity MCP 自动恢复保持 `0/5`、`blocked_upstream`；除 10.1.0 包内约 15 秒周期的并发 reconnect/session eviction 外，closing review 还确认 manual Disconnect、batch/import-worker、machine-global endpoint、cold-start ownership 与 Play Mode compile gate 等项目层阻断项，当前 bootstrap 不具备提交条件。
+* **Validation**: bootstrap 定向 EditMode gate `17/17` 通过但不足以关闭 lifecycle findings；MCP 配置与测试 gate 黑盒回归当前 `35/35` 通过，C# 工程与 Unity domain reload 编译无错误。连续 5 轮与全量 EditMode/PlayMode 未执行。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:0f88291a600f37945f06e0d685b44582aac4a9677c99547b3bf4d680514c9dca`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:098794df49f10c4f16ceba41c9408f3a76310deedde27d0ed5f727ae1c3c40c2`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:e1fb883441dbe29028dbeefe3b888573d92fc65a6c646998a53562afcaca6f5f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:d729106f7bd8e396980267889b7544e8be9e5ffde166b49448a6fd04cfa6654b`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:653fd5013cf174409755182e449008943be5069a749199ffd5565a567cb7d10f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:9e3bab058975d650aad70afe843d530ff7b227d9135cff4f848e433c14430956`。
+
+## 2026-08-05
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:b29ac70db0543418488a7d2af16e89be5cc3a81f471663a3f71ca26559c65243`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:34829606800536b4f2ae60e6b6c0ec83fa02487a15e6c11a7f09e3996c770549`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:f1827f93a982ed163cdf662a48b7ba629a58c64ed9e0ee38f18b009fb0a0f6eb`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:2db17fd21a80c57916d40e567c60fff5e3e4bf2cecb883258b7fbc1a28be89ac`。
+* **Fix**: 战斗启动不再调度 Cheat Console UI，只自动显示 Battle UI；调试控制台保留 ToggleConsole 手动入口并继续在战斗结束时关闭。
+* **Fix**: Friendly、Selected、Finished、Targetable 单位状态改为独立动态 Mesh，并在 `LateUpdate` 连续跟随单位根；`UnitLeftCell` 不再提前跳格，非 0 阵营隐藏被动状态但保留 Targetable 红色提示。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:e03a9bbd9a8c56830f83e40ebbbd21c52bf88627f1d3644680f005c71dadf0b6`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:41a19adad1671169b500fae8807330c8fe3398a4bfbe02f38701ea96e689980e`。
+
+* **Update**: 等距战场统一以 `TilemapCellGeometry` 定义 Ground Center、世界点拾取和菱形顶点；高亮、虚拟输入、Scene Handle、Brush、单位根与尸体不再各自维护半格补偿。
+* **Migration**: Legacy Fighter/Skeleton 将非 Tween Sprite 高度烘焙到 Prefab，12 个 Pure Run Prefab 显式保持零 Sprite/VisualRoot 基线与 Shadow `localY=-0.03`；`TilemapUnit` 移除重复运行时视觉偏移字段。
+* **Documentation**: 新增等距网格与视觉锚点权威契约，并同步 Battle、Gameplay Test、Pure Run Artwork 与 Project Documentation 导航。
+
+## 2026-08-04
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:4bdbad6bbe32df967c2d0473fee6c7a7c7f518551ac9dbccd4cd09f750397b5b`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:a6465d9a98503acfd535c85bf4d85578982ca7722ab0dd04cbe35c8e048f289a`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5777c9188ba246f7efde654d3b13f3983292a42433d7d2ab7312419403e94205`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:71a44d19fa8b7bbc7124bbc0811f0b8f7f03945c137ab685eb4bb6feac18c2aa`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:0e3c28b8674e2abcc365b1155618490180676c89e263daf1a45450ab6cbac5a6`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:5769b15100129494f34a58149e040443d92a2affa58eb95099c997c673051e84`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:df7d7e02411cda4b081d7f5ee2bd342348669e8aa477b13a4932d29720ae9ded`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:8da8298c973a9aa54026b50fafa3d5134de6881ebf4c3f3c8d701fbf21b514a8`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c4ce89ba804ed241091de58dd44b1da7a5b9cdf00573f709964e7709891b8800`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:70bad24a950c50b4b4a12381846644433bbfb170467a617365917d636c15866a`。
+* **Fix**: 尸体在隐藏准备阶段继承死者主 Sprite Renderer 的 Sorting Layer 与当前 Sorting Order，修复运行时从单位 `order 4` 回落到 Prefab `order 0` 的遮挡错误；Handoff、落地和 Preview 共用该契约。
+* **Update**: 多 Tile `death_state_volume_review_v03` 左列获批；Hunter `v04`、Mage `v04`、Necromancer `v05`、Goat `v03` 已晋升正式源并逐字节替换 Runtime，尸体改用 Alpha AABB 居中的零局部偏移。
+* **Fix**: 致死受击改为 `0.07s recoil → 0.05s shake → 0.08s collapse`，`0.20s` Handoff 前回到 Tile 基准并从底部 Pivot 压至 `1.02× / 0.58×`；Tween Preview 同步显示完整阶段标记。
+* **Tooling**: `UnitTweenVisual` 新增 Play Mode Inspector 只读状态面板，显示 Lifecycle、Priority、活动 Tween、generation 与 Handoff，不提供状态写入或强制按钮。
+* **Fix**: Tween Preview 的 `CorpseLanding` 改为独立 Corpse 并复用运行时 `ApplyVisual`，统一死亡 Sprite bounds 居中、材质/Tint、镜像清理及 Drop/Impact/Settled 时间轴；新增真实 `UnitDestroyed` 尸体生成与逐时刻落地采样回归。
+* **Review**: Hunter、Mage、Necromancer 与 Goat 死亡图完成等比体量候选和统一 Tile Review；候选仍待人工确认，未替换运行时纹理、未提交。
+* **Update**: 火球、骨矛与突刺 Lv1-Lv3 升级为 Piloto 粒子混合表现；9 个正式 Presentation Graph 以 Fork/Join 并行保留程序化 Blocking/路径快照与新蓄力、飞行、定向枪芒和命中粒子，玩法时序及首批三技能保持不变。
+* **Validation**: 新适配 Prefab/Profile、Graph、Preview 四向和池化生命周期已纳入自动化；真实 Battle Camera 的遮挡、强度和多实例观感仍为 `manual_visual_qa_pending`，人工确认前不提交。
+* **Correction**: 羊魔 UL 武器轴改为按动作分别投影：Melee UL 保持斧刃左上/杆尾右下；Thrown UL 从 DR 过顶姿势转到背向视图后保留上下关系并翻转水平斜向，使用斧刃右上/杆尾左下。
+* **Update**: 裂颚羊魔动作生成经验改为 3D 世界关系、固定等距摄像机与 2D 屏幕验收三层约束；UL Melee/Thrown 锁定左倾主体、左上斧刃/右下杆尾、武器与双手后层及贴身无手臂规则，并废止旧的 UL 长柄斧固定前层结论。
+* **Update**: 经本轮明确批准，法师 `Cast DR v04 / UL v01`、`Hit DR v02 / UL v04` 与死灵 `Cast DR v03 / UL v01`、`Hit DR v01 / UL v01` 已晋升到 `calibrated`，生成 `_128` Review 图并接入各自 Cast/Hit-only Profile；后续换图不改变运行时接口。
+* **Validation**: 新动作纹理逐字节/Importer 契约、Profile/Prefab、四向镜像、恢复 Idle 与非主 Renderer 不翻转纳入自动化；严格 Sprite 校验 99/0，相关 EditMode 89/89、PlayMode 30/30 通过。
+* **Update**: 补齐单帧动作姿态经验沉淀：标准胶囊角色 Hit 统一参考已批准赤柴的后仰、压耳、大眼白/小瞳孔与双侧蓝白泪线；法杖 Cast 锁定前指施法轴与直杆中点握持。规则已写入权威美术指南、法师/死灵提示词与 Pure Run 美术 skill 参考。
+* **Update**: 法师逐图候选已生成到 `Cast DR v04 / UL v01` 与 `Hit DR v02`；全部仍是待完整核心蒙版、`_128` 和 Tile Review 的 `candidates`，未晋升、未导入 Unity。单图生成不代表赤柴真实战斗 QA 已通过。
+* **Update**: 单帧动作姿态范围扩展为赤柴 3 对、羊魔 4 对、法师 2 对与死灵法师 2 对，共 22 张动作图；法师/死灵仅覆盖当前技能实际使用的 `Cast / Hit`，死灵动作图移除只属于 Idle 的蓝色鬼火。
+* **Update**: 新增法师与死灵法师可复用动作提示词库，并锁定用户手动启动的 DR/UL 两阶段夜间候选队列；每槽位两个候选，夜间只完成技术加工，不自动批准或运行时接入。
+* **Validation**: `03ca6488` 基线上 Unity 强制编译无错误，动作姿态相关 EditMode 79/79、PlayMode 28/28 通过；仓库没有真实战斗代表画面的后台 Gameplay Test，赤柴受击视觉闸门保持 `manual_visual_qa_pending`。
+
+## 2026-08-03
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:e1bcdee710dbdc67e8a5456a9a0f71cd5d5a82340cfbb0ff4714a37e89077a2f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:212eac94f2b0e22c185874665db3575a1c3c14677b9e897c314dc42abb023087`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:ecc12e1ce9eb237734f5748f435c86c49040fe6392de40abb6220ff28bf0ea3d`。
+* **Update**: 赤柴基础动作真实战斗试玩通过后，接入获批的无矛 Hit DR/UL；`Default/Unarmed` 共用同一方向对，`Hit` 在恢复段开始退出且不修改 `IsSpearHeld`，运行时赤柴姿态纹理由 6 张增至 8 张。
+* **Validation**: Hit 纹理逐字节与 Importer 契约、Profile 双状态映射、四向镜像、恢复段退出、连续受击和显式停止恢复纳入自动化；相关 EditMode 60/60、PlayMode 28/28 通过，羊魔生产继续等待真实战斗受击 QA。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:1f4e3893e6689264aff86ca690309a126486fe46bb4d972ac43595e6dd9cdc73`。
+* **Update**: 只将获批的赤柴空手 idle、近战和无矛施法 3 对接入运行时；`ThrownAttack` 复用近战图，`Cast Default/Unarmed` 共用无矛图，Hit 与羊魔继续延期。
+* **Validation**: 运行时纹理逐字节/Importer 契约、Amazon Profile/Prefab/毒矛引用、四向镜像、Release/恢复时序与长矛状态均纳入 Editor/PlayMode 自动化；真实战斗人工试玩通过前不继续批量美术。
+* **Update**: 赤柴 Cast 简化为 `Default / Unarmed` 共用一对无矛施法 Sprite；姿态期间不修改 `IsSpearHeld`，恢复段按权威状态返回对应 idle，首批唯一动作图由 18 张调整为 16 张。
+* **Update**: 赤柴 `ThrownAttack` 改为复用已批准的 `MeleeAttack` 方向 Sprite，同时保留 Release 当帧退出与空手切换语义；首批唯一动作图由 20 张调整为 18 张，专用投掷失败稿归档到 `rejected/superseded`。
+* **Fix**: 修正首次运行态视觉误判：`TilemapUnit` 不再用会被 Idle Tween 改写的 `Sprite.localPosition` 计算 Shadow，而是把 Shadow 固定在单位根节点的 Tile 落点 `localY=-0.03`。Test1 2× 后台截图确认死灵与羊魔均出现可辨识椭圆，回归测试新增初始化时序断言。
+* **Fix**: Pure Run 单格单位 Shadow 从第三方 `HeliSprite/FloatingUnitShader` 切换到静态 `PureRunUnitShadow.mat`（`Sprites/Default`），恢复 Renderer alpha 契约并移除顶点悬浮；目录级 Editor 测试新增共享材质断言。
+* **Fix**: Pure Run 单格单位的 Prefab 作者状态不再保留历史 Shadow `localY=-0.42`；共享 Fighter 链和三个直接 Prefab 统一按脚底偏移 `-0.03`，并清除 PureRunNecromancer 的禁用覆盖。目录级 Editor 测试新增激活状态与根空间脚底对齐回归。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:2581b747a7543a03256dc340e4ecad5e48a33b38537ca6e3d71a112814ecc7e1`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:33186db7ceac3a37f1e2fc666fa3c9ceb373780e07e81d5d28c8dce073e0f0a8`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:9d439c87c139d73831a6db5bac4519c90c3a6aa503c97acd74ac746bbe988949`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:f9a9ab0f14e32770d20645b5982133d2e624f5ddad3228e8707ddcd91d08f1c3`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:e8f8738b5e931de0fc6835636c38922d164a281f4eb89a20ff352527dc4aea37`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:39fb942e4cf502aa3113564e8afc3081515e0b214b6f9f77e57c5f76c887d0bf`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:82d54dd1ec9fb21b326b45f24a87b7ebeb45d6d695294216ca9779e1c059933a`。
+* **Update**: 伤害加深诅咒正式表现升级为三层 V2 法阵：独立校准暗盘、双圆环、符文和中央符号，十二个固定尺寸火焰节点从 12 点方向顺时针延迟点燃，并按远近半圈使用 `-1/+2` 层级；V1 双层资产保留回退。
+
+## 2026-08-02
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:66622df99da280c97e0a08a4d3131360be4a3f605d5a9fa236d6aac80409b4cc`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:c722156cad98360da87bd8b373c02a9411d1ef07b5143b46ac457e8639608c52`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:18225d1c4bcd2ac8b7467e5c2718aeb02ee8be85ce7abedac5a2c498881fe20c`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:0f080e8691e67e947e7f50ca642b48b764777091eff0732a16a62a78779ba7f8`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:b9a548d829c25b09ed8a90950fe0add3d71ea16b6dde169c4a8935f18040b03e`。
+
+## 2026-08-01
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:a11db2e61d2bfb3f84bf0c96b6654b202fc71f62547c0564b5d9021c8bd07f1e`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:27885e3884c37298f2b48fca07c2d27bb559861674c1b7936a672b5b75cbc1cc`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:1ed9b97b1092b21a0dda79377c6cb72821a0650c369c05b39afb412d8c8aa93b`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:dba31cfaea224654b9f87f7f891880eb18c27bcbbcd3698e6da255a4c290053c`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:3d258f5eac44ca5b51737f094baa4474681b3c9722a14fef61e8a207dd807ce1`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:b33460aefbe1875a2d47df1e5bf23780ef6b8a61dfb140c42c0e1ce81a407ffe`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:42385fa3f1f6a3a9f09b7ac12a439cb9b0babf9f2d4019a005835401b4c4b391`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:07a592fba3f9ce26eea1990aae4e30e8873274fba231ab1138ac083b93003c3f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:9efa57e5d37dab9188590e9498d6ecf631d635e50959135c16af79d196fb8c60`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:9c5bb7f2aaa67ce42b9b5d02c8992d2de27641a835d44f967e40ee3e3d7940ee`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:870a8cc20de52924fa1f0a2618d1d5005269833e5f961599f97b84412f9f6fa1`。
+* **Update**: 新增独立 `Tactics/Pure Run/Tween Preview`，以隔离 PreviewRenderUtility 舞台复用运行时单位 Sequence、投射物 Renderer/材质/轨迹与尾迹构建；支持十种动作组合、四方向、距离、循环、倍速、时间拖动和可 Undo 的 Profile 沙盒。该窗口只标记 Release/ProjectileImpact，Skill Recipe 仍由独立 VFX Preview 检查，蝙蝠动画继续延期。
+* **Update**: 程序化火球、骨矛和突刺已完成可玩验收，但定位为传统美术特效逐技能替换前的临时视觉基线；Tween 长期保留角色/投射物运动、受击等简单动画，简单光环、闪光和短尾迹仍可程序化，复杂技能不再默认扩展有限原语。
+* **Fix**: 废弃 Cast 整张人物 `GlowOverlay` 白膜，改为人物与阴影后方的非阻塞 `CastCharge` 径向光环；所有 Cast 都有默认蓝色 Recipe，骨矛与火球分别覆写苍白青和暖橙红，主 Sprite 的 Sprite、Material 和 Color 保持不变。
+* **Validation**: Cast 光环与 Pure Run Tween 资产 EditMode 48/48，三职业技能、骨矛清理和战斗倍速联合 PlayMode 72/72，Sprite 严格校验 38 文件/0 失败。
+* **Update**: Battle 全局播放倍率新增 `0.5×`，按钮循环固定为 `1× → 2× → 4× → 0.5× → 1×`；初始默认仍为 `1×`，暂停恢复与跨场景保留继续由 `GameTimeService` 统一负责。
+* **Update**: 经人工确认的骨矛 `v01` 已接入独立运行时 Sprite；使用中心 Pivot、`128 PPU`、`Scale=1`、切线旋转与最多两个非阻塞短残影，不再复用死灵飞行能量球。
+* **Fix**: Sprite 投射物和残影只在 Profile 显式提供 Material 时覆盖 `SpriteRenderer` 默认材质，修复空 Material 导致骨矛显示为洋红错误线的问题；程序化 VFX Material 继续只用于 Mesh 原语。
+* **Validation**: Pure Run VFX 资产 EditMode 46/46、相关技能与 VFX PlayMode 48/48 通过；测试同时验证默认/显式 Sprite Material、骨矛残影上限和取消清理。
+
+## 2026-07-31
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:ad6f9994669477d3e6d6b351856b95832b7a2d9840c5061e411bcc8c007062c9`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:89818c025b2730669f248d438f8dd025425a1a4ae274339f1a574aecb298cc52`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:32ba7eb650697ee3ec72986dbc10a04198773974cecf9f4137d72a3b693b5ca8`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:3ff4e929873881ea8d07d3c2b6cddc0561321ab135a1446c920781be2caa501e`。
+* **Update**: SkillGraph 新增五种语义 Cue、六种有限原语 Recipe、接触关键帧阻塞、程序化火球与三技能命中反馈；骨矛新 Sprite 保持人工确认门禁，未接入运行时。
+* **Update**: Pure Run 技能 VFX 预览支持 Recipe/Cue/等级/路径/命中数、固定种子及可拖动时间轴；突刺端点不再被中途敌人的通用 LOS 误裁剪。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:8026bb89e61794a34ef8dd68a329f94839923089a9e0f35de765607789bedbf2`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:e1c57e802eb3635bbb0ed25157f98b55681f44a2e036ca52042edc38903dd526`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:9781161bcccb96d44d673207cf1f050e91c471289fb41fb2f3e31382fc2a2866`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:c0399c6a5e22f83268d07bd35e260f2e2de0d1eb881a184fdeb28b96cb34cbcb`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:cc2b86d403d34d9da429396e6e348cd4ba003f307f412cf30a0aef716b07806a`。
+
+## 2026-07-30
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:085379df987e40c0fceed1ac7b5456c08a516e49e7146abcff95d09b862556fc`。
+* **Update**: Pure Run 方向图改为先用排除耳、口鼻、手脚和装备的纯核心主体蒙版校准；无手臂角色的手掌必须以多像素接触面直接嵌入主体边缘。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:2d92453e876618b718cde40cef55d235774620335f74114e1e2efd52b8e2a48a`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:0820098ef9c4869b66ff00e787d4a378c95f467f043bf77e1a8ccc2c0c372571`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:9781161bcccb96d44d673207cf1f050e91c471289fb41fb2f3e31382fc2a2866`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:2ad6b06e6d022bb041402d5a1e68816c7870669ce1ed2f0c7a8c8cd87256e00c`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:a2d637e9e22612d4785cc4ab6da340a3ca016f4c2d2c255f48a2af50ade27333`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:a2c370f95a6dffa0c91fc182418dc7fd375f32992c1f529a484ec189023b27de`。
+
+## 2026-07-29
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:44a4fde38bd8dd0859970e34d2ba54ce2067651d3dd526dc43b5d470f001be7f`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:0550c020533163fae8da57c9b22961a6989fa574dbef5c3ae3583d285e9179e4`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:5c32ee885b8ac4fca82b6f06a8c5414c23ee21161118e31e2a438ba64bcfa4df`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:e14364ded10298b483585c30fa2c6c4d0f3a257357adfb2914faf69044493202`。
+* **Creation**: 新增 `pure-run-artwork` scope，沉淀角色美术尺寸、生成、去幕、Review、资产状态和提交边界。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:3246c857bc4055e840180cf5e1d52aab73c142bb636d61060e6da8ccf9542`。
+
+## 2026-07-28
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:f094c7ad4afd293f4ad9475c73cd07d5a3a2545903900bbb52cb0747f54e93d1`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:a75c15825a5b87fd5a7963a55f6a4b3f6d7bcc66fe5c9895de8843940577f5bc`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:f30f1cf05214a2c1c56c8bdfa8e5f229541093fcf3026f38a38e3546cae81a0c`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:1f4f15f36833e48bdb6de2116f69b3c4f262e88b3527c39f3072fba9db969412`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:27b7fdd07a1478edb0a38d15493f0286419bb5c581fbd78804297a9ae6266b87`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:dd33f78e40c74d2171da787945125ea8a3f001f381ab4509b70b96c818261f98`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:dc40a65a2b1a2a545f3f28b252b65ddf48b2bf3e28e85072499365875ae4ff25`。
+* **Update**: 同步 `MaxUsesPerTurn` cantrip 的权威设计、Unit 回合计数、怪物 AI 统一可用性与正式技能数值。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:feea3f5c79eed1429db582bf4f26c0a988afa724f8858af325e20548c47bfd26`。
+
+## 2026-07-26
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:1917edf6608a303005ad92b48408f13063bb9a9f668bfc07486f9819fdb524a9`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:42e98c00ac118c735de6590654f4994ee19a0eab335656e688ba439b4c523dac`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:c5b464ba43f093f7b028b92c2549ea172445b830088e21ee32e81d14babf21d3`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:064d37473ec009a0676a68352ee8b1833069ea81c807fcc0e8234d6a325ea5b6`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:b28b51a81457cc21f4269b053dfc1c97ac00db461265c2dc4ddacf353d9e3bfa`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:cf6cd093cfef1fe67a0c14a77a0a0f4d976ae40f588f564abe411d9f78c37f2c`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:7d5067a04ea4e6a4fc8b22e3fb17b5271f05d1f2c93a26d7826000898fa307f2`。
+
+## 2026-07-25
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:f4ff8c314f92d6bb6bcb10383d04574592d3a72678da6175258a6e46c6ae48c3`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:4892a9a9396799870c0a69551d433f30f60b18818b679e0abd4b61621e11a238`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:42e98c00ac118c735de6590654f4994ee19a0eab335656e688ba439b4c523dac`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:b01fbffe3d7cccf7d798bb61f39fc0ce682bd0ecabb8294a584e5bfe393f555a`。
+
+## 2026-07-24
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:e87b82a09bf59a49f8a43ab453206406fe0ddcbfb990ff3b049534e819c06b67`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d79372a22b9cc60b64d08bd17d8d5e8c0c1076d0154104103352f095cb6bff0e`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:03505c18a1c58168b7b69b6739f5794c7f9ac538425ec2b88c709b3fd6a7432d`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:64546eadc8cd66ef56356e6177ec1e90d0cbd4f1f48fcab51586030e12acd3b8`。
+
+## 2026-07-23
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:0822cab4e0392c57db64cde9c07c55db1809a716e439321e26184326495b582e`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:0cee9620e2a4067589eda282545a7b591e2da1e0fb52c26af437edb1c2806e49`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:216702530bf8315f80c2facf3d1a459290d3716cff964da0b5143f6019ea7f8a`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:03505c18a1c58168b7b69b6739f5794c7f9ac538425ec2b88c709b3fd6a7432d`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:15d9e0d25e7ada8a91d98f94c48038ffd7b97736f996ff251bdc204decf8c8f7`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:38f691018a7cb17afb64c79bfa5b59000283f3fb2dad67c45104a7e05daeb3e1`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:c58451ad405dde6f30a64fc4d37a25f5e989f8fd7e274b997c1af39b418b3a89`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:67cfe68ebcea5cdba1230c8c18ae935dc45a2b2a7f7c5d1acfbf983ded90ef1b`。
+
+## 2026-07-22
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:c93f60b02efda1ca3f5243350b87e02d0d09f3d8fa31d1e89bfd5aefad5112c9`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:ea72a5a682d55be31a4eeda5f33226ab18ac54956d4880bcb16fb7f9882b39ec`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:061429ee5ba7a3b0810df7b8166aebae636559ede5c520a4bb312eec7fb8a97b`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:f50ef54e80612750e3d0e2b0fc7fa88d5d65d85c589ebf0605cc34c2077885b0`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:6a46949cebe9e135082a5972fbdb75e94bc529449f92d1fc2f1688c6e641b8e1`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:1884f4fc252a540b3c156f036c0ec0a17d0e4305ac415b62612081b343c2775c`。
+
+## 2026-07-19
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:42d4ec5e191aa824a2b25b1e71df5d6dc808a1f340c9677e5a79c368de5dc75a`。
+
+## 2026-07-17
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:9e3fc2abb8fc7203d0d7b0245c54634e1f0111c0f3146a493126e30ccf328827`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:376c3eda0531910d96d810798cee3cef07c1109c44aea3ef1c0983854931398a`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:2da48e44bf7153720c3a6cd7ced3489e0cae28bcf4146e50d27e0fbe37a43276`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:84ef9e15d718d0fdc31f08006b393bd403b9d512467d0ec8b6afdea710cad933`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:55eb3c23fb677cae86b96acc5a1d3e095e957405aed599c369bdf35785554586`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:bc2f8ba872a7e43c1f73226ae9e9ea48fa9aa27110030f94ba0a14f97ab43330`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:7476716c4fe3e81b169e3ea7a7e7e7a1e1d5f6d89e01798c060ba427a732066a`。
+
+## 2026-07-16
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:cfc076a4fb606f80df1f884ffa698befce7351d59a46120809c7517fadc046ee`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:ff754942be80393dd1872043284cd1fcb7f54d3b0617dffb5005c60a03bb7e80`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:2e68e9c787a39b8ec3c98971f1ffa8a8241eb21aab656d7238040cb21d64566a`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:0831db66b3f9367493259c1263f785693a53809c89ed03782bb412b424828b2d`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:9c29b0335f80fdcbd610adf374a97dfb0f8051e643fbfd573b100a150763d502`。
+
+## 2026-07-15
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:adbe32e3cf9f575b3f59f7f38d4666d01640762723f8b7eb58ad9bcd96cfe774`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:7225f0f8f97854f10d0461539683e1ea1fc01e388e9bbbf75958ffdc4a8c2902`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:6617411637c9911034d298186c5d4f0c70ea6e65ea82f1cfe9692ed512d5d3c4`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:49c60c62589897f441d456ae2d98e125358bd3fc888f14e7d98ed8edb0786222`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:ac0c40ecf08a3791382ed3df8e4423f1995d9efab28c61384760bf8d7a649343`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:9c77cfbcdf7eaaabc5b94dfba923530905c98277735689a9512652bb115e2128`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:d8e53a4c62644be88e719c29d56fbdedba90d06d4885e03ebdf5199ad4829edb`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:a19edfe2bdecc307735299939024a40b4d2a6071bf7b4c6d5a86407b86f76498`。
+* **Creation**: 添加项目文档生命周期与统一已知缺口概念。
+* **Update**: 将当前设计收敛为权威文档，并移除已经完成、过期或重复的 docs/plans。
+* **Deprecation**: 三职业首切计划已完成知识迁移，概念状态改为 archived。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:c4c7f7adc1fa8276fd7db81be3db016ba55f2f540895be24963a0ae46a508529`。
+
+## 2026-07-14
+* **Update (2026-08-15)**: Gameplay Test Framework 新增 Godot v2 Main.tscn Runner、受控 checkpoint、生产输入、隔离 Save、watchdog 与五场景结构化报告；统一迁移门禁拒绝旧报告和重复 scenario 身份，人工边界缩减为可读性、动画观感和真实 Editor Assembly Reload。
+* **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:5440f1243da2099b84fb0adceb31384a23f2972b2828a31b623b58ab897e7bc3`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c5bb833c80c14524000a378200da1320e749d264ae36b4f1855ed2f7d7473a49`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:fa9001e6f81de2611327d6d630cc6221d897541d1d6d9958b5dc344a9945351b`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:6aeee3da30a2d0fe4073e3151e98c97c09a8c74d828c2b39efe55ea53a75edaa`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:5d4ab233e01cba7e6371f498b746679e238e8583282891667409a3e92611ad37`。
+* **Sync**: `first-slice-three-class-skills` 已同步到来源指纹 `sha256:36a0cf2d06c6997b451c0fe52f1d6e2261e02b40255f42d6193c5358dd9f7a95`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:a73a6fe393e8f3d04d86b9af95cfa3cdb417f053b8897d5b5e79f3e9b3dea7a3`。
+* **Creation**: 添加 Gameplay Test Framework 概念及其 compiler、runtime adapters 和 specs 影响范围。
+* **Update**: 同步 Pure Run 7 层只前进地图、单人成长、高级技能保底、显式遭遇配方和 Mew 风格怪物 AI 职责边界。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:8e4038c1ec510f34d13190724394d01a2edceea63d9821e017694f419fe58e70`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:0d4feed7888853a0ca5f469716af441f37f1f2e8ce95009e80e8c6d96cf06637`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:35c9b0a981ee8d162b4d6961a9544cf4b78543d8917ab597cb65f80847bd4710`。
+* **Creation**: 添加路径到 `catalog_scope` 的影响映射、Agent worktree 检测与 OKF 自动同步流程。
+* **Creation**: 建立符合 OKF v0.1 与 Tactics Profile v0.1 的独立知识 bundle。
+* **Creation**: 添加项目架构、SkillGraph、怪物 AI、战斗、Roguelike Run、三职业首切计划和 Unity Agent 工作流概念。
+* **Creation**: 登记 OKF v0.1 规范与 Karpathy LLM Wiki 方法来源。
+* **Lint**: 建立仓库内 frontmatter、链接、index、状态和 `catalog_scope` 校验工具。
+* **Fix**: `UnitTweenVisual` 正式化 `Alive / Dying / Removed` 生命周期；致死受击以 `0.14s` recoil+shake 抢占前景表现并幂等交接已即时注册的 Corpse，玩法占格和交互不等待视觉，旧单位与召唤物规则保持不变。
+* **Preview**: Tween Preview 新增 `Lethal Hit → Corpse`，复用 Runtime Handoff 与尸体落地，完整标记 `0.14s / 0.27s / 0.42s`，并覆盖 Stop/Restart 的 Renderer、Shadow 和临时对象恢复。
+* **Review**: 在已确认体量候选上仅做整数像素平移，生成 Hunter `v04`、Mage `v04`、Necromancer `v05`、Goat `v03` 与 `death_state_volume_review_v02.png`；仍待人工批准，未替换 Runtime 纹理、未提交。
+* **Review Fix**: 旧 `death_state_volume_review_v02.png` 的单 Tile 合成将尸体错误放在 Tile 中心上方 `25px`；新增多 Tile `v03`，同时展示精确 Alpha AABB 居中与仅诊断用 `+8px` 屏幕 Y 对照，候选与 Runtime 均未改变。
+* **Fix**: 移除鼠标世界坐标进入 `WorldToCell` 前重复施加的半格 Anchor 补偿，修复等距战场光标与高亮 Tile 固定 `(0.5, 0.5)` 偏移；新增格内多点坐标回归。
+* **Update (2026-08-13)**: Godot migration 记录 Phase 8E 完整棋盘取景、Esc 非破坏性暂停菜单、committed-event Damage Number 与原子成长事务；Catalog 124 不变，人工相机/菜单/动态数值/成长验收继续 pending。

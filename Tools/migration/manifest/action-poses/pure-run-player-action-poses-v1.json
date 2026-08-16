@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "contractId": "pure-run-player-action-poses-v1",
+  "assets": [
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_cast_dr.png", "sha256": "59ea2ab032f37b1b76ba84942964ff21dcdd5095ef73bb1d33fd71cc34d55b0f" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_cast_ul.png", "sha256": "822ae999232063260ae0b63d2920d3e232d763af1b0dc976f590c7f197353eb8" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_hit_dr.png", "sha256": "a921486bec40be843d02efdce8617e2a1b764c33e6a9e8e4278cf76c92fa9e01" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_hit_ul.png", "sha256": "0eb88380ebee80e99d1208b0adf5dca6b91ed368c94039ae298b9c4bb0c297af" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_melee_attack_dr.png", "sha256": "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_melee_attack_ul.png", "sha256": "e1a2c54c286adbd01c4a98a1a7f023d9b07880459c21c5e42994a8eeaa922ffe" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Mage/doge_mage_cast_dr.png", "sha256": "8232c168c3c1e114c6be03004a919a832d8e02acae5b9a648f6782f688086b80" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Mage/doge_mage_cast_ul.png", "sha256": "5897a9dd9d2d4fa3076fc93bcba921017fa0f203113ca4d08e4e966ae99c7490" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Mage/doge_mage_hit_dr.png", "sha256": "76c2d6d9427f78b0a67ca1f051ed323d61eb1ac3a2d88dcd09b027abbda8fea0" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Mage/doge_mage_hit_ul.png", "sha256": "42fe16f9824683592ba23991bc556a828fe32b9fb2e4d627db5b8d69e57c1f58" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Necromancer/doge_necromancer_cast_dr.png", "sha256": "8262b0dd3cf5b29443b5d98d10628a1e56581dae5f68189020ed2beac46a0f92" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Necromancer/doge_necromancer_cast_ul.png", "sha256": "1b986f6a882fb6d5bf2477493a9dd5e392781e158c0aa1eecb764a3b56c2c713" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Necromancer/doge_necromancer_hit_dr.png", "sha256": "66e6a41a4de74288eab731cda2dda6369646d01ce93992f0a836b7d4add63395" },
+    { "source": "Assets/Tactics/Arts/PureRun/Textures/Actions/Necromancer/doge_necromancer_hit_ul.png", "sha256": "7ff19e1d7a3e6e1deadf22b3e481021b53793705278b3bf1a554dd34066df913" }
+  ]
+}

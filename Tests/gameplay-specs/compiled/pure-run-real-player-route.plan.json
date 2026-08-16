@@ -1,0 +1,563 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.PureRunRealPlayerRoute",
+  "requiredAdapters": [
+    "UI",
+    "Map",
+    "Battle",
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "playerFinisher",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 999,
+        "isRanged": false,
+        "minRange": 1,
+        "maxRange": 1
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "Home"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "NewGameButton",
+        "minimumFrames": 2,
+        "maxFrames": 30
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "NewGameButton"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "SkillOption_0",
+        "minimumFrames": 3,
+        "maxFrames": 60
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "ConfirmButton",
+        "minimumFrames": 2,
+        "maxFrames": 30
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "ConfirmButton"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "SkillOption_0",
+        "minimumFrames": 3,
+        "maxFrames": 60
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "ConfirmButton",
+        "minimumFrames": 2,
+        "maxFrames": 30
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "ConfirmButton"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "SkillOption_0",
+        "minimumFrames": 3,
+        "maxFrames": 60
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "SkillOption_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForElement",
+      "parameters": {
+        "elementName": "ConfirmButton",
+        "minimumFrames": 2,
+        "maxFrames": 30
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "ConfirmButton"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "waitForMapReady",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "captureActivePureRun",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "beginBattleNode",
+      "parameters": {
+        "nodeId": "layer_01_battle"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "playerFinisher",
+        "casterAlias": "p1_0",
+        "targetAlias": "p2_0"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "waitForBattleEnd",
+      "parameters": {
+        "maxFrames": 120
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNaturalBattleVictory",
+      "parameters": {
+        "playerNumber": 1
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "grantPureRunLevel",
+      "parameters": {
+        "characterId": "pure_run_mage"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "LevelUp"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "configureLevelUpPanel",
+      "parameters": {
+        "characterId": "pure_run_mage"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "AttributePlus_Strength"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "LevelUpSkillCard_mage_fireball"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "ConfirmButton"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindPureRunAbilityToUnit",
+      "parameters": {
+        "unitAlias": "p1_0",
+        "skillId": "mage.fireball",
+        "level": 2
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "spawnBattleUnit",
+      "parameters": {
+        "alias": "enemy_02",
+        "cellAlias": "cell_1_0",
+        "playerNumber": 2,
+        "health": 8,
+        "maxHealth": 8
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "restartBattle",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "beginBattleNode",
+      "parameters": {
+        "nodeId": "layer_02_battle"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "playerFinisher",
+        "casterAlias": "p1_0",
+        "targetAlias": "enemy_02"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "waitForBattleEnd",
+      "parameters": {
+        "maxFrames": 120
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNaturalBattleVictory",
+      "parameters": {
+        "playerNumber": 1
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "spawnBattleUnit",
+      "parameters": {
+        "alias": "enemy_03",
+        "cellAlias": "cell_1_0",
+        "playerNumber": 2,
+        "health": 8,
+        "maxHealth": 8
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "restartBattle",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "beginBattleNode",
+      "parameters": {
+        "nodeId": "layer_03_battle"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "playerFinisher",
+        "casterAlias": "p1_0",
+        "targetAlias": "enemy_03"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "waitForBattleEnd",
+      "parameters": {
+        "maxFrames": 120
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNaturalBattleVictory",
+      "parameters": {
+        "playerNumber": 1
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setAdventureGold",
+      "parameters": {
+        "amount": 100
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "buyShopGoodTransaction",
+      "parameters": {
+        "nodeId": "layer_04_store",
+        "itemKind": "Consumable",
+        "contentId": "life_potion",
+        "price": 10
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNodeTransaction",
+      "parameters": {
+        "nodeId": "layer_04_store",
+        "consumeNode": false
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNodeInteraction",
+      "parameters": {
+        "nodeId": "layer_04_store"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "reloadPureRunSession",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "spawnBattleUnit",
+      "parameters": {
+        "alias": "enemy_05",
+        "cellAlias": "cell_1_0",
+        "playerNumber": 2,
+        "health": 8,
+        "maxHealth": 8
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "restartBattle",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "beginBattleNode",
+      "parameters": {
+        "nodeId": "layer_05_battle"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "playerFinisher",
+        "casterAlias": "p1_0",
+        "targetAlias": "enemy_05"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "waitForBattleEnd",
+      "parameters": {
+        "maxFrames": 120
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNaturalBattleVictory",
+      "parameters": {
+        "playerNumber": 1
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "buyShopGoodTransaction",
+      "parameters": {
+        "nodeId": "layer_06_store",
+        "itemKind": "Consumable",
+        "contentId": "mana_potion",
+        "price": 10
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNodeTransaction",
+      "parameters": {
+        "nodeId": "layer_06_store",
+        "consumeNode": false
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNodeInteraction",
+      "parameters": {
+        "nodeId": "layer_06_store"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "spawnBattleUnit",
+      "parameters": {
+        "alias": "boss_07",
+        "cellAlias": "cell_1_0",
+        "playerNumber": 2,
+        "health": 8,
+        "maxHealth": 8
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "restartBattle",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "beginBattleNode",
+      "parameters": {
+        "nodeId": "layer_07_special"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "playerFinisher",
+        "casterAlias": "p1_0",
+        "targetAlias": "boss_07"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "waitForBattleEnd",
+      "parameters": {
+        "maxFrames": 120
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNaturalBattleVictory",
+      "parameters": {
+        "playerNumber": 1
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "actualSkillLevelEquals",
+      "target": "p1_0",
+      "expected": 2,
+      "parameters": {
+        "skillId": "mage.fireball"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "expected": "Victory",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryNodesVisitedEquals",
+      "expected": 7,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryContainsItem",
+      "expected": "life_potion",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 45000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "actualSkillLevelEquals",
+      "target": "p1_0",
+      "parameters": {
+        "skillId": "mage.fireball"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryNodesVisitedEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryContainsItem",
+      "parameters": {}
+    }
+  ]
+}

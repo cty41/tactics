@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pure Run Artwork Pipeline"
+  short_description: "Generate and validate Pure Run sprites"
+  default_prompt: "Use $pure-run-artwork-pipeline to generate or review a Pure Run character sprite."

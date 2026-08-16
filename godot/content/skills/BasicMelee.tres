@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://cjytprsb6ycgm"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_vc4ta"]
+
+[resource]
+script = ExtResource("1_vc4ta")
+ContentIdValue = "skill.basic.melee"
+SourceId = "basic.melee"
+DisplayName = "Melee Attack"
+Description = "Melee Attack Graph"
+RoleValue = "Any"
+KindValue = "Basic"
+Level = 1
+MinRange = 1
+MaxRange = 1
+ExecutionKindValue = "MeleeAttack"
+Damage = 2
+DamageKindValue = "Physical"
+IsBasicAbility = true
+BranchId = "basic.melee"
+GrowthVisible = false
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MeleeAttack_Graph_Ability.asset"
+SourceGuid = "8d4aca5505ce3aa488ce92abfcd0e1ed"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/MeleeAttack_Graph.asset"
+GraphDependencyHash = "e2509b15ec06de6b4e631919aa2de0f1"

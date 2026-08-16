@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://x52streelmv6"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_45li8"]
+
+[resource]
+script = ExtResource("1_45li8")
+ContentIdValue = "skill.enemy.heavy-shot.lv1"
+SourceId = "enemy.heavy-shot.lv1"
+DisplayName = "Heavy Shot"
+Description = "Heavy Shot"
+RoleValue = "Any"
+KindValue = "Active"
+Level = 1
+ManaCost = 8
+MinRange = 2
+MaxRange = 4
+ExecutionKindValue = "HeavyShot"
+Damage = 6
+DamageKindValue = "Magical"
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/HeavyShot_Graph_Ability.asset"
+SourceGuid = "619059b290ee8b64eaffd47230d26da7"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/HeavyShot_Graph.asset"
+GraphDependencyHash = "85471f2583b8dff24f3579e02126a47a"

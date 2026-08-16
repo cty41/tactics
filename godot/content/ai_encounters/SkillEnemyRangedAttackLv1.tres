@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://830uqq24eho5"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_bfay5"]
+
+[resource]
+script = ExtResource("1_bfay5")
+ContentIdValue = "skill.enemy.ranged-attack.lv1"
+SourceId = "enemy.ranged-attack.lv1"
+DisplayName = "Ranged Attack"
+Description = "Ranged Attack"
+RoleValue = "Any"
+KindValue = "Active"
+Level = 1
+MinRange = 2
+MaxRange = 4
+ExecutionKindValue = "RangedAttack"
+Damage = 2
+DamageKindValue = "Magical"
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/RangedAttack_Graph_Ability.asset"
+SourceGuid = "1ad56c4d57f26284ca18073f5901148f"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/RangedAttack_Graph.asset"
+GraphDependencyHash = "765c4fc8986f9537c3a05a17dd15e6aa"

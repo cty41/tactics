@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://bx2p3yfyuseog"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotUnitGallery.cs" id="1_c5joo"]
+[ext_resource type="Resource" path="res://content/units/ContentCatalog.tres" id="2_8uql6"]
+
+[node name="UnitGallery" type="Node2D" unique_id=1274271484]
+script = ExtResource("1_c5joo")
+Catalog = ExtResource("2_8uql6")

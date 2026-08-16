@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "categories": [
+    {"name": "Core", "owner": "GodotOwned", "batch": "phase-1"},
+    {"name": "Unit", "owner": "GodotOwned", "batch": "batch-a"},
+    {"name": "Buff", "owner": "GodotOwned", "batch": "batch-b"},
+    {"name": "Item", "owner": "GodotOwned", "batch": "batch-b"},
+    {"name": "Skill", "owner": "GodotOwned", "batch": "batch-c"},
+    {"name": "AI", "owner": "GodotOwned", "batch": "batch-d"},
+    {"name": "Encounter", "owner": "GodotOwned", "batch": "batch-e"},
+    {"name": "Run", "owner": "GodotOwned", "batch": "pure-run-full-seven-layer-v1"},
+    {"name": "Map", "owner": "GodotOwned", "batch": "pure-run-map-treasure-v1"},
+    {"name": "UIInput", "owner": "GodotOwned", "batch": "batch-f"},
+    {"name": "Presentation", "owner": "GodotOwned", "batch": "batch-g"},
+    {"name": "Tooling", "owner": "GodotOwned", "batch": "pure-run-ownership-closure-v1"},
+    {"name": "AudioFramework", "owner": "GodotOwned", "batch": "silent-framework-v1"}
+  ],
+  "excludedThirdParty": ["Odin", "TBSFramework", "TilemapSet"],
+  "rebuildAssets": ["pure_run_tile_warm_gray", "pure_run_tile_cool_gray"]
+}

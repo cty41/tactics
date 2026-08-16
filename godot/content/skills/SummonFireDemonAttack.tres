@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://m3rmkdk32luy"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_55n7d"]
+
+[resource]
+script = ExtResource("1_55n7d")
+ContentIdValue = "skill.summon.fire-demon-attack"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FireDemonAttack_Ability.asset"
+DisplayName = "火魔攻击"
+Description = "对1至3格内敌人造成4点火焰魔法伤害并施加1层点燃。"
+RoleValue = "Any"
+KindValue = "Basic"
+Level = 1
+MinRange = 1
+MaxRange = 3
+ExecutionKindValue = "FireDemonAttack"
+Damage = 4
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.ignite"
+StatusDuration = 1
+IsBasicAbility = true
+CanCrit = false
+BranchId = "summon.fire-demon-attack"
+GrowthVisible = false
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FireDemonAttack_Ability.asset"
+SourceGuid = "12547b4f153581042a88620057735e1b"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/FireDemonAttack_Graph.asset"
+GraphDependencyHash = "5718d531d9c7402c1263e3c556ba1bc7"

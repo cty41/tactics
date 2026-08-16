@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillPresentationResource" format=3 uid="uid://etwsfqwyas73"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillPresentationResource.cs" id="1_bl7jb"]
+
+[resource]
+script = ExtResource("1_bl7jb")
+ContentIdValue = "presentation.skill.mage.ice-bolt"
+SkillBranch = "mage.ice-bolt"
+ProgrammaticKind = "ice-bolt"
+PrimaryColor = Color(0.62, 0.94, 1, 1)
+SecondaryColor = Color(0.2, 0.65, 1, 1)

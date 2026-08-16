@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Editor Lifecycle"
+  short_description: "Safely suspend and restore the Godot Editor"
+  default_prompt: "Use $godot-editor-lifecycle to close the canonical Godot Editor for exclusive work and restore its prior session."

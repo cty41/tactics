@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://ck5v3sdiu4rsb"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotUnitSpawnFixture.cs" id="1_36urf"]
+[ext_resource type="Resource" path="res://content/units/ContentCatalog.tres" id="2_goe2n"]
+
+[node name="UnitSpawnFixture" type="Node2D" unique_id=450782827]
+script = ExtResource("1_36urf")
+Catalog = ExtResource("2_goe2n")

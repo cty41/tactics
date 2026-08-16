@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://cjajivuxlyobg"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_20nqv"]
+
+[resource]
+script = ExtResource("1_20nqv")
+ContentIdValue = "item.equipment.shadow-cloak-01"
+SourceId = "shadow_cloak_01"
+DisplayName = "暗影斗篷"
+SlotValue = "Armor"
+RarityValue = "Rare"
+Price = 15
+AgilityBonus = 5
+LuckBonus = 2

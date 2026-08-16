@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-units-v1",
+  "classification": "real_godot_resource_generation",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:d7d25a38e6be69ace05efafb95a987d2e7809bf063e3013ec0b6263d17241aee",
+  "typedDraftHash": "sha256:824277588f16bfbe3a0f5444de8a7c54286bc8a494111cc3e8bc89729177bb5e",
+  "generationLedger": "Tools/migration/manifest/state/pure-run-units-v1.json",
+  "generationLedgerHash": "sha256:aa42df47587a58b7abb43ae88e800ca8ad650b227bacbe9f7a888f5bd1badc98",
+  "textureLedger": "Tools/migration/manifest/state/pure-run-unit-textures-v1.json",
+  "textureLedgerHash": "sha256:1db84e66d94dadab5324047758ee1786e2985b238cf650d9c3e51f8816ac8ff7",
+  "galleryCapture": "Tools/migration/out/pure-run-units-v1-gallery.png",
+  "galleryCaptureHash": "sha256:314051a2d7c315f28578bee08a0b7f4ca4f27fb38aabec4886dc47087fbbfa68",
+  "galleryCaptureSize": [
+    1600,
+    900
+  ],
+  "spawnCapture": "Tools/migration/out/pure-run-units-v1-spawn.png",
+  "spawnCaptureHash": "sha256:325408862040fe7173fdc0bdce48d503b508acf4d5ea862a8cbaad20008373b7",
+  "spawnCaptureSize": [
+    1600,
+    900
+  ],
+  "captureMode": "godot-image-software-reference-with-goat-body-mask-sprite-pivot-and-native-1600x900-v2",
+  "previewCanvas": {
+    "contract": "native-1600x900-v1",
+    "logicalSize": {
+      "width": 1600,
+      "height": 900
+    },
+    "windowOverride": {
+      "width": 1600,
+      "height": 900
+    },
+    "stretchMode": "canvas_items",
+    "stretchAspect": "keep",
+    "gallery": {
+      "layoutContract": "ground-baseline-native-1600x900-v2",
+      "actorScale": 0.725,
+      "firstGround": [
+        212.5,
+        193.75
+      ],
+      "spacing": [
+        387.5,
+        287.5
+      ],
+      "labelOffset": [
+        -131.25,
+        52.5
+      ],
+      "labelSize": [
+        262.5,
+        42.5
+      ],
+      "fontSize": 20
+    },
+    "spawn": {
+      "layoutContract": "native-1600x900-spawn-v1",
+      "gridOrigin": [
+        440,
+        90
+      ],
+      "cellSize": 72,
+      "actorScale": 0.375,
+      "viewportSafeInset": 24,
+      "boardSafeInset": 8,
+      "overflowPolicy": "internal-grid-overflow-allowed; board-frame-and-viewport-clipping-forbidden"
+    }
+  },
+  "contentEntryCount": 13,
+  "unitDefinitionCount": 12,
+  "texturePayloadCount": 21,
+  "artifactCount": 16,
+  "dependencyBoundary": {
+    "policy": "audit_only_not_selected_or_copied",
+    "deferredDependencyCount": 29,
+    "thirdPartyDependencyCount": 6,
+    "materialAndShaderPayloadCopied": false,
+    "projectOwnedShaderAlgorithmPorted": true,
+    "thirdPartyPayloadCopied": false
+  },
+  "tintContract": {
+    "id": "unity-goat-body-tint-v1",
+    "unityShaderPath": "Assets/Tactics/Arts/PureRun/Shaders/GoatBodyTint.shader",
+    "unityShaderGitBlobSha1": "d4da8e21404ac1b5d134b0f1455f36839900e7c2",
+    "godotShaderPath": "res://src/Tactics.Godot.Adapter/Runtime/Shaders/GoatBodyTint.gdshader",
+    "godotShaderSha256": "sha256:92c4dbc30bad84c9c5b473ab1c78490cca8ea65a1c4d154673c9da44c9003958",
+    "runtimeModes": [
+      "multiply",
+      "goat-body-mask-v1"
+    ],
+    "materialAuditOnly": true,
+    "unityPayloadCopied": false
+  },
+  "spriteContract": {
+    "id": "unity-unit-sprite-geometry-v1",
+    "livingPivot": [
+      0.5,
+      0.078125
+    ],
+    "deathPivot": [
+      0.5,
+      0.5
+    ],
+    "bodyPixelsPerUnit": 128,
+    "shadowPixelsPerUnit": 64,
+    "shadowLocalPosition": [
+      0,
+      -0.03,
+      0
+    ],
+    "shadowLocalScale": [
+      0.8,
+      0.8,
+      0.8
+    ],
+    "shadowColor": [
+      1,
+      1,
+      1,
+      0.9
+    ],
+    "godotOffsetAndScaleConversion": "unity-y-up-to-godot-y-down-with-body-ppu"
+  },
+  "automatedValidation": {
+    "coreContractTests": "passed",
+    "applicationCompilerTests": "passed",
+    "unityOracleTests": "passed",
+    "resourceSaver": "passed",
+    "uidPreservation": "passed",
+    "byteIdempotencyRuns": 2,
+    "byteIdentical": true,
+    "textureCopyIdempotencyRuns": 2,
+    "textureByteIdentical": true,
+    "headlessEditorFilesystemScan": "passed",
+    "gdUnitRuntimeTests": "passed",
+    "catalogAndFactoryRuntime": "passed",
+    "rendererHeadlessStartup": [
+      "gl_compatibility",
+      "forward_plus"
+    ],
+    "programmaticGalleryCapture": "passed",
+    "programmaticSpawnCapture": "passed"
+  },
+  "manualValidation": {
+    "acceptedOn": "2026-08-11",
+    "environment": "canonical-godot-editor",
+    "checks": [
+      "gallery-facing-death-reset-and-goat-tint",
+      "native-1600x900-layout-and-aspect-preservation",
+      "spawn-board-frame-and-viewport-bounds",
+      "assembly-reload-and-clean-output"
+    ]
+  },
+  "ownership": "UnityOwned",
+  "state": "Validated",
+  "visualAcceptance": "passed_for_migrated_project_owned_unit_visuals"
+}

@@ -1,0 +1,569 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-units-v1",
+  "classification": "real_unity_assetdatabase_export",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:d7d25a38e6be69ace05efafb95a987d2e7809bf063e3013ec0b6263d17241aee",
+  "assets": [
+    {
+      "sourceKey": "packed-scene.unit-actor/texture-shadow",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png",
+      "gitBlobSha1": "db69d966319f918e950c9999dc8f48aedc2c53b0",
+      "sourceGuid": "51728048c3bf58b4ebcf9d290e08e4d2",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "d88795e6a08b096b31901b25bcbc245a",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 550,
+      "targetContentIds": [
+        "packed-scene.unit-actor"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunHunter.prefab",
+      "gitBlobSha1": "71048fc1ee37b6db15688712dd3db278ef6eae57",
+      "sourceGuid": "e148ee9bab302964887fe52dafcaf375",
+      "sourceLocalFileId": 2148628906429528633,
+      "dependencyHash": "23346da70a6e4724f0e21d06e15bbd9a",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1406,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/texture-death",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_death.png",
+      "gitBlobSha1": "12edbff78f75afa3b0d67a779e79892bbbb0a788",
+      "sourceGuid": "eed71edb13be6a0468d1d8ea05d758e7",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "0570e5ccb69280eea415b240a04152f2",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 506,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/texture-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter.png",
+      "gitBlobSha1": "5e501e2d9b3ddc1ce6fbe0d16f7ed51c6fd361c3",
+      "sourceGuid": "462c9f75e7d26874993bdc2e68cccc4c",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "624f0631d663dfec6e1f8c775ce8242e",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 482,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/texture-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_hunter_ul.png",
+      "gitBlobSha1": "8b9b6d05d10aff56e70826237e1690f85bd69747",
+      "sourceGuid": "ad91fea9c9041cf44a78cca47b302e75",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "5921489b257c48e98a65c0a0534566bb",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 494,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/texture-unarmed-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_dr.png",
+      "gitBlobSha1": "d19a7118697bcc09b65d72c3e9415fd0fe1d2713",
+      "sourceGuid": "d8cffe695e166d848b349c486779e028",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "e9e623730f0384f8622a8bb198cf2dbc",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 546,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.amazon/texture-unarmed-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/Actions/Amazon/doge_hunter_idle_unarmed_ul.png",
+      "gitBlobSha1": "f9d2e76db7b7e8bfa3af66fbdb3beb320361c14b",
+      "sourceGuid": "c1146b3b8537dfd4b9d3132d7b1f9c86",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "e0c7a59c78e3a773c728aecafe9ecefd",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 546,
+      "targetContentIds": [
+        "unit.pure-run.amazon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.fire-demon/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunFireDemon.prefab",
+      "gitBlobSha1": "43be522fea961b738d943ba0361b19bc74247493",
+      "sourceGuid": "de2da8ff6d4ccab4f9655ccc093fef93",
+      "sourceLocalFileId": 1092389101776067933,
+      "dependencyHash": "c589f975c1c3e07f92a885dcd3ebc7e4",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1409,
+      "targetContentIds": [
+        "unit.pure-run.fire-demon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.fire-demon/texture-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_fire_demon.png",
+      "gitBlobSha1": "dce3e3fa261f1f05443880cc814065e880c7d1d2",
+      "sourceGuid": "48a17cac082d7e942863529219e6f83a",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "72e39e140c68e7749a2edfd0f6fb2cc3",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 498,
+      "targetContentIds": [
+        "unit.pure-run.fire-demon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.fire-demon/texture-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_fire_demon_ul.png",
+      "gitBlobSha1": "df4a59cdac608df5e847036367ce0067dbf3f1ca",
+      "sourceGuid": "f6aea04ef2964734f839cd9c8c54abbf",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "d21ffc97e9c15b0f0a451a7b2eb1afb1",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 510,
+      "targetContentIds": [
+        "unit.pure-run.fire-demon"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-aoe/material-audit",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Materials/goat_aoe.mat",
+      "gitBlobSha1": "7cf0570cb728a47af148624bd86ba67dd3112586",
+      "sourceGuid": "c069bc069c8fc9d4291df11271d9a2de",
+      "sourceLocalFileId": 2100000,
+      "dependencyHash": "475fcc358dbcaa81e5fed0dfe4510fe0",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 147,
+      "targetContentIds": [
+        "unit.pure-run.goat-aoe"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-aoe/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatAoe.prefab",
+      "gitBlobSha1": "fbefa41165995ca77119ead236a052de00705ac0",
+      "sourceGuid": "b11f6498058006042ad0826735bf1813",
+      "sourceLocalFileId": 2621865824612640169,
+      "dependencyHash": "2172615fc4435bb7d8b81d6cf4cc768d",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1407,
+      "targetContentIds": [
+        "unit.pure-run.goat-aoe"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-charger/material-audit",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Materials/goat_charger.mat",
+      "gitBlobSha1": "7f44664c723d7b67fb14d6154631c9ae4e9e1c72",
+      "sourceGuid": "2c07896d63898c144b1831d7089606d6",
+      "sourceLocalFileId": 2100000,
+      "dependencyHash": "7744a2c928ca70e52b2bf142da27308c",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 151,
+      "targetContentIds": [
+        "unit.pure-run.goat-charger"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-charger/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatCharger.prefab",
+      "gitBlobSha1": "46d6a45b8876a02f328ef661c0b83a9548d701e9",
+      "sourceGuid": "11085574f546c764e982d70a68050c4e",
+      "sourceLocalFileId": 5564698756041841269,
+      "dependencyHash": "c7a7a6e5daec8bd663075a09a2f50dd6",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1411,
+      "targetContentIds": [
+        "unit.pure-run.goat-charger"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-elite-charger/material-audit",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Materials/goat_elite_charger.mat",
+      "gitBlobSha1": "5191db89017a001a2c74b01ff048c1ad4f67de81",
+      "sourceGuid": "2e3f4fd08b93fd2429a5b0b47277991d",
+      "sourceLocalFileId": 2100000,
+      "dependencyHash": "177c32e9aea9a7b1407506ab9b512ea3",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 157,
+      "targetContentIds": [
+        "unit.pure-run.goat-elite-charger"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-elite-charger/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatEliteCharger.prefab",
+      "gitBlobSha1": "7d09ef16e1159b13b92d7fc737799e81ac5d4dc0",
+      "sourceGuid": "58d3d2b6686e2474c8a3249ab5cba292",
+      "sourceLocalFileId": 5564698756041841269,
+      "dependencyHash": "a88ee45c823eb5775e318382681a5448",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1416,
+      "targetContentIds": [
+        "unit.pure-run.goat-elite-charger"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-elite-poison-caster/material-audit",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Materials/goat_elite_poison_caster.mat",
+      "gitBlobSha1": "473d3512ea78e05437df92090d42a4f86d0eeecd",
+      "sourceGuid": "53f15e3e42ea9f745bf0ac6506b94399",
+      "sourceLocalFileId": 2100000,
+      "dependencyHash": "25e539b1cffce411a540e4ef5bb1f99a",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 163,
+      "targetContentIds": [
+        "unit.pure-run.goat-elite-poison-caster"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-elite-poison-caster/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatElitePoisonCaster.prefab",
+      "gitBlobSha1": "5da1552e902050165cc5dfe648b29e0561ab75e4",
+      "sourceGuid": "ea10ddc2d11b17242a85b8cf2799af14",
+      "sourceLocalFileId": 2621865824612640169,
+      "dependencyHash": "9c87913a123e056ee9e9bb341c4c39ad",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1421,
+      "targetContentIds": [
+        "unit.pure-run.goat-elite-poison-caster"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-ranged/material-audit",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Materials/goat_ranged.mat",
+      "gitBlobSha1": "1c1c8e11733b3195d9d2bb18297d2dcad9960031",
+      "sourceGuid": "a033a70fe7fe9914d9dce56384e29188",
+      "sourceLocalFileId": 2100000,
+      "dependencyHash": "5a8a23c4967f0cf497af17023010865f",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 150,
+      "targetContentIds": [
+        "unit.pure-run.goat-ranged"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-ranged/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatRanged.prefab",
+      "gitBlobSha1": "c720bbf84f4884861888ce9b6b96783a382b821b",
+      "sourceGuid": "09f97311b8aff6548b6924579d8f1d96",
+      "sourceLocalFileId": 1152459569254233399,
+      "dependencyHash": "6e4220e22fc6d23caefa86553b0b8b6c",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1412,
+      "targetContentIds": [
+        "unit.pure-run.goat-ranged"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-support/material-audit",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Materials/goat_support.mat",
+      "gitBlobSha1": "310daaa4ac5593b0543ea4f95724ce9780d25546",
+      "sourceGuid": "e510e3fa4ba663e41bf0b01a2ac32bf5",
+      "sourceLocalFileId": 2100000,
+      "dependencyHash": "61b519c6d6f059ed7d566b3c82ca02e6",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 151,
+      "targetContentIds": [
+        "unit.pure-run.goat-support"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goat-support/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunGoatSupport.prefab",
+      "gitBlobSha1": "7a3c753d5cf99a7984404dad1e227df0dbe2bf28",
+      "sourceGuid": "fc4fb274bafcb914b9c21c157fa291f4",
+      "sourceLocalFileId": 6629993234310956201,
+      "dependencyHash": "6c2df82ccf7a2bb67d145982218bed0c",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1411,
+      "targetContentIds": [
+        "unit.pure-run.goat-support"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goats/texture-death",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/splitjaw_goat_death.png",
+      "gitBlobSha1": "aaac2cb7add469f96d2c83bc2f360a60536d82c1",
+      "sourceGuid": "e8d80a8e25c764a418f25754142d6d24",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "b7da50041bd320a2de6f5b4bfb689a9f",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 514,
+      "targetContentIds": [
+        "unit.pure-run.goat-aoe",
+        "unit.pure-run.goat-charger",
+        "unit.pure-run.goat-elite-charger",
+        "unit.pure-run.goat-elite-poison-caster",
+        "unit.pure-run.goat-ranged",
+        "unit.pure-run.goat-support"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goats/texture-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/splitjaw_goat.png",
+      "gitBlobSha1": "3dcbbb3bd2c15ea6cf42ba9c701e4a3b694942f0",
+      "sourceGuid": "c3a508bf14b4ad748a2a66ae8d49dc1e",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "8d12a8f915126560b7b5dbc34d15d119",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 490,
+      "targetContentIds": [
+        "unit.pure-run.goat-aoe",
+        "unit.pure-run.goat-charger",
+        "unit.pure-run.goat-elite-charger",
+        "unit.pure-run.goat-elite-poison-caster",
+        "unit.pure-run.goat-ranged",
+        "unit.pure-run.goat-support"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.goats/texture-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/splitjaw_goat_ul.png",
+      "gitBlobSha1": "df4abd965e9d0a029f238e9ededde2411d2bf18c",
+      "sourceGuid": "a349cd93574bc13448f5a788b0ab25be",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "8db82c6bfc8ed2b78cc434fc01be21c9",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 502,
+      "targetContentIds": [
+        "unit.pure-run.goat-aoe",
+        "unit.pure-run.goat-charger",
+        "unit.pure-run.goat-elite-charger",
+        "unit.pure-run.goat-elite-poison-caster",
+        "unit.pure-run.goat-ranged",
+        "unit.pure-run.goat-support"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.mage/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunMage.prefab",
+      "gitBlobSha1": "691214a00e7493a8ff062b56ec09b4dffb0fb6bd",
+      "sourceGuid": "ad982ff27a88098459daddd7657c9fa7",
+      "sourceLocalFileId": 3960063069242102423,
+      "dependencyHash": "354953d998c1d36f0660b036e67d750e",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1404,
+      "targetContentIds": [
+        "unit.pure-run.mage"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.mage/texture-death",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_mage_death.png",
+      "gitBlobSha1": "f1b82cc1680ad90e2ec845cc485c9c4c198a75f9",
+      "sourceGuid": "9f813e61f936db649b37f20f8c3c94a8",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "07ff54a5cbbad61688aa47351eca9fd5",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 498,
+      "targetContentIds": [
+        "unit.pure-run.mage"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.mage/texture-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_mage.png",
+      "gitBlobSha1": "3be624dc054da7cc04bdccd3ef14c2d278b0ffc8",
+      "sourceGuid": "caa45cadfd96965449493e23136d4da2",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "f69e066357a85603d0900919e4b4a65d",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 474,
+      "targetContentIds": [
+        "unit.pure-run.mage"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.mage/texture-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_mage_ul.png",
+      "gitBlobSha1": "5fca4882295f46f5d8958824e74bb701cd75818b",
+      "sourceGuid": "02f673f7fdc84b54aaf2f962fb9879a7",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "cddb9415f93de96da7d893e81f1d3328",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 486,
+      "targetContentIds": [
+        "unit.pure-run.mage"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.necromancer/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunNecromancer.prefab",
+      "gitBlobSha1": "9656de7166cf30d2163af47f13cd687ceafac8ec",
+      "sourceGuid": "3cf84838a79e48d4ab2fce9e24fdf6bb",
+      "sourceLocalFileId": 3960063069242102423,
+      "dependencyHash": "ac9af7eff04b0c9e4f7aa42c4d628d1d",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1411,
+      "targetContentIds": [
+        "unit.pure-run.necromancer"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.necromancer/texture-death",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer_death.png",
+      "gitBlobSha1": "ccd30575b97fe91d147ebe30106c867c5191db18",
+      "sourceGuid": "dda7eb0c47aff7d49aa37c26c9d39509",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "8e3a3322476d9d5b420892d8a9b851c6",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 526,
+      "targetContentIds": [
+        "unit.pure-run.necromancer"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.necromancer/texture-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer.png",
+      "gitBlobSha1": "b70a395ffa1daafc5e92774d9dbe477148a6c94a",
+      "sourceGuid": "0dab1e606ae22b5448e4206c5bb640b5",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "3be4969c3f665fe5a16a28e97080e68e",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 502,
+      "targetContentIds": [
+        "unit.pure-run.necromancer"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.necromancer/texture-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_necromancer_ul.png",
+      "gitBlobSha1": "10e68858b037f7232c7fe5dd395fe049ef487587",
+      "sourceGuid": "7c206a2e9c1425a4b8bbc43ca14aacf0",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "7c354d94ae5a76861409a96c53e286dc",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 514,
+      "targetContentIds": [
+        "unit.pure-run.necromancer"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.skeleton-mage/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonMage.prefab",
+      "gitBlobSha1": "a8727d356d33f665c39f5bde9426d9196b455148",
+      "sourceGuid": "33920621776d4964f9b832860f66eb66",
+      "sourceLocalFileId": 6629993234310956201,
+      "dependencyHash": "149abf0ef30fce3bf902f704449d8ffa",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1413,
+      "targetContentIds": [
+        "unit.pure-run.skeleton-mage"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.skeleton-mage/texture-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_mage.png",
+      "gitBlobSha1": "eeeb938bf71008a3e25b9f4da1057e569143f165",
+      "sourceGuid": "9599a87aa21c40649a0f48a96a92719f",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "72f504c02ea6d940196d955b99db9b9b",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 661,
+      "targetContentIds": [
+        "unit.pure-run.skeleton-mage"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.skeleton-mage/texture-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_mage_ul.png",
+      "gitBlobSha1": "7be34ec507dd932e0a5b867c211592de43d02db7",
+      "sourceGuid": "040cf9725f912c34a9427f51208ec63e",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "daa91035ee517e14ff461ac49a086d29",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 522,
+      "targetContentIds": [
+        "unit.pure-run.skeleton-mage"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.skeleton-warrior/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Prefabs/Units/PureRunSkeletonWarrior.prefab",
+      "gitBlobSha1": "41bb60e04be8fde67ca1c544c3a19e2aa88648cf",
+      "sourceGuid": "d81ae2199b650f142a55b755085423bd",
+      "sourceLocalFileId": 6629993234310956201,
+      "dependencyHash": "e3a497f03d6fb94b628f516be3c7de3f",
+      "serializedObjectCount": 19,
+      "serializedPropertyCount": 1416,
+      "targetContentIds": [
+        "unit.pure-run.skeleton-warrior"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.skeleton-warrior/texture-dr",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_warrior.png",
+      "gitBlobSha1": "1dacd9b4b97f24073635cee0b3d2a48d89bebf8a",
+      "sourceGuid": "d19f195ae8359994aa9ea81a0b748db5",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "7b9a52c009345597db8d1ace1f7585bb",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 522,
+      "targetContentIds": [
+        "unit.pure-run.skeleton-warrior"
+      ]
+    },
+    {
+      "sourceKey": "unit.pure-run.skeleton-warrior/texture-ul",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Textures/doge_skeleton_warrior_ul.png",
+      "gitBlobSha1": "92bd1f9430b38d57813e621a9cf26204a9f34fbd",
+      "sourceGuid": "1b67f10832d0740458b1ad12c7ef8f81",
+      "sourceLocalFileId": 2800000,
+      "dependencyHash": "0ca362fd2a7bd0423512ea6779944cb3",
+      "serializedObjectCount": 2,
+      "serializedPropertyCount": 534,
+      "targetContentIds": [
+        "unit.pure-run.skeleton-warrior"
+      ]
+    }
+  ],
+  "warnings": [],
+  "ownership": "UnityOwned",
+  "nextState": "Exported",
+  "outputSha256": "b606c3b68db0d0d2b0e1e5cad1c511e37383ccfe18b69a2f96fc5ed19da4d861",
+  "typedDraftHash": "sha256:77224fe7d1f675b828d52b0fe8a75b13799baac6b4622546865da9447821fb75",
+  "batchShape": {
+    "unitDefinitions": 12,
+    "prefabAuditRoots": 12,
+    "texturePayloads": 21,
+    "materialAuditRoots": 6,
+    "selectedRoots": 39
+  },
+  "dependencyAudit": {
+    "policy": "audit_only_not_selected_or_copied",
+    "deferredDependencyCount": 29,
+    "thirdPartyDependencies": [
+      "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/Assets/Sprites/kenney_tiny-battle/Tilemap/tilemap_packed.png",
+      "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/Assets/Sprites/smoke.png",
+      "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/ExplosionAnimationController.controller",
+      "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/Materials/HeliSprite.mat",
+      "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/Materials/InfantryMaterial.mat",
+      "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/Materials/ShipSprite.mat"
+    ],
+    "forbiddenPayloadDependencies": [
+      "Assets/ThirdParty/TBSFramework/Examples/TilemapExample/Materials/HeliSprite.mat"
+    ],
+    "materialAndShaderPayloadCopied": false
+  },
+  "idempotency": {
+    "warmupRuns": 1,
+    "measuredIndependentRuns": 2,
+    "byteIdentical": true,
+    "measuredOutputSha256": "b606c3b68db0d0d2b0e1e5cad1c511e37383ccfe18b69a2f96fc5ed19da4d861",
+    "coldStartObservation": "compile/import warm-up excluded before measured runs"
+  }
+}

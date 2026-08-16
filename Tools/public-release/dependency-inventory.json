@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "documentType": "tactics-public-dependency-inventory",
+  "dependencyCount": 22,
+  "dependencies": [
+    {
+      "ecosystem": "NuGet",
+      "name": "Godot.SourceGenerators",
+      "version": "4.7.1"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "GodotSharp",
+      "version": "4.7.1"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "GodotSharpEditor",
+      "version": "4.7.1"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "Microsoft.CodeCoverage",
+      "version": "17.14.1"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "Microsoft.NET.Test.Sdk",
+      "version": "17.14.1"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "Microsoft.TestPlatform.ObjectModel",
+      "version": "17.14.1"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "Microsoft.TestPlatform.TestHost",
+      "version": "17.14.1"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "Newtonsoft.Json",
+      "version": "13.0.3"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "NUnit",
+      "version": "4.3.2"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "NUnit3TestAdapter",
+      "version": "4.6.0"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "System.Collections.Immutable",
+      "version": "8.0.0"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "System.Reflection.Metadata",
+      "version": "8.0.0"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "tactics.application",
+      "version": "unknown"
+    },
+    {
+      "ecosystem": "NuGet",
+      "name": "tactics.core",
+      "version": "unknown"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/js-yaml",
+      "version": "4.0.9"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/node",
+      "version": "20.19.42"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "argparse",
+      "version": "2.0.1"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "commander",
+      "version": "12.1.0"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "js-yaml",
+      "version": "4.2.0"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "typescript",
+      "version": "5.9.3"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "undici-types",
+      "version": "6.21.0"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "zod",
+      "version": "3.25.76"
+    }
+  ]
+}

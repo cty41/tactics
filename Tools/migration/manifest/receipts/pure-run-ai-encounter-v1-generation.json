@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ai-encounter-v1",
+  "state": "Validated",
+  "ownership": "UnityOwned",
+  "sourceExportHash": "sha256:e2f817741a88ce33da21e2c5ca9bf9c90b37afcef6a6e80c9154ab0624a3e53f",
+  "typedDraftSha256": "15834a3a4f3e912ce0ca7be458895283101c684a59443ccc993fa1b001fc567c",
+  "generationLedgerSha256": "b78fad70068dec97e441c9007c6a74420a06da375f2b13d78669361857cf4017",
+  "artifactCount": 17,
+  "skillCount": 4,
+  "aiCount": 6,
+  "layoutCount": 2,
+  "encounterCount": 3,
+  "batchCatalogEntryCount": 15,
+  "canonicalCatalogEntryCount": 73,
+  "canvas": "native-1600x900-v1",
+  "idempotency": {"measuredConsecutiveRuns": 2, "byteIdentical": true},
+  "rendererValidation": ["Compatibility", "Forward+"],
+  "visualAcceptance": "not_applicable_gameplay_only_no_visual_payload",
+  "manualGameplayAcceptance": "passed"
+}

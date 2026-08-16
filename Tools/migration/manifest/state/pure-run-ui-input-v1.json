@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ui-input-v1",
+  "source": {
+    "exportHash": "sha256:ff33dcc0331be4cf5681a89b95937271878bff301ff741bfd72d915cad644f77",
+    "exporterVersion": "unity-assetdatabase-v1",
+    "sourceBlobs": {
+      "Assets/Tactics/Scripts/Common/Battle/BattleSettlementFlow.cs": "4d4c89fcdc9f85d10d17f66945888446649771cd",
+      "Assets/Tactics/Scripts/Flow/HomeFlowCoordinator.cs": "88079e195b70ed586eb0c148000f5cfbd85a4226",
+      "Assets/Tactics/Scripts/RoguelikeMap/UI/BossVictoryUIController.cs": "1eab56b026d0e459daa4ea66594c0f7d5cacb22a",
+      "Assets/Tactics/Scripts/UI/BattleSettlementUIController.cs": "38d55d67e7ec10300cb4e32cf9783fa082691fd5",
+      "Assets/Tactics/Scripts/UI/BattleUIController.cs": "5a953c158c51e861f3577a60bee60d37fed8ed7a",
+      "Assets/Tactics/Scripts/UI/HomeUIController.cs": "28da6f4aec47aa16b71cdb541ce10631b2be5f13"
+    },
+    "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+    "sourceTag": "unity-final-2026-08-08",
+    "unityVersion": "6000.3.11f1"
+  },
+  "artifacts": [
+    {
+      "resourcePath": "res://scenes/Main.tscn",
+      "targetHash": "sha256:aeaee66da1f1a077470731d52b35ea2d1df7c84b3c1bbd7c1ee0f284d41050f7"
+    },
+    {
+      "resourcePath": "res://content/ui/PlayableLv1BalanceProfile.tres",
+      "targetHash": "sha256:518d632437d8cd34572cc4fea5680719640a3094c754aec08d4b886b26964006"
+    },
+    {
+      "resourcePath": "res://content/ui/PlayableEnemySpeedProfile.tres",
+      "targetHash": "sha256:38cd85a4bceaaced63a3b824e5484d0135ff05fa2af70361cb97e9103a98bbde"
+    }
+  ]
+}

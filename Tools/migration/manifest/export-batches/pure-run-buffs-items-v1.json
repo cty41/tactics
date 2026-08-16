@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-buffs-items-v1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "outputPath": "Tools/migration/out/pure-run-buffs-items-v1.unity.json",
+  "assets": [
+    { "sourceKey": "buff.counter", "sourcePath": "Assets/Tactics/Battle/Buffs/Counter.asset", "gitBlobSha1": "60382673b5c58ff193f4d167440190b6ce015fc0", "targetContentIds": ["buff.counter"] },
+    { "sourceKey": "buff.curse-damage-amplifier", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/CurseDamageAmplifier.asset", "gitBlobSha1": "70c6a54001e4e662918847c373872a8c810300e1", "targetContentIds": ["buff.curse-damage-amplifier"] },
+    { "sourceKey": "buff.event-damage-reduction", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/EventDamageReduction.asset", "gitBlobSha1": "3206a5d909f11b9147281bfc5ba90f619e36f8cb", "targetContentIds": ["buff.event-damage-reduction"] },
+    { "sourceKey": "buff.event-damage-taken-up", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset", "gitBlobSha1": "44de67445c64ac6f5b670d1dccd2059aae63e21d", "targetContentIds": ["buff.event-damage-taken-up"] },
+    { "sourceKey": "buff.fear", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/Fear.asset", "gitBlobSha1": "1adea35d76c2e9c0d015d71ffe9d817567c844fb", "targetContentIds": ["buff.fear"] },
+    { "sourceKey": "buff.frozen", "sourcePath": "Assets/Tactics/Battle/Buffs/Frozen.asset", "gitBlobSha1": "688b1851a74e61fc83f8a62029729edc0f056c50", "targetContentIds": ["buff.frozen"] },
+    { "sourceKey": "buff.ice-armor", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/IceArmor.asset", "gitBlobSha1": "addaedfc81adbe99d821cf56c018d6038a21db4e", "targetContentIds": ["buff.ice-armor"] },
+    { "sourceKey": "buff.ice-armor.lv1", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/IceArmor_Lv1.asset", "gitBlobSha1": "970a5d4c1b6deb757a50bcfcc0acc18a57fca226", "targetContentIds": ["buff.ice-armor.lv1"] },
+    { "sourceKey": "buff.ice-armor.lv2", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/IceArmor_Lv2.asset", "gitBlobSha1": "0a260a7173be582654dba4a7906a0ad46d8e0d8f", "targetContentIds": ["buff.ice-armor.lv2"] },
+    { "sourceKey": "buff.ignite", "sourcePath": "Assets/Tactics/Battle/Buffs/Ignite.asset", "gitBlobSha1": "a88531194676fca9a8ae0d99dd7054863c30848a", "targetContentIds": ["buff.ignite"] },
+    { "sourceKey": "buff.mark", "sourcePath": "Assets/Tactics/Battle/Buffs/Mark.asset", "gitBlobSha1": "d195e24476beb6fb8f2cfc5ad1534ecf52a3814a", "targetContentIds": ["buff.mark"] },
+    { "sourceKey": "buff.poison", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/Poison.asset", "gitBlobSha1": "2bf38b86c4c65f0624596aaae1ed9fee7cf5a541", "targetContentIds": ["buff.poison"] },
+    { "sourceKey": "buff.slow", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/Slow.asset", "gitBlobSha1": "91457d1e1d4c3fa73cdfe2f77510aa4ae4d3fe92", "targetContentIds": ["buff.slow"] },
+    { "sourceKey": "buff.stun", "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/Stun.asset", "gitBlobSha1": "4b1fb89df79ac996fae8acebc5cbf5ad35b0aa6b", "targetContentIds": ["buff.stun"] }
+  ]
+}

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://8ypqfoeepiq5"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_q656d"]
+
+[resource]
+script = ExtResource("1_q656d")
+ContentIdValue = "skill.mage.lightning.lv1"
+SourceId = "mage.lightning"
+DisplayName = "霹雳闪电 Lv1"
+Description = "无视路径与视线直接造成9点闪电魔法伤害。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 1
+ManaCost = 6
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Lightning"
+Damage = 9
+DamageKindValue = "Magical"
+BranchId = "mage.lightning"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 5
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Graph_Ability.asset"
+SourceGuid = "3a161586d911e124b9a695ae36ad434a"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Lightning_Graph.asset"
+GraphDependencyHash = "27f25dfca524bb4e81e5de1be2d71bb1"

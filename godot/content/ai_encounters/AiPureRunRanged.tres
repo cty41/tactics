@@ -1,0 +1,210 @@
+[gd_resource type="Resource" script_class="AiDefinitionResource" format=3 uid="uid://d0gim665iwky8"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/AiDefinitionResource.cs" id="1_bblbp"]
+
+[resource]
+script = ExtResource("1_bblbp")
+ContentIdValue = "ai.pure-run.ranged"
+ArchetypeValue = "ranged"
+SkillContentIds = PackedStringArray("skill.enemy.ranged-attack.lv1", "skill.enemy.heavy-shot.lv1")
+DistanceWeight = 2.0
+BrainPath = "Assets/Tactics/AI/Encounters/RangedBrain.asset"
+BrainGuid = "19a9314a7ef98e54e8813f1fe95ba926"
+BrainLocalFileId = 11400000
+ProfilePath = "Assets/Tactics/AI/Encounters/RangedProfile.asset"
+ProfileGuid = "e84119b11e7829944af9205fbc6a8c28"
+DecisionGraphPath = "Assets/Tactics/AI/BasicMeleeGraph.asset"
+DecisionGraphHash = "3ccb90fe7b983e6ce5daadd2ea041178"
+DecisionGraphJson = "{
+        \"dependencyHash\": \"3ccb90fe7b983e6ce5daadd2ea041178\",
+        \"edges\": [
+          {
+            \"sourceNodeId\": \"1\",
+            \"targetNodeId\": \"10\"
+          },
+          {
+            \"sourceNodeId\": \"1\",
+            \"targetNodeId\": \"11\"
+          },
+          {
+            \"sourceNodeId\": \"1\",
+            \"targetNodeId\": \"20\"
+          },
+          {
+            \"sourceNodeId\": \"1\",
+            \"targetNodeId\": \"21\"
+          },
+          {
+            \"sourceNodeId\": \"2\",
+            \"targetNodeId\": \"12\"
+          },
+          {
+            \"sourceNodeId\": \"2\",
+            \"targetNodeId\": \"21\"
+          },
+          {
+            \"sourceNodeId\": \"2\",
+            \"targetNodeId\": \"22\"
+          },
+          {
+            \"sourceNodeId\": \"3\",
+            \"targetNodeId\": \"10\"
+          },
+          {
+            \"sourceNodeId\": \"3\",
+            \"targetNodeId\": \"21\"
+          },
+          {
+            \"sourceNodeId\": \"4\",
+            \"targetNodeId\": \"13\"
+          },
+          {
+            \"sourceNodeId\": \"4\",
+            \"targetNodeId\": \"14\"
+          },
+          {
+            \"sourceNodeId\": \"5\",
+            \"targetNodeId\": \"21\"
+          }
+        ],
+        \"nodes\": [
+          {
+            \"basePriority\": 35.0,
+            \"enabled\": true,
+            \"kind\": \"intent\",
+            \"nodeId\": \"1\",
+            \"type\": \"FinishOff\"
+          },
+          {
+            \"basePriority\": 25.0,
+            \"enabled\": true,
+            \"kind\": \"intent\",
+            \"nodeId\": \"2\",
+            \"type\": \"BasicAttack\"
+          },
+          {
+            \"basePriority\": 15.0,
+            \"enabled\": true,
+            \"kind\": \"intent\",
+            \"nodeId\": \"3\",
+            \"type\": \"Engage\"
+          },
+          {
+            \"basePriority\": 30.0,
+            \"enabled\": true,
+            \"kind\": \"intent\",
+            \"nodeId\": \"4\",
+            \"type\": \"Retreat\"
+          },
+          {
+            \"basePriority\": 1.0,
+            \"enabled\": true,
+            \"kind\": \"intent\",
+            \"nodeId\": \"5\",
+            \"type\": \"HoldPosition\"
+          },
+          {
+            \"enabled\": true,
+            \"kind\": \"rule\",
+            \"nodeId\": \"10\",
+            \"parameter\": 0.0,
+            \"type\": \"TargetInMoveAttackRange\"
+          },
+          {
+            \"enabled\": true,
+            \"kind\": \"rule\",
+            \"nodeId\": \"11\",
+            \"parameter\": 0.0,
+            \"type\": \"TargetKillable\"
+          },
+          {
+            \"enabled\": true,
+            \"kind\": \"rule\",
+            \"nodeId\": \"12\",
+            \"parameter\": 0.0,
+            \"type\": \"TargetInRange\"
+          },
+          {
+            \"enabled\": true,
+            \"kind\": \"rule\",
+            \"nodeId\": \"13\",
+            \"parameter\": 0.30000001192092896,
+            \"type\": \"HealthBelowThreshold\"
+          },
+          {
+            \"enabled\": true,
+            \"kind\": \"rule\",
+            \"nodeId\": \"14\",
+            \"parameter\": 0.0,
+            \"type\": \"DestinationSafe\"
+          },
+          {
+            \"curve\": [
+              {
+                \"inSlope\": 0.0,
+                \"outSlope\": 1.0,
+                \"time\": 0.0,
+                \"value\": 0.0
+              },
+              {
+                \"inSlope\": 1.0,
+                \"outSlope\": 0.0,
+                \"time\": 1.0,
+                \"value\": 1.0
+              }
+            ],
+            \"enabled\": true,
+            \"kind\": \"score\",
+            \"nodeId\": \"20\",
+            \"type\": \"KillPotential\",
+            \"weight\": 8.0
+          },
+          {
+            \"curve\": [
+              {
+                \"inSlope\": 0.0,
+                \"outSlope\": -1.0,
+                \"time\": 0.0,
+                \"value\": 1.0
+              },
+              {
+                \"inSlope\": -1.0,
+                \"outSlope\": 0.0,
+                \"time\": 1.0,
+                \"value\": 0.0
+              }
+            ],
+            \"enabled\": true,
+            \"kind\": \"score\",
+            \"nodeId\": \"21\",
+            \"type\": \"DistanceToTarget\",
+            \"weight\": 5.0
+          },
+          {
+            \"curve\": [
+              {
+                \"inSlope\": 0.0,
+                \"outSlope\": -1.0,
+                \"time\": 0.0,
+                \"value\": 1.0
+              },
+              {
+                \"inSlope\": -1.0,
+                \"outSlope\": 0.0,
+                \"time\": 1.0,
+                \"value\": 0.0
+              }
+            ],
+            \"enabled\": true,
+            \"kind\": \"score\",
+            \"nodeId\": \"22\",
+            \"type\": \"TargetHealth\",
+            \"weight\": 3.0
+          }
+        ],
+        \"sourceGuid\": \"9f3d163714779294b9d41163551957a9\",
+        \"sourcePath\": \"Assets/Tactics/AI/BasicMeleeGraph.asset\"
+      }"
+PreferredMinimumRange = 2
+PreferredMaximumRange = 4
+PreferredRangeRepositionBonus = 35.0

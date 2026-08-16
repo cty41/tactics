@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://d2rehamwpvbju"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_e3m2t"]
+
+[resource]
+script = ExtResource("1_e3m2t")
+ContentIdValue = "skill.mage.ice-bolt.lv3"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Lv3_Graph_Ability.asset"
+DisplayName = "寒冰箭 Lv3"
+Description = "命中后反弹至3格内最近的另一敌人。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 3
+ManaCost = 4
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "IceBolt"
+Damage = 8
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.slow"
+StatusDuration = 2
+BranchId = "mage.ice-bolt"
+PrerequisiteContentIdValue = "skill.mage.ice-bolt.lv2"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 5
+BounceRange = 3
+BounceCount = 1
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Lv3_Graph_Ability.asset"
+SourceGuid = "dd43b227d5d3e6448abf514538115e0e"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/IceBolt_Lv3_Graph.asset"
+GraphDependencyHash = "7170d773d390e5e55194ac58dbbb3c5b"

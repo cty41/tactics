@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-buffs-items-v1",
+  "source": {
+    "sourceTag": "unity-final-2026-08-08",
+    "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+    "unityVersion": "6000.3.11f1",
+    "exporterVersion": "unity-assetdatabase-v1",
+    "exportHash": "sha256:b35df5f063a83c452ed0831cd1519c7d9a996a3fde7380709e0b7eeeb20bb310",
+    "consumablesJsonSha256": "e5e8aaa6fe22daa9b94eaea8725cb6afbc968bfba542bad2e22db1a2111e51d5",
+    "equipmentJsonSha256": "b865bcc3f6af7f5eae279f53a32d08ce9e624a1f4a7a5af9602eaceac9df318f"
+  },
+  "artifacts": [
+    {
+      "resourcePath": "res://content/buffs_items/BuffCounter.tres",
+      "resourceUid": "uid://2voebbkatqrn",
+      "targetHash": "sha256:aafe197fa15305cde8df01cf3a2ddbc1b7ddc16e9ec975a4682af48336eb3005",
+      "semanticHash": "sha256:cae4c2185e1642c9c30150ad8c48d2702bfb2e1ccef7ad68a3cdeced81133d5a"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffCurseDamageAmplifier.tres",
+      "resourceUid": "uid://0x3slbg3mal",
+      "targetHash": "sha256:6cfdf72b3a7b6bf856ec65238cd704518498ae76124e3f755221827207a55013",
+      "semanticHash": "sha256:296ed57932060fa810161856310bf0a128cd5bdbae53684036611482f61e8e06"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffEventDamageReduction.tres",
+      "resourceUid": "uid://do1aw18ye2rgm",
+      "targetHash": "sha256:cab441bee49540757da220ee7ec1aefd87123dd8615696743bba2790edb2841e",
+      "semanticHash": "sha256:9c8a3ae6e9353b2b50ec79dd0b0a944bd48a0108ad2e69106f585b100e18046e"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffEventDamageTakenUp.tres",
+      "resourceUid": "uid://b762tyyv1r8k3",
+      "targetHash": "sha256:22833946568bb26c7b87a6a36bda7ec992c7396adad71edc6df9f8e1f7c6966b",
+      "semanticHash": "sha256:4c5768cad6874b67e0572f785070335b614438ccc86d0e6fbcc9f29fa4b3acaf"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffFear.tres",
+      "resourceUid": "uid://cavos15760hys",
+      "targetHash": "sha256:ba95a4272216613c67d30c9695d7d9ec69a2fdf66e442e655d6a2497de0ba564",
+      "semanticHash": "sha256:eb66865443ac5bc245fbd24f06edc19576377740b02cbf58dc2b3595747e578c"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffFrozen.tres",
+      "resourceUid": "uid://q0xhmr1xwwrm",
+      "targetHash": "sha256:02cf7b9c638da36cebeb72d5d41c472cc45ec69662fad914546f4fc6472bad36",
+      "semanticHash": "sha256:f7892c9d0bf12bc661f5528739f86e4e1a2584507d86d4218899e481eb3c2f92"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffIceArmor.tres",
+      "resourceUid": "uid://bqgpx2ubhp6yn",
+      "targetHash": "sha256:03b0ef863a4999f584331c7b821b7473c1af28a32ec43c05e01cb4cd9848d0ff",
+      "semanticHash": "sha256:499898e570ea696a58bc0f4dffbb3d45782773b1fd2e1428721da9736c4d6972"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffIceArmorLv1.tres",
+      "resourceUid": "uid://dsebgsadlwftq",
+      "targetHash": "sha256:5688ad618741dace1ec94f1e5c526ca6f90710ec395758c394c50e3a97bc44a5",
+      "semanticHash": "sha256:3d63831aded1f54877a913e59fa60ee2a78dcda6ddf26c88a2b777eaddc2fc3f"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffIceArmorLv2.tres",
+      "resourceUid": "uid://d0xnjt2wife8r",
+      "targetHash": "sha256:6d15090ab36a6e1d7f2594caabe37ec652395dcb14797210bbc3876eab76b191",
+      "semanticHash": "sha256:a637d6a8027c7c7b960e050f1c4c18e7e2ca55856cc2fdb834cecfbc4116fa9d"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffIgnite.tres",
+      "resourceUid": "uid://dnv3b20bruf60",
+      "targetHash": "sha256:893437c946d50eddfa744d2342a50ce9076533b0f5f0cf3a434ce76e5decc7d9",
+      "semanticHash": "sha256:2357da89221aa08ac63ee2064993232cb525631727edb933923901bba8388583"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffMark.tres",
+      "resourceUid": "uid://c0ilwkb5ygvwg",
+      "targetHash": "sha256:dd05327ca8c2da057adc9b983744f1512a1b0a7833d1c4e7e6381ff75fadb093",
+      "semanticHash": "sha256:a7fa2b2eb2dd4f1880b445185f35edee60dedb50e6891b11062df34b190320dd"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffSlow.tres",
+      "resourceUid": "uid://cey0ta2haejeo",
+      "targetHash": "sha256:8d3cdec02933f16978a9c0b9bf19a4ae9559bcdcd27a18236a8d0b7415835eb0",
+      "semanticHash": "sha256:ac3b0675141a542a0beff5e2ef9f4a6180a634a53235ff4cddf6a02e00e5d727"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/BuffStun.tres",
+      "resourceUid": "uid://woijxs12u8uj",
+      "targetHash": "sha256:94893298b84da5ca18711263aa94641006f5d0d2c37276e35b70f04e3b6a1f8e",
+      "semanticHash": "sha256:a1dbdc4b391e08b65579a6c15770750655e591938f33f71f15a99a30f65c3855"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/ConsumableCleansingPotion.tres",
+      "resourceUid": "uid://ltyukggslgcv",
+      "targetHash": "sha256:382ae1c098f72768409fd11ce5b73314cf6d1808d5b16de3ddefa498fd718721",
+      "semanticHash": "sha256:be34ae357abc6e0ca1669932d1332ae724dae53198330fd2fb30368028928618"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/ConsumableLifePotion.tres",
+      "resourceUid": "uid://clv1d4n1x46rg",
+      "targetHash": "sha256:e29741b37591636190f671de327d2b7865c33d127d71e6a4c7730295c6ef4a8f",
+      "semanticHash": "sha256:080d22a38b5e6fed40ffd5d68aa019fec22195ce30ffab7349eed2832519c884"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/ConsumableManaPotion.tres",
+      "resourceUid": "uid://cs3aa1n5kwi05",
+      "targetHash": "sha256:13dba837fe83a11a49492e2e2fb321d524d1f5090697ca2b3fd6366f7d74a8a7",
+      "semanticHash": "sha256:7d422bd5214882e11d55091fbe1fdb026bc2708172d175e90acde4cba50fd62a"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/ContentCatalog.tres",
+      "resourceUid": "uid://ccms8ixfuipce",
+      "targetHash": "sha256:b366e75fbb2fac45d91d897c900dc7a9ad35b809a7146d61147cb3452a9691ba",
+      "semanticHash": "sha256:8264c7b4ba148f46780eb8e6ce00d3e1f9e37d00b7983dd208d53c19d63e5dfe"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentBow01.tres",
+      "resourceUid": "uid://cuny5a2atywxk",
+      "targetHash": "sha256:3660471cf23d99194514db114569bccd6d1ebf6202e3bd3a4c1b74d5922663e7",
+      "semanticHash": "sha256:d9827e85f09eff3733cc6d5dcda7a99f8ab7715d6c53a46c47762dd87ec02bd9"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentIronHelmet01.tres",
+      "resourceUid": "uid://brrayrlqqtwoh",
+      "targetHash": "sha256:8ee39de931a3047bb5623c29e870b22fc582891cf5fa96eb542b4adae50aa468",
+      "semanticHash": "sha256:3c1b6ac1672e234f99a08b9c1df8a6003ccb5ca9f72bebe0740875cfe7a4ce38"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentLeatherArmor01.tres",
+      "resourceUid": "uid://dp02ugh85tbyn",
+      "targetHash": "sha256:dd4791eff783ec55bca4e8fc950a7a7584893dfd835722b7cf7f97c19cf1495a",
+      "semanticHash": "sha256:5857bca5061eb0ba9ee41b77746296a35d16cd5931b3871b692c239d80d38cb7"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentLeatherBoots01.tres",
+      "resourceUid": "uid://df2jtiktwna0g",
+      "targetHash": "sha256:17fa0d8278430ce6e8d1a725df99b9f6f8caaefe97f80607a24a0cc415886eac",
+      "semanticHash": "sha256:61a12c11e4183eb45fceb468cb8b620c714b899edb7c9e6f72422a978f4228b7"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentLuckyRing01.tres",
+      "resourceUid": "uid://daf8ufg4gk48g",
+      "targetHash": "sha256:66638f57657f5fab88e07da026bbdec0539af385a5785f8ef9c394a69135fa9b",
+      "semanticHash": "sha256:810bdf3f8d0a4d932987db1e2c8619fde3f13ffd7807e26b0357c333bff55ac2"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentShadowCloak01.tres",
+      "resourceUid": "uid://cjajivuxlyobg",
+      "targetHash": "sha256:9b284349aae3dd9dc4ba8de4a238fe8c3c7f36ab3af4e3ef9745a83c3c2aa4e0",
+      "semanticHash": "sha256:2d6fc214fe72030fe9cc819c2c56b69af67f2dabe7280165bffc557ba7792e6b"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentShield01.tres",
+      "resourceUid": "uid://bh7frgpoqefli",
+      "targetHash": "sha256:22f11396e67b524aab6fd174d0177bcbc2d7f2b03cdab3642d4bec1cde97eefb",
+      "semanticHash": "sha256:0e32df6e15e50180e1f6c624af9893dac946ad2ba86c0a6b0ba34bc43a50af0c"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentSilverRing01.tres",
+      "resourceUid": "uid://53tbtgag4l7q",
+      "targetHash": "sha256:03170c3b603db3846381fc741ea4f24043dbc2fca1680bdea6654a9359a4a3eb",
+      "semanticHash": "sha256:dcf3b604b62c91499afe284a7169b29175825dcde6c11738652c28b528bd60ed"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentStaff01.tres",
+      "resourceUid": "uid://kctafdu01i2n",
+      "targetHash": "sha256:f33ea10022061802ad8ae631ed1acbe243ea41b248a9efafcc02a2a417fe29f8",
+      "semanticHash": "sha256:acf55f3ec74dbde8415e5629523ca943ec28e0df4d686f1fde5eb33c6decbf36"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentSteelSword01.tres",
+      "resourceUid": "uid://cwd1tlqwoyay0",
+      "targetHash": "sha256:a7294cf48fb02197c4bd2423c1d15184f721840552d453310bb04d2e13ac1c3d",
+      "semanticHash": "sha256:d96a8a3f140553ad1cf8001a89b138e58d134da3747904f6a3b3ee7045af9fd7"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentSword01.tres",
+      "resourceUid": "uid://w410f7x47itg",
+      "targetHash": "sha256:d72f8d3a5350e7d41b0a0ff03d39d1185e860cf8ef3fca1dd539f2bafa0bc00b",
+      "semanticHash": "sha256:95b151bfdd286408ccb03da401b233556acc04db15a3ab53c1a7983edc27ddb5"
+    },
+    {
+      "resourcePath": "res://content/buffs_items/EquipmentWizardHat01.tres",
+      "resourceUid": "uid://bv0c8ch1the3y",
+      "targetHash": "sha256:d25046efa446eeab2bef93abbb32ec3dffbca8ef46e6e5f18924df6fdedd1e8c",
+      "semanticHash": "sha256:bd26d90cf3392b8fe2935570fb3ebbcc3884e71c324f7feb0930ab6eeeb7a175"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://2voebbkatqrn"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_svhcu"]
+
+[resource]
+script = ExtResource("1_svhcu")
+ContentIdValue = "buff.counter"
+SourceId = "Counter"
+DefaultDuration = 1
+PolarityValue = "Beneficial"
+EffectKindValue = "None"
+TriggerTimingValue = "DamageTaken"
+RefreshStrategyValue = "AddDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/Battle/Buffs/Counter.asset"
+SourceGuid = "26d701a0cfdf43a4698db7bda2c94326"
+SourceLocalFileId = 11400000

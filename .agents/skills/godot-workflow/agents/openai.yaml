@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Workflow"
+  short_description: "Route Godot 4.7 migration tasks safely"
+  default_prompt: "Use $godot-workflow to route this Godot migration task to the correct project workflow and evidence."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Content Migration"
+  short_description: "Migrate Unity content into Godot assets"
+  default_prompt: "Use $godot-content-migration to export, compile, generate, and validate this content batch."

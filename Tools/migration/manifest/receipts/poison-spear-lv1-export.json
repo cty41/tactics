@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "batchId": "poison-spear-lv1",
+  "classification": "real_unity_assetdatabase_export",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:d3b6fd9ff624a4ab88d0a627b81963aa8f269e5795474f0a3f90c5797ca9645f",
+  "outputSha256": "e3f3bb1c4431d95a0c9d2f4330ca54b7deeaae2b0327b024eb9000705f44993e",
+  "assets": [
+    {
+      "sourceKey": "buff.poison/definition",
+      "sourcePath": "Assets/Tactics/ScriptableObjects/Buffs/Poison.asset",
+      "gitBlobSha1": "2bf38b86c4c65f0624596aaae1ed9fee7cf5a541",
+      "sourceGuid": "1d4b249e1482b334abd2f0a23030e184",
+      "sourceLocalFileId": 11400000,
+      "dependencyHash": "02a81f1e6253a446fbf5c7130207d2dc",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 110,
+      "targetContentIds": ["buff.poison"]
+    },
+    {
+      "sourceKey": "impact.poison-spear/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Prefabs/PoisonSpearImpact.prefab",
+      "gitBlobSha1": "048b8ae49a08e292dfa87b47d086451ef8cf0953",
+      "sourceGuid": "e14cf10b9af6744469494c5fadc74de4",
+      "sourceLocalFileId": 4054336494229344821,
+      "dependencyHash": "e4132e42b5d029f48e7e462bcab6a5f6",
+      "serializedObjectCount": 10,
+      "serializedPropertyCount": 11565,
+      "targetContentIds": ["impact.poison-spear"]
+    },
+    {
+      "sourceKey": "presentation.poison-spear.lv1/graph",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Presentation/PoisonSpear_Presentation.asset",
+      "gitBlobSha1": "c798f59da6e370a59ab06a033c596ca4ba082a00",
+      "sourceGuid": "38801232b6eea8e46be375422507d7bd",
+      "sourceLocalFileId": 11400000,
+      "dependencyHash": "00d8ac55d26ffbe35e98b71a6529051a",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 833,
+      "targetContentIds": ["presentation.poison-spear.lv1"]
+    },
+    {
+      "sourceKey": "projectile.poison-spear/prefab",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Prefabs/PoisonSpearFlight.prefab",
+      "gitBlobSha1": "e26363e60d994935d5ae6986cb878e1937c0db60",
+      "sourceGuid": "2fa6a7b356d43a1488a5d772017c328e",
+      "sourceLocalFileId": 8472119723316566080,
+      "dependencyHash": "5bcb5cf56a982c43c127e0687d546716",
+      "serializedObjectCount": 10,
+      "serializedPropertyCount": 11462,
+      "targetContentIds": ["projectile.poison-spear"]
+    },
+    {
+      "sourceKey": "projectile.poison-spear/profile",
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset",
+      "gitBlobSha1": "2ed185556c495f4b1fcfb5bde3513ee3053cf3f3",
+      "sourceGuid": "d4814bf96a1f991408389bdfeaa6938a",
+      "sourceLocalFileId": 11400000,
+      "dependencyHash": "5d80a2822f4ebe3ede708036ce5110c5",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 153,
+      "targetContentIds": [
+        "impact.poison-spear",
+        "presentation.poison-spear.lv1",
+        "projectile.poison-spear"
+      ]
+    },
+    {
+      "sourceKey": "skill.poison-spear.lv1/ability",
+      "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset",
+      "gitBlobSha1": "306b1fa9f64c40976818618e64ab8366c922f3ab",
+      "sourceGuid": "1c7d176040f05764985f9edd5a33b8d6",
+      "sourceLocalFileId": 11400000,
+      "dependencyHash": "8be0b0cf5053505801df3d8f52e937e2",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 196,
+      "targetContentIds": ["skill.poison-spear.lv1"]
+    },
+    {
+      "sourceKey": "skill.poison-spear.lv1/graph",
+      "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/PoisonSpear_Graph.asset",
+      "gitBlobSha1": "8be083974506119738322d9714f6c6eea68b6b34",
+      "sourceGuid": "32619069363c21846a59eec3be83680f",
+      "sourceLocalFileId": 11400000,
+      "dependencyHash": "c7687e9e7925984697a81f654e923b30",
+      "serializedObjectCount": 1,
+      "serializedPropertyCount": 442,
+      "targetContentIds": ["skill.poison-spear.lv1"]
+    }
+  ],
+  "warnings": [],
+  "idempotency": {
+    "runs": 2,
+    "byteIdentical": true
+  },
+  "ownership": "UnityOwned",
+  "nextState": "Exported"
+}

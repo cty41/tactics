@@ -1,0 +1,113 @@
+*.csproj
+*.csproj.meta
+*.sln
+*.slnx
+*.DotSettings
+*.DotSettings.user
+*.suo
+*.userprefs
+
+# Migration-side C# project descriptors are tracked explicitly.
+!src/
+!src/**/*.csproj
+!src/**/*.props
+!src/**/*.targets
+!godot/
+!godot/**/*.csproj
+!godot/**/*.props
+!godot/**/*.targets
+!Tactics.Migration.slnx
+!Tactics.Migration.runsettings
+!src/**/packages.lock.json
+!godot/**/packages.lock.json
+!godot/*.packages.lock.json
+/godot/gdunit4_testadapter_v5/
+/godot/tests/gdunit4_testadapter_v5/
+/godot/addons/godot_ai/
+*.DS_Store
+*.patch
+
+/obj/
+/src/**/bin/
+/src/**/obj/
+/godot/.godot/
+/godot/**/bin/
+/godot/**/obj/
+*.translation
+
+# Godot/.NET test-host and local verification outputs
+/godot.godot/
+/artifacts/
+/gdunit4_testadapter_v5/
+**/bin/
+**/obj/
+*.pck
+*.log
+*.dmp
+/Build/
+/Release/
+/.vs
+/.vscode
+/.vsconfig
+/.log
+/Logs/
+/UserSettings/
+__pycache__/
+
+# Local Node tool outputs
+/Tools/gameplay-test-spec/node_modules/
+/Tools/gameplay-test-spec/dist/
+/Tools/migration/out/
+/.migration-staging/
+
+# Gameplay test spec batch compile output
+Tests/gameplay-specs/**/*.gameplay-test.plan.json
+
+# JetBrains Rider
+.idea
+!.editorConfig
+/Assets/Plugins/Editor/JetBrains*
+
+# UWA test data
+TestData/
+
+# Cursor ignores
+*.cursorignore
+.cursorrules
+CLAUDE.md
+.clipignore
+
+# White code-workspace
+*.code-workspace
+!</CodeWorkspaces/*.code-workspace>
+
+# Local build output
+/Output/
+.clinerules
+.sisyphus
+
+
+.mimocode/plans
+.mimocode/.cron-lock
+Tests/gameplay-specs/compiled
+
+# Worktree-local agent endpoints. Templates and tooling remain tracked.
+/.agents/mcp.json
+/.agents/mcp.local.json
+/.agents/mcp.json.*.tmp
+/.agents/mcp.json.*.bak
+/.agents/mcp.local.json.*.tmp
+/.agents/mcp.local.json.*.bak
+/.codex/config.toml
+/.codex/config.toml.*.tmp
+/.codex/config.toml.*.bak
+/.opencode/opencode.json
+/.opencode/opencode.json.*.tmp
+/.opencode/opencode.json.*.bak
+/.mimocode/mimocode.json
+/.mimocode/mimocode.json.*.tmp
+/.mimocode/mimocode.json.*.bak
+tmp
+
+# Hermes project plans are intentionally not ignored here.
+# Ignore /.hermes/plans via .git/info/exclude to keep them desktop-visible.

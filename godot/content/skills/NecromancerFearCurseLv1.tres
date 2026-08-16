@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://bhp17ta374hqn"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_lsiab"]
+
+[resource]
+script = ExtResource("1_lsiab")
+ContentIdValue = "skill.necromancer.fear-curse.lv1"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Graph_Ability.asset"
+DisplayName = "恐惧诅咒 Lv1"
+Description = "令单个敌人下一次行动开始时远离施法者。"
+RoleValue = "Necromancer"
+KindValue = "Active"
+Level = 1
+ManaCost = 7
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "FearCurse"
+DamageKindValue = "None"
+StatusContentIdValue = "buff.fear"
+StatusDuration = 1
+BranchId = "necromancer.fear-curse"
+PrerequisiteBranchId = "necromancer.amplify-damage"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/FearCurse_Graph_Ability.asset"
+SourceGuid = "bef3084422e4f0c40bb0e0fc555b4a82"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/FearCurse_Graph.asset"
+GraphDependencyHash = "304593f7ce88666071ccbefab2dfaf78"

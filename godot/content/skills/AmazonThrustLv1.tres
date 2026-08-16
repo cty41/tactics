@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://rntj7qgaym5p"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_c4w17"]
+
+[resource]
+script = ExtResource("1_c4w17")
+ContentIdValue = "skill.amazon.thrust.lv1"
+SourceId = "amazon.thrust"
+DisplayName = "突刺 Lv1"
+Description = "攻击前方2格内所有敌人。"
+RoleValue = "Amazon"
+KindValue = "Active"
+Level = 1
+ManaCost = 3
+MinRange = 1
+MaxRange = 2
+ExecutionKindValue = "Thrust"
+Damage = 2
+DamageKindValue = "Physical"
+BranchId = "amazon.thrust"
+RequiredAttribute = "Agility"
+MinimumAttribute = 5
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Graph_Ability.asset"
+SourceGuid = "5e7046ba8bb24ea498bcdca6e574e22f"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Thrust_Graph.asset"
+GraphDependencyHash = "d9a7cd27133fefe912a7a6dcfa7542c7"

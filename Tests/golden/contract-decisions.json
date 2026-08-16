@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "unityOracle": {
+    "tag": "unity-final-2026-08-08",
+    "commit": "168d1934",
+    "policy": "read_only"
+  },
+  "contracts": [
+    {
+      "id": "battle.command-event-transition",
+      "resolution": "versioned_migration_contract",
+      "runtimeContractId": "battle-transition-v5",
+      "reason": "The frozen runtime applies movement, damage, status and turn effects imperatively across controllers and SkillGraph executors; it has no immutable command-to-state-plus-events boundary to link as an exact Oracle.",
+      "invariants": [
+        "commands contain engine-neutral values",
+        "a rejected command preserves source state and emits one stable rejection event",
+        "successful state is complete before ordered presentation events are consumed",
+        "presentation cannot mutate gameplay state"
+      ],
+      "frozenEvidence": [
+        {
+          "path": "Assets/Tactics/Scripts/Common/Skills/Graph/Executors/MovementAndEffectExecutors.cs",
+          "blob": "e6221216c07fef30c3fce1cefaa7bba7faca161e",
+          "observation": "damage executor invokes CombatComponent.ApplyDamage directly"
+        },
+        {
+          "path": "Assets/Tactics/Scripts/Common/Skills/Graph/Executors/MoveNodeExecutors.cs",
+          "blob": "75072f2a3b745af88ea698fb9450205cfebf7eae",
+          "observation": "move executor awaits mutable MoveCommand execution and marks ability use"
+        },
+        {
+          "path": "Assets/Tactics/Scripts/Common/Battle/BattleController.cs",
+          "blob": "2f04fdd155866eef3b32459caa757454c27d0f0e",
+          "observation": "turn advancement delegates directly into the mutable grid controller"
+        }
+      ]
+    },
+    {
+      "id": "random.splitmix64-v1",
+      "resolution": "deterministic_replacement_contract",
+      "runtimeContractId": "splitmix64-v1",
+      "reason": "The frozen project mixes Unity global Random, unseeded static System.Random and Guid ordering, so no single serializable Unity RNG state exists to preserve for deterministic replay.",
+      "invariants": [
+        "random state is explicit and serializable",
+        "the algorithm ID is stored with Golden and save schemas",
+        "all gameplay draws advance only the supplied stream",
+        "algorithm changes require an explicit schema migration"
+      ],
+      "frozenEvidence": [
+        {
+          "path": "Assets/Tactics/Scripts/Common/Utils.cs",
+          "blob": "c4f57f3ae264ce1a107a6dc54cfcf45747469462",
+          "observation": "mixes UnityEngine.Random, unseeded System.Random and Guid.NewGuid ordering"
+        },
+        {
+          "path": "Assets/Tactics/Scripts/Common/Units/CombatComponent.cs",
+          "blob": "462daa2d6b3bdca5fb2694a499146e8c2efe6d45",
+          "observation": "combat uses multiple unseeded static System.Random streams"
+        },
+        {
+          "path": "Assets/Tactics/Scripts/Common/ai/MonsterAI/IntentScorer.cs",
+          "blob": "6bd467862ae9f21a015b462dc65bf422b10bce6c",
+          "observation": "AI noise consumes UnityEngine.Random.value"
+        }
+      ]
+    },
+    {
+      "id": "battle.line-of-sight-shadow-cone-v1",
+      "resolution": "godot_mainline_replacement_contract",
+      "runtimeContractId": "godot-los-shadow-cone-v1",
+      "reason": "The retired Unity runtime used supercover corner blocking. The Godot product adopts cell-shadow cones so edge or corner tangency does not hide a target that is not behind the blocker.",
+      "invariants": [
+        "a blocker shadows targets whose center ray crosses the blocker cell open interior",
+        "touching only a blocker edge or corner remains visible",
+        "living units and terrain use the same geometry while corpses and dropped spears do not block",
+        "preview AI and command execution consume the same Core query",
+        "nearest-blocker diagnostics are deterministic"
+      ],
+      "supersedes": "10x10-core-vectors.json#/lineOfSightQueries/0",
+      "externalReference": "https://mewgenics.wiki.gg/wiki/Range_and_Area",
+      "frozenEvidence": []
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "DisplayName": "火球术 Lv2",
+  "Description": "4格火球；主目标总计4点魔法伤害，命中格及正交相邻敌人受到2点溅射并施加3层点燃。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "target", "Type": "SelectPrimaryTarget", "Parameters": { "minRange": 1, "maxRange": 4 } },
+    { "Id": "projectile", "Type": "ProjectileLaunch", "Parameters": { "travelTime": 0.5, "speed": 8 } },
+    { "Id": "onHit", "Type": "OnHit" },
+    { "Id": "directDamage", "Type": "ApplyDamage", "Parameters": { "baseDamage": 2, "damageType": 1, "isRanged": false, "canCrit": true } },
+    { "Id": "point", "Type": "SelectTargetPoint", "Parameters": { "maxRange": 4 } },
+    { "Id": "collect", "Type": "CollectTargetsInArea", "Parameters": { "radius": 1, "shape": 1, "targetFaction": 1 } },
+    { "Id": "loop", "Type": "ForEachTarget" },
+    { "Id": "splashDamage", "Type": "ApplyDamage", "Parameters": { "baseDamage": 2, "damageType": 1, "isRanged": false, "canCrit": true } },
+    { "Id": "ignite", "Type": "ApplyBuff", "Parameters": { "duration": 3, "buffAssetPath": "Assets/Tactics/Battle/Buffs/Ignite.asset" } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "target" },
+    { "Source": "target", "Target": "projectile" },
+    { "Source": "projectile", "Target": "onHit" },
+    { "Source": "onHit", "Target": "directDamage" },
+    { "Source": "directDamage", "Target": "point" },
+    { "Source": "point", "Target": "collect" },
+    { "Source": "collect", "Target": "loop" },
+    { "Source": "loop", "Target": "splashDamage" },
+    { "Source": "splashDamage", "Target": "ignite" },
+    { "Source": "ignite", "Target": "loop" },
+    { "Source": "loop", "Target": "finish", "Port": "OnComplete" }
+  ]
+}

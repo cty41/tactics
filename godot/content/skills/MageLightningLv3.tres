@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://qsh0ebkoafbr"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_23tqs"]
+
+[resource]
+script = ExtResource("1_23tqs")
+ContentIdValue = "skill.mage.lightning.lv3"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Lv3_Graph_Ability.asset"
+DisplayName = "霹雳闪电 Lv3"
+Description = "直接造成11点闪电魔法伤害，并有50%概率眩晕。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 3
+ManaCost = 6
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Lightning"
+Damage = 11
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.stun"
+StatusDuration = 1
+BranchId = "mage.lightning"
+PrerequisiteContentIdValue = "skill.mage.lightning.lv2"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 5
+IgnoreLineOfSight = true
+StatusChancePercent = 50
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Lv3_Graph_Ability.asset"
+SourceGuid = "5515f935e38765b4ab2f479021f34a04"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Lightning_Lv3_Graph.asset"
+GraphDependencyHash = "c05d69ccbd8c6184a56f3ae99afefa30"

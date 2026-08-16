@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-persistence-v1",
+  "status": "Validated",
+  "ownership": "UnityOwned",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "runDefinitionCount": 1,
+  "encounterCount": 3,
+  "saveSchemaVersion": 1,
+  "unitySemanticSchemaVersion": 5,
+  "manualGameplayAcceptance": "not_required_automated_observability",
+  "visualAcceptance": "not_applicable_no_visual_payload"
+}

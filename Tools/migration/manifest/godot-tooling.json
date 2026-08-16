@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "godotVersion": "4.7.1-stable",
+  "dotnetSdk": "9.0.312",
+  "windowsCiDistribution": {
+    "editorUrl": "https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_mono_win64.zip",
+    "editorSha512": "aa04876c7932c2e6807233e6908da4045e904781a83dc3c793c34ba71c9f66292eb4da82aa55a6b8694fccf856f8c244c7709cfba20405066445daf9c2749b71",
+    "exportTemplatesUrl": "https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_mono_export_templates.tpz",
+    "exportTemplatesSha512": "8bbc4caed6f095f4a2dee27b59254077797f3a4288b55e9f9eec7fe47c69deb2e3f8853644b37e8bec0c2910c596aa1a6ecc0a7f4b7502d4c685cf9d853be0d1",
+    "templateDirectory": "4.7.1.stable.mono"
+  },
+  "godotAi": {
+    "sourcePath": "D:/codes/godot-ai",
+    "tag": "v3.1.2",
+    "commit": "678b16a6a0a335cf80cbb7d3f85c183cd3e616de",
+    "pluginCfgSha256": "6290daf20479a1ad215abce7b489f78bd6b43154909fd7317ee3f4551c299514",
+    "sourceMutation": "forbidden",
+    "customTacticsTooling": "deferred",
+    "codexMcp": {
+      "scope": "project",
+      "configPath": ".codex/config.toml",
+      "transport": "attach",
+      "httpPort": 8000,
+      "websocketPort": 9500,
+      "startupTimeoutSec": 60,
+      "toolTimeoutSec": 360,
+      "defaultProfile": "phase3-observe",
+      "profileOrder": [
+        "phase3-observe",
+        "content-authoring",
+        "ui-input",
+        "presentation"
+      ],
+      "profiles": {
+        "phase3-observe": {
+          "extends": null,
+          "tools": [
+            "api_manage",
+            "editor_reload_plugin",
+            "editor_screenshot",
+            "editor_state",
+            "logs_read",
+            "node_find",
+            "node_get_properties",
+            "project_manage",
+            "project_run",
+            "resource_manage",
+            "scene_get_hierarchy",
+            "scene_open",
+            "session_activate",
+            "session_manage",
+            "test_manage",
+            "test_run"
+          ]
+        },
+        "content-authoring": {
+          "extends": "phase3-observe",
+          "tools": [
+            "batch_execute",
+            "node_create",
+            "node_manage",
+            "node_set_property",
+            "scene_manage",
+            "scene_save",
+            "signal_manage"
+          ]
+        },
+        "ui-input": {
+          "extends": "content-authoring",
+          "tools": [
+            "game_manage",
+            "input_map_manage",
+            "theme_manage",
+            "ui_manage"
+          ]
+        },
+        "presentation": {
+          "extends": "ui-input",
+          "tools": [
+            "animation_create",
+            "animation_manage",
+            "audio_manage",
+            "camera_manage",
+            "material_manage",
+            "particle_manage"
+          ]
+        }
+      },
+      "alwaysForbiddenTools": [
+        "autoload_manage",
+        "client_manage",
+        "filesystem_manage",
+        "script_attach",
+        "script_create",
+        "script_patch"
+      ]
+    }
+  },
+  "gdu4": {
+    "apiPackage": "gdUnit4.api",
+    "apiVersion": "5.1.0-rc5",
+    "testAdapterPackage": "gdUnit4.test.adapter",
+    "testAdapterVersion": "3.1.1",
+    "runtimeSmoke": "passed_with_GODOT_BIN",
+    "runtimeHostConstraint": "CSharp runner must be compiled into project.godot main assembly",
+    "testHost": "Tactics.Godot.TestHost.csproj uses the project assembly name with isolated obj, lock and packages",
+    "releaseDependency": "forbidden_and_excluded"
+  }
+}

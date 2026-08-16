@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://c0ilwkb5ygvwg"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_hx0ha"]
+
+[resource]
+script = ExtResource("1_hx0ha")
+ContentIdValue = "buff.mark"
+SourceId = "Mark"
+DefaultDuration = 2147483647
+PolarityValue = "Harmful"
+EffectKindValue = "Marked"
+TriggerTimingValue = "BeforeAttacked"
+RefreshStrategyValue = "AddDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/Battle/Buffs/Mark.asset"
+SourceGuid = "cf4fc29c603b1ce45b8bba355f45413c"
+SourceLocalFileId = 11400000
+IconSourcePath = "Assets/Tactics/Arts/UI/Icons/Buffs/marked.png"
+IconSourceGuid = "f0dfe7d281fca7b4f850cef80fcc9ae4"
+IconSourceLocalFileId = 447771795652833367
+IconDependencyHash = "e7b857ececb37d49eb40179a3f3975d9"

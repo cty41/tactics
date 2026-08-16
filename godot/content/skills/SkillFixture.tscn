@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://5e711quh6evj"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotStartingSkillFixture.cs" id="1_8dx8e"]
+
+[node name="SkillFixture" type="Control" unique_id=1980112507]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_8dx8e")

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ConsumableDefinitionResource" format=3 uid="uid://clv1d4n1x46rg"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/ConsumableDefinitionResource.cs" id="1_e44t0"]
+
+[resource]
+script = ExtResource("1_e44t0")
+ContentIdValue = "item.consumable.life-potion"
+SourceId = "life_potion"
+DisplayName = "生命药剂"
+Description = "为自身或相邻友军恢复 8 点生命。"
+RarityValue = "Common"
+Price = 5
+MaxCharges = 1
+EffectKindValue = "RestoreHealth"
+Magnitude = 8
+MaxRange = 1
+TargetModeValue = "AllyIncludingSelf"

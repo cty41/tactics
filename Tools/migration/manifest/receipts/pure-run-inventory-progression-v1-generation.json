@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-inventory-progression-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "typedDraftHash": "sha256:ce8fd25908b8904e79dc18b7a75162e27f3b7ee0cf70e78fa6927fc82f219dc6",
+  "generationLedger": "Tools/migration/manifest/state/pure-run-inventory-progression-v1.json",
+  "generationLedgerHash": "sha256:e01546d358947145b85e96fd7050141985da5a7e45bee1592515e000e74594a5",
+  "generatedSkillDefinitionCount": 32,
+  "generatedSummonAiDefinitionCount": 2,
+  "batchCatalogEntryCount": 34,
+  "canonicalCatalogEntryCount": 131,
+  "artifactCount": 35,
+  "idempotency": {
+    "resourceSaverRuns": 2,
+    "byteIdentical": true
+  },
+  "visualAcceptance": "not_applicable_functional_placeholder_only",
+  "manualInventoryProgressionAcceptance": "pending"
+}

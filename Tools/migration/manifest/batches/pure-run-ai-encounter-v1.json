@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ai-encounter-v1",
+  "status": "Validated",
+  "ownership": "UnityOwned",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "aiCount": 6,
+  "enemySkillCount": 4,
+  "layoutCount": 2,
+  "encounterCount": 3,
+  "excludedEncounters": ["N4", "N5", "N6", "E1", "E2", "Special"],
+  "manualGameplayAcceptance": "passed",
+  "visualAcceptance": "not_applicable_gameplay_only_no_visual_payload"
+}

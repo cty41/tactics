@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-full-seven-layer-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "visualAcceptance": "not_applicable_functional_ui_only",
+  "manualGameplayAcceptance": "pending",
+  "catalogCount": 131,
+  "artifacts": [
+    {
+      "resourcePath": "res://content/full_run/BattleLayoutPureRunSpecialOpen.tres",
+      "resourceUid": "uid://v601shy2cytn",
+      "targetHash": "sha256:a0333c8563b87a1423887843380e7f46205b7ef685bbff371b07c99401bc138e"
+    },
+    {
+      "resourcePath": "res://content/full_run/encounter_pure_run_e1.tres",
+      "resourceUid": "uid://dtkql6tjreih",
+      "targetHash": "sha256:e8bc0feea9c3b76c53f7408afbe2cd2d0565021756a634e85e4eae95a101ef3f"
+    },
+    {
+      "resourcePath": "res://content/full_run/encounter_pure_run_e2.tres",
+      "resourceUid": "uid://181cjf6xv7ki",
+      "targetHash": "sha256:18d5abf52c57b220354a5ef4682ac31db55ec7cd87aea40f4fb0924b25fca0a9"
+    },
+    {
+      "resourcePath": "res://content/full_run/encounter_pure_run_n5.tres",
+      "resourceUid": "uid://dqtm6d1o7x1qw",
+      "targetHash": "sha256:19873def6e6da02c04a30a006c38fcda2339ea9285a3830b92493f68ddb83faa"
+    },
+    {
+      "resourcePath": "res://content/full_run/encounter_pure_run_n6.tres",
+      "resourceUid": "uid://y7y7bp56wt1d",
+      "targetHash": "sha256:7b0f73886740a6248c186ffd25a7f15c28d5450900dcc77863515cf6f0503c3b"
+    },
+    {
+      "resourcePath": "res://content/full_run/encounter_pure_run_special.tres",
+      "resourceUid": "uid://bwrs45gnce72k",
+      "targetHash": "sha256:8552bd37cbfc3c4860f4e9e1ca4b7092b60a3e155012d6faef4659b7f61eb5d1"
+    }
+  ]
+}

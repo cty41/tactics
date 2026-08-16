@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://do1aw18ye2rgm"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_oyqfg"]
+
+[resource]
+script = ExtResource("1_oyqfg")
+ContentIdValue = "buff.event-damage-reduction"
+SourceId = "EventDamageReduction"
+DefaultDuration = 3
+PolarityValue = "Beneficial"
+EffectKindValue = "DamageReduction"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+DamageReductionPercent = 0.2
+SourcePath = "Assets/Tactics/ScriptableObjects/Buffs/EventDamageReduction.asset"
+SourceGuid = "e5437dcc337fbc940b2309204c1c7e17"
+SourceLocalFileId = 11400000

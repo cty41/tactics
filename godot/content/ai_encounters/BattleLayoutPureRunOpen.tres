@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BattleLayoutResource" format=3 uid="uid://dhjv1ej0wequx"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/BattleLayoutResource.cs" id="1_e4vn1"]
+
+[resource]
+script = ExtResource("1_e4vn1")
+ContentIdValue = "battle-layout.pure-run.open"
+PartySpawnsValue = "1,4;1,5;2,4"
+EnemySpawnsValue = "6,4;7,3;7,5;8,4"

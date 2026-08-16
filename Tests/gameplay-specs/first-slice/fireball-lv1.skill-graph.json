@@ -1,0 +1,21 @@
+{
+  "DisplayName": "火球术 Lv1",
+  "Description": "4格单体火球，命中造成2点魔法伤害并施加2层点燃，无范围伤害。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "target", "Type": "SelectPrimaryTarget", "Parameters": { "minRange": 1, "maxRange": 4 } },
+    { "Id": "projectile", "Type": "ProjectileLaunch", "Parameters": { "travelTime": 0.5, "speed": 8 } },
+    { "Id": "onHit", "Type": "OnHit" },
+    { "Id": "damage", "Type": "ApplyDamage", "Parameters": { "baseDamage": 2, "damageType": 1, "isRanged": false, "canCrit": true } },
+    { "Id": "ignite", "Type": "ApplyBuff", "Parameters": { "duration": 2, "buffAssetPath": "Assets/Tactics/Battle/Buffs/Ignite.asset" } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "target" },
+    { "Source": "target", "Target": "projectile" },
+    { "Source": "projectile", "Target": "onHit" },
+    { "Source": "onHit", "Target": "damage" },
+    { "Source": "damage", "Target": "ignite" },
+    { "Source": "ignite", "Target": "finish" }
+  ]
+}

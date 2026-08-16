@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "MageSkillLevels.FireballLevelTwoCrossSplash",
+  "requiredAdapters": [
+    "Skill",
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "useRealAssets",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "loadSkillGraphAsset",
+      "parameters": {
+        "alias": "fireballLevelTwo",
+        "assetPath": "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv2_Graph.asset"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "casterCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "lineCell",
+        "x": 1,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "primaryCell",
+        "x": 2,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "splashCell",
+        "x": 2,
+        "y": 1
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "diagonalCell",
+        "x": 3,
+        "y": 1
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "mage",
+        "playerNumber": 0,
+        "cellAlias": "casterCell",
+        "mana": 20,
+        "maxMana": 20
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "primary",
+        "playerNumber": 1,
+        "cellAlias": "primaryCell",
+        "health": 20,
+        "maxHealth": 20,
+        "defenceFactor": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "splash",
+        "playerNumber": 1,
+        "cellAlias": "splashCell",
+        "health": 20,
+        "maxHealth": 20,
+        "defenceFactor": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "diagonal",
+        "playerNumber": 1,
+        "cellAlias": "diagonalCell",
+        "health": 20,
+        "maxHealth": 20,
+        "defenceFactor": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "setTurnContext",
+      "parameters": {
+        "currentPlayerNumber": 0,
+        "playableUnitAliases": [
+          "mage"
+        ]
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Skill",
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "fireballLevelTwo",
+        "casterAlias": "mage",
+        "targetPointAlias": "primaryCell"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "expected": "Completed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "primary",
+      "expected": 16,
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "splash",
+      "expected": 18,
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "diagonal",
+      "expected": 20,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "primary",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "splash",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "unitHealthEquals",
+      "target": "diagonal",
+      "parameters": {}
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.BattleEndsWithResult",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "endBattleWithResult",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "expected": false,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "parameters": {}
+    }
+  ]
+}

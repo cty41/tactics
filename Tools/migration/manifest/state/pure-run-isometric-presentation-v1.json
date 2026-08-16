@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-isometric-presentation-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "visualAcceptance": "manual_isometric_and_presentation_qa_pending",
+  "catalogCount": 131,
+  "sourceAudit": [
+    {
+      "sourcePath": "Assets/Tactics/Scripts/Common/Units/Buffs/BuffComponent.cs",
+      "gitBlobSha1": "audit-current-final-tag"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_warm_gray.png",
+      "gitBlobSha1": "5781e4e5f9de0d6fee99cf0beb28218890c7f440"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Arts/PureRun/Tiles/pure_run_tile_cool_gray.png",
+      "gitBlobSha1": "dfc6f3cc6c32889224217dffef146879ad2e84f1"
+    },
+    {
+      "sourcePath": "Assets/Tactics/Shaders/BattleBackdrop.shader",
+      "gitBlobSha1": "5ab8814f03d843b07ceaf73c8d74b449f50c7589"
+    }
+  ],
+  "payloadBoundary": "programmatic-only-no-piloto-prefab-texture-material-shader-audio",
+  "artifacts": [
+    {
+      "resourcePath": "res://content/presentation/BattleBoardPureRunIsometricV1.tres",
+      "resourceUid": "uid://da68ywjslhm5i",
+      "targetHash": "sha256:298ccf33f315de9c051d12a6d2f148322d8e823b3feb87b080c017ab17017943"
+    },
+    {
+      "resourcePath": "res://content/presentation/StandardUnitPresentationV1.tres",
+      "resourceUid": "uid://2ocjy8yyn8cy",
+      "targetHash": "sha256:0ca6f16fcb9c970d06abd3d59f41f0dcb0336a53d16a696285f98e9f909c8b08"
+    },
+    {
+      "resourcePath": "res://content/presentation/FireballPresentation.tres",
+      "resourceUid": "uid://cngsjku8g8q63",
+      "targetHash": "sha256:2c6ae52d9ad744743364bdbde35eb5742d8850c502aaea337671cccfd0beac0c"
+    },
+    {
+      "resourcePath": "res://content/presentation/BoneSpearPresentation.tres",
+      "resourceUid": "uid://cltg33pgydy7s",
+      "targetHash": "sha256:39d97a23b0e5d6f067d18888247dd33382b8b1e08955ecd38c991ac47da9a423"
+    },
+    {
+      "resourcePath": "res://content/presentation/ThrustPresentation.tres",
+      "resourceUid": "uid://bk11eqwwlgi5d",
+      "targetHash": "sha256:4e92e03248b353c20382b968c828ab0065b4c2b50f1947a75fcf4a61a5193494"
+    },
+    {
+      "resourcePath": "res://content/presentation/IceBoltPresentation.tres",
+      "resourceUid": "uid://etwsfqwyas73",
+      "targetHash": "sha256:2e93aeb7ded955082f4c13effd940f8a8060d4bb7e8ee62c9c837256734a70ae"
+    },
+    {
+      "resourcePath": "res://content/presentation/LightningPresentation.tres",
+      "resourceUid": "uid://b7b8hurilrj6l",
+      "targetHash": "sha256:5b4dbbdf84acdf9c6b8900a03391709fecc3fd0a3a93acfdd55c571b00d7acc0"
+    },
+    {
+      "resourcePath": "res://content/presentation/PoisonSpearPresentation.tres",
+      "resourceUid": "uid://0gdrlk0ych1r",
+      "targetHash": "sha256:eda932817b0cdcbf364a5a30dadfb8e12e80bafd07ba1da42b1b066a3af2dc52"
+    },
+    {
+      "resourcePath": "res://content/presentation/AmplifyDamagePresentation.tres",
+      "resourceUid": "uid://dy33mrv243vil",
+      "targetHash": "sha256:84bdad2bda93ddbe945f6e29d94ab530ff969f110fbddfe8fe3aaf0380ed581b"
+    },
+    {
+      "resourcePath": "res://content/presentation/StandardStatusPresentationV1.tres",
+      "resourceUid": "uid://u7ig8dq5qjc4",
+      "targetHash": "sha256:f8e7372aa65a352637cdd1ff2ac1a256e9aad104f106c28bca0ef6eab60a6981"
+    }
+  ]
+}

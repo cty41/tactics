@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.MysteryDeterminismAndReentry",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 7301
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "resolveNodeEventOption",
+      "parameters": {
+        "nodeId": "layer_04_event",
+        "optionId": "disarm_trap"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "reloadPureRunSession",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "resolveNodeEventOption",
+      "parameters": {
+        "nodeId": "layer_04_event",
+        "optionId": "disarm_trap"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "mysteryEventIdsUnique",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeEventIdEquals",
+      "target": "layer_04_event",
+      "expected": "cursed_chest_001",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeEventIdEquals",
+      "target": "layer_06_event",
+      "expected": "lost_villager_001",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_event",
+      "expected": "Resolved",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionRewardAppliedEquals",
+      "target": "layer_04_event",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "transactionApplicationCountEquals",
+      "expected": 1,
+      "parameters": {
+        "key": "node:layer_04_event:Mystery"
+      }
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "mysteryEventIdsUnique",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeEventIdEquals",
+      "target": "layer_04_event",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeEventIdEquals",
+      "target": "layer_06_event",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionPhaseEquals",
+      "target": "layer_04_event",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeTransactionRewardAppliedEquals",
+      "target": "layer_04_event",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "transactionApplicationCountEquals",
+      "parameters": {
+        "key": "node:layer_04_event:Mystery"
+      }
+    }
+  ]
+}

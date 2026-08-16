@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PureRunTreasureResource" format=3 uid="uid://vgoj4fvpx240"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PureRunTreasureResource.cs" id="1_qemkc"]
+
+[resource]
+script = ExtResource("1_qemkc")
+ContentIdValue = "treasure.pure-run.standard-v1"
+GoldMinimum = 2
+GoldMaximum = 5
+EquipmentContentIds = PackedStringArray("item.equipment.lucky-ring-01")
+EquipmentWeights = PackedInt32Array(1)
+BuffContentIds = PackedStringArray("buff.event-damage-reduction")
+BuffWeights = PackedInt32Array(1)

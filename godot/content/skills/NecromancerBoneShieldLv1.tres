@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://v6ch7iuo4rag"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_rod7y"]
+
+[resource]
+script = ExtResource("1_rod7y")
+ContentIdValue = "skill.necromancer.bone-shield.lv1"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneShield_Graph_Ability.asset"
+DisplayName = "骨盾 Lv1"
+Description = "获得魅力两倍的物理伤害护盾。"
+RoleValue = "Necromancer"
+KindValue = "Active"
+Level = 1
+ManaCost = 8
+ExecutionKindValue = "BoneShield"
+DamageKindValue = "None"
+BranchId = "necromancer.bone-shield"
+PrerequisiteBranchId = "necromancer.bone-spear"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+ShieldMultiplier = 2
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneShield_Graph_Ability.asset"
+SourceGuid = "80385b8da5e598744a2efe609cfdaab8"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/BoneShield_Graph.asset"
+GraphDependencyHash = "8752262ac863d991190a8cd4c4a2972e"

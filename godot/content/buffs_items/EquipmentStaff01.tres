@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://kctafdu01i2n"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_kee2f"]
+
+[resource]
+script = ExtResource("1_kee2f")
+ContentIdValue = "item.equipment.staff-01"
+SourceId = "staff_01"
+DisplayName = "橡木法杖"
+SlotValue = "Weapon"
+RarityValue = "Common"
+Price = 9
+IntelligenceBonus = 5

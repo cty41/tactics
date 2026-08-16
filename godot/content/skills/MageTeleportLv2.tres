@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://6ujihcdoas7d"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_ni5te"]
+
+[resource]
+script = ExtResource("1_ni5te")
+ContentIdValue = "skill.mage.teleport.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Lv2_Graph_Ability.asset"
+DisplayName = "瞬移术 Lv2"
+Description = "瞬移到4格内任意合法空格，无需视线。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 2
+ManaCost = 5
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Teleport"
+DamageKindValue = "None"
+BranchId = "mage.teleport"
+PrerequisiteContentIdValue = "skill.mage.teleport.lv1"
+PrerequisiteBranchId = "mage.lightning"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 7
+IgnoreLineOfSight = true
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Lv2_Graph_Ability.asset"
+SourceGuid = "bd295d33ee4c60648b8492b528d3a482"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Teleport_Lv2_Graph.asset"
+GraphDependencyHash = "842008d765ec58f1501cea8b5282526e"

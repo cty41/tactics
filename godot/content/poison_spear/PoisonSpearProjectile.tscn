@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://dewosssqq8p7p"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PoisonSpearProjectile.cs" id="1_udk7h"]
+
+[node name="PoisonSpearProjectile" type="Node2D" unique_id=1168657203]
+script = ExtResource("1_udk7h")
+FlightSeconds = 0.3
+SourceScale = 0.72
+ArcHeight = 0.07
+Tint = Color(0.33, 0.9, 0.28, 1)
+RotateAlongTangent = true

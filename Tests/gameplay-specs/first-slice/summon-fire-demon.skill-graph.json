@@ -1,0 +1,13 @@
+{
+  "DisplayName": "召唤火魔",
+  "Description": "在施法者邻近空格召唤火魔。当前首版使用通用单位预制体承载召唤运行时。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "summon", "Type": "SummonUnit", "Parameters": { "unitPrefabPath": "Assets/Tactics/Arts/Prefabs/Units/SkillGraphTestUnit.prefab", "requiresCorpse": false, "summonName": "FireDemon" } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "summon" },
+    { "Source": "summon", "Target": "finish" }
+  ]
+}

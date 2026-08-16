@@ -1,0 +1,108 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://cwfyn1lf5ilaj"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_vlbfy"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_mdag0"]
+
+[sub_resource type="Resource" id="Resource_5hae3"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.amazon.combat-techniques.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://by7ora41sorsi"
+DiagnosticPathValue = "res://content/skills/AmazonCombatTechniquesLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_qbmg0"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.amazon.pickup-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://d4nhj5nyd6sk7"
+DiagnosticPathValue = "res://content/skills/AmazonPickupSpearLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_5pty8"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.amazon.thrust.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://rntj7qgaym5p"
+DiagnosticPathValue = "res://content/skills/AmazonThrustLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_xpsy7"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.basic.magic"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bra6jwtsiowk7"
+DiagnosticPathValue = "res://content/skills/BasicMagic.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_me6s3"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.basic.melee"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cjytprsb6ycgm"
+DiagnosticPathValue = "res://content/skills/BasicMelee.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_pw6eg"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.mage.fireball.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://u6t4ogddty4j"
+DiagnosticPathValue = "res://content/skills/MageFireballLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_blgvs"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.mage.ice-bolt.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://to8x8dbr6p04"
+DiagnosticPathValue = "res://content/skills/MageIceBoltLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.slow")
+
+[sub_resource type="Resource" id="Resource_ilu08"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.mage.lightning.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://8ypqfoeepiq5"
+DiagnosticPathValue = "res://content/skills/MageLightningLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_a86o6"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.necromancer.amplify-damage.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c5y67uuebcl2w"
+DiagnosticPathValue = "res://content/skills/NecromancerAmplifyDamageLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.curse-damage-amplifier")
+
+[sub_resource type="Resource" id="Resource_kuu21"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.necromancer.bone-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bodkqw7srjkd2"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneSpearLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_4hxfq"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c0tjm5iteo1dv"
+DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_g7ilr"]
+script = ExtResource("1_vlbfy")
+ContentIdValue = "skill.poison-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://n4swajo5tftl"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearSkillLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.poison")
+
+[resource]
+script = ExtResource("2_mdag0")
+Entries = [SubResource("Resource_5hae3"), SubResource("Resource_qbmg0"), SubResource("Resource_5pty8"), SubResource("Resource_xpsy7"), SubResource("Resource_me6s3"), SubResource("Resource_pw6eg"), SubResource("Resource_blgvs"), SubResource("Resource_ilu08"), SubResource("Resource_a86o6"), SubResource("Resource_kuu21"), SubResource("Resource_4hxfq"), SubResource("Resource_g7ilr")]

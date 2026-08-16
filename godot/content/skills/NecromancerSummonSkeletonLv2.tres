@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://8s8bmpy34g8p"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_e1tuo"]
+
+[resource]
+script = ExtResource("1_e1tuo")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Lv2_Graph_Ability.asset"
+DisplayName = "召唤骷髅 Lv2"
+Description = "消耗1具尸体召唤强化骷髅，上限2。"
+RoleValue = "Necromancer"
+KindValue = "Active"
+Level = 2
+ManaCost = 3
+MinRange = 1
+MaxRange = 999
+ExecutionKindValue = "SummonSkeleton"
+DamageKindValue = "None"
+BranchId = "necromancer.summon-skeleton"
+PrerequisiteContentIdValue = "skill.necromancer.summon-skeleton.lv1"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 5
+SummonLimit = 2
+SummonCategory = "Skeleton"
+RequiresCorpse = true
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Lv2_Graph_Ability.asset"
+SourceGuid = "be87d132812674042b895a8157adc5fb"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/SummonSkeleton_Lv2_Graph.asset"
+GraphDependencyHash = "8685bc292b40c726b45d2aa3e2ce88e8"

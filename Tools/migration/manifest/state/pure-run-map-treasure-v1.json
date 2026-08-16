@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-map-treasure-v1",
+  "state": "Generated",
+  "ownership": "UnityOwned",
+  "catalogCount": 142,
+  "artifacts": [
+    {
+      "contentId": "run-map.pure-run.layer4-v1",
+      "resourcePath": "res://content/map/PureRunDefaultMap.tres",
+      "resourceUid": "uid://dmo1sgartbob1",
+      "targetHash": "sha256:e61288586e8457e93036bf00ad06c6e4e4249e0beb4fa586d3b4af49af629b5d"
+    },
+    {
+      "contentId": "treasure.pure-run.standard-v1",
+      "resourcePath": "res://content/map/PureRunStandardTreasure.tres",
+      "resourceUid": "uid://vgoj4fvpx240",
+      "targetHash": "sha256:8ffb4c9cfdc73c6bcbb269c5aad0a6480954e2d9bd0f58f178495b044e108781"
+    }
+  ]
+}

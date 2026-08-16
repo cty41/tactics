@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="UnitDefinitionResource" format=3 uid="uid://b4c2fbja1m4p1"]
+
+[ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_8i2yb"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_cast_dr.png" id="2_6bn74"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_death.png" id="2_ylcg6"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_cast_ul.png" id="3_4k86x"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter.png" id="3_3552w"]
+[ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="4_nm7tx"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_idle_unarmed_dr.png" id="5_3552w"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_ul.png" id="5_j41ys"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="6_j0oda"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_idle_unarmed_ul.png" id="6_nm7tx"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_hit_dr.png" id="6_qsb5i"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_hit_ul.png" id="7_1kviq"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_melee_attack_dr.png" id="8_11wmg"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_melee_attack_ul.png" id="9_csnr0"]
+
+[resource]
+script = ExtResource("6_j0oda")
+ContentIdValue = "unit.pure-run.amazon"
+SourceId = "pure_run_amazon"
+DisplayName = "Amazon"
+Category = "player"
+FamilyId = "player"
+RoleId = "amazon"
+Strength = 5
+Agility = 6
+Constitution = 5
+Intelligence = 5
+Charisma = 5
+Luck = 5
+Speed = 5.0
+MaxHealth = 20
+MaxMana = 15
+StartingMana = 5
+MoveRange = 3
+Initiative = 10.0
+AttackRange = 1
+AttackFactor = 1.0
+DefenceFactor = 1.0
+CanProduceCorpse = true
+ActorContentIdValue = "packed-scene.unit-actor"
+ActorScene = ExtResource("1_8i2yb")
+DownRightTexture = ExtResource("3_3552w")
+UpLeftTexture = ExtResource("5_j41ys")
+UnarmedDownRightTexture = ExtResource("5_3552w")
+UnarmedUpLeftTexture = ExtResource("6_nm7tx")
+DeathTexture = ExtResource("2_ylcg6")
+MeleeDownRightTexture = ExtResource("8_11wmg")
+MeleeUpLeftTexture = ExtResource("9_csnr0")
+RangedDownRightTexture = ExtResource("8_11wmg")
+RangedUpLeftTexture = ExtResource("9_csnr0")
+CastDownRightTexture = ExtResource("2_6bn74")
+CastUpLeftTexture = ExtResource("3_4k86x")
+HitDownRightTexture = ExtResource("6_qsb5i")
+HitUpLeftTexture = ExtResource("7_1kviq")
+ShadowTexture = ExtResource("4_nm7tx")
+DownRightBodyOffset = Vector2(0, -108)
+UpLeftBodyOffset = Vector2(0, -108)
+ShadowOffset = Vector2(0, 3.84)
+ShadowScale = Vector2(1.6, 1.6)
+ShadowOpacity = 0.9
+DeferredDependencies = PackedStringArray("starting-branch-skill")

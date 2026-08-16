@@ -1,0 +1,327 @@
+name: Godot Windows Debug and Release build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_flavor:
+        description: Windows package flavor
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - debug
+          - release
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Validate and export Windows
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      GODOT_VERSION: 4.7.1-stable
+      BUILD_OUTPUT: Build/Godot
+    steps:
+      - name: Initialize bounded RC paths
+        id: paths
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+          $sourceRoot = Join-Path $env:RUNNER_TEMP 'tactics-godot-rc-source'
+          $diagnostics = Join-Path $env:RUNNER_TEMP 'tactics-godot-rc-diagnostics'
+          New-Item -ItemType Directory -Path $diagnostics -Force | Out-Null
+          "source=$sourceRoot" >> $env:GITHUB_OUTPUT
+          "diagnostics=$diagnostics" >> $env:GITHUB_OUTPUT
+
+      - name: Check out repository without all LFS objects
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          lfs: false
+          fetch-depth: 1
+
+      - name: Preserve canonical repository bytes
+        shell: pwsh
+        run: |
+          # windows-latest has system core.autocrlf=true. Set the checkout-local
+          # policy and rematerialize tracked files before LFS objects are pulled,
+          # otherwise canonical JSON plans acquire CRLF bytes.
+          git config --local core.autocrlf false
+          git config --local core.eol lf
+          $env:GIT_LFS_SKIP_SMUDGE = '1'
+          try {
+            git checkout-index --force --all
+          }
+          finally {
+            Remove-Item Env:GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
+          }
+          $planEol = git ls-files --eol -- Tests/gameplay-specs/godot/defeated-terminal.plan.json
+          if ($planEol -notmatch 'w/lf') {
+            throw "Canonical gameplay plan was not materialized with LF bytes: $planEol"
+          }
+
+      - name: Pull all approved public LFS objects
+        shell: pwsh
+        run: |
+          git lfs install --local
+          git lfs pull
+          $pointerHeader = [Text.Encoding]::ASCII.GetBytes("version https://git-lfs.github.com/spec/v1")
+          $remainingPointers = @()
+          foreach ($path in @(git lfs ls-files -n)) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              $remainingPointers += $path
+              continue
+            }
+            $stream = [IO.File]::OpenRead($path)
+            try {
+              $bytes = New-Object byte[] $pointerHeader.Length
+              $read = $stream.Read($bytes, 0, $bytes.Length)
+              if ($read -eq $pointerHeader.Length -and [Text.Encoding]::ASCII.GetString($bytes) -eq [Text.Encoding]::ASCII.GetString($pointerHeader)) {
+                $remainingPointers += $path
+              }
+            }
+            finally {
+              $stream.Dispose()
+            }
+          }
+          if ($remainingPointers.Count -gt 0) {
+            throw "Public LFS objects were not materialized: $($remainingPointers -join ', ')"
+          }
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            src/**/packages.lock.json
+            godot/**/packages.lock.json
+
+      - name: Install Python verification dependencies
+        shell: pwsh
+        run: |
+          python --version
+          python -m pip install --disable-pip-version-check --requirement Tools/okf/requirements.txt
+
+      - name: Cache official Godot archives
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ci-cache/godot
+          key: godot-${{ runner.os }}-${{ env.GODOT_VERSION }}-mono
+
+      - name: Install Godot Mono and export templates
+        id: godot
+        shell: pwsh
+        run: |
+          $cache = Join-Path $env:GITHUB_WORKSPACE '.ci-cache/godot'
+          $install = Join-Path $env:RUNNER_TEMP 'godot'
+          $editorArchive = Join-Path $cache "Godot_v$env:GODOT_VERSION`_mono_win64.zip"
+          $templateArchive = Join-Path $cache "Godot_v$env:GODOT_VERSION`_mono_export_templates.tpz"
+          $tooling = Get-Content -LiteralPath 'Tools/migration/manifest/godot-tooling.json' -Raw | ConvertFrom-Json
+          if ($tooling.godotVersion -ne $env:GODOT_VERSION) {
+            throw "Workflow Godot version differs from the tooling manifest: $env:GODOT_VERSION vs $($tooling.godotVersion)."
+          }
+          New-Item -ItemType Directory -Path $cache,$install -Force | Out-Null
+          function Get-VerifiedArchive {
+            param([string]$Path, [string]$Url, [string]$ExpectedSha512)
+            if (Test-Path -LiteralPath $Path) {
+              $cachedHash = (Get-FileHash -LiteralPath $Path -Algorithm SHA512).Hash.ToLowerInvariant()
+              if ($cachedHash -ne $ExpectedSha512) {
+                Remove-Item -LiteralPath $Path -Force
+              }
+            }
+            if (-not (Test-Path -LiteralPath $Path)) {
+              Invoke-WebRequest $Url -OutFile $Path
+            }
+            $actualHash = (Get-FileHash -LiteralPath $Path -Algorithm SHA512).Hash.ToLowerInvariant()
+            if ($actualHash -ne $ExpectedSha512) {
+              throw "Archive SHA-512 mismatch for $Path`: $actualHash."
+            }
+          }
+          Get-VerifiedArchive -Path $editorArchive -Url $tooling.windowsCiDistribution.editorUrl -ExpectedSha512 $tooling.windowsCiDistribution.editorSha512
+          Get-VerifiedArchive -Path $templateArchive -Url $tooling.windowsCiDistribution.exportTemplatesUrl -ExpectedSha512 $tooling.windowsCiDistribution.exportTemplatesSha512
+          Expand-Archive -LiteralPath $editorArchive -DestinationPath $install -Force
+          $templateZip = Join-Path $env:RUNNER_TEMP 'godot-export-templates.zip'
+          Copy-Item -LiteralPath $templateArchive -Destination $templateZip -Force
+          $templateExtract = Join-Path $env:RUNNER_TEMP 'godot-export-templates'
+          Expand-Archive -LiteralPath $templateZip -DestinationPath $templateExtract -Force
+          $templateSource = Join-Path $templateExtract 'templates'
+          if (-not (Test-Path -LiteralPath $templateSource -PathType Container)) {
+            throw "Godot export template archive did not contain a templates directory: $templateSource"
+          }
+          $templateTarget = Join-Path $env:APPDATA "Godot/export_templates/$($tooling.windowsCiDistribution.templateDirectory)"
+          New-Item -ItemType Directory -Path $templateTarget -Force | Out-Null
+          Copy-Item -Path (Join-Path $templateSource '*') -Destination $templateTarget -Recurse -Force
+          $godot = Get-ChildItem -LiteralPath $install -Filter '*_console.exe' -File -Recurse | Select-Object -First 1
+          if ($null -eq $godot) {
+            throw 'Godot Mono console executable was not found after extraction.'
+          }
+          $actualVersion = (& $godot.FullName --version).Trim()
+          $normalizedExpectedVersion = $env:GODOT_VERSION.Replace('-', '.')
+          if ($actualVersion -notlike "$normalizedExpectedVersion*") {
+            throw "Expected Godot $env:GODOT_VERSION, found $actualVersion."
+          }
+          "executable=$($godot.FullName)" >> $env:GITHUB_OUTPUT
+          "version=$actualVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Create clean Godot-owned RC source
+        shell: pwsh
+        run: |
+          ./Tools/godot/New-GodotOwnedRcSource.ps1 `
+            -DestinationRoot '${{ steps.paths.outputs.source }}' `
+            -ManifestPath 'rc-source-manifest.json' `
+            -InitializeGit
+          Copy-Item -LiteralPath (Join-Path '${{ steps.paths.outputs.source }}' 'rc-source-manifest.json') -Destination '${{ steps.paths.outputs.diagnostics }}'
+
+      - name: Verify Godot ownership boundary
+        shell: pwsh
+        working-directory: ${{ steps.paths.outputs.source }}
+        run: |
+          try {
+            ./Tools/godot/Verify-GodotProject.ps1 `
+              -GodotExecutable '${{ steps.godot.outputs.executable }}' *>&1 |
+              Tee-Object -FilePath '${{ steps.paths.outputs.diagnostics }}\godot-owned-verifier.log'
+          }
+          catch {
+            $_ | Out-String | Set-Content -LiteralPath '${{ steps.paths.outputs.diagnostics }}\godot-owned-verifier-error.log'
+            throw
+          }
+
+      - name: Export and audit selected Windows packages
+        shell: pwsh
+        working-directory: ${{ steps.paths.outputs.source }}
+        run: |
+          try {
+            ./Tools/godot/Build-GodotWindows.ps1 `
+              -GodotExecutable '${{ steps.godot.outputs.executable }}' `
+              -OutputDirectory $env:BUILD_OUTPUT `
+              -BuildFlavor '${{ inputs.build_flavor }}' `
+              -SourceManifestPath 'rc-source-manifest.json' `
+              -SourceCommit '${{ github.sha }}' `
+              -WorkflowRunId '${{ github.run_id }}' `
+              -WorkflowRef '${{ github.ref }}' *>&1 |
+              Tee-Object -FilePath '${{ steps.paths.outputs.diagnostics }}\windows-export.log'
+          }
+          catch {
+            $_ | Out-String | Set-Content -LiteralPath '${{ steps.paths.outputs.diagnostics }}\windows-export-error.log'
+            throw
+          }
+
+      - name: Smoke exported executables
+        shell: pwsh
+        working-directory: ${{ steps.paths.outputs.source }}
+        run: |
+          $selected = switch ('${{ inputs.build_flavor }}') {
+            'debug' { @('Debug') }
+            'release' { @('Release') }
+            default { @('Debug', 'Release') }
+          }
+          foreach ($flavor in $selected) {
+            $exe = Join-Path '${{ steps.paths.outputs.source }}' "$env:BUILD_OUTPUT/Windows-$flavor/Tactics.exe"
+            foreach ($renderer in @('gl_compatibility', 'default')) {
+              ./Tools/godot/Test-GodotWindowsLaunch.ps1 `
+                -Executable $exe `
+                -DiagnosticsDirectory '${{ steps.paths.outputs.diagnostics }}' `
+                -Renderer $renderer
+            }
+          }
+
+      - name: Collect public release evidence
+        shell: pwsh
+        working-directory: ${{ steps.paths.outputs.source }}
+        run: |
+          $evidence = Join-Path '${{ steps.paths.outputs.diagnostics }}' 'public-release'
+          New-Item -ItemType Directory -Path $evidence -Force | Out-Null
+          python Tools/public-release/validate_public_candidate.py --root . --candidate |
+            Set-Content -LiteralPath (Join-Path $evidence 'public-candidate-report.json') -Encoding utf8
+          python Tools/public-release/generate_dependency_report.py --root . --check
+          Copy-Item -LiteralPath Tools/public-release/dependency-inventory.json -Destination $evidence
+          Copy-Item -LiteralPath Tools/public-release/asset-provenance.json -Destination $evidence
+          Copy-Item -LiteralPath LICENSE,NOTICE,ASSET_LICENSE.md,THIRD_PARTY_NOTICES.md,TRADEMARKS.md -Destination $evidence
+
+      - name: Describe distributable packages
+        id: packages
+        shell: pwsh
+        run: |
+          $shortSha = '${{ github.sha }}'.Substring(0, 8)
+          $selected = switch ('${{ inputs.build_flavor }}') {
+            'debug' { @('Debug') }
+            'release' { @('Release') }
+            default { @('Debug', 'Release') }
+          }
+          foreach ($flavor in $selected) {
+            $key = $flavor.ToLowerInvariant()
+            $artifactName = "tactics-godot-windows-$key-$shortSha-${{ github.run_number }}"
+            $packageRoot = Join-Path '${{ steps.paths.outputs.source }}' "$env:BUILD_OUTPUT/Windows-$flavor"
+            $size = (Get-ChildItem -LiteralPath $packageRoot -File -Recurse | Measure-Object Length -Sum).Sum
+            $semanticHash = (Get-FileHash -LiteralPath (Join-Path $packageRoot 'rc-semantic-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            "${key}_name=$artifactName" >> $env:GITHUB_OUTPUT
+            "${key}_size=$size" >> $env:GITHUB_OUTPUT
+            "${key}_root=$packageRoot" >> $env:GITHUB_OUTPUT
+            "${key}_semantic_hash=$semanticHash" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Upload Windows Debug package
+        if: inputs.build_flavor == 'debug' || inputs.build_flavor == 'both'
+        id: upload_debug
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.packages.outputs.debug_name }}
+          path: ${{ steps.packages.outputs.debug_root }}/**
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
+
+      - name: Upload Windows Release package
+        if: inputs.build_flavor == 'release' || inputs.build_flavor == 'both'
+        id: upload_release
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.packages.outputs.release_name }}
+          path: ${{ steps.packages.outputs.release_root }}/**
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
+
+      - name: Upload bounded RC diagnostics
+        if: always() && steps.paths.outputs.diagnostics != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tactics-godot-windows-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ${{ steps.paths.outputs.diagnostics }}/**
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+      - name: Write build summary
+        shell: pwsh
+        run: |
+          @"
+          ## Godot Windows Debug and Release packages
+
+          - Commit: ${{ github.sha }}
+          - Run: ${{ github.run_number }}
+          - Godot: ${{ steps.godot.outputs.version }}
+          - .NET SDK: $(dotnet --version)
+          - Selected flavor: ${{ inputs.build_flavor }}
+          - Debug artifact: ${{ steps.packages.outputs.debug_name }}
+          - Debug size: ${{ steps.packages.outputs.debug_size }} bytes
+          - Debug digest: ${{ steps.upload_debug.outputs.artifact-digest }}
+          - Debug semantic manifest: ${{ steps.packages.outputs.debug_semantic_hash }}
+          - Debug retention: 7 days
+          - Release artifact: ${{ steps.packages.outputs.release_name }}
+          - Release size: ${{ steps.packages.outputs.release_size }} bytes
+          - Release digest: ${{ steps.upload_release.outputs.artifact-digest }}
+          - Release semantic manifest: ${{ steps.packages.outputs.release_semantic_hash }}
+          - Release retention: 14 days
+          - Startup smoke: selected packages passed Compatibility + default renderer
+          - Public source policy: candidate manifest, asset provenance, dependency inventory, and license evidence validated
+          - Audio: deferred for this version (no payload)
+          "@ >> $env:GITHUB_STEP_SUMMARY

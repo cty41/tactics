@@ -1,0 +1,13 @@
+{
+  "DisplayName": "瞬移术",
+  "Description": "选择6格内未被占用的目标格，直接移动且不经过路径。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "teleport", "Type": "Teleport", "Parameters": { "maxRange": 6 } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "teleport" },
+    { "Source": "teleport", "Target": "finish" }
+  ]
+}

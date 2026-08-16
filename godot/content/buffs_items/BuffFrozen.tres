@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://q0xhmr1xwwrm"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_r31j1"]
+
+[resource]
+script = ExtResource("1_r31j1")
+ContentIdValue = "buff.frozen"
+SourceId = "Frozen"
+DefaultDuration = 1
+CanAct = false
+PolarityValue = "Harmful"
+EffectKindValue = "Frozen"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "AddDuration"
+ElementKindValue = "None"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/Battle/Buffs/Frozen.asset"
+SourceGuid = "a3c92373b55924547be3387b6b740996"
+SourceLocalFileId = 11400000
+IconSourcePath = "Assets/Tactics/Arts/UI/Icons/Buffs/freezed.png"
+IconSourceGuid = "84a96d75359d36f44a16ffc926c29669"
+IconSourceLocalFileId = 21300000
+IconDependencyHash = "f0364fe6077e32e949abf9804eff2c2b"

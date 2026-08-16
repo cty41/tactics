@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-persistence-v1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "outputPath": "Tools/migration/out/pure-run-persistence-v1.unity.json",
+  "assets": [
+    {
+      "sourceKey": "pure-run.map-config",
+      "sourcePath": "Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset",
+      "gitBlobSha1": "092baa564f5ac2df1a531b80187f305dd594f93c",
+      "targetContentIds": ["run.pure-run.three-encounter-v1"]
+    },
+    {
+      "sourceKey": "pure-run.node.minor-enemy",
+      "sourcePath": "Assets/Tactics/RoguelikeMap/Nodes/DefaultConfigNodes/MinorEnemy.asset",
+      "gitBlobSha1": "cffbe3056c5c296ce1ad41feea8e40a4191f1bbb",
+      "targetContentIds": ["run.pure-run.three-encounter-v1"]
+    },
+    {
+      "sourceKey": "pure-run.node.start",
+      "sourcePath": "Assets/Tactics/RoguelikeMap/Nodes/DefaultConfigNodes/Start.asset",
+      "gitBlobSha1": "cfb736ff8577bd401921d93c786201258540236d",
+      "targetContentIds": ["run.pure-run.three-encounter-v1"]
+    }
+  ]
+}

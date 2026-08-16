@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://br5l1ag2pqtxu"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_6x3ow"]
+
+[resource]
+script = ExtResource("1_6x3ow")
+ContentIdValue = "skill.amazon.thrust.lv3"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Lv3_Graph_Ability.asset"
+DisplayName = "突刺 Lv3"
+Description = "移动距离会提高本次突刺伤害。"
+RoleValue = "Amazon"
+KindValue = "Active"
+Level = 3
+ManaCost = 3
+MinRange = 1
+MaxRange = 3
+ExecutionKindValue = "Thrust"
+Damage = 6
+DamageKindValue = "Physical"
+BranchId = "amazon.thrust"
+PrerequisiteContentIdValue = "skill.amazon.thrust.lv2"
+RequiredAttribute = "Agility"
+MinimumAttribute = 5
+MovementDamagePerCell = 1
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Lv3_Graph_Ability.asset"
+SourceGuid = "fed44ae5268c58a40a10805fb6778d33"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Thrust_Lv3_Graph.asset"
+GraphDependencyHash = "b279cc3f13b719bfbb2e44e60efe5777"

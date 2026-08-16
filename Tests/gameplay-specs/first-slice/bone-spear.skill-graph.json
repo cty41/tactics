@@ -1,0 +1,19 @@
+{
+  "DisplayName": "骨矛",
+  "Description": "最大距离5格的单体骨矛投射物；命中第一个目标后造成魔法伤害。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "target", "Type": "SelectPrimaryTarget", "Parameters": { "minRange": 1, "maxRange": 5 } },
+    { "Id": "projectile", "Type": "ProjectileLaunch", "Parameters": { "travelTime": 0.25, "speed": 12 } },
+    { "Id": "onHit", "Type": "OnHit" },
+    { "Id": "damage", "Type": "ApplyDamage", "Parameters": { "baseDamage": 7, "damageType": 1, "isRanged": true, "canCrit": false } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "target" },
+    { "Source": "target", "Target": "projectile" },
+    { "Source": "projectile", "Target": "onHit" },
+    { "Source": "onHit", "Target": "damage" },
+    { "Source": "damage", "Target": "finish" }
+  ]
+}

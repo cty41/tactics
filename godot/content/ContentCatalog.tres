@@ -1,0 +1,1214 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://bd7k2rl30h63x"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_alrkk"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_7ktjk"]
+
+[sub_resource type="Resource" id="Resource_alrkk"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.pure-run.aoe"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://belreeyliit7t"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunAoe.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.area-blast.lv1")
+
+[sub_resource type="Resource" id="Resource_7ktjk"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.pure-run.charger"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://dwc6sac2lva3a"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.charge-strike.lv1")
+
+[sub_resource type="Resource" id="Resource_3v4uf"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.pure-run.elite-charger"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://mp5k2hhdoju6"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunEliteCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.charge-strike.lv1")
+
+[sub_resource type="Resource" id="Resource_25yxx"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.pure-run.elite-poison-caster"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://cbh88q2lk5ih4"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunElitePoisonCaster.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.area-blast.lv1")
+
+[sub_resource type="Resource" id="Resource_qn5wl"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.pure-run.ranged"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://d0gim665iwky8"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunRanged.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.enemy.heavy-shot.lv1", "skill.enemy.ranged-attack.lv1")
+
+[sub_resource type="Resource" id="Resource_3mgu5"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.pure-run.support"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://dy5703mscymtx"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunSupport.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.necromancer.amplify-damage.lv1")
+
+[sub_resource type="Resource" id="Resource_dhim2"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.summon.basic-melee"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://bka82ygiekdfu"
+DiagnosticPathValue = "res://content/skills/SummonBasicMeleeAi.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.summon.skeleton-attack.lv1", "skill.summon.skeleton-attack.lv2")
+
+[sub_resource type="Resource" id="Resource_s116p"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "ai.summon.fire-demon"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://cuaxx382yb4hq"
+DiagnosticPathValue = "res://content/skills/SummonFireDemonAi.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.summon.fire-demon-attack", "skill.summon.skeleton-mage-fireball.lv1", "skill.summon.skeleton-mage-fireball.lv2")
+
+[sub_resource type="Resource" id="Resource_k3en5"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "battle-board.pure-run.isometric-v1"
+ResourceTypeIdValue = "battle-board"
+ResourceUidValue = "uid://da68ywjslhm5i"
+DiagnosticPathValue = "res://content/presentation/BattleBoardPureRunIsometricV1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_pscyn"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "battle-layout.pure-run.center-blocker"
+ResourceTypeIdValue = "battle-layout"
+ResourceUidValue = "uid://c1hwl18r7cqr6"
+DiagnosticPathValue = "res://content/ai_encounters/BattleLayoutPureRunCenterBlocker.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_0757x"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "battle-layout.pure-run.open"
+ResourceTypeIdValue = "battle-layout"
+ResourceUidValue = "uid://dhjv1ej0wequx"
+DiagnosticPathValue = "res://content/ai_encounters/BattleLayoutPureRunOpen.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_cua4i"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "battle-layout.pure-run.special-open"
+ResourceTypeIdValue = "battle-layout"
+ResourceUidValue = "uid://v601shy2cytn"
+DiagnosticPathValue = "res://content/full_run/BattleLayoutPureRunSpecialOpen.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_m71co"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.counter"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://2voebbkatqrn"
+DiagnosticPathValue = "res://content/buffs_items/BuffCounter.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ovk60"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.curse-damage-amplifier"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://0x3slbg3mal"
+DiagnosticPathValue = "res://content/buffs_items/BuffCurseDamageAmplifier.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_dxrgf"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.event-damage-reduction"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://do1aw18ye2rgm"
+DiagnosticPathValue = "res://content/buffs_items/BuffEventDamageReduction.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_t8emu"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.event-damage-taken-up"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://b762tyyv1r8k3"
+DiagnosticPathValue = "res://content/buffs_items/BuffEventDamageTakenUp.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_j3y4e"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.fear"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://cavos15760hys"
+DiagnosticPathValue = "res://content/buffs_items/BuffFear.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_1s0ay"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.frozen"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://q0xhmr1xwwrm"
+DiagnosticPathValue = "res://content/buffs_items/BuffFrozen.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_nch75"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.ice-armor"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://bqgpx2ubhp6yn"
+DiagnosticPathValue = "res://content/buffs_items/BuffIceArmor.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_m3t66"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.ice-armor.lv1"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://dsebgsadlwftq"
+DiagnosticPathValue = "res://content/buffs_items/BuffIceArmorLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_cf3oj"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.ice-armor.lv2"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://d0xnjt2wife8r"
+DiagnosticPathValue = "res://content/buffs_items/BuffIceArmorLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.slow")
+
+[sub_resource type="Resource" id="Resource_1giqk"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.ignite"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://dnv3b20bruf60"
+DiagnosticPathValue = "res://content/buffs_items/BuffIgnite.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_q3ul1"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.mark"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://c0ilwkb5ygvwg"
+DiagnosticPathValue = "res://content/buffs_items/BuffMark.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_hf8yp"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.poison"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://byvdudy464o8b"
+DiagnosticPathValue = "res://content/poison_spear/PoisonBuff.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_borai"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.slow"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://cey0ta2haejeo"
+DiagnosticPathValue = "res://content/buffs_items/BuffSlow.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_daerc"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "buff.stun"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://woijxs12u8uj"
+DiagnosticPathValue = "res://content/buffs_items/BuffStun.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ok1ri"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.poison-spear.10x10"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://c1u2bwisfgkk1"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpear10x10Fixture.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.poison-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_kront"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.e1"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://dtkql6tjreih"
+DiagnosticPathValue = "res://content/full_run/encounter_pure_run_e1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.aoe", "ai.pure-run.charger", "ai.pure-run.charger", "ai.pure-run.support", "battle-layout.pure-run.center-blocker", "unit.pure-run.goat-aoe", "unit.pure-run.goat-charger", "unit.pure-run.goat-charger", "unit.pure-run.goat-support")
+
+[sub_resource type="Resource" id="Resource_8nj7b"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.e2"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://181cjf6xv7ki"
+DiagnosticPathValue = "res://content/full_run/encounter_pure_run_e2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.aoe", "ai.pure-run.charger", "ai.pure-run.ranged", "ai.pure-run.ranged", "unit.pure-run.goat-aoe", "unit.pure-run.goat-charger", "unit.pure-run.goat-ranged", "unit.pure-run.goat-ranged")
+
+[sub_resource type="Resource" id="Resource_odikj"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.n1"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://bbxbsujas3veq"
+DiagnosticPathValue = "res://content/ai_encounters/EncounterPureRunN1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.charger", "ai.pure-run.charger", "ai.pure-run.ranged", "battle-layout.pure-run.open", "unit.pure-run.goat-charger", "unit.pure-run.goat-charger", "unit.pure-run.goat-ranged")
+
+[sub_resource type="Resource" id="Resource_du0xd"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.n2"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://diot7v5peg4je"
+DiagnosticPathValue = "res://content/ai_encounters/EncounterPureRunN2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.ranged", "ai.pure-run.ranged", "ai.pure-run.support", "battle-layout.pure-run.open", "unit.pure-run.goat-ranged", "unit.pure-run.goat-ranged", "unit.pure-run.goat-support")
+
+[sub_resource type="Resource" id="Resource_437oe"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.n3"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://deyrsp4w7v6db"
+DiagnosticPathValue = "res://content/ai_encounters/EncounterPureRunN3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.aoe", "ai.pure-run.charger", "ai.pure-run.charger", "ai.pure-run.support", "battle-layout.pure-run.center-blocker", "unit.pure-run.goat-aoe", "unit.pure-run.goat-charger", "unit.pure-run.goat-charger", "unit.pure-run.goat-support")
+
+[sub_resource type="Resource" id="Resource_nyocb"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.n4"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://buk0xtyh882yw"
+DiagnosticPathValue = "res://content/layer4/encounter_pure_run_n4.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_k3oyh"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.n5"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://dqtm6d1o7x1qw"
+DiagnosticPathValue = "res://content/full_run/encounter_pure_run_n5.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.aoe", "ai.pure-run.charger", "ai.pure-run.support", "ai.pure-run.support", "battle-layout.pure-run.center-blocker", "unit.pure-run.goat-aoe", "unit.pure-run.goat-charger", "unit.pure-run.goat-support", "unit.pure-run.goat-support")
+
+[sub_resource type="Resource" id="Resource_pi5ta"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.n6"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://y7y7bp56wt1d"
+DiagnosticPathValue = "res://content/full_run/encounter_pure_run_n6.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.aoe", "ai.pure-run.charger", "ai.pure-run.charger", "ai.pure-run.ranged", "unit.pure-run.goat-aoe", "unit.pure-run.goat-charger", "unit.pure-run.goat-charger", "unit.pure-run.goat-ranged")
+
+[sub_resource type="Resource" id="Resource_ybh32"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "encounter.pure-run.special"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://bwrs45gnce72k"
+DiagnosticPathValue = "res://content/full_run/encounter_pure_run_special.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.elite-charger", "battle-layout.pure-run.special-open", "unit.pure-run.goat-elite-charger")
+
+[sub_resource type="Resource" id="Resource_8xuaj"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "event.pure-run.cursed-chest"
+ResourceTypeIdValue = "event"
+ResourceUidValue = "uid://dtff7v4coyfpx"
+DiagnosticPathValue = "res://content/layer4/event_pure_run_cursed_chest.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_7d2bs"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "event.pure-run.fallen-altar"
+ResourceTypeIdValue = "event"
+ResourceUidValue = "uid://brte0yu14qgcq"
+DiagnosticPathValue = "res://content/layer4/event_pure_run_fallen_altar.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_w4vik"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "event.pure-run.lost-villager"
+ResourceTypeIdValue = "event"
+ResourceUidValue = "uid://dsbju1be6q0fv"
+DiagnosticPathValue = "res://content/layer4/event_pure_run_lost_villager.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_7vuwv"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "impact.poison-spear"
+ResourceTypeIdValue = "packed-scene"
+ResourceUidValue = "uid://c3525yd0esr0y"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearImpact.tscn"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_q7413"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.consumable.cleansing-potion"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://ltyukggslgcv"
+DiagnosticPathValue = "res://content/buffs_items/ConsumableCleansingPotion.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_b2bq6"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.consumable.life-potion"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://clv1d4n1x46rg"
+DiagnosticPathValue = "res://content/buffs_items/ConsumableLifePotion.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_alep5"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.consumable.mana-potion"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cs3aa1n5kwi05"
+DiagnosticPathValue = "res://content/buffs_items/ConsumableManaPotion.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ojvqo"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.bow-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cuny5a2atywxk"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentBow01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_0wa12"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.iron-helmet-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://brrayrlqqtwoh"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentIronHelmet01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_i4u7p"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.leather-armor-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://dp02ugh85tbyn"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentLeatherArmor01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_rixq5"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.leather-boots-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://df2jtiktwna0g"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentLeatherBoots01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_cagl8"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.lucky-ring-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://daf8ufg4gk48g"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentLuckyRing01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_rm7yc"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.shadow-cloak-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cjajivuxlyobg"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentShadowCloak01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_5mawl"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.shield-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://bh7frgpoqefli"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentShield01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_41wyn"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.silver-ring-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://53tbtgag4l7q"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentSilverRing01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_d1oog"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.staff-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://kctafdu01i2n"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentStaff01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_sf0mq"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.steel-sword-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cwd1tlqwoyay0"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentSteelSword01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_6km46"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.sword-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://w410f7x47itg"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentSword01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_pas1r"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "item.equipment.wizard-hat-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://bv0c8ch1the3y"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentWizardHat01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_yynvf"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "packed-scene.unit-actor"
+ResourceTypeIdValue = "packed-scene"
+ResourceUidValue = "uid://c1frlvegnpcpp"
+DiagnosticPathValue = "res://content/units/UnitActor.tscn"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_n8clc"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.poison-spear.lv1"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://c0wk7kb5m0147"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearPresentationLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("impact.poison-spear", "projectile.poison-spear")
+
+[sub_resource type="Resource" id="Resource_qc0md"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.skill.amazon.poison-spear"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://0gdrlk0ych1r"
+DiagnosticPathValue = "res://content/presentation/PoisonSpearPresentation.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_l13f6"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.skill.amazon.thrust"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://bk11eqwwlgi5d"
+DiagnosticPathValue = "res://content/presentation/ThrustPresentation.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_8375g"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.skill.mage.fireball"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://cngsjku8g8q63"
+DiagnosticPathValue = "res://content/presentation/FireballPresentation.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_g7no3"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.skill.mage.ice-bolt"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://etwsfqwyas73"
+DiagnosticPathValue = "res://content/presentation/IceBoltPresentation.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_077i6"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.skill.mage.lightning"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://b7b8hurilrj6l"
+DiagnosticPathValue = "res://content/presentation/LightningPresentation.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_2csts"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.skill.necromancer.amplify-damage"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://dy33mrv243vil"
+DiagnosticPathValue = "res://content/presentation/AmplifyDamagePresentation.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_2tp6u"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.skill.necromancer.bone-spear"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://cltg33pgydy7s"
+DiagnosticPathValue = "res://content/presentation/BoneSpearPresentation.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_c85fw"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.status.standard-v1"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://u7ig8dq5qjc4"
+DiagnosticPathValue = "res://content/presentation/StandardStatusPresentationV1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_b68gd"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "presentation.unit.standard-v1"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://2ocjy8yyn8cy"
+DiagnosticPathValue = "res://content/presentation/StandardUnitPresentationV1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_wjjoy"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "projectile.poison-spear"
+ResourceTypeIdValue = "packed-scene"
+ResourceUidValue = "uid://dewosssqq8p7p"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearProjectile.tscn"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ig77e"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "rest.pure-run.standard-v1"
+ResourceTypeIdValue = "rest"
+ResourceUidValue = "uid://bi3pdv8u6aqbm"
+DiagnosticPathValue = "res://content/layer4/rest_pure_run_standard_v1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_fjqwg"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "run-map.pure-run.layer4-v1"
+ResourceTypeIdValue = "run-map"
+ResourceUidValue = "uid://dmo1sgartbob1"
+DiagnosticPathValue = "res://content/map/PureRunDefaultMap.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("run.pure-run.three-encounter-v1", "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3", "encounter.pure-run.n4", "rest.pure-run.standard-v1", "store.pure-run.standard-v1", "event.pure-run.cursed-chest", "treasure.pure-run.standard-v1", "encounter.pure-run.e1", "encounter.pure-run.special")
+
+[sub_resource type="Resource" id="Resource_grcmf"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "run.pure-run.three-encounter-v1"
+ResourceTypeIdValue = "run"
+ResourceUidValue = "uid://dy2d31awtdhgm"
+DiagnosticPathValue = "res://content/runs/PureRunThreeEncounterV1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3", "skill.amazon.combat-techniques.lv1", "skill.amazon.thrust.lv1", "skill.mage.fireball.lv1", "skill.mage.ice-bolt.lv1", "skill.mage.lightning.lv1", "skill.necromancer.amplify-damage.lv1", "skill.necromancer.bone-spear.lv1", "skill.necromancer.summon-skeleton.lv1", "skill.poison-spear.lv1", "unit.pure-run.amazon", "unit.pure-run.mage", "unit.pure-run.necromancer")
+
+[sub_resource type="Resource" id="Resource_aew24"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.combat-techniques.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://by7ora41sorsi"
+DiagnosticPathValue = "res://content/skills/AmazonCombatTechniquesLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_fxmlp"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.combat-techniques.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bsu74sp32d1cp"
+DiagnosticPathValue = "res://content/skills/AmazonCombatTechniquesLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.combat-techniques.lv1")
+
+[sub_resource type="Resource" id="Resource_miheu"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.combat-techniques.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cieqwq207rk8d"
+DiagnosticPathValue = "res://content/skills/AmazonCombatTechniquesLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.combat-techniques.lv2")
+
+[sub_resource type="Resource" id="Resource_liesm"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.decoy.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c2iwo7bdhnveh"
+DiagnosticPathValue = "res://content/skills/AmazonDecoyLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_mtdxj"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.decoy.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bbubdmk42lpfl"
+DiagnosticPathValue = "res://content/skills/AmazonDecoyLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.decoy.lv1")
+
+[sub_resource type="Resource" id="Resource_shcu7"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.multi-stab.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://ju44plnyvqjr"
+DiagnosticPathValue = "res://content/skills/AmazonMultiStabLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_newau"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.multi-stab.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bxu68x78k1cwl"
+DiagnosticPathValue = "res://content/skills/AmazonMultiStabLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.multi-stab.lv1")
+
+[sub_resource type="Resource" id="Resource_y5qpm"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.pickup-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://d4nhj5nyd6sk7"
+DiagnosticPathValue = "res://content/skills/AmazonPickupSpearLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_evipo"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.poison-spear.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://mt0e0emwpigf"
+DiagnosticPathValue = "res://content/skills/AmazonPoisonSpearLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.poison-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_6njj4"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.poison-spear.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c8fhbjhp3aqal"
+DiagnosticPathValue = "res://content/skills/AmazonPoisonSpearLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.poison", "skill.amazon.poison-spear.lv2")
+
+[sub_resource type="Resource" id="Resource_h1e1i"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.recover-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://buxpysnpvqdnj"
+DiagnosticPathValue = "res://content/skills/AmazonRecoverSpearLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_n4ypq"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.recover-spear.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cd07l0ckxhf5h"
+DiagnosticPathValue = "res://content/skills/AmazonRecoverSpearLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.recover-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_6o6o1"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.thrust.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://rntj7qgaym5p"
+DiagnosticPathValue = "res://content/skills/AmazonThrustLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_3dm0r"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.thrust.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cth8imi44y5wl"
+DiagnosticPathValue = "res://content/skills/AmazonThrustLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.thrust.lv1")
+
+[sub_resource type="Resource" id="Resource_i6utu"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.amazon.thrust.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://br5l1ag2pqtxu"
+DiagnosticPathValue = "res://content/skills/AmazonThrustLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.amazon.thrust.lv2")
+
+[sub_resource type="Resource" id="Resource_wsm4t"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.basic.magic"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bra6jwtsiowk7"
+DiagnosticPathValue = "res://content/skills/BasicMagic.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_qn008"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.basic.melee"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cjytprsb6ycgm"
+DiagnosticPathValue = "res://content/skills/BasicMelee.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_7uva8"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.enemy.area-blast.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://5jkpcuaunf6s"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyAreaBlastLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_q8emw"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.enemy.charge-strike.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://dwcr6xrkndcol"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyChargeStrikeLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_yngoi"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.enemy.heavy-shot.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://x52streelmv6"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyHeavyShotLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_aw3dj"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.enemy.ranged-attack.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://830uqq24eho5"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyRangedAttackLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ret13"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.fireball.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://u6t4ogddty4j"
+DiagnosticPathValue = "res://content/skills/MageFireballLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_vtad5"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.fireball.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bqswj2otavis4"
+DiagnosticPathValue = "res://content/skills/MageFireballLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.fireball.lv1")
+
+[sub_resource type="Resource" id="Resource_t31ic"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.fireball.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cv4fij7nvxr51"
+DiagnosticPathValue = "res://content/skills/MageFireballLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite", "skill.mage.fireball.lv2")
+
+[sub_resource type="Resource" id="Resource_olrba"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.ice-armor.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bnopqqdd2ru2c"
+DiagnosticPathValue = "res://content/skills/MageIceArmorLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ice-armor")
+
+[sub_resource type="Resource" id="Resource_e8gv8"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.ice-armor.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://emngtl4tjls4"
+DiagnosticPathValue = "res://content/skills/MageIceArmorLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ice-armor", "skill.mage.ice-armor.lv1")
+
+[sub_resource type="Resource" id="Resource_uchwv"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.ice-bolt.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://to8x8dbr6p04"
+DiagnosticPathValue = "res://content/skills/MageIceBoltLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.slow")
+
+[sub_resource type="Resource" id="Resource_30qsl"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.ice-bolt.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cu7yd7wxmi3p1"
+DiagnosticPathValue = "res://content/skills/MageIceBoltLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.ice-bolt.lv1")
+
+[sub_resource type="Resource" id="Resource_nd8qa"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.ice-bolt.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://d2rehamwpvbju"
+DiagnosticPathValue = "res://content/skills/MageIceBoltLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.slow", "skill.mage.ice-bolt.lv2")
+
+[sub_resource type="Resource" id="Resource_wen2n"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.lightning.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://8ypqfoeepiq5"
+DiagnosticPathValue = "res://content/skills/MageLightningLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ci8k3"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.lightning.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://dphkfsvbnpa37"
+DiagnosticPathValue = "res://content/skills/MageLightningLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.lightning.lv1")
+
+[sub_resource type="Resource" id="Resource_dsg0c"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.lightning.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://qsh0ebkoafbr"
+DiagnosticPathValue = "res://content/skills/MageLightningLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.stun", "skill.mage.lightning.lv2")
+
+[sub_resource type="Resource" id="Resource_uymrn"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.summon-fire-demon.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bqhtiix7uax65"
+DiagnosticPathValue = "res://content/skills/MageSummonFireDemonLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_iahgw"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.summon-fire-demon.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cijl7f7n1a0qy"
+DiagnosticPathValue = "res://content/skills/MageSummonFireDemonLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.summon-fire-demon.lv1")
+
+[sub_resource type="Resource" id="Resource_4wgjn"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.teleport.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://d0ucjhvlp4eyx"
+DiagnosticPathValue = "res://content/skills/MageTeleportLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_yei7q"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.mage.teleport.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://6ujihcdoas7d"
+DiagnosticPathValue = "res://content/skills/MageTeleportLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.mage.teleport.lv1")
+
+[sub_resource type="Resource" id="Resource_nd0b1"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.amplify-damage.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c5y67uuebcl2w"
+DiagnosticPathValue = "res://content/skills/NecromancerAmplifyDamageLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.curse-damage-amplifier")
+
+[sub_resource type="Resource" id="Resource_d76e3"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.amplify-damage.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://clfflbusn1ytt"
+DiagnosticPathValue = "res://content/skills/NecromancerAmplifyDamageLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.curse-damage-amplifier", "skill.necromancer.amplify-damage.lv1")
+
+[sub_resource type="Resource" id="Resource_bf8p4"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.amplify-damage.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://6omsalww0x4u"
+DiagnosticPathValue = "res://content/skills/NecromancerAmplifyDamageLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.curse-damage-amplifier", "skill.necromancer.amplify-damage.lv2")
+
+[sub_resource type="Resource" id="Resource_707w6"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.bone-shield.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://v6ch7iuo4rag"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneShieldLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_j5atr"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.bone-shield.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bxyeeofms81pq"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneShieldLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.bone-shield.lv1")
+
+[sub_resource type="Resource" id="Resource_v0l5m"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.bone-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bodkqw7srjkd2"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneSpearLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_y58j4"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.bone-spear.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://b6053ej6r10wy"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneSpearLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.bone-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_ncb4d"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.bone-spear.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://frj6udejf07b"
+DiagnosticPathValue = "res://content/skills/NecromancerBoneSpearLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.bone-spear.lv2")
+
+[sub_resource type="Resource" id="Resource_tpyfj"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.fear-curse.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bhp17ta374hqn"
+DiagnosticPathValue = "res://content/skills/NecromancerFearCurseLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.fear")
+
+[sub_resource type="Resource" id="Resource_k5nee"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.fear-curse.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://ubojngbmyide"
+DiagnosticPathValue = "res://content/skills/NecromancerFearCurseLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.fear", "skill.necromancer.fear-curse.lv1")
+
+[sub_resource type="Resource" id="Resource_tq1nk"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.skeleton-mage.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://bdm5p1jmjvqib"
+DiagnosticPathValue = "res://content/skills/NecromancerSkeletonMageLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_qjvrt"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.skeleton-mage.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://dr0u02vunhtj0"
+DiagnosticPathValue = "res://content/skills/NecromancerSkeletonMageLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.skeleton-mage.lv1")
+
+[sub_resource type="Resource" id="Resource_g1bw4"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c0tjm5iteo1dv"
+DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_2uy8m"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://8s8bmpy34g8p"
+DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.summon-skeleton.lv1")
+
+[sub_resource type="Resource" id="Resource_afx2w"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.necromancer.summon-skeleton.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://biu21muos0v5c"
+DiagnosticPathValue = "res://content/skills/NecromancerSummonSkeletonLv3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.necromancer.summon-skeleton.lv2", "skill.summon.skeleton-attack.lv3")
+
+[sub_resource type="Resource" id="Resource_bxxdy"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.poison-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://n4swajo5tftl"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearSkillLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.poison", "presentation.poison-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_t1a4e"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.summon.fire-demon-attack"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://m3rmkdk32luy"
+DiagnosticPathValue = "res://content/skills/SummonFireDemonAttack.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_ve222"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.summon.skeleton-attack.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://cjsm5ccnk3qaf"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonAttackLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_4cqui"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.summon.skeleton-attack.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://c0x82lfcmixqd"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonAttackLv2.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_qvsn6"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.summon.skeleton-attack.lv3"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://ck8f4q0hlv6pt"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonAttackLv3.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_1swhk"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.summon.skeleton-mage-fireball.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://b0nfars26su60"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonMageFireballLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_1yg32"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "skill.summon.skeleton-mage-fireball.lv2"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://i34kqrm2hwgx"
+DiagnosticPathValue = "res://content/skills/SummonSkeletonMageFireballLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.ignite")
+
+[sub_resource type="Resource" id="Resource_q4t4o"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "store.pure-run.standard-v1"
+ResourceTypeIdValue = "store"
+ResourceUidValue = "uid://db6bnj8qy271a"
+DiagnosticPathValue = "res://content/layer4/store_pure_run_standard_v1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_hg3un"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "treasure.pure-run.standard-v1"
+ResourceTypeIdValue = "treasure"
+ResourceUidValue = "uid://vgoj4fvpx240"
+DiagnosticPathValue = "res://content/map/PureRunStandardTreasure.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("item.equipment.lucky-ring-01", "buff.event-damage-reduction")
+
+[sub_resource type="Resource" id="Resource_xng6m"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.amazon"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://b4c2fbja1m4p1"
+DiagnosticPathValue = "res://content/units/PureRunAmazon.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_kjbqg"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.fire-demon"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://cyqpcrxrpb846"
+DiagnosticPathValue = "res://content/units/PureRunFireDemon.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_0frot"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.goat-aoe"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://bsvl836s078sr"
+DiagnosticPathValue = "res://content/units/PureRunGoatAoe.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_m5x53"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.goat-charger"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://c67q02uinwgul"
+DiagnosticPathValue = "res://content/units/PureRunGoatCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_pvspx"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.goat-elite-charger"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://dmon1v6ocr7vc"
+DiagnosticPathValue = "res://content/units/PureRunGoatEliteCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_b4e23"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.goat-elite-poison-caster"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://bs0w3pfcur15y"
+DiagnosticPathValue = "res://content/units/PureRunGoatElitePoisonCaster.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_5358o"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.goat-ranged"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://c1l2k4devxblc"
+DiagnosticPathValue = "res://content/units/PureRunGoatRanged.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_dnavv"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.goat-support"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://m1nxdafgwl1m"
+DiagnosticPathValue = "res://content/units/PureRunGoatSupport.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_xudhe"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.mage"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://bqysyhov6sk7s"
+DiagnosticPathValue = "res://content/units/PureRunMage.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_4bex3"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.necromancer"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://chihlradw121e"
+DiagnosticPathValue = "res://content/units/PureRunNecromancer.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_nuwov"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.skeleton-mage"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://d3aux6gs6gy3r"
+DiagnosticPathValue = "res://content/units/PureRunSkeletonMage.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_xyo4h"]
+script = ExtResource("1_alrkk")
+ContentIdValue = "unit.pure-run.skeleton-warrior"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://k70sjv3othgm"
+DiagnosticPathValue = "res://content/units/PureRunSkeletonWarrior.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[resource]
+script = ExtResource("2_7ktjk")
+Entries = [SubResource("Resource_alrkk"), SubResource("Resource_7ktjk"), SubResource("Resource_3v4uf"), SubResource("Resource_25yxx"), SubResource("Resource_qn5wl"), SubResource("Resource_3mgu5"), SubResource("Resource_dhim2"), SubResource("Resource_s116p"), SubResource("Resource_k3en5"), SubResource("Resource_pscyn"), SubResource("Resource_0757x"), SubResource("Resource_cua4i"), SubResource("Resource_m71co"), SubResource("Resource_ovk60"), SubResource("Resource_dxrgf"), SubResource("Resource_t8emu"), SubResource("Resource_j3y4e"), SubResource("Resource_1s0ay"), SubResource("Resource_nch75"), SubResource("Resource_m3t66"), SubResource("Resource_cf3oj"), SubResource("Resource_1giqk"), SubResource("Resource_q3ul1"), SubResource("Resource_hf8yp"), SubResource("Resource_borai"), SubResource("Resource_daerc"), SubResource("Resource_ok1ri"), SubResource("Resource_kront"), SubResource("Resource_8nj7b"), SubResource("Resource_odikj"), SubResource("Resource_du0xd"), SubResource("Resource_437oe"), SubResource("Resource_nyocb"), SubResource("Resource_k3oyh"), SubResource("Resource_pi5ta"), SubResource("Resource_ybh32"), SubResource("Resource_8xuaj"), SubResource("Resource_7d2bs"), SubResource("Resource_w4vik"), SubResource("Resource_7vuwv"), SubResource("Resource_q7413"), SubResource("Resource_b2bq6"), SubResource("Resource_alep5"), SubResource("Resource_ojvqo"), SubResource("Resource_0wa12"), SubResource("Resource_i4u7p"), SubResource("Resource_rixq5"), SubResource("Resource_cagl8"), SubResource("Resource_rm7yc"), SubResource("Resource_5mawl"), SubResource("Resource_41wyn"), SubResource("Resource_d1oog"), SubResource("Resource_sf0mq"), SubResource("Resource_6km46"), SubResource("Resource_pas1r"), SubResource("Resource_yynvf"), SubResource("Resource_n8clc"), SubResource("Resource_qc0md"), SubResource("Resource_l13f6"), SubResource("Resource_8375g"), SubResource("Resource_g7no3"), SubResource("Resource_077i6"), SubResource("Resource_2csts"), SubResource("Resource_2tp6u"), SubResource("Resource_c85fw"), SubResource("Resource_b68gd"), SubResource("Resource_wjjoy"), SubResource("Resource_ig77e"), SubResource("Resource_fjqwg"), SubResource("Resource_grcmf"), SubResource("Resource_aew24"), SubResource("Resource_fxmlp"), SubResource("Resource_miheu"), SubResource("Resource_liesm"), SubResource("Resource_mtdxj"), SubResource("Resource_shcu7"), SubResource("Resource_newau"), SubResource("Resource_y5qpm"), SubResource("Resource_evipo"), SubResource("Resource_6njj4"), SubResource("Resource_h1e1i"), SubResource("Resource_n4ypq"), SubResource("Resource_6o6o1"), SubResource("Resource_3dm0r"), SubResource("Resource_i6utu"), SubResource("Resource_wsm4t"), SubResource("Resource_qn008"), SubResource("Resource_7uva8"), SubResource("Resource_q8emw"), SubResource("Resource_yngoi"), SubResource("Resource_aw3dj"), SubResource("Resource_ret13"), SubResource("Resource_vtad5"), SubResource("Resource_t31ic"), SubResource("Resource_olrba"), SubResource("Resource_e8gv8"), SubResource("Resource_uchwv"), SubResource("Resource_30qsl"), SubResource("Resource_nd8qa"), SubResource("Resource_wen2n"), SubResource("Resource_ci8k3"), SubResource("Resource_dsg0c"), SubResource("Resource_uymrn"), SubResource("Resource_iahgw"), SubResource("Resource_4wgjn"), SubResource("Resource_yei7q"), SubResource("Resource_nd0b1"), SubResource("Resource_d76e3"), SubResource("Resource_bf8p4"), SubResource("Resource_707w6"), SubResource("Resource_j5atr"), SubResource("Resource_v0l5m"), SubResource("Resource_y58j4"), SubResource("Resource_ncb4d"), SubResource("Resource_tpyfj"), SubResource("Resource_k5nee"), SubResource("Resource_tq1nk"), SubResource("Resource_qjvrt"), SubResource("Resource_g1bw4"), SubResource("Resource_2uy8m"), SubResource("Resource_afx2w"), SubResource("Resource_bxxdy"), SubResource("Resource_t1a4e"), SubResource("Resource_ve222"), SubResource("Resource_4cqui"), SubResource("Resource_qvsn6"), SubResource("Resource_1swhk"), SubResource("Resource_1yg32"), SubResource("Resource_q4t4o"), SubResource("Resource_hg3un"), SubResource("Resource_xng6m"), SubResource("Resource_kjbqg"), SubResource("Resource_0frot"), SubResource("Resource_m5x53"), SubResource("Resource_pvspx"), SubResource("Resource_b4e23"), SubResource("Resource_5358o"), SubResource("Resource_dnavv"), SubResource("Resource_xudhe"), SubResource("Resource_4bex3"), SubResource("Resource_nuwov"), SubResource("Resource_xyo4h")]

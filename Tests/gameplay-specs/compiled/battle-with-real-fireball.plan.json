@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.BattleWithRealFireball",
+  "requiredAdapters": [
+    "Battle",
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "useRealAssets",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "loadSkillGraphAsset",
+      "parameters": {
+        "alias": "fireballGraph",
+        "assetPath": "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv1_Graph.asset"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "fireballGraph",
+        "casterAlias": "p1_0",
+        "targetPointAlias": "cell_1_0"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 20000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "parameters": {}
+    }
+  ]
+}

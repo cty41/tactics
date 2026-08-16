@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://d0ucjhvlp4eyx"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_bal8b"]
+
+[resource]
+script = ExtResource("1_bal8b")
+ContentIdValue = "skill.mage.teleport.lv1"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Graph_Ability.asset"
+DisplayName = "瞬移术 Lv1"
+Description = "瞬移到4格内可见的合法空格。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 1
+ManaCost = 8
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Teleport"
+DamageKindValue = "None"
+BranchId = "mage.teleport"
+PrerequisiteBranchId = "mage.lightning"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 7
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Teleport_Graph_Ability.asset"
+SourceGuid = "fd0afa6c1bf146542b99e8a7c62e81c7"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Teleport_Graph.asset"
+GraphDependencyHash = "7ca4bbeecee13edda84890ec27ec6785"

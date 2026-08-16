@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-inventory-progression-v1",
+  "status": "Exported",
+  "ownership": "UnityOwned",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "branchCount": 18,
+  "playerSkillLevelCount": 36,
+  "internalSkillDependencyCount": 5,
+  "canonicalCatalogTarget": 101,
+  "visualAcceptance": "not_applicable_functional_ui_only",
+  "manualInventoryProgressionAcceptance": "pending"
+}

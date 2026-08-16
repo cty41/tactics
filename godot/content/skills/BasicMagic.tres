@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://bra6jwtsiowk7"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_o8o0g"]
+
+[resource]
+script = ExtResource("1_o8o0g")
+ContentIdValue = "skill.basic.magic"
+SourceId = "basic.magic"
+DisplayName = "Magic Attack"
+Description = "Magic Attack"
+RoleValue = "Any"
+KindValue = "Basic"
+Level = 1
+MinRange = 1
+MaxRange = 3
+ExecutionKindValue = "MagicAttack"
+DamageKindValue = "Magical"
+IsBasicAbility = true
+BranchId = "basic.magic"
+GrowthVisible = false
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MagicAttack_Graph_Ability.asset"
+SourceGuid = "68cefc53956fac64ca301b9d50d2f00d"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/MagicAttack_Graph.asset"
+GraphDependencyHash = "fd34a38ab04c51bb836c051b50eab03b"

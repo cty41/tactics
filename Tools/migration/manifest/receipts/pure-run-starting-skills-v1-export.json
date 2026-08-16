@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-starting-skills-v1",
+  "classification": "real_unity_assetdatabase_export",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:c04e9da8758c6f6144d8c98b04a61111cd218bb6280a486d61288486e918f163",
+  "outputSha256": "7340e09f345ee639e8edd52605fea77854dab39a2d83ef9cac2def3aab1d63d2",
+  "typedDraftSha256": "2278fe46911949afeccc5fc9dbd42ad1dde14848c74c01b62f0cab0987a7b8c1",
+  "assetRoots": 21,
+  "abilityConfigs": 11,
+  "skillGraphs": 10,
+  "contentDefinitions": 12,
+  "externalContentDependencies": ["skill.poison-spear.lv1"],
+  "idempotency": { "measuredIndependentRuns": 2, "byteIdentical": true },
+  "payloadBoundary": {
+    "presentation": "audit_only_not_copied",
+    "thirdPartyPayloadCopied": false,
+    "visualAcceptance": "not_applicable_gameplay_only_no_visual_payload"
+  },
+  "ownership": "UnityOwned",
+  "nextState": "Exported"
+}

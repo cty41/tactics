@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-buffs-items-v1",
+  "classification": "real_godot_resource_generation",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:b35df5f063a83c452ed0831cd1519c7d9a996a3fde7380709e0b7eeeb20bb310",
+  "typedDraftHash": "sha256:1fa237a2111fb1f7dac0d2d1e7d0cdac6f8b574d2440970d25c16f678a49e7f9",
+  "generationLedger": "Tools/migration/manifest/state/pure-run-buffs-items-v1.json",
+  "generationLedgerHash": "sha256:535a4cf44c91eaa713892186225b2853df29d7ee38d5e9966b86b30684c57f8a",
+  "batchCatalog": "godot/content/buffs_items/ContentCatalog.tres",
+  "batchCatalogEntryCount": 29,
+  "canonicalCatalog": "godot/content/ContentCatalog.tres",
+  "canonicalCatalogEntryCount": 58,
+  "generatedBuffDefinitionCount": 13,
+  "externalBuffDefinitionCount": 1,
+  "consumableDefinitionCount": 3,
+  "equipmentDefinitionCount": 12,
+  "artifactCount": 29,
+  "externalContentDependencies": [
+    {
+      "contentId": "buff.poison",
+      "ownerBatch": "poison-spear-lv1-real",
+      "resourcePath": "godot/content/poison_spear/PoisonBuff.tres"
+    }
+  ],
+  "dependencyBoundary": {
+    "buffIconReferenceCount": 3,
+    "buffIconPayloadCopied": false,
+    "unityMaterialOrShaderPayloadCopied": false,
+    "thirdPartyPayloadCopied": false
+  },
+  "automatedValidation": {
+    "coreContractTests": "passed",
+    "applicationCompilerTests": "passed",
+    "unityOracleTests": "passed",
+    "resourceSaver": "passed",
+    "uidPreservation": "passed",
+    "byteIdempotencyRuns": 2,
+    "byteIdentical": true,
+    "headlessEditorFilesystemScan": "passed",
+    "gdUnitRuntimeTests": "passed",
+    "batchCatalogRuntime": "passed",
+    "canonicalCatalogRuntime": "passed",
+    "rendererHeadlessStartup": [
+      "gl_compatibility",
+      "forward_plus"
+    ]
+  },
+  "ownership": "UnityOwned",
+  "state": "Validated",
+  "visualAcceptance": "not_applicable_no_visual_payload"
+}

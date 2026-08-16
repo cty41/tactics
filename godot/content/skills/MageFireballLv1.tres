@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://u6t4ogddty4j"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_w70h6"]
+
+[resource]
+script = ExtResource("1_w70h6")
+ContentIdValue = "skill.mage.fireball.lv1"
+SourceId = "mage.fireball"
+DisplayName = "火球术 Lv1"
+Description = "对首个敌人造成2点魔法伤害并施加2层点燃。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 1
+ManaCost = 7
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "Fireball"
+Damage = 2
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.ignite"
+StatusDuration = 2
+BranchId = "mage.fireball"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 5
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset"
+SourceGuid = "5025aef9a8bb0564cb2559dba1f41278"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv1_Graph.asset"
+GraphDependencyHash = "154c5b83e524b8d882104668f42abe79"

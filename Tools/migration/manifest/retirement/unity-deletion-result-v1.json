@@ -1,0 +1,18 @@
+{
+    "schemaVersion":  1,
+    "receiptId":  "unity-deletion-result-v1",
+    "manifestId":  "unity-deletion-manifest-v1",
+    "manifestSha256":  "a7d82341b29ee8f11d15ad8c4bc948f865dfc12effc3f7af2c5c0558f3dddd57",
+    "archivedUnityTag":  "unity-final-2026-08-08",
+    "archiveTagObject":  "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+    "archiveCommit":  "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+    "deletedFileCount":  9307,
+    "deletedTrackedBytes":  46909708,
+    "deletedIgnoredFileCount":  1659,
+    "result":  "passed",
+    "postDeletionVerifier":  "Tools/godot/Verify-GodotProject.ps1",
+    "postDeletionVerifierResult":  "passed",
+    "postDeletionVerifierElapsedSeconds":  261.1,
+    "completedAtUtc":  "2026-08-16T04:46:52.8477062+00:00",
+    "elapsedSeconds":  3.472
+}

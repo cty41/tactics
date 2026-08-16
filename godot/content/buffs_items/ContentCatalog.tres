@@ -1,0 +1,241 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://ccms8ixfuipce"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_jyagg"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_3fftc"]
+
+[sub_resource type="Resource" id="Resource_m6tkp"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.counter"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://2voebbkatqrn"
+DiagnosticPathValue = "res://content/buffs_items/BuffCounter.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_5jbut"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.curse-damage-amplifier"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://0x3slbg3mal"
+DiagnosticPathValue = "res://content/buffs_items/BuffCurseDamageAmplifier.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_w38tw"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.event-damage-reduction"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://do1aw18ye2rgm"
+DiagnosticPathValue = "res://content/buffs_items/BuffEventDamageReduction.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_q44cw"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.event-damage-taken-up"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://b762tyyv1r8k3"
+DiagnosticPathValue = "res://content/buffs_items/BuffEventDamageTakenUp.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_crlbo"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.fear"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://cavos15760hys"
+DiagnosticPathValue = "res://content/buffs_items/BuffFear.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_sbmks"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.frozen"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://q0xhmr1xwwrm"
+DiagnosticPathValue = "res://content/buffs_items/BuffFrozen.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_aiguh"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.ice-armor"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://bqgpx2ubhp6yn"
+DiagnosticPathValue = "res://content/buffs_items/BuffIceArmor.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_0yf2x"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.ice-armor.lv1"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://dsebgsadlwftq"
+DiagnosticPathValue = "res://content/buffs_items/BuffIceArmorLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_nibod"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.ice-armor.lv2"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://d0xnjt2wife8r"
+DiagnosticPathValue = "res://content/buffs_items/BuffIceArmorLv2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.slow")
+
+[sub_resource type="Resource" id="Resource_ukgw3"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.ignite"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://dnv3b20bruf60"
+DiagnosticPathValue = "res://content/buffs_items/BuffIgnite.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_vvb08"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.mark"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://c0ilwkb5ygvwg"
+DiagnosticPathValue = "res://content/buffs_items/BuffMark.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_guqkd"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.poison"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://byvdudy464o8b"
+DiagnosticPathValue = "res://content/poison_spear/PoisonBuff.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_tn0sc"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.slow"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://cey0ta2haejeo"
+DiagnosticPathValue = "res://content/buffs_items/BuffSlow.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_0eeis"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "buff.stun"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://woijxs12u8uj"
+DiagnosticPathValue = "res://content/buffs_items/BuffStun.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_70p7r"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.consumable.cleansing-potion"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://ltyukggslgcv"
+DiagnosticPathValue = "res://content/buffs_items/ConsumableCleansingPotion.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_of5fh"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.consumable.life-potion"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://clv1d4n1x46rg"
+DiagnosticPathValue = "res://content/buffs_items/ConsumableLifePotion.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_ydsle"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.consumable.mana-potion"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cs3aa1n5kwi05"
+DiagnosticPathValue = "res://content/buffs_items/ConsumableManaPotion.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_hp1uv"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.bow-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cuny5a2atywxk"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentBow01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_n4ocm"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.iron-helmet-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://brrayrlqqtwoh"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentIronHelmet01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_lgb1x"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.leather-armor-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://dp02ugh85tbyn"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentLeatherArmor01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_t6vdd"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.leather-boots-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://df2jtiktwna0g"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentLeatherBoots01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_hj3mn"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.lucky-ring-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://daf8ufg4gk48g"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentLuckyRing01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_2r0sf"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.shadow-cloak-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cjajivuxlyobg"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentShadowCloak01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_rvb7g"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.shield-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://bh7frgpoqefli"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentShield01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_xp67k"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.silver-ring-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://53tbtgag4l7q"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentSilverRing01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_0mns3"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.staff-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://kctafdu01i2n"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentStaff01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_0laon"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.steel-sword-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://cwd1tlqwoyay0"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentSteelSword01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_7cs8f"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.sword-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://w410f7x47itg"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentSword01.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_exvwn"]
+script = ExtResource("1_jyagg")
+ContentIdValue = "item.equipment.wizard-hat-01"
+ResourceTypeIdValue = "item"
+ResourceUidValue = "uid://bv0c8ch1the3y"
+DiagnosticPathValue = "res://content/buffs_items/EquipmentWizardHat01.tres"
+SchemaVersion = 1
+
+[resource]
+script = ExtResource("2_3fftc")
+Entries = [SubResource("Resource_m6tkp"), SubResource("Resource_5jbut"), SubResource("Resource_w38tw"), SubResource("Resource_q44cw"), SubResource("Resource_crlbo"), SubResource("Resource_sbmks"), SubResource("Resource_aiguh"), SubResource("Resource_0yf2x"), SubResource("Resource_nibod"), SubResource("Resource_ukgw3"), SubResource("Resource_vvb08"), SubResource("Resource_guqkd"), SubResource("Resource_tn0sc"), SubResource("Resource_0eeis"), SubResource("Resource_70p7r"), SubResource("Resource_of5fh"), SubResource("Resource_ydsle"), SubResource("Resource_hp1uv"), SubResource("Resource_n4ocm"), SubResource("Resource_lgb1x"), SubResource("Resource_t6vdd"), SubResource("Resource_hj3mn"), SubResource("Resource_2r0sf"), SubResource("Resource_rvb7g"), SubResource("Resource_xp67k"), SubResource("Resource_0mns3"), SubResource("Resource_0laon"), SubResource("Resource_7cs8f"), SubResource("Resource_exvwn")]

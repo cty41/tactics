@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ownership-closure-v1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d",
+  "outputPath": "Tools/migration/out/pure-run-ownership-closure-v1.unity.json",
+  "assets": [
+    {"sourceKey":"skill.mage.fireball.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv3_Ability.asset","gitBlobSha1":"3656f006450c601af9884fc8f91e162ecdfcc188","targetContentIds":["skill.mage.fireball.lv3"]},
+    {"sourceKey":"skill.mage.ice-bolt.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Lv3_Graph_Ability.asset","gitBlobSha1":"af9a38a0f93670166a656882883608bcb3f8bc7c","targetContentIds":["skill.mage.ice-bolt.lv3"]},
+    {"sourceKey":"skill.mage.lightning.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Lv3_Graph_Ability.asset","gitBlobSha1":"d3c7541e34ccef6a78ba42e4c2be559a6b872e0f","targetContentIds":["skill.mage.lightning.lv3"]},
+    {"sourceKey":"skill.necromancer.summon-skeleton.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Lv3_Graph_Ability.asset","gitBlobSha1":"2cd61cf899527d4f23e0371fab422be998b7097c","targetContentIds":["skill.necromancer.summon-skeleton.lv3"]},
+    {"sourceKey":"skill.necromancer.amplify-damage.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Lv3_Graph_Ability.asset","gitBlobSha1":"e79310e774cab010a99d10a6ce3c7db271e13f04","targetContentIds":["skill.necromancer.amplify-damage.lv3"]},
+    {"sourceKey":"skill.necromancer.bone-spear.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Lv3_Graph_Ability.asset","gitBlobSha1":"8c10c55063f162bff3e0d019b54c151d7c014dd2","targetContentIds":["skill.necromancer.bone-spear.lv3"]},
+    {"sourceKey":"skill.amazon.thrust.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Lv3_Graph_Ability.asset","gitBlobSha1":"bf9a8e1a72bea126d50c09b1f37f2a247b9fc9de","targetContentIds":["skill.amazon.thrust.lv3"]},
+    {"sourceKey":"skill.amazon.poison-spear.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Lv3_Graph_Ability.asset","gitBlobSha1":"58598faf49d6748678af21615a796ffd982ae140","targetContentIds":["skill.amazon.poison-spear.lv3"]},
+    {"sourceKey":"skill.amazon.combat-techniques.lv3","sourcePath":"Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs","gitBlobSha1":"bbf411fa404993a9f5603495c47630c05f23eb60","targetContentIds":["skill.amazon.combat-techniques.lv3"],"exportMode":"audit-only-file"},
+    {"sourceKey":"skill.summon.skeleton-attack.lv3","sourcePath":"Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonAttack_Lv3_Ability.asset","gitBlobSha1":"22dabe2c44f9b883b45f70a9a3067fcd916376f6","targetContentIds":["skill.summon.skeleton-attack.lv3"]},
+    {"sourceKey":"runtime.treasure","sourcePath":"Assets/Tactics/Scripts/RoguelikeMap/Interaction/TreasureNodeHandler.cs","gitBlobSha1":"b86b707f05c88295e6d1ba07bcab2adf2ae98886","targetContentIds":["treasure.pure-run.standard-v1"],"exportMode":"audit-only-file"},
+    {"sourceKey":"runtime.map-node","sourcePath":"Assets/Tactics/Scripts/Common/RoguelikeMapNode.cs","gitBlobSha1":"a1e7766145bbae61fe637d0ff9878ce079932042","targetContentIds":["run-map.pure-run.default-v1","treasure.pure-run.standard-v1"],"exportMode":"audit-only-file"},
+    {"sourceKey":"tooling.map","sourcePath":"Assets/Tactics/Scripts/Editor/RoguelikeMapEditor/MapEditorDocument.cs","gitBlobSha1":"3ac896865f32057c86ccbe8b871a14e588554778","targetContentIds":["run-map.pure-run.default-v1"],"exportMode":"audit-only-file"},
+    {"sourceKey":"tooling.event","sourcePath":"Assets/Tactics/Scripts/Editor/RoguelikeEventEditor/Serialization/EventGraphSerializer.cs","gitBlobSha1":"2a9388ed048683e7f5a92392aca127f33130dd87","targetContentIds":["event.pure-run.cursed-chest"],"exportMode":"audit-only-file"},
+    {"sourceKey":"tooling.battle-test.encounter","sourcePath":"Assets/Tactics/Scripts/Editor/BattleTest/BattleEncounterTestConfigEditor.cs","gitBlobSha1":"11ecb29cbf34b9fc749dbe05ad8b6368563e4232","targetContentIds":["battle-fixture.pure-run.authoring-v1"],"exportMode":"audit-only-file"},
+    {"sourceKey":"tooling.battle-test.party","sourcePath":"Assets/Tactics/Scripts/Editor/BattleTest/BattlePartyTestConfigEditor.cs","gitBlobSha1":"cc70171b12ef25798492e4c771bd4e61adcc91a9","targetContentIds":["battle-fixture.pure-run.authoring-v1"],"exportMode":"audit-only-file"},
+    {"sourceKey":"tooling.battle-test.grid","sourcePath":"Assets/Tactics/Scripts/Editor/BattleTest/BattleTestSpawnCellSceneGuiUtility.cs","gitBlobSha1":"8e993cd8621350a1a14170f17e7f0d9f90f7bc5d","targetContentIds":["battle-fixture.pure-run.authoring-v1"],"exportMode":"audit-only-file"}
+  ]
+}

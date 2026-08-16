@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PureRunLayerFourResource" format=3 uid="uid://buk0xtyh882yw"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PureRunLayerFourResource.cs" id="1_7y4gl"]
+
+[resource]
+script = ExtResource("1_7y4gl")
+ContentIdValue = "encounter.pure-run.n4"
+KindValue = "encounter"
+PayloadJson = "{
+    \"contentId\": \"encounter.pure-run.n4\",
+    \"layout\": \"battle-layout.pure-run.split-flank\",
+    \"monsters\": [
+      \"unit.pure-run.ranged\",
+      \"unit.pure-run.ranged\",
+      \"unit.pure-run.aoe\",
+      \"unit.pure-run.charger\"
+    ]
+  }"

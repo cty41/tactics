@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "SharedBattlePrimitives.OrderedTargetSelectionState",
+  "requiredAdapters": [
+    "Skill",
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "aCell",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "bCell",
+        "x": 1,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "targetA",
+        "playerNumber": 1,
+        "cellAlias": "aCell"
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createUnit",
+      "parameters": {
+        "alias": "targetB",
+        "playerNumber": 1,
+        "cellAlias": "bCell"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "beginOrderedTargetSelection",
+      "parameters": {
+        "requiredCount": 3
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "selectOrderedTarget",
+      "parameters": {
+        "targetAlias": "targetA"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "selectOrderedTarget",
+      "parameters": {
+        "targetAlias": "targetB"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "selectOrderedTarget",
+      "parameters": {
+        "targetAlias": "targetA"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "undoOrderedTargetSelection",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "selectOrderedTarget",
+      "parameters": {
+        "targetAlias": "targetB"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "commitOrderedTargetSelection",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "orderedTargetSelectionEquals",
+      "expected": [
+        "targetA",
+        "targetB",
+        "targetB"
+      ],
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "selectionStageEquals",
+      "expected": "Committed",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "orderedTargetSelectionEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "selectionStageEquals",
+      "parameters": {}
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="PlayableEnemySpeedProfileResource" format=3]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/PlayableEnemySpeedProfileResource.cs" id="1_0hoop"]
+
+[resource]
+script = ExtResource("1_0hoop")
+UnitContentIds = PackedStringArray("unit.pure-run.goat-ranged", "unit.pure-run.goat-charger", "unit.pure-run.goat-support", "unit.pure-run.goat-aoe", "unit.pure-run.goat-elite-charger", "unit.pure-run.goat-elite-poison-caster")
+Speeds = PackedFloat32Array(6, 6, 5, 5, 7, 6)

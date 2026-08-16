@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.PureRunEventPartyDefeat",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 9102
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "pure_run_mage",
+        "currentHp": 1,
+        "isDead": false
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "pure_run_necromancer",
+        "currentHp": 1,
+        "isDead": false
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "setRosterCharacterState",
+      "parameters": {
+        "characterId": "pure_run_amazon",
+        "currentHp": 1,
+        "isDead": false
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "applyEventResult",
+      "parameters": {
+        "resultType": "Damage",
+        "targetType": "All",
+        "partyCharacterIds": [
+          "pure_run_mage",
+          "pure_run_necromancer",
+          "pure_run_amazon"
+        ],
+        "amount": 99
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitEventPartyDefeat",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "expected": "Defeat",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "expected": false,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "parameters": {}
+    }
+  ]
+}

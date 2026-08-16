@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 2,
+  "runtime": "Godot",
+  "scenarioName": "GodotPendingAcceptance.DefeatedTerminal",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "Battle",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:endTurnOnlyUntilTerminal",
+    "assertion:activeRunExistsEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "assertion:terminalSummaryOutcomeEquals",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "defeat-no-summon-v1",
+        "path": "validated://defeat-no-summon-v1",
+        "semanticHash": "3da74c45e5d8d8033900cb7f9fb2483928acaca8ea97f6a8886f5249b270a833"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "endTurnOnlyUntilTerminal",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "terminalSummaryOutcomeEquals",
+      "expected": "Defeated",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "activeRunExistsEquals",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "terminalSummaryOutcomeEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "activeRunExistsEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "defeat-no-summon-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "3da74c45e5d8d8033900cb7f9fb2483928acaca8ea97f6a8886f5249b270a833",
+    "path": "validated://defeat-no-summon-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

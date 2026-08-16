@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://emngtl4tjls4"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_v3in3"]
+
+[resource]
+script = ExtResource("1_v3in3")
+ContentIdValue = "skill.mage.ice-armor.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceArmor_Lv2_Graph_Ability.asset"
+DisplayName = "冰甲 Lv2"
+Description = "冰甲减伤期间，近战攻击者会被减速2回合。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 2
+ManaCost = 5
+ExecutionKindValue = "IceArmor"
+DamageKindValue = "None"
+StatusContentIdValue = "buff.ice-armor"
+StatusDuration = 2
+BranchId = "mage.ice-armor"
+PrerequisiteContentIdValue = "skill.mage.ice-armor.lv1"
+PrerequisiteBranchId = "mage.ice-bolt"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 7
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceArmor_Lv2_Graph_Ability.asset"
+SourceGuid = "989447c28e1567548aabc05549ff5e88"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/IceArmor_Lv2_Graph.asset"
+GraphDependencyHash = "71d0461ade2d61cc3223db7b8c6553b7"

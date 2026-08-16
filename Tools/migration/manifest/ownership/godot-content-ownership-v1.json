@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "godot-content-ownership-v1",
+  "ownership": "GodotOwned",
+  "catalogCount": 142,
+  "catalogSha256": "sha256:54ecf35fe703c688987e9127e3cee2b722b6b39463bd6eaf4ec5c21389878425",
+  "catalogSemanticSha256": "sha256:60badc5f448a983f14bb2c03ce64e31f8c4a53ad34516376016380325bf2566a",
+  "resourceTypeCounts": {
+    "ai": 8,
+    "battle-board": 1,
+    "battle-layout": 3,
+    "buff": 14,
+    "encounter": 10,
+    "event": 3,
+    "item": 15,
+    "packed-scene": 3,
+    "presentation": 10,
+    "rest": 1,
+    "run": 1,
+    "run-map": 1,
+    "skill": 58,
+    "store": 1,
+    "treasure": 1,
+    "unit": 12
+  },
+  "categories": [
+    {
+      "name": "Core",
+      "owner": "GodotOwned",
+      "batch": "phase-1"
+    },
+    {
+      "name": "Unit",
+      "owner": "GodotOwned",
+      "batch": "batch-a"
+    },
+    {
+      "name": "Buff",
+      "owner": "GodotOwned",
+      "batch": "batch-b"
+    },
+    {
+      "name": "Item",
+      "owner": "GodotOwned",
+      "batch": "batch-b"
+    },
+    {
+      "name": "Skill",
+      "owner": "GodotOwned",
+      "batch": "batch-c"
+    },
+    {
+      "name": "AI",
+      "owner": "GodotOwned",
+      "batch": "batch-d"
+    },
+    {
+      "name": "Encounter",
+      "owner": "GodotOwned",
+      "batch": "batch-e"
+    },
+    {
+      "name": "Run",
+      "owner": "GodotOwned",
+      "batch": "pure-run-full-seven-layer-v1"
+    },
+    {
+      "name": "Map",
+      "owner": "GodotOwned",
+      "batch": "pure-run-map-treasure-v1"
+    },
+    {
+      "name": "UIInput",
+      "owner": "GodotOwned",
+      "batch": "batch-f"
+    },
+    {
+      "name": "Presentation",
+      "owner": "GodotOwned",
+      "batch": "batch-g"
+    },
+    {
+      "name": "Tooling",
+      "owner": "GodotOwned",
+      "batch": "pure-run-ownership-closure-v1"
+    },
+    {
+      "name": "AudioFramework",
+      "owner": "GodotOwned",
+      "batch": "silent-framework-v1"
+    }
+  ],
+  "supersedesGenerationState": [
+    "poison-spear-lv1-real.json",
+    "pure-run-ai-encounter-v1.json",
+    "pure-run-buffs-items-v1.json",
+    "pure-run-full-seven-layer-v1.json",
+    "pure-run-inventory-progression-v1.json",
+    "pure-run-isometric-presentation-v1.json",
+    "pure-run-layer4-map-nodes-v1.json",
+    "pure-run-map-treasure-v1.json",
+    "pure-run-ownership-closure-v1.json",
+    "pure-run-persistence-v1.json",
+    "pure-run-starting-skills-v1.json",
+    "pure-run-ui-input-v1.json",
+    "pure-run-unit-textures-v1.json",
+    "pure-run-units-v1.json"
+  ],
+  "historicalExportReceiptsPreserved": true,
+  "manualAcceptance": "pending_separate_quality_gate",
+  "payloadBoundary": {
+    "audioPayloadIncluded": false,
+    "thirdPartyUnityPayloadIncluded": false,
+    "unityPlayerPrefsImportIncluded": false
+  }
+}

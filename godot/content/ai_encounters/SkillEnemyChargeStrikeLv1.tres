@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://dwcr6xrkndcol"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_nhb8x"]
+
+[resource]
+script = ExtResource("1_nhb8x")
+ContentIdValue = "skill.enemy.charge-strike.lv1"
+SourceId = "enemy.charge-strike.lv1"
+DisplayName = "Charge Strike Lv1"
+Description = "Charge Strike Lv1"
+RoleValue = "Any"
+KindValue = "Active"
+Level = 1
+MinRange = 1
+MaxRange = 3
+ExecutionKindValue = "ChargeStrike"
+Damage = 7
+DamageKindValue = "Magical"
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/ChargeStrike_Lv1_Ability.asset"
+SourceGuid = "f603bd8f4d327744d874dfa6fbf0c5ba"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/ChargeStrike_Lv1.asset"
+GraphDependencyHash = "bf5431c7c54f5f75f96942dc085b3ff7"

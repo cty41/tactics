@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot C# Development"
+  short_description: "Develop and validate Godot C# safely"
+  default_prompt: "Use $godot-csharp-development to implement this Godot 4.7 C# change and run the required validation."

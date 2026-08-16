@@ -1,0 +1,137 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://bk126m4bsc8x1"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_lrkd8"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_cq4f0"]
+
+[sub_resource type="Resource" id="Resource_cdsuk"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "ai.pure-run.aoe"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://belreeyliit7t"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunAoe.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.area-blast.lv1")
+
+[sub_resource type="Resource" id="Resource_sucs6"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "ai.pure-run.charger"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://dwc6sac2lva3a"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.charge-strike.lv1")
+
+[sub_resource type="Resource" id="Resource_rk6qg"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "ai.pure-run.elite-charger"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://mp5k2hhdoju6"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunEliteCharger.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.charge-strike.lv1")
+
+[sub_resource type="Resource" id="Resource_qok0u"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "ai.pure-run.elite-poison-caster"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://cbh88q2lk5ih4"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunElitePoisonCaster.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.enemy.area-blast.lv1")
+
+[sub_resource type="Resource" id="Resource_teges"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "ai.pure-run.ranged"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://d0gim665iwky8"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunRanged.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.enemy.heavy-shot.lv1", "skill.enemy.ranged-attack.lv1")
+
+[sub_resource type="Resource" id="Resource_ababs"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "ai.pure-run.support"
+ResourceTypeIdValue = "ai"
+ResourceUidValue = "uid://dy5703mscymtx"
+DiagnosticPathValue = "res://content/ai_encounters/AiPureRunSupport.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.basic.melee", "skill.necromancer.amplify-damage.lv1")
+
+[sub_resource type="Resource" id="Resource_ej5wy"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "battle-layout.pure-run.center-blocker"
+ResourceTypeIdValue = "battle-layout"
+ResourceUidValue = "uid://c1hwl18r7cqr6"
+DiagnosticPathValue = "res://content/ai_encounters/BattleLayoutPureRunCenterBlocker.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_rec1l"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "battle-layout.pure-run.open"
+ResourceTypeIdValue = "battle-layout"
+ResourceUidValue = "uid://dhjv1ej0wequx"
+DiagnosticPathValue = "res://content/ai_encounters/BattleLayoutPureRunOpen.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_44u4g"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "encounter.pure-run.n1"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://bbxbsujas3veq"
+DiagnosticPathValue = "res://content/ai_encounters/EncounterPureRunN1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.charger", "ai.pure-run.charger", "ai.pure-run.ranged", "battle-layout.pure-run.open", "unit.pure-run.goat-charger", "unit.pure-run.goat-charger", "unit.pure-run.goat-ranged")
+
+[sub_resource type="Resource" id="Resource_f65ba"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "encounter.pure-run.n2"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://diot7v5peg4je"
+DiagnosticPathValue = "res://content/ai_encounters/EncounterPureRunN2.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.ranged", "ai.pure-run.ranged", "ai.pure-run.support", "battle-layout.pure-run.open", "unit.pure-run.goat-ranged", "unit.pure-run.goat-ranged", "unit.pure-run.goat-support")
+
+[sub_resource type="Resource" id="Resource_1i03i"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "encounter.pure-run.n3"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://deyrsp4w7v6db"
+DiagnosticPathValue = "res://content/ai_encounters/EncounterPureRunN3.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("ai.pure-run.aoe", "ai.pure-run.charger", "ai.pure-run.charger", "ai.pure-run.support", "battle-layout.pure-run.center-blocker", "unit.pure-run.goat-aoe", "unit.pure-run.goat-charger", "unit.pure-run.goat-charger", "unit.pure-run.goat-support")
+
+[sub_resource type="Resource" id="Resource_3bfsg"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "skill.enemy.area-blast.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://5jkpcuaunf6s"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyAreaBlastLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_b2yyg"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "skill.enemy.charge-strike.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://dwcr6xrkndcol"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyChargeStrikeLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_qeqbm"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "skill.enemy.heavy-shot.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://x52streelmv6"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyHeavyShotLv1.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_or7x0"]
+script = ExtResource("1_lrkd8")
+ContentIdValue = "skill.enemy.ranged-attack.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://830uqq24eho5"
+DiagnosticPathValue = "res://content/ai_encounters/SkillEnemyRangedAttackLv1.tres"
+SchemaVersion = 1
+
+[resource]
+script = ExtResource("2_cq4f0")
+Entries = [SubResource("Resource_cdsuk"), SubResource("Resource_sucs6"), SubResource("Resource_rk6qg"), SubResource("Resource_qok0u"), SubResource("Resource_teges"), SubResource("Resource_ababs"), SubResource("Resource_ej5wy"), SubResource("Resource_rec1l"), SubResource("Resource_44u4g"), SubResource("Resource_f65ba"), SubResource("Resource_1i03i"), SubResource("Resource_3bfsg"), SubResource("Resource_b2yyg"), SubResource("Resource_qeqbm"), SubResource("Resource_or7x0")]

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://bodkqw7srjkd2"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_odty4"]
+
+[resource]
+script = ExtResource("1_odty4")
+ContentIdValue = "skill.necromancer.bone-spear.lv1"
+SourceId = "necromancer.bone_spear"
+DisplayName = "骨矛 Lv1"
+Description = "对直线首个敌人造成7点魔法伤害。"
+RoleValue = "Necromancer"
+KindValue = "Active"
+Level = 1
+ManaCost = 6
+MinRange = 1
+MaxRange = 4
+ExecutionKindValue = "BoneSpear"
+Damage = 7
+DamageKindValue = "Magical"
+BranchId = "necromancer.bone-spear"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 5
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset"
+SourceGuid = "54177d88beba96242b3e52fcbda386c0"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/BoneSpear_Graph.asset"
+GraphDependencyHash = "59be852b0547c5ded3b857d146d3b088"

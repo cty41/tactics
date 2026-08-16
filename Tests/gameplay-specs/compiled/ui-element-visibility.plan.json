@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "UI.UiElementVisibility",
+  "requiredAdapters": [
+    "UI"
+  ],
+  "setupActions": [],
+  "runtimeActions": [
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "Home"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "NewGameButton"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "NewGameButton",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementEnabled",
+      "target": "NewGameButton",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "NewGameButton",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementEnabled",
+      "target": "NewGameButton",
+      "parameters": {}
+    }
+  ]
+}

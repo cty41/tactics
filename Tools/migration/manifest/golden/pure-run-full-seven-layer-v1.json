@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-full-seven-layer-v1",
+  "layoutVersion": 2,
+  "layers": 7,
+  "encounters": ["N5", "N6", "E1", "E2", "Special"],
+  "eliteMultipliers": {"health": 1.3, "output": 1.15},
+  "specialMultipliers": {"health": 1.8, "output": 1.25},
+  "layer5": "elite",
+  "layer6": ["elite", "rest", "store", "mystery"],
+  "layer7": "special",
+  "maxSkillLevel": 2
+}

@@ -1,0 +1,13 @@
+{
+  "DisplayName": "分身",
+  "Description": "在施法者邻近空格生成一个分身单位。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "summon", "Type": "SummonUnit", "Parameters": { "unitPrefabPath": "Assets/Tactics/Arts/Prefabs/Units/SkillGraphTestUnit.prefab", "requiresCorpse": false, "summonName": "AmazonDecoy" } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "summon" },
+    { "Source": "summon", "Target": "finish" }
+  ]
+}

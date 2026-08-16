@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://c1frlvegnpcpp"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotUnitActor.cs" id="1_ne8fk"]
+
+[node name="UnitActor" type="Node2D" unique_id=311699469 node_paths=PackedStringArray("Shadow", "Body")]
+script = ExtResource("1_ne8fk")
+Shadow = NodePath("Shadow")
+Body = NodePath("Body")
+
+[node name="Shadow" type="Sprite2D" parent="." unique_id=1912327994]
+
+[node name="Body" type="Sprite2D" parent="." unique_id=1691566398]
+z_index = 1

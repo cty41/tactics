@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EncounterDefinitionResource" format=3 uid="uid://y7y7bp56wt1d"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EncounterDefinitionResource.cs" id="1_082in"]
+
+[resource]
+script = ExtResource("1_082in")
+ContentIdValue = "encounter.pure-run.n6"
+LayoutContentId = "battle-layout.pure-run.split-flank"
+MonsterUnitContentIds = PackedStringArray("unit.pure-run.goat-charger", "unit.pure-run.goat-charger", "unit.pure-run.goat-ranged", "unit.pure-run.goat-aoe")
+MonsterAiContentIds = PackedStringArray("ai.pure-run.charger", "ai.pure-run.charger", "ai.pure-run.ranged", "ai.pure-run.aoe")

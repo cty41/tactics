@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "BattleTestConfig.PlayerSpawnPointsApplyCorrectly",
+  "requiredAdapters": [
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Skill",
+      "kind": "createSkillTestWorld",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "playerSpawnA",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createCell",
+      "parameters": {
+        "alias": "playerSpawnB",
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "adapter": "Skill",
+      "kind": "loadTestPartyConfig",
+      "parameters": {
+        "configPath": "Tests/gameplay-specs/battle-test-config/Assets/Party/TestParty.asset"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Skill",
+      "kind": "setBattleTestMode",
+      "parameters": {
+        "enabled": true
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "expected": "Completed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "expected": "loadTestPartyConfig",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "expected": "setBattleTestMode",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Skill",
+      "kind": "executionStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "stepMessageContains",
+      "parameters": {}
+    }
+  ]
+}

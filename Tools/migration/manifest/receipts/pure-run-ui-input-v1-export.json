@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ui-input-v1",
+  "classification": "real_unity_assetdatabase_export",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:ff33dcc0331be4cf5681a89b95937271878bff301ff741bfd72d915cad644f77",
+  "assets": [
+    {
+      "sourceKey": "input.actions",
+      "sourcePath": "Assets/Tactics/Input/InputSystem_Actions.inputactions",
+      "gitBlobSha1": "116594d250950e2680fcfc35308209f7270f514a",
+      "sourceGuid": "2bcd2660ca9b64942af0de543d8d7100",
+      "sourceLocalFileId": -944628639613478452,
+      "dependencyHash": "45a8c2e79d0e50dfb96af645e5bac6a6",
+      "exportMode": "audit-only-file",
+      "sourceFileSha256": "078c23d86a6d02a020632c31a2365765e20238dc845e25d69cb88bac660c9b07",
+      "sourceByteLength": 42438,
+      "serializedObjectCount": 0,
+      "serializedPropertyCount": 0,
+      "targetContentIds": [
+        "input.pure-run.desktop"
+      ]
+    },
+    {
+      "sourceKey": "ui.battle",
+      "sourcePath": "Assets/Tactics/Arts/UI/Battle.uxml",
+      "gitBlobSha1": "f2695f11ff0d9d9b69708af4ab6054128cb81768",
+      "sourceGuid": "cf197d52026e1e4448ca17ebc44610b8",
+      "sourceLocalFileId": 9197481963319205126,
+      "dependencyHash": "cf501022f970b59c6f709ca3ce2b1d39",
+      "exportMode": "audit-only-file",
+      "sourceFileSha256": "071295470bd821bcf5fd25a3528f5d3f428313151682e556981439ad3cd79d60",
+      "sourceByteLength": 4298,
+      "serializedObjectCount": 0,
+      "serializedPropertyCount": 0,
+      "targetContentIds": [
+        "ui.pure-run.battle"
+      ]
+    },
+    {
+      "sourceKey": "ui.home",
+      "sourcePath": "Assets/Tactics/Arts/UI/Home.uxml",
+      "gitBlobSha1": "de447ae8fa1231ec5fabe4e9ba33bac78efbd289",
+      "sourceGuid": "f2990b2a068e27a4abc4521f4170b9f7",
+      "sourceLocalFileId": 9197481963319205126,
+      "dependencyHash": "1ef32d7859908e8c2c7d8303db04b135",
+      "exportMode": "audit-only-file",
+      "sourceFileSha256": "3de07c2537a2d4dae643ef4267d433252a5af1e86eb7994cfd742449948e659b",
+      "sourceByteLength": 1761,
+      "serializedObjectCount": 0,
+      "serializedPropertyCount": 0,
+      "targetContentIds": [
+        "ui.pure-run.home"
+      ]
+    },
+    {
+      "sourceKey": "ui.settlement",
+      "sourcePath": "Assets/Tactics/Arts/UI/BattleSettlement.uxml",
+      "gitBlobSha1": "a8d1e5f9b4173e9e4bab6cf95fb2ebccaa8d8e01",
+      "sourceGuid": "fc8af6c96bb7c58458333543dd1a9f11",
+      "sourceLocalFileId": 9197481963319205126,
+      "dependencyHash": "cf15440054b884a35432e14cd7007139",
+      "exportMode": "audit-only-file",
+      "sourceFileSha256": "720655be21ed9425d601a8e9b52006690390bb95affffce481239a1eaf028947",
+      "sourceByteLength": 1484,
+      "serializedObjectCount": 0,
+      "serializedPropertyCount": 0,
+      "targetContentIds": [
+        "ui.pure-run.settlement"
+      ]
+    },
+    {
+      "sourceKey": "ui.summary",
+      "sourcePath": "Assets/Tactics/Arts/UI/RunEndSummary.uxml",
+      "gitBlobSha1": "86bfaaab0a4953864bb3cda71dbb054118cfc05b",
+      "sourceGuid": "2b5e628416309954987ea244f3441e94",
+      "sourceLocalFileId": 9197481963319205126,
+      "dependencyHash": "6c8be27d6609a2f8d6b1d3007ee29855",
+      "exportMode": "audit-only-file",
+      "sourceFileSha256": "793fb563d2015bddff2e967c6c2795603904ed514394753e837dee73bb2f6a73",
+      "sourceByteLength": 2018,
+      "serializedObjectCount": 0,
+      "serializedPropertyCount": 0,
+      "targetContentIds": [
+        "ui.pure-run.summary"
+      ]
+    }
+  ],
+  "warnings": [],
+  "ownership": "UnityOwned",
+  "nextState": "Exported",
+  "idempotency": {
+    "measuredIndependentRuns": 2,
+    "byteIdentical": true
+  },
+  "payloadBoundary": {
+    "unityUiToolkitCopied": false,
+    "formalVfxAudioCopied": false,
+    "dependencyAuditOnly": true
+  },
+  "manualUiInputAcceptance": "pending",
+  "outputSha256": "74c2b049ca93ec53f567509cfcc67e9e6db58dc1265905c00def7b74d8254444"
+}

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EncounterDefinitionResource" format=3 uid="uid://bwrs45gnce72k"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EncounterDefinitionResource.cs" id="1_o0k36"]
+
+[resource]
+script = ExtResource("1_o0k36")
+ContentIdValue = "encounter.pure-run.special"
+LayoutContentId = "battle-layout.pure-run.special-open"
+MonsterUnitContentIds = PackedStringArray("unit.pure-run.goat-elite-charger")
+MonsterAiContentIds = PackedStringArray("ai.pure-run.elite-charger")
+HealthMultiplier = 1.8
+OutputMultiplier = 1.25
+MinimumStartingMana = 12
+EncounterClassValue = "Boss"

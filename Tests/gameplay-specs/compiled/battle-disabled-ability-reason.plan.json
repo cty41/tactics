@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "UI.BattleDisabledAbilityReason",
+  "requiredAdapters": [
+    "Battle",
+    "UI"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "dropAmazonSpear",
+      "parameters": {
+        "unitAlias": "p1_0",
+        "cellAlias": "cell_0_1"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "Battle"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindPureRunAbilityToUnit",
+      "parameters": {
+        "unitAlias": "p1_0",
+        "skillId": "amazon.poison_spear",
+        "level": 1
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "clickBattleUnit",
+      "parameters": {
+        "unitAlias": "p1_0"
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "refreshBattleActions",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "clickElement",
+      "parameters": {
+        "elementName": "AbilityCard_毒矛_Lv1"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "UI",
+      "kind": "abilityCardAvailabilityEquals",
+      "target": "AbilityCard_毒矛_Lv1",
+      "expected": "DisabledClickable",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "AbilityReasonTooltip",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "AbilityReasonTooltip",
+      "expected": "需要先回收长矛",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 15000,
+  "probeRequests": [
+    {
+      "adapter": "UI",
+      "kind": "abilityCardAvailabilityEquals",
+      "target": "AbilityCard_毒矛_Lv1",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "AbilityReasonTooltip",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementText",
+      "target": "AbilityReasonTooltip",
+      "parameters": {}
+    }
+  ]
+}

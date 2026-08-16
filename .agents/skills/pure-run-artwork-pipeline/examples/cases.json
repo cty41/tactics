@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "approved_assets": [
+    {
+      "id": "hunter",
+      "down_right": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+      "up_left": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02.png"
+    },
+    {
+      "id": "necromancer",
+      "down_right": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_color_calibrated_v04.png",
+      "up_left": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_color_ul_v07.png"
+    },
+    {
+      "id": "mage",
+      "down_right": "Tools/artworks/doge/calibrated/doge_capsule_mage_color_calibrated_v03.png",
+      "up_left": "Tools/artworks/doge/calibrated/doge_capsule_mage_color_ul_v05.png"
+    },
+    {
+      "id": "skeleton-warrior",
+      "down_right": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_warrior_color_calibrated_v02.png",
+      "up_left": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_warrior_color_ul_v01.png"
+    },
+    {
+      "id": "skeleton-mage",
+      "down_right": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_mage_color_calibrated_v02.png",
+      "up_left": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_mage_color_ul_v01.png"
+    },
+    {
+      "id": "fire-demon",
+      "down_right": "Tools/artworks/doge/calibrated/doge_capsule_fire_demon_color_calibrated_v03.png",
+      "up_left": "Tools/artworks/doge/calibrated/doge_capsule_fire_demon_color_ul_v01.png"
+    },
+    {
+      "id": "splitjaw-goat",
+      "down_right": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_color_v05.png",
+      "up_left": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_color_ul_v01.png"
+    },
+    {
+      "id": "tomb-maw-bat",
+      "down_right": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+      "up_left": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png"
+    }
+  ],
+  "cases": [
+    {
+      "id": "core-body-volume",
+      "title": "核心胶囊体体量",
+      "approved_source": "Tools/artworks/doge/calibrated/doge_capsule_mage_color_ul_v05.png",
+      "rejected_source": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v03.png",
+      "approved_snapshot": ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/correct_128.png",
+      "rejected_snapshot": ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/incorrect_128.png",
+      "lesson": "排除耳朵、口鼻、手脚和装备，只比较同角色核心胶囊体的上下缘、中心和上中下截面；禁止矮胖、修长或梨形漂移。",
+      "acceptance": [
+        "核心主体与同角色已确认 down-right 的高度和最大宽度误差在容差内",
+        "中段近似平行，下段只能持平或缓慢内收",
+        "完整 alpha 包围盒不参与主体缩放"
+      ],
+      "rejected_for_mother_image": true
+    },
+    {
+      "id": "equipment-layering",
+      "title": "远近手与装备层级",
+      "approved_source": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_color_ul_v07.png",
+      "rejected_source": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_wrong_far_hand_v06.png",
+      "approved_snapshot": ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/correct_128.png",
+      "rejected_snapshot": ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/incorrect_128.png",
+      "lesson": "方向变化必须重新声明近远手和装备绘制顺序；远侧手可以被身体遮住，但手掌仍需贴合主体，不能完整浮在身体外。",
+      "acceptance": [
+        "近侧手、远侧手和装备的前后顺序与目标视角一致",
+        "无手臂角色的手掌与主体形成多像素接触面",
+        "远侧手被遮挡后仍可从装备和剩余轮廓识别"
+      ],
+      "rejected_for_mother_image": true
+    },
+    {
+      "id": "flying-core-scale",
+      "title": "飞行球核与翼展",
+      "approved_source": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+      "rejected_source": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_ranged_color_v04.png",
+      "approved_snapshot": ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/correct_128.png",
+      "rejected_snapshot": ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/incorrect_128.png",
+      "lesson": "球核决定小型飞行单位的体量、水平中心和悬浮位置；翅膀只检查安全边距，不能参与缩放或居中。",
+      "acceptance": [
+        "球核中心、虚拟落点和 Tile 中心位于同一垂直轴线",
+        "球核中心对齐地面胶囊体上部圆帽中心",
+        "翼展不改变球核尺寸和悬浮高度"
+      ],
+      "rejected_for_mother_image": true
+    }
+  ]
+}

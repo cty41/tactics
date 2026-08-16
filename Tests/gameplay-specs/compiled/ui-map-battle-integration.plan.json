@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "UI.UiMapBattleIntegration",
+  "requiredAdapters": [
+    "UI",
+    "Map",
+    "Battle",
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "attackGraph",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 1
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "RoguelikeMap"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "attackGraph",
+        "casterAlias": "p1_0",
+        "targetAlias": "p2_0"
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "completeNode",
+      "parameters": {
+        "nodeId": "layer_01_battle"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeIsVisited",
+      "target": "layer_01_battle",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "RootContainer",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 25000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "battleIsActive",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "nodeIsVisited",
+      "target": "layer_01_battle",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementVisible",
+      "target": "RootContainer",
+      "parameters": {}
+    }
+  ]
+}

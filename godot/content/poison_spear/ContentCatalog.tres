@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://3c5ynhv5gblk"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_q4nlv"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_o67qe"]
+
+[sub_resource type="Resource" id="Resource_q4nlv"]
+script = ExtResource("1_q4nlv")
+ContentIdValue = "buff.poison"
+ResourceTypeIdValue = "buff"
+ResourceUidValue = "uid://byvdudy464o8b"
+DiagnosticPathValue = "res://content/poison_spear/PoisonBuff.tres"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_o67qe"]
+script = ExtResource("1_q4nlv")
+ContentIdValue = "skill.poison-spear.lv1"
+ResourceTypeIdValue = "skill"
+ResourceUidValue = "uid://n4swajo5tftl"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearSkillLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("buff.poison", "presentation.poison-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_cltql"]
+script = ExtResource("1_q4nlv")
+ContentIdValue = "presentation.poison-spear.lv1"
+ResourceTypeIdValue = "presentation"
+ResourceUidValue = "uid://c0wk7kb5m0147"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearPresentationLv1.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("impact.poison-spear", "projectile.poison-spear")
+
+[sub_resource type="Resource" id="Resource_ia77n"]
+script = ExtResource("1_q4nlv")
+ContentIdValue = "encounter.poison-spear.10x10"
+ResourceTypeIdValue = "encounter"
+ResourceUidValue = "uid://c1u2bwisfgkk1"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpear10x10Fixture.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("skill.poison-spear.lv1")
+
+[sub_resource type="Resource" id="Resource_lt8qr"]
+script = ExtResource("1_q4nlv")
+ContentIdValue = "projectile.poison-spear"
+ResourceTypeIdValue = "packed-scene"
+ResourceUidValue = "uid://dewosssqq8p7p"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearProjectile.tscn"
+SchemaVersion = 1
+
+[sub_resource type="Resource" id="Resource_1ajm8"]
+script = ExtResource("1_q4nlv")
+ContentIdValue = "impact.poison-spear"
+ResourceTypeIdValue = "packed-scene"
+ResourceUidValue = "uid://c3525yd0esr0y"
+DiagnosticPathValue = "res://content/poison_spear/PoisonSpearImpact.tscn"
+SchemaVersion = 1
+
+[resource]
+script = ExtResource("2_o67qe")
+Entries = [SubResource("Resource_q4nlv"), SubResource("Resource_o67qe"), SubResource("Resource_cltql"), SubResource("Resource_ia77n"), SubResource("Resource_lt8qr"), SubResource("Resource_1ajm8")]

@@ -1,0 +1,334 @@
+{
+    "schemaVersion":  1,
+    "defaultAttribution":  "cty41",
+    "entries":  [
+                    {
+                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/correct_128.png",
+                        "sha256":  "b38131a6c5f18a8ee36f0a1bab0ef78929a7c36c3a3f834a420870dfd42d8500",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-agent-review-example"
+                    },
+                    {
+                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/incorrect_128.png",
+                        "sha256":  "eb0bd32260f580c92f229aeae2f36d71da82f43bf549fdef701b17b19013ae71",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-agent-review-example"
+                    },
+                    {
+                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/correct_128.png",
+                        "sha256":  "a6c81f77fd76e9dafcefba33edb24e69a727285371bac6b9f893485d914d6e15",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-agent-review-example"
+                    },
+                    {
+                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/incorrect_128.png",
+                        "sha256":  "c71b19259a4f354cf12b2808431327ca9c85a9621436e199c47908a0fbc2d024",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-agent-review-example"
+                    },
+                    {
+                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/correct_128.png",
+                        "sha256":  "6b816acd9688a078a60d24cb4ef16d0e69cc5a876fae7e9405a6f9ef99cd6c0e",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-agent-review-example"
+                    },
+                    {
+                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/incorrect_128.png",
+                        "sha256":  "060de12e9d127f1886f1a3aa9390432e53367fb4bb3f8059a68c0d1195578ae9",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-agent-review-example"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_hunter_cast_dr.png",
+                        "sha256":  "59ea2ab032f37b1b76ba84942964ff21dcdd5095ef73bb1d33fd71cc34d55b0f",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_hunter_cast_ul.png",
+                        "sha256":  "822ae999232063260ae0b63d2920d3e232d763af1b0dc976f590c7f197353eb8",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_hunter_hit_dr.png",
+                        "sha256":  "a921486bec40be843d02efdce8617e2a1b764c33e6a9e8e4278cf76c92fa9e01",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_hunter_hit_ul.png",
+                        "sha256":  "0eb88380ebee80e99d1208b0adf5dca6b91ed368c94039ae298b9c4bb0c297af",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_hunter_melee_attack_dr.png",
+                        "sha256":  "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_hunter_melee_attack_ul.png",
+                        "sha256":  "e1a2c54c286adbd01c4a98a1a7f023d9b07880459c21c5e42994a8eeaa922ffe",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_mage_cast_dr.png",
+                        "sha256":  "8232c168c3c1e114c6be03004a919a832d8e02acae5b9a648f6782f688086b80",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_mage_cast_ul.png",
+                        "sha256":  "5897a9dd9d2d4fa3076fc93bcba921017fa0f203113ca4d08e4e966ae99c7490",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_mage_hit_dr.png",
+                        "sha256":  "76c2d6d9427f78b0a67ca1f051ed323d61eb1ac3a2d88dcd09b027abbda8fea0",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_mage_hit_ul.png",
+                        "sha256":  "42fe16f9824683592ba23991bc556a828fe32b9fb2e4d627db5b8d69e57c1f58",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_necromancer_cast_dr.png",
+                        "sha256":  "8262b0dd3cf5b29443b5d98d10628a1e56581dae5f68189020ed2beac46a0f92",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_necromancer_cast_ul.png",
+                        "sha256":  "1b986f6a882fb6d5bf2477493a9dd5e392781e158c0aa1eecb764a3b56c2c713",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_necromancer_hit_dr.png",
+                        "sha256":  "66e6a41a4de74288eab731cda2dda6369646d01ce93992f0a836b7d4add63395",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/actions/doge_necromancer_hit_ul.png",
+                        "sha256":  "7ff19e1d7a3e6e1deadf22b3e481021b53793705278b3bf1a554dd34066df913",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_fire_demon.png",
+                        "sha256":  "e6ec064f0b5e6497159e15eadcae66ee719cd920d6c0a79f1daf386eb4f25939",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_fire_demon_ul.png",
+                        "sha256":  "d52d3c7d2e43310fd53a5d8081fee782729754b8afbc8c93c7ea04ae94982d95",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_hunter.png",
+                        "sha256":  "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_hunter_death.png",
+                        "sha256":  "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_hunter_idle_unarmed_dr.png",
+                        "sha256":  "4f9388311ad640336a5f9cb0eac90831849f885d2ccae01195b06bcc0fba56ab",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_hunter_idle_unarmed_ul.png",
+                        "sha256":  "08bf56069d3fd4365995b5a8a4f388ba15b8c18c4018bd5c2f2ad97fecdb41a2",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_hunter_ul.png",
+                        "sha256":  "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_mage.png",
+                        "sha256":  "84fbefaa2423948cb2a716aa9848a75a12745a4bfdc4a9ad446b95fe17bccee5",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_mage_death.png",
+                        "sha256":  "d39fac2c00f1aee495b1a3ea31fb4547c5d540432a35130fa5361614ce7ddd0b",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_mage_ul.png",
+                        "sha256":  "40547194e76662324b687df271b34edb767a5d6c57d1539d39ff4d32db39bad8",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_necromancer.png",
+                        "sha256":  "a967f2767667bb16cfae4167ae16570ad169246654455280f33eccca0fa44b8f",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_necromancer_death.png",
+                        "sha256":  "f614dc8d42d194886c2f3d179b9ae4918f431a9a53e0cc7d0d704d550dac1a32",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_necromancer_ul.png",
+                        "sha256":  "8f6d5e868e706e337fc56b3bbd58a9c8102a89f9d124faa7c3f4e4dc56014ab7",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_skeleton_mage.png",
+                        "sha256":  "885e0bdd2a34a40b9d472cd830108f46dd69f2fc4a170f7e94b89c10abcde334",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_skeleton_mage_ul.png",
+                        "sha256":  "ea9f16e8165b451c8be43247634a66123e4ac0baf34b2e5a368e63e15fc47e16",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_skeleton_warrior.png",
+                        "sha256":  "f86d92c8038ab47b1d66ab4e95ff4807fa3e91ddd89276f67f919b577be5e6c3",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/doge_skeleton_warrior_ul.png",
+                        "sha256":  "c327f0b3b55e06ed7789075cc82fde8d17fceaa1a452de863c8a3ffb350bf951",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/pure_run_unit_shadow_1x1_v01.png",
+                        "sha256":  "c232948d6631bb8f88d1c7476f33fde923b5dd9fb7ac9d6793cb84fdd58e9e83",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/splitjaw_goat.png",
+                        "sha256":  "55850716a198201e3756ae0eb34e1f024d472fb1a1a020fbcee671b219c1121a",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/splitjaw_goat_death.png",
+                        "sha256":  "03b9916ed03a0d77fb248ab642039c41788a3ad259d73b51c2ab27f73f4599ef",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    },
+                    {
+                        "path":  "godot/assets/units/splitjaw_goat_ul.png",
+                        "sha256":  "4d09c98b72ba2310874844de9216bd06ddf69447c0b87dc89576dac01814a2eb",
+                        "status":  "approved",
+                        "rightsHolder":  "cty41",
+                        "license":  "CC-BY-4.0",
+                        "provenance":  "project-owned-migrated-runtime-art"
+                    }
+                ]
+}

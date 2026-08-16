@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.AIEngageThenAttack",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "createAiBrain",
+      "parameters": {
+        "brainAssetAlias": "attack_brain",
+        "brainType": "attack"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "moveUnit",
+      "parameters": {
+        "unitAlias": "p2_0",
+        "cellAlias": "cell_3_0"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeAI",
+      "parameters": {
+        "unitAlias": "p1_0",
+        "brainAssetAlias": "attack_brain",
+        "targetAlias": "p2_0"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "aiWasNoOpEquals",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitPositionChangedSinceStep",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "targetHealthChangedSinceStep",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 15000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "aiWasNoOpEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitPositionChangedSinceStep",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "targetHealthChangedSinceStep",
+      "parameters": {}
+    }
+  ]
+}

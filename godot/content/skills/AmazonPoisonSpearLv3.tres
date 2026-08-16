@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://c8fhbjhp3aqal"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_dilgy"]
+
+[resource]
+script = ExtResource("1_dilgy")
+ContentIdValue = "skill.amazon.poison-spear.lv3"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Lv3_Graph_Ability.asset"
+DisplayName = "毒矛 Lv3"
+Description = "造成10点伤害并使九宫格敌人中毒。"
+RoleValue = "Amazon"
+KindValue = "Active"
+Level = 3
+ManaCost = 6
+MinRange = 1
+MaxRange = 5
+ExecutionKindValue = "PoisonSpear"
+Damage = 10
+DamageKindValue = "Physical"
+StatusContentIdValue = "buff.poison"
+StatusDuration = 3
+BranchId = "amazon.poison-spear"
+PrerequisiteContentIdValue = "skill.amazon.poison-spear.lv2"
+RequiredAttribute = "Agility"
+MinimumAttribute = 5
+AreaRadius = 1
+AreaShape = "square"
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Lv3_Graph_Ability.asset"
+SourceGuid = "79b012b45543ac645b5006cf780e6e0f"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/PoisonSpear_Lv3_Graph.asset"
+GraphDependencyHash = "ebebc5da8187fe56d08cd71f3dcdd83e"

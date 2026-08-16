@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Editor Tooling"
+  short_description: "Build reload-safe Godot editor tools"
+  default_prompt: "Use $godot-editor-tooling to implement and verify this EditorPlugin workflow."

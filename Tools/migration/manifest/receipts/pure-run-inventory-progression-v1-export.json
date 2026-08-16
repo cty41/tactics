@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-inventory-progression-v1",
+  "classification": "real_unity_assetdatabase_export",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "unityVersion": "6000.3.11f1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "exportHash": "sha256:bd345ce3d8fa3f2a35fde1881e3c001bd5ccf0cdd440c22a32f7630d1f021eac",
+  "outputSha256": "6d4e9ac9f7504db4c63c2eb6b9a48a863edc1d37b90de09d763de567cf36334f",
+  "typedDraftSha256": "9c7349e28ba9acb1e61e6c7df4c0ae0b1741d7ee56c747ad32094a4d1d44efc7",
+  "assetRoots": 76,
+  "abilityConfigs": 39,
+  "skillGraphs": 34,
+  "sourceContracts": 3,
+  "branchCount": 18,
+  "playerSkillLevelCount": 36,
+  "internalSkillDependencies": 5,
+  "idempotency": {"measuredIndependentRuns": 2, "byteIdentical": true},
+  "payloadBoundary": {"unityUiPayloadCopied": false, "formalVfxAudioCopied": false, "thirdPartyPayloadCopied": false},
+  "ownership": "UnityOwned",
+  "nextState": "Exported"
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "scenarioName": "SkillGraph.SelfHealSkillRaisesCasterHealth",
+  "requiredAdapters": [
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "kind": "createSkillTestWorld",
+      "parameters": {},
+      "adapter": "Skill"
+    }
+  ],
+  "runtimeActions": [
+    {
+      "kind": "executeSkillGraph",
+      "parameters": {
+        "graphAlias": "graph",
+        "casterAlias": "caster"
+      },
+      "adapter": "Skill"
+    }
+  ],
+  "assertionPlans": [
+    {
+      "kind": "executionStateEquals",
+      "expected": "Completed",
+      "parameters": {},
+      "adapter": "Skill"
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": []
+}

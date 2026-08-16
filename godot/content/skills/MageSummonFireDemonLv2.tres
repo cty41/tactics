@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://cijl7f7n1a0qy"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_8jcs6"]
+
+[resource]
+script = ExtResource("1_8jcs6")
+ContentIdValue = "skill.mage.summon-fire-demon.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonFireDemon_Lv2_Graph_Ability.asset"
+DisplayName = "召唤火魔 Lv2"
+Description = "替换旧火魔并在3格内尝试召唤2只火魔。"
+RoleValue = "Mage"
+KindValue = "Active"
+Level = 2
+ManaCost = 7
+MinRange = 1
+MaxRange = 3
+ExecutionKindValue = "SummonFireDemon"
+DamageKindValue = "None"
+BranchId = "mage.summon-fire-demon"
+PrerequisiteContentIdValue = "skill.mage.summon-fire-demon.lv1"
+PrerequisiteBranchId = "mage.fireball"
+RequiredAttribute = "Intelligence"
+MinimumAttribute = 7
+SummonCount = 2
+SummonLimit = 2
+SummonCategory = "FireDemon"
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonFireDemon_Lv2_Graph_Ability.asset"
+SourceGuid = "ae78c0300166c6245be43500a8564d89"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/SummonFireDemon_Lv2_Graph.asset"
+GraphDependencyHash = "8cc6c136023ff67e3167b8dc45cd5d9e"

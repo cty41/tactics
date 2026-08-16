@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://dnv3b20bruf60"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_rxwer"]
+
+[resource]
+script = ExtResource("1_rxwer")
+ContentIdValue = "buff.ignite"
+SourceId = "Ignite"
+DefaultDuration = 2
+PolarityValue = "Harmful"
+EffectKindValue = "Burning"
+TriggerTimingValue = "TurnStart"
+RefreshStrategyValue = "AddStacks"
+DamagePerTurn = 2.0
+ElementKindValue = "Fire"
+DamageCategoryValue = "Magic"
+SourcePath = "Assets/Tactics/Battle/Buffs/Ignite.asset"
+SourceGuid = "b5dd0ae5757dcc248a30b257a07ebb1e"
+SourceLocalFileId = 11400000
+IconSourcePath = "Assets/Tactics/Arts/UI/Icons/Buffs/ignited.png"
+IconSourceGuid = "4673971a1dedb674fbb877940273cf67"
+IconSourceLocalFileId = 7634403413835184380
+IconDependencyHash = "15c231f186138252362c8a7f6d73352d"

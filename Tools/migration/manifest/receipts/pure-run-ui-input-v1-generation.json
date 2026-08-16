@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ui-input-v1",
+  "state": "Validated",
+  "ownership": "UnityOwned",
+  "canvas": {
+    "width": 1600,
+    "height": 900,
+    "stretch": "canvas_items+keep"
+  },
+  "canonicalCatalogEntries": 74,
+  "sceneHash": "sha256:aeaee66da1f1a077470731d52b35ea2d1df7c84b3c1bbd7c1ee0f284d41050f7",
+  "playableBalanceContract": "godot-playable-lv1-balance-v1",
+  "playableBalanceHash": "sha256:518d632437d8cd34572cc4fea5680719640a3094c754aec08d4b886b26964006",
+  "enemySpeedContract": "godot-playable-enemy-speed-v1",
+  "enemySpeedHash": "sha256:38cd85a4bceaaced63a3b824e5484d0135ff05fa2af70361cb97e9103a98bbde",
+  "idempotency": {
+    "resourceSaverRuns": 2,
+    "byteIdentical": true
+  },
+  "visualPayload": "existing_migrated_unit_visuals_only",
+  "manualUiInputAcceptance": "passed"
+}

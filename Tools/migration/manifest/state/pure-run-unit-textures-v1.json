@@ -1,0 +1,159 @@
+{
+  "artifacts": [
+    {
+      "contentId": "texture.unit.doge-fire-demon",
+      "relativePath": "godot/assets/units/doge_fire_demon.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:e8940fbc8a2b3247e3726e29df5030c8dcd93173f2faa87cdeabee32040c6fb1",
+      "targetHash": "sha256:e6ec064f0b5e6497159e15eadcae66ee719cd920d6c0a79f1daf386eb4f25939"
+    },
+    {
+      "contentId": "texture.unit.doge-fire-demon-ul",
+      "relativePath": "godot/assets/units/doge_fire_demon_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:a36ed692a3d2959e23b2c40b84fc60f8f9184e6a95f8f0fd56778cd29b23e291",
+      "targetHash": "sha256:d52d3c7d2e43310fd53a5d8081fee782729754b8afbc8c93c7ea04ae94982d95"
+    },
+    {
+      "contentId": "texture.unit.doge-hunter",
+      "relativePath": "godot/assets/units/doge_hunter.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:86af9412236d27374bc5ce846c6b9186ac934c741f1a601ea6182f7378ce012d",
+      "targetHash": "sha256:68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07"
+    },
+    {
+      "contentId": "texture.unit.doge-hunter-death",
+      "relativePath": "godot/assets/units/doge_hunter_death.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:02fa432fba836fd0184a27753bb4c9ad11b33f171bde49f3c3b85ab767ef943a",
+      "targetHash": "sha256:f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19"
+    },
+    {
+      "contentId": "texture.unit.doge-hunter-idle-unarmed-dr",
+      "relativePath": "godot/assets/units/doge_hunter_idle_unarmed_dr.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:6e4cb98a1c4829563dc36786f4dcbf2d3cb87ac42888dc6726236e10d62312b6",
+      "targetHash": "sha256:4f9388311ad640336a5f9cb0eac90831849f885d2ccae01195b06bcc0fba56ab"
+    },
+    {
+      "contentId": "texture.unit.doge-hunter-idle-unarmed-ul",
+      "relativePath": "godot/assets/units/doge_hunter_idle_unarmed_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:3ee14849d0b1174ace74c6223fb614457727d09290332a7a517c16e7ca29ba58",
+      "targetHash": "sha256:08bf56069d3fd4365995b5a8a4f388ba15b8c18c4018bd5c2f2ad97fecdb41a2"
+    },
+    {
+      "contentId": "texture.unit.doge-hunter-ul",
+      "relativePath": "godot/assets/units/doge_hunter_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:233e3ee2a6224742610914ad00b52a9605490a89fd0ff4ccdf13922f5f59e9b0",
+      "targetHash": "sha256:f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24"
+    },
+    {
+      "contentId": "texture.unit.doge-mage",
+      "relativePath": "godot/assets/units/doge_mage.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:0ce1c5d21425b5953a5879d60721a0b86abae6e8207bfe03d569e32ed17385f6",
+      "targetHash": "sha256:84fbefaa2423948cb2a716aa9848a75a12745a4bfdc4a9ad446b95fe17bccee5"
+    },
+    {
+      "contentId": "texture.unit.doge-mage-death",
+      "relativePath": "godot/assets/units/doge_mage_death.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:06bc6cbe3efadb0278b9948ecdb7127791f3180c8b10a0fac0dc0d10c871f0fa",
+      "targetHash": "sha256:d39fac2c00f1aee495b1a3ea31fb4547c5d540432a35130fa5361614ce7ddd0b"
+    },
+    {
+      "contentId": "texture.unit.doge-mage-ul",
+      "relativePath": "godot/assets/units/doge_mage_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:5dd5b75d1d530b9ef7ef60ab607ae5cedd4437e666e0bd3c29a3d3b30c786c75",
+      "targetHash": "sha256:40547194e76662324b687df271b34edb767a5d6c57d1539d39ff4d32db39bad8"
+    },
+    {
+      "contentId": "texture.unit.doge-necromancer",
+      "relativePath": "godot/assets/units/doge_necromancer.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:06f8e9e03dde6f4aa7d94f5db43adbed3b2773d062392b491ab4c937985e92ed",
+      "targetHash": "sha256:a967f2767667bb16cfae4167ae16570ad169246654455280f33eccca0fa44b8f"
+    },
+    {
+      "contentId": "texture.unit.doge-necromancer-death",
+      "relativePath": "godot/assets/units/doge_necromancer_death.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:e21a3ec94ea0375591867e68b80567fe62c21476c81a15a7133c4bf5df5a3012",
+      "targetHash": "sha256:f614dc8d42d194886c2f3d179b9ae4918f431a9a53e0cc7d0d704d550dac1a32"
+    },
+    {
+      "contentId": "texture.unit.doge-necromancer-ul",
+      "relativePath": "godot/assets/units/doge_necromancer_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:5ba4b527c93f05534ab622c47b3780b217f4ed317c0387da55a86b0c00479441",
+      "targetHash": "sha256:8f6d5e868e706e337fc56b3bbd58a9c8102a89f9d124faa7c3f4e4dc56014ab7"
+    },
+    {
+      "contentId": "texture.unit.doge-skeleton-mage",
+      "relativePath": "godot/assets/units/doge_skeleton_mage.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:d6fe1d8aa7ddc33227b9d81b69da93f5c5cac892f2e0b7cdf05c32940d40c134",
+      "targetHash": "sha256:885e0bdd2a34a40b9d472cd830108f46dd69f2fc4a170f7e94b89c10abcde334"
+    },
+    {
+      "contentId": "texture.unit.doge-skeleton-mage-ul",
+      "relativePath": "godot/assets/units/doge_skeleton_mage_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:eec513ce03f94dde8fdb95648242ad05b8111d2b1a14b4a7c48fbb987e16adc0",
+      "targetHash": "sha256:ea9f16e8165b451c8be43247634a66123e4ac0baf34b2e5a368e63e15fc47e16"
+    },
+    {
+      "contentId": "texture.unit.doge-skeleton-warrior",
+      "relativePath": "godot/assets/units/doge_skeleton_warrior.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:b48932f953d10c30070e1081cd8087ab8d4dc6e9ceade87c2c88e98fc75aa4c9",
+      "targetHash": "sha256:f86d92c8038ab47b1d66ab4e95ff4807fa3e91ddd89276f67f919b577be5e6c3"
+    },
+    {
+      "contentId": "texture.unit.doge-skeleton-warrior-ul",
+      "relativePath": "godot/assets/units/doge_skeleton_warrior_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:85e8142d50e82e9d475e332fff5fcbd8f2176d3c419fcbea4d9925d9d1edd387",
+      "targetHash": "sha256:c327f0b3b55e06ed7789075cc82fde8d17fceaa1a452de863c8a3ffb350bf951"
+    },
+    {
+      "contentId": "texture.unit.pure-run-unit-shadow-1x1-v01",
+      "relativePath": "godot/assets/units/pure_run_unit_shadow_1x1_v01.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:c4c811c0c2c2dfc2591c8ca68dcd4fef2d8fc36d010f424840869c7605f9db35",
+      "targetHash": "sha256:c232948d6631bb8f88d1c7476f33fde923b5dd9fb7ac9d6793cb84fdd58e9e83"
+    },
+    {
+      "contentId": "texture.unit.splitjaw-goat",
+      "relativePath": "godot/assets/units/splitjaw_goat.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:0541035464e01c7fccb33b194c28cb487ea815ba3017042fe28173d8abdec083",
+      "targetHash": "sha256:55850716a198201e3756ae0eb34e1f024d472fb1a1a020fbcee671b219c1121a"
+    },
+    {
+      "contentId": "texture.unit.splitjaw-goat-death",
+      "relativePath": "godot/assets/units/splitjaw_goat_death.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:434f3f82439206a7acec144af06fbeef881f0dab51ea4fe6dff3a1ce37c9fe00",
+      "targetHash": "sha256:03b9916ed03a0d77fb248ab642039c41788a3ad259d73b51c2ab27f73f4599ef"
+    },
+    {
+      "contentId": "texture.unit.splitjaw-goat-ul",
+      "relativePath": "godot/assets/units/splitjaw_goat_ul.png",
+      "resourceUid": null,
+      "semanticHash": "sha256:1b8fa5982f6e762fc065316ffbe187a97741202d58ad8190ab1e46dc8e1d3d91",
+      "targetHash": "sha256:4d09c98b72ba2310874844de9216bd06ddf69447c0b87dc89576dac01814a2eb"
+    }
+  ],
+  "batchId": "pure-run-unit-textures-v1",
+  "schemaVersion": 1,
+  "source": {
+    "exportHash": "sha256:d7d25a38e6be69ace05efafb95a987d2e7809bf063e3013ec0b6263d17241aee",
+    "exporterVersion": "unity-assetdatabase-v1",
+    "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+    "sourceTag": "unity-final-2026-08-08"
+  }
+}

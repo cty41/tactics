@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "UI.BattleUiTwoRowLayout",
+  "requiredAdapters": [
+    "Battle",
+    "UI"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "UI",
+      "kind": "openUI",
+      "parameters": {
+        "uiId": "Battle"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "UI",
+      "kind": "elementChildOrderEquals",
+      "target": "ActionPanel",
+      "expected": [
+        "MoveButton",
+        "BattleConsumableButton"
+      ],
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementRectRelationEquals",
+      "target": "SkillPanel",
+      "expected": "below",
+      "parameters": {
+        "otherElement": "ActionPanel",
+        "tolerance": 1
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementRectRelationEquals",
+      "target": "SkillPanel",
+      "expected": "nonoverlapping",
+      "parameters": {
+        "otherElement": "ActionPanel"
+      }
+    }
+  ],
+  "timeoutMs": 15000,
+  "probeRequests": [
+    {
+      "adapter": "UI",
+      "kind": "elementChildOrderEquals",
+      "target": "ActionPanel",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementRectRelationEquals",
+      "target": "SkillPanel",
+      "parameters": {
+        "otherElement": "ActionPanel",
+        "tolerance": 1
+      }
+    },
+    {
+      "adapter": "UI",
+      "kind": "elementRectRelationEquals",
+      "target": "SkillPanel",
+      "parameters": {
+        "otherElement": "ActionPanel"
+      }
+    }
+  ]
+}

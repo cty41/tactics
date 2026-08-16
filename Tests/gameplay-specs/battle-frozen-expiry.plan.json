@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.FrozenBuffExpiry",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "addBuff",
+      "parameters": {
+        "unitAlias": "p2_0",
+        "buffName": "Frozen",
+        "duration": 2
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "advanceTurn",
+      "parameters": {}
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "unitDoesNotHaveBuff",
+      "target": "p2_0",
+      "expected": "Frozen",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": []
+}

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://cieqwq207rk8d"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_sxcue"]
+
+[resource]
+script = ExtResource("1_sxcue")
+ContentIdValue = "skill.amazon.combat-techniques.lv3"
+SourceId = "Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs"
+DisplayName = "战斗技巧 Lv3"
+Description = "通过战斗技巧闪避攻击并强化伤害。"
+RoleValue = "Amazon"
+KindValue = "Passive"
+Level = 3
+ExecutionKindValue = "CombatTechniques"
+DamageKindValue = "None"
+BranchId = "amazon.combat-techniques"
+PrerequisiteContentIdValue = "skill.amazon.combat-techniques.lv2"
+RequiredAttribute = "Luck"
+MinimumAttribute = 5
+SourcePath = "Assets/Tactics/Scripts/Common/Battle/PureRunAbilityCatalog.cs"
+SourceGuid = "186edb047008cbf4f80657abf2803367"
+SourceLocalFileId = 11500000

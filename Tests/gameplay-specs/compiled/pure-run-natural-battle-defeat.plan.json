@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.PureRunNaturalBattleDefeat",
+  "requiredAdapters": [
+    "Map",
+    "Battle",
+    "Skill"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "setRunSeed",
+      "parameters": {
+        "seed": 9101
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "loadPureRunMap",
+      "parameters": {
+        "mapConfigPath": "Assets/Tactics/RoguelikeMap/MapConfigs/DarkForestPrototypeConfig.asset"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Skill",
+      "kind": "createSkillGraph",
+      "parameters": {
+        "alias": "enemyFinisher",
+        "graphKind": "singleTargetDamage",
+        "baseDamage": 999,
+        "isRanged": false,
+        "minRange": 1,
+        "maxRange": 1
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "beginBattleNode",
+      "parameters": {
+        "nodeId": "layer_01_battle"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeBattleSkillGraph",
+      "parameters": {
+        "graphAlias": "enemyFinisher",
+        "casterAlias": "p2_0",
+        "targetAlias": "p1_0"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "waitForBattleEnd",
+      "parameters": {
+        "maxFrames": 120
+      }
+    },
+    {
+      "adapter": "Map",
+      "kind": "commitNaturalBattleDefeat",
+      "parameters": {
+        "playerNumber": 1
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "battleDefeatRewardsAreZero",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "expected": "Defeat",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "expected": false,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 20000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "battleDefeatRewardsAreZero",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "completedSummaryOutcomeEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "mapIsActive",
+      "parameters": {}
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentDefinitionResource" format=3 uid="uid://daf8ufg4gk48g"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/EquipmentDefinitionResource.cs" id="1_2mvrr"]
+
+[resource]
+script = ExtResource("1_2mvrr")
+ContentIdValue = "item.equipment.lucky-ring-01"
+SourceId = "lucky_ring_01"
+DisplayName = "幸运戒指"
+SlotValue = "Accessory"
+RarityValue = "Rare"
+Price = 15
+CharismaBonus = 1
+LuckBonus = 5

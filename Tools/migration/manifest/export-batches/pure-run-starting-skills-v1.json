@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-starting-skills-v1",
+  "exporterVersion": "unity-assetdatabase-v1",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "outputPath": "Tools/migration/out/pure-run-starting-skills-v1.unity.json",
+  "assets": [
+    { "sourceKey": "skill.amazon.pickup-spear.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PickupSpear_Graph_Ability.asset", "gitBlobSha1": "4ae2a60a8d37ac076dfacf3a23fd891060c32018", "targetContentIds": ["skill.amazon.pickup-spear.lv1"] },
+    { "sourceKey": "skill.amazon.thrust.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Thrust_Graph_Ability.asset", "gitBlobSha1": "aa630d28921cacd885433c8201e9530a430fc081", "targetContentIds": ["skill.amazon.thrust.lv1"] },
+    { "sourceKey": "skill.basic.magic", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MagicAttack_Graph_Ability.asset", "gitBlobSha1": "cdfbd84253a5197223baffd34377c1e2cf34d6b4", "targetContentIds": ["skill.basic.magic"] },
+    { "sourceKey": "skill.basic.melee", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/MeleeAttack_Graph_Ability.asset", "gitBlobSha1": "999ad1d9f6890de125d9af024ff58d5edd24c0d1", "targetContentIds": ["skill.basic.melee"] },
+    { "sourceKey": "skill.mage.fireball.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Fireball_Lv1_Ability.asset", "gitBlobSha1": "7b9990cb1268e6cea261a8dc00a8158004bb8518", "targetContentIds": ["skill.mage.fireball.lv1"] },
+    { "sourceKey": "skill.mage.ice-bolt.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/IceBolt_Graph_Ability.asset", "gitBlobSha1": "fc254f00034066ff4138242131ed4da8888fc376", "targetContentIds": ["skill.mage.ice-bolt.lv1"] },
+    { "sourceKey": "skill.mage.lightning.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Lightning_Graph_Ability.asset", "gitBlobSha1": "ab52cc83f569d524645a9d91a2192d16a675382c", "targetContentIds": ["skill.mage.lightning.lv1"] },
+    { "sourceKey": "skill.necromancer.amplify-damage.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/Curse_Graph_Ability.asset", "gitBlobSha1": "629c95558dd5df8ec7af51f51899952e2f713467", "targetContentIds": ["skill.necromancer.amplify-damage.lv1"] },
+    { "sourceKey": "skill.necromancer.bone-spear.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneSpear_Graph_Ability.asset", "gitBlobSha1": "74e1c7f9cebb9da0069b3f699dbefc4e79c3ed18", "targetContentIds": ["skill.necromancer.bone-spear.lv1"] },
+    { "sourceKey": "skill.necromancer.summon-skeleton.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SummonSkeleton_Graph_Ability.asset", "gitBlobSha1": "6af81fd2dbdf17a85b2438f0e26762166f379d81", "targetContentIds": ["skill.necromancer.summon-skeleton.lv1"] },
+    { "sourceKey": "skill.poison-spear.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset", "gitBlobSha1": "306b1fa9f64c40976818618e64ab8366c922f3ab", "targetContentIds": ["skill.poison-spear.lv1"] },
+    { "sourceKey": "graph.amazon.pickup-spear.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/PickupSpear_Graph.asset", "gitBlobSha1": "ab024e455b83ba285a0b23e7dd855653dc583dec", "targetContentIds": ["skill.amazon.pickup-spear.lv1"] },
+    { "sourceKey": "graph.amazon.thrust.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/Thrust_Graph.asset", "gitBlobSha1": "0574905c21b6554acf1395a19ece7e3e2867a081", "targetContentIds": ["skill.amazon.thrust.lv1"] },
+    { "sourceKey": "graph.basic.magic", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/MagicAttack_Graph.asset", "gitBlobSha1": "b21947b0de7169057ed846ee7263f3ba2089c3f3", "targetContentIds": ["skill.basic.magic"] },
+    { "sourceKey": "graph.basic.melee", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/MeleeAttack_Graph.asset", "gitBlobSha1": "87634103e1d4ebf50a55ece693e5d6b4d9721fbb", "targetContentIds": ["skill.basic.melee"] },
+    { "sourceKey": "graph.mage.fireball.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/Fireball_Lv1_Graph.asset", "gitBlobSha1": "07abeac51490def6d5147357bbcfdf4adc290b5b", "targetContentIds": ["skill.mage.fireball.lv1"] },
+    { "sourceKey": "graph.mage.ice-bolt.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/IceBolt_Graph.asset", "gitBlobSha1": "fab3726cc458b2b2226d606bd9d823f8cc3eea9d", "targetContentIds": ["skill.mage.ice-bolt.lv1"] },
+    { "sourceKey": "graph.mage.lightning.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/Lightning_Graph.asset", "gitBlobSha1": "65c538ff43cc12346bddc3717b88cdba9c2edad9", "targetContentIds": ["skill.mage.lightning.lv1"] },
+    { "sourceKey": "graph.necromancer.amplify-damage.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/Curse_Graph.asset", "gitBlobSha1": "ae14985d12ff65a4f2992c7a2176c7f3b64dd2a0", "targetContentIds": ["skill.necromancer.amplify-damage.lv1"] },
+    { "sourceKey": "graph.necromancer.bone-spear.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/BoneSpear_Graph.asset", "gitBlobSha1": "bc58ef80ca6d259776a6c75ba1995dcb5d7ca653", "targetContentIds": ["skill.necromancer.bone-spear.lv1"] },
+    { "sourceKey": "graph.necromancer.summon-skeleton.lv1", "sourcePath": "Assets/Tactics/Battle/Abilities/SkillGraphs/SummonSkeleton_Graph.asset", "gitBlobSha1": "8b3adb451ec265bf36b7426adcfd9eff2b1aa8c7", "targetContentIds": ["skill.necromancer.summon-skeleton.lv1"] }
+  ]
+}

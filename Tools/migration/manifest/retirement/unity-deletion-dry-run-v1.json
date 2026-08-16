@@ -1,0 +1,14 @@
+{
+    "schemaVersion":  1,
+    "receiptId":  "unity-deletion-dry-run-v1",
+    "sourceCommit":  "8b45b3c48d088693d1e1d485c6f75c5390e53317",
+    "manifestId":  "unity-deletion-manifest-v1",
+    "manifestSha256":  "a7d82341b29ee8f11d15ad8c4bc948f865dfc12effc3f7af2c5c0558f3dddd57",
+    "entryCount":  9307,
+    "totalBytes":  46909708,
+    "verifier":  "Tools/godot/Verify-GodotProject.ps1",
+    "result":  "passed",
+    "productionWorkspaceDeleted":  false,
+    "completedAtUtc":  "2026-08-16T03:49:20.9481028+00:00",
+    "elapsedSeconds":  503.879
+}

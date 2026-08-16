@@ -1,0 +1,15 @@
+{
+  "DisplayName": "回收长矛",
+  "Description": "投掷长矛命中目标后，长矛掉落在最后命中单位附近的空格，不嵌入单位。",
+  "Nodes": [
+    { "Id": "start", "Type": "Start" },
+    { "Id": "target", "Type": "SelectPrimaryTarget", "Parameters": { "minRange": 1, "maxRange": 6 } },
+    { "Id": "projectile", "Type": "ProjectileLaunch", "Parameters": { "travelTime": 0.15, "speed": 12, "dropOnHit": true, "dropSearchRadius": 1 } },
+    { "Id": "finish", "Type": "Finish" }
+  ],
+  "Edges": [
+    { "Source": "start", "Target": "target" },
+    { "Source": "target", "Target": "projectile" },
+    { "Source": "projectile", "Target": "finish" }
+  ]
+}

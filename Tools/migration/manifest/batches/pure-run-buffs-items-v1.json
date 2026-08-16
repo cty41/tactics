@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-buffs-items-v1",
+  "classification": "real_content_migration",
+  "sourceTag": "unity-final-2026-08-08",
+  "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+  "exportSpecification": "Tools/migration/manifest/export-batches/pure-run-buffs-items-v1.json",
+  "exportReceipt": "Tools/migration/manifest/receipts/pure-run-buffs-items-v1-export.json",
+  "owner": "UnityOwned",
+  "status": "Validated",
+  "contentCounts": {
+    "buffs": 14,
+    "consumables": 3,
+    "equipment": 12,
+    "total": 29
+  },
+  "externalContentDependencies": [
+    "buff.poison"
+  ],
+  "jsonSources": [
+    {
+      "sourcePath": "Assets/Tactics/GameData/Consumables.json",
+      "gitBlobSha1": "626f45f2fabe2e957d6eeb327a57e4b695935ef8"
+    },
+    {
+      "sourcePath": "Assets/Tactics/GameData/Equipment.json",
+      "gitBlobSha1": "fdc13a13402f4f15aaa6ef97bcd1d118fdf76802"
+    }
+  ],
+  "dependencyBoundary": {
+    "buffIcons": "audit_only_not_copied",
+    "unityMaterialsAndShaders": "not_in_scope",
+    "thirdPartyPayloads": "not_copied"
+  },
+  "generation": "godot-resource-saver-buff-item-v1",
+  "generationLedger": "Tools/migration/manifest/state/pure-run-buffs-items-v1.json",
+  "generationReceipt": "Tools/migration/manifest/receipts/pure-run-buffs-items-v1-generation.json",
+  "plannedTargetAssets": [
+    "godot/content/buffs_items/ContentCatalog.tres",
+    "godot/content/buffs_items/*.tres",
+    "godot/content/ContentCatalog.tres"
+  ],
+  "validation": {
+    "sourceIdentity": "passed",
+    "exportIdempotency": "passed_two_independent_runs",
+    "typedDraft": "passed",
+    "godotGeneration": "passed_two_byte_identical_resource_saver_runs",
+    "uidPreservation": "passed",
+    "catalogRuntime": "passed_compatibility_and_forward_plus",
+    "gdUnitRuntime": "passed",
+    "visualAcceptance": "not_applicable_no_visual_payload"
+  }
+}

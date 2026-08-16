@@ -1,0 +1,72 @@
+<!-- policy-id: foreground-interaction -->
+
+# 前台交互与焦点保护规则
+
+本规则约束 Agent 对 Windows 桌面应用的前台控制。仓库任务默认采用 `default-deny`：除非通过本规则的唯一例外门槛，不得抢占用户焦点。
+
+## Quick Reference
+
+| 场景 | 允许 | 禁止或停止条件 |
+|---|---|---|
+| Unity 截图与视觉检查 | Unity MCP `manage_camera`、测试产物、已有图片 | 不激活 Unity，不用物理鼠标键盘补画面 |
+| Unity 交互验证 | PlayMode 自动测试、Input System 虚拟设备 | 不点击真实 Game View；后台无法构造状态时标记 `manual_visual_qa_pending` |
+| MCP 故障恢复 | 配置、端口、进程、日志和 MCP 状态的只读诊断 | 不点击 Connect、发送快捷键或切换 Editor 焦点 |
+| Canonical Godot 生命周期 | 已授权 Godot 修改任务通过 `godot-editor-lifecycle` 正常关闭并恢复原 Editor | 不激活窗口、不注入输入、不强杀、不打开原本关闭的 Editor |
+| 其他桌面应用 | 后台 API、专用 connector、文件级工具 | 默认不调用 Computer Use 或窗口激活 |
+
+## 定义
+
+以下任一行为都属于前台交互：
+
+- 对桌面应用调用 Computer Use 或等价的 OS UI 自动化。
+- 调用 `activate_window`，或以点击、按键、输入、拖动、滚动等方式隐式激活窗口。
+- 切换窗口、改变当前焦点、控制真实鼠标或键盘。
+- 为截图、视觉 QA、编译、测试、构建、连接恢复或补充演示状态操作用户前台应用。
+
+普通的“实现计划”“完成测试”“做视觉 QA”“生成截图”或类似任务授权不等于前台交互授权。
+
+## Canonical Godot 生命周期例外
+
+用户已授权：在明确的 canonical Godot 修改任务中，如果项目规则要求 Editor session 为 `0`，Agent 可自动加载 `godot-editor-lifecycle`，正常关闭经 MCP 验证的唯一 Editor，并在任务结束后恢复它，不需要逐次 `action-time-confirmation`。该例外只允许：
+
+- 对 `session_manage` 返回的精确 canonical Editor PID 发送正常窗口关闭请求；
+- 通过 pinned Godot GUI executable 重新打开同一 `godot/project.godot`；
+- 接受操作系统在创建可见窗口时可能产生的短暂焦点变化。
+
+不得调用 Computer Use、`activate_window`、键鼠输入、按进程名批量关闭或任何强制终止。正常关闭超时表示可能有未保存提示：保留进程并停止。Editor 原本未打开时不得在任务结束后新开；中间任务失败时仍优先恢复由本流程关闭的 Editor。
+
+## 默认工作流
+
+1. 先判断计划动作是否会激活窗口或注入真实输入；会则按前台交互处理。
+2. 优先使用后台 API、Unity MCP、自动测试、Input System 虚拟设备、文件工具或只读诊断。
+3. 后台路径不能提供所需证据时，停止在 `manual_visual_qa_pending`，说明已经完成的验证、缺失证据和用户可手动执行的最小步骤。
+4. 不得因为 MCP 暂时不可用、截图不完整、需要点击技能或希望补齐代表性画面而自动降级到 Computer Use。
+5. Agent 自己造成了临时 Play Mode、场景或任务状态时，优先通过不抢焦点的后台接口恢复；不得为了恢复而激活窗口。
+
+## 其他前台交互的唯一例外门槛
+
+只有同时满足以下条件时才允许前台交互：
+
+1. `current-turn-explicit-request`：用户在当前任务中明确要求操作桌面窗口；历史授权和普通实现授权均无效。
+2. Agent 在动作前说明目标应用、具体动作以及会抢占焦点的影响。
+3. `action-time-confirmation`：用户对本次前台操作明确确认。
+4. 操作只覆盖已确认的目标窗口和动作；状态变化后重新观察，不能复用旧坐标或扩大范围。
+
+用户随时撤销或中断后，必须立即停止所有前台输入。例外不授权认证、安全设置、密码管理或其他工具自身禁止的操作。
+
+## 代表性场景
+
+| 请求或状态 | 正确处理 |
+|---|---|
+| “补一张 Unity Game View 截图” | 使用 MCP 截图；截图不足时报告人工 QA 缺口 |
+| “需要点击召唤技能才能出现代表单位” | 使用虚拟输入测试；没有现成后台路径时标记 `manual_visual_qa_pending` |
+| “MCP 断线了，继续完成测试” | 后台重试和只读诊断；无法恢复时停止并请用户稍后手动处理 |
+| “请控制我的 Unity 窗口完成这一步” | 说明焦点影响并等待本次确认，通过后仅执行确认动作 |
+
+## Checklist
+
+- [ ] 已确认当前动作不会激活或切换用户前台窗口。
+- [ ] 已优先使用后台 API、MCP、自动测试或虚拟输入。
+- [ ] 后台证据不足时已使用 `manual_visual_qa_pending`，没有自动改用 Computer Use。
+- [ ] 如需例外，已有当前任务的明确请求、动作说明和本次确认。
+- [ ] 没有把普通实现、QA、截图或连接恢复授权解释为前台控制授权。

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot AI Workflow"
+  short_description: "Use pinned godot-ai within project limits"
+  default_prompt: "Use $godot-ai-workflow to operate the canonical Godot project through the pinned godot-ai boundary."

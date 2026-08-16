@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://dr0u02vunhtj0"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_r1tj3"]
+
+[resource]
+script = ExtResource("1_r1tj3")
+ContentIdValue = "skill.necromancer.skeleton-mage.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMage_Lv2_Graph_Ability.asset"
+DisplayName = "骷髅法师 Lv2"
+Description = "消耗1具尸体召唤使用火球术 Lv2 的骷髅法师，上限2。"
+RoleValue = "Necromancer"
+KindValue = "Active"
+Level = 2
+ManaCost = 7
+MinRange = 1
+MaxRange = 999
+ExecutionKindValue = "SummonSkeletonMage"
+DamageKindValue = "None"
+BranchId = "necromancer.skeleton-mage"
+PrerequisiteContentIdValue = "skill.necromancer.skeleton-mage.lv1"
+PrerequisiteBranchId = "necromancer.summon-skeleton"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+SummonLimit = 2
+SummonCategory = "SkeletonMage"
+RequiresCorpse = true
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/SkeletonMage_Lv2_Graph_Ability.asset"
+SourceGuid = "e13c7f77bbd6621499f52f94b8ed7cc5"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/SkeletonMage_Lv2_Graph.asset"
+GraphDependencyHash = "b6a4936613648d970d377cdbcf8e48b5"

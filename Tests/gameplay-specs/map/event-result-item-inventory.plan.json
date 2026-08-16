@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Map.EventResultItemInventory",
+  "requiredAdapters": [
+    "Map"
+  ],
+  "setupActions": [],
+  "runtimeActions": [
+    {
+      "adapter": "Map",
+      "kind": "applyEventResult",
+      "parameters": {
+        "resultType": "Item",
+        "targetType": "All",
+        "itemId": "potion_healing"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "inventoryContains",
+      "expected": "potion_healing",
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 10000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "inventoryContains",
+      "parameters": {}
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "batchId": "poison-spear-lv1",
+  "classification": "technical_spike",
+  "sourceCommit": "168d1934",
+  "sourcePathSetHash": "sha256:c6eb1ca1b7caf71cbbe5a11a7c56de64f701ec81d8726afa6ee34f588bb744f6",
+  "owner": "UnityOwned",
+  "status": "Generated",
+  "contentIds": [
+    "skill.poison-spear.lv1",
+    "presentation.poison-spear.lv1",
+    "encounter.poison-spear.10x10",
+    "projectile.poison-spear",
+    "impact.poison-spear"
+  ],
+  "sourceAssets": [
+    "Assets/Tactics/Battle/Abilities/SkillGraphs/PoisonSpear_Graph.asset",
+    "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/PoisonSpear_Graph_Ability.asset",
+    "Assets/Tactics/Arts/PureRun/Presentation/PoisonSpear_Presentation.asset",
+    "Assets/Tactics/Arts/PureRun/Tween/Projectiles/AmazonPoisonSpear.asset",
+    "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Prefabs/PoisonSpearFlight.prefab",
+    "Assets/Tactics/Arts/PureRun/VFX/PilotoAdapted/Prefabs/PoisonSpearImpact.prefab"
+  ],
+  "targetAssets": [
+    "godot/content/poison_spear/PoisonSpearSkillLv1.tres",
+    "godot/content/poison_spear/PoisonSpearPresentationLv1.tres",
+    "godot/content/poison_spear/PoisonSpear10x10Fixture.tres",
+    "godot/content/poison_spear/PoisonSpearProjectile.tscn",
+    "godot/content/poison_spear/PoisonSpearImpact.tscn",
+    "godot/content/poison_spear/ContentCatalog.tres"
+  ],
+  "validation": {
+    "unityParity": "pending_oracle_matrix",
+    "coreGoldenVectors": "spike_only_not_oracle_bound",
+    "godotRuntime": "passed",
+    "editorSpike": "passed",
+    "visualAcceptance": "pending"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pure-run-ai-encounter-v1",
+  "source": {
+    "encounterConfigBlob": "850f23e53869c04c8ff28adbd85c1d4f12da9bae",
+    "exportHash": "sha256:e2f817741a88ce33da21e2c5ca9bf9c90b37afcef6a6e80c9154ab0624a3e53f",
+    "exporterVersion": "unity-assetdatabase-v1",
+    "sourceCommit": "168d19345d7e0f7f22ce2516351eda9cef2e1cb1",
+    "sourceTag": "unity-final-2026-08-08",
+    "unityVersion": "6000.3.11f1"
+  },
+  "artifacts": [
+    {
+      "resourcePath": "res://content/ai_encounters/AiEncounterFixture.tscn",
+      "resourceUid": "uid://cnqmlmobrybkv",
+      "targetHash": "sha256:2acc3cd6a2c035bd2cf59334bb076743fc4fae43b549e2a680c81ae75df9c7ab"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/AiPureRunAoe.tres",
+      "resourceUid": "uid://belreeyliit7t",
+      "targetHash": "sha256:5404e937dcbfa10ab4bed148437c12e99bfe6f30e31921f07b4c7bf3ffc34f48"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/AiPureRunCharger.tres",
+      "resourceUid": "uid://dwc6sac2lva3a",
+      "targetHash": "sha256:c4433e9b8e6b2a07f3ffe0c07cbe92f421d44abd217f9456998225083c66f926"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/AiPureRunEliteCharger.tres",
+      "resourceUid": "uid://mp5k2hhdoju6",
+      "targetHash": "sha256:d878bc2e4200f213b7eaee783334288a9957649a91ac91a0fa2d5ff6f111fc3f"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/AiPureRunElitePoisonCaster.tres",
+      "resourceUid": "uid://cbh88q2lk5ih4",
+      "targetHash": "sha256:ca144fabf8fe45621ed7ce0572902d544619ccc10e40108da587d0488cad9de5"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/AiPureRunRanged.tres",
+      "resourceUid": "uid://d0gim665iwky8",
+      "targetHash": "sha256:0dd78248d5226aa4aaef0964f45e3907aedde64a53e7810c54992b801ef8ea11"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/AiPureRunSupport.tres",
+      "resourceUid": "uid://dy5703mscymtx",
+      "targetHash": "sha256:09dd788f6a80a38981ddbc2c67a288ac7d358c347c8ffb448ae622ec943f5e9b"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/BattleLayoutPureRunCenterBlocker.tres",
+      "resourceUid": "uid://c1hwl18r7cqr6",
+      "targetHash": "sha256:55791e4bea8fe5e307d8db9631ca6ab5f4a8dfcbc08b4b2da649ad8e546296e8"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/BattleLayoutPureRunOpen.tres",
+      "resourceUid": "uid://dhjv1ej0wequx",
+      "targetHash": "sha256:d610b0a73ef9b1e4d85141141834fe325fbbab73c408c0ddee8abdb0b0be7408"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/ContentCatalog.tres",
+      "resourceUid": "uid://bk126m4bsc8x1",
+      "targetHash": "sha256:2b561f9536b656b7dd94a5d4e7bc196b9171d655d93f913da44b36e18ac102bf"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/EncounterPureRunN1.tres",
+      "resourceUid": "uid://bbxbsujas3veq",
+      "targetHash": "sha256:bfd5361c6bb14c14ac725458c94c89209976a1f37d9bc899c9d437af0559429c"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/EncounterPureRunN2.tres",
+      "resourceUid": "uid://diot7v5peg4je",
+      "targetHash": "sha256:6770bf9e23f479e97e5616da78e90c467c93c1a3129bbe64e07554afce74d72b"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/EncounterPureRunN3.tres",
+      "resourceUid": "uid://deyrsp4w7v6db",
+      "targetHash": "sha256:f3a477d36ca7f737170d19bb02acee70fdc5ed6f6f50bd4eb002c8f1dbe917fc"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/SkillEnemyAreaBlastLv1.tres",
+      "resourceUid": "uid://5jkpcuaunf6s",
+      "targetHash": "sha256:02201576f6e1727818e2b907e00166abd9363189e08e12a8a0cba804898a9ca4"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/SkillEnemyChargeStrikeLv1.tres",
+      "resourceUid": "uid://dwcr6xrkndcol",
+      "targetHash": "sha256:f9b6f4ce4dc886e4ebddc0cafd286b414ea125c7843b5b5a05f23071a65b02f5"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/SkillEnemyHeavyShotLv1.tres",
+      "resourceUid": "uid://x52streelmv6",
+      "targetHash": "sha256:f32a8c16215c484c34feb90c001c2b18ba9c9cbd964834c8ed040ea6a610f45e"
+    },
+    {
+      "resourcePath": "res://content/ai_encounters/SkillEnemyRangedAttackLv1.tres",
+      "resourceUid": "uid://830uqq24eho5",
+      "targetHash": "sha256:72e1d9257fe9a589b6c18fe22d9eabd8488d81d8846c61296315c7d167e6fd6c"
+    }
+  ]
+}

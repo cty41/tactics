@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="UnitDefinitionResource" format=3 uid="uid://chihlradw121e"]
+
+[ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_4xgwx"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_necromancer_death.png" id="2_lit5g"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_cast_dr.png" id="2_mln8f"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_necromancer.png" id="3_fxtvd"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_cast_ul.png" id="3_tvm4o"]
+[ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="4_qolfw"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_necromancer_ul.png" id="5_mln8f"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_hit_dr.png" id="6_kg3ga"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="6_tvm4o"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_necromancer_hit_ul.png" id="7_onpp1"]
+
+[resource]
+script = ExtResource("6_tvm4o")
+ContentIdValue = "unit.pure-run.necromancer"
+SourceId = "pure_run_necromancer"
+DisplayName = "Necromancer"
+Category = "player"
+FamilyId = "player"
+RoleId = "necromancer"
+Strength = 5
+Agility = 5
+Constitution = 5
+Intelligence = 5
+Charisma = 6
+Luck = 5
+Speed = 5.0
+MaxHealth = 20
+MaxMana = 18
+StartingMana = 6
+MoveRange = 3
+Initiative = 10.0
+AttackRange = 1
+AttackFactor = 1.0
+DefenceFactor = 1.0
+CanProduceCorpse = true
+ActorContentIdValue = "packed-scene.unit-actor"
+ActorScene = ExtResource("1_4xgwx")
+DownRightTexture = ExtResource("3_fxtvd")
+UpLeftTexture = ExtResource("5_mln8f")
+DeathTexture = ExtResource("2_lit5g")
+CastDownRightTexture = ExtResource("2_mln8f")
+CastUpLeftTexture = ExtResource("3_tvm4o")
+HitDownRightTexture = ExtResource("6_kg3ga")
+HitUpLeftTexture = ExtResource("7_onpp1")
+ShadowTexture = ExtResource("4_qolfw")
+DownRightBodyOffset = Vector2(0, -108)
+UpLeftBodyOffset = Vector2(0, -108)
+ShadowOffset = Vector2(0, 3.84)
+ShadowScale = Vector2(1.6, 1.6)
+ShadowOpacity = 0.9
+DeferredDependencies = PackedStringArray("starting-branch-skill")

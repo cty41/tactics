@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "scenarioName": "Battle.AIFullCombat",
+  "requiredAdapters": [
+    "Battle"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Battle",
+      "kind": "bindBattleController",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "createAiBrain",
+      "parameters": {
+        "brainAssetAlias": "attack_brain",
+        "brainType": "attack"
+      }
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "Battle",
+      "kind": "executeAI",
+      "parameters": {
+        "unitAlias": "p1_0",
+        "brainAssetAlias": "attack_brain"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeAI",
+      "parameters": {
+        "unitAlias": "p2_0",
+        "brainAssetAlias": "attack_brain"
+      }
+    },
+    {
+      "adapter": "Battle",
+      "kind": "executeAI",
+      "parameters": {
+        "unitAlias": "p1_0",
+        "brainAssetAlias": "attack_brain"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "unitAliveEquals",
+      "target": "p1_0",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitAliveEquals",
+      "target": "p2_0",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "unitHealthEquals",
+      "target": "p1_0",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "unitHealthEquals",
+      "target": "p2_0",
+      "parameters": {}
+    }
+  ]
+}

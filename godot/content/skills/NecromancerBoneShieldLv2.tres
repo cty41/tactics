@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://bxyeeofms81pq"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_2uyqo"]
+
+[resource]
+script = ExtResource("1_2uyqo")
+ContentIdValue = "skill.necromancer.bone-shield.lv2"
+SourceId = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneShield_Lv2_Graph_Ability.asset"
+DisplayName = "骨盾 Lv2"
+Description = "获得魅力两倍的全伤害护盾。"
+RoleValue = "Necromancer"
+KindValue = "Active"
+Level = 2
+ManaCost = 8
+ExecutionKindValue = "BoneShield"
+DamageKindValue = "None"
+BranchId = "necromancer.bone-shield"
+PrerequisiteContentIdValue = "skill.necromancer.bone-shield.lv1"
+PrerequisiteBranchId = "necromancer.bone-spear"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+ShieldMultiplier = 2
+ShieldAbsorbsAllDamage = true
+SourcePath = "Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/BoneShield_Lv2_Graph_Ability.asset"
+SourceGuid = "ed9245fd473248a449640a65ca914174"
+SourceLocalFileId = 11400000
+GraphPath = "Assets/Tactics/Battle/Abilities/SkillGraphs/BoneShield_Lv2_Graph.asset"
+GraphDependencyHash = "71b5d54536f5af6b087b57b49f4b06e2"
