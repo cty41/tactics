@@ -8,6 +8,9 @@
 *.h   text eol=lf
 *.txt text eol=lf
 
+# Generated Godot gameplay plans are byte-compared against Node output.
+Tests/gameplay-specs/godot/*.plan.json text eol=lf
+
 # Unity-generated metadata and imported vendor sources are preserved byte-for-byte.
 *.meta -whitespace
 "Assets/Piloto Studio/**" -whitespace
