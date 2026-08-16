@@ -126,6 +126,11 @@ class WindowsRcPipelineTests(unittest.TestCase):
             self.assertTrue((package / "rc-semantic-manifest.json").is_file())
             self.assertTrue((package / "rc-manifest.json").is_file())
             self.assertTrue((package / "SHA256SUMS.txt").is_file())
+            release_semantic = json.loads(
+                (package / "rc-semantic-manifest.json").read_text(encoding="utf-8-sig")
+            )
+            self.assertEqual("release", release_semantic["exportMode"])
+            self.assertEqual("ExportRelease", release_semantic["configuration"])
 
             (package / "Tactics.dll").unlink()
             embedded = run_pwsh(
@@ -147,11 +152,56 @@ class WindowsRcPipelineTests(unittest.TestCase):
             self.assertNotEqual(0, rejected.returncode)
             self.assertIn("Forbidden RC payload", rejected.stdout)
 
+    def test_debug_package_records_mode_and_allows_symbols(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = pathlib.Path(temp)
+            package = root / "package"
+            package.mkdir()
+            pe = bytearray(256)
+            struct.pack_into("<H", pe, 0, 0x5A4D)
+            struct.pack_into("<I", pe, 0x3C, 0x80)
+            struct.pack_into("<I", pe, 0x80, 0x00004550)
+            struct.pack_into("<H", pe, 0x84, 0x8664)
+            (package / "Tactics.exe").write_bytes(pe)
+            (package / "Tactics.pck").write_bytes(b"PCK")
+            (package / "Tactics.dll").write_bytes(b"managed")
+            (package / "Tactics.pdb").write_bytes(b"symbols")
+            source_manifest = root / "source.json"
+            source_manifest.write_text('{"schemaVersion":1}', encoding="utf-8")
+
+            result = run_pwsh(
+                TOOLS / "Test-GodotWindowsPackage.ps1",
+                "-PackageRoot", str(package),
+                "-SourceManifestPath", str(source_manifest),
+                "-ExportMode", "Debug",
+                "-Configuration", "ExportDebug",
+            )
+            self.assertEqual(0, result.returncode, result.stdout)
+            semantic = json.loads(
+                (package / "rc-semantic-manifest.json").read_text(encoding="utf-8-sig")
+            )
+            self.assertEqual("debug", semantic["exportMode"])
+            self.assertEqual("ExportDebug", semantic["configuration"])
+
+            release = run_pwsh(
+                TOOLS / "Test-GodotWindowsPackage.ps1",
+                "-PackageRoot", str(package),
+                "-SourceManifestPath", str(source_manifest),
+                "-ExportMode", "Release",
+                "-Configuration", "ExportRelease",
+            )
+            self.assertNotEqual(0, release.returncode)
+            self.assertIn("Tactics.pdb", release.stdout)
+
     def test_workflow_is_internal_read_only_and_uploads_bounded_artifacts(self):
         workflow = (REPO / ".github" / "workflows" / "godot-windows-build.yml").read_text(
             encoding="utf-8"
         )
         self.assertIn("workflow_dispatch:", workflow)
+        self.assertNotIn("  push:", workflow)
+        self.assertIn("build_flavor:", workflow)
+        self.assertIn("default: both", workflow)
+        self.assertIn("-BuildFlavor '${{ inputs.build_flavor }}'", workflow)
         self.assertIn("contents: read", workflow)
         self.assertNotIn("contents: write", workflow)
         self.assertNotIn("releases: write", workflow)
@@ -161,7 +211,9 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("git config --global core.autocrlf false", workflow)
         self.assertNotIn("-GodotOwned `", workflow)
         self.assertIn("if: always()", workflow)
+        self.assertIn("retention-days: 7", workflow)
         self.assertIn("retention-days: 14", workflow)
+        self.assertIn("tactics-godot-windows-$key-", workflow)
         self.assertNotIn("create-release", workflow.lower())
         self.assertNotIn("${{ runner.temp }}", workflow)
         self.assertIn("steps.paths.outputs.diagnostics != ''", workflow)
@@ -173,7 +225,7 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("Tactics.Godot.Adapter.sln", build_script)
         self.assertIn("Tactics.Godot.Adapter.sln", staging_script)
         self.assertIn("-match '^ERROR:'", build_script)
-        self.assertIn("Godot reported export errors despite exit code 0", build_script)
+        self.assertIn("export errors despite exit code 0", build_script)
         self.assertIn("RID allocations of type", build_script)
 
         for project in (
@@ -190,6 +242,9 @@ class WindowsRcPipelineTests(unittest.TestCase):
         )
         self.assertIn("dotnet restore $adapterProject --locked-mode -r win-x64", build_script)
         self.assertIn("dotnet publish $adapterProject", build_script)
+        self.assertIn("dotnet build $adapterProject -c ExportDebug", build_script)
+        self.assertNotIn("Remove-Item -LiteralPath $outputRoot -Recurse -Force", build_script)
+        self.assertIn("Remove-Item -LiteralPath $selectedOutput -Recurse -Force", build_script)
         self.assertIn("-c ExportRelease -r win-x64 --self-contained true -p:GodotTargetPlatform=windows", build_script)
         self.assertIn("--artifacts-path $exportArtifactsDirectory", build_script)
         self.assertIn("-p:GodotProjectDir=$exportGodotProjectDirectory", build_script)
@@ -197,6 +252,8 @@ class WindowsRcPipelineTests(unittest.TestCase):
         self.assertIn("editorAssetsHashAfterExport", build_script)
         self.assertIn("ExportRelease publish changed the Godot Editor dependency graph", build_script)
         self.assertIn("$GodotExecutable --verbose --headless", build_script)
+        self.assertIn("'--export-debug'", build_script)
+        self.assertIn("'--export-release'", build_script)
         self.assertIn("packages.windows.lock.json", adapter_project)
         debug_lock = json.loads((REPO / "godot" / "packages.lock.json").read_text(encoding="utf-8-sig"))
         export_lock = json.loads((REPO / "godot" / "packages.windows.lock.json").read_text(encoding="utf-8-sig"))

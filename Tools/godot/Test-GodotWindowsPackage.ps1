@@ -7,7 +7,10 @@ param(
     [string]$SourceCommit,
     [string]$GodotVersion,
     [string]$DotnetSdk,
-    [string]$Configuration = 'Release',
+    [ValidateSet('Debug', 'Release')]
+    [string]$ExportMode = 'Release',
+    [ValidateSet('ExportDebug', 'ExportRelease')]
+    [string]$Configuration = 'ExportRelease',
     [string]$WorkflowRunId = '',
     [string]$WorkflowRef = '',
     [ValidateSet('Auto', 'LooseAssemblies', 'PckEmbedded')]
@@ -52,13 +55,18 @@ $forbidden = @($files | Where-Object {
     $_.Name -match '^(UnityEngine|UnityEditor).*\.dll$' -or
     $_.Name -match '(?i)(save|backup|quarantine).*\.json$'
 })
+if ($ExportMode -eq 'Release') {
+    $forbidden += @($files | Where-Object Extension -eq '.pdb')
+}
 if ($forbidden.Count -gt 0) {
     throw "Forbidden RC payload detected: $($forbidden.FullName -join ', ')"
 }
 
 $allowedRootFiles = @('Tactics.exe', 'Tactics.pck', 'SHA256SUMS.txt')
+$allowedRootExtensions = @('.dll', '.json')
+if ($ExportMode -eq 'Debug') { $allowedRootExtensions += '.pdb' }
 $unexpectedRootFiles = @(Get-ChildItem -LiteralPath $root -File | Where-Object {
-    $_.Name -notin $allowedRootFiles -and $_.Extension -notin @('.dll', '.json')
+    $_.Name -notin $allowedRootFiles -and $_.Extension -notin $allowedRootExtensions
 })
 if ($unexpectedRootFiles.Count -gt 0) {
     throw "Unexpected RC root files: $($unexpectedRootFiles.Name -join ', ')"
@@ -86,6 +94,7 @@ $semantic = [ordered]@{
     sourceManifestSha256 = $sourceManifestHash
     godotVersion = $GodotVersion
     dotnetSdk = $DotnetSdk
+    exportMode = $ExportMode.ToLowerInvariant()
     configuration = $Configuration
     architecture = 'windows-x86_64'
     managedPayloadMode = $resolvedManagedPayloadMode

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# mainline.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-16T13:39:26+08:00"
+timestamp: "2026-08-16T15:50:16+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -24,16 +24,16 @@ repo_paths:
   - Tools/migration/godot_ai_codex_config.py
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:e03b94568cfe86761d727fd4aad59559a0096d34e10c057fa71dd393e3c7b102
+source_fingerprint: sha256:316520e50b59878ad16d02ff1de4f812193427337f5d475fa1a7ea2c23e26fc1
 ---
 
 # Current state
 
 远程 `main` 是 Godot 产品与治理权威，使用唯一项目 `godot/project.godot`、Godot 4.7.1 Mono 和 .NET SDK 9。现有 `migration/godot` worktree 可在切换期间继续承载同一 tracked tree，但分支名不再定义权威，也不要求为切换移动本地 worktree。Agent 入口为 `godot-workflow`，再按任务加载 C#、内容、编辑器工具、测试诊断或 godot-ai 专项 Skill。未知或版本敏感结论必须按 Research Guide 从本地复现、官方文档/源码到上游和社区逐级调查，并标记证据等级。
 
-Windows 内部 RC 由 `Tools/godot/Build-GodotWindows.ps1` 提供唯一只读构建入口，`godot/export_presets.cfg` 固定 `Windows Desktop` Release 预设。GitHub Actions 在相关 `main` push 或手动触发时只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 必须携带 tracked `godot/Tactics.Godot.Adapter.sln`，否则 Godot .NET export 会在退出码为 0 时逐文件报告缺少 solution。staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
+Windows 内部构建由 `Tools/godot/Build-GodotWindows.ps1` 提供唯一只读入口，并复用 `godot/export_presets.cfg` 的单一 `Windows Desktop` preset。GitHub Actions 仅允许手动选择 `Debug`、`Release` 或 `Both`；默认 `Both`，公共 verifier 只运行一次，再串行使用 `ExportDebug + --export-debug` 和/或 `ExportRelease + --export-release` 导出，避免共享 MSBuild/Godot 输出竞态。工作流只 materialize `godot/**` LFS，再由 `New-GodotOwnedRcSource.ps1` 从 tracked clean HEAD 建立物理排除 Unity 根、Unity Oracle、本地 MCP、缓存和 artifact 的临时 staging；staging 必须携带 tracked `godot/Tactics.Godot.Adapter.sln`，否则 Godot .NET export 会在退出码为 0 时逐文件报告缺少 solution。staging 内初始化本地只读 Git snapshot，以便统一 verifier 和 build 继续执行 tracked-tree mutation guard。官方 Godot Mono 编辑器与 debug/release 导出模板 URL/SHA-512 固定在 tooling manifest；CI 不运行会刷新迁移证据的完整生成链。
 
-RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed runtime packaging、顶层 allowlist 及测试/Unity/godot-ai/save payload 禁令，并生成 source/semantic/provenance manifest 与 `SHA256SUMS.txt`。Godot 4.7 Windows C# export 可将托管程序集封装进 PCK；manifest 必须记录 `LooseAssemblies` 或 `PckEmbedded`，后者由随后的真实 EXE 启动证明 C# 入口可加载，不能以缺少松散 DLL 误判失败。`Test-GodotWindowsLaunch.ps1` 在隔离 APPDATA/LOCALAPPDATA 下以 Compatibility 和默认 renderer 有界启动导出 EXE；成功包与筛选后的失败诊断分别作为保留 14 天的 Actions artifact，内部测试不自动创建 GitHub Release。当前版本明确不登记 Audio payload，静默运行是 RC 合法状态。
+两档 export 后都由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed runtime packaging、顶层 allowlist 及测试/Unity/godot-ai/save payload 禁令，并生成 source/semantic/provenance manifest 与 `SHA256SUMS.txt`；语义清单显式记录 `exportMode` 和 `ExportDebug`/`ExportRelease`。Debug 允许调试符号，Release 明确拒绝调试符号；Godot 4.7 Windows C# export 可将托管程序集封装进 PCK，manifest 必须记录 `LooseAssemblies` 或 `PckEmbedded`，后者由随后的真实 EXE 启动证明 C# 入口可加载。`Test-GodotWindowsLaunch.ps1` 在隔离 APPDATA/LOCALAPPDATA 下以 Compatibility 和默认 renderer 有界启动每个已选择包；Debug artifact 保留 7 天，Release 与诊断 artifact 保留 14 天，内部测试不自动创建 GitHub Release。当前版本明确不登记 Audio payload，静默运行是合法状态。
 
 ## Verified boundaries
 
@@ -63,7 +63,7 @@ RC export 后由 `Test-GodotWindowsPackage.ps1` 验证 x86_64 PE、PCK、managed
 
 删除前预演由 `Test-UnityRetirementManifest.ps1` 在系统临时副本逐文件应用 `unity-deletion-manifest-v1` 后调用正式主线 verifier。首次干净项目扫描使用 Godot `--import` 等待 UID/import 完成；GdUnit test host 位于 `godot/tests/`，生成的 runner source由验证器从版本控制模板临时注入并在 finally 清理。每个 suite 使用独立 native host；仅对没有断言失败计数的已知 Windows native crash 或 ResourceLoader 空资源宿主故障重试一次，真实测试失败立即终止。OKF 只允许 deletion manifest 已审计的历史 Unity 来源前缀缺失，当前 Godot 和 FrozenOracle 路径必须存在。
 
-Windows RC staging 必须执行正式主线 verifier，随后通过同一 .NET 9 feature band、单节点 build、headless Editor scan、生产 Release 测试依赖排除、Compatibility smoke、Windows export、包审计和 EXE 启动 smoke。2026-08-15 hosted run `31889338418` 已通过 ExportRelease、199 文件包审计、Compatibility/default renderer EXE 启动并上传 14 天 artifact；剩余外部交付闸门是下载后的 clean-machine 人工启动与玩法 smoke。
+Windows 两档 staging 必须执行正式主线 verifier，随后通过同一 .NET 9 feature band、单节点 build、headless Editor scan、所选 ExportDebug/ExportRelease、包审计和 Compatibility/default renderer EXE 启动 smoke。Debug 用于开发定位且不能替代 Release 验收；Release 继续执行生产依赖隔离并保留下载后的 clean-machine 人工启动与玩法 smoke 作为外部交付闸门。2026-08-15 hosted run `31889338418` 是切换前单档 Release RC 的历史成功证据。
 
 ExportRelease publish 必须同时使用临时 `GodotProjectDir` 和 `--artifacts-path` 隔离中间产物；脚本在 publish 前后校验 canonical Editor `project.assets.json` 哈希不变，统一验证器也要求其中存在 `GodotSharpEditor/4.7.1`，防止 export 污染 Editor 依赖图并令 typed C# Resource 退化为基础 `Resource`。
 

@@ -1,23 +1,17 @@
-name: Godot Windows test build
+name: Godot Windows Debug and Release build
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/godot-windows-build.yml'
-      - 'global.json'
-      - 'godot/**'
-      - 'src/Tactics.Core/**'
-      - 'src/Tactics.Application/**'
-      - 'Tests/gameplay-specs/godot/**'
-      - 'Tools/agent-policy/**'
-      - 'Tools/gameplay-test-spec/**'
-      - 'Tools/godot/**'
-      - 'Tools/migration/**'
-      - 'Tools/okf/**'
-      - '.agents/knowledge/**'
   workflow_dispatch:
+    inputs:
+      build_flavor:
+        description: Windows package flavor
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - debug
+          - release
 
 permissions:
   contents: read
@@ -33,7 +27,7 @@ jobs:
     timeout-minutes: 90
     env:
       GODOT_VERSION: 4.7.1-stable
-      BUILD_OUTPUT: Build/Godot/Windows
+      BUILD_OUTPUT: Build/Godot
     steps:
       - name: Initialize bounded RC paths
         id: paths
@@ -200,14 +194,15 @@ jobs:
             throw
           }
 
-      - name: Export and audit Windows RC package
+      - name: Export and audit selected Windows packages
         shell: pwsh
         working-directory: ${{ steps.paths.outputs.source }}
         run: |
           try {
             ./Tools/godot/Build-GodotWindows.ps1 `
-            -GodotExecutable '${{ steps.godot.outputs.executable }}' `
+              -GodotExecutable '${{ steps.godot.outputs.executable }}' `
               -OutputDirectory $env:BUILD_OUTPUT `
+              -BuildFlavor '${{ inputs.build_flavor }}' `
               -SourceManifestPath 'rc-source-manifest.json' `
               -SourceCommit '${{ github.sha }}' `
               -WorkflowRunId '${{ github.run_id }}' `
@@ -219,38 +214,65 @@ jobs:
             throw
           }
 
-      - name: Smoke exported executable
+      - name: Smoke exported executables
         shell: pwsh
         working-directory: ${{ steps.paths.outputs.source }}
         run: |
-          $exe = Join-Path '${{ steps.paths.outputs.source }}' "$env:BUILD_OUTPUT/Tactics.exe"
-          foreach ($renderer in @('gl_compatibility', 'default')) {
-            ./Tools/godot/Test-GodotWindowsLaunch.ps1 `
-              -Executable $exe `
-              -DiagnosticsDirectory '${{ steps.paths.outputs.diagnostics }}' `
-              -Renderer $renderer
+          $selected = switch ('${{ inputs.build_flavor }}') {
+            'debug' { @('Debug') }
+            'release' { @('Release') }
+            default { @('Debug', 'Release') }
+          }
+          foreach ($flavor in $selected) {
+            $exe = Join-Path '${{ steps.paths.outputs.source }}' "$env:BUILD_OUTPUT/Windows-$flavor/Tactics.exe"
+            foreach ($renderer in @('gl_compatibility', 'default')) {
+              ./Tools/godot/Test-GodotWindowsLaunch.ps1 `
+                -Executable $exe `
+                -DiagnosticsDirectory '${{ steps.paths.outputs.diagnostics }}' `
+                -Renderer $renderer
+            }
           }
 
-      - name: Describe distributable package
-        id: package
+      - name: Describe distributable packages
+        id: packages
         shell: pwsh
         run: |
           $shortSha = '${{ github.sha }}'.Substring(0, 8)
-          $artifactName = "tactics-godot-windows-$shortSha-${{ github.run_number }}"
-          $packageRoot = Join-Path '${{ steps.paths.outputs.source }}' $env:BUILD_OUTPUT
-          $size = (Get-ChildItem -LiteralPath $packageRoot -File -Recurse | Measure-Object Length -Sum).Sum
-          $semanticHash = (Get-FileHash -LiteralPath (Join-Path $packageRoot 'rc-semantic-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-          "name=$artifactName" >> $env:GITHUB_OUTPUT
-          "size=$size" >> $env:GITHUB_OUTPUT
-          "root=$packageRoot" >> $env:GITHUB_OUTPUT
-          "semantic-hash=$semanticHash" >> $env:GITHUB_OUTPUT
+          $selected = switch ('${{ inputs.build_flavor }}') {
+            'debug' { @('Debug') }
+            'release' { @('Release') }
+            default { @('Debug', 'Release') }
+          }
+          foreach ($flavor in $selected) {
+            $key = $flavor.ToLowerInvariant()
+            $artifactName = "tactics-godot-windows-$key-$shortSha-${{ github.run_number }}"
+            $packageRoot = Join-Path '${{ steps.paths.outputs.source }}' "$env:BUILD_OUTPUT/Windows-$flavor"
+            $size = (Get-ChildItem -LiteralPath $packageRoot -File -Recurse | Measure-Object Length -Sum).Sum
+            $semanticHash = (Get-FileHash -LiteralPath (Join-Path $packageRoot 'rc-semantic-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            "${key}_name=$artifactName" >> $env:GITHUB_OUTPUT
+            "${key}_size=$size" >> $env:GITHUB_OUTPUT
+            "${key}_root=$packageRoot" >> $env:GITHUB_OUTPUT
+            "${key}_semantic_hash=$semanticHash" >> $env:GITHUB_OUTPUT
+          }
 
-      - name: Upload Windows test package
-        id: upload
+      - name: Upload Windows Debug package
+        if: inputs.build_flavor == 'debug' || inputs.build_flavor == 'both'
+        id: upload_debug
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ steps.package.outputs.name }}
-          path: ${{ steps.package.outputs.root }}/**
+          name: ${{ steps.packages.outputs.debug_name }}
+          path: ${{ steps.packages.outputs.debug_root }}/**
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
+
+      - name: Upload Windows Release package
+        if: inputs.build_flavor == 'release' || inputs.build_flavor == 'both'
+        id: upload_release
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.packages.outputs.release_name }}
+          path: ${{ steps.packages.outputs.release_root }}/**
           if-no-files-found: error
           retention-days: 14
           compression-level: 6
@@ -259,7 +281,7 @@ jobs:
         if: always() && steps.paths.outputs.diagnostics != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: tactics-godot-windows-rc-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
+          name: tactics-godot-windows-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
           path: ${{ steps.paths.outputs.diagnostics }}/**
           if-no-files-found: warn
           retention-days: 14
@@ -269,19 +291,23 @@ jobs:
         shell: pwsh
         run: |
           @"
-          ## Godot Windows test package
+          ## Godot Windows Debug and Release packages
 
           - Commit: ${{ github.sha }}
           - Run: ${{ github.run_number }}
           - Godot: ${{ steps.godot.outputs.version }}
           - .NET SDK: $(dotnet --version)
-          - Artifact: ${{ steps.package.outputs.name }}
-          - Uncompressed size: ${{ steps.package.outputs.size }} bytes
-          - Artifact digest: ${{ steps.upload.outputs.artifact-digest }}
-          - Semantic manifest: ${{ steps.package.outputs.semantic-hash }}
-          - Startup smoke: Compatibility + default renderer passed
+          - Selected flavor: ${{ inputs.build_flavor }}
+          - Debug artifact: ${{ steps.packages.outputs.debug_name }}
+          - Debug size: ${{ steps.packages.outputs.debug_size }} bytes
+          - Debug digest: ${{ steps.upload_debug.outputs.artifact-digest }}
+          - Debug semantic manifest: ${{ steps.packages.outputs.debug_semantic_hash }}
+          - Debug retention: 7 days
+          - Release artifact: ${{ steps.packages.outputs.release_name }}
+          - Release size: ${{ steps.packages.outputs.release_size }} bytes
+          - Release digest: ${{ steps.upload_release.outputs.artifact-digest }}
+          - Release semantic manifest: ${{ steps.packages.outputs.release_semantic_hash }}
+          - Release retention: 14 days
+          - Startup smoke: selected packages passed Compatibility + default renderer
           - Audio: deferred for this version (no payload)
-          - Retention: 14 days
-
-          [Download this artifact](${{ steps.upload.outputs.artifact-url }}). The downloader must be signed in and have read access to the repository.
           "@ >> $env:GITHUB_STEP_SUMMARY
