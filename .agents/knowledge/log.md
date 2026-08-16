@@ -1,11 +1,19 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-16
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:780861c483e81c60e78cbd2f6c646bf5b1229f41c8d3215cc2d934a43f070f3c`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:a021af3654bb62068eec55d0d450e37b36c0afe89a08f6024b4fbe3761f731c9`。
-* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:d80ee48a40140ac3487ed01189dd65dda66a1014d347dc4657d7e1399d04bf59`。
-* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:68527fb70dd6f98195d35a8d5aff4d21fda711f5340fc6be02b2078e5118be53`。
-* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:bce691b186754f295a2052028cd20aff540bb8696c1d180d15856ebd8be4f384`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:b4525a168bd50af198c3837ba4c0aa0e8b39efa2ea5998031ce68be666d90bbb`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:066039a42258cda14492f76c54d5d3d689539a744f7fc754813abd98481cc9bf`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:829d5df190732ea0a7719a74589e24c26b7b96034512cb4b3c23855994579e0d`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:a79db34036260c20d5839f6286e84355f0305a57450383937ca3458983bd7a38`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:1ea6ea7e9a16c80bfbdb74c3ff81e27a1566db1b31502b2cbfd00b29356456b6`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:e34265c3ba985aea95d14c344ee12533af32bd13cb2ba269343f160484ab38f1`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d06759cbf112800e6c88b7ebfc7105386ca5741c92c5b9d5d67d72327a5ca74a`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:4747afc4d536add464e8518ec304be49ed98aff2f11ebbd7652591de32251ee9`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:30bd8dce59da02b854eb8b8d620d6b02301d31d3cd21be636f20b56e7b3f2c27`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:0876ab4b0368e4edf53d80bb4163e46cbe5dcbbe162c1a334e7b16a2f104077e`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3`。
+* **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:d83fb58058dc99f4465aa2bfb9680919c39217ec0f526ed1f891f45cf1c28113`。
+* **Unity retirement**: 用户确认后按 `unity-deletion-manifest-v1` 删除 9307 个 tracked 文件、46909708 bytes，并清理 1659 个 Git-ignored Unity 生成文件；四个 Unity 工程根已不存在，真实删除后的完整 Godot verifier 通过，源码由 `unity-final-2026-08-08` 与 Git 历史保留。
 * **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:ef73463977333e87a99b1362e61db75553c1253932fe2ed1caf30383825b7269`。
 * **Governance**: 根 `AGENTS.md` 切换为 Godot-first；Unity Agent Workflow 归档，88 个 Unity-only rules/skills/tools/legacy specs 进入 blob 级退役索引等待最终删除确认。
 * **Godot mainline**: 新增 `Tactics.Godot.slnx` 与无 public ownership switch 的 `Tools/godot/Verify-GodotProject.ps1`；物理无 Unity 临时副本通过完整 Godot 门禁。
@@ -14,7 +22,6 @@
 * **Retirement audit**: 冻结最终 Unity annotated tag object `b881177a7a34eff2d4ef8bc3ca6e47c12f5a468d` 与 peeled commit `168d19345d7e0f7f22ce2516351eda9cef2e1cb1`，完成 9,263 个跟踪文件、46,501,338 字节的退役分类，`unresolved=0`。
 * **Scope correction**: Barbarian、Hunter 及旧技能原型归档退役，不进入三职业 Pure Run；Audio payload 继续延后，Godot 人工验收不自动晋升。
 * **Rule correction**: Bone Spear Lv1 的成长门槛归属 Necromancer 主属性 Charisma 5。
-* **Sync**: `battle-system` 已同步到来源指纹 `sha256:15c3bf39fbcc92acde062699809dd583cf88ca8018243ead44568375111cd668`。
 
 ## 2026-08-15
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:238ab2aa4b314318194c3612d32f4b43d3a6a014fb9777b9e5038658b6ade4d2`。

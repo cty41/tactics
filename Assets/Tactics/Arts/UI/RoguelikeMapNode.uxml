@@ -1,7 +1,0 @@
-<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:VisualElement name="NodeRoot" class="map-node">
-        <ui:VisualElement name="NodeIcon" class="map-node-icon"/>
-        <ui:VisualElement name="VisitedIndicator" class="visited-indicator"/>
-        <ui:VisualElement name="SwirlFill" class="swirl-fill"/>
-    </ui:VisualElement>
-</ui:UXML>

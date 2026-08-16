@@ -20,7 +20,7 @@ if ($ImportFromUser -and $Check) {
 }
 
 $resolvedRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
-$helper = Join-Path $PSScriptRoot 'godot_ai_codex_config.py'
+$helper = Join-Path $PSScriptRoot '..\migration\godot_ai_codex_config.py'
 $arguments = @(
     $helper,
     '--root', $resolvedRoot,

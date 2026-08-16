@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Comm
 title: SkillGraph
 description: 技能资产、解释器、Ability 桥接、共享目标规则和 Agent-first 创作验证主链。
 tags: [gameplay, skills, skill-graph, unity]
-timestamp: "2026-08-07T19:15:46+08:00"
+timestamp: "2026-08-16T12:55:23+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -55,7 +55,7 @@ repo_paths:
   - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs
   - Assets/Tactics/Tests/Editor/BattlePresentationGraphEditorTests.cs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:bb48d556cc8faccf19f828eab9d60b1959e062371855dc45cc8178f789681a0a
+source_fingerprint: sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3
 ---
 
 # Current State

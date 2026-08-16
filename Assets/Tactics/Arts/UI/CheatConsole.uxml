@@ -1,7 +1,0 @@
-<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Tactics/Arts/UI/CheatConsole.uss?fileID=7433441132597879392&amp;guid=53717a7035d4c434b9bb4f7159b4b74b&amp;type=3#CheatConsole"/>
-    <ui:VisualElement name="CheatConsoleRoot" class="cheat-console-root">
-        <ui:ScrollView name="LogList" class="log-list"/>
-        <ui:TextField name="CommandInput" placeholder-text="Enter command..." class="command-input"/>
-    </ui:VisualElement>
-</ui:UXML>

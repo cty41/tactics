@@ -87,6 +87,23 @@ def worktree_status() -> dict[str, str]:
 
 
 def main() -> None:
+    # The deletion manifest is immutable retirement evidence once every Unity
+    # project root is physically absent.  Re-running this historical generator
+    # after retirement must never replace that evidence with an empty manifest.
+    unity_roots_exist = any(
+        (ROOT / root.rstrip("/")).exists()
+        for root in UNITY_ROOTS
+    )
+    if not unity_roots_exist:
+        document = json.loads(OUTPUT.read_text(encoding="utf-8"))
+        if document.get("manifestId") != "unity-deletion-manifest-v1":
+            raise RuntimeError("Frozen Unity deletion manifest identity is invalid.")
+        print(
+            "UNITY_DELETION_MANIFEST_FROZEN "
+            f"files={document['entryCount']} bytes={document['totalBytes']}"
+        )
+        return
+
     governance = json.loads(GOVERNANCE.read_text(encoding="utf-8"))
     governance_paths = {
         entry["path"]

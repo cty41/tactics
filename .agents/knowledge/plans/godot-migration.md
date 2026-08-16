@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-16T11:18:57+08:00"
+timestamp: "2026-08-16T12:55:23+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:a021af3654bb62068eec55d0d450e37b36c0afe89a08f6024b4fbe3761f731c9
+source_fingerprint: sha256:a79db34036260c20d5839f6286e84355f0305a57450383937ca3458983bd7a38
 ---
 
 # Current state
@@ -33,11 +33,11 @@ Phase 1A 已建立不可变 `BattleState/BattleUnitState`、typed `BattleCommand
 
 冻结 Unity 的 Dijkstra、Heap、`BattleInitiativeService`、RuntimeScope 和 Presentation compiler 已由 `Tactics.FrozenOracle.Tests` 编译仓库内不可变快照，不再 linked compile `Assets/Tactics/**`。FrozenOracle 共保存 47 份源码、JSON 与 Shader 证据；每项记录原路径、Git blob、SHA-256 和来源方式。部分后期 Oracle blob 并不等于最终 Tag 同路径 blob，因此 manifest 对这些条目以显式 Oracle blob binding 为权威，只对未单独绑定的 GameData 使用最终 Tag path。15 项语义测试继续覆盖 Core 路径、先攻、RuntimeScope、Presentation、Poison Spear、Buff/Item、Run、Map、成长和 Unit 合同。
 
-旧 `Verify-GodotMigration.ps1 -GodotOwned` 已被正式 `Tools/godot/Verify-GodotProject.ps1` 取代。精确 deletion manifest 已在系统临时副本删除 9307 个文件后完成 Core/Application/FrozenOracle、Gameplay Specs、GdUnit、双 renderer 与 OKF 验证；旧迁移 verifier 随 Unity 源删除。内容所有权与人工验收状态相互独立：完成权威切换后允许 `GodotOwned + manual_qa_pending`，自动化不得据此把人工项标记为通过。
+旧 `Verify-GodotMigration.ps1 -GodotOwned` 已被正式 `Tools/godot/Verify-GodotProject.ps1` 取代。用户确认后，精确 deletion manifest 已在产品工作区删除 9307 个 tracked 文件、46909708 bytes，并清理 1659 个经 Git 证明为 ignored 的 Unity 生成文件；四个 Unity 工程根均已不存在。真实删除后的 Core/Application/FrozenOracle、Gameplay Specs、GdUnit、双 renderer 与 OKF 门禁通过，结果由 `unity-deletion-result-v1` 固定；旧迁移 verifier随 Unity 源删除。内容所有权与人工验收状态相互独立：当前为 `GodotOwned + manual_qa_pending`，自动化不得据此把人工项标记为通过。
 
 当前内容所有权由 `Tools/migration/manifest/ownership/godot-content-ownership-v1.json` 统一声明：canonical Catalog 精确 142 项，Core、Unit、Buff、Item、Skill、AI、Encounter、Run、Map、UIInput、Presentation、Tooling 和静默 AudioFramework 共 13 类均为 `GodotOwned`。旧 batch/state 继续保留其生成当时的 `UnityOwned` 事实，并由新 receipt 的 `supersedesGenerationState` 明确替代；这避免改写历史 receipt。Audio payload、第三方 Unity payload 与 PlayerPrefs import 仍明确排除，人工验收保持独立 pending。
 
-正式主线入口为 `Tactics.Godot.slnx` 与 `Tools/godot/Verify-GodotProject.ps1`。新 verifier 不暴露 ownership skip 参数，默认拒绝 `Assets/`、`Packages/`、`ProjectSettings/` 和 `UIElementsSchema/`；`Test-UnityRetirementManifest.ps1` 在系统临时副本逐文件应用受版本控制的 deletion manifest 后调用该入口。该预演已覆盖 Core 103、Application 114、FrozenOracle 15、Gameplay Specs、GdUnit、Debug/Release、Compatibility/Forward+ 和 OKF，并生成 `unity-deletion-dry-run-v1` receipt。
+正式主线入口为 `Tactics.Godot.slnx` 与 `Tools/godot/Verify-GodotProject.ps1`。新 verifier 不暴露 ownership skip 参数，默认拒绝 `Assets/`、`Packages/`、`ProjectSettings/` 和 `UIElementsSchema/`；`Test-UnityRetirementManifest.ps1` 的系统临时副本预演与产品工作区真实删除均覆盖 Core 103、Application 114、FrozenOracle 15、Gameplay Specs、GdUnit、Debug/Release、Compatibility/Forward+ 和 OKF。`prepare_unity_retirement.py` 在四个 Unity 根均不存在后只校验并保留冻结 manifest，不得重写退役证据。
 
 Phase 1B 完整统一门禁已通过，覆盖 locked restore、单节点 solution build、Core/Application/Unity Oracle NUnit、Python、Skill/Incident、隔离 GdUnit、生产 Debug 恢复、Release 测试依赖排除、Poison Spear runtime/presentation、EditorPlugin headless 与 OKF。该结论关闭路径和初始先攻 tie-break 缺口。
 
