@@ -36,6 +36,17 @@
 /godot/.godot/
 /godot/**/bin/
 /godot/**/obj/
+*.translation
+
+# Godot/.NET test-host and local verification outputs
+/godot.godot/
+/artifacts/
+/gdunit4_testadapter_v5/
+**/bin/
+**/obj/
+*.pck
+*.log
+*.dmp
 /Library*/
 /Temp/
 /Build/
