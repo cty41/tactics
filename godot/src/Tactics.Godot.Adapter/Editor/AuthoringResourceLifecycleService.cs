@@ -276,7 +276,7 @@ public sealed class AuthoringResourceLifecycleService
     private byte[] BuildLedgerBytes(IEnumerable<AuthoringOwnershipRecord> appended)
     {
         string[] lines = ReadLedger().Concat(appended)
-            .Select(value => JsonSerializer.Serialize(value)).ToArray();
+            .Select(SerializeOwnership).ToArray();
         return Encoding.UTF8.GetBytes(string.Join(System.Environment.NewLine, lines) + System.Environment.NewLine);
     }
 
@@ -310,9 +310,32 @@ public sealed class AuthoringResourceLifecycleService
         string absolute = ProjectSettings.GlobalizePath(LedgerPath);
         if (!File.Exists(absolute)) return Array.Empty<AuthoringOwnershipRecord>();
         return Array.AsReadOnly(File.ReadLines(absolute).Where(value => !string.IsNullOrWhiteSpace(value))
-            .Select(value => JsonSerializer.Deserialize<AuthoringOwnershipRecord>(value)
-                ?? throw new InvalidOperationException("Authoring UID ledger contains an invalid record."))
+            .Select(DeserializeOwnership)
             .ToArray());
+    }
+
+    private static string SerializeOwnership(AuthoringOwnershipRecord value) => new JsonObject
+    {
+        ["contentId"] = value.ContentId,
+        ["resourceTypeId"] = value.ResourceTypeId,
+        ["resourcePath"] = value.ResourcePath,
+        ["resourceUid"] = value.ResourceUid,
+        ["ownership"] = value.Ownership.ToString(),
+        ["operationId"] = value.OperationId,
+        ["timestampUtc"] = value.TimestampUtc.ToString("O", System.Globalization.CultureInfo.InvariantCulture)
+    }.ToJsonString();
+
+    private static AuthoringOwnershipRecord DeserializeOwnership(string payload)
+    {
+        using JsonDocument parsed = JsonDocument.Parse(payload);
+        JsonElement root = parsed.RootElement;
+        return new AuthoringOwnershipRecord(
+            root.GetProperty("contentId").GetString()!, root.GetProperty("resourceTypeId").GetString()!,
+            root.GetProperty("resourcePath").GetString()!, root.GetProperty("resourceUid").GetString()!,
+            Enum.Parse<AuthoringResourceOwnership>(root.GetProperty("ownership").GetString()!, true),
+            root.GetProperty("operationId").GetString()!,
+            DateTimeOffset.Parse(root.GetProperty("timestampUtc").GetString()!, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind));
     }
 
     private static IAuthoringDocument DuplicateDocument(IAuthoringResourceHandler handler, string snapshot, string newContentId, string resourceTypeId)

@@ -1,4 +1,5 @@
 using System.IO.Pipes;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
@@ -75,16 +76,50 @@ internal sealed class TacticsAuthoringMcpServer(string projectRoot, Stream input
     private async Task<string> CallBridgeAsync(string tool, JsonElement arguments)
     {
         string sessionDirectory = Path.Combine(projectRoot, "godot", ".godot");
-        string[] descriptors = Directory.Exists(sessionDirectory) ? Directory.GetFiles(sessionDirectory, "tactics-authoring-session-*.json") : Array.Empty<string>();
-        if (descriptors.Length != 1) throw new InvalidOperationException($"Expected exactly one canonical Editor bridge session, found {descriptors.Length}.");
-        using JsonDocument descriptorDocument = JsonDocument.Parse(await File.ReadAllTextAsync(descriptors[0])); JsonElement descriptor = descriptorDocument.RootElement;
-        string root = Path.GetFullPath(descriptor.GetProperty("projectRoot").GetString()!); if (!string.Equals(root.TrimEnd(Path.DirectorySeparatorChar), projectRoot.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Editor bridge project root differs from the MCP project root.");
-        if (descriptor.GetProperty("state").GetString() != "ready") throw new InvalidOperationException("Editor bridge is not ready (possibly reloading).");
-        string pipeName = descriptor.GetProperty("pipeName").GetString()!, token = descriptor.GetProperty("sessionToken").GetString()!;
-        using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10)); await pipe.ConnectAsync(timeout.Token);
-        using var writer = new StreamWriter(pipe, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true }; using var reader = new StreamReader(pipe, Encoding.UTF8, false, leaveOpen: true);
-        await writer.WriteLineAsync(JsonSerializer.Serialize(new { tool, sessionToken = token, projectRoot, arguments = arguments.Clone() }, _json));
+        AuthoringEditorSessionDescriptor descriptor = AuthoringEditorSessionResolver.Resolve(projectRoot, sessionDirectory);
+        string token = descriptor.SessionToken;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        string requestJson = JsonSerializer.Serialize(new { tool, sessionToken = token, projectRoot, arguments = arguments.Clone() }, _json);
+        if (descriptor.Transport == "filesystem-mailbox")
+            return await CallFileMailboxAsync(descriptor.EndpointPath, requestJson, timeout.Token);
+        using TcpClient? tcp = descriptor.Transport == "loopback-tcp" ? new TcpClient() : null;
+        using NamedPipeClientStream? pipe = descriptor.Transport == "loopback-tcp" ? null : new NamedPipeClientStream(".", descriptor.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+        Stream stream;
+        if (tcp is not null)
+        {
+            await tcp.ConnectAsync("127.0.0.1", descriptor.Port, timeout.Token);
+            stream = tcp.GetStream();
+        }
+        else
+        {
+            await pipe!.ConnectAsync(timeout.Token);
+            stream = pipe;
+        }
+        using var writer = new StreamWriter(stream, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true }; using var reader = new StreamReader(stream, Encoding.UTF8, false, leaveOpen: true);
+        await writer.WriteLineAsync(requestJson);
         return await reader.ReadLineAsync(timeout.Token) ?? throw new InvalidOperationException("Editor bridge closed without a response.");
+    }
+
+    private static async Task<string> CallFileMailboxAsync(string directory, string requestJson, CancellationToken cancellation)
+    {
+        string requestId = Guid.NewGuid().ToString("N");
+        string temporary = Path.Combine(directory, $"{requestId}.request.tmp");
+        string request = Path.Combine(directory, $"{requestId}.request.json");
+        string response = Path.Combine(directory, $"{requestId}.response.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            await File.WriteAllTextAsync(temporary, requestJson, cancellation);
+            File.Move(temporary, request);
+            while (!File.Exists(response)) await Task.Delay(25, cancellation);
+            return await File.ReadAllTextAsync(response, cancellation);
+        }
+        finally
+        {
+            if (File.Exists(temporary)) File.Delete(temporary);
+            if (File.Exists(request)) File.Delete(request);
+            if (File.Exists(response)) File.Delete(response);
+        }
     }
 
     private static object[] ToolSchemas() =>

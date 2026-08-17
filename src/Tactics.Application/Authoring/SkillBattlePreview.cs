@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using Tactics.Core.Battle;
 using Tactics.Core.Board;
 using Tactics.Core.Skills;
@@ -96,5 +95,5 @@ public sealed class SkillBattlePreviewService
     }
 
     private static string SerializeEvent(BattleEvent value) =>
-        value.GetType().Name + ":" + JsonSerializer.Serialize(value, value.GetType());
+        value.GetType().Name + ":" + value;
 }

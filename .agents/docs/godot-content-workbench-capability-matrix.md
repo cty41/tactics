@@ -12,7 +12,7 @@ ScriptableObject、AssetBundle、RuleTile 或旧运行时。
 
 | Unity 最终标签证据 | 有效作者能力 | Godot 页面/合同 | 当前状态 | 自动证据 | 尚需人工/实现收口 |
 |---|---|---|---|---|---|
-| `Assets/Tactics/Scripts/Editor/RoguelikeMapEditor` | Map 节点、连接、Inspector、布局、导入导出 | Map / `MapAuthoringDocument` | partial | CRUD、确定性布局、Import/Export、完整图校验、全局草稿与原子 Apply All 已受测 | 七层真实资源 Apply→Undo→Redo→Reload 人验 |
+| `Assets/Tactics/Scripts/Editor/RoguelikeMapEditor` | Map 节点、连接、Inspector、布局、导入导出 | Map / `MapAuthoringDocument` | partial | CRUD、确定性布局、Import/Export、完整图校验、全局草稿与原子 Apply All；Unity 语义色圆形节点与主题组件几何回归已受测 | 七层真实资源的图面密度、连接手感及 Apply→Undo→Redo→Reload 人验 |
 | `Assets/Tactics/Scripts/Editor/RoguelikeEventEditor` | 事件选项、检定、成功/失败结果与预览 | Event / `EventAuthoringDocument` | partial | typed outcome、Catalog picker、固定 Seed 预览、round-trip、同批 rebind/Delete 与回滚 | 真实 Editor 人验 |
 | Unity Map 内嵌 Treasure 数据 | 金币和三类 weighted table | Treasure / `TreasureAuthoringDocument` | partial | 三类 picker、排序、精确概率/固定 Seed 抽样、round-trip、同批 rebind/Delete 与回滚 | 真实 Editor 人验 |
 | `Assets/Tactics/Scripts/Editor/BattleTest` | Encounter、队伍/敌人、出生格、阻挡格、固定场景预览 | Encounter Fixture / `EncounterAuthoringDocument`、`BattleLayoutAuthoringDocument` | partial | 10×10 草稿、组合校验、双 Resource 原子 Apply、固定 Seed 单步/整轮草稿预览 | 拖动手感、退出清理与 Reload 人验 |

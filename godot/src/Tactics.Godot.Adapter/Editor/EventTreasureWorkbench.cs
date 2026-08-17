@@ -50,21 +50,22 @@ public partial class EventTreasureWorkbench : VBoxContainer, IAuthoringWorkspace
     {
         if (_undoRedo is null) throw new InvalidOperationException("Editor UndoRedo manager is required.");
         SizeFlagsHorizontal = SizeFlags.ExpandFill; SizeFlagsVertical = SizeFlags.ExpandFill;
-        AddChild(new Label { Text = _treasureMode ? "Treasure sandbox — weighted content tables" : "Event sandbox — runtime-supported options and outcomes" });
+        WorkbenchUi.StylePage(this);
+        var heading = WorkbenchUi.Toolbar(this); heading.AddChild(new Label { Text = _treasureMode ? "TREASURE WEIGHTED TABLE" : "EVENT AUTHORING" }); AddChild(heading);
         var split = new HSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        _resources = new ItemList { CustomMinimumSize = new Vector2(300, 420), SizeFlagsVertical = SizeFlags.ExpandFill };
+        _resources = new ItemList { CustomMinimumSize = new Vector2(WorkbenchUi.ResourcePaneWidth, 420), SizeFlagsVertical = SizeFlags.ExpandFill };
         _resources.ItemSelected += SelectResource; split.AddChild(_resources);
         var right = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        var toolbar = new HBoxContainer(); toolbar.AddChild(Button("Validate", ValidateDraft)); toolbar.AddChild(new Label { Text = "Seed" }); _previewSeed = new SpinBox { MinValue = 0, MaxValue = int.MaxValue, Step = 1, Value = 42, CustomMinimumSize = new Vector2(110, 0) }; toolbar.AddChild(_previewSeed); toolbar.AddChild(Button("Preview", PreviewDraft)); toolbar.AddChild(Button("Revert", RevertAll)); right.AddChild(toolbar);
+        var toolbar = WorkbenchUi.Toolbar(this); toolbar.AddChild(Button("Validate", ValidateDraft)); toolbar.AddChild(new Label { Text = "Seed" }); _previewSeed = new SpinBox { MinValue = 0, MaxValue = int.MaxValue, Step = 1, Value = 42, CustomMinimumSize = new Vector2(110, 0) }; toolbar.AddChild(_previewSeed); toolbar.AddChild(Button("Preview", PreviewDraft)); toolbar.AddChild(Button("Revert", RevertAll)); right.AddChild(toolbar);
         var scroll = new ScrollContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         _form = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; scroll.AddChild(_form); right.AddChild(scroll);
-        _status = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart }; right.AddChild(_status); split.AddChild(right); AddChild(split);
+        _status = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(0, 54) }; WorkbenchUi.StyleStatus(_status); right.AddChild(_status); split.AddChild(right); AddChild(split);
         CallDeferred(nameof(LoadCatalog));
     }
 
     public override void _ExitTree()
     {
-        _catalogLoadAttempts = 0; if (_resources is not null) _resources.ItemSelected -= SelectResource;
+        _catalogLoadAttempts = 0;
         _eventDraft = null; _treasureDraft = null; _eventResource = null; _treasureResource = null;
     }
 
@@ -150,7 +151,9 @@ public partial class EventTreasureWorkbench : VBoxContainer, IAuthoringWorkspace
         _form.AddChild(IntField("Gold minimum", value.GoldMinimum, 0, 50, number => ReplaceTreasure(number, value.GoldMaximum, value.Entries)));
         _form.AddChild(IntField("Gold maximum", value.GoldMaximum, 0, 50, number => ReplaceTreasure(value.GoldMinimum, number, value.Entries)));
         var bar = new HBoxContainer(); var picker = new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        foreach (TreasureEntryAuthoring entry in value.Entries) picker.AddItem($"{entry.Kind}: {entry.ContentId} × {entry.Weight}");
+        int totalWeight = value.Entries.Sum(entry => entry.Weight);
+        foreach (TreasureEntryAuthoring entry in value.Entries)
+            picker.AddItem($"{entry.Kind,-10}  {entry.ContentId}  weight={entry.Weight}  p={(totalWeight == 0 ? 0 : 100d * entry.Weight / totalWeight):0.##}%");
         if (value.Entries.Count > 0) picker.Select(Math.Clamp(_selectedEntry, 0, value.Entries.Count - 1));
         picker.ItemSelected += index => { _selectedEntry = (int)index; RefreshForm(); }; bar.AddChild(picker);
         bar.AddChild(Button("Add entry", AddEntry)); bar.AddChild(Button("Up", () => MoveEntry(-1))); bar.AddChild(Button("Down", () => MoveEntry(1))); bar.AddChild(Button("Delete entry", DeleteEntry)); _form.AddChild(bar);
@@ -251,6 +254,6 @@ public partial class EventTreasureWorkbench : VBoxContainer, IAuthoringWorkspace
         picker.ItemSelected += index => changed(ids[(int)index]); row.AddChild(picker); return row;
     }
     private static HBoxContainer Row(string label) { var row = new HBoxContainer(); row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(170, 0) }); return row; }
-    private void SetStatus(string message, bool error = false) { if (_status is null) return; _status.Text = message; _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen; }
+    private void SetStatus(string message, bool error = false) { if (_status is null) return; _status.Text = message; WorkbenchUi.StyleStatus(_status, error); }
 }
 #endif

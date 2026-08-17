@@ -8,6 +8,7 @@ namespace Tactics.Godot.Adapter.Runtime;
 /// <summary>
 /// Stores one generated Pure Run Unit definition while keeping gameplay semantics in Core.
 /// </summary>
+[Tool]
 [GlobalClass]
 public partial class UnitDefinitionResource : Resource
 {

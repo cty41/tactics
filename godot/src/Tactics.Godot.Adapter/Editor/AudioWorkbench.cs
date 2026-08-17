@@ -14,10 +14,12 @@ public partial class AudioWorkbench : VBoxContainer
     {
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
-        AddChild(new Label { Text = "Audio Framework — Master / Music / SFX / UI" });
-        AddChild(new Label { Text = "No distributable audio payload is registered. Add licensed AudioCueDefinition resources before content acceptance." });
+        WorkbenchUi.StylePage(this);
+        var toolbar = WorkbenchUi.Toolbar(this); toolbar.AddChild(new Label { Text = "AUDIO MIXER" }); AddChild(toolbar);
+        var notice = new Label { Text = "No distributable audio payload is registered. Add licensed AudioCueDefinition resources before content acceptance." }; WorkbenchUi.StyleStatus(notice, warning: true); AddChild(notice);
         _runtime = new GodotAudioRuntime();
         AddChild(_runtime);
+        var mixer = WorkbenchUi.InspectorSection(this, "Master / Music / SFX / UI", new Color("4a90d9"));
         foreach (string bus in new[] { "Master", "Music", "SFX", "UI" })
         {
             var row = new HBoxContainer();
@@ -25,8 +27,9 @@ public partial class AudioWorkbench : VBoxContainer
             var slider = new HSlider { MinValue = 0, MaxValue = 1, Step = 0.01, Value = bus == "Music" ? 0.8 : 1, CustomMinimumSize = new Vector2(300, 0) };
             slider.ValueChanged += _ => Apply(slider, bus);
             row.AddChild(slider);
-            AddChild(row);
+            mixer.AddChild(row);
         }
+        AddChild(mixer);
         var stop = new Button { Text = "Stop Preview" };
         stop.Pressed += () => _runtime.StopAll();
         AddChild(stop);

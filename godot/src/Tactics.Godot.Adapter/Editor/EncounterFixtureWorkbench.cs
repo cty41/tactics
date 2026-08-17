@@ -30,7 +30,8 @@ public partial class EncounterFixtureWorkbench : VBoxContainer
         _initialized = true;
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
-        var toolbar = new HBoxContainer();
+        WorkbenchUi.StylePage(this);
+        var toolbar = WorkbenchUi.Toolbar(this); toolbar.AddChild(new Label { Text = "FIXED-SEED ENCOUNTER PREVIEW" });
         var scenarios = new OptionButton { CustomMinimumSize = new Vector2(220, 0) };
         foreach (string name in ScenarioNames) scenarios.AddItem(name);
         scenarios.ItemSelected += index => RunSafely(() => _fixture!.SelectScenario((int)index), $"Loaded {ScenarioNames[index]}.");
@@ -50,6 +51,7 @@ public partial class EncounterFixtureWorkbench : VBoxContainer
         AddChild(toolbar);
 
         _status = new Label { Text = "Fixture uses canonical Encounter/Layout/AI/Skill resources." };
+        WorkbenchUi.StyleStatus(_status);
         AddChild(_status);
         var frame = new SubViewportContainer
         {
@@ -112,7 +114,7 @@ public partial class EncounterFixtureWorkbench : VBoxContainer
     {
         if (_status is null) return;
         _status.Text = text;
-        _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen;
+        WorkbenchUi.StyleStatus(_status, error);
     }
 }
 #endif

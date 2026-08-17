@@ -28,6 +28,10 @@ public partial class PureRunMapWorkbench : VBoxContainer, IAuthoringWorkspacePar
     private bool _initialized;
     private bool _suppressGraphSignals;
     private int _mapLoadAttempts;
+    private const float GraphOriginX = 72f;
+    private const float GraphOriginY = 260f;
+    private const float GraphLayerSpacing = 150f;
+    private const float GraphLaneSpacing = 82f;
     private readonly Dictionary<string, GraphNode> _graphNodes = new(StringComparer.Ordinal);
     private readonly Dictionary<string, GraphElement.DraggedEventHandler> _dragHandlers = new(StringComparer.Ordinal);
 
@@ -47,65 +51,100 @@ public partial class PureRunMapWorkbench : VBoxContainer, IAuthoringWorkspacePar
         _initialized = true;
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
+        WorkbenchUi.StylePage(this);
 
-        var toolbar = new HBoxContainer();
-        _nodePicker = new OptionButton { CustomMinimumSize = new Vector2(170, 0) };
-        _nodePicker.ItemSelected += SelectNode;
-        toolbar.AddChild(_nodePicker);
-        AddButton(toolbar, "Add", AddNode);
-        AddButton(toolbar, "Delete", DeleteNode);
-        _connectionTarget = new OptionButton { CustomMinimumSize = new Vector2(150, 0) };
-        toolbar.AddChild(_connectionTarget);
-        AddButton(toolbar, "Connect", AddConnection);
-        AddButton(toolbar, "Disconnect", RemoveConnection);
-        AddButton(toolbar, "Auto Layout", AutoLayout);
+        var toolbar = WorkbenchUi.Toolbar(this);
+        toolbar.AddChild(new Label { Text = "Map Authoring" });
         AddButton(toolbar, "Validate", ValidateDraft);
-        AddButton(toolbar, "Revert All", RevertAll);
+        AddButton(toolbar, "Auto Layout", AutoLayout);
+        AddButton(toolbar, "Revert", RevertAll);
         AddChild(toolbar);
 
-        var inspector = new HBoxContainer();
-        inspector.AddChild(new Label { Text = "Title" });
-        _title = new LineEdit { CustomMinimumSize = new Vector2(150, 0) };
-        inspector.AddChild(_title);
-        inspector.AddChild(new Label { Text = "Kind" });
-        _kind = new OptionButton { CustomMinimumSize = new Vector2(110, 0) };
-        foreach (string name in Enum.GetNames<PureRunNodeKind>()) _kind.AddItem(name);
-        inspector.AddChild(_kind);
-        inspector.AddChild(new Label { Text = "Layer" });
-        _layer = new SpinBox { MinValue = 0, MaxValue = 20, Step = 1, CustomMinimumSize = new Vector2(70, 0) };
-        inspector.AddChild(_layer);
-        inspector.AddChild(new Label { Text = "Lane" });
-        _lane = new SpinBox { MinValue = -10, MaxValue = 10, Step = 0.25, CustomMinimumSize = new Vector2(75, 0) };
-        inspector.AddChild(_lane);
-        inspector.AddChild(new Label { Text = "ContentId" });
-        _contentId = new LineEdit { CustomMinimumSize = new Vector2(240, 0) };
-        inspector.AddChild(_contentId);
-        AddButton(inspector, "Update Draft", UpdateSelectedNode);
-        AddChild(inspector);
+        var content = new HSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
+        var resources = WorkbenchUi.Pane(this, WorkbenchUi.ResourcePaneWidth);
+        resources.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
+        resources.AddChild(new Label { Text = "MAP DOCUMENT" });
+        _nodePicker = new OptionButton { CustomMinimumSize = new Vector2(170, 0) };
+        _nodePicker.ItemSelected += SelectNode;
+        resources.AddChild(_nodePicker);
+        var nodeActions = WorkbenchUi.Toolbar(this);
+        AddButton(nodeActions, "Add", AddNode);
+        AddButton(nodeActions, "Delete", DeleteNode);
+        resources.AddChild(nodeActions);
+        var legend = WorkbenchUi.InspectorSection(this, "Node legend");
+        var startRow = new HBoxContainer(); var startMarker = new Label { Text = "S", CustomMinimumSize = new Vector2(24, 24), HorizontalAlignment = HorizontalAlignment.Center }; startMarker.AddThemeColorOverride("font_color", new Color("33b34d")); startRow.AddChild(startMarker); startRow.AddChild(new Label { Text = "Start layer" }); legend.AddChild(startRow);
+        foreach (PureRunNodeKind nodeKind in Enum.GetValues<PureRunNodeKind>())
+        {
+            var row = new HBoxContainer();
+            var marker = new Label { Text = Glyph(nodeKind), CustomMinimumSize = new Vector2(24, 24), HorizontalAlignment = HorizontalAlignment.Center };
+            marker.AddThemeColorOverride("font_color", NodeColor(nodeKind));
+            row.AddChild(marker); row.AddChild(new Label { Text = nodeKind.ToString() }); legend.AddChild(row);
+        }
+        resources.AddChild(legend);
+        content.AddChild(resources);
 
-        _status = new Label { Text = "Loading authoritative map..." };
-        AddChild(_status);
-        var split = new VSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         _graph = new GraphEdit { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        split.AddChild(_graph);
-        var jsonPanel = new VBoxContainer { CustomMinimumSize = new Vector2(0, 150) };
+        WorkbenchUi.StyleGraph(_graph);
+        _graph.NodeSelected += element =>
+        {
+            if (_session is null || _nodePicker is null) return;
+            int index = _session.Draft.Nodes.ToList().FindIndex(value => value.NodeId == element.Name.ToString());
+            if (index < 0) return;
+            _nodePicker.Select(index); SelectNode(index);
+        };
+        content.AddChild(_graph);
+
+        var inspectorScroll = new ScrollContainer { CustomMinimumSize = new Vector2(WorkbenchUi.InspectorWidth, 0), SizeFlagsVertical = SizeFlags.ExpandFill };
+        var inspector = WorkbenchUi.Pane(this, WorkbenchUi.InspectorWidth);
+        inspector.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
+        var properties = WorkbenchUi.InspectorSection(this, "Selected node");
+        properties.AddChild(new Label { Text = "Title" });
+        _title = new LineEdit(); properties.AddChild(_title);
+        properties.AddChild(new Label { Text = "Kind" });
+        _kind = new OptionButton();
+        foreach (string name in Enum.GetNames<PureRunNodeKind>()) _kind.AddItem(name);
+        properties.AddChild(_kind);
+        var coordinates = new HBoxContainer();
+        var layerBox = new VBoxContainer(); layerBox.AddChild(new Label { Text = "Layer" });
+        _layer = new SpinBox { MinValue = 0, MaxValue = 20, Step = 1, SizeFlagsHorizontal = SizeFlags.ExpandFill }; layerBox.AddChild(_layer);
+        var laneBox = new VBoxContainer(); laneBox.AddChild(new Label { Text = "Lane" });
+        _lane = new SpinBox { MinValue = -10, MaxValue = 10, Step = 0.25, SizeFlagsHorizontal = SizeFlags.ExpandFill }; laneBox.AddChild(_lane);
+        coordinates.AddChild(layerBox); coordinates.AddChild(laneBox); properties.AddChild(coordinates);
+        properties.AddChild(new Label { Text = "ContentId" });
+        _contentId = new LineEdit(); properties.AddChild(_contentId);
+        AddButton(properties, "Update Draft", UpdateSelectedNode);
+        inspector.AddChild(properties);
+
+        var connections = WorkbenchUi.InspectorSection(this, "Connections");
+        _connectionTarget = new OptionButton { CustomMinimumSize = new Vector2(150, 0) };
+        connections.AddChild(_connectionTarget);
+        var connectionActions = WorkbenchUi.Toolbar(this); AddButton(connectionActions, "Connect", AddConnection); AddButton(connectionActions, "Disconnect", RemoveConnection); connections.AddChild(connectionActions);
+        inspector.AddChild(connections);
+
+        var advanced = WorkbenchUi.InspectorSection(this, "Advanced snapshot", collapsed: true);
+        var advancedToggle = new CheckButton { Text = "Show JSON", ButtonPressed = false };
+        advanced.AddChild(advancedToggle);
+        var jsonPanel = new VBoxContainer { Visible = false, CustomMinimumSize = new Vector2(0, 180) };
+        advancedToggle.Toggled += visible => jsonPanel.Visible = visible;
         var jsonToolbar = new HBoxContainer();
         AddButton(jsonToolbar, "Export Snapshot", ExportSnapshot);
         AddButton(jsonToolbar, "Import To Draft", ImportSnapshot);
         jsonPanel.AddChild(jsonToolbar);
         _json = new TextEdit { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         jsonPanel.AddChild(_json);
-        split.AddChild(jsonPanel);
-        AddChild(split);
+        advanced.AddChild(jsonPanel); inspector.AddChild(advanced);
+        inspectorScroll.AddChild(inspector); content.AddChild(inspectorScroll); AddChild(content);
+
+        _status = new Label { Text = "Loading authoritative map...", AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        WorkbenchUi.StyleStatus(_status); AddChild(_status);
         LoadMap();
     }
 
     public override void _ExitTree()
     {
-        DisconnectGraphSignals();
+        _dragHandlers.Clear();
         _initialized = false;
         _mapLoadAttempts = 0;
-        if (_nodePicker is not null) _nodePicker.ItemSelected -= SelectNode;
         _session = null;
         _map = null;
     }
@@ -212,8 +251,8 @@ public partial class PureRunMapWorkbench : VBoxContainer, IAuthoringWorkspacePar
     {
         if (_suppressGraphSignals || _session is null || from.IsEqualApprox(to)) return;
         MapAuthoringNode node = _session.Draft.Nodes.Single(value => value.NodeId == nodeId);
-        float lane = (to.Y - 280f) / 105f;
-        int layer = Math.Max(0, (int)MathF.Round((to.X - 90f) / 210f));
+        float lane = (to.Y - GraphOriginY) / GraphLaneSpacing;
+        int layer = Math.Max(0, (int)MathF.Round((to.X - GraphOriginX) / GraphLayerSpacing));
         ApplyDraftOperations("drag-map-node", new UpdateMapNodeOperation(node with { Layer = layer, Lane = lane }));
     }
 
@@ -329,13 +368,13 @@ public partial class PureRunMapWorkbench : VBoxContainer, IAuthoringWorkspacePar
         _suppressGraphSignals = true;
         foreach (MapAuthoringNode value in _session.Draft.Nodes)
         {
-            var node = new GraphNode
+            var node = new CircularMapGraphNode
             {
-                Name = value.NodeId, Title = $"{value.Title} [{value.Kind}]",
-                PositionOffset = new Vector2(90 + value.Layer * 210, 280 + value.Lane * 105), Resizable = false
+                Name = value.NodeId,
+                PositionOffset = new Vector2(GraphOriginX + value.Layer * GraphLayerSpacing, GraphOriginY + value.Lane * GraphLaneSpacing)
             };
-            node.AddChild(new Label { Text = value.ContentId, CustomMinimumSize = new Vector2(175, 32) });
-            node.SetSlot(0, true, 0, Colors.White, true, 0, Colors.White);
+            bool isStart = value.Layer == _session.Draft.Nodes.Min(item => item.Layer);
+            node.Configure(isStart ? "S" : Glyph(value.Kind), isStart ? new Color("33b34d") : NodeColor(value.Kind), $"{value.Title}\n{value.NodeId}\n{value.ContentId}\nLayer {value.Layer}, lane {value.Lane:0.##}");
             GraphElement.DraggedEventHandler handler = (from, to) => OnGraphNodeDragged(value.NodeId, from, to);
             node.Dragged += handler;
             _dragHandlers[value.NodeId] = handler;
@@ -358,7 +397,22 @@ public partial class PureRunMapWorkbench : VBoxContainer, IAuthoringWorkspacePar
     {
         if (_status is null) return;
         _status.Text = text;
-        _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen;
+        WorkbenchUi.StyleStatus(_status, error);
     }
+
+    internal static string Glyph(PureRunNodeKind kind) => kind switch
+    {
+        PureRunNodeKind.Boss => "B", PureRunNodeKind.Store => "$",
+        PureRunNodeKind.Rest => "R", PureRunNodeKind.Treasure => "T", PureRunNodeKind.Battle => "E",
+        PureRunNodeKind.Elite => "X", PureRunNodeKind.Mystery => "?", _ => "?"
+    };
+
+    internal static Color NodeColor(PureRunNodeKind kind) => kind switch
+    {
+        PureRunNodeKind.Boss => new Color("cc2626"), PureRunNodeKind.Store => new Color("d9b31a"), PureRunNodeKind.Rest => new Color("3380e6"),
+        PureRunNodeKind.Treasure => new Color("e6d933"), PureRunNodeKind.Battle => new Color("808080"),
+        PureRunNodeKind.Elite => new Color("9933cc"), PureRunNodeKind.Mystery => new Color("33cccc"),
+        _ => Colors.Gray
+    };
 }
 #endif

@@ -1,70 +1,114 @@
 #if TOOLS
-using System.Collections.Concurrent;
-using System.IO.Pipes;
-using System.Text;
+using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Godot;
 using Tactics.Application.Authoring;
 using Tactics.Godot.Adapter.Runtime;
 
 namespace Tactics.Godot.Adapter.Editor;
 
+internal readonly record struct AuthoringBridgeShutdownResult(
+    bool Completed,
+    int PendingRequestCount,
+    string Diagnostic);
+
 [Tool]
-public partial class TacticsAuthoringEditorBridge : Node
+public partial class TacticsAuthoringEditorBridge : Node, ISerializationListener
 {
     private const string CatalogPath = "res://content/ContentCatalog.tres";
-    private readonly ConcurrentQueue<PendingRequest> _pending = new();
-    private CancellationTokenSource? _cancellation;
-    private Task? _server;
+    private NamedPipeAuthoringServer? _server;
     private EditorUndoRedoManager? _undoRedo;
     private string _token = string.Empty;
     private string _pipeName = string.Empty;
     private string _descriptorPath = string.Empty;
     private string _projectRoot = string.Empty;
     private bool _ready;
-    private readonly TacticsAuthoringEditorService _authoring = new();
+    private int _shutdown;
+    private bool _allowMissingUndoRedoForLifecycleTest;
+    private TacticsAuthoringEditorService? _authoring;
+    private TacticsAuthoringEditorService Authoring =>
+        _authoring ?? throw new InvalidOperationException("Authoring bridge service is not active.");
 
     public void Configure(EditorUndoRedoManager undoRedo) => _undoRedo = undoRedo;
+    internal void ConfigureForLifecycleTest() => _allowMissingUndoRedoForLifecycleTest = true;
+    internal bool IsReady => _ready;
     public override void _EnterTree()
     {
-        if (_undoRedo is null) throw new InvalidOperationException("Authoring bridge requires Editor UndoRedo.");
+        StartBridge(requireUndoRedo: true);
+    }
+
+    public void OnBeforeSerialize()
+    {
+        ShutdownForReload(TimeSpan.FromSeconds(2));
+    }
+
+    public void OnAfterDeserialize()
+    {
+        // Godot invokes this while other tool scripts may still have old handles.
+        // TacticsEditorPlugin defers the actual restart until deserialization finishes.
+    }
+
+    internal void RestartAfterReload(EditorUndoRedoManager undoRedo)
+    {
+        Configure(undoRedo);
+        Interlocked.Exchange(ref _shutdown, 0);
+        StartBridge(requireUndoRedo: false);
+    }
+
+    private void StartBridge(bool requireUndoRedo)
+    {
+        if (_server is not null || Volatile.Read(ref _shutdown) != 0) return;
+        if (requireUndoRedo && _undoRedo is null && !_allowMissingUndoRedoForLifecycleTest)
+            throw new InvalidOperationException("Authoring bridge requires Editor UndoRedo.");
         _token = Guid.NewGuid().ToString("N"); _pipeName = $"tactics-authoring-{System.Environment.ProcessId}-{Guid.NewGuid():N}";
+        _authoring = new TacticsAuthoringEditorService();
         _projectRoot = Path.GetFullPath(ProjectSettings.GlobalizePath("res://..")).TrimEnd(Path.DirectorySeparatorChar);
         _descriptorPath = ProjectSettings.GlobalizePath($"res://.godot/tactics-authoring-session-{System.Environment.ProcessId}.json");
-        _ready = false; WriteDescriptor("initializing"); _cancellation = new CancellationTokenSource(); _server = RunServerAsync(_cancellation.Token); SetProcess(true);
+        RemoveDeadDescriptors();
+        _ready = false;
+        _server = new NamedPipeAuthoringServer(_pipeName);
+        WriteDescriptor("initializing");
+        SetProcess(true);
         GD.Print($"[Tactics Tooling] Authoring bridge initializing on {_pipeName}.");
     }
-    public override void _ExitTree()
+    public override void _ExitTree() => ShutdownForReload(TimeSpan.FromSeconds(2));
+
+    internal AuthoringBridgeShutdownResult ShutdownForReload(TimeSpan timeout)
     {
-        _ready = false; try { WriteDescriptor("reloading"); } catch { }
-        _cancellation?.Cancel(); _cancellation?.Dispose(); _cancellation = null; _server = null;
+        if (Interlocked.Exchange(ref _shutdown, 1) != 0)
+            return new AuthoringBridgeShutdownResult(_server is null, 0,
+                "Authoring bridge shutdown was already requested.");
+
+        _ready = false;
+        try { WriteDescriptor("reloading"); } catch { }
+        string pipeState = _server?.State ?? "none";
+        bool stopped = _server?.Shutdown(timeout) ?? true;
+        int pending = _server?.PendingRequestCount ?? 0;
+        _server?.Dispose();
+        _server = null;
+        _authoring = null;
         if (!string.IsNullOrWhiteSpace(_descriptorPath) && File.Exists(_descriptorPath)) File.Delete(_descriptorPath);
-        while (_pending.TryDequeue(out PendingRequest? request)) request.Completion.TrySetException(new InvalidOperationException("Editor bridge is reloading."));
+        return new AuthoringBridgeShutdownResult(stopped, pending,
+            $"Authoring bridge stopped synchronously; pipe={pipeState}, timeoutBudget={timeout.TotalMilliseconds:0}ms.");
     }
+
     public override void _Process(double delta)
     {
         _ = delta;
-        while (_pending.TryDequeue(out PendingRequest? pending))
+        if (Volatile.Read(ref _shutdown) != 0) return;
+        try
         {
-            try { pending.Completion.SetResult(HandleOnMainThread(pending.Json)); }
-            catch (Exception error) { pending.Completion.SetResult(JsonSerializer.Serialize(new { succeeded = false, error = error.Message })); }
+            if (_server?.TryReadRequest(out string requestJson) != true) return;
+            string response;
+            try { response = HandleOnMainThread(requestJson); }
+            catch (Exception error) { response = ErrorJson(error.Message).ToJsonString(); }
+            _server.WriteResponse(response);
         }
-    }
-
-    private async Task RunServerAsync(CancellationToken cancellation)
-    {
-        while (!cancellation.IsCancellationRequested)
+        catch (Exception error)
         {
-            try
-            {
-                await using var pipe = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-                await pipe.WaitForConnectionAsync(cancellation); using var reader = new StreamReader(pipe, Encoding.UTF8, false, leaveOpen: true); await using var writer = new StreamWriter(pipe, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true };
-                string requestJson = await reader.ReadLineAsync(cancellation) ?? throw new InvalidOperationException("Bridge request is empty.");
-                var completion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously); _pending.Enqueue(new PendingRequest(requestJson, completion));
-                string response = await completion.Task.WaitAsync(TimeSpan.FromSeconds(8), cancellation); await writer.WriteLineAsync(response.AsMemory(), cancellation);
-            }
-            catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { break; }
-            catch (Exception error) { GD.PushError($"[Tactics Tooling] Authoring bridge request failed: {error.Message}"); }
+            _server?.AbortConnection();
+            GD.PushError($"[Tactics Tooling] Authoring bridge request failed: {error.Message}");
         }
     }
 
@@ -75,7 +119,7 @@ public partial class TacticsAuthoringEditorBridge : Node
         if (root.GetProperty("sessionToken").GetString() != _token) throw new UnauthorizedAccessException("Authoring session token mismatch.");
         if (!string.Equals(Path.GetFullPath(root.GetProperty("projectRoot").GetString()!).TrimEnd(Path.DirectorySeparatorChar), _projectRoot, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Authoring project root mismatch.");
         string tool = root.GetProperty("tool").GetString()!; JsonElement arguments = root.GetProperty("arguments");
-        object response = tool switch
+        JsonObject response = tool switch
         {
             "tactics_authoring_list" => List(arguments),
             "tactics_authoring_get" => Get(arguments),
@@ -85,39 +129,54 @@ public partial class TacticsAuthoringEditorBridge : Node
             "tactics_authoring_reference_audit" => ReferenceAudit(arguments),
             _ => throw new InvalidOperationException($"Unknown authoring tool '{tool}'.")
         };
-        return JsonSerializer.Serialize(response);
+        return response.ToJsonString();
     }
 
-    private object List(JsonElement arguments)
+    private JsonObject List(JsonElement arguments)
     {
         string? kind = arguments.TryGetProperty("kind", out JsonElement supplied) ? supplied.GetString() : null;
-        StoredAuthoringDocument[] documents = _authoring.List(kind).ToArray();
-        return new { succeeded = true, documents = documents.Select(value => new { kind = value.Entry.ResourceTypeIdValue, contentId = value.Document.ContentId, revision = value.Revision, path = value.Entry.DiagnosticPathValue, diagnostics = Array.Empty<object>() }).ToArray() };
+        StoredAuthoringDocument[] documents = Authoring.List(kind).ToArray();
+        return new JsonObject
+        {
+            ["succeeded"] = true,
+            ["documents"] = new JsonArray(documents.Select(value => (JsonNode)new JsonObject
+            {
+                ["kind"] = value.Entry.ResourceTypeIdValue,
+                ["contentId"] = value.Document.ContentId,
+                ["revision"] = value.Revision,
+                ["path"] = value.Entry.DiagnosticPathValue,
+                ["diagnostics"] = new JsonArray()
+            }).ToArray())
+        };
     }
-    private object Get(JsonElement arguments)
+    private JsonObject Get(JsonElement arguments)
     {
         StoredAuthoringDocument stored = LoadDocument(arguments);
-        return new { succeeded = true, kind = stored.Entry.ResourceTypeIdValue, contentId = stored.Document.ContentId, revision = stored.Revision, snapshot = stored.Snapshot, dependencies = stored.Document.Dependencies };
+        return new JsonObject { ["succeeded"] = true, ["kind"] = stored.Entry.ResourceTypeIdValue,
+            ["contentId"] = stored.Document.ContentId, ["revision"] = stored.Revision,
+            ["snapshot"] = stored.Snapshot, ["dependencies"] = StringArray(stored.Document.Dependencies) };
     }
-    private object Validate(JsonElement arguments)
+    private JsonObject Validate(JsonElement arguments)
     {
         StoredAuthoringDocument stored = LoadDocument(arguments); string snapshot = arguments.TryGetProperty("snapshot", out JsonElement supplied) && supplied.ValueKind == JsonValueKind.String ? supplied.GetString()! : stored.Snapshot;
         string? expected = arguments.TryGetProperty("expectedRevision", out JsonElement expectedValue) && expectedValue.ValueKind == JsonValueKind.String ? expectedValue.GetString() : null;
-        AuthoringValidationResult validation = _authoring.Validate(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, snapshot, expected);
-        return new { succeeded = validation.Succeeded, contentId = stored.Document.ContentId, predictedRevision = validation.PredictedRevision, diagnostics = validation.Diagnostics, previewAvailable = validation.PreviewAvailable };
+        AuthoringValidationResult validation = Authoring.Validate(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, snapshot, expected);
+        return ValidationJson(validation, stored.Document.ContentId);
     }
-    private object Apply(JsonElement arguments)
+    private JsonObject Apply(JsonElement arguments)
     {
         if ((arguments.TryGetProperty("changes", out JsonElement changes) && changes.ValueKind == JsonValueKind.Array) ||
             (arguments.TryGetProperty("lifecycle", out JsonElement lifecycle) && lifecycle.ValueKind == JsonValueKind.Array))
             return ApplyBatch(arguments);
         StoredAuthoringDocument stored = LoadDocument(arguments); string expected = arguments.GetProperty("expectedRevision").GetString()!, afterJson = arguments.GetProperty("snapshot").GetString()!;
-        AuthoringValidationResult validation = _authoring.Validate(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, afterJson, expected); if (!validation.Succeeded) throw new InvalidOperationException(string.Join("; ", validation.Diagnostics.Select(value => value.Message)));
+        AuthoringValidationResult validation = Authoring.Validate(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, afterJson, expected); if (!validation.Succeeded) throw new InvalidOperationException(string.Join("; ", validation.Diagnostics.Select(value => value.Message)));
         _undoRedo!.CreateAction($"MCP apply {stored.Entry.ContentIdValue}", UndoRedo.MergeMode.Disable, stored.Resource); _undoRedo.AddDoMethod(this, MethodName.ApplySerializedDocument, stored.Entry.ResourceTypeIdValue, stored.Entry.ContentIdValue, expected, afterJson); _undoRedo.AddUndoMethod(this, MethodName.ApplySerializedDocument, stored.Entry.ResourceTypeIdValue, stored.Entry.ContentIdValue, validation.PredictedRevision, stored.Snapshot); _undoRedo.CommitAction();
-        StoredAuthoringDocument applied = _authoring.Get(stored.Entry.ResourceTypeIdValue, stored.Entry.ContentIdValue);
-        return new { succeeded = true, contentId = applied.Document.ContentId, revision = applied.Revision, modified = new[] { applied.Entry.DiagnosticPathValue }, evidence = "EditorUndoRedo+staged-ResourceSaver+typed-reload" };
+        StoredAuthoringDocument applied = Authoring.Get(stored.Entry.ResourceTypeIdValue, stored.Entry.ContentIdValue);
+        return new JsonObject { ["succeeded"] = true, ["contentId"] = applied.Document.ContentId,
+            ["revision"] = applied.Revision, ["modified"] = StringArray([applied.Entry.DiagnosticPathValue]),
+            ["evidence"] = "EditorUndoRedo+staged-ResourceSaver+typed-reload" };
     }
-    private object ApplyBatch(JsonElement arguments)
+    private JsonObject ApplyBatch(JsonElement arguments)
     {
         var after = new List<BridgeDocumentChange>();
         var before = new List<BridgeDocumentChange>();
@@ -133,8 +192,8 @@ public partial class TacticsAuthoringEditorBridge : Node
                 after.Add(new BridgeDocumentChange(kind, contentId, expected, snapshot));
                 continue;
             }
-            StoredAuthoringDocument stored = _authoring.Get(kind, contentId);
-            AuthoringValidationResult validation = _authoring.Validate(kind, contentId, snapshot, expected);
+            StoredAuthoringDocument stored = Authoring.Get(kind, contentId);
+            AuthoringValidationResult validation = Authoring.Validate(kind, contentId, snapshot, expected);
             if (!validation.Succeeded) throw new InvalidOperationException(string.Join("; ", validation.Diagnostics.Select(value => value.Message)));
             after.Add(new BridgeDocumentChange(kind, contentId, expected, snapshot));
             before.Add(new BridgeDocumentChange(kind, contentId, validation.PredictedRevision, stored.Snapshot));
@@ -156,9 +215,9 @@ public partial class TacticsAuthoringEditorBridge : Node
         string changeId = Guid.NewGuid().ToString("N");
         var payload = new BridgeBatchPayload(changeId, after.ToArray(), assets.ToArray());
         AuthoringBatchChangeSet batch = BuildBatch(payload);
-        _authoring.ValidateBatch(batch);
-        string afterPayload = JsonSerializer.Serialize(payload);
-        string beforePayload = JsonSerializer.Serialize(new BridgeBatchPayload(Guid.NewGuid().ToString("N"), before.ToArray(), Array.Empty<BridgeAssetChange>()));
+        Authoring.ValidateBatch(batch);
+        string afterPayload = SerializeBatch(payload);
+        string beforePayload = SerializeBatch(new BridgeBatchPayload(Guid.NewGuid().ToString("N"), before.ToArray(), Array.Empty<BridgeAssetChange>()));
         _undoRedo!.CreateAction($"MCP apply {after.Count + assets.Count} authored changes", UndoRedo.MergeMode.Disable);
         _undoRedo.AddDoMethod(this, MethodName.ApplySerializedAuthoringBatch, afterPayload);
         if (assets.Count > 0)
@@ -178,26 +237,31 @@ public partial class TacticsAuthoringEditorBridge : Node
             BridgeAssetChange lifecycleChange = assets.FirstOrDefault(item => item.ContentId == value)!;
             string? kind = change?.Kind ?? lifecycleChange?.ResourceType;
             if (kind is null && lifecycleChange?.SourceContentId is { } sourceId)
-                kind = _authoring.List().Single(item => item.Document.ContentId == sourceId).Entry.ResourceTypeIdValue;
+                kind = Authoring.List().Single(item => item.Document.ContentId == sourceId).Entry.ResourceTypeIdValue;
             if (kind is null) throw new InvalidOperationException($"Lifecycle Resource type missing for '{value}'.");
-            return _authoring.Get(kind, value);
+            return Authoring.Get(kind, value);
         }).ToArray();
-        return new
+        var revisions = new JsonObject();
+        foreach (StoredAuthoringDocument value in applied) revisions[value.Document.ContentId] = value.Revision;
+        return new JsonObject
         {
-            succeeded = true,
-            revisions = applied.ToDictionary(value => value.Document.ContentId, value => value.Revision, StringComparer.Ordinal),
-            created = assets.Where(value => ParseAssetKind(value.Operation) is AuthoringAssetChangeKind.Create or AuthoringAssetChangeKind.Duplicate).Select(value => value.ContentId).ToArray(),
-            modified = after.Where(value => value.ExpectedRevision != "new").Select(value => value.ContentId).ToArray(),
-            deleted = deletedIds.ToArray(),
-            resources = applied.Select(value => new { contentId = value.Document.ContentId, path = value.Entry.DiagnosticPathValue, uid = value.Entry.ResourceUidValue, revision = value.Revision, reloadValidated = true }).ToArray(),
-            evidence = "single-EditorUndoRedo+atomic-Resource-Catalog-UID-ledger+typed-reload"
+            ["succeeded"] = true, ["revisions"] = revisions,
+            ["created"] = StringArray(assets.Where(value => ParseAssetKind(value.Operation) is AuthoringAssetChangeKind.Create or AuthoringAssetChangeKind.Duplicate).Select(value => value.ContentId)),
+            ["modified"] = StringArray(after.Where(value => value.ExpectedRevision != "new").Select(value => value.ContentId)),
+            ["deleted"] = StringArray(deletedIds),
+            ["resources"] = new JsonArray(applied.Select(value => (JsonNode)new JsonObject
+            {
+                ["contentId"] = value.Document.ContentId, ["path"] = value.Entry.DiagnosticPathValue,
+                ["uid"] = value.Entry.ResourceUidValue, ["revision"] = value.Revision, ["reloadValidated"] = true
+            }).ToArray()),
+            ["evidence"] = "single-EditorUndoRedo+atomic-Resource-Catalog-UID-ledger+typed-reload"
         };
     }
-    private object Preview(JsonElement arguments)
+    private JsonObject Preview(JsonElement arguments)
     {
         StoredAuthoringDocument stored = LoadDocument(arguments); string snapshotText = arguments.TryGetProperty("snapshot", out JsonElement snapshot) && snapshot.ValueKind == JsonValueKind.String ? snapshot.GetString()! : stored.Snapshot;
         int seedValue = arguments.TryGetProperty("seed", out JsonElement seed) ? seed.GetInt32() : 0;
-        AuthoringValidationResult validation = _authoring.Validate(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, snapshotText);
+        AuthoringValidationResult validation = Authoring.Validate(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, snapshotText);
         object? evidence = null;
         if (validation.Succeeded && stored.Entry.ResourceTypeIdValue == "skill" &&
             arguments.TryGetProperty("context", out JsonElement context))
@@ -209,30 +273,38 @@ public partial class TacticsAuthoringEditorBridge : Node
                 new GridCellAuthoring(context.GetProperty("targetX").GetInt32(), context.GetProperty("targetY").GetInt32()),
                 context.TryGetProperty("seed", out JsonElement contextSeed) ? contextSeed.GetUInt64() : (ulong)seedValue,
                 context.TryGetProperty("casterUnitContentId", out JsonElement casterContent) ? casterContent.GetString() : null);
-            evidence = _authoring.PreviewSkillBattle(stored.Document.ContentId, snapshotText, typed);
+            evidence = Authoring.PreviewSkillBattle(stored.Document.ContentId, snapshotText, typed);
         }
-        else if (validation.Succeeded) evidence = _authoring.Preview(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, snapshotText, seedValue);
-        return new { succeeded = validation.Succeeded, contentId = stored.Document.ContentId, revision = validation.PredictedRevision, previewKind = stored.Entry.ResourceTypeIdValue, seed = seedValue, available = validation.PreviewAvailable, diagnostics = validation.Diagnostics, evidence };
+        else if (validation.Succeeded) evidence = Authoring.Preview(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, snapshotText, seedValue);
+        return new JsonObject { ["succeeded"] = validation.Succeeded, ["contentId"] = stored.Document.ContentId,
+            ["revision"] = validation.PredictedRevision, ["previewKind"] = stored.Entry.ResourceTypeIdValue,
+            ["seed"] = seedValue, ["available"] = validation.PreviewAvailable,
+            ["diagnostics"] = DiagnosticsJson(validation.Diagnostics), ["evidence"] = PreviewEvidenceJson(evidence) };
     }
-    private object ReferenceAudit(JsonElement arguments)
+    private JsonObject ReferenceAudit(JsonElement arguments)
     {
         string? id = arguments.TryGetProperty("contentId", out JsonElement supplied) ? supplied.GetString() : null; AuthoringCatalogAuditRow[] rows = AuthoringCatalogAuditService.Audit(LoadCatalog()).Where(value => id is null || value.ContentId == id).ToArray();
-        return new { succeeded = true, rows };
+        return new JsonObject { ["succeeded"] = true, ["rows"] = new JsonArray(rows.Select(value => (JsonNode)new JsonObject
+        {
+            ["contentId"] = value.ContentId, ["type"] = value.Type, ["path"] = value.Path, ["uid"] = value.Uid,
+            ["revision"] = value.Revision, ["ownership"] = value.Ownership.ToString(),
+            ["forwardReferences"] = StringArray(value.ForwardReferences), ["reverseReferences"] = StringArray(value.ReverseReferences),
+            ["diagnostics"] = DiagnosticsJson(value.Diagnostics)
+        }).ToArray()) };
     }
 
     public void ApplySerializedDocument(string kind, string contentId, string expectedRevision, string snapshot)
     {
-        _ = _authoring.ApplySingle(kind, contentId, expectedRevision, snapshot);
+        _ = Authoring.ApplySingle(kind, contentId, expectedRevision, snapshot);
     }
 
     public void ApplySerializedAuthoringBatch(string payload)
     {
-        BridgeBatchPayload batch = JsonSerializer.Deserialize<BridgeBatchPayload>(payload)
-            ?? throw new InvalidOperationException("Serialized authoring batch is invalid.");
-        _ = _authoring.ApplyBatch(BuildBatch(batch));
+        BridgeBatchPayload batch = DeserializeBatch(payload);
+        _ = Authoring.ApplyBatch(BuildBatch(batch));
     }
 
-    public void UndoSerializedLifecycleBatch(string changeId) => _authoring.UndoLifecycleBatch(changeId);
+    public void UndoSerializedLifecycleBatch(string changeId) => Authoring.UndoLifecycleBatch(changeId);
 
     private static AuthoringBatchChangeSet BuildBatch(BridgeBatchPayload payload) => new(
         payload.ChangeId,
@@ -243,9 +315,9 @@ public partial class TacticsAuthoringEditorBridge : Node
 
     private StoredAuthoringDocument LoadDocument(JsonElement arguments)
     {
-        string kind = arguments.GetProperty("kind").GetString()!, contentId = arguments.GetProperty("contentId").GetString()!; return _authoring.Get(kind, contentId);
+        string kind = arguments.GetProperty("kind").GetString()!, contentId = arguments.GetProperty("contentId").GetString()!; return Authoring.Get(kind, contentId);
     }
-    private GodotResourceCatalog LoadCatalog() => _authoring.LoadCatalog();
+    private GodotResourceCatalog LoadCatalog() => Authoring.LoadCatalog();
     private static AuthoringDocumentKind ParseKind(string value) => AuthoringResourceHandlerRegistry.Normalize(value) switch
     {
         "run-map" => AuthoringDocumentKind.Map,
@@ -262,13 +334,129 @@ public partial class TacticsAuthoringEditorBridge : Node
         Enum.TryParse(value, true, out AuthoringAssetChangeKind parsed)
             ? parsed
             : throw new InvalidOperationException($"Unsupported lifecycle operation '{value}'.");
-    private void WriteDescriptor(string state) { Directory.CreateDirectory(Path.GetDirectoryName(_descriptorPath)!); File.WriteAllText(_descriptorPath, JsonSerializer.Serialize(new { projectRoot = _projectRoot, pipeName = _pipeName, sessionToken = _token, processId = System.Environment.ProcessId, state })); }
+    private void WriteDescriptor(string state) { Directory.CreateDirectory(Path.GetDirectoryName(_descriptorPath)!); File.WriteAllText(_descriptorPath,
+        new JsonObject { ["projectRoot"] = _projectRoot, ["transport"] = "named-pipe",
+            ["endpointPath"] = string.Empty, ["pipeName"] = _pipeName,
+            ["sessionToken"] = _token, ["processId"] = System.Environment.ProcessId, ["state"] = state }.ToJsonString()); }
     public void MarkReady()
     {
-        if (!IsInsideTree() || EditorInterface.Singleton.GetResourceFilesystem().IsScanning()) return;
+        if (Volatile.Read(ref _shutdown) != 0 || !IsInsideTree() || EditorInterface.Singleton.GetResourceFilesystem().IsScanning()) return;
         _ready = true; WriteDescriptor("ready"); GD.Print($"[Tactics Tooling] Authoring bridge ready on {_pipeName}.");
     }
-    private sealed record PendingRequest(string Json, TaskCompletionSource<string> Completion);
+
+    private void RemoveDeadDescriptors()
+    {
+        string directory = Path.GetDirectoryName(_descriptorPath)!;
+        if (!Directory.Exists(directory)) return;
+        foreach (string path in Directory.GetFiles(directory, "tactics-authoring-session-*.json"))
+        {
+            if (string.Equals(path, _descriptorPath, StringComparison.OrdinalIgnoreCase)) continue;
+            try
+            {
+                using JsonDocument json = JsonDocument.Parse(File.ReadAllText(path));
+                JsonElement root = json.RootElement;
+                string candidateRoot = Path.GetFullPath(root.GetProperty("projectRoot").GetString()!).TrimEnd(Path.DirectorySeparatorChar);
+                int processId = root.GetProperty("processId").GetInt32();
+                if (!string.Equals(candidateRoot, _projectRoot, StringComparison.OrdinalIgnoreCase) || IsProcessAlive(processId)) continue;
+                File.Delete(path);
+            }
+            catch (JsonException) { }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    private static bool IsProcessAlive(int processId)
+    {
+        try { using Process process = Process.GetProcessById(processId); return !process.HasExited; }
+        catch (ArgumentException) { return false; }
+    }
+
+    private static JsonObject ErrorJson(string message) => new() { ["succeeded"] = false, ["error"] = message };
+
+    private static JsonArray StringArray(IEnumerable<string> values) =>
+        new(values.Select(value => (JsonNode)JsonValue.Create(value)!).ToArray());
+
+    private static JsonObject ValidationJson(AuthoringValidationResult validation, string contentId) => new()
+    {
+        ["succeeded"] = validation.Succeeded,
+        ["contentId"] = contentId,
+        ["predictedRevision"] = validation.PredictedRevision,
+        ["diagnostics"] = DiagnosticsJson(validation.Diagnostics),
+        ["previewAvailable"] = validation.PreviewAvailable
+    };
+
+    private static JsonArray DiagnosticsJson(IEnumerable<AuthoringDiagnostic> diagnostics) =>
+        new(diagnostics.Select(value => (JsonNode)new JsonObject
+        {
+            ["code"] = value.Code,
+            ["severity"] = value.Severity.ToString(),
+            ["message"] = value.Message,
+            ["path"] = value.Path
+        }).ToArray());
+
+    private static JsonNode? PreviewEvidenceJson(object? evidence) => evidence switch
+    {
+        null => null,
+        AuthoringPreviewEvidence value => new JsonObject
+        {
+            ["kind"] = value.Kind,
+            ["summary"] = value.Summary,
+            ["values"] = StringMap(value.Values)
+        },
+        SkillBattlePreviewResult value => new JsonObject
+        {
+            ["succeeded"] = value.Succeeded,
+            ["rejectionReason"] = value.RejectionReason,
+            ["beforeFingerprint"] = value.BeforeFingerprint,
+            ["afterFingerprint"] = value.AfterFingerprint,
+            ["events"] = StringArray(value.Events),
+            ["values"] = StringMap(value.Values),
+            ["sourceStateUnchanged"] = value.SourceStateUnchanged
+        },
+        _ => throw new InvalidOperationException($"Unsupported authoring preview evidence '{evidence.GetType().Name}'.")
+    };
+
+    private static JsonObject StringMap(IEnumerable<KeyValuePair<string, string>> values)
+    {
+        var result = new JsonObject();
+        foreach ((string key, string value) in values) result[key] = value;
+        return result;
+    }
+
+    private static string SerializeBatch(BridgeBatchPayload payload)
+    {
+        var changes = new JsonArray(payload.Changes.Select(value => (JsonNode)new JsonObject
+        {
+            ["kind"] = value.Kind, ["contentId"] = value.ContentId,
+            ["expectedRevision"] = value.ExpectedRevision, ["snapshot"] = value.Snapshot
+        }).ToArray());
+        var lifecycle = new JsonArray(payload.Lifecycle.Select(value => (JsonNode)new JsonObject
+        {
+            ["operation"] = value.Operation, ["contentId"] = value.ContentId,
+            ["sourceContentId"] = value.SourceContentId, ["resourceType"] = value.ResourceType,
+            ["path"] = value.Path, ["expectedReferenceRevision"] = value.ExpectedReferenceRevision
+        }).ToArray());
+        return new JsonObject { ["changeId"] = payload.ChangeId, ["changes"] = changes, ["lifecycle"] = lifecycle }.ToJsonString();
+    }
+
+    private static BridgeBatchPayload DeserializeBatch(string payload)
+    {
+        using JsonDocument parsed = JsonDocument.Parse(payload);
+        JsonElement root = parsed.RootElement;
+        BridgeDocumentChange[] changes = root.GetProperty("changes").EnumerateArray().Select(value => new BridgeDocumentChange(
+            value.GetProperty("kind").GetString()!, value.GetProperty("contentId").GetString()!,
+            value.GetProperty("expectedRevision").GetString()!, value.GetProperty("snapshot").GetString()!)).ToArray();
+        BridgeAssetChange[] lifecycle = root.GetProperty("lifecycle").EnumerateArray().Select(value => new BridgeAssetChange(
+            value.GetProperty("operation").GetString()!, value.GetProperty("contentId").GetString()!,
+            OptionalString(value, "sourceContentId"), OptionalString(value, "resourceType"), OptionalString(value, "path"),
+            OptionalString(value, "expectedReferenceRevision"))).ToArray();
+        return new BridgeBatchPayload(root.GetProperty("changeId").GetString()!, changes, lifecycle);
+    }
+
+    private static string? OptionalString(JsonElement owner, string name) =>
+        owner.TryGetProperty(name, out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+
     private sealed record BridgeDocumentChange(string Kind, string ContentId, string ExpectedRevision, string Snapshot);
     private sealed record BridgeAssetChange(string Operation, string ContentId, string? SourceContentId,
         string? ResourceType, string? Path, string? ExpectedReferenceRevision);
