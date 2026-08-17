@@ -48,21 +48,23 @@ public partial class SkillAuthoringWorkbench : VBoxContainer, IAuthoringWorkspac
     {
         if (_undoRedo is null) throw new InvalidOperationException("Editor UndoRedo manager is required.");
         SizeFlagsHorizontal = SizeFlags.ExpandFill; SizeFlagsVertical = SizeFlags.ExpandFill;
-        var toolbar = new HBoxContainer(); _picker = new OptionButton { CustomMinimumSize = new Vector2(300, 0) }; _picker.ItemSelected += LoadSelected; toolbar.AddChild(_picker);
+        WorkbenchUi.StylePage(this);
+        var toolbar = WorkbenchUi.Toolbar(this); toolbar.AddChild(new Label { Text = "SKILL DEFINITION" }); _picker = new OptionButton { CustomMinimumSize = new Vector2(300, 0) }; _picker.ItemSelected += LoadSelected; toolbar.AddChild(_picker);
         AddButton(toolbar, "Validate / Compile", ValidateDraft); AddButton(toolbar, "Preview Battle", PreviewDraft); AddButton(toolbar, "Revert", RevertAll); AddButton(toolbar, "Advanced JSON", ToggleAdvancedJson); AddChild(toolbar);
-        var preview = new HBoxContainer(); preview.AddChild(new Label { Text = "Encounter" });
-        _previewEncounter = new OptionButton { CustomMinimumSize = new Vector2(260, 0) }; preview.AddChild(_previewEncounter);
-        preview.AddChild(new Label { Text = "Target instance" }); _previewTarget = new LineEdit { Text = "preview.enemy.0", CustomMinimumSize = new Vector2(150, 0) }; preview.AddChild(_previewTarget);
-        preview.AddChild(new Label { Text = "Cell X/Y" }); _previewX = new SpinBox { MinValue = 0, MaxValue = 9, Step = 1, Value = 7 }; preview.AddChild(_previewX);
-        _previewY = new SpinBox { MinValue = 0, MaxValue = 9, Step = 1, Value = 4 }; preview.AddChild(_previewY);
-        preview.AddChild(new Label { Text = "Seed" }); _previewSeed = new SpinBox { MinValue = 0, MaxValue = int.MaxValue, Step = 1, Value = 42 }; preview.AddChild(_previewSeed); AddChild(preview);
-        AddChild(new Label { Text = "Structured SkillDefinition inspector — fields are grouped by runtime execution contract; frozen migration provenance is read-only." });
+        var split = new HSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         var scroll = new ScrollContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        _form = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; scroll.AddChild(_form); AddChild(scroll);
+        _form = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; scroll.AddChild(_form); split.AddChild(scroll);
+        var preview = WorkbenchUi.InspectorSection(this, "BattleTransition Preview", new Color("4a90d9")); preview.CustomMinimumSize = new Vector2(340, 0);
+        preview.AddChild(new Label { Text = "Encounter" }); _previewEncounter = new OptionButton(); preview.AddChild(_previewEncounter);
+        preview.AddChild(new Label { Text = "Target instance" }); _previewTarget = new LineEdit { Text = "preview.enemy.0" }; preview.AddChild(_previewTarget);
+        preview.AddChild(new Label { Text = "Target cell X / Y" }); var cell = new HBoxContainer(); _previewX = new SpinBox { MinValue = 0, MaxValue = 9, Step = 1, Value = 7, SizeFlagsHorizontal = SizeFlags.ExpandFill }; cell.AddChild(_previewX);
+        _previewY = new SpinBox { MinValue = 0, MaxValue = 9, Step = 1, Value = 4, SizeFlagsHorizontal = SizeFlags.ExpandFill }; cell.AddChild(_previewY); preview.AddChild(cell);
+        preview.AddChild(new Label { Text = "Fixed seed" }); _previewSeed = new SpinBox { MinValue = 0, MaxValue = int.MaxValue, Step = 1, Value = 42 }; preview.AddChild(_previewSeed);
+        preview.AddChild(new Label { Text = "Preview uses an isolated BattleState and never writes formal content." }); split.AddChild(preview); AddChild(split);
         _snapshot = new TextEdit { Visible = false, CustomMinimumSize = new Vector2(0, 180), SizeFlagsHorizontal = SizeFlags.ExpandFill }; AddChild(_snapshot);
-        _status = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart }; AddChild(_status); CallDeferred(nameof(LoadCatalog));
+        _status = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(0, 48) }; WorkbenchUi.StyleStatus(_status); AddChild(_status); CallDeferred(nameof(LoadCatalog));
     }
-    public override void _ExitTree() { _catalogLoadAttempts = 0; if (_picker is not null) _picker.ItemSelected -= LoadSelected; _resource = null; _draft = null; }
+    public override void _ExitTree() { _catalogLoadAttempts = 0; _resource = null; _draft = null; }
     public void LoadCatalog()
     {
         EditorResourceLoadResult<GodotResourceCatalog> result = ReloadSafeEditorResourceLoader.Load<GodotResourceCatalog>(CatalogPath, CatalogScriptPath, "Entries");
@@ -137,18 +139,18 @@ public partial class SkillAuthoringWorkbench : VBoxContainer, IAuthoringWorkspac
         if (_form is null || _snapshot is null || string.IsNullOrWhiteSpace(_snapshot.Text)) return;
         foreach (Node child in _form.GetChildren()) { _form.RemoveChild(child); child.QueueFree(); }
         JsonObject root = JsonNode.Parse(_snapshot.Text)!.AsObject();
-        _form.AddChild(Heading("Identity, targeting and damage"));
+        VBoxContainer identity = WorkbenchUi.InspectorSection(this, "Identity, targeting and damage", new Color("4a90d9")); _form.AddChild(identity);
         foreach (string name in new[] { "contentId", "displayName", "description", "role", "kind", "level", "manaCost", "minRange", "maxRange", "executionKind", "damage", "damageKind", "canCrit" })
-            AddProperty(_form, root, name, name);
-        _form.AddChild(Heading("Status, growth and prerequisites"));
+            AddProperty(identity, root, name, name);
+        VBoxContainer growth = WorkbenchUi.InspectorSection(this, "Status, growth and prerequisites", new Color("d49a32")); _form.AddChild(growth);
         foreach (string name in new[] { "statusContentId", "statusDuration", "hidden", "externalDependency", "isBasicAbility", "maxUsesPerTurn", "branchId", "prerequisiteContentId", "prerequisiteBranchId", "growthVisible", "requiredAttribute", "minimumAttribute" })
-            AddProperty(_form, root, name, name);
-        _form.AddChild(Heading("Execution profile — " + root["executionKind"]!.GetValue<string>()));
+            AddProperty(growth, root, name, name);
+        VBoxContainer execution = WorkbenchUi.InspectorSection(this, "Execution profile — " + root["executionKind"]!.GetValue<string>(), new Color("e05555")); _form.AddChild(execution);
         JsonObject profile = root["executionProfile"]!.AsObject();
-        foreach ((string name, _) in profile) AddProperty(_form, profile, name, "executionProfile." + name);
-        _form.AddChild(Heading("Provenance (frozen fields are read-only)"));
+        foreach ((string name, _) in profile) AddProperty(execution, profile, name, "executionProfile." + name);
+        VBoxContainer provenance = WorkbenchUi.InspectorSection(this, "Provenance (read-only)", new Color("9aa4b2"), collapsed: true); _form.AddChild(provenance);
         foreach (string name in new[] { "sourceKind", "sourceId", "sourcePath", "sourceGuid", "sourceLocalFileId", "graphPath", "graphDependencyHash" })
-            AddProperty(_form, root, name, name);
+            AddProperty(provenance, root, name, name);
     }
 
     private void AddProperty(Container parent, JsonObject owner, string name, string path)
@@ -207,8 +209,7 @@ public partial class SkillAuthoringWorkbench : VBoxContainer, IAuthoringWorkspac
         "role" => Enum.GetNames<SkillRole>(), "kind" => Enum.GetNames<SkillKind>(), "executionKind" => Enum.GetNames<SkillExecutionKind>(),
         "damageKind" => Enum.GetNames<SkillDamageKind>(), "sourceKind" => Enum.GetNames<SkillAuthoringSourceKind>(), _ => null
     };
-    private static Label Heading(string text) { var label = new Label { Text = text }; label.AddThemeFontSizeOverride("font_size", 20); return label; }
     private static void AddButton(Container parent, string text, Action action) { var button = new Button { Text = text }; button.Pressed += action; parent.AddChild(button); }
-    private void SetStatus(string message, bool error = false) { if (_status is null) return; _status.Text = message; _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen; }
+    private void SetStatus(string message, bool error = false) { if (_status is null) return; _status.Text = message; WorkbenchUi.StyleStatus(_status, error); }
 }
 #endif

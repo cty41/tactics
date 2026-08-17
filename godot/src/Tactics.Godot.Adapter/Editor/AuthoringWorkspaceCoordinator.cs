@@ -1,5 +1,4 @@
 #if TOOLS
-using System.Text.Json;
 using Godot;
 using Tactics.Application.Authoring;
 
@@ -39,8 +38,10 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
     public override void _Ready()
     {
         if (_undoRedo is null) throw new InvalidOperationException("Workspace coordinator requires Editor UndoRedo.");
+        WorkbenchUi.StylePage(this);
+        AddChild(new Label { Text = "GLOBAL TRANSACTION" });
         AddButton("Validate All", ValidateAll); AddButton("Apply All", ApplyAll); AddButton("Revert All", RevertAll);
-        _status = new Label { Text = "Workspace: no dirty documents." }; AddChild(_status); SetProcess(true);
+        _status = new Label { Text = "Workspace: no dirty documents." }; WorkbenchUi.StyleStatus(_status); AddChild(_status); SetProcess(true);
     }
 
     public override void _Process(double delta)
@@ -52,11 +53,11 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
             AuthoringEditorDiagnostics.RecordWorkspace(changes.Length, _lifecycle.Count);
             _status!.Text = changes.Length == 0 && _lifecycle.Count == 0 ? "Workspace: no dirty documents."
                 : $"Workspace: {changes.Length} dirty documents, {_lifecycle.Count} lifecycle operations; Apply All is one Undo action.";
-            _status.Modulate = changes.Length == 0 && _lifecycle.Count == 0 ? Colors.LightGray : Colors.Gold;
+            WorkbenchUi.StyleStatus(_status, warning: changes.Length > 0 || _lifecycle.Count > 0);
         }
         catch (Exception error)
         {
-            _status!.Text = "Workspace conflict: " + error.Message; _status.Modulate = Colors.IndianRed;
+            _status!.Text = "Workspace conflict: " + error.Message; WorkbenchUi.StyleStatus(_status, error: true);
         }
     }
 
@@ -91,8 +92,8 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
                 IAuthoringDocument draft = handler.Deserialize(value.Snapshot);
                 return new AuthoringDocumentChange(value.Kind, value.ContentId, AuthoringRevision.Compute(draft), stored.Snapshot);
             }).ToArray();
-            string afterPayload = JsonSerializer.Serialize(new WorkspaceBatchPayload(changeId, after, lifecycle));
-            string beforePayload = JsonSerializer.Serialize(new WorkspaceBatchPayload(
+            string afterPayload = AuthoringBatchPayloadJson.Serialize(new AuthoringBatchPayload(changeId, after, lifecycle));
+            string beforePayload = AuthoringBatchPayloadJson.Serialize(new AuthoringBatchPayload(
                 Guid.NewGuid().ToString("N"), before, Array.Empty<AuthoringAssetChange>()));
             _undoRedo!.CreateAction($"Apply {after.Length + lifecycle.Length} Content Workbench changes", UndoRedo.MergeMode.Disable);
             _undoRedo.AddDoMethod(this, MethodName.ApplySerializedWorkspace, afterPayload);
@@ -105,8 +106,7 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
 
     public void ApplySerializedWorkspace(string payload)
     {
-        WorkspaceBatchPayload value = JsonSerializer.Deserialize<WorkspaceBatchPayload>(payload)
-            ?? throw new InvalidOperationException("Workspace batch payload is invalid.");
+        AuthoringBatchPayload value = AuthoringBatchPayloadJson.Deserialize(payload);
         _ = _authoring.ApplyBatch(new AuthoringBatchChangeSet(value.ChangeId, value.Changes, value.Lifecycle));
         _lifecycle.Clear();
         string[] reloadErrors = ReloadParticipants();
@@ -151,8 +151,6 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
         return errors.ToArray();
     }
     private void AddButton(string text, Action action) { var button = new Button { Text = text }; button.Pressed += action; AddChild(button); }
-    private void SetStatus(string text, bool error = false) { if (_status is null) return; _status.Text = text; _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen; }
-    private sealed record WorkspaceBatchPayload(string ChangeId, AuthoringDocumentChange[] Changes,
-        AuthoringAssetChange[] Lifecycle);
+    private void SetStatus(string text, bool error = false) { if (_status is null) return; _status.Text = text; WorkbenchUi.StyleStatus(_status, error); }
 }
 #endif

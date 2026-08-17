@@ -95,6 +95,9 @@ public class AuthoringRoundTripGodotTests
 
         var stage = new PresentationProfilePreviewStage();
         stage._Ready();
+        stage.InitializeActors();
+        stage.InitializeActors();
+        AssertThat(stage.ActorCount).IsEqual(2);
         foreach (StoredAuthoringDocument profile in profiles)
         {
             stage.Configure(profile.Resource);
@@ -104,6 +107,33 @@ public class AuthoringRoundTripGodotTests
             AssertThat(stage.ActiveTweenCount).OverrideFailureMessage(profile.Document.ContentId).IsEqual(0);
             AssertThat(stage.TemporaryNodeCount).OverrideFailureMessage(profile.Document.ContentId).IsEqual(0);
         }
+        stage.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void NativePresentationPreviewWaitsForTypedActorsWithoutPartialConstruction()
+    {
+        PresentationPreviewActorLoadResult ready = PresentationProfilePreviewStage.ProbeActorResources();
+        AssertThat((int)ready.State).IsEqual((int)EditorResourceLoadState.Ready);
+        int probes = 0;
+        var stage = new PresentationProfilePreviewStage
+        {
+            ActorResourceProbe = () => probes++ == 0
+                ? new PresentationPreviewActorLoadResult(EditorResourceLoadState.ReloadPending, null, null,
+                    "synthetic assembly reload")
+                : ready
+        };
+
+        stage._Ready();
+        stage.InitializeActors();
+        AssertThat(stage.ActorCount).IsEqual(0);
+        stage.InitializeActors();
+        stage.InitializeActors();
+        AssertThat(stage.ActorCount).IsEqual(2);
+        AssertThat(probes).IsEqual(2);
+        stage._ExitTree();
+        AssertThat(stage.ActorCount).IsEqual(0);
         stage.Free();
     }
 }

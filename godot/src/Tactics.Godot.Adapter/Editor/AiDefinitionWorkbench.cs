@@ -56,27 +56,27 @@ public partial class AiDefinitionWorkbench : VBoxContainer, IAuthoringWorkspaceP
     {
         if (_undoRedo is null) throw new InvalidOperationException("Editor UndoRedo manager is required.");
         SizeFlagsHorizontal = SizeFlags.ExpandFill; SizeFlagsVertical = SizeFlags.ExpandFill;
-        var toolbar = new HBoxContainer(); _resourcePicker = new OptionButton { CustomMinimumSize = new Vector2(240, 0) };
-        _resourcePicker.ItemSelected += LoadSelected; toolbar.AddChild(_resourcePicker);
-        _distance = AddWeight(toolbar, "Distance"); _damage = AddWeight(toolbar, "Damage"); _targets = AddWeight(toolbar, "Targets"); _statusWeight = AddWeight(toolbar, "Status");
-        AddButton(toolbar, "Update Profile Draft", UpdateProfile); AddButton(toolbar, "Auto Layout", AutoLayout); AddButton(toolbar, "Validate", ValidateDraft); AddButton(toolbar, "Preview", PreviewDraft); AddButton(toolbar, "Revert", RevertAll); AddChild(toolbar);
-        var bindingBar = new HBoxContainer(); bindingBar.AddChild(new Label { Text = "Skill" }); _skillPicker = new OptionButton { CustomMinimumSize = new Vector2(210, 0) }; bindingBar.AddChild(_skillPicker); AddButton(bindingBar, "Add Skill", AddSkill); AddButton(bindingBar, "Remove Skill", RemoveSkill); bindingBar.AddChild(new Label { Text = "Pattern" }); _patternPicker = new OptionButton { CustomMinimumSize = new Vector2(210, 0) }; bindingBar.AddChild(_patternPicker); AddButton(bindingBar, "Add Pattern", AddPattern); AddButton(bindingBar, "Remove Pattern", RemovePattern);
-        bindingBar.AddChild(new Label { Text = "Candidates" }); _maximumCandidates = Integer(bindingBar, 1, 20); bindingBar.AddChild(new Label { Text = "Range min/max" }); _minimumRange = Integer(bindingBar, 0, 20); _maximumRange = Integer(bindingBar, 0, 20); bindingBar.AddChild(new Label { Text = "Reposition bonus" }); _rangeBonus = AddWeight(bindingBar, string.Empty); AddButton(bindingBar, "Update Movement Draft", UpdateMovement); AddChild(bindingBar);
-        var nodeBar = new HBoxContainer(); _nodePicker = new OptionButton { CustomMinimumSize = new Vector2(170, 0) }; _nodePicker.ItemSelected += SelectNode; nodeBar.AddChild(_nodePicker);
-        AddButton(nodeBar, "Add", AddNode); AddButton(nodeBar, "Delete", DeleteNode); _kind = new OptionButton(); foreach (string name in Enum.GetNames<AiAuthoringNodeKind>()) _kind.AddItem(name); nodeBar.AddChild(_kind);
-        _type = new LineEdit { PlaceholderText = "Runtime node type", CustomMinimumSize = new Vector2(170, 0) }; nodeBar.AddChild(_type);
-        _parameter = new SpinBox { MinValue = -100, MaxValue = 100, Step = .1, CustomMinimumSize = new Vector2(80, 0) }; nodeBar.AddChild(_parameter);
-        _enabled = new CheckBox { Text = "Enabled" }; nodeBar.AddChild(_enabled); AddButton(nodeBar, "Update Node", UpdateNode);
-        _edgeTarget = new OptionButton { CustomMinimumSize = new Vector2(150, 0) }; nodeBar.AddChild(_edgeTarget); AddButton(nodeBar, "Connect", AddEdge); AddButton(nodeBar, "Disconnect", RemoveEdge); AddChild(nodeBar);
-        var curveBar = new HBoxContainer(); curveBar.AddChild(new Label { Text = "Score Curve Time" }); _curveTime = new SpinBox { MinValue = -1000, MaxValue = 1000, Step = .1 }; curveBar.AddChild(_curveTime); curveBar.AddChild(new Label { Text = "Value" }); _curveValue = new SpinBox { MinValue = -1000, MaxValue = 1000, Step = .1 }; curveBar.AddChild(_curveValue); AddButton(curveBar, "Add Key", AddCurveKey); AddButton(curveBar, "Delete Last Key", DeleteCurveKey); AddChild(curveBar);
-        _status = new Label { Text = "Loading typed AI authoring documents..." }; AddChild(_status);
-        _graph = new GraphEdit { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill }; AddChild(_graph);
+        WorkbenchUi.StylePage(this);
+        var toolbar = WorkbenchUi.Toolbar(this); toolbar.AddChild(new Label { Text = "AI DECISION GRAPH" }); _resourcePicker = new OptionButton { CustomMinimumSize = new Vector2(240, 0) };
+        _resourcePicker.ItemSelected += LoadSelected; toolbar.AddChild(_resourcePicker); AddButton(toolbar, "Auto Layout", AutoLayout); AddButton(toolbar, "Validate", ValidateDraft); AddButton(toolbar, "Preview", PreviewDraft); AddButton(toolbar, "Revert", RevertAll); AddChild(toolbar);
+        var split = new HSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
+        _graph = new GraphEdit { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(520, 400) }; WorkbenchUi.StyleGraph(_graph); split.AddChild(_graph);
+        var inspectorScroll = new ScrollContainer { CustomMinimumSize = new Vector2(360, 0), SizeFlagsVertical = SizeFlags.ExpandFill };
+        var inspector = WorkbenchUi.Pane(this, 350);
+        var profile = WorkbenchUi.InspectorSection(this, "Scoring profile", new Color("d49a32")); var profileGrid = new GridContainer { Columns = 2 };
+        _distance = AddWeight(profileGrid, "Distance"); _damage = AddWeight(profileGrid, "Damage"); _targets = AddWeight(profileGrid, "Targets"); _statusWeight = AddWeight(profileGrid, "Status"); profile.AddChild(profileGrid); AddButton(profile, "Update Profile Draft", UpdateProfile); inspector.AddChild(profile);
+        var bindingBar = WorkbenchUi.InspectorSection(this, "Skills, patterns and movement", new Color("4a90d9")); bindingBar.AddChild(new Label { Text = "Skill" }); _skillPicker = new OptionButton(); bindingBar.AddChild(_skillPicker); var skillActions = new HBoxContainer(); AddButton(skillActions, "Add Skill", AddSkill); AddButton(skillActions, "Remove Skill", RemoveSkill); bindingBar.AddChild(skillActions); bindingBar.AddChild(new Label { Text = "Pattern" }); _patternPicker = new OptionButton(); bindingBar.AddChild(_patternPicker); var patternActions = new HBoxContainer(); AddButton(patternActions, "Add Pattern", AddPattern); AddButton(patternActions, "Remove Pattern", RemovePattern); bindingBar.AddChild(patternActions);
+        var movement = new GridContainer { Columns = 2 }; movement.AddChild(new Label { Text = "Candidates" }); _maximumCandidates = Integer(movement, 1, 20); movement.AddChild(new Label { Text = "Range min/max" }); var range = new HBoxContainer(); _minimumRange = Integer(range, 0, 20); _maximumRange = Integer(range, 0, 20); movement.AddChild(range); movement.AddChild(new Label { Text = "Reposition bonus" }); _rangeBonus = AddWeight(movement, string.Empty); bindingBar.AddChild(movement); AddButton(bindingBar, "Update Movement Draft", UpdateMovement); inspector.AddChild(bindingBar);
+        var nodeBar = WorkbenchUi.InspectorSection(this, "Selected node", new Color("4fb06f")); _nodePicker = new OptionButton(); _nodePicker.ItemSelected += SelectNode; nodeBar.AddChild(_nodePicker); var nodeActions = new HBoxContainer(); AddButton(nodeActions, "Add", AddNode); AddButton(nodeActions, "Delete", DeleteNode); nodeBar.AddChild(nodeActions); _kind = new OptionButton(); foreach (string name in Enum.GetNames<AiAuthoringNodeKind>()) _kind.AddItem(name); nodeBar.AddChild(_kind); _type = new LineEdit { PlaceholderText = "Runtime node type" }; nodeBar.AddChild(_type); _parameter = new SpinBox { MinValue = -100, MaxValue = 100, Step = .1 }; nodeBar.AddChild(_parameter); _enabled = new CheckBox { Text = "Enabled" }; nodeBar.AddChild(_enabled); AddButton(nodeBar, "Update Node", UpdateNode); _edgeTarget = new OptionButton(); nodeBar.AddChild(_edgeTarget); var edgeActions = new HBoxContainer(); AddButton(edgeActions, "Connect", AddEdge); AddButton(edgeActions, "Disconnect", RemoveEdge); nodeBar.AddChild(edgeActions); inspector.AddChild(nodeBar);
+        var curveBar = WorkbenchUi.InspectorSection(this, "Score curve", new Color("d49a32")); curveBar.AddChild(new Label { Text = "Time" }); _curveTime = new SpinBox { MinValue = -1000, MaxValue = 1000, Step = .1 }; curveBar.AddChild(_curveTime); curveBar.AddChild(new Label { Text = "Value" }); _curveValue = new SpinBox { MinValue = -1000, MaxValue = 1000, Step = .1 }; curveBar.AddChild(_curveValue); var curveActions = new HBoxContainer(); AddButton(curveActions, "Add Key", AddCurveKey); AddButton(curveActions, "Delete Last Key", DeleteCurveKey); curveBar.AddChild(curveActions); inspector.AddChild(curveBar);
+        inspectorScroll.AddChild(inspector); split.AddChild(inspectorScroll); AddChild(split);
+        _status = new Label { Text = "Loading typed AI authoring documents...", AutowrapMode = TextServer.AutowrapMode.WordSmart }; WorkbenchUi.StyleStatus(_status); AddChild(_status);
         CallDeferred(nameof(LoadCatalog));
     }
 
     public override void _ExitTree()
     {
-        DisconnectGraphSignals(); _catalogLoadAttempts = 0; if (_resourcePicker is not null) _resourcePicker.ItemSelected -= LoadSelected; if (_nodePicker is not null) _nodePicker.ItemSelected -= SelectNode;
+        _dragHandlers.Clear(); _catalogLoadAttempts = 0;
         _resource = null; _draft = null;
     }
 
@@ -229,6 +229,8 @@ public partial class AiDefinitionWorkbench : VBoxContainer, IAuthoringWorkspaceP
             var node = new GraphNode { Name = value.NodeId, Title = $"{value.Kind}: {value.Type}", PositionOffset = new Vector2(value.X, value.Y) };
             string parameter = value.Kind == AiAuthoringNodeKind.Rule ? "runtime ignored / read-only" : value.Kind == AiAuthoringNodeKind.Score ? $"weight {value.Parameter:0.##}" : $"priority {value.Parameter:0.##}";
             node.AddChild(new Label { Text = $"{value.NodeId}\n{(value.Enabled ? "enabled" : "disabled")} | {parameter}", CustomMinimumSize = new Vector2(220, 48) }); node.SetSlot(0, true, 0, Colors.White, true, 0, Colors.White);
+            WorkbenchUi.StyleGraphNode(node, value.Kind switch { AiAuthoringNodeKind.Intent => new Color("4a90d9"), AiAuthoringNodeKind.Rule => new Color("4fb06f"), _ => new Color("d49a32") }, value.Enabled,
+                value.Kind != AiAuthoringNodeKind.Intent && !_draft.Edges.Any(edge => edge.SourceNodeId == value.NodeId || edge.TargetNodeId == value.NodeId));
             GraphElement.DraggedEventHandler handler = (_, to) => MoveNode(value.NodeId, to); node.Dragged += handler; _dragHandlers[value.NodeId] = handler;
             _graph.AddChild(node); _graphNodes[value.NodeId] = node;
         }
@@ -248,6 +250,6 @@ public partial class AiDefinitionWorkbench : VBoxContainer, IAuthoringWorkspaceP
     private static SpinBox AddWeight(Container parent, string name) { parent.AddChild(new Label { Text = name }); var field = new SpinBox { MinValue = 0, MaxValue = 20, Step = .1, CustomMinimumSize = new Vector2(70, 0) }; parent.AddChild(field); return field; }
     private static SpinBox Integer(Container parent, int minimum, int maximum) { var field = new SpinBox { MinValue = minimum, MaxValue = maximum, Step = 1, CustomMinimumSize = new Vector2(58, 0) }; parent.AddChild(field); return field; }
     private static void AddButton(Container parent, string text, Action action) { var button = new Button { Text = text }; button.Pressed += action; parent.AddChild(button); }
-    private void SetStatus(string text, bool error = false) { if (_status is null) return; _status.Text = text; _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen; }
+    private void SetStatus(string text, bool error = false) { if (_status is null) return; _status.Text = text; WorkbenchUi.StyleStatus(_status, error); }
 }
 #endif

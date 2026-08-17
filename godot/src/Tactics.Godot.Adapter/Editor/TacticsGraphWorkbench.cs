@@ -55,8 +55,10 @@ public partial class TacticsGraphWorkbench : VBoxContainer
             SizeFlagsHorizontal = SizeFlags.ExpandFill;
             SizeFlagsVertical = SizeFlags.ExpandFill;
             CustomMinimumSize = new Vector2(960, 520);
+            WorkbenchUi.StylePage(this);
 
-            var toolbar = new HBoxContainer();
+            var toolbar = WorkbenchUi.Toolbar(this);
+            toolbar.AddChild(new Label { Text = "POISON SPEAR GRAPH" });
             _toggleNodeButton = new Button { Text = "Toggle First Presentation Leaf (Undoable)" };
             _toggleNodeButton.Pressed += ToggleFirstLeaf;
             toolbar.AddChild(_toggleNodeButton);
@@ -98,6 +100,7 @@ public partial class TacticsGraphWorkbench : VBoxContainer
                 SizeFlagsStretchRatio = 64f,
                 ShowArrangeButton = false
             };
+            WorkbenchUi.StyleGraph(_graph);
             _split.AddChild(_graph);
 
             var previewPane = new VBoxContainer
@@ -144,15 +147,7 @@ public partial class TacticsGraphWorkbench : VBoxContainer
     public override void _ExitTree()
     {
         _initialized = false;
-        if (_toggleNodeButton is not null)
-            _toggleNodeButton.Pressed -= ToggleFirstLeaf;
-        if (_autoLayoutButton is not null)
-            _autoLayoutButton.Pressed -= ApplyAutoLayout;
-        if (_togglePreviewButton is not null)
-            _togglePreviewButton.Pressed -= TogglePreviewVisibility;
-        if (_savePresentationButton is not null)
-            _savePresentationButton.Pressed -= SavePresentation;
-        DisconnectGraphNodeSignals();
+        _dragHandlers.Clear();
         _preview?.QueueFree();
         _preview = null;
         _previewCanvas = null;
@@ -378,6 +373,7 @@ public partial class TacticsGraphWorkbench : VBoxContainer
             label.Text = $"{FriendlyType(_presentationNodeTypes[index])} · {(enabled ? "enabled" : "disabled")}";
         Color color = NodeColor(_presentationNodeTypes[index], enabled);
         node.SetSlot(0, true, 0, color, true, 0, color, null, null, true);
+        WorkbenchUi.StyleGraphNode(node, color, enabled);
     }
 
     private void RemoveGraphNode(string nodeId)

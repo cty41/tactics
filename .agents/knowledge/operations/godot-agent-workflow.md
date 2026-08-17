@@ -104,6 +104,8 @@ Phase 6A 已生成四项敌方 Skill、六类 AI、两个 Layout 与 N1–N3 Enc
 
 ## Navigation
 
+Workbench 的 Main Screen、authoring bridge 和 native Presentation Preview 不得把 `ResourceLoader.Load<T>` 的直接 cast 当作 reload readiness probe。Editor 初始化先 untyped load 并核对 script/schema；匹配的基础 `Godot.Resource` 表示 typed binding 尚未恢复，应有界 deferred retry，永久不匹配则 fail-closed。只有全部立即依赖的 typed Resource ready 后才能发布 bridge ready 或创建 Preview actor；真实 C# Assembly Reload 仍由人工验收确认。
+
 - 规则：`.agents/rules/godot-agent-workflow.md`
 - 研究方法：`.agents/skills/godot-workflow/references/research-guide.md`
 - Incident 路由：`.agents/incidents/godot/index.md`

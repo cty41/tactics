@@ -162,9 +162,11 @@ Ownership closure 的统一 Content Workbench 以现有 Godot Main Screen Plugin
 
 Editor workbench 的 catalog/map 初始化通过有界 deferred probe 等待 C# script/schema 恢复后才执行 typed cast，runtime fixture 则继续 fail-fast 并输出 path、实际类型和 script 诊断；真实 C# Reload 后的布局、信号与预览体验仍保留人工验收。
 
-2026-08-17 Workbench 最终自动收口在安全事务基础上增加全局 workspace、prospective reference graph、带 typed rebind 的原子 Delete、UID 稳定 Undo/Redo、MCP 生命周期、真实 Skill BattleTransition 预览、原生 Presentation runtime player/作用域/共享叶/cleanup、AI 有效 picker 与只读 Rule 诊断。统一门禁通过 Core 104、Application 133、Frozen Oracle 15、MCP 协议、隔离 GdUnit/Gameplay journeys、Compatibility/Forward+、Release 依赖隔离、ownership、OKF 与 whitespace；正式资源删除保护和 fault rollback 均有 Godot 回归。自动实现缺口已关闭，真实 Editor 的逐页 Apply All/Undo/Redo、视觉播放、Graph 手感和 Assembly Reload 仍保持 `partial + manual pending`。
+2026-08-17 Workbench 最终自动收口在安全事务基础上增加全局 workspace、prospective reference graph、带 typed rebind 的原子 Delete、UID 稳定 Undo/Redo、MCP 生命周期、真实 Skill BattleTransition 预览、原生 Presentation runtime player/作用域/共享叶/cleanup、AI 有效 picker 与只读 Rule 诊断。统一门禁通过 Core 104、Application 133、Frozen Oracle 15、MCP 协议、隔离 GdUnit/Gameplay journeys、Compatibility/Forward+、Release 依赖隔离、ownership、OKF 与 whitespace；正式资源删除保护和 fault rollback 均有 Godot 回归。真实 Windows Editor smoke 已完成冷启动三类 Presentation、同 PID Assembly Reload 的 NamedPipe/token 轮换、Reload 后预览与零错误退出；反射 JSON 缓存不再持有 collectible assembly。自动实现与 Reload 生命周期缺口已关闭，逐页 Apply All/Undo/Redo 手感、Graph 可读性和 SubViewport 视觉仍保持 `partial + manual pending`。
 
 Workbench 直接加载的 catalog/entry/map/event/treasure/AI/encounter/layout C# Resource 同时声明 `[GlobalClass]` 与 `[Tool]`，保证 EditorPlugin 中的 typed 实例化；Map 与 AI GraphEdit 重建仅移除 authored `GraphNode`，保留引擎 connection layer。
+
+2026-08-17 native Presentation Preview 又暴露 Unit/Profile 在 assembly reload 窗口可暂时退化为基础 `Godot.Resource`。Main Screen 与 authoring bridge 现由统一 untyped readiness probe 门禁，遇到匹配脚本但尚未恢复 typed 实例时 deferred retry，脚本/schema 真不匹配时 fail-closed；Preview actor 构建使用同一分类且只在全量 ready 后原子创建。Unit 与三类 native Presentation Resource 已补齐 `[Tool]+[GlobalClass]`。定向 GdUnit 与完整 Godot 门禁通过，修复后的真实 Editor Reload/Preview 仍记为人工 pending。
 
 Audio ownership 框架使用独立于 Run Save 的 `tactics-audio-settings-v1`，运行时确定性建立 Master/Music/SFX/UI bus，并通过 `AudioCueDefinitionResource`/`AudioCueCatalogResource` 约束变体、并发和 committed event 映射；Workbench 可调整 bus 试听状态并清理预览播放器。当前仓库尚未登记可随 Godot 发布的音频 payload；用户已明确本版本不接入 Audio，因此 cue catalog 内容、battle/page 音频绑定与听感验收转为 deferred，静默 RC 合法且不再阻断 Windows 构建，但不得将框架完成表述为 Audio 内容迁移完成。
 

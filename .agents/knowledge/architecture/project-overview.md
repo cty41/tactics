@@ -45,6 +45,9 @@ Tactics 是 Agent 优先维护并准备公开发布的 Godot 4.7 C# 战棋项目
 Session 与批量事务协调器；Godot Adapter 负责 Catalog/UID、EditorUndoRedo、SubViewport 和 ResourceSaver。
 Map、Event、Treasure、Encounter/Layout、AI、Skill 与 Godot-native Presentation Profile 已接入同一
 draft→validate→apply/revert 边界，QA 页显示作者 revision 和正反向引用审计。
+Main Screen 与本机 authoring bridge 在 assembly reload 后先以 untyped probe 验证所有立即使用的 C# Resource；
+匹配脚本但尚未恢复 typed 实例时延迟重试，真实脚本/schema 错误则 fail-closed。Presentation Preview 只在 Unit/Profile
+全部 typed ready 后原子建立临时 actor，并在停止、切页或退出时清理。
 
 开发期 `Tools/tactics-authoring-mcp` 通过唯一 canonical Editor 的本机命名管道 bridge 暴露六个作者工具；
 project root、session token、reload state 与单 session 数量不匹配时 fail-closed。Server 不被产品 solution 或

@@ -5,12 +5,16 @@ using Tactics.Godot.Adapter.Editor;
 namespace Tactics.Godot.Adapter.Editor;
 
 [Tool]
-public partial class TacticsEditorPlugin : EditorPlugin
+public partial class TacticsEditorPlugin : EditorPlugin, ISerializationListener
 {
+    private const string BridgeNodeName = "TacticsAuthoringEditorBridge";
+    private const string WorkbenchNodeName = "TacticsContentWorkbench";
     private TacticsContentWorkbench? _workbench;
     private bool _headless;
-    private bool _filesystemSubscribed;
     private TacticsAuthoringEditorBridge? _authoringBridge;
+    private int _readinessAttempts;
+    private string _lastReadinessDiagnostic = string.Empty;
+    private bool _shuttingDown;
 
     public override void _EnterTree()
     {
@@ -18,6 +22,7 @@ public partial class TacticsEditorPlugin : EditorPlugin
 
         try
         {
+            _shuttingDown = false;
             if (OS.GetCmdlineArgs().Contains("--build-poison-spear"))
             {
                 PoisonSpearAssetFactory.BuildLv1();
@@ -37,30 +42,43 @@ public partial class TacticsEditorPlugin : EditorPlugin
             }
 
             SetProcess(true);
-            _authoringBridge = new TacticsAuthoringEditorBridge();
-            _authoringBridge.Configure(GetUndoRedo());
-            AddChild(_authoringBridge);
-            EditorInterface.Singleton.GetResourceFilesystem().FilesystemChanged += OnFilesystemChanged;
-            _filesystemSubscribed = true;
+            CreateBridge();
         }
         catch (Exception exception)
         {
             GD.PushError($"[Tactics Tooling] Failed to initialize: {exception}");
-            CleanupWorkbench();
-            CleanupBridge();
+            ShutdownForReload();
         }
     }
 
     public override void _ExitTree()
     {
         GD.Print("[Tactics Tooling] EditorPlugin exiting tree.");
-        if (_filesystemSubscribed)
-        {
-            EditorInterface.Singleton.GetResourceFilesystem().FilesystemChanged -= OnFilesystemChanged;
-            _filesystemSubscribed = false;
-        }
-        CleanupWorkbench();
-        CleanupBridge();
+        ShutdownForReload();
+    }
+
+    public void OnBeforeSerialize()
+    {
+        _shuttingDown = true;
+    }
+
+    public void OnAfterDeserialize()
+    {
+        _shuttingDown = false;
+        CallDeferred(nameof(RestoreAfterAssemblyReload));
+    }
+
+    private void RestoreAfterAssemblyReload()
+    {
+        _shuttingDown = false;
+        _authoringBridge ??= GetNodeOrNull<TacticsAuthoringEditorBridge>(BridgeNodeName);
+        _workbench ??= EditorInterface.Singleton.GetEditorMainScreen()
+            .GetNodeOrNull<TacticsContentWorkbench>(WorkbenchNodeName);
+        if (_authoringBridge is not null && GodotObject.IsInstanceValid(_authoringBridge))
+            _authoringBridge.RestartAfterReload(GetUndoRedo());
+        else
+            CreateBridge();
+        SetProcess(true);
     }
 
     public override bool _HasMainScreen() => true;
@@ -68,9 +86,15 @@ public partial class TacticsEditorPlugin : EditorPlugin
     public override void _Process(double delta)
     {
         _ = delta;
-        if (_headless) return;
-        if (_workbench is not null || EditorInterface.Singleton.GetResourceFilesystem().IsScanning()) return;
-        SetProcess(false);
+        if (_headless || _shuttingDown) return;
+        if (EditorInterface.Singleton.GetResourceFilesystem().IsScanning()) return;
+        if (_workbench is not null)
+        {
+            if (_authoringBridge is not null && !_authoringBridge.IsReady &&
+                AuthoringEditorReadinessProbe.Probe().State == EditorResourceLoadState.Ready)
+                _authoringBridge.MarkReady();
+            return;
+        }
         RegisterMainScreenWhenReady();
     }
 
@@ -85,13 +109,50 @@ public partial class TacticsEditorPlugin : EditorPlugin
     public override Texture2D _GetPluginIcon() =>
         EditorInterface.Singleton.GetEditorTheme().GetIcon("Node", "EditorIcons");
 
+    private void CreateBridge()
+    {
+        if (_authoringBridge is not null) return;
+        _authoringBridge = new TacticsAuthoringEditorBridge { Name = BridgeNodeName };
+        _authoringBridge.Configure(GetUndoRedo());
+        AddChild(_authoringBridge);
+    }
+
     private void RegisterMainScreenWhenReady()
     {
-        if (_headless) return;
+        if (_headless || _shuttingDown) return;
         if (!IsInsideTree()) return;
         if (EditorInterface.Singleton.GetResourceFilesystem().IsScanning()) return;
         if (_workbench is not null) return;
-        _workbench = new TacticsContentWorkbench();
+        AuthoringEditorReadinessResult readiness = AuthoringEditorReadinessProbe.Probe();
+        if (readiness.State == EditorResourceLoadState.InvalidResource)
+        {
+            _readinessAttempts = 0;
+            if (!string.Equals(_lastReadinessDiagnostic, readiness.Diagnostic, StringComparison.Ordinal))
+            {
+                _lastReadinessDiagnostic = readiness.Diagnostic;
+                GD.PushError($"[Tactics Tooling] Main screen readiness failed: {readiness.Diagnostic}");
+            }
+            return;
+        }
+        if (readiness.State == EditorResourceLoadState.ReloadPending)
+        {
+            _readinessAttempts++;
+            if (_readinessAttempts == 1)
+                GD.PushWarning("[Tactics Tooling] Main screen is waiting for C# Resource types after assembly reload.");
+            if (_readinessAttempts >= ReloadSafeEditorResourceLoader.MaximumDeferredAttempts)
+            {
+                if (!string.Equals(_lastReadinessDiagnostic, readiness.Diagnostic, StringComparison.Ordinal))
+                {
+                    _lastReadinessDiagnostic = readiness.Diagnostic;
+                    GD.PushError($"[Tactics Tooling] Main screen remained unavailable after {_readinessAttempts} deferred frames. {readiness.Diagnostic}");
+                }
+                return;
+            }
+            return;
+        }
+        _readinessAttempts = 0;
+        _lastReadinessDiagnostic = string.Empty;
+        _workbench = new TacticsContentWorkbench { Name = WorkbenchNodeName };
         _workbench.Configure(GetUndoRedo());
         EditorInterface.Singleton.GetEditorMainScreen().AddChild(_workbench);
         _MakeVisible(false);
@@ -99,19 +160,38 @@ public partial class TacticsEditorPlugin : EditorPlugin
         GD.Print("[Tactics Tooling] Main screen registered after filesystem scan.");
     }
 
-    private void OnFilesystemChanged() => CallDeferred(nameof(RegisterMainScreenWhenReady));
-
-    private void CleanupWorkbench()
+    public void ShutdownForReload()
     {
+        if (_shuttingDown && _workbench is null && _authoringBridge is null) return;
+        _shuttingDown = true;
+        try
+        {
+            if (GodotObject.IsInstanceValid(this)) SetProcess(false);
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        _readinessAttempts = 0;
+        _lastReadinessDiagnostic = string.Empty;
+
         if (_workbench is not null && GodotObject.IsInstanceValid(_workbench))
-            _workbench.QueueFree();
+        {
+            _workbench.ShutdownForReload();
+            _workbench.GetParent()?.RemoveChild(_workbench);
+            _workbench.Free();
+        }
         _workbench = null;
-    }
 
-    private void CleanupBridge()
-    {
-        if (_authoringBridge is not null && GodotObject.IsInstanceValid(_authoringBridge)) _authoringBridge.QueueFree();
+        if (_authoringBridge is not null && GodotObject.IsInstanceValid(_authoringBridge))
+        {
+            AuthoringBridgeShutdownResult result = _authoringBridge.ShutdownForReload(TimeSpan.FromSeconds(2));
+            if (!result.Completed)
+                GD.PushError($"[Tactics Tooling] {result.Diagnostic}");
+            _authoringBridge.GetParent()?.RemoveChild(_authoringBridge);
+            _authoringBridge.Free();
+        }
         _authoringBridge = null;
+
     }
 }
 #endif

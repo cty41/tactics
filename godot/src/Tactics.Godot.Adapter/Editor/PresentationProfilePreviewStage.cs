@@ -10,17 +10,31 @@ using Tactics.Godot.Adapter.Runtime;
 
 namespace Tactics.Godot.Adapter.Editor;
 
+internal readonly record struct PresentationPreviewActorLoadResult(
+    EditorResourceLoadState State,
+    UnitDefinitionResource? Caster,
+    UnitDefinitionResource? Target,
+    string Diagnostic);
+
 internal sealed partial class PresentationProfilePreviewStage : Control
 {
+    private const string CatalogPath = "res://content/ContentCatalog.tres";
+    private const string CatalogScriptPath = "res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs";
+    private const string UnitScriptPath = "res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs";
     private readonly Dictionary<UnitInstanceId, GodotUnitActor> _actors = new();
     private GodotBattlePresentationPlayer? _player;
     private GodotUnitActor? _caster;
     private GodotUnitActor? _target;
     private Label? _diagnostic;
+    private Node? _actorParent;
     private Resource? _profile;
+    private int _actorLoadAttempts;
+    private bool _actorInitializationFailed;
+    internal Func<PresentationPreviewActorLoadResult> ActorResourceProbe { get; set; } = ProbeActorResources;
 
     public int TemporaryNodeCount => _player?.TransientNodeCount ?? 0;
     public int ActiveTweenCount => (_player?.ActiveTweenCount ?? 0) + (_caster?.StatusOverlay?.ActiveTweenCount ?? 0);
+    public int ActorCount => _actors.Count;
     public bool IsPlaying => _player?.IsPlaying ?? false;
 
     public override void _Ready()
@@ -31,9 +45,10 @@ internal sealed partial class PresentationProfilePreviewStage : Control
         AddChild(background);
         _diagnostic = new Label { Position = new Vector2(24, 18), Text = "Presentation preview idle." };
         background.AddChild(_diagnostic);
-        BuildActors(background);
+        _actorParent = background;
         _player = new GodotBattlePresentationPlayer();
         background.AddChild(_player);
+        CallDeferred(nameof(InitializeActors));
     }
 
     public void Configure(Resource profile)
@@ -119,18 +134,70 @@ internal sealed partial class PresentationProfilePreviewStage : Control
             _diagnostic.Text = $"Stopped; cleanup tweens={ActiveTweenCount}, temporary nodes={TemporaryNodeCount}.";
     }
 
-    public override void _ExitTree() => Stop();
+    public override void _ExitTree()
+    {
+        Stop();
+        _actors.Clear();
+        _caster = null;
+        _target = null;
+        _actorParent = null;
+        _actorLoadAttempts = 0;
+        _actorInitializationFailed = false;
+    }
 
     private string ContentId() => _profile?.Get("ContentIdValue").AsString() ?? string.Empty;
 
-    private void BuildActors(Node parent)
+    public void InitializeActors()
     {
-        UnitDefinitionResource casterResource = LoadUnit("unit.pure-run.amazon");
-        UnitDefinitionResource targetResource = LoadFirstEnemyUnit();
+        if (_actors.Count == 2 || _actorInitializationFailed || _actorParent is null) return;
+        try
+        {
+            PresentationPreviewActorLoadResult result = ActorResourceProbe();
+            if (result.State == EditorResourceLoadState.ReloadPending && _diagnostic is not null)
+                _diagnostic.Text = "Waiting for C# Resource types used by presentation preview.";
+            if (ReloadSafeEditorResourceLoader.RetryDeferred(this, MethodName.InitializeActors,
+                    ref _actorLoadAttempts, result.State, result.Diagnostic, "Presentation preview")) return;
+            BuildActors(_actorParent, result.Caster!, result.Target!);
+            _actorLoadAttempts = 0;
+            if (_diagnostic is not null) _diagnostic.Text = "Presentation preview actors ready.";
+        }
+        catch (Exception error)
+        {
+            _actorInitializationFailed = true;
+            string diagnostic = "Presentation preview initialization failed: " + error.Message;
+            if (_diagnostic is not null) _diagnostic.Text = diagnostic;
+            GD.PushError("[Tactics Tooling] " + diagnostic);
+        }
+    }
+
+    internal static PresentationPreviewActorLoadResult ProbeActorResources()
+    {
+        EditorResourceLoadResult<GodotResourceCatalog> catalogResult =
+            ReloadSafeEditorResourceLoader.Load<GodotResourceCatalog>(CatalogPath, CatalogScriptPath, "Entries");
+        if (catalogResult.State != EditorResourceLoadState.Ready)
+            return new PresentationPreviewActorLoadResult(catalogResult.State, null, null, catalogResult.Diagnostic);
+        GodotResourceCatalog catalog = catalogResult.Resource!;
+        EditorResourceLoadResult<UnitDefinitionResource> casterResult = LoadUnit("unit.pure-run.amazon", catalog);
+        if (casterResult.State != EditorResourceLoadState.Ready)
+            return new PresentationPreviewActorLoadResult(casterResult.State, null, null, casterResult.Diagnostic);
+        GodotResourceEntry? targetEntry = catalog.Entries.FirstOrDefault(value =>
+            value.ResourceTypeIdValue == "unit" && value.ContentIdValue.Contains("goat", StringComparison.Ordinal));
+        if (targetEntry is null)
+            return new PresentationPreviewActorLoadResult(EditorResourceLoadState.InvalidResource, null, null,
+                "Presentation preview Catalog contains no enemy Unit.");
+        EditorResourceLoadResult<UnitDefinitionResource> targetResult = LoadUnit(targetEntry.ContentIdValue, catalog);
+        return targetResult.State == EditorResourceLoadState.Ready
+            ? new PresentationPreviewActorLoadResult(EditorResourceLoadState.Ready, casterResult.Resource,
+                targetResult.Resource, string.Empty)
+            : new PresentationPreviewActorLoadResult(targetResult.State, null, null, targetResult.Diagnostic);
+    }
+
+    private void BuildActors(Node parent, UnitDefinitionResource casterResource, UnitDefinitionResource targetResource)
+    {
         var casterId = new UnitInstanceId("presentation.preview.caster");
         var targetId = new UnitInstanceId("presentation.preview.target");
-        _caster = GodotUnitFactory.InstantiateActor(casterResource);
-        _target = GodotUnitFactory.InstantiateActor(targetResource);
+        _caster = CreatePreviewActor(casterResource);
+        _target = CreatePreviewActor(targetResource);
         _caster.SetMeta("preview_id", casterId.Value); _target.SetMeta("preview_id", targetId.Value);
         _caster.Position = IsometricBattleBoardLayout.GridToScreen(new GridPoint(1, 4));
         _target.Position = IsometricBattleBoardLayout.GridToScreen(new GridPoint(7, 4));
@@ -139,24 +206,42 @@ internal sealed partial class PresentationProfilePreviewStage : Control
         _actors[casterId] = _caster; _actors[targetId] = _target;
     }
 
-    private static UnitDefinitionResource LoadUnit(string contentId) => LoadByCatalog<UnitDefinitionResource>(contentId);
-    private static UnitDefinitionResource LoadFirstEnemyUnit()
+    internal static GodotUnitActor CreatePreviewActor(UnitDefinitionResource resource)
     {
-        GodotResourceCatalog catalog = LoadCatalog();
-        string id = catalog.Entries.Where(value => value.ResourceTypeIdValue == "unit" &&
-            value.ContentIdValue.Contains("goat", StringComparison.Ordinal)).Select(value => value.ContentIdValue).First();
-        return LoadByCatalog<UnitDefinitionResource>(id, catalog);
+        // Non-[Tool] scripts attached to PackedScene roots intentionally do not instantiate as
+        // their runtime C# type inside the Editor. Build the preview shell explicitly while still
+        // using the production GodotUnitActor.Configure and presentation methods.
+        resource.ValidateVisualContract();
+        var actor = new GodotUnitActor();
+        var shadow = new Sprite2D { Name = "Shadow" };
+        var body = new Sprite2D { Name = "Body", ZIndex = 1 };
+        actor.Shadow = shadow;
+        actor.Body = body;
+        actor.AddChild(shadow);
+        actor.AddChild(body);
+        actor.Configure(resource);
+        return actor;
+    }
+
+    private static EditorResourceLoadResult<UnitDefinitionResource> LoadUnit(
+        string contentId,
+        GodotResourceCatalog catalog)
+    {
+        GodotResourceEntry entry = catalog.Entries.FirstOrDefault(value => value.ContentIdValue == contentId)
+            ?? throw new InvalidOperationException($"Presentation preview Catalog entry is missing: {contentId}.");
+        return ReloadSafeEditorResourceLoader.Load<UnitDefinitionResource>(entry.DiagnosticPathValue,
+            UnitScriptPath, "ContentIdValue", "ActorScene");
     }
     private static T LoadPresentation<T>(string contentId) where T : Resource => LoadByCatalog<T>(contentId);
     private static T LoadByCatalog<T>(string contentId, GodotResourceCatalog? supplied = null) where T : Resource
     {
         GodotResourceCatalog catalog = supplied ?? LoadCatalog();
         GodotResourceEntry entry = catalog.Entries.Single(value => value.ContentIdValue == contentId);
-        return ResourceLoader.Load<T>(entry.DiagnosticPathValue, string.Empty, ResourceLoader.CacheMode.Ignore)
+        return ResourceLoader.Load<T>(entry.DiagnosticPathValue, string.Empty, ResourceLoader.CacheMode.IgnoreDeep)
             ?? throw new InvalidOperationException($"Preview Resource '{contentId}' is not {typeof(T).Name}.");
     }
     private static GodotResourceCatalog LoadCatalog() =>
-        ResourceLoader.Load<GodotResourceCatalog>(TacticsAuthoringEditorService.CatalogPath, string.Empty,
-            ResourceLoader.CacheMode.Ignore) ?? throw new InvalidOperationException("Presentation preview Catalog is missing.");
+        ResourceLoader.Load<GodotResourceCatalog>(CatalogPath, string.Empty, ResourceLoader.CacheMode.Ignore)
+        ?? throw new InvalidOperationException("Presentation preview Catalog is missing.");
 }
 #endif

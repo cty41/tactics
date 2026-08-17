@@ -27,6 +27,7 @@ public partial class EncounterAuthoringWorkbench : VBoxContainer, IAuthoringWork
     private string _layoutPath = string.Empty;
     private int _catalogLoadAttempts;
     private EncounterFixtureWorkbench? _preview;
+    private Label? _selectedCell;
 
     public void Configure(EditorUndoRedoManager undoRedo) => _undoRedo = undoRedo;
     public string WorkspaceName => "Encounter / Layout";
@@ -50,16 +51,21 @@ public partial class EncounterAuthoringWorkbench : VBoxContainer, IAuthoringWork
     {
         if (_undoRedo is null) throw new InvalidOperationException("Editor UndoRedo manager is required.");
         SizeFlagsHorizontal = SizeFlags.ExpandFill; SizeFlagsVertical = SizeFlags.ExpandFill;
-        var toolbar = new HBoxContainer(); _picker = new OptionButton { CustomMinimumSize = new Vector2(300, 0) }; _picker.ItemSelected += LoadSelected; toolbar.AddChild(_picker);
-        AddButton(toolbar, "Import Encounter Draft", ImportEncounter); AddButton(toolbar, "Validate", ValidateDraft); AddButton(toolbar, "Preview Draft", PreviewDraft); AddButton(toolbar, "Revert", RevertAll); AddChild(toolbar);
+        WorkbenchUi.StylePage(this);
+        var toolbar = WorkbenchUi.Toolbar(this); toolbar.AddChild(new Label { Text = "ENCOUNTER / LAYOUT" }); _picker = new OptionButton { CustomMinimumSize = new Vector2(300, 0) }; _picker.ItemSelected += LoadSelected; toolbar.AddChild(_picker);
+        AddButton(toolbar, "Import Draft", ImportEncounter); AddButton(toolbar, "Validate", ValidateDraft); AddButton(toolbar, "Preview", PreviewDraft); AddButton(toolbar, "Revert", RevertAll); AddChild(toolbar);
         var split = new HSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        var left = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill }; left.AddChild(new Label { Text = "Typed Encounter snapshot (unit/AI pairs, layout, multipliers, mana, class)" });
+        var left = WorkbenchUi.Pane(this, 280); left.AddChild(new Label { Text = "ENCOUNTER SNAPSHOT" }); left.AddChild(new Label { Text = "Unit/AI pairs, multipliers, mana and encounter class" });
         _encounterJson = new TextEdit { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill }; left.AddChild(_encounterJson); split.AddChild(left);
-        var right = new VBoxContainer(); right.AddChild(new Label { Text = "10×10 Layout: click cycles Empty → Party → Enemy → Blocked" });
-        _grid = new GridContainer { Columns = 10 }; right.AddChild(_grid); split.AddChild(right); AddChild(split);
-        _status = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart }; AddChild(_status); CallDeferred(nameof(LoadCatalog));
+        var board = WorkbenchUi.Pane(this, 460); board.AddChild(new Label { Text = "10×10 LAYOUT  • click cycles Empty → Party → Enemy → Blocked" });
+        _grid = new GridContainer { Columns = 10, SizeFlagsHorizontal = SizeFlags.ShrinkCenter, SizeFlagsVertical = SizeFlags.ShrinkCenter }; board.AddChild(_grid); split.AddChild(board);
+        var inspector = WorkbenchUi.Pane(this, WorkbenchUi.InspectorWidth);
+        var cellInfo = WorkbenchUi.InspectorSection(this, "Selected cell", new Color("4a90d9")); _selectedCell = new Label { Text = "Click a cell to inspect and cycle its role." }; cellInfo.AddChild(_selectedCell); inspector.AddChild(cellInfo);
+        var legend = WorkbenchUi.InspectorSection(this, "Spawn legend"); foreach ((string glyph, string label, Color color) in new[] { ("P", "Party", new Color("4a90d9")), ("E", "Enemy", new Color("ef5350")), ("X", "Blocked", new Color("9aa4b2")), ("·", "Empty", new Color("4a4d52")) }) { var row = new HBoxContainer(); var marker = new Label { Text = glyph, CustomMinimumSize = new Vector2(24, 24), HorizontalAlignment = HorizontalAlignment.Center }; marker.AddThemeColorOverride("font_color", color); row.AddChild(marker); row.AddChild(new Label { Text = label }); legend.AddChild(row); } inspector.AddChild(legend);
+        inspector.AddChild(new Label { Text = "Use Preview to compile this draft into the isolated fixed-seed fixture. Formal resources remain unchanged." }); split.AddChild(inspector); AddChild(split);
+        _status = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(0, 48) }; WorkbenchUi.StyleStatus(_status); AddChild(_status); CallDeferred(nameof(LoadCatalog));
     }
-    public override void _ExitTree() { _catalogLoadAttempts = 0; if (_picker is not null) _picker.ItemSelected -= LoadSelected; _encounterResource = null; _layoutResource = null; }
+    public override void _ExitTree() { _catalogLoadAttempts = 0; _encounterResource = null; _layoutResource = null; }
     public void LoadCatalog()
     {
         EditorResourceLoadResult<GodotResourceCatalog> result = ReloadSafeEditorResourceLoader.Load<GodotResourceCatalog>(CatalogPath, CatalogScriptPath, "Entries");
@@ -84,7 +90,7 @@ public partial class EncounterAuthoringWorkbench : VBoxContainer, IAuthoringWork
     {
         if (_encounterDraft is null || _layoutDraft is null) return; _encounterJson!.Text = EncounterAuthoringJson.Serialize(_encounterDraft);
         foreach (Node child in _grid!.GetChildren()) { _grid.RemoveChild(child); child.QueueFree(); }
-        for (int y = 0; y < 10; y++) for (int x = 0; x < 10; x++) { int cellX = x, cellY = y; string state = CellState(cellX, cellY); var button = new Button { Text = state, CustomMinimumSize = new Vector2(42, 34), TooltipText = $"({x},{y}) {state}" }; button.Pressed += () => CycleCell(cellX, cellY); _grid.AddChild(button); }
+        for (int y = 0; y < 10; y++) for (int x = 0; x < 10; x++) { int cellX = x, cellY = y; string state = CellState(cellX, cellY); var button = new Button { Text = state, CustomMinimumSize = new Vector2(42, 34), TooltipText = $"({x},{y}) {state}" }; Color color = state switch { "P" => new Color("4a90d9"), "E" => new Color("ef5350"), "X" => new Color("687382"), _ => new Color("2b2d31") }; button.AddThemeStyleboxOverride("normal", WorkbenchUi.PanelStyle(color.Darkened(.35f), 3, 1, color)); button.Pressed += () => CycleCell(cellX, cellY); _grid.AddChild(button); }
     }
     private string CellState(int x, int y) { var cell = new GridCellAuthoring(x, y); if (_layoutDraft!.PartySpawns.Contains(cell)) return "P"; if (_layoutDraft.EnemySpawns.Contains(cell)) return "E"; if (_layoutDraft.BlockedCells.Contains(cell)) return "X"; return "·"; }
     private void CycleCell(int x, int y)
@@ -93,7 +99,7 @@ public partial class EncounterAuthoringWorkbench : VBoxContainer, IAuthoringWork
         {
             var cell = new GridCellAuthoring(x, y); List<GridCellAuthoring> party = _layoutDraft!.PartySpawns.Where(value => value != cell).ToList(); List<GridCellAuthoring> enemies = _layoutDraft.EnemySpawns.Where(value => value != cell).ToList(); List<GridCellAuthoring> blocked = _layoutDraft.BlockedCells.Where(value => value != cell).ToList();
             switch (CellState(x, y)) { case "·": party.Add(cell); break; case "P": enemies.Add(cell); break; case "E": blocked.Add(cell); break; }
-            _layoutDraft = new BattleLayoutAuthoringDocument(_layoutDraft.ContentId, party, enemies, blocked); Refresh(); SetStatus("Layout draft changed; formal Resource unchanged.");
+            _layoutDraft = new BattleLayoutAuthoringDocument(_layoutDraft.ContentId, party, enemies, blocked); if (_selectedCell is not null) _selectedCell.Text = $"Cell ({x}, {y}) → {CellState(x, y)}"; Refresh(); SetStatus("Layout draft changed; formal Resource unchanged.");
         }
         catch (Exception e) { SetStatus(e.Message, true); }
     }
@@ -144,6 +150,6 @@ public partial class EncounterAuthoringWorkbench : VBoxContainer, IAuthoringWork
         foreach (string id in encounter.MonsterAiContentIds) if (!_entries.TryGetValue(id, out GodotResourceEntry? entry) || entry.ResourceTypeIdValue != "ai") throw new InvalidOperationException($"Unknown AI ContentId '{id}'.");
     }
     private static void AddButton(Container parent, string text, Action action) { var button = new Button { Text = text }; button.Pressed += action; parent.AddChild(button); }
-    private void SetStatus(string message, bool error = false) { if (_status is null) return; _status.Text = message; _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen; }
+    private void SetStatus(string message, bool error = false) { if (_status is null) return; _status.Text = message; WorkbenchUi.StyleStatus(_status, error); }
 }
 #endif

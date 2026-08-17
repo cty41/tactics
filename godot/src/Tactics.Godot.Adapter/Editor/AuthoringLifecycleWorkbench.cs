@@ -23,8 +23,9 @@ public partial class AuthoringLifecycleWorkbench : VBoxContainer
     public override void _Ready()
     {
         if (_undoRedo is null) throw new InvalidOperationException("Editor UndoRedo manager is required.");
-        var row = new HBoxContainer();
-        row.AddChild(new Label { Text = "Authoring resource" });
+        WorkbenchUi.StylePage(this);
+        var row = WorkbenchUi.Toolbar(this);
+        row.AddChild(new Label { Text = "RESOURCE LIFECYCLE" });
         _type = new OptionButton { CustomMinimumSize = new Vector2(135, 0) };
         foreach (string type in Types) _type.AddItem(type == "run-map" ? "Map" : type);
         _type.ItemSelected += OnTypeSelected;
@@ -40,14 +41,16 @@ public partial class AuthoringLifecycleWorkbench : VBoxContainer
         AddButton(row, "Refresh", Refresh);
         AddChild(row);
         _status = new Label { Text = "Formal migration resources are protected; authored resources use the UID ledger." };
+        WorkbenchUi.StyleStatus(_status);
         AddChild(_status);
         Refresh();
     }
 
     public override void _ExitTree()
     {
-        if (_type is not null) _type.ItemSelected -= OnTypeSelected;
-        if (_resources is not null) _resources.ItemSelected -= OnResourceSelected;
+        // Descendant Controls are freed with this workbench; Godot disconnects their signals.
+        // Explicit -= after an assembly reload targets a new managed delegate handle and produces
+        // a false "nonexistent connection" error during deterministic teardown.
     }
 
     private void CreateFromTemplate()
@@ -121,7 +124,7 @@ public partial class AuthoringLifecycleWorkbench : VBoxContainer
     private void OnResourceSelected(long _) => ShowOwnership();
 
     private string GetTypeId() => Types[Math.Clamp(_type?.Selected ?? 0, 0, Types.Length - 1)];
-    private void SetStatus(string text, bool error = false) { if (_status is not null) { _status.Text = text; _status.Modulate = error ? Colors.IndianRed : Colors.LightGreen; } }
+    private void SetStatus(string text, bool error = false) { if (_status is not null) { _status.Text = text; WorkbenchUi.StyleStatus(_status, error); } }
     private static void AddButton(Container parent, string text, Action action) { var button = new Button { Text = text }; button.Pressed += action; parent.AddChild(button); }
 }
 #endif

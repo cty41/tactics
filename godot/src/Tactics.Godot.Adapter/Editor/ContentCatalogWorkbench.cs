@@ -15,6 +15,9 @@ public partial class ContentCatalogWorkbench : VBoxContainer
     private ItemList? _items;
     private RichTextLabel? _details;
     private Label? _summary;
+    private LineEdit? _filter;
+    private OptionButton? _sort;
+    private IReadOnlyList<GodotResourceEntry> _entries = Array.Empty<GodotResourceEntry>();
     private IReadOnlyDictionary<string, AuthoringCatalogAuditRow> _audit = new Dictionary<string, AuthoringCatalogAuditRow>();
     private int _catalogLoadAttempts;
 
@@ -29,15 +32,18 @@ public partial class ContentCatalogWorkbench : VBoxContainer
     {
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
-        AddChild(new Label { Text = $"{_heading} — canonical resources are inspected read-only until their typed editor is selected." });
+        WorkbenchUi.StylePage(this);
+        var heading = WorkbenchUi.Toolbar(this); heading.AddChild(new Label { Text = _heading.ToUpperInvariant() }); heading.AddChild(new Label { Text = "  read-only evidence" }); AddChild(heading);
         if (string.IsNullOrEmpty(_resourceType))
         {
-            var toolbar = new HBoxContainer();
+            var toolbar = WorkbenchUi.Toolbar(this);
             var audit = new Button { Text = "Run Catalog + Reference + Revision Audit" }; audit.Pressed += RunAudit; toolbar.AddChild(audit);
-            _summary = new Label { Text = "Audit not run in this Editor session." }; toolbar.AddChild(_summary); AddChild(toolbar);
+            _filter = new LineEdit { PlaceholderText = "Filter ContentId", CustomMinimumSize = new Vector2(190, 0) }; _filter.TextChanged += _ => RefreshItems(); toolbar.AddChild(_filter);
+            _sort = new OptionButton(); _sort.AddItem("Sort: ContentId"); _sort.AddItem("Sort: Type"); _sort.AddItem("Sort: Ownership"); _sort.ItemSelected += _ => RefreshItems(); toolbar.AddChild(_sort);
+            _summary = new Label { Text = "Audit not run in this Editor session." }; WorkbenchUi.StyleStatus(_summary, warning: true); toolbar.AddChild(_summary); AddChild(toolbar);
         }
         var split = new HSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        _items = new ItemList { CustomMinimumSize = new Vector2(360, 400), SizeFlagsVertical = SizeFlags.ExpandFill };
+        _items = new ItemList { CustomMinimumSize = new Vector2(WorkbenchUi.ResourcePaneWidth, 400), SizeFlagsVertical = SizeFlags.ExpandFill };
         _items.ItemSelected += ShowDetails;
         split.AddChild(_items);
         _details = new RichTextLabel { BbcodeEnabled = true, SelectionEnabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
@@ -49,7 +55,6 @@ public partial class ContentCatalogWorkbench : VBoxContainer
     public override void _ExitTree()
     {
         _catalogLoadAttempts = 0;
-        if (_items is not null) _items.ItemSelected -= ShowDetails;
     }
 
     public void LoadCatalog()
@@ -60,20 +65,37 @@ public partial class ContentCatalogWorkbench : VBoxContainer
             return;
         GodotResourceCatalog catalog = result.Resource!;
         catalog.Validate();
-        foreach (GodotResourceEntry entry in catalog.Entries.Where(value => string.IsNullOrEmpty(_resourceType) || value.ResourceTypeIdValue == _resourceType))
+        _entries = catalog.Entries.Where(value => string.IsNullOrEmpty(_resourceType) || value.ResourceTypeIdValue == _resourceType).ToArray();
+        RefreshItems();
+        if (string.IsNullOrEmpty(_resourceType)) RunAudit();
+    }
+
+    private void RefreshItems()
+    {
+        if (_items is null) return;
+        _items.Clear();
+        string filter = _filter?.Text.Trim() ?? string.Empty;
+        IEnumerable<GodotResourceEntry> rows = _entries.Where(value => filter.Length == 0 || value.ContentIdValue.Contains(filter, StringComparison.OrdinalIgnoreCase));
+        rows = (_sort?.Selected ?? 0) switch
         {
-            int index = _items!.AddItem(entry.ContentIdValue);
+            1 => rows.OrderBy(value => value.ResourceTypeIdValue, StringComparer.Ordinal).ThenBy(value => value.ContentIdValue, StringComparer.Ordinal),
+            2 => rows.OrderBy(value => _audit.GetValueOrDefault(value.ContentIdValue)?.Ownership).ThenBy(value => value.ContentIdValue, StringComparer.Ordinal),
+            _ => rows.OrderBy(value => value.ContentIdValue, StringComparer.Ordinal)
+        };
+        foreach (GodotResourceEntry entry in rows)
+        {
+            int index = _items.AddItem($"{entry.ContentIdValue}  [{entry.ResourceTypeIdValue}]");
             _items.SetItemMetadata(index, entry.DiagnosticPathValue);
         }
-        if (_items!.ItemCount > 0) { _items.Select(0); ShowDetails(0); }
-        if (string.IsNullOrEmpty(_resourceType)) RunAudit();
+        if (_items.ItemCount > 0) { _items.Select(0); ShowDetails(0); }
     }
 
     private void ShowDetails(long index)
     {
         string path = _items!.GetItemMetadata((int)index).AsString();
         Resource? resource = ResourceLoader.Load<Resource>(path, string.Empty, ResourceLoader.CacheMode.Ignore);
-        string id = _items.GetItemText((int)index);
+        string pathId = _entries.FirstOrDefault(value => value.DiagnosticPathValue == path)?.ContentIdValue ?? _items.GetItemText((int)index);
+        string id = pathId;
         string audit = _audit.TryGetValue(id, out AuthoringCatalogAuditRow? row)
             ? $"\nAuthoring revision: {row.Revision ?? "not an authoring document"}\nOwnership: {row.Ownership}\nForward refs: {string.Join(", ", row.ForwardReferences)}\nReverse refs: {string.Join(", ", row.ReverseReferences)}\nDiagnostics: {(row.Diagnostics.Count == 0 ? "none" : string.Join("; ", row.Diagnostics.Select(value => value.Code + ": " + value.Message)))}"
             : string.Empty;
@@ -90,6 +112,7 @@ public partial class ContentCatalogWorkbench : VBoxContainer
                 ?? throw new InvalidOperationException("Catalog cannot be loaded.");
             AuthoringCatalogAuditRow[] rows = AuthoringCatalogAuditService.Audit(catalog).ToArray();
             _audit = rows.ToDictionary(value => value.ContentId, StringComparer.Ordinal);
+            RefreshItems();
             int errors = rows.Sum(value => value.Diagnostics.Count(item => item.Severity == AuthoringDiagnosticSeverity.Error));
             if (_summary is not null)
             {
@@ -101,11 +124,11 @@ public partial class ContentCatalogWorkbench : VBoxContainer
                 var editor = AuthoringEditorDiagnostics.Snapshot();
                 int cleanupLeaks = editor.Cleanup.Count(value => value.ActiveTweens != 0 || value.TemporaryNodes != 0);
                 _summary.Text = $"{rows.Length} resources; {rows.Count(value => value.Revision is not null)} authored; {rows.Count(value => value.Ownership == AuthoringResourceOwnership.WorkbenchOwned)} Workbench-owned; {errors} errors; dirty={editor.DirtyDocuments}, lifecycle={editor.QueuedLifecycle}; preview cleanup leaks={cleanupLeaks}; {mcp}; {gameplay}.";
-                _summary.Modulate = errors == 0 && descriptors.Length <= 1 ? Colors.LightGreen : Colors.IndianRed;
+                WorkbenchUi.StyleStatus(_summary, errors > 0 || descriptors.Length > 1);
             }
             if (_items is not null && _items.GetSelectedItems().Length > 0) ShowDetails(_items.GetSelectedItems()[0]);
         }
-        catch (Exception error) { if (_summary is not null) { _summary.Text = "Audit failed: " + error.Message; _summary.Modulate = Colors.IndianRed; } }
+        catch (Exception error) { if (_summary is not null) { _summary.Text = "Audit failed: " + error.Message; WorkbenchUi.StyleStatus(_summary, error: true); } }
     }
 }
 #endif

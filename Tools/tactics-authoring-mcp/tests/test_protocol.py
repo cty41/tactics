@@ -20,6 +20,9 @@ class TacticsAuthoringMcpProtocolTests(unittest.TestCase):
             session_dir.mkdir(parents=True)
             (godot / "project.godot").write_text("; protocol fixture\n", encoding="utf-8")
             for index, descriptor in enumerate(descriptors):
+                descriptor = dict(descriptor)
+                if descriptor.get("projectRoot") == "__PROJECT_ROOT__":
+                    descriptor["projectRoot"] = str(root)
                 (session_dir / f"tactics-authoring-session-{index}.json").write_text(
                     json.dumps(descriptor), encoding="utf-8")
             process = subprocess.run(
@@ -60,12 +63,25 @@ class TacticsAuthoringMcpProtocolTests(unittest.TestCase):
         self.assertEqual(response["error"]["code"], -32022)
 
     def test_reload_and_multiple_sessions_fail_closed(self):
-        base = {"projectRoot": "wrong", "pipeName": "unused", "sessionToken": "unused", "state": "reloading"}
+        base = {"projectRoot": "wrong", "pipeName": "unused", "sessionToken": "unused",
+                "processId": os.getpid(), "state": "reloading"}
         request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "tactics_authoring_list", "arguments": {}}}
         reload_response = self.run_server([request], [base])[0]
         multiple_response = self.run_server([request], [base, base])[0]
         self.assertTrue(reload_response["result"]["isError"])
         self.assertTrue(multiple_response["result"]["isError"])
+
+    def test_dead_descriptor_does_not_create_a_multiple_session_conflict(self):
+        request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                   "params": {"name": "tactics_authoring_list", "arguments": {}}}
+        live = {"projectRoot": "__PROJECT_ROOT__", "pipeName": "unused", "sessionToken": "unused",
+                "processId": os.getpid(), "state": "ready"}
+        dead = dict(live, projectRoot="stale-other-worktree", processId=2147483646)
+        response = self.run_server([request], [dead, live])[0]
+        message = response["result"]["content"][0]["text"]
+        self.assertTrue(response["result"]["isError"])
+        self.assertNotIn("found 2", message)
+        self.assertNotIn("project root differs", message.lower())
 
 
 if __name__ == "__main__":
