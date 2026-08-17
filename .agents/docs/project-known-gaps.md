@@ -15,7 +15,7 @@
 
 | 状态 | 缺口与证据 | 未激活原因 | 激活条件 | 历史来源 |
 |---|---|---|---|---|
-| `verified-gap` | `ScoreNode.Parameter` 已序列化，但 `IntentScorer` 尚未消费该参数。 | 参数语义尚未统一。 | 定义每种 scorer 的参数契约与回归测试。 | 怪物 AI 旧计划 |
+| `deferred` | AI `Rule` 节点字段为历史 round-trip 数据，但当前 `AiDecisionService` 不消费；Workbench 已改为只读并稳定诊断。`ScoreNode.Parameter` 实际映射为运行时消费的 Score weight，不再列为缺口。 | 不改变当前 AI 决策规则。 | 只有批准新的 Rule 运行语义并建立 Golden 回归时才重新开放编辑。 | Workbench 最终收口 2026-08-17 |
 | `verified-gap` | 首批六类遭遇 Brain/Profile、Pattern 引用和资源可执行性已有自动校验；跨第二批怪物的行为退化基线尚未建立。 | 当前只有首批遭遇资产进入正式目录。 | 出现第二批 Brain/Profile 或批量生成需求。 | 怪物 AI 旧计划 |
 | `idea` | 用热力图展示候选行动及评分，辅助调试。 | 非运行必需。 | 评分系统稳定且调试成本明显增加。 | Monster System 旧计划 |
 
@@ -37,6 +37,12 @@
 | `verified-gap` | 动画完成/表现时序缺少稳定的跨帧断言契约。 | 战斗逻辑验证不依赖表现资产。 | 动画进入自动验收范围。 | Framework Roadmap 旧计划 |
 | `deferred` | Gameplay Test 未接入 CI。 | 项目当前没有 CI 流程。 | 建立可稳定启动 Unity 的 CI 环境。 | Framework Roadmap 旧计划 |
 | `needs-decision` | SkillGraph 更强的循环、阶段与目标语义静态检查仍可扩展。 | 静态校验与运行测试的职责边界需先确定。 | 收集真实误配案例并定义可判定规则。 | SkillGraph 旧计划 |
+
+## Godot Content Workbench
+
+| 状态 | 缺口与证据 | 未激活原因 | 激活条件 | 历史来源 |
+|---|---|---|---|---|
+| `deferred` | 自动作者闭环已完成；真实 Godot Editor 中逐页 Apply All→Undo→Redo→Save→C# Reload、Graph 拖动手感与 Preview cleanup 尚未人工验收。自动套件中的 PlayableRunUi 仍报告 4 个 orphan-node runner warning，独立 page-replacement/preview cleanup 断言通过。 | 前台交互、视觉观感和 Assembly Reload 不能由后台门禁替代；不修改第三方 GdUnit adapter 掩盖 warning。 | 用户在 canonical Editor 按 `MQA-GODOT-CONTENT-WORKBENCH` 完成并反馈。 | Workbench 人工验收账本 |
 
 ## Unity MCP 可靠性
 

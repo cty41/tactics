@@ -36,6 +36,7 @@ public partial class SkillDefinitionResource : Resource
     [Export] public int MinimumAttribute { get; set; }
     [Export] public int AreaRadius { get; set; }
     [Export] public int OrderedTargetCount { get; set; }
+    [Export] public string SummonDefinitionIdValue { get; set; } = string.Empty;
     [Export] public int SummonCount { get; set; }
     [Export] public int SummonLimit { get; set; }
     [Export] public string SummonCategory { get; set; } = string.Empty;
@@ -59,6 +60,7 @@ public partial class SkillDefinitionResource : Resource
     [Export] public long SourceLocalFileId { get; set; }
     [Export] public string GraphPath { get; set; } = string.Empty;
     [Export] public string GraphDependencyHash { get; set; } = string.Empty;
+    [Export] public string AuthoringSourceKindValue { get; set; } = "FrozenMigration";
     [Export] public bool PresentationPayloadCopied { get; set; }
     [Export] public bool ThirdPartyPayloadCopied { get; set; }
 
@@ -66,10 +68,14 @@ public partial class SkillDefinitionResource : Resource
     {
         if (SchemaVersion != 1 || PresentationPayloadCopied || ThirdPartyPayloadCopied)
             throw new InvalidOperationException($"Skill '{ContentIdValue}' violates schema or payload boundary.");
-        if (!ExternalDependency && ExecutionKindValue != nameof(SkillExecutionKind.CombatTechniques) &&
+        if (AuthoringSourceKindValue == "FrozenMigration" && !ExternalDependency && ExecutionKindValue != nameof(SkillExecutionKind.CombatTechniques) &&
             (string.IsNullOrWhiteSpace(SourcePath) || string.IsNullOrWhiteSpace(SourceGuid) || SourceLocalFileId <= 0 || string.IsNullOrWhiteSpace(GraphPath) || string.IsNullOrWhiteSpace(GraphDependencyHash)))
             throw new InvalidOperationException($"Skill '{ContentIdValue}' has incomplete source audit fields.");
-        var profile = new SkillExecutionProfile(AreaRadius, OrderedTargetCount, null, SummonCount, SummonLimit,
+        if (AuthoringSourceKindValue is not ("FrozenMigration" or "GodotAuthored")) throw new InvalidOperationException($"Skill '{ContentIdValue}' has unknown authoring source kind '{AuthoringSourceKindValue}'.");
+        if (AuthoringSourceKindValue == "GodotAuthored" && (!string.IsNullOrWhiteSpace(SourceGuid) || SourceLocalFileId != 0)) throw new InvalidOperationException($"Godot-authored skill '{ContentIdValue}' carries Unity audit identity.");
+        var profile = new SkillExecutionProfile(AreaRadius, OrderedTargetCount,
+            string.IsNullOrEmpty(SummonDefinitionIdValue) ? null : new ContentId(SummonDefinitionIdValue),
+            SummonCount, SummonLimit,
             SummonCategory, RequiresCorpse, IgnoreLineOfSight, ShieldMultiplier, ShieldAbsorbsAllDamage,
             CleanseHarmful, SecondaryDamage, AreaShape, StatusChancePercent,
             string.IsNullOrEmpty(DetonateStatusContentIdValue) ? null : new ContentId(DetonateStatusContentIdValue),

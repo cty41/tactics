@@ -14,6 +14,7 @@ public partial class EncounterFixtureWorkbench : VBoxContainer
     private Label? _status;
     private int _catalogLoadAttempts;
     private bool _initialized;
+    private (Tactics.Core.Encounters.EncounterDefinition Encounter, Tactics.Core.Encounters.BattleLayoutDefinition Layout)? _pendingDraft;
 
     public override void _Ready() => CallDeferred(nameof(InitializeWorkbench));
 
@@ -64,6 +65,7 @@ public partial class EncounterFixtureWorkbench : VBoxContainer
         viewport.AddChild(_fixture);
         frame.AddChild(viewport);
         AddChild(frame);
+        if (_pendingDraft is { } draft) { _fixture.LoadDraft(draft.Encounter, draft.Layout); _pendingDraft = null; SetStatus("Loaded authoring draft into the fixed-seed fixture.", false); }
     }
 
     public override void _ExitTree()
@@ -89,6 +91,13 @@ public partial class EncounterFixtureWorkbench : VBoxContainer
                 throw new InvalidOperationException($"Encounter has invalid unit/AI bindings: {id}.");
             if (!entries.ContainsKey(encounter.LayoutContentId)) throw new InvalidOperationException($"Encounter layout is missing: {encounter.LayoutContentId}.");
         }
+    }
+
+    public void LoadDraft(Tactics.Core.Encounters.EncounterDefinition encounter, Tactics.Core.Encounters.BattleLayoutDefinition layout)
+    {
+        if (_fixture is null) _pendingDraft = (encounter, layout);
+        else _fixture.LoadDraft(encounter, layout);
+        SetStatus("Loaded authoring draft into the fixed-seed fixture; formal Resources unchanged.", false);
     }
 
     private void ValidateAssets() => RunSafely(ValidateCanonicalAssets, "Encounter, layout, unit and AI references validated.");

@@ -55,7 +55,7 @@ public static class InventoryProgressionAssetFactory
         var entries = current.Entries.ToDictionary(value => value.ContentIdValue, Copy, StringComparer.Ordinal);
         foreach (GodotResourceEntry entry in generated) entries[entry.ContentIdValue] = Copy(entry);
         var global = new GodotResourceCatalog { Entries = entries.Values.OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray() };
-        if (global.Entries.Length is not (101 or 102 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125 or 131 or 141 or 142))
+        if (global.Entries.Length is not (101 or 102 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125 or 131 or 141 or 142 or 143))
             throw new InvalidOperationException($"Canonical Catalog count is invalid: {global.Entries.Length}.");
         Save(global, GlobalCatalogPath); global.Validate();
     }

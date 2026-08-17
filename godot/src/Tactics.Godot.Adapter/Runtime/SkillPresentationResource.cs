@@ -15,4 +15,5 @@ public partial class SkillPresentationResource : Resource
     [Export] public int MaximumGhosts { get; set; }
     [Export] public bool LevelOneHasAreaEffect { get; set; }
     [Export] public string PayloadBoundary { get; set; } = "programmatic-only-no-piloto-payload";
+    [Export(PropertyHint.MultilineText)] public string AuthoringGraphJsonValue { get; set; } = string.Empty;
 }

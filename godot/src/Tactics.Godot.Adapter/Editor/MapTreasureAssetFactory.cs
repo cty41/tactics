@@ -44,7 +44,7 @@ public static class MapTreasureAssetFactory
         {
             Entries = entries.Values.OrderBy(value => value.ContentIdValue, StringComparer.Ordinal).ToArray()
         };
-        if (catalog.Entries.Length != 142)
+        if (catalog.Entries.Length is not (142 or 143))
             throw new InvalidOperationException($"Canonical Catalog count is invalid: {catalog.Entries.Length}.");
         Save(catalog, CatalogPath);
         catalog.Validate();

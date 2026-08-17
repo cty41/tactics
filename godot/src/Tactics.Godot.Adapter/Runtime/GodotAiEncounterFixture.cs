@@ -53,6 +53,8 @@ public partial class GodotAiEncounterFixture : Control
     private int _index;
     private int _step;
     private string _last = "Ready.";
+    private EncounterDefinition? _draftEncounter;
+    private BattleLayoutDefinition? _draftLayout;
 
     public override void _Ready()
     {
@@ -92,12 +94,21 @@ public partial class GodotAiEncounterFixture : Control
     public void SelectScenario(int index)
     {
         if (index < 0 || index >= Scenarios.Length) throw new ArgumentOutOfRangeException(nameof(index));
-        _index = index;
+        _draftEncounter = null; _draftLayout = null; _index = index;
         ResetCurrentScenario();
     }
 
     public void ResetCurrentScenario()
     {
+        ResetScenario();
+    }
+
+    public void LoadDraft(EncounterDefinition encounter, BattleLayoutDefinition layout)
+    {
+        _draftEncounter = encounter ?? throw new ArgumentNullException(nameof(encounter));
+        _draftLayout = layout ?? throw new ArgumentNullException(nameof(layout));
+        if (encounter.LayoutId != layout.ContentId) throw new InvalidOperationException("Draft Encounter/Layout identity mismatch.");
+        if (encounter.Monsters.Count > layout.EnemySpawns.Count) throw new InvalidOperationException("Draft layout has fewer enemy spawns than Encounter monsters.");
         ResetScenario();
     }
 
@@ -129,20 +140,22 @@ public partial class GodotAiEncounterFixture : Control
         _patternCursors = _unitAi.Keys.ToDictionary(value => value, _ => 0);
         _history.Clear();
         _step = 0;
-        _last = $"RESET — fixed seed=6; {_unitAi.Count} AI actors. Space advances 1 actor; Enter advances all {_unitAi.Count} actors in the round.";
+        _last = $"RESET — fixed seed=6; {_unitAi.Count} AI actors{(_draftEncounter is null ? string.Empty : "; AUTHORING DRAFT")}. Space advances 1 actor; Enter advances all {_unitAi.Count} actors in the round.";
         Refresh();
     }
 
     private (BattleState State, Dictionary<UnitInstanceId, AiDefinition> UnitAi) CreateScenario(int index)
     {
-        BattleLayoutDefinition layout = LoadLayout(index == 2 ? "battle-layout.pure-run.center-blocker" : "battle-layout.pure-run.open");
-        (string[] unitIds, string[] aiIds) = index < 3 ? LoadEncounter($"encounter.pure-run.n{index + 1}") :
+        BattleLayoutDefinition layout = _draftLayout ?? LoadLayout(index == 2 ? "battle-layout.pure-run.center-blocker" : "battle-layout.pure-run.open");
+        (string[] unitIds, string[] aiIds) = _draftEncounter is not null
+            ? (_draftEncounter.Monsters.Select(value => value.UnitId.Value).ToArray(), _draftEncounter.Monsters.Select(value => value.AiId.Value).ToArray())
+            : index < 3 ? LoadEncounter($"encounter.pure-run.n{index + 1}") :
             index == 3 ? (new[] { "unit.pure-run.goat-elite-charger" }, new[] { "ai.pure-run.elite-charger" }) :
             (new[] { "unit.pure-run.goat-elite-poison-caster" }, new[] { "ai.pure-run.elite-poison-caster" });
         var cells = Enumerable.Range(0, BoardSpec.Width).SelectMany(x => Enumerable.Range(0, BoardSpec.Height).Select(y =>
             new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState(blocksMovement: layout.BlockedCells.Contains(new GridPoint(x, y)))))).ToDictionary();
         var units = new List<BattleUnitState>();
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < Math.Min(3, layout.PartySpawns.Count); i++)
         {
             UnitInstanceId id = new($"fixture.party.{i}");
             units.Add(new BattleUnitState(new UnitState(id, new ContentId("unit.pure-run.amazon"), layout.PartySpawns[i], 3, 10, 0, i), 40, 40, maxMana: 30, currentMana: 30));
@@ -200,7 +213,7 @@ public partial class GodotAiEncounterFixture : Control
     private void Refresh()
     {
         if (_title is null || _log is null || _state is null) return;
-        _title.Text = $"{_index + 1}/5  {Scenarios[_index]} — round {_state.Round}, active {_state.ActiveUnitId}";
+        _title.Text = _draftEncounter is null ? $"{_index + 1}/5  {Scenarios[_index]} — round {_state.Round}, active {_state.ActiveUnitId}" : $"DRAFT  {_draftEncounter.ContentId} — round {_state.Round}, active {_state.ActiveUnitId}";
         string units = string.Join(" | ", _state.Units.Values.OrderBy(value => value.Unit.InstanceId.Value, StringComparer.Ordinal).Select(value => $"{value.Unit.InstanceId}: HP {value.CurrentHealth}, MP {value.CurrentMana}, cell {value.Unit.Position}"));
         string history = _history.Count == 0 ? "(no turns executed)" : string.Join('\n', _history.TakeLast(12));
         string eliteNote = _unitAi.Count == 1 ? "\nNOTE: Single-enemy Elite scenario — Space and Enter both execute one actor, so their state result is intentionally identical." : string.Empty;

@@ -39,4 +39,5 @@ public partial class StandardUnitPresentationResource : Resource
     [Export] public float CorpseStartHeightPixels { get; set; } = 8f;
     [Export] public float ShadowContactOffsetY { get; set; } = -10f;
     [Export] public string MarkerContract { get; set; } = "begin,release,impact,recover,complete";
+    [Export(PropertyHint.MultilineText)] public string AuthoringGraphJsonValue { get; set; } = string.Empty;
 }

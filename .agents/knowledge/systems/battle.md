@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-16T16:17:23+08:00"
+timestamp: "2026-08-17T15:01:41+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -22,7 +22,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:4cb2e91ce2de794c09790d1b56cf82f3c20684dd63db0db7144bf11904e8d3ae
+source_fingerprint: sha256:1a281795242a5e25be67d748da11a48e5efee4d12a20334700ed0f8f28912f13
 ---
 
 # Current State
@@ -50,8 +50,9 @@ AI 和真实 Transition 必须复用 Core 规则；表现 cue、Tween、伤害�
 状态触发、召唤上限、尸体消费、长矛和战后结果均由 Core/Application 事务维护。Godot 只消费 Snapshot 和事件，
 缺失表现资源或取消表现不得改变命中、伤害、状态与终局。
 
-Pure Run 三职业、敌人、召唤物和固定遭遇均从 Godot-owned Catalog/Resource 组合。内容 ownership 与人工验收
-分开记录；自动测试通过不能把视觉或操作验收直接标为 passed。
+Pure Run 三职业、敌人、召唤物和固定遭遇均从 Godot-owned Catalog/Resource 组合；N6/E2 使用的
+`battle-layout.pure-run.split-flank` 已由正式 `BattleLayoutResource` 提供，不再由运行时硬编码补建。内容
+ownership 与人工验收分开记录；自动测试通过不能把视觉或操作验收直接标为 passed。
 
 # Relationships
 
