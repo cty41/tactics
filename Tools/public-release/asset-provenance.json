@@ -1,334 +1,3390 @@
 {
-    "schemaVersion":  1,
-    "defaultAttribution":  "cty41",
-    "entries":  [
-                    {
-                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/correct_128.png",
-                        "sha256":  "b38131a6c5f18a8ee36f0a1bab0ef78929a7c36c3a3f834a420870dfd42d8500",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-agent-review-example"
-                    },
-                    {
-                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/incorrect_128.png",
-                        "sha256":  "eb0bd32260f580c92f229aeae2f36d71da82f43bf549fdef701b17b19013ae71",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-agent-review-example"
-                    },
-                    {
-                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/correct_128.png",
-                        "sha256":  "a6c81f77fd76e9dafcefba33edb24e69a727285371bac6b9f893485d914d6e15",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-agent-review-example"
-                    },
-                    {
-                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/incorrect_128.png",
-                        "sha256":  "c71b19259a4f354cf12b2808431327ca9c85a9621436e199c47908a0fbc2d024",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-agent-review-example"
-                    },
-                    {
-                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/correct_128.png",
-                        "sha256":  "6b816acd9688a078a60d24cb4ef16d0e69cc5a876fae7e9405a6f9ef99cd6c0e",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-agent-review-example"
-                    },
-                    {
-                        "path":  ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/incorrect_128.png",
-                        "sha256":  "060de12e9d127f1886f1a3aa9390432e53367fb4bb3f8059a68c0d1195578ae9",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-agent-review-example"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_hunter_cast_dr.png",
-                        "sha256":  "59ea2ab032f37b1b76ba84942964ff21dcdd5095ef73bb1d33fd71cc34d55b0f",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_hunter_cast_ul.png",
-                        "sha256":  "822ae999232063260ae0b63d2920d3e232d763af1b0dc976f590c7f197353eb8",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_hunter_hit_dr.png",
-                        "sha256":  "a921486bec40be843d02efdce8617e2a1b764c33e6a9e8e4278cf76c92fa9e01",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_hunter_hit_ul.png",
-                        "sha256":  "0eb88380ebee80e99d1208b0adf5dca6b91ed368c94039ae298b9c4bb0c297af",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_hunter_melee_attack_dr.png",
-                        "sha256":  "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_hunter_melee_attack_ul.png",
-                        "sha256":  "e1a2c54c286adbd01c4a98a1a7f023d9b07880459c21c5e42994a8eeaa922ffe",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_mage_cast_dr.png",
-                        "sha256":  "8232c168c3c1e114c6be03004a919a832d8e02acae5b9a648f6782f688086b80",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_mage_cast_ul.png",
-                        "sha256":  "5897a9dd9d2d4fa3076fc93bcba921017fa0f203113ca4d08e4e966ae99c7490",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_mage_hit_dr.png",
-                        "sha256":  "76c2d6d9427f78b0a67ca1f051ed323d61eb1ac3a2d88dcd09b027abbda8fea0",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_mage_hit_ul.png",
-                        "sha256":  "42fe16f9824683592ba23991bc556a828fe32b9fb2e4d627db5b8d69e57c1f58",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_necromancer_cast_dr.png",
-                        "sha256":  "8262b0dd3cf5b29443b5d98d10628a1e56581dae5f68189020ed2beac46a0f92",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_necromancer_cast_ul.png",
-                        "sha256":  "1b986f6a882fb6d5bf2477493a9dd5e392781e158c0aa1eecb764a3b56c2c713",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_necromancer_hit_dr.png",
-                        "sha256":  "66e6a41a4de74288eab731cda2dda6369646d01ce93992f0a836b7d4add63395",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/actions/doge_necromancer_hit_ul.png",
-                        "sha256":  "7ff19e1d7a3e6e1deadf22b3e481021b53793705278b3bf1a554dd34066df913",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_fire_demon.png",
-                        "sha256":  "e6ec064f0b5e6497159e15eadcae66ee719cd920d6c0a79f1daf386eb4f25939",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_fire_demon_ul.png",
-                        "sha256":  "d52d3c7d2e43310fd53a5d8081fee782729754b8afbc8c93c7ea04ae94982d95",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_hunter.png",
-                        "sha256":  "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_hunter_death.png",
-                        "sha256":  "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_hunter_idle_unarmed_dr.png",
-                        "sha256":  "4f9388311ad640336a5f9cb0eac90831849f885d2ccae01195b06bcc0fba56ab",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_hunter_idle_unarmed_ul.png",
-                        "sha256":  "08bf56069d3fd4365995b5a8a4f388ba15b8c18c4018bd5c2f2ad97fecdb41a2",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_hunter_ul.png",
-                        "sha256":  "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_mage.png",
-                        "sha256":  "84fbefaa2423948cb2a716aa9848a75a12745a4bfdc4a9ad446b95fe17bccee5",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_mage_death.png",
-                        "sha256":  "d39fac2c00f1aee495b1a3ea31fb4547c5d540432a35130fa5361614ce7ddd0b",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_mage_ul.png",
-                        "sha256":  "40547194e76662324b687df271b34edb767a5d6c57d1539d39ff4d32db39bad8",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_necromancer.png",
-                        "sha256":  "a967f2767667bb16cfae4167ae16570ad169246654455280f33eccca0fa44b8f",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_necromancer_death.png",
-                        "sha256":  "f614dc8d42d194886c2f3d179b9ae4918f431a9a53e0cc7d0d704d550dac1a32",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_necromancer_ul.png",
-                        "sha256":  "8f6d5e868e706e337fc56b3bbd58a9c8102a89f9d124faa7c3f4e4dc56014ab7",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_skeleton_mage.png",
-                        "sha256":  "885e0bdd2a34a40b9d472cd830108f46dd69f2fc4a170f7e94b89c10abcde334",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_skeleton_mage_ul.png",
-                        "sha256":  "ea9f16e8165b451c8be43247634a66123e4ac0baf34b2e5a368e63e15fc47e16",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_skeleton_warrior.png",
-                        "sha256":  "f86d92c8038ab47b1d66ab4e95ff4807fa3e91ddd89276f67f919b577be5e6c3",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/doge_skeleton_warrior_ul.png",
-                        "sha256":  "c327f0b3b55e06ed7789075cc82fde8d17fceaa1a452de863c8a3ffb350bf951",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/pure_run_unit_shadow_1x1_v01.png",
-                        "sha256":  "c232948d6631bb8f88d1c7476f33fde923b5dd9fb7ac9d6793cb84fdd58e9e83",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/splitjaw_goat.png",
-                        "sha256":  "55850716a198201e3756ae0eb34e1f024d472fb1a1a020fbcee671b219c1121a",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/splitjaw_goat_death.png",
-                        "sha256":  "03b9916ed03a0d77fb248ab642039c41788a3ad259d73b51c2ab27f73f4599ef",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    },
-                    {
-                        "path":  "godot/assets/units/splitjaw_goat_ul.png",
-                        "sha256":  "4d09c98b72ba2310874844de9216bd06ddf69447c0b87dc89576dac01814a2eb",
-                        "status":  "approved",
-                        "rightsHolder":  "cty41",
-                        "license":  "CC-BY-4.0",
-                        "provenance":  "project-owned-migrated-runtime-art"
-                    }
-                ]
+  "schemaVersion": 1,
+  "defaultAttribution": "cty41",
+  "entries": [
+    {
+      "path": ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/correct_128.png",
+      "sha256": "b38131a6c5f18a8ee36f0a1bab0ef78929a7c36c3a3f834a420870dfd42d8500",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-agent-review-example"
+    },
+    {
+      "path": ".agents/skills/pure-run-artwork-pipeline/examples/core-body-volume/incorrect_128.png",
+      "sha256": "eb0bd32260f580c92f229aeae2f36d71da82f43bf549fdef701b17b19013ae71",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-agent-review-example"
+    },
+    {
+      "path": ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/correct_128.png",
+      "sha256": "a6c81f77fd76e9dafcefba33edb24e69a727285371bac6b9f893485d914d6e15",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-agent-review-example"
+    },
+    {
+      "path": ".agents/skills/pure-run-artwork-pipeline/examples/equipment-layering/incorrect_128.png",
+      "sha256": "c71b19259a4f354cf12b2808431327ca9c85a9621436e199c47908a0fbc2d024",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-agent-review-example"
+    },
+    {
+      "path": ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/correct_128.png",
+      "sha256": "6b816acd9688a078a60d24cb4ef16d0e69cc5a876fae7e9405a6f9ef99cd6c0e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-agent-review-example"
+    },
+    {
+      "path": ".agents/skills/pure-run-artwork-pipeline/examples/flying-core-scale/incorrect_128.png",
+      "sha256": "060de12e9d127f1886f1a3aa9390432e53367fb4bb3f8059a68c0d1195578ae9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-agent-review-example"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v01.png",
+      "sha256": "2f0baed6e4b30ff4f93d296018230b6ee92ae6d74acf51cfdf70feaa1c37176d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v01_128.png",
+      "sha256": "cd5746a120b54a1820132e6ddfe757ded697e3aa94778d3af9c700a5b66ab16c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v02.png",
+      "sha256": "34782f332b97ae7b8dfca1143f2e300890e10d58dbb5d885b1641e45eebc65ef",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v02_128.png",
+      "sha256": "2342b57998e0ae701780dabb1f0936782fa3aafb7d60f9d4afecd68d1ec938cf",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v03.png",
+      "sha256": "4c8d339c0886d929611bdaec60f3b8bfb715f8a91889846d90ecd922d592bbc7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v03_128.png",
+      "sha256": "bc2c1a39722835111bad3a4a1ae7f0882d1a75d97220962abf1adab14e501c4b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v04.png",
+      "sha256": "31c1f4f8d73baa1ce211390487cf4aa3363a3ff0cfd2bee588a109885f12e916",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v04_128.png",
+      "sha256": "ff3856d6bab006001c11131d255c1d2186e04ce236101d44aa6dccef6d50d945",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v05.png",
+      "sha256": "f126e2d534c7328c2b8c72c9daf3e42446a9d66c5be9e53ad9439849b0631dfb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/concepts/amazon_lineart_v05_128.png",
+      "sha256": "451a67b9546e30d65a1ba91839fb3368e41edfaf790c63b9728390919304b0c4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/idle.png",
+      "sha256": "90c7f3c0662a24bdd87d2b583f67f0d35d79120d20b1dc69920d2475abbcbef2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle.png",
+      "sha256": "90c7f3c0662a24bdd87d2b583f67f0d35d79120d20b1dc69920d2475abbcbef2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f01.png",
+      "sha256": "94cfe28ad238a3dc3dd91f12436c9c748ea83fa246138d6e355c625edc004c15",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f02.png",
+      "sha256": "b595b48d6fac04a8b859c7d583271af17b4c0cd40609ea961163e16b5c5fba7d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f03.png",
+      "sha256": "aab7905ec32d5739576725eef9228309d7c5090656af61c8eca89bd3e621fa7f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f04.png",
+      "sha256": "ee6e65739cc123723edff160d29cb64b18dbdccfbcd5e755c2cc10dbd10615cc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f05.png",
+      "sha256": "2652076d49adf3d5b270f93ba794a84e793aca69ba8139cf6cd08f453f0ab290",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f06.png",
+      "sha256": "6da11c37995af63d4c0d1f039d49b72186c1b7559cdc07894a8ace007bb2a1fe",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f07.png",
+      "sha256": "4080797d6990b8378d431962f221f581f3c2fd0186a4aed17bdf218f8820d165",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/idle_f08.png",
+      "sha256": "5df65b184d3745bb8ec6d8402343b7ea1263fe228f4cc23745c39e490768ce3c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/source/idle_sheet_3x3.png",
+      "sha256": "ed22383911b1bc84838e6255de5ab565258655d7e106c33fef0c60957a83889d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/amazon/imgs/idle/dr/source/idle_sheet_3x3_chromakey.png",
+      "sha256": "314daa036af94524c045693d9ba1c2a37c6cd595543a6023e267f4b13a489ece",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_fire_demon_color_calibrated_v03.png",
+      "sha256": "e6ec064f0b5e6497159e15eadcae66ee719cd920d6c0a79f1daf386eb4f25939",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_fire_demon_color_calibrated_v03_128.png",
+      "sha256": "f230db7abad7640814dcff4993a2a9c39a76c4633b5ca1b9bf9a24aed906af38",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_fire_demon_color_ul_v01.png",
+      "sha256": "d52d3c7d2e43310fd53a5d8081fee782729754b8afbc8c93c7ea04ae94982d95",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_fire_demon_color_ul_v01_128.png",
+      "sha256": "87dcf5783d06c4b6149c0645c71a9bb8ae4523577dbf123fa9e5d8fa93c488de",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+      "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01_128.png",
+      "sha256": "723493a0e6ac9f2348929c455793e7e50e3fb0308c6d26f9dca112d838303122",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02.png",
+      "sha256": "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02_128.png",
+      "sha256": "ff3a412f1c7e03a04f61c82f61f0d2b03e991d438c0bfd90db631b5d7631629b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_death_color_v04.png",
+      "sha256": "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_death_color_v04_128.png",
+      "sha256": "bf3c70b07211e6972014fef8e1642387a9e0df4290eea0f58e6b93636c644caa",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_cast_dr_v04.png",
+      "sha256": "8232c168c3c1e114c6be03004a919a832d8e02acae5b9a648f6782f688086b80",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_cast_dr_v04_128.png",
+      "sha256": "bccde12aaee21173a7b0286dee8f4c035ce001987215737535a75a1f05a318e9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_cast_ul_v01.png",
+      "sha256": "5897a9dd9d2d4fa3076fc93bcba921017fa0f203113ca4d08e4e966ae99c7490",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_cast_ul_v01_128.png",
+      "sha256": "bf337ac6a37f37087591aba4a13bdde13f99640cb2eb5309434df7a265edbe9c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_color_calibrated_v03.png",
+      "sha256": "84fbefaa2423948cb2a716aa9848a75a12745a4bfdc4a9ad446b95fe17bccee5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_color_calibrated_v03_128.png",
+      "sha256": "2f54d57dd7b759a0b2d9180a0ea2972b68216b80e29c82a36aad3a84d45ba215",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_color_ul_v05.png",
+      "sha256": "40547194e76662324b687df271b34edb767a5d6c57d1539d39ff4d32db39bad8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_color_ul_v05_128.png",
+      "sha256": "b38131a6c5f18a8ee36f0a1bab0ef78929a7c36c3a3f834a420870dfd42d8500",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_death_color_v04.png",
+      "sha256": "d39fac2c00f1aee495b1a3ea31fb4547c5d540432a35130fa5361614ce7ddd0b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_death_color_v04_128.png",
+      "sha256": "258085afa627176a921b0cb0c1173ee708a622b26c855e6c12ae333246c77d8a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_hit_dr_v02.png",
+      "sha256": "76c2d6d9427f78b0a67ca1f051ed323d61eb1ac3a2d88dcd09b027abbda8fea0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_hit_dr_v02_128.png",
+      "sha256": "59714810795be4de9912a48137d1e4ae74c6a0f7e067b037cdeb21a6f03fb1d6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_hit_ul_v04.png",
+      "sha256": "42fe16f9824683592ba23991bc556a828fe32b9fb2e4d627db5b8d69e57c1f58",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_mage_hit_ul_v04_128.png",
+      "sha256": "b93960aa59fa1bf986ce82c5da3a603db484a7c93585316c0382da0093be67b0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_cast_dr_v03.png",
+      "sha256": "8262b0dd3cf5b29443b5d98d10628a1e56581dae5f68189020ed2beac46a0f92",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_cast_dr_v03_128.png",
+      "sha256": "443c8dffa08ff9107834a00bf244b2abe865f8ad125e2a676731086f8dc610fc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_cast_ul_v01.png",
+      "sha256": "1b986f6a882fb6d5bf2477493a9dd5e392781e158c0aa1eecb764a3b56c2c713",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_cast_ul_v01_128.png",
+      "sha256": "91196858a137036b9900098b719134a3a890fc0adb2ba109b759596e3ce5109c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_color_calibrated_v04.png",
+      "sha256": "a967f2767667bb16cfae4167ae16570ad169246654455280f33eccca0fa44b8f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_color_calibrated_v04_128.png",
+      "sha256": "11eede572308fbf6e661d13659a61995ef3c067bebdefce2bf3df0f389997c11",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_color_ul_v07.png",
+      "sha256": "8f6d5e868e706e337fc56b3bbd58a9c8102a89f9d124faa7c3f4e4dc56014ab7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_color_ul_v07_128.png",
+      "sha256": "a6c81f77fd76e9dafcefba33edb24e69a727285371bac6b9f893485d914d6e15",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_death_color_v05.png",
+      "sha256": "f614dc8d42d194886c2f3d179b9ae4918f431a9a53e0cc7d0d704d550dac1a32",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_death_color_v05_128.png",
+      "sha256": "b23ed1b0b03a17de75c0142f29a083c52b7f8cc98f6b92ca9117a69ec58b52d3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_hit_dr_v01.png",
+      "sha256": "66e6a41a4de74288eab731cda2dda6369646d01ce93992f0a836b7d4add63395",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_hit_dr_v01_128.png",
+      "sha256": "d3658cd5eab49a660a76dc9f857df4dae7c72b0c1405c995eb6c9581f7608a99",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_hit_ul_v01.png",
+      "sha256": "7ff19e1d7a3e6e1deadf22b3e481021b53793705278b3bf1a554dd34066df913",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_necromancer_hit_ul_v01_128.png",
+      "sha256": "f98e0e4bc81bc1bed705dee94b700a30a5119141a36ffb71314740973de43710",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_mage_color_calibrated_v02.png",
+      "sha256": "885e0bdd2a34a40b9d472cd830108f46dd69f2fc4a170f7e94b89c10abcde334",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_mage_color_calibrated_v02_128.png",
+      "sha256": "b8ff7f42e57bf8aeebdc8f1836a99b7120aa9dc5939f9d50ffb709ea4ea54ec0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_mage_color_ul_v01.png",
+      "sha256": "ea9f16e8165b451c8be43247634a66123e4ac0baf34b2e5a368e63e15fc47e16",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_mage_color_ul_v01_128.png",
+      "sha256": "5ce9faf46bf37ab29d62e82906561e5b755cdfae361c5b850cce6440723bf736",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_warrior_color_calibrated_v02.png",
+      "sha256": "f86d92c8038ab47b1d66ab4e95ff4807fa3e91ddd89276f67f919b577be5e6c3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_warrior_color_calibrated_v02_128.png",
+      "sha256": "a23193454d3be7b9e2d5935767463485bd9ae752a48c60551446d760cc4f5a95",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_warrior_color_ul_v01.png",
+      "sha256": "c327f0b3b55e06ed7789075cc82fde8d17fceaa1a452de863c8a3ffb350bf951",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_skeleton_warrior_color_ul_v01_128.png",
+      "sha256": "96158cb9ffaa6573ab1dfec6404f948435e2b4d3d3b21cc8814a73712a6e54fd",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_mage_cast_dr_v01.png",
+      "sha256": "30c84e9dca4af794368639d5fa8b2c814d1b641837f4b8be69caa930ccd233e3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_mage_cast_dr_v02.png",
+      "sha256": "58c4abf31763544dae342fd77dc812e571f9f39cfe20224895a837b5ce0a0187",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_mage_cast_dr_v03.png",
+      "sha256": "58933d1c636e1520f8bc6af4565c0ab303ae1600cddef4deacd33e48199fc719",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_mage_hit_dr_v01.png",
+      "sha256": "79f925e36fa137cacc87f515b3ce0e25033577d4d4ab98811787d3ecb9414b33",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_mage_hit_ul_v01.png",
+      "sha256": "0184f1147b0c387a4023b648284b851440e7ee1d748921f15690672558055dfe",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_mage_hit_ul_v02.png",
+      "sha256": "eb2f1b3262676f8b2ba4d619f52ca2be0d95b4577926a1a381fe9cbf2e617164",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_mage_hit_ul_v03.png",
+      "sha256": "6ee5c1d94f4819b62fc71c5b5a2ce7bcd6c7eeeb95d3ba025e833512dc7521ba",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_necromancer_cast_dr_v01.png",
+      "sha256": "b2d87e81b2144605ae506f9bc61c1715eb2bf5deb63a32d29525220c49e1d100",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_necromancer_cast_dr_v02.png",
+      "sha256": "58d5b9a844c176dc386d0f0fef0846cfe99786534a3c977e1c28160d1017befc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_cast_spear_hidden_dr_v02.png",
+      "sha256": "59ea2ab032f37b1b76ba84942964ff21dcdd5095ef73bb1d33fd71cc34d55b0f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_cast_spear_hidden_dr_v02_128.png",
+      "sha256": "f048a2fc7e190c2ce6c72c6f9dc5bd5e8f31654b455dd0c267ef96f3d4b35929",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_cast_spear_hidden_ul_v04.png",
+      "sha256": "822ae999232063260ae0b63d2920d3e232d763af1b0dc976f590c7f197353eb8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_cast_spear_hidden_ul_v04_128.png",
+      "sha256": "fdbdaf5040012f52e11ad2f373198579cbad08028fbe049d3fdbfe65c74f9d0e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_hit_spear_hidden_dr_v02.png",
+      "sha256": "a921486bec40be843d02efdce8617e2a1b764c33e6a9e8e4278cf76c92fa9e01",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_hit_spear_hidden_dr_v02_128.png",
+      "sha256": "4ac2a439278cf56595fda6bd7d68f2c4aa98eb5cc96d00b741f9457f615bcb4a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_hit_spear_hidden_ul_v02.png",
+      "sha256": "0eb88380ebee80e99d1208b0adf5dca6b91ed368c94039ae298b9c4bb0c297af",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_hit_spear_hidden_ul_v02_128.png",
+      "sha256": "cab5285db55fc18a208daae32fe03f1bc5c0ceaedcbdd3c7a4b1e8bb36eb0da5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_idle_unarmed_dr_v02.png",
+      "sha256": "4f9388311ad640336a5f9cb0eac90831849f885d2ccae01195b06bcc0fba56ab",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_idle_unarmed_dr_v02_128.png",
+      "sha256": "415f1ce901927c50a4bf9ac195d1d914f71d2b23b31f92ccca0290bbb6d6d9c9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_idle_unarmed_ul_v01.png",
+      "sha256": "08bf56069d3fd4365995b5a8a4f388ba15b8c18c4018bd5c2f2ad97fecdb41a2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_idle_unarmed_ul_v01_128.png",
+      "sha256": "af2649b7b45afdd0b160bf54684c72068db40b3b47d685981c221fe84446247f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_melee_attack_held_dr_v03.png",
+      "sha256": "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_melee_attack_held_dr_v03_128.png",
+      "sha256": "246ca9b17b94b6df6513f1bc4852a5dc8e7144184f356cd53ffb9a236479dbdf",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_melee_attack_held_ul_v08.png",
+      "sha256": "e1a2c54c286adbd01c4a98a1a7f023d9b07880459c21c5e42994a8eeaa922ffe",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_hunter_melee_attack_held_ul_v08_128.png",
+      "sha256": "4623692727e3ec869c1cc0271836b65eb6b0f83adbbe14fac43e5d505bc96ca6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v01.png",
+      "sha256": "3edb4127c5ce47d3cc9e32c12e0e6033cd4ead7d71eede72b90d4b2b40942bc7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v01_128.png",
+      "sha256": "45c0ea33bfac4a1a32274494861fada5856f79b3b3efa23986ddbd946f042ed5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v02.png",
+      "sha256": "864dfbac76ae5a777856856741160c0e7612fd5a92370f6ffe0811bd43d06a52",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v02_128.png",
+      "sha256": "9aa48d35f557f8216f64c89646d7cf3833331c96680d559b8152c4a3355245ed",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v03.png",
+      "sha256": "8a32464a197bce0f7a68651ab59393ab6e7edd470f6cd496b05d351ef1627bc1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v03_128.png",
+      "sha256": "588b6092d35e3d6aff1eaa176ecad4db48bc315b3d22ab72ae786bdb963f5545",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v04.png",
+      "sha256": "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_death_color_v04_128.png",
+      "sha256": "bf3c70b07211e6972014fef8e1642387a9e0df4290eea0f58e6b93636c644caa",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_lineart_v03.png",
+      "sha256": "a548d6ed10a226ef4a17b0d532acd11f9d87724099eda8156421fefedaf0d337",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_lineart_v03_128.png",
+      "sha256": "d4650946f48d5b8def4bc983a81c44c9ebc9f8825210bef055f7c8c2d248540b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_spear_dropped_color_v04.png",
+      "sha256": "5a7624bd3ee3fcd1ecb84771eec129c93269f484c77460a6d3399001e5d2a73c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_spear_dropped_color_v04_128.png",
+      "sha256": "43ea4bd765b81ba76079d09ba7b8c3412d599b2c161f9530c142fd65bd5a4320",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_spear_projectile_color_v01.png",
+      "sha256": "bb2d2d20f0a3b901731a663ab02f52dc3ecb56e4e578b0cf7b86d4e2c3a155f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_spear_projectile_color_v01_128.png",
+      "sha256": "d1d463a07a41d39145e824c1c77a482ad5ff2f80f5a7a74709ba56edf3a73e26",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_unarmed_color_ul_v01.png",
+      "sha256": "81d0c32c0214b1780505e13261f6db8b36f2a697608a48d4754586813973d475",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_unarmed_color_ul_v01_128.png",
+      "sha256": "cccf819ba29a7df4dbe0cc1e7122b3773b604e4037c3e26bf84cef479e5fd248",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_unarmed_color_v01.png",
+      "sha256": "d0d2fbfbaa2c56c5af554968ce0056a7a14abe115a4e3b76e016a9ee1e1e6dd6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_hunter_unarmed_color_v01_128.png",
+      "sha256": "d19bc274c0fc3dfac083e6afef2860d32da53fe72307c00f2ba9e9da5a6af307",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_arcane_bolt_projectile_color_v02.png",
+      "sha256": "6d8b8b241b0b9cce2e7a182e0026d9975b269ddb2eb6fb923e7f4913ead7f253",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_arcane_bolt_projectile_color_v02_128.png",
+      "sha256": "7f1d3d89819c9336db949c9ab3921c8c61a3eb2da489e2800b3a745983db8513",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v01.png",
+      "sha256": "a2dd99fe939e13116555e8d4705395effa4fc2675c0bb75247fd760851f3bcd4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v01_128.png",
+      "sha256": "bc2516cb82033844464dbf5d259788398c3b04fdd7aeee212dcd00859de4ccb4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v02.png",
+      "sha256": "dcd55f0ee69a4f58c70b71d4bc4597632d8d1c88850a2227c808fb6655d2aadf",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v02_128.png",
+      "sha256": "dfbcdf11e66c63174d5377a4dcfb5c16f39d500a537d3c15a5e91de4efbaaa2b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v03.png",
+      "sha256": "f1e14ec7487a5206977d99589660b92e497dcf6c6b272e32bccaa14d00dfed52",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v03_128.png",
+      "sha256": "ed0b4ca4ad6014d83f3f9eebab8d40e088419b21ff3cdc79edf507064c0c2efc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v04.png",
+      "sha256": "d39fac2c00f1aee495b1a3ea31fb4547c5d540432a35130fa5361614ce7ddd0b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_mage_death_color_v04_128.png",
+      "sha256": "258085afa627176a921b0cb0c1173ee708a622b26c855e6c12ae333246c77d8a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_bone_spear_projectile_color_v01.png",
+      "sha256": "27a060dc53452fa5b6ec1424e657d7b3c5d4d69a119dfb92510da22b388c666a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_bone_spear_projectile_color_v01_128.png",
+      "sha256": "d02703988bc3999638975103ef51eb690064832291862408f39df0c0db1ddd46",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v01.png",
+      "sha256": "cecb070aec4fadcf1efc1149576fc10a2ca8cbb4a9c75a67aac16524f68e6c88",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v01_128.png",
+      "sha256": "5302d1f65ade339331cc40bbf9ec6fb3f0591e5cd32df469c88a430fff801acc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v02.png",
+      "sha256": "8fc0cb0e7f27b7b6b66c07717b472bc4f3dc6f5b7d39db5453535e3dfa710c13",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v02_128.png",
+      "sha256": "aeca284312530ad80f33a6b634df013978b2bbe179a388683c4d502d461bd2ed",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v03.png",
+      "sha256": "0aa21f32b5a0c2fff92031283ae05d391251b4557771242de87ba66b4ea17b24",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v03_128.png",
+      "sha256": "7976f19b20d5162bce2825596011a961eccef96d16eca227832c49a0066c254d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v04.png",
+      "sha256": "7fa82d9c4c5e598366172300d668176d2d6faf672fc3d9a7bd46923f272528bc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v04_128.png",
+      "sha256": "a94771195442255fc8c0c838f10be6099ce3e533895acc10978c009bbcf24075",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v05.png",
+      "sha256": "f614dc8d42d194886c2f3d179b9ae4918f431a9a53e0cc7d0d704d550dac1a32",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_death_color_v05_128.png",
+      "sha256": "b23ed1b0b03a17de75c0142f29a083c52b7f8cc98f6b92ca9117a69ec58b52d3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_pale_orb_projectile_color_v02.png",
+      "sha256": "ce6903a3fae323175a35e2192a32af91da32e5339fff5912d551e4b81d054483",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_pale_orb_projectile_color_v02_128.png",
+      "sha256": "4f4ddc462fbb2cd34c52d79d2e32c47d5479b92943688dd282ae140010c02881",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_pale_orb_projectile_color_v03.png",
+      "sha256": "2a36941104fbc266be6a1d9cb3e3c903e682aaff7e06bb5eb47b02e245cfe9d7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_necromancer_pale_orb_projectile_color_v03_128.png",
+      "sha256": "cdf4b1b4299fd7dd8d159ac80db1b7b18cf911bbb95bb998dbb1166a2d4c0eb7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_cast_spear_hidden_dr_chroma_source_v02.png",
+      "sha256": "725a318f6e274e51ff6861f64c938b4b0e010df864404e9cf6c41616cc523cb7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_cast_spear_hidden_ul_chroma_source_v04.png",
+      "sha256": "c8bd3ee21931698cb41f4478fb3319ce122f09e3f9140c367ffe715e0d14b8e6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_hit_spear_hidden_dr_chroma_source_v02.png",
+      "sha256": "03739cf470e46169d6d227fd5eb7a9bc6d81dd2673c3e59cf52fb8426bea9783",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_hit_spear_hidden_ul_chroma_source_v02.png",
+      "sha256": "ccd54fbdd19d180fc2b60968be452fe9917593b8847dcbc8e91c21664885260c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_idle_unarmed_dr_user_approved_chroma_source_v01.png",
+      "sha256": "22a7152dc9499ed46f01d7444219d55b73cf309b538ad0ad3a32675987e57e53",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_idle_unarmed_ul_chroma_source_v01.png",
+      "sha256": "811294add93867685c34536c13d2173bc7042608642123bced39691bc01cbb53",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_melee_attack_held_dr_chroma_source_v03.png",
+      "sha256": "074ea8500ce75f6c739f7627a1ab9b9ef216870955e180c4978811af62fa3a23",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/concepts/doge_hunter_melee_attack_held_ul_chroma_source_v08.png",
+      "sha256": "a872c6bae4dd29f5b550a7f6034a977c5fb96448c2a404eadd796ebde1b3c402",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_fire_demon_color_calibrated_v02.png",
+      "sha256": "64a653420af0d98406e648a34312a7060c40c217ea184992e215593b6b8ec6ac",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_fire_demon_color_calibrated_v02_128.png",
+      "sha256": "82ea054b02e28f402e6fbb6e3a93f01fde81f3b7b2cb6097c809e919ceb175f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_color_ul_v01.png",
+      "sha256": "89a2eac037485e3acc7b988d7d7065f11b26d14fe371772d1a0586a4e64f1060",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_color_ul_v01_128.png",
+      "sha256": "c3f1aef28730e7aadff4baa48e04994a9e3a72e41f95c738e235a47b6eb518ca",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_dropped_color_v01.png",
+      "sha256": "e8013da459543f610dfccda1e7b4226443c13596dde263052b757f0a13ae09bc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_dropped_color_v01_128.png",
+      "sha256": "cebb9fa0985abf82553138a08f4e1b0d0ac9d0f17bf4754fb5e7383819644d53",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_dropped_color_v02.png",
+      "sha256": "bc5b4bd204506749404e22e0000a53988bc87261561d856acc7f8acc95a58176",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_dropped_color_v02_128.png",
+      "sha256": "379d6f9dccc8f1577aa4a76537645c7ae422c81644dd1cfe0695c0ca74a72a23",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_dropped_color_v03.png",
+      "sha256": "a652531456a4474b5e35ca38181dda35d8115deb4be0f4a72b300112707cd2c3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_dropped_color_v03_128.png",
+      "sha256": "47921728a10c7cd6a338bbd648b2cc9e5e9154e4cf2c58c4bd28f9198be23fb2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_projectile_color_v02.png",
+      "sha256": "6223c881cbeb3712566185d525c202fd4f1124bde007630d559b497db2edc478",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_projectile_color_v02_128.png",
+      "sha256": "f4e8636d99aaf49e1baa7c6d84d8340aac87570b52a2ec315daa866e88fd3950",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_projectile_color_v03.png",
+      "sha256": "49177b869ee5bbb7f84753d50e290a5403bb96002d61f13b5f9ea13f6182c985",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_hunter_spear_projectile_color_v03_128.png",
+      "sha256": "bea75e4e47782804f5bcedff8b72403a086b5b8184f1fdb22b29cf62963586bd",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_arcane_bolt_projectile_color_v01.png",
+      "sha256": "c440569169f2849059977201100a5e6d38781b2320e197a0dd0315f4df13c12d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_arcane_bolt_projectile_color_v01_128.png",
+      "sha256": "1d4bdf6378e5deaf47105413ae741aec7703867e84a01e768db73294e5b5e153",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_calibrated_v01.png",
+      "sha256": "cd5fb35de89342b1faba1aa701f6fe903e5453f33ea5e3b4382f440a936654d6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_calibrated_v01_128.png",
+      "sha256": "09de08dc10d7229d8f263f98e585d4012f549a72d06518d3afe674fbda361a04",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_calibrated_v02.png",
+      "sha256": "c63813e6393d4a5f304e11b549e13a51758dca0e463e058ad98b6f729e90c31c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_calibrated_v02_128.png",
+      "sha256": "27319aee8a6008ccbc5bb7ce77153a583a7a736b605690637ddfcb61c0975861",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v01.png",
+      "sha256": "217d92fcd7aa0ee3867fe3c7c7ab192cc1d3adb92843ad0a83b0590ab5065ec4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v01_128.png",
+      "sha256": "fa3148b83d00918fd14aff9f7d3af05861ae6368e7e9b760fe681361e1895aa2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v02.png",
+      "sha256": "eb85c62dac664aa2873180322274d2b01be1a5859e8338094e84258fca31279a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v02_128.png",
+      "sha256": "33f8cc53af287736aa67a164f605d5a063ff5eb26e746454b46f16002f04bb3c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v03.png",
+      "sha256": "4bea70f1f95ed4c97f2cee83eff09a2dc60daf1e7b2f5a2c633f96434e0a4639",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v03_128.png",
+      "sha256": "eb0bd32260f580c92f229aeae2f36d71da82f43bf549fdef701b17b19013ae71",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v04.png",
+      "sha256": "48629af45bbe6bc71fc8f9621ec78a6012f198b36454985fbc64a18c3a8bea67",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_mage_color_ul_v04_128.png",
+      "sha256": "3ad9bda1238e5fc5baddfd9390c5d44c609ba870d7f29e819932df05186415e4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_calibrated_v01.png",
+      "sha256": "e939c209c403d04bfd150db9fbbfbd5abba48d88b858f3e888b9a1837508093f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_calibrated_v01_128.png",
+      "sha256": "1dc8f0a9bf674224404798901c7d5247a898c2d2e6c98fa9a21c68123dcfbaf9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_calibrated_v02.png",
+      "sha256": "7ec2b6844980ed1fa09cc823be6c74c65352c5745f12d13d78f04d9db6a988b0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_calibrated_v02_128.png",
+      "sha256": "0f858a4aeed9319888583e8a2f86653866a34884b99708b5fddfc132f78471c8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_calibrated_v03.png",
+      "sha256": "6f0dbd8695f4fcd437378eff5ad08ba38f1ca7665d714707049fddd563d1308f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_calibrated_v03_128.png",
+      "sha256": "089711b55329c152de50a9d0c0e3b6383906fd7309dbb2848af4a29b157ec130",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v01.png",
+      "sha256": "1ffb4d93ac11c86e7e2d626813bc98db521b5d0755c4c2d1d21cc0eef1c2e573",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v01_128.png",
+      "sha256": "6abf1c7e4639c40f55fc5dfe982a4584ac91ee8d7afbafdc3862904c4d2303ec",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v02.png",
+      "sha256": "0f18a5972de61f09f3a63e6d121e29f39dda5d949a7b83e41bd1c27099abba4f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v02_128.png",
+      "sha256": "c2c88cda40327af12cc05d97ed9f6100ca4f6eec88e28e8a24244003758b8f69",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v03.png",
+      "sha256": "b05a13540002cbfdfb71dff18fc112fb84cc756a9e451f82a8d84148d1ca2729",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v03_128.png",
+      "sha256": "f9281ba94f921f98aa079ec940252a5b845f72545b0b2e4faa6381b83befdad3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v04.png",
+      "sha256": "a734372969ac45c07a3d48732a446ebeccc678d3e6baa3f45358251912f8d1de",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v04_128.png",
+      "sha256": "b179c86507ed4fd89ffd508ba742e91f64482bb466391b032d7f04653aab9975",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v05.png",
+      "sha256": "7546239fb52e91f21cddda111c95265de5ef4cb3c2cc1939d0ac40791358fce0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_v05_128.png",
+      "sha256": "9d85a4d34457ec3fac275d2a6986cd4a519dd58a7ad920f5953dae7142f3130c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_wrong_far_hand_v06.png",
+      "sha256": "1c8c1e2a84acafe01826d31c7407ad008a131cb5ccd766ed44cf3a612ea98d56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_color_ul_wrong_far_hand_v06_128.png",
+      "sha256": "c71b19259a4f354cf12b2808431327ca9c85a9621436e199c47908a0fbc2d024",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_pale_orb_projectile_color_v01.png",
+      "sha256": "6de9704b4692186dc4f0f4a3fa88f8ef7f8b3533be4635b3714e24a43baefa09",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_necromancer_pale_orb_projectile_color_v01_128.png",
+      "sha256": "d994850f29a75ecff1f97e53b422e28fc2df88043fbc0973a85596e0adc05127",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_skeleton_mage_color_calibrated_v01.png",
+      "sha256": "e045f23b702d410cd288d5be970769f072837f2d586114518ba3c6ba05f1ecfa",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_skeleton_mage_color_calibrated_v01_128.png",
+      "sha256": "4b7a575267b77d8923d520f71f76a4ba0068e3291c4f657a34f1f58e4c7d82f5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_skeleton_warrior_color_calibrated_v01.png",
+      "sha256": "e1f8e19249559b125479aa406101fc570b3e2a951ba751dec155c24c36c39fcd",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_capsule_skeleton_warrior_color_calibrated_v01_128.png",
+      "sha256": "1644c81f7782f7994a2ed61ddd7d3b499f19f3a94e09566855609a55124ad508",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_cast_spear_hidden_dr_body_too_wide_chroma_source_rejected_v01.png",
+      "sha256": "42d11350518d1b8190b7e85593703fdd6599f8bf1971a77e02bceb761728e4a8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_cast_spear_hidden_ul_limbs_and_far_hand_layer_chroma_source_rejected_v02.png",
+      "sha256": "42d6a9851e0e8a4fa096dcd30a3e9a5ce402e4eb7d9d7c6c287db8c029614bac",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_cast_spear_hidden_ul_limbs_and_far_hand_layer_rejected_v02.png",
+      "sha256": "ef6589de91bc7c573f538a7e96eeab81a9ca1520471a7d5d39edb1a8f1e32acb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_cast_spear_hidden_ul_limbs_and_far_hand_layer_rejected_v02_128.png",
+      "sha256": "34129f53c6e10e9e16ee8eefd08585559bc23805a8e83092091a14ac1347673d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_cast_spear_hidden_ul_lower_body_too_wide_chroma_source_rejected_v03.png",
+      "sha256": "ad8018f3fdab2be5bc205695e0f8da16be805a795be37b3852e5b7869331efce",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_cast_spear_hidden_ul_wrong_front_view_chroma_source_rejected_v01.png",
+      "sha256": "dd3123ebdef5eefdc6d5ed2b9fc3b2ff79bd14e1f7b91074920a9c01cdf7c6f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_held_dr_separate_state_chroma_source_superseded_v02.png",
+      "sha256": "7de35ebcacaaab18cc20c178a7ca6fea895665a765e02cfaa8929ee583af4fb9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_held_dr_separate_state_superseded_v02.png",
+      "sha256": "a3e83c6130fee07f78b0eb29dcac7b70fa5cc9d060249b8a858932c52d9e8dd5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_held_dr_separate_state_superseded_v02_128.png",
+      "sha256": "213fc74309c1f5976e1f1ecf097fb774a092687f6ea1666a41c8cc3505b4b391",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_held_dr_visible_spear_paws_chroma_source_rejected_v01.png",
+      "sha256": "759ae952d5140498b2da8a4851e432297f57eb4ff0dfd8eb5d3e46fbd01d9abb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_dr_identity_drift_chroma_source_superseded_v01.png",
+      "sha256": "d5a7363a99c81db77336893566628ad75d73eb2784bceeb5c580ce4e6b4a0af8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_dr_identity_drift_superseded_v01.png",
+      "sha256": "a79ff861898efebb6e5578fa579a79da23f062c71838b845f12fe6fc95e94b02",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_dr_identity_drift_superseded_v01_128.png",
+      "sha256": "aa18042dfb0b022006669dd0548ad9ec7e1dbf3b00ecae3c7c4388f0d8230983",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_extra_ear_rear_tear_chroma_source_rejected_v01.png",
+      "sha256": "c20d5fb232d4b7829d4ea4f48e11e3f388c0d53e5789ce7eedf472bce6d4714e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_parallel_tears_not_selected_chroma_source_rejected_v05.png",
+      "sha256": "1eedea0f4c72f17fc6a31ac4849c01fbfaf30742ce469bc34c1d2719630011e4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_parallel_tears_not_selected_rejected_v05.png",
+      "sha256": "db4f6e564a522f1630d361e668f69bf6200e3ac6063b9d1608c4e406a8537fdd",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_parallel_tears_not_selected_rejected_v05_128.png",
+      "sha256": "a0c1a708ffb9c99720e78840d4ac5919fa639f863edc600963d5d21b1fedfd0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_upright_disconnected_far_tear_chroma_source_rejected_v04.png",
+      "sha256": "40924d77aa62d73196ee2920e24443c9064800a64e952e5cea157fe758cc1168",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_upright_pose_wrong_tears_chroma_source_rejected_v02.png",
+      "sha256": "268eaeb6032b5c302cbc4195e601efe67063034704b6e30012f85821915fbf5a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_upright_pose_wrong_tears_rejected_v02.png",
+      "sha256": "b4797f824d391cc606827e33fadafe9b2589857ae961fa51dca1c185791f35bc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_upright_pose_wrong_tears_rejected_v02_128.png",
+      "sha256": "ebc8f82187a315e3fe1508ce15b3f9f2fe837663b4c2ff013e05ef6c186c279d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_hit_spear_hidden_ul_upright_rear_tear_visible_hands_chroma_source_rejected_v03.png",
+      "sha256": "127e7a554561972071c70299bc3e00105a0a92c685986a4938b682d9e8812e49",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_exact_removal_rejected_v01.png",
+      "sha256": "5fff1454e1293445ebbf8cf5acaed284de7a3d61656af97ca6dc90b548abfe5d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_exact_removal_rejected_v01_128.png",
+      "sha256": "cb3baf9d550aa9bdd3e7311e759c7fb24ae8a3207b52361b7e75da023ba102db",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_restylized_rejected_v01.png",
+      "sha256": "fcc7ade8ed80479e8a9ef80fca4828c77c234d2636deee175dbb0cc4579dfe97",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_restylized_rejected_v02.png",
+      "sha256": "8e7435042a67507093b520bda37f1fbbb4b1992c52c10ce3ea5b414b43d7ec74",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_restylized_rejected_v03.png",
+      "sha256": "1d0231d3f905069eca27c29ce6ce688ac713b9555d54a57271a2efddf774f040",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_wrong_full_bbox_scale_v01.png",
+      "sha256": "e13ff1e2169dc1e34ee024f5237c27c5caf7c6680cb72aa5afa666cfeead2133",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_wrong_full_bbox_scale_v01_128.png",
+      "sha256": "d856e2579352f7188b8769db93f960996dc0af88d3bf9f9b0094aa8f8ac2f691",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_idle_unarmed_dr_wrong_paw_mask_rejected_v01.png",
+      "sha256": "e177cf033006751c4943bd361fda92f2f4af9ea11bd1a18b793d72ee61611a53",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_dr_grip_too_far_back_chroma_source_rejected_v02.png",
+      "sha256": "e83e70e155dfb0f34fa6d430b90f92c6ff003b9a45a33b38863224d5fdcc12f0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_dr_grip_too_far_back_rejected_v02.png",
+      "sha256": "550829498dfcc0f90b5baccae46092a63891f583fac366e98fc41cf6b1ef4a27",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_dr_grip_too_far_back_rejected_v02_128.png",
+      "sha256": "fc1cc1f5b41444a78ed9f4e67d6a33ed0fc714d139b6e18294685e6a2bef1a14",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_dr_visible_arms_chroma_source_rejected_v01.png",
+      "sha256": "74b65cfca55ececa51a11412b18e11a9909bcd32990666643c859e9c31be318e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_dr_visible_arms_rejected_v01.png",
+      "sha256": "599611024e92db068d59546c3c14ae22b189d198a1bd10c903c301d7694be068",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_dr_visible_arms_rejected_v01_128.png",
+      "sha256": "a4a68d4411d02e69e04521cb2b191e638973c9f1ae9215569f8ac496f8bc2159",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_body_too_wide_chroma_source_rejected_v06.png",
+      "sha256": "e4778977aad1c17cfe9268321e253a74c1686cd54f4eb56800d6f87a68e69dd2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_body_too_wide_rejected_v06.png",
+      "sha256": "e6e4b564832c0b29b7b2c409b6af82d8c1d5f148285e4506fb21bdd8c13f2ac2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_body_too_wide_rejected_v06_128.png",
+      "sha256": "8f9605011cbf95b6823b5991a77dd5107d45fbb8372a1fd2aa59857d5e29b620",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_compact_but_rear_grip_chroma_source_rejected_v04.png",
+      "sha256": "5cc7de9a5281ae92187256d9b6880522115d9281874fe0288b4672983d0c19d9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_grip_too_far_back_chroma_source_rejected_v02.png",
+      "sha256": "d4f9d33f1e935c1d7c2f22c5f678f61cb3d2ea2127c152586cb9f61457cb87ad",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_overextended_butt_chroma_source_rejected_v05.png",
+      "sha256": "feb73018af68a70f1dcabf919efd2de39e48be90c31fcddc949ae5bef4820408",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_overextended_butt_rejected_v05.png",
+      "sha256": "8749d6fde4447b1736d0f955c315d7fa9d4265c3b5aa5b37c7186f6d6f4ebc2f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_overextended_butt_rejected_v05_128.png",
+      "sha256": "85a2c08a7b3a114f6c0aaa97781f825dc1ef6824fa65e82650d3d611f235658e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_overlong_spear_chroma_source_rejected_v03.png",
+      "sha256": "26e0216d327a8cbeda6a20e50f00710b7abfc343934229d89267d41b9fbcc220",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_upward_pitch_chroma_source_rejected_v07.png",
+      "sha256": "e5f063e3cf23c54889a9f8f4a53177e812505ee165904e19578b878d3745b22c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_upward_pitch_rejected_v07.png",
+      "sha256": "c43b7f9b5903645c4e4f74ed7053ee4616404046244b11526cf520ad6a218633",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_upward_pitch_rejected_v07_128.png",
+      "sha256": "a93cbef6013ff359dc863119107842b4a7a8172322e2b5504a5339d14819ca6f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_visible_arms_chroma_source_rejected_v01.png",
+      "sha256": "fcd726895328b7a3fd71778fe5eac88474ac310f51576bf5a44ef2321fe55c1c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_visible_arms_rejected_v01.png",
+      "sha256": "17c29015ad73c670a6963d04ed7c594422c58065f6d44d0cb3544aa44b3eb02b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_melee_attack_held_ul_visible_arms_rejected_v01_128.png",
+      "sha256": "49fcd9d39bbe85e4cd793071f279cd8dabca9ed977493acb5f91903dc2537731",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_thrown_attack_held_dr_floating_paw_chroma_source_rejected_v01.png",
+      "sha256": "59323c5e9ad2a8944a80a806b926443ebc834a01c33eb2cd8a699957290311db",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_thrown_attack_held_dr_reuse_melee_instead_chroma_source_rejected_v02.png",
+      "sha256": "bccda477224623e4a9a550d8de1d6b84d54a12d59c93add907a82c7063f867d9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_thrown_attack_held_dr_reuse_melee_instead_rejected_v02.png",
+      "sha256": "b4eef3a99b04d3c75c78c7396225b577d314c600d2075eff6133bdc17fa511c8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/doge/rejected/superseded/doge_hunter_thrown_attack_held_dr_reuse_melee_instead_rejected_v02_128.png",
+      "sha256": "13622cde2da5610aa0e4da372f2400e26864606dea135585b6d3faf17ef8c075",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_color_ul_v01.png",
+      "sha256": "4d09c98b72ba2310874844de9216bd06ddf69447c0b87dc89576dac01814a2eb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_color_ul_v01_128.png",
+      "sha256": "dcf189f1a6092db5ff9070015049f855b741da7e1167a2a15104388a8c829b1a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_color_v05.png",
+      "sha256": "55850716a198201e3756ae0eb34e1f024d472fb1a1a020fbcee671b219c1121a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_color_v05_128.png",
+      "sha256": "9922e2303c7d0d0c15a1e918b9970b583f308ae1e03048f2cc45d3729ddd20ce",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_death_color_v03.png",
+      "sha256": "03b9916ed03a0d77fb248ab642039c41788a3ad259d73b51c2ab27f73f4599ef",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_death_color_v03_128.png",
+      "sha256": "561c93c1b3f01738b7ed6cbe4fd93466ebfd8ef30a2bbaaecbf72f66427b273a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+      "sha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01_128.png",
+      "sha256": "afd88fafaca13d1cda6a2c0db40e08acd537492d595532cee48f2453d7b4dce2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+      "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06_128.png",
+      "sha256": "6b816acd9688a078a60d24cb4ef16d0e69cc5a876fae7e9405a6f9ef99cd6c0e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_dr_v03.png",
+      "sha256": "3d178d9af2a9a093c3792f0e22d760cb21c1e45669b50b81c2e5bd8381a2d9f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_dr_v03_128.png",
+      "sha256": "e82bb86c6bb99515f9b7ce201d4915a1033d8b2e36354f27422f419559320d57",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_dr_v01.png",
+      "sha256": "6bdeab9a34fccd6be3c7179fb3bd62b4a12e682c35d2be32843fbb87d349c528",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_dr_v02.png",
+      "sha256": "4ed35ad29cfcd3512685149033a23dff5b78b72dd537090796407049dd8948fa",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_dr_v03.png",
+      "sha256": "931e6c61e27e38ed80d143a4919e65c6007752a7f09a64487150d10cba52ee32",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_dr_v04.png",
+      "sha256": "17d47bc9738b0464524c9659eb25221214dd791f9c87f98561712bbc1f3c2546",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_dr_v04_128.png",
+      "sha256": "6a552380e55a50fd87929ec37ebd5105325deeff0b44e44305e383d5b9de2df1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_dr_v05.png",
+      "sha256": "0ea0f80bd33c5250fdf4f3446bc78e2d625a5b6c18b7d4bd127134b93dc7cfc3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_dr_v05_128.png",
+      "sha256": "a906021cea153c62a0f1397b12a0d3eb3ef6cf897479afb4d2d8f2d64b743fe1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v01.png",
+      "sha256": "7bf956ac3b4b1b03778bf67bb98ad0cd30d85fb27c05cb184a5592b43955d2ec",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v02.png",
+      "sha256": "4b3e43aeefeba5090608ac48b36f4d9d52e93eb3a8f38752037bbe3f92c0cb2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v03.png",
+      "sha256": "304351472af04f038ccbae49379b5f6dd2ad672a356012799023f765e9e6180f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v04.png",
+      "sha256": "054dad797a057a0279e0ad2a4a7339607c8a483faa3d34f004bc3edbf8b9a5e6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v05.png",
+      "sha256": "df35728ec9c1b5789453c1ba9f1fc04b4ef7d34d4894aa8273700f17f57c9e1e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v05_128.png",
+      "sha256": "441b897efe94af88fc6628a964689618b71866cdfac73b3c217fb53cec6045e4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v06.png",
+      "sha256": "6e7301ef389350211171a057894ce01adf88ab783215d36e47e703d3083f17f6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_cast_ul_v06_128.png",
+      "sha256": "e20a1190f09f6b54e53699c3cfae8bb76509b1e4c4ea40c47479929f787954a0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v01.png",
+      "sha256": "cd5febb7ab726b1f2a34aca01d689ea8f6b12e2ae600843780745b00ed18e565",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v01_128.png",
+      "sha256": "9e100ba6880270960dc8863389badc76c2d0c6d3befe51c8ef51126cb5a6c9c8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v02.png",
+      "sha256": "a2f93c4592aae7d19099d92bb8869cd72c625f74da15d4c63d122f0a5113575f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v02_128.png",
+      "sha256": "653a0f5c60852a9ecd5de8cfdba890813765d57239cbebf13f9907188d679af4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v03.png",
+      "sha256": "03b9916ed03a0d77fb248ab642039c41788a3ad259d73b51c2ab27f73f4599ef",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_charger_death_color_v03_128.png",
+      "sha256": "561c93c1b3f01738b7ed6cbe4fd93466ebfd8ef30a2bbaaecbf72f66427b273a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_dr_v01.png",
+      "sha256": "e211d1a661451611c7e4ac9f2c0c06ee8f5f30eb95296fc156dfe75ac66d2b2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_dr_v02.png",
+      "sha256": "b552d1138eff719f535b971f2eae1f3cf4c79e240e6d116f3b725dd0d9f021e1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_dr_v02_128.png",
+      "sha256": "231105b173a528d8cd82c5a8c02a359946d837df1658b35b87d75dd8b6cad884",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_dr_v03.png",
+      "sha256": "1f68cf3a95d635b91ccf28b0e2393b2da6c48125d67ec1e54bf3675ef4cd0469",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_dr_v03_128.png",
+      "sha256": "dedaeb3ac910440d949dbb24dcb6fc155bd466798b324167ad6222bfe6cdcf5b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v01.png",
+      "sha256": "21262116945e8b99ac203d36b8137d3ac62d40e15b08952de88724950e44750c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v02.png",
+      "sha256": "7688fb0dfc8787ccf900351fd948d8becd4ac59456f913d921d80c14f3df16bb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v03.png",
+      "sha256": "94e26a90461b8bc5caa212fd8f33b722282ba13e0c7a3fdbec64d7449df17d9e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v04.png",
+      "sha256": "bf7125c70e761c7b4def328f9a9bb15e0c1ab7618cebdcadb0b8fbc9e2dce2a2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v05.png",
+      "sha256": "19238ca316df4c3bb8624b770abc2849c8f9e293229291a860b919ebdcf820ba",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v05_128.png",
+      "sha256": "d5e13ea9d239f5bb61fa91439be4dbf66e369b6c3e40a0beeccda192cb56eca7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v06.png",
+      "sha256": "33ea6fb3c1e530eedf13cbe3e984d334219cd5fd3d988e117d2e8e81ca04f11b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v06_128.png",
+      "sha256": "726398d96b57dfb31ca9c2bec80005632d2f2ea75a13d6ec9ffdc82c47a240a3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v07.png",
+      "sha256": "6f8496c3ba1f6ac426191015161f753b86d6b10a02614f12963e494afaa9f4ff",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_hit_ul_v07_128.png",
+      "sha256": "1af7545cdffb20024740750113763a8458d038b3f1347af4c6b37d7ae6e43245",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v01.png",
+      "sha256": "8fdad45b513a5985c6e04a31e8089cace905c06226290b7e16294864fe9ad1ea",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v02.png",
+      "sha256": "640999b271f6330886c6d84d350a4d75c01140e5bb7c97cb7f0768af471e5f0f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v03.png",
+      "sha256": "81843eb8f3d8ebe4407d611de5510565dea7b0dfb42e5055cd1638ee1423c629",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v04.png",
+      "sha256": "b8655e94501cf03e4f15cb7923cce2c06c15a54940dbf1cf013ad65007459d4c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v04_128.png",
+      "sha256": "3dca50d0ec0da98cd21299e6595ba9cba36e1a51efccb13e4ab0758454891eb5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v05.png",
+      "sha256": "0f750a66ec8b9d2a1e6b0a37a90446011c5ddfe5cb837fe64b83bb0298a0b7d3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v05_128.png",
+      "sha256": "f4a9b66c3832a169ff2c3e70d9091d1cc236ba4b9a149a53da5a7b76a99e9801",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v06.png",
+      "sha256": "4c5e0f8f5b401dc0db66f0d9b3094be81e4e60e8becb22103c14e2c37f73b64d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v06_128.png",
+      "sha256": "7efcc910b43f5b9c4b336f93afc173e5f923c580d4ce900b5b0fe571438e550c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v07.png",
+      "sha256": "a6509271c6fea220f5322e82e3ac61cdecf9d4d0b0158a0099e231e4b262d4b4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v08.png",
+      "sha256": "bd5ff82e78be087135aa8068d838621dfa8c0aa605f7cc74efaef09a740a7edc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v08_128.png",
+      "sha256": "3404474e9542e90d2b2e570bc692a4b3ee024f2061f2947672f12ba9b2caa857",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v09.png",
+      "sha256": "bc74fec018ee0eda0dfac3c941fc9ce17ee717cd2e234321fbd58618a6784d7c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v09_128.png",
+      "sha256": "8c33291f58c25f0867f83dc522ad6c9579149a967e706fe59ba40c3a196d60c5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v10.png",
+      "sha256": "2c3ce3cf257b54cbcdc9d3ec07bc741dd84ffc37e1c1da511005a17672a12e5a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_dr_v10_128.png",
+      "sha256": "620472186bee4927e8bc97a54051b4b15f3d2142eb5cbc5a61a0dd339110e162",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v01.png",
+      "sha256": "e4d60b7a10ea71b0ed4207de176794d6dbb902231c85fec9575b77e90c5dd656",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v02.png",
+      "sha256": "c7ea8c4608b67655b441b95734c727a1963faca39056052155560d476322cc78",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v03.png",
+      "sha256": "a2eb3b50852093afc2de09358aec6ee904d1e013526984c39ad0d8590c2cfa55",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v04.png",
+      "sha256": "de0a51d0049105109aab6be5a00d0ef449b36446f27c9391f08ac903382ba6fb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v05.png",
+      "sha256": "d66790982c27e16ce3149f11a34004221f410567c0b531dba10e724cf9f89187",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v06.png",
+      "sha256": "683a8a57c10cb729a55536c8f4462dbf54a16380fb9a8f25c2e9dd4252f70804",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v07.png",
+      "sha256": "0bd34385724bd3e9ee15c5c10666264ebf25024e4f0bdc4799701f7ad926c6dd",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v08.png",
+      "sha256": "4d086c54e60394881c546ad0c6b8423d65b6ac28e1b5e5875a0a22d668b9d501",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v08_128.png",
+      "sha256": "f4c407b0fb7a3598c6de67cc2201171f1b79996eb84e8979c5484b7efafd3dae",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v09.png",
+      "sha256": "46e09653f1aad7af6da1b7125d62f9626b596780f3bd5802799321d4ee90adbf",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_melee_attack_ul_v09_128.png",
+      "sha256": "a8ebbbb8befd80329fc0717012646f8c19b9129a77cb1e847206258afa7c1e2d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v01.png",
+      "sha256": "7b121b3b4a8e0f54473a27d64779d33be7de20cedea1eef3718ce5ac35f3ea26",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v02.png",
+      "sha256": "5ed8a8b1d0ee92e1816bbcbcbb4afc8dcf476d6114028d2c938299b2d0b5c2a4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v03.png",
+      "sha256": "c4112cbb5b3b5c5398cd5de7a9894c4d813599d5fea033a24fe14b2aed50a9fc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v04.png",
+      "sha256": "6425b21a5f16dd6a418c280a7220ed6a7f6bfd179b2f34dc47fc813d80537d82",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v05.png",
+      "sha256": "d77dfe4e4f420bde8dd954b1dd3fbb0cea33c84d78839358f3a332e25ed5765a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v05_128.png",
+      "sha256": "64f30636eb41d62d3f55cb08fbb9db446fa848c834814b78a2ed68f2c14c968e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v06.png",
+      "sha256": "98cc8fa96accc7a02b0c581b8b65f710bea83772a116aa5f9895b7be12dfb7f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v06_128.png",
+      "sha256": "6e09ab640a0bd613bc12b396cf3f4b16a1d7bdb91f100635d8cf2ab310536645",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v07.png",
+      "sha256": "c79bed3176e4632fa01d12f0c56d99e273a47cfacaf1454d3f82a65c7fe1257e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v07_128.png",
+      "sha256": "d6b4841929366f7edd4101ed20da5bfe7c1018eda45f2f45c805992eba95ad48",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v08.png",
+      "sha256": "1ec0e6fc7f7e8ab4f08a7ac9e3609582b17aa2e7d7505b514a647c532efbc87e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_dr_v08_128.png",
+      "sha256": "1b22e43efcd48a04541ec8b53aa6b01a56a818bf35a45b8cb42fe29c385f4ede",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_ul_v01.png",
+      "sha256": "1fa29fc604e15abd9f2622f2fb90ccffccc83ab5c780f81a2e6b68b5d404f6d9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_ul_v02.png",
+      "sha256": "4c3ed2cf57ab6d102e61d1db1b0a04fa0607d46402a6668dc37e3c2a9451ab04",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_ul_v03.png",
+      "sha256": "7c5ed0b68985a2292748627ab3d667a203aaf12297626a4f4f754b8fa54a533b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_ul_v04.png",
+      "sha256": "691a8ae1ba4874a0a5461a00784ee7253a2e5744320cf0c4d0625b2960555e8a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_ul_v04_128.png",
+      "sha256": "bbdcba98939ce5632b5c045e25684be49100b92bb0d7fad1d26575ebb359df6e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_ul_v05.png",
+      "sha256": "bf179b343da3f9bc7c695f6380a35b6f9e820b32f90cdf300e5cb746b418b9f3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/splitjaw_goat_thrown_attack_ul_v05_128.png",
+      "sha256": "b387e34f4ff6565c5cc0bfe8c0bb4177e853958902c777cee42e57d796d27d2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v01.png",
+      "sha256": "1fc751603d961de80f8fe588304bc5473a980c1a62a5012c0b858c1d8b8512f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v01_128.png",
+      "sha256": "9a2837b6478ddefc9153887a985cf45b5697459d075c12ca547188cc5f9995b9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+      "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02_128.png",
+      "sha256": "11e1068230f846c50dba9073a63fc9d4e865947a7dc68f8f13befe78a0e1f81a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_dr_chroma_source_v03.png",
+      "sha256": "088c232988695e51a45fe89cdcbba269c99079f72bb2dfc256354f8a87e95f49",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/gaping_maw_toad_aoe_color_v01.png",
+      "sha256": "f84e8c8f458dfe5d97135c56a5f0a99d2b1dc4f688119632fb7688e803d0f8ed",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/gaping_maw_toad_aoe_color_v01_128.png",
+      "sha256": "401a8149917dd6716e1d588098b6245ed0f78eb39c5153093d666f494e43ab3a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/splitjaw_goat_charger_color_v03.png",
+      "sha256": "09c0f4d0a2f866992f66555bef1c94c36840c12023148524044678fcb9ee3774",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/splitjaw_goat_charger_color_v03_128.png",
+      "sha256": "3ac9fdb085366defe92ff3108d46bd42393f1eff2f2aebeb54adf4f82a6ede61",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/splitjaw_goat_charger_color_v04.png",
+      "sha256": "7b9c5fb49176caa7410dfe02123f5edb1d43369ea203bec9219156ddc6ae1e85",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/splitjaw_goat_charger_color_v04_128.png",
+      "sha256": "d006d0eafd3da3ad77ac9f0e17d325f6e26e358d9eaaafc63e928ec6f5aa2b61",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_ranged_color_v03.png",
+      "sha256": "0e84567698af1e03e3cbd6885c4d56c0f7b505b3c0234d5d4f193f914a7a7922",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_ranged_color_v03_128.png",
+      "sha256": "f972cb8cb56152700659c72f6a77643e9830117221df38cc061bc9813984ddc6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_ranged_color_v04.png",
+      "sha256": "5b9de09c1b6f07a2a93f2d1158f723655dc719002702c6a1c98584bcecce8fd1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_ranged_color_v04_128.png",
+      "sha256": "060de12e9d127f1886f1a3aa9390432e53367fb4bb3f8059a68c0d1195578ae9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_ranged_color_v05.png",
+      "sha256": "741ab508dd3d14e25b59f8a90586e45446ad4d4182d2b3ad35239e2532d9bd22",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_ranged_color_v05_128.png",
+      "sha256": "71b78dcb7195dced538082ba45e70c7728e84cfcd963152d1239878eec7de59c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_compact_fold_not_selected_chroma_source_v04.png",
+      "sha256": "f5f297ddac18d9e633ef0a6c81944b4c2e6c2d7188984a9acfc25feb3165327f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_compact_fold_not_selected_v04.png",
+      "sha256": "a294808e724b8a6dc5c8d5446eb2a0b4697a660555f70ded70c231e483c4f4f4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_compact_fold_not_selected_v04_128.png",
+      "sha256": "cb304e2832c1dba8c1a9a8423b184b6cfddcef823929223496af011838508e72",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_near_wing_oversized_chroma_source_rejected_v02.png",
+      "sha256": "cf9b0ad6a56413486d7264d857177bbd39a2a0e0723d459ac57231c0a6ca6dd3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_near_wing_oversized_rejected_v02.png",
+      "sha256": "a8ab4623fe36e08560b6fc934499f873be663766bd711e094ca76b08ddd32f0b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_near_wing_oversized_rejected_v02_128.png",
+      "sha256": "bf74b8f936c84280587b9a1cf2f7dd25b5e79a7734d3cd64cf4ea714dbb34162",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_single_wing_sweep_chroma_source_rejected_v01.png",
+      "sha256": "95c4bf7a437c2e6423aba03a812298f2cf63466023bd62563b300afe4517015e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_single_wing_sweep_rejected_v01.png",
+      "sha256": "af99cb82655fe6a73b16282ca3dd093ec95cb88acc97b5ae77865077fa4bd8d7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/rejected/superseded/tomb_maw_bat_wind_blade_attack_dr_single_wing_sweep_rejected_v01_128.png",
+      "sha256": "f77a1a78e0c22115d40e0c7a90a36d07232ede5b89b25a3715b1c7f5cdf3c1e3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/reviews/death_state_volume_review_v01.png",
+      "sha256": "5735e00875cbb9ded3217fc8a685470c625fa6dd274e6992d95e870021e081c8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/reviews/death_state_volume_review_v02.png",
+      "sha256": "73315c7b97d3ff73d96614716f6a49dea141aec0f9ad867defb7d219234a5b5d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/reviews/death_state_volume_review_v03.png",
+      "sha256": "a483d70287d7b471606c2b95e5bded7a2ead8fc40edab2401e97ad253d354aed",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png",
+      "sha256": "c232948d6631bb8f88d1c7476f33fde923b5dd9fb7ac9d6793cb84fdd58e9e83",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/tiles/pure_run_tile_cool_gray_v01.png",
+      "sha256": "e6e6200dfffc1d3f3d2bee02ca9cd836f3fcd8f672c6184030b1e02823908d69",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/tiles/pure_run_tile_cool_gray_v02.png",
+      "sha256": "3cc95065726f10596170e5401e7cd26cda593d271b3064bb291e13ec499c3e7a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/tiles/pure_run_tile_cool_gray_v03.png",
+      "sha256": "4fbabe158e28a41adfacc8ddea1ccbd6f548ff26c3a92516ee60a0c23f2d35c7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/tiles/pure_run_tile_warm_gray_v01.png",
+      "sha256": "fa7bf69250288dbe6451e540888562c5ae2ee81d1224e35f03d3cdf79707c312",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/tiles/pure_run_tile_warm_gray_v02.png",
+      "sha256": "fe28bb79744163c6fad6405cd9d8590b9e75034110d110a38288698aa5555273",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/tiles/pure_run_tile_warm_gray_v03.png",
+      "sha256": "8f4268d50dabe88ab4ecf89ae39610cca0d47b23015989294d76b02f7ededc30",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-openai-generated-development-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_hunter_cast_dr.png",
+      "sha256": "59ea2ab032f37b1b76ba84942964ff21dcdd5095ef73bb1d33fd71cc34d55b0f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_hunter_cast_ul.png",
+      "sha256": "822ae999232063260ae0b63d2920d3e232d763af1b0dc976f590c7f197353eb8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_hunter_hit_dr.png",
+      "sha256": "a921486bec40be843d02efdce8617e2a1b764c33e6a9e8e4278cf76c92fa9e01",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_hunter_hit_ul.png",
+      "sha256": "0eb88380ebee80e99d1208b0adf5dca6b91ed368c94039ae298b9c4bb0c297af",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_hunter_melee_attack_dr.png",
+      "sha256": "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_hunter_melee_attack_ul.png",
+      "sha256": "e1a2c54c286adbd01c4a98a1a7f023d9b07880459c21c5e42994a8eeaa922ffe",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_mage_cast_dr.png",
+      "sha256": "8232c168c3c1e114c6be03004a919a832d8e02acae5b9a648f6782f688086b80",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_mage_cast_ul.png",
+      "sha256": "5897a9dd9d2d4fa3076fc93bcba921017fa0f203113ca4d08e4e966ae99c7490",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_mage_hit_dr.png",
+      "sha256": "76c2d6d9427f78b0a67ca1f051ed323d61eb1ac3a2d88dcd09b027abbda8fea0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_mage_hit_ul.png",
+      "sha256": "42fe16f9824683592ba23991bc556a828fe32b9fb2e4d627db5b8d69e57c1f58",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_necromancer_cast_dr.png",
+      "sha256": "8262b0dd3cf5b29443b5d98d10628a1e56581dae5f68189020ed2beac46a0f92",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_necromancer_cast_ul.png",
+      "sha256": "1b986f6a882fb6d5bf2477493a9dd5e392781e158c0aa1eecb764a3b56c2c713",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_necromancer_hit_dr.png",
+      "sha256": "66e6a41a4de74288eab731cda2dda6369646d01ce93992f0a836b7d4add63395",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_necromancer_hit_ul.png",
+      "sha256": "7ff19e1d7a3e6e1deadf22b3e481021b53793705278b3bf1a554dd34066df913",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_fire_demon.png",
+      "sha256": "e6ec064f0b5e6497159e15eadcae66ee719cd920d6c0a79f1daf386eb4f25939",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_fire_demon_ul.png",
+      "sha256": "d52d3c7d2e43310fd53a5d8081fee782729754b8afbc8c93c7ea04ae94982d95",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_hunter.png",
+      "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_hunter_death.png",
+      "sha256": "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_hunter_idle_unarmed_dr.png",
+      "sha256": "4f9388311ad640336a5f9cb0eac90831849f885d2ccae01195b06bcc0fba56ab",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_hunter_idle_unarmed_ul.png",
+      "sha256": "08bf56069d3fd4365995b5a8a4f388ba15b8c18c4018bd5c2f2ad97fecdb41a2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_hunter_ul.png",
+      "sha256": "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_mage.png",
+      "sha256": "84fbefaa2423948cb2a716aa9848a75a12745a4bfdc4a9ad446b95fe17bccee5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_mage_death.png",
+      "sha256": "d39fac2c00f1aee495b1a3ea31fb4547c5d540432a35130fa5361614ce7ddd0b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_mage_ul.png",
+      "sha256": "40547194e76662324b687df271b34edb767a5d6c57d1539d39ff4d32db39bad8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_necromancer.png",
+      "sha256": "a967f2767667bb16cfae4167ae16570ad169246654455280f33eccca0fa44b8f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_necromancer_death.png",
+      "sha256": "f614dc8d42d194886c2f3d179b9ae4918f431a9a53e0cc7d0d704d550dac1a32",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_necromancer_ul.png",
+      "sha256": "8f6d5e868e706e337fc56b3bbd58a9c8102a89f9d124faa7c3f4e4dc56014ab7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_skeleton_mage.png",
+      "sha256": "885e0bdd2a34a40b9d472cd830108f46dd69f2fc4a170f7e94b89c10abcde334",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_skeleton_mage_ul.png",
+      "sha256": "ea9f16e8165b451c8be43247634a66123e4ac0baf34b2e5a368e63e15fc47e16",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_skeleton_warrior.png",
+      "sha256": "f86d92c8038ab47b1d66ab4e95ff4807fa3e91ddd89276f67f919b577be5e6c3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_skeleton_warrior_ul.png",
+      "sha256": "c327f0b3b55e06ed7789075cc82fde8d17fceaa1a452de863c8a3ffb350bf951",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/pure_run_unit_shadow_1x1_v01.png",
+      "sha256": "c232948d6631bb8f88d1c7476f33fde923b5dd9fb7ac9d6793cb84fdd58e9e83",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/splitjaw_goat.png",
+      "sha256": "55850716a198201e3756ae0eb34e1f024d472fb1a1a020fbcee671b219c1121a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/splitjaw_goat_death.png",
+      "sha256": "03b9916ed03a0d77fb248ab642039c41788a3ad259d73b51c2ab27f73f4599ef",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/splitjaw_goat_ul.png",
+      "sha256": "4d09c98b72ba2310874844de9216bd06ddf69447c0b87dc89576dac01814a2eb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    }
+  ]
 }
