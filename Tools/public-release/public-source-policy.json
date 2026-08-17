@@ -24,7 +24,6 @@
     ".mimocode/**",
     ".migration-staging/**",
     "_frost_nova_spec.json",
-    "Tools/artworks/**",
     "Tools/reverse-engineering/**",
     "Tools/GPakTools/**",
     "Tools/ToastNotify/**",

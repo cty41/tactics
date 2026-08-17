@@ -4,21 +4,22 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-08-17T01:26:54+08:00"
-status: archived
+timestamp: "2026-08-17T23:31:30+08:00"
+status: active
 catalog_scope: pure-run-artwork
 repo_paths:
   - .agents/docs/pure-run-artwork-guidelines.md
   - .agents/skills/pure-run-artwork-pipeline
+  - Tools/artworks
   - godot/assets
   - Tools/public-release/asset-provenance.json
 verified_revision: c68dbebe
-source_fingerprint: sha256:7c50d4b5baee5917a57d76d449ba7b5755101c89004157203c2d8861d1f0f481
+source_fingerprint: sha256:00e7c68ce814b5f4f84bedb7dabe3cb69a1b01e00c26a15e00489932585b4b98
 ---
 
 # Pure Run 角色美术流水线
 
-> 公开边界：本页保留迁移期设计与验收历史。`Tools/artworks` 的候选、拒绝稿和生成中间件已移入私有归档；公开运行资产只以 `godot/assets` 和 `Tools/public-release/asset-provenance.json` 中逐文件批准的 CC BY 4.0 条目为准。本文中的 Unity、Piloto 和已移除路径不构成当前执行指令或许可声明。
+> 公开边界：`Tools/artworks` 保留项目自有的 GPT 生成母图、候选、反例、校准稿与提示词。其中的媒体文件必须在 `Tools/public-release/asset-provenance.json` 中逐文件登记并通过公开发布校验；`approved` 来源状态只表示允许公开分发，不改变 `candidates`、`rejected` 或 `superseded` 的制作评审语义。运行时资产仍以 `godot/assets` 为准，恢复制作资产不代表运行时接入或人工视觉验收通过。
 
 ## Current State
 

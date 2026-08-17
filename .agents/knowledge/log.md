@@ -1,6 +1,7 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-17
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:00e7c68ce814b5f4f84bedb7dabe3cb69a1b01e00c26a15e00489932585b4b98`。
 * **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:b106c9ce68cd9a1393974c1c15c161fa49b308548c04806a4d0cfbad7c9eddbe`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:ff4e0b889a7ea7c9ef361243bb02c296315a585c05ae74cb01ba025c65db2c08`。
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:6dc1ff854e93ef35da0a155fdb29db44d2a9d7b0402186112d595117f270df6c`。
@@ -10,7 +11,6 @@
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:1a281795242a5e25be67d748da11a48e5efee4d12a20334700ed0f8f28912f13`。
 * **Sync**: `unity-agent-workflow` 已同步到来源指纹 `sha256:251ed1f61d4dfd47db9ab9c53d0d096bec0901bbf1b0dec943ff0476d5179300`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3`。
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:7c50d4b5baee5917a57d76d449ba7b5755101c89004157203c2d8861d1f0f481`。
 * **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:b1b731b882f647d95e4028ebd12ed7eb6bf7d3916ed27ebebaa73b30a373e88e`。
 * **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:f5de85135f37a5235f3d62d8af9c4bdbc74f245e4d6138902311217def729fda`。
 
