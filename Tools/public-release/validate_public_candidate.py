@@ -91,6 +91,25 @@ def _is_probably_text(path: Path) -> bool:
         return False
 
 
+def _artwork_states(root: Path) -> dict[str, str]:
+    pipeline = root / "Tools/artworks/pipeline"
+    states: dict[str, str] = {}
+    legacy = pipeline / "legacy-assets.json"
+    if legacy.is_file():
+        for asset in _read_json(legacy).get("assets", []):
+            states[asset["path"].replace("\\", "/")] = asset.get("state", "")
+    attempts = pipeline / "attempts"
+    if attempts.is_dir():
+        for attempt_path in attempts.glob("*.json"):
+            attempt = _read_json(attempt_path)
+            if attempt.get("state") != "promoted":
+                continue
+            for artifact in attempt.get("artifacts", {}).get("promoted", {}).values():
+                if isinstance(artifact, dict) and artifact.get("path"):
+                    states[artifact["path"].replace("\\", "/")] = "promoted"
+    return states
+
+
 def audit(root: Path, candidate: bool) -> AuditResult:
     result = AuditResult()
     policy_path = root / "Tools/public-release/public-source-policy.json"
@@ -131,6 +150,7 @@ def audit(root: Path, candidate: bool) -> AuditResult:
         if Path(path).suffix.lower() in media_extensions
         and not _matches(path, policy["excludedFromPublicRoot"])
     ]
+    artwork_states = _artwork_states(root)
     for path in public_media:
         entry = manifest_by_path.get(path)
         if entry is None:
@@ -146,6 +166,12 @@ def audit(root: Path, candidate: bool) -> AuditResult:
             result.errors.append(f"asset_hash_mismatch:{path}")
         else:
             result.approved_assets += 1
+        if path.startswith("Tools/artworks/") and not path.startswith("Tools/artworks/pipeline/"):
+            state = artwork_states.get(path)
+            if state is None:
+                result.errors.append(f"artwork_state_unregistered:{path}")
+            elif ("/approved/" in path or "/calibrated/" in path) and state not in {"legacy-approved", "promoted"}:
+                result.errors.append(f"artwork_formal_state_invalid:{path}:{state}")
 
     for path in manifest_by_path:
         if path not in tracked_set and not (root / path).is_file():

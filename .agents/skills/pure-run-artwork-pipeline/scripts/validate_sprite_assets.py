@@ -421,9 +421,9 @@ def main() -> int:
     reports.extend(validate_tiles(root / "pure_run" / "tiles"))
 
     if args.include_candidates:
-        candidate_dir = root / "pure_run" / "enemies" / "candidates"
-        reports.extend(
-            validate_sprite_directory(
+        for candidate_dir in (root / "pure_run" / "enemies" / "candidates", root / "doge" / "candidates"):
+            reports.extend(
+                validate_sprite_directory(
                 candidate_dir,
                 standard_height=args.standard_height,
                 baseline=args.baseline,
@@ -431,7 +431,7 @@ def main() -> int:
                 geometry_required=False,
                 category="candidate",
             )
-        )
+            )
 
     if args.review_examples:
         repo_root = root.parent.parent

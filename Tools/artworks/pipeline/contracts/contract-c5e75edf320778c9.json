@@ -1,0 +1,27 @@
+{
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+    "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07"
+  },
+  "assetId": "demonbound",
+  "contractId": "contract-c5e75edf320778c9",
+  "direction": "down-right",
+  "kind": "ground_character",
+  "maskRequired": true,
+  "noArms": true,
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_color_dr_v01.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_color_dr_v01_128.png"
+  },
+  "pose": "idle",
+  "rights": {
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated",
+    "rightsHolder": "cty41"
+  },
+  "schemaVersion": 1,
+  "tolerances": {
+    "centerPx": 2,
+    "sizePx": 3
+  }
+}

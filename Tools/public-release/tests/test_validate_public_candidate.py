@@ -89,6 +89,36 @@ class PublicCandidateAuditTests(unittest.TestCase):
         self.assertIn("excluded_files_tracked:1", report.warnings)
         self.assertIn("excluded_files_tracked:1", candidate.errors)
 
+    def test_artwork_requires_state_inventory_and_formal_state(self):
+        artwork = self.root / "Tools/artworks/doge/calibrated/hero.png"
+        artwork.parent.mkdir(parents=True)
+        artwork.write_bytes(b"hero")
+        manifest = json.loads((self.root / "Tools/public-release/asset-provenance.json").read_text(encoding="utf-8"))
+        manifest["entries"].append({
+            "path": "Tools/artworks/doge/calibrated/hero.png",
+            "sha256": hashlib.sha256(b"hero").hexdigest(), "status": "approved",
+            "rightsHolder": "cty41", "license": "CC-BY-4.0", "provenance": "test",
+        })
+        (self.root / "Tools/public-release/asset-provenance.json").write_text(json.dumps(manifest), encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+        missing = audit(self.root, candidate=True)
+        self.assertIn("artwork_state_unregistered:Tools/artworks/doge/calibrated/hero.png", missing.errors)
+
+        pipeline = self.root / "Tools/artworks/pipeline"
+        pipeline.mkdir(parents=True)
+        inventory = {"schemaVersion": 1, "assets": [{
+            "path": "Tools/artworks/doge/calibrated/hero.png", "sha256": hashlib.sha256(b"hero").hexdigest(),
+            "state": "legacy-unresolved", "lineage": None,
+        }]}
+        (pipeline / "legacy-assets.json").write_text(json.dumps(inventory), encoding="utf-8")
+        invalid = audit(self.root, candidate=True)
+        self.assertIn("artwork_formal_state_invalid:Tools/artworks/doge/calibrated/hero.png:legacy-unresolved", invalid.errors)
+
+        inventory["assets"][0]["state"] = "legacy-approved"
+        (pipeline / "legacy-assets.json").write_text(json.dumps(inventory), encoding="utf-8")
+        accepted = audit(self.root, candidate=True)
+        self.assertFalse(any(error.startswith("artwork_") for error in accepted.errors), accepted.errors)
+
 
 if __name__ == "__main__":
     unittest.main()
