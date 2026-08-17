@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-17T01:40:42+08:00"
+timestamp: "2026-08-17T16:37:20+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - .agents/skills/plan-mode-plan-writer/SKILL.md
   - .agents/skills/manual-qa-handoff/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:f99b0c8ef26799f6c51a5d7b4773de1896a8b2588df3af29f34090f917bc9675
+source_fingerprint: sha256:ff4e0b889a7ea7c9ef361243bb02c296315a585c05ae74cb01ba025c65db2c08
 ---
 
 # Current State
@@ -26,6 +26,12 @@ source_fingerprint: sha256:f99b0c8ef26799f6c51a5d7b4773de1896a8b2588df3af29f3409
 `.agents/knowledge/` 负责跨系统摘要、关系和导航，不复制完整设计或已完成计划。代码、Unity 资产和测试仍是当前行为的最终事实源。
 
 跨 Unity/Godot 的当前人工验收状态由 `.agents/docs/manual-acceptance.md` 以稳定 ID 维护。实现通过 code review 与自动门禁后，`manual-qa-handoff` 只重开受本轮行为、UI、表现、流程或 Editor 生命周期影响的项目，并输出本轮重点、累计待验收、自动覆盖边界和最短操作旅程；自动证据不能把人工项晋升为 passed，只有用户明确反馈可以更新人工结论。
+
+Godot Content Workbench 的能力防回退基线保存在
+`.agents/docs/godot-content-workbench-capability-matrix.md`。它将最终 Unity 标签中的有效自定义编辑器能力逐项映射为
+`implemented`、`partial`、`replacement` 或 `excluded`，并绑定当前 Godot 页面、Application 作者合同、自动证据
+和人工收口条件；不得用笼统的 `replaced_by_godot_design` 代替实际证据。`partial` 只有在代码、自动门禁和真实
+Editor 人验均完成后才能晋升。
 
 迁移阶段的验证边界以 `.agents/docs/2026-08-07-godot-tactics-migration-design.md` 为准；其中明确 Unity Windows Standalone 不属于迁移门禁，避免在 OKF 摘要中复制整份迁移设计。
 

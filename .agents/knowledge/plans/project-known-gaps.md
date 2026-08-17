@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/blob/main/.agents/docs/project-known-
 title: Project Known Gaps
 description: 已从当前实现确认但尚未获批为活跃开发计划的集中缺口目录。
 tags: [planning, backlog, gaps]
-timestamp: "2026-08-16T12:55:23+08:00"
+timestamp: "2026-08-17T16:17:17+08:00"
 status: active
 catalog_scope: project-known-gaps
 repo_paths:
@@ -15,12 +15,12 @@ repo_paths:
   - Packages/packages-lock.json
   - Tools/unity-mcp/README.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:4747afc4d536add464e8518ec304be49ed98aff2f11ebbd7652591de32251ee9
+source_fingerprint: sha256:b106c9ce68cd9a1393974c1c15c161fa49b308548c04806a4d0cfbad7c9eddbe
 ---
 
 # Current State
 
-权威缺口清单按 `verified-gap`、`needs-decision`、`deferred` 和 `idea` 区分确定性。当前覆盖 Monster AI、事件编辑器、Gameplay Test、SkillGraph、Unity MCP 可靠性、Pure Run 内容扩展、战斗反馈和配置硬编码。
+权威缺口清单按 `verified-gap`、`needs-decision`、`deferred` 和 `idea` 区分确定性。当前覆盖 Monster AI、事件编辑器、Gameplay Test、SkillGraph、Godot Content Workbench、Unity MCP 历史可靠性、Pure Run 内容扩展、战斗反馈和配置硬编码。Workbench 的同批 rebind 删除、真实 Skill BattleTransition 预览、当前 runtime 语义的通用 Presentation 和 MCP 生命周期已完成自动闭环；仅真实 Editor 的视觉、操作与 Assembly Reload 验收保持 deferred。自动门禁通过不等于人工项目完成。
 
 该清单不是活跃开发计划。某项只有在满足文档中的激活条件、范围获得确认并建立可验收计划后才进入执行。
 

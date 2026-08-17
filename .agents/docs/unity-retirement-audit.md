@@ -2,7 +2,7 @@
 
 ## 结论
 
-当前产品范围是三职业 Pure Run。Godot 已具备 Catalog 142、完整 Run、Save V6、Lv1–Lv3、Map/Treasure、Inventory/Progression、程序化表现、正式 UI、Content Workbench、Gameplay Spec Runner 和 Windows RC 自动证据。
+当前产品范围是三职业 Pure Run。Godot 已具备 Catalog 143、完整 Run、Save V6、Lv1–Lv3、Map/Treasure、Inventory/Progression、程序化表现、正式 UI、Content Workbench、Gameplay Spec Runner 和 Windows RC 自动证据。
 
 Unity 工程中仍存在的 Barbarian、Hunter、Uppercut、Counter、Mark、Freeze、Frost Nova、Charge Heal 和 Melee Heal 属于历史原型，不进入当前产品；它们由最终 Unity Tag 和退役清单保留来源，不迁入 Godot Runtime。
 
@@ -29,7 +29,7 @@ Unity 工程中仍存在的 Barbarian、Hunter、Uppercut、Counter、Mark、Fre
 
 | Unity 领域 | Godot 当前权威 | 退役分类 |
 |---|---|---|
-| Battle/Core/Skill/Status/AI | `src/Tactics.Core`、`src/Tactics.Application`、Catalog 142 | `migrated_equivalent` |
+| Battle/Core/Skill/Status/AI | `src/Tactics.Core`、`src/Tactics.Application`、Catalog 143 | `migrated_equivalent` |
 | 三职业角色、召唤物、敌人与 Lv1–Lv3 | Godot content Resources、Frozen Oracle、NUnit/GdUnit | `migrated_equivalent` |
 | 七层 Run、Rest/Store/Mystery/Treasure/Elite/Boss | Map Resource、Save V6、Gameplay Specs | `migrated_equivalent` |
 | Home/Battle/Map/Inventory/Progression/Summary UI | Godot Theme、Control、`Main.tscn` | `replaced_by_godot_design` |

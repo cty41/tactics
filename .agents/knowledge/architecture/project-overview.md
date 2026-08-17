@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的 Godot 产品主线、纯 .NET 分层、运行时和主要游戏系统总入口。
 tags: [architecture, godot, agent-first]
-timestamp: "2026-08-17T02:25:29+08:00"
+timestamp: "2026-08-17T15:01:43+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -17,7 +17,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter
   - godot/project.godot
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:75e173b44957b86fe8bf9d38f142fb56f47c9ea59c464a04c9a122ea8675f7b5
+source_fingerprint: sha256:636eee27a2a4f9bd62c4fdf28c1f52ba2afe85ee363762ae78135cb230e691c4
 ---
 
 # Summary
@@ -28,7 +28,8 @@ Tactics 是 Agent 优先维护并准备公开发布的 Godot 4.7 C# 战棋项目
 
 - `Tactics.Core` 与 `Tactics.Application` 是纯 .NET 9；Godot Node、Resource、Scene、文件系统和 UI 只进入 Adapter/Editor 层。
 - 最终内容由 Godot Resource/PackedScene 与轻量 Catalog 驱动；迁移 DTO、Unity GUID 和历史 receipt 不进入运行时。
-- 三职业 Pure Run 使用 Save V6、确定性 Battle/Run 状态、Catalog 142 与单一 `Main.tscn`。
+- 三职业 Pure Run 使用 Save V6、确定性 Battle/Run 状态、Catalog 143 与单一 `Main.tscn`；新增的
+  `battle-layout.pure-run.split-flank` 将原本只在运行时代码中补建的布局闭合为正式 Resource。
 - `Tools/godot/Verify-GodotProject.ps1` 是本地主线统一门禁；Windows RC 使用只读 staging、包审计和双 renderer EXE smoke。
 - `Tools/public-release` 固定公开文件策略、资产来源哈希、依赖清单与单 root 候选重建；运行时不依赖这些审计工具。
 - Agent 默认在用户指定的 worktree 中完成审计和修复；新建、删除或切换 worktree 必须有活跃计划或用户明确授权。
@@ -36,6 +37,19 @@ Tactics 是 Agent 优先维护并准备公开发布的 Godot 4.7 C# 战棋项目
 - Agent 默认禁止 Computer Use、窗口激活和真实鼠标键盘等前台交互；实现、截图、视觉 QA、测试或连接恢复不构成例外授权。后台验证不足时停止为人工验证待办，完整规则由 [Godot Agent Workflow](../operations/godot-agent-workflow.md) 导航。
 
 # System Map
+
+## Content Authoring
+
+`Tactics Tooling` Main Screen 是当前 Godot 内容作者入口。纯 .NET
+`src/Tactics.Application/Authoring` 定义规范化 Document、SHA-256 revision、typed ChangeSet、引用快照、沙盒
+Session 与批量事务协调器；Godot Adapter 负责 Catalog/UID、EditorUndoRedo、SubViewport 和 ResourceSaver。
+Map、Event、Treasure、Encounter/Layout、AI、Skill 与 Godot-native Presentation Profile 已接入同一
+draft→validate→apply/revert 边界，QA 页显示作者 revision 和正反向引用审计。
+
+开发期 `Tools/tactics-authoring-mcp` 通过唯一 canonical Editor 的本机命名管道 bridge 暴露六个作者工具；
+project root、session token、reload state 与单 session 数量不匹配时 fail-closed。Server 不被产品 solution 或
+Godot ExportRelease 引用，bridge 源仅在 `TOOLS` 条件下编译。能力与未完成人工闸门见
+`.agents/docs/godot-content-workbench-capability-matrix.md`。
 
 - [SkillGraph](../systems/skill-graph.md)负责技能资产和解释执行。
 - [Monster AI](../systems/monster-ai.md)生成、过滤、评分并执行战斗意图。

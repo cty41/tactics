@@ -1,6 +1,8 @@
 using GdUnit4;
 using Godot;
 using Tactics.Godot.Adapter.Runtime;
+using Tactics.Godot.Adapter.Editor;
+using Tactics.Application.Authoring;
 using static GdUnit4.Assertions;
 
 namespace Tactics.Godot.Tests;
@@ -12,7 +14,7 @@ public class AiEncounterBatchGodotTests
     [RequireGodotRuntime]
     public void GeneratedBatchBuildsCanonical73Catalog()
     {
-        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/ai_encounters/ContentCatalog.tres");var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres");AssertThat(batch).IsNotNull();AssertThat(global).IsNotNull();if(batch is null||global is null)return;AiEncounterBatchValidation result=AiEncounterBatchValidator.Validate(batch,global);AssertThat(result.BatchCount).IsEqual(15);AssertThat(result.GlobalCount is 74 or 101 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125 or 131 or 141 or 142).IsTrue();AssertThat(result.Skills).IsEqual(4);AssertThat(result.Ai).IsEqual(6);AssertThat(result.Layouts).IsEqual(2);AssertThat(result.Encounters).IsEqual(3);
+        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/ai_encounters/ContentCatalog.tres");var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres");AssertThat(batch).IsNotNull();AssertThat(global).IsNotNull();if(batch is null||global is null)return;AiEncounterBatchValidation result=AiEncounterBatchValidator.Validate(batch,global);AssertThat(result.BatchCount).IsEqual(15);AssertThat(result.GlobalCount is 74 or 101 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125 or 131 or 132 or 141 or 142 or 143).IsTrue();AssertThat(result.Skills).IsEqual(4);AssertThat(result.Ai).IsEqual(6);AssertThat(result.Layouts).IsEqual(2);AssertThat(result.Encounters).IsEqual(3);
     }
 
     [TestCase]
@@ -84,6 +86,22 @@ public class AiEncounterBatchGodotTests
         AiFixtureRoundResult eliteRound = fixture.ExecuteCurrentRound();
         AssertThat(eliteRound.Turns.Count).IsEqual(1);
         AssertThat(eliteRound.StateFingerprint).IsEqual(eliteSingle.StateFingerprint);
+        fixture.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void FixtureExecutesAuthoringDraftWithoutMutatingFormalResources()
+    {
+        var service = new TacticsAuthoringEditorService();
+        var encounter = (EncounterAuthoringDocument)service.Get("encounter", "encounter.pure-run.n6").Document;
+        var layout = (BattleLayoutAuthoringDocument)service.Get("battle-layout", encounter.LayoutContentId).Document;
+        var fixture = new GodotAiEncounterFixture();
+        fixture._Ready();
+        fixture.LoadDraft(encounter.ToCoreDefinition(), layout.ToCoreDefinition());
+        AiFixtureRoundResult result = fixture.ExecuteCurrentRound();
+        AssertThat(result.Turns.Count).IsEqual(encounter.MonsterUnitContentIds.Count);
+        AssertThat(result.HitCommandLimit).IsFalse();
         fixture.Free();
     }
 }

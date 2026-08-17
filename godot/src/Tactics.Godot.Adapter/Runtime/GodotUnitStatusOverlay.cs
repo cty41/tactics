@@ -8,9 +8,21 @@ namespace Tactics.Godot.Adapter.Runtime;
 public partial class GodotUnitStatusOverlay : Node2D
 {
     private IReadOnlyList<BattleUiStatusSnapshot> _statuses=Array.Empty<BattleUiStatusSnapshot>();
+    private Tween? _pulse;
     public int MaximumVisible { get; set; }=4;
+    public float PulseDuration { get; set; }=.22f;
     public int StatusCount => _statuses.Count;
-    public void Apply(IReadOnlyList<BattleUiStatusSnapshot>? statuses){_statuses=statuses??Array.Empty<BattleUiStatusSnapshot>();QueueRedraw();}
+    public int ActiveTweenCount => _pulse is not null && GodotObject.IsInstanceValid(_pulse) && _pulse.IsRunning() ? 1 : 0;
+    public void Apply(IReadOnlyList<BattleUiStatusSnapshot>? statuses)
+    {
+        _statuses=statuses??Array.Empty<BattleUiStatusSnapshot>(); QueueRedraw(); ClearAnimation();
+        if (_statuses.Count == 0 || PulseDuration <= 0 || !IsInsideTree()) return;
+        _pulse = CreateTween(); _pulse.TweenProperty(this, "scale", Vector2.One * 1.08f, PulseDuration * .5f)
+            .SetTrans(Tween.TransitionType.Sine); _pulse.TweenProperty(this, "scale", Vector2.One, PulseDuration * .5f)
+            .SetTrans(Tween.TransitionType.Sine);
+    }
+    public void ClearAnimation() { if (_pulse is not null && GodotObject.IsInstanceValid(_pulse)) _pulse.Kill(); _pulse = null; Scale = Vector2.One; }
+    public override void _ExitTree() => ClearAnimation();
     public override void _Draw()
     {
         BattleUiStatusSnapshot[] ordered=_statuses.OrderBy(value=>value.StatusId.Value,StringComparer.Ordinal).ToArray();

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BattleLayoutResource" format=3 uid="uid://b1vaaq5tlbc3"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/BattleLayoutResource.cs" id="1_8jlvb"]
+
+[resource]
+script = ExtResource("1_8jlvb")
+ContentIdValue = "battle-layout.pure-run.split-flank"
+PartySpawnsValue = "1,4;1,5;2,4"
+EnemySpawnsValue = "6,2;6,7;7,2;7,7"
+BlockedCellsValue = "4,3;5,4;4,6;5,5"

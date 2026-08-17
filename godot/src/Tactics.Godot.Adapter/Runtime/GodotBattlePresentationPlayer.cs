@@ -21,6 +21,8 @@ public partial class GodotBattlePresentationPlayer : Node
     private bool _completionRaised;
     public bool HasPendingFrame => _pendingStage is not null;
     public bool IsPlaying => _activeTweens.Any(tween => GodotObject.IsInstanceValid(tween) && tween.IsRunning());
+    public int ActiveTweenCount => _activeTweens.Count(tween => GodotObject.IsInstanceValid(tween));
+    public int TransientNodeCount => _transientNodes.Count(node => GodotObject.IsInstanceValid(node));
     public event Action<PresentationFrameCompletion>? FrameCompleted;
     public event Action<BattlePresentationNumber>? NumberRequested;
 

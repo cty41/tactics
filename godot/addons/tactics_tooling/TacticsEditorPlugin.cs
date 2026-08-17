@@ -10,6 +10,7 @@ public partial class TacticsEditorPlugin : EditorPlugin
     private TacticsContentWorkbench? _workbench;
     private bool _headless;
     private bool _filesystemSubscribed;
+    private TacticsAuthoringEditorBridge? _authoringBridge;
 
     public override void _EnterTree()
     {
@@ -36,6 +37,9 @@ public partial class TacticsEditorPlugin : EditorPlugin
             }
 
             SetProcess(true);
+            _authoringBridge = new TacticsAuthoringEditorBridge();
+            _authoringBridge.Configure(GetUndoRedo());
+            AddChild(_authoringBridge);
             EditorInterface.Singleton.GetResourceFilesystem().FilesystemChanged += OnFilesystemChanged;
             _filesystemSubscribed = true;
         }
@@ -43,6 +47,7 @@ public partial class TacticsEditorPlugin : EditorPlugin
         {
             GD.PushError($"[Tactics Tooling] Failed to initialize: {exception}");
             CleanupWorkbench();
+            CleanupBridge();
         }
     }
 
@@ -55,6 +60,7 @@ public partial class TacticsEditorPlugin : EditorPlugin
             _filesystemSubscribed = false;
         }
         CleanupWorkbench();
+        CleanupBridge();
     }
 
     public override bool _HasMainScreen() => true;
@@ -89,6 +95,7 @@ public partial class TacticsEditorPlugin : EditorPlugin
         _workbench.Configure(GetUndoRedo());
         EditorInterface.Singleton.GetEditorMainScreen().AddChild(_workbench);
         _MakeVisible(false);
+        _authoringBridge?.MarkReady();
         GD.Print("[Tactics Tooling] Main screen registered after filesystem scan.");
     }
 
@@ -99,6 +106,12 @@ public partial class TacticsEditorPlugin : EditorPlugin
         if (_workbench is not null && GodotObject.IsInstanceValid(_workbench))
             _workbench.QueueFree();
         _workbench = null;
+    }
+
+    private void CleanupBridge()
+    {
+        if (_authoringBridge is not null && GodotObject.IsInstanceValid(_authoringBridge)) _authoringBridge.QueueFree();
+        _authoringBridge = null;
     }
 }
 #endif

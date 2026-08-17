@@ -35,8 +35,8 @@ def compile_evidence(draft: dict, project: Path) -> tuple[dict, dict]:
         })
     catalog = project / "content" / "ContentCatalog.tres"
     catalog_count = catalog.read_text(encoding="utf-8").count("ContentIdValue =")
-    if catalog_count not in (141, 142):
-        raise ValueError("canonical Catalog must contain 141 entries, or 142 after Treasure generation")
+    if catalog_count not in (141, 142, 143):
+        raise ValueError("canonical Catalog must contain 141 entries, 142 after Treasure generation, or 143 after split-flank closure")
     state = {
         "schemaVersion": 1,
         "batchId": draft["batchId"],

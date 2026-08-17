@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "batchId": "split-flank-layout-closure-v1",
+  "ownership": "GodotOwned",
+  "manualQa": "pending",
+  "source": "retired runtime split-flank fallback",
+  "contentId": "battle-layout.pure-run.split-flank",
+  "resourcePath": "res://content/full_run/BattleLayoutPureRunSplitFlank.tres",
+  "resourceUid": "uid://b1vaaq5tlbc3",
+  "targetHash": "sha256:bf503c4c28b522db7082f30207e75778c0a487f46b6a3724ec391c89268810a8"
+}

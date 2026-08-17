@@ -13,19 +13,19 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Observe: Progression cards/current skills, Battle HUD and CheatConsole, Treasure result, Rogue Map node state, Inventory and Godot Output.
 - Preserve on failure: Run seed/revision, selected skill/branch, Treasure node/result, save and backup copy, screenshot and Output excerpt.
 - Save boundary: This journey mutates progression, rewards and Save V6; use a disposable Run or preserve the current save first.
-- Automated evidence: Core/Application cover all nine player Lv3 contracts, Skeleton Warrior Lv3, deterministic Treasure rewards/idempotency, arbitrary Map topology and V5→V6 migration; Catalog 142, ResourceSaver idempotency, Gameplay Specs and both renderers are green. Gameplay feel and cross-page readability remain manual.
+- Automated evidence: Core/Application cover all nine player Lv3 contracts, Skeleton Warrior Lv3, deterministic Treasure rewards/idempotency, arbitrary Map topology and V5→V6 migration; Catalog 143 (including the formal split-flank Layout), ResourceSaver idempotency, Gameplay Specs and both renderers are green. Gameplay feel and cross-page readability remain manual.
 - User verdict: none.
 
 ### MQA-GODOT-CONTENT-WORKBENCH — Unified authoring and fixture shell
 
 - Status: `pending`
-- Source: `6cf74ce0`, unified Godot Content Workbench checkpoint; 2026-08-16 reload-safe Resource loading repair
-- Action: Open Tactics Tooling and visit Map, Event, Treasure, Encounter Fixture, Skill/Presentation, AI, Audio and QA tabs; exercise one safe Undo/Redo or preview action in each editable surface and Reload the C# assembly once.
-- Expected: The single Main Screen tool opens without duplicate panels; canonical resources load, validation and previews respond, Undo/Redo remains stable, and reload restores a clean tool with no stale SubViewport or signal.
+- Source: `6cf74ce0`, unified Godot Content Workbench checkpoint; 2026-08-16 reload-safe Resource loading repair; 2026-08-17 unified Application authoring kernel and Tactics Authoring MCP implementation
+- Action: Open Tactics Tooling; make disposable drafts on two pages and use one Validate All → Apply All → Undo → Redo journey. Then exercise Skill BattleTransition preview, Presentation Play/Pause/Stop and AI diagnostics, and Reload the C# assembly once.
+- Expected: The two drafts commit as one Undo action; lifecycle/rebind conflicts fail closed; Skill preview reports deterministic transition events without changing formal state; Presentation/AI controls reflect only runtime-effective fields; Stop, page switch and Reload leave zero Workbench temporary nodes or stale signals.
 - Observe: Tactics Tooling Main Screen, Inspector/GraphEdit/SubViewport, status labels and Godot Output.
 - Preserve on failure: Tab name, selected ContentId/resource path, exact action, screenshot, full Output and whether Assembly Reload occurred.
 - Save boundary: Use read-only validation/preview actions unless working on a disposable resource copy; do not overwrite canonical content during first acceptance.
-- Automated evidence: Headless plugin lifecycle, canonical catalog/reference validation, Map/Event/Treasure/Encounter/AI/Presentation tests, ResourceSaver rollback and Godot-owned no-Unity verification are green. Reload-safe editor probes wait for exact script/schema; Editor-loaded custom Resources carry the scoped `[Tool]` contract; GraphEdit cleanup preserves the engine connection layer; runtime fixture loads fail fast with path/type/script diagnostics. A fresh canonical Editor startup and Main scene MCP smoke had zero errors/warnings. Editor interaction, layout and a real assembly reload remain manual.
+- Automated evidence: Global workspace batching, prospective reference graph, atomic Create/Duplicate/Rebind/Delete, UID-preserving Undo/Redo and every persistence fault point are covered. Skill preview executes the real `BattleTransitionService` on isolated state; native Skill/Status/Unit Presentation uses the runtime player and asserts cleanup; MCP applies `changes+lifecycle` as one canonical Editor Undo action. The complete `Verify-GodotProject.ps1` gate passes Core 104, Application 133, Frozen Oracle 15, MCP protocol, isolated GdUnit/Gameplay journeys, Compatibility/Forward+, Release dependency isolation, OKF and whitespace. The PlayableRunUi suite still emits a four-orphan-node runner warning despite passing assertions, while independent page-replacement and Workbench preview cleanup assertions pass; visual cleanup remains manual. Real Apply/Undo/Redo feel and Assembly Reload remain manual.
 - User verdict: none.
 
 ### MQA-GODOT-FORMAL-UI — Formal Pure Run visual shell
@@ -308,4 +308,4 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-AVAILABILITY-TURNS-LOS`
+1. `MQA-GODOT-CONTENT-WORKBENCH`

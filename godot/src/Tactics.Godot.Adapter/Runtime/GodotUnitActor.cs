@@ -115,10 +115,10 @@ public partial class GodotUnitActor : Node2D
         ApplyTint();
     }
 
-    public void SetStatuses(IReadOnlyList<BattleUiStatusSnapshot>? statuses,int maximumVisible=4)
+    public void SetStatuses(IReadOnlyList<BattleUiStatusSnapshot>? statuses,int maximumVisible=4,float pulseDuration=.22f)
     {
         if(StatusOverlay is null){StatusOverlay=new GodotUnitStatusOverlay{ZIndex=50};AddChild(StatusOverlay);}
-        StatusOverlay.MaximumVisible=maximumVisible;StatusOverlay.Apply(statuses);
+        StatusOverlay.MaximumVisible=maximumVisible;StatusOverlay.PulseDuration=pulseDuration;StatusOverlay.Apply(statuses);
     }
 
     public Rect2 VisualBoundsInParent()

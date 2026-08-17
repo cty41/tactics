@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-17T02:25:28+08:00"
+timestamp: "2026-08-17T16:37:19+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,10 +18,33 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:817f9cf67a9764b768e0f392f46674570e9954246b7a556c621cce061143b77f
+source_fingerprint: sha256:6dc1ff854e93ef35da0a155fdb29db44d2a9d7b0402186112d595117f270df6c
 ---
 
 # Current state
+
+## Godot Content Workbench 作者能力
+
+Unity 完整退役后，最终标签 `unity-final-2026-08-08` 仅作为自定义编辑器能力的只读历史证据；逐项映射保存在
+`.agents/docs/godot-content-workbench-capability-matrix.md`，没有 `unknown`。新实现不恢复 Unity
+ScriptableObject/AssetBundle/RuleTile：Application 作者合同直接编译当前 Core 定义，Adapter 映射当前 Godot
+Resource。
+
+统一内核现包含 Document Envelope、规范化 revision、typed ChangeSet、正反向引用 snapshot、沙盒 Session
+与多参与者逆序回滚协调器。Main Screen 的 Map、Event、Treasure、Encounter/Layout、AI、Skill 和
+Godot-native Presentation Profile 由 workspace coordinator 汇总草稿，以一次 Validate/Apply/Revert 和一个 Undo
+action 提交。Resource、Catalog、UID ledger、tombstone 与 prospective reference graph 全部 staging；同批 typed
+rebind 后才允许删除 Workbench-owned 资源，任一故障均回滚。Skill 使用隔离 BattleState 执行真实
+`BattleTransitionService` 预览；通用 Presentation 复用 runtime player，并对当前 runtime 不消费的 Delay/Parallel
+fail-closed。Poison Spear Graph 继续保持 Workbench-only 专用边界。自动作者闭环已完成，真实视觉/操作/Reload
+人验仍按能力矩阵保持 pending，不能宣称人工等价。
+
+独立 `Tools/tactics-authoring-mcp` stdio Server 声明 list/get/validate/apply/preview/reference-audit 六个工具，并通过
+`TOOLS` Editor bridge 绑定唯一 canonical project root、session token 和 ready state；Editor 缺失或出现多个
+descriptor 时拒绝调用。`apply` 的 `changes+lifecycle` 支持 Create/Duplicate/Delete 与 typed rebind 的单批原子事务；
+typed Skill preview 使用相同预览服务。QA 页扫描 Catalog/UID/ownership、作者 revision、正反向引用、workspace
+dirty、preview cleanup、MCP session 与 Gameplay Spec 报告。
+MCP Server/bridge 不进入 Windows RC 产品程序集。
 
 远程 `main` 是 Godot 产品与治理权威；唯一 Godot 项目为 `godot/project.godot`。完整 Unity Git/LFS 历史已从公开候选中分离，并由本地 bundle/bare archive 与私有 `cty41/tactics-legacy-private` 冷恢复证据保存；未来公开单 root 不携带旧 Tag、分支或对象。Frozen Oracle、Golden 与迁移 receipt 作为项目自有的公开测试/历史证据继续存在，但不进入产品运行时。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
 
@@ -138,6 +161,8 @@ Ownership closure 的 Map/Treasure checkpoint 已将冻结合同接入真实运�
 Ownership closure 的统一 Content Workbench 以现有 Godot Main Screen Plugin 为单一入口，不再为每类内容创建互不关联的 Dock。Map 页加载 canonical Map Resource，提供节点标题/lane 的 Undo/Redo、确定性自动布局、GraphEdit 全拓扑、运行时编译验证和 UID 保留的 ResourceSaver 回滚保存；Event/Treasure 页显示实际选项、属性检定、成功/失败结果、weighted reward table 及 Map 节点反向关联。Encounter Fixture 在 SubViewport 内复用 N1/N2/N3/Elite 的 canonical Encounter/Layout/Unit/Skill/AI Resource，可按固定 seed 单步或执行整轮。Skill/Presentation 页继续保留已验证的 typed ChangeSet、revision、Undo/Redo 与正式 SubViewport player；AI 页将完整 Intent/Rule/Score/Curve 图可视化，并仅开放四项安全 profile weight 编辑。Audio 与 QA 标签已预留在同一导航中，其正式 cue/bus audition 与后台 Gameplay Spec 执行分别由后续 ownership checkpoint 接入；只读目录不得被误称为已完成 authoring surface。
 
 Editor workbench 的 catalog/map 初始化通过有界 deferred probe 等待 C# script/schema 恢复后才执行 typed cast，runtime fixture 则继续 fail-fast 并输出 path、实际类型和 script 诊断；真实 C# Reload 后的布局、信号与预览体验仍保留人工验收。
+
+2026-08-17 Workbench 最终自动收口在安全事务基础上增加全局 workspace、prospective reference graph、带 typed rebind 的原子 Delete、UID 稳定 Undo/Redo、MCP 生命周期、真实 Skill BattleTransition 预览、原生 Presentation runtime player/作用域/共享叶/cleanup、AI 有效 picker 与只读 Rule 诊断。统一门禁通过 Core 104、Application 133、Frozen Oracle 15、MCP 协议、隔离 GdUnit/Gameplay journeys、Compatibility/Forward+、Release 依赖隔离、ownership、OKF 与 whitespace；正式资源删除保护和 fault rollback 均有 Godot 回归。自动实现缺口已关闭，真实 Editor 的逐页 Apply All/Undo/Redo、视觉播放、Graph 手感和 Assembly Reload 仍保持 `partial + manual pending`。
 
 Workbench 直接加载的 catalog/entry/map/event/treasure/AI/encounter/layout C# Resource 同时声明 `[GlobalClass]` 与 `[Tool]`，保证 EditorPlugin 中的 typed 实例化；Map 与 AI GraphEdit 重建仅移除 authored `GraphNode`，保留引擎 connection layer。
 

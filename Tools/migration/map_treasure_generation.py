@@ -34,20 +34,21 @@ def compile_evidence(project: Path) -> tuple[dict, dict]:
     if 'GoldMinimum = 2' not in treasure_text or 'GoldMaximum = 5' not in treasure_text:
         raise ValueError("Treasure gold contract drifted")
     catalog = project / "content" / "ContentCatalog.tres"
-    if catalog.read_text(encoding="utf-8").count("ContentIdValue =") != 142:
-        raise ValueError("canonical Catalog must contain 142 entries")
+    catalog_count = catalog.read_text(encoding="utf-8").count("ContentIdValue =")
+    if catalog_count not in (142, 143):
+        raise ValueError("canonical Catalog must contain 142 entries, or 143 after split-flank closure")
     state = {
         "schemaVersion": 1,
         "batchId": "pure-run-map-treasure-v1",
         "state": "Generated",
         "ownership": "UnityOwned",
-        "catalogCount": 142,
+        "catalogCount": catalog_count,
         "artifacts": artifacts,
     }
     receipt = {
         "schemaVersion": 1,
         "batchId": "pure-run-map-treasure-v1",
-        "canonicalCatalogEntries": 142,
+        "canonicalCatalogEntries": catalog_count,
         "mapNodes": 16,
         "mapConnections": 23,
         "treasureContracts": 1,

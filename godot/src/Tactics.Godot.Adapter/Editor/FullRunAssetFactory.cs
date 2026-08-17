@@ -40,15 +40,14 @@ public static class FullRunAssetFactory
                 MonsterUnitContentIds=unitIds,MonsterAiContentIds=aiIds,HealthMultiplier=value.GetProperty("health").GetSingle(),
                 OutputMultiplier=value.GetProperty("output").GetSingle(),MinimumStartingMana=elite?8:boss?12:0,
                 EncounterClassValue=boss?"Boss":elite?"Elite":"Normal"};
-            string[] references=encounter.LayoutContentId=="battle-layout.pure-run.split-flank"
-                ? [..unitIds,..aiIds] : [encounter.LayoutContentId,..unitIds,..aiIds];
+            string[] references=[encounter.LayoutContentId,..unitIds,..aiIds];
             Save(encounter,path);targets.Add(path);entries.Add(Entry(id,"encounter",path,references));
         }
         GodotResourceCatalog old=ResourceLoader.Load<GodotResourceCatalog>(Global,string.Empty,ResourceLoader.CacheMode.Ignore)!;
         var ids=entries.Select(value=>value.ContentIdValue).ToHashSet(StringComparer.Ordinal);
         GodotResourceEntry[] all=old.Entries.Where(value=>!ids.Contains(value.ContentIdValue)).Select(Copy).Concat(entries)
             .OrderBy(value=>value.ContentIdValue,StringComparer.Ordinal).ToArray();
-        if(all.Length is not (114 or 115 or 116 or 119 or 121 or 131 or 141 or 142))throw new InvalidOperationException($"Expected a supported full-run aggregate, got {all.Length} entries.");
+        if(all.Length is not (114 or 115 or 116 or 117 or 119 or 120 or 121 or 122 or 131 or 132 or 141 or 142 or 143))throw new InvalidOperationException($"Expected a supported full-run aggregate, got {all.Length} entries.");
         var catalog=new GodotResourceCatalog{Entries=all};Save(catalog,Global);catalog.Validate();
         File.WriteAllText(ledger,JsonSerializer.Serialize(new{schemaVersion=1,batchId=BatchId,state="Generated",ownership="UnityOwned",
             visualAcceptance="not_applicable_functional_ui_only",manualGameplayAcceptance="pending",catalogCount=all.Length,

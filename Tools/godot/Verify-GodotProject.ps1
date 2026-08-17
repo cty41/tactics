@@ -228,6 +228,14 @@ try {
         dotnet test 'src/Tactics.FrozenOracle.Tests/Tactics.FrozenOracle.Tests.csproj' -c Debug --no-restore --no-build --settings $runSettings --logger 'console;verbosity=minimal'
     }
 
+    Invoke-Checked 'Build development-only Tactics Authoring MCP' {
+        dotnet build 'Tools/tactics-authoring-mcp/Tactics.Authoring.Mcp.csproj' -c Release -m:1
+    }
+
+    Invoke-Checked 'Run Tactics Authoring MCP protocol tests' {
+        python -m unittest Tools.tactics-authoring-mcp.tests.test_protocol
+    }
+
     Invoke-Checked 'Validate canonical Godot content ownership' {
         python -m unittest Tools.migration.tests.test_godot_content_ownership
     }
@@ -719,6 +727,20 @@ try {
         if ($fullRunCatalogHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash) {
             throw 'Pure Run full seven-layer Catalog generation is not byte-idempotent.'
         }
+    }
+
+
+    Invoke-Checked 'Generate authored split-flank layout closure first pass' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/SplitFlankLayoutClosureBuilder.cs'
+    }
+    $splitFlankCatalogHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash
+    $splitFlankLayoutHash = (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\full_run\BattleLayoutPureRunSplitFlank.tres') -Algorithm SHA256).Hash
+    Invoke-Checked 'Generate authored split-flank layout closure second pass' {
+        & $GodotExecutable --headless --path $projectRoot --rendering-method gl_compatibility --script 'res://src/Tactics.Godot.Adapter/Editor/SplitFlankLayoutClosureBuilder.cs'
+    }
+    if ($splitFlankCatalogHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\ContentCatalog.tres') -Algorithm SHA256).Hash -or
+        $splitFlankLayoutHash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'content\full_run\BattleLayoutPureRunSplitFlank.tres') -Algorithm SHA256).Hash) {
+        throw 'Split-flank layout closure is not byte-idempotent.'
     }
 
     Invoke-Checked 'Generate isometric battle board resource first pass' {

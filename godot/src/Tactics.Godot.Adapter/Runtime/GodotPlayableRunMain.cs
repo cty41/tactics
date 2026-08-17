@@ -81,6 +81,7 @@ public partial class GodotPlayableRunMain : Control
     private bool _pauseAfterCurrentFrame;
     private bool _presentationInputLocked;
     private StandardUnitPresentationResource? _presentationProfile;
+    private StatusPresentationResource? _statusPresentationProfile;
     private readonly List<SkillPresentationResource> _skillPresentationProfiles=new();
     private readonly PureRunFlowProjector _flowProjector = new();
     private GodotRogueMapView? _mapView;
@@ -107,7 +108,7 @@ public partial class GodotPlayableRunMain : Control
 
     public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
         _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 &&
-        _mapDefinition is not null && _treasureDefinition is not null && _catalogCount == 142;
+        _mapDefinition is not null && _treasureDefinition is not null && _catalogCount == 143;
 
     public override void _Ready()
     {
@@ -325,6 +326,7 @@ public partial class GodotPlayableRunMain : Control
                         Enum.Parse<EncounterClass>(encounter.EncounterClassValue)); break;
                 case PureRunDefinitionResource run: runResource = run; break;
                 case SkillPresentationResource presentation: _skillPresentationProfiles.Add(presentation); break;
+                case StatusPresentationResource statusPresentation: _statusPresentationProfile = statusPresentation; break;
                 case EquipmentDefinitionResource equipment: _equipment[id] = equipment.ToCoreDefinition(); break;
                 case ConsumableDefinitionResource consumable: _consumables[id] = consumable.ToCoreDefinition(); break;
                 case PureRunMapResource map: _mapDefinition = map.ToCoreDefinition(); break;
@@ -335,7 +337,8 @@ public partial class GodotPlayableRunMain : Control
                         string[] units=payload.RootElement.GetProperty("monsters").EnumerateArray().Select(value=>value.GetString()!).ToArray();
                         string[] aiIds=units.Select(value=>"ai.pure-run."+value["unit.pure-run.".Length..].Replace("goat-",string.Empty)).ToArray();
                         var layoutId=new ContentId("battle-layout.pure-run.split-flank");
-                        _layouts[layoutId]=new BattleLayoutDefinition(layoutId,[new GridPoint(1,4),new GridPoint(1,5),new GridPoint(2,4)],[new GridPoint(6,2),new GridPoint(6,7),new GridPoint(7,2),new GridPoint(7,7)],[new GridPoint(4,3),new GridPoint(5,4),new GridPoint(4,6),new GridPoint(5,5)]);
+                        if (!_layouts.ContainsKey(layoutId))
+                            throw new InvalidOperationException("Catalog is missing the authored split-flank battle layout.");
                         _encounters[id]=new EncounterDefinition(id,layoutId,units.Select((unit,index)=>new EncounterMonsterDefinition(new ContentId(unit),new ContentId(aiIds[index]),_ai[new ContentId(aiIds[index])].SkillIds)).ToArray());
                     }
                     break;
@@ -586,7 +589,9 @@ public partial class GodotPlayableRunMain : Control
             if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
             actor.SetSpearHeld(unit.DefinitionId.Value != "unit.pure-run.amazon" || !snapshot.DroppedSpears.ContainsKey(unit.UnitId));
-            actor.SetStatuses(unit.IsAlive ? unit.Statuses : Array.Empty<BattleUiStatusSnapshot>());
+            StatusPresentationResource statusProfile = _statusPresentationProfile ?? new StatusPresentationResource();
+            actor.SetStatuses(unit.IsAlive ? unit.Statuses : Array.Empty<BattleUiStatusSnapshot>(),
+                statusProfile.MaximumVisibleStatuses, statusProfile.PulseDuration);
             actor.ZIndex = 100 + (18-unit.Cell.X-unit.Cell.Y) * 12 + unit.Cell.X;
             if(!_unitMeters.TryGetValue(unit.UnitId,out Control? meter)||meter is not GodotCompactUnitMeter compact||!GodotObject.IsInstanceValid(meter))
             {
