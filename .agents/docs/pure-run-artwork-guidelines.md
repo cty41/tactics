@@ -8,6 +8,14 @@ verified_revision: c68dbebe
 
 这份文档是 Pure Run 角色 Sprite 的稳定设计契约。它记录可复用的尺寸、目录和验收规则，不复制完整生成提示词或一次性候选讨论；实际 PNG 仍是外观真相源。
 
+## 合同状态机
+
+- `Tools/artworks/pipeline` 是制作状态与血缘的机器权威；PNG 是像素真相源，两者必须以 SHA-256 绑定。ImageGen 仅是 `create-job` 与 `ingest` 之间的外部非确定性步骤。
+- 新资产只能沿 `ready -> ingested -> prepared -> annotated -> review_pending -> approved/rejected -> promoted` 转换。技术失败固定为 `technical_failed`，后续必须新建 retry，不能修改失败 attempt 或把它作为母图。
+- `prepare` 只负责确定性去幕、RGBA 与透明 RGB；核心体量必须由同坐标语义蒙版检查。聊天中的“通过”必须由 CLI 写成同时绑定候选和蒙版哈希的人工 receipt 才生效。
+- `legacy-assets.json` 逐文件登记历史 PNG。缺失可证血缘的 `legacy-unresolved` 只可保留和查看；目录名不能让它自动成为母图。正式旧图只有补充审核过的核心蒙版后，才能成为新任务的几何锚点。
+- 晋升只能由状态机写入 `calibrated/approved` 并同步公开 provenance。验证入口是 `python .agents/skills/pure-run-artwork-pipeline/scripts/artwork_pipeline.py --root . check --strict`；它也是 Godot 统一验证的一部分。
+
 ## 身体与屏幕契约
 
 - 角色采用右下方 `45°` 等距视角，胶囊体、短手、短脚和粗深色轮廓构成统一的屏幕语言。角色身体锚点居于画布 `x=128`，脚掌沿等距方向错开但必须接触同一地面基线。

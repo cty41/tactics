@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-08-17T23:31:30+08:00"
+timestamp: "2026-08-18T01:07:37+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - godot/assets
   - Tools/public-release/asset-provenance.json
 verified_revision: c68dbebe
-source_fingerprint: sha256:00e7c68ce814b5f4f84bedb7dabe3cb69a1b01e00c26a15e00489932585b4b98
+source_fingerprint: sha256:f85f47e03ccaf588977823bbff1f3f9649ef48f04e1678b5d41c03293505006f
 ---
 
 # Pure Run 角色美术流水线
@@ -23,6 +23,8 @@ source_fingerprint: sha256:00e7c68ce814b5f4f84bedb7dabe3cb69a1b01e00c26a15e00489
 
 ## Current State
 
+- `Tools/artworks/pipeline` 现为 schema v1 合同状态机：合同、job、attempt、不可变验证报告、人工 approval receipt 与 promotion 均绑定 SHA-256。ImageGen 保持外部调用；本地状态固定沿 `ready -> ingested -> prepared -> annotated -> review_pending -> approved/rejected -> promoted`，技术失败只能新建 retry。385 张历史 PNG 已逐文件登记，其中 59 张为 `legacy-approved`、128 张为 `legacy-rejected`、198 张为 `legacy-unresolved`；未知血缘不推断且不能作为母图。
+- Demonbound 垂直切片已登记固定 prompt、Hunter bootstrap anchor、原始 ImageGen 输出与旧校准候选。1254px 原图按合同进入 `technical_failed`；旧候选停在 `prepared`，等待经人工审核的语义蒙版，不因完整 AABB 校准或聊天确认自动晋升。
 - `c68dbebe` 是当前已提交角色美术的初始验证锚点；设计层正式资产由 Doge `calibrated` 与敌人 `approved` 共同组成，旧版本保留在 `rejected/superseded`，不得作为母图。
 - 运行时标准角色纹理为 `128 PPU`，根节点与 `Sprite` 子节点均为 `localScale = 1`；单位状态由等距 Tile 高亮而非角色方形 Marker 表达。标准 `Sprite` 表现高度使用根空间 `localY=0.15`，降低原 `0.25` 带来的脚底悬空感；逻辑 Root、格子坐标、occupancy、碰撞与排序点不变。阴影继续锚定单位根节点代表的 Tile 几何落点，不跟随 Sprite Tween。
 - 已确认的单格单位通用阴影以 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png` 为设计源，并原字节复制到 `Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png`。它是屏幕水平的 `64×32` 等距软椭圆，导入为 Single Sprite、`64 PPU`、中心 Pivot、Full Rect、Bilinear、Clamp、无 Mipmap/压缩/Read-Write/fallback physics shape。保守贴地参数为：地面 Scale `0.80` / Renderer alpha `0.90`，飞行为同图 Scale `0.60` / alpha `0.54`；两者都以 Tile 几何中心为虚拟落点。
@@ -71,6 +73,8 @@ source_fingerprint: sha256:00e7c68ce814b5f4f84bedb7dabe3cb69a1b01e00c26a15e00489
 ## Verification Guidance
 
 ```powershell
+python .agents/skills/pure-run-artwork-pipeline/scripts/artwork_pipeline.py --root . check --strict
+python -m unittest discover -s .agents/skills/pure-run-artwork-pipeline/tests -p "test_*.py"
 python .agents/skills/pure-run-artwork-pipeline/scripts/validate_sprite_assets.py --root Tools/artworks --strict --review-examples
 python Tools/okf/catalog_impact.py report --worktree
 python Tools/okf/catalog_impact.py sync --worktree --scope pure-run-artwork --write

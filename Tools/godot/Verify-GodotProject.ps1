@@ -1047,6 +1047,10 @@ try {
         python -m unittest discover -s (Join-Path $repoRoot 'Tools/public-release/tests') -p 'test_*.py'
     }
 
+    Invoke-Checked 'Validate Pure Run artwork state registry' {
+        python '.agents/skills/pure-run-artwork-pipeline/scripts/artwork_pipeline.py' --root $repoRoot check --strict
+    }
+
     Invoke-Checked 'Validate public source candidate' {
         python 'Tools/public-release/validate_public_candidate.py' --root $repoRoot --candidate
     }

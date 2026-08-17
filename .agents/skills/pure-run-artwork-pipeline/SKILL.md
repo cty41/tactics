@@ -23,6 +23,8 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 去幕与 alpha 校验 | `references/chroma-key-validation.md` |
 | Review、归档和提交 | `references/artwork-review-and-git.md` |
 | 只读批量检查 | `python scripts/validate_sprite_assets.py --root Tools/artworks --strict --review-examples` |
+| 创建/重试/摄取任务 | `python scripts/artwork_pipeline.py --root <repo> create-job|retry|ingest ...` |
+| 状态机严格门禁 | `python scripts/artwork_pipeline.py --root <repo> check --strict` |
 | 运行时视觉 QA | 使用 Unity MCP 截图或 PlayMode 虚拟输入；不控制真实 Editor 窗口 |
 
 ## When to use
@@ -34,19 +36,23 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 
 ## Workflow
 
+0. **先建立合同与 job。** `create-contract` 固定素材类型、方向、姿态、核心锚点、容差、发布路径与授权；`create-job` 固定提示词和每张输入图的角色与 SHA-256，并输出可交给 Codex ImageGen 的 packet。ImageGen 不属于 CLI；返回图只能通过 `retry` 创建的 attempt 执行 `ingest`。目录名和聊天确认都不能替代状态。
+
 1. **先查案例，再锁定母图。** 阅读 `references/review-casebook.md` 中与任务相关的正反案例，并从 `examples/cases.json` 的 `approved_assets` 选择唯一正式母图。记录必须保持的身体、脚位、盾牌、武器和构图；把其他图片标为犬种、武器、姿态或色彩参考。不要让参考图替换母图的比例，禁止从 `rejected`、`superseded`、案例快照或 `tmp` 开始编辑。
 2. **一次生成一个变体。** ImageGen 只处理一个角色、一个局部变体或一个投射物。动作姿态先读取 `references/single-frame-action-poses.md`，明确角色母图、已选 DR 动作图与跨角色姿态参考的独立责任。明确“保持不变”区域；新武器、耳朵、翅膀和法术必须在屏幕空间中有清晰的前后层级，并完整留在画布内。单帧候选展示后必须停止；未获人工继续/批准时，不开始下一张或晋升资产。
 3. **去幕。** 选择纯 `#00ff00` 或 `#ff00ff` 背景，移除背景、软化 matte 边缘并检查绿色/洋红残留。保留真实透明 alpha，不把带色幕截图当母版。
 4. **尺寸校准。** 方向图必须以同角色已确认的 `down-right` 为唯一核心体量锚点，并制作只包含中央胶囊体或球核的纯核心主体蒙版；耳朵、口鼻、眼睛、手掌、脚掌、武器、盾牌、法杖、翅膀和特效全部排除。蒙版只用于测量和 QA，禁止粘贴或参与成品合成。比较主体上缘、下缘、中心、最大宽度以及上中下三个截面的宽度分布；中段近似平行，下段只能持平或内收。飞行单位改用球核体量，把球核中心固定在身体水平锚点 `x=128`，并在垂直方向对齐基准胶囊体上部圆帽中心。完整 alpha 包围盒只用于画布安全、裁切和技术校验：标准母版 `256×256 RGBA`、脚底或虚拟基线 `y=236`。禁止单轴拉伸；外部轮廓超出标准时记录为例外或候选。
 5. **缩小和逐角色 Review。** 生成 `128×128` Mitchell 等比预览，确认脚底基线 `y=118`。再使用真实错列等距 Tile 排布，将预览的脚底锚点 `(64,118)` 精确映射到目标 `64×32` Tile 的几何中心；飞行单位使用同一虚拟落点，不能用可见身体下沿替代。死亡图先按 `references/death-state-sprites.md` 分类拓扑，并使用完整尸体 AABB 中心对齐 Tile。检查脚掌接触或悬浮间距、角色占用、脸部识别和装备分离。每次只校正一个角色，必须展示基准与当前角色并排并等待人工确认；确认后才进入下一个角色或生成其方向变体。运行时 Game View Review 必须遵循[前台交互与焦点保护规则](../../rules/foreground-interaction.md)：使用 MCP 截图、自动测试或虚拟输入；如果代表状态只能靠点击真实窗口获得，停止并标记 `manual_visual_qa_pending`。
-6. **归档并验证。** 用版本名保存成对的母版与 `_128` 预览，按目录语义归类；正式敌人进入 `approved`，失败历史进入 `rejected/superseded`。运行 `scripts/validate_sprite_assets.py --review-examples`，需要查看尚未确认的候选时再加 `--include-candidates`。
-7. **提交准备。** 运行 OKF report/sync、bundle 校验和单元测试；按路径暂存，排除 `.hermes/`、`tmp/` 和运行时 Unity 文件。展示精确暂存清单，等待用户确认后再提交。
+6. **执行状态转换。** `prepare` 只做确定性去幕、RGBA 规范化和透明 RGB 清零；`attach-mask` 绑定同坐标语义蒙版；`validate` 生成不可变技术/几何报告；通过后用 `render-review` 生成蒙版叠加、128 预览和真实 `64×32` Tile Review。技术失败进入 `technical_failed`，只能 `retry`，不得编辑原 attempt。
+7. **人工批准并晋升。** `approve` 前必须已经生成且哈希仍匹配 overlay、128 预览和 Tile Review；只有 `approve --reviewer cty41 --reason ... --decided-at ...` 落成绑定候选与蒙版哈希的 receipt 才算批准。`promote` 只接受 `approved` attempt，并同步正式输出、正式母图清单与公开 provenance。`legacy-unresolved` 不得作为母图；旧正式图的核心蒙版也必须先有同一候选/蒙版哈希组合的批准 receipt，才可写入新合同的几何锚点。
+8. **归档并验证。** 运行 `artwork_pipeline.py check --strict` 与 `validate_sprite_assets.py --review-examples`；需要查看未确认候选时加 `--include-candidates`。再运行 OKF report/sync、bundle 校验和单元测试；按路径暂存，排除临时文件和任何运行时文件。展示精确暂存清单，等待用户确认后再提交。
 
 ## Guardrails
 
 - 默认不修改 Unity Prefab、AI、遭遇配置或运行时代码；只有用户明确授权“运行时美术接入”时，才可将已确认原生图配置到 Prefab，并且不得改变玩法朝向语义。
 - 运行时接入授权、视觉 QA、截图要求或“补齐代表单位”都不授权 Computer Use、`activate_window` 或真实鼠标键盘输入。后台验证不足时记录 `manual_visual_qa_pending`，不得抢占用户焦点。
 - 不覆盖已确认版本；新设计使用新的版本号，失败候选移动到 `rejected`，而不是删除历史证据。
+- 不手改 registry 状态、report 或 receipt；所有转换必须经 `artwork_pipeline.py`。同一 attempt 不得摄取不同字节，`technical_failed` 不得批准或晋升。
 - 不把未校准候选标为可用 Sprite；武器或耳朵超出标准包围盒时，优先保持胶囊身体并显式记录例外。
 - 不把正反案例快照当成生成母图；快照只服务于快速 Review，正式母图以 `examples/cases.json` 的 `approved_assets` 原图路径为准。
 - 不把 `rejected` 或 `superseded` 中局部看似正确的版本继续传递到下一轮；反例只能用于写明禁止项和验收失败原因。
