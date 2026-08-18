@@ -234,6 +234,10 @@ public sealed class GodotGameplayRuntimeRunner
             "presentationNodeCountEquals" => probe.PresentationNumberCount == assertion.Expected.GetInt32(),
             "checkpointRevisionEquals" => probe.SaveSnapshot?.ActiveRun?.Checkpoint?.Revision == assertion.Expected.GetInt64(),
             "runtimeStateHashEquals" => context.StateHash() == assertion.Expected.GetString(),
+            "demonboundCorruptionEquals" => probe.BattleSnapshot?.Units.SingleOrDefault(unit =>
+                unit.UnitId.Value == assertion.Target)?.Corruption == assertion.Expected.GetInt32(),
+            "demonboundPossessedEquals" => probe.BattleSnapshot?.Units.SingleOrDefault(unit =>
+                unit.UnitId.Value == assertion.Target)?.IsPossessed == assertion.Expected.GetBoolean(),
             "runtimeHasNoErrors" => (probe.RuntimeErrorCount == 0) == assertion.Expected.GetBoolean(),
             "productionSaveUnchanged" => context.ProductionSaveIsUnchanged() == assertion.Expected.GetBoolean(),
             _ => throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Contract, "unsupported_assertion:" + assertion.Kind)

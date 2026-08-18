@@ -134,11 +134,13 @@ const godotPlanAdapterByKind: Record<string, z.infer<typeof AdapterSchema>> = {
   productionSaveUnchanged: "Map",
   checkpointRevisionEquals: "Map",
   runtimeStateHashEquals: "UI",
+  demonboundCorruptionEquals: "Battle",
+  demonboundPossessedEquals: "Battle",
   runtimeHasNoErrors: "UI"
 };
 
 export const GodotExecutableScenarioPlanSchema = z.object({
-  schemaVersion: z.literal(2),
+  schemaVersion: z.union([z.literal(2), z.literal(3)]),
   runtime: z.literal("Godot"),
   scenarioName: z.string().min(1),
   requiredAdapters: z.array(AdapterSchema).min(1),

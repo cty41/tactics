@@ -22,6 +22,7 @@ public sealed record SelectSkillIntent(ContentId SkillId) : BattleUiIntent;
 public sealed record ConfirmCellIntent(GridPoint Cell) : BattleUiIntent;
 public sealed record CancelTargetingIntent : BattleUiIntent;
 public sealed record EndTurnIntent : BattleUiIntent;
+public sealed record MeditateIntent : BattleUiIntent;
 
 public sealed record BattleUiStatusSnapshot(ContentId StatusId, StatusEffectKind EffectKind,
     StatusPolarity Polarity, int RemainingTurns, int StackCount);
@@ -38,7 +39,9 @@ public sealed record BattleUiUnitSnapshot(
     bool HasMovedThisTurn,
     IReadOnlyList<ContentId> StatusIds,
     IReadOnlyDictionary<ContentId, int> SuccessfulSkillUses,
-    IReadOnlyList<BattleUiStatusSnapshot>? Statuses = null);
+    IReadOnlyList<BattleUiStatusSnapshot>? Statuses = null,
+    int? Corruption = null,
+    bool IsPossessed = false);
 
 public sealed record BattleUiTarget(ContentId SkillId, GridPoint Cell, UnitInstanceId? UnitId);
 public sealed record BattleUiSkillPreview(
@@ -93,7 +96,8 @@ public sealed record BattleUiSnapshot(
     IReadOnlyCollection<GridPoint>? BlockedCells = null,
     IReadOnlyList<BattleUiSkillAvailability>? SkillAvailability = null,
     BattleUiMoveAvailability MoveAvailability = null!,
-    bool TerminalPending = false);
+    bool TerminalPending = false,
+    BattleUiSkillAvailability? MeditationAvailability = null);
 
 public sealed record PlayableBattleSessionContext(
     BattleState InitialState,
@@ -197,7 +201,7 @@ public sealed class PlayableBattleSessionService
             AdvanceAutomaticTurns();
             return Result(true, null, Array.Empty<BattleEvent>());
         }
-        if (active.Unit.PlayerNumber != _context.PlayerNumber || ControllerFor(active) is not null || IsNonActingSummon(active))
+        if (active.Unit.PlayerNumber != _context.PlayerNumber || IsAiControlled(active) || IsNonActingSummon(active))
             return Result(false, "battle.ai_turn_input_rejected", Array.Empty<BattleEvent>());
 
         return intent switch
@@ -208,6 +212,7 @@ public sealed class PlayableBattleSessionService
             ConfirmCellIntent confirm => ConfirmCell(confirm),
             CancelTargetingIntent => Cancel(),
             EndTurnIntent => ApplyCommand(new EndTurnCommand(active.Unit.InstanceId)),
+            MeditateIntent => ApplyCommand(new MeditateCommand(active.Unit.InstanceId)),
             _ => Result(false, "battle.unsupported_intent", Array.Empty<BattleEvent>())
         };
     }
@@ -218,7 +223,7 @@ public sealed class PlayableBattleSessionService
         BattleUnitState active = view.Units[view.ActiveUnitId];
         IReadOnlyList<SkillDefinition> skills = SkillsFor(active);
         bool playerControlled = active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber &&
-            ControllerFor(active) is null && !IsNonActingSummon(active);
+            !IsAiControlled(active) && !IsNonActingSummon(active);
         GridPoint[] moves = interactive && playerControlled && !active.HasMovedThisTurn
             ? view.Board.Cells.Keys.Where(cell => _transitions.Apply(view, new MoveUnitCommand(active.Unit.InstanceId, cell)).Succeeded).OrderBy(cell => cell.X).ThenBy(cell => cell.Y).ToArray()
             : Array.Empty<GridPoint>();
@@ -234,7 +239,8 @@ public sealed class PlayableBattleSessionService
             _context.BlockedCells ?? Array.Empty<GridPoint>(),
             skills.Select(skill => Availability(view, active, skill)).ToArray(),
             MoveAvailability(view, active),
-            _battleResult is not null);
+            _battleResult is not null,
+            MeditationAvailability(view, active));
     }
 
     public IReadOnlyList<GridPoint> PreviewMovePath(GridPoint destination)
@@ -297,7 +303,7 @@ public sealed class PlayableBattleSessionService
     private BattleUiMoveAvailability MoveAvailability(BattleState view, BattleUnitState actor)
     {
         string? failure = null;
-        if (!actor.IsAlive || actor.Unit.PlayerNumber != _context.PlayerNumber || ControllerFor(actor) is not null || IsNonActingSummon(actor))
+        if (!actor.IsAlive || actor.Unit.PlayerNumber != _context.PlayerNumber || IsAiControlled(actor) || IsNonActingSummon(actor))
             failure = "move_not_player_controlled";
         else if (DeterminePhase(view) != PlayableBattlePhase.PlayerTurn)
             failure = "move_not_current_turn";
@@ -371,7 +377,7 @@ public sealed class PlayableBattleSessionService
                 return;
             BattleUnitState active = State.Units[State.ActiveUnitId];
             SummonControllerDefinition? summonController = ControllerFor(active);
-            if (active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && summonController is null && !IsNonActingSummon(active))
+            if (active.IsAlive && active.Unit.PlayerNumber == _context.PlayerNumber && !IsAiControlled(active) && !IsNonActingSummon(active))
                 return;
             if (++commandCount > MaximumAutomaticCommands)
             {
@@ -392,16 +398,27 @@ public sealed class PlayableBattleSessionService
                 Append(skip.Events);
                 continue;
             }
-            AiDefinition? definition = summonController is null
-                ? null
-                : summonController.Ai with { SkillIds = SkillsFor(active).Select(skill => skill.ContentId).ToArray() };
+            bool possessed = active.DemonboundState?.IsPossessed == true;
+            bool possessedTargetsAllies = possessed && State.Units.Values.Any(unit => unit.IsAlive &&
+                unit.Unit.PlayerNumber == active.Unit.PlayerNumber &&
+                unit.Unit.InstanceId != active.Unit.InstanceId);
+            AiDefinition? definition = possessed
+                ? new AiDefinition(new ContentId("ai.demonbound.possessed"), AiArchetype.Charger,
+                    new AiProfileDefinition(5, 3, 2, 1),
+                    SkillsFor(active).Where(skill => !skill.IsPassive &&
+                        skill.ExecutionKind != SkillExecutionKind.Meditation).Select(skill => skill.ContentId).ToArray(),
+                    Array.Empty<ContentId>())
+                : summonController is null
+                    ? null
+                    : summonController.Ai with { SkillIds = SkillsFor(active).Select(skill => skill.ContentId).ToArray() };
             if (definition is null && !_context.AiByUnit.TryGetValue(active.Unit.InstanceId, out definition))
             {
                 _failureCode = "battle.ai_definition_missing";
                 return;
             }
             int patternIndex = _patternIndices.GetValueOrDefault(active.Unit.InstanceId);
-            AiTurnPlan plan = _decisions.Decide(State, definition, _context.SkillCatalog, patternIndex);
+            AiTurnPlan plan = _decisions.Decide(State, definition, _context.SkillCatalog, patternIndex,
+                targetOwnFaction: possessedTargetsAllies);
             AiPlanExecutionResult result = _aiTurns.Execute(State, plan, _context.SkillCatalog);
             _automaticFrames.Enqueue(("Decision",State,result.Decision,Array.Empty<BattleEvent>()));
             foreach(AiExecutionFrame frame in result.Frames??Array.Empty<AiExecutionFrame>())_automaticFrames.Enqueue((frame.Stage,frame.State,null,frame.Events));
@@ -413,7 +430,7 @@ public sealed class PlayableBattleSessionService
 
     private IEnumerable<BattleUiTarget> LegalTargets(BattleState view, BattleUnitState active, SkillDefinition skill)
     {
-        if (!active.IsAlive || active.Unit.PlayerNumber != _context.PlayerNumber || ControllerFor(active) is not null || IsNonActingSummon(active))
+        if (!active.IsAlive || active.Unit.PlayerNumber != _context.PlayerNumber || IsAiControlled(active) || IsNonActingSummon(active))
             yield break;
         foreach (GridPoint cell in view.Board.Cells.Keys.OrderBy(cell => cell.X).ThenBy(cell => cell.Y))
         {
@@ -438,6 +455,15 @@ public sealed class PlayableBattleSessionService
         if (failure is null && (skill.ExecutionKind is SkillExecutionKind.SummonSkeleton or SkillExecutionKind.SummonSkeletonMage || skill.ExecutionProfile.RequiresCorpse) && view.Corpses.Count == 0)
             failure = "corpse_not_found";
         return new BattleUiSkillAvailability(skill.ContentId, failure is null, failure);
+    }
+
+    private BattleUiSkillAvailability? MeditationAvailability(BattleState view, BattleUnitState actor)
+    {
+        if (actor.DemonboundState is null) return null;
+        BattleTransition probe = _transitions.Apply(view, new MeditateCommand(actor.Unit.InstanceId));
+        string? failure = probe.Events.OfType<CommandRejectedEvent>().LastOrDefault()?.Reason;
+        return new BattleUiSkillAvailability(new ContentId("skill.demonbound.meditation"),
+            failure is null, failure);
     }
 
     private static BattleUiSkillPreview CreateSkillPreview(BattleState view, BattleUnitState actor, SkillDefinition skill, IEnumerable<BattleUiTarget> allTargets)
@@ -506,7 +532,8 @@ public sealed class PlayableBattleSessionService
             .OrderBy(unit => unit.Unit.SpawnOrdinal)
             .Select(unit => new BattlePartyResult(
                 characterIds[unit.Unit.InstanceId], unit.CurrentHealth, unit.CurrentMana, !unit.IsAlive,
-                unit.Consumables.Values.OrderBy(item => item.InstanceId.Value, StringComparer.Ordinal).ToArray()))
+                unit.Consumables.Values.OrderBy(item => item.InstanceId.Value, StringComparer.Ordinal).ToArray(),
+                unit.Statuses.ContainsKey(SkillRuntimeService.RunPermanentDeathStatusId)))
             .ToArray();
         int defeated = _initialEnemyCount - State.Units.Values.Count(unit => unit.IsAlive && unit.Unit.PlayerNumber != _context.PlayerNumber);
         _battleResult = new PureRunBattleResult(request.RunId, request.CheckpointRevision, request.EncounterContentId,
@@ -523,7 +550,7 @@ public sealed class PlayableBattleSessionService
         if(!playerAlive)return PlayableBattlePhase.Defeat;
         if(!enemyAlive)return PlayableBattlePhase.Victory;
         BattleUnitState active = view.Units[view.ActiveUnitId];
-        return active.Unit.PlayerNumber == _context.PlayerNumber && ControllerFor(active) is null && !IsNonActingSummon(active)
+        return active.Unit.PlayerNumber == _context.PlayerNumber && !IsAiControlled(active) && !IsNonActingSummon(active)
             ? PlayableBattlePhase.PlayerTurn
             : PlayableBattlePhase.AiTurn;
     }
@@ -552,6 +579,9 @@ public sealed class PlayableBattleSessionService
             ? controller
             : null;
 
+    private bool IsAiControlled(BattleUnitState unit) =>
+        unit.DemonboundState?.IsPossessed == true || ControllerFor(unit) is not null;
+
     private static bool IsNonActingSummon(BattleUnitState unit) =>
         string.Equals(unit.SummonCategory, "Decoy", StringComparison.Ordinal) ||
         unit.Unit.DefinitionId == new ContentId("unit.pure-run.amazon-decoy");
@@ -573,12 +603,15 @@ public sealed class PlayableBattleSessionService
         unit.SuccessfulSkillUses,
         unit.Statuses.Values.OrderBy(status => status.ContentId.Value, StringComparer.Ordinal)
             .Select(status => new BattleUiStatusSnapshot(status.ContentId, status.EffectKind, status.Polarity,
-                status.RemainingTurns, status.StackCount)).ToArray());
+                status.RemainingTurns, status.StackCount)).ToArray(),
+        unit.DemonboundState?.Corruption,
+        unit.DemonboundState?.IsPossessed == true);
 
     private BattleTerminalUnitDiagnostics ToTerminalDiagnostics(BattleUnitState unit)
     {
         string control = unit.Unit.PlayerNumber != _context.PlayerNumber
             ? (_context.AiByUnit.ContainsKey(unit.Unit.InstanceId) ? "enemy_ai" : "enemy_missing_ai")
+            : unit.DemonboundState?.IsPossessed == true ? "possessed_ai"
             : ControllerFor(unit) is not null ? "friendly_ai"
             : IsNonActingSummon(unit) ? "non_acting_summon"
             : "player";

@@ -31,6 +31,7 @@ public partial class UnitDefinitionResource : Resource
     [Export] public int StartingMana { get; set; }
     [Export] public int MoveRange { get; set; }
     [Export] public float Initiative { get; set; }
+    [Export] public string DerivedStatModeValue { get; set; } = "frozen-formula";
     [Export] public int AttackRange { get; set; }
     [Export] public float AttackFactor { get; set; }
     [Export] public float DefenceFactor { get; set; }
@@ -77,6 +78,13 @@ public partial class UnitDefinitionResource : Resource
             _ => throw new InvalidOperationException(
                 $"Unit '{ContentIdValue}' has unknown movement kind '{MovementKindValue}'.")
         };
+        UnitDerivedStatMode derivedStatMode = DerivedStatModeValue switch
+        {
+            "frozen-formula" => UnitDerivedStatMode.FrozenFormula,
+            "explicit" => UnitDerivedStatMode.Explicit,
+            _ => throw new InvalidOperationException(
+                $"Unit '{ContentIdValue}' has unknown derived stat mode '{DerivedStatModeValue}'.")
+        };
         return new UnitDefinition(
             new ContentId(ContentIdValue),
             SourceId,
@@ -90,7 +98,8 @@ public partial class UnitDefinitionResource : Resource
             AttackFactor,
             DefenceFactor,
             movementKind,
-            CanProduceCorpse);
+            CanProduceCorpse,
+            derivedStatMode);
     }
 
     /// <summary>

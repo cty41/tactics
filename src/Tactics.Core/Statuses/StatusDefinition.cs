@@ -25,7 +25,9 @@ public enum StatusEffectKind
     Burning,
     Slow,
     Stun,
-    Fear
+    Fear,
+    BaneWeapon,
+    DamageOutputReduction
 }
 
 /// <summary>

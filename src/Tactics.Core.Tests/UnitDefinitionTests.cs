@@ -103,6 +103,24 @@ public sealed class UnitDefinitionTests
         });
     }
 
+    [Test]
+    public void ExplicitDerivedMode_AllowsAuthoredClassMovementWithoutChangingFrozenFormula()
+    {
+        var definition = new UnitDefinition(
+            new ContentId("unit.pure-run.demonbound"), "godot.demonbound", "Demonbound", "player", "demonbound",
+            new UnitAttributes(5, 5, 5, 5, 6, 5), 4,
+            new UnitDerivedStats(20, 18, 6, 4, 8), 1, 1, 1,
+            UnitMovementKind.Land, true, UnitDerivedStatMode.Explicit);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(definition.DerivedStatMode, Is.EqualTo(UnitDerivedStatMode.Explicit));
+            Assert.That(definition.DerivedStats.MoveRange, Is.EqualTo(4));
+            Assert.That(UnitDerivedStatRules.Calculate(definition.Attributes, definition.Speed).MoveRange, Is.EqualTo(2),
+                "The frozen migration formula remains unchanged for legacy content.");
+        });
+    }
+
     private static UnitDefinition CreateDefinition(JsonElement unit)
     {
         JsonElement attributes = unit.GetProperty("attributes");

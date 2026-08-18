@@ -64,7 +64,8 @@ public sealed class PureRunSessionService
         if (HasPendingSetup(loaded)) return Fail("run_setup.pending", loaded.Snapshot);
         long expected = loaded.Snapshot?.Revision ?? 0;
         string runId = $"run-{unchecked((uint)PureRunSettlementService.DeriveSeed(seed, "run-id")):x8}";
-        RunCharacterState[] party = _definition.Party.Select(template => CreateCharacter(template)).ToArray();
+        RunCharacterState[] party = _definition.Party.Take(_definition.ActivePartySize)
+            .Select(template => CreateCharacter(template, ResolveStartingSkill(template, seed))).ToArray();
         var run = new PureRunState(runId, seed, expected + 1, PureRunPhase.Ready, 0,
             _definition.Encounters[0], party);
         return Save(new PureRunSaveSnapshot(run.Revision, run, null), expected);
@@ -80,11 +81,30 @@ public sealed class PureRunSessionService
         PureRunState? preserved = loaded.Snapshot?.ActiveRun is null
             ? null
             : CopyRevision(loaded.Snapshot.ActiveRun, revision);
-        var setup = new PendingRunSetup(seed, 0, Array.Empty<PendingRunStartingSkillChoice>())
-        {
-            CurrentCharacterId = _definition.Party[0].CharacterId
-        };
+        string[] selected = _definition.Party.Count == _definition.ActivePartySize
+            ? _definition.Party.Select(value => value.CharacterId).ToArray()
+            : Array.Empty<string>();
+        PendingRunSetup setup = BuildPendingSetup(seed, selected, Array.Empty<PendingRunStartingSkillChoice>());
         return Save(new PureRunSaveSnapshot(revision, preserved, loaded.Snapshot?.TerminalSummary, setup), expected);
+    }
+
+    public RunSessionResult ChooseParty(IReadOnlyList<string> characterIds)
+    {
+        ArgumentNullException.ThrowIfNull(characterIds);
+        RunStoreResult loaded = _store.Load();
+        if (!loaded.Succeeded || loaded.Snapshot?.PendingRunSetup is not PendingRunSetup setup)
+            return Fail(loaded.ErrorCode ?? "run_setup.not_pending", loaded.Snapshot);
+        if (setup.SelectedCharacterIds.Count != 0 || setup.Choices.Count != 0)
+            return Fail("run_setup.party_already_selected", loaded.Snapshot);
+        if (characterIds.Count != _definition.ActivePartySize ||
+            characterIds.Distinct(StringComparer.Ordinal).Count() != _definition.ActivePartySize)
+            return Fail("run_setup.party_size_invalid", loaded.Snapshot);
+        string[] selected = _definition.Party.Where(value => characterIds.Contains(value.CharacterId, StringComparer.Ordinal))
+            .Select(value => value.CharacterId).ToArray();
+        if (selected.Length != _definition.ActivePartySize)
+            return Fail("run_setup.party_character_invalid", loaded.Snapshot);
+        return AdvanceSetup(loaded.Snapshot, BuildPendingSetup(setup.Seed, selected,
+            Array.Empty<PendingRunStartingSkillChoice>()));
     }
 
     public RunSessionResult ChooseStartingSkill(string characterId, ContentId skillContentId)
@@ -92,9 +112,10 @@ public sealed class PureRunSessionService
         RunStoreResult loaded = _store.Load();
         if (!loaded.Succeeded || loaded.Snapshot?.PendingRunSetup is not PendingRunSetup setup)
             return Fail(loaded.ErrorCode ?? "run_setup.not_pending", loaded.Snapshot);
-        if (setup.CurrentCharacterIndex >= _definition.Party.Count)
+        IReadOnlyList<PureRunPartyTemplate> selectedParty = SelectedTemplates(setup);
+        if (setup.CurrentCharacterIndex >= selectedParty.Count)
             return Fail("run_setup.complete", loaded.Snapshot);
-        PureRunPartyTemplate template = _definition.Party[setup.CurrentCharacterIndex];
+        PureRunPartyTemplate template = selectedParty[setup.CurrentCharacterIndex];
         if (!string.Equals(template.CharacterId, characterId, StringComparison.Ordinal))
             return Fail("run_setup.character_out_of_order", loaded.Snapshot);
         if (!template.EffectiveStartingSkillChoices.Contains(skillContentId))
@@ -102,26 +123,8 @@ public sealed class PureRunSessionService
 
         PendingRunStartingSkillChoice[] choices = setup.Choices
             .Append(new PendingRunStartingSkillChoice(characterId, skillContentId)).ToArray();
-        long revision = loaded.Snapshot.Revision + 1;
-        if (choices.Length == _definition.Party.Count)
-        {
-            string runId = $"run-{unchecked((uint)PureRunSettlementService.DeriveSeed(setup.Seed, "run-id")):x8}";
-            RunCharacterState[] party = _definition.Party.Select((value, index) =>
-                CreateCharacter(value, choices[index].SkillContentId)).ToArray();
-            var run = new PureRunState(runId, setup.Seed, revision, PureRunPhase.Ready, 0,
-                _definition.Encounters[0], party);
-            return Save(new PureRunSaveSnapshot(revision, run, null), loaded.Snapshot.Revision);
-        }
-
-        PureRunState? preserved = loaded.Snapshot.ActiveRun is null
-            ? null
-            : CopyRevision(loaded.Snapshot.ActiveRun, revision);
-        var pending = new PendingRunSetup(setup.Seed, choices.Length, choices)
-        {
-            CurrentCharacterId = _definition.Party[choices.Length].CharacterId
-        };
-        return Save(new PureRunSaveSnapshot(revision, preserved, loaded.Snapshot.TerminalSummary, pending),
-            loaded.Snapshot.Revision);
+        return AdvanceSetup(loaded.Snapshot, BuildPendingSetup(setup.Seed,
+            setup.SelectedCharacterIds, choices));
     }
 
     public RunSessionResult CancelNewRunSetup()
@@ -300,7 +303,62 @@ public sealed class PureRunSessionService
         return new RunCharacterState(
             template.CharacterId, template.UnitContentId, template.Level, template.Attributes,
             stats.MaxHealth, stats.MaxHealth, stats.StartingMana, stats.MaxMana, false,
-            new[] { startingSkill }, startingSkillContentId: startingSkill);
+            template.EffectiveInherentSkills.Append(startingSkill).Distinct().ToArray(),
+            startingSkillContentId: startingSkill);
+    }
+
+    private PendingRunSetup BuildPendingSetup(int seed, IReadOnlyList<string> selectedCharacterIds,
+        IReadOnlyList<PendingRunStartingSkillChoice> existingChoices)
+    {
+        var choices = existingChoices.ToList();
+        IReadOnlyList<PureRunPartyTemplate> templates = selectedCharacterIds.Count == 0
+            ? Array.Empty<PureRunPartyTemplate>()
+            : _definition.Party.Where(value => selectedCharacterIds.Contains(value.CharacterId, StringComparer.Ordinal)).ToArray();
+        while (choices.Count < templates.Count && templates[choices.Count].SeededStartingSkill)
+        {
+            PureRunPartyTemplate automatic = templates[choices.Count];
+            choices.Add(new PendingRunStartingSkillChoice(automatic.CharacterId,
+                ResolveStartingSkill(automatic, seed)));
+        }
+        return new PendingRunSetup(seed, choices.Count, choices.ToArray())
+        {
+            SelectedCharacterIds = selectedCharacterIds.ToArray(),
+            CurrentCharacterId = choices.Count < templates.Count ? templates[choices.Count].CharacterId : null
+        };
+    }
+
+    private RunSessionResult AdvanceSetup(PureRunSaveSnapshot snapshot, PendingRunSetup pending)
+    {
+        long revision = snapshot.Revision + 1;
+        IReadOnlyList<PureRunPartyTemplate> templates = SelectedTemplates(pending);
+        if (templates.Count == _definition.ActivePartySize && pending.Choices.Count == templates.Count)
+        {
+            string runId = $"run-{unchecked((uint)PureRunSettlementService.DeriveSeed(pending.Seed, "run-id")):x8}";
+            RunCharacterState[] party = templates.Select((value, index) =>
+                CreateCharacter(value, pending.Choices[index].SkillContentId)).ToArray();
+            var run = new PureRunState(runId, pending.Seed, revision, PureRunPhase.Ready, 0,
+                _definition.Encounters[0], party);
+            return Save(new PureRunSaveSnapshot(revision, run, null), snapshot.Revision);
+        }
+        PureRunState? preserved = snapshot.ActiveRun is null ? null : CopyRevision(snapshot.ActiveRun, revision);
+        return Save(new PureRunSaveSnapshot(revision, preserved, snapshot.TerminalSummary, pending), snapshot.Revision);
+    }
+
+    private IReadOnlyList<PureRunPartyTemplate> SelectedTemplates(PendingRunSetup setup)
+    {
+        IReadOnlyList<string> selected = setup.SelectedCharacterIds.Count == 0 && _definition.Party.Count == 3
+            ? _definition.Party.Select(value => value.CharacterId).ToArray()
+            : setup.SelectedCharacterIds;
+        return _definition.Party.Where(value => selected.Contains(value.CharacterId, StringComparer.Ordinal)).ToArray();
+    }
+
+    private static ContentId ResolveStartingSkill(PureRunPartyTemplate template, int seed)
+    {
+        IReadOnlyList<ContentId> choices = template.EffectiveStartingSkillChoices;
+        if (!template.SeededStartingSkill || choices.Count == 1) return template.StartingSkillContentId;
+        int derived = PureRunSettlementService.DeriveSeed(seed, $"starting-skill:{template.CharacterId}");
+        return choices.OrderBy(value => value.Value, StringComparer.Ordinal)
+            .ElementAt((int)((uint)derived % (uint)choices.Count));
     }
 
     private static PureRunState CopyRevision(PureRunState run, long revision) => new(

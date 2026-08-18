@@ -3,7 +3,7 @@ using Tactics.Core.Statuses;
 
 namespace Tactics.Core.Skills;
 
-public enum SkillRole { Any, Mage, Necromancer, Amazon }
+public enum SkillRole { Any, Mage, Necromancer, Amazon, Demonbound }
 public enum SkillKind { Basic, Active, Passive, Utility }
 public enum SkillDamageKind { None, Physical, Magical }
 public enum SkillExecutionKind
@@ -33,7 +33,14 @@ public enum SkillExecutionKind
     MultiStab,
     RecoverSpear,
     Decoy,
-    FireDemonAttack
+    FireDemonAttack,
+    Meditation,
+    Mindfulness,
+    Bane,
+    Cleave,
+    InfernalBlast,
+    Hellfire,
+    DemonicRegeneration
 }
 
 /// <summary>Optional normalized parameters used by the complete Pure Run Lv1/Lv2 skill set.</summary>
@@ -58,7 +65,8 @@ public sealed record SkillExecutionProfile(
     bool PierceAll = false,
     bool AllowsEmptyTarget = false,
     int MovementDamagePerCell = 0,
-    ContentId? SummonAttackContentId = null);
+    ContentId? SummonAttackContentId = null,
+    int CorruptionCost = 0);
 
 /// <summary>Normalized engine-neutral execution contract for one migrated skill level.</summary>
 public sealed record SkillDefinition
@@ -116,7 +124,8 @@ public sealed record SkillDefinition
         GrowthVisible = growthVisible;
         ExecutionProfile = executionProfile ?? new SkillExecutionProfile();
         if (ExecutionProfile.StatusChancePercent is < 0 or > 100 || ExecutionProfile.BounceRange < 0 ||
-            ExecutionProfile.BounceCount < 0 || ExecutionProfile.MovementDamagePerCell < 0)
+            ExecutionProfile.BounceCount < 0 || ExecutionProfile.MovementDamagePerCell < 0 ||
+            ExecutionProfile.CorruptionCost < 0)
             throw new ArgumentOutOfRangeException(nameof(executionProfile));
         RequiredAttribute = requiredAttribute.Trim();
         MinimumAttribute = minimumAttribute;

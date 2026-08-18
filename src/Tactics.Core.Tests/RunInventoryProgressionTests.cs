@@ -369,6 +369,47 @@ public sealed class RunInventoryProgressionTests
         });
     }
 
+    [Test]
+    public void DemonboundGrowthCandidatesUseCharismaAndPreserveThreeBranchChains()
+    {
+        ContentId baneId = new("skill.demonbound.bane.lv1");
+        var demonbound = new RunCharacterState("pure_run_demonbound", new ContentId("unit.pure-run.demonbound"),
+            1, new UnitAttributes(5, 5, 5, 5, 7, 5), 20, 20, 6, 18, false, [baneId],
+            learnedSkillStates: [new RunLearnedSkillState("demonbound.bane", 1, baneId)],
+            startingSkillContentId: baneId);
+        SkillDefinition Skill(string id, string branch, int level, SkillExecutionKind execution,
+            string prerequisiteBranch = "") => new(new ContentId(id), id, SkillRole.Demonbound,
+            execution == SkillExecutionKind.Mindfulness ? SkillKind.Passive : SkillKind.Active,
+            level, 0, 0, 1, execution, 0, SkillDamageKind.None, branchId: branch,
+            prerequisiteBranchId: prerequisiteBranch, requiredAttribute: "Charisma",
+            minimumAttribute: prerequisiteBranch.Length == 0 && level == 1 ? 5 : 7);
+        SkillDefinition baneTwo = Skill("skill.demonbound.bane.lv2", "demonbound.bane", 2, SkillExecutionKind.Bane);
+        SkillDefinition cleave = Skill("skill.demonbound.cleave.lv1", "demonbound.cleave", 1,
+            SkillExecutionKind.Cleave, "demonbound.bane");
+        SkillDefinition infernal = Skill("skill.demonbound.infernal-blast.lv1", "demonbound.infernal-blast", 1,
+            SkillExecutionKind.InfernalBlast);
+        SkillDefinition mindfulness = Skill("skill.demonbound.mindfulness.lv1", "demonbound.mindfulness", 1,
+            SkillExecutionKind.Mindfulness);
+        SkillDefinition hellfireLocked = Skill("skill.demonbound.hellfire.lv1", "demonbound.hellfire", 1,
+            SkillExecutionKind.Hellfire, "demonbound.infernal-blast");
+        var skills = new[] { baneTwo, cleave, infernal, mindfulness, hellfireLocked }
+            .ToDictionary(value => value.ContentId);
+
+        SkillDefinition[] candidates = new RunInventoryProgressionService()
+            .GrowthCandidates(demonbound, skills).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(candidates.Select(value => value.ContentId), Does.Contain(baneTwo.ContentId));
+            Assert.That(candidates.Select(value => value.ContentId), Does.Contain(cleave.ContentId));
+            Assert.That(candidates.Select(value => value.ContentId), Does.Contain(infernal.ContentId));
+            Assert.That(candidates.Select(value => value.ContentId), Does.Contain(mindfulness.ContentId));
+            Assert.That(candidates.Select(value => value.ContentId), Does.Not.Contain(hellfireLocked.ContentId));
+            Assert.That(candidates, Is.All.Matches<SkillDefinition>(value =>
+                value.Role == SkillRole.Demonbound && value.RequiredAttribute == "Charisma"));
+        });
+    }
+
     private static PureRunState State(bool withProgression = false, bool frozenCharacterIds = false)
     {
         var attributes = new UnitAttributes(3, 3, 3, 5, 4, 2);

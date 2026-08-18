@@ -8,6 +8,109 @@ namespace Tactics.Application.Tests;
 
 public sealed class PureRunSessionServiceTests
 {
+    private static IEnumerable<TestCaseData> DemonboundFixedSeedCases()
+    {
+        string[][] parties =
+        [
+            ["mage", "amazon", "demonbound"],
+            ["mage", "necromancer", "demonbound"],
+            ["necromancer", "amazon", "demonbound"]
+        ];
+        foreach (string[] party in parties)
+        {
+            for (int seed = 0; seed < 10; seed++)
+                yield return new TestCaseData(party, seed).SetName(
+                    $"DemonboundFixedSeed_{string.Join('_', party.Take(2))}_{seed:D2}");
+        }
+    }
+
+    [TestCaseSource(nameof(DemonboundFixedSeedCases))]
+    public void DemonboundFixedSeedSetupSamples_AreStableAcrossThreePartyCombinations(string[] party, int seed)
+    {
+        var store = new MemoryRunStore();
+        PureRunDefinition definition = DefinitionWithDemonbound();
+        var service = new PureRunSessionService(definition, store);
+
+        Assert.That(service.BeginNewRunSetup(seed).Succeeded, Is.True);
+        Assert.That(service.ChooseParty(party).Succeeded, Is.True);
+        foreach (PureRunPartyTemplate template in definition.Party.Where(value =>
+                     party.Contains(value.CharacterId, StringComparer.Ordinal) && value.CharacterId != "demonbound"))
+        {
+            Assert.That(service.ChooseStartingSkill(template.CharacterId, template.StartingSkillContentId).Succeeded,
+                Is.True);
+        }
+
+        RunCharacterState demonbound = store.Snapshot!.ActiveRun!.Party.Single(value =>
+            value.CharacterId == "demonbound");
+        ContentId expected = definition.Party.Single(value => value.CharacterId == "demonbound")
+            .EffectiveStartingSkillChoices
+            .OrderBy(value => value.Value, StringComparer.Ordinal)
+            .ElementAt((int)((uint)PureRunSettlementService.DeriveSeed(seed, "starting-skill:demonbound") % 3U));
+        Assert.Multiple(() =>
+        {
+            Assert.That(demonbound.StartingSkillContentId, Is.EqualTo(expected));
+            Assert.That(demonbound.LearnedSkills, Does.Contain(new ContentId("skill.demonbound.meditation")));
+            Assert.That(store.Snapshot.ActiveRun.Party.Select(value => value.CharacterId),
+                Is.EqualTo(definition.Party.Where(value => party.Contains(value.CharacterId, StringComparer.Ordinal))
+                    .Select(value => value.CharacterId)));
+        });
+    }
+
+    [Test]
+    public void FourCandidateSetup_ChoosesThreeAndResolvesSeededDemonboundSkill()
+    {
+        var store = new MemoryRunStore();
+        PureRunDefinition definition = DefinitionWithDemonbound();
+        var service = new PureRunSessionService(definition, store);
+
+        RunSessionResult begun = service.BeginNewRunSetup(37);
+        Assert.Multiple(() =>
+        {
+            Assert.That(begun.Succeeded, Is.True);
+            Assert.That(begun.Snapshot!.PendingRunSetup!.SelectedCharacterIds, Is.Empty);
+            Assert.That(begun.Snapshot.PendingRunSetup.CurrentCharacterId, Is.Null);
+        });
+
+        RunSessionResult selected = service.ChooseParty(["amazon", "demonbound", "mage"]);
+        Assert.Multiple(() =>
+        {
+            Assert.That(selected.Succeeded, Is.True);
+            Assert.That(selected.Snapshot!.PendingRunSetup!.SelectedCharacterIds,
+                Is.EqualTo(new[] { "mage", "amazon", "demonbound" }));
+            Assert.That(selected.Snapshot.PendingRunSetup.CurrentCharacterId, Is.EqualTo("mage"));
+        });
+
+        Assert.That(service.ChooseStartingSkill("mage", new ContentId("skill.mage.fireball.lv1")).Succeeded, Is.True);
+        Assert.That(service.ChooseStartingSkill("amazon", new ContentId("skill.amazon.thrust.lv1")).Succeeded, Is.True);
+        PureRunSaveSnapshot completed = store.Snapshot!;
+        RunCharacterState demonbound = completed.ActiveRun!.Party.Single(value => value.CharacterId == "demonbound");
+        Assert.Multiple(() =>
+        {
+            Assert.That(completed.PendingRunSetup, Is.Null);
+            Assert.That(completed.ActiveRun.Party.Select(value => value.CharacterId),
+                Is.EqualTo(new[] { "mage", "amazon", "demonbound" }));
+            Assert.That(demonbound.LearnedSkills, Does.Contain(new ContentId("skill.demonbound.meditation")));
+            Assert.That(demonbound.StartingSkillContentId,
+                Is.AnyOf(new ContentId("skill.demonbound.bane.lv1"),
+                    new ContentId("skill.demonbound.infernal-blast.lv1"),
+                    new ContentId("skill.demonbound.mindfulness.lv1")));
+        });
+    }
+
+    [Test]
+    public void FourCandidateSetup_RejectsInvalidPartySelection()
+    {
+        var service = new PureRunSessionService(DefinitionWithDemonbound(), new MemoryRunStore());
+        service.BeginNewRunSetup(1);
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.ChooseParty(["mage", "mage", "amazon"]).ErrorCode,
+                Is.EqualTo("run_setup.party_size_invalid"));
+            Assert.That(service.ChooseParty(["mage", "amazon", "unknown"]).ErrorCode,
+                Is.EqualTo("run_setup.party_character_invalid"));
+        });
+    }
+
     [Test]
     public void NewRunSetup_RequiresThreeCanonicalChoicesBeforeReplacingActiveRun()
     {
@@ -561,6 +664,19 @@ public sealed class PureRunSessionServiceTests
         new[] { "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3" }.Select(value => new ContentId(value)),
         Definition().Party,
         new ContentId("run-map.pure-run.layer4-v1"));
+
+    private static PureRunDefinition DefinitionWithDemonbound() => new(
+        new ContentId("run.pure-run.four-candidate-v1"),
+        new[] { "encounter.pure-run.n1", "encounter.pure-run.n2", "encounter.pure-run.n3" }
+            .Select(value => new ContentId(value)),
+        DefinitionWithChoices().Party.Append(new PureRunPartyTemplate(
+            "demonbound", new ContentId("unit.pure-run.demonbound"),
+            new ContentId("skill.demonbound.bane.lv1"), new UnitAttributes(5, 5, 5, 5, 6, 5), 1,
+            [new ContentId("skill.demonbound.bane.lv1"),
+                new ContentId("skill.demonbound.infernal-blast.lv1"),
+                new ContentId("skill.demonbound.mindfulness.lv1")],
+            SeededStartingSkill: true,
+            InherentSkills: [new ContentId("skill.demonbound.meditation")])));
 
     private static PureRunMapDefinition LayerFourMap() => new(new ContentId("run-map.pure-run.layer4-v1"), 2,
     [

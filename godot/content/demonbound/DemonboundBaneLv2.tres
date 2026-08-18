@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://ck744hfqmbjr"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_c3bp0"]
+
+[resource]
+script = ExtResource("1_c3bp0")
+ContentIdValue = "skill.demonbound.bane.lv2"
+SourceId = "godot.skill.demonbound.bane.lv2"
+DisplayName = "Hex: Bane"
+Description = "Hex: Bane"
+RoleValue = "Demonbound"
+KindValue = "Active"
+Level = 2
+ManaCost = 3
+ExecutionKindValue = "Bane"
+DamageKindValue = "None"
+CanCrit = false
+BranchId = "demonbound.bane"
+PrerequisiteContentIdValue = "skill.demonbound.bane.lv1"
+PrerequisiteBranchId = "demonbound.bane"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+CorruptionCost = 2
+AuthoringSourceKindValue = "GodotAuthored"

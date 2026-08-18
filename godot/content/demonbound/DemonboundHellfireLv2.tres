@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://cqjagn6oww7o8"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_sen3r"]
+
+[resource]
+script = ExtResource("1_sen3r")
+ContentIdValue = "skill.demonbound.hellfire.lv2"
+SourceId = "godot.skill.demonbound.hellfire.lv2"
+DisplayName = "Hellfire"
+Description = "Hellfire"
+RoleValue = "Demonbound"
+KindValue = "Active"
+Level = 2
+ManaCost = 5
+ExecutionKindValue = "Hellfire"
+Damage = 5
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.stun"
+StatusDuration = 1
+BranchId = "demonbound.hellfire"
+PrerequisiteContentIdValue = "skill.demonbound.hellfire.lv1"
+PrerequisiteBranchId = "demonbound.hellfire"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+IgnoreLineOfSight = true
+StatusChancePercent = 40
+CorruptionCost = 4
+AuthoringSourceKindValue = "GodotAuthored"

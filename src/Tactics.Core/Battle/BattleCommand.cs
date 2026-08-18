@@ -59,3 +59,6 @@ public sealed record UseConsumableCommand(
 /// </summary>
 /// <param name="ActorId">Unit ending its turn.</param>
 public sealed record EndTurnCommand(UnitInstanceId ActorId) : BattleCommand(ActorId);
+
+/// <summary>Uses the Demonbound's inherent once-per-turn Meditation action.</summary>
+public sealed record MeditateCommand(UnitInstanceId ActorId) : BattleCommand(ActorId);

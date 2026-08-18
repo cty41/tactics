@@ -71,4 +71,34 @@ public sealed class AiEncounterRuntimeTests
         AiTurnPlan plan=new AiDecisionService().Decide(state,definition,new Dictionary<ContentId,SkillDefinition>{{skill.ContentId,skill}});
         Assert.That(plan.Selected.TargetId,Is.EqualTo(skeletonId));
     }
+
+    [Test]
+    public void Decision_IncludesAndSelectsDemonicRegenerationAsSelfTargetWhenWounded()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 3; x++) for (int y = 0; y < 3; y++) cells[new GridPoint(x, y)] = new CellState();
+        var actorId = new UnitInstanceId("demonbound");
+        var targetId = new UnitInstanceId("ally");
+        var actor = new BattleUnitState(new UnitState(actorId, new ContentId("unit.pure-run.demonbound"),
+            new GridPoint(1, 1), 0, 5, 0, 0), 20, 2, maxMana: 10, currentMana: 10,
+            demonboundState: new DemonboundBattleState(10, 3, isPossessed: true));
+        var target = new BattleUnitState(new UnitState(targetId, new ContentId("unit.pure-run.mage"),
+            new GridPoint(2, 1), 0, 4, 0, 1), 20, 20);
+        var state = new BattleState(new BoardSnapshot(cells), [actor, target], [actorId, targetId]);
+        var regeneration = new SkillDefinition(new ContentId("skill.demonbound.regeneration.lv1"), "regen",
+            SkillRole.Demonbound, SkillKind.Active, 1, 0, 0, 0, SkillExecutionKind.DemonicRegeneration,
+            0, SkillDamageKind.None);
+        var definition = new AiDefinition(new ContentId("ai.demonbound.possessed"), AiArchetype.Charger,
+            new AiProfileDefinition(1, 1, 1, 1), [regeneration.ContentId], Array.Empty<ContentId>());
+
+        AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
+            new Dictionary<ContentId, SkillDefinition> { [regeneration.ContentId] = regeneration },
+            targetOwnFaction: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Selected.SkillId, Is.EqualTo(regeneration.ContentId));
+            Assert.That(plan.Selected.TargetId, Is.EqualTo(actorId));
+        });
+    }
 }

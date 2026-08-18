@@ -20,8 +20,32 @@ public static class GodotGameplayCheckpointCatalog
             character => character.CharacterId == "pure_run_amazon" ? character : Copy(character, health: 0),
             amazonStartingSkill: new ContentId("skill.amazon.combat-techniques.lv1"), battleRandomState: 2),
         "reload-pending-battle-v1" => PendingBattle(id, character => character),
+        "demonbound-ready-v1" => DemonboundPendingBattle(id),
         _ => throw new InvalidDataException("Unknown validated Godot checkpoint: " + id)
     };
+
+    private static ValidatedGodotRunCheckpoint DemonboundPendingBattle(string id)
+    {
+        var definition = new PureRunDefinition(new ContentId("run.demonbound.qa"),
+            [new ContentId("encounter.pure-run.n1"), new ContentId("encounter.pure-run.n2"), new ContentId("encounter.pure-run.n3")],
+            [
+                new PureRunPartyTemplate("pure_run_mage", new ContentId("unit.pure-run.mage"),
+                    new ContentId("skill.mage.fireball.lv1"), new UnitAttributes(5,5,5,6,5,5)),
+                new PureRunPartyTemplate("pure_run_necromancer", new ContentId("unit.pure-run.necromancer"),
+                    new ContentId("skill.necromancer.summon-skeleton.lv1"), new UnitAttributes(5,5,5,5,6,5)),
+                new PureRunPartyTemplate("pure_run_demonbound", new ContentId("unit.pure-run.demonbound"),
+                    new ContentId("skill.demonbound.bane.lv1"), new UnitAttributes(5,5,5,5,6,5),
+                    InherentSkills: [new ContentId("skill.demonbound.meditation")])
+            ]);
+        var store = new MemoryRunStore();
+        var service = new PureRunSessionService(definition, store);
+        Require(service.BeginNewRunSetup(7).Succeeded, "demonbound_setup_failed");
+        foreach (PureRunPartyTemplate member in definition.Party)
+            Require(service.ChooseStartingSkill(member.CharacterId, member.StartingSkillContentId).Succeeded,
+                "demonbound_choice_failed:" + member.CharacterId);
+        Require(service.BeginEncounter().Succeeded, "demonbound_encounter_failed");
+        return ValidatedGodotRunCheckpoint.Create(id, "validated://" + id, store.Snapshot!);
+    }
 
     private static ValidatedGodotRunCheckpoint InventoryReady(string id)
     {

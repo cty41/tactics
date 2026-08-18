@@ -52,17 +52,26 @@ public sealed class PlayableBattleSessionFactory
             RunCharacterState character = request.Party[index];
             UnitDefinition definition = units[character.UnitContentId];
             var instanceId = new UnitInstanceId($"party-{character.CharacterId}");
+            SkillDefinition[] learnedDefinitions = character.LearnedSkills
+                .Select(id => playableSkills[id]).ToArray();
+            SkillRole role = learnedDefinitions.Select(skill => skill.Role)
+                .FirstOrDefault(value => value != SkillRole.Any);
+            ContentId basicId = role is SkillRole.Amazon or SkillRole.Demonbound ? MeleeAttackId : MagicAttackId;
+            IEnumerable<ContentId> learned=new[] { basicId }.Concat(character.LearnedSkills);
+            if(role == SkillRole.Amazon) learned=learned.Append(PickupSpearId);
+            SkillDefinition[] unitSkills = learned.Distinct().Select(id => playableSkills[id]).ToArray();
             BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[index], index,
                 balance, equipment);
+            if (role == SkillRole.Demonbound)
+            {
+                int mindfulnessLevel = learnedDefinitions
+                    .Where(skill => skill.ExecutionKind == SkillExecutionKind.Mindfulness)
+                    .Select(skill => skill.Level).DefaultIfEmpty(0).Max();
+                state = state.WithDemonboundState(new DemonboundBattleState(mindfulnessLevel: mindfulnessLevel));
+            }
             states.Add(state);
             characterIds.Add(instanceId, character.CharacterId);
-            ContentId basicId = definition.RoleId.Contains("amazon", StringComparison.OrdinalIgnoreCase)
-                ? MeleeAttackId
-                : MagicAttackId;
-            IEnumerable<ContentId> learned=new[] { basicId }.Concat(character.LearnedSkills);
-            if(definition.RoleId.Contains("amazon",StringComparison.OrdinalIgnoreCase))learned=learned.Append(PickupSpearId);
-            skillsByUnit.Add(instanceId, learned.Distinct()
-                .Select(id => playableSkills[id]).ToArray());
+            skillsByUnit.Add(instanceId, unitSkills);
         }
 
         for (int index = 0; index < resolved.Enemies.Count; index++)
@@ -132,9 +141,10 @@ public sealed class PlayableBattleSessionFactory
             throw new ArgumentException($"Equipment definition '{item.DefinitionId}' is unavailable.", nameof(equipment)))
             .ToArray();
         EquipmentStatProjection projection = EquipmentStatProjector.Project(character.Attributes, definition.Speed, loadout);
+        UnitDerivedStats battleDerived = ResolvePartyDerivedStats(definition, projection);
         var facts = new UnitState(
-            instanceId, definition.ContentId, cell, projection.DerivedStats.MoveRange,
-            projection.DerivedStats.Initiative, 0, spawnOrdinal, !character.IsDead);
+            instanceId, definition.ContentId, cell, battleDerived.MoveRange,
+            battleDerived.Initiative, 0, spawnOrdinal, !character.IsDead);
         IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> consumables = character.CarriedConsumables
             .ToDictionary(item => item.InstanceId);
         (int physical, int magical) = balance?.Attacks(definition.ContentId) ?? (2, 2);
@@ -151,4 +161,12 @@ public sealed class PlayableBattleSessionFactory
             .DefaultIfEmpty(0).Max();
         return combatTechniquesLevel > 0 ? state.WithCombatTechniquesLevel(combatTechniquesLevel) : state;
     }
+
+    public static UnitDerivedStats ResolvePartyDerivedStats(
+        UnitDefinition definition, EquipmentStatProjection projection) =>
+        definition.DerivedStatMode == UnitDerivedStatMode.Explicit
+            ? new UnitDerivedStats(projection.DerivedStats.MaxHealth, projection.DerivedStats.MaxMana,
+                projection.DerivedStats.StartingMana, definition.DerivedStats.MoveRange,
+                definition.DerivedStats.Initiative)
+            : projection.DerivedStats;
 }

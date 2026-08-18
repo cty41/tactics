@@ -88,7 +88,7 @@ public sealed class GodotRunSaveStore : IRunSaveStore
                 return new RunStoreResult(false, "save.stale_revision", current.Snapshot);
             if (snapshot.Revision <= expectedRevision)
                 return new RunStoreResult(false, "save.non_increasing_revision", current.Snapshot);
-            string encoded = RunSaveDocumentV6.Encode(snapshot);
+            string encoded = RunSaveDocumentV7.Encode(snapshot);
             try
             {
                 _files.WriteAllText(Temp, encoded);
@@ -115,16 +115,17 @@ public sealed class GodotRunSaveStore : IRunSaveStore
 
     private RunStoreResult LoadCore(bool repairMain)
     {
-        if (TryDecode(_main, out PureRunSaveSnapshot? main)) return new RunStoreResult(true, null, main);
+        if (TryDecode(_main, out PureRunSaveSnapshot? main, out bool mainRequiresNewRun))
+            return new RunStoreResult(true, mainRequiresNewRun ? "save.run_reset_for_v7" : null, main);
         bool mainExists = _files.Exists(_main);
-        if (TryDecode(Backup, out PureRunSaveSnapshot? backup))
+        if (TryDecode(Backup, out PureRunSaveSnapshot? backup, out bool backupRequiresNewRun))
         {
             if (repairMain)
             {
                 if (mainExists) Quarantine(_main);
                 _files.WriteAllText(_main, _files.ReadAllText(Backup));
             }
-            return new RunStoreResult(true, "save.recovered_from_backup", backup);
+            return new RunStoreResult(true, backupRequiresNewRun ? "save.recovered_from_backup_run_reset_for_v7" : "save.recovered_from_backup", backup);
         }
         bool backupExists = _files.Exists(Backup);
         if (!mainExists && !backupExists) return new RunStoreResult(true, null, new PureRunSaveSnapshot(0, null, null));
@@ -136,14 +137,16 @@ public sealed class GodotRunSaveStore : IRunSaveStore
         return new RunStoreResult(false, "save.no_recoverable_document", null);
     }
 
-    private bool TryDecode(string path, out PureRunSaveSnapshot? snapshot)
+    private bool TryDecode(string path, out PureRunSaveSnapshot? snapshot, out bool requiresNewRun)
     {
         snapshot = null;
+        requiresNewRun = false;
         if (!_files.Exists(path)) return false;
         try
         {
-            RunSaveDecodeResultV6 decoded = RunSaveDocumentV6.Decode(_files.ReadAllText(path));
+            RunSaveDecodeResultV7 decoded = RunSaveDocumentV7.Decode(_files.ReadAllText(path));
             snapshot = decoded.Snapshot;
+            requiresNewRun = decoded.RequiresNewRun;
             return decoded.Succeeded && snapshot is not null;
         }
         catch { return false; }
@@ -151,7 +154,7 @@ public sealed class GodotRunSaveStore : IRunSaveStore
 
     private PureRunSaveSnapshot RequireValid(string path, long revision)
     {
-        if (!TryDecode(path, out PureRunSaveSnapshot? snapshot) || snapshot!.Revision != revision)
+        if (!TryDecode(path, out PureRunSaveSnapshot? snapshot, out _) || snapshot!.Revision != revision)
             throw new IOException($"Save verification failed for '{path}'.");
         return snapshot;
     }
@@ -174,7 +177,7 @@ public sealed class GodotRunSaveStore : IRunSaveStore
     {
         try
         {
-            if (!_files.Exists(_main) && TryDecode(Backup, out _)) _files.WriteAllText(_main, _files.ReadAllText(Backup));
+            if (!_files.Exists(_main) && TryDecode(Backup, out _, out _)) _files.WriteAllText(_main, _files.ReadAllText(Backup));
         }
         catch { }
     }

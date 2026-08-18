@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://dvbiuv4yisi5f"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_2y10l"]
+
+[resource]
+script = ExtResource("1_2y10l")
+ContentIdValue = "skill.demonbound.hellfire.lv1"
+SourceId = "godot.skill.demonbound.hellfire.lv1"
+DisplayName = "Hellfire"
+Description = "Hellfire"
+RoleValue = "Demonbound"
+KindValue = "Active"
+Level = 1
+ManaCost = 5
+ExecutionKindValue = "Hellfire"
+Damage = 5
+DamageKindValue = "Magical"
+StatusContentIdValue = "buff.stun"
+StatusDuration = 1
+BranchId = "demonbound.hellfire"
+PrerequisiteContentIdValue = "skill.demonbound.infernal-blast.lv1"
+PrerequisiteBranchId = "demonbound.infernal-blast"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+IgnoreLineOfSight = true
+StatusChancePercent = 10
+CorruptionCost = 4
+AuthoringSourceKindValue = "GodotAuthored"

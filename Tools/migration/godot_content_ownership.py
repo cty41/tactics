@@ -50,8 +50,8 @@ def compile_receipt() -> dict[str, object]:
     if any(category["owner"] != "GodotOwned" for category in categories):
         raise ValueError("Every current content category must be GodotOwned")
     entries = parse_catalog()
-    if len(entries) != 143:
-        raise ValueError(f"Canonical Catalog must contain 143 entries, got {len(entries)}")
+    if len(entries) != 160:
+        raise ValueError(f"Canonical Catalog must contain 160 entries, got {len(entries)}")
     ids = [entry["contentId"] for entry in entries]
     if len(ids) != len(set(ids)):
         raise ValueError("Canonical Catalog contains duplicate ContentId values")

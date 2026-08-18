@@ -71,6 +71,7 @@ public sealed class BattleTransitionService
             UsePoisonSpearCommand poisonSpear => ApplyPoisonSpear(state, actor, poisonSpear),
             UseSkillCommand skill => ApplySkill(state, actor, skill),
             UseConsumableCommand consumable => ApplyConsumable(state, actor, consumable),
+            MeditateCommand meditate => ApplyMeditation(state, actor, meditate),
             EndTurnCommand endTurn => ApplyEndTurn(state, endTurn),
             _ => Rejected(state, command.ActorId, "unsupported_command")
         };
@@ -79,7 +80,29 @@ public sealed class BattleTransitionService
     private BattleTransition ApplySkill(BattleState state, BattleUnitState actor, UseSkillCommand command)
     {
         if (command.Definition.ExecutionKind != SkillExecutionKind.PoisonSpear)
-            return _skillRuntime.Apply(state, actor, command);
+        {
+            BattleTransition genericTransition = _skillRuntime.Apply(state, actor, command);
+            if (genericTransition.Events.OfType<CommandRejectedEvent>().Any() || actor.DemonboundState is null)
+                return genericTransition;
+            BattleUnitState updatedActor = genericTransition.State.Units[actor.Unit.InstanceId];
+            DemonboundBattleState actionState = command.Definition.IsBasicAbility
+                ? actor.DemonboundState.WithBasicAttackUsed()
+                : actor.DemonboundState.WithNonMeditationSkillUsed();
+            int corruptionCost = actionState.IsPossessed
+                ? 0
+                : Math.Max(0, command.Definition.ExecutionProfile.CorruptionCost -
+                    (actionState.MindfulnessLevel >= 1 ? 1 : 0));
+            actionState = actionState.WithCorruption(checked(actionState.Corruption + corruptionCost));
+            var events = genericTransition.Events.ToList();
+            if (corruptionCost > 0)
+                events.Add(new CorruptionChangedEvent(actor.Unit.InstanceId, command.Definition.ContentId,
+                    corruptionCost, actionState.Corruption));
+            if (!actor.DemonboundState.IsPossessed && actionState.IsPossessed)
+                events.Add(new DemonboundPossessedEvent(actor.Unit.InstanceId));
+            return new BattleTransition(
+                genericTransition.State.WithUnit(updatedActor.WithDemonboundState(actionState)),
+                events);
+        }
         string? usageFailure = SkillRuntimeService.UsageFailure(actor, command.Definition);
         if (usageFailure is not null)
             return Rejected(state, command.ActorId, usageFailure);
@@ -154,6 +177,36 @@ public sealed class BattleTransitionService
         {
             new UnitMovedEvent(command.ActorId, origin, command.Destination, Array.AsReadOnly(path.ToArray()))
         });
+    }
+
+    private BattleTransition ApplyMeditation(BattleState state, BattleUnitState actor, MeditateCommand command)
+    {
+        DemonboundBattleState? demonbound = actor.DemonboundState;
+        if (demonbound is null)
+            return Rejected(state, command.ActorId, "meditation_not_available");
+        if (demonbound.IsPossessed)
+            return Rejected(state, command.ActorId, "meditation_possessed");
+        if (demonbound.Corruption == 0)
+            return Rejected(state, command.ActorId, "meditation_corruption_empty");
+        if (demonbound.MeditationUsedThisTurn)
+            return Rejected(state, command.ActorId, "meditation_already_used");
+        if (demonbound.NonMeditationSkillUsedThisTurn)
+            return Rejected(state, command.ActorId, "meditation_blocked_by_skill");
+        if (actor.HasMovedThisTurn && demonbound.MindfulnessLevel < 2)
+            return Rejected(state, command.ActorId, "meditation_blocked_by_move");
+        if (demonbound.MindfulnessLevel < 3 &&
+            (demonbound.BasicAttackUsedThisTurn || actor.LastSuccessfulConsumableUseRound == state.Round))
+            return Rejected(state, command.ActorId, "meditation_blocked_by_action");
+
+        int remaining = Math.Max(0, demonbound.Corruption - 5);
+        int reduced = demonbound.Corruption - remaining;
+        BattleUnitState meditated = actor.WithDemonboundState(
+            demonbound.WithCorruption(remaining).WithMeditationUsed());
+        BattleState updated = state.WithUnit(meditated);
+        BattleTransition ended = ApplyEndTurn(updated, new EndTurnCommand(command.ActorId));
+        return new BattleTransition(ended.State,
+            new BattleEvent[] { new MeditationUsedEvent(command.ActorId, reduced, remaining) }
+                .Concat(ended.Events).ToArray());
     }
 
     private BattleTransition ApplyPoisonSpear(

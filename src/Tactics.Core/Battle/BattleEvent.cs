@@ -188,6 +188,26 @@ public sealed record SpearDroppedEvent(UnitInstanceId OwnerId, GridPoint Cell) :
 /// <param name="UnitId">Defeated unit ID.</param>
 public sealed record UnitDefeatedEvent(UnitInstanceId UnitId) : BattleEvent;
 
+public sealed record MeditationUsedEvent(
+    UnitInstanceId UnitId,
+    int CorruptionReduced,
+    int RemainingCorruption) : BattleEvent;
+
+public sealed record CorruptionChangedEvent(
+    UnitInstanceId UnitId,
+    ContentId SourceSkillId,
+    int Amount,
+    int CurrentCorruption) : BattleEvent;
+
+public sealed record DemonboundPossessedEvent(UnitInstanceId UnitId) : BattleEvent;
+
+public sealed record RunPermanentDeathRolledEvent(
+    UnitInstanceId AttackerId,
+    UnitInstanceId TargetId,
+    int Roll,
+    bool PermanentDeath,
+    ulong RandomState) : BattleEvent;
+
 /// <summary>
 /// Reports deterministic turn advancement.
 /// </summary>

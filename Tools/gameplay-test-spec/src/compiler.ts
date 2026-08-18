@@ -131,6 +131,8 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   productionSaveUnchanged: "Map",
   checkpointRevisionEquals: "Map",
   runtimeStateHashEquals: "UI",
+  demonboundCorruptionEquals: "Battle",
+  demonboundPossessedEquals: "Battle",
   runtimeHasNoErrors: "UI",
   // Skill 独占断言
   executionStateEquals: "Skill",
@@ -308,7 +310,8 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
       path: String(checkpointStep.parameters.path)
     } : undefined;
     const plan = {
-      schemaVersion: 2 as const,
+      schemaVersion: spec.assertions.some(assertion => assertion.kind === "demonboundCorruptionEquals" ||
+        assertion.kind === "demonboundPossessedEquals") ? 3 as const : 2 as const,
       runtime: "Godot" as const,
       scenarioName: `${spec.feature}.${spec.scenario}`,
       requiredAdapters: spec.requiredAdapters,
