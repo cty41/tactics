@@ -14,7 +14,7 @@ public sealed class AiDecisionService
 
     public AiTurnPlan Decide(BattleState state, AiDefinition definition,
         IReadOnlyDictionary<ContentId, SkillDefinition> skills, int patternIndex = 0,
-        bool targetOwnFaction = false)
+        bool targetOwnFaction = false, UnitInstanceId? priorityTargetId = null)
     {
         BattleUnitState actor = state.Units[state.ActiveUnitId];
         BattleUnitState[] enemies = state.Units.Values.Where(unit => unit.IsAlive &&
@@ -33,13 +33,13 @@ public sealed class AiDecisionService
         foreach (ContentId skillId in definition.SkillIds.OrderBy(value => value.Value, StringComparer.Ordinal))
         {
             SkillDefinition skill = skills[skillId];
-            if (skill.ExecutionKind is SkillExecutionKind.Bane or SkillExecutionKind.DemonicRegeneration)
+            if (skill.ExecutionKind == SkillExecutionKind.DemonicRegeneration)
             {
                 BattleTransition selfProbe = _transitions.Apply(state, new UseSkillCommand(
                     actor.Unit.InstanceId, actor.Unit.InstanceId, actor.Unit.Position, skill));
                 if (selfProbe.Succeeded)
                 {
-                    bool regeneration = skill.ExecutionKind == SkillExecutionKind.DemonicRegeneration;
+                    const bool regeneration = true;
                     float missingHealth = 1f - actor.CurrentHealth / (float)actor.MaxHealth;
                     float priority = regeneration ? 20f + missingHealth * 30f : 18f;
                     candidates.Add(new AiIntentCandidate(
@@ -54,7 +54,10 @@ public sealed class AiDecisionService
             foreach (BattleUnitState originalTarget in enemies)
             {
                 BattleUnitState target = probeState.Units[originalTarget.Unit.InstanceId];
-                BattleTransition probe = _transitions.Apply(probeState, new UseSkillCommand(actor.Unit.InstanceId, target.Unit.InstanceId, target.Unit.Position, skill));
+                GridPoint targetCell = skill.ExecutionKind == SkillExecutionKind.Bane
+                    ? DirectionCell(origin, target.Unit.Position)
+                    : target.Unit.Position;
+                BattleTransition probe = _transitions.Apply(probeState, new UseSkillCommand(actor.Unit.InstanceId, target.Unit.InstanceId, targetCell, skill));
                 if (!probe.Succeeded) continue;
                 int distance = Manhattan(origin, target.Unit.Position);
                 int targets = skill.ExecutionKind == SkillExecutionKind.AreaBlast
@@ -65,13 +68,14 @@ public sealed class AiDecisionService
                 float proximity = GraphScore(definition, "BasicAttack", "DistanceToTarget", Math.Clamp(distance / 10f, 0f, 1f), 5f);
                 float damage = skill.Damage * definition.Profile.DamageWeight;
                 float targetScore = targets * definition.Profile.TargetCountWeight +
-                    GraphScore(definition, "BasicAttack", "TargetHealth", target.CurrentHealth / (float)target.MaxHealth, 0f);
+                    GraphScore(definition, "BasicAttack", "TargetHealth", target.CurrentHealth / (float)target.MaxHealth, 0f) +
+                    (priorityTargetId is UnitInstanceId priority && target.Unit.InstanceId == priority ? 100f : 0f);
                 float status = intent == AiIntentKind.Debuff ? definition.Profile.HarmfulStatusWeight : 0;
                 float reposition = PreferredRangeBonus(definition, actor.Unit.Position, origin, target.Unit.Position);
-                candidates.Add(new AiIntentCandidate(intent, skillId, origin, target.Unit.InstanceId, target.Unit.Position,
+                candidates.Add(new AiIntentCandidate(intent, skillId, origin, target.Unit.InstanceId, targetCell,
                     proximity + reposition, damage, targetScore, status, true, string.Empty, basePriority, origin != actor.Unit.Position));
                 if (target.CurrentHealth <= Math.Max(1, skill.Damage))
-                    candidates.Add(new AiIntentCandidate(AiIntentKind.FinishOff, skillId, origin, target.Unit.InstanceId, target.Unit.Position,
+                    candidates.Add(new AiIntentCandidate(AiIntentKind.FinishOff, skillId, origin, target.Unit.InstanceId, targetCell,
                         GraphScore(definition, "FinishOff", "DistanceToTarget", Math.Clamp(distance / 10f, 0f, 1f), 5f) + reposition,
                         damage + GraphScore(definition, "FinishOff", "KillPotential", 1f, 8f), targetScore, status, true, string.Empty,
                         IntentPriority(definition, "FinishOff", 35), origin != actor.Unit.Position));
@@ -113,6 +117,14 @@ public sealed class AiDecisionService
         if (definition.PreferredRangeRepositionBonus <= 0 || Manhattan(current, target) >= definition.PreferredMinimumRange) return 0;
         int distance = Manhattan(destination, target);
         return distance >= definition.PreferredMinimumRange && distance <= definition.PreferredMaximumRange ? definition.PreferredRangeRepositionBonus : 0;
+    }
+
+    private static GridPoint DirectionCell(GridPoint origin, GridPoint target)
+    {
+        int dx = target.X - origin.X;
+        int dy = target.Y - origin.Y;
+        if (dx != 0 && dy != 0) return target;
+        return new GridPoint(origin.X + Math.Sign(dx), origin.Y + Math.Sign(dy));
     }
 
     private static float IntentPriority(AiDefinition definition, string intentType, float fallback) =>

@@ -50,6 +50,39 @@ public sealed class BattlePresentationFrameCompilerTests
     }
 
     [Test]
+    public void BaneCompilesAsMeleeWithTwoCellPathAndNearToFarImpacts()
+    {
+        UnitInstanceId actor = new("demonbound"), near = new("enemy.near"), far = new("enemy.far");
+        ContentId skillId = new("skill.demonbound.bane.lv2");
+        BattleUiSnapshot snapshot = Snapshot(actor, near, new GridPoint(1, 1), new GridPoint(2, 1), true);
+        BattleUiUnitSnapshot farUnit = new(far, new ContentId("unit.test"), new GridPoint(3, 1), 1, true,
+            10, 10, 5, 5, false, [], new Dictionary<ContentId, int>());
+        snapshot = snapshot with { Units = snapshot.Units.Append(farUnit).ToArray() };
+        SkillDefinition skill = new(skillId, "godot.bane", SkillRole.Demonbound, SkillKind.Active, 2, 3, 1, 1,
+            SkillExecutionKind.Bane, 6, SkillDamageKind.Magical,
+            new ContentId("buff.demonbound.bane-debuff"), 1);
+        BattleEvent[] events =
+        [
+            new SkillUsedEvent(actor, near, skillId),
+            new DamageAppliedEvent(actor, near, skillId, 7, 3),
+            new DamageAppliedEvent(actor, far, skillId, 7, 3)
+        ];
+
+        BattlePresentationFrame frame = BattlePresentationFrameCompiler.Compile("bane", snapshot, snapshot,
+            events, new Dictionary<ContentId, SkillDefinition> { [skillId] = skill });
+        BattlePresentationCue action = frame.Cues[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(action.Kind, Is.EqualTo(PresentationCueKind.Melee));
+            Assert.That(action.Destination, Is.EqualTo(new GridPoint(3, 1)));
+            Assert.That(action.Path, Is.EqualTo(new[] { new GridPoint(2, 1), new GridPoint(3, 1) }));
+            Assert.That(action.AffectedUnitIds, Is.EqualTo(new[] { near, far }));
+            Assert.That(frame.Cues.Skip(1).Select(value => value.ActorId), Is.EqualTo(new[] { near, far }));
+        });
+    }
+
+    [Test]
     public void StatusAndSpearEffectsComeOnlyFromCommittedEvents()
     {
         UnitInstanceId actor=new("amazon"),target=new("enemy");ContentId skillId=new("skill.poison-spear.lv1"),poison=new("buff.poison");

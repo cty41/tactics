@@ -5,6 +5,7 @@ using Tactics.Godot.Adapter.Runtime;
 using Tactics.Application.Presentation;
 using Tactics.Core.Content;
 using Tactics.Core.Runs;
+using Tactics.Core.Units;
 using static GdUnit4.Assertions;
 
 namespace Tactics.Godot.Tests;
@@ -218,6 +219,48 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(completions[0].Recovered).IsFalse();
         AssertThat(player.HasPendingFrame).IsFalse();
         player.QueueFree();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task BaneCrescentUsesTwoTravelSegmentsAndReleasesItsTransientNode()
+    {
+        var host = new Node();
+        var player = new GodotBattlePresentationPlayer();
+        host.AddChild(player);
+        ((SceneTree)Engine.GetMainLoop()).Root.AddChild(host);
+        player.ConfigureSkills([new SkillPresentationResource
+        {
+            SkillBranch = "demonbound.bane", ProgrammaticKind = "bane-crescent",
+            PrimaryColor = new Color(.72f, .2f, 1f), SecondaryColor = new Color(1f, .45f, .95f),
+            TravelDuration = .28f, ImpactDuration = .16f
+        }]);
+        player.SetSpeed(4f);
+        UnitInstanceId actor = new("demonbound"), near = new("near"), far = new("far");
+        ContentId skill = new("skill.demonbound.bane.lv1");
+        BattlePresentationMarker[] markers = [new(PresentationMarkerKind.Begin, 0)];
+        BattlePresentationCue action = new(PresentationCueKind.Melee, actor, near, skill,
+            new GridPoint(1, 1), new GridPoint(3, 1), [new GridPoint(2, 1), new GridPoint(3, 1)],
+            [near, far], markers);
+        BattlePresentationCue firstHit = new(PresentationCueKind.Hit, near, near, skill,
+            new GridPoint(2, 1), new GridPoint(2, 1), [], [near], markers, InstigatorId: actor);
+        BattlePresentationCue secondHit = new(PresentationCueKind.Hit, far, far, skill,
+            new GridPoint(3, 1), new GridPoint(3, 1), [], [far], markers, InstigatorId: actor);
+        var numbers = new List<UnitInstanceId>();
+        player.NumberRequested += value => numbers.Add(value.TargetId);
+
+        player.Play(new BattlePresentationFrame("Bane", null!, null!, [action, firstHit, secondHit],
+            [new(BattlePresentationNumberKind.Normal, near, "-6", PresentationMarkerKind.Impact, 0),
+             new(BattlePresentationNumberKind.Normal, far, "-6", PresentationMarkerKind.Impact, 1)]),
+            new Dictionary<UnitInstanceId, GodotUnitActor>());
+        await player.ToSignal(player.GetTree().CreateTimer(.03), SceneTreeTimer.SignalName.Timeout);
+        AssertThat(player.ActiveTransientCount).IsEqual(1);
+        await player.ToSignal(player.GetTree().CreateTimer(.3), SceneTreeTimer.SignalName.Timeout);
+
+        AssertThat(numbers.SequenceEqual(new[] { near, far })).IsTrue();
+        AssertThat(player.ActiveTransientCount).IsEqual(0);
+        AssertThat(player.HasPendingFrame).IsFalse();
+        host.QueueFree();
     }
 
     [TestCase]

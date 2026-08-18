@@ -5,7 +5,7 @@
   "ownership": "UnityOwned",
   "visualAcceptance": "not_applicable_functional_ui_only",
   "manualGameplayAcceptance": "pending",
-  "catalogCount": 131,
+  "catalogCount": 121,
   "artifacts": [
     {
       "resourcePath": "res://content/full_run/BattleLayoutPureRunSpecialOpen.tres",

@@ -36,6 +36,21 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void PrimaryAttributeDamageBonusUsesProjectedRoleAttributeAboveFive()
+    {
+        UnitAttributes attributes = new(8, 7, 5, 9, 11, 5);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Mage), Is.EqualTo(4));
+            Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Necromancer), Is.EqualTo(6));
+            Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Demonbound), Is.EqualTo(6));
+            Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Amazon), Is.EqualTo(2));
+            Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Any), Is.Zero);
+        });
+    }
+
+    [Test]
     public void PlayableEnemySpeedProfile_PreservesPlayerSpeedAndOverridesEnemyArchetypes()
     {
         var profile = new PlayableEnemySpeedProfile(new Dictionary<ContentId, float>
@@ -422,6 +437,41 @@ public sealed class PlayableBattleSessionServiceTests
             Assert.That(service.BattleResult, Is.Not.Null);
             Assert.That(service.BattleResult!.PlayerVictory, Is.False);
             Assert.That(service.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.Defeat));
+        });
+    }
+
+    [Test]
+    public void ProtectedNpc_FleesAutomaticallyAndCannotTurnPartyWipeIntoVictory()
+    {
+        UnitInstanceId heroId = new("party-mage");
+        UnitInstanceId protectedNpcId = new("escort-villager");
+        UnitInstanceId enemyId = new("enemy-goat");
+        BattleUnitState hero = Unit(heroId, "unit.pure-run.mage", new GridPoint(1, 1), 0, 0, 20, 20);
+        BattleUnitState protectedNpc = Unit(protectedNpcId, "unit.escort.lost-villager",
+            new GridPoint(2, 1), 0, 1, 12, 12);
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(3, 1), 1, 2, 20, 20);
+        SkillDefinition attack = Skill("skill.basic.melee", 2);
+        PlayableBattleSessionContext Context(BattleUnitState currentHero) => new(
+            State([currentHero, protectedNpc, enemy], [heroId, protectedNpcId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>(),
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", attack.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [attack.ContentId] = attack },
+            new EncounterRequest("run-escort", 2, new ContentId("encounter.pure-run.n1"), Array.Empty<RunCharacterState>()),
+            new Dictionary<UnitInstanceId, string> { [heroId] = "pure_run_mage" },
+            ProtectedNpcUnitId: protectedNpcId);
+        var service = new PlayableBattleSessionService(Context(hero));
+        var partyWiped = new PlayableBattleSessionService(Context(hero.WithHealth(0)));
+        BattleUiIntentResult ended = service.Submit(new EndTurnIntent());
+        var stages = new List<string>();
+        while (service.DequeueAutomaticFrame() is { } frame) stages.Add(frame.Stage);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ended.Succeeded, Is.True, ended.FailureCode);
+            Assert.That(stages, Does.Contain("EscortFlee"));
+            Assert.That(partyWiped.BattleResult, Is.Not.Null);
+            Assert.That(partyWiped.BattleResult!.PlayerVictory, Is.False);
+            Assert.That(partyWiped.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.Defeat));
         });
     }
 

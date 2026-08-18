@@ -93,7 +93,8 @@ public sealed class BattleUnitState
         int combatTechniquesLevel = 0,
         BattleDamageShieldState? damageShield = null,
         int movementCellsThisTurn = 0,
-        DemonboundBattleState? demonboundState = null)
+        DemonboundBattleState? demonboundState = null,
+        int primaryAttributeDamageBonus = 0)
     {
         if (maxHealth <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxHealth));
@@ -113,6 +114,8 @@ public sealed class BattleUnitState
             throw new ArgumentOutOfRangeException(nameof(manaRecoveryPerTurn));
         if (movementCellsThisTurn < 0)
             throw new ArgumentOutOfRangeException(nameof(movementCellsThisTurn));
+        if (primaryAttributeDamageBonus < 0)
+            throw new ArgumentOutOfRangeException(nameof(primaryAttributeDamageBonus));
         if (statusDurations is not null && statusDurations.Count > 0 && statuses is not null && statuses.Count > 0)
             throw new ArgumentException("Provide either legacy status durations or detailed statuses, not both.");
 
@@ -138,6 +141,7 @@ public sealed class BattleUnitState
         DamageShield = damageShield;
         MovementCellsThisTurn = movementCellsThisTurn;
         DemonboundState = demonboundState;
+        PrimaryAttributeDamageBonus = primaryAttributeDamageBonus;
         var skillUses = new Dictionary<ContentId, int>();
         foreach ((ContentId skillId, int count) in successfulSkillUses ?? new Dictionary<ContentId, int>())
         {
@@ -219,6 +223,7 @@ public sealed class BattleUnitState
     public BattleDamageShieldState? DamageShield { get; }
     public int MovementCellsThisTurn { get; }
     public DemonboundBattleState? DemonboundState { get; }
+    public int PrimaryAttributeDamageBonus { get; }
     public IReadOnlyDictionary<ContentId, int> SuccessfulSkillUses => _successfulSkillUses;
 
     public int SuccessfulUsesOf(ContentId skillId) => _successfulSkillUses.TryGetValue(skillId, out int count) ? count : 0;
@@ -273,7 +278,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: movementCellsThisTurn ?? MovementCellsThisTurn, demonboundState: DemonboundState);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: movementCellsThisTurn ?? MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState ResetMovementCells() => Copy(movementCellsThisTurn: 0);
 
@@ -286,7 +291,7 @@ public sealed class BattleUnitState
         canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
         manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
         combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield,
-        movementCellsThisTurn: MovementCellsThisTurn, demonboundState: state);
+        movementCellsThisTurn: MovementCellsThisTurn, demonboundState: state, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     /// <summary>
     /// Returns a copy with clamped health and matching alive state.
@@ -306,7 +311,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     /// <summary>
     /// Returns a copy with clamped mana.
@@ -324,7 +329,7 @@ public sealed class BattleUnitState
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState WithHealthAndMana(int maxHealth, int currentHealth, int maxMana, int currentMana) => new(
         Unit, maxHealth, currentHealth, HasMovedThisTurn, maxMana: maxMana, currentMana: currentMana,
@@ -334,7 +339,7 @@ public sealed class BattleUnitState
         canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
         canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
         manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
-combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState WithDamageOutputMultiplier(float multiplier)
     {
@@ -347,7 +352,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
             canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
             canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
             manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
-combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
     }
 
     /// <summary>
@@ -389,7 +394,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
     }
 
     /// <summary>
@@ -411,7 +416,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
     }
 
     public BattleUnitState WithUnitFacts(UnitState unit) => new(
@@ -426,7 +431,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
         consumables: _consumables,
         lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
         physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState WithConsumable(BattleConsumableState consumable)
     {
@@ -447,7 +452,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
             consumables: consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
     }
 
     public BattleUnitState WithSuccessfulConsumableUse(int round) => new(
@@ -462,7 +467,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
         consumables: _consumables,
         lastSuccessfulConsumableUseRound: round,
         physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     /// <summary>
     /// Returns a copy whose one-per-turn movement use is available again.
@@ -481,14 +486,14 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
             consumables: _consumables,
             lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: null, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: 0, demonboundState: DemonboundState?.PrepareForTurn());
+            canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne, canProduceCorpse: CanProduceCorpse, successfulSkillUses: null, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: 0, demonboundState: DemonboundState?.PrepareForTurn(), primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState WithCombatTechniquesLevelOne(bool enabled) => new(
         Unit, MaxHealth, CurrentHealth, HasMovedThisTurn, maxMana: MaxMana, currentMana: CurrentMana,
         statuses: _statuses, baseSpeed: BaseSpeed, consumables: _consumables,
         lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
         physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
-        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: enabled, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: enabled ? Math.Max(1, CombatTechniquesLevel) : 0, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+        canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: enabled, canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses, manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: enabled ? Math.Max(1, CombatTechniquesLevel) : 0, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState WithCombatTechniquesLevel(int level) => new(
         Unit, MaxHealth, CurrentHealth, HasMovedThisTurn, maxMana: MaxMana, currentMana: CurrentMana,
@@ -498,7 +503,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
         canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: level > 0,
         canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
         manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
-        combatTechniquesLevel: level, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+        combatTechniquesLevel: level, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState WithDamageShield(BattleDamageShieldState? shield) => new(
         Unit, MaxHealth, CurrentHealth, HasMovedThisTurn, maxMana: MaxMana, currentMana: CurrentMana,
@@ -508,7 +513,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
         canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
         canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
         manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
-        combatTechniquesLevel: CombatTechniquesLevel, damageShield: shield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+        combatTechniquesLevel: CombatTechniquesLevel, damageShield: shield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 
     public BattleUnitState WithBaseSpeed(float baseSpeed)
     {
@@ -528,7 +533,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
             canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
             canProduceCorpse: CanProduceCorpse, successfulSkillUses: _successfulSkillUses,
             manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory,
-combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState);
+combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
     }
 
     private BattleUnitState Copy(IReadOnlyDictionary<ContentId, int>? successfulSkillUses = null, int? movementCellsThisTurn = null) => new(
@@ -538,5 +543,5 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
         physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,
         canReceiveStandardHealing: CanReceiveStandardHealing, hasCombatTechniquesLevelOne: HasCombatTechniquesLevelOne,
         canProduceCorpse: CanProduceCorpse, successfulSkillUses: successfulSkillUses ?? _successfulSkillUses,
-        manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: movementCellsThisTurn ?? MovementCellsThisTurn, demonboundState: DemonboundState);
+        manaRecoveryPerTurn: ManaRecoveryPerTurn, summonCategory: SummonCategory, combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, movementCellsThisTurn: movementCellsThisTurn ?? MovementCellsThisTurn, demonboundState: DemonboundState, primaryAttributeDamageBonus: PrimaryAttributeDamageBonus);
 }

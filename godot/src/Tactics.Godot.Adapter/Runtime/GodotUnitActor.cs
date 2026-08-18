@@ -1,7 +1,6 @@
 using Godot;
 using Tactics.Application.Units;
 using Tactics.Application.Battle;
-using Tactics.Core.Statuses;
 
 namespace Tactics.Godot.Adapter.Runtime;
 
@@ -27,7 +26,6 @@ public partial class GodotUnitActor : Node2D
     [Export] public Sprite2D? Shadow { get; set; }
     [Export] public Sprite2D? Body { get; set; }
     public GodotUnitStatusOverlay? StatusOverlay { get; private set; }
-    public Line2D? BaneBladeGlow { get; private set; }
 
     private UnitDefinitionResource? _definition;
     private GodotUnitActionPose? _actionPose;
@@ -37,7 +35,6 @@ public partial class GodotUnitActor : Node2D
     public GodotUnitFacing PresentationFacing => Facing;
     public bool IsBodyTintEnabled { get; private set; } = true;
     public bool IsSpearHeld { get; private set; } = true;
-    public bool IsBaneBladeGlowVisible => BaneBladeGlow?.Visible == true;
     public bool UsesGoatBodyMaskTint =>
         _definition?.BodyTintModeValue == UnitBodyTintModes.GoatBodyMaskV1;
 
@@ -122,24 +119,6 @@ public partial class GodotUnitActor : Node2D
     {
         if(StatusOverlay is null){StatusOverlay=new GodotUnitStatusOverlay{ZIndex=50};AddChild(StatusOverlay);}
         StatusOverlay.MaximumVisible=maximumVisible;StatusOverlay.PulseDuration=pulseDuration;StatusOverlay.Apply(statuses);
-        EnsureBaneBladeGlow();
-        BaneBladeGlow!.Visible = !IsShowingDeath && statuses?.Any(value =>
-            value.EffectKind == StatusEffectKind.BaneWeapon) == true;
-    }
-
-    private void EnsureBaneBladeGlow()
-    {
-        if (BaneBladeGlow is not null) return;
-        BaneBladeGlow = new Line2D
-        {
-            Name = "BaneBladeGlow",
-            Width = 7f,
-            DefaultColor = new Color(.66f, .18f, 1f, .92f),
-            ZIndex = 45,
-            Antialiased = true,
-            Points = [new Vector2(7f, -51f), new Vector2(19f, -80f)]
-        };
-        AddChild(BaneBladeGlow);
     }
 
     public Rect2 VisualBoundsInParent()

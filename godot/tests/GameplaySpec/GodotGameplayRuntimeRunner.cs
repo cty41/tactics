@@ -5,7 +5,9 @@ using Godot;
 using Tactics.Application.Battle;
 using Tactics.Application.Runs;
 using Tactics.Godot.Adapter.Runtime;
+using Tactics.Core.Battle;
 using Tactics.Core.Board;
+using Tactics.Core.Content;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
 
@@ -228,6 +230,9 @@ public sealed class GodotGameplayRuntimeRunner
                 case "waitForPlayerObservable": await context.WaitObservableAsync(RequiredString(step.Parameters, "observable"), step.Target, step.Parameters, timeout.Token); break;
                 case "waitForFrames": await context.WaitFramesAsync(RequiredInt(step.Parameters, "count", 1), timeout.Token); break;
                 case "playBattleThroughInput": await new ProductionInputDecisionSource(RequiredInt(step.Parameters, "maximumActions", 100)).ExecuteAsync(context, timeout.Token); break;
+                case "useBattleSkillThroughInput": await context.UseBattleSkillThroughInputAsync(
+                    RequiredString(step.Parameters, "actorId"), RequiredString(step.Parameters, "skillId"),
+                    RequiredInt(step.Parameters, "maximumActions", 100), timeout.Token); break;
                 case "restartGodotMain": await context.RestartMainAsync(timeout.Token); break;
                 case "setPresentationPaused": await context.SetPausedAsync(step.Parameters["paused"].GetBoolean(), timeout.Token); break;
                 case "setPresentationSpeed": await context.SetSpeedAsync((float)step.Parameters["speed"].GetDouble(), timeout.Token); break;
@@ -277,6 +282,8 @@ public sealed class GodotGameplayRuntimeRunner
                 unit.UnitId.Value == assertion.Target)?.Corruption == assertion.Expected.GetInt32(),
             "demonboundPossessedEquals" => probe.BattleSnapshot?.Units.SingleOrDefault(unit =>
                 unit.UnitId.Value == assertion.Target)?.IsPossessed == assertion.Expected.GetBoolean(),
+            "battleSkillReceiptEquals" => context.LastBattleSkillReceipt is JsonElement receipt &&
+                ExpectedReceiptMatches(receipt, assertion.Expected),
             "adventureActorCellEquals" => probe.Adventure?.ActorCells.TryGetValue(assertion.Target ?? string.Empty, out string? actorCell) == true &&
                 actorCell == assertion.Expected.GetString(),
             "activeAdventureLeaderEquals" => probe.Adventure?.LeaderId == assertion.Expected.GetString(),
@@ -332,6 +339,10 @@ public sealed class GodotGameplayRuntimeRunner
         return Task.CompletedTask;
     }
 
+    private static bool ExpectedReceiptMatches(JsonElement actual, JsonElement expected) =>
+        expected.EnumerateObject().All(property => actual.TryGetProperty(property.Name, out JsonElement value) &&
+            JsonElement.DeepEquals(value, property.Value));
+
     private static string RequiredString(Dictionary<string, JsonElement> parameters, string key) =>
         parameters.TryGetValue(key, out JsonElement value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()! : throw new InvalidDataException($"Missing string parameter '{key}'.");
@@ -368,6 +379,56 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     private string _lastHash = string.Empty;
     private int _sameHashCount;
     private AdventureRevisionBaseline _lastActionAdventure;
+    public JsonElement? LastBattleSkillReceipt { get; private set; }
+
+    public async Task UseBattleSkillThroughInputAsync(string actorId, string skillId, int maximumActions,
+        CancellationToken token)
+    {
+        var requestedSkill = new ContentId(skillId);
+        for (int action = 0; action < maximumActions && HasActiveBattle && !IsTerminal; action++)
+        {
+            if (IsTerminalPending || !CanSubmitPlayerInput)
+            {
+                await WaitForAutomaticProgressAsync(token);
+                action--;
+                continue;
+            }
+            BattleUiSnapshot snapshot = Main.CaptureVisibleBattleSnapshot()!;
+            if (!string.Equals(snapshot.ActiveUnitId.Value, actorId, StringComparison.Ordinal))
+            {
+                await PressKeyAsync(Key.Enter, token);
+                continue;
+            }
+            BattleUiSkillAvailability? availability = snapshot.SkillAvailability?.SingleOrDefault(value => value.SkillId == requestedSkill);
+            BattleUiTarget[] legalTargets = snapshot.LegalTargets.Where(value => value.SkillId == requestedSkill)
+                .OrderBy(value => value.Cell.X).ThenBy(value => value.Cell.Y).ThenBy(value => value.UnitId?.Value, StringComparer.Ordinal).ToArray();
+            if (availability?.IsAvailable != true || legalTargets.Length == 0)
+            {
+                await PressKeyAsync(Key.Enter, token);
+                continue;
+            }
+            await ClickPointerAsync("SkillAction_" + skillId.Replace('.', '_'),
+                Parameters(("targetKind", "UiElement")), token);
+            BattleUiSnapshot targeted = Main.CaptureVisibleBattleSnapshot()!;
+            BattleUiTarget target = targeted.LegalTargets.Where(value => value.SkillId == requestedSkill)
+                .OrderBy(value => value.Cell.X).ThenBy(value => value.Cell.Y).ThenBy(value => value.UnitId?.Value, StringComparer.Ordinal).First();
+            await ClickPointerAsync($"{target.Cell.X},{target.Cell.Y}", Parameters(("targetKind", "BattleCell")), token);
+            BattleUiSnapshot after = Main.CaptureTestProbe().BattleSnapshot!;
+            var damages = after.RecentEvents.OfType<DamageAppliedEvent>().Where(value => value.SkillId == requestedSkill)
+                .Select(value => new { targetId = value.TargetId.Value, amount = value.Amount }).ToArray();
+            var statuses = after.RecentEvents.OfType<StatusAppliedEvent>()
+                .Where(value => value.SourceId.Value == actorId)
+                .Select(value => new { targetId = value.TargetId.Value, statusId = value.StatusId.Value, remainingTurns = value.RemainingTurns }).ToArray();
+            int? corruption = after.Units.Single(value => value.UnitId.Value == actorId).Corruption;
+            LastBattleSkillReceipt = JsonSerializer.SerializeToElement(new { actorId, skillId, damages, statuses, corruption });
+            return;
+        }
+        throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
+            $"battle_skill_not_resolved:{actorId}:{skillId}");
+    }
+
+    private static Dictionary<string, JsonElement> Parameters(params (string Key, object Value)[] values) =>
+        values.ToDictionary(value => value.Key, value => JsonSerializer.SerializeToElement(value.Value), StringComparer.Ordinal);
 
     public async Task ClickButtonAsync(string text, CancellationToken token)
     {

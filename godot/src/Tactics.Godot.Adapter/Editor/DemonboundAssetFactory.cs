@@ -10,12 +10,14 @@ public static class DemonboundAssetFactory
     private const string CatalogPath = "res://content/ContentCatalog.tres";
     private const string RunPath = "res://content/runs/PureRunThreeEncounterV1.tres";
     private const string BalancePath = "res://content/ui/PlayableLv1BalanceProfile.tres";
+    private const string BanePresentationPath = Root + "/BanePresentation.tres";
+    private const string BaneDebuffPath = Root + "/BaneDamageOutputReduction.tres";
 
     private sealed record SkillData(string Id, string Name, string Kind, int Level, int Mana,
         int MinRange, int MaxRange, string Execution, int Damage, string DamageKind, string Branch,
         int Corruption, string Prerequisite = "", string StatusId = "", int StatusDuration = 0,
         int StatusChance = 100, bool Hidden = false, bool GrowthVisible = true,
-        string PrerequisiteBranch = "");
+        string PrerequisiteBranch = "", bool ScaleFromPrimaryAttribute = false);
 
     public static void Build()
     {
@@ -33,15 +35,17 @@ public static class DemonboundAssetFactory
                 ExecutionKindValue = data.Execution, Damage = data.Damage, DamageKindValue = data.DamageKind,
                 StatusContentIdValue = data.StatusId, StatusDuration = data.StatusDuration,
                 IsBasicAbility = false, MaxUsesPerTurn = data.Execution == "Meditation" ? 1 : 0,
-                CanCrit = data.Execution is not ("Bane" or "Mindfulness" or "Meditation" or "DemonicRegeneration"),
+                CanCrit = data.Execution is not ("Mindfulness" or "Meditation" or "DemonicRegeneration"),
                 BranchId = data.Branch, PrerequisiteContentIdValue = data.Prerequisite,
                 PrerequisiteBranchId = !string.IsNullOrWhiteSpace(data.PrerequisiteBranch)
                     ? data.PrerequisiteBranch : data.Level > 1 ? data.Branch : string.Empty,
                 GrowthVisible = data.GrowthVisible, RequiredAttribute = data.Execution == "Meditation" ? string.Empty : "Charisma",
                 MinimumAttribute = data.Execution == "Meditation" ? 0 :
                     !string.IsNullOrWhiteSpace(data.PrerequisiteBranch) || data.Level > 1 ? 7 : 5,
-                IgnoreLineOfSight = data.Execution is "Cleave" or "InfernalBlast" or "Hellfire",
+                IgnoreLineOfSight = data.Execution is "Bane" or "Cleave" or "InfernalBlast" or "Hellfire",
                 StatusChancePercent = data.StatusChance, CorruptionCost = data.Corruption,
+                DamageScalingValue = data.ScaleFromPrimaryAttribute
+                    ? "PrimaryAttributeAboveNeutral" : "None",
                 Hidden = data.Hidden, AuthoringSourceKindValue = "GodotAuthored"
             };
             resource.ToCoreDefinition();
@@ -50,6 +54,39 @@ public static class DemonboundAssetFactory
                 .Where(value => !string.IsNullOrWhiteSpace(value)).ToArray();
             generated.Add(Entry(data.Id, "skill", path, references));
         }
+
+        var baneDebuff = new StatusDefinitionResource
+        {
+            ContentIdValue = "buff.demonbound.bane-debuff",
+            SourceId = "godot.buff.demonbound.bane-debuff",
+            DefaultDuration = 1,
+            CanAct = true,
+            PolarityValue = "Harmful",
+            EffectKindValue = "DamageOutputReduction",
+            TriggerTimingValue = "None",
+            RefreshStrategyValue = "RefreshDuration",
+            ElementKindValue = "Dark",
+            DamageCategoryValue = "Magic",
+            SourcePath = "GodotAuthored/Demonbound/BaneDamageOutputReduction",
+            SourceGuid = "2ec889592b4a4f02b9592f23cd56a12b",
+            SourceLocalFileId = 1
+        };
+        _ = baneDebuff.ToCoreDefinition();
+        Save(baneDebuff, BaneDebuffPath);
+        generated.Add(Entry(baneDebuff.ContentIdValue, "buff", BaneDebuffPath, Array.Empty<string>()));
+
+        var banePresentation = new SkillPresentationResource
+        {
+            ContentIdValue = "presentation.skill.demonbound.bane",
+            SkillBranch = "demonbound.bane",
+            ProgrammaticKind = "bane-crescent",
+            PrimaryColor = new Color(.72f, .2f, 1f),
+            SecondaryColor = new Color(1f, .45f, .95f),
+            TravelDuration = .28f,
+            ImpactDuration = .16f
+        };
+        Save(banePresentation, BanePresentationPath);
+        generated.Add(Entry(banePresentation.ContentIdValue, "presentation", BanePresentationPath, Array.Empty<string>()));
 
         const string unitPath = Root + "/PureRunDemonbound.tres";
         UnitDefinitionResource template = ResourceLoader.Load<UnitDefinitionResource>(
@@ -112,9 +149,9 @@ public static class DemonboundAssetFactory
     private static SkillData[] Definitions() => new[]
     {
         new SkillData("skill.demonbound.meditation", "Meditation", "Utility", 1, 0, 0, 0, "Meditation", 0, "None", "demonbound.meditation", 0, Hidden:true, GrowthVisible:false),
-        new SkillData("skill.demonbound.bane.lv1", "Hex: Bane", "Active", 1, 3, 0, 0, "Bane", 0, "None", "demonbound.bane", 2),
-        new SkillData("skill.demonbound.bane.lv2", "Hex: Bane", "Active", 2, 3, 0, 0, "Bane", 0, "None", "demonbound.bane", 2, "skill.demonbound.bane.lv1"),
-        new SkillData("skill.demonbound.bane.lv3", "Hex: Bane", "Active", 3, 3, 0, 0, "Bane", 0, "None", "demonbound.bane", 2, "skill.demonbound.bane.lv2"),
+        new SkillData("skill.demonbound.bane.lv1", "Hex: Bane", "Active", 1, 3, 1, 1, "Bane", 5, "Magical", "demonbound.bane", 3, ScaleFromPrimaryAttribute:true),
+        new SkillData("skill.demonbound.bane.lv2", "Hex: Bane", "Active", 2, 3, 1, 1, "Bane", 6, "Magical", "demonbound.bane", 3, "skill.demonbound.bane.lv1", "buff.demonbound.bane-debuff", 1, ScaleFromPrimaryAttribute:true),
+        new SkillData("skill.demonbound.bane.lv3", "Hex: Bane", "Active", 3, 3, 1, 1, "Bane", 7, "Magical", "demonbound.bane", 3, "skill.demonbound.bane.lv2", "buff.demonbound.bane-debuff", 2, ScaleFromPrimaryAttribute:true),
         new SkillData("skill.demonbound.cleave.lv1", "Cleave", "Active", 1, 4, 1, 1, "Cleave", 6, "Physical", "demonbound.cleave", 2, "skill.demonbound.bane.lv1", PrerequisiteBranch:"demonbound.bane"),
         new SkillData("skill.demonbound.cleave.lv2", "Cleave", "Active", 2, 4, 1, 1, "Cleave", 6, "Physical", "demonbound.cleave", 2, "skill.demonbound.cleave.lv1"),
         new SkillData("skill.demonbound.infernal-blast.lv1", "Infernal Blast", "Active", 1, 5, 1, 1, "InfernalBlast", 4, "Magical", "demonbound.infernal-blast", 3),

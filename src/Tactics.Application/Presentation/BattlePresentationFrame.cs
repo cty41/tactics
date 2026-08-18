@@ -63,7 +63,7 @@ public static class BattlePresentationFrameCompiler
                     BattleUiUnitSnapshot actor = Find(before, after, used.ActorId);
                     BattleUiUnitSnapshot target = Find(before, after, used.TargetId);
                     SkillDefinition definition = skills[used.SkillId];
-                    GridPoint destination = ResolveActionDestination(definition, used, target.Cell, events);
+                    GridPoint destination = ResolveActionDestination(definition, used, actor.Cell, target.Cell, events);
                     PresentationCueKind actionKind = ResolveAction(definition);
                     cues.Add(Cue(actionKind, used.ActorId, used.TargetId, used.SkillId, actor.Cell, destination, [], [used.TargetId]));
                     break;
@@ -110,14 +110,20 @@ public static class BattlePresentationFrameCompiler
 
     private static PresentationCueKind ResolveAction(SkillDefinition skill) => skill.ExecutionKind switch
     {
-        SkillExecutionKind.MeleeAttack or SkillExecutionKind.Thrust or SkillExecutionKind.MultiStab => PresentationCueKind.Melee,
+        SkillExecutionKind.MeleeAttack or SkillExecutionKind.Thrust or SkillExecutionKind.MultiStab or SkillExecutionKind.Bane => PresentationCueKind.Melee,
         SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.PoisonSpear => PresentationCueKind.Ranged,
         _ => PresentationCueKind.Cast
     };
 
     private static GridPoint ResolveActionDestination(SkillDefinition skill, SkillUsedEvent used,
-        GridPoint fallback, IReadOnlyList<BattleEvent> events)
+        GridPoint origin, GridPoint fallback, IReadOnlyList<BattleEvent> events)
     {
+        if (skill.ExecutionKind == SkillExecutionKind.Bane)
+        {
+            int dx = Math.Sign(fallback.X - origin.X);
+            int dy = Math.Sign(fallback.Y - origin.Y);
+            return new GridPoint(origin.X + dx * 2, origin.Y + dy * 2);
+        }
         if (skill.ExecutionKind is not (SkillExecutionKind.SummonSkeleton or
             SkillExecutionKind.SummonSkeletonMage or SkillExecutionKind.SummonFireDemon or SkillExecutionKind.Decoy))
             return fallback;

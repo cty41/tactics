@@ -52,6 +52,15 @@ public partial class GodotProgrammaticSkillFx : Node2D
             case "amplify-damage":
                 if(Progress>.2f)foreach(Vector2 impact in Impacts){float radius=20f+Progress*8f;DrawArc(impact,radius,0,Mathf.Tau,28,Primary with{A=.75f},4f,true);DrawArc(impact,radius*.62f,0,Mathf.Tau,20,Secondary with{A=.7f},2f,true);for(int index=0;index<6;index++){Vector2 p=impact+Vector2.FromAngle(index*Mathf.Tau/6f)*radius;DrawCircle(p,2.5f,Secondary);}}
                 break;
+            case "bane-crescent":
+                float alpha = Progress < .85f ? 1f : Math.Max(0f, (1f - Progress) / .15f);
+                float crescentAngle = direction.Angle();
+                DrawArc(current, 24f, crescentAngle - Mathf.Pi * .58f, crescentAngle + Mathf.Pi * .58f,
+                    24, Primary with { A = alpha }, 8f, true);
+                DrawArc(current - direction * 4f, 18f, crescentAngle - Mathf.Pi * .52f, crescentAngle + Mathf.Pi * .52f,
+                    20, Secondary with { A = alpha * .9f }, 3f, true);
+                DrawLine(Start, current, Primary with { A = alpha * .18f }, 5f, true);
+                break;
         }
     }
 }

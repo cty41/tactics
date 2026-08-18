@@ -118,7 +118,8 @@ const supportedActionKinds = new Set([
   "pressInputKey",
   "waitForPlayerObservable",
   "waitForFrames",
-  "playBattleThroughInput"
+  "playBattleThroughInput",
+  "useBattleSkillThroughInput"
 ]);
 
 const playerInputActionKinds = new Set([
@@ -174,6 +175,7 @@ const supportedAssertionKinds = new Set([
   "checkpointRevisionEquals",
   "runtimeStateHashEquals",
   "demonboundCorruptionEquals",
+  "battleSkillReceiptEquals",
   "demonboundPossessedEquals",
   "adventureActorCellEquals",
   "activeAdventureLeaderEquals",
@@ -690,6 +692,15 @@ function validateActionStep(step: ScenarioStep, state: AliasState, diagnostics: 
         });
       }
       break;
+    case "useBattleSkillThroughInput":
+      requireStepStringParameter(step, "actorId", diagnostics);
+      requireStepStringParameter(step, "skillId", diagnostics);
+      if (step.parameters.maximumActions !== undefined &&
+          (!Number.isInteger(step.parameters.maximumActions) || Number(step.parameters.maximumActions) < 1 || Number(step.parameters.maximumActions) > 100)) {
+        diagnostics.push({ code: "InvalidMaximumPlayerActions", severity: "error",
+          message: "useBattleSkillThroughInput maximumActions must be an integer from 1 to 100.", path: step.id ?? step.kind });
+      }
+      break;
     case "endTurnUntilPresentationNumber":
       if (typeof step.parameters.kind !== "string" || !["Normal", "Critical", "Heal", "Mana", "Miss"].includes(step.parameters.kind)) diagnostics.push({
         code: "InvalidPresentationNumberKind", severity: "error", message: "endTurnUntilPresentationNumber requires a supported kind.", path: step.id ?? step.kind
@@ -814,6 +825,11 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "partyResourceSummaryEquals":
       if (!Array.isArray(assertion.expected) || assertion.expected.some(value => typeof value !== "string")) diagnostics.push({
         code: "InvalidAssertionExpectedType", severity: "error", message: `${assertion.kind} requires a string-array expected value.`, path: assertion.id ?? assertion.kind
+      });
+      break;
+    case "battleSkillReceiptEquals":
+      if (assertion.expected === null || Array.isArray(assertion.expected) || typeof assertion.expected !== "object") diagnostics.push({
+        code: "InvalidAssertionExpectedType", severity: "error", message: "battleSkillReceiptEquals requires an object expected value.", path: assertion.id ?? assertion.kind
       });
       break;
     case "executionStateEquals":

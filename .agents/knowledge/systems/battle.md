@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-18T17:50:32+08:00"
+timestamp: "2026-08-18T19:10:03+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -22,7 +22,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:a0597a48879eacca8612e0dcaf49441f77977267f00af2a83dad5373b6b6061e
+source_fingerprint: sha256:01aa83b6474e9179320a8196c1badc4d9bcde0fc786afdb7469d417f9bf496b7
 ---
 
 # Current State
@@ -57,6 +57,8 @@ Pure Run 三职业、敌人、召唤物和固定遭遇均从 Godot-owned Catalog
 ownership 与人工验收分开记录；自动测试通过不能把视觉或操作验收直接标为 passed。
 
 魔剑士 `Demonbound` 作为第四名开局候选但仍维持三人参战。Core 保存战斗局部 0–10 腐化、正念等级、冥想资格与附身控制状态；附身只切换控制者、不改变阵营，AI 优先攻击存活队友并在队友全 Down 后回退敌人。友军致命伤只进行一次确定性 25% Run 永久死亡判定；仅剩附身魔剑士且敌人全灭仍是玩家胜利。Godot 左上状态卡只绑定当前行动者，复用 Unit Resource 显示头像/名称/HP/MP，并由 nullable Corruption 投影可选连续特殊资源条；Hover/LOS 详情迁入鼠标旁输入穿透浮层。结构与语义已自动覆盖，视觉可读性仍待人工验收。
+
+厄运魔刃使用相邻方向输入并按近到远命中前方两格；墙体和第一格单位都不截断半月斩。Application 保存装备投影后的主属性伤害加值，只有显式启用缩放的技能读取该值。表现层把 Bane 编译为近战挥剑 Cue，并在半月斩抵达第一、第二格时依次插入受击和数字；规则提交仍早于表现，表现暂停或取消不改变结算。
 
 固定种子数值循环已有 Core 规则层诊断代理：三种 Demonbound 队伍标签各跑相同 10 seed，复用正式 `AiDecisionService`、`AiTurnService` 与 `BattleTransitionService`，记录终局、腐化峰值、冥想、首次附身、友伤、Down、永久死亡和技能次数，并验证同 seed 重放一致。其无尸体诊断夹具和简化队友策略只用于证明采样管线及发现规则问题；未接入生产 Run 路线、Resource 数值和完整职业策略前，不得视为完整平衡证据或人工体验替代。
 

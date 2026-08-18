@@ -10,7 +10,9 @@
   ],
   "requiredCapabilities": [
     "action:restartGodotMain",
+    "action:useBattleSkillThroughInput",
     "action:waitForPlayerObservable",
+    "assertion:battleSkillReceiptEquals",
     "assertion:demonboundCorruptionEquals",
     "assertion:demonboundPossessedEquals",
     "assertion:productionSaveUnchanged",
@@ -47,6 +49,15 @@
         "observable": "battleReady",
         "maximumFrames": 300
       }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "useBattleSkillThroughInput",
+      "parameters": {
+        "actorId": "party-pure_run_demonbound",
+        "skillId": "skill.demonbound.bane.lv1",
+        "maximumActions": 40
+      }
     }
   ],
   "assertionPlans": [
@@ -54,7 +65,7 @@
       "adapter": "Battle",
       "kind": "demonboundCorruptionEquals",
       "target": "party-pure_run_demonbound",
-      "expected": 0,
+      "expected": 3,
       "parameters": {}
     },
     {
@@ -62,6 +73,16 @@
       "kind": "demonboundPossessedEquals",
       "target": "party-pure_run_demonbound",
       "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "battleSkillReceiptEquals",
+      "expected": {
+        "actorId": "party-pure_run_demonbound",
+        "skillId": "skill.demonbound.bane.lv1",
+        "corruption": 3
+      },
       "parameters": {}
     },
     {
@@ -89,6 +110,11 @@
       "adapter": "Battle",
       "kind": "demonboundPossessedEquals",
       "target": "party-pure_run_demonbound",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "battleSkillReceiptEquals",
       "parameters": {}
     },
     {

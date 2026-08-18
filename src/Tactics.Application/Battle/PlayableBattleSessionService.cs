@@ -108,7 +108,8 @@ public sealed record PlayableBattleSessionContext(
     EncounterRequest? EncounterRequest = null,
     IReadOnlyDictionary<UnitInstanceId, string>? CharacterIds = null,
     IReadOnlyCollection<GridPoint>? BlockedCells = null,
-    IReadOnlyDictionary<ContentId, SummonControllerDefinition>? SummonControllers = null);
+    IReadOnlyDictionary<ContentId, SummonControllerDefinition>? SummonControllers = null,
+    UnitInstanceId? ProtectedNpcUnitId = null);
 
 public sealed record SummonControllerDefinition(
     AiDefinition Ai,
@@ -398,6 +399,11 @@ public sealed class PlayableBattleSessionService
                 Append(skip.Events);
                 continue;
             }
+            if (_context.ProtectedNpcUnitId is UnitInstanceId protectedId && active.Unit.InstanceId == protectedId)
+            {
+                AdvanceProtectedNpc(active);
+                continue;
+            }
             bool possessed = active.DemonboundState?.IsPossessed == true;
             bool possessedTargetsAllies = possessed && State.Units.Values.Any(unit => unit.IsAlive &&
                 unit.Unit.PlayerNumber == active.Unit.PlayerNumber &&
@@ -418,7 +424,8 @@ public sealed class PlayableBattleSessionService
             }
             int patternIndex = _patternIndices.GetValueOrDefault(active.Unit.InstanceId);
             AiTurnPlan plan = _decisions.Decide(State, definition, _context.SkillCatalog, patternIndex,
-                targetOwnFaction: possessedTargetsAllies);
+                targetOwnFaction: possessedTargetsAllies,
+                priorityTargetId: active.Unit.PlayerNumber == _context.PlayerNumber ? null : _context.ProtectedNpcUnitId);
             AiPlanExecutionResult result = _aiTurns.Execute(State, plan, _context.SkillCatalog);
             _automaticFrames.Enqueue(("Decision",State,result.Decision,Array.Empty<BattleEvent>()));
             foreach(AiExecutionFrame frame in result.Frames??Array.Empty<AiExecutionFrame>())_automaticFrames.Enqueue((frame.Stage,frame.State,null,frame.Events));
@@ -426,6 +433,31 @@ public sealed class PlayableBattleSessionService
             _patternIndices[active.Unit.InstanceId] = result.NextPatternIndex;
             Append(result.Events);
         }
+    }
+
+    private void AdvanceProtectedNpc(BattleUnitState active)
+    {
+        BattleUnitState[] enemies = State.Units.Values.Where(unit => unit.IsAlive &&
+            unit.Unit.PlayerNumber != active.Unit.PlayerNumber).ToArray();
+        GridPoint destination = State.Board.Cells.Keys
+            .Select(cell => (Cell: cell, Transition: _transitions.Apply(State,
+                new MoveUnitCommand(active.Unit.InstanceId, cell))))
+            .Where(value => value.Transition.Succeeded)
+            .OrderByDescending(value => enemies.Length == 0 ? 0 : enemies.Min(enemy =>
+                Math.Abs(enemy.Unit.Position.X - value.Cell.X) + Math.Abs(enemy.Unit.Position.Y - value.Cell.Y)))
+            .ThenBy(value => value.Cell.Y).ThenBy(value => value.Cell.X)
+            .Select(value => value.Cell).FirstOrDefault(active.Unit.Position);
+        if (destination != active.Unit.Position)
+        {
+            BattleTransition move = _transitions.Apply(State, new MoveUnitCommand(active.Unit.InstanceId, destination));
+            _automaticFrames.Enqueue(("EscortFlee", State, null, move.Events));
+            State = move.State;
+            Append(move.Events);
+        }
+        BattleTransition end = _transitions.Apply(State, new EndTurnCommand(active.Unit.InstanceId));
+        _automaticFrames.Enqueue(("EscortEnd", State, null, end.Events));
+        State = end.State;
+        Append(end.Events);
     }
 
     private IEnumerable<BattleUiTarget> LegalTargets(BattleState view, BattleUnitState active, SkillDefinition skill)
@@ -514,7 +546,9 @@ public sealed class PlayableBattleSessionService
 
     private void EvaluateTerminal()
     {
-        bool playerAlive = State.Units.Values.Any(unit => unit.IsAlive && unit.Unit.PlayerNumber == _context.PlayerNumber);
+        bool playerAlive = State.Units.Values.Any(unit => unit.IsAlive &&
+            unit.Unit.PlayerNumber == _context.PlayerNumber &&
+            (_context.ProtectedNpcUnitId is not UnitInstanceId protectedId || unit.Unit.InstanceId != protectedId));
         bool enemyAlive = State.Units.Values.Any(unit => unit.IsAlive && unit.Unit.PlayerNumber != _context.PlayerNumber);
         if (playerAlive && enemyAlive)
         {
@@ -545,7 +579,8 @@ public sealed class PlayableBattleSessionService
     private PlayableBattlePhase DeterminePhase(BattleState view)
     {
         if (_failureCode is not null) return PlayableBattlePhase.Faulted;
-        bool playerAlive=view.Units.Values.Any(unit=>unit.IsAlive&&unit.Unit.PlayerNumber==_context.PlayerNumber);
+        bool playerAlive=view.Units.Values.Any(unit=>unit.IsAlive&&unit.Unit.PlayerNumber==_context.PlayerNumber&&
+            (_context.ProtectedNpcUnitId is not UnitInstanceId protectedId || unit.Unit.InstanceId!=protectedId));
         bool enemyAlive=view.Units.Values.Any(unit=>unit.IsAlive&&unit.Unit.PlayerNumber!=_context.PlayerNumber);
         if(!playerAlive)return PlayableBattlePhase.Defeat;
         if(!enemyAlive)return PlayableBattlePhase.Victory;
@@ -580,7 +615,8 @@ public sealed class PlayableBattleSessionService
             : null;
 
     private bool IsAiControlled(BattleUnitState unit) =>
-        unit.DemonboundState?.IsPossessed == true || ControllerFor(unit) is not null;
+        unit.DemonboundState?.IsPossessed == true || ControllerFor(unit) is not null ||
+        _context.ProtectedNpcUnitId is UnitInstanceId protectedId && unit.Unit.InstanceId == protectedId;
 
     private static bool IsNonActingSummon(BattleUnitState unit) =>
         string.Equals(unit.SummonCategory, "Decoy", StringComparison.Ordinal) ||

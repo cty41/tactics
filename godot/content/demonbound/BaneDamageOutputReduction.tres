@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDefinitionResource" format=3 uid="uid://buwph2r38cl40"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/StatusDefinitionResource.cs" id="1_76f7y"]
+
+[resource]
+script = ExtResource("1_76f7y")
+ContentIdValue = "buff.demonbound.bane-debuff"
+SourceId = "godot.buff.demonbound.bane-debuff"
+DefaultDuration = 1
+PolarityValue = "Harmful"
+EffectKindValue = "DamageOutputReduction"
+TriggerTimingValue = "None"
+RefreshStrategyValue = "RefreshDuration"
+ElementKindValue = "Dark"
+DamageCategoryValue = "Magic"
+SourcePath = "GodotAuthored/Demonbound/BaneDamageOutputReduction"
+SourceGuid = "2ec889592b4a4f02b9592f23cd56a12b"
+SourceLocalFileId = 1
