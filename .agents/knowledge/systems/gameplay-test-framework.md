@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity 或 Godot adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity, godot]
-timestamp: "2026-08-18T17:50:30+08:00"
+timestamp: "2026-08-18T19:10:03+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:accbdf4fd39a692a8005d2196577f902731daaea251bdf08c84455a2d08a38c6
+source_fingerprint: sha256:88c22da8a1c3462b64614f359d9313e93a45222022e8b9c20f31699f54cec5ac
 ---
 
 # Current State
@@ -32,6 +32,8 @@ Godot v2 Runtime Runner 通过预 Tree 注入的 `GodotPlayableRunTestContext` �
 首批五个 Godot acceptance spec 已进入统一迁移门禁：Inventory 装备投影进入真实 BattleState、无召唤物 Defeated、Mana 动态数字、确定性 Miss 动态数字，以及 PendingBattle 的 Main 重启/Continue/清理。批量执行生成 `godot-gameplay-spec-result-v1.json`，门禁要求五场景通过、生产 save/backup 证据前后一致且临时节点为零。自动证据关闭规则、事务、scene/process reload 和清理边界；真实 Editor Assembly Reload、文字可读性与动画观感仍保留人工 smoke。
 
 Godot-owned 隔离门禁继续编译并执行全部 Godot v2 spec；魔剑士状态 probe 使用向后兼容的 Godot v3 plan、`demonbound-ready-v1` checkpoint 与 V7 隔离存档，compiler capability、Plan schema、Runner switch 和 assertion 同步 fail-closed。`GODOT_OWNED_VERIFY=1` 只跳过对已被物理排除的 Unity runtime plan 的 byte-level deep compare，不跳过 schema、capability、checkpoint、生产输入、Main journey 或清理验证。默认 Unity 编译行为在完整仓库模式仍必须保持 byte-identical。
+
+Godot v3 新增通用 `useBattleSkillThroughInput` 行动与 `battleSkillReceiptEquals` 断言：Runner 等待指定角色行动，只读合法技能/方向后仍通过 `Viewport.PushInput` 点击正式技能卡与棋盘格，并保存技能 ID、按结算顺序排列的伤害/状态事件及施放后职业资源 receipt。`demonbound-runtime` 现实际施放 `skill.demonbound.bane.lv1` 并断言腐化与 receipt；它不以直接调用 Battle service 代替输入成功证据。receipt 对象允许源 spec 只声明本场需要锁定的字段，Runner 保存的完整事件序列仍供更细断言使用。
 
 `GameplayRuntimeRunner` 默认以 `GamePlaybackSpeed.Quadruple`（4×）执行计划；需要真实 1× 语义的调用方可通过显式 speed constructor opt out 到 `Normal`。Runner 只通过 `GameTimeService` 设置 requested speed，并在成功、timeout 或 adapter exception 后恢复进入时速度；它不调用 `ForceResume`，进入时已暂停会 fail-fast，因此 pause ownership 始终属于调用方。`plan.TimeoutMs` 与 cancellation grace 继续使用 realtime `Task.Delay`，不会被 4× 缩短。Runner 的返回也是 runtime scope 生命周期边界：成功、timeout 或异常退出前均先 cancel scope、await `WhenIdleAsync()` 排空所有 tracked task，再 dispose runtime context 和 scope，避免投射物/VFX 等异步 cleanup 泄漏到下一个 fixture 或场景。由于速度状态是进程级全局状态，Runner 调用不得重叠；新增或调整 consumer 时应避免并行执行，并仅在明确验证 1× 行为时使用 `Normal` opt-out。
 

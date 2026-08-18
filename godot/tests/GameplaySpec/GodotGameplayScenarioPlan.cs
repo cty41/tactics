@@ -118,6 +118,12 @@ public sealed record GodotGameplayScenarioPlan(
             case "playBattleThroughInput" when step.Parameters.TryGetValue("maximumActions", out JsonElement maximum) &&
                 (maximum.ValueKind != JsonValueKind.Number || maximum.GetInt32() is < 1 or > 100):
                 throw new InvalidDataException("playBattleThroughInput maximumActions is invalid.");
+            case "useBattleSkillThroughInput":
+                if (!HasString("actorId") || !HasString("skillId") ||
+                    step.Parameters.TryGetValue("maximumActions", out JsonElement skillMaximum) &&
+                    (skillMaximum.ValueKind != JsonValueKind.Number || skillMaximum.GetInt32() is < 1 or > 100))
+                    throw new InvalidDataException("useBattleSkillThroughInput parameters are invalid.");
+                break;
             case "endTurnUntilPresentationNumber":
                 if (!HasString("kind") || step.Parameters["kind"].GetString() is not
                     ("Normal" or "Critical" or "Heal" or "Mana" or "Miss") ||
@@ -145,6 +151,7 @@ public sealed record GodotGameplayScenarioPlan(
                 "storeSoldOfferCountEquals" or "runSaveSchemaVersionEquals" => kind == JsonValueKind.Number,
             "demonboundCorruptionEquals" => kind == JsonValueKind.Number && !string.IsNullOrWhiteSpace(assertion.Target),
             "demonboundPossessedEquals" => kind is JsonValueKind.True or JsonValueKind.False && !string.IsNullOrWhiteSpace(assertion.Target),
+            "battleSkillReceiptEquals" => kind == JsonValueKind.Object,
             "terminalSummaryOutcomeEquals" or "presentationNumberEquals" or "runtimeStateHashEquals" or
                 "adventureActorCellEquals" or "activeAdventureLeaderEquals" or "runNodeLifecycleEquals" or
                 "adventureObjectStateEquals" or "eventResolutionEquals" or "pendingBattleContextKindEquals" or
@@ -174,6 +181,7 @@ internal static class GodotGameplayCapabilities
         ["action:rightClickPointerTarget"] = "PlayerInput", ["action:pressInputKey"] = "PlayerInput",
         ["action:waitForPlayerObservable"] = "PlayerInput", ["action:waitForFrames"] = "PlayerInput",
         ["action:playBattleThroughInput"] = "PlayerInput", ["action:endTurnOnlyUntilTerminal"] = "Battle",
+        ["action:useBattleSkillThroughInput"] = "PlayerInput",
         ["action:endTurnUntilPresentationNumber"] = "Battle",
         ["action:restartGodotMain"] = "UI", ["action:setPresentationPaused"] = "UI", ["action:setPresentationSpeed"] = "UI",
         ["assertion:inventoryProjectionEnteredBattle"] = "Battle", ["assertion:terminalSummaryOutcomeEquals"] = "Map",
@@ -181,6 +189,7 @@ internal static class GodotGameplayCapabilities
         ["assertion:presentationNodeCountEquals"] = "UI", ["assertion:productionSaveUnchanged"] = "Map",
         ["assertion:checkpointRevisionEquals"] = "Map", ["assertion:runtimeStateHashEquals"] = "UI",
         ["assertion:demonboundCorruptionEquals"] = "Battle", ["assertion:demonboundPossessedEquals"] = "Battle",
+        ["assertion:battleSkillReceiptEquals"] = "Battle",
         ["assertion:adventureActorCellEquals"] = "Map", ["assertion:activeAdventureLeaderEquals"] = "Map",
         ["assertion:runNodeLifecycleEquals"] = "Map", ["assertion:routeCandidateNodeIdsEqual"] = "Map",
         ["assertion:adventureObjectStateEquals"] = "Map", ["assertion:storeOfferCountEquals"] = "Map",

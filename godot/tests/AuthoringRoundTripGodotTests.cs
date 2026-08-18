@@ -10,6 +10,15 @@ namespace Tactics.Godot.Tests;
 [TestSuite]
 public class AuthoringRoundTripGodotTests
 {
+    [AfterTest]
+    public void ReleaseGodotNativeWrappersBeforeRuntimeShutdown()
+    {
+        // Godot 4.7 native-backed Variant/Array wrappers must finalize while the runtime is still alive.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
+
     [TestCase]
     [RequireGodotRuntime]
     public void FormalAiRevisionsAndSourceHashesAreStableAcrossUncachedReads()

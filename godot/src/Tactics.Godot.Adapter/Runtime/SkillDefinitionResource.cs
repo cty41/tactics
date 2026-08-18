@@ -56,6 +56,7 @@ public partial class SkillDefinitionResource : Resource
     [Export] public int MovementDamagePerCell { get; set; }
     [Export] public string SummonAttackContentIdValue { get; set; } = string.Empty;
     [Export] public int CorruptionCost { get; set; }
+    [Export] public string DamageScalingValue { get; set; } = nameof(SkillDamageScalingKind.None);
     [Export] public string SourcePath { get; set; } = string.Empty;
     [Export] public string SourceGuid { get; set; } = string.Empty;
     [Export] public long SourceLocalFileId { get; set; }
@@ -82,7 +83,7 @@ public partial class SkillDefinitionResource : Resource
             string.IsNullOrEmpty(DetonateStatusContentIdValue) ? null : new ContentId(DetonateStatusContentIdValue),
             BounceRange, BounceCount, PierceAll, AllowsEmptyTarget, MovementDamagePerCell,
             string.IsNullOrEmpty(SummonAttackContentIdValue) ? null : new ContentId(SummonAttackContentIdValue),
-            CorruptionCost);
+            CorruptionCost, Parse<SkillDamageScalingKind>(DamageScalingValue));
         return new SkillDefinition(new ContentId(ContentIdValue), SourceId, Parse<SkillRole>(RoleValue), Parse<SkillKind>(KindValue), Level, ManaCost, MinRange, MaxRange, Parse<SkillExecutionKind>(ExecutionKindValue), Damage, Parse<SkillDamageKind>(DamageKindValue), string.IsNullOrEmpty(StatusContentIdValue) ? null : new ContentId(StatusContentIdValue), StatusDuration, Hidden, ExternalDependency, IsBasicAbility, MaxUsesPerTurn, BranchId, string.IsNullOrEmpty(PrerequisiteContentIdValue) ? null : new ContentId(PrerequisiteContentIdValue), GrowthVisible, profile, RequiredAttribute, MinimumAttribute, PrerequisiteBranchId, CanCrit);
     }
 

@@ -57,8 +57,8 @@ public class UnitBatchGodotTests
         var expected = new Dictionary<string, (int Mana, int Damage, int Corruption)>
         {
             ["skill.demonbound.meditation"] = (0, 0, 0),
-            ["skill.demonbound.bane.lv1"] = (3, 0, 2), ["skill.demonbound.bane.lv2"] = (3, 0, 2),
-            ["skill.demonbound.bane.lv3"] = (3, 0, 2), ["skill.demonbound.cleave.lv1"] = (4, 6, 2),
+            ["skill.demonbound.bane.lv1"] = (3, 5, 3), ["skill.demonbound.bane.lv2"] = (3, 6, 3),
+            ["skill.demonbound.bane.lv3"] = (3, 7, 3), ["skill.demonbound.cleave.lv1"] = (4, 6, 2),
             ["skill.demonbound.cleave.lv2"] = (4, 6, 2),
             ["skill.demonbound.infernal-blast.lv1"] = (5, 4, 3),
             ["skill.demonbound.infernal-blast.lv2"] = (3, 4, 3),
@@ -89,24 +89,18 @@ public class UnitBatchGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
-    public void BaneWeaponStatusShowsPurpleBladePlaceholderAndClearsWithStatus()
+    public void BaneUsesAProgrammaticPurpleTravellingCrescentProfile()
     {
-        var resource = ResourceLoader.Load<UnitDefinitionResource>(
-            "res://content/demonbound/PureRunDemonbound.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
+        var resource = ResourceLoader.Load<SkillPresentationResource>(
+            "res://content/demonbound/BanePresentation.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
         AssertThat(resource).IsNotNull();
         if (resource is null) return;
-        GodotUnitActor actor = GodotUnitFactory.InstantiateActor(resource);
 
-        actor.SetStatuses([new BattleUiStatusSnapshot(new ContentId("buff.demonbound.bane-weapon"),
-            StatusEffectKind.BaneWeapon, StatusPolarity.Beneficial, 2, 1)]);
-        bool visible = actor.IsBaneBladeGlowVisible;
-        Color glow = actor.BaneBladeGlow!.DefaultColor;
-        actor.SetStatuses(Array.Empty<BattleUiStatusSnapshot>());
-
-        AssertThat(visible).IsTrue();
-        AssertThat(glow.B).IsGreater(glow.R);
-        AssertThat(actor.IsBaneBladeGlowVisible).IsFalse();
-        actor.Free();
+        AssertThat(resource.SkillBranch).IsEqual("demonbound.bane");
+        AssertThat(resource.ProgrammaticKind).IsEqual("bane-crescent");
+        AssertThat(resource.PrimaryColor.B).IsGreater(resource.PrimaryColor.R);
+        AssertThat(resource.TravelDuration).IsEqual(.28f);
+        AssertThat(resource.ImpactDuration).IsEqual(.16f);
     }
 
     [TestCase]

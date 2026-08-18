@@ -182,7 +182,7 @@ public sealed class PlayableBattleSessionFactory
             physicalAttack: physical, magicalAttack: magical,
             canProduceCorpse: definition.CanProduceCorpse,
             manaRecoveryPerTurn: projection.Attributes.Intelligence,
-            primaryAttributeDamageBonus: Math.Max(0, PrimaryAttribute(projection.Attributes, role) - 5));
+            primaryAttributeDamageBonus: CalculatePrimaryAttributeDamageBonus(projection.Attributes, role));
         int combatTechniquesLevel = character.LearnedSkills
             .Where(id => id.Value.StartsWith("skill.amazon.combat-techniques.lv", StringComparison.Ordinal))
             .Select(id => id.Value.EndsWith("lv2", StringComparison.Ordinal) ? 2 : 1)
@@ -190,13 +190,17 @@ public sealed class PlayableBattleSessionFactory
         return combatTechniquesLevel > 0 ? state.WithCombatTechniquesLevel(combatTechniquesLevel) : state;
     }
 
-    private static int PrimaryAttribute(UnitAttributes attributes, SkillRole role) => role switch
+    public static int CalculatePrimaryAttributeDamageBonus(UnitAttributes attributes, SkillRole role)
     {
-        SkillRole.Mage => attributes.Intelligence,
-        SkillRole.Necromancer or SkillRole.Demonbound => attributes.Charisma,
-        SkillRole.Amazon => attributes.Agility,
-        _ => 5
-    };
+        int primary = role switch
+        {
+            SkillRole.Mage => attributes.Intelligence,
+            SkillRole.Necromancer or SkillRole.Demonbound => attributes.Charisma,
+            SkillRole.Amazon => attributes.Agility,
+            _ => 5
+        };
+        return Math.Max(0, primary - 5);
+    }
 
     public static UnitDerivedStats ResolvePartyDerivedStats(
         UnitDefinition definition, EquipmentStatProjection projection) =>

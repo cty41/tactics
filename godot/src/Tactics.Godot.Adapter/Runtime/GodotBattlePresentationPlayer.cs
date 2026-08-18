@@ -20,6 +20,7 @@ public partial class GodotBattlePresentationPlayer : Node
     private string? _pendingStage;
     private bool _completionRaised;
     public bool HasPendingFrame => _pendingStage is not null;
+    public int ActiveTransientCount => _transientNodes.Count(node => GodotObject.IsInstanceValid(node));
     public bool IsPlaying => _activeTweens.Any(tween => GodotObject.IsInstanceValid(tween) && tween.IsRunning());
     public int ActiveTweenCount => _activeTweens.Count(tween => GodotObject.IsInstanceValid(tween));
     public int TransientNodeCount => _transientNodes.Count(node => GodotObject.IsInstanceValid(node));
@@ -54,13 +55,20 @@ public partial class GodotBattlePresentationPlayer : Node
             BattlePresentationCue cue = frame.Cues[index];
             if (cue.Kind is PresentationCueKind.Melee or PresentationCueKind.Ranged or PresentationCueKind.Cast)
             {
-                PlayCue(sequence, cue, actors, recoverAction: false);
+                bool segmentedBane = IsBaneCue(cue);
+                PlayCue(sequence, cue, actors, recoverAction: false, playSkillFx: !segmentedBane);
+                var actionHits = new List<BattlePresentationCue>();
                 while (index + 1 < frame.Cues.Count && frame.Cues[index + 1].Kind == PresentationCueKind.Hit)
                 {
                     BattlePresentationCue hit = frame.Cues[++index];
-                    PlayCue(sequence, hit, actors);
-                    QueueNextNumber(sequence, pendingNumbers, hit.ActorId);
+                    actionHits.Add(hit);
+                    if (!segmentedBane)
+                    {
+                        PlayCue(sequence, hit, actors);
+                        QueueNextNumber(sequence, pendingNumbers, hit.ActorId);
+                    }
                 }
+                if (segmentedBane) PlayBaneSequence(sequence, cue, actionHits, actors, pendingNumbers);
                 RecoverAction(sequence, cue, actors);
             }
             else
@@ -148,7 +156,7 @@ public partial class GodotBattlePresentationPlayer : Node
     public override void _ExitTree() => Clear();
 
     private void PlayCue(Tween tween,BattlePresentationCue cue, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors,
-        bool recoverAction = true)
+        bool recoverAction = true, bool playSkillFx = true)
     {
         if (!actors.TryGetValue(cue.ActorId, out GodotUnitActor? actor) || !GodotObject.IsInstanceValid(actor)) return;
         switch (cue.Kind)
@@ -175,7 +183,7 @@ public partial class GodotBattlePresentationPlayer : Node
                 tween.TweenCallback(Callable.From(()=>actor.SetFacing(GodotPresentationFacingResolver.Resolve(cue.Origin,cue.Destination,actor.PresentationFacing))));
                 tween.TweenCallback(Callable.From(() => actor.SetActionPose(GodotUnitActionPose.Melee)));
                 PlayRelease(tween, actor, cue, _profile.MeleeWindupDuration, _profile.MeleeLungeDuration, _profile.MeleeImpactHold, 18f);
-                if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
+                if(playSkillFx && cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) PlayRecover(tween,actor,cue,_profile.MeleeRecoverDuration);
                 break;
             case PresentationCueKind.Ranged:
@@ -185,7 +193,7 @@ public partial class GodotBattlePresentationPlayer : Node
                 tween.TweenCallback(Callable.From(() => actor.SetActionPose(GodotUnitActionPose.Ranged)));
                 PlayRelease(tween, actor, cue, _profile.RangedAimDuration, _profile.RangedReleaseDuration, 0f, -8f,
                     clearPoseAtRelease: true);
-                if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
+                if(playSkillFx && cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) PlayRecover(tween,actor,cue,_profile.RangedRecoverDuration);
                 break;
             case PresentationCueKind.Cast:
@@ -197,7 +205,7 @@ public partial class GodotBattlePresentationPlayer : Node
                 if (actor.Body is null) break;
                 tween.TweenProperty(actor.Body, "scale", Vector2.One * 1.12f, _profile.CastChargeDuration).SetTrans(Tween.TransitionType.Sine);
                 tween.TweenInterval(_profile.CastReleaseHold);
-                if(cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
+                if(playSkillFx && cue.SkillId is not null)PlaySkillFx(tween,cue,actors);
                 if (recoverAction) tween.TweenProperty(actor.Body, "scale", Vector2.One, _profile.CastRecoverDuration).SetTrans(Tween.TransitionType.Sine);
                 break;
             case PresentationCueKind.Hit:
@@ -344,15 +352,9 @@ public partial class GodotBattlePresentationPlayer : Node
 
     private void PlaySkillFx(Tween tween, BattlePresentationCue cue, IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors)
     {
-        string branch=cue.SkillId!.Value.Value;
-        SkillPresentationResource? profile=branch.Contains("fireball",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.fireball"):
-            branch.Contains("bone-spear",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("necromancer.bone-spear"):
-            branch.Contains("ice-bolt",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.ice-bolt"):
-            branch.Contains("lightning",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.lightning"):
-            branch.Contains("poison-spear",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("amazon.poison-spear"):
-            branch.Contains("amplify-damage",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("necromancer.amplify-damage"):
-            branch.Contains("thrust",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("amazon.thrust"):null;
+        SkillPresentationResource? profile = ResolveSkillProfile(cue);
         if(profile is null)return;
+        string branch=cue.SkillId!.Value.Value;
         GridPoint end=cue.Effects?.FirstOrDefault(effect=>effect.Kind==BattlePresentationEffectKind.SpearDropped)?.Cell??cue.Destination;
         Vector2[] impacts=(cue.Effects??Array.Empty<BattlePresentationEffect>()).Where(effect=>effect.TargetId is not null)
             .Select(effect=>cue.AffectedUnitIds.Contains(effect.TargetId!.Value)?effect.TargetId:null).Where(id=>id is not null)
@@ -371,7 +373,57 @@ public partial class GodotBattlePresentationPlayer : Node
         tween.TweenCallback(Callable.From(()=>{if(GodotObject.IsInstanceValid(fx))fx.Visible=true;}));
         tween.TweenProperty(fx,"Progress",1f,profile.TravelDuration).SetTrans(Tween.TransitionType.Quad);
         tween.TweenInterval(profile.ImpactDuration);
-        tween.TweenCallback(Callable.From(() => { _transientNodes.Remove(fx); if (GodotObject.IsInstanceValid(fx)) fx.QueueFree(); }));
+        tween.TweenCallback(Callable.From(() => ReleaseFx(fx)));
+    }
+
+    private SkillPresentationResource? ResolveSkillProfile(BattlePresentationCue cue)
+    {
+        string branch=cue.SkillId!.Value.Value;
+        return branch.Contains("fireball",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.fireball"):
+            branch.Contains("bone-spear",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("necromancer.bone-spear"):
+            branch.Contains("ice-bolt",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.ice-bolt"):
+            branch.Contains("lightning",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("mage.lightning"):
+            branch.Contains("poison-spear",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("amazon.poison-spear"):
+            branch.Contains("amplify-damage",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("necromancer.amplify-damage"):
+            branch.Contains("thrust",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("amazon.thrust"):
+            branch.Contains("demonbound.bane",StringComparison.Ordinal)?_skillProfiles.GetValueOrDefault("demonbound.bane"):null;
+    }
+
+    private static bool IsBaneCue(BattlePresentationCue cue) =>
+        cue.SkillId?.Value.Contains("demonbound.bane", StringComparison.Ordinal) == true;
+
+    private void PlayBaneSequence(Tween tween, BattlePresentationCue cue, IReadOnlyList<BattlePresentationCue> hits,
+        IReadOnlyDictionary<UnitInstanceId, GodotUnitActor> actors, List<BattlePresentationNumber> pendingNumbers)
+    {
+        SkillPresentationResource? profile = ResolveSkillProfile(cue);
+        if (profile is null) return;
+        var fx=new GodotProgrammaticSkillFx{Kind=profile.ProgrammaticKind,
+            Start=IsometricBattleBoardLayout.GridToScreen(cue.Origin),
+            End=IsometricBattleBoardLayout.GridToScreen(cue.Destination),
+            Primary=profile.PrimaryColor,Secondary=profile.SecondaryColor,ZIndex=900,Visible=false};
+        _transientNodes.Add(fx);
+        GetParent().AddChild(fx);
+        tween.TweenCallback(Callable.From(()=>{if(GodotObject.IsInstanceValid(fx))fx.Visible=true;}));
+        int segments = Math.Max(1, cue.Path.Count);
+        for (int index = 0; index < segments; index++)
+        {
+            float progress = (index + 1f) / segments;
+            tween.TweenProperty(fx,"Progress",progress,profile.TravelDuration / segments).SetTrans(Tween.TransitionType.Linear);
+            GridPoint cell = cue.Path.Count > index ? cue.Path[index] : cue.Destination;
+            foreach (BattlePresentationCue hit in hits.Where(value => value.Origin == cell))
+            {
+                PlayCue(tween, hit, actors);
+                QueueNextNumber(tween, pendingNumbers, hit.ActorId);
+            }
+        }
+        tween.TweenInterval(profile.ImpactDuration);
+        tween.TweenCallback(Callable.From(() => ReleaseFx(fx)));
+    }
+
+    private void ReleaseFx(Node fx)
+    {
+        _transientNodes.Remove(fx);
+        if (GodotObject.IsInstanceValid(fx)) fx.QueueFree();
     }
 
     private static void PlayRelease(Tween tween, GodotUnitActor actor, BattlePresentationCue cue,

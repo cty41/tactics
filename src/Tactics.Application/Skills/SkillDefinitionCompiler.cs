@@ -44,6 +44,7 @@ public sealed record SkillDefinitionDraft
     public bool CleanseHarmful { get; init; }
     public int SecondaryDamage { get; init; }
     public int CorruptionCost { get; init; }
+    public string DamageScaling { get; init; } = nameof(SkillDamageScalingKind.None);
 }
 
 public sealed record SkillDefinitionCompileResult(
@@ -71,7 +72,8 @@ public sealed class SkillDefinitionCompiler
             if (definitions.ContainsKey(contentId)) { diagnostics.Add(Error("skill.duplicate_id", $"Duplicate skill '{contentId}'.", contentId)); continue; }
             if (draft.SchemaVersion != 1 || string.IsNullOrWhiteSpace(draft.SourceId) ||
                 !TryEnum(draft.Role, out SkillRole role) || !TryEnum(draft.Kind, out SkillKind kind) ||
-                !TryEnum(draft.ExecutionKind, out SkillExecutionKind execution) || !TryEnum(draft.DamageKind, out SkillDamageKind damageKind))
+                !TryEnum(draft.ExecutionKind, out SkillExecutionKind execution) || !TryEnum(draft.DamageKind, out SkillDamageKind damageKind) ||
+                !TryEnum(draft.DamageScaling, out SkillDamageScalingKind damageScaling))
             { diagnostics.Add(Error("skill.invalid_contract", $"Skill '{contentId}' has an invalid schema, source, or enum.", contentId)); continue; }
             ContentId? statusId = null;
             if (!string.IsNullOrEmpty(draft.StatusContentId))
@@ -84,7 +86,7 @@ public sealed class SkillDefinitionCompiler
             if (diagnostics.Any(item => item.ContentId == contentId && item.Severity == ContentDiagnosticSeverity.Error)) continue;
             try
             {
-                var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage, CorruptionCost: draft.CorruptionCost);
+                var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage, CorruptionCost: draft.CorruptionCost, DamageScaling: damageScaling);
                 var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn, draft.BranchId, prerequisiteId, draft.GrowthVisible, profile, draft.RequiredAttribute, draft.MinimumAttribute, draft.PrerequisiteBranchId);
                 definitions.Add(contentId, definition);
                 contentDrafts.Add(new ContentDraft(contentId, "skill", 1, statusId is null ? null : new[] { statusId.Value }, new Dictionary<string, string>(StringComparer.Ordinal)

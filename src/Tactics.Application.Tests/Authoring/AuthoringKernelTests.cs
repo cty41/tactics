@@ -371,7 +371,8 @@ public sealed class AuthoringKernelTests
         var definition = new SkillDefinition(new ContentId("skill.test"), "test_1", SkillRole.Mage,
             SkillKind.Active, 1, 3, 1, 5, SkillExecutionKind.Fireball, 12, SkillDamageKind.Magical,
             externalDependency: true, executionProfile: new SkillExecutionProfile(2, SummonDefinitionId: new ContentId("unit.summon"), StatusChancePercent: 75,
-                BounceRange: 3, BounceCount: 2, PierceAll: true, CorruptionCost: 4));
+                BounceRange: 3, BounceCount: 2, PierceAll: true, CorruptionCost: 4,
+                DamageScaling: SkillDamageScalingKind.PrimaryAttributeAboveNeutral));
         var source = new SkillAuthoringDocument(definition, "Fireball", "Test", string.Empty, string.Empty, 0,
             string.Empty, string.Empty);
         SkillAuthoringDocument restored = SkillAuthoringJson.Deserialize(SkillAuthoringJson.Serialize(source));
@@ -381,9 +382,27 @@ public sealed class AuthoringKernelTests
             Assert.That(restored.Definition.ExecutionProfile.PierceAll, Is.True);
             Assert.That(restored.Definition.ExecutionProfile.SummonDefinitionId?.Value, Is.EqualTo("unit.summon"));
             Assert.That(restored.Definition.ExecutionProfile.CorruptionCost, Is.EqualTo(4));
+            Assert.That(restored.Definition.ExecutionProfile.DamageScaling,
+                Is.EqualTo(SkillDamageScalingKind.PrimaryAttributeAboveNeutral));
             Assert.That(restored.Dependencies, Does.Contain("unit.summon"));
             Assert.That(AuthoringRevision.Compute(restored), Is.EqualTo(AuthoringRevision.Compute(source)));
         });
+    }
+
+    [Test]
+    public void SkillAuthoring_LegacyJsonWithoutDamageScalingFallsBackToNone()
+    {
+        var definition = new SkillDefinition(new ContentId("skill.legacy"), "legacy", SkillRole.Any,
+            SkillKind.Active, 1, 0, 1, 1, SkillExecutionKind.MeleeAttack, 2, SkillDamageKind.Physical,
+            externalDependency: true);
+        var source = new SkillAuthoringDocument(definition, "Legacy", string.Empty, string.Empty, string.Empty, 0,
+            string.Empty, string.Empty);
+        string json = SkillAuthoringJson.Serialize(source).Replace(",\n    \"damageScaling\": \"None\"", string.Empty,
+            StringComparison.Ordinal);
+
+        SkillAuthoringDocument restored = SkillAuthoringJson.Deserialize(json);
+
+        Assert.That(restored.Definition.ExecutionProfile.DamageScaling, Is.EqualTo(SkillDamageScalingKind.None));
     }
 
     [Test]

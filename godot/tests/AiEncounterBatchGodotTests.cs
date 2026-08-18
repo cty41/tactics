@@ -10,11 +10,20 @@ namespace Tactics.Godot.Tests;
 [TestSuite]
 public class AiEncounterBatchGodotTests
 {
+    [AfterTest]
+    public void ReleaseGodotNativeWrappersBeforeRuntimeShutdown()
+    {
+        // ResourceLoader and PackedScene wrappers must finalize while the Godot runtime is still alive.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
+
     [TestCase]
     [RequireGodotRuntime]
     public void GeneratedBatchBuildsCanonical73Catalog()
     {
-        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/ai_encounters/ContentCatalog.tres");var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres");AssertThat(batch).IsNotNull();AssertThat(global).IsNotNull();if(batch is null||global is null)return;AiEncounterBatchValidation result=AiEncounterBatchValidator.Validate(batch,global);AssertThat(result.BatchCount).IsEqual(15);AssertThat(result.GlobalCount is 74 or 101 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125 or 131 or 132 or 141 or 142 or 143 or 160).IsTrue();AssertThat(result.Skills).IsEqual(4);AssertThat(result.Ai).IsEqual(6);AssertThat(result.Layouts).IsEqual(2);AssertThat(result.Encounters).IsEqual(3);
+        var batch=ResourceLoader.Load<GodotResourceCatalog>("res://content/ai_encounters/ContentCatalog.tres");var global=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres");AssertThat(batch).IsNotNull();AssertThat(global).IsNotNull();if(batch is null||global is null)return;AiEncounterBatchValidation result=AiEncounterBatchValidator.Validate(batch,global);AssertThat(result.BatchCount).IsEqual(15);AssertThat(result.GlobalCount is 74 or 101 or 108 or 114 or 115 or 116 or 119 or 123 or 124 or 125 or 131 or 132 or 141 or 142 or 143 or 160 or 161 or 162).IsTrue();AssertThat(result.Skills).IsEqual(4);AssertThat(result.Ai).IsEqual(6);AssertThat(result.Layouts).IsEqual(2);AssertThat(result.Encounters).IsEqual(3);
     }
 
     [TestCase]

@@ -119,7 +119,8 @@ const actionKindToAdapter: Record<string, Adapter> = {
   pressInputKey: "PlayerInput",
   waitForPlayerObservable: "PlayerInput",
   waitForFrames: "PlayerInput",
-  playBattleThroughInput: "PlayerInput"
+  playBattleThroughInput: "PlayerInput",
+  useBattleSkillThroughInput: "PlayerInput"
 };
 
 const assertionKindToAdapter: Record<string, Adapter> = {
@@ -132,6 +133,7 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   checkpointRevisionEquals: "Map",
   runtimeStateHashEquals: "UI",
   demonboundCorruptionEquals: "Battle",
+  battleSkillReceiptEquals: "Battle",
   demonboundPossessedEquals: "Battle",
   adventureActorCellEquals: "Map",
   activeAdventureLeaderEquals: "Map",
@@ -327,7 +329,8 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
       path: String(checkpointStep.parameters.path)
     } : undefined;
     const plan = {
-      schemaVersion: spec.assertions.some(assertion => assertion.kind === "demonboundCorruptionEquals" ||
+      schemaVersion: spec.assertions.some(assertion => assertion.kind === "battleSkillReceiptEquals" ||
+        assertion.kind === "demonboundCorruptionEquals" ||
         assertion.kind === "demonboundPossessedEquals" || assertion.kind.startsWith("adventure") ||
         assertion.kind === "activeAdventureLeaderEquals" || assertion.kind === "runNodeLifecycleEquals" ||
         assertion.kind === "routeCandidateNodeIdsEqual" || assertion.kind === "storeOfferCountEquals" ||

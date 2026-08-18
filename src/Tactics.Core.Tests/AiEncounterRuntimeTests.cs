@@ -73,6 +73,34 @@ public sealed class AiEncounterRuntimeTests
     }
 
     [Test]
+    public void Decision_PriorityTargetOverridesOtherwiseEquivalentTarget()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 4; x++) for (int y = 0; y < 4; y++) cells[new GridPoint(x, y)] = new CellState();
+        var actorId = new UnitInstanceId("enemy");
+        var heroId = new UnitInstanceId("party.hero");
+        var protectedNpcId = new UnitInstanceId("party.escort");
+        var actor = new BattleUnitState(new UnitState(actorId, new ContentId("unit.enemy"),
+            new GridPoint(1, 1), 0, 5, 1, 0), 20, 20);
+        var hero = new BattleUnitState(new UnitState(heroId, new ContentId("unit.hero"),
+            new GridPoint(2, 1), 0, 4, 0, 1), 20, 20);
+        var protectedNpc = new BattleUnitState(new UnitState(protectedNpcId, new ContentId("unit.escort"),
+            new GridPoint(1, 2), 0, 3, 0, 2), 20, 20);
+        var state = new BattleState(new BoardSnapshot(cells), [actor, hero, protectedNpc],
+            [actorId, heroId, protectedNpcId]);
+        var skill = new SkillDefinition(new ContentId("skill.basic.melee"), "melee", SkillRole.Any,
+            SkillKind.Basic, 1, 0, 1, 1, SkillExecutionKind.MeleeAttack, 2, SkillDamageKind.Physical);
+        var definition = new AiDefinition(new ContentId("ai.test"), AiArchetype.Charger,
+            new AiProfileDefinition(0, 0, 0, 0), [skill.ContentId], Array.Empty<ContentId>());
+
+        AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
+            new Dictionary<ContentId, SkillDefinition> { [skill.ContentId] = skill },
+            priorityTargetId: protectedNpcId);
+
+        Assert.That(plan.Selected.TargetId, Is.EqualTo(protectedNpcId));
+    }
+
+    [Test]
     public void Decision_IncludesAndSelectsDemonicRegenerationAsSelfTargetWhenWounded()
     {
         var cells = new Dictionary<GridPoint, CellState>();
@@ -100,5 +128,32 @@ public sealed class AiEncounterRuntimeTests
             Assert.That(plan.Selected.SkillId, Is.EqualTo(regeneration.ContentId));
             Assert.That(plan.Selected.TargetId, Is.EqualTo(actorId));
         });
+    }
+
+    [Test]
+    public void Decision_UsesAdjacentDirectionCellForBaneInsteadOfSelfOrFarTargetCell()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 5; x++) for (int y = 0; y < 3; y++) cells[new GridPoint(x, y)] = new CellState();
+        UnitInstanceId actorId = new("demonbound"), targetId = new("party");
+        BattleUnitState actor = new(new UnitState(actorId, new ContentId("unit.pure-run.demonbound"),
+            new GridPoint(1, 1), 0, 5, 1, 0), 20, 20, maxMana: 10, currentMana: 10,
+            demonboundState: new DemonboundBattleState());
+        BattleUnitState target = new(new UnitState(targetId, new ContentId("unit.party"),
+            new GridPoint(3, 1), 0, 4, 0, 1), 20, 20);
+        BattleState state = new(new BoardSnapshot(cells), [actor, target], [actorId, targetId]);
+        SkillDefinition bane = new(new ContentId("skill.demonbound.bane.lv1"), "bane",
+            SkillRole.Demonbound, SkillKind.Active, 1, 3, 1, 1, SkillExecutionKind.Bane, 5,
+            SkillDamageKind.Magical, executionProfile: new SkillExecutionProfile(CorruptionCost: 3));
+        AiDefinition definition = new(new ContentId("ai.demonbound"), AiArchetype.Charger,
+            new AiProfileDefinition(1, 1, 1, 1), [bane.ContentId], Array.Empty<ContentId>());
+
+        AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
+            new Dictionary<ContentId, SkillDefinition> { [bane.ContentId] = bane });
+
+        AiIntentCandidate candidate = plan.Candidates.Single(value => value.SkillId == bane.ContentId &&
+            value.Destination == actor.Unit.Position);
+        Assert.That(candidate.TargetId, Is.EqualTo(targetId));
+        Assert.That(candidate.TargetCell, Is.EqualTo(new GridPoint(2, 1)));
     }
 }

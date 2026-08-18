@@ -20,6 +20,8 @@ source_fingerprint: sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b954427
 
 # Current State
 
+Godot Core 的统一 `SkillDefinition` 已增加 Demonbound 角色、腐化成本及显式主属性伤害缩放，Typed Resource、Catalog、作者 JSON 和 Workbench 可完整 round-trip。当前正式非大师内容为固有冥想、正念 Lv1–Lv3、厄运魔刃 Lv1–Lv3、横扫 Lv1–Lv2、狱火冲击 Lv1–Lv3、地狱火 Lv1–Lv2 和恶魔再生 Lv1–Lv2；厄运魔刃是忽略墙体的两格推进魔法斩，伤害按魅力超过 5 的部分增长，Lv2/Lv3 对存活目标施加 1/2 回合的 25% 伤害输出降低。成功施放后才提交 MP、腐化和使用记录，失败或取消无副作用。三个大师技能仍不进入资源与候选池。
+
 `SkillGraphAsset` 保存编辑态节点图，`SkillGraphRunner` 解释执行，`SkillGraphAbilityImpl` 接入既有 `IAbility`、共享 targeting 和计划执行接口。玩家预览、AI 候选及执行前重验证复用射程、阵营、AOE 展开和 LOS 结论；多目标 AOE 只执行一次图并扣除一次资源。
 
 `SkillGraphAbilityConfig` 可选引用 `BattlePresentationGraph`，并以 `VisualAction` 选择 None、Melee、Ranged 或 Cast Tween 模板；可选 `PoseFamily` 表达毒矛等明确物理动作，未指定时由角色 `UnitActionPoseProfile` 选择默认族。玩法仍由 SkillGraph 决定目标、伤害、Buff 和分支；Presentation Graph 只编排强类型语义入口、角色 Tween、投射物、第三方 Prefab FX、程序化 Recipe、Delay、Marker 与显式 Fork/Join。`Action` 的 Release Marker 至多一次启动玩法图，并把 Pose Family 与 Release 准备回调传给共享 Tween；`Projectile` 的 Impact Marker 控制命中继续。缺少 Graph、入口、姿态图或 Profile 时回退兼容路径/idle，不让表现依赖改变玩法成功边界。
