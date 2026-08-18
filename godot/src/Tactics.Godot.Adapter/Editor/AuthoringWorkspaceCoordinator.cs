@@ -21,6 +21,7 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
     private readonly TacticsAuthoringEditorService _authoring = new();
     private EditorUndoRedoManager? _undoRedo;
     private Label? _status;
+    private bool _shuttingDown;
 
     public void Configure(EditorUndoRedoManager undoRedo) => _undoRedo = undoRedo;
     public void Register(IAuthoringWorkspaceParticipant participant)
@@ -38,6 +39,7 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
     public override void _Ready()
     {
         if (_undoRedo is null) throw new InvalidOperationException("Workspace coordinator requires Editor UndoRedo.");
+        _shuttingDown = false;
         WorkbenchUi.StylePage(this);
         AddChild(new Label { Text = "GLOBAL TRANSACTION" });
         AddButton("Validate All", ValidateAll); AddButton("Apply All", ApplyAll); AddButton("Revert All", RevertAll);
@@ -47,18 +49,47 @@ internal sealed partial class AuthoringWorkspaceCoordinator : HBoxContainer
     public override void _Process(double delta)
     {
         _ = delta;
+        if (_shuttingDown) return;
+        Label? status = _status;
+        if (status is null || !GodotObject.IsInstanceValid(status))
+        {
+            SetProcess(false);
+            return;
+        }
         try
         {
             AuthoringDocumentChange[] changes = CaptureChanges();
             AuthoringEditorDiagnostics.RecordWorkspace(changes.Length, _lifecycle.Count);
-            _status!.Text = changes.Length == 0 && _lifecycle.Count == 0 ? "Workspace: no dirty documents."
+            status.Text = changes.Length == 0 && _lifecycle.Count == 0 ? "Workspace: no dirty documents."
                 : $"Workspace: {changes.Length} dirty documents, {_lifecycle.Count} lifecycle operations; Apply All is one Undo action.";
-            WorkbenchUi.StyleStatus(_status, warning: changes.Length > 0 || _lifecycle.Count > 0);
+            WorkbenchUi.StyleStatus(status, warning: changes.Length > 0 || _lifecycle.Count > 0);
         }
         catch (Exception error)
         {
-            _status!.Text = "Workspace conflict: " + error.Message; WorkbenchUi.StyleStatus(_status, error: true);
+            if (_shuttingDown || !GodotObject.IsInstanceValid(status)) return;
+            status.Text = "Workspace conflict: " + error.Message;
+            WorkbenchUi.StyleStatus(status, error: true);
         }
+    }
+
+    public override void _ExitTree() => ShutdownForReload();
+
+    internal void ShutdownForReload()
+    {
+        if (_shuttingDown) return;
+        _shuttingDown = true;
+        SetProcess(false);
+        _participants.Clear();
+        _lifecycle.Clear();
+        _status = null;
+        _undoRedo = null;
+    }
+
+    internal void SimulateReloadFieldLossForTest()
+    {
+        _status = null;
+        _shuttingDown = false;
+        SetProcess(true);
     }
 
     private void ValidateAll()

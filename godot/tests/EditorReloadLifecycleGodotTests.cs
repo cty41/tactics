@@ -47,6 +47,21 @@ public class EditorReloadLifecycleGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
+    public void WorkspaceCoordinatorStopsWhenReloadHasNotRestoredPrivateControlFields()
+    {
+        var coordinator = new AuthoringWorkspaceCoordinator();
+        coordinator.SimulateReloadFieldLossForTest();
+
+        coordinator._Process(0);
+
+        AssertThat(coordinator.IsProcessing()).IsFalse();
+        coordinator.ShutdownForReload();
+        coordinator.ShutdownForReload();
+        coordinator.Free();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
     public void MapGraphUsesCompactUnityStyleSemanticNodes()
     {
         AssertThat((int)CircularMapGraphNode.Diameter).IsEqual(44);
