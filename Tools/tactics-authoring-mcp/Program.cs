@@ -126,7 +126,7 @@ internal sealed class TacticsAuthoringMcpServer(string projectRoot, Stream input
     [
         Tool("tactics_authoring_list", "List canonical authoring documents in the unique Editor session.", new { type = "object", properties = new { kind = new { type = "string" } } }),
         Tool("tactics_authoring_get", "Get a normalized authoring snapshot and revision.", Required("kind", "contentId", new { kind = StringProperty(), contentId = StringProperty() })),
-        Tool("tactics_authoring_validate", "Validate a stored or supplied authoring snapshot without saving.", Required("kind", "contentId", new { kind = StringProperty(), contentId = StringProperty(), snapshot = StringProperty(), expectedRevision = StringProperty() })),
+        Tool("tactics_authoring_validate", "Validate a stored snapshot or a compiled authoring batch without saving.", ValidateSchema()),
         Tool("tactics_authoring_apply", "Atomically apply snapshots and Create/Duplicate/Delete lifecycle operations with revision and reference fencing.", ApplySchema()),
         Tool("tactics_authoring_preview", "Run an approved draft preview in the canonical Editor; Skill accepts a typed BattleTransition context.", PreviewSchema()),
         Tool("tactics_authoring_reference_audit", "Audit forward and reverse Catalog references.", new { type = "object", properties = new { contentId = StringProperty() } })
@@ -152,7 +152,8 @@ internal sealed class TacticsAuthoringMcpServer(string projectRoot, Stream input
                 sourceContentId = StringProperty(),
                 resourceType = StringProperty(),
                 path = StringProperty(),
-                expectedReferenceRevision = StringProperty()
+                expectedReferenceRevision = StringProperty(),
+                initialSnapshot = StringProperty()
             },
             required = new[] { "operation", "contentId" },
             additionalProperties = false
@@ -162,6 +163,7 @@ internal sealed class TacticsAuthoringMcpServer(string projectRoot, Stream input
             type = "object",
             properties = new
             {
+                schemaVersion = new { type = "integer", @enum = new[] { 1 } },
                 kind = StringProperty(), contentId = StringProperty(), expectedRevision = StringProperty(), snapshot = StringProperty(),
                 changes = new { type = "array", minItems = 1, items = change },
                 lifecycle = new { type = "array", minItems = 1, items = lifecycle }
@@ -174,6 +176,11 @@ internal sealed class TacticsAuthoringMcpServer(string projectRoot, Stream input
             },
             additionalProperties = false
         };
+    }
+    private static object ValidateSchema()
+    {
+        object apply = ApplySchema();
+        return apply;
     }
     private static object PreviewSchema() => new
     {

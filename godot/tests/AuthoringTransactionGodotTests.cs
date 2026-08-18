@@ -186,6 +186,25 @@ public class AuthoringTransactionGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
+    public void PresentationCreateInitialSnapshotSelectsAMatchingTypedProfileSource()
+    {
+        var editor = new TacticsAuthoringEditorService();
+        StoredAuthoringDocument source = editor.List("presentation").First();
+        var profile = (PresentationProfileAuthoringDocument)source.Document;
+        string contentId = "presentation.workbench.validate-" + Guid.NewGuid().ToString("N");
+        var candidate = new PresentationProfileAuthoringDocument(contentId, profile.ResourceClass, profile.Properties);
+        var batch = new AuthoringBatchChangeSet("presentation-create-validate",
+            [new AuthoringDocumentChange(AuthoringDocumentKind.Presentation, contentId, "new",
+                PresentationProfileAuthoringJson.Serialize(candidate))],
+            [new AuthoringAssetChange(AuthoringAssetChangeKind.Create, contentId, ResourceType: "presentation")]);
+
+        editor.ValidateBatch(batch);
+
+        AssertThat(editor.LoadCatalog().Entries.Any(value => value.ContentIdValue == contentId)).IsFalse();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
     public void LifecycleValidationRejectsAnAuthoredPathThatEscapesItsRoot()
     {
         string contentId = "treasure.workbench.escape-" + Guid.NewGuid().ToString("N");

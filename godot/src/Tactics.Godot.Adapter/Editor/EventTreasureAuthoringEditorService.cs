@@ -44,7 +44,8 @@ public static class EventTreasureAuthoringEditorService
         return new TreasureAuthoringDocument(resource.ContentIdValue, resource.GoldMinimum, resource.GoldMaximum,
             Build(TreasureEntryKind.Equipment, resource.EquipmentContentIds, resource.EquipmentWeights)
                 .Concat(Build(TreasureEntryKind.Consumable, resource.ConsumableContentIds, resource.ConsumableWeights))
-                .Concat(Build(TreasureEntryKind.Buff, resource.BuffContentIds, resource.BuffWeights)));
+                .Concat(Build(TreasureEntryKind.Buff, resource.BuffContentIds, resource.BuffWeights)),
+            AuthoringGraphLayoutJson.Deserialize(resource.AuthoringGraphLayoutJsonValue));
     }
 
     public static void Write(PureRunTreasureResource resource, TreasureAuthoringDocument document)
@@ -57,6 +58,7 @@ public static class EventTreasureAuthoringEditorService
         (resource.EquipmentContentIds, resource.EquipmentWeights) = Assign(TreasureEntryKind.Equipment);
         (resource.ConsumableContentIds, resource.ConsumableWeights) = Assign(TreasureEntryKind.Consumable);
         (resource.BuffContentIds, resource.BuffWeights) = Assign(TreasureEntryKind.Buff);
+        resource.AuthoringGraphLayoutJsonValue = AuthoringGraphLayoutJson.Serialize(document.GraphLayout);
 
         (string[] Ids, int[] Weights) Assign(TreasureEntryKind kind)
         {
@@ -74,7 +76,7 @@ public static class EventTreasureAuthoringEditorService
         {
             Success = Normalize(option.Success),
             Failure = option.Failure is null ? null : Normalize(option.Failure)
-        }), document.SourcePath, document.SourceSha256);
+        }), document.SourcePath, document.SourceSha256, document.GraphLayout);
 
     private static EventOutcomeAuthoring Normalize(EventOutcomeAuthoring outcome) =>
         outcome.EffectContentId is { } value && LegacyContentIds.TryGetValue(value, out string? canonical)

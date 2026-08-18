@@ -51,6 +51,9 @@ class TacticsAuthoringMcpProtocolTests(unittest.TestCase):
         self.assertEqual(lifecycle["items"]["properties"]["operation"]["enum"],
                          ["create", "duplicate", "delete"])
         self.assertIn("expectedReferenceRevision", lifecycle["items"]["properties"])
+        self.assertIn("initialSnapshot", lifecycle["items"]["properties"])
+        self.assertIn("changes", tools["tactics_authoring_validate"]["inputSchema"]["properties"])
+        self.assertIn("lifecycle", tools["tactics_authoring_validate"]["inputSchema"]["properties"])
         preview_context = tools["tactics_authoring_preview"]["inputSchema"]["properties"]["context"]
         self.assertEqual(preview_context["properties"]["targetX"]["maximum"], 9)
         self.assertIn("encounterContentId", preview_context["required"])

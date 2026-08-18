@@ -158,6 +158,15 @@ public partial class TacticsAuthoringEditorBridge : Node, ISerializationListener
     }
     private JsonObject Validate(JsonElement arguments)
     {
+        if ((arguments.TryGetProperty("changes", out JsonElement changes) && changes.ValueKind == JsonValueKind.Array) ||
+            (arguments.TryGetProperty("lifecycle", out JsonElement lifecycle) && lifecycle.ValueKind == JsonValueKind.Array))
+        {
+            BridgeBatchPayload payload = ParseBatchArguments(arguments, Guid.NewGuid().ToString("N"), includeStoredBefore: false, out _);
+            Authoring.ValidateBatch(BuildBatch(payload));
+            return new JsonObject { ["succeeded"] = true, ["batch"] = true,
+                ["diagnostics"] = new JsonArray(), ["changeCount"] = payload.Changes.Length,
+                ["lifecycleCount"] = payload.Lifecycle.Length };
+        }
         StoredAuthoringDocument stored = LoadDocument(arguments); string snapshot = arguments.TryGetProperty("snapshot", out JsonElement supplied) && supplied.ValueKind == JsonValueKind.String ? supplied.GetString()! : stored.Snapshot;
         string? expected = arguments.TryGetProperty("expectedRevision", out JsonElement expectedValue) && expectedValue.ValueKind == JsonValueKind.String ? expectedValue.GetString() : null;
         AuthoringValidationResult validation = Authoring.Validate(stored.Entry.ResourceTypeIdValue, stored.Document.ContentId, snapshot, expected);
@@ -178,46 +187,15 @@ public partial class TacticsAuthoringEditorBridge : Node, ISerializationListener
     }
     private JsonObject ApplyBatch(JsonElement arguments)
     {
-        var after = new List<BridgeDocumentChange>();
-        var before = new List<BridgeDocumentChange>();
-        if (arguments.TryGetProperty("changes", out JsonElement changes))
-        foreach (JsonElement change in changes.EnumerateArray())
-        {
-            string kind = change.GetProperty("kind").GetString()!;
-            string contentId = change.GetProperty("contentId").GetString()!;
-            string expected = change.GetProperty("expectedRevision").GetString()!;
-            string snapshot = change.GetProperty("snapshot").GetString()!;
-            if (expected == "new")
-            {
-                after.Add(new BridgeDocumentChange(kind, contentId, expected, snapshot));
-                continue;
-            }
-            StoredAuthoringDocument stored = Authoring.Get(kind, contentId);
-            AuthoringValidationResult validation = Authoring.Validate(kind, contentId, snapshot, expected);
-            if (!validation.Succeeded) throw new InvalidOperationException(string.Join("; ", validation.Diagnostics.Select(value => value.Message)));
-            after.Add(new BridgeDocumentChange(kind, contentId, expected, snapshot));
-            before.Add(new BridgeDocumentChange(kind, contentId, validation.PredictedRevision, stored.Snapshot));
-        }
-        var assets = new List<BridgeAssetChange>();
-        if (arguments.TryGetProperty("lifecycle", out JsonElement lifecycle))
-        foreach (JsonElement item in lifecycle.EnumerateArray())
-        {
-            assets.Add(new BridgeAssetChange(
-                item.GetProperty("operation").GetString()!,
-                item.GetProperty("contentId").GetString()!,
-                item.TryGetProperty("sourceContentId", out JsonElement source) ? source.GetString() : null,
-                item.TryGetProperty("resourceType", out JsonElement resourceType) ? resourceType.GetString() : null,
-                item.TryGetProperty("path", out JsonElement path) ? path.GetString() : null,
-                item.TryGetProperty("expectedReferenceRevision", out JsonElement reference) ? reference.GetString() : null));
-        }
+        string changeId = Guid.NewGuid().ToString("N");
+        BridgeBatchPayload payload = ParseBatchArguments(arguments, changeId, includeStoredBefore: true, out BridgeDocumentChange[] beforeValues);
+        List<BridgeDocumentChange> after = payload.Changes.ToList(); List<BridgeAssetChange> assets = payload.Lifecycle.ToList();
         if (after.Count == 0 && assets.Count == 0)
             throw new InvalidOperationException("MCP batch apply requires document or lifecycle changes.");
-        string changeId = Guid.NewGuid().ToString("N");
-        var payload = new BridgeBatchPayload(changeId, after.ToArray(), assets.ToArray());
         AuthoringBatchChangeSet batch = BuildBatch(payload);
         Authoring.ValidateBatch(batch);
         string afterPayload = SerializeBatch(payload);
-        string beforePayload = SerializeBatch(new BridgeBatchPayload(Guid.NewGuid().ToString("N"), before.ToArray(), Array.Empty<BridgeAssetChange>()));
+        string beforePayload = SerializeBatch(new BridgeBatchPayload(Guid.NewGuid().ToString("N"), beforeValues, Array.Empty<BridgeAssetChange>()));
         _undoRedo!.CreateAction($"MCP apply {after.Count + assets.Count} authored changes", UndoRedo.MergeMode.Disable);
         _undoRedo.AddDoMethod(this, MethodName.ApplySerializedAuthoringBatch, afterPayload);
         if (assets.Count > 0)
@@ -256,6 +234,46 @@ public partial class TacticsAuthoringEditorBridge : Node, ISerializationListener
             }).ToArray()),
             ["evidence"] = "single-EditorUndoRedo+atomic-Resource-Catalog-UID-ledger+typed-reload"
         };
+    }
+
+    private BridgeBatchPayload ParseBatchArguments(JsonElement arguments, string changeId, bool includeStoredBefore,
+        out BridgeDocumentChange[] before)
+    {
+        var after = new List<BridgeDocumentChange>(); var beforeValues = new List<BridgeDocumentChange>();
+        if (arguments.TryGetProperty("changes", out JsonElement changes))
+        foreach (JsonElement change in changes.EnumerateArray())
+        {
+            string kind = change.GetProperty("kind").GetString()!, contentId = change.GetProperty("contentId").GetString()!;
+            string expected = change.GetProperty("expectedRevision").GetString()!, snapshot = change.GetProperty("snapshot").GetString()!;
+            after.Add(new BridgeDocumentChange(kind, contentId, expected, snapshot));
+            if (includeStoredBefore && expected != "new")
+            {
+                StoredAuthoringDocument stored = Authoring.Get(kind, contentId);
+                AuthoringValidationResult validation = Authoring.Validate(kind, contentId, snapshot, expected);
+                if (!validation.Succeeded) throw new InvalidOperationException(string.Join("; ", validation.Diagnostics.Select(value => value.Message)));
+                beforeValues.Add(new BridgeDocumentChange(kind, contentId, validation.PredictedRevision, stored.Snapshot));
+            }
+        }
+        var assets = new List<BridgeAssetChange>();
+        if (arguments.TryGetProperty("lifecycle", out JsonElement lifecycle))
+        foreach (JsonElement item in lifecycle.EnumerateArray())
+        {
+            var asset = new BridgeAssetChange(item.GetProperty("operation").GetString()!, item.GetProperty("contentId").GetString()!,
+                OptionalString(item, "sourceContentId"), OptionalString(item, "resourceType"), OptionalString(item, "path"),
+                OptionalString(item, "expectedReferenceRevision"), OptionalString(item, "initialSnapshot"));
+            assets.Add(asset);
+            if (asset.InitialSnapshot is not null)
+            {
+                AuthoringAssetChangeKind operation = ParseAssetKind(asset.Operation);
+                if (operation is not (AuthoringAssetChangeKind.Create or AuthoringAssetChangeKind.Duplicate))
+                    throw new InvalidOperationException($"Lifecycle '{asset.ContentId}' can only provide initialSnapshot for create or duplicate.");
+                if (after.Any(value => value.ContentId == asset.ContentId))
+                    throw new InvalidOperationException($"Lifecycle '{asset.ContentId}' cannot provide both initialSnapshot and a document change.");
+                if (asset.ResourceType is null) throw new InvalidOperationException($"Lifecycle '{asset.ContentId}' initialSnapshot requires resourceType.");
+                after.Add(new BridgeDocumentChange(asset.ResourceType, asset.ContentId, "new", asset.InitialSnapshot));
+            }
+        }
+        before = beforeValues.ToArray(); return new BridgeBatchPayload(changeId, after.ToArray(), assets.ToArray());
     }
     private JsonObject Preview(JsonElement arguments)
     {
@@ -435,7 +453,8 @@ public partial class TacticsAuthoringEditorBridge : Node, ISerializationListener
         {
             ["operation"] = value.Operation, ["contentId"] = value.ContentId,
             ["sourceContentId"] = value.SourceContentId, ["resourceType"] = value.ResourceType,
-            ["path"] = value.Path, ["expectedReferenceRevision"] = value.ExpectedReferenceRevision
+            ["path"] = value.Path, ["expectedReferenceRevision"] = value.ExpectedReferenceRevision,
+            ["initialSnapshot"] = value.InitialSnapshot
         }).ToArray());
         return new JsonObject { ["changeId"] = payload.ChangeId, ["changes"] = changes, ["lifecycle"] = lifecycle }.ToJsonString();
     }
@@ -450,7 +469,7 @@ public partial class TacticsAuthoringEditorBridge : Node, ISerializationListener
         BridgeAssetChange[] lifecycle = root.GetProperty("lifecycle").EnumerateArray().Select(value => new BridgeAssetChange(
             value.GetProperty("operation").GetString()!, value.GetProperty("contentId").GetString()!,
             OptionalString(value, "sourceContentId"), OptionalString(value, "resourceType"), OptionalString(value, "path"),
-            OptionalString(value, "expectedReferenceRevision"))).ToArray();
+            OptionalString(value, "expectedReferenceRevision"), OptionalString(value, "initialSnapshot"))).ToArray();
         return new BridgeBatchPayload(root.GetProperty("changeId").GetString()!, changes, lifecycle);
     }
 
@@ -459,7 +478,7 @@ public partial class TacticsAuthoringEditorBridge : Node, ISerializationListener
 
     private sealed record BridgeDocumentChange(string Kind, string ContentId, string ExpectedRevision, string Snapshot);
     private sealed record BridgeAssetChange(string Operation, string ContentId, string? SourceContentId,
-        string? ResourceType, string? Path, string? ExpectedReferenceRevision);
+        string? ResourceType, string? Path, string? ExpectedReferenceRevision, string? InitialSnapshot);
     private sealed record BridgeBatchPayload(string ChangeId, BridgeDocumentChange[] Changes, BridgeAssetChange[] Lifecycle);
 }
 #endif

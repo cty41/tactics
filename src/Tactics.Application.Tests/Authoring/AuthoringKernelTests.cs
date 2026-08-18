@@ -253,6 +253,42 @@ public sealed class AuthoringKernelTests
     }
 
     [Test]
+    public void EventAndTreasureGraphLayout_IsCanonicalAndBackwardCompatible()
+    {
+        const string legacyEvent = """
+            {"contentId":"event.legacy","sourceId":"event_legacy","title":"Legacy","description":"","options":[{"id":"go","text":"Go","attribute":"None","baseSuccessRate":100,"success":{"type":"Nothing","target":"Self","amount":0,"itemId":null,"description":""},"failure":null}],"sourcePath":"","sourceSha256":""}
+            """;
+        EventAuthoringDocument upgraded = EventAuthoringJson.Deserialize(legacyEvent);
+        Assert.That(upgraded.GraphLayout.Nodes, Is.Empty);
+
+        var layout = new AuthoringGraphLayout(new[]
+        {
+            new AuthoringGraphNodeLayout("option:go", 120.5, 80),
+            new AuthoringGraphNodeLayout("start", 10, 20)
+        });
+        var positioned = new EventAuthoringDocument(upgraded.ContentId, upgraded.SourceId, upgraded.Title,
+            upgraded.Description, upgraded.Options, upgraded.SourcePath, upgraded.SourceSha256, layout);
+        EventAuthoringDocument restored = EventAuthoringJson.Deserialize(EventAuthoringJson.SerializePayload(positioned));
+
+        var treasureLayout = new AuthoringGraphLayout(new[]
+        {
+            new AuthoringGraphNodeLayout("treasure:root", 10, 20),
+            new AuthoringGraphNodeLayout("treasure:buff", 120.5, 80)
+        });
+        var treasure = new TreasureAuthoringDocument("treasure.layout", 1, 2,
+            new[] { new TreasureEntryAuthoring(TreasureEntryKind.Buff, "buff.test", 1) }, treasureLayout);
+        TreasureAuthoringDocument restoredTreasure = TreasureAuthoringJson.Deserialize(TreasureAuthoringJson.Serialize(treasure));
+        Assert.Multiple(() =>
+        {
+            Assert.That(restored.GraphLayout.Nodes.Select(value => value.NodeId), Is.EqualTo(new[] { "option:go", "start" }));
+            Assert.That(restoredTreasure.GraphLayout.Nodes.Count, Is.EqualTo(2));
+            Assert.That(AuthoringRevision.Compute(positioned), Is.Not.EqualTo(AuthoringRevision.Compute(upgraded)));
+            Assert.That(AuthoringRevision.Compute(restored), Is.EqualTo(AuthoringRevision.Compute(positioned)));
+            Assert.That(AuthoringRevision.Compute(restoredTreasure), Is.EqualTo(AuthoringRevision.Compute(treasure)));
+        });
+    }
+
+    [Test]
     public void TreasureDocument_CompilesAndRejectsDuplicateOrNonPositiveEntries()
     {
         var source = new TreasureAuthoringDocument("treasure.test", 2, 5, new[]

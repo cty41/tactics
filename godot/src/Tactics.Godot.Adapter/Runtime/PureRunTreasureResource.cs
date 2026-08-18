@@ -17,6 +17,7 @@ public partial class PureRunTreasureResource : Resource
     [Export] public int[] ConsumableWeights { get; set; } = Array.Empty<int>();
     [Export] public string[] BuffContentIds { get; set; } = Array.Empty<string>();
     [Export] public int[] BuffWeights { get; set; } = Array.Empty<int>();
+    [Export(PropertyHint.MultilineText)] public string AuthoringGraphLayoutJsonValue { get; set; } = string.Empty;
 
     public PureRunTreasureDefinition ToCoreDefinition()
     {

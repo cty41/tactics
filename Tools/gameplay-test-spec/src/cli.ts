@@ -6,8 +6,29 @@ import { compileScenarioSpec, compileScenarioDraft } from "./compiler.js";
 import { formatGameplayTestDocument, parseGameplayTestDocument } from "./frontmatter.js";
 import { generateScenarioSpec, generateSkillGraphSpec, generateSkillGraphSpecFromAnswers, generateGameplayTestFromSpec, type SkillDesignAnswers } from "./generator.js";
 import { validateScenarioSpec, validateScenarioDraft } from "./validator.js";
+import { compileAuthoringSpec } from "./authoring/compiler.js";
 
 const program = new Command();
+
+program.command("validate-authoring-spec")
+  .description("Validate an AuthoringAssetSpecV1 JSON document without writing resources")
+  .requiredOption("-s, --spec <path>", "input authoring spec JSON")
+  .action(async options => {
+    const result = compileAuthoringSpec(JSON.parse(await readFile(options.spec, "utf8")));
+    printJson({ valid: result.valid, diagnostics: result.diagnostics });
+    if (!result.valid) process.exitCode = 1;
+  });
+
+program.command("compile-authoring-spec")
+  .description("Compile AuthoringAssetSpecV1 JSON to MCP batch arguments")
+  .requiredOption("-s, --spec <path>", "input authoring spec JSON")
+  .requiredOption("-o, --out <path>", "output compiled authoring batch JSON")
+  .action(async options => {
+    const result = compileAuthoringSpec(JSON.parse(await readFile(options.spec, "utf8")));
+    if (!result.valid || !result.batch) { printJson(result); process.exitCode = 1; return; }
+    await writeFile(options.out, `${JSON.stringify(result.batch, null, 2)}\n`, "utf8");
+    printJson({ ok: true, out: options.out, diagnostics: result.diagnostics });
+  });
 
 program
   .name("gameplay-test-spec")
