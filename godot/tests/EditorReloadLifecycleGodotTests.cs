@@ -91,4 +91,11 @@ public class EditorReloadLifecycleGodotTests
         AssertThat(tokens.Success).IsNotEqual(tokens.Warning);
         control.Free();
     }
+
+    [TestCase]
+    public void WorkbenchNavigationExposesOnlyTheThreeAuthoringSurfaces()
+    {
+        AssertThat(TacticsContentWorkbench.TopLevelTabNames.ToArray())
+            .ContainsExactly("Map", "Event", "Skill / Presentation");
+    }
 }

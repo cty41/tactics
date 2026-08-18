@@ -25,7 +25,8 @@ public sealed record EventOptionAuthoring(
 public sealed class EventAuthoringDocument : IAuthoringDocument
 {
     public EventAuthoringDocument(string contentId, string sourceId, string title, string description,
-        IEnumerable<EventOptionAuthoring> options, string? sourcePath = null, string? sourceSha256 = null)
+        IEnumerable<EventOptionAuthoring> options, string? sourcePath = null, string? sourceSha256 = null,
+        AuthoringGraphLayout? graphLayout = null)
     {
         ContentId = Require(contentId, nameof(contentId));
         SourceId = Require(sourceId, nameof(sourceId));
@@ -34,17 +35,19 @@ public sealed class EventAuthoringDocument : IAuthoringDocument
         Options = Array.AsReadOnly((options ?? throw new ArgumentNullException(nameof(options))).ToArray());
         SourcePath = sourcePath;
         SourceSha256 = sourceSha256;
+        GraphLayout = graphLayout ?? new AuthoringGraphLayout();
         Validate();
     }
 
     public string ContentId { get; }
-    public int SchemaVersion => 1;
+    public int SchemaVersion => 2;
     public string SourceId { get; }
     public string Title { get; }
     public string Description { get; }
     public IReadOnlyList<EventOptionAuthoring> Options { get; }
     public string? SourcePath { get; }
     public string? SourceSha256 { get; }
+    public AuthoringGraphLayout GraphLayout { get; }
     public IReadOnlyList<string> Dependencies => Array.AsReadOnly(Options
         .SelectMany(value => new[] { value.Success.EffectContentId, value.Failure?.EffectContentId })
         .OfType<string>().Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray());
@@ -67,6 +70,12 @@ public sealed class EventAuthoringDocument : IAuthoringDocument
             if (!requiresReference && !string.IsNullOrWhiteSpace(outcome.EffectContentId))
                 throw new ArgumentException($"Event outcome '{outcome.Type}' cannot carry a ContentId.");
         }
+        HashSet<string> layoutNodeIds = ["start", "end"];
+        foreach (EventOptionAuthoring option in Options)
+            foreach (string role in new[] { "option", "check", "success", "failure" })
+                layoutNodeIds.Add($"{role}:{option.OptionId}");
+        if (GraphLayout.Nodes.Any(value => !layoutNodeIds.Contains(value.NodeId)))
+            throw new ArgumentException("Event graph layout contains an unknown stable node identity.");
     }
 
     public void WriteCanonical(Utf8JsonWriter writer) => WritePayload(writer, includeSchemaVersion: true);
@@ -93,6 +102,7 @@ public sealed class EventAuthoringDocument : IAuthoringDocument
             writer.WriteEndObject();
         }
         writer.WriteEndArray();
+        writer.WritePropertyName("graphLayout"); GraphLayout.WriteCanonical(writer);
         if (!string.IsNullOrWhiteSpace(SourcePath)) writer.WriteString("sourcePath", SourcePath);
         if (!string.IsNullOrWhiteSpace(SourceSha256)) writer.WriteString("sourceSha256", SourceSha256);
         writer.WriteEndObject();
@@ -120,7 +130,8 @@ public static class EventAuthoringJson
             root.GetProperty("title").GetString()!, root.GetProperty("description").GetString() ?? string.Empty,
             root.GetProperty("options").EnumerateArray().Select(ReadOption),
             root.TryGetProperty("sourcePath", out JsonElement path) ? path.GetString() : null,
-            root.TryGetProperty("sourceSha256", out JsonElement sha) ? sha.GetString() : null);
+            root.TryGetProperty("sourceSha256", out JsonElement sha) ? sha.GetString() : null,
+            root.TryGetProperty("graphLayout", out JsonElement layout) ? AuthoringGraphLayout.Read(layout) : null);
     }
 
     public static string SerializePayload(EventAuthoringDocument document)
@@ -150,21 +161,27 @@ public sealed record TreasureEntryAuthoring(TreasureEntryKind Kind, string Conte
 
 public sealed class TreasureAuthoringDocument : IAuthoringDocument
 {
-    public TreasureAuthoringDocument(string contentId, int goldMinimum, int goldMaximum, IEnumerable<TreasureEntryAuthoring> entries)
+    public TreasureAuthoringDocument(string contentId, int goldMinimum, int goldMaximum,
+        IEnumerable<TreasureEntryAuthoring> entries, AuthoringGraphLayout? graphLayout = null)
     {
         ContentId = string.IsNullOrWhiteSpace(contentId) ? throw new ArgumentException("ContentId is required.") : contentId;
         GoldMinimum = goldMinimum; GoldMaximum = goldMaximum;
         Entries = Array.AsReadOnly((entries ?? throw new ArgumentNullException(nameof(entries))).ToArray());
+        GraphLayout = graphLayout ?? new AuthoringGraphLayout();
         _ = ToCoreDefinition();
         if (Entries.GroupBy(value => (value.Kind, value.ContentId)).Any(group => group.Count() > 1))
             throw new ArgumentException("Treasure entries must be unique within each table.");
+        string[] layoutNodeIds = ["treasure:root", "treasure:gold", "treasure:equipment", "treasure:consumable", "treasure:buff"];
+        if (GraphLayout.Nodes.Any(value => !layoutNodeIds.Contains(value.NodeId, StringComparer.Ordinal)))
+            throw new ArgumentException("Treasure graph layout contains an unknown stable node identity.");
     }
 
     public string ContentId { get; }
-    public int SchemaVersion => 1;
+    public int SchemaVersion => 2;
     public int GoldMinimum { get; }
     public int GoldMaximum { get; }
     public IReadOnlyList<TreasureEntryAuthoring> Entries { get; }
+    public AuthoringGraphLayout GraphLayout { get; }
     public IReadOnlyList<string> Dependencies => Array.AsReadOnly(Entries.Select(value => value.ContentId)
         .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray());
 
@@ -183,7 +200,9 @@ public sealed class TreasureAuthoringDocument : IAuthoringDocument
         writer.WriteStartArray("entries");
         foreach (TreasureEntryAuthoring entry in Entries.OrderBy(value => value.Kind).ThenBy(value => value.ContentId, StringComparer.Ordinal))
         { writer.WriteStartObject(); writer.WriteString("kind", entry.Kind.ToString()); writer.WriteString("contentId", entry.ContentId); writer.WriteNumber("weight", entry.Weight); writer.WriteEndObject(); }
-        writer.WriteEndArray(); writer.WriteEndObject();
+        writer.WriteEndArray();
+        writer.WritePropertyName("graphLayout"); GraphLayout.WriteCanonical(writer);
+        writer.WriteEndObject();
     }
 
     private WeightedContentDefinition[] Build(TreasureEntryKind kind) => Entries.Where(value => value.Kind == kind)
@@ -208,6 +227,7 @@ public static class TreasureAuthoringJson
             root.GetProperty("goldMinimum").GetInt32(), root.GetProperty("goldMaximum").GetInt32(),
             root.GetProperty("entries").EnumerateArray().Select(value => new TreasureEntryAuthoring(
                 Enum.Parse<TreasureEntryKind>(value.GetProperty("kind").GetString()!),
-                value.GetProperty("contentId").GetString()!, value.GetProperty("weight").GetInt32())));
+                value.GetProperty("contentId").GetString()!, value.GetProperty("weight").GetInt32())),
+            root.TryGetProperty("graphLayout", out JsonElement layout) ? AuthoringGraphLayout.Read(layout) : null);
     }
 }

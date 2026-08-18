@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    { "operation": "create", "kind": "battle-layout", "contentId": "battle-layout.agent-demo", "document": { "contentId": "battle-layout.agent-demo", "schemaVersion": 1, "partySpawns": [{ "x": 1, "y": 1 }], "enemySpawns": [{ "x": 8, "y": 8 }], "blockedCells": [] } },
+    { "operation": "create", "kind": "encounter", "contentId": "encounter.agent-demo", "dependencies": ["battle-layout.agent-demo"], "document": { "contentId": "encounter.agent-demo", "schemaVersion": 1, "layoutContentId": "battle-layout.agent-demo", "monsterUnitContentIds": ["unit.enemy.melee"], "monsterAiContentIds": ["ai.enemy.melee"], "healthMultiplier": 1, "outputMultiplier": 1, "minimumStartingMana": 0, "encounterClass": "Normal" } },
+    { "operation": "create", "kind": "event", "contentId": "event.agent-demo", "dependencies": ["encounter.agent-demo"], "eventGraph": { "sourceId": "agent_demo", "title": "Agent demo", "description": "A constrained choice graph.", "options": [{ "id": "fight", "text": "Fight", "check": { "attribute": "Strength", "baseSuccessRate": 65 }, "success": { "type": "Gold", "target": "All", "amount": 10, "description": "Won." }, "failure": { "type": "Damage", "target": "Self", "amount": 2, "description": "Wounded." } }], "graphLayout": { "layoutSchemaVersion": 1, "nodes": [{ "nodeId": "start", "x": 20, "y": 40 }, { "nodeId": "option:fight", "x": 220, "y": 40 }] } } }
+  ]
+}

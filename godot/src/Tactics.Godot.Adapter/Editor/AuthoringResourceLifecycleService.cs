@@ -118,6 +118,16 @@ public sealed class AuthoringResourceLifecycleService
                 }
                 if (document.ContentId != asset.ContentId)
                     throw new InvalidOperationException($"Lifecycle document identity differs from '{asset.ContentId}'.");
+                if (asset.Kind == AuthoringAssetChangeKind.Create && document is PresentationProfileAuthoringDocument profile)
+                {
+                    source = storedById.Values.FirstOrDefault(candidate =>
+                        candidate.Entry.ResourceTypeIdValue == type &&
+                        candidate.Document is PresentationProfileAuthoringDocument existing &&
+                        existing.ResourceClass == profile.ResourceClass &&
+                        existing.Properties.Keys.ToHashSet(StringComparer.Ordinal).SetEquals(profile.Properties.Keys))
+                        ?? throw new InvalidOperationException(
+                            $"No compatible {profile.ResourceClass} Presentation Resource exists to supply the typed class and property schema.");
+                }
 
                 Resource identitySource = (Resource)source.Resource.Duplicate(true);
                 identitySource.Set("ContentIdValue", asset.ContentId);

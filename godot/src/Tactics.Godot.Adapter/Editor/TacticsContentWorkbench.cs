@@ -6,6 +6,7 @@ namespace Tactics.Godot.Adapter.Editor;
 [Tool]
 public partial class TacticsContentWorkbench : VBoxContainer
 {
+    internal static IReadOnlyList<string> TopLevelTabNames { get; } = Array.AsReadOnly(new[] { "Map", "Event", "Skill / Presentation" });
     private EditorUndoRedoManager? _undoRedo;
     private AuthoringWorkspaceCoordinator? _workspace;
     private bool _shuttingDown;
@@ -40,14 +41,9 @@ public partial class TacticsContentWorkbench : VBoxContainer
         lifecycle.Configure(_undoRedo, _workspace);
         AddChild(lifecycle);
         var tabs = new TabContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        AddTab(tabs, CreateMap(), "Map");
-        AddTab(tabs, CreateEventTreasure(false), "Event");
-        AddTab(tabs, CreateEventTreasure(true), "Treasure");
-        AddTab(tabs, CreateEncounter(), "Encounter Fixture");
-        AddTab(tabs, CreateSkillPresentation(), "Skill / Presentation");
-        AddTab(tabs, CreateAi(), "AI");
-        AddTab(tabs, new AudioWorkbench(), "Audio");
-        AddTab(tabs, new ContentCatalogWorkbench(string.Empty, "QA / Catalog Evidence"), "QA");
+        AddTab(tabs, CreateMap(), TopLevelTabNames[0]);
+        AddTab(tabs, CreateEventTreasure(), TopLevelTabNames[1]);
+        AddTab(tabs, CreateSkillPresentation(), TopLevelTabNames[2]);
         AddChild(tabs);
         var footer = new Label { Text = "Drafts are sandboxed. Apply All creates one Editor Undo action." };
         WorkbenchUi.StyleStatus(footer); AddChild(footer);
@@ -77,21 +73,12 @@ public partial class TacticsContentWorkbench : VBoxContainer
         return panel;
     }
 
-    private EventTreasureWorkbench CreateEventTreasure(bool treasureMode)
+    private EventTreasureWorkbench CreateEventTreasure()
     {
-        var panel = new EventTreasureWorkbench(treasureMode);
+        var panel = new EventTreasureWorkbench();
         panel.Configure(_undoRedo!);
         _workspace!.Register(panel);
         return panel;
-    }
-
-    private Control CreateEncounter()
-    {
-        var tabs = new TabContainer();
-        var preview = new EncounterFixtureWorkbench { Name = "Fixed Seed Preview" };
-        var authoring = new EncounterAuthoringWorkbench { Name = "Authoring" }; authoring.Configure(_undoRedo!); authoring.ConfigurePreview(preview); _workspace!.Register(authoring); tabs.AddChild(authoring);
-        tabs.AddChild(preview);
-        return tabs;
     }
 
     private TacticsGraphWorkbench CreatePresentation()
@@ -108,14 +95,6 @@ public partial class TacticsContentWorkbench : VBoxContainer
         var profiles = new PresentationProfileWorkbench { Name = "Native Profiles" }; profiles.Configure(_undoRedo!); _workspace!.Register(profiles); tabs.AddChild(profiles);
         TacticsGraphWorkbench presentation = CreatePresentation(); presentation.Name = "Poison Graph + Preview"; tabs.AddChild(presentation);
         return tabs;
-    }
-
-    private AiDefinitionWorkbench CreateAi()
-    {
-        var panel = new AiDefinitionWorkbench();
-        panel.Configure(_undoRedo!);
-        _workspace!.Register(panel);
-        return panel;
     }
 
     private static void AddTab(TabContainer tabs, Control panel, string title)
