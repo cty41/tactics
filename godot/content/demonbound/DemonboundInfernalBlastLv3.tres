@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://dfq3dyncjcjuq"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_feqlw"]
+
+[resource]
+script = ExtResource("1_feqlw")
+ContentIdValue = "skill.demonbound.infernal-blast.lv3"
+SourceId = "godot.skill.demonbound.infernal-blast.lv3"
+DisplayName = "Infernal Blast"
+Description = "Infernal Blast"
+RoleValue = "Demonbound"
+KindValue = "Active"
+Level = 3
+ManaCost = 3
+MinRange = 1
+MaxRange = 1
+ExecutionKindValue = "InfernalBlast"
+Damage = 4
+DamageKindValue = "Magical"
+BranchId = "demonbound.infernal-blast"
+PrerequisiteContentIdValue = "skill.demonbound.infernal-blast.lv2"
+PrerequisiteBranchId = "demonbound.infernal-blast"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+IgnoreLineOfSight = true
+CorruptionCost = 4
+AuthoringSourceKindValue = "GodotAuthored"

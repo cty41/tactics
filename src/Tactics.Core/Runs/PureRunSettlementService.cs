@@ -214,7 +214,8 @@ public sealed class PureRunSettlementService
         {
             RunCharacterState? prior = state.Party.FirstOrDefault(item => item.CharacterId == member.CharacterId);
             if (prior is null || member.CurrentHealth < 0 || member.CurrentHealth > prior.MaxHealth ||
-                member.CurrentMana < 0 || member.CurrentMana > prior.MaxMana || member.IsDead != (member.CurrentHealth == 0))
+                member.CurrentMana < 0 || member.CurrentMana > prior.MaxMana || member.IsDead != (member.CurrentHealth == 0) ||
+                member.RunPermanentlyDead && !member.IsDead)
                 return "run.result_invalid_character";
             if (member.CarriedConsumables.Any(item => item.RemainingCharges < 0 || item.RemainingCharges > item.MaxCharges))
                 return "run.result_invalid_consumable";
@@ -228,7 +229,7 @@ public sealed class PureRunSettlementService
         {
             BattlePartyResult current = result.Party.Single(item => item.CharacterId == prior.CharacterId);
             bool wasDead = current.IsDead;
-            int health = recoverAfterVictory ? Math.Min(prior.MaxHealth,
+            int health = recoverAfterVictory && !current.RunPermanentlyDead ? Math.Min(prior.MaxHealth,
                 checked(current.CurrentHealth + prior.Attributes.Constitution * 2)) : current.CurrentHealth;
             int mana = recoverAfterVictory ? Math.Min(prior.MaxMana,
                 checked(current.CurrentMana + prior.Attributes.Charisma)) : current.CurrentMana;

@@ -362,6 +362,7 @@ try {
         'GodotPendingAcceptance.PresentationNumbers' = 'numbers-mana-v1'
         'GodotPendingAcceptance.PresentationMiss' = 'numbers-miss-v1'
         'GodotPendingAcceptance.ReloadCleanup' = 'reload-pending-battle-v1'
+        'Demonbound.RuntimeState' = 'demonbound-ready-v1'
     }
     $actualScenarioNames = @($godotGameplayResult.scenarios | ForEach-Object { [string]$_.scenarioName })
     $scenarioIdentityMismatch = $actualScenarioNames.Count -ne $expectedGodotGameplayScenarios.Count -or
@@ -371,8 +372,8 @@ try {
             [string]$_.checkpointId -ne $expectedGodotGameplayScenarios[[string]$_.scenarioName]
         }).Count -ne 0
     if ($godotGameplayResult.schema -ne 'godot-gameplay-spec-result-v1' -or
-        $godotGameplayResult.runtime -ne 'Godot' -or $godotGameplayResult.total -ne 5 -or
-        $godotGameplayResult.passed -ne 5 -or $godotGameplayResult.failed -ne 0 -or
+        $godotGameplayResult.runtime -ne 'Godot' -or $godotGameplayResult.total -ne 6 -or
+        $godotGameplayResult.passed -ne 6 -or $godotGameplayResult.failed -ne 0 -or
         $scenarioIdentityMismatch -or
         @($godotGameplayResult.scenarios | Where-Object {
             -not $_.productionSaveUnchanged -or $_.productionSaveBefore -ne $_.productionSaveAfter -or

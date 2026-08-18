@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://7yjd4pr0l5op"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_x6v1b"]
+
+[resource]
+script = ExtResource("1_x6v1b")
+ContentIdValue = "skill.demonbound.mindfulness.lv3"
+SourceId = "godot.skill.demonbound.mindfulness.lv3"
+DisplayName = "Mindfulness"
+Description = "Mindfulness"
+RoleValue = "Demonbound"
+KindValue = "Passive"
+Level = 3
+ExecutionKindValue = "Mindfulness"
+DamageKindValue = "None"
+CanCrit = false
+BranchId = "demonbound.mindfulness"
+PrerequisiteContentIdValue = "skill.demonbound.mindfulness.lv2"
+PrerequisiteBranchId = "demonbound.mindfulness"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+AuthoringSourceKindValue = "GodotAuthored"

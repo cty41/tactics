@@ -425,6 +425,21 @@ test("keeps legacy Unity plans unchanged and emits capability-bound Godot v2 pla
   }
 });
 
+test("emits backward-compatible Godot v3 only for Demonbound runtime probes", () => {
+  const compiled = compileScenarioSpec({
+    feature: "Demonbound", scenario: "CorruptionProbe", tags: ["godot-qa"],
+    requiredAdapters: ["PlayerInput", "Battle"], timeoutMs: 10000,
+    setup: [{ kind: "initializePlayerInput", parameters: {} }],
+    actions: [{ kind: "clickPointerTarget", target: "MeditateAction", parameters: {} }],
+    assertions: [
+      { kind: "demonboundCorruptionEquals", target: "party-pure_run_demonbound", expected: 0, parameters: {} },
+      { kind: "demonboundPossessedEquals", target: "party-pure_run_demonbound", expected: false, parameters: {} }
+    ]
+  }, { runtime: "Godot" });
+  assert.equal(compiled.valid, true, compiled.diagnostics.map(value => value.message).join("\n"));
+  assert.equal(compiled.plan?.schemaVersion, 3);
+});
+
 test("rejects capabilities not implemented by the Godot runtime", () => {
   const compiled = compileScenarioSpec({
     feature: "GodotQA", scenario: "RejectShortcut", tags: [], requiredAdapters: ["Map"], timeoutMs: 10000,

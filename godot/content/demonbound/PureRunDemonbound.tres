@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="UnitDefinitionResource" format=3 uid="uid://cwfl7i53f38tc"]
+
+[ext_resource type="PackedScene" path="res://content/units/UnitActor.tscn" id="1_4na0g"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_cast_dr.png" id="2_0nf5r"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_cast_ul.png" id="3_ke461"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_death.png" id="4_y3o63"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter.png" id="5_bcx33"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_hit_dr.png" id="6_ai4nf"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_hit_ul.png" id="7_opcdc"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_melee_attack_dr.png" id="8_he5ax"]
+[ext_resource type="Texture2D" path="res://assets/units/actions/doge_hunter_melee_attack_ul.png" id="9_c673u"]
+[ext_resource type="Texture2D" path="res://assets/units/pure_run_unit_shadow_1x1_v01.png" id="10_ny2mv"]
+[ext_resource type="Texture2D" path="res://assets/units/doge_hunter_ul.png" id="11_12tj0"]
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/UnitDefinitionResource.cs" id="12_xq2mi"]
+
+[resource]
+script = ExtResource("12_xq2mi")
+ContentIdValue = "unit.pure-run.demonbound"
+SourceId = "godot.demonbound"
+DisplayName = "Demonbound"
+Category = "player"
+FamilyId = "player"
+RoleId = "demonbound"
+Strength = 5
+Agility = 5
+Constitution = 5
+Intelligence = 5
+Charisma = 6
+Luck = 5
+Speed = 4.0
+MaxHealth = 20
+MaxMana = 18
+StartingMana = 6
+MoveRange = 4
+Initiative = 8.0
+DerivedStatModeValue = "explicit"
+AttackRange = 1
+AttackFactor = 1.0
+DefenceFactor = 1.0
+CanProduceCorpse = true
+ActorContentIdValue = "packed-scene.unit-actor"
+ActorScene = ExtResource("1_4na0g")
+DownRightTexture = ExtResource("5_bcx33")
+UpLeftTexture = ExtResource("11_12tj0")
+DeathTexture = ExtResource("4_y3o63")
+MeleeDownRightTexture = ExtResource("8_he5ax")
+MeleeUpLeftTexture = ExtResource("9_c673u")
+RangedDownRightTexture = ExtResource("8_he5ax")
+RangedUpLeftTexture = ExtResource("9_c673u")
+CastDownRightTexture = ExtResource("2_0nf5r")
+CastUpLeftTexture = ExtResource("3_ke461")
+HitDownRightTexture = ExtResource("6_ai4nf")
+HitUpLeftTexture = ExtResource("7_opcdc")
+ShadowTexture = ExtResource("10_ny2mv")
+DownRightBodyOffset = Vector2(0, -108)
+UpLeftBodyOffset = Vector2(0, -108)
+ShadowOffset = Vector2(0, 3.84)
+ShadowScale = Vector2(1.6, 1.6)
+ShadowOpacity = 0.9
+BodyTint = Color(0.72, 0.58, 0.86, 1)
+BaseBodyColor = Color(0.72, 0.58, 0.86, 1)
+DeferredDependencies = PackedStringArray("starting-branch-skill")

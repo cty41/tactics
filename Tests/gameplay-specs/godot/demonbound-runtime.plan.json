@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "Demonbound.RuntimeState",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI",
+    "Battle"
+  ],
+  "requiredCapabilities": [
+    "action:restartGodotMain",
+    "action:waitForPlayerObservable",
+    "assertion:demonboundCorruptionEquals",
+    "assertion:demonboundPossessedEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "demonbound-ready-v1",
+        "path": "validated://demonbound-ready-v1",
+        "semanticHash": "1cd48e2ccb905b7f7bf609e8e5cc82462811c8e85f75237e169a9418245f1666"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "UI",
+      "kind": "restartGodotMain",
+      "parameters": {}
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "battleReady",
+        "maximumFrames": 300
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Battle",
+      "kind": "demonboundCorruptionEquals",
+      "target": "party-pure_run_demonbound",
+      "expected": 0,
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "demonboundPossessedEquals",
+      "target": "party-pure_run_demonbound",
+      "expected": false,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Battle",
+      "kind": "demonboundCorruptionEquals",
+      "target": "party-pure_run_demonbound",
+      "parameters": {}
+    },
+    {
+      "adapter": "Battle",
+      "kind": "demonboundPossessedEquals",
+      "target": "party-pure_run_demonbound",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "demonbound-ready-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "1cd48e2ccb905b7f7bf609e8e5cc82462811c8e85f75237e169a9418245f1666",
+    "path": "validated://demonbound-ready-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

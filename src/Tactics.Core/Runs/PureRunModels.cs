@@ -34,10 +34,14 @@ public sealed record PureRunPartyTemplate(
     ContentId StartingSkillContentId,
     UnitAttributes Attributes,
     int Level = 1,
-    IReadOnlyList<ContentId>? StartingSkillChoices = null)
+    IReadOnlyList<ContentId>? StartingSkillChoices = null,
+    bool SeededStartingSkill = false,
+    IReadOnlyList<ContentId>? InherentSkills = null)
 {
     public IReadOnlyList<ContentId> EffectiveStartingSkillChoices =>
         StartingSkillChoices is { Count: > 0 } ? StartingSkillChoices : [StartingSkillContentId];
+
+    public IReadOnlyList<ContentId> EffectiveInherentSkills => InherentSkills ?? Array.Empty<ContentId>();
 }
 
 public sealed record PendingRunStartingSkillChoice(string CharacterId, ContentId SkillContentId);
@@ -48,6 +52,7 @@ public sealed record PendingRunSetup(
     IReadOnlyList<PendingRunStartingSkillChoice> Choices)
 {
     public string? CurrentCharacterId { get; init; }
+    public IReadOnlyList<string> SelectedCharacterIds { get; init; } = Array.Empty<string>();
 }
 
 public sealed record PureRunDefinition
@@ -64,8 +69,8 @@ public sealed record PureRunDefinition
         LayerFourMapContentId = layerFourMapContentId;
         if (Encounters.Count != 3 || Encounters.Distinct().Count() != 3)
             throw new ArgumentException("The Phase 6B slice requires exactly three unique encounters.", nameof(encounters));
-        if (Party.Count != 3 || Party.Select(item => item.CharacterId).Distinct(StringComparer.Ordinal).Count() != 3)
-            throw new ArgumentException("The Phase 6B slice requires exactly three unique party characters.", nameof(party));
+        if (Party.Count is not (3 or 4) || Party.Select(item => item.CharacterId).Distinct(StringComparer.Ordinal).Count() != Party.Count)
+            throw new ArgumentException("Pure Run requires three or four unique candidate characters.", nameof(party));
         foreach (PureRunPartyTemplate template in Party)
         {
             IReadOnlyList<ContentId> choices = template.EffectiveStartingSkillChoices;
@@ -78,6 +83,7 @@ public sealed record PureRunDefinition
     public ContentId ContentId { get; }
     public IReadOnlyList<ContentId> Encounters { get; }
     public IReadOnlyList<PureRunPartyTemplate> Party { get; }
+    public int ActivePartySize => 3;
     public ContentId? LayerFourMapContentId { get; }
 }
 
@@ -272,7 +278,8 @@ public sealed record BattlePartyResult(
     int CurrentHealth,
     int CurrentMana,
     bool IsDead,
-    IReadOnlyList<BattleConsumableState> CarriedConsumables);
+    IReadOnlyList<BattleConsumableState> CarriedConsumables,
+    bool RunPermanentlyDead = false);
 
 public sealed record PureRunBattleResult(
     string RunId,

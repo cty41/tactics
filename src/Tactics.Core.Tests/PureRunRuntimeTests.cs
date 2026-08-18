@@ -64,6 +64,32 @@ public sealed class PureRunRuntimeTests
     }
 
     [Test]
+    public void Settlement_VictoryDoesNotReviveRunPermanentlyDeadPartyMember()
+    {
+        PureRunDefinition definition = TestDefinition();
+        PureRunState pending = PendingState(definition, 23);
+        PureRunBattleResult battle = Result(pending, true, 4,
+            new[] { 0, 7, 8 }, new[] { 0, 1, 2 });
+        battle = battle with
+        {
+            Party = battle.Party.Select((member, index) =>
+                index == 0 ? member with { RunPermanentlyDead = true } : member).ToArray()
+        };
+
+        PureRunSettlementResult result = new PureRunSettlementService().Apply(
+            definition, pending, battle, Array.Empty<ContentId>());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.ActiveRun!.Party[0].CurrentHealth, Is.Zero);
+            Assert.That(result.ActiveRun.Party[0].IsDead, Is.True);
+            Assert.That(result.ActiveRun.Party[1].CurrentHealth, Is.GreaterThan(7),
+                "Ordinary Down party members still use normal post-victory recovery.");
+        });
+    }
+
+    [Test]
     public void Settlement_RejectsStaleRevisionWithoutMutation()
     {
         PureRunDefinition definition = TestDefinition();

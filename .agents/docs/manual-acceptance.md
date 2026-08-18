@@ -4,6 +4,54 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
+### MQA-GODOT-DEMONBOUND-HUD — Active-unit card, corruption meter and hover tooltip
+
+- Status: `pending`
+- Source: Demonbound active-unit status-card implementation
+- Action: Enter a disposable battle containing Demonbound. Observe at least one player turn, one enemy turn, corruption values in each visual band (0–4, 5–8, 9–10), and the possessed state. Hover units, empty cells, legal/illegal skill targets and one LOS blocker near every screen edge.
+- Expected: The top-left card always follows only the current actor, including enemies during their turns; portrait, name, HP and MP remain readable; units without a special resource omit the third row; Demonbound shows a continuous `N/10` corruption bar with three clear risk colors and a legible possessed pulse. Hover detail follows the pointer, stays inside the canvas, preserves targeting/LOS information and never blocks board input.
+- Observe: Top-left BattleUnitPanel, corruption bar, turn order, pointer tooltip, target highlights, CheatConsole and Godot Output.
+- Preserve on failure: Screenshot or short video, resolution, active unit ID, corruption value, hovered cell/target, exact pointer position, Run seed and Output excerpt.
+- Save boundary: Ordinary battle actions mutate the current Run; use a disposable Run or preserve the battle checkpoint before testing possession.
+- Automated evidence: Godot UI tests cover active-unit/faction projection, portrait and value binding, missing-special-row collapse, 0/4/5/8/9/10 stage mapping, possessed pulse state, tooltip canvas clamping and `MouseFilter.Ignore`. PlayableRun UI 39/39 and Gameplay Spec journeys 15/15 passed. Visual hierarchy, portrait crop, color discrimination, pulse comfort and pointer interference remain manual. The unified verifier later stopped on an unrelated dirty artwork provenance failure, not this UI slice.
+- User verdict: none.
+
+### MQA-GODOT-DEMONBOUND-RUN — Three-party full-Run balance baseline
+
+- Status: `pending`
+- Source: Demonbound continuous-loop implementation and fixed-seed automation checkpoint
+- Action: Use three disposable Runs containing Demonbound, once each with Mage+Amazon, Mage+Necromancer, and Amazon+Necromancer. Complete the Run while recording the seeded starting branch, peak corruption, Meditation count, first possession timing, friendly damage/Down/permanent death, and any dominant or unusable skill.
+- Expected: Four-select-three and the seeded starting skill are understandable; Charisma growth and all non-master skill chains remain usable; corruption creates deliberate risk; Meditation choices are legible; possession cannot silently change faction or stall battle/settlement.
+- Observe: New Run party selection, progression cards, Battle HUD corruption and disabled reasons, skill effects, settlement, terminal Summary, CheatConsole and Godot Output.
+- Preserve on failure: Run seed, party, growth choices, encounter/node, turn/action sequence, corruption history, save/backup copy, screenshot or short video, and Output excerpt.
+- Save boundary: Each journey mutates and completes a Run; use disposable saves and do not overwrite a diagnostic failure before copying it.
+- Automated evidence: Core/Application, Resource/Catalog, Workbench round-trip, Gameplay Spec v3 and the unified verifier cover deterministic legality and state transitions. The 3x10 fixed-seed suite is an automated balance signal only; it does not prove full-Run feel.
+- User verdict: none.
+
+### MQA-GODOT-DEMONBOUND-POSSESSION — Possession readability and terminal behavior
+
+- Status: `pending`
+- Source: Demonbound possession AI, permanent-death and special-victory implementation
+- Action: In a disposable battle, push Demonbound to 10 corruption, observe at least one possessed turn with a living ally, then a turn after all allies are Down. If practical, replay a fixed setup until both ordinary Down and permanent-death outcomes have been observed.
+- Expected: The possessed actor is immediately distinguishable; AI prioritizes allies, falls back to enemies when no living ally remains, never changes faction, and a possessed sole survivor still wins after enemies are defeated. Friendly lethal damage rolls permanent death exactly once and settlement clearly reflects the result.
+- Observe: Actor glow/tint, corruption/POSSESSED label, target choice, event log, Down/permanent roster state, settlement and terminal Summary.
+- Preserve on failure: RNG seed/state, unit cells and HP, selected skill, event sequence, battle checkpoint, screenshot/video and full Output.
+- Save boundary: Permanent death mutates the current Run roster; use a disposable Run and preserve the pre-battle checkpoint.
+- Automated evidence: Deterministic AI target priority/fallback, controller-faction separation, one-time 25% lethal roll, settlement and special victory are covered. Visual distinction and emotional/interaction clarity remain manual.
+- User verdict: none.
+
+### MQA-GODOT-DEMONBOUND-WORKBENCH — Corruption-cost authoring round-trip
+
+- Status: `pending`
+- Source: Demonbound typed Resource and Skill Workbench integration
+- Action: Duplicate one Demonbound skill to a disposable authoring resource, change `executionProfile.corruptionCost`, Validate and Apply, Reload the C# assembly, confirm the value, then Undo/Redo and delete the disposable copy through the Workbench transaction.
+- Expected: Catalog, typed Resource and Workbench preserve the value through Apply, Reload, Undo and Redo; validation failures or cancellation create no partial resource, UID or reference side effects.
+- Observe: Skill page field, diagnostics, Catalog/reference audit, filesystem result and Godot Output.
+- Preserve on failure: Source/destination ContentId and path, revision, exact action, resource copy, screenshot and Output.
+- Save boundary: Never edit a canonical Demonbound resource for this acceptance; use a disposable duplicate and Workbench lifecycle actions only.
+- Automated evidence: Authoring compiler, ResourceSaver generation, byte-idempotency, Catalog ownership and semantic round-trip tests pass; real Editor Reload interaction remains manual.
+- User verdict: none.
+
 ### MQA-GODOT-OWNERSHIP-CONTENT — Lv3, Treasure and authoritative Map journey
 
 - Status: `pending`
@@ -308,4 +356,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-CONTENT-WORKBENCH`
+1. `MQA-GODOT-DEMONBOUND-HUD`
+2. `MQA-GODOT-DEMONBOUND-RUN`
+3. `MQA-GODOT-DEMONBOUND-POSSESSION`
+4. `MQA-GODOT-DEMONBOUND-WORKBENCH`

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://b45soe3wwsvxp"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_bsoqe"]
+
+[resource]
+script = ExtResource("1_bsoqe")
+ContentIdValue = "skill.demonbound.regeneration.lv2"
+SourceId = "godot.skill.demonbound.regeneration.lv2"
+DisplayName = "Demonic Regeneration"
+Description = "Demonic Regeneration"
+RoleValue = "Demonbound"
+KindValue = "Active"
+Level = 2
+ManaCost = 5
+ExecutionKindValue = "DemonicRegeneration"
+DamageKindValue = "None"
+CanCrit = false
+BranchId = "demonbound.regeneration"
+PrerequisiteContentIdValue = "skill.demonbound.regeneration.lv1"
+PrerequisiteBranchId = "demonbound.regeneration"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+CorruptionCost = 6
+AuthoringSourceKindValue = "GodotAuthored"

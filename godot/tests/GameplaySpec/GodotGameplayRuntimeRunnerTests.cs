@@ -21,7 +21,8 @@ public class GodotGameplayRuntimeRunnerTests
             ["defeat-no-summon-v1"] = "3da74c45e5d8d8033900cb7f9fb2483928acaca8ea97f6a8886f5249b270a833",
             ["numbers-mana-v1"] = "42d6647ef5748a3aadc201852ec34a54e132f8ad92d5831456f6c4b8ac7cdcca",
             ["numbers-miss-v1"] = "2d83197311dd0cc117c94da371cd7e5fe1aa82d60a7a8db8a2bd66ec87382687",
-            ["reload-pending-battle-v1"] = "c1920a71b7611a4aed2d70db290909e956d5f205d36f60dfb74ef671407365b7"
+            ["reload-pending-battle-v1"] = "c1920a71b7611a4aed2d70db290909e956d5f205d36f60dfb74ef671407365b7",
+            ["demonbound-ready-v1"] = "1cd48e2ccb905b7f7bf609e8e5cc82462811c8e85f75237e169a9418245f1666"
         };
         foreach ((string id, string hash) in expected)
         {
@@ -42,6 +43,7 @@ public class GodotGameplayRuntimeRunnerTests
             ("presentation-numbers", "numbers-mana-v1"),
             ("presentation-miss", "numbers-miss-v1"),
             ("reload-cleanup", "reload-pending-battle-v1")
+            ,("demonbound-runtime", "demonbound-ready-v1")
         ];
         var executions = new List<GodotGameplayReportScenario>();
         foreach ((string planName, string _) in scenarios)
@@ -62,10 +64,10 @@ public class GodotGameplayRuntimeRunnerTests
         }
 
         AssertThat(File.Exists(output)).IsTrue();
-        AssertThat(report.Scenarios.Count).IsEqual(5);
-        AssertThat(report.Passed).IsEqual(5);
+        AssertThat(report.Scenarios.Count).IsEqual(6);
+        AssertThat(report.Passed).IsEqual(6);
         AssertThat(report.Failed).IsEqual(0);
-        AssertThat(report.Scenarios.Select(value => value.ScenarioName).Distinct().Count()).IsEqual(5);
+        AssertThat(report.Scenarios.Select(value => value.ScenarioName).Distinct().Count()).IsEqual(6);
         var expectedIdentities = scenarios.ToDictionary(value => LoadCompiledPlan(value.Plan).ScenarioName,
             value => value.Checkpoint, StringComparer.Ordinal);
         AssertThat(report.Scenarios.All(value => expectedIdentities.TryGetValue(value.ScenarioName, out string? checkpointId) &&

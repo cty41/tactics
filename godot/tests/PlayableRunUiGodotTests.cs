@@ -174,12 +174,131 @@ public class PlayableRunUiGodotTests
     }
 
     [TestCase]
+    [RequireGodotRuntime]
+    public void ActiveUnitPanelBindsIdentityResourcesAndHidesMissingSpecialProgress()
+    {
+        using Image image = Image.CreateEmpty(8, 8, false, Image.Format.Rgba8);
+        image.Fill(Colors.White);
+        using ImageTexture texture = ImageTexture.CreateFromImage(image);
+        var definition = new UnitDefinitionResource
+        {
+            DisplayName = "Demonbound",
+            DownRightTexture = texture
+        };
+        var panel = new GodotBattleActiveUnitPanel();
+        panel._Ready();
+
+        panel.Bind(definition, BattleUnit(corruption: 9));
+        AssertThat(panel.Visible).IsTrue();
+        AssertThat(Descendants<TextureRect>(panel).Single(value => value.Name == "ActiveUnitPortrait").Texture)
+            .IsSame(texture);
+        AssertThat(Descendants<Label>(panel).Single(value => value.Name == "ActiveUnitName").Text)
+            .IsEqual("Demonbound");
+        AssertThat(Descendants<Label>(panel).Single(value => value.Name == "HealthValue").Text)
+            .IsEqual("16/20");
+        AssertThat(Descendants<Label>(panel).Single(value => value.Name == "ManaValue").Text)
+            .IsEqual("7/18");
+        AssertThat(Descendants<Label>(panel).Single(value => value.Name == "SpecialValue").Text)
+            .IsEqual("Corruption  9/10");
+        AssertThat(Descendants<Control>(panel).Single(value => value.Name == "SpecialResourceRow").Visible)
+            .IsTrue();
+
+        panel.Bind(definition, BattleUnit());
+        AssertThat(Descendants<Control>(panel).Single(value => value.Name == "SpecialResourceRow").Visible)
+            .IsFalse();
+        panel.Clear();
+        AssertThat(panel.Visible).IsFalse();
+        panel.Free();
+    }
+
+    [TestCase]
+    public void CorruptionProgressUsesThreeRiskStagesAndPossessionPulse()
+    {
+        AssertThat((int)GodotBattleActiveUnitPanel.StageFor(0))
+            .IsEqual((int)GodotBattleSpecialResourceStage.Low);
+        AssertThat((int)GodotBattleActiveUnitPanel.StageFor(4))
+            .IsEqual((int)GodotBattleSpecialResourceStage.Low);
+        AssertThat((int)GodotBattleActiveUnitPanel.StageFor(5))
+            .IsEqual((int)GodotBattleSpecialResourceStage.Elevated);
+        AssertThat((int)GodotBattleActiveUnitPanel.StageFor(8))
+            .IsEqual((int)GodotBattleSpecialResourceStage.Elevated);
+        AssertThat((int)GodotBattleActiveUnitPanel.StageFor(9))
+            .IsEqual((int)GodotBattleSpecialResourceStage.Critical);
+        AssertThat((int)GodotBattleActiveUnitPanel.StageFor(10))
+            .IsEqual((int)GodotBattleSpecialResourceStage.Critical);
+
+        GodotBattleSpecialResourceView possessed = GodotBattleActiveUnitPanel.ProjectSpecialResource(
+            BattleUnit(corruption: 10, possessed: true))!;
+        AssertThat(possessed.Current).IsEqual(10);
+        AssertThat(possessed.Maximum).IsEqual(10);
+        AssertThat(possessed.Pulsing).IsTrue();
+        AssertThat(GodotBattleActiveUnitPanel.ProjectSpecialResource(BattleUnit())).IsNull();
+    }
+
+    [TestCase]
+    public void ActiveUnitPanelProjectionFollowsTurnOwnerInsteadOfSelectionOrFaction()
+    {
+        BattleUiUnitSnapshot player = BattleUnit();
+        BattleUiUnitSnapshot enemy = player with
+        {
+            UnitId = new UnitInstanceId("enemy.0"),
+            DefinitionId = new ContentId("unit.enemy"),
+            PlayerNumber = 1
+        };
+        var snapshot = new BattleUiSnapshot(PlayableBattlePhase.AiTurn, 1, enemy.UnitId,
+            BattleTargetingMode.None, null, [player, enemy], Array.Empty<SkillDefinition>(),
+            Array.Empty<GridPoint>(), Array.Empty<BattleUiTarget>(), null, Array.Empty<GridPoint>(),
+            new Dictionary<UnitInstanceId, GridPoint>(), Array.Empty<Tactics.Core.Battle.BattleEvent>(),
+            [player.UnitId, enemy.UnitId], 1, null,
+            MoveAvailability: new BattleUiMoveAvailability(false, "ai_turn"));
+
+        AssertThat(GodotPlayableRunMain.ResolveActiveUnit(snapshot)).IsEqual(enemy);
+        AssertThat(GodotPlayableRunMain.ResolveActiveUnit(snapshot with
+        {
+            ActiveUnitId = new UnitInstanceId("missing")
+        })).IsNull();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void BattleHoverTooltipClampsToCanvasAndNeverInterceptsPointerInput()
+    {
+        var tooltip = new GodotBattleHoverTooltip();
+        tooltip._Ready();
+        tooltip.ShowDetail("Cell detail", new Vector2(1590, 890));
+
+        AssertThat(tooltip.MouseFilter).IsEqual(Control.MouseFilterEnum.Ignore);
+        AssertThat(tooltip.Position).IsEqual(new Vector2(1180, 782));
+        AssertThat(Descendants<Label>(tooltip).Single().MouseFilter).IsEqual(Control.MouseFilterEnum.Ignore);
+        AssertThat(tooltip.Visible).IsTrue();
+        tooltip.HideDetail();
+        AssertThat(tooltip.Visible).IsFalse();
+        tooltip.Free();
+    }
+
+    [TestCase]
     public void ActiveTileMarkerIsHiddenWhileCommittedActionPresentationRuns()
     {
         AssertThat(GodotPlayableRunMain.ShouldShowActiveMarker(false, false)).IsTrue();
         AssertThat(GodotPlayableRunMain.ShouldShowActiveMarker(true, false)).IsFalse();
         AssertThat(GodotPlayableRunMain.ShouldShowActiveMarker(false, true)).IsFalse();
     }
+
+    private static BattleUiUnitSnapshot BattleUnit(int? corruption = null, bool possessed = false) => new(
+        new UnitInstanceId("unit.0"),
+        new ContentId("unit.pure-run.demonbound"),
+        new GridPoint(1, 1),
+        0,
+        true,
+        16,
+        20,
+        7,
+        18,
+        false,
+        Array.Empty<ContentId>(),
+        new Dictionary<ContentId, int>(),
+        Corruption: corruption,
+        IsPossessed: possessed);
 
     [TestCase]
     [RequireGodotRuntime]
@@ -225,6 +344,26 @@ public class PlayableRunUiGodotTests
             .Contains(new ContentId("skill.poison-spear.lv1"));
         AssertThat(amazon.EffectiveStartingSkillChoices)
             .NotContains(new ContentId("skill.amazon.poison-spear.lv1"));
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void RunDefinitionV2SerializesAllFourCandidateAttributes()
+    {
+        var resource = ResourceLoader.Load<PureRunDefinitionResource>(
+            "res://content/runs/PureRunThreeEncounterV1.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
+        AssertThat(resource).IsNotNull();
+        if (resource is null) return;
+
+        PureRunDefinition definition = resource.ToCoreDefinition();
+        PureRunPartyTemplate demonbound = definition.Party.Single(value =>
+            value.CharacterId == "pure_run_demonbound");
+
+        AssertThat(resource.SchemaVersion).IsEqual(2);
+        AssertThat(resource.Charismas.Length).IsEqual(4);
+        AssertThat(demonbound.Attributes).IsEqual(new UnitAttributes(5, 5, 5, 5, 6, 5));
+        AssertThat(demonbound.EffectiveInherentSkills)
+            .Contains(new ContentId("skill.demonbound.meditation"));
     }
 
     [TestCase]
@@ -613,7 +752,7 @@ public class PlayableRunUiGodotTests
             "res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!;
         Dictionary<string, GodotResourceEntry> entries = catalog.Entries.ToDictionary(value => value.ContentIdValue);
 
-        AssertThat(entries.Count).IsEqual(143);
+        AssertThat(entries.Count).IsEqual(160);
         foreach (string id in new[]
         {
             "skill.summon.skeleton-attack.lv1", "skill.summon.skeleton-attack.lv2",

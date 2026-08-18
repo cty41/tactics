@@ -164,6 +164,8 @@ const supportedAssertionKinds = new Set([
   "productionSaveUnchanged",
   "checkpointRevisionEquals",
   "runtimeStateHashEquals",
+  "demonboundCorruptionEquals",
+  "demonboundPossessedEquals",
   "runtimeHasNoErrors",
   "executionStateEquals",
   "validationErrorCodeIncludes",
@@ -754,12 +756,14 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
       break;
     case "presentationNodeCountEquals":
     case "checkpointRevisionEquals":
+    case "demonboundCorruptionEquals":
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "inventoryProjectionEnteredBattle":
     case "activeRunExistsEquals":
     case "productionSaveUnchanged":
     case "runtimeHasNoErrors":
+    case "demonboundPossessedEquals":
       if (typeof assertion.expected !== "boolean") diagnostics.push({
         code: "InvalidAssertionExpectedType", severity: "error", message: `${assertion.kind} requires a boolean expected value.`, path: assertion.id ?? assertion.kind
       });

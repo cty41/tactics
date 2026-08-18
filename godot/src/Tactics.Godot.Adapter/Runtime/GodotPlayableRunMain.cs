@@ -58,7 +58,8 @@ public partial class GodotPlayableRunMain : Control
     private GodotIsometricBattleBoard? _board;
     private RichTextLabel? _eventLog;
     private GodotBattleCheatConsole? _cheatConsole;
-    private Label? _hoverInfo;
+    private GodotBattleActiveUnitPanel? _activeUnitPanel;
+    private GodotBattleHoverTooltip? _hoverTooltip;
     private Label? _turnOrder;
     private Button? _speedButton;
     private Button? _stepButton;
@@ -106,9 +107,9 @@ public partial class GodotPlayableRunMain : Control
     private enum InventoryReturnTarget { RunRoute }
     internal enum PresentationDrainAction { DequeueFrame, CompleteBattle, Pause, Refresh }
 
-    public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 12 &&
+    public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 13 &&
         _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 &&
-        _mapDefinition is not null && _treasureDefinition is not null && _catalogCount == 143;
+        _mapDefinition is not null && _treasureDefinition is not null && _catalogCount == 160;
 
     public override void _Ready()
     {
@@ -391,7 +392,9 @@ public partial class GodotPlayableRunMain : Control
         menu.AddChild(continueRun);
         menu.AddChild(Button("Options", ShowHomeOptions));
         menu.AddChild(Button("Quit", RequestQuit));
-        string status = loaded.Snapshot?.PendingRunSetup is PendingRunSetup setup
+        string status = loaded.ErrorCode?.Contains("run_reset_for_v7", StringComparison.Ordinal) == true
+            ? "Save upgraded to V7. The previous unfinished run was cleared; start a new run."
+            : loaded.Snapshot?.PendingRunSetup is PendingRunSetup setup
             ? $"New Run setup: {setup.CurrentCharacterId}"
             : loaded.Snapshot?.ActiveRun is null ? "No active run" : $"Active run: {loaded.Snapshot.ActiveRun.EncounterContentId.Value}";
         _status = Label(status, 16); _status.HorizontalAlignment = HorizontalAlignment.Center;
@@ -456,7 +459,13 @@ public partial class GodotPlayableRunMain : Control
     private void ShowNewRunSetup(PureRunSaveSnapshot snapshot)
     {
         PendingRunSetup setup = snapshot.PendingRunSetup ?? throw new InvalidOperationException("Pending setup is missing.");
-        PureRunPartyTemplate template = _runDefinition!.Party[setup.CurrentCharacterIndex];
+        if (setup.SelectedCharacterIds.Count == 0 && _runDefinition!.Party.Count > _runDefinition.ActivePartySize)
+        {
+            ShowPartySelection();
+            return;
+        }
+        PureRunPartyTemplate template = _runDefinition!.Party.Single(value =>
+            string.Equals(value.CharacterId, setup.CurrentCharacterId, StringComparison.Ordinal));
         Control root = NewPage("NEW RUN — STARTING SKILL", $"Choose 1 of 3 for {template.CharacterId} ({setup.CurrentCharacterIndex + 1}/3)");
         var choices = new VBoxContainer { Position = new Vector2(470, 230), Size = new Vector2(660, 430) };
         root.AddChild(choices);
@@ -479,6 +488,36 @@ public partial class GodotPlayableRunMain : Control
             ShowHome();
         }), new Vector2(650, 720), new Vector2(300, 60)));
         _status = LabelAt(root, "The previous active run is preserved until all three choices are confirmed.", new Vector2(470, 680), 18);
+    }
+
+    private void ShowPartySelection()
+    {
+        Control root = NewPage("NEW RUN — PARTY", "Choose exactly 3 of 4 candidates");
+        var choices = new VBoxContainer { Position = new Vector2(470, 210), Size = new Vector2(660, 440) };
+        root.AddChild(choices);
+        var toggles = new List<(PureRunPartyTemplate Template, CheckButton Toggle)>();
+        foreach (PureRunPartyTemplate template in _runDefinition!.Party)
+        {
+            var toggle = new CheckButton { Text = template.CharacterId };
+            choices.AddChild(toggle);
+            toggles.Add((template, toggle));
+        }
+        root.AddChild(PlaceControl(Button("Confirm Party", () =>
+        {
+            string[] selected = toggles.Where(value => value.Toggle.ButtonPressed)
+                .Select(value => value.Template.CharacterId).ToArray();
+            RunSessionResult result = _run!.ChooseParty(selected);
+            if (!result.Succeeded) { SetStatus(result.ErrorCode); return; }
+            if (result.Snapshot!.PendingRunSetup is not null) ShowNewRunSetup(result.Snapshot);
+            else RouteRunState(result.Snapshot);
+        }), new Vector2(650, 670), new Vector2(300, 60)));
+        root.AddChild(PlaceControl(Button("Cancel", () =>
+        {
+            RunSessionResult canceled = _run!.CancelNewRunSetup();
+            if (!canceled.Succeeded) { SetStatus(canceled.ErrorCode); return; }
+            ShowHome();
+        }), new Vector2(650, 740), new Vector2(300, 50)));
+        _status = LabelAt(root, "Party order follows the canonical candidate order.", new Vector2(470, 640), 18);
     }
 
     private void BeginReadyEncounter()
@@ -555,7 +594,16 @@ public partial class GodotPlayableRunMain : Control
         _skillPanel = new HBoxContainer { CustomMinimumSize = new Vector2(1120, 90) };
         actionScroll.AddChild(_skillPanel);
         _turnOrder=LabelAt(root,string.Empty,new Vector2(475,32),18);_turnOrder.Size=new Vector2(650,50);_turnOrder.HorizontalAlignment=HorizontalAlignment.Center;_turnOrder.ZIndex=1201;
-        _hoverInfo=LabelAt(root,"Hover a unit or cell",new Vector2(34,34),16);_hoverInfo.Size=new Vector2(398,158);_hoverInfo.AutowrapMode=TextServer.AutowrapMode.WordSmart;_hoverInfo.ZIndex=1201;
+        _activeUnitPanel = new GodotBattleActiveUnitPanel
+        {
+            Name = "BattleActiveUnitPanel",
+            Position = new Vector2(26, 26),
+            Size = new Vector2(414, 174),
+            ZIndex = 1201
+        };
+        root.AddChild(_activeUnitPanel);
+        _hoverTooltip = new GodotBattleHoverTooltip();
+        root.AddChild(_hoverTooltip);
         _settlementStatus=LabelAt(root,string.Empty,new Vector2(475,82),16);_settlementStatus.Size=new Vector2(650,34);_settlementStatus.HorizontalAlignment=HorizontalAlignment.Center;_settlementStatus.ZIndex=1201;
         var controls=new HBoxContainer{Position=new Vector2(1160,32),Size=new Vector2(410,55),ZIndex=1201};root.AddChild(controls);
         controls.AddChild(SmallButton("Pause/Resume",TogglePause));_stepButton=SmallButton("Step",()=>{if(_playbackPaused)PlaybackStep(true);});_stepButton.Disabled=true;controls.AddChild(_stepButton);_speedButton=SmallButton($"Speed {_playbackSpeed:0.#}x",ToggleSpeed);controls.AddChild(_speedButton);
@@ -563,7 +611,7 @@ public partial class GodotPlayableRunMain : Control
         _endTurnButton=Button("End Turn\nEnter",()=>ApplyIntent(new EndTurnIntent()));_endTurnButton.ZIndex=1201;root.AddChild(PlaceControl(_endTurnButton,new Vector2(1325,801),new Vector2(242,72)));
         BuildPauseMenu(root);
         _eventLog=null;
-        _status = _hoverInfo;
+        _status = _settlementStatus;
         RefreshBattle();
         if(_battle!.HasPendingAutomaticFrames)PlaybackStep(false);
     }
@@ -588,6 +636,7 @@ public partial class GodotPlayableRunMain : Control
             {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));actor.ConfigurePresentation(_presentationProfile??new StandardUnitPresentationResource());_board.AddChild(actor);_actors[unit.UnitId]=actor;}
             if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
+            actor.Modulate = unit.IsPossessed ? new Color(1.25f, .55f, 1.35f) : Colors.White;
             actor.SetSpearHeld(unit.DefinitionId.Value != "unit.pure-run.amazon" || !snapshot.DroppedSpears.ContainsKey(unit.UnitId));
             StatusPresentationResource statusProfile = _statusPresentationProfile ?? new StatusPresentationResource();
             actor.SetStatuses(unit.IsAlive ? unit.Statuses : Array.Empty<BattleUiStatusSnapshot>(),
@@ -603,13 +652,21 @@ public partial class GodotPlayableRunMain : Control
         }
         _droppedSpears?.Sync(snapshot.DroppedSpears);
         foreach (Node child in _skillPanel.GetChildren()) child.QueueFree();
-        BattleUiUnitSnapshot activeSnapshot=snapshot.Units.Single(unit=>unit.UnitId==snapshot.ActiveUnitId);
-        if(_hoverInfo is not null)_hoverInfo.Text=$"{EncounterLabel(_currentEncounterId!.Value)} | {activeSnapshot.UnitId.Value}\nHP {activeSnapshot.CurrentHealth}/{activeSnapshot.MaxHealth}  MP {activeSnapshot.CurrentMana}/{activeSnapshot.MaxMana}\nStatus: {string.Join(", ",activeSnapshot.StatusIds.Select(id=>id.Value))}";
+        BattleUiUnitSnapshot? activeSnapshot=ResolveActiveUnit(snapshot);
+        if (activeSnapshot is not null && _unitResources.TryGetValue(activeSnapshot.DefinitionId,
+                out UnitDefinitionResource? activeDefinition))
+            _activeUnitPanel?.Bind(activeDefinition, activeSnapshot);
+        else
+            _activeUnitPanel?.Clear();
         bool aiPlayback=_battle.HasPendingAutomaticFrames||_presentationInputLocked;
         BattleUiMoveAvailability moveAvailability=snapshot.MoveAvailability??new BattleUiMoveAvailability(true,null);
         Button moveButton=ActionButton("Move", () => ApplyIntent(new BeginMoveIntent()));moveButton.Name="MoveAction";moveButton.Disabled=aiPlayback||!moveAvailability.IsAvailable;moveButton.TooltipText=moveAvailability.FailureCode??"Move to a legal tile";_skillPanel.AddChild(moveButton);
+        if(snapshot.MeditationAvailability is BattleUiSkillAvailability meditation)
+        {
+            Button meditationButton=ActionButton("Meditate\n-5 Corruption",()=>ApplyIntent(new MeditateIntent()));meditationButton.Name="MeditateAction";meditationButton.Disabled=aiPlayback||!meditation.IsAvailable;meditationButton.TooltipText=meditation.FailureCode??"Reduce Corruption by 5 and end the turn";_skillPanel.AddChild(meditationButton);
+        }
         bool spearDropped=snapshot.DroppedSpears.ContainsKey(snapshot.ActiveUnitId);
-        foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
+        foreach (SkillDefinition skill in snapshot.ActiveSkills.Where(skill => !skill.IsPassive&&skill.ExecutionKind!=SkillExecutionKind.Meditation&&(!skill.Hidden||skill.ExecutionKind==SkillExecutionKind.PickupSpear&&spearDropped)))
         {
             BattleUiSkillAvailability availability = snapshot.SkillAvailability?.Single(value => value.SkillId == skill.ContentId)
                 ?? new BattleUiSkillAvailability(skill.ContentId, true, null);
@@ -665,6 +722,9 @@ public partial class GodotPlayableRunMain : Control
         _board?.SetVisuals(colors,snapshot.BlockedCells??Array.Empty<GridPoint>());
     }
 
+    internal static BattleUiUnitSnapshot? ResolveActiveUnit(BattleUiSnapshot snapshot) =>
+        snapshot.Units.FirstOrDefault(unit => unit.UnitId == snapshot.ActiveUnitId);
+
     private void OnBoardCellPressed(GridPoint cell)=>ApplyIntent(new ConfirmCellIntent(cell));
 
     private void OnBoardPointerPressed(Vector2 pointer)
@@ -700,12 +760,13 @@ public partial class GodotPlayableRunMain : Control
             }
         }
         PreviewTargetingFacing(snapshot, cell);
-        if(_hoverInfo is not null)_hoverInfo.Text=detail;ApplyHighlights(snapshot);
+        _hoverTooltip?.ShowDetail(detail, GetViewport().GetMousePosition());ApplyHighlights(snapshot);
     }
-    private void ClearHover(){RestoreTargetingFacing();_hoveredCell=null;if(_hoverInfo is not null)_hoverInfo.Text="Hover a cell";if(_visibleSnapshot is not null)ApplyHighlights(_visibleSnapshot);}
+    private void ClearHover(){RestoreTargetingFacing();_hoveredCell=null;_hoverTooltip?.HideDetail();if(_visibleSnapshot is not null)ApplyHighlights(_visibleSnapshot);}
 
     private void UpdateHoveredMeter(Vector2 pointer)
     {
+        _hoverTooltip?.MoveTo(GetViewport().GetMousePosition());
         UnitInstanceId? hovered = GodotUnitPointerResolver.Resolve(_actors, pointer);
         if (hovered is UnitInstanceId unitId && _visibleSnapshot?.Units.FirstOrDefault(unit => unit.UnitId == unitId) is BattleUiUnitSnapshot unit)
             HoverCell(unit.Cell);
@@ -1589,7 +1650,8 @@ public partial class GodotPlayableRunMain : Control
         _skillPanel=null;
         _turnOrder=null;
         _speedButton=null;
-        _hoverInfo=null;
+        _activeUnitPanel=null;
+        _hoverTooltip=null;
         _settlementStatus=null;
         _cheatConsole=null;
         _eventLog=null;

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://tkeuxp7bxa1w"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_wwy78"]
+
+[resource]
+script = ExtResource("1_wwy78")
+ContentIdValue = "skill.demonbound.meditation"
+SourceId = "godot.skill.demonbound.meditation"
+DisplayName = "Meditation"
+Description = "Meditation"
+RoleValue = "Demonbound"
+KindValue = "Utility"
+Level = 1
+ExecutionKindValue = "Meditation"
+DamageKindValue = "None"
+Hidden = true
+MaxUsesPerTurn = 1
+CanCrit = false
+BranchId = "demonbound.meditation"
+GrowthVisible = false
+AuthoringSourceKindValue = "GodotAuthored"

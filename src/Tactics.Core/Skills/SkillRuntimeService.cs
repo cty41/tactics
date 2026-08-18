@@ -16,6 +16,7 @@ public sealed class SkillRuntimeService
     private static readonly ContentId FireDemonDefinitionId = new("unit.pure-run.fire-demon");
     private static readonly ContentId SkeletonMageDefinitionId = new("unit.pure-run.skeleton-mage");
     private static readonly ContentId DecoyDefinitionId = new("unit.pure-run.amazon-decoy");
+    public static readonly ContentId RunPermanentDeathStatusId = new("status.run.permanent-death");
     private readonly ILineOfSightService _lineOfSight;
     private readonly StatusRuntimeService _statuses;
 
@@ -38,6 +39,8 @@ public sealed class SkillRuntimeService
         if (skill.ExecutionKind == SkillExecutionKind.Decoy) return ApplyRelocation(state, actor, command, createDecoy: true);
         if (skill.ExecutionKind == SkillExecutionKind.RecoverSpear) return ApplyRecoverSpear(state, actor, command);
         if (skill.ExecutionKind is SkillExecutionKind.IceArmor or SkillExecutionKind.BoneShield) return ApplySelfDefense(state, actor, command);
+        if (skill.ExecutionKind == SkillExecutionKind.Bane) return ApplyBane(state, actor, command);
+        if (skill.ExecutionKind == SkillExecutionKind.DemonicRegeneration) return ApplyDemonicRegeneration(state, actor, command);
         if (skill.ExecutionKind == SkillExecutionKind.MultiStab) return ApplyMultiStab(state, actor, command);
         if (skill.RequiresLineOfSight && state.Board.Contains(command.TargetCell) &&
             !_lineOfSight.Trace(state.Board, actor.Unit.Position, command.TargetCell,
@@ -65,7 +68,7 @@ public sealed class SkillRuntimeService
         foreach (BattleUnitState originalTarget in targets)
         {
             BattleUnitState target = next.Units[originalTarget.Unit.InstanceId];
-            if (target.Unit.PlayerNumber == actor.Unit.PlayerNumber) return Reject(state, actor, "target_not_enemy");
+            if (!IsHostile(state, actor, target)) return Reject(state, actor, "target_not_enemy");
             if (!target.IsAlive) return Reject(state, actor, "target_defeated");
             if (originalTarget.Unit.InstanceId == primaryTargetId &&
                 skill.ExecutionProfile.DetonateStatusContentId is ContentId detonateId &&
@@ -97,11 +100,15 @@ public sealed class SkillRuntimeService
             int rawDamage = skill.ExecutionKind switch
             {
                 SkillExecutionKind.MagicAttack => actor.MagicalAttack,
-                SkillExecutionKind.MeleeAttack => actor.PhysicalAttack,
+                SkillExecutionKind.MeleeAttack => checked(actor.PhysicalAttack + actor.Statuses.Values
+                    .Where(status => status.EffectKind == StatusEffectKind.BaneWeapon)
+                    .Select(status => status.StackCount + 1).DefaultIfEmpty(0).Max()),
                 SkillExecutionKind.Fireball when originalTarget.Unit.InstanceId != primaryTargetId => Math.Max(1, skill.Damage / 2),
                 SkillExecutionKind.Thrust => checked(skill.Damage + actor.MovementCellsThisTurn * skill.ExecutionProfile.MovementDamagePerCell),
                 _ => skill.Damage
             };
+            if (actor.Statuses.Values.Any(status => status.EffectKind == StatusEffectKind.DamageOutputReduction))
+                rawDamage = (int)MathF.Round(rawDamage * 0.75f, MidpointRounding.AwayFromZero);
             if (critical) rawDamage = checked(rawDamage * 2);
             StatusDamagePolicy damagePolicy = _statuses.EvaluateDamageTaken(target, actor, skill.MaxRange > 1);
             int damage = dodged ? 0 : (int)MathF.Round(rawDamage * damagePolicy.DamageMultiplier, MidpointRounding.AwayFromZero);
@@ -118,6 +125,19 @@ public sealed class SkillRuntimeService
             int health = Math.Max(0, beforeHealth - damage);
             target = target.WithHealth(health);
             events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, beforeHealth - health, health));
+            if (!target.IsAlive && beforeHealth > 0 && actor.DemonboundState?.IsPossessed == true &&
+                target.Unit.PlayerNumber == actor.Unit.PlayerNumber)
+            {
+                var permanentRandom = new DeterministicRandom(next.RandomState);
+                int permanentRoll = permanentRandom.NextInt(100);
+                bool permanent = permanentRoll < 25;
+                next = next.WithRandomState(permanentRandom.State);
+                if (permanent)
+                    target = target.WithStatus(new BattleStatusState(RunPermanentDeathStatusId,
+                        actor.Unit.InstanceId, int.MaxValue, 0, polarity: StatusPolarity.Harmful));
+                events.Add(new RunPermanentDeathRolledEvent(actor.Unit.InstanceId, target.Unit.InstanceId,
+                    permanentRoll, permanent, permanentRandom.State));
+            }
 
             if (target.IsAlive && !dodged && skill.StatusContentId is ContentId statusId)
             {
@@ -139,6 +159,21 @@ public sealed class SkillRuntimeService
                     StatusApplicationResult application = _statuses.Apply(target, definition, actor.Unit.InstanceId, duration);
                     target = application.Unit;
                     events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, statusId, application.AppliedStatus.RemainingTurns));
+                }
+            }
+            if (target.IsAlive && !dodged && skill.ExecutionKind == SkillExecutionKind.MeleeAttack)
+            {
+                BattleStatusState? bane = actor.Statuses.Values
+                    .Where(status => status.EffectKind == StatusEffectKind.BaneWeapon && status.StackCount >= 2)
+                    .OrderByDescending(status => status.StackCount).FirstOrDefault();
+                if (bane is not null)
+                {
+                    var debuffId = new ContentId("buff.demonbound.bane-debuff");
+                    int duration = bane.StackCount >= 3 ? 2 : 1;
+                    target = target.WithStatus(new BattleStatusState(debuffId, actor.Unit.InstanceId, duration, 0,
+                        polarity: StatusPolarity.Harmful, effectKind: StatusEffectKind.DamageOutputReduction,
+                        refreshStrategy: StatusRefreshStrategy.RefreshDuration));
+                    events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, debuffId, duration));
                 }
             }
             next = next.WithUnit(target);
@@ -170,7 +205,7 @@ public sealed class SkillRuntimeService
             next.TryGetUnit(primaryTargetId, out BattleUnitState? primary) && primary is not null)
         {
             foreach (BattleUnitState candidate in next.Units.Values
-                         .Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber && unit.Unit.InstanceId != primaryTargetId)
+                         .Where(unit => unit.IsAlive && IsHostile(next, actor, unit) && unit.Unit.InstanceId != primaryTargetId)
                          .Where(unit => Manhattan(unit.Unit.Position, primary.Unit.Position) <= skill.ExecutionProfile.BounceRange)
                          .OrderBy(unit => Manhattan(unit.Unit.Position, primary.Unit.Position))
                          .ThenBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal)
@@ -202,6 +237,17 @@ public sealed class SkillRuntimeService
 
     private BattleTransition ApplyPassive(BattleState state, BattleUnitState actor, SkillDefinition skill)
     {
+        if (skill.ExecutionKind == SkillExecutionKind.Mindfulness)
+        {
+            DemonboundBattleState current = actor.DemonboundState ?? new DemonboundBattleState();
+            BattleUnitState mindful = actor.WithDemonboundState(new DemonboundBattleState(current.Corruption,
+                skill.Level, isPossessed: current.IsPossessed));
+            return new BattleTransition(state.WithUnit(mindful), new BattleEvent[]
+            {
+                new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId),
+                new SemanticCueEmittedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId, "passive-enabled")
+            });
+        }
         if (skill.ExecutionKind != SkillExecutionKind.CombatTechniques) return Reject(state, actor, "unsupported_passive");
         BattleUnitState updated = actor.WithCombatTechniquesLevel(skill.Level).WithSuccessfulSkillUse(skill.ContentId);
         return new BattleTransition(state.WithUnit(updated), new BattleEvent[]
@@ -209,6 +255,50 @@ public sealed class SkillRuntimeService
             new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId),
             new SemanticCueEmittedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId, "passive-enabled")
         });
+    }
+
+    private static BattleTransition ApplyBane(BattleState state, BattleUnitState actor, UseSkillCommand command)
+    {
+        SkillDefinition skill = command.Definition;
+        if (command.TargetId is UnitInstanceId targetId && targetId != actor.Unit.InstanceId)
+            return Reject(state, actor, "bane_target_not_self");
+        var statusId = skill.StatusContentId ?? new ContentId("buff.demonbound.bane-weapon");
+        BattleUnitState updated = actor.WithMana(actor.CurrentMana - skill.ManaCost)
+            .WithSuccessfulSkillUse(skill.ContentId)
+            .WithStatus(new BattleStatusState(statusId, actor.Unit.InstanceId,
+                skill.StatusDuration > 0 ? skill.StatusDuration : 2, 0,
+                stackCount: skill.Level, polarity: StatusPolarity.Beneficial,
+                effectKind: StatusEffectKind.BaneWeapon, refreshStrategy: StatusRefreshStrategy.RefreshDuration));
+        var events = new List<BattleEvent>
+        {
+            new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId)
+        };
+        if (skill.ManaCost > 0)
+            events.Add(new ManaSpentEvent(actor.Unit.InstanceId, skill.ContentId, skill.ManaCost, updated.CurrentMana));
+        events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, statusId,
+            skill.StatusDuration > 0 ? skill.StatusDuration : 2));
+        return new BattleTransition(state.WithUnit(updated), events);
+    }
+
+    private static BattleTransition ApplyDemonicRegeneration(
+        BattleState state, BattleUnitState actor, UseSkillCommand command)
+    {
+        SkillDefinition skill = command.Definition;
+        if (actor.CurrentHealth >= actor.MaxHealth) return Reject(state, actor, "target_at_full_health");
+        if (command.TargetId is UnitInstanceId targetId && targetId != actor.Unit.InstanceId)
+            return Reject(state, actor, "regeneration_target_not_self");
+        int amount = (int)Math.Ceiling(actor.MaxHealth * (skill.Level >= 2 ? 0.8d : 0.5d));
+        BattleUnitState updated = actor.WithHealth(actor.CurrentHealth + amount)
+            .WithMana(actor.CurrentMana - skill.ManaCost).WithSuccessfulSkillUse(skill.ContentId);
+        var events = new List<BattleEvent>
+        {
+            new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId),
+            new HealthRestoredEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId,
+                updated.CurrentHealth - actor.CurrentHealth, updated.CurrentHealth)
+        };
+        if (skill.ManaCost > 0)
+            events.Insert(1, new ManaSpentEvent(actor.Unit.InstanceId, skill.ContentId, skill.ManaCost, updated.CurrentMana));
+        return new BattleTransition(state.WithUnit(updated), events);
     }
 
     private static BattleTransition ApplyPickup(BattleState state, BattleUnitState actor, UseSkillCommand command)
@@ -327,7 +417,7 @@ public sealed class SkillRuntimeService
         if (secondaryDamage > 0)
         {
             foreach (BattleUnitState original in next.Units.Values
-                         .Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber && Manhattan(unit.Unit.Position, actor.Unit.Position) == 1)
+                         .Where(unit => unit.IsAlive && IsHostile(state, actor, unit) && Manhattan(unit.Unit.Position, actor.Unit.Position) == 1)
                          .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray())
             {
                 BattleUnitState target = next.Units[original.Unit.InstanceId];
@@ -349,7 +439,7 @@ public sealed class SkillRuntimeService
         if (command.Definition.ManaCost > 0) events.Add(new ManaSpentEvent(actor.Unit.InstanceId, command.Definition.ContentId, command.Definition.ManaCost, next.Units[actor.Unit.InstanceId].CurrentMana));
         foreach (UnitInstanceId targetId in command.OrderedTargetIds)
         {
-            if (!next.TryGetUnit(targetId, out BattleUnitState? target) || target is null || !target.IsAlive || target.Unit.PlayerNumber == actor.Unit.PlayerNumber) return Reject(state, actor, "invalid_ordered_target");
+            if (!next.TryGetUnit(targetId, out BattleUnitState? target) || target is null || !target.IsAlive || !IsHostile(next, actor, target)) return Reject(state, actor, "invalid_ordered_target");
             int before = target.CurrentHealth;
             BattleUnitState damaged = target.WithHealth(before - command.Definition.Damage);
             next = next.WithUnit(damaged);
@@ -361,16 +451,57 @@ public sealed class SkillRuntimeService
 
     private static int Manhattan(GridPoint left, GridPoint right) => Math.Abs(left.X - right.X) + Math.Abs(left.Y - right.Y);
 
+    private static bool IsHostile(BattleState state, BattleUnitState actor, BattleUnitState target)
+    {
+        if (actor.DemonboundState?.IsPossessed != true)
+            return target.Unit.PlayerNumber != actor.Unit.PlayerNumber;
+        bool livingAlly = state.Units.Values.Any(unit => unit.IsAlive &&
+            unit.Unit.InstanceId != actor.Unit.InstanceId &&
+            unit.Unit.PlayerNumber == actor.Unit.PlayerNumber);
+        return target.Unit.InstanceId != actor.Unit.InstanceId &&
+            (livingAlly
+                ? target.Unit.PlayerNumber == actor.Unit.PlayerNumber
+                : target.Unit.PlayerNumber != actor.Unit.PlayerNumber);
+    }
+
     private IEnumerable<BattleUnitState> ResolveTargets(BattleState state, BattleUnitState actor, UseSkillCommand command)
     {
         SkillDefinition skill = command.Definition;
+        if (skill.ExecutionKind is SkillExecutionKind.Cleave or SkillExecutionKind.InfernalBlast)
+        {
+            int dx = Math.Sign(command.TargetCell.X - actor.Unit.Position.X);
+            int dy = Math.Sign(command.TargetCell.Y - actor.Unit.Position.Y);
+            if (Math.Abs(dx) + Math.Abs(dy) != 1) yield break;
+            int depth = skill.ExecutionKind == SkillExecutionKind.Cleave ? Math.Min(2, skill.Level) : 4;
+            int halfWidth = skill.ExecutionKind == SkillExecutionKind.Cleave || skill.Level >= 3 ? 1 : 0;
+            HashSet<GridPoint> cells = Enumerable.Range(1, depth)
+                .SelectMany(step => Enumerable.Range(-halfWidth, halfWidth * 2 + 1)
+                    .Select(offset => new GridPoint(actor.Unit.Position.X + dx * step - dy * offset,
+                        actor.Unit.Position.Y + dy * step + dx * offset)))
+                .Where(state.Board.Contains).ToHashSet();
+            foreach (BattleUnitState unit in state.Units.Values
+                         .Where(unit => unit.IsAlive && IsHostile(state, actor, unit) &&
+                             cells.Contains(unit.Unit.Position))
+                         .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal))
+                yield return unit;
+            yield break;
+        }
+        if (skill.ExecutionKind == SkillExecutionKind.Hellfire)
+        {
+            foreach (BattleUnitState unit in state.Units.Values
+                         .Where(unit => unit.IsAlive && IsHostile(state, actor, unit) &&
+                             Manhattan(unit.Unit.Position, actor.Unit.Position) is >= 1 and <= 2)
+                         .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal))
+                yield return unit;
+            yield break;
+        }
         int distance = Math.Abs(actor.Unit.Position.X - command.TargetCell.X) + Math.Abs(actor.Unit.Position.Y - command.TargetCell.Y);
         if (!state.Board.Contains(command.TargetCell) || distance < skill.MinRange || distance > skill.MaxRange) yield break;
         if (skill.RequiresLineOfSight && !_lineOfSight.Trace(state.Board, actor.Unit.Position, command.TargetCell,
                 LivingBlockers(state, actor.Unit.InstanceId, command.TargetCell, skill.ExecutionKind)).IsClear) yield break;
         if (skill.AreaRadius > 0 && skill.ExecutionKind is SkillExecutionKind.AreaBlast or SkillExecutionKind.Fireball or SkillExecutionKind.AmplifyDamage or SkillExecutionKind.FearCurse or SkillExecutionKind.PoisonSpear)
         {
-            BattleUnitState[] area = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
+            BattleUnitState[] area = state.Units.Values.Where(unit => unit.IsAlive && IsHostile(state, actor, unit))
                 .Where(unit => skill.ExecutionProfile.AreaShape == "square"
                     ? Math.Max(Math.Abs(unit.Unit.Position.X-command.TargetCell.X), Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y)) <= skill.AreaRadius
                     : Math.Abs(unit.Unit.Position.X-command.TargetCell.X)+Math.Abs(unit.Unit.Position.Y-command.TargetCell.Y) <= skill.AreaRadius)
@@ -395,11 +526,11 @@ public sealed class SkillRuntimeService
                 (command.TargetId is not UnitInstanceId selectedId ||
                  !state.TryGetUnit(selectedId, out BattleUnitState? selectedUnit) ||
                  selectedUnit is null || !selectedUnit.IsAlive ||
-                 selectedUnit.Unit.PlayerNumber == actor.Unit.PlayerNumber ||
+                 !IsHostile(state, actor, selectedUnit) ||
                  selectedUnit.Unit.Position != command.TargetCell))
                 yield break;
             int selectedDistance = Math.Abs(dx) + Math.Abs(dy);
-            IEnumerable<BattleUnitState> ray = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
+            IEnumerable<BattleUnitState> ray = state.Units.Values.Where(unit => unit.IsAlive && IsHostile(state, actor, unit))
                 .Where(unit => IsOnSelectedRay(actor.Unit.Position, command.TargetCell, unit.Unit.Position))
                 .Where(unit => Math.Abs(unit.Unit.Position.X - actor.Unit.Position.X) + Math.Abs(unit.Unit.Position.Y - actor.Unit.Position.Y) <= selectedDistance)
                 .OrderBy(unit => Math.Abs(unit.Unit.Position.X - actor.Unit.Position.X) + Math.Abs(unit.Unit.Position.Y - actor.Unit.Position.Y));
@@ -436,7 +567,7 @@ public sealed class SkillRuntimeService
     {
         SkillExecutionKind.Fireball or SkillExecutionKind.FireDemonAttack => new StatusDefinition(statusId, "Ignite", 2, true, StatusPolarity.Harmful, StatusEffectKind.Burning, StatusTriggerTiming.TurnStart, StatusRefreshStrategy.AddStacks, damagePerTurn: 1, elementKind: StatusElementKind.Fire),
         SkillExecutionKind.IceBolt => new StatusDefinition(statusId, "Slow", 1, true, StatusPolarity.Harmful, StatusEffectKind.Slow, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, speedModifier: -2f, elementKind: StatusElementKind.Ice),
-        SkillExecutionKind.Lightning => new StatusDefinition(statusId, "Stun", 1, true, StatusPolarity.Harmful, StatusEffectKind.Stun, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, elementKind: StatusElementKind.Lightning),
+        SkillExecutionKind.Lightning or SkillExecutionKind.Hellfire => new StatusDefinition(statusId, "Stun", 1, true, StatusPolarity.Harmful, StatusEffectKind.Stun, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, elementKind: StatusElementKind.Lightning),
         SkillExecutionKind.AmplifyDamage => new StatusDefinition(statusId, "CurseDamageAmplifier", 5, true, StatusPolarity.Harmful, StatusEffectKind.CurseDamageAmplifier, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "damage-taken"),
         SkillExecutionKind.FearCurse => new StatusDefinition(statusId, "Fear", Math.Max(1, skill.StatusDuration), true, StatusPolarity.Harmful, StatusEffectKind.Fear, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "fear"),
         _ => throw new InvalidOperationException($"Unsupported status contract for {skill.ExecutionKind}.")

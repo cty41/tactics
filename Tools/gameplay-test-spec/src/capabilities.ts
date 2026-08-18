@@ -36,6 +36,8 @@ const godotAssertionKinds = new Set([
   "productionSaveUnchanged",
   "checkpointRevisionEquals",
   "runtimeStateHashEquals",
+  "demonboundCorruptionEquals",
+  "demonboundPossessedEquals",
   "runtimeHasNoErrors"
 ]);
 

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://ruripgmsuvww"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_j3ujs"]
+
+[resource]
+script = ExtResource("1_j3ujs")
+ContentIdValue = "skill.demonbound.regeneration.lv1"
+SourceId = "godot.skill.demonbound.regeneration.lv1"
+DisplayName = "Demonic Regeneration"
+Description = "Demonic Regeneration"
+RoleValue = "Demonbound"
+KindValue = "Active"
+Level = 1
+ManaCost = 5
+ExecutionKindValue = "DemonicRegeneration"
+DamageKindValue = "None"
+CanCrit = false
+BranchId = "demonbound.regeneration"
+PrerequisiteContentIdValue = "skill.demonbound.mindfulness.lv1"
+PrerequisiteBranchId = "demonbound.mindfulness"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+CorruptionCost = 5
+AuthoringSourceKindValue = "GodotAuthored"

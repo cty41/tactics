@@ -13,6 +13,13 @@ public enum UnitMovementKind
     Air
 }
 
+/// <summary>Declares whether serialized derived stats follow the frozen formula or an authored class contract.</summary>
+public enum UnitDerivedStatMode
+{
+    FrozenFormula,
+    Explicit
+}
+
 /// <summary>
 /// Stores immutable gameplay facts used to instantiate one or more battle units.
 /// </summary>
@@ -31,7 +38,8 @@ public sealed class UnitDefinition
         float attackFactor,
         float defenceFactor,
         UnitMovementKind movementKind,
-        bool canProduceCorpse)
+        bool canProduceCorpse,
+        UnitDerivedStatMode derivedStatMode = UnitDerivedStatMode.FrozenFormula)
     {
         if (!float.IsFinite(speed) || speed < 0)
             throw new ArgumentOutOfRangeException(nameof(speed));
@@ -44,8 +52,10 @@ public sealed class UnitDefinition
         if (!Enum.IsDefined(movementKind))
             throw new ArgumentOutOfRangeException(nameof(movementKind));
 
+        if (!Enum.IsDefined(derivedStatMode))
+            throw new ArgumentOutOfRangeException(nameof(derivedStatMode));
         UnitDerivedStats expected = UnitDerivedStatRules.Calculate(attributes, speed);
-        if (derivedStats != expected)
+        if (derivedStatMode == UnitDerivedStatMode.FrozenFormula && derivedStats != expected)
         {
             throw new ArgumentException(
                 $"Explicit derived values do not match {UnitDerivedStatRules.ContractId}.",
@@ -65,6 +75,7 @@ public sealed class UnitDefinition
         DefenceFactor = defenceFactor;
         MovementKind = movementKind;
         CanProduceCorpse = canProduceCorpse;
+        DerivedStatMode = derivedStatMode;
     }
 
     public ContentId ContentId { get; }
@@ -80,6 +91,7 @@ public sealed class UnitDefinition
     public float DefenceFactor { get; }
     public UnitMovementKind MovementKind { get; }
     public bool CanProduceCorpse { get; }
+    public UnitDerivedStatMode DerivedStatMode { get; }
 
     /// <summary>
     /// Creates mutable-per-battle state while preserving definition identity separately from instance identity.

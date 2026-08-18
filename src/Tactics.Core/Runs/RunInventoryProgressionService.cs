@@ -15,7 +15,9 @@ public sealed class RunInventoryProgressionService
     public IReadOnlyList<SkillDefinition> GrowthCandidates(RunCharacterState character,
         IReadOnlyDictionary<ContentId, SkillDefinition> skills)
     {
-        SkillRole role = CharacterRole(character);
+        if (!skills.Values.Any(skill => skill.Role != SkillRole.Any))
+            return Array.Empty<SkillDefinition>();
+        SkillRole role = CharacterRole(character, skills);
         return skills.Values.Where(skill => skill.GrowthVisible && !skill.Hidden && skill.Role == role)
             .Where(skill => skill.Level == (character.LearnedSkillStates.FirstOrDefault(value => value.BranchId == skill.BranchId)?.Level ?? 0) + 1)
             .Where(skill => string.IsNullOrEmpty(skill.PrerequisiteBranchId) ||
@@ -240,13 +242,24 @@ public sealed class RunInventoryProgressionService
         "Intelligence" => value.Intelligence, "Charisma" => value.Charisma, "Luck" => value.Luck,
         "" => int.MaxValue, _ => int.MinValue
     };
-    private static SkillRole CharacterRole(RunCharacterState character) => character.UnitContentId.Value switch
+    private static SkillRole CharacterRole(RunCharacterState character,
+        IReadOnlyDictionary<ContentId, SkillDefinition> skills)
     {
-        "unit.pure-run.mage" => SkillRole.Mage,
-        "unit.pure-run.necromancer" => SkillRole.Necromancer,
-        "unit.pure-run.amazon" => SkillRole.Amazon,
-        _ => throw new InvalidOperationException($"Unknown progression character '{character.CharacterId}' ({character.UnitContentId.Value}).")
-    };
+        SkillRole[] roles = character.LearnedSkills
+            .SelectMany(id => skills.TryGetValue(id, out SkillDefinition? exact)
+                ? new[] { exact.Role }
+                : skills.Values.Where(candidate =>
+                        id.Value.StartsWith($"skill.{candidate.BranchId}.lv", StringComparison.Ordinal))
+                    .Select(candidate => candidate.Role))
+            .Where(role => role != SkillRole.Any).Distinct().ToArray();
+        if (roles.Length == 0)
+            roles = skills.Values.Select(skill => skill.Role).Where(role => role != SkillRole.Any)
+                .Distinct().ToArray();
+        return roles.Length == 1
+            ? roles[0]
+            : throw new InvalidOperationException(
+                $"Character '{character.CharacterId}' has {roles.Length} learned-skill roles; exactly one is required.");
+    }
     private static bool AnyAttributeLower(UnitAttributes value, UnitAttributes prior) => value.Strength < prior.Strength || value.Agility < prior.Agility || value.Constitution < prior.Constitution || value.Intelligence < prior.Intelligence || value.Charisma < prior.Charisma || value.Luck < prior.Luck;
     private static RunCharacterState[] Replace(IReadOnlyList<RunCharacterState> party, RunCharacterState updated) => party.Select(value => value.CharacterId == updated.CharacterId ? updated : value).ToArray();
     private static RunCharacterState Copy(RunCharacterState value, IReadOnlyList<RunEquipmentState>? equipment = null, IReadOnlyList<BattleConsumableState>? carried = null, int? maxHealth = null, int? maxMana = null) =>

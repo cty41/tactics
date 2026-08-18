@@ -6,6 +6,7 @@ using Tactics.Application.Units;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Statuses;
+using Tactics.Core.Skills;
 using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
 using static GdUnit4.Assertions;
@@ -15,6 +16,99 @@ namespace Tactics.Godot.Tests;
 [TestSuite]
 public class UnitBatchGodotTests
 {
+    [TestCase]
+    [RequireGodotRuntime]
+    public void DemonboundUsesAuthoredMoveFourContractWithoutChangingFrozenUnits()
+    {
+        var resource = ResourceLoader.Load<UnitDefinitionResource>(
+            "res://content/demonbound/PureRunDemonbound.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
+        AssertThat(resource).IsNotNull();
+        if (resource is null) return;
+
+        UnitDefinition definition = resource.ToCoreDefinition();
+        AssertThat(resource.DerivedStatModeValue).IsEqual("explicit");
+        AssertThat(definition.DerivedStatMode).IsEqual(UnitDerivedStatMode.Explicit);
+        AssertThat(definition.Speed).IsEqual(4f);
+        AssertThat(definition.DerivedStats.MoveRange).IsEqual(4);
+        AssertThat(definition.DerivedStats.Initiative).IsEqual(8f);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void DemonboundPlayableBalanceUsesFourPointBareMeleeDamage()
+    {
+        var resource = ResourceLoader.Load<PlayableLv1BalanceProfileResource>(
+            "res://content/ui/PlayableLv1BalanceProfile.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
+        AssertThat(resource).IsNotNull();
+        if (resource is null) return;
+
+        (int physical, int magical) = resource.ToCoreProfile().Attacks(
+            new ContentId("unit.pure-run.demonbound"));
+        AssertThat(physical).IsEqual(4);
+        AssertThat(magical).IsEqual(2);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void DemonboundSkillResourcesMatchTheFormalManaDamageAndCorruptionTables()
+    {
+        var catalog = ResourceLoader.Load<GodotResourceCatalog>(
+            "res://content/ContentCatalog.tres", string.Empty, ResourceLoader.CacheMode.Ignore)!;
+        var expected = new Dictionary<string, (int Mana, int Damage, int Corruption)>
+        {
+            ["skill.demonbound.meditation"] = (0, 0, 0),
+            ["skill.demonbound.bane.lv1"] = (3, 0, 2), ["skill.demonbound.bane.lv2"] = (3, 0, 2),
+            ["skill.demonbound.bane.lv3"] = (3, 0, 2), ["skill.demonbound.cleave.lv1"] = (4, 6, 2),
+            ["skill.demonbound.cleave.lv2"] = (4, 6, 2),
+            ["skill.demonbound.infernal-blast.lv1"] = (5, 4, 3),
+            ["skill.demonbound.infernal-blast.lv2"] = (3, 4, 3),
+            ["skill.demonbound.infernal-blast.lv3"] = (3, 4, 4),
+            ["skill.demonbound.hellfire.lv1"] = (5, 5, 4),
+            ["skill.demonbound.hellfire.lv2"] = (5, 5, 4),
+            ["skill.demonbound.mindfulness.lv1"] = (0, 0, 0),
+            ["skill.demonbound.mindfulness.lv2"] = (0, 0, 0),
+            ["skill.demonbound.mindfulness.lv3"] = (0, 0, 0),
+            ["skill.demonbound.regeneration.lv1"] = (5, 0, 5),
+            ["skill.demonbound.regeneration.lv2"] = (5, 0, 6)
+        };
+
+        SkillDefinition[] skills = catalog.Entries.Where(entry => expected.ContainsKey(entry.ContentIdValue))
+            .Select(entry => ResourceLoader.Load<SkillDefinitionResource>(entry.DiagnosticPathValue,
+                string.Empty, ResourceLoader.CacheMode.Ignore)!.ToCoreDefinition()).ToArray();
+
+        AssertThat(skills.Length).IsEqual(16);
+        foreach (SkillDefinition skill in skills)
+        {
+            (int mana, int damage, int corruption) = expected[skill.ContentId.Value];
+            AssertThat(skill.ManaCost).IsEqual(mana);
+            AssertThat(skill.Damage).IsEqual(damage);
+            AssertThat(skill.ExecutionProfile.CorruptionCost).IsEqual(corruption);
+            AssertThat(skill.Role).IsEqual(SkillRole.Demonbound);
+        }
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void BaneWeaponStatusShowsPurpleBladePlaceholderAndClearsWithStatus()
+    {
+        var resource = ResourceLoader.Load<UnitDefinitionResource>(
+            "res://content/demonbound/PureRunDemonbound.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
+        AssertThat(resource).IsNotNull();
+        if (resource is null) return;
+        GodotUnitActor actor = GodotUnitFactory.InstantiateActor(resource);
+
+        actor.SetStatuses([new BattleUiStatusSnapshot(new ContentId("buff.demonbound.bane-weapon"),
+            StatusEffectKind.BaneWeapon, StatusPolarity.Beneficial, 2, 1)]);
+        bool visible = actor.IsBaneBladeGlowVisible;
+        Color glow = actor.BaneBladeGlow!.DefaultColor;
+        actor.SetStatuses(Array.Empty<BattleUiStatusSnapshot>());
+
+        AssertThat(visible).IsTrue();
+        AssertThat(glow.B).IsGreater(glow.R);
+        AssertThat(actor.IsBaneBladeGlowVisible).IsFalse();
+        actor.Free();
+    }
+
     [TestCase]
     [RequireGodotRuntime]
     public void CatalogResourcesAndFactoryMatchTheSharedGolden()

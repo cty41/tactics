@@ -6,6 +6,7 @@ using Tactics.Core.Battle;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Runs;
+using Tactics.Core.Items;
 using Tactics.Core.Pathfinding;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
@@ -14,6 +15,26 @@ namespace Tactics.Application.Tests;
 
 public sealed class PlayableBattleSessionServiceTests
 {
+    [Test]
+    public void ExplicitClassDerivedStatsPreserveDemonboundMoveAndInitiativeInBattleProjection()
+    {
+        var attributes = new UnitAttributes(5, 5, 5, 5, 6, 5);
+        var definition = new UnitDefinition(new ContentId("unit.pure-run.demonbound"), "godot.demonbound",
+            "Demonbound", "player", "demonbound", attributes, 4,
+            new UnitDerivedStats(20, 18, 6, 4, 8), 1, 1, 1, UnitMovementKind.Land, true,
+            UnitDerivedStatMode.Explicit);
+        EquipmentStatProjection projection = EquipmentStatProjector.Project(attributes, definition.Speed, []);
+
+        UnitDerivedStats result = PlayableBattleSessionFactory.ResolvePartyDerivedStats(definition, projection);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.MoveRange, Is.EqualTo(4));
+            Assert.That(result.Initiative, Is.EqualTo(8));
+            Assert.That(projection.DerivedStats.MoveRange, Is.EqualTo(2));
+        });
+    }
+
     [Test]
     public void PlayableEnemySpeedProfile_PreservesPlayerSpeedAndOverridesEnemyArchetypes()
     {
@@ -401,6 +422,94 @@ public sealed class PlayableBattleSessionServiceTests
             Assert.That(service.BattleResult, Is.Not.Null);
             Assert.That(service.BattleResult!.PlayerVictory, Is.False);
             Assert.That(service.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.Defeat));
+        });
+    }
+
+    [Test]
+    public void PossessedDemonbound_AutomaticallyTargetsItsOwnFactionWithoutChangingFaction()
+    {
+        UnitInstanceId demonboundId = new("party-demonbound");
+        UnitInstanceId allyId = new("party-mage");
+        UnitInstanceId enemyId = new("enemy-goat");
+        BattleUnitState demonbound = Unit(demonboundId, "unit.pure-run.demonbound",
+                new GridPoint(1, 1), 0, 0, 20, 20)
+            .WithDemonboundState(new DemonboundBattleState(10, 3, isPossessed: true));
+        BattleUnitState ally = Unit(allyId, "unit.pure-run.mage", new GridPoint(2, 1), 0, 1, 20, 20);
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(8, 8), 1, 2, 20, 20);
+        SkillDefinition attack = Skill("skill.basic.melee", 3);
+
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([demonbound, ally, enemy], [demonboundId, allyId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>> { [demonboundId] = [attack] },
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", attack.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [attack.ContentId] = attack }));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.State.Units[demonboundId].Unit.PlayerNumber, Is.Zero);
+            Assert.That(service.State.Units[allyId].CurrentHealth, Is.LessThan(20));
+            Assert.That(service.CaptureSnapshot().RecentEvents.OfType<SkillUsedEvent>()
+                .Any(value => value.ActorId == demonboundId), Is.True);
+        });
+    }
+
+    [Test]
+    public void PossessedDemonboundAsOnlySurvivor_WithEnemiesDefeated_IsPlayerVictory()
+    {
+        UnitInstanceId demonboundId = new("party-demonbound");
+        UnitInstanceId allyId = new("party-mage");
+        UnitInstanceId enemyId = new("enemy-goat");
+        BattleUnitState demonbound = Unit(demonboundId, "unit.pure-run.demonbound",
+                new GridPoint(1, 1), 0, 0, 20, 20)
+            .WithDemonboundState(new DemonboundBattleState(10, 3, isPossessed: true));
+        BattleUnitState ally = Unit(allyId, "unit.pure-run.mage", new GridPoint(2, 1), 0, 1, 20, 0);
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(8, 8), 1, 2, 20, 0);
+        var request = new EncounterRequest("run-possessed-victory", 2,
+            new ContentId("encounter.pure-run.n1"), Array.Empty<RunCharacterState>());
+
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([demonbound, ally, enemy], [demonboundId, allyId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>(),
+            new Dictionary<UnitInstanceId, AiDefinition>(),
+            new Dictionary<ContentId, SkillDefinition>(), request,
+            new Dictionary<UnitInstanceId, string>
+            {
+                [demonboundId] = "pure_run_demonbound",
+                [allyId] = "pure_run_mage"
+            }));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.BattleResult, Is.Not.Null);
+            Assert.That(service.BattleResult!.PlayerVictory, Is.True);
+            Assert.That(service.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.Victory));
+        });
+    }
+
+    [Test]
+    public void PossessedDemonboundFallsBackToEnemyTargetsAfterAlliesAreDown()
+    {
+        UnitInstanceId demonboundId = new("party-demonbound");
+        UnitInstanceId allyId = new("party-mage");
+        UnitInstanceId enemyId = new("enemy-goat");
+        BattleUnitState demonbound = Unit(demonboundId, "unit.pure-run.demonbound",
+                new GridPoint(1, 1), 0, 0, 20, 20)
+            .WithDemonboundState(new DemonboundBattleState(10, 3, isPossessed: true));
+        BattleUnitState ally = Unit(allyId, "unit.pure-run.mage", new GridPoint(0, 1), 0, 1, 20, 0);
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(2, 1), 1, 2, 20, 20);
+        SkillDefinition attack = Skill("skill.basic.melee", 3);
+
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([demonbound, ally, enemy], [demonboundId, allyId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>> { [demonboundId] = [attack] },
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", attack.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [attack.ContentId] = attack }));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.State.Units[enemyId].CurrentHealth, Is.LessThan(20));
+            Assert.That(service.CaptureSnapshot().RecentEvents.OfType<SkillUsedEvent>()
+                .Any(value => value.ActorId == demonboundId), Is.True);
         });
     }
 

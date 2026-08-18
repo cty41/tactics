@@ -12,10 +12,15 @@ public sealed class AiDecisionService
     private readonly BattleTransitionService _transitions;
     public AiDecisionService(BattleTransitionService? transitions = null) => _transitions = transitions ?? new BattleTransitionService();
 
-    public AiTurnPlan Decide(BattleState state, AiDefinition definition, IReadOnlyDictionary<ContentId, SkillDefinition> skills, int patternIndex = 0)
+    public AiTurnPlan Decide(BattleState state, AiDefinition definition,
+        IReadOnlyDictionary<ContentId, SkillDefinition> skills, int patternIndex = 0,
+        bool targetOwnFaction = false)
     {
         BattleUnitState actor = state.Units[state.ActiveUnitId];
-        BattleUnitState[] enemies = state.Units.Values.Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber)
+        BattleUnitState[] enemies = state.Units.Values.Where(unit => unit.IsAlive &&
+                (targetOwnFaction
+                    ? unit.Unit.PlayerNumber == actor.Unit.PlayerNumber && unit.Unit.InstanceId != actor.Unit.InstanceId
+                    : unit.Unit.PlayerNumber != actor.Unit.PlayerNumber))
             .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray();
         var origins = new List<(GridPoint Cell, BattleState State)> { (actor.Unit.Position, state) };
         foreach (GridPoint cell in state.Board.Cells.Keys.OrderBy(cell => cell.X).ThenBy(cell => cell.Y))
@@ -28,6 +33,23 @@ public sealed class AiDecisionService
         foreach (ContentId skillId in definition.SkillIds.OrderBy(value => value.Value, StringComparer.Ordinal))
         {
             SkillDefinition skill = skills[skillId];
+            if (skill.ExecutionKind is SkillExecutionKind.Bane or SkillExecutionKind.DemonicRegeneration)
+            {
+                BattleTransition selfProbe = _transitions.Apply(state, new UseSkillCommand(
+                    actor.Unit.InstanceId, actor.Unit.InstanceId, actor.Unit.Position, skill));
+                if (selfProbe.Succeeded)
+                {
+                    bool regeneration = skill.ExecutionKind == SkillExecutionKind.DemonicRegeneration;
+                    float missingHealth = 1f - actor.CurrentHealth / (float)actor.MaxHealth;
+                    float priority = regeneration ? 20f + missingHealth * 30f : 18f;
+                    candidates.Add(new AiIntentCandidate(
+                        regeneration ? AiIntentKind.Retreat : AiIntentKind.Debuff,
+                        skillId, actor.Unit.Position, actor.Unit.InstanceId, actor.Unit.Position,
+                        0, 0, 0, regeneration ? missingHealth * 10f : definition.Profile.HarmfulStatusWeight,
+                        true, string.Empty, priority));
+                }
+                continue;
+            }
             foreach ((GridPoint origin, BattleState probeState) in origins)
             foreach (BattleUnitState originalTarget in enemies)
             {
@@ -66,7 +88,7 @@ public sealed class AiDecisionService
                 IntentPriority(definition, "Engage", 15)));
         }
 
-        if (actor.CurrentHealth <= actor.MaxHealth * .3f)
+        if (enemies.Length > 0 && actor.CurrentHealth <= actor.MaxHealth * .3f)
         {
             (GridPoint Cell, BattleState State) retreat = origins.OrderByDescending(value => enemies.Min(enemy => Manhattan(value.Cell, enemy.Unit.Position)))
                 .ThenBy(value => value.Cell.X).ThenBy(value => value.Cell.Y).First();

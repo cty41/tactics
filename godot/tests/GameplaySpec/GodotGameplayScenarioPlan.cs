@@ -20,8 +20,8 @@ public sealed record GodotGameplayScenarioPlan(
     {
         GodotGameplayScenarioPlan? plan = JsonSerializer.Deserialize<GodotGameplayScenarioPlan>(json,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        if (plan is null || plan.SchemaVersion != 2 || !string.Equals(plan.Runtime, "Godot", StringComparison.Ordinal))
-            throw new InvalidDataException("A Godot ExecutableScenarioPlan v2 is required.");
+        if (plan is null || plan.SchemaVersion is not (2 or 3) || !string.Equals(plan.Runtime, "Godot", StringComparison.Ordinal))
+            throw new InvalidDataException("A Godot ExecutableScenarioPlan v2 or v3 is required.");
         plan.ValidateContract();
         return plan;
     }
@@ -139,6 +139,8 @@ public sealed record GodotGameplayScenarioPlan(
             "inventoryProjectionEnteredBattle" or "activeRunExistsEquals" or "runtimeHasNoErrors" or
                 "productionSaveUnchanged" => kind is JsonValueKind.True or JsonValueKind.False,
             "presentationNodeCountEquals" or "checkpointRevisionEquals" => kind == JsonValueKind.Number,
+            "demonboundCorruptionEquals" => kind == JsonValueKind.Number && !string.IsNullOrWhiteSpace(assertion.Target),
+            "demonboundPossessedEquals" => kind is JsonValueKind.True or JsonValueKind.False && !string.IsNullOrWhiteSpace(assertion.Target),
             "terminalSummaryOutcomeEquals" or "presentationNumberEquals" or "runtimeStateHashEquals" => kind == JsonValueKind.String,
             _ => false
         };
@@ -168,6 +170,7 @@ internal static class GodotGameplayCapabilities
         ["assertion:activeRunExistsEquals"] = "Map", ["assertion:presentationNumberEquals"] = "UI",
         ["assertion:presentationNodeCountEquals"] = "UI", ["assertion:productionSaveUnchanged"] = "Map",
         ["assertion:checkpointRevisionEquals"] = "Map", ["assertion:runtimeStateHashEquals"] = "UI",
+        ["assertion:demonboundCorruptionEquals"] = "Battle", ["assertion:demonboundPossessedEquals"] = "Battle",
         ["assertion:runtimeHasNoErrors"] = "UI"
     };
     public static string? AdapterFor(string phase, string kind) => Adapters.GetValueOrDefault($"{phase}:{kind}");

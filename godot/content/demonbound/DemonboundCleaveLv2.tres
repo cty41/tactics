@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://ctxeh2kx13hm"]
+
+[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_nu401"]
+
+[resource]
+script = ExtResource("1_nu401")
+ContentIdValue = "skill.demonbound.cleave.lv2"
+SourceId = "godot.skill.demonbound.cleave.lv2"
+DisplayName = "Cleave"
+Description = "Cleave"
+RoleValue = "Demonbound"
+KindValue = "Active"
+Level = 2
+ManaCost = 4
+MinRange = 1
+MaxRange = 1
+ExecutionKindValue = "Cleave"
+Damage = 6
+DamageKindValue = "Physical"
+BranchId = "demonbound.cleave"
+PrerequisiteContentIdValue = "skill.demonbound.cleave.lv1"
+PrerequisiteBranchId = "demonbound.cleave"
+RequiredAttribute = "Charisma"
+MinimumAttribute = 7
+IgnoreLineOfSight = true
+CorruptionCost = 2
+AuthoringSourceKindValue = "GodotAuthored"

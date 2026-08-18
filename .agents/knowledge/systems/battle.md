@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-17T15:01:41+08:00"
+timestamp: "2026-08-18T09:11:43+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -22,7 +22,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:1a281795242a5e25be67d748da11a48e5efee4d12a20334700ed0f8f28912f13
+source_fingerprint: sha256:6d413d625a4324c5f0983e66becb0a60ea14dad6555a2968b3a43b828cee50c6
 ---
 
 # Current State
@@ -53,6 +53,10 @@ AI 和真实 Transition 必须复用 Core 规则；表现 cue、Tween、伤害�
 Pure Run 三职业、敌人、召唤物和固定遭遇均从 Godot-owned Catalog/Resource 组合；N6/E2 使用的
 `battle-layout.pure-run.split-flank` 已由正式 `BattleLayoutResource` 提供，不再由运行时硬编码补建。内容
 ownership 与人工验收分开记录；自动测试通过不能把视觉或操作验收直接标为 passed。
+
+魔剑士 `Demonbound` 作为第四名开局候选但仍维持三人参战。Core 保存战斗局部 0–10 腐化、正念等级、冥想资格与附身控制状态；附身只切换控制者、不改变阵营，AI 优先攻击存活队友并在队友全 Down 后回退敌人。友军致命伤只进行一次确定性 25% Run 永久死亡判定；仅剩附身魔剑士且敌人全灭仍是玩家胜利。Godot 左上状态卡只绑定当前行动者，复用 Unit Resource 显示头像/名称/HP/MP，并由 nullable Corruption 投影可选连续特殊资源条；Hover/LOS 详情迁入鼠标旁输入穿透浮层。结构与语义已自动覆盖，视觉可读性仍待人工验收。
+
+固定种子数值循环已有 Core 规则层诊断代理：三种 Demonbound 队伍标签各跑相同 10 seed，复用正式 `AiDecisionService`、`AiTurnService` 与 `BattleTransitionService`，记录终局、腐化峰值、冥想、首次附身、友伤、Down、永久死亡和技能次数，并验证同 seed 重放一致。其无尸体诊断夹具和简化队友策略只用于证明采样管线及发现规则问题；未接入生产 Run 路线、Resource 数值和完整职业策略前，不得视为完整平衡证据或人工体验替代。
 
 # Relationships
 
