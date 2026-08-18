@@ -268,7 +268,7 @@ public sealed class RunInventoryProgressionService
         new(value.RunId, value.Seed, value.Revision + 1, value.Phase, value.EncounterIndex, value.EncounterContentId, party ?? value.Party,
             backpackConsumables ?? value.BackpackConsumables, backpackEquipment ?? value.BackpackEquipment, pending ?? value.PendingProgression,
             transactions ?? (transaction is null ? value.AppliedTransactionKeys : value.AppliedTransactionKeys.Append(transaction).ToArray()), value.Gold, value.BattlesCompleted, value.EnemiesDefeated, value.AcquiredItems, value.Checkpoint,
-            value.MapState, value.NodeTransaction);
+            value.MapState, value.NodeTransaction, value.EscortState, value.AdventureState);
     private static RunMutationResult Success(PureRunState state) => new(true, null, state);
     private static RunMutationResult Reject(PureRunState state, string code) => new(false, code, state);
 }

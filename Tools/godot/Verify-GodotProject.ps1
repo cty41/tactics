@@ -140,19 +140,27 @@ function Invoke-IsolatedGdUnitSuite {
 
     for ($attempt = 1; $attempt -le 2; $attempt++) {
         Write-Host "== $Description (attempt $attempt/2) =="
-        $output = @(
-            dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
-                -p:GodotProjectDir=$projectRootWithSeparator --filter $Filter `
-                --logger 'console;verbosity=minimal' 2>&1 |
-                ForEach-Object { [string]$_ }
-        )
-        $exitCode = $LASTEXITCODE
+        $previousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            $output = @(
+                dotnet test $testHostProject -c Debug --no-restore --no-build --settings $runSettings `
+                    -p:GodotProjectDir=$projectRootWithSeparator --filter $Filter `
+                    --logger 'console;verbosity=minimal' 2>&1 |
+                    ForEach-Object { [string]$_ }
+            )
+            $exitCode = $LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
         $output | ForEach-Object { Write-Output $_ }
         if ($exitCode -eq 0) { return }
 
         $text = $output -join "`n"
         $knownNativeCrash =
             $text -match 'GodotRuntimeTestRunner ends with exit code: -107374(?:1795|1819)' -or
+            $text -match 'GodotRuntimeTestRunner ends with exit code: (?:-1|100)' -or
             $text -match "Value cannot be null\. \(Parameter 'resource'\)"
         $reportedAssertionFailure = $text -match 'Failed:\s+[1-9][0-9]*'
         if ($attempt -eq 1 -and $knownNativeCrash -and -not $reportedAssertionFailure) {
@@ -363,17 +371,31 @@ try {
         'GodotPendingAcceptance.PresentationMiss' = 'numbers-miss-v1'
         'GodotPendingAcceptance.ReloadCleanup' = 'reload-pending-battle-v1'
         'Demonbound.RuntimeState' = 'demonbound-ready-v1'
+        'AdventureBoard.StartCampPartyOrder' = $null
+        'AdventureBoard.StartingSkillsEnterAdventureBoard' = $null
+        'AdventureBoard.LeaderSwitchAndFreePath' = $null
+        'AdventureBoard.TwoGroupRouteCommit' = $null
+        'AdventureBoard.PartialRouteAndCommitSurviveReload' = $null
+        'AdventureBoard.RestCampfireResolution' = 'layer4-choice-ready-v1'
+        'AdventureBoard.StoreMerchantPurchase' = 'layer4-choice-ready-v1'
+        'AdventureBoard.StandardTreasureChest' = 'layer4-choice-ready-v1'
+        'AdventureBoard.CursedChestMimicBattle' = 'layer4-event-ready-v1'
+        'AdventureBoard.EventBattleContextSurvivesReload' = 'layer4-event-ready-v1'
+        'AdventureBoard.PostEventNormalBattleClearsContext' = 'layer4-event-ready-v1'
+        'AdventureBoard.FallenAltarGuardianBattle' = 'layer6-event-ready-v1'
+        'AdventureBoard.LostVillagerEscortBattle' = 'layer6-escort-ready-v1'
+        'AdventureBoard.FixedSeedCompleteRun' = $null
     }
     $actualScenarioNames = @($godotGameplayResult.scenarios | ForEach-Object { [string]$_.scenarioName })
     $scenarioIdentityMismatch = $actualScenarioNames.Count -ne $expectedGodotGameplayScenarios.Count -or
         @($actualScenarioNames | Select-Object -Unique).Count -ne $expectedGodotGameplayScenarios.Count -or
         @($godotGameplayResult.scenarios | Where-Object {
             -not $expectedGodotGameplayScenarios.ContainsKey([string]$_.scenarioName) -or
-            [string]$_.checkpointId -ne $expectedGodotGameplayScenarios[[string]$_.scenarioName]
+            [string]$_.checkpointId -ne [string]$expectedGodotGameplayScenarios[[string]$_.scenarioName]
         }).Count -ne 0
     if ($godotGameplayResult.schema -ne 'godot-gameplay-spec-result-v1' -or
-        $godotGameplayResult.runtime -ne 'Godot' -or $godotGameplayResult.total -ne 6 -or
-        $godotGameplayResult.passed -ne 6 -or $godotGameplayResult.failed -ne 0 -or
+        $godotGameplayResult.runtime -ne 'Godot' -or $godotGameplayResult.total -ne 20 -or
+        $godotGameplayResult.passed -ne 20 -or $godotGameplayResult.failed -ne 0 -or
         $scenarioIdentityMismatch -or
         @($godotGameplayResult.scenarios | Where-Object {
             -not $_.productionSaveUnchanged -or $_.productionSaveBefore -ne $_.productionSaveAfter -or

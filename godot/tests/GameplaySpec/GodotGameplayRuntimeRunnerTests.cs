@@ -13,40 +13,61 @@ public class GodotGameplayRuntimeRunnerTests
 {
     [TestCase]
     [RequireGodotRuntime]
-    public void ValidatedCheckpointCatalogProducesStableCanonicalV5Hashes()
+    public void ValidatedCheckpointCatalogProducesStableCanonicalV9Hashes()
     {
         var expected = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["inventory-store-ready-v1"] = "de13b6914c27f36fad607257cda289771a15f0eed3648a1d7286ef79d39b0b6b",
-            ["defeat-no-summon-v1"] = "3da74c45e5d8d8033900cb7f9fb2483928acaca8ea97f6a8886f5249b270a833",
-            ["numbers-mana-v1"] = "42d6647ef5748a3aadc201852ec34a54e132f8ad92d5831456f6c4b8ac7cdcca",
-            ["numbers-miss-v1"] = "2d83197311dd0cc117c94da371cd7e5fe1aa82d60a7a8db8a2bd66ec87382687",
-            ["reload-pending-battle-v1"] = "c1920a71b7611a4aed2d70db290909e956d5f205d36f60dfb74ef671407365b7",
-            ["demonbound-ready-v1"] = "1cd48e2ccb905b7f7bf609e8e5cc82462811c8e85f75237e169a9418245f1666"
+            ["inventory-store-ready-v1"] = "871fdd3d6a37e66b3b072fd0cb5add3bf54d9ae4985e4b03d80bae3dd7c8e625",
+            ["defeat-no-summon-v1"] = "c4dfaf31b13248f6b151810e187ee5601f902abbc9e0402c5d2dc8757a78189f",
+            ["numbers-mana-v1"] = "a946a748226f95abbcf3769743570eddccf3afb00b856c4c363e13ab5249bc20",
+            ["numbers-miss-v1"] = "f7bda3a52483e83f4b44595b5a4a3bf6e9f1dc2f4937e73e61867863bb5fadc6",
+            ["reload-pending-battle-v1"] = "12c95663706165bae8a178d8f39b9ba63b8d4754b96d5c93bbb4db75d7701230",
+            ["demonbound-ready-v1"] = "be97eff7ae17ad478fa596f2baa23ddc9ce9977c39be1da9b46369dc049fe959",
+            ["layer4-choice-ready-v1"] = "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab",
+            ["layer4-event-ready-v1"] = "e87eba856e590e14226d417ed9d61b7b5e7656933597a83dc0fb29fe7ed6fa72",
+            ["layer6-event-ready-v1"] = "81fdf128c8db01120597f18749fec38ce63032bc5f5152b305164cfaa81082ca",
+            ["layer6-escort-ready-v1"] = "be224262f4ab5fa41a48b27bcec5ccf1684d6d199c00f17abc992e57c27a467c"
         };
+        var mismatches = new List<string>();
         foreach ((string id, string hash) in expected)
         {
             ValidatedGodotRunCheckpoint checkpoint = GodotGameplayCheckpointCatalog.Create(id);
+            System.Console.WriteLine($"checkpoint:{id}:{checkpoint.SemanticHash}");
             AssertThat(checkpoint.Verify()).IsTrue();
-            AssertThat(checkpoint.SemanticHash).IsEqual(hash);
+            if (checkpoint.SemanticHash != hash) mismatches.Add($"{id}={checkpoint.SemanticHash}");
         }
+        AssertThat(string.Join(";", mismatches)).IsEqual(string.Empty);
     }
 
     [TestCase]
     [RequireGodotRuntime]
     public async Task AcceptanceSpecsWriteStructuredBatchReport()
     {
-        (string Plan, string Checkpoint)[] scenarios =
+        (string Plan, string? Checkpoint)[] scenarios =
         [
             ("inventory-battle-projection", "inventory-store-ready-v1"),
             ("defeated-terminal", "defeat-no-summon-v1"),
             ("presentation-numbers", "numbers-mana-v1"),
             ("presentation-miss", "numbers-miss-v1"),
-            ("reload-cleanup", "reload-pending-battle-v1")
-            ,("demonbound-runtime", "demonbound-ready-v1")
+            ("reload-cleanup", "reload-pending-battle-v1"),
+            ("demonbound-runtime", "demonbound-ready-v1"),
+            ("adventure-start-camp", null),
+            ("adventure-starting-skills", null),
+            ("adventure-exploration-controls", null),
+            ("adventure-route-commit", null),
+            ("adventure-route-reload", null),
+            ("adventure-rest-node", "layer4-choice-ready-v1"),
+            ("adventure-store-node", "layer4-choice-ready-v1"),
+            ("adventure-treasure-node", "layer4-choice-ready-v1"),
+            ("adventure-cursed-chest-battle", "layer4-event-ready-v1"),
+            ("adventure-event-battle-reload", "layer4-event-ready-v1"),
+            ("adventure-post-event-normal-battle", "layer4-event-ready-v1"),
+            ("adventure-altar-guardian-battle", "layer6-event-ready-v1"),
+            ("adventure-escort-battle", "layer6-escort-ready-v1"),
+            ("adventure-fixed-seed-full-run", null)
         ];
         var executions = new List<GodotGameplayReportScenario>();
-        foreach ((string planName, string _) in scenarios)
+        foreach ((string planName, string? _) in scenarios)
         {
             GodotGameplayScenarioPlan plan = LoadCompiledPlan(planName);
             GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
@@ -64,10 +85,10 @@ public class GodotGameplayRuntimeRunnerTests
         }
 
         AssertThat(File.Exists(output)).IsTrue();
-        AssertThat(report.Scenarios.Count).IsEqual(6);
-        AssertThat(report.Passed).IsEqual(6);
+        AssertThat(report.Scenarios.Count).IsEqual(20);
+        AssertThat(report.Passed).IsEqual(20);
         AssertThat(report.Failed).IsEqual(0);
-        AssertThat(report.Scenarios.Select(value => value.ScenarioName).Distinct().Count()).IsEqual(6);
+        AssertThat(report.Scenarios.Select(value => value.ScenarioName).Distinct().Count()).IsEqual(20);
         var expectedIdentities = scenarios.ToDictionary(value => LoadCompiledPlan(value.Plan).ScenarioName,
             value => value.Checkpoint, StringComparer.Ordinal);
         AssertThat(report.Scenarios.All(value => expectedIdentities.TryGetValue(value.ScenarioName, out string? checkpointId) &&
@@ -105,6 +126,173 @@ public class GodotGameplayRuntimeRunnerTests
     }
 
     [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureStartCampUsesProductionInputAndPreservesClickOrder()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-start-camp");
+
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureStartingSkillsUseProductionInputAndEnterRunMap()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-starting-skills");
+
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureLeaderSwitchMovesOnlyTheLeaderThroughProductionInput()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-exploration-controls");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureRouteCommitUsesTwoOrderedChoiceGroups()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-route-commit");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureRestUsesCampfireBeforeFormalResolution()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-rest-node");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureStoreUsesMerchantAndPersistsPurchase()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-store-node");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureTreasureUsesChestAndPersistsReward()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-treasure-node");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureCursedChestBattleReturnsToChangedScene()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-cursed-chest-battle");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureFallenAltarBattleReturnsToPurifiedScene()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-altar-guardian-battle");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureEscortSurvivesReloadAndCompletesProtectedBattle()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-escort-battle");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureFixedSeedCompleteRunUsesProductionInputToBossVictory()
+    {
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-fixed-seed-full-run");
+        GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
+
+        if (!result.Succeeded)
+            throw new InvalidOperationException($"Scenario {result.ScenarioName} failed: {result.ErrorCode}\n{string.Join(System.Environment.NewLine,
+                result.Trace.Select(entry => $"{entry.Ordinal}:{entry.Phase}:{entry.Kind}:{entry.Succeeded}:{entry.Diagnostic}"))}");
+        AssertThat(result.Succeeded).IsTrue();
+        AssertThat(result.ProductionSaveUnchanged).IsTrue();
+        AssertThat(result.RemainingTemporaryNodes).IsEqual(0);
+    }
+
+    [TestCase]
     public void PlanParserRejectsUnityOrUnknownSchema()
     {
         AssertThrown(() => GodotGameplayScenarioPlan.Parse("{\"schemaVersion\":1,\"runtime\":\"Unity\"}"))
@@ -138,6 +326,30 @@ public class GodotGameplayRuntimeRunnerTests
             {
                 ProbeRequests = [new GodotGameplayProbeRequest("runtimeStateHashEquals", "UI", null, [])]
             }).ValidateContract()).IsInstanceOf<InvalidDataException>();
+    }
+
+    [TestCase]
+    public void PlanContractAcceptsAdventureTargetsObservablesAndAssertions()
+    {
+        var actions = new[]
+        {
+            new GodotGameplayPlanStep("clickPointerTarget", "PlayerInput", "4,4", Parameters(("targetKind", "AdventureCell"))),
+            new GodotGameplayPlanStep("clickPointerTarget", "PlayerInput", "party-mage", Parameters(("targetKind", "AdventureActor"))),
+            new GodotGameplayPlanStep("clickPointerTarget", "PlayerInput", "campfire", Parameters(("targetKind", "AdventureObject"))),
+            new GodotGameplayPlanStep("clickPointerTarget", "PlayerInput", "layer04-rest", Parameters(("targetKind", "RouteNode"))),
+            new GodotGameplayPlanStep("waitForPlayerObservable", "PlayerInput", null, Parameters(("observable", "adventureBoardReady")))
+        };
+        var assertions = new[]
+        {
+            new GodotGameplayPlanAssertion("adventureActorCellEquals", "Map", "party-mage", JsonSerializer.SerializeToElement("4,4"), []),
+            new GodotGameplayPlanAssertion("activeAdventureLeaderEquals", "Map", null, JsonSerializer.SerializeToElement("party-mage"), []),
+            new GodotGameplayPlanAssertion("routeCandidateNodeIdsEqual", "Map", null,
+                JsonSerializer.SerializeToElement(new[] { "layer04-rest", "layer04-store", "layer04-event" }), []),
+            new GodotGameplayPlanAssertion("runSaveSchemaVersionEquals", "Map", null, JsonSerializer.SerializeToElement(9), [])
+        };
+        GodotGameplayScenarioPlan plan = Plan("Runner.AdventureContract", [], actions, assertions) with { SchemaVersion = 3 };
+
+        plan.ValidateContract();
     }
 
     [TestCase]
@@ -293,7 +505,7 @@ public class GodotGameplayRuntimeRunnerTests
         GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
 
         AssertThat(result.Succeeded).IsFalse();
-        AssertThat(result.ErrorCode).IsEqual("battle_action_limit");
+        AssertThat(result.ErrorCode).StartsWith("battle_action_limit:");
         AssertThat(result.FailureKind).IsEqual(GodotGameplayFailureKind.NoProgress);
         AssertThat(result.Trace.Last().Succeeded).IsFalse();
     }
@@ -317,7 +529,7 @@ public class GodotGameplayRuntimeRunnerTests
         GodotGameplayScenarioResult step = await new GodotGameplayRuntimeRunner().ExecuteAsync(stepPlan);
         GodotGameplayScenarioResult scenario = await new GodotGameplayRuntimeRunner().ExecuteAsync(scenarioPlan);
 
-        AssertThat(step.ErrorCode).IsEqual("step.timeout:1:waitForPlayerObservable");
+        AssertThat(step.ErrorCode).StartsWith("step.timeout:1:waitForPlayerObservable:");
         AssertThat(step.Trace.Single().Succeeded).IsFalse();
         AssertThat(scenario.ErrorCode).IsEqual("scenario.timeout");
         AssertThat(scenario.Trace.Single().Succeeded).IsFalse();

@@ -132,7 +132,10 @@ const playerInputActionKinds = new Set([
   "playBattleThroughInput"
 ]);
 
-const supportedPointerTargetKinds = new Set(["UiElement", "MapNode", "BattleUnit", "BattleCell"]);
+const supportedPointerTargetKinds = new Set([
+  "UiElement", "MapNode", "BattleUnit", "BattleCell",
+  "AdventureCell", "AdventureActor", "AdventureObject", "RouteNode"
+]);
 const supportedPlayerObservables = new Set([
   "uiElement",
   "uiVisible",
@@ -141,6 +144,12 @@ const supportedPlayerObservables = new Set([
   "battleReady",
   "humanTurn",
   "battleEnded",
+  "adventureBoardReady",
+  "adventureLeaderChanged",
+  "adventureInteractionResolved",
+  "routeCommitted",
+  "eventBattleReady",
+  "adventureSceneChanged",
 ]);
 
 const supportedGraphKinds = new Set([
@@ -166,6 +175,23 @@ const supportedAssertionKinds = new Set([
   "runtimeStateHashEquals",
   "demonboundCorruptionEquals",
   "demonboundPossessedEquals",
+  "adventureActorCellEquals",
+  "activeAdventureLeaderEquals",
+  "runNodeLifecycleEquals",
+  "routeCandidateNodeIdsEqual",
+  "adventureObjectStateEquals",
+  "storeOfferCountEquals",
+  "storeSoldOfferCountEquals",
+  "backpackContainsContentId",
+  "eventResolutionEquals",
+  "pendingBattleContextKindEquals",
+  "escortStateEquals",
+  "protectedNpcAliveEquals",
+  "runSaveSchemaVersionEquals",
+  "pendingPartyOrderEquals",
+  "activePartyStartingSkillIdsEqual",
+  "partyAllLivingAtFullResourcesEquals",
+  "partyResourceSummaryEquals",
   "runtimeHasNoErrors",
   "executionStateEquals",
   "validationErrorCodeIncludes",
@@ -683,14 +709,15 @@ function validatePlayerInputTarget(step: ScenarioStep, diagnostics: ExpectationD
     diagnostics.push({
       code: "InvalidPlayerInputTargetKind",
       severity: "error",
-      message: `${step.kind} targetKind must be UiElement, MapNode, BattleUnit, or BattleCell.`,
+      message: `${step.kind} targetKind must be UiElement, MapNode, BattleUnit, BattleCell, AdventureCell, AdventureActor, AdventureObject, or RouteNode.`,
       path: step.id ?? step.kind
     });
     return;
   }
 
   const locator = step.target ?? getString(step.parameters.elementName) ?? getString(step.parameters.nodeId) ??
-    getString(step.parameters.unitId) ?? getString(step.parameters.cell);
+    getString(step.parameters.unitId) ?? getString(step.parameters.actorId) ??
+    getString(step.parameters.objectId) ?? getString(step.parameters.routeNodeId) ?? getString(step.parameters.cell);
   if (!locator) {
     diagnostics.push({
       code: "MissingPlayerInputTarget",
@@ -707,7 +734,7 @@ function validatePlayerObservable(step: ScenarioStep, diagnostics: ExpectationDi
     diagnostics.push({
       code: "InvalidPlayerObservable",
       severity: "error",
-      message: "waitForPlayerObservable observable must be uiElement, uiVisible, uiHidden, mapReady, battleReady, humanTurn, or battleEnded.",
+      message: "waitForPlayerObservable observable must be a supported UI, battle, map, or adventure lifecycle value.",
       path: step.id ?? step.kind
     });
     return;
@@ -752,11 +779,21 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "terminalSummaryOutcomeEquals":
     case "presentationNumberEquals":
     case "runtimeStateHashEquals":
+    case "adventureActorCellEquals":
+    case "activeAdventureLeaderEquals":
+    case "runNodeLifecycleEquals":
+    case "adventureObjectStateEquals":
+    case "eventResolutionEquals":
+    case "pendingBattleContextKindEquals":
+    case "escortStateEquals":
       requireStringExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "presentationNodeCountEquals":
     case "checkpointRevisionEquals":
     case "demonboundCorruptionEquals":
+    case "storeOfferCountEquals":
+    case "storeSoldOfferCountEquals":
+    case "runSaveSchemaVersionEquals":
       requireIntegerExpected(assertion, diagnostics, "InvalidAssertionExpectedType");
       break;
     case "inventoryProjectionEnteredBattle":
@@ -764,8 +801,19 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
     case "productionSaveUnchanged":
     case "runtimeHasNoErrors":
     case "demonboundPossessedEquals":
+    case "backpackContainsContentId":
+    case "protectedNpcAliveEquals":
+    case "partyAllLivingAtFullResourcesEquals":
       if (typeof assertion.expected !== "boolean") diagnostics.push({
         code: "InvalidAssertionExpectedType", severity: "error", message: `${assertion.kind} requires a boolean expected value.`, path: assertion.id ?? assertion.kind
+      });
+      break;
+    case "routeCandidateNodeIdsEqual":
+    case "pendingPartyOrderEquals":
+    case "activePartyStartingSkillIdsEqual":
+    case "partyResourceSummaryEquals":
+      if (!Array.isArray(assertion.expected) || assertion.expected.some(value => typeof value !== "string")) diagnostics.push({
+        code: "InvalidAssertionExpectedType", severity: "error", message: `${assertion.kind} requires a string-array expected value.`, path: assertion.id ?? assertion.kind
       });
       break;
     case "executionStateEquals":

@@ -1,0 +1,477 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.FixedSeedCompleteRun",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:playBattleThroughInput",
+    "action:waitForPlayerObservable",
+    "assertion:productionSaveUnchanged",
+    "assertion:runSaveSchemaVersionEquals",
+    "assertion:runtimeHasNoErrors",
+    "assertion:terminalSummaryOutcomeEquals",
+    "setup:initializePlayerInput"
+  ],
+  "setupActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "target": "New Run",
+      "parameters": {
+        "observable": "uiElement",
+        "elementName": "New Run",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "New Run",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_amazon",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_demonbound",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_mage",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "start-exit",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "starting_skill__skill_amazon_thrust_lv1",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "starting_skill__skill_mage_fireball_lv1",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "7,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-overview",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-a-store",
+      "parameters": {
+        "targetKind": "RouteNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-b-event",
+      "parameters": {
+        "targetKind": "RouteNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-submit",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-depart",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "mapReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_01_battle",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Continue — Progression",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionAttribute_Strength",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionSkillChoice_0",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Continue",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_02_battle",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Continue — Progression",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionAttribute_Strength",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionSkillChoice_0",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Continue",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_03_battle",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Continue — Progression",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionAttribute_Strength",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionSkillChoice_0",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_04_rest",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "rest-campfire",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Confirm Rest",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_05_battle",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Continue — Progression",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionAttribute_Strength",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "ProgressionSkillChoice_0",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_06_treasure",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "treasure-chest",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Confirm Treasure",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_07_battle",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "terminalSummaryOutcomeEquals",
+      "expected": "BossVictory",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "runSaveSchemaVersionEquals",
+      "expected": 9,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 600000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "terminalSummaryOutcomeEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "runSaveSchemaVersionEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

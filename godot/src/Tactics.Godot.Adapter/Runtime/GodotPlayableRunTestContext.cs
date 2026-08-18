@@ -30,7 +30,26 @@ public sealed record GodotPlayableRunProbe(
     bool CheatConsoleVisible,
     int RuntimeErrorCount,
     bool QuitRequested,
-    string? StatusText);
+    string? StatusText,
+    GodotAdventureRuntimeProbe? Adventure);
+
+public sealed record GodotAdventureRuntimeProbe(
+    string BoardContentId,
+    string? LeaderId,
+    IReadOnlyDictionary<string, string> ActorCells,
+    IReadOnlyDictionary<string, string> ObjectStates,
+    IReadOnlyList<string> RouteCandidateNodeIds,
+    string? NodeLifecycle,
+    string? EventResolution,
+    string? PendingBattleContextKind,
+    string? EscortState,
+    bool? ProtectedNpcAlive,
+    int StoreOfferCount,
+    int StoreSoldOfferCount,
+    int LeaderRevision,
+    int InteractionRevision,
+    int RouteRevision,
+    int SceneRevision);
 
 public sealed record GodotBattleUnitProjection(UnitInstanceId UnitId, int MaxHealth, int MaxMana,
     float BaseSpeed, int PhysicalAttack, int MagicalAttack, int MoveRange, float Initiative,

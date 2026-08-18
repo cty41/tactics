@@ -291,15 +291,22 @@ public sealed class PureRunLayerFourNodeService
     }
 
     public LayerFourNodeResolution BeginN4(PureRunState run, ContentId encounterId)
+        => BeginNodeBattle(run, encounterId, PureRunNodeKind.Battle);
+
+    public LayerFourNodeResolution BeginEventBattle(PureRunState run, ContentId encounterId)
+        => BeginNodeBattle(run, encounterId, PureRunNodeKind.Mystery);
+
+    private static LayerFourNodeResolution BeginNodeBattle(PureRunState run, ContentId encounterId, PureRunNodeKind expectedKind)
     {
-        if (!Validate(run, PureRunNodeKind.Battle, out LayerFourNodeResolution? failure)) return failure!;
+        if (!Validate(run, expectedKind, out LayerFourNodeResolution? failure)) return failure!;
         long revision = run.Revision + 1;
         int encounterIndex = run.Phase == PureRunPhase.ResolvingLayerSixNode ? 5 : 3;
         var checkpoint = new RunEncounterCheckpoint(encounterId, encounterIndex, revision, run.Party.ToArray(),
             run.BackpackConsumables.ToArray(), run.BackpackEquipment.ToArray());
         PureRunState pending = Copy(run, phase: PureRunPhase.PendingBattle, encounterId: encounterId,
             checkpoint: checkpoint, map: run.MapState! with { NodeLifecycle = RunNodeLifecycle.Pending });
-        return new(true, null, pending, EncounterRequest: new EncounterRequest(run.RunId, checkpoint.Revision, encounterId, checkpoint.Party));
+        return new(true, null, pending, EncounterRequest: new EncounterRequest(run.RunId, checkpoint.Revision, encounterId, checkpoint.Party,
+            pending.AdventureState?.Revision ?? 0));
     }
 
     private static bool Validate(PureRunState run, PureRunNodeKind expected, out LayerFourNodeResolution? failure)
@@ -343,7 +350,7 @@ public sealed class PureRunLayerFourNodeService
         party ?? run.Party, consumables ?? run.BackpackConsumables, equipment ?? run.BackpackEquipment,
         run.PendingProgression, appliedKey is null ? run.AppliedTransactionKeys : run.AppliedTransactionKeys.Append(appliedKey).ToArray(),
         gold ?? run.Gold, run.BattlesCompleted, run.EnemiesDefeated, acquiredItems ?? run.AcquiredItems, checkpoint,
-        map ?? run.MapState, transaction ?? run.NodeTransaction);
+        map ?? run.MapState, transaction ?? run.NodeTransaction, run.EscortState, run.AdventureState);
 
     private static int Percent(int value, int percent) => (int)Math.Ceiling(value * percent / 100d);
     private static ContentId? SelectWeighted(IReadOnlyList<WeightedContentDefinition> pool, Random random)

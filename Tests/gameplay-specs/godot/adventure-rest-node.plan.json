@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.RestCampfireResolution",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:waitForPlayerObservable",
+    "assertion:partyResourceSummaryEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "layer4-choice-ready-v1",
+        "path": "validated://layer4-choice-ready-v1",
+        "semanticHash": "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "mapReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_04_rest",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "rest-campfire",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "target": "Confirm Rest",
+      "parameters": {
+        "observable": "uiElement",
+        "elementName": "Confirm Rest",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Confirm Rest",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "target": "PURE RUN MAP",
+      "parameters": {
+        "observable": "uiElement",
+        "elementName": "PURE RUN MAP",
+        "maximumFrames": 180
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "partyResourceSummaryEquals",
+      "expected": [
+        "pure_run_mage:12/20:5/15",
+        "pure_run_necromancer:12/20:6/18",
+        "pure_run_amazon:12/20:5/15"
+      ],
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "partyResourceSummaryEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "layer4-choice-ready-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab",
+    "path": "validated://layer4-choice-ready-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

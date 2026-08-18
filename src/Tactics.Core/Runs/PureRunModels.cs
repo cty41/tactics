@@ -1,4 +1,5 @@
 using Tactics.Core.Content;
+using Tactics.Core.Board;
 using Tactics.Core.Items;
 using Tactics.Core.Units;
 
@@ -196,6 +197,53 @@ public sealed record RunEncounterCheckpoint(
     IReadOnlyList<BattleConsumableState> BackpackConsumables,
     IReadOnlyList<RunEquipmentState> BackpackEquipment);
 
+public enum RunEscortLifecycle { Accepted, Traveling, BattlePending, Completed, Failed }
+
+public sealed record RunEscortState(
+    string QuestId,
+    RunEscortLifecycle Lifecycle,
+    bool ProtectedNpcAlive,
+    string AcceptedNodeId,
+    string DestinationNodeId,
+    long Revision);
+
+public enum RunAdventureLifecycle
+{
+    InitialExploration,
+    RouteGroupOne,
+    RouteGroupTwo,
+    RouteReady,
+    RouteCommitted,
+    MapActive
+}
+
+public enum RunAdventureEventContextKind
+{
+    None,
+    CursedChestMimic,
+    FallenAltarGuardian,
+    LostVillagerEscort
+}
+
+public sealed record RunAdventureActorCell(string ActorId, GridPoint Cell);
+
+/// <summary>Authoritative, save-backed state for the tile adventure presentation and event routing.</summary>
+public sealed record RunAdventureState(
+    RunAdventureLifecycle Lifecycle,
+    ContentId BoardContentId,
+    string LeaderId,
+    IReadOnlyList<RunAdventureActorCell> ActorCells,
+    string? RouteGroupOneSelection,
+    string? RouteGroupTwoSelection,
+    RunAdventureEventContextKind PendingEventContext,
+    string? PendingEventNodeId,
+    string? PendingEventObjectId,
+    long Revision,
+    long LeaderRevision,
+    long InteractionRevision,
+    long RouteRevision,
+    long SceneRevision);
+
 public sealed record PureRunState
 {
     public PureRunState(
@@ -216,7 +264,9 @@ public sealed record PureRunState
         IReadOnlyList<ContentId>? acquiredItems = null,
         RunEncounterCheckpoint? checkpoint = null,
         PureRunMapState? mapState = null,
-        RunNodeTransaction? nodeTransaction = null)
+        RunNodeTransaction? nodeTransaction = null,
+        RunEscortState? escortState = null,
+        RunAdventureState? adventureState = null)
     {
         if (string.IsNullOrWhiteSpace(runId))
             throw new ArgumentException("Run ID cannot be empty.", nameof(runId));
@@ -251,6 +301,8 @@ public sealed record PureRunState
         Checkpoint = checkpoint;
         MapState = mapState;
         NodeTransaction = nodeTransaction;
+        EscortState = escortState;
+        AdventureState = adventureState;
     }
 
     public string RunId { get; }
@@ -271,6 +323,8 @@ public sealed record PureRunState
     public RunEncounterCheckpoint? Checkpoint { get; }
     public PureRunMapState? MapState { get; }
     public RunNodeTransaction? NodeTransaction { get; }
+    public RunEscortState? EscortState { get; }
+    public RunAdventureState? AdventureState { get; }
 }
 
 public sealed record BattlePartyResult(

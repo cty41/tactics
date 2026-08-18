@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.StartCampPartyOrder",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:waitForPlayerObservable",
+    "assertion:pendingPartyOrderEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput"
+  ],
+  "setupActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "target": "New Run",
+      "parameters": {
+        "observable": "uiElement",
+        "elementName": "New Run",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "New Run",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_amazon",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_demonbound",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_mage",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "start-exit",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "pendingPartyOrderEquals",
+      "expected": [
+        "pure_run_amazon",
+        "pure_run_demonbound",
+        "pure_run_mage"
+      ],
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "pendingPartyOrderEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

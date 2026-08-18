@@ -319,6 +319,46 @@ test("allows production battle lifecycle observables for player input", () => {
   assert.equal(validation.valid, true, JSON.stringify(validation.diagnostics));
 });
 
+test("allows Godot adventure pointer targets, lifecycle observables, and typed assertions", () => {
+  const spec = {
+    feature: "AdventureBoard",
+    scenario: "MoveLeaderAndResolveInteraction",
+    tags: ["player-input-e2e", "godot", "adventure-board"],
+    requiredAdapters: ["PlayerInput", "Map"],
+    timeoutMs: 30000,
+    setup: [{ kind: "initializePlayerInput", adapter: "PlayerInput", parameters: {} }],
+    actions: [
+      { kind: "waitForPlayerObservable", adapter: "PlayerInput", parameters: { observable: "adventureBoardReady" } },
+      { kind: "clickPointerTarget", adapter: "PlayerInput", target: "4,4", parameters: { targetKind: "AdventureCell" } },
+      { kind: "clickPointerTarget", adapter: "PlayerInput", target: "party-mage", parameters: { targetKind: "AdventureActor" } },
+      { kind: "clickPointerTarget", adapter: "PlayerInput", target: "campfire", parameters: { targetKind: "AdventureObject" } },
+      { kind: "clickPointerTarget", adapter: "PlayerInput", target: "layer04-rest", parameters: { targetKind: "RouteNode" } },
+      { kind: "waitForPlayerObservable", adapter: "PlayerInput", parameters: { observable: "adventureInteractionResolved" } }
+    ],
+    assertions: [
+      { kind: "adventureActorCellEquals", adapter: "Map", target: "party-mage", expected: "4,4", parameters: {} },
+      { kind: "activeAdventureLeaderEquals", adapter: "Map", expected: "party-mage", parameters: {} },
+      { kind: "runNodeLifecycleEquals", adapter: "Map", target: "layer04-rest", expected: "Resolved", parameters: {} },
+      { kind: "routeCandidateNodeIdsEqual", adapter: "Map", expected: ["layer04-rest", "layer04-store", "layer04-event"], parameters: {} },
+      { kind: "adventureObjectStateEquals", adapter: "Map", target: "campfire", expected: "Resolved", parameters: {} },
+      { kind: "storeOfferCountEquals", adapter: "Map", expected: 3, parameters: {} },
+      { kind: "storeSoldOfferCountEquals", adapter: "Map", expected: 0, parameters: {} },
+      { kind: "backpackContainsContentId", adapter: "Map", target: "item.consumable.life-potion", expected: true, parameters: {} },
+      { kind: "eventResolutionEquals", adapter: "Map", expected: "Resolved", parameters: {} },
+      { kind: "pendingBattleContextKindEquals", adapter: "Map", expected: "CursedChest", parameters: {} },
+      { kind: "escortStateEquals", adapter: "Map", expected: "Active", parameters: {} },
+      { kind: "protectedNpcAliveEquals", adapter: "Map", expected: true, parameters: {} },
+      { kind: "runSaveSchemaVersionEquals", adapter: "Map", expected: 8, parameters: {} }
+    ]
+  };
+
+  const validation = validateScenarioSpec(spec);
+  assert.equal(validation.valid, true, JSON.stringify(validation.diagnostics));
+  const compiled = compileScenarioSpec(spec, { runtime: "Godot" });
+  assert.equal(compiled.valid, true, JSON.stringify(compiled.diagnostics));
+  assert.equal(compiled.plan?.schemaVersion, 3);
+});
+
 test("rejects shared sequence assertion with non-string-array expected value", () => {
   const validation = validateScenarioSpec({
     feature: "Battle",

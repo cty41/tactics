@@ -136,6 +136,23 @@ const godotPlanAdapterByKind: Record<string, z.infer<typeof AdapterSchema>> = {
   runtimeStateHashEquals: "UI",
   demonboundCorruptionEquals: "Battle",
   demonboundPossessedEquals: "Battle",
+  adventureActorCellEquals: "Map",
+  activeAdventureLeaderEquals: "Map",
+  runNodeLifecycleEquals: "Map",
+  routeCandidateNodeIdsEqual: "Map",
+  adventureObjectStateEquals: "Map",
+  storeOfferCountEquals: "Map",
+  storeSoldOfferCountEquals: "Map",
+  backpackContainsContentId: "Map",
+  eventResolutionEquals: "Map",
+  pendingBattleContextKindEquals: "Map",
+  escortStateEquals: "Map",
+  protectedNpcAliveEquals: "Map",
+  runSaveSchemaVersionEquals: "Map",
+  pendingPartyOrderEquals: "Map",
+  activePartyStartingSkillIdsEqual: "Map",
+  partyAllLivingAtFullResourcesEquals: "Map",
+  partyResourceSummaryEquals: "Map",
   runtimeHasNoErrors: "UI"
 };
 

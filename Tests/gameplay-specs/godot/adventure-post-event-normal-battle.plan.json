@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.PostEventNormalBattleClearsContext",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:playBattleThroughInput",
+    "action:waitForPlayerObservable",
+    "assertion:pendingBattleContextKindEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "layer4-event-ready-v1",
+        "path": "validated://layer4-event-ready-v1",
+        "semanticHash": "e87eba856e590e14226d417ed9d61b7b5e7656933597a83dc0fb29fe7ed6fa72"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_04_event",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "cursed-chest",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "Continue",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_05_battle",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "battleReady",
+        "maximumFrames": 300
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "pendingBattleContextKindEquals",
+      "expected": "None",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 150000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "pendingBattleContextKindEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "layer4-event-ready-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "e87eba856e590e14226d417ed9d61b7b5e7656933597a83dc0fb29fe7ed6fa72",
+    "path": "validated://layer4-event-ready-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

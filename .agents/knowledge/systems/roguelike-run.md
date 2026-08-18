@@ -11,31 +11,24 @@ repo_paths:
   - .agents/docs/2026-06-24-pure-run-squad-prototype-design.md
   - .agents/docs/roguelike-event-editor-design.md
   - .agents/docs/roguelike-map-editor-manual-test.md
-  - Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs
-  - Assets/Tactics/Scripts/Roguelike/RoguelikeMapRuntimeState.cs
-  - Assets/Tactics/Scripts/Roguelike/PureRunSessionStore.cs
-  - Assets/Tactics/Scripts/Roguelike/PureRunSummaryRecorder.cs
-  - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureState.cs
-  - Assets/Tactics/Scripts/Common/Roster/CharacterDefinition.cs
-  - Assets/Tactics/Scripts/Common/Roster/PlayerAdventureStateStore.cs
-  - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
-  - Assets/Tactics/Scripts/UI/InventoryUIController.cs
-  - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
-  - Assets/Tactics/Scripts/UI/HomeUIController.cs
-  - Assets/Tactics/Scenes/Home.unity
-  - Assets/Tactics/Arts/UI/Inventory.uxml
-  - Assets/Tactics/Arts/UI/Inventory.uss
-  - Assets/Tactics/Scripts/Editor/RoguelikeEventEditor
-  - Assets/Tactics/RoguelikeMap/MapConfigs/DefaultRogueLikeMapConfig.asset
-  - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
-  - Assets/Tactics/Tests/Editor/HomeSceneCompositionEditorTests.cs
-  - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
-  - Tests/gameplay-specs/ui/home-options-player-input-smoke.gameplay-test.md
+  - src/Tactics.Core/Runs
+  - src/Tactics.Application/Runs
+  - src/Tactics.Core.Tests/RunAdventureTransitionServiceTests.cs
+  - src/Tactics.Application.Tests/RunSaveDocumentV9Tests.cs
+  - godot/src/Tactics.Godot.Adapter/Runtime/GodotAdventureBoardView.cs
+  - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
+  - Tests/gameplay-specs/godot
 verified_revision: c56d71ad4ebd
 source_fingerprint: sha256:0876ab4b0368e4edf53d80bb4163e46cbe5dcbbe162c1a334e7b16a2f104077e
 ---
 
 # Current State
+
+Godot Pure Run 的 Tile Adventure 权威状态现由 `RunAdventureState` 随 `PureRunState` 持久化，包含生命周期、Board ID、三名角色格、领队、两组路线选择、事件战枚举上下文及分域 revision。`RunAdventureTransitionService` 统一移动、切换领队、路线选择/提交、Board 进入和事件战开始/清空；成功变更同步提升 Run revision。V9 对 V8 活跃 Run 与 Pending Setup 强制重新开局但保留 Terminal Summary。PendingBattle 重启会恢复诅咒宝箱、祭坛守卫或护送上下文；护送 NPC 继续生成并以 resolve-once 事务结算。
+
+Adventure Board 使用 Godot `TileMapLayer.MapToLocal/LocalToMap` 作为 marker、语义目标和正式点击的唯一投影。Board 校验拒绝 Actor 重叠、阻挡格/阻挡物占位及 Entry/Exit 非法占用；寻路把 Idle 队友视为不可穿越、不可落点的占位。普通探索、Event、Rest、Store 和 Treasure 只有领队移动到相邻格才可交互；Start Camp 和 Route Overview 的选择本身保持直接点击。
+
+当前 Godot Pure Run 新局提供 Mage、Necromancer、Amazon、Demonbound 四名候选并选择三名参战。Demonbound 固有冥想，起始普通技能按 Run seed 从三条初级分支确定；正式存档为 V7，保留旧终局总结但会清除 V1–V6 的进行中 Run/未完成开局并要求重新开始。永久死亡状态在战斗结算时从队伍移除，自动测试与人工账本分别记录逻辑和体验边界。
 
 Pure Run v1 由 `RoguelikeMapGenerator.GetPureRunMap` 生成 7 层只前进地图，单局实际战斗数为 5、6 或 7；第 4、6 层均在战斗、休息、商店和随机事件之间四选一。节点沿 outgoing 揭示，已访问节点不会重新可选。地图布局版本为 2。
 
@@ -84,7 +77,7 @@ Inventory、LevelUp、BattleSettlement 与 RunEndSummary 在每次显示时重�
 # Relationships
 
 - 战斗节点进入[Battle System](battle.md)并在结算后返回地图。
-- 技能成长由当前三职业目录与[SkillGraph](skill-graph.md)承接。
+- 技能成长由当前四职业目录与[SkillGraph](skill-graph.md)承接。
 - 地图 seed、成长和节点状态可由[Gameplay Test Framework](gameplay-test-framework.md)验证。
 - 战斗内消耗品通过[SkillGraph](skill-graph.md)复用目标合法性和效果执行。
 - 未实施的内容扩展与编辑器增强见[Project Known Gaps](../plans/project-known-gaps.md)。

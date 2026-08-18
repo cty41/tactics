@@ -70,13 +70,14 @@ public sealed class PureRunSettlementService
                     state.RunId, state.Seed, state.Revision + 1, PureRunPhase.AwaitingLayerFourChoice,
                     state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment,
                     progression, transactions, nextGold, battles, defeatedEnemies, acquired,
-                    mapState: mapState);
+                    mapState: mapState, escortState: state.EscortState, adventureState: state.AdventureState);
                 return new PureRunSettlementResult(true, null, awaitingMap, null, false);
             }
             var terminalState = new PureRunState(
                 state.RunId, state.Seed, state.Revision + 1, PureRunPhase.SliceCompleted,
                 state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment,
-                progression, transactions, nextGold, battles, defeatedEnemies, acquired);
+                progression, transactions, nextGold, battles, defeatedEnemies, acquired,
+                escortState: state.EscortState, adventureState: state.AdventureState);
             return new PureRunSettlementResult(
                 true, null, null, CreateSummary(terminalState, PureRunOutcome.SliceCompleted, party, transactions), false);
         }
@@ -85,7 +86,8 @@ public sealed class PureRunSettlementService
         var next = new PureRunState(
             state.RunId, state.Seed, state.Revision + 1, PureRunPhase.Ready,
             nextIndex, definition.Encounters[nextIndex], party, backpack, state.BackpackEquipment,
-            progression, transactions, nextGold, battles, defeatedEnemies, acquired);
+            progression, transactions, nextGold, battles, defeatedEnemies, acquired,
+            escortState: state.EscortState, adventureState: state.AdventureState);
         return new PureRunSettlementResult(true, null, next, null, false);
     }
 
@@ -98,7 +100,7 @@ public sealed class PureRunSettlementService
     public PureRunSettlementResult ApplyLayerFour(PureRunState state, PureRunBattleResult result,
         IReadOnlyList<ContentId> consumableDropPool)
     {
-        if (state.NodeTransaction is not { Kind: PureRunNodeKind.Battle } transaction ||
+        if (state.NodeTransaction is not { Kind: PureRunNodeKind.Battle or PureRunNodeKind.Mystery } transaction ||
             state.MapState?.SelectedNodeId != transaction.NodeId)
             return new(false, "node.transaction_invalid", state, null, false);
         string battleKey = $"battle:{result.EncounterContentId.Value}:settlement";
@@ -115,7 +117,8 @@ public sealed class PureRunSettlementService
                 PureRunPhase.Defeated, state.EncounterIndex, state.EncounterContentId, party,
                 state.BackpackConsumables, state.BackpackEquipment, state.PendingProgression, transactions,
                 state.Gold, state.BattlesCompleted, state.EnemiesDefeated, state.AcquiredItems,
-                mapState: state.MapState, nodeTransaction: state.NodeTransaction);
+                mapState: state.MapState, nodeTransaction: state.NodeTransaction, escortState: state.EscortState,
+                adventureState: state.AdventureState);
             return new(true, null, null, CreateSummary(defeatedState, PureRunOutcome.Defeated, party, transactions), false);
         }
         int gold = Math.Min(GoldCap, checked(state.Gold + CalculateGold(result.TotalRounds)));
@@ -144,7 +147,8 @@ public sealed class PureRunSettlementService
             layerSix ? PureRunPhase.ReadyForBoss : PureRunPhase.ReadyForLayerFive, state.EncounterIndex, state.EncounterContentId, party, backpack,
             state.BackpackEquipment, state.PendingProgression, transactions, gold, state.BattlesCompleted + 1,
             checked(state.EnemiesDefeated + result.EnemiesDefeated), acquired, mapState: map,
-            nodeTransaction: transaction with { Committed = true });
+            nodeTransaction: transaction with { Committed = true }, escortState: state.EscortState,
+            adventureState: state.AdventureState);
         return new(true, null, completed, null, false);
     }
 
@@ -178,7 +182,8 @@ public sealed class PureRunSettlementService
         {
             var won = new PureRunState(state.RunId, state.Seed, state.Revision + 1, PureRunPhase.SliceCompleted,
                 state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment,
-                state.PendingProgression, transactions, gold, battles, defeated, acquired, mapState: state.MapState);
+                state.PendingProgression, transactions, gold, battles, defeated, acquired, mapState: state.MapState,
+                escortState: state.EscortState, adventureState: state.AdventureState);
             PureRunSummary summary = CreateSummary(won, PureRunOutcome.BossVictory, party, transactions) with
             { BossDefeated = true, TerminalEncounterId = result.EncounterContentId };
             return new(true, null, null, summary, false);
@@ -191,7 +196,8 @@ public sealed class PureRunSettlementService
                 result.EncounterContentId.Value, target)).ToArray();
         var next = new PureRunState(state.RunId, state.Seed, state.Revision + 1, victoryPhase,
             state.EncounterIndex, state.EncounterContentId, party, backpack, state.BackpackEquipment, progression,
-            transactions, gold, battles, defeated, acquired, mapState: state.MapState);
+            transactions, gold, battles, defeated, acquired, mapState: state.MapState,
+            escortState: state.EscortState, adventureState: state.AdventureState);
         return new(true, null, next, null, false);
     }
 
