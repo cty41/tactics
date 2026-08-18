@@ -3,6 +3,8 @@ using Godot;
 using Tactics.Core.Board;
 using Tactics.Godot.Adapter.Runtime;
 using Tactics.Application.Presentation;
+using Tactics.Core.Content;
+using Tactics.Core.Runs;
 using static GdUnit4.Assertions;
 
 namespace Tactics.Godot.Tests;
@@ -21,6 +23,36 @@ public sealed class IsometricBattleBoardGodotTests
             AssertThat(found).IsTrue();
             AssertThat(actual).IsEqual(expected);
         }
+    }
+
+    [TestCase]
+    public void LegacyIsometricProjectionMatchesBattleProjection()
+    {
+        for (int y = 0; y < 10; y++)
+        for (int x = 0; x < 10; x++)
+            AssertThat(IsometricBattleBoardLayout.GridToScreen(new GridPoint(x, y)))
+                .IsEqual(IsometricGridProjection.GridToScreen(new GridPoint(x, y)));
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public async Task AdventureViewBuildsARealTenByTenTileMapLayerAndSemanticTargets()
+    {
+        var view = new GodotAdventureBoardView();
+        ((SceneTree)Engine.GetMainLoop()).Root.AddChild(view);
+        await view.ToSignal(view.GetTree(), SceneTree.SignalName.ProcessFrame);
+        AdventureBoardDefinition board = AdventureBoard();
+
+        view.SetBoard(board);
+
+        AssertThat(view.TileLayer.GetUsedCells().Count).IsEqual(100);
+        AssertThat(view.TryResolveTarget("AdventureCell", "3,4", out Vector2 cell)).IsTrue();
+        AssertThat(cell).IsEqual(view.CellCenter(new GridPoint(3, 4)));
+        AssertThat(view.TryPointToCell(cell, out GridPoint roundTrip)).IsTrue();
+        AssertThat(roundTrip).IsEqual(new GridPoint(3, 4));
+        AssertThat(view.TryResolveTarget("AdventureActor", "party-mage", out _)).IsTrue();
+        AssertThat(view.TryResolveTarget("AdventureObject", "campfire", out _)).IsTrue();
+        view.QueueFree();
     }
 
     [TestCase]
@@ -227,7 +259,7 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(catalog).IsNotNull();
         if (board is null || catalog is null) return;
         AssertThat(board.TileSize).IsEqual(new Vector2(96, 48));
-        AssertThat(catalog.Entries.Length).IsEqual(160);
+        AssertThat(catalog.Entries.Length).IsEqual(162);
         AssertThat(catalog.Entries.Count(entry => entry.ContentIdValue == "battle-board.pure-run.isometric-v1")).IsEqual(1);
     }
 
@@ -242,7 +274,7 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="fireball").LevelOneHasAreaEffect).IsFalse();
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="bone-spear").MaximumGhosts).IsEqual(2);
         var catalog=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")!;
-        AssertThat(catalog.Entries.Length).IsEqual(160);
+        AssertThat(catalog.Entries.Length).IsEqual(162);
     }
 
     [TestCase]
@@ -255,4 +287,13 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(status.MaximumVisibleStatuses).IsEqual(4);
         AssertThat(catalog.Entries.Any(entry=>entry.ContentIdValue=="presentation.camera.battle-focus-v1")).IsFalse();
     }
+
+    private static AdventureBoardDefinition AdventureBoard() => new(
+        new ContentId("adventure-board.test.camp"), 10, 10,
+        Enumerable.Range(0, 10).SelectMany(value => new[] { new GridPoint(value, 0), new GridPoint(value, 9) })
+            .Concat(Enumerable.Range(1, 8).SelectMany(value => new[] { new GridPoint(0, value), new GridPoint(9, value) }))
+            .Distinct().ToArray(),
+        [new AdventureBoardObject("campfire", AdventureObjectKind.Campfire, new GridPoint(4, 5), true, false)],
+        [new AdventureActorPlacement("party-mage", new GridPoint(2, 5))],
+        new GridPoint(1, 5), new GridPoint(8, 5));
 }

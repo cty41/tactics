@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.FallenAltarGuardianBattle",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:playBattleThroughInput",
+    "action:waitForPlayerObservable",
+    "assertion:adventureObjectStateEquals",
+    "assertion:eventResolutionEquals",
+    "assertion:pendingBattleContextKindEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "layer6-event-ready-v1",
+        "path": "validated://layer6-event-ready-v1",
+        "semanticHash": "81fdf128c8db01120597f18749fec38ce63032bc5f5152b305164cfaa81082ca"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "mapReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_06_event",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "fallen-altar",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "eventBattleReady",
+        "maximumFrames": 300
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureSceneChanged",
+        "maximumFrames": 600
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "eventResolutionEquals",
+      "expected": "FallenAltarGuardianDefeated",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "pendingBattleContextKindEquals",
+      "expected": "None",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "fallen-altar",
+      "expected": "Purified",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 120000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "eventResolutionEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "pendingBattleContextKindEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "fallen-altar",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "layer6-event-ready-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "81fdf128c8db01120597f18749fec38ce63032bc5f5152b305164cfaa81082ca",
+    "path": "validated://layer6-event-ready-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

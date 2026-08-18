@@ -22,7 +22,11 @@ public sealed record EncounterRequest(
     string RunId,
     long CheckpointRevision,
     ContentId EncounterContentId,
-    IReadOnlyList<RunCharacterState> Party);
+    IReadOnlyList<RunCharacterState> Party,
+    long AdventureRevision = 0)
+{
+    public ulong EffectiveRandomState => unchecked((ulong)Math.Max(0, CheckpointRevision - AdventureRevision));
+}
 
 public sealed record RunSessionResult(
     bool Succeeded,
@@ -67,7 +71,7 @@ public sealed class PureRunSessionService
         RunCharacterState[] party = _definition.Party.Take(_definition.ActivePartySize)
             .Select(template => CreateCharacter(template, ResolveStartingSkill(template, seed))).ToArray();
         var run = new PureRunState(runId, seed, expected + 1, PureRunPhase.Ready, 0,
-            _definition.Encounters[0], party);
+            _definition.Encounters[0], party, adventureState: new RunAdventureTransitionService().CreateInitial(party));
         return Save(new PureRunSaveSnapshot(run.Revision, run, null), expected);
     }
 
@@ -99,8 +103,8 @@ public sealed class PureRunSessionService
         if (characterIds.Count != _definition.ActivePartySize ||
             characterIds.Distinct(StringComparer.Ordinal).Count() != _definition.ActivePartySize)
             return Fail("run_setup.party_size_invalid", loaded.Snapshot);
-        string[] selected = _definition.Party.Where(value => characterIds.Contains(value.CharacterId, StringComparer.Ordinal))
-            .Select(value => value.CharacterId).ToArray();
+        HashSet<string> known = _definition.Party.Select(value => value.CharacterId).ToHashSet(StringComparer.Ordinal);
+        string[] selected = characterIds.Where(known.Contains).ToArray();
         if (selected.Length != _definition.ActivePartySize)
             return Fail("run_setup.party_character_invalid", loaded.Snapshot);
         return AdvanceSetup(loaded.Snapshot, BuildPendingSetup(setup.Seed, selected,
@@ -155,7 +159,7 @@ public sealed class PureRunSessionService
             run.EncounterIndex, run.EncounterContentId, run.Party, run.BackpackConsumables,
             run.BackpackEquipment, run.PendingProgression, run.AppliedTransactionKeys,
             run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint,
-            run.MapState, run.NodeTransaction);
+            run.MapState, run.NodeTransaction, run.EscortState, run.AdventureState);
         RunSessionResult saved = Save(new PureRunSaveSnapshot(pending.Revision, pending, loaded.Snapshot.TerminalSummary), run.Revision);
         return saved.Succeeded ? saved with { EncounterRequest = CreateRequest(pending), Diagnostics = diagnostics } : saved;
     }
@@ -292,7 +296,8 @@ public sealed class PureRunSessionService
     }
 
     private static EncounterRequest CreateRequest(PureRunState run) => new(
-        run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, run.Checkpoint.Party);
+        run.RunId, run.Checkpoint!.Revision, run.EncounterContentId, run.Checkpoint.Party,
+        run.AdventureState?.Revision ?? 0);
 
     private static RunCharacterState CreateCharacter(PureRunPartyTemplate template) =>
         CreateCharacter(template, template.StartingSkillContentId);
@@ -311,9 +316,11 @@ public sealed class PureRunSessionService
         IReadOnlyList<PendingRunStartingSkillChoice> existingChoices)
     {
         var choices = existingChoices.ToList();
+        Dictionary<string, PureRunPartyTemplate> byCharacter = _definition.Party
+            .ToDictionary(value => value.CharacterId, StringComparer.Ordinal);
         IReadOnlyList<PureRunPartyTemplate> templates = selectedCharacterIds.Count == 0
             ? Array.Empty<PureRunPartyTemplate>()
-            : _definition.Party.Where(value => selectedCharacterIds.Contains(value.CharacterId, StringComparer.Ordinal)).ToArray();
+            : selectedCharacterIds.Select(value => byCharacter[value]).ToArray();
         while (choices.Count < templates.Count && templates[choices.Count].SeededStartingSkill)
         {
             PureRunPartyTemplate automatic = templates[choices.Count];
@@ -337,7 +344,7 @@ public sealed class PureRunSessionService
             RunCharacterState[] party = templates.Select((value, index) =>
                 CreateCharacter(value, pending.Choices[index].SkillContentId)).ToArray();
             var run = new PureRunState(runId, pending.Seed, revision, PureRunPhase.Ready, 0,
-                _definition.Encounters[0], party);
+                _definition.Encounters[0], party, adventureState: new RunAdventureTransitionService().CreateInitial(party));
             return Save(new PureRunSaveSnapshot(revision, run, null), snapshot.Revision);
         }
         PureRunState? preserved = snapshot.ActiveRun is null ? null : CopyRevision(snapshot.ActiveRun, revision);
@@ -349,7 +356,9 @@ public sealed class PureRunSessionService
         IReadOnlyList<string> selected = setup.SelectedCharacterIds.Count == 0 && _definition.Party.Count == 3
             ? _definition.Party.Select(value => value.CharacterId).ToArray()
             : setup.SelectedCharacterIds;
-        return _definition.Party.Where(value => selected.Contains(value.CharacterId, StringComparer.Ordinal)).ToArray();
+        Dictionary<string, PureRunPartyTemplate> templates = _definition.Party
+            .ToDictionary(value => value.CharacterId, StringComparer.Ordinal);
+        return selected.Select(value => templates[value]).ToArray();
     }
 
     private static ContentId ResolveStartingSkill(PureRunPartyTemplate template, int seed)
@@ -365,7 +374,7 @@ public sealed class PureRunSessionService
         run.RunId, run.Seed, revision, run.Phase, run.EncounterIndex, run.EncounterContentId,
         run.Party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
         run.AppliedTransactionKeys, run.Gold, run.BattlesCompleted, run.EnemiesDefeated,
-        run.AcquiredItems, run.Checkpoint, run.MapState, run.NodeTransaction);
+        run.AcquiredItems, run.Checkpoint, run.MapState, run.NodeTransaction, run.EscortState, run.AdventureState);
 
     private static RunSessionResult Fail(string? code, PureRunSaveSnapshot? snapshot = null) =>
         new(false, code ?? "run.store_failure", snapshot, null);
@@ -419,7 +428,7 @@ public sealed class PureRunSessionService
             var repairedRun = new PureRunState(run.RunId, run.Seed, run.Revision, run.Phase, run.EncounterIndex,
                 run.EncounterContentId, party, run.BackpackConsumables, run.BackpackEquipment, run.PendingProgression,
                 run.AppliedTransactionKeys, run.Gold, run.BattlesCompleted, run.EnemiesDefeated, run.AcquiredItems, checkpoint,
-                mapState, run.NodeTransaction);
+                mapState, run.NodeTransaction, run.EscortState, run.AdventureState);
             diagnostics = new[]
             {
                 repairedLayerFourMap ? "save.layer_four_map_repaired" :

@@ -63,7 +63,8 @@ public sealed class PureRunFullRunService
         var checkpoint = new RunEncounterCheckpoint(encounter, index, revision, state.Party.ToArray(),
             state.BackpackConsumables.ToArray(), state.BackpackEquipment.ToArray());
         PureRunState pending = Copy(state, phase, encounter, index, checkpoint: checkpoint);
-        return new(true, null, pending, new EncounterRequest(state.RunId, revision, encounter, checkpoint.Party));
+        return new(true, null, pending, new EncounterRequest(state.RunId, revision, encounter, checkpoint.Party,
+            pending.AdventureState?.Revision ?? 0));
     }
 
     private static FullRunTransitionResult FromSettlement(PureRunState prior, PureRunSettlementResult result)
@@ -92,5 +93,6 @@ public sealed class PureRunFullRunService
         new(value.RunId, value.Seed, value.Revision + 1, phase, encounterIndex ?? value.EncounterIndex,
             encounter ?? value.EncounterContentId, value.Party, value.BackpackConsumables, value.BackpackEquipment,
             value.PendingProgression, value.AppliedTransactionKeys, value.Gold, value.BattlesCompleted,
-            value.EnemiesDefeated, value.AcquiredItems, checkpoint, map ?? value.MapState, value.NodeTransaction);
+            value.EnemiesDefeated, value.AcquiredItems, checkpoint, map ?? value.MapState, value.NodeTransaction,
+            value.EscortState, value.AdventureState);
 }

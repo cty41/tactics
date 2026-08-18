@@ -133,6 +133,23 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   runtimeStateHashEquals: "UI",
   demonboundCorruptionEquals: "Battle",
   demonboundPossessedEquals: "Battle",
+  adventureActorCellEquals: "Map",
+  activeAdventureLeaderEquals: "Map",
+  runNodeLifecycleEquals: "Map",
+  routeCandidateNodeIdsEqual: "Map",
+  adventureObjectStateEquals: "Map",
+  storeOfferCountEquals: "Map",
+  storeSoldOfferCountEquals: "Map",
+  backpackContainsContentId: "Map",
+  eventResolutionEquals: "Map",
+  pendingBattleContextKindEquals: "Map",
+  escortStateEquals: "Map",
+  protectedNpcAliveEquals: "Map",
+  runSaveSchemaVersionEquals: "Map",
+  pendingPartyOrderEquals: "Map",
+  activePartyStartingSkillIdsEqual: "Map",
+  partyAllLivingAtFullResourcesEquals: "Map",
+  partyResourceSummaryEquals: "Map",
   runtimeHasNoErrors: "UI",
   // Skill 独占断言
   executionStateEquals: "Skill",
@@ -311,7 +328,15 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
     } : undefined;
     const plan = {
       schemaVersion: spec.assertions.some(assertion => assertion.kind === "demonboundCorruptionEquals" ||
-        assertion.kind === "demonboundPossessedEquals") ? 3 as const : 2 as const,
+        assertion.kind === "demonboundPossessedEquals" || assertion.kind.startsWith("adventure") ||
+        assertion.kind === "activeAdventureLeaderEquals" || assertion.kind === "runNodeLifecycleEquals" ||
+        assertion.kind === "routeCandidateNodeIdsEqual" || assertion.kind === "storeOfferCountEquals" ||
+        assertion.kind === "storeSoldOfferCountEquals" || assertion.kind === "backpackContainsContentId" ||
+        assertion.kind === "eventResolutionEquals" || assertion.kind === "pendingBattleContextKindEquals" ||
+        assertion.kind === "escortStateEquals" || assertion.kind === "protectedNpcAliveEquals" ||
+        assertion.kind === "runSaveSchemaVersionEquals" || assertion.kind === "pendingPartyOrderEquals" ||
+        assertion.kind === "activePartyStartingSkillIdsEqual" || assertion.kind === "partyAllLivingAtFullResourcesEquals" ||
+        assertion.kind === "partyResourceSummaryEquals") ? 3 as const : 2 as const,
       runtime: "Godot" as const,
       scenarioName: `${spec.feature}.${spec.scenario}`,
       requiredAdapters: spec.requiredAdapters,

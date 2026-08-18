@@ -51,7 +51,17 @@ internal static class RunSaveNormalizer
         {
             Party = state.Checkpoint.Party.Select(Normalize).ToArray()
         },
-        Normalize(state.MapState), state.NodeTransaction);
+        Normalize(state.MapState), state.NodeTransaction, state.EscortState, Normalize(state.AdventureState));
+
+    private static RunAdventureState? Normalize(RunAdventureState? state) => state is null ? null : state with
+    {
+        LeaderId = state.LeaderId.Trim(),
+        ActorCells = state.ActorCells.OrderBy(value => value.ActorId, StringComparer.Ordinal).ToArray(),
+        PendingEventNodeId = NullIfWhiteSpace(state.PendingEventNodeId),
+        PendingEventObjectId = NullIfWhiteSpace(state.PendingEventObjectId)
+    };
+
+    private static string? NullIfWhiteSpace(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static RunCharacterState Normalize(RunCharacterState character) => new(
         character.CharacterId,

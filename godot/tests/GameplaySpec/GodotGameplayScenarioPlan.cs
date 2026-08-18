@@ -92,15 +92,18 @@ public sealed record GodotGameplayScenarioPlan(
         {
             case "movePointerToTarget" or "clickPointerTarget" or "rightClickPointerTarget":
                 string kind = HasString("targetKind") ? step.Parameters["targetKind"].GetString()! : "UiElement";
-                if (kind is not ("UiElement" or "MapNode" or "BattleUnit" or "BattleCell") ||
-                    string.IsNullOrWhiteSpace(step.Target) && !new[] { "elementName", "nodeId", "unitId", "cell" }.Any(HasString))
+                if (kind is not ("UiElement" or "MapNode" or "BattleUnit" or "BattleCell" or
+                    "AdventureCell" or "AdventureActor" or "AdventureObject" or "RouteNode") ||
+                    string.IsNullOrWhiteSpace(step.Target) && !new[] { "elementName", "nodeId", "unitId", "actorId", "objectId", "routeNodeId", "cell" }.Any(HasString))
                     throw new InvalidDataException($"{step.Kind} has an invalid pointer target.");
                 break;
             case "pressInputKey" when !HasString("key"):
                 throw new InvalidDataException("pressInputKey requires key.");
             case "waitForPlayerObservable":
                 if (!HasString("observable") || step.Parameters["observable"].GetString() is not
-                    ("uiElement" or "uiVisible" or "uiHidden" or "mapReady" or "battleReady" or "humanTurn" or "battleEnded"))
+                    ("uiElement" or "uiVisible" or "uiHidden" or "mapReady" or "battleReady" or "humanTurn" or "battleEnded" or
+                     "adventureBoardReady" or "adventureLeaderChanged" or "adventureInteractionResolved" or "routeCommitted" or
+                     "eventBattleReady" or "adventureSceneChanged"))
                     throw new InvalidDataException("waitForPlayerObservable has an invalid observable.");
                 string observable = step.Parameters["observable"].GetString()!;
                 if (observable == "uiElement" && string.IsNullOrWhiteSpace(step.Target) && !HasString("elementName") ||
@@ -138,10 +141,17 @@ public sealed record GodotGameplayScenarioPlan(
         {
             "inventoryProjectionEnteredBattle" or "activeRunExistsEquals" or "runtimeHasNoErrors" or
                 "productionSaveUnchanged" => kind is JsonValueKind.True or JsonValueKind.False,
-            "presentationNodeCountEquals" or "checkpointRevisionEquals" => kind == JsonValueKind.Number,
+            "presentationNodeCountEquals" or "checkpointRevisionEquals" or "storeOfferCountEquals" or
+                "storeSoldOfferCountEquals" or "runSaveSchemaVersionEquals" => kind == JsonValueKind.Number,
             "demonboundCorruptionEquals" => kind == JsonValueKind.Number && !string.IsNullOrWhiteSpace(assertion.Target),
             "demonboundPossessedEquals" => kind is JsonValueKind.True or JsonValueKind.False && !string.IsNullOrWhiteSpace(assertion.Target),
-            "terminalSummaryOutcomeEquals" or "presentationNumberEquals" or "runtimeStateHashEquals" => kind == JsonValueKind.String,
+            "terminalSummaryOutcomeEquals" or "presentationNumberEquals" or "runtimeStateHashEquals" or
+                "adventureActorCellEquals" or "activeAdventureLeaderEquals" or "runNodeLifecycleEquals" or
+                "adventureObjectStateEquals" or "eventResolutionEquals" or "pendingBattleContextKindEquals" or
+                "escortStateEquals" => kind == JsonValueKind.String,
+            "routeCandidateNodeIdsEqual" or "pendingPartyOrderEquals" or "activePartyStartingSkillIdsEqual" or "partyResourceSummaryEquals" => kind == JsonValueKind.Array &&
+                assertion.Expected.EnumerateArray().All(value => value.ValueKind == JsonValueKind.String),
+            "backpackContainsContentId" or "protectedNpcAliveEquals" or "partyAllLivingAtFullResourcesEquals" => kind is JsonValueKind.True or JsonValueKind.False,
             _ => false
         };
         if (!valid) throw new InvalidDataException($"Assertion '{assertion.Kind}' has an invalid expected value.");
@@ -171,6 +181,17 @@ internal static class GodotGameplayCapabilities
         ["assertion:presentationNodeCountEquals"] = "UI", ["assertion:productionSaveUnchanged"] = "Map",
         ["assertion:checkpointRevisionEquals"] = "Map", ["assertion:runtimeStateHashEquals"] = "UI",
         ["assertion:demonboundCorruptionEquals"] = "Battle", ["assertion:demonboundPossessedEquals"] = "Battle",
+        ["assertion:adventureActorCellEquals"] = "Map", ["assertion:activeAdventureLeaderEquals"] = "Map",
+        ["assertion:runNodeLifecycleEquals"] = "Map", ["assertion:routeCandidateNodeIdsEqual"] = "Map",
+        ["assertion:adventureObjectStateEquals"] = "Map", ["assertion:storeOfferCountEquals"] = "Map",
+        ["assertion:storeSoldOfferCountEquals"] = "Map", ["assertion:backpackContainsContentId"] = "Map",
+        ["assertion:eventResolutionEquals"] = "Map", ["assertion:pendingBattleContextKindEquals"] = "Map",
+        ["assertion:escortStateEquals"] = "Map", ["assertion:protectedNpcAliveEquals"] = "Map",
+        ["assertion:runSaveSchemaVersionEquals"] = "Map",
+        ["assertion:pendingPartyOrderEquals"] = "Map",
+        ["assertion:activePartyStartingSkillIdsEqual"] = "Map",
+        ["assertion:partyAllLivingAtFullResourcesEquals"] = "Map",
+        ["assertion:partyResourceSummaryEquals"] = "Map",
         ["assertion:runtimeHasNoErrors"] = "UI"
     };
     public static string? AdapterFor(string phase, string kind) => Adapters.GetValueOrDefault($"{phase}:{kind}");

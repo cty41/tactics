@@ -38,6 +38,23 @@ const godotAssertionKinds = new Set([
   "runtimeStateHashEquals",
   "demonboundCorruptionEquals",
   "demonboundPossessedEquals",
+  "adventureActorCellEquals",
+  "activeAdventureLeaderEquals",
+  "runNodeLifecycleEquals",
+  "routeCandidateNodeIdsEqual",
+  "adventureObjectStateEquals",
+  "storeOfferCountEquals",
+  "storeSoldOfferCountEquals",
+  "backpackContainsContentId",
+  "eventResolutionEquals",
+  "pendingBattleContextKindEquals",
+  "escortStateEquals",
+  "protectedNpcAliveEquals",
+  "runSaveSchemaVersionEquals",
+  "pendingPartyOrderEquals",
+  "activePartyStartingSkillIdsEqual",
+  "partyAllLivingAtFullResourcesEquals",
+  "partyResourceSummaryEquals",
   "runtimeHasNoErrors"
 ]);
 

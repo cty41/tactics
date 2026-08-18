@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.TwoGroupRouteCommit",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:waitForPlayerObservable",
+    "assertion:adventureObjectStateEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:routeCandidateNodeIdsEqual",
+    "assertion:runNodeLifecycleEquals",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput"
+  ],
+  "setupActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "target": "New Run",
+      "parameters": {
+        "observable": "uiElement",
+        "elementName": "New Run",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "New Run",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_amazon",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_demonbound",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "pure_run_mage",
+      "parameters": {
+        "targetKind": "AdventureActor"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "start-exit",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "starting_skill__skill_amazon_thrust_lv1",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "starting_skill__skill_mage_fireball_lv1",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "7,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-overview",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureSceneChanged",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-a-store",
+      "parameters": {
+        "targetKind": "RouteNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-b-event",
+      "parameters": {
+        "targetKind": "RouteNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "route-submit",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "routeCommitted",
+        "maximumFrames": 180
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "runNodeLifecycleEquals",
+      "expected": "RouteCommitted",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "routeCandidateNodeIdsEqual",
+      "expected": [
+        "route-a-store",
+        "route-b-event"
+      ],
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "route-submit",
+      "expected": "Committed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "route-depart",
+      "expected": "Ready",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "runNodeLifecycleEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "routeCandidateNodeIdsEqual",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "route-submit",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "route-depart",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

@@ -1,4 +1,5 @@
 using Tactics.Application.Runs;
+using Tactics.Core.Board;
 using Tactics.Core.Content;
 using Tactics.Core.Items;
 using Tactics.Core.Runs;
@@ -21,8 +22,92 @@ public static class GodotGameplayCheckpointCatalog
             amazonStartingSkill: new ContentId("skill.amazon.combat-techniques.lv1"), battleRandomState: 2),
         "reload-pending-battle-v1" => PendingBattle(id, character => character),
         "demonbound-ready-v1" => DemonboundPendingBattle(id),
+        "layer4-choice-ready-v1" => LayerFourChoice(id, damaged: true),
+        "layer4-event-ready-v1" => LayerFourChoice(id, damaged: false),
+        "layer6-event-ready-v1" => LayerSixChoice(id),
+        "layer6-escort-ready-v1" => LayerSixEscort(id),
         _ => throw new InvalidDataException("Unknown validated Godot checkpoint: " + id)
     };
+
+    private static ValidatedGodotRunCheckpoint LayerSixEscort(string id)
+    {
+        PureRunState source = LayerSixChoice("layer6-escort-source").Snapshot.ActiveRun!;
+        var service = new PureRunEscortService();
+        RunEscortTransition accepted = service.Accept(source, "escort.lost-villager.v1",
+            "layer_04_event", "layer_06_event");
+        Require(accepted.Succeeded, accepted.RejectionCode);
+        RunEscortTransition traveling = service.BeginTravel(accepted.State);
+        Require(traveling.Succeeded, traveling.RejectionCode);
+        return ValidatedGodotRunCheckpoint.Create(id, "validated://" + id,
+            new PureRunSaveSnapshot(traveling.State.Revision, traveling.State, null));
+    }
+
+    private static ValidatedGodotRunCheckpoint LayerSixChoice(string id)
+    {
+        (_, MemoryRunStore store, _) = ReadyRun();
+        PureRunState source = store.Snapshot!.ActiveRun!;
+        RunCharacterState[] party = source.Party.Select(character => new RunCharacterState(
+            character.CharacterId, character.UnitContentId, 10, new UnitAttributes(50, 50, 50, 50, 50, 50),
+            200, 200, 100, 100, false, character.LearnedSkills, character.Equipment,
+            character.CarriedConsumables, character.LearnedSkillStates, character.StartingSkillContentId)).ToArray();
+        PureRunMapDefinition map = AdventureMap();
+        PureRunMapState mapState = new PureRunMapService(map)
+            .UnlockLayerSix(new PureRunMapService(map).UnlockLayerFour(source.Seed), source.Seed);
+        var run = new PureRunState(source.RunId, source.Seed, source.Revision + 1,
+            PureRunPhase.AwaitingLayerSixChoice, 5, new ContentId("encounter.pure-run.n5"), party,
+            source.BackpackConsumables, source.BackpackEquipment, source.PendingProgression,
+            source.AppliedTransactionKeys, 50, 5, source.EnemiesDefeated, source.AcquiredItems,
+            mapState: mapState, adventureState: MapAdventure(source.AdventureState!, party, map.ContentId));
+        return ValidatedGodotRunCheckpoint.Create(id, "validated://" + id,
+            new PureRunSaveSnapshot(run.Revision, run, null));
+    }
+
+    private static PureRunMapDefinition AdventureMap() => new(new ContentId("run-map.pure-run.layer4-v1"), 3,
+    [
+        new("layer_04_battle", 4, PureRunNodeKind.Battle, new ContentId("encounter.pure-run.n4")),
+        new("layer_04_rest", 4, PureRunNodeKind.Rest, new ContentId("rest.pure-run.standard-v1")),
+        new("layer_04_store", 4, PureRunNodeKind.Store, new ContentId("store.pure-run.standard-v1")),
+        new("layer_04_event", 4, PureRunNodeKind.Mystery, new ContentId("event.pure-run.cursed-chest")),
+        new("layer_04_treasure", 4, PureRunNodeKind.Treasure, new ContentId("treasure.pure-run.standard-v1")),
+        new("layer_06_battle", 6, PureRunNodeKind.Battle, new ContentId("encounter.pure-run.e1")),
+        new("layer_06_rest", 6, PureRunNodeKind.Rest, new ContentId("rest.pure-run.standard-v1")),
+        new("layer_06_store", 6, PureRunNodeKind.Store, new ContentId("store.pure-run.standard-v1")),
+        new("layer_06_event", 6, PureRunNodeKind.Mystery, new ContentId("event.pure-run.fallen-altar")),
+        new("layer_06_treasure", 6, PureRunNodeKind.Treasure, new ContentId("treasure.pure-run.standard-v1"))
+    ]);
+
+    private static ValidatedGodotRunCheckpoint LayerFourChoice(string id, bool damaged)
+    {
+        (_, MemoryRunStore store, _) = ReadyRun();
+        PureRunState source = store.Snapshot!.ActiveRun!;
+        RunCharacterState[] party = source.Party.Select(character => damaged
+            ? Copy(character, health: Math.Max(1, character.MaxHealth / 3), mana: 0)
+            : new RunCharacterState(character.CharacterId, character.UnitContentId, 10,
+                new UnitAttributes(50, 50, 50, 50, 50, 50), 200, 200, 100, 100, false,
+                character.LearnedSkills, character.Equipment, character.CarriedConsumables,
+                character.LearnedSkillStates, character.StartingSkillContentId)).ToArray();
+        var run = new PureRunState(source.RunId, source.Seed, source.Revision + 1,
+            PureRunPhase.AwaitingLayerFourChoice, 3, new ContentId("encounter.pure-run.n3"), party,
+            source.BackpackConsumables, source.BackpackEquipment, source.PendingProgression,
+            source.AppliedTransactionKeys, 50, 3, source.EnemiesDefeated, source.AcquiredItems,
+            adventureState: MapAdventure(source.AdventureState!, party, AdventureMap().ContentId));
+        return ValidatedGodotRunCheckpoint.Create(id, "validated://" + id,
+            new PureRunSaveSnapshot(run.Revision, run, null));
+    }
+
+    private static RunAdventureState MapAdventure(RunAdventureState state, IReadOnlyList<RunCharacterState> party, ContentId boardId)
+    {
+        GridPoint[] cells = [new(2, 5), new(1, 4), new(1, 6)];
+        return state with
+        {
+            Lifecycle = RunAdventureLifecycle.MapActive,
+            BoardContentId = boardId,
+            LeaderId = party[0].CharacterId,
+            ActorCells = party.Select((member, index) => new RunAdventureActorCell(member.CharacterId, cells[index])).ToArray(),
+            SceneRevision = state.SceneRevision + 1,
+            Revision = state.Revision + 1
+        };
+    }
 
     private static ValidatedGodotRunCheckpoint DemonboundPendingBattle(string id)
     {

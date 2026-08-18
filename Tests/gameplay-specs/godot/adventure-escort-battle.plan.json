@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.LostVillagerEscortBattle",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:playBattleThroughInput",
+    "action:restartGodotMain",
+    "action:waitForPlayerObservable",
+    "assertion:adventureObjectStateEquals",
+    "assertion:escortStateEquals",
+    "assertion:eventResolutionEquals",
+    "assertion:productionSaveUnchanged",
+    "assertion:protectedNpcAliveEquals",
+    "assertion:runSaveSchemaVersionEquals",
+    "assertion:runtimeHasNoErrors",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "layer6-escort-ready-v1",
+        "path": "validated://layer6-escort-ready-v1",
+        "semanticHash": "be224262f4ab5fa41a48b27bcec5ccf1684d6d199c00f17abc992e57c27a467c"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "UI",
+      "kind": "restartGodotMain",
+      "parameters": {}
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "mapReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_06_event",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "lost-villager",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "eventBattleReady",
+        "maximumFrames": 300
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "playBattleThroughInput",
+      "parameters": {
+        "maximumActions": 100
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureSceneChanged",
+        "maximumFrames": 600
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "escortStateEquals",
+      "expected": "Completed",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "protectedNpcAliveEquals",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "eventResolutionEquals",
+      "expected": "EscortCompleted",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "lost-villager",
+      "expected": "Safe",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "runSaveSchemaVersionEquals",
+      "expected": 9,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 120000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "escortStateEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "protectedNpcAliveEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "eventResolutionEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "lost-villager",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "runSaveSchemaVersionEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "layer6-escort-ready-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "be224262f4ab5fa41a48b27bcec5ccf1684d6d199c00f17abc992e57c27a467c",
+    "path": "validated://layer6-escort-ready-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}

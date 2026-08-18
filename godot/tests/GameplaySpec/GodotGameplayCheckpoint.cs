@@ -23,13 +23,13 @@ public sealed class ValidatedGodotRunCheckpoint
 
     public static ValidatedGodotRunCheckpoint Create(string id, string path, PureRunSaveSnapshot snapshot)
     {
-        string encoded = RunSaveDocumentV6.Encode(snapshot);
+        string encoded = RunSaveDocumentV9.Encode(snapshot);
         string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(encoded))).ToLowerInvariant();
         return new ValidatedGodotRunCheckpoint(id, path, hash, snapshot);
     }
 
     public bool Verify() => string.Equals(SemanticHash,
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(RunSaveDocumentV6.Encode(Snapshot)))).ToLowerInvariant(),
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(RunSaveDocumentV9.Encode(Snapshot)))).ToLowerInvariant(),
         StringComparison.Ordinal);
 }
 
@@ -52,7 +52,7 @@ public sealed class GodotGameplayIsolatedRunStore : IRunSaveStore
         {
             string absolute = ProjectSettings.GlobalizePath(SavePath);
             Directory.CreateDirectory(Path.GetDirectoryName(absolute)!);
-            File.WriteAllText(absolute, RunSaveDocumentV7.Encode(initial), Encoding.UTF8);
+            File.WriteAllText(absolute, RunSaveDocumentV9.Encode(initial), Encoding.UTF8);
             RunStoreResult seed = _inner.Load();
             if (!seed.Succeeded || seed.Snapshot?.Revision != initial.Revision)
                 throw new InvalidOperationException("Unable to seed isolated checkpoint: " + seed.ErrorCode);

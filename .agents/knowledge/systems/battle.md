@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-18T09:11:43+08:00"
+timestamp: "2026-08-18T17:50:32+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -22,7 +22,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:6d413d625a4324c5f0983e66becb0a60ea14dad6555a2968b3a43b828cee50c6
+source_fingerprint: sha256:a0597a48879eacca8612e0dcaf49441f77977267f00af2a83dad5373b6b6061e
 ---
 
 # Current State
@@ -45,6 +45,8 @@ AI 和真实 Transition 必须复用 Core 规则；表现 cue、Tween、伤害�
 历史事实；`contract-decisions.json` 显式记录它已被当前 Godot 合同替代，不能再约束当前 Core 行为。
 
 ## Battle Runtime
+
+Adventure 事件战的随机状态会从 checkpoint revision 中扣除 Adventure 专属 revision，确保领队移动、路线点击和场景切换不会改变相同 run seed 的战斗序列。护送 NPC 的生命值读取正式 UnitDefinition 派生值，不再使用硬编码 12 HP；其存活、团灭与事件失败仍由现有 Protected NPC 胜负规则裁决。
 
 战斗命令失败时保持源状态并发出稳定 rejection；成功状态在表现事件消费前已经完整。技能次数、Mana、移动、
 状态触发、召唤上限、尸体消费、长矛和战后结果均由 Core/Application 事务维护。Godot 只消费 Snapshot 和事件，

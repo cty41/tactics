@@ -33,8 +33,8 @@ public sealed class PureRunSessionServiceTests
 
         Assert.That(service.BeginNewRunSetup(seed).Succeeded, Is.True);
         Assert.That(service.ChooseParty(party).Succeeded, Is.True);
-        foreach (PureRunPartyTemplate template in definition.Party.Where(value =>
-                     party.Contains(value.CharacterId, StringComparer.Ordinal) && value.CharacterId != "demonbound"))
+        Dictionary<string, PureRunPartyTemplate> templates = definition.Party.ToDictionary(value => value.CharacterId, StringComparer.Ordinal);
+        foreach (PureRunPartyTemplate template in party.Select(value => templates[value]).Where(value => value.CharacterId != "demonbound"))
         {
             Assert.That(service.ChooseStartingSkill(template.CharacterId, template.StartingSkillContentId).Succeeded,
                 Is.True);
@@ -76,19 +76,19 @@ public sealed class PureRunSessionServiceTests
         {
             Assert.That(selected.Succeeded, Is.True);
             Assert.That(selected.Snapshot!.PendingRunSetup!.SelectedCharacterIds,
-                Is.EqualTo(new[] { "mage", "amazon", "demonbound" }));
-            Assert.That(selected.Snapshot.PendingRunSetup.CurrentCharacterId, Is.EqualTo("mage"));
+                Is.EqualTo(new[] { "amazon", "demonbound", "mage" }));
+            Assert.That(selected.Snapshot.PendingRunSetup.CurrentCharacterId, Is.EqualTo("amazon"));
         });
 
+        Assert.That(service.ChooseStartingSkill("amazon", new ContentId("skill.poison-spear.lv1")).Succeeded, Is.True);
         Assert.That(service.ChooseStartingSkill("mage", new ContentId("skill.mage.fireball.lv1")).Succeeded, Is.True);
-        Assert.That(service.ChooseStartingSkill("amazon", new ContentId("skill.amazon.thrust.lv1")).Succeeded, Is.True);
         PureRunSaveSnapshot completed = store.Snapshot!;
         RunCharacterState demonbound = completed.ActiveRun!.Party.Single(value => value.CharacterId == "demonbound");
         Assert.Multiple(() =>
         {
             Assert.That(completed.PendingRunSetup, Is.Null);
             Assert.That(completed.ActiveRun.Party.Select(value => value.CharacterId),
-                Is.EqualTo(new[] { "mage", "amazon", "demonbound" }));
+                Is.EqualTo(new[] { "amazon", "demonbound", "mage" }));
             Assert.That(demonbound.LearnedSkills, Does.Contain(new ContentId("skill.demonbound.meditation")));
             Assert.That(demonbound.StartingSkillContentId,
                 Is.AnyOf(new ContentId("skill.demonbound.bane.lv1"),

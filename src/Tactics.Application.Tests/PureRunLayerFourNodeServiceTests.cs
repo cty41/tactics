@@ -77,6 +77,22 @@ public sealed class PureRunLayerFourNodeServiceTests
     }
 
     [Test]
+    public void MysteryNodeCanBeginAnEventBattleWithoutChangingItsTransactionKind()
+    {
+        PureRunState run = Select(CreateRun(), "layer_04_event").State;
+
+        LayerFourNodeResolution begun = _service.BeginEventBattle(run, new ContentId("encounter.pure-run.n4"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(begun.Succeeded, Is.True);
+            Assert.That(begun.State.Phase, Is.EqualTo(PureRunPhase.PendingBattle));
+            Assert.That(begun.State.NodeTransaction!.Kind, Is.EqualTo(PureRunNodeKind.Mystery));
+            Assert.That(begun.State.Checkpoint!.EncounterContentId, Is.EqualTo(new ContentId("encounter.pure-run.n4")));
+        });
+    }
+
+    [Test]
     public void MysteryAdjudicator_IsChosenOnceFromLivingPartyAndReusedAcrossOptions()
     {
         PureRunState run = Select(CreateRun(), "layer_04_event").State;

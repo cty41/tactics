@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Tactics.Core.Content;
+using Tactics.Core.Board;
 using Tactics.Core.Items;
 using Tactics.Core.Units;
 
@@ -84,6 +85,7 @@ public static class RunSaveDocumentV1
         options.Converters.Add(new ContentIdJsonConverter());
         options.Converters.Add(new ItemInstanceIdJsonConverter());
         options.Converters.Add(new UnitAttributesJsonConverter());
+        options.Converters.Add(new GridPointJsonConverter());
         return options;
     }
 
@@ -144,6 +146,28 @@ public static class RunSaveDocumentV1
             writer.WriteStartObject(); writer.WriteNumber("strength", value.Strength); writer.WriteNumber("agility", value.Agility);
             writer.WriteNumber("constitution", value.Constitution); writer.WriteNumber("intelligence", value.Intelligence);
             writer.WriteNumber("charisma", value.Charisma); writer.WriteNumber("luck", value.Luck); writer.WriteEndObject();
+        }
+    }
+
+    private sealed class GridPointJsonConverter : JsonConverter<GridPoint>
+    {
+        public override GridPoint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            using JsonDocument document = JsonDocument.ParseValue(ref reader);
+            JsonElement root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Count() != 2 ||
+                !root.TryGetProperty("x", out JsonElement x) || !x.TryGetInt32(out int xValue) ||
+                !root.TryGetProperty("y", out JsonElement y) || !y.TryGetInt32(out int yValue))
+                throw new JsonException("GridPoint must contain exactly x and y integers.");
+            return new GridPoint(xValue, yValue);
+        }
+
+        public override void Write(Utf8JsonWriter writer, GridPoint value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("x", value.X);
+            writer.WriteNumber("y", value.Y);
+            writer.WriteEndObject();
         }
     }
 }

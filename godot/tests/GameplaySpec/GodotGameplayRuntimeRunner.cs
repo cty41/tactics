@@ -6,6 +6,8 @@ using Tactics.Application.Battle;
 using Tactics.Application.Runs;
 using Tactics.Godot.Adapter.Runtime;
 using Tactics.Core.Board;
+using Tactics.Core.Skills;
+using Tactics.Core.Units;
 
 namespace Tactics.Godot.Tests.GameplaySpec;
 
@@ -47,25 +49,16 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
     public async Task ExecuteAsync(GodotGameplayRuntimeContext context, CancellationToken cancellationToken)
     {
         int actions = 0;
-        while (!context.IsTerminal && actions < maximumActions)
+        while (context.HasActiveBattle && !context.IsTerminal && !context.IsAdventureEventResolved && actions < maximumActions)
         {
             if (context.IsTerminalPending || !context.CanSubmitPlayerInput)
             {
                 await context.WaitForAutomaticProgressAsync(cancellationToken);
                 continue;
             }
-            BattleUiSnapshot snapshot = context.Main.CaptureTestProbe().BattleSnapshot!;
+            BattleUiSnapshot snapshot = context.Main.CaptureVisibleBattleSnapshot()!;
             if (await TryUseFirstSkillAsync(context, snapshot, cancellationToken))
             {
-                actions++;
-                await context.WaitUntilPlayerReadyOrTerminalAsync(cancellationToken);
-                continue;
-            }
-            if (snapshot.MoveAvailability.IsAvailable && snapshot.LegalMoveCells.Count > 0)
-            {
-                await context.ClickPointerAsync("Move", Parameters(("targetKind", "UiElement")), cancellationToken);
-                GridPoint cell = snapshot.LegalMoveCells.OrderBy(value => value.Y).ThenBy(value => value.X).First();
-                await context.ClickPointerAsync($"{cell.X},{cell.Y}", Parameters(("targetKind", "BattleCell")), cancellationToken);
                 actions++;
                 await context.WaitUntilPlayerReadyOrTerminalAsync(cancellationToken);
                 continue;
@@ -73,23 +66,59 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
             await context.PressKeyAsync(Key.Enter, cancellationToken);
             actions++;
         }
-        if (!context.IsTerminal)
-            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress, "battle_action_limit");
+        if (context.HasActiveBattle && !context.IsTerminal && !context.IsAdventureEventResolved)
+        {
+            BattleUiSnapshot? final = context.Main.CaptureTestProbe().BattleSnapshot;
+            string units = final is null ? "none" : string.Join(",", final.Units.Where(value => value.IsAlive)
+                .Select(value => $"{value.UnitId.Value}@{value.Cell}:{value.CurrentHealth}/{value.MaxHealth}:p{value.PlayerNumber}"));
+            string skills = final is null ? "none" : string.Join(",", final.SkillAvailability?.Select(value =>
+                $"{value.SkillId.Value}:{value.IsAvailable}:{value.FailureCode ?? "ok"}") ?? []);
+            string targets = final is null ? "none" : string.Join(",", final.LegalTargets.Select(value =>
+                $"{value.SkillId.Value}@{value.Cell}:{value.UnitId?.Value ?? "cell"}"));
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
+                $"battle_action_limit:round={final?.Round.ToString() ?? "none"}:active={final?.ActiveUnitId.Value ?? "none"}:units={units}:skills={skills}:targets={targets}");
+        }
     }
 
     private static async Task<bool> TryUseFirstSkillAsync(GodotGameplayRuntimeContext context,
         BattleUiSnapshot snapshot, CancellationToken cancellationToken)
     {
-        BattleUiSkillAvailability? availability = snapshot.SkillAvailability?.FirstOrDefault(value => value.IsAvailable &&
-                snapshot.LegalTargets.Any(target => target.SkillId == value.SkillId));
-        if (availability is null) return false;
-        await context.ClickPointerAsync("SkillAction_" + availability.SkillId.Value.Replace('.', '_'),
-            Parameters(("targetKind", "UiElement")), cancellationToken);
-        BattleUiTarget target = context.Main.CaptureTestProbe().BattleSnapshot!.LegalTargets
-            .First(value => value.SkillId == availability.SkillId);
-        await context.ClickPointerAsync($"{target.Cell.X},{target.Cell.Y}",
-            Parameters(("targetKind", "BattleCell")), cancellationToken);
-        return true;
+        BattleUiUnitSnapshot active = snapshot.Units.Single(value => value.UnitId == snapshot.ActiveUnitId);
+        HashSet<UnitInstanceId> enemyIds = snapshot.Units.Where(value => value.IsAlive && value.PlayerNumber != active.PlayerNumber)
+            .Select(value => value.UnitId).ToHashSet();
+        BattleUiTarget? selectedTarget = snapshot.TargetingMode == BattleTargetingMode.Skill
+            ? snapshot.LegalTargets.FirstOrDefault(value => value.SkillId == snapshot.SelectedSkillId &&
+                (value.UnitId is UnitInstanceId id && enemyIds.Contains(id) ||
+                 snapshot.Units.Any(unit => unit.IsAlive && enemyIds.Contains(unit.UnitId) && unit.Cell == value.Cell)))
+            : null;
+        if (selectedTarget is not null)
+        {
+            await context.ClickPointerAsync($"{selectedTarget.Cell.X},{selectedTarget.Cell.Y}",
+                Parameters(("targetKind", "BattleCell")), cancellationToken);
+            return true;
+        }
+        foreach (BattleUiSkillAvailability availability in snapshot.SkillAvailability?.Where(value => value.IsAvailable &&
+                     snapshot.ActiveSkills.Any(skill => skill.ContentId == value.SkillId && !skill.Hidden && !skill.IsPassive &&
+                         skill.ExecutionKind != SkillExecutionKind.Meditation) &&
+                     snapshot.LegalTargets.Any(target => target.SkillId == value.SkillId &&
+                         (target.UnitId is UnitInstanceId targetId && enemyIds.Contains(targetId) ||
+                          snapshot.Units.Any(unit => unit.IsAlive && enemyIds.Contains(unit.UnitId) && unit.Cell == target.Cell)))) ?? [])
+        {
+            await context.ClickPointerAsync("SkillAction_" + availability.SkillId.Value.Replace('.', '_'),
+                Parameters(("targetKind", "UiElement")), cancellationToken);
+            BattleUiSnapshot targeted = context.Main.CaptureTestProbe().BattleSnapshot!;
+            BattleUiTarget? target = targeted.LegalTargets.FirstOrDefault(value => value.SkillId == availability.SkillId &&
+                (value.UnitId is UnitInstanceId id && enemyIds.Contains(id) ||
+                 targeted.Units.Any(unit => unit.IsAlive && enemyIds.Contains(unit.UnitId) && unit.Cell == value.Cell)));
+            if (target is not null)
+            {
+                await context.ClickPointerAsync($"{target.Cell.X},{target.Cell.Y}",
+                    Parameters(("targetKind", "BattleCell")), cancellationToken);
+                return true;
+            }
+            await context.PressKeyAsync(Key.Escape, cancellationToken);
+        }
+        return false;
     }
 
     private static Dictionary<string, JsonElement> Parameters(params (string Key, object Value)[] values) =>
@@ -181,7 +210,10 @@ public sealed class GodotGameplayRuntimeRunner
         string phase, int ordinal, List<GodotGameplayTraceEntry> trace, CancellationToken scenarioToken)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(scenarioToken);
-        timeout.CancelAfter(context.Plan.Watchdog.StepTimeoutMs);
+        int stepTimeout = step.Kind == "playBattleThroughInput"
+            ? Math.Max(context.Plan.Watchdog.StepTimeoutMs, 120_000)
+            : context.Plan.Watchdog.StepTimeoutMs;
+        timeout.CancelAfter(stepTimeout);
         ulong started = Time.GetTicksMsec();
         try
         {
@@ -208,7 +240,14 @@ public sealed class GodotGameplayRuntimeRunner
         }
         catch (OperationCanceledException) when (!scenarioToken.IsCancellationRequested)
         {
-            string diagnostic = $"step.timeout:{ordinal}:{step.Kind}";
+            GodotPlayableRunProbe probe = context.Main.CaptureTestProbe();
+            BattleUiSnapshot? current = probe.BattleSnapshot;
+            BattleUiSnapshot? visible = context.Main.CaptureVisibleBattleSnapshot();
+            string diagnostic = $"step.timeout:{ordinal}:{step.Kind}:page={probe.PageTitle}:round={current?.Round.ToString() ?? "none"}" +
+                $":active={current?.ActiveUnitId.Value ?? "none"}:phase={current?.Phase.ToString() ?? "none"}" +
+                $":targeting={current?.TargetingMode.ToString() ?? "none"}:visibleActive={visible?.ActiveUnitId.Value ?? "none"}" +
+                $":visiblePhase={visible?.Phase.ToString() ?? "none"}:visibleTargeting={visible?.TargetingMode.ToString() ?? "none"}" +
+                $":locked={probe.PresentationLocked}:playing={probe.PresentationPlaying}:automatic={probe.AutomaticFramesPending}";
             trace.Add(new GodotGameplayTraceEntry(ordinal, phase, step.Kind, false, context.StateHash(), (long)(Time.GetTicksMsec() - started), diagnostic));
             throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Timeout, diagnostic);
         }
@@ -238,19 +277,56 @@ public sealed class GodotGameplayRuntimeRunner
                 unit.UnitId.Value == assertion.Target)?.Corruption == assertion.Expected.GetInt32(),
             "demonboundPossessedEquals" => probe.BattleSnapshot?.Units.SingleOrDefault(unit =>
                 unit.UnitId.Value == assertion.Target)?.IsPossessed == assertion.Expected.GetBoolean(),
+            "adventureActorCellEquals" => probe.Adventure?.ActorCells.TryGetValue(assertion.Target ?? string.Empty, out string? actorCell) == true &&
+                actorCell == assertion.Expected.GetString(),
+            "activeAdventureLeaderEquals" => probe.Adventure?.LeaderId == assertion.Expected.GetString(),
+            "runNodeLifecycleEquals" => probe.Adventure?.NodeLifecycle == assertion.Expected.GetString(),
+            "routeCandidateNodeIdsEqual" => probe.Adventure?.RouteCandidateNodeIds.SequenceEqual(
+                assertion.Expected.EnumerateArray().Select(value => value.GetString()!), StringComparer.Ordinal) == true,
+            "adventureObjectStateEquals" => probe.Adventure?.ObjectStates.TryGetValue(assertion.Target ?? string.Empty, out string? objectState) == true &&
+                objectState == assertion.Expected.GetString(),
+            "storeOfferCountEquals" => probe.Adventure?.StoreOfferCount == assertion.Expected.GetInt32(),
+            "storeSoldOfferCountEquals" => probe.Adventure?.StoreSoldOfferCount == assertion.Expected.GetInt32(),
+            "backpackContainsContentId" => ((probe.SaveSnapshot?.ActiveRun?.BackpackConsumables.Any(value => value.DefinitionId.Value == assertion.Target) ?? false) ||
+                (probe.SaveSnapshot?.ActiveRun?.BackpackEquipment.Any(value => value.DefinitionId.Value == assertion.Target) ?? false)) == assertion.Expected.GetBoolean(),
+            "eventResolutionEquals" => probe.Adventure?.EventResolution == assertion.Expected.GetString(),
+            "pendingBattleContextKindEquals" => probe.Adventure?.PendingBattleContextKind == assertion.Expected.GetString(),
+            "escortStateEquals" => probe.Adventure?.EscortState == assertion.Expected.GetString(),
+            "protectedNpcAliveEquals" => probe.Adventure?.ProtectedNpcAlive == assertion.Expected.GetBoolean(),
+            "runSaveSchemaVersionEquals" => RunSaveDocumentV9.SchemaVersion == assertion.Expected.GetInt32(),
+            "pendingPartyOrderEquals" => probe.SaveSnapshot?.PendingRunSetup?.SelectedCharacterIds.SequenceEqual(
+                assertion.Expected.EnumerateArray().Select(value => value.GetString()!), StringComparer.Ordinal) == true,
+            "activePartyStartingSkillIdsEqual" => probe.SaveSnapshot?.ActiveRun?.Party.Select(value => value.StartingSkillContentId?.Value)
+                .SequenceEqual(assertion.Expected.EnumerateArray().Select(value => value.GetString()), StringComparer.Ordinal) == true,
+            "partyAllLivingAtFullResourcesEquals" => (probe.SaveSnapshot?.ActiveRun?.Party.Where(value => !value.IsDead)
+                .All(value => value.CurrentHealth == value.MaxHealth && value.CurrentMana == value.MaxMana) == true) == assertion.Expected.GetBoolean(),
+            "partyResourceSummaryEquals" => probe.SaveSnapshot?.ActiveRun?.Party.Select(value =>
+                    $"{value.CharacterId}:{value.CurrentHealth}/{value.MaxHealth}:{value.CurrentMana}/{value.MaxMana}")
+                .SequenceEqual(assertion.Expected.EnumerateArray().Select(value => value.GetString()), StringComparer.Ordinal) == true,
             "runtimeHasNoErrors" => (probe.RuntimeErrorCount == 0) == assertion.Expected.GetBoolean(),
             "productionSaveUnchanged" => context.ProductionSaveIsUnchanged() == assertion.Expected.GetBoolean(),
             _ => throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Contract, "unsupported_assertion:" + assertion.Kind)
         };
         if (!passed)
         {
-            string diagnostic = assertion.Kind == "inventoryProjectionEnteredBattle"
-                ? "assertion_failed:" + string.Join(";", context.Main.CaptureInventoryBattleProjectionEvidence().Select(value =>
-                    $"{value.CharacterId}:equipment={value.EquipmentCount},hp={value.BaseMaxHealth}->{value.ProjectedMaxHealth}/{value.BattleMaxHealth},mp={value.BaseMaxMana}->{value.ProjectedMaxMana}/{value.BattleMaxMana},match={value.Matches}"))
-                : "assertion_failed";
+            string diagnostic = assertion.Kind switch
+            {
+                "inventoryProjectionEnteredBattle" => "assertion_failed:" + string.Join(";", context.Main.CaptureInventoryBattleProjectionEvidence().Select(value =>
+                    $"{value.CharacterId}:equipment={value.EquipmentCount},hp={value.BaseMaxHealth}->{value.ProjectedMaxHealth}/{value.BattleMaxHealth},mp={value.BaseMaxMana}->{value.ProjectedMaxMana}/{value.BattleMaxMana},match={value.Matches}")),
+                "activePartyStartingSkillIdsEqual" => "assertion_failed:actual=" + string.Join(",",
+                    probe.SaveSnapshot?.ActiveRun?.Party.Select(value => value.StartingSkillContentId?.Value ?? "null") ?? []),
+                "partyResourceSummaryEquals" => "assertion_failed:actual=" + string.Join(",",
+                    probe.SaveSnapshot?.ActiveRun?.Party.Select(value => $"{value.CharacterId}:{value.CurrentHealth}/{value.MaxHealth}:{value.CurrentMana}/{value.MaxMana}") ?? []),
+                "storeOfferCountEquals" => $"assertion_failed:actual={probe.Adventure?.StoreOfferCount.ToString() ?? "null"}",
+                "storeSoldOfferCountEquals" => $"assertion_failed:actual={probe.Adventure?.StoreSoldOfferCount.ToString() ?? "null"}",
+                "escortStateEquals" => $"assertion_failed:actual={probe.Adventure?.EscortState ?? "null"}:npc={probe.Adventure?.ProtectedNpcAlive?.ToString() ?? "null"}",
+                "adventureObjectStateEquals" => $"assertion_failed:actual={string.Join(',', probe.Adventure?.ObjectStates.Select(value => $"{value.Key}={value.Value}") ?? [])}",
+                "runtimeHasNoErrors" => "assertion_failed:" + string.Join(";", context.Main.CaptureRejectedBattleLogEntries()
+                    .Select(value => $"{value.EventType}:{value.Message}")),
+                _ => "assertion_failed"
+            };
             trace.Add(new GodotGameplayTraceEntry(ordinal, "assertion", assertion.Kind, false, context.StateHash(), 0, diagnostic));
-            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Assertion,
-                assertion.Kind == "inventoryProjectionEnteredBattle" ? diagnostic : "assertion_failed:" + assertion.Kind);
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Assertion, diagnostic);
         }
         trace.Add(new GodotGameplayTraceEntry(ordinal, "assertion", assertion.Kind, true, context.StateHash(), 0, null));
         return Task.CompletedTask;
@@ -262,7 +338,7 @@ public sealed class GodotGameplayRuntimeRunner
     private static int RequiredInt(Dictionary<string, JsonElement> parameters, string key, int fallback) =>
         parameters.TryGetValue(key, out JsonElement value) ? value.GetInt32() : fallback;
     private static string PointerLocator(GodotGameplayPlanStep step) => step.Target ??
-        new[] { "elementName", "nodeId", "unitId", "cell" }
+        new[] { "elementName", "nodeId", "unitId", "actorId", "objectId", "routeNodeId", "cell" }
             .Select(key => step.Parameters.TryGetValue(key, out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null)
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ??
         throw new InvalidDataException("Pointer action requires a semantic target locator.");
@@ -291,12 +367,14 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     private string ProductionSaveEvidence { get; } = productionSaveEvidence;
     private string _lastHash = string.Empty;
     private int _sameHashCount;
+    private AdventureRevisionBaseline _lastActionAdventure;
 
     public async Task ClickButtonAsync(string text, CancellationToken token)
     {
+        CaptureAdventureBaseline();
         Control expected;
         Vector2 logicalPoint;
-        Button[] candidates = Descendants<Button>(Main).Where(value => value.Visible && !value.Disabled).ToArray();
+        Button[] candidates = Descendants<Button>(Main).Where(value => value.IsVisibleInTree() && !value.Disabled).ToArray();
         Button? button = candidates.FirstOrDefault(value => string.Equals(value.Name, text, StringComparison.Ordinal)) ??
             candidates.FirstOrDefault(value => string.Equals(value.Text, text, StringComparison.OrdinalIgnoreCase)) ??
             candidates.FirstOrDefault(value => value.Text.Contains(text, StringComparison.OrdinalIgnoreCase));
@@ -309,7 +387,9 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             mapNodeId = text[4..];
             expected = map; logicalPoint = map.NodeCenter(mapNodeId);
         }
-        else throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action, "pointer_target_not_available:" + text);
+        else throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action,
+            "pointer_target_not_available:" + text + ":buttons=" + string.Join(",", Descendants<Button>(Main)
+                .Select(value => $"{value.Name}:{value.Text}[{value.Disabled},{value.Visible}]")));
         (Viewport viewport, Vector2 point, bool localCoordinates) = map is null
             ? await ResolvePointerAsync(logicalPoint, expected, text, token)
             : await ResolveMapPointerAsync(map, mapNodeId!, token);
@@ -335,7 +415,7 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     {
         string targetKind = OptionalString(parameters, "targetKind") ?? "UiElement";
         Button? button = string.Equals(targetKind, "UiElement", StringComparison.Ordinal)
-            ? Descendants<Button>(Main).FirstOrDefault(value => value.Visible &&
+            ? Descendants<Button>(Main).FirstOrDefault(value => value.IsVisibleInTree() &&
                 (value.Text.Contains(target, StringComparison.OrdinalIgnoreCase) || string.Equals(value.Name, target, StringComparison.Ordinal)))
             : null;
         if (button is not null) { await ResolvePointerAsync(button.GetGlobalRect().GetCenter(), button, target, token); return; }
@@ -351,11 +431,17 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             await ResolvePointerAsync(battlePoint, surface, target, token);
             return;
         }
+        if (Main.TryResolveTestAdventurePointerTarget(targetKind, target, out Control? adventureSurface, out Vector2 adventurePoint) && adventureSurface is not null)
+        {
+            await ResolvePointerAsync(adventurePoint, adventureSurface, target, token);
+            return;
+        }
         throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action, "pointer_target_not_found:" + target);
     }
 
     public async Task ClickPointerAsync(string target, Dictionary<string, JsonElement> parameters, CancellationToken token)
     {
+        CaptureAdventureBaseline();
         string targetKind = OptionalString(parameters, "targetKind") ?? "UiElement";
         if (string.Equals(targetKind, "UiElement", StringComparison.Ordinal))
         {
@@ -365,6 +451,18 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         if (string.Equals(targetKind, "MapNode", StringComparison.Ordinal))
         {
             await ClickButtonAsync(target.StartsWith("map:", StringComparison.Ordinal) ? target : "map:" + target, token);
+            return;
+        }
+        if (Main.TryResolveTestAdventurePointerTarget(targetKind, target, out Control? adventureSurface, out Vector2 adventurePoint) &&
+            adventureSurface is not null)
+        {
+            string before = StateHash();
+            (Viewport adventureViewport, Vector2 adventureClickPoint, bool adventureLocal) =
+                await ResolvePointerAsync(adventurePoint, adventureSurface, target, token);
+            adventureViewport.PushInput(new InputEventMouseButton { Position = adventureClickPoint, GlobalPosition = adventureClickPoint, ButtonIndex = MouseButton.Left, Pressed = true }, adventureLocal);
+            await WaitFramesAsync(1, token);
+            adventureViewport.PushInput(new InputEventMouseButton { Position = adventureClickPoint, GlobalPosition = adventureClickPoint, ButtonIndex = MouseButton.Left, Pressed = false }, adventureLocal);
+            await WaitForStateDifferentAsync(before, token);
             return;
         }
         if (!Main.TryResolveTestBattlePointerTarget(targetKind, target, out Control? surface, out Vector2 logicalPoint) ||
@@ -400,10 +498,12 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         {
             viewport.PushInput(new InputEventMouseMotion { Position = candidatePoint, GlobalPosition = candidatePoint }, local);
             await WaitFramesAsync(1, token);
-            if (viewport.GuiGetHoveredControl() == expectedControl) { resolved = (candidatePoint, local); break; }
+            Control? hovered = viewport.GuiGetHoveredControl();
+            if (hovered == expectedControl || hovered is not null && expectedControl.IsAncestorOf(hovered))
+            { resolved = (candidatePoint, local); break; }
         }
         if (resolved is null) throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action,
-            $"pointer_target_not_hovered:{identity}:viewport={viewport.GetVisibleRect()}");
+            $"pointer_target_not_hovered:{identity}:logical={logicalPoint}:hovered={viewport.GuiGetHoveredControl()?.Name ?? "none"}:viewport={viewport.GetVisibleRect()}");
         return (viewport, resolved.Value.Point, resolved.Value.Local);
     }
 
@@ -479,6 +579,12 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
                 "battleReady" => probe.BattleSnapshot is not null,
                 "humanTurn" => probe.BattleSnapshot?.Phase == Tactics.Application.Battle.PlayableBattlePhase.PlayerTurn,
                 "battleEnded" => IsTerminal,
+                "adventureBoardReady" => probe.Adventure is not null,
+                "adventureLeaderChanged" => probe.Adventure is not null && probe.Adventure.LeaderRevision > _lastActionAdventure.Leader,
+                "adventureInteractionResolved" => probe.Adventure is not null && probe.Adventure.InteractionRevision > _lastActionAdventure.Interaction,
+                "routeCommitted" => probe.Adventure is not null && probe.Adventure.RouteRevision > _lastActionAdventure.Route,
+                "eventBattleReady" => probe.Adventure?.PendingBattleContextKind is not null and not "None" && probe.BattleSnapshot is not null,
+                "adventureSceneChanged" => probe.Adventure is not null && probe.Adventure.SceneRevision > _lastActionAdventure.Scene,
                 "uiVisible" or "uiElement" => locator is not null && IsUiVisible(locator),
                 "uiHidden" => locator is not null && !IsUiVisible(locator),
                 _ => false
@@ -486,8 +592,10 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             if (ready) return;
             await WaitFramesAsync(1, token);
         }
+        GodotPlayableRunProbe finalProbe = Main.CaptureTestProbe();
         throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
-            $"observable_not_reached:{observable}:{locator ?? "none"}");
+            $"observable_not_reached:{observable}:{locator ?? "none"}:page={finalProbe.PageTitle}:status={finalProbe.StatusText ?? "none"}:" +
+            $"event_context={finalProbe.Adventure?.PendingBattleContextKind ?? "null"}:battle={(finalProbe.BattleSnapshot is null ? "null" : finalProbe.BattleSnapshot.Phase.ToString())}");
     }
 
     public async Task RestartMainAsync(CancellationToken token)
@@ -521,14 +629,22 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         GodotPlayableRunProbe before = Main.CaptureTestProbe();
         if (key is Key.Enter or Key.KpEnter && (before.PresentationLocked || before.PresentationPlaying))
             throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action, "input_locked:presentation");
-        Main.GetViewport().PushInput(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true }, true);
-        Main.GetViewport().PushInput(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false }, true);
         if (key is Key.Enter or Key.KpEnter)
         {
             BattleAuthorityStamp stamp = BattleAuthorityStamp.From(before.BattleSnapshot);
-            await WaitUntilAsync(() => BattleAuthorityStamp.From(Main.CaptureTestProbe().BattleSnapshot) != stamp, token);
-            return;
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                PushKeyInput(key);
+                for (int frame = 0; frame < 3; frame++)
+                {
+                    await WaitFramesAsync(1, token);
+                    if (BattleAuthorityStamp.From(Main.CaptureTestProbe().BattleSnapshot) != stamp) return;
+                }
+            }
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
+                $"key_input_not_committed:{key}:round={stamp.Round}:active={stamp.ActiveUnit}");
         }
+        PushKeyInput(key);
         if (key == Key.Escape)
         {
             await WaitUntilAsync(() =>
@@ -541,6 +657,13 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             return;
         }
         await WaitForStateDifferentAsync(StateHash(before), token);
+    }
+
+    private void PushKeyInput(Key key)
+    {
+        Main.GetViewport().GuiReleaseFocus();
+        Main.GetViewport().PushInput(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true }, true);
+        Main.GetViewport().PushInput(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false }, true);
     }
 
     public async Task SetPausedAsync(bool paused, CancellationToken token)
@@ -580,12 +703,19 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         }
         if (after == _lastHash) _sameHashCount++; else { _lastHash = after; _sameHashCount = 1; }
         if (_sameHashCount >= Plan.Watchdog.NoProgressLimit)
-            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress, "no_progress");
+            throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
+                $"no_progress:page={probe.PageTitle}:round={probe.BattleSnapshot?.Round.ToString() ?? "none"}:" +
+                $"active={probe.BattleSnapshot?.ActiveUnitId.Value ?? "none"}:phase={probe.BattleSnapshot?.Phase.ToString() ?? "none"}:" +
+                $"terminalPending={IsTerminalPending}:presentation={probe.PresentationPlaying}:locked={probe.PresentationLocked}:" +
+                $"automatic={probe.AutomaticFramesPending}:status={probe.StatusText ?? "none"}");
     }
 
     public async Task WaitUntilPlayerReadyOrTerminalAsync(CancellationToken token)
     {
-        while (!IsTerminal && !IsTerminalPending && !CanSubmitPlayerInput)
+        // The production click can enqueue presentation work deferred to the next frame.
+        // Observe at least one frame before deciding that the player is ready again.
+        await WaitFramesAsync(1, token);
+        while (HasActiveBattle && !IsTerminal && !IsAdventureEventResolved && !IsTerminalPending && !CanSubmitPlayerInput)
             await WaitForAutomaticProgressAsync(token);
     }
 
@@ -645,9 +775,21 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
 
     private static string StateHash(GodotPlayableRunProbe probe)
     {
-        string value = $"{probe.PageTitle}|{probe.SaveSnapshot?.Revision}|{probe.SaveSnapshot?.ActiveRun?.Revision}|{probe.BattleSnapshot?.Round}|{probe.BattleSnapshot?.ActiveUnitId.Value}|{probe.BattleSnapshot?.Phase}|{probe.PresentationLocked}|{probe.PresentationPlaying}|{probe.AutomaticFramesPending}|{probe.PresentationNumberCount}|{probe.PlaybackPaused}|{probe.PlaybackSpeed}|{probe.QuitRequested}";
+        GodotAdventureRuntimeProbe? adventure = probe.Adventure;
+        string actors = adventure is null ? "" : string.Join(';', adventure.ActorCells.OrderBy(value => value.Key, StringComparer.Ordinal).Select(value => $"{value.Key}={value.Value}"));
+        string candidates = adventure is null ? "" : string.Join(',', adventure.RouteCandidateNodeIds);
+        string value = $"{probe.PageTitle}|{probe.SaveSnapshot?.Revision}|{probe.SaveSnapshot?.ActiveRun?.Revision}|{probe.BattleSnapshot?.Round}|{probe.BattleSnapshot?.ActiveUnitId.Value}|{probe.BattleSnapshot?.Phase}|{probe.PresentationLocked}|{probe.PresentationPlaying}|{probe.AutomaticFramesPending}|{probe.PresentationNumberCount}|{probe.PlaybackPaused}|{probe.PlaybackSpeed}|{probe.QuitRequested}|{adventure?.BoardContentId}|{adventure?.NodeLifecycle}|{adventure?.LeaderId}|{actors}|{candidates}|{adventure?.PendingBattleContextKind}|{adventure?.LeaderRevision}|{adventure?.InteractionRevision}|{adventure?.RouteRevision}|{adventure?.SceneRevision}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     }
+
+    private void CaptureAdventureBaseline()
+    {
+        GodotAdventureRuntimeProbe? adventure = Main.CaptureTestProbe().Adventure;
+        _lastActionAdventure = adventure is null ? default : new AdventureRevisionBaseline(
+            adventure.LeaderRevision, adventure.InteractionRevision, adventure.RouteRevision, adventure.SceneRevision);
+    }
+
+    private readonly record struct AdventureRevisionBaseline(int Leader, int Interaction, int Route, int Scene);
 
     public bool IsTerminal
     {
@@ -655,6 +797,17 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         {
             GodotPlayableRunProbe probe = Main.CaptureTestProbe();
             return probe.SaveSnapshot?.TerminalSummary is not null;
+        }
+    }
+
+    public bool HasActiveBattle => Main.CaptureTestProbe().BattleActive;
+
+    public bool IsAdventureEventResolved
+    {
+        get
+        {
+            GodotPlayableRunProbe probe = Main.CaptureTestProbe();
+            return !probe.BattleActive && probe.Adventure?.EventResolution is not null;
         }
     }
 
@@ -673,7 +826,10 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         get
         {
             GodotPlayableRunProbe probe = Main.CaptureTestProbe();
+            BattleUiSnapshot? visible = Main.CaptureVisibleBattleSnapshot();
             return probe.BattleSnapshot?.Phase == PlayableBattlePhase.PlayerTurn &&
+                visible?.Phase == PlayableBattlePhase.PlayerTurn &&
+                visible.ActiveUnitId == probe.BattleSnapshot.ActiveUnitId &&
                 !probe.PresentationLocked && !probe.PresentationPlaying && !probe.AutomaticFramesPending && !probe.PlaybackPaused;
         }
     }
@@ -719,10 +875,12 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
 
     private bool IsUiVisible(string locator) =>
         Main.CaptureTestProbe().PageTitle.Contains(locator, StringComparison.OrdinalIgnoreCase) ||
-        Descendants<Control>(Main).Any(value => value.Visible &&
+        Descendants<Control>(Main).Any(value => value.IsVisibleInTree() &&
             (string.Equals(value.Name, locator, StringComparison.OrdinalIgnoreCase) ||
              value is Button button && button.Text.Contains(locator, StringComparison.OrdinalIgnoreCase) ||
              value is Label label && label.Text.Contains(locator, StringComparison.OrdinalIgnoreCase)));
+
+    public bool HasVisibleUiElement(string locator) => IsUiVisible(locator);
 
     private async Task WaitUntilAsync(Func<bool> predicate, CancellationToken token)
     {

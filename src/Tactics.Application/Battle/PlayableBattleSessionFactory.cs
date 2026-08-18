@@ -15,6 +15,7 @@ namespace Tactics.Application.Battle;
 /// <summary>Composes migrated catalogs into a deterministic playable battle session.</summary>
 public sealed class PlayableBattleSessionFactory
 {
+    public sealed record ProtectedNpcBattleConfig(ContentId UnitDefinitionId, GridPoint PreferredCell);
     private static readonly ContentId MagicAttackId = new("skill.basic.magic");
     private static readonly ContentId MeleeAttackId = new("skill.basic.melee");
     private static readonly ContentId PickupSpearId = new("skill.amazon.pickup-spear.lv1");
@@ -32,7 +33,8 @@ public sealed class PlayableBattleSessionFactory
         IReadOnlyDictionary<ContentId, AiDefinition> aiDefinitions,
         PlayableBattleBalanceProfile? balance = null,
         PlayableEnemySpeedProfile? enemySpeed = null,
-        IReadOnlyDictionary<ContentId, EquipmentDefinition>? equipment = null)
+        IReadOnlyDictionary<ContentId, EquipmentDefinition>? equipment = null,
+        ProtectedNpcBattleConfig? protectedNpc = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.EncounterContentId != encounter.ContentId)
@@ -61,7 +63,7 @@ public sealed class PlayableBattleSessionFactory
             if(role == SkillRole.Amazon) learned=learned.Append(PickupSpearId);
             SkillDefinition[] unitSkills = learned.Distinct().Select(id => playableSkills[id]).ToArray();
             BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[index], index,
-                balance, equipment);
+                balance, equipment, role);
             if (role == SkillRole.Demonbound)
             {
                 int mindfulnessLevel = learnedDefinitions
@@ -91,6 +93,30 @@ public sealed class PlayableBattleSessionFactory
             aiByUnit.Add(instanceId, aiDefinitions[monster.AiId]);
         }
 
+        UnitInstanceId? protectedNpcUnitId = null;
+        if (protectedNpc is not null)
+        {
+            protectedNpcUnitId = new UnitInstanceId("escort-lost-villager");
+            UnitDefinition npcDefinition = units[protectedNpc.UnitDefinitionId];
+            HashSet<GridPoint> occupied = states.Select(value => value.Unit.Position).ToHashSet();
+            GridPoint spawn = Enumerable.Range(0, 10).SelectMany(y => Enumerable.Range(0, 10)
+                    .Select(x => new GridPoint(x, y)))
+                .Where(cell => !layout.BlockedCells.Contains(cell) && !occupied.Contains(cell))
+                .OrderBy(cell => Math.Abs(cell.X - protectedNpc.PreferredCell.X) +
+                                 Math.Abs(cell.Y - protectedNpc.PreferredCell.Y))
+                .ThenBy(cell => cell.Y).ThenBy(cell => cell.X).First();
+            UnitState facts = new(protectedNpcUnitId.Value, npcDefinition.ContentId, spawn,
+                npcDefinition.DerivedStats.MoveRange, npcDefinition.DerivedStats.Initiative, 0, request.Party.Count, true);
+            BattleUnitState npc = new(facts, npcDefinition.DerivedStats.MaxHealth, npcDefinition.DerivedStats.MaxHealth,
+                baseSpeed: npcDefinition.Speed,
+                physicalAttack: 0, magicalAttack: 0, canProduceCorpse: false);
+            states.Add(npc);
+            skillsByUnit.Add(protectedNpcUnitId.Value, Array.Empty<SkillDefinition>());
+            aiByUnit.Add(protectedNpcUnitId.Value, new AiDefinition(new ContentId("ai.escort.flee"),
+                AiArchetype.Support, new AiProfileDefinition(0, 0, 0, 0),
+                Array.Empty<ContentId>(), Array.Empty<ContentId>()));
+        }
+
         var cells = new Dictionary<GridPoint, CellState>();
         for (int x = 0; x < 10; x++)
         for (int y = 0; y < 10; y++)
@@ -103,7 +129,7 @@ public sealed class PlayableBattleSessionFactory
             state.Unit.InstanceId, state.Unit.Initiative, state.Unit.PlayerNumber, state.Unit.SpawnOrdinal)))
             .Select(entry => entry.UnitId).ToArray();
         var battle = new BattleState(new BoardSnapshot(cells), states, order,
-            randomState: unchecked((ulong)request.CheckpointRevision));
+            randomState: request.EffectiveRandomState);
         var summonControllers = new Dictionary<ContentId, SummonControllerDefinition>
         {
             [SkeletonUnitId] = new(aiDefinitions[new ContentId("ai.summon.basic-melee")],
@@ -119,7 +145,7 @@ public sealed class PlayableBattleSessionFactory
         };
         return new PlayableBattleSessionService(new PlayableBattleSessionContext(
             battle, 0, skillsByUnit, aiByUnit, playableSkills, request, characterIds, layout.BlockedCells,
-            summonControllers));
+            summonControllers, protectedNpcUnitId));
     }
 
     private static IReadOnlyDictionary<int, SkillDefinition> Levels(
@@ -134,7 +160,8 @@ public sealed class PlayableBattleSessionFactory
         GridPoint cell,
         int spawnOrdinal,
         PlayableBattleBalanceProfile? balance,
-        IReadOnlyDictionary<ContentId, EquipmentDefinition>? equipment)
+        IReadOnlyDictionary<ContentId, EquipmentDefinition>? equipment,
+        SkillRole role)
     {
         EquipmentDefinition[] loadout = character.Equipment.Select(item =>
             equipment?.GetValueOrDefault(item.DefinitionId) ??
@@ -154,13 +181,22 @@ public sealed class PlayableBattleSessionFactory
             baseSpeed: definition.Speed, consumables: consumables,
             physicalAttack: physical, magicalAttack: magical,
             canProduceCorpse: definition.CanProduceCorpse,
-            manaRecoveryPerTurn: projection.Attributes.Intelligence);
+            manaRecoveryPerTurn: projection.Attributes.Intelligence,
+            primaryAttributeDamageBonus: Math.Max(0, PrimaryAttribute(projection.Attributes, role) - 5));
         int combatTechniquesLevel = character.LearnedSkills
             .Where(id => id.Value.StartsWith("skill.amazon.combat-techniques.lv", StringComparison.Ordinal))
             .Select(id => id.Value.EndsWith("lv2", StringComparison.Ordinal) ? 2 : 1)
             .DefaultIfEmpty(0).Max();
         return combatTechniquesLevel > 0 ? state.WithCombatTechniquesLevel(combatTechniquesLevel) : state;
     }
+
+    private static int PrimaryAttribute(UnitAttributes attributes, SkillRole role) => role switch
+    {
+        SkillRole.Mage => attributes.Intelligence,
+        SkillRole.Necromancer or SkillRole.Demonbound => attributes.Charisma,
+        SkillRole.Amazon => attributes.Agility,
+        _ => 5
+    };
 
     public static UnitDerivedStats ResolvePartyDerivedStats(
         UnitDefinition definition, EquipmentStatProjection projection) =>

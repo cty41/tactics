@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 3,
+  "runtime": "Godot",
+  "scenarioName": "AdventureBoard.StoreMerchantPurchase",
+  "requiredAdapters": [
+    "Map",
+    "PlayerInput",
+    "UI"
+  ],
+  "requiredCapabilities": [
+    "action:clickPointerTarget",
+    "action:waitForPlayerObservable",
+    "assertion:backpackContainsContentId",
+    "assertion:productionSaveUnchanged",
+    "assertion:runtimeHasNoErrors",
+    "assertion:storeOfferCountEquals",
+    "assertion:storeSoldOfferCountEquals",
+    "setup:initializePlayerInput",
+    "setup:loadValidatedCheckpoint"
+  ],
+  "setupActions": [
+    {
+      "adapter": "Map",
+      "kind": "loadValidatedCheckpoint",
+      "parameters": {
+        "id": "layer4-choice-ready-v1",
+        "path": "validated://layer4-choice-ready-v1",
+        "semanticHash": "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "initializePlayerInput",
+      "parameters": {}
+    }
+  ],
+  "runtimeActions": [
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "mapReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "layer_04_store",
+      "parameters": {
+        "targetKind": "MapNode"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "store-merchant",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "target": "item.consumable.life-potion",
+      "parameters": {
+        "observable": "uiElement",
+        "elementName": "item.consumable.life-potion",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "item.consumable.life-potion",
+      "parameters": {
+        "targetKind": "UiElement"
+      }
+    }
+  ],
+  "assertionPlans": [
+    {
+      "adapter": "Map",
+      "kind": "storeOfferCountEquals",
+      "expected": 3,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "storeSoldOfferCountEquals",
+      "expected": 1,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "backpackContainsContentId",
+      "target": "item.consumable.life-potion",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "expected": true,
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "expected": true,
+      "parameters": {}
+    }
+  ],
+  "timeoutMs": 30000,
+  "probeRequests": [
+    {
+      "adapter": "Map",
+      "kind": "storeOfferCountEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "storeSoldOfferCountEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "backpackContainsContentId",
+      "target": "item.consumable.life-potion",
+      "parameters": {}
+    },
+    {
+      "adapter": "UI",
+      "kind": "runtimeHasNoErrors",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "productionSaveUnchanged",
+      "parameters": {}
+    }
+  ],
+  "checkpoint": {
+    "id": "layer4-choice-ready-v1",
+    "source": "validated_checkpoint",
+    "semanticHash": "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab",
+    "path": "validated://layer4-choice-ready-v1"
+  },
+  "saveIsolation": {
+    "root": "user://qa-runner",
+    "protectProductionSave": true
+  },
+  "watchdog": {
+    "stepTimeoutMs": 30000,
+    "battleRoundLimit": 80,
+    "scenarioTimeoutMs": 300000,
+    "noProgressLimit": 2
+  }
+}
