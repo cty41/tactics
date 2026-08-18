@@ -59,7 +59,7 @@ public partial class TacticsEditorPlugin : EditorPlugin, ISerializationListener
 
     public void OnBeforeSerialize()
     {
-        _shuttingDown = true;
+        ShutdownForReload();
     }
 
     public void OnAfterDeserialize()
@@ -191,7 +191,6 @@ public partial class TacticsEditorPlugin : EditorPlugin, ISerializationListener
             _authoringBridge.Free();
         }
         _authoringBridge = null;
-
     }
 }
 #endif
