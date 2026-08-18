@@ -12,6 +12,15 @@ namespace Tactics.Godot.Tests.GameplaySpec;
 public class GodotGameplayRuntimeRunnerTests
 {
     [TestCase]
+    public void EventWindowCountsOnlyTheNewSuffix()
+    {
+        AssertThat(GodotGameplayEventWindow.NewEventOffset(["a", "b", "c"], ["b", "c", "d"])).IsEqual(2);
+        AssertThat(GodotGameplayEventWindow.NewEventOffset(["a", "b"], ["a", "b"])).IsEqual(2);
+        AssertThat(GodotGameplayEventWindow.NewEventOffset(["a", "b"], ["c"])).IsEqual(0);
+        AssertThat(GodotGameplayEventWindow.NewEventOffset([], ["a"])).IsEqual(0);
+    }
+
+    [TestCase]
     [RequireGodotRuntime]
     public void ValidatedCheckpointCatalogProducesStableCanonicalV9Hashes()
     {
@@ -543,7 +552,45 @@ public class GodotGameplayRuntimeRunnerTests
         return Plan(name, [setup], [quit], [BoolAssertion("runtimeHasNoErrors", "UI", true)]);
     }
 
-    private static GodotGameplayScenarioPlan LoadCompiledPlan(string planName)
+    internal static GodotGameplayScenarioPlan WithParty(GodotGameplayScenarioPlan plan, IReadOnlyList<string> party,
+        string scenarioName)
+    {
+        if (party.Count != 3 || !party.Contains("pure_run_demonbound", StringComparer.Ordinal))
+            throw new ArgumentException("A Demonbound production party must contain exactly three actors including Demonbound.", nameof(party));
+        int firstSelection = Array.FindIndex(plan.RuntimeActions, action => action.Parameters.TryGetValue("targetKind", out JsonElement kind) &&
+            kind.GetString() == "AdventureActor");
+        int exit = Array.FindIndex(plan.RuntimeActions, action => action.Target == "start-exit");
+        if (firstSelection < 0 || exit <= firstSelection) throw new InvalidDataException("The source full-run plan has no party-selection segment.");
+        GodotGameplayPlanStep[] selection = party.Select(actor => new GodotGameplayPlanStep("clickPointerTarget", "PlayerInput", actor,
+            Parameters(("targetKind", "AdventureActor")))).ToArray();
+        var actions = new List<GodotGameplayPlanStep>();
+        actions.AddRange(plan.RuntimeActions.Take(firstSelection));
+        actions.AddRange(selection);
+        actions.Add(plan.RuntimeActions[exit]);
+        actions.AddRange(party.Where(actor => actor != "pure_run_demonbound").Select(StartingSkillAction));
+        actions.AddRange(plan.RuntimeActions.Skip(exit + 1).SkipWhile(action => action.Target?.StartsWith("starting_skill__", StringComparison.Ordinal) == true));
+        GodotGameplayPlanAssertion[] assertions = plan.AssertionPlans.Where(value =>
+            value.Kind != "terminalSummaryOutcomeEquals").ToArray();
+        GodotGameplayProbeRequest[] probes = assertions.Select(value =>
+            new GodotGameplayProbeRequest(value.Kind, value.Adapter, value.Target, value.Parameters)).ToArray();
+        string[] adapters = plan.SetupActions.Concat(actions).Select(value => value.Adapter)
+            .Concat(assertions.Select(value => value.Adapter)).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        string[] capabilities = plan.SetupActions.Select(value => "setup:" + value.Kind)
+            .Concat(actions.Select(value => "action:" + value.Kind))
+            .Concat(assertions.Select(value => "assertion:" + value.Kind)).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        return plan with { ScenarioName = scenarioName, RequiredAdapters = adapters, RequiredCapabilities = capabilities,
+            RuntimeActions = actions.ToArray(), AssertionPlans = assertions, ProbeRequests = probes };
+    }
+
+    private static GodotGameplayPlanStep StartingSkillAction(string actor) => actor switch
+    {
+        "pure_run_amazon" => new("clickPointerTarget", "PlayerInput", "starting_skill__skill_amazon_thrust_lv1", Parameters(("targetKind", "UiElement"))),
+        "pure_run_mage" => new("clickPointerTarget", "PlayerInput", "starting_skill__skill_mage_fireball_lv1", Parameters(("targetKind", "UiElement"))),
+        "pure_run_necromancer" => new("clickPointerTarget", "PlayerInput", "starting_skill__skill_necromancer_summon_skeleton_lv1", Parameters(("targetKind", "UiElement"))),
+        _ => throw new ArgumentOutOfRangeException(nameof(actor), actor, "Unknown production party actor.")
+    };
+
+    internal static GodotGameplayScenarioPlan LoadCompiledPlan(string planName)
     {
         string path = Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", "Tests",
             "gameplay-specs", "godot", planName + ".plan.json"));

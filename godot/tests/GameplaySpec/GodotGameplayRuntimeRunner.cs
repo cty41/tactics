@@ -108,14 +108,21 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
         {
             await context.ClickPointerAsync("SkillAction_" + availability.SkillId.Value.Replace('.', '_'),
                 Parameters(("targetKind", "UiElement")), cancellationToken);
-            BattleUiSnapshot targeted = context.Main.CaptureTestProbe().BattleSnapshot!;
+            BattleUiSnapshot? targeted = await context.WaitForSkillTargetingAsync(availability.SkillId, cancellationToken);
+            if (targeted is null)
+            {
+                await context.CancelBattleTargetingAsync(cancellationToken);
+                continue;
+            }
             BattleUiTarget? target = targeted.LegalTargets.FirstOrDefault(value => value.SkillId == availability.SkillId &&
                 (value.UnitId is UnitInstanceId id && enemyIds.Contains(id) ||
                  targeted.Units.Any(unit => unit.IsAlive && enemyIds.Contains(unit.UnitId) && unit.Cell == value.Cell)));
             if (target is not null)
             {
+                BattleAuthorityStamp beforeCommit = context.CaptureBattleAuthorityStamp();
                 await context.ClickPointerAsync($"{target.Cell.X},{target.Cell.Y}",
                     Parameters(("targetKind", "BattleCell")), cancellationToken);
+                await context.WaitForBattleCommitAsync(beforeCommit, cancellationToken);
                 return true;
             }
             await context.PressKeyAsync(Key.Escape, cancellationToken);
@@ -127,12 +134,69 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
         values.ToDictionary(value => value.Key, value => JsonSerializer.SerializeToElement(value.Value), StringComparer.Ordinal);
 }
 
+public sealed record GodotGameplayRunOptions(int FixedSeed = 7, string? AttemptLabel = null)
+{
+    public static readonly GodotGameplayRunOptions Default = new();
+}
+
+public sealed record GodotDemonboundRunMetrics(
+    int Seed,
+    string? Outcome,
+    int BattlesCompleted,
+    int EncountersObserved,
+    int CorruptionPeak,
+    int Meditations,
+    int? FirstPossessionRound,
+    int FriendlyDamage,
+    int Downs,
+    int PermanentDeaths,
+    int BaneUses,
+    int BaneDoubleTargetUses,
+    IReadOnlyDictionary<string, int> SkillUses,
+    IReadOnlyDictionary<string, int> DamageBySkill,
+    IReadOnlyDictionary<string, int> StatusApplications,
+    IReadOnlyDictionary<string, int> FailureReasons);
+
+public readonly record struct BattleAuthorityStamp(int Round, string ActiveUnit, PlayableBattlePhase Phase,
+    BattleTargetingMode TargetingMode, int EventCount)
+{
+    public static BattleAuthorityStamp From(BattleUiSnapshot? snapshot) => snapshot is null
+        ? new BattleAuthorityStamp(-1, string.Empty, PlayableBattlePhase.Faulted, BattleTargetingMode.None, -1)
+        : new BattleAuthorityStamp(snapshot.Round, snapshot.ActiveUnitId.Value, snapshot.Phase,
+            snapshot.TargetingMode, snapshot.RecentEvents.Count);
+}
+
+public static class GodotGameplayEventWindow
+{
+    public static int NewEventOffset(IReadOnlyList<string> previous, IReadOnlyList<string> current)
+    {
+        int maximum = Math.Min(previous.Count, current.Count);
+        for (int length = maximum; length > 0; length--)
+        {
+            bool matches = true;
+            for (int index = 0; index < length; index++)
+            {
+                if (string.Equals(previous[previous.Count - length + index], current[index], StringComparison.Ordinal)) continue;
+                matches = false;
+                break;
+            }
+            if (matches) return length;
+        }
+        return 0;
+    }
+}
+
 public sealed class GodotGameplayRuntimeRunner
 {
     public async Task<GodotGameplayScenarioResult> ExecuteAsync(GodotGameplayScenarioPlan plan,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await ExecuteAsync(plan, GodotGameplayRunOptions.Default, cancellationToken);
+
+    public async Task<GodotGameplayScenarioResult> ExecuteAsync(GodotGameplayScenarioPlan plan,
+        GodotGameplayRunOptions options, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(options);
         plan.ValidateContract();
         ValidatedGodotRunCheckpoint? checkpoint = plan.Checkpoint is null
             ? null
@@ -143,10 +207,13 @@ public sealed class GodotGameplayRuntimeRunner
             throw new InvalidDataException("The catalog checkpoint does not match the compiled plan.");
         var trace = new List<GodotGameplayTraceEntry>();
         string before = ProductionSaveEvidence();
-        string attemptId = Guid.NewGuid().ToString("N");
+        string attemptId = string.IsNullOrWhiteSpace(options.AttemptLabel)
+            ? Guid.NewGuid().ToString("N")
+            : options.AttemptLabel + "-" + Guid.NewGuid().ToString("N");
         var isolatedStore = new GodotGameplayIsolatedRunStore(plan.ScenarioName, attemptId, checkpoint?.Snapshot);
         TacticsMigrationRoot? activeRoot = null;
         GodotGameplayRuntimeContext? context = null;
+        GodotDemonboundRunMetrics? demonboundMetrics = null;
         GodotGameplayFailureKind? failure = null;
         string? error = null;
         int remainingTemporaryNodes = 0;
@@ -157,17 +224,20 @@ public sealed class GodotGameplayRuntimeRunner
             PackedScene scene = ResourceLoader.Load<PackedScene>("res://scenes/Main.tscn")
                 ?? throw new InvalidOperationException("Main.tscn is missing.");
             activeRoot = scene.Instantiate<TacticsMigrationRoot>();
-            activeRoot.ConfigureTestContext(new GodotPlayableRunTestContext(isolatedStore, 7,
+            activeRoot.ConfigureTestContext(new GodotPlayableRunTestContext(isolatedStore, options.FixedSeed,
                 plan.Checkpoint?.Id ?? "no-checkpoint", true, 4f));
             ((SceneTree)Engine.GetMainLoop()).Root.AddChild(activeRoot);
             await activeRoot.ToSignal(activeRoot.GetTree(), SceneTree.SignalName.ProcessFrame);
             GodotPlayableRunMain main = activeRoot.PlayableRun ?? throw new InvalidOperationException("Main did not create the playable run UI.");
-            context = new GodotGameplayRuntimeContext(plan, activeRoot, main, isolatedStore, before);
+            context = new GodotGameplayRuntimeContext(plan, activeRoot, main, isolatedStore, before, options.FixedSeed);
             int ordinal = 0;
             foreach (GodotGameplayPlanStep step in plan.SetupActions)
                 await ExecuteStepAsync(context, step, "setup", ++ordinal, trace, scenarioTimeout.Token);
             foreach (GodotGameplayPlanStep step in plan.RuntimeActions)
+            {
+                if (context.IsTerminal) break;
                 await ExecuteStepAsync(context, step, "action", ++ordinal, trace, scenarioTimeout.Token);
+            }
             foreach (GodotGameplayPlanAssertion assertion in plan.AssertionPlans)
                 await ExecuteAssertionAsync(context, assertion, ++ordinal, trace, scenarioTimeout.Token);
         }
@@ -188,6 +258,8 @@ public sealed class GodotGameplayRuntimeRunner
         }
         finally
         {
+            if (context is not null)
+                demonboundMetrics = context.BuildDemonboundMetrics();
             activeRoot = context?.Root ?? activeRoot;
             if (activeRoot is not null && GodotObject.IsInstanceValid(activeRoot))
             {
@@ -205,7 +277,7 @@ public sealed class GodotGameplayRuntimeRunner
         bool productionUnchanged = before == after;
         if (!productionUnchanged && failure is null) { failure = GodotGameplayFailureKind.Cleanup; error = "production_save_changed"; }
         return new GodotGameplayScenarioResult(plan.ScenarioName, failure is null, failure, error, trace,
-            productionUnchanged, remainingTemporaryNodes, before, after);
+            productionUnchanged, remainingTemporaryNodes, before, after, demonboundMetrics);
     }
 
     private static async Task ExecuteStepAsync(GodotGameplayRuntimeContext context, GodotGameplayPlanStep step,
@@ -369,7 +441,7 @@ public sealed class GodotGameplayRuntimeRunner
 }
 
 public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, TacticsMigrationRoot root,
-    GodotPlayableRunMain main, GodotGameplayIsolatedRunStore saveStore, string productionSaveEvidence)
+    GodotPlayableRunMain main, GodotGameplayIsolatedRunStore saveStore, string productionSaveEvidence, int fixedSeed)
 {
     public GodotGameplayScenarioPlan Plan { get; } = plan;
     public TacticsMigrationRoot Root { get; private set; } = root;
@@ -379,6 +451,7 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     private string _lastHash = string.Empty;
     private int _sameHashCount;
     private AdventureRevisionBaseline _lastActionAdventure;
+    private readonly DemonboundTelemetry _telemetry = new(fixedSeed);
     public JsonElement? LastBattleSkillReceipt { get; private set; }
 
     public async Task UseBattleSkillThroughInputAsync(string actorId, string skillId, int maximumActions,
@@ -826,7 +899,59 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         {
             token.ThrowIfCancellationRequested();
             await Main.ToSignal(Main.GetTree(), SceneTree.SignalName.ProcessFrame);
+            _telemetry.Observe(Main.CaptureTestProbe());
         }
+    }
+
+    public GodotDemonboundRunMetrics BuildDemonboundMetrics()
+    {
+        GodotPlayableRunProbe probe = Main.CaptureTestProbe();
+        _telemetry.Observe(probe);
+        return _telemetry.Build();
+    }
+
+    public string DescribeProbe()
+    {
+        GodotPlayableRunProbe probe = Main.CaptureTestProbe();
+        BattleUiSnapshot? battle = probe.BattleSnapshot;
+        string units = battle is null ? "none" : string.Join(',', battle.Units.Where(value => value.IsAlive)
+            .OrderBy(value => value.UnitId.Value, StringComparer.Ordinal)
+            .Select(value => $"{value.UnitId.Value}@{value.Cell}:{value.CurrentHealth}/{value.MaxHealth}:p{value.PlayerNumber}"));
+        return $"page={probe.PageTitle}:battle={battle?.Phase.ToString() ?? "none"}:round={battle?.Round.ToString() ?? "none"}:" +
+            $"active={battle?.ActiveUnitId.Value ?? "none"}:targeting={battle?.TargetingMode.ToString() ?? "none"}:" +
+            $"locked={probe.PresentationLocked}:playing={probe.PresentationPlaying}:automatic={probe.AutomaticFramesPending}:" +
+            $"status={probe.StatusText ?? "none"}:units={units}";
+    }
+
+    public BattleAuthorityStamp CaptureBattleAuthorityStamp() =>
+        BattleAuthorityStamp.From(Main.CaptureTestProbe().BattleSnapshot);
+
+    public async Task<BattleUiSnapshot?> WaitForSkillTargetingAsync(ContentId skillId, CancellationToken token)
+    {
+        for (int frame = 0; frame < 8; frame++)
+        {
+            BattleUiSnapshot? snapshot = Main.CaptureVisibleBattleSnapshot();
+            if (snapshot?.TargetingMode == BattleTargetingMode.Skill && snapshot.SelectedSkillId == skillId) return snapshot;
+            await WaitFramesAsync(1, token);
+        }
+        return null;
+    }
+
+    public async Task CancelBattleTargetingAsync(CancellationToken token)
+    {
+        if (Main.CaptureVisibleBattleSnapshot()?.TargetingMode != BattleTargetingMode.None)
+            await PressKeyAsync(Key.Escape, token);
+    }
+
+    public async Task WaitForBattleCommitAsync(BattleAuthorityStamp before, CancellationToken token)
+    {
+        for (int frame = 0; frame < 12; frame++)
+        {
+            await WaitFramesAsync(1, token);
+            if (CaptureBattleAuthorityStamp() != before) return;
+        }
+        throw new GodotGameplayScenarioException(GodotGameplayFailureKind.NoProgress,
+            "battle_pointer_input_not_committed:" + DescribeProbe());
     }
 
     public string StateHash()
@@ -851,6 +976,99 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     }
 
     private readonly record struct AdventureRevisionBaseline(int Leader, int Interaction, int Route, int Scene);
+
+    private sealed class DemonboundTelemetry(int seed)
+    {
+        private readonly Dictionary<string, int> _skillUses = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> _damageBySkill = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> _statusApplications = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> _failureReasons = new(StringComparer.Ordinal);
+        private bool _battleActive;
+        private int _encountersObserved;
+        private int _corruptionPeak;
+        private int _meditations;
+        private int? _firstPossessionRound;
+        private int _friendlyDamage;
+        private int _downs;
+        private int _permanentDeaths;
+        private int _baneUses;
+        private int _baneDoubleTargetUses;
+        private string[] _previousEventWindow = [];
+        private string? _outcome;
+        private int _battlesCompleted;
+
+        public void Observe(GodotPlayableRunProbe probe)
+        {
+            BattleUiSnapshot? battle = probe.BattleSnapshot;
+            if (probe.BattleActive && !_battleActive) _encountersObserved++;
+            _battleActive = probe.BattleActive;
+            if (probe.SaveSnapshot?.TerminalSummary is { } terminal)
+            {
+                _outcome = terminal.Outcome.ToString();
+                _battlesCompleted = terminal.BattlesCompleted;
+            }
+            if (battle is null) return;
+            BattleUiUnitSnapshot? demonbound = battle.Units.SingleOrDefault(unit =>
+                unit.UnitId.Value == "party-pure_run_demonbound" || unit.DefinitionId.Value == "unit.pure-run.demonbound");
+            if (demonbound is not null)
+            {
+                _corruptionPeak = Math.Max(_corruptionPeak, demonbound.Corruption ?? 0);
+                if (demonbound.IsPossessed && _firstPossessionRound is null) _firstPossessionRound = battle.Round;
+            }
+            if (battle.RecentEvents.Count == 0)
+            {
+                _previousEventWindow = [];
+                return;
+            }
+            string[] currentWindow = battle.RecentEvents.Select(value => value.ToString()).ToArray();
+            int overlap = GodotGameplayEventWindow.NewEventOffset(_previousEventWindow, currentWindow);
+            _previousEventWindow = currentWindow;
+            int baneTargets = 0;
+            foreach (BattleEvent battleEvent in battle.RecentEvents.Skip(overlap))
+            {
+                switch (battleEvent)
+                {
+                    case SkillUsedEvent skill when skill.ActorId.Value == "party-pure_run_demonbound":
+                        Increment(_skillUses, skill.SkillId.Value);
+                        if (skill.SkillId.Value.Contains("demonbound.bane", StringComparison.Ordinal)) _baneUses++;
+                        break;
+                    case DamageAppliedEvent damage when damage.SourceId.Value == "party-pure_run_demonbound":
+                        Increment(_damageBySkill, damage.SkillId.Value, damage.Amount);
+                        if (damage.SkillId.Value.Contains("demonbound.bane", StringComparison.Ordinal)) baneTargets++;
+                        BattleUiUnitSnapshot? target = battle.Units.SingleOrDefault(unit => unit.UnitId == damage.TargetId);
+                        BattleUiUnitSnapshot? source = battle.Units.SingleOrDefault(unit => unit.UnitId == damage.SourceId);
+                        if (target is not null && source is not null && target.PlayerNumber == source.PlayerNumber) _friendlyDamage += damage.Amount;
+                        break;
+                    case StatusAppliedEvent status when status.SourceId.Value == "party-pure_run_demonbound":
+                        Increment(_statusApplications, status.StatusId.Value);
+                        break;
+                    case MeditationUsedEvent meditation when meditation.UnitId.Value == "party-pure_run_demonbound":
+                        _meditations++;
+                        break;
+                    case UnitDefeatedEvent defeated when battle.Units.SingleOrDefault(unit => unit.UnitId == defeated.UnitId)?.PlayerNumber == 0:
+                        _downs++;
+                        break;
+                    case RunPermanentDeathRolledEvent death when death.PermanentDeath:
+                        _permanentDeaths++;
+                        break;
+                    case CommandRejectedEvent rejected when rejected.ActorId.Value == "party-pure_run_demonbound":
+                        Increment(_failureReasons, rejected.Reason);
+                        break;
+                }
+            }
+            if (baneTargets >= 2) _baneDoubleTargetUses++;
+        }
+
+        public GodotDemonboundRunMetrics Build() => new(seed, _outcome, _battlesCompleted, _encountersObserved,
+            _corruptionPeak, _meditations, _firstPossessionRound, _friendlyDamage, _downs, _permanentDeaths,
+            _baneUses, _baneDoubleTargetUses, Copy(_skillUses), Copy(_damageBySkill), Copy(_statusApplications), Copy(_failureReasons));
+
+        private static void Increment(Dictionary<string, int> values, string key, int amount = 1) =>
+            values[key] = values.GetValueOrDefault(key) + amount;
+
+        private static IReadOnlyDictionary<string, int> Copy(Dictionary<string, int> values) =>
+            new Dictionary<string, int>(values, StringComparer.Ordinal);
+    }
 
     public bool IsTerminal
     {
@@ -962,14 +1180,6 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             ? value.GetInt32()
             : fallback;
 
-    private readonly record struct BattleAuthorityStamp(int Round, string ActiveUnit, PlayableBattlePhase Phase,
-        BattleTargetingMode TargetingMode, int EventCount)
-    {
-        public static BattleAuthorityStamp From(BattleUiSnapshot? snapshot) => snapshot is null
-            ? new BattleAuthorityStamp(-1, string.Empty, PlayableBattlePhase.Faulted, BattleTargetingMode.None, -1)
-            : new BattleAuthorityStamp(snapshot.Round, snapshot.ActiveUnitId.Value, snapshot.Phase,
-                snapshot.TargetingMode, snapshot.RecentEvents.Count);
-    }
 }
 
 public sealed class GodotGameplayScenarioException(GodotGameplayFailureKind kind, string message) : Exception(message)

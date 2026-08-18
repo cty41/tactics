@@ -343,7 +343,10 @@ try {
                 throw "Unable to parse GdUnit4Net suite declaration: $($_.FullName)"
             }
             "$($namespaceMatch.Groups[1].Value).$($classMatch.Groups[1].Value)"
-        } | Where-Object { $_ -ne 'Tactics.Godot.Tests.GameplaySpec.GodotGameplayRuntimeRunnerTests' } |
+        } | Where-Object { $_ -notin @(
+            'Tactics.Godot.Tests.GameplaySpec.GodotGameplayRuntimeRunnerTests',
+            'Tactics.Godot.Tests.GameplaySpec.GodotDemonboundLongRunTests'
+        ) } |
         Sort-Object -Unique)
     if ($suiteNames.Count -eq 0) { throw 'No non-gameplay GdUnit4Net suites were discovered.' }
     foreach ($suiteName in $suiteNames) {
