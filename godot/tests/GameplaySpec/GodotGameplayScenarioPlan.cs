@@ -210,4 +210,5 @@ public enum GodotGameplayFailureKind { Contract, Timeout, NoProgress, Action, As
 public sealed record GodotGameplayTraceEntry(int Ordinal, string Phase, string Kind, bool Succeeded, string StateHash, long ElapsedMs, string? Diagnostic);
 public sealed record GodotGameplayScenarioResult(string ScenarioName, bool Succeeded, GodotGameplayFailureKind? FailureKind,
     string? ErrorCode, IReadOnlyList<GodotGameplayTraceEntry> Trace, bool ProductionSaveUnchanged,
-    int RemainingTemporaryNodes, string ProductionSaveBefore, string ProductionSaveAfter);
+    int RemainingTemporaryNodes, string ProductionSaveBefore, string ProductionSaveAfter,
+    GodotDemonboundRunMetrics? DemonboundMetrics = null);
