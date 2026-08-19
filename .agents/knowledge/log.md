@@ -1,12 +1,32 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-19
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:ce1d1722a4189c47786bdce4ad2e6c98f2ecd42e2b2a010bcf553e6a4ce53939`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:e67d18852a6dc97e913eb5c01843dd1e863e7a2eba67c36ff8852e0627fb97e1`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:1ea6ea7e9a16c80bfbdb74c3ff81e27a1566db1b31502b2cbfd00b29356456b6`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:92d44f751e42f0327e61fe3a8ac34e74de1c1695eea6be8a27888f13018e4740`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:95119fdbb672cec85121ab4a98b2ea8aab72bed70ef7c107de91a52adc32303c`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:455548f4662675be3a2626f65ea722a1ba0664c783ec40976499a8353e7d7b18`。
+
 ## 2026-08-18
-* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:f85f47e03ccaf588977823bbff1f3f9649ef48f04e1678b5d41c03293505006f`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:3b126263205eb3d0ec5196d364b994937848ce3d83b25b191cd6ab2e6af8e7b4`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:92d44f751e42f0327e61fe3a8ac34e74de1c1695eea6be8a27888f13018e4740`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:b706a85cd80b99ae027021f3aba9c1e55fcd59bc9c9c9c1fd477e489cc45acb5`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:ab1bf85f1a84461952a620912f446f0904f5d0b2685853b9544272ddbeb7abe3`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:82528d880e6693cec33f43587b9e918213a1345700ee18c1e82c59391265abf7`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:01aa83b6474e9179320a8196c1badc4d9bcde0fc786afdb7469d417f9bf496b7`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:88c22da8a1c3462b64614f359d9313e93a45222022e8b9c20f31699f54cec5ac`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:1ea6ea7e9a16c80bfbdb74c3ff81e27a1566db1b31502b2cbfd00b29356456b6`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:536c08d6b30756c0a092a22791de34427331da2f41b2e43443f6d05ad4af7744`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:0876ab4b0368e4edf53d80bb4163e46cbe5dcbbe162c1a334e7b16a2f104077e`。
+* **Update**: Tile Adventure 权威状态迁入 `PureRunState`，存档升至 V9；V8 活跃局强制重开但保留终局摘要，事件战 checkpoint、路线选择、领队与角色格均可恢复。
+* **Update**: Adventure TileMapLayer 统一原生投影与相邻交互，Runner 改用动作前 revision fencing 和扩展状态哈希；20 场 Godot Gameplay acceptance 批次通过，人工可读性与手感仍 pending。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:a7fdf8ce077aaa03e0a6e54336e1334457b304de3d4f6140a2d82066381cef15`。
 
 ## 2026-08-17
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:00e7c68ce814b5f4f84bedb7dabe3cb69a1b01e00c26a15e00489932585b4b98`。
-* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:b106c9ce68cd9a1393974c1c15c161fa49b308548c04806a4d0cfbad7c9eddbe`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:ff4e0b889a7ea7c9ef361243bb02c296315a585c05ae74cb01ba025c65db2c08`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:b770b8dba43958f510bbf6e51a00ff23144a27b35da5d68f216f202eb8e21553`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:52f4f29de7ac7f91b2682cc25610df6e996ae9d36f6374f583885dac3b8ef7c3`。
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:6dc1ff854e93ef35da0a155fdb29db44d2a9d7b0402186112d595117f270df6c`。
 * **Workbench closure**: 全局草稿/单 Undo 事务、typed rebind Delete、Skill BattleTransition 预览、原生 Presentation runtime preview、MCP 生命周期与 AI/QA 诊断完成自动闭环；完整 Godot verifier 通过，真实 Editor 人验保持 pending。
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:636eee27a2a4f9bd62c4fdf28c1f52ba2afe85ee363762ae78135cb230e691c4`。
@@ -340,6 +360,8 @@
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:c4c7f7adc1fa8276fd7db81be3db016ba55f2f540895be24963a0ae46a508529`。
 
 ## 2026-07-14
+* **Update (2026-08-18)**: Godot Battle 左上角新增当前行动者状态卡，显示头像、名称、HP/MP 与可选连续腐化条；Hover/LOS 详情改为画布内鼠标浮层且不拦截输入，自动语义通过、人工可读性 pending。
+* **Update (2026-08-18)**: Demonbound 非大师实现加入四选三、Save V7、腐化/冥想、附身 AI、永久死亡、Catalog 160、Workbench round-trip 与 Gameplay Spec v3；自动门禁通过，三局完整 Run、可读性和同 seed A/B 保持人工 pending。
 * **Update (2026-08-15)**: Gameplay Test Framework 新增 Godot v2 Main.tscn Runner、受控 checkpoint、生产输入、隔离 Save、watchdog 与五场景结构化报告；统一迁移门禁拒绝旧报告和重复 scenario 身份，人工边界缩减为可读性、动画观感和真实 Editor Assembly Reload。
 * **Sync**: `mewgenics-reference-analysis` 已同步到来源指纹 `sha256:5440f1243da2099b84fb0adceb31384a23f2972b2828a31b623b58ab897e7bc3`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:c5bb833c80c14524000a378200da1320e749d264ae36b4f1855ed2f7d7473a49`。
@@ -364,3 +386,6 @@
 * **Review Fix**: 旧 `death_state_volume_review_v02.png` 的单 Tile 合成将尸体错误放在 Tile 中心上方 `25px`；新增多 Tile `v03`，同时展示精确 Alpha AABB 居中与仅诊断用 `+8px` 屏幕 Y 对照，候选与 Runtime 均未改变。
 * **Fix**: 移除鼠标世界坐标进入 `WorldToCell` 前重复施加的半格 Anchor 补偿，修复等距战场光标与高亮 Tile 固定 `(0.5, 0.5)` 偏移；新增格内多点坐标回归。
 * **Update (2026-08-13)**: Godot migration 记录 Phase 8E 完整棋盘取景、Esc 非破坏性暂停菜单、committed-event Damage Number 与原子成长事务；Catalog 124 不变，人工相机/菜单/动态数值/成长验收继续 pending。
+* **Update (2026-08-18)**: Pure Run Artwork schema v1 增加有序 series、每姿态最多五个不同 ImageGen 输出、逐版不可变 feedback 与 provisional concept-only 门禁；Demonbound 九姿态作为首个持续验证 Goal，Hunter bootstrap 蒙版等待人工 receipt。
+* **Update (2026-08-18)**: Artwork 状态机增加 behind-core 遮挡合同、可见面积上限、核心行连续性、确定性 `calibrate-core` 与 `depthReview`；Demonbound Idle UL v1/v2 保留为已反馈失败稿，v3 前先补齐机器门禁。
+* **Update (2026-08-18)**: Pure Run Artwork series 的五版硬上限改为可选预算：`maxUniqueOutputs: null` 表示不限版，正整数才启用有限预算；预算变更必须通过 `set-series-output-limit` 生成不可变审计记录。Demonbound 九姿态 series 已由 5 版改为不限版，仍保留逐版反馈与人工审核门禁。

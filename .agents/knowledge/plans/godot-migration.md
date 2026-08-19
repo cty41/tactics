@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration implementation
 description: Unity frozen Oracle to Godot migration boundaries, parity closure, content compilation and batch ownership.
 tags: [migration, godot, core, parity, testing]
-timestamp: "2026-08-17T16:37:19+08:00"
+timestamp: "2026-08-19T23:03:49+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/migration
   - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
 verified_revision: 2b341cb3
-source_fingerprint: sha256:6dc1ff854e93ef35da0a155fdb29db44d2a9d7b0402186112d595117f270df6c
+source_fingerprint: sha256:e67d18852a6dc97e913eb5c01843dd1e863e7a2eba67c36ff8852e0627fb97e1
 ---
 
 # Current state
@@ -31,9 +31,8 @@ ScriptableObject/AssetBundle/RuleTile：Application 作者合同直接编译当�
 Resource。
 
 统一内核现包含 Document Envelope、规范化 revision、typed ChangeSet、正反向引用 snapshot、沙盒 Session
-与多参与者逆序回滚协调器。Main Screen 的 Map、Event、Treasure、Encounter/Layout、AI、Skill 和
-Godot-native Presentation Profile 由 workspace coordinator 汇总草稿，以一次 Validate/Apply/Revert 和一个 Undo
-action 提交。Resource、Catalog、UID ledger、tombstone 与 prospective reference graph 全部 staging；同批 typed
+与多参与者逆序回滚协调器。Main Screen 顶层收敛为 Map、Event、Skill / Presentation；Treasure 是 Event 页内的独立资源类别，Encounter/Layout 与 AI 保留后台/MCP 作者能力。可见页面由 workspace coordinator 汇总草稿，以一次 Validate/Apply/Revert 和一个 Undo
+action 提交。Event/Treasure 图只投影当前运行时语义，稳定节点布局进入 canonical revision，但不保存第二份语义边。Resource、Catalog、UID ledger、tombstone 与 prospective reference graph 全部 staging；同批 typed
 rebind 后才允许删除 Workbench-owned 资源，任一故障均回滚。Skill 使用隔离 BattleState 执行真实
 `BattleTransitionService` 预览；通用 Presentation 复用 runtime player，并对当前 runtime 不消费的 Delay/Parallel
 fail-closed。Poison Spear Graph 继续保持 Workbench-only 专用边界。自动作者闭环已完成，真实视觉/操作/Reload
@@ -42,8 +41,7 @@ fail-closed。Poison Spear Graph 继续保持 Workbench-only 专用边界。自�
 独立 `Tools/tactics-authoring-mcp` stdio Server 声明 list/get/validate/apply/preview/reference-audit 六个工具，并通过
 `TOOLS` Editor bridge 绑定唯一 canonical project root、session token 和 ready state；Editor 缺失或出现多个
 descriptor 时拒绝调用。`apply` 的 `changes+lifecycle` 支持 Create/Duplicate/Delete 与 typed rebind 的单批原子事务；
-typed Skill preview 使用相同预览服务。QA 页扫描 Catalog/UID/ownership、作者 revision、正反向引用、workspace
-dirty、preview cleanup、MCP session 与 Gameplay Spec 报告。
+typed Skill preview 使用相同预览服务。八类 `AuthoringAssetSpecV1` 可由 TypeScript 编译为同一 batch；Create/Duplicate 的 `initialSnapshot` 与生命周期操作属于一个 Editor Undo action。Catalog/UID/ownership、作者 revision、正反向引用、workspace dirty、preview cleanup、MCP session 与 Gameplay Spec 摘要进入全局状态与自动门禁，不再实例化独立 QA 页。
 MCP Server/bridge 不进入 Windows RC 产品程序集。
 
 远程 `main` 是 Godot 产品与治理权威；唯一 Godot 项目为 `godot/project.godot`。完整 Unity Git/LFS 历史已从公开候选中分离，并由本地 bundle/bare archive 与私有 `cty41/tactics-legacy-private` 冷恢复证据保存；未来公开单 root 不携带旧 Tag、分支或对象。Frozen Oracle、Golden 与迁移 receipt 作为项目自有的公开测试/历史证据继续存在，但不进入产品运行时。`d092a955` 定性为技术 Spike：C#、GraphEdit、Undo、SubViewport、ResourceSaver、GdUnit4Net 和 headless 可运行，但没有证明 Unity 行为或真实资产等价。
@@ -181,6 +179,8 @@ Godot 正式 UI 收口采用原生 `Theme`/`Control` 等价表达 Unity UI Toolk
 Godot ownership 验证另提供 `Test-GodotOwnedWithoutUnity.ps1`：它从 tracked working tree 建立系统临时副本，明确排除 `Assets/`、`Packages/`、`ProjectSettings/` 与 `src/Tactics.UnityOracle.Tests`，并在副本中执行 `Verify-GodotMigration.ps1 -GodotOwned`。该模式仍运行 Core/Application、Godot test host、Gameplay Spec、Debug/Release、Compatibility/Forward+、运行时与 OKF 结构校验；仅跳过需要活动 Unity 源/AssetDatabase 的 Oracle 与生成批次，并允许 OKF 中作为历史来源保留的 Unity `repo_paths` 在这个刻意裁剪的副本中缺失。Godot v2 Gameplay Spec 保持运行，唯一跳过的是对已排除 Unity runtime plan 文件的 byte-level deep compare。测试开始和结束均清理精确验证过的系统临时目录，不读写生产 `user://` 存档，也不把项目级未跟踪 godot-ai 配置当作发布依赖。
 
 ## Next gates
+
+魔剑士持续循环已把 Godot-owned canonical Catalog 扩展到 160，并加入四选三、Save V7、腐化/冥想、全部非大师技能、附身 AI、永久死亡、Typed Resource/Workbench round-trip 及 Gameplay Spec v3 状态场景。Battle Adapter 进一步把左上占位文字替换为当前行动者头像/名称/HP/MP/可选腐化条状态卡，并将 Hover/LOS 详情拆为输入穿透浮层。相关 Godot UI 与 Gameplay Spec 定向门禁已通过；三局人工完整 Run、HUD/附身/置灰可读性、Workbench 真实 Reload 和同 seed A/B 仍是独立人工/平衡闸门。
 
 1. Phase 4 Unit 与 Phase 5A Buff/Item 均已完成并删除各自 active plan；结果由代码、设计、manifest、测试、OKF 与 Git 历史保存。
 2. 项目 MCP Profile 当前为 `presentation`；统一入口在每次完整门禁中验证项目级白名单配置。

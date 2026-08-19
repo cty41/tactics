@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-17T16:37:20+08:00"
+timestamp: "2026-08-19T23:03:47+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -14,12 +14,14 @@ repo_paths:
   - .agents/skills/plan-mode-plan-writer/SKILL.md
   - .agents/skills/manual-qa-handoff/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:ff4e0b889a7ea7c9ef361243bb02c296315a585c05ae74cb01ba025c65db2c08
+source_fingerprint: sha256:95119fdbb672cec85121ab4a98b2ea8aab72bed70ef7c107de91a52adc32303c
 ---
 
 # Current State
 
 `.agents/docs/` 主要保存当前设计与使用指南；同一主题优先维护一份权威文档。`brainstorm.md` 是唯一的临时灵感收集箱，不属于设计真相源或实施承诺。想法成熟后迁入主题设计、[项目已知缺口](../plans/project-known-gaps.md)或正式计划。
+
+魔剑士 `Demonbound` 已从职业 brainstorm 迁入 `.agents/docs/demonbound-class-design.md` 作为唯一权威设计，并由 `.agents/plans/demonbound-loop-development.md` 持续跟踪非大师实现、自动样本与人工门禁。三个大师技能及正式美术/完整表现仍由[项目已知缺口](../plans/project-known-gaps.md)导航；在人工账本通过前不得把自动绿灯表述为体验验收。
 
 `.agents/plans/` 只保存仍需执行且 decision-complete 的计划。实现完成并验证后，长期规则回写 docs，未实施项进入已知缺口或经批准的新计划，completed plan 随后删除并由 Git 保留历史。
 
