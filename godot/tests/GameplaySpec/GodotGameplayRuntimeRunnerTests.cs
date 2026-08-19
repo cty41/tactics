@@ -22,6 +22,20 @@ public class GodotGameplayRuntimeRunnerTests
 
     [TestCase]
     [RequireGodotRuntime]
+    public void DemonboundProductionPartyUsesTheProductionStartingSkillButtonName()
+    {
+        GodotGameplayScenarioPlan source = LoadCompiledPlan("adventure-fixed-seed-full-run");
+        GodotGameplayScenarioPlan plan = WithParty(source,
+            ["pure_run_mage", "pure_run_necromancer", "pure_run_demonbound"], "Runner.NecromancerParty");
+
+        AssertThat(plan.RuntimeActions.Any(action =>
+            action.Target == "starting_skill__skill_necromancer_summon-skeleton_lv1")).IsTrue();
+        AssertThat(plan.RuntimeActions.Any(action =>
+            action.Target == "starting_skill__skill_necromancer_summon_skeleton_lv1")).IsFalse();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
     public void ValidatedCheckpointCatalogProducesStableCanonicalV9Hashes()
     {
         var expected = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -586,7 +600,7 @@ public class GodotGameplayRuntimeRunnerTests
     {
         "pure_run_amazon" => new("clickPointerTarget", "PlayerInput", "starting_skill__skill_amazon_thrust_lv1", Parameters(("targetKind", "UiElement"))),
         "pure_run_mage" => new("clickPointerTarget", "PlayerInput", "starting_skill__skill_mage_fireball_lv1", Parameters(("targetKind", "UiElement"))),
-        "pure_run_necromancer" => new("clickPointerTarget", "PlayerInput", "starting_skill__skill_necromancer_summon_skeleton_lv1", Parameters(("targetKind", "UiElement"))),
+        "pure_run_necromancer" => new("clickPointerTarget", "PlayerInput", "starting_skill__skill_necromancer_summon-skeleton_lv1", Parameters(("targetKind", "UiElement"))),
         _ => throw new ArgumentOutOfRangeException(nameof(actor), actor, "Unknown production party actor.")
     };
 
