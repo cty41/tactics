@@ -16,6 +16,18 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Godot UI tests cover active-unit/faction projection, portrait and value binding, missing-special-row collapse, 0/4/5/8/9/10 stage mapping, possessed pulse state, tooltip canvas clamping and `MouseFilter.Ignore`. PlayableRun UI 39/39 and Gameplay Spec journeys 15/15 passed. Visual hierarchy, portrait crop, color discrimination, pulse comfort and pointer interference remain manual. The unified verifier later stopped on an unrelated dirty artwork provenance failure, not this UI slice.
 - User verdict: none.
 
+### MQA-GODOT-DEMONBOUND-BANE — Two-cell purple crescent readability and timing
+
+- Status: `pending`
+- Source: Demonbound Bane active-skill redesign
+- Action: In a disposable battle, cast Hex: Bane in all four directions. Include one cast through a wall, one with only a far-cell enemy, and one with enemies in both the first and second cells. Repeat once at 2× or 4× speed and once while Demonbound is possessed.
+- Expected: The actor uses the melee swing pose; a purple crescent travels exactly two cells, passes through walls and the first target, triggers the first-cell hit before continuing to the second-cell hit, and disappears only after the second cell. No persistent blade glow remains. Possession changes target hostility without changing the visual path.
+- Observe: Battle board actors, target highlights, damage numbers, Debuff status overlay, corruption bar and Godot Output.
+- Preserve on failure: Short video, direction, unit cells, wall cell, speed, corruption, possession state, Run seed and Output excerpt.
+- Save boundary: Skill use mutates the disposable battle and Run resources; preserve the pre-battle checkpoint if testing possession.
+- Automated evidence: Core/Application cover two-cell legality, wall piercing, near-to-far independent rolls, level damage/status progression and main-attribute scaling. Godot tests cover the two-segment programmatic FX queue and transient cleanup. Crescent shape, timing clarity and speed-dependent feel remain manual.
+- User verdict: none.
+
 ### MQA-GODOT-DEMONBOUND-RUN — Three-party full-Run balance baseline
 
 - Status: `pending`
@@ -44,8 +56,8 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 - Status: `pending`
 - Source: Demonbound typed Resource and Skill Workbench integration
-- Action: Duplicate one Demonbound skill to a disposable authoring resource, change `executionProfile.corruptionCost`, Validate and Apply, Reload the C# assembly, confirm the value, then Undo/Redo and delete the disposable copy through the Workbench transaction.
-- Expected: Catalog, typed Resource and Workbench preserve the value through Apply, Reload, Undo and Redo; validation failures or cancellation create no partial resource, UID or reference side effects.
+- Action: Duplicate one Demonbound skill to a disposable authoring resource, change `executionProfile.corruptionCost` and `executionProfile.damageScaling`, Validate and Apply, Reload the C# assembly, confirm both values, then Undo/Redo and delete the disposable copy through the Workbench transaction.
+- Expected: Catalog, typed Resource and Workbench preserve both values through Apply, Reload, Undo and Redo; validation failures or cancellation create no partial resource, UID or reference side effects.
 - Observe: Skill page field, diagnostics, Catalog/reference audit, filesystem result and Godot Output.
 - Preserve on failure: Source/destination ContentId and path, revision, exact action, resource copy, screenshot and Output.
 - Save boundary: Never edit a canonical Demonbound resource for this acceptance; use a disposable duplicate and Workbench lifecycle actions only.
@@ -67,14 +79,15 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 ### MQA-GODOT-CONTENT-WORKBENCH — Unified authoring and fixture shell
 
 - Status: `pending`
-- Source: `6cf74ce0`, unified Godot Content Workbench checkpoint; 2026-08-16 reload-safe Resource loading repair; 2026-08-17 unified authoring kernel, MCP implementation, deterministic Assembly Reload repair and Unity-style information-hierarchy pass
-- Action: Open Tactics Tooling; first inspect the complete seven-layer Map at normal zoom and verify compact circular nodes, connections, tooltip and right Inspector. Resize the Main Screen, then visit Event, Treasure, Encounter, Skill, AI, native Presentation and QA. Make disposable drafts on two pages and use one Validate All → Apply All → Undo → Redo journey. Exercise Skill BattleTransition preview, then preview native Skill/Status/Unit Presentation with Play/Pause/Stop. Reload the C# assembly once and repeat one native Presentation preview before checking AI diagnostics.
-- Expected: The Workbench follows the active Godot Editor theme while retaining domain semantic colors. Map nodes remain circular and compact without title/ContentId expanding their bounds; the Map, Skill, Encounter and Presentation split panes remain readable at ordinary Editor sizes. The bridge reports ready only after all immediate authoring Resource types are typed; no base-`Resource` cast error appears. The two drafts commit as one Undo action; lifecycle/rebind conflicts fail closed; Skill preview reports deterministic transition events without changing formal state; Presentation/AI controls reflect only runtime-effective fields; Stop, page switch and Reload leave zero Workbench temporary nodes or stale signals.
-- Observe: Tactics Tooling Main Screen, circular Map nodes, resizable pane hierarchy, Inspector/GraphEdit/SubViewport, status labels and Godot Output.
+- Source: `6cf74ce0`, unified Godot Content Workbench checkpoint; 2026-08-16 reload-safe Resource loading repair; 2026-08-17 unified authoring kernel and Unity-style hierarchy; 2026-08-18 three-surface navigation, Event/Treasure graph and TS→MCP authoring chain
+- Reopen reason: Event/Treasure navigation and graph interaction changed after the earlier partial pass.
+- Action: Open Tactics Tooling and confirm the only top-level tabs are Map, Event and Skill / Presentation. In Event, open one Event and one Treasure: inspect the constrained Event choice graph, drag nodes, toggle a Check between None and an attribute, confirm hidden Failure data returns, then edit/reorder a Treasure weighted row. Use disposable drafts on Map and Event and complete Validate All → Apply All → Undo → Redo. Finally preview one native Presentation, perform one C# Reload and repeat the preview.
+- Expected: Treasure appears as an Event-page resource category rather than a top-level tab; Encounter, AI, Audio and QA do not instantiate visible pages. Event shows Start→Option→Check→Success/Failure→End without arbitrary Branch/cycle semantics; Auto Success hides but does not erase Failure data. Treasure shows Root→Gold/Equipment/Consumable/Buff and edits weighted rows in the Inspector. Layout survives Apply/Undo/Redo/Reload, the global batch remains one Undo action, and page switch/Reload leaves no temporary preview nodes or Output errors.
+- Observe: Tactics Tooling top tabs, Event resource list, GraphEdit, right Inspector, global status, Presentation SubViewport and Godot Output.
 - Preserve on failure: Tab name, selected ContentId/resource path, exact action, screenshot, full Output and whether Assembly Reload occurred.
 - Save boundary: Use read-only validation/preview actions unless working on a disposable resource copy; do not overwrite canonical content during first acceptance.
-- Automated evidence: Global workspace batching, prospective reference graph, atomic Create/Duplicate/Rebind/Delete, UID-preserving Undo/Redo and every persistence fault point are covered. Skill preview executes the real `BattleTransitionService` on isolated state; native Skill/Status/Unit Presentation uses the runtime player and asserts cleanup; MCP applies `changes+lifecycle` as one canonical Editor Undo action. Reload-safe Resource tests pass 7/7. The Unity-style UI pass adds shared adaptive theme components, 44px circular Map node/glyph regression and reload-safe Workbench teardown tests; Editor lifecycle UI tests pass 4/4 and authoring round-trip tests pass 6/6. A dedicated hidden Windows smoke completed cold Skill/Status/Unit previews, rotated the NamedPipe token during one real C# Assembly Reload, repeated native preview, exited cleanly, and found zero `InvalidCastException`, unload, stale delegate, missing method, signal-disconnect or other Godot `ERROR` lines. The complete `Verify-GodotProject.ps1` gate passes Core 104, Application 133, Frozen Oracle 15, MCP protocol, isolated GdUnit/Gameplay journeys, Compatibility/Forward+, Release dependency isolation, OKF and whitespace. The PlayableRunUi suite still emits its independently tracked four-orphan-node runner warning while page-replacement and Workbench cleanup assertions pass. Only real Apply/Undo/Redo interaction feel, Graph readability, pane density and SubViewport visual judgment remain manual.
-- User verdict: none.
+- Automated evidence: Full `Verify-GodotProject.ps1` passes: Core 132, Application 176, Frozen Oracle 15, MCP protocol, TypeScript authoring compiler, isolated GdUnit (including Editor lifecycle 6/6 and authoring round-trip 6/6), Gameplay journeys 27/27, both renderers and Release isolation. Layout backward compatibility/revision, unknown node rejection, three-tab navigation, eight typed spec kinds, dependency cycles and Create `initialSnapshot` are covered. `PlayableRunUi` retains its separately tracked four-orphan-node infrastructure warning while passing 39/39. Graph readability, drag/Inspector feel and real Editor Reload remain human-only.
+- User verdict: Partial pass: after rebuilding C# in the real Editor, the repeated `AuthoringWorkspaceCoordinator` Output errors stopped. Remaining page interaction and visual checks are still pending.
 
 ### MQA-GODOT-FORMAL-UI — Formal Pure Run visual shell
 
@@ -163,6 +176,78 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Save boundary: Ordinary battle mutation; use a disposable Run if the exact encounter state must be replayed.
 - Automated evidence: Core covers corner/edge tangency, non-axial interior crossing and nearest blocker; Application proves Ice Bolt preview and commit through a corner-touching ally; GdUnit covers the Godot contract boundary. Visual targeting and the reported isometric arrangement remain manual.
 - User verdict: none after the shadow-cone contract change.
+
+### MQA-GODOT-TILE-READABILITY — Adventure Tile readability
+
+- Status: `pending`
+- Source: Gameplay-Test-Driven Tile Adventure Goal
+- Action: From Start Camp, traverse every implemented adventure node type and inspect the 10×10 isometric board at the supported window sizes.
+- Expected: Walkable cells, blocked cells, current position, actors, interaction objects, route exits, and node state changes remain distinguishable without relying on debug text.
+- Observe: Adventure board, tile highlights, actor/object silhouettes, overlay, and Godot Output.
+- Preserve on failure: Screenshot with window size, node ID, leader cell, pointer position, and Output; do not continue to the next node.
+- Save boundary: Visual inspection and hover do not mutate the Run; entering or resolving a node does.
+- Automated evidence: Projection round trips, board readiness, cell coordinates, object state, and node lifecycle assertions pass through the formal Main scene.
+- User verdict: None; pending human acceptance.
+
+### MQA-GODOT-TILE-INPUT-FEEL — Adventure click and leader-switch feel
+
+- Status: `pending`
+- Source: Gameplay-Test-Driven Tile Adventure Goal
+- Action: Click near cell edges and occupied cells, move the leader along short and long valid paths, switch portraits, and repeat movement with each available leader.
+- Expected: Intended cells and actors are selected consistently; paths commit once; the selected leader changes clearly; fixed Idle companions do not appear to accept movement.
+- Observe: Pointer highlight, route preview, leader portrait, actor motion, final cell, and Godot Output.
+- Preserve on failure: Short video or sequential screenshots, clicked screen position, expected/actual cell, leader ID, and Output; stop before another input hides the state.
+- Save boundary: Leader selection is transient; committed movement and interactions may mutate the Run checkpoint.
+- Automated evidence: AdventureCell and AdventureActor production-input targets, leader-switch checkpoints, and final coordinate assertions pass.
+- User verdict: None; pending human acceptance.
+
+### MQA-GODOT-TILE-SCENE-CHANGE — Interaction and event-battle scene changes
+
+- Status: `pending`
+- Source: Gameplay-Test-Driven Tile Adventure Goal
+- Action: Resolve a normal treasure, cursed chest, and guarded altar, including the transition into battle and return to the changed adventure scene.
+- Expected: Each interaction has an unambiguous before/after state; event battle opens once with the correct context; victory returns to the same node with the chest or altar visibly resolved.
+- Observe: Interaction object, scene overlay, battle context, post-battle board, reward state, and Godot Output.
+- Preserve on failure: Pre/post screenshots, node and object IDs, battle context, reward summary, save/backup copy, and Output; do not retry the interaction.
+- Save boundary: Interaction and battle settlement mutate the Run; preserve the pre-event checkpoint and production backup.
+- Automated evidence: Interaction-settled, Event Battle Ready, overlay-updated, event-result, battle-context, and idempotent-state assertions pass.
+- User verdict: None; pending human acceptance.
+
+### MQA-GODOT-TILE-ROUTE-MISCLICK — Route overview and accidental submission risk
+
+- Status: `pending`
+- Source: Gameplay-Test-Driven Tile Adventure Goal
+- Action: At both three-way route choices, inspect candidates, deliberately click between choices and on the overview background, then select and submit one route.
+- Expected: Background or near-miss clicks do not choose or submit a route; the chosen route is clearly previewed; submission occurs only through the explicit confirmation action and cannot duplicate.
+- Observe: Candidate routes, selected route, submit control, unlocked node, lifecycle state, and Godot Output.
+- Preserve on failure: Screenshot, pointer position, candidate/selected route IDs, node lifecycle, save/backup copy, and Output; stop before advancing.
+- Save boundary: Preview is transient; route submission mutates the Run once.
+- Automated evidence: RouteNode targeting, candidate-route assertion, route-submitted checkpoint, lifecycle transition, and fixed topology regression pass.
+- User verdict: None; pending human acceptance.
+
+### MQA-GODOT-TILE-START-CAMP — Start Camp presentation and setup flow
+
+- Status: `pending`
+- Source: Gameplay-Test-Driven Tile Adventure Goal
+- Action: Start a new Run, choose the party by clicking characters in order, choose each starting skill, and enter the adventure board.
+- Expected: Selection order is readable and reversible before confirmation; each character receives exactly one visible starting skill choice; confirmation enters the camp/board without duplicate actors or stale prompts.
+- Observe: Camp composition, order indicators, skill cards, confirmation state, initial board, and Godot Output.
+- Preserve on failure: Screenshots of every setup page, selected order and skills, initial actor cells, save/backup copy, and Output.
+- Save boundary: Draft selections remain transient until final confirmation; confirmation creates or replaces the active Run checkpoint.
+- Automated evidence: Formal click-order setup, starting-skill selection, Board Ready, actor coordinates, and fixed-seed setup assertions pass.
+- User verdict: None; pending human acceptance.
+
+### MQA-GODOT-TILE-ESCORT-DIFFICULTY — Lost villager escort readability and difficulty
+
+- Status: `pending`
+- Source: Gameplay-Test-Driven Tile Adventure Goal
+- Action: Accept the lost-villager escort, cross the relevant nodes, and play the escort battle while allowing enemies at least one opportunity to threaten the villager.
+- Expected: Escort ownership and destination remain clear; villager AI behavior is understandable; enemy threat is noticeable but recoverable; villager death and party defeat produce the documented failure, while survival produces one reward and completion.
+- Observe: Escort overlay, villager position/HP, enemy target choices, objective result, reward, node state, and Godot Output.
+- Preserve on failure: Run seed, node/battle IDs, turn sequence, villager HP/cell, enemy targets, result, save/backup copy, and Output.
+- Save boundary: Accepting, battle turns, and settlement mutate the Run; use the pre-battle checkpoint for replay and keep production backup unchanged.
+- Automated evidence: Escort state, protected-NPC AI, enemy priority target, special victory/failure, reward, V8 round-trip, and idempotent settlement assertions pass.
+- User verdict: None; pending human acceptance.
 
 ## Passed
 
@@ -356,7 +441,4 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-DEMONBOUND-HUD`
-2. `MQA-GODOT-DEMONBOUND-RUN`
-3. `MQA-GODOT-DEMONBOUND-POSSESSION`
-4. `MQA-GODOT-DEMONBOUND-WORKBENCH`
+1. `MQA-GODOT-CONTENT-WORKBENCH`

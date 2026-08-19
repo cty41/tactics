@@ -9,25 +9,19 @@ status: active
 catalog_scope: monster-ai
 repo_paths:
   - .agents/skills/monster-ai-mcp-workflow/SKILL.md
-  - Assets/Tactics/Scripts/Common/ai/MonsterAI
-  - Assets/Tactics/Scripts/Editor/MonsterAIEditor
-  - Assets/Tactics/AI/BasicMeleeBrain.asset
-  - Assets/Tactics/AI/BasicMeleeGraph.asset
-  - Assets/Tactics/AI/BasicMeleeProfile.asset
-  - Assets/Tactics/AI/FireDemonBrain.asset
-  - Assets/Tactics/AI/Encounters
-  - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
-  - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs
-  - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs
-  - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
-  - Assets/Tactics/Scripts/Common/Units/Unit.cs
-  - Assets/Tactics/Tests/PlayMode/PureRunAiVsAiBenchmarkTests.cs
+  - src/Tactics.Core/AI
+  - src/Tactics.Application/AI
+  - src/Tactics.Core.Tests/AiEncounterRuntimeTests.cs
+  - godot/src/Tactics.Godot.Adapter/Runtime/AiEncounterBatchValidator.cs
+  - godot/content
   - Tools/balance/pure-run-playtest-template.csv
 verified_revision: c56d71ad4ebd
 source_fingerprint: sha256:1ea6ea7e9a16c80bfbdb74c3ff81e27a1566db1b31502b2cbfd00b29356456b6
 ---
 
 # Current State
+
+Godot Core 另有魔剑士附身控制路径：所属阵营保持玩家方，但 controller 切换为 AI；候选先面向存活队友，队友全 Down 后才回退敌人，自身增益/治疗仍可作为合法决策。该路径复用正式 transition legality，附身后技能不再继续累积腐化。
 
 `AiContextBuilder` 构建战斗快照，`IntentGenerator` 生成“可达站位 × 合法技能目标点”候选，`RuleFilter` 执行硬门禁，`IntentScorer` 评分，`IntentResolver` 稳定选取结果，`IntentExecutor` 执行移动与技能计划。可达站位消费 Battle System 已派生的移动预算；固定 10×10 战场统一使用 `clamp(ceil(Speed / 2), 1, 4)`，AI 不另行放大 Speed 或维护第二套移动公式。
 

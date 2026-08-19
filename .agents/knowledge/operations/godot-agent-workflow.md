@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Current verified routing, research, testing and incident-promotion boundaries for the Godot 4.7 C# mainline.
 tags: [godot, agent, workflow, research, incidents]
-timestamp: "2026-08-17T15:01:42+08:00"
+timestamp: "2026-08-19T23:03:49+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -23,7 +23,7 @@ repo_paths:
   - Tools/migration/manifest/godot-tooling.json
   - Tools/public-release
 verified_revision: d092a955
-source_fingerprint: sha256:04f0cfcf11863eb842698c1662904278fff27cf7d193896345d7fdc9a1ee5fa9
+source_fingerprint: sha256:ce1d1722a4189c47786bdce4ad2e6c98f2ecd42e2b2a010bcf553e6a4ce53939
 ---
 
 # Current state
@@ -46,7 +46,7 @@ Windows 内部构建由 `Tools/godot/Build-GodotWindows.ps1` 提供唯一只读�
 - Engine/toolchain 踩坑先进入 `.agents/incidents/godot`；verified 摘要才进入 OKF，重复流程才进入 Skill。
 - Standalone headless ResourceSaver 新增路径时，UID 注册只对当前进程可见；生成器必须固定并持久化 ledger UID，随后先运行 headless Editor filesystem scan，再由独立 Runtime 验证 Catalog。
 - Catalog 的 UID 继续作为生成/审计身份验证；运行时加载使用 receipt 固定的 `DiagnosticPathValue`。连续 headless ResourceSaver 批次可能让 Godot UID cache 暂时指向旧路径，因此不得把该缓存当作运行时 locator 真相源。完整 GdUnit 从版本控制的 `[TestSuite]` 声明发现 suite，并让每个 suite 使用独立串行原生 testhost；完整 Main 页 replacement cleanup 进一步单独运行，Gameplay Spec journeys 也使用独立宿主，避免累积的 SceneTree/ResourceLoader 对象在最终 teardown 互相污染，同时不减少断言覆盖。
-- Ownership closure 的 Map/Treasure 生成器维护 layout v3 的 16 节点/23 边权威地图与确定性 Treasure Resource；split-flank closure 通过独立 ResourceSaver builder 补齐正式 Layout，最终 ledger/receipt 和 Catalog 143 必须一致。旧 Layer 4 批次可以重建自身冻结证据，但检测到权威 Treasure batch 后不得替换 canonical run-map entry。
+- Ownership closure 的 Map/Treasure 生成器维护 layout v3 的 16 节点/23 边权威地图与确定性 Treasure Resource；split-flank closure 通过独立 ResourceSaver builder 补齐正式 Layout。Demonbound ResourceSaver builder 在此基础上生成 16 个技能与 1 个单位、更新四选三 Run/平衡资源，最终 ledger/receipt 和 canonical Catalog 160 必须一致。旧 Layer 4 批次可以重建自身冻结证据，但检测到权威 Treasure batch 后不得替换 canonical run-map entry。
 - Buff/Item disposable DTO 存在时，统一入口会严格编译 14 Buff、3 Consumable、12 Equipment typed draft，重建 export receipt，再连续两次通过 ResourceSaver 生成 28 个定义 Resource 与 29 项分批 Catalog；Phase 6A 存在时 canonical Catalog 为 73 项。该链路不复制只审计的 Buff icon，并在两个 renderer 的 typed runtime 验证后才刷新 `Validated/UnityOwned` generation receipt。
 - Starting Skill disposable DTO 存在时，统一入口会编译 12 项 typed draft，通过 ResourceSaver 生成 11 个新 Skill Resource、12 项分批 Catalog 与原生 1600×900 Gameplay Fixture；`skill.poison-spear.lv1` 保持外部依赖。两轮生成比较 13 个批次独占 artifact；Phase 6A 存在时 canonical Catalog 组合为 73 个唯一 ContentId，并在 Compatibility/Forward+ 后保留已人工接受的 `Validated/UnityOwned` receipt。
 - AI/Encounter disposable DTO 存在时，统一入口会编译共享 BasicMeleeGraph 的 13 节点/12 边、六类 AI、四项敌方技能、两个 Layout 与 N1–N3 Encounter，连续两次通过 ResourceSaver 比较 17 个批次 artifact，并在 Compatibility/Forward+ 验证 15 项分批 Catalog 与 73 项 canonical Catalog。AI 必须共同生成 Engage、当前格攻击和移动后技能候选；不可退化为“无攻击才移动”。
@@ -56,7 +56,7 @@ Windows 内部构建由 `Tools/godot/Build-GodotWindows.ps1` 提供唯一只读�
 
 ## Validation
 
-统一入口为 `Tools/godot/Verify-GodotProject.ps1` 与 `Tactics.Godot.slnx`：锁定 restore、单节点 build、Core/Application/FrozenOracle NUnit、Gameplay Spec 编译与 Main.tscn 报告、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless、双 renderer、ownership receipt 与 OKF。它不暴露 Unity ownership skip 参数，并默认拒绝 Unity 四个工程根目录。Godot Gameplay Spec 报告必须由本轮 GdUnit 新生成，并精确包含预期 scenario/checkpoint、生产 save 前后证据和零临时节点；真实 Editor Assembly Reload 和表现可读性仍单独记录为人工边界。
+统一入口为 `Tools/godot/Verify-GodotProject.ps1` 与 `Tactics.Godot.slnx`：锁定 restore、单节点 build、Core/Application/FrozenOracle NUnit、Gameplay Spec 编译与 Main.tscn 报告、Python、Skill/Incident lint、GdUnit、Release build、Godot Runtime/Editor headless、双 renderer、ownership receipt 与 OKF。它不暴露 Unity ownership skip 参数，并默认拒绝 Unity 四个工程根目录。Godot Gameplay Spec 报告必须由本轮 GdUnit 新生成，当前精确包含 20 个 acceptance 场景，并校验 v2/v3 capability、V9 checkpoint、Adventure revision fencing、生产 save 前后证据和零临时节点；真实 Editor Assembly Reload、Tile 可读性与操作手感仍单独记录为人工边界。
 
 删除前预演由 `Test-UnityRetirementManifest.ps1` 在系统临时副本逐文件应用 `unity-deletion-manifest-v1` 后调用正式主线 verifier。首次干净项目扫描使用 Godot `--import` 等待 UID/import 完成；GdUnit test host 位于 `godot/tests/`，生成的 runner source由验证器从版本控制模板临时注入并在 finally 清理。每个 suite 使用独立 native host；仅对没有断言失败计数的已知 Windows native crash 或 ResourceLoader 空资源宿主故障重试一次，真实测试失败立即终止。OKF 只允许 deletion manifest 已审计的历史 Unity 来源前缀缺失，当前 Godot 和 FrozenOracle 路径必须存在。
 

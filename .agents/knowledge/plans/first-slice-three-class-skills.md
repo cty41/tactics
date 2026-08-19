@@ -10,10 +10,10 @@ catalog_scope: first-slice-three-class-skills
 repo_paths:
   - .agents/docs/three-class-skill-design.md
   - .agents/docs/2026-06-24-pure-run-squad-prototype-design.md
-  - Assets/Tactics/Scripts/Common/Battle/FirstSliceSkillCatalog.cs
-  - Assets/Tactics/Battle/Abilities/SkillGraphs
-  - Assets/Tactics/Tests/PlayMode/FirstSliceSkillCatalogTests.cs
-  - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
+  - src/Tactics.Core/Skills
+  - src/Tactics.Application/Skills
+  - src/Tactics.Core.Tests
+  - godot/content
 verified_revision: c56d71ad4ebd
 source_fingerprint: sha256:36a0cf2d06c6997b451c0fe52f1d6e2261e02b40255f42d6193c5358dd9f7a95
 ---
