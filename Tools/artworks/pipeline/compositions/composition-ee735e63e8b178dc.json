@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-ee735e63e8b178dc",
+  "assetId": "demonbound-cast-dr-raised-v3",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "bottom": [
+        127,
+        230
+      ],
+      "top": [
+        127,
+        121
+      ],
+      "tiltDegrees": [
+        -2.0,
+        2.0
+      ]
+    },
+    "footCenter": [
+      127,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        127,
+        177
+      ],
+      "exitWindow": [
+        123,
+        92,
+        132,
+        166
+      ],
+      "tipRegion": [
+        120,
+        60,
+        135,
+        90
+      ],
+      "guardWindow": [
+        112,
+        163,
+        144,
+        184
+      ],
+      "bladeCenterline": [
+        123,
+        88,
+        132,
+        163
+      ],
+      "maxBladeWidthPx": 9,
+      "gemWindow": [
+        122,
+        168,
+        132,
+        178
+      ],
+      "forbiddenGemRegions": [
+        [
+          120,
+          60,
+          135,
+          90
+        ],
+        [
+          122,
+          184,
+          132,
+          198
+        ]
+      ],
+      "maxGemAreaPx": 36
+    },
+    "forbiddenRegions": [
+      {
+        "name": "left_eye",
+        "rect": [
+          100,
+          126,
+          120,
+          148
+        ]
+      },
+      {
+        "name": "right_eye",
+        "rect": [
+          135,
+          126,
+          155,
+          148
+        ]
+      }
+    ],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {
+      "equipment": 0.22
+    },
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_raised_sword_composition_v5.json",
+    "sha256": "9457a8f91c4af47fd76a6a47f75ddd37811efb98a7ad0442f5c6ed5a09ef7c61"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  }
+}

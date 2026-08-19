@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 3,
+  "contractId": "contract-af662f7fc1c7f8ab",
+  "assetId": "demonbound-cast-dr-near-paw-overlay-v1",
+  "approvedAssetId": "demonbound-cast-dr-near-paw-overlay-v1",
+  "kind": "tile",
+  "direction": "down-right",
+  "pose": "cast-near-paw-overlay",
+  "anchor": null,
+  "maskRequired": true,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/components/doge_capsule_demonbound_cast_dr_near_paw_overlay_v01.png",
+    "preview": "Tools/artworks/doge/components/doge_capsule_demonbound_cast_dr_near_paw_overlay_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  },
+  "assetRole": "component",
+  "componentKind": "paw_overlay",
+  "sourceMode": "derived",
+  "runtimeEligible": false
+}

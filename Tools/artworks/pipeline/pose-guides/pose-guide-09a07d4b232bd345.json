@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "poseGuideId": "pose-guide-09a07d4b232bd345",
+  "compositionId": "composition-2f1e92222e094311",
+  "compositionSha256": "6a1be1b9d4f7908e2e3d10c1c4c08018509661c2fe8c811102f187f8af4e6518",
+  "anchorSha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_body_layer_pose_guide_v1.png",
+    "sha256": "faa70198adccd0ccb1363d275120c053bcb9426fb4fa292033f5e5ea70e0d40d"
+  },
+  "role": "supporting-derived"
+}

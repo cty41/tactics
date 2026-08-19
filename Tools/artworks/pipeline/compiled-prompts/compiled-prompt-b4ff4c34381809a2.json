@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-b4ff4c34381809a2",
+  "jobId": "job-8d5c9871c64e9e4b",
+  "poseGuideId": "pose-guide-ef27f6ca5b379b42",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/packets/job-8d5c9871c64e9e4b-compiled.md",
+    "sha256": "186611739c2dcce37b5d06733856f7c717f7d1dbfebc981ea1c1a3d1dc93785e"
+  }
+}

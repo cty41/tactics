@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-5426a50be41119c1",
+  "attemptId": "job-38caaa8120d4a303-a004",
+  "candidateSha256": "7907f127a10b02fd0c72849be39a42383999b848bd041b6741fee2bda0626c17",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "selected v7 identity and composition preserved"
+  ],
+  "defects": [
+    "mask label and calibration preprocessing require deterministic remediation"
+  ],
+  "nextPromptDelta": "no visual regeneration; repeat the selected raw hash with corrected technical artifacts",
+  "recordedAt": "2026-08-18T12:00:00+08:00"
+}

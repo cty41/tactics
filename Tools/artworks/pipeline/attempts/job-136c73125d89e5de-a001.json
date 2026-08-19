@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-136c73125d89e5de-a001",
+  "jobId": "job-136c73125d89e5de",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_dr_chroma_source_v01.png",
+      "sha256": "1bea7fbe422f227d5ed1b907b7f92f2cbf7faf25af70126d03be893e6fd5a2f2"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-136c73125d89e5de/job-136c73125d89e5de-a001/raw.png",
+      "sha256": "1bea7fbe422f227d5ed1b907b7f92f2cbf7faf25af70126d03be893e6fd5a2f2"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-136c73125d89e5de/job-136c73125d89e5de-a001/prepared.png",
+      "sha256": "de8d3880c487d787cdc07fb781510e39f3ea24ed074d64ed32a1fceb74c5111c"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-dr-v01-source-mask.png",
+      "sha256": "bb176455e5c314dfad73b838531e14cd989d1b7f027f7ca8102ae926b9544f0f"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-136c73125d89e5de/job-136c73125d89e5de-a001/mask.png",
+      "sha256": "bb176455e5c314dfad73b838531e14cd989d1b7f027f7ca8102ae926b9544f0f"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-136c73125d89e5de/job-136c73125d89e5de-a001/calibrated.png",
+      "sha256": "31eec5adc6403820daa110223e05b4df4767e383ebb46e186b63e3cde251322c"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-136c73125d89e5de/job-136c73125d89e5de-a001/calibrated-mask.png",
+      "sha256": "bcbb6c04078c23f4d854c8f179df499dece1ac348ea98d757a04ede4a3c99c12"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-136c73125d89e5de-a001/overlay.png",
+        "sha256": "a44740a5190a23c2386d69a8bbc808e6eeea39a650b05bb5cebaf6dcee4c6b22"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-136c73125d89e5de-a001/preview128.png",
+        "sha256": "ffb70d9f02e4becb40d820aea28807e7ed2914a34b1f692c529f5457b223cc04"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-136c73125d89e5de-a001/tile64x32.png",
+        "sha256": "294681ab82d23eaf64b5c75e2e8f938edf00d9248ed55e4bce8cc3ca2c0c9301"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-55c652c2d11a7fdb.json",
+    "sha256": "748f2a7a6fd4ca48e97edc7008f69811df07658482c51d55e67c734ae4cbca6e"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-5ad81bb811a0d08b",
+  "preparation": {
+    "chroma": "14f113",
+    "chromaTolerance": 160
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.24078091106290672,
+    "offset": [
+      -19,
+      -18
+    ],
+    "sourceCoreBbox": [
+      451,
+      575,
+      770,
+      1035
+    ],
+    "anchorCoreBbox": [
+      96,
+      121,
+      159,
+      231
+    ]
+  },
+  "feedbackAddendumIds": [
+    "feedback-addendum-6f2d12b3c91c9c28"
+  ]
+}

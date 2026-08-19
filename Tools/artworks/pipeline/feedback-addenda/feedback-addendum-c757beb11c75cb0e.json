@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "feedbackAddendumId": "feedback-addendum-c757beb11c75cb0e",
+  "attemptId": "job-38caaa8120d4a303-a002",
+  "parentFeedbackId": "feedback-5846dcc9d91f3006",
+  "reviewer": "cty41",
+  "defects": [
+    "retained as the user-queryable fallback candidate after v7 selection"
+  ],
+  "recordedAt": "2026-08-18T12:12:00+08:00",
+  "authorType": "human",
+  "disposition": "backup"
+}

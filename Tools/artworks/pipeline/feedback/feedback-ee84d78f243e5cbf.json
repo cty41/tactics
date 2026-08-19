@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-ee84d78f243e5cbf",
+  "attemptId": "job-8511c38401ba2a99-a002",
+  "candidateSha256": "aa627f541ae2eb78fe178eba772f407394f96ce7d188930d4d2b75d81f922d63",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The sword now follows a readable lower-right cleave axis at a much better compact length, the rigid body finally shows clear forward attack commitment, and the restored forehead blaze, alternate ear, split coat, four paws, and no-scabbard state remain recognizable."
+  ],
+  "defects": [
+    "The calibrated core is 93 pixels wide versus the 64-pixel anchor and becomes a broad triangular body instead of an equal-width capsule; the sword tip drops below the feet to y=252; the sword-hand paw remains a complete round disk while the far hand is barely readable; the eyes still aim down and partly toward the viewer, and the soft mouth/large eyes read cute rather than serious exertion; the reddish slab blade loses the noble metallic ancestral-sword character; the semantic mask also extends outside the subject and a core row is disconnected."
+  ],
+  "nextPromptDelta": "Keep v6's compact sword length, lower-right attack axis, forward commitment, broad forehead blaze, alternate ear, split coat, and no scabbard. Restart the body strictly from the approved Idle DR silhouette: a 64-pixel equal-width capsule with parallel sides, not v6's broad triangle. Raise the pupils toward the enemy torso and use smaller narrowed eyes, inward lowered brows, and a straight firm closed mouth. Replace both hands with tiny partially occluded edge arcs. Keep the metallic ornate ancestral blade entirely above the y=236 feet baseline while preserving the lower-right axis.",
+  "recordedAt": "2026-08-18T11:17:13.3604707+08:00"
+}

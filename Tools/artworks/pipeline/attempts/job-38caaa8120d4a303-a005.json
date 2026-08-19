@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-38caaa8120d4a303-a005",
+  "jobId": "job-38caaa8120d4a303",
+  "ordinal": 5,
+  "parentAttemptId": "job-38caaa8120d4a303-a004",
+  "retryFeedbackId": "feedback-5426a50be41119c1",
+  "promptDelta": "no visual regeneration; repeat the selected raw hash with corrected technical artifacts",
+  "technicalRemediation": true,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v07.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a005/raw.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a005/prepared.png",
+      "sha256": "b7d37c230b88dc83a4bc34f74aa7f3214559cb0b12972b441175077f76d99a0e"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-ul-v07-source-mask-v3.png",
+      "sha256": "09cf601f182407a9de3d0f7ccfddf70b68d65454a36de49862d0f9c71ec87954"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a005/mask.png",
+      "sha256": "09cf601f182407a9de3d0f7ccfddf70b68d65454a36de49862d0f9c71ec87954"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a005/calibrated.png",
+      "sha256": "1c71c3fc515c3604e262c7b242025985859c8786544406b15a62d1e4e3e6a79b"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a005/calibrated-mask.png",
+      "sha256": "fd77d0f500b89c35ec5d172c4fbd6f95141c678df48104954cab4b2803d052b7"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-6797cb4c85596794.json",
+    "sha256": "8bb824e1ec886dac50d00784a05820e8e05a43f6f9609ec39b9ef8d046fa3c6b"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-f428e023c2dc135e",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 160
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.32448377581120946,
+    "offset": [
+      -74,
+      -52
+    ],
+    "sourceCoreBbox": [
+      516,
+      532,
+      720,
+      870
+    ],
+    "anchorCoreBbox": [
+      92,
+      121,
+      162,
+      230
+    ]
+  }
+}

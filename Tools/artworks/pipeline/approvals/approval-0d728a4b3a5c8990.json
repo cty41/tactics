@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-0d728a4b3a5c8990",
+  "attemptId": "job-8520f1be804163d0-a010",
+  "candidateSha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d",
+  "maskSha256": "2d6b57ad6e9c2e8885575ddb3225c7f90f0047f7b97bc2d1456cd128ecb88225",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "anchorTileCompare": "f55ff719afb04c25f2509ea54ebed86e90435565f63aa77bb8d863da3a4a85cd",
+    "overlay": "cd3effe3cd094eba33dd2f6c316729fef3cb0c8522b07f5d545e146a518d3b91",
+    "preview128": "d5d068a640091a0f2df69b689252b216a0246affe1aef997660c4170970e16a1",
+    "tile64x32": "d1f75ae184289ae06b422b7430730bb2e68968c519c8de975f99cde2d563d3b2"
+  },
+  "decision": "approved",
+  "reason": "Technical remediation only: corrected the accepted Cast DR body component semantic paw regions without changing candidate pixels; preserves the user's accepted body and two-paw grip.",
+  "decidedAt": "2026-08-19T15:30:00+08:00",
+  "annotation": null,
+  "reportSha256": "c53c8d8e2499a62076690c16f9a6dcd4f7748d43915c4794c6a08b77db6fd01d"
+}

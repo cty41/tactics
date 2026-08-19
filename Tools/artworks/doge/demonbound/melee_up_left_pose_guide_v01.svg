@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#46d9ff"/>
+    </marker>
+  </defs>
+  <rect width="256" height="256" fill="#20242c"/>
+  <path d="M92 151 Q93 123 122 116 Q153 122 161 151 L162 221 Q158 232 148 235 L107 235 Q95 231 92 220 Z"
+        fill="#526176" stroke="#a9bbd2" stroke-width="2" opacity="0.88"/>
+  <path d="M99 127 L105 98 L119 121 M137 119 L151 98 L155 130"
+        fill="none" stroke="#a9bbd2" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="108" cy="236" rx="11" ry="6" fill="#526176" stroke="#a9bbd2" stroke-width="2"/>
+  <ellipse cx="147" cy="236" rx="11" ry="6" fill="#526176" stroke="#a9bbd2" stroke-width="2"/>
+  <line x1="128" y1="234" x2="122" y2="119" stroke="#ffe36e" stroke-width="2" stroke-dasharray="5 4"/>
+  <circle cx="126" cy="177" r="6" fill="#ff4b55" stroke="#ffffff" stroke-width="2"/>
+  <line x1="126" y1="177" x2="94" y2="169" stroke="#ff4b55" stroke-width="5" stroke-dasharray="6 4"/>
+  <circle cx="94" cy="169" r="5" fill="#ffad33" stroke="#ffffff" stroke-width="2"/>
+  <line x1="94" y1="169" x2="49" y2="109" stroke="#46d9ff" stroke-width="7" marker-end="url(#arrow)"/>
+  <path d="M89 164 L99 174" stroke="#ffad33" stroke-width="4" stroke-linecap="round"/>
+  <text x="139" y="181" fill="#ff8d94" font-family="sans-serif" font-size="10">hidden grip</text>
+  <text x="18" y="99" fill="#79e5ff" font-family="sans-serif" font-size="10">visible blade</text>
+  <text x="130" y="114" fill="#ffe36e" font-family="sans-serif" font-size="9">3-5° lean</text>
+  <text x="17" y="248" fill="#d4d9e2" font-family="sans-serif" font-size="9">BODY OCCLUDES RED DASHED SEGMENT AND GUARD</text>
+</svg>

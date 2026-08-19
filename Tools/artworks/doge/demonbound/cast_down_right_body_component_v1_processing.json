@@ -1,0 +1,15 @@
+{
+  "operation": "pre-v3 deterministic preparation",
+  "backgroundRemoval": {
+    "method": "edge-connected flood fill",
+    "seed": [0, 0],
+    "fuzzPercent": 8
+  },
+  "calibration": {
+    "method": "uniform alpha-bbox fit and integer placement",
+    "targetSubjectSize": [69, 128],
+    "targetOffset": [96, 109],
+    "canvas": [256, 256]
+  },
+  "transparentRgb": "zero"
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "approvalId": "approval-a5e7a62e66cd438d",
+  "attemptId": "job-8511c38401ba2a99-a008",
+  "candidateSha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5",
+  "maskSha256": "aaf5dc74ed7375965bc6534449cd62ddde007ace3075aef3c6386f6273010497",
+  "reportSha256": "05e3607632568b52c57f73dc03b68b9a787c128966f0a942a885736bd57763dd",
+  "contractId": "contract-e2f1c2d0f2146a1d",
+  "contractSha256": "902a2a401a8bc091d20132fe910cedbc7295d8e04c6a7f33fe243bab0460e0e9",
+  "reviewSha256": {
+    "overlay": "919db9ad80aa8b9850edf0afa4ac3c616065381566a1c75664499a534b72e154",
+    "preview128": "3e43d371ee74033b4512ddfd0e4c2366bc141e5365380993d55a987cfaa3b7e1",
+    "tile64x32": "0662a5319d2dc0fdc32b6809dd0bae299cbbe267aea1e659c91bac2d6a205cc9"
+  },
+  "reviewer": "cty41",
+  "decision": "approved",
+  "approvalMode": "gate-exception",
+  "waivedIssues": [
+    {
+      "code": "core_size_out_of_tolerance",
+      "candidateCoreSize": [
+        74,
+        108
+      ],
+      "anchorCoreSize": [
+        64,
+        111
+      ],
+      "delta": [
+        10,
+        -3
+      ],
+      "tolerancePx": 3
+    }
+  ],
+  "reason": "User accepted the 96 percent calibrated Demonbound Melee DR v9 Tilemap review; waive only the documented 74px versus 64px core-width difference (feedback-addendum-5d4fc0ffe0dce88c).",
+  "decidedAt": "2026-08-18T12:50:15.6885915+08:00"
+}

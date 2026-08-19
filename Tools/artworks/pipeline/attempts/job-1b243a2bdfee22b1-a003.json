@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-1b243a2bdfee22b1-a003",
+  "jobId": "job-1b243a2bdfee22b1",
+  "ordinal": 3,
+  "parentAttemptId": "job-1b243a2bdfee22b1-a002",
+  "retryFeedbackId": "feedback-5ba6a5f6e482300c",
+  "promptDelta": "Use explicit screen coordinates: keep both feet at the baseline, place the capsule top and both ear roots clearly 35-60 pixels screen-left of the midpoint between the feet, and rotate the entire straight capsule counterclockwise as one rigid form so its long axis parallels the eye-to-target and blade direction. Preserve v2 scale, split coat, forehead patch, alternate ear, and no-scabbard sword. Hide the grip and most of the sword-side paw behind the left body edge; reveal only a tiny attached crescent and move the guard leftward away from the eye.",
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v03.png",
+      "sha256": "d645b8a51661ad168547cee546eba6c92dbfbddc85ceb3f502d5875b63c8163d"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1b243a2bdfee22b1/job-1b243a2bdfee22b1-a003/raw.png",
+      "sha256": "d645b8a51661ad168547cee546eba6c92dbfbddc85ceb3f502d5875b63c8163d"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1b243a2bdfee22b1/job-1b243a2bdfee22b1-a003/prepared.png",
+      "sha256": "9e93c7e812e4371e2894cb667ecbbbed59bd331396ee53d810ad97bc628dd631"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-f013be4d32354720",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 96
+  }
+}

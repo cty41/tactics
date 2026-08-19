@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-79a1ca8f9a8044cd",
+  "artifact": {
+    "path": "Tools/artworks/doge/components/doge_capsule_demonbound_cast_ul_far_foot_overlay_v01.png",
+    "sha256": "78dac3b4ae5df9071e4dd87d0677de21049ba1bc7edb192b7caff6c92d0d0b54"
+  },
+  "role": "supporting-derived",
+  "note": "Demonbound Cast UL body and deterministic foot-behind-body occlusion review"
+}

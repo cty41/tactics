@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-95b2508d3672ac17",
+  "attemptId": "job-96bbe2ae0fc73102-a001",
+  "candidateSha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "User explicitly approved the final Cast DR assembly after reviewing the sprite, tile comparison, layer review and semantic overlay"
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-19T19:56:01.6155012+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology",
+    "equipment_scale",
+    "occlusion"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "final assembly pixels,component hashes,70 percent sword scale,paw occlusion,core geometry,baseline"
+  ],
+  "pendingFixes": []
+}

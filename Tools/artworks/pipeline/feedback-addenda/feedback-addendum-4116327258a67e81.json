@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "feedbackAddendumId": "feedback-addendum-4116327258a67e81",
+  "attemptId": "job-f8c3ac316cfe7021-a001",
+  "parentFeedbackId": "feedback-ad711362d204ea2f",
+  "reviewer": "cty41",
+  "defects": [
+    "body pose accepted; sword blade is thinner than the formal Idle and Melee ancestral sword, so widen the blade without increasing its length"
+  ],
+  "recordedAt": "2026-08-18T16:45:00+08:00",
+  "authorType": "human",
+  "disposition": "retry"
+}

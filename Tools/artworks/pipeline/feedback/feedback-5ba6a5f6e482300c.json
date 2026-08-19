@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-5ba6a5f6e482300c",
+  "attemptId": "job-1b243a2bdfee22b1-a002",
+  "candidateSha256": "3e54fdbd850cbdd31cc1bc0bb17b9576d80c0f01777e4e4dd94a58007752807b",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Body scale is closer to the formal Idle UL anchor, the broad shallow gray-white forehead marking is restored, and the sword remains unsheathed without a scabbard."
+  ],
+  "defects": [
+    "The capsule leans opposite the attack gaze: its top is screen-right of the midpoint between the feet while the eye and blade aim screen-left/up-left.",
+    "The sword-side hand remains a mostly complete oval, and the guard still crowds the eye instead of sitting behind the body contour."
+  ],
+  "nextPromptDelta": "Use explicit screen coordinates: keep both feet at the baseline, place the capsule top and both ear roots clearly 35-60 pixels screen-left of the midpoint between the feet, and rotate the entire straight capsule counterclockwise as one rigid form so its long axis parallels the eye-to-target and blade direction. Preserve v2 scale, split coat, forehead patch, alternate ear, and no-scabbard sword. Hide the grip and most of the sword-side paw behind the left body edge; reveal only a tiny attached crescent and move the guard leftward away from the eye.",
+  "recordedAt": "2026-08-18T13:45:35+08:00"
+}

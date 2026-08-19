@@ -1,0 +1,11 @@
+{
+  "attemptId": "job-d5e63cb8798a9488-a002",
+  "defects": [
+    "The sword and visible holding paw are drawn in front of the capsule body; Idle UL requires both hands and the sword behind the core with only outer arcs exposed"
+  ],
+  "feedbackAddendumId": "feedback-addendum-44a0ab84261aab10",
+  "parentFeedbackId": "feedback-5fa0c0a0c053293e",
+  "recordedAt": "2026-08-18T09:20:51+08:00",
+  "reviewer": "cty41",
+  "schemaVersion": 1
+}

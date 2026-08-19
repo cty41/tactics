@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-21ce521e4fe232eb",
+  "state": "ready",
+  "contractId": "contract-ab5b32c9290480f2",
+  "contractSha256": "7ebf78f71223c39f5bdcc83673bfd212271c4069f0ce9e59536b837cec5079d8",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_body_layer_prompt_v3.md",
+    "sha256": "e4e3619b07a6984b032962b815f1893d1329820e5f2d3eee6b08e8c3cb20d3c2"
+  },
+  "inputs": [
+    {
+      "role": "identity_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_guide",
+      "path": "Tools/artworks/doge/demonbound/cast_down_right_body_layer_pose_guide_v3.png",
+      "sha256": "faa70198adccd0ccb1363d275120c053bcb9426fb4fa292033f5e5ea70e0d40d"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "cast-body-layer"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-a3f736cd51ba6a5e",
+    "sha256": "b45eac3d30a275f654ae36df96a3346d0866eac8b79167b0a32825511840418f"
+  }
+}

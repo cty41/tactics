@@ -1,0 +1,19 @@
+{
+  "canvas": [256, 256],
+  "bodyLayer": true,
+  "coreAxis": {"bottom": [127, 230], "top": [127, 121], "tiltDegrees": [-2.0, 2.0]},
+  "footCenter": [127, 236],
+  "weapon": {
+    "hiddenGrip": [137, 178],
+    "exitWindow": [133, 169, 141, 190],
+    "tipRegion": [123, 112, 132, 126],
+    "guardWindow": [112, 163, 144, 184],
+    "bladeCenterline": [133, 126, 141, 190],
+    "maxBladeWidthPx": 9,
+    "maxGemAreaPx": 36
+  },
+  "forbiddenRegions": [],
+  "requiredHiddenLabels": [],
+  "visibleAreaCaps": {},
+  "equipmentState": {"scabbard": "absent", "staticEffects": "absent"}
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-33b591a0de916181-a001",
+  "jobId": "job-33b591a0de916181",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": "feedback-9d45a6546086faa9",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_raised_v02.png",
+      "sha256": "b8e621f2df5c8266eddbd66c65a678eb95dd403a98e03df2e8f5c62e790e15ff"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-33b591a0de916181/job-33b591a0de916181-a001/raw.png",
+      "sha256": "b8e621f2df5c8266eddbd66c65a678eb95dd403a98e03df2e8f5c62e790e15ff"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-33b591a0de916181/job-33b591a0de916181-a001/prepared.png",
+      "sha256": "9b0ea16e8def2a555a9d97e80b64302fdbc15a7bc4a0b50f120bdeccd54d698d"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-b726c72d70d6916c",
+  "generationInvocationId": "generation-invocation-0b98fac43bb73094",
+  "generationDeliveryId": "generation-delivery-a682a8bd3613a079",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 0
+  }
+}

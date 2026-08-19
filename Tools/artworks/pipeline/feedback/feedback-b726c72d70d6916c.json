@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-b726c72d70d6916c",
+  "attemptId": "job-33b591a0de916181-a001",
+  "candidateSha256": "9b0ea16e8def2a555a9d97e80b64302fdbc15a7bc4a0b50f120bdeccd54d698d",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "one small red gem is placed on the guard; plain metal tip; pupils do not cross; no static magical effect or scabbard"
+  ],
+  "defects": [
+    "front-facing symmetric redesign instead of formal down-right three-quarter Idle DR identity",
+    "missing gray-white forehead blaze and one alternate-color ear",
+    "unapproved pale ornament remains at the pommel"
+  ],
+  "nextPromptDelta": "make the formal Idle DR silhouette and asymmetry visually dominant; include its gray-white blaze and single alternate-color ear; remove every pommel ornament while retaining only the guard-center red gem",
+  "recordedAt": "2026-08-18T16:11:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "pose_axis",
+    "equipment_state"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "front-facing symmetric redesign instead of formal down-right three-quarter Idle DR identity",
+    "missing gray-white forehead blaze and one alternate-color ear",
+    "unapproved pale ornament remains at the pommel"
+  ]
+}

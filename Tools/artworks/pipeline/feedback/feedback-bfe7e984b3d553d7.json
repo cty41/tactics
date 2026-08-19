@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-bfe7e984b3d553d7",
+  "attemptId": "job-38caaa8120d4a303-a001",
+  "candidateSha256": "366d6b7e2dc4b655544af3778a46015593ece1cc967d0579453867898efd3072",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "The pose guide successfully moves the blade exit below the eye at the left collar contour; the face is no longer crossed by the guard, the grip reads as rear-layer, and no scabbard is present."
+  ],
+  "defects": [
+    "The guard jewel is enlarged into a prominent brooch instead of the tiny DR guard gem.",
+    "The core is larger and more upright than the formal Idle UL anchor, losing the subtle left attack lean.",
+    "Both hand paws remain complete exposed ovals instead of small asymmetric body-occluded crescents."
+  ],
+  "nextPromptDelta": "Preserve v5 blade exit and rear-layer grip exactly. Scale the entire character core down to match formal Idle UL, add only a subtle 3-5 degree left lean, reduce the visible guard/gem to a pinhead-sized rim matching formal Melee DR, and hide at least two thirds of each hand paw behind the body so only tiny asymmetric attached crescents remain.",
+  "recordedAt": "2026-08-18T13:57:24+08:00"
+}

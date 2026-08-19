@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-7907d36bf7a1511f",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/melee_up_left_pose_guide_v01.png",
+    "sha256": "a191057118563de12df3f814c57dab38071d9033332fbda397d2fc38d9ea8c71"
+  },
+  "role": "supporting-derived",
+  "note": "legacy deterministic melee UL composition guide; not a promotable sprite"
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-15f1fae52b4039db",
+  "attemptId": "job-9c1b93e8a987e7b1-a005",
+  "candidateSha256": "e0aa70d3d93190e2013db0d03107ab558fcbc5f9496a45346e804551499ac7a3",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Human-selected Cast DR body and compact diagonal paw grip preserved"
+  ],
+  "defects": [
+    "Low-alpha chroma fringe and interpolated semantic mask colors caused deterministic validation failure"
+  ],
+  "nextPromptDelta": "No regeneration; repeat deterministic preparation and rebuild exact-palette semantic mask",
+  "recordedAt": "2026-08-19T19:45:25.1339972+08:00",
+  "authorType": "agent",
+  "categories": [
+    "chroma",
+    "processing",
+    "topology"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [
+    "all visible artwork pixels and selected composition"
+  ],
+  "pendingFixes": [
+    "technical chroma cleanup and exact semantic mask"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-38caaa8120d4a303-a003",
+  "jobId": "job-38caaa8120d4a303",
+  "ordinal": 3,
+  "parentAttemptId": "job-38caaa8120d4a303-a002",
+  "retryFeedbackId": "feedback-5846dcc9d91f3006",
+  "promptDelta": "Use v6 as the edit target and preserve every pixel-level design decision except two: rotate the entire straight capsule rigidly 3-5 degrees toward screen-left while keeping both feet grounded, and reduce the visible red guard gem/rim by roughly half. Do not change body scale, blade exit, sword length, rear occlusion, paws, coat, face, ears, collar, or background.",
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v07.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a003/raw.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a003/prepared.png",
+      "sha256": "a6e38bd8a44b81d2575b701c71f24ba9b57b7d8c9b0bd7e868e2d0b3dcc3a170"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-ul-v07-source-mask.png",
+      "sha256": "97a8f2a88b353657dd84f4e19ff6a20730ff979cb8599730c46972f280ee36ae"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a003/mask.png",
+      "sha256": "97a8f2a88b353657dd84f4e19ff6a20730ff979cb8599730c46972f280ee36ae"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a003/calibrated.png",
+      "sha256": "eb73ea2ac4bef2366b371a59aa9fdee754529cbbc2ca54a40260a601432e1cc5"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a003/calibrated-mask.png",
+      "sha256": "8224377347f5522f9572c93c1dc4ae79240469798a4765d10b1356e97ac66906"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a003/overlay.png",
+        "sha256": "58c7c77849208de2e89cd3aa78d59b7bccb1f4ebf43d4569eb9a7142beda7652"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a003/preview128.png",
+        "sha256": "0cde7930c4cda5df0137b381d5ef2d050b11e1c198d953e100cd7151f37d6910"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a003/tile64x32.png",
+        "sha256": "ecd0ac5e0a7710eda0d88a3908e6c039e4aff9ec162cbbffeb9fce5f9552020d"
+      },
+      "depthReview": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a003/depthReview.png",
+        "sha256": "6660c77a9bab28de0c6c41e2f1121960873bd681650a56e60cae12941a22b459"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-77b7c0f86b973970.json",
+    "sha256": "5a3f7eaaf73609477021df8efe69637ecc6223908b956ba174cb2a6f6123e11c"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-f72602ec4d99607e",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 96
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.3691275167785235,
+    "offset": [
+      -100,
+      -80
+    ],
+    "sourceCoreBbox": [
+      498,
+      545,
+      730,
+      842
+    ],
+    "anchorCoreBbox": [
+      92,
+      121,
+      162,
+      230
+    ]
+  }
+}

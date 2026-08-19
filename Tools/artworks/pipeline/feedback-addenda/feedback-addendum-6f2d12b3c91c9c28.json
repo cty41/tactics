@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "feedbackAddendumId": "feedback-addendum-6f2d12b3c91c9c28",
+  "attemptId": "job-136c73125d89e5de-a001",
+  "parentFeedbackId": "feedback-5ad81bb811a0d08b",
+  "reviewer": "cty41",
+  "defects": [
+    "In every active melee swing frame the scabbard must be completely absent: no visible sheath, empty scabbard, belt sheath, or duplicate sword-shaped object."
+  ],
+  "recordedAt": "2026-08-18T10:13:33+08:00"
+}

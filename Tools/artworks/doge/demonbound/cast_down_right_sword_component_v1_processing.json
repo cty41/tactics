@@ -1,0 +1,8 @@
+{
+  "operation": "deterministic equipment normalization",
+  "sourceCanvas": [1254, 1254],
+  "method": "alpha trim and uniform resize",
+  "targetSubjectSize": [36, 137],
+  "assemblyScalePercent": 70,
+  "transparentRgb": "zero"
+}

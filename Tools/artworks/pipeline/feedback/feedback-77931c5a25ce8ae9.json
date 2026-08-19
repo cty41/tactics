@@ -1,0 +1,18 @@
+{
+  "attemptId": "job-168fd4b2f49ff6ca-a001",
+  "candidateSha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+  "defects": [
+    "Final aesthetic acceptance still requires the explicit Idle DR early approval gate"
+  ],
+  "feedbackId": "feedback-77931c5a25ce8ae9",
+  "nextPromptDelta": "Use this exact promoted Idle DR identity and core volume as the only Demonbound anchor for later poses",
+  "recordedAt": "2026-08-18T08:53:32+08:00",
+  "reviewer": "cty41",
+  "schemaVersion": 1,
+  "strengths": [
+    "Equal-width capsule core matches the approved Hunter anchor within zero effective geometry drift",
+    "Four paws touch the body; compact one-handed ancestral sword stays within the silhouette",
+    "Half-body alternate coat, alternate ear treatment and fitted gray-white forehead blaze retain Demonbound identity"
+  ],
+  "verdict": "selected"
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-7423a5fc8cd94098",
+  "state": "ready",
+  "contractId": "contract-690f8826f5fb1488",
+  "contractSha256": "17d146a79b65dd401f0067b108d9d07c06c8f21fe583597236352c6fe3e725f7",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_raised_sword_prompt_v8.md",
+    "sha256": "db503586169ad831bbe2214a1349ef63f8bb31f5f861eb2286a3f814b0237853"
+  },
+  "inputs": [
+    {
+      "role": "identity_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_guide",
+      "path": "Tools/artworks/doge/demonbound/cast_down_right_raised_sword_pose_guide_v8.png",
+      "sha256": "e69c817482dfe60afa7604b606a65d3909fc74501ebcc1cfeea63730a0b3a326"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "cast"
+  },
+  "series": {
+    "seriesId": "demonbound-nine-pose-v1",
+    "poseId": "cast-dr"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-e43326632e840f31",
+    "sha256": "468306e5cc2a4d32abace436d13589b75830de37e983e6a917e6220bbf686611"
+  }
+}

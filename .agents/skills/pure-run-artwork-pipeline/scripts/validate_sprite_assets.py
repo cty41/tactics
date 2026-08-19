@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import artwork_pipeline as state_machine
+
 try:
     from PIL import Image
 except ImportError:  # pragma: no cover - dependency failure is reported to the caller
@@ -173,6 +175,7 @@ def validate_sprite_directory(
     preview_size: int,
     geometry_required: bool,
     category: str,
+    state_managed_paths: Optional[set[Path]] = None,
 ) -> List[Dict[str, Any]]:
     reports: List[Dict[str, Any]] = []
     if not directory.exists():
@@ -188,10 +191,12 @@ def validate_sprite_directory(
             standard_height=standard_height,
             baseline=baseline,
             preview_size=preview_size,
-            geometry_required=geometry_required,
+            geometry_required=geometry_required and master.resolve() not in (state_managed_paths or set()),
         )
         for report in pair_reports:
             report["category"] = category
+            if Path(report["path"]).resolve() in (state_managed_paths or set()):
+                report["geometry_authority"] = "artwork-pipeline-state-machine"
         reports.extend(pair_reports)
 
     for preview in sorted(directory.glob("*_128.png")):
@@ -201,6 +206,26 @@ def validate_sprite_directory(
             add_issue(report, "找不到对应的母版 PNG")
             reports.append(report)
     return reports
+
+
+def promoted_state_machine_paths(repo_root: Path) -> tuple[set[Path], Optional[str]]:
+    pipeline_root = repo_root / state_machine.PIPELINE_REL
+    if not pipeline_root.is_dir():
+        return set(), None
+    store = state_machine.Store(repo_root)
+    try:
+        state_machine.strict_check(store, True)
+    except state_machine.PipelineError as exc:
+        return set(), str(exc)
+    promoted: set[Path] = set()
+    for attempt_path in (pipeline_root / "attempts").glob("*.json"):
+        attempt = state_machine.load_json(attempt_path)
+        if attempt.get("state") != "promoted":
+            continue
+        for artifact in attempt.get("artifacts", {}).get("promoted", {}).values():
+            if isinstance(artifact, dict) and artifact.get("path"):
+                promoted.add(store.absolute(artifact["path"]))
+    return promoted, None
 
 
 def validate_tiles(directory: Path) -> List[Dict[str, Any]]:
@@ -232,6 +257,7 @@ def validate_review_examples(
     standard_height: int,
     baseline: int,
     preview_size: int,
+    state_managed_paths: Optional[set[Path]] = None,
 ) -> List[Dict[str, Any]]:
     reports: List[Dict[str, Any]] = []
     manifest_report: Dict[str, Any] = {
@@ -284,7 +310,7 @@ def validate_review_examples(
             if not ({"calibrated", "approved"} & parts):
                 add_issue(manifest_report, f"正式资产不在 calibrated/approved：{value}")
             preview = source.with_name(f"{source.stem}_128.png")
-            geometry_required = "calibrated" in parts
+            geometry_required = "calibrated" in parts and source.resolve() not in (state_managed_paths or set())
             pair_reports = validate_pair(
                 source,
                 preview,
@@ -297,6 +323,8 @@ def validate_review_examples(
                 report["category"] = "approved-anchor"
                 report["asset_id"] = asset_id
                 report["direction"] = direction
+                if Path(report["path"]).resolve() in (state_managed_paths or set()):
+                    report["geometry_authority"] = "artwork-pipeline-state-machine"
             reports.extend(pair_reports)
 
     cases = payload.get("cases")
@@ -396,6 +424,14 @@ def main() -> int:
 
     root = args.root.resolve()
     reports: List[Dict[str, Any]] = []
+    repo_root = root.parent.parent
+    state_managed_paths, state_error = promoted_state_machine_paths(repo_root)
+    if state_error:
+        reports.append({
+            "path": (repo_root / state_machine.PIPELINE_REL).as_posix(),
+            "category": "pipeline-state",
+            "issues": [state_error],
+        })
     # The release set is deliberately explicit: concepts and uncalibrated enemies
     # are design records, not publication sprites.
     reports.extend(
@@ -406,6 +442,7 @@ def main() -> int:
             preview_size=args.preview_size,
             geometry_required=True,
             category="release",
+            state_managed_paths=state_managed_paths,
         )
     )
     reports.extend(
@@ -416,6 +453,7 @@ def main() -> int:
             preview_size=args.preview_size,
             geometry_required=False,
             category="approved-enemy",
+            state_managed_paths=state_managed_paths,
         )
     )
     reports.extend(validate_tiles(root / "pure_run" / "tiles"))
@@ -430,11 +468,11 @@ def main() -> int:
                 preview_size=args.preview_size,
                 geometry_required=False,
                 category="candidate",
+                state_managed_paths=state_managed_paths,
             )
             )
 
     if args.review_examples:
-        repo_root = root.parent.parent
         default_manifest = (
             Path(__file__).resolve().parents[1] / "examples" / "cases.json"
         )
@@ -450,6 +488,7 @@ def main() -> int:
                 standard_height=args.standard_height,
                 baseline=args.baseline,
                 preview_size=args.preview_size,
+                state_managed_paths=state_managed_paths,
             )
         )
 

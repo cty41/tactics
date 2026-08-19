@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "jobId": "job-38caaa8120d4a303",
+  "state": "ready",
+  "contractId": "contract-63e48d93e0c14372",
+  "contractSha256": "56d2397defdde34deb8e804401b8b77b3df81b91e30861f4ca782ca7d70a9079",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/melee_up_left_prompt_v05.md",
+    "sha256": "cfb731465abdfa252977a901c81b278ff27b591ef6dea078aa2f0275de93ba4b"
+  },
+  "inputs": [
+    {
+      "role": "action_reference",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_dr_v01.png",
+      "sha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5"
+    },
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+      "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+    },
+    {
+      "role": "pose_guide",
+      "path": "Tools/artworks/doge/demonbound/melee_up_left_pose_guide_v01.png",
+      "sha256": "a191057118563de12df3f814c57dab38071d9033332fbda397d2fc38d9ea8c71"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "melee"
+  },
+  "series": {
+    "seriesId": "demonbound-nine-pose-v1",
+    "poseId": "melee-ul"
+  },
+  "conceptOnly": false,
+  "contractRequirements": {
+    "occlusion": {
+      "layerRules": {
+        "near_hand": "behind-core",
+        "far_hand": "behind-core",
+        "equipment": "behind-core"
+      },
+      "visibilityCaps": {
+        "near_hand": 0.04,
+        "far_hand": 0.04,
+        "equipment": 0.3
+      }
+    },
+    "imageGenDirective": "Draw behind-core equipment and both hand paws first, then draw the capsule body over their inner portions; only outer arcs may remain visible."
+  }
+}

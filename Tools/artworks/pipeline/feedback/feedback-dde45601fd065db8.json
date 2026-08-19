@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-dde45601fd065db8",
+  "attemptId": "job-3adba83fc2881bb0-a002",
+  "candidateSha256": "a88e223cf7090dd0765ed5c26a13e0cf9669c6d8942ba8f91101ffa37b116bdb",
+  "reviewer": "codex-agent",
+  "verdict": "retry",
+  "strengths": [
+    "Pupil distance is tighter; far eye is smaller and closer to the face centre; no sword or FX; the central empty clamp remains available for a later sword overlay."
+  ],
+  "defects": [
+    "Human review is still required before selecting this body layer; it may remain too front-facing and its facial expression is not yet clearly serious/focused."
+  ],
+  "nextPromptDelta": "If retried, strengthen DR head projection and serious focus without widening the eye spacing.",
+  "recordedAt": "2026-08-19T10:58:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "pose_axis",
+    "identity"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "No sword or FX in the body layer; exactly four attached paws; equal-width capsule body; retain the tighter asymmetric eye spacing."
+  ],
+  "pendingFixes": [
+    "Confirm whether the DR depth and focused facial read are sufficient before creating the standalone sword layer."
+  ]
+}

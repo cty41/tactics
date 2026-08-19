@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-865efd0bdd4ed769",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/doge_capsule_demonbound_cast_dr_body_grip_sword_preview_v05.png",
+    "sha256": "693b2606e244ecb4726a65f4eed58aeeba32ae0b75e6e649d8560f4d43062e3c"
+  },
+  "role": "supporting-derived",
+  "note": "Demonbound Cast DR retained candidate or deterministic review artifact from the approved component-composition iteration"
+}

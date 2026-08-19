@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-a4ff32a1decb9904",
+  "attemptId": "job-8520f1be804163d0-a011",
+  "candidateSha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d",
+  "maskSha256": "7bf915468e3863bda493637edb8a77408e0c9a3bc63f0a868d54124880c54448",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "anchorTileCompare": "f55ff719afb04c25f2509ea54ebed86e90435565f63aa77bb8d863da3a4a85cd",
+    "overlay": "9a3d3a3c091755dea25bd203ae685d5087552cb34a1ac4ee2ece7e3cd6dae785",
+    "preview128": "d5d068a640091a0f2df69b689252b216a0246affe1aef997660c4170970e16a1",
+    "tile64x32": "d1f75ae184289ae06b422b7430730bb2e68968c519c8de975f99cde2d563d3b2"
+  },
+  "decision": "approved",
+  "reason": "Technical remediation only: excludes the final stray eye-edge row from the accepted Cast DR body's near-paw semantic region; candidate pixels remain unchanged.",
+  "decidedAt": "2026-08-19T15:45:00+08:00",
+  "annotation": null,
+  "reportSha256": "f658442e9a013003fb5742863768872257e3c9d13ddf8042b8a0de14be002d25"
+}

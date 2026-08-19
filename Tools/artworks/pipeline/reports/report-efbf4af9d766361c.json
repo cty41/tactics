@@ -1,0 +1,105 @@
+{
+  "attemptId": "job-f40816b1c2e8b36c-a001",
+  "geometry": {
+    "boxes": {
+      "core": [
+        95,
+        121,
+        159,
+        231
+      ],
+      "effect": null,
+      "equipment": [
+        159,
+        142,
+        173,
+        183
+      ],
+      "far_foot": [
+        135,
+        224,
+        154,
+        237
+      ],
+      "far_hand": [
+        159,
+        187,
+        163,
+        203
+      ],
+      "head_appendage": [
+        90,
+        105,
+        153,
+        177
+      ],
+      "near_foot": [
+        99,
+        224,
+        119,
+        237
+      ],
+      "near_hand": [
+        90,
+        188,
+        100,
+        208
+      ],
+      "wings": null
+    },
+    "core": {
+      "bandMaxWidths": [
+        64,
+        65,
+        65
+      ],
+      "bbox": [
+        95,
+        121,
+        159,
+        231
+      ],
+      "center": [
+        127.0,
+        176.0
+      ]
+    },
+    "occlusion": {
+      "intrusionPixels": {
+        "equipment": 4,
+        "far_hand": 8,
+        "near_hand": 64
+      },
+      "visibleAreaRatios": {
+        "equipment": 0.04268924991358451,
+        "far_hand": 0.01123401313515382,
+        "near_hand": 0.0305910819218804
+      }
+    }
+  },
+  "inputSha256": "16d71544cb76d4030eced32850203b50a20a47f03d633d402c3bba770197ea48",
+  "issues": [
+    "baseline_not_236",
+    "chroma_fringe",
+    "core_row_disconnected",
+    "equipment_intrudes_core",
+    "exact_chroma_residue",
+    "far_hand_intrudes_core",
+    "near_hand_intrudes_core"
+  ],
+  "maskSha256": "beef0caf6e238f7141edf6986ed76a00817a4e888dc509a331a8db9b87f8f5c3",
+  "passed": false,
+  "schemaVersion": 1,
+  "technical": {
+    "alphaBbox": [
+      87,
+      102,
+      177,
+      241
+    ],
+    "size": [
+      256,
+      256
+    ]
+  }
+}

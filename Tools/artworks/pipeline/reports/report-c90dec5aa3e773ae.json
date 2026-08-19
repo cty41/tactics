@@ -1,0 +1,85 @@
+{
+  "attemptId": "job-168fd4b2f49ff6ca-a001",
+  "geometry": {
+    "boxes": {
+      "core": [
+        96,
+        121,
+        159,
+        231
+      ],
+      "effect": null,
+      "equipment": [
+        94,
+        137,
+        138,
+        219
+      ],
+      "far_foot": [
+        135,
+        224,
+        155,
+        237
+      ],
+      "far_hand": [
+        148,
+        196,
+        162,
+        211
+      ],
+      "head_appendage": [
+        104,
+        116,
+        155,
+        139
+      ],
+      "near_foot": [
+        98,
+        224,
+        117,
+        237
+      ],
+      "near_hand": [
+        91,
+        178,
+        106,
+        193
+      ],
+      "wings": null
+    },
+    "core": {
+      "bandMaxWidths": [
+        63,
+        64,
+        64
+      ],
+      "bbox": [
+        96,
+        121,
+        159,
+        231
+      ],
+      "center": [
+        127.5,
+        176.0
+      ]
+    }
+  },
+  "inputSha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+  "issues": [],
+  "maskSha256": "9f4968081aa296e73ec215a3a7e89383ad6e34c7d86fe7251af0b3511f12b2c8",
+  "passed": true,
+  "schemaVersion": 1,
+  "technical": {
+    "alphaBbox": [
+      88,
+      115,
+      162,
+      237
+    ],
+    "size": [
+      256,
+      256
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 3,
+  "regions": {
+    "eyeRegion": [130, 142, 164, 160],
+    "leftEyeRegion": [130, 142, 145, 160],
+    "rightEyeRegion": [146, 142, 164, 160],
+    "weaponExit": [133, 144, 142, 155],
+    "weaponTip": [135, 91, 141, 98],
+    "weaponBlade": [133, 91, 142, 150],
+    "guardRegion": [125, 151, 149, 159],
+    "gemRegion": [135, 177, 141, 184],
+    "scabbard": null,
+    "staticEffect": null
+  }
+}

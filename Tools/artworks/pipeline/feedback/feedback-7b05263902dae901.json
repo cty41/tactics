@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-7b05263902dae901",
+  "attemptId": "job-8ea704ad390748f2-a001",
+  "candidateSha256": "73577c59116aa86b25575ee57bd644bcc6f9fcac682bb719f6f38515b4d46365",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "ear-height silver-gray blade; inner-eye overlap reduces eye gap; one guard gem; no scabbard or static effect"
+  ],
+  "defects": [
+    "front-facing oversized symmetric redesign rather than Idle DR identity",
+    "missing gray-white blaze and alternate ear",
+    "blade and guard too large; pale pommel ornament persists"
+  ],
+  "nextPromptDelta": "retain eye overlap and silver metal but match exact compact Idle DR body and sword scale, remove pommel ornament",
+  "recordedAt": "2026-08-19T10:26:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "equipment_scale",
+    "equipment_state"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "front-facing oversized symmetric redesign rather than Idle DR identity",
+    "missing gray-white blaze and alternate ear",
+    "blade and guard too large; pale pommel ornament persists"
+  ]
+}

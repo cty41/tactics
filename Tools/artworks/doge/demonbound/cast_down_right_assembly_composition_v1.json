@@ -1,0 +1,23 @@
+{
+  "canvas": [256, 256],
+  "coreAxis": {"bottom": [127, 231], "top": [127, 124], "tiltDegrees": [-2.0, 2.0]},
+  "footCenter": [127, 236],
+  "weapon": {
+    "hiddenGrip": [137, 158],
+    "exitWindow": [132, 73, 143, 139],
+    "tipRegion": [133, 73, 143, 85],
+    "guardWindow": [123, 133, 150, 146],
+    "bladeCenterline": [132, 73, 143, 139],
+    "bladeLengthRangePx": [55, 65],
+    "minBladeWidthPx": 7,
+    "maxBladeWidthPx": 10,
+    "gemWindow": [132, 158, 143, 170],
+    "forbiddenGemRegions": [[133, 73, 143, 85], [132, 86, 143, 139]],
+    "maxGemAreaPx": 64
+  },
+  "eyeOcclusion": {"bladeOverlapsBothInnerEyes": false, "maxEyeCenterGapPx": 28},
+  "forbiddenRegions": [],
+  "requiredHiddenLabels": [],
+  "visibleAreaCaps": {"equipment": 0.22},
+  "equipmentState": {"scabbard": "absent", "staticEffects": "absent", "metalFinish": "silver_gray"}
+}

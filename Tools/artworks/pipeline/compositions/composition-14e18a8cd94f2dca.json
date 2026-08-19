@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-14e18a8cd94f2dca",
+  "assetId": "demonbound-cast-dr",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "bottom": [
+        127,
+        230
+      ],
+      "top": [
+        127,
+        121
+      ],
+      "tiltDegrees": [
+        -3.0,
+        3.0
+      ]
+    },
+    "footCenter": [
+      127,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        132,
+        178
+      ],
+      "exitWindow": [
+        155,
+        142,
+        174,
+        188
+      ],
+      "tipRegion": [
+        174,
+        100,
+        224,
+        158
+      ],
+      "maxGemAreaPx": 36
+    },
+    "forbiddenRegions": [
+      {
+        "name": "eyes",
+        "rect": [
+          101,
+          126,
+          157,
+          158
+        ]
+      }
+    ],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {
+      "equipment": 0.22
+    },
+    "equipmentState": {
+      "scabbard": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_composition_v2.json",
+    "sha256": "92e004ce0e55ab840e108ef850b00d7c1ef12fde97c718c898b3b6067eb1830f"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  }
+}

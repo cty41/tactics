@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 3,
+  "attemptId": "job-1ba4cbd209ecf161-a001",
+  "jobId": "job-1ba4cbd209ecf161",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "technical_failed",
+  "artifacts": {
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1ba4cbd209ecf161/job-1ba4cbd209ecf161-a001/prepared.png",
+      "sha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1ba4cbd209ecf161/job-1ba4cbd209ecf161-a001/mask.png",
+      "sha256": "1009c5787e17e04cf91109d051a258a1e05eaa876c3b107c0e9a182ea24664dd"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-1ba4cbd209ecf161-a001/overlay.png",
+        "sha256": "848c211a82ed9600ab3cd89c7f6378bb795d24cbd3df425a9f96554cf57cb1e1"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-1ba4cbd209ecf161-a001/preview128.png",
+        "sha256": "e9f9fdd770fb58cd3c28e0dcd2bcdffc5ff81898cd28b5db575f700ec6848349"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-1ba4cbd209ecf161-a001/tile64x32.png",
+        "sha256": "de2b4838272185b2511c77af029f3a5528487eae6d6cd6129000212c1b049fbb"
+      },
+      "assemblyLayerReview": {
+        "path": "Tools/artworks/pipeline/reviews/job-1ba4cbd209ecf161-a001/assemblyLayerReview.png",
+        "sha256": "db8e5e82f47ec995a42348143644ce8859572bc3d31c318437666fe1a9e7fe38"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-f390daf833bf8840.json",
+    "sha256": "b3d9c78ba43992b26769f0a5ac7224874a5ded6e4350f7e9d8b77911c58e0a89"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-1adfcd712356d0c8",
+  "assemblyId": "assembly-6f0d21bbbacd3ccf",
+  "assemblyRenderId": "assembly-render-e417904a9152390e",
+  "sourceMode": "derived",
+  "annotationId": "annotations-4cf8ed2eeaf6013a"
+}

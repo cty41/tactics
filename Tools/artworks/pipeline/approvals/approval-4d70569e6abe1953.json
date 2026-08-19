@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-4d70569e6abe1953",
+  "attemptId": "job-23cf32963f9f38f1-a001",
+  "candidateSha256": "52ce844658bda00b97d5d914af0677b0796e035a004325f34ddf9bab6845ba85",
+  "maskSha256": "1ad9d51594894141cdb448aacaa1017a4007da74e8439b44769989d9729be28c",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "f85d2a361018e029badf2d657632e5c3b579114efdda4fb9a9dc31e7dff9a619",
+    "preview128": "708ded34cca7fcb047a4c49ffb5b5552527e0cc6af63f714747137213adb0428",
+    "tile64x32": "8bdd32ecb736d4c9c60c2a2c023e182b0b9ea72da71700b3cc6c2f2255df3cd5"
+  },
+  "decision": "approved",
+  "reason": "Technical re-derivation from the accepted body using corrected near-paw semantics; candidate body pixels and accepted grip are unchanged.",
+  "decidedAt": "2026-08-19T15:35:00+08:00",
+  "annotation": null,
+  "reportSha256": "fd23ceac00c88c80f3cfbdefe823bb4235a77403eeb7dd619d2c882b71af190f"
+}

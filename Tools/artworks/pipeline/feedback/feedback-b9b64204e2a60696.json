@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-b9b64204e2a60696",
+  "attemptId": "job-2fc0deb3ce46c873-a001",
+  "candidateSha256": "b3c79d88484e90589921178641e793ea4b603d2967cc90c59f9108452719ed6e",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Sword, scabbard and side paws are removed, yielding a clean body-shell concept"
+  ],
+  "defects": [
+    "Body remains too tall/narrow and the pure rear view lacks the facial side plane expected from the isometric Amazon UL reference"
+  ],
+  "nextPromptDelta": "Rotate the rear body about 20-25 degrees toward camera, reveal one near-side eye and a narrow muzzle/cheek profile, preserve mostly-back reading and Idle core proportions",
+  "recordedAt": "2026-08-19T20:33:22.7753573+08:00",
+  "authorType": "human",
+  "categories": [
+    "core_geometry",
+    "pose_axis",
+    "identity"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "no equipment,no front paws yet,rear feet,coat split,collar,alternate ear"
+  ],
+  "pendingFixes": [
+    "shorter/wider core and isometric rear-three-quarter facial sliver"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-1b243a2bdfee22b1-a004",
+  "jobId": "job-1b243a2bdfee22b1",
+  "ordinal": 4,
+  "parentAttemptId": "job-1b243a2bdfee22b1-a003",
+  "retryFeedbackId": "feedback-f013be4d32354720",
+  "promptDelta": "Preserve v3 identity and up-left direction, but reduce the rigid left lean to only 3-5 degrees: the top center should be only slightly left of the midpoint between the feet. Reconstruct the DR centerline grip in the UL rear view: place grip, sword-side paw, and most of the guard behind the upper-left core, with only a tiny guard rim, tiny attached paw crescent, and the blade emerging beyond the left contour. Keep the eye unobstructed and omit the scabbard.",
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v04.png",
+      "sha256": "26da5e91d1b554286f573b406650c28b57193dc22e051f6b6a434dd25475c959"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1b243a2bdfee22b1/job-1b243a2bdfee22b1-a004/raw.png",
+      "sha256": "26da5e91d1b554286f573b406650c28b57193dc22e051f6b6a434dd25475c959"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1b243a2bdfee22b1/job-1b243a2bdfee22b1-a004/prepared.png",
+      "sha256": "ce49f6e63b34e72a6f25ec78d995db595368aec6b4855520e41d7741fc1a8dd5"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-075ce89dccf9a8b6",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 96
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-7731890491bd247b",
+  "attemptId": "job-871408b81417ce24-a002",
+  "candidateSha256": "33639ed90070330945bd75e03d091c424813bd5c6a59c11aeb236ec872599248",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The v10 identity baseline is largely preserved: serious face, shallow separate forehead patch, split coat, alternate ear, one small guard gem, compact sword, and no scabbard all remain recognizable."
+  ],
+  "defects": [
+    "The requested principal edit did not succeed: the capsule top center remains almost vertically aligned with the midpoint between the feet, so there is no clearly readable screen-right forward lean. The calibrated core regresses from v10's 67 pixels to 70 pixels, the near hand remains circular, the sword still descends below the feet to y=244, and chroma fringe/residue plus mask issues remain."
+  ],
+  "nextPromptDelta": "Keep v10 as the visual baseline again, but make the rigid-body lean measurable: move the capsule top center about 8-10 calibrated pixels screen-right relative to the feet midpoint while keeping both feet fixed and preserving the parallel 67-pixel width bands. Do not alter the face, forehead patch, coat, sword, gem count, or no-scabbard state.",
+  "recordedAt": "2026-08-18T11:46:11.1192725+08:00"
+}

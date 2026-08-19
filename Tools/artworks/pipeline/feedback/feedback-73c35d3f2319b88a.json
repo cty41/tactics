@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-73c35d3f2319b88a",
+  "attemptId": "job-d3e64d0255927458-a001",
+  "candidateSha256": "47a0b5061b68bd9e5a3da0b93f1b83ca9f4c7a86c10372219a2b5ac806c22808",
+  "reviewer": "codex-agent",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Four paws remain visually separate and directly attached; no sword, scabbard, or static FX; Idle DR Tilemap comparison is available."
+  ],
+  "defects": [
+    "The generated projection is still too frontal. The first manually prepared semantic mask also demonstrates unresolved annotation fidelity, so this candidate cannot advance to approval."
+  ],
+  "nextPromptDelta": "Strengthen the Down-Right projection while preserving four direct paws, no limb segments, tight asymmetric eyes, and the flat Idle-like forehead blaze.",
+  "recordedAt": "2026-08-19T11:31:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "pose_axis",
+    "topology",
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [
+    "Exactly four paws directly attached to the capsule body; no arms and no legs; same flush gray-white forehead blaze rather than an ornament; no sword or FX."
+  ],
+  "pendingFixes": [
+    "Regenerate a clearer Down-Right body projection, then annotate the actual paw/core silhouette without synthetic overlaps."
+  ]
+}

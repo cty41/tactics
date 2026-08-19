@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "contractId": "contract-63e48d93e0c14372",
+  "assetId": "demonbound-melee",
+  "approvedAssetId": "demonbound-melee",
+  "kind": "action_pose",
+  "direction": "up-left",
+  "pose": "melee",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+    "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4",
+    "maskPath": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a005/calibrated-mask.png",
+    "maskSha256": "2fa658cdf1f956b2b10422703aa8e74ebf98f6a7ed13fb4e118a7d81afdadbde"
+  },
+  "maskRequired": true,
+  "noArms": true,
+  "handSides": {
+    "near_hand": "left",
+    "far_hand": "right"
+  },
+  "occlusion": {
+    "layerRules": {
+      "near_hand": "behind-core",
+      "far_hand": "behind-core",
+      "equipment": "behind-core"
+    },
+    "visibilityCaps": {
+      "near_hand": 0.04,
+      "far_hand": 0.04,
+      "equipment": 0.3
+    }
+  },
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_ul_v01.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_ul_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

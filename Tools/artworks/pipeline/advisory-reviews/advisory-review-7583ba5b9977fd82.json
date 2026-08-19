@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-7583ba5b9977fd82",
+  "attemptId": "job-9c8a49b12ae5683e-a001",
+  "candidateSha256": "effcd97cb0dc39d91cbf396909ade7bf266086ef4c4301acd1a9e13df5452d1d",
+  "reviewer": "codex",
+  "risks": [
+    "long narrow blade and concentrated inward-upward gaze now match requested direction; however the sword extends too near the canvas top, the sprite still drifts toward front-facing symmetry and lacks the approved gray-white blaze/single alternate ear, and an unapproved pale pommel ornament remains"
+  ],
+  "recordedAt": "2026-08-18T16:26:00+08:00",
+  "nonBinding": true
+}

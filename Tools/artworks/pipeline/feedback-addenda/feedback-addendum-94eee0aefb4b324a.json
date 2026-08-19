@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "feedbackAddendumId": "feedback-addendum-94eee0aefb4b324a",
+  "attemptId": "job-f40816b1c2e8b36c-a001",
+  "parentFeedbackId": "feedback-7c9c88fffc102260",
+  "reviewer": "cty41",
+  "defects": [
+    "The character's left sword-holding paw is too symmetric with the right paw. Move it inward toward the front center of the capsule and hide more of it behind the core, matching the asymmetric hand placement language of the approved DR."
+  ],
+  "recordedAt": "2026-08-18T09:41:41+08:00"
+}

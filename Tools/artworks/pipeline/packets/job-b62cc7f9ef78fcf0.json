@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 3,
+  "jobId": "job-b62cc7f9ef78fcf0",
+  "state": "ready",
+  "contractId": "contract-433436bd58094043",
+  "contractSha256": "cfa05608cdceda9fdca35fe9cdd62d80cebb3f7aa205f9fab96e4ce04d1a22c0",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/cast_up_left_body_shell_prompt_v2.md",
+    "sha256": "ea99a0e6660ba7aa3ec1be99bd41856afbded2ea4ce21bd261676eb7ce475db4"
+  },
+  "inputs": [
+    {
+      "role": "identity_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+      "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+    },
+    {
+      "role": "pose_guide",
+      "path": "Tools/artworks/doge/demonbound/cast_up_left_body_pose_guide_v1.png",
+      "sha256": "30adbb9ea9f7d8da4c193915be48f2e8e8013c221f82d64ea24cbaba1b8bd540"
+    },
+    {
+      "role": "pose_reference",
+      "path": "Tools/artworks/amazon/imgs/idle.png",
+      "sha256": "90c7f3c0662a24bdd87d2b583f67f0d35d79120d20b1dc69920d2475abbcbef2"
+    },
+    {
+      "role": "topology_reference",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_v01.png",
+      "sha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "cast-body-shell"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

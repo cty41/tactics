@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "feedbackAddendumId": "feedback-addendum-51a0b6fa53bba88b",
+  "attemptId": "job-e635163e7b36bbe4-a001",
+  "parentFeedbackId": "feedback-a0b31118da805412",
+  "reviewer": "cty41",
+  "defects": [
+    "The v2 sword is now undersized for an ancestral battle sword; restore it to a balanced scale between v1 and v2, approximately the approved Idle sword's full length.",
+    "The eyes must not keep looking outward at the viewer during the attack; both pupils must track the down-right attack target along the blade direction."
+  ],
+  "recordedAt": "2026-08-18T10:23:50.7683211+08:00"
+}

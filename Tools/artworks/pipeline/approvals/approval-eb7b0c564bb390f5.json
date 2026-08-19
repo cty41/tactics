@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-eb7b0c564bb390f5",
+  "attemptId": "job-8520f1be804163d0-a008",
+  "candidateSha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d",
+  "maskSha256": "8b41585a6a823be60d587b33aa0b6334a1bfb7156676bb329eae5823efa7aa1f",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "anchorTileCompare": "f55ff719afb04c25f2509ea54ebed86e90435565f63aa77bb8d863da3a4a85cd",
+    "overlay": "160513828085a69160a5d13bf80782804f62d7c6e1dc2dbb6ebfbcb4954b5167",
+    "preview128": "d5d068a640091a0f2df69b689252b216a0246affe1aef997660c4170970e16a1",
+    "tile64x32": "d1f75ae184289ae06b422b7430730bb2e68968c519c8de975f99cde2d563d3b2"
+  },
+  "decision": "approved",
+  "reason": "User visually accepted the closer two-paw Cast DR body component and confirmed continuation.",
+  "decidedAt": "2026-08-19T15:41:00.7260740+08:00",
+  "annotation": null,
+  "reportSha256": "51a2f9440d330e23d7b75cfd2e19a90e9f4642627939647198d9a9993d1854bd"
+}

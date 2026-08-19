@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 3,
+  "attemptId": "job-232f7a0a02daa476-a001",
+  "jobId": "job-232f7a0a02daa476",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "review_pending",
+  "artifacts": {
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-232f7a0a02daa476/job-232f7a0a02daa476-a001/prepared.png",
+      "sha256": "a51e0bfd4545b8bfa7538630ca2639fbd5ca80c4f711cd887df7d3844ec20a1e"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-232f7a0a02daa476/job-232f7a0a02daa476-a001/mask.png",
+      "sha256": "c21fc68522d6ecdf2fbc59a19855d28546941ac6594ebe9d8fa2efd9495ef030"
+    },
+    "identityMaskSource": {
+      "path": "Tools/artworks/doge/demonbound/demonbound_idle_dr_identity_mask_v1.png",
+      "sha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb"
+    },
+    "identityMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-232f7a0a02daa476/job-232f7a0a02daa476-a001/identity-mask.png",
+      "sha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-232f7a0a02daa476-a001/overlay.png",
+        "sha256": "f6026b801b0944f66ae7439287e1d6c25f0d590d5a2556bd1d5b4b008275a387"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-232f7a0a02daa476-a001/preview128.png",
+        "sha256": "0d8f16ada8e53196d1485f358f55f84c8b0380bdc6c227a19d00d625ecdbaf38"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-232f7a0a02daa476-a001/tile64x32.png",
+        "sha256": "bc34b0342d7092ec35c705ee52901d37a6afae0c42c94149c86c211ad3b70320"
+      },
+      "anchorTileCompare": {
+        "path": "Tools/artworks/pipeline/reviews/job-232f7a0a02daa476-a001/anchorTileCompare.png",
+        "sha256": "e47ca86cfd4bf7f6492bf2f8582321f4986b1833745b7981783838af4b6a2129"
+      },
+      "assemblyLayerReview": {
+        "path": "Tools/artworks/pipeline/reviews/job-232f7a0a02daa476-a001/assemblyLayerReview.png",
+        "sha256": "f4fd3f9832497d433315c9209ef43261bc743aa59cfc7db87c5de9f1fe593006"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-ea903fcb945985f0.json",
+    "sha256": "1a5bb16041cc0b0a798dfa0df5065636f2671df78ff7bb59881a50dc06cae728"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "assemblyId": "assembly-fe9a832ea22ca92a",
+  "assemblyRenderId": "assembly-render-9a3eb30162503aa3",
+  "sourceMode": "derived",
+  "annotationId": "annotations-fda4ec31f163a3ed"
+}

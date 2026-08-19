@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-90d23c6544c7fdcd",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/artifacts/job-8520f1be804163d0/job-8520f1be804163d0-a002/mask.png",
+    "sha256": "7d4591ea0adc8466cdae453688ee2aab6c531d0292219142218ce1b2c3a0b1d5"
+  },
+  "role": "supporting-derived",
+  "note": "Immutable early body component semantic-mask evidence retained for audit."
+}

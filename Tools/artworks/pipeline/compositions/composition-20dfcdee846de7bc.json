@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-20dfcdee846de7bc",
+  "assetId": "demonbound-cast-dr-assembled-v1",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "bottom": [
+        127,
+        231
+      ],
+      "top": [
+        127,
+        124
+      ],
+      "tiltDegrees": [
+        -2.0,
+        2.0
+      ]
+    },
+    "footCenter": [
+      127,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        137,
+        158
+      ],
+      "exitWindow": [
+        132,
+        73,
+        143,
+        139
+      ],
+      "tipRegion": [
+        133,
+        73,
+        143,
+        85
+      ],
+      "guardWindow": [
+        123,
+        133,
+        150,
+        146
+      ],
+      "bladeCenterline": [
+        132,
+        73,
+        143,
+        139
+      ],
+      "bladeLengthRangePx": [
+        55,
+        65
+      ],
+      "minBladeWidthPx": 7,
+      "maxBladeWidthPx": 10,
+      "gemWindow": [
+        132,
+        158,
+        143,
+        170
+      ],
+      "forbiddenGemRegions": [
+        [
+          133,
+          73,
+          143,
+          85
+        ],
+        [
+          132,
+          86,
+          143,
+          139
+        ]
+      ],
+      "maxGemAreaPx": 64
+    },
+    "eyeOcclusion": {
+      "bladeOverlapsBothInnerEyes": false,
+      "maxEyeCenterGapPx": 28
+    },
+    "forbiddenRegions": [],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {
+      "equipment": 0.22
+    },
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent",
+      "metalFinish": "silver_gray"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_assembly_composition_v1.json",
+    "sha256": "f5b622bc5a73c62ab3a1f3a97573ca02662d91c9b7c51ce41d58593aae1291c5"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  }
+}

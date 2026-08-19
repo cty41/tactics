@@ -1,0 +1,5 @@
+Transparent-background 2D game sprite layer, 256x256 master canvas with a uniform #00ff00 chroma background. Generate only one compact upright ancestral cursed sword; no character, paws, body, face, eyes, sword scabbard, glow, magic, particles, beam, ground, text or shadow.
+
+Use the formal Demonbound Idle DR only as the exact sword design reference. Keep its compact narrow blade proportions: silver-gray blade and guard, no jewel or decoration at the tip, no oversized guard. The grip itself is brown-red wood. The pommel is silver-gray metal with one small embedded red gemstone. Preserve the same restrained noble heirloom finish, dark outline, line weight and material read as the Idle sword.
+
+Place the sword vertically at the canvas centre for later compositing: narrow blade on x=127, tip around y=110, guard around y=165, grip/pommel below it around y=190. The blade is straight and compact, not a greatsword and not taller than the ears of the later character. No static visual effect of any kind.

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-b5972b67feee10ea",
+  "attemptId": "job-7423a5fc8cd94098-a001",
+  "candidateSha256": "df567c281ac1519f854ddde13c53ff1b3ad4fababd89ecffb981d29a933564dc",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "medium thick blade meets requested intermediate scale; upward focused gaze; one guard gem; no tip gem, scabbard, or static effect"
+  ],
+  "defects": [
+    "front-facing symmetric identity drift and missing forehead blaze/alternate ear",
+    "gold guard/pommel are oversized and redesigned"
+  ],
+  "nextPromptDelta": "freeze medium blade length/thickness; restore Idle DR asymmetry, blaze, alternate ear and compact guard/pommel",
+  "recordedAt": "2026-08-19T10:06:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "equipment_scale",
+    "equipment_state"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "front-facing symmetric identity drift and missing forehead blaze/alternate ear",
+    "gold guard/pommel are oversized and redesigned"
+  ]
+}

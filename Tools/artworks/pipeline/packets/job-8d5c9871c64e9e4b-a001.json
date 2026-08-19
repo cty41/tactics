@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-8d5c9871c64e9e4b-a001",
+  "jobId": "job-8d5c9871c64e9e4b",
+  "promptDelta": null,
+  "inputs": [
+    {
+      "role": "identity_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_guide",
+      "path": "Tools/artworks/doge/demonbound/cast_down_right_pose_guide_v2.png",
+      "sha256": "af59f7724aa9f2025b7464cf36f5150bd61809aece0c95e5b05e29e309b487be"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "cast"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null
+}

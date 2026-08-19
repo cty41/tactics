@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-8e12b02b65c94371",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_idle_tile_compare_foot_occlusion_v02.png",
+    "sha256": "69a58a385f0b3ebfd8fea9d65a83cb99a98f6e86fc9f0575a4afbbe52f14e692"
+  },
+  "role": "supporting-derived",
+  "note": "Demonbound Cast UL body and deterministic foot-behind-body occlusion review"
+}

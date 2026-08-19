@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-748064ad66e1ce21",
+  "attemptId": "job-9c1b93e8a987e7b1-a009",
+  "candidateSha256": "fe16c7f4cbc65ddb6f5522d1f7aa5d91b396e9ce55bf5f146b4f153f726e29b1",
+  "maskSha256": "20113458bf569e63771f6fd1eefdb14f8325347019a3d3cced107c1a1a190d40",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "a33d9bf700044cd1a778a48fb287a0130e8c52b16c07d298c7219e30d21166ff",
+    "preview128": "826699dbd2d7959fe5a44963a747f475ee7f4063102d198304e608093c05e9e0",
+    "tile64x32": "1772e99c7f1da2951176eaca312724facd57f74cbd514b7d82df1c5e9d1b70ab"
+  },
+  "decision": "approved",
+  "reason": "User accepted Cast DR v5 body and requested formal finalization; this remediation replays the selected pixels with chroma cleanup, exact mask, annotations, passing validation and review",
+  "decidedAt": "2026-08-19T19:50:37.1566992+08:00",
+  "annotation": {
+    "annotationId": "annotations-c771576b8645a4bb",
+    "sha256": "c3e8db81510292cd1fd54784430642affc8d3cb6053b609d56406cc8ecdf7497"
+  },
+  "reportSha256": "4990d109fcbeb7d1d59bbd74145bda32855c9408498e00439bdc964051ef1ff2"
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "feedbackAddendumId": "feedback-addendum-9fe3d164742f37d8",
+  "attemptId": "job-8511c38401ba2a99-a002",
+  "parentFeedbackId": "feedback-ee84d78f243e5cbf",
+  "reviewer": "cty41",
+  "defects": [
+    "The short red-black object protruding behind the sword hand is a visible scabbard or scabbard mouth. A melee attack frame must contain only the one complete sword in hand; no sheath, scabbard mouth, belt-mounted weapon fragment, or second handle may appear anywhere behind the hand or body."
+  ],
+  "recordedAt": "2026-08-18T11:20:35.3434947+08:00"
+}

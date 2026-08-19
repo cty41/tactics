@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 3,
+  "attemptId": "job-6584309088f1217c-a001",
+  "jobId": "job-6584309088f1217c",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "technical_failed",
+  "artifacts": {
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-6584309088f1217c/job-6584309088f1217c-a001/prepared.png",
+      "sha256": "2161ab86f9a1a1c73a581f5e1114c3a3cf742f8c891f9096a2f45fdc87e2726a"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-6584309088f1217c/job-6584309088f1217c-a001/mask.png",
+      "sha256": "75bd2b829b1f36aebccf8af759b9d09cb95869eb96d42bdf2fddca32ad803445"
+    },
+    "identityMaskSource": {
+      "path": "Tools/artworks/doge/demonbound/demonbound_idle_dr_identity_mask_v1.png",
+      "sha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb"
+    },
+    "identityMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-6584309088f1217c/job-6584309088f1217c-a001/identity-mask.png",
+      "sha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-ac929fe6879b883b.json",
+    "sha256": "8f3bcdeeadff7af26a9bf3cf099ee34fd3e78802dabd14968292e07c4a25f219"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "assemblyId": "assembly-eb3fa8dfc214956e",
+  "assemblyRenderId": "assembly-render-27cf374bf7513ca0",
+  "sourceMode": "derived",
+  "annotationId": "annotations-cd3f4b67f61fdb60"
+}

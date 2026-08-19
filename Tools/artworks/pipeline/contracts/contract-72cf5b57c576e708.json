@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 3,
+  "contractId": "contract-72cf5b57c576e708",
+  "assetId": "demonbound-cast-ul-body-shell-v1",
+  "approvedAssetId": "demonbound-cast-ul-body-shell-v1",
+  "kind": "action_pose",
+  "direction": "up-left",
+  "pose": "cast-body-shell",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+    "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+  },
+  "maskRequired": true,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-5f652b4644f2c9d7",
+    "sha256": "584781d2c4082b070e97429e5f7a322a9f3bf2a60abede397295133c44536762"
+  },
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_ul_body_shell_v01.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_ul_body_shell_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "GPT-edited project-owned Demonbound Cast UL body shell from formal Idle UL"
+  },
+  "assetRole": "component",
+  "componentKind": "body",
+  "sourceMode": "generated",
+  "runtimeEligible": false
+}

@@ -1,0 +1,47 @@
+{
+  "conceptOnly": false,
+  "contractId": "contract-075b9db204c60d9b",
+  "contractRequirements": {
+    "imageGenDirective": "Draw behind-core equipment and both hand paws first, then draw the capsule body over their inner portions; only outer arcs may remain visible.",
+    "occlusion": {
+      "layerRules": {
+        "equipment": "behind-core",
+        "far_hand": "behind-core",
+        "near_hand": "behind-core"
+      },
+      "visibilityCaps": {
+        "equipment": 0.12,
+        "far_hand": 0.04,
+        "near_hand": 0.04
+      }
+    }
+  },
+  "contractSha256": "6b7024c0152f286da5c0c8133cb45cf6fbd6f4316c9af4792e5e9f75f71b5a99",
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "role": "core_anchor",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02.png",
+      "role": "pose_reference",
+      "sha256": "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24"
+    }
+  ],
+  "jobId": "job-f40816b1c2e8b36c",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/idle_up_left_behind_core_prompt.md",
+    "sha256": "8276efb96cf5c09a1f148b2b21892518947b1d42946c7573fd7739f6eb8021c6"
+  },
+  "schemaVersion": 1,
+  "series": {
+    "poseId": "idle-ul",
+    "seriesId": "demonbound-nine-pose-v1"
+  },
+  "state": "ready",
+  "target": {
+    "direction": "up-left",
+    "pose": "idle"
+  }
+}

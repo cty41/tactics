@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-c4270f321ad53571",
+  "attemptId": "job-ff0004c252fc0691-a001",
+  "candidateSha256": "a80385a293b136c8cd93c24a111d8dd23b523923d63ba671ffda379bd19a77c7",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Rear three-quarter UL direction, capsule proportions, coat split and grounded feet are acceptable"
+  ],
+  "defects": [
+    "The two front paws appear on opposite outer body sides instead of sharing the central hidden sword grip"
+  ],
+  "nextPromptDelta": "Move both gripping paws to the upper back center around one invisible vertical handle; body occludes most inner paw area; no side-edge paws",
+  "recordedAt": "2026-08-19T20:09:00.7327382+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology",
+    "occlusion"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "rear UL direction,identity,core geometry,coat split,collar,rear feet,no limbs,no sword,no effects"
+  ],
+  "pendingFixes": [
+    "central behind-core two-paw grip"
+  ]
+}

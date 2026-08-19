@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-8511c38401ba2a99-a002",
+  "jobId": "job-8511c38401ba2a99",
+  "promptDelta": "Preserve the restored forehead blaze, alternate ear, far hand, split coat, and no-scabbard state. Re-establish v4's raised target-torso gaze and serious closed-mouth brows, rotate the blade to a lower-right cleave axis and shorten it about 20%, shrink both hands to mostly occluded asymmetric edge arcs, restore a readable rigid-body screen-right lean, lock core width to 64 pixels and baseline y=236, and use exact flat #00FF00 without contamination.",
+  "inputs": [
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_reference",
+      "path": "godot/assets/units/actions/doge_hunter_melee_attack_dr.png",
+      "sha256": "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "melee"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null
+}

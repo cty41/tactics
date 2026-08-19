@@ -1,0 +1,20 @@
+{
+  "attemptId": "job-f40816b1c2e8b36c-a001",
+  "candidateSha256": "16d71544cb76d4030eced32850203b50a20a47f03d633d402c3bba770197ea48",
+  "defects": [
+    "Both hand paws intrude into the approved core region; the near paw is still presented as a complete side oval rather than a small outer arc",
+    "Four sword pixels intrude into the approved core and the core mask becomes row-disconnected",
+    "Calibrated feet end at y=241 instead of baseline y=236",
+    "Residual green chroma remains after the first tolerant preparation"
+  ],
+  "feedbackId": "feedback-7c9c88fffc102260",
+  "nextPromptDelta": "Preserve v3 direction, identity and mostly hidden sword; reduce each hand to a tiny crescent entirely outside the capsule hull, move every visible sword fragment outside the body hull, and raise the feet relative to the core so the calibrated baseline lands at y=236",
+  "recordedAt": "2026-08-18T09:25:14+08:00",
+  "reviewer": "cty41",
+  "schemaVersion": 1,
+  "strengths": [
+    "Correct up-left three-quarter-back direction and preserves the approved Demonbound split-coat identity",
+    "The sword is mostly moved behind the right/back contour and core calibration preserves the approved capsule center and height"
+  ],
+  "verdict": "retry"
+}

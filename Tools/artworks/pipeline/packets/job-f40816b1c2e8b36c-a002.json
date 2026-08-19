@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-f40816b1c2e8b36c-a002",
+  "jobId": "job-f40816b1c2e8b36c",
+  "promptDelta": "Preserve v3 direction, identity and mostly hidden sword; reduce each hand to a tiny crescent entirely outside the capsule hull, move every visible sword fragment outside the body hull, and raise the feet relative to the core so the calibrated baseline lands at y=236",
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "role": "core_anchor",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02.png",
+      "role": "pose_reference",
+      "sha256": "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "idle"
+  },
+  "conceptOnly": false,
+  "contractRequirements": {
+    "imageGenDirective": "Draw behind-core equipment and both hand paws first, then draw the capsule body over their inner portions; only outer arcs may remain visible.",
+    "occlusion": {
+      "layerRules": {
+        "equipment": "behind-core",
+        "far_hand": "behind-core",
+        "near_hand": "behind-core"
+      },
+      "visibilityCaps": {
+        "equipment": 0.12,
+        "far_hand": 0.04,
+        "near_hand": 0.04
+      }
+    }
+  }
+}

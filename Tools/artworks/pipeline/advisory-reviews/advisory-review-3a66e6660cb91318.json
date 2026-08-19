@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-3a66e6660cb91318",
+  "attemptId": "job-3adba83fc2881bb0-a002",
+  "candidateSha256": "a88e223cf7090dd0765ed5c26a13e0cf9669c6d8942ba8f91101ffa37b116bdb",
+  "reviewer": "codex-agent",
+  "risks": [
+    "The pupil distance is visibly reduced and the far eye is smaller, improving the down-right read. Remaining risks for human review: the head/body perspective still needs comparison against the formal Idle DR, and the neutral mouth may not yet read as a focused casting expression."
+  ],
+  "recordedAt": "2026-08-19T10:57:00+08:00",
+  "nonBinding": true
+}

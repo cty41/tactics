@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "feedbackAddendumId": "feedback-addendum-5d4fc0ffe0dce88c",
+  "attemptId": "job-8511c38401ba2a99-a008",
+  "parentFeedbackId": "feedback-418915e8e9400e7c",
+  "reviewer": "cty41",
+  "defects": [
+    "人工视觉例外接受：确认采用 v9 的 96% 等比校准版，接受核心宽度 74px 相对 Idle DR 64px 锚点的差异；该确认不等同于自动几何门禁通过，禁止单轴压缩或伪造技术报告。"
+  ],
+  "recordedAt": "2026-08-18T12:00:43.8470382+08:00"
+}

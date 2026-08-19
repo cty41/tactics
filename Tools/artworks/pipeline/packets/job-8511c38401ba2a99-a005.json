@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-8511c38401ba2a99-a005",
+  "jobId": "job-8511c38401ba2a99",
+  "promptDelta": "Retain only v8's shorter irregular forehead-patch direction and modest screen-right lean. Restore v7's compact metallic sword, total absence of any scabbard, serious closed mouth, and narrower body, then go further to the exact 64-pixel Idle DR core. The forehead patch must be wider left-to-right and shallower top-to-bottom, matching Idle DR rather than a vertical zigzag. Use tiny mostly hidden hand arcs, raise the pupils off-camera toward the target torso, and keep the complete sword above y=236.",
+  "inputs": [
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_reference",
+      "path": "godot/assets/units/actions/doge_hunter_melee_attack_dr.png",
+      "sha256": "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "melee"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null
+}

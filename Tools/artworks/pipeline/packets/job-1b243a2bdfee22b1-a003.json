@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-1b243a2bdfee22b1-a003",
+  "jobId": "job-1b243a2bdfee22b1",
+  "promptDelta": "Use explicit screen coordinates: keep both feet at the baseline, place the capsule top and both ear roots clearly 35-60 pixels screen-left of the midpoint between the feet, and rotate the entire straight capsule counterclockwise as one rigid form so its long axis parallels the eye-to-target and blade direction. Preserve v2 scale, split coat, forehead patch, alternate ear, and no-scabbard sword. Hide the grip and most of the sword-side paw behind the left body edge; reveal only a tiny attached crescent and move the guard leftward away from the eye.",
+  "inputs": [
+    {
+      "role": "action_reference",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_dr_v01.png",
+      "sha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5"
+    },
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+      "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+    },
+    {
+      "role": "pose_reference",
+      "path": "godot/assets/units/actions/doge_hunter_melee_attack_ul.png",
+      "sha256": "e1a2c54c286adbd01c4a98a1a7f023d9b07880459c21c5e42994a8eeaa922ffe"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "melee"
+  },
+  "conceptOnly": false,
+  "contractRequirements": {
+    "occlusion": {
+      "layerRules": {
+        "near_hand": "behind-core",
+        "far_hand": "behind-core",
+        "equipment": "behind-core"
+      },
+      "visibilityCaps": {
+        "near_hand": 0.04,
+        "far_hand": 0.04,
+        "equipment": 0.3
+      }
+    },
+    "imageGenDirective": "Draw behind-core equipment and both hand paws first, then draw the capsule body over their inner portions; only outer arcs may remain visible."
+  }
+}

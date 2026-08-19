@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-ddb76f743690eef6",
+  "attemptId": "job-8511c38401ba2a99-a007",
+  "candidateSha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "v9 deterministic 96 percent uniform scaling preserves the selected appearance, moves the alpha baseline exactly to y=236, and removes chroma residue, fringe, and semantic-mask overshoot."
+  ],
+  "defects": [
+    "The core remains 74 pixels wide versus the 64-pixel Idle DR anchor, which cannot be corrected by further uniform scaling without making the 108-pixel core too short; one top-row semantic-mask pixel gap also remains."
+  ],
+  "nextPromptDelta": "Reuse the exact same deterministic visual source without another ImageGen output; correct only the semantic mask top-row discontinuity and retain the known non-promotable core-width exception.",
+  "recordedAt": "2026-08-18T11:56:44.9781278+08:00"
+}

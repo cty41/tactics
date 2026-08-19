@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-a0b31118da805412",
+  "attemptId": "job-e635163e7b36bbe4-a001",
+  "candidateSha256": "0e0b802014c81635bffd70b15a1b29877d8b2de26a3d0b7a85fcb3d1d7229133",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The active swing frame removes the scabbard completely, shortens the ancestral sword substantially, preserves the split gray-and-black coat and all four paws, and points the blade toward the lower-right target."
+  ],
+  "defects": [
+    "The broad gray-white forehead blaze is still absent, both hand paws remain overly complete circular disks, the rigid capsule shows almost no forward lean, the calibrated core reaches 70 pixels versus the 64-pixel anchor, the alpha baseline reaches y=237 rather than y=236, the core mask has a disconnected row, and chroma residue/fringe remains."
+  ],
+  "nextPromptDelta": "Keep the no-scabbard active-swing equipment state and the compact sword length. Restore the broad gray-white forehead blaze from Idle DR; make the sword hand a small pad mostly hidden inside the lower front-center core edge and the far hand a smaller asymmetric edge arc; give the whole rigid capsule a clearly readable modest screen-right lean; lock the core to the approved 64-pixel width and y=236 baseline; require a perfectly uniform exact #00FF00 background with no green contamination inside the subject.",
+  "recordedAt": "2026-08-18T10:17:06.4982959+08:00"
+}

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-201d48a031491aba",
+  "assetId": "demonbound-cast-dr-raised-v7",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "bottom": [
+        127,
+        230
+      ],
+      "top": [
+        127,
+        121
+      ],
+      "tiltDegrees": [
+        -2.0,
+        2.0
+      ]
+    },
+    "footCenter": [
+      127,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        127,
+        177
+      ],
+      "exitWindow": [
+        121,
+        105,
+        134,
+        166
+      ],
+      "tipRegion": [
+        119,
+        105,
+        136,
+        118
+      ],
+      "guardWindow": [
+        111,
+        163,
+        145,
+        184
+      ],
+      "bladeCenterline": [
+        121,
+        106,
+        134,
+        165
+      ],
+      "bladeLengthRangePx": [
+        55,
+        65
+      ],
+      "minBladeWidthPx": 10,
+      "maxBladeWidthPx": 13,
+      "gemWindow": [
+        122,
+        168,
+        132,
+        178
+      ],
+      "forbiddenGemRegions": [
+        [
+          119,
+          105,
+          136,
+          118
+        ],
+        [
+          122,
+          184,
+          132,
+          198
+        ]
+      ],
+      "maxGemAreaPx": 36
+    },
+    "eyeOcclusion": {
+      "bladeOverlapsBothInnerEyes": true,
+      "maxEyeCenterGapPx": 28
+    },
+    "forbiddenRegions": [
+      {
+        "name": "left_outer_eye",
+        "rect": [
+          100,
+          126,
+          119,
+          148
+        ]
+      },
+      {
+        "name": "right_outer_eye",
+        "rect": [
+          136,
+          126,
+          155,
+          148
+        ]
+      }
+    ],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {
+      "equipment": 0.22
+    },
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent",
+      "metalFinish": "silver_gray"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_raised_sword_composition_v9.json",
+    "sha256": "2529f2db2f359dfee32d5ca5c71964d2b0b2a04f78a8b4a3a5b5fa44bb047361"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  }
+}

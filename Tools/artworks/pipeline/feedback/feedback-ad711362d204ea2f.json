@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-ad711362d204ea2f",
+  "attemptId": "job-f8c3ac316cfe7021-a001",
+  "candidateSha256": "af642bb694bc1f984a2062d611363397e2f5c1f4cd097b13fa0ca35871401f84",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "Idle-scale compact narrow sword; deliberate inward-upward focus; red gem only on guard; no tip gem, scabbard, or static effect"
+  ],
+  "defects": [
+    "front-facing symmetric redesign instead of formal down-right Idle DR identity",
+    "missing gray-white forehead blaze and single alternate-color ear",
+    "unapproved pale pommel ornament"
+  ],
+  "nextPromptDelta": "preserve the compact v4 blade; restore exact Idle DR asymmetric identity, blaze and alternate ear; remove pale pommel ornament",
+  "recordedAt": "2026-08-18T16:41:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "equipment_state"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "front-facing symmetric redesign instead of formal down-right Idle DR identity",
+    "missing gray-white forehead blaze and single alternate-color ear",
+    "unapproved pale pommel ornament"
+  ]
+}

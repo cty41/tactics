@@ -22,8 +22,10 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 校对 Tile 落点 | 脚底锚点或飞行单位虚拟落点必须精确位于 `64×32` Tile 几何中心 |
 | 去幕与 alpha 校验 | `references/chroma-key-validation.md` |
 | Review、归档和提交 | `references/artwork-review-and-git.md` |
-| 只读批量检查 | `python scripts/validate_sprite_assets.py --root Tools/artworks --strict --review-examples` |
+| 只读批量检查 | `python scripts/validate_sprite_assets.py --root Tools/artworks --strict --review-examples`；状态机已晋升输出的几何权威委托给绑定 report/receipt |
 | 创建/重试/摄取任务 | `python scripts/artwork_pipeline.py --root <repo> create-job|retry|ingest ...` |
+| 连续姿态生产 | `create-series` → 每版 `record-feedback` → `select-attempt` → `advance-series` |
+| 限定几何例外 | `approve-exception`；首版只允许 `core_size_out_of_tolerance`，并绑定完整证据哈希 |
 | 状态机严格门禁 | `python scripts/artwork_pipeline.py --root <repo> check --strict` |
 | 运行时视觉 QA | 使用 Unity MCP 截图或 PlayMode 虚拟输入；不控制真实 Editor 窗口 |
 
@@ -36,15 +38,26 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 
 ## Workflow
 
-0. **先建立合同与 job。** `create-contract` 固定素材类型、方向、姿态、核心锚点、容差、发布路径与授权；`create-job` 固定提示词和每张输入图的角色与 SHA-256，并输出可交给 Codex ImageGen 的 packet。ImageGen 不属于 CLI；返回图只能通过 `retry` 创建的 attempt 执行 `ingest`。目录名和聊天确认都不能替代状态。
+0. **先建立合同与 job。** 读取器兼容且不重写 schema v1/v2；普通新合同沿用 v2，组件化资产写 schema v3。`action_pose`、`death_pose`、遮挡任务或使用姿态参考的 job 必须先 `create-composition`，再 `render-pose-guide`；导引是 `supporting-derived`，不能晋升为 Sprite。`create-contract` 固定核心锚点、构图规范、容差、发布路径与授权，`create-job` 固定每张输入图的职责与 SHA-256。随后用 `compile-prompt` 重复冻结不变量并只合并待修项。ImageGen 不属于 CLI；每次外部调用必须先 `begin-generation`，成功图使用匹配的 `invocation-id` 摄取，交付失败则用 `record-generation-failure` 留证且不计 raw 版本。
+
+   多姿态任务先用 `create-series` 固定顺序；`maxUniqueOutputs: null` 表示无限迭代，正整数表示显式预算。每个不同 raw SHA 计一次输出；相同 SHA 的重新摄取、去幕、蒙版或验证不增加计数。每个已摄取 attempt 都必须用 `record-feedback` 记录优点、缺陷、技术结论、选择及下一版 prompt delta；`retry --feedback-id` 和 `advance-series` 均不得绕过该记录。只有有限预算达到上限后才能进入 `exhausted`；只有耗尽的首个 `idle-dr` 可显式选择 provisional anchor，且其下游 job 自动标记 `conceptOnly`，禁止批准或晋升。已创建 series 的预算变化必须通过 `set-series-output-limit` 写入审核人、原因和时间，不得手改注册表。
 
 1. **先查案例，再锁定母图。** 阅读 `references/review-casebook.md` 中与任务相关的正反案例，并从 `examples/cases.json` 的 `approved_assets` 选择唯一正式母图。记录必须保持的身体、脚位、盾牌、武器和构图；把其他图片标为犬种、武器、姿态或色彩参考。不要让参考图替换母图的比例，禁止从 `rejected`、`superseded`、案例快照或 `tmp` 开始编辑。
-2. **一次生成一个变体。** ImageGen 只处理一个角色、一个局部变体或一个投射物。动作姿态先读取 `references/single-frame-action-poses.md`，明确角色母图、已选 DR 动作图与跨角色姿态参考的独立责任。明确“保持不变”区域；新武器、耳朵、翅膀和法术必须在屏幕空间中有清晰的前后层级，并完整留在画布内。单帧候选展示后必须停止；未获人工继续/批准时，不开始下一张或晋升资产。
+2. **一次生成一个变体。** ImageGen 只处理一个角色、一个局部变体或一个投射物。动作姿态先读取 `references/single-frame-action-poses.md`，明确角色母图、已选 DR 动作图与跨角色姿态参考的独立责任。明确“保持不变”区域；新武器、耳朵、翅膀和法术必须在屏幕空间中有清晰的前后层级，并完整留在画布内。普通任务的单帧候选展示后停止；显式 series 任务按合同中的审批节奏推进，但任何 `cty41` approval 都必须来自用户确认并落成 receipt，不能由自动推进替代。
 3. **去幕。** 选择纯 `#00ff00` 或 `#ff00ff` 背景，移除背景、软化 matte 边缘并检查绿色/洋红残留。保留真实透明 alpha，不把带色幕截图当母版。
 4. **尺寸校准。** 方向图必须以同角色已确认的 `down-right` 为唯一核心体量锚点，并制作只包含中央胶囊体或球核的纯核心主体蒙版；耳朵、口鼻、眼睛、手掌、脚掌、武器、盾牌、法杖、翅膀和特效全部排除。蒙版只用于测量和 QA，禁止粘贴或参与成品合成。比较主体上缘、下缘、中心、最大宽度以及上中下三个截面的宽度分布；中段近似平行，下段只能持平或内收。飞行单位改用球核体量，把球核中心固定在身体水平锚点 `x=128`，并在垂直方向对齐基准胶囊体上部圆帽中心。完整 alpha 包围盒只用于画布安全、裁切和技术校验：标准母版 `256×256 RGBA`、脚底或虚拟基线 `y=236`。禁止单轴拉伸；外部轮廓超出标准时记录为例外或候选。
-5. **缩小和逐角色 Review。** 生成 `128×128` Mitchell 等比预览，确认脚底基线 `y=118`。再使用真实错列等距 Tile 排布，将预览的脚底锚点 `(64,118)` 精确映射到目标 `64×32` Tile 的几何中心；飞行单位使用同一虚拟落点，不能用可见身体下沿替代。死亡图先按 `references/death-state-sprites.md` 分类拓扑，并使用完整尸体 AABB 中心对齐 Tile。检查脚掌接触或悬浮间距、角色占用、脸部识别和装备分离。每次只校正一个角色，必须展示基准与当前角色并排并等待人工确认；确认后才进入下一个角色或生成其方向变体。运行时 Game View Review 必须遵循[前台交互与焦点保护规则](../../rules/foreground-interaction.md)：使用 MCP 截图、自动测试或虚拟输入；如果代表状态只能靠点击真实窗口获得，停止并标记 `manual_visual_qa_pending`。
-6. **执行状态转换。** `prepare` 只做确定性去幕、RGBA 规范化和透明 RGB 清零；`attach-mask` 绑定同坐标语义蒙版；`validate` 生成不可变技术/几何报告；通过后用 `render-review` 生成蒙版叠加、128 预览和真实 `64×32` Tile Review。技术失败进入 `technical_failed`，只能 `retry`，不得编辑原 attempt。
-7. **人工批准并晋升。** `approve` 前必须已经生成且哈希仍匹配 overlay、128 预览和 Tile Review；只有 `approve --reviewer cty41 --reason ... --decided-at ...` 落成绑定候选与蒙版哈希的 receipt 才算批准。`promote` 只接受 `approved` attempt，并同步正式输出、正式母图清单与公开 provenance。`legacy-unresolved` 不得作为母图；旧正式图的核心蒙版也必须先有同一候选/蒙版哈希组合的批准 receipt，才可写入新合同的几何锚点。
+5. **缩小和逐角色 Review。** 生成 `128×128` Mitchell 等比预览，确认脚底基线 `y=118`。再使用真实错列等距 Tile 排布，将预览的脚底锚点 `(64,118)` 精确映射到目标 `64×32` Tile 的几何中心；飞行单位使用同一虚拟落点，不能用可见身体下沿替代。带身份蒙版的动作/身体层还必须输出 Idle 锚点与候选同屏的 `anchorTileCompare`，两者使用相同 Tile 与脚底中心。死亡图先按 `references/death-state-sprites.md` 分类拓扑，并使用完整尸体 AABB 中心对齐 Tile。检查脚掌接触或悬浮间距、角色占用、脸部识别和装备分离。每次只校正一个角色，必须展示基准与当前角色并排并等待人工确认；确认后才进入下一个角色或生成其方向变体。运行时 Game View Review 必须遵循[前台交互与焦点保护规则](../../rules/foreground-interaction.md)：使用 MCP 截图、自动测试或虚拟输入；如果代表状态只能靠点击真实窗口获得，停止并标记 `manual_visual_qa_pending`。
+6. **执行状态转换。** `prepare` 只做确定性去幕、RGBA 规范化和透明 RGB 清零；对 ImageGen 的近似纯色色幕可显式传入 `--chroma-tolerance`。`attach-mask` 绑定源图同坐标语义蒙版；v2 高风险任务还必须 `attach-annotations` 绑定眼区、武器出口、剑尖和宝石区域。高分辨率输出再用 `calibrate-core` 统一等比缩放，并以语义脚爪校准地面基线；图像与蒙版共用同一变换。`validate` 确定性检查倾角、出口窗口、禁入区、宝石面积、装备状态与旧几何门禁。技术失败只能新建 retry；用户已经选中的同一 raw 可用 `--technical-remediation` 创建技术子 attempt，不增加唯一 ImageGen 输出数。
+7. **人工批准并晋升。** `approve` 前必须已经生成且哈希仍匹配 overlay、128 预览和 Tile Review；只有 `approve --reviewer cty41 --reason ... --decided-at ...` 落成绑定候选与蒙版哈希的 receipt 才算批准。若报告唯一失败项为 `core_size_out_of_tolerance`，且用户明确接受该候选，可使用 `approve-exception --issue core_size_out_of_tolerance --reviewer cty41 ...` 生成限定例外 receipt；它保留 `report.passed=false`，并额外绑定报告、合同、候选、蒙版和全部 Review 哈希及实际/锚点核心尺寸。任何其他失败项、未知 reviewer、哈希变化或全局容差放宽都不允许。`promote` 只接受有效 `approved` attempt，并同步正式输出、正式母图清单与公开 provenance。`legacy-unresolved` 不得作为母图；旧正式图的核心蒙版也必须先有同一候选/蒙版哈希组合的批准 receipt，才可写入新合同的几何锚点。
+
+### 受控组件与确定性合成（schema v3）
+
+- `component` 仅限 `body`、`equipment`、`paw_overlay`，必须独立验证和人工批准，且 `runtimeEligible: false`，不能直接 `promote`。
+- 旧的明确自有输入只能用 `migrate-component` 进入 `pre_v3_import`；必须保留原始哈希、处理参数和用户确认，禁止伪造 ImageGen invocation。
+- 爪覆盖层使用 `derive-component` 从获批身体及语义标签确定性派生，不调用 ImageGen。逐层 Review 若暴露眼睛、身体或其他错误像素，必须修正源语义蒙版并重新派生，不能在 overlay 上手工擦除。
+- `create-assembly` / `render-assembly` 只允许等比整数百分比缩放、整数平移、水平翻转和 Alpha 合成。输入顺序、组件/蒙版 SHA 与变换共同决定 assembly ID；任何变化都会使旧 Review 与 approval 失效。
+- 完整 `assembled_sprite` 必须重新验证并生成 `assemblyLayerReview`；组件 approval 不能代替完整 Sprite approval。只有完整 Sprite 获得单独的 `cty41` receipt 后才能晋升。
+- 组件化制作仍是离线美术管线；不得据此实现换装系统、运行时动态组装或程序 FX，除非任务另行明确授权。
 8. **归档并验证。** 运行 `artwork_pipeline.py check --strict` 与 `validate_sprite_assets.py --review-examples`；需要查看未确认候选时加 `--include-candidates`。再运行 OKF report/sync、bundle 校验和单元测试；按路径暂存，排除临时文件和任何运行时文件。展示精确暂存清单，等待用户确认后再提交。
 
 ## Guardrails
@@ -52,7 +65,12 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 - 默认不修改 Unity Prefab、AI、遭遇配置或运行时代码；只有用户明确授权“运行时美术接入”时，才可将已确认原生图配置到 Prefab，并且不得改变玩法朝向语义。
 - 运行时接入授权、视觉 QA、截图要求或“补齐代表单位”都不授权 Computer Use、`activate_window` 或真实鼠标键盘输入。后台验证不足时记录 `manual_visual_qa_pending`，不得抢占用户焦点。
 - 不覆盖已确认版本；新设计使用新的版本号，失败候选移动到 `rejected`，而不是删除历史证据。
-- 不手改 registry 状态、report 或 receipt；所有转换必须经 `artwork_pipeline.py`。同一 attempt 不得摄取不同字节，`technical_failed` 不得批准或晋升。
+- 不手改 registry 状态、report 或 receipt；所有转换必须经 `artwork_pipeline.py`。同一 attempt 不得摄取不同字节，`technical_failed` 不得走普通批准或直接晋升；只有下述限定例外命令可以原子转为 `approved`。
+- `approve-exception` 不是通用跳过门禁：首版只豁免报告中唯一的 `core_size_out_of_tolerance`，且只能由 `cty41` 签发。基线、Alpha、透明 RGB、色幕、蒙版、缺爪、接触、错误侧、梨形、遮挡、裁切、路径和哈希问题一律不可豁免。
+- Series 中满意稿和失败稿同样必须留下不可变 feedback；无限 series 可在逐版反馈与人工 Review 门禁下继续产生不同输出，有限 series 不得越过其显式预算；不得把失败稿作为母图。provisional anchor 只允许维持有限预算耗尽后的生产连续性，不能成为正式资产血缘。
+- Feedback v2 必须区分 `authorType: agent|human`，使用结构化缺陷分类和 `selected|backup|retry|technical_failed|exhausted` disposition；Agent 或视觉模型的建议不得签发 `cty41` approval。视觉语义辅助只能用 `record-advisory-review` 留下非绑定风险，不参与确定性通过判定。
+- 纯美术生产默认只运行 Artwork、公开 provenance/LFS 与 OKF 门禁；除非任务同时改动运行时资源或 Godot 代码，不运行完整 `Verify-GodotProject.ps1`。
+- 背向合同用 `--layer-rule near_hand=behind-core`、`far_hand=behind-core`、`equipment=behind-core` 明确绘制层级，并用逐标签 `--visibility-cap` 限制外露面积。后层标签不得侵入批准锚点的核心区域，核心逐行必须连续；双手和武器只能露出贴着胶囊轮廓的外弧。
 - 不把未校准候选标为可用 Sprite；武器或耳朵超出标准包围盒时，优先保持胶囊身体并显式记录例外。
 - 不把正反案例快照当成生成母图；快照只服务于快速 Review，正式母图以 `examples/cases.json` 的 `approved_assets` 原图路径为准。
 - 不把 `rejected` 或 `superseded` 中局部看似正确的版本继续传递到下一轮；反例只能用于写明禁止项和验收失败原因。
@@ -62,6 +80,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 - 不把核心蒙版当作成品图层，也不通过擦线修补蒙版接缝；出现双轮廓、后脑鼓包或局部变胖时，回到正确母图原生重绘。
 - `up-left` 默认将画面左侧近手放在前层完整显示、画面右侧远手放在后层并由身体部分遮挡；任务若有不同三维关系，必须在生成前显式覆盖。
 - 对采用“无手臂”策略的胶囊角色，手掌必须以多像素接触面直接重叠主体边缘；删除手臂后不得留下浮空手掌、单像素切点或透明间隙。
+- “无手臂”不等于“没有前爪”：胶囊角色始终保留两只前爪和两只后爪。四爪直接贴合身体，任何连接肢体都必须被语义蒙版标为禁止 arm/leg 标签并由状态机拒绝。需要复用正式身份的姿态还须绑定独立身份蒙版；灰白额斑必须是与锚点轮廓相符的贴服毛色，不能变成菱形、徽记或装饰物。
 - 不用左右翼完整包围盒居中飞行单位；球核中心、虚拟落点与 Tile 中心必须处于同一垂直轴线。
 - 不把飞行球核下沿当作脚底放在基线附近；球核中心应对齐地面基准角色的上部圆帽中心，让悬浮高度直接可读。
 - 不把 `Tools/artworks/amazon` 的黑白设定图当成正式 Sprite 或方向母图；四方向生产只从已确认的胶囊体信徒/怪物基础图开始。

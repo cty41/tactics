@@ -1,0 +1,11 @@
+{
+  "approvalId": "approval-5279d9c839250047",
+  "attemptId": "job-168fd4b2f49ff6ca-a001",
+  "candidateSha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+  "decidedAt": "2026-08-18T08:54:52+08:00",
+  "decision": "approved",
+  "maskSha256": "9f4968081aa296e73ec215a3a7e89383ad6e34c7d86fe7251af0b3511f12b2c8",
+  "reason": "User approved Demonbound Idle DR after semantic-mask, 128px, and 64x32 tile review",
+  "reviewer": "cty41",
+  "schemaVersion": 1
+}

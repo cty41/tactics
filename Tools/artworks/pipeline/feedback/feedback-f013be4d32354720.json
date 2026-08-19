@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-f013be4d32354720",
+  "attemptId": "job-1b243a2bdfee22b1-a003",
+  "candidateSha256": "9e93c7e812e4371e2894cb667ecbbbed59bd331396ee53d810ad97bc628dd631",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "The left-right lean direction is now correct; body axis, eye gaze, and sword all commit toward the up-left target. Identity, forehead patch, alternate ear, four paws, and no-scabbard state remain readable."
+  ],
+  "defects": [
+    "The body leans too far left; the desired attack commitment is only a subtle 3-5 degree lean.",
+    "The grip, sword-side paw, and guard project too far forward beside the face. In the UL rear projection they should sit near the body center in 3D and be mostly occluded by the capsule."
+  ],
+  "nextPromptDelta": "Preserve v3 identity and up-left direction, but reduce the rigid left lean to only 3-5 degrees: the top center should be only slightly left of the midpoint between the feet. Reconstruct the DR centerline grip in the UL rear view: place grip, sword-side paw, and most of the guard behind the upper-left core, with only a tiny guard rim, tiny attached paw crescent, and the blade emerging beyond the left contour. Keep the eye unobstructed and omit the scabbard.",
+  "recordedAt": "2026-08-18T13:50:46+08:00"
+}

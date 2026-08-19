@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-10c576bac14601e7",
+  "attemptId": "job-f40816b1c2e8b36c-a002",
+  "candidateSha256": "66a410596d4341ddb075b50df0c14daf3cf66779fc508d8b8e44b3e1d260d503",
+  "reviewer": "cty41",
+  "verdict": "technical_failed",
+  "strengths": [
+    "The v4 raw output improves the requested asymmetry: the sword-side paw is more covered and the opposite paw remains farther outward; the sword is entirely on the rear contour."
+  ],
+  "defects": [
+    "Automatic chroma selection was omitted, leaving the gradient green background opaque; this processing attempt is technically invalid and must not be reviewed or promoted."
+  ],
+  "nextPromptDelta": "Do not call ImageGen again. Re-ingest the exact same v4 raw SHA and prepare it with an explicit sampled green chroma key and higher deterministic tolerance.",
+  "recordedAt": "2026-08-18T09:46:19+08:00"
+}

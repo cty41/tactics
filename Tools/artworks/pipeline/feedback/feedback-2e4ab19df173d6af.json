@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-2e4ab19df173d6af",
+  "attemptId": "job-f40816b1c2e8b36c-a003",
+  "candidateSha256": "337a3dbc3d3055c650619840f98efc390fa11d15b47f0201f5fa3e81323552f7",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "The sword-side paw is more covered and clearly less symmetric than v3; the sword stays behind the body with zero equipment intrusion."
+  ],
+  "defects": [
+    "The calibrated capsule is approximately 11 pixels wider than the approved DR core, the feet land approximately 10 pixels below the y=236 baseline, the opposite hand still intrudes 8 pixels into the approved core, and green fringe remains."
+  ],
+  "nextPromptDelta": "Preserve v4's asymmetric rear-layer sword-side grip and rear sword placement. Restore the exact narrower DR capsule width without changing core height; move the opposite hand outward until only a tiny contour crescent remains; place both feet higher relative to the core; use a genuinely uniform pure green background.",
+  "recordedAt": "2026-08-18T09:47:19+08:00"
+}

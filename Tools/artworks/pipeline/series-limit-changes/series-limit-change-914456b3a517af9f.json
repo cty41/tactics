@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "seriesLimitChangeId": "series-limit-change-914456b3a517af9f",
+  "seriesId": "demonbound-nine-pose-v1",
+  "previousMaxUniqueOutputs": 5,
+  "maxUniqueOutputs": null,
+  "reviewer": "cty41",
+  "reason": "User removed the five-output cap so each pose may continue through reviewed iterations until an acceptable promoted result exists.",
+  "decidedAt": "2026-08-18T11:02:46.1290673+08:00"
+}

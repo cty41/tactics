@@ -1,0 +1,62 @@
+{
+  "approvalId": "approval-5279d9c839250047",
+  "artifacts": {
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-168fd4b2f49ff6ca/job-168fd4b2f49ff6ca-a001/mask.png",
+      "sha256": "9f4968081aa296e73ec215a3a7e89383ad6e34c7d86fe7251af0b3511f12b2c8"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-idle-dr-a001.png",
+      "sha256": "9f4968081aa296e73ec215a3a7e89383ad6e34c7d86fe7251af0b3511f12b2c8"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-168fd4b2f49ff6ca/job-168fd4b2f49ff6ca-a001/prepared.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+        "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+      },
+      "preview": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01_128.png",
+        "sha256": "65c9377e0dce0ee3ad832c7ad9c68566a21ab53eb7045a09a02ab042e42a0878"
+      }
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-168fd4b2f49ff6ca/job-168fd4b2f49ff6ca-a001/raw.png",
+      "sha256": "c408bca3760667599bd099c57c7313f3f1e6d9d2d58a1a568493c5ed42c83004"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-168fd4b2f49ff6ca-a001/overlay.png",
+        "sha256": "24165e8ce85c570d3d3a43c80f25128cfa48c0b8f52fdb9d5ce3f780292ea495"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-168fd4b2f49ff6ca-a001/preview128.png",
+        "sha256": "28525ae4a57a6ebda3bc40fabfcaf2a6365befaa98372559cca59e4e5d5d1d62"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-168fd4b2f49ff6ca-a001/tile64x32.png",
+        "sha256": "143369672039751345495ef83b7cd3beff5e2c23393104024024c6972f653984"
+      }
+    },
+    "source": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_color_dr_calibrated_v01.png",
+      "sha256": "c408bca3760667599bd099c57c7313f3f1e6d9d2d58a1a568493c5ed42c83004"
+    }
+  },
+  "attemptId": "job-168fd4b2f49ff6ca-a001",
+  "feedbackId": "feedback-77931c5a25ce8ae9",
+  "jobId": "job-168fd4b2f49ff6ca",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "promptDelta": null,
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-c90dec5aa3e773ae.json",
+    "sha256": "3a9210a4485b14926a5380a3eba8bf0dad1cf4aabf38a4574bf0ce6eafcba4b7"
+  },
+  "retryFeedbackId": null,
+  "schemaVersion": 1,
+  "state": "promoted"
+}

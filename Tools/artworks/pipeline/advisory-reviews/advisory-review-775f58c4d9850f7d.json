@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-775f58c4d9850f7d",
+  "attemptId": "job-8d5c9871c64e9e4b-a001",
+  "candidateSha256": "47e2448c6bd4f40ec9bd0ef3d9ddb8ad9a4be13c461f66473e855fd49238a71b",
+  "reviewer": "codex-visual-advisory",
+  "risks": [
+    "sword and demonic effect dominate the capsule and exceed the approved compact equipment scale",
+    "face linework and eye style drift from the approved Idle DR identity",
+    "hand paws read as large front circles rather than minimal attached paws"
+  ],
+  "recordedAt": "2026-08-18T12:25:00+08:00",
+  "nonBinding": true
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "approvalId": "approval-b416727c3f90417d",
+  "attemptId": "job-38caaa8120d4a303-a006",
+  "candidateSha256": "4519d643cecce40130d92f00e4bbef9c3cd628f6b34953763a7cbbdda4d0e82b",
+  "maskSha256": "be152dc41ca96b6736e444dfea6c804b312acfc87ce918cceadd0652a8a3e296",
+  "reportSha256": "c2fc939e7876c09b442d7e190d8f2f0f3a5ccc0d3e6f6cdbad173f2e9c3b3916",
+  "contractId": "contract-63e48d93e0c14372",
+  "contractSha256": "56d2397defdde34deb8e804401b8b77b3df81b91e30861f4ca782ca7d70a9079",
+  "reviewSha256": {
+    "depthReview": "01a8b5f6ec69988751a47896f6346fe17cbf16a0c8d9ea1e076a020d60fca426",
+    "overlay": "6b3ae774521ccdaad638137bb9a5440081396e9eb8c014369e585580216dbcb7",
+    "preview128": "5c39afbe8865556225e2b3b6ebfcd671742858da1fd0546093c661ffa2086891",
+    "tile64x32": "8f4846315349c863919624344f038906e84d073093e569dca10f589a903199ac"
+  },
+  "reviewer": "cty41",
+  "decision": "approved",
+  "approvalMode": "gate-exception",
+  "waivedIssues": [
+    {
+      "code": "core_size_out_of_tolerance",
+      "candidateCoreSize": [
+        67,
+        109
+      ],
+      "anchorCoreSize": [
+        71,
+        110
+      ],
+      "delta": [
+        -4,
+        -1
+      ],
+      "tolerancePx": 3
+    }
+  ],
+  "reason": "User explicitly selected Melee UL v7; deterministic remediation passed every non-waivable gate and preserves the selected raw image.",
+  "decidedAt": "2026-08-18T12:11:00+08:00"
+}

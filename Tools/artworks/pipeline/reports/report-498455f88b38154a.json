@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-f40816b1c2e8b36c-a003",
+  "inputSha256": "337a3dbc3d3055c650619840f98efc390fa11d15b47f0201f5fa3e81323552f7",
+  "maskSha256": "7a2c88deee4580de58fa093917cc33e8f303008803b94c1539bf61459053dfba",
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      84,
+      99,
+      180,
+      246
+    ]
+  },
+  "geometry": {
+    "boxes": {
+      "core": [
+        90,
+        121,
+        164,
+        231
+      ],
+      "head_appendage": [
+        87,
+        102,
+        154,
+        174
+      ],
+      "near_hand": [
+        162,
+        180,
+        169,
+        199
+      ],
+      "far_hand": [
+        88,
+        198,
+        96,
+        212
+      ],
+      "near_foot": [
+        100,
+        231,
+        121,
+        242
+      ],
+      "far_foot": [
+        132,
+        231,
+        152,
+        239
+      ],
+      "equipment": [
+        161,
+        146,
+        176,
+        190
+      ],
+      "wings": null,
+      "effect": null
+    },
+    "core": {
+      "bbox": [
+        90,
+        121,
+        164,
+        231
+      ],
+      "center": [
+        127.0,
+        176.0
+      ],
+      "bandMaxWidths": [
+        73,
+        74,
+        71
+      ]
+    },
+    "occlusion": {
+      "intrusionPixels": {
+        "equipment": 0,
+        "far_hand": 8,
+        "near_hand": 0
+      },
+      "visibleAreaRatios": {
+        "equipment": 0.03648558014755198,
+        "far_hand": 0.014218645204560697,
+        "near_hand": 0.015425888665325285
+      }
+    }
+  },
+  "issues": [
+    "baseline_not_236",
+    "chroma_fringe",
+    "core_row_disconnected",
+    "core_size_out_of_tolerance",
+    "exact_chroma_residue",
+    "far_hand_intrudes_core",
+    "far_hand_wrong_side",
+    "near_hand_wrong_side"
+  ],
+  "passed": false
+}

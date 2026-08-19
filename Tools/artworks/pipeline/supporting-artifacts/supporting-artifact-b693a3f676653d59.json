@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-b693a3f676653d59",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/artifacts/job-80191342a2559d49/job-80191342a2559d49-a002/mask.png",
+    "sha256": "27607f13120b050404ca8529086828496542aaee7bde24c4c7917122d61ef37c"
+  },
+  "role": "supporting-derived",
+  "note": "Immutable early sword component semantic-mask evidence retained for audit."
+}

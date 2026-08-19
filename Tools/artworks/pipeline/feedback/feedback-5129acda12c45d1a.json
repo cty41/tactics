@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-5129acda12c45d1a",
+  "attemptId": "job-8511c38401ba2a99-a004",
+  "candidateSha256": "04d63b982a28ffd89970e8f67762319cfe616da9779fa00a60b759bf52c735b6",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The forehead marking is shorter and more irregular than v7's long centered stripe, the alternate ear and split coat remain readable, and the body shows some screen-right attack lean."
+  ],
+  "defects": [
+    "The calibrated core regresses to 94 pixels wide against the 64-pixel anchor and flares into a broad action body; both hands are again large complete circles; the eyes and smiling mouth return to a cute viewer-facing expression rather than tracking the target with serious exertion; the sword becomes oversized and reaches y=246; a red jeweled scabbard mouth or second handle has reappeared behind the sword hand; the forehead patch is still a narrow vertical jagged stripe rather than Idle DR's broader close-lying patch; chroma fringe/residue, a disconnected core row, and semantic-mask overshoot remain."
+  ],
+  "nextPromptDelta": "Retain only v8's shorter irregular forehead-patch direction and modest screen-right lean. Restore v7's compact metallic sword, total absence of any scabbard, serious closed mouth, and narrower body, then go further to the exact 64-pixel Idle DR core. The forehead patch must be wider left-to-right and shallower top-to-bottom, matching Idle DR rather than a vertical zigzag. Use tiny mostly hidden hand arcs, raise the pupils off-camera toward the target torso, and keep the complete sword above y=236.",
+  "recordedAt": "2026-08-18T11:29:36.2719217+08:00"
+}

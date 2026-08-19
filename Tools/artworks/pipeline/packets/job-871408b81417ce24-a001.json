@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-871408b81417ce24-a001",
+  "jobId": "job-871408b81417ce24",
+  "promptDelta": null,
+  "inputs": [
+    {
+      "role": "candidate_reference",
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a006/calibrated.png",
+      "sha256": "519f0eef8199625b3336dafafb2cecb45182ba0af5e384a5757b6f5dd94b9ea0"
+    },
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "melee"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null
+}

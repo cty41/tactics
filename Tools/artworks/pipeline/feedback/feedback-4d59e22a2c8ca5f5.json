@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-4d59e22a2c8ca5f5",
+  "attemptId": "job-1b243a2bdfee22b1-a001",
+  "candidateSha256": "7275e221e62047a24e3ca9b92b30034fc461ba14a07fd3381e8674619fc447e2",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Correct native up-left attack direction, four paws are present, the sword is unsheathed, and no scabbard appears."
+  ],
+  "defects": [
+    "Core is substantially oversized and wider than the approved Idle UL capsule.",
+    "The broad shallow gray-white forehead patch is nearly absent, weakening identity continuity.",
+    "The sword-side hand is a complete exposed oval and the guard crosses in front of the face instead of remaining mostly behind the core."
+  ],
+  "nextPromptDelta": "Keep the up-left swing and no-scabbard state. Match Idle UL body scale and width exactly; restore its broad shallow gray-white forehead marking; reduce both hands to tiny asymmetric attached outer crescents; move the grip and guard behind the left body contour so the face is unobstructed while the blade emerges toward the up-left target.",
+  "recordedAt": "2026-08-18T13:38:35+08:00"
+}

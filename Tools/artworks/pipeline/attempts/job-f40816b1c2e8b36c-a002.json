@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-f40816b1c2e8b36c-a002",
+  "jobId": "job-f40816b1c2e8b36c",
+  "ordinal": 2,
+  "parentAttemptId": "job-f40816b1c2e8b36c-a001",
+  "retryFeedbackId": "feedback-7c9c88fffc102260",
+  "promptDelta": "Preserve v3 direction, identity and mostly hidden sword; reduce each hand to a tiny crescent entirely outside the capsule hull, move every visible sword fragment outside the body hull, and raise the feet relative to the core so the calibrated baseline lands at y=236",
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_idle_ul_chroma_source_v04.png",
+      "sha256": "ba120c53c4cd53b8ec6ecfcfa637af6bf59e257e5a7ef219f3056b90e7561426"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a002/raw.png",
+      "sha256": "ba120c53c4cd53b8ec6ecfcfa637af6bf59e257e5a7ef219f3056b90e7561426"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a002/prepared.png",
+      "sha256": "55d4fd872be57cae2370089cb481183e8a80e94fc2eb8bb2bf4c3609b7c82710"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-idle-ul-v04-source-mask.png",
+      "sha256": "b677f4b3e78cdf96843ede29ebf8eb4b3c69052b344309067b3074d1a14ea41e"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a002/mask.png",
+      "sha256": "b677f4b3e78cdf96843ede29ebf8eb4b3c69052b344309067b3074d1a14ea41e"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a002/calibrated.png",
+      "sha256": "66a410596d4341ddb075b50df0c14daf3cf66779fc508d8b8e44b3e1d260d503"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a002/calibrated-mask.png",
+      "sha256": "7a2c88deee4580de58fa093917cc33e8f303008803b94c1539bf61459053dfba"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-0fdeb3f6cc92a442.json",
+    "sha256": "754e38fa3fc7b0ebf1a3bddfeeebe88a18268ccb50d413c8ed9c4fb54a6d4219"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-10c576bac14601e7",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 48
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.23819742489270387,
+    "offset": [
+      -29,
+      21
+    ],
+    "sourceCoreBbox": [
+      500,
+      420,
+      814,
+      885
+    ],
+    "anchorCoreBbox": [
+      96,
+      121,
+      159,
+      231
+    ]
+  }
+}

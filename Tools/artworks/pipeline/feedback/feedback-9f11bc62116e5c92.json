@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-9f11bc62116e5c92",
+  "attemptId": "job-8d5c9871c64e9e4b-a001",
+  "candidateSha256": "47e2448c6bd4f40ec9bd0ef3d9ddb8ad9a4be13c461f66473e855fd49238a71b",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "down-right target direction and absent scabbard are readable"
+  ],
+  "defects": [
+    "weapon and spell effect are too large",
+    "face and paw topology drift from the approved identity"
+  ],
+  "nextPromptDelta": "Keep the down-right cast and no-scabbard state; restore the exact Idle DR face and tiny attached paws, reduce sword and demonic effect substantially, and keep the capsule dominant.",
+  "recordedAt": "2026-08-18T12:26:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "equipment_scale",
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "down-right cast target",
+    "scabbard absent"
+  ],
+  "pendingFixes": [
+    "reduce sword and spell effect to the approved compact scale",
+    "restore approved Idle DR face and small attached paw topology"
+  ]
+}

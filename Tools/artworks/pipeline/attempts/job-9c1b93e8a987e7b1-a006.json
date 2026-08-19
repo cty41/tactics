@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 3,
+  "attemptId": "job-9c1b93e8a987e7b1-a006",
+  "jobId": "job-9c1b93e8a987e7b1",
+  "ordinal": 6,
+  "parentAttemptId": "job-9c1b93e8a987e7b1-a005",
+  "retryFeedbackId": "feedback-15f1fae52b4039db",
+  "promptDelta": null,
+  "technicalRemediation": true,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_body_grip_v05_clean.png",
+      "sha256": "d8c89b11a53a40f5d2c471f86d2843907805f2dfa1d748e05dd354224f58154a"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-9c1b93e8a987e7b1/job-9c1b93e8a987e7b1-a006/raw.png",
+      "sha256": "d8c89b11a53a40f5d2c471f86d2843907805f2dfa1d748e05dd354224f58154a"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-9c1b93e8a987e7b1/job-9c1b93e8a987e7b1-a006/prepared.png",
+      "sha256": "64f327efc11609648b7c3f0d2fd0a5495caefab1befb5725908af955b65500e7"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_body_grip_mask_v05_exact.png",
+      "sha256": "cfe0b557aa0ba943ab58fbab2d539d2e02a79c2dae8fdaff83213bf9b21e5c9f"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-9c1b93e8a987e7b1/job-9c1b93e8a987e7b1-a006/mask.png",
+      "sha256": "cfe0b557aa0ba943ab58fbab2d539d2e02a79c2dae8fdaff83213bf9b21e5c9f"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-9c1b93e8a987e7b1/job-9c1b93e8a987e7b1-a006/calibrated.png",
+      "sha256": "f4ec3c378bd293f0c51000060c2d4253a4eacc29a509ade41c3d55dd9149644f"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-9c1b93e8a987e7b1/job-9c1b93e8a987e7b1-a006/calibrated-mask.png",
+      "sha256": "63d0ab29492ba9cc64efbf97de8474079558fdfb89ab67ea6e7e7a3e6683da5d"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-997b5339c98323fc.json",
+    "sha256": "b8623bda19cf46b73a60ef2e4f3043919dcf455386e67ac0a086e4e3d64e5379"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-6a3aa1399829caf4",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.20903954802259886,
+    "offset": [
+      -5,
+      17
+    ],
+    "sourceCoreBbox": [
+      478,
+      500,
+      790,
+      1030
+    ],
+    "anchorCoreBbox": [
+      96,
+      121,
+      159,
+      231
+    ]
+  }
+}

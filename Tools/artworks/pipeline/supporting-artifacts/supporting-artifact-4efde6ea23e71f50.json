@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4efde6ea23e71f50",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/demonbound_idle_dr_identity_mask_v1.png",
+    "sha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb"
+  },
+  "role": "supporting-derived",
+  "note": "Formal Idle DR identity mask for forehead blaze, alternate ear, and alternate coat validation."
+}

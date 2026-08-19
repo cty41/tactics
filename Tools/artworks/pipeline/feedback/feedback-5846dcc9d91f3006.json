@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-5846dcc9d91f3006",
+  "attemptId": "job-38caaa8120d4a303-a002",
+  "candidateSha256": "793a0b4a6863f1822f5b6e80bcecbbd777daf4689e372ae96815955eeb58c45a",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Accepted as a viable fallback candidate: formal-like core scale, correct below-eye blade exit, convincing rear-layer grip, small attached hand arcs, preserved identity, and no scabbard."
+  ],
+  "defects": [
+    "The intended 3-5 degree left attack lean is barely readable; the core appears almost fully upright.",
+    "The visible red guard gem remains slightly larger than the formal Melee DR pinhead scale."
+  ],
+  "nextPromptDelta": "Use v6 as the edit target and preserve every pixel-level design decision except two: rotate the entire straight capsule rigidly 3-5 degrees toward screen-left while keeping both feet grounded, and reduce the visible red guard gem/rim by roughly half. Do not change body scale, blade exit, sword length, rear occlusion, paws, coat, face, ears, collar, or background.",
+  "recordedAt": "2026-08-18T14:01:06+08:00"
+}

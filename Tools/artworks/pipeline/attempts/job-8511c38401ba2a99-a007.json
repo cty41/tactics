@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-8511c38401ba2a99-a007",
+  "jobId": "job-8511c38401ba2a99",
+  "ordinal": 7,
+  "parentAttemptId": "job-8511c38401ba2a99-a005",
+  "retryFeedbackId": "feedback-14bef190721e09cd",
+  "promptDelta": "Preserve v10's 67-pixel parallel core, shallow separate forehead patch, serious target gaze, one tiny guard gem, and total absence of a scabbard. Narrow the core only 3 more pixels, then tilt the complete rigid body modestly screen-right without changing its width bands. Hide most of the sword hand behind the body as a crescent. Rotate the compact sword slightly upward from v10 into a readable lower-right mid-swing axis, with the whole blade above y=236.",
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_dr_v09_technical_scale096.png",
+      "sha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a007/raw.png",
+      "sha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a007/prepared.png",
+      "sha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-dr-v09-technical-scale096-mask.png",
+      "sha256": "f13ce7ee09c881cc944468b54ea6ce381a20e8fbb6d953ce13218e405288a127"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a007/mask.png",
+      "sha256": "f13ce7ee09c881cc944468b54ea6ce381a20e8fbb6d953ce13218e405288a127"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-8511c38401ba2a99-a007/overlay.png",
+        "sha256": "b037dcdefa27914e27337dce837b684918ffa3368572e94256fbf3e9e2db4582"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-8511c38401ba2a99-a007/preview128.png",
+        "sha256": "3e43d371ee74033b4512ddfd0e4c2366bc141e5365380993d55a987cfaa3b7e1"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-8511c38401ba2a99-a007/tile64x32.png",
+        "sha256": "0662a5319d2dc0fdc32b6809dd0bae299cbbe267aea1e659c91bac2d6a205cc9"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-e1bdcf08803e6b10.json",
+    "sha256": "59bcd3e4257bf2e51dfa424a4ff955102659c51cfd07bee4863f58300c214c11"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-ddb76f743690eef6",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-5f652b4644f2c9d7",
+  "assetId": "demonbound-cast-ul-body-v1",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "bodyLayer": true,
+    "coreAxis": {
+      "bottom": [
+        127,
+        231
+      ],
+      "top": [
+        127,
+        121
+      ],
+      "tiltDegrees": [
+        -2.0,
+        2.0
+      ]
+    },
+    "footCenter": [
+      127,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        127,
+        190
+      ],
+      "exitWindow": [
+        122,
+        171,
+        132,
+        199
+      ],
+      "tipRegion": [
+        123,
+        105,
+        132,
+        116
+      ],
+      "guardWindow": [
+        114,
+        169,
+        141,
+        182
+      ],
+      "bladeCenterline": [
+        122,
+        105,
+        132,
+        178
+      ],
+      "maxBladeWidthPx": 10,
+      "maxGemAreaPx": 64
+    },
+    "forbiddenRegions": [],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {},
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_up_left_body_composition_v1.json",
+    "sha256": "e06f4084d8f4104a6fb0c15712066932a61b09b6f872c4017be415f00f52d9bc"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+    "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+  }
+}

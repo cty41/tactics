@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-1fbfe1552e0cc18e",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-96bbe2ae0fc73102-a001/anchorTileCompare.png",
+    "sha256": "25de5ed4a15668deee2340b80dacd29ffb1e4710e9b93881db19c242057117da"
+  },
+  "role": "supporting-derived",
+  "note": "Idle DR and final Cast DR assembly aligned to the same 64x32 isometric tile baseline for final human review"
+}

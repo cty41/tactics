@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-f40816b1c2e8b36c-a003",
+  "jobId": "job-f40816b1c2e8b36c",
+  "ordinal": 3,
+  "parentAttemptId": "job-f40816b1c2e8b36c-a002",
+  "retryFeedbackId": "feedback-10c576bac14601e7",
+  "promptDelta": "Do not call ImageGen again. Re-ingest the exact same v4 raw SHA and prepare it with an explicit sampled green chroma key and higher deterministic tolerance.",
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_idle_ul_chroma_source_v04.png",
+      "sha256": "ba120c53c4cd53b8ec6ecfcfa637af6bf59e257e5a7ef219f3056b90e7561426"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a003/raw.png",
+      "sha256": "ba120c53c4cd53b8ec6ecfcfa637af6bf59e257e5a7ef219f3056b90e7561426"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a003/prepared.png",
+      "sha256": "5f3fc63b264944734ed80f39902d76706ac435ca8c3f66189f6e8355d267cf73"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-idle-ul-v04-source-mask.png",
+      "sha256": "b677f4b3e78cdf96843ede29ebf8eb4b3c69052b344309067b3074d1a14ea41e"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a003/mask.png",
+      "sha256": "b677f4b3e78cdf96843ede29ebf8eb4b3c69052b344309067b3074d1a14ea41e"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a003/calibrated.png",
+      "sha256": "337a3dbc3d3055c650619840f98efc390fa11d15b47f0201f5fa3e81323552f7"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a003/calibrated-mask.png",
+      "sha256": "7a2c88deee4580de58fa093917cc33e8f303008803b94c1539bf61459053dfba"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a003/overlay.png",
+        "sha256": "1de96f0d5e8481424cee3ceadd283e9f91c5eee0a07d69bba47e24f4cc152201"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a003/preview128.png",
+        "sha256": "f83f24b7e1444524d08d98e0268121a4d28648308b7c8541bb50b6ca3a7df5cf"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a003/tile64x32.png",
+        "sha256": "0b3fbd4d6880db65d44490a1e2e5f6ac64eab01e138af547a869f9141a943940"
+      },
+      "depthReview": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a003/depthReview.png",
+        "sha256": "edb1f8c41bac3a1bc7c06e794208c2eedd8f03b2072c9648fc71bc42bf6ab2d2"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-498455f88b38154a.json",
+    "sha256": "a9d748e26857a401a1f89e08f6197b01643b24f310c462829412e60de485c91f"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-2e4ab19df173d6af",
+  "preparation": {
+    "chroma": "14f113",
+    "chromaTolerance": 96
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.23819742489270387,
+    "offset": [
+      -29,
+      21
+    ],
+    "sourceCoreBbox": [
+      500,
+      420,
+      814,
+      885
+    ],
+    "anchorCoreBbox": [
+      96,
+      121,
+      159,
+      231
+    ]
+  }
+}

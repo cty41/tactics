@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-38caaa8120d4a303-a004",
+  "jobId": "job-38caaa8120d4a303",
+  "ordinal": 4,
+  "parentAttemptId": "job-38caaa8120d4a303-a003",
+  "retryFeedbackId": "feedback-f72602ec4d99607e",
+  "promptDelta": "",
+  "technicalRemediation": true,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v07.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a004/raw.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a004/prepared.png",
+      "sha256": "b7d37c230b88dc83a4bc34f74aa7f3214559cb0b12972b441175077f76d99a0e"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-ul-v07-source-mask-v2.png",
+      "sha256": "1a34faa85f289ba459bb6477b2ce991960bc8622131db2ec3fcb1bc4c16d7ece"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a004/mask.png",
+      "sha256": "1a34faa85f289ba459bb6477b2ce991960bc8622131db2ec3fcb1bc4c16d7ece"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a004/calibrated.png",
+      "sha256": "7907f127a10b02fd0c72849be39a42383999b848bd041b6741fee2bda0626c17"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a004/calibrated-mask.png",
+      "sha256": "4bba668cdbdf59f7ef3a547c84fadd61b3021831942530dba60351b7de098ebc"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-853ca4a811ae7f6d.json",
+    "sha256": "ade4fc25dc213264b222e1eaeda7a6f7d9bce235a940aafbf1ef4fcf923eb56c"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-5426a50be41119c1",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 160
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.3170028818443804,
+    "offset": [
+      -69,
+      -47
+    ],
+    "sourceCoreBbox": [
+      512,
+      528,
+      724,
+      874
+    ],
+    "anchorCoreBbox": [
+      92,
+      121,
+      162,
+      230
+    ]
+  }
+}
