@@ -145,7 +145,12 @@ internal sealed partial class PresentationProfilePreviewStage : Control
         _actorInitializationFailed = false;
     }
 
-    private string ContentId() => _profile?.Get("ContentIdValue").AsString() ?? string.Empty;
+    private string ContentId()
+    {
+        if (_profile is null) return string.Empty;
+        using Variant value = _profile.Get("ContentIdValue");
+        return value.AsString();
+    }
 
     public void InitializeActors()
     {

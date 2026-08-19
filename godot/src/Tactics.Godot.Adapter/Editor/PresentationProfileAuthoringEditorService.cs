@@ -11,22 +11,29 @@ public static class PresentationProfileAuthoringEditorService
         { "amplify-damage", "bone-spear", "fireball", "ice-bolt", "lightning", "poison-spear", "thrust" };
     public static PresentationProfileAuthoringDocument Read(Resource resource)
     {
-        string contentId = resource.Get("ContentIdValue").AsString();
+        using Variant contentIdValue = resource.Get("ContentIdValue");
+        string contentId = contentIdValue.AsString();
         if (string.IsNullOrWhiteSpace(contentId)) throw new InvalidOperationException("Presentation Resource has no ContentIdValue.");
         var properties = new Dictionary<string, PresentationAuthoringValue>(StringComparer.Ordinal);
-        foreach (global::Godot.Collections.Dictionary descriptor in resource.GetPropertyList())
+        global::Godot.Collections.Array<global::Godot.Collections.Dictionary> descriptors = resource.GetPropertyList();
+        using global::Godot.Collections.Array descriptorStorage = (global::Godot.Collections.Array)descriptors;
+        foreach (global::Godot.Collections.Dictionary descriptor in descriptors)
         {
-            string name = descriptor["name"].AsString(); Variant.Type type = (Variant.Type)descriptor["type"].AsInt32();
-            PropertyUsageFlags usage = (PropertyUsageFlags)descriptor["usage"].AsInt32();
+            using Variant nameValue = descriptor["name"];
+            using Variant typeValue = descriptor["type"];
+            using Variant usageValue = descriptor["usage"];
+            string name = nameValue.AsString(); Variant.Type type = (Variant.Type)typeValue.AsInt32();
+            PropertyUsageFlags usage = (PropertyUsageFlags)usageValue.AsInt32();
             if (name == "ContentIdValue" || name == "script" || !usage.HasFlag(PropertyUsageFlags.ScriptVariable) || !Supported(type)) continue;
-            Variant value = resource.Get(name); properties[name] = Encode(type, value);
+            using Variant value = resource.Get(name); properties[name] = Encode(type, value);
         }
         return new PresentationProfileAuthoringDocument(contentId, resource.GetType().Name, properties);
     }
 
     public static void Write(Resource resource, PresentationProfileAuthoringDocument document)
     {
-        if (resource.Get("ContentIdValue").AsString() != document.ContentId || resource.GetType().Name != document.ResourceClass) throw new InvalidOperationException("Presentation profile identity or class differs.");
+        using Variant contentIdValue = resource.Get("ContentIdValue");
+        if (contentIdValue.AsString() != document.ContentId || resource.GetType().Name != document.ResourceClass) throw new InvalidOperationException("Presentation profile identity or class differs.");
         PresentationProfileAuthoringDocument current = Read(resource);
         if (!current.Properties.Keys.ToHashSet(StringComparer.Ordinal).SetEquals(document.Properties.Keys)) throw new InvalidOperationException("Presentation profile properties cannot be added or removed.");
         if (document.Properties.TryGetValue("AuthoringGraphJsonValue", out PresentationAuthoringValue? graphValue) && !string.IsNullOrWhiteSpace(graphValue.Value))
@@ -40,7 +47,11 @@ public static class PresentationProfileAuthoringEditorService
             if (current.Properties[name].Kind != value.Kind) throw new InvalidOperationException($"Presentation property '{name}' cannot change type.");
             ValidateValue(name, value, current.Properties[name]);
         }
-        foreach ((string name, PresentationAuthoringValue value) in document.Properties) resource.Set(name, Decode(value));
+        foreach ((string name, PresentationAuthoringValue value) in document.Properties)
+        {
+            using Variant decoded = Decode(value);
+            resource.Set(name, decoded);
+        }
         PresentationProfileAuthoringDocument reloaded = Read(resource);
         if (AuthoringRevision.Compute(reloaded) != AuthoringRevision.Compute(document)) throw new InvalidOperationException("Presentation profile write did not preserve the validated document.");
     }
@@ -59,7 +70,7 @@ public static class PresentationProfileAuthoringEditorService
     private static Vector2 ParseVector2(string value) { float[] parts = value.Split(',').Select(item => float.Parse(item, CultureInfo.InvariantCulture)).ToArray(); if (parts.Length != 2) throw new FormatException("Vector2 requires x,y."); return new Vector2(parts[0], parts[1]); }
     private static void ValidateValue(string name, PresentationAuthoringValue value, PresentationAuthoringValue current)
     {
-        Variant decoded = Decode(value);
+        using Variant decoded = Decode(value);
         if (name is "PayloadBoundary" or "MarkerContract" && value.Value != current.Value) throw new InvalidOperationException($"Presentation contract field '{name}' is read-only.");
         if (name == "ProgrammaticKind" && !ProgrammaticKinds.Contains(value.Value)) throw new InvalidOperationException($"Unknown ProgrammaticKind '{value.Value}'.");
         if (name.Contains("Duration", StringComparison.Ordinal) && decoded.AsDouble() < 0) throw new InvalidOperationException($"Presentation duration '{name}' cannot be negative.");
